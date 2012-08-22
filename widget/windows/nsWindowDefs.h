@@ -186,14 +186,14 @@ typedef enum
  * For example, changing the window classes could break
  * touchpad scrolling or screen readers.
  */
-const PRUint32 kMaxClassNameLength   = 40;
+const uint32_t kMaxClassNameLength   = 40;
 const char kClassNameHidden[]        = "MozillaHiddenWindowClass";
 const char kClassNameGeneral[]       = "MozillaWindowClass";
 const char kClassNameDialog[]        = "MozillaDialogClass";
 const char kClassNameDropShadow[]    = "MozillaDropShadowWindowClass";
 const char kClassNameTemp[]          = "MozillaTempWindowClass";
 
-static const PRUint32 sModifierKeyMap[][3] = {
+static const uint32_t sModifierKeyMap[][3] = {
   { nsIWidget::CAPS_LOCK, VK_CAPITAL, 0 },
   { nsIWidget::NUM_LOCK,  VK_NUMLOCK, 0 },
   { nsIWidget::SHIFT_L,   VK_SHIFT,   VK_LSHIFT },
@@ -232,10 +232,10 @@ struct nsFakeCharMessage {
 
 // Used for synthesizing events
 struct KeyPair {
-  PRUint8 mGeneral;
-  PRUint8 mSpecific;
-  KeyPair(PRUint32 aGeneral, PRUint32 aSpecific)
-    : mGeneral(PRUint8(aGeneral)), mSpecific(PRUint8(aSpecific)) {}
+  uint8_t mGeneral;
+  uint8_t mSpecific;
+  KeyPair(uint32_t aGeneral, uint32_t aSpecific)
+    : mGeneral(uint8_t(aGeneral)), mSpecific(uint8_t(aSpecific)) {}
 };
 
 #if (WINVER < 0x0600)

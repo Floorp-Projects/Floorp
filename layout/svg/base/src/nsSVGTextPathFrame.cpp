@@ -151,9 +151,9 @@ nsSVGTextPathFrame::GetOffsetScale()
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGTextPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGTextPathFrame::AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
-                                     PRInt32         aModType)
+                                     int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::startOffset) {

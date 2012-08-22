@@ -43,11 +43,11 @@ public:
     return mItems.IsEmpty();
   }
 
-  PRUint32 Length() const {
+  uint32_t Length() const {
     return mItems.Length();
   }
 
-  const SVGTransform& operator[](PRUint32 aIndex) const {
+  const SVGTransform& operator[](uint32_t aIndex) const {
     return mItems[aIndex];
   }
 
@@ -55,7 +55,7 @@ public:
     return mItems == rhs.mItems;
   }
 
-  bool SetCapacity(PRUint32 size) {
+  bool SetCapacity(uint32_t size) {
     return mItems.SetCapacity(size);
   }
 
@@ -81,7 +81,7 @@ protected:
   nsresult CopyFrom(const SVGTransformList& rhs);
   nsresult CopyFrom(const nsTArray<SVGTransform>& aTransformArray);
 
-  SVGTransform& operator[](PRUint32 aIndex) {
+  SVGTransform& operator[](uint32_t aIndex) {
     return mItems[aIndex];
   }
 
@@ -89,7 +89,7 @@ protected:
    * This may fail (return false) on OOM if the internal capacity is being
    * increased, in which case the list will be left unmodified.
    */
-  bool SetLength(PRUint32 aNumberOfItems) {
+  bool SetLength(uint32_t aNumberOfItems) {
     return mItems.SetLength(aNumberOfItems);
   }
 
@@ -105,20 +105,20 @@ private:
     mItems.Clear();
   }
 
-  bool InsertItem(PRUint32 aIndex, const SVGTransform& aTransform) {
+  bool InsertItem(uint32_t aIndex, const SVGTransform& aTransform) {
     if (aIndex >= mItems.Length()) {
       aIndex = mItems.Length();
     }
     return !!mItems.InsertElementAt(aIndex, aTransform);
   }
 
-  void ReplaceItem(PRUint32 aIndex, const SVGTransform& aTransform) {
+  void ReplaceItem(uint32_t aIndex, const SVGTransform& aTransform) {
     NS_ABORT_IF_FALSE(aIndex < mItems.Length(),
                       "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mItems[aIndex] = aTransform;
   }
 
-  void RemoveItem(PRUint32 aIndex) {
+  void RemoveItem(uint32_t aIndex) {
     NS_ABORT_IF_FALSE(aIndex < mItems.Length(),
                       "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mItems.RemoveElementAt(aIndex);

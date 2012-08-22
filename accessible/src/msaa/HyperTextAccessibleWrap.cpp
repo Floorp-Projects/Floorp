@@ -41,7 +41,7 @@ HyperTextAccessibleWrap::QueryInterface(REFIID aIID, void** aInstancePtr)
 nsresult
 HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 {
-  PRUint32 eventType = aEvent->GetEventType();
+  uint32_t eventType = aEvent->GetEventType();
 
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_REMOVED ||
       eventType == nsIAccessibleEvent::EVENT_TEXT_INSERTED) {
@@ -68,8 +68,8 @@ HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 nsresult
 HyperTextAccessibleWrap::GetModifiedText(bool aGetInsertedText,
                                          nsAString& aText,
-                                         PRUint32* aStartOffset,
-                                         PRUint32* aEndOffset)
+                                         uint32_t* aStartOffset,
+                                         uint32_t* aEndOffset)
 {
   aText.Truncate();
   *aStartOffset = 0;

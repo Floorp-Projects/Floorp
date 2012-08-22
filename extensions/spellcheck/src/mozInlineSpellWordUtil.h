@@ -39,9 +39,9 @@ class mozInlineSpellWordUtil
 public:
   struct NodeOffset {
     nsINode* mNode;
-    PRInt32  mOffset;
+    int32_t  mOffset;
     
-    NodeOffset(nsINode* aNode, PRInt32 aOffset) :
+    NodeOffset(nsINode* aNode, int32_t aOffset) :
       mNode(aNode), mOffset(aOffset) {}
   };
 
@@ -52,11 +52,11 @@ public:
 
   nsresult Init(nsWeakPtr aWeakEditor);
 
-  nsresult SetEnd(nsINode* aEndNode, PRInt32 aEndOffset);
+  nsresult SetEnd(nsINode* aEndNode, int32_t aEndOffset);
 
   // sets the current position, this should be inside the range. If we are in
   // the middle of a word, we'll move to its start.
-  nsresult SetPosition(nsINode* aNode, PRInt32 aOffset);
+  nsresult SetPosition(nsINode* aNode, int32_t aOffset);
 
   // Given a point inside or immediately following a word, this returns the
   // DOM range that exactly encloses that word's characters. The current
@@ -67,7 +67,7 @@ public:
   // THIS CHANGES THE CURRENT POSITION AND RANGE. It is designed to be called
   // before you actually generate the range you are interested in and iterate
   // the words in it.
-  nsresult GetRangeForWord(nsIDOMNode* aWordNode, PRInt32 aWordOffset,
+  nsresult GetRangeForWord(nsIDOMNode* aWordNode, int32_t aWordOffset,
                            nsRange** aRange);
 
   // Moves to the the next word in the range, and retrieves it's text and range.
@@ -102,10 +102,10 @@ private:
   // DOM node appears at most once in this list.
   struct DOMTextMapping {
     NodeOffset mNodeOffset;
-    PRInt32    mSoftTextOffset;
-    PRInt32    mLength;
+    int32_t    mSoftTextOffset;
+    int32_t    mLength;
     
-    DOMTextMapping(NodeOffset aNodeOffset, PRInt32 aSoftTextOffset, PRInt32 aLength)
+    DOMTextMapping(NodeOffset aNodeOffset, int32_t aSoftTextOffset, int32_t aLength)
       : mNodeOffset(aNodeOffset), mSoftTextOffset(aSoftTextOffset),
         mLength(aLength) {}
   };
@@ -113,23 +113,23 @@ private:
   
   // A list of the "real words" in mSoftText, ordered by mSoftTextOffset
   struct RealWord {
-    PRInt32      mSoftTextOffset;
-    PRInt32      mLength;
+    int32_t      mSoftTextOffset;
+    int32_t      mLength;
     bool mCheckableWord;
     
-    RealWord(PRInt32 aOffset, PRInt32 aLength, bool aCheckable)
+    RealWord(int32_t aOffset, int32_t aLength, bool aCheckable)
       : mSoftTextOffset(aOffset), mLength(aLength), mCheckableWord(aCheckable) {}
-    PRInt32 EndOffset() const { return mSoftTextOffset + mLength; }
+    int32_t EndOffset() const { return mSoftTextOffset + mLength; }
   };
   nsTArray<RealWord> mRealWords;
-  PRInt32            mNextWordIndex;
+  int32_t            mNextWordIndex;
 
   bool mSoftTextValid;
 
   void InvalidateWords() { mSoftTextValid = false; }
   void EnsureWords();
   
-  PRInt32 MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset);
+  int32_t MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset);
   // Map an offset into mSoftText to a DOM position. Note that two DOM positions
   // can map to the same mSoftText offset, e.g. given nodes A=aaaa and B=bbbb
   // forming aaaabbbb, (A,4) and (B,0) give the same string offset. So,
@@ -137,7 +137,7 @@ private:
   // then the position indicates the END of a range so we return (A,4). Otherwise
   // the position indicates the START of a range so we return (B,0).
   enum DOMMapHint { HINT_BEGIN, HINT_END };
-  NodeOffset MapSoftTextOffsetToDOMPosition(PRInt32 aSoftTextOffset,
+  NodeOffset MapSoftTextOffsetToDOMPosition(int32_t aSoftTextOffset,
                                             DOMMapHint aHint);
   // Finds the index of the real word containing aSoftTextOffset, or -1 if none
   // If it's exactly between two words, then if aHint is HINT_BEGIN, return the
@@ -145,7 +145,7 @@ private:
   // otherwise return the earlier word (assuming it's the END of a word).
   // If aSearchForward is true, then if we don't find a word at the given
   // position, search forward until we do find a word and return that (if found).
-  PRInt32 FindRealWordContaining(PRInt32 aSoftTextOffset, DOMMapHint aHint,
+  int32_t FindRealWordContaining(int32_t aSoftTextOffset, DOMMapHint aHint,
                                  bool aSearchForward);
     
   // build mSoftText and mSoftTextDOMMapping
@@ -153,7 +153,7 @@ private:
   // Build mRealWords array
   void BuildRealWords();
 
-  void SplitDOMWord(PRInt32 aStart, PRInt32 aEnd);
+  void SplitDOMWord(int32_t aStart, int32_t aEnd);
 
   // Convenience functions, object must be initialized
   nsresult MakeRange(NodeOffset aBegin, NodeOffset aEnd, nsRange** aRange);

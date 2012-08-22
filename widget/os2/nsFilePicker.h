@@ -39,18 +39,18 @@ public:
   NS_IMETHOD SetDefaultString(const nsAString& aDefaultString);
   NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension);
   NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
-  NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
-  NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
+  NS_IMETHOD GetFilterIndex(int32_t *aFilterIndex);
+  NS_IMETHOD SetFilterIndex(int32_t aFilterIndex);
   NS_IMETHOD GetFile(nsIFile * *aFile);
   NS_IMETHOD GetFileURL(nsIURI * *aFileURL);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
-  NS_IMETHOD Show(PRInt16 *_retval); 
+  NS_IMETHOD Show(int16_t *_retval); 
   NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
 
 protected:
   /* method from nsBaseFilePicker */
   virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
-                          PRInt16 aMode);
+                          int16_t aMode);
 
 
   void GetFilterListArray(nsString& aFilterList);
@@ -60,7 +60,7 @@ protected:
 
   HWND                   mWnd;
   nsString               mTitle;
-  PRInt16                mMode;
+  int16_t                mMode;
   nsCString              mFile;
   nsString               mDefault;
   nsString               mDefaultExtension;
@@ -68,7 +68,7 @@ protected:
   nsTArray<nsString>     mTitles;
   nsIUnicodeEncoder*     mUnicodeEncoder;
   nsIUnicodeDecoder*     mUnicodeDecoder;
-  PRInt16                mSelectedType;
+  int16_t                mSelectedType;
   nsCOMArray<nsIFile> mFiles;
   static char            mLastUsedDirectory[];
 };

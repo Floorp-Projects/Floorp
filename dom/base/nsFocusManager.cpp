@@ -103,7 +103,7 @@ PRLogModuleInfo* gFocusNavigationLog;
 
 struct nsDelayedBlurOrFocusEvent
 {
-  nsDelayedBlurOrFocusEvent(PRUint32 aType,
+  nsDelayedBlurOrFocusEvent(uint32_t aType,
                             nsIPresShell* aPresShell,
                             nsIDocument* aDocument,
                             nsIDOMEventTarget* aTarget)
@@ -118,7 +118,7 @@ struct nsDelayedBlurOrFocusEvent
      mDocument(aOther.mDocument),
      mTarget(aOther.mTarget) { }
 
-  PRUint32 mType;
+  uint32_t mType;
   nsCOMPtr<nsIPresShell> mPresShell;
   nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<nsIDOMEventTarget> mTarget;
@@ -344,7 +344,7 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
 
 // static
 InputContextAction::Cause
-nsFocusManager::GetFocusMoveActionCause(PRUint32 aFlags)
+nsFocusManager::GetFocusMoveActionCause(uint32_t aFlags)
 {
   if (aFlags & nsIFocusManager::FLAG_BYMOUSE) {
     return InputContextAction::CAUSE_MOUSE;
@@ -432,7 +432,7 @@ nsFocusManager::GetFocusedElement(nsIDOMElement** aFocusedElement)
 }
 
 NS_IMETHODIMP
-nsFocusManager::GetLastFocusMethod(nsIDOMWindow* aWindow, PRUint32* aLastFocusMethod)
+nsFocusManager::GetLastFocusMethod(nsIDOMWindow* aWindow, uint32_t* aLastFocusMethod)
 {
   // the focus method is stored on the inner window
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
@@ -449,7 +449,7 @@ nsFocusManager::GetLastFocusMethod(nsIDOMWindow* aWindow, PRUint32* aLastFocusMe
 }
 
 NS_IMETHODIMP
-nsFocusManager::SetFocus(nsIDOMElement* aElement, PRUint32 aFlags)
+nsFocusManager::SetFocus(nsIDOMElement* aElement, uint32_t aFlags)
 {
   LOGFOCUS(("<<SetFocus begin>>"));
 
@@ -464,7 +464,7 @@ nsFocusManager::SetFocus(nsIDOMElement* aElement, PRUint32 aFlags)
 }
 
 NS_IMETHODIMP
-nsFocusManager::ElementIsFocusable(nsIDOMElement* aElement, PRUint32 aFlags,
+nsFocusManager::ElementIsFocusable(nsIDOMElement* aElement, uint32_t aFlags,
                                    bool* aIsFocusable)
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_INVALID_ARG);
@@ -478,7 +478,7 @@ nsFocusManager::ElementIsFocusable(nsIDOMElement* aElement, PRUint32 aFlags,
 
 NS_IMETHODIMP
 nsFocusManager::MoveFocus(nsIDOMWindow* aWindow, nsIDOMElement* aStartElement,
-                          PRUint32 aType, PRUint32 aFlags, nsIDOMElement** aElement)
+                          uint32_t aType, uint32_t aFlags, nsIDOMElement** aElement)
 {
   *aElement = nullptr;
 
@@ -610,7 +610,7 @@ nsFocusManager::GetFocusedElementForWindow(nsIDOMWindow* aWindow,
 NS_IMETHODIMP
 nsFocusManager::MoveCaretToFocus(nsIDOMWindow* aWindow)
 {
-  PRInt32 itemType = nsIDocShellTreeItem::typeChrome;
+  int32_t itemType = nsIDocShellTreeItem::typeChrome;
 
   nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(aWindow);
   nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
@@ -1018,11 +1018,11 @@ nsFocusManager::FireDelayedEvents(nsIDocument* aDocument)
   NS_ENSURE_ARG(aDocument);
 
   // fire any delayed focus and blur events in the same order that they were added
-  for (PRUint32 i = 0; i < mDelayedBlurFocusEvents.Length(); i++)
+  for (uint32_t i = 0; i < mDelayedBlurFocusEvents.Length(); i++)
   {
     if (mDelayedBlurFocusEvents[i].mDocument == aDocument &&
         !aDocument->EventHandlingSuppressed()) {
-      PRUint32 type = mDelayedBlurFocusEvents[i].mType;
+      uint32_t type = mDelayedBlurFocusEvents[i].mType;
       nsCOMPtr<nsIDOMEventTarget> target = mDelayedBlurFocusEvents[i].mTarget;
       nsCOMPtr<nsIPresShell> presShell = mDelayedBlurFocusEvents[i].mPresShell;
       mDelayedBlurFocusEvents.RemoveElementAt(i);
@@ -1088,7 +1088,7 @@ nsFocusManager::EnsureCurrentWidgetFocused()
 }
 
 void
-nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
+nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
                               bool aFocusChanged, bool aAdjustWidget)
 {
   // if the element is not focusable, just return and leave the focus as is
@@ -1273,7 +1273,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
       AdjustWindowFocus(newWindow, true);
 
     // set the focus node and method as needed
-    PRUint32 focusMethod = aFocusChanged ? aFlags & FOCUSMETHODANDRING_MASK :
+    uint32_t focusMethod = aFocusChanged ? aFlags & FOCUSMETHODANDRING_MASK :
                            newWindow->GetFocusMethod() | (aFlags & FLAG_SHOWRING);
     newWindow->SetFocusedNode(contentToFocus, focusMethod);
     if (aFocusChanged) {
@@ -1341,10 +1341,10 @@ nsFocusManager::GetCommonAncestor(nsPIDOMWindow* aWindow1,
     dsti2.swap(parentDsti2);
   } while (dsti2);
 
-  PRUint32 pos1 = parents1.Length();
-  PRUint32 pos2 = parents2.Length();
+  uint32_t pos1 = parents1.Length();
+  uint32_t pos2 = parents2.Length();
   nsIDocShellTreeItem* parent = nullptr;
-  PRUint32 len;
+  uint32_t len;
   for (len = NS_MIN(pos1, pos2); len > 0; --len) {
     nsIDocShellTreeItem* child1 = parents1.ElementAt(--pos1);
     nsIDocShellTreeItem* child2 = parents2.ElementAt(--pos2);
@@ -1431,7 +1431,7 @@ nsFocusManager::IsNonFocusableRoot(nsIContent* aContent)
 }
 
 nsIContent*
-nsFocusManager::CheckIfFocusable(nsIContent* aContent, PRUint32 aFlags)
+nsFocusManager::CheckIfFocusable(nsIContent* aContent, uint32_t aFlags)
 {
   if (!aContent)
     return nullptr;
@@ -1488,7 +1488,7 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, PRUint32 aFlags)
   nsIDocument* subdoc = doc->GetSubDocumentFor(aContent);
   if (subdoc && IsWindowVisible(subdoc->GetWindow())) {
     const nsStyleUserInterface* ui = frame->GetStyleUserInterface();
-    PRInt32 tabIndex = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE ||
+    int32_t tabIndex = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE ||
                         ui->mUserFocus == NS_STYLE_USER_FOCUS_NONE) ? -1 : 0;
     return aContent->IsFocusable(&tabIndex, aFlags & FLAG_BYMOUSE) ? aContent : nullptr;
   }
@@ -1665,7 +1665,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
 void
 nsFocusManager::Focus(nsPIDOMWindow* aWindow,
                       nsIContent* aContent,
-                      PRUint32 aFlags,
+                      uint32_t aFlags,
                       bool aIsNewDocument,
                       bool aFocusChanged,
                       bool aWindowRaised,
@@ -1693,7 +1693,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   // If the focus actually changed, set the focus method (mouse, keyboard, etc).
   // Otherwise, just get the current focus method and use that. This ensures
   // that the method is set during the document and window focus events.
-  PRUint32 focusMethod = aFocusChanged ? aFlags & FOCUSMETHODANDRING_MASK :
+  uint32_t focusMethod = aFocusChanged ? aFlags & FOCUSMETHODANDRING_MASK :
                          aWindow->GetFocusMethod() | (aFlags & FLAG_SHOWRING);
 
   if (!IsWindowVisible(aWindow)) {
@@ -1876,7 +1876,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
 class FocusBlurEvent : public nsRunnable
 {
 public:
-  FocusBlurEvent(nsISupports* aTarget, PRUint32 aType,
+  FocusBlurEvent(nsISupports* aTarget, uint32_t aType,
                  nsPresContext* aContext, bool aWindowRaised,
                  bool aIsRefocus)
   : mTarget(aTarget), mType(aType), mContext(aContext),
@@ -1892,18 +1892,18 @@ public:
   }
 
   nsCOMPtr<nsISupports>   mTarget;
-  PRUint32                mType;
+  uint32_t                mType;
   nsRefPtr<nsPresContext> mContext;
   bool                    mWindowRaised;
   bool                    mIsRefocus;
 };
 
 void
-nsFocusManager::SendFocusOrBlurEvent(PRUint32 aType,
+nsFocusManager::SendFocusOrBlurEvent(uint32_t aType,
                                      nsIPresShell* aPresShell,
                                      nsIDocument* aDocument,
                                      nsISupports* aTarget,
-                                     PRUint32 aFocusMethod,
+                                     uint32_t aFocusMethod,
                                      bool aWindowRaised,
                                      bool aIsRefocus)
 {
@@ -1920,7 +1920,7 @@ nsFocusManager::SendFocusOrBlurEvent(PRUint32 aType,
     // on a window raise.
     NS_ASSERTION(!aWindowRaised, "aWindowRaised should not be set");
 
-    for (PRUint32 i = mDelayedBlurFocusEvents.Length(); i > 0; --i) {
+    for (uint32_t i = mDelayedBlurFocusEvents.Length(); i > 0; --i) {
       // if this event was already queued, remove it and append it to the end
       if (mDelayedBlurFocusEvents[i - 1].mType == aType &&
           mDelayedBlurFocusEvents[i - 1].mPresShell == aPresShell &&
@@ -1953,7 +1953,7 @@ nsFocusManager::SendFocusOrBlurEvent(PRUint32 aType,
 void
 nsFocusManager::ScrollIntoView(nsIPresShell* aPresShell,
                                nsIContent* aContent,
-                               PRUint32 aFlags)
+                               uint32_t aFlags)
 {
   // if the noscroll flag isn't set, scroll the newly focused element into view
   if (!(aFlags & FLAG_NOSCROLL))
@@ -2041,7 +2041,7 @@ nsFocusManager::UpdateCaret(bool aMoveCaretToFocus,
   if (!dsti)
     return;
 
-  PRInt32 itemType;
+  int32_t itemType;
   dsti->GetItemType(&itemType);
   if (itemType == nsIDocShellTreeItem::typeChrome)
     return;  // Never browse with caret in chrome
@@ -2215,7 +2215,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
   nsCOMPtr<nsIDOMNode> startNode, endNode;
   bool isCollapsed = false;
   nsCOMPtr<nsIContent> startContent, endContent;
-  PRInt32 startOffset = 0;
+  int32_t startOffset = 0;
   if (domSelection) {
     domSelection->GetIsCollapsed(&isCollapsed);
     nsCOMPtr<nsIDOMRange> domRange;
@@ -2238,7 +2238,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
 
       endContent = do_QueryInterface(endNode);
       if (endContent && endContent->IsElement()) {
-        PRInt32 endOffset = 0;
+        int32_t endOffset = 0;
         domRange->GetEndOffset(&endOffset);
         NS_ASSERTION(endOffset >= 0, "End offset cannot be negative");
         childContent = endContent->GetChildAt(endOffset);
@@ -2268,7 +2268,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
         bool isFormControl =
           startContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL);
 
-        if (nodeValue.Length() == (PRUint32)startOffset && !isFormControl &&
+        if (nodeValue.Length() == (uint32_t)startOffset && !isFormControl &&
             startContent != aDocument->GetRootElement()) {
           // Yes, indeed we were at the end of the last node
           nsFrameIterator frameTraversal(presContext, startFrame,
@@ -2326,7 +2326,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
 nsresult
 nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
                                             nsIContent* aStartContent,
-                                            PRInt32 aType, bool aNoParentTraversal,
+                                            int32_t aType, bool aNoParentTraversal,
                                             nsIContent** aNextContent)
 {
   *aNextContent = nullptr;
@@ -2401,7 +2401,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
   // be stored in popupFrame.
   nsIFrame* popupFrame = nullptr;
 
-  PRInt32 tabIndex = forward ? 1 : 0;
+  int32_t tabIndex = forward ? 1 : 0;
   if (startContent) {
     nsIFrame* frame = startContent->GetPrimaryFrame();
     if (startContent->Tag() == nsGkAtoms::area &&
@@ -2467,7 +2467,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
     }
     else {
       // Otherwise, for content shells, start from the location of the caret.
-      PRInt32 itemType;
+      int32_t itemType;
       nsCOMPtr<nsIDocShellTreeItem> shellItem = do_QueryInterface(docShell);
       shellItem->GetItemType(&itemType);
       if (itemType != nsIDocShellTreeItem::typeChrome) {
@@ -2659,7 +2659,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
                                        nsIContent* aOriginalStartContent,
                                        nsIContent* aStartContent,
                                        bool aForward,
-                                       PRInt32 aCurrentTabIndex,
+                                       int32_t aCurrentTabIndex,
                                        bool aIgnoreTabIndex,
                                        nsIContent** aResultContent)
 {
@@ -2729,7 +2729,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
       //          == 0 in normal tab order (last after positive tabindexed items)
       //          > 0 can be tabbed to in the order specified by this value
 
-      PRInt32 tabIndex;
+      int32_t tabIndex;
       frame->IsFocusable(&tabIndex, 0);
 
       LOGCONTENTNAVIGATION("Next Tabbable %s:", frame->GetContent());
@@ -2867,7 +2867,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
 
 nsIContent*
 nsFocusManager::GetNextTabbableMapArea(bool aForward,
-                                       PRInt32 aCurrentTabIndex,
+                                       int32_t aCurrentTabIndex,
                                        nsIContent* aImageContent,
                                        nsIContent* aStartContent)
 {
@@ -2879,18 +2879,18 @@ nsFocusManager::GetNextTabbableMapArea(bool aForward,
     nsCOMPtr<nsIContent> mapContent = doc->FindImageMap(useMap);
     if (!mapContent)
       return nullptr;
-    PRUint32 count = mapContent->GetChildCount();
+    uint32_t count = mapContent->GetChildCount();
     // First see if the the start content is in this map
 
-    PRInt32 index = mapContent->IndexOf(aStartContent);
-    PRInt32 tabIndex;
+    int32_t index = mapContent->IndexOf(aStartContent);
+    int32_t tabIndex;
     if (index < 0 || (aStartContent->IsFocusable(&tabIndex) &&
                       tabIndex != aCurrentTabIndex)) {
       // If aStartContent is in this map we must start iterating past it.
       // We skip the case where aStartContent has tabindex == aStartContent
       // since the next tab ordered element might be before it
       // (or after for backwards) in the child list.
-      index = aForward ? -1 : (PRInt32)count;
+      index = aForward ? -1 : (int32_t)count;
     }
 
     // GetChildAt will return nullptr if our index < 0 or index >= count
@@ -2905,12 +2905,12 @@ nsFocusManager::GetNextTabbableMapArea(bool aForward,
   return nullptr;
 }
 
-PRInt32
+int32_t
 nsFocusManager::GetNextTabIndex(nsIContent* aParent,
-                                PRInt32 aCurrentTabIndex,
+                                int32_t aCurrentTabIndex,
                                 bool aForward)
 {
-  PRInt32 tabIndex, childTabIndex;
+  int32_t tabIndex, childTabIndex;
 
   if (aForward) {
     tabIndex = 0;
@@ -2925,7 +2925,7 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
       nsAutoString tabIndexStr;
       child->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
       nsresult ec;
-      PRInt32 val = tabIndexStr.ToInteger(&ec);
+      int32_t val = tabIndexStr.ToInteger(&ec);
       if (NS_SUCCEEDED (ec) && val > aCurrentTabIndex && val != tabIndex) {
         tabIndex = (tabIndex == 0 || val < tabIndex) ? val : tabIndex;
       }
@@ -2945,7 +2945,7 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
       nsAutoString tabIndexStr;
       child->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
       nsresult ec;
-      PRInt32 val = tabIndexStr.ToInteger(&ec);
+      int32_t val = tabIndexStr.ToInteger(&ec);
       if (NS_SUCCEEDED (ec)) {
         if ((aCurrentTabIndex == 0 && val > tabIndex) ||
             (val < aCurrentTabIndex && val > tabIndex) ) {
@@ -2980,7 +2980,7 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
     }
   }
   else  {
-    PRInt32 itemType;
+    int32_t itemType;
     nsCOMPtr<nsIDocShellTreeItem> shellItem = do_QueryInterface(aWindow->GetDocShell());
     shellItem->GetItemType(&itemType);
 
@@ -3017,7 +3017,7 @@ nsFocusManager::GetLastDocShell(nsIDocShellTreeItem* aItem,
 
   nsCOMPtr<nsIDocShellTreeItem> curItem = aItem;
   while (curItem) {
-    PRInt32 childCount = 0;
+    int32_t childCount = 0;
     curItem->GetChildCount(&childCount);
     if (!childCount) {
       *aResult = curItem;
@@ -3036,7 +3036,7 @@ nsFocusManager::GetNextDocShell(nsIDocShellTreeItem* aItem,
 {
   *aResult = nullptr;
 
-  PRInt32 childCount = 0;
+  int32_t childCount = 0;
   aItem->GetChildCount(&childCount);
   if (childCount) {
     aItem->GetChildAt(0, aResult);
@@ -3056,7 +3056,7 @@ nsFocusManager::GetNextDocShell(nsIDocShellTreeItem* aItem,
     nsCOMPtr<nsIDocShellTreeItem> iterItem;
     childCount = 0;
     parentItem->GetChildCount(&childCount);
-    for (PRInt32 index = 0; index < childCount; ++index) {
+    for (int32_t index = 0; index < childCount; ++index) {
       parentItem->GetChildAt(index, getter_AddRefs(iterItem));
       if (iterItem == curItem) {
         ++index;
@@ -3086,10 +3086,10 @@ nsFocusManager::GetPreviousDocShell(nsIDocShellTreeItem* aItem,
 
   // Note that we avoid using GetChildOffset() here because docshell
   // child offsets can't be trusted to be correct. bug 162283.
-  PRInt32 childCount = 0;
+  int32_t childCount = 0;
   parentItem->GetChildCount(&childCount);
   nsCOMPtr<nsIDocShellTreeItem> prevItem, iterItem;
-  for (PRInt32 index = 0; index < childCount; ++index) {
+  for (int32_t index = 0; index < childCount; ++index) {
     parentItem->GetChildAt(index, getter_AddRefs(iterItem));
     if (iterItem == aItem)
       break;
@@ -3111,8 +3111,8 @@ nsFocusManager::GetNextTabbablePanel(nsIDocument* aDocument, nsIFrame* aCurrentP
 
   // Iterate through the array backwards if aForward is false.
   nsTArray<nsIFrame *> popups = pm->GetVisiblePopups();
-  PRInt32 i = aForward ? 0 : popups.Length() - 1;
-  PRInt32 end = aForward ? popups.Length() : -1;
+  int32_t i = aForward ? 0 : popups.Length() - 1;
+  int32_t end = aForward ? popups.Length() : -1;
 
   for (; i != end; aForward ? i++ : i--) {
     nsIFrame* popupFrame = popups[i];

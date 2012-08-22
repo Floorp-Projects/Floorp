@@ -59,8 +59,8 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
 }
 
 
-nsresult nsCollationOS2::CompareString(PRInt32 strength, 
-                                       const nsAString& string1, const nsAString& string2, PRInt32* result)
+nsresult nsCollationOS2::CompareString(int32_t strength, 
+                                       const nsAString& string1, const nsAString& string2, int32_t* result)
 {
   nsAutoString stringNormalized1, stringNormalized2;
   if (strength != kCollationCaseSensitive) {
@@ -91,8 +91,8 @@ nsresult nsCollationOS2::CompareString(PRInt32 strength,
 }
  
 
-nsresult nsCollationOS2::AllocateRawSortKey(PRInt32 strength, 
-                                            const nsAString& stringIn, PRUint8** key, PRUint32* outLen)
+nsresult nsCollationOS2::AllocateRawSortKey(int32_t strength, 
+                                            const nsAString& stringIn, uint8_t** key, uint32_t* outLen)
 {
   nsresult res = NS_OK;
 
@@ -138,7 +138,7 @@ nsresult nsCollationOS2::AllocateRawSortKey(PRInt32 strength,
       if (uLen < iBufferLength) {
           // Success!
           // Give 'em the real size in bytes...
-          *key = (PRUint8 *)nsCRT::strdup((PRUnichar*) pLocalBuffer);
+          *key = (uint8_t *)nsCRT::strdup((PRUnichar*) pLocalBuffer);
           *outLen = uLen * 2 + 2;
           res = NS_OK;
       }
@@ -149,9 +149,9 @@ nsresult nsCollationOS2::AllocateRawSortKey(PRInt32 strength,
   return res;
 }
 
-nsresult nsCollationOS2::CompareRawSortKey(const PRUint8* key1, PRUint32 len1, 
-                                           const PRUint8* key2, PRUint32 len2, 
-                                           PRInt32* result)
+nsresult nsCollationOS2::CompareRawSortKey(const uint8_t* key1, uint32_t len1, 
+                                           const uint8_t* key2, uint32_t len2, 
+                                           int32_t* result)
 {
   *result = PL_strcmp((const char *)key1, (const char *)key2);
   return NS_OK;

@@ -8,8 +8,8 @@
 #import "CoreFoundation/CoreFoundation.h"
 #import "CoreServices/CoreServices.h"
 #import "Carbon/Carbon.h"
-#define PRInt32 int32_t
-#define PRUint32 uint32_t
+#define int32_t int32_t
+#define uint32_t uint32_t
 
 #include "MacQuirks.h"
 

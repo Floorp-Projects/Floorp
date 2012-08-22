@@ -131,7 +131,7 @@ pluginInstanceShutdown(InstanceData* instanceData)
 }
 
 static void 
-SetCairoRGBA(cairo_t* cairoWindow, PRUint32 rgba)
+SetCairoRGBA(cairo_t* cairoWindow, uint32_t rgba)
 {
   float b = (rgba & 0xFF) / 255.0;
   float g = ((rgba & 0xFF00) >> 8) / 255.0;

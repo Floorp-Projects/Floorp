@@ -37,7 +37,7 @@ static already_AddRefed<nsIFile> NewFile(nsIFile* aBase)
 static nsCString FixName(const char* aName)
 {
     nsCString name;
-    for (PRUint32 i = 0; aName[i]; ++i) {
+    for (uint32_t i = 0; aName[i]; ++i) {
         char ch = aName[i];
        // PR_GetPathSeparator returns the wrong value on Mac so don't use it
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -70,7 +70,7 @@ static bool TestInvalidFileName(nsIFile* aBase, const char* aName)
 
 // Test nsIFile::Create, verifying that the file exists and did not exist before,
 // and leaving it there for future tests
-static bool TestCreate(nsIFile* aBase, const char* aName, PRInt32 aType, PRInt32 aPerm)
+static bool TestCreate(nsIFile* aBase, const char* aName, int32_t aType, int32_t aPerm)
 {
     gFunction = "TestCreate";
     nsCOMPtr<nsIFile> file = NewFile(aBase);
@@ -109,7 +109,7 @@ static bool TestCreate(nsIFile* aBase, const char* aName, PRInt32 aType, PRInt32
 // Test nsIFile::CreateUnique, verifying that the new file exists and if it existed before,
 // the new file has a different name.
 // The new file is left in place.
-static bool TestCreateUnique(nsIFile* aBase, const char* aName, PRInt32 aType, PRInt32 aPerm)
+static bool TestCreateUnique(nsIFile* aBase, const char* aName, int32_t aType, int32_t aPerm)
 {
     gFunction = "TestCreateUnique";
     nsCOMPtr<nsIFile> file = NewFile(aBase);
@@ -155,7 +155,7 @@ static bool TestCreateUnique(nsIFile* aBase, const char* aName, PRInt32 aType, P
 
 // Test nsIFile::OpenNSPRFileDesc with DELETE_ON_CLOSE, verifying that the file exists
 // and did not exist before, and leaving it there for future tests
-static bool TestDeleteOnClose(nsIFile* aBase, const char* aName, PRInt32 aFlags, PRInt32 aPerm)
+static bool TestDeleteOnClose(nsIFile* aBase, const char* aName, int32_t aFlags, int32_t aPerm)
 {
     gFunction = "TestDeleteOnClose";
     nsCOMPtr<nsIFile> file = NewFile(aBase);

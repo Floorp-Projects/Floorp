@@ -20,10 +20,10 @@ public:
   friend nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual void
-  SetAdditionalStyleContext(PRInt32          aIndex, 
+  SetAdditionalStyleContext(int32_t          aIndex, 
                             nsStyleContext*  aStyleContext);
   virtual nsStyleContext*
-  GetAdditionalStyleContext(PRInt32 aIndex) const;
+  GetAdditionalStyleContext(int32_t aIndex) const;
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent);
@@ -46,13 +46,13 @@ public:
   GetIntrinsicWidth(nsRenderingContext* aRenderingContext);
 
   NS_IMETHOD
-  AttributeChanged(PRInt32         aNameSpaceID,
+  AttributeChanged(int32_t         aNameSpaceID,
                    nsIAtom*        aAttribute,
-                   PRInt32         aModType);
+                   int32_t         aModType);
 
   // override the base method because we must keep separators in sync
   virtual nsresult
-  ChildListChanged(PRInt32 aModType);
+  ChildListChanged(int32_t aModType);
 
   // override the base method so that we can deal with fences and separators
   virtual nscoord
@@ -64,7 +64,7 @@ public:
              nsRenderingContext& aRenderingContext,
              nsMathMLChar*        aMathMLChar,
              nsOperatorFlags      aForm,
-             PRInt32              aScriptLevel,
+             int32_t              aScriptLevel,
              nscoord              axisHeight,
              nscoord              leading,
              nscoord              em,
@@ -88,7 +88,7 @@ protected:
   nsMathMLChar* mOpenChar;
   nsMathMLChar* mCloseChar;
   nsMathMLChar* mSeparatorsChar;
-  PRInt32       mSeparatorsCount;
+  int32_t       mSeparatorsCount;
 
   // clean up
   void

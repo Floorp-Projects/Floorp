@@ -21,9 +21,9 @@ const char *ProberName[] =
 
 #endif
 
-nsMBCSGroupProber::nsMBCSGroupProber(PRUint32 aLanguageFilter)
+nsMBCSGroupProber::nsMBCSGroupProber(uint32_t aLanguageFilter)
 {
-  for (PRUint32 i = 0; i < NUM_OF_PROBERS; i++)
+  for (uint32_t i = 0; i < NUM_OF_PROBERS; i++)
     mProbers[i] = nullptr;
 
   mProbers[0] = new nsUTF8Prober();
@@ -46,7 +46,7 @@ nsMBCSGroupProber::nsMBCSGroupProber(PRUint32 aLanguageFilter)
 
 nsMBCSGroupProber::~nsMBCSGroupProber()
 {
-  for (PRUint32 i = 0; i < NUM_OF_PROBERS; i++)
+  for (uint32_t i = 0; i < NUM_OF_PROBERS; i++)
   {
     delete mProbers[i];
   }
@@ -66,7 +66,7 @@ const char* nsMBCSGroupProber::GetCharSetName()
 void  nsMBCSGroupProber::Reset(void)
 {
   mActiveNum = 0;
-  for (PRUint32 i = 0; i < NUM_OF_PROBERS; i++)
+  for (uint32_t i = 0; i < NUM_OF_PROBERS; i++)
   {
     if (mProbers[i])
     {
@@ -82,14 +82,14 @@ void  nsMBCSGroupProber::Reset(void)
   mKeepNext = 0;
 }
 
-nsProbingState nsMBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
+nsProbingState nsMBCSGroupProber::HandleData(const char* aBuf, uint32_t aLen)
 {
   nsProbingState st;
-  PRUint32 start = 0;
-  PRUint32 keepNext = mKeepNext;
+  uint32_t start = 0;
+  uint32_t keepNext = mKeepNext;
 
   //do filtering to reduce load to probers
-  for (PRUint32 pos = 0; pos < aLen; ++pos)
+  for (uint32_t pos = 0; pos < aLen; ++pos)
   {
     if (aBuf[pos] & 0x80)
     {
@@ -101,7 +101,7 @@ nsProbingState nsMBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
     {
       if (--keepNext == 0)
       {
-        for (PRUint32 i = 0; i < NUM_OF_PROBERS; i++)
+        for (uint32_t i = 0; i < NUM_OF_PROBERS; i++)
         {
           if (!mIsActive[i])
             continue;
@@ -118,7 +118,7 @@ nsProbingState nsMBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
   }
 
   if (keepNext) {
-    for (PRUint32 i = 0; i < NUM_OF_PROBERS; i++)
+    for (uint32_t i = 0; i < NUM_OF_PROBERS; i++)
     {
       if (!mIsActive[i])
         continue;
@@ -138,7 +138,7 @@ nsProbingState nsMBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
 
 float nsMBCSGroupProber::GetConfidence(void)
 {
-  PRUint32 i;
+  uint32_t i;
   float bestConf = 0.0, cf;
 
   switch (mState)
@@ -166,7 +166,7 @@ float nsMBCSGroupProber::GetConfidence(void)
 #ifdef DEBUG_chardet
 void nsMBCSGroupProber::DumpStatus()
 {
-  PRUint32 i;
+  uint32_t i;
   float cf;
   
   GetConfidence();
@@ -184,9 +184,9 @@ void nsMBCSGroupProber::DumpStatus()
 #endif
 
 #ifdef DEBUG_jgmyers
-void nsMBCSGroupProber::GetDetectorState(nsUniversalDetector::DetectorState (&states)[nsUniversalDetector::NumDetectors], PRUint32 &offset)
+void nsMBCSGroupProber::GetDetectorState(nsUniversalDetector::DetectorState (&states)[nsUniversalDetector::NumDetectors], uint32_t &offset)
 {
-  for (PRUint32 i = 0; i < NUM_OF_PROBERS; ++i) {
+  for (uint32_t i = 0; i < NUM_OF_PROBERS; ++i) {
     states[offset].name = ProberName[i];
     states[offset].isActive = mIsActive[i];
     states[offset].confidence = mIsActive[i] ? mProbers[i]->GetConfidence() : 0.0;

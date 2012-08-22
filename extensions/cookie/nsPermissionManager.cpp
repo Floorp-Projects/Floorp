@@ -85,7 +85,7 @@ static char *
 ArenaStrDup(const char* str, PLArenaPool* aArena)
 {
   void* mem;
-  const PRUint32 size = strlen(str) + 1;
+  const uint32_t size = strlen(str) + 1;
   PL_ARENA_ALLOCATE(mem, aArena, size);
   if (mem)
     memcpy(mem, str, size);
@@ -201,7 +201,7 @@ NS_IMETHODIMP DeleteFromMozHostListener::HandleError(mozIStorageError *)
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(PRUint16 aReason)
+NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(uint16_t aReason)
 {
   // Help breaking cycles
   nsRefPtr<nsPermissionManager> manager = mManager.forget();
@@ -281,7 +281,7 @@ nsPermissionManager::Init()
     InfallibleTArray<IPC::Permission> perms;
     ChildProcess()->SendReadPermissions(&perms);
 
-    for (PRUint32 i = 0; i < perms.Length(); i++) {
+    for (uint32_t i = 0; i < perms.Length(); i++) {
       const IPC::Permission &perm = perms[i];
       AddInternal(perm.host, perm.type, perm.capability, 0, perm.expireType,
                   perm.expireTime, eNotify, eNoDBOperation);
@@ -353,7 +353,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
 
   } else {
     // table already exists; check the schema version before reading
-    PRInt32 dbSchemaVersion;
+    int32_t dbSchemaVersion;
     rv = mDBConn->GetSchemaVersion(&dbSchemaVersion);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -479,9 +479,9 @@ nsPermissionManager::CreateTable()
 NS_IMETHODIMP
 nsPermissionManager::Add(nsIURI     *aURI,
                          const char *aType,
-                         PRUint32    aPermission,
-                         PRUint32    aExpireType,
-                         PRInt64     aExpireTime)
+                         uint32_t    aPermission,
+                         uint32_t    aExpireType,
+                         int64_t     aExpireTime)
 {
   ENSURE_NOT_CHILD_PROCESS;
 
@@ -509,8 +509,8 @@ nsPermissionManager::Add(nsIURI     *aURI,
 
 NS_IMETHODIMP
 nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
-                                      const char* aType, PRUint32 aPermission,
-                                      PRUint32 aExpireType, PRInt64 aExpireTime)
+                                      const char* aType, uint32_t aPermission,
+                                      uint32_t aExpireType, int64_t aExpireTime)
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
@@ -529,10 +529,10 @@ nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
 nsresult
 nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
                                  const nsAFlatCString &aType,
-                                 PRUint32              aPermission,
-                                 PRInt64               aID,
-                                 PRUint32              aExpireType,
-                                 PRInt64               aExpireTime,
+                                 uint32_t              aPermission,
+                                 int64_t               aID,
+                                 uint32_t              aExpireType,
+                                 int64_t               aExpireTime,
                                  NotifyOperationType   aNotifyOperation,
                                  DBOperationType       aDBOperation)
 {
@@ -543,7 +543,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
 
     nsTArray<ContentParent*> cplist;
     ContentParent::GetAll(cplist);
-    for (PRUint32 i = 0; i < cplist.Length(); ++i) {
+    for (uint32_t i = 0; i < cplist.Length(); ++i) {
       ContentParent* cp = cplist[i];
       if (cp->NeedsPermissionsUpdate())
         unused << cp->SendAddPermission(permission);
@@ -558,7 +558,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
   }
 
   // look up the type index
-  PRInt32 typeIndex = GetTypeIndex(aType.get(), true);
+  int32_t typeIndex = GetTypeIndex(aType.get(), true);
   NS_ENSURE_TRUE(typeIndex != -1, NS_ERROR_OUT_OF_MEMORY);
 
   // When an entry already exists, PutEntry will return that, instead
@@ -572,7 +572,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
 
   // figure out the transaction type, and get any existing permission value
   OperationType op;
-  PRInt32 index = entry->GetPermissionIndex(typeIndex);
+  int32_t index = entry->GetPermissionIndex(typeIndex);
   if (index == -1) {
     if (aPermission == nsIPermissionManager::UNKNOWN_ACTION)
       op = eOperationNone;
@@ -600,7 +600,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
 
   // do the work for adding, deleting, or changing a permission:
   // update the in-memory list, write to the db, and notify consumers.
-  PRInt64 id;
+  int64_t id;
   switch (op) {
   case eOperationNone:
     {
@@ -784,7 +784,7 @@ nsPermissionManager::RemoveAllInternal(bool aNotifyObservers)
 NS_IMETHODIMP
 nsPermissionManager::TestExactPermission(nsIURI     *aURI,
                                          const char *aType,
-                                         PRUint32   *aPermission)
+                                         uint32_t   *aPermission)
 {
   return CommonTestPermission(aURI, aType, aPermission, true);
 }
@@ -792,7 +792,7 @@ nsPermissionManager::TestExactPermission(nsIURI     *aURI,
 NS_IMETHODIMP
 nsPermissionManager::TestPermission(nsIURI     *aURI,
                                     const char *aType,
-                                    PRUint32   *aPermission)
+                                    uint32_t   *aPermission)
 {
   return CommonTestPermission(aURI, aType, aPermission, false);
 }
@@ -800,7 +800,7 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
 NS_IMETHODIMP
 nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                  const char* aType,
-                                                 PRUint32* aPermission)
+                                                 uint32_t* aPermission)
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
@@ -820,7 +820,7 @@ nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
 NS_IMETHODIMP
 nsPermissionManager::TestExactPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                       const char* aType,
-                                                      PRUint32* aPermission)
+                                                      uint32_t* aPermission)
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
@@ -840,7 +840,7 @@ nsPermissionManager::TestExactPermissionFromPrincipal(nsIPrincipal* aPrincipal,
 nsresult
 nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
                                           const char *aType,
-                                          PRUint32   *aPermission,
+                                          uint32_t   *aPermission,
                                           bool        aExactHostMatch)
 {
   NS_ENSURE_ARG_POINTER(aURI);
@@ -865,7 +865,7 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
     }
   }
   
-  PRInt32 typeIndex = GetTypeIndex(aType, false);
+  int32_t typeIndex = GetTypeIndex(aType, false);
   // If type == -1, the type isn't known,
   // so just return NS_OK
   if (typeIndex == -1) return NS_OK;
@@ -884,12 +884,12 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
 // lookup as the string doesn't contain any dots.
 nsHostEntry *
 nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
-                                  PRUint32              aType,
+                                  uint32_t              aType,
                                   bool                  aExactHostMatch)
 {
-  PRUint32 offset = 0;
+  uint32_t offset = 0;
   nsHostEntry *entry;
-  PRInt64 now = PR_Now() / 1000;
+  int64_t now = PR_Now() / 1000;
 
   do {
     entry = mHostTable.GetEntry(aHost.get() + offset);
@@ -933,7 +933,7 @@ AddPermissionsToList(nsHostEntry *entry, void *arg)
 {
   nsGetEnumeratorData *data = static_cast<nsGetEnumeratorData *>(arg);
 
-  for (PRUint32 i = 0; i < entry->GetPermissions().Length(); ++i) {
+  for (uint32_t i = 0; i < entry->GetPermissions().Length(); ++i) {
     nsPermissionEntry &permEntry = entry->GetPermissions()[i];
 
     nsPermission *perm = new nsPermission(entry->GetHost(), 
@@ -1002,11 +1002,11 @@ nsPermissionManager::RemoveAllFromMemory()
 }
 
 // Returns -1 on failure
-PRInt32
+int32_t
 nsPermissionManager::GetTypeIndex(const char *aType,
                                   bool        aAdd)
 {
-  for (PRUint32 i = 0; i < mTypeArray.Length(); ++i)
+  for (uint32_t i = 0; i < mTypeArray.Length(); ++i)
     if (mTypeArray[i].Equals(aType))
       return i;
 
@@ -1030,9 +1030,9 @@ nsPermissionManager::GetTypeIndex(const char *aType,
 void
 nsPermissionManager::NotifyObserversWithPermission(const nsACString &aHost,
                                                    const nsCString  &aType,
-                                                   PRUint32          aPermission,
-                                                   PRUint32          aExpireType,
-                                                   PRInt64           aExpireTime,
+                                                   uint32_t          aPermission,
+                                                   uint32_t          aExpireType,
+                                                   int64_t           aExpireTime,
                                                    const PRUnichar  *aData)
 {
   nsCOMPtr<nsIPermission> permission =
@@ -1090,11 +1090,11 @@ nsPermissionManager::Read()
     "FROM moz_hosts"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt64 id;
+  int64_t id;
   nsCAutoString host, type;
-  PRUint32 permission;
-  PRUint32 expireType;
-  PRInt64 expireTime;
+  uint32_t permission;
+  uint32_t expireType;
+  int64_t expireTime;
   bool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     // explicitly set our entry id counter for use in AddInternal(),
@@ -1112,7 +1112,7 @@ nsPermissionManager::Read()
     permission = stmt->AsInt32(3);
     expireType = stmt->AsInt32(4);
 
-    // convert into PRInt64 value (milliseconds)
+    // convert into int64_t value (milliseconds)
     expireTime = stmt->AsInt64(5);
 
     rv = AddInternal(host, type, permission, id, expireType, expireTime,
@@ -1174,7 +1174,7 @@ nsPermissionManager::Import()
         lineArray.Length() == 4) {
       
       nsresult error;
-      PRUint32 permission = lineArray[2].ToInteger(&error);
+      uint32_t permission = lineArray[2].ToInteger(&error);
       if (NS_FAILED(error))
         continue;
 
@@ -1227,12 +1227,12 @@ nsPermissionManager::GetHost(nsIURI *aURI, nsACString &aResult)
 void
 nsPermissionManager::UpdateDB(OperationType         aOp,
                               mozIStorageStatement* aStmt,
-                              PRInt64               aID,
+                              int64_t               aID,
                               const nsACString     &aHost,
                               const nsACString     &aType,
-                              PRUint32              aPermission,
-                              PRUint32              aExpireType,
-                              PRInt64               aExpireTime)
+                              uint32_t              aPermission,
+                              uint32_t              aExpireType,
+                              int64_t               aExpireTime)
 {
   ENSURE_NOT_CHILD_PROCESS_NORET;
 

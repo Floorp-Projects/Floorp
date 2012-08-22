@@ -36,7 +36,7 @@ public:
 
 private:
     // Utility methods
-    static GdkAtom               GetSelectionAtom (PRInt32 aWhichClipboard);
+    static GdkAtom               GetSelectionAtom (int32_t aWhichClipboard);
     static GtkSelectionData     *GetTargets       (GdkAtom aWhichClipboard);
 
     // Save global clipboard content to gtk
@@ -44,7 +44,7 @@ private:
 
     // Get our hands on the correct transferable, given a specific
     // clipboard
-    nsITransferable             *GetTransferable  (PRInt32 aWhichClipboard);
+    nsITransferable             *GetTransferable  (int32_t aWhichClipboard);
 
     // Hang on to our owners and transferables so we can transfer data
     // when asked.

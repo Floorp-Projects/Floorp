@@ -27,7 +27,7 @@ NS_IMETHODIMP nsScriptableRegion::SetToRegion(nsIScriptableRegion *aRegion)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptableRegion::SetToRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsScriptableRegion::SetToRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
 {
   mRegion = nsIntRect(aX, aY, aWidth, aHeight);
   return NS_OK;
@@ -41,7 +41,7 @@ NS_IMETHODIMP nsScriptableRegion::IntersectRegion(nsIScriptableRegion *aRegion)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptableRegion::IntersectRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsScriptableRegion::IntersectRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
 {
   mRegion.And(mRegion, nsIntRect(aX, aY, aWidth, aHeight));
   return NS_OK;
@@ -55,7 +55,7 @@ NS_IMETHODIMP nsScriptableRegion::UnionRegion(nsIScriptableRegion *aRegion)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptableRegion::UnionRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsScriptableRegion::UnionRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
 {
   mRegion.Or(mRegion, nsIntRect(aX, aY, aWidth, aHeight));
   return NS_OK;
@@ -69,7 +69,7 @@ NS_IMETHODIMP nsScriptableRegion::SubtractRegion(nsIScriptableRegion *aRegion)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptableRegion::SubtractRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsScriptableRegion::SubtractRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
 {
   mRegion.Sub(mRegion, nsIntRect(aX, aY, aWidth, aHeight));
   return NS_OK;
@@ -89,7 +89,7 @@ NS_IMETHODIMP nsScriptableRegion::IsEqualRegion(nsIScriptableRegion *aRegion, bo
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptableRegion::GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
+NS_IMETHODIMP nsScriptableRegion::GetBoundingBox(int32_t *aX, int32_t *aY, int32_t *aWidth, int32_t *aHeight)
 {
   nsIntRect boundRect = mRegion.GetBounds();
   *aX = boundRect.x;
@@ -99,13 +99,13 @@ NS_IMETHODIMP nsScriptableRegion::GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptableRegion::Offset(PRInt32 aXOffset, PRInt32 aYOffset)
+NS_IMETHODIMP nsScriptableRegion::Offset(int32_t aXOffset, int32_t aYOffset)
 {
   mRegion.MoveBy(aXOffset, aYOffset);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptableRegion::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool *containsRect)
+NS_IMETHODIMP nsScriptableRegion::ContainsRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, bool *containsRect)
 {
   *containsRect = mRegion.Contains(nsIntRect(aX, aY, aWidth, aHeight));
   return NS_OK;
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsScriptableRegion::GetRegion(nsIntRegion* outRgn)
 
 NS_IMETHODIMP nsScriptableRegion::GetRects(JSContext* aCx, JS::Value* aRects)
 {
-  PRUint32 numRects = mRegion.GetNumRects();
+  uint32_t numRects = mRegion.GetNumRects();
 
   if (!numRects) {
     *aRects = JSVAL_NULL;

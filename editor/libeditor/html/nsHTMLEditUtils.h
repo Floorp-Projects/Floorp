@@ -6,7 +6,7 @@
 #ifndef nsHTMLEditUtils_h__
 #define nsHTMLEditUtils_h__
 
-#include "prtypes.h"  // for PRInt32
+#include "prtypes.h"  // for int32_t
 
 class nsIDOMNode;
 class nsINode;
@@ -56,8 +56,8 @@ public:
   static bool IsFormWidget(nsINode* aNode);
   static bool IsFormWidget(nsIDOMNode *aNode);
   static bool SupportsAlignAttr(nsIDOMNode *aNode);
-  static bool CanContain(PRInt32 aParent, PRInt32 aChild);
-  static bool IsContainer(PRInt32 aTag);
+  static bool CanContain(int32_t aParent, int32_t aChild);
+  static bool IsContainer(int32_t aTag);
 };
 
 #endif /* nsHTMLEditUtils_h__ */

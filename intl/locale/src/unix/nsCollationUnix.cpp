@@ -105,10 +105,10 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 }
 
 
-nsresult nsCollationUnix::CompareString(PRInt32 strength,
+nsresult nsCollationUnix::CompareString(int32_t strength,
                                         const nsAString& string1,
                                         const nsAString& string2,
-                                        PRInt32* result) 
+                                        int32_t* result) 
 {
   nsresult res = NS_OK;
 
@@ -146,9 +146,9 @@ nsresult nsCollationUnix::CompareString(PRInt32 strength,
 }
 
 
-nsresult nsCollationUnix::AllocateRawSortKey(PRInt32 strength, 
+nsresult nsCollationUnix::AllocateRawSortKey(int32_t strength, 
                                              const nsAString& stringIn,
-                                             PRUint8** key, PRUint32* outLen)
+                                             uint8_t** key, uint32_t* outLen)
 {
   nsresult res = NS_OK;
 
@@ -175,7 +175,7 @@ nsresult nsCollationUnix::AllocateRawSortKey(PRInt32 strength,
       PR_Free(buffer);
       res = NS_ERROR_FAILURE;
     } else {
-      *key = (PRUint8 *)buffer;
+      *key = (uint8_t *)buffer;
       *outLen = len;
     }
     DoRestoreLocale();
@@ -185,9 +185,9 @@ nsresult nsCollationUnix::AllocateRawSortKey(PRInt32 strength,
   return res;
 }
 
-nsresult nsCollationUnix::CompareRawSortKey(const PRUint8* key1, PRUint32 len1, 
-                                            const PRUint8* key2, PRUint32 len2, 
-                                            PRInt32* result)
+nsresult nsCollationUnix::CompareRawSortKey(const uint8_t* key1, uint32_t len1, 
+                                            const uint8_t* key2, uint32_t len2, 
+                                            int32_t* result)
 {
   *result = PL_strcmp((const char *)key1, (const char *)key2);
   return NS_OK;

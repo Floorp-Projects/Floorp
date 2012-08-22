@@ -53,7 +53,7 @@ static qcms_profile*
 GetICCProfile(struct jpeg_decompress_struct &info)
 {
   JOCTET* profilebuf;
-  PRUint32 profileLength;
+  uint32_t profileLength;
   qcms_profile* profile = nullptr;
 
   if (read_icc_profile(&info, &profilebuf, &profileLength)) {
@@ -71,7 +71,7 @@ METHODDEF(void) term_source (j_decompress_ptr jd);
 METHODDEF(void) my_error_exit (j_common_ptr cinfo);
 
 /* Normal JFIF markers can't have more bytes than this. */
-#define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
+#define MAX_JPEG_MARKER_LENGTH  (((uint32_t)1 << 16) - 1)
 
 
 nsJPEGDecoder::nsJPEGDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
@@ -160,7 +160,7 @@ nsJPEGDecoder::InitInternal()
   mSourceMgr.term_source = term_source;
 
   /* Record app markers for ICC data */
-  for (PRUint32 m = 0; m < 16; m++)
+  for (uint32_t m = 0; m < 16; m++)
     jpeg_save_markers(&mInfo, JPEG_APP0 + m, 0xFFFF);
 }
 
@@ -180,7 +180,7 @@ nsJPEGDecoder::FinishInternal()
 }
 
 void
-nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
+nsJPEGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
 {
   mSegment = (const JOCTET *)aBuffer;
   mSegmentLen = aCount;
@@ -242,7 +242,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     /* We're doing a full decode. */
     if (mCMSMode != eCMSMode_Off &&
         (mInProfile = GetICCProfile(mInfo)) != nullptr) {
-      PRUint32 profileSpace = qcms_profile_get_color_space(mInProfile);
+      uint32_t profileSpace = qcms_profile_get_color_space(mInProfile);
       bool mismatch = false;
 
 #ifdef DEBUG_tor
@@ -357,7 +357,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     /* Used to set up image size so arrays can be allocated */
     jpeg_calc_output_dimensions(&mInfo);
 
-    PRUint32 imagelength;
+    uint32_t imagelength;
     if (NS_FAILED(mImage.EnsureFrame(0, 0, 0, mInfo.image_width, mInfo.image_height,
                                      gfxASurface::ImageFormatRGB24,
                                      &mImageData, &imagelength))) {
@@ -544,11 +544,11 @@ nsJPEGDecoder::OutputScanlines(bool* suspend)
 {
   *suspend = false;
 
-  const PRUint32 top = mInfo.output_scanline;
+  const uint32_t top = mInfo.output_scanline;
 
   while ((mInfo.output_scanline < mInfo.output_height)) {
       /* Use the Cairo image buffer as scanline buffer */
-      PRUint32 *imageRow = ((PRUint32*)mImageData) +
+      uint32_t *imageRow = ((uint32_t*)mImageData) +
                            (mInfo.output_scanline * mInfo.output_width);
 
       if (mInfo.cconvert->color_convert == ycc_rgb_convert_argb) {
@@ -605,7 +605,7 @@ nsJPEGDecoder::OutputScanlines(bool* suspend)
       }
 
       // counter for while() loops below
-      PRUint32 idx = mInfo.output_width;
+      uint32_t idx = mInfo.output_width;
 
       // copy as bytes until source pointer is 32-bit-aligned
       for (; (NS_PTR_TO_UINT32(sampleRow) & 0x3) && idx; --idx) {
@@ -765,7 +765,7 @@ fill_input_buffer (j_decompress_ptr jd)
 
   if (decoder->mReading) {
     const JOCTET *new_buffer = decoder->mSegment;
-    PRUint32 new_buflen = decoder->mSegmentLen;
+    uint32_t new_buflen = decoder->mSegmentLen;
   
     if (!new_buffer || new_buflen == 0)
       return false; /* suspend */
@@ -801,7 +801,7 @@ fill_input_buffer (j_decompress_ptr jd)
   }
 
   /* Save remainder of netlib buffer in backtrack buffer */
-  const PRUint32 new_backtrack_buflen = src->bytes_in_buffer + decoder->mBackBufferLen;
+  const uint32_t new_backtrack_buflen = src->bytes_in_buffer + decoder->mBackBufferLen;
  
   /* Make sure backtrack buffer is big enough to hold new data. */
   if (decoder->mBackBufferSize < new_backtrack_buflen) {
@@ -1119,7 +1119,7 @@ ycc_rgb_convert_argb (j_decompress_ptr cinfo,
     JSAMPROW inptr1 = input_buf[1][input_row];
     JSAMPROW inptr2 = input_buf[2][input_row];
     input_row++;
-    PRUint32 *outptr = (PRUint32 *) *output_buf++;
+    uint32_t *outptr = (uint32_t *) *output_buf++;
     for (JDIMENSION col = 0; col < num_cols; col++) {
       int y  = GETJSAMPLE(inptr0[col]);
       int cb = GETJSAMPLE(inptr1[col]);
@@ -1148,7 +1148,7 @@ static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width)
   JSAMPROW in = row + width*4;
   JSAMPROW out = in;
 
-  for (PRUint32 i = width; i > 0; i--) {
+  for (uint32_t i = width; i > 0; i--) {
     in -= 4;
     out -= 3;
 
@@ -1171,10 +1171,10 @@ static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width)
     // B = 1 - Y => 1 - (1 - iY*iK) => iY*iK
   
     // Convert from Inverted CMYK (0..255) to RGB (0..255)
-    const PRUint32 iC = in[0];
-    const PRUint32 iM = in[1];
-    const PRUint32 iY = in[2];
-    const PRUint32 iK = in[3];
+    const uint32_t iC = in[0];
+    const uint32_t iM = in[1];
+    const uint32_t iY = in[2];
+    const uint32_t iK = in[3];
     out[0] = iC*iK/255;   // Red
     out[1] = iM*iK/255;   // Green
     out[2] = iY*iK/255;   // Blue

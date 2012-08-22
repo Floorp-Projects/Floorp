@@ -27,8 +27,8 @@
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
 
-typedef PRUint16 nsMediaNetworkState;
-typedef PRUint16 nsMediaReadyState;
+typedef uint16_t nsMediaNetworkState;
+typedef uint16_t nsMediaReadyState;
 
 namespace mozilla {
 class MediaResource;
@@ -79,21 +79,21 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLMediaElement,
                                            nsGenericHTMLElement)
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
                              bool aNotify);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -112,8 +112,8 @@ public:
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.
-  void MetadataLoaded(PRUint32 aChannels,
-                      PRUint32 aRate,
+  void MetadataLoaded(uint32_t aChannels,
+                      uint32_t aRate,
                       bool aHasAudio,
                       const MetadataTags* aTags);
 
@@ -198,7 +198,7 @@ public:
   nsresult DispatchEvent(const nsAString& aName);
   nsresult DispatchAsyncEvent(const nsAString& aName);
   nsresult DispatchAudioAvailableEvent(float* aFrameBuffer,
-                                       PRUint32 aFrameBufferLength,
+                                       uint32_t aFrameBufferLength,
                                        float aTime);
 
   // Dispatch events that were raised while in the bfcache
@@ -327,17 +327,17 @@ public:
   /**
    * Called when data has been written to the underlying audio stream.
    */
-  void NotifyAudioAvailable(float* aFrameBuffer, PRUint32 aFrameBufferLength,
+  void NotifyAudioAvailable(float* aFrameBuffer, uint32_t aFrameBufferLength,
                             float aTime);
 
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(uint32_t aFlags) const;
 
   /**
    * Returns the current load ID. Asynchronous events store the ID that was
    * current when they were enqueued, and if it has changed when they come to
    * fire, they consider themselves cancelled, and don't fire.
    */
-  PRUint32 GetCurrentLoadID() { return mCurrentLoadID; }
+  uint32_t GetCurrentLoadID() { return mCurrentLoadID; }
 
   /**
    * Returns the load group for this media element's owner document.
@@ -391,7 +391,7 @@ protected:
    */
   void ReportLoadError(const char* aMsg,
                        const PRUnichar** aParams = nullptr,
-                       PRUint32 aParamCount = 0);
+                       uint32_t aParamCount = 0);
 
   /**
    * Changes mHasPlayedOrSeeked to aValue. If mHasPlayedOrSeeked changes
@@ -544,7 +544,7 @@ protected:
    */
   nsresult OnChannelRedirect(nsIChannel *aChannel,
                              nsIChannel *aNewChannel,
-                             PRUint32 aFlags);
+                             uint32_t aFlags);
 
   /**
    * Call this to reevaluate whether we should be holding a self-reference.
@@ -610,7 +610,7 @@ protected:
    * Resets the media element for an error condition as per aErrorCode.
    * aErrorCode must be one of nsIDOMHTMLMediaError codes.
    */
-  void Error(PRUint16 aErrorCode);
+  void Error(uint16_t aErrorCode);
 
   /**
    * Returns the URL spec of the currentSrc.
@@ -662,7 +662,7 @@ protected:
   // The current media load ID. This is incremented every time we start a
   // new load. Async events note the ID when they're first sent, and only fire
   // if the ID is unchanged when they come to fire.
-  PRUint32 mCurrentLoadID;
+  uint32_t mCurrentLoadID;
 
   // Points to the child source elements, used to iterate through the children
   // when selecting a resource to load.
@@ -701,10 +701,10 @@ protected:
   double mVolume;
 
   // Current number of audio channels.
-  PRUint32 mChannels;
+  uint32_t mChannels;
 
   // Current audio sample rate.
-  PRUint32 mRate;
+  uint32_t mRate;
 
   // Helper function to iterate over a hash table
   // and convert it to a JSObject.

@@ -15,18 +15,18 @@ namespace dom {
 namespace sms {
 
 struct SmsMessageData {
-  PRInt32       id;
+  int32_t       id;
   DeliveryState delivery;
   nsString      sender;
   nsString      receiver;
   nsString      body;
-  PRUint64      timestamp; // ms since epoch.
+  uint64_t      timestamp; // ms since epoch.
   bool          read;
 };
 
 struct SmsFilterData {
-  PRUint64      startDate;
-  PRUint64      endDate;
+  uint64_t      startDate;
+  uint64_t      endDate;
   nsString[]    numbers;
   DeliveryState delivery;
   ReadState     read;  
@@ -42,64 +42,64 @@ child:
 
     NotifyDeliveredMessage(SmsMessageData aMessageData);
 
-    NotifyRequestSmsSent(SmsMessageData aMessageData, PRInt32 aRequestId,
-                         PRUint64 aProcessId);
+    NotifyRequestSmsSent(SmsMessageData aMessageData, int32_t aRequestId,
+                         uint64_t aProcessId);
 
-    NotifyRequestSmsSendFailed(PRInt32 aError, PRInt32 aRequestId,
-                               PRUint64 aProcessId);
+    NotifyRequestSmsSendFailed(int32_t aError, int32_t aRequestId,
+                               uint64_t aProcessId);
 
-    NotifyRequestGotSms(SmsMessageData aMessageData, PRInt32 aRequestId,
-                        PRUint64 aProcessId);
+    NotifyRequestGotSms(SmsMessageData aMessageData, int32_t aRequestId,
+                        uint64_t aProcessId);
 
-    NotifyRequestGetSmsFailed(PRInt32 aError, PRInt32 aRequestId,
-                              PRUint64 aProcessId);
+    NotifyRequestGetSmsFailed(int32_t aError, int32_t aRequestId,
+                              uint64_t aProcessId);
 
-    NotifyRequestSmsDeleted(bool aDeleted, PRInt32 aRequestId,
-                            PRUint64 aProcessId);
+    NotifyRequestSmsDeleted(bool aDeleted, int32_t aRequestId,
+                            uint64_t aProcessId);
 
-    NotifyRequestSmsDeleteFailed(PRInt32 aError, PRInt32 aRequestId,
-                                 PRUint64 aProcessId);
+    NotifyRequestSmsDeleteFailed(int32_t aError, int32_t aRequestId,
+                                 uint64_t aProcessId);
 
-    NotifyRequestNoMessageInList(PRInt32 aRequestId, PRUint64 aProcessId);
+    NotifyRequestNoMessageInList(int32_t aRequestId, uint64_t aProcessId);
 
-    NotifyRequestCreateMessageList(PRInt32 aListId, SmsMessageData aMessageData, PRInt32 aRequestId, PRUint64 aProcessId);
+    NotifyRequestCreateMessageList(int32_t aListId, SmsMessageData aMessageData, int32_t aRequestId, uint64_t aProcessId);
 
-    NotifyRequestGotNextMessage(SmsMessageData aMessageData, PRInt32 aRequestId, PRUint64 aProcessId);
+    NotifyRequestGotNextMessage(SmsMessageData aMessageData, int32_t aRequestId, uint64_t aProcessId);
 
-    NotifyRequestReadListFailed(PRInt32 aError, PRInt32 aRequestId,
-                                PRUint64 aProcessId);
-    NotifyRequestMarkedMessageRead(bool aRead, PRInt32 aRequestId,
-                                   PRUint64 aProcessId);
-    NotifyRequestMarkMessageReadFailed(PRInt32 aError, PRInt32 aRequestId,
-                                       PRUint64 aProcessId);
+    NotifyRequestReadListFailed(int32_t aError, int32_t aRequestId,
+                                uint64_t aProcessId);
+    NotifyRequestMarkedMessageRead(bool aRead, int32_t aRequestId,
+                                   uint64_t aProcessId);
+    NotifyRequestMarkMessageReadFailed(int32_t aError, int32_t aRequestId,
+                                       uint64_t aProcessId);
 
 parent:
     sync HasSupport()
         returns (bool aHasSupport);
 
     sync GetNumberOfMessagesForText(nsString aText)
-        returns (PRUint16 aNumber);
+        returns (uint16_t aNumber);
 
-    SendMessage(nsString aNumber, nsString aMessage, PRInt32 aRequestId,
-                PRUint64 aProcessId);
+    SendMessage(nsString aNumber, nsString aMessage, int32_t aRequestId,
+                uint64_t aProcessId);
 
-    sync SaveReceivedMessage(nsString aSender, nsString aBody, PRUint64 aDate)
-        returns (PRInt32 aId);
+    sync SaveReceivedMessage(nsString aSender, nsString aBody, uint64_t aDate)
+        returns (int32_t aId);
 
-    sync SaveSentMessage(nsString aReceiver, nsString aBody, PRUint64 aDate)
-        returns (PRInt32 aId);
+    sync SaveSentMessage(nsString aReceiver, nsString aBody, uint64_t aDate)
+        returns (int32_t aId);
 
-    GetMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId);
+    GetMessage(int32_t aMessageId, int32_t aRequestId, uint64_t aProcessId);
 
-    DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId);
+    DeleteMessage(int32_t aMessageId, int32_t aRequestId, uint64_t aProcessId);
 
-    CreateMessageList(SmsFilterData aFilter, bool aReverse, PRInt32 aRequestId, PRUint64 aProcessId);
+    CreateMessageList(SmsFilterData aFilter, bool aReverse, int32_t aRequestId, uint64_t aProcessId);
 
-    GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId, PRUint64 aProcessId);
+    GetNextMessageInList(int32_t aListId, int32_t aRequestId, uint64_t aProcessId);
 
-    ClearMessageList(PRInt32 aListId);
+    ClearMessageList(int32_t aListId);
 
-    MarkMessageRead(PRInt32 aMessageId, bool aValue, PRInt32 aRequestId, PRUint64 aProcessId);
+    MarkMessageRead(int32_t aMessageId, bool aValue, int32_t aRequestId, uint64_t aProcessId);
 
     __delete__();
 };

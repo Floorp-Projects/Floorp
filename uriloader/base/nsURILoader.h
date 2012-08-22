@@ -39,7 +39,7 @@ protected:
    * channel is opened already.
    */
   NS_HIDDEN_(nsresult) OpenChannel(nsIChannel* channel,
-                                   PRUint32 aFlags,
+                                   uint32_t aFlags,
                                    nsIInterfaceRequestor* aWindowContext,
                                    bool aChannelOpen,
                                    nsIStreamListener** aListener);

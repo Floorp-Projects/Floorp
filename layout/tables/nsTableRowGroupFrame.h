@@ -124,19 +124,19 @@ public:
 #endif
 
   /** return the number of child rows (not necessarily == number of child frames) */
-  PRInt32 GetRowCount();
+  int32_t GetRowCount();
 
   /** return the table-relative row index of the first row in this rowgroup.
     * if there are no rows, -1 is returned.
     */
-  PRInt32 GetStartRowIndex();
+  int32_t GetStartRowIndex();
 
   /** Adjust the row indices of all rows  whose index is >= aRowIndex.  
     * @param aRowIndex   - start adjusting with this index
     * @param aAdjustment - shift the row index by this amount
     */
-  void AdjustRowIndices(PRInt32   aRowIndex,
-                        PRInt32   anAdjustment);
+  void AdjustRowIndices(int32_t   aRowIndex,
+                        int32_t   anAdjustment);
 
   /**
    * Used for header and footer row group frames that are repeated when
@@ -169,7 +169,7 @@ public:
    * Sets full border widths before collapsing with cell borders
    * @param aForSide - side to set; only right, left, and bottom valid
    */
-  void SetContinuousBCBorderWidth(PRUint8     aForSide,
+  void SetContinuousBCBorderWidth(uint8_t     aForSide,
                                   BCPixelSize aPixelValue);
   /**
     * Adjust to the effect of visibibility:collapse on the row group and
@@ -197,7 +197,7 @@ public:
   /** Get the number of rows in a row group
     * @return the number of lines in a row group
     */
-  virtual PRInt32 GetNumLines();
+  virtual int32_t GetNumLines();
 
   /** @see nsILineIterator.h GetDirection
     * @return true if the table is rtl
@@ -216,11 +216,11 @@ public:
     * @param aLineBounds       - rect of the row
     * @param aLineFlags        - unused set to 0
     */
-  NS_IMETHOD GetLine(PRInt32 aLineNumber,
+  NS_IMETHOD GetLine(int32_t aLineNumber,
                      nsIFrame** aFirstFrameOnLine,
-                     PRInt32* aNumFramesOnLine,
+                     int32_t* aNumFramesOnLine,
                      nsRect& aLineBounds,
-                     PRUint32* aLineFlags);
+                     uint32_t* aLineFlags);
   
   /** Given a frame that's a child of the rowgroup, find which line its on.
     * @param aFrame       - frame, should be a row
@@ -229,7 +229,7 @@ public:
     *                       frame and the index is at least aStartLine.
     *                       -1 if the frame cannot be found.
     */
-  virtual PRInt32 FindLineContaining(nsIFrame* aFrame, PRInt32 aStartLine = 0);
+  virtual int32_t FindLineContaining(nsIFrame* aFrame, int32_t aStartLine = 0);
 
   /** Find the orginating cell frame on a row that is the nearest to the
     * coordinate X.
@@ -242,7 +242,7 @@ public:
     * @param aXIsAfterLastFrame   - the point is after the last originating
     *                               cellframe
     */
-  NS_IMETHOD FindFrameAt(PRInt32 aLineNumber,
+  NS_IMETHOD FindFrameAt(int32_t aLineNumber,
                          nscoord aX,
                          nsIFrame** aFrameFound,
                          bool* aXIsBeforeFirstFrame,
@@ -257,7 +257,7 @@ public:
      * @param aLastVisual  - if the table is rtl last originating cell frame
      */
 
-  NS_IMETHOD CheckLineOrder(PRInt32                  aLine,
+  NS_IMETHOD CheckLineOrder(int32_t                  aLine,
                             bool                     *aIsReordered,
                             nsIFrame                 **aFirstVisual,
                             nsIFrame                 **aLastVisual);
@@ -268,7 +268,7 @@ public:
     *                      originating in a row
     * @param aLineNumber - the index of the row relative to the table
     */  
-  NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber);
+  NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, int32_t aLineNumber);
 
   // row cursor methods to speed up searching for the row(s)
   // containing a point. The basic idea is that we set the cursor
@@ -282,7 +282,7 @@ public:
   // though, and could be extracted and used elsewhere.
   struct FrameCursorData {
     nsTArray<nsIFrame*> mFrames;
-    PRUint32            mCursorIndex;
+    uint32_t            mCursorIndex;
     nscoord             mOverflowAbove;
     nscoord             mOverflowBelow;
     
@@ -440,7 +440,7 @@ inline void nsTableRowGroupFrame::SetHasStyleHeight(bool aValue)
 inline void
 nsTableRowGroupFrame::GetContinuousBCBorderWidth(nsMargin& aBorder)
 {
-  PRInt32 aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
+  int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
   aBorder.right = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips,
                                             mRightContBorderWidth);
   aBorder.bottom = BC_BORDER_TOP_HALF_COORD(aPixelsToTwips,

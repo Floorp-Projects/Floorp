@@ -26,7 +26,7 @@ public:
 
 protected:
   // Specific implementation for a keyboard event.
-  virtual nsresult Which(PRUint32* aWhich);
+  virtual nsresult Which(uint32_t* aWhich);
 };
 
 

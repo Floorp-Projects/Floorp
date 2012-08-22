@@ -68,13 +68,13 @@ public:
    * Called when a window is moved to location (x, y). Returns true if the
    * notification was handled. Coordinates are outer window screen coordinates.
    */
-  virtual bool WindowMoved(nsIWidget* aWidget, PRInt32 aX, PRInt32 aY) { return false; }
+  virtual bool WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY) { return false; }
 
   /**
    * Called when a window is resized to (width, height). Returns true if the
    * notification was handled. Coordinates are outer window screen coordinates.
    */
-  virtual bool WindowResized(nsIWidget* aWidget, PRInt32 aWidth, PRInt32 aHeight) { return false; }
+  virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) { return false; }
 
   /**
    * Called when the size mode (minimized, maximized, fullscreen) is changed.

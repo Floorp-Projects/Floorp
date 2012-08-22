@@ -36,7 +36,7 @@ public:
   nsresult Blur(nsIDOMEvent* aEvent);
   nsresult MouseDown(nsIDOMEvent* aMouseEvent);
 
-  static nsresult GetMenuAccessKey(PRInt32* aAccessKey);
+  static nsresult GetMenuAccessKey(int32_t* aAccessKey);
   
   NS_DECL_ISUPPORTS
 
@@ -45,7 +45,7 @@ public:
 protected:
   static void InitAccessKey();
 
-  static PRUint32 GetModifiers(nsIDOMKeyEvent* event);
+  static uint32_t GetModifiers(nsIDOMKeyEvent* event);
 
   // This should only be called by the nsMenuBarListener during event dispatch,
   // thus ensuring that this doesn't get destroyed during the process.
@@ -57,8 +57,8 @@ protected:
   // Whether or not the ALT key down is canceled by other action.
   bool mAccessKeyDownCanceled;
   static bool mAccessKeyFocuses; // Does the access key by itself focus the menubar?
-  static PRInt32 mAccessKey;     // See nsIDOMKeyEvent.h for sample values
-  static PRUint32 mAccessKeyMask;// Modifier mask for the access key
+  static int32_t mAccessKey;     // See nsIDOMKeyEvent.h for sample values
+  static uint32_t mAccessKeyMask;// Modifier mask for the access key
 };
 
 

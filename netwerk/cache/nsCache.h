@@ -42,8 +42,8 @@ void   CacheLogPrintPath(PRLogModuleLevel level,
 #endif
 
 
-extern PRUint32  SecondsFromPRTime(PRTime prTime);
-extern PRTime    PRTimeFromSeconds(PRUint32 seconds);
+extern uint32_t  SecondsFromPRTime(PRTime prTime);
+extern PRTime    PRTimeFromSeconds(uint32_t seconds);
 
 
 extern nsresult  ClientIDFromCacheKey(const nsACString&  key, char ** result);

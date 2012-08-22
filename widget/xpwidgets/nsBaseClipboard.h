@@ -35,8 +35,8 @@ public:
   
 protected:
 
-  NS_IMETHOD SetNativeClipboardData ( PRInt32 aWhichClipboard ) = 0;
-  NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard ) = 0;
+  NS_IMETHOD SetNativeClipboardData ( int32_t aWhichClipboard ) = 0;
+  NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, int32_t aWhichClipboard ) = 0;
 
   bool                mIgnoreEmptyNotification;
   nsIClipboardOwner * mClipboardOwner;

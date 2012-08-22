@@ -73,18 +73,18 @@ CopyUTF8toUTF16( const char* aSource, nsAString& aDest )
 // returning zero (which could have other meanings) and
 // throws away the out-param pointer.
 bool
-SetLengthForWriting(nsAString& aDest, PRUint32 aDesiredLength)
+SetLengthForWriting(nsAString& aDest, uint32_t aDesiredLength)
   {
     PRUnichar* dummy;
-    PRUint32 len = aDest.GetMutableData(&dummy, aDesiredLength);
+    uint32_t len = aDest.GetMutableData(&dummy, aDesiredLength);
     return (len >= aDesiredLength);
   }
 
 bool
-SetLengthForWritingC(nsACString& aDest, PRUint32 aDesiredLength)
+SetLengthForWritingC(nsACString& aDest, uint32_t aDesiredLength)
   {
     char* dummy;
-    PRUint32 len = aDest.GetMutableData(&dummy, aDesiredLength);
+    uint32_t len = aDest.GetMutableData(&dummy, aDesiredLength);
     return (len >= aDesiredLength);
   }
 
@@ -92,7 +92,7 @@ SetLengthForWritingC(nsACString& aDest, PRUint32 aDesiredLength)
 void
 LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest )
   {
-    PRUint32 old_dest_length = aDest.Length();
+    uint32_t old_dest_length = aDest.Length();
     if (!SetLengthForWritingC(aDest, old_dest_length + aSource.Length()))
         return;
 
@@ -112,7 +112,7 @@ LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest )
 void
 AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
   {
-    PRUint32 old_dest_length = aDest.Length();
+    uint32_t old_dest_length = aDest.Length();
     if (!SetLengthForWriting(aDest, old_dest_length + aSource.Length()))
         return;
 
@@ -153,11 +153,11 @@ AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
     copy_string(aSource.BeginReading(source_start),
                 aSource.EndReading(source_end), calculator);
 
-    PRUint32 count = calculator.Size();
+    uint32_t count = calculator.Size();
 
     if (count)
       {
-        PRUint32 old_dest_length = aDest.Length();
+        uint32_t old_dest_length = aDest.Length();
 
         // Grow the buffer if we need to.
         if(!SetLengthForWritingC(aDest, old_dest_length + count))
@@ -183,12 +183,12 @@ AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
     copy_string(aSource.BeginReading(source_start),
                 aSource.EndReading(source_end), calculator);
 
-    PRUint32 count = calculator.Length();
+    uint32_t count = calculator.Length();
 
     // Avoid making the string mutable if we're appending an empty string
     if (count)
       {
-        PRUint32 old_dest_length = aDest.Length();
+        uint32_t old_dest_length = aDest.Length();
 
         // Grow the buffer if we need to.
         if(!SetLengthForWriting(aDest, old_dest_length + count))
@@ -259,7 +259,7 @@ ToNewCString( const nsAString& aSource )
   }
 
 char*
-ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count )
+ToNewUTF8String( const nsAString& aSource, uint32_t *aUTF8Count )
   {
     nsAString::const_iterator start, end;
     CalculateUTF8Size calculator;
@@ -326,7 +326,7 @@ ToNewUnicode( const nsACString& aSource )
   }
 
 PRUnichar*
-UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count )
+UTF8ToNewUnicode( const nsACString& aSource, uint32_t *aUTF16Count )
   {
     nsACString::const_iterator start, end;
     CalculateUTF8Length calculator;
@@ -350,11 +350,11 @@ UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count )
   }
 
 PRUnichar*
-CopyUnicodeTo( const nsAString& aSource, PRUint32 aSrcOffset, PRUnichar* aDest, PRUint32 aLength )
+CopyUnicodeTo( const nsAString& aSource, uint32_t aSrcOffset, PRUnichar* aDest, uint32_t aLength )
   {
     nsAString::const_iterator fromBegin, fromEnd;
     PRUnichar* toBegin = aDest;    
-    copy_string(aSource.BeginReading(fromBegin).advance( PRInt32(aSrcOffset) ), aSource.BeginReading(fromEnd).advance( PRInt32(aSrcOffset+aLength) ), toBegin);
+    copy_string(aSource.BeginReading(fromBegin).advance( int32_t(aSrcOffset) ), aSource.BeginReading(fromEnd).advance( int32_t(aSrcOffset+aLength) ), toBegin);
     return aDest;
   }
 
@@ -379,7 +379,7 @@ AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
                  nsAString& aDest )
   {
     nsAString::iterator writer;
-    PRUint32 oldLength = aDest.Length();
+    uint32_t oldLength = aDest.Length();
     if(!SetLengthForWriting(aDest, oldLength + Distance(aSrcStart, aSrcEnd)))
         return;
 
@@ -443,12 +443,12 @@ IsUTF8( const nsACString& aString, bool aRejectNonChar )
     nsReadingIterator<char> done_reading;
     aString.EndReading(done_reading);
 
-    PRInt32 state = 0;
+    int32_t state = 0;
     bool overlong = false;
     bool surrogate = false;
     bool nonchar = false;
-    PRUint16 olupper = 0; // overlong byte upper bound.
-    PRUint16 slower = 0;  // surrogate byte lower bound.
+    uint16_t olupper = 0; // overlong byte upper bound.
+    uint16_t slower = 0;  // surrogate byte lower bound.
 
     nsReadingIterator<char> iter;
     aString.BeginReading(iter);
@@ -457,7 +457,7 @@ IsUTF8( const nsACString& aString, bool aRejectNonChar )
     const char* end = done_reading.get();
     while ( ptr < end )
       {
-        PRUint8 c;
+        uint8_t c;
         
         if (0 == state)
           {
@@ -539,8 +539,8 @@ class ConvertToUpperCase
     public:
       typedef char value_type;
 
-      PRUint32
-      write( const char* aSource, PRUint32 aSourceLength )
+      uint32_t
+      write( const char* aSource, uint32_t aSourceLength )
         {
           char* cp = const_cast<char*>(aSource);
           const char* end = aSource + aSourceLength;
@@ -575,10 +575,10 @@ class CopyToUpperCase
         {
         }
 
-      PRUint32
-      write( const char* aSource, PRUint32 aSourceLength )
+      uint32_t
+      write( const char* aSource, uint32_t aSourceLength )
         {
-          PRUint32 len = NS_MIN(PRUint32(mIter.size_forward()), aSourceLength);
+          uint32_t len = NS_MIN(uint32_t(mIter.size_forward()), aSourceLength);
           char* cp = mIter.get();
           const char* end = aSource + len;
           while (aSource != end) {
@@ -618,8 +618,8 @@ class ConvertToLowerCase
     public:
       typedef char value_type;
 
-      PRUint32
-      write( const char* aSource, PRUint32 aSourceLength )
+      uint32_t
+      write( const char* aSource, uint32_t aSourceLength )
         {
           char* cp = const_cast<char*>(aSource);
           const char* end = aSource + aSourceLength;
@@ -654,10 +654,10 @@ class CopyToLowerCase
         {
         }
 
-      PRUint32
-      write( const char* aSource, PRUint32 aSourceLength )
+      uint32_t
+      write( const char* aSource, uint32_t aSourceLength )
         {
-          PRUint32 len = NS_MIN(PRUint32(mIter.size_forward()), aSourceLength);
+          uint32_t len = NS_MIN(uint32_t(mIter.size_forward()), aSourceLength);
           char* cp = mIter.get();
           const char* end = aSource + len;
           while (aSource != end) {
@@ -697,7 +697,7 @@ ParseString(const nsACString& aSource, char aDelimiter,
     aSource.BeginReading(start);
     aSource.EndReading(end);
 
-    PRUint32 oldLength = aArray.Length();
+    uint32_t oldLength = aArray.Length();
 
     for (;;)
       {
@@ -880,7 +880,7 @@ RFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearch
 bool
 FindCharInReadable( PRUnichar aChar, nsAString::const_iterator& aSearchStart, const nsAString::const_iterator& aSearchEnd )
   {
-    PRInt32 fragmentLength = aSearchEnd.get() - aSearchStart.get();
+    int32_t fragmentLength = aSearchEnd.get() - aSearchStart.get();
 
     const PRUnichar* charFoundAt = nsCharTraits<PRUnichar>::find(aSearchStart.get(), fragmentLength, aChar);
     if ( charFoundAt ) {
@@ -895,7 +895,7 @@ FindCharInReadable( PRUnichar aChar, nsAString::const_iterator& aSearchStart, co
 bool
 FindCharInReadable( char aChar, nsACString::const_iterator& aSearchStart, const nsACString::const_iterator& aSearchEnd )
   {
-    PRInt32 fragmentLength = aSearchEnd.get() - aSearchStart.get();
+    int32_t fragmentLength = aSearchEnd.get() - aSearchStart.get();
 
     const char* charFoundAt = nsCharTraits<char>::find(aSearchStart.get(), fragmentLength, aChar);
     if ( charFoundAt ) {
@@ -907,11 +907,11 @@ FindCharInReadable( char aChar, nsACString::const_iterator& aSearchStart, const 
     return false;
   }
 
-PRUint32
+uint32_t
 CountCharInReadable( const nsAString& aStr,
                      PRUnichar aChar )
 {
-  PRUint32 count = 0;
+  uint32_t count = 0;
   nsAString::const_iterator begin, end;
   
   aStr.BeginReading(begin);
@@ -927,11 +927,11 @@ CountCharInReadable( const nsAString& aStr,
   return count;
 }
 
-PRUint32
+uint32_t
 CountCharInReadable( const nsACString& aStr,
                      char aChar )
 {
-  PRUint32 count = 0;
+  uint32_t count = 0;
   nsACString::const_iterator begin, end;
   
   aStr.BeginReading(begin);
@@ -1029,11 +1029,11 @@ NullCString()
     return sNull;
   }
 
-PRInt32
+int32_t
 CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
                    const nsASingleFragmentString& aUTF16String)
   {
-    static const PRUint32 NOT_ASCII = PRUint32(~0x7F);
+    static const uint32_t NOT_ASCII = uint32_t(~0x7F);
 
     const char *u8, *u8end;
     aUTF8String.BeginReading(u8);
@@ -1046,8 +1046,8 @@ CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
     while (u8 != u8end && u16 != u16end)
       {
         // Cast away the signedness of *u8 to prevent signextension when
-        // converting to PRUint32
-        PRUint32 c8_32 = (PRUint8)*u8;
+        // converting to uint32_t
+        uint32_t c8_32 = (uint8_t)*u8;
 
         if (c8_32 & NOT_ASCII)
           {
@@ -1056,7 +1056,7 @@ CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
             if (err)
               return PR_INT32_MIN;
 
-            PRUint32 c16_32 = UTF16CharEnumerator::NextChar(&u16, u16end);
+            uint32_t c16_32 = UTF16CharEnumerator::NextChar(&u16, u16end);
             // The above UTF16CharEnumerator::NextChar() calls can
             // fail, but if it does for anything other than no data to
             // look at (which can't happen here), it returns the
@@ -1107,7 +1107,7 @@ CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
   }
 
 void
-AppendUCS4ToUTF16(const PRUint32 aSource, nsAString& aDest)
+AppendUCS4ToUTF16(const uint32_t aSource, nsAString& aDest)
   {
     NS_ASSERTION(IS_VALID_CHAR(aSource), "Invalid UCS4 char");
     if (IS_IN_BMP(aSource))

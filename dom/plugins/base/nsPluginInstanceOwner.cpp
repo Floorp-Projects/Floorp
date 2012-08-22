@@ -345,7 +345,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 
 nsPluginInstanceOwner::~nsPluginInstanceOwner()
 {
-  PRInt32 cnt;
+  int32_t cnt;
 
   if (mWaitingForPaint) {
     // We don't care when the event is dispatched as long as it's "soon",
@@ -445,7 +445,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetWindow(NPWindow *&aWindow)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetMode(PRInt32 *aMode)
+NS_IMETHODIMP nsPluginInstanceOwner::GetMode(int32_t *aMode)
 {
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = GetDocument(getter_AddRefs(doc));
@@ -460,7 +460,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetMode(PRInt32 *aMode)
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
+NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(uint16_t& n,
                                                    const char*const*& names,
                                                    const char*const*& values)
 {
@@ -512,7 +512,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
                                             const char *aTarget,
                                             nsIInputStream *aPostStream,
                                             void *aHeadersData,
-                                            PRUint32 aHeadersDataLen)
+                                            uint32_t aHeadersDataLen)
 {
   NS_ENSURE_TRUE(mContent, NS_ERROR_NULL_POINTER);
 
@@ -566,7 +566,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
     headersDataStream = do_QueryInterface(sis);
   }
 
-  PRInt32 blockPopups =
+  int32_t blockPopups =
     Preferences::GetInt("privacy.popups.disable_from_plugins");
   nsAutoPopupStatePusher popupStatePusher((PopupControlState)blockPopups);
 
@@ -775,7 +775,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
 #endif
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(PRInt32 eventModel)
+NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(int32_t eventModel)
 {
 #ifdef XP_MACOSX
   mEventModel = static_cast<NPEventModel>(eventModel);
@@ -892,7 +892,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const*& names, const char*const*& values)
+NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(uint16_t& n, const char*const*& names, const char*const*& values)
 {
   nsresult rv = EnsureCachedAttrParamArrays();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1041,7 +1041,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
       if (!gCharsetMap)
         return NS_ERROR_OUT_OF_MEMORY;
       gCharsetMap->Init(NUM_CHARSETS);
-      for (PRUint16 i = 0; i < NUM_CHARSETS; i++) {
+      for (uint16_t i = 0; i < NUM_CHARSETS; i++) {
         gCharsetMap->Put(charsets[i].mozName, charsets[i].javaName);
       }
     }
@@ -1059,7 +1059,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAlignment(const char* *result)
   return GetAttribute("ALIGN", result);
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(uint32_t *result)
 {
   NS_ENSURE_ARG_POINTER(result);
 
@@ -1070,7 +1070,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(PRUint32 *result)
   return NS_OK;
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(uint32_t *result)
 {
   NS_ENSURE_ARG_POINTER(result);
 
@@ -1082,7 +1082,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
 }
 
   
-NS_IMETHODIMP nsPluginInstanceOwner::GetBorderVertSpace(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetBorderVertSpace(uint32_t *result)
 {
   nsresult    rv;
   const char  *vspace;
@@ -1091,7 +1091,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetBorderVertSpace(PRUint32 *result)
 
   if (NS_OK == rv) {
     if (*result != 0)
-      *result = (PRUint32)atol(vspace);
+      *result = (uint32_t)atol(vspace);
     else
       *result = 0;
   }
@@ -1101,7 +1101,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetBorderVertSpace(PRUint32 *result)
   return rv;
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(uint32_t *result)
 {
   nsresult    rv;
   const char  *hspace;
@@ -1110,7 +1110,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(PRUint32 *result)
 
   if (NS_OK == rv) {
     if (*result != 0)
-      *result = (PRUint32)atol(hspace);
+      *result = (uint32_t)atol(hspace);
     else
       *result = 0;
   }
@@ -1137,9 +1137,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   // Convert to a 16-bit count. Subtract 2 in case we add an extra
   // "src" or "wmode" entry below.
-  PRUint32 cattrs = mContent->GetAttrCount();
+  uint32_t cattrs = mContent->GetAttrCount();
   if (cattrs < 0x0000FFFD) {
-    mNumCachedAttrs = static_cast<PRUint16>(cattrs);
+    mNumCachedAttrs = static_cast<uint16_t>(cattrs);
   } else {
     mNumCachedAttrs = 0xFFFD;
   }
@@ -1166,9 +1166,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   mydomElement->GetElementsByTagNameNS(xhtml_ns, NS_LITERAL_STRING("param"),
                                        getter_AddRefs(allParams));
   if (allParams) {
-    PRUint32 numAllParams; 
+    uint32_t numAllParams; 
     allParams->GetLength(&numAllParams);
-    for (PRUint32 i = 0; i < numAllParams; i++) {
+    for (uint32_t i = 0; i < numAllParams; i++) {
       nsCOMPtr<nsIDOMNode> pnode;
       allParams->Item(i, getter_AddRefs(pnode));
       nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(pnode);
@@ -1207,14 +1207,14 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   }
 
   // Convert to a 16-bit count.
-  PRUint32 cparams = ourParams.Count();
+  uint32_t cparams = ourParams.Count();
   if (cparams < 0x0000FFFF) {
-    mNumCachedParams = static_cast<PRUint16>(cparams);
+    mNumCachedParams = static_cast<uint16_t>(cparams);
   } else {
     mNumCachedParams = 0xFFFF;
   }
 
-  PRUint16 numRealAttrs = mNumCachedAttrs;
+  uint16_t numRealAttrs = mNumCachedAttrs;
 
   // Some plugins were never written to understand the "data" attribute of the OBJECT tag.
   // Real and WMP will not play unless they find a "src" attribute, see bug 152334.
@@ -1247,7 +1247,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // other browsers.  Now in HTML, the storage order is the reverse of the
   // source order, while in XML and XHTML it's the same as the source order
   // (see the AddAttributes functions in the HTML and XML content sinks).
-  PRInt32 start, end, increment;
+  int32_t start, end, increment;
   if (mContent->IsHTML() &&
       mContent->IsInHTMLDocument()) {
     // HTML.  Walk attributes in reverse order.
@@ -1262,14 +1262,14 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   }
 
   // Set to the next slot to fill in name and value cache arrays.
-  PRUint32 nextAttrParamIndex = 0;
+  uint32_t nextAttrParamIndex = 0;
 
   // Whether or not we force the wmode below while traversing
   // the name/value pairs.
   bool wmodeSet = false;
 
   // Add attribute name/value pairs.
-  for (PRInt32 index = start; index != end; index += increment) {
+  for (int32_t index = start; index != end; index += increment) {
     const nsAttrName* attrName = mContent->GetAttrNameAt(index);
     nsIAtom* atom = attrName->LocalName();
     nsAutoString value;
@@ -1320,7 +1320,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   nextAttrParamIndex++;
 
   // Add PARAM name/value pairs.
-  for (PRUint16 i = 0; i < mNumCachedParams; i++) {
+  for (uint16_t i = 0; i < mNumCachedParams; i++) {
     nsIDOMElement* param = ourParams.ObjectAt(i);
     if (!param) {
       continue;
@@ -1385,7 +1385,7 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
   if (!mInstance)
     return drawingModel;
 
-  mInstance->GetDrawingModel((PRInt32*)&drawingModel);
+  mInstance->GetDrawingModel((int32_t*)&drawingModel);
   return drawingModel;
 }
 
@@ -1633,11 +1633,11 @@ void nsPluginInstanceOwner::EndCGPaint()
 #endif
 
 // static
-PRUint32
+uint32_t
 nsPluginInstanceOwner::GetEventloopNestingLevel()
 {
   nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  PRUint32 currentLevel = 0;
+  uint32_t currentLevel = 0;
   if (appShell) {
     appShell->GetEventloopNestingLevel(&currentLevel);
 #ifdef XP_MACOSX
@@ -1719,8 +1719,8 @@ GetOffsetRootContent(nsIFrame* aFrame)
   // will be converted and added to offset when the current APD changes.
   nsPoint offset(0, 0), docOffset(0, 0);
   const nsIFrame* f = aFrame;
-  PRInt32 currAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
-  PRInt32 apd = currAPD;
+  int32_t currAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
+  int32_t apd = currAPD;
   nsRect displayPort;
   while (f) {
     if (f->GetContent() && nsLayoutUtils::GetDisplayPort(f->GetContent(), &displayPort))
@@ -1733,7 +1733,7 @@ GetOffsetRootContent(nsIFrame* aFrame)
     } else {
       nsPoint newOffset(0, 0);
       f = nsLayoutUtils::GetCrossDocParentFrame(f, &newOffset);
-      PRInt32 newAPD = f ? f->PresContext()->AppUnitsPerDevPixel() : 0;
+      int32_t newAPD = f ? f->PresContext()->AppUnitsPerDevPixel() : 0;
       if (!f || newAPD != currAPD) {
         // Convert docOffset to the right APD and add it to offset.
         offset += docOffset.ConvertAppUnits(currAPD, apd);
@@ -1862,7 +1862,7 @@ void nsPluginInstanceOwner::ExitFullScreen() {
 
   mFullScreen = false;
   
-  PRInt32 model = mInstance->GetANPDrawingModel();
+  int32_t model = mInstance->GetANPDrawingModel();
 
   if (model == kSurface_ANPDrawingModel) {
     // We need to do this immediately, otherwise Flash
@@ -2294,7 +2294,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
     ::DeactivateTSMDocument(::TSMGetActiveDocument());
 #endif
 
-  PRInt16 response = kNPEventNotHandled;
+  int16_t response = kNPEventNotHandled;
   void* window = FixUpPluginWindow(ePluginPaintEnable);
   if (window || (eventModel == NPEventModelCocoa)) {
     mInstance->HandleEvent(event, &response);
@@ -2412,7 +2412,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   }
 
   if (pPluginEvent) {
-    PRInt16 response = kNPEventNotHandled;
+    int16_t response = kNPEventNotHandled;
     mInstance->HandleEvent(pPluginEvent, &response);
     if (response == kNPEventHandled)
       rv = nsEventStatus_eConsumeNoDefault;
@@ -2670,7 +2670,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   event.serial = 0;
   event.send_event = False;
 
-  PRInt16 response = kNPEventNotHandled;
+  int16_t response = kNPEventNotHandled;
   mInstance->HandleEvent(&pluginEvent, &response);
   if (response == kNPEventHandled)
     rv = nsEventStatus_eConsumeNoDefault;
@@ -2923,7 +2923,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   if (!mInstance || !mObjectFrame || !mPluginDocumentActiveState || mFullScreen)
     return;
 
-  PRInt32 model = mInstance->GetANPDrawingModel();
+  int32_t model = mInstance->GetANPDrawingModel();
 
   if (model == kSurface_ANPDrawingModel) {
     if (!AddPluginView(GetPluginRect())) {
@@ -3015,10 +3015,10 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                        NS_lround(pluginRect.height));
 
   // Determine what the plugin needs to draw.
-  nsIntRect pluginDirtyRect(PRInt32(dirtyRect.x),
-                            PRInt32(dirtyRect.y),
-                            PRInt32(dirtyRect.width),
-                            PRInt32(dirtyRect.height));
+  nsIntRect pluginDirtyRect(int32_t(dirtyRect.x),
+                            int32_t(dirtyRect.y),
+                            int32_t(dirtyRect.width),
+                            int32_t(dirtyRect.height));
   if (!pluginDirtyRect.
       IntersectRect(nsIntRect(0, 0, pluginSize.width, pluginSize.height),
                     pluginDirtyRect))
@@ -3027,7 +3027,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   NPWindow* window;
   GetWindow(window);
 
-  PRUint32 rendererFlags = 0;
+  uint32_t rendererFlags = 0;
   if (!mFlash10Quirks) {
     rendererFlags |=
       Renderer::DRAW_SUPPORTS_CLIP_RECT |
@@ -3056,7 +3056,7 @@ nsresult
 nsPluginInstanceOwner::Renderer::DrawWithXlib(gfxXlibSurface* xsurface, 
                                               nsIntPoint offset,
                                               nsIntRect *clipRects, 
-                                              PRUint32 numClipRects)
+                                              uint32_t numClipRects)
 {
   Screen *screen = cairo_xlib_surface_get_screen(xsurface->CairoSurface());
   Colormap colormap;
@@ -3435,7 +3435,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 // Mac specific code to fix up the port location and clipping region
 #ifdef XP_MACOSX
 
-void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
+void* nsPluginInstanceOwner::FixUpPluginWindow(int32_t inPaintState)
 {
   if (!mWidget || !mPluginWindow || !mInstance || !mObjectFrame)
     return nullptr;

@@ -8,12 +8,12 @@
 #include "xptcprivate.h"
 
 extern "C" uint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
+invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 {
-    PRUint32 result = 0;
+    uint32_t result = 0;
     /*    fprintf(stderr,"invoke_count_words(%d,%p)\n",paramCount, s);*/
 
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
+    for(uint32_t i = 0; i < paramCount; i++, s++)
     {
         if(s->IsPtrData())
         {
@@ -59,13 +59,13 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 }
 
 extern "C" void
-invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s, double *fprData)
+invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s, double *fprData)
 {
-	PRUint32 fpCount = 0;
+	uint32_t fpCount = 0;
 
     /*    fprintf(stderr,"invoke_copy_to_stack(%p, %d, %p, %p)\n", d, paramCount, s, fprData);*/
 
-    for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
+    for(uint32_t i = 0; i < paramCount; i++, d++, s++)
     {
         if(s->IsPtrData())
         {
@@ -74,14 +74,14 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s, double 
         }
         switch(s->type)
         {
-        case nsXPTType::T_I8     : *((PRInt32*) d) = s->val.i8;          break;
-        case nsXPTType::T_I16    : *((PRInt32*) d) = s->val.i16;         break;
-        case nsXPTType::T_I32    : *((PRInt32*) d) = s->val.i32;         break;
-        case nsXPTType::T_I64    : *((PRInt64*) d) = s->val.i64; d++;    break;
-        case nsXPTType::T_U8     : *((PRUint32*) d) = s->val.u8;          break;
-        case nsXPTType::T_U16    : *((PRUint32*)d) = s->val.u16;         break;
-        case nsXPTType::T_U32    : *((PRUint32*)d) = s->val.u32;         break;
-        case nsXPTType::T_U64    : *((PRUint64*)d) = s->val.u64; d++;    break;
+        case nsXPTType::T_I8     : *((int32_t*) d) = s->val.i8;          break;
+        case nsXPTType::T_I16    : *((int32_t*) d) = s->val.i16;         break;
+        case nsXPTType::T_I32    : *((int32_t*) d) = s->val.i32;         break;
+        case nsXPTType::T_I64    : *((int64_t*) d) = s->val.i64; d++;    break;
+        case nsXPTType::T_U8     : *((uint32_t*) d) = s->val.u8;          break;
+        case nsXPTType::T_U16    : *((uint32_t*)d) = s->val.u16;         break;
+        case nsXPTType::T_U32    : *((uint32_t*)d) = s->val.u32;         break;
+        case nsXPTType::T_U64    : *((uint64_t*)d) = s->val.u64; d++;    break;
         case nsXPTType::T_FLOAT  : *((float*)   d) = s->val.f;
         			   if (fpCount < 13)
         		               fprData[fpCount++] = s->val.f;
@@ -90,9 +90,9 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s, double 
         			   if (fpCount < 13)
         			       fprData[fpCount++] = s->val.d;
         			   break;
-        case nsXPTType::T_BOOL   : *((PRUint32*) d) = s->val.b;          break;
-        case nsXPTType::T_CHAR   : *((PRInt32*)  d) = s->val.c;          break;
-        case nsXPTType::T_WCHAR  : *((PRUint32*) d) = s->val.wc;         break;
+        case nsXPTType::T_BOOL   : *((uint32_t*) d) = s->val.b;          break;
+        case nsXPTType::T_CHAR   : *((int32_t*)  d) = s->val.c;          break;
+        case nsXPTType::T_WCHAR  : *((uint32_t*) d) = s->val.wc;         break;
         default:
             // all the others are plain pointer types
             *((void**)d) = s->val.p;
@@ -101,13 +101,13 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s, double 
     }
 }
 
-extern "C" nsresult _NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                                      PRUint32 paramCount, 
+extern "C" nsresult _NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+                                      uint32_t paramCount, 
                                       nsXPTCVariant* params);
 
 EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                 PRUint32 paramCount, nsXPTCVariant* params)
+NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+                 uint32_t paramCount, nsXPTCVariant* params)
 {
     return _NS_InvokeByIndex_P(that, methodIndex, paramCount, params);
 }    

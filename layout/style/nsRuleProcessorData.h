@@ -102,7 +102,7 @@ class NS_STACK_CLASS AncestorFilter {
   nsAutoPtr<Filter> mFilter;
 
   // Stack of indices to pop to.  These are indices into mHashes.
-  nsTArray<PRUint32> mPopTargets;
+  nsTArray<uint32_t> mPopTargets;
 
   // List of hashes; this is what we pop using mPopTargets.  We store
   // hashes of our ancestor element tag names, ids, and classes in
@@ -345,7 +345,7 @@ struct NS_STACK_CLASS AttributeRuleProcessorData : public RuleProcessorData {
   AttributeRuleProcessorData(nsPresContext* aPresContext,
                              mozilla::dom::Element* aElement,
                              nsIAtom* aAttribute,
-                             PRInt32 aModType,
+                             int32_t aModType,
                              bool aAttrHasChanged,
                              TreeMatchContext& aTreeMatchContext)
     : RuleProcessorData(aPresContext, aElement, nullptr, aTreeMatchContext),
@@ -357,7 +357,7 @@ struct NS_STACK_CLASS AttributeRuleProcessorData : public RuleProcessorData {
     NS_PRECONDITION(!aTreeMatchContext.mForStyling, "Not styling here!");
   }
   nsIAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?
-  PRInt32 mModType;    // The type of modification (see nsIDOMMutationEvent).
+  int32_t mModType;    // The type of modification (see nsIDOMMutationEvent).
   bool mAttrHasChanged; // Whether the attribute has already changed.
 };
 

@@ -28,7 +28,7 @@ interface nsIPromptService2 : nsIPromptService {
   // parameters.
   boolean promptAuth(in nsIDOMWindow aParent,
                      in nsIChannel aChannel,
-                     in PRUint32 level,
+                     in uint32_t level,
                      in nsIAuthInformation authInfo,
                      in wstring checkboxLabel,
                      inout boolean checkValue);
@@ -37,7 +37,7 @@ interface nsIPromptService2 : nsIPromptService {
                                 in nsIChannel aChannel,
                                 in nsIAuthPromptCallback aCallback,
                                 in nsISupports aContext,
-                                in PRUint32 level,
+                                in uint32_t level,
                                 in nsIAuthInformation authInfo,
                                 in wstring checkboxLabel,
                                 inout boolean checkValue);

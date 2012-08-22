@@ -102,7 +102,7 @@ interface nsILocalFileMac : nsILocalFile
     * as returned by GetFileSize()
     *
     */
-   readonly attribute PRInt64 fileSizeWithResFork;
+   readonly attribute int64_t fileSizeWithResFork;
 
    /**
     * fileType, creator
@@ -167,7 +167,7 @@ interface nsILocalFileMac : nsILocalFile
      * bundle's version information and other identifiers.  For non-bundles
      * this is the same as lastModifiedTime.
      */
-    readonly attribute PRInt64 bundleContentsLastModifiedTime;
+    readonly attribute int64_t bundleContentsLastModifiedTime;
 };
 
 %{C++

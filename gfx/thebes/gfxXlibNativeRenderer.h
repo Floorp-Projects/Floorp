@@ -39,7 +39,7 @@ public:
      */
     virtual nsresult DrawWithXlib(gfxXlibSurface* surface,
                                   nsIntPoint offset,
-                                  nsIntRect* clipRects, PRUint32 numClipRects) = 0;
+                                  nsIntRect* clipRects, uint32_t numClipRects) = 0;
   
     enum {
         // If set, then Draw() is opaque, i.e., every pixel in the intersection
@@ -82,12 +82,12 @@ public:
      * otherwise *resultSurface is set to nullptr.
      */
     void Draw(gfxContext* ctx, nsIntSize size,
-              PRUint32 flags, Screen *screen, Visual *visual,
+              uint32_t flags, Screen *screen, Visual *visual,
               DrawOutput* result);
 
 private:
     bool DrawDirect(gfxContext *ctx, nsIntSize bounds,
-                      PRUint32 flags, Screen *screen, Visual *visual);
+                      uint32_t flags, Screen *screen, Visual *visual);
 
     bool DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
                                nsIntPoint offset);

@@ -25,7 +25,7 @@ class nsIXPathResult : public nsISupports
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPATHRESULT_IID)
     virtual nsresult SetExprResult(txAExprResult *aExprResult,
-                                   PRUint16 aResultType,
+                                   uint16_t aResultType,
                                    nsINode* aContextNode) = 0;
     virtual nsresult GetExprResult(txAExprResult **aExprResult) = 0;
     virtual nsresult Clone(nsIXPathResult **aResult) = 0;
@@ -61,23 +61,23 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
     // nsIXPathResult interface
-    nsresult SetExprResult(txAExprResult *aExprResult, PRUint16 aResultType,
+    nsresult SetExprResult(txAExprResult *aExprResult, uint16_t aResultType,
                            nsINode* aContextNode);
     nsresult GetExprResult(txAExprResult **aExprResult);
     nsresult Clone(nsIXPathResult **aResult);
     void RemoveObserver();
 private:
-    static bool isSnapshot(PRUint16 aResultType)
+    static bool isSnapshot(uint16_t aResultType)
     {
         return aResultType == UNORDERED_NODE_SNAPSHOT_TYPE ||
                aResultType == ORDERED_NODE_SNAPSHOT_TYPE;
     }
-    static bool isIterator(PRUint16 aResultType)
+    static bool isIterator(uint16_t aResultType)
     {
         return aResultType == UNORDERED_NODE_ITERATOR_TYPE ||
                aResultType == ORDERED_NODE_ITERATOR_TYPE;
     }
-    static bool isNode(PRUint16 aResultType)
+    static bool isNode(uint16_t aResultType)
     {
         return aResultType == FIRST_ORDERED_NODE_TYPE ||
                aResultType == ANY_UNORDERED_NODE_TYPE;
@@ -100,8 +100,8 @@ private:
     nsRefPtr<txAExprResult> mResult;
     nsCOMArray<nsIDOMNode> mResultNodes;
     nsCOMPtr<nsIDocument> mDocument;
-    PRUint32 mCurrentPos;
-    PRUint16 mResultType;
+    uint32_t mCurrentPos;
+    uint16_t mResultType;
     nsWeakPtr mContextNode;
     bool mInvalidIteratorState;
     bool mBooleanResult;

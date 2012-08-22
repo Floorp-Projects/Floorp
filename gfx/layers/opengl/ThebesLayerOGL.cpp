@@ -28,7 +28,7 @@ using gl::TextureImage;
 static const int ALLOW_REPEAT = ThebesLayerBuffer::ALLOW_REPEAT;
 
 GLenum
-WrapMode(GLContext *aGl, PRUint32 aFlags)
+WrapMode(GLContext *aGl, uint32_t aFlags)
 {
   if ((aFlags & ALLOW_REPEAT) &&
       (aGl->IsExtensionSupported(GLContext::ARB_texture_non_power_of_two) ||
@@ -48,7 +48,7 @@ static already_AddRefed<TextureImage>
 CreateClampOrRepeatTextureImage(GLContext *aGl,
                                 const nsIntSize& aSize,
                                 TextureImage::ContentType aContentType,
-                                PRUint32 aFlags)
+                                uint32_t aFlags)
 {
 
   return aGl->CreateTextureImage(aSize, aContentType, WrapMode(aGl, aFlags));
@@ -83,10 +83,10 @@ public:
 
   enum { PAINT_WILL_RESAMPLE = ThebesLayerBuffer::PAINT_WILL_RESAMPLE };
   virtual PaintState BeginPaint(ContentType aContentType,
-                                PRUint32 aFlags) = 0;
+                                uint32_t aFlags) = 0;
 
   void RenderTo(const nsIntPoint& aOffset, LayerManagerOGL* aManager,
-                PRUint32 aFlags);
+                uint32_t aFlags);
 
   void EndUpdate();
 
@@ -124,7 +124,7 @@ void ThebesLayerBufferOGL::EndUpdate()
 void
 ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
                                LayerManagerOGL* aManager,
-                               PRUint32 aFlags)
+                               uint32_t aFlags)
 {
   NS_ASSERTION(Initialised(), "RenderTo with uninitialised buffer!");
 
@@ -142,8 +142,8 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
   }
 #endif
 
-  PRInt32 passes = mTexImageOnWhite ? 2 : 1;
-  for (PRInt32 pass = 1; pass <= passes; ++pass) {
+  int32_t passes = mTexImageOnWhite ? 2 : 1;
+  for (int32_t pass = 1; pass <= passes; ++pass) {
     ShaderProgramOGL *program;
 
     if (passes == 2) {
@@ -325,7 +325,7 @@ public:
 
   // ThebesLayerBufferOGL interface
   virtual PaintState BeginPaint(ContentType aContentType, 
-                                PRUint32 aFlags)
+                                uint32_t aFlags)
   {
     // Let ThebesLayerBuffer do all the hard work for us! :D
     return ThebesLayerBuffer::BeginPaint(mLayer, 
@@ -335,7 +335,7 @@ public:
 
   // ThebesLayerBuffer interface
   virtual already_AddRefed<gfxASurface>
-  CreateBuffer(ContentType aType, const nsIntSize& aSize, PRUint32 aFlags)
+  CreateBuffer(ContentType aType, const nsIntSize& aSize, uint32_t aFlags)
   {
     NS_ASSERTION(gfxASurface::CONTENT_ALPHA != aType,"ThebesBuffer has color");
 
@@ -365,7 +365,7 @@ public:
   virtual ~BasicBufferOGL() {}
 
   virtual PaintState BeginPaint(ContentType aContentType,
-                                PRUint32 aFlags);
+                                uint32_t aFlags);
 
 protected:
   enum XSide {
@@ -386,7 +386,7 @@ private:
 };
 
 static void
-WrapRotationAxis(PRInt32* aRotationPoint, PRInt32 aSize)
+WrapRotationAxis(int32_t* aRotationPoint, int32_t aSize)
 {
   if (*aRotationPoint < 0) {
     *aRotationPoint += aSize;
@@ -419,7 +419,7 @@ FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
 
 BasicBufferOGL::PaintState
 BasicBufferOGL::BeginPaint(ContentType aContentType,
-                           PRUint32 aFlags)
+                           uint32_t aFlags)
 {
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
@@ -516,7 +516,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
   nsRefPtr<TextureImage> destBuffer;
   nsRefPtr<TextureImage> destBufferOnWhite;
 
-  PRUint32 bufferFlags = canHaveRotation ? ALLOW_REPEAT : 0;
+  uint32_t bufferFlags = canHaveRotation ? ALLOW_REPEAT : 0;
   if (canReuseBuffer) {
     nsIntRect keepArea;
     if (keepArea.IntersectRect(destBufferRect, mBufferRect)) {
@@ -529,8 +529,8 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
       WrapRotationAxis(&newRotation.y, mBufferRect.height);
       NS_ASSERTION(nsIntRect(nsIntPoint(0,0), mBufferRect.Size()).Contains(newRotation),
                    "newRotation out of bounds");
-      PRInt32 xBoundary = destBufferRect.XMost() - newRotation.x;
-      PRInt32 yBoundary = destBufferRect.YMost() - newRotation.y;
+      int32_t xBoundary = destBufferRect.XMost() - newRotation.x;
+      int32_t yBoundary = destBufferRect.YMost() - newRotation.y;
       if ((drawBounds.x < xBoundary && xBoundary < drawBounds.XMost()) ||
           (drawBounds.y < yBoundary && yBoundary < drawBounds.YMost()) ||
           (newRotation != nsIntPoint(0,0) && !canHaveRotation)) {
@@ -671,8 +671,8 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
   result.mRegionToInvalidate.Or(result.mRegionToInvalidate, invalidate);
 
   // Figure out which quadrant to draw in
-  PRInt32 xBoundary = mBufferRect.XMost() - mBufferRotation.x;
-  PRInt32 yBoundary = mBufferRect.YMost() - mBufferRotation.y;
+  int32_t xBoundary = mBufferRect.XMost() - mBufferRotation.x;
+  int32_t yBoundary = mBufferRect.YMost() - mBufferRotation.y;
   XSide sideX = drawBounds.XMost() <= xBoundary ? RIGHT : LEFT;
   YSide sideY = drawBounds.YMost() <= yBoundary ? BOTTOM : TOP;
   nsIntRect quadrantRect = GetQuadrantRectangle(sideX, sideY);
@@ -808,7 +808,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     CanUseOpaqueSurface() ? gfxASurface::CONTENT_COLOR :
                             gfxASurface::CONTENT_COLOR_ALPHA;
 
-  PRUint32 flags = 0;
+  uint32_t flags = 0;
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
   gfxMatrix transform2d;
   if (GetEffectiveTransform().Is2D(&transform2d)) {
@@ -884,7 +884,7 @@ public:
     mInitialised = false;
   }
 
-  virtual PaintState BeginPaint(ContentType aContentType, PRUint32) {
+  virtual PaintState BeginPaint(ContentType aContentType, uint32_t) {
     NS_RUNTIMEABORT("can't BeginPaint for a shadow layer");
     return PaintState();
   }

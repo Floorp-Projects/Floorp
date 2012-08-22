@@ -54,9 +54,9 @@ nsDeckFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsDeckFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsDeckFrame::AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType)
+                              int32_t         aModType)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                              aModType);
@@ -92,7 +92,7 @@ void
 nsDeckFrame::IndexChanged()
 {
   //did the index change?
-  PRInt32 index = GetSelectedIndex();
+  int32_t index = GetSelectedIndex();
   if (index == mIndex)
     return;
 
@@ -107,11 +107,11 @@ nsDeckFrame::IndexChanged()
   mIndex = index;
 }
 
-PRInt32
+int32_t
 nsDeckFrame::GetSelectedIndex()
 {
   // default index is 0
-  PRInt32 index = 0;
+  int32_t index = 0;
 
   // get the index attribute
   nsAutoString value;
@@ -167,7 +167,7 @@ nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
 {
   // Make sure we tweak the state so it does not resize our children.
   // We will do that.
-  PRUint32 oldFlags = aState.LayoutFlags();
+  uint32_t oldFlags = aState.LayoutFlags();
   aState.SetLayoutFlags(NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY);
 
   // do a normal layout

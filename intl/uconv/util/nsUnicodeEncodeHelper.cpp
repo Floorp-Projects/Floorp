@@ -12,9 +12,9 @@
 // Class nsUnicodeEncodeHelper [implementation]
 nsresult nsUnicodeEncodeHelper::ConvertByTable(
                                      const PRUnichar * aSrc, 
-                                     PRInt32 * aSrcLength, 
+                                     int32_t * aSrcLength, 
                                      char * aDest, 
-                                     PRInt32 * aDestLength, 
+                                     int32_t * aDestLength, 
                                      uScanClassID aScanClass,
                                      uShiftOutTable * aShiftOutTable,
                                      uMappingTable  * aMappingTable)
@@ -22,14 +22,14 @@ nsresult nsUnicodeEncodeHelper::ConvertByTable(
   const PRUnichar * src = aSrc;
   const PRUnichar * srcEnd = aSrc + *aSrcLength;
   char * dest = aDest;
-  PRInt32 destLen = *aDestLength;
+  int32_t destLen = *aDestLength;
 
   PRUnichar med;
-  PRInt32 bcw; // byte count for write;
+  int32_t bcw; // byte count for write;
   nsresult res = NS_OK;
 
   while (src < srcEnd) {
-    if (!uMapCode((uTable*) aMappingTable, static_cast<PRUnichar>(*(src++)), reinterpret_cast<PRUint16*>(&med))) {
+    if (!uMapCode((uTable*) aMappingTable, static_cast<PRUnichar>(*(src++)), reinterpret_cast<uint16_t*>(&med))) {
       if (aScanClass == u1ByteCharset && *(src - 1) < 0x20) {
         // some tables are missing the 0x00 - 0x20 part
         med = *(src - 1);
@@ -43,12 +43,12 @@ nsresult nsUnicodeEncodeHelper::ConvertByTable(
     if (aScanClass == uMultibytesCharset) {
       NS_ASSERTION(aShiftOutTable, "shift table missing");
       charFound = uGenerateShift(aShiftOutTable, 0, med,
-                                 (PRUint8 *)dest, destLen, 
-                                 (PRUint32 *)&bcw);
+                                 (uint8_t *)dest, destLen, 
+                                 (uint32_t *)&bcw);
     } else {
       charFound = uGenerate(aScanClass, 0, med,
-                            (PRUint8 *)dest, destLen, 
-                            (PRUint32 *)&bcw);
+                            (uint8_t *)dest, destLen, 
+                            (uint32_t *)&bcw);
     }
     if (!charFound) {
       src--;
@@ -67,10 +67,10 @@ nsresult nsUnicodeEncodeHelper::ConvertByTable(
 
 nsresult nsUnicodeEncodeHelper::ConvertByMultiTable(
                                      const PRUnichar * aSrc, 
-                                     PRInt32 * aSrcLength, 
+                                     int32_t * aSrcLength, 
                                      char * aDest, 
-                                     PRInt32 * aDestLength, 
-                                     PRInt32 aTableCount, 
+                                     int32_t * aDestLength, 
+                                     int32_t aTableCount, 
                                      uScanClassID * aScanClassArray,
                                      uShiftOutTable ** aShiftOutTable, 
                                      uMappingTable  ** aMappingTable)
@@ -78,16 +78,16 @@ nsresult nsUnicodeEncodeHelper::ConvertByMultiTable(
   const PRUnichar * src = aSrc;
   const PRUnichar * srcEnd = aSrc + *aSrcLength;
   char * dest = aDest;
-  PRInt32 destLen = *aDestLength;
+  int32_t destLen = *aDestLength;
 
   PRUnichar med;
-  PRInt32 bcw; // byte count for write;
+  int32_t bcw; // byte count for write;
   nsresult res = NS_OK;
-  PRInt32 i;
+  int32_t i;
 
   while (src < srcEnd) {
     for (i=0; i<aTableCount; i++) 
-      if (uMapCode((uTable*) aMappingTable[i], static_cast<PRUint16>(*src), reinterpret_cast<PRUint16*>(&med))) break;
+      if (uMapCode((uTable*) aMappingTable[i], static_cast<uint16_t>(*src), reinterpret_cast<uint16_t*>(&med))) break;
 
     src++;
     if (i == aTableCount) {
@@ -99,13 +99,13 @@ nsresult nsUnicodeEncodeHelper::ConvertByMultiTable(
     if (aScanClassArray[i] == uMultibytesCharset) {
       NS_ASSERTION(aShiftOutTable[i], "shift table missing");
       charFound = uGenerateShift(aShiftOutTable[i], 0, med,
-                                 (PRUint8 *)dest, destLen,
-                                 (PRUint32 *)&bcw);
+                                 (uint8_t *)dest, destLen,
+                                 (uint32_t *)&bcw);
     }
     else
       charFound = uGenerate(aScanClassArray[i], 0, med,
-                            (PRUint8 *)dest, destLen, 
-                            (PRUint32 *)&bcw);
+                            (uint8_t *)dest, destLen, 
+                            (uint32_t *)&bcw);
     if (!charFound) { 
       src--;
       res = NS_OK_UENC_MOREOUTPUT;

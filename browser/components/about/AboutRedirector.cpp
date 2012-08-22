@@ -17,7 +17,7 @@ NS_IMPL_ISUPPORTS1(AboutRedirector, nsIAboutModule)
 struct RedirEntry {
   const char* id;
   const char* url;
-  PRUint32 flags;  // See nsIAboutModule.  The URI_SAFE_FOR_UNTRUSTED_CONTENT
+  uint32_t flags;  // See nsIAboutModule.  The URI_SAFE_FOR_UNTRUSTED_CONTENT
                    // flag does double duty here -- if it's not set, we don't
                    // drop chrome privileges.
 };
@@ -86,7 +86,7 @@ GetAboutModuleName(nsIURI *aURI)
   nsCAutoString path;
   aURI->GetPath(path);
 
-  PRInt32 f = path.FindChar('#');
+  int32_t f = path.FindChar('#');
   if (f >= 0)
     path.SetLength(f);
 
@@ -137,7 +137,7 @@ AboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
 }
 
 NS_IMETHODIMP
-AboutRedirector::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+AboutRedirector::GetURIFlags(nsIURI *aURI, uint32_t *result)
 {
   NS_ENSURE_ARG_POINTER(aURI);
 

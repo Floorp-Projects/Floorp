@@ -40,8 +40,8 @@ NESTED(_NS_InvokeByIndex_P, FRAMESZ, ra)
     move     a1, a3
     jal      invoke_count_words
 
-    # invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount,
-    #                      nsXPTCVariant* s, PRUint32 *reg)
+    # invoke_copy_to_stack(uint32_t* d, uint32_t paramCount,
+    #                      nsXPTCVariant* s, uint32_t *reg)
 
     REG_L    a1, A2OFF(sp) # a1 - paramCount
     REG_L    a2, A3OFF(sp) # a2 - params

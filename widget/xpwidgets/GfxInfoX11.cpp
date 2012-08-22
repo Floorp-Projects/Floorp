@@ -249,9 +249,9 @@ GfxInfo::GetData()
     }
 }
 
-static inline PRUint64 version(PRUint32 major, PRUint32 minor, PRUint32 revision = 0)
+static inline uint64_t version(uint32_t major, uint32_t minor, uint32_t revision = 0)
 {
-    return (PRUint64(major) << 32) + (PRUint64(minor) << 16) + PRUint64(revision);
+    return (uint64_t(major) << 32) + (uint64_t(minor) << 16) + uint64_t(revision);
 }
 
 const nsTArray<GfxDriverInfo>&
@@ -265,8 +265,8 @@ GfxInfo::GetGfxDriverInfo()
 }
 
 nsresult
-GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
-                              PRInt32 *aStatus, 
+GfxInfo::GetFeatureStatusImpl(int32_t aFeature, 
+                              int32_t *aStatus, 
                               nsAString & aSuggestedDriverVersion, 
                               const nsTArray<GfxDriverInfo>& aDriverInfo, 
                               OperatingSystem* aOS /* = nullptr */)
@@ -537,7 +537,7 @@ NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
 }
 
 /* void spoofOSVersion (in unsigned long aVersion); */
-NS_IMETHODIMP GfxInfo::SpoofOSVersion(PRUint32 aVersion)
+NS_IMETHODIMP GfxInfo::SpoofOSVersion(uint32_t aVersion)
 {
   // We don't support OS versioning on Linux. There's just "Linux".
   return NS_OK;

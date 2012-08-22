@@ -141,7 +141,7 @@ DOMCI_DATA(FileRequest, FileRequest)
 NS_IMPL_EVENT_HANDLER(FileRequest, progress)
 
 void
-FileRequest::FireProgressEvent(PRUint64 aLoaded, PRUint64 aTotal)
+FileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal)
 {
   if (NS_FAILED(CheckInnerWindowCorrectness())) {
     return;

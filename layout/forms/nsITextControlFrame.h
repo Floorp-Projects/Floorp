@@ -26,16 +26,16 @@ public:
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
 
-  NS_IMETHOD    GetTextLength(PRInt32* aTextLength) = 0;
+  NS_IMETHOD    GetTextLength(int32_t* aTextLength) = 0;
   
-  NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart) = 0;
-  NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd) = 0;
+  NS_IMETHOD    SetSelectionStart(int32_t aSelectionStart) = 0;
+  NS_IMETHOD    SetSelectionEnd(int32_t aSelectionEnd) = 0;
   
-  NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart,
-                                  PRInt32 aSelectionEnd,
+  NS_IMETHOD    SetSelectionRange(int32_t aSelectionStart,
+                                  int32_t aSelectionEnd,
                                   SelectionDirection aDirection = eNone) = 0;
-  NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart,
-                                  PRInt32* aSelectionEnd,
+  NS_IMETHOD    GetSelectionRange(int32_t* aSelectionStart,
+                                  int32_t* aSelectionEnd,
                                   SelectionDirection* aDirection = nullptr) = 0;
 
   NS_IMETHOD    GetOwnedSelectionController(nsISelectionController** aSelCon) = 0;

@@ -14,12 +14,12 @@ void  nsEUCKRProber::Reset(void)
   //mContextAnalyser.Reset();
 }
 
-nsProbingState nsEUCKRProber::HandleData(const char* aBuf, PRUint32 aLen)
+nsProbingState nsEUCKRProber::HandleData(const char* aBuf, uint32_t aLen)
 {
   NS_ASSERTION(aLen, "HandleData called with empty buffer");
   nsSMState codingState;
 
-  for (PRUint32 i = 0; i < aLen; i++)
+  for (uint32_t i = 0; i < aLen; i++)
   {
     codingState = mCodingSM->NextState(aBuf[i]);
     if (codingState == eItsMe)
@@ -29,7 +29,7 @@ nsProbingState nsEUCKRProber::HandleData(const char* aBuf, PRUint32 aLen)
     }
     if (codingState == eStart)
     {
-      PRUint32 charLen = mCodingSM->GetCurrentCharLen();
+      uint32_t charLen = mCodingSM->GetCurrentCharLen();
 
       if (i == 0)
       {

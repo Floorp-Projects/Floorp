@@ -32,7 +32,7 @@ public:
         mLevel = 6;
     }
 
-    nsDeflateConverter(PRInt32 level)
+    nsDeflateConverter(int32_t level)
     {
         mLevel = level;
     }
@@ -50,8 +50,8 @@ private:
     };
 
     WrapMode mWrapMode;
-    PRUint32 mOffset;
-    PRInt32 mLevel;
+    uint32_t mOffset;
+    int32_t mLevel;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCOMPtr<nsISupports> mContext;
     z_stream mZstream;

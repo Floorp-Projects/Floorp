@@ -36,9 +36,9 @@ class nsCookie : public nsICookie2
              const char     *aHost,
              const char     *aPath,
              const char     *aEnd,
-             PRInt64         aExpiry,
-             PRInt64         aLastAccessed,
-             PRInt64         aCreationTime,
+             int64_t         aExpiry,
+             int64_t         aLastAccessed,
+             int64_t         aCreationTime,
              bool            aIsSession,
              bool            aIsSecure,
              bool            aIsHttpOnly)
@@ -59,7 +59,7 @@ class nsCookie : public nsICookie2
   public:
     // Generate a unique and monotonically increasing creation time. See comment
     // in nsCookie.cpp.
-    static PRInt64 GenerateUniqueCreationTime(PRInt64 aCreationTime);
+    static int64_t GenerateUniqueCreationTime(int64_t aCreationTime);
 
     // public helper to create an nsCookie object. use |operator delete|
     // to destroy an object created by this method.
@@ -67,9 +67,9 @@ class nsCookie : public nsICookie2
                              const nsACString &aValue,
                              const nsACString &aHost,
                              const nsACString &aPath,
-                             PRInt64           aExpiry,
-                             PRInt64           aLastAccessed,
-                             PRInt64           aCreationTime,
+                             int64_t           aExpiry,
+                             int64_t           aLastAccessed,
+                             int64_t           aCreationTime,
                              bool              aIsSession,
                              bool              aIsSecure,
                              bool              aIsHttpOnly);
@@ -82,21 +82,21 @@ class nsCookie : public nsICookie2
     inline const nsDependentCString Host()  const { return nsDependentCString(mHost, mPath - 1); }
     inline const nsDependentCString RawHost() const { return nsDependentCString(IsDomain() ? mHost + 1 : mHost, mPath - 1); }
     inline const nsDependentCString Path()  const { return nsDependentCString(mPath, mEnd); }
-    inline PRInt64 Expiry()                 const { return mExpiry; }        // in seconds
-    inline PRInt64 LastAccessed()           const { return mLastAccessed; }  // in microseconds
-    inline PRInt64 CreationTime()           const { return mCreationTime; }  // in microseconds
+    inline int64_t Expiry()                 const { return mExpiry; }        // in seconds
+    inline int64_t LastAccessed()           const { return mLastAccessed; }  // in microseconds
+    inline int64_t CreationTime()           const { return mCreationTime; }  // in microseconds
     inline bool IsSession()               const { return mIsSession; }
     inline bool IsDomain()                const { return *mHost == '.'; }
     inline bool IsSecure()                const { return mIsSecure; }
     inline bool IsHttpOnly()              const { return mIsHttpOnly; }
 
     // setters
-    inline void SetExpiry(PRInt64 aExpiry)        { mExpiry = aExpiry; }
-    inline void SetLastAccessed(PRInt64 aTime)    { mLastAccessed = aTime; }
+    inline void SetExpiry(int64_t aExpiry)        { mExpiry = aExpiry; }
+    inline void SetLastAccessed(int64_t aTime)    { mLastAccessed = aTime; }
     inline void SetIsSession(bool aIsSession)   { mIsSession = (bool) aIsSession; }
     // Set the creation time manually, overriding the monotonicity checks in
     // Create(). Use with caution!
-    inline void SetCreationTime(PRInt64 aTime)    { mCreationTime = aTime; }
+    inline void SetCreationTime(int64_t aTime)    { mCreationTime = aTime; }
 
   protected:
     // member variables
@@ -109,9 +109,9 @@ class nsCookie : public nsICookie2
     const char  *mHost;
     const char  *mPath;
     const char  *mEnd;
-    PRInt64      mExpiry;
-    PRInt64      mLastAccessed;
-    PRInt64      mCreationTime;
+    int64_t      mExpiry;
+    int64_t      mLastAccessed;
+    int64_t      mCreationTime;
     bool mIsSession;
     bool mIsSecure;
     bool mIsHttpOnly;

@@ -20,13 +20,13 @@ class CameraStreamImpl {
 public:
     class FrameCallback {
     public:
-        virtual void ReceiveFrame(char* frame, PRUint32 length) = 0;
+        virtual void ReceiveFrame(char* frame, uint32_t length) = 0;
     };
     
     /**
      * instance bound to a given camera
      */
-    static CameraStreamImpl* GetInstance(PRUint32 aCamera);
+    static CameraStreamImpl* GetInstance(uint32_t aCamera);
     
     bool initNeeded() {
         return !mInit;
@@ -36,29 +36,29 @@ public:
         return mCallback;
     }
     
-    bool Init(const nsCString& contentType, const PRUint32& camera, const PRUint32& width, const PRUint32& height, FrameCallback* callback);
+    bool Init(const nsCString& contentType, const uint32_t& camera, const uint32_t& width, const uint32_t& height, FrameCallback* callback);
     void Close();
     
-    PRUint32 GetWidth() { return mWidth; }
-    PRUint32 GetHeight() { return mHeight; }
-    PRUint32 GetFps() { return mFps; }
+    uint32_t GetWidth() { return mWidth; }
+    uint32_t GetHeight() { return mHeight; }
+    uint32_t GetFps() { return mFps; }
     
     void takePicture(const nsAString& aFileName);
     
     void transmitFrame(JNIEnv *env, jbyteArray *data);
     
 private:
-    CameraStreamImpl(PRUint32 aCamera);
+    CameraStreamImpl(uint32_t aCamera);
     CameraStreamImpl(const CameraStreamImpl&);
     CameraStreamImpl& operator=(const CameraStreamImpl&);
 
     ~CameraStreamImpl();
 
     bool mInit;
-    PRUint32 mCamera;
-    PRUint32 mWidth;
-    PRUint32 mHeight;
-    PRUint32 mFps;
+    uint32_t mCamera;
+    uint32_t mWidth;
+    uint32_t mHeight;
+    uint32_t mFps;
     FrameCallback* mCallback;
 };
 

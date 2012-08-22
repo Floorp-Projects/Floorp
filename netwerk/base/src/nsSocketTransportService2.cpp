@@ -42,7 +42,7 @@ PRThread                 *gSocketThread           = nullptr;
 #define SOCKET_LIMIT_TARGET 550U
 #define SOCKET_LIMIT_MIN     50U
 
-PRUint32 nsSocketTransportService::gMaxCount;
+uint32_t nsSocketTransportService::gMaxCount;
 PRCallOnceType nsSocketTransportService::gMaxCountInitOnce;
 
 //-----------------------------------------------------------------------------
@@ -107,7 +107,7 @@ nsSocketTransportService::GetThreadSafely()
 }
 
 NS_IMETHODIMP
-nsSocketTransportService::Dispatch(nsIRunnable *event, PRUint32 flags)
+nsSocketTransportService::Dispatch(nsIRunnable *event, uint32_t flags)
 {
     SOCKET_LOG(("STS dispatch [%p]\n", event));
 
@@ -205,7 +205,7 @@ nsSocketTransportService::DetachSocket(SocketContext *listHead, SocketContext *s
 nsresult
 nsSocketTransportService::AddToPollList(SocketContext *sock)
 {
-    NS_ABORT_IF_FALSE(!(((PRUint32)(sock - mActiveList)) < mActiveListSize),
+    NS_ABORT_IF_FALSE(!(((uint32_t)(sock - mActiveList)) < mActiveListSize),
                       "AddToPollList Socket Already Active");
 
     SOCKET_LOG(("nsSocketTransportService::AddToPollList [handler=%x]\n", sock->mHandler));
@@ -233,7 +233,7 @@ nsSocketTransportService::RemoveFromPollList(SocketContext *sock)
 {
     SOCKET_LOG(("nsSocketTransportService::RemoveFromPollList [handler=%x]\n", sock->mHandler));
 
-    PRUint32 index = sock - mActiveList;
+    uint32_t index = sock - mActiveList;
     NS_ABORT_IF_FALSE(index < mActiveListSize, "invalid index");
 
     SOCKET_LOG(("  index=%u mActiveCount=%u\n", index, mActiveCount));
@@ -250,7 +250,7 @@ nsSocketTransportService::RemoveFromPollList(SocketContext *sock)
 nsresult
 nsSocketTransportService::AddToIdleList(SocketContext *sock)
 {
-    NS_ABORT_IF_FALSE(!(((PRUint32)(sock - mIdleList)) < mIdleListSize),
+    NS_ABORT_IF_FALSE(!(((uint32_t)(sock - mIdleList)) < mIdleListSize),
                       "AddToIdlelList Socket Already Idle");
 
     SOCKET_LOG(("nsSocketTransportService::AddToIdleList [handler=%x]\n", sock->mHandler));
@@ -274,7 +274,7 @@ nsSocketTransportService::RemoveFromIdleList(SocketContext *sock)
 {
     SOCKET_LOG(("nsSocketTransportService::RemoveFromIdleList [handler=%x]\n", sock->mHandler));
 
-    PRUint32 index = sock - mIdleList;
+    uint32_t index = sock - mIdleList;
     NS_ASSERTION(index < mIdleListSize, "invalid index in idle list");
 
     if (index != mIdleCount-1)
@@ -307,7 +307,7 @@ nsSocketTransportService::MoveToPollList(SocketContext *sock)
 bool
 nsSocketTransportService::GrowActiveList()
 {
-    PRInt32 toAdd = gMaxCount - mActiveListSize;
+    int32_t toAdd = gMaxCount - mActiveListSize;
     if (toAdd > 100)
         toAdd = 100;
     if (toAdd < 1)
@@ -324,7 +324,7 @@ nsSocketTransportService::GrowActiveList()
 bool
 nsSocketTransportService::GrowIdleList()
 {
-    PRInt32 toAdd = gMaxCount - mIdleListSize;
+    int32_t toAdd = gMaxCount - mIdleListSize;
     if (toAdd > 100)
         toAdd = 100;
     if (toAdd < 1)
@@ -343,12 +343,12 @@ nsSocketTransportService::PollTimeout()
         return NS_SOCKET_POLL_TIMEOUT;
 
     // compute minimum time before any socket timeout expires.
-    PRUint32 minR = PR_UINT16_MAX;
-    for (PRUint32 i=0; i<mActiveCount; ++i) {
+    uint32_t minR = PR_UINT16_MAX;
+    for (uint32_t i=0; i<mActiveCount; ++i) {
         const SocketContext &s = mActiveList[i];
         // mPollTimeout could be less than mElapsedTime if setTimeout
         // was called with a value smaller than mElapsedTime.
-        PRUint32 r = (s.mElapsedTime < s.mHandler->mPollTimeout)
+        uint32_t r = (s.mElapsedTime < s.mHandler->mPollTimeout)
           ? s.mHandler->mPollTimeout - s.mElapsedTime
           : 0;
         if (r < minR)
@@ -358,11 +358,11 @@ nsSocketTransportService::PollTimeout()
     return PR_SecondsToInterval(minR);
 }
 
-PRInt32
-nsSocketTransportService::Poll(bool wait, PRUint32 *interval)
+int32_t
+nsSocketTransportService::Poll(bool wait, uint32_t *interval)
 {
     PRPollDesc *pollList;
-    PRUint32 pollCount;
+    uint32_t pollCount;
     PRIntervalTime pollTimeout;
 
     if (mPollList[0].fd) {
@@ -388,7 +388,7 @@ nsSocketTransportService::Poll(bool wait, PRUint32 *interval)
 
     SOCKET_LOG(("    timeout = %i milliseconds\n",
          PR_IntervalToMilliseconds(pollTimeout)));
-    PRInt32 rv = PR_Poll(pollList, pollCount, pollTimeout);
+    int32_t rv = PR_Poll(pollList, pollCount, pollTimeout);
 
     PRIntervalTime passedInterval = PR_IntervalNow() - ts;
 
@@ -518,9 +518,9 @@ nsSocketTransportService::Shutdown()
 
 NS_IMETHODIMP
 nsSocketTransportService::CreateTransport(const char **types,
-                                          PRUint32 typeCount,
+                                          uint32_t typeCount,
                                           const nsACString &host,
-                                          PRInt32 port,
+                                          int32_t port,
                                           nsIProxyInfo *proxyInfo,
                                           nsISocketTransport **result)
 {
@@ -567,14 +567,14 @@ nsSocketTransportService::OnDispatchedEvent(nsIThreadInternal *thread)
 
 NS_IMETHODIMP
 nsSocketTransportService::OnProcessNextEvent(nsIThreadInternal *thread,
-                                             bool mayWait, PRUint32 depth)
+                                             bool mayWait, uint32_t depth)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSocketTransportService::AfterProcessNextEvent(nsIThreadInternal* thread,
-                                                PRUint32 depth)
+                                                uint32_t depth)
 {
     return NS_OK;
 }
@@ -635,7 +635,7 @@ nsSocketTransportService::Run()
     SOCKET_LOG(("STS shutting down thread\n"));
 
     // detach any sockets
-    PRInt32 i;
+    int32_t i;
     for (i=mActiveCount-1; i>=0; --i)
         DetachSocket(mActiveList, &mActiveList[i]);
     for (i=mIdleCount-1; i>=0; --i)
@@ -658,7 +658,7 @@ nsSocketTransportService::DoPollIteration(bool wait)
 {
     SOCKET_LOG(("STS poll iter [%d]\n", wait));
 
-    PRInt32 i, count;
+    int32_t i, count;
 
     //
     // poll loop
@@ -679,7 +679,7 @@ nsSocketTransportService::DoPollIteration(bool wait)
         if (NS_FAILED(mActiveList[i].mHandler->mCondition))
             DetachSocket(mActiveList, &mActiveList[i]);
         else {
-            PRUint16 in_flags = mActiveList[i].mHandler->mPollFlags;
+            uint16_t in_flags = mActiveList[i].mHandler->mPollFlags;
             if (in_flags == 0)
                 MoveToIdleList(&mActiveList[i]);
             else {
@@ -713,9 +713,9 @@ nsSocketTransportService::DoPollIteration(bool wait)
 #endif
 
     // Measures seconds spent while blocked on PR_Poll
-    PRUint32 pollInterval;
+    uint32_t pollInterval;
 
-    PRInt32 n = Poll(wait, &pollInterval);
+    int32_t n = Poll(wait, &pollInterval);
     if (n < 0) {
         SOCKET_LOG(("  PR_Poll error [%d]\n", PR_GetError()));
     }
@@ -723,7 +723,7 @@ nsSocketTransportService::DoPollIteration(bool wait)
         //
         // service "active" sockets...
         //
-        for (i=0; i<PRInt32(mActiveCount); ++i) {
+        for (i=0; i<int32_t(mActiveCount); ++i) {
             PRPollDesc &desc = mPollList[i+1];
             SocketContext &s = mActiveList[i];
             if (n > 0 && desc.out_flags != 0) {
@@ -736,7 +736,7 @@ nsSocketTransportService::DoPollIteration(bool wait)
                 if (NS_UNLIKELY(pollInterval > (PR_UINT16_MAX - s.mElapsedTime)))
                     s.mElapsedTime = PR_UINT16_MAX;
                 else
-                    s.mElapsedTime += PRUint16(pollInterval);
+                    s.mElapsedTime += uint16_t(pollInterval);
                 // check for timeout expiration 
                 if (s.mElapsedTime >= s.mHandler->mPollTimeout) {
                     s.mElapsedTime = 0;
@@ -792,7 +792,7 @@ nsSocketTransportService::UpdatePrefs()
     
     nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (tmpPrefService) {
-        PRInt32 bufferSize;
+        int32_t bufferSize;
         nsresult rv = tmpPrefService->GetIntPref(SEND_BUFFER_PREF, &bufferSize);
         if (NS_SUCCEEDED(rv) && bufferSize > 0)
             mSendBufferSize = bufferSize;
@@ -813,7 +813,7 @@ nsSocketTransportService::Observe(nsISupports *subject,
 }
 
 NS_IMETHODIMP
-nsSocketTransportService::GetSendBufferSize(PRInt32 *value)
+nsSocketTransportService::GetSendBufferSize(int32_t *value)
 {
     *value = mSendBufferSize;
     return NS_OK;
@@ -839,7 +839,7 @@ nsSocketTransportService::ProbeMaxCount()
         return;
     mProbedMaxCount = true;
 
-    PRInt32 startedMaxCount = gMaxCount;
+    int32_t startedMaxCount = gMaxCount;
 
     // Allocate and test a PR_Poll up to the gMaxCount number of unconnected
     // sockets. See bug 692260 - windows should be able to handle 1000 sockets
@@ -848,9 +848,9 @@ nsSocketTransportService::ProbeMaxCount()
 
     // Allocate
     struct PRPollDesc pfd[SOCKET_LIMIT_TARGET];
-    PRUint32 numAllocated = 0;
+    uint32_t numAllocated = 0;
 
-    for (PRUint32 index = 0 ; index < gMaxCount; ++index) {
+    for (uint32_t index = 0 ; index < gMaxCount; ++index) {
         pfd[index].in_flags = PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT;
         pfd[index].out_flags = 0;
         pfd[index].fd =  PR_OpenTCPSocket(PR_AF_INET);
@@ -868,7 +868,7 @@ nsSocketTransportService::ProbeMaxCount()
     // Test
     PR_STATIC_ASSERT(SOCKET_LIMIT_MIN >= 32U);
     while (gMaxCount <= numAllocated) {
-        PRInt32 rv = PR_Poll(pfd, gMaxCount, PR_MillisecondsToInterval(0));
+        int32_t rv = PR_Poll(pfd, gMaxCount, PR_MillisecondsToInterval(0));
         
         SOCKET_LOG(("Socket Limit Test poll() size=%d rv=%d\n",
                     gMaxCount, rv));
@@ -887,7 +887,7 @@ nsSocketTransportService::ProbeMaxCount()
     }
 
     // Free
-    for (PRUint32 index = 0 ; index < numAllocated; ++index)
+    for (uint32_t index = 0 ; index < numAllocated; ++index)
         if (pfd[index].fd)
             PR_Close(pfd[index].fd);
 
@@ -916,12 +916,12 @@ nsSocketTransportService::DiscoverMaxCount()
         return PR_SUCCESS;
     }
 
-    PRInt32 maxallowed = rlimitData.rlim_max;
+    int32_t maxallowed = rlimitData.rlim_max;
     if (maxallowed == -1) {                       /* no limit */
         maxallowed = SOCKET_LIMIT_TARGET + 250;
-    } else if ((PRUint32)maxallowed < SOCKET_LIMIT_MIN + 250) {
+    } else if ((uint32_t)maxallowed < SOCKET_LIMIT_MIN + 250) {
         return PR_SUCCESS;
-    } else if ((PRUint32)maxallowed > SOCKET_LIMIT_TARGET + 250) {
+    } else if ((uint32_t)maxallowed > SOCKET_LIMIT_TARGET + 250) {
         maxallowed = SOCKET_LIMIT_TARGET + 250;
     }
 

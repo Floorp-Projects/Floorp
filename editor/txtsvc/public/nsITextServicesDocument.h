@@ -109,7 +109,7 @@ public:
    * selected in the string.
    */
 
-  NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus *aSelectionStatus, PRInt32 *aSelectionOffset, PRInt32 *aSelectionLength) = 0;
+  NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus *aSelectionStatus, int32_t *aSelectionOffset, int32_t *aSelectionLength) = 0;
 
   /**
    * Tells the document to point to the text block before
@@ -153,7 +153,7 @@ public:
    * @param aLength number characters selected.
    */
 
-  NS_IMETHOD SetSelection(PRInt32 aOffset, PRInt32 aLength) = 0;
+  NS_IMETHOD SetSelection(int32_t aOffset, int32_t aLength) = 0;
 
   /**
    * Scrolls the document so that the current selection is visible.

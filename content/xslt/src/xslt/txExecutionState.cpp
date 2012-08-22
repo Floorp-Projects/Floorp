@@ -14,7 +14,7 @@
 #include "txURIUtils.h"
 #include "txXMLParser.h"
 
-const PRInt32 txExecutionState::kMaxRecursionDepth = 20000;
+const int32_t txExecutionState::kMaxRecursionDepth = 20000;
 
 nsresult txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
 {
@@ -176,7 +176,7 @@ txExecutionState::end(nsresult aResult)
 
 
 nsresult
-txExecutionState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
+txExecutionState::getVariable(int32_t aNamespace, nsIAtom* aLName,
                               txAExprResult*& aResult)
 {
     nsresult rv = NS_OK;
@@ -337,8 +337,8 @@ bool
 txExecutionState::popBool()
 {
     NS_ASSERTION(mBoolStack.Length(), "popping from empty stack");
-    PRUint32 last = mBoolStack.Length() - 1;
-    NS_ENSURE_TRUE(last != (PRUint32)-1, false);
+    uint32_t last = mBoolStack.Length() - 1;
+    NS_ENSURE_TRUE(last != (uint32_t)-1, false);
 
     bool res = mBoolStack.ElementAt(last);
     mBoolStack.RemoveElementAt(last);

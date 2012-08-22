@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-nsHtml5UTF16Buffer::nsHtml5UTF16Buffer(PRUnichar* aBuffer, PRInt32 aEnd)
+nsHtml5UTF16Buffer::nsHtml5UTF16Buffer(PRUnichar* aBuffer, int32_t aEnd)
   : buffer(aBuffer)
   , start(0)
   , end(aEnd)
@@ -25,8 +25,8 @@ void
 nsHtml5UTF16Buffer::Swap(nsHtml5UTF16Buffer* aOther)
 {
   PRUnichar* tempBuffer = buffer;
-  PRInt32 tempStart = start;
-  PRInt32 tempEnd = end;
+  int32_t tempStart = start;
+  int32_t tempEnd = end;
   buffer = aOther->buffer;
   start = aOther->start;
   end = aOther->end;

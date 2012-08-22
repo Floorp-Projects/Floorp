@@ -19,19 +19,19 @@ interface nsISeekableStream : nsISupports
     /* 
      * Sets the stream pointer to the value of the 'offset' parameter 
      */
-    const PRInt32 NS_SEEK_SET = 0;
+    const int32_t NS_SEEK_SET = 0;
 
     /*  
      * Sets the stream pointer to its current location plus the value 
      * of the offset parameter. 
      */
-    const PRInt32 NS_SEEK_CUR = 1;
+    const int32_t NS_SEEK_CUR = 1;
 
     /* 
      * Sets the stream pointer to the size of the stream plus the value 
      * of the offset parameter. 
      */
-    const PRInt32 NS_SEEK_END = 2;
+    const int32_t NS_SEEK_END = 2;
 
     /**
      *  seek

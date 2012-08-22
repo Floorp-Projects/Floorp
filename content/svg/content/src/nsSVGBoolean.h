@@ -22,7 +22,7 @@ class nsSVGBoolean
 {
 
 public:
-  void Init(PRUint8 aAttrEnum = 0xff, bool aValue = false) {
+  void Init(uint8_t aAttrEnum = 0xff, bool aValue = false) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
     mIsAnimated = false;
@@ -49,7 +49,7 @@ private:
   bool mAnimVal;
   bool mBaseVal;
   bool mIsAnimated;
-  PRUint8 mAttrEnum; // element specified tracking for attribute
+  uint8_t mAttrEnum; // element specified tracking for attribute
 
 public:
   struct DOMAnimatedBoolean MOZ_FINAL : public nsIDOMSVGAnimatedBoolean

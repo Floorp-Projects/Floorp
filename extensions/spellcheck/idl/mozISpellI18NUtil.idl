@@ -13,8 +13,8 @@
 
 interface mozISpellI18NUtil : nsISupports {
 
-    const PRUint32 kCheck=0;
-    const PRUint32 kSuggest=1;
+    const uint32_t kCheck=0;
+    const uint32_t kSuggest=1;
 
    /**
     * The language being used to check spelling
@@ -25,23 +25,23 @@ interface mozISpellI18NUtil : nsISupports {
     * Given a word return a list of possible root forms of that word
     */
     void getRootForm(in wstring word,
-                     in PRUint32 type,
+                     in uint32_t type,
                      [array, size_is(count)] out wstring words,
-                     out PRUint32 count);
+                     out uint32_t count);
     
    /**
     * Given a word return a list of possible root forms of that word
     */
     void fromRootForm(in wstring word,
                       [array, size_is(icount)] in wstring iwords,
-                      in PRUint32 icount,
+                      in uint32_t icount,
                       [array, size_is(ocount)] out wstring owords,
-                      out PRUint32 ocount);
+                      out uint32_t ocount);
     
     /**
      * Given a unicode string and an offset, find the beginning and end of the
      * next word. begin and end are -1 if there are no words remaining in the 
      * string. This should really be folded into the Line/WordBreaker.
      */
-    void findNextWord(in wstring word, in PRUint32 length, in PRUint32 offset, out PRInt32 begin, out PRInt32 end); 
+    void findNextWord(in wstring word, in uint32_t length, in uint32_t offset, out int32_t begin, out int32_t end); 
 };

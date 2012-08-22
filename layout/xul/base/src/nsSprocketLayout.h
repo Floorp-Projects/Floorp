@@ -105,7 +105,7 @@ protected:
                     const nsRect& aChildLayoutRect, 
                     nsRect& aChildActualRect, 
                     nsRect& aContainingRect, 
-                    PRInt32 aFlexes, 
+                    int32_t aFlexes, 
                     bool& aFinished);
 
   void AlignChildren(nsIFrame* aBox,
@@ -121,11 +121,11 @@ protected:
 
   virtual void PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState,
                                 nsBoxSize*& aBoxSizes, nscoord& aMinSize,
-                                nscoord& aMaxSize, PRInt32& aFlexes);
+                                nscoord& aMaxSize, int32_t& aFlexes);
 
   virtual void InvalidateComputedSizes(nsComputedBoxSize* aComputedBoxSizes);
 
-  virtual bool GetDefaultFlex(PRInt32& aFlex);
+  virtual bool GetDefaultFlex(int32_t& aFlex);
 
   virtual void GetFrameState(nsIFrame* aBox, nsFrameState& aState);
 

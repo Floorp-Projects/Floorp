@@ -38,8 +38,8 @@ NS_IMETHODIMP
 nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                           nsISupports *context,
                           nsresult aStatus,
-                          PRUint32 dataLen,
-                          const PRUint8 *data)
+                          uint32_t dataLen,
+                          const uint8_t *data)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -95,7 +95,7 @@ nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 }
 
 NS_IMETHODIMP
-nsSound::PlayEventSound(PRUint32 aEventId)
+nsSound::PlayEventSound(uint32_t aEventId)
 {
   // Mac doesn't have system sound settings for each user actions.
   return NS_OK;

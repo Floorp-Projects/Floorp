@@ -84,7 +84,7 @@ NS_IMETHODIMP
 StatementParams::NewEnumerate(nsIXPConnectWrappedNative *aWrapper,
                               JSContext *aCtx,
                               JSObject *aScopeObj,
-                              PRUint32 aEnumOp,
+                              uint32_t aEnumOp,
                               jsval *_statep,
                               jsid *_idp,
                               bool *_retval)
@@ -109,7 +109,7 @@ StatementParams::NewEnumerate(nsIXPConnectWrappedNative *aWrapper,
       NS_ASSERTION(*_statep != JSVAL_NULL, "Internal state is null!");
 
       // Make sure we are in range first.
-      PRUint32 index = static_cast<PRUint32>(JSVAL_TO_INT(*_statep));
+      uint32_t index = static_cast<uint32_t>(JSVAL_TO_INT(*_statep));
       if (index >= mParamCount) {
         *_statep = JSVAL_NULL;
         return NS_OK;
@@ -153,7 +153,7 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
                             JSContext *aCtx,
                             JSObject *aScopeObj,
                             jsid aId,
-                            PRUint32 aFlags,
+                            uint32_t aFlags,
                             JSObject **_objp,
                             bool *_retval)
 {
@@ -165,7 +165,7 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
   bool resolved = false;
   bool ok = true;
   if (JSID_IS_INT(aId)) {
-    PRUint32 idx = JSID_TO_INT(aId);
+    uint32_t idx = JSID_TO_INT(aId);
 
     // Ensure that our index is within range.  We do not care about the
     // prototype chain being checked here.
@@ -185,7 +185,7 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
     // Check to see if there's a parameter with this name, and if not, let
     // the rest of the prototype chain be checked.
     NS_ConvertUTF16toUTF8 name(nameChars, nameLength);
-    PRUint32 idx;
+    uint32_t idx;
     nsresult rv = mStatement->GetParameterIndex(name, &idx);
     if (NS_SUCCEEDED(rv)) {
       ok = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID, nullptr,

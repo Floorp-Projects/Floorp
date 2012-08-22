@@ -29,18 +29,18 @@ NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 }
 
 int
-Test(const char* filename, PRInt32 minSize, PRInt32 maxSize, 
-     PRInt32 sizeIncrement, PRInt32 iterations)
+Test(const char* filename, int32_t minSize, int32_t maxSize, 
+     int32_t sizeIncrement, int32_t iterations)
 {
     fprintf(stdout, "      size  write:    mean     stddev      iters  total:    mean     stddev      iters\n");
-    for (PRInt32 size = minSize; size <= maxSize; size += sizeIncrement) {
+    for (int32_t size = minSize; size <= maxSize; size += sizeIncrement) {
         // create a buffer of stuff to write
         char* buf = (char*)PR_Malloc(size);
         if (buf == NULL)
             return -1;
 
         // initialize it with a pattern
-        PRInt32 i;
+        int32_t i;
         char hex[] = "0123456789ABCDEF";
         for (i = 0; i < size; i++) {
             buf[i] = hex[i & 0xF];
@@ -58,7 +58,7 @@ Test(const char* filename, PRInt32 minSize, PRInt32 maxSize,
                 return -1;
 
             PRIntervalTime writeStart = PR_IntervalNow();
-            PRInt32 rv = PR_Write(fd, buf, size);
+            int32_t rv = PR_Write(fd, buf, size);
             if (rv < 0) return rv;
             if (rv != size) return -1;
             PRIntervalTime writeStop = PR_IntervalNow();
@@ -94,8 +94,8 @@ Test(const char* filename, PRInt32 minSize, PRInt32 maxSize,
         NS_MeanAndStdDev(totalCount, totalRate, totalRateSquared,
                          &totalMean, &totalStddev);
         fprintf(stdout, "%10d      %10.2f %10.2f %10d      %10.2f %10.2f %10d\n",
-                size, writeMean, writeStddev, (PRInt32)writeCount, 
-                totalMean, totalStddev, (PRInt32)totalCount);
+                size, writeMean, writeStddev, (int32_t)writeCount, 
+                totalMean, totalStddev, (int32_t)totalCount);
     }
     return 0;
 }

@@ -26,7 +26,7 @@ public:
     eSecond
   };
 
-  void Init(PRUint8 aAttrEnum = 0xff, PRInt32 aValue1 = 0, PRInt32 aValue2 = 0) {
+  void Init(uint8_t aAttrEnum = 0xff, int32_t aValue1 = 0, int32_t aValue2 = 0) {
     mAnimVal[0] = mBaseVal[0] = aValue1;
     mAnimVal[1] = mBaseVal[1] = aValue2;
     mAttrEnum = aAttrEnum;
@@ -38,12 +38,12 @@ public:
                               nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue) const;
 
-  void SetBaseValue(PRInt32 aValue, PairIndex aIndex, nsSVGElement *aSVGElement);
-  void SetBaseValues(PRInt32 aValue1, PRInt32 aValue2, nsSVGElement *aSVGElement);
-  PRInt32 GetBaseValue(PairIndex aIndex) const
+  void SetBaseValue(int32_t aValue, PairIndex aIndex, nsSVGElement *aSVGElement);
+  void SetBaseValues(int32_t aValue1, int32_t aValue2, nsSVGElement *aSVGElement);
+  int32_t GetBaseValue(PairIndex aIndex) const
     { return mBaseVal[aIndex == eFirst ? 0 : 1]; }
-  void SetAnimValue(const PRInt32 aValue[2], nsSVGElement *aSVGElement);
-  PRInt32 GetAnimValue(PairIndex aIndex) const
+  void SetAnimValue(const int32_t aValue[2], nsSVGElement *aSVGElement);
+  int32_t GetAnimValue(PairIndex aIndex) const
     { return mAnimVal[aIndex == eFirst ? 0 : 1]; }
 
   // Returns true if the animated value of this integer has been explicitly
@@ -62,9 +62,9 @@ public:
 
 private:
 
-  PRInt32 mAnimVal[2];
-  PRInt32 mBaseVal[2];
-  PRUint8 mAttrEnum; // element specified tracking for attribute
+  int32_t mAnimVal[2];
+  int32_t mBaseVal[2];
+  uint8_t mAttrEnum; // element specified tracking for attribute
   bool mIsAnimated;
   bool mIsBaseSet;
 
@@ -81,9 +81,9 @@ public:
     nsRefPtr<nsSVGElement> mSVGElement;
     PairIndex mIndex; // are we the first or second integer
 
-    NS_IMETHOD GetBaseVal(PRInt32* aResult)
+    NS_IMETHOD GetBaseVal(int32_t* aResult)
       { *aResult = mVal->GetBaseValue(mIndex); return NS_OK; }
-    NS_IMETHOD SetBaseVal(PRInt32 aValue)
+    NS_IMETHOD SetBaseVal(int32_t aValue)
       {
         mVal->SetBaseValue(aValue, mIndex, mSVGElement);
         return NS_OK;
@@ -91,7 +91,7 @@ public:
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    NS_IMETHOD GetAnimVal(PRInt32* aResult)
+    NS_IMETHOD GetAnimVal(int32_t* aResult)
     {
       mSVGElement->FlushAnimations();
       *aResult = mVal->GetAnimValue(mIndex);

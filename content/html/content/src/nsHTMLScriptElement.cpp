@@ -53,10 +53,10 @@ public:
   NS_IMETHOD Click() {
     return nsGenericHTMLElement::Click();
   }
-  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex) {
+  NS_IMETHOD GetTabIndex(int32_t* aTabIndex) {
     return nsGenericHTMLElement::GetTabIndex(aTabIndex);
   }
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) {
+  NS_IMETHOD SetTabIndex(int32_t aTabIndex) {
     return nsGenericHTMLElement::SetTabIndex(aTabIndex);
   }
   NS_IMETHOD Focus() {
@@ -82,7 +82,7 @@ public:
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers);
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
                               nsAttrValue& aResult);
@@ -90,7 +90,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsGenericElement
-  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 
   virtual nsXPCClassInfo* GetClassInfo();
@@ -154,7 +154,7 @@ nsHTMLScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 bool
-nsHTMLScriptElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLScriptElement::ParseAttribute(int32_t aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
@@ -232,7 +232,7 @@ nsHTMLScriptElement::SetAsync(bool aValue)
 }
 
 nsresult
-nsHTMLScriptElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+nsHTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                   const nsAttrValue* aValue, bool aNotify)
 {
   if (nsGkAtoms::async == aName && kNameSpaceID_None == aNamespaceID) {

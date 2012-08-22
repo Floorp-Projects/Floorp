@@ -32,9 +32,9 @@ nsFixedSizeAllocator::AddBucket(size_t aSize)
 nsresult
 nsFixedSizeAllocator::Init(const char* aName,
                            const size_t* aBucketSizes,
-                           PRInt32 aNumBuckets,
-                           PRInt32 aInitialSize,
-                           PRInt32 aAlign)
+                           int32_t aNumBuckets,
+                           int32_t aInitialSize,
+                           int32_t aAlign)
 {
     NS_PRECONDITION(aNumBuckets > 0, "no buckets");
     if (aNumBuckets <= 0)
@@ -44,11 +44,11 @@ nsFixedSizeAllocator::Init(const char* aName,
     if (mBuckets)
         PL_FinishArenaPool(&mPool);
 
-    PRInt32 bucketspace = aNumBuckets * sizeof(Bucket);
+    int32_t bucketspace = aNumBuckets * sizeof(Bucket);
     PL_InitArenaPool(&mPool, aName, bucketspace + aInitialSize, aAlign);
 
     mBuckets = nullptr;
-    for (PRInt32 i = 0; i < aNumBuckets; ++i)
+    for (int32_t i = 0; i < aNumBuckets; ++i)
         AddBucket(aBucketSizes[i]);
 
     return NS_OK;

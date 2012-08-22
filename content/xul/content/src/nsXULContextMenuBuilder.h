@@ -35,7 +35,7 @@ protected:
   nsCOMPtr<nsIAtom>             mGeneratedItemIdAttr;
 
   nsCOMPtr<nsIContent>          mCurrentNode;
-  PRInt32                       mCurrentGeneratedItemId;
+  int32_t                       mCurrentGeneratedItemId;
 
   nsCOMArray<nsIDOMHTMLElement> mElements;
 };

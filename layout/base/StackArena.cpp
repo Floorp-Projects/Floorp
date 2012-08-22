@@ -87,7 +87,7 @@ StackArena::Push()
   // allows callers not to worry about error checking.
   if (mStackTop >= mMarkLength)
   {
-    PRUint32 newLength = mStackTop + STACK_ARENA_MARK_INCREMENT;
+    uint32_t newLength = mStackTop + STACK_ARENA_MARK_INCREMENT;
     StackMark* newMarks = new StackMark[newLength];
     if (newMarks) {
       if (mMarkLength)

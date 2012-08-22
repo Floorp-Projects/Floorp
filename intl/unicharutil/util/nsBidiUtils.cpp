@@ -12,24 +12,24 @@
 #define ARABIC_TO_PERSIAN_DIGIT_INCREMENT (START_FARSI_DIGITS - START_ARABIC_DIGITS)
 #define NUM_TO_ARABIC(c) \
   ((((c)>=START_HINDI_DIGITS) && ((c)<=END_HINDI_DIGITS)) ? \
-   ((c) - (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT) : \
+   ((c) - (uint16_t)ARABIC_TO_HINDI_DIGIT_INCREMENT) : \
    ((((c)>=START_FARSI_DIGITS) && ((c)<=END_FARSI_DIGITS)) ? \
-    ((c) - (PRUint16)ARABIC_TO_PERSIAN_DIGIT_INCREMENT) : \
+    ((c) - (uint16_t)ARABIC_TO_PERSIAN_DIGIT_INCREMENT) : \
      (c)))
 #define NUM_TO_HINDI(c) \
   ((((c)>=START_ARABIC_DIGITS) && ((c)<=END_ARABIC_DIGITS)) ? \
-   ((c) + (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT): \
+   ((c) + (uint16_t)ARABIC_TO_HINDI_DIGIT_INCREMENT): \
    ((((c)>=START_FARSI_DIGITS) && ((c)<=END_FARSI_DIGITS)) ? \
-    ((c) + (PRUint16)PERSIAN_TO_HINDI_DIGIT_INCREMENT) : \
+    ((c) + (uint16_t)PERSIAN_TO_HINDI_DIGIT_INCREMENT) : \
      (c)))
 #define NUM_TO_PERSIAN(c) \
   ((((c)>=START_HINDI_DIGITS) && ((c)<=END_HINDI_DIGITS)) ? \
-   ((c) - (PRUint16)PERSIAN_TO_HINDI_DIGIT_INCREMENT) : \
+   ((c) - (uint16_t)PERSIAN_TO_HINDI_DIGIT_INCREMENT) : \
    ((((c)>=START_ARABIC_DIGITS) && ((c)<=END_ARABIC_DIGITS)) ? \
-    ((c) + (PRUint16)ARABIC_TO_PERSIAN_DIGIT_INCREMENT) : \
+    ((c) + (uint16_t)ARABIC_TO_PERSIAN_DIGIT_INCREMENT) : \
      (c)))
 
-PRUnichar HandleNumberInChar(PRUnichar aChar, bool aPrevCharArabic, PRUint32 aNumFlag)
+PRUnichar HandleNumberInChar(PRUnichar aChar, bool aPrevCharArabic, uint32_t aNumFlag)
 {
   // IBMBIDI_NUMERAL_NOMINAL *
   // IBMBIDI_NUMERAL_REGULAR
@@ -63,9 +63,9 @@ PRUnichar HandleNumberInChar(PRUnichar aChar, bool aPrevCharArabic, PRUint32 aNu
   }
 }
 
-nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
+nsresult HandleNumbers(PRUnichar* aBuffer, uint32_t aSize, uint32_t aNumFlag)
 {
-  PRUint32 i;
+  uint32_t i;
 
   switch (aNumFlag) {
     case IBMBIDI_NUMERAL_HINDI:
@@ -87,7 +87,7 @@ nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
 #define LRM_CHAR 0x200e
 #define LRE_CHAR 0x202a
 #define RLO_CHAR 0x202e
-bool IsBidiControl(PRUint32 aChar)
+bool IsBidiControl(uint32_t aChar)
 {
   // This method is used when stripping Bidi control characters for
   // display, so it will return TRUE for LRM, RLM, LRE, RLE, PDF, LRO and RLO
@@ -101,8 +101,8 @@ bool HasRTLChars(const nsAString& aString)
 // right-to-left characters. To simplify things, anything that could be a
 // surrogate or RTL presentation form is covered just by testing >= 0xD800).
 // It's fine to enable bidi in rare cases where it actually isn't needed.
-  PRInt32 length = aString.Length();
-  for (PRInt32 i = 0; i < length; i++) {
+  int32_t length = aString.Length();
+  for (int32_t i = 0; i < length; i++) {
     PRUnichar ch = aString.CharAt(i);
     if (ch >= 0xD800 || IS_IN_BMP_RTL_BLOCK(ch)) {
       return true;

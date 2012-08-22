@@ -11,7 +11,7 @@
 using namespace mozilla;
 
 static const float PATH_SEG_LENGTH_TOLERANCE = 0.0000001f;
-static const PRUint32 MAX_RECURSION = 10;
+static const uint32_t MAX_RECURSION = 10;
 
 
 /* static */ void
@@ -22,7 +22,7 @@ SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
                      nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL);
   PR_STATIC_ASSERT(NS_SVG_PATH_SEG_MAX_ARGS == 7);
 
-  PRUint32 type = DecodeType(aSeg[0]);
+  uint32_t type = DecodeType(aSeg[0]);
   PRUnichar typeAsChar = GetPathSegTypeAsLetter(type);
 
   // Special case arcs:
@@ -125,14 +125,14 @@ SplitCubicBezier(const gfxPoint* aCurve, gfxPoint* aLeft, gfxPoint* aRight)
 }
 
 static gfxFloat
-CalcBezLengthHelper(gfxPoint* aCurve, PRUint32 aNumPts,
-                    PRUint32 aRecursionCount,
+CalcBezLengthHelper(gfxPoint* aCurve, uint32_t aNumPts,
+                    uint32_t aRecursionCount,
                     void (*aSplit)(const gfxPoint*, gfxPoint*, gfxPoint*))
 {
   gfxPoint left[4];
   gfxPoint right[4];
   gfxFloat length = 0, dist;
-  for (PRUint32 i = 0; i < aNumPts - 1; i++) {
+  for (uint32_t i = 0; i < aNumPts - 1; i++) {
     length += CalcDistanceBetweenPoints(aCurve[i], aCurve[i+1]);
   }
   dist = CalcDistanceBetweenPoints(aCurve[0], aCurve[aNumPts - 1]);
@@ -441,6 +441,6 @@ SVGPathSegUtils::TraversePathSegment(const float* aData,
 {
   PR_STATIC_ASSERT(NS_ARRAY_LENGTH(gTraverseFuncTable) ==
                      NS_SVG_PATH_SEG_TYPE_COUNT);
-  PRUint32 type = DecodeType(aData[0]);
+  uint32_t type = DecodeType(aData[0]);
   gTraverseFuncTable[type](aData + 1, aState);
 }

@@ -70,13 +70,13 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 namespace {
 
-PRInt32 gShutdown = 0;
-PRInt32 gClosed = 0;
+int32_t gShutdown = 0;
+int32_t gClosed = 0;
 
 // Does not hold a reference.
 IndexedDatabaseManager* gInstance = nullptr;
 
-PRInt32 gIndexedDBQuotaMB = DEFAULT_QUOTA_MB;
+int32_t gIndexedDBQuotaMB = DEFAULT_QUOTA_MB;
 
 bool
 GetBaseFilename(const nsAString& aFilename,
@@ -105,10 +105,10 @@ public:
 
   NS_IMETHOD
   QuotaExceeded(const nsACString& aFilename,
-                PRInt64 aCurrentSizeLimit,
-                PRInt64 aCurrentTotalSize,
+                int64_t aCurrentSizeLimit,
+                int64_t aCurrentTotalSize,
                 nsISupports* aUserData,
-                PRInt64* _retval)
+                int64_t* _retval)
   {
     if (IndexedDatabaseManager::QuotaIsLifted()) {
       *_retval = 0;
@@ -153,7 +153,7 @@ InvalidateAllFileManagers(const nsACString& aKey,
   NS_ASSERTION(!aKey.IsEmpty(), "Empty key!");
   NS_ASSERTION(aValue, "Null pointer!");
 
-  for (PRUint32 i = 0; i < aValue->Length(); i++) {
+  for (uint32_t i = 0; i < aValue->Length(); i++) {
     nsRefPtr<FileManager> fileManager = aValue->ElementAt(i);
     fileManager->Invalidate();
   }
@@ -474,7 +474,7 @@ IndexedDatabaseManager::WaitForOpenAllowed(const nsACString& aOrigin,
 
   // See if this runnable needs to wait.
   bool delayed = false;
-  for (PRUint32 index = mSynchronizedOps.Length(); index > 0; index--) {
+  for (uint32_t index = mSynchronizedOps.Length(); index > 0; index--) {
     nsAutoPtr<SynchronizedOp>& existingOp = mSynchronizedOps[index - 1];
     if (op->MustWaitFor(*existingOp)) {
       existingOp->DelayRunnable(aRunnable);
@@ -503,8 +503,8 @@ IndexedDatabaseManager::AllowNextSynchronizedOp(const nsACString& aOrigin,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!aOrigin.IsEmpty(), "Empty origin!");
 
-  PRUint32 count = mSynchronizedOps.Length();
-  for (PRUint32 index = 0; index < count; index++) {
+  uint32_t count = mSynchronizedOps.Length();
+  for (uint32_t index = 0; index < count; index++) {
     nsAutoPtr<SynchronizedOp>& op = mSynchronizedOps[index];
     if (op->mOrigin.Equals(aOrigin)) {
       if (op->mId == aId) {
@@ -558,7 +558,7 @@ IndexedDatabaseManager::AcquireExclusiveAccess(
     if (aDatabase) {
       // Grab all databases that are not yet closed but whose database id match
       // the one we're looking for.
-      for (PRUint32 index = 0; index < array->Length(); index++) {
+      for (uint32_t index = 0; index < array->Length(); index++) {
         IDBDatabase*& database = array->ElementAt(index);
         if (!database->IsClosed() &&
             database != aDatabase &&
@@ -629,7 +629,7 @@ IndexedDatabaseManager::AbortCloseDatabasesForWindow(nsPIDOMWindow* aWindow)
   FileService* service = FileService::Get();
   TransactionThreadPool* pool = TransactionThreadPool::Get();
 
-  for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
+  for (uint32_t index = 0; index < liveDatabases.Length(); index++) {
     IDBDatabase*& database = liveDatabases[index];
     if (database->GetOwner() == aWindow) {
       if (NS_FAILED(database->Close())) {
@@ -663,7 +663,7 @@ IndexedDatabaseManager::HasOpenTransactions(nsPIDOMWindow* aWindow)
     return false;
   }
 
-  for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
+  for (uint32_t index = 0; index < liveDatabases.Length(); index++) {
     IDBDatabase*& database = liveDatabases[index];
     if (database->GetOwner() == aWindow &&
         ((service && service->HasLockedFilesForStorage(database)) ||
@@ -725,10 +725,10 @@ IndexedDatabaseManager::SetCurrentWindowInternal(nsPIDOMWindow* aWindow)
 }
 
 // static
-PRUint32
+uint32_t
 IndexedDatabaseManager::GetIndexedDBQuotaMB()
 {
-  return PRUint32(NS_MAX(gIndexedDBQuotaMB, 0));
+  return uint32_t(NS_MAX(gIndexedDBQuotaMB, 0));
 }
 
 nsresult
@@ -892,7 +892,7 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < subdirsToProcess.Length(); i++) {
+  for (uint32_t i = 0; i < subdirsToProcess.Length(); i++) {
     const nsString& subdir = subdirsToProcess[i];
     if (!validSubdirs.GetEntry(subdir)) {
       NS_WARNING("Unknown subdirectory found!");
@@ -900,7 +900,7 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     }
   }
 
-  for (PRUint32 i = 0; i < unknownFiles.Length(); i++) {
+  for (uint32_t i = 0; i < unknownFiles.Length(); i++) {
     nsCOMPtr<nsIFile>& unknownFile = unknownFiles[i];
 
     // Some temporary SQLite files could disappear, so we have to check if the
@@ -1056,7 +1056,7 @@ IndexedDatabaseManager::GetOrCreateFileManager(const nsACString& aOrigin,
   }
 
   nsRefPtr<FileManager> fileManager;
-  for (PRUint32 i = 0; i < array->Length(); i++) {
+  for (uint32_t i = 0; i < array->Length(); i++) {
     nsRefPtr<FileManager> fm = array->ElementAt(i);
 
     if (fm->DatabaseName().Equals(aDatabaseName)) {
@@ -1083,7 +1083,7 @@ IndexedDatabaseManager::GetFileManager(const nsACString& aOrigin,
     return nullptr;
   }
 
-  for (PRUint32 i = 0; i < array->Length(); i++) {
+  for (uint32_t i = 0; i < array->Length(); i++) {
     nsRefPtr<FileManager>& fileManager = array->ElementAt(i);
 
     if (fileManager->DatabaseName().Equals(aDatabaseName)) {
@@ -1101,7 +1101,7 @@ IndexedDatabaseManager::InvalidateFileManagersForOrigin(
 {
   nsTArray<nsRefPtr<FileManager> >* array;
   if (mFileManagers.Get(aOrigin, &array)) {
-    for (PRUint32 i = 0; i < array->Length(); i++) {
+    for (uint32_t i = 0; i < array->Length(); i++) {
       nsRefPtr<FileManager> fileManager = array->ElementAt(i);
       fileManager->Invalidate();
     }
@@ -1118,7 +1118,7 @@ IndexedDatabaseManager::InvalidateFileManager(const nsACString& aOrigin,
     return;
   }
 
-  for (PRUint32 i = 0; i < array->Length(); i++) {
+  for (uint32_t i = 0; i < array->Length(); i++) {
     nsRefPtr<FileManager> fileManager = array->ElementAt(i);
     if (fileManager->DatabaseName().Equals(aDatabaseName)) {
       fileManager->Invalidate();
@@ -1135,7 +1135,7 @@ IndexedDatabaseManager::InvalidateFileManager(const nsACString& aOrigin,
 
 nsresult
 IndexedDatabaseManager::AsyncDeleteFile(FileManager* aFileManager,
-                                        PRInt64 aFileId)
+                                        int64_t aFileId)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1191,7 +1191,7 @@ IndexedDatabaseManager::RunSynchronizedOp(IDBDatabase* aDatabase,
     aOp->mDatabases.SwapElements(databases);
   }
 
-  PRUint32 waitCount = service && pool && !databases.IsEmpty() ? 2 : 1;
+  uint32_t waitCount = service && pool && !databases.IsEmpty() ? 2 : 1;
 
   nsRefPtr<WaitForTransactionsToFinishRunnable> runnable =
     new WaitForTransactionsToFinishRunnable(aOp, waitCount);
@@ -1278,7 +1278,7 @@ IndexedDatabaseManager::CancelGetUsageForURI(
 
   // See if one of our pending callbacks matches both the URI and the callback
   // given. Cancel an remove it if so.
-  for (PRUint32 index = 0; index < mUsageRunnables.Length(); index++) {
+  for (uint32_t index = 0; index < mUsageRunnables.Length(); index++) {
     nsRefPtr<AsyncUsageRunnable>& runnable = mUsageRunnables[index];
 
     bool equals;
@@ -1334,7 +1334,7 @@ IndexedDatabaseManager::ClearDatabasesForURI(nsIURI* aURI)
     liveDatabases.AppendElements(*array);
   }
 
-  for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
+  for (uint32_t index = 0; index < liveDatabases.Length(); index++) {
     liveDatabases[index]->Invalidate();
   }
 
@@ -1436,8 +1436,8 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject,
 
     // Invalidate them all.
     if (!liveDatabases.IsEmpty()) {
-      PRUint32 count = liveDatabases.Length();
-      for (PRUint32 index = 0; index < count; index++) {
+      uint32_t count = liveDatabases.Length();
+      for (uint32_t index = 0; index < count; index++) {
         liveDatabases[index]->Invalidate();
       }
     }
@@ -1466,7 +1466,7 @@ OriginClearRunnable::InvalidateOpenedDatabases(
   nsTArray<nsRefPtr<IDBDatabase> > databases;
   databases.SwapElements(aDatabases);
 
-  for (PRUint32 index = 0; index < databases.Length(); index++) {
+  for (uint32_t index = 0; index < databases.Length(); index++) {
     databases[index]->Invalidate();
   }
 
@@ -1580,7 +1580,7 @@ IndexedDatabaseManager::AsyncUsageRunnable::Cancel()
 }
 
 inline void
-IncrementUsage(PRUint64* aUsage, PRUint64 aDelta)
+IncrementUsage(uint64_t* aUsage, uint64_t aDelta)
 {
   // Watch for overflow!
   if ((LL_MAXINT - *aUsage) <= aDelta) {
@@ -1663,7 +1663,7 @@ IndexedDatabaseManager::AsyncUsageRunnable::RunInternal()
 
       // Call the callback unless we were canceled.
       if (!mCanceled) {
-        PRUint64 usage = mUsage;
+        uint64_t usage = mUsage;
         IncrementUsage(&usage, mFileUsage);
         mCallback->OnUsageResult(mURI, usage, mFileUsage);
       }
@@ -1693,7 +1693,7 @@ IndexedDatabaseManager::AsyncUsageRunnable::RunInternal()
 nsresult
 IndexedDatabaseManager::AsyncUsageRunnable::GetUsageForDirectory(
                                      nsIFile* aDirectory,
-                                     PRUint64* aUsage)
+                                     uint64_t* aUsage)
 {
   NS_ASSERTION(aDirectory, "Null pointer!");
   NS_ASSERTION(aUsage, "Null pointer!");
@@ -1732,13 +1732,13 @@ IndexedDatabaseManager::AsyncUsageRunnable::GetUsageForDirectory(
       continue;
     }
 
-    PRInt64 fileSize;
+    int64_t fileSize;
     rv = file->GetFileSize(&fileSize);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ASSERTION(fileSize >= 0, "Negative size?!");
 
-    IncrementUsage(aUsage, PRUint64(fileSize));
+    IncrementUsage(aUsage, uint64_t(fileSize));
   }
   NS_ENSURE_SUCCESS(rv, rv);
  
@@ -1889,8 +1889,8 @@ IndexedDatabaseManager::SynchronizedOp::DispatchDelayedRunnables()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!mHelper, "Any helper should be gone by now!");
 
-  PRUint32 count = mDelayedRunnables.Length();
-  for (PRUint32 index = 0; index < count; index++) {
+  uint32_t count = mDelayedRunnables.Length();
+  for (uint32_t index = 0; index < count; index++) {
     NS_DispatchToCurrentThread(mDelayedRunnables[index]);
   }
 

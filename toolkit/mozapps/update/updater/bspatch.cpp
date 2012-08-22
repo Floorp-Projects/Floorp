@@ -80,7 +80,7 @@ MBS_ReadHeader(FILE* file, MBSPatchHeader *header)
   if (sizeof(MBSPatchHeader) +
       header->cblen +
       header->difflen +
-      header->extralen != PRUint32(hs.st_size))
+      header->extralen != uint32_t(hs.st_size))
     return UNEXPECTED_BSPATCH_ERROR;
 
   return OK;
@@ -145,10 +145,10 @@ MBS_ApplyPatch(const MBSPatchHeader *header, FILE* patchFile,
         rv = UNEXPECTED_BSPATCH_ERROR;
         goto end;
       }
-      for (PRUint32 i = 0; i < ctrlsrc->x; ++i) {
+      for (uint32_t i = 0; i < ctrlsrc->x; ++i) {
         diffsrc[i] += fbuffer[i];
       }
-      if ((PRUint32) fwrite(diffsrc, 1, ctrlsrc->x, file) != ctrlsrc->x) {
+      if ((uint32_t) fwrite(diffsrc, 1, ctrlsrc->x, file) != ctrlsrc->x) {
         rv = WRITE_ERROR;
         goto end;
       }
@@ -161,7 +161,7 @@ MBS_ApplyPatch(const MBSPatchHeader *header, FILE* patchFile,
         rv = UNEXPECTED_BSPATCH_ERROR;
         goto end;
       }
-      if ((PRUint32) fwrite(extrasrc, 1, ctrlsrc->y, file) != ctrlsrc->y) {
+      if ((uint32_t) fwrite(extrasrc, 1, ctrlsrc->y, file) != ctrlsrc->y) {
         rv = WRITE_ERROR;
         goto end;
       }

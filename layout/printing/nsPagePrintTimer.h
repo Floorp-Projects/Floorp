@@ -30,7 +30,7 @@ public:
 
   void Init(nsPrintEngine*          aPrintEngine,
             nsIDocumentViewerPrint* aDocViewerPrint,
-            PRUint32                aDelay);
+            uint32_t                aDelay);
 
   nsresult Start(nsPrintObject* aPO);
 
@@ -42,8 +42,8 @@ private:
   nsPrintEngine*             mPrintEngine;
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
   nsCOMPtr<nsITimer>         mTimer;
-  PRUint32                   mDelay;
-  PRUint32                   mFiringCount;
+  uint32_t                   mDelay;
+  uint32_t                   mFiringCount;
   nsPrintObject *            mPrintObj;
 };
 

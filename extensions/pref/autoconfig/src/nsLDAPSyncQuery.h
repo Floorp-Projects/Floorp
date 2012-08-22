@@ -36,10 +36,10 @@ class nsLDAPSyncQuery : public nsILDAPSyncQuery,
     nsCOMPtr<nsILDAPOperation> mOperation;   // current ldap op
     nsCOMPtr<nsILDAPURL> mServerURL;         // LDAP URL
     bool mFinished;                        // control variable for eventQ
-    PRUint32 mAttrCount;                     // No. of attrbiutes
+    uint32_t mAttrCount;                     // No. of attrbiutes
     char **mAttrs;                           // Attributes to search
     nsString mResults;                       // values to return
-    PRUint32 mProtocolVersion;               // LDAP version to use
+    uint32_t mProtocolVersion;               // LDAP version to use
 
     nsresult InitConnection();
     // check that we bound ok and start then call StartLDAPSearch

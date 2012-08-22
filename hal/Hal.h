@@ -400,7 +400,7 @@ void NotifyAlarmFired();
  * This API is currently only allowed to be used from non-sandboxed
  * contexts.
  */
-bool SetAlarm(PRInt32 aSeconds, PRInt32 aNanoseconds);
+bool SetAlarm(int32_t aSeconds, int32_t aNanoseconds);
 
 /**
  * Set the priority of the given process.

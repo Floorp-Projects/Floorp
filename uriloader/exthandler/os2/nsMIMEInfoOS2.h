@@ -41,8 +41,8 @@ class nsMIMEInfoOS2 : public nsMIMEInfoBase, public nsIPropertyBag
     void GetDefaultApplication(nsIFile **aDefaultAppHandler);
     void SetDefaultApplication(nsIFile *aDefaultApplication);
 
-    void GetDefaultAppHandle(PRUint32 *aHandle);
-    void SetDefaultAppHandle(PRUint32 aHandle);
+    void GetDefaultAppHandle(uint32_t *aHandle);
+    void SetDefaultAppHandle(uint32_t aHandle);
 
   protected:
     virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
@@ -55,7 +55,7 @@ class nsMIMEInfoOS2 : public nsMIMEInfoBase, public nsIPropertyBag
     NS_IMETHOD GetIconURLVariant(nsIFile *aApplication, nsIVariant **_retval);
 
     nsCOMPtr<nsIFile> mDefaultApplication;
-    PRUint32 mDefaultAppHandle;
+    uint32_t mDefaultAppHandle;
 };
 
 #endif

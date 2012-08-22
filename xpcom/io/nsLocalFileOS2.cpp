@@ -82,10 +82,10 @@ static nsresult ConvertOS2Error(int err)
 }
 
 static void
-myLL_L2II(PRInt64 result, PRInt32 *hi, PRInt32 *lo )
+myLL_L2II(int64_t result, int32_t *hi, int32_t *lo )
 {
-    PRInt64 a64, b64;  // probably could have been done with
-                       // only one PRInt64, but these are macros,
+    int64_t a64, b64;  // probably could have been done with
+                       // only one int64_t, but these are macros,
                        // and I am a wimp.
 
     // shift the hi word to the low word, then push it into a long.
@@ -381,8 +381,8 @@ public:
 private:
     // mDrives is a bitmap representing the available drives
     // mLetter is incremented each time mDrives is shifted rightward
-    PRUint32    mDrives;
-    PRUint8     mLetter;
+    uint32_t    mDrives;
+    uint8_t     mLetter;
 };
 
 NS_IMPL_ISUPPORTS1(nsDriveEnumerator, nsISimpleEnumerator)
@@ -474,7 +474,7 @@ public:
     ~TypeEaEnumerator() { if (mEaBuf) NS_Free(mEaBuf); }
 
     nsresult Init(nsLocalFile * aFile);
-    char *   GetNext(PRUint32 *lth);
+    char *   GetNext(uint32_t *lth);
 
 private:
     char *  mEaBuf;
@@ -519,7 +519,7 @@ nsresult TypeEaEnumerator::Init(nsLocalFile * aFile)
 }
 
 
-char *   TypeEaEnumerator::GetNext(PRUint32 *lth)
+char *   TypeEaEnumerator::GetNext(uint32_t *lth)
 {
     char *  result = nullptr;
 
@@ -679,7 +679,7 @@ nsLocalFile::InitWithNativePath(const nsACString &filePath)
 
     mWorkingPath = filePath;
     // kill any trailing '\' provided it isn't the second char of DBCS
-    PRInt32 len = mWorkingPath.Length() - 1;
+    int32_t len = mWorkingPath.Length() - 1;
     if (mWorkingPath[len] == '\\' && !::isleadbyte(mWorkingPath[len - 1]))
         mWorkingPath.Truncate(len);
 
@@ -687,7 +687,7 @@ nsLocalFile::InitWithNativePath(const nsACString &filePath)
 }
 
 NS_IMETHODIMP
-nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
+nsLocalFile::OpenNSPRFileDesc(int32_t flags, int32_t mode, PRFileDesc **_retval)
 {
     nsresult rv = Stat();
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
@@ -720,7 +720,7 @@ nsLocalFile::OpenANSIFileDesc(const char *mode, FILE * *_retval)
 }
 
 NS_IMETHODIMP
-nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
+nsLocalFile::Create(uint32_t type, uint32_t attributes)
 {
     if (type != NORMAL_FILE_TYPE && type != DIRECTORY_TYPE)
         return NS_ERROR_FILE_UNKNOWN_TYPE;
@@ -877,7 +877,7 @@ nsLocalFile::Normalize()
     // using ".."  For a local drive this is the first slash (e.g. "c:\").
     // For a UNC path it is the slash following the share name
     // (e.g. "\\server\share\").
-    PRInt32 rootIdx = 2;        // default to local drive
+    int32_t rootIdx = 2;        // default to local drive
     if (path.First() == '\\')   // if a share then calculate the rootIdx
     {
         rootIdx = path.FindChar('\\', 2);   // skip \\ in front of the server
@@ -908,11 +908,11 @@ nsLocalFile::Normalize()
         else
             path.Replace(0, 2, currentDir + NS_LITERAL_STRING("\\"));
     }
-    NS_POSTCONDITION(0 < rootIdx && rootIdx < (PRInt32)path.Length(), "rootIdx is invalid");
+    NS_POSTCONDITION(0 < rootIdx && rootIdx < (int32_t)path.Length(), "rootIdx is invalid");
     NS_POSTCONDITION(path.CharAt(rootIdx) == '\\', "rootIdx is invalid");
 
     // if there is nothing following the root path then it is already normalized
-    if (rootIdx + 1 == (PRInt32)path.Length())
+    if (rootIdx + 1 == (int32_t)path.Length())
         return NS_OK;
 
     // assign the root
@@ -931,8 +931,8 @@ nsLocalFile::Normalize()
     // The last form is something that Windows 95 and 98 supported and
     // is a shortcut for changing up multiple directories. Windows XP
     // and ilk ignore it in a path, as is done here.
-    PRInt32 len, begin, end = rootIdx;
-    while (end < (PRInt32)path.Length())
+    int32_t len, begin, end = rootIdx;
+    while (end < (int32_t)path.Length())
     {
         // find the current segment (text between the backslashes) to
         // be examined, this will set the following variables:
@@ -962,7 +962,7 @@ nsLocalFile::Normalize()
                 // back up a path component on double dot
                 if (len == 2)
                 {
-                    PRInt32 prev = normal.RFindChar('\\');
+                    int32_t prev = normal.RFindChar('\\');
                     if (prev >= rootIdx)
                         normal.Truncate(prev);
                     continue;
@@ -989,7 +989,7 @@ nsLocalFile::Normalize()
     }
 
     // kill trailing dots and spaces.
-    PRInt32 filePathLen = normal.Length() - 1;
+    int32_t filePathLen = normal.Length() - 1;
     while(filePathLen > 0 && (normal[filePathLen] == ' ' || normal[filePathLen] == '.'))
     {
         normal.Truncate(filePathLen--);
@@ -1032,7 +1032,7 @@ nsLocalFile::SetNativeLeafName(const nsACString &aLeafName)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     // cannot use nsCString::RFindChar() due to 0x5c problem
-    PRInt32 offset = (PRInt32) (_mbsrchr(temp, '\\') - temp);
+    int32_t offset = (int32_t) (_mbsrchr(temp, '\\') - temp);
     if (offset)
     {
         mWorkingPath.Truncate(offset+1);
@@ -1112,8 +1112,8 @@ nsLocalFile::GetFileTypes(nsIArray **_retval)
         do_CreateInstance(NS_ARRAY_CONTRACTID);
     NS_ENSURE_STATE(mutArray);
 
-    PRInt32  cnt;
-    PRUint32 lth;
+    int32_t  cnt;
+    uint32_t lth;
     char *   ptr;
 
     // get each file type, convert to a CString, then add to the array
@@ -1156,7 +1156,7 @@ nsLocalFile::IsFileType(const nsACString& fileType, bool *_retval)
     if (NS_FAILED(rv))
         return rv;
 
-    PRUint32 lth;
+    uint32_t lth;
     char *   ptr;
 
     // compare each type to the request;  if there's a match, exit
@@ -1207,9 +1207,9 @@ nsLocalFile::SetFileTypes(const nsACString& fileTypes)
     if (fileTypes.IsEmpty())
         return NS_ERROR_FAILURE;
 
-    PRUint32 cnt = CountCharInReadable(fileTypes, ',');
-    PRUint32 lth = fileTypes.Length() - cnt + (cnt * sizeof(TYPEEA2));
-    PRUint32 size = sizeof(TYPEEA) + lth;
+    uint32_t cnt = CountCharInReadable(fileTypes, ',');
+    uint32_t lth = fileTypes.Length() - cnt + (cnt * sizeof(TYPEEA2));
+    uint32_t size = sizeof(TYPEEA) + lth;
 
     char *pBuf = (char*)NS_Alloc(size);
     if (!pBuf)
@@ -1292,7 +1292,7 @@ nsLocalFile::SetFileSource(const nsACString& aURI)
         return NS_ERROR_FAILURE;
 
     // this includes an extra character for the spec's trailing null
-    PRUint32 lth = sizeof(SUBJEA) + aURI.Length();
+    uint32_t lth = sizeof(SUBJEA) + aURI.Length();
     char *   pBuf = (char*)NS_Alloc(lth);
     if (!pBuf)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1702,7 +1702,7 @@ nsLocalFile::Remove(bool recursive)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
+nsLocalFile::GetLastModifiedTime(int64_t *aLastModifiedTime)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -1715,7 +1715,7 @@ nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
         return rv;
 
     // microseconds -> milliseconds
-    PRInt64 usecPerMsec;
+    int64_t usecPerMsec;
     LL_I2L(usecPerMsec, PR_USEC_PER_MSEC);
     LL_DIV(*aLastModifiedTime, mFileInfo64.modifyTime, usecPerMsec);
     return NS_OK;
@@ -1723,14 +1723,14 @@ nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
 
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTime)
+nsLocalFile::GetLastModifiedTimeOfLink(int64_t *aLastModifiedTime)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTime(PRInt64 aLastModifiedTime)
+nsLocalFile::SetLastModifiedTime(int64_t aLastModifiedTime)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -1740,13 +1740,13 @@ nsLocalFile::SetLastModifiedTime(PRInt64 aLastModifiedTime)
 
 
 NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTime)
+nsLocalFile::SetLastModifiedTimeOfLink(int64_t aLastModifiedTime)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-nsLocalFile::SetModDate(PRInt64 aLastModifiedTime)
+nsLocalFile::SetModDate(int64_t aLastModifiedTime)
 {
     nsresult rv = Stat();
 
@@ -1793,7 +1793,7 @@ nsLocalFile::SetModDate(PRInt64 aLastModifiedTime)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetPermissions(PRUint32 *aPermissions)
+nsLocalFile::GetPermissions(uint32_t *aPermissions)
 {
     NS_ENSURE_ARG(aPermissions);
 
@@ -1815,7 +1815,7 @@ nsLocalFile::GetPermissions(PRUint32 *aPermissions)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetPermissionsOfLink(PRUint32 *aPermissionsOfLink)
+nsLocalFile::GetPermissionsOfLink(uint32_t *aPermissionsOfLink)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1825,7 +1825,7 @@ nsLocalFile::GetPermissionsOfLink(PRUint32 *aPermissionsOfLink)
 // to change any of the other DOS-style attributes;  to enforce
 // this, we use DosSetPathInfo() rather than chmod()
 NS_IMETHODIMP
-nsLocalFile::SetPermissions(PRUint32 aPermissions)
+nsLocalFile::SetPermissions(uint32_t aPermissions)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -1863,14 +1863,14 @@ nsLocalFile::SetPermissions(PRUint32 aPermissions)
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetPermissionsOfLink(PRUint32 aPermissions)
+nsLocalFile::SetPermissionsOfLink(uint32_t aPermissions)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP
-nsLocalFile::GetFileSize(PRInt64 *aFileSize)
+nsLocalFile::GetFileSize(int64_t *aFileSize)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -1888,14 +1888,14 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 
 
 NS_IMETHODIMP
-nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
+nsLocalFile::GetFileSizeOfLink(int64_t *aFileSize)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP
-nsLocalFile::SetFileSize(PRInt64 aFileSize)
+nsLocalFile::SetFileSize(int64_t aFileSize)
 {
     nsresult rv = Stat();
     if (NS_FAILED(rv))
@@ -1921,7 +1921,7 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
     }
 
     // Seek to new, desired end of file
-    PRInt32 hi, lo;
+    int32_t hi, lo;
     myLL_L2II(aFileSize, &hi, &lo );
 
     rc = DosSetFileSize(hFile, lo);
@@ -1935,7 +1935,7 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
+nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -1975,7 +1975,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     nsCAutoString parentPath(mWorkingPath);
 
     // cannot use nsCString::RFindChar() due to 0x5c problem
-    PRInt32 offset = (PRInt32) (_mbsrchr((const unsigned char *) parentPath.get(), '\\')
+    int32_t offset = (int32_t) (_mbsrchr((const unsigned char *) parentPath.get(), '\\')
                      - (const unsigned char *) parentPath.get());
     // adding this offset check that was removed in bug 241708 fixes mail
     // directories that aren't relative to/underneath the profile dir.
@@ -2230,7 +2230,7 @@ nsLocalFile::Contains(nsIFile *inFile, bool recur, bool *_retval)
     if ( NS_FAILED(GetNativeTarget(myFilePath)))
         GetNativePath(myFilePath);
 
-    PRInt32 myFilePathLen = myFilePath.Length();
+    int32_t myFilePathLen = myFilePath.Length();
 
     nsCAutoString inFilePath;
     if ( NS_FAILED(inFile->GetNativeTarget(inFilePath)))
@@ -2539,7 +2539,7 @@ nsLocalFile::Equals(nsIHashable* aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetHashCode(PRUint32 *aResult)
+nsLocalFile::GetHashCode(uint32_t *aResult)
 {
     *aResult = HashString(mWorkingPath);
     return NS_OK;

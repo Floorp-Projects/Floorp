@@ -43,7 +43,7 @@ while (<>) {
   # record the date, and begin assignment to an array of valid tags
   if (m/^File-Date:\s*(.+)$/) {
     print "// Based on IANA registry dated $1\n\n";
-    print "static const PRUint32 sLanguageTagList[] = {";
+    print "static const uint32_t sLanguageTagList[] = {";
     next;
   }
 

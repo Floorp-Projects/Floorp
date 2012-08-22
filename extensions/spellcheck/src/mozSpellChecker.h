@@ -54,9 +54,9 @@ protected:
   nsCOMPtr<mozISpellCheckingEngine>  mSpellCheckingEngine;
   bool mFromStart;
 
-  nsresult SetupDoc(PRInt32 *outBlockOffset);
+  nsresult SetupDoc(int32_t *outBlockOffset);
 
-  nsresult GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *outBlockIndex);
+  nsresult GetCurrentBlockIndex(nsITextServicesDocument *aDoc, int32_t *outBlockIndex);
 
   nsresult GetEngineList(nsCOMArray<mozISpellCheckingEngine> *aDictionaryList);
 };

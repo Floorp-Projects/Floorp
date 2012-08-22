@@ -26,10 +26,10 @@ protected:
 
 #define NS_DECL_OR_FORWARD_NSIACCESSIBLETABLECELL_WITH_XPCACCESSIBLETABLECELL \
   NS_IMETHOD GetTable(nsIAccessibleTable * *aTable); \
-  NS_IMETHOD GetColumnIndex(PRInt32 *aColumnIndex); \
-  NS_IMETHOD GetRowIndex(PRInt32 *aRowIndex); \
-  NS_IMETHOD GetColumnExtent(PRInt32 *aColumnExtent); \
-  NS_IMETHOD GetRowExtent(PRInt32 *aRowExtent); \
+  NS_IMETHOD GetColumnIndex(int32_t *aColumnIndex); \
+  NS_IMETHOD GetRowIndex(int32_t *aRowIndex); \
+  NS_IMETHOD GetColumnExtent(int32_t *aColumnExtent); \
+  NS_IMETHOD GetRowExtent(int32_t *aRowExtent); \
   NS_IMETHOD GetColumnHeaderCells(nsIArray * *aColumnHeaderCells); \
   NS_IMETHOD GetRowHeaderCells(nsIArray * *aRowHeaderCells); \
   NS_IMETHOD IsSelected(bool *_retval ); 

@@ -11,11 +11,11 @@
 template<class T, class Compare>
 void
 CheckPopSequence(const nsTPriorityQueue<T, Compare>& aQueue,
-                 const T* aExpectedSequence, const PRUint32 aSequenceLength)
+                 const T* aExpectedSequence, const uint32_t aSequenceLength)
 {
   nsTPriorityQueue<T, Compare> copy(aQueue);
 
-  for (PRUint32 i = 0; i < aSequenceLength; i++) {
+  for (uint32_t i = 0; i < aSequenceLength; i++) {
     if (copy.IsEmpty()) {
       printf("Number of elements in the queue is too short by %d.\n",
           aSequenceLength - i);

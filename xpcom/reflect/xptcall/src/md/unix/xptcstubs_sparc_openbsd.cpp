@@ -25,8 +25,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32* args)
     nsXPTCMiniVariant* dispatchParams = NULL;
     nsIInterfaceInfo* iface_info = NULL;
     const nsXPTMethodInfo* info;
-    PRUint8 paramCount;
-    PRUint8 i;
+    uint8_t paramCount;
+    uint8_t i;
     nsresult result = NS_ERROR_FAILURE;
 
     NS_ASSERTION(self,"no self");
@@ -34,7 +34,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32* args)
     self->GetInterfaceInfo(&iface_info);
     NS_ASSERTION(iface_info,"no interface info");
 
-    iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
+    iface_info->GetMethodInfo(uint16_t(methodIndex), &info);
     NS_ASSERTION(info,"no interface info");
 
     paramCount = info->GetParamCount();
@@ -49,7 +49,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32* args)
     if (!dispatchParams)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PRUint32* ap = args;
+    uint32_t* ap = args;
     for(i = 0; i < paramCount; i++, ap++)
     {
         const nsXPTParamInfo& param = info->GetParam(i);
@@ -64,29 +64,29 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32* args)
         // else
         switch(type)
         {
-        case nsXPTType::T_I8     : dp->val.i8  = *((PRInt32*)  ap);       break;
-        case nsXPTType::T_I16    : dp->val.i16 = *((PRInt32*) ap);       break;
-        case nsXPTType::T_I32    : dp->val.i32 = *((PRInt32*) ap);       break;
+        case nsXPTType::T_I8     : dp->val.i8  = *((int32_t*)  ap);       break;
+        case nsXPTType::T_I16    : dp->val.i16 = *((int32_t*) ap);       break;
+        case nsXPTType::T_I32    : dp->val.i32 = *((int32_t*) ap);       break;
         case nsXPTType::T_DOUBLE :
         case nsXPTType::T_U64    :
         case nsXPTType::T_I64    : ((DU *)dp)->hi = ((DU *)ap)->hi; 
                                    ((DU *)dp)->lo = ((DU *)ap)->lo;
                                    ap++;
                                    break;
-        case nsXPTType::T_U8     : dp->val.u8  = *((PRUint32*)ap);       break;
-        case nsXPTType::T_U16    : dp->val.u16 = *((PRUint32*)ap);       break;
-        case nsXPTType::T_U32    : dp->val.u32 = *((PRUint32*)ap);       break;
+        case nsXPTType::T_U8     : dp->val.u8  = *((uint32_t*)ap);       break;
+        case nsXPTType::T_U16    : dp->val.u16 = *((uint32_t*)ap);       break;
+        case nsXPTType::T_U32    : dp->val.u32 = *((uint32_t*)ap);       break;
         case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)   ap);       break;
-        case nsXPTType::T_BOOL   : dp->val.b   = *((PRUint32*)ap);       break;
-        case nsXPTType::T_CHAR   : dp->val.c   = *((PRUint32*)ap);       break;
-        case nsXPTType::T_WCHAR  : dp->val.wc  = *((PRInt32*) ap);       break;
+        case nsXPTType::T_BOOL   : dp->val.b   = *((uint32_t*)ap);       break;
+        case nsXPTType::T_CHAR   : dp->val.c   = *((uint32_t*)ap);       break;
+        case nsXPTType::T_WCHAR  : dp->val.wc  = *((int32_t*) ap);       break;
         default:
             NS_ERROR("bad type");
             break;
         }
     }
 
-    result = self->CallMethod((PRUint16)methodIndex, info, dispatchParams);
+    result = self->CallMethod((uint16_t)methodIndex, info, dispatchParams);
 
     NS_RELEASE(iface_info);
 

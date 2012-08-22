@@ -9,51 +9,51 @@
 
 /* Prototype specifies unmangled function name and disables unused warning */
 static void
-invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount, nsXPTCVariant* s)
+invoke_copy_to_stack(uint64_t* d, uint32_t paramCount, nsXPTCVariant* s)
 __asm__("invoke_copy_to_stack") __attribute__((used));
 
 static void
-invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount, nsXPTCVariant* s)
+invoke_copy_to_stack(uint64_t* d, uint32_t paramCount, nsXPTCVariant* s)
 {
-    const PRUint8 NUM_ARG_REGS = 6-1;        // -1 for "this" pointer
+    const uint8_t NUM_ARG_REGS = 6-1;        // -1 for "this" pointer
 
-    for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
+    for(uint32_t i = 0; i < paramCount; i++, d++, s++)
     {
         if(s->IsPtrData())
         {
-            *d = (PRUint64)s->ptr;
+            *d = (uint64_t)s->ptr;
             continue;
         }
         switch(s->type)
         {
-        case nsXPTType::T_I8     : *d = (PRUint64)s->val.i8;     break;
-        case nsXPTType::T_I16    : *d = (PRUint64)s->val.i16;    break;
-        case nsXPTType::T_I32    : *d = (PRUint64)s->val.i32;    break;
-        case nsXPTType::T_I64    : *d = (PRUint64)s->val.i64;    break;
-        case nsXPTType::T_U8     : *d = (PRUint64)s->val.u8;     break;
-        case nsXPTType::T_U16    : *d = (PRUint64)s->val.u16;    break;
-        case nsXPTType::T_U32    : *d = (PRUint64)s->val.u32;    break;
-        case nsXPTType::T_U64    : *d = (PRUint64)s->val.u64;    break;
+        case nsXPTType::T_I8     : *d = (uint64_t)s->val.i8;     break;
+        case nsXPTType::T_I16    : *d = (uint64_t)s->val.i16;    break;
+        case nsXPTType::T_I32    : *d = (uint64_t)s->val.i32;    break;
+        case nsXPTType::T_I64    : *d = (uint64_t)s->val.i64;    break;
+        case nsXPTType::T_U8     : *d = (uint64_t)s->val.u8;     break;
+        case nsXPTType::T_U16    : *d = (uint64_t)s->val.u16;    break;
+        case nsXPTType::T_U32    : *d = (uint64_t)s->val.u32;    break;
+        case nsXPTType::T_U64    : *d = (uint64_t)s->val.u64;    break;
         case nsXPTType::T_FLOAT  :
             if(i < NUM_ARG_REGS)
             {
                 // convert floats to doubles if they are to be passed
                 // via registers so we can just deal with doubles later
-                union { PRUint64 u64; double d; } t;
+                union { uint64_t u64; double d; } t;
                 t.d = (double)s->val.f;
                 *d = t.u64;
             }
             else
                 // otherwise copy to stack normally
-                *d = (PRUint64)s->val.u32;
+                *d = (uint64_t)s->val.u32;
             break;
-        case nsXPTType::T_DOUBLE : *d = (PRUint64)s->val.u64;    break;
-        case nsXPTType::T_BOOL   : *d = (PRUint64)s->val.b;      break;
-        case nsXPTType::T_CHAR   : *d = (PRUint64)s->val.c;      break;
-        case nsXPTType::T_WCHAR  : *d = (PRUint64)s->val.wc;     break;
+        case nsXPTType::T_DOUBLE : *d = (uint64_t)s->val.u64;    break;
+        case nsXPTType::T_BOOL   : *d = (uint64_t)s->val.b;      break;
+        case nsXPTType::T_CHAR   : *d = (uint64_t)s->val.c;      break;
+        case nsXPTType::T_WCHAR  : *d = (uint64_t)s->val.wc;     break;
         default:
             // all the others are plain pointer types
-            *d = (PRUint64)s->val.p;
+            *d = (uint64_t)s->val.p;
             break;
         }
     }
@@ -61,8 +61,8 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount, nsXPTCVariant* s)
 
 /*
  * EXPORT_XPCOM_API(nsresult)
- * NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
- *                  PRUint32 paramCount, nsXPTCVariant* params)
+ * NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+ *                  uint32_t paramCount, nsXPTCVariant* params)
  */
 __asm__(
     "#### NS_InvokeByIndex_P ####\n"

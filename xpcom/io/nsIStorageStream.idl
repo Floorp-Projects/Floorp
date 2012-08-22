@@ -33,7 +33,7 @@ interface nsIStorageStream : nsISupports
      *        Which allocator to use for the segments. May be null, in which
      *        case a default allocator will be used.
      */
-    void init(in PRUint32 segmentSize, in PRUint32 maxSize, in nsIMemory segmentAllocator);
+    void init(in uint32_t segmentSize, in uint32_t maxSize, in nsIMemory segmentAllocator);
 
     /**
      * Get a reference to the one and only output stream for this instance.
@@ -42,14 +42,14 @@ interface nsIStorageStream : nsISupports
      * current buffer length.  Calling this method has the side-effect of
      * truncating the internal buffer to startPosition bytes.
      */
-    nsIOutputStream getOutputStream(in PRInt32 startPosition);
+    nsIOutputStream getOutputStream(in int32_t startPosition);
 
     /**
      * Create a new input stream to read data (written by the singleton output
      * stream) from the internal buffer.  Multiple, independent input streams
      * can be created.
      */
-    nsIInputStream newInputStream(in PRInt32 startPosition);
+    nsIInputStream newInputStream(in int32_t startPosition);
 
     /** 
      * The length attribute indicates the total number of bytes stored in the
@@ -59,7 +59,7 @@ interface nsIStorageStream : nsISupports
      * stream is in use.
      *
      * @See #writeInProgress */
-    attribute PRUint32 length;
+    attribute uint32_t length;
 
     /**
      * True, when output stream has not yet been Close'ed
@@ -70,5 +70,5 @@ interface nsIStorageStream : nsISupports
 %{C++
 // Factory method
 nsresult
-NS_NewStorageStream(PRUint32 segmentSize, PRUint32 maxSize, nsIStorageStream **result);
+NS_NewStorageStream(uint32_t segmentSize, uint32_t maxSize, nsIStorageStream **result);
 %}

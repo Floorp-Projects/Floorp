@@ -62,7 +62,7 @@ test_GetCachedStatement()
   // Make sure we get a statement back with the right state.
   nsCOMPtr<mozIStorageStatement> stmt = cache.GetCachedStatement(sql);
   do_check_true(stmt);
-  PRInt32 state;
+  int32_t state;
   do_check_success(stmt->GetState(&state));
   do_check_eq(mozIStorageBaseStatement::MOZ_STORAGE_STATEMENT_READY, state);
 
@@ -88,7 +88,7 @@ test_FinalizeStatements()
   cache.FinalizeStatements();
 
   // We should be in an invalid state at this point.
-  PRInt32 state;
+  int32_t state;
   do_check_success(stmt->GetState(&state));
   do_check_eq(mozIStorageBaseStatement::MOZ_STORAGE_STATEMENT_INVALID, state);
 
@@ -108,7 +108,7 @@ test_GetCachedAsyncStatement()
   // Make sure we get a statement back with the right state.
   nsCOMPtr<mozIStorageAsyncStatement> stmt = cache.GetCachedStatement(sql);
   do_check_true(stmt);
-  PRInt32 state;
+  int32_t state;
   do_check_success(stmt->GetState(&state));
   do_check_eq(mozIStorageBaseStatement::MOZ_STORAGE_STATEMENT_READY, state);
 
@@ -134,7 +134,7 @@ test_FinalizeAsyncStatements()
   cache.FinalizeStatements();
 
   // We should be in an invalid state at this point.
-  PRInt32 state;
+  int32_t state;
   do_check_success(stmt->GetState(&state));
   do_check_eq(mozIStorageBaseStatement::MOZ_STORAGE_STATEMENT_INVALID, state);
 

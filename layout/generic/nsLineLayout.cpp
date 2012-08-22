@@ -132,7 +132,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
                               nscoord aWidth, nscoord aHeight,
                               bool aImpactedByFloats,
                               bool aIsTopOfPage,
-                              PRUint8 aDirection)
+                              uint8_t aDirection)
 {
   NS_ASSERTION(nullptr == mRootSpan, "bad linelayout user");
   NS_WARN_IF_FALSE(aWidth != NS_UNCONSTRAINEDSIZE,
@@ -232,8 +232,8 @@ nsLineLayout::EndLineReflow()
   NS_ASSERTION(mFramesAllocated == mFramesFreed, "leak");
 
 #if 0
-  static PRInt32 maxSpansAllocated = NS_LINELAYOUT_NUM_SPANS;
-  static PRInt32 maxFramesAllocated = NS_LINELAYOUT_NUM_FRAMES;
+  static int32_t maxSpansAllocated = NS_LINELAYOUT_NUM_SPANS;
+  static int32_t maxFramesAllocated = NS_LINELAYOUT_NUM_FRAMES;
   if (mSpansAllocated > maxSpansAllocated) {
     printf("XXX: saw a line with %d spans\n", mSpansAllocated);
     maxSpansAllocated = mSpansAllocated;
@@ -423,11 +423,11 @@ nsLineLayout::EndSpan(nsIFrame* aFrame)
   return widthResult;
 }
 
-PRInt32
+int32_t
 nsLineLayout::GetCurrentSpanCount() const
 {
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
-  PRInt32 count = 0;
+  int32_t count = 0;
   PerFrameData* pfd = mRootSpan->mFirstFrame;
   while (nullptr != pfd) {
     count++;
@@ -437,7 +437,7 @@ nsLineLayout::GetCurrentSpanCount() const
 }
 
 void
-nsLineLayout::SplitLineTo(PRInt32 aNewCount)
+nsLineLayout::SplitLineTo(int32_t aNewCount)
 {
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
 
@@ -812,7 +812,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nscoord ty = pfd->mBounds.y;
   mFloatManager->Translate(tx, ty);
 
-  PRInt32 savedOptionalBreakOffset;
+  int32_t savedOptionalBreakOffset;
   gfxBreakPriority savedOptionalBreakPriority;
   nsIContent* savedOptionalBreakContent =
     GetLastOptionalBreakPosition(&savedOptionalBreakOffset,
@@ -983,7 +983,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // Direction is inherited, so using the psd direction is fine.
     // Get it off the reflow state instead of the frame to save style
     // data computation (especially for the text).
-    PRUint8 direction =
+    uint8_t direction =
       isText ? psd->mReflowState->mStyleVisibility->mDirection :
                reflowStateHolder.ref().mStyleVisibility->mDirection;
     if (CanPlaceFrame(pfd, direction, notSafeToBreak, continuingTextRun,
@@ -1111,7 +1111,7 @@ nsLineLayout::GetCurrentFrameXDistanceFromBlock()
  */
 bool
 nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
-                            PRUint8 aFrameDirection,
+                            uint8_t aFrameDirection,
                             bool aNotSafeToBreak,
                             bool aFrameCanContinueTextRun,
                             bool aCanRollBackBeforeFrame,
@@ -1343,7 +1343,7 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
 
 #ifdef DEBUG
 void
-nsLineLayout::DumpPerSpanData(PerSpanData* psd, PRInt32 aIndent)
+nsLineLayout::DumpPerSpanData(PerSpanData* psd, int32_t aIndent)
 {
   nsFrame::IndentBy(stdout, aIndent);
   printf("%p: left=%d x=%d right=%d\n", static_cast<void*>(psd),
@@ -1771,7 +1771,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // Get vertical-align property
     const nsStyleCoord& verticalAlign =
       frame->GetStyleTextReset()->mVerticalAlign;
-    PRUint8 verticalAlignEnum = frame->VerticalAlignEnum();
+    uint8_t verticalAlignEnum = frame->VerticalAlignEnum();
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  [frame]");
     nsFrame::ListTag(stdout, frame);
@@ -2361,14 +2361,14 @@ nsLineLayout::TrimTrailingWhiteSpace()
 
 void
 nsLineLayout::ComputeJustificationWeights(PerSpanData* aPSD,
-                                          PRInt32* aNumSpaces,
-                                          PRInt32* aNumLetters)
+                                          int32_t* aNumSpaces,
+                                          int32_t* aNumLetters)
 {
   NS_ASSERTION(aPSD, "null arg");
   NS_ASSERTION(aNumSpaces, "null arg");
   NS_ASSERTION(aNumLetters, "null arg");
-  PRInt32 numSpaces = 0;
-  PRInt32 numLetters = 0;
+  int32_t numSpaces = 0;
+  int32_t numLetters = 0;
 
   for (PerFrameData* pfd = aPSD->mFirstFrame; pfd != nullptr; pfd = pfd->mNext) {
 
@@ -2377,8 +2377,8 @@ nsLineLayout::ComputeJustificationWeights(PerSpanData* aPSD,
       numLetters += pfd->mJustificationNumLetters;
     }
     else if (pfd->mSpan != nullptr) {
-      PRInt32 spanSpaces;
-      PRInt32 spanLetters;
+      int32_t spanSpaces;
+      int32_t spanLetters;
 
       ComputeJustificationWeights(pfd->mSpan, &spanSpaces, &spanLetters);
 
@@ -2475,7 +2475,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
 
   if (remainingWidth > 0 &&
       !(mBlockReflowState->frame->IsSVGText())) {
-    PRUint8 textAlign = mStyleText->mTextAlign;
+    uint8_t textAlign = mStyleText->mTextAlign;
 
     /* 
      * 'text-align-last: auto' is equivalent to the value of the 'text-align'
@@ -2496,8 +2496,8 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
 
     switch (textAlign) {
       case NS_STYLE_TEXT_ALIGN_JUSTIFY:
-        PRInt32 numSpaces;
-        PRInt32 numLetters;
+        int32_t numSpaces;
+        int32_t numLetters;
             
         ComputeJustificationWeights(psd, &numSpaces, &numLetters);
 

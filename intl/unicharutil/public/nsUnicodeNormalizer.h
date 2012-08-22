@@ -27,8 +27,8 @@ public:
    NS_IMETHOD NormalizeUnicodeNFKC( const nsAString& aSrc, nsAString& aDest);
 
    // low-level access to the composition data needed for HarfBuzz callbacks
-   static bool Compose(PRUint32 a, PRUint32 b, PRUint32 *ab);
-   static bool DecomposeNonRecursively(PRUint32 comp, PRUint32 *c1, PRUint32 *c2);
+   static bool Compose(uint32_t a, uint32_t b, uint32_t *ab);
+   static bool DecomposeNonRecursively(uint32_t comp, uint32_t *c1, uint32_t *c2);
 };
 
 #endif //nsUnicodeNormalizer_h__

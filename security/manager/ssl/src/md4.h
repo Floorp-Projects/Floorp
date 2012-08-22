@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 /**
  * md4sum - computes the MD4 sum over the input buffer per RFC 1320
@@ -29,7 +29,7 @@ extern "C" {
  * interface would make more sense if that were a requirement.  Currently, this
  * is good enough for the applications we care about.
  */
-void md4sum(const PRUint8 *input, PRUint32 inputLen, PRUint8 *result);
+void md4sum(const uint8_t *input, uint32_t inputLen, uint8_t *result);
 
 #ifdef __cplusplus
 }

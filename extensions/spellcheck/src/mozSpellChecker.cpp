@@ -65,8 +65,8 @@ mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSugge
   if(!aSuggestions||!mConverter)
     return NS_ERROR_NULL_POINTER;
 
-  PRInt32 selOffset;
-  PRInt32 begin,end;
+  int32_t selOffset;
+  int32_t begin,end;
   nsresult result;
   result = SetupDoc(&selOffset);
   bool isMisspelled,done;
@@ -116,7 +116,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray
   NS_ENSURE_SUCCESS(result, result);
   if(!correct){
     if(aSuggestions){
-      PRUint32 count,i;
+      uint32_t count,i;
       PRUnichar **words;
       
       result = mSpellCheckingEngine->Suggest(PromiseFlatString(aWord).get(), &words, &count);
@@ -142,9 +142,9 @@ mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, b
   nsAutoString newWord(aNewWord); // sigh
 
   if(aAllOccurrences){
-    PRInt32 selOffset;
-    PRInt32 startBlock,currentBlock,currOffset;
-    PRInt32 begin,end;
+    int32_t selOffset;
+    int32_t startBlock,currentBlock,currOffset;
+    int32_t begin,end;
     bool done;
     nsresult result;
     nsAutoString str;
@@ -172,7 +172,7 @@ mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, b
               // move the selection point forwards
               if((currentBlock == startBlock)&&(begin < selOffset)){
                 selOffset +=
-                  PRInt32(aNewWord.Length()) - PRInt32(aOldWord.Length());
+                  int32_t(aNewWord.Length()) - int32_t(aOldWord.Length());
                 if(selOffset < begin) selOffset=begin;
               }
               mTsDoc->SetSelection(begin, end-begin);
@@ -286,13 +286,13 @@ mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
   rv = GetEngineList(&spellCheckingEngines);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < spellCheckingEngines.Count(); i++) {
+  for (int32_t i = 0; i < spellCheckingEngines.Count(); i++) {
     nsCOMPtr<mozISpellCheckingEngine> engine = spellCheckingEngines[i];
 
-    PRUint32 count = 0;
+    uint32_t count = 0;
     PRUnichar **words = NULL;
     engine->GetDictionaryList(&words, &count);
-    for (PRUint32 k = 0; k < count; k++) {
+    for (uint32_t k = 0; k < count; k++) {
       nsAutoString dictName;
 
       dictName.Assign(words[k]);
@@ -347,7 +347,7 @@ mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
   rv = GetEngineList(&spellCheckingEngines);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < spellCheckingEngines.Count(); i++) {
+  for (int32_t i = 0; i < spellCheckingEngines.Count(); i++) {
     // We must set mSpellCheckingEngine before we call SetDictionary, since
     // SetDictionary calls back to this spell checker to check if the
     // dictionary was set
@@ -398,13 +398,13 @@ mozSpellChecker::CheckCurrentDictionary()
 }
 
 nsresult
-mozSpellChecker::SetupDoc(PRInt32 *outBlockOffset)
+mozSpellChecker::SetupDoc(int32_t *outBlockOffset)
 {
   nsresult  rv;
 
   nsITextServicesDocument::TSDBlockSelectionStatus blockStatus;
-  PRInt32 selOffset;
-  PRInt32 selLength;
+  int32_t selOffset;
+  int32_t selLength;
   *outBlockOffset = 0;
 
   if (!mFromStart) 
@@ -455,9 +455,9 @@ mozSpellChecker::SetupDoc(PRInt32 *outBlockOffset)
 // us this, because it can't assume a read-only document.
 // shamelessly stolen from nsTextServicesDocument
 nsresult
-mozSpellChecker::GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *outBlockIndex)
+mozSpellChecker::GetCurrentBlockIndex(nsITextServicesDocument *aDoc, int32_t *outBlockIndex)
 {
-  PRInt32  blockIndex = 0;
+  int32_t  blockIndex = 0;
   bool     isDone = false;
   nsresult result = NS_OK;
 

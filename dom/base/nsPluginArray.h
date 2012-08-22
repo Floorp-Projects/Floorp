@@ -36,7 +36,7 @@ public:
 
   nsresult GetPluginHost(nsIPluginHost** aPluginHost);
 
-  nsIDOMPlugin* GetItemAt(PRUint32 aIndex, nsresult* aResult);
+  nsIDOMPlugin* GetItemAt(uint32_t aIndex, nsresult* aResult);
   nsIDOMPlugin* GetNamedItem(const nsAString& aName, nsresult* aResult);
 
   static nsPluginArray* FromSupports(nsISupports* aSupports)
@@ -66,7 +66,7 @@ public:
 protected:
   mozilla::dom::Navigator* mNavigator;
   nsCOMPtr<nsIPluginHost> mPluginHost;
-  PRUint32 mPluginCount;
+  uint32_t mPluginCount;
   nsIDOMPlugin** mPluginArray;
   nsWeakPtr mDocShell;
 };
@@ -80,7 +80,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMPLUGIN
 
-  nsIDOMMimeType* GetItemAt(PRUint32 aIndex, nsresult* aResult);
+  nsIDOMMimeType* GetItemAt(uint32_t aIndex, nsresult* aResult);
   nsIDOMMimeType* GetNamedItem(const nsAString& aName, nsresult* aResult);
 
   static nsPluginElement* FromSupports(nsISupports* aSupports)
@@ -105,7 +105,7 @@ private:
 
 protected:
   nsIDOMPlugin* mPlugin;
-  PRUint32 mMimeTypeCount;
+  uint32_t mMimeTypeCount;
   nsIDOMMimeType** mMimeTypeArray;
 };
 

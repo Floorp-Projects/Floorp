@@ -26,14 +26,14 @@ nsViewSourceHandler::GetScheme(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsViewSourceHandler::GetDefaultPort(PRInt32 *result)
+nsViewSourceHandler::GetDefaultPort(int32_t *result)
 {
     *result = -1;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsViewSourceHandler::GetProtocolFlags(PRUint32 *result)
+nsViewSourceHandler::GetProtocolFlags(uint32_t *result)
 {
     *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
         URI_NON_PERSISTABLE;
@@ -51,7 +51,7 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
     // Extract inner URL and normalize to ASCII.  This is done to properly
     // support IDN in cases like "view-source:http://www.szalagavató.hu/"
 
-    PRInt32 colon = aSpec.FindChar(':');
+    int32_t colon = aSpec.FindChar(':');
     if (colon == kNotFound)
         return NS_ERROR_MALFORMED_URI;
 
@@ -109,7 +109,7 @@ nsViewSourceHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 NS_IMETHODIMP 
-nsViewSourceHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
+nsViewSourceHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = false;

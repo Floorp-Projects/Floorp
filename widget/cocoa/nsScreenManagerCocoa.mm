@@ -21,7 +21,7 @@ nsScreenManagerCocoa::~nsScreenManagerCocoa()
 nsScreenCocoa*
 nsScreenManagerCocoa::ScreenForCocoaScreen(NSScreen *screen)
 {
-    for (PRUint32 i = 0; i < mScreenList.Length(); ++i) {
+    for (uint32_t i = 0; i < mScreenList.Length(); ++i) {
         nsScreenCocoa* sc = mScreenList[i];
         if (sc->CocoaScreen() == screen) {
             // doesn't addref
@@ -36,7 +36,7 @@ nsScreenManagerCocoa::ScreenForCocoaScreen(NSScreen *screen)
 }
 
 NS_IMETHODIMP
-nsScreenManagerCocoa::ScreenForRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+nsScreenManagerCocoa::ScreenForRect (int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
                                      nsIScreen **outScreen)
 {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -83,7 +83,7 @@ nsScreenManagerCocoa::GetPrimaryScreen (nsIScreen **outScreen)
 }
 
 NS_IMETHODIMP
-nsScreenManagerCocoa::GetNumberOfScreens (PRUint32 *aNumberOfScreens)
+nsScreenManagerCocoa::GetNumberOfScreens (uint32_t *aNumberOfScreens)
 {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

@@ -61,7 +61,7 @@ interface nsIPrompt : nsISupports
     const unsigned long STD_YES_NO_BUTTONS         = (BUTTON_TITLE_YES * BUTTON_POS_0) +
                                                     (BUTTON_TITLE_NO * BUTTON_POS_1);
 
-    PRInt32 confirmEx(in wstring dialogTitle,
+    int32_t confirmEx(in wstring dialogTitle,
                    in wstring text,
                    in unsigned long buttonFlags,
                    in wstring button0Title,
@@ -91,7 +91,7 @@ interface nsIPrompt : nsISupports
     
     boolean select(in wstring dialogTitle,
                    in wstring text,
-                   in  PRUint32 count,
+                   in  uint32_t count,
                    [array, size_is(count)] in wstring selectList,
                    out long outSelection);
 };

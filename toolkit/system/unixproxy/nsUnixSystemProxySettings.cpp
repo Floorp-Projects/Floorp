@@ -36,8 +36,8 @@ private:
   nsInterfaceHashtable<nsCStringHashKey, nsIGSettingsCollection> mSchemeProxySettings;
   bool IsProxyMode(const char* aMode);
   nsresult SetProxyResultFromGConf(const char* aKeyBase, const char* aType, nsACString& aResult);
-  nsresult GetProxyFromGConf(const nsACString& aScheme, const nsACString& aHost, PRInt32 aPort, nsACString& aResult);
-  nsresult GetProxyFromGSettings(const nsACString& aScheme, const nsACString& aHost, PRInt32 aPort, nsACString& aResult);
+  nsresult GetProxyFromGConf(const nsACString& aScheme, const nsACString& aHost, int32_t aPort, nsACString& aResult);
+  nsresult GetProxyFromGSettings(const nsACString& aScheme, const nsACString& aHost, int32_t aPort, nsACString& aResult);
   nsresult SetProxyResultFromGSettings(const char* aKeyBase, const char* aType, nsACString& aResult);
 };
 
@@ -91,7 +91,7 @@ nsUnixSystemProxySettings::GetPACURI(nsACString& aResult)
 }
 
 static bool
-IsInNoProxyList(const nsACString& aHost, PRInt32 aPort, const char* noProxyVal)
+IsInNoProxyList(const nsACString& aHost, int32_t aPort, const char* noProxyVal)
 {
   NS_ASSERTION(aPort >= 0, "Negative port?");
   
@@ -117,7 +117,7 @@ IsInNoProxyList(const nsACString& aHost, PRInt32 aPort, const char* noProxyVal)
     }
     
     nsReadingIterator<char> colon = pos;
-    PRInt32 port = -1;
+    int32_t port = -1;
     if (FindCharInReadable(':', colon, last)) {
       ++colon;
       nsDependentCSubstring portStr(colon, last);
@@ -146,7 +146,7 @@ IsInNoProxyList(const nsACString& aHost, PRInt32 aPort, const char* noProxyVal)
 }
 
 static void SetProxyResult(const char* aType, const nsACString& aHost,
-                           PRInt32 aPort, nsACString& aResult)
+                           int32_t aPort, nsACString& aResult)
 {
   aResult.AppendASCII(aType);
   aResult.Append(' ');
@@ -158,7 +158,7 @@ static void SetProxyResult(const char* aType, const nsACString& aHost,
 static nsresult
 GetProxyFromEnvironment(const nsACString& aScheme,
                         const nsACString& aHost,
-                        PRInt32 aPort,
+                        int32_t aPort,
                         nsACString& aResult)
 {
   nsCAutoString envVar;
@@ -197,7 +197,7 @@ GetProxyFromEnvironment(const nsACString& aScheme,
   rv = proxyURI->GetHost(proxyHost);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 proxyPort;
+  int32_t proxyPort;
   rv = proxyURI->GetPort(&proxyPort);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -221,7 +221,7 @@ nsUnixSystemProxySettings::SetProxyResultFromGConf(const char* aKeyBase, const c
   nsCAutoString portKey;
   portKey.AppendASCII(aKeyBase);
   portKey.AppendLiteral("port");
-  PRInt32 port;
+  int32_t port;
   rv = mGConf->GetInt(portKey, &port);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -254,7 +254,7 @@ nsUnixSystemProxySettings::SetProxyResultFromGSettings(const char* aKeyBase, con
   if (host.IsEmpty())
     return NS_ERROR_FAILURE;
   
-  PRInt32 port;
+  int32_t port;
   rv = proxy_settings->GetInt(NS_LITERAL_CSTRING("port"), &port);
   NS_ENSURE_SUCCESS(rv, rv);
     
@@ -268,7 +268,7 @@ nsUnixSystemProxySettings::SetProxyResultFromGSettings(const char* aKeyBase, con
 
 /* copied from nsProtocolProxyService.cpp --- we should share this! */
 static void
-proxy_MaskIPv6Addr(PRIPv6Addr &addr, PRUint16 mask_len)
+proxy_MaskIPv6Addr(PRIPv6Addr &addr, uint16_t mask_len)
 {
   if (mask_len == 128)
     return;
@@ -330,7 +330,7 @@ static bool HostIgnoredByProxy(const nsACString& aIgnore,
                      nsCaseInsensitiveCStringComparator()))
     return true;
 
-  PRInt32 mask = 128;
+  int32_t mask = 128;
   nsReadingIterator<char> start;
   nsReadingIterator<char> slash;
   nsReadingIterator<char> end;
@@ -366,7 +366,7 @@ static bool HostIgnoredByProxy(const nsACString& aIgnore,
 nsresult
 nsUnixSystemProxySettings::GetProxyFromGConf(const nsACString& aScheme,
                                              const nsACString& aHost,
-                                             PRInt32 aPort,
+                                             int32_t aPort,
                                              nsACString& aResult)
 {
   bool masterProxySwitch = false;
@@ -379,9 +379,9 @@ nsUnixSystemProxySettings::GetProxyFromGConf(const nsACString& aScheme,
   nsCOMPtr<nsIArray> ignoreList;
   if (NS_SUCCEEDED(mGConf->GetStringList(NS_LITERAL_CSTRING("/system/http_proxy/ignore_hosts"),
                                          getter_AddRefs(ignoreList))) && ignoreList) {
-    PRUint32 len = 0;
+    uint32_t len = 0;
     ignoreList->GetLength(&len);
-    for (PRUint32 i = 0; i < len; ++i) {
+    for (uint32_t i = 0; i < len; ++i) {
       nsCOMPtr<nsISupportsString> str = do_QueryElementAt(ignoreList, i);
       if (str) {
         nsAutoString s;
@@ -425,7 +425,7 @@ nsUnixSystemProxySettings::GetProxyFromGConf(const nsACString& aScheme,
 nsresult
 nsUnixSystemProxySettings::GetProxyFromGSettings(const nsACString& aScheme,
                                                  const nsACString& aHost,
-                                                 PRInt32 aPort,
+                                                 int32_t aPort,
                                                  nsACString& aResult)
 {
   nsCString proxyMode; 
@@ -440,9 +440,9 @@ nsUnixSystemProxySettings::GetProxyFromGSettings(const nsACString& aScheme,
   nsCOMPtr<nsIArray> ignoreList;
   if (NS_SUCCEEDED(mProxySettings->GetStringList(NS_LITERAL_CSTRING("ignore-hosts"),
                                                  getter_AddRefs(ignoreList))) && ignoreList) {
-    PRUint32 len = 0;
+    uint32_t len = 0;
     ignoreList->GetLength(&len);
-    for (PRUint32 i = 0; i < len; ++i) {
+    for (uint32_t i = 0; i < len; ++i) {
       nsCOMPtr<nsISupportsCString> str = do_QueryElementAt(ignoreList, i);
       if (str) {
         nsCString s;
@@ -491,7 +491,7 @@ nsUnixSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
   rv = aURI->GetHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 port;
+  int32_t port;
   rv = aURI->GetPort(&port);
   NS_ENSURE_SUCCESS(rv, rv);
 

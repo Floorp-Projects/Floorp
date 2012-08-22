@@ -69,12 +69,12 @@ public:
 
   already_AddRefed<nsIFile> GetDirectory();
 
-  already_AddRefed<FileInfo> GetFileInfo(PRInt64 aId);
+  already_AddRefed<FileInfo> GetFileInfo(int64_t aId);
 
   already_AddRefed<FileInfo> GetNewFileInfo();
 
   static already_AddRefed<nsIFile> GetFileForId(nsIFile* aDirectory,
-                                                PRInt64 aId);
+                                                int64_t aId);
 
 private:
   nsCString mOrigin;
@@ -82,7 +82,7 @@ private:
 
   nsString mDirectoryPath;
 
-  PRInt64 mLastFileId;
+  int64_t mLastFileId;
 
   // Protected by IndexedDatabaseManager::FileMutex()
   nsDataHashtable<nsUint64HashKey, FileInfo*> mFileInfos;

@@ -123,8 +123,8 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, nsIContent* aContent)
 
 void nsMenuBarX::ConstructNativeMenus()
 {
-  PRUint32 count = mContent->GetChildCount();
-  for (PRUint32 i = 0; i < count; i++) { 
+  uint32_t count = mContent->GetChildCount();
+  for (uint32_t i = 0; i < count; i++) { 
     nsIContent *menuContent = mContent->GetChildAt(i);
     if (menuContent &&
         menuContent->Tag() == nsGkAtoms::menu &&
@@ -141,7 +141,7 @@ void nsMenuBarX::ConstructNativeMenus()
   }  
 }
 
-PRUint32 nsMenuBarX::GetMenuCount()
+uint32_t nsMenuBarX::GetMenuCount()
 {
   return mMenuArray.Length();
 }
@@ -156,7 +156,7 @@ bool nsMenuBarX::MenuContainsAppMenu()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
-nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, PRUint32 aIndex)
+nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -190,7 +190,7 @@ nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, PRUint32 aIndex)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void nsMenuBarX::RemoveMenuAtIndex(PRUint32 aIndex)
+void nsMenuBarX::RemoveMenuAtIndex(uint32_t aIndex)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -217,7 +217,7 @@ void nsMenuBarX::ObserveAttributeChanged(nsIDocument* aDocument,
 
 void nsMenuBarX::ObserveContentRemoved(nsIDocument* aDocument,
                                        nsIContent* aChild, 
-                                       PRInt32 aIndexInContainer)
+                                       int32_t aIndexInContainer)
 {
   RemoveMenuAtIndex(aIndexInContainer);
 }
@@ -247,7 +247,7 @@ void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString)
   nsMenuX* currentMenu = NULL;
   int targetIndex = [[indexes objectAtIndex:0] intValue];
   int visible = 0;
-  PRUint32 length = mMenuArray.Length();
+  uint32_t length = mMenuArray.Length();
   // first find a menu in the menu bar
   for (unsigned int i = 0; i < length; i++) {
     nsMenuX* menu = mMenuArray[i];
@@ -304,7 +304,7 @@ void nsMenuBarX::ForceNativeMenuReload()
   ConstructNativeMenus();
 }
 
-nsMenuX* nsMenuBarX::GetMenuAt(PRUint32 aIndex)
+nsMenuX* nsMenuBarX::GetMenuAt(uint32_t aIndex)
 {
   if (mMenuArray.Length() <= aIndex) {
     NS_ERROR("Requesting menu at invalid index!");
@@ -317,7 +317,7 @@ nsMenuX* nsMenuBarX::GetXULHelpMenu()
 {
   // The Help menu is usually (always?) the last one, so we start there and
   // count back.
-  for (PRInt32 i = GetMenuCount() - 1; i >= 0; --i) {
+  for (int32_t i = GetMenuCount() - 1; i >= 0; --i) {
     nsMenuX* aMenu = GetMenuAt(i);
     if (aMenu && nsMenuX::IsXULHelpMenu(aMenu->Content()))
       return aMenu;
@@ -513,7 +513,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
       // now grab the key equivalent modifiers
       nsAutoString modifiersStr;
       keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiersStr);
-      PRUint8 geckoModifiers = nsMenuUtilsX::GeckoModifiersForNodeAttribute(modifiersStr);
+      uint8_t geckoModifiers = nsMenuUtilsX::GeckoModifiersForNodeAttribute(modifiersStr);
       macKeyModifiers = nsMenuUtilsX::MacModifiersForGeckoModifiers(geckoModifiers);
     }
   }
@@ -892,7 +892,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
   // given the commandID, look it up in our hashtable and dispatch to
   // that menu item.
   if (menuGroupOwner) {
-    nsMenuItemX* menuItem = menuGroupOwner->GetMenuItemForCommandID(static_cast<PRUint32>(tag));
+    nsMenuItemX* menuItem = menuGroupOwner->GetMenuItemForCommandID(static_cast<uint32_t>(tag));
     if (menuItem)
       menuItem->DoCommand();
   }

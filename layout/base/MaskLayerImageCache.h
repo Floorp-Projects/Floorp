@@ -131,7 +131,7 @@ public:
     {
       PLDHashNumber hash = 0;
 
-      for (PRUint32 i = 0; i < mRoundedClipRects.Length(); ++i) {
+      for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
         hash = AddToHash(hash, mRoundedClipRects[i].Hash());
       }
       hash = AddToHash(hash, mBackend);
@@ -145,7 +145,7 @@ public:
     }
 
     layers::LayersBackend mBackend;
-    mutable PRUint32 mLayerCount;
+    mutable uint32_t mLayerCount;
     nsTArray<PixelRoundedRect> mRoundedClipRects;
   };
 

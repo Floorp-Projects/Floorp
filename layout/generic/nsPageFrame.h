@@ -43,7 +43,7 @@ public:
   //////////////////
 
   // Tell the page which page number it is out of how many
-  virtual void  SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages);
+  virtual void  SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages);
 
   virtual void SetSharedPageData(nsSharedPageData* aPD);
 
@@ -68,12 +68,12 @@ protected:
 
   nscoord GetXPosition(nsRenderingContext& aRenderingContext, 
                        const nsRect&        aRect, 
-                       PRInt32              aJust,
+                       int32_t              aJust,
                        const nsString&      aStr);
 
   void DrawHeaderFooter(nsRenderingContext& aRenderingContext,
                         nsHeaderFooterEnum   aHeaderFooter,
-                        PRInt32              aJust,
+                        int32_t              aJust,
                         const nsString&      sStr,
                         const nsRect&        aRect,
                         nscoord              aHeight,
@@ -91,8 +91,8 @@ protected:
 
   void ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr);
 
-  PRInt32     mPageNum;
-  PRInt32     mTotNumPages;
+  int32_t     mPageNum;
+  int32_t     mTotNumPages;
 
   nsSharedPageData* mPD;
 };

@@ -200,10 +200,10 @@ private:
  * want to override it.
  */
 #define NS_FORWARD_NSIDOMEVENTTARGET_NOPREHANDLEEVENT(_to) \
-  NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, bool useCapture, bool wantsUntrusted, PRUint8 _argc) { \
+  NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, bool useCapture, bool wantsUntrusted, uint8_t _argc) { \
     return _to AddEventListener(type, listener, useCapture, wantsUntrusted, _argc); \
   } \
-  NS_IMETHOD AddSystemEventListener(const nsAString & type, nsIDOMEventListener *listener, bool aUseCapture, bool aWantsUntrusted, PRUint8 _argc) { \
+  NS_IMETHOD AddSystemEventListener(const nsAString & type, nsIDOMEventListener *listener, bool aUseCapture, bool aWantsUntrusted, uint8_t _argc) { \
     return _to AddSystemEventListener(type, listener, aUseCapture, aWantsUntrusted, _argc); \
   } \
   NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, bool useCapture) { \

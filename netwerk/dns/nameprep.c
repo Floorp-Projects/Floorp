@@ -64,9 +64,9 @@
 #include "nameprep_template.c"
 #undef VERSION
 
-typedef const char	*(*nameprep_mapproc)(PRUint32 v);
-typedef int		(*nameprep_checkproc)(PRUint32 v);
-typedef idn_biditype_t	(*nameprep_biditypeproc)(PRUint32 v);
+typedef const char	*(*nameprep_mapproc)(uint32_t v);
+typedef int		(*nameprep_checkproc)(uint32_t v);
+typedef idn_biditype_t	(*nameprep_biditypeproc)(uint32_t v);
 
 static struct idn_nameprep {
 	char *version;
@@ -86,8 +86,8 @@ static struct idn_nameprep {
 };
 
 static idn_result_t	idn_nameprep_check(nameprep_checkproc proc,
-					   const PRUint32 *str,
-					   const PRUint32 **found);
+					   const uint32_t *str,
+					   const uint32_t **found);
 
 idn_result_t
 idn_nameprep_create(const char *version, idn_nameprep_t *handlep) {
@@ -125,15 +125,15 @@ idn_nameprep_destroy(idn_nameprep_t handle) {
 }
 
 idn_result_t
-idn_nameprep_map(idn_nameprep_t handle, const PRUint32 *from,
-		 PRUint32 *to, size_t tolen) {
+idn_nameprep_map(idn_nameprep_t handle, const uint32_t *from,
+		 uint32_t *to, size_t tolen) {
 	assert(handle != NULL && from != NULL && to != NULL);
 
 	TRACE(("idn_nameprep_map(ctx=%s, from=\"%s\")\n",
 	       handle->version, idn__debug_ucs4xstring(from, 50)));
 
 	while (*from != '\0') {
-		PRUint32 v = *from;
+		uint32_t v = *from;
 		const char *mapped;
 
 		if (v > UCS_MAX) {
@@ -189,8 +189,8 @@ idn_nameprep_map(idn_nameprep_t handle, const PRUint32 *from,
 }
 
 idn_result_t
-idn_nameprep_isprohibited(idn_nameprep_t handle, const PRUint32 *str,
-			  const PRUint32 **found) {
+idn_nameprep_isprohibited(idn_nameprep_t handle, const uint32_t *str,
+			  const uint32_t **found) {
 	assert(handle != NULL && str != NULL && found != NULL);
 
 	TRACE(("idn_nameprep_isprohibited(ctx=%s, str=\"%s\")\n",
@@ -200,8 +200,8 @@ idn_nameprep_isprohibited(idn_nameprep_t handle, const PRUint32 *str,
 }
 		
 idn_result_t
-idn_nameprep_isunassigned(idn_nameprep_t handle, const PRUint32 *str,
-			  const PRUint32 **found) {
+idn_nameprep_isunassigned(idn_nameprep_t handle, const uint32_t *str,
+			  const uint32_t **found) {
 	assert(handle != NULL && str != NULL && found != NULL);
 
 	TRACE(("idn_nameprep_isunassigned(handle->version, str=\"%s\")\n",
@@ -211,9 +211,9 @@ idn_nameprep_isunassigned(idn_nameprep_t handle, const PRUint32 *str,
 }
 		
 static idn_result_t
-idn_nameprep_check(nameprep_checkproc proc, const PRUint32 *str,
-		   const PRUint32 **found) {
-	PRUint32 v;
+idn_nameprep_check(nameprep_checkproc proc, const uint32_t *str,
+		   const uint32_t **found) {
+	uint32_t v;
 
 	while (*str != '\0') {
 		v = *str;
@@ -236,9 +236,9 @@ idn_nameprep_check(nameprep_checkproc proc, const PRUint32 *str,
 }
 
 idn_result_t
-idn_nameprep_isvalidbidi(idn_nameprep_t handle, const PRUint32 *str,
-			 const PRUint32 **found) {
-	PRUint32 v;
+idn_nameprep_isvalidbidi(idn_nameprep_t handle, const uint32_t *str,
+			 const uint32_t **found) {
+	uint32_t v;
 	idn_biditype_t first_char;
 	idn_biditype_t last_char;
 	int found_r_al;
@@ -323,25 +323,25 @@ idn_nameprep_destroyproc(void *handle) {
 }
 
 idn_result_t
-idn_nameprep_mapproc(void *handle, const PRUint32 *from,
-		      PRUint32 *to, size_t tolen) {
+idn_nameprep_mapproc(void *handle, const uint32_t *from,
+		      uint32_t *to, size_t tolen) {
 	return idn_nameprep_map((idn_nameprep_t)handle, from, to, tolen);
 }
 
 idn_result_t
-idn_nameprep_prohibitproc(void *handle, const PRUint32 *str,
-			   const PRUint32 **found) {
+idn_nameprep_prohibitproc(void *handle, const uint32_t *str,
+			   const uint32_t **found) {
 	return idn_nameprep_isprohibited((idn_nameprep_t)handle, str, found);
 }
 
 idn_result_t
-idn_nameprep_unassignedproc(void *handle, const PRUint32 *str,
-			     const PRUint32 **found) {
+idn_nameprep_unassignedproc(void *handle, const uint32_t *str,
+			     const uint32_t **found) {
 	return idn_nameprep_isunassigned((idn_nameprep_t)handle, str, found);
 }
 
 idn_result_t
-idn_nameprep_bidiproc(void *handle, const PRUint32 *str,
-		      const PRUint32 **found) {
+idn_nameprep_bidiproc(void *handle, const uint32_t *str,
+		      const uint32_t **found) {
 	return idn_nameprep_isvalidbidi((idn_nameprep_t)handle, str, found);
 }

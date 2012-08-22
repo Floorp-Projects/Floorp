@@ -194,7 +194,7 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
   contentSortInfo *right = (contentSortInfo *)data2;
   nsSortState* sortState = (nsSortState *)privateData;
       
-  PRInt32 sortOrder = 0;
+  int32_t sortOrder = 0;
 
   if (sortState->direction == nsSortState_natural && sortState->processor) {
     // sort in natural order
@@ -202,8 +202,8 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
                                          nullptr, sortState->sortHints, &sortOrder);
   }
   else {
-    PRInt32 length = sortState->sortKeys.Count();
-    for (PRInt32 t = 0; t < length; t++) {
+    int32_t length = sortState->sortKeys.Count();
+    for (int32_t t = 0; t < length; t++) {
       // for templates, use the query processor to do sorting
       if (sortState->processor) {
         sortState->processor->CompareResults(left->result, right->result,
@@ -236,15 +236,15 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
   nsresult rv = GetItemsToSort(aContainer, aSortState, items);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 numResults = items.Length();
+  uint32_t numResults = items.Length();
   if (!numResults)
     return NS_OK;
 
-  PRUint32 i;
+  uint32_t i;
 
   // inbetweenSeparatorSort sorts the items between separators independently
   if (aSortState->inbetweenSeparatorSort) {
-    PRUint32 startIndex = 0;
+    uint32_t startIndex = 0;
     for (i = 0; i < numResults; i++) {
       if (i > startIndex + 1) {
         nsAutoString type;
@@ -288,7 +288,7 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
       // into the same parent. This is necessary as multiple rules
       // may generate results which get placed in different locations.
       items[i].parent = parent;
-      PRInt32 index = parent->IndexOf(child);
+      int32_t index = parent->IndexOf(child);
       parent->RemoveChildAt(index, true);
     }
   }
@@ -326,13 +326,13 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
 
 nsresult
 XULSortServiceImpl::InvertSortInfo(nsTArray<contentSortInfo>& aData,
-                                   PRInt32 aStart, PRInt32 aNumItems)
+                                   int32_t aStart, int32_t aNumItems)
 {
   if (aNumItems > 1) {
     // reverse the items in the array starting from aStart
-    PRInt32 upPoint = (aNumItems + 1) / 2 + aStart;
-    PRInt32 downPoint = (aNumItems - 2) / 2 + aStart;
-    PRInt32 half = aNumItems / 2;
+    int32_t upPoint = (aNumItems + 1) / 2 + aStart;
+    int32_t downPoint = (aNumItems - 2) / 2 + aStart;
+    int32_t half = aNumItems / 2;
     while (half-- > 0) {
       aData[downPoint--].swap(aData[upPoint++]);
     }
@@ -447,16 +447,16 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
   return NS_OK;
 }
 
-PRInt32
+int32_t
 XULSortServiceImpl::CompareValues(const nsAString& aLeft,
                                   const nsAString& aRight,
-                                  PRUint32 aSortHints)
+                                  uint32_t aSortHints)
 {
   if (aSortHints & SORT_INTEGER) {
     nsresult err;
-    PRInt32 leftint = PromiseFlatString(aLeft).ToInteger(&err);
+    int32_t leftint = PromiseFlatString(aLeft).ToInteger(&err);
     if (NS_SUCCEEDED(err)) {
-      PRInt32 rightint = PromiseFlatString(aRight).ToInteger(&err);
+      int32_t rightint = PromiseFlatString(aRight).ToInteger(&err);
       if (NS_SUCCEEDED(err)) {
         return leftint - rightint;
       }
@@ -470,7 +470,7 @@ XULSortServiceImpl::CompareValues(const nsAString& aLeft,
 
   nsICollation* collation = nsXULContentUtils::GetCollation();
   if (collation) {
-    PRInt32 result;
+    int32_t result;
     collation->CompareString(nsICollation::kCollationCaseInSensitive,
                              aLeft, aRight, &result);
     return result;

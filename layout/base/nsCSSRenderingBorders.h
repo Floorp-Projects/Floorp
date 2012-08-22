@@ -63,10 +63,10 @@ typedef enum {
 } BorderColorStyle;
 
 struct nsCSSBorderRenderer {
-  nsCSSBorderRenderer(PRInt32 aAppUnitsPerPixel,
+  nsCSSBorderRenderer(int32_t aAppUnitsPerPixel,
                       gfxContext* aDestContext,
                       gfxRect& aOuterRect,
-                      const PRUint8* aBorderStyles,
+                      const uint8_t* aBorderStyles,
                       const gfxFloat* aBorderWidths,
                       gfxCornerSizes& aBorderRadii,
                       const nscolor* aBorderColors,
@@ -84,9 +84,9 @@ struct nsCSSBorderRenderer {
   gfxRect mInnerRect;
 
   // the style and size of the border
-  const PRUint8* mBorderStyles;
+  const uint8_t* mBorderStyles;
   const gfxFloat* mBorderWidths;
-  PRUint8* mSanitizedStyles;
+  uint8_t* mSanitizedStyles;
   gfxFloat* mSanitizedWidths;
   gfxCornerSizes mBorderRadii;
 
@@ -95,7 +95,7 @@ struct nsCSSBorderRenderer {
   nsBorderColors* const* mCompositeColors;
 
   // core app units per pixel
-  PRInt32 mAUPP;
+  int32_t mAUPP;
 
   // misc -- which sides to skip, the background color
   int mSkipSides;
@@ -108,13 +108,13 @@ struct nsCSSBorderRenderer {
 
   // For all the sides in the bitmask, would they be rendered
   // in an identical color and style?
-  bool AreBorderSideFinalStylesSame(PRUint8 aSides);
+  bool AreBorderSideFinalStylesSame(uint8_t aSides);
 
   // For the given style, is the given corner a solid color?
-  bool IsSolidCornerStyle(PRUint8 aStyle, mozilla::css::Corner aCorner);
+  bool IsSolidCornerStyle(uint8_t aStyle, mozilla::css::Corner aCorner);
 
   // For the given solid corner, what color style should be used?
-  BorderColorStyle BorderColorStyleForSolidCorner(PRUint8 aStyle, mozilla::css::Corner aCorner);
+  BorderColorStyle BorderColorStyleForSolidCorner(uint8_t aStyle, mozilla::css::Corner aCorner);
 
   //
   // Path generation functions

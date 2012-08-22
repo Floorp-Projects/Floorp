@@ -212,8 +212,8 @@ ContainerLayerD3D10::RenderLayer()
         // applied to use relative to our parent, and compensates for the offset
         // that was applied on our parent's rendering.
         D3D10_BOX srcBox;
-        srcBox.left = visibleRect.x + PRInt32(transform.x0) - PRInt32(previousRenderTargetOffset[0]);
-        srcBox.top = visibleRect.y + PRInt32(transform.y0) - PRInt32(previousRenderTargetOffset[1]);
+        srcBox.left = visibleRect.x + int32_t(transform.x0) - int32_t(previousRenderTargetOffset[0]);
+        srcBox.top = visibleRect.y + int32_t(transform.y0) - int32_t(previousRenderTargetOffset[1]);
         srcBox.right = srcBox.left + visibleRect.width;
         srcBox.bottom = srcBox.top + visibleRect.height;
         srcBox.back = 1;
@@ -260,7 +260,7 @@ ContainerLayerD3D10::RenderLayer()
   /*
    * Render this container's contents.
    */
-  for (PRUint32 i = 0; i < children.Length(); i++) {
+  for (uint32_t i = 0; i < children.Length(); i++) {
     LayerD3D10* layerToRender = static_cast<LayerD3D10*>(children.ElementAt(i)->ImplData());
 
     if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {

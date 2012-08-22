@@ -141,7 +141,7 @@ OfflineCacheUpdateGlue::SetDocument(nsIDOMDocument *aDocument)
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateGlue::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate, PRUint32 state)
+OfflineCacheUpdateGlue::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate, uint32_t state)
 {
     if (state == nsIOfflineCacheUpdateObserver::STATE_FINISHED) {
         LOG(("OfflineCacheUpdateGlue got STATE_FINISHED [%p]", this));

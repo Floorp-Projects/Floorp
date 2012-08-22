@@ -211,7 +211,7 @@ nsSMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
 
 nsresult
 nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                        PRUint32 aCount) const
+                        uint32_t aCount) const
 {
   NS_ABORT_IF_FALSE(aValueToAdd.mType == aDest.mType,
                     "Trying to add invalid types");
@@ -347,16 +347,16 @@ ValueFromStringHelper(nsCSSProperty aPropID,
   // (This is a partial solution to let us accept some otherwise out-of-bounds
   // CSS values. Bug 501188 will provide a more complete fix.)
   bool isNegative = false;
-  PRUint32 subStringBegin = 0;
+  uint32_t subStringBegin = 0;
 
   // NOTE: We need to opt-out 'stroke-dasharray' from the negative-number
   // check.  Its values might look negative (e.g. by starting with "-1"), but
   // they're more complicated than our simple negation logic here can handle.
   if (aPropID != eCSSProperty_stroke_dasharray) {
-    PRInt32 absValuePos = nsSMILParserUtils::CheckForNegativeNumber(aString);
+    int32_t absValuePos = nsSMILParserUtils::CheckForNegativeNumber(aString);
     if (absValuePos > 0) {
       isNegative = true;
-      subStringBegin = (PRUint32)absValuePos; // Start parsing after '-' sign
+      subStringBegin = (uint32_t)absValuePos; // Start parsing after '-' sign
     }
   }
   nsDependentSubstring subString(aString, subStringBegin);

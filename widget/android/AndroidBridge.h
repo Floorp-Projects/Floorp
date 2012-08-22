@@ -144,9 +144,9 @@ public:
     static void NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
                                  const nsAString& aActionHint);
 
-    static void NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen, int aStart, int aEnd, int aNewEnd);
+    static void NotifyIMEChange(const PRUnichar *aText, uint32_t aTextLen, int aStart, int aEnd, int aNewEnd);
 
-    nsresult TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstY, PRInt32 dstX, PRInt32 dstW, PRInt32 dstH, PRInt32 bufW, PRInt32 bufH, PRInt32 tabId, PRInt32 token, jobject buffer);
+    nsresult TakeScreenshot(nsIDOMWindow *window, int32_t srcX, int32_t srcY, int32_t srcW, int32_t srcH, int32_t dstY, int32_t dstX, int32_t dstW, int32_t dstH, int32_t bufW, int32_t bufH, int32_t tabId, int32_t token, jobject buffer);
 
     static void NotifyPaintedRect(float top, float left, float bottom, float right);
 
@@ -159,7 +159,7 @@ public:
 
     void DisableSensor(int aSensorType);
 
-    void ReturnIMEQueryResult(const PRUnichar *aResult, PRUint32 aLen, int aSelStart, int aSelLen);
+    void ReturnIMEQueryResult(const PRUnichar *aResult, uint32_t aLen, int aSelStart, int aSelLen);
 
     void NotifyXreExit();
 
@@ -208,8 +208,8 @@ public:
                                const nsAString& aAlertName);
 
     void AlertsProgressListener_OnProgress(const nsAString& aAlertName,
-                                           PRInt64 aProgress,
-                                           PRInt64 aProgressMax,
+                                           int64_t aProgress,
+                                           int64_t aProgressMax,
                                            const nsAString& aAlertText);
 
     void AlertsProgressListener_OnCancel(const nsAString& aAlertName);
@@ -222,7 +222,7 @@ public:
 
     void PerformHapticFeedback(bool aIsLongPress);
 
-    void Vibrate(const nsTArray<PRUint32>& aPattern);
+    void Vibrate(const nsTArray<uint32_t>& aPattern);
     void CancelVibrate();
 
     void SetFullScreen(bool aFullScreen);
@@ -241,7 +241,7 @@ public:
 
     void GetSystemColors(AndroidSystemColors *aColors);
 
-    void GetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSize, PRUint8 * const aBuf);
+    void GetIconForExtension(const nsACString& aFileExt, uint32_t aIconSize, uint8_t * const aBuf);
 
     bool GetShowPasswordSetting();
 
@@ -256,7 +256,7 @@ public:
 
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result, JNIEnv* env = nullptr);
 
-    bool GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt, JNIEnv* env = nullptr);
+    bool GetStaticIntField(const char *className, const char *fieldName, int32_t* aInt, JNIEnv* env = nullptr);
 
     void SetKeepScreenOn(bool on);
 
@@ -302,7 +302,7 @@ public:
     void CheckURIVisited(const nsAString& uri);
     void MarkURIVisited(const nsAString& uri);
 
-    bool InitCamera(const nsCString& contentType, PRUint32 camera, PRUint32 *width, PRUint32 *height, PRUint32 *fps);
+    bool InitCamera(const nsCString& contentType, uint32_t camera, uint32_t *width, uint32_t *height, uint32_t *fps);
 
     void CloseCamera();
 
@@ -310,14 +310,14 @@ public:
     void DisableBatteryNotifications();
     void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
 
-    PRUint16 GetNumberOfMessagesForText(const nsAString& aText);
-    void SendMessage(const nsAString& aNumber, const nsAString& aText, PRInt32 aRequestId, PRUint64 aProcessId);
-    PRInt32 SaveSentMessage(const nsAString& aRecipient, const nsAString& aBody, PRUint64 aDate);
-    void GetMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId);
-    void DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId);
-    void CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aReverse, PRInt32 aRequestId, PRUint64 aProcessId);
-    void GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId, PRUint64 aProcessId);
-    void ClearMessageList(PRInt32 aListId);
+    uint16_t GetNumberOfMessagesForText(const nsAString& aText);
+    void SendMessage(const nsAString& aNumber, const nsAString& aText, int32_t aRequestId, uint64_t aProcessId);
+    int32_t SaveSentMessage(const nsAString& aRecipient, const nsAString& aBody, uint64_t aDate);
+    void GetMessage(int32_t aMessageId, int32_t aRequestId, uint64_t aProcessId);
+    void DeleteMessage(int32_t aMessageId, int32_t aRequestId, uint64_t aProcessId);
+    void CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aReverse, int32_t aRequestId, uint64_t aProcessId);
+    void GetNextMessageInList(int32_t aListId, int32_t aRequestId, uint64_t aProcessId);
+    void ClearMessageList(int32_t aListId);
 
     bool IsTablet();
 

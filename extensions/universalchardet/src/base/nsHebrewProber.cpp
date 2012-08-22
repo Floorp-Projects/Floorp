@@ -74,7 +74,7 @@ bool nsHebrewProber::isNonFinal(char c)
  * The input buffer should not contain any white spaces that are not (' ')
  * or any low-ascii punctuation marks. 
  */
-nsProbingState nsHebrewProber::HandleData(const char* aBuf, PRUint32 aLen)
+nsProbingState nsHebrewProber::HandleData(const char* aBuf, uint32_t aLen)
 {
   // Both model probers say it's not them. No reason to continue.
   if (GetState() == eNotMe)
@@ -113,7 +113,7 @@ nsProbingState nsHebrewProber::HandleData(const char* aBuf, PRUint32 aLen)
 const char* nsHebrewProber::GetCharSetName()
 {
   // If the final letter score distance is dominant enough, rely on it.
-  PRInt32 finalsub = mFinalCharLogicalScore - mFinalCharVisualScore;
+  int32_t finalsub = mFinalCharLogicalScore - mFinalCharVisualScore;
   if (finalsub >= MIN_FINAL_CHAR_DISTANCE) 
     return LOGICAL_HEBREW_NAME;
   if (finalsub <= -(MIN_FINAL_CHAR_DISTANCE))

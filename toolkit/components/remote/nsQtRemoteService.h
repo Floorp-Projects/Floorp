@@ -26,7 +26,7 @@ private:
   ~nsQtRemoteService() { };
 
   virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
-                                              PRUint32 aTimestamp);
+                                              uint32_t aTimestamp);
 
   void PropertyNotifyEvent(XEvent *evt);
   friend class MozQRemoteEventHandlerWidget;

@@ -32,16 +32,16 @@ public:
   virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual void ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aState);
   NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual void CountRowsColumns(nsIFrame* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
+  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount);
   virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState);
-  virtual PRInt32 BuildRows(nsIFrame* aBox, nsGridRow* aRows);
+  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows);
   virtual Type GetType() { return eRowLeaf; }
 
 protected:
 
   virtual void PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState,
                                 nsBoxSize*& aBoxSizes, nscoord& aMinSize,
-                                nscoord& aMaxSize, PRInt32& aFlexes);
+                                nscoord& aMaxSize, int32_t& aFlexes);
   virtual void ComputeChildSizes(nsIFrame* aBox,
                                  nsBoxLayoutState& aState,
                                  nscoord& aGivenSize,

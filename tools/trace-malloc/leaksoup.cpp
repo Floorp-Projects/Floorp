@@ -33,7 +33,7 @@ struct AllocationNode {
     // Early on in the algorithm, the pre-order index from a DFS.
     // Later on, set to the index of the strongly connected component to
     // which this node belongs.
-    PRUint32 index;
+    uint32_t index;
 
     bool reached;
     bool is_root;
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
     // Do a depth-first search on the graph (i.e., by following
     // |pointers_to|) and assign the post-order index to |index|.
     {
-        PRUint32 dfs_index = 0;
+        uint32_t dfs_index = 0;
         nsVoidArray stack;
 
         for (AllocationNode *n = nodes, *n_end = nodes+count; n != n_end; ++n) {
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
             stack.AppendElement(n);
 
             do {
-                PRUint32 pos = stack.Count() - 1;
+                uint32_t pos = stack.Count() - 1;
                 AllocationNode *n =
                     static_cast<AllocationNode*>(stack[pos]);
                 if (n->reached) {
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
                     // When doing post-order processing, we have to be
                     // careful not to put reached nodes into the stack.
                     nsVoidArray &pt = n->pointers_to;
-                    for (PRInt32 i = pt.Count() - 1; i >= 0; --i) {
+                    for (int32_t i = pt.Count() - 1; i >= 0; --i) {
                         if (!static_cast<AllocationNode*>(pt[i])->reached) {
                             stack.AppendElement(pt[i]);
                         }
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
     }
 
     // Put the nodes into their strongly-connected components.
-    PRUint32 num_sccs = 0;
+    uint32_t num_sccs = 0;
     {
         for (size_t i = 0; i < count; ++i) {
             nodes[i].reached = false;
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
             // We found a new strongly connected index.
             stack.AppendElement(*sn);
             do {
-                PRUint32 pos = stack.Count() - 1;
+                uint32_t pos = stack.Count() - 1;
                 AllocationNode *n =
                     static_cast<AllocationNode*>(stack[pos]);
                 stack.RemoveElementAt(pos);
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
 
     // Identify which nodes are leak roots by using DFS, and watching
     // for component transitions.
-    PRUint32 num_root_nodes = count;
+    uint32_t num_root_nodes = count;
     {
         for (size_t i = 0; i < count; ++i) {
             nodes[i].is_root = true;
@@ -268,7 +268,7 @@ int main(int argc, char **argv)
             }
 
             while (stack.Count() > 0) {
-                PRUint32 pos = stack.Count() - 1;
+                uint32_t pos = stack.Count() - 1;
                 AllocationNode *n =
                     static_cast<AllocationNode*>(stack[pos]);
                 stack.RemoveElementAt(pos);
@@ -307,7 +307,7 @@ int main(int argc, char **argv)
 
         // Loop over the sorted nodes twice, first printing the roots
         // and then the non-roots.
-        for (PRInt32 root_type = true;
+        for (int32_t root_type = true;
              root_type == true || root_type == false; --root_type) {
             if (root_type) {
                 printf("\n\n"
@@ -318,7 +318,7 @@ int main(int argc, char **argv)
                        "<div class=\"nonroot\">\n"
                        "<h1 id=\"nonroot\">Non-root components</h1>\n");
             }
-            PRUint32 component = (PRUint32)-1;
+            uint32_t component = (uint32_t)-1;
             bool one_object_component;
             for (const AllocationNode *const* sn = sorted_nodes,
                                   *const* sn_end = sorted_nodes + count;
@@ -370,7 +370,7 @@ int main(int argc, char **argv)
 
                 if (n->pointers_from.Count()) {
                     printf("\nPointers from:\n");
-                    for (PRUint32 i = 0, i_end = n->pointers_from.Count();
+                    for (uint32_t i = 0, i_end = n->pointers_from.Count();
                          i != i_end; ++i) {
                         AllocationNode *t = static_cast<AllocationNode*>
                                                        (n->pointers_from[i]);

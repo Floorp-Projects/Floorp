@@ -23,9 +23,9 @@ public:
 
   FileStreamWrapper(nsISupports* aFileStream,
                     FileHelper* aFileHelper,
-                    PRUint64 aOffset,
-                    PRUint64 aLimit,
-                    PRUint32 aFlags);
+                    uint64_t aOffset,
+                    uint64_t aLimit,
+                    uint32_t aFlags);
 
   virtual ~FileStreamWrapper();
 
@@ -38,9 +38,9 @@ public:
 protected:
   nsCOMPtr<nsISupports> mFileStream;
   nsRefPtr<FileHelper> mFileHelper;
-  PRUint64 mOffset;
-  PRUint64 mLimit;
-  PRUint32 mFlags;
+  uint64_t mOffset;
+  uint64_t mLimit;
+  uint32_t mFlags;
   bool mFirstTime;
 };
 
@@ -53,9 +53,9 @@ public:
 
   FileInputStreamWrapper(nsISupports* aFileStream,
                          FileHelper* aFileHelper,
-                         PRUint64 aOffset,
-                         PRUint64 aLimit,
-                         PRUint32 aFlags);
+                         uint64_t aOffset,
+                         uint64_t aLimit,
+                         uint32_t aFlags);
 
 protected:
   virtual ~FileInputStreamWrapper()
@@ -74,9 +74,9 @@ public:
 
   FileOutputStreamWrapper(nsISupports* aFileStream,
                          FileHelper* aFileHelper,
-                         PRUint64 aOffset,
-                         PRUint64 aLimit,
-                         PRUint32 aFlags);
+                         uint64_t aOffset,
+                         uint64_t aLimit,
+                         uint32_t aFlags);
 
 protected:
   virtual ~FileOutputStreamWrapper()

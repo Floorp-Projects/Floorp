@@ -217,8 +217,8 @@ nsSound::Shutdown()
 NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
-                                        PRUint32 dataLen,
-                                        const PRUint8 *data)
+                                        uint32_t dataLen,
+                                        const uint8_t *data)
 {
     // print a load error on bad status, and return
     if (NS_FAILED(aStatus)) {
@@ -267,9 +267,9 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     }
 
     // XXX: Should we do this on another thread?
-    PRUint32 length = dataLen;
+    uint32_t length = dataLen;
     while (length > 0) {
-        PRInt32 amount = PR_Write(fd, data, length);
+        int32_t amount = PR_Write(fd, data, length);
         if (amount < 0) {
             return NS_ERROR_FAILURE;
         }
@@ -346,7 +346,7 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
     return rv;
 }
 
-NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
+NS_IMETHODIMP nsSound::PlayEventSound(uint32_t aEventId)
 {
     if (!mInited)
         Init();
@@ -396,7 +396,7 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
     if (NS_IsMozAliasSound(aSoundAlias)) {
         NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
-        PRUint32 eventId;
+        uint32_t eventId;
         if (aSoundAlias.Equals(NS_SYSSOUND_ALERT_DIALOG))
             eventId = EVENT_ALERT_DIALOG_OPEN;
         else if (aSoundAlias.Equals(NS_SYSSOUND_CONFIRM_DIALOG))

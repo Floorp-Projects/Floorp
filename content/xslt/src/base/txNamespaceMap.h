@@ -31,13 +31,13 @@ public:
     }
 
     nsresult mapNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI);
-    PRInt32 lookupNamespace(nsIAtom* aPrefix);
-    PRInt32 lookupNamespaceWithDefault(const nsAString& aPrefix);
+    int32_t lookupNamespace(nsIAtom* aPrefix);
+    int32_t lookupNamespaceWithDefault(const nsAString& aPrefix);
 
 private:
     nsAutoRefCnt mRefCnt;
     nsCOMArray<nsIAtom> mPrefixes;
-    nsTArray<PRInt32> mNamespaces;
+    nsTArray<int32_t> mNamespaces;
 };
 
 #endif //TRANSFRMX_TXNAMESPACEMAP_H

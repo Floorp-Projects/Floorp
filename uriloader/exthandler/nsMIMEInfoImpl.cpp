@@ -73,10 +73,10 @@ nsMIMEInfoBase::ExtensionExists(const nsACString& aExtension, bool *_retval)
 {
     NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
     bool found = false;
-    PRUint32 extCount = mExtensions.Length();
+    uint32_t extCount = mExtensions.Length();
     if (extCount < 1) return NS_OK;
 
-    for (PRUint8 i=0; i < extCount; i++) {
+    for (uint8_t i=0; i < extCount; i++) {
         const nsCString& ext = mExtensions[i];
         if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
             found = true;
@@ -102,8 +102,8 @@ NS_IMETHODIMP
 nsMIMEInfoBase::SetPrimaryExtension(const nsACString& aExtension)
 {
   NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
-  PRUint32 extCount = mExtensions.Length();
-  PRUint8 i;
+  uint32_t extCount = mExtensions.Length();
+  uint8_t i;
   bool found = false;
   for (i=0; i < extCount; i++) {
     const nsCString& ext = mExtensions[i];
@@ -182,7 +182,7 @@ nsMIMEInfoBase::SetFileExtensions(const nsACString& aExtensions)
     mExtensions.Clear();
     nsCString extList( aExtensions );
     
-    PRInt32 breakLocation = -1;
+    int32_t breakLocation = -1;
     while ( (breakLocation= extList.FindChar(',') )!= -1)
     {
         mExtensions.AppendElement(Substring(extList.get(), extList.get() + breakLocation));

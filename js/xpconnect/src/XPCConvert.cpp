@@ -257,7 +257,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                     break;
 
                 if (!cString->IsVoid()) {
-                    PRUint32 len;
+                    uint32_t len;
                     jschar *p = (jschar *)UTF8ToNewUnicode(*cString, &len);
 
                     if (!p)
@@ -477,7 +477,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         const PRUnichar* chars = nullptr;
         JSString* str = nullptr;
         JSBool isNewString = false;
-        PRUint32 length = 0;
+        uint32_t length = 0;
 
         if (JSVAL_IS_VOID(s)) {
             if (isDOMString) {
@@ -492,7 +492,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             if (!str)
                 return false;
 
-            length = (PRUint32) JS_GetStringLength(str);
+            length = (uint32_t) JS_GetStringLength(str);
             if (length) {
                 chars = JS_GetStringCharsZ(cx, str);
                 if (!chars)
@@ -562,7 +562,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             bool legalRange = true;
             int len = JS_GetStringLength(str);
             const jschar* t;
-            PRInt32 i=0;
+            int32_t i=0;
             for (t=chars; (i< len) && legalRange ; i++,t++) {
                 if (!CheckJSCharInCharRange(*t))
                     break;
@@ -615,7 +615,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
     case nsXPTType::T_UTF8STRING:
     {
         const jschar* chars;
-        PRUint32 length;
+        uint32_t length;
         JSString* str;
 
         if (JSVAL_IS_NULL(s) || JSVAL_IS_VOID(s)) {
@@ -699,8 +699,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             rs = *((nsACString**)d);
         }
 
-        rs->SetLength(PRUint32(length));
-        if (rs->Length() != PRUint32(length)) {
+        rs->SetLength(uint32_t(length));
+        if (rs->Length() != uint32_t(length)) {
             return false;
         }
         JS_EncodeStringToBuffer(str, rs->BeginWriting(), length);
@@ -729,7 +729,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                     *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
                 return false;
             }
-            PRUint32 length = JS_GetStringLength(str);
+            uint32_t length = JS_GetStringLength(str);
             nsIAtom* atom = NS_NewAtom(nsDependentSubstring(chars,
                                                             chars + length));
             if (!atom && pErr)
@@ -1492,7 +1492,7 @@ failure:
 static JSBool
 CheckTargetAndPopulate(JSContext *cx,
                        const nsXPTType& type,
-                       PRUint8 requiredType,
+                       uint8_t requiredType,
                        size_t typeSize,
                        uint32_t count,
                        JSObject* tArr,
@@ -1762,13 +1762,13 @@ failure:
     if (array) {
         if (cleanupMode == re) {
             nsISupports** a = (nsISupports**) array;
-            for (PRUint32 i = 0; i < initedCount; i++) {
+            for (uint32_t i = 0; i < initedCount; i++) {
                 nsISupports* p = a[i];
                 NS_IF_RELEASE(p);
             }
         } else if (cleanupMode == fr) {
             void** a = (void**) array;
-            for (PRUint32 i = 0; i < initedCount; i++) {
+            for (uint32_t i = 0; i < initedCount; i++) {
                 void* p = a[i];
                 if (p) nsMemory::Free(p);
             }
@@ -1876,7 +1876,7 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                     *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
                 return false;
             }
-            len = PRUint32(length);
+            len = uint32_t(length);
 
             if (len < count)
                 len = count;

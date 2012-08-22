@@ -42,7 +42,7 @@ public:
   // nsIDOMHTMLTableSectionElement
   NS_DECL_NSIDOMHTMLTABLESECTIONELEMENT
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -118,7 +118,7 @@ nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
 
 
 NS_IMETHODIMP
-nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex,
+nsHTMLTableSectionElement::InsertRow(int32_t aIndex,
                                      nsIDOMHTMLElement** aValue)
 {
   *aValue = nullptr;
@@ -130,14 +130,14 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex,
   nsCOMPtr<nsIDOMHTMLCollection> rows;
   GetRows(getter_AddRefs(rows));
 
-  PRUint32 rowCount;
+  uint32_t rowCount;
   rows->GetLength(&rowCount);
 
-  if (aIndex > (PRInt32)rowCount) {
+  if (aIndex > (int32_t)rowCount) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  bool doInsert = (aIndex < PRInt32(rowCount)) && (aIndex != -1);
+  bool doInsert = (aIndex < int32_t(rowCount)) && (aIndex != -1);
 
   // create the row
   nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -174,7 +174,7 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsHTMLTableSectionElement::DeleteRow(PRInt32 aValue)
+nsHTMLTableSectionElement::DeleteRow(int32_t aValue)
 {
   if (aValue < -1) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -184,7 +184,7 @@ nsHTMLTableSectionElement::DeleteRow(PRInt32 aValue)
   GetRows(getter_AddRefs(rows));
 
   nsresult rv;
-  PRUint32 refIndex;
+  uint32_t refIndex;
   if (aValue == -1) {
     rv = rows->GetLength(&refIndex);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -196,7 +196,7 @@ nsHTMLTableSectionElement::DeleteRow(PRInt32 aValue)
     --refIndex;
   }
   else {
-    refIndex = (PRUint32)aValue;
+    refIndex = (uint32_t)aValue;
   }
 
   nsCOMPtr<nsIDOMNode> row;
@@ -212,7 +212,7 @@ nsHTMLTableSectionElement::DeleteRow(PRInt32 aValue)
 }
 
 bool
-nsHTMLTableSectionElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLTableSectionElement::ParseAttribute(int32_t aNamespaceID,
                                           nsIAtom* aAttribute,
                                           const nsAString& aValue,
                                           nsAttrValue& aResult)

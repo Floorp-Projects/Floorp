@@ -58,7 +58,7 @@ protected:
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
   
-  PRUint32 mCanvasFramebuffer;
+  uint32_t mCanvasFramebuffer;
 
   bool mGLBufferIsPremultiplied;
   bool mNeedsYFlip;

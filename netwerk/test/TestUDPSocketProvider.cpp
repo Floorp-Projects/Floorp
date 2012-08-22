@@ -104,8 +104,8 @@ main(int argc, char* argv[])
                                   UDP_PORT, nullptr, getter_AddRefs(transport));
         UDP_ASSERT_NSRESULT("Cannot create transport");
         
-        PRUint32 count, read;
-        const PRUint32 data = 0xFF0056A9;
+        uint32_t count, read;
+        const uint32_t data = 0xFF0056A9;
 
         // write to the output stream
         nsCOMPtr<nsIOutputStream> outstream;
@@ -113,21 +113,21 @@ main(int argc, char* argv[])
                                          0, 0, getter_AddRefs(outstream));
         UDP_ASSERT_NSRESULT("Cannot open output stream");
 
-        rv = outstream->Write((const char*)&data, sizeof(PRUint32), &count);
+        rv = outstream->Write((const char*)&data, sizeof(uint32_t), &count);
         UDP_ASSERT_NSRESULT("Cannot write to output stream");
-        UDP_ASSERT(count == sizeof(PRUint32),
+        UDP_ASSERT(count == sizeof(uint32_t),
                    "Did not write enough bytes to output stream");
 
         // read from NSPR to check it's the same
-        count = PR_RecvFrom(serverFD, &read, sizeof(PRUint32), 0, &addr, 1);
-        UDP_ASSERT(count == sizeof(PRUint32),
+        count = PR_RecvFrom(serverFD, &read, sizeof(uint32_t), 0, &addr, 1);
+        UDP_ASSERT(count == sizeof(uint32_t),
                    "Did not read enough bytes from NSPR");
         status = (read == data ? PR_SUCCESS : PR_FAILURE);
         UDP_ASSERT_PRSTATUS("Did not read expected data from NSPR");
 
         // write to NSPR
-        count = PR_SendTo(serverFD, &data, sizeof(PRUint32), 0, &addr, 1);
-        status = (count == sizeof(PRUint32) ? PR_SUCCESS : PR_FAILURE);
+        count = PR_SendTo(serverFD, &data, sizeof(uint32_t), 0, &addr, 1);
+        status = (count == sizeof(uint32_t) ? PR_SUCCESS : PR_FAILURE);
         UDP_ASSERT_PRSTATUS("Did not write enough bytes to NSPR");
         
         // read from stream
@@ -136,9 +136,9 @@ main(int argc, char* argv[])
                                         0, 0, getter_AddRefs(instream));
         UDP_ASSERT_NSRESULT("Cannot open input stream");
         
-        rv = instream->Read((char*)&read, sizeof(PRUint32), &count);
+        rv = instream->Read((char*)&read, sizeof(uint32_t), &count);
         UDP_ASSERT_NSRESULT("Cannot read from input stream");
-        UDP_ASSERT(count == sizeof(PRUint32),
+        UDP_ASSERT(count == sizeof(uint32_t),
                    "Did not read enough bytes from input stream");
         UDP_ASSERT(read == data, "Did not read expected data from stream");
 

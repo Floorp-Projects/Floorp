@@ -161,7 +161,7 @@ static MozQOrientationSensorFilter gOrientationFilter;
 static bool
 isContextMenuKeyEvent(const QKeyEvent *qe)
 {
-    PRUint32 kc = QtKeyCodeToDOMKeyCode(qe->key());
+    uint32_t kc = QtKeyCodeToDOMKeyCode(qe->key());
     if (qe->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
         return false;
 
@@ -252,7 +252,7 @@ nsWindow::nsWindow()
 }
 
 static inline gfxASurface::gfxImageFormat
-_depth_to_gfximage_format(PRInt32 aDepth)
+_depth_to_gfximage_format(int32_t aDepth)
 {
     switch (aDepth) {
     case 32:
@@ -340,7 +340,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsBaseWidget, nsISupportsWeakReference)
 NS_IMETHODIMP
 nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& aConfigurations)
 {
-    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    for (uint32_t i = 0; i < aConfigurations.Length(); ++i) {
         const Configuration& configuration = aConfigurations[i];
 
         nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
@@ -482,11 +482,11 @@ nsWindow::IsVisible() const
 }
 
 NS_IMETHODIMP
-nsWindow::ConstrainPosition(bool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
+nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
 {
     if (mWidget) {
-        PRInt32 screenWidth  = QApplication::desktop()->width();
-        PRInt32 screenHeight = QApplication::desktop()->height();
+        int32_t screenWidth  = QApplication::desktop()->width();
+        int32_t screenHeight = QApplication::desktop()->height();
 
         if (aAllowSlop) {
             if (*aX < (kWindowPositionSlop - mBounds.width))
@@ -513,7 +513,7 @@ nsWindow::ConstrainPosition(bool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 }
 
 NS_IMETHODIMP
-nsWindow::Move(PRInt32 aX, PRInt32 aY)
+nsWindow::Move(int32_t aX, int32_t aY)
 {
     LOG(("nsWindow::Move [%p] %d %d\n", (void *)this,
          aX, aY));
@@ -558,7 +558,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
 }
 
 NS_IMETHODIMP
-nsWindow::SetSizeMode(PRInt32 aMode)
+nsWindow::SetSizeMode(int32_t aMode)
 {
     nsresult rv;
 
@@ -710,7 +710,7 @@ nsWindow::SetCursor(nsCursor aCursor)
 
 NS_IMETHODIMP
 nsWindow::SetCursor(imgIContainer* aCursor,
-                    PRUint32 aHotspotX, PRUint32 aHotspotY)
+                    uint32_t aHotspotX, uint32_t aHotspotY)
 {
     return NS_ERROR_NOT_AVAILABLE;
 }
@@ -746,7 +746,7 @@ QWidget* nsWindow::GetViewWidget()
 }
 
 void*
-nsWindow::GetNativeData(PRUint32 aDataType)
+nsWindow::GetNativeData(uint32_t aDataType)
 {
     switch (aDataType) {
     case NS_NATIVE_WINDOW:
@@ -827,7 +827,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     const char extensions[6][7] = { ".png", "16.png", "32.png", "48.png",
                                     ".xpm", "16.xpm" };
 
-    for (PRUint32 i = 0; i < ArrayLength(extensions); i++) {
+    for (uint32_t i = 0; i < ArrayLength(extensions); i++) {
         // Don't bother looking for XPM versions if we found a PNG.
         if (i == ArrayLength(extensions) - 2 && iconList.Length())
             break;
@@ -929,11 +929,11 @@ check_for_rollup(double aMouseX, double aMouseY,
             // if we're dealing with menus, we probably have submenus and
             // we don't want to rollup if the clickis in a parent menu of
             // the current submenu
-            PRUint32 popupsToRollup = PR_UINT32_MAX;
+            uint32_t popupsToRollup = PR_UINT32_MAX;
             if (gRollupListener) {
                 nsAutoTArray<nsIWidget*, 5> widgetChain;
-                PRUint32 sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
-                for (PRUint32 i=0; i<widgetChain.Length(); ++i) {
+                uint32_t sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
+                for (uint32_t i=0; i<widgetChain.Length(); ++i) {
                     nsIWidget* widget =  widgetChain[i];
                     MozQWidget* currWindow =
                         (MozQWidget*) widget->GetNativeData(NS_NATIVE_WINDOW);
@@ -971,7 +971,7 @@ is_mouse_in_window (MozQWidget* aWindow, double aMouseX, double aMouseY)
 }
 
 NS_IMETHODIMP
-nsWindow::GetAttention(PRInt32 aCycleCount)
+nsWindow::GetAttention(int32_t aCycleCount)
 {
     LOG(("nsWindow::GetAttention [%p]\n", (void *)this));
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1322,7 +1322,7 @@ nsWindow::OnButtonPressEvent(QGraphicsSceneMouseEvent *aEvent)
     if (gConsumeRollupEvent && rolledUp)
         return nsEventStatus_eIgnore;
 
-    PRUint16      domButton;
+    uint16_t      domButton;
     switch (aEvent->button()) {
     case Qt::MidButton:
         domButton = nsMouseEvent::eMiddleButton;
@@ -1364,7 +1364,7 @@ nsWindow::OnButtonReleaseEvent(QGraphicsSceneMouseEvent *aEvent)
     // The user has done something.
     UserActivity();
 
-    PRUint16 domButton;
+    uint16_t domButton;
 
     switch (aEvent->button()) {
     case Qt::MidButton:
@@ -1392,7 +1392,7 @@ nsWindow::OnButtonReleaseEvent(QGraphicsSceneMouseEvent *aEvent)
 nsEventStatus
 nsWindow::OnMouseDoubleClickEvent(QGraphicsSceneMouseEvent *aEvent)
 {
-    PRUint32 eventType;
+    uint32_t eventType;
 
     switch (aEvent->button()) {
     case Qt::MidButton:
@@ -1477,7 +1477,7 @@ nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 }
 
 nsEventStatus
-nsWindow::DispatchContentCommandEvent(PRInt32 aMsg)
+nsWindow::DispatchContentCommandEvent(int32_t aMsg)
 {
     nsContentCommandEvent event(true, aMsg, this);
 
@@ -1512,8 +1512,8 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
         return DispatchEvent(&contextMenuEvent);
     }
 
-    PRUint32 domCharCode = 0;
-    PRUint32 domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
+    uint32_t domCharCode = 0;
+    uint32_t domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
 
     // get keymap and modifier map from the Xserver
     Display *display = mozilla::DefaultXDisplay();
@@ -1579,7 +1579,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
 
     // store character in domCharCode
     if (aEvent->text().length() && aEvent->text()[0].isPrint())
-        domCharCode = (PRInt32) aEvent->text()[0].unicode();
+        domCharCode = (int32_t) aEvent->text()[0].unicode();
 
     // If the key isn't autorepeat, we need to send the initial down event
     if (!aEvent->isAutoRepeat() && !IsKeyDown(domKeyCode)) {
@@ -1678,7 +1678,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
         // get a character from X11 key map
         KeySym keysym = aEvent->nativeVirtualKey();
         if (keysym) {
-            domCharCode = (PRUint32) keysym2ucs(keysym);
+            domCharCode = (uint32_t) keysym2ucs(keysym);
             if (domCharCode == -1 || ! QChar((quint32)domCharCode).isPrint()) {
                 domCharCode = 0;
             }
@@ -1690,7 +1690,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
             int index = (aEvent->nativeScanCode() - x_min_keycode) * xkeysyms_per_keycode;
             for (int i = 0; i < xkeysyms_per_keycode; ++i) {
                 if (xkeymap[index + i] <= 0xFF && !shift_state) {
-                    domCharCode = (PRUint32) QChar::toLower((uint) xkeymap[index + i]);
+                    domCharCode = (uint32_t) QChar::toLower((uint) xkeymap[index + i]);
                     break;
                 }
             }
@@ -1740,15 +1740,15 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
         if ((unshiftedChar.isUpper() || unshiftedChar.isLower()) &&
             unshiftedChar.toLower() == shiftedChar.toLower()) {
             if (shift_state ^ capslock_state) {
-                altCharCode.mUnshiftedCharCode = (PRUint32) QChar::toUpper((uint)domCharCode);
-                altCharCode.mShiftedCharCode = (PRUint32) QChar::toLower((uint)domCharCode);
+                altCharCode.mUnshiftedCharCode = (uint32_t) QChar::toUpper((uint)domCharCode);
+                altCharCode.mShiftedCharCode = (uint32_t) QChar::toLower((uint)domCharCode);
             } else {
-                altCharCode.mUnshiftedCharCode = (PRUint32) QChar::toLower((uint)domCharCode);
-                altCharCode.mShiftedCharCode = (PRUint32) QChar::toUpper((uint)domCharCode);
+                altCharCode.mUnshiftedCharCode = (uint32_t) QChar::toLower((uint)domCharCode);
+                altCharCode.mShiftedCharCode = (uint32_t) QChar::toUpper((uint)domCharCode);
             }
         } else {
-            altCharCode.mUnshiftedCharCode = (PRUint32) unshiftedChar.unicode();
-            altCharCode.mShiftedCharCode = (PRUint32) shiftedChar.unicode();
+            altCharCode.mUnshiftedCharCode = (uint32_t) unshiftedChar.unicode();
+            altCharCode.mShiftedCharCode = (uint32_t) shiftedChar.unicode();
         }
 
         // append alternative char code to event
@@ -1817,11 +1817,11 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
         return DispatchEvent(&contextMenuEvent);
     }
 
-    PRUint32 domCharCode = 0;
-    PRUint32 domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
+    uint32_t domCharCode = 0;
+    uint32_t domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
 
     if (aEvent->text().length() && aEvent->text()[0].isPrint())
-        domCharCode = (PRInt32) aEvent->text()[0].unicode();
+        domCharCode = (int32_t) aEvent->text()[0].unicode();
 
     // If the key isn't autorepeat, we need to send the initial down event
     if (!aEvent->isAutoRepeat() && !IsKeyDown(domKeyCode)) {
@@ -1869,7 +1869,7 @@ nsWindow::OnKeyReleaseEvent(QKeyEvent *aEvent)
         return nsEventStatus_eConsumeDoDefault;
     }
 
-    PRUint32 domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
+    uint32_t domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
 
 #ifdef MOZ_X11
     if (!domKeyCode) {
@@ -1922,7 +1922,7 @@ nsWindow::OnScrollEvent(QGraphicsSceneWheelEvent *aEvent)
     // TODO: Store the unused delta values due to fraction round and add it
     //       to next event.  The stored values should be reset by other
     //       direction scroll event.
-    PRInt32 delta = (int)(aEvent->delta() / WHEEL_DELTA) * -3;
+    int32_t delta = (int)(aEvent->delta() / WHEEL_DELTA) * -3;
 
     switch (aEvent->orientation()) {
     case Qt::Vertical:
@@ -2077,7 +2077,7 @@ nsWindow::OnGestureEvent(QGestureEvent* event, bool &handled) {
 }
 
 nsEventStatus
-nsWindow::DispatchGestureEvent(PRUint32 aMsg, PRUint32 aDirection,
+nsWindow::DispatchGestureEvent(uint32_t aMsg, uint32_t aDirection,
                                double aDelta, const nsIntPoint& aRefPoint)
 {
     nsSimpleGestureEvent mozGesture(true, aMsg, this, 0, 0.0);
@@ -2321,7 +2321,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
 }
 
 void
-nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, bool    aRepaint)
+nsWindow::NativeResize(int32_t aWidth, int32_t aHeight, bool    aRepaint)
 {
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
          aWidth, aHeight));
@@ -2346,8 +2346,8 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, bool    aRepaint)
 }
 
 void
-nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
-                       PRInt32 aWidth, PRInt32 aHeight,
+nsWindow::NativeResize(int32_t aX, int32_t aY,
+                       int32_t aWidth, int32_t aHeight,
                        bool    aRepaint)
 {
     LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
@@ -2418,7 +2418,7 @@ nsWindow::SetWindowIconList(const nsTArray<nsCString> &aIconList)
 {
     QIcon icon;
 
-    for (PRUint32 i = 0; i < aIconList.Length(); ++i) {
+    for (uint32_t i = 0; i < aIconList.Length(); ++i) {
         const char *path = aIconList[i].get();
         LOG(("window [%p] Loading icon from %s\n", (void *)this, path));
         icon.addFile(path);
@@ -2745,7 +2745,7 @@ nsWindow::GetThebesSurface()
 }
 
 NS_IMETHODIMP
-nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical)
+nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical)
 {
     NS_ENSURE_ARG_POINTER(aEvent);
 
@@ -2925,7 +2925,7 @@ nsWindow::Show(bool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
+nsWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
 {
     mBounds.width = aWidth;
     mBounds.height = aHeight;
@@ -2980,7 +2980,7 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+nsWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
                  bool aRepaint)
 {
     mBounds.x = aX;
@@ -3242,7 +3242,7 @@ nsWindow::SetSoftwareKeyboardState(bool aOpen,
     if (aOpen) {
         // VKB open need to be delayed in order to give
         // to plugins chance prevent VKB from opening
-        PRInt32 openDelay =
+        int32_t openDelay =
             Preferences::GetInt("ui.vkb.open.delay", 200);
         MozQWidget::requestVKB(openDelay, mWidget);
     } else {
@@ -3263,7 +3263,7 @@ nsWindow::UserActivity()
   }
 }
 
-PRUint32
+uint32_t
 nsWindow::GetGLFrameBufferFormat()
 {
     if (mLayerManager &&

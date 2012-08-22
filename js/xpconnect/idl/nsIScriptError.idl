@@ -37,9 +37,9 @@ interface nsIScriptError : nsIConsoleMessage
 
     readonly attribute AString sourceName;
     readonly attribute AString sourceLine;
-    readonly attribute PRUint32 lineNumber;
-    readonly attribute PRUint32 columnNumber;
-    readonly attribute PRUint32 flags;
+    readonly attribute uint32_t lineNumber;
+    readonly attribute uint32_t columnNumber;
+    readonly attribute uint32_t flags;
 
     /**
      * Categories I know about -
@@ -69,9 +69,9 @@ interface nsIScriptError : nsIConsoleMessage
     void init(in wstring message,
               in wstring sourceName,
               in wstring sourceLine,
-              in PRUint32 lineNumber,
-              in PRUint32 columnNumber,
-              in PRUint32 flags,
+              in uint32_t lineNumber,
+              in uint32_t columnNumber,
+              in uint32_t flags,
               in string category);
 
     /* This should be called instead of nsIScriptError.init to
@@ -80,9 +80,9 @@ interface nsIScriptError : nsIConsoleMessage
     void initWithWindowID(in wstring message,
                           in wstring sourceName,
                           in wstring sourceLine,
-                          in PRUint32 lineNumber,
-                          in PRUint32 columnNumber,
-                          in PRUint32 flags,
+                          in uint32_t lineNumber,
+                          in uint32_t columnNumber,
+                          in uint32_t flags,
                           in string category,
                           in unsigned long long innerWindowID);
 

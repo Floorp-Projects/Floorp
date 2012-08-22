@@ -352,7 +352,7 @@ nsToolkitProfileLock::Unlock()
 }
 
 NS_IMETHODIMP
-nsToolkitProfileLock::GetReplacedLockTime(PRInt64 *aResult)
+nsToolkitProfileLock::GetReplacedLockTime(int64_t *aResult)
 {
     mLock.GetReplacedLockTime(aResult);
     return NS_OK;
@@ -395,7 +395,7 @@ nsToolkitProfileService::Init()
         return NS_OK;
     }
 
-    PRInt64 size;
+    int64_t size;
     rv = mListFile->GetFileSize(&size);
     if (NS_FAILED(rv) || !size) {
         return NS_OK;
@@ -829,7 +829,7 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
 }
 
 NS_IMETHODIMP
-nsToolkitProfileService::GetProfileCount(PRUint32 *aResult)
+nsToolkitProfileService::GetProfileCount(uint32_t *aResult)
 {
     if (!mFirst)
         *aResult = 0;
@@ -849,13 +849,13 @@ nsToolkitProfileService::Flush()
     // that buffer to disk.
 
     nsresult rv;
-    PRUint32 pCount = 0;
+    uint32_t pCount = 0;
     nsToolkitProfile *cur;
 
     for (cur = mFirst; cur != nullptr; cur = cur->mNext)
         ++pCount;
 
-    PRUint32 length;
+    uint32_t length;
     nsAutoArrayPtr<char> buffer (new char[100+MAXPATHLEN*pCount]);
 
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
@@ -976,7 +976,7 @@ nsresult
 XRE_GetFileFromPath(const char *aPath, nsIFile* *aResult)
 {
 #if defined(XP_MACOSX)
-    PRInt32 pathLen = strlen(aPath);
+    int32_t pathLen = strlen(aPath);
     if (pathLen > MAXPATHLEN)
         return NS_ERROR_INVALID_ARG;
 

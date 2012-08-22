@@ -14,9 +14,9 @@ interface nsICookie;
 [scriptable, uuid(72f8bb14-2810-4f38-8d0d-290c5401f54e)]
 interface nsICookiePromptService : nsISupports
 {
-  const PRUint32 DENY_COOKIE = 0;
-  const PRUint32 ACCEPT_COOKIE = 1;
-  const PRUint32 ACCEPT_SESSION_COOKIE = 2;
+  const uint32_t DENY_COOKIE = 0;
+  const uint32_t ACCEPT_COOKIE = 1;
+  const uint32_t ACCEPT_SESSION_COOKIE = 2;
 
   /* Open a dialog that asks for permission to accept a cookie
    * 

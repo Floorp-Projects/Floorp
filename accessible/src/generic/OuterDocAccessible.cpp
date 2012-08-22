@@ -47,10 +47,10 @@ OuterDocAccessible::NativeRole()
 }
 
 Accessible*
-OuterDocAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
+OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
                                  EWhichChildAtPoint aWhichChild)
 {
-  PRInt32 docX = 0, docY = 0, docWidth = 0, docHeight = 0;
+  int32_t docX = 0, docY = 0, docWidth = 0, docHeight = 0;
   nsresult rv = GetBounds(&docX, &docY, &docWidth, &docHeight);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
@@ -83,7 +83,7 @@ OuterDocAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
-PRUint8
+uint8_t
 OuterDocAccessible::ActionCount()
 {
   // Internal frame, which is the doc's parent, should not have a click action.
@@ -91,7 +91,7 @@ OuterDocAccessible::ActionCount()
 }
 
 NS_IMETHODIMP
-OuterDocAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+OuterDocAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
   aName.Truncate();
 
@@ -99,7 +99,7 @@ OuterDocAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-OuterDocAccessible::GetActionDescription(PRUint8 aIndex,
+OuterDocAccessible::GetActionDescription(uint8_t aIndex,
                                          nsAString& aDescription)
 {
   aDescription.Truncate();
@@ -108,7 +108,7 @@ OuterDocAccessible::GetActionDescription(PRUint8 aIndex,
 }
 
 NS_IMETHODIMP
-OuterDocAccessible::DoAction(PRUint8 aIndex)
+OuterDocAccessible::DoAction(uint8_t aIndex)
 {
   return NS_ERROR_INVALID_ARG;
 }

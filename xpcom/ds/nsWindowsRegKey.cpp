@@ -74,7 +74,7 @@ nsWindowsRegKey::Close()
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::Open(PRUint32 rootKey, const nsAString &path, PRUint32 mode)
+nsWindowsRegKey::Open(uint32_t rootKey, const nsAString &path, uint32_t mode)
 {
   Close();
 
@@ -85,7 +85,7 @@ nsWindowsRegKey::Open(PRUint32 rootKey, const nsAString &path, PRUint32 mode)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::Create(PRUint32 rootKey, const nsAString &path, PRUint32 mode)
+nsWindowsRegKey::Create(uint32_t rootKey, const nsAString &path, uint32_t mode)
 {
   Close();
 
@@ -98,7 +98,7 @@ nsWindowsRegKey::Create(PRUint32 rootKey, const nsAString &path, PRUint32 mode)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::OpenChild(const nsAString &path, PRUint32 mode,
+nsWindowsRegKey::OpenChild(const nsAString &path, uint32_t mode,
                            nsIWindowsRegKey **result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
@@ -116,7 +116,7 @@ nsWindowsRegKey::OpenChild(const nsAString &path, PRUint32 mode,
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::CreateChild(const nsAString &path, PRUint32 mode,
+nsWindowsRegKey::CreateChild(const nsAString &path, uint32_t mode,
                              nsIWindowsRegKey **result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
@@ -134,7 +134,7 @@ nsWindowsRegKey::CreateChild(const nsAString &path, PRUint32 mode,
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::GetChildCount(PRUint32 *result)
+nsWindowsRegKey::GetChildCount(uint32_t *result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -148,7 +148,7 @@ nsWindowsRegKey::GetChildCount(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::GetChildName(PRUint32 index, nsAString &result)
+nsWindowsRegKey::GetChildName(uint32_t index, nsAString &result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -186,7 +186,7 @@ nsWindowsRegKey::HasChild(const nsAString &name, bool *result)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::GetValueCount(PRUint32 *result)
+nsWindowsRegKey::GetValueCount(uint32_t *result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -200,7 +200,7 @@ nsWindowsRegKey::GetValueCount(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::GetValueName(PRUint32 index, nsAString &result)
+nsWindowsRegKey::GetValueName(uint32_t index, nsAString &result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -250,7 +250,7 @@ nsWindowsRegKey::RemoveValue(const nsAString &name)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::GetValueType(const nsAString &name, PRUint32 *result)
+nsWindowsRegKey::GetValueType(const nsAString &name, uint32_t *result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -330,7 +330,7 @@ nsWindowsRegKey::ReadStringValue(const nsAString &name, nsAString &result)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::ReadIntValue(const nsAString &name, PRUint32 *result)
+nsWindowsRegKey::ReadIntValue(const nsAString &name, uint32_t *result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -342,7 +342,7 @@ nsWindowsRegKey::ReadIntValue(const nsAString &name, PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::ReadInt64Value(const nsAString &name, PRUint64 *result)
+nsWindowsRegKey::ReadInt64Value(const nsAString &name, uint64_t *result)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -393,7 +393,7 @@ nsWindowsRegKey::WriteStringValue(const nsAString &name, const nsAString &value)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::WriteIntValue(const nsAString &name, PRUint32 value)
+nsWindowsRegKey::WriteIntValue(const nsAString &name, uint32_t value)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 
@@ -404,7 +404,7 @@ nsWindowsRegKey::WriteIntValue(const nsAString &name, PRUint32 value)
 }
 
 NS_IMETHODIMP
-nsWindowsRegKey::WriteInt64Value(const nsAString &name, PRUint64 value)
+nsWindowsRegKey::WriteInt64Value(const nsAString &name, uint64_t value)
 {
   NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
 

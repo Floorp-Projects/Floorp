@@ -26,8 +26,8 @@ NS_IMETHODIMP
 MyStreamLoaderObserver::OnStreamComplete(nsIStreamLoader *loader,
                                          nsISupports     *ctxt,
                                          nsresult         status,
-                                         PRUint32         resultLen,
-                                         const PRUint8   *result)
+                                         uint32_t         resultLen,
+                                         const uint8_t   *result)
 {
   LOG(("OnStreamComplete [status=%x resultLen=%u]\n", status, resultLen));
 

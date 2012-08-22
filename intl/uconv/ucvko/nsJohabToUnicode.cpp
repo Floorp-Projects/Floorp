@@ -26,11 +26,11 @@ static const uRange g_JOHABRanges[] = {
   { 0xE0, 0xF9 }
 };
 
-static const PRUint16 g_utJohabJamoMapping[] ={   
+static const uint16_t g_utJohabJamoMapping[] ={   
 #include "johabjamo.ut"
 };
 
-static const PRUint16 *g_JOHABMappingTableSet [] ={
+static const uint16_t *g_JOHABMappingTableSet [] ={
   g_ucvko_AsciiMapping,
   g_HangulNullMapping,
   g_utJohabJamoMapping,

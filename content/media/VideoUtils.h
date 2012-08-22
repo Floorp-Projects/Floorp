@@ -91,26 +91,26 @@ private:
 // the specified audio rate (aRate). Stores result in aOutUsecs. Returns true
 // if the operation succeeded, or false if there was an integer overflow
 // while calulating the conversion.
-CheckedInt64 FramesToUsecs(PRInt64 aFrames, PRUint32 aRate);
+CheckedInt64 FramesToUsecs(int64_t aFrames, uint32_t aRate);
 
 // Converts from microseconds (aUsecs) to number of audio frames, given the
 // specified audio rate (aRate). Stores the result in aOutFrames. Returns
 // true if the operation succeeded, or false if there was an integer
 // overflow while calulating the conversion.
-CheckedInt64 UsecsToFrames(PRInt64 aUsecs, PRUint32 aRate);
+CheckedInt64 UsecsToFrames(int64_t aUsecs, uint32_t aRate);
 
 // Number of microseconds per second. 1e6.
-static const PRInt64 USECS_PER_S = 1000000;
+static const int64_t USECS_PER_S = 1000000;
 
 // Number of microseconds per millisecond.
-static const PRInt64 USECS_PER_MS = 1000;
+static const int64_t USECS_PER_MS = 1000;
 
 // The maximum height and width of the video. Used for
 // sanitizing the memory allocation of the RGB buffer.
 // The maximum resolution we anticipate encountering in the
 // wild is 2160p - 3840x2160 pixels.
-static const PRInt32 MAX_VIDEO_WIDTH = 4000;
-static const PRInt32 MAX_VIDEO_HEIGHT = 3000;
+static const int32_t MAX_VIDEO_WIDTH = 4000;
+static const int32_t MAX_VIDEO_HEIGHT = 3000;
 
 // Scales the display rect aDisplay by aspect ratio aAspectRatio.
 // Note that aDisplay must be validated by nsVideoInfo::ValidateVideoRegion()

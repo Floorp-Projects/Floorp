@@ -111,7 +111,7 @@ nsStringBundle::LoadProperties()
 
 
 nsresult
-nsStringBundle::GetStringFromID(PRInt32 aID, nsAString& aResult)
+nsStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
 {  
   ReentrantMonitorAutoEnter automon(mReentrantMonitor);
   nsCAutoString name;
@@ -166,9 +166,9 @@ nsStringBundle::GetStringFromName(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-nsStringBundle::FormatStringFromID(PRInt32 aID,
+nsStringBundle::FormatStringFromID(int32_t aID,
                                    const PRUnichar **aParams,
-                                   PRUint32 aLength,
+                                   uint32_t aLength,
                                    PRUnichar ** aResult)
 {
   nsAutoString idStr;
@@ -181,7 +181,7 @@ nsStringBundle::FormatStringFromID(PRInt32 aID,
 NS_IMETHODIMP
 nsStringBundle::FormatStringFromName(const PRUnichar *aName,
                                      const PRUnichar **aParams,
-                                     PRUint32 aLength,
+                                     uint32_t aLength,
                                      PRUnichar **aResult)
 {
   NS_ENSURE_ARG_POINTER(aName);
@@ -205,7 +205,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsStringBundle,
 
 /* void GetStringFromID (in long aID, out wstring aResult); */
 NS_IMETHODIMP
-nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
+nsStringBundle::GetStringFromID(int32_t aID, PRUnichar **aResult)
 {
   nsresult rv;
   rv = LoadProperties();
@@ -338,7 +338,7 @@ nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
 
 nsresult
 nsStringBundle::FormatString(const PRUnichar *aFormatStr,
-                             const PRUnichar **aParams, PRUint32 aLength,
+                             const PRUnichar **aParams, uint32_t aLength,
                              PRUnichar **aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -431,11 +431,11 @@ nsExtensibleStringBundle::~nsExtensibleStringBundle()
 {
 }
 
-nsresult nsExtensibleStringBundle::GetStringFromID(PRInt32 aID, PRUnichar ** aResult)
+nsresult nsExtensibleStringBundle::GetStringFromID(int32_t aID, PRUnichar ** aResult)
 {
   nsresult rv;
-  const PRUint32 size = mBundles.Count();
-  for (PRUint32 i = 0; i < size; ++i) {
+  const uint32_t size = mBundles.Count();
+  for (uint32_t i = 0; i < size; ++i) {
     nsIStringBundle *bundle = mBundles[i];
     if (bundle) {
       rv = bundle->GetStringFromID(aID, aResult);
@@ -451,8 +451,8 @@ nsresult nsExtensibleStringBundle::GetStringFromName(const PRUnichar *aName,
                                                      PRUnichar ** aResult)
 {
   nsresult rv;
-  const PRUint32 size = mBundles.Count();
-  for (PRUint32 i = 0; i < size; ++i) {
+  const uint32_t size = mBundles.Count();
+  for (uint32_t i = 0; i < size; ++i) {
     nsIStringBundle* bundle = mBundles[i];
     if (bundle) {
       rv = bundle->GetStringFromName(aName, aResult);
@@ -465,9 +465,9 @@ nsresult nsExtensibleStringBundle::GetStringFromName(const PRUnichar *aName,
 }
 
 NS_IMETHODIMP
-nsExtensibleStringBundle::FormatStringFromID(PRInt32 aID,
+nsExtensibleStringBundle::FormatStringFromID(int32_t aID,
                                              const PRUnichar ** aParams,
-                                             PRUint32 aLength,
+                                             uint32_t aLength,
                                              PRUnichar ** aResult)
 {
   nsAutoString idStr;
@@ -478,7 +478,7 @@ nsExtensibleStringBundle::FormatStringFromID(PRInt32 aID,
 NS_IMETHODIMP
 nsExtensibleStringBundle::FormatStringFromName(const PRUnichar *aName,
                                                const PRUnichar ** aParams,
-                                               PRUint32 aLength,
+                                               uint32_t aLength,
                                                PRUnichar ** aResult)
 {
   nsXPIDLString formatStr;
@@ -735,7 +735,7 @@ nsStringBundleService::CreateExtensibleBundle(const char* aCategory,
 
 nsresult
 nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus,
-                                        PRUint32 argCount, PRUnichar** argArray,
+                                        uint32_t argCount, PRUnichar** argArray,
                                         PRUnichar* *result)
 {
   nsresult rv;
@@ -753,7 +753,7 @@ nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatu
 
   // if the string key fails, try looking up the error message with the int key:
   if (NS_FAILED(rv)) {
-    PRUint16 code = NS_ERROR_GET_CODE(aStatus);
+    uint16_t code = NS_ERROR_GET_CODE(aStatus);
     rv = bundle->FormatStringFromID(code, (const PRUnichar**)argArray, argCount, result);
   }
 
@@ -761,10 +761,10 @@ nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatu
   //   An unknown error has occurred (0x804B0003).
   if (NS_FAILED(rv)) {
     nsAutoString statusStr;
-    statusStr.AppendInt(static_cast<PRUint32>(aStatus), 16);
+    statusStr.AppendInt(static_cast<uint32_t>(aStatus), 16);
     const PRUnichar* otherArgArray[1];
     otherArgArray[0] = statusStr.get();
-    PRUint16 code = NS_ERROR_GET_CODE(NS_ERROR_FAILURE);
+    uint16_t code = NS_ERROR_GET_CODE(NS_ERROR_FAILURE);
     rv = bundle->FormatStringFromID(code, otherArgArray, 1, result);
   }
 
@@ -777,7 +777,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
                                            PRUnichar* *result)
 {
   nsresult rv;
-  PRUint32 i, argCount = 0;
+  uint32_t i, argCount = 0;
   nsCOMPtr<nsIStringBundle> bundle;
   nsXPIDLCString stringBundleURL;
 
@@ -804,9 +804,9 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
     argArray[0] = (PRUnichar*)aStatusArg;
   }
   else if (argCount > 1) {
-    PRInt32 offset = 0;
+    int32_t offset = 0;
     for (i = 0; i < argCount; i++) {
-      PRInt32 pos = args.FindChar('\n', offset);
+      int32_t pos = args.FindChar('\n', offset);
       if (pos == -1) 
         pos = args.Length();
       argArray[i] = ToNewUnicode(Substring(args, offset, pos - offset));

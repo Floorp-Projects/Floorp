@@ -60,15 +60,15 @@ private:
     unsigned char *mOutBuffer;
     unsigned char *mInpBuffer;
 
-    PRUint32	mOutBufferLen;
-    PRUint32	mInpBufferLen;
+    uint32_t	mOutBufferLen;
+    uint32_t	mInpBufferLen;
 	
     nsCOMPtr<nsISupports>   mAsyncConvContext;
     nsCOMPtr<nsIStringInputStream>  mStream;
 
     nsresult do_OnDataAvailable (nsIRequest *request, nsISupports *aContext,
-                                 PRUint32 aSourceOffset, const char *buffer,
-                                 PRUint32 aCount);
+                                 uint32_t aSourceOffset, const char *buffer,
+                                 uint32_t aCount);
 
     bool        mCheckHeaderDone;
     bool        mStreamEnded;
@@ -78,7 +78,7 @@ private:
     z_stream d_stream;
     unsigned mLen, hMode, mSkipCount, mFlags;
 
-    PRUint32 check_header (nsIInputStream *iStr, PRUint32 streamLen, nsresult *rv);
+    uint32_t check_header (nsIInputStream *iStr, uint32_t streamLen, nsresult *rv);
 };
 
 

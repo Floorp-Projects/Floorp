@@ -23,7 +23,7 @@
 #define ticks2msec(reader, ticks) ticks2xsec((reader), (ticks), 1000)
 #define ticks2usec(reader, ticks) ticks2xsec((reader), (ticks), 1000000)
 #define TICK_RESOLUTION 1000
-#define TICK_PRINTABLE(timeval) ((PRFloat64)(timeval) / (PRFloat64)ST_TIMEVAL_RESOLUTION)
+#define TICK_PRINTABLE(timeval) ((double)(timeval) / (double)ST_TIMEVAL_RESOLUTION)
 
 
 typedef struct __struct_Options
@@ -411,14 +411,14 @@ int initOptions(Options* outOptions, int inArgc, char** inArgv)
 }
 
 
-PRUint32 ticks2xsec(tmreader* aReader, PRUint32 aTicks, PRUint32 aResolution)
+uint32_t ticks2xsec(tmreader* aReader, uint32_t aTicks, uint32_t aResolution)
 /*
 ** Convert platform specific ticks to second units
 */
 {
-    PRUint32 retval = 0;
-    PRUint64 bigone;
-    PRUint64 tmp64;
+    uint32_t retval = 0;
+    uint64_t bigone;
+    uint64_t tmp64;
 
     LL_UI2L(bigone, aResolution);
     LL_UI2L(tmp64, aTicks);

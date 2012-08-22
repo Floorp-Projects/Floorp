@@ -39,13 +39,13 @@ nsBMPEncoder::~nsBMPEncoder()
 //
 // One output option is supported: bpp=<bpp_value>
 // bpp specifies the bits per pixel to use where bpp_value can be 24 or 32
-NS_IMETHODIMP nsBMPEncoder::InitFromData(const PRUint8* aData,
-                                         PRUint32 aLength, // (unused,
+NS_IMETHODIMP nsBMPEncoder::InitFromData(const uint8_t* aData,
+                                         uint32_t aLength, // (unused,
                                                            // req'd by JS)
-                                         PRUint32 aWidth,
-                                         PRUint32 aHeight,
-                                         PRUint32 aStride,
-                                         PRUint32 aInputFormat,
+                                         uint32_t aWidth,
+                                         uint32_t aHeight,
+                                         uint32_t aStride,
+                                         uint32_t aInputFormat,
                                          const nsAString& aOutputOptions)
 {
   // validate input format
@@ -82,18 +82,18 @@ NS_IMETHODIMP nsBMPEncoder::InitFromData(const PRUint8* aData,
 
 // Just a helper method to make it explicit in calculations that we are dealing
 // with bytes and not bits
-static inline PRUint32
-BytesPerPixel(PRUint32 aBPP)
+static inline uint32_t
+BytesPerPixel(uint32_t aBPP)
 {
   return aBPP / 8;
 }
 
 // Calculates the number of padding bytes that are needed per row of image data
-static inline PRUint32
-PaddingBytes(PRUint32 aBPP, PRUint32 aWidth)
+static inline uint32_t
+PaddingBytes(uint32_t aBPP, uint32_t aWidth)
 {
-  PRUint32 rowSize = aWidth * BytesPerPixel(aBPP);
-  PRUint8 paddingSize = 0;
+  uint32_t rowSize = aWidth * BytesPerPixel(aBPP);
+  uint8_t paddingSize = 0;
   if(rowSize % 4) {
     paddingSize = (4 - (rowSize % 4));
   }
@@ -101,9 +101,9 @@ PaddingBytes(PRUint32 aBPP, PRUint32 aWidth)
 }
 
 // See ::InitFromData for other info.
-NS_IMETHODIMP nsBMPEncoder::StartImageEncode(PRUint32 aWidth,
-                                             PRUint32 aHeight,
-                                             PRUint32 aInputFormat,
+NS_IMETHODIMP nsBMPEncoder::StartImageEncode(uint32_t aWidth,
+                                             uint32_t aHeight,
+                                             uint32_t aInputFormat,
                                              const nsAString& aOutputOptions)
 {
   // can't initialize more than once
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsBMPEncoder::StartImageEncode(PRUint32 aWidth,
 
   // parse and check any provided output options
   Version version;
-  PRUint32 bpp;
+  uint32_t bpp;
   nsresult rv = ParseOptions(aOutputOptions, &version, &bpp);
   if (NS_FAILED(rv)) {
     return rv;
@@ -130,7 +130,7 @@ NS_IMETHODIMP nsBMPEncoder::StartImageEncode(PRUint32 aWidth,
   InitInfoHeader(version, bpp, aWidth, aHeight);
 
   mImageBufferSize = mBMPFileHeader.filesize;
-  mImageBufferStart = static_cast<PRUint8*>(moz_malloc(mImageBufferSize));
+  mImageBufferStart = static_cast<uint8_t*>(moz_malloc(mImageBufferSize));
   if (!mImageBufferStart) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -144,7 +144,7 @@ NS_IMETHODIMP nsBMPEncoder::StartImageEncode(PRUint32 aWidth,
 
 // Returns the number of bytes in the image buffer used.
 // For a BMP file, this is all bytes in the buffer.
-NS_IMETHODIMP nsBMPEncoder::GetImageBufferUsed(PRUint32 *aOutputSize)
+NS_IMETHODIMP nsBMPEncoder::GetImageBufferUsed(uint32_t *aOutputSize)
 {
   NS_ENSURE_ARG_POINTER(aOutputSize);
   *aOutputSize = mImageBufferSize;
@@ -159,13 +159,13 @@ NS_IMETHODIMP nsBMPEncoder::GetImageBuffer(char **aOutputBuffer)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBMPEncoder::AddImageFrame(const PRUint8* aData,
-                                          PRUint32 aLength, // (unused,
+NS_IMETHODIMP nsBMPEncoder::AddImageFrame(const uint8_t* aData,
+                                          uint32_t aLength, // (unused,
                                                             // req'd by JS)
-                                          PRUint32 aWidth,
-                                          PRUint32 aHeight,
-                                          PRUint32 aStride,
-                                          PRUint32 aInputFormat,
+                                          uint32_t aWidth,
+                                          uint32_t aHeight,
+                                          uint32_t aStride,
+                                          uint32_t aInputFormat,
                                           const nsAString& aFrameOptions)
 {
   // must be initialized
@@ -181,8 +181,8 @@ NS_IMETHODIMP nsBMPEncoder::AddImageFrame(const PRUint8* aData,
   }
 
   static fallible_t fallible = fallible_t();
-  nsAutoArrayPtr<PRUint8> row(new (fallible) 
-                              PRUint8[mBMPInfoHeader.width * 
+  nsAutoArrayPtr<uint8_t> row(new (fallible) 
+                              uint8_t[mBMPInfoHeader.width * 
                               BytesPerPixel(mBMPInfoHeader.bpp)]);
   if (!row) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -192,7 +192,7 @@ NS_IMETHODIMP nsBMPEncoder::AddImageFrame(const PRUint8* aData,
   // generalize the conversions
   if (aInputFormat == INPUT_FORMAT_HOSTARGB) {
     // BMP requires RGBA with post-multiplied alpha, so we need to convert
-    for (PRInt32 y = mBMPInfoHeader.height - 1; y >= 0 ; y --) {
+    for (int32_t y = mBMPInfoHeader.height - 1; y >= 0 ; y --) {
       ConvertHostARGBRow(&aData[y * aStride], row, mBMPInfoHeader.width);
       if(mBMPInfoHeader.bpp == 24) {
         EncodeImageDataRow24(row);
@@ -202,7 +202,7 @@ NS_IMETHODIMP nsBMPEncoder::AddImageFrame(const PRUint8* aData,
     }
   } else if (aInputFormat == INPUT_FORMAT_RGBA) {
     // simple RGBA, no conversion needed
-    for (PRInt32 y = 0; y < mBMPInfoHeader.height; y ++) {
+    for (int32_t y = 0; y < mBMPInfoHeader.height; y ++) {
       if (mBMPInfoHeader.bpp == 24) {
         EncodeImageDataRow24(row);
       } else {
@@ -211,7 +211,7 @@ NS_IMETHODIMP nsBMPEncoder::AddImageFrame(const PRUint8* aData,
     }
   } else if (aInputFormat == INPUT_FORMAT_RGB) {
     // simple RGB, no conversion needed
-    for (PRInt32 y = 0; y < mBMPInfoHeader.height; y ++) {
+    for (int32_t y = 0; y < mBMPInfoHeader.height; y ++) {
       if (mBMPInfoHeader.bpp == 24) {
         EncodeImageDataRow24(&aData[y * aStride]);
       } else { 
@@ -250,7 +250,7 @@ NS_IMETHODIMP nsBMPEncoder::EndImageEncode()
 // See InitFromData for a description of the parse options
 nsresult
 nsBMPEncoder::ParseOptions(const nsAString& aOptions, Version* version,
-                           PRUint32* bpp)
+                           uint32_t* bpp)
 {
   if (version) {
     *version = VERSION_3;
@@ -268,7 +268,7 @@ nsBMPEncoder::ParseOptions(const nsAString& aOptions, Version* version,
   }
 
   // For each name/value pair in the set
-  for (PRUint32 i = 0; i < nameValuePairs.Length(); ++i) {
+  for (uint32_t i = 0; i < nameValuePairs.Length(); ++i) {
 
     // Split the name value pair [0] = name, [1] = value
     nsTArray<nsCString> nameValuePair;
@@ -321,7 +321,7 @@ NS_IMETHODIMP nsBMPEncoder::Close()
 }
 
 // Obtains the available bytes to read
-NS_IMETHODIMP nsBMPEncoder::Available(PRUint64 *_retval)
+NS_IMETHODIMP nsBMPEncoder::Available(uint64_t *_retval)
 {
   if (!mImageBufferStart || !mImageBufferCurr) {
     return NS_BASE_STREAM_CLOSED;
@@ -332,18 +332,18 @@ NS_IMETHODIMP nsBMPEncoder::Available(PRUint64 *_retval)
 }
 
 // [noscript] Reads bytes which are available
-NS_IMETHODIMP nsBMPEncoder::Read(char * aBuf, PRUint32 aCount,
-                                 PRUint32 *_retval)
+NS_IMETHODIMP nsBMPEncoder::Read(char * aBuf, uint32_t aCount,
+                                 uint32_t *_retval)
 {
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, _retval);
 }
 
 // [noscript] Reads segments
 NS_IMETHODIMP nsBMPEncoder::ReadSegments(nsWriteSegmentFun aWriter,
-                                         void *aClosure, PRUint32 aCount,
-                                         PRUint32 *_retval)
+                                         void *aClosure, uint32_t aCount,
+                                         uint32_t *_retval)
 {
-  PRUint32 maxCount = GetCurrentImageBufferOffset() - mImageBufferReadPoint;
+  uint32_t maxCount = GetCurrentImageBufferOffset() - mImageBufferReadPoint;
   if (maxCount == 0) {
     *_retval = 0;
     return mFinished ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
@@ -373,8 +373,8 @@ nsBMPEncoder::IsNonBlocking(bool *_retval)
 
 NS_IMETHODIMP 
 nsBMPEncoder::AsyncWait(nsIInputStreamCallback *aCallback,
-                        PRUint32 aFlags,
-                        PRUint32 aRequestedCount,
+                        uint32_t aFlags,
+                        uint32_t aRequestedCount,
                         nsIEventTarget *aTarget)
 {
   if (aFlags != 0) {
@@ -414,15 +414,15 @@ NS_IMETHODIMP nsBMPEncoder::CloseWithStatus(nsresult aStatus)
 //    an output with no alpha in machine-independent byte order.
 //
 void
-nsBMPEncoder::ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
-                                 PRUint32 aPixelWidth)
+nsBMPEncoder::ConvertHostARGBRow(const uint8_t* aSrc, uint8_t* aDest,
+                                 uint32_t aPixelWidth)
 {
   int bytes = BytesPerPixel(mBMPInfoHeader.bpp);
 
   if (mBMPInfoHeader.bpp == 32) {
-    for (PRUint32 x = 0; x < aPixelWidth; x++) {
-      const PRUint32& pixelIn = ((const PRUint32*)(aSrc))[x];
-      PRUint8 *pixelOut = &aDest[x * bytes];
+    for (uint32_t x = 0; x < aPixelWidth; x++) {
+      const uint32_t& pixelIn = ((const uint32_t*)(aSrc))[x];
+      uint8_t *pixelOut = &aDest[x * bytes];
 
       pixelOut[0] = (pixelIn & 0x00ff0000) >> 16;
       pixelOut[1] = (pixelIn & 0x0000ff00) >>  8;
@@ -430,9 +430,9 @@ nsBMPEncoder::ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
       pixelOut[3] = (pixelIn & 0xff000000) >> 24;
     }
   } else {
-    for (PRUint32 x = 0; x < aPixelWidth; x++) {
-      const PRUint32& pixelIn = ((const PRUint32*)(aSrc))[x];
-      PRUint8 *pixelOut = &aDest[x * bytes];
+    for (uint32_t x = 0; x < aPixelWidth; x++) {
+      const uint32_t& pixelIn = ((const uint32_t*)(aSrc))[x];
+      uint8_t *pixelOut = &aDest[x * bytes];
 
       pixelOut[0] = (pixelIn & 0xff0000) >> 16;
       pixelOut[1] = (pixelIn & 0x00ff00) >>  8;
@@ -469,8 +469,8 @@ nsBMPEncoder::NotifyListener()
 
 // Initializes the BMP file header mBMPFileHeader to the passed in values
 void 
-nsBMPEncoder::InitFileHeader(Version aVersion, PRUint32 aBPP, PRUint32 aWidth,
-                             PRUint32 aHeight)
+nsBMPEncoder::InitFileHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
+                             uint32_t aHeight)
 {
   memset(&mBMPFileHeader, 0, sizeof(mBMPFileHeader));
   mBMPFileHeader.signature[0] = 'B';
@@ -484,7 +484,7 @@ nsBMPEncoder::InitFileHeader(Version aVersion, PRUint32 aBPP, PRUint32 aWidth,
 
   // The color table is present only if BPP is <= 8
   if (aBPP <= 8) {
-    PRUint32 numColors = 1 << aBPP;
+    uint32_t numColors = 1 << aBPP;
     mBMPFileHeader.dataoffset += 4 * numColors;
     mBMPFileHeader.filesize = mBMPFileHeader.dataoffset + aWidth * aHeight;
   } else {
@@ -508,8 +508,8 @@ nsBMPEncoder::InitFileHeader(Version aVersion, PRUint32 aBPP, PRUint32 aWidth,
 
 // Initializes the bitmap info header mBMPInfoHeader to the passed in values
 void 
-nsBMPEncoder::InitInfoHeader(Version aVersion, PRUint32 aBPP, PRUint32 aWidth,
-                             PRUint32 aHeight)
+nsBMPEncoder::InitInfoHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
+                             uint32_t aHeight)
 {
   memset(&mBMPInfoHeader, 0, sizeof(mBMPInfoHeader));
   mBMPInfoHeader.width = aWidth;
@@ -613,9 +613,9 @@ nsBMPEncoder::EncodeInfoHeader()
   ConvertToLittle(littleEndianmBIH.profile_size);
   
   if (mBMPFileHeader.bihsize == OS2_BIH_LENGTH) {
-      PRUint16 width = (PRUint16) littleEndianmBIH.width;
+      uint16_t width = (uint16_t) littleEndianmBIH.width;
       ENCODE(&mImageBufferCurr, width);
-      PRUint16 height = (PRUint16) littleEndianmBIH.width;
+      uint16_t height = (uint16_t) littleEndianmBIH.width;
       ENCODE(&mImageBufferCurr, height);
   } else {
       ENCODE(&mImageBufferCurr, littleEndianmBIH.width);
@@ -661,8 +661,8 @@ nsBMPEncoder::EncodeInfoHeader()
 
 // Sets a pixel in the image buffer that doesn't have alpha data
 static inline void 
-  SetPixel24(PRUint8*& imageBufferCurr, PRUint8 aRed, PRUint8 aGreen, 
-  PRUint8 aBlue)
+  SetPixel24(uint8_t*& imageBufferCurr, uint8_t aRed, uint8_t aGreen, 
+  uint8_t aBlue)
 {
   *imageBufferCurr = aBlue;
   *(imageBufferCurr + 1) = aGreen;
@@ -671,8 +671,8 @@ static inline void
 
 // Sets a pixel in the image buffer with alpha data
 static inline void 
-SetPixel32(PRUint8*& imageBufferCurr, PRUint8 aRed, PRUint8 aGreen, 
-           PRUint8 aBlue, PRUint8 aAlpha = 0xFF)
+SetPixel32(uint8_t*& imageBufferCurr, uint8_t aRed, uint8_t aGreen, 
+           uint8_t aBlue, uint8_t aAlpha = 0xFF)
 {
   *imageBufferCurr = aBlue;
   *(imageBufferCurr + 1) = aGreen;
@@ -682,15 +682,15 @@ SetPixel32(PRUint8*& imageBufferCurr, PRUint8 aRed, PRUint8 aGreen,
 
 // Encodes a row of image data which does not have alpha data
 void 
-nsBMPEncoder::EncodeImageDataRow24(const PRUint8* aData)
+nsBMPEncoder::EncodeImageDataRow24(const uint8_t* aData)
 {
-  for (PRInt32 x = 0; x < mBMPInfoHeader.width; x++) {
-    PRUint32 pos = x * BytesPerPixel(mBMPInfoHeader.bpp);
+  for (int32_t x = 0; x < mBMPInfoHeader.width; x++) {
+    uint32_t pos = x * BytesPerPixel(mBMPInfoHeader.bpp);
     SetPixel24(mImageBufferCurr, aData[pos], aData[pos + 1], aData[pos + 2]);
     mImageBufferCurr += BytesPerPixel(mBMPInfoHeader.bpp);
   }
   
-  for (PRUint32 x = 0; x < PaddingBytes(mBMPInfoHeader.bpp, 
+  for (uint32_t x = 0; x < PaddingBytes(mBMPInfoHeader.bpp, 
                                         mBMPInfoHeader.width); x++) {
     *mImageBufferCurr++ = 0;
   }
@@ -698,16 +698,16 @@ nsBMPEncoder::EncodeImageDataRow24(const PRUint8* aData)
 
 // Encodes a row of image data which does have alpha data
 void 
-nsBMPEncoder::EncodeImageDataRow32(const PRUint8* aData)
+nsBMPEncoder::EncodeImageDataRow32(const uint8_t* aData)
 {
-  for (PRInt32 x = 0; x < mBMPInfoHeader.width; x ++) {
-    PRUint32 pos = x * BytesPerPixel(mBMPInfoHeader.bpp);
+  for (int32_t x = 0; x < mBMPInfoHeader.width; x ++) {
+    uint32_t pos = x * BytesPerPixel(mBMPInfoHeader.bpp);
     SetPixel32(mImageBufferCurr, aData[pos], aData[pos + 1], 
                aData[pos + 2], aData[pos + 3]);
     mImageBufferCurr += 4;
   }
 
-  for (PRUint32 x = 0; x < PaddingBytes(mBMPInfoHeader.bpp, 
+  for (uint32_t x = 0; x < PaddingBytes(mBMPInfoHeader.bpp, 
                                         mBMPInfoHeader.width); x ++) {
     *mImageBufferCurr++ = 0;
   }

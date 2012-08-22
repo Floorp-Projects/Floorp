@@ -47,9 +47,9 @@ class NS_COM_GLUE nsTextFormatter {
     /*
      * sprintf into a fixed size buffer. Guarantees that a NULL is at the end
      * of the buffer. Returns the length of the written output, NOT including
-     * the NUL, or (PRUint32)-1 if an error occurs.
+     * the NUL, or (uint32_t)-1 if an error occurs.
      */
-    static PRUint32 snprintf(PRUnichar *out, PRUint32 outlen, const PRUnichar *fmt, ...);
+    static uint32_t snprintf(PRUnichar *out, uint32_t outlen, const PRUnichar *fmt, ...);
 
     /*
      * sprintf into a nsMemory::Alloc'd buffer. Return a pointer to 
@@ -57,14 +57,14 @@ class NS_COM_GLUE nsTextFormatter {
      */
     static PRUnichar* smprintf(const PRUnichar *fmt, ...);
 
-    static PRUint32 ssprintf(nsAString& out, const PRUnichar* fmt, ...);
+    static uint32_t ssprintf(nsAString& out, const PRUnichar* fmt, ...);
 
     /*
      * va_list forms of the above.
      */
-    static PRUint32 vsnprintf(PRUnichar *out, PRUint32 outlen, const PRUnichar *fmt, va_list ap);
+    static uint32_t vsnprintf(PRUnichar *out, uint32_t outlen, const PRUnichar *fmt, va_list ap);
     static PRUnichar* vsmprintf(const PRUnichar *fmt, va_list ap);
-    static PRUint32 vssprintf(nsAString& out, const PRUnichar *fmt, va_list ap);
+    static uint32_t vssprintf(nsAString& out, const PRUnichar *fmt, va_list ap);
 
     /*
      * Free the memory allocated, for the caller, by smprintf.

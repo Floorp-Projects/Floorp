@@ -19,7 +19,7 @@ static const uScanClassID g_BIG5HKSCSScanClassIDs[] = {
   u2BytesCharset
 };
 
-static const PRUint16 *g_BIG5HKSCSMappingTableSet [] ={
+static const uint16_t *g_BIG5HKSCSMappingTableSet [] ={
   g_ASCIIMapping,
   g_utBig5HKSCSMapping,
   g_utBIG5Mapping,

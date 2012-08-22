@@ -14,6 +14,7 @@
 #include "hasht.h"
 #include "cert.h"
 #include "key.h"
+#include "mozilla/StandardInteger.h"
 
 typedef struct {
   enum {

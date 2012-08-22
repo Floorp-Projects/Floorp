@@ -25,7 +25,7 @@ interface nsIRedirectChannelRegistrar : nsISupports
    * Primarily used in HttpChannelParentListener::AsyncOnChannelRedirect to get
    * a channel id sent to the HttpChannelChild being redirected.
    */
-  PRUint32 registerChannel(in nsIChannel channel);
+  uint32_t registerChannel(in nsIChannel channel);
 
   /**
    * First, search for the channel registered under the id.  If found return
@@ -38,7 +38,7 @@ interface nsIRedirectChannelRegistrar : nsISupports
    * in reaction to nsIChildChannel.connectParent(id) called from the child
    * process.
    */
-  nsIChannel linkChannels(in PRUint32 id, in nsIParentChannel channel);
+  nsIChannel linkChannels(in uint32_t id, in nsIParentChannel channel);
 
   /**
    * Returns back the channel previously registered under the ID with
@@ -47,7 +47,7 @@ interface nsIRedirectChannelRegistrar : nsISupports
    * Primarilly used in chrome IPC side of protocols when attaching a redirect
    * target channel to an existing 'real' channel implementation.
    */
-  nsIChannel getRegisteredChannel(in PRUint32 id);
+  nsIChannel getRegisteredChannel(in uint32_t id);
 
   /**
    * Returns the stream listener that shall be attached to the redirect target
@@ -58,7 +58,7 @@ interface nsIRedirectChannelRegistrar : nsISupports
    * to grab the created parent side of the channel and forward notifications
    * to it.
    */
-  nsIParentChannel getParentChannel(in PRUint32 id);
+  nsIParentChannel getParentChannel(in uint32_t id);
 
   /**
    * To not force all channel implementations to support weak reference
@@ -68,5 +68,5 @@ interface nsIRedirectChannelRegistrar : nsISupports
    *
    * Primarilly used in HttpChannelParentListener::OnRedirectResult callback.
    */
-  void deregisterChannels(in PRUint32 id);
+  void deregisterChannels(in uint32_t id);
 };

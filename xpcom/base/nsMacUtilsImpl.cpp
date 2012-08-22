@@ -120,7 +120,7 @@ NS_IMETHODIMP nsMacUtilsImpl::GetIsTranslated(bool *aIsTranslated)
   // Initialize sIsNative to 1.  If the sysctl fails because it doesn't
   // exist, then translation is not possible, so the process must not be
   // running translated.
-  static PRInt32 sIsNative = 1;
+  static int32_t sIsNative = 1;
 
   if (!sInitialized) {
     size_t sz = sizeof(sIsNative);

@@ -93,7 +93,7 @@ txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
         case FUNCTION_AVAILABLE:
         {
             extern bool TX_XSLTFunctionAvailable(nsIAtom* aName,
-                                                   PRInt32 aNameSpaceID);
+                                                   int32_t aNameSpaceID);
 
             txCoreFunctionCall::eType type;
             bool val = (qname.mNamespaceID == kNameSpaceID_None &&

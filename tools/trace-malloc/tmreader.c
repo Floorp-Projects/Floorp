@@ -293,7 +293,7 @@ static int get_tmevent(FILE *fp, tmevent *event)
     return 1;
 }
 
-static void *arena_alloc(void* pool, PRSize size)
+static void *arena_alloc(void* pool, size_t size)
 {
     PLArenaPool* arena = (PLArenaPool*)pool;
     void* result;
@@ -302,7 +302,7 @@ static void *arena_alloc(void* pool, PRSize size)
     return result;
 }
 
-static void *generic_alloctable(void *pool, PRSize size)
+static void *generic_alloctable(void *pool, size_t size)
 {
     return arena_alloc(pool, size);
 }
@@ -369,7 +369,7 @@ static PLHashEntry *method_allocentry(void *pool, const void *key)
     return &node->graphnode.entry;
 }
 
-static void graphnode_freeentry(void *pool, PLHashEntry *he, PRUintn flag)
+static void graphnode_freeentry(void *pool, PLHashEntry *he, unsigned flag)
 {
     /* Always free the value, which points to a strdup'd string. */
     free(he->value);
@@ -380,7 +380,7 @@ static void graphnode_freeentry(void *pool, PLHashEntry *he, PRUintn flag)
 #endif
 }
 
-static void component_freeentry(void *pool, PLHashEntry *he, PRUintn flag)
+static void component_freeentry(void *pool, PLHashEntry *he, unsigned flag)
 {
     if (flag == HT_FREE_ENTRY) {
         tmgraphnode *comp = (tmgraphnode*) he;

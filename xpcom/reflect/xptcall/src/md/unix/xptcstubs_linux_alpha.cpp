@@ -10,25 +10,25 @@
 
 /* Prototype specifies unmangled function name and disables unused warning */
 static nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint64* args)
+PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint64_t* args)
 __asm__("PrepareAndDispatch") __attribute__((used));
 
 static nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint64* args)
+PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint64_t* args)
 {
-    const PRUint8 PARAM_BUFFER_COUNT = 16;
-    const PRUint8 NUM_ARG_REGS = 6-1;        // -1 for "this" pointer
+    const uint8_t PARAM_BUFFER_COUNT = 16;
+    const uint8_t NUM_ARG_REGS = 6-1;        // -1 for "this" pointer
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
     const nsXPTMethodInfo* info;
-    PRUint8 paramCount;
-    PRUint8 i;
+    uint8_t paramCount;
+    uint8_t i;
     nsresult result = NS_ERROR_FAILURE;
 
     NS_ASSERTION(self,"no self");
 
-    self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+    self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
 
     paramCount = info->GetParamCount();
 
@@ -40,7 +40,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint64* args)
     NS_ASSERTION(dispatchParams,"no place for params");
 
     // args[0] to args[NUM_ARG_REGS] hold floating point register values
-    PRUint64* ap = args + NUM_ARG_REGS;
+    uint64_t* ap = args + NUM_ARG_REGS;
     for(i = 0; i < paramCount; i++, ap++)
     {
         const nsXPTParamInfo& param = info->GetParam(i);
@@ -55,24 +55,24 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint64* args)
         // else
         switch(type)
         {
-        case nsXPTType::T_I8     : dp->val.i8  = (PRInt8)    *ap;    break;
-        case nsXPTType::T_I16    : dp->val.i16 = (PRInt16)   *ap;    break;
-        case nsXPTType::T_I32    : dp->val.i32 = (PRInt32)   *ap;    break;
-        case nsXPTType::T_I64    : dp->val.i64 = (PRInt64)   *ap;    break;
-        case nsXPTType::T_U8     : dp->val.u8  = (PRUint8)   *ap;    break;
-        case nsXPTType::T_U16    : dp->val.u16 = (PRUint16)  *ap;    break;
-        case nsXPTType::T_U32    : dp->val.u32 = (PRUint32)  *ap;    break;
-        case nsXPTType::T_U64    : dp->val.u64 = (PRUint64)  *ap;    break;
+        case nsXPTType::T_I8     : dp->val.i8  = (int8_t)    *ap;    break;
+        case nsXPTType::T_I16    : dp->val.i16 = (int16_t)   *ap;    break;
+        case nsXPTType::T_I32    : dp->val.i32 = (int32_t)   *ap;    break;
+        case nsXPTType::T_I64    : dp->val.i64 = (int64_t)   *ap;    break;
+        case nsXPTType::T_U8     : dp->val.u8  = (uint8_t)   *ap;    break;
+        case nsXPTType::T_U16    : dp->val.u16 = (uint16_t)  *ap;    break;
+        case nsXPTType::T_U32    : dp->val.u32 = (uint32_t)  *ap;    break;
+        case nsXPTType::T_U64    : dp->val.u64 = (uint64_t)  *ap;    break;
         case nsXPTType::T_FLOAT  :
             if(i < NUM_ARG_REGS)
             {
                 // floats passed via registers are stored as doubles
                 // in the first NUM_ARG_REGS entries in args
-                dp->val.u64 = (PRUint64) args[i];
+                dp->val.u64 = (uint64_t) args[i];
                 dp->val.f = (float) dp->val.d;    // convert double to float
             }
             else
-                dp->val.u32 = (PRUint32) *ap;
+                dp->val.u32 = (uint32_t) *ap;
             break;
         case nsXPTType::T_DOUBLE :
             // doubles passed via registers are also stored
@@ -88,7 +88,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint64* args)
         }
     }
 
-    result = self->mOuter->CallMethod((PRUint16)methodIndex, info, dispatchParams);
+    result = self->mOuter->CallMethod((uint16_t)methodIndex, info, dispatchParams);
 
     if(dispatchParams != paramBuffer)
         delete [] dispatchParams;

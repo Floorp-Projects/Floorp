@@ -75,7 +75,7 @@ public:
                                          bool aSuppressTransaction);
 
   /** prepare the editor for use */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, uint32_t aFlags);
   
   NS_IMETHOD GetDocumentIsEmpty(bool *aDocumentIsEmpty);
   NS_IMETHOD GetIsDocumentEditable(bool *aIsDocumentEditable);
@@ -85,26 +85,26 @@ public:
 
   NS_IMETHOD SetDocumentCharacterSet(const nsACString & characterSet);
 
-  NS_IMETHOD Undo(PRUint32 aCount);
-  NS_IMETHOD Redo(PRUint32 aCount);
+  NS_IMETHOD Undo(uint32_t aCount);
+  NS_IMETHOD Redo(uint32_t aCount);
 
   NS_IMETHOD Cut();
   NS_IMETHOD CanCut(bool *aCanCut);
   NS_IMETHOD Copy();
   NS_IMETHOD CanCopy(bool *aCanCopy);
-  NS_IMETHOD Paste(PRInt32 aSelectionType);
-  NS_IMETHOD CanPaste(PRInt32 aSelectionType, bool *aCanPaste);
+  NS_IMETHOD Paste(int32_t aSelectionType);
+  NS_IMETHOD CanPaste(int32_t aSelectionType, bool *aCanPaste);
   NS_IMETHOD PasteTransferable(nsITransferable *aTransferable);
   NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste);
 
   NS_IMETHOD OutputToString(const nsAString& aFormatType,
-                            PRUint32 aFlags,
+                            uint32_t aFlags,
                             nsAString& aOutputString);
                             
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
                             const nsAString& aFormatType,
                             const nsACString& aCharsetOverride,
-                            PRUint32 aFlags);
+                            uint32_t aFlags);
 
 
   /** All editor operations which alter the doc should be prefaced
@@ -134,14 +134,14 @@ public:
 
   nsresult InsertTextAt(const nsAString &aStringToInsert,
                         nsIDOMNode *aDestinationNode,
-                        PRInt32 aDestOffset,
+                        int32_t aDestOffset,
                         bool aDoDeleteSelection);
 
   virtual nsresult InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
-                                          PRInt32 aIndex,
+                                          int32_t aIndex,
                                           nsIDOMDocument *aSourceDoc,
                                           nsIDOMNode *aDestinationNode,
-                                          PRInt32 aDestOffset,
+                                          int32_t aDestOffset,
                                           bool aDoDeleteSelection);
 
   virtual nsresult InsertFromDrop(nsIDOMEvent* aDropEvent);
@@ -159,8 +159,8 @@ public:
   // Otherwise, the data must be sanitized first.
   bool IsSafeToInsertData(nsIDOMDocument* aSourceDoc);
 
-  static void GetDefaultEditorPrefs(PRInt32 &aNewLineHandling,
-                                    PRInt32 &aCaretStyle);
+  static void GetDefaultEditorPrefs(int32_t &aNewLineHandling,
+                                    int32_t &aCaretStyle);
 
 protected:
 
@@ -170,15 +170,15 @@ protected:
 
   // Helpers for output routines
   NS_IMETHOD GetAndInitDocEncoder(const nsAString& aFormatType,
-                                  PRUint32 aFlags,
+                                  uint32_t aFlags,
                                   const nsACString& aCharset,
                                   nsIDocumentEncoder** encoder);
 
   // key event helpers
-  NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
+  NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset, 
                       nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect = eNone);
   nsresult CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
-                        PRInt32* aInOutOffset,
+                        int32_t* aInOutOffset,
                         nsCOMPtr<nsIDOMNode>* outBRNode,
                         EDirection aSelect);
   nsresult InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode);
@@ -187,17 +187,17 @@ protected:
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
   NS_IMETHOD InsertTextFromTransferable(nsITransferable *transferable,
                                         nsIDOMNode *aDestinationNode,
-                                        PRInt32 aDestOffset,
+                                        int32_t aDestOffset,
                                         bool aDoDeleteSelection);
 
   /** shared outputstring; returns whether selection is collapsed and resulting string */
-  nsresult SharedOutputString(PRUint32 aFlags, bool* aIsCollapsed, nsAString& aResult);
+  nsresult SharedOutputString(uint32_t aFlags, bool* aIsCollapsed, nsAString& aResult);
 
   /* small utility routine to test the eEditorReadonly bit */
   bool IsModifiable();
 
   bool CanCutOrCopy();
-  bool FireClipboardEvent(PRInt32 aType);
+  bool FireClipboardEvent(int32_t aType);
 
   bool UpdateMetaCharset(nsIDOMDocument* aDocument,
                          const nsACString& aCharacterSet);
@@ -207,11 +207,11 @@ protected:
 
   nsCOMPtr<nsIEditRules>        mRules;
   bool    mWrapToWindow;
-  PRInt32 mWrapColumn;
-  PRInt32 mMaxTextLength;
-  PRInt32 mInitTriggerCounter;
-  PRInt32 mNewlineHandling;
-  PRInt32 mCaretStyle;
+  int32_t mWrapColumn;
+  int32_t mMaxTextLength;
+  int32_t mInitTriggerCounter;
+  int32_t mNewlineHandling;
+  int32_t mCaretStyle;
 
 // friends
 friend class nsHTMLEditRules;

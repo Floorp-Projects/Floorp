@@ -120,7 +120,7 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
     return NS_ERROR_FAILURE;
   }
   
-  PRUint32 responseCode = 0;
+  uint32_t responseCode = 0;
   rv = httpChannel->GetResponseStatus(&responseCode);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
@@ -171,7 +171,7 @@ nsPluginByteRangeStreamListener::OnStopRequest(nsIRequest *request, nsISupports 
     // remove magic number from container
     nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(ctxt);
     if (container) {
-      PRUint32 magicNumber = 0;
+      uint32_t magicNumber = 0;
       container->GetData(&magicNumber);
       if (magicNumber == MAGIC_REQUEST_CONTEXT) {
         // to allow properly finish nsPluginStreamListenerPeer->OnStopRequest()
@@ -218,7 +218,7 @@ CachedFileHolder::Release()
 
 NS_IMETHODIMP
 nsPluginByteRangeStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
-                                                 nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
+                                                 nsIInputStream *inStr, uint32_t sourceOffset, uint32_t count)
 {
   if (!mStreamConverter)
     return NS_ERROR_FAILURE;
@@ -246,11 +246,11 @@ nsPluginByteRangeStreamListener::GetInterface(const nsIID& aIID, void** result)
 
 class nsPRUintKey : public nsHashKey {
 protected:
-  PRUint32 mKey;
+  uint32_t mKey;
 public:
-  nsPRUintKey(PRUint32 key) : mKey(key) {}
+  nsPRUintKey(uint32_t key) : mKey(key) {}
   
-  PRUint32 HashCode() const {
+  uint32_t HashCode() const {
     return mKey;
   }
   
@@ -260,7 +260,7 @@ public:
   nsHashKey *Clone() const {
     return new nsPRUintKey(mKey);
   }
-  PRUint32 GetValue() { return mKey; }
+  uint32_t GetValue() { return mKey; }
 };
 
 // nsPluginStreamListenerPeer
@@ -417,10 +417,10 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
 
   // Look for an existing cache file for the URI.
   nsTArray< nsRefPtr<nsNPAPIPluginInstance> > *instances = pluginHost->InstanceArray();
-  for (PRUint32 i = 0; i < instances->Length(); i++) {
+  for (uint32_t i = 0; i < instances->Length(); i++) {
     // most recent streams are at the end of list
     nsTArray<nsPluginStreamListenerPeer*> *streamListeners = instances->ElementAt(i)->FileCachedStreamListeners();
-    for (PRInt32 i = streamListeners->Length() - 1; i >= 0; --i) {
+    for (int32_t i = streamListeners->Length() - 1; i >= 0; --i) {
       nsPluginStreamListenerPeer *lp = streamListeners->ElementAt(i);
       if (lp && lp->mLocalCachedFileHolder) {
         useExistingCacheFile = lp->UseExistingPluginCacheFile(this);
@@ -509,7 +509,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   // just return, this causes the request to be ignored.
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    PRUint32 responseCode = 0;
+    uint32_t responseCode = 0;
     rv = httpChannel->GetResponseStatus(&responseCode);
     if (NS_FAILED(rv)) {
       // NPP_Notify() will be called from OnStopRequest
@@ -554,7 +554,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   if (loadGroup)
     mWeakPtrChannelLoadGroup = do_GetWeakReference(loadGroup);
   
-  PRInt32 length;
+  int32_t length;
   rv = channel->GetContentLength(&length);
   
   // it's possible for the server to not send a Content-Length.
@@ -619,8 +619,8 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIRequest *request,
                                                      nsISupports* aContext,
-                                                     PRUint64 aProgress,
-                                                     PRUint64 aProgressMax)
+                                                     uint64_t aProgress,
+                                                     uint64_t aProgressMax)
 {
   nsresult rv = NS_OK;
   return rv;
@@ -650,14 +650,14 @@ nsPluginStreamListenerPeer::IsSeekable(bool* result)
 }
 
 nsresult
-nsPluginStreamListenerPeer::GetLength(PRUint32* result)
+nsPluginStreamListenerPeer::GetLength(uint32_t* result)
 {
   *result = mLength;
   return NS_OK;
 }
 
 nsresult
-nsPluginStreamListenerPeer::GetLastModified(PRUint32* result)
+nsPluginStreamListenerPeer::GetLastModified(uint32_t* result)
 {
   *result = mModified;
   return NS_OK;
@@ -672,7 +672,7 @@ nsPluginStreamListenerPeer::GetURL(const char** result)
 
 void
 nsPluginStreamListenerPeer::MakeByteRangeString(NPByteRange* aRangeList, nsACString &rangeRequest,
-                                                PRInt32 *numRequests)
+                                                int32_t *numRequests)
 {
   rangeRequest.Truncate();
   *numRequests  = 0;
@@ -680,7 +680,7 @@ nsPluginStreamListenerPeer::MakeByteRangeString(NPByteRange* aRangeList, nsACStr
   if (!aRangeList)
     return;
   
-  PRInt32 requestCnt = 0;
+  int32_t requestCnt = 0;
   nsCAutoString string("bytes=");
   
   for (NPByteRange * range = aRangeList; range != nullptr; range = range->next) {
@@ -710,7 +710,7 @@ nsresult
 nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
 {
   nsCAutoString rangeString;
-  PRInt32 numRequests;
+  int32_t numRequests;
   
   MakeByteRangeString(rangeList, rangeString, &numRequests);
   
@@ -770,14 +770,14 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
 }
 
 nsresult
-nsPluginStreamListenerPeer::GetStreamOffset(PRInt32* result)
+nsPluginStreamListenerPeer::GetStreamOffset(int32_t* result)
 {
   *result = mStreamOffset;
   return NS_OK;
 }
 
 nsresult
-nsPluginStreamListenerPeer::SetStreamOffset(PRInt32 value)
+nsPluginStreamListenerPeer::SetStreamOffset(int32_t value)
 {
   mStreamOffset = value;
   return NS_OK;
@@ -849,8 +849,8 @@ nsPluginStreamListenerPeer::UseExistingPluginCacheFile(nsPluginStreamListenerPee
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
                                                           nsISupports* aContext,
                                                           nsIInputStream *aIStream,
-                                                          PRUint32 sourceOffset,
-                                                          PRUint32 aLength)
+                                                          uint32_t sourceOffset,
+                                                          uint32_t aLength)
 {
   NS_ASSERTION(mRequests.IndexOfObject(GetBaseRequest(request)) != -1,
                "Received OnDataAvailable for untracked request.");
@@ -859,7 +859,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
     return NS_ERROR_FAILURE;
   
   if (mAbort) {
-    PRUint32 magicNumber = 0;  // set it to something that is not the magic number.
+    uint32_t magicNumber = 0;  // set it to something that is not the magic number.
     nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(aContext);
     if (container)
       container->GetData(&magicNumber);
@@ -892,11 +892,11 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
       if (!mDataForwardToRequest)
         return NS_ERROR_FAILURE;
       
-      PRInt64 absoluteOffset64 = LL_ZERO;
+      int64_t absoluteOffset64 = LL_ZERO;
       brr->GetStartRange(&absoluteOffset64);
       
       // XXX handle 64-bit for real
-      PRInt32 absoluteOffset = (PRInt32)PRInt64(absoluteOffset64);
+      int32_t absoluteOffset = (int32_t)int64_t(absoluteOffset64);
       
       // we need to track how much data we have forwarded to the
       // plugin.
@@ -906,7 +906,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
       // Why couldn't this be tracked on the plugin info, and not in a
       // *hash table*?
       nsPRUintKey key(absoluteOffset);
-      PRInt32 amtForwardToPlugin =
+      int32_t amtForwardToPlugin =
       NS_PTR_TO_INT32(mDataForwardToRequest->Get(&key));
       mDataForwardToRequest->Put(&key, NS_INT32_TO_PTR(amtForwardToPlugin + aLength));
       
@@ -938,7 +938,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   {
     // if we don't read from the stream, OnStopRequest will never be called
     char* buffer = new char[aLength];
-    PRUint32 amountRead, amountWrote = 0;
+    uint32_t amountRead, amountWrote = 0;
     rv = aIStream->Read(buffer, aLength, &amountRead);
     
     // if we are caching this to disk ourselves, lets write the bytes out.
@@ -973,10 +973,10 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   // for ByteRangeRequest we're just updating the mDataForwardToRequest hash and return.
   nsCOMPtr<nsIByteRangeRequest> brr = do_QueryInterface(request);
   if (brr) {
-    PRInt64 absoluteOffset64 = LL_ZERO;
+    int64_t absoluteOffset64 = LL_ZERO;
     brr->GetStartRange(&absoluteOffset64);
     // XXX support 64-bit offsets
-    PRInt32 absoluteOffset = (PRInt32)PRInt64(absoluteOffset64);
+    int32_t absoluteOffset = (int32_t)int64_t(absoluteOffset64);
     
     nsPRUintKey key(absoluteOffset);
     
@@ -1001,7 +1001,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   // we keep our connections around...
   nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(aContext);
   if (container) {
-    PRUint32 magicNumber = 0;  // set it to something that is not the magic number.
+    uint32_t magicNumber = 0;  // set it to something that is not the magic number.
     container->GetData(&magicNumber);
     if (magicNumber == MAGIC_REQUEST_CONTEXT) {
       // this is one of our range requests
@@ -1117,7 +1117,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     // listener.  Would be nice if we could get the raw status line,
     // but nsIHttpChannel doesn't currently provide that.
     // Status code: required; the status line isn't useful without it.
-    PRUint32 statusNum;
+    uint32_t statusNum;
     if (NS_SUCCEEDED(httpChannel->GetResponseStatus(&statusNum)) &&
         statusNum < 1000) {
       // HTTP version: provide if available.  Defaults to empty string.
@@ -1125,7 +1125,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
       nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
       do_QueryInterface(channel);
       if (httpChannelInternal) {
-        PRUint32 major, minor;
+        uint32_t major, minor;
         if (NS_SUCCEEDED(httpChannelInternal->GetResponseVersion(&major,
                                                                  &minor))) {
           ver = nsPrintfCString("/%lu.%lu", major, minor);
@@ -1162,7 +1162,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     } else {
       // set seekability (seekable if the stream has a known length and if the
       // http server accepts byte ranges).
-      PRUint32 length;
+      uint32_t length;
       GetLength(&length);
       if (length) {
         nsCAutoString range;
@@ -1184,7 +1184,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
       // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
       double fpTime;
       LL_L2D(fpTime, time64);
-      mModified = (PRUint32)(fpTime * 1e-6 + 0.5);
+      mModified = (uint32_t)(fpTime * 1e-6 + 0.5);
     }
   }
   
@@ -1326,7 +1326,7 @@ NS_IMPL_ISUPPORTS1(ChannelRedirectProxyCallback, nsIAsyncVerifyRedirectCallback)
 
 NS_IMETHODIMP
 nsPluginStreamListenerPeer::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
-                                                   PRUint32 flags, nsIAsyncVerifyRedirectCallback* callback)
+                                                   uint32_t flags, nsIAsyncVerifyRedirectCallback* callback)
 {
   // Disallow redirects if we don't have a stream listener.
   if (!mPStreamListener) {
@@ -1345,7 +1345,7 @@ nsPluginStreamListenerPeer::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsICh
   // Don't allow cross-origin 307 POST redirects.
   nsCOMPtr<nsIHttpChannel> oldHttpChannel(do_QueryInterface(oldChannel));
   if (oldHttpChannel) {
-    PRUint32 responseStatus;
+    uint32_t responseStatus;
     nsresult rv = oldHttpChannel->GetResponseStatus(&responseStatus);
     if (NS_FAILED(rv)) {
       return rv;

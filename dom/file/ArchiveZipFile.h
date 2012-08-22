@@ -21,7 +21,7 @@ class ArchiveZipFile : public nsDOMFileCC
 public:
   ArchiveZipFile(const nsAString& aName,
                  const nsAString& aContentType,
-                 PRUint64 aLength,
+                 uint64_t aLength,
                  ZipCentral& aCentral,
                  ArchiveReader* aReader)
   : nsDOMFileCC(aName, aContentType, aLength),
@@ -35,8 +35,8 @@ public:
 
   ArchiveZipFile(const nsAString& aName,
                  const nsAString& aContentType,
-                 PRUint64 aStart,
-                 PRUint64 aLength,
+                 uint64_t aStart,
+                 uint64_t aLength,
                  ZipCentral& aCentral,
                  ArchiveReader* aReader)
   : nsDOMFileCC(aContentType, aStart, aLength),
@@ -60,8 +60,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ArchiveZipFile, nsIDOMFile)
 
 protected:
-  virtual already_AddRefed<nsIDOMBlob> CreateSlice(PRUint64 aStart,
-                                                   PRUint64 aLength,
+  virtual already_AddRefed<nsIDOMBlob> CreateSlice(uint64_t aStart,
+                                                   uint64_t aLength,
                                                    const nsAString& aContentType);
 
 private: // Data

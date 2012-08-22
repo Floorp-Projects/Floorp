@@ -74,17 +74,17 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   }
 
   // Figure out how much data we've been passed
-  PRUint64 length;
+  uint64_t length;
   rv = inStream->Available(&length);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(length <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   // Send the source data to the Image. WriteToRasterImage always
   // consumes everything it gets if it doesn't run out of memory.
-  PRUint32 bytesRead;
+  uint32_t bytesRead;
   rv = inStream->ReadSegments(RasterImage::WriteToRasterImage,
                               static_cast<void*>(image),
-                              (PRUint32)length, &bytesRead);
+                              (uint32_t)length, &bytesRead);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ABORT_IF_FALSE(bytesRead == length || image->HasError(),
   "WriteToRasterImage should consume everything or the image must be in error!");
@@ -115,8 +115,8 @@ NS_IMETHODIMP imgTools::EncodeImage(imgIContainer *aContainer,
 
 NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
                                           const nsACString& aMimeType,
-                                          PRInt32 aScaledWidth,
-                                          PRInt32 aScaledHeight,
+                                          int32_t aScaledWidth,
+                                          int32_t aScaledHeight,
                                           const nsAString& aOutputOptions,
                                           nsIInputStream **aStream)
 {
@@ -133,7 +133,7 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
   nsresult rv = GetFirstImageFrame(aContainer, getter_AddRefs(frame));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 frameWidth = frame->Width(), frameHeight = frame->Height();
+  int32_t frameWidth = frame->Width(), frameHeight = frame->Height();
 
   // If the given width or height is zero we'll replace it with the image's
   // original dimensions.
@@ -163,10 +163,10 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
 
 NS_IMETHODIMP imgTools::EncodeCroppedImage(imgIContainer *aContainer,
                                            const nsACString& aMimeType,
-                                           PRInt32 aOffsetX,
-                                           PRInt32 aOffsetY,
-                                           PRInt32 aWidth,
-                                           PRInt32 aHeight,
+                                           int32_t aOffsetX,
+                                           int32_t aOffsetY,
+                                           int32_t aWidth,
+                                           int32_t aHeight,
                                            const nsAString& aOutputOptions,
                                            nsIInputStream **aStream)
 {
@@ -187,7 +187,7 @@ NS_IMETHODIMP imgTools::EncodeCroppedImage(imgIContainer *aContainer,
   nsresult rv = GetFirstImageFrame(aContainer, getter_AddRefs(frame));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 frameWidth = frame->Width(), frameHeight = frame->Height();
+  int32_t frameWidth = frame->Width(), frameHeight = frame->Height();
 
   // If the given width or height is zero we'll replace it with the image's
   // original dimensions.
@@ -222,8 +222,8 @@ NS_IMETHODIMP imgTools::EncodeImageData(gfxImageSurface *aSurface,
                                         const nsAString& aOutputOptions,
                                         nsIInputStream **aStream)
 {
-  PRUint8 *bitmapData;
-  PRUint32 bitmapDataLength, strideSize;
+  uint8_t *bitmapData;
+  uint32_t bitmapDataLength, strideSize;
 
   // Get an image encoder for the media type
   nsCAutoString encoderCID(
@@ -239,7 +239,7 @@ NS_IMETHODIMP imgTools::EncodeImageData(gfxImageSurface *aSurface,
 
   strideSize = aSurface->Stride();
 
-  PRInt32 width = aSurface->Width(), height = aSurface->Height();
+  int32_t width = aSurface->Width(), height = aSurface->Height();
   bitmapDataLength = height * strideSize;
 
   // Encode the bitmap

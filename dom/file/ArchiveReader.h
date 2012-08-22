@@ -38,11 +38,11 @@ public:
   NS_IMETHOD Initialize(nsISupports* aOwner,
                         JSContext* aCx,
                         JSObject* aObj,
-                        PRUint32 aArgc,
+                        uint32_t aArgc,
                         jsval* aArgv);
 
   nsresult GetInputStream(nsIInputStream** aInputStream);
-  nsresult GetSize(PRUint64* aSize);
+  nsresult GetSize(uint64_t* aSize);
 
 public: // for the ArchiveRequest:
   nsresult RegisterRequest(ArchiveRequest* aRequest);

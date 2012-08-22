@@ -38,8 +38,8 @@ class TelephonyCall : public nsDOMEventTargetHelper,
   nsString mState;
   nsCOMPtr<nsIDOMDOMError> mError;
 
-  PRUint32 mCallIndex;
-  PRUint16 mCallState;
+  uint32_t mCallIndex;
+  uint16_t mCallState;
   bool mLive;
   bool mOutgoing;
 
@@ -51,8 +51,8 @@ public:
                                            nsDOMEventTargetHelper)
 
   static already_AddRefed<TelephonyCall>
-  Create(Telephony* aTelephony, const nsAString& aNumber, PRUint16 aCallState,
-         PRUint32 aCallIndex = kOutgoingPlaceholderCallIndex);
+  Create(Telephony* aTelephony, const nsAString& aNumber, uint16_t aCallState,
+         uint32_t aCallIndex = kOutgoingPlaceholderCallIndex);
 
   nsIDOMEventTarget*
   ToIDOMEventTarget() const
@@ -68,26 +68,26 @@ public:
   }
 
   void
-  ChangeState(PRUint16 aCallState)
+  ChangeState(uint16_t aCallState)
   {
     ChangeStateInternal(aCallState, true);
   }
 
-  PRUint32
+  uint32_t
   CallIndex() const
   {
     return mCallIndex;
   }
 
   void
-  UpdateCallIndex(PRUint32 aCallIndex)
+  UpdateCallIndex(uint32_t aCallIndex)
   {
     NS_ASSERTION(mCallIndex == kOutgoingPlaceholderCallIndex,
                  "Call index should not be set!");
     mCallIndex = aCallIndex;
   }
 
-  PRUint16
+  uint16_t
   CallState() const
   {
     return mCallState;
@@ -112,7 +112,7 @@ private:
   { }
 
   void
-  ChangeStateInternal(PRUint16 aCallState, bool aFireEvents);
+  ChangeStateInternal(uint16_t aCallState, bool aFireEvents);
 };
 
 END_TELEPHONY_NAMESPACE

@@ -42,9 +42,9 @@ public:
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                        PRUint32 aFilter);
+                                        uint32_t aFilter);
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     // Override nsBoxFrame.
     if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))
@@ -122,7 +122,7 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
 void
 nsDocElementBoxFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                               PRUint32 aFilter)
+                                               uint32_t aFilter)
 {
   aElements.MaybeAppendElement(mPopupgroupContent);
   aElements.MaybeAppendElement(mTooltipContent);

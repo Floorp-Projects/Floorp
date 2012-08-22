@@ -44,7 +44,7 @@ struct NameTableEntry : public PLDHashEntryHdr
 {
     // no ownership here!
     const nsAFlatCString* mString;
-    PRInt32 mIndex;
+    int32_t mIndex;
 };
 
 static bool
@@ -117,7 +117,7 @@ nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
 {
     if (mNameArray) {
         // manually call the destructor on placement-new'ed objects
-        for (PRUint32 index = 0; index < mNameTable.entryCount; index++) {
+        for (uint32_t index = 0; index < mNameTable.entryCount; index++) {
             mNameArray[index].~nsDependentCString();
         }
         nsMemory::Free((void*)mNameArray);
@@ -128,7 +128,7 @@ nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
 }
 
 bool 
-nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count)
+nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], int32_t Count)
 {
     NS_ASSERTION(!mNameArray, "double Init");
     NS_ASSERTION(!mNameTable.ops, "double Init");
@@ -147,7 +147,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count
         return false;
     }
 
-    for (PRInt32 index = 0; index < Count; ++index) {
+    for (int32_t index = 0; index < Count; ++index) {
         const char* raw = aNames[index];
 #ifdef DEBUG
         {
@@ -182,7 +182,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count
     return true;
 }
 
-PRInt32
+int32_t
 nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
 {
     NS_ASSERTION(mNameArray, "not inited");
@@ -202,7 +202,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
     return entry->mIndex;
 }
 
-PRInt32
+int32_t
 nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
 {
     NS_ASSERTION(mNameArray, "not inited");
@@ -223,12 +223,12 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
 }
 
 const nsAFlatCString& 
-nsStaticCaseInsensitiveNameTable::GetStringValue(PRInt32 index)
+nsStaticCaseInsensitiveNameTable::GetStringValue(int32_t index)
 {
     NS_ASSERTION(mNameArray, "not inited");
     NS_ASSERTION(mNameTable.ops, "not inited");
 
-    if ((NOT_FOUND < index) && ((PRUint32)index < mNameTable.entryCount)) {
+    if ((NOT_FOUND < index) && ((uint32_t)index < mNameTable.entryCount)) {
         return mNameArray[index];
     }
     return mNullStr;

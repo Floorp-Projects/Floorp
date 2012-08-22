@@ -314,9 +314,9 @@ nsEditorTxnLog::WriteTransaction(nsITransaction *aTransaction)
 }
 
 nsresult
-nsEditorTxnLog::PrintIndent(PRInt32 aIndentLevel)
+nsEditorTxnLog::PrintIndent(int32_t aIndentLevel)
 {
-  PRInt32 i;
+  int32_t i;
 
   Write("    // ");
 
@@ -335,7 +335,7 @@ nsEditorTxnLog::Write(const char *aBuffer)
     mEditorLog->Write(aBuffer);
   else
   {
-    PRInt32 len = strlen(aBuffer);
+    int32_t len = strlen(aBuffer);
     if (len > 0)
       fwrite(aBuffer, 1, len, stdout);
   }
@@ -344,7 +344,7 @@ nsEditorTxnLog::Write(const char *aBuffer)
 }
 
 nsresult
-nsEditorTxnLog::WriteInt(PRInt32 aInt)
+nsEditorTxnLog::WriteInt(int32_t aInt)
 {
   if (mEditorLog)
     mEditorLog->WriteInt(aInt);

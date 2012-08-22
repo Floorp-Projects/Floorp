@@ -127,16 +127,16 @@ nsTXTToHTMLConv::PreFormatHTML(bool value)
 NS_IMETHODIMP
 nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
                                  nsIInputStream *aInStream,
-                                 PRUint32 aOffset, PRUint32 aCount)
+                                 uint32_t aOffset, uint32_t aCount)
 {
     nsresult rv = NS_OK;
     nsString pushBuffer;
-    PRUint32 amtRead = 0;
+    uint32_t amtRead = 0;
     nsAutoArrayPtr<char> buffer(new char[aCount+1]);
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
     do {
-        PRUint32 read = 0;
+        uint32_t read = 0;
         // XXX readSegments, to avoid the first copy?
         rv = aInStream->Read(buffer, aCount-amtRead, &read);
         if (NS_FAILED(rv)) return rv;
@@ -146,7 +146,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
         AppendASCIItoUTF16(buffer, mBuffer);
         amtRead += read;
 
-        PRInt32 front = -1, back = -1, tokenLoc = -1, cursor = 0;
+        int32_t front = -1, back = -1, tokenLoc = -1, cursor = 0;
 
         while ( (tokenLoc = FindToken(cursor, &mToken)) > -1) {
             if (mToken->prepend) {
@@ -167,7 +167,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
             cursor = CatHTML(front, back);
         }
 
-        PRInt32 end = mBuffer.RFind(TOKEN_DELIMITERS, mBuffer.Length());
+        int32_t end = mBuffer.RFind(TOKEN_DELIMITERS, mBuffer.Length());
         mBuffer.Left(pushBuffer, NS_MAX(cursor, end));
         mBuffer.Cut(0, NS_MAX(cursor, end));
         cursor = 0;
@@ -244,12 +244,12 @@ nsTXTToHTMLConv::Init()
     return rv;
 }
 
-PRInt32
-nsTXTToHTMLConv::FindToken(PRInt32 cursor, convToken* *_retval)
+int32_t
+nsTXTToHTMLConv::FindToken(int32_t cursor, convToken* *_retval)
 {
-    PRInt32 loc = -1, firstToken = mBuffer.Length();
-    PRInt8 token = -1;
-    for (PRUint8 i=0; i < mTokens.Length(); i++) {
+    int32_t loc = -1, firstToken = mBuffer.Length();
+    int8_t token = -1;
+    for (uint8_t i=0; i < mTokens.Length(); i++) {
         loc = mBuffer.Find(mTokens[i]->token, cursor);
         if (loc != -1)
             if (loc < firstToken) {
@@ -264,11 +264,11 @@ nsTXTToHTMLConv::FindToken(PRInt32 cursor, convToken* *_retval)
     return firstToken;
 }
 
-PRInt32
-nsTXTToHTMLConv::CatHTML(PRInt32 front, PRInt32 back)
+int32_t
+nsTXTToHTMLConv::CatHTML(int32_t front, int32_t back)
 {
-    PRInt32 cursor = 0;
-    PRInt32 modLen = mToken->modText.Length();
+    int32_t cursor = 0;
+    int32_t modLen = mToken->modText.Length();
     if (!mToken->prepend) {
         // replace the entire token (from delimiter to delimiter)
         mBuffer.Cut(front, back - front);

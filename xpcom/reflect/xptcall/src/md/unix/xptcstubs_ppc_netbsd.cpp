@@ -29,17 +29,17 @@
 
 extern "C" nsresult
 PrepareAndDispatch(nsXPTCStubBase* self,
-                   PRUint32 methodIndex,
-                   PRUint32* args,
-                   PRUint32 *gprData,
+                   uint32_t methodIndex,
+                   uint32_t* args,
+                   uint32_t *gprData,
                    double *fprData)
 {
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
     nsIInterfaceInfo* iface_info = NULL;
     const nsXPTMethodInfo* info;
-    PRUint32 paramCount;
-    PRUint32 i;
+    uint32_t paramCount;
+    uint32_t i;
     nsresult result = NS_ERROR_FAILURE;
 
     NS_ASSERTION(self,"no self");
@@ -49,7 +49,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
     if (! iface_info)
         return NS_ERROR_UNEXPECTED;
 
-    iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
+    iface_info->GetMethodInfo(uint16_t(methodIndex), &info);
     NS_ASSERTION(info,"no method info");
     if (! info)
         return NS_ERROR_UNEXPECTED;
@@ -66,11 +66,11 @@ PrepareAndDispatch(nsXPTCStubBase* self,
     if (! dispatchParams)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PRUint32* ap = args;
-    PRUint32 gpr = 1;    // skip one GPR register
-    PRUint32 fpr = 0;
-    PRUint32 tempu32;
-    PRUint64 tempu64;
+    uint32_t* ap = args;
+    uint32_t gpr = 1;    // skip one GPR register
+    uint32_t fpr = 0;
+    uint32_t tempu32;
+    uint64_t tempu64;
 
     for(i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& param = info->GetParam(i);
@@ -81,7 +81,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
             if (fpr < FPR_COUNT)
                 dp->val.d = fprData[fpr++];
             else {
-                if ((PRUint32) ap & 4) ap++; // doubles are 8-byte aligned on stack
+                if ((uint32_t) ap & 4) ap++; // doubles are 8-byte aligned on stack
                 dp->val.d = *(double*) ap;
                 ap += 2;
 		if (gpr < GPR_COUNT)
@@ -104,12 +104,12 @@ PrepareAndDispatch(nsXPTCStubBase* self,
                                     || type == nsXPTType::T_U64)) {
             if (gpr & 1) gpr++; // longlongs are aligned in odd/even register pairs, eg. r5/r6
             if ((gpr + 1) < GPR_COUNT) {
-                tempu64 = *(PRUint64*) &gprData[gpr];
+                tempu64 = *(uint64_t*) &gprData[gpr];
                 gpr += 2;
             }
             else {
-                if ((PRUint32) ap & 4) ap++; // longlongs are 8-byte aligned on stack
-                tempu64 = *(PRUint64*) ap;
+                if ((uint32_t) ap & 4) ap++; // longlongs are 8-byte aligned on stack
+                tempu64 = *(uint64_t*) ap;
                 ap += 2;
             }
         }
@@ -126,14 +126,14 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         }
 
         switch(type) {
-        case nsXPTType::T_I8:      dp->val.i8  = (PRInt8)   tempu32; break;
-        case nsXPTType::T_I16:     dp->val.i16 = (PRInt16)  tempu32; break;
-        case nsXPTType::T_I32:     dp->val.i32 = (PRInt32)  tempu32; break;
-        case nsXPTType::T_I64:     dp->val.i64 = (PRInt64)  tempu64; break;
-        case nsXPTType::T_U8:      dp->val.u8  = (PRUint8)  tempu32; break;
-        case nsXPTType::T_U16:     dp->val.u16 = (PRUint16) tempu32; break;
-        case nsXPTType::T_U32:     dp->val.u32 = (PRUint32) tempu32; break;
-        case nsXPTType::T_U64:     dp->val.u64 = (PRUint64) tempu64; break;
+        case nsXPTType::T_I8:      dp->val.i8  = (int8_t)   tempu32; break;
+        case nsXPTType::T_I16:     dp->val.i16 = (int16_t)  tempu32; break;
+        case nsXPTType::T_I32:     dp->val.i32 = (int32_t)  tempu32; break;
+        case nsXPTType::T_I64:     dp->val.i64 = (int64_t)  tempu64; break;
+        case nsXPTType::T_U8:      dp->val.u8  = (uint8_t)  tempu32; break;
+        case nsXPTType::T_U16:     dp->val.u16 = (uint16_t) tempu32; break;
+        case nsXPTType::T_U32:     dp->val.u32 = (uint32_t) tempu32; break;
+        case nsXPTType::T_U64:     dp->val.u64 = (uint64_t) tempu64; break;
         case nsXPTType::T_BOOL:    dp->val.b   = (bool)   tempu32; break;
         case nsXPTType::T_CHAR:    dp->val.c   = (char)     tempu32; break;
         case nsXPTType::T_WCHAR:   dp->val.wc  = (wchar_t)  tempu32; break;
@@ -144,7 +144,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         }
     }
 
-    result = self->CallMethod((PRUint16) methodIndex, info, dispatchParams);
+    result = self->CallMethod((uint16_t) methodIndex, info, dispatchParams);
 
     NS_RELEASE(iface_info);
 

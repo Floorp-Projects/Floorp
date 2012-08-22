@@ -101,7 +101,7 @@ Classifier::InitKey()
       do_GetService("@mozilla.org/security/random-generator;1");
     NS_ENSURE_STATE(rg);
 
-    PRUint8 *temp;
+    uint8_t *temp;
     nsresult rv = rg->GenerateRandomBytes(sizeof(mHashKey), &temp);
     NS_ENSURE_SUCCESS(rv, rv);
     memcpy(&mHashKey, temp, sizeof(mHashKey));
@@ -112,8 +112,8 @@ Classifier::InitKey()
                                        -1, -1, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 written;
-    rv = out->Write(reinterpret_cast<char*>(&mHashKey), sizeof(PRUint32), &written);
+    uint32_t written;
+    rv = out->Write(reinterpret_cast<char*>(&mHashKey), sizeof(uint32_t), &written);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISafeOutputStream> safeOut = do_QueryInterface(out);
@@ -135,7 +135,7 @@ Classifier::InitKey()
     void *buffer = &mHashKey;
     rv = NS_ReadInputStreamToBuffer(inputStream,
                                     &buffer,
-                                    sizeof(PRUint32));
+                                    sizeof(uint32_t));
     NS_ENSURE_SUCCESS(rv, rv);
 
     LOG(("Loaded classifier key = %X", mHashKey));
@@ -276,7 +276,7 @@ Classifier::Check(const nsACString& aSpec, LookupResultArray& aResults)
   ActiveTables(activeTables);
 
   nsTArray<LookupCache*> cacheArray;
-  for (PRUint32 i = 0; i < activeTables.Length(); i++) {
+  for (uint32_t i = 0; i < activeTables.Length(); i++) {
     LookupCache *cache = GetLookupCache(activeTables[i]);
     if (cache) {
       cacheArray.AppendElement(cache);
@@ -286,7 +286,7 @@ Classifier::Check(const nsACString& aSpec, LookupResultArray& aResults)
   }
 
   // Now check each lookup fragment against the entries in the DB.
-  for (PRUint32 i = 0; i < fragments.Length(); i++) {
+  for (uint32_t i = 0; i < fragments.Length(); i++) {
     Completion lookupHash;
     lookupHash.FromPlaintext(fragments[i], mCryptoHash);
 
@@ -305,7 +305,7 @@ Classifier::Check(const nsACString& aSpec, LookupResultArray& aResults)
       LOG(("Checking %s (%X)", checking.get(), lookupHash.ToUint32()));
     }
 #endif
-    for (PRUint32 i = 0; i < cacheArray.Length(); i++) {
+    for (uint32_t i = 0; i < cacheArray.Length(); i++) {
       LookupCache *cache = cacheArray[i];
       bool has, complete;
       Prefix codedPrefix;
@@ -317,12 +317,12 @@ Classifier::Check(const nsACString& aSpec, LookupResultArray& aResults)
         if (!result)
           return NS_ERROR_OUT_OF_MEMORY;
 
-        PRInt64 age;
+        int64_t age;
         bool found = mTableFreshness.Get(cache->TableName(), &age);
         if (!found) {
           age = 24 * 60 * 60; // just a large number
         } else {
-          PRInt64 now = (PR_Now() / PR_USEC_PER_SEC);
+          int64_t now = (PR_Now() / PR_USEC_PER_SEC);
           age = now - age;
         }
 
@@ -464,7 +464,7 @@ Classifier::ScanStoreDir(nsTArray<nsCString>& aTables)
 
     nsCString suffix(NS_LITERAL_CSTRING(".sbstore"));
 
-    PRInt32 dot = leafName.RFind(suffix, 0);
+    int32_t dot = leafName.RFind(suffix, 0);
     if (dot != -1) {
       leafName.Cut(dot, suffix.Length());
       aTables.AppendElement(leafName);
@@ -527,7 +527,7 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
   if (!prefixSet) {
     return NS_ERROR_FAILURE;
   }
-  nsTArray<PRUint32> AddPrefixHashes;
+  nsTArray<uint32_t> AddPrefixHashes;
   rv = prefixSet->GetPrefixes(&AddPrefixHashes);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = store->AugmentAdds(AddPrefixHashes);
@@ -597,7 +597,7 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (updateFreshness) {
-    PRInt64 now = (PR_Now() / PR_USEC_PER_SEC);
+    int64_t now = (PR_Now() / PR_USEC_PER_SEC);
     LOG(("Successfully updated %s", store->TableName().get()));
     mTableFreshness.Put(store->TableName(), now);
   }
@@ -634,7 +634,7 @@ Classifier::GetLookupCache(const nsACString& aTable)
 nsresult
 Classifier::ReadNoiseEntries(const Prefix& aPrefix,
                              const nsACString& aTableName,
-                             PRInt32 aCount,
+                             int32_t aCount,
                              PrefixArray* aNoiseEntries)
 {
   LookupCache *cache = GetLookupCache(aTableName);
@@ -642,20 +642,20 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
     return NS_ERROR_FAILURE;
   }
 
-  nsTArray<PRUint32> prefixes;
+  nsTArray<uint32_t> prefixes;
   nsresult rv = cache->GetPrefixes(&prefixes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 idx = prefixes.BinaryIndexOf(aPrefix.ToUint32());
+  int32_t idx = prefixes.BinaryIndexOf(aPrefix.ToUint32());
 
-  if (idx == nsTArray<PRUint32>::NoIndex) {
+  if (idx == nsTArray<uint32_t>::NoIndex) {
     NS_WARNING("Could not find prefix in PrefixSet during noise lookup");
     return NS_ERROR_FAILURE;
   }
 
   idx -= idx % aCount;
 
-  for (PRInt32 i = 0; (i < aCount) && ((idx+i) < prefixes.Length()); i++) {
+  for (int32_t i = 0; (i < aCount) && ((idx+i) < prefixes.Length()); i++) {
     Prefix newPref;
     newPref.FromUint32(prefixes[idx+i]);
     aNoiseEntries->AppendElement(newPref);

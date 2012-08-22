@@ -85,7 +85,7 @@ def paramlistAsNative(m, empty='void'):
         l.append("JSContext* cx")
 
     if m.optional_argc:
-        l.append('PRUint8 _argc')
+        l.append('uint8_t _argc')
 
     if not m.notxpcom and m.realtype.name != 'void':
         l.append(paramAsNative(xpidl.Param(paramtype='out',

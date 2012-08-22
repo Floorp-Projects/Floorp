@@ -13,7 +13,7 @@ interface nsIBrowserTab : nsISupports {
 
 [scriptable, uuid(d10377b4-1c90-493a-a532-63cb3f16ee2b)]
 interface nsIAndroidBrowserApp : nsISupports {
-  nsIBrowserTab getBrowserTab(in PRInt32 tabId);
+  nsIBrowserTab getBrowserTab(in int32_t tabId);
 };
 
 [scriptable, uuid(bbb8e0d7-5cca-4ad0-88be-538ce6d04f63)]

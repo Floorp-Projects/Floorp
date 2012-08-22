@@ -142,7 +142,7 @@ nsCParserNode::GetText() const
  *  @param   
  *  @return  int value that represents tag type
  */
-PRInt32 
+int32_t 
 nsCParserNode::GetNodeType(void) const
 {
   return (mToken) ? mToken->GetTypeID() : 0;
@@ -157,7 +157,7 @@ nsCParserNode::GetNodeType(void) const
  *  @param   
  *  @return  
  */
-PRInt32 
+int32_t 
 nsCParserNode::GetTokenType(void) const
 {
   return (mToken) ? mToken->GetTokenType() : 0;
@@ -171,7 +171,7 @@ nsCParserNode::GetTokenType(void) const
  *  @param   
  *  @return  int -- representing attribute count
  */
-PRInt32 
+int32_t 
 nsCParserNode::GetAttributeCount(bool askToken) const
 {
   return 0;
@@ -186,7 +186,7 @@ nsCParserNode::GetAttributeCount(bool askToken) const
  *  @return  string rep of given attribute text key
  */
 const nsAString&
-nsCParserNode::GetKeyAt(PRUint32 anIndex) const 
+nsCParserNode::GetKeyAt(uint32_t anIndex) const 
 {
   return EmptyString();
 }
@@ -200,12 +200,12 @@ nsCParserNode::GetKeyAt(PRUint32 anIndex) const
  *  @return  string rep of given attribute text value
  */
 const nsAString&
-nsCParserNode::GetValueAt(PRUint32 anIndex) const 
+nsCParserNode::GetValueAt(uint32_t anIndex) const 
 {
   return EmptyString();
 }
 
-PRInt32 
+int32_t 
 nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
 {
   if (eToken_entity == mToken->GetTokenType()) {
@@ -220,7 +220,7 @@ nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
  * @update	gess7/24/98
  * @return  int containing the line number the token was found on
  */
-PRInt32
+int32_t
 nsCParserNode::GetSourceLineNumber(void) const {
   return mToken ? mToken->GetLineNumber() : 0;
 }
@@ -285,10 +285,10 @@ void nsCParserStartNode::AddAttribute(CToken* aToken)
   mAttributes.Push(aToken);
 }
 
-PRInt32 
+int32_t 
 nsCParserStartNode::GetAttributeCount(bool askToken) const
 {
-  PRInt32 result = 0;
+  int32_t result = 0;
   if (askToken) {
     result = mToken ? mToken->GetAttributeCount() : 0;
   }
@@ -299,9 +299,9 @@ nsCParserStartNode::GetAttributeCount(bool askToken) const
 }
 
 const nsAString&
-nsCParserStartNode::GetKeyAt(PRUint32 anIndex) const 
+nsCParserStartNode::GetKeyAt(uint32_t anIndex) const 
 {
-  if ((PRInt32)anIndex < mAttributes.GetSize()) {
+  if ((int32_t)anIndex < mAttributes.GetSize()) {
     CAttributeToken* attr = 
       static_cast<CAttributeToken*>(mAttributes.ObjectAt(anIndex));
     if (attr) {
@@ -312,9 +312,9 @@ nsCParserStartNode::GetKeyAt(PRUint32 anIndex) const
 }
 
 const nsAString&
-nsCParserStartNode::GetValueAt(PRUint32 anIndex) const 
+nsCParserStartNode::GetValueAt(uint32_t anIndex) const 
 {
-  if (PRInt32(anIndex) < mAttributes.GetSize()) {
+  if (int32_t(anIndex) < mAttributes.GetSize()) {
     CAttributeToken* attr = 
       static_cast<CAttributeToken*>(mAttributes.ObjectAt(anIndex));
     if (attr) {
@@ -344,8 +344,8 @@ void nsCParserStartNode::GetSource(nsString& aString) const
   if (theTagName) {
     aString.Append(theTagName);
   }
-  PRInt32 index;
-  PRInt32 size = mAttributes.GetSize();
+  int32_t index;
+  int32_t size = mAttributes.GetSize();
   for (index = 0 ; index < size; ++index) {
     CAttributeToken *theToken = 
       static_cast<CAttributeToken*>(mAttributes.ObjectAt(index));

@@ -40,12 +40,12 @@ class nsTDependentString_CharT : public nsTString_CharT
          */
 
       nsTDependentString_CharT( const char_type* start, const char_type* end )
-        : string_type(const_cast<char_type*>(start), PRUint32(end - start), F_TERMINATED)
+        : string_type(const_cast<char_type*>(start), uint32_t(end - start), F_TERMINATED)
         {
           AssertValid();
         }
 
-      nsTDependentString_CharT( const char_type* data, PRUint32 length )
+      nsTDependentString_CharT( const char_type* data, uint32_t length )
         : string_type(const_cast<char_type*>(data), length, F_TERMINATED)
         {
           AssertValid();
@@ -53,12 +53,12 @@ class nsTDependentString_CharT : public nsTString_CharT
 
       explicit
       nsTDependentString_CharT( const char_type* data )
-        : string_type(const_cast<char_type*>(data), PRUint32(char_traits::length(data)), F_TERMINATED)
+        : string_type(const_cast<char_type*>(data), uint32_t(char_traits::length(data)), F_TERMINATED)
         {
           AssertValid();
         }
 
-      nsTDependentString_CharT( const string_type& str, PRUint32 startPos )
+      nsTDependentString_CharT( const string_type& str, uint32_t startPos )
         : string_type()
         {
           Rebind(str, startPos);
@@ -80,17 +80,17 @@ class nsTDependentString_CharT : public nsTString_CharT
 
       void Rebind( const char_type* data )
         {
-          Rebind(data, PRUint32(char_traits::length(data)));
+          Rebind(data, uint32_t(char_traits::length(data)));
         }
 
       void Rebind( const char_type* data, size_type length );
 
       void Rebind( const char_type* start, const char_type* end )
         {
-          Rebind(start, PRUint32(end - start));
+          Rebind(start, uint32_t(end - start));
         }
 
-      void Rebind( const string_type&, PRUint32 startPos );
+      void Rebind( const string_type&, uint32_t startPos );
 
     private:
       

@@ -18,7 +18,7 @@ public:
                             const nsAString& aAlertTitle,
                             const nsAString& aAlertText,
                             const nsAString& aAlertCookie,
-                            PRUint32 aAlertListenerKey);
+                            uint32_t aAlertListenerKey);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER
@@ -27,7 +27,7 @@ private:
   nsString mAlertTitle;
   nsString mAlertText;
   nsString mAlertCookie;
-  PRUint32 mAlertListenerKey;
+  uint32_t mAlertListenerKey;
 };
 
 #endif // nsAlertsImageLoadListener_h_

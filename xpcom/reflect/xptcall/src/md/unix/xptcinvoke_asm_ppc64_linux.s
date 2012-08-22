@@ -19,8 +19,8 @@
 
 
 #
-# NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-#                    PRUint32 paramCount, nsXPTCVariant* params)
+# NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+#                    uint32_t paramCount, nsXPTCVariant* params)
 #
 
         .section ".toc","aw"
@@ -62,9 +62,9 @@ NS_InvokeByIndex_P:
         stdux   r1,r1,r7
 
 
-        # Call invoke_copy_to_stack(PRUint64* gpregs, double* fpregs,
-        #                           PRUint32 paramCount, nsXPTCVariant* s, 
-        #                           PRUint64* d))
+        # Call invoke_copy_to_stack(uint64_t* gpregs, double* fpregs,
+        #                           uint32_t paramCount, nsXPTCVariant* s, 
+        #                           uint64_t* d))
 
         # r5, r6 are passed through intact (paramCount, params)
         # r7 (d) has to be r1+112 -- where parameters are passed on the stack.

@@ -197,9 +197,9 @@ public:
    * Returns true if any unexpected mutations have occurred. You can pass in
    * an 8-bit ignore count to ignore a number of expected mutations.
    */
-  bool Mutated(PRUint8 aIgnoreCount)
+  bool Mutated(uint8_t aIgnoreCount)
   {
-    return sMutationCount < static_cast<PRUint32>(eMaxMutations - aIgnoreCount);
+    return sMutationCount < static_cast<uint32_t>(eMaxMutations - aIgnoreCount);
   }
 
   // This function should be called whenever a mutation that we want to keep
@@ -216,7 +216,7 @@ private:
   // mDelta is the amount sMutationCount was adjusted when the guard was
   // initialized. It is needed so that we can undo that adjustment once
   // the guard dies.
-  PRUint32 mDelta;
+  uint32_t mDelta;
 
   // The value 300 is not important, as long as it is bigger then anything
   // ever passed to Mutated().
@@ -226,7 +226,7 @@ private:
   // sMutationCount is a global mutation counter which is decreased by one at
   // every mutation. It is capped at 0 to avoid wrapping.
   // Its value is always between 0 and 300, inclusive.
-  static PRUint32 sMutationCount;
+  static uint32_t sMutationCount;
 };
 
 // Categories of node properties
@@ -353,7 +353,7 @@ public:
    * @param aFlags what types you want to test for (see above)
    * @return whether the content matches ALL flags passed in
    */
-  virtual bool IsNodeOfType(PRUint32 aFlags) const = 0;
+  virtual bool IsNodeOfType(uint32_t aFlags) const = 0;
 
   /**
    * Return whether the node is an Element node
@@ -386,14 +386,14 @@ public:
    * Get the number of children
    * @return the number of children
    */
-  virtual PRUint32 GetChildCount() const = 0;
+  virtual uint32_t GetChildCount() const = 0;
 
   /**
    * Get a child by index
    * @param aIndex the index of the child to get
    * @return the child, or null if index out of bounds
    */
-  virtual nsIContent* GetChildAt(PRUint32 aIndex) const = 0;
+  virtual nsIContent* GetChildAt(uint32_t aIndex) const = 0;
 
   /**
    * Get a raw pointer to the child array.  This should only be used if you
@@ -404,7 +404,7 @@ public:
    * garbage pointer.  In all cases the out param will be set to the number of
    * children.
    */
-  virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const = 0;
+  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const = 0;
 
   /**
    * Get the index of a child within this content
@@ -414,7 +414,7 @@ public:
    * If the return value is not -1, then calling GetChildAt() with that value
    * will return aPossibleChild.
    */
-  virtual PRInt32 IndexOf(nsINode* aPossibleChild) const = 0;
+  virtual int32_t IndexOf(nsINode* aPossibleChild) const = 0;
 
   /**
    * Return the "owner document" of this node.  Note that this is not the same
@@ -458,7 +458,7 @@ public:
    * The values returned by this function are the ones defined for
    * nsIDOMNode.nodeType
    */
-  PRUint16 NodeType() const
+  uint16_t NodeType() const
   {
     return mNodeInfo->NodeType();
   }
@@ -519,7 +519,7 @@ public:
    *
    * @throws NS_ERROR_OUT_OF_MEMORY in some cases (from BindToTree).
    */
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+  virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify) = 0;
 
   /**
@@ -556,7 +556,7 @@ public:
    *
    * Note: If there is no child at aIndex, this method will simply do nothing.
    */
-  virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify) = 0;
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) = 0;
 
   /**
    * Get a property associated with this node.
@@ -587,7 +587,7 @@ public:
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  virtual void* GetProperty(PRUint16 aCategory,
+  virtual void* GetProperty(uint16_t aCategory,
                             nsIAtom *aPropertyName,
                             nsresult *aStatus = nullptr) const;
 
@@ -635,7 +635,7 @@ public:
    *                                       was already set
    * @throws NS_ERROR_OUT_OF_MEMORY if that occurs
    */
-  virtual nsresult SetProperty(PRUint16 aCategory,
+  virtual nsresult SetProperty(uint16_t aCategory,
                                nsIAtom *aPropertyName,
                                void *aValue,
                                NSPropertyDtorFunc aDtor = nullptr,
@@ -660,7 +660,7 @@ public:
    * @param aCategory      category of property to destroy.
    * @param aPropertyName  name of property to destroy.
    */
-  virtual void DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName);
+  virtual void DeleteProperty(uint16_t aCategory, nsIAtom *aPropertyName);
 
   /**
    * Unset a property associated with this node. The value will not be
@@ -695,7 +695,7 @@ public:
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  virtual void* UnsetProperty(PRUint16 aCategory,
+  virtual void* UnsetProperty(uint16_t aCategory,
                               nsIAtom *aPropertyName,
                               nsresult *aStatus = nullptr);
   
@@ -901,12 +901,12 @@ public:
     return !!(GetFlags() & aFlag);
   }
 
-  PRUint32 GetFlags() const
+  uint32_t GetFlags() const
   {
     return mFlags;
   }
 
-  void SetFlags(PRUint32 aFlagsToSet)
+  void SetFlags(uint32_t aFlagsToSet)
   {
     NS_ASSERTION(!(aFlagsToSet & (NODE_IS_ANONYMOUS |
                                   NODE_IS_NATIVE_ANONYMOUS_ROOT |
@@ -919,7 +919,7 @@ public:
     mFlags |= aFlagsToSet;
   }
 
-  void UnsetFlags(PRUint32 aFlagsToUnset)
+  void UnsetFlags(uint32_t aFlagsToUnset)
   {
     NS_ASSERTION(!(aFlagsToUnset &
                    (NODE_IS_ANONYMOUS |
@@ -997,7 +997,7 @@ public:
   nsIContent* GetFirstChild() const { return mFirstChild; }
   nsIContent* GetLastChild() const
   {
-    PRUint32 count;
+    uint32_t count;
     nsIContent* const* children = GetChildArray(&count);
 
     return count > 0 ? children[count - 1] : nullptr;
@@ -1105,15 +1105,15 @@ public:
    *
    * @see nsIDOMNode
    */
-  PRUint16 CompareDocPosition(nsINode* aOtherNode);
-  nsresult CompareDocPosition(nsINode* aOtherNode, PRUint16* aReturn)
+  uint16_t CompareDocPosition(nsINode* aOtherNode);
+  nsresult CompareDocPosition(nsINode* aOtherNode, uint16_t* aReturn)
   {
     NS_ENSURE_ARG(aOtherNode);
     *aReturn = CompareDocPosition(aOtherNode);
     return NS_OK;
   }
   nsresult CompareDocumentPosition(nsIDOMNode* aOther,
-                                   PRUint16* aReturn);
+                                   uint16_t* aReturn);
 
   nsresult LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix);
   nsresult IsDefaultNamespace(const nsAString& aNamespaceURI, bool* aResult)
@@ -1405,7 +1405,7 @@ public:
    * Returns the length of this node, as specified at
    * <http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#concept-node-length>
    */
-  PRUint32 Length() const;
+  uint32_t Length() const;
 
 protected:
 
@@ -1491,7 +1491,7 @@ protected:
    * @param aChildArray The child array to work with.
    * @param aMutationEvent whether to fire a mutation event for this removal.
    */
-  void doRemoveChildAt(PRUint32 aIndex, bool aNotify, nsIContent* aKid,
+  void doRemoveChildAt(uint32_t aIndex, bool aNotify, nsIContent* aKid,
                        nsAttrAndChildArray& aChildArray);
 
   /**
@@ -1504,7 +1504,7 @@ protected:
    * @param aNotify Whether to notify.
    * @param aChildArray The child array to work with
    */
-  nsresult doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+  nsresult doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
                            bool aNotify, nsAttrAndChildArray& aChildArray);
 
 public:
@@ -1535,11 +1535,11 @@ protected:
 
   nsINode* mParent;
 
-  PRUint32 mFlags;
+  uint32_t mFlags;
 
 private:
   // Boolean flags.
-  PRUint32 mBoolFlags;
+  uint32_t mBoolFlags;
 
 protected:
   nsIContent* mNextSibling;

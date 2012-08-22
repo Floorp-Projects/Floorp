@@ -64,14 +64,14 @@ public:
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
-                        JSObject* aObject, PRUint32 aArgc, jsval* aArgv);
+                        JSObject* aObject, uint32_t aArgc, jsval* aArgv);
 
   // nsIDOMEventTarget
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener *aListener,
                               bool aUseCapture,
                               bool aWantsUntrusted,
-                              PRUint8 optional_argc);
+                              uint8_t optional_argc);
   NS_IMETHOD RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
                                  bool aUseCapture);
@@ -85,9 +85,9 @@ protected:
   nsresult EstablishConnection();
 
   // These methods when called can release the WebSocket object
-  nsresult FailConnection(PRUint16 reasonCode,
+  nsresult FailConnection(uint16_t reasonCode,
                           const nsACString& aReasonString = EmptyCString());
-  nsresult CloseConnection(PRUint16 reasonCode,
+  nsresult CloseConnection(uint16_t reasonCode,
                            const nsACString& aReasonString = EmptyCString());
   nsresult Disconnect();
 
@@ -95,12 +95,12 @@ protected:
   nsresult PrintErrorOnConsole(const char       *aBundleURI,
                                const PRUnichar  *aError,
                                const PRUnichar **aFormatStrings,
-                               PRUint32          aFormatStringsLen);
+                               uint32_t          aFormatStringsLen);
 
   // Get msg info out of JS variable being sent (string, arraybuffer, blob)
   nsresult GetSendParams(nsIVariant *aData, nsCString &aStringOut,
                          nsCOMPtr<nsIInputStream> &aStreamOut,
-                         bool &aIsBinary, PRUint32 &aOutgoingLength,
+                         bool &aIsBinary, uint32_t &aOutgoingLength,
                          JSContext *aCx);
 
   nsresult DoOnMessageAvailable(const nsACString & aMsg, bool isBinary);
@@ -119,7 +119,7 @@ protected:
   nsresult CreateAndDispatchSimpleEvent(const nsString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData,
                                          bool isBinary);
-  nsresult CreateAndDispatchCloseEvent(bool aWasClean, PRUint16 aCode,
+  nsresult CreateAndDispatchCloseEvent(bool aWasClean, uint16_t aCode,
                                        const nsString &aReason);
   nsresult CreateResponseBlob(const nsACString& aData, JSContext *aCx,
                               jsval &jsData);
@@ -156,10 +156,10 @@ protected:
   // Set attributes of DOM 'onclose' message
   bool      mCloseEventWasClean;
   nsString  mCloseEventReason;
-  PRUint16  mCloseEventCode;
+  uint16_t  mCloseEventCode;
 
   nsCString mAsciiHost;  // hostname
-  PRUint32  mPort;
+  uint32_t  mPort;
   nsCString mResource; // [filepath[?query]]
   nsString  mUTF16Origin;
 
@@ -168,11 +168,11 @@ protected:
   nsCString mEstablishedProtocol;
   nsCString mEstablishedExtensions;
 
-  PRUint16 mReadyState;
+  uint16_t mReadyState;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
-  PRUint32 mOutgoingBufferedAmount;
+  uint32_t mOutgoingBufferedAmount;
 
   enum
   {
@@ -187,8 +187,8 @@ protected:
   //   be the same as the Web Socket owner window.
   // These attributes are used for error reporting.
   nsCString mScriptFile;
-  PRUint32 mScriptLine;
-  PRUint64 mInnerWindowID;
+  uint32_t mScriptLine;
+  uint64_t mInnerWindowID;
 
 private:
   nsWebSocket(const nsWebSocket& x);   // prevent bad usage

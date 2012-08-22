@@ -211,7 +211,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 //------------------------------------------------------------------------------
 nscoord nsPageFrame::GetXPosition(nsRenderingContext& aRenderingContext, 
                                   const nsRect&        aRect, 
-                                  PRInt32              aJust,
+                                  int32_t              aJust,
                                   const nsString&      aStr)
 {
   nscoord width = nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
@@ -254,7 +254,7 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
                               nscoord              aAscent,
                               nscoord              aHeight)
 {
-  PRInt32 numStrs = 0;
+  int32_t numStrs = 0;
   if (!aStrLeft.IsEmpty()) numStrs++;
   if (!aStrCenter.IsEmpty()) numStrs++;
   if (!aStrRight.IsEmpty()) numStrs++;
@@ -291,7 +291,7 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
 void
 nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
                               nsHeaderFooterEnum   aHeaderFooter,
-                              PRInt32              aJust,
+                              int32_t              aJust,
                               const nsString&      aStr,
                               const nsRect&        aRect,
                               nscoord              aAscent,
@@ -306,17 +306,17 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
     nsAutoString str;
     ProcessSpecialCodes(aStr, str);
 
-    PRInt32 indx;
-    PRInt32 textWidth = 0;
+    int32_t indx;
+    int32_t textWidth = 0;
     const PRUnichar* text = str.get();
 
-    PRInt32 len = (PRInt32)str.Length();
+    int32_t len = (int32_t)str.Length();
     if (len == 0) {
       return; // bail is empty string
     }
     // find how much text fits, the "position" is the size of the available area
     if (nsLayoutUtils::BinarySearchForPosition(&aRenderingContext, text, 0, 0, 0, len,
-                                PRInt32(contentWidth), indx, textWidth)) {
+                                int32_t(contentWidth), indx, textWidth)) {
       if (indx < len-1 ) {
         // we can't fit in all the text
         if (indx > 3) {
@@ -405,7 +405,7 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 //------------------------------------------------------------------------------
 void
-nsPageFrame::SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages) 
+nsPageFrame::SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages) 
 { 
   mPageNum     = aPageNumber; 
   mTotNumPages = aTotalPages;

@@ -14,11 +14,11 @@ namespace mozilla {
  * We represent media times in 64-bit fixed point. So 1 MediaTime is
  * 1/(2^MEDIA_TIME_FRAC_BITS) seconds.
  */
-typedef PRInt64 MediaTime;
-const PRInt64 MEDIA_TIME_FRAC_BITS = 20;
-const PRInt64 MEDIA_TIME_MAX = PR_INT64_MAX;
+typedef int64_t MediaTime;
+const int64_t MEDIA_TIME_FRAC_BITS = 20;
+const int64_t MEDIA_TIME_MAX = PR_INT64_MAX;
 
-inline MediaTime MillisecondsToMediaTime(PRInt32 aMS)
+inline MediaTime MillisecondsToMediaTime(int32_t aMS)
 {
   return (MediaTime(aMS) << MEDIA_TIME_FRAC_BITS)/1000;
 }
@@ -40,8 +40,8 @@ inline double MediaTimeToSeconds(MediaTime aTime)
  * audio sample rate). We want to make sure that multiplying TrackTicks by
  * 2^MEDIA_TIME_FRAC_BITS doesn't overflow, so we set its max accordingly.
  */
-typedef PRInt64 TrackTicks;
-const PRInt64 TRACK_TICKS_MAX = PR_INT64_MAX >> MEDIA_TIME_FRAC_BITS;
+typedef int64_t TrackTicks;
+const int64_t TRACK_TICKS_MAX = PR_INT64_MAX >> MEDIA_TIME_FRAC_BITS;
 
 /**
  * A MediaSegment is a chunk of media data sequential in time. Different
@@ -221,7 +221,7 @@ protected:
                  "Slice out of range");
     mDuration += aEnd - aStart;
     TrackTicks offset = 0;
-    for (PRUint32 i = 0; i < aSource.mChunks.Length() && offset < aEnd; ++i) {
+    for (uint32_t i = 0; i < aSource.mChunks.Length() && offset < aEnd; ++i) {
       const Chunk& c = aSource.mChunks[i];
       TrackTicks start = NS_MAX(aStart, offset);
       TrackTicks nextOffset = offset + c.GetDuration();
@@ -247,7 +247,7 @@ protected:
       return nullptr;
     }
     TrackTicks offset = 0;
-    for (PRUint32 i = 0; i < mChunks.Length(); ++i) {
+    for (uint32_t i = 0; i < mChunks.Length(); ++i) {
       Chunk& c = mChunks[i];
       TrackTicks nextOffset = offset + c.GetDuration();
       if (aOffset < nextOffset) {
@@ -279,15 +279,15 @@ protected:
     Chunk* operator->() { return &mSegment.mChunks[mIndex]; }
   private:
     MediaSegmentBase<C, Chunk>& mSegment;
-    PRUint32 mIndex;
+    uint32_t mIndex;
   };
 
-  void RemoveLeading(TrackTicks aDuration, PRUint32 aStartIndex)
+  void RemoveLeading(TrackTicks aDuration, uint32_t aStartIndex)
   {
     NS_ASSERTION(aDuration >= 0, "Can't remove negative duration");
     TrackTicks t = aDuration;
-    PRUint32 chunksToRemove = 0;
-    for (PRUint32 i = aStartIndex; i < mChunks.Length() && t > 0; ++i) {
+    uint32_t chunksToRemove = 0;
+    for (uint32_t i = aStartIndex; i < mChunks.Length() && t > 0; ++i) {
       Chunk* c = &mChunks[i];
       if (c->GetDuration() > t) {
         c->SliceTo(t, c->GetDuration());

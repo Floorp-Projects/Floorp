@@ -20,9 +20,9 @@
 // For HTTP seeking, if number of bytes needing to be
 // seeked forward is less than this value then a read is
 // done rather than a byte range request.
-static const PRInt64 SEEK_VS_READ_THRESHOLD = 32*1024;
+static const int64_t SEEK_VS_READ_THRESHOLD = 32*1024;
 
-static const PRUint32 HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE = 416;
+static const uint32_t HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE = 416;
 
 class nsMediaDecoder;
 
@@ -62,7 +62,7 @@ public:
     mAccumulatedTime += aNow - mLastStartTime;
     mIsStarted = false;
   }
-  void AddBytes(PRInt64 aBytes) {
+  void AddBytes(int64_t aBytes) {
     if (!mIsStarted) {
       // ignore this data, it may be related to seeking or some other
       // operation we don't care about
@@ -89,7 +89,7 @@ public:
     return static_cast<double>(mAccumulatedBytes)/seconds;
   }
 private:
-  PRInt64      mAccumulatedBytes;
+  int64_t      mAccumulatedBytes;
   TimeDuration mAccumulatedTime;
   TimeStamp    mLastStartTime;
   bool         mIsStarted;
@@ -101,7 +101,7 @@ class MediaByteRange {
 public:
   MediaByteRange() : mStart(0), mEnd(0) {}
 
-  MediaByteRange(PRInt64 aStart, PRInt64 aEnd)
+  MediaByteRange(int64_t aStart, int64_t aEnd)
     : mStart(aStart), mEnd(aEnd)
   {
     NS_ASSERTION(mStart < mEnd, "Range should end after start!");
@@ -111,7 +111,7 @@ public:
     return mStart == 0 && mEnd == 0;
   }
 
-  PRInt64 mStart, mEnd;
+  int64_t mStart, mEnd;
 };
 
 /**
@@ -177,14 +177,14 @@ public:
   // This is the client's estimate of the playback rate assuming
   // the media plays continuously. The cache can't guess this itself
   // because it doesn't know when the decoder was paused, buffering, etc.
-  virtual void SetPlaybackRate(PRUint32 aBytesPerSecond) = 0;
+  virtual void SetPlaybackRate(uint32_t aBytesPerSecond) = 0;
   // Read up to aCount bytes from the stream. The buffer must have
   // enough room for at least aCount bytes. Stores the number of
   // actual bytes read in aBytes (0 on end of file).
   // May read less than aCount bytes if the number of
   // available bytes is less than aCount. Always check *aBytes after
   // read, and call again if necessary.
-  virtual nsresult Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes) = 0;
+  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) = 0;
   // Seek to the given bytes offset in the stream. aWhence can be
   // one of:
   //   NS_SEEK_SET
@@ -211,11 +211,11 @@ public:
   //
   // The file strategy doesn't block for any great length of time so
   // is fine for a no-op cancel.
-  virtual nsresult Seek(PRInt32 aWhence, PRInt64 aOffset) = 0;
+  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) = 0;
   virtual void StartSeekingForMetadata() = 0;
   virtual void EndSeekingForMetadata() = 0;
   // Report the current offset in bytes from the start of the stream.
-  virtual PRInt64 Tell() = 0;
+  virtual int64_t Tell() = 0;
   // Moves any existing channel loads into the background, so that they don't
   // block the load event. Any new loads initiated (for example to seek)
   // will also be in the background.
@@ -239,16 +239,16 @@ public:
   // reported previously --- or it may just lie in its Content-Length
   // header and give us more or less data than it reported. We will adjust
   // the result of GetLength to reflect the data that's actually arriving.
-  virtual PRInt64 GetLength() = 0;
+  virtual int64_t GetLength() = 0;
   // Returns the offset of the first byte of cached data at or after aOffset,
   // or -1 if there is no such cached data.
-  virtual PRInt64 GetNextCachedData(PRInt64 aOffset) = 0;
+  virtual int64_t GetNextCachedData(int64_t aOffset) = 0;
   // Returns the end of the bytes starting at the given offset
   // which are in cache.
-  virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset) = 0;
+  virtual int64_t GetCachedDataEnd(int64_t aOffset) = 0;
   // Returns true if all the data from aOffset to the end of the stream
   // is in cache. If the end of the stream is not known, we return false.
-  virtual bool IsDataCachedToEndOfResource(PRInt64 aOffset) = 0;
+  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) = 0;
   // Returns true if this stream is suspended by the cache because the
   // cache is full. If true then the decoder should try to start consuming
   // data, otherwise we may not be able to make progress.
@@ -267,8 +267,8 @@ public:
   // any thread, and it is the only read operation which is safe to call on
   // the main thread, since it's guaranteed to be non blocking.
   virtual nsresult ReadFromCache(char* aBuffer,
-                                 PRInt64 aOffset,
-                                 PRUint32 aCount) = 0;
+                                 int64_t aOffset,
+                                 uint32_t aCount) = 0;
 
   /**
    * Create a resource, reading data from the channel. Call on main thread only.
@@ -356,7 +356,7 @@ public:
   // and no more data from the old load will be notified via
   // nsMediaCacheStream::NotifyDataReceived/Ended.
   // This can fail.
-  nsresult CacheClientSeek(PRInt64 aOffset, bool aResume);
+  nsresult CacheClientSeek(int64_t aOffset, bool aResume);
   // Suspend the current load since data is currently not wanted
   nsresult CacheClientSuspend();
   // Resume the current load since data is wanted again
@@ -372,26 +372,26 @@ public:
   bool IsClosed() const { return mCacheStream.IsClosed(); }
   virtual bool     CanClone();
   virtual MediaResource* CloneData(nsMediaDecoder* aDecoder);
-  virtual nsresult ReadFromCache(char* aBuffer, PRInt64 aOffset, PRUint32 aCount);
+  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount);
   virtual void     EnsureCacheUpToDate();
 
   // Other thread
   virtual void     SetReadMode(nsMediaCacheStream::ReadMode aMode);
-  virtual void     SetPlaybackRate(PRUint32 aBytesPerSecond);
-  virtual nsresult Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes);
-  virtual nsresult Seek(PRInt32 aWhence, PRInt64 aOffset);
+  virtual void     SetPlaybackRate(uint32_t aBytesPerSecond);
+  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
+  virtual nsresult Seek(int32_t aWhence, int64_t aOffset);
   virtual void     StartSeekingForMetadata();
   virtual void     EndSeekingForMetadata();
-  virtual PRInt64  Tell();
+  virtual int64_t  Tell();
 
   // Any thread
   virtual void    Pin();
   virtual void    Unpin();
   virtual double  GetDownloadRate(bool* aIsReliable);
-  virtual PRInt64 GetLength();
-  virtual PRInt64 GetNextCachedData(PRInt64 aOffset);
-  virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset);
-  virtual bool    IsDataCachedToEndOfResource(PRInt64 aOffset);
+  virtual int64_t GetLength();
+  virtual int64_t GetNextCachedData(int64_t aOffset);
+  virtual int64_t GetCachedDataEnd(int64_t aOffset);
+  virtual bool    IsDataCachedToEndOfResource(int64_t aOffset);
   virtual bool    IsSuspendedByCache(MediaResource** aActiveResource);
   virtual bool    IsSuspended();
 
@@ -423,8 +423,8 @@ protected:
   nsresult OnStopRequest(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnDataAvailable(nsIRequest* aRequest,
                            nsIInputStream* aStream,
-                           PRUint32 aCount);
-  nsresult OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew, PRUint32 aFlags);
+                           uint32_t aCount);
+  nsresult OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew, uint32_t aFlags);
 
   // Opens the channel, using an HTTP byte range request to start at mOffset
   // if possible. Main thread only.
@@ -440,9 +440,9 @@ protected:
   static NS_METHOD CopySegmentToCache(nsIInputStream *aInStream,
                                       void *aClosure,
                                       const char *aFromSegment,
-                                      PRUint32 aToOffset,
-                                      PRUint32 aCount,
-                                      PRUint32 *aWriteCount);
+                                      uint32_t aToOffset,
+                                      uint32_t aCount,
+                                      uint32_t *aWriteCount);
 
   // Suspend the channel only if the channels is currently downloading data.
   // If it isn't we set a flag, mIgnoreResume, so that PossiblyResume knows
@@ -453,12 +453,12 @@ protected:
   void PossiblyResume();
 
   // Main thread access only
-  PRInt64            mOffset;
+  int64_t            mOffset;
   nsRefPtr<Listener> mListener;
   // A data received event for the decoder that has been dispatched but has
   // not yet been processed.
   nsRevocableEventPtr<nsRunnableMethod<ChannelMediaResource, void, false> > mDataReceivedEvent;
-  PRUint32           mSuspendCount;
+  uint32_t           mSuspendCount;
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
   bool               mReopenOnError;

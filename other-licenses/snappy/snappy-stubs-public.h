@@ -36,7 +36,7 @@
 #ifndef UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_PUBLIC_H_
 #define UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_PUBLIC_H_
 
-#include "prtypes.h"
+#include "mozilla/StandardInteger.h"
 
 #define SNAPPY_MAJOR 1
 #define SNAPPY_MINOR 0
@@ -48,14 +48,14 @@
 
 namespace snappy {
 
-typedef PRInt8 int8;
-typedef PRUint8 uint8;
-typedef PRInt16 int16;
-typedef PRUint16 uint16;
-typedef PRInt32 int32;
-typedef PRUint32 uint32;
-typedef PRInt64 int64;
-typedef PRUint64 uint64;
+typedef int8_t int8;
+typedef uint8_t uint8;
+typedef int16_t int16;
+typedef uint16_t uint16;
+typedef int32_t int32;
+typedef uint32_t uint32;
+typedef int64_t int64;
+typedef uint64_t uint64;
 
 typedef std::string string;
 

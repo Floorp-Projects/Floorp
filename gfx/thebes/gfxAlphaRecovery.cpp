@@ -38,23 +38,23 @@ gfxAlphaRecovery::RecoverAlpha(gfxImageSurface* blackSurf,
     unsigned char* whiteData = whiteSurf->Data();
 
     /* Get the alpha value of 'first' */
-    PRUint32 first;
+    uint32_t first;
     if (size.width == 0 || size.height == 0) {
         first = 0;
     } else {
         if (!blackData || !whiteData)
             return false;
 
-        first = RecoverPixel(*reinterpret_cast<PRUint32*>(blackData),
-                             *reinterpret_cast<PRUint32*>(whiteData));
+        first = RecoverPixel(*reinterpret_cast<uint32_t*>(blackData),
+                             *reinterpret_cast<uint32_t*>(whiteData));
     }
 
-    PRUint32 deltas = 0;
-    for (PRInt32 i = 0; i < size.height; ++i) {
-        PRUint32* blackPixel = reinterpret_cast<PRUint32*>(blackData);
-        const PRUint32* whitePixel = reinterpret_cast<PRUint32*>(whiteData);
-        for (PRInt32 j = 0; j < size.width; ++j) {
-            PRUint32 recovered = RecoverPixel(blackPixel[j], whitePixel[j]);
+    uint32_t deltas = 0;
+    for (int32_t i = 0; i < size.height; ++i) {
+        uint32_t* blackPixel = reinterpret_cast<uint32_t*>(blackData);
+        const uint32_t* whitePixel = reinterpret_cast<uint32_t*>(whiteData);
+        for (int32_t j = 0; j < size.width; ++j) {
+            uint32_t recovered = RecoverPixel(blackPixel[j], whitePixel[j]);
             blackPixel[j] = recovered;
             deltas |= (first ^ recovered);
         }

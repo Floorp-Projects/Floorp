@@ -30,8 +30,8 @@ public:
     NS_DECL_NSIOFFLINECACHEUPDATE
 
     virtual bool
-    RecvNotifyStateEvent(const PRUint32& stateEvent,
-                         const PRUint64& byteProgress);
+    RecvNotifyStateEvent(const uint32_t& stateEvent,
+                         const uint64_t& byteProgress);
 
     virtual bool
     RecvAssociateDocuments(
@@ -87,7 +87,7 @@ private:
        parent offline cache update construcor */
     nsCOMPtr<nsIDOMWindow> mWindow;
 
-    PRUint64 mByteProgress;
+    uint64_t mByteProgress;
 };
 
 }

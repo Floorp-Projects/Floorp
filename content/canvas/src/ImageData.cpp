@@ -42,7 +42,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 /* readonly attribute unsigned long width; */
 NS_IMETHODIMP
-ImageData::GetWidth(PRUint32* aWidth)
+ImageData::GetWidth(uint32_t* aWidth)
 {
   *aWidth = GetWidth();
   return NS_OK;
@@ -50,7 +50,7 @@ ImageData::GetWidth(PRUint32* aWidth)
 
 /* readonly attribute unsigned long height; */
 NS_IMETHODIMP
-ImageData::GetHeight(PRUint32* aHeight)
+ImageData::GetHeight(uint32_t* aHeight)
 {
   *aHeight = GetHeight();
   return NS_OK;

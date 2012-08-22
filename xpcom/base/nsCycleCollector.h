@@ -21,10 +21,10 @@ public:
         mForcedGC(false), mVisitedRefCounted(0), mVisitedGCed(0),
         mFreedRefCounted(0), mFreedGCed(0) {}
     bool mForcedGC;
-    PRUint32 mVisitedRefCounted;
-    PRUint32 mVisitedGCed;
-    PRUint32 mFreedRefCounted;
-    PRUint32 mFreedGCed;
+    uint32_t mVisitedRefCounted;
+    uint32_t mVisitedGCed;
+    uint32_t mFreedRefCounted;
+    uint32_t mFreedGCed;
 };
 
 nsresult nsCycleCollector_startup();
@@ -44,7 +44,7 @@ void nsCycleCollector_logPurpleRemoval(void* aObject);
 void nsCycleCollector_collect(bool aMergeCompartments,
                               nsCycleCollectorResults *aResults,
                               nsICycleCollectorListener *aListener);
-PRUint32 nsCycleCollector_suspectedCount();
+uint32_t nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdownThreads();
 void nsCycleCollector_shutdown();
 
@@ -73,7 +73,7 @@ struct nsCycleCollectionJSRuntime
     /**
      * Runs the JavaScript GC. |reason| is a gcreason::Reason from jsfriendapi.h.
      */
-    virtual void Collect(PRUint32 reason) = 0;
+    virtual void Collect(uint32_t reason) = 0;
 
     /**
      * Get the JS cycle collection participant.

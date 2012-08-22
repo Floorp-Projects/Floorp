@@ -18,7 +18,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 NS_IMETHODIMP
 nsConverterInputStream::Init(nsIInputStream* aStream,
                              const char *aCharset,
-                             PRInt32 aBufferSize,
+                             int32_t aBufferSize,
                              PRUnichar aReplacementChar)
 {
     if (!aCharset)
@@ -63,11 +63,11 @@ nsConverterInputStream::Close()
 
 NS_IMETHODIMP
 nsConverterInputStream::Read(PRUnichar* aBuf,
-                             PRUint32 aCount,
-                             PRUint32 *aReadCount)
+                             uint32_t aCount,
+                             uint32_t *aReadCount)
 {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
-  PRUint32 readCount = mUnicharDataLength - mUnicharDataOffset;
+  uint32_t readCount = mUnicharDataLength - mUnicharDataOffset;
   if (0 == readCount) {
     // Fill the unichar buffer
     readCount = Fill(&mLastErrorCode);
@@ -89,10 +89,10 @@ nsConverterInputStream::Read(PRUnichar* aBuf,
 NS_IMETHODIMP
 nsConverterInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
                                      void* aClosure,
-                                     PRUint32 aCount, PRUint32 *aReadCount)
+                                     uint32_t aCount, uint32_t *aReadCount)
 {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
-  PRUint32 bytesToWrite = mUnicharDataLength - mUnicharDataOffset;
+  uint32_t bytesToWrite = mUnicharDataLength - mUnicharDataOffset;
   nsresult rv;
   if (0 == bytesToWrite) {
     // Fill the unichar buffer
@@ -106,8 +106,8 @@ nsConverterInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
   if (bytesToWrite > aCount)
     bytesToWrite = aCount;
   
-  PRUint32 bytesWritten;
-  PRUint32 totalBytesWritten = 0;
+  uint32_t bytesWritten;
+  uint32_t totalBytesWritten = 0;
 
   while (bytesToWrite) {
     rv = aWriter(this, aClosure,
@@ -130,11 +130,11 @@ nsConverterInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
 }
 
 NS_IMETHODIMP
-nsConverterInputStream::ReadString(PRUint32 aCount, nsAString& aString,
-                                   PRUint32* aReadCount)
+nsConverterInputStream::ReadString(uint32_t aCount, nsAString& aString,
+                                   uint32_t* aReadCount)
 {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
-  PRUint32 readCount = mUnicharDataLength - mUnicharDataOffset;
+  uint32_t readCount = mUnicharDataLength - mUnicharDataOffset;
   if (0 == readCount) {
     // Fill the unichar buffer
     readCount = Fill(&mLastErrorCode);
@@ -154,7 +154,7 @@ nsConverterInputStream::ReadString(PRUint32 aCount, nsAString& aString,
   return NS_OK;
 }
 
-PRUint32
+uint32_t
 nsConverterInputStream::Fill(nsresult * aErrorCode)
 {
   if (nullptr == mInput) {
@@ -176,7 +176,7 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
   // to n+1 unicode chars.  Thus we need to keep track of the leftover
   // bytes as we convert.
   
-  PRInt32 nb = mByteData->Fill(aErrorCode, mInput, mLeftOverBytes);
+  int32_t nb = mByteData->Fill(aErrorCode, mInput, mLeftOverBytes);
 #if defined(DEBUG_bzbarsky) && 0
   for (unsigned int foo = 0; foo < mByteData->GetLength(); ++foo) {
     fprintf(stderr, "%c", mByteData->GetBuffer()[foo]);
@@ -189,16 +189,16 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
     return 0;
   }
 
-  NS_ASSERTION(PRUint32(nb) + mLeftOverBytes == mByteData->GetLength(),
+  NS_ASSERTION(uint32_t(nb) + mLeftOverBytes == mByteData->GetLength(),
                "mByteData is lying to us somewhere");
   
   // Now convert as much of the byte buffer to unicode as possible
   mUnicharDataOffset = 0;
   mUnicharDataLength = 0;
-  PRUint32 srcConsumed = 0;
+  uint32_t srcConsumed = 0;
   do {
-    PRInt32 srcLen = mByteData->GetLength() - srcConsumed;
-    PRInt32 dstLen = mUnicharData->GetBufferSize() - mUnicharDataLength;
+    int32_t srcLen = mByteData->GetLength() - srcConsumed;
+    int32_t dstLen = mUnicharData->GetBufferSize() - mUnicharDataLength;
     *aErrorCode = mConverter->Convert(mByteData->GetBuffer()+srcConsumed,
                                       &srcLen,
                                       mUnicharData->GetBuffer()+mUnicharDataLength,
@@ -216,14 +216,14 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
       ++srcConsumed;
       // XXX this is needed to make sure we don't underrun our buffer;
       // bug 160784 again
-      srcConsumed = NS_MAX<PRUint32>(srcConsumed, 0);
+      srcConsumed = NS_MAX<uint32_t>(srcConsumed, 0);
       mConverter->Reset();
     }
     NS_ASSERTION(srcConsumed <= mByteData->GetLength(),
                  "Whoa.  The converter should have returned NS_OK_UDEC_MOREINPUT before this point!");
   } while (mReplacementChar &&
            NS_FAILED(*aErrorCode) &&
-           PRUint32(mUnicharData->GetBufferSize()) > mUnicharDataLength);
+           uint32_t(mUnicharData->GetBufferSize()) > mUnicharDataLength);
 
   mLeftOverBytes = mByteData->GetLength() - srcConsumed;
 

@@ -50,7 +50,7 @@ nsDOMTokenList::DropReference()
 }
 
 NS_IMETHODIMP
-nsDOMTokenList::GetLength(PRUint32 *aLength)
+nsDOMTokenList::GetLength(uint32_t *aLength)
 {
   const nsAttrValue* attr = GetParsedAttr();
   if (!attr) {
@@ -64,11 +64,11 @@ nsDOMTokenList::GetLength(PRUint32 *aLength)
 }
 
 NS_IMETHODIMP
-nsDOMTokenList::Item(PRUint32 aIndex, nsAString& aResult)
+nsDOMTokenList::Item(uint32_t aIndex, nsAString& aResult)
 {
   const nsAttrValue* attr = GetParsedAttr();
 
-  if (!attr || aIndex >= static_cast<PRUint32>(attr->GetAtomCount())) {
+  if (!attr || aIndex >= static_cast<uint32_t>(attr->GetAtomCount())) {
     SetDOMStringToNull(aResult);
     return NS_OK;
   }

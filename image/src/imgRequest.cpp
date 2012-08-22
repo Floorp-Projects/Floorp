@@ -108,7 +108,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
                           imgCacheEntry *aCacheEntry,
                           void *aLoadId,
                           nsIPrincipal* aLoadingPrincipal,
-                          PRInt32 aCORSMode)
+                          int32_t aCORSMode)
 {
   LOG_FUNC(gImgLog, "imgRequest::Init");
 
@@ -354,16 +354,16 @@ bool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
   return false;
 }
 
-PRInt32 imgRequest::Priority() const
+int32_t imgRequest::Priority() const
 {
-  PRInt32 priority = nsISupportsPriority::PRIORITY_NORMAL;
+  int32_t priority = nsISupportsPriority::PRIORITY_NORMAL;
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mRequest);
   if (p)
     p->GetPriority(&priority);
   return priority;
 }
 
-void imgRequest::AdjustPriority(imgRequestProxy *proxy, PRInt32 delta)
+void imgRequest::AdjustPriority(imgRequestProxy *proxy, int32_t delta)
 {
   // only the first proxy is allowed to modify the priority of this image load.
   //
@@ -410,7 +410,7 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
       if (cacheToken) {
         nsCOMPtr<nsICacheEntryInfo> entryDesc(do_QueryInterface(cacheToken));
         if (entryDesc) {
-          PRUint32 expiration;
+          uint32_t expiration;
           /* get the expiration time from the caching channel's token */
           entryDesc->GetExpirationTime(&expiration);
 
@@ -584,7 +584,7 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, imgIContainer *
 
 /* void onStartFrame (in imgIRequest request, in unsigned long frame); */
 NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request,
-                                       PRUint32 frame)
+                                       uint32_t frame)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStartFrame");
   NS_ABORT_IF_FALSE(mImage,
@@ -621,7 +621,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request,
 
 /* void onStopFrame (in imgIRequest request, in unsigned long frame); */
 NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request,
-                                      PRUint32 frame)
+                                      uint32_t frame)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStopFrame");
   NS_ABORT_IF_FALSE(mImage,
@@ -937,12 +937,12 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 
 /* prototype for these defined below */
 static NS_METHOD sniff_mimetype_callback(nsIInputStream* in, void* closure, const char* fromRawSegment,
-                                         PRUint32 toOffset, PRUint32 count, PRUint32 *writeCount);
+                                         uint32_t toOffset, uint32_t count, uint32_t *writeCount);
 
 /** nsIStreamListener methods **/
 
 /* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
-NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
+NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt, nsIInputStream *inStr, uint32_t sourceOffset, uint32_t count)
 {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "count", count);
 
@@ -950,7 +950,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
   nsresult rv;
 
-  PRUint16 imageType;
+  uint16_t imageType;
   if (mGotData) {
     imageType = mImage->GetType();
   } else {
@@ -961,7 +961,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     /* look at the first few bytes and see if we can tell what the data is from that
      * since servers tend to lie. :(
      */
-    PRUint32 out;
+    uint32_t out;
     inStr->ReadSegments(sniff_mimetype_callback, this, count, &out);
 
 #ifdef DEBUG
@@ -1055,7 +1055,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       isDiscardable = doDecodeOnDraw = false;
 
     // We have all the information we need
-    PRUint32 imageFlags = Image::INIT_FLAG_NONE;
+    uint32_t imageFlags = Image::INIT_FLAG_NONE;
     if (isDiscardable)
       imageFlags |= Image::INIT_FLAG_DISCARDABLE;
     if (doDecodeOnDraw)
@@ -1087,13 +1087,13 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
         rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
                                             contentLength);
         if (NS_SUCCEEDED(rv)) {
-          PRInt32 len = contentLength.ToInteger(&rv);
+          int32_t len = contentLength.ToInteger(&rv);
 
           // Pass anything usable on so that the RasterImage can preallocate
           // its source buffer
           if (len > 0) {
-            PRUint32 sizeHint = (PRUint32) len;
-            sizeHint = NS_MIN<PRUint32>(sizeHint, 20000000); /* Bound by something reasonable */
+            uint32_t sizeHint = (uint32_t) len;
+            sizeHint = NS_MIN<uint32_t>(sizeHint, 20000000); /* Bound by something reasonable */
             RasterImage* rasterImage = static_cast<RasterImage*>(mImage.get());
             rv = rasterImage->SetSourceSizeHint(sizeHint);
             if (NS_FAILED(rv)) {
@@ -1126,7 +1126,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
   if (imageType == imgIContainer::TYPE_RASTER) {
     // WriteToRasterImage always consumes everything it gets
     // if it doesn't run out of memory
-    PRUint32 bytesRead;
+    uint32_t bytesRead;
     rv = inStr->ReadSegments(RasterImage::WriteToRasterImage,
                              static_cast<void*>(mImage),
                              count, &bytesRead);
@@ -1151,9 +1151,9 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,
                                          void* closure,
                                          const char* fromRawSegment,
-                                         PRUint32 toOffset,
-                                         PRUint32 count,
-                                         PRUint32 *writeCount)
+                                         uint32_t toOffset,
+                                         uint32_t count,
+                                         uint32_t *writeCount)
 {
   imgRequest *request = static_cast<imgRequest*>(closure);
 
@@ -1167,7 +1167,7 @@ static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,
 }
 
 void
-imgRequest::SniffMimeType(const char *buf, PRUint32 len)
+imgRequest::SniffMimeType(const char *buf, uint32_t len)
 {
   imgLoader::GetMimeTypeFromContent(buf, len, mContentType);
 
@@ -1180,10 +1180,10 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
   // to see if they can identify the image. If we always trusted the server
   // to send the right MIME, images sent as text/plain would not be rendered.
   const nsCOMArray<nsIContentSniffer>& sniffers = mImageSniffers.GetEntries();
-  PRUint32 length = sniffers.Count();
-  for (PRUint32 i = 0; i < length; ++i) {
+  uint32_t length = sniffers.Count();
+  for (uint32_t i = 0; i < length; ++i) {
     nsresult rv =
-      sniffers[i]->GetMIMETypeFromContent(nullptr, (const PRUint8 *) buf, len, mContentType);
+      sniffers[i]->GetMIMETypeFromContent(nullptr, (const uint8_t *) buf, len, mContentType);
     if (NS_SUCCEEDED(rv) && !mContentType.IsEmpty()) {
       return;
     }
@@ -1207,7 +1207,7 @@ imgRequest::GetInterface(const nsIID & aIID, void **aResult)
 /** nsIChannelEventSink methods **/
 NS_IMETHODIMP
 imgRequest::AsyncOnChannelRedirect(nsIChannel *oldChannel,
-                                   nsIChannel *newChannel, PRUint32 flags,
+                                   nsIChannel *newChannel, uint32_t flags,
                                    nsIAsyncVerifyRedirectCallback *callback)
 {
   NS_ASSERTION(mRequest && mChannel, "Got a channel redirect after we nulled out mRequest!");

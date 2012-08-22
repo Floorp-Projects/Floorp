@@ -56,30 +56,30 @@ protected:
   bool mShowSubDocuments;
   bool mShowWhitespaceNodes;
   bool mShowAccessibleNodes;
-  PRUint32 mWhatToShow;
+  uint32_t mWhatToShow;
 
   nsCOMPtr<nsIDOMNode> mRootNode;
   nsCOMPtr<nsIDOMDocument> mRootDocument;
 
   nsTArray<inDOMViewNode*> mNodes;
 
-  inDOMViewNode* GetNodeAt(PRInt32 aIndex);
-  PRInt32 GetRowCount();
-  PRInt32 NodeToRow(inDOMViewNode* aNode);
-  bool RowOutOfBounds(PRInt32 aRow, PRInt32 aCount);
+  inDOMViewNode* GetNodeAt(int32_t aIndex);
+  int32_t GetRowCount();
+  int32_t NodeToRow(inDOMViewNode* aNode);
+  bool RowOutOfBounds(int32_t aRow, int32_t aCount);
   inDOMViewNode* CreateNode(nsIDOMNode* aNode, inDOMViewNode* aParent);
   void AppendNode(inDOMViewNode* aNode);
-  void InsertNode(inDOMViewNode* aNode, PRInt32 aIndex);
-  void RemoveNode(PRInt32 aIndex);
-  void ReplaceNode(inDOMViewNode* aNode, PRInt32 aIndex);
-  void InsertNodes(nsTArray<inDOMViewNode*>& aNodes, PRInt32 aIndex);
-  void RemoveNodes(PRInt32 aIndex, PRInt32 aCount);
+  void InsertNode(inDOMViewNode* aNode, int32_t aIndex);
+  void RemoveNode(int32_t aIndex);
+  void ReplaceNode(inDOMViewNode* aNode, int32_t aIndex);
+  void InsertNodes(nsTArray<inDOMViewNode*>& aNodes, int32_t aIndex);
+  void RemoveNodes(int32_t aIndex, int32_t aCount);
   void RemoveAllNodes();
-  void ExpandNode(PRInt32 aRow);
-  void CollapseNode(PRInt32 aRow);
+  void ExpandNode(int32_t aRow);
+  void CollapseNode(int32_t aRow);
 
-  nsresult RowToNode(PRInt32 aRow, inDOMViewNode** aNode);
-  nsresult NodeToRow(nsIDOMNode* aNode, PRInt32* aRow);
+  nsresult RowToNode(int32_t aRow, inDOMViewNode** aNode);
+  nsresult NodeToRow(nsIDOMNode* aNode, int32_t* aRow);
 
   void InsertLinkAfter(inDOMViewNode* aNode, inDOMViewNode* aInsertAfter);
   void InsertLinkBefore(inDOMViewNode* aNode, inDOMViewNode* aInsertBefore);
@@ -89,8 +89,8 @@ protected:
   nsresult GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult);
   nsresult AppendKidsToArray(nsIDOMNodeList* aKids, nsCOMArray<nsIDOMNode>& aArray);
   nsresult AppendAttrsToArray(nsIDOMNamedNodeMap* aKids, nsCOMArray<nsIDOMNode>& aArray);
-  nsresult GetFirstDescendantOf(inDOMViewNode* aNode, PRInt32 aRow, PRInt32* aResult);
-  nsresult GetLastDescendantOf(inDOMViewNode* aNode, PRInt32 aRow, PRInt32* aResult);
+  nsresult GetFirstDescendantOf(inDOMViewNode* aNode, int32_t aRow, int32_t* aResult);
+  nsresult GetLastDescendantOf(inDOMViewNode* aNode, int32_t aRow, int32_t* aResult);
   nsresult GetRealPreviousSibling(nsIDOMNode* aNode, nsIDOMNode* aRealParent, nsIDOMNode** aSibling);
 };
 

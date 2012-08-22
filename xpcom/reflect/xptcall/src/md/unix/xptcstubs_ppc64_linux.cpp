@@ -34,21 +34,21 @@
 #include <stdio.h>
 extern "C" nsresult
 PrepareAndDispatch(nsXPTCStubBase* self,
-                   PRUint64 methodIndex,
-                   PRUint64* args,
-                   PRUint64 *gprData,
+                   uint64_t methodIndex,
+                   uint64_t* args,
+                   uint64_t *gprData,
                    double *fprData)
 {
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
     const nsXPTMethodInfo* info;
-    PRUint32 paramCount;
-    PRUint32 i;
+    uint32_t paramCount;
+    uint32_t i;
     nsresult result = NS_ERROR_FAILURE;
 
     NS_ASSERTION(self,"no self");
 
-    self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+    self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
     NS_ASSERTION(info,"no method info");
     if (! info)
         return NS_ERROR_UNEXPECTED;
@@ -65,8 +65,8 @@ PrepareAndDispatch(nsXPTCStubBase* self,
     if (! dispatchParams)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PRUint64* ap = args;
-    PRUint64 tempu64;
+    uint64_t* ap = args;
+    uint64_t tempu64;
 
     for(i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& param = info->GetParam(i);
@@ -95,21 +95,21 @@ PrepareAndDispatch(nsXPTCStubBase* self,
             if (param.IsOut() || !type.IsArithmetic())
                 dp->val.p = (void*) tempu64;
             else if (type == nsXPTType::T_I8)
-                dp->val.i8  = (PRInt8)   tempu64;
+                dp->val.i8  = (int8_t)   tempu64;
             else if (type == nsXPTType::T_I16)
-                dp->val.i16 = (PRInt16)  tempu64;
+                dp->val.i16 = (int16_t)  tempu64;
             else if (type == nsXPTType::T_I32)
-                dp->val.i32 = (PRInt32)  tempu64;
+                dp->val.i32 = (int32_t)  tempu64;
             else if (type == nsXPTType::T_I64)
-                dp->val.i64 = (PRInt64)  tempu64;
+                dp->val.i64 = (int64_t)  tempu64;
             else if (type == nsXPTType::T_U8)
-                dp->val.u8  = (PRUint8)  tempu64;
+                dp->val.u8  = (uint8_t)  tempu64;
             else if (type == nsXPTType::T_U16)
-                dp->val.u16 = (PRUint16) tempu64;
+                dp->val.u16 = (uint16_t) tempu64;
             else if (type == nsXPTType::T_U32)
-                dp->val.u32 = (PRUint32) tempu64;
+                dp->val.u32 = (uint32_t) tempu64;
             else if (type == nsXPTType::T_U64)
-                dp->val.u64 = (PRUint64) tempu64;
+                dp->val.u64 = (uint64_t) tempu64;
             else if (type == nsXPTType::T_BOOL)
                 dp->val.b   = (bool)   tempu64;
             else if (type == nsXPTType::T_CHAR)
@@ -124,7 +124,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
             ap++;
     }
 
-    result = self->mOuter->CallMethod((PRUint16) methodIndex, info,
+    result = self->mOuter->CallMethod((uint16_t) methodIndex, info,
                                       dispatchParams);
 
     if (dispatchParams != paramBuffer)

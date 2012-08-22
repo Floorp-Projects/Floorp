@@ -149,16 +149,16 @@ private:
   nsNSSShutDownList();
   static PLDHashOperator PR_CALLBACK
   evaporateAllNSSResourcesHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                                                        PRUint32 number, void *arg);
+                                                        uint32_t number, void *arg);
 
   static PLDHashOperator PR_CALLBACK
   doPK11LogoutHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                                                    PRUint32 number, void *arg);
+                                                    uint32_t number, void *arg);
 protected:
   mozilla::Mutex mListLock;
   static nsNSSShutDownList *singleton;
   PLDHashTable mObjects;
-  PRUint32 mActiveSSLSockets;
+  uint32_t mActiveSSLSockets;
   PLDHashTable mPK11LogoutCancelObjects;
   nsNSSActivityState mActivityState;
 };

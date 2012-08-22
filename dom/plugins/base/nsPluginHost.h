@@ -45,13 +45,13 @@ class nsPluginInstanceOwner;
 class nsInvalidPluginTag : public nsISupports
 {
 public:
-  nsInvalidPluginTag(const char* aFullPath, PRInt64 aLastModifiedTime = 0);
+  nsInvalidPluginTag(const char* aFullPath, int64_t aLastModifiedTime = 0);
   virtual ~nsInvalidPluginTag();
   
   NS_DECL_ISUPPORTS
   
   nsCString   mFullPath;
-  PRInt64     mLastModifiedTime;
+  int64_t     mLastModifiedTime;
   bool        mSeen;
   
   nsRefPtr<nsInvalidPluginTag> mPrev;
@@ -86,10 +86,10 @@ public:
   nsresult IsPluginEnabledForType(const char* aMimeType);
   nsresult IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
   bool     IsPluginClickToPlayForType(const char *aMimeType);
-  nsresult GetBlocklistStateForType(const char *aMimeType, PRUint32 *state);
+  nsresult GetBlocklistStateForType(const char *aMimeType, uint32_t *state);
 
-  nsresult GetPluginCount(PRUint32* aPluginCount);
-  nsresult GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray);
+  nsresult GetPluginCount(uint32_t* aPluginCount);
+  nsresult GetPlugins(uint32_t aPluginCount, nsIDOMPlugin** aPluginArray);
 
   nsresult GetURL(nsISupports* pluginInst,
                   const char* url,
@@ -100,7 +100,7 @@ public:
                   bool forceJSEnabled);
   nsresult PostURL(nsISupports* pluginInst,
                    const char* url,
-                   PRUint32 postDataLen,
+                   uint32_t postDataLen,
                    const char* postData,
                    bool isFile,
                    const char* target,
@@ -108,13 +108,13 @@ public:
                    const char* altHost,
                    const char* referrer,
                    bool forceJSEnabled,
-                   PRUint32 postHeadersLength,
+                   uint32_t postHeadersLength,
                    const char* postHeaders);
 
   nsresult FindProxyForURL(const char* url, char* *result);
   nsresult UserAgent(const char **retstring);
-  nsresult ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPostDataLen,
-                                       char **outPostData, PRUint32 *outPostDataLen);
+  nsresult ParsePostBufferToFixHeaders(const char *inPostData, uint32_t inPostDataLen,
+                                       char **outPostData, uint32_t *outPostDataLen);
   nsresult CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile);
   nsresult NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow);
 
@@ -132,7 +132,7 @@ public:
                      nsNPAPIPluginStreamListener *aListener,
                      nsIInputStream *aPostStream = nullptr,
                      const char *aHeadersData = nullptr, 
-                     PRUint32 aHeadersDataLen = 0);
+                     uint32_t aHeadersDataLen = 0);
 
   nsresult
   GetURLWithHeaders(nsNPAPIPluginInstance *pluginInst, 
@@ -142,7 +142,7 @@ public:
                     const char* altHost = NULL,
                     const char* referrer = NULL,
                     bool forceJSEnabled = false,
-                    PRUint32 getHeadersLength = 0, 
+                    uint32_t getHeadersLength = 0, 
                     const char* getHeaders = NULL);
 
   nsresult
@@ -150,7 +150,7 @@ public:
                          const char* aURL);
 
   nsresult
-  AddHeadersToChannel(const char *aHeadersData, PRUint32 aHeadersDataLen, 
+  AddHeadersToChannel(const char *aHeadersData, uint32_t aHeadersDataLen, 
                       nsIChannel *aGenericChannel);
 
   static nsresult GetPluginTempDir(nsIFile **aDir);
@@ -177,7 +177,7 @@ public:
 
   nsNPAPIPluginInstance *FindInstance(const char *mimetype);
   nsNPAPIPluginInstance *FindOldestStoppedInstance();
-  PRUint32 StoppedInstanceCount();
+  uint32_t StoppedInstanceCount();
 
   nsTArray< nsRefPtr<nsNPAPIPluginInstance> > *InstanceArray();
 

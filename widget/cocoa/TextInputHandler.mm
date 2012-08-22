@@ -195,7 +195,7 @@ GetCharacters(const NSString* aString)
   }
 
   nsAutoString escapedStr;
-  for (PRUint32 i = 0; i < str.Length(); i++) {
+  for (uint32_t i = 0; i < str.Length(); i++) {
     PRUnichar ch = str[i];
     if (ch < 0x20) {
       nsPrintfCString utf8str("(U+%04X)", ch);
@@ -244,7 +244,7 @@ GetGeckoKeyEventType(const nsEvent &aEvent)
 }
 
 static const char*
-GetRangeTypeName(PRUint32 aRangeType)
+GetRangeTypeName(uint32_t aRangeType)
 {
   switch (aRangeType) {
     case NS_TEXTRANGE_RAWINPUT:
@@ -315,7 +315,7 @@ GetWindowLevelName(NSInteger aWindowLevel)
 
 #endif // #ifdef PR_LOGGING
 
-static PRUint32 gHandlerInstanceCount = 0;
+static uint32_t gHandlerInstanceCount = 0;
 static TISInputSourceWrapper gCurrentKeyboardLayout;
 
 static void
@@ -412,7 +412,7 @@ TISInputSourceWrapper::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
   return true;
 }
 
-PRUint32
+uint32_t
 TISInputSourceWrapper::TranslateToChar(UInt32 aKeyCode, UInt32 aModifiers,
                                        UInt32 aKbType)
 {
@@ -421,7 +421,7 @@ TISInputSourceWrapper::TranslateToChar(UInt32 aKeyCode, UInt32 aModifiers,
       str.Length() != 1) {
     return 0;
   }
-  return static_cast<PRUint32>(str.CharAt(0));
+  return static_cast<uint32_t>(str.CharAt(0));
 }
 
 void
@@ -743,14 +743,14 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
         aKeyEvent.IsNumLocked() ? kEventKeyModifierNumLockMask : 0;
       UInt32 capsLockState = aKeyEvent.IsCapsLocked() ? alphaLock : 0;
       UInt32 shiftState = aKeyEvent.IsShift() ? shiftKey : 0;
-      PRUint32 uncmdedChar =
+      uint32_t uncmdedChar =
         TranslateToChar(nativeKeyCode, numLockState, kbType);
-      PRUint32 cmdedChar =
+      uint32_t cmdedChar =
         TranslateToChar(nativeKeyCode, cmdKey | numLockState, kbType);
       // If we can make a good guess at the characters that the user would
       // expect this key combination to produce (with and without Shift) then
       // use those characters.  This also corrects for CapsLock.
-      PRUint32 ch = 0;
+      uint32_t ch = 0;
       if (uncmdedChar == cmdedChar) {
         // The characters produced with Command seem similar to those without
         // Command.
@@ -758,7 +758,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
                              shiftState | capsLockState | numLockState, kbType);
       } else {
         TISInputSourceWrapper USLayout("com.apple.keylayout.US");
-        PRUint32 uncmdedUSChar =
+        uint32_t uncmdedUSChar =
           USLayout.TranslateToChar(nativeKeyCode, numLockState, kbType);
         // If it looks like characters from US keyboard layout when Command key
         // is pressed, we should compute a character in the layout.
@@ -909,23 +909,23 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   nsString str;
 
   // normal chars
-  PRUint32 unshiftedChar = TranslateToChar(key, lockState, aKbType);
+  uint32_t unshiftedChar = TranslateToChar(key, lockState, aKbType);
   UInt32 shiftLockMod = shiftKey | lockState;
-  PRUint32 shiftedChar = TranslateToChar(key, shiftLockMod, aKbType);
+  uint32_t shiftedChar = TranslateToChar(key, shiftLockMod, aKbType);
 
   // characters generated with Cmd key
   // XXX we should remove CapsLock state, which changes characters from
   //     Latin to Cyrillic with Russian layout on 10.4 only when Cmd key
   //     is pressed.
   UInt32 numState = (lockState & ~alphaLock); // only num lock state
-  PRUint32 uncmdedChar = TranslateToChar(key, numState, aKbType);
+  uint32_t uncmdedChar = TranslateToChar(key, numState, aKbType);
   UInt32 shiftNumMod = numState | shiftKey;
-  PRUint32 uncmdedShiftChar = TranslateToChar(key, shiftNumMod, aKbType);
-  PRUint32 uncmdedUSChar = USLayout.TranslateToChar(key, numState, aKbType);
+  uint32_t uncmdedShiftChar = TranslateToChar(key, shiftNumMod, aKbType);
+  uint32_t uncmdedUSChar = USLayout.TranslateToChar(key, numState, aKbType);
   UInt32 cmdNumMod = cmdKey | numState;
-  PRUint32 cmdedChar = TranslateToChar(key, cmdNumMod, aKbType);
+  uint32_t cmdedChar = TranslateToChar(key, cmdNumMod, aKbType);
   UInt32 cmdShiftNumMod = shiftKey | cmdNumMod;
-  PRUint32 cmdedShiftChar = TranslateToChar(key, cmdShiftNumMod, aKbType);
+  uint32_t cmdedShiftChar = TranslateToChar(key, cmdShiftNumMod, aKbType);
 
   // Is the keyboard layout changed by Cmd key?
   // E.g., Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
@@ -966,7 +966,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   // we'll send it as an alternative char.
   bool hasCmdShiftOnlyChar =
     cmdedChar != cmdedShiftChar && uncmdedShiftChar != cmdedShiftChar;
-  PRUint32 originalCmdedShiftChar = cmdedShiftChar;
+  uint32_t originalCmdedShiftChar = cmdedShiftChar;
 
   // If we can make a good guess at the characters that the user would
   // expect this key combination to produce (with and without Shift) then
@@ -984,7 +984,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   } else if (uncmdedUSChar == cmdedChar) {
     // It looks like characters from a US layout are provided when Command
     // is down.
-    PRUint32 ch = USLayout.TranslateToChar(key, lockState, aKbType);
+    uint32_t ch = USLayout.TranslateToChar(key, lockState, aKbType);
     if (ch) {
       cmdedChar = ch;
     }
@@ -1025,7 +1025,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   NS_OBJC_END_TRY_ABORT_BLOCK
 }
 
-PRUint32
+uint32_t
 TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
                                            UInt32 aKbType,
                                            bool aCmdIsPressed)
@@ -1139,7 +1139,7 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
   // E.g., Dvorak-QWERTY.  Therefore, if Cmd key is pressed, we should honor it.
   UInt32 modifiers = aCmdIsPressed ? cmdKey : 0;
 
-  PRUint32 charCode = TranslateToChar(aNativeKeyCode, modifiers, aKbType);
+  uint32_t charCode = TranslateToChar(aNativeKeyCode, modifiers, aKbType);
 
   // Special case for Mac.  Mac inputs Yen sign (U+00A5) directly instead of
   // Back slash (U+005C).  We should return NS_VK_BACK_SLASH for compatibility
@@ -1149,7 +1149,7 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     return NS_VK_BACK_SLASH;
   }
 
-  PRUint32 keyCode = WidgetUtils::ComputeKeyCodeFromChar(charCode);
+  uint32_t keyCode = WidgetUtils::ComputeKeyCodeFromChar(charCode);
   if (keyCode) {
     return keyCode;
   }
@@ -1488,9 +1488,9 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
     const NSUInteger kModifierMaskTable[] =
       { NSShiftKeyMask, NSControlKeyMask,
         NSAlternateKeyMask, NSCommandKeyMask };
-    const PRUint32 kModifierCount = ArrayLength(kModifierMaskTable);
+    const uint32_t kModifierCount = ArrayLength(kModifierMaskTable);
 
-    for (PRUint32 i = 0; i < kModifierCount; i++) {
+    for (uint32_t i = 0; i < kModifierCount; i++) {
       NSUInteger modifierBit = kModifierMaskTable[i];
       if ((modifiers & modifierBit) != (sLastModifierState & modifierBit)) {
         bool isKeyDown = ((modifiers & modifierBit) != 0);
@@ -1534,7 +1534,7 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
     return;
   }
 
-  PRUint32 message = aDispatchKeyDown ? NS_KEY_DOWN : NS_KEY_UP;
+  uint32_t message = aDispatchKeyDown ? NS_KEY_DOWN : NS_KEY_UP;
 
 #ifndef NP_NO_CARBON
   EventRecord carbonEvent;
@@ -2052,7 +2052,7 @@ IMEInputHandler::ExecutePendingMethods()
     return;
   }
 
-  PRUint32 pendingMethods = mPendingMethods;
+  uint32_t pendingMethods = mPendingMethods;
   // First, reset the pending method flags because if each methods cannot
   // run now, they can reentry to the pending flags by theirselves.
   mPendingMethods = 0;
@@ -2078,8 +2078,8 @@ IMEInputHandler::ExecutePendingMethods()
  *
  ******************************************************************************/
 
-PRUint32
-IMEInputHandler::ConvertToTextRangeType(PRUint32 aUnderlineStyle,
+uint32_t
+IMEInputHandler::ConvertToTextRangeType(uint32_t aUnderlineStyle,
                                         NSRange& aSelectedRange)
 {
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -2114,14 +2114,14 @@ IMEInputHandler::ConvertToTextRangeType(PRUint32 aUnderlineStyle,
   }
 }
 
-PRUint32
+uint32_t
 IMEInputHandler::GetRangeCount(NSAttributedString *aAttrString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   // Iterate through aAttrString for the NSUnderlineStyleAttributeName and
   // count the different segments adjusting limitRange as we go.
-  PRUint32 count = 0;
+  uint32_t count = 0;
   NSRange effectiveRange;
   NSRange limitRange = NSMakeRange(0, [aAttrString length]);
   while (limitRange.length > 0) {
@@ -2156,8 +2156,8 @@ IMEInputHandler::SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
   // Gecko IME textrange attributes.  We may need to change the code here if
   // we change the implementation of validAttributesForMarkedText.
   NSRange limitRange = NSMakeRange(0, [aAttrString length]);
-  PRUint32 rangeCount = GetRangeCount(aAttrString);
-  for (PRUint32 i = 0; i < rangeCount && limitRange.length > 0; i++) {
+  uint32_t rangeCount = GetRangeCount(aAttrString);
+  for (uint32_t i = 0; i < rangeCount && limitRange.length > 0; i++) {
     NSRange effectiveRange;
     id attributeValue = [aAttrString attribute:NSUnderlineStyleAttributeName
                                        atIndex:limitRange.location
@@ -3367,7 +3367,7 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
   currentKeyboardLayout.InitByCurrentKeyboardLayout();
 
   EventRef cloneEvent = ::CopyEvent(aKeyEvent);
-  for (PRUint32 i = 0; i < numCharCodes; ++i) {
+  for (uint32_t i = 0; i < numCharCodes; ++i) {
     status = ::SetEventParameter(cloneEvent, kEventParamKeyMacCharCodes,
                                  typeChar, 1, charCodes.Elements() + i);
     NS_ENSURE_TRUE(status == noErr, );
@@ -3377,10 +3377,10 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
       nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
       nsCocoaUtils::InitInputEvent(keydownEvent, cocoaModifiers);
 
-      PRUint32 keyCode =
+      uint32_t keyCode =
         currentKeyboardLayout.ComputeGeckoKeyCode(macKeyCode, ::LMGetKbdType(),
                                                   keydownEvent.IsMeta());
-      PRUint32 charCode(charCodes.ElementAt(i));
+      uint32_t charCode(charCodes.ElementAt(i));
 
       keydownEvent.time = PR_IntervalNow();
       keydownEvent.pluginEvent = &eventRec;
@@ -3818,15 +3818,15 @@ TextInputHandlerBase::InitKeyEvent(NSEvent *aNativeKeyEvent,
 
 nsresult
 TextInputHandlerBase::SynthesizeNativeKeyEvent(
-                        PRInt32 aNativeKeyboardLayout,
-                        PRInt32 aNativeKeyCode,
-                        PRUint32 aModifierFlags,
+                        int32_t aNativeKeyboardLayout,
+                        int32_t aNativeKeyCode,
+                        uint32_t aModifierFlags,
                         const nsAString& aCharacters,
                         const nsAString& aUnmodifiedCharacters)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  static const PRUint32 sModifierFlagMap[][2] = {
+  static const uint32_t sModifierFlagMap[][2] = {
     { nsIWidget::CAPS_LOCK,       NSAlphaShiftKeyMask },
     { nsIWidget::SHIFT_L,         NSShiftKeyMask },
     { nsIWidget::SHIFT_R,         NSShiftKeyMask },
@@ -3841,8 +3841,8 @@ TextInputHandlerBase::SynthesizeNativeKeyEvent(
     { nsIWidget::FUNCTION,        NSFunctionKeyMask }
   };
 
-  PRUint32 modifierFlags = 0;
-  for (PRUint32 i = 0; i < ArrayLength(sModifierFlagMap); ++i) {
+  uint32_t modifierFlags = 0;
+  for (uint32_t i = 0; i < ArrayLength(sModifierFlagMap); ++i) {
     if (aModifierFlags & sModifierFlagMap[i][0]) {
       modifierFlags |= sModifierFlagMap[i][1];
     }

@@ -34,7 +34,7 @@ nsresult nsDeflateConverter::Init()
     mZstream.zfree = Z_NULL;
     mZstream.opaque = Z_NULL;
     
-    PRInt32 window = MAX_WBITS;
+    int32_t window = MAX_WBITS;
     switch (mWrapMode) {
         case WRAP_NONE:
             window = -window;
@@ -106,8 +106,8 @@ NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char *aFromType,
 NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest *aRequest,
                                                   nsISupports *aContext,
                                                   nsIInputStream *aInputStream,
-                                                  PRUint32 aOffset,
-                                                  PRUint32 aCount)
+                                                  uint32_t aOffset,
+                                                  uint32_t aCount)
 {
     if (!mListener)
         return NS_ERROR_NOT_INITIALIZED;
@@ -174,7 +174,7 @@ NS_IMETHODIMP nsDeflateConverter::OnStopRequest(nsIRequest *aRequest,
 nsresult nsDeflateConverter::PushAvailableData(nsIRequest *aRequest,
                                                nsISupports *aContext)
 {
-    PRUint32 bytesToWrite = sizeof(mWriteBuffer) - mZstream.avail_out;
+    uint32_t bytesToWrite = sizeof(mWriteBuffer) - mZstream.avail_out;
     // We don't need to do anything if there isn't any data
     if (bytesToWrite == 0)
         return NS_OK;

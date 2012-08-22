@@ -48,17 +48,17 @@ XULColorPickerTileAccessible::NativeRole()
   return roles::PUSHBUTTON;
 }
 
-PRUint64
+uint64_t
 XULColorPickerTileAccessible::NativeState()
 {
-  PRUint64 state = AccessibleWrap::NativeState();
+  uint64_t state = AccessibleWrap::NativeState();
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::selected))
     state |= states::SELECTED;
 
   return state;
 }
 
-PRUint64
+uint64_t
 XULColorPickerTileAccessible::NativeInteractiveState() const
 {
   return NativelyUnavailable() ?
@@ -94,10 +94,10 @@ XULColorPickerAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // XULColorPickerAccessible: Accessible
 
-PRUint64
+uint64_t
 XULColorPickerAccessible::NativeState()
 {
-  PRUint64 state = AccessibleWrap::NativeState();
+  uint64_t state = AccessibleWrap::NativeState();
   return state | states::HASPOPUP;
 }
 
@@ -145,7 +145,7 @@ XULColorPickerAccessible::CacheChildren()
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild())) {
-    PRUint32 role = child->Role();
+    uint32_t role = child->Role();
 
     // Get an accessible for menupopup or panel elements.
     if (role == roles::ALERT) {

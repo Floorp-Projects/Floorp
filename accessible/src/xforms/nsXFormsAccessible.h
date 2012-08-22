@@ -51,7 +51,7 @@ public:
 
   // Returns state of xforms element taking into account state of instance node
   // that it is bound to.
-  virtual PRUint64 NativeState();
+  virtual uint64_t NativeState();
   virtual bool NativelyUnavailable() const;
 
   // Denies accessible nodes in anonymous content of xforms element by
@@ -114,7 +114,7 @@ public:
   virtual already_AddRefed<nsIEditor> GetEditor() const;
 
   // Accessible
-  virtual PRUint64 NativeState();
+  virtual uint64_t NativeState();
 };
 
 
@@ -130,16 +130,16 @@ public:
   // SelectAccessible
   virtual bool IsSelect();
   virtual already_AddRefed<nsIArray> SelectedItems();
-  virtual PRUint32 SelectedItemCount();
-  virtual Accessible* GetSelectedItem(PRUint32 aIndex);
-  virtual bool IsItemSelected(PRUint32 aIndex);
-  virtual bool AddItemToSelection(PRUint32 aIndex);
-  virtual bool RemoveItemFromSelection(PRUint32 aIndex);
+  virtual uint32_t SelectedItemCount();
+  virtual Accessible* GetSelectedItem(uint32_t aIndex);
+  virtual bool IsItemSelected(uint32_t aIndex);
+  virtual bool AddItemToSelection(uint32_t aIndex);
+  virtual bool RemoveItemFromSelection(uint32_t aIndex);
   virtual bool SelectAll();
   virtual bool UnselectAll();
 
 protected:
-  nsIContent* GetItemByIndex(PRUint32* aIndex,
+  nsIContent* GetItemByIndex(uint32_t* aIndex,
                              Accessible* aAccessible = nullptr);
 
   bool mIsSelect1Element;
@@ -155,13 +155,13 @@ public:
   nsXFormsSelectableItemAccessible(nsIContent* aContent,
                                    DocAccessible* aDoc);
 
-  NS_IMETHOD DoAction(PRUint8 aIndex);
+  NS_IMETHOD DoAction(uint8_t aIndex);
 
   // Accessible
   virtual void Value(nsString& aValue);
 
   // ActionAccessible
-  virtual PRUint8 ActionCount();
+  virtual uint8_t ActionCount();
 
 protected:
   bool IsSelected();

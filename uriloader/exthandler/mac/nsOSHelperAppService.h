@@ -45,7 +45,7 @@ protected:
   virtual void FixFilePermissions(nsIFile* aFile);
 
 private:
-  PRUint32 mPermissions;
+  uint32_t mPermissions;
 };
 
 #endif // nsOSHelperAppService_h__

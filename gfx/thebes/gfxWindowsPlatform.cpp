@@ -97,7 +97,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(
 namespace
 {
 
-PRInt64 GetD2DSurfaceVramUsage() {
+int64_t GetD2DSurfaceVramUsage() {
   cairo_device_t *device =
       gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
   if (device) {
@@ -121,11 +121,11 @@ NS_MEMORY_REPORTER_IMPLEMENT(
 namespace
 {
 
-PRInt64 GetD2DVRAMUsageDrawTarget() {
+int64_t GetD2DVRAMUsageDrawTarget() {
     return mozilla::gfx::Factory::GetD2DVRAMUsageDrawTarget();
 }
 
-PRInt64 GetD2DVRAMUsageSourceSurface() {
+int64_t GetD2DVRAMUsageSourceSurface() {
     return mozilla::gfx::Factory::GetD2DVRAMUsageSourceSurface();
 }
 
@@ -212,12 +212,12 @@ public:
     CollectReports(nsIMemoryMultiReporterCallback* aCb,
                    nsISupports* aClosure)
     {
-        PRInt32 winVers, buildNum;
+        int32_t winVers, buildNum;
         HANDLE ProcessHandle = GetCurrentProcess();
         
-        PRInt64 dedicatedBytesUsed = 0;
-        PRInt64 sharedBytesUsed = 0;
-        PRInt64 committedBytesUsed = 0;
+        int64_t dedicatedBytesUsed = 0;
+        int64_t sharedBytesUsed = 0;
+        int64_t committedBytesUsed = 0;
         IDXGIAdapter *DXGIAdapter;
         
         HMODULE gdi32Handle;
@@ -320,7 +320,7 @@ public:
 
     // nsIMemoryMultiReporter abstract method implementation
     NS_IMETHOD
-    GetExplicitNonHeap(PRInt64 *aExplicitNonHeap)
+    GetExplicitNonHeap(int64_t *aExplicitNonHeap)
     {
         // This reporter doesn't do any non-heap measurements.
         *aExplicitNonHeap = 0;
@@ -448,7 +448,7 @@ gfxWindowsPlatform::UpdateRenderMode()
 
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     if (gfxInfo) {
-        PRInt32 status;
+        int32_t status;
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT2D, &status))) {
             if (status != nsIGfxInfo::FEATURE_NO_INFO) {
                 d2dBlocked = true;
@@ -516,7 +516,7 @@ gfxWindowsPlatform::UpdateRenderMode()
     }
 #endif
 
-    PRUint32 backendMask = 1 << BACKEND_CAIRO;
+    uint32_t backendMask = 1 << BACKEND_CAIRO;
     if (mRenderMode == RENDER_DIRECT2D) {
       backendMask |= 1 << BACKEND_DIRECT2D;
     } else {
@@ -686,7 +686,7 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
 static bool
 AllowDirectWrite()
 {
-    PRInt32 winVers, buildNum;
+    int32_t winVers, buildNum;
 
     winVers = gfxWindowsPlatform::WindowsOSVersion(&buildNum);
     if (winVers == gfxWindowsPlatform::kWindows7 &&
@@ -852,7 +852,7 @@ gfxWindowsPlatform::GetFontList(nsIAtom *aLangGroup,
 static void
 RemoveCharsetFromFontSubstitute(nsAString &aName)
 {
-    PRInt32 comma = aName.FindChar(PRUnichar(','));
+    int32_t comma = aName.FindChar(PRUnichar(','));
     if (comma >= 0)
         aName.Truncate(comma);
 }
@@ -896,22 +896,22 @@ static const char kFontSylfaen[] = "Sylfaen";
 static const char kFontTraditionalArabic[] = "Traditional Arabic";
 
 void
-gfxWindowsPlatform::GetCommonFallbackFonts(const PRUint32 aCh,
-                                           PRInt32 aRunScript,
+gfxWindowsPlatform::GetCommonFallbackFonts(const uint32_t aCh,
+                                           int32_t aRunScript,
                                            nsTArray<const char*>& aFontList)
 {
     // Arial is used as the default fallback for system fallback
     aFontList.AppendElement(kFontArial);
 
     if (!IS_IN_BMP(aCh)) {
-        PRUint32 p = aCh >> 16;
+        uint32_t p = aCh >> 16;
         if (p == 1) { // SMP plane
             aFontList.AppendElement(kFontSegoeUISymbol);
             aFontList.AppendElement(kFontEbrima);
             aFontList.AppendElement(kFontCambriaMath);
         }
     } else {
-        PRUint32 b = (aCh >> 8) & 0xff;
+        uint32_t b = (aCh >> 8) & 0xff;
 
         switch (b) {
         case 0x05:
@@ -1041,7 +1041,7 @@ struct ResolveData {
                 void *aClosure) :
         mFoundCount(0), mCallback(aCallback), mCaller(aCaller),
         mFontName(aFontName), mClosure(aClosure) {}
-    PRUint32 mFoundCount;
+    uint32_t mFoundCount;
     gfxPlatform::FontResolverCallback mCallback;
     gfxWindowsPlatform *mCaller;
     const nsAString *mFontName;
@@ -1089,7 +1089,7 @@ gfxWindowsPlatform::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 
 gfxFontEntry* 
 gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                     const PRUint8 *aFontData, PRUint32 aLength)
+                                     const uint8_t *aFontData, uint32_t aLength)
 {
     return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aProxyEntry,
                                                                      aFontData,
@@ -1097,7 +1097,7 @@ gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 }
 
 bool
-gfxWindowsPlatform::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
+gfxWindowsPlatform::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags)
 {
     // check for strange format flags
     NS_ASSERTION(!(aFormatFlags & gfxUserFontSet::FLAG_FORMAT_NOT_USED),
@@ -1203,11 +1203,11 @@ gfxWindowsPlatform::UseClearTypeAlways()
     return mUseClearTypeAlways;
 }
 
-PRInt32
-gfxWindowsPlatform::WindowsOSVersion(PRInt32 *aBuildNum)
+int32_t
+gfxWindowsPlatform::WindowsOSVersion(int32_t *aBuildNum)
 {
-    static PRInt32 winVersion = UNINITIALIZED_VALUE;
-    static PRInt32 buildNum = UNINITIALIZED_VALUE;
+    static int32_t winVersion = UNINITIALIZED_VALUE;
+    static int32_t buildNum = UNINITIALIZED_VALUE;
 
     OSVERSIONINFO vinfo;
 
@@ -1217,8 +1217,8 @@ gfxWindowsPlatform::WindowsOSVersion(PRInt32 *aBuildNum)
             winVersion = kWindowsUnknown;
             buildNum = 0;
         } else {
-            winVersion = PRInt32(vinfo.dwMajorVersion << 16) + vinfo.dwMinorVersion;
-            buildNum = PRInt32(vinfo.dwBuildNumber);
+            winVersion = int32_t(vinfo.dwMajorVersion << 16) + vinfo.dwMinorVersion;
+            buildNum = int32_t(vinfo.dwBuildNumber);
         }
     }
 
@@ -1239,7 +1239,7 @@ gfxWindowsPlatform::GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion
     nsAutoTArray<BYTE,512> versionInfo;
     
     if (versInfoSize == 0 ||
-        !versionInfo.AppendElements(PRUint32(versInfoSize)))
+        !versionInfo.AppendElements(uint32_t(versInfoSize)))
     {
         return;
     }
@@ -1407,7 +1407,7 @@ gfxWindowsPlatform::SetupClearTypeParams()
         FLOAT level = -1.0;
         int geometry = -1;
         int mode = -1;
-        PRInt32 value;
+        int32_t value;
         if (NS_SUCCEEDED(Preferences::GetInt(GFX_CLEARTYPE_PARAMS_GAMMA, &value))) {
             if (value >= 1000 && value <= 2200) {
                 gamma = FLOAT(value / 1000.0);

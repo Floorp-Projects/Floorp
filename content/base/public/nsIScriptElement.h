@@ -112,11 +112,11 @@ public:
     return mParserCreated;
   }
 
-  void SetScriptLineNumber(PRUint32 aLineNumber)
+  void SetScriptLineNumber(uint32_t aLineNumber)
   {
     mLineNumber = aLineNumber;
   }
-  PRUint32 GetScriptLineNumber()
+  uint32_t GetScriptLineNumber()
   {
     return mLineNumber;
   }
@@ -257,7 +257,7 @@ protected:
   /**
    * The start line number of the script.
    */
-  PRUint32 mLineNumber;
+  uint32_t mLineNumber;
   
   /**
    * The "already started" flag per HTML5.

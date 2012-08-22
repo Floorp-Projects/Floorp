@@ -313,8 +313,8 @@ public:
    */
   void SetIsFirstPaint() { mIsFirstPaint = true; }
 
-  virtual PRInt32 GetMaxTextureSize() const { return mMaxTextureSize; }
-  void SetMaxTextureSize(PRInt32 aMaxTextureSize) { mMaxTextureSize = aMaxTextureSize; }
+  virtual int32_t GetMaxTextureSize() const { return mMaxTextureSize; }
+  void SetMaxTextureSize(int32_t aMaxTextureSize) { mMaxTextureSize = aMaxTextureSize; }
 
 protected:
   ShadowLayerForwarder();
@@ -379,7 +379,7 @@ private:
   static void PlatformSyncBeforeUpdate();
 
   Transaction* mTxn;
-  PRInt32 mMaxTextureSize;
+  int32_t mMaxTextureSize;
   LayersBackend mParentBackend;
 
   bool mIsFirstPaint;
@@ -423,12 +423,12 @@ public:
 
   static void PlatformSyncBeforeReplyUpdate();
 
-  void SetCompositorID(PRUint32 aID)
+  void SetCompositorID(uint32_t aID)
   {
     NS_ASSERTION(mCompositorID==0, "The compositor ID must be set only once.");
     mCompositorID = aID;
   }
-  PRUint32 GetCompositorID() const
+  uint32_t GetCompositorID() const
   {
     return mCompositorID;
   }
@@ -438,7 +438,7 @@ protected:
   : mCompositorID(0) {}
 
   bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
-  PRUint32 mCompositorID;
+  uint32_t mCompositorID;
 };
 
 
@@ -676,8 +676,8 @@ protected:
   {}
 
   // ImageBridge protocol:
-  PRUint32 mImageContainerID;
-  PRUint32 mImageVersion;
+  uint32_t mImageContainerID;
+  uint32_t mImageVersion;
 };
 
 

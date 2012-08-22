@@ -37,7 +37,7 @@ enum nsStyleUnit {
 };
 
 typedef union {
-  PRInt32     mInt;   // nscoord is a PRInt32 for now
+  int32_t     mInt;   // nscoord is a int32_t for now
   float       mFloat;
   // An mPointer is a weak pointer to a value that is guaranteed to
   // outlive the nsStyleCoord.  In the case of nsStyleCoord::Calc*, it
@@ -74,7 +74,7 @@ public:
   nsStyleCoord(nsStyleUnit aUnit = eStyleUnit_Null);
   enum CoordConstructorType { CoordConstructor };
   inline nsStyleCoord(nscoord aValue, CoordConstructorType);
-  nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit);
+  nsStyleCoord(int32_t aValue, nsStyleUnit aUnit);
   nsStyleCoord(float aValue, nsStyleUnit aUnit);
   inline nsStyleCoord(const nsStyleCoord& aCopy);
   inline nsStyleCoord(const nsStyleUnion& aValue, nsStyleUnit aUnit);
@@ -128,7 +128,7 @@ public:
   }
 
   nscoord     GetCoordValue() const;
-  PRInt32     GetIntValue() const;
+  int32_t     GetIntValue() const;
   float       GetPercentValue() const;
   float       GetFactorValue() const;
   float       GetAngleValue() const;
@@ -138,7 +138,7 @@ public:
 
   void  Reset();  // sets to null
   void  SetCoordValue(nscoord aValue);
-  void  SetIntValue(PRInt32 aValue, nsStyleUnit aUnit);
+  void  SetIntValue(int32_t aValue, nsStyleUnit aUnit);
   void  SetPercentValue(float aValue);
   void  SetFactorValue(float aValue);
   void  SetAngleValue(float aValue, nsStyleUnit aUnit);
@@ -186,7 +186,7 @@ public:
   inline void SetBottom(const nsStyleCoord& aCoord);
 
 protected:
-  PRUint8       mUnits[4];
+  uint8_t       mUnits[4];
   nsStyleUnion  mValues[4];
 };
 
@@ -205,16 +205,16 @@ public:
   bool           operator!=(const nsStyleCorners& aOther) const;
 
   // aCorner is always one of NS_CORNER_* defined in nsStyleConsts.h
-  inline nsStyleUnit GetUnit(PRUint8 aHalfCorner) const;
+  inline nsStyleUnit GetUnit(uint8_t aHalfCorner) const;
 
-  inline nsStyleCoord Get(PRUint8 aHalfCorner) const;
+  inline nsStyleCoord Get(uint8_t aHalfCorner) const;
 
   void  Reset();
 
-  inline void Set(PRUint8 aHalfCorner, const nsStyleCoord& aCoord);
+  inline void Set(uint8_t aHalfCorner, const nsStyleCoord& aCoord);
 
 protected:
-  PRUint8       mUnits[8];
+  uint8_t       mUnits[8];
   nsStyleUnion  mValues[8];
 };
 
@@ -264,7 +264,7 @@ inline nscoord nsStyleCoord::GetCoordValue() const
   return 0;
 }
 
-inline PRInt32 nsStyleCoord::GetIntValue() const
+inline int32_t nsStyleCoord::GetIntValue() const
 {
   NS_ASSERTION((mUnit == eStyleUnit_Enumerated) ||
                (mUnit == eStyleUnit_Integer), "not an int value");
@@ -410,17 +410,17 @@ inline bool nsStyleCorners::operator!=(const nsStyleCorners& aOther) const
   return !((*this) == aOther);
 }
 
-inline nsStyleUnit nsStyleCorners::GetUnit(PRUint8 aCorner) const
+inline nsStyleUnit nsStyleCorners::GetUnit(uint8_t aCorner) const
 {
   return (nsStyleUnit)mUnits[aCorner];
 }
 
-inline nsStyleCoord nsStyleCorners::Get(PRUint8 aCorner) const
+inline nsStyleCoord nsStyleCorners::Get(uint8_t aCorner) const
 {
   return nsStyleCoord(mValues[aCorner], nsStyleUnit(mUnits[aCorner]));
 }
 
-inline void nsStyleCorners::Set(PRUint8 aCorner, const nsStyleCoord& aCoord)
+inline void nsStyleCorners::Set(uint8_t aCorner, const nsStyleCoord& aCoord)
 {
   mUnits[aCorner] = aCoord.GetUnit();
   aCoord.GetUnionValue(mValues[aCorner]);

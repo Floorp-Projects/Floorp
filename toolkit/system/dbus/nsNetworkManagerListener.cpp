@@ -53,7 +53,7 @@ nsNetworkManagerListener::GetLinkStatusKnown(bool* aKnown) {
 }
 
 nsresult
-nsNetworkManagerListener::GetLinkType(PRUint32 *aLinkType)
+nsNetworkManagerListener::GetLinkType(uint32_t *aLinkType)
 {
   NS_ENSURE_ARG_POINTER(aLinkType);
 
@@ -160,7 +160,7 @@ nsNetworkManagerListener::HandleMessage(DBusMessage* message) {
 
 void
 nsNetworkManagerListener::UpdateNetworkStatus(DBusMessage* msg) {
-  PRInt32 result;
+  int32_t result;
   if (!dbus_message_get_args(msg, NULL, DBUS_TYPE_UINT32, &result,
                              DBUS_TYPE_INVALID))
     return;

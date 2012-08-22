@@ -100,7 +100,7 @@ nsEscapeHTML(const char* string)
 {
   /* XXX Hardcoded max entity len. The +1 is for the trailing null. */
   char* escaped = nullptr;
-  PRUint32 len = strlen(string);
+  uint32_t len = strlen(string);
   if (len >= (PR_UINT32_MAX / 6))
     return nullptr;
 
@@ -238,7 +238,7 @@ static const char kLastCharsetAttribute[] = " LAST_CHARSET=\"";
 static nsresult
 WriteContainerPrologue(const nsACString& aIndent, nsIOutputStream* aOutput)
 {
-  PRUint32 dummy;
+  uint32_t dummy;
   nsresult rv = aOutput->Write(PromiseFlatCString(aIndent).get(), aIndent.Length(), &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aOutput->Write(kBookmarkIntro, sizeof(kBookmarkIntro)-1, &dummy);
@@ -255,7 +255,7 @@ WriteContainerPrologue(const nsACString& aIndent, nsIOutputStream* aOutput)
 static nsresult
 WriteContainerEpilogue(const nsACString& aIndent, nsIOutputStream* aOutput)
 {
-  PRUint32 dummy;
+  uint32_t dummy;
   nsresult rv = aOutput->Write(PromiseFlatCString(aIndent).get(), aIndent.Length(), &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aOutput->Write(kBookmarkClose, sizeof(kBookmarkClose)-1, &dummy);
@@ -272,7 +272,7 @@ WriteContainerEpilogue(const nsACString& aIndent, nsIOutputStream* aOutput)
 static nsresult
 WriteFaviconAttribute(const nsACString& aURI, nsIOutputStream* aOutput)
 {
-  PRUint32 dummy;
+  uint32_t dummy;
 
   // if favicon uri is invalid we skip the attribute silently, to avoid
   // creating a corrupt file.
@@ -336,10 +336,10 @@ WriteFaviconAttribute(const nsACString& aURI, nsIOutputStream* aOutput)
 //    This writes the '{attr value=}"{time in seconds}"' attribute for
 //    an item.
 static nsresult
-WriteDateAttribute(const char aAttributeStart[], PRInt32 aLength, PRTime aAttributeValue, nsIOutputStream* aOutput)
+WriteDateAttribute(const char aAttributeStart[], int32_t aLength, PRTime aAttributeValue, nsIOutputStream* aOutput)
 {
   // write attribute start
-  PRUint32 dummy;
+  uint32_t dummy;
   nsresult rv = aOutput->Write(aAttributeStart, aLength, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -387,7 +387,7 @@ nsPlacesExportService::WriteContainerHeader(nsINavHistoryResultNode* aFolder,
                                                   const nsACString& aIndent,
                                                   nsIOutputStream* aOutput)
 {
-  PRUint32 dummy;
+  uint32_t dummy;
   nsresult rv;
 
   // indent
@@ -401,7 +401,7 @@ nsPlacesExportService::WriteContainerHeader(nsINavHistoryResultNode* aFolder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get folder id
-  PRInt64 folderId;
+  int64_t folderId;
   rv = aFolder->GetItemId(&folderId);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -425,19 +425,19 @@ nsPlacesExportService::WriteContainerHeader(nsINavHistoryResultNode* aFolder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  PRInt64 placesRoot;
+  int64_t placesRoot;
   rv = mBookmarksService->GetPlacesRoot(&placesRoot);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt64 bookmarksMenuFolder;
+  int64_t bookmarksMenuFolder;
   rv = mBookmarksService->GetBookmarksMenuFolder(&bookmarksMenuFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt64 toolbarFolder;
+  int64_t toolbarFolder;
   rv = mBookmarksService->GetToolbarFolder(&toolbarFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt64 unfiledBookmarksFolder;
+  int64_t unfiledBookmarksFolder;
   rv = mBookmarksService->GetUnfiledBookmarksFolder(&unfiledBookmarksFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -487,7 +487,7 @@ nsPlacesExportService::WriteTitle(nsINavHistoryResultNode* aItem,
                                         nsIOutputStream* aOutput)
 {
   // XXX Bug 381767 - support titles for separators
-  PRUint32 type = 0;
+  uint32_t type = 0;
   nsresult rv = aItem->GetType(&type);
   NS_ENSURE_SUCCESS(rv, rv);
   if (type == nsINavHistoryResultNode::RESULT_TYPE_SEPARATOR)
@@ -499,7 +499,7 @@ nsPlacesExportService::WriteTitle(nsINavHistoryResultNode* aItem,
 
   char* escapedTitle = nsEscapeHTML(title.get());
   if (escapedTitle) {
-    PRUint32 dummy;
+    uint32_t dummy;
     rv = aOutput->Write(escapedTitle, strlen(escapedTitle), &dummy);
     nsMemory::Free(escapedTitle);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -512,7 +512,7 @@ nsPlacesExportService::WriteTitle(nsINavHistoryResultNode* aItem,
 //
 //  Write description out for all item types.
 nsresult
-nsPlacesExportService::WriteDescription(PRInt64 aItemId, PRInt32 aType,
+nsPlacesExportService::WriteDescription(int64_t aItemId, int32_t aType,
                                               nsIOutputStream* aOutput)
 {
   bool hasDescription = false;
@@ -529,7 +529,7 @@ nsPlacesExportService::WriteDescription(PRInt64 aItemId, PRInt32 aType,
 
   char* escapedDesc = nsEscapeHTML(NS_ConvertUTF16toUTF8(description).get());
   if (escapedDesc) {
-    PRUint32 dummy;
+    uint32_t dummy;
     rv = aOutput->Write(kDescriptionIntro, sizeof(kDescriptionIntro)-1, &dummy);
     if (NS_FAILED(rv)) {
       nsMemory::Free(escapedDesc);
@@ -570,7 +570,7 @@ nsPlacesExportService::WriteItem(nsINavHistoryResultNode* aItem,
   }
 
   // indent
-  PRUint32 dummy;
+  uint32_t dummy;
   if (!aIndent.IsEmpty()) {
     rv = aOutput->Write(PromiseFlatCString(aIndent).get(), aIndent.Length(), &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -614,7 +614,7 @@ nsPlacesExportService::WriteItem(nsINavHistoryResultNode* aItem,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get item id 
-  PRInt64 itemId;
+  int64_t itemId;
   rv = aItem->GetItemId(&itemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -711,7 +711,7 @@ nsresult
 nsPlacesExportService::WriteLivemark(nsINavHistoryResultNode* aFolder, const nsACString& aIndent,
                               nsIOutputStream* aOutput)
 {
-  PRUint32 dummy;
+  uint32_t dummy;
   nsresult rv;
 
   // indent
@@ -725,7 +725,7 @@ nsPlacesExportService::WriteLivemark(nsINavHistoryResultNode* aFolder, const nsA
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get folder id
-  PRInt64 folderId;
+  int64_t folderId;
   rv = aFolder->GetItemId(&folderId);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -788,7 +788,7 @@ nsPlacesExportService::WriteSeparator(nsINavHistoryResultNode* aItem,
                                             const nsACString& aIndent,
                                             nsIOutputStream* aOutput)
 {
-  PRUint32 dummy;
+  uint32_t dummy;
   nsresult rv;
 
   // indent
@@ -802,7 +802,7 @@ nsPlacesExportService::WriteSeparator(nsINavHistoryResultNode* aItem,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX: separator result nodes don't support the title getter yet
-  PRInt64 itemId;
+  int64_t itemId;
   rv = aItem->GetItemId(&itemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -817,7 +817,7 @@ nsPlacesExportService::WriteSeparator(nsINavHistoryResultNode* aItem,
 
     char* escapedTitle = nsEscapeHTML(title.get());
     if (escapedTitle) {
-      PRUint32 dummy;
+      uint32_t dummy;
       rv = aOutput->Write(escapedTitle, strlen(escapedTitle), &dummy);
       nsMemory::Free(escapedTitle);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -849,12 +849,12 @@ nsresult
 WriteEscapedUrl(const nsCString& aString, nsIOutputStream* aOutput)
 {
   nsCAutoString escaped(aString);
-  PRInt32 offset;
+  int32_t offset;
   while ((offset = escaped.FindChar('\"')) >= 0) {
     escaped.Cut(offset, 1);
     escaped.Insert(NS_LITERAL_CSTRING("%22"), offset);
   }
-  PRUint32 dummy;
+  uint32_t dummy;
   return aOutput->Write(escaped.get(), escaped.Length(), &dummy);
 }
 
@@ -871,7 +871,7 @@ nsPlacesExportService::WriteContainerContents(nsINavHistoryResultNode* aFolder,
   nsCAutoString myIndent(aIndent);
   myIndent.Append(kIndent);
 
-  PRInt64 folderId;
+  int64_t folderId;
   nsresult rv = aFolder->GetItemId(&folderId);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -881,18 +881,18 @@ nsPlacesExportService::WriteContainerContents(nsINavHistoryResultNode* aFolder,
   rv = folderNode->SetContainerOpen(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 childCount = 0;
+  uint32_t childCount = 0;
   folderNode->GetChildCount(&childCount);
-  for (PRUint32 i = 0; i < childCount; ++i) {
+  for (uint32_t i = 0; i < childCount; ++i) {
     nsCOMPtr<nsINavHistoryResultNode> child;
     rv = folderNode->GetChild(i, getter_AddRefs(child));
     NS_ENSURE_SUCCESS(rv, rv);
-    PRUint32 type = 0;
+    uint32_t type = 0;
     rv = child->GetType(&type);
     NS_ENSURE_SUCCESS(rv, rv);
     if (type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER) {
       // bookmarks folder
-      PRInt64 childFolderId;
+      int64_t childFolderId;
       rv = child->GetItemId(&childFolderId);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -965,7 +965,7 @@ nsPlacesExportService::ExportHTMLToFile(nsIFile* aBookmarksFile)
   nsCOMPtr<nsINavHistoryResult> result;
 
   // We need the bookmarks menu root node to write out the title.
-  PRInt64 bookmarksMenuFolder;
+  int64_t bookmarksMenuFolder;
   rv = mBookmarksService->GetBookmarksMenuFolder(&bookmarksMenuFolder);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = query->SetFolders(&bookmarksMenuFolder, 1);
@@ -977,7 +977,7 @@ nsPlacesExportService::ExportHTMLToFile(nsIFile* aBookmarksFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // file header
-  PRUint32 dummy;
+  uint32_t dummy;
   rv = strm->Write(kFileIntro, sizeof(kFileIntro)-1, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1007,7 +1007,7 @@ nsPlacesExportService::ExportHTMLToFile(nsIFile* aBookmarksFile)
 
   // Bookmarks Toolbar.
   // We write this folder under the bookmarks-menu for backwards compatibility.
-  PRInt64 toolbarFolder;
+  int64_t toolbarFolder;
   rv = mBookmarksService->GetToolbarFolder(&toolbarFolder);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = query->SetFolders(&toolbarFolder, 1);
@@ -1019,7 +1019,7 @@ nsPlacesExportService::ExportHTMLToFile(nsIFile* aBookmarksFile)
   // Write it out only if it's not empty.
   rv = rootNode->SetContainerOpen(true);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRUint32 childCount = 0;
+  uint32_t childCount = 0;
   rv = rootNode->GetChildCount(&childCount);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = rootNode->SetContainerOpen(false);
@@ -1031,7 +1031,7 @@ nsPlacesExportService::ExportHTMLToFile(nsIFile* aBookmarksFile)
 
   // Unfiled Bookmarks.
   // We write this folder under the bookmarks-menu for backwards compatibility.
-  PRInt64 unfiledBookmarksFolder;
+  int64_t unfiledBookmarksFolder;
   rv = mBookmarksService->GetUnfiledBookmarksFolder(&unfiledBookmarksFolder);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = query->SetFolders(&unfiledBookmarksFolder, 1);

@@ -28,7 +28,7 @@ public:
    * @param  aEventType   [in] the event type
    * @param  aAccessible  [in] the event target
    */
-  static void FireEvent(PRUint32 aEventType, Accessible* aAccessible,
+  static void FireEvent(uint32_t aEventType, Accessible* aAccessible,
                         EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
   /**

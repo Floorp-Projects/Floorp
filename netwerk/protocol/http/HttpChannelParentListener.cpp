@@ -89,8 +89,8 @@ NS_IMETHODIMP
 HttpChannelParentListener::OnDataAvailable(nsIRequest *aRequest, 
                                             nsISupports *aContext, 
                                             nsIInputStream *aInputStream, 
-                                            PRUint32 aOffset, 
-                                            PRUint32 aCount)
+                                            uint32_t aOffset, 
+                                            uint32_t aCount)
 {
   if (!mActiveChannel)
     return NS_ERROR_UNEXPECTED;
@@ -132,7 +132,7 @@ NS_IMETHODIMP
 HttpChannelParentListener::AsyncOnChannelRedirect(
                                     nsIChannel *oldChannel,
                                     nsIChannel *newChannel,
-                                    PRUint32 redirectFlags,
+                                    uint32_t redirectFlags,
                                     nsIAsyncVerifyRedirectCallback* callback)
 {
   nsresult rv;

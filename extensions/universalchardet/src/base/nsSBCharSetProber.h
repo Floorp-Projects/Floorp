@@ -19,7 +19,7 @@
 typedef struct
 {
   const unsigned char* const charToOrderMap;    // [256] table use to find a char's order
-  const PRUint8* const precedenceMatrix;  // [SAMPLE_SIZE][SAMPLE_SIZE]; table to find a 2-char sequence's frequency
+  const uint8_t* const precedenceMatrix;  // [SAMPLE_SIZE][SAMPLE_SIZE]; table to find a 2-char sequence's frequency
   float  mTypicalPositiveRatio;     // = freqSeqs / totalSeqs 
   bool keepEnglishLetter;         // says if this script contains English characters (not implemented)
   const char* const charsetName;
@@ -34,7 +34,7 @@ public:
     :mModel(model), mReversed(reversed), mNameProber(nameProber) { Reset(); }
 
   virtual const char* GetCharSetName();
-  virtual nsProbingState HandleData(const char* aBuf, PRUint32 aLen);
+  virtual nsProbingState HandleData(const char* aBuf, uint32_t aLen);
   virtual nsProbingState GetState(void) {return mState;}
   virtual void      Reset(void);
   virtual float     GetConfidence(void);
@@ -59,12 +59,12 @@ protected:
   //char order of last character
   unsigned char mLastOrder;
 
-  PRUint32 mTotalSeqs;
-  PRUint32 mSeqCounters[NUMBER_OF_SEQ_CAT];
+  uint32_t mTotalSeqs;
+  uint32_t mSeqCounters[NUMBER_OF_SEQ_CAT];
 
-  PRUint32 mTotalChar;
+  uint32_t mTotalChar;
   //characters that fall in our sampling range
-  PRUint32 mFreqChar;
+  uint32_t mFreqChar;
   
   // Optional auxiliary prober for name decision. created and destroyed by the GroupProber
   nsCharSetProber* mNameProber; 

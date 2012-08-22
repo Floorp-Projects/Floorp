@@ -34,14 +34,14 @@ class nsCycleCollectionTraversalCallback;
 struct nsDiscriminatedUnion
 {
     union {
-        PRInt8         mInt8Value;
-        PRInt16        mInt16Value;
-        PRInt32        mInt32Value;
-        PRInt64        mInt64Value;
-        PRUint8        mUint8Value;
-        PRUint16       mUint16Value;
-        PRUint32       mUint32Value;
-        PRUint64       mUint64Value;
+        int8_t         mInt8Value;
+        int16_t        mInt16Value;
+        int32_t        mInt32Value;
+        int64_t        mInt64Value;
+        uint8_t        mUint8Value;
+        uint16_t       mUint16Value;
+        uint32_t       mUint32Value;
+        uint64_t       mUint64Value;
         float          mFloatValue;
         double         mDoubleValue;
         bool           mBoolValue;
@@ -58,19 +58,19 @@ struct nsDiscriminatedUnion
         struct {
             nsIID        mArrayInterfaceID;
             void*        mArrayValue;
-            PRUint32     mArrayCount;
-            PRUint16     mArrayType;
+            uint32_t     mArrayCount;
+            uint16_t     mArrayType;
         } array;
         struct {
             char*        mStringValue;
-            PRUint32     mStringLength;
+            uint32_t     mStringLength;
         } str;
         struct {
             PRUnichar*   mWStringValue;
-            PRUint32     mWStringLength;
+            uint32_t     mWStringLength;
         } wstr;
     } u;
-    PRUint16       mType;
+    uint16_t       mType;
 };
 
 /**
@@ -96,14 +96,14 @@ public:
     static nsresult Initialize(nsDiscriminatedUnion* data);
     static nsresult Cleanup(nsDiscriminatedUnion* data);
 
-    static nsresult ConvertToInt8(const nsDiscriminatedUnion& data, PRUint8 *_retval);
-    static nsresult ConvertToInt16(const nsDiscriminatedUnion& data, PRInt16 *_retval);
-    static nsresult ConvertToInt32(const nsDiscriminatedUnion& data, PRInt32 *_retval);
-    static nsresult ConvertToInt64(const nsDiscriminatedUnion& data, PRInt64 *_retval);
-    static nsresult ConvertToUint8(const nsDiscriminatedUnion& data, PRUint8 *_retval);
-    static nsresult ConvertToUint16(const nsDiscriminatedUnion& data, PRUint16 *_retval);
-    static nsresult ConvertToUint32(const nsDiscriminatedUnion& data, PRUint32 *_retval);
-    static nsresult ConvertToUint64(const nsDiscriminatedUnion& data, PRUint64 *_retval);
+    static nsresult ConvertToInt8(const nsDiscriminatedUnion& data, uint8_t *_retval);
+    static nsresult ConvertToInt16(const nsDiscriminatedUnion& data, int16_t *_retval);
+    static nsresult ConvertToInt32(const nsDiscriminatedUnion& data, int32_t *_retval);
+    static nsresult ConvertToInt64(const nsDiscriminatedUnion& data, int64_t *_retval);
+    static nsresult ConvertToUint8(const nsDiscriminatedUnion& data, uint8_t *_retval);
+    static nsresult ConvertToUint16(const nsDiscriminatedUnion& data, uint16_t *_retval);
+    static nsresult ConvertToUint32(const nsDiscriminatedUnion& data, uint32_t *_retval);
+    static nsresult ConvertToUint64(const nsDiscriminatedUnion& data, uint64_t *_retval);
     static nsresult ConvertToFloat(const nsDiscriminatedUnion& data, float *_retval);
     static nsresult ConvertToDouble(const nsDiscriminatedUnion& data, double *_retval);
     static nsresult ConvertToBool(const nsDiscriminatedUnion& data, bool *_retval);
@@ -117,20 +117,20 @@ public:
     static nsresult ConvertToWString(const nsDiscriminatedUnion& data, PRUnichar **_retval);
     static nsresult ConvertToISupports(const nsDiscriminatedUnion& data, nsISupports **_retval);
     static nsresult ConvertToInterface(const nsDiscriminatedUnion& data, nsIID * *iid, void * *iface);
-    static nsresult ConvertToArray(const nsDiscriminatedUnion& data, PRUint16 *type, nsIID* iid, PRUint32 *count, void * *ptr);
-    static nsresult ConvertToStringWithSize(const nsDiscriminatedUnion& data, PRUint32 *size, char **str);
-    static nsresult ConvertToWStringWithSize(const nsDiscriminatedUnion& data, PRUint32 *size, PRUnichar **str);
+    static nsresult ConvertToArray(const nsDiscriminatedUnion& data, uint16_t *type, nsIID* iid, uint32_t *count, void * *ptr);
+    static nsresult ConvertToStringWithSize(const nsDiscriminatedUnion& data, uint32_t *size, char **str);
+    static nsresult ConvertToWStringWithSize(const nsDiscriminatedUnion& data, uint32_t *size, PRUnichar **str);
 
     static nsresult SetFromVariant(nsDiscriminatedUnion* data, nsIVariant* aValue);
 
-    static nsresult SetFromInt8(nsDiscriminatedUnion* data, PRUint8 aValue);
-    static nsresult SetFromInt16(nsDiscriminatedUnion* data, PRInt16 aValue);
-    static nsresult SetFromInt32(nsDiscriminatedUnion* data, PRInt32 aValue);
-    static nsresult SetFromInt64(nsDiscriminatedUnion* data, PRInt64 aValue);
-    static nsresult SetFromUint8(nsDiscriminatedUnion* data, PRUint8 aValue);
-    static nsresult SetFromUint16(nsDiscriminatedUnion* data, PRUint16 aValue);
-    static nsresult SetFromUint32(nsDiscriminatedUnion* data, PRUint32 aValue);
-    static nsresult SetFromUint64(nsDiscriminatedUnion* data, PRUint64 aValue);
+    static nsresult SetFromInt8(nsDiscriminatedUnion* data, uint8_t aValue);
+    static nsresult SetFromInt16(nsDiscriminatedUnion* data, int16_t aValue);
+    static nsresult SetFromInt32(nsDiscriminatedUnion* data, int32_t aValue);
+    static nsresult SetFromInt64(nsDiscriminatedUnion* data, int64_t aValue);
+    static nsresult SetFromUint8(nsDiscriminatedUnion* data, uint8_t aValue);
+    static nsresult SetFromUint16(nsDiscriminatedUnion* data, uint16_t aValue);
+    static nsresult SetFromUint32(nsDiscriminatedUnion* data, uint32_t aValue);
+    static nsresult SetFromUint64(nsDiscriminatedUnion* data, uint64_t aValue);
     static nsresult SetFromFloat(nsDiscriminatedUnion* data, float aValue);
     static nsresult SetFromDouble(nsDiscriminatedUnion* data, double aValue);
     static nsresult SetFromBool(nsDiscriminatedUnion* data, bool aValue);
@@ -144,9 +144,9 @@ public:
     static nsresult SetFromWString(nsDiscriminatedUnion* data, const PRUnichar *aValue);
     static nsresult SetFromISupports(nsDiscriminatedUnion* data, nsISupports *aValue);
     static nsresult SetFromInterface(nsDiscriminatedUnion* data, const nsIID& iid, nsISupports *aValue);
-    static nsresult SetFromArray(nsDiscriminatedUnion* data, PRUint16 type, const nsIID* iid, PRUint32 count, void * aValue);
-    static nsresult SetFromStringWithSize(nsDiscriminatedUnion* data, PRUint32 size, const char *aValue);
-    static nsresult SetFromWStringWithSize(nsDiscriminatedUnion* data, PRUint32 size, const PRUnichar *aValue);
+    static nsresult SetFromArray(nsDiscriminatedUnion* data, uint16_t type, const nsIID* iid, uint32_t count, void * aValue);
+    static nsresult SetFromStringWithSize(nsDiscriminatedUnion* data, uint32_t size, const char *aValue);
+    static nsresult SetFromWStringWithSize(nsDiscriminatedUnion* data, uint32_t size, const PRUnichar *aValue);
 
     static nsresult SetToVoid(nsDiscriminatedUnion* data);
     static nsresult SetToEmpty(nsDiscriminatedUnion* data);

@@ -20,7 +20,7 @@ class nsIScriptContext;
 struct nsXBLTextWithLineNumber
 {
   PRUnichar* mText;
-  PRUint32 mLineNumber;
+  uint32_t mLineNumber;
 
   nsXBLTextWithLineNumber() :
     mText(nullptr),
@@ -50,11 +50,11 @@ struct nsXBLTextWithLineNumber
     return mText;
   }
 
-  void SetLineNumber(PRUint32 aLineNumber) {
+  void SetLineNumber(uint32_t aLineNumber) {
     mLineNumber = aLineNumber;
   }
 
-  PRUint32 GetLineNumber() {
+  uint32_t GetLineNumber() {
     return mLineNumber;
   }
 };

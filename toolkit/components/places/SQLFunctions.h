@@ -71,17 +71,17 @@ private:
   /**
    * Argument Indexes
    */
-  static const PRUint32 kArgSearchString = 0;
-  static const PRUint32 kArgIndexURL = 1;
-  static const PRUint32 kArgIndexTitle = 2;
-  static const PRUint32 kArgIndexTags = 3;
-  static const PRUint32 kArgIndexVisitCount = 4;
-  static const PRUint32 kArgIndexTyped = 5;
-  static const PRUint32 kArgIndexBookmark = 6;
-  static const PRUint32 kArgIndexOpenPageCount = 7;
-  static const PRUint32 kArgIndexMatchBehavior = 8;
-  static const PRUint32 kArgIndexSearchBehavior = 9;
-  static const PRUint32 kArgIndexLength = 10;
+  static const uint32_t kArgSearchString = 0;
+  static const uint32_t kArgIndexURL = 1;
+  static const uint32_t kArgIndexTitle = 2;
+  static const uint32_t kArgIndexTags = 3;
+  static const uint32_t kArgIndexVisitCount = 4;
+  static const uint32_t kArgIndexTyped = 5;
+  static const uint32_t kArgIndexBookmark = 6;
+  static const uint32_t kArgIndexOpenPageCount = 7;
+  static const uint32_t kArgIndexMatchBehavior = 8;
+  static const uint32_t kArgIndexSearchBehavior = 9;
+  static const uint32_t kArgIndexLength = 10;
 
   /**
    * Typedefs
@@ -99,7 +99,7 @@ private:
    *        mozIPlacesAutoComplete::MATCH_* values.
    * @return a pointer to the function that will perform the proper search.
    */
-  static searchFunctionPtr getSearchFunction(PRInt32 aBehavior);
+  static searchFunctionPtr getSearchFunction(int32_t aBehavior);
 
   /**
    * Tests if aSourceString starts with aToken.
@@ -164,7 +164,7 @@ private:
    * @param _fixedSpec
    *        An out parameter that is the fixed up string.
    */
-  static void fixupURISpec(const nsCString &aURISpec, PRInt32 aMatchBehavior,
+  static void fixupURISpec(const nsCString &aURISpec, int32_t aMatchBehavior,
                            nsCString &_fixedSpec);
 };
 

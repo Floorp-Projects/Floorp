@@ -43,15 +43,15 @@ private:
     CredHandle   mCred;
     CtxtHandle   mCtxt;
     nsCString    mServiceName;
-    PRUint32     mServiceFlags;
-    PRUint32     mMaxTokenLen;
+    uint32_t     mServiceFlags;
+    uint32_t     mMaxTokenLen;
     pType        mPackage;
     nsString     mDomain;
     nsString     mUsername;
     nsString     mPassword;
     bool         mIsFirst;	
     void*        mCertDERData; 
-    PRUint32     mCertDERLength;
+    uint32_t     mCertDERLength;
 };
 
 #endif /* nsAuthSSPI_h__ */

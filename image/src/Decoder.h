@@ -52,7 +52,7 @@ public:
    *
    * Notifications Sent: TODO
    */
-  void Write(const char* aBuffer, PRUint32 aCount);
+  void Write(const char* aBuffer, uint32_t aCount);
 
   /**
    * Informs the decoder that all the data has been written.
@@ -98,10 +98,10 @@ public:
 
   // The number of frames we have, including anything in-progress. Thus, this
   // is only 0 if we haven't begun any frames.
-  PRUint32 GetFrameCount() { return mFrameCount; }
+  uint32_t GetFrameCount() { return mFrameCount; }
 
   // The number of complete frames we have (ie, not including anything in-progress).
-  PRUint32 GetCompleteFrameCount() { return mInFrame ? mFrameCount - 1 : mFrameCount; }
+  uint32_t GetCompleteFrameCount() { return mInFrame ? mFrameCount - 1 : mFrameCount; }
 
   // Error tracking
   bool HasError() { return HasDataError() || HasDecoderError(); };
@@ -120,8 +120,8 @@ public:
     DECODER_NO_PREMULTIPLY_ALPHA = 0x2,     // imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA
     DECODER_NO_COLORSPACE_CONVERSION = 0x4  // imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION
   };
-  void SetDecodeFlags(PRUint32 aFlags) { mDecodeFlags = aFlags; }
-  PRUint32 GetDecodeFlags() { return mDecodeFlags; }
+  void SetDecodeFlags(uint32_t aFlags) { mDecodeFlags = aFlags; }
+  uint32_t GetDecodeFlags() { return mDecodeFlags; }
 
   // Use HistogramCount as an invalid Histogram ID
   virtual Telemetry::ID SpeedHistogram() { return Telemetry::HistogramCount; }
@@ -133,7 +133,7 @@ protected:
    * only these methods.
    */
   virtual void InitInternal();
-  virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
   virtual void FinishInternal();
 
   /*
@@ -142,7 +142,7 @@ protected:
 
   // Called by decoders when they determine the size of the image. Informs
   // the image of its size and sends notifications.
-  void PostSize(PRInt32 aWidth, PRInt32 aHeight);
+  void PostSize(int32_t aWidth, int32_t aHeight);
 
   // Called by decoders when they begin/end a frame. Informs the image, sends
   // notifications, and does internal book-keeping.
@@ -171,12 +171,12 @@ protected:
   RasterImage &mImage;
   nsCOMPtr<imgIDecoderObserver> mObserver;
 
-  PRUint32 mDecodeFlags;
+  uint32_t mDecodeFlags;
   bool mDecodeDone;
   bool mDataError;
 
 private:
-  PRUint32 mFrameCount; // Number of frames, including anything in-progress
+  uint32_t mFrameCount; // Number of frames, including anything in-progress
 
   nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
 

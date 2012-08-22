@@ -130,7 +130,7 @@ public:
   line_iterator line(nsLineBox* aList) { return mLines.begin(aList); }
   reverse_line_iterator rline(nsLineBox* aList) { return mLines.rbegin(aList); }
 
-  friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
+  friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aFlags);
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
@@ -160,9 +160,9 @@ public:
                               const nsDisplayListSet& aLists);
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                  PRUint32 aFlags);
+                                  uint32_t aFlags);
   virtual nsIAtom* GetType() const;
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     return nsContainerFrame::IsFrameOfType(aFlags &
              ~(nsIFrame::eCanContainOverflowContainers |
@@ -170,7 +170,7 @@ public:
   }
 
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, int32_t aIndent) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -264,9 +264,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
 
   virtual nsresult StealFrame(nsPresContext* aPresContext,
                               nsIFrame*      aChild,
@@ -370,7 +370,7 @@ protected:
   nsLineBox* NewLineBox(nsIFrame* aFrame, bool aIsBlock) {
     return NS_NewLineBox(PresContext()->PresShell(), aFrame, aIsBlock);
   }
-  nsLineBox* NewLineBox(nsLineBox* aFromLine, nsIFrame* aFrame, PRInt32 aCount) {
+  nsLineBox* NewLineBox(nsLineBox* aFromLine, nsIFrame* aFrame, int32_t aCount) {
     return NS_NewLineBox(PresContext()->PresShell(), aFromLine, aFrame, aCount);
   }
   void FreeLineBox(nsLineBox* aLine) {
@@ -450,7 +450,7 @@ public:
     REMOVE_FIXED_CONTINUATIONS = 0x02,
     FRAMES_ARE_EMPTY           = 0x04
   };
-  nsresult DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags);
+  nsresult DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags);
 
   void ReparentFloats(nsIFrame* aFirstFrame,
                       nsBlockFrame* aOldParent, bool aFromOverflow,
@@ -492,7 +492,7 @@ protected:
 
   /** Find any trailing BR clear from the last line of the block (or its PIFs)
    */
-  PRUint8 FindTrailingClear();
+  uint8_t FindTrailingClear();
 
   /**
     * Remove a float from our float list and also the float cache
@@ -692,10 +692,10 @@ protected:
 
   static bool RenumberListsInBlock(nsPresContext* aPresContext,
                                      nsBlockFrame* aBlockFrame,
-                                     PRInt32* aOrdinal,
-                                     PRInt32 aDepth);
+                                     int32_t* aOrdinal,
+                                     int32_t aDepth);
 
-  static bool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
+  static bool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid, int32_t* aOrdinal, int32_t aDepth);
 
   static bool FrameStartsCounterScope(nsIFrame* aFrame);
 
@@ -786,7 +786,7 @@ protected:
 #ifdef DEBUG
   void VerifyLines(bool aFinalCheckOK);
   void VerifyOverflowSituation();
-  PRInt32 GetDepth() const;
+  int32_t GetDepth() const;
 #endif
 
   nscoord mMinWidth, mPrefWidth;
@@ -813,7 +813,7 @@ public:
   static bool gVerifyLines;
   static bool gDisableResizeOpt;
 
-  static PRInt32 gNoiseIndent;
+  static int32_t gNoiseIndent;
 
   static const char* kReflowCommandType[];
 

@@ -35,7 +35,7 @@ XULTreeGridCellAccessibleWrap::
                                 XULTreeGridRowAccessible* aRowAcc,
                                 nsITreeBoxObject* aTree,
                                 nsITreeView* aTreeView,
-                                PRInt32 aRow, nsITreeColumn* aColumn) :
+                                int32_t aRow, nsITreeColumn* aColumn) :
   XULTreeGridCellAccessible(aContent, aDoc, aRowAcc, aTree, aTreeView,
                             aRow, aColumn)
 {

@@ -46,7 +46,7 @@ nsSVGAnimateMotionElement::AnimationFunction()
 }
 
 bool
-nsSVGAnimateMotionElement::GetTargetAttributeName(PRInt32 *aNamespaceID,
+nsSVGAnimateMotionElement::GetTargetAttributeName(int32_t *aNamespaceID,
                                                   nsIAtom **aLocalName) const
 {
   // <animateMotion> doesn't take an attributeName, since it doesn't target an

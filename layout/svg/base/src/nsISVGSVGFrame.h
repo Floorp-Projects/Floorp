@@ -20,7 +20,7 @@ public:
    * nsISVGChildFrame::COORD_CONTEXT_CHANGED and/or
    * nsISVGChildFrame::TRANSFORM_CHANGED.
    */
-  virtual void NotifyViewportOrTransformChanged(PRUint32 aFlags)=0; 
+  virtual void NotifyViewportOrTransformChanged(uint32_t aFlags)=0; 
 };
 
 #endif // __NS_ISVGSVGFRAME_H__

@@ -270,7 +270,7 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    *
    * @param returns -1 if less, 0 if equal, or 1 if greater
    */
-   PRInt32 compareResults(in nsIXULTemplateResult aLeft,
+   int32_t compareResults(in nsIXULTemplateResult aLeft,
                           in nsIXULTemplateResult aRight,
                           in nsIAtom aVar,
                           in unsigned long aSortHints);

@@ -71,7 +71,7 @@ protected:
     RecentBadCert mCerts[const_recently_seen_list_size];
 
     // will be in the range of 0 to list_size-1
-    PRUint32 mNextStorePosition;
+    uint32_t mNextStorePosition;
 };
 
 #define NS_RECENTBADCERTS_CID { /* e7caf8c0-3570-47fe-aa1b-da47539b5d07 */ \

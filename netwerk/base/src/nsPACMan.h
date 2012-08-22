@@ -147,7 +147,7 @@ private:
   bool                         mLoadPending;
   bool                         mShutdown;
   PRTime                       mScheduledReload;
-  PRUint32                     mLoadFailureCount;
+  uint32_t                     mLoadFailureCount;
 };
 
 #endif  // nsPACMan_h__

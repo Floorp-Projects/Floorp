@@ -17,8 +17,8 @@ interface nsIAccessibleText : nsISupports
   // In parameters for character offsets:
   //  -1 will be treated as the equal to the end of the text
   //  -2 will be treated as the caret position
-  const PRInt32 TEXT_OFFSET_END_OF_TEXT = -1;
-  const PRInt32 TEXT_OFFSET_CARET       = -2;
+  const int32_t TEXT_OFFSET_END_OF_TEXT = -1;
+  const int32_t TEXT_OFFSET_CARET       = -2;
 
   const AccessibleTextBoundary BOUNDARY_CHAR = 0;
   const AccessibleTextBoundary BOUNDARY_WORD_START = 1;

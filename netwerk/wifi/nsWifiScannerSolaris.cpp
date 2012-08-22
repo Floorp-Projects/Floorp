@@ -38,8 +38,8 @@ do_parse_str(char *bssid_str, char *essid_str, char *strength)
          &mac_as_int[2], &mac_as_int[3], &mac_as_int[4], &mac_as_int[5]);
 
   int signal = 0;
-  PRUint32 strength_vals_count = sizeof(strength_vals) / sizeof (val_strength_t);
-  for (PRUint32 i = 0; i < strength_vals_count; i++) {
+  uint32_t strength_vals_count = sizeof(strength_vals) / sizeof (val_strength_t);
+  for (uint32_t i = 0; i < strength_vals_count; i++) {
     if (!strncasecmp(strength, strength_vals[i].strength_name, DLADM_STRSIZE)) {
       signal = strength_vals[i].signal_value;
       break;
@@ -69,9 +69,9 @@ do_dladm(nsCOMArray<nsWifiAccessPoint> &accessPoints)
                              &sout, &serr, &exit_status, &err);
   if (rv && !exit_status) {
     char wlan[DLADM_SECTIONS][DLADM_STRSIZE+1];
-    PRUint32 section = 0;
-    PRUint32 sout_scan = 0;
-    PRUint32 wlan_put = 0;
+    uint32_t section = 0;
+    uint32_t sout_scan = 0;
+    uint32_t wlan_put = 0;
     bool escape = false;
     nsWifiAccessPoint* ap;
     char sout_char;

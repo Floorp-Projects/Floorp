@@ -53,7 +53,7 @@ interface fuelIAnnotations : nsISupports
    *          The expiration policy for the annotation.
    *          See nsIAnnotationService.
    */
-  void set(in AString aName, in nsIVariant aValue, in PRInt32 aExpiration);
+  void set(in AString aName, in nsIVariant aValue, in int32_t aExpiration);
 
   /**
    * Removes the named annotation from the owner item.
@@ -274,7 +274,7 @@ interface fuelIBrowserTab : nsISupports
   /**
    * The current index of this tab in the browser window.
    */
-  readonly attribute PRInt32 index;
+  readonly attribute int32_t index;
 
   /**
    * The browser window that is holding the tab.

@@ -23,20 +23,20 @@
 //----------------------------------------------------------------------
 // Subclassing of nsTablesDecoderSupport class [implementation]
 NS_IMETHODIMP nsGB2312ToUnicodeV2::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
+                                              int32_t aSrcLength, 
+                                              int32_t * aDestLength)
 {
   *aDestLength = aSrcLength;
   return NS_OK;
 }
 NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
-                                                 PRInt32 * aSrcLength,
+                                                 int32_t * aSrcLength,
                                                  PRUnichar *aDest,
-                                                 PRInt32 * aDestLength)
+                                                 int32_t * aDestLength)
 {
-  PRInt32 i=0;
-  PRInt32 iSrcLength = (*aSrcLength);
-  PRInt32 iDestlen = 0;
+  int32_t i=0;
+  int32_t iSrcLength = (*aSrcLength);
+  int32_t iDestlen = 0;
   nsresult rv = NS_OK;
   for (i=0;i<iSrcLength;i++)
   {

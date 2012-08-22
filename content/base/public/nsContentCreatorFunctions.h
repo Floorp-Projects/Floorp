@@ -73,7 +73,7 @@ NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
 // First argument should be nsHTMLTag, but that adds dependency to parser
 // for a bunch of files.
 already_AddRefed<nsGenericHTMLElement>
-CreateHTMLElement(PRUint32 aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
+CreateHTMLElement(uint32_t aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
                   mozilla::dom::FromParser aFromParser);
 
 nsresult

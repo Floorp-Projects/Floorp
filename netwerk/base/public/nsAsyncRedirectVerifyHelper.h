@@ -40,7 +40,7 @@ public:
     nsresult DelegateOnChannelRedirect(nsIChannelEventSink *sink,
                                        nsIChannel *oldChannel, 
                                        nsIChannel *newChannel,
-                                       PRUint32 flags);
+                                       uint32_t flags);
  
     /**
      * Initialize and run the chain of AsyncOnChannelRedirect calls. OldChannel
@@ -60,17 +60,17 @@ public:
      */
     nsresult Init(nsIChannel* oldChan,
                   nsIChannel* newChan,
-                  PRUint32 flags,
+                  uint32_t flags,
                   bool synchronize = false);
 
 protected:
     nsCOMPtr<nsIChannel> mOldChan;
     nsCOMPtr<nsIChannel> mNewChan;
-    PRUint32 mFlags;
+    uint32_t mFlags;
     bool mWaitingForRedirectCallback;
     nsCOMPtr<nsIThread>      mCallbackThread;
     bool                     mCallbackInitiated;
-    PRInt32                  mExpectedCallbacks;
+    int32_t                  mExpectedCallbacks;
     nsresult                 mResult; // value passed to callback
 
     void InitCallback();

@@ -157,7 +157,7 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
     contractID.Append(aKey);
     contractID.Append("&scheme=");
 
-    PRInt32 i = mURI.FindChar(':');
+    int32_t i = mURI.FindChar(':');
     contractID += StringHead(mURI, i);
 
     nsCOMPtr<nsIRDFDelegateFactory> delegateFactory =

@@ -25,20 +25,20 @@ class nsACString;
 %}
 
 typedef boolean             bool   ;
-typedef octet               PRUint8  ;
-typedef unsigned short      PRUint16 ;
+typedef octet               uint8_t  ;
+typedef unsigned short      uint16_t ;
 typedef unsigned short      PRUnichar;
-typedef unsigned long       PRUint32 ;
-typedef unsigned long long  PRUint64 ;
+typedef unsigned long       uint32_t ;
+typedef unsigned long long  uint64_t ;
 typedef long long           PRTime   ;
-typedef short               PRInt16  ;
-typedef long                PRInt32  ;
-typedef long long           PRInt64  ;
+typedef short               int16_t  ;
+typedef long                int32_t  ;
+typedef long long           int64_t  ;
 
 typedef unsigned long       nsrefcnt ;
 typedef unsigned long       nsresult ;
 
-// XXX need this built into xpidl compiler so that it's really size_t or PRSize
+// XXX need this built into xpidl compiler so that it's really size_t or size_t
 // and it's scriptable:
 typedef unsigned long       size_t;
 

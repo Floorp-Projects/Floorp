@@ -306,7 +306,7 @@ public:
 #define NS_INLINE_DECL_REFCOUNTING(_class)                                    \
 public:                                                                       \
   NS_METHOD_(nsrefcnt) AddRef(void) {                                         \
-    NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
+    NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");                 \
     NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                          \
     ++mRefCnt;                                                                \
     NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                     \
@@ -341,7 +341,7 @@ public:
 #define NS_INLINE_DECL_THREADSAFE_REFCOUNTING(_class)                         \
 public:                                                                       \
   NS_METHOD_(nsrefcnt) AddRef(void) {                                         \
-    NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
+    NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");                 \
     nsrefcnt count = NS_AtomicIncrementRefcnt(mRefCnt);                       \
     NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                       \
     return (nsrefcnt) count;                                                  \
@@ -367,7 +367,7 @@ public:
 #define NS_IMPL_ADDREF(_class)                                                \
 NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 {                                                                             \
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                   \
+  NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");                   \
   NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                            \
   ++mRefCnt;                                                                  \
   NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                       \
@@ -457,7 +457,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
 #define NS_IMPL_CYCLE_COLLECTING_ADDREF(_class)                               \
 NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 {                                                                             \
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                   \
+  NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");                   \
   NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                            \
   nsrefcnt count =                                                            \
     mRefCnt.incr(NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this));        \
@@ -506,7 +506,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
 struct QITableEntry
 {
   const nsIID *iid;     // null indicates end of the QITableEntry array
-  PROffset32   offset;
+  int32_t   offset;
 };
 
 NS_COM_GLUE nsresult NS_FASTCALL
@@ -529,14 +529,14 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 
 #define NS_INTERFACE_TABLE_ENTRY(_class, _interface)                          \
   { &_interface::COMTypeInfo<int>::kIID,                                      \
-    PROffset32(reinterpret_cast<char*>(                                       \
+    int32_t(reinterpret_cast<char*>(                                       \
                         static_cast<_interface*>((_class*) 0x1000)) -         \
                reinterpret_cast<char*>((_class*) 0x1000))                     \
   },
 
 #define NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, _interface, _implClass)    \
   { &_interface::COMTypeInfo<int>::kIID,                                      \
-    PROffset32(reinterpret_cast<char*>(                                       \
+    int32_t(reinterpret_cast<char*>(                                       \
                         static_cast<_interface*>(                             \
                                        static_cast<_implClass*>(              \
                                                       (_class*) 0x1000))) -   \
@@ -1290,7 +1290,7 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
 #define NS_IMPL_THREADSAFE_ADDREF(_class)                                     \
 NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 {                                                                             \
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                   \
+  NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");                   \
   nsrefcnt count = NS_AtomicIncrementRefcnt(mRefCnt);                         \
   NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                         \
   return (nsrefcnt) count;                                                    \
@@ -1410,13 +1410,13 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
  */
 #define NS_IMPL_THREADSAFE_CI(_class)                                         \
 NS_IMETHODIMP                                                                 \
-_class::GetInterfaces(PRUint32* _count, nsIID*** _array)                      \
+_class::GetInterfaces(uint32_t* _count, nsIID*** _array)                      \
 {                                                                             \
   return NS_CI_INTERFACE_GETTER_NAME(_class)(_count, _array);                 \
 }                                                                             \
                                                                               \
 NS_IMETHODIMP                                                                 \
-_class::GetHelperForLanguage(PRUint32 _language, nsISupports** _retval)       \
+_class::GetHelperForLanguage(uint32_t _language, nsISupports** _retval)       \
 {                                                                             \
   *_retval = nullptr;                                                          \
   return NS_OK;                                                               \
@@ -1444,14 +1444,14 @@ _class::GetClassID(nsCID** _classID)                                          \
 }                                                                             \
                                                                               \
 NS_IMETHODIMP                                                                 \
-_class::GetImplementationLanguage(PRUint32* _language)                        \
+_class::GetImplementationLanguage(uint32_t* _language)                        \
 {                                                                             \
   *_language = nsIProgrammingLanguage::CPLUSPLUS;                             \
   return NS_OK;                                                               \
 }                                                                             \
                                                                               \
 NS_IMETHODIMP                                                                 \
-_class::GetFlags(PRUint32* _flags)                                            \
+_class::GetFlags(uint32_t* _flags)                                            \
 {                                                                             \
   *_flags = nsIClassInfo::THREADSAFE;                                         \
   return NS_OK;                                                               \

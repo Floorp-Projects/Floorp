@@ -208,8 +208,8 @@ nsXBLResourceLoader::NotifyBoundElements()
 
   nsIURI* bindingURI = mBinding->BindingURI();
 
-  PRUint32 eltCount = mBoundElements.Count();
-  for (PRUint32 j = 0; j < eltCount; j++) {
+  uint32_t eltCount = mBoundElements.Count();
+  for (uint32_t j = 0; j < eltCount; j++) {
     nsCOMPtr<nsIContent> content = mBoundElements.ObjectAt(j);
     
     bool ready = false;

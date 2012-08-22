@@ -32,12 +32,12 @@ txLiteralExpr::getReturnType()
 }
 
 Expr*
-txLiteralExpr::getSubExprAt(PRUint32 aPos)
+txLiteralExpr::getSubExprAt(uint32_t aPos)
 {
     return nullptr;
 }
 void
-txLiteralExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+txLiteralExpr::setSubExprAt(uint32_t aPos, Expr* aExpr)
 {
     NS_NOTREACHED("setting bad subexpression index");
 }

@@ -262,7 +262,7 @@ public:
   // data available based on an incorrect reported length. Seeks relative
   // EOF also depend on the reported length if we haven't managed to
   // read the whole stream yet.
-  void NotifyDataLength(PRInt64 aLength);
+  void NotifyDataLength(int64_t aLength);
   // Notifies the cache that a load has begun. We pass the offset
   // because in some cases the offset might not be what the cache
   // requested. In particular we might unexpectedly start providing
@@ -270,14 +270,14 @@ public:
   // offset that the cache requested in
   // ChannelMediaResource::CacheClientSeek. This can be called at any
   // time by the client, not just after a CacheClientSeek.
-  void NotifyDataStarted(PRInt64 aOffset);
+  void NotifyDataStarted(int64_t aOffset);
   // Notifies the cache that data has been received. The stream already
   // knows the offset because data is received in sequence and
   // the starting offset is known via NotifyDataStarted or because
   // the cache requested the offset in
   // ChannelMediaResource::CacheClientSeek, or because it defaulted to 0.
   // We pass in the principal that was used to load this data.
-  void NotifyDataReceived(PRInt64 aSize, const char* aData,
+  void NotifyDataReceived(int64_t aSize, const char* aData,
                           nsIPrincipal* aPrincipal);
   // Notifies the cache that the channel has closed with the given status.
   void NotifyDataEnded(nsresult aStatus);
@@ -293,16 +293,16 @@ public:
   // the stream ended normally we return the length we actually got.
   // If we've successfully read data beyond the originally reported length,
   // we return the end of the data we've read.
-  PRInt64 GetLength();
+  int64_t GetLength();
   // Returns the unique resource ID. Call only on the main thread or while
   // holding the media cache lock.
-  PRInt64 GetResourceID() { return mResourceID; }
+  int64_t GetResourceID() { return mResourceID; }
   // Returns the end of the bytes starting at the given offset
   // which are in cache.
-  PRInt64 GetCachedDataEnd(PRInt64 aOffset);
+  int64_t GetCachedDataEnd(int64_t aOffset);
   // Returns the offset of the first byte of cached data at or after aOffset,
   // or -1 if there is no such cached data.
-  PRInt64 GetNextCachedData(PRInt64 aOffset);
+  int64_t GetNextCachedData(int64_t aOffset);
   // Fills aRanges with the ByteRanges representing the data which is currently
   // cached. Locks the media cache while running, to prevent any ranges
   // growing. The stream should be pinned while this runs and while its results
@@ -314,21 +314,21 @@ public:
   // thread. It's the caller's responsibility to wrap the call in a pin/unpin,
   // and also to check that the range they want is cached before calling this.
   nsresult ReadFromCache(char* aBuffer,
-                         PRInt64 aOffset,
-                         PRInt64 aCount);
+                         int64_t aOffset,
+                         int64_t aCount);
 
   // IsDataCachedToEndOfStream returns true if all the data from
   // aOffset to the end of the stream (the server-reported end, if the
   // real end is not known) is in cache. If we know nothing about the
   // end of the stream, this returns false.
-  bool IsDataCachedToEndOfStream(PRInt64 aOffset);
+  bool IsDataCachedToEndOfStream(int64_t aOffset);
   // The mode is initially MODE_PLAYBACK.
   void SetReadMode(ReadMode aMode);
   // This is the client's estimate of the playback rate assuming
   // the media plays continuously. The cache can't guess this itself
   // because it doesn't know when the decoder was paused, buffering, etc.
   // Do not pass zero.
-  void SetPlaybackRate(PRUint32 aBytesPerSecond);
+  void SetPlaybackRate(uint32_t aBytesPerSecond);
   // Returns the last set value of SetSeekable.
   bool IsSeekable();
 
@@ -343,13 +343,13 @@ public:
   // stream.
   // This can fail when aWhence is NS_SEEK_END and no stream length
   // is known.
-  nsresult Seek(PRInt32 aWhence, PRInt64 aOffset);
-  PRInt64 Tell();
+  nsresult Seek(int32_t aWhence, int64_t aOffset);
+  int64_t Tell();
   // *aBytes gets the number of bytes that were actually read. This can
   // be less than aCount. If the first byte of data is not in the cache,
   // this will block until the data is available or the stream is
   // closed, otherwise it won't block.
-  nsresult Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes);
+  nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
 
 private:
   friend class nsMediaCache;
@@ -370,23 +370,23 @@ private:
       NS_ASSERTION(mFirstBlock == -1 && mCount == 0,
                    "Destroying non-empty block list");
     }
-    void AddFirstBlock(PRInt32 aBlock);
-    void AddAfter(PRInt32 aBlock, PRInt32 aBefore);
-    void RemoveBlock(PRInt32 aBlock);
+    void AddFirstBlock(int32_t aBlock);
+    void AddAfter(int32_t aBlock, int32_t aBefore);
+    void RemoveBlock(int32_t aBlock);
     // Returns the first block in the list, or -1 if empty
-    PRInt32 GetFirstBlock() const { return mFirstBlock; }
+    int32_t GetFirstBlock() const { return mFirstBlock; }
     // Returns the last block in the list, or -1 if empty
-    PRInt32 GetLastBlock() const;
+    int32_t GetLastBlock() const;
     // Returns the next block in the list after aBlock or -1 if
     // aBlock is the last block
-    PRInt32 GetNextBlock(PRInt32 aBlock) const;
+    int32_t GetNextBlock(int32_t aBlock) const;
     // Returns the previous block in the list before aBlock or -1 if
     // aBlock is the first block
-    PRInt32 GetPrevBlock(PRInt32 aBlock) const;
+    int32_t GetPrevBlock(int32_t aBlock) const;
     bool IsEmpty() const { return mFirstBlock < 0; }
-    PRInt32 GetCount() const { return mCount; }
+    int32_t GetCount() const { return mCount; }
     // The contents of aBlockIndex1 and aBlockIndex2 have been swapped
-    void NotifyBlockSwapped(PRInt32 aBlockIndex1, PRInt32 aBlockIndex2);
+    void NotifyBlockSwapped(int32_t aBlockIndex1, int32_t aBlockIndex2);
 #ifdef DEBUG
     // Verify linked-list invariants
     void Verify();
@@ -400,27 +400,27 @@ private:
       Entry(const Entry& toCopy) : nsUint32HashKey(&toCopy.GetKey()),
         mNextBlock(toCopy.mNextBlock), mPrevBlock(toCopy.mPrevBlock) {}
 
-      PRInt32 mNextBlock;
-      PRInt32 mPrevBlock;
+      int32_t mNextBlock;
+      int32_t mPrevBlock;
     };
     nsTHashtable<Entry> mEntries;
 
     // The index of the first block in the list, or -1 if the list is empty.
-    PRInt32 mFirstBlock;
+    int32_t mFirstBlock;
     // The number of blocks in the list.
-    PRInt32 mCount;
+    int32_t mCount;
   };
 
   // Returns the end of the bytes starting at the given offset
   // which are in cache.
   // This method assumes that the cache monitor is held and can be called on
   // any thread.
-  PRInt64 GetCachedDataEndInternal(PRInt64 aOffset);
+  int64_t GetCachedDataEndInternal(int64_t aOffset);
   // Returns the offset of the first byte of cached data at or after aOffset,
   // or -1 if there is no such cached data.
   // This method assumes that the cache monitor is held and can be called on
   // any thread.
-  PRInt64 GetNextCachedDataInternal(PRInt64 aOffset);
+  int64_t GetNextCachedDataInternal(int64_t aOffset);
   // A helper function to do the work of closing the stream. Assumes
   // that the cache monitor is held. Main thread only.
   // aReentrantMonitor is the nsAutoReentrantMonitor wrapper holding the cache monitor.
@@ -451,7 +451,7 @@ private:
   // This is a unique ID representing the resource we're loading.
   // All streams with the same mResourceID are loading the same
   // underlying resource and should share data.
-  PRInt64 mResourceID;
+  int64_t mResourceID;
   // The last reported seekability state for the underlying channel
   bool mIsSeekable;
   // True if the cache has suspended our channel because the cache is
@@ -461,19 +461,19 @@ private:
   // True if the channel ended and we haven't seeked it again.
   bool mChannelEnded;
   // The offset where the next data from the channel will arrive
-  PRInt64      mChannelOffset;
+  int64_t      mChannelOffset;
   // The reported or discovered length of the data, or -1 if nothing is
   // known
-  PRInt64      mStreamLength;
+  int64_t      mStreamLength;
 
   // The following fields are protected by the cache's monitor can can be written
   // by any thread.
 
   // The offset where the reader is positioned in the stream
-  PRInt64           mStreamOffset;
+  int64_t           mStreamOffset;
   // For each block in the stream data, maps to the cache entry for the
   // block, or -1 if the block is not cached.
-  nsTArray<PRInt32> mBlocks;
+  nsTArray<int32_t> mBlocks;
   // The list of read-ahead blocks, ordered by stream offset; the first
   // block is the earliest in the stream (so the last block will be the
   // least valuable).
@@ -483,10 +483,10 @@ private:
   // The list of played-back blocks; the first block is the most recently used
   BlockList         mPlayedBlocks;
   // The last reported estimate of the decoder's playback rate
-  PRUint32          mPlaybackBytesPerSecond;
+  uint32_t          mPlaybackBytesPerSecond;
   // The number of times this stream has been Pinned without a
   // corresponding Unpin
-  PRUint32          mPinCount;
+  uint32_t          mPinCount;
   // The status used when we did CacheClientNotifyDataEnded. Only valid
   // when mDidNotifyDataEnded is true.
   nsresult          mNotifyDataEndedStatus;
@@ -502,8 +502,8 @@ private:
   // to wait here so we can write back a complete block. The first
   // mChannelOffset%BLOCK_SIZE bytes have been filled in with good data,
   // the rest are garbage.
-  // Use PRInt64 so that the data is well-aligned.
-  PRInt64           mPartialBlockBuffer[BLOCK_SIZE/sizeof(PRInt64)];
+  // Use int64_t so that the data is well-aligned.
+  int64_t           mPartialBlockBuffer[BLOCK_SIZE/sizeof(int64_t)];
 };
 
 #endif

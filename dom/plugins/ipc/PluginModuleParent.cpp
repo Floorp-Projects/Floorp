@@ -74,7 +74,7 @@ PluginModuleParent::LoadModule(const char* aFilePath)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
 
-    PRInt32 prefSecs = Preferences::GetInt(kLaunchTimeoutPref, 0);
+    int32_t prefSecs = Preferences::GetInt(kLaunchTimeoutPref, 0);
 
     // Block on the child process being launched and initialized.
     nsAutoPtr<PluginModuleParent> parent(new PluginModuleParent(aFilePath));
@@ -187,7 +187,7 @@ PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
               notes.Put(CS("PluginCpuUsage"), cpuUsageStr);
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
-              for (PRUint32 i=1; i<mPluginCpuUsageOnHang.Length(); ++i) {
+              for (uint32_t i=1; i<mPluginCpuUsageOnHang.Length(); ++i) {
                 nsCString tempStr;
                 tempStr.AppendFloat(std::ceil(mPluginCpuUsageOnHang[i] * 100) / 100);
                 notes.Put(nsPrintfCString("CpuUsageFlashProcess%d", i), tempStr);
@@ -206,13 +206,13 @@ PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
     NS_ASSERTION(NS_IsMainThread(), "Wrong thead!");
     if (!strcmp(aPref, kChildTimeoutPref)) {
       // The timeout value used by the parent for children
-      PRInt32 timeoutSecs = Preferences::GetInt(kChildTimeoutPref, 0);
+      int32_t timeoutSecs = Preferences::GetInt(kChildTimeoutPref, 0);
       int32 timeoutMs = (timeoutSecs > 0) ? (1000 * timeoutSecs) :
                         SyncChannel::kNoTimeout;
       static_cast<PluginModuleParent*>(aModule)->SetReplyTimeoutMs(timeoutMs);
     } else if (!strcmp(aPref, kParentTimeoutPref)) {
       // The timeout value used by the child for its parent
-      PRInt32 timeoutSecs = Preferences::GetInt(kParentTimeoutPref, 0);
+      int32_t timeoutSecs = Preferences::GetInt(kParentTimeoutPref, 0);
       unused << static_cast<PluginModuleParent*>(aModule)->SendSetParentHangTimeout(timeoutSecs);
     }
     return 0;
@@ -228,7 +228,7 @@ PluginModuleParent::CleanupFromTimeout()
 #ifdef XP_WIN
 namespace {
 
-PRUint64
+uint64_t
 FileTimeToUTC(const FILETIME& ftime) 
 {
   ULARGE_INTEGER li;
@@ -239,8 +239,8 @@ FileTimeToUTC(const FILETIME& ftime)
 
 struct CpuUsageSamples
 {
-  PRUint64 sampleTimes[2];
-  PRUint64 cpuTimes[2];
+  uint64_t sampleTimes[2];
+  uint64_t cpuTimes[2];
 };
 
 bool 
@@ -250,7 +250,7 @@ GetProcessCpuUsage(const InfallibleTArray<base::ProcessHandle>& processHandles, 
   FILETIME creationTime, exitTime, kernelTime, userTime, currentTime;
   BOOL res;
 
-  for (PRUint32 i = 0; i < processHandles.Length(); ++i) {
+  for (uint32_t i = 0; i < processHandles.Length(); ++i) {
     ::GetSystemTimeAsFileTime(&currentTime);
     res = ::GetProcessTimes(processHandles[i], &creationTime, &exitTime, &kernelTime, &userTime);
     if (!res) {
@@ -267,9 +267,9 @@ GetProcessCpuUsage(const InfallibleTArray<base::ProcessHandle>& processHandles, 
   // we already hung for a while, a little bit longer won't matter
   ::Sleep(50);
 
-  const PRInt32 numberOfProcessors = PR_GetNumberOfProcessors();
+  const int32_t numberOfProcessors = PR_GetNumberOfProcessors();
 
-  for (PRUint32 i = 0; i < processHandles.Length(); ++i) {
+  for (uint32_t i = 0; i < processHandles.Length(); ++i) {
     ::GetSystemTimeAsFileTime(&currentTime);
     res = ::GetProcessTimes(processHandles[i], &creationTime, &exitTime, &kernelTime, &userTime);
     if (!res) {
@@ -280,8 +280,8 @@ GetProcessCpuUsage(const InfallibleTArray<base::ProcessHandle>& processHandles, 
     samples[i].sampleTimes[1] = FileTimeToUTC(currentTime);
     samples[i].cpuTimes[1]    = FileTimeToUTC(kernelTime) + FileTimeToUTC(userTime);    
 
-    const PRUint64 deltaSampleTime = samples[i].sampleTimes[1] - samples[i].sampleTimes[0];
-    const PRUint64 deltaCpuTime    = samples[i].cpuTimes[1]    - samples[i].cpuTimes[0];
+    const uint64_t deltaSampleTime = samples[i].sampleTimes[1] - samples[i].sampleTimes[0];
+    const uint64_t deltaCpuTime    = samples[i].cpuTimes[1]    - samples[i].cpuTimes[0];
     const float usage = 100.f * (float(deltaCpuTime) / deltaSampleTime) / numberOfProcessors;
     cpuUsage.AppendElement(usage);
   }
@@ -383,14 +383,14 @@ PluginModuleParent::ProcessFirstMinidump()
         return;
     }
 
-    PRUint32 sequence = PR_UINT32_MAX;
+    uint32_t sequence = PR_UINT32_MAX;
     nsCOMPtr<nsIFile> dumpFile;
     nsCAutoString flashProcessType;
     TakeMinidump(getter_AddRefs(dumpFile), &sequence);
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     nsCOMPtr<nsIFile> childDumpFile;
-    PRUint32 childSequence;
+    uint32_t childSequence;
 
     if (mFlashProcess1 &&
         TakeMinidumpForChild(mFlashProcess1,
@@ -1252,7 +1252,7 @@ PluginModuleParent::RecvPluginHideWindow(const uint32_t& aWindowId)
 
 PCrashReporterParent*
 PluginModuleParent::AllocPCrashReporter(mozilla::dom::NativeThreadId* id,
-                                        PRUint32* processType)
+                                        uint32_t* processType)
 {
 #ifdef MOZ_CRASHREPORTER
     return new CrashReporterParent();
@@ -1403,7 +1403,7 @@ PluginModuleParent::InitializeInjector()
 
     nsCString path(Process()->GetPluginFilePath().c_str());
     ToUpperCase(path);
-    PRInt32 lastSlash = path.RFindCharInSet("\\/");
+    int32_t lastSlash = path.RFindCharInSet("\\/");
     if (kNotFound == lastSlash)
         return;
 

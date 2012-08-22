@@ -45,8 +45,8 @@ public:
   void Disconnect();
 
   // nsSMILContainer
-  virtual void Pause(PRUint32 aType);
-  virtual void Resume(PRUint32 aType);
+  virtual void Pause(uint32_t aType);
+  virtual void Resume(uint32_t aType);
   virtual nsSMILTime GetParentTime() const;
 
   // nsARefreshObserver

@@ -38,9 +38,9 @@ public:
 #endif
 
   // nsIFrame:
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType);
+                               int32_t         aModType);
 
   /**
    * Get the "type" of the frame
@@ -56,10 +56,10 @@ public:
   }
 #endif
   // nsISVGChildFrame interface:
-  virtual void NotifySVGChanged(PRUint32 aFlags);
+  virtual void NotifySVGChanged(uint32_t aFlags);
   
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM(PRUint32 aFor);
+  virtual gfxMatrix GetCanvasTM(uint32_t aFor);
 
   // nsSVGTextContainerFrame methods:
   virtual void GetXY(mozilla::SVGUserUnitList *aX, mozilla::SVGUserUnitList *aY);
@@ -101,9 +101,9 @@ nsSVGAFrame::Init(nsIContent* aContent,
 #endif /* DEBUG */
 
 NS_IMETHODIMP
-nsSVGAFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGAFrame::AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType)
+                              int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::transform) {
@@ -124,7 +124,7 @@ nsSVGAFrame::GetType() const
 // nsISVGChildFrame methods
 
 void
-nsSVGAFrame::NotifySVGChanged(PRUint32 aFlags)
+nsSVGAFrame::NotifySVGChanged(uint32_t aFlags)
 {
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
@@ -141,7 +141,7 @@ nsSVGAFrame::NotifySVGChanged(PRUint32 aFlags)
 // nsSVGContainerFrame methods:
 
 gfxMatrix
-nsSVGAFrame::GetCanvasTM(PRUint32 aFor)
+nsSVGAFrame::GetCanvasTM(uint32_t aFor)
 {
   if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||

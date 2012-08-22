@@ -10,11 +10,11 @@
 // Remember that these 'words' are 32bit DWORDS
 
 extern "C" {
-    static PRUint32
-    invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
+    static uint32_t
+    invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
     {
-        PRUint32 result = 0;
-        for(PRUint32 i = 0; i < paramCount; i++, s++)
+        uint32_t result = 0;
+        for(uint32_t i = 0; i < paramCount; i++, s++)
         {
             if(s->IsPtrData())
             {
@@ -60,9 +60,9 @@ extern "C" {
     }
 
     void
-    invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
+    invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
     {
-        for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
+        for(uint32_t i = 0; i < paramCount; i++, d++, s++)
         {
             if(s->IsPtrData())
             {
@@ -73,18 +73,18 @@ extern "C" {
             {
             // 8 and 16 bit types should be promoted to 32 bits when copying
             // onto the stack.
-            case nsXPTType::T_I8     : *((PRUint32*)d) = s->val.i8;          break;
-            case nsXPTType::T_I16    : *((PRUint32*)d) = s->val.i16;         break;
-            case nsXPTType::T_I32    : *((PRInt32*) d) = s->val.i32;         break;
-            case nsXPTType::T_I64    : *((PRInt64*) d) = s->val.i64; d++;    break;
-            case nsXPTType::T_U8     : *((PRUint32*)d) = s->val.u8;          break;
-            case nsXPTType::T_U16    : *((PRUint32*)d) = s->val.u16;         break;
-            case nsXPTType::T_U32    : *((PRUint32*)d) = s->val.u32;         break;
-            case nsXPTType::T_U64    : *((PRUint64*)d) = s->val.u64; d++;    break;
+            case nsXPTType::T_I8     : *((uint32_t*)d) = s->val.i8;          break;
+            case nsXPTType::T_I16    : *((uint32_t*)d) = s->val.i16;         break;
+            case nsXPTType::T_I32    : *((int32_t*) d) = s->val.i32;         break;
+            case nsXPTType::T_I64    : *((int64_t*) d) = s->val.i64; d++;    break;
+            case nsXPTType::T_U8     : *((uint32_t*)d) = s->val.u8;          break;
+            case nsXPTType::T_U16    : *((uint32_t*)d) = s->val.u16;         break;
+            case nsXPTType::T_U32    : *((uint32_t*)d) = s->val.u32;         break;
+            case nsXPTType::T_U64    : *((uint64_t*)d) = s->val.u64; d++;    break;
             case nsXPTType::T_FLOAT  : *((float*)   d) = s->val.f;           break;
             case nsXPTType::T_DOUBLE : *((double*)  d) = s->val.d;   d++;    break;
-            case nsXPTType::T_BOOL   : *((PRUint32*)d) = s->val.b;           break;
-            case nsXPTType::T_CHAR   : *((PRUint32*)d) = s->val.c;           break;
+            case nsXPTType::T_BOOL   : *((uint32_t*)d) = s->val.b;           break;
+            case nsXPTType::T_CHAR   : *((uint32_t*)d) = s->val.c;           break;
             case nsXPTType::T_WCHAR  : *((wchar_t*) d) = s->val.wc;          break;
 
             default:
@@ -97,10 +97,10 @@ extern "C" {
 }
 
 EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params)
+NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+                   uint32_t paramCount, nsXPTCVariant* params)
 {
-    PRUint32 result, n;
+    uint32_t result, n;
 
     n = invoke_count_words(paramCount, params) * 4;
 

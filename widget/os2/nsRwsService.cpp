@@ -58,7 +58,7 @@
 //  function prototypes
 //------------------------------------------------------------------------
 
-static nsresult IsDescendedFrom(PRUint32 wpsFilePtr, const char *pszClassname);
+static nsresult IsDescendedFrom(uint32_t wpsFilePtr, const char *pszClassname);
 static nsresult CreateFileForExtension(const char *aFileExt, nsACString& aPath);
 static nsresult DeleteFileForExtension(const char *aPath);
 static void     AssignNLSString(const PRUnichar *aKey, nsAString& _retval);
@@ -91,9 +91,9 @@ static ULONG (* _System sRwsGetArgPtr)(PRWSHDR, ULONG, PRWSDSC*);
 typedef struct _ExtInfo
 {
   char       ext[8];
-  PRUint32   icon;
-  PRUint32   mini;
-  PRUint32   handler;
+  uint32_t   icon;
+  uint32_t   mini;
+  uint32_t   handler;
   PRUnichar *title;
 } ExtInfo;
 
@@ -106,19 +106,19 @@ public:
   ExtCache();
   ~ExtCache();
 
-  nsresult GetIcon(const char *aExt, bool aNeedMini, PRUint32 *oIcon);
-  nsresult SetIcon(const char *aExt, bool aIsMini, PRUint32 aIcon);
-  nsresult GetHandler(const char *aExt, PRUint32 *oHandle, nsAString& oTitle);
-  nsresult SetHandler(const char *aExt, PRUint32 aHandle, nsAString& aTitle);
+  nsresult GetIcon(const char *aExt, bool aNeedMini, uint32_t *oIcon);
+  nsresult SetIcon(const char *aExt, bool aIsMini, uint32_t aIcon);
+  nsresult GetHandler(const char *aExt, uint32_t *oHandle, nsAString& oTitle);
+  nsresult SetHandler(const char *aExt, uint32_t aHandle, nsAString& aTitle);
   void     EmptyCache();
 
 protected:
   ExtInfo *FindExtension(const char *aExt, bool aSet = false);
 
-  PRUint32 mPid;
-  PRUint32 mMutex;
-  PRUint32 mCount;
-  PRUint32 mSize;
+  uint32_t mPid;
+  uint32_t mMutex;
+  uint32_t mCount;
+  uint32_t mSize;
   ExtInfo *mExtInfo;
 };
 
@@ -147,7 +147,7 @@ nsRwsService::~nsRwsService()
 
 NS_IMETHODIMP
 nsRwsService::IconFromExtension(const char *aExt, bool aNeedMini,
-                                PRUint32 *_retval)
+                                uint32_t *_retval)
 {
   if (!aExt || !*aExt || !_retval)
     return NS_ERROR_INVALID_ARG;
@@ -176,19 +176,19 @@ nsRwsService::IconFromExtension(const char *aExt, bool aNeedMini,
 
 NS_IMETHODIMP
 nsRwsService::IconFromPath(const char *aPath, bool aAbstract,
-                           bool aNeedMini, PRUint32 *_retval)
+                           bool aNeedMini, uint32_t *_retval)
 {
   if (!aPath || !*aPath || !_retval)
     return NS_ERROR_INVALID_ARG;
 
-  PRUint32  rwsType;
+  uint32_t  rwsType;
 
   if (aAbstract)
     rwsType = (aNeedMini ? RWSC_OFTITLE_OMINI : RWSC_OFTITLE_OICON);
   else
     rwsType = (aNeedMini ? RWSC_OPATH_OMINI : RWSC_OPATH_OICON);
 
-  return RwsConvert(rwsType, (PRUint32)aPath, _retval);
+  return RwsConvert(rwsType, (uint32_t)aPath, _retval);
 }
 
 //------------------------------------------------------------------------
@@ -196,8 +196,8 @@ nsRwsService::IconFromPath(const char *aPath, bool aAbstract,
 // retrieve's an object's icon using its persistent handle
 
 NS_IMETHODIMP
-nsRwsService::IconFromHandle(PRUint32 aHandle, bool aNeedMini,
-                             PRUint32 *_retval)
+nsRwsService::IconFromHandle(uint32_t aHandle, bool aNeedMini,
+                             uint32_t *_retval)
 {
   if (!aHandle || !_retval)
     return NS_ERROR_INVALID_ARG;
@@ -211,7 +211,7 @@ nsRwsService::IconFromHandle(PRUint32 aHandle, bool aNeedMini,
 // retrieve's an object's title using its persistent handle
 
 NS_IMETHODIMP
-nsRwsService::TitleFromHandle(PRUint32 aHandle, nsAString& _retval)
+nsRwsService::TitleFromHandle(uint32_t aHandle, nsAString& _retval)
 {
   if (!aHandle)
     return NS_ERROR_INVALID_ARG;
@@ -227,7 +227,7 @@ nsRwsService::TitleFromHandle(PRUint32 aHandle, nsAString& _retval)
 // temp file, then caches the info.
 
 NS_IMETHODIMP
-nsRwsService::HandlerFromExtension(const char *aExt, PRUint32 *aHandle,
+nsRwsService::HandlerFromExtension(const char *aExt, uint32_t *aHandle,
                                    nsAString& _retval)
 {
   if (!aExt || !*aExt || !aHandle)
@@ -257,7 +257,7 @@ nsRwsService::HandlerFromExtension(const char *aExt, PRUint32 *aHandle,
 // and sets the object handle to zero
 
 NS_IMETHODIMP
-nsRwsService::HandlerFromPath(const char *aPath, PRUint32 *aHandle,
+nsRwsService::HandlerFromPath(const char *aPath, uint32_t *aHandle,
                               nsAString& _retval)
 {
   if (!aPath || !*aPath || !aHandle)
@@ -265,7 +265,7 @@ nsRwsService::HandlerFromPath(const char *aPath, PRUint32 *aHandle,
 
   nsresult  rv = NS_ERROR_FAILURE;
   PRWSHDR   pHdr = 0;
-  PRUint32  rc;
+  uint32_t  rc;
 
   _retval.Truncate();
   *aHandle = 0;
@@ -280,8 +280,8 @@ nsRwsService::HandlerFromPath(const char *aPath, PRUint32 *aHandle,
                   RWSI_OPATH, 0, (ULONG)aPath);
     ERRBREAK(rc, "wpQueryDefaultView")
 
-    PRUint32 defView = sRwsGetResult(pHdr, 0, 0);
-    if (defView == (PRUint32)-1)
+    uint32_t defView = sRwsGetResult(pHdr, 0, 0);
+    if (defView == (uint32_t)-1)
       break;
 
     // if the default view is OPEN_SETTINGS ('2'),
@@ -291,7 +291,7 @@ nsRwsService::HandlerFromPath(const char *aPath, PRUint32 *aHandle,
 
     // to improve efficiency, retrieve & reuse the file's wpObject
     // ptr rather than repeatedly converting the name to an object
-    PRUint32 wpsFilePtr = sRwsGetResult(pHdr, 1, 0);
+    uint32_t wpsFilePtr = sRwsGetResult(pHdr, 1, 0);
 
     // free pHdr before the next call
     sRwsFreeMem(pHdr);
@@ -328,8 +328,8 @@ nsRwsService::HandlerFromPath(const char *aPath, PRUint32 *aHandle,
       PRWSDSC pRtn;
       rc = sRwsGetArgPtr(pHdr, 0, &pRtn);
       ERRBREAK(rc, "GetArgPtr")
-      *aHandle = *((PRUint32*)pRtn->pget);
-      PRUint32 wpsPgmPtr = pRtn->value;
+      *aHandle = *((uint32_t*)pRtn->pget);
+      uint32_t wpsPgmPtr = pRtn->value;
 
       // free pHdr before the next call
       sRwsFreeMem(pHdr);
@@ -424,7 +424,7 @@ nsRwsService::HandlerFromPath(const char *aPath, PRUint32 *aHandle,
       break;
 
     nsAutoChar16Buffer buffer;
-    PRInt32 bufLength;
+    int32_t bufLength;
     rv = MultiByteToWideChar(0, pszTitle, strlen(pszTitle),
                              buffer, bufLength);
     if (NS_FAILED(rv))
@@ -458,8 +458,8 @@ nsRwsService::MenuFromPath(const char *aPath, bool aAbstract)
 
   nsresult  rv = NS_ERROR_FAILURE;
   PRWSHDR   pHdr = 0;
-  PRUint32  type = (aAbstract ? RWSI_OFTITLE : RWSI_OPATH);
-  PRUint32  rc;
+  uint32_t  type = (aAbstract ? RWSI_OFTITLE : RWSI_OPATH);
+  uint32_t  rc;
   POINTL    ptl;
   HWND      hTgt = 0;
 
@@ -504,14 +504,14 @@ nsRwsService::MenuFromPath(const char *aPath, bool aAbstract)
 // this is identical to dropping the file on the program's WPS icon
 
 NS_IMETHODIMP
-nsRwsService::OpenWithAppHandle(const char *aFilePath, PRUint32 aAppHandle)
+nsRwsService::OpenWithAppHandle(const char *aFilePath, uint32_t aAppHandle)
 {
   if (!aFilePath || !*aFilePath || !aAppHandle)
     return NS_ERROR_INVALID_ARG;
 
   nsresult  rv = NS_ERROR_FAILURE;
   PRWSHDR   pHdr = 0;
-  PRUint32  rc;
+  uint32_t  rc;
 
   rc = sRwsCall(&pHdr,
                 RWSP_CMD,   RWSCMD_OPENUSING,
@@ -540,7 +540,7 @@ nsRwsService::OpenWithAppPath(const char *aFilePath, const char *aAppPath)
 
   nsresult  rv = NS_ERROR_FAILURE;
   PRWSHDR   pHdr = 0;
-  PRUint32  rc;
+  uint32_t  rc;
 
   rc = sRwsCall(&pHdr,
                 RWSP_CMD,   RWSCMD_OPENUSING,
@@ -565,13 +565,13 @@ nsRwsService::OpenWithAppPath(const char *aFilePath, const char *aAppPath)
 
 //static
 nsresult
-nsRwsService::RwsConvert(PRUint32 type, PRUint32 value, PRUint32 *result)
+nsRwsService::RwsConvert(uint32_t type, uint32_t value, uint32_t *result)
 {
   nsresult  rv = NS_ERROR_FAILURE;
   PRWSHDR   pHdr = 0;
 
   *result = 0;
-  PRUint32 rc = sRwsCall(&pHdr,
+  uint32_t rc = sRwsCall(&pHdr,
                          RWSP_CONV, 0,
                          RWSR_ASIS, 0, 1,
                          type,      0, value);
@@ -580,7 +580,7 @@ nsRwsService::RwsConvert(PRUint32 type, PRUint32 value, PRUint32 *result)
     ERRMSG(rc, "RwsConvert to ULONG")
   else {
     *result = sRwsGetResult(pHdr, 1, 0);
-    if (*result == (PRUint32)-1)
+    if (*result == (uint32_t)-1)
       *result = 0;
     else
       rv = NS_OK;
@@ -598,13 +598,13 @@ nsRwsService::RwsConvert(PRUint32 type, PRUint32 value, PRUint32 *result)
 
 //static
 nsresult
-nsRwsService::RwsConvert(PRUint32 type, PRUint32 value, nsAString& result)
+nsRwsService::RwsConvert(uint32_t type, uint32_t value, nsAString& result)
 {
   nsresult  rv = NS_ERROR_FAILURE;
   PRWSHDR   pHdr = 0;
 
   result.Truncate();
-  PRUint32 rc = sRwsCall(&pHdr,
+  uint32_t rc = sRwsCall(&pHdr,
                          RWSP_CONV, 0,
                          RWSR_ASIS, 0, 1,
                          type,      0, value);
@@ -634,7 +634,7 @@ nsRwsService::Observe(nsISupports *aSubject, const char *aTopic,
                       const PRUnichar *aSomeData)
 {
   if (strcmp(aTopic, "quit-application") == 0) {
-    PRUint32 rc = sRwsClientTerminate();
+    uint32_t rc = sRwsClientTerminate();
     if (rc)
         ERRMSG(rc, "RwsClientTerminate");
 
@@ -651,12 +651,12 @@ nsRwsService::Observe(nsISupports *aSubject, const char *aTopic,
 
 // this wrapper for somIsA() makes HandlerFromPath() easier to read
 
-static nsresult IsDescendedFrom(PRUint32 wpsFilePtr, const char *pszClassname)
+static nsresult IsDescendedFrom(uint32_t wpsFilePtr, const char *pszClassname)
 {
   PRWSHDR   pHdr = 0;
   nsresult  rv = NS_ERROR_FAILURE;
 
-  PRUint32 rc = sRwsCall(&pHdr,
+  uint32_t rc = sRwsCall(&pHdr,
                          RWSP_MNAMI, (ULONG)"somIsA",
                          RWSR_ASIS,  0, 2,
                          RWSI_ASIS,  0, wpsFilePtr,
@@ -765,7 +765,7 @@ static void AssignNLSString(const PRUnichar *aKey, nsAString& result)
 static nsresult AssignTitleString(const char *aTitle, nsAString& result)
 {
   nsAutoChar16Buffer buffer;
-  PRInt32 bufLength;
+  int32_t bufLength;
 
   // convert the title to Unicode
   if (NS_FAILED(MultiByteToWideChar(0, aTitle, strlen(aTitle),
@@ -814,7 +814,7 @@ ExtCache::ExtCache() : mCount(0), mSize(0), mExtInfo(0)
   DosGetInfoBlocks(&ptib, &ppib);
   mPid = ppib->pib_ulpid;
 
-  PRUint32 rc = DosCreateMutexSem(0, (PHMTX)&mMutex, 0, 0);
+  uint32_t rc = DosCreateMutexSem(0, (PHMTX)&mMutex, 0, 0);
   if (rc)
     ERRMSG(rc, "DosCreateMutexSem")
 }
@@ -826,9 +826,9 @@ ExtCache::~ExtCache() {}
 // retrieve the WPS's default icon for files with this extension
 
 nsresult ExtCache::GetIcon(const char *aExt, bool aNeedMini,
-                           PRUint32 *oIcon)
+                           uint32_t *oIcon)
 {
-  PRUint32 rc = DosRequestMutexSem(mMutex, kMutexTimeout);
+  uint32_t rc = DosRequestMutexSem(mMutex, kMutexTimeout);
   if (rc) {
     ERRMSG(rc, "DosRequestMutexSem")
     return NS_ERROR_FAILURE;
@@ -857,9 +857,9 @@ nsresult ExtCache::GetIcon(const char *aExt, bool aNeedMini,
 // save the WPS's default icon for files with this extension
 
 nsresult ExtCache::SetIcon(const char *aExt, bool aIsMini,
-                           PRUint32 aIcon)
+                           uint32_t aIcon)
 {
-  PRUint32 rc = DosRequestMutexSem(mMutex, kMutexTimeout);
+  uint32_t rc = DosRequestMutexSem(mMutex, kMutexTimeout);
   if (rc) {
     ERRMSG(rc, "DosRequestMutexSem")
     return NS_ERROR_FAILURE;
@@ -894,10 +894,10 @@ nsresult ExtCache::SetIcon(const char *aExt, bool aIsMini,
 
 // retrieve the WPS default handler's title & object handle (if any)
 
-nsresult ExtCache::GetHandler(const char *aExt, PRUint32 *oHandle,
+nsresult ExtCache::GetHandler(const char *aExt, uint32_t *oHandle,
                               nsAString& oTitle)
 {
-  PRUint32 rc = DosRequestMutexSem(mMutex, kMutexTimeout);
+  uint32_t rc = DosRequestMutexSem(mMutex, kMutexTimeout);
   if (rc) {
     ERRMSG(rc, "DosRequestMutexSem")
     return NS_ERROR_FAILURE;
@@ -924,10 +924,10 @@ nsresult ExtCache::GetHandler(const char *aExt, PRUint32 *oHandle,
 
 // save the WPS default handler's title & object handle (if any)
 
-nsresult ExtCache::SetHandler(const char *aExt, PRUint32 aHandle,
+nsresult ExtCache::SetHandler(const char *aExt, uint32_t aHandle,
                               nsAString& aTitle)
 {
-  PRUint32 rc = DosRequestMutexSem(mMutex, kMutexTimeout);
+  uint32_t rc = DosRequestMutexSem(mMutex, kMutexTimeout);
   if (rc) {
     ERRMSG(rc, "DosRequestMutexSem")
     return NS_ERROR_FAILURE;
@@ -985,7 +985,7 @@ ExtInfo *ExtCache::FindExtension(const char *aExt, bool aSet)
     return &mExtInfo[mCount-1];
 
   ExtInfo *info;
-  PRUint32  ctr;
+  uint32_t  ctr;
 
   // look for the extension in the array, return if found
   for (ctr = 0, info = mExtInfo; ctr < mCount; ctr++, info++)
@@ -994,7 +994,7 @@ ExtInfo *ExtCache::FindExtension(const char *aExt, bool aSet)
 
   // if a new entry won't fit into the current array, realloc
   if (mCount >= mSize) {
-    PRUint32 newSize = mSize + kGrowBy;
+    uint32_t newSize = mSize + kGrowBy;
     info = (ExtInfo*) NS_Realloc(mExtInfo, newSize * sizeof(ExtInfo));
     if (!info)
       return 0;
@@ -1021,16 +1021,16 @@ void ExtCache::EmptyCache()
   if (!mExtInfo)
     return;
 
-  PRUint32 rc = DosRequestMutexSem(mMutex, kMutexTimeout);
+  uint32_t rc = DosRequestMutexSem(mMutex, kMutexTimeout);
   if (rc) {
     ERRMSG(rc, "DosRequestMutexSem")
     return;
   }
 
-  PRUint32  saveMutex = mMutex;
+  uint32_t  saveMutex = mMutex;
   mMutex = 0;
 
-  PRUint32 ctr;
+  uint32_t ctr;
   ExtInfo *info;
 
   for (ctr = 0, info = mExtInfo; ctr < mCount; ctr++, info++) {
@@ -1102,7 +1102,7 @@ static nsresult nsRwsServiceInit(nsRwsService **aClass)
   // directory;  the goal is to consistently use the same pair of
   // dlls if the user has multiple copies
 
-  PRUint32  rc = 1;
+  uint32_t  rc = 1;
 
   // get the list of registered WPS classes
   ULONG  cbClass;
@@ -1172,8 +1172,8 @@ static nsresult nsRwsServiceInit(nsRwsService **aClass)
 
   // if the user hasn't set a timeout, reset it to 2 seconds
   // (the default is 20 seconds)
-  PRUint32  currentTO;
-  PRUint32  userTO;
+  uint32_t  currentTO;
+  uint32_t  userTO;
   rc = sRwsGetTimeout((PULONG)&currentTO, (PULONG)&userTO);
   if (rc)
     ERRMSG(rc, "RwsGetTimeout")

@@ -20,13 +20,13 @@ GenericClassInfo::Release()
 NS_IMPL_QUERY_INTERFACE1(GenericClassInfo, nsIClassInfo)
 
 NS_IMETHODIMP
-GenericClassInfo::GetInterfaces(PRUint32* countp, nsIID*** array)
+GenericClassInfo::GetInterfaces(uint32_t* countp, nsIID*** array)
 {
   return mData->getinterfaces(countp, array);
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetHelperForLanguage(PRUint32 language, nsISupports** helper)
+GenericClassInfo::GetHelperForLanguage(uint32_t language, nsISupports** helper)
 {
   if (mData->getlanguagehelper)
     return mData->getlanguagehelper(language, helper);
@@ -57,14 +57,14 @@ GenericClassInfo::GetClassID(nsCID** classid)
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetImplementationLanguage(PRUint32* language)
+GenericClassInfo::GetImplementationLanguage(uint32_t* language)
 {
   *language = nsIProgrammingLanguage::CPLUSPLUS;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetFlags(PRUint32* flags)
+GenericClassInfo::GetFlags(uint32_t* flags)
 {
   *flags = mData->flags;
   return NS_OK;

@@ -24,7 +24,7 @@ interface nsIMultiPartChannel : nsISupports
      * Attribute guaranteed to be different for different parts of
      * the same multipart document.
      */
-    readonly attribute PRUint32 partID;
+    readonly attribute uint32_t partID;
 
     /**
      * Set to true when onStopRequest is received from the base channel.

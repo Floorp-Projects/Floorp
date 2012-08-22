@@ -7,7 +7,7 @@
 NS_IMPL_ISUPPORTS1(nsAuthInformationHolder, nsIAuthInformation)
 
 NS_IMETHODIMP
-nsAuthInformationHolder::GetFlags(PRUint32* aFlags)
+nsAuthInformationHolder::GetFlags(uint32_t* aFlags)
 {
     *aFlags = mFlags;
     return NS_OK;

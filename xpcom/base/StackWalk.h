@@ -14,7 +14,7 @@
 namespace mozilla {
 
 nsresult
-FramePointerStackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
                       void *aClosure, void **bp, void *stackEnd);
 
 }

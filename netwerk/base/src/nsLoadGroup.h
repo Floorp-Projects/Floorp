@@ -59,8 +59,8 @@ private:
                                 bool defaultRequest);
 
 protected:
-    PRUint32                        mForegroundCount;
-    PRUint32                        mLoadFlags;
+    uint32_t                        mForegroundCount;
+    uint32_t                        mLoadFlags;
 
     nsCOMPtr<nsILoadGroup>          mLoadGroup; // load groups can contain load groups
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
@@ -71,14 +71,14 @@ protected:
     nsWeakPtr                       mObserver;
     
     nsresult                        mStatus;
-    PRInt32                         mPriority;
+    int32_t                         mPriority;
     bool                            mIsCanceling;
 
     /* Telemetry */
     mozilla::TimeStamp              mDefaultRequestCreationTime;
     bool                            mDefaultLoadIsTimed;
-    PRUint32                        mTimedRequests;
-    PRUint32                        mCachedRequests;
+    uint32_t                        mTimedRequests;
+    uint32_t                        mCachedRequests;
 };
 
 #endif // nsLoadGroup_h__

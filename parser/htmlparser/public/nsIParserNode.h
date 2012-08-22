@@ -71,21 +71,21 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @update	gess5/11/98
      * @return  node type.
      */
-    virtual PRInt32 GetNodeType()  const =0;
+    virtual int32_t GetNodeType()  const =0;
 
     /**
      * Retrieve token type of parser node
      * @update	gess5/11/98
      * @return  token type
      */
-    virtual PRInt32 GetTokenType()  const =0;
+    virtual int32_t GetTokenType()  const =0;
 
     /**
      * Retrieve the number of attributes in this node.
      * @update	gess5/11/98
      * @return  count of attributes (may be 0)
      */
-    virtual PRInt32 GetAttributeCount(bool askToken=false) const =0;
+    virtual int32_t GetAttributeCount(bool askToken=false) const =0;
 
     /**
      * Retrieve the key (of key/value pair) at given index
@@ -93,7 +93,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @param   anIndex is the index of the key you want
      * @return  string containing key.
      */
-    virtual const nsAString& GetKeyAt(PRUint32 anIndex) const = 0;
+    virtual const nsAString& GetKeyAt(uint32_t anIndex) const = 0;
 
     /**
      * Retrieve the value (of key/value pair) at given index
@@ -101,7 +101,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @param   anIndex is the index of the value you want
      * @return  string containing value.
      */
-    virtual const nsAString& GetValueAt(PRUint32 anIndex) const = 0;
+    virtual const nsAString& GetValueAt(uint32_t anIndex) const = 0;
 
     /**
      * NOTE: When the node is an entity, this will translate the entity
@@ -110,7 +110,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @param   aString will contain the resulting unicode string value
      * @return  int (unicode char or unicode index from table)
      */
-    virtual PRInt32 TranslateToUnicodeStr(nsString& aString) const = 0;
+    virtual int32_t TranslateToUnicodeStr(nsString& aString) const = 0;
 
 
     virtual void AddAttribute(CToken* aToken)=0;
@@ -121,7 +121,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @update	gess7/24/98
      * @return  int containing the line number the token was found on
      */
-    virtual PRInt32 GetSourceLineNumber(void) const =0;
+    virtual int32_t GetSourceLineNumber(void) const =0;
 
     /**
      * This pair of methods allows us to set a generic bit (for arbitrary use)

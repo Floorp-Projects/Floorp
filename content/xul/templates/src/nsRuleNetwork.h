@@ -96,15 +96,15 @@ protected:
             mElement->Destroy();
             NS_IF_RELEASE(mNext); }
 
-        PRInt32 AddRef() { return ++mRefCnt; }
+        int32_t AddRef() { return ++mRefCnt; }
 
-        PRInt32 Release() {
-            PRInt32 refcnt = --mRefCnt;
+        int32_t Release() {
+            int32_t refcnt = --mRefCnt;
             if (refcnt == 0) delete this;
             return refcnt; }
 
         MemoryElement* mElement;
-        PRInt32        mRefCnt;
+        int32_t        mRefCnt;
         List*          mNext;
     };
 
@@ -240,15 +240,15 @@ protected:
             MOZ_COUNT_DTOR(nsAssignmentSet::List);
             NS_IF_RELEASE(mNext); }
 
-        PRInt32 AddRef() { return ++mRefCnt; }
+        int32_t AddRef() { return ++mRefCnt; }
 
-        PRInt32 Release() {
-            PRInt32 refcnt = --mRefCnt;
+        int32_t Release() {
+            int32_t refcnt = --mRefCnt;
             if (refcnt == 0) delete this;
             return refcnt; }
 
         nsAssignment mAssignment;
-        PRInt32 mRefCnt;
+        int32_t mRefCnt;
         List*   mNext;
     };
 
@@ -375,7 +375,7 @@ public:
      * Count the number of assignments in the set
      * @return the number of assignments in the set
      */
-    PRInt32 Count() const;
+    int32_t Count() const;
 
     /**
      * Determine if the set is empty
@@ -737,12 +737,12 @@ public:
     Iterator First() { return Iterator(mNodes); }
     Iterator Last() { return Iterator(mNodes + mCount); }
 
-    PRInt32 Count() const { return mCount; }
+    int32_t Count() const { return mCount; }
 
 protected:
     ReteNode** mNodes;
-    PRInt32 mCount;
-    PRInt32 mCapacity;
+    int32_t mCount;
+    int32_t mCapacity;
 };
 
 //----------------------------------------------------------------------

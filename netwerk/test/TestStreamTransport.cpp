@@ -101,7 +101,7 @@ public:
         while (1) {
             mInputCondition = NS_OK; // reset
 
-            PRUint32 n;
+            uint32_t n;
             nsresult rv = mOutput->WriteSegments(FillOutputBuffer, this, CHUNK_SIZE, &n);
             if (NS_FAILED(rv) || (n == 0)) {
                 if (rv == NS_BASE_STREAM_WOULD_BLOCK)
@@ -140,9 +140,9 @@ public:
     static NS_METHOD FillOutputBuffer(nsIOutputStream *outStr,
                                       void *closure,
                                       char *buffer,
-                                      PRUint32 offset,
-                                      PRUint32 count,
-                                      PRUint32 *countRead)
+                                      uint32_t offset,
+                                      uint32_t count,
+                                      uint32_t *countRead)
     {
         MyCopier *self = (MyCopier *) closure;
 
@@ -191,12 +191,12 @@ RunTest(nsIFile *srcFile, nsIFile *destFile)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsITransport> srcTransport;
-    rv = sts->CreateInputTransport(srcStr, PRInt64(-1), PRInt64(-1), true,
+    rv = sts->CreateInputTransport(srcStr, int64_t(-1), int64_t(-1), true,
                                    getter_AddRefs(srcTransport));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsITransport> destTransport;
-    rv = sts->CreateOutputTransport(destStr, PRInt64(-1), PRInt64(-1), true,
+    rv = sts->CreateOutputTransport(destStr, int64_t(-1), int64_t(-1), true,
                                     getter_AddRefs(destTransport));
     if (NS_FAILED(rv)) return rv;
 
@@ -236,7 +236,7 @@ RunBlockingTest(nsIFile *srcFile, nsIFile *destFile)
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsITransport> destTransport;
-    rv = sts->CreateOutputTransport(fileOut, PRInt64(-1), PRInt64(-1),
+    rv = sts->CreateOutputTransport(fileOut, int64_t(-1), int64_t(-1),
                                     true, getter_AddRefs(destTransport));
     if (NS_FAILED(rv)) return rv;
 
@@ -245,7 +245,7 @@ RunBlockingTest(nsIFile *srcFile, nsIFile *destFile)
     if (NS_FAILED(rv)) return rv;
 
     char buf[120];
-    PRUint32 n;
+    uint32_t n;
     for (;;) {
         rv = srcIn->Read(buf, sizeof(buf), &n);
         if (NS_FAILED(rv) || (n == 0)) return rv;

@@ -80,7 +80,7 @@ nsXPathResult::RemoveObserver()
 }
 
 NS_IMETHODIMP
-nsXPathResult::GetResultType(PRUint16 *aResultType)
+nsXPathResult::GetResultType(uint16_t *aResultType)
 {
     *aResultType = mResultType;
 
@@ -149,13 +149,13 @@ nsXPathResult::GetInvalidIteratorState(bool *aInvalidIteratorState)
 }
 
 NS_IMETHODIMP
-nsXPathResult::GetSnapshotLength(PRUint32 *aSnapshotLength)
+nsXPathResult::GetSnapshotLength(uint32_t *aSnapshotLength)
 {
     if (!isSnapshot()) {
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    *aSnapshotLength = (PRUint32)mResultNodes.Count();
+    *aSnapshotLength = (uint32_t)mResultNodes.Count();
 
     return NS_OK;
 }
@@ -175,7 +175,7 @@ nsXPathResult::IterateNext(nsIDOMNode **aResult)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
 
-    if (mCurrentPos < (PRUint32)mResultNodes.Count()) {
+    if (mCurrentPos < (uint32_t)mResultNodes.Count()) {
         NS_ADDREF(*aResult = mResultNodes[mCurrentPos++]);
     }
     else {
@@ -186,7 +186,7 @@ nsXPathResult::IterateNext(nsIDOMNode **aResult)
 }
 
 NS_IMETHODIMP
-nsXPathResult::SnapshotItem(PRUint32 aIndex, nsIDOMNode **aResult)
+nsXPathResult::SnapshotItem(uint32_t aIndex, nsIDOMNode **aResult)
 {
     if (!isSnapshot()) {
         return NS_ERROR_DOM_TYPE_ERR;
@@ -218,9 +218,9 @@ nsXPathResult::CharacterDataChanged(nsIDocument* aDocument,
 void
 nsXPathResult::AttributeChanged(nsIDocument* aDocument,
                                 Element* aElement,
-                                PRInt32 aNameSpaceID,
+                                int32_t aNameSpaceID,
                                 nsIAtom* aAttribute,
-                                PRInt32 aModType)
+                                int32_t aModType)
 {
     Invalidate(aElement);
 }
@@ -229,7 +229,7 @@ void
 nsXPathResult::ContentAppended(nsIDocument* aDocument,
                                nsIContent* aContainer,
                                nsIContent* aFirstNewContent,
-                               PRInt32 aNewIndexInContainer)
+                               int32_t aNewIndexInContainer)
 {
     Invalidate(aContainer);
 }
@@ -238,7 +238,7 @@ void
 nsXPathResult::ContentInserted(nsIDocument* aDocument,
                                nsIContent* aContainer,
                                nsIContent* aChild,
-                               PRInt32 aIndexInContainer)
+                               int32_t aIndexInContainer)
 {
     Invalidate(aContainer);
 }
@@ -247,14 +247,14 @@ void
 nsXPathResult::ContentRemoved(nsIDocument* aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
-                              PRInt32 aIndexInContainer,
+                              int32_t aIndexInContainer,
                               nsIContent* aPreviousSibling)
 {
     Invalidate(aContainer);
 }
 
 nsresult
-nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType,
+nsXPathResult::SetExprResult(txAExprResult* aExprResult, uint16_t aResultType,
                              nsINode* aContextNode)
 {
     if ((isSnapshot(aResultType) || isIterator(aResultType) ||
@@ -285,7 +285,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType,
     if (aExprResult && aExprResult->getResultType() == txAExprResult::NODESET) {
         txNodeSet *nodeSet = static_cast<txNodeSet*>(aExprResult);
         nsCOMPtr<nsIDOMNode> node;
-        PRInt32 i, count = nodeSet->size();
+        int32_t i, count = nodeSet->size();
         for (i = 0; i < count; ++i) {
             txXPathNativeNode::getNode(nodeSet->get(i), getter_AddRefs(node));
             if (node) {
@@ -381,7 +381,7 @@ nsXPathResult::GetExprResult(txAExprResult** aExprResult)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    PRUint32 i, count = mResultNodes.Count();
+    uint32_t i, count = mResultNodes.Count();
     for (i = 0; i < count; ++i) {
         nsAutoPtr<txXPathNode> node(txXPathNativeNode::createXPathNode(mResultNodes[i]));
         if (!node) {

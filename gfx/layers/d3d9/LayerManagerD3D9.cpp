@@ -48,7 +48,7 @@ LayerManagerD3D9::Initialize(bool force)
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {
-    PRInt32 status;
+    int32_t status;
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
       if (status != nsIGfxInfo::FEATURE_NO_INFO && !forceAccelerate)
       {
@@ -276,7 +276,7 @@ LayerManagerD3D9::ReportFailure(const nsACString &aMsg, HRESULT aCode)
   nsCString msg;
   msg.Append(aMsg);
   msg.AppendLiteral(" Error code: ");
-  msg.AppendInt(PRUint32(aCode));
+  msg.AppendInt(uint32_t(aCode));
   NS_WARNING(msg.BeginReading());
 
   gfx::LogFailure(msg);

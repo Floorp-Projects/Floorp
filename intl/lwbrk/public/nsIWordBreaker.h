@@ -17,8 +17,8 @@
    { 0xb3, 0xaf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
 
 typedef struct {
-  PRUint32 mBegin;
-  PRUint32 mEnd;
+  uint32_t mBegin;
+  uint32_t mEnd;
 } nsWordRange;
 
 class nsIWordBreaker : public nsISupports
@@ -26,13 +26,13 @@ class nsIWordBreaker : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWORDBREAKER_IID)
 
-  virtual bool BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
+  virtual bool BreakInBetween(const PRUnichar* aText1 , uint32_t aTextLen1,
                                 const PRUnichar* aText2 ,
-                                PRUint32 aTextLen2) = 0;
-  virtual nsWordRange FindWord(const PRUnichar* aText1 , PRUint32 aTextLen1,
-                               PRUint32 aOffset) = 0;
-  virtual PRInt32 NextWord(const PRUnichar* aText, PRUint32 aLen, 
-                           PRUint32 aPos) = 0;
+                                uint32_t aTextLen2) = 0;
+  virtual nsWordRange FindWord(const PRUnichar* aText1 , uint32_t aTextLen1,
+                               uint32_t aOffset) = 0;
+  virtual int32_t NextWord(const PRUnichar* aText, uint32_t aLen, 
+                           uint32_t aPos) = 0;
                            
 };
 

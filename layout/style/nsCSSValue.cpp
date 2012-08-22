@@ -19,7 +19,7 @@
 
 namespace css = mozilla::css;
 
-nsCSSValue::nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit)
+nsCSSValue::nsCSSValue(int32_t aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
   NS_ABORT_IF_FALSE(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
@@ -302,7 +302,7 @@ void nsCSSValue::DoReset()
   mUnit = eCSSUnit_Null;
 }
 
-void nsCSSValue::SetIntValue(PRInt32 aValue, nsCSSUnit aUnit)
+void nsCSSValue::SetIntValue(int32_t aValue, nsCSSUnit aUnit)
 {
   NS_ABORT_IF_FALSE(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
                     aUnit == eCSSUnit_EnumColor, "not an int value");
@@ -589,7 +589,7 @@ bool nsCSSValue::IsNonTransparentColor() const
 }
 
 nsCSSValue::Array*
-nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs)
+nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, uint32_t aNumArgs)
 {
   nsRefPtr<nsCSSValue::Array> func = Array::Create(aNumArgs + 1);
   func->Item(0).SetIntValue(aFunctionId, eCSSUnit_Enumerated);
@@ -802,7 +802,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
   }
   else if (eCSSUnit_Enumerated == unit) {
     if (eCSSProperty_text_decoration_line == aProperty) {
-      PRInt32 intValue = GetIntValue();
+      int32_t intValue = GetIntValue();
       if (NS_STYLE_TEXT_DECORATION_LINE_NONE == intValue) {
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
                            aResult);
@@ -818,7 +818,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       }
     }
     else if (eCSSProperty_marks == aProperty) {
-      PRInt32 intValue = GetIntValue();
+      int32_t intValue = GetIntValue();
       if (intValue == NS_STYLE_PAGE_MARKS_NONE) {
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
                            aResult);
@@ -851,7 +851,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       // round-tripping of all other rgba() values.
       aResult.AppendLiteral("transparent");
     } else {
-      PRUint8 a = NS_GET_A(color);
+      uint8_t a = NS_GET_A(color);
       if (a < 255) {
         aResult.AppendLiteral("rgba(");
       } else {
@@ -913,7 +913,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
           NS_ABORT_IF_FALSE(gradient->GetRadialShape().GetUnit() ==
                             eCSSUnit_Enumerated,
                             "bad unit for radial gradient shape");
-          PRInt32 intValue = gradient->GetRadialShape().GetIntValue();
+          int32_t intValue = gradient->GetRadialShape().GetIntValue();
           NS_ABORT_IF_FALSE(intValue != NS_STYLE_GRADIENT_SHAPE_LINEAR,
                             "radial gradient with linear shape?!");
           AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
@@ -929,7 +929,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
           NS_ABORT_IF_FALSE(gradient->GetRadialSize().GetUnit() ==
                             eCSSUnit_Enumerated,
                             "bad unit for radial gradient size");
-          PRInt32 intValue = gradient->GetRadialSize().GetIntValue();
+          int32_t intValue = gradient->GetRadialSize().GetIntValue();
           AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
                                  nsCSSProps::kRadialGradientSizeKTable),
                              aResult);
@@ -1007,7 +1007,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         NS_ABORT_IF_FALSE(gradient->GetRadialShape().GetUnit() ==
                           eCSSUnit_Enumerated,
                           "bad unit for radial gradient shape");
-        PRInt32 intValue = gradient->GetRadialShape().GetIntValue();
+        int32_t intValue = gradient->GetRadialShape().GetIntValue();
         NS_ABORT_IF_FALSE(intValue != NS_STYLE_GRADIENT_SHAPE_LINEAR,
                           "radial gradient with linear shape?!");
         AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
@@ -1020,7 +1020,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         NS_ABORT_IF_FALSE(gradient->GetRadialSize().GetUnit() ==
                           eCSSUnit_Enumerated,
                           "bad unit for radial gradient size");
-        PRInt32 intValue = gradient->GetRadialSize().GetIntValue();
+        int32_t intValue = gradient->GetRadialSize().GetIntValue();
         AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
                                nsCSSProps::kRadialGradientSizeKTable),
                            aResult);
@@ -1031,7 +1031,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       aResult.AppendLiteral(", ");
     }
 
-    for (PRUint32 i = 0 ;;) {
+    for (uint32_t i = 0 ;;) {
       gradient->mStops[i].mColor.AppendToString(aProperty, aResult);
       if (gradient->mStops[i].mLocation.GetUnit() != eCSSUnit_None) {
         aResult.AppendLiteral(" ");
@@ -1789,7 +1789,7 @@ nsCSSValueGradient::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   n += mRadialValues[0].SizeOfExcludingThis(aMallocSizeOf);
   n += mRadialValues[1].SizeOfExcludingThis(aMallocSizeOf);
   n += mStops.SizeOfExcludingThis(aMallocSizeOf);
-  for (PRUint32 i = 0; i < mStops.Length(); i++) {
+  for (uint32_t i = 0; i < mStops.Length(); i++) {
     n += mStops[i].SizeOfExcludingThis(aMallocSizeOf);
   }
   return n;

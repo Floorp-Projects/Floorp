@@ -57,7 +57,7 @@ class nsCppSharedAllocator
       pointer
       allocate( size_type n, const void* /*hint*/=0 )
         {
-          return reinterpret_cast<pointer>(nsMemory::Alloc(static_cast<PRUint32>(n*sizeof(T))));
+          return reinterpret_cast<pointer>(nsMemory::Alloc(static_cast<uint32_t>(n*sizeof(T))));
         }
 
       void
