@@ -103,8 +103,7 @@ public class AboutHomePromoBox extends LinearLayout implements View.OnClickListe
     }
 
     private void updateTextViewResources() {
-        final String promoText = mContext.getResources().getString(mTextResource) + " \u00BB";
-
+        final String promoText = mContext.getResources().getString(mTextResource);
         final String boldName = mContext.getResources().getString(mBoldTextResource);
         final int styleIndex = promoText.indexOf(boldName);
         if (styleIndex < 0)
