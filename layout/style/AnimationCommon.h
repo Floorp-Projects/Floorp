@@ -19,8 +19,11 @@
 
 class nsPresContext;
 
+
 namespace mozilla {
 namespace css {
+
+bool IsGeometricProperty(nsCSSProperty aProperty);
 
 struct CommonElementAnimationData;
 
@@ -150,7 +153,8 @@ struct CommonElementAnimationData : public PRCList
 
   static bool
   CanAnimatePropertyOnCompositor(const dom::Element *aElement,
-                                 nsCSSProperty aProperty);
+                                 nsCSSProperty aProperty,
+                                 bool aHasGeometricProperties);
 
   dom::Element *mElement;
 

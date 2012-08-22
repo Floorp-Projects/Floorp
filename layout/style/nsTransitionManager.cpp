@@ -109,11 +109,8 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 }
 
 bool
-ElementPropertyTransition::CanPerformOnCompositor(mozilla::dom::Element* aElement,
-                                                  TimeStamp aTime) const {
-  return css::CommonElementAnimationData::
-    CanAnimatePropertyOnCompositor(aElement, mProperty) && !IsRemovedSentinel() &&
-    mStartTime < aTime && aTime < mStartTime + mDuration;
+ElementPropertyTransition::IsRunningAt(TimeStamp aTime) const {
+  return !IsRemovedSentinel() && mStartTime < aTime && aTime < mStartTime + mDuration;
 }
 
 bool
@@ -130,13 +127,29 @@ ElementTransitions::HasTransitionOfProperty(nsCSSProperty aProperty) const
 bool
 ElementTransitions::CanPerformOnCompositorThread() const
 {
+  if (mElementProperty != nsGkAtoms::transitionsProperty) {
+    return false;
+  }
+  bool hasGeometricProperty = false;
+  nsIFrame* frame = mElement->GetPrimaryFrame();
+  TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
+
   for (PRUint32 i = 0, i_end = mPropertyTransitions.Length(); i < i_end; ++i) {
-    const ElementPropertyTransition &pt = mPropertyTransitions[i];
+    const ElementPropertyTransition& pt = mPropertyTransitions[i];
+    if (css::IsGeometricProperty(pt.mProperty) && pt.IsRunningAt(now)) {
+      hasGeometricProperty = true;
+      break;
+    }
+  }
+
+  for (PRUint32 i = 0, i_end = mPropertyTransitions.Length(); i < i_end; ++i) {
+    const ElementPropertyTransition& pt = mPropertyTransitions[i];
     if (pt.IsRemovedSentinel()) {
       continue;
     }
     if (!css::CommonElementAnimationData::CanAnimatePropertyOnCompositor(mElement,
-                                                                         pt.mProperty)) {
+                                                                         pt.mProperty,
+                                                                         hasGeometricProperty)) {
       return false;
     }
   }

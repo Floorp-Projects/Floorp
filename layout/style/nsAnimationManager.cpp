@@ -15,6 +15,7 @@
 #include "nsCSSFrameConstructor.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 
 ElementAnimations::ElementAnimations(mozilla::dom::Element *aElement, nsIAtom *aElementProperty,
                                      nsAnimationManager *aAnimationManager)
@@ -262,28 +263,10 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   }
 }
 
-static bool
-CanPerformAnimationOnCompositor(const ElementAnimation* aAnim,
-                                mozilla::dom::Element* aElement)
-{
-  for (PRUint32 propIdx = 0, propEnd = aAnim->mProperties.Length();
-       propIdx != propEnd; ++propIdx) {
-    const AnimationProperty &prop = aAnim->mProperties[propIdx];
-    if (!mozilla::css::CommonElementAnimationData::
-           CanAnimatePropertyOnCompositor(aElement,
-                                          prop.mProperty)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 bool
-ElementAnimation::CanPerformOnCompositor(mozilla::dom::Element* aElement,
-                                         TimeStamp aTime) const
+ElementAnimation::IsRunningAt(TimeStamp aTime) const
 {
-  return CanPerformAnimationOnCompositor(this, aElement) &&
-    !IsPaused() && aTime > mStartTime &&
+  return !IsPaused() && aTime > mStartTime &&
     (aTime - mStartTime)  / mIterationDuration < mIterationCount;
 }
 
@@ -316,19 +299,42 @@ ElementAnimations::HasAnimationOfProperty(nsCSSProperty aProperty) const
 bool
 ElementAnimations::CanPerformOnCompositorThread() const
 {
-  if (mElementProperty != nsGkAtoms::animationsProperty)
+  if (mElementProperty != nsGkAtoms::animationsProperty) {
     return false;
+  }
+  bool hasGeometricProperty = false;
+  nsIFrame* frame = mElement->GetPrimaryFrame();
+  TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
+
   for (PRUint32 animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const ElementAnimation &anim = mAnimations[animIdx];
+    const ElementAnimation& anim = mAnimations[animIdx];
+    for (PRUint32 propIdx = 0, propEnd = anim.mProperties.Length();
+         propIdx != propEnd; ++propIdx) {
+      if (IsGeometricProperty(anim.mProperties[propIdx].mProperty) &&
+          anim.IsRunningAt(now)) {
+        hasGeometricProperty = true;
+        break;
+      }
+    }
+  }
+
+  for (PRUint32 animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    const ElementAnimation& anim = mAnimations[animIdx];
     if (anim.mIterationDuration.ToMilliseconds() <= 0.0) {
       // No animation data
       continue;
     }
 
-    if (!CanPerformAnimationOnCompositor(&anim, mElement))
-      return false;
- }
-
+    for (PRUint32 propIdx = 0, propEnd = anim.mProperties.Length();
+         propIdx != propEnd; ++propIdx) {
+      const AnimationProperty& prop = anim.mProperties[propIdx];
+      if (!CanAnimatePropertyOnCompositor(mElement,
+                                          prop.mProperty,
+                                          hasGeometricProperty)) {
+        return false;
+      }
+    }
+  }
   return true;
 }
 
