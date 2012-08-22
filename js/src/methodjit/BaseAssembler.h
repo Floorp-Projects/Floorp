@@ -536,6 +536,9 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
     // a register, is asking for breaking on some platform or some situation.
     // Be careful to limit to storeArg() during setupABICall.
     void setupABICall(Registers::CallConvention convention, uint32_t generalArgs) {
+        if (sps && sps->enabled())
+            leaveBeforeCall();
+
         JS_ASSERT(!callIsAligned);
 
         uint32_t numArgRegs = Registers::numArgRegs(convention);
@@ -679,6 +682,33 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
         }
     }
 
+  private:
+    // When profiling is enabled, we need to run an epilogue and a prologue to
+    // every call. These two functions manage this code generation and are
+    // called from callWithABI below.
+    void leaveBeforeCall() {
+        if (availInCall.empty()) {
+            RegisterID reg = Registers(Registers::TempRegs).peekReg().reg();
+            saveReg(reg);
+            sps->leave(*pc_, *this, reg);
+            restoreReg(reg);
+        } else {
+            sps->leave(*this, availInCall.peekReg().reg());
+        }
+    }
+
+    void reenterAfterCall() {
+        if (availInCall.empty()) {
+            RegisterID reg = Registers(Registers::TempRegs).peekReg().reg();
+            saveReg(reg);
+            sps->reenter(*this, reg);
+            restoreReg(reg);
+        } else {
+            sps->reenter(*this, availInCall.peekReg().reg());
+        }
+    }
+
+  public:
     // High-level call helper, given an optional function pointer and a
     // calling convention. setupABICall() must have been called beforehand,
     // as well as each numbered argument stored with storeArg().
@@ -707,20 +737,13 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
 
         JS_ASSERT(callIsAligned);
 
-        Call cl;
-        if (sps && sps->enabled()) {
-            RegisterID reg = availInCall.takeAnyReg().reg();
-            sps->leave(*this, reg);
-            cl = callAddress(fun);
-            sps->reenter(*this, reg);
-            availInCall.putReg(reg);
-        } else {
-            cl = callAddress(fun);
-        }
+        Call cl = callAddress(fun);
 
 #ifdef JS_CPU_ARM
         JS_ASSERT(initFlushCount == flushCount());
 #endif
+        if (sps && sps->enabled())
+            reenterAfterCall();
         if (stackAdjust)
             addPtr(Imm32(stackAdjust), stackPointerRegister);
 
