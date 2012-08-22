@@ -1835,10 +1835,10 @@ CodeGenerator::visitCompareS(LCompareS *lir)
 
     // This optimization is only correct for atomized strings,
     // so we need to jump to the ool path.
-    masm.branchTest32(Assembler::NonZero, Address(left, JSString::offsetOfLengthAndFlags()), 
+    masm.branchTest32(Assembler::Zero, Address(left, JSString::offsetOfLengthAndFlags()), 
                       atomMask, ool->entry());
 
-    masm.branchTest32(Assembler::NonZero, Address(right, JSString::offsetOfLengthAndFlags()), 
+    masm.branchTest32(Assembler::Zero, Address(right, JSString::offsetOfLengthAndFlags()), 
                       atomMask, ool->entry());
 
     masm.cmpPtr(left, right);
