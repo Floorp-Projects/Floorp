@@ -56,10 +56,10 @@ interface nsIPopupBoxObject : nsISupports
    * normal event.  This should be set immediately before calling showPopup()
    * if non-default behavior is desired.
    */
-  const PRUint32 ROLLUP_DEFAULT = 0;   /* widget/platform default */
-  const PRUint32 ROLLUP_CONSUME = 1;   /* consume the rollup event */
-  const PRUint32 ROLLUP_NO_CONSUME = 2; /* don't consume the rollup event */
-  void setConsumeRollupEvent(in PRUint32 consume);
+  const uint32_t ROLLUP_DEFAULT = 0;   /* widget/platform default */
+  const uint32_t ROLLUP_CONSUME = 1;   /* consume the rollup event */
+  const uint32_t ROLLUP_NO_CONSUME = 2; /* don't consume the rollup event */
+  void setConsumeRollupEvent(in uint32_t consume);
 
   /** 
    * Size the popup to the given dimensions

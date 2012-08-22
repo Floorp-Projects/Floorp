@@ -31,74 +31,74 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #endif
 
 // Magic values that identify RIFF chunks we're interested in.
-static const PRUint32 RIFF_CHUNK_MAGIC = 0x52494646;
-static const PRUint32 WAVE_CHUNK_MAGIC = 0x57415645;
-static const PRUint32 FRMT_CHUNK_MAGIC = 0x666d7420;
-static const PRUint32 DATA_CHUNK_MAGIC = 0x64617461;
+static const uint32_t RIFF_CHUNK_MAGIC = 0x52494646;
+static const uint32_t WAVE_CHUNK_MAGIC = 0x57415645;
+static const uint32_t FRMT_CHUNK_MAGIC = 0x666d7420;
+static const uint32_t DATA_CHUNK_MAGIC = 0x64617461;
 
 // Size of RIFF chunk header.  4 byte chunk header type and 4 byte size field.
-static const PRUint16 RIFF_CHUNK_HEADER_SIZE = 8;
+static const uint16_t RIFF_CHUNK_HEADER_SIZE = 8;
 
 // Size of RIFF header.  RIFF chunk and 4 byte RIFF type.
-static const PRUint16 RIFF_INITIAL_SIZE = RIFF_CHUNK_HEADER_SIZE + 4;
+static const uint16_t RIFF_INITIAL_SIZE = RIFF_CHUNK_HEADER_SIZE + 4;
 
 // Size of required part of format chunk.  Actual format chunks may be
 // extended (for non-PCM encodings), but we skip any extended data.
-static const PRUint16 WAVE_FORMAT_CHUNK_SIZE = 16;
+static const uint16_t WAVE_FORMAT_CHUNK_SIZE = 16;
 
 // PCM encoding type from format chunk.  Linear PCM is the only encoding
 // supported by nsAudioStream.
-static const PRUint16 WAVE_FORMAT_ENCODING_PCM = 1;
+static const uint16_t WAVE_FORMAT_ENCODING_PCM = 1;
 
 // Maximum number of channels supported
-static const PRUint8 MAX_CHANNELS = 2;
+static const uint8_t MAX_CHANNELS = 2;
 
 namespace {
-  PRUint32
+  uint32_t
   ReadUint32BE(const char** aBuffer)
   {
-    PRUint32 result =
-      PRUint8((*aBuffer)[0]) << 24 |
-      PRUint8((*aBuffer)[1]) << 16 |
-      PRUint8((*aBuffer)[2]) << 8 |
-      PRUint8((*aBuffer)[3]);
-    *aBuffer += sizeof(PRUint32);
+    uint32_t result =
+      uint8_t((*aBuffer)[0]) << 24 |
+      uint8_t((*aBuffer)[1]) << 16 |
+      uint8_t((*aBuffer)[2]) << 8 |
+      uint8_t((*aBuffer)[3]);
+    *aBuffer += sizeof(uint32_t);
     return result;
   }
 
-  PRUint32
+  uint32_t
   ReadUint32LE(const char** aBuffer)
   {
-    PRUint32 result =
-      PRUint8((*aBuffer)[3]) << 24 |
-      PRUint8((*aBuffer)[2]) << 16 |
-      PRUint8((*aBuffer)[1]) << 8 |
-      PRUint8((*aBuffer)[0]);
-    *aBuffer += sizeof(PRUint32);
+    uint32_t result =
+      uint8_t((*aBuffer)[3]) << 24 |
+      uint8_t((*aBuffer)[2]) << 16 |
+      uint8_t((*aBuffer)[1]) << 8 |
+      uint8_t((*aBuffer)[0]);
+    *aBuffer += sizeof(uint32_t);
     return result;
   }
 
-  PRUint16
+  uint16_t
   ReadUint16LE(const char** aBuffer)
   {
-    PRUint16 result =
-      PRUint8((*aBuffer)[1]) << 8 |
-      PRUint8((*aBuffer)[0]) << 0;
-    *aBuffer += sizeof(PRUint16);
+    uint16_t result =
+      uint8_t((*aBuffer)[1]) << 8 |
+      uint8_t((*aBuffer)[0]) << 0;
+    *aBuffer += sizeof(uint16_t);
     return result;
   }
 
-  PRInt16
+  int16_t
   ReadInt16LE(const char** aBuffer)
   {
-    return static_cast<PRInt16>(ReadUint16LE(aBuffer));
+    return static_cast<int16_t>(ReadUint16LE(aBuffer));
   }
 
-  PRUint8
+  uint8_t
   ReadUint8(const char** aBuffer)
   {
-    PRUint8 result = PRUint8((*aBuffer)[0]);
-    *aBuffer += sizeof(PRUint8);
+    uint8_t result = uint8_t((*aBuffer)[0]);
+    *aBuffer += sizeof(uint8_t);
     return result;
   }
 }
@@ -141,7 +141,7 @@ nsresult nsWaveReader::ReadMetadata(nsVideoInfo* aInfo,
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   mDecoder->GetStateMachine()->SetDuration(
-    static_cast<PRInt64>(BytesToTime(GetDataLength()) * USECS_PER_S));
+    static_cast<int64_t>(BytesToTime(GetDataLength()) * USECS_PER_S));
 
   return NS_OK;
 }
@@ -150,20 +150,20 @@ bool nsWaveReader::DecodeAudioData()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
-  PRInt64 pos = GetPosition() - mWavePCMOffset;
-  PRInt64 len = GetDataLength();
-  PRInt64 remaining = len - pos;
+  int64_t pos = GetPosition() - mWavePCMOffset;
+  int64_t len = GetDataLength();
+  int64_t remaining = len - pos;
   NS_ASSERTION(remaining >= 0, "Current wave position is greater than wave file length");
 
-  static const PRInt64 BLOCK_SIZE = 4096;
-  PRInt64 readSize = NS_MIN(BLOCK_SIZE, remaining);
-  PRInt64 frames = readSize / mFrameSize;
+  static const int64_t BLOCK_SIZE = 4096;
+  int64_t readSize = NS_MIN(BLOCK_SIZE, remaining);
+  int64_t frames = readSize / mFrameSize;
 
-  PR_STATIC_ASSERT(PRUint64(BLOCK_SIZE) < UINT_MAX / sizeof(AudioDataValue) / MAX_CHANNELS);
+  PR_STATIC_ASSERT(uint64_t(BLOCK_SIZE) < UINT_MAX / sizeof(AudioDataValue) / MAX_CHANNELS);
   const size_t bufferSize = static_cast<size_t>(frames * mChannels);
   nsAutoArrayPtr<AudioDataValue> sampleBuffer(new AudioDataValue[bufferSize]);
 
-  PR_STATIC_ASSERT(PRUint64(BLOCK_SIZE) < UINT_MAX / sizeof(char));
+  PR_STATIC_ASSERT(uint64_t(BLOCK_SIZE) < UINT_MAX / sizeof(char));
   nsAutoArrayPtr<char> dataBuffer(new char[static_cast<size_t>(readSize)]);
 
   if (!ReadAll(dataBuffer, readSize)) {
@@ -177,7 +177,7 @@ bool nsWaveReader::DecodeAudioData()
   for (int i = 0; i < frames; ++i) {
     for (unsigned int j = 0; j < mChannels; ++j) {
       if (mSampleFormat == nsAudioStream::FORMAT_U8) {
-        PRUint8 v =  ReadUint8(&d);
+        uint8_t v =  ReadUint8(&d);
 #if defined(MOZ_SAMPLE_TYPE_S16LE)
         *s++ = (v * (1.F/PR_UINT8_MAX)) * PR_UINT16_MAX + PR_INT16_MIN;
 #elif defined(MOZ_SAMPLE_TYPE_FLOAT32)
@@ -185,11 +185,11 @@ bool nsWaveReader::DecodeAudioData()
 #endif
       }
       else if (mSampleFormat == nsAudioStream::FORMAT_S16_LE) {
-        PRInt16 v =  ReadInt16LE(&d);
+        int16_t v =  ReadInt16LE(&d);
 #if defined(MOZ_SAMPLE_TYPE_S16LE)
         *s++ = v;
 #elif defined(MOZ_SAMPLE_TYPE_FLOAT32)
-        *s++ = (PRInt32(v) - PR_INT16_MIN) / float(PR_UINT16_MAX) * 2.F - 1.F;
+        *s++ = (int32_t(v) - PR_INT16_MIN) / float(PR_UINT16_MAX) * 2.F - 1.F;
 #endif
       }
     }
@@ -202,9 +202,9 @@ bool nsWaveReader::DecodeAudioData()
   NS_ASSERTION(frames < PR_INT32_MAX, "frames overflow");
 
   mAudioQueue.Push(new AudioData(pos,
-                                 static_cast<PRInt64>(posTime * USECS_PER_S),
-                                 static_cast<PRInt64>(readSizeTime * USECS_PER_S),
-                                 static_cast<PRInt32>(frames),
+                                 static_cast<int64_t>(posTime * USECS_PER_S),
+                                 static_cast<int64_t>(readSizeTime * USECS_PER_S),
+                                 static_cast<int32_t>(frames),
                                  sampleBuffer.forget(),
                                  mChannels));
 
@@ -212,14 +212,14 @@ bool nsWaveReader::DecodeAudioData()
 }
 
 bool nsWaveReader::DecodeVideoFrame(bool &aKeyframeSkip,
-                                      PRInt64 aTimeThreshold)
+                                      int64_t aTimeThreshold)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   return false;
 }
 
-nsresult nsWaveReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime)
+nsresult nsWaveReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lld", mDecoder, aTarget));
@@ -228,9 +228,9 @@ nsresult nsWaveReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   }
   double d = BytesToTime(GetDataLength());
   NS_ASSERTION(d < INT64_MAX / USECS_PER_S, "Duration overflow"); 
-  PRInt64 duration = static_cast<PRInt64>(d * USECS_PER_S);
+  int64_t duration = static_cast<int64_t>(d * USECS_PER_S);
   double seekTime = NS_MIN(aTarget, duration) / static_cast<double>(USECS_PER_S);
-  PRInt64 position = RoundDownToFrame(static_cast<PRInt64>(TimeToBytes(seekTime)));
+  int64_t position = RoundDownToFrame(static_cast<int64_t>(TimeToBytes(seekTime)));
   NS_ASSERTION(INT64_MAX - mWavePCMOffset > position, "Integer overflow during wave seek");
   position += mWavePCMOffset;
   return mDecoder->GetResource()->Seek(nsISeekableStream::NS_SEEK_SET, position);
@@ -240,14 +240,14 @@ static double RoundToUsecs(double aSeconds) {
   return floor(aSeconds * USECS_PER_S) / USECS_PER_S;
 }
 
-nsresult nsWaveReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
+nsresult nsWaveReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
 {
   if (!mInfo.mHasAudio) {
     return NS_OK;
   }
-  PRInt64 startOffset = mDecoder->GetResource()->GetNextCachedData(mWavePCMOffset);
+  int64_t startOffset = mDecoder->GetResource()->GetNextCachedData(mWavePCMOffset);
   while (startOffset >= 0) {
-    PRInt64 endOffset = mDecoder->GetResource()->GetCachedDataEnd(startOffset);
+    int64_t endOffset = mDecoder->GetResource()->GetCachedDataEnd(startOffset);
     // Bytes [startOffset..endOffset] are cached.
     NS_ASSERTION(startOffset >= mWavePCMOffset, "Integer underflow in GetBuffered");
     NS_ASSERTION(endOffset >= mWavePCMOffset, "Integer underflow in GetBuffered");
@@ -263,15 +263,15 @@ nsresult nsWaveReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 }
 
 bool
-nsWaveReader::ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead)
+nsWaveReader::ReadAll(char* aBuf, int64_t aSize, int64_t* aBytesRead)
 {
-  PRUint32 got = 0;
+  uint32_t got = 0;
   if (aBytesRead) {
     *aBytesRead = 0;
   }
   do {
-    PRUint32 read = 0;
-    if (NS_FAILED(mDecoder->GetResource()->Read(aBuf + got, PRUint32(aSize - got), &read))) {
+    uint32_t read = 0;
+    if (NS_FAILED(mDecoder->GetResource()->Read(aBuf + got, uint32_t(aSize - got), &read))) {
       NS_WARNING("Resource read failed");
       return false;
     }
@@ -300,7 +300,7 @@ nsWaveReader::LoadRIFFChunk()
     return false;
   }
 
-  PR_STATIC_ASSERT(sizeof(PRUint32) * 2 <= RIFF_INITIAL_SIZE);
+  PR_STATIC_ASSERT(sizeof(uint32_t) * 2 <= RIFF_INITIAL_SIZE);
   if (ReadUint32BE(&p) != RIFF_CHUNK_MAGIC) {
     NS_WARNING("resource data not in RIFF format");
     return false;
@@ -318,7 +318,7 @@ nsWaveReader::LoadRIFFChunk()
 }
 
 bool
-nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
+nsWaveReader::ScanForwardUntil(uint32_t aWantedChunk, uint32_t* aChunkSize)
 {
   NS_ABORT_IF_FALSE(aChunkSize, "Require aChunkSize argument");
   *aChunkSize = 0;
@@ -332,9 +332,9 @@ nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
       return false;
     }
 
-    PR_STATIC_ASSERT(sizeof(PRUint32) * 2 <= CHUNK_HEADER_SIZE);
-    PRUint32 magic = ReadUint32BE(&p);
-    PRUint32 chunkSize = ReadUint32LE(&p);
+    PR_STATIC_ASSERT(sizeof(uint32_t) * 2 <= CHUNK_HEADER_SIZE);
+    uint32_t magic = ReadUint32BE(&p);
+    uint32_t chunkSize = ReadUint32LE(&p);
 
     if (magic == aWantedChunk) {
       *aChunkSize = chunkSize;
@@ -348,7 +348,7 @@ nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
     PR_STATIC_ASSERT(MAX_CHUNK_SIZE < UINT_MAX / sizeof(char));
     nsAutoArrayPtr<char> chunk(new char[MAX_CHUNK_SIZE]);
     while (chunkSize > 0) {
-      PRUint32 size = NS_MIN(chunkSize, MAX_CHUNK_SIZE);
+      uint32_t size = NS_MIN(chunkSize, MAX_CHUNK_SIZE);
       if (!ReadAll(chunk.get(), size)) {
         return false;
       }
@@ -360,7 +360,7 @@ nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
 bool
 nsWaveReader::LoadFormatChunk()
 {
-  PRUint32 fmtSize, rate, channels, frameSize, sampleFormat;
+  uint32_t fmtSize, rate, channels, frameSize, sampleFormat;
   char waveFormat[WAVE_FORMAT_CHUNK_SIZE];
   const char* p = waveFormat;
 
@@ -378,12 +378,12 @@ nsWaveReader::LoadFormatChunk()
     return false;
   }
 
-  PR_STATIC_ASSERT(sizeof(PRUint16) +
-                   sizeof(PRUint16) +
-                   sizeof(PRUint32) +
+  PR_STATIC_ASSERT(sizeof(uint16_t) +
+                   sizeof(uint16_t) +
+                   sizeof(uint32_t) +
                    4 +
-                   sizeof(PRUint16) +
-                   sizeof(PRUint16) <= sizeof(waveFormat));
+                   sizeof(uint16_t) +
+                   sizeof(uint16_t) <= sizeof(waveFormat));
   if (ReadUint16LE(&p) != WAVE_FORMAT_ENCODING_PCM) {
     NS_WARNING("WAVE is not uncompressed PCM, compressed encodings are not supported");
     return false;
@@ -412,8 +412,8 @@ nsWaveReader::LoadFormatChunk()
       return false;
     }
 
-    PR_STATIC_ASSERT(sizeof(PRUint16) <= sizeof(extLength));
-    PRUint16 extra = ReadUint16LE(&p);
+    PR_STATIC_ASSERT(sizeof(uint16_t) <= sizeof(extLength));
+    uint16_t extra = ReadUint16LE(&p);
     if (fmtSize - (WAVE_FORMAT_CHUNK_SIZE + 2) != extra) {
       NS_WARNING("Invalid extended format chunk size");
       return false;
@@ -465,12 +465,12 @@ nsWaveReader::FindDataOffset()
 
   // The "data" chunk may not directly follow the "format" chunk, so skip
   // over any intermediate chunks.
-  PRUint32 length;
+  uint32_t length;
   if (!ScanForwardUntil(DATA_CHUNK_MAGIC, &length)) {
     return false;
   }
 
-  PRInt64 offset = mDecoder->GetResource()->Tell();
+  int64_t offset = mDecoder->GetResource()->Tell();
   if (offset <= 0 || offset > PR_UINT32_MAX) {
     NS_WARNING("PCM data offset out of range");
     return false;
@@ -478,47 +478,47 @@ nsWaveReader::FindDataOffset()
 
   ReentrantMonitorAutoEnter monitor(mDecoder->GetReentrantMonitor());
   mWaveLength = length;
-  mWavePCMOffset = PRUint32(offset);
+  mWavePCMOffset = uint32_t(offset);
   return true;
 }
 
 double
-nsWaveReader::BytesToTime(PRInt64 aBytes) const
+nsWaveReader::BytesToTime(int64_t aBytes) const
 {
   NS_ABORT_IF_FALSE(aBytes >= 0, "Must be >= 0");
   return float(aBytes) / mSampleRate / mFrameSize;
 }
 
-PRInt64
+int64_t
 nsWaveReader::TimeToBytes(double aTime) const
 {
   NS_ABORT_IF_FALSE(aTime >= 0.0f, "Must be >= 0");
-  return RoundDownToFrame(PRInt64(aTime * mSampleRate * mFrameSize));
+  return RoundDownToFrame(int64_t(aTime * mSampleRate * mFrameSize));
 }
 
-PRInt64
-nsWaveReader::RoundDownToFrame(PRInt64 aBytes) const
+int64_t
+nsWaveReader::RoundDownToFrame(int64_t aBytes) const
 {
   NS_ABORT_IF_FALSE(aBytes >= 0, "Must be >= 0");
   return aBytes - (aBytes % mFrameSize);
 }
 
-PRInt64
+int64_t
 nsWaveReader::GetDataLength()
 {
-  PRInt64 length = mWaveLength;
+  int64_t length = mWaveLength;
   // If the decoder has a valid content length, and it's shorter than the
   // expected length of the PCM data, calculate the playback duration from
   // the content length rather than the expected PCM data length.
-  PRInt64 streamLength = mDecoder->GetResource()->GetLength();
+  int64_t streamLength = mDecoder->GetResource()->GetLength();
   if (streamLength >= 0) {
-    PRInt64 dataLength = NS_MAX<PRInt64>(0, streamLength - mWavePCMOffset);
+    int64_t dataLength = NS_MAX<int64_t>(0, streamLength - mWavePCMOffset);
     length = NS_MIN(dataLength, length);
   }
   return length;
 }
 
-PRInt64
+int64_t
 nsWaveReader::GetPosition()
 {
   return mDecoder->GetResource()->Tell();

@@ -6,7 +6,7 @@
 #include "nsHtml5Portability.h"
 #include "nsHtml5AtomTable.h"
 
-nsHtml5ReleasableAttributeName::nsHtml5ReleasableAttributeName(PRInt32* uri, nsIAtom** local, nsIAtom** prefix)
+nsHtml5ReleasableAttributeName::nsHtml5ReleasableAttributeName(int32_t* uri, nsIAtom** local, nsIAtom** prefix)
   : nsHtml5AttributeName(uri, local, prefix)
 {
 }

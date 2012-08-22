@@ -582,7 +582,7 @@ JSStructuredCloneWriter::write(const Value &v)
                 if (prop) {
                     RootedValue val(context());
                     if (!writeId(id) ||
-                        !obj->getGeneric(context(), id, &val) ||
+                        !JSObject::getGeneric(context(), obj, obj, id, &val) ||
                         !startWrite(val))
                         return false;
                 }
@@ -922,7 +922,7 @@ JSStructuredCloneReader::read(Value *vp)
             objs.popBack();
         } else {
             RootedValue v(context());
-            if (!startRead(v.address()) || !obj->defineGeneric(context(), id, v))
+            if (!startRead(v.address()) || !JSObject::defineGeneric(context(), obj, id, v))
                 return false;
         }
     }

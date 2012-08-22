@@ -149,7 +149,7 @@ nsWindow::DumpWindows()
 void
 nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent)
 {
-    for (PRUint32 i = 0; i < wins.Length(); ++i) {
+    for (uint32_t i = 0; i < wins.Length(); ++i) {
         nsWindow *w = wins[i];
         LogWindow(w, i, indent);
         DumpWindows(w->mChildren, indent+1);
@@ -260,7 +260,7 @@ nsWindow::Destroy(void)
 NS_IMETHODIMP
 nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
 {
-    for (PRUint32 i = 0; i < config.Length(); ++i) {
+    for (uint32_t i = 0; i < config.Length(); ++i) {
         nsWindow *childWin = (nsWindow*) config[i].mChild;
         childWin->Resize(config[i].mBounds.x,
                          config[i].mBounds.y,
@@ -392,8 +392,8 @@ nsWindow::IsVisible() const
 
 NS_IMETHODIMP
 nsWindow::ConstrainPosition(bool aAllowSlop,
-                            PRInt32 *aX,
-                            PRInt32 *aY)
+                            int32_t *aX,
+                            int32_t *aY)
 {
     ALOG("nsWindow[%p]::ConstrainPosition %d [%d %d]", (void*)this, aAllowSlop, *aX, *aY);
 
@@ -407,8 +407,8 @@ nsWindow::ConstrainPosition(bool aAllowSlop,
 }
 
 NS_IMETHODIMP
-nsWindow::Move(PRInt32 aX,
-               PRInt32 aY)
+nsWindow::Move(int32_t aX,
+               int32_t aY)
 {
     if (IsTopLevel())
         return NS_OK;
@@ -421,8 +421,8 @@ nsWindow::Move(PRInt32 aX,
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(PRInt32 aWidth,
-                 PRInt32 aHeight,
+nsWindow::Resize(int32_t aWidth,
+                 int32_t aHeight,
                  bool aRepaint)
 {
     return Resize(mBounds.x,
@@ -433,10 +433,10 @@ nsWindow::Resize(PRInt32 aWidth,
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(PRInt32 aX,
-                 PRInt32 aY,
-                 PRInt32 aWidth,
-                 PRInt32 aHeight,
+nsWindow::Resize(int32_t aX,
+                 int32_t aY,
+                 int32_t aWidth,
+                 int32_t aHeight,
                  bool aRepaint)
 {
     ALOG("nsWindow[%p]::Resize [%d %d %d %d] (repaint %d)", (void*)this, aX, aY, aWidth, aHeight, aRepaint);
@@ -459,7 +459,7 @@ nsWindow::Resize(PRInt32 aX,
 }
 
 NS_IMETHODIMP
-nsWindow::SetZIndex(PRInt32 aZIndex)
+nsWindow::SetZIndex(int32_t aZIndex)
 {
     ALOG("nsWindow[%p]::SetZIndex %d ignored", (void*)this, aZIndex);
 
@@ -475,7 +475,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 }
 
 NS_IMETHODIMP
-nsWindow::SetSizeMode(PRInt32 aMode)
+nsWindow::SetSizeMode(int32_t aMode)
 {
     switch (aMode) {
         case nsSizeMode_Minimized:
@@ -757,7 +757,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             win->mBounds.width = 0;
             win->mBounds.height = 0;
             // also resize the children
-            for (PRUint32 i = 0; i < win->mChildren.Length(); i++) {
+            for (uint32_t i = 0; i < win->mChildren.Length(); i++) {
                 win->mChildren[i]->mBounds.width = 0;
                 win->mChildren[i]->mBounds.height = 0;
             }
@@ -799,7 +799,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             // Tell the content process the new screen size.
             nsTArray<ContentParent*> cplist;
             ContentParent::GetAll(cplist);
-            for (PRUint32 i = 0; i < cplist.Length(); ++i)
+            for (uint32_t i = 0; i < cplist.Length(); ++i)
                 unused << cplist[i]->SendScreenSizeChanged(gAndroidScreenBounds);
 
             if (gContentCreationNotifier)
@@ -974,13 +974,13 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
     nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
 
     // Figure out if any of our children cover this widget completely
-    PRInt32 coveringChildIndex = -1;
-    for (PRUint32 i = 0; i < mChildren.Length(); ++i) {
+    int32_t coveringChildIndex = -1;
+    for (uint32_t i = 0; i < mChildren.Length(); ++i) {
         if (mChildren[i]->mBounds.IsEmpty())
             continue;
 
         if (mChildren[i]->mBounds.Contains(boundsRect)) {
-            coveringChildIndex = PRInt32(i);
+            coveringChildIndex = int32_t(i);
         }
     }
 
@@ -1037,7 +1037,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
     if (targetSurface)
         offset = targetSurface->GetDeviceOffset();
 
-    for (PRUint32 i = coveringChildIndex; i < mChildren.Length(); ++i) {
+    for (uint32_t i = coveringChildIndex; i < mChildren.Length(); ++i) {
         if (mChildren[i]->mBounds.IsEmpty() ||
             !mChildren[i]->mBounds.Intersects(boundsRect)) {
             continue;
@@ -1263,7 +1263,7 @@ nsWindow::GetAndroidScreenBounds()
 }
 
 void *
-nsWindow::GetNativeData(PRUint32 aDataType)
+nsWindow::GetNativeData(uint32_t aDataType)
 {
     switch (aDataType) {
         // used by GLContextProviderEGL, NULL is EGL_DEFAULT_DISPLAY
@@ -1280,8 +1280,8 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 void
 nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
 {
-    PRUint32 msg;
-    PRInt16 buttons = nsMouseEvent::eLeftButtonFlag;
+    uint32_t msg;
+    int16_t buttons = nsMouseEvent::eLeftButtonFlag;
     switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
 #ifndef MOZ_ONLY_TOUCH_EVENTS
         case AndroidMotionEvent::ACTION_DOWN:
@@ -1448,7 +1448,7 @@ nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
 void
 nsWindow::OnGestureEvent(AndroidGeckoEvent *ae)
 {
-    PRUint32 msg = 0;
+    uint32_t msg = 0;
 
     nsIntPoint midPoint;
     midPoint.x = ((ae->Points()[0].x + ae->Points()[1].x) / 2);
@@ -1495,7 +1495,7 @@ nsWindow::OnGestureEvent(AndroidGeckoEvent *ae)
         if (mStartPoint) {
             double swipeDistance = getDistance(midPoint, *mStartPoint);
             if (swipeDistance > mSwipeMinDistance) {
-                PRUint32 direction = 0;
+                uint32_t direction = 0;
                 nsIntPoint motion = midPoint - *mStartPoint;
 
                 if (motion.x < -swipeDistance/2)
@@ -1523,8 +1523,8 @@ nsWindow::OnGestureEvent(AndroidGeckoEvent *ae)
 }
 
 void
-nsWindow::DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
-                               const nsIntPoint &refPoint, PRUint64 time)
+nsWindow::DispatchGestureEvent(uint32_t msg, uint32_t direction, double delta,
+                               const nsIntPoint &refPoint, uint64_t time)
 {
     nsSimpleGestureEvent event(true, msg, this, direction, delta);
 
@@ -1656,7 +1656,7 @@ static void InitPluginEvent(ANPEvent* pluginEvent, ANPKeyActions keyAction,
                             AndroidGeckoEvent& key)
 {
     int androidKeyCode = key.KeyCode();
-    PRUint32 domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
+    uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
 
     int modifiers = 0;
     if (key.IsAltPressed())
@@ -1679,7 +1679,7 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key,
                        ANPEvent* pluginEvent)
 {
     int androidKeyCode = key.KeyCode();
-    PRUint32 domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
+    uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
 
     if (event.message == NS_KEY_PRESS) {
         // Android gives us \n, so filter out some control characters.
@@ -1725,7 +1725,7 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
     bool isDown = ae->Action() == AndroidKeyEvent::ACTION_DOWN;
     bool isLongPress = !!(ae->Flags() & AndroidKeyEvent::FLAG_LONG_PRESS);
     bool doCommand = false;
-    PRUint32 keyCode = ae->KeyCode();
+    uint32_t keyCode = ae->KeyCode();
 
     if (isDown) {
         switch (keyCode) {
@@ -1784,7 +1784,7 @@ void
 nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
 {
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
-    PRUint32 msg;
+    uint32_t msg;
     switch (ae->Action()) {
     case AndroidKeyEvent::ACTION_DOWN:
         msg = NS_KEY_DOWN;
@@ -1991,10 +1991,10 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             nsSelectionEvent selEvent(true, NS_SELECTION_SET, this);
             InitEvent(selEvent, nullptr);
 
-            selEvent.mOffset = PRUint32(ae->Count() >= 0 ?
+            selEvent.mOffset = uint32_t(ae->Count() >= 0 ?
                                         ae->Offset() :
                                         ae->Offset() + ae->Count());
-            selEvent.mLength = PRUint32(NS_ABS(ae->Count()));
+            selEvent.mLength = uint32_t(NS_ABS(ae->Count()));
             selEvent.mReversed = ae->Count() >= 0 ? false : true;
 
             DispatchEvent(&selEvent);
@@ -2035,7 +2035,7 @@ nsWindow::FindWindowForPoint(const nsIntPoint& pt)
     // children mBounds are relative to their parent
     nsIntPoint childPoint(pt.x - mBounds.x, pt.y - mBounds.y);
 
-    for (PRUint32 i = 0; i < mChildren.Length(); ++i) {
+    for (uint32_t i = 0; i < mChildren.Length(); ++i) {
         if (mChildren[i]->mBounds.Contains(childPoint))
             return mChildren[i]->FindWindowForPoint(childPoint);
     }
@@ -2165,7 +2165,7 @@ nsWindow::OnIMEFocusChange(bool aFocus)
 }
 
 NS_IMETHODIMP
-nsWindow::OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd)
+nsWindow::OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd)
 {
     ALOGIME("IME: OnIMETextChange: s=%d, oe=%d, ne=%d",
             aStart, aOldEnd, aNewEnd);

@@ -102,9 +102,9 @@ public:
 
   static nsresult OnFocusChange(bool, nsWindow*, IMEState::Enabled);
 
-  static nsresult OnTextChange(PRUint32 aStart,
-                               PRUint32 aOldEnd,
-                               PRUint32 aNewEnd)
+  static nsresult OnTextChange(uint32_t aStart,
+                               uint32_t aOldEnd,
+                               uint32_t aNewEnd)
   {
     if (!sTsfTextStore) return NS_OK;
     return sTsfTextStore->OnTextChangeInternal(aStart, aOldEnd, aNewEnd);
@@ -164,7 +164,7 @@ protected:
   HRESULT  OnStartCompositionInternal(ITfCompositionView*, ITfRange*, bool);
   void     CommitCompositionInternal(bool);
   void     SetInputContextInternal(IMEState::Enabled aState);
-  nsresult OnTextChangeInternal(PRUint32, PRUint32, PRUint32);
+  nsresult OnTextChangeInternal(uint32_t, uint32_t, uint32_t);
   void     OnTextChangeMsgInternal(void);
   nsresult OnSelectionChangeInternal(void);
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,

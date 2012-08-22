@@ -24,7 +24,7 @@ interface nsIConsoleService : nsISupports
      * 0-length array when called from script.
      */
     void getMessageArray([array, size_is(count)] out nsIConsoleMessage messages,
-                         out PRUint32 count);
+                         out uint32_t count);
 
     /**
      * To guard against stack overflows from listeners that could log

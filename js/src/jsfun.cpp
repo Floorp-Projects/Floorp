@@ -206,22 +206,22 @@ fun_enumerate(JSContext *cx, HandleObject obj)
 
     if (!obj->isBoundFunction()) {
         id = NameToId(cx->runtime->atomState.classPrototypeAtom);
-        if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
+        if (!JSObject::hasProperty(cx, obj, id, &found, JSRESOLVE_QUALIFIED))
             return false;
     }
 
     id = NameToId(cx->runtime->atomState.lengthAtom);
-    if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
+    if (!JSObject::hasProperty(cx, obj, id, &found, JSRESOLVE_QUALIFIED))
         return false;
 
     id = NameToId(cx->runtime->atomState.nameAtom);
-    if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
+    if (!JSObject::hasProperty(cx, obj, id, &found, JSRESOLVE_QUALIFIED))
         return false;
 
     for (unsigned i = 0; i < ArrayLength(poisonPillProps); i++) {
         const uint16_t offset = poisonPillProps[i];
         id = NameToId(OFFSET_TO_NAME(cx->runtime, offset));
-        if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
+        if (!JSObject::hasProperty(cx, obj, id, &found, JSRESOLVE_QUALIFIED))
             return false;
     }
 
@@ -253,7 +253,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     if (!objProto)
         return NULL;
     RootedObject proto(cx, NewObjectWithGivenProto(cx, &ObjectClass, objProto, NULL));
-    if (!proto || !proto->setSingletonType(cx))
+    if (!proto || !JSObject::setSingletonType(cx, proto))
         return NULL;
 
     /*
@@ -264,11 +264,11 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
      */
     RootedValue protoVal(cx, ObjectValue(*proto));
     RootedValue objVal(cx, ObjectValue(*obj));
-    if (!obj->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
-                             protoVal, JS_PropertyStub, JS_StrictPropertyStub,
-                             JSPROP_PERMANENT) ||
-        !proto->defineProperty(cx, cx->runtime->atomState.constructorAtom,
-                               objVal, JS_PropertyStub, JS_StrictPropertyStub, 0))
+    if (!JSObject::defineProperty(cx, obj, cx->runtime->atomState.classPrototypeAtom,
+                                  protoVal, JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_PERMANENT) ||
+        !JSObject::defineProperty(cx, proto, cx->runtime->atomState.constructorAtom,
+                                  objVal, JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
        return NULL;
     }
@@ -416,7 +416,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
         fun->atom.init(atom);
         fun->initScript(script);
         script->setFunction(fun);
-        if (!fun->setTypeForScriptedFunction(cx))
+        if (!JSFunction::setTypeForScriptedFunction(cx, fun))
             return false;
         JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
@@ -456,7 +456,7 @@ js::CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleF
     clone->atom.init(srcFun->atom);
     clone->initScript(clonedScript);
     clonedScript->setFunction(clone);
-    if (!clone->setTypeForScriptedFunction(cx))
+    if (!JSFunction::setTypeForScriptedFunction(cx, clone))
         return NULL;
 
     js_CallNewScriptHook(cx, clone->script(), clone);
@@ -480,7 +480,7 @@ fun_hasInstance(JSContext *cx, HandleObject obj_, const Value *v, JSBool *bp)
     }
 
     RootedValue pval(cx);
-    if (!obj->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &pval))
+    if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.classPrototypeAtom, &pval))
         return JS_FALSE;
 
     if (pval.isPrimitive()) {
@@ -926,7 +926,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
          */
         RootedObject aobj(cx, &vp[3].toObject());
         uint32_t length;
-        if (!js_GetLengthProperty(cx, aobj, &length))
+        if (!GetLengthProperty(cx, aobj, &length))
             return false;
 
         /* Step 6. */
@@ -1443,7 +1443,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
     }
     fun->atom.init(atom);
 
-    if (native && !fun->setSingletonType(cx))
+    if (native && !JSObject::setSingletonType(cx, fun))
         return NULL;
 
     return fun;
@@ -1488,7 +1488,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
         if (fun->getProto() == proto && !fun->hasSingletonType())
             clone->setType(fun->type());
     } else {
-        if (!clone->setSingletonType(cx))
+        if (!JSObject::setSingletonType(cx, clone))
             return NULL;
 
         /*
@@ -1570,7 +1570,7 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
         return NULL;
 
     RootedValue funVal(cx, ObjectValue(*fun));
-    if (!obj->defineGeneric(cx, id, funVal, gop, sop, attrs & ~JSFUN_FLAGS_MASK))
+    if (!JSObject::defineGeneric(cx, obj, id, funVal, gop, sop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
 
     return fun;

@@ -92,7 +92,7 @@ private:
   // ownership.
 
   nsIDOMCSSValue* GetEllipseRadii(const nsStyleCorners& aRadius,
-                                  PRUint8 aFullCorner,
+                                  uint8_t aFullCorner,
                                   bool aIsBorder); // else outline
 
   nsIDOMCSSValue* GetOffsetWidthFor(mozilla::css::Side aSide);
@@ -123,9 +123,9 @@ private:
                                     const nscolor& aDefaultColor,
                                     bool aIsBoxShadow);
 
-  nsIDOMCSSValue* GetBackgroundList(PRUint8 nsStyleBackground::Layer::* aMember,
-                                    PRUint32 nsStyleBackground::* aCount,
-                                    const PRInt32 aTable[]);
+  nsIDOMCSSValue* GetBackgroundList(uint8_t nsStyleBackground::Layer::* aMember,
+                                    uint32_t nsStyleBackground::* aCount,
+                                    const int32_t aTable[]);
 
   void GetCSSGradientString(const nsStyleGradient* aGradient,
                             nsAString& aString);
@@ -437,7 +437,7 @@ private:
                        const nsStyleCoord& aCoord,
                        bool aClampNegativeCalc,
                        PercentageBaseGetter aPercentageBaseGetter = nullptr,
-                       const PRInt32 aTable[] = nullptr,
+                       const int32_t aTable[] = nullptr,
                        nscoord aMinAppUnits = nscoord_MIN,
                        nscoord aMaxAppUnits = nscoord_MAX);
 
@@ -469,7 +469,7 @@ private:
     bool mNeedsLayoutFlush;
   };
 
-  static const ComputedStyleMapEntry* GetQueryablePropertyMap(PRUint32* aLength);
+  static const ComputedStyleMapEntry* GetQueryablePropertyMap(uint32_t* aLength);
 
   // We don't really have a good immutable representation of "presentation".
   // Given the way GetComputedStyle is currently used, we should just grab the

@@ -55,21 +55,21 @@ nsBaseContentStream::Close()
 }
 
 NS_IMETHODIMP
-nsBaseContentStream::Available(PRUint64 *result)
+nsBaseContentStream::Available(uint64_t *result)
 {
   *result = 0;
   return mStatus;
 }
 
 NS_IMETHODIMP
-nsBaseContentStream::Read(char *buf, PRUint32 count, PRUint32 *result)
+nsBaseContentStream::Read(char *buf, uint32_t count, uint32_t *result)
 {
   return ReadSegments(NS_CopySegmentToBuffer, buf, count, result); 
 }
 
 NS_IMETHODIMP
 nsBaseContentStream::ReadSegments(nsWriteSegmentFun fun, void *closure,
-                                  PRUint32 count, PRUint32 *result)
+                                  uint32_t count, uint32_t *result)
 {
   *result = 0;
 
@@ -108,7 +108,7 @@ nsBaseContentStream::CloseWithStatus(nsresult status)
 
 NS_IMETHODIMP
 nsBaseContentStream::AsyncWait(nsIInputStreamCallback *callback,
-                               PRUint32 flags, PRUint32 requestedCount,
+                               uint32_t flags, uint32_t requestedCount,
                                nsIEventTarget *target)
 {
   // Our _only_ consumer is nsInputStreamPump, so we simplify things here by

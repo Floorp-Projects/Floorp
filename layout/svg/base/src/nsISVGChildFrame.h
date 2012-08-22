@@ -100,7 +100,7 @@ public:
    * invalidate the entire area of the ancestor that changed. However, they
    * may need to update their bounds.
    */
-  virtual void NotifySVGChanged(PRUint32 aFlags)=0;
+  virtual void NotifySVGChanged(uint32_t aFlags)=0;
 
   /**
    * Get this frame's contribution to the rect returned by a GetBBox() call
@@ -124,7 +124,7 @@ public:
    *   included in the bbox calculation.
    */
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                      PRUint32 aFlags) = 0;
+                                      uint32_t aFlags) = 0;
 
   // Are we a container frame?
   NS_IMETHOD_(bool) IsDisplayContainer()=0;

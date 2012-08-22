@@ -130,14 +130,14 @@ NS_IMETHODIMP nsAutoCompleteResults::SetItems(nsISupportsArray * aItems)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAutoCompleteResults::GetDefaultItemIndex(PRInt32 *aDefaultItemIndex)
+NS_IMETHODIMP nsAutoCompleteResults::GetDefaultItemIndex(int32_t *aDefaultItemIndex)
 {
     if (!aDefaultItemIndex) return NS_ERROR_NULL_POINTER;
     *aDefaultItemIndex = mDefaultItemIndex;  
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAutoCompleteResults::SetDefaultItemIndex(PRInt32 aDefaultItemIndex)
+NS_IMETHODIMP nsAutoCompleteResults::SetDefaultItemIndex(int32_t aDefaultItemIndex)
 {
     mDefaultItemIndex = aDefaultItemIndex;
     return NS_OK;

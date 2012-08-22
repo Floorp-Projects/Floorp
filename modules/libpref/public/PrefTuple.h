@@ -15,7 +15,7 @@ struct PrefTuple
   // We don't use a union to avoid allocations when using the string component
   // NOTE: Only one field will be valid at any given time, as indicated by the type enum
   nsCAutoString stringVal;
-  PRInt32       intVal;
+  int32_t       intVal;
   bool          boolVal;
 
   enum {

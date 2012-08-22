@@ -91,8 +91,8 @@ nsUnicodeNormalizer::~nsUnicodeNormalizer()
 #define SLast		(SBase + LCount * VCount * TCount)
 
 struct composition {
-	PRUint32 c2;	/* 2nd character */
-	PRUint32 comp;	/* composed character */
+	uint32_t c2;	/* 2nd character */
+	uint32_t comp;	/* composed character */
 };
 
 
@@ -123,38 +123,38 @@ struct composition {
 #define DMAP(vprefix)	vprefix ## _table
 #define SEQ(vprefix)	vprefix ## _seq
 
-static PRInt32
-canonclass(PRUint32 c) {
+static int32_t
+canonclass(uint32_t c) {
 	/* Look up canonicalclass table. */
 	return (LOOKUPTBL(canon_class, CANON_CLASS, c));
 }
 
-static PRInt32
-decompose_char(PRUint32 c, const PRUint32 **seqp)
+static int32_t
+decompose_char(uint32_t c, const uint32_t **seqp)
 {
 	/* Look up decomposition table. */
-	PRInt32 seqidx = LOOKUPTBL(decompose, DECOMP, c);
+	int32_t seqidx = LOOKUPTBL(decompose, DECOMP, c);
 	*seqp = SEQ(decompose) + (seqidx & ~DECOMP_COMPAT);
 	return (seqidx);
 }
 
-static PRInt32
-compose_char(PRUint32 c,
+static int32_t
+compose_char(uint32_t c,
 				const struct composition **compp)
 {
 	/* Look up composition table. */
-	PRInt32 seqidx = LOOKUPTBL(compose, CANON_COMPOSE, c);
+	int32_t seqidx = LOOKUPTBL(compose, CANON_COMPOSE, c);
 	*compp = SEQ(compose) + (seqidx & 0xffff);
 	return (seqidx >> 16);
 }
 
 static nsresult
-mdn__unicode_decompose(PRInt32 compat, PRUint32 *v, size_t vlen,
-		       PRUint32 c, PRInt32 *decomp_lenp)
+mdn__unicode_decompose(int32_t compat, uint32_t *v, size_t vlen,
+		       uint32_t c, int32_t *decomp_lenp)
 {
-	PRUint32 *vorg = v;
-	PRInt32 seqidx;
-	const PRUint32 *seq;
+	uint32_t *vorg = v;
+	int32_t seqidx;
+	const uint32_t *seq;
 
 	//assert(v != NULL && vlen >= 0 && decomp_lenp != NULL);
 
@@ -162,7 +162,7 @@ mdn__unicode_decompose(PRInt32 compat, PRUint32 *v, size_t vlen,
 	 * First, check for Hangul.
 	 */
 	if (SBase <= c && c < SLast) {
-		PRInt32 idx, t_offset, v_offset, l_offset;
+		int32_t idx, t_offset, v_offset, l_offset;
 
 		idx = c - SBase;
 		t_offset = idx % TCount;
@@ -193,8 +193,8 @@ mdn__unicode_decompose(PRInt32 compat, PRUint32 *v, size_t vlen,
 	 * marked with END_BIT.
 	 */
 	do {
-		PRUint32 c;
-		PRInt32 dlen;
+		uint32_t c;
+		int32_t dlen;
 		nsresult r;
 
 		c = *seq & ~END_BIT;
@@ -220,8 +220,8 @@ mdn__unicode_decompose(PRInt32 compat, PRUint32 *v, size_t vlen,
 	return (NS_OK);
 }
 
-static PRInt32
-mdn__unicode_iscompositecandidate(PRUint32 c)
+static int32_t
+mdn__unicode_iscompositecandidate(uint32_t c)
 {
 	const struct composition *dummy;
 
@@ -241,10 +241,10 @@ mdn__unicode_iscompositecandidate(PRUint32 c)
 }
 
 static nsresult
-mdn__unicode_compose(PRUint32 c1, PRUint32 c2, PRUint32 *compp)
+mdn__unicode_compose(uint32_t c1, uint32_t c2, uint32_t *compp)
 {
-	PRInt32 n;
-	PRInt32 lo, hi;
+	int32_t n;
+	int32_t lo, hi;
 	const struct composition *cseq;
 
 	//assert(compp != NULL);
@@ -286,7 +286,7 @@ mdn__unicode_compose(PRUint32 c1, PRUint32 c2, PRUint32 *compp)
 	lo = 0;
 	hi = n - 1;
 	while (lo <= hi) {
-		PRInt32 mid = (lo + hi) / 2;
+		int32_t mid = (lo + hi) / 2;
 
 		if (cseq[mid].c2 < c2) {
 			lo = mid + 1;
@@ -305,16 +305,16 @@ mdn__unicode_compose(PRUint32 c1, PRUint32 c2, PRUint32 *compp)
 #define WORKBUF_SIZE_MAX	10000
 
 typedef struct {
-	PRInt32 cur;		/* pointing now processing character */
-	PRInt32 last;		/* pointing just after the last character */
-	PRInt32 size;		/* size of UCS and CLASS array */
-	PRUint32 *ucs;	/* UCS-4 characters */
-	PRInt32 *cclass;		/* and their canonical classes */
-	PRUint32 ucs_buf[WORKBUF_SIZE];	/* local buffer */
-	PRInt32 class_buf[WORKBUF_SIZE];		/* ditto */
+	int32_t cur;		/* pointing now processing character */
+	int32_t last;		/* pointing just after the last character */
+	int32_t size;		/* size of UCS and CLASS array */
+	uint32_t *ucs;	/* UCS-4 characters */
+	int32_t *cclass;		/* and their canonical classes */
+	uint32_t ucs_buf[WORKBUF_SIZE];	/* local buffer */
+	int32_t class_buf[WORKBUF_SIZE];		/* ditto */
 } workbuf_t;
 
-static nsresult	decompose(workbuf_t *wb, PRUint32 c, PRInt32 compat);
+static nsresult	decompose(workbuf_t *wb, uint32_t c, int32_t compat);
 static void		get_class(workbuf_t *wb);
 static void		reorder(workbuf_t *wb);
 static void		compose(workbuf_t *wb);
@@ -322,8 +322,8 @@ static nsresult flush_before_cur(workbuf_t *wb, nsAString& aToStr);
 static void		workbuf_init(workbuf_t *wb);
 static void		workbuf_free(workbuf_t *wb);
 static nsresult	workbuf_extend(workbuf_t *wb);
-static nsresult	workbuf_append(workbuf_t *wb, PRUint32 c);
-static void		workbuf_shift(workbuf_t *wb, PRInt32 shift);
+static nsresult	workbuf_append(workbuf_t *wb, uint32_t c);
+static void		workbuf_shift(workbuf_t *wb, int32_t shift);
 static void		workbuf_removevoid(workbuf_t *wb);
 
 
@@ -343,7 +343,7 @@ mdn_normalize(bool do_composition, bool compat,
 	aSrcStr.EndReading(end); 
 
 	while (start != end) {
-		PRUint32 c;
+		uint32_t c;
 		PRUnichar curChar;
 
 		//assert(wb.cur == wb.last);
@@ -439,9 +439,9 @@ mdn_normalize(bool do_composition, bool compat,
 }
 
 static nsresult
-decompose(workbuf_t *wb, PRUint32 c, PRInt32 compat) {
+decompose(workbuf_t *wb, uint32_t c, int32_t compat) {
 	nsresult r;
-	PRInt32 dec_len;
+	int32_t dec_len;
 
 again:
 	r = mdn__unicode_decompose(compat, wb->ucs + wb->last,
@@ -468,7 +468,7 @@ again:
 
 static void		
 get_class(workbuf_t *wb) {
-	PRInt32 i;
+	int32_t i;
 
 	for (i = wb->cur; i < wb->last; i++)
 		wb->cclass[i] = canonclass(wb->ucs[i]);
@@ -476,9 +476,9 @@ get_class(workbuf_t *wb) {
 
 static void
 reorder(workbuf_t *wb) {
-	PRUint32 c;
-	PRInt32 i;
-	PRInt32 cclass;
+	uint32_t c;
+	int32_t i;
+	int32_t cclass;
 
 	//assert(wb != NULL);
 
@@ -497,12 +497,12 @@ reorder(workbuf_t *wb) {
 
 static void
 compose(workbuf_t *wb) {
-	PRInt32 cur;
-	PRUint32 *ucs;
-	PRInt32 *cclass;
-	PRInt32 last_class;
-	PRInt32 nvoids;
-	PRInt32 i;
+	int32_t cur;
+	uint32_t *ucs;
+	int32_t *cclass;
+	int32_t last_class;
+	int32_t nvoids;
+	int32_t i;
 
 	//assert(wb != NULL && wb->cclass[0] == 0);
 
@@ -520,8 +520,8 @@ compose(workbuf_t *wb) {
 	last_class = 0;
 	nvoids = 0;
 	for (i = 1; i <= cur; i++) {
-		PRUint32 c;
-		PRInt32 cl = cclass[i];
+		uint32_t c;
+		int32_t cl = cclass[i];
 
 		if ((last_class < cl || cl == 0) &&
 		    mdn__unicode_compose(ucs[0], ucs[i],
@@ -547,7 +547,7 @@ compose(workbuf_t *wb) {
 static nsresult
 flush_before_cur(workbuf_t *wb, nsAString& aToStr) 
 {
-	PRInt32 i;
+	int32_t i;
 
 	for (i = 0; i < wb->cur; i++) {
 		if (!IS_IN_BMP(wb->ucs[i])) {
@@ -582,13 +582,13 @@ workbuf_free(workbuf_t *wb) {
 
 static nsresult
 workbuf_extend(workbuf_t *wb) {
-	PRInt32 newsize = wb->size * 3;
+	int32_t newsize = wb->size * 3;
 
 	if (wb->ucs == wb->ucs_buf) {
-		wb->ucs = (PRUint32*)nsMemory::Alloc(sizeof(wb->ucs[0]) * newsize);
+		wb->ucs = (uint32_t*)nsMemory::Alloc(sizeof(wb->ucs[0]) * newsize);
 		if (!wb->ucs)
 			return NS_ERROR_OUT_OF_MEMORY;
-		wb->cclass = (PRInt32*)nsMemory::Alloc(sizeof(wb->cclass[0]) * newsize);
+		wb->cclass = (int32_t*)nsMemory::Alloc(sizeof(wb->cclass[0]) * newsize);
 		if (!wb->cclass) {
 			nsMemory::Free(wb->ucs);
 			wb->ucs = NULL;
@@ -598,17 +598,17 @@ workbuf_extend(workbuf_t *wb) {
 		void* buf = nsMemory::Realloc(wb->ucs, sizeof(wb->ucs[0]) * newsize);
 		if (!buf)
 			return NS_ERROR_OUT_OF_MEMORY;
-		wb->ucs = (PRUint32*)buf;
+		wb->ucs = (uint32_t*)buf;
 		buf = nsMemory::Realloc(wb->cclass, sizeof(wb->cclass[0]) * newsize);
 		if (!buf)
 			return NS_ERROR_OUT_OF_MEMORY;
-		wb->cclass = (PRInt32*)buf;
+		wb->cclass = (int32_t*)buf;
 	}
 	return (NS_OK);
 }
 
 static nsresult
-workbuf_append(workbuf_t *wb, PRUint32 c) {
+workbuf_append(workbuf_t *wb, uint32_t c) {
 	nsresult r;
 
 	if (wb->last >= wb->size && (r = workbuf_extend(wb)) != NS_OK)
@@ -618,8 +618,8 @@ workbuf_append(workbuf_t *wb, PRUint32 c) {
 }
 
 static void
-workbuf_shift(workbuf_t *wb, PRInt32 shift) {
-	PRInt32 nmove;
+workbuf_shift(workbuf_t *wb, int32_t shift) {
+	int32_t nmove;
 
 	//assert(wb != NULL && wb->cur >= shift);
 
@@ -634,8 +634,8 @@ workbuf_shift(workbuf_t *wb, PRInt32 shift) {
 
 static void
 workbuf_removevoid(workbuf_t *wb) {
-	PRInt32 i, j;
-	PRInt32 last = wb->last;
+	int32_t i, j;
+	int32_t last = wb->last;
 
 	for (i = j = 0; i < last; i++) {
 		if (wb->cclass[i] >= 0) {
@@ -675,21 +675,21 @@ nsUnicodeNormalizer::NormalizeUnicodeNFKC( const nsAString& aSrc, nsAString& aDe
 }
 
 bool
-nsUnicodeNormalizer::Compose(PRUint32 a, PRUint32 b, PRUint32 *ab)
+nsUnicodeNormalizer::Compose(uint32_t a, uint32_t b, uint32_t *ab)
 {
   return mdn__unicode_compose(a, b, ab) == NS_OK;
 }
 
 bool
-nsUnicodeNormalizer::DecomposeNonRecursively(PRUint32 c, PRUint32 *c1, PRUint32 *c2)
+nsUnicodeNormalizer::DecomposeNonRecursively(uint32_t c, uint32_t *c1, uint32_t *c2)
 {
   // We can't use mdn__unicode_decompose here, because that does a recursive
   // decomposition that may yield more than two characters, but the harfbuzz
   // callback wants just a single-step decomp that is guaranteed to produce
   // no more than two characters. So we do a low-level lookup in the table
   // of decomp sequences.
-  const PRUint32 *seq;
-  PRUint32 seqidx = decompose_char(c, &seq);
+  const uint32_t *seq;
+  uint32_t seqidx = decompose_char(c, &seq);
   if (seqidx == 0 || ((seqidx & DECOMP_COMPAT) != 0)) {
     return false;
   }

@@ -19,14 +19,14 @@
  */
 extern "C" void
 invoke_copy_to_stack(uint64_t* mloc, uint64_t* iloc, uint64_t* floc,
-  const PRUint32 paramCount, nsXPTCVariant* s)
+  const uint32_t paramCount, nsXPTCVariant* s)
 {
   uint64_t* dest = mloc;
-  PRUint32 len = paramCount;
+  uint32_t len = paramCount;
   nsXPTCVariant* source = s;
 
-  PRUint32 indx;
-  PRUint32 endlen;
+  uint32_t indx;
+  uint32_t endlen;
   endlen = (len > 7) ? 7 : len;
   /* handle the memory arguments */
   for (indx = 7; indx < len; ++indx)

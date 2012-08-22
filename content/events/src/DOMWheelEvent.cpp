@@ -55,18 +55,18 @@ DOMWheelEvent::InitWheelEvent(const nsAString & aType,
                               bool aCanBubble,
                               bool aCancelable,
                               nsIDOMWindow *aView,
-                              PRInt32 aDetail,
-                              PRInt32 aScreenX,
-                              PRInt32 aScreenY,
-                              PRInt32 aClientX,
-                              PRInt32 aClientY, 
-                              PRUint16 aButton,
+                              int32_t aDetail,
+                              int32_t aScreenX,
+                              int32_t aScreenY,
+                              int32_t aClientX,
+                              int32_t aClientY, 
+                              uint16_t aButton,
                               nsIDOMEventTarget *aRelatedTarget,
                               const nsAString& aModifiersList,
                               double aDeltaX,
                               double aDeltaY,
                               double aDeltaZ,
-                              PRUint32 aDeltaMode)
+                              uint32_t aDeltaMode)
 {
   nsresult rv =
     nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable, aView,
@@ -112,7 +112,7 @@ DOMWheelEvent::GetDeltaZ(double* aDeltaZ)
 }
 
 NS_IMETHODIMP
-DOMWheelEvent::GetDeltaMode(PRUint32* aDeltaMode)
+DOMWheelEvent::GetDeltaMode(uint32_t* aDeltaMode)
 {
   NS_ENSURE_ARG_POINTER(aDeltaMode);
 

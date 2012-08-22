@@ -672,7 +672,7 @@ nsLocation::GetPort(nsAString& aPort)
   result = GetURI(getter_AddRefs(uri), true);
 
   if (uri) {
-    PRInt32 port;
+    int32_t port;
     result = uri->GetPort(&port);
 
     if (NS_SUCCEEDED(result) && -1 != port) {
@@ -698,7 +698,7 @@ nsLocation::SetPort(const nsAString& aPort)
     // perhaps use nsReadingIterators at some point?
     NS_ConvertUTF16toUTF8 portStr(aPort);
     const char *buf = portStr.get();
-    PRInt32 port = -1;
+    int32_t port = -1;
 
     if (buf) {
       if (*buf == ':') {
@@ -829,7 +829,7 @@ nsLocation::Reload(bool aForceget)
   }
 
   if (webNav) {
-    PRUint32 reloadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
+    uint32_t reloadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
 
     if (aForceget) {
       reloadFlags = nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | 

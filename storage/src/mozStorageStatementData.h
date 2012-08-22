@@ -121,7 +121,7 @@ public:
    * @note In the case of AsyncStatements this may actually create the
    *       statement.
    */
-  inline PRUint32 needsTransaction()
+  inline uint32_t needsTransaction()
   {
     MOZ_ASSERT(!NS_IsMainThread());
     // Be sure to use the getSqliteStatement helper, since sqlite3_stmt_readonly

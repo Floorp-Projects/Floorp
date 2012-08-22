@@ -48,7 +48,7 @@ static const char OFFLINE_CACHE_DEVICE_ID[] = { "offline" };
 
 #define LOG(args) CACHE_LOG_DEBUG(args)
 
-static PRUint32 gNextTemporaryClientID = 0;
+static uint32_t gNextTemporaryClientID = 0;
 
 /*****************************************************************************
  * helpers
@@ -72,7 +72,7 @@ DecomposeCacheEntryKey(const nsCString *fullKey,
 {
   buf = *fullKey;
 
-  PRInt32 colon = buf.FindChar(':');
+  int32_t colon = buf.FindChar(':');
   if (colon == kNotFound)
   {
     NS_ERROR("Invalid key");
@@ -138,11 +138,11 @@ class EvictionObserver
  *  map files may become invalid, and therefore the kCurrentVersion needs
  *  to be revised.
  */
-static PRUint64
+static uint64_t
 DCacheHash(const char * key)
 {
   // initval 0x7416f295 was chosen randomly
-  return (PRUint64(nsDiskCache::Hash(key, 0)) << 32) | nsDiskCache::Hash(key, 0x7416f295);
+  return (uint64_t(nsDiskCache::Hash(key, 0)) << 32) | nsDiskCache::Hash(key, 0x7416f295);
 }
 
 /******************************************************************************
@@ -161,10 +161,10 @@ GetCacheDataFile(nsIFile *cacheDir, const char *key,
   if (!file)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRUint64 hash = DCacheHash(key);
+  uint64_t hash = DCacheHash(key);
 
-  PRUint32 dir1 = (PRUint32) (hash & 0x0F);
-  PRUint32 dir2 = (PRUint32)((hash & 0xF0) >> 4);
+  uint32_t dir1 = (uint32_t) (hash & 0x0F);
+  uint32_t dir2 = (uint32_t)((hash & 0xF0) >> 4);
 
   hash >>= 8;
 
@@ -183,12 +183,12 @@ nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, ns
 
   *_retval = nullptr;
 
-  PRUint32 numEntries;
+  uint32_t numEntries;
   nsresult rv = values->GetNumEntries(&numEntries);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(numEntries == 3, "unexpected number of arguments");
 
-  PRUint32 valueLen;
+  uint32_t valueLen;
   const char *clientID = values->AsSharedUTF8String(0, &valueLen);
   const char *key = values->AsSharedUTF8String(1, &valueLen);
   nsCAutoString fullKey(clientID);
@@ -222,7 +222,7 @@ nsOfflineCacheEvictionFunction::Apply()
 {
   LOG(("nsOfflineCacheEvictionFunction::Apply\n"));
 
-  for (PRInt32 i = 0; i < mItems.Count(); i++) {
+  for (int32_t i = 0; i < mItems.Count(); i++) {
 #if defined(PR_LOGGING)
     nsCAutoString path;
     mItems[i]->GetNativePath(path);
@@ -319,21 +319,21 @@ nsOfflineCacheDeviceInfo::GetUsageReport(char ** usageReport)
 }
 
 NS_IMETHODIMP
-nsOfflineCacheDeviceInfo::GetEntryCount(PRUint32 *aEntryCount)
+nsOfflineCacheDeviceInfo::GetEntryCount(uint32_t *aEntryCount)
 {
   *aEntryCount = mDevice->EntryCount();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOfflineCacheDeviceInfo::GetTotalSize(PRUint32 *aTotalSize)
+nsOfflineCacheDeviceInfo::GetTotalSize(uint32_t *aTotalSize)
 {
   *aTotalSize = mDevice->CacheSize();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOfflineCacheDeviceInfo::GetMaximumSize(PRUint32 *aMaximumSize)
+nsOfflineCacheDeviceInfo::GetMaximumSize(uint32_t *aMaximumSize)
 {
   *aMaximumSize = mDevice->CacheCapacity();
   return NS_OK;
@@ -379,10 +379,10 @@ nsOfflineCacheBinding::Create(nsIFile *cacheDir,
   if (!DecomposeCacheEntryKey(fullKey, &cid, &key, keyBuf))
     return nullptr;
 
-  PRUint64 hash = DCacheHash(key);
+  uint64_t hash = DCacheHash(key);
 
-  PRUint32 dir1 = (PRUint32) (hash & 0x0F);
-  PRUint32 dir2 = (PRUint32)((hash & 0xF0) >> 4);
+  uint32_t dir1 = (uint32_t) (hash & 0x0F);
+  uint32_t dir2 = (uint32_t)((hash & 0xF0) >> 4);
 
   hash >>= 8;
 
@@ -441,14 +441,14 @@ struct nsOfflineCacheRecord
 {
   const char    *clientID;
   const char    *key;
-  const PRUint8 *metaData;
-  PRUint32       metaDataLen;
-  PRInt32        generation;
-  PRInt32        dataSize;
-  PRInt32        fetchCount;
-  PRInt64        lastFetched;
-  PRInt64        lastModified;
-  PRInt64        expirationTime;
+  const uint8_t *metaData;
+  uint32_t       metaDataLen;
+  int32_t        generation;
+  int32_t        dataSize;
+  int32_t        fetchCount;
+  int64_t        lastFetched;
+  int64_t        lastModified;
+  int64_t        expirationTime;
 };
 
 static nsCacheEntry *
@@ -469,11 +469,11 @@ CreateCacheEntry(nsOfflineCacheDevice *device,
   if (NS_FAILED(rv))
     return nullptr;
 
-  entry->SetFetchCount((PRUint32) rec.fetchCount);
+  entry->SetFetchCount((uint32_t) rec.fetchCount);
   entry->SetLastFetched(SecondsFromPRTime(rec.lastFetched));
   entry->SetLastModified(SecondsFromPRTime(rec.lastModified));
   entry->SetExpirationTime(SecondsFromPRTime(rec.expirationTime));
-  entry->SetDataSize((PRUint32) rec.dataSize);
+  entry->SetDataSize((uint32_t) rec.dataSize);
 
   entry->UnflattenMetaData((const char *) rec.metaData, rec.metaDataLen);
 
@@ -530,28 +530,28 @@ nsOfflineCacheEntryInfo::GetKey(nsACString &clientKey)
 }
 
 NS_IMETHODIMP
-nsOfflineCacheEntryInfo::GetFetchCount(PRInt32 *aFetchCount)
+nsOfflineCacheEntryInfo::GetFetchCount(int32_t *aFetchCount)
 {
   *aFetchCount = mRec->fetchCount;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOfflineCacheEntryInfo::GetLastFetched(PRUint32 *aLastFetched)
+nsOfflineCacheEntryInfo::GetLastFetched(uint32_t *aLastFetched)
 {
   *aLastFetched = SecondsFromPRTime(mRec->lastFetched);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOfflineCacheEntryInfo::GetLastModified(PRUint32 *aLastModified)
+nsOfflineCacheEntryInfo::GetLastModified(uint32_t *aLastModified)
 {
   *aLastModified = SecondsFromPRTime(mRec->lastModified);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOfflineCacheEntryInfo::GetExpirationTime(PRUint32 *aExpirationTime)
+nsOfflineCacheEntryInfo::GetExpirationTime(uint32_t *aExpirationTime)
 {
   *aExpirationTime = SecondsFromPRTime(mRec->expirationTime);
   return NS_OK;
@@ -565,7 +565,7 @@ nsOfflineCacheEntryInfo::IsStreamBased(bool *aStreamBased)
 }
 
 NS_IMETHODIMP
-nsOfflineCacheEntryInfo::GetDataSize(PRUint32 *aDataSize)
+nsOfflineCacheEntryInfo::GetDataSize(uint32_t *aDataSize)
 {
   *aDataSize = mRec->dataSize;
   return NS_OK;
@@ -579,7 +579,7 @@ nsOfflineCacheEntryInfo::GetDataSize(PRUint32 *aDataSize)
 NS_IMPL_ISUPPORTS1(nsApplicationCacheNamespace, nsIApplicationCacheNamespace)
 
 NS_IMETHODIMP
-nsApplicationCacheNamespace::Init(PRUint32 itemType,
+nsApplicationCacheNamespace::Init(uint32_t itemType,
                                   const nsACString &namespaceSpec,
                                   const nsACString &data)
 {
@@ -590,7 +590,7 @@ nsApplicationCacheNamespace::Init(PRUint32 itemType,
 }
 
 NS_IMETHODIMP
-nsApplicationCacheNamespace::GetItemType(PRUint32 *out)
+nsApplicationCacheNamespace::GetItemType(uint32_t *out)
 {
   *out = mItemType;
   return NS_OK;
@@ -728,7 +728,7 @@ nsApplicationCache::Discard()
 
 NS_IMETHODIMP
 nsApplicationCache::MarkEntry(const nsACString &key,
-                              PRUint32 typeBits)
+                              uint32_t typeBits)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
@@ -739,7 +739,7 @@ nsApplicationCache::MarkEntry(const nsACString &key,
 
 NS_IMETHODIMP
 nsApplicationCache::UnmarkEntry(const nsACString &key,
-                                PRUint32 typeBits)
+                                uint32_t typeBits)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
@@ -749,7 +749,7 @@ nsApplicationCache::UnmarkEntry(const nsACString &key,
 
 NS_IMETHODIMP
 nsApplicationCache::GetTypes(const nsACString &key,
-                             PRUint32 *typeBits)
+                             uint32_t *typeBits)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
@@ -758,8 +758,8 @@ nsApplicationCache::GetTypes(const nsACString &key,
 }
 
 NS_IMETHODIMP
-nsApplicationCache::GatherEntries(PRUint32 typeBits,
-                                  PRUint32 * count,
+nsApplicationCache::GatherEntries(uint32_t typeBits,
+                                  uint32_t * count,
                                   char *** keys)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
@@ -779,11 +779,11 @@ nsApplicationCache::AddNamespaces(nsIArray *namespaces)
 
   mozStorageTransaction transaction(mDevice->mDB, false);
 
-  PRUint32 length;
+  uint32_t length;
   nsresult rv = namespaces->GetLength(&length);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < length; i++) {
+  for (uint32_t i = 0; i < length; i++) {
     nsCOMPtr<nsIApplicationCacheNamespace> ns =
       do_QueryElementAt(namespaces, i);
     if (ns) {
@@ -810,7 +810,7 @@ nsApplicationCache::GetMatchingNamespace(const nsACString &key,
 }
 
 NS_IMETHODIMP
-nsApplicationCache::GetUsage(PRUint32 *usage)
+nsApplicationCache::GetUsage(uint32_t *usage)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
@@ -872,7 +872,7 @@ nsOfflineCacheDevice::GetStrictFileOriginPolicy()
     return true;
 }
 
-PRUint32
+uint32_t
 nsOfflineCacheDevice::CacheSize()
 {
   AutoResetStatement statement(mStatement_CacheSize);
@@ -881,10 +881,10 @@ nsOfflineCacheDevice::CacheSize()
   nsresult rv = statement->ExecuteStep(&hasRows);
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasRows, 0);
   
-  return (PRUint32) statement->AsInt32(0);
+  return (uint32_t) statement->AsInt32(0);
 }
 
-PRUint32
+uint32_t
 nsOfflineCacheDevice::EntryCount()
 {
   AutoResetStatement statement(mStatement_EntryCount);
@@ -893,7 +893,7 @@ nsOfflineCacheDevice::EntryCount()
   nsresult rv = statement->ExecuteStep(&hasRows);
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasRows, 0);
 
-  return (PRUint32) statement->AsInt32(0);
+  return (uint32_t) statement->AsInt32(0);
 }
 
 nsresult
@@ -907,14 +907,14 @@ nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
     return NS_ERROR_UNEXPECTED;
 
   nsCString metaDataBuf;
-  PRUint32 mdSize = entry->MetaDataSize();
+  uint32_t mdSize = entry->MetaDataSize();
   if (!EnsureStringLength(metaDataBuf, mdSize))
     return NS_ERROR_OUT_OF_MEMORY;
   char *md = metaDataBuf.BeginWriting();
   entry->FlattenMetaData(md, mdSize);
 
   nsOfflineCacheRecord rec;
-  rec.metaData = (const PRUint8 *) md;
+  rec.metaData = (const uint8_t *) md;
   rec.metaDataLen = mdSize;
   rec.dataSize = entry->DataSize();
   rec.fetchCount = entry->FetchCount();
@@ -965,7 +965,7 @@ nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
 }
 
 nsresult
-nsOfflineCacheDevice::UpdateEntrySize(nsCacheEntry *entry, PRUint32 newSize)
+nsOfflineCacheDevice::UpdateEntrySize(nsCacheEntry *entry, uint32_t newSize)
 {
   // Decompose the key into "ClientID" and "Key"
   nsCAutoString keyBuf;
@@ -1208,7 +1208,7 @@ nsOfflineCacheDevice::Init()
     StatementSql ( mStatement_EnumerateGroups,       "SELECT GroupID, ActiveClientID FROM moz_cache_groups;"),
     StatementSql ( mStatement_EnumerateGroupsTimeOrder, "SELECT GroupID, ActiveClientID FROM moz_cache_groups ORDER BY ActivateTimeStamp;")
   };
-  for (PRUint32 i = 0; NS_SUCCEEDED(rv) && i < ArrayLength(prepared); ++i)
+  for (uint32_t i = 0; NS_SUCCEEDED(rv) && i < ArrayLength(prepared); ++i)
   {
     LOG(("Creating statement: %s\n", prepared[i].sql));
 
@@ -1389,7 +1389,7 @@ nsOfflineCacheDevice::FindEntry(nsCString *fullKey, bool *collision)
 
   nsOfflineCacheRecord rec;
   statement->GetSharedBlob(0, &rec.metaDataLen,
-                           (const PRUint8 **) &rec.metaData);
+                           (const uint8_t **) &rec.metaData);
   rec.generation     = statement->AsInt32(1);
   rec.dataSize       = statement->AsInt32(2);
   rec.fetchCount     = statement->AsInt32(3);
@@ -1581,7 +1581,7 @@ nsOfflineCacheDevice::DoomEntry(nsCacheEntry *entry)
 nsresult
 nsOfflineCacheDevice::OpenInputStreamForEntry(nsCacheEntry      *entry,
                                               nsCacheAccessMode  mode,
-                                              PRUint32           offset,
+                                              uint32_t           offset,
                                               nsIInputStream   **result)
 {
   LOG(("nsOfflineCacheDevice::OpenInputStreamForEntry [key=%s]\n",
@@ -1618,7 +1618,7 @@ nsOfflineCacheDevice::OpenInputStreamForEntry(nsCacheEntry      *entry,
 nsresult
 nsOfflineCacheDevice::OpenOutputStreamForEntry(nsCacheEntry       *entry,
                                                nsCacheAccessMode   mode,
-                                               PRUint32            offset,
+                                               uint32_t            offset,
                                                nsIOutputStream   **result)
 {
   LOG(("nsOfflineCacheDevice::OpenOutputStreamForEntry [key=%s]\n",
@@ -1673,19 +1673,19 @@ nsOfflineCacheDevice::GetFileForEntry(nsCacheEntry *entry, nsIFile **result)
 }
 
 nsresult
-nsOfflineCacheDevice::OnDataSizeChange(nsCacheEntry *entry, PRInt32 deltaSize)
+nsOfflineCacheDevice::OnDataSizeChange(nsCacheEntry *entry, int32_t deltaSize)
 {
   LOG(("nsOfflineCacheDevice::OnDataSizeChange [key=%s delta=%d]\n",
       entry->Key()->get(), deltaSize));
 
-  const PRInt32 DELTA_THRESHOLD = 1<<14; // 16k
+  const int32_t DELTA_THRESHOLD = 1<<14; // 16k
 
   // called to notify us of an impending change in the total size of the
   // specified entry.
 
-  PRUint32 oldSize = entry->DataSize();
-  NS_ASSERTION(deltaSize >= 0 || PRInt32(oldSize) + deltaSize >= 0, "oops");
-  PRUint32 newSize = PRInt32(oldSize) + deltaSize;
+  uint32_t oldSize = entry->DataSize();
+  NS_ASSERTION(deltaSize >= 0 || int32_t(oldSize) + deltaSize >= 0, "oops");
+  uint32_t newSize = int32_t(oldSize) + deltaSize;
   UpdateEntrySize(entry, newSize);
 
   mDeltaCounter += deltaSize; // this may go negative
@@ -1753,7 +1753,7 @@ nsOfflineCacheDevice::Visit(nsICacheVisitor *visitor)
     statement->GetSharedUTF8String(0, NULL, &rec.clientID);
     statement->GetSharedUTF8String(1, NULL, &rec.key);
     statement->GetSharedBlob(2, &rec.metaDataLen,
-                             (const PRUint8 **) &rec.metaData);
+                             (const uint8_t **) &rec.metaData);
     rec.generation     = statement->AsInt32(3);
     rec.dataSize       = statement->AsInt32(4);
     rec.fetchCount     = statement->AsInt32(5);
@@ -1853,7 +1853,7 @@ nsOfflineCacheDevice::EvictEntries(const char *clientID)
 nsresult
 nsOfflineCacheDevice::MarkEntry(const nsCString &clientID,
                                 const nsACString &key,
-                                PRUint32 typeBits)
+                                uint32_t typeBits)
 {
   LOG(("nsOfflineCacheDevice::MarkEntry [cid=%s, key=%s, typeBits=%d]\n",
        clientID.get(), PromiseFlatCString(key).get(), typeBits));
@@ -1875,7 +1875,7 @@ nsOfflineCacheDevice::MarkEntry(const nsCString &clientID,
 nsresult
 nsOfflineCacheDevice::UnmarkEntry(const nsCString &clientID,
                                   const nsACString &key,
-                                  PRUint32 typeBits)
+                                  uint32_t typeBits)
 {
   LOG(("nsOfflineCacheDevice::UnmarkEntry [cid=%s, key=%s, typeBits=%d]\n",
        clientID.get(), PromiseFlatCString(key).get(), typeBits));
@@ -1934,12 +1934,12 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
 
   bool found = false;
   nsCString nsSpec;
-  PRInt32 nsType = 0;
+  int32_t nsType = 0;
   nsCString nsData;
 
   while (hasRows)
   {
-    PRInt32 itemType;
+    int32_t itemType;
     rv = statement->GetInt32(2, &itemType);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1987,7 +1987,7 @@ nsOfflineCacheDevice::CacheOpportunistically(const nsCString &clientID,
 nsresult
 nsOfflineCacheDevice::GetTypes(const nsCString &clientID,
                                const nsACString &key,
-                               PRUint32 *typeBits)
+                               uint32_t *typeBits)
 {
   LOG(("nsOfflineCacheDevice::GetTypes [cid=%s, key=%s]\n",
        clientID.get(), PromiseFlatCString(key).get()));
@@ -2012,8 +2012,8 @@ nsOfflineCacheDevice::GetTypes(const nsCString &clientID,
 
 nsresult
 nsOfflineCacheDevice::GatherEntries(const nsCString &clientID,
-                                    PRUint32 typeBits,
-                                    PRUint32 *count,
+                                    uint32_t typeBits,
+                                    uint32_t *count,
                                     char ***keys)
 {
   LOG(("nsOfflineCacheDevice::GatherEntries [cid=%s, typeBits=%X]\n",
@@ -2041,7 +2041,7 @@ nsOfflineCacheDevice::AddNamespace(const nsCString &clientID,
   rv = ns->GetData(data);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 itemType;
+  uint32_t itemType;
   rv = ns->GetItemType(&itemType);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2070,7 +2070,7 @@ nsOfflineCacheDevice::AddNamespace(const nsCString &clientID,
 
 nsresult
 nsOfflineCacheDevice::GetUsage(const nsACString &clientID,
-                               PRUint32 *usage)
+                               uint32_t *usage)
 {
   LOG(("nsOfflineCacheDevice::GetUsage [cid=%s]\n",
        PromiseFlatCString(clientID).get()));
@@ -2089,13 +2089,13 @@ nsOfflineCacheDevice::GetUsage(const nsACString &clientID,
   if (!hasRows)
     return NS_OK;
 
-  *usage = static_cast<PRUint32>(statement->AsInt32(0));
+  *usage = static_cast<uint32_t>(statement->AsInt32(0));
 
   return NS_OK;
 }
 
 nsresult
-nsOfflineCacheDevice::GetGroups(PRUint32 *count,
+nsOfflineCacheDevice::GetGroups(uint32_t *count,
                                  char ***keys)
 {
   LOG(("nsOfflineCacheDevice::GetGroups"));
@@ -2104,7 +2104,7 @@ nsOfflineCacheDevice::GetGroups(PRUint32 *count,
 }
 
 nsresult
-nsOfflineCacheDevice::GetGroupsTimeOrdered(PRUint32 *count,
+nsOfflineCacheDevice::GetGroupsTimeOrdered(uint32_t *count,
 					   char ***keys)
 {
   LOG(("nsOfflineCacheDevice::GetGroupsTimeOrder"));
@@ -2132,8 +2132,8 @@ nsOfflineCacheDevice::Unlock(const nsACString &key)
 
 nsresult
 nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement * statement,
-                                     PRUint32 resultIndex,
-                                     PRUint32 * count,
+                                     uint32_t resultIndex,
+                                     uint32_t * count,
                                      char *** values)
 {
   bool hasRows;
@@ -2143,7 +2143,7 @@ nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement * statement,
   nsTArray<nsCString> valArray;
   while (hasRows)
   {
-    PRUint32 length;
+    uint32_t length;
     valArray.AppendElement(
       nsDependentCString(statement->AsSharedUTF8String(resultIndex, &length)));
 
@@ -2155,7 +2155,7 @@ nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement * statement,
   char **ret = static_cast<char **>(NS_Alloc(*count * sizeof(char*)));
   if (!ret) return NS_ERROR_OUT_OF_MEMORY;
 
-  for (PRUint32 i = 0; i <  *count; i++) {
+  for (uint32_t i = 0; i <  *count; i++) {
     ret[i] = NS_strdup(valArray[i].get());
     if (!ret[i]) {
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, ret);
@@ -2323,7 +2323,7 @@ nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
   NS_ENSURE_SUCCESS(rv, rv);
 
   while (hasRows) {
-    PRInt32 itemType;
+    int32_t itemType;
     rv = statement->GetInt32(1, &itemType);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2354,7 +2354,7 @@ nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
 
   while (hasRows)
   {
-    PRInt32 itemType;
+    int32_t itemType;
     rv = nsstatement->GetInt32(1, &itemType);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2484,7 +2484,7 @@ nsOfflineCacheDevice::SetCacheParentDirectory(nsIFile *parentDir)
 }
 
 void
-nsOfflineCacheDevice::SetCapacity(PRUint32 capacity)
+nsOfflineCacheDevice::SetCapacity(uint32_t capacity)
 {
   mCacheCapacity = capacity * 1024;
 }

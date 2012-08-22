@@ -76,13 +76,13 @@ class nsTableColFrame;
 
 // Create a frame that supports "display: block" layout behavior
 nsIFrame*
-NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags = 0);
+NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aFlags = 0);
 
 // Special Generated Content Node. It contains text taken from an
 // attribute of its *grandparent* content node. 
 nsresult
 NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
-                       PRInt32 aNameSpaceID, nsIAtom* aAttrName,
+                       int32_t aNameSpaceID, nsIAtom* aAttrName,
                        nsIContent** aResult);
 
 // Create a basic area frame but the GetFrameForPoint is overridden to always
@@ -90,7 +90,7 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
 // By default, area frames will extend
 // their height to cover any children that "stick out".
 nsIFrame*
-NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
+NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aFlags);
 
 // Create a block formatting context blockframe
 inline nsIFrame* NS_NewBlockFormattingContext(nsIPresShell* aPresShell,
@@ -135,7 +135,7 @@ NS_NewWBRFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
 }
 
 nsIFrame*
-NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aStateFlags);
+NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aStateFlags);
 
 nsIFrame*
 NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -184,7 +184,7 @@ NS_NewNativeSelectControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContex
 nsIFrame*
 NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
+NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aFlags);
 nsIFrame*
 NS_NewProgressFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*

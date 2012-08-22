@@ -60,7 +60,7 @@ nsGnomeVFSMimeApp::GetCanOpenMultipleFiles(bool* aCanOpen)
 }
 
 NS_IMETHODIMP
-nsGnomeVFSMimeApp::GetExpectsURIs(PRInt32* aExpects)
+nsGnomeVFSMimeApp::GetExpectsURIs(int32_t* aExpects)
 {
   *aExpects = mApp->expects_uris;
   return NS_OK;
@@ -96,7 +96,7 @@ public:
   NS_DECL_NSIUTF8STRINGENUMERATOR
 
   nsTArray<nsCString> mStrings;
-  PRUint32            mIndex;
+  uint32_t            mIndex;
 };
 
 NS_IMPL_ISUPPORTS1(UTF8StringEnumerator, nsIUTF8StringEnumerator)

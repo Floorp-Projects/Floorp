@@ -305,14 +305,14 @@ NS_NewDOMProgressEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresCon
 nsresult
 NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext,
                           nsEvent* aEvent,
-                          PRUint32 aEventType = 0,
+                          uint32_t aEventType = 0,
                           nsInvalidateRequestList* aInvalidateRequests = nullptr);
 nsresult
 NS_NewDOMAudioAvailableEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext,
                              nsEvent* aEvent,
-                             PRUint32 aEventType = 0,
+                             uint32_t aEventType = 0,
                              float* aFrameBuffer = nullptr,
-                             PRUint32 aFrameBufferLength = 0,
+                             uint32_t aFrameBufferLength = 0,
                              float aTime = 0);
 nsresult
 NS_NewDOMSimpleGestureEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsSimpleGestureEvent* aEvent);

@@ -272,7 +272,7 @@ TryAttachNativeStub(JSContext *cx, IonCacheGetProperty &cache, HandleObject obj,
 
     RootedShape shape(cx);
     RootedObject holder(cx);
-    if (!obj->lookupProperty(cx, name, &holder, &shape))
+    if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
         return false;
 
     if (!IsCacheableGetProp(obj, holder, shape))
@@ -647,11 +647,11 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
 }
 
 bool
-IonCacheGetElement::attachGetProp(JSContext *cx, JSObject *obj, const Value &idval, PropertyName *name)
+IonCacheGetElement::attachGetProp(JSContext *cx, HandleObject obj, const Value &idval, PropertyName *name)
 {
     RootedObject holder(cx);
     RootedShape shape(cx);
-    if (!obj->lookupProperty(cx, name, &holder, &shape))
+    if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
         return false;
 
     if (!IsCacheableGetProp(obj, holder, shape)) {
@@ -781,7 +781,7 @@ IonCacheGetElement::attachDenseArray(JSContext *cx, JSObject *obj, const Value &
 }
 
 bool
-js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, HandleValue idval,
+js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
                          MutableHandleValue res)
 {
     AutoFlushCache afc ("GetElementCache");
@@ -877,7 +877,7 @@ GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
         if (!callObj->isForEval()) {
             JSFunction *fun = &callObj->callee();
             JSScript *script = fun->script();
-            if (!script->bindings.extensibleParents() && !script->funHasExtensibleScope)
+            if (!script->funHasExtensibleScope)
                 return;
         }
     } else if (scopeObj->isGlobal()) {
@@ -1005,12 +1005,11 @@ js::ion::BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain
     IonCacheBindName &cache = ion->getCache(cacheIndex).toBindName();
     HandlePropertyName name = cache.name();
 
-    JSObject *holder;
+    RootedObject holder(cx);
     if (scopeChain->isGlobal()) {
         holder = scopeChain;
     } else {
-        holder = FindIdentifierBase(cx, scopeChain, name);
-        if (!holder)
+        if (!LookupNameForSet(cx, name, scopeChain, &holder))
             return NULL;
     }
 
@@ -1147,7 +1146,7 @@ js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
     RootedObject obj(cx);
     RootedObject holder(cx);
     RootedShape shape(cx);
-    if (!FindProperty(cx, name, scopeChain, &obj, &holder, &shape))
+    if (!LookupName(cx, name, scopeChain, &obj, &holder, &shape))
         return false;
 
     if (cache.stubCount() < MAX_STUBS &&

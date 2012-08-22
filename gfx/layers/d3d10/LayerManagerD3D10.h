@@ -107,7 +107,7 @@ public:
     return aSize <= gfxIntSize(MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE);
   }
 
-  virtual PRInt32 GetMaxTextureSize() const
+  virtual int32_t GetMaxTextureSize() const
   {
     return MAX_TEXTURE_SIZE;
   }
@@ -296,7 +296,7 @@ protected:
    * Returns SHADER_MASK if a texture is loaded, SHADER_NO_MASK if there was no 
    * mask layer, or a texture for the mask layer could not be loaded.
    */
-  PRUint8 LoadMaskTexture();
+  uint8_t LoadMaskTexture();
 
   /**
    * Select a shader technique using a combination of the following flags.
@@ -305,21 +305,21 @@ protected:
    * include any combination of the 0x20 bit = 0 flags OR one of the 0x20 bit = 1
    * flags. Mask flags can be used in either case.
    */
-  ID3D10EffectTechnique* SelectShader(PRUint8 aFlags);
-  const static PRUint8 SHADER_NO_MASK = 0;
-  const static PRUint8 SHADER_MASK = 0x1;
-  const static PRUint8 SHADER_MASK_3D = 0x2;
+  ID3D10EffectTechnique* SelectShader(uint8_t aFlags);
+  const static uint8_t SHADER_NO_MASK = 0;
+  const static uint8_t SHADER_MASK = 0x1;
+  const static uint8_t SHADER_MASK_3D = 0x2;
   // 0x20 bit = 0
-  const static PRUint8 SHADER_RGB = 0;
-  const static PRUint8 SHADER_RGBA = 0x4;
-  const static PRUint8 SHADER_NON_PREMUL = 0;
-  const static PRUint8 SHADER_PREMUL = 0x8;
-  const static PRUint8 SHADER_LINEAR = 0;
-  const static PRUint8 SHADER_POINT = 0x10;
+  const static uint8_t SHADER_RGB = 0;
+  const static uint8_t SHADER_RGBA = 0x4;
+  const static uint8_t SHADER_NON_PREMUL = 0;
+  const static uint8_t SHADER_PREMUL = 0x8;
+  const static uint8_t SHADER_LINEAR = 0;
+  const static uint8_t SHADER_POINT = 0x10;
   // 0x20 bit = 1
-  const static PRUint8 SHADER_YCBCR = 0x20;
-  const static PRUint8 SHADER_COMPONENT_ALPHA = 0x24;
-  const static PRUint8 SHADER_SOLID = 0x28;
+  const static uint8_t SHADER_YCBCR = 0x20;
+  const static uint8_t SHADER_COMPONENT_ALPHA = 0x24;
+  const static uint8_t SHADER_SOLID = 0x28;
 
   LayerManagerD3D10 *mD3DManager;
 };

@@ -24,14 +24,14 @@
 using namespace mozilla;
 
 #ifdef DEBUG_LAYOUT
-PRInt32 gIndent = 0;
+int32_t gIndent = 0;
 #endif
 
 #ifdef DEBUG_LAYOUT
 void
 nsBoxAddIndents()
 {
-    for(PRInt32 i=0; i < gIndent; i++)
+    for(int32_t i=0; i < gIndent; i++)
     {
         printf(" ");
     }
@@ -69,11 +69,11 @@ nsBox::ListBox(nsAutoString& aResult)
       nsCOMPtr<nsIDOMNamedNodeMap> namedMap;
 
       node->GetAttributes(getter_AddRefs(namedMap));
-      PRUint32 length;
+      uint32_t length;
       namedMap->GetLength(&length);
 
       nsCOMPtr<nsIDOMNode> attribute;
-      for (PRUint32 i = 0; i < length; ++i)
+      for (uint32_t i = 0; i < length; ++i)
       {
         namedMap->Item(i, getter_AddRefs(attribute));
         nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
@@ -237,10 +237,10 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, bool aRemoveOver
 
     nsRect rect(mRect);
 
-    PRUint32 flags = 0;
+    uint32_t flags = 0;
     GetLayoutFlags(flags);
 
-    PRUint32 stateFlags = aState.LayoutFlags();
+    uint32_t stateFlags = aState.LayoutFlags();
 
     flags |= stateFlags;
 
@@ -278,7 +278,7 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, bool aRemoveOver
 }
 
 void
-nsBox::GetLayoutFlags(PRUint32& aFlags)
+nsBox::GetLayoutFlags(uint32_t& aFlags)
 {
   aFlags = 0;
 }
@@ -462,10 +462,10 @@ nsBox::GetFlex(nsBoxLayoutState& aState)
   return flex;
 }
 
-PRUint32
+uint32_t
 nsIFrame::GetOrdinal(nsBoxLayoutState& aState)
 {
-  PRUint32 ordinal = GetStyleXUL()->mBoxOrdinal;
+  uint32_t ordinal = GetStyleXUL()->mBoxOrdinal;
 
   // When present, attribute value overrides CSS.
   nsIContent* content = GetContent();
@@ -543,10 +543,10 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
 
   nsPresContext* presContext = aState.PresContext();
 
-  PRUint32 flags = 0;
+  uint32_t flags = 0;
   GetLayoutFlags(flags);
 
-  PRUint32 stateFlags = aState.LayoutFlags();
+  uint32_t stateFlags = aState.LayoutFlags();
 
   flags |= stateFlags;
 

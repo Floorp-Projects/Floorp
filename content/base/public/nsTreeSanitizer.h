@@ -23,7 +23,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      *
      * @param aFlags Flags from nsIParserUtils
      */
-    nsTreeSanitizer(PRUint32 aFlags = 0);
+    nsTreeSanitizer(uint32_t aFlags = 0);
 
     static void InitializeStatics();
     static void ReleaseStatics();
@@ -91,7 +91,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      * @return true if the element must be replaced with its children and
      *         false if the element is to be kept
      */
-    bool MustFlatten(PRInt32 aNamespace, nsIAtom* aLocal);
+    bool MustFlatten(int32_t aNamespace, nsIAtom* aLocal);
 
     /**
      * Queries if an element including its children must be removed.
@@ -101,7 +101,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      * @return true if the element and its children must be removed and
      *         false if the element is to be kept
      */
-    bool MustPrune(PRInt32 aNamespace,
+    bool MustPrune(int32_t aNamespace,
                      nsIAtom* aLocal,
                      mozilla::dom::Element* aElement);
 
@@ -145,7 +145,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      * @return true if the attribute was removed and false otherwise
      */
     bool SanitizeURL(mozilla::dom::Element* aElement,
-                       PRInt32 aNamespace,
+                       int32_t aNamespace,
                        nsIAtom* aLocalName);
 
     /**

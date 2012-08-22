@@ -74,39 +74,39 @@ public:
 
   // These override the SetAttr methods in nsGenericHTMLElement (need
   // both here to silence compiler warnings).
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
 
    /**
     * GetRowSpec is used to get the "rows" spec.
-    * @param out PRInt32 aNumValues The number of row sizes specified.
+    * @param out int32_t aNumValues The number of row sizes specified.
     * @param out nsFramesetSpec* aSpecs The array of size specifications.
              This is _not_ owned by the caller, but by the nsFrameSetElement
              implementation.  DO NOT DELETE IT.
     */
-  nsresult GetRowSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs);
+  nsresult GetRowSpec(int32_t *aNumValues, const nsFramesetSpec** aSpecs);
    /**
     * GetColSpec is used to get the "cols" spec
-    * @param out PRInt32 aNumValues The number of row sizes specified.
+    * @param out int32_t aNumValues The number of row sizes specified.
     * @param out nsFramesetSpec* aSpecs The array of size specifications.
              This is _not_ owned by the caller, but by the nsFrameSetElement
              implementation.  DO NOT DELETE IT.
     */
-  nsresult GetColSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs);
+  nsresult GetColSpec(int32_t *aNumValues, const nsFramesetSpec** aSpecs);
 
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              PRInt32 aModType) const;
+                                              int32_t aModType) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
@@ -120,17 +120,17 @@ public:
 
 private:
   nsresult ParseRowCol(const nsAString& aValue,
-                       PRInt32&         aNumSpecs,
+                       int32_t&         aNumSpecs,
                        nsFramesetSpec** aSpecs);
 
   /**
    * The number of size specs in our "rows" attr
    */
-  PRInt32          mNumRows;
+  int32_t          mNumRows;
   /**
    * The number of size specs in our "cols" attr
    */
-  PRInt32          mNumCols;
+  int32_t          mNumCols;
   /**
    * The style hint to return for the rows/cols attrs in
    * GetAttributeChangeHint

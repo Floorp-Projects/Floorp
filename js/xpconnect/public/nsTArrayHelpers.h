@@ -22,7 +22,7 @@ nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
   JSObject* global = JS_GetGlobalForScopeChain(aCx);
   MOZ_ASSERT(global);
 
-  for (PRUint32 index = 0; index < aSourceArray.Length(); index++) {
+  for (uint32_t index = 0; index < aSourceArray.Length(); index++) {
     nsCOMPtr<nsISupports> obj;
     nsresult rv = CallQueryInterface(aSourceArray[index], getter_AddRefs(obj));
     NS_ENSURE_SUCCESS(rv, rv);

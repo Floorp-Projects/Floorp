@@ -68,7 +68,7 @@ CParserContext::GetTokenizer(nsIDTD* aDTD,
                              nsITokenizer*& aTokenizer)
 {
   nsresult result = NS_OK;
-  PRInt32 type = aDTD ? aDTD->GetType() : NS_IPARSER_FLAG_HTML;
+  int32_t type = aDTD ? aDTD->GetType() : NS_IPARSER_FLAG_HTML;
 
   if (!mTokenizer) {
     if (type == NS_IPARSER_FLAG_HTML || mParserCommand == eViewSource) {

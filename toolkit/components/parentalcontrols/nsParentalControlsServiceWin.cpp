@@ -141,7 +141,7 @@ nsParentalControlsServiceWin::GetLoggingEnabled(bool *aResult)
 
 // Post a log event to the system
 NS_IMETHODIMP
-nsParentalControlsServiceWin::Log(PRInt16 aEntryType, bool blocked, nsIURI *aSource, nsIFile *aTarget)
+nsParentalControlsServiceWin::Log(int16_t aEntryType, bool blocked, nsIURI *aSource, nsIFile *aTarget)
 {
   if (!mEnabled)
     return NS_ERROR_NOT_AVAILABLE;
@@ -223,7 +223,7 @@ nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfa
 
   NS_ENSURE_ARG_POINTER(aTargets);
 
-  PRUint32 arrayLength = 0;
+  uint32_t arrayLength = 0;
   aTargets->GetLength(&arrayLength);
   if (!arrayLength)
     return NS_ERROR_INVALID_ARG;
@@ -254,12 +254,12 @@ nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfa
     return NS_ERROR_INVALID_ARG;
 
   // Allocate an array of sub uri
-  PRInt32 count = arrayLength - 1;
+  int32_t count = arrayLength - 1;
   nsAutoArrayPtr<LPCWSTR> arrUrls(new LPCWSTR[count]);
   if (!arrUrls)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRUint32 uriIdx = 0, idx;
+  uint32_t uriIdx = 0, idx;
   for (idx = 1; idx < arrayLength; idx++)
   {
     nsCOMPtr<nsIURI> uri = do_QueryElementAt(aTargets, idx);

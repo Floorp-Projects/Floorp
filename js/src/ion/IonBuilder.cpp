@@ -3817,12 +3817,12 @@ IonBuilder::jsop_compare(JSOp op)
 JSObject *
 IonBuilder::getNewArrayTemplateObject(uint32 count)
 {
-    JSObject *templateObject = NewDenseUnallocatedArray(cx, count);
+    RootedObject templateObject(cx, NewDenseUnallocatedArray(cx, count));
     if (!templateObject)
         return NULL;
 
     if (types::UseNewTypeForInitializer(cx, script, pc, JSProto_Array)) {
-        if (!templateObject->setSingletonType(cx))
+        if (!JSObject::setSingletonType(cx, templateObject))
             return NULL;
     } else {
         types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
@@ -3857,7 +3857,7 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
     // Don't bake in the TypeObject for non-CNG scripts.
     JS_ASSERT(script->hasGlobal());
 
-    JSObject *templateObject;
+    RootedObject templateObject(cx);
 
     if (baseObj) {
         templateObject = CopyInitializerObject(cx, baseObj);
@@ -3870,7 +3870,7 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
         return false;
 
     if (types::UseNewTypeForInitializer(cx, script, pc, JSProto_Object)) {
-        if (!templateObject->setSingletonType(cx))
+        if (!JSObject::setSingletonType(cx, templateObject))
             return false;
     } else {
         types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Object);
@@ -4251,7 +4251,7 @@ IonBuilder::insertRecompileCheck()
 }
 
 static inline bool
-TestSingletonProperty(JSContext *cx, JSObject *obj, HandleId id, bool *isKnownConstant)
+TestSingletonProperty(JSContext *cx, HandleObject obj, HandleId id, bool *isKnownConstant)
 {
     // We would like to completely no-op property/global accesses which can
     // produce only a particular JSObject. When indicating the access result is
@@ -4273,7 +4273,7 @@ TestSingletonProperty(JSContext *cx, JSObject *obj, HandleId id, bool *isKnownCo
 
     RootedObject holder(cx);
     RootedShape shape(cx);
-    if (!obj->lookupGeneric(cx, id, &holder, &shape))
+    if (!JSObject::lookupGeneric(cx, obj, id, &holder, &shape))
         return false;
     if (!shape)
         return true;
@@ -4304,7 +4304,7 @@ TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
     if (!types || types->unknownObject())
         return true;
 
-    JSObject *singleton = types->getSingleton(cx);
+    RootedObject singleton(cx, types->getSingleton(cx));
     if (singleton)
         return TestSingletonProperty(cx, singleton, id, isKnownConstant);
 
@@ -4347,7 +4347,8 @@ TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
 
             if (object->proto) {
                 // Test this type.
-                if (!TestSingletonProperty(cx, object->proto, id, &thoughtConstant))
+                RootedObject proto(cx, object->proto);
+                if (!TestSingletonProperty(cx, proto, id, &thoughtConstant))
                     return false;
                 // Short circuit
                 if (!thoughtConstant)
@@ -5236,7 +5237,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
     // Iterate down all the types to see if they all have the same getter or
     // setter.
     for (unsigned i = 0; i < types->getObjectCount(); i++) {
-        JSObject *curObj = types->getSingleObject(i);
+        RootedObject curObj(cx, types->getSingleObject(i));
 
         // Non-Singleton type
         if (!curObj) {
@@ -5281,7 +5282,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
 
         RootedObject proto(cx);
         RootedShape shape(cx);
-        if (!curObj->lookupGeneric(cx, id, &proto, &shape))
+        if (!JSObject::lookupGeneric(cx, curObj, id, &proto, &shape))
             return false;
 
         if (!shape)

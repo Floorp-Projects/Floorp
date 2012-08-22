@@ -42,10 +42,10 @@ interface nsIZipWriter : nsISupports
   /**
    * Some predefined compression levels
    */
-  const PRUint32 COMPRESSION_NONE    = 0;
-  const PRUint32 COMPRESSION_FASTEST = 1;
-  const PRUint32 COMPRESSION_DEFAULT = 6;
-  const PRUint32 COMPRESSION_BEST    = 9;
+  const uint32_t COMPRESSION_NONE    = 0;
+  const uint32_t COMPRESSION_FASTEST = 1;
+  const uint32_t COMPRESSION_DEFAULT = 6;
+  const uint32_t COMPRESSION_BEST    = 9;
 
   /**
    * Gets or sets the comment associated with the open zip file.
@@ -78,7 +78,7 @@ interface nsIZipWriter : nsISupports
    * @throws <other-error> on failure to open zip file (most likely corrupt
    *  or unsupported form)
    */
-  void open(in nsIFile aFile, in PRInt32 aIoFlags);
+  void open(in nsIFile aFile, in int32_t aIoFlags);
 
   /**
    * Returns a nsIZipEntry describing a specified zip entry or null if there
@@ -129,7 +129,7 @@ interface nsIZipWriter : nsISupports
    * @throws NS_ERROR_FILE_NOT_FOUND if file does not exist
    */
   void addEntryFile(in AUTF8String aZipEntry,
-                    in PRInt32 aCompression, in nsIFile aFile,
+                    in int32_t aCompression, in nsIFile aFile,
                     in boolean aQueue);
 
   /**
@@ -149,7 +149,7 @@ interface nsIZipWriter : nsISupports
    * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
    */
   void addEntryChannel(in AUTF8String aZipEntry, in PRTime aModTime,
-                       in PRInt32 aCompression, in nsIChannel aChannel,
+                       in int32_t aCompression, in nsIChannel aChannel,
                        in boolean aQueue);
 
   /**
@@ -167,7 +167,7 @@ interface nsIZipWriter : nsISupports
    * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
    */
   void addEntryStream(in AUTF8String aZipEntry, in PRTime aModTime,
-                      in PRInt32 aCompression, in nsIInputStream aStream,
+                      in int32_t aCompression, in nsIInputStream aStream,
                       in boolean aQueue);
 
   /**

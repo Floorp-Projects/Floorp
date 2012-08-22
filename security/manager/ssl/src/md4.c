@@ -10,8 +10,8 @@
 #include <string.h>
 #include "md4.h"
 
-typedef PRUint32 Uint32;
-typedef PRUint8 Uint8;
+typedef uint32_t Uint32;
+typedef uint8_t Uint8;
 
 /* the "conditional" function */
 #define F(x,y,z) (((x) & (y)) | (~(x) & (z)))

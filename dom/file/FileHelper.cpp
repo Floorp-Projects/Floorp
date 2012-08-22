@@ -118,7 +118,7 @@ FileHelper::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
 }
 
 void
-FileHelper::OnStreamProgress(PRUint64 aProgress, PRUint64 aProgressMax)
+FileHelper::OnStreamProgress(uint64_t aProgress, uint64_t aProgressMax)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 

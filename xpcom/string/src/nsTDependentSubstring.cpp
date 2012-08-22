@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void
-nsTDependentSubstring_CharT::Rebind( const substring_type& str, PRUint32 startPos, PRUint32 length )
+nsTDependentSubstring_CharT::Rebind( const substring_type& str, uint32_t startPos, uint32_t length )
   {
     // If we currently own a buffer, release it.
     Finalize();

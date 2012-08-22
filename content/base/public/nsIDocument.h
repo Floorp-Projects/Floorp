@@ -253,14 +253,14 @@ public:
    */
   virtual void SetDocumentCharacterSet(const nsACString& aCharSetID) = 0;
 
-  PRInt32 GetDocumentCharacterSetSource() const
+  int32_t GetDocumentCharacterSetSource() const
   {
     return mCharacterSetSource;
   }
 
   // This method MUST be called before SetDocumentCharacterSet if
   // you're planning to call both.
-  void SetDocumentCharacterSetSource(PRInt32 aCharsetSource)
+  void SetDocumentCharacterSetSource(int32_t aCharsetSource)
   {
     mCharacterSetSource = aCharsetSource;
   }
@@ -384,7 +384,7 @@ public:
    * Get the bidi options for this document.
    * @see nsBidiUtils.h
    */
-  PRUint32 GetBidiOptions() const
+  uint32_t GetBidiOptions() const
   {
     return mBidiOptions;
   }
@@ -395,7 +395,7 @@ public:
    * change to actually change anything immediately.
    * @see nsBidiUtils.h
    */
-  void SetBidiOptions(PRUint32 aBidiOptions)
+  void SetBidiOptions(uint32_t aBidiOptions)
   {
     mBidiOptions = aBidiOptions;
   }
@@ -405,7 +405,7 @@ public:
    * Get the sandbox flags for this document.
    * @see nsSandboxFlags.h for the possible flags
    */
-  PRUint32 GetSandboxFlags() const
+  uint32_t GetSandboxFlags() const
   {
     return mSandboxFlags;
   }
@@ -414,7 +414,7 @@ public:
    * Set the sandbox flags for this document.
    * @see nsSandboxFlags.h for the possible flags
    */
-  void SetSandboxFlags(PRUint32 sandboxFlags)
+  void SetSandboxFlags(uint32_t sandboxFlags)
   {
     mSandboxFlags = sandboxFlags;
   }
@@ -539,7 +539,7 @@ public:
    * @return the number of stylesheets
    * @throws no exceptions
    */
-  virtual PRInt32 GetNumberOfStyleSheets() const = 0;
+  virtual int32_t GetNumberOfStyleSheets() const = 0;
   
   /**
    * Get a particular stylesheet
@@ -547,7 +547,7 @@ public:
    * @return the stylesheet at aIndex.  Null if aIndex is out of range.
    * @throws no exceptions
    */
-  virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex) const = 0;
+  virtual nsIStyleSheet* GetStyleSheetAt(int32_t aIndex) const = 0;
   
   /**
    * Insert a sheet at a particular spot in the stylesheet list (zero-based)
@@ -556,7 +556,7 @@ public:
    *   adjusted for the "special" sheets.
    * @throws no exceptions
    */
-  virtual void InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex) = 0;
+  virtual void InsertStyleSheetAt(nsIStyleSheet* aSheet, int32_t aIndex) = 0;
 
   /**
    * Get the index of a particular stylesheet.  This will _always_
@@ -564,7 +564,7 @@ public:
    * @param aSheet the sheet to get the index of
    * @return aIndex the index of the sheet in the full list
    */
-  virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet) const = 0;
+  virtual int32_t GetIndexOfStyleSheet(nsIStyleSheet* aSheet) const = 0;
 
   /**
    * Replace the stylesheets in aOldSheets with the stylesheets in
@@ -598,8 +598,8 @@ public:
    * Just like the style sheet API, but for "catalog" sheets,
    * extra sheets inserted at the UA level.
    */
-  virtual PRInt32 GetNumberOfCatalogStyleSheets() const = 0;
-  virtual nsIStyleSheet* GetCatalogStyleSheetAt(PRInt32 aIndex) const = 0;
+  virtual int32_t GetNumberOfCatalogStyleSheets() const = 0;
+  virtual nsIStyleSheet* GetCatalogStyleSheetAt(int32_t aIndex) const = 0;
   virtual void AddCatalogStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual void EnsureCatalogStyleSheet(const char *aStyleSheetURI) = 0;
 
@@ -701,7 +701,7 @@ public:
   /**
    * Return the outer window ID.
    */
-  PRUint64 OuterWindowID() const
+  uint64_t OuterWindowID() const
   {
     nsPIDOMWindow *window = GetWindow();
     return window ? window->WindowID() : 0;
@@ -710,7 +710,7 @@ public:
   /**
    * Return the inner window ID.
    */
-  PRUint64 InnerWindowID()
+  uint64_t InnerWindowID()
   {
     nsPIDOMWindow *window = GetInnerWindow();
     return window ? window->WindowID() : 0;
@@ -932,7 +932,7 @@ public:
    */
   virtual void SetXMLDeclaration(const PRUnichar *aVersion,
                                  const PRUnichar *aEncoding,
-                                 const PRInt32 aStandalone) = 0;
+                                 const int32_t aStandalone) = 0;
   virtual void GetXMLDeclaration(nsAString& aVersion,
                                  nsAString& aEncoding,
                                  nsAString& Standalone) = 0;
@@ -954,7 +954,7 @@ public:
    * Create an element with the specified name, prefix and namespace ID.
    */
   virtual nsresult CreateElem(const nsAString& aName, nsIAtom *aPrefix,
-                              PRInt32 aNamespaceID,
+                              int32_t aNamespaceID,
                               nsIContent** aResult) = 0;
 
   /**
@@ -973,7 +973,7 @@ public:
    * Returns the default namespace ID used for elements created in this
    * document.
    */
-  PRInt32 GetDefaultNamespaceID() const
+  int32_t GetDefaultNamespaceID() const
   {
     return mDefaultElementType;
   }
@@ -981,25 +981,25 @@ public:
   void DeleteAllProperties();
   void DeleteAllPropertiesFor(nsINode* aNode);
 
-  nsPropertyTable* PropertyTable(PRUint16 aCategory) {
+  nsPropertyTable* PropertyTable(uint16_t aCategory) {
     if (aCategory == 0)
       return &mPropertyTable;
     return GetExtraPropertyTable(aCategory);
   }
-  PRUint32 GetPropertyTableCount()
+  uint32_t GetPropertyTableCount()
   { return mExtraPropertyTables.Length() + 1; }
 
   /**
    * Sets the ID used to identify this part of the multipart document
    */
-  void SetPartID(PRUint32 aID) {
+  void SetPartID(uint32_t aID) {
     mPartID = aID;
   }
 
   /**
    * Return the ID used to identify this part of the multipart document
    */
-  PRUint32 GetPartID() const {
+  uint32_t GetPartID() const {
     return mPartID;
   }
 
@@ -1210,7 +1210,7 @@ public:
    * Marks as not-going-to-be-collected for the given generation of
    * cycle collection.
    */
-  void MarkUncollectableForCCGeneration(PRUint32 aGeneration)
+  void MarkUncollectableForCCGeneration(uint32_t aGeneration)
   {
     mMarkedCCGeneration = aGeneration;
   }
@@ -1218,7 +1218,7 @@ public:
   /**
    * Gets the cycle collector generation this document is marked for.
    */
-  PRUint32 GetMarkedCCGeneration()
+  uint32_t GetMarkedCCGeneration()
   {
     return mMarkedCCGeneration;
   }
@@ -1409,7 +1409,7 @@ public:
    * Prevents user initiated events from being dispatched to the document and
    * subdocuments.
    */
-  virtual void SuppressEventHandling(PRUint32 aIncrease = 1) = 0;
+  virtual void SuppressEventHandling(uint32_t aIncrease = 1) = 0;
 
   /**
    * Unsuppress event handling.
@@ -1418,7 +1418,7 @@ public:
    */
   virtual void UnsuppressEventHandlingAndFireEvents(bool aFireEvents) = 0;
 
-  PRUint32 EventHandlingSuppressed() const { return mEventsSuppressed; }
+  uint32_t EventHandlingSuppressed() const { return mEventsSuppressed; }
 
   bool IsEventHandlingEnabled() {
     return !EventHandlingSuppressed() && mScriptGlobalObject;
@@ -1582,8 +1582,8 @@ public:
   virtual Element* LookupImageElement(const nsAString& aElementId) = 0;
 
   nsresult ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback,
-                                        PRInt32 *aHandle);
-  void CancelFrameRequestCallback(PRInt32 aHandle);
+                                        int32_t *aHandle);
+  void CancelFrameRequestCallback(int32_t aHandle);
 
   typedef nsTArray< nsCOMPtr<nsIFrameRequestCallback> > FrameRequestCallbackList;
   /**
@@ -1708,11 +1708,11 @@ public:
   }
 
 private:
-  PRUint64 mWarnedAbout;
+  uint64_t mWarnedAbout;
 
 protected:
   ~nsIDocument();
-  nsPropertyTable* GetExtraPropertyTable(PRUint16 aCategory);
+  nsPropertyTable* GetExtraPropertyTable(uint16_t aCategory);
 
   // Never ever call this. Only call GetWindow!
   virtual nsPIDOMWindow *GetWindowInternal() const = 0;
@@ -1760,7 +1760,7 @@ protected:
   nsWeakPtr mDocumentContainer;
 
   nsCString mCharacterSet;
-  PRInt32 mCharacterSetSource;
+  int32_t mCharacterSetSource;
 
   // This is just a weak pointer; the parent document owns its children.
   nsIDocument* mParentDocument;
@@ -1889,12 +1889,12 @@ protected:
 
   // The bidi options for this document.  What this bitfield means is
   // defined in nsBidiUtils.h
-  PRUint32 mBidiOptions;
+  uint32_t mBidiOptions;
 
   // The sandbox flags on the document. These reflect the value of the sandbox attribute of the
   // associated IFRAME or CSP-protectable content, if existent. These are set at load time and
   // are immutable - see nsSandboxFlags.h for the possible flags.
-  PRUint32 mSandboxFlags;
+  uint32_t mSandboxFlags;
 
   // The root directionality of this document.
   mozilla::directionality::Directionality mDirectionality;
@@ -1909,34 +1909,34 @@ protected:
 
   // if this document is part of a multipart document,
   // the ID can be used to distinguish it from the other parts.
-  PRUint32 mPartID;
+  uint32_t mPartID;
   
   // Cycle collector generation in which we're certain that this document
   // won't be collected
-  PRUint32 mMarkedCCGeneration;
+  uint32_t mMarkedCCGeneration;
 
   nsIPresShell* mPresShell;
 
   nsCOMArray<nsINode> mSubtreeModifiedTargets;
-  PRUint32            mSubtreeModifiedDepth;
+  uint32_t            mSubtreeModifiedDepth;
 
   // If we're an external resource document, this will be non-null and will
   // point to our "display document": the one that all resource lookups should
   // go to.
   nsCOMPtr<nsIDocument> mDisplayDocument;
 
-  PRUint32 mEventsSuppressed;
+  uint32_t mEventsSuppressed;
 
   /**
    * The number number of external scripts (ones with the src attribute) that
    * have this document as their owner and that are being evaluated right now.
    */
-  PRUint32 mExternalScriptsBeingEvaluated;
+  uint32_t mExternalScriptsBeingEvaluated;
 
   /**
    * The current frame request callback handle
    */
-  PRInt32 mFrameRequestCallbackCounter;
+  int32_t mFrameRequestCallbackCounter;
 
   // Weak reference to mScriptGlobalObject QI:d to nsPIDOMWindow,
   // updated on every set of mSecriptGlobalObject.
@@ -1946,7 +1946,7 @@ protected:
 
   struct FrameRequest {
     FrameRequest(nsIFrameRequestCallback* aCallback,
-                 PRInt32 aHandle) :
+                 int32_t aHandle) :
       mCallback(aCallback),
       mHandle(aHandle)
     {}
@@ -1957,15 +1957,15 @@ protected:
 
     // Comparator operators to allow RemoveElementSorted with an
     // integer argument on arrays of FrameRequest
-    bool operator==(PRInt32 aHandle) const {
+    bool operator==(int32_t aHandle) const {
       return mHandle == aHandle;
     }
-    bool operator<(PRInt32 aHandle) const {
+    bool operator<(int32_t aHandle) const {
       return mHandle < aHandle;
     }
     
     nsCOMPtr<nsIFrameRequestCallback> mCallback;
-    PRInt32 mHandle;
+    int32_t mHandle;
   };
 
   nsTArray<FrameRequest> mFrameRequestCallbacks;
@@ -1980,9 +1980,9 @@ protected:
   nsCOMPtr<nsIStructuredCloneContainer> mStateObjectContainer;
   nsCOMPtr<nsIVariant> mStateObjectCached;
 
-  PRUint8 mDefaultElementType;
+  uint8_t mDefaultElementType;
 
-  PRUint32 mInSyncOperationCount;
+  uint32_t mInSyncOperationCount;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
@@ -2036,7 +2036,7 @@ public:
   ~nsAutoSyncOperation();
 private:
   nsCOMArray<nsIDocument> mDocuments;
-  PRUint32                mMicroTaskLevel;
+  uint32_t                mMicroTaskLevel;
 };
 
 // XXX These belong somewhere else

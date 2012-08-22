@@ -172,9 +172,9 @@ nsSVGUseElement::CharacterDataChanged(nsIDocument *aDocument,
 void
 nsSVGUseElement::AttributeChanged(nsIDocument* aDocument,
                                   Element* aElement,
-                                  PRInt32 aNameSpaceID,
+                                  int32_t aNameSpaceID,
                                   nsIAtom* aAttribute,
-                                  PRInt32 aModType)
+                                  int32_t aModType)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aElement)) {
     TriggerReclone();
@@ -185,7 +185,7 @@ void
 nsSVGUseElement::ContentAppended(nsIDocument *aDocument,
                                  nsIContent *aContainer,
                                  nsIContent *aFirstNewContent,
-                                 PRInt32 aNewIndexInContainer)
+                                 int32_t aNewIndexInContainer)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aContainer)) {
     TriggerReclone();
@@ -196,7 +196,7 @@ void
 nsSVGUseElement::ContentInserted(nsIDocument *aDocument,
                                  nsIContent *aContainer,
                                  nsIContent *aChild,
-                                 PRInt32 aIndexInContainer)
+                                 int32_t aIndexInContainer)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aChild)) {
     TriggerReclone();
@@ -207,7 +207,7 @@ void
 nsSVGUseElement::ContentRemoved(nsIDocument *aDocument,
                                 nsIContent *aContainer,
                                 nsIContent *aChild,
-                                PRInt32 aIndexInContainer,
+                                int32_t aIndexInContainer,
                                 nsIContent *aPreviousSibling)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aChild)) {
@@ -321,10 +321,10 @@ nsSVGUseElement::CreateAnonymousContent()
     
     // copy attributes
     const nsAttrName* name;
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; (name = newcontent->GetAttrNameAt(i)); i++) {
       nsAutoString value;
-      PRInt32 nsID = name->NamespaceID();
+      int32_t nsID = name->NamespaceID();
       nsIAtom* lname = name->LocalName();
 
       newcontent->GetAttr(nsID, lname, value);
@@ -332,7 +332,7 @@ nsSVGUseElement::CreateAnonymousContent()
     }
 
     // move the children over
-    PRUint32 num = newcontent->GetChildCount();
+    uint32_t num = newcontent->GetChildCount();
     for (i = 0; i < num; i++) {
       nsCOMPtr<nsIContent> child = newcontent->GetFirstChild();
       newcontent->RemoveChildAt(0, false);
@@ -398,7 +398,7 @@ nsSVGUseElement::SyncWidthOrHeight(nsIAtom* aName)
 
   if (symbol || svg) {
     nsSVGElement *target = static_cast<nsSVGElement*>(mClone.get());
-    PRUint32 index = *sLengthInfo[WIDTH].mName == aName ? WIDTH : HEIGHT;
+    uint32_t index = *sLengthInfo[WIDTH].mName == aName ? WIDTH : HEIGHT;
 
     if (mLengthAttributes[index].IsExplicitlySet()) {
       target->SetLength(aName, mLengthAttributes[index]);

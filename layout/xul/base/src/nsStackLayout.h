@@ -42,7 +42,7 @@ public:
   // bitfield mask of the SPECIFIED_LEFT, SPECIFIED_RIGHT, SPECIFIED_TOP and
   // SPECIFIED_BOTTOM offsets indicating which sides have been specified by
   // attributes.
-  static PRUint8 GetOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsMargin& aMargin);
+  static uint8_t GetOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsMargin& aMargin);
 
 private:
   static nsBoxLayout* gInstance;

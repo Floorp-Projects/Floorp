@@ -17,7 +17,7 @@
 #include "nsIWeakReferenceUtils.h"      // for nsWeakPtr
 #include "nsWeakReference.h"            // for nsSupportsWeakReference, etc
 #include "nscore.h"                     // for nsresult
-#include "prtypes.h"                    // for PRUint32, PRUint16
+#include "prtypes.h"                    // for uint32_t, uint16_t
 
 #ifndef __gen_nsIWebProgressListener_h__
 #include "nsIWebProgressListener.h"
@@ -72,11 +72,11 @@ protected:
   nsresult        SetupEditorCommandController(const char *aControllerClassName,
                                                nsIDOMWindow *aWindow,
                                                nsISupports *aContext,
-                                               PRUint32 *aControllerId);
+                                               uint32_t *aControllerId);
 
   nsresult        SetContextOnControllerById(nsIControllers* aControllers, 
                                             nsISupports* aContext,
-                                            PRUint32 aID);
+                                            uint32_t aID);
 
   nsresult        PrepareForEditing(nsIDOMWindow *aWindow);
 
@@ -127,7 +127,7 @@ protected:
   bool            mProgressListenerRegistered;
 
   // The image animation mode before it was turned off.
-  PRUint16        mImageAnimationMode;
+  uint16_t        mImageAnimationMode;
 
   // THE REMAINING MEMBER VARIABLES WILL BECOME A SET WHEN WE EDIT
   // MORE THAN ONE EDITOR PER EDITING SESSION
@@ -135,11 +135,11 @@ protected:
   
   // Save the editor type so we can create the editor after loading uri
   nsCString       mEditorType; 
-  PRUint32        mEditorFlags;
-  PRUint32        mEditorStatus;
-  PRUint32        mBaseCommandControllerId;
-  PRUint32        mDocStateControllerId;
-  PRUint32        mHTMLCommandControllerId;
+  uint32_t        mEditorFlags;
+  uint32_t        mEditorStatus;
+  uint32_t        mBaseCommandControllerId;
+  uint32_t        mDocStateControllerId;
+  uint32_t        mHTMLCommandControllerId;
 
   // Make sure the docshell we use is safe
   nsWeakPtr       mDocShell;

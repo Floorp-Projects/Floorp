@@ -83,12 +83,12 @@ CanvasLayerD3D9::UpdateSurface()
 
     const bool stridesMatch = r.Pitch == mBounds.width * 4;
 
-    PRUint8 *destination;
+    uint8_t *destination;
     if (!stridesMatch) {
       destination = GetTempBlob(mBounds.width * mBounds.height * 4);
     } else {
       DiscardTempBlob();
-      destination = (PRUint8*)r.pBits;
+      destination = (uint8_t*)r.pBits;
     }
 
     mGLContext->MakeCurrent();
@@ -103,7 +103,7 @@ CanvasLayerD3D9::UpdateSurface()
 
     if (!stridesMatch) {
       for (int y = 0; y < mBounds.height; y++) {
-        memcpy((PRUint8*)r.pBits + r.Pitch * y,
+        memcpy((uint8_t*)r.pBits + r.Pitch * y,
                destination + mBounds.width * 4 * y,
                mBounds.width * 4);
       }
@@ -143,8 +143,8 @@ CanvasLayerD3D9::UpdateSurface()
       ctx->Paint();
     }
 
-    PRUint8 *startBits = sourceSurface->Data();
-    PRUint32 sourceStride = sourceSurface->Stride();
+    uint8_t *startBits = sourceSurface->Data();
+    uint32_t sourceStride = sourceSurface->Stride();
 
     if (sourceSurface->Format() != gfxASurface::ImageFormatARGB32) {
       mHasAlpha = false;
@@ -153,7 +153,7 @@ CanvasLayerD3D9::UpdateSurface()
     }
 
     for (int y = 0; y < mBounds.height; y++) {
-      memcpy((PRUint8*)lockedRect.pBits + lockedRect.Pitch * y,
+      memcpy((uint8_t*)lockedRect.pBits + lockedRect.Pitch * y,
              startBits + sourceStride * y,
              mBounds.width * 4);
     }

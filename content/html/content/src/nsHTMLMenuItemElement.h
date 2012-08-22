@@ -52,7 +52,7 @@ public:
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers);
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -65,7 +65,7 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
-  PRUint8 GetType() const { return mType; }
+  uint8_t GetType() const { return mType; }
 
   /**
    * Syntax sugar to make it easier to check for checked and checked dirty
@@ -76,7 +76,7 @@ public:
   void GetText(nsAString& aText);
 
 protected:
-  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 
   void WalkRadioGroup(Visitor* aVisitor);
@@ -94,7 +94,7 @@ protected:
   void SetCheckedDirty() { mCheckedDirty = true; }
 
 private:
-  PRUint8 mType : 2;
+  uint8_t mType : 2;
   bool mParserCreating : 1;
   bool mShouldInitChecked : 1;
   bool mCheckedDirty : 1;

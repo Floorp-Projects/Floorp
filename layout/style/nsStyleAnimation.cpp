@@ -108,7 +108,7 @@ ToPrimitive(nsCSSKeyword aKeyword)
 static already_AddRefed<nsCSSValue::Array>
 AppendFunction(nsCSSKeyword aTransformFunction)
 {
-  PRUint32 nargs;
+  uint32_t nargs;
   switch (aTransformFunction) {
     case eCSSKeyword_matrix3d:
       nargs = 16;
@@ -243,8 +243,8 @@ ToPrimitive(nsCSSValue::Array* aArray)
 }
 
 // Greatest Common Divisor
-static PRUint32
-gcd(PRUint32 a, PRUint32 b)
+static uint32_t
+gcd(uint32_t a, uint32_t b)
 {
   // Euclid's algorithm; O(N) in the worst case.  (There are better
   // ways, but we don't need them for stroke-dasharray animation.)
@@ -262,8 +262,8 @@ gcd(PRUint32 a, PRUint32 b)
 }
 
 // Least Common Multiple
-static PRUint32
-lcm(PRUint32 a, PRUint32 b)
+static uint32_t
+lcm(uint32_t a, uint32_t b)
 {
   // Divide first to reduce overflow risk.
   return (a / gcd(a, b)) * b;
@@ -405,8 +405,8 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       switch (aProperty) {
         case eCSSProperty_font_stretch: {
           // just like eUnit_Integer.
-          PRInt32 startInt = aStartValue.GetIntValue();
-          PRInt32 endInt = aEndValue.GetIntValue();
+          int32_t startInt = aStartValue.GetIntValue();
+          int32_t endInt = aEndValue.GetIntValue();
           aDistance = NS_ABS(endInt - startInt);
           return true;
         }
@@ -414,16 +414,16 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           return false;
       }
    case eUnit_Visibility: {
-      PRInt32 startVal =
+      int32_t startVal =
         aStartValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
-      PRInt32 endVal =
+      int32_t endVal =
         aEndValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
       aDistance = NS_ABS(startVal - endVal);
       return true;
     }
     case eUnit_Integer: {
-      PRInt32 startInt = aStartValue.GetIntValue();
-      PRInt32 endInt = aEndValue.GetIntValue();
+      int32_t startInt = aStartValue.GetIntValue();
+      int32_t endInt = aEndValue.GetIntValue();
       aDistance = NS_ABS(endInt - startInt);
       return true;
     }
@@ -519,7 +519,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       static nsCSSValue nsCSSValuePair::* const pairValues[2] = {
         &nsCSSValuePair::mXValue, &nsCSSValuePair::mYValue
       };
-      for (PRUint32 i = 0; i < 2; ++i) {
+      for (uint32_t i = 0; i < 2; ++i) {
         nsCSSValue nsCSSValuePair::*member = pairValues[i];
         double diffsquared;
         switch (unit[i]) {
@@ -572,7 +572,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       static nsCSSValue nsCSSValueTriplet::* const pairValues[3] = {
         &nsCSSValueTriplet::mXValue, &nsCSSValueTriplet::mYValue, &nsCSSValueTriplet::mZValue
       };
-      for (PRUint32 i = 0; i < 3; ++i) {
+      for (uint32_t i = 0; i < 3; ++i) {
         nsCSSValue nsCSSValueTriplet::*member = pairValues[i];
         double diffsquared;
         switch (unit[i]) {
@@ -621,7 +621,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       }
 
       double squareDistance = 0.0;
-      for (PRUint32 i = 0; i < ArrayLength(nsCSSRect::sides); ++i) {
+      for (uint32_t i = 0; i < ArrayLength(nsCSSRect::sides); ++i) {
         nsCSSValue nsCSSRect::*member = nsCSSRect::sides[i];
         NS_ABORT_IF_FALSE((rect1->*member).GetUnit() ==
                             (rect2->*member).GetUnit(),
@@ -826,7 +826,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           &nsCSSValuePairList::mXValue,
           &nsCSSValuePairList::mYValue,
         };
-        for (PRUint32 i = 0; i < ArrayLength(pairListValues); ++i) {
+        for (uint32_t i = 0; i < ArrayLength(pairListValues); ++i) {
           const nsCSSValue &v1 = list1->*(pairListValues[i]);
           const nsCSSValue &v2 = list2->*(pairListValues[i]);
           nsCSSUnit unit =
@@ -880,7 +880,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
 
 #define MAX_PACKED_COLOR_COMPONENT 255
 
-inline PRUint8 ClampColor(double aColor)
+inline uint8_t ClampColor(double aColor)
 {
   if (aColor >= MAX_PACKED_COLOR_COMPONENT)
     return MAX_PACKED_COLOR_COMPONENT;
@@ -891,7 +891,7 @@ inline PRUint8 ClampColor(double aColor)
 
 template <typename T>
 T
-RestrictValue(PRUint32 aRestrictions, T aValue)
+RestrictValue(uint32_t aRestrictions, T aValue)
 {
   T result = aValue;
   switch (aRestrictions) {
@@ -924,7 +924,7 @@ RestrictValue(nsCSSProperty aProperty, T aValue)
 static inline void
 AddCSSValuePixel(double aCoeff1, const nsCSSValue &aValue1,
                  double aCoeff2, const nsCSSValue &aValue2,
-                 nsCSSValue &aResult, PRUint32 aValueRestrictions = 0)
+                 nsCSSValue &aResult, uint32_t aValueRestrictions = 0)
 {
   NS_ABORT_IF_FALSE(aValue1.GetUnit() == eCSSUnit_Pixel, "unexpected unit");
   NS_ABORT_IF_FALSE(aValue2.GetUnit() == eCSSUnit_Pixel, "unexpected unit");
@@ -937,7 +937,7 @@ AddCSSValuePixel(double aCoeff1, const nsCSSValue &aValue1,
 static inline void
 AddCSSValueNumber(double aCoeff1, const nsCSSValue &aValue1,
                   double aCoeff2, const nsCSSValue &aValue2,
-                  nsCSSValue &aResult, PRUint32 aValueRestrictions = 0)
+                  nsCSSValue &aResult, uint32_t aValueRestrictions = 0)
 {
   NS_ABORT_IF_FALSE(aValue1.GetUnit() == eCSSUnit_Number, "unexpected unit");
   NS_ABORT_IF_FALSE(aValue2.GetUnit() == eCSSUnit_Number, "unexpected unit");
@@ -950,7 +950,7 @@ AddCSSValueNumber(double aCoeff1, const nsCSSValue &aValue1,
 static inline void
 AddCSSValuePercent(double aCoeff1, const nsCSSValue &aValue1,
                    double aCoeff2, const nsCSSValue &aValue2,
-                   nsCSSValue &aResult, PRUint32 aValueRestrictions = 0)
+                   nsCSSValue &aResult, uint32_t aValueRestrictions = 0)
 {
   NS_ABORT_IF_FALSE(aValue1.GetUnit() == eCSSUnit_Percent, "unexpected unit");
   NS_ABORT_IF_FALSE(aValue2.GetUnit() == eCSSUnit_Percent, "unexpected unit");
@@ -990,7 +990,7 @@ AddCSSValueAngle(const nsCSSValue &aValue1, double aCoeff1,
 }
 
 static bool
-AddCSSValuePixelPercentCalc(const PRUint32 aValueRestrictions,
+AddCSSValuePixelPercentCalc(const uint32_t aValueRestrictions,
                             const nsCSSUnit aCommonUnit,
                             double aCoeff1, const nsCSSValue &aValue1,
                             double aCoeff2, const nsCSSValue &aValue2,
@@ -1692,7 +1692,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       switch (aProperty) {
         case eCSSProperty_font_stretch: {
           // Animate just like eUnit_Integer.
-          PRInt32 result = floor(aCoeff1 * double(aValue1.GetIntValue()) +
+          int32_t result = floor(aCoeff1 * double(aValue1.GetIntValue()) +
                                  aCoeff2 * double(aValue2.GetIntValue()));
           if (result < NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED) {
             result = NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED;
@@ -1706,10 +1706,10 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           return false;
       }
     case eUnit_Visibility: {
-      PRInt32 val1 = aValue1.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
-      PRInt32 val2 = aValue2.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
+      int32_t val1 = aValue1.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
+      int32_t val2 = aValue2.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
       double interp = aCoeff1 * val1 + aCoeff2 * val2;
-      PRInt32 result = interp > 0.0 ? NS_STYLE_VISIBILITY_VISIBLE
+      int32_t result = interp > 0.0 ? NS_STYLE_VISIBILITY_VISIBLE
                                     : NS_STYLE_VISIBILITY_HIDDEN;
       aResultValue.SetIntValue(result, eUnit_Visibility);
       return true;
@@ -1717,7 +1717,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
     case eUnit_Integer: {
       // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
       // says we should use floor
-      PRInt32 result = floor(aCoeff1 * double(aValue1.GetIntValue()) +
+      int32_t result = floor(aCoeff1 * double(aValue1.GetIntValue()) +
                              aCoeff2 * double(aValue2.GetIntValue()));
       if (aProperty == eCSSProperty_font_weight) {
         if (result < 100) {
@@ -1789,10 +1789,10 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           Aresf = 1.0;
         }
         double factor = 1.0 / Aresf;
-        PRUint8 Ares = NSToIntRound(Aresf * 255.0);
-        PRUint8 Rres = ClampColor((R1 * aCoeff1 + R2 * aCoeff2) * factor);
-        PRUint8 Gres = ClampColor((G1 * aCoeff1 + G2 * aCoeff2) * factor);
-        PRUint8 Bres = ClampColor((B1 * aCoeff1 + B2 * aCoeff2) * factor);
+        uint8_t Ares = NSToIntRound(Aresf * 255.0);
+        uint8_t Rres = ClampColor((R1 * aCoeff1 + R2 * aCoeff2) * factor);
+        uint8_t Gres = ClampColor((G1 * aCoeff1 + G2 * aCoeff2) * factor);
+        uint8_t Bres = ClampColor((B1 * aCoeff1 + B2 * aCoeff2) * factor);
         resultColor = NS_RGBA(Rres, Gres, Bres, Ares);
       }
       aResultValue.SetColorValue(resultColor);
@@ -1836,8 +1836,8 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       static nsCSSValue nsCSSValuePair::* const pairValues[2] = {
         &nsCSSValuePair::mXValue, &nsCSSValuePair::mYValue
       };
-      PRUint32 restrictions = nsCSSProps::ValueRestrictions(aProperty);
-      for (PRUint32 i = 0; i < 2; ++i) {
+      uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
+      for (uint32_t i = 0; i < 2; ++i) {
         nsCSSValue nsCSSValuePair::*member = pairValues[i];
         if (!AddCSSValuePixelPercentCalc(restrictions, unit[i],
                                          aCoeff1, pair1->*member,
@@ -1872,8 +1872,8 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       static nsCSSValue nsCSSValueTriplet::* const tripletValues[3] = {
         &nsCSSValueTriplet::mXValue, &nsCSSValueTriplet::mYValue, &nsCSSValueTriplet::mZValue
       };
-      PRUint32 restrictions = nsCSSProps::ValueRestrictions(aProperty);
-      for (PRUint32 i = 0; i < 3; ++i) {
+      uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
+      for (uint32_t i = 0; i < 3; ++i) {
         nsCSSValue nsCSSValueTriplet::*member = tripletValues[i];
         if (!AddCSSValuePixelPercentCalc(restrictions, unit[i],
                                          aCoeff1, &triplet1->*member,
@@ -1902,7 +1902,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       }
 
       nsAutoPtr<nsCSSRect> result(new nsCSSRect);
-      for (PRUint32 i = 0; i < ArrayLength(nsCSSRect::sides); ++i) {
+      for (uint32_t i = 0; i < ArrayLength(nsCSSRect::sides); ++i) {
         nsCSSValue nsCSSRect::*member = nsCSSRect::sides[i];
         NS_ABORT_IF_FALSE((rect1->*member).GetUnit() ==
                             (rect2->*member).GetUnit(),
@@ -1933,7 +1933,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       const nsCSSValueList *list1 = aValue1.GetCSSValueListValue();
       const nsCSSValueList *list2 = aValue2.GetCSSValueListValue();
 
-      PRUint32 len1 = 0, len2 = 0;
+      uint32_t len1 = 0, len2 = 0;
       for (const nsCSSValueList *v = list1; v; v = v->mNext) {
         ++len1;
       }
@@ -1953,7 +1953,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
 
       nsAutoPtr<nsCSSValueList> result;
       nsCSSValueList **resultTail = getter_Transfers(result);
-      for (PRUint32 i = 0, i_end = lcm(len1, len2); i != i_end; ++i) {
+      for (uint32_t i = 0, i_end = lcm(len1, len2); i != i_end; ++i) {
         const nsCSSValue &v1 = list1->mValue;
         const nsCSSValue &v2 = list2->mValue;
         NS_ABORT_IF_FALSE(v1.GetUnit() == eCSSUnit_Number ||
@@ -2117,7 +2117,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
         nsCSSValue::Array* bgPosRes = nsCSSValue::Array::Create(4);
         item->mValue.SetArrayValue(bgPosRes, eCSSUnit_Array);
 
-        PRUint32 restrictions = nsCSSProps::ValueRestrictions(aProperty);
+        uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
 
         /* Only iterate over elements 1 and 3. The background position is
          * 'uncomputed' to only those elements.
@@ -2168,8 +2168,8 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           &nsCSSValuePairList::mXValue,
           &nsCSSValuePairList::mYValue,
         };
-        PRUint32 restrictions = nsCSSProps::ValueRestrictions(aProperty);
-        for (PRUint32 i = 0; i < ArrayLength(pairListValues); ++i) {
+        uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
+        for (uint32_t i = 0; i < ArrayLength(pairListValues); ++i) {
           const nsCSSValue &v1 = list1->*(pairListValues[i]);
           const nsCSSValue &v2 = list2->*(pairListValues[i]);
           nsCSSValue &vr = item->*(pairListValues[i]);
@@ -2702,7 +2702,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         }
 
         case eCSSProperty_text_decoration_style: {
-          PRUint8 decorationStyle =
+          uint8_t decorationStyle =
             static_cast<const nsStyleTextReset*>(styleStruct)->
               GetDecorationStyle();
           aComputedValue.SetIntValue(decorationStyle, eUnit_Enumerated);
@@ -2767,7 +2767,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             NS_ABORT_IF_FALSE(svg->mStrokeDasharrayLength > 0,
                               "non-null list should have positive length");
             nsCSSValueList **resultTail = getter_Transfers(result);
-            for (PRUint32 i = 0, i_end = svg->mStrokeDasharrayLength;
+            for (uint32_t i = 0, i_end = svg->mStrokeDasharrayLength;
                  i != i_end; ++i) {
               nsCSSValueList *item = new nsCSSValueList;
               if (!item) {
@@ -2812,7 +2812,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         }
 
         case eCSSProperty_font_stretch: {
-          PRInt16 stretch =
+          int16_t stretch =
             static_cast<const nsStyleFont*>(styleStruct)->mFont.stretch;
           MOZ_STATIC_ASSERT(NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED == -4 &&
                             NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED == 4,
@@ -2826,7 +2826,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         }
 
         case eCSSProperty_font_weight: {
-          PRUint16 weight =
+          uint16_t weight =
             static_cast<const nsStyleFont*>(styleStruct)->mFont.weight;
           if (weight % 100 != 0) {
             return false;
@@ -2892,7 +2892,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           nsAutoPtr<nsCSSValueList> result;
           nsCSSValueList **resultTail = getter_Transfers(result);
           NS_ABORT_IF_FALSE(bg->mPositionCount > 0, "unexpected count");
-          for (PRUint32 i = 0, i_end = bg->mPositionCount; i != i_end; ++i) {
+          for (uint32_t i = 0, i_end = bg->mPositionCount; i != i_end; ++i) {
             nsCSSValueList *item = new nsCSSValueList;
             *resultTail = item;
             resultTail = &item->mNext;
@@ -2936,7 +2936,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           nsAutoPtr<nsCSSValuePairList> result;
           nsCSSValuePairList **resultTail = getter_Transfers(result);
           NS_ABORT_IF_FALSE(bg->mSizeCount > 0, "unexpected count");
-          for (PRUint32 i = 0, i_end = bg->mSizeCount; i != i_end; ++i) {
+          for (uint32_t i = 0, i_end = bg->mSizeCount; i != i_end; ++i) {
             nsCSSValuePairList *item = new nsCSSValuePairList;
             *resultTail = item;
             resultTail = &item->mNext;
@@ -3068,7 +3068,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
 
       const nsStyleCorners *corners = static_cast<const nsStyleCorners*>(
         StyleDataAtOffset(styleStruct, ssOffset));
-      PRUint8 fullCorner = animType - eStyleAnimType_Corner_TopLeft;
+      uint8_t fullCorner = animType - eStyleAnimType_Corner_TopLeft;
       const nsStyleCoord &horiz =
         corners->Get(NS_FULL_TO_HALF_CORNER(fullCorner, false));
       const nsStyleCoord &vert =
@@ -3088,7 +3088,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         StyleDataAtOffset(styleStruct, ssOffset)));
       return true;
     case eStyleAnimType_EnumU8:
-      aComputedValue.SetIntValue(*static_cast<const PRUint8*>(
+      aComputedValue.SetIntValue(*static_cast<const uint8_t*>(
         StyleDataAtOffset(styleStruct, ssOffset)), eUnit_Enumerated);
       return true;
     case eStyleAnimType_float:
@@ -3150,7 +3150,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
       }
       nsAutoPtr<nsCSSValueList> result;
       nsCSSValueList **resultTail = getter_Transfers(result);
-      for (PRUint32 i = 0, i_end = shadowArray->Length(); i < i_end; ++i) {
+      for (uint32_t i = 0, i_end = shadowArray->Length(); i < i_end; ++i) {
         const nsCSSShadowItem *shadow = shadowArray->ShadowAt(i);
         // X, Y, Radius, Spread, Color, Inset
         nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(6);
@@ -3186,7 +3186,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
   return false;
 }
 
-nsStyleAnimation::Value::Value(PRInt32 aInt, Unit aUnit,
+nsStyleAnimation::Value::Value(int32_t aInt, Unit aUnit,
                                IntegerConstructorType)
 {
   NS_ASSERTION(IsIntUnit(aUnit), "unit must be of integer type");
@@ -3330,7 +3330,7 @@ nsStyleAnimation::Value::SetNoneValue()
 }
 
 void
-nsStyleAnimation::Value::SetIntValue(PRInt32 aInt, Unit aUnit)
+nsStyleAnimation::Value::SetIntValue(int32_t aInt, Unit aUnit)
 {
   NS_ASSERTION(IsIntUnit(aUnit), "unit must be of integer type");
   FreeValue();

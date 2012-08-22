@@ -67,7 +67,7 @@ nsFilePicker::Shutdown()
 }
 
 static GtkFileChooserAction
-GetGtkFileChooserAction(PRInt16 aMode)
+GetGtkFileChooserAction(int16_t aMode)
 {
   GtkFileChooserAction action;
 
@@ -220,7 +220,7 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
   GtkFileFilter *filter = gtk_file_chooser_get_filter(GTK_FILE_CHOOSER(file_chooser));
   GSList *filter_list = gtk_file_chooser_list_filters(GTK_FILE_CHOOSER(file_chooser));
 
-  mSelectedType = static_cast<PRInt16>(g_slist_index(filter_list, filter));
+  mSelectedType = static_cast<int16_t>(g_slist_index(filter_list, filter));
   g_slist_free(filter_list);
 
   // Remember last used directory.
@@ -238,7 +238,7 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
 void
 nsFilePicker::InitNative(nsIWidget *aParent,
                          const nsAString& aTitle,
-                         PRInt16 aMode)
+                         int16_t aMode)
 {
   mParentWidget = aParent;
   mTitle.Assign(aTitle);
@@ -246,7 +246,7 @@ nsFilePicker::InitNative(nsIWidget *aParent,
 }
 
 NS_IMETHODIMP
-nsFilePicker::AppendFilters(PRInt32 aFilterMask)
+nsFilePicker::AppendFilters(int32_t aFilterMask)
 {
   mAllowURLs = !!(aFilterMask & filterAllowURLs);
   return nsBaseFilePicker::AppendFilters(aFilterMask);
@@ -302,7 +302,7 @@ nsFilePicker::GetDefaultExtension(nsAString& aExtension)
 }
 
 NS_IMETHODIMP
-nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
+nsFilePicker::GetFilterIndex(int32_t *aFilterIndex)
 {
   *aFilterIndex = mSelectedType;
 
@@ -310,7 +310,7 @@ nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
 }
 
 NS_IMETHODIMP
-nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
+nsFilePicker::SetFilterIndex(int32_t aFilterIndex)
 {
   mSelectedType = aFilterIndex;
 
@@ -358,7 +358,7 @@ nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 }
 
 NS_IMETHODIMP
-nsFilePicker::Show(PRInt16 *aReturn)
+nsFilePicker::Show(int16_t *aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
@@ -438,8 +438,8 @@ nsFilePicker::Show(PRInt16 *aReturn)
 
   gtk_dialog_set_default_response(GTK_DIALOG(file_chooser), GTK_RESPONSE_ACCEPT);
 
-  PRInt32 count = mFilters.Length();
-  for (PRInt32 i = 0; i < count; ++i) {
+  int32_t count = mFilters.Length();
+  for (int32_t i = 0; i < count; ++i) {
     // This is fun... the GTK file picker does not accept a list of filters
     // so we need to split out each string, and add it manually.
 

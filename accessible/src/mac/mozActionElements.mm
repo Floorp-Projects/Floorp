@@ -148,7 +148,7 @@ enum CheckboxValue {
 
 - (int)isChecked
 {
-  PRUint64 state = mGeckoAccessible->NativeState();
+  uint64_t state = mGeckoAccessible->NativeState();
 
   // check if we're checked or in a mixed state
   if (state & states::CHECKED) {

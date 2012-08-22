@@ -37,7 +37,7 @@ public:
 #endif
   {}
 
-  SVGLength(float aValue, PRUint8 aUnit)
+  SVGLength(float aValue, uint8_t aUnit)
     : mValue(aValue)
     , mUnit(aUnit)
   {
@@ -75,7 +75,7 @@ public:
     return mValue;
   }
 
-  PRUint8 GetUnit() const {
+  uint8_t GetUnit() const {
     return mUnit;
   }
 
@@ -84,7 +84,7 @@ public:
     NS_ASSERTION(IsValid(), "Set invalid SVGLength");
   }
 
-  void SetValueAndUnit(float aValue, PRUint8 aUnit) {
+  void SetValueAndUnit(float aValue, uint8_t aUnit) {
     mValue = aValue;
     mUnit = aUnit;
 
@@ -103,7 +103,7 @@ public:
    * If it's not possible to convert this length's value to user units, then
    * this method will return numeric_limits<float>::quiet_NaN().
    */
-  float GetValueInUserUnits(const nsSVGElement *aElement, PRUint8 aAxis) const {
+  float GetValueInUserUnits(const nsSVGElement *aElement, uint8_t aAxis) const {
     return mValue * GetUserUnitsPerUnit(aElement, aAxis);
   }
 
@@ -117,7 +117,7 @@ public:
    */
   bool SetFromUserUnitValue(float aUserUnitValue,
                               nsSVGElement *aElement,
-                              PRUint8 aAxis) {
+                              uint8_t aAxis) {
     float uuPerUnit = GetUserUnitsPerUnit(aElement, aAxis);
     float value = aUserUnitValue / uuPerUnit;
     if (uuPerUnit > 0 && NS_finite(value)) {
@@ -134,9 +134,9 @@ public:
    * This method returns numeric_limits<float>::quiet_NaN() if it is not
    * possible to convert the value to the specified unit.
    */
-  float GetValueInSpecifiedUnit(PRUint8 aUnit,
+  float GetValueInSpecifiedUnit(uint8_t aUnit,
                                 const nsSVGElement *aElement,
-                                PRUint8 aAxis) const;
+                                uint8_t aAxis) const;
 
   /**
    * Convert this length's value to the unit specified.
@@ -145,7 +145,7 @@ public:
    * length to the specified unit. In that case the length is left unchanged
    * and this method returns false.
    */
-  bool ConvertToUnit(PRUint32 aUnit, nsSVGElement *aElement, PRUint8 aAxis) {
+  bool ConvertToUnit(uint32_t aUnit, nsSVGElement *aElement, uint8_t aAxis) {
     float val = GetValueInSpecifiedUnit(aUnit, aElement, aAxis);
     if (NS_finite(val)) {
       mValue = val;
@@ -160,7 +160,7 @@ public:
     return mUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE;
   }
 
-  static bool IsValidUnitType(PRUint16 unit) {
+  static bool IsValidUnitType(uint16_t unit) {
     return unit > nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN &&
            unit <= nsIDOMSVGLength::SVG_LENGTHTYPE_PC;
   }
@@ -180,7 +180,7 @@ private:
    * factor between the length's current unit and user units is undefined (see
    * the comments for GetUserUnitsPerInch and GetUserUnitsPerPercent).
    */
-  float GetUserUnitsPerUnit(const nsSVGElement *aElement, PRUint8 aAxis) const;
+  float GetUserUnitsPerUnit(const nsSVGElement *aElement, uint8_t aAxis) const;
 
   /**
    * The conversion factor between user units (CSS px) and CSS inches is
@@ -200,10 +200,10 @@ private:
    * This function returns a non-negative value if the conversion factor is
    * defined, otherwise it returns numeric_limits<float>::quiet_NaN().
    */
-  static float GetUserUnitsPerPercent(const nsSVGElement *aElement, PRUint8 aAxis);
+  static float GetUserUnitsPerPercent(const nsSVGElement *aElement, uint8_t aAxis);
 
   float mValue;
-  PRUint8 mUnit;
+  uint8_t mUnit;
 };
 
 } // namespace mozilla

@@ -341,9 +341,3 @@ LTestVAndBranch::ifFalse()
     return ifFalse_->lir()->label();
 }
 
-bool
-LNewCallObject::isCall() const
-{
-    return mir()->templateObj()->lastProperty()->extensibleParents();
-}
-

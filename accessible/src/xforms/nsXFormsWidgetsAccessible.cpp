@@ -27,7 +27,7 @@ nsXFormsDropmarkerWidgetAccessible::NativeRole()
   return roles::PUSHBUTTON;
 }
 
-PRUint64
+uint64_t
 nsXFormsDropmarkerWidgetAccessible::NativeState()
 {
   bool isOpen = false;
@@ -38,14 +38,14 @@ nsXFormsDropmarkerWidgetAccessible::NativeState()
   return isOpen ? states::PRESSED: 0;
 }
 
-PRUint8
+uint8_t
 nsXFormsDropmarkerWidgetAccessible::ActionCount()
 {
   return 1;
 }
 
 NS_IMETHODIMP
-nsXFormsDropmarkerWidgetAccessible::GetActionName(PRUint8 aIndex,
+nsXFormsDropmarkerWidgetAccessible::GetActionName(uint8_t aIndex,
                                                   nsAString& aName)
 {
   if (aIndex != eAction_Click)
@@ -65,7 +65,7 @@ nsXFormsDropmarkerWidgetAccessible::GetActionName(PRUint8 aIndex,
 }
 
 NS_IMETHODIMP
-nsXFormsDropmarkerWidgetAccessible::DoAction(PRUint8 aIndex)
+nsXFormsDropmarkerWidgetAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
@@ -109,10 +109,10 @@ nsXFormsComboboxPopupWidgetAccessible::NativeRole()
   return roles::LIST;
 }
 
-PRUint64
+uint64_t
 nsXFormsComboboxPopupWidgetAccessible::NativeState()
 {
-  PRUint64 state = nsXFormsAccessible::NativeState();
+  uint64_t state = nsXFormsAccessible::NativeState();
 
   bool isOpen = false;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
@@ -127,7 +127,7 @@ nsXFormsComboboxPopupWidgetAccessible::NativeState()
   return state;
 }
 
-PRUint64
+uint64_t
 nsXFormsComboboxPopupWidgetAccessible::NativeInteractiveState() const
 {
   return NativelyUnavailable() ? states::UNAVAILABLE : states::FOCUSABLE;

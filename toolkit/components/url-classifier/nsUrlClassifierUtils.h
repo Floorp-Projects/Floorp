@@ -23,8 +23,8 @@ private:
   class Charmap
   {
   public:
-    Charmap(PRUint32 b0, PRUint32 b1, PRUint32 b2, PRUint32 b3,
-            PRUint32 b4, PRUint32 b5, PRUint32 b6, PRUint32 b7)
+    Charmap(uint32_t b0, uint32_t b1, uint32_t b2, uint32_t b3,
+            uint32_t b4, uint32_t b5, uint32_t b6, uint32_t b7)
     {
       mMap[0] = b0; mMap[1] = b1; mMap[2] = b2; mMap[3] = b3;
       mMap[4] = b4; mMap[5] = b5; mMap[6] = b6; mMap[7] = b7;
@@ -40,7 +40,7 @@ private:
 
   private:
     // Store the 256 bits in an 8 byte array.
-    PRUint32 mMap[8];
+    uint32_t mMap[8];
   };
 
 
@@ -69,7 +69,7 @@ public:
 
   void ParseIPAddress(const nsACString & host, nsACString & _retval);
   void CanonicalNum(const nsACString & num,
-                    PRUint32 bytes,
+                    uint32_t bytes,
                     bool allowOctal,
                     nsACString & _retval);
 

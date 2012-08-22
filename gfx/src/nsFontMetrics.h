@@ -165,33 +165,33 @@ public:
      */
     nsIAtom* Language() { return mLanguage; }
 
-    PRInt32 GetMaxStringLength();
+    int32_t GetMaxStringLength();
 
     // Get the width for this string.  aWidth will be updated with the
     // width in points, not twips.  Callers must convert it if they
     // want it in another format.
-    nscoord GetWidth(const char* aString, PRUint32 aLength,
+    nscoord GetWidth(const char* aString, uint32_t aLength,
                      nsRenderingContext *aContext);
-    nscoord GetWidth(const PRUnichar* aString, PRUint32 aLength,
+    nscoord GetWidth(const PRUnichar* aString, uint32_t aLength,
                      nsRenderingContext *aContext);
 
     // Draw a string using this font handle on the surface passed in.
-    void DrawString(const char *aString, PRUint32 aLength,
+    void DrawString(const char *aString, uint32_t aLength,
                     nscoord aX, nscoord aY,
                     nsRenderingContext *aContext);
-    void DrawString(const PRUnichar* aString, PRUint32 aLength,
+    void DrawString(const PRUnichar* aString, uint32_t aLength,
                     nscoord aX, nscoord aY,
                     nsRenderingContext *aContext,
                     nsRenderingContext *aTextRunConstructionContext);
 
     nsBoundingMetrics GetBoundingMetrics(const PRUnichar *aString,
-                                         PRUint32 aLength,
+                                         uint32_t aLength,
                                          nsRenderingContext *aContext);
 
     // Returns the LOOSE_INK_EXTENTS bounds of the text for determing the
     // overflow area of the string.
     nsBoundingMetrics GetInkBoundsForVisualOverflow(const PRUnichar *aString,
-                                                    PRUint32 aLength,
+                                                    uint32_t aLength,
                                                     nsRenderingContext *aContext);
 
     void SetTextRunRTL(bool aIsRTL) { mTextRunRTL = aIsRTL; }
@@ -200,7 +200,7 @@ public:
     gfxFontGroup* GetThebesFontGroup() { return mFontGroup; }
     gfxUserFontSet* GetUserFontSet() { return mFontGroup->GetUserFontSet(); }
 
-    PRUint32 AppUnitsPerDevPixel() { return mP2A; }
+    uint32_t AppUnitsPerDevPixel() { return mP2A; }
 
 protected:
     const gfxFont::Metrics& GetMetrics() const;
@@ -209,7 +209,7 @@ protected:
     nsRefPtr<gfxFontGroup> mFontGroup;
     nsCOMPtr<nsIAtom> mLanguage;
     nsDeviceContext *mDeviceContext;
-    PRUint32 mP2A;
+    uint32_t mP2A;
     bool mTextRunRTL;
 };
 

@@ -240,7 +240,7 @@ static const nsCursor sCustomCursor = eCursorCount;
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-- (nsresult) setCursorWithImage: (imgIContainer*) aCursorImage hotSpotX: (PRUint32) aHotspotX hotSpotY: (PRUint32) aHotspotY
+- (nsresult) setCursorWithImage: (imgIContainer*) aCursorImage hotSpotX: (uint32_t) aHotspotX hotSpotY: (uint32_t) aHotspotY
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
   // As the user moves the mouse, this gets called repeatedly with the same aCursorImage
@@ -250,7 +250,7 @@ static const nsCursor sCustomCursor = eCursorCount;
   }
   
   [[NSCursor currentCursor] set];
-  PRInt32 width = 0, height = 0;
+  int32_t width = 0, height = 0;
   aCursorImage->GetWidth(&width);
   aCursorImage->GetHeight(&height);
   // prevent DoS attacks
@@ -265,8 +265,8 @@ static const nsCursor sCustomCursor = eCursorCount;
   }
 
   // if the hotspot is nonsensical, make it 0,0
-  aHotspotX = (aHotspotX > (PRUint32)width - 1) ? 0 : aHotspotX;
-  aHotspotY = (aHotspotY > (PRUint32)height - 1) ? 0 : aHotspotY;
+  aHotspotX = (aHotspotX > (uint32_t)width - 1) ? 0 : aHotspotX;
+  aHotspotY = (aHotspotY > (uint32_t)height - 1) ? 0 : aHotspotY;
 
   NSPoint hotSpot = ::NSMakePoint(aHotspotX, aHotspotY);
   [self setMacCursor:[nsMacCursor cursorWithCursor:[[NSCursor alloc] initWithImage:cursorImage hotSpot:hotSpot] type:sCustomCursor]];

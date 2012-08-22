@@ -50,7 +50,7 @@ public:
    * each call to Pause of a given aType has been matched by at least one call
    * to Resume with the same aType.
    */
-  virtual void Pause(PRUint32 aType);
+  virtual void Pause(uint32_t aType);
 
   /*
    * Resume this time container
@@ -59,7 +59,7 @@ public:
    * this particular type of pause request. When all pause flags have been
    * cleared the time container will be resumed.
    */
-  virtual void Resume(PRUint32 aType);
+  virtual void Resume(uint32_t aType);
 
   /**
    * Returns true if this time container is paused by the specified type.
@@ -69,7 +69,7 @@ public:
    * @param @aType The pause source to test for.
    * @return true if this container is paused by aType.
    */
-  bool IsPausedByType(PRUint32 aType) const { return mPauseState & aType; }
+  bool IsPausedByType(uint32_t aType) const { return mPauseState & aType; }
 
   /**
    * Returns true if this time container is paused.
@@ -267,7 +267,7 @@ protected:
   bool mIsSeeking; // Currently in the middle of a seek operation
 
   // A bitfield of the pause state for all pause requests
-  PRUint32 mPauseState;
+  uint32_t mPauseState;
 
   struct MilestoneEntry
   {

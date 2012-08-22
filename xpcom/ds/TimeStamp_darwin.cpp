@@ -22,19 +22,19 @@
 #include "mozilla/TimeStamp.h"
 
 // Estimate of the smallest duration of time we can measure.
-static PRUint64 sResolution;
-static PRUint64 sResolutionSigDigs;
+static uint64_t sResolution;
+static uint64_t sResolutionSigDigs;
 
-static const PRUint16 kNsPerUs   =       1000;
-static const PRUint64 kNsPerMs   =    1000000;
-static const PRUint64 kNsPerSec  = 1000000000;
+static const uint16_t kNsPerUs   =       1000;
+static const uint64_t kNsPerMs   =    1000000;
+static const uint64_t kNsPerSec  = 1000000000;
 static const double kNsPerMsd    =    1000000.0;
 static const double kNsPerSecd   = 1000000000.0;
 
 static bool gInitialized = false;
 static double sNsPerTick;
 
-static PRUint64
+static uint64_t
 ClockTime()
 {
   // mach_absolute_time is it when it comes to ticks on the Mac.  Other calls
@@ -47,12 +47,12 @@ ClockTime()
   return mach_absolute_time();
 }
 
-static PRUint64
+static uint64_t
 ClockResolutionNs()
 {
-  PRUint64 start = ClockTime();
-  PRUint64 end = ClockTime();
-  PRUint64 minres = (end - start);
+  uint64_t start = ClockTime();
+  uint64_t end = ClockTime();
+  uint64_t minres = (end - start);
 
   // 10 total trials is arbitrary: what we're trying to avoid by
   // looping is getting unlucky and being interrupted by a context
@@ -61,7 +61,7 @@ ClockResolutionNs()
     start = ClockTime();
     end = ClockTime();
 
-    PRUint64 candidate = (start - end);
+    uint64_t candidate = (start - end);
     if (candidate < minres)
       minres = candidate;
   }
@@ -89,7 +89,7 @@ TimeDuration::ToSecondsSigDigits() const
 {
   NS_ABORT_IF_FALSE(gInitialized, "calling TimeDuration too early");
   // don't report a value < mResolution ...
-  PRInt64 valueSigDigs = sResolution * (mValue / sResolution);
+  int64_t valueSigDigs = sResolution * (mValue / sResolution);
   // and chop off insignificant digits
   valueSigDigs = sResolutionSigDigs * (valueSigDigs / sResolutionSigDigs);
   return (valueSigDigs * sNsPerTick) / kNsPerSecd;
@@ -99,14 +99,14 @@ TimeDuration
 TimeDuration::FromMilliseconds(double aMilliseconds)
 {
   NS_ABORT_IF_FALSE(gInitialized, "calling TimeDuration too early");
-  return TimeDuration::FromTicks(PRInt64((aMilliseconds * kNsPerMsd) / sNsPerTick));
+  return TimeDuration::FromTicks(int64_t((aMilliseconds * kNsPerMsd) / sNsPerTick));
 }
 
 TimeDuration
 TimeDuration::Resolution()
 {
   NS_ABORT_IF_FALSE(gInitialized, "calling TimeDuration too early");
-  return TimeDuration::FromTicks(PRInt64(sResolution));
+  return TimeDuration::FromTicks(int64_t(sResolution));
 }
 
 struct TimeStampInitialization

@@ -42,9 +42,9 @@ struct DatabaseInfoGuts
   // Make sure to update ipc/SerializationHelpers.h when changing members here!
   nsString name;
   nsCString origin;
-  PRUint64 version;
-  PRInt64 nextObjectStoreId;
-  PRInt64 nextIndexId;
+  uint64_t version;
+  int64_t nextObjectStoreId;
+  int64_t nextIndexId;
 };
 
 struct DatabaseInfo : public DatabaseInfoGuts
@@ -106,7 +106,7 @@ struct IndexInfo
 
   // Make sure to update ipc/SerializationHelpers.h when changing members here!
   nsString name;
-  PRInt64 id;
+  int64_t id;
   KeyPath keyPath;
   bool unique;
   bool multiEntry;
@@ -128,7 +128,7 @@ struct ObjectStoreInfoGuts
 
   // Constant members, can be gotten on any thread
   nsString name;
-  PRInt64 id;
+  int64_t id;
   KeyPath keyPath;
   bool autoIncrement;
 
@@ -158,8 +158,8 @@ public:
 
   // Database-thread members. After the ObjectStoreInfo has been initialized,
   // these can *only* be touced on the database thread.
-  PRInt64 nextAutoIncrementId;
-  PRInt64 comittedAutoIncrementId;
+  int64_t nextAutoIncrementId;
+  int64_t comittedAutoIncrementId;
 
   // This is threadsafe since the ObjectStoreInfos are created on the database
   // thread but then only used from the main thread. Ideal would be if we
@@ -184,7 +184,7 @@ struct IndexUpdateInfo
   };
 
   // Make sure to update ipc/SerializationHelpers.h when changing members here!
-  PRInt64 indexId;
+  int64_t indexId;
   bool indexUnique;
   Key value;
 };

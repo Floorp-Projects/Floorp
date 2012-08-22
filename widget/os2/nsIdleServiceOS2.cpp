@@ -32,7 +32,7 @@ nsIdleServiceOS2::~nsIdleServiceOS2()
 }
 
 bool
-nsIdleServiceOS2::PollIdleTime(PRUint32 *aIdleTime)
+nsIdleServiceOS2::PollIdleTime(uint32_t *aIdleTime)
 {
   if (!mInitialized)
     return false;

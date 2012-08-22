@@ -132,7 +132,7 @@ pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
 }
 
 static void 
-GetColorsFromRGBA(PRUint32 rgba, float* r, float* g, float* b, float* a)
+GetColorsFromRGBA(uint32_t rgba, float* r, float* g, float* b, float* a)
 {
   *b = (rgba & 0xFF) / 255.0;
   *g = ((rgba & 0xFF00) >> 8) / 255.0;

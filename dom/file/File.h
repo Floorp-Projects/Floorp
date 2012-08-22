@@ -24,7 +24,7 @@ public:
 
   // Create as a file
   File(const nsAString& aName, const nsAString& aContentType,
-       PRUint64 aLength, nsIFile* aFile, LockedFile* aLockedFile)
+       uint64_t aLength, nsIFile* aFile, LockedFile* aLockedFile)
   : nsDOMFileCC(aName, aContentType, aLength),
     mFile(aFile), mLockedFile(aLockedFile),
     mWholeFile(true), mStoredFile(false)
@@ -35,7 +35,7 @@ public:
 
   // Create as a stored file
   File(const nsAString& aName, const nsAString& aContentType,
-       PRUint64 aLength, nsIFile* aFile, LockedFile* aLockedFile,
+       uint64_t aLength, nsIFile* aFile, LockedFile* aLockedFile,
        FileInfo* aFileInfo)
   : nsDOMFileCC(aName, aContentType, aLength),
     mFile(aFile), mLockedFile(aLockedFile),
@@ -55,14 +55,14 @@ public:
 
 protected:
   // Create slice
-  File(const File* aOther, PRUint64 aStart, PRUint64 aLength,
+  File(const File* aOther, uint64_t aStart, uint64_t aLength,
        const nsAString& aContentType);
 
   virtual ~File()
   { }
 
   virtual already_AddRefed<nsIDOMBlob>
-  CreateSlice(PRUint64 aStart, PRUint64 aLength,
+  CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType);
 
   virtual bool

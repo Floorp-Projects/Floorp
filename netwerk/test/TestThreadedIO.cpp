@@ -128,8 +128,8 @@ NS_IMETHODIMP
 TestListener::OnDataAvailable( nsIChannel *aChannel,
                                nsISupports *aContext,
                                nsIInputStream *aStream,
-                               PRUint32 offset,
-                               PRUint32 aLength ) {
+                               uint32_t offset,
+                               uint32_t aLength ) {
     nsresult rv = NS_OK;
 
     printf( "TestListener::OnDataAvailable called on thread %d\n", mThreadNo );

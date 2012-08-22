@@ -35,7 +35,7 @@ private:
 
     // Only this class (via |CreateEmptyBlock|) or nsCSSExpandedDataBlock
     // (in |Compress|) can create compressed data blocks.
-    nsCSSCompressedDataBlock(PRUint32 aNumProps)
+    nsCSSCompressedDataBlock(uint32_t aNumProps)
       : mStyleBits(0), mNumProps(aNumProps)
     {}
 
@@ -89,29 +89,29 @@ public:
     bool HasDefaultBorderImageRepeat() const;
 
 private:
-    void* operator new(size_t aBaseSize, PRUint32 aNumProps) {
+    void* operator new(size_t aBaseSize, uint32_t aNumProps) {
         NS_ABORT_IF_FALSE(aBaseSize == sizeof(nsCSSCompressedDataBlock),
                           "unexpected size for nsCSSCompressedDataBlock");
         return ::operator new(aBaseSize + DataSize(aNumProps));
     }
 
 public:
-    // Ideally, |nsCSSProperty| would be |enum nsCSSProperty : PRInt16|.  But
+    // Ideally, |nsCSSProperty| would be |enum nsCSSProperty : int16_t|.  But
     // not all of the compilers we use are modern enough to support small
     // enums.  So we manually squeeze nsCSSProperty into 16 bits ourselves.
     // The static assertion below ensures it fits.
-    typedef PRInt16 CompressedCSSProperty;
+    typedef int16_t CompressedCSSProperty;
     static const size_t MaxCompressedCSSProperty = PR_INT16_MAX;
 
 private:
-    static size_t DataSize(PRUint32 aNumProps) {
+    static size_t DataSize(uint32_t aNumProps) {
         return size_t(aNumProps) *
                (sizeof(nsCSSValue) + sizeof(CompressedCSSProperty));
     }
 
-    PRInt32 mStyleBits; // the structs for which we have data, according to
+    int32_t mStyleBits; // the structs for which we have data, according to
                         // |nsCachedStyleData::GetBitForSID|.
-    PRUint32 mNumProps;
+    uint32_t mNumProps;
     // nsCSSValue elements are stored after these fields, and
     // nsCSSProperty elements are stored -- each one compressed as a
     // CompressedCSSProperty -- after the nsCSSValue elements.  Space for them
@@ -127,27 +127,27 @@ private:
         return (CompressedCSSProperty*)(Values() + mNumProps);
     }
 
-    nsCSSValue* ValueAtIndex(PRUint32 i) const {
+    nsCSSValue* ValueAtIndex(uint32_t i) const {
         NS_ABORT_IF_FALSE(i < mNumProps, "value index out of range");
         return Values() + i;
     }
 
-    nsCSSProperty PropertyAtIndex(PRUint32 i) const {
+    nsCSSProperty PropertyAtIndex(uint32_t i) const {
         NS_ABORT_IF_FALSE(i < mNumProps, "property index out of range");
         nsCSSProperty prop = (nsCSSProperty)CompressedProperties()[i];
         NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(prop), "out of range");
         return prop;
     }
 
-    void CopyValueToIndex(PRUint32 i, nsCSSValue* aValue) {
+    void CopyValueToIndex(uint32_t i, nsCSSValue* aValue) {
         new (ValueAtIndex(i)) nsCSSValue(*aValue);
     }
 
-    void RawCopyValueToIndex(PRUint32 i, nsCSSValue* aValue) {
+    void RawCopyValueToIndex(uint32_t i, nsCSSValue* aValue) {
         memcpy(ValueAtIndex(i), aValue, sizeof(nsCSSValue));
     }
 
-    void SetPropertyAtIndex(PRUint32 i, nsCSSProperty aProperty) {
+    void SetPropertyAtIndex(uint32_t i, nsCSSProperty aProperty) {
         NS_ABORT_IF_FALSE(i < mNumProps, "set property index out of range");
         CompressedProperties()[i] = (CompressedCSSProperty)aProperty;
     }
@@ -259,8 +259,8 @@ private:
      * Compute the number of properties that will be present in the
      * result of |Compress|.
      */
-    void ComputeNumProps(PRUint32* aNumPropsNormal,
-                         PRUint32* aNumPropsImportant);
+    void ComputeNumProps(uint32_t* aNumPropsNormal,
+                         uint32_t* aNumPropsImportant);
     
     void DoExpand(nsCSSCompressedDataBlock *aBlock, bool aImportant);
 

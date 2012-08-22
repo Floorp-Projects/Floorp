@@ -168,7 +168,7 @@ struct CommonLayerAttributes {
   TransformMatrix transform;
   float postXScale;
   float postYScale;
-  PRUint32 contentFlags;
+  uint32_t contentFlags;
   float opacity;
   bool useClipRect;
   nsIntRect clipRect;

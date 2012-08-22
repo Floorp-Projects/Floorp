@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 nsPlatformCharset::nsPlatformCharset()
 {
   nsAutoString acpKey(NS_LITERAL_STRING("acp."));
-  acpKey.AppendInt(PRInt32(::GetACP() & 0x00FFFF), 10);
+  acpKey.AppendInt(int32_t(::GetACP() & 0x00FFFF), 10);
   MapToCharset(acpKey, mCharset);
 }
 

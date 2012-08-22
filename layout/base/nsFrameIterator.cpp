@@ -9,7 +9,7 @@
 #include "nsPlaceholderFrame.h"
 
 nsFrameIterator::nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
-                                 nsIteratorType aType, PRUint32 aFlags)
+                                 nsIteratorType aType, uint32_t aFlags)
   : mPresContext(aPresContext)
   , mOffEdge(0)
   , mType(aType)

@@ -25,20 +25,20 @@ parent:
   __delete__();
 
   AsyncOpen(URI uri,
-            PRUint64 startPos,
+            uint64_t startPos,
             nsCString entityID,
             InputStream uploadStream,
             SerializedLoadContext loadContext);
 
-  ConnectChannel(PRUint32 channelId);
+  ConnectChannel(uint32_t channelId);
   Cancel(nsresult status);
   Suspend();
   Resume();
 
 child:
-  OnStartRequest(PRInt32 aContentLength, nsCString aContentType,
+  OnStartRequest(int32_t aContentLength, nsCString aContentType,
                  PRTime aLastModified, nsCString aEntityID, URI aURI);
-  OnDataAvailable(nsCString data, PRUint32 offset, PRUint32 count);
+  OnDataAvailable(nsCString data, uint32_t offset, uint32_t count);
   OnStopRequest(nsresult statusCode);
   FailedAsyncOpen(nsresult statusCode);
   DeleteSelf();

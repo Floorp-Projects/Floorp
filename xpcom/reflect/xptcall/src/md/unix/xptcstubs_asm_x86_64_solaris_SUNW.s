@@ -25,7 +25,7 @@ __1cOnsXPTCStubBaseHStub/**/nn/**/6M_I_: \
     jmp	SharedStub; \
     .size	__1cOnsXPTCStubBaseHStub/**/nn/**/6M_I_, . - __1cOnsXPTCStubBaseHStub/**/nn/**/6M_I_ \
 
-// static nsresult SharedStub(PRUint32 methodIndex)
+// static nsresult SharedStub(uint32_t methodIndex)
     .type      SharedStub, @function;
     SharedStub:
     // make room for gpregs (48), fpregs (64)

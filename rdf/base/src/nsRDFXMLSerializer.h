@@ -65,7 +65,7 @@ protected:
                       nsIRDFResource* aResource,
                       nsIRDFResource* aProperty,
                       bool aInline,
-                      PRInt32* aSkipped);
+                      int32_t* aSkipped);
 
     bool
     IsContainerProperty(nsIRDFResource* aProperty);
@@ -103,9 +103,9 @@ protected:
     nsDataHashtable<nsISupportsHashKey, nsCString> mQNames;
     friend class QNameCollector;
 
-    PRUint32 mPrefixID;
+    uint32_t mPrefixID;
 
-    static PRInt32 gRefCnt;
+    static int32_t gRefCnt;
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_type;
     static nsIRDFResource* kRDF_nextVal;

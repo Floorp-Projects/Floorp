@@ -14,8 +14,8 @@
 #include "nsTArray.h"
 
 void
-NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
-                        PRUint8* aBreakBefore)
+NS_GetComplexLineBreaks(const PRUnichar* aText, uint32_t aLength,
+                        uint8_t* aBreakBefore)
 {
   NS_ASSERTION(aText, "aText shouldn't be null"); 
 
@@ -38,8 +38,8 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
   } while (result == E_OUTOFMEMORY);
 
   for (int iItem = 0; iItem < outItems; ++iItem)  {
-    PRUint32 endOffset = (iItem + 1 == outItems ? aLength : items[iItem + 1].iCharPos);
-    PRUint32 startOffset = items[iItem].iCharPos;
+    uint32_t endOffset = (iItem + 1 == outItems ? aLength : items[iItem + 1].iCharPos);
+    uint32_t startOffset = items[iItem].iCharPos;
     nsAutoTArray<SCRIPT_LOGATTR, 64> sla;
     
     if (!sla.AppendElements(endOffset - startOffset))
@@ -49,7 +49,7 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
                     &items[iItem].a,  sla.Elements()) < 0) 
       return;
 
-    for (PRUint32 j=0; j+startOffset < endOffset; ++j) {
+    for (uint32_t j=0; j+startOffset < endOffset; ++j) {
        aBreakBefore[j+startOffset] = sla[j].fSoftBreak;
     }
   }

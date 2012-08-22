@@ -227,7 +227,7 @@ private:
   nsTArray<nsString> mObjectStoreNames;
   ReadyState mReadyState;
   Mode mMode;
-  PRUint32 mPendingRequests;
+  uint32_t mPendingRequests;
 
   // Only touched on the main thread.
   NS_DECL_EVENT_HANDLER(error)
@@ -243,7 +243,7 @@ private:
   nsCOMPtr<mozIStorageConnection> mConnection;
 
   // Only touched on the database thread.
-  PRUint32 mSavepointCount;
+  uint32_t mSavepointCount;
 
   nsTArray<nsRefPtr<IDBObjectStore> > mCreatedObjectStores;
   nsTArray<nsRefPtr<IDBObjectStore> > mDeletedObjectStores;
@@ -354,7 +354,7 @@ private:
     { }
 
     nsRefPtr<FileInfo> mFileInfo;
-    PRInt32 mDelta;
+    int32_t mDelta;
   };
 
   enum UpdateType {
@@ -369,14 +369,14 @@ private:
     : mConnection(aConnection), mErrorCode(NS_OK)
     { }
 
-    bool Update(PRInt64 aId, PRInt32 aDelta);
+    bool Update(int64_t aId, int32_t aDelta);
     nsresult ErrorCode()
     {
       return mErrorCode;
     }
 
   private:
-    nsresult UpdateInternal(PRInt64 aId, PRInt32 aDelta);
+    nsresult UpdateInternal(int64_t aId, int32_t aDelta);
 
     nsCOMPtr<mozIStorageConnection> mConnection;
     nsCOMPtr<mozIStorageStatement> mUpdateStatement;
@@ -386,16 +386,16 @@ private:
   };
 
   nsresult ProcessValue(mozIStorageValueArray* aValues,
-                        PRInt32 aIndex,
+                        int32_t aIndex,
                         UpdateType aUpdateType);
 
   static PLDHashOperator
-  DatabaseUpdateCallback(const PRUint64& aKey,
+  DatabaseUpdateCallback(const uint64_t& aKey,
                          FileInfoEntry* aValue,
                          void* aUserArg);
 
   static PLDHashOperator
-  FileInfoUpdateCallback(const PRUint64& aKey,
+  FileInfoUpdateCallback(const uint64_t& aKey,
                          FileInfoEntry* aValue,
                          void* aUserArg);
 

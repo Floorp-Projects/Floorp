@@ -55,10 +55,10 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIForm
-  NS_IMETHOD_(nsIFormControl*) GetElementAt(PRInt32 aIndex) const;
-  NS_IMETHOD_(PRUint32) GetElementCount() const;
+  NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const;
+  NS_IMETHOD_(uint32_t) GetElementCount() const;
   NS_IMETHOD_(already_AddRefed<nsISupports>) ResolveName(const nsAString& aName);
-  NS_IMETHOD_(PRInt32) IndexOfControl(nsIFormControl* aControl);
+  NS_IMETHOD_(int32_t) IndexOfControl(nsIFormControl* aControl);
   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const;
 
   // nsIRadioGroupContainer
@@ -73,7 +73,7 @@ public:
                             bool aFlushContent);
   void AddToRadioGroup(const nsAString& aName, nsIFormControl* aRadio);
   void RemoveFromRadioGroup(const nsAString& aName, nsIFormControl* aRadio);
-  virtual PRUint32 GetRequiredRadioCount(const nsAString& aName) const;
+  virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const;
   virtual void RadioRequiredChanged(const nsAString& aName,
                                     nsIFormControl* aRadio);
   virtual bool GetValueMissingState(const nsAString& aName) const;
@@ -82,7 +82,7 @@ public:
   virtual nsEventStates IntrinsicState() const;
 
   // nsIContent
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -95,15 +95,15 @@ public:
                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
-  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 
   /**
@@ -260,7 +260,7 @@ protected:
   };
 
   nsresult DoSubmitOrReset(nsEvent* aEvent,
-                           PRInt32 aMessage);
+                           int32_t aMessage);
   nsresult DoReset();
 
   // Async callback to handle removal of our default submit
@@ -346,7 +346,7 @@ protected:
   /** The currently selected radio button of each group */
   nsInterfaceHashtable<nsStringCaseInsensitiveHashKey,nsIDOMHTMLInputElement> mSelectedRadioButtons;
   /** The number of required radio button of each group */
-  nsDataHashtable<nsStringCaseInsensitiveHashKey,PRUint32> mRequiredRadioButtonCounts;
+  nsDataHashtable<nsStringCaseInsensitiveHashKey,uint32_t> mRequiredRadioButtonCounts;
   /** The value missing state of each group */
   nsDataHashtable<nsStringCaseInsensitiveHashKey,bool> mValueMissingRadioGroups;
   /** Whether we are currently processing a submit event or not */
@@ -387,7 +387,7 @@ protected:
    * form the last time UpdateValidity has been called.
    * @note Should only be used by UpdateValidity() and GetValidity()!
    */
-  PRInt32 mInvalidElementsCount;
+  int32_t mInvalidElementsCount;
 
   /**
    * Whether the submission of this form has been ever prevented because of

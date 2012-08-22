@@ -115,7 +115,7 @@ gfxAndroidPlatform::CreatePlatformFontList()
 }
 
 bool
-gfxAndroidPlatform::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
+gfxAndroidPlatform::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags)
 {
     // check for strange format flags
     NS_ASSERTION(!(aFormatFlags & gfxUserFontSet::FLAG_FORMAT_NOT_USED),
@@ -153,7 +153,7 @@ gfxAndroidPlatform::GetFTLibrary()
 
 gfxFontEntry* 
 gfxAndroidPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                     const PRUint8 *aFontData, PRUint32 aLength)
+                                     const uint8_t *aFontData, uint32_t aLength)
 {
     return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aProxyEntry,
                                                                      aFontData,

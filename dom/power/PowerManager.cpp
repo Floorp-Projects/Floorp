@@ -122,7 +122,7 @@ PowerManager::Callback(const nsAString &aTopic, const nsAString &aState)
    * more than one listener per window, so it shouldn't be too long.
    */
   nsAutoTArray<nsCOMPtr<nsIDOMMozWakeLockListener>, 2> listeners(mListeners);
-  for (PRUint32 i = 0; i < listeners.Length(); ++i) {
+  for (uint32_t i = 0; i < listeners.Length(); ++i) {
     listeners[i]->Callback(aTopic, aState);
   }
 
@@ -189,7 +189,7 @@ PowerManager::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(permMgr, nullptr);
 
-  PRUint32 permission = nsIPermissionManager::DENY_ACTION;
+  uint32_t permission = nsIPermissionManager::DENY_ACTION;
   permMgr->TestPermissionFromPrincipal(principal, "power", &permission);
 
   if (permission != nsIPermissionManager::ALLOW_ACTION) {

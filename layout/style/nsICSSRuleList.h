@@ -18,7 +18,7 @@ class nsICSSRuleList : public nsIDOMCSSRuleList
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSRULELIST_IID)
 
-  virtual nsIDOMCSSRule* GetItemAt(PRUint32 aIndex, nsresult* aResult) = 0;
+  virtual nsIDOMCSSRule* GetItemAt(uint32_t aIndex, nsresult* aResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSRuleList, NS_ICSSRULELIST_IID)

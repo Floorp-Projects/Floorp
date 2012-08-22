@@ -37,7 +37,7 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsNullPrincipal,
 NS_IMETHODIMP_(nsrefcnt) 
 nsNullPrincipal::AddRef()
 {
-  NS_PRECONDITION(PRInt32(refcount) >= 0, "illegal refcnt");
+  NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
   nsrefcnt count = PR_ATOMIC_INCREMENT(&refcount);
   NS_LOG_ADDREF(this, count, "nsNullPrincipal", sizeof(*this));
   return count;
@@ -82,8 +82,8 @@ nsNullPrincipal::Init()
   char chars[NSID_LENGTH];
   id.ToProvidedString(chars);
 
-  PRUint32 suffixLen = NSID_LENGTH - 1;
-  PRUint32 prefixLen = ArrayLength(NS_NULLPRINCIPAL_PREFIX) - 1;
+  uint32_t suffixLen = NSID_LENGTH - 1;
+  uint32_t prefixLen = ArrayLength(NS_NULLPRINCIPAL_PREFIX) - 1;
 
   // Use an nsCString so we only do the allocation once here and then share
   // with nsJSPrincipals
@@ -156,7 +156,7 @@ nsNullPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::GetHashValue(PRUint32 *aResult)
+nsNullPrincipal::GetHashValue(uint32_t *aResult)
 {
   *aResult = (NS_PTR_TO_INT32(this) >> 2);
   return NS_OK;
@@ -181,7 +181,7 @@ nsNullPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
 
 NS_IMETHODIMP 
 nsNullPrincipal::CanEnableCapability(const char *aCapability, 
-                                     PRInt16 *aResult)
+                                     int16_t *aResult)
 {
   // Null principal can enable no capabilities.
   *aResult = nsIPrincipal::ENABLE_DENIED;
@@ -340,14 +340,14 @@ nsNullPrincipal::GetExtendedOrigin(nsACString& aExtendedOrigin)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::GetAppStatus(PRUint16* aAppStatus)
+nsNullPrincipal::GetAppStatus(uint16_t* aAppStatus)
 {
   *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::GetAppId(PRUint32* aAppId)
+nsNullPrincipal::GetAppId(uint32_t* aAppId)
 {
   *aAppId = nsIScriptSecurityManager::NO_APP_ID;
   return NS_OK;

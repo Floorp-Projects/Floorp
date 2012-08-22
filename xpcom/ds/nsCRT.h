@@ -72,23 +72,23 @@ public:
   };
 
   /// Compare s1 and s2.
-  static PRInt32 strcmp(const char* s1, const char* s2) {
-    return PRInt32(PL_strcmp(s1, s2));
+  static int32_t strcmp(const char* s1, const char* s2) {
+    return int32_t(PL_strcmp(s1, s2));
   }
 
-  static PRInt32 strncmp(const char* s1, const char* s2,
-                         PRUint32 aMaxLen) {
-    return PRInt32(PL_strncmp(s1, s2, aMaxLen));
+  static int32_t strncmp(const char* s1, const char* s2,
+                         uint32_t aMaxLen) {
+    return int32_t(PL_strncmp(s1, s2, aMaxLen));
   }
 
   /// Case-insensitive string comparison.
-  static PRInt32 strcasecmp(const char* s1, const char* s2) {
-    return PRInt32(PL_strcasecmp(s1, s2));
+  static int32_t strcasecmp(const char* s1, const char* s2) {
+    return int32_t(PL_strcasecmp(s1, s2));
   }
 
   /// Case-insensitive string comparison with length
-  static PRInt32 strncasecmp(const char* s1, const char* s2, PRUint32 aMaxLen) {
-    PRInt32 result=PRInt32(PL_strncasecmp(s1, s2, aMaxLen));
+  static int32_t strncasecmp(const char* s1, const char* s2, uint32_t aMaxLen) {
+    int32_t result=int32_t(PL_strncasecmp(s1, s2, aMaxLen));
     //Egads. PL_strncasecmp is returning *very* negative numbers.
     //Some folks expect -1,0,1, so let's temper its enthusiasm.
     if (result<0) 
@@ -96,18 +96,18 @@ public:
     return result;
   }
 
-  static PRInt32 strncmp(const char* s1, const char* s2, PRInt32 aMaxLen) {
+  static int32_t strncmp(const char* s1, const char* s2, int32_t aMaxLen) {
     // inline the first test (assumes strings are not null):
-    PRInt32 diff = ((const unsigned char*)s1)[0] - ((const unsigned char*)s2)[0];
+    int32_t diff = ((const unsigned char*)s1)[0] - ((const unsigned char*)s2)[0];
     if (diff != 0) return diff;
-    return PRInt32(PL_strncmp(s1,s2,unsigned(aMaxLen)));
+    return int32_t(PL_strncmp(s1,s2,unsigned(aMaxLen)));
   }
   
   static char* strdup(const char* str) {
     return PL_strdup(str);
   }
 
-  static char* strndup(const char* str, PRUint32 len) {
+  static char* strndup(const char* str, uint32_t len) {
     return PL_strndup(str, len);
   }
 
@@ -137,24 +137,24 @@ public:
   static char* strtok(char* str, const char* delims, char* *newStr); 
 
   /// Like strcmp except for ucs2 strings
-  static PRInt32 strcmp(const PRUnichar* s1, const PRUnichar* s2);
+  static int32_t strcmp(const PRUnichar* s1, const PRUnichar* s2);
   /// Like strcmp except for ucs2 strings
-  static PRInt32 strncmp(const PRUnichar* s1, const PRUnichar* s2,
-                         PRUint32 aMaxLen);
+  static int32_t strncmp(const PRUnichar* s1, const PRUnichar* s2,
+                         uint32_t aMaxLen);
 
   // The GNU libc has memmem, which is strstr except for binary data
   // This is our own implementation that uses memmem on platforms
   // where it's available.
-  static const char* memmem(const char* haystack, PRUint32 haystackLen,
-                            const char* needle, PRUint32 needleLen);
+  static const char* memmem(const char* haystack, uint32_t haystackLen,
+                            const char* needle, uint32_t needleLen);
 
   // You must use nsCRT::free(PRUnichar*) to free memory allocated
   // by nsCRT::strdup(PRUnichar*).
   static PRUnichar* strdup(const PRUnichar* str);
 
   // You must use nsCRT::free(PRUnichar*) to free memory allocated
-  // by strndup(PRUnichar*, PRUint32).
-  static PRUnichar* strndup(const PRUnichar* str, PRUint32 len);
+  // by strndup(PRUnichar*, uint32_t).
+  static PRUnichar* strndup(const PRUnichar* str, uint32_t len);
 
   static void free(PRUnichar* str) {
   	nsCppSharedAllocator<PRUnichar> shared_allocator;
@@ -162,7 +162,7 @@ public:
   }
 
   // String to longlong
-  static PRInt64 atoll(const char *str);
+  static int64_t atoll(const char *str);
   
   static char ToUpper(char aChar) { return NS_ToUpper(aChar); }
   static char ToLower(char aChar) { return NS_ToLower(aChar); }
@@ -176,7 +176,7 @@ public:
   static bool IsAsciiDigit(PRUnichar aChar) { return NS_IsAsciiDigit(aChar); }
   static bool IsAsciiSpace(PRUnichar aChar) { return NS_IsAsciiWhitespace(aChar); }
   static bool IsAscii(const char* aString) { return NS_IsAscii(aString); }
-  static bool IsAscii(const char* aString, PRUint32 aLength) { return NS_IsAscii(aString, aLength); }
+  static bool IsAscii(const char* aString, uint32_t aLength) { return NS_IsAscii(aString, aLength); }
 };
 
 

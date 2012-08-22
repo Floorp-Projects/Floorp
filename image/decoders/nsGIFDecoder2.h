@@ -27,7 +27,7 @@ public:
   nsGIFDecoder2(RasterImage &aImage, imgIDecoderObserver* aObserver);
   ~nsGIFDecoder2();
 
-  virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
   virtual void FinishInternal();
   virtual Telemetry::ID SpeedHistogram();
 
@@ -36,32 +36,32 @@ private:
    * frame size information, etc. */
 
   void      BeginGIF();
-  nsresult  BeginImageFrame(PRUint16 aDepth);
+  nsresult  BeginImageFrame(uint16_t aDepth);
   void      EndImageFrame();
   void      FlushImageData();
-  void      FlushImageData(PRUint32 fromRow, PRUint32 rows);
+  void      FlushImageData(uint32_t fromRow, uint32_t rows);
 
-  nsresult  GifWrite(const PRUint8 * buf, PRUint32 numbytes);
-  PRUint32  OutputRow();
-  bool      DoLzw(const PRUint8 *q);
+  nsresult  GifWrite(const uint8_t * buf, uint32_t numbytes);
+  uint32_t  OutputRow();
+  bool      DoLzw(const uint8_t *q);
 
   inline int ClearCode() const { return 1 << mGIFStruct.datasize; }
 
-  PRInt32 mCurrentRow;
-  PRInt32 mLastFlushedRow;
+  int32_t mCurrentRow;
+  int32_t mLastFlushedRow;
 
-  PRUint8 *mImageData;       // Pointer to image data in either Cairo or 8bit format
-  PRUint32 *mColormap;       // Current colormap to be used in Cairo format
-  PRUint32 mColormapSize;
-  PRUint32 mOldColor;        // The old value of the transparent pixel
+  uint8_t *mImageData;       // Pointer to image data in either Cairo or 8bit format
+  uint32_t *mColormap;       // Current colormap to be used in Cairo format
+  uint32_t mColormapSize;
+  uint32_t mOldColor;        // The old value of the transparent pixel
 
   // The frame number of the currently-decoding frame when we're in the middle
   // of decoding it, and -1 otherwise.
-  PRInt32 mCurrentFrame;
+  int32_t mCurrentFrame;
 
-  PRUint8 mCurrentPass;
-  PRUint8 mLastFlushedPass;
-  PRUint8 mColorMask;        // Apply this to the pixel to keep within colormap
+  uint8_t mCurrentPass;
+  uint8_t mLastFlushedPass;
+  uint8_t mColorMask;        // Apply this to the pixel to keep within colormap
   bool mGIFOpen;
   bool mSawTransparency;
 

@@ -32,7 +32,7 @@ nsWebNavigationInfo::Init()
 NS_IMETHODIMP
 nsWebNavigationInfo::IsTypeSupported(const nsACString& aType,
                                      nsIWebNavigation* aWebNav,
-                                     PRUint32* aIsTypeSupported)
+                                     uint32_t* aIsTypeSupported)
 {
   NS_PRECONDITION(aIsTypeSupported, "null out param?");
 
@@ -73,7 +73,7 @@ nsWebNavigationInfo::IsTypeSupported(const nsACString& aType,
 
 nsresult
 nsWebNavigationInfo::IsTypeSupportedInternal(const nsCString& aType,
-                                             PRUint32* aIsSupported)
+                                             uint32_t* aIsSupported)
 {
   NS_PRECONDITION(aIsSupported, "Null out param?");
 

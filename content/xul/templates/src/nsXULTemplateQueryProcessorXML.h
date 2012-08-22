@@ -94,7 +94,7 @@ private:
     nsCOMPtr<nsIDOMXPathResult> mResults;
 
     // current position within the list of results
-    PRUint32 mPosition;
+    uint32_t mPosition;
 
 public:
 

@@ -73,7 +73,7 @@ public:
   // We need mInLoadResourcesFunc because we do a mixture of sync and
   // async loads.
   bool mInLoadResourcesFunc;
-  PRInt16 mPendingSheets; // The number of stylesheets that have yet to load.
+  int16_t mPendingSheets; // The number of stylesheets that have yet to load.
 
   // Bound elements that are waiting on the stylesheets and scripts.
   nsCOMArray<nsIContent> mBoundElements;

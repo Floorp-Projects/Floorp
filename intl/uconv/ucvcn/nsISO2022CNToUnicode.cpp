@@ -9,7 +9,7 @@
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-NS_IMETHODIMP nsISO2022CNToUnicode::GB2312_To_Unicode(unsigned char *aSrc, PRInt32 aSrcLength, PRUnichar * aDest, PRInt32 * aDestLength)
+NS_IMETHODIMP nsISO2022CNToUnicode::GB2312_To_Unicode(unsigned char *aSrc, int32_t aSrcLength, PRUnichar * aDest, int32_t * aDestLength)
 {
     nsresult rv;
 
@@ -32,7 +32,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::GB2312_To_Unicode(unsigned char *aSrc, PRInt
     return rv;
 }
 
-NS_IMETHODIMP nsISO2022CNToUnicode::EUCTW_To_Unicode(unsigned char *aSrc, PRInt32 aSrcLength, PRUnichar * aDest, PRInt32 * aDestLength)
+NS_IMETHODIMP nsISO2022CNToUnicode::EUCTW_To_Unicode(unsigned char *aSrc, int32_t aSrcLength, PRUnichar * aDest, int32_t * aDestLength)
 {
     nsresult rv;
 
@@ -55,14 +55,14 @@ NS_IMETHODIMP nsISO2022CNToUnicode::EUCTW_To_Unicode(unsigned char *aSrc, PRInt3
     return(rv);
 }
 
-NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen, PRUnichar * aDest, PRInt32 * aDestLen)
+NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, int32_t * aSrcLen, PRUnichar * aDest, int32_t * aDestLen)
 {
   const unsigned char * srcEnd = (unsigned char *)aSrc + *aSrcLen;
   const unsigned char * src = (unsigned char *) aSrc;
   PRUnichar* destEnd = aDest + *aDestLen;
   PRUnichar* dest = aDest;
   nsresult rv;
-  PRInt32 aLen; 
+  int32_t aLen; 
 
   while ((src < srcEnd))
   {
@@ -171,7 +171,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_GB2312_1980_2ndbyte:  // ESC $ ) A SO
         if(0x20 < *src && *src < 0x7f) {
            unsigned char gb[2];
-           PRInt32 gbLen = 2;
+           int32_t gbLen = 2;
 
            gb[0] = mData | 0x80;
            gb[1] = *src | 0x80;
@@ -253,7 +253,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_CNS11643_1_2ndbyte:  // ESC $ ) G SO
         if(0x20 < *src && *src < 0x7f) {
            unsigned char cns[4];
-           PRInt32 cnsLen = 2;
+           int32_t cnsLen = 2;
 
            cns[0] = mData | 0x80;
            cns[1] = *src | 0x80;
@@ -369,7 +369,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_CNS11643_2_2ndbyte:   // ESC $ * H ESC SS2
         if(0x20 < *src && *src < 0x7f) {
            unsigned char cns[4];
-           PRInt32 cnsLen = 4;
+           int32_t cnsLen = 4;
  
            cns[0] = (unsigned char) MBYTE;
            cns[1] = (unsigned char) (PMASK + 2);
@@ -501,7 +501,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_CNS11643_3_2ndbyte:  // ESC $ + I ESC SS3
         if(0x20 < *src && *src < 0x7f) {
            unsigned char cns[4];
-           PRInt32 cnsLen = 4;
+           int32_t cnsLen = 4;
 
            cns[0] = (unsigned char) MBYTE;
            cns[1] = (unsigned char) (PMASK + mPlaneID);

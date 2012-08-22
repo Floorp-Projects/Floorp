@@ -484,6 +484,9 @@
 @BINPATH@/components/ActivityRequestHandler.js
 @BINPATH@/components/ActivityWrapper.js
 
+@BINPATH@/components/TCPSocket.js
+@BINPATH@/components/TCPSocket.manifest
+
 @BINPATH@/components/AppProtocolHandler.js
 @BINPATH@/components/AppProtocolHandler.manifest
 

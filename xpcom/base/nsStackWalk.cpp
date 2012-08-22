@@ -69,9 +69,9 @@ stack_callback(void *pc, void *sp, void *closure)
 #define MAC_OS_X_VERSION_10_7_HEX 0x00001070
 #define MAC_OS_X_VERSION_10_6_HEX 0x00001060
 
-static PRInt32 OSXVersion()
+static int32_t OSXVersion()
 {
-  static PRInt32 gOSXVersion = 0x0;
+  static int32_t gOSXVersion = 0x0;
   if (gOSXVersion == 0x0) {
     OSErr err = ::Gestalt(gestaltSystemVersion, (SInt32*)&gOSXVersion);
     MOZ_ASSERT(err == noErr);
@@ -201,18 +201,18 @@ bool EnsureSymInitialized();
 bool EnsureImageHlpInitialized();
 
 struct WalkStackData {
-  PRUint32 skipFrames;
+  uint32_t skipFrames;
   HANDLE thread;
   bool walkCallingThread;
   HANDLE process;
   HANDLE eventStart;
   HANDLE eventEnd;
   void **pcs;
-  PRUint32 pc_size;
-  PRUint32 pc_count;
+  uint32_t pc_size;
+  uint32_t pc_count;
   void **sps;
-  PRUint32 sp_size;
-  PRUint32 sp_count;
+  uint32_t sp_size;
+  uint32_t sp_count;
 };
 
 void PrintError(char *prefix, WalkStackData* data);
@@ -446,7 +446,7 @@ WalkStackThread(void* aData)
  */
 
 EXPORT_XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
@@ -545,7 +545,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
 
     ::CloseHandle(myThread);
 
-    for (PRUint32 i = 0; i < data.pc_count; ++i)
+    for (uint32_t i = 0; i < data.pc_count; ++i)
         (*aCallback)(data.pcs[i], data.sps[i], aClosure);
 
     return NS_OK;
@@ -757,7 +757,7 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
 
 EXPORT_XPCOM_API(nsresult)
 NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
-                            char *aBuffer, PRUint32 aBufferSize)
+                            char *aBuffer, uint32_t aBufferSize)
 {
     if (aDetails->function[0])
         _snprintf(aBuffer, aBufferSize, "%s!%s+0x%016lX",
@@ -767,7 +767,7 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 
     aBuffer[aBufferSize - 1] = '\0';
 
-    PRUint32 len = strlen(aBuffer);
+    uint32_t len = strlen(aBuffer);
     if (aDetails->filename[0]) {
         _snprintf(aBuffer + len, aBufferSize - len, " (%s, line %d)\n",
                   aDetails->filename, aDetails->lineno);
@@ -877,7 +877,7 @@ struct bucket {
 
 struct my_user_args {
     NS_WalkStackCallback callback;
-    PRUint32 skipFrames;
+    uint32_t skipFrames;
     void *closure;
 };
 
@@ -999,7 +999,7 @@ cs_operate(int (*operate_func)(void *, void *, void *), void * usrarg)
 }
 
 EXPORT_XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
@@ -1054,7 +1054,7 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
 
 EXPORT_XPCOM_API(nsresult)
 NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
-                            char *aBuffer, PRUint32 aBufferSize)
+                            char *aBuffer, uint32_t aBufferSize)
 {
     snprintf(aBuffer, aBufferSize, "%p %s:%s+0x%lx\n",
              aPC,
@@ -1077,7 +1077,7 @@ extern void *__libc_stack_end; // from ld-linux.so
 #endif
 namespace mozilla {
 nsresult
-FramePointerStackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
                       void *aClosure, void **bp, void *aStackEnd)
 {
   // Stack walking code courtesy Kipp's "leaky".
@@ -1126,7 +1126,7 @@ FramePointerStackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
 #if X86_OR_PPC && (NSSTACKWALK_SUPPORTS_MACOSX || NSSTACKWALK_SUPPORTS_LINUX) // i386 or PPC Linux or Mac stackwalking code
 
 EXPORT_XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
   MOZ_ASSERT(gCriticalAddress.mInit);
@@ -1185,7 +1185,7 @@ unwind_callback (struct _Unwind_Context *context, void *closure)
 }
 
 EXPORT_XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
@@ -1244,7 +1244,7 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
 
 EXPORT_XPCOM_API(nsresult)
 NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
-                            char *aBuffer, PRUint32 aBufferSize)
+                            char *aBuffer, uint32_t aBufferSize)
 {
   if (!aDetails->library[0]) {
     snprintf(aBuffer, aBufferSize, "UNKNOWN %p\n", aPC);
@@ -1264,7 +1264,7 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 #else // unsupported platform.
 
 EXPORT_XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
@@ -1274,7 +1274,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
 
 namespace mozilla {
 nsresult
-FramePointerStackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
                       void *aClosure, void **bp)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1295,7 +1295,7 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
 
 EXPORT_XPCOM_API(nsresult)
 NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
-                            char *aBuffer, PRUint32 aBufferSize)
+                            char *aBuffer, uint32_t aBufferSize)
 {
     aBuffer[0] = '\0';
     return NS_ERROR_NOT_IMPLEMENTED;

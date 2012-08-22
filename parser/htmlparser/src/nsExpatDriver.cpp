@@ -82,7 +82,7 @@ Driver_HandleCharacterData(void *aUserData,
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
     nsExpatDriver* driver = static_cast<nsExpatDriver*>(aUserData);
-    driver->HandleCharacterData(aData, PRUint32(aLength));
+    driver->HandleCharacterData(aData, uint32_t(aLength));
   }
 }
 
@@ -116,7 +116,7 @@ Driver_HandleDefault(void *aUserData,
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
     nsExpatDriver* driver = static_cast<nsExpatDriver*>(aUserData);
-    driver->HandleDefault(aData, PRUint32(aLength));
+    driver->HandleDefault(aData, uint32_t(aLength));
   }
 }
 
@@ -364,7 +364,7 @@ nsExpatDriver::HandleStartElement(const PRUnichar *aValue,
   // XML_GetSpecifiedAttributeCount will only give us the number of specified
   // attrs (twice that number, actually), so we have to check for default attrs
   // ourselves.
-  PRUint32 attrArrayLength;
+  uint32_t attrArrayLength;
   for (attrArrayLength = XML_GetSpecifiedAttributeCount(mExpatParser);
        aAtts[attrArrayLength];
        attrArrayLength += 2) {
@@ -399,7 +399,7 @@ nsExpatDriver::HandleEndElement(const PRUnichar *aValue)
 
 nsresult
 nsExpatDriver::HandleCharacterData(const PRUnichar *aValue,
-                                   const PRUint32 aLength)
+                                   const uint32_t aLength)
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
@@ -467,7 +467,7 @@ nsExpatDriver::HandleProcessingInstruction(const PRUnichar *aTarget,
 nsresult
 nsExpatDriver::HandleXMLDeclaration(const PRUnichar *aVersion,
                                     const PRUnichar *aEncoding,
-                                    PRInt32 aStandalone)
+                                    int32_t aStandalone)
 {
   if (mSink) {
     nsresult rv = mSink->HandleXMLDeclaration(aVersion, aEncoding, aStandalone);
@@ -479,7 +479,7 @@ nsExpatDriver::HandleXMLDeclaration(const PRUnichar *aVersion,
 
 nsresult
 nsExpatDriver::HandleDefault(const PRUnichar *aValue,
-                             const PRUint32 aLength)
+                             const uint32_t aLength)
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
@@ -492,7 +492,7 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
     mInternalSubset.Append(aValue, aLength);
   }
   else if (mSink) {
-    PRUint32 i;
+    uint32_t i;
     nsresult rv = mInternalState;
     for (i = 0; i < aLength && NS_SUCCEEDED(rv); ++i) {
       if (aValue[i] == '\n' || aValue[i] == '\r') {
@@ -641,9 +641,9 @@ static NS_METHOD
 ExternalDTDStreamReaderFunc(nsIUnicharInputStream* aIn,
                             void* aClosure,
                             const PRUnichar* aFromSegment,
-                            PRUint32 aToOffset,
-                            PRUint32 aCount,
-                            PRUint32 *aWriteCount)
+                            uint32_t aToOffset,
+                            uint32_t aCount,
+                            uint32_t *aWriteCount)
 {
   // Pass the buffer to expat for parsing.
   if (XML_Parse((XML_Parser)aClosure, (const char *)aFromSegment,
@@ -705,10 +705,10 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
 
       mInExternalDTD = true;
 
-      PRUint32 totalRead;
+      uint32_t totalRead;
       do {
         rv = uniIn->ReadSegments(ExternalDTDStreamReaderFunc, entParser,
-                                 PRUint32(-1), &totalRead);
+                                 uint32_t(-1), &totalRead);
       } while (NS_SUCCEEDED(rv) && totalRead > 0);
 
       result = XML_Parse(entParser, nullptr, 0, 1);
@@ -766,7 +766,7 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
                "mOriginalSink not the same object as mSink?");
   if (mOriginalSink)
     doc = do_QueryInterface(mOriginalSink->GetTarget());
-  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_DTD,
                                 uri,
                                 (doc ? doc->NodePrincipal() : nullptr),
@@ -796,8 +796,8 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
 static nsresult
 CreateErrorText(const PRUnichar* aDescription,
                 const PRUnichar* aSourceURL,
-                const PRUint32 aLineNumber,
-                const PRUint32 aColNumber,
+                const uint32_t aLineNumber,
+                const uint32_t aColNumber,
                 nsString& aErrorString)
 {
   aErrorString.Truncate();
@@ -823,20 +823,20 @@ CreateErrorText(const PRUnichar* aDescription,
 }
 
 static nsresult
-AppendErrorPointer(const PRInt32 aColNumber,
+AppendErrorPointer(const int32_t aColNumber,
                    const PRUnichar *aSourceLine,
                    nsString& aSourceString)
 {
   aSourceString.Append(PRUnichar('\n'));
 
   // Last character will be '^'.
-  PRInt32 last = aColNumber - 1;
-  PRInt32 i;
-  PRUint32 minuses = 0;
+  int32_t last = aColNumber - 1;
+  int32_t i;
+  uint32_t minuses = 0;
   for (i = 0; i < last; ++i) {
     if (aSourceLine[i] == '\t') {
       // Since this uses |white-space: pre;| a tab stop equals 8 spaces.
-      PRUint32 add = 8 - (minuses % 8);
+      uint32_t add = 8 - (minuses % 8);
       aSourceString.AppendASCII("--------", add);
       minuses += add;
     }
@@ -853,7 +853,7 @@ AppendErrorPointer(const PRInt32 aColNumber,
 nsresult
 nsExpatDriver::HandleError()
 {
-  PRInt32 code = XML_GetErrorCode(mExpatParser);
+  int32_t code = XML_GetErrorCode(mExpatParser);
   NS_ASSERTION(code > XML_ERROR_NONE, "unexpected XML error code");
 
   // Map Expat error code to an error string
@@ -912,8 +912,8 @@ nsExpatDriver::HandleError()
   }
 
   // Adjust the column number so that it is one based rather than zero based.
-  PRUint32 colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
-  PRUint32 lineNumber = XML_GetCurrentLineNumber(mExpatParser);
+  uint32_t colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
+  uint32_t lineNumber = XML_GetCurrentLineNumber(mExpatParser);
 
   nsAutoString errorText;
   CreateErrorText(description.get(), XML_GetBase(mExpatParser), lineNumber,
@@ -962,9 +962,9 @@ nsExpatDriver::HandleError()
 
 void
 nsExpatDriver::ParseBuffer(const PRUnichar *aBuffer,
-                           PRUint32 aLength,
+                           uint32_t aLength,
                            bool aIsFinal,
-                           PRUint32 *aConsumed)
+                           uint32_t *aConsumed)
 {
   NS_ASSERTION((aBuffer && aLength != 0) || (!aBuffer && aLength == 0), "?");
   NS_ASSERTION(mInternalState != NS_OK || aIsFinal || aBuffer,
@@ -975,7 +975,7 @@ nsExpatDriver::ParseBuffer(const PRUnichar *aBuffer,
                   "Consumed part of a PRUnichar?");
 
   if (mExpatParser && (mInternalState == NS_OK || BlockedOrInterrupted())) {
-    PRInt32 parserBytesBefore = XML_GetCurrentByteIndex(mExpatParser);
+    int32_t parserBytesBefore = XML_GetCurrentByteIndex(mExpatParser);
     NS_ASSERTION(parserBytesBefore >= 0, "Unexpected value");
 
     XML_Status status;
@@ -989,7 +989,7 @@ nsExpatDriver::ParseBuffer(const PRUnichar *aBuffer,
                          aLength * sizeof(PRUnichar), aIsFinal);
     }
 
-    PRInt32 parserBytesConsumed = XML_GetCurrentByteIndex(mExpatParser);
+    int32_t parserBytesConsumed = XML_GetCurrentByteIndex(mExpatParser);
 
     NS_ASSERTION(parserBytesConsumed >= 0, "Unexpected value");
     NS_ASSERTION(parserBytesConsumed >= parserBytesBefore,
@@ -1044,7 +1044,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
     bool blocked = BlockedOrInterrupted();
 
     const PRUnichar *buffer;
-    PRUint32 length;
+    uint32_t length;
     if (blocked || noMoreBuffers) {
       // If we're blocked we just resume Expat so we don't need a buffer, if
       // there aren't any more buffers we pass a null buffer to Expat.
@@ -1072,7 +1072,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
     }
     else {
       buffer = start.get();
-      length = PRUint32(start.size_forward());
+      length = uint32_t(start.size_forward());
 
       PR_LOG(gExpatDriverLog, PR_LOG_DEBUG,
              ("Calling Expat, will parse data remaining in Expat's buffer and "
@@ -1083,7 +1083,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
               NS_ConvertUTF16toUTF8(start.get(), length).get()));
     }
 
-    PRUint32 consumed;
+    uint32_t consumed;
     ParseBuffer(buffer, length, noMoreBuffers, &consumed);
     if (consumed > 0) {
       nsScannerIterator oldExpatPosition = currentExpatPosition;
@@ -1136,8 +1136,8 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
         // Look for the next newline after the last one we consumed
         nsScannerIterator lastLine = currentExpatPosition;
         while (lastLine != end) {
-          length = PRUint32(lastLine.size_forward());
-          PRUint32 endOffset = 0;
+          length = uint32_t(lastLine.size_forward());
+          uint32_t endOffset = 0;
           const PRUnichar *buffer = lastLine.get();
           while (endOffset < length && buffer[endOffset] != '\n' &&
                  buffer[endOffset] != '\r') {
@@ -1322,7 +1322,7 @@ nsExpatDriver::Terminate()
   mInternalState = NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 
-NS_IMETHODIMP_(PRInt32)
+NS_IMETHODIMP_(int32_t)
 nsExpatDriver::GetType()
 {
   return NS_IPARSER_FLAG_XML;
@@ -1361,12 +1361,12 @@ nsExpatDriver::PeekToken(void)
 }
 
 NS_IMETHODIMP_(CToken*)
-nsExpatDriver::GetTokenAt(PRInt32 anIndex)
+nsExpatDriver::GetTokenAt(int32_t anIndex)
 {
   return 0;
 }
 
-NS_IMETHODIMP_(PRInt32)
+NS_IMETHODIMP_(int32_t)
 nsExpatDriver::GetCount(void)
 {
   return 0;
@@ -1396,13 +1396,13 @@ nsExpatDriver::HandleToken(CToken* aToken)
 }
 
 NS_IMETHODIMP_(bool)
-nsExpatDriver::IsContainer(PRInt32 aTag) const
+nsExpatDriver::IsContainer(int32_t aTag) const
 {
   return true;
 }
 
 NS_IMETHODIMP_(bool)
-nsExpatDriver::CanContain(PRInt32 aParent,PRInt32 aChild) const
+nsExpatDriver::CanContain(int32_t aParent,int32_t aChild) const
 {
   return true;
 }

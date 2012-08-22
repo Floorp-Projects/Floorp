@@ -236,7 +236,7 @@ interface nsIDOMDataTransfer : nsISupports
    * cross-domain drop from a subframe where access to the data should be
    * prevented.
    */
-  [noscript] nsIDOMDataTransfer clone(in PRUint32 aEventType,
+  [noscript] nsIDOMDataTransfer clone(in uint32_t aEventType,
                                       in boolean aUserCancelled,
                                       in boolean isCrossDomainSubFrameDrop);
 };

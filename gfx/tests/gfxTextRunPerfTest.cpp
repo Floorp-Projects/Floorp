@@ -73,7 +73,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     }
 
     nsAutoPtr<gfxTextRun> textRun;
-    PRUint32 i;
+    uint32_t i;
     bool isASCII = true;
     for (i = 0; test->mString[i]; ++i) {
         if (test->mString[i] & 0x80) {
@@ -83,13 +83,13 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     gfxTextRunFactory::Parameters params = {
       ctx, nullptr, nullptr, nullptr, 0, 60
     };
-    PRUint32 flags = gfxTextRunFactory::TEXT_IS_PERSISTENT;
-    PRUint32 length;
+    uint32_t flags = gfxTextRunFactory::TEXT_IS_PERSISTENT;
+    uint32_t length;
     if (isASCII) {
         flags |= gfxTextRunFactory::TEXT_IS_ASCII |
                  gfxTextRunFactory::TEXT_IS_8BIT;
         length = strlen(test->mString);
-        textRun = fontGroup->MakeTextRun(reinterpret_cast<const PRUint8*>(test->mString), length, &params, flags);
+        textRun = fontGroup->MakeTextRun(reinterpret_cast<const uint8_t*>(test->mString), length, &params, flags);
     } else {
         NS_ConvertUTF8toUTF16 str(nsDependentCString(test->mString));
         length = str.Length();
@@ -102,7 +102,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     textRun->GetAdvanceWidth(0, length, nullptr);
 }
 
-PRUint32 iterations = 20;
+uint32_t iterations = 20;
 
 int
 main (int argc, char **argv) {
@@ -130,7 +130,7 @@ main (int argc, char **argv) {
     // Start timing
     PRIntervalTime start = PR_IntervalNow();
 
-    for (PRUint32 i = 0; i < iterations; ++i) {
+    for (uint32_t i = 0; i < iterations; ++i) {
         for (uint test = 0;
              test < ArrayLength(testList) - 1;
              test++)

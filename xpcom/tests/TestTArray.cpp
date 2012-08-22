@@ -32,7 +32,7 @@ inline bool operator<(const nsCOMPtr<T>& lhs, const nsCOMPtr<T>& rhs) {
 
 template <class ElementType>
 static bool test_basic_array(ElementType *data,
-                               PRUint32 dataLen,
+                               uint32_t dataLen,
                                const ElementType& extra) {
   nsTArray<ElementType> ary;
   ary.AppendElements(data, dataLen);
@@ -42,7 +42,7 @@ static bool test_basic_array(ElementType *data,
   if (!(ary == ary)) {
     return false;
   }
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < ary.Length(); ++i) {
     if (ary[i] != data[i])
       return false;
@@ -56,7 +56,7 @@ static bool test_basic_array(ElementType *data,
     return false;
   // ensure sort results in ascending order
   ary.Sort();
-  PRUint32 j = 0, k;
+  uint32_t j = 0, k;
   if (ary.GreatestIndexLtEq(extra, k))
     return false;
   for (i = 0; i < ary.Length(); ++i) {
@@ -81,14 +81,14 @@ static bool test_basic_array(ElementType *data,
   }
   if (ary.BinaryIndexOf(extra) != ary.NoIndex)
     return false;
-  PRUint32 oldLen = ary.Length();
+  uint32_t oldLen = ary.Length();
   ary.RemoveElement(data[dataLen / 2]);
   if (ary.Length() != (oldLen - 1))
     return false;
   if (!(ary == ary))
     return false;
 
-  PRUint32 index = ary.Length() / 2;
+  uint32_t index = ary.Length() / 2;
   if (!ary.InsertElementAt(index, extra))
     return false;
   if (!(ary == ary))
@@ -114,7 +114,7 @@ static bool test_basic_array(ElementType *data,
   }
   if (!ary.AppendElements(copy))
     return false;
-  PRUint32 cap = ary.Capacity();
+  uint32_t cap = ary.Capacity();
   ary.RemoveElementsAt(copy.Length(), copy.Length());
   ary.Compact();
   if (ary.Capacity() == cap)
@@ -167,8 +167,8 @@ static bool test_int_array() {
 }
 
 static bool test_int64_array() {
-  PRInt64 data[] = {4,6,8,2,4,1,5,7,3};
-  return test_basic_array(data, ArrayLength(data), PRInt64(14));
+  int64_t data[] = {4,6,8,2,4,1,5,7,3};
+  return test_basic_array(data, ArrayLength(data), int64_t(14));
 }
 
 static bool test_char_array() {
@@ -177,8 +177,8 @@ static bool test_char_array() {
 }
 
 static bool test_uint32_array() {
-  PRUint32 data[] = {4,6,8,2,4,1,5,7,3};
-  return test_basic_array(data, ArrayLength(data), PRUint32(14));
+  uint32_t data[] = {4,6,8,2,4,1,5,7,3};
+  return test_basic_array(data, ArrayLength(data), uint32_t(14));
 }
 
 //----
@@ -187,7 +187,7 @@ class Object {
   public:
     Object() : mNum(0) {
     }
-    Object(const char *str, PRUint32 num) : mStr(str), mNum(num) {
+    Object(const char *str, uint32_t num) : mStr(str), mNum(num) {
     }
     Object(const Object& other) : mStr(other.mStr), mNum(other.mNum) {
     }
@@ -209,17 +209,17 @@ class Object {
     }
 
     const char *Str() const { return mStr.get(); }
-    PRUint32 Num() const { return mNum; }
+    uint32_t Num() const { return mNum; }
 
   private:
     nsCString mStr;
-    PRUint32  mNum;
+    uint32_t  mNum;
 };
 
 static bool test_object_array() {
   nsTArray<Object> objArray;
   const char kdata[] = "hello world";
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < ArrayLength(kdata); ++i) {
     char x[] = {kdata[i],'\0'};
     if (!objArray.AppendElement(Object(x, i)))
@@ -245,7 +245,7 @@ static bool test_object_array() {
 static bool test_autoptr_array() {
   nsTArray< nsAutoPtr<Object> > objArray;
   const char kdata[] = "hello world";
-  for (PRUint32 i = 0; i < ArrayLength(kdata); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(kdata); ++i) {
     char x[] = {kdata[i],'\0'};
     nsAutoPtr<Object> obj(new Object(x,i));
     if (!objArray.AppendElement(obj))  // XXX does not call copy-constructor for nsAutoPtr!!!
@@ -254,7 +254,7 @@ static bool test_autoptr_array() {
       return false;
     obj.forget();  // the array now owns the reference
   }
-  for (PRUint32 i = 0; i < ArrayLength(kdata); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(kdata); ++i) {
     if (objArray[i]->Str()[0] != kdata[i])
       return false;
     if (objArray[i]->Num() != i)
@@ -269,7 +269,7 @@ static bool test_autoptr_array() {
 static bool test_string_array() {
   nsTArray<nsCString> strArray;
   const char kdata[] = "hello world";
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < ArrayLength(kdata); ++i) {
     nsCString str;
     str.Assign(kdata[i]);
@@ -282,7 +282,7 @@ static bool test_string_array() {
   }
 
   const char kextra[] = "foo bar";
-  PRUint32 oldLen = strArray.Length();
+  uint32_t oldLen = strArray.Length();
   if (!strArray.AppendElement(kextra))
     return false;
   strArray.RemoveElement(kextra);
@@ -336,7 +336,7 @@ static bool test_comptr_array() {
     "foo.txt", "bar.html", "baz.gif"
   };
   nsTArray<FilePointer> fileArray;
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < ArrayLength(kNames); ++i) {
     FilePointer f;
     tmpDir->Clone(getter_AddRefs(f));
@@ -369,7 +369,7 @@ class RefcountedObject {
     }
     ~RefcountedObject() {}
   private:
-    PRInt32 rc;
+    int32_t rc;
 };
 
 static bool test_refptr_array() {
@@ -397,24 +397,24 @@ static bool test_refptr_array() {
 //----
 
 static bool test_ptrarray() {
-  nsTArray<PRUint32*> ary;
+  nsTArray<uint32_t*> ary;
   if (ary.SafeElementAt(0) != nullptr)
     return false;
   if (ary.SafeElementAt(1000) != nullptr)
     return false;
-  PRUint32 a = 10;
+  uint32_t a = 10;
   ary.AppendElement(&a);
   if (*ary[0] != a)
     return false;
   if (*ary.SafeElementAt(0) != a)
     return false;
 
-  nsTArray<const PRUint32*> cary;
+  nsTArray<const uint32_t*> cary;
   if (cary.SafeElementAt(0) != nullptr)
     return false;
   if (cary.SafeElementAt(1000) != nullptr)
     return false;
-  const PRUint32 b = 14;
+  const uint32_t b = 14;
   cary.AppendElement(&a);
   cary.AppendElement(&b);
   if (*cary[0] != a || *cary[1] != b)
@@ -431,13 +431,13 @@ static bool test_ptrarray() {
 // useful in non-debug builds.
 #ifdef DEBUG
 static bool test_autoarray() {
-  PRUint32 data[] = {4,6,8,2,4,1,5,7,3};
-  nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data)> array;
+  uint32_t data[] = {4,6,8,2,4,1,5,7,3};
+  nsAutoTArray<uint32_t, NS_ARRAY_LENGTH(data)> array;
 
   void* hdr = array.DebugGetHeader();
-  if (hdr == nsTArray<PRUint32>().DebugGetHeader())
+  if (hdr == nsTArray<uint32_t>().DebugGetHeader())
     return false;
-  if (hdr == nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data)>().DebugGetHeader())
+  if (hdr == nsAutoTArray<uint32_t, NS_ARRAY_LENGTH(data)>().DebugGetHeader())
     return false;
 
   array.AppendElement(1u);
@@ -461,14 +461,14 @@ static bool test_autoarray() {
   if (hdr != array.DebugGetHeader())
     return false;
 
-  nsTArray<PRUint32> array2;
+  nsTArray<uint32_t> array2;
   void* emptyHdr = array2.DebugGetHeader();
   array.SwapElements(array2);
   if (emptyHdr == array.DebugGetHeader())
     return false;
   if (hdr == array2.DebugGetHeader())
     return false;
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < ArrayLength(data); ++i) {
     if (array2[i] != data[i])
       return false;
@@ -478,8 +478,8 @@ static bool test_autoarray() {
 
   array.Compact();
   array.AppendElements(data, ArrayLength(data));
-  PRUint32 data3[] = {5, 7, 11};
-  nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data3)> array3;
+  uint32_t data3[] = {5, 7, 11};
+  nsAutoTArray<uint32_t, NS_ARRAY_LENGTH(data3)> array3;
   array3.AppendElements(data3, ArrayLength(data3));  
   array.SwapElements(array3);
   for (i = 0; i < ArrayLength(data); ++i) {
@@ -513,8 +513,8 @@ static bool test_indexof() {
 //----
 
 template <class Array>
-static bool is_heap(const Array& ary, PRUint32 len) {
-  PRUint32 index = 1;
+static bool is_heap(const Array& ary, uint32_t len) {
+  uint32_t index = 1;
   while (index < len) {
     if (ary[index] > ary[(index - 1) >> 1])
       return false;
@@ -542,7 +542,7 @@ static bool test_heap() {
     return false;
   // make sure the heap looks like what we expect
   const int expected_data[] = {8,7,5,6,4,1,4,2,3};
-  PRUint32 index;
+  uint32_t index;
   for (index = 0; index < ArrayLength(data); index++)
     if (ary[index] != expected_data[index])
       return false;
@@ -597,8 +597,8 @@ static bool test_heap() {
 
 #define CHECK_ARRAY(arr, data) \
   do {                                                          \
-    CHECK_EQ_INT((arr).Length(), (PRUint32)ArrayLength(data));  \
-    for (PRUint32 _i = 0; _i < ArrayLength(data); _i++) {       \
+    CHECK_EQ_INT((arr).Length(), (uint32_t)ArrayLength(data));  \
+    for (uint32_t _i = 0; _i < ArrayLength(data); _i++) {       \
       CHECK_EQ_INT((arr)[_i], (data)[_i]);                      \
     }                                                           \
   } while(0)
@@ -749,7 +749,7 @@ static bool test_swap() {
     b.AppendElements(data2, ArrayLength(data2));
 
     CHECK_EQ_INT(a.Capacity(), 0);
-    PRUint32 bCapacity = b.Capacity();
+    uint32_t bCapacity = b.Capacity();
 
     a.SwapElements(b);
 
@@ -847,7 +847,7 @@ static bool test_fallible()
   // 9 * 512MB > 4GB, so we should definitely OOM by the 9th array.
   const unsigned numArrays = 9;
   FallibleTArray<char> arrays[numArrays];
-  for (PRUint32 i = 0; i < numArrays; i++) {
+  for (uint32_t i = 0; i < numArrays; i++) {
     bool success = arrays[i].SetCapacity(512 * 1024 * 1024);
     if (!success) {
       // We got our OOM.  Check that it didn't come too early.

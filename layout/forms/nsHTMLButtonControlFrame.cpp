@@ -352,13 +352,13 @@ nsresult nsHTMLButtonControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aV
 }
 
 nsStyleContext*
-nsHTMLButtonControlFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
+nsHTMLButtonControlFrame::GetAdditionalStyleContext(int32_t aIndex) const
 {
   return mRenderer.GetStyleContext(aIndex);
 }
 
 void
-nsHTMLButtonControlFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
+nsHTMLButtonControlFrame::SetAdditionalStyleContext(int32_t aIndex, 
                                                     nsStyleContext* aStyleContext)
 {
   mRenderer.SetStyleContext(aIndex, aStyleContext);

@@ -40,7 +40,7 @@ public:
 	//
 	// nsIEntityConverter
 	//
-  NS_IMETHOD Init(const char *charset, PRUint32 attr, PRUint32 entityVersion);
+  NS_IMETHOD Init(const char *charset, uint32_t attr, uint32_t entityVersion);
 
   NS_IMETHOD Convert(const PRUnichar *inString, char **_retval);
 
@@ -50,12 +50,12 @@ protected:
 
   NS_IMETHOD DoCharsetConversion(const PRUnichar *inString, char **outString);
 
-  NS_IMETHOD DoConversionFallBack(PRUint32 inUCS4, char *outString, PRInt32 bufferLength);
+  NS_IMETHOD DoConversionFallBack(uint32_t inUCS4, char *outString, int32_t bufferLength);
 
   // do the fallback, reallocate the buffer if necessary
   // need to pass destination buffer info (size, current position and estimation of rest of the conversion)
-  NS_IMETHOD HandleFallBack(PRUint32 character, char **outString, PRInt32 *bufferLength, 
-                            PRInt32 *currentPos, PRInt32 estimatedLength);
+  NS_IMETHOD HandleFallBack(uint32_t character, char **outString, int32_t *bufferLength, 
+                            int32_t *currentPos, int32_t estimatedLength);
 
   nsresult SetupUnicodeEncoder(const char* charset);
 
@@ -63,12 +63,12 @@ protected:
 
   const char * GetNextCharset();
 
-  PRUint32 mAttribute;                    // conversion attribute
-  PRUint32 mEntityVersion;                // see nsIEntityConverter
+  uint32_t mAttribute;                    // conversion attribute
+  uint32_t mEntityVersion;                // see nsIEntityConverter
   nsCOMPtr<nsIUnicodeEncoder> mEncoder;   // encoder (convert from unicode)
   nsCOMPtr<nsIEntityConverter> mEntityConverter;
   nsTArray<nsCString> mCharsetList;
-  PRInt32        mCharsetListIndex;
+  int32_t        mCharsetListIndex;
 };
 
 #endif

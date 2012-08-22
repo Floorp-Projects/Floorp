@@ -88,17 +88,17 @@ public:
 
   nsresult Init();
 
-  nsresult RegisterNameSpace(const nsAString& aURI,  PRInt32& aNameSpaceID);
+  nsresult RegisterNameSpace(const nsAString& aURI,  int32_t& aNameSpaceID);
 
-  nsresult GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI);
-  PRInt32 GetNameSpaceID(const nsAString& aURI);
+  nsresult GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI);
+  int32_t GetNameSpaceID(const nsAString& aURI);
 
-  bool HasElementCreator(PRInt32 aNameSpaceID);
+  bool HasElementCreator(int32_t aNameSpaceID);
 
 private:
-  nsresult AddNameSpace(const nsAString& aURI, const PRInt32 aNameSpaceID);
+  nsresult AddNameSpace(const nsAString& aURI, const int32_t aNameSpaceID);
 
-  nsDataHashtable<nsNameSpaceKey,PRInt32> mURIToIDTable;
+  nsDataHashtable<nsNameSpaceKey,int32_t> mURIToIDTable;
   nsTArray< nsAutoPtr<nsString> > mURIArray;
 };
 
@@ -135,7 +135,7 @@ nsresult NameSpaceManagerImpl::Init()
 
 nsresult
 NameSpaceManagerImpl::RegisterNameSpace(const nsAString& aURI, 
-                                        PRInt32& aNameSpaceID)
+                                        int32_t& aNameSpaceID)
 {
   if (aURI.IsEmpty()) {
     aNameSpaceID = kNameSpaceID_None; // xmlns="", see bug 75700 for details
@@ -159,12 +159,12 @@ NameSpaceManagerImpl::RegisterNameSpace(const nsAString& aURI,
 }
 
 nsresult
-NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI)
+NameSpaceManagerImpl::GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI)
 {
   NS_PRECONDITION(aNameSpaceID >= 0, "Bogus namespace ID");
   
-  PRInt32 index = aNameSpaceID - 1; // id is index + 1
-  if (index < 0 || index >= PRInt32(mURIArray.Length())) {
+  int32_t index = aNameSpaceID - 1; // id is index + 1
+  if (index < 0 || index >= int32_t(mURIArray.Length())) {
     aURI.Truncate();
 
     return NS_ERROR_ILLEGAL_VALUE;
@@ -175,14 +175,14 @@ NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI)
   return NS_OK;
 }
 
-PRInt32
+int32_t
 NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI)
 {
   if (aURI.IsEmpty()) {
     return kNameSpaceID_None; // xmlns="", see bug 75700 for details
   }
 
-  PRInt32 nameSpaceID;
+  int32_t nameSpaceID;
 
   if (mURIToIDTable.Get(&aURI, &nameSpaceID)) {
     NS_POSTCONDITION(nameSpaceID >= 0, "Bogus namespace ID");
@@ -196,7 +196,7 @@ nsresult
 NS_NewElement(nsIContent** aResult,
               already_AddRefed<nsINodeInfo> aNodeInfo, FromParser aFromParser)
 {
-  PRInt32 ns = aNodeInfo.get()->NamespaceID();
+  int32_t ns = aNodeInfo.get()->NamespaceID();
   if (ns == kNameSpaceID_XHTML) {
     return NS_NewHTMLElement(aResult, aNodeInfo, aFromParser);
   }
@@ -227,7 +227,7 @@ NS_NewElement(nsIContent** aResult,
 }
 
 bool
-NameSpaceManagerImpl::HasElementCreator(PRInt32 aNameSpaceID)
+NameSpaceManagerImpl::HasElementCreator(int32_t aNameSpaceID)
 {
   return aNameSpaceID == kNameSpaceID_XHTML ||
 #ifdef MOZ_XUL
@@ -240,14 +240,14 @@ NameSpaceManagerImpl::HasElementCreator(PRInt32 aNameSpaceID)
 }
 
 nsresult NameSpaceManagerImpl::AddNameSpace(const nsAString& aURI,
-                                            const PRInt32 aNameSpaceID)
+                                            const int32_t aNameSpaceID)
 {
   if (aNameSpaceID < 0) {
     // We've wrapped...  Can't do anything else here; just bail.
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  NS_ASSERTION(aNameSpaceID - 1 == (PRInt32) mURIArray.Length(),
+  NS_ASSERTION(aNameSpaceID - 1 == (int32_t) mURIArray.Length(),
                "BAD! AddNameSpace not called in right order!");
 
   nsString* uri = new nsString(aURI);

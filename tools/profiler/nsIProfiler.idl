@@ -8,16 +8,16 @@
 [scriptable, uuid(e388fded-1321-41af-a988-861a2bc5cfc3)]
 interface nsIProfiler : nsISupports
 {
-  void StartProfiler(in PRUint32 aEntries, in PRUint32 aInterval,
+  void StartProfiler(in uint32_t aEntries, in uint32_t aInterval,
                       [array, size_is(aFeatureCount)] in string aFeatures,
-                      in PRUint32 aFeatureCount);
+                      in uint32_t aFeatureCount);
   void StopProfiler();
   string GetProfile();
   [implicit_jscontext]
   jsval getProfileData();
   boolean IsActive();
-  void GetResponsivenessTimes(out PRUint32 aCount, [retval, array, size_is(aCount)] out double aResult);
-  void GetFeatures(out PRUint32 aCount, [retval, array, size_is(aCount)] out string aFeatures);
+  void GetResponsivenessTimes(out uint32_t aCount, [retval, array, size_is(aCount)] out double aResult);
+  void GetFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
 
   /**
    * Returns a JSON string of an array of shared library objects.

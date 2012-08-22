@@ -21,7 +21,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2,PRInt32 aRegressionOutput=0);
+  NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2,int32_t aRegressionOutput=0);
   NS_IMETHOD DumpRegressionData(FILE* aInputFile, FILE* aOutputFile);
 
   struct Node;
@@ -50,7 +50,7 @@ public:
 
     Node* next;
     char* type;
-    PRUint32 state;
+    uint32_t state;
     nsRect bbox;
     nsCString styleData;
     NodeList* lists;
@@ -79,15 +79,15 @@ public:
     char* name;
     Type type;
     char** attributes;
-    PRInt32 num;
-    PRInt32 size;
+    int32_t num;
+    int32_t size;
     char** values;
   };
 
   static char* Copy(const char* aString);
 
-  static void DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent);
-  static void DumpTree(Node* aNode, FILE* aOutputFile, PRInt32 aIndent);
+  static void DumpNode(Node* aNode, FILE* aOutputFile, int32_t aIndent);
+  static void DumpTree(Node* aNode, FILE* aOutputFile, int32_t aIndent);
   static bool CompareTrees(Node* aNode1, Node* aNode2);
 };
 
@@ -159,11 +159,11 @@ nsFrameUtil::Node::Destroy(Node* aList)
   }
 }
 
-static PRInt32 GetInt(nsFrameUtil::Tag* aTag, const char* aAttr)
+static int32_t GetInt(nsFrameUtil::Tag* aTag, const char* aAttr)
 {
   const char* value = aTag->GetAttr(aAttr);
   if (nullptr != value) {
-    return PRInt32( atoi(value) );
+    return int32_t( atoi(value) );
   }
   return 0;
 }
@@ -270,7 +270,7 @@ nsFrameUtil::Tag::Tag()
 
 nsFrameUtil::Tag::~Tag()
 {
-  PRInt32 i, n = num;
+  int32_t i, n = num;
   if (0 != n) {
     for (i = 0; i < n; i++) {
       delete attributes[i];
@@ -285,7 +285,7 @@ void
 nsFrameUtil::Tag::AddAttr(char* aAttr, char* aValue)
 {
   if (num == size) {
-    PRInt32 newSize = size * 2 + 4;
+    int32_t newSize = size * 2 + 4;
     char** a = new char*[newSize];
     char** v = new char*[newSize];
     if (0 != num) {
@@ -306,7 +306,7 @@ nsFrameUtil::Tag::AddAttr(char* aAttr, char* aValue)
 const char*
 nsFrameUtil::Tag::GetAttr(const char* aAttr)
 {
-  PRInt32 i, n = num;
+  int32_t i, n = num;
   for (i = 0; i < n; i++) {
     if (PL_strcmp(attributes[i], aAttr) == 0) {
       return values[i];
@@ -454,7 +454,7 @@ nsFrameUtil::Tag::ToString(nsString& aResult)
   }
   aResult.AppendASCII(name);
   if (0 != num) {
-    PRInt32 i, n = num;
+    int32_t i, n = num;
     for (i = 0; i < n; i++) {
       aResult.Append(PRUnichar(' '));
       aResult.AppendASCII(attributes[i]);
@@ -498,7 +498,7 @@ nsFrameUtil::~nsFrameUtil()
 NS_IMPL_ISUPPORTS1(nsFrameUtil, nsIFrameUtil)
 
 void
-nsFrameUtil::DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)
+nsFrameUtil::DumpNode(Node* aNode, FILE* aOutputFile, int32_t aIndent)
 {
   nsFrame::IndentBy(aOutputFile, aIndent);
   fprintf(aOutputFile, "%s 0x%x %d,%d,%d,%d, %s\n", aNode->type, aNode->state,
@@ -508,7 +508,7 @@ nsFrameUtil::DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)
 }
 
 void
-nsFrameUtil::DumpTree(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)
+nsFrameUtil::DumpTree(Node* aNode, FILE* aOutputFile, int32_t aIndent)
 {
   while (nullptr != aNode) {
     DumpNode(aNode, aOutputFile, aIndent);
@@ -631,7 +631,7 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
 }
 
 NS_IMETHODIMP
-nsFrameUtil::CompareRegressionData(FILE* aFile1, FILE* aFile2,PRInt32 aRegressionOutput)
+nsFrameUtil::CompareRegressionData(FILE* aFile1, FILE* aFile2,int32_t aRegressionOutput)
 {
   Node* tree1 = Node::ReadTree(aFile1);
   Node* tree2 = Node::ReadTree(aFile2);

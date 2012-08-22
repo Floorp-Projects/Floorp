@@ -34,7 +34,7 @@ public:
   // management of aData here; it is the caller's responsibility to call
   // Stop() before aData's memory is released.
   void Start(Callback aCallback, void* aData,
-             PRUint32 aInitialDelay = INITAL_REPEAT_DELAY);
+             uint32_t aInitialDelay = INITAL_REPEAT_DELAY);
   // Stop dispatching timer events to the callback. If the repeat service
   // is not currently configured with the given callback and data, this
   // is just ignored.

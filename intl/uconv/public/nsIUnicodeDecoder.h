@@ -91,8 +91,8 @@ public:
    *                    the caller must skip over one byte, reset the decoder
    *                    and retry.
    */
-  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength, 
-      PRUnichar * aDest, PRInt32 * aDestLength) = 0;
+  NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength, 
+      PRUnichar * aDest, int32_t * aDestLength) = 0;
 
   /**
    * Returns a quick estimation of the size of the buffer needed to hold the
@@ -105,8 +105,8 @@ public:
    * @return            NS_EXACT_LENGTH if an exact length was computed
    *                    NS_OK is all we have is an approximation
    */
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength) = 0;
+  NS_IMETHOD GetMaxLength(const char * aSrc, int32_t aSrcLength, 
+      int32_t * aDestLength) = 0;
 
   /**
    * Resets the charset converter so it may be recycled for a completely 
@@ -121,7 +121,7 @@ public:
    * @see kOnError_Recover
    * @see kOnError_Signal
    */
-  virtual void SetInputErrorBehavior(PRInt32 aBehavior) = 0;
+  virtual void SetInputErrorBehavior(int32_t aBehavior) = 0;
 
   /**
    * return the UNICODE character for unmapped character

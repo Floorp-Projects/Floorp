@@ -149,7 +149,7 @@ FramePropertyTable::Remove(nsIFrame* aFrame, const FramePropertyDescriptor* aPro
 
   void* result = array->ElementAt(index).mValue;
 
-  PRUint32 last = array->Length() - 1;
+  uint32_t last = array->Length() - 1;
   array->ElementAt(index) = array->ElementAt(last);
   array->RemoveElementAt(last);
 
@@ -185,7 +185,7 @@ FramePropertyTable::DeleteAllForEntry(Entry* aEntry)
   }
 
   nsTArray<PropertyValue>* array = aEntry->mProp.ToArray();
-  for (PRUint32 i = 0; i < array->Length(); ++i) {
+  for (uint32_t i = 0; i < array->Length(); ++i) {
     array->ElementAt(i).DestroyValueFor(aEntry->GetKey());
   }
   array->~nsTArray<PropertyValue>();

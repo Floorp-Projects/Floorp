@@ -530,8 +530,9 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
      * NewNativeClassInstance to find the class prototype, we must get the
      * class prototype ourselves.
      */
+    RootedObject callee(cx, &args.callee());
     RootedValue protov(cx);
-    if (!args.callee().getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &protov))
+    if (!JSObject::getProperty(cx, callee, callee, cx->runtime->atomState.classPrototypeAtom, &protov))
         return false;
 
     if (!protov.isObject()) {
@@ -614,7 +615,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 3. */
     RootedValue nameVal(cx);
-    if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, &nameVal))
+    if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.nameAtom, &nameVal))
         return false;
 
     /* Step 4. */
@@ -629,7 +630,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 5. */
     RootedValue msgVal(cx);
-    if (!obj->getProperty(cx, cx->runtime->atomState.messageAtom, &msgVal))
+    if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.messageAtom, &msgVal))
         return false;
 
     /* Step 6. */
@@ -688,7 +689,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
 
     RootedValue nameVal(cx);
     RootedString name(cx);
-    if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, &nameVal) ||
+    if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.nameAtom, &nameVal) ||
         !(name = ToString(cx, nameVal)))
     {
         return false;
@@ -696,7 +697,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
 
     RootedValue messageVal(cx);
     RootedString message(cx);
-    if (!obj->getProperty(cx, cx->runtime->atomState.messageAtom, &messageVal) ||
+    if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.messageAtom, &messageVal) ||
         !(message = js_ValueToSource(cx, messageVal)))
     {
         return false;
@@ -704,7 +705,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
 
     RootedValue filenameVal(cx);
     RootedString filename(cx);
-    if (!obj->getProperty(cx, cx->runtime->atomState.fileNameAtom, &filenameVal) ||
+    if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.fileNameAtom, &filenameVal) ||
         !(filename = js_ValueToSource(cx, filenameVal)))
     {
         return false;
@@ -712,7 +713,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
 
     RootedValue linenoVal(cx);
     uint32_t lineno;
-    if (!obj->getProperty(cx, cx->runtime->atomState.lineNumberAtom, &linenoVal) ||
+    if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.lineNumberAtom, &linenoVal) ||
         !ToUint32(cx, linenoVal, &lineno))
     {
         return false;

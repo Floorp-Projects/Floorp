@@ -104,8 +104,8 @@ nsDOMParser::ParseFromString(const PRUnichar *str,
 }
 
 NS_IMETHODIMP 
-nsDOMParser::ParseFromBuffer(const PRUint8 *buf,
-                             PRUint32 bufLen,
+nsDOMParser::ParseFromBuffer(const uint8_t *buf,
+                             uint32_t bufLen,
                              const char *contentType,
                              nsIDOMDocument **aResult)
 {
@@ -127,7 +127,7 @@ nsDOMParser::ParseFromBuffer(const PRUint8 *buf,
 NS_IMETHODIMP 
 nsDOMParser::ParseFromStream(nsIInputStream *stream, 
                              const char *charset, 
-                             PRInt32 contentLength,
+                             int32_t contentLength,
                              const char *contentType,
                              nsIDOMDocument **aResult)
 {
@@ -320,7 +320,7 @@ JSvalToInterface(JSContext* cx, JS::Value val, nsIXPConnect* xpc, bool* wasNull)
 }
 
 static nsresult
-GetInitArgs(JSContext *cx, PRUint32 argc, jsval *argv,
+GetInitArgs(JSContext *cx, uint32_t argc, jsval *argv,
             nsIPrincipal** aPrincipal, nsIURI** aDocumentURI,
             nsIURI** aBaseURI)
 {
@@ -371,7 +371,7 @@ GetInitArgs(JSContext *cx, PRUint32 argc, jsval *argv,
 
 NS_IMETHODIMP
 nsDOMParser::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
-                        PRUint32 argc, jsval *argv)
+                        uint32_t argc, jsval *argv)
 {
   AttemptedInitMarker marker(&mAttemptedInit);
   nsCOMPtr<nsIPrincipal> prin;

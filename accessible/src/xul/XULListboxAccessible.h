@@ -31,7 +31,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeState();
+  virtual uint64_t NativeState();
 };
 
 /**
@@ -44,15 +44,15 @@ public:
   XULColumnItemAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
-  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(PRUint8 aIndex);
+  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(uint8_t aIndex);
 
   // Accessible
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeState();
+  virtual uint64_t NativeState();
 
   // ActionAccessible
-  virtual PRUint8 ActionCount();
+  virtual uint8_t ActionCount();
 
   enum { eAction_Click = 0 };
 };
@@ -75,21 +75,21 @@ public:
   NS_FORWARD_NSIACCESSIBLETABLE(xpcAccessibleTable::)
 
   // TableAccessible
-  virtual PRUint32 ColCount();
-  virtual PRUint32 RowCount();
-  virtual Accessible* CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex);
-  virtual bool IsColSelected(PRUint32 aColIdx);
-  virtual bool IsRowSelected(PRUint32 aRowIdx);
-  virtual bool IsCellSelected(PRUint32 aRowIdx, PRUint32 aColIdx);
-  virtual PRUint32 SelectedCellCount();
-  virtual PRUint32 SelectedColCount();
-  virtual PRUint32 SelectedRowCount();
+  virtual uint32_t ColCount();
+  virtual uint32_t RowCount();
+  virtual Accessible* CellAt(uint32_t aRowIndex, uint32_t aColumnIndex);
+  virtual bool IsColSelected(uint32_t aColIdx);
+  virtual bool IsRowSelected(uint32_t aRowIdx);
+  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx);
+  virtual uint32_t SelectedCellCount();
+  virtual uint32_t SelectedColCount();
+  virtual uint32_t SelectedRowCount();
   virtual void SelectedCells(nsTArray<Accessible*>* aCells);
-  virtual void SelectedCellIndices(nsTArray<PRUint32>* aCells);
-  virtual void SelectedColIndices(nsTArray<PRUint32>* aCols);
-  virtual void SelectedRowIndices(nsTArray<PRUint32>* aRows);
-  virtual void SelectRow(PRUint32 aRowIdx);
-  virtual void UnselectRow(PRUint32 aRowIdx);
+  virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells);
+  virtual void SelectedColIndices(nsTArray<uint32_t>* aCols);
+  virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows);
+  virtual void SelectRow(uint32_t aRowIdx);
+  virtual void UnselectRow(uint32_t aRowIdx);
 
   // nsAccessNode
   virtual void Shutdown();
@@ -98,7 +98,7 @@ public:
   virtual void Value(nsString& aValue);
   virtual TableAccessible* AsTable() { return this; }
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeState();
+  virtual uint64_t NativeState();
 
   // Widgets
   virtual bool IsWidget() const;
@@ -125,15 +125,15 @@ public:
   virtual ~XULListitemAccessible() {}
 
   // nsIAccessible
-  NS_IMETHOD GetActionName(PRUint8 index, nsAString& aName);
+  NS_IMETHOD GetActionName(uint8_t index, nsAString& aName);
   // Don't use XUL menuitems's description attribute
 
   // Accessible
   virtual void Description(nsString& aDesc);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeState();
-  virtual PRUint64 NativeInteractiveState() const;
+  virtual uint64_t NativeState();
+  virtual uint64_t NativeInteractiveState() const;
   virtual bool CanHaveAnonChildren();
 
   // Widgets

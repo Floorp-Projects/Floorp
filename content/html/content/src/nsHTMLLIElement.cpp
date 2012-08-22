@@ -37,7 +37,7 @@ public:
   // nsIDOMHTMLLIElement
   NS_DECL_NSIDOMHTMLLIELEMENT
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -102,7 +102,7 @@ static const nsAttrValue::EnumTable kOrderedListItemTypeTable[] = {
 };
 
 bool
-nsHTMLLIElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLLIElement::ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)

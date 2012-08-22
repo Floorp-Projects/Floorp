@@ -200,7 +200,7 @@ struct nsHTMLReflowMetrics {
   nscoord width, height;    // [OUT] desired width and height (border-box)
   nscoord ascent;           // [OUT] baseline (from top), or ASK_FOR_BASELINE
 
-  PRUint32 mFlags;
+  uint32_t mFlags;
 
   enum { ASK_FOR_BASELINE = nscoord_MAX };
 
@@ -247,7 +247,7 @@ struct nsHTMLReflowMetrics {
   // XXX width/height/ascent are OUT parameters and so they shouldn't
   // have to be initialized, but there are some bad frame classes that
   // aren't properly setting them when returning from Reflow()...
-  nsHTMLReflowMetrics(PRUint32 aFlags = 0)
+  nsHTMLReflowMetrics(uint32_t aFlags = 0)
     : width(0), height(0), ascent(ASK_FOR_BASELINE), mFlags(aFlags)
   {}
 };

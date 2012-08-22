@@ -129,7 +129,7 @@ gfxHarfBuzzShaper::GetGlyph(hb_codepoint_t unicode,
     NS_ASSERTION(mCmapTable && (mCmapFormat > 0) && (mSubtableOffset > 0),
                  "cmap data not correctly set up, expect disaster");
 
-    const PRUint8* data = (const PRUint8*)hb_blob_get_data(mCmapTable, nullptr);
+    const uint8_t* data = (const uint8_t*)hb_blob_get_data(mCmapTable, nullptr);
 
     hb_codepoint_t gid;
     switch (mCmapFormat) {
@@ -214,7 +214,7 @@ gfxHarfBuzzShaper::GetGlyphHAdvance(gfxContext *aContext,
     NS_ASSERTION((mNumLongMetrics > 0) && mHmtxTable != nullptr,
                  "font is lacking metrics, we shouldn't be here");
 
-    if (glyph >= PRUint32(mNumLongMetrics)) {
+    if (glyph >= uint32_t(mNumLongMetrics)) {
         glyph = mNumLongMetrics - 1;
     }
 
@@ -224,7 +224,7 @@ gfxHarfBuzzShaper::GetGlyphHAdvance(gfxContext *aContext,
     const HMetrics* hmtx =
         reinterpret_cast<const HMetrics*>(hb_blob_get_data(mHmtxTable, nullptr));
     return FloatToFixed(mFont->FUnitsToDevUnitsFactor() *
-                        PRUint16(hmtx->metrics[glyph].advanceWidth));
+                        uint16_t(hmtx->metrics[glyph].advanceWidth));
 }
 
 static hb_position_t
@@ -270,10 +270,10 @@ struct KernPair {
 // kerning value for a given pair.
 static void
 GetKernValueFmt0(const void* aSubtable,
-                 PRUint32 aSubtableLen,
-                 PRUint16 aFirstGlyph,
-                 PRUint16 aSecondGlyph,
-                 PRInt32& aValue,
+                 uint32_t aSubtableLen,
+                 uint16_t aFirstGlyph,
+                 uint16_t aSecondGlyph,
+                 int32_t& aValue,
                  bool     aIsOverride = false,
                  bool     aIsMinimum = false)
 {
@@ -281,7 +281,7 @@ GetKernValueFmt0(const void* aSubtable,
         reinterpret_cast<const KernHeaderFmt0*>(aSubtable);
 
     const KernPair *lo = reinterpret_cast<const KernPair*>(hdr + 1);
-    const KernPair *hi = lo + PRUint16(hdr->nPairs);
+    const KernPair *hi = lo + uint16_t(hdr->nPairs);
     const KernPair *limit = hi;
 
     if (reinterpret_cast<const char*>(aSubtable) + aSubtableLen <
@@ -291,9 +291,9 @@ GetKernValueFmt0(const void* aSubtable,
         return;
     }
 
-#define KERN_PAIR_KEY(l,r) (PRUint32((PRUint16(l) << 16) + PRUint16(r)))
+#define KERN_PAIR_KEY(l,r) (uint32_t((uint16_t(l) << 16) + uint16_t(r)))
 
-    PRUint32 key = KERN_PAIR_KEY(aFirstGlyph, aSecondGlyph);
+    uint32_t key = KERN_PAIR_KEY(aFirstGlyph, aSecondGlyph);
     while (lo < hi) {
         const KernPair *mid = lo + (hi - lo) / 2;
         if (KERN_PAIR_KEY(mid->left, mid->right) < key) {
@@ -305,11 +305,11 @@ GetKernValueFmt0(const void* aSubtable,
 
     if (lo < limit && KERN_PAIR_KEY(lo->left, lo->right) == key) {
         if (aIsOverride) {
-            aValue = PRInt16(lo->value);
+            aValue = int16_t(lo->value);
         } else if (aIsMinimum) {
-            aValue = NS_MAX(aValue, PRInt32(lo->value));
+            aValue = NS_MAX(aValue, int32_t(lo->value));
         } else {
-            aValue += PRInt16(lo->value);
+            aValue += int16_t(lo->value);
         }
     }
 }
@@ -334,11 +334,11 @@ struct KernClassTableHdr {
     AutoSwap_PRUint16 offsets[1]; // actually an array of nGlyphs entries	
 };
 
-static PRInt16
+static int16_t
 GetKernValueVersion1Fmt2(const void* aSubtable,
-                         PRUint32 aSubtableLen,
-                         PRUint16 aFirstGlyph,
-                         PRUint16 aSecondGlyph)
+                         uint32_t aSubtableLen,
+                         uint16_t aFirstGlyph,
+                         uint16_t aSecondGlyph)
 {
     if (aSubtableLen < sizeof(KernHeaderVersion1Fmt2)) {
         return 0;
@@ -349,43 +349,43 @@ GetKernValueVersion1Fmt2(const void* aSubtable,
 
     const KernHeaderVersion1Fmt2* h =
         reinterpret_cast<const KernHeaderVersion1Fmt2*>(aSubtable);
-    PRUint32 offset = h->array;
+    uint32_t offset = h->array;
 
     const KernClassTableHdr* leftClassTable =
         reinterpret_cast<const KernClassTableHdr*>(base +
-                                                   PRUint16(h->leftOffsetTable));
+                                                   uint16_t(h->leftOffsetTable));
     if (reinterpret_cast<const char*>(leftClassTable) +
         sizeof(KernClassTableHdr) > subtableEnd) {
         return 0;
     }
-    if (aFirstGlyph >= PRUint16(leftClassTable->firstGlyph)) {
-        aFirstGlyph -= PRUint16(leftClassTable->firstGlyph);
-        if (aFirstGlyph < PRUint16(leftClassTable->nGlyphs)) {
+    if (aFirstGlyph >= uint16_t(leftClassTable->firstGlyph)) {
+        aFirstGlyph -= uint16_t(leftClassTable->firstGlyph);
+        if (aFirstGlyph < uint16_t(leftClassTable->nGlyphs)) {
             if (reinterpret_cast<const char*>(leftClassTable) +
                 sizeof(KernClassTableHdr) +
-                aFirstGlyph * sizeof(PRUint16) >= subtableEnd) {
+                aFirstGlyph * sizeof(uint16_t) >= subtableEnd) {
                 return 0;
             }
-            offset = PRUint16(leftClassTable->offsets[aFirstGlyph]);
+            offset = uint16_t(leftClassTable->offsets[aFirstGlyph]);
         }
     }
 
     const KernClassTableHdr* rightClassTable =
         reinterpret_cast<const KernClassTableHdr*>(base +
-                                                   PRUint16(h->rightOffsetTable));
+                                                   uint16_t(h->rightOffsetTable));
     if (reinterpret_cast<const char*>(rightClassTable) +
         sizeof(KernClassTableHdr) > subtableEnd) {
         return 0;
     }
-    if (aSecondGlyph >= PRUint16(rightClassTable->firstGlyph)) {
-        aSecondGlyph -= PRUint16(rightClassTable->firstGlyph);
-        if (aSecondGlyph < PRUint16(rightClassTable->nGlyphs)) {
+    if (aSecondGlyph >= uint16_t(rightClassTable->firstGlyph)) {
+        aSecondGlyph -= uint16_t(rightClassTable->firstGlyph);
+        if (aSecondGlyph < uint16_t(rightClassTable->nGlyphs)) {
             if (reinterpret_cast<const char*>(rightClassTable) +
                 sizeof(KernClassTableHdr) +
-                aSecondGlyph * sizeof(PRUint16) >= subtableEnd) {
+                aSecondGlyph * sizeof(uint16_t) >= subtableEnd) {
                 return 0;
             }
-            offset += PRUint16(rightClassTable->offsets[aSecondGlyph]);
+            offset += uint16_t(rightClassTable->offsets[aSecondGlyph]);
         }
     }
 
@@ -406,17 +406,17 @@ GetKernValueVersion1Fmt2(const void* aSubtable,
 struct KernHeaderVersion1Fmt3 {
     KernTableSubtableHeaderVersion1 header;
     AutoSwap_PRUint16 glyphCount;
-    PRUint8 kernValueCount;
-    PRUint8 leftClassCount;
-    PRUint8 rightClassCount;
-    PRUint8 flags;
+    uint8_t kernValueCount;
+    uint8_t leftClassCount;
+    uint8_t rightClassCount;
+    uint8_t flags;
 };
 
-static PRInt16
+static int16_t
 GetKernValueVersion1Fmt3(const void* aSubtable,
-                         PRUint32 aSubtableLen,
-                         PRUint16 aFirstGlyph,
-                         PRUint16 aSecondGlyph)
+                         uint32_t aSubtableLen,
+                         uint16_t aFirstGlyph,
+                         uint16_t aSecondGlyph)
 {
     // check that we can safely read the header fields
     if (aSubtableLen < sizeof(KernHeaderVersion1Fmt3)) {
@@ -429,11 +429,11 @@ GetKernValueVersion1Fmt3(const void* aSubtable,
         return 0;
     }
 
-    PRUint16 glyphCount = hdr->glyphCount;
+    uint16_t glyphCount = hdr->glyphCount;
 
     // check that table is large enough for the arrays
     if (sizeof(KernHeaderVersion1Fmt3) +
-        hdr->kernValueCount * sizeof(PRInt16) +
+        hdr->kernValueCount * sizeof(int16_t) +
         glyphCount + glyphCount +
         hdr->leftClassCount * hdr->rightClassCount > aSubtableLen) {
         return 0;
@@ -447,18 +447,18 @@ GetKernValueVersion1Fmt3(const void* aSubtable,
     // get pointers to the four arrays within the subtable
     const AutoSwap_PRInt16* kernValue =
         reinterpret_cast<const AutoSwap_PRInt16*>(hdr + 1);
-    const PRUint8* leftClass =
-        reinterpret_cast<const PRUint8*>(kernValue + hdr->kernValueCount);
-    const PRUint8* rightClass = leftClass + glyphCount;
-    const PRUint8* kernIndex = rightClass + glyphCount;
+    const uint8_t* leftClass =
+        reinterpret_cast<const uint8_t*>(kernValue + hdr->kernValueCount);
+    const uint8_t* rightClass = leftClass + glyphCount;
+    const uint8_t* kernIndex = rightClass + glyphCount;
 
-    PRUint8 lc = leftClass[aFirstGlyph];
-    PRUint8 rc = rightClass[aSecondGlyph];
+    uint8_t lc = leftClass[aFirstGlyph];
+    uint8_t rc = rightClass[aSecondGlyph];
     if (lc >= hdr->leftClassCount || rc >= hdr->rightClassCount) {
         return 0;
     }
 
-    PRUint8 ki = kernIndex[leftClass[aFirstGlyph] * hdr->rightClassCount +
+    uint8_t ki = kernIndex[leftClass[aFirstGlyph] * hdr->rightClassCount +
                            rightClass[aSecondGlyph]];
     if (ki >= hdr->kernValueCount) {
         return 0;
@@ -479,13 +479,13 @@ GetKernValueVersion1Fmt3(const void* aSubtable,
 #define KERN1_COVERAGE_RESERVED     0x1F00
 
 hb_position_t
-gfxHarfBuzzShaper::GetHKerning(PRUint16 aFirstGlyph,
-                               PRUint16 aSecondGlyph) const
+gfxHarfBuzzShaper::GetHKerning(uint16_t aFirstGlyph,
+                               uint16_t aSecondGlyph) const
 {
     // We want to ignore any kern pairs involving <space>, because we are
     // handling words in isolation, the only space characters seen here are
     // the ones artificially added by the textRun code.
-    PRUint32 spaceGlyph = mFont->GetSpaceGlyph();
+    uint32_t spaceGlyph = mFont->GetSpaceGlyph();
     if (aFirstGlyph == spaceGlyph || aSecondGlyph == spaceGlyph) {
         return 0;
     }
@@ -497,33 +497,33 @@ gfxHarfBuzzShaper::GetHKerning(PRUint16 aFirstGlyph,
         }
     }
 
-    PRUint32 len;
+    uint32_t len;
     const char* base = hb_blob_get_data(mKernTable, &len);
     if (len < sizeof(KernTableVersion0)) {
         return 0;
     }
-    PRInt32 value = 0;
+    int32_t value = 0;
 
     // First try to interpret as "version 0" kern table
     // (see http://www.microsoft.com/typography/otspec/kern.htm)
     const KernTableVersion0* kern0 =
         reinterpret_cast<const KernTableVersion0*>(base);
-    if (PRUint16(kern0->version) == 0) {
-        PRUint16 nTables = kern0->nTables;
-        PRUint32 offs = sizeof(KernTableVersion0);
-        for (PRUint16 i = 0; i < nTables; ++i) {
+    if (uint16_t(kern0->version) == 0) {
+        uint16_t nTables = kern0->nTables;
+        uint32_t offs = sizeof(KernTableVersion0);
+        for (uint16_t i = 0; i < nTables; ++i) {
             if (offs + sizeof(KernTableSubtableHeaderVersion0) > len) {
                 break;
             }
             const KernTableSubtableHeaderVersion0* st0 =
                 reinterpret_cast<const KernTableSubtableHeaderVersion0*>
                                 (base + offs);
-            PRUint16 subtableLen = PRUint16(st0->length);
+            uint16_t subtableLen = uint16_t(st0->length);
             if (offs + subtableLen > len) {
                 break;
             }
             offs += subtableLen;
-            PRUint16 coverage = st0->coverage;
+            uint16_t coverage = st0->coverage;
             if (!(coverage & KERN0_COVERAGE_HORIZONTAL)) {
                 // we only care about horizontal kerning (for now)
                 continue;
@@ -535,7 +535,7 @@ gfxHarfBuzzShaper::GetHKerning(PRUint16 aFirstGlyph,
                 // ignore the subtable if not
                 continue;
             }
-            PRUint8 format = (coverage >> 8);
+            uint8_t format = (coverage >> 8);
             switch (format) {
             case 0:
                 GetKernValueFmt0(st0 + 1, subtableLen - sizeof(*st0),
@@ -564,19 +564,19 @@ gfxHarfBuzzShaper::GetHKerning(PRUint16 aFirstGlyph,
         // (see http://developer.apple.com/fonts/TTRefMan/RM06/Chap6kern.html)
         const KernTableVersion1* kern1 =
             reinterpret_cast<const KernTableVersion1*>(base);
-        if (PRUint32(kern1->version) == 0x00010000) {
-            PRUint32 nTables = kern1->nTables;
-            PRUint32 offs = sizeof(KernTableVersion1);
-            for (PRUint32 i = 0; i < nTables; ++i) {
+        if (uint32_t(kern1->version) == 0x00010000) {
+            uint32_t nTables = kern1->nTables;
+            uint32_t offs = sizeof(KernTableVersion1);
+            for (uint32_t i = 0; i < nTables; ++i) {
                 if (offs + sizeof(KernTableSubtableHeaderVersion1) > len) {
                     break;
                 }
                 const KernTableSubtableHeaderVersion1* st1 =
                     reinterpret_cast<const KernTableSubtableHeaderVersion1*>
                                     (base + offs);
-                PRUint32 subtableLen = PRUint32(st1->length);
+                uint32_t subtableLen = uint32_t(st1->length);
                 offs += subtableLen;
-                PRUint16 coverage = st1->coverage;
+                uint16_t coverage = st1->coverage;
                 if (coverage &
                     (KERN1_COVERAGE_VERTICAL     |
                      KERN1_COVERAGE_CROSS_STREAM |
@@ -589,7 +589,7 @@ gfxHarfBuzzShaper::GetHKerning(PRUint16 aFirstGlyph,
                     // ignore the subtable if not
                     continue;
                 }
-                PRUint8 format = (coverage & 0xff);
+                uint8_t format = (coverage & 0xff);
                 switch (format) {
                 case 0:
                     GetKernValueFmt0(st1 + 1, subtableLen - sizeof(*st1),
@@ -813,7 +813,7 @@ HBUnicodeDecompose(hb_unicode_funcs_t *ufuncs,
 }
 
 static PLDHashOperator
-AddFeature(const PRUint32& aTag, PRUint32& aValue, void *aUserArg)
+AddFeature(const uint32_t& aTag, uint32_t& aValue, void *aUserArg)
 {
     nsTArray<hb_feature_t>* features = static_cast<nsTArray<hb_feature_t>*> (aUserArg);
 
@@ -896,8 +896,8 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
                 NS_WARNING("failed to load cmap, glyphs will be missing");
                 return false;
             }
-            PRUint32 len;
-            const PRUint8* data = (const PRUint8*)hb_blob_get_data(mCmapTable, &len);
+            uint32_t len;
+            const uint8_t* data = (const uint8_t*)hb_blob_get_data(mCmapTable, &len);
             bool symbol;
             mCmapFormat = gfxFontUtils::
                 FindPreferredSubtable(data, len,
@@ -913,14 +913,14 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
             hb_blob_t *hheaTable =
                 mFont->GetFontTable(TRUETYPE_TAG('h','h','e','a'));
             if (hheaTable) {
-                PRUint32 len;
+                uint32_t len;
                 const HMetricsHeader* hhea =
                     reinterpret_cast<const HMetricsHeader*>
                         (hb_blob_get_data(hheaTable, &len));
                 if (len >= sizeof(HMetricsHeader)) {
                     mNumLongMetrics = hhea->numberOfHMetrics;
                     if (mNumLongMetrics > 0 &&
-                        PRInt16(hhea->metricDataFormat) == 0) {
+                        int16_t(hhea->metricDataFormat) == 0) {
                         // no point reading hmtx if number of entries is zero!
                         // in that case, we won't be able to use this font
                         // (this method will return FALSE below if mHmtx is null)
@@ -950,7 +950,7 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
     hb_font_t *font = hb_font_create(mHBFace);
     hb_font_set_funcs(font, sHBFontFuncs, &fcd, nullptr);
     hb_font_set_ppem(font, mFont->GetAdjustedSize(), mFont->GetAdjustedSize());
-    PRUint32 scale = FloatToFixed(mFont->GetAdjustedSize()); // 16.16 fixed-point
+    uint32_t scale = FloatToFixed(mFont->GetAdjustedSize()); // 16.16 fixed-point
     hb_font_set_scale(font, scale, scale);
 
     nsAutoTArray<hb_feature_t,20> features;
@@ -958,7 +958,7 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
     gfxFontEntry *entry = mFont->GetFontEntry();
     const gfxFontStyle *style = mFont->GetStyle();
 
-    nsDataHashtable<nsUint32HashKey,PRUint32> mergedFeatures;
+    nsDataHashtable<nsUint32HashKey,uint32_t> mergedFeatures;
 
     if (MergeFontFeatures(style->featureSettings,
                       mFont->GetFontEntry()->mFeatureSettings,
@@ -975,7 +975,7 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
     // For unresolved "common" or "inherited" runs, default to Latin for now.
     // (Should we somehow use the language or locale to try and infer
     // a better default?)
-    PRInt32 scriptCode = aShapedWord->Script();
+    int32_t scriptCode = aShapedWord->Script();
     hb_script_t scriptTag = (scriptCode <= MOZ_SCRIPT_INHERITED) ?
         HB_SCRIPT_LATIN :
         hb_script_t(GetScriptTagForCode(scriptCode));
@@ -994,7 +994,7 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
     }
     hb_buffer_set_language(buffer, language);
 
-    PRUint32 length = aShapedWord->Length();
+    uint32_t length = aShapedWord->Length();
     hb_buffer_add_utf16(buffer,
                         reinterpret_cast<const uint16_t*>(aText),
                         length, 0, length);
@@ -1097,7 +1097,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
                                     gfxShapedWord *aShapedWord,
                                     hb_buffer_t *aBuffer)
 {
-    PRUint32 numGlyphs;
+    uint32_t numGlyphs;
     const hb_glyph_info_t *ginfo = hb_buffer_get_glyph_infos(aBuffer, &numGlyphs);
     if (numGlyphs == 0) {
         return NS_OK;
@@ -1105,33 +1105,33 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
 
     nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
 
-    PRUint32 wordLength = aShapedWord->Length();
-    static const PRInt32 NO_GLYPH = -1;
-    nsAutoTArray<PRInt32,SMALL_GLYPH_RUN> charToGlyphArray;
+    uint32_t wordLength = aShapedWord->Length();
+    static const int32_t NO_GLYPH = -1;
+    nsAutoTArray<int32_t,SMALL_GLYPH_RUN> charToGlyphArray;
     if (!charToGlyphArray.SetLength(wordLength)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    PRInt32 *charToGlyph = charToGlyphArray.Elements();
-    for (PRUint32 offset = 0; offset < wordLength; ++offset) {
+    int32_t *charToGlyph = charToGlyphArray.Elements();
+    for (uint32_t offset = 0; offset < wordLength; ++offset) {
         charToGlyph[offset] = NO_GLYPH;
     }
 
-    for (PRUint32 i = 0; i < numGlyphs; ++i) {
-        PRUint32 loc = ginfo[i].cluster;
+    for (uint32_t i = 0; i < numGlyphs; ++i) {
+        uint32_t loc = ginfo[i].cluster;
         if (loc < wordLength) {
             charToGlyph[loc] = i;
         }
     }
 
-    PRInt32 glyphStart = 0; // looking for a clump that starts at this glyph
-    PRInt32 charStart = 0; // and this char index within the range of the run
+    int32_t glyphStart = 0; // looking for a clump that starts at this glyph
+    int32_t charStart = 0; // and this char index within the range of the run
 
     bool roundX;
     bool roundY;
     GetRoundOffsetsToPixels(aContext, &roundX, &roundY);
 
-    PRInt32 appUnitsPerDevUnit = aShapedWord->AppUnitsPerDevUnit();
+    int32_t appUnitsPerDevUnit = aShapedWord->AppUnitsPerDevUnit();
 
     // factor to convert 16.16 fixed-point pixels to app units
     // (only used if not rounding)
@@ -1155,11 +1155,11 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
     const hb_glyph_position_t *posInfo =
         hb_buffer_get_glyph_positions(aBuffer, nullptr);
 
-    while (glyphStart < PRInt32(numGlyphs)) {
+    while (glyphStart < int32_t(numGlyphs)) {
 
-        PRInt32 charEnd = ginfo[glyphStart].cluster;
-        PRInt32 glyphEnd = glyphStart;
-        PRInt32 charLimit = wordLength;
+        int32_t charEnd = ginfo[glyphStart].cluster;
+        int32_t glyphEnd = glyphStart;
+        int32_t charLimit = wordLength;
         while (charEnd < charLimit) {
             // This is normally executed once for each iteration of the outer loop,
             // but in unusual cases where the character/glyph association is complex,
@@ -1172,7 +1172,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
             }
 
             // find the maximum glyph index covered by the clump so far
-            for (PRInt32 i = charStart; i < charEnd; ++i) {
+            for (int32_t i = charStart; i < charEnd; ++i) {
                 if (charToGlyph[i] != NO_GLYPH) {
                     glyphEnd = NS_MAX(glyphEnd, charToGlyph[i] + 1);
                     // update extent of glyph range
@@ -1194,8 +1194,8 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
             // in our clump; if not, we have a discontinuous range, and should extend it
             // unless we've reached the end of the text
             bool allGlyphsAreWithinCluster = true;
-            for (PRInt32 i = glyphStart; i < glyphEnd; ++i) {
-                PRInt32 glyphCharIndex = ginfo[i].cluster;
+            for (int32_t i = glyphStart; i < glyphEnd; ++i) {
+                int32_t glyphCharIndex = ginfo[i].cluster;
                 if (glyphCharIndex < charStart || glyphCharIndex >= charEnd) {
                     allGlyphsAreWithinCluster = false;
                     break;
@@ -1215,24 +1215,24 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
         // Set baseCharIndex to the char we'll actually attach the glyphs to (1st of ligature),
         // and endCharIndex to the limit (position beyond the last char),
         // adjusting for the offset of the stringRange relative to the textRun.
-        PRInt32 baseCharIndex, endCharIndex;
-        while (charEnd < PRInt32(wordLength) && charToGlyph[charEnd] == NO_GLYPH)
+        int32_t baseCharIndex, endCharIndex;
+        while (charEnd < int32_t(wordLength) && charToGlyph[charEnd] == NO_GLYPH)
             charEnd++;
         baseCharIndex = charStart;
         endCharIndex = charEnd;
 
         // Then we check if the clump falls outside our actual string range;
         // if so, just go to the next.
-        if (baseCharIndex >= PRInt32(wordLength)) {
+        if (baseCharIndex >= int32_t(wordLength)) {
             glyphStart = glyphEnd;
             charStart = charEnd;
             continue;
         }
         // Ensure we won't try to go beyond the valid length of the textRun's text
-        endCharIndex = NS_MIN<PRInt32>(endCharIndex, wordLength);
+        endCharIndex = NS_MIN<int32_t>(endCharIndex, wordLength);
 
         // Now we're ready to set the glyph info in the textRun
-        PRInt32 glyphsInClump = glyphEnd - glyphStart;
+        int32_t glyphsInClump = glyphEnd - glyphStart;
 
         // Check for default-ignorable char that didn't get filtered, combined,
         // etc by the shaping process, and remove from the run.
@@ -1331,7 +1331,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
         // the rest of the chars in the group are ligature continuations,
         // no associated glyphs
         while (++baseCharIndex != endCharIndex &&
-               baseCharIndex < PRInt32(wordLength)) {
+               baseCharIndex < int32_t(wordLength)) {
             gfxTextRun::CompressedGlyph g;
             g.SetComplex(aShapedWord->IsClusterStart(baseCharIndex),
                          false, 0);

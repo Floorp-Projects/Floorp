@@ -52,14 +52,14 @@
 class nsImageBoxFrameEvent : public nsRunnable
 {
 public:
-  nsImageBoxFrameEvent(nsIContent *content, PRUint32 message)
+  nsImageBoxFrameEvent(nsIContent *content, uint32_t message)
     : mContent(content), mMessage(message) {}
 
   NS_IMETHOD Run();
 
 private:
   nsCOMPtr<nsIContent> mContent;
-  PRUint32 mMessage;
+  uint32_t mMessage;
 };
 
 NS_IMETHODIMP
@@ -92,7 +92,7 @@ nsImageBoxFrameEvent::Run()
 // asynchronously.
 
 void
-FireImageDOMEvent(nsIContent* aContent, PRUint32 aMessage)
+FireImageDOMEvent(nsIContent* aContent, uint32_t aMessage)
 {
   NS_ASSERTION(aMessage == NS_LOAD || aMessage == NS_LOAD_ERROR,
                "invalid message");
@@ -116,9 +116,9 @@ NS_NewImageBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsImageBoxFrame)
 
 NS_IMETHODIMP
-nsImageBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
+nsImageBoxFrame::AttributeChanged(int32_t aNameSpaceID,
                                   nsIAtom* aAttribute,
-                                  PRInt32 aModType)
+                                  int32_t aModType)
 {
   nsresult rv = nsLeafBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                                  aModType);
@@ -242,7 +242,7 @@ nsImageBoxFrame::UpdateImage()
   } else {
     // Only get the list-style-image if we aren't being drawn
     // by a native theme.
-    PRUint8 appearance = GetStyleDisplay()->mAppearance;
+    uint8_t appearance = GetStyleDisplay()->mAppearance;
     if (!(appearance && nsBox::gTheme &&
           nsBox::gTheme->ThemeSupportsWidget(nullptr, this, appearance))) {
       // get the list-style-image
@@ -308,8 +308,8 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
   static_cast<nsImageBoxFrame*>(mFrame)->
     PaintImage(*aCtx, mVisibleRect, ToReferenceFrame(),
                aBuilder->ShouldSyncDecodeImages()
-                 ? (PRUint32) imgIContainer::FLAG_SYNC_DECODE
-                 : (PRUint32) imgIContainer::FLAG_NONE);
+                 ? (uint32_t) imgIContainer::FLAG_SYNC_DECODE
+                 : (uint32_t) imgIContainer::FLAG_NONE);
 }
 
 NS_IMETHODIMP
@@ -337,7 +337,7 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 void
 nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect, nsPoint aPt,
-                            PRUint32 aFlags)
+                            uint32_t aFlags)
 {
   nsRect rect;
   GetClientRect(rect);
@@ -470,8 +470,8 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
       // Subtract off the border and padding from the height because the
       // content-box needs to be used to determine the ratio
       nscoord height = size.height - borderPadding.TopBottom();
-      size.width = nscoord(PRInt64(height) * PRInt64(intrinsicSize.width) /
-                           PRInt64(intrinsicSize.height));
+      size.width = nscoord(int64_t(height) * int64_t(intrinsicSize.width) /
+                           int64_t(intrinsicSize.height));
     }
     else {
       size.width = intrinsicSize.width;
@@ -482,8 +482,8 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
   else if (!heightSet) {
     if (intrinsicSize.width > 0) {
       nscoord width = size.width - borderPadding.LeftRight();
-      size.height = nscoord(PRInt64(width) * PRInt64(intrinsicSize.height) /
-                            PRInt64(intrinsicSize.width));
+      size.height = nscoord(int64_t(width) * int64_t(intrinsicSize.height) /
+                            int64_t(intrinsicSize.width));
     }
     else {
       size.height = intrinsicSize.height;

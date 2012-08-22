@@ -65,7 +65,7 @@ SVGPointListSMILType::IsEqual(const nsSMILValue& aLeft,
 nsresult
 SVGPointListSMILType::Add(nsSMILValue& aDest,
                           const nsSMILValue& aValueToAdd,
-                          PRUint32 aCount) const
+                          uint32_t aCount) const
 {
   NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL type");
   NS_PRECONDITION(aValueToAdd.mType == this, "Incompatible SMIL type");
@@ -89,7 +89,7 @@ SVGPointListSMILType::Add(nsSMILValue& aDest,
     if (!dest.SetLength(valueToAdd.Length())) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    for (PRUint32 i = 0; i < dest.Length(); ++i) {
+    for (uint32_t i = 0; i < dest.Length(); ++i) {
       dest[i] = aCount * valueToAdd[i];
     }
     dest.SetInfo(valueToAdd.Element()); // propagate target element info!
@@ -102,7 +102,7 @@ SVGPointListSMILType::Add(nsSMILValue& aDest,
     // items. nsSVGUtils::ReportToConsole
     return NS_ERROR_FAILURE;
   }
-  for (PRUint32 i = 0; i < dest.Length(); ++i) {
+  for (uint32_t i = 0; i < dest.Length(); ++i) {
     dest[i] += aCount * valueToAdd[i];
   }
   dest.SetInfo(valueToAdd.Element()); // propagate target element info!
@@ -133,7 +133,7 @@ SVGPointListSMILType::ComputeDistance(const nsSMILValue& aFrom,
 
   double total = 0.0;
 
-  for (PRUint32 i = 0; i < to.Length(); ++i) {
+  for (uint32_t i = 0; i < to.Length(); ++i) {
     double dx = to[i].mX - from[i].mX;
     double dy = to[i].mY - from[i].mY;
     total += dx * dx + dy * dy;
@@ -184,12 +184,12 @@ SVGPointListSMILType::Interpolate(const nsSMILValue& aStartVal,
 
   if (start.Length() != end.Length()) {
     NS_ABORT_IF_FALSE(start.Length() == 0, "Not an identity value");
-    for (PRUint32 i = 0; i < end.Length(); ++i) {
+    for (uint32_t i = 0; i < end.Length(); ++i) {
       result[i] = aUnitDistance * end[i];
     }
     return NS_OK;
   }
-  for (PRUint32 i = 0; i < end.Length(); ++i) {
+  for (uint32_t i = 0; i < end.Length(); ++i) {
     result[i] = start[i] + (end[i] - start[i]) * aUnitDistance;
   }
   return NS_OK;

@@ -185,7 +185,7 @@ MonitorContention2()
 
 
 static Monitor* gMon3;
-static PRInt32 gMonFirst;
+static int32_t gMonFirst;
 
 static void
 MonitorSyncSanity_thread(void* /*arg*/)
@@ -211,7 +211,7 @@ MonitorSyncSanity()
 {
     gMon3 = new Monitor("monitor::syncsanity");
    
-    for (PRInt32 i = 0; i < 10000; ++i) {
+    for (int32_t i = 0; i < 10000; ++i) {
         gMonFirst = 1;
         PRThread* ping = spawn(MonitorSyncSanity_thread, nullptr);
         PRThread* pong = spawn(MonitorSyncSanity_thread, nullptr);
@@ -229,7 +229,7 @@ MonitorSyncSanity()
 //
 static Mutex* gCvlock1;
 static CondVar* gCv1;
-static PRInt32 gCvFirst;
+static int32_t gCvFirst;
 
 static void
 CondVarSanity_thread(void* /*arg*/)
@@ -252,7 +252,7 @@ CondVarSanity()
     gCvlock1 = new Mutex("cvlock1");
     gCv1 = new CondVar(*gCvlock1, "cvlock1");
 
-    for (PRInt32 i = 0; i < 10000; ++i) {
+    for (int32_t i = 0; i < 10000; ++i) {
         gCvFirst = 1;
         PRThread* ping = spawn(CondVarSanity_thread, nullptr);
         PRThread* pong = spawn(CondVarSanity_thread, nullptr);

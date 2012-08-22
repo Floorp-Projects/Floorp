@@ -76,7 +76,7 @@ public:
   // Finds the index of the first function that will affect our animation
   // sandwich. Also toggles the 'mForceCompositing' flag if it finds that any
   // (used) functions have changed.
-  PRUint32 GetFirstFuncToAffectSandwich();
+  uint32_t GetFirstFuncToAffectSandwich();
 
   // If the passed-in base value differs from our cached base value, this
   // method updates the cached value (and toggles the 'mForceCompositing' flag)

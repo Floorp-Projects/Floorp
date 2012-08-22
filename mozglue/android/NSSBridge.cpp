@@ -204,7 +204,7 @@ doCrypto(JNIEnv* jenv, const char *path, const char *value, char** result, bool 
       LOG("Encrypted: %s\n", *result);
     } else {
       LOG("Decoding: %s\n", value);
-      rv = decode(value, &request.data, (PRInt32*)&request.len);
+      rv = decode(value, &request.data, (int32_t*)&request.len);
       if (rv != SECSuccess) {
           throwError(jenv, "decode");
           return rv;
@@ -234,7 +234,7 @@ done:
  * Base64 encodes the data passed in. The caller must deallocate _retval using free();
  */
 SECStatus
-encode(const unsigned char *data, PRInt32 dataLen, char **_retval)
+encode(const unsigned char *data, int32_t dataLen, char **_retval)
 {
   SECStatus rv = SECSuccess;
   char *encoded = f_PL_Base64Encode((const char *)data, dataLen, NULL);
@@ -259,10 +259,10 @@ encode(const unsigned char *data, PRInt32 dataLen, char **_retval)
  * Base64 decodes the data passed in. The caller must deallocate result using free();
  */
 SECStatus
-decode(const char *data, unsigned char **result, PRInt32 *length)
+decode(const char *data, unsigned char **result, int32_t *length)
 {
   SECStatus rv = SECSuccess;
-  PRUint32 len = strlen(data);
+  uint32_t len = strlen(data);
   int adjust = 0;
 
   /* Compute length adjustment */

@@ -35,7 +35,7 @@ protected:
 
     nsresult SetGlyphsFromRun(gfxShapedWord *aShapedWord,
                               CTRunRef aCTRun,
-                              PRInt32 aStringOffset);
+                              int32_t aStringOffset);
 
     CTFontRef CreateCTFontWithDisabledLigatures(CGFloat aSize);
 

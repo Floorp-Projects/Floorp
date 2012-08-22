@@ -105,17 +105,17 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const IPC::URI&            aOriginalURI,
                                  const IPC::URI&            aDocURI,
                                  const IPC::URI&            aReferrerURI,
-                                 const PRUint32&            loadFlags,
+                                 const uint32_t&            loadFlags,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsHttpAtom&          requestMethod,
                                  const IPC::InputStream&    uploadStream,
                                  const bool&              uploadStreamHasHeaders,
-                                 const PRUint16&            priority,
-                                 const PRUint8&             redirectionLimit,
+                                 const uint16_t&            priority,
+                                 const uint8_t&             redirectionLimit,
                                  const bool&              allowPipelining,
                                  const bool&              forceAllowThirdPartyCookie,
                                  const bool&                doResumeAt,
-                                 const PRUint64&            startPos,
+                                 const uint64_t&            startPos,
                                  const nsCString&           entityID,
                                  const bool&                chooseApplicationCache,
                                  const nsCString&           appCacheClientID,
@@ -159,7 +159,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
   if (loadFlags != nsIRequest::LOAD_NORMAL)
     httpChan->SetLoadFlags(loadFlags);
 
-  for (PRUint32 i = 0; i < requestHeaders.Length(); i++) {
+  for (uint32_t i = 0; i < requestHeaders.Length(); i++) {
     httpChan->SetRequestHeader(requestHeaders[i].mHeader,
                                requestHeaders[i].mValue,
                                requestHeaders[i].mMerge);
@@ -228,7 +228,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 }
 
 bool
-HttpChannelParent::RecvConnectChannel(const PRUint32& channelId)
+HttpChannelParent::RecvConnectChannel(const uint32_t& channelId)
 {
   nsresult rv;
 
@@ -240,7 +240,7 @@ HttpChannelParent::RecvConnectChannel(const PRUint32& channelId)
 }
 
 bool 
-HttpChannelParent::RecvSetPriority(const PRUint16& priority)
+HttpChannelParent::RecvSetPriority(const uint16_t& priority)
 {
   if (mChannel) {
     nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
@@ -294,10 +294,10 @@ HttpChannelParent::RecvSetCacheTokenCachedCharset(const nsCString& charset)
 }
 
 bool
-HttpChannelParent::RecvUpdateAssociatedContentSecurity(const PRInt32& high,
-                                                       const PRInt32& low,
-                                                       const PRInt32& broken,
-                                                       const PRInt32& no)
+HttpChannelParent::RecvUpdateAssociatedContentSecurity(const int32_t& high,
+                                                       const int32_t& low,
+                                                       const int32_t& broken,
+                                                       const int32_t& no)
 {
   if (mAssociatedContentSecurity) {
     mAssociatedContentSecurity->SetCountSubRequestsHighSecurity(high);
@@ -317,7 +317,7 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
         do_QueryInterface(mRedirectChannel);
 
     if (newHttpChannel) {
-      for (PRUint32 i = 0; i < changedHeaders.Length(); i++) {
+      for (uint32_t i = 0; i < changedHeaders.Length(); i++) {
         newHttpChannel->SetRequestHeader(changedHeaders[i].mHeader,
                                          changedHeaders[i].mValue,
                                          changedHeaders[i].mMerge);
@@ -386,7 +386,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   nsHttpRequestHead  *requestHead = chan->GetRequestHead();
   bool isFromCache = false;
   chan->IsFromCache(&isFromCache);
-  PRUint32 expirationTime = nsICache::NO_EXPIRATION_TIME;
+  uint32_t expirationTime = nsICache::NO_EXPIRATION_TIME;
   chan->GetCacheTokenExpirationTime(&expirationTime);
   nsCString cachedCharset;
   chan->GetCacheTokenCachedCharset(cachedCharset);
@@ -462,8 +462,8 @@ NS_IMETHODIMP
 HttpChannelParent::OnDataAvailable(nsIRequest *aRequest, 
                                    nsISupports *aContext, 
                                    nsIInputStream *aInputStream, 
-                                   PRUint32 aOffset, 
-                                   PRUint32 aCount)
+                                   uint32_t aOffset, 
+                                   uint32_t aCount)
 {
   LOG(("HttpChannelParent::OnDataAvailable [this=%x]\n", this));
 
@@ -491,8 +491,8 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
 NS_IMETHODIMP
 HttpChannelParent::OnProgress(nsIRequest *aRequest, 
                               nsISupports *aContext, 
-                              PRUint64 aProgress, 
-                              PRUint64 aProgressMax)
+                              uint64_t aProgress, 
+                              uint64_t aProgressMax)
 {
   // OnStatus has always just set mStoredStatus. If it indicates this precedes
   // OnDataAvailable, store and ODA will send to child.
@@ -549,9 +549,9 @@ HttpChannelParent::Delete()
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParent::StartRedirect(PRUint32 newChannelId,
+HttpChannelParent::StartRedirect(uint32_t newChannelId,
                                  nsIChannel* newChannel,
-                                 PRUint32 redirectFlags,
+                                 uint32_t redirectFlags,
                                  nsIAsyncVerifyRedirectCallback* callback)
 {
   if (mIPCClosed)

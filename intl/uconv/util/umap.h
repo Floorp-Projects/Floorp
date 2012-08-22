@@ -15,21 +15,21 @@ enum {
 };
 
 typedef struct {
-		PRUint16 srcBegin;		/* 2 byte	*/
-		PRUint16 srcEnd;			/* 2 byte	*/
-		PRUint16 destBegin;		/* 2 byte	*/
+		uint16_t srcBegin;		/* 2 byte	*/
+		uint16_t srcEnd;			/* 2 byte	*/
+		uint16_t destBegin;		/* 2 byte	*/
 } uFormat0;
 
 typedef struct {
-		PRUint16 srcBegin;		/* 2 byte	*/
-		PRUint16 srcEnd;			/* 2 byte	*/
-		PRUint16	mappingOffset;	/* 2 byte	*/
+		uint16_t srcBegin;		/* 2 byte	*/
+		uint16_t srcEnd;			/* 2 byte	*/
+		uint16_t	mappingOffset;	/* 2 byte	*/
 } uFormat1;
 
 typedef struct {
-		PRUint16 srcBegin;		/* 2 byte	*/
-		PRUint16 srcEnd;			/* 2 byte	-waste	*/
-		PRUint16 destBegin;		/* 2 byte	*/
+		uint16_t srcBegin;		/* 2 byte	*/
+		uint16_t srcEnd;			/* 2 byte	-waste	*/
+		uint16_t destBegin;		/* 2 byte	*/
 } uFormat2;
 
 typedef struct  {
@@ -40,14 +40,14 @@ typedef struct  {
 	} fmt;
 } uMapCell;
 
-#define UMAPCELL_SIZE (3*sizeof(PRUint16))
+#define UMAPCELL_SIZE (3*sizeof(uint16_t))
 
 typedef struct  {
-	PRUint16 		itemOfList;
-	PRUint16		offsetToFormatArray;
-	PRUint16		offsetToMapCellArray;
-	PRUint16		offsetToMappingTable;
-	PRUint16		data[1];
+	uint16_t 		itemOfList;
+	uint16_t		offsetToFormatArray;
+	uint16_t		offsetToMapCellArray;
+	uint16_t		offsetToMappingTable;
+	uint16_t		data[1];
 } uTable;
 
 #endif

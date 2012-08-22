@@ -19,18 +19,18 @@ template <typename T>
 static void
 Encode3to4(const unsigned char *src, T *dest)
 {
-    PRUint32 b32 = (PRUint32)0;
+    uint32_t b32 = (uint32_t)0;
     int i, j = 18;
 
     for( i = 0; i < 3; i++ )
     {
         b32 <<= 8;
-        b32 |= (PRUint32)src[i];
+        b32 |= (uint32_t)src[i];
     }
 
     for( i = 0; i < 4; i++ )
     {
-        dest[i] = base[ (PRUint32)((b32>>j) & 0x3F) ];
+        dest[i] = base[ (uint32_t)((b32>>j) & 0x3F) ];
         j -= 6;
     }
 }
@@ -39,9 +39,9 @@ template <typename T>
 static void
 Encode2to4(const unsigned char *src, T *dest)
 {
-    dest[0] = base[ (PRUint32)((src[0]>>2) & 0x3F) ];
-    dest[1] = base[ (PRUint32)(((src[0] & 0x03) << 4) | ((src[1] >> 4) & 0x0F)) ];
-    dest[2] = base[ (PRUint32)((src[1] & 0x0F) << 2) ];
+    dest[0] = base[ (uint32_t)((src[0]>>2) & 0x3F) ];
+    dest[1] = base[ (uint32_t)(((src[0] & 0x03) << 4) | ((src[1] >> 4) & 0x0F)) ];
+    dest[2] = base[ (uint32_t)((src[1] & 0x0F) << 2) ];
     dest[3] = (unsigned char)'=';
 }
 
@@ -49,15 +49,15 @@ template <typename T>
 static void
 Encode1to4(const unsigned char *src, T *dest)
 {
-    dest[0] = base[ (PRUint32)((src[0]>>2) & 0x3F) ];
-    dest[1] = base[ (PRUint32)((src[0] & 0x03) << 4) ];
+    dest[0] = base[ (uint32_t)((src[0]>>2) & 0x3F) ];
+    dest[1] = base[ (uint32_t)((src[0] & 0x03) << 4) ];
     dest[2] = (unsigned char)'=';
     dest[3] = (unsigned char)'=';
 }
 
 template <typename T>
 static void
-Encode(const unsigned char *src, PRUint32 srclen, T *dest)
+Encode(const unsigned char *src, uint32_t srclen, T *dest)
 {
     while( srclen >= 3 )
     {
@@ -87,7 +87,7 @@ Encode(const unsigned char *src, PRUint32 srclen, T *dest)
 template <typename T>
 struct EncodeInputStream_State {
   unsigned char c[3];
-  PRUint8 charsOnStack;
+  uint8_t charsOnStack;
   typename T::char_type* buffer;
 };
 
@@ -96,9 +96,9 @@ NS_METHOD
 EncodeInputStream_Encoder(nsIInputStream *aStream,
                           void *aClosure,
                           const char *aFromSegment,
-                          PRUint32 aToOffset,
-                          PRUint32 aCount,
-                          PRUint32 *aWriteCount)
+                          uint32_t aToOffset,
+                          uint32_t aCount,
+                          uint32_t *aWriteCount)
 {
   NS_ASSERTION(aCount > 0, "Er, what?");
 
@@ -106,7 +106,7 @@ EncodeInputStream_Encoder(nsIInputStream *aStream,
     static_cast<EncodeInputStream_State<T>*>(aClosure);
 
   // If we have any data left from last time, encode it now.
-  PRUint32 countRemaining = aCount;
+  uint32_t countRemaining = aCount;
   const unsigned char *src = (const unsigned char*)aFromSegment;
   if (state->charsOnStack) {
     unsigned char firstSet[4];
@@ -129,7 +129,7 @@ EncodeInputStream_Encoder(nsIInputStream *aStream,
   }
 
   // Encode the bulk of the 
-  PRUint32 encodeLength = countRemaining - countRemaining % 3;
+  uint32_t encodeLength = countRemaining - countRemaining % 3;
   NS_ABORT_IF_FALSE(encodeLength % 3 == 0,
                     "Should have an exact number of triplets!");
   Encode(src, encodeLength, state->buffer);
@@ -155,26 +155,26 @@ template <typename T>
 nsresult
 EncodeInputStream(nsIInputStream *aInputStream, 
                   T &aDest,
-                  PRUint32 aCount,
-                  PRUint32 aOffset)
+                  uint32_t aCount,
+                  uint32_t aOffset)
 {
   nsresult rv;
-  PRUint64 count64 = aCount;
+  uint64_t count64 = aCount;
 
   if (!aCount) {
     rv = aInputStream->Available(&count64);
     NS_ENSURE_SUCCESS(rv, rv);
     // if count64 is over 4GB, it will be failed at the below condition,
     // then will return NS_ERROR_OUT_OF_MEMORY
-    aCount = (PRUint32)count64;
+    aCount = (uint32_t)count64;
   }
 
-  PRUint64 countlong =
+  uint64_t countlong =
     (count64 + 2) / 3 * 4; // +2 due to integer math.
   if (countlong + aOffset > PR_UINT32_MAX)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRUint32 count = PRUint32(countlong);
+  uint32_t count = uint32_t(countlong);
 
   aDest.SetLength(count + aOffset);
   if (aDest.Length() != count + aOffset)
@@ -186,7 +186,7 @@ EncodeInputStream(nsIInputStream *aInputStream,
   state.buffer = aOffset + aDest.BeginWriting();
 
   while (1) {
-    PRUint32 read = 0;
+    uint32_t read = 0;
 
     rv = aInputStream->ReadSegments(&EncodeInputStream_Encoder<T>,
                                     (void*)&state,
@@ -220,8 +220,8 @@ namespace mozilla {
 nsresult
 Base64EncodeInputStream(nsIInputStream *aInputStream, 
                         nsACString &aDest,
-                        PRUint32 aCount,
-                        PRUint32 aOffset)
+                        uint32_t aCount,
+                        uint32_t aOffset)
 {
   return EncodeInputStream<nsACString>(aInputStream, aDest, aCount, aOffset);
 }
@@ -229,8 +229,8 @@ Base64EncodeInputStream(nsIInputStream *aInputStream,
 nsresult
 Base64EncodeInputStream(nsIInputStream *aInputStream, 
                         nsAString &aDest,
-                        PRUint32 aCount,
-                        PRUint32 aOffset)
+                        uint32_t aCount,
+                        uint32_t aOffset)
 {
   return EncodeInputStream<nsAString>(aInputStream, aDest, aCount, aOffset);
 }
@@ -243,7 +243,7 @@ Base64Encode(const nsACString &aBinaryData, nsACString &aString)
     return NS_ERROR_FAILURE;
   }
 
-  PRUint32 stringLen = ((aBinaryData.Length() + 2) / 3) * 4;
+  uint32_t stringLen = ((aBinaryData.Length() + 2) / 3) * 4;
 
   char *buffer;
 
@@ -287,7 +287,7 @@ Base64Decode(const nsACString &aString, nsACString &aBinaryData)
     return NS_ERROR_FAILURE;
   }
 
-  PRUint32 binaryDataLen = ((aString.Length() * 3) / 4);
+  uint32_t binaryDataLen = ((aString.Length() * 3) / 4);
 
   char *buffer;
 

@@ -70,20 +70,20 @@ protected:
    */
   virtual bool ProcessNextNativeEvent(bool mayWait) = 0;
 
-  PRInt32 mSuspendNativeCount;
-  PRUint32 mEventloopNestingLevel;
+  int32_t mSuspendNativeCount;
+  uint32_t mEventloopNestingLevel;
 
 private:
-  bool DoProcessNextNativeEvent(bool mayWait, PRUint32 recursionDepth);
+  bool DoProcessNextNativeEvent(bool mayWait, uint32_t recursionDepth);
 
   bool DispatchDummyEvent(nsIThread* target);
 
   /**
    * Runs all synchronous sections which are queued up in mSyncSections.
    */
-  void RunSyncSectionsInternal(bool stable, PRUint32 threadRecursionLevel);
+  void RunSyncSectionsInternal(bool stable, uint32_t threadRecursionLevel);
 
-  void RunSyncSections(bool stable, PRUint32 threadRecursionLevel)
+  void RunSyncSections(bool stable, uint32_t threadRecursionLevel)
   {
     if (!mSyncSections.IsEmpty()) {
       RunSyncSectionsInternal(stable, threadRecursionLevel);
@@ -105,8 +105,8 @@ private:
     }
 
     bool mStable;
-    PRUint32 mEventloopNestingLevel;
-    PRUint32 mThreadRecursionLevel;
+    uint32_t mEventloopNestingLevel;
+    uint32_t mThreadRecursionLevel;
     nsCOMPtr<nsIRunnable> mRunnable;
   };
 
@@ -118,8 +118,8 @@ private:
    * have been consumed by the inner event loop(s).
    */
   bool *mBlockedWait;
-  PRInt32 mFavorPerf;
-  PRInt32 mNativeEventPending;
+  int32_t mFavorPerf;
+  int32_t mNativeEventPending;
   PRIntervalTime mStarvationDelay;
   PRIntervalTime mSwitchTime;
   PRIntervalTime mLastNativeEventTime;

@@ -497,6 +497,12 @@ IsLocalOp(JSOp op)
 }
 
 inline bool
+IsGlobalOp(JSOp op)
+{
+    return js_CodeSpec[op].format & JOF_GNAME;
+}
+
+inline bool
 IsGetterPC(jsbytecode *pc)
 {
     JSOp op = JSOp(*pc);

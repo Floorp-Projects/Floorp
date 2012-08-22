@@ -35,7 +35,7 @@ public:
 
   virtual nsGridRowGroupLayout* CastToRowGroupLayout() { return nullptr; }
   virtual nsGridLayout2* CastToGridLayout() { return nullptr; }
-  virtual nsGrid* GetGrid(nsIFrame* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nullptr);
+  virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequestor=nullptr);
   virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox);
   virtual void ChildrenInserted(nsIFrame* aBox, nsBoxLayoutState& aState,
                                 nsIFrame* aPrevBox,

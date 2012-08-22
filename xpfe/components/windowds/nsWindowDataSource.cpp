@@ -18,7 +18,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
 
-PRUint32 nsWindowDataSource::windowCount = 0;
+uint32_t nsWindowDataSource::windowCount = 0;
 
 nsIRDFResource* nsWindowDataSource::kNC_Name = nullptr;
 nsIRDFResource* nsWindowDataSource::kNC_WindowRoot = nullptr;
@@ -26,7 +26,7 @@ nsIRDFResource* nsWindowDataSource::kNC_KeyIndex = nullptr;
 
 nsIRDFService*  nsWindowDataSource::gRDFService = nullptr;
 
-PRUint32 nsWindowDataSource::gRefCnt = 0;
+uint32_t nsWindowDataSource::gRefCnt = 0;
 
 static const char kURINC_WindowRoot[] = "NC:WindowMediatorRoot";
 
@@ -213,7 +213,7 @@ nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
     
     // update RDF and keyindex - from this point forward we'll ignore
     // errors, because they just indicate some kind of RDF inconsistency
-    PRInt32 winIndex = -1;
+    int32_t winIndex = -1;
     rv = mContainer->IndexOf(resource, &winIndex);
         
     if (NS_FAILED(rv))
@@ -239,7 +239,7 @@ nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
         if (NS_FAILED(rv))
             continue;
 
-        PRInt32 currentIndex = -1;
+        int32_t currentIndex = -1;
         mContainer->IndexOf(windowResource, &currentIndex);
 
         // can skip updating windows with lower indexes
@@ -360,7 +360,7 @@ NS_IMETHODIMP nsWindowDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResou
     // special case kNC_KeyIndex before we forward to mInner
     if (aProperty == kNC_KeyIndex) {
 
-        PRInt32 theIndex = 0;
+        int32_t theIndex = 0;
         nsresult rv = mContainer->IndexOf(aSource, &theIndex);
         if (NS_FAILED(rv)) return rv;
 

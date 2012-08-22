@@ -29,8 +29,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetVisibleByFlag(bool *aVisible, PRUint32 aChromeFlag);
-  NS_IMETHOD SetVisibleByFlag(bool aVisible, PRUint32 aChromeFlag);
+  NS_IMETHOD GetVisibleByFlag(bool *aVisible, uint32_t aChromeFlag);
+  NS_IMETHOD SetVisibleByFlag(bool aVisible, uint32_t aChromeFlag);
 
 protected:
   already_AddRefed<nsIWebBrowserChrome> GetBrowserChrome();

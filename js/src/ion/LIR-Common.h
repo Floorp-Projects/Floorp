@@ -272,8 +272,6 @@ class LNewCallObject : public LInstructionHelper<1, 1, 0>
         setOperand(0, slots);
     }
 
-    bool isCall() const;
-
     const LAllocation *slots() {
         return getOperand(0);
     }

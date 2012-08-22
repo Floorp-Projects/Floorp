@@ -25,7 +25,7 @@
 
 class nsFileCopyEvent : public nsRunnable {
 public:
-  nsFileCopyEvent(nsIOutputStream *dest, nsIInputStream *source, PRInt64 len)
+  nsFileCopyEvent(nsIOutputStream *dest, nsIInputStream *source, int64_t len)
     : mDest(dest)
     , mSource(source)
     , mLen(len)
@@ -64,7 +64,7 @@ private:
   nsCOMPtr<nsITransportEventSink> mSink;
   nsCOMPtr<nsIOutputStream> mDest;
   nsCOMPtr<nsIInputStream> mSource;
-  PRInt64 mLen;
+  int64_t mLen;
   nsresult mStatus;           // modified on i/o thread only
   nsresult mInterruptStatus;  // modified on main thread only
 };
@@ -74,24 +74,24 @@ nsFileCopyEvent::DoCopy()
 {
   // We'll copy in chunks this large by default.  This size affects how
   // frequently we'll check for interrupts.
-  const PRInt32 chunk = nsIOService::gDefaultSegmentSize * nsIOService::gDefaultSegmentCount;
+  const int32_t chunk = nsIOService::gDefaultSegmentSize * nsIOService::gDefaultSegmentCount;
 
   nsresult rv = NS_OK;
 
-  PRInt64 len = mLen, progress = 0;
+  int64_t len = mLen, progress = 0;
   while (len) {
     // If we've been interrupted, then stop copying.
     rv = mInterruptStatus;
     if (NS_FAILED(rv))
       break;
 
-    PRInt32 num = NS_MIN((PRInt32) len, chunk);
+    int32_t num = NS_MIN((int32_t) len, chunk);
 
-    PRUint32 result;
+    uint32_t result;
     rv = mSource->ReadSegments(NS_CopySegmentToStream, mDest, num, &result);
     if (NS_FAILED(rv))
       break;
-    if (result != (PRUint32) num) {
+    if (result != (uint32_t) num) {
       rv = NS_ERROR_FILE_DISK_FULL;  // stopped prematurely (out of disk space)
       break;
     }
@@ -162,7 +162,7 @@ public:
   nsFileUploadContentStream(bool nonBlocking,
                             nsIOutputStream *dest,
                             nsIInputStream *source,
-                            PRInt64 len,
+                            int64_t len,
                             nsITransportEventSink *sink)
     : nsBaseContentStream(nonBlocking)
     , mCopyEvent(new nsFileCopyEvent(dest, source, len))
@@ -174,9 +174,9 @@ public:
   }
 
   NS_IMETHODIMP ReadSegments(nsWriteSegmentFun fun, void *closure,
-                             PRUint32 count, PRUint32 *result);
-  NS_IMETHODIMP AsyncWait(nsIInputStreamCallback *callback, PRUint32 flags,
-                          PRUint32 count, nsIEventTarget *target);
+                             uint32_t count, uint32_t *result);
+  NS_IMETHODIMP AsyncWait(nsIInputStreamCallback *callback, uint32_t flags,
+                          uint32_t count, nsIEventTarget *target);
 
 private:
   void OnCopyComplete();
@@ -190,7 +190,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsFileUploadContentStream,
 
 NS_IMETHODIMP
 nsFileUploadContentStream::ReadSegments(nsWriteSegmentFun fun, void *closure,
-                                        PRUint32 count, PRUint32 *result)
+                                        uint32_t count, uint32_t *result)
 {
   *result = 0;  // nothing is ever actually read from this stream
 
@@ -213,7 +213,7 @@ nsFileUploadContentStream::ReadSegments(nsWriteSegmentFun fun, void *closure,
 
 NS_IMETHODIMP
 nsFileUploadContentStream::AsyncWait(nsIInputStreamCallback *callback,
-                                     PRUint32 flags, PRUint32 count,
+                                     uint32_t flags, uint32_t count,
                                      nsIEventTarget *target)
 {
   nsresult rv = nsBaseContentStream::AsyncWait(callback, flags, count, target);
@@ -372,7 +372,7 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
 
     // fixup content length and type
     if (ContentLength64() < 0) {
-      PRInt64 size;
+      int64_t size;
       rv = file->GetFileSize(&size);
       if (NS_FAILED(rv))
         return rv;
@@ -414,7 +414,7 @@ nsFileChannel::GetFile(nsIFile **file)
 NS_IMETHODIMP
 nsFileChannel::SetUploadStream(nsIInputStream *stream,
                                const nsACString &contentType,
-                               PRInt32 contentLength)
+                               int32_t contentLength)
 {
   NS_ENSURE_TRUE(!IsPending(), NS_ERROR_IN_PROGRESS);
 
@@ -422,7 +422,7 @@ nsFileChannel::SetUploadStream(nsIInputStream *stream,
     mUploadLength = contentLength;
     if (mUploadLength < 0) {
       // Make sure we know how much data we are uploading.
-      PRUint64 avail;
+      uint64_t avail;
       nsresult rv = mUploadStream->Available(&avail);
       if (NS_FAILED(rv))
         return rv;

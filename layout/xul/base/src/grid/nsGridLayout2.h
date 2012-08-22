@@ -36,16 +36,16 @@ public:
 
   virtual nsGridRowGroupLayout* CastToRowGroupLayout() { return nullptr; }
   virtual nsGridLayout2* CastToGridLayout() { return this; }
-  virtual nsGrid* GetGrid(nsIFrame* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nullptr);
+  virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequestor=nullptr);
   virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox) {
     NS_NOTREACHED("Should not be called"); return nullptr;
   }
   virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual void CountRowsColumns(nsIFrame* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount) { aRowCount++; }
+  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) { aRowCount++; }
   virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) { }
-  virtual PRInt32 BuildRows(nsIFrame* aBox, nsGridRow* aRows);
+  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows);
   virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal);
   virtual Type GetType() { return eGrid; }
   virtual void ChildrenInserted(nsIFrame* aBox, nsBoxLayoutState& aState,

@@ -98,7 +98,7 @@ MOZ_STATIC_ASSERT(MAX_WORKERS_PER_DOMAIN >= 1,
                                                                                \
     if (!workers.IsEmpty()) {                                                  \
       AutoSafeJSContext cx;                                                    \
-      for (PRUint32 index = 0; index < workers.Length(); index++) {            \
+      for (uint32_t index = 0; index < workers.Length(); index++) {            \
         workers[index]-> _func (cx, ##__VA_ARGS__);                            \
       }                                                                        \
     }                                                                          \
@@ -106,12 +106,12 @@ MOZ_STATIC_ASSERT(MAX_WORKERS_PER_DOMAIN >= 1,
 
 namespace {
 
-const PRUint32 kNoIndex = PRUint32(-1);
+const uint32_t kNoIndex = uint32_t(-1);
 
-const PRUint32 kRequiredJSContextOptions =
+const uint32_t kRequiredJSContextOptions =
   JSOPTION_DONT_REPORT_UNCAUGHT | JSOPTION_NO_SCRIPT_RVAL;
 
-PRUint32 gMaxWorkersPerDomain = MAX_WORKERS_PER_DOMAIN;
+uint32_t gMaxWorkersPerDomain = MAX_WORKERS_PER_DOMAIN;
 
 // Does not hold an owning reference.
 RuntimeService* gRuntimeService = nullptr;
@@ -195,15 +195,15 @@ PrefCallback(const char* aPrefName, void* aClosure)
   NS_NAMED_LITERAL_CSTRING(jsOptionStr, JS_OPTIONS_DOT_STR);
 
   if (!strcmp(aPrefName, gPrefsToWatch[PREF_mem_max])) {
-    PRInt32 pref = Preferences::GetInt(aPrefName, -1);
-    PRUint32 maxBytes = (pref <= 0 || pref >= 0x1000) ?
-                        PRUint32(-1) :
-                        PRUint32(pref) * 1024 * 1024;
+    int32_t pref = Preferences::GetInt(aPrefName, -1);
+    uint32_t maxBytes = (pref <= 0 || pref >= 0x1000) ?
+                        uint32_t(-1) :
+                        uint32_t(pref) * 1024 * 1024;
     RuntimeService::SetDefaultJSRuntimeHeapSize(maxBytes);
     rts->UpdateAllWorkerJSRuntimeHeapSize();
   }
   else if (StringBeginsWith(nsDependentCString(aPrefName), jsOptionStr)) {
-    PRUint32 newOptions = kRequiredJSContextOptions;
+    uint32_t newOptions = kRequiredJSContextOptions;
     if (Preferences::GetBool(gPrefsToWatch[PREF_strict])) {
       newOptions |= JSOPTION_STRICT;
     }
@@ -234,8 +234,8 @@ PrefCallback(const char* aPrefName, void* aClosure)
   }
 #ifdef JS_GC_ZEAL
   else if (!strcmp(aPrefName, gPrefsToWatch[PREF_gczeal])) {
-    PRInt32 gczeal = Preferences::GetInt(gPrefsToWatch[PREF_gczeal]);
-    RuntimeService::SetDefaultGCZeal(PRUint8(clamped(gczeal, 0, 3)));
+    int32_t gczeal = Preferences::GetInt(gPrefsToWatch[PREF_gczeal]);
+    RuntimeService::SetDefaultGCZeal(uint8_t(clamped(gczeal, 0, 3)));
     rts->UpdateAllWorkerGCZeal();
   }
 #endif
@@ -296,10 +296,10 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
 
 #ifdef JS_GC_ZEAL
   {
-    PRUint8 zeal = aWorkerPrivate->GetGCZeal();
+    uint8_t zeal = aWorkerPrivate->GetGCZeal();
     NS_ASSERTION(zeal <= 3, "Bad zeal value!");
 
-    PRUint32 frequency = zeal <= 2 ? JS_DEFAULT_ZEAL_FREQ : 1;
+    uint32_t frequency = zeal <= 2 ? JS_DEFAULT_ZEAL_FREQ : 1;
     JS_SetGCZeal(workerCx, zeal, frequency);
   }
 #endif
@@ -388,7 +388,7 @@ ResolveWorkerClasses(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, unsign
 
   // Make sure our strings are interned.
   if (JSID_IS_VOID(gStringIDs[0])) {
-    for (PRUint32 i = 0; i < ID_COUNT; i++) {
+    for (uint32_t i = 0; i < ID_COUNT; i++) {
       JSString* str = JS_InternString(aCx, gStringChars[i]);
       if (!str) {
         while (i) {
@@ -403,7 +403,7 @@ ResolveWorkerClasses(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, unsign
   bool isChrome = false;
   bool shouldResolve = false;
 
-  for (PRUint32 i = 0; i < ID_COUNT; i++) {
+  for (uint32_t i = 0; i < ID_COUNT; i++) {
     if (gStringIDs[i] == aId) {
       nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
       NS_ASSERTION(ssm, "This should never be null!");
@@ -535,15 +535,15 @@ WorkerCrossThreadDispatcher::PostTask(WorkerTask* aTask)
 
 END_WORKERS_NAMESPACE
 
-PRUint32 RuntimeService::sDefaultJSContextOptions = kRequiredJSContextOptions;
+uint32_t RuntimeService::sDefaultJSContextOptions = kRequiredJSContextOptions;
 
-PRUint32 RuntimeService::sDefaultJSRuntimeHeapSize =
+uint32_t RuntimeService::sDefaultJSRuntimeHeapSize =
   WORKER_DEFAULT_RUNTIME_HEAPSIZE;
 
-PRInt32 RuntimeService::sCloseHandlerTimeoutSeconds = MAX_SCRIPT_RUN_TIME_SEC;
+int32_t RuntimeService::sCloseHandlerTimeoutSeconds = MAX_SCRIPT_RUN_TIME_SEC;
 
 #ifdef JS_GC_ZEAL
-PRUint8 RuntimeService::sDefaultGCZeal = 0;
+uint8_t RuntimeService::sDefaultGCZeal = 0;
 #endif
 
 RuntimeService::RuntimeService()
@@ -710,7 +710,7 @@ RuntimeService::UnregisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
 
     // Remove old worker from everywhere.
-    PRUint32 index = domainInfo->mQueuedWorkers.IndexOf(aWorkerPrivate);
+    uint32_t index = domainInfo->mQueuedWorkers.IndexOf(aWorkerPrivate);
     if (index != kNoIndex) {
       // Was queued, remove from the list.
       domainInfo->mQueuedWorkers.RemoveElementAt(index);
@@ -783,7 +783,7 @@ RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
     MutexAutoLock lock(mMutex);
     if (!mIdleThreadArray.IsEmpty()) {
-      PRUint32 index = mIdleThreadArray.Length() - 1;
+      uint32_t index = mIdleThreadArray.Length() - 1;
       mIdleThreadArray[index].mThread.swap(thread);
       mIdleThreadArray.RemoveElementAt(index);
     }
@@ -839,7 +839,7 @@ RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
   {
     MutexAutoLock lock(runtime->mMutex);
 
-    for (PRUint32 index = 0; index < runtime->mIdleThreadArray.Length();
+    for (uint32_t index = 0; index < runtime->mIdleThreadArray.Length();
          index++) {
       IdleThreadInfo& info = runtime->mIdleThreadArray[index];
       if (info.mExpirationTime > now) {
@@ -860,7 +860,7 @@ RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
                "Should have a new time or there should be some threads to shut "
                "down");
 
-  for (PRUint32 index = 0; index < expiredThreads.Length(); index++) {
+  for (uint32_t index = 0; index < expiredThreads.Length(); index++) {
     if (NS_FAILED(expiredThreads[index]->Shutdown())) {
       NS_WARNING("Failed to shutdown thread!");
     }
@@ -868,7 +868,7 @@ RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
 
   if (!nextExpiration.IsNull()) {
     TimeDuration delta = nextExpiration - TimeStamp::Now();
-    PRUint32 delay(delta > TimeDuration(0) ? delta.ToMilliseconds() : 0);
+    uint32_t delay(delta > TimeDuration(0) ? delta.ToMilliseconds() : 0);
 
     // Reschedule the timer.
     if (NS_FAILED(aTimer->InitWithFuncCallback(ShutdownIdleThreads, nullptr,
@@ -908,7 +908,7 @@ RuntimeService::Init()
     NS_WARNING("Failed to register for memory pressure notifications!");
   }
 
-  for (PRUint32 index = 0; index < ArrayLength(gPrefsToWatch); index++) {
+  for (uint32_t index = 0; index < ArrayLength(gPrefsToWatch); index++) {
     if (NS_FAILED(Preferences::RegisterCallback(PrefCallback,
                                                 gPrefsToWatch[index], this))) {
       NS_WARNING("Failed to register pref callback?!");
@@ -925,7 +925,7 @@ RuntimeService::Init()
       NS_WARNING("Failed to register timeout cache?!");
   }
 
-  PRInt32 maxPerDomain = Preferences::GetInt(PREF_WORKERS_MAX_PER_DOMAIN,
+  int32_t maxPerDomain = Preferences::GetInt(PREF_WORKERS_MAX_PER_DOMAIN,
                                              MAX_WORKERS_PER_DOMAIN);
   gMaxWorkersPerDomain = NS_MAX(0, maxPerDomain);
 
@@ -990,7 +990,7 @@ RuntimeService::Cleanup()
 
         AutoSafeJSContext cx;
 
-        for (PRUint32 index = 0; index < workers.Length(); index++) {
+        for (uint32_t index = 0; index < workers.Length(); index++) {
           if (!workers[index]->Kill(cx)) {
             NS_WARNING("Failed to cancel worker!");
           }
@@ -1001,10 +1001,10 @@ RuntimeService::Cleanup()
       if (!mIdleThreadArray.IsEmpty()) {
         nsAutoTArray<nsCOMPtr<nsIThread>, 20> idleThreads;
 
-        PRUint32 idleThreadCount = mIdleThreadArray.Length();
+        uint32_t idleThreadCount = mIdleThreadArray.Length();
         idleThreads.SetLength(idleThreadCount);
 
-        for (PRUint32 index = 0; index < idleThreadCount; index++) {
+        for (uint32_t index = 0; index < idleThreadCount; index++) {
           NS_ASSERTION(mIdleThreadArray[index].mThread, "Null thread!");
           idleThreads[index].swap(mIdleThreadArray[index].mThread);
         }
@@ -1013,7 +1013,7 @@ RuntimeService::Cleanup()
 
         MutexAutoUnlock unlock(mMutex);
 
-        for (PRUint32 index = 0; index < idleThreadCount; index++) {
+        for (uint32_t index = 0; index < idleThreadCount; index++) {
           if (NS_FAILED(idleThreads[index]->Shutdown())) {
             NS_WARNING("Failed to shutdown thread!");
           }
@@ -1038,7 +1038,7 @@ RuntimeService::Cleanup()
   }
 
   if (mObserved) {
-    for (PRUint32 index = 0; index < ArrayLength(gPrefsToWatch); index++) {
+    for (uint32_t index = 0; index < ArrayLength(gPrefsToWatch); index++) {
       Preferences::UnregisterCallback(PrefCallback, gPrefsToWatch[index], this);
     }
 
@@ -1071,7 +1071,7 @@ RuntimeService::AddAllTopLevelWorkersToArray(const nsACString& aKey,
     static_cast<nsTArray<WorkerPrivate*>*>(aUserArg);
 
 #ifdef DEBUG
-  for (PRUint32 index = 0; index < aData->mActiveWorkers.Length(); index++) {
+  for (uint32_t index = 0; index < aData->mActiveWorkers.Length(); index++) {
     NS_ASSERTION(!aData->mActiveWorkers[index]->GetParent(),
                  "Shouldn't have a parent in this list!");
   }
@@ -1080,7 +1080,7 @@ RuntimeService::AddAllTopLevelWorkersToArray(const nsACString& aKey,
   array->AppendElements(aData->mActiveWorkers);
 
   // These might not be top-level workers...
-  for (PRUint32 index = 0; index < aData->mQueuedWorkers.Length(); index++) {
+  for (uint32_t index = 0; index < aData->mQueuedWorkers.Length(); index++) {
     WorkerPrivate* worker = aData->mQueuedWorkers[index];
     if (!worker->GetParent()) {
       array->AppendElement(worker);
@@ -1117,7 +1117,7 @@ RuntimeService::CancelWorkersForWindow(JSContext* aCx,
 
   if (!workers.IsEmpty()) {
     AutoSafeJSContext cx(aCx);
-    for (PRUint32 index = 0; index < workers.Length(); index++) {
+    for (uint32_t index = 0; index < workers.Length(); index++) {
       if (!workers[index]->Cancel(aCx)) {
         NS_WARNING("Failed to cancel worker!");
       }
@@ -1136,7 +1136,7 @@ RuntimeService::SuspendWorkersForWindow(JSContext* aCx,
 
   if (!workers.IsEmpty()) {
     AutoSafeJSContext cx(aCx);
-    for (PRUint32 index = 0; index < workers.Length(); index++) {
+    for (uint32_t index = 0; index < workers.Length(); index++) {
       if (!workers[index]->Suspend(aCx)) {
         NS_WARNING("Failed to cancel worker!");
       }
@@ -1155,7 +1155,7 @@ RuntimeService::ResumeWorkersForWindow(JSContext* aCx,
 
   if (!workers.IsEmpty()) {
     AutoSafeJSContext cx(aCx);
-    for (PRUint32 index = 0; index < workers.Length(); index++) {
+    for (uint32_t index = 0; index < workers.Length(); index++) {
       if (!workers[index]->Resume(aCx)) {
         NS_WARNING("Failed to cancel worker!");
       }

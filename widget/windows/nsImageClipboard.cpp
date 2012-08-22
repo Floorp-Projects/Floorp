@@ -69,10 +69,10 @@ nsImageToClipboard :: GetPicture ( HANDLE* outBits )
 //
 // Computes # of bytes needed by a bitmap with the specified attributes.
 //
-PRInt32 
-nsImageToClipboard :: CalcSize ( PRInt32 aHeight, PRInt32 aColors, WORD aBitsPerPixel, PRInt32 aSpanBytes )
+int32_t 
+nsImageToClipboard :: CalcSize ( int32_t aHeight, int32_t aColors, WORD aBitsPerPixel, int32_t aSpanBytes )
 {
-  PRInt32 HeaderMem = sizeof(BITMAPINFOHEADER);
+  int32_t HeaderMem = sizeof(BITMAPINFOHEADER);
 
   // add size of pallette to header size
   if (aBitsPerPixel < 16)
@@ -90,10 +90,10 @@ nsImageToClipboard :: CalcSize ( PRInt32 aHeight, PRInt32 aColors, WORD aBitsPer
 //
 // Computes the span bytes for determining the overall size of the image
 //
-PRInt32 
-nsImageToClipboard::CalcSpanLength(PRUint32 aWidth, PRUint32 aBitCount)
+int32_t 
+nsImageToClipboard::CalcSpanLength(uint32_t aWidth, uint32_t aBitCount)
 {
-  PRInt32 spanBytes = (aWidth * aBitCount) >> 5;
+  int32_t spanBytes = (aWidth * aBitCount) >> 5;
   
   if ((aWidth * aBitCount) & 0x1F)
     spanBytes++;
@@ -123,7 +123,7 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
     nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/bmp", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    PRUint32 format;
+    uint32_t format;
     nsAutoString options;
     options.AppendASCII("version=5;bpp=");
     switch (frame->Format()) {
@@ -144,7 +144,7 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
                                format, options);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 size;
+    uint32_t size;
     encoder->GetImageBufferUsed(&size);
     NS_ENSURE_TRUE(size > BFH_LENGTH, NS_ERROR_FAILURE);
     HGLOBAL glob = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT,
@@ -189,8 +189,8 @@ nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, co
   // pull the size information out of the BITMAPINFO header and
   // initialize the image
   BITMAPINFO* header = (BITMAPINFO *) aClipboardData;
-  PRInt32 width  = header->bmiHeader.biWidth;
-  PRInt32 height = header->bmiHeader.biHeight;
+  int32_t width  = header->bmiHeader.biWidth;
+  int32_t height = header->bmiHeader.biHeight;
   // neg. heights mean the Y axis is inverted and we don't handle that case
   NS_ENSURE_TRUE(height > 0, NS_ERROR_FAILURE); 
 
@@ -231,16 +231,16 @@ nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, co
 // Take the image data from the clipboard and invert the rows. Modifying aInitialBuffer in place.
 //
 void
-nsImageFromClipboard::InvertRows(unsigned char * aInitialBuffer, PRUint32 aSizeOfBuffer, PRUint32 aNumBytesPerRow)
+nsImageFromClipboard::InvertRows(unsigned char * aInitialBuffer, uint32_t aSizeOfBuffer, uint32_t aNumBytesPerRow)
 {
   if (!aNumBytesPerRow) 
     return; 
 
-  PRUint32 numRows = aSizeOfBuffer / aNumBytesPerRow;
+  uint32_t numRows = aSizeOfBuffer / aNumBytesPerRow;
   unsigned char * row = new unsigned char[aNumBytesPerRow];
 
-  PRUint32 currentRow = 0;
-  PRUint32 lastRow = (numRows - 1) * aNumBytesPerRow;
+  uint32_t currentRow = 0;
+  uint32_t lastRow = (numRows - 1) * aNumBytesPerRow;
   while (currentRow < lastRow)
   {
     // store the current row into a temporary buffer
@@ -262,23 +262,23 @@ nsImageFromClipboard::InvertRows(unsigned char * aInitialBuffer, PRUint32 aSizeO
 nsresult 
 nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPINFO pBitMapInfo, unsigned char * aOutBuffer)
 {
-  PRUint8 bitCount = pBitMapInfo->bmiHeader.biBitCount; 
-  PRUint32 imageSize = pBitMapInfo->bmiHeader.biSizeImage; // may be zero for BI_RGB bitmaps which means we need to calculate by hand
-  PRUint32 bytesPerPixel = bitCount / 8;
+  uint8_t bitCount = pBitMapInfo->bmiHeader.biBitCount; 
+  uint32_t imageSize = pBitMapInfo->bmiHeader.biSizeImage; // may be zero for BI_RGB bitmaps which means we need to calculate by hand
+  uint32_t bytesPerPixel = bitCount / 8;
   
   if (bitCount <= 4)
     bytesPerPixel = 1;
 
   // rows are DWORD aligned. Calculate how many real bytes are in each row in the bitmap. This number won't 
   // correspond to biWidth.
-  PRUint32 rowSize = (bitCount * pBitMapInfo->bmiHeader.biWidth + 7) / 8; // +7 to round up
+  uint32_t rowSize = (bitCount * pBitMapInfo->bmiHeader.biWidth + 7) / 8; // +7 to round up
   if (rowSize % 4)
     rowSize += (4 - (rowSize % 4)); // Pad to DWORD Boundary
   
   // if our buffer includes a color map, skip over it 
   if (bitCount <= 8)
   {
-    PRInt32 bytesToSkip = (pBitMapInfo->bmiHeader.biClrUsed ? pBitMapInfo->bmiHeader.biClrUsed : (1 << bitCount) ) * sizeof(RGBQUAD);
+    int32_t bytesToSkip = (pBitMapInfo->bmiHeader.biClrUsed ? pBitMapInfo->bmiHeader.biClrUsed : (1 << bitCount) ) * sizeof(RGBQUAD);
     aInputBuffer +=  bytesToSkip;
   }
 
@@ -287,9 +287,9 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
   if (pBitMapInfo->bmiHeader.biCompression == BI_BITFIELDS)
   {
     // color table consists of 3 DWORDS containing the color masks...
-    colorMasks.red = (*((PRUint32*)&(pBitMapInfo->bmiColors[0]))); 
-    colorMasks.green = (*((PRUint32*)&(pBitMapInfo->bmiColors[1]))); 
-    colorMasks.blue = (*((PRUint32*)&(pBitMapInfo->bmiColors[2]))); 
+    colorMasks.red = (*((uint32_t*)&(pBitMapInfo->bmiColors[0]))); 
+    colorMasks.green = (*((uint32_t*)&(pBitMapInfo->bmiColors[1]))); 
+    colorMasks.blue = (*((uint32_t*)&(pBitMapInfo->bmiColors[2]))); 
     CalcBitShift(&colorMasks);
     aInputBuffer += 3 * sizeof(DWORD);
   } 
@@ -304,14 +304,14 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
 
   if (!pBitMapInfo->bmiHeader.biCompression || pBitMapInfo->bmiHeader.biCompression == BI_BITFIELDS) 
   {  
-    PRUint32 index = 0;
-    PRUint32 writeIndex = 0;
+    uint32_t index = 0;
+    uint32_t writeIndex = 0;
      
     unsigned char redValue, greenValue, blueValue;
-    PRUint8 colorTableEntry = 0;
-    PRInt8 bit; // used for grayscale bitmaps where each bit is a pixel
-    PRUint32 numPixelsLeftInRow = pBitMapInfo->bmiHeader.biWidth; // how many more pixels do we still need to read for the current row
-    PRUint32 pos = 0;
+    uint8_t colorTableEntry = 0;
+    int8_t bit; // used for grayscale bitmaps where each bit is a pixel
+    uint32_t numPixelsLeftInRow = pBitMapInfo->bmiHeader.biWidth; // how many more pixels do we still need to read for the current row
+    uint32_t pos = 0;
 
     while (index < imageSize)
     {
@@ -358,14 +358,14 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
           break;
         case 16:
           {
-            PRUint16 num = 0;
-            num = (PRUint8) aInputBuffer[index+1];
+            uint16_t num = 0;
+            num = (uint8_t) aInputBuffer[index+1];
             num <<= 8;
-            num |= (PRUint8) aInputBuffer[index];
+            num |= (uint8_t) aInputBuffer[index];
 
-            redValue = ((PRUint32) (((float)(num & 0xf800) / 0xf800) * 0xFF0000) & 0xFF0000)>> 16;
-            greenValue =  ((PRUint32)(((float)(num & 0x07E0) / 0x07E0) * 0x00FF00) & 0x00FF00)>> 8;
-            blueValue =  ((PRUint32)(((float)(num & 0x001F) / 0x001F) * 0x0000FF) & 0x0000FF);
+            redValue = ((uint32_t) (((float)(num & 0xf800) / 0xf800) * 0xFF0000) & 0xFF0000)>> 16;
+            greenValue =  ((uint32_t)(((float)(num & 0x07E0) / 0x07E0) * 0x00FF00) & 0x00FF00)>> 8;
+            blueValue =  ((uint32_t)(((float)(num & 0x001F) / 0x001F) * 0x0000FF) & 0x0000FF);
 
             // now we have the right RGB values...
             aOutBuffer[writeIndex++] = redValue;
@@ -379,7 +379,7 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
         case 24:
           if (pBitMapInfo->bmiHeader.biCompression == BI_BITFIELDS)
           {
-            PRUint32 val = *((PRUint32*) (aInputBuffer + index) );
+            uint32_t val = *((uint32_t*) (aInputBuffer + index) );
             aOutBuffer[writeIndex++] = (val & colorMasks.red) >> colorMasks.redRightShift << colorMasks.redLeftShift;
             aOutBuffer[writeIndex++] =  (val & colorMasks.green) >> colorMasks.greenRightShift << colorMasks.greenLeftShift;
             aOutBuffer[writeIndex++] = (val & colorMasks.blue) >> colorMasks.blueRightShift << colorMasks.blueLeftShift;
@@ -419,10 +419,10 @@ nsImageFromClipboard::ConvertColorBitMap(unsigned char * aInputBuffer, PBITMAPIN
   return NS_OK;
 }
 
-void nsImageFromClipboard::CalcBitmask(PRUint32 aMask, PRUint8& aBegin, PRUint8& aLength)
+void nsImageFromClipboard::CalcBitmask(uint32_t aMask, uint8_t& aBegin, uint8_t& aLength)
 {
   // find the rightmost 1
-  PRUint8 pos;
+  uint8_t pos;
   bool started = false;
   aBegin = aLength = 0;
   for (pos = 0; pos <= 31; pos++) 
@@ -442,7 +442,7 @@ void nsImageFromClipboard::CalcBitmask(PRUint32 aMask, PRUint8& aBegin, PRUint8&
 
 void nsImageFromClipboard::CalcBitShift(bitFields * aColorMask)
 {
-  PRUint8 begin, length;
+  uint8_t begin, length;
   // red
   CalcBitmask(aColorMask->red, begin, length);
   aColorMask->redRightShift = begin;

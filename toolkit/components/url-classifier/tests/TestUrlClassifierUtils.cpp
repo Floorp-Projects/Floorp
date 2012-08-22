@@ -14,7 +14,7 @@
 static int gTotalTests = 0;
 static int gPassedTests = 0;
 
-static char int_to_hex_digit(PRInt32 i) {
+static char int_to_hex_digit(int32_t i) {
   NS_ASSERTION((i >= 0) && (i <= 15), "int too big in int_to_hex_digit");
   return static_cast<char>(((i < 10) ? (i + '0') : ((i - 10) + 'A')));
 }
@@ -46,7 +46,7 @@ void TestUnescape()
 
   // Test docoding of all characters.
   nsCString allCharsEncoded, allCharsEncodedLowercase, allCharsAsString;
-  for (PRInt32 i = 1; i < 256; ++i) {
+  for (int32_t i = 1; i < 256; ++i) {
     allCharsEncoded.Append('%');
     allCharsEncoded.Append(int_to_hex_digit(i / 16));
     allCharsEncoded.Append((int_to_hex_digit(i % 16)));
@@ -99,7 +99,7 @@ void TestEnc()
 
   // Test that all characters we shouldn't encode ([33-36],[38,126]) are not.
   nsCString noenc;
-  for (PRInt32 i = 33; i < 127; i++) {
+  for (int32_t i = 33; i < 127; i++) {
     if (i != 37) {                      // skip %
       noenc.Append(static_cast<char>(i));
     }
@@ -111,7 +111,7 @@ void TestEnc()
 
   // Test that all the chars that we should encode [0,32],37,[127,255] are
   nsCString yesAsString, yesExpectedString;
-  for (PRInt32 i = 1; i < 256; i++) {
+  for (int32_t i = 1; i < 256; i++) {
     if (i < 33 || i == 37 || i > 126) {
       yesAsString.Append(static_cast<char>(i));
       yesExpectedString.Append('%');
@@ -189,7 +189,7 @@ void TestParseIPAddress()
   TestParseIPAddressHelper("1.2.3.4", "1.2.3.4");
 }
 
-void TestCanonicalNumHelper(const char *in, PRUint32 bytes,
+void TestCanonicalNumHelper(const char *in, uint32_t bytes,
                             bool allowOctal, const char *expected)
 {
   nsCString out, strIn(in), strExp(expected);

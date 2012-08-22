@@ -49,7 +49,7 @@ public:
    */
   static char* ConvertLineBreaks(const char* aSrc,
                 ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nullptr);
+                int32_t aSrcLen = kIgnoreLen, int32_t* aOutLen = nullptr);
   
 
   /* ConvertUnicharLineBreaks
@@ -66,7 +66,7 @@ public:
    */
   static PRUnichar* ConvertUnicharLineBreaks(const PRUnichar* aSrc,
                 ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nullptr);
+                int32_t aSrcLen = kIgnoreLen, int32_t* aOutLen = nullptr);
   
 
   /* ConvertStringLineBreaks
@@ -97,7 +97,7 @@ public:
    * @param aOutLen: used to return character length of returned buffer, if not null.
    */
   static nsresult ConvertLineBreaksInSitu(char **ioBuffer, ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                        PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nullptr);
+                        int32_t aSrcLen = kIgnoreLen, int32_t* aOutLen = nullptr);
 
 
   /* ConvertUnicharLineBreaksInSitu
@@ -115,7 +115,7 @@ public:
    * @param aOutLen: used to return character length of returned buffer, if not null.
    */
   static nsresult ConvertUnicharLineBreaksInSitu(PRUnichar **ioBuffer, ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                        PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nullptr);
+                        int32_t aSrcLen = kIgnoreLen, int32_t* aOutLen = nullptr);
     
 };
 

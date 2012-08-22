@@ -13,13 +13,13 @@
 class nsAHtml5TreeBuilderState {
   public:
   
-    virtual jArray<nsHtml5StackNode*,PRInt32> getStack() = 0;
+    virtual jArray<nsHtml5StackNode*,int32_t> getStack() = 0;
     
-    virtual jArray<nsHtml5StackNode*,PRInt32> getListOfActiveFormattingElements() = 0;
+    virtual jArray<nsHtml5StackNode*,int32_t> getListOfActiveFormattingElements() = 0;
     
-    virtual PRInt32 getStackLength() = 0;
+    virtual int32_t getStackLength() = 0;
 
-    virtual PRInt32 getListOfActiveFormattingElementsLength() = 0;
+    virtual int32_t getListOfActiveFormattingElementsLength() = 0;
 
     virtual nsIContent** getFormPointer() = 0;
     
@@ -27,9 +27,9 @@ class nsAHtml5TreeBuilderState {
 
     virtual nsIContent** getDeepTreeSurrogateParent() = 0;
 
-    virtual PRInt32 getMode() = 0;
+    virtual int32_t getMode() = 0;
 
-    virtual PRInt32 getOriginalMode() = 0;
+    virtual int32_t getOriginalMode() = 0;
 
     virtual bool isFramesetOk() = 0;
 

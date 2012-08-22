@@ -78,7 +78,7 @@ private:
 
   // Requests the controller to draw into a canvas of the given width and
   // height. The resulting bitmap is sent to the DWM to display.
-  void DrawBitmap(PRUint32 width, PRUint32 height, bool isPreview);
+  void DrawBitmap(uint32_t width, uint32_t height, bool isPreview);
 
   // WindowHook procedure for hooking mWnd
   static bool MainWindowHook(void *aContext,

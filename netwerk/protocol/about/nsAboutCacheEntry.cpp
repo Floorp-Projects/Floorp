@@ -18,7 +18,7 @@
 #define HEXDUMP_MAX_ROWS 16
 
 static void
-HexDump(PRUint32 *state, const char *buf, PRInt32 n, nsCString &result)
+HexDump(uint32_t *state, const char *buf, int32_t n, nsCString &result)
 {
   char temp[16];
 
@@ -30,7 +30,7 @@ HexDump(PRUint32 *state, const char *buf, PRInt32 n, nsCString &result)
 
     p = (const unsigned char *) buf;
 
-    PRInt32 i, row_max = NS_MIN(HEXDUMP_MAX_ROWS, n);
+    int32_t i, row_max = NS_MIN(HEXDUMP_MAX_ROWS, n);
 
     // print hex codes:
     for (i = 0; i < row_max; ++i) {
@@ -96,7 +96,7 @@ nsAboutCacheEntry::NewChannel(nsIURI *uri, nsIChannel **result)
 }
 
 NS_IMETHODIMP
-nsAboutCacheEntry::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+nsAboutCacheEntry::GetURIFlags(nsIURI *aURI, uint32_t *result)
 {
     *result = nsIAboutModule::HIDE_FROM_ABOUTABOUT;
     return NS_OK;
@@ -110,7 +110,7 @@ nsAboutCacheEntry::GetContentStream(nsIURI *uri, nsIInputStream **result)
 {
     nsCOMPtr<nsIStorageStream> storageStream;
     nsCOMPtr<nsIOutputStream> outputStream;
-    PRUint32 n;
+    uint32_t n;
     nsCString buffer;
     nsresult rv;
 
@@ -118,7 +118,7 @@ nsAboutCacheEntry::GetContentStream(nsIURI *uri, nsIInputStream **result)
     OpenCacheEntry(uri, getter_AddRefs(descriptor));
 
     // Init: (block size, maximum length)
-    rv = NS_NewStorageStream(256, PRUint32(-1), getter_AddRefs(storageStream));
+    rv = NS_NewStorageStream(256, uint32_t(-1), getter_AddRefs(storageStream));
     if (NS_FAILED(rv)) return rv;
 
     rv = storageStream->GetOutputStream(0, getter_AddRefs(outputStream));
@@ -148,7 +148,7 @@ nsAboutCacheEntry::GetContentStream(nsIURI *uri, nsIInputStream **result)
     outputStream->Write(buffer.get(), buffer.Length(), &n);
 
     nsCOMPtr<nsIInputStream> inStr;
-    PRUint32 size;
+    uint32_t size;
 
     rv = storageStream->GetLength(&size);
     if (NS_FAILED(rv)) return rv;
@@ -189,7 +189,7 @@ nsAboutCacheEntry::OpenCacheEntry(nsIURI *uri, nsICacheEntryDescriptor **result)
 // helper methods
 //-----------------------------------------------------------------------------
 
-static PRTime SecondsToPRTime(PRUint32 t_sec)
+static PRTime SecondsToPRTime(uint32_t t_sec)
 {
     PRTime t_usec, usec_per_sec;
     LL_I2L(t_usec, t_sec);
@@ -197,7 +197,7 @@ static PRTime SecondsToPRTime(PRUint32 t_sec)
     LL_MUL(t_usec, t_usec, usec_per_sec);
     return t_usec;
 }
-static void PrintTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
+static void PrintTimeString(char *buf, uint32_t bufsize, uint32_t t_sec)
 {
     PRExplodedTime et;
     PRTime t_usec = SecondsToPRTime(t_sec);
@@ -223,7 +223,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
 {
     nsresult rv;
     nsCString buffer;
-    PRUint32 n;
+    uint32_t n;
 
     nsCAutoString str;
 
@@ -265,8 +265,8 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
 
     // temp vars for reporting
     char timeBuf[255];
-    PRUint32 u = 0;
-    PRInt32  i = 0;
+    uint32_t u = 0;
+    int32_t  i = 0;
     nsCAutoString s;
 
     // Fetch Count
@@ -304,9 +304,9 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
 
     // Data Size
     s.Truncate();
-    PRUint32 dataSize;
+    uint32_t dataSize;
     descriptor->GetStorageDataSize(&dataSize);
-    s.AppendInt((PRInt32)dataSize);     // XXX nsICacheEntryInfo interfaces should be fixed.
+    s.AppendInt((int32_t)dataSize);     // XXX nsICacheEntryInfo interfaces should be fixed.
     APPEND_ROW("Data size", s);
 
     // Storage Policy
@@ -367,7 +367,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
         if (stream) {
             buffer.AssignLiteral("<hr/>\n"
                                  "<pre>");
-            PRUint32 hexDumpState = 0;
+            uint32_t hexDumpState = 0;
             char chunk[4096];
             while(NS_SUCCEEDED(stream->Read(chunk, sizeof(chunk), &n)) && 
                   n > 0) {
@@ -385,7 +385,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
 nsresult
 nsAboutCacheEntry::WriteCacheEntryUnavailable(nsIOutputStream *outputStream)
 {
-    PRUint32 n;
+    uint32_t n;
     NS_NAMED_LITERAL_CSTRING(buffer,
         "The cache entry you selected is not available.");
     outputStream->Write(buffer.get(), buffer.Length(), &n);

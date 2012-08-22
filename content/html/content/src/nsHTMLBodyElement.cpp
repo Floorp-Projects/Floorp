@@ -39,7 +39,7 @@ public:
   // nsIStyleRule interface
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 
   nsHTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
@@ -82,7 +82,7 @@ public:
 #undef FORWARDED_EVENT
 #undef EVENT
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -121,12 +121,12 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) || !mPart)
     return; // We only care about margins.
 
-  PRInt32 bodyMarginWidth  = -1;
-  PRInt32 bodyMarginHeight = -1;
-  PRInt32 bodyTopMargin = -1;
-  PRInt32 bodyBottomMargin = -1;
-  PRInt32 bodyLeftMargin = -1;
-  PRInt32 bodyRightMargin = -1;
+  int32_t bodyMarginWidth  = -1;
+  int32_t bodyMarginHeight = -1;
+  int32_t bodyTopMargin = -1;
+  int32_t bodyBottomMargin = -1;
+  int32_t bodyLeftMargin = -1;
+  int32_t bodyRightMargin = -1;
 
   // check the mode (fortunately, the ruleData has a presContext for us to use!)
   NS_ASSERTION(aData->mPresContext, "null presContext in ruleNode was unexpected");
@@ -252,7 +252,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
 
 #ifdef DEBUG
 /* virtual */ void
-BodyRule::List(FILE* out, PRInt32 aIndent) const
+BodyRule::List(FILE* out, int32_t aIndent) const
 {
 }
 #endif
@@ -301,7 +301,7 @@ NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Text, text)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, BgColor, bgcolor)
 
 bool
-nsHTMLBodyElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLBodyElement::ParseAttribute(int32_t aNamespaceID,
                                   nsIAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)

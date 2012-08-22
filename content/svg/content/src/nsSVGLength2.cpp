@@ -78,7 +78,7 @@ static nsSVGAttrTearoffTable<nsSVGLength2, nsIDOMSVGLength>
 /* Helper functions */
 
 static bool
-IsValidUnitType(PRUint16 unit)
+IsValidUnitType(uint16_t unit)
 {
   if (unit > nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN &&
       unit <= nsIDOMSVGLength::SVG_LENGTHTYPE_PC)
@@ -88,7 +88,7 @@ IsValidUnitType(PRUint16 unit)
 }
 
 static void
-GetUnitString(nsAString& unit, PRUint16 unitType)
+GetUnitString(nsAString& unit, uint16_t unitType)
 {
   if (IsValidUnitType(unitType)) {
     if (unitMap[unitType]) {
@@ -101,7 +101,7 @@ GetUnitString(nsAString& unit, PRUint16 unitType)
   return;
 }
 
-static PRUint16
+static uint16_t
 GetUnitTypeForString(const char* unitStr)
 {
   if (!unitStr || *unitStr == '\0') 
@@ -109,7 +109,7 @@ GetUnitTypeForString(const char* unitStr)
                    
   nsCOMPtr<nsIAtom> unitAtom = do_GetAtom(unitStr);
 
-  for (PRUint32 i = 0 ; i < ArrayLength(unitMap) ; i++) {
+  for (uint32_t i = 0 ; i < ArrayLength(unitMap) ; i++) {
     if (unitMap[i] && *unitMap[i] == unitAtom) {
       return i;
     }
@@ -119,7 +119,7 @@ GetUnitTypeForString(const char* unitStr)
 }
 
 static void
-GetValueString(nsAString &aValueAsString, float aValue, PRUint16 aUnitType)
+GetValueString(nsAString &aValueAsString, float aValue, uint16_t aUnitType)
 {
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
@@ -135,7 +135,7 @@ GetValueString(nsAString &aValueAsString, float aValue, PRUint16 aUnitType)
 static nsresult
 GetValueFromString(const nsAString &aValueAsString,
                    float *aValue,
-                   PRUint16 *aUnitType)
+                   uint16_t *aUnitType)
 {
   NS_ConvertUTF16toUTF8 value(aValueAsString);
   const char *str = value.get();
@@ -196,7 +196,7 @@ nsSVGLength2::GetAxisLength(nsIFrame *aNonSVGFrame) const
 
 float
 nsSVGLength2::GetUnitScaleFactor(nsSVGElement *aSVGElement,
-                                 PRUint8 aUnitType) const
+                                 uint8_t aUnitType) const
 {
   switch (aUnitType) {
   case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
@@ -212,7 +212,7 @@ nsSVGLength2::GetUnitScaleFactor(nsSVGElement *aSVGElement,
 }
 
 float
-nsSVGLength2::GetUnitScaleFactor(nsSVGSVGElement *aCtx, PRUint8 aUnitType) const
+nsSVGLength2::GetUnitScaleFactor(nsSVGSVGElement *aCtx, uint8_t aUnitType) const
 {
   switch (aUnitType) {
   case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
@@ -241,7 +241,7 @@ nsSVGLength2::GetUnitScaleFactor(nsSVGSVGElement *aCtx, PRUint8 aUnitType) const
 }
 
 float
-nsSVGLength2::GetUnitScaleFactor(nsIFrame *aFrame, PRUint8 aUnitType) const
+nsSVGLength2::GetUnitScaleFactor(nsIFrame *aFrame, uint8_t aUnitType) const
 {
   nsIContent* content = aFrame->GetContent();
   if (content->IsSVG())
@@ -300,13 +300,13 @@ nsSVGLength2::SetBaseValueInSpecifiedUnits(float aValue,
 }
 
 nsresult
-nsSVGLength2::ConvertToSpecifiedUnits(PRUint16 unitType,
+nsSVGLength2::ConvertToSpecifiedUnits(uint16_t unitType,
                                       nsSVGElement *aSVGElement)
 {
   if (!IsValidUnitType(unitType))
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
-  if (mIsBaseSet && mSpecifiedUnitType == PRUint8(unitType))
+  if (mIsBaseSet && mSpecifiedUnitType == uint8_t(unitType))
     return NS_OK;
 
   // Even though we're not changing the visual effect this length will have
@@ -317,7 +317,7 @@ nsSVGLength2::ConvertToSpecifiedUnits(PRUint16 unitType,
 
   float valueInUserUnits =
     mBaseVal / GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType);
-  mSpecifiedUnitType = PRUint8(unitType);
+  mSpecifiedUnitType = uint8_t(unitType);
   // Setting aDoSetAttr to false here will ensure we don't call
   // Will/DidChangeAngle a second time (and dispatch duplicate notifications).
   SetBaseValue(valueInUserUnits, aSVGElement, false);
@@ -328,7 +328,7 @@ nsSVGLength2::ConvertToSpecifiedUnits(PRUint16 unitType,
 }
 
 nsresult
-nsSVGLength2::NewValueSpecifiedUnits(PRUint16 unitType,
+nsSVGLength2::NewValueSpecifiedUnits(uint16_t unitType,
                                      float valueInSpecifiedUnits,
                                      nsSVGElement *aSVGElement)
 {
@@ -338,14 +338,14 @@ nsSVGLength2::NewValueSpecifiedUnits(PRUint16 unitType,
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
   if (mIsBaseSet && mBaseVal == valueInSpecifiedUnits &&
-      mSpecifiedUnitType == PRUint8(unitType)) {
+      mSpecifiedUnitType == uint8_t(unitType)) {
     return NS_OK;
   }
 
   nsAttrValue emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
   mBaseVal = valueInSpecifiedUnits;
   mIsBaseSet = true;
-  mSpecifiedUnitType = PRUint8(unitType);
+  mSpecifiedUnitType = uint8_t(unitType);
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
@@ -404,7 +404,7 @@ nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
                                  bool aDoSetAttr)
 {
   float value;
-  PRUint16 unitType;
+  uint16_t unitType;
 
   nsresult rv = GetValueFromString(aValueAsString, &value, &unitType);
   if (NS_FAILED(rv)) {
@@ -412,7 +412,7 @@ nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
   }
 
   if (mIsBaseSet && mBaseVal == value &&
-      mSpecifiedUnitType == PRUint8(unitType)) {
+      mSpecifiedUnitType == uint8_t(unitType)) {
     return NS_OK;
   }
 
@@ -422,7 +422,7 @@ nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
   }
   mBaseVal = value;
   mIsBaseSet = true;
-  mSpecifiedUnitType = PRUint8(unitType);
+  mSpecifiedUnitType = uint8_t(unitType);
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
@@ -511,7 +511,7 @@ nsSVGLength2::SMILLength::ValueFromString(const nsAString& aStr,
                                  bool& aPreventCachingOfSandwich) const
 {
   float value;
-  PRUint16 unitType;
+  uint16_t unitType;
   
   nsresult rv = GetValueFromString(aStr, &value, &unitType);
   if (NS_FAILED(rv)) {

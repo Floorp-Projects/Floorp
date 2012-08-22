@@ -58,12 +58,12 @@
 
       // This is the number of different "buckets" you'll need for
       // fixed size objects. In our example, this will be "1".
-      static const PRInt32 kNumBuckets
+      static const int32_t kNumBuckets
         = sizeof(kBucketSizes) / sizeof(size_t);
 
       // This is the intial size of the allocator, in bytes. We'll
       // assume that we want to start with space for 1024 Foo objects.
-      static const PRInt32 kInitialPoolSize = sizeof(Foo) * 1024;
+      static const int32_t kInitialPoolSize = sizeof(Foo) * 1024;
 
       // Initialize (or re-initialize) the pool
       pool.Init("TheFooPool", kBucketSizes, kNumBuckets, kInitialPoolSize);
@@ -145,9 +145,9 @@ public:
     nsresult
     Init(const char* aName,
          const size_t* aBucketSizes,
-         PRInt32 aNumBuckets,
-         PRInt32 aInitialSize,
-         PRInt32 aAlign = 0);
+         int32_t aNumBuckets,
+         int32_t aInitialSize,
+         int32_t aAlign = 0);
 
     /**
      * Allocate a block of memory 'aSize' bytes big.

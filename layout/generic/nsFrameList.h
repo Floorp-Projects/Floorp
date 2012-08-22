@@ -218,8 +218,8 @@ public:
     return mLastChild;
   }
 
-  nsIFrame* FrameAt(PRInt32 aIndex) const;
-  PRInt32 IndexOf(nsIFrame* aFrame) const;
+  nsIFrame* FrameAt(int32_t aIndex) const;
+  int32_t IndexOf(nsIFrame* aFrame) const;
 
   bool IsEmpty() const {
     return nullptr == mFirstChild;
@@ -231,7 +231,7 @@ public:
 
   bool ContainsFrame(const nsIFrame* aFrame) const;
 
-  PRInt32 GetLength() const;
+  int32_t GetLength() const;
 
   /**
    * If this frame list has only one frame, return that frame.

@@ -81,10 +81,10 @@ void  nsLatin1Prober::Reset(void)
 }
 
 
-nsProbingState nsLatin1Prober::HandleData(const char* aBuf, PRUint32 aLen)
+nsProbingState nsLatin1Prober::HandleData(const char* aBuf, uint32_t aLen)
 {
   char *newBuf1 = 0;
-  PRUint32 newLen1 = 0;
+  uint32_t newLen1 = 0;
 
   if (!FilterWithEnglishLetters(aBuf, aLen, &newBuf1, newLen1)) {
     newBuf1 = (char*)aBuf;
@@ -93,7 +93,7 @@ nsProbingState nsLatin1Prober::HandleData(const char* aBuf, PRUint32 aLen)
   
   unsigned char charClass;
   unsigned char freq;
-  for (PRUint32 i = 0; i < newLen1; i++)
+  for (uint32_t i = 0; i < newLen1; i++)
   {
     charClass = Latin1_CharToClass[(unsigned char)newBuf1[i]];
     freq = Latin1ClassModel[mLastCharClass*CLASS_NUM + charClass];
@@ -117,8 +117,8 @@ float nsLatin1Prober::GetConfidence(void)
     return 0.01f;
   
   float confidence;
-  PRUint32 total = 0;
-  for (PRInt32 i = 0; i < FREQ_CAT_NUM; i++)
+  uint32_t total = 0;
+  for (int32_t i = 0; i < FREQ_CAT_NUM; i++)
     total += mFreqCounter[i];
 
   if(!total)

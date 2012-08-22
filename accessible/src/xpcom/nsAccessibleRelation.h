@@ -23,7 +23,7 @@ class Relation;
 class nsAccessibleRelation MOZ_FINAL : public nsIAccessibleRelation
 {
 public:
-  nsAccessibleRelation(PRUint32 aType, Relation* aRel);
+  nsAccessibleRelation(uint32_t aType, Relation* aRel);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLERELATION
@@ -33,7 +33,7 @@ private:
   nsAccessibleRelation(const nsAccessibleRelation&);
   nsAccessibleRelation& operator = (const nsAccessibleRelation&);
   
-  PRUint32 mType;
+  uint32_t mType;
   nsCOMPtr<nsIMutableArray> mTargets;
 };
 

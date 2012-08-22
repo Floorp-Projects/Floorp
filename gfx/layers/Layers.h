@@ -40,7 +40,7 @@ struct PRLogModuleInfo;
 class gfxContext;
 class nsPaintEvent;
 
-extern PRUint8 gLayerManagerLayerBuilder;
+extern uint8_t gLayerManagerLayerBuilder;
 
 namespace mozilla {
 
@@ -399,7 +399,7 @@ public:
    * returns the maximum texture size on this layer backend, or PR_INT32_MAX
    * if there is no maximum
    */
-  virtual PRInt32 GetMaxTextureSize() const = 0;
+  virtual int32_t GetMaxTextureSize() const = 0;
 
   /**
    * Return the name of the layer manager's backend.
@@ -571,7 +571,7 @@ public:
    * visible region of the ThebesLayer. This enables internal quality
    * and performance optimizations.
    */
-  void SetContentFlags(PRUint32 aFlags)
+  void SetContentFlags(uint32_t aFlags)
   {
     NS_ASSERTION((aFlags & (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA)) !=
                  (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA),
@@ -754,7 +754,7 @@ public:
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nullptr; }
-  PRUint32 GetContentFlags() { return mContentFlags; }
+  uint32_t GetContentFlags() { return mContentFlags; }
   const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() { return mNextSibling; }
@@ -966,8 +966,8 @@ public:
   static bool IsLogEnabled() { return LayerManager::IsLogEnabled(); }
 
 #ifdef DEBUG
-  void SetDebugColorIndex(PRUint32 aIndex) { mDebugColorIndex = aIndex; }
-  PRUint32 GetDebugColorIndex() { return mDebugColorIndex; }
+  void SetDebugColorIndex(uint32_t aIndex) { mDebugColorIndex = aIndex; }
+  uint32_t GetDebugColorIndex() { return mDebugColorIndex; }
 #endif
 
 protected:
@@ -1026,12 +1026,12 @@ protected:
   float mOpacity;
   nsIntRect mClipRect;
   nsIntRect mTileSourceRect;
-  PRUint32 mContentFlags;
+  uint32_t mContentFlags;
   bool mUseClipRect;
   bool mUseTileSourceRect;
   bool mIsFixedPosition;
   gfxPoint mAnchor;
-  DebugOnly<PRUint32> mDebugColorIndex;
+  DebugOnly<uint32_t> mDebugColorIndex;
 };
 
 /**

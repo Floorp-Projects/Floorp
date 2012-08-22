@@ -341,7 +341,7 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
     nsCOMPtr<nsISupports> cont = aPresShell->GetPresContext()->GetContainer();
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
     if (dsti) {
-      PRInt32 type = -1;
+      int32_t type = -1;
       isChromeShell = (NS_SUCCEEDED(dsti->GetItemType(&type)) &&
                        type == nsIDocShellTreeItem::typeChrome);
     }
@@ -382,11 +382,11 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
 }
 
 void
-nsResizerFrame::AdjustDimensions(PRInt32* aPos, PRInt32* aSize,
-                                 PRInt32 aMinSize, PRInt32 aMaxSize,
-                                 PRInt32 aMovement, PRInt8 aResizerDirection)
+nsResizerFrame::AdjustDimensions(int32_t* aPos, int32_t* aSize,
+                                 int32_t aMinSize, int32_t aMaxSize,
+                                 int32_t aMovement, int8_t aResizerDirection)
 {
-  PRInt32 oldSize = *aSize;
+  int32_t oldSize = *aSize;
 
   *aSize += aResizerDirection * aMovement;
   // use one as a minimum size or the element could disappear
@@ -520,7 +520,7 @@ nsResizerFrame::GetDirection()
   if (!GetContent())
     return directions[0]; // default: topleft
 
-  PRInt32 index = GetContent()->FindAttrValueIn(kNameSpaceID_None,
+  int32_t index = GetContent()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsGkAtoms::dir,
                                                 strings, eCaseMatters);
   if(index < 0)

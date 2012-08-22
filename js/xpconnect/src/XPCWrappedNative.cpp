@@ -489,7 +489,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // of that class.
     bool iidIsClassInfo = Interface &&
                           Interface->GetIID()->Equals(NS_GET_IID(nsIClassInfo));
-    PRUint32 classInfoFlags;
+    uint32_t classInfoFlags;
     bool isClassInfoSingleton = helper.GetClassInfo() == helper.Object() &&
                                 NS_SUCCEEDED(helper.GetClassInfo()
                                                    ->GetFlags(&classInfoFlags)) &&
@@ -1106,7 +1106,7 @@ XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
 }
 
 #ifdef DEBUG_slimwrappers
-static PRUint32 sMorphedSlimWrappers;
+static uint32_t sMorphedSlimWrappers;
 #endif
 
 JSBool
@@ -1354,7 +1354,7 @@ XPCWrappedNative::SystemIsBeingShutDown()
     {
         printf("Removing root for still-live XPCWrappedNative %p wrapping:\n",
                static_cast<void*>(this));
-        for (PRUint16 i = 0, i_end = mSet->GetInterfaceCount(); i < i_end; ++i) {
+        for (uint16_t i = 0, i_end = mSet->GetInterfaceCount(); i < i_end; ++i) {
             nsXPIDLCString name;
             mSet->GetInterfaceAt(i)->GetInterfaceInfo()
                 ->GetName(getter_Copies(name));
@@ -2286,7 +2286,7 @@ class CallMethodHelper
     uint8_t mOptArgcIndex; // TODO make const
 
     jsval* const mArgv;
-    const PRUint32 mArgc;
+    const uint32_t mArgc;
 
     JS_ALWAYS_INLINE JSBool
     GetArraySizeFromParam(uint8_t paramIndex, uint32_t* result) const;
@@ -2382,8 +2382,8 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
     // set up the method index and do the security check if needed
 
-    PRUint32 secFlag;
-    PRUint32 secAction;
+    uint32_t secFlag;
+    uint32_t secAction;
 
     switch (mode) {
         case CALL_METHOD:
@@ -2786,7 +2786,7 @@ CallMethodHelper::InitializeDispatchParams()
     if (wantsOptArgc) {
         nsXPTCVariant* dp = &mDispatchParams[mOptArgcIndex];
         dp->type = nsXPTType::T_U8;
-        dp->val.u8 = NS_MIN<PRUint32>(mArgc, paramCount) - requiredArgs;
+        dp->val.u8 = NS_MIN<uint32_t>(mArgc, paramCount) - requiredArgs;
     }
 
     return true;
@@ -3112,7 +3112,7 @@ CallMethodHelper::HandleDipperParam(nsXPTCVariant* dp,
 nsresult
 CallMethodHelper::Invoke()
 {
-    PRUint32 argc = mDispatchParams.Length();
+    uint32_t argc = mDispatchParams.Length();
     nsXPTCVariant* argv = mDispatchParams.Elements();
 
     return NS_InvokeByIndex(mCallee, mVTableIndex, argc, argv);
@@ -3242,7 +3242,7 @@ NS_IMETHODIMP XPCWrappedNative::GetSecurityInfoAddress(void*** securityInfoAddrP
 }
 
 /* void debugDump (in short depth); */
-NS_IMETHODIMP XPCWrappedNative::DebugDump(PRInt16 depth)
+NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
     depth-- ;
@@ -3270,7 +3270,7 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(PRInt16 depth)
         if (depth && mScriptableInfo) {
             XPC_LOG_INDENT();
             XPC_LOG_ALWAYS(("mScriptable @ %x", mScriptableInfo->GetCallback()));
-            XPC_LOG_ALWAYS(("mFlags of %x", (PRUint32)mScriptableInfo->GetFlags()));
+            XPC_LOG_ALWAYS(("mFlags of %x", (uint32_t)mScriptableInfo->GetFlags()));
             XPC_LOG_ALWAYS(("mJSClass @ %x", mScriptableInfo->GetJSClass()));
             XPC_LOG_OUTDENT();
         }
@@ -3308,7 +3308,7 @@ XPCWrappedNative::ToString(XPCCallContext& ccx,
     } else if (!name) {
         XPCNativeSet* set = GetSet();
         XPCNativeInterface** array = set->GetInterfaceArray();
-        PRUint16 count = set->GetInterfaceCount();
+        uint16_t count = set->GetInterfaceCount();
 
         if (count == 1)
             name = JS_sprintf_append(name, "%s", array[0]->GetNameString());
@@ -3316,7 +3316,7 @@ XPCWrappedNative::ToString(XPCCallContext& ccx,
                  array[0] == XPCNativeInterface::GetISupports(ccx)) {
             name = JS_sprintf_append(name, "%s", array[1]->GetNameString());
         } else {
-            for (PRUint16 i = 0; i < count; i++) {
+            for (uint16_t i = 0; i < count; i++) {
                 const char* fmt = (i == 0) ?
                                     "(%s" : (i == count-1) ?
                                         ", %s)" : ", %s";
@@ -3355,8 +3355,8 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper)
 
     nsISupports* obj = wrapper->GetIdentityObject();
     XPCNativeSet* set = wrapper->GetSet();
-    PRUint16 count = set->GetInterfaceCount();
-    for (PRUint16 i = 0; i < count; i++) {
+    uint16_t count = set->GetInterfaceCount();
+    for (uint16_t i = 0; i < count; i++) {
         nsIClassInfo* clsInfo = wrapper->GetClassInfo();
         XPCNativeInterface* iface = set->GetInterfaceAt(i);
         nsIInterfaceInfo* info = iface->GetInterfaceInfo();
@@ -3443,8 +3443,8 @@ static void DEBUG_PrintShadowObjectInfo(const char* header,
 
     printf("   claims to implement interfaces:\n");
 
-    PRUint16 count = set->GetInterfaceCount();
-    for (PRUint16 i = 0; i < count; i++) {
+    uint16_t count = set->GetInterfaceCount();
+    for (uint16_t i = 0; i < count; i++) {
         XPCNativeInterface* iface = set->GetInterfaceAt(i);
         nsIInterfaceInfo* info = iface->GetInterfaceInfo();
         const char* interfaceName;
@@ -3510,9 +3510,9 @@ static JSBool InterfacesAreRelated(XPCNativeInterface* iface1,
 }
 
 static JSBool MembersAreTheSame(XPCNativeInterface* iface1,
-                                PRUint16 memberIndex1,
+                                uint16_t memberIndex1,
                                 XPCNativeInterface* iface2,
-                                PRUint16 memberIndex2)
+                                uint16_t memberIndex2)
 {
     nsIInterfaceInfo* info1 = iface1->GetInterfaceInfo();
     nsIInterfaceInfo* info2 = iface2->GetInterfaceInfo();
@@ -3520,8 +3520,8 @@ static JSBool MembersAreTheSame(XPCNativeInterface* iface1,
     XPCNativeMember* member1 = iface1->GetMemberAt(memberIndex1);
     XPCNativeMember* member2 = iface2->GetMemberAt(memberIndex2);
 
-    PRUint16 index1 = member1->GetIndex();
-    PRUint16 index2 = member2->GetIndex();
+    uint16_t index1 = member1->GetIndex();
+    uint16_t index2 = member2->GetIndex();
 
     // If they are both constants, then we'll just be sure that they are equivalent.
 
@@ -3632,8 +3632,8 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
 
     jsval QIName = rt->GetStringJSVal(XPCJSRuntime::IDX_QUERY_INTERFACE);
 
-    PRUint16 ifaceCount = set->GetInterfaceCount();
-    PRUint16 i, j, k, m;
+    uint16_t ifaceCount = set->GetInterfaceCount();
+    uint16_t i, j, k, m;
 
     // First look for duplicate interface entries
 
@@ -3654,7 +3654,7 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
         XPCNativeInterface* ifaceOuter = set->GetInterfaceAt(i);
         jsval ifaceOuterName = ifaceOuter->GetName();
 
-        PRUint16 memberCountOuter = ifaceOuter->GetMemberCount();
+        uint16_t memberCountOuter = ifaceOuter->GetMemberCount();
         for (j = 0; j < memberCountOuter; j++) {
             XPCNativeMember* memberOuter = ifaceOuter->GetMemberAt(j);
             jsval memberOuterName = memberOuter->GetName();
@@ -3681,7 +3681,7 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
                                   ifaceOuterName, memberOuterName);
                 }
 
-                PRUint16 memberCountInner = ifaceInner->GetMemberCount();
+                uint16_t memberCountInner = ifaceInner->GetMemberCount();
 
                 for (m = 0; m < memberCountInner; m++) {
                     XPCNativeMember* memberInner = ifaceInner->GetMemberAt(m);
@@ -3771,7 +3771,7 @@ MorphSlimWrapper(JSContext *cx, JSObject *obj)
 }
 
 #ifdef DEBUG_slimwrappers
-static PRUint32 sSlimWrappers;
+static uint32_t sSlimWrappers;
 #endif
 
 JSBool
@@ -3836,7 +3836,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
         return true;
     }
 
-    PRUint32 interfacesBitmap = classInfoHelper->GetInterfacesBitmap();
+    uint32_t interfacesBitmap = classInfoHelper->GetInterfacesBitmap();
     XPCNativeScriptableCreateInfo
         sciProto(aHelper.forgetXPCClassInfo(), flags, interfacesBitmap);
 

@@ -177,7 +177,7 @@ LookupCache::Build(AddPrefixArray& aAddPrefixes,
                    AddCompleteArray& aAddCompletes)
 {
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_COMPLETIONS,
-                        static_cast<PRUint32>(aAddCompletes.Length()));
+                        static_cast<uint32_t>(aAddCompletes.Length()));
 
   mCompletions.Clear();
   mCompletions.SetCapacity(aAddCompletes.Length());
@@ -188,7 +188,7 @@ LookupCache::Build(AddPrefixArray& aAddPrefixes,
   mCompletions.Sort();
 
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_PREFIXES,
-                        static_cast<PRUint32>(aAddPrefixes.Length()));
+                        static_cast<uint32_t>(aAddPrefixes.Length()));
 
   nsresult rv = ConstructPrefixSet(aAddPrefixes);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -215,7 +215,7 @@ LookupCache::Dump()
 nsresult
 LookupCache::Has(const Completion& aCompletion,
                  const Completion& aHostkey,
-                 const PRUint32 aHashKey,
+                 const uint32_t aHashKey,
                  bool* aHas, bool* aComplete,
                  Prefix* aOrigPrefix)
 {
@@ -229,9 +229,9 @@ LookupCache::Has(const Completion& aCompletion,
     return NS_OK;
   }
 
-  PRUint32 prefix = aCompletion.ToUint32();
-  PRUint32 hostkey = aHostkey.ToUint32();
-  PRUint32 codedkey;
+  uint32_t prefix = aCompletion.ToUint32();
+  uint32_t hostkey = aHostkey.ToUint32();
+  uint32_t codedkey;
   nsresult rv = KeyedHash(prefix, hostkey, aHashKey, &codedkey, !mPerClientRandomize);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -276,7 +276,7 @@ LookupCache::WriteFile()
   UpdateHeader();
   LOG(("Writing %d completions", mHeader.numCompletions));
 
-  PRUint32 written;
+  uint32_t written;
   rv = out->Write(reinterpret_cast<char*>(&mHeader), sizeof(mHeader), &written);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -333,7 +333,7 @@ LookupCache::EnsureSizeConsistent()
   rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(CACHE_SUFFIX));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt64 fileSize;
+  int64_t fileSize;
   rv = storeFile->GetFileSize(&fileSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -341,7 +341,7 @@ LookupCache::EnsureSizeConsistent()
     return NS_ERROR_FAILURE;
   }
 
-  PRInt64 expectedSize = sizeof(mHeader)
+  int64_t expectedSize = sizeof(mHeader)
                         + mHeader.numCompletions*sizeof(Completion);
   if (expectedSize != fileSize) {
     NS_WARNING("File length does not match. Probably corrupted.");
@@ -409,7 +409,7 @@ LookupCache::IsCanonicalizedIP(const nsACString& aHost)
 {
   // The canonicalization process will have left IP addresses in dotted
   // decimal with no surprises.
-  PRUint32 i1, i2, i3, i4;
+  uint32_t i1, i2, i3, i4;
   char c;
   if (PR_sscanf(PromiseFlatCString(aHost).get(), "%u.%u.%u.%u%c",
                 &i1, &i2, &i3, &i4, &c) == 4) {
@@ -448,7 +448,7 @@ LookupCache::GetKey(const nsACString& aSpec,
   if (hostComponents.Length() < 2)
     return NS_ERROR_FAILURE;
 
-  PRInt32 last = PRInt32(hostComponents.Length()) - 1;
+  int32_t last = int32_t(hostComponents.Length()) - 1;
   nsCAutoString lookupHost;
 
   if (hostComponents.Length() > 2) {
@@ -553,8 +553,8 @@ LookupCache::GetLookupFragments(const nsACString& aSpec,
   // Check an empty path (for whole-domain blacklist entries)
   paths.AppendElement(EmptyCString());
 
-  for (PRUint32 hostIndex = 0; hostIndex < hosts.Length(); hostIndex++) {
-    for (PRUint32 pathIndex = 0; pathIndex < paths.Length(); pathIndex++) {
+  for (uint32_t hostIndex = 0; hostIndex < hosts.Length(); hostIndex++) {
+    for (uint32_t pathIndex = 0; pathIndex < paths.Length(); pathIndex++) {
       nsCString key;
       key.Assign(hosts[hostIndex]);
       key.Append('/');
@@ -602,7 +602,7 @@ LookupCache::GetHostKeys(const nsACString& aSpec,
   }
 
   // First check with two domain components
-  PRInt32 last = PRInt32(hostComponents.Length()) - 1;
+  int32_t last = int32_t(hostComponents.Length()) - 1;
   nsCString *lookupHost = aHostKeys->AppendElement();
   if (!lookupHost)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -630,8 +630,8 @@ LookupCache::GetHostKeys(const nsACString& aSpec,
    ensuring any collisions happens at a different points for
    different users.
 */
-/* static */ nsresult LookupCache::KeyedHash(PRUint32 aPref, PRUint32 aHostKey,
-                                             PRUint32 aUserKey, PRUint32* aOut,
+/* static */ nsresult LookupCache::KeyedHash(uint32_t aPref, uint32_t aHostKey,
+                                             uint32_t aUserKey, uint32_t* aOut,
                                              bool aPassthrough)
 {
   /* Do not do any processing in passthrough mode. */
@@ -645,19 +645,19 @@ LookupCache::GetHostKeys(const nsACString& aSpec,
      http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
      for nblocks = 2
   */
-  PRUint32 c1 = 0xCC9E2D51;
-  PRUint32 c2 = 0x1B873593;
-  PRUint32 c3 = 0xE6546B64;
-  PRUint32 c4 = 0x85EBCA6B;
-  PRUint32 c5 = 0xC2B2AE35;
-  PRUint32 h1 = aPref; // seed
-  PRUint32 k1;
-  PRUint32 karr[2];
+  uint32_t c1 = 0xCC9E2D51;
+  uint32_t c2 = 0x1B873593;
+  uint32_t c3 = 0xE6546B64;
+  uint32_t c4 = 0x85EBCA6B;
+  uint32_t c5 = 0xC2B2AE35;
+  uint32_t h1 = aPref; // seed
+  uint32_t k1;
+  uint32_t karr[2];
 
   karr[0] = aHostKey;
   karr[1] = aUserKey;
 
-  for (PRUint32 i = 0; i < 2; i++) {
+  for (uint32_t i = 0; i < 2; i++) {
     k1 = karr[i];
     k1 *= c1;
     k1 = (k1 << 15) | (k1 >> (32-15));
@@ -712,7 +712,7 @@ LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_CONSTRUCT_TIME> timer;
 
-  nsTArray<PRUint32> array;
+  nsTArray<uint32_t> array;
   array.SetCapacity(aAddPrefixes.Length());
 
   for (uint32 i = 0; i < aAddPrefixes.Length(); i++) {
@@ -732,7 +732,7 @@ LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
   }
 
 #ifdef DEBUG
-  PRUint32 size;
+  uint32_t size;
   size = mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
   LOG(("SB tree done, size = %d bytes\n", size));
 #endif
@@ -772,7 +772,7 @@ LookupCache::LoadPrefixSet()
 
 #ifdef DEBUG
   if (mPrimed) {
-    PRUint32 size = mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
+    uint32_t size = mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
     LOG(("SB tree done, size = %d bytes\n", size));
   }
 #endif
@@ -781,15 +781,15 @@ LookupCache::LoadPrefixSet()
 }
 
 nsresult
-LookupCache::GetPrefixes(nsTArray<PRUint32>* aAddPrefixes)
+LookupCache::GetPrefixes(nsTArray<uint32_t>* aAddPrefixes)
 {
   if (!mPrimed) {
     // This can happen if its a new table, so no error.
     LOG(("GetPrefixes from empty LookupCache"));
     return NS_OK;
   }
-  PRUint32 cnt;
-  PRUint32 *arr;
+  uint32_t cnt;
+  uint32_t *arr;
   nsresult rv = mPrefixSet->GetPrefixes(&cnt, &arr);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!aAddPrefixes->AppendElements(arr, cnt))
