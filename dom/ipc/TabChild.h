@@ -190,6 +190,7 @@ public:
     virtual bool RecvRealKeyEvent(const nsKeyEvent& event);
     virtual bool RecvMouseWheelEvent(const mozilla::widget::WheelEvent& event);
     virtual bool RecvRealTouchEvent(const nsTouchEvent& event);
+    virtual bool RecvRealTouchMoveEvent(const nsTouchEvent& event);
     virtual bool RecvKeyEvent(const nsString& aType,
                               const int32_t&  aKeyCode,
                               const int32_t&  aCharCode,
