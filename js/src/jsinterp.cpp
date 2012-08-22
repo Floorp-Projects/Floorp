@@ -2307,7 +2307,7 @@ BEGIN_CASE(JSOP_SETNAME)
 
     HandleValue value = HandleValue::fromMarkedLocation(&regs.sp[-1]);
 
-    if (!SetNameOperation(cx, regs.pc, scope, value))
+    if (!SetNameOperation(cx, script, regs.pc, scope, value))
         goto error;
 
     regs.sp[-2] = regs.sp[-1];
