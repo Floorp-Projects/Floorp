@@ -3351,7 +3351,7 @@ BeginMarkPhase(JSRuntime *rt)
     if (rt->gcIsIncremental) {
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_DISCARD_CODE);
-            c->discardJitCode(rt->defaultFreeOp());
+            c->discardJitCode(rt->defaultFreeOp(), false);
         }
     }
 
