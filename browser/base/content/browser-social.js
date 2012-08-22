@@ -282,14 +282,6 @@ var SocialToolbar = {
   init: function SocialToolbar_init() {
     document.getElementById("social-provider-image").setAttribute("image", Social.provider.iconURL);
 
-    let removeItem = document.getElementById("social-remove-menuitem");
-    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
-    let label = gNavigatorBundle.getFormattedString("social.remove.label",
-                                                    [brandShortName]);
-    let accesskey = gNavigatorBundle.getString("social.remove.accesskey");
-    removeItem.setAttribute("label", label);
-    removeItem.setAttribute("accesskey", accesskey);
-
     let statusAreaPopup = document.getElementById("social-statusarea-popup");
     statusAreaPopup.addEventListener("popupshown", function(e) {
       this.button.setAttribute("open", "true");
