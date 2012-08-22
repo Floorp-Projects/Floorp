@@ -757,16 +757,9 @@ ContentChild::AddRemoteAlertObserver(const nsString& aData,
 }
 
 bool
-ContentChild::RecvPreferenceUpdate(const PrefTuple& aPref)
+ContentChild::RecvPreferenceUpdate(const PrefSetting& aPref)
 {
-    Preferences::SetPreference(&aPref);
-    return true;
-}
-
-bool
-ContentChild::RecvClearUserPreference(const nsCString& aPrefName)
-{
-    Preferences::ClearContentPref(aPrefName.get());
+    Preferences::SetPreference(aPref);
     return true;
 }
 
