@@ -13,7 +13,7 @@
 #include "nsISeekableStream.h"
 #include "nsIStreamBufferAccess.h"
 #include "nsCOMPtr.h"
-#include "nsIIPCSerializableObsolete.h"
+#include "nsIIPCSerializableInputStream.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,14 +60,14 @@ protected:
 class nsBufferedInputStream : public nsBufferedStream,
                               public nsIBufferedInputStream,
                               public nsIStreamBufferAccess,
-                              public nsIIPCSerializableObsolete
+                              public nsIIPCSerializableInputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIBUFFEREDINPUTSTREAM
     NS_DECL_NSISTREAMBUFFERACCESS
-    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
+    NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
     nsBufferedInputStream() : nsBufferedStream() {}
     virtual ~nsBufferedInputStream() {}

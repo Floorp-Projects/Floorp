@@ -39,7 +39,7 @@ class WebSocketChannelParent : public PWebSocketParent,
   bool RecvClose(const uint16_t & code, const nsCString & reason);
   bool RecvSendMsg(const nsCString& aMsg);
   bool RecvSendBinaryMsg(const nsCString& aMsg);
-  bool RecvSendBinaryStream(const InputStream& aStream,
+  bool RecvSendBinaryStream(const InputStreamParams& aStream,
                             const uint32_t& aLength);
   bool RecvDeleteSelf();
 

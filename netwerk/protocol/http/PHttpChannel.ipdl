@@ -11,12 +11,13 @@ include "mozilla/net/PHttpChannelParams.h";
 include "mozilla/net/NeckoMessageUtils.h";
 include "prio.h";
 
+include IPCSerializableParams;
+
 using RequestHeaderTuples;
 using nsHttpHeaderArray;
 using nsHttpResponseHead;
 using nsHttpAtom;
 using IPC::URI;
-using IPC::InputStream;
 using IPC::SerializedLoadContext;
 using PRNetAddr;
 
@@ -39,7 +40,7 @@ parent:
             uint32_t            loadFlags,
             RequestHeaderTuples requestHeaders,
             nsHttpAtom          requestMethod,
-            InputStream         uploadStream,
+            OptionalInputStreamParams uploadStream,
             bool                uploadStreamHasHeaders,
             uint16_t            priority,
             uint8_t             redirectionLimit,
