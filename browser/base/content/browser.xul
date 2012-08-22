@@ -674,8 +674,6 @@
                           oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();"/>
                 </vbox>
               </hbox>
-              <menuitem id="social-remove-menuitem"
-                        oncommand="Social.active = false;"/>
               <menuitem id="social-toggle-sidebar-menuitem"
                         type="checkbox"
                         autocheck="false"
