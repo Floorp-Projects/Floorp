@@ -132,7 +132,7 @@ public:
    * If a displacement will overscroll the axis, this returns the amount and in
    * what direction. Similar to getExcess() but takes a displacement to apply.
    */
-  float DisplacementWillOverscrollAmount(PRInt32 aDisplacement);
+  float DisplacementWillOverscrollAmount(int32_t aDisplacement);
 
   /**
    * Gets the overscroll state of the axis given a scaling of the page. That is
@@ -153,7 +153,7 @@ public:
    * scroll offset in such a way that it remains in the same place on the page
    * relative.
    */
-  float ScaleWillOverscrollAmount(float aScale, PRInt32 aFocus);
+  float ScaleWillOverscrollAmount(float aScale, int32_t aFocus);
 
   /**
    * Checks if an axis will overscroll in both directions by computing the
