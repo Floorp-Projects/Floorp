@@ -29,6 +29,7 @@
     _(CheckOverRecursed)            \
     _(RecompileCheck)               \
     _(DefVar)                       \
+    _(CallKnown)                    \
     _(CallGeneric)                  \
     _(CallNative)                   \
     _(CallConstructor)              \

@@ -471,7 +471,7 @@ CodeGenerator::visitMonitorTypes(LMonitorTypes *lir)
 bool
 CodeGenerator::visitCallNative(LCallNative *call)
 {
-    JSFunction *target = call->function();
+    JSFunction *target = call->getSingleTarget();
     JS_ASSERT(target);
     JS_ASSERT(target->isNative());
 
@@ -554,7 +554,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
 bool
 CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
 {
-    JSFunction *target = call->func();
+    JSFunction *target = call->getSingleTarget();
     JS_ASSERT(target);
     JS_ASSERT(target->isNative());
     JS_ASSERT(target->jitInfo());
@@ -654,7 +654,8 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
 
 
 bool
-CodeGenerator::emitCallInvokeFunction(LCallGeneric *call, uint32 unusedStack)
+CodeGenerator::emitCallInvokeFunction(LInstruction *call, Register calleereg,
+                                      uint32 argc, uint32 unusedStack)
 {
     typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
     static const VMFunction InvokeFunctionInfo = FunctionInfo<pf>(InvokeFunction);
@@ -663,52 +664,129 @@ CodeGenerator::emitCallInvokeFunction(LCallGeneric *call, uint32 unusedStack)
     // Each path must account for framePushed_ separately, for callVM to be valid.
     masm.freeStack(unusedStack);
 
-    pushArg(StackPointer);                    // argv.
-    pushArg(Imm32(call->numActualArgs()));    // argc.
-    pushArg(ToRegister(call->getFunction())); // JSFunction *.
+    pushArg(StackPointer); // argv.
+    pushArg(Imm32(argc));  // argc.
+    pushArg(calleereg);    // JSFunction *.
 
     if (!callVM(InvokeFunctionInfo, call))
         return false;
 
     // Un-nestle %esp from the argument vector. No prefix was pushed.
     masm.reserveStack(unusedStack);
-
     return true;
 }
 
 bool
 CodeGenerator::visitCallGeneric(LCallGeneric *call)
 {
-    // Holds the function object.
-    const LAllocation *callee = call->getFunction();
-    Register calleereg = ToRegister(callee);
+    Register calleereg = ToRegister(call->getFunction());
+    Register objreg    = ToRegister(call->getTempObject());
+    Register nargsreg  = ToRegister(call->getNargsReg());
+    uint32 unusedStack = StackOffsetOfPassedArg(call->argslot());
+    Label invoke, thunk, makeCall, end;
 
-    // Temporary register for modifying the function object.
-    const LAllocation *obj = call->getTempObject();
-    Register objreg = ToRegister(obj);
+    // Known-target case is handled by LCallKnown.
+    JS_ASSERT(!call->hasSingleTarget());
+    // Unknown constructor case is handled by LCallConstructor.
+    JS_ASSERT(!call->mir()->isConstructing());
 
-    // Holds the function nargs. Initially undefined.
-    const LAllocation *nargs = call->getNargsReg();
-    Register nargsreg = ToRegister(nargs);
-
-    uint32 callargslot = call->argslot();
-    uint32 unusedStack = StackOffsetOfPassedArg(callargslot);
+    // Generate an ArgumentsRectifier.
+    IonCompartment *ion = gen->ionCompartment();
+    IonCode *argumentsRectifier = ion->getArgumentsRectifier(GetIonContext()->cx);
+    if (!argumentsRectifier)
+        return false;
 
     masm.checkStackAlignment();
 
-    // Unless already known, guard that calleereg is actually a function object.
-    if (!call->hasSingleTarget()) {
-        masm.loadObjClass(calleereg, nargsreg);
-        masm.cmpPtr(nargsreg, ImmWord(&js::FunctionClass));
-        if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
-            return false;
+    // Guard that calleereg is actually a function object.
+    masm.loadObjClass(calleereg, nargsreg);
+    masm.cmpPtr(nargsreg, ImmWord(&js::FunctionClass));
+    if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
+        return false;
+
+    // Guard that calleereg is a non-native function:
+    // Non-native iff (callee->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
+    // This is equivalent to testing if any of the bits in JSFUN_KINDMASK are set.
+    Address flags(calleereg, offsetof(JSFunction, flags));
+    masm.load16ZeroExtend_mask(flags, Imm32(JSFUN_INTERPRETED), nargsreg);
+    masm.branch32(Assembler::NotEqual, nargsreg, Imm32(JSFUN_INTERPRETED), &invoke);
+
+    // Knowing that calleereg is a non-native function, load the JSScript.
+    masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
+    masm.movePtr(Address(objreg, offsetof(JSScript, ion)), objreg);
+
+    // Guard that the IonScript has been compiled.
+    masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
+
+    // Nestle the StackPointer up to the argument vector.
+    masm.freeStack(unusedStack);
+
+    // Construct the IonFramePrefix.
+    uint32 descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_JS);
+    masm.Push(Imm32(call->numActualArgs()));
+    masm.Push(calleereg);
+    masm.Push(Imm32(descriptor));
+
+    // Check whether the provided arguments satisfy target argc.
+    masm.load16ZeroExtend(Address(calleereg, offsetof(JSFunction, nargs)), nargsreg);
+    masm.cmp32(nargsreg, Imm32(call->numStackArgs()));
+    masm.j(Assembler::Above, &thunk);
+
+    // No argument fixup needed. Load the start of the target IonCode.
+    masm.movePtr(Address(objreg, offsetof(IonScript, method_)), objreg);
+    masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
+    masm.jump(&makeCall);
+
+    // Argument fixed needed. Load the ArgumentsRectifier.
+    masm.bind(&thunk);
+    {
+        JS_ASSERT(ArgumentsRectifierReg != objreg);
+        masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
+        masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
+        masm.move32(Imm32(call->numStackArgs()), ArgumentsRectifierReg);
     }
 
+    // Finally call the function in objreg.
+    masm.bind(&makeCall);
+    masm.callIon(objreg);
+    if (!markSafepoint(call))
+        return false;
+
+    // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
+    // The return address has already been removed from the Ion frame.
+    int prefixGarbage = sizeof(IonJSFrameLayout) - sizeof(void *);
+    masm.adjustStack(prefixGarbage - unusedStack);
+    masm.jump(&end);
+
+    // Handle uncompiled or native functions.
+    masm.bind(&invoke);
+    if (!emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack))
+        return false;
+
+    masm.bind(&end);
+    dropArguments(call->numStackArgs() + 1);
+    return true;
+}
+
+bool
+CodeGenerator::visitCallKnown(LCallKnown *call)
+{
+    Register calleereg = ToRegister(call->getFunction());
+    Register objreg    = ToRegister(call->getTempObject());
+    uint32 unusedStack = StackOffsetOfPassedArg(call->argslot());
+    JSFunction *target = call->getSingleTarget();
+    Label end, invoke;
+
+    // Native single targets are handled by LCallNative.
+    JS_ASSERT(!target->isNative());
+    // Missing arguments must have been explicitly appended by the IonBuilder.
+    JS_ASSERT(target->nargs <= call->numStackArgs());
+
+    masm.checkStackAlignment();
+
     // If the function is known to be uncompilable, only emit the call to InvokeFunction.
-    if (call->hasSingleTarget() &&
-        call->getSingleTarget()->script()->ion == ION_DISABLED_SCRIPT)
-    {
-        if (!emitCallInvokeFunction(call, unusedStack))
+    if (target->script()->ion == ION_DISABLED_SCRIPT) {
+        if (!emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack))
             return false;
 
         if (call->mir()->isConstructing()) {
@@ -722,21 +800,6 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         return true;
     }
 
-    Label end, invoke;
-
-    // Guard that calleereg is a non-native function:
-    // Non-native iff (callee->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
-    // This is equivalent to testing if any of the bits in JSFUN_KINDMASK are set.
-    if (!call->hasSingleTarget()) {
-        Address flags(calleereg, offsetof(JSFunction, flags));
-        masm.load16ZeroExtend_mask(flags, Imm32(JSFUN_INTERPRETED), nargsreg);
-        masm.branch32(Assembler::NotEqual, nargsreg, Imm32(JSFUN_INTERPRETED), &invoke);
-    } else {
-        // Native single targets are handled by LCallNative.
-        JS_ASSERT(!call->getSingleTarget()->isNative());
-    }
-
-
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
     masm.movePtr(Address(objreg, offsetof(JSScript, ion)), objreg);
@@ -744,7 +807,11 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     // Guard that the IonScript has been compiled.
     masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
 
-    // Nestle %esp up to the argument vector.
+    // Load the start of the target IonCode.
+    masm.movePtr(Address(objreg, offsetof(IonScript, method_)), objreg);
+    masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
+
+    // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
 
     // Construct the IonFramePrefix.
@@ -753,65 +820,20 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.Push(calleereg);
     masm.Push(Imm32(descriptor));
 
-    Label thunk, rejoin;
-
-    if (call->hasSingleTarget()) {
-        // Missing arguments must have been explicitly appended by the IonBuilder.
-        JS_ASSERT(call->getSingleTarget()->nargs <= call->numStackArgs());
-    } else {
-        // Check whether the provided arguments satisfy target argc.
-        masm.load16ZeroExtend(Address(calleereg, offsetof(JSFunction, nargs)), nargsreg);
-        masm.cmp32(nargsreg, Imm32(call->numStackArgs()));
-        masm.j(Assembler::Above, &thunk);
-    }
-
-    // No argument fixup needed. Load the start of the target IonCode.
-    {
-        masm.movePtr(Address(objreg, offsetof(IonScript, method_)), objreg);
-        masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
-    }
-
-    Label afterCall;
-
-    // Argument fixup needed. Get ready to call the argumentsRectifier.
-    if (!call->hasSingleTarget()) {
-        // Skip this thunk unless an explicit jump target.
-        masm.jump(&rejoin);
-        masm.bind(&thunk);
-
-        // Hardcode the address of the argumentsRectifier code.
-        IonCompartment *ion = gen->ionCompartment();
-        IonCode *argumentsRectifier = ion->getArgumentsRectifier(GetIonContext()->cx);
-        if (!argumentsRectifier)
-            return false;
-
-        JS_ASSERT(ArgumentsRectifierReg != objreg);
-        masm.move32(Imm32(call->numStackArgs()), ArgumentsRectifierReg);
-        masm.call(argumentsRectifier);
-        if (!markSafepoint(call))
-            return false;
-        masm.jump(&afterCall);
-    }
-
-    masm.bind(&rejoin);
-
     // Finally call the function in objreg.
     masm.callIon(objreg);
     if (!markSafepoint(call))
         return false;
 
-    masm.bind(&afterCall);
-
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     // The return address has already been removed from the Ion frame.
     int prefixGarbage = sizeof(IonJSFrameLayout) - sizeof(void *);
     masm.adjustStack(prefixGarbage - unusedStack);
-
     masm.jump(&end);
 
-    // Handle uncompiled or native functions.
+    // Handle uncompiled functions.
     masm.bind(&invoke);
-    if (!emitCallInvokeFunction(call, unusedStack))
+    if (!emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack))
         return false;
 
     masm.bind(&end);
