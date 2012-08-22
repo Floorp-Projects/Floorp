@@ -24,6 +24,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_597136_network_requests_from_chrome.js \
 	browser_webconsole_completion.js \
 	browser_webconsole_console_logging_api.js \
+	browser_webconsole_change_font_size.js \
 	browser_webconsole_chrome.js \
 	browser_webconsole_execution_scope.js \
 	browser_webconsole_for_of.js \

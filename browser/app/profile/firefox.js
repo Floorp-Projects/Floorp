@@ -1090,6 +1090,9 @@ pref("devtools.webconsole.filter.warn", true);
 pref("devtools.webconsole.filter.info", true);
 pref("devtools.webconsole.filter.log", true);
 
+// Text size in the Web Console. Use 0 for the system default size.
+pref("devtools.webconsole.fontSize", 0);
+
 // The number of lines that are displayed in the web console for the Net,
 // CSS, JS and Web Developer categories.
 pref("devtools.hud.loglimit.network", 200);
