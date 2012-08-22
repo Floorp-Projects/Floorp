@@ -116,8 +116,7 @@ nsHTMLAudioElement::MozSetup(PRUint32 aChannels, PRUint32 aRate)
   }
 
   mAudioStream = nsAudioStream::AllocateStream();
-  nsresult rv = mAudioStream->Init(aChannels, aRate,
-                                   nsAudioStream::FORMAT_FLOAT32);
+  nsresult rv = mAudioStream->Init(aChannels, aRate);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
@@ -169,7 +168,30 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, PRUint
   // Don't write more than can be written without blocking.
   PRUint32 writeLen = NS_MIN(mAudioStream->Available(), dataLength / mChannels);
 
-  nsresult rv = mAudioStream->Write(JS_GetFloat32ArrayData(tsrc, aCx), writeLen);
+  float* frames = JS_GetFloat32ArrayData(tsrc, aCx);
+#ifdef MOZ_SAMPLE_TYPE_S16LE
+  // Convert the samples back to integers as we are using fixed point audio in
+  // the nsAudioStream.
+  nsAutoArrayPtr<short> shortsArray(new short[writeLen * mChannels]);
+  // Hard clip the samples.
+  for (PRUint32 i = 0; i <  writeLen * mChannels; ++i) {
+    float scaled_value = floorf(0.5 + 32768 * frames[i]);
+    if (frames[i] < 0.0) {
+      shortsArray[i] = (scaled_value < -32768.0) ?
+        -32768 :
+        short(scaled_value);
+    } else {
+      shortsArray[i] = (scaled_value > 32767.0) ?
+        32767 :
+        short(scaled_value);
+    }
+  }
+  nsresult rv = mAudioStream->Write(shortsArray, writeLen);
+#else
+  nsresult rv = mAudioStream->Write(frames, writeLen);
+#endif
+
+
   if (NS_FAILED(rv)) {
     return rv;
   }

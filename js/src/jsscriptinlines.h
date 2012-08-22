@@ -27,12 +27,6 @@ Bindings::Bindings()
     : callObjShape_(NULL), bindingArrayAndFlag_(TEMPORARY_STORAGE_BIT), numArgs_(0), numVars_(0)
 {}
 
-bool
-Bindings::extensibleParents()
-{
-    return callObjShape_->extensibleParents();
-}
-
 inline
 AliasedFormalIter::AliasedFormalIter(JSScript *script)
   : begin_(script->bindings.bindingArray()),

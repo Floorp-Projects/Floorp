@@ -17,6 +17,13 @@ enum ImageFormat {
   PLANAR_YCBCR,
 
   /**
+   * The GRALLOC_PLANAR_YCBCR format creates a GrallocPlanarYCbCrImage, a
+   * subtype of PlanarYCbCrImage. It takes a PlanarYCbCrImage data and can be
+   * used as a texture by Gonk backend directly.
+   */
+  GRALLOC_PLANAR_YCBCR,
+
+  /**
    * The CAIRO_SURFACE format creates a CairoImage. All backends should
    * support this format, because video rendering sometimes requires it.
    * 
