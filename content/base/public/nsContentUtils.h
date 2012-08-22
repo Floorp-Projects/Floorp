@@ -174,14 +174,6 @@ struct ViewportInfo
 
     // Whether or not the user can zoom in and out on the page. Default is true.
     bool allowZoom;
-
-    // This is a holdover from e10s fennec, and might be removed in the future.
-    // It's a hack to work around bugs that didn't allow zooming of documents
-    // from within the parent process. It is still used in native Fennec for XUL
-    // documents, but it should probably be removed.
-    // Currently, from, within GetViewportInfo(), This is only set to false
-    // if the document is a XUL document.
-    bool autoScale;
 };
 
 struct EventNameMapping

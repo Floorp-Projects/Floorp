@@ -5055,7 +5055,6 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   ret.defaultZoom = 1.0;
   ret.autoSize = true;
   ret.allowZoom = true;
-  ret.autoScale = true;
 
   // If the docType specifies that we are on a site optimized for mobile,
   // then we want to return specially crafted defaults for the viewport info.
@@ -5075,11 +5074,6 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
         return ret;
       }
     }
-  }
-
-  if (aDocument->IsXUL()) {
-    ret.autoScale = false;
-    return ret;
   }
 
   nsAutoString handheldFriendly;
