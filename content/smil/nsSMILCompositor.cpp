@@ -73,7 +73,7 @@ nsSMILCompositor::ComposeAttribute()
 
   // THIRD: Step backwards through animation functions to find out
   // which ones we actually care about.
-  PRUint32 firstFuncToCompose = GetFirstFuncToAffectSandwich();
+  uint32_t firstFuncToCompose = GetFirstFuncToAffectSandwich();
 
   // FOURTH: Get & cache base value
   nsSMILValue sandwichResultValue;
@@ -87,8 +87,8 @@ nsSMILCompositor::ComposeAttribute()
   }
 
   // FIFTH: Compose animation functions
-  PRUint32 length = mAnimationFunctions.Length();
-  for (PRUint32 i = firstFuncToCompose; i < length; ++i) {
+  uint32_t length = mAnimationFunctions.Length();
+  for (uint32_t i = firstFuncToCompose; i < length; ++i) {
     mAnimationFunctions[i]->ComposeResult(*smilAttr, sandwichResultValue);
   }
   if (sandwichResultValue.IsNull()) {
@@ -136,10 +136,10 @@ nsSMILCompositor::CreateSMILAttr()
   return nullptr;
 }
 
-PRUint32
+uint32_t
 nsSMILCompositor::GetFirstFuncToAffectSandwich()
 {
-  PRUint32 i;
+  uint32_t i;
   for (i = mAnimationFunctions.Length(); i > 0; --i) {
     nsSMILAnimationFunction* curAnimFunc = mAnimationFunctions[i-1];
     // In the following, the lack of short-circuit behavior of |= means that we
@@ -163,7 +163,7 @@ nsSMILCompositor::GetFirstFuncToAffectSandwich()
   // (otherwise we would have set the flag on a previous sample) and if
   // something has changed mForceCompositing will be true.
   if (mForceCompositing) {
-    for (PRUint32 j = i; j > 0; --j) {
+    for (uint32_t j = i; j > 0; --j) {
       mAnimationFunctions[j-1]->SetWasSkipped();
     }
   }

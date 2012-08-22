@@ -18,7 +18,7 @@ using namespace mozilla;
 
 struct EntityNode {
   const char* mStr; // never owns buffer
-  PRInt32       mUnicode;
+  int32_t       mUnicode;
 };
 
 struct EntityNodeEntry : public PLDHashEntryHdr
@@ -40,7 +40,7 @@ static bool
                    const void* key)
 {
   const EntityNodeEntry* entry = static_cast<const EntityNodeEntry*>(aHdr);
-  const PRInt32 ucode = NS_PTR_TO_INT32(key);
+  const int32_t ucode = NS_PTR_TO_INT32(key);
   return (entry->node->mUnicode == ucode);
 }
 
@@ -84,7 +84,7 @@ static const EntityNode gEntityArray[] = {
 };
 #undef HTML_ENTITY
 
-#define NS_HTML_ENTITY_COUNT ((PRInt32)ArrayLength(gEntityArray))
+#define NS_HTML_ENTITY_COUNT ((int32_t)ArrayLength(gEntityArray))
 
 nsresult
 nsHTMLEntities::AddRefTable(void) 
@@ -92,13 +92,13 @@ nsHTMLEntities::AddRefTable(void)
   if (!gTableRefCnt) {
     if (!PL_DHashTableInit(&gEntityToUnicode, &EntityToUnicodeOps,
                            nullptr, sizeof(EntityNodeEntry),
-                           PRUint32(NS_HTML_ENTITY_COUNT / 0.75))) {
+                           uint32_t(NS_HTML_ENTITY_COUNT / 0.75))) {
       gEntityToUnicode.ops = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     if (!PL_DHashTableInit(&gUnicodeToEntity, &UnicodeToEntityOps,
                            nullptr, sizeof(EntityNodeEntry),
-                           PRUint32(NS_HTML_ENTITY_COUNT / 0.75))) {
+                           uint32_t(NS_HTML_ENTITY_COUNT / 0.75))) {
       PL_DHashTableFinish(&gEntityToUnicode);
       gEntityToUnicode.ops = gUnicodeToEntity.ops = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
@@ -154,7 +154,7 @@ nsHTMLEntities::ReleaseTable(void)
 
 }
 
-PRInt32 
+int32_t 
 nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
 {
   NS_ASSERTION(gEntityToUnicode.ops, "no lookup table, needs addref");
@@ -181,7 +181,7 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
 }
 
 
-PRInt32 
+int32_t 
 nsHTMLEntities::EntityToUnicode(const nsAString& aEntity) {
   nsCAutoString theEntity; theEntity.AssignWithConversion(aEntity);
   if(';'==theEntity.Last()) {
@@ -193,7 +193,7 @@ nsHTMLEntities::EntityToUnicode(const nsAString& aEntity) {
 
 
 const char*
-nsHTMLEntities::UnicodeToEntity(PRInt32 aUnicode)
+nsHTMLEntities::UnicodeToEntity(int32_t aUnicode)
 {
   NS_ASSERTION(gUnicodeToEntity.ops, "no lookup table, needs addref");
   EntityNodeEntry* entry =
@@ -212,7 +212,7 @@ nsHTMLEntities::UnicodeToEntity(PRInt32 aUnicode)
 class nsTestEntityTable {
 public:
    nsTestEntityTable() {
-     PRInt32 value;
+     int32_t value;
      nsHTMLEntities::AddRefTable();
 
      // Make sure we can find everything we are supposed to

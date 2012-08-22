@@ -63,7 +63,7 @@ nsAsyncRedirectVerifyHelper::~nsAsyncRedirectVerifyHelper()
 
 nsresult
 nsAsyncRedirectVerifyHelper::Init(nsIChannel* oldChan, nsIChannel* newChan,
-                                  PRUint32 flags, bool synchronize)
+                                  uint32_t flags, bool synchronize)
 {
     LOG(("nsAsyncRedirectVerifyHelper::Init() "
          "oldChan=%p newChan=%p", oldChan, newChan));
@@ -127,7 +127,7 @@ nsresult
 nsAsyncRedirectVerifyHelper::DelegateOnChannelRedirect(nsIChannelEventSink *sink,
                                                        nsIChannel *oldChannel,
                                                        nsIChannel *newChannel,
-                                                       PRUint32 flags)
+                                                       uint32_t flags)
 {
     LOG(("nsAsyncRedirectVerifyHelper::DelegateOnChannelRedirect() "
          "sink=%p expectedCBs=%u mResult=%x",

@@ -33,14 +33,14 @@ public:
     /**
      * Compute an our DOM keycode from a GDK keyval.
      */
-    static PRUint32 ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent);
+    static uint32_t ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent);
 
     /**
      * Returns a GDK keyval which is related to the aDOMKeyCode.  However,
      * it may not be same as original value since there are some lost
      * information.
      */
-    static guint GuessGDKKeyval(PRUint32 aDOMKeyCode);
+    static guint GuessGDKKeyval(uint32_t aDOMKeyCode);
 
     /**
      * Modifier is list of modifiers which we support in widget level.
@@ -63,7 +63,7 @@ public:
      * Modifiers is used for combination of Modifier.
      * E.g., |Modifiers modifiers = (SHIFT | CTRL);| means Shift and Ctrl.
      */
-    typedef PRUint32 Modifiers;
+    typedef uint32_t Modifiers;
 
     /**
      * GetCurrentModifierState() returns current modifier key state.
@@ -221,8 +221,8 @@ protected:
      * @return                  charCode which is inputted by aGdkKeyEvent.
      *                          If failed, this returns 0.
      */
-    static PRUint32 GetCharCodeFor(const GdkEventKey *aGdkKeyEvent);
-    PRUint32 GetCharCodeFor(const GdkEventKey *aGdkKeyEvent,
+    static uint32_t GetCharCodeFor(const GdkEventKey *aGdkKeyEvent);
+    uint32_t GetCharCodeFor(const GdkEventKey *aGdkKeyEvent,
                             guint aModifierState,
                             gint aGroup);
 
@@ -261,7 +261,7 @@ protected:
      * @return                  TRUE if aCharCode is an alphabet or a numeric
      *                          in ASCII range.  Otherwise, FALSE.
      */
-    static bool IsBasicLatinLetterOrNumeral(PRUint32 aCharCode);
+    static bool IsBasicLatinLetterOrNumeral(uint32_t aCharCode);
 
     /**
      * GetGDKKeyvalWithoutModifier() returns the keyval for aGdkKeyEvent when
@@ -274,7 +274,7 @@ protected:
      * GetDOMKeyCodeFromKeyPairs() returns DOM keycode for aGdkKeyval if
      * it's in KeyPair table.
      */
-    static PRUint32 GetDOMKeyCodeFromKeyPairs(guint aGdkKeyval);
+    static uint32_t GetDOMKeyCodeFromKeyPairs(guint aGdkKeyval);
 
     /**
      * InitKeypressEvent() intializes keyCode, charCode and

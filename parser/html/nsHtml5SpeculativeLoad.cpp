@@ -45,7 +45,7 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
         CopyUTF16toUTF8(mCharset, narrowName);
         NS_ASSERTION(mTypeOrCharsetSource.Length() == 1,
             "Unexpected charset source string");
-        PRInt32 intSource = (PRInt32)mTypeOrCharsetSource.First();
+        int32_t intSource = (int32_t)mTypeOrCharsetSource.First();
         aExecutor->SetDocumentCharsetAndSource(narrowName,
                                                intSource);
       }

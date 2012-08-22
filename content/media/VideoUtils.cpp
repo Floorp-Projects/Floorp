@@ -10,21 +10,21 @@
 
 // Converts from number of audio frames to microseconds, given the specified
 // audio rate.
-CheckedInt64 FramesToUsecs(PRInt64 aFrames, PRUint32 aRate) {
+CheckedInt64 FramesToUsecs(int64_t aFrames, uint32_t aRate) {
   return (CheckedInt64(aFrames) * USECS_PER_S) / aRate;
 }
 
 // Converts from microseconds to number of audio frames, given the specified
 // audio rate.
-CheckedInt64 UsecsToFrames(PRInt64 aUsecs, PRUint32 aRate) {
+CheckedInt64 UsecsToFrames(int64_t aUsecs, uint32_t aRate) {
   return (CheckedInt64(aUsecs) * aRate) / USECS_PER_S;
 }
 
-static PRInt32 ConditionDimension(float aValue)
+static int32_t ConditionDimension(float aValue)
 {
   // This will exclude NaNs and too-big values.
   if (aValue > 1.0 && aValue <= PR_INT32_MAX)
-    return PRInt32(NS_round(aValue));
+    return int32_t(NS_round(aValue));
   return 0;
 }
 

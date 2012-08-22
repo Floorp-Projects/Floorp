@@ -41,11 +41,11 @@
 
 namespace mozilla {
 
-PRInt32 NS_COM_GLUE
+int32_t NS_COM_GLUE
 CompareVersions(const char *A, const char *B);
 
 #ifdef XP_WIN
-PRInt32 NS_COM_GLUE
+int32_t NS_COM_GLUE
 CompareVersions(const PRUnichar *A, const PRUnichar *B);
 #endif
 

@@ -51,7 +51,7 @@ public:
 
   nsCOMPtr<nsIContent> mArea;
   nscoord* mCoords;
-  PRInt32 mNumCoords;
+  int32_t mNumCoords;
   bool mHasFocus;
 };
 
@@ -86,7 +86,7 @@ is_space(char c)
 
 static void logMessage(nsIContent*      aContent,
                        const nsAString& aCoordsSpec,
-                       PRInt32          aFlags,
+                       int32_t          aFlags,
                        const char* aMessageName) {
   nsIDocument* doc = aContent->OwnerDoc();
 
@@ -108,8 +108,8 @@ void Area::ParseCoords(const nsAString& aSpec)
   if (cp) {
     char *tptr;
     char *n_str;
-    PRInt32 i, cnt;
-    PRInt32 *value_list;
+    int32_t i, cnt;
+    int32_t *value_list;
 
     /*
      * Nothing in an empty list
@@ -336,7 +336,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
   Area::ParseCoords(aSpec);
 
   bool saneRect = true;
-  PRInt32 flag = nsIScriptError::warningFlag;
+  int32_t flag = nsIScriptError::warningFlag;
   if (mNumCoords >= 4) {
     if (mCoords[0] > mCoords[2]) {
       // x-coords in reversed order
@@ -455,15 +455,15 @@ void PolyArea::ParseCoords(const nsAString& aSpec)
 bool PolyArea::IsInside(nscoord x, nscoord y) const
 {
   if (mNumCoords >= 6) {
-    PRInt32 intersects = 0;
+    int32_t intersects = 0;
     nscoord wherex = x;
     nscoord wherey = y;
-    PRInt32 totalv = mNumCoords / 2;
-    PRInt32 totalc = totalv * 2;
+    int32_t totalv = mNumCoords / 2;
+    int32_t totalc = totalv * 2;
     nscoord xval = mCoords[totalc - 2];
     nscoord yval = mCoords[totalc - 1];
-    PRInt32 end = totalc;
-    PRInt32 pointer = 1;
+    int32_t end = totalc;
+    int32_t pointer = 1;
 
     if ((yval >= wherey) != (mCoords[pointer] >= wherey)) {
       if ((xval >= wherex) == (mCoords[0] >= wherex)) {
@@ -523,7 +523,7 @@ void PolyArea::Draw(nsIFrame* aFrame, nsRenderingContext& aRC)
       nscoord x0 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
       nscoord y0 = nsPresContext::CSSPixelsToAppUnits(mCoords[1]);
       nscoord x1, y1;
-      for (PRInt32 i = 2; i < mNumCoords; i += 2) {
+      for (int32_t i = 2; i < mNumCoords; i += 2) {
         x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[i]);
         y1 = nsPresContext::CSSPixelsToAppUnits(mCoords[i+1]);
         aRC.DrawLine(x0, y0, x1, y1);
@@ -543,7 +543,7 @@ void PolyArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
     nscoord x1, x2, y1, y2, xtmp, ytmp;
     x1 = x2 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
     y1 = y2 = nsPresContext::CSSPixelsToAppUnits(mCoords[1]);
-    for (PRInt32 i = 2; i < mNumCoords; i += 2) {
+    for (int32_t i = 2; i < mNumCoords; i += 2) {
       xtmp = nsPresContext::CSSPixelsToAppUnits(mCoords[i]);
       ytmp = nsPresContext::CSSPixelsToAppUnits(mCoords[i+1]);
       x1 = x1 < xtmp ? x1 : xtmp;
@@ -578,7 +578,7 @@ void CircleArea::ParseCoords(const nsAString& aSpec)
   Area::ParseCoords(aSpec);
 
   bool wrongNumberOfCoords = false;
-  PRInt32 flag = nsIScriptError::warningFlag;
+  int32_t flag = nsIScriptError::warningFlag;
   if (mNumCoords >= 3) {
     if (mCoords[2] < 0) {
       logMessage(mArea,
@@ -680,7 +680,7 @@ nsImageMap::GetBoundsForAreaContent(nsIContent *aContent,
   NS_ENSURE_TRUE(aContent && mImageFrame, NS_ERROR_INVALID_ARG);
 
   // Find the Area struct associated with this content node, and return bounds
-  PRUint32 i, n = mAreas.Length();
+  uint32_t i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
     Area* area = mAreas.ElementAt(i);
     if (area->mArea == aContent) {
@@ -695,7 +695,7 @@ nsImageMap::GetBoundsForAreaContent(nsIContent *aContent,
 void
 nsImageMap::FreeAreas()
 {
-  PRUint32 i, n = mAreas.Length();
+  uint32_t i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
     Area* area = mAreas.ElementAt(i);
     if (area->mArea->IsInDoc()) {
@@ -736,7 +736,7 @@ nsImageMap::SearchForAreas(nsIContent* aParent, bool& aFoundArea,
                            bool& aFoundAnchor)
 {
   nsresult rv = NS_OK;
-  PRUint32 i, n = aParent->GetChildCount();
+  uint32_t i, n = aParent->GetChildCount();
 
   // Look for <area> or <a> elements. We'll use whichever type we find first.
   for (i = 0; i < n; i++) {
@@ -858,7 +858,7 @@ nsIContent*
 nsImageMap::GetArea(nscoord aX, nscoord aY) const
 {
   NS_ASSERTION(mMap, "Not initialized");
-  PRUint32 i, n = mAreas.Length();
+  uint32_t i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
     Area* area = mAreas.ElementAt(i);
     if (area->IsInside(aX, aY)) {
@@ -870,7 +870,7 @@ nsImageMap::GetArea(nscoord aX, nscoord aY) const
 }
 
 nsIContent*
-nsImageMap::GetAreaAt(PRUint32 aIndex) const
+nsImageMap::GetAreaAt(uint32_t aIndex) const
 {
   return mAreas.ElementAt(aIndex)->mArea;
 }
@@ -878,7 +878,7 @@ nsImageMap::GetAreaAt(PRUint32 aIndex) const
 void
 nsImageMap::Draw(nsIFrame* aFrame, nsRenderingContext& aRC)
 {
-  PRUint32 i, n = mAreas.Length();
+  uint32_t i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
     Area* area = mAreas.ElementAt(i);
     area->Draw(aFrame, aRC);
@@ -896,9 +896,9 @@ nsImageMap::MaybeUpdateAreas(nsIContent *aContent)
 void
 nsImageMap::AttributeChanged(nsIDocument*  aDocument,
                              dom::Element* aElement,
-                             PRInt32       aNameSpaceID,
+                             int32_t       aNameSpaceID,
                              nsIAtom*      aAttribute,
-                             PRInt32       aModType)
+                             int32_t       aModType)
 {
   // If the parent of the changing content node is our map then update
   // the map.  But only do this if the node is an HTML <area> or <a>
@@ -925,7 +925,7 @@ void
 nsImageMap::ContentAppended(nsIDocument *aDocument,
                             nsIContent* aContainer,
                             nsIContent* aFirstNewContent,
-                            PRInt32     /* unused */)
+                            int32_t     /* unused */)
 {
   MaybeUpdateAreas(aContainer);
 }
@@ -934,7 +934,7 @@ void
 nsImageMap::ContentInserted(nsIDocument *aDocument,
                             nsIContent* aContainer,
                             nsIContent* aChild,
-                            PRInt32 /* unused */)
+                            int32_t /* unused */)
 {
   MaybeUpdateAreas(aContainer);
 }
@@ -943,7 +943,7 @@ void
 nsImageMap::ContentRemoved(nsIDocument *aDocument,
                            nsIContent* aContainer,
                            nsIContent* aChild,
-                           PRInt32 aIndexInContainer,
+                           int32_t aIndexInContainer,
                            nsIContent* aPreviousSibling)
 {
   MaybeUpdateAreas(aContainer);
@@ -973,7 +973,7 @@ nsImageMap::HandleEvent(nsIDOMEvent* aEvent)
   if (NS_SUCCEEDED(aEvent->GetTarget(getter_AddRefs(target))) && target) {
     nsCOMPtr<nsIContent> targetContent(do_QueryInterface(target));
     if (targetContent) {
-      PRUint32 i, n = mAreas.Length();
+      uint32_t i, n = mAreas.Length();
       for (i = 0; i < n; i++) {
         Area* area = mAreas.ElementAt(i);
         if (area->mArea == targetContent) {

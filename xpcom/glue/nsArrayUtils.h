@@ -13,7 +13,7 @@
 class NS_COM_GLUE nsQueryArrayElementAt : public nsCOMPtr_helper
   {
     public:
-      nsQueryArrayElementAt(nsIArray* aArray, PRUint32 aIndex,
+      nsQueryArrayElementAt(nsIArray* aArray, uint32_t aIndex,
                             nsresult* aErrorPtr)
           : mArray(aArray),
             mIndex(aIndex),
@@ -26,13 +26,13 @@ class NS_COM_GLUE nsQueryArrayElementAt : public nsCOMPtr_helper
 
     private:
       nsIArray*  mArray;
-      PRUint32   mIndex;
+      uint32_t   mIndex;
       nsresult*  mErrorPtr;
   };
 
 inline
 const nsQueryArrayElementAt
-do_QueryElementAt(nsIArray* aArray, PRUint32 aIndex, nsresult* aErrorPtr = 0)
+do_QueryElementAt(nsIArray* aArray, uint32_t aIndex, nsresult* aErrorPtr = 0)
   {
     return nsQueryArrayElementAt(aArray, aIndex, aErrorPtr);
   }

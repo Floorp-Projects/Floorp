@@ -34,7 +34,7 @@ interface nsIDOMTouch : nsISupports {
     void SetTarget(nsIDOMEventTarget *target) { mTarget = target; }
     nsIntPoint mRefPoint;
     bool mChanged;
-    PRUint32 mMessage;
+    uint32_t mMessage;
   %}
 };
 

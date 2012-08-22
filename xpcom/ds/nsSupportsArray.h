@@ -11,7 +11,7 @@
 #include "nsISupportsArray.h"
 #include "mozilla/Attributes.h"
 
-static const PRUint32 kAutoArraySize = 8;
+static const uint32_t kAutoArraySize = 8;
 
 class nsSupportsArray MOZ_FINAL : public nsISupportsArray {
 public:
@@ -26,12 +26,12 @@ public:
   NS_DECL_NSISERIALIZABLE
 
   // nsICollection methods:
-  NS_IMETHOD Count(PRUint32 *result) { *result = mCount; return NS_OK; }
-  NS_IMETHOD GetElementAt(PRUint32 aIndex, nsISupports* *result) {
+  NS_IMETHOD Count(uint32_t *result) { *result = mCount; return NS_OK; }
+  NS_IMETHOD GetElementAt(uint32_t aIndex, nsISupports* *result) {
     *result = ElementAt(aIndex);
     return NS_OK;
   }
-  NS_IMETHOD QueryElementAt(PRUint32 aIndex, const nsIID & aIID, void * *aResult) {
+  NS_IMETHOD QueryElementAt(uint32_t aIndex, const nsIID & aIID, void * *aResult) {
     if (aIndex < mCount) {
       nsISupports* element = mArray[aIndex];
       if (nullptr != element)
@@ -39,7 +39,7 @@ public:
     }
     return NS_ERROR_FAILURE;
   }
-  NS_IMETHOD SetElementAt(PRUint32 aIndex, nsISupports* value) {
+  NS_IMETHOD SetElementAt(uint32_t aIndex, nsISupports* value) {
     return ReplaceElementAt(value, aIndex) ? NS_OK : NS_ERROR_FAILURE;
   }
   NS_IMETHOD AppendElement(nsISupports *aElement) {
@@ -51,51 +51,51 @@ public:
     // XXX Invalid cast of bool to nsresult (bug 778110)
     return (nsresult)RemoveElement(aElement, 0)/* ? NS_OK : NS_ERROR_FAILURE*/;
   }
-  NS_IMETHOD_(bool) MoveElement(PRInt32 aFrom, PRInt32 aTo);
+  NS_IMETHOD_(bool) MoveElement(int32_t aFrom, int32_t aTo);
   NS_IMETHOD Enumerate(nsIEnumerator* *result);
   NS_IMETHOD Clear(void);
 
   // nsISupportsArray methods:
   NS_IMETHOD_(bool) Equals(const nsISupportsArray* aOther);
 
-  NS_IMETHOD_(nsISupports*) ElementAt(PRUint32 aIndex);
+  NS_IMETHOD_(nsISupports*) ElementAt(uint32_t aIndex);
 
-  NS_IMETHOD_(PRInt32) IndexOf(const nsISupports* aPossibleElement);
-  NS_IMETHOD_(PRInt32) IndexOfStartingAt(const nsISupports* aPossibleElement,
-                                         PRUint32 aStartIndex = 0);
-  NS_IMETHOD_(PRInt32) LastIndexOf(const nsISupports* aPossibleElement);
+  NS_IMETHOD_(int32_t) IndexOf(const nsISupports* aPossibleElement);
+  NS_IMETHOD_(int32_t) IndexOfStartingAt(const nsISupports* aPossibleElement,
+                                         uint32_t aStartIndex = 0);
+  NS_IMETHOD_(int32_t) LastIndexOf(const nsISupports* aPossibleElement);
 
-  NS_IMETHOD GetIndexOf(nsISupports *aPossibleElement, PRInt32 *_retval) {
+  NS_IMETHOD GetIndexOf(nsISupports *aPossibleElement, int32_t *_retval) {
     *_retval = IndexOf(aPossibleElement);
     return NS_OK;
   }
   
   NS_IMETHOD GetIndexOfStartingAt(nsISupports *aPossibleElement,
-                                  PRUint32 aStartIndex, PRInt32 *_retval) {
+                                  uint32_t aStartIndex, int32_t *_retval) {
     *_retval = IndexOfStartingAt(aPossibleElement, aStartIndex);
     return NS_OK;
   }
   
-  NS_IMETHOD GetLastIndexOf(nsISupports *aPossibleElement, PRInt32 *_retval) {
+  NS_IMETHOD GetLastIndexOf(nsISupports *aPossibleElement, int32_t *_retval) {
     *_retval = LastIndexOf(aPossibleElement);
     return NS_OK;
   }
   
-  NS_IMETHOD_(bool) InsertElementAt(nsISupports* aElement, PRUint32 aIndex);
+  NS_IMETHOD_(bool) InsertElementAt(nsISupports* aElement, uint32_t aIndex);
 
-  NS_IMETHOD_(bool) ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex);
+  NS_IMETHOD_(bool) ReplaceElementAt(nsISupports* aElement, uint32_t aIndex);
 
-  NS_IMETHOD_(bool) RemoveElementAt(PRUint32 aIndex) {
+  NS_IMETHOD_(bool) RemoveElementAt(uint32_t aIndex) {
     return RemoveElementsAt(aIndex,1);
   }
-  NS_IMETHOD_(bool) RemoveElement(const nsISupports* aElement, PRUint32 aStartIndex = 0);
+  NS_IMETHOD_(bool) RemoveElement(const nsISupports* aElement, uint32_t aStartIndex = 0);
   NS_IMETHOD_(bool) RemoveLastElement(const nsISupports* aElement);
 
   NS_IMETHOD DeleteLastElement(nsISupports *aElement) {
     return (RemoveLastElement(aElement) ? NS_OK : NS_ERROR_FAILURE);
   }
   
-  NS_IMETHOD DeleteElementAt(PRUint32 aIndex) {
+  NS_IMETHOD DeleteElementAt(uint32_t aIndex) {
     return (RemoveElementAt(aIndex) ? NS_OK : NS_ERROR_FAILURE);
   }
   
@@ -110,23 +110,23 @@ public:
 
   NS_IMETHOD Clone(nsISupportsArray **_retval);
 
-  NS_IMETHOD_(bool) InsertElementsAt(nsISupportsArray *aOther, PRUint32 aIndex);
+  NS_IMETHOD_(bool) InsertElementsAt(nsISupportsArray *aOther, uint32_t aIndex);
 
-  NS_IMETHOD_(bool) RemoveElementsAt(PRUint32 aIndex, PRUint32 aCount);
+  NS_IMETHOD_(bool) RemoveElementsAt(uint32_t aIndex, uint32_t aCount);
 
-  NS_IMETHOD_(bool) SizeTo(PRInt32 aSize);
+  NS_IMETHOD_(bool) SizeTo(int32_t aSize);
 protected:
   void DeleteArray(void);
 
-  NS_IMETHOD_(void) GrowArrayBy(PRInt32 aGrowBy);
+  NS_IMETHOD_(void) GrowArrayBy(int32_t aGrowBy);
 
   nsISupports** mArray;
-  PRUint32 mArraySize;
-  PRUint32 mCount;
+  uint32_t mArraySize;
+  uint32_t mCount;
   nsISupports*  mAutoArray[kAutoArraySize];
 #if DEBUG_SUPPORTSARRAY
-  PRUint32 mMaxCount;
-  PRUint32 mMaxSize;
+  uint32_t mMaxCount;
+  uint32_t mMaxSize;
 #endif
 
 private:

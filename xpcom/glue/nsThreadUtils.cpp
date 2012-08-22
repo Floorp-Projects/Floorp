@@ -41,7 +41,7 @@ nsRunnable::Run()
 //-----------------------------------------------------------------------------
 
 NS_METHOD
-NS_NewThread(nsIThread **result, nsIRunnable *event, PRUint32 stackSize)
+NS_NewThread(nsIThread **result, nsIRunnable *event, uint32_t stackSize)
 {
   nsCOMPtr<nsIThread> thread;
 #ifdef MOZILLA_INTERNAL_API
@@ -136,7 +136,7 @@ NS_DispatchToCurrentThread(nsIRunnable *event)
 }
 
 NS_METHOD
-NS_DispatchToMainThread(nsIRunnable *event, PRUint32 dispatchFlags)
+NS_DispatchToMainThread(nsIRunnable *event, uint32_t dispatchFlags)
 {
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(thread));

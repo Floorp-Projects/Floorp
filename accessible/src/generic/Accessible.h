@@ -61,9 +61,9 @@ struct GroupPos
 {
   GroupPos() : level(0), posInSet(0), setSize(0) { }
 
-  PRInt32 level;
-  PRInt32 posInSet;
-  PRInt32 setSize;
+  int32_t level;
+  int32_t posInSet;
+  int32_t setSize;
 };
 
 } // namespace a11y
@@ -157,7 +157,7 @@ public:
    *
    * @param  [in/out] where to fill the states into.
    */
-  virtual void ApplyARIAState(PRUint64* aState) const;
+  virtual void ApplyARIAState(uint64_t* aState) const;
 
   /**
    * Returns the accessible name provided by native markup. It doesn't take
@@ -197,15 +197,15 @@ public:
   /**
    * Return all states of accessible (including ARIA states).
    */
-  virtual PRUint64 State();
+  virtual uint64_t State();
 
   /**
    * Return interactive states present on the accessible
    * (@see NativeInteractiveState).
    */
-  PRUint64 InteractiveState() const
+  uint64_t InteractiveState() const
   {
-    PRUint64 state = NativeInteractiveState();
+    uint64_t state = NativeInteractiveState();
     ApplyARIAState(&state);
     return state;
   }
@@ -213,9 +213,9 @@ public:
   /**
    * Return link states present on the accessible.
    */
-  PRUint64 LinkState() const
+  uint64_t LinkState() const
   {
-    PRUint64 state = NativeLinkState();
+    uint64_t state = NativeLinkState();
     ApplyARIAState(&state);
     return state;
   }
@@ -224,22 +224,22 @@ public:
    * Return the states of accessible, not taking into account ARIA states.
    * Use State() to get complete set of states.
    */
-  virtual PRUint64 NativeState();
+  virtual uint64_t NativeState();
 
   /**
    * Return native interactice state (unavailable, focusable or selectable).
    */
-  virtual PRUint64 NativeInteractiveState() const;
+  virtual uint64_t NativeInteractiveState() const;
 
   /**
    * Return native link states present on the accessible.
    */
-  virtual PRUint64 NativeLinkState() const;
+  virtual uint64_t NativeLinkState() const;
 
   /**
    * Return bit set of invisible and offscreen states.
    */
-  PRUint64 VisibilityState();
+  uint64_t VisibilityState();
 
   /**
    * Return true if native unavailable state present.
@@ -273,7 +273,7 @@ public:
    * @param  aWhichChild  [in] flag points if deepest or direct child
    *                        should be returned
    */
-  virtual Accessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+  virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild);
 
   /**
@@ -284,7 +284,7 @@ public:
   /**
    * Return calculated group level based on accessible hierarchy.
    */
-  virtual PRInt32 GetLevelInternal();
+  virtual int32_t GetLevelInternal();
 
   /**
    * Calculate position in group and group size ('posinset' and 'setsize') based
@@ -293,13 +293,13 @@ public:
    * @param  aPosInSet  [out] accessible position in the group
    * @param  aSetSize   [out] the group size
    */
-  virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
-                                          PRInt32 *aSetSize);
+  virtual void GetPositionAndSizeInternal(int32_t *aPosInSet,
+                                          int32_t *aSetSize);
 
   /**
    * Get the relation of the given type.
    */
-  virtual mozilla::a11y::Relation RelationByType(PRUint32 aType);
+  virtual mozilla::a11y::Relation RelationByType(uint32_t aType);
 
   //////////////////////////////////////////////////////////////////////////////
   // Initializing methods
@@ -339,7 +339,7 @@ public:
    * Append/insert/remove a child. Return true if operation was successful.
    */
   virtual bool AppendChild(Accessible* aChild);
-  virtual bool InsertChildAt(PRUint32 aIndex, Accessible* aChild);
+  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild);
   virtual bool RemoveChild(Accessible* aChild);
 
   //////////////////////////////////////////////////////////////////////////////
@@ -353,22 +353,22 @@ public:
   /**
    * Return child accessible at the given index.
    */
-  virtual Accessible* GetChildAt(PRUint32 aIndex);
+  virtual Accessible* GetChildAt(uint32_t aIndex);
 
   /**
    * Return child accessible count.
    */
-  virtual PRUint32 ChildCount() const;
+  virtual uint32_t ChildCount() const;
 
   /**
    * Return index of the given child accessible.
    */
-  virtual PRInt32 GetIndexOf(Accessible* aChild);
+  virtual int32_t GetIndexOf(Accessible* aChild);
 
   /**
    * Return index in parent accessible.
    */
-  virtual PRInt32 IndexInParent() const;
+  virtual int32_t IndexInParent() const;
 
   /**
    * Return true if accessible has children;
@@ -386,7 +386,7 @@ public:
     { return GetChildAt(0); }
   inline Accessible* LastChild()
   {
-    PRUint32 childCount = ChildCount();
+    uint32_t childCount = ChildCount();
     return childCount != 0 ? GetChildAt(childCount - 1) : nullptr;
   }
 
@@ -394,25 +394,25 @@ public:
   /**
    * Return embedded accessible children count.
    */
-  PRUint32 EmbeddedChildCount();
+  uint32_t EmbeddedChildCount();
 
   /**
    * Return embedded accessible child at the given index.
    */
-  Accessible* GetEmbeddedChildAt(PRUint32 aIndex);
+  Accessible* GetEmbeddedChildAt(uint32_t aIndex);
 
   /**
    * Return index of the given embedded accessible child.
    */
-  PRInt32 GetIndexOfEmbeddedChild(Accessible* aChild);
+  int32_t GetIndexOfEmbeddedChild(Accessible* aChild);
 
   /**
    * Return number of content children/content child at index. The content
    * child is created from markup in contrast to it's never constructed by its
    * parent accessible (like treeitem accessibles for XUL trees).
    */
-  PRUint32 ContentChildCount() const { return mChildren.Length(); }
-  Accessible* ContentChildAt(PRUint32 aIndex) const
+  uint32_t ContentChildCount() const { return mChildren.Length(); }
+  Accessible* ContentChildAt(uint32_t aIndex) const
     { return mChildren.ElementAt(aIndex); }
 
   /**
@@ -450,8 +450,8 @@ public:
    * @param aLength       [in, optional] required length of text, if missed
    *                        then text form start offset till the end is appended
    */
-  virtual void AppendTextTo(nsAString& aText, PRUint32 aStartOffset = 0,
-                            PRUint32 aLength = PR_UINT32_MAX);
+  virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
+                            uint32_t aLength = PR_UINT32_MAX);
 
   /**
    * Assert if child not in parent's cache if the cache was initialized at this
@@ -523,7 +523,7 @@ public:
   /**
    * Return the number of actions that can be performed on this accessible.
    */
-  virtual PRUint8 ActionCount();
+  virtual uint8_t ActionCount();
 
   /**
    * Return access key, such as Alt+D.
@@ -547,12 +547,12 @@ public:
   /**
    * Return the start offset of the link within the parent accessible.
    */
-  virtual PRUint32 StartOffset();
+  virtual uint32_t StartOffset();
 
   /**
    * Return the end offset of the link within the parent accessible.
    */
-  virtual PRUint32 EndOffset();
+  virtual uint32_t EndOffset();
 
   /**
    * Return true if the link is valid (e. g. points to a valid URL).
@@ -576,17 +576,17 @@ public:
   /**
    * Return the number of anchors within the link.
    */
-  virtual PRUint32 AnchorCount();
+  virtual uint32_t AnchorCount();
 
   /**
    * Returns an anchor accessible at the given index.
    */
-  virtual Accessible* AnchorAt(PRUint32 aAnchorIndex);
+  virtual Accessible* AnchorAt(uint32_t aAnchorIndex);
 
   /**
    * Returns an anchor URI at the given index.
    */
-  virtual already_AddRefed<nsIURI> AnchorURIAt(PRUint32 aAnchorIndex);
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex);
 
   //////////////////////////////////////////////////////////////////////////////
   // SelectAccessible
@@ -605,27 +605,27 @@ public:
   /**
    * Return the number of selected items.
    */
-  virtual PRUint32 SelectedItemCount();
+  virtual uint32_t SelectedItemCount();
 
   /**
    * Return selected item at the given index.
    */
-  virtual Accessible* GetSelectedItem(PRUint32 aIndex);
+  virtual Accessible* GetSelectedItem(uint32_t aIndex);
 
   /**
    * Determine if item at the given index is selected.
    */
-  virtual bool IsItemSelected(PRUint32 aIndex);
+  virtual bool IsItemSelected(uint32_t aIndex);
 
   /**
    * Add item at the given index the selection. Return true if success.
    */
-  virtual bool AddItemToSelection(PRUint32 aIndex);
+  virtual bool AddItemToSelection(uint32_t aIndex);
 
   /**
    * Remove item at the given index from the selection. Return if success.
    */
-  virtual bool RemoveItemFromSelection(PRUint32 aIndex);
+  virtual bool RemoveItemFromSelection(uint32_t aIndex);
 
   /**
    * Select all items. Return true if success.
@@ -702,13 +702,13 @@ protected:
   /**
    * Set accessible parent and index in parent.
    */
-  virtual void BindToParent(Accessible* aParent, PRUint32 aIndexInParent);
+  virtual void BindToParent(Accessible* aParent, uint32_t aIndexInParent);
   virtual void UnbindFromParent();
 
   /**
    * Return sibling accessible at the given offset.
    */
-  virtual Accessible* GetSiblingAtOffset(PRInt32 aOffset,
+  virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
                                          nsresult *aError = nullptr) const;
 
   /**
@@ -814,15 +814,15 @@ protected:
    * @param  aContent      [in, optional] element to click
    * @param  aActionIndex  [in, optional] index of accessible action
    */
-  void DoCommand(nsIContent *aContent = nullptr, PRUint32 aActionIndex = 0);
+  void DoCommand(nsIContent *aContent = nullptr, uint32_t aActionIndex = 0);
 
   /**
    * Dispatch click event.
    */
-  virtual void DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex);
+  virtual void DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex);
 
   NS_DECL_RUNNABLEMETHOD_ARG2(Accessible, DispatchClickEvent,
-                              nsCOMPtr<nsIContent>, PRUint32)
+                              nsCOMPtr<nsIContent>, uint32_t)
 
   //////////////////////////////////////////////////////////////////////////////
   // Helpers
@@ -847,7 +847,7 @@ protected:
    * Return the action rule based on ARIA enum constants EActionRule
    * (see nsARIAMap.h). Used by ActionCount() and GetActionName().
    */
-  PRUint32 GetActionRule();
+  uint32_t GetActionRule();
 
   /**
    * Return group info.
@@ -867,16 +867,16 @@ protected:
   // Data Members
   nsRefPtr<Accessible> mParent;
   nsTArray<nsRefPtr<Accessible> > mChildren;
-  PRInt32 mIndexInParent;
+  int32_t mIndexInParent;
 
-  static const PRUint32 kChildrenFlagsMask =
+  static const uint32_t kChildrenFlagsMask =
     eChildrenUninitialized | eMixedChildren | eEmbeddedChildren;
 
-  PRUint32 mFlags;
+  uint32_t mFlags;
   friend class DocAccessible;
 
   nsAutoPtr<EmbeddedObjCollector> mEmbeddedObjCollector;
-  PRInt32 mIndexOfEmbeddedChild;
+  int32_t mIndexOfEmbeddedChild;
   friend class EmbeddedObjCollector;
 
   nsAutoPtr<AccGroupInfo> mGroupInfo;
@@ -902,19 +902,19 @@ public:
   /**
    * Modifier mask values.
    */
-  static const PRUint32 kShift = 1;
-  static const PRUint32 kControl = 2;
-  static const PRUint32 kAlt = 4;
-  static const PRUint32 kMeta = 8;
-  static const PRUint32 kOS = 16;
+  static const uint32_t kShift = 1;
+  static const uint32_t kControl = 2;
+  static const uint32_t kAlt = 4;
+  static const uint32_t kMeta = 8;
+  static const uint32_t kOS = 16;
 
   KeyBinding() : mKey(0), mModifierMask(0) {}
-  KeyBinding(PRUint32 aKey, PRUint32 aModifierMask) :
+  KeyBinding(uint32_t aKey, uint32_t aModifierMask) :
     mKey(aKey), mModifierMask(aModifierMask) {};
 
   inline bool IsEmpty() const { return !mKey; }
-  inline PRUint32 Key() const { return mKey; }
-  inline PRUint32 ModifierMask() const { return mModifierMask; }
+  inline uint32_t Key() const { return mKey; }
+  inline uint32_t ModifierMask() const { return mModifierMask; }
 
   enum Format {
     ePlatformFormat,
@@ -945,8 +945,8 @@ private:
   void ToPlatformFormat(nsAString& aValue) const;
   void ToAtkFormat(nsAString& aValue) const;
 
-  PRUint32 mKey;
-  PRUint32 mModifierMask;
+  uint32_t mKey;
+  uint32_t mModifierMask;
 };
 
 #endif

@@ -53,7 +53,7 @@ XPCContext::~XPCContext()
 }
 
 void
-XPCContext::DebugDump(PRInt16 depth)
+XPCContext::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
     depth--;

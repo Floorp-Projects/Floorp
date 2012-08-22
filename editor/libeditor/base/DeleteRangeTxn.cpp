@@ -76,9 +76,9 @@ DeleteRangeTxn::DoTransaction()
 
   // build the child transactions
   nsCOMPtr<nsINode> startParent = mRange->GetStartParent();
-  PRInt32 startOffset = mRange->StartOffset();
+  int32_t startOffset = mRange->StartOffset();
   nsCOMPtr<nsINode> endParent = mRange->GetEndParent();
-  PRInt32 endOffset = mRange->EndOffset();
+  int32_t endOffset = mRange->EndOffset();
   MOZ_ASSERT(startParent && endParent);
 
   if (startParent == endParent) {
@@ -141,15 +141,15 @@ DeleteRangeTxn::GetTxnDescription(nsAString& aString)
 
 nsresult
 DeleteRangeTxn::CreateTxnsToDeleteBetween(nsINode* aNode,
-                                          PRInt32 aStartOffset,
-                                          PRInt32 aEndOffset)
+                                          int32_t aStartOffset,
+                                          int32_t aEndOffset)
 {
   // see what kind of node we have
   if (aNode->IsNodeOfType(nsINode::eDATA_NODE)) {
     // if the node is a chardata node, then delete chardata content
     nsRefPtr<DeleteTextTxn> txn = new DeleteTextTxn();
 
-    PRInt32 numToDel;
+    int32_t numToDel;
     if (aStartOffset == aEndOffset) {
       numToDel = 1;
     } else {
@@ -169,7 +169,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsINode* aNode,
   NS_ENSURE_STATE(child);
 
   nsresult res = NS_OK;
-  for (PRInt32 i = aStartOffset; i < aEndOffset; ++i) {
+  for (int32_t i = aStartOffset; i < aEndOffset; ++i) {
     nsRefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
     res = txn->Init(mEditor, child, mRangeUpdater);
     if (NS_SUCCEEDED(res)) {
@@ -185,13 +185,13 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsINode* aNode,
 
 nsresult
 DeleteRangeTxn::CreateTxnsToDeleteContent(nsINode* aNode,
-                                          PRInt32 aOffset,
+                                          int32_t aOffset,
                                           nsIEditor::EDirection aAction)
 {
   // see what kind of node we have
   if (aNode->IsNodeOfType(nsINode::eDATA_NODE)) {
     // if the node is a chardata node, then delete chardata content
-    PRUint32 start, numToDelete;
+    uint32_t start, numToDelete;
     if (nsIEditor::eNext == aAction) {
       start = aOffset;
       numToDelete = aNode->Length() - aOffset;

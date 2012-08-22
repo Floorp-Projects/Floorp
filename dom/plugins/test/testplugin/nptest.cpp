@@ -540,9 +540,9 @@ drawAsyncBitmapColor(InstanceData* instanceData)
 {
   NPP npp = instanceData->npp;
 
-  PRUint32 *pixelData = (PRUint32*)instanceData->backBuffer->bitmap.data;
+  uint32_t *pixelData = (uint32_t*)instanceData->backBuffer->bitmap.data;
 
-  PRUint32 rgba = instanceData->scriptableObject->drawColor;
+  uint32_t rgba = instanceData->scriptableObject->drawColor;
 
   unsigned char subpixels[4];
   subpixels[0] = rgba & 0xFF;
@@ -550,13 +550,13 @@ drawAsyncBitmapColor(InstanceData* instanceData)
   subpixels[2] = (rgba & 0xFF0000) >> 16;
   subpixels[3] = (rgba & 0xFF000000) >> 24;
 
-  subpixels[0] = PRUint8(float(subpixels[3] * subpixels[0]) / 0xFF);
-  subpixels[1] = PRUint8(float(subpixels[3] * subpixels[1]) / 0xFF);
-  subpixels[2] = PRUint8(float(subpixels[3] * subpixels[2]) / 0xFF);
-  PRUint32 premultiplied;
+  subpixels[0] = uint8_t(float(subpixels[3] * subpixels[0]) / 0xFF);
+  subpixels[1] = uint8_t(float(subpixels[3] * subpixels[1]) / 0xFF);
+  subpixels[2] = uint8_t(float(subpixels[3] * subpixels[2]) / 0xFF);
+  uint32_t premultiplied;
   memcpy(&premultiplied, subpixels, sizeof(premultiplied));
 
-  for (PRUint32* lastPixel = pixelData + instanceData->backBuffer->size.width * instanceData->backBuffer->size.height;
+  for (uint32_t* lastPixel = pixelData + instanceData->backBuffer->size.width * instanceData->backBuffer->size.height;
 	pixelData < lastPixel;
 	++pixelData) {
     *pixelData = premultiplied;

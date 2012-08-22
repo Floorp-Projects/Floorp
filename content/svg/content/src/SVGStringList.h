@@ -42,11 +42,11 @@ public:
     return mStrings.IsEmpty();
   }
 
-  PRUint32 Length() const {
+  uint32_t Length() const {
     return mStrings.Length();
   }
 
-  const nsAString& operator[](PRUint32 aIndex) const {
+  const nsAString& operator[](uint32_t aIndex) const {
     return mStrings[aIndex];
   }
 
@@ -54,7 +54,7 @@ public:
     return mStrings == rhs.mStrings;
   }
 
-  bool SetCapacity(PRUint32 size) {
+  bool SetCapacity(uint32_t size) {
     return mStrings.SetCapacity(size);
   }
 
@@ -82,7 +82,7 @@ protected:
    */
   nsresult CopyFrom(const SVGStringList& rhs);
 
-  nsAString& operator[](PRUint32 aIndex) {
+  nsAString& operator[](uint32_t aIndex) {
     return mStrings[aIndex];
   }
 
@@ -90,7 +90,7 @@ protected:
    * This may fail (return false) on OOM if the internal capacity is being
    * increased, in which case the list will be left unmodified.
    */
-  bool SetLength(PRUint32 aStringOfItems) {
+  bool SetLength(uint32_t aStringOfItems) {
     return mStrings.SetLength(aStringOfItems);
   }
 
@@ -100,7 +100,7 @@ private:
   // used by our friend classes (as opposed to our subclasses) - it doesn't
   // really provide additional safety.
 
-  bool InsertItem(PRUint32 aIndex, const nsAString &aString) {
+  bool InsertItem(uint32_t aIndex, const nsAString &aString) {
     if (aIndex >= mStrings.Length()) {
       aIndex = mStrings.Length();
     }
@@ -111,13 +111,13 @@ private:
     return false;
   }
 
-  void ReplaceItem(PRUint32 aIndex, const nsAString &aString) {
+  void ReplaceItem(uint32_t aIndex, const nsAString &aString) {
     NS_ABORT_IF_FALSE(aIndex < mStrings.Length(),
                       "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mStrings[aIndex] = aString;
   }
 
-  void RemoveItem(PRUint32 aIndex) {
+  void RemoveItem(uint32_t aIndex) {
     NS_ABORT_IF_FALSE(aIndex < mStrings.Length(),
                       "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mStrings.RemoveElementAt(aIndex);

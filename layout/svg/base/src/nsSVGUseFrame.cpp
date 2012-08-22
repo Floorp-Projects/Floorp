@@ -33,9 +33,9 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType);
+                               int32_t         aModType);
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
@@ -57,12 +57,12 @@ public:
 
   // nsISVGChildFrame interface:
   virtual void ReflowSVG();
-  virtual void NotifySVGChanged(PRUint32 aFlags);
+  virtual void NotifySVGChanged(uint32_t aFlags);
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                        PRUint32 aFilter);
+                                        uint32_t aFilter);
 
 private:
   bool mHasValidDimensions;
@@ -112,9 +112,9 @@ nsSVGUseFrame::Init(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
                                 nsIAtom*        aAttribute,
-                                PRInt32         aModType)
+                                int32_t         aModType)
 {
   nsSVGUseElement *useElement = static_cast<nsSVGUseElement*>(mContent);
 
@@ -187,7 +187,7 @@ nsSVGUseFrame::ReflowSVG()
 }
 
 void
-nsSVGUseFrame::NotifySVGChanged(PRUint32 aFlags)
+nsSVGUseFrame::NotifySVGChanged(uint32_t aFlags)
 {
   if (aFlags & COORD_CONTEXT_CHANGED &&
       !(aFlags & TRANSFORM_CHANGED)) {
@@ -232,7 +232,7 @@ nsSVGUseFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
 void
 nsSVGUseFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                        PRUint32 aFilter)
+                                        uint32_t aFilter)
 {
   nsSVGUseElement *use = static_cast<nsSVGUseElement*>(mContent);
   nsIContent* clone = use->GetAnonymousContent();

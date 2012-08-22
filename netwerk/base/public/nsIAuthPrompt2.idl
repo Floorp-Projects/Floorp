@@ -23,16 +23,16 @@ interface nsIAuthPrompt2 : nsISupports
   /**
    * The password will be sent unencrypted. No security provided.
    */
-  const PRUint32 LEVEL_NONE = 0;
+  const uint32_t LEVEL_NONE = 0;
   /**
    * Password will be sent encrypted, but the connection is otherwise
    * insecure.
    */
-  const PRUint32 LEVEL_PW_ENCRYPTED = 1;
+  const uint32_t LEVEL_PW_ENCRYPTED = 1;
   /**
    * The connection, both for password and data, is secure.
    */
-  const PRUint32 LEVEL_SECURE = 2;
+  const uint32_t LEVEL_SECURE = 2;
   /* @} */
 
   /**
@@ -61,7 +61,7 @@ interface nsIAuthPrompt2 : nsISupports
    *         return value of false.
    */
   boolean promptAuth(in nsIChannel aChannel,
-                     in PRUint32 level,
+                     in uint32_t level,
                      in nsIAuthInformation authInfo);
 
   /**
@@ -98,6 +98,6 @@ interface nsIAuthPrompt2 : nsISupports
   nsICancelable asyncPromptAuth(in nsIChannel aChannel,
                                 in nsIAuthPromptCallback aCallback,
                                 in nsISupports aContext,
-                                in PRUint32 level,
+                                in uint32_t level,
                                 in nsIAuthInformation authInfo);
 };

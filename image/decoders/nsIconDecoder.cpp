@@ -32,13 +32,13 @@ nsIconDecoder::~nsIconDecoder()
 { }
 
 void
-nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
+nsIconDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
 {
   NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
 
   // We put this here to avoid errors about crossing initialization with case
   // jumps on linux.
-  PRUint32 bytesToRead = 0;
+  uint32_t bytesToRead = 0;
   nsresult rv;
 
   // Performance isn't critical here, so our update rectangle is 
@@ -51,7 +51,7 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       case iconStateStart:
 
         // Grab the width
-        mWidth = (PRUint8)*aBuffer;
+        mWidth = (uint8_t)*aBuffer;
 
         // Book Keeping
         aBuffer++;
@@ -62,7 +62,7 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       case iconStateHaveHeight:
 
         // Grab the Height
-        mHeight = (PRUint8)*aBuffer;
+        mHeight = (uint8_t)*aBuffer;
 
         // Post our size to the superclass
         PostSize(mWidth, mHeight);

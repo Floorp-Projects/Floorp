@@ -38,21 +38,21 @@ class AndroidCameraInputStream : public nsIAsyncInputStream, mozilla::net::Camer
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIASYNCINPUTSTREAM
 
-    void ReceiveFrame(char* frame, PRUint32 length);
+    void ReceiveFrame(char* frame, uint32_t length);
 
   protected:
     void NotifyListeners();
     void doClose();
 
-    PRUint32 mAvailable;
+    uint32_t mAvailable;
     nsCString mContentType;
-    PRUint32 mWidth;
-    PRUint32 mHeight;
-    PRUint32 mCamera;
+    uint32_t mWidth;
+    uint32_t mHeight;
+    uint32_t mCamera;
     bool mHeaderSent;
     bool mClosed;
     nsDeque *mFrameQueue;
-    PRUint32 mFrameSize;
+    uint32_t mFrameSize;
     mozilla::ReentrantMonitor mMonitor;
 
     nsCOMPtr<nsIInputStreamCallback> mCallback;

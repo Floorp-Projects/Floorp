@@ -25,7 +25,7 @@ struct testcaseLine {
 #ifdef DEBUG_smontagu
 #define DEBUG_NAMED_TESTCASE(t, s) \
   printf(t ": "); \
-  for (PRUint32 i = 0; i < s.Length(); ++i) \
+  for (uint32_t i = 0; i < s.Length(); ++i) \
     printf("%x ", s.CharAt(i)); \
   printf("\n")
 #else
@@ -124,7 +124,7 @@ bool TestInvariants(testcaseLine* testLine)
   return rv;
 }
 
-PRUint32 UTF32CodepointFromTestcase(testcaseLine* testLine)
+uint32_t UTF32CodepointFromTestcase(testcaseLine* testLine)
 {
   if (!IS_SURROGATE(testLine->c1[0]))
     return testLine->c1[0];
@@ -135,7 +135,7 @@ PRUint32 UTF32CodepointFromTestcase(testcaseLine* testLine)
   return SURROGATE_TO_UCS4(testLine->c1[0], testLine->c1[1]);
 }
 
-bool TestUnspecifiedCodepoint(PRUint32 codepoint)
+bool TestUnspecifiedCodepoint(uint32_t codepoint)
 {
   bool rv = true;
   PRUnichar unicharArray[3];
@@ -174,9 +174,9 @@ void TestPart0()
 {
   printf("Test Part0: Specific cases\n");
 
-  PRUint32 i = 0;
-  PRUint32 numFailed = 0;
-  PRUint32 numPassed = 0;
+  uint32_t i = 0;
+  uint32_t numFailed = 0;
+  uint32_t numPassed = 0;
 
   while (Part0TestData[i].c1[0] != 0) {
     if (TestInvariants(&Part0TestData[i++]))
@@ -191,11 +191,11 @@ void TestPart1()
 {
   printf("Test Part1: Character by character test\n");
 
-  PRUint32 i = 0;
-  PRUint32 numFailed = 0;
-  PRUint32 numPassed = 0;
-  PRUint32 codepoint;
-  PRUint32 testDataCodepoint = UTF32CodepointFromTestcase(&Part1TestData[i]);
+  uint32_t i = 0;
+  uint32_t numFailed = 0;
+  uint32_t numPassed = 0;
+  uint32_t codepoint;
+  uint32_t testDataCodepoint = UTF32CodepointFromTestcase(&Part1TestData[i]);
 
   for (codepoint = 1; codepoint < 0x110000; ++codepoint) {
     if (testDataCodepoint == codepoint) {
@@ -218,9 +218,9 @@ void TestPart2()
 {
   printf("Test Part2: Canonical Order Test\n");
 
-  PRUint32 i = 0;
-  PRUint32 numFailed = 0;
-  PRUint32 numPassed = 0;
+  uint32_t i = 0;
+  uint32_t numFailed = 0;
+  uint32_t numPassed = 0;
 
   while (Part2TestData[i].c1[0] != 0) {
     if (TestInvariants(&Part2TestData[i++]))
@@ -235,9 +235,9 @@ void TestPart3()
 {
   printf("Test Part3: PRI #29 Test\n");
 
-  PRUint32 i = 0;
-  PRUint32 numFailed = 0;
-  PRUint32 numPassed = 0;
+  uint32_t i = 0;
+  uint32_t numFailed = 0;
+  uint32_t numPassed = 0;
 
   while (Part3TestData[i].c1[0] != 0) {
     if (TestInvariants(&Part3TestData[i++]))

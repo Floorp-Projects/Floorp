@@ -257,14 +257,14 @@ interface nsIDOMWindowUtils : nsISupports {
    * returns true if the page called prevent default on this touch event
    */
   boolean sendTouchEvent(in AString aType,
-                         [array, size_is(count)] in PRUint32 aIdentifiers,
-                         [array, size_is(count)] in PRInt32 aXs,
-                         [array, size_is(count)] in PRInt32 aYs,
-                         [array, size_is(count)] in PRUint32 aRxs,
-                         [array, size_is(count)] in PRUint32 aRys,
+                         [array, size_is(count)] in uint32_t aIdentifiers,
+                         [array, size_is(count)] in int32_t aXs,
+                         [array, size_is(count)] in int32_t aYs,
+                         [array, size_is(count)] in uint32_t aRxs,
+                         [array, size_is(count)] in uint32_t aRys,
                          [array, size_is(count)] in float aRotationAngles,
                          [array, size_is(count)] in float aForces,
-                         in PRUint32 count,
+                         in uint32_t count,
                          in long aModifiers,
                          [optional] in boolean aIgnoreRootScrollFrame);
 
@@ -579,7 +579,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * This method requires UniversalXPConnect privileges.
    */
-  PRUint32 compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
+  uint32_t compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
                            in nsIDOMHTMLCanvasElement aCanvas2,
                            out unsigned long aMaxDifference);
 
@@ -1009,7 +1009,7 @@ interface nsIDOMWindowUtils : nsISupports {
   nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
 
   [noscript] void RenderDocument(in nsConstRect aRect,
-                                 in PRUint32 aFlags,
+                                 in uint32_t aFlags,
                                  in nscolor aBackgroundColor,
                                  in gfxContext aThebesContext);
 

@@ -21,7 +21,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
                                         in JSObjectPtr aJSObject,
                                         in string aClassName,
                                         in jsid aProperty,
-                                        in PRUint32 aAction);
+                                        in uint32_t aAction);
 
     /**
      * Check that the script currently running in context "cx" can load "uri".

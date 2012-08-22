@@ -79,8 +79,8 @@ class MaemoLocationProvider : public nsIGeolocationProvider,
   double mPrevLong;
 
   bool mIgnoreBigHErr;
-  PRInt32 mMaxHErr;
+  int32_t mMaxHErr;
   bool mIgnoreBigVErr;
-  PRInt32 mMaxVErr;
+  int32_t mMaxVErr;
 
 };

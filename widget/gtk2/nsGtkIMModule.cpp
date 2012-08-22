@@ -31,7 +31,7 @@ using namespace mozilla::widget;
 PRLogModuleInfo* gGtkIMLog = nullptr;
 
 static const char*
-GetRangeTypeName(PRUint32 aRangeType)
+GetRangeTypeName(uint32_t aRangeType)
 {
     switch (aRangeType) {
         case NS_TEXTRANGE_RAWINPUT:
@@ -50,7 +50,7 @@ GetRangeTypeName(PRUint32 aRangeType)
 }
 
 static const char*
-GetEnabledStateName(PRUint32 aState)
+GetEnabledStateName(uint32_t aState)
 {
     switch (aState) {
         case IMEState::DISABLED:
@@ -615,7 +615,7 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
         mozilla::services::GetObserverService();
     if (observerService) {
         nsAutoString rectBuf;
-        PRInt32 x, y, w, h;
+        int32_t x, y, w, h;
         gdk_window_get_position(aCaller->GetGdkWindow(), &x, &y);
         gdk_window_get_size(aCaller->GetGdkWindow(), &w, &h);
         rectBuf.Assign(NS_LITERAL_STRING("{\"left\": "));
@@ -873,13 +873,13 @@ nsGtkIMModule::OnRetrieveSurroundingNative(GtkIMContext *aContext)
     }
 
     nsAutoString uniStr;
-    PRUint32 cursorPos;
+    uint32_t cursorPos;
     if (NS_FAILED(GetCurrentParagraph(uniStr, cursorPos))) {
         return FALSE;
     }
 
     NS_ConvertUTF16toUTF8 utf8Str(nsDependentSubstring(uniStr, 0, cursorPos));
-    PRUint32 cursorPosInUTF8 = utf8Str.Length();
+    uint32_t cursorPosInUTF8 = utf8Str.Length();
     AppendUTF16toUTF8(nsDependentSubstring(uniStr, cursorPos), utf8Str);
     gtk_im_context_set_surrounding(aContext, utf8Str.get(), utf8Str.Length(),
                                    cursorPosInUTF8);
@@ -912,7 +912,7 @@ nsGtkIMModule::OnDeleteSurroundingNative(GtkIMContext  *aContext,
         return FALSE;
     }
 
-    if (NS_SUCCEEDED(DeleteText(aOffset, (PRUint32)aNChars))) {
+    if (NS_SUCCEEDED(DeleteText(aOffset, (uint32_t)aNChars))) {
         return TRUE;
     }
 
@@ -1205,14 +1205,14 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     nsTextEvent textEvent(true, NS_TEXT_TEXT, mLastFocusedWindow);
     InitEvent(textEvent);
 
-    PRUint32 targetOffset = mCompositionStart;
+    uint32_t targetOffset = mCompositionStart;
 
     nsAutoTArray<nsTextRange, 4> textRanges;
     if (!aIsCommit) {
         // NOTE: SetTextRangeList() assumes that mDispatchedCompositionString
         //       has been updated already.
         SetTextRangeList(textRanges);
-        for (PRUint32 i = 0; i < textRanges.Length(); i++) {
+        for (uint32_t i = 0; i < textRanges.Length(); i++) {
             nsTextRange& range = textRanges[i];
             if (range.mRangeType == NS_TEXTRANGE_SELECTEDRAWTEXT ||
                 range.mRangeType == NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) {
@@ -1348,10 +1348,10 @@ nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
     nsTextRange range;
     if (cursor_pos < 0) {
         range.mStartOffset = 0;
-    } else if (PRUint32(cursor_pos) > mDispatchedCompositionString.Length()) {
+    } else if (uint32_t(cursor_pos) > mDispatchedCompositionString.Length()) {
         range.mStartOffset = mDispatchedCompositionString.Length();
     } else {
-        range.mStartOffset = PRUint32(cursor_pos);
+        range.mStartOffset = uint32_t(cursor_pos);
     }
     range.mEndOffset = range.mStartOffset;
     range.mRangeType = NS_TEXTRANGE_CARETPOSITION;
@@ -1368,7 +1368,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
 }
 
 void
-nsGtkIMModule::SetCursorPosition(PRUint32 aTargetOffset)
+nsGtkIMModule::SetCursorPosition(uint32_t aTargetOffset)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("GtkIMModule(%p): SetCursorPosition, aTargetOffset=%u",
@@ -1426,7 +1426,7 @@ nsGtkIMModule::SetCursorPosition(PRUint32 aTargetOffset)
 }
 
 nsresult
-nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
+nsGtkIMModule::GetCurrentParagraph(nsAString& aText, uint32_t& aCursorPos)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("GtkIMModule(%p): GetCurrentParagraph, mCompositionState=%s",
@@ -1440,8 +1440,8 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
 
     nsEventStatus status;
 
-    PRUint32 selOffset = mCompositionStart;
-    PRUint32 selLength = mSelectedString.Length();
+    uint32_t selOffset = mCompositionStart;
+    uint32_t selLength = mSelectedString.Length();
 
     // If focused editor doesn't have composition string, we should use
     // current selection.
@@ -1461,7 +1461,7 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
         ("        selOffset=%u, selLength=%u",
          selOffset, selLength));
 
-    // XXX nsString::Find and nsString::RFind take PRInt32 for offset, so,
+    // XXX nsString::Find and nsString::RFind take int32_t for offset, so,
     //     we cannot support this request when the current offset is larger
     //     than PR_INT32_MAX.
     if (selOffset > PR_INT32_MAX || selLength > PR_INT32_MAX ||
@@ -1497,14 +1497,14 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
     }
 
     // Get only the focused paragraph, by looking for newlines
-    PRInt32 parStart = (selOffset == 0) ? 0 :
+    int32_t parStart = (selOffset == 0) ? 0 :
         textContent.RFind("\n", false, selOffset - 1, -1) + 1;
-    PRInt32 parEnd = textContent.Find("\n", false, selOffset + selLength, -1);
+    int32_t parEnd = textContent.Find("\n", false, selOffset + selLength, -1);
     if (parEnd < 0) {
         parEnd = textContent.Length();
     }
     aText = nsDependentSubstring(textContent, parStart, parEnd - parStart);
-    aCursorPos = selOffset - PRUint32(parStart);
+    aCursorPos = selOffset - uint32_t(parStart);
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("    aText=%s, aText.Length()=%u, aCursorPos=%u",
@@ -1515,7 +1515,7 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
 }
 
 nsresult
-nsGtkIMModule::DeleteText(const PRInt32 aOffset, const PRUint32 aNChars)
+nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("GtkIMModule(%p): DeleteText, aOffset=%d, aNChars=%d, "
@@ -1539,7 +1539,7 @@ nsGtkIMModule::DeleteText(const PRInt32 aOffset, const PRUint32 aNChars)
 
     // First, we should cancel current composition because editor cannot
     // handle changing selection and deleting text.
-    PRUint32 selOffset;
+    uint32_t selOffset;
     bool wasComposing = IsComposing();
     bool editorHadCompositionString = EditorHasCompositionString();
     if (wasComposing) {

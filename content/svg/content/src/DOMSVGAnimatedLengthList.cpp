@@ -55,8 +55,8 @@ DOMSVGAnimatedLengthList::GetAnimVal(nsIDOMSVGLengthList **_retval)
 /* static */ already_AddRefed<DOMSVGAnimatedLengthList>
 DOMSVGAnimatedLengthList::GetDOMWrapper(SVGAnimatedLengthList *aList,
                                         nsSVGElement *aElement,
-                                        PRUint8 aAttrEnum,
-                                        PRUint8 aAxis)
+                                        uint8_t aAttrEnum,
+                                        uint8_t aAxis)
 {
   DOMSVGAnimatedLengthList *wrapper =
     sSVGAnimatedLengthListTearoffTable.GetTearoff(aList);

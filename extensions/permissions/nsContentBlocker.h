@@ -35,13 +35,13 @@ private:
   void PrefChanged(nsIPrefBranch *, const char *);
   nsresult TestPermission(nsIURI *aCurrentURI,
                           nsIURI *aFirstURI,
-                          PRInt32 aContentType,
+                          int32_t aContentType,
                           bool *aPermission,
                           bool *aFromPrefs);
 
   nsCOMPtr<nsIPermissionManager> mPermissionManager;
   nsCOMPtr<nsIPrefBranch> mPrefBranchInternal;
-  static PRUint8 mBehaviorPref[];
+  static uint8_t mBehaviorPref[];
 };
 
 #define NS_CONTENTBLOCKER_CID \

@@ -38,7 +38,7 @@ class nsEmptyStyleRule MOZ_FINAL : public nsIStyleRule
   NS_DECL_ISUPPORTS
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 };
 
@@ -47,7 +47,7 @@ class nsInitialStyleRule MOZ_FINAL : public nsIStyleRule
   NS_DECL_ISUPPORTS
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 };
 
@@ -192,7 +192,7 @@ class nsStyleSet
   nsRestyleHint HasAttributeDependentStyle(nsPresContext* aPresContext,
                                            mozilla::dom::Element* aElement,
                                            nsIAtom*       aAttribute,
-                                           PRInt32        aModType,
+                                           int32_t        aModType,
                                            bool           aAttrHasChanged);
 
   /*
@@ -238,11 +238,11 @@ class nsStyleSet
   bool GetAuthorStyleDisabled();
   nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
 
-  PRInt32 SheetCount(sheetType aType) const {
+  int32_t SheetCount(sheetType aType) const {
     return mSheets[aType].Count();
   }
 
-  nsIStyleSheet* StyleSheetAt(sheetType aType, PRInt32 aIndex) const {
+  nsIStyleSheet* StyleSheetAt(sheetType aType, int32_t aIndex) const {
     return mSheets[aType].ObjectAt(aIndex);
   }
 
@@ -371,14 +371,14 @@ class nsStyleSet
                          // lexicographic tree of matched rules that style
                          // contexts use to look up properties.
 
-  PRUint16 mBatching;
+  uint16_t mBatching;
 
   unsigned mInShutdown : 1;
   unsigned mAuthorStyleDisabled: 1;
   unsigned mInReconstruct : 1;
   unsigned mDirty : 8;  // one dirty bit is used per sheet type
 
-  PRUint32 mUnusedRuleNodeCount; // used to batch rule node GC
+  uint32_t mUnusedRuleNodeCount; // used to batch rule node GC
   nsTArray<nsStyleContext*> mRoots; // style contexts with no parent
 
   // Empty style rules to force things that restrict which properties

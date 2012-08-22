@@ -58,7 +58,7 @@ public:
 
     // Max Socket count may need to get initialized/used by nsHttpHandler
     // before this class is initialized.
-    static PRUint32 gMaxCount;
+    static uint32_t gMaxCount;
     static PRCallOnceType gMaxCountInitOnce;
     static PRStatus DiscoverMaxCount();
 
@@ -123,16 +123,16 @@ private:
     {
         PRFileDesc       *mFD;
         nsASocketHandler *mHandler;
-        PRUint16          mElapsedTime;  // time elapsed w/o activity
+        uint16_t          mElapsedTime;  // time elapsed w/o activity
     };
 
     SocketContext *mActiveList;                   /* mListSize entries */
     SocketContext *mIdleList;                     /* mListSize entries */
 
-    PRUint32 mActiveListSize;
-    PRUint32 mIdleListSize;
-    PRUint32 mActiveCount;
-    PRUint32 mIdleCount;
+    uint32_t mActiveListSize;
+    uint32_t mIdleListSize;
+    uint32_t mActiveCount;
+    uint32_t mIdleCount;
 
     nsresult DetachSocket(SocketContext *, SocketContext *);
     nsresult AddToIdleList(SocketContext *);
@@ -158,7 +158,7 @@ private:
     PRIntervalTime PollTimeout();            // computes ideal poll timeout
     nsresult       DoPollIteration(bool wait);
                                              // perfoms a single poll iteration
-    PRInt32        Poll(bool wait, PRUint32 *interval);
+    int32_t        Poll(bool wait, uint32_t *interval);
                                              // calls PR_Poll.  the out param
                                              // interval indicates the poll
                                              // duration in seconds.
@@ -171,7 +171,7 @@ private:
 
     // Preference Monitor for SendBufferSize
     nsresult    UpdatePrefs();
-    PRInt32     mSendBufferSize;
+    int32_t     mSendBufferSize;
 
     // Socket thread only for dynamically adjusting max socket size
 #if defined(XP_WIN)

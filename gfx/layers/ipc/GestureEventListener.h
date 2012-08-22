@@ -159,11 +159,11 @@ protected:
   /**
    * Stores the time a touch started, used for detecting a tap gesture. Only
    * valid when there's exactly one touch in mTouches. This is the time that the
-   * first touch was inserted into the array. This is a PRUint64 because it is
+   * first touch was inserted into the array. This is a uint64_t because it is
    * initialized from interactions with InputData, which stores its timestamps as
-   * a PRUint64.
+   * a uint64_t.
    */
-  PRUint64 mTapStartTime;
+  uint64_t mTapStartTime;
 
   /**
    * Cached copy of the last touch input, only valid when in the

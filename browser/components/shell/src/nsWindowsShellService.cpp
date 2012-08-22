@@ -395,7 +395,7 @@ nsWindowsShellService::IsDefaultBrowser(bool* aIsDefaultBrowser)
   for (settings = gSettings; settings < end; ++settings) {
     NS_ConvertUTF8toUTF16 keyName(settings->keyName);
     NS_ConvertUTF8toUTF16 valueData(settings->valueData);
-    PRInt32 offset = valueData.Find("%APPPATH%");
+    int32_t offset = valueData.Find("%APPPATH%");
     valueData.Replace(offset, 9, appLongPath);
 
     rv = OpenKeyForReading(HKEY_CLASSES_ROOT, keyName, &theKey);
@@ -518,7 +518,7 @@ nsWindowsShellService::IsDefaultBrowser(bool* aIsDefaultBrowser)
     }
 
     NS_ConvertUTF8toUTF16 oldValueOpen(OLD_VAL_OPEN);
-    PRInt32 offset = oldValueOpen.Find("%APPPATH%");
+    int32_t offset = oldValueOpen.Find("%APPPATH%");
     oldValueOpen.Replace(offset, 9, appLongPath);
 
     ::ZeroMemory(currValue, sizeof(currValue));
@@ -665,13 +665,13 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
                                   getter_AddRefs(image));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 width = image->Width();
-  PRInt32 height = image->Height();
+  int32_t width = image->Width();
+  int32_t height = image->Height();
 
-  PRUint8* bits = image->Data();
-  PRUint32 length = image->GetDataSize();
-  PRUint32 bpr = PRUint32(image->Stride());
-  PRInt32 bitCount = bpr/width;
+  uint8_t* bits = image->Data();
+  uint32_t length = image->GetDataSize();
+  uint32_t bpr = uint32_t(image->Stride());
+  int32_t bitCount = bpr/width;
 
   // initialize these bitmap structs which we will later
   // serialize directly to the head of the bitmap file
@@ -703,14 +703,14 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
   // write the bitmap headers and rgb pixel data to the file
   rv = NS_ERROR_FAILURE;
   if (stream) {
-    PRUint32 written;
+    uint32_t written;
     stream->Write((const char*)&bf, sizeof(BITMAPFILEHEADER), &written);
     if (written == sizeof(BITMAPFILEHEADER)) {
       stream->Write((const char*)&bmi, sizeof(BITMAPINFOHEADER), &written);
       if (written == sizeof(BITMAPINFOHEADER)) {
         // write out the image data backwards because the desktop won't
         // show bitmaps with negative heights for top-to-bottom
-        PRUint32 i = length;
+        uint32_t i = length;
         do {
           i -= bpr;
           stream->Write(((const char*)bits) + i, bpr, &written);
@@ -732,7 +732,7 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 
 NS_IMETHODIMP
 nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement, 
-                                            PRInt32 aPosition)
+                                            int32_t aPosition)
 {
   nsresult rv;
 
@@ -843,7 +843,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::OpenApplication(PRInt32 aApplication)
+nsWindowsShellService::OpenApplication(int32_t aApplication)
 {
   nsAutoString application;
   switch (aApplication) {
@@ -904,8 +904,8 @@ nsWindowsShellService::OpenApplication(PRInt32 aApplication)
   // Look for any embedded environment variables and substitute their 
   // values, as |::CreateProcessW| is unable to do this.
   nsAutoString path(buf);
-  PRInt32 end = path.Length();
-  PRInt32 cursor = 0, temp = 0;
+  int32_t end = path.Length();
+  int32_t cursor = 0, temp = 0;
   ::ZeroMemory(buf, sizeof(buf));
   do {
     cursor = path.FindChar('%', cursor);
@@ -944,15 +944,15 @@ nsWindowsShellService::OpenApplication(PRInt32 aApplication)
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::GetDesktopBackgroundColor(PRUint32* aColor)
+nsWindowsShellService::GetDesktopBackgroundColor(uint32_t* aColor)
 {
-  PRUint32 color = ::GetSysColor(COLOR_DESKTOP);
+  uint32_t color = ::GetSysColor(COLOR_DESKTOP);
   *aColor = (GetRValue(color) << 16) | (GetGValue(color) << 8) | GetBValue(color);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::SetDesktopBackgroundColor(PRUint32 aColor)
+nsWindowsShellService::SetDesktopBackgroundColor(uint32_t aColor)
 {
   int aParameters[2] = { COLOR_BACKGROUND, COLOR_DESKTOP };
   BYTE r = (aColor >> 16);

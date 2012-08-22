@@ -25,11 +25,11 @@ public:
 private:
   nsresult DispatchTrustedEventToRequest(const nsAString& aEventName,
                                          nsIDOMMozSmsRequest* aRequest);
-  SmsRequest* GetRequest(PRInt32 aRequestId);
+  SmsRequest* GetRequest(int32_t aRequestId);
 
   template <class T>
-  nsresult NotifySuccess(PRInt32 aRequestId, T aParam);
-  nsresult NotifyError(PRInt32 aRequestId, PRInt32 aError);
+  nsresult NotifySuccess(int32_t aRequestId, T aParam);
+  nsresult NotifyError(int32_t aRequestId, int32_t aError);
 
   nsCOMArray<nsIDOMMozSmsRequest> mRequests;
 };

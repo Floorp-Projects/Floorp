@@ -43,7 +43,7 @@ bool test1()
 
     nsAutoString buf(aStr);
 
-    PRInt32 n = buf.FindChar(',');
+    int32_t n = buf.FindChar(',');
 
     n = buf.Length();
 
@@ -74,7 +74,7 @@ bool test_find()
   {
     nsCString src("<!DOCTYPE blah blah blah>");
 
-    PRInt32 i = src.Find("DOCTYPE", true, 2, 1);
+    int32_t i = src.Find("DOCTYPE", true, 2, 1);
     if (i == 2)
       return true;
 
@@ -87,7 +87,7 @@ bool test_rfind()
     const char text[] = "<!DOCTYPE blah blah blah>";
     const char term[] = "bLaH";
     nsCString src(text);
-    PRInt32 i;
+    int32_t i;
 
     i = src.RFind(term, true, 3, -1); 
     if (i != kNotFound)
@@ -124,7 +124,7 @@ bool test_rfind_2()
   {
     const char text[] = "<!DOCTYPE blah blah blah>";
     nsCString src(text);
-    PRInt32 i = src.RFind("TYPE", false, 5, -1); 
+    int32_t i = src.RFind("TYPE", false, 5, -1); 
     if (i == 5)
       return true;
 
@@ -136,7 +136,7 @@ bool test_rfind_3()
   {
     const char text[] = "urn:mozilla:locale:en-US:necko";
     nsCAutoString value(text);
-    PRInt32 i = value.RFind(":");
+    int32_t i = value.RFind(":");
     if (i == 24)
       return true;
 
@@ -147,7 +147,7 @@ bool test_rfind_3()
 bool test_rfind_4()
   {
     nsCString value("a.msf");
-    PRInt32 i = value.RFind(".msf");
+    int32_t i = value.RFind(".msf");
     if (i != 1)
       {
         printf("i=%d\n", i);
@@ -578,7 +578,7 @@ bool test_xpidl_string()
       return false;
 
     /*
-    PRInt32 index = a.FindCharInSet("xyz");
+    int32_t index = a.FindCharInSet("xyz");
     if (index != kNotFound)
       return false;
     */
@@ -657,10 +657,10 @@ bool test_appendint()
   {
     nsString str;
     nsCString cstr;
-    PRInt32 L;
-    PRUint32 UL;
-    PRInt64 LL;
-    PRUint64 ULL;
+    int32_t L;
+    uint32_t UL;
+    int64_t LL;
+    uint64_t ULL;
     test_appends(2147483647, L)
     test_appends(-2147483648, L)
     test_appends(4294967295, UL)
@@ -686,12 +686,12 @@ bool test_appendint64()
   {
     nsCString str;
 
-    PRInt64 max = LL_MaxInt();
+    int64_t max = LL_MaxInt();
     static const char max_expected[] = "9223372036854775807";
-    PRInt64 min = LL_MinInt();
+    int64_t min = LL_MinInt();
     static const char min_expected[] = "-9223372036854775808";
     static const char min_expected_oct[] = "1000000000000000000000";
-    PRInt64 maxint_plus1 = LL_INIT(1, 0);
+    int64_t maxint_plus1 = LL_INIT(1, 0);
     static const char maxint_plus1_expected[] = "4294967296";
     static const char maxint_plus1_expected_x[] = "100000000";
 
@@ -763,7 +763,7 @@ bool test_findcharinset()
   {
     nsCString buf("hello, how are you?");
 
-    PRInt32 index = buf.FindCharInSet(",?", 5);
+    int32_t index = buf.FindCharInSet(",?", 5);
     if (index != 5)
       return false;
 
@@ -772,7 +772,7 @@ bool test_findcharinset()
       return false;
 
     index = buf.FindCharInSet("z?", 6);
-    if (index != (PRInt32) buf.Length()-1)
+    if (index != (int32_t) buf.Length()-1)
       return false;
 
     return true;
@@ -782,7 +782,7 @@ bool test_rfindcharinset()
   {
     nsCString buf("hello, how are you?");
 
-    PRInt32 index = buf.RFindCharInSet(",?", 5);
+    int32_t index = buf.RFindCharInSet(",?", 5);
     if (index != 5)
       return false;
 
@@ -936,8 +936,8 @@ bool test_empty_assignment()
 struct ToIntegerTest
 {
   const char *str;
-  PRUint32 radix;
-  PRInt32 result;
+  uint32_t radix;
+  int32_t result;
   nsresult rv;
 };
 
@@ -950,10 +950,10 @@ static const ToIntegerTest kToIntegerTests[] = {
 
 bool test_string_tointeger()
 {
-  PRInt32 i;
+  int32_t i;
   nsresult rv;
   for (const ToIntegerTest* t = kToIntegerTests; t->str; ++t) {
-    PRInt32 result = nsCAutoString(t->str).ToInteger(&rv, t->radix);
+    int32_t result = nsCAutoString(t->str).ToInteger(&rv, t->radix);
     if (rv != t->rv || result != t->result)
       return false;
     result = nsCAutoString(t->str).ToInteger(&i, t->radix);
@@ -1007,7 +1007,7 @@ static bool test_parse_string()
          test_parse_string_helper1("  foo", ' ', "foo");
 }
 
-static bool test_strip_chars_helper(const PRUnichar* str, const PRUnichar* strip, const nsAString& result, PRUint32 offset=0)
+static bool test_strip_chars_helper(const PRUnichar* str, const PRUnichar* strip, const nsAString& result, uint32_t offset=0)
 {
   nsAutoString tmp(str);
   nsAString& data = tmp;
@@ -1125,7 +1125,7 @@ static bool test_huge_capacity()
 
 static bool test_tofloat_helper(const nsString& aStr, float aExpected, bool aSuccess)
 {
-  PRInt32 result;
+  int32_t result;
   return aStr.ToFloat(&result) == aExpected &&
          aSuccess ? result == NS_OK : result != NS_OK;
 }
@@ -1150,7 +1150,7 @@ static bool test_tofloat()
 
 static bool test_todouble_helper(const nsString& aStr, double aExpected, bool aSuccess)
 {
-  PRInt32 result;
+  int32_t result;
   return aStr.ToDouble(&result) == aExpected &&
          aSuccess ? result == NS_OK : result != NS_OK;
 }

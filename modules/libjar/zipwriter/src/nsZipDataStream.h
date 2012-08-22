@@ -24,7 +24,7 @@ public:
     }
 
     nsresult Init(nsZipWriter *aWriter, nsIOutputStream *aStream,
-                  nsZipHeader *aHeader, PRInt32 aCompression);
+                  nsZipHeader *aHeader, int32_t aCompression);
 
     nsresult ReadStream(nsIInputStream *aStream);
 
@@ -37,7 +37,7 @@ private:
 
     nsresult CompleteEntry();
     nsresult ProcessData(nsIRequest *aRequest, nsISupports *aContext,
-                         char *aBuffer, PRUint32 aOffset, PRUint32 aCount);
+                         char *aBuffer, uint32_t aOffset, uint32_t aCount);
 };
 
 #endif

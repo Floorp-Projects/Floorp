@@ -45,9 +45,9 @@ public:
                                       const nsAString* aSerialized,
                                       bool aNotify);
 
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
-  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                                 const nsAttrValue* aValue, bool aNotify);
 
   nsIDOMCSSStyleDeclaration* GetStyle(nsresult* retval);
@@ -65,7 +65,7 @@ protected:
                            nsAttrValue& aResult,
                            bool aForceInDataDoc);
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
                                 const nsAString& aValue, nsAttrValue& aResult);
 
   friend class nsGenericElement;

@@ -32,9 +32,9 @@ public:
 #endif
 
   // nsIFrame overrides
-  NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType);
+                              int32_t aModType);
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,

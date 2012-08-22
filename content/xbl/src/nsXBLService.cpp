@@ -70,7 +70,7 @@ IsAncestorBinding(nsIDocument* aDocument,
   NS_ASSERTION(aChildBindingURI, "expected a binding URI");
   NS_ASSERTION(aChild, "expected a child content");
 
-  PRUint32 bindingRecursion = 0;
+  uint32_t bindingRecursion = 0;
   nsBindingManager* bindingManager = aDocument->BindingManager();
   for (nsIContent *bindingParent = aChild->GetBindingParent();
        bindingParent;
@@ -176,9 +176,9 @@ static const size_t kBucketSizes[] = {
   sizeof(nsXBLBindingRequest)
 };
 
-static const PRInt32 kNumBuckets = sizeof(kBucketSizes)/sizeof(size_t);
-static const PRInt32 kNumElements = 64;
-static const PRInt32 kInitialSize = sizeof(nsXBLBindingRequest) * kNumElements;
+static const int32_t kNumBuckets = sizeof(kBucketSizes)/sizeof(size_t);
+static const int32_t kNumElements = 64;
+static const int32_t kInitialSize = sizeof(nsXBLBindingRequest) * kNumElements;
 
 // nsXBLStreamListener, a helper class used for 
 // asynchronous parsing of URLs
@@ -226,7 +226,7 @@ nsXBLStreamListener::nsXBLStreamListener(nsIDocument* aBoundDocument,
 
 nsXBLStreamListener::~nsXBLStreamListener()
 {
-  for (PRUint32 i = 0; i < mBindingRequests.Length(); i++) {
+  for (uint32_t i = 0; i < mBindingRequests.Length(); i++) {
     nsXBLBindingRequest* req = mBindingRequests.ElementAt(i);
     nsXBLBindingRequest::Destroy(nsXBLService::GetInstance()->mPool, req);
   }
@@ -234,7 +234,7 @@ nsXBLStreamListener::~nsXBLStreamListener()
 
 NS_IMETHODIMP
 nsXBLStreamListener::OnDataAvailable(nsIRequest *request, nsISupports* aCtxt, nsIInputStream* aInStr, 
-                                     PRUint32 aSourceOffset, PRUint32 aCount)
+                                     uint32_t aSourceOffset, uint32_t aCount)
 {
   if (mInner)
     return mInner->OnDataAvailable(request, aCtxt, aInStr, aSourceOffset, aCount);
@@ -292,8 +292,8 @@ bool
 nsXBLStreamListener::HasRequest(nsIURI* aURI, nsIContent* aElt)
 {
   // XXX Could be more efficient.
-  PRUint32 count = mBindingRequests.Length();
-  for (PRUint32 i = 0; i < count; i++) {
+  uint32_t count = mBindingRequests.Length();
+  for (uint32_t i = 0; i < count; i++) {
     nsXBLBindingRequest* req = mBindingRequests.ElementAt(i);
     bool eq;
     if (req->mBoundElement == aElt &&
@@ -308,8 +308,8 @@ nsresult
 nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsresult rv = NS_OK;
-  PRUint32 i;
-  PRUint32 count = mBindingRequests.Length();
+  uint32_t i;
+  uint32_t count = mBindingRequests.Length();
 
   // Get the binding document; note that we don't hold onto it in this object
   // to avoid creating a cycle
@@ -397,8 +397,8 @@ bool nsXBLService::gAllowDataURIs = false;
 nsHashtable* nsXBLService::gClassTable = nullptr;
 
 JSCList  nsXBLService::gClassLRUList = JS_INIT_STATIC_CLIST(&nsXBLService::gClassLRUList);
-PRUint32 nsXBLService::gClassLRUListLength = 0;
-PRUint32 nsXBLService::gClassLRUListQuota = 64;
+uint32_t nsXBLService::gClassLRUListLength = 0;
+uint32_t nsXBLService::gClassLRUListQuota = 64;
 
 // Implement our nsISupports methods
 NS_IMPL_ISUPPORTS2(nsXBLService, nsIObserver, nsISupportsWeakReference)
@@ -818,8 +818,8 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   else {
     baseBindingURI = protoBinding->GetBaseBindingURI();
     if (baseBindingURI) {
-      PRUint32 count = aDontExtendURIs.Length();
-      for (PRUint32 index = 0; index < count; ++index) {
+      uint32_t count = aDontExtendURIs.Length();
+      for (uint32_t index = 0; index < count; ++index) {
         bool equal;
         rv = aDontExtendURIs[index]->Equals(baseBindingURI, &equal);
         NS_ENSURE_SUCCESS(rv, rv);

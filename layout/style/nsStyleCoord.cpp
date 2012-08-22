@@ -22,7 +22,7 @@ nsStyleCoord::nsStyleCoord(nsStyleUnit aUnit)
   mValue.mInt = 0;
 }
 
-nsStyleCoord::nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit)
+nsStyleCoord::nsStyleCoord(int32_t aValue, nsStyleUnit aUnit)
   : mUnit(aUnit)
 {
   //if you want to pass in eStyleUnit_Coord, don't. instead, use the
@@ -91,7 +91,7 @@ void nsStyleCoord::SetCoordValue(nscoord aValue)
   mValue.mInt = aValue;
 }
 
-void nsStyleCoord::SetIntValue(PRInt32 aValue, nsStyleUnit aUnit)
+void nsStyleCoord::SetIntValue(int32_t aValue, nsStyleUnit aUnit)
 {
   NS_ASSERTION((aUnit == eStyleUnit_Enumerated) ||
                (aUnit == eStyleUnit_Integer), "not an int value");

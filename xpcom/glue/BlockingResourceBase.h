@@ -289,7 +289,7 @@ private:
      * Thread-private index to the front of each thread's resource
      * acquisition chain.
      */
-    static PRUintn sResourceAcqnChainFrontTPI;
+    static unsigned sResourceAcqnChainFrontTPI;
 
     /**
      * sDeadlockDetector

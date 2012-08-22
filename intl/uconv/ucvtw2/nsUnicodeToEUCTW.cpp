@@ -21,7 +21,7 @@ static const uScanClassID g_EUCTWScanClassSet [] = {
   u2BytesGRPrefix8EA7Charset
 };
 
-static const PRUint16 *g_EUCTWMappingTableSet [] ={
+static const uint16_t *g_EUCTWMappingTableSet [] ={
   g_ASCIIMappingTable,
   g_ufCNS1MappingTable,
   g_ufCNS2MappingTable,

@@ -77,7 +77,7 @@ nsFTPDirListingConv::AsyncConvertData(const char *aFromType, const char *aToType
 // nsIStreamListener implementation
 NS_IMETHODIMP
 nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
-                                  nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count) {
+                                  nsIInputStream *inStr, uint32_t sourceOffset, uint32_t count) {
     NS_ASSERTION(request, "FTP dir listing stream converter needs a request");
     
     nsresult rv;
@@ -85,12 +85,12 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    PRUint32 read, streamLen;
+    uint32_t read, streamLen;
 
-    PRUint64 streamLen64;
+    uint64_t streamLen64;
     rv = inStr->Available(&streamLen64);
     NS_ENSURE_SUCCESS(rv, rv);
-    streamLen = (PRUint32)NS_MIN(streamLen64, PRUint64(PR_UINT32_MAX - 1));
+    streamLen = (uint32_t)NS_MIN(streamLen64, uint64_t(PR_UINT32_MAX - 1));
 
     nsAutoArrayPtr<char> buffer(new char[streamLen + 1]);
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);

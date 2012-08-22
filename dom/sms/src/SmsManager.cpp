@@ -90,7 +90,7 @@ SmsManager::Shutdown()
 }
 
 NS_IMETHODIMP
-SmsManager::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult)
+SmsManager::GetNumberOfMessagesForText(const nsAString& aText, uint16_t* aResult)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, NS_OK);
@@ -114,7 +114,7 @@ SmsManager::Send(JSContext* aCx, JSObject* aGlobal, JSString* aNumber,
 
   nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
 
-  PRInt32 requestId;
+  int32_t requestId;
   nsresult rv = requestManager->CreateRequest(this, getter_AddRefs(request),
                                               &requestId);
   if (NS_FAILED(rv)) {
@@ -189,11 +189,11 @@ SmsManager::Send(const jsval& aNumber, const nsAString& aMessage, jsval* aReturn
 }
 
 NS_IMETHODIMP
-SmsManager::GetMessageMoz(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
+SmsManager::GetMessageMoz(int32_t aId, nsIDOMMozSmsRequest** aRequest)
 {
   nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
 
-  PRInt32 requestId;
+  int32_t requestId;
   nsresult rv = requestManager->CreateRequest(this, aRequest, &requestId);
   if (NS_FAILED(rv)) {
     NS_ERROR("Failed to create the request!");
@@ -210,11 +210,11 @@ SmsManager::GetMessageMoz(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
 }
 
 nsresult
-SmsManager::Delete(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
+SmsManager::Delete(int32_t aId, nsIDOMMozSmsRequest** aRequest)
 {
   nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
 
-  PRInt32 requestId;
+  int32_t requestId;
   nsresult rv = requestManager->CreateRequest(this, aRequest, &requestId);
   if (NS_FAILED(rv)) {
     NS_ERROR("Failed to create the request!");
@@ -249,7 +249,7 @@ SmsManager::Delete(const jsval& aParam, nsIDOMMozSmsRequest** aRequest)
           sc->GetNativeContext(), &aParam.toObject()));
   NS_ENSURE_TRUE(message, NS_ERROR_INVALID_ARG);
 
-  PRInt32 id;
+  int32_t id;
   message->GetId(&id);
 
   return Delete(id, aRequest);
@@ -267,7 +267,7 @@ SmsManager::GetMessages(nsIDOMMozSmsFilter* aFilter, bool aReverse,
 
   nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
 
-  PRInt32 requestId;
+  int32_t requestId;
   nsresult rv = requestManager->CreateRequest(this, aRequest,
                                               &requestId);
   if (NS_FAILED(rv)) {
@@ -285,13 +285,13 @@ SmsManager::GetMessages(nsIDOMMozSmsFilter* aFilter, bool aReverse,
 }
 
 NS_IMETHODIMP
-SmsManager::MarkMessageRead(PRInt32 aId, bool aValue,
+SmsManager::MarkMessageRead(int32_t aId, bool aValue,
                             nsIDOMMozSmsRequest** aRequest)
 {
   nsCOMPtr<nsISmsRequestManager> requestManager =
     do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
 
-  PRInt32 requestId;
+  int32_t requestId;
   nsresult rv = requestManager->CreateRequest(this, aRequest, &requestId);
   if (NS_FAILED(rv)) {
     NS_ERROR("Failed to create the request!");

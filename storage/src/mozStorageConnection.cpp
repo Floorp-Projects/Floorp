@@ -505,7 +505,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
   // Set page_size to the preferred default value.  This is effective only if
   // the database has just been created, otherwise, if the database does not
   // use WAL journal mode, a VACUUM operation will updated its page_size.
-  PRInt64 pageSize = DEFAULT_PAGE_SIZE;
+  int64_t pageSize = DEFAULT_PAGE_SIZE;
   nsCAutoString pageSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
                               "PRAGMA page_size = ");
   pageSizeQuery.AppendInt(pageSize);
@@ -530,7 +530,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
   nsCAutoString cacheSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
                                "PRAGMA cache_size = ");
   cacheSizeQuery.AppendInt(NS_MIN(DEFAULT_CACHE_SIZE_PAGES,
-                                  PRInt32(MAX_CACHE_SIZE_BYTES / pageSize)));
+                                  int32_t(MAX_CACHE_SIZE_BYTES / pageSize)));
   srv = executeSql(cacheSizeQuery.get());
   if (srv != SQLITE_OK) {
     ::sqlite3_close(mDBConn);
@@ -958,7 +958,7 @@ Connection::Clone(bool aReadOnly,
     "synchronous",
     "wal_autocheckpoint",
   };
-  for (PRUint32 i = 0; i < ArrayLength(pragmas); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(pragmas); ++i) {
     // Read-only connections just need cache_size and temp_store pragmas.
     if (aReadOnly && ::strcmp(pragmas[i], "cache_size") != 0 &&
                      ::strcmp(pragmas[i], "temp_store") != 0) {
@@ -1004,7 +1004,7 @@ Connection::GetDatabaseFile(nsIFile **_dbFile)
 }
 
 NS_IMETHODIMP
-Connection::GetLastInsertRowID(PRInt64 *_id)
+Connection::GetLastInsertRowID(int64_t *_id)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
@@ -1015,7 +1015,7 @@ Connection::GetLastInsertRowID(PRInt64 *_id)
 }
 
 NS_IMETHODIMP
-Connection::GetAffectedRows(PRInt32 *_rows)
+Connection::GetAffectedRows(int32_t *_rows)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
@@ -1025,7 +1025,7 @@ Connection::GetAffectedRows(PRInt32 *_rows)
 }
 
 NS_IMETHODIMP
-Connection::GetLastError(PRInt32 *_error)
+Connection::GetLastError(int32_t *_error)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
@@ -1046,7 +1046,7 @@ Connection::GetLastErrorString(nsACString &_errorString)
 }
 
 NS_IMETHODIMP
-Connection::GetSchemaVersion(PRInt32 *_version)
+Connection::GetSchemaVersion(int32_t *_version)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
@@ -1064,7 +1064,7 @@ Connection::GetSchemaVersion(PRInt32 *_version)
 }
 
 NS_IMETHODIMP
-Connection::SetSchemaVersion(PRInt32 aVersion)
+Connection::SetSchemaVersion(int32_t aVersion)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
@@ -1123,12 +1123,12 @@ Connection::ExecuteSimpleSQL(const nsACString &aSQLStatement)
 
 NS_IMETHODIMP
 Connection::ExecuteAsync(mozIStorageBaseStatement **aStatements,
-                         PRUint32 aNumStatements,
+                         uint32_t aNumStatements,
                          mozIStorageStatementCallback *aCallback,
                          mozIStoragePendingStatement **_handle)
 {
   nsTArray<StatementData> stmts(aNumStatements);
-  for (PRUint32 i = 0; i < aNumStatements; i++) {
+  for (uint32_t i = 0; i < aNumStatements; i++) {
     nsCOMPtr<StorageBaseStatementInternal> stmt = 
       do_QueryInterface(aStatements[i]);
 
@@ -1179,7 +1179,7 @@ Connection::BeginTransaction()
 }
 
 NS_IMETHODIMP
-Connection::BeginTransactionAs(PRInt32 aTransactionType)
+Connection::BeginTransactionAs(int32_t aTransactionType)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
@@ -1255,7 +1255,7 @@ Connection::CreateTable(const char *aTableName,
 
 NS_IMETHODIMP
 Connection::CreateFunction(const nsACString &aFunctionName,
-                           PRInt32 aNumArguments,
+                           int32_t aNumArguments,
                            mozIStorageFunction *aFunction)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
@@ -1286,7 +1286,7 @@ Connection::CreateFunction(const nsACString &aFunctionName,
 
 NS_IMETHODIMP
 Connection::CreateAggregateFunction(const nsACString &aFunctionName,
-                                    PRInt32 aNumArguments,
+                                    int32_t aNumArguments,
                                     mozIStorageAggregateFunction *aFunction)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
@@ -1344,7 +1344,7 @@ Connection::RemoveFunction(const nsACString &aFunctionName)
 }
 
 NS_IMETHODIMP
-Connection::SetProgressHandler(PRInt32 aGranularity,
+Connection::SetProgressHandler(int32_t aGranularity,
                                mozIStorageProgressHandler *aHandler,
                                mozIStorageProgressHandler **_oldHandler)
 {
@@ -1380,14 +1380,14 @@ Connection::RemoveProgressHandler(mozIStorageProgressHandler **_oldHandler)
 }
 
 NS_IMETHODIMP
-Connection::SetGrowthIncrement(PRInt32 aChunkSize, const nsACString &aDatabaseName)
+Connection::SetGrowthIncrement(int32_t aChunkSize, const nsACString &aDatabaseName)
 {
   // Bug 597215: Disk space is extremely limited on Android
   // so don't preallocate space. This is also not effective
   // on log structured file systems used by Android devices
 #if !defined(ANDROID) && !defined(MOZ_PLATFORM_MAEMO)
   // Don't preallocate if less than 500MiB is available.
-  PRInt64 bytesAvailable;
+  int64_t bytesAvailable;
   nsresult rv = mDatabaseFile->GetDiskSpaceAvailable(&bytesAvailable);
   NS_ENSURE_SUCCESS(rv, rv);
   if (bytesAvailable < MIN_AVAILABLE_BYTES_PER_CHUNKED_GROWTH) {

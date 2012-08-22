@@ -26,7 +26,7 @@ nsScreenGtk :: ~nsScreenGtk()
 
 
 NS_IMETHODIMP
-nsScreenGtk :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
+nsScreenGtk :: GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
   *outLeft = mRect.x;
   *outTop = mRect.y;
@@ -39,7 +39,7 @@ nsScreenGtk :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 
 
 NS_IMETHODIMP
-nsScreenGtk :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
+nsScreenGtk :: GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
   *outLeft = mAvailRect.x;
   *outTop = mAvailRect.y;
@@ -52,7 +52,7 @@ nsScreenGtk :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
 
 
 NS_IMETHODIMP 
-nsScreenGtk :: GetPixelDepth(PRInt32 *aPixelDepth)
+nsScreenGtk :: GetPixelDepth(int32_t *aPixelDepth)
 {
   GdkVisual * rgb_visual = gdk_rgb_get_visual();
   *aPixelDepth = rgb_visual->depth;
@@ -63,7 +63,7 @@ nsScreenGtk :: GetPixelDepth(PRInt32 *aPixelDepth)
 
 
 NS_IMETHODIMP 
-nsScreenGtk :: GetColorDepth(PRInt32 *aColorDepth)
+nsScreenGtk :: GetColorDepth(int32_t *aColorDepth)
 {
   return GetPixelDepth ( aColorDepth );
 

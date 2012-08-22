@@ -18,7 +18,7 @@
 
 #include "nsICacheService.h"
 
-static PRTime SecondsToPRTime(PRUint32 t_sec)
+static PRTime SecondsToPRTime(uint32_t t_sec)
 {
     PRTime t_usec, usec_per_sec;
     LL_I2L(t_usec, t_sec);
@@ -26,7 +26,7 @@ static PRTime SecondsToPRTime(PRUint32 t_sec)
     LL_MUL(t_usec, t_usec, usec_per_sec);
     return t_usec;
 }
-static void PrintTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
+static void PrintTimeString(char *buf, uint32_t bufsize, uint32_t t_sec)
 {
     PRExplodedTime et;
     PRTime t_usec = SecondsToPRTime(t_sec);
@@ -42,7 +42,7 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
     NS_ENSURE_ARG_POINTER(aURI);
     nsresult rv;
-    PRUint32 bytesWritten;
+    uint32_t bytesWritten;
 
     *result = nullptr;
     // Get the cache manager service
@@ -54,7 +54,7 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     nsCOMPtr<nsIOutputStream> outputStream;
 
     // Init: (block size, maximum length)
-    rv = NS_NewStorageStream(256, (PRUint32)-1, getter_AddRefs(storageStream));
+    rv = NS_NewStorageStream(256, (uint32_t)-1, getter_AddRefs(storageStream));
     if (NS_FAILED(rv)) return rv;
 
     rv = storageStream->GetOutputStream(0, getter_AddRefs(outputStream));
@@ -117,7 +117,7 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
 }
 
 NS_IMETHODIMP
-nsAboutCache::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+nsAboutCache::GetURIFlags(nsIURI *aURI, uint32_t *result)
 {
     *result = 0;
     return NS_OK;
@@ -128,7 +128,7 @@ nsAboutCache::VisitDevice(const char *deviceID,
                           nsICacheDeviceInfo *deviceInfo,
                           bool *visitEntries)
 {
-    PRUint32 bytesWritten, value, entryCount;
+    uint32_t bytesWritten, value, entryCount;
     nsXPIDLCString str;
 
     *visitEntries = false;
@@ -233,7 +233,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
       return NS_ERROR_FAILURE;
 
     nsresult        rv;
-    PRUint32        bytesWritten;
+    uint32_t        bytesWritten;
     nsCAutoString   key;
     nsXPIDLCString  clientID;
     bool            streamBased;
@@ -269,14 +269,14 @@ nsAboutCache::VisitEntry(const char *deviceID,
     mBuffer.AppendLiteral("</a></td>\n");
 
     // Content length
-    PRUint32 length = 0;
+    uint32_t length = 0;
     entryInfo->GetDataSize(&length);
     mBuffer.AppendLiteral("    <td>");
     mBuffer.AppendInt(length);
     mBuffer.AppendLiteral(" bytes</td>\n");
 
     // Number of accesses
-    PRInt32 fetchCount = 0;
+    int32_t fetchCount = 0;
     entryInfo->GetFetchCount(&fetchCount);
     mBuffer.AppendLiteral("    <td>");
     mBuffer.AppendInt(fetchCount);
@@ -284,7 +284,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
 
     // vars for reporting time
     char buf[255];
-    PRUint32 t;
+    uint32_t t;
 
     // Last modified time
     mBuffer.AppendLiteral("    <td>");

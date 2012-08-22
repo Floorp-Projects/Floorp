@@ -67,8 +67,8 @@ static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 
 static bool sDoNotTrackEnabled = false;
 static bool sVibratorEnabled   = false;
-static PRUint32 sMaxVibrateMS  = 0;
-static PRUint32 sMaxVibrateListLen = 0;
+static uint32_t sMaxVibrateMS  = 0;
+static uint32_t sMaxVibrateListLen = 0;
 
 /* static */
 void
@@ -194,8 +194,8 @@ Navigator::Invalidate()
   }
 #endif
 
-  PRUint32 len = mDeviceStorageStores.Length();
-  for (PRUint32 i = 0; i < len; ++i) {
+  uint32_t len = mDeviceStorageStores.Length();
+  for (uint32_t i = 0; i < len; ++i) {
     mDeviceStorageStores[i]->Shutdown();
   }
   mDeviceStorageStores.Clear();
@@ -287,7 +287,7 @@ Navigator::GetLanguage(nsAString& aLanguage)
   }
 
   nsCharSeparatedTokenizer localeTokenizer(aLanguage, '-');
-  PRInt32 pos = 0;
+  int32_t pos = 0;
   bool first = true;
   while (localeTokenizer.hasMoreTokens()) {
     const nsSubstring& code = localeTokenizer.nextToken();
@@ -507,9 +507,9 @@ Navigator::JavaEnabled(bool* aReturn)
 
   RefreshMIMEArray();
 
-  PRUint32 count;
+  uint32_t count;
   mMimeTypes->GetLength(&count);
-  for (PRUint32 i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     nsresult rv;
     nsIDOMMimeType* type = mMimeTypes->GetItemAt(i, &rv);
 
@@ -661,7 +661,7 @@ Navigator::AddIdleObserver(nsIIdleObserver* aIdleObserver)
 
   nsIPrincipal* principal = doc->NodePrincipal();
   if (!nsContentUtils::IsSystemPrincipal(principal)) {
-    PRUint16 appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+    uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
     principal->GetAppStatus(&appStatus);
     if (appStatus != nsIPrincipal::APP_STATUS_CERTIFIED) {
       return NS_ERROR_DOM_SECURITY_ERR;
@@ -727,13 +727,13 @@ Navigator::Vibrate(const jsval& aPattern, JSContext* cx)
   }
   else {
     JSObject *obj = JSVAL_TO_OBJECT(aPattern);
-    PRUint32 length;
+    uint32_t length;
     if (!JS_GetArrayLength(cx, obj, &length) || length > sMaxVibrateListLen) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
     pattern.SetLength(length);
 
-    for (PRUint32 i = 0; i < length; ++i) {
+    for (uint32_t i = 0; i < length; ++i) {
       jsval v;
       int32_t pv;
       if (JS_GetElement(cx, obj, i, &v) &&
@@ -855,7 +855,7 @@ Navigator::MozIsLocallyAvailable(const nsAString &aURI,
   // valid cache entry, and skip the load if there is.
   // If the cache is busy, assume that it is not yet available rather
   // than waiting for it to become available.
-  PRUint32 loadFlags = nsIChannel::INHIBIT_CACHING |
+  uint32_t loadFlags = nsIChannel::INHIBIT_CACHING |
                        nsICachingChannel::LOAD_NO_NETWORK_IO |
                        nsICachingChannel::LOAD_ONLY_IF_MODIFIED |
                        nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
@@ -1253,7 +1253,7 @@ Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(permMgr, NS_OK);
 
-    PRUint32 permission = nsIPermissionManager::DENY_ACTION;
+    uint32_t permission = nsIPermissionManager::DENY_ACTION;
     permMgr->TestPermissionFromPrincipal(principal, "mobileconnection", &permission);
 
     if (permission != nsIPermissionManager::ALLOW_ACTION) {

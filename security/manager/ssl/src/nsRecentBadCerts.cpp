@@ -135,7 +135,7 @@ nsRecentBadCertsService::AddBadCert(const nsAString &hostWithPort,
   NS_ENSURE_SUCCESS(rv, rv);
 
   SECItem tempItem;
-  rv = cert->GetRawDER(&tempItem.len, (PRUint8 **)&tempItem.data);
+  rv = cert->GetRawDER(&tempItem.len, (uint8_t **)&tempItem.data);
   NS_ENSURE_SUCCESS(rv, rv);
 
   {

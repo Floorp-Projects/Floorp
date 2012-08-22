@@ -51,14 +51,14 @@ enum nsFrameborder {
 
 struct nsFramesetDrag {
   nsHTMLFramesetFrame* mSource;    // frameset whose border was dragged to cause the resize
-  PRInt32              mIndex;     // index of left col or top row of effected area
-  PRInt32              mChange;    // pos for left to right or top to bottom, neg otherwise
+  int32_t              mIndex;     // index of left col or top row of effected area
+  int32_t              mChange;    // pos for left to right or top to bottom, neg otherwise
   bool                 mVertical;  // vertical if true, otherwise horizontal
 
   nsFramesetDrag();
   void Reset(bool                 aVertical, 
-             PRInt32              aIndex, 
-             PRInt32              aChange, 
+             int32_t              aIndex, 
+             int32_t              aChange, 
              nsHTMLFramesetFrame* aSource); 
   void UnSet();
 };
@@ -88,7 +88,7 @@ public:
 
   void GetSizeOfChild(nsIFrame* aChild, nsSize& aSize);
 
-  void GetSizeOfChildAt(PRInt32  aIndexInParent, 
+  void GetSizeOfChildAt(int32_t  aIndexInParent, 
                         nsSize&  aSize, 
                         nsIntPoint& aCellIndex);
 
@@ -136,20 +136,20 @@ public:
 
 protected:
   void Scale(nscoord  aDesired, 
-             PRInt32  aNumIndicies, 
-             PRInt32* aIndicies, 
-             PRInt32  aNumItems,
-             PRInt32* aItems);
+             int32_t  aNumIndicies, 
+             int32_t* aIndicies, 
+             int32_t  aNumItems,
+             int32_t* aItems);
 
   void CalculateRowCol(nsPresContext*       aPresContext, 
                        nscoord               aSize, 
-                       PRInt32               aNumSpecs, 
+                       int32_t               aNumSpecs, 
                        const nsFramesetSpec* aSpecs, 
                        nscoord*              aValues);
 
   void GenerateRowCol(nsPresContext*       aPresContext,
                       nscoord               aSize,
-                      PRInt32               aNumSpecs,
+                      int32_t               aNumSpecs,
                       const nsFramesetSpec* aSpecs,
                       nscoord*              aValues,
                       nsString&             aNewAttr);
@@ -158,12 +158,12 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics&     aDesiredSize);
 
-  PRInt32 GetBorderWidth(nsPresContext* aPresContext,
+  int32_t GetBorderWidth(nsPresContext* aPresContext,
                          bool aTakeForcingIntoAccount);
 
-  PRInt32 GetParentBorderWidth() { return mParentBorderWidth; }
+  int32_t GetParentBorderWidth() { return mParentBorderWidth; }
 
-  void SetParentBorderWidth(PRInt32 aWidth) { mParentBorderWidth = aWidth; }
+  void SetParentBorderWidth(int32_t aWidth) { mParentBorderWidth = aWidth; }
 
   nscolor GetParentBorderColor() { return mParentBorderColor; }
 
@@ -193,10 +193,10 @@ protected:
 
   bool CanChildResize(bool    aVertical, 
                         bool    aLeft, 
-                        PRInt32 aChildX,
+                        int32_t aChildX,
                         bool    aFrameset);
   
-  void SetBorderResize(PRInt32*                   aChildTypes, 
+  void SetBorderResize(int32_t*                   aChildTypes, 
                        nsHTMLFramesetBorderFrame* aBorderFrame);
 
   bool ChildIsFrameset(nsIFrame* aChild); 
@@ -209,24 +209,24 @@ protected:
   nsHTMLFramesetFrame* mTopLevelFrameset;
   nsHTMLFramesetBorderFrame** mVerBorders;  // vertical borders
   nsHTMLFramesetBorderFrame** mHorBorders;  // horizontal borders
-  PRInt32*         mChildTypes; // frameset/frame distinction of children
+  int32_t*         mChildTypes; // frameset/frame distinction of children
   nsFrameborder*   mChildFrameborder; // the frameborder attr of children
   nsBorderColor*   mChildBorderColors;
   nscoord*         mRowSizes;  // currently computed row sizes
   nscoord*         mColSizes;  // currently computed col sizes
   nsIntPoint       mFirstDragPoint;
-  PRInt32          mNumRows;
-  PRInt32          mNumCols;
-  PRInt32          mNonBorderChildCount; 
-  PRInt32          mNonBlankChildCount; 
-  PRInt32          mEdgeVisibility;
+  int32_t          mNumRows;
+  int32_t          mNumCols;
+  int32_t          mNonBorderChildCount; 
+  int32_t          mNonBlankChildCount; 
+  int32_t          mEdgeVisibility;
   nsFrameborder    mParentFrameborder;
   nscolor          mParentBorderColor;
-  PRInt32          mParentBorderWidth;
-  PRInt32          mPrevNeighborOrigSize; // used during resize
-  PRInt32          mNextNeighborOrigSize;
-  PRInt32          mMinDrag;
-  PRInt32          mChildCount;
+  int32_t          mParentBorderWidth;
+  int32_t          mPrevNeighborOrigSize; // used during resize
+  int32_t          mNextNeighborOrigSize;
+  int32_t          mMinDrag;
+  int32_t          mChildCount;
   bool             mForceFrameResizability;
 };
 

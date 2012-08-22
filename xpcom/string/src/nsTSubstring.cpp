@@ -7,7 +7,7 @@
 
 #ifdef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
 nsTSubstring_CharT::nsTSubstring_CharT( char_type *data, size_type length,
-                                        PRUint32 flags)
+                                        uint32_t flags)
   : mData(data),
     mLength(length),
     mFlags(flags)
@@ -39,7 +39,7 @@ AsFixedString( const nsTSubstring_CharT* s )
    * the old data must be released by the caller.
    */
 bool
-nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint32* oldFlags )
+nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, uint32_t* oldFlags )
   {
     // initialize to no old data
     *oldData = nullptr;
@@ -112,7 +112,7 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint3
       }
 
     char_type* newData;
-    PRUint32 newDataFlags;
+    uint32_t newDataFlags;
 
       // if we have a fixed buffer of sufficient size, then use it.  this helps
       // avoid heap allocations.
@@ -162,7 +162,7 @@ nsTSubstring_CharT::ReplacePrepInternal(index_type cutStart, size_type cutLen,
                                         size_type fragLen, size_type newLen)
   {
     char_type* oldData;
-    PRUint32 oldFlags;
+    uint32_t oldFlags;
     if (!MutatePrep(newLen, &oldData, &oldFlags))
       return false; // out-of-memory
 
@@ -182,7 +182,7 @@ nsTSubstring_CharT::ReplacePrepInternal(index_type cutStart, size_type cutLen,
             // copy suffix from old string to new offset
             size_type from = cutStart + cutLen;
             size_type fromLen = mLength - from;
-            PRUint32 to = cutStart + fragLen;
+            uint32_t to = cutStart + fragLen;
             char_traits::copy(mData + to, oldData + from, fromLen);
           }
 
@@ -196,9 +196,9 @@ nsTSubstring_CharT::ReplacePrepInternal(index_type cutStart, size_type cutLen,
         // to make room for the requested hole.
         if (fragLen != cutLen && cutStart + cutLen < mLength)
           {
-            PRUint32 from = cutStart + cutLen;
-            PRUint32 fromLen = mLength - from;
-            PRUint32 to = cutStart + fragLen;
+            uint32_t from = cutStart + cutLen;
+            uint32_t fromLen = mLength - from;
+            uint32_t to = cutStart + fragLen;
             char_traits::move(mData + to, mData + from, fromLen);
           }
       }
@@ -406,7 +406,7 @@ nsTSubstring_CharT::Assign( const substring_tuple_type& tuple, const fallible_t&
 
     // don't use ReplacePrep here because it changes the length
     char_type* oldData;
-    PRUint32 oldFlags;
+    uint32_t oldFlags;
     if (!MutatePrep(length, &oldData, &oldFlags))
       return false;
 
@@ -549,7 +549,7 @@ nsTSubstring_CharT::SetCapacity( size_type capacity, const fallible_t& )
       }
 
     char_type* oldData;
-    PRUint32 oldFlags;
+    uint32_t oldFlags;
     if (!MutatePrep(capacity, &oldData, &oldFlags))
       return false; // out-of-memory
 
@@ -682,7 +682,7 @@ nsTSubstring_CharT::CountChar( char_type c ) const
     return NS_COUNT(start, end, c);
   }
 
-PRInt32
+int32_t
 nsTSubstring_CharT::FindChar( char_type c, index_type offset ) const
   {
     if (offset < mLength)
@@ -695,9 +695,9 @@ nsTSubstring_CharT::FindChar( char_type c, index_type offset ) const
   }
 
 void
-nsTSubstring_CharT::StripChar( char_type aChar, PRInt32 aOffset )
+nsTSubstring_CharT::StripChar( char_type aChar, int32_t aOffset )
   {
-    if (mLength == 0 || aOffset >= PRInt32(mLength))
+    if (mLength == 0 || aOffset >= int32_t(mLength))
       return;
 
     if (!EnsureMutable()) // XXX do this lazily?
@@ -720,9 +720,9 @@ nsTSubstring_CharT::StripChar( char_type aChar, PRInt32 aOffset )
   }
 
 void
-nsTSubstring_CharT::StripChars( const char_type* aChars, PRUint32 aOffset )
+nsTSubstring_CharT::StripChars( const char_type* aChars, uint32_t aOffset )
   {
-    if (aOffset >= PRUint32(mLength))
+    if (aOffset >= uint32_t(mLength))
       return;
 
     if (!EnsureMutable()) // XXX do this lazily?
@@ -751,7 +751,7 @@ nsTSubstring_CharT::StripChars( const char_type* aChars, PRUint32 aOffset )
   }
 
 int
-nsTSubstring_CharT::AppendFunc(void* arg, const char* s, PRUint32 len)
+nsTSubstring_CharT::AppendFunc(void* arg, const char* s, uint32_t len)
   {
     self_type* self = static_cast<self_type*>(arg);
 
@@ -769,16 +769,16 @@ void nsTSubstring_CharT::AppendPrintf( const char* format, ...)
   {
     va_list ap;
     va_start(ap, format);
-    PRUint32 r = PR_vsxprintf(AppendFunc, this, format, ap);
-    if (r == (PRUint32) -1)
+    uint32_t r = PR_vsxprintf(AppendFunc, this, format, ap);
+    if (r == (uint32_t) -1)
       NS_RUNTIMEABORT("Allocation or other failure in PR_vsxprintf");
     va_end(ap);
   }
 
 void nsTSubstring_CharT::AppendPrintf( const char* format, va_list ap )
   {
-    PRUint32 r = PR_vsxprintf(AppendFunc, this, format, ap);
-    if (r == (PRUint32) -1)
+    uint32_t r = PR_vsxprintf(AppendFunc, this, format, ap);
+    if (r == (uint32_t) -1)
       NS_RUNTIMEABORT("Allocation or other failure in PR_vsxprintf");
   }
 

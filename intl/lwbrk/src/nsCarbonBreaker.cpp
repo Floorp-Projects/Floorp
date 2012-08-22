@@ -7,13 +7,13 @@
 #include <Carbon/Carbon.h>
 
 void
-NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
-                        PRUint8* aBreakBefore)
+NS_GetComplexLineBreaks(const PRUnichar* aText, uint32_t aLength,
+                        uint8_t* aBreakBefore)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
   TextBreakLocatorRef breakLocator;
 
-  memset(aBreakBefore, false, aLength * sizeof(PRUint8));
+  memset(aBreakBefore, false, aLength * sizeof(uint8_t));
 
   OSStatus status = UCCreateTextBreakLocator(NULL, 0, kUCTextBreakLineMask, &breakLocator);
 

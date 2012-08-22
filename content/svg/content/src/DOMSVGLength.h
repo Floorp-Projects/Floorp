@@ -78,9 +78,9 @@ public:
    * Generic ctor for DOMSVGLength objects that are created for an attribute.
    */
   DOMSVGLength(DOMSVGLengthList *aList,
-               PRUint8 aAttrEnum,
-               PRUint32 aListIndex,
-               PRUint8 aIsAnimValItem);
+               uint8_t aAttrEnum,
+               uint32_t aListIndex,
+               uint8_t aIsAnimValItem);
 
   /**
    * Ctor for creating the objects returned by SVGSVGElement.createSVGLength(),
@@ -131,16 +131,16 @@ public:
    * the necessary notifications) is located elsewhere (in DOMSVGLengthList).)
    */
   void InsertingIntoList(DOMSVGLengthList *aList,
-                         PRUint8 aAttrEnum,
-                         PRUint32 aListIndex,
-                         PRUint8 aIsAnimValItem);
+                         uint8_t aAttrEnum,
+                         uint32_t aListIndex,
+                         uint8_t aIsAnimValItem);
 
-  static PRUint32 MaxListIndex() {
+  static uint32_t MaxListIndex() {
     return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
   }
 
   /// This method is called to notify this object that its list index changed.
-  void UpdateListIndex(PRUint32 aListIndex) {
+  void UpdateListIndex(uint32_t aListIndex) {
     mListIndex = aListIndex;
   }
 
@@ -160,7 +160,7 @@ private:
     return mList->Element();
   }
 
-  PRUint8 AttrEnum() const {
+  uint8_t AttrEnum() const {
     return mAttrEnum;
   }
 
@@ -168,7 +168,7 @@ private:
    * Get the axis that this length lies along. This method must only be called
    * when this object is associated with an element (HasOwner() returns true).
    */
-  PRUint8 Axis() const {
+  uint8_t Axis() const {
     return mList->Axis();
   }
 
@@ -192,12 +192,12 @@ private:
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
 
-  PRUint32 mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
-  PRUint32 mAttrEnum:4; // supports up to 16 attributes
-  PRUint32 mIsAnimValItem:1;
+  uint32_t mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
+  uint32_t mAttrEnum:4; // supports up to 16 attributes
+  uint32_t mIsAnimValItem:1;
 
   // The following members are only used when we're not in a list:
-  PRUint32 mUnit:5; // can handle 31 units (the 10 SVG 1.1 units + rem, vw, vh, wm, calc + future additions)
+  uint32_t mUnit:5; // can handle 31 units (the 10 SVG 1.1 units + rem, vw, vh, wm, calc + future additions)
   float mValue;
 };
 

@@ -25,20 +25,20 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIFilePicker (less what's in nsBaseFilePicker)
-  NS_IMETHODIMP AppendFilters(PRInt32 aFilterMask);
+  NS_IMETHODIMP AppendFilters(int32_t aFilterMask);
   NS_IMETHODIMP AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
   NS_IMETHODIMP SetDefaultString(const nsAString& aString);
   NS_IMETHODIMP GetDefaultString(nsAString& aString);
   NS_IMETHODIMP SetDefaultExtension(const nsAString& aExtension);
   NS_IMETHODIMP GetDefaultExtension(nsAString& aExtension);
-  NS_IMETHODIMP GetFilterIndex(PRInt32 *aFilterIndex);
-  NS_IMETHODIMP SetFilterIndex(PRInt32 aFilterIndex);
+  NS_IMETHODIMP GetFilterIndex(int32_t *aFilterIndex);
+  NS_IMETHODIMP SetFilterIndex(int32_t aFilterIndex);
   NS_IMETHODIMP GetFile(nsIFile **aFile);
   NS_IMETHODIMP GetFileURL(nsIURI **aFileURL);
   NS_IMETHODIMP GetFiles(nsISimpleEnumerator **aFiles);
-  NS_IMETHODIMP Show(PRInt16 *aReturn);
+  NS_IMETHODIMP Show(int16_t *aReturn);
 
-  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle, PRInt16 aMode);
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle, int16_t aMode);
 
   static void Shutdown();
 
@@ -49,8 +49,8 @@ protected:
   nsCOMPtr<nsIWidget>    mParentWidget;
   nsCOMArray<nsIFile> mFiles;
 
-  PRInt16   mMode;
-  PRInt16   mSelectedType;
+  int16_t   mMode;
+  int16_t   mSelectedType;
   bool      mAllowURLs;
   nsCString mFileURL;
   nsString  mTitle;

@@ -215,8 +215,8 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-combobox"
 };
 
-PRInt32 nsXPLookAndFeel::sCachedColors[LookAndFeel::eColorID_LAST_COLOR] = {0};
-PRInt32 nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
+int32_t nsXPLookAndFeel::sCachedColors[LookAndFeel::eColorID_LAST_COLOR] = {0};
+int32_t nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 
 bool nsXPLookAndFeel::sInitialized = false;
 bool nsXPLookAndFeel::sUseNativeColors = true;
@@ -262,7 +262,7 @@ nsXPLookAndFeel::IntPrefChanged(nsLookAndFeelIntPref *data)
     return;
   }
 
-  PRInt32 intpref;
+  int32_t intpref;
   nsresult rv = Preferences::GetInt(data->name, &intpref);
   if (NS_FAILED(rv)) {
     return;
@@ -282,7 +282,7 @@ nsXPLookAndFeel::FloatPrefChanged(nsLookAndFeelFloatPref *data)
     return;
   }
 
-  PRInt32 intpref;
+  int32_t intpref;
   nsresult rv = Preferences::GetInt(data->name, &intpref);
   if (NS_FAILED(rv)) {
     return;
@@ -307,11 +307,11 @@ nsXPLookAndFeel::ColorPrefChanged (unsigned int index, const char *prefName)
     nscolor thecolor;
     if (colorStr[0] == PRUnichar('#')) {
       if (NS_HexToRGB(nsDependentString(colorStr, 1), &thecolor)) {
-        PRInt32 id = NS_PTR_TO_INT32(index);
+        int32_t id = NS_PTR_TO_INT32(index);
         CACHE_COLOR(id, thecolor);
       }
     } else if (NS_ColorNameToRGB(colorStr, &thecolor)) {
-      PRInt32 id = NS_PTR_TO_INT32(index);
+      int32_t id = NS_PTR_TO_INT32(index);
       CACHE_COLOR(id, thecolor);
 #ifdef DEBUG_akkana
       printf("====== Changed color pref %s to 0x%lx\n",
@@ -321,7 +321,7 @@ nsXPLookAndFeel::ColorPrefChanged (unsigned int index, const char *prefName)
   } else {
     // Reset to the default color, by clearing the cache
     // to force lookup when the color is next used
-    PRInt32 id = NS_PTR_TO_INT32(index);
+    int32_t id = NS_PTR_TO_INT32(index);
     CLEAR_COLOR_CACHE(id);
   }
 }
@@ -329,7 +329,7 @@ nsXPLookAndFeel::ColorPrefChanged (unsigned int index, const char *prefName)
 void
 nsXPLookAndFeel::InitFromPref(nsLookAndFeelIntPref* aPref)
 {
-  PRInt32 intpref;
+  int32_t intpref;
   nsresult rv = Preferences::GetInt(aPref->name, &intpref);
   if (NS_SUCCEEDED(rv)) {
     aPref->isSet = true;
@@ -340,7 +340,7 @@ nsXPLookAndFeel::InitFromPref(nsLookAndFeelIntPref* aPref)
 void
 nsXPLookAndFeel::InitFromPref(nsLookAndFeelFloatPref* aPref)
 {
-  PRInt32 intpref;
+  int32_t intpref;
   nsresult rv = Preferences::GetInt(aPref->name, &intpref);
   if (NS_SUCCEEDED(rv)) {
     aPref->isSet = true;
@@ -349,7 +349,7 @@ nsXPLookAndFeel::InitFromPref(nsLookAndFeelFloatPref* aPref)
 }
 
 void
-nsXPLookAndFeel::InitColorFromPref(PRInt32 i)
+nsXPLookAndFeel::InitColorFromPref(int32_t i)
 {
   nsAutoString colorStr;
   nsresult rv = Preferences::GetString(sColorPrefs[i], &colorStr);
@@ -608,7 +608,7 @@ nsXPLookAndFeel::GetColorImpl(ColorID aID, nscolor &aResult)
          !IsSpecialColor(aID, aResult)) {
       qcms_transform *transform = gfxPlatform::GetCMSInverseRGBTransform();
       if (transform) {
-        PRUint8 color[3];
+        uint8_t color[3];
         color[0] = NS_GET_R(aResult);
         color[1] = NS_GET_G(aResult);
         color[2] = NS_GET_B(aResult);
@@ -625,7 +625,7 @@ nsXPLookAndFeel::GetColorImpl(ColorID aID, nscolor &aResult)
 }
   
 nsresult
-nsXPLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
+nsXPLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
 {
   if (!sInitialized)
     Init();
@@ -680,7 +680,7 @@ void
 nsXPLookAndFeel::RefreshImpl()
 {
   // Wipe out our color cache.
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < eColorID_LAST_COLOR; i++)
     sCachedColors[i] = 0;
   for (i = 0; i < COLOR_CACHE_SIZE; i++)
@@ -698,7 +698,7 @@ LookAndFeel::GetColor(ColorID aID, nscolor* aResult)
 
 // static
 nsresult
-LookAndFeel::GetInt(IntID aID, PRInt32* aResult)
+LookAndFeel::GetInt(IntID aID, int32_t* aResult)
 {
   return nsLookAndFeel::GetInstance()->GetIntImpl(aID, *aResult);
 }
@@ -732,7 +732,7 @@ LookAndFeel::GetEchoPassword()
 }
 
 // static
-PRUint32
+uint32_t
 LookAndFeel::GetPasswordMaskDelay()
 {
   return nsLookAndFeel::GetInstance()->GetPasswordMaskDelayImpl();

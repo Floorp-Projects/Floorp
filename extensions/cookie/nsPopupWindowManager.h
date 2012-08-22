@@ -27,7 +27,7 @@ public:
   nsresult Init();
 
 private:
-  PRUint32                       mPolicy;
+  uint32_t                       mPolicy;
   nsCOMPtr<nsIPermissionManager> mPermissionManager;
 };
 

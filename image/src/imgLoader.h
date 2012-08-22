@@ -41,7 +41,7 @@ public:
 
   nsrefcnt AddRef()
   {
-    NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+    NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
     NS_ABORT_IF_FALSE(_mOwningThread.GetThread() == PR_GetCurrentThread(), "imgCacheEntry addref isn't thread-safe!");
     ++mRefCnt;
     NS_LOG_ADDREF(this, mRefCnt, "imgCacheEntry", sizeof(*this));
@@ -62,32 +62,32 @@ public:
     return mRefCnt;                              
   }
 
-  PRUint32 GetDataSize() const
+  uint32_t GetDataSize() const
   {
     return mDataSize;
   }
-  void SetDataSize(PRUint32 aDataSize)
+  void SetDataSize(uint32_t aDataSize)
   {
-    PRInt32 oldsize = mDataSize;
+    int32_t oldsize = mDataSize;
     mDataSize = aDataSize;
     UpdateCache(mDataSize - oldsize);
   }
 
-  PRInt32 GetTouchedTime() const
+  int32_t GetTouchedTime() const
   {
     return mTouchedTime;
   }
-  void SetTouchedTime(PRInt32 time)
+  void SetTouchedTime(int32_t time)
   {
     mTouchedTime = time;
     Touch(/* updateTime = */ false);
   }
 
-  PRInt32 GetExpiryTime() const
+  int32_t GetExpiryTime() const
   {
     return mExpiryTime;
   }
-  void SetExpiryTime(PRInt32 aExpiryTime)
+  void SetExpiryTime(int32_t aExpiryTime)
   {
     mExpiryTime = aExpiryTime;
     Touch();
@@ -134,7 +134,7 @@ private: // methods
   friend class imgLoader;
   friend class imgCacheQueue;
   void Touch(bool updateTime = true);
-  void UpdateCache(PRInt32 diff = 0);
+  void UpdateCache(int32_t diff = 0);
   void SetEvicted(bool evict)
   {
     mEvicted = evict;
@@ -149,9 +149,9 @@ private: // data
   NS_DECL_OWNINGTHREAD
 
   nsRefPtr<imgRequest> mRequest;
-  PRUint32 mDataSize;
-  PRInt32 mTouchedTime;
-  PRInt32 mExpiryTime;
+  uint32_t mDataSize;
+  int32_t mTouchedTime;
+  int32_t mExpiryTime;
   nsExpirationState mExpirationState;
   bool mMustValidate : 1;
   bool mEvicted : 1;
@@ -179,9 +179,9 @@ public:
   bool IsDirty();
   already_AddRefed<imgCacheEntry> Pop();
   void Refresh();
-  PRUint32 GetSize() const;
-  void UpdateSize(PRInt32 diff);
-  PRUint32 GetNumElements() const;
+  uint32_t GetSize() const;
+  void UpdateSize(int32_t diff);
+  uint32_t GetNumElements() const;
   typedef std::vector<nsRefPtr<imgCacheEntry> > queueContainer;  
   typedef queueContainer::iterator iterator;
   typedef queueContainer::const_iterator const_iterator;
@@ -194,7 +194,7 @@ public:
 private:
   queueContainer mQueue;
   bool mDirty;
-  PRUint32 mSize;
+  uint32_t mSize;
 };
 
 class imgMemoryReporter;
@@ -217,7 +217,7 @@ public:
 
   nsresult Init();
 
-  static nsresult GetMimeTypeFromContent(const char* aContents, PRUint32 aLength, nsACString& aContentType);
+  static nsresult GetMimeTypeFromContent(const char* aContents, uint32_t aLength, nsACString& aContentType);
 
   static void Shutdown(); // for use by the factory
 
@@ -284,7 +284,7 @@ private: // methods
                        imgIRequest **aProxyRequest,
                        nsIChannelPolicy *aPolicy,
                        nsIPrincipal* aLoadingPrincipal,
-                       PRInt32 aCORSMode);
+                       int32_t aCORSMode);
   bool ValidateRequestWithNewChannel(imgRequest *request, nsIURI *aURI,
                                        nsIURI *aInitialDocumentURI,
                                        nsIURI *aReferrerURI,
@@ -295,7 +295,7 @@ private: // methods
                                        imgIRequest **aProxyRequest,
                                        nsIChannelPolicy *aPolicy,
                                        nsIPrincipal* aLoadingPrincipal,
-                                       PRInt32 aCORSMode);
+                                       int32_t aCORSMode);
 
   nsresult CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
                                     imgIDecoderObserver *aObserver,
@@ -312,7 +312,7 @@ private: // methods
 
   static imgCacheTable &GetCache(nsIURI *aURI);
   static imgCacheQueue &GetCacheQueue(nsIURI *aURI);
-  static void CacheEntriesChanged(nsIURI *aURI, PRInt32 sizediff = 0);
+  static void CacheEntriesChanged(nsIURI *aURI, int32_t sizediff = 0);
   static void CheckCacheLimits(imgCacheTable &cache, imgCacheQueue &queue);
 
 private: // data
@@ -325,7 +325,7 @@ private: // data
   static imgCacheTable sChromeCache;
   static imgCacheQueue sChromeCacheQueue;
   static double sCacheTimeWeight;
-  static PRUint32 sCacheMaxSize;
+  static uint32_t sCacheMaxSize;
 
   nsCString mAcceptHeader;
 };

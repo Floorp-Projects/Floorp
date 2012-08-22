@@ -7,10 +7,10 @@
 
 namespace mozilla {
 
-static PRUint16
-FlipByteOrderIfBigEndian(PRUint16 aValue)
+static uint16_t
+FlipByteOrderIfBigEndian(uint16_t aValue)
 {
-  PRUint16 s = aValue;
+  uint16_t s = aValue;
 #if defined(IS_BIG_ENDIAN)
   s = (s << 8) | (s >> 8);
 #endif
@@ -29,14 +29,14 @@ SampleToFloat(float aValue)
   return aValue;
 }
 static float
-SampleToFloat(PRUint8 aValue)
+SampleToFloat(uint8_t aValue)
 {
   return (aValue - 128)/128.0f;
 }
 static float
-SampleToFloat(PRInt16 aValue)
+SampleToFloat(int16_t aValue)
 {
-  return PRInt16(FlipByteOrderIfBigEndian(aValue))/32768.0f;
+  return int16_t(FlipByteOrderIfBigEndian(aValue))/32768.0f;
 }
 
 static void
@@ -45,31 +45,31 @@ FloatToSample(float aValue, float* aOut)
   *aOut = aValue;
 }
 static void
-FloatToSample(float aValue, PRUint8* aOut)
+FloatToSample(float aValue, uint8_t* aOut)
 {
   float v = aValue*128 + 128;
   float clamped = NS_MAX(0.0f, NS_MIN(255.0f, v));
-  *aOut = PRUint8(clamped);
+  *aOut = uint8_t(clamped);
 }
 static void
-FloatToSample(float aValue, PRInt16* aOut)
+FloatToSample(float aValue, int16_t* aOut)
 {
   float v = aValue*32768.0f;
   float clamped = NS_MAX(-32768.0f, NS_MIN(32767.0f, v));
-  *aOut = PRInt16(FlipByteOrderIfBigEndian(PRInt16(clamped)));
+  *aOut = int16_t(FlipByteOrderIfBigEndian(int16_t(clamped)));
 }
 
 template <class SrcT, class DestT>
 static void
-InterleaveAndConvertBuffer(const SrcT* aSource, PRInt32 aSourceLength,
-                           PRInt32 aLength,
+InterleaveAndConvertBuffer(const SrcT* aSource, int32_t aSourceLength,
+                           int32_t aLength,
                            float aVolume,
-                           PRInt32 aChannels,
+                           int32_t aChannels,
                            DestT* aOutput)
 {
   DestT* output = aOutput;
-  for (PRInt32 i = 0; i < aLength; ++i) {
-    for (PRInt32 channel = 0; channel < aChannels; ++channel) {
+  for (int32_t i = 0; i < aLength; ++i) {
+    for (int32_t channel = 0; channel < aChannels; ++channel) {
       float v = SampleToFloat(aSource[channel*aSourceLength + i])*aVolume;
       FloatToSample(v, output);
       ++output;
@@ -78,19 +78,19 @@ InterleaveAndConvertBuffer(const SrcT* aSource, PRInt32 aSourceLength,
 }
 
 static void
-InterleaveAndConvertBuffer(const PRInt16* aSource, PRInt32 aSourceLength,
-                           PRInt32 aLength,
+InterleaveAndConvertBuffer(const int16_t* aSource, int32_t aSourceLength,
+                           int32_t aLength,
                            float aVolume,
-                           PRInt32 aChannels,
-                           PRInt16* aOutput)
+                           int32_t aChannels,
+                           int16_t* aOutput)
 {
-  PRInt16* output = aOutput;
+  int16_t* output = aOutput;
   float v = NS_MAX(NS_MIN(aVolume, 1.0f), -1.0f);
-  PRInt32 volume = PRInt32((1 << 16) * v);
-  for (PRInt32 i = 0; i < aLength; ++i) {
-    for (PRInt32 channel = 0; channel < aChannels; ++channel) {
-      PRInt16 s = FlipByteOrderIfBigEndian(aSource[channel*aSourceLength + i]);
-      *output = FlipByteOrderIfBigEndian(PRInt16((PRInt32(s) * volume) >> 16));
+  int32_t volume = int32_t((1 << 16) * v);
+  for (int32_t i = 0; i < aLength; ++i) {
+    for (int32_t channel = 0; channel < aChannels; ++channel) {
+      int16_t s = FlipByteOrderIfBigEndian(aSource[channel*aSourceLength + i]);
+      *output = FlipByteOrderIfBigEndian(int16_t((int32_t(s) * volume) >> 16));
       ++output;
     }
   }
@@ -98,10 +98,10 @@ InterleaveAndConvertBuffer(const PRInt16* aSource, PRInt32 aSourceLength,
 
 template <class SrcT>
 static void
-InterleaveAndConvertBuffer(const SrcT* aSource, PRInt32 aSourceLength,
-                           PRInt32 aLength,
+InterleaveAndConvertBuffer(const SrcT* aSource, int32_t aSourceLength,
+                           int32_t aLength,
                            float aVolume,
-                           PRInt32 aChannels,
+                           int32_t aChannels,
                            void* aOutput, nsAudioStream::SampleFormat aOutputFormat)
 {
   switch (aOutputFormat) {
@@ -111,21 +111,21 @@ InterleaveAndConvertBuffer(const SrcT* aSource, PRInt32 aSourceLength,
     break;
   case nsAudioStream::FORMAT_S16_LE:
     InterleaveAndConvertBuffer(aSource, aSourceLength, aLength, aVolume,
-                               aChannels, static_cast<PRInt16*>(aOutput));
+                               aChannels, static_cast<int16_t*>(aOutput));
     break;
   case nsAudioStream::FORMAT_U8:
     InterleaveAndConvertBuffer(aSource, aSourceLength, aLength, aVolume,
-                               aChannels, static_cast<PRUint8*>(aOutput));
+                               aChannels, static_cast<uint8_t*>(aOutput));
     break;
   }
 }
 
 static void
 InterleaveAndConvertBuffer(const void* aSource, nsAudioStream::SampleFormat aSourceFormat,
-                           PRInt32 aSourceLength,
-                           PRInt32 aOffset, PRInt32 aLength,
+                           int32_t aSourceLength,
+                           int32_t aOffset, int32_t aLength,
                            float aVolume,
-                           PRInt32 aChannels,
+                           int32_t aChannels,
                            void* aOutput, nsAudioStream::SampleFormat aOutputFormat)
 {
   switch (aSourceFormat) {
@@ -137,14 +137,14 @@ InterleaveAndConvertBuffer(const void* aSource, nsAudioStream::SampleFormat aSou
                                aOutput, aOutputFormat);
     break;
   case nsAudioStream::FORMAT_S16_LE:
-    InterleaveAndConvertBuffer(static_cast<const PRInt16*>(aSource) + aOffset, aSourceLength,
+    InterleaveAndConvertBuffer(static_cast<const int16_t*>(aSource) + aOffset, aSourceLength,
                                aLength,
                                aVolume,
                                aChannels,
                                aOutput, aOutputFormat);
     break;
   case nsAudioStream::FORMAT_U8:
-    InterleaveAndConvertBuffer(static_cast<const PRUint8*>(aSource) + aOffset, aSourceLength,
+    InterleaveAndConvertBuffer(static_cast<const uint8_t*>(aSource) + aOffset, aSourceLength,
                                aLength,
                                aVolume,
                                aChannels,
@@ -167,18 +167,18 @@ void
 AudioSegment::WriteTo(nsAudioStream* aOutput)
 {
   NS_ASSERTION(mChannels == aOutput->GetChannels(), "Wrong number of channels");
-  nsAutoTArray<PRUint8,STATIC_AUDIO_BUFFER_BYTES> buf;
-  PRUint32 frameSize = GetSampleSize(aOutput->GetFormat())*mChannels;
+  nsAutoTArray<uint8_t,STATIC_AUDIO_BUFFER_BYTES> buf;
+  uint32_t frameSize = GetSampleSize(aOutput->GetFormat())*mChannels;
   for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
     AudioChunk& c = *ci;
     if (frameSize*c.mDuration > PR_UINT32_MAX) {
       NS_ERROR("Buffer overflow");
       return;
     }
-    buf.SetLength(PRInt32(frameSize*c.mDuration));
+    buf.SetLength(int32_t(frameSize*c.mDuration));
     if (c.mBuffer) {
       InterleaveAndConvertBuffer(c.mBuffer->Data(), c.mBufferFormat, c.mBufferLength,
-                                 c.mOffset, PRInt32(c.mDuration),
+                                 c.mOffset, int32_t(c.mDuration),
                                  c.mVolume,
                                  aOutput->GetChannels(),
                                  buf.Elements(), aOutput->GetFormat());
@@ -186,7 +186,7 @@ AudioSegment::WriteTo(nsAudioStream* aOutput)
       // Assumes that a bit pattern of zeroes == 0.0f
       memset(buf.Elements(), 0, buf.Length());
     }
-    aOutput->Write(buf.Elements(), PRInt32(c.mDuration));
+    aOutput->Write(buf.Elements(), int32_t(c.mDuration));
   }
 }
 

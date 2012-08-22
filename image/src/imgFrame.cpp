@@ -27,8 +27,8 @@ static bool gDisableOptimize = false;
 /* Whether to use the windows surface; only for desktop win32 */
 #define USE_WIN_SURFACE 1
 
-static PRUint32 gTotalDDBs = 0;
-static PRUint32 gTotalDDBSize = 0;
+static uint32_t gTotalDDBs = 0;
+static uint32_t gTotalDDBSize = 0;
 // only use up a maximum of 64MB in DDBs
 #define kMaxDDBSize (64*1024*1024)
 // and don't let anything in that's bigger than 4MB
@@ -39,10 +39,10 @@ static PRUint32 gTotalDDBSize = 0;
 using namespace mozilla::image;
 
 // Returns true if an image of aWidth x aHeight is allowed and legal.
-static bool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight)
+static bool AllowedImageSize(int32_t aWidth, int32_t aHeight)
 {
   // reject over-wide or over-tall images
-  const PRInt32 k64KLimit = 0x0000FFFF;
+  const int32_t k64KLimit = 0x0000FFFF;
   if (NS_UNLIKELY(aWidth > k64KLimit || aHeight > k64KLimit )) {
     NS_WARNING("image too big");
     return false;
@@ -54,7 +54,7 @@ static bool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight)
   }
 
   // check to make sure we don't overflow a 32-bit
-  PRInt32 tmp = aWidth * aHeight;
+  int32_t tmp = aWidth * aHeight;
   if (NS_UNLIKELY(tmp / aHeight != aWidth)) {
     NS_WARNING("width or height too large");
     return false;
@@ -145,8 +145,8 @@ imgFrame::~imgFrame()
   }
 }
 
-nsresult imgFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, 
-                        gfxASurface::gfxImageFormat aFormat, PRUint8 aPaletteDepth /* = 0 */)
+nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, 
+                        gfxASurface::gfxImageFormat aFormat, uint8_t aPaletteDepth /* = 0 */)
 {
   // assert for properties that should be verified by decoders, warn for properties related to bad content
   if (!AllowedImageSize(aWidth, aHeight))
@@ -166,7 +166,7 @@ nsresult imgFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     }
 
     // Use the fallible allocator here
-    mPalettedImageData = (PRUint8*)moz_malloc(PaletteDataLength() + GetImageDataLength());
+    mPalettedImageData = (uint8_t*)moz_malloc(PaletteDataLength() + GetImageDataLength());
     NS_ENSURE_TRUE(mPalettedImageData, NS_ERROR_OUT_OF_MEMORY);
   } else {
     // For Windows, we must create the device surface first (if we're
@@ -232,9 +232,9 @@ nsresult imgFrame::Optimize()
 
   // this should always be true
   if (mImageSurface->Stride() == mSize.width * 4) {
-    PRUint32 *imgData = (PRUint32*) mImageSurface->Data();
-    PRUint32 firstPixel = * (PRUint32*) imgData;
-    PRUint32 pixelCount = mSize.width * mSize.height + 1;
+    uint32_t *imgData = (uint32_t*) mImageSurface->Data();
+    uint32_t firstPixel = * (uint32_t*) imgData;
+    uint32_t pixelCount = mSize.width * mSize.height + 1;
 
     while (--pixelCount && *imgData++ == firstPixel)
       ;
@@ -306,7 +306,7 @@ nsresult imgFrame::Optimize()
     // be less than 4MB to keep very large images out of DDBs.
 
     // assume (almost -- we don't quadword-align) worst-case size
-    PRUint32 ddbSize = mSize.width * mSize.height * 4;
+    uint32_t ddbSize = mSize.width * mSize.height * 4;
     if (ddbSize <= kMaxSingleDDBSize &&
         ddbSize + gTotalDDBSize <= kMaxDDBSize)
     {
@@ -381,7 +381,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
                             gfxRect&           aSourceRect,
                             gfxRect&           aImageRect)
 {
-  gfxIntSize size(PRInt32(aImageRect.Width()), PRInt32(aImageRect.Height()));
+  gfxIntSize size(int32_t(aImageRect.Width()), int32_t(aImageRect.Height()));
   if (!aDoPadding && !aDoPartialDecode) {
     NS_ASSERTION(!mSinglePixel, "This should already have been handled");
     return SurfaceWithFormat(new gfxSurfaceDrawable(ThebesSurface(), size), mFormat);
@@ -435,7 +435,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
 void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
                     const gfxMatrix &aUserSpaceToImageSpace, const gfxRect& aFill,
                     const nsIntMargin &aPadding, const nsIntRect &aSubimage,
-                    PRUint32 aImageFlags)
+                    uint32_t aImageFlags)
 {
   SAMPLE_LABEL("image", "imgFrame::Draw");
   NS_ASSERTION(!aFill.IsEmpty(), "zero dest size --- fix caller");
@@ -558,7 +558,7 @@ bool imgFrame::GetNeedsBackground() const
   return (mFormat == gfxASurface::ImageFormatARGB32 || !ImageComplete());
 }
 
-PRUint32 imgFrame::GetImageBytesPerRow() const
+uint32_t imgFrame::GetImageBytesPerRow() const
 {
   if (mImageSurface)
     return mImageSurface->Stride();
@@ -571,12 +571,12 @@ PRUint32 imgFrame::GetImageBytesPerRow() const
   return 0;
 }
 
-PRUint32 imgFrame::GetImageDataLength() const
+uint32_t imgFrame::GetImageDataLength() const
 {
   return GetImageBytesPerRow() * mSize.height;
 }
 
-void imgFrame::GetImageData(PRUint8 **aData, PRUint32 *length) const
+void imgFrame::GetImageData(uint8_t **aData, uint32_t *length) const
 {
   if (mImageSurface)
     *aData = mImageSurface->Data();
@@ -598,13 +598,13 @@ bool imgFrame::GetHasAlpha() const
   return mFormat == gfxASurface::ImageFormatARGB32;
 }
 
-void imgFrame::GetPaletteData(PRUint32 **aPalette, PRUint32 *length) const
+void imgFrame::GetPaletteData(uint32_t **aPalette, uint32_t *length) const
 {
   if (!mPalettedImageData) {
     *aPalette = nullptr;
     *length = 0;
   } else {
-    *aPalette = (PRUint32 *) mPalettedImageData;
+    *aPalette = (uint32_t *) mPalettedImageData;
     *length = PaletteDataLength();
   }
 }
@@ -687,7 +687,7 @@ nsresult imgFrame::UnlockImageData()
   return NS_OK;
 }
 
-PRInt32 imgFrame::GetTimeout() const
+int32_t imgFrame::GetTimeout() const
 {
   // Ensure a minimal time between updates so we don't throttle the UI thread.
   // consider 0 == unspecified and make it fast but not too fast.  See bug
@@ -708,29 +708,29 @@ PRInt32 imgFrame::GetTimeout() const
     return mTimeout;
 }
 
-void imgFrame::SetTimeout(PRInt32 aTimeout)
+void imgFrame::SetTimeout(int32_t aTimeout)
 {
   mTimeout = aTimeout;
 }
 
-PRInt32 imgFrame::GetFrameDisposalMethod() const
+int32_t imgFrame::GetFrameDisposalMethod() const
 {
   return mDisposalMethod;
 }
 
-void imgFrame::SetFrameDisposalMethod(PRInt32 aFrameDisposalMethod)
+void imgFrame::SetFrameDisposalMethod(int32_t aFrameDisposalMethod)
 {
   mDisposalMethod = aFrameDisposalMethod;
 }
 
-PRInt32 imgFrame::GetBlendMethod() const
+int32_t imgFrame::GetBlendMethod() const
 {
   return mBlendMethod;
 }
 
-void imgFrame::SetBlendMethod(PRInt32 aBlendMethod)
+void imgFrame::SetBlendMethod(int32_t aBlendMethod)
 {
-  mBlendMethod = (PRInt8)aBlendMethod;
+  mBlendMethod = (int8_t)aBlendMethod;
 }
 
 bool imgFrame::ImageComplete() const

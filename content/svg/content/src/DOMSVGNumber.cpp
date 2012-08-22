@@ -45,9 +45,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGNumber)
 NS_INTERFACE_MAP_END
 
 DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList *aList,
-                           PRUint8 aAttrEnum,
-                           PRUint32 aListIndex,
-                           PRUint8 aIsAnimValItem)
+                           uint8_t aAttrEnum,
+                           uint32_t aListIndex,
+                           uint8_t aIsAnimValItem)
   : mList(aList)
   , mListIndex(aListIndex)
   , mAttrEnum(aAttrEnum)
@@ -109,9 +109,9 @@ DOMSVGNumber::SetValue(float aValue)
 
 void
 DOMSVGNumber::InsertingIntoList(DOMSVGNumberList *aList,
-                                PRUint8 aAttrEnum,
-                                PRUint32 aListIndex,
-                                PRUint8 aIsAnimValItem)
+                                uint8_t aAttrEnum,
+                                uint32_t aListIndex,
+                                uint8_t aIsAnimValItem)
 {
   NS_ASSERTION(!HasOwner(), "Inserting item that is already in a list");
 

@@ -32,9 +32,9 @@ interface nsIInputStream;
 typedef NS_CALLBACK(nsWriteUnicharSegmentFun)(nsIUnicharInputStream *aInStream,
                                               void *aClosure,
                                               const PRUnichar *aFromSegment,
-                                              PRUint32 aToOffset,
-                                              PRUint32 aCount,
-                                              PRUint32 *aWriteCount);
+                                              uint32_t aToOffset,
+                                              uint32_t aCount,
+                                              uint32_t *aWriteCount);
 %}
 native nsWriteUnicharSegmentFun(nsWriteUnicharSegmentFun);
 

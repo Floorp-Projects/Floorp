@@ -26,10 +26,10 @@ class nsSVGLength2
 {
 
 public:
-  void Init(PRUint8 aCtxType = nsSVGUtils::XY,
-            PRUint8 aAttrEnum = 0xff,
+  void Init(uint8_t aCtxType = nsSVGUtils::XY,
+            uint8_t aAttrEnum = 0xff,
             float aValue = 0,
-            PRUint8 aUnitType = nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER) {
+            uint8_t aUnitType = nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER) {
     mAnimVal = mBaseVal = aValue;
     mSpecifiedUnitType = aUnitType;
     mAttrEnum = aAttrEnum;
@@ -60,8 +60,8 @@ public:
   float GetAnimValue(nsIFrame* aFrame) const
     { return mAnimVal / GetUnitScaleFactor(aFrame, mSpecifiedUnitType); }
 
-  PRUint8 GetCtxType() const { return mCtxType; }
-  PRUint8 GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
+  uint8_t GetCtxType() const { return mCtxType; }
+  uint8_t GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
   bool IsPercentage() const
     { return mSpecifiedUnitType == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE; }
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
@@ -92,9 +92,9 @@ private:
   
   float mAnimVal;
   float mBaseVal;
-  PRUint8 mSpecifiedUnitType;
-  PRUint8 mAttrEnum; // element specified tracking for attribute
-  PRUint8 mCtxType; // X, Y or Unspecified
+  uint8_t mSpecifiedUnitType;
+  uint8_t mAttrEnum; // element specified tracking for attribute
+  uint8_t mCtxType; // X, Y or Unspecified
   bool mIsAnimated:1;
   bool mIsBaseSet:1;
   
@@ -104,7 +104,7 @@ private:
     { return nsSVGUtils::GetFontSize(aFrame); }
   static float GetExLength(nsIFrame *aFrame)
     { return nsSVGUtils::GetFontXHeight(aFrame); }
-  float GetUnitScaleFactor(nsIFrame *aFrame, PRUint8 aUnitType) const;
+  float GetUnitScaleFactor(nsIFrame *aFrame, uint8_t aUnitType) const;
 
   float GetMMPerPixel(nsSVGSVGElement *aCtx) const;
   float GetAxisLength(nsSVGSVGElement *aCtx) const;
@@ -112,8 +112,8 @@ private:
     { return nsSVGUtils::GetFontSize(aSVGElement); }
   static float GetExLength(nsSVGElement *aSVGElement)
     { return nsSVGUtils::GetFontXHeight(aSVGElement); }
-  float GetUnitScaleFactor(nsSVGElement *aSVGElement, PRUint8 aUnitType) const;
-  float GetUnitScaleFactor(nsSVGSVGElement *aCtx, PRUint8 aUnitType) const;
+  float GetUnitScaleFactor(nsSVGElement *aSVGElement, uint8_t aUnitType) const;
+  float GetUnitScaleFactor(nsSVGSVGElement *aCtx, uint8_t aUnitType) const;
 
   // SetBaseValue and SetAnimValue set the value in user units
   void SetBaseValue(float aValue, nsSVGElement *aSVGElement, bool aDoSetAttr);
@@ -121,9 +121,9 @@ private:
                                     bool aDoSetAttr);
   void SetAnimValue(float aValue, nsSVGElement *aSVGElement);
   void SetAnimValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
-  nsresult NewValueSpecifiedUnits(PRUint16 aUnitType, float aValue,
+  nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   nsSVGElement *aSVGElement);
-  nsresult ConvertToSpecifiedUnits(PRUint16 aUnitType, nsSVGElement *aSVGElement);
+  nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, nsSVGElement *aSVGElement);
   nsresult ToDOMBaseVal(nsIDOMSVGLength **aResult, nsSVGElement* aSVGElement);
   nsresult ToDOMAnimVal(nsIDOMSVGLength **aResult, nsSVGElement* aSVGElement);
 
@@ -139,7 +139,7 @@ private:
     nsSVGLength2* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
     
-    NS_IMETHOD GetUnitType(PRUint16* aResult)
+    NS_IMETHOD GetUnitType(uint16_t* aResult)
       { *aResult = mVal->mSpecifiedUnitType; return NS_OK; }
 
     NS_IMETHOD GetValue(float* aResult)
@@ -169,13 +169,13 @@ private:
     NS_IMETHOD GetValueAsString(nsAString& aValue)
       { mVal->GetBaseValueString(aValue); return NS_OK; }
 
-    NS_IMETHOD NewValueSpecifiedUnits(PRUint16 unitType,
+    NS_IMETHOD NewValueSpecifiedUnits(uint16_t unitType,
                                       float valueInSpecifiedUnits)
       {
         return mVal->NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits,
                                             mSVGElement); }
 
-    NS_IMETHOD ConvertToSpecifiedUnits(PRUint16 unitType)
+    NS_IMETHOD ConvertToSpecifiedUnits(uint16_t unitType)
       { return mVal->ConvertToSpecifiedUnits(unitType, mSVGElement); }
   };
 
@@ -193,7 +193,7 @@ private:
     
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    NS_IMETHOD GetUnitType(PRUint16* aResult)
+    NS_IMETHOD GetUnitType(uint16_t* aResult)
     {
       mSVGElement->FlushAnimations();
       *aResult = mVal->mSpecifiedUnitType;
@@ -227,11 +227,11 @@ private:
       return NS_OK;
     }
 
-    NS_IMETHOD NewValueSpecifiedUnits(PRUint16 unitType,
+    NS_IMETHOD NewValueSpecifiedUnits(uint16_t unitType,
                                       float valueInSpecifiedUnits)
       { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
 
-    NS_IMETHOD ConvertToSpecifiedUnits(PRUint16 unitType)
+    NS_IMETHOD ConvertToSpecifiedUnits(uint16_t unitType)
       { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
   };
 

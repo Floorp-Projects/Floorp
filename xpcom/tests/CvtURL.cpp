@@ -63,10 +63,10 @@ int main(int argc, char** argv)
 
   // Read the input and write some output
   PRTime start = PR_Now();
-  PRInt32 count = 0;
+  int32_t count = 0;
   for (;;) {
     PRUnichar buf[1000];
-    PRUint32 nb;
+    uint32_t nb;
     ec = uin->Read(buf, 0, 1000, &nb);
     if (NS_FAILED(ec)) {
       printf("i/o error: %d\n", ec);

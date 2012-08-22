@@ -117,15 +117,15 @@ public:
   virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist, bool aPrivate);
 
   virtual nsTArray<nsString>* GetKeys(bool aCallerSecure) = 0;
-  virtual nsresult GetLength(bool aCallerSecure, PRUint32* aLength) = 0;
-  virtual nsresult GetKey(bool aCallerSecure, PRUint32 aIndex, nsAString& aKey) = 0;
+  virtual nsresult GetLength(bool aCallerSecure, uint32_t* aLength) = 0;
+  virtual nsresult GetKey(bool aCallerSecure, uint32_t aIndex, nsAString& aKey) = 0;
   virtual nsIDOMStorageItem* GetValue(bool aCallerSecure, const nsAString& aKey,
                                       nsresult* rv) = 0;
   virtual nsresult SetValue(bool aCallerSecure, const nsAString& aKey,
                             const nsAString& aData, nsAString& aOldValue) = 0;
   virtual nsresult RemoveValue(bool aCallerSecure, const nsAString& aKey,
                                nsAString& aOldValue) = 0;
-  virtual nsresult Clear(bool aCallerSecure, PRInt32* aOldCount) = 0;
+  virtual nsresult Clear(bool aCallerSecure, int32_t* aOldCount) = 0;
 
   // Call nsDOMStorage::CanUseStorage with |this|
   bool CanUseStorage();
@@ -228,21 +228,21 @@ public:
   }
 
   virtual nsTArray<nsString>* GetKeys(bool aCallerSecure);
-  virtual nsresult GetLength(bool aCallerSecure, PRUint32* aLength);
-  virtual nsresult GetKey(bool aCallerSecure, PRUint32 aIndex, nsAString& aKey);
+  virtual nsresult GetLength(bool aCallerSecure, uint32_t* aLength);
+  virtual nsresult GetKey(bool aCallerSecure, uint32_t aIndex, nsAString& aKey);
   virtual nsIDOMStorageItem* GetValue(bool aCallerSecure, const nsAString& aKey,
                                       nsresult* rv);
   virtual nsresult SetValue(bool aCallerSecure, const nsAString& aKey,
                             const nsAString& aData, nsAString& aOldValue);
   virtual nsresult RemoveValue(bool aCallerSecure, const nsAString& aKey,
                                nsAString& aOldValue);
-  virtual nsresult Clear(bool aCallerSecure, PRInt32* aOldCount);
+  virtual nsresult Clear(bool aCallerSecure, int32_t* aOldCount);
 
   // cache the keys from the database for faster lookup
   nsresult CacheKeysFromDB();
 
-  PRUint64 CachedVersion() { return mItemsCachedVersion; }
-  void SetCachedVersion(PRUint64 version) { mItemsCachedVersion = version; }
+  uint64_t CachedVersion() { return mItemsCachedVersion; }
+  void SetCachedVersion(uint64_t version) { mItemsCachedVersion = version; }
   
   // Some privileged internal pages can use a persistent storage even in
   // session-only or private-browsing modes.
@@ -296,14 +296,14 @@ private:
                      const nsACString& aScopeDBKey,
                      const nsACString& aQuotaDomainDBKey,
                      const nsACString& aQuotaETLDplus1DomainDBKey,
-                     PRUint32 aStorageType);
+                     uint32_t aStorageType);
   void SetSessionOnly(bool aSessionOnly);
 
   static nsresult InitDB();
 
   // 0 initially or a positive data version number assigned by gStorageDB
   // after keys have been cached from the database
-  PRUint64 mItemsCachedVersion;
+  uint64_t mItemsCachedVersion;
 
   // the key->value item pairs
   nsTHashtable<nsSessionStorageEntry> mItems;
@@ -503,7 +503,7 @@ protected:
 nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-PRUint32
+uint32_t
 GetOfflinePermission(const nsACString &aDomain);
 
 bool

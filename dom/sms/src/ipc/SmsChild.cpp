@@ -60,8 +60,8 @@ SmsChild::RecvNotifyDeliveredMessage(const SmsMessageData& aMessageData)
 
 bool
 SmsChild::RecvNotifyRequestSmsSent(const SmsMessageData& aMessage,
-                                   const PRInt32& aRequestId,
-                                   const PRUint64& aProcessId)
+                                   const int32_t& aRequestId,
+                                   const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -75,9 +75,9 @@ SmsChild::RecvNotifyRequestSmsSent(const SmsMessageData& aMessage,
 }
 
 bool
-SmsChild::RecvNotifyRequestSmsSendFailed(const PRInt32& aError,
-                                         const PRInt32& aRequestId,
-                                         const PRUint64& aProcessId)
+SmsChild::RecvNotifyRequestSmsSendFailed(const int32_t& aError,
+                                         const int32_t& aRequestId,
+                                         const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -91,8 +91,8 @@ SmsChild::RecvNotifyRequestSmsSendFailed(const PRInt32& aError,
 
 bool
 SmsChild::RecvNotifyRequestGotSms(const SmsMessageData& aMessage,
-                                  const PRInt32& aRequestId,
-                                  const PRUint64& aProcessId)
+                                  const int32_t& aRequestId,
+                                  const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -106,9 +106,9 @@ SmsChild::RecvNotifyRequestGotSms(const SmsMessageData& aMessage,
 }
 
 bool
-SmsChild::RecvNotifyRequestGetSmsFailed(const PRInt32& aError,
-                                        const PRInt32& aRequestId,
-                                        const PRUint64& aProcessId)
+SmsChild::RecvNotifyRequestGetSmsFailed(const int32_t& aError,
+                                        const int32_t& aRequestId,
+                                        const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -122,8 +122,8 @@ SmsChild::RecvNotifyRequestGetSmsFailed(const PRInt32& aError,
 
 bool
 SmsChild::RecvNotifyRequestSmsDeleted(const bool& aDeleted,
-                                      const PRInt32& aRequestId,
-                                      const PRUint64& aProcessId)
+                                      const int32_t& aRequestId,
+                                      const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -136,9 +136,9 @@ SmsChild::RecvNotifyRequestSmsDeleted(const bool& aDeleted,
 }
 
 bool
-SmsChild::RecvNotifyRequestSmsDeleteFailed(const PRInt32& aError,
-                                           const PRInt32& aRequestId,
-                                           const PRUint64& aProcessId)
+SmsChild::RecvNotifyRequestSmsDeleteFailed(const int32_t& aError,
+                                           const int32_t& aRequestId,
+                                           const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -151,8 +151,8 @@ SmsChild::RecvNotifyRequestSmsDeleteFailed(const PRInt32& aError,
 }
 
 bool
-SmsChild::RecvNotifyRequestNoMessageInList(const PRInt32& aRequestId,
-                                           const PRUint64& aProcessId)
+SmsChild::RecvNotifyRequestNoMessageInList(const int32_t& aRequestId,
+                                           const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -164,10 +164,10 @@ SmsChild::RecvNotifyRequestNoMessageInList(const PRInt32& aRequestId,
 }
 
 bool
-SmsChild::RecvNotifyRequestCreateMessageList(const PRInt32& aListId,
+SmsChild::RecvNotifyRequestCreateMessageList(const int32_t& aListId,
                                              const SmsMessageData& aMessageData,
-                                             const PRInt32& aRequestId,
-                                             const PRUint64& aProcessId)
+                                             const int32_t& aRequestId,
+                                             const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -181,8 +181,8 @@ SmsChild::RecvNotifyRequestCreateMessageList(const PRInt32& aListId,
 
 bool
 SmsChild::RecvNotifyRequestGotNextMessage(const SmsMessageData& aMessageData,
-                                          const PRInt32& aRequestId,
-                                          const PRUint64& aProcessId)
+                                          const int32_t& aRequestId,
+                                          const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -195,9 +195,9 @@ SmsChild::RecvNotifyRequestGotNextMessage(const SmsMessageData& aMessageData,
 }
 
 bool
-SmsChild::RecvNotifyRequestReadListFailed(const PRInt32& aError,
-                                          const PRInt32& aRequestId,
-                                          const PRUint64& aProcessId)
+SmsChild::RecvNotifyRequestReadListFailed(const int32_t& aError,
+                                          const int32_t& aRequestId,
+                                          const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -210,8 +210,8 @@ SmsChild::RecvNotifyRequestReadListFailed(const PRInt32& aError,
 
 bool
 SmsChild::RecvNotifyRequestMarkedMessageRead(const bool& aRead,
-                                             const PRInt32& aRequestId,
-                                             const PRUint64& aProcessId)
+                                             const int32_t& aRequestId,
+                                             const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;
@@ -224,9 +224,9 @@ SmsChild::RecvNotifyRequestMarkedMessageRead(const bool& aRead,
 }
 
 bool
-SmsChild::RecvNotifyRequestMarkMessageReadFailed(const PRInt32& aError,
-                                                 const PRInt32& aRequestId,
-                                                 const PRUint64& aProcessId)
+SmsChild::RecvNotifyRequestMarkMessageReadFailed(const int32_t& aError,
+                                                 const int32_t& aRequestId,
+                                                 const uint64_t& aProcessId)
 {
   if (ContentChild::GetSingleton()->GetID() != aProcessId) {
     return true;

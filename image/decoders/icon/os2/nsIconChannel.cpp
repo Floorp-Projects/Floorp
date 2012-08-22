@@ -36,10 +36,10 @@ static  HPOINTER GetIcon(nsCString& file, bool fExists,
                          bool fMini, bool *fWpsIcon);
 static  void DestroyIcon(HPOINTER hIcon, bool fWpsIcon);
 
-void    ConvertColorBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
-                           PRUint8 *outBuf, bool fShrink);
-void    ConvertMaskBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
-                          PRUint8 *outBuf, bool fShrink);
+void    ConvertColorBitMap(uint8_t *inBuf, PBITMAPINFO2 pBMInfo,
+                           uint8_t *outBuf, bool fShrink);
+void    ConvertMaskBitMap(uint8_t *inBuf, PBITMAPINFO2 pBMInfo,
+                          uint8_t *outBuf, bool fShrink);
 
 //------------------------------------------------------------------------
 
@@ -118,12 +118,12 @@ NS_IMETHODIMP nsIconChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::GetLoadFlags(PRUint32 *aLoadAttributes)
+NS_IMETHODIMP nsIconChannel::GetLoadFlags(uint32_t *aLoadAttributes)
 {
   return mPump->GetLoadFlags(aLoadAttributes);
 }
 
-NS_IMETHODIMP nsIconChannel::SetLoadFlags(PRUint32 aLoadAttributes)
+NS_IMETHODIMP nsIconChannel::SetLoadFlags(uint32_t aLoadAttributes)
 {
   return mPump->SetLoadFlags(aLoadAttributes);
 }
@@ -166,7 +166,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     return rv;
 
   // Init our streampump
-  rv = mPump->Init(inStream, PRInt64(-1), PRInt64(-1), 0, 0, false);
+  rv = mPump->Init(inStream, int64_t(-1), int64_t(-1), 0, 0, false);
   if (NS_FAILED(rv))
     return rv;
 
@@ -181,7 +181,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   return rv;
 }
 
-nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension)
+nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, uint32_t * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMozIconURI> iconURI (do_QueryInterface(mUrl, &rv));
@@ -220,7 +220,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
 
   // get some details about this icon
   nsCOMPtr<nsIFile> localFile;
-  PRUint32 desiredImageSize;
+  uint32_t desiredImageSize;
   nsXPIDLCString contentType;
   nsCAutoString filePath;
   nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile),
@@ -263,8 +263,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
 
   // various resources to be allocated
   PBITMAPINFO2  pBMInfo = 0;
-  PRUint8*      pInBuf  = 0;
-  PRUint8*      pOutBuf = 0;
+  uint8_t*      pInBuf  = 0;
+  uint8_t*      pOutBuf = 0;
   HDC           hdc     = 0;
   HPS           hps     = 0;
 
@@ -284,24 +284,24 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
       break;
 
     // alloc space for the color bitmap's info, including its color table
-    PRUint32 cbBMInfo = sizeof(BITMAPINFO2) + (sizeof(RGB2) * 255);
+    uint32_t cbBMInfo = sizeof(BITMAPINFO2) + (sizeof(RGB2) * 255);
     pBMInfo = (PBITMAPINFO2)nsMemory::Alloc(cbBMInfo);
     if (!pBMInfo)
       break;
 
     // alloc space for the color bitmap data
-    PRUint32 cbInRow = ALIGNEDBPR(BMHeader.cx, BMHeader.cBitCount);
-    PRUint32 cbInBuf = cbInRow * BMHeader.cy;
-    pInBuf = (PRUint8*)nsMemory::Alloc(cbInBuf);
+    uint32_t cbInRow = ALIGNEDBPR(BMHeader.cx, BMHeader.cBitCount);
+    uint32_t cbInBuf = cbInRow * BMHeader.cy;
+    pInBuf = (uint8_t*)nsMemory::Alloc(cbInBuf);
     if (!pInBuf)
       break;
     memset(pInBuf, 0, cbInBuf);
 
     // alloc space for the BGRA32 bitmap we're creating
-    PRUint32 cxOut    = fShrink ? BMHeader.cx / 2 : BMHeader.cx;
-    PRUint32 cyOut    = fShrink ? BMHeader.cy / 2 : BMHeader.cy;
-    PRUint32 cbOutBuf = 2 + ALIGNEDBPR(cxOut, 32) * cyOut;
-    pOutBuf = (PRUint8*)nsMemory::Alloc(cbOutBuf);
+    uint32_t cxOut    = fShrink ? BMHeader.cx / 2 : BMHeader.cx;
+    uint32_t cyOut    = fShrink ? BMHeader.cy / 2 : BMHeader.cy;
+    uint32_t cbOutBuf = 2 + ALIGNEDBPR(cxOut, 32) * cyOut;
+    pOutBuf = (uint8_t*)nsMemory::Alloc(cbOutBuf);
     if (!pOutBuf)
       break;
     memset(pOutBuf, 0, cbOutBuf);
@@ -327,9 +327,9 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
 
     // The first 2 bytes are the width & height of the icon in pixels,
     // the remaining bytes are BGRA32 (B in first byte, A in last)
-    PRUint8* outPtr = pOutBuf;
-    *outPtr++ = (PRUint8)cxOut;
-    *outPtr++ = (PRUint8)cyOut;
+    uint8_t* outPtr = pOutBuf;
+    *outPtr++ = (uint8_t)cxOut;
+    *outPtr++ = (uint8_t)cyOut;
 
     // convert the color bitmap
     pBMInfo->cbImage = cbInBuf;
@@ -350,7 +350,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
     {
       cbInBuf = cbInRow * BMHeader.cy;
       nsMemory::Free(pInBuf);
-      pInBuf = (PRUint8*)nsMemory::Alloc(cbInBuf);
+      pInBuf = (uint8_t*)nsMemory::Alloc(cbInBuf);
       memset(pInBuf, 0, cbInBuf);
     }
 
@@ -375,7 +375,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
       break;
 
     // put our data into the pipe
-    PRUint32 written;
+    uint32_t written;
     rv = outStream->Write(reinterpret_cast<const char*>(pOutBuf),
                           cbOutBuf, &written);
     if (NS_FAILED(rv))
@@ -426,12 +426,12 @@ static HPOINTER GetIcon(nsCString& file, bool fExists,
       sUseRws = false;
     else {
       if (fExists) {
-        rwsSvc->IconFromPath(file.get(), false, fMini, (PRUint32*)&hRtn);
+        rwsSvc->IconFromPath(file.get(), false, fMini, (uint32_t*)&hRtn);
       } else {
         const char *ptr = file.get();
         if (*ptr == '.')
           ptr++;
-        rwsSvc->IconFromExtension(ptr, fMini, (PRUint32*)&hRtn);
+        rwsSvc->IconFromExtension(ptr, fMini, (uint32_t*)&hRtn);
       }
     }
   }
@@ -488,40 +488,40 @@ static void DestroyIcon(HPOINTER hIcon, bool fWpsIcon)
 // end of the input buffer & works its way back;  Note: only 4-bit, 20x20
 // icons contain input padding that has to be ignored
 
-void ConvertColorBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
-                        PRUint8 *outBuf, bool fShrink)
+void ConvertColorBitMap(uint8_t *inBuf, PBITMAPINFO2 pBMInfo,
+                        uint8_t *outBuf, bool fShrink)
 {
-  PRUint32 next  = fShrink ? 2 : 1;
-  PRUint32 bprIn = ALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
-  PRUint8 *pIn   = inBuf + (pBMInfo->cy - 1) * bprIn;
-  PRUint8 *pOut  = outBuf;
+  uint32_t next  = fShrink ? 2 : 1;
+  uint32_t bprIn = ALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
+  uint8_t *pIn   = inBuf + (pBMInfo->cy - 1) * bprIn;
+  uint8_t *pOut  = outBuf;
   PRGB2    pColorTable = &pBMInfo->argbColor[0];
 
   if (pBMInfo->cBitCount == 4) {
-    PRUint32  ubprIn = UNALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
-    PRUint32  padIn  = bprIn - ubprIn;
+    uint32_t  ubprIn = UNALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
+    uint32_t  padIn  = bprIn - ubprIn;
 
-    for (PRUint32 row = pBMInfo->cy; row > 0; row -= next) {
-      for (PRUint32 ndx = 0; ndx < ubprIn; ndx++, pIn++) {
-        pOut = 4 + (PRUint8*)memcpy(pOut, &pColorTable[FIRSTPEL(*pIn)], 3);
+    for (uint32_t row = pBMInfo->cy; row > 0; row -= next) {
+      for (uint32_t ndx = 0; ndx < ubprIn; ndx++, pIn++) {
+        pOut = 4 + (uint8_t*)memcpy(pOut, &pColorTable[FIRSTPEL(*pIn)], 3);
         if (!fShrink) {
-          pOut = 4 + (PRUint8*)memcpy(pOut, &pColorTable[SECONDPEL(*pIn)], 3);
+          pOut = 4 + (uint8_t*)memcpy(pOut, &pColorTable[SECONDPEL(*pIn)], 3);
         }
       }
       pIn -= ((next + 1) * bprIn) - padIn;
     }
   } else if (pBMInfo->cBitCount == 8) {
-    for (PRUint32 row = pBMInfo->cy; row > 0; row -= next) {
-      for (PRUint32 ndx = 0; ndx < bprIn; ndx += next, pIn += next) {
-        pOut = 4 + (PRUint8*)memcpy(pOut, &pColorTable[*pIn], 3);
+    for (uint32_t row = pBMInfo->cy; row > 0; row -= next) {
+      for (uint32_t ndx = 0; ndx < bprIn; ndx += next, pIn += next) {
+        pOut = 4 + (uint8_t*)memcpy(pOut, &pColorTable[*pIn], 3);
       }
       pIn -= (next + 1) * bprIn;
     }
   } else if (pBMInfo->cBitCount == 24) {
-    PRUint32 next3 = next * 3;
-    for (PRUint32 row = pBMInfo->cy; row > 0; row -= next) {
-      for (PRUint32 ndx = 0; ndx < bprIn; ndx += next3, pIn += next3) {
-        pOut = 4 + (PRUint8*)memcpy(pOut, pIn, 3);
+    uint32_t next3 = next * 3;
+    for (uint32_t row = pBMInfo->cy; row > 0; row -= next) {
+      for (uint32_t ndx = 0; ndx < bprIn; ndx += next3, pIn += next3) {
+        pOut = 4 + (uint8_t*)memcpy(pOut, pIn, 3);
       }
       pIn -= (next + 1) * bprIn;
     }
@@ -538,22 +538,22 @@ void ConvertColorBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
 // and 40-pixel icons all have padding bits at the end of every row that
 // must be skipped over
 
-void ConvertMaskBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
-                       PRUint8 *outBuf, bool fShrink)
+void ConvertMaskBitMap(uint8_t *inBuf, PBITMAPINFO2 pBMInfo,
+                       uint8_t *outBuf, bool fShrink)
 {
-  PRUint32 next   = (fShrink ? 2 : 1);
-  PRUint32 bprIn  = ALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
-  PRUint32 padIn  = bprIn - UNALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
-  PRUint8 *pIn    = inBuf + (pBMInfo->cy - 1) * bprIn;
-  PRUint8 *pOut   = outBuf + 3;
+  uint32_t next   = (fShrink ? 2 : 1);
+  uint32_t bprIn  = ALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
+  uint32_t padIn  = bprIn - UNALIGNEDBPR(pBMInfo->cx, pBMInfo->cBitCount);
+  uint8_t *pIn    = inBuf + (pBMInfo->cy - 1) * bprIn;
+  uint8_t *pOut   = outBuf + 3;
 
   // for each row or every other row
-  for (PRUint32 row = pBMInfo->cy/2; row > 0; row -= next) {
+  for (uint32_t row = pBMInfo->cy/2; row > 0; row -= next) {
 
     // for all of the non-padding bits in the row
-    for (PRUint32 bits = pBMInfo->cx; bits; pIn++) {
-      PRUint8 src = ~(*pIn);
-      PRUint8 srcMask = 0x80;
+    for (uint32_t bits = pBMInfo->cx; bits; pIn++) {
+      uint8_t src = ~(*pIn);
+      uint8_t srcMask = 0x80;
 
       // for each bit or every other bit in the current byte
       for ( ; srcMask && bits; srcMask >>= next, bits -= next, pOut += 4) {
@@ -600,7 +600,7 @@ nsIconChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetContentDisposition(PRUint32 *aContentDisposition)
+nsIconChannel::GetContentDisposition(uint32_t *aContentDisposition)
 {
   return NS_ERROR_NOT_AVAILABLE;
 }
@@ -617,13 +617,13 @@ nsIconChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP nsIconChannel::GetContentLength(PRInt32 *aContentLength)
+NS_IMETHODIMP nsIconChannel::GetContentLength(int32_t *aContentLength)
 {
   *aContentLength = mContentLength;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::SetContentLength(PRInt32 aContentLength)
+NS_IMETHODIMP nsIconChannel::SetContentLength(int32_t aContentLength)
 {
   NS_NOTREACHED("nsIconChannel::SetContentLength");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -691,8 +691,8 @@ NS_IMETHODIMP nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aC
 NS_IMETHODIMP nsIconChannel::OnDataAvailable(nsIRequest* aRequest,
                                              nsISupports* aContext,
                                              nsIInputStream* aStream,
-                                             PRUint32 aOffset,
-                                             PRUint32 aCount)
+                                             uint32_t aOffset,
+                                             uint32_t aCount)
 {
   if (mListener)
     return mListener->OnDataAvailable(this, aContext, aStream, aOffset, aCount);

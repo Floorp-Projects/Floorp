@@ -14,15 +14,15 @@
 /**
  * Grow the array by at least this many elements at a time.
  */
-static const PRInt32 kMinGrowArrayBy = 8;
-static const PRInt32 kMaxGrowArrayBy = 1024;
-static const PRInt32 kAutoClearCompactSizeFactor = 4;
+static const int32_t kMinGrowArrayBy = 8;
+static const int32_t kMaxGrowArrayBy = 1024;
+static const int32_t kAutoClearCompactSizeFactor = 4;
 
 /**
  * This is the threshold (in bytes) of the mImpl struct, past which
  * we'll force the array to grow geometrically
  */
-static const PRInt32 kLinearThreshold = 24 * sizeof(void *);
+static const int32_t kLinearThreshold = 24 * sizeof(void *);
 
 /**
  * Compute the number of bytes requires for the mImpl struct that will
@@ -107,14 +107,14 @@ VoidStats gVoidStats;
 #endif
 
 void
-nsVoidArray::SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount,
+nsVoidArray::SetArray(Impl *newImpl, int32_t aSize, int32_t aCount,
                       bool aOwner, bool aHasAuto)
 {
   // old mImpl has been realloced and so we don't free/delete it
   NS_PRECONDITION(newImpl, "can't set size");
   mImpl = newImpl;
   mImpl->mCount = aCount;
-  mImpl->mBits = static_cast<PRUint32>(aSize & kArraySizeMask) |
+  mImpl->mBits = static_cast<uint32_t>(aSize & kArraySizeMask) |
                  (aOwner ? kArrayOwnerMask : 0) |
                  (aHasAuto ? kArrayHasAutoBufferMask : 0);
 }
@@ -122,13 +122,13 @@ nsVoidArray::SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount,
 // This does all allocation/reallocation of the array.
 // It also will compact down to N - good for things that might grow a lot
 // at times,  but usually are smaller, like JS deferred GC releases.
-bool nsVoidArray::SizeTo(PRInt32 aSize)
+bool nsVoidArray::SizeTo(int32_t aSize)
 {
-  PRUint32 oldsize = GetArraySize();
+  uint32_t oldsize = GetArraySize();
   bool isOwner = IsArrayOwner();
   bool hasAuto = HasAutoBuffer();
 
-  if (aSize == (PRInt32) oldsize)
+  if (aSize == (int32_t) oldsize)
     return true; // no change
 
   if (aSize <= 0)
@@ -189,7 +189,7 @@ bool nsVoidArray::SizeTo(PRInt32 aSize)
     return true;
   }
 
-  if ((PRUint32) aSize < oldsize) {
+  if ((uint32_t) aSize < oldsize) {
     // No point in allocating if it won't free the current Impl anyway.
     return true;
   }
@@ -230,7 +230,7 @@ bool nsVoidArray::SizeTo(PRInt32 aSize)
   return true;
 }
 
-bool nsVoidArray::GrowArrayBy(PRInt32 aGrowBy)
+bool nsVoidArray::GrowArrayBy(int32_t aGrowBy)
 {
   // We have to grow the array. Grow by kMinGrowArrayBy slots if we're
   // smaller than kLinearThreshold bytes, or a power of two if we're
@@ -239,10 +239,10 @@ bool nsVoidArray::GrowArrayBy(PRInt32 aGrowBy)
   if (aGrowBy < kMinGrowArrayBy)
     aGrowBy = kMinGrowArrayBy;
 
-  PRUint32 newCapacity = GetArraySize() + aGrowBy;  // Minimum increase
-  PRUint32 newSize = SIZEOF_IMPL(newCapacity);
+  uint32_t newCapacity = GetArraySize() + aGrowBy;  // Minimum increase
+  uint32_t newSize = SIZEOF_IMPL(newCapacity);
 
-  if (newSize >= (PRUint32) kLinearThreshold)
+  if (newSize >= (uint32_t) kLinearThreshold)
   {
     // newCount includes enough space for at least kMinGrowArrayBy new
     // slots. Select the next power-of-two size in bytes above or
@@ -279,7 +279,7 @@ nsVoidArray::nsVoidArray()
 #endif
 }
 
-nsVoidArray::nsVoidArray(PRInt32 aCount)
+nsVoidArray::nsVoidArray(int32_t aCount)
   : mImpl(nullptr)
 {
   MOZ_COUNT_CTOR(nsVoidArray);
@@ -294,8 +294,8 @@ nsVoidArray::nsVoidArray(PRInt32 aCount)
 
 nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
 {
-  PRInt32 otherCount = other.Count();
-  PRInt32 maxCount = GetArraySize();
+  int32_t otherCount = other.Count();
+  int32_t maxCount = GetArraySize();
   if (otherCount)
   {
     if (otherCount > maxCount)
@@ -320,7 +320,7 @@ nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
     }
 #if DEBUG_VOIDARRAY
      if (mImpl->mCount > mMaxCount &&
-         mImpl->mCount < (PRInt32)(sizeof(MaxElements)/sizeof(MaxElements[0])))
+         mImpl->mCount < (int32_t)(sizeof(MaxElements)/sizeof(MaxElements[0])))
      {
        MaxElements[mImpl->mCount]++;
        MaxElements[mMaxCount]--;
@@ -344,7 +344,7 @@ nsVoidArray::~nsVoidArray()
     free(reinterpret_cast<char*>(mImpl));
 }
 
-bool nsVoidArray::SetCount(PRInt32 aNewCount)
+bool nsVoidArray::SetCount(int32_t aNewCount)
 {
   NS_ASSERTION(aNewCount >= 0,"SetCount(negative index)");
   if (aNewCount < 0)
@@ -356,10 +356,10 @@ bool nsVoidArray::SetCount(PRInt32 aNewCount)
     return true;
   }
 
-  if (PRUint32(aNewCount) > PRUint32(GetArraySize()))
+  if (uint32_t(aNewCount) > uint32_t(GetArraySize()))
   {
-    PRInt32 oldCount = Count();
-    PRInt32 growDelta = aNewCount - oldCount;
+    int32_t oldCount = Count();
+    int32_t growDelta = aNewCount - oldCount;
 
     // frees old mImpl IF this succeeds
     if (!GrowArrayBy(growDelta))
@@ -379,7 +379,7 @@ bool nsVoidArray::SetCount(PRInt32 aNewCount)
 
 #if DEBUG_VOIDARRAY
   if (mImpl->mCount > mMaxCount &&
-      mImpl->mCount < (PRInt32)(sizeof(MaxElements)/sizeof(MaxElements[0])))
+      mImpl->mCount < (int32_t)(sizeof(MaxElements)/sizeof(MaxElements[0])))
   {
     MaxElements[mImpl->mCount]++;
     MaxElements[mMaxCount]--;
@@ -390,7 +390,7 @@ bool nsVoidArray::SetCount(PRInt32 aNewCount)
   return true;
 }
 
-PRInt32 nsVoidArray::IndexOf(void* aPossibleElement) const
+int32_t nsVoidArray::IndexOf(void* aPossibleElement) const
 {
   if (mImpl)
   {
@@ -408,11 +408,11 @@ PRInt32 nsVoidArray::IndexOf(void* aPossibleElement) const
   return -1;
 }
 
-bool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
+bool nsVoidArray::InsertElementAt(void* aElement, int32_t aIndex)
 {
-  PRInt32 oldCount = Count();
+  int32_t oldCount = Count();
   NS_ASSERTION(aIndex >= 0,"InsertElementAt(negative index)");
-  if (PRUint32(aIndex) > PRUint32(oldCount))
+  if (uint32_t(aIndex) > uint32_t(oldCount))
   {
     // An invalid index causes the insertion to fail
     // Invalid indexes are ones that add more than one entry to the
@@ -427,7 +427,7 @@ bool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
   }
   // else the array is already large enough
 
-  PRInt32 slide = oldCount - aIndex;
+  int32_t slide = oldCount - aIndex;
   if (0 != slide)
   {
     // Slide data over to make room for the insertion
@@ -440,7 +440,7 @@ bool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
 
 #if DEBUG_VOIDARRAY
   if (mImpl->mCount > mMaxCount &&
-      mImpl->mCount < (PRInt32)(sizeof(MaxElements)/sizeof(MaxElements[0])))
+      mImpl->mCount < (int32_t)(sizeof(MaxElements)/sizeof(MaxElements[0])))
   {
     MaxElements[mImpl->mCount]++;
     MaxElements[mMaxCount]--;
@@ -451,13 +451,13 @@ bool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
   return true;
 }
 
-bool nsVoidArray::InsertElementsAt(const nsVoidArray& other, PRInt32 aIndex)
+bool nsVoidArray::InsertElementsAt(const nsVoidArray& other, int32_t aIndex)
 {
-  PRInt32 oldCount = Count();
-  PRInt32 otherCount = other.Count();
+  int32_t oldCount = Count();
+  int32_t otherCount = other.Count();
 
   NS_ASSERTION(aIndex >= 0,"InsertElementsAt(negative index)");
-  if (PRUint32(aIndex) > PRUint32(oldCount))
+  if (uint32_t(aIndex) > uint32_t(oldCount))
   {
     // An invalid index causes the insertion to fail
     // Invalid indexes are ones that are more than one entry past the end of
@@ -472,7 +472,7 @@ bool nsVoidArray::InsertElementsAt(const nsVoidArray& other, PRInt32 aIndex)
   }
   // else the array is already large enough
 
-  PRInt32 slide = oldCount - aIndex;
+  int32_t slide = oldCount - aIndex;
   if (0 != slide)
   {
     // Slide data over to make room for the insertion
@@ -480,7 +480,7 @@ bool nsVoidArray::InsertElementsAt(const nsVoidArray& other, PRInt32 aIndex)
             slide * sizeof(mImpl->mArray[0]));
   }
 
-  for (PRInt32 i = 0; i < otherCount; i++)
+  for (int32_t i = 0; i < otherCount; i++)
   {
     // copy all the elements (destroys aIndex)
     mImpl->mArray[aIndex++] = other.mImpl->mArray[i];
@@ -489,7 +489,7 @@ bool nsVoidArray::InsertElementsAt(const nsVoidArray& other, PRInt32 aIndex)
 
 #if DEBUG_VOIDARRAY
   if (mImpl->mCount > mMaxCount &&
-      mImpl->mCount < (PRInt32)(sizeof(MaxElements)/sizeof(MaxElements[0])))
+      mImpl->mCount < (int32_t)(sizeof(MaxElements)/sizeof(MaxElements[0])))
   {
     MaxElements[mImpl->mCount]++;
     MaxElements[mMaxCount]--;
@@ -500,7 +500,7 @@ bool nsVoidArray::InsertElementsAt(const nsVoidArray& other, PRInt32 aIndex)
   return true;
 }
 
-bool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
+bool nsVoidArray::ReplaceElementAt(void* aElement, int32_t aIndex)
 {
   NS_ASSERTION(aIndex >= 0,"ReplaceElementAt(negative index)");
   if (aIndex < 0)
@@ -508,11 +508,11 @@ bool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 
   // Unlike InsertElementAt, ReplaceElementAt can implicitly add more
   // than just the one element to the array.
-  if (PRUint32(aIndex) >= PRUint32(GetArraySize()))
+  if (uint32_t(aIndex) >= uint32_t(GetArraySize()))
   {
-    PRInt32 oldCount = Count();
-    PRInt32 requestedCount = aIndex + 1;
-    PRInt32 growDelta = requestedCount - oldCount;
+    int32_t oldCount = Count();
+    int32_t requestedCount = aIndex + 1;
+    int32_t growDelta = requestedCount - oldCount;
 
     // frees old mImpl IF this succeeds
     if (!GrowArrayBy(growDelta))
@@ -538,7 +538,7 @@ bool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 
 #if DEBUG_VOIDARRAY
      if (mImpl->mCount > mMaxCount &&
-         mImpl->mCount < (PRInt32)(sizeof(MaxElements)/sizeof(MaxElements[0])))
+         mImpl->mCount < (int32_t)(sizeof(MaxElements)/sizeof(MaxElements[0])))
      {
        MaxElements[mImpl->mCount]++;
        MaxElements[mMaxCount]--;
@@ -551,7 +551,7 @@ bool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 }
 
 // useful for doing LRU arrays
-bool nsVoidArray::MoveElement(PRInt32 aFrom, PRInt32 aTo)
+bool nsVoidArray::MoveElement(int32_t aFrom, int32_t aTo)
 {
   void *tempElement;
 
@@ -584,11 +584,11 @@ bool nsVoidArray::MoveElement(PRInt32 aFrom, PRInt32 aTo)
   return true;
 }
 
-bool nsVoidArray::RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount)
+bool nsVoidArray::RemoveElementsAt(int32_t aIndex, int32_t aCount)
 {
-  PRInt32 oldCount = Count();
+  int32_t oldCount = Count();
   NS_ASSERTION(aIndex >= 0,"RemoveElementsAt(negative index)");
-  if (PRUint32(aIndex) >= PRUint32(oldCount))
+  if (uint32_t(aIndex) >= uint32_t(oldCount))
   {
     // An invalid index causes the replace to fail
     return false;
@@ -611,7 +611,7 @@ bool nsVoidArray::RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount)
 
 bool nsVoidArray::RemoveElement(void* aElement)
 {
-  PRInt32 theIndex = IndexOf(aElement);
+  int32_t theIndex = IndexOf(aElement);
   if (theIndex != -1)
     return RemoveElementAt(theIndex);
 
@@ -638,7 +638,7 @@ void nsVoidArray::Compact()
   {
     // XXX NOTE: this is quite inefficient in many cases if we're only
     // compacting by a little, but some callers care more about memory use.
-    PRInt32 count = Count();
+    int32_t count = Count();
     if (HasAutoBuffer() && count <= kAutoBufSize)
     {
       Impl* oldImpl = mImpl;
@@ -682,7 +682,7 @@ void nsVoidArray::Sort(nsVoidArrayComparatorFunc aFunc, void* aData)
 
 bool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
-  PRInt32 index = -1;
+  int32_t index = -1;
   bool    running = true;
 
   if (mImpl) {
@@ -696,7 +696,7 @@ bool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
 bool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFuncConst aFunc,
                                     void* aData) const
 {
-  PRInt32 index = -1;
+  int32_t index = -1;
   bool    running = true;
 
   if (mImpl) {
@@ -713,7 +713,7 @@ bool nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
 
   if (mImpl)
   {
-    PRInt32 index = Count();
+    int32_t index = Count();
     while (running && (0 <= --index))
     {
       running = (*aFunc)(mImpl->mArray[index], aData);
@@ -789,7 +789,7 @@ nsSmallVoidArray::~nsSmallVoidArray()
 nsSmallVoidArray& 
 nsSmallVoidArray::operator=(nsSmallVoidArray& other)
 {
-  PRInt32 count = other.Count();
+  int32_t count = other.Count();
   switch (count) {
     case 0:
       Clear();
@@ -807,7 +807,7 @@ nsSmallVoidArray::operator=(nsSmallVoidArray& other)
   return *this;
 }
 
-PRInt32
+int32_t
 nsSmallVoidArray::GetArraySize() const
 {
   if (HasSingle()) {
@@ -817,7 +817,7 @@ nsSmallVoidArray::GetArraySize() const
   return AsArray()->GetArraySize();
 }
 
-PRInt32
+int32_t
 nsSmallVoidArray::Count() const
 {
   if (HasSingle()) {
@@ -828,7 +828,7 @@ nsSmallVoidArray::Count() const
 }
 
 void*
-nsSmallVoidArray::FastElementAt(PRInt32 aIndex) const
+nsSmallVoidArray::FastElementAt(int32_t aIndex) const
 {
   NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsSmallVoidArray::FastElementAt: index out of range");
 
@@ -839,7 +839,7 @@ nsSmallVoidArray::FastElementAt(PRInt32 aIndex) const
   return AsArray()->FastElementAt(aIndex);
 }
 
-PRInt32
+int32_t
 nsSmallVoidArray::IndexOf(void* aPossibleElement) const
 {
   if (HasSingle()) {
@@ -850,7 +850,7 @@ nsSmallVoidArray::IndexOf(void* aPossibleElement) const
 }
 
 bool
-nsSmallVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
+nsSmallVoidArray::InsertElementAt(void* aElement, int32_t aIndex)
 {
   NS_ASSERTION(!(NS_PTR_TO_INT32(aElement) & 0x1),
                "Attempt to add element with 0x1 bit set to nsSmallVoidArray");
@@ -868,7 +868,7 @@ nsSmallVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
   return AsArray()->InsertElementAt(aElement, aIndex);
 }
 
-bool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &aOther, PRInt32 aIndex)
+bool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &aOther, int32_t aIndex)
 {
 #ifdef DEBUG  
   for (int i = 0; i < aOther.Count(); i++) {
@@ -891,7 +891,7 @@ bool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &aOther, PRInt32 aInde
 }
 
 bool
-nsSmallVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
+nsSmallVoidArray::ReplaceElementAt(void* aElement, int32_t aIndex)
 {
   NS_ASSERTION(!(NS_PTR_TO_INT32(aElement) & 0x1),
                "Attempt to add element with 0x1 bit set to nsSmallVoidArray");
@@ -944,7 +944,7 @@ nsSmallVoidArray::RemoveElement(void* aElement)
 }
 
 bool
-nsSmallVoidArray::RemoveElementAt(PRInt32 aIndex)
+nsSmallVoidArray::RemoveElementAt(int32_t aIndex)
 {
   if (HasSingle()) {
     if (aIndex == 0) {
@@ -960,7 +960,7 @@ nsSmallVoidArray::RemoveElementAt(PRInt32 aIndex)
 }
 
 bool
-nsSmallVoidArray::RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount)
+nsSmallVoidArray::RemoveElementsAt(int32_t aIndex, int32_t aCount)
 {
   if (HasSingle()) {
     if (aIndex == 0) {
@@ -989,7 +989,7 @@ nsSmallVoidArray::Clear()
 }
 
 bool
-nsSmallVoidArray::SizeTo(PRInt32 aMin)
+nsSmallVoidArray::SizeTo(int32_t aMin)
 {
   if (!HasSingle()) {
     return AsArray()->SizeTo(aMin);

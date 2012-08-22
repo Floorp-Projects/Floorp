@@ -16,10 +16,10 @@
 namespace mozilla {
 namespace css {
 
-// check that we can fit all the CSS properties into a PRUint8
-// for the mOrder array - if not, might need to use PRUint16!
+// check that we can fit all the CSS properties into a uint8_t
+// for the mOrder array - if not, might need to use uint16_t!
 MOZ_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands - 1 <= PR_UINT8_MAX,
-                  "CSS longhand property numbers no longer fit in a PRUint8");
+                  "CSS longhand property numbers no longer fit in a uint8_t");
 
 Declaration::Declaration()
   : mImmutable(false)
@@ -138,7 +138,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   // Since we're doing this check for 'inherit' and 'initial' up front,
   // we can also simplify the property serialization code by serializing
   // those values up front as well.
-  PRUint32 totalCount = 0, importantCount = 0,
+  uint32_t totalCount = 0, importantCount = 0,
            initialCount = 0, inheritCount = 0;
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
     if (*p == eCSSProperty__x_system_font ||
@@ -331,7 +331,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         // Check only the first four subprops in each table, since the
         // others are extras for dimensional box properties.
         const nsCSSValue *firstSide = data->ValueFor((*subprops)[0]);
-        for (PRInt32 side = 1; side < 4; ++side) {
+        for (int32_t side = 1; side < 4; ++side) {
           const nsCSSValue *otherSide =
             data->ValueFor((*subprops)[side]);
           if (*firstSide != *otherSide)
@@ -739,7 +739,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       const nsCSSValue* values[numProps];
       const nsCSSValueList* lists[numProps];
 
-      for (PRUint32 i = 0; i < numProps; ++i) {
+      for (uint32_t i = 0; i < numProps; ++i) {
         values[i] = data->ValueFor(subprops[i]);
         NS_ABORT_IF_FALSE(values[i]->GetUnit() == eCSSUnit_List ||
                           values[i]->GetUnit() == eCSSUnit_ListDep,
@@ -755,7 +755,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
                             eCSSProperty_animation_name,
                           "animation-name must be last");
         bool done = false;
-        for (PRUint32 i = 0;;) {
+        for (uint32_t i = 0;;) {
           lists[i]->mValue.AppendToString(subprops[i], aValue);
           lists[i] = lists[i]->mNext;
           if (!lists[i]) {
@@ -771,7 +771,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         }
         aValue.AppendLiteral(", ");
       }
-      for (PRUint32 i = 0; i < numProps; ++i) {
+      for (uint32_t i = 0; i < numProps; ++i) {
         if (lists[i]) {
           // Lists not all the same length, can't use shorthand.
           aValue.Truncate();
@@ -892,8 +892,8 @@ Declaration::ToString(nsAString& aString) const
                                 systemFont->GetUnit() != eCSSUnit_Null;
   bool didSystemFont = false;
 
-  PRInt32 count = mOrder.Length();
-  PRInt32 index;
+  int32_t count = mOrder.Length();
+  int32_t index;
   nsAutoTArray<nsCSSProperty, 16> shorthandsUsed;
   for (index = 0; index < count; index++) {
     nsCSSProperty property = OrderValueAt(index);
@@ -975,9 +975,9 @@ Declaration::ToString(nsAString& aString) const
 
 #ifdef DEBUG
 void
-Declaration::List(FILE* out, PRInt32 aIndent) const
+Declaration::List(FILE* out, int32_t aIndent) const
 {
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("{ ", out);
   nsAutoString s;
@@ -988,7 +988,7 @@ Declaration::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 void
-Declaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const
+Declaration::GetNthProperty(uint32_t aIndex, nsAString& aReturn) const
 {
   aReturn.Truncate();
   if (aIndex < mOrder.Length()) {

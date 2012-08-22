@@ -101,10 +101,10 @@ bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 typedef gfxPattern::GraphicsFilter GraphicsFilter;
 typedef FrameMetrics::ViewID ViewID;
 
-/* static */ PRUint32 nsLayoutUtils::sFontSizeInflationEmPerLine;
-/* static */ PRUint32 nsLayoutUtils::sFontSizeInflationMinTwips;
-/* static */ PRUint32 nsLayoutUtils::sFontSizeInflationLineThreshold;
-/* static */ PRInt32 nsLayoutUtils::sFontSizeInflationMappingIntercept;
+/* static */ uint32_t nsLayoutUtils::sFontSizeInflationEmPerLine;
+/* static */ uint32_t nsLayoutUtils::sFontSizeInflationMinTwips;
+/* static */ uint32_t nsLayoutUtils::sFontSizeInflationLineThreshold;
+/* static */ int32_t nsLayoutUtils::sFontSizeInflationMappingIntercept;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
@@ -662,11 +662,11 @@ nsLayoutUtils::IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
 }
 
 // static
-PRInt32
+int32_t
 nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
                                      nsIContent* aContent2,
-                                     PRInt32 aIf1Ancestor,
-                                     PRInt32 aIf2Ancestor,
+                                     int32_t aIf1Ancestor,
+                                     int32_t aIf2Ancestor,
                                      const nsIContent* aCommonAncestor)
 {
   NS_PRECONDITION(aContent1, "aContent1 must not be null");
@@ -731,8 +731,8 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
     return 0;
   }
 
-  PRInt32 index1 = parent->IndexOf(content1Ancestor);
-  PRInt32 index2 = parent->IndexOf(content2Ancestor);
+  int32_t index1 = parent->IndexOf(content1Ancestor);
+  int32_t index2 = parent->IndexOf(content2Ancestor);
   if (index1 < 0 || index2 < 0) {
     // one of them must be anonymous; we can't determine the order
     return 0;
@@ -765,11 +765,11 @@ static bool IsFrameAfter(nsIFrame* aFrame1, nsIFrame* aFrame2)
 }
 
 // static
-PRInt32
+int32_t
 nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
                                      nsIFrame* aFrame2,
-                                     PRInt32 aIf1Ancestor,
-                                     PRInt32 aIf2Ancestor,
+                                     int32_t aIf1Ancestor,
+                                     int32_t aIf2Ancestor,
                                      nsIFrame* aCommonAncestor)
 {
   NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
@@ -797,8 +797,8 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
                                  aIf1Ancestor, aIf2Ancestor, nullptr);
   }
 
-  PRInt32 last1 = PRInt32(frame1Ancestors.Length()) - 1;
-  PRInt32 last2 = PRInt32(frame2Ancestors.Length()) - 1;
+  int32_t last1 = int32_t(frame1Ancestors.Length()) - 1;
+  int32_t last2 = int32_t(frame2Ancestors.Length()) - 1;
   while (last1 >= 0 && last2 >= 0 &&
          frame1Ancestors[last1] == frame2Ancestors[last2]) {
     last1--;
@@ -957,7 +957,7 @@ nsLayoutUtils::GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
     if (scrollableFrame) {
       nsPresContext::ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();
-      PRUint32 scrollbarVisibility = scrollableFrame->GetScrollbarVisibility();
+      uint32_t scrollbarVisibility = scrollableFrame->GetScrollbarVisibility();
       nsRect scrollRange = scrollableFrame->GetScrollRange();
       // Require visible scrollbars or something to scroll to in
       // the given direction.
@@ -1097,8 +1097,8 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent,
 
   // Convert from root document app units to app units of the document aFrame
   // is in.
-  PRInt32 rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
-  PRInt32 localAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
+  int32_t rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
+  int32_t localAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
   widgetToView = widgetToView.ConvertAppUnits(rootAPD, localAPD);
 
   /* If we encountered a transform, we can't do simple arithmetic to figure
@@ -1125,7 +1125,7 @@ nsLayoutUtils::GetPopupFrameForEventCoordinates(nsPresContext* aPresContext,
     return nullptr;
   }
   nsTArray<nsIFrame*> popups = pm->GetVisiblePopups();
-  PRUint32 i;
+  uint32_t i;
   // Search from top to bottom
   for (i = 0; i < popups.Length(); i++) {
     nsIFrame* popup = popups[i];
@@ -1387,11 +1387,11 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
 
 // Combine aNewBreakType with aOrigBreakType, but limit the break types
 // to NS_STYLE_CLEAR_LEFT, RIGHT, LEFT_AND_RIGHT.
-PRUint8
-nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
-                                PRUint8 aNewBreakType)
+uint8_t
+nsLayoutUtils::CombineBreakType(uint8_t aOrigBreakType,
+                                uint8_t aNewBreakType)
 {
-  PRUint8 breakType = aOrigBreakType;
+  uint8_t breakType = aOrigBreakType;
   switch(breakType) {
   case NS_STYLE_CLEAR_LEFT:
     if ((NS_STYLE_CLEAR_RIGHT          == aNewBreakType) ||
@@ -1615,7 +1615,7 @@ GetNextPage(nsIFrame* aPageContentFrame)
 nsresult
 nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
-                          PRUint32 aFlags)
+                          uint32_t aFlags)
 {
   SAMPLE_LABEL("nsLayoutUtils","PaintFrame");
   if (aFlags & PAINT_WIDGET_LAYERS) {
@@ -1836,7 +1836,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
   list.ComputeVisibilityForRoot(&builder, &visibleRegion);
 
-  PRUint32 flags = nsDisplayList::PAINT_DEFAULT;
+  uint32_t flags = nsDisplayList::PAINT_DEFAULT;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
     if (willFlushRetainedLayers) {
@@ -1912,7 +1912,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   return NS_OK;
 }
 
-PRInt32
+int32_t
 nsLayoutUtils::GetZIndex(nsIFrame* aFrame) {
   if (!aFrame->IsPositioned())
     return 0;
@@ -1941,30 +1941,30 @@ nsLayoutUtils::GetZIndex(nsIFrame* aFrame) {
 bool
 nsLayoutUtils::BinarySearchForPosition(nsRenderingContext* aRendContext,
                         const PRUnichar* aText,
-                        PRInt32    aBaseWidth,
-                        PRInt32    aBaseInx,
-                        PRInt32    aStartInx,
-                        PRInt32    aEndInx,
-                        PRInt32    aCursorPos,
-                        PRInt32&   aIndex,
-                        PRInt32&   aTextWidth)
+                        int32_t    aBaseWidth,
+                        int32_t    aBaseInx,
+                        int32_t    aStartInx,
+                        int32_t    aEndInx,
+                        int32_t    aCursorPos,
+                        int32_t&   aIndex,
+                        int32_t&   aTextWidth)
 {
-  PRInt32 range = aEndInx - aStartInx;
+  int32_t range = aEndInx - aStartInx;
   if ((range == 1) || (range == 2 && NS_IS_HIGH_SURROGATE(aText[aStartInx]))) {
     aIndex   = aStartInx + aBaseInx;
     aTextWidth = aRendContext->GetWidth(aText, aIndex);
     return true;
   }
 
-  PRInt32 inx = aStartInx + (range / 2);
+  int32_t inx = aStartInx + (range / 2);
 
   // Make sure we don't leave a dangling low surrogate
   if (NS_IS_HIGH_SURROGATE(aText[inx-1]))
     inx++;
 
-  PRInt32 textWidth = aRendContext->GetWidth(aText, inx);
+  int32_t textWidth = aRendContext->GetWidth(aText, inx);
 
-  PRInt32 fullWidth = aBaseWidth + textWidth;
+  int32_t fullWidth = aBaseWidth + textWidth;
   if (fullWidth == aCursorPos) {
     aTextWidth = textWidth;
     aIndex = inx;
@@ -2021,11 +2021,11 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
 
   nsIFrame* mRelativeTo;
   nsLayoutUtils::RectCallback* mCallback;
-  PRUint32 mFlags;
+  uint32_t mFlags;
   GetRectFromFrameFun mRectFromFrame;
 
   BoxToRect(nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback,
-            PRUint32 aFlags, GetRectFromFrameFun aRectFromFrame)
+            uint32_t aFlags, GetRectFromFrameFun aRectFromFrame)
     : mRelativeTo(aRelativeTo), mCallback(aCallback), mFlags(aFlags),
       mRectFromFrame(aRectFromFrame) {}
 
@@ -2053,7 +2053,7 @@ GetFrameBorderSize(nsIFrame* aFrame)
 
 void
 nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
-                                 RectCallback* aCallback, PRUint32 aFlags)
+                                 RectCallback* aCallback, uint32_t aFlags)
 {
   BoxToRect converter(aRelativeTo, aCallback, aFlags, &GetFrameBorderSize);
   GetAllInFlowBoxes(aFrame, &converter);
@@ -2067,7 +2067,7 @@ GetFramePaddingSize(nsIFrame* aFrame)
 
 void
 nsLayoutUtils::GetAllInFlowPaddingRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
-                                        RectCallback* aCallback, PRUint32 aFlags)
+                                        RectCallback* aCallback, uint32_t aFlags)
 {
   BoxToRect converter(aRelativeTo, aCallback, aFlags, &GetFramePaddingSize);
   GetAllInFlowBoxes(aFrame, &converter);
@@ -2100,7 +2100,7 @@ nsIFrame* nsLayoutUtils::GetContainingBlockForClientRect(nsIFrame* aFrame)
 
 nsRect
 nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
-                                      PRUint32 aFlags) {
+                                      uint32_t aFlags) {
   RectAccumulator accumulator;
   GetAllInFlowRects(aFrame, aRelativeTo, &accumulator, aFlags);
   return accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect
@@ -2110,7 +2110,7 @@ nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
 nsRect
 nsLayoutUtils::GetAllInFlowPaddingRectsUnion(nsIFrame* aFrame,
                                              nsIFrame* aRelativeTo,
-                                             PRUint32 aFlags)
+                                             uint32_t aFlags)
 {
   RectAccumulator accumulator;
   GetAllInFlowPaddingRects(aFrame, aRelativeTo, &accumulator, aFlags);
@@ -2121,15 +2121,15 @@ nsLayoutUtils::GetAllInFlowPaddingRectsUnion(nsIFrame* aFrame,
 nsRect
 nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
                                        nsIFrame* aFrame,
-                                       PRUint32 aFlags)
+                                       uint32_t aFlags)
 {
   const nsStyleText* textStyle = aFrame->GetStyleText();
   if (!textStyle->HasTextShadow(aFrame))
     return aTextAndDecorationsRect;
 
   nsRect resultRect = aTextAndDecorationsRect;
-  PRInt32 A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
-  for (PRUint32 i = 0; i < textStyle->mTextShadow->Length(); ++i) {
+  int32_t A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
+  for (uint32_t i = 0; i < textStyle->mTextShadow->Length(); ++i) {
     nsCSSShadowItem* shadow = textStyle->mTextShadow->ShadowAt(i);
     nsMargin blur = nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D);
     if ((aFlags & EXCLUDE_BLUR_SHADOWS) && blur != nsMargin(0, 0, 0, 0))
@@ -2426,7 +2426,7 @@ GetIntrinsicCoord(const nsStyleCoord& aStyle,
                   aProperty == PROP_MIN_WIDTH, "unexpected property");
   if (aStyle.GetUnit() != eStyleUnit_Enumerated)
     return false;
-  PRInt32 val = aStyle.GetIntValue();
+  int32_t val = aStyle.GetIntValue();
   NS_ASSERTION(val == NS_STYLE_WIDTH_MAX_CONTENT ||
                val == NS_STYLE_WIDTH_MIN_CONTENT ||
                val == NS_STYLE_WIDTH_FIT_CONTENT ||
@@ -2463,7 +2463,7 @@ GetIntrinsicCoord(const nsStyleCoord& aStyle,
 #undef  DEBUG_INTRINSIC_WIDTH
 
 #ifdef DEBUG_INTRINSIC_WIDTH
-static PRInt32 gNoiseIndent = 0;
+static int32_t gNoiseIndent = 0;
 #endif
 
 /* static */ nscoord
@@ -2489,7 +2489,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
     aFrame->IntrinsicWidthOffsets(aRenderingContext);
 
   const nsStylePosition *stylePos = aFrame->GetStylePosition();
-  PRUint8 boxSizing = stylePos->mBoxSizing;
+  uint8_t boxSizing = stylePos->mBoxSizing;
   const nsStyleCoord &styleWidth = stylePos->mWidth;
   const nsStyleCoord &styleMinWidth = stylePos->mMinWidth;
   const nsStyleCoord &styleMaxWidth = stylePos->mMaxWidth;
@@ -2746,7 +2746,7 @@ nsLayoutUtils::ComputeWidthValue(
     // wrapping inside of it should not apply font size inflation.
     AutoMaybeDisableFontInflation an(aFrame);
 
-    PRInt32 val = aCoord.GetIntValue();
+    int32_t val = aCoord.GetIntValue();
     switch (val) {
       case NS_STYLE_WIDTH_MAX_CONTENT:
         result = aFrame->GetPrefWidth(aRenderingContext);
@@ -2801,7 +2801,7 @@ nsLayoutUtils::ComputeHeightDependentValue(
   return 0;
 }
 
-#define MULDIV(a,b,c) (nscoord(PRInt64(a) * PRInt64(b) / PRInt64(c)))
+#define MULDIV(a,b,c) (nscoord(int64_t(a) * int64_t(b) / int64_t(c)))
 
 /* static */ nsSize
 nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
@@ -3026,8 +3026,8 @@ nsLayoutUtils::ComputeAutoSizeWithIntrinsicDimensions(nscoord minWidth, nscoord 
 
   if (tentWidth > maxWidth) {
     if (tentHeight > maxHeight) {
-      if (PRInt64(maxWidth) * PRInt64(tentHeight) <=
-          PRInt64(maxHeight) * PRInt64(tentWidth)) {
+      if (int64_t(maxWidth) * int64_t(tentHeight) <=
+          int64_t(maxHeight) * int64_t(tentWidth)) {
         width = maxWidth;
         height = heightAtMaxWidth;
       } else {
@@ -3043,8 +3043,8 @@ nsLayoutUtils::ComputeAutoSizeWithIntrinsicDimensions(nscoord minWidth, nscoord 
     }
   } else if (tentWidth < minWidth) {
     if (tentHeight < minHeight) {
-      if (PRInt64(minWidth) * PRInt64(tentHeight) <=
-          PRInt64(minHeight) * PRInt64(tentWidth)) {
+      if (int64_t(minWidth) * int64_t(tentHeight) <=
+          int64_t(minHeight) * int64_t(tentWidth)) {
         width = widthAtMinHeight;
         height = minHeight;
       } else {
@@ -3105,8 +3105,8 @@ nsLayoutUtils::PrefWidthFromInline(nsIFrame* aFrame,
 static nscolor
 DarkenColor(nscolor aColor)
 {
-  PRUint16  hue, sat, value;
-  PRUint8 alpha;
+  uint16_t  hue, sat, value;
+  uint8_t alpha;
 
   // convert the RBG to HSV so we can get the lightness (which is the v)
   NS_RGB2HSV(aColor, hue, sat, value, alpha);
@@ -3161,9 +3161,9 @@ void
 nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
                           nsRenderingContext* aContext,
                           const PRUnichar*     aString,
-                          PRInt32              aLength,
+                          int32_t              aLength,
                           nsPoint              aPoint,
-                          PRUint8              aDirection)
+                          uint8_t              aDirection)
 {
 #ifdef IBMBIDI
   nsresult rv = NS_ERROR_FAILURE;
@@ -3191,7 +3191,7 @@ nscoord
 nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
                               nsRenderingContext* aContext,
                               const PRUnichar*     aString,
-                              PRInt32              aLength)
+                              int32_t              aLength)
 {
 #ifdef IBMBIDI
   nsPresContext* presContext = aFrame->PresContext();
@@ -3224,7 +3224,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
   // Text shadow happens with the last value being painted at the back,
   // ie. it is painted first.
   gfxContext* aDestCtx = aContext->ThebesContext();
-  for (PRUint32 i = textStyle->mTextShadow->Length(); i > 0; --i) {
+  for (uint32_t i = textStyle->mTextShadow->Length(); i > 0; --i) {
     nsCSSShadowItem* shadowDetails = textStyle->mTextShadow->ShadowAt(i - 1);
     nsPoint shadowOffset(shadowDetails->mXOffset,
                          shadowDetails->mYOffset);
@@ -3521,7 +3521,7 @@ MapToFloatUserPixels(const gfxSize& aSize,
 }
 
 /* static */ gfxRect
-nsLayoutUtils::RectToGfxRect(const nsRect& aRect, PRInt32 aAppUnitsPerDevPixel)
+nsLayoutUtils::RectToGfxRect(const nsRect& aRect, int32_t aAppUnitsPerDevPixel)
 {
   return gfxRect(gfxFloat(aRect.x) / aAppUnitsPerDevPixel,
                  gfxFloat(aRect.y) / aAppUnitsPerDevPixel,
@@ -3570,7 +3570,7 @@ struct SnappedImageDrawingParameters {
  */
 static SnappedImageDrawingParameters
 ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
-                                     PRInt32         aAppUnitsPerDevPixel,
+                                     int32_t         aAppUnitsPerDevPixel,
                                      const nsRect    aDest,
                                      const nsRect    aFill,
                                      const nsPoint   aAnchor,
@@ -3672,12 +3672,12 @@ DrawImageInternal(nsRenderingContext* aRenderingContext,
                   const nsPoint&       aAnchor,
                   const nsRect&        aDirty,
                   const nsIntSize&     aImageSize,
-                  PRUint32             aImageFlags)
+                  uint32_t             aImageFlags)
 {
   if (aDest.Contains(aFill)) {
     aImageFlags |= imgIContainer::FLAG_CLAMP;
   }
-  PRInt32 appUnitsPerDevPixel = aRenderingContext->AppUnitsPerDevPixel();
+  int32_t appUnitsPerDevPixel = aRenderingContext->AppUnitsPerDevPixel();
   gfxContext* ctx = aRenderingContext->ThebesContext();
 
   SnappedImageDrawingParameters drawingParams =
@@ -3707,7 +3707,7 @@ nsLayoutUtils::DrawPixelSnapped(nsRenderingContext* aRenderingContext,
                                 const nsPoint&       aAnchor,
                                 const nsRect&        aDirty)
 {
-  PRInt32 appUnitsPerDevPixel = aRenderingContext->AppUnitsPerDevPixel();
+  int32_t appUnitsPerDevPixel = aRenderingContext->AppUnitsPerDevPixel();
   gfxContext* ctx = aRenderingContext->ThebesContext();
   gfxIntSize drawableSize = aDrawable->Size();
   nsIntSize imageSize(drawableSize.width, drawableSize.height);
@@ -3745,7 +3745,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsRenderingContext* aRenderingContext,
                                        GraphicsFilter       aGraphicsFilter,
                                        const nsPoint&       aDest,
                                        const nsRect*        aDirty,
-                                       PRUint32             aImageFlags,
+                                       uint32_t             aImageFlags,
                                        const nsRect*        aSourceArea)
 {
   nsIntSize imageSize;
@@ -3781,7 +3781,7 @@ nsLayoutUtils::DrawSingleImage(nsRenderingContext* aRenderingContext,
                                GraphicsFilter       aGraphicsFilter,
                                const nsRect&        aDest,
                                const nsRect&        aDirty,
-                               PRUint32             aImageFlags,
+                               uint32_t             aImageFlags,
                                const nsRect*        aSourceArea)
 {
   nsIntSize imageSize;
@@ -3851,7 +3851,7 @@ nsLayoutUtils::DrawBackgroundImage(nsRenderingContext* aRenderingContext,
                                    const nsRect&       aFill,
                                    const nsPoint&      aAnchor,
                                    const nsRect&       aDirty,
-                                   PRUint32            aImageFlags)
+                                   uint32_t            aImageFlags)
 {
   SAMPLE_LABEL("layout", "nsLayoutUtils::DrawBackgroundImage");
 
@@ -3872,7 +3872,7 @@ nsLayoutUtils::DrawImage(nsRenderingContext* aRenderingContext,
                          const nsRect&        aFill,
                          const nsPoint&       aAnchor,
                          const nsRect&        aDirty,
-                         PRUint32             aImageFlags)
+                         uint32_t             aImageFlags)
 {
   nsIntSize imageSize;
   nsSize imageRatio;
@@ -3951,7 +3951,7 @@ nsLayoutUtils::HasNonZeroCorner(const nsStyleCorners& aCorners)
 }
 
 // aCorner is a "full corner" value, i.e. NS_CORNER_TOP_LEFT etc
-static bool IsCornerAdjacentToSide(PRUint8 aCorner, mozilla::css::Side aSide)
+static bool IsCornerAdjacentToSide(uint8_t aCorner, mozilla::css::Side aSide)
 {
   PR_STATIC_ASSERT((int)NS_SIDE_TOP == NS_CORNER_TOP_LEFT);
   PR_STATIC_ASSERT((int)NS_SIDE_RIGHT == NS_CORNER_TOP_RIGHT);
@@ -4068,12 +4068,12 @@ nsLayoutUtils::GetDisplayRootFrame(nsIFrame* aFrame)
   }
 }
 
-/* static */ PRUint32
+/* static */ uint32_t
 nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
                                        const nsStyleFont* aStyleFont,
                                        nscoord aLetterSpacing)
 {
-  PRUint32 result = 0;
+  uint32_t result = 0;
   if (aLetterSpacing != 0) {
     result |= gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
   }
@@ -4165,7 +4165,7 @@ nsLayoutUtils::IsReallyFixedPos(nsIFrame* aFrame)
 
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
-                                  PRUint32 aSurfaceFlags)
+                                  uint32_t aSurfaceFlags)
 {
   SurfaceFromElementResult result;
   nsresult rv;
@@ -4191,7 +4191,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (NS_FAILED(rv) || !imgRequest)
     return result;
 
-  PRUint32 status;
+  uint32_t status;
   imgRequest->GetImageStatus(&status);
   if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0) {
     // Spec says to use GetComplete, but that only works on
@@ -4211,10 +4211,10 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (NS_FAILED(rv) || !imgContainer)
     return result;
 
-  PRUint32 whichFrame = (aSurfaceFlags & SFE_WANT_FIRST_FRAME)
-                        ? (PRUint32) imgIContainer::FRAME_FIRST
-                        : (PRUint32) imgIContainer::FRAME_CURRENT;
-  PRUint32 frameFlags = imgIContainer::FLAG_SYNC_DECODE;
+  uint32_t whichFrame = (aSurfaceFlags & SFE_WANT_FIRST_FRAME)
+                        ? (uint32_t) imgIContainer::FRAME_FIRST
+                        : (uint32_t) imgIContainer::FRAME_CURRENT;
+  uint32_t frameFlags = imgIContainer::FLAG_SYNC_DECODE;
   if (aSurfaceFlags & SFE_NO_COLORSPACE_CONVERSION)
     frameFlags |= imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION;
   if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA)
@@ -4226,7 +4226,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (NS_FAILED(rv))
     return result;
 
-  PRInt32 imgWidth, imgHeight;
+  int32_t imgWidth, imgHeight;
   rv = imgContainer->GetWidth(&imgWidth);
   nsresult rv2 = imgContainer->GetHeight(&imgHeight);
   if (NS_FAILED(rv) || NS_FAILED(rv2))
@@ -4252,7 +4252,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     ctx->Paint();
   }
 
-  PRInt32 corsmode;
+  int32_t corsmode;
   if (NS_SUCCEEDED(imgRequest->GetCORSMode(&corsmode))) {
     result.mCORSUsed = (corsmode != imgIRequest::CORS_NONE);
   }
@@ -4269,7 +4269,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
 
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(nsHTMLImageElement *aElement,
-                                  PRUint32 aSurfaceFlags)
+                                  uint32_t aSurfaceFlags)
 {
   return SurfaceFromElement(static_cast<nsIImageLoadingContent*>(aElement),
                             aSurfaceFlags);
@@ -4277,7 +4277,7 @@ nsLayoutUtils::SurfaceFromElement(nsHTMLImageElement *aElement,
 
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(nsHTMLCanvasElement* aElement,
-                                  PRUint32 aSurfaceFlags)
+                                  uint32_t aSurfaceFlags)
 {
   SurfaceFromElementResult result;
   nsresult rv;
@@ -4315,7 +4315,7 @@ nsLayoutUtils::SurfaceFromElement(nsHTMLCanvasElement* aElement,
 
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
     // XXX shouldn't use the external interface, but maybe we can layerify this
-    PRUint32 flags = premultAlpha ? nsHTMLCanvasElement::RenderFlagPremultAlpha : 0;
+    uint32_t flags = premultAlpha ? nsHTMLCanvasElement::RenderFlagPremultAlpha : 0;
     rv = aElement->RenderContextsExternal(ctx, gfxPattern::FILTER_NEAREST, flags);
     if (NS_FAILED(rv))
       return result;
@@ -4335,7 +4335,7 @@ nsLayoutUtils::SurfaceFromElement(nsHTMLCanvasElement* aElement,
 
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(nsHTMLVideoElement* aElement,
-                                  PRUint32 aSurfaceFlags)
+                                  uint32_t aSurfaceFlags)
 {
   SurfaceFromElementResult result;
 
@@ -4346,7 +4346,7 @@ nsLayoutUtils::SurfaceFromElement(nsHTMLVideoElement* aElement,
     wantImageSurface = true;
   }
 
-  PRUint16 readyState;
+  uint16_t readyState;
   if (NS_SUCCEEDED(aElement->GetReadyState(&readyState)) &&
       (readyState == nsIDOMHTMLMediaElement::HAVE_NOTHING ||
        readyState == nsIDOMHTMLMediaElement::HAVE_METADATA)) {
@@ -4389,7 +4389,7 @@ nsLayoutUtils::SurfaceFromElement(nsHTMLVideoElement* aElement,
 
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(dom::Element* aElement,
-                                  PRUint32 aSurfaceFlags)
+                                  uint32_t aSurfaceFlags)
 {
   // If it's a <canvas>, we may be able to just grab its internal surface
   if (nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(aElement)) {
@@ -4484,7 +4484,7 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
                "frame tree not empty, but caller reported complete status");
 
   // Also assert that text frames map no text.
-  PRInt32 start, end;
+  int32_t start, end;
   nsresult rv = aSubtreeRoot->GetOffsets(start, end);
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetOffsets failed");
   // In some cases involving :first-letter, we'll partially unlink a
@@ -4543,7 +4543,7 @@ nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
 /* static */
 nsresult
 nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
-                                   PRInt32 aStartOffset, PRInt32 aEndOffset,
+                                   int32_t aStartOffset, int32_t aEndOffset,
                                    bool aFollowContinuations,
                                    nsFontFaceList* aFontFaceList)
 {
@@ -4555,8 +4555,8 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
 
   nsTextFrame* curr = static_cast<nsTextFrame*>(aFrame);
   do {
-    PRInt32 fstart = NS_MAX(curr->GetContentOffset(), aStartOffset);
-    PRInt32 fend = NS_MIN(curr->GetContentEnd(), aEndOffset);
+    int32_t fstart = NS_MAX(curr->GetContentOffset(), aStartOffset);
+    int32_t fend = NS_MIN(curr->GetContentEnd(), aEndOffset);
     if (fstart >= fend) {
       continue;
     }
@@ -4566,8 +4566,8 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
     gfxTextRun* textRun = curr->GetTextRun(nsTextFrame::eInflated);
     NS_ENSURE_TRUE(textRun, NS_ERROR_OUT_OF_MEMORY);
 
-    PRUint32 skipStart = iter.ConvertOriginalToSkipped(fstart);
-    PRUint32 skipEnd = iter.ConvertOriginalToSkipped(fend);
+    uint32_t skipStart = iter.ConvertOriginalToSkipped(fstart);
+    uint32_t skipEnd = iter.ConvertOriginalToSkipped(fend);
     aFontFaceList->AddFontsFromTextRun(textRun,
                                        skipStart,
                                        skipEnd - skipStart,
@@ -4590,7 +4590,7 @@ nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
 
   if (aFrame->GetType() == nsGkAtoms::textFrame) {
     nsTextFrame* textFrame = static_cast<nsTextFrame*>(aFrame);
-    for (PRUint32 i = 0; i < 2; ++i) {
+    for (uint32_t i = 0; i < 2; ++i) {
       gfxTextRun *run = textFrame->GetTextRun(
         (i != 0) ? nsTextFrame::eInflated : nsTextFrame::eNotInflated);
       if (run) {
@@ -4763,7 +4763,7 @@ nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
 }
 
 nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
-                                     PRInt32 aValue)
+                                     int32_t aValue)
   : mContent(aContent),
     mAttrName(aAttrName)
 {
@@ -4820,8 +4820,8 @@ MinimumFontSizeFor(nsPresContext* aPresContext, nscoord aContainerWidth)
 {
   nsIPresShell* presShell = aPresContext->PresShell();
 
-  PRUint32 emPerLine = presShell->FontSizeInflationEmPerLine();
-  PRUint32 minTwips = presShell->FontSizeInflationMinTwips();
+  uint32_t emPerLine = presShell->FontSizeInflationEmPerLine();
+  uint32_t minTwips = presShell->FontSizeInflationMinTwips();
   if (emPerLine == 0 && minTwips == 0) {
     return 0;
   }
@@ -4890,7 +4890,7 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
     }
   }
 
-  PRInt32 interceptParam = nsLayoutUtils::FontSizeInflationMappingIntercept();
+  int32_t interceptParam = nsLayoutUtils::FontSizeInflationMappingIntercept();
 
   float ratio = float(styleFontSize) / float(aMinFontSize);
 

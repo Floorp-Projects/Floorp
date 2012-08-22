@@ -20,8 +20,8 @@ public:
   nsOCSPResponder(const PRUnichar*, const PRUnichar*);
   virtual ~nsOCSPResponder();
   /* additional members */
-  static PRInt32 CmpCAName(nsIOCSPResponder *a, nsIOCSPResponder *b);
-  static PRInt32 CompareEntries(nsIOCSPResponder *a, nsIOCSPResponder *b);
+  static int32_t CmpCAName(nsIOCSPResponder *a, nsIOCSPResponder *b);
+  static int32_t CompareEntries(nsIOCSPResponder *a, nsIOCSPResponder *b);
   static bool IncludeCert(CERTCertificate *aCert);
 private:
   nsString mCA;

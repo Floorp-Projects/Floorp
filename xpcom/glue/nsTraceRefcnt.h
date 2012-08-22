@@ -10,7 +10,7 @@
 #ifdef NS_BUILD_REFCNT_LOGGING
 
 #define NS_LOG_ADDREF(_p, _rc, _type, _size) \
-  NS_LogAddRef((_p), (_rc), (_type), (PRUint32) (_size))
+  NS_LogAddRef((_p), (_rc), (_type), (uint32_t) (_size))
 
 #define NS_LOG_RELEASE(_p, _rc, _type) \
   NS_LogRelease((_p), (_rc), (_type))
@@ -62,7 +62,7 @@ PR_END_MACRO
 class nsTraceRefcnt {
 public:
   inline static void LogAddRef(void* aPtr, nsrefcnt aNewRefCnt,
-                               const char* aTypeName, PRUint32 aInstanceSize) {
+                               const char* aTypeName, uint32_t aInstanceSize) {
     NS_LogAddRef(aPtr, aNewRefCnt, aTypeName, aInstanceSize);
   }
 
@@ -72,12 +72,12 @@ public:
   }
 
   inline static void LogCtor(void* aPtr, const char* aTypeName,
-                             PRUint32 aInstanceSize) {
+                             uint32_t aInstanceSize) {
     NS_LogCtor(aPtr, aTypeName, aInstanceSize);
   }
 
   inline static void LogDtor(void* aPtr, const char* aTypeName,
-                             PRUint32 aInstanceSize) {
+                             uint32_t aInstanceSize) {
     NS_LogDtor(aPtr, aTypeName, aInstanceSize);
   }
 

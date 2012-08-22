@@ -68,7 +68,7 @@ static bool gHasWarnedUploadChannel2;
 // TODO: I am sure that there are more ports to be added.  
 //       This cut is based on the classic mozilla codebase
 
-PRInt16 gBadPortList[] = { 
+int16_t gBadPortList[] = { 
   1,    // tcpmux          
   7,    // echo     
   9,    // discard          
@@ -135,8 +135,8 @@ static const char kProfileChangeNetRestoreTopic[] = "profile-change-net-restore"
 static const char kProfileDoChange[] = "profile-do-change";
 
 // Necko buffer defaults
-PRUint32   nsIOService::gDefaultSegmentSize = 4096;
-PRUint32   nsIOService::gDefaultSegmentCount = 24;
+uint32_t   nsIOService::gDefaultSegmentSize = 4096;
+uint32_t   nsIOService::gDefaultSegmentCount = 24;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -320,7 +320,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS6(nsIOService,
 
 nsresult
 nsIOService::AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
-                                    PRUint32 flags,
+                                    uint32_t flags,
                                     nsAsyncRedirectVerifyHelper *helper)
 {
     nsCOMPtr<nsIChannelEventSink> sink =
@@ -335,8 +335,8 @@ nsIOService::AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
     // Finally, our category
     const nsCOMArray<nsIChannelEventSink>& entries =
         mChannelEventSinks.GetEntries();
-    PRInt32 len = entries.Count();
-    for (PRInt32 i = 0; i < len; ++i) {
+    int32_t len = entries.Count();
+    for (int32_t i = 0; i < len; ++i) {
         nsresult rv = helper->DelegateOnChannelRedirect(entries[i], oldChan,
                                                         newChan, flags);
         if (NS_FAILED(rv))
@@ -373,9 +373,9 @@ nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handle
 }
 
 nsresult
-nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **result, PRUint32 start, PRUint32 end)
+nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **result, uint32_t start, uint32_t end)
 {
-    PRUint32 len = end - start - 1;
+    uint32_t len = end - start - 1;
     for (unsigned int i=0; i<NS_N(gScheme); i++)
     {
         if (!mWeakHandler[i])
@@ -498,7 +498,7 @@ nsIOService::ExtractScheme(const nsACString &inURI, nsACString &scheme)
 }
 
 NS_IMETHODIMP 
-nsIOService::GetProtocolFlags(const char* scheme, PRUint32 *flags)
+nsIOService::GetProtocolFlags(const char* scheme, uint32_t *flags)
 {
     nsCOMPtr<nsIProtocolHandler> handler;
     nsresult rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
@@ -511,7 +511,7 @@ nsIOService::GetProtocolFlags(const char* scheme, PRUint32 *flags)
 class AutoIncrement
 {
     public:
-        AutoIncrement(PRUint32 *var) : mVar(var)
+        AutoIncrement(uint32_t *var) : mVar(var)
         {
             ++*var;
         }
@@ -520,7 +520,7 @@ class AutoIncrement
             --*mVar;
         }
     private:
-        PRUint32 *mVar;
+        uint32_t *mVar;
 };
 
 nsresult
@@ -528,7 +528,7 @@ nsIOService::NewURI(const nsACString &aSpec, const char *aCharset, nsIURI *aBase
 {
     NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
-    static PRUint32 recursionCount = 0;
+    static uint32_t recursionCount = 0;
     if (recursionCount >= MAX_RECURSION_COUNT)
         return NS_ERROR_MALFORMED_URI;
     AutoIncrement inc(&recursionCount);
@@ -579,7 +579,7 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 void
 nsIOService::LookupProxyInfo(nsIURI *aURI,
                              nsIURI *aProxyURI,
-                             PRUint32 aProxyFlags,
+                             uint32_t aProxyFlags,
                              nsCString *aScheme,
                              nsIProxyInfo **outPI)
 {
@@ -604,7 +604,7 @@ nsIOService::LookupProxyInfo(nsIURI *aURI,
 NS_IMETHODIMP
 nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
                                              nsIURI *aProxyURI,
-                                             PRUint32 aProxyFlags,
+                                             uint32_t aProxyFlags,
                                              nsIChannel **result)
 {
     nsresult rv;
@@ -620,7 +620,7 @@ nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
     if (NS_FAILED(rv))
         return rv;
 
-    PRUint32 protoFlags;
+    uint32_t protoFlags;
     rv = handler->GetProtocolFlags(&protoFlags);
     if (NS_FAILED(rv))
         return rv;
@@ -803,16 +803,16 @@ nsIOService::SetOffline(bool offline)
 
 
 NS_IMETHODIMP
-nsIOService::AllowPort(PRInt32 inPort, const char *scheme, bool *_retval)
+nsIOService::AllowPort(int32_t inPort, const char *scheme, bool *_retval)
 {
-    PRInt16 port = inPort;
+    int16_t port = inPort;
     if (port == -1) {
         *_retval = true;
         return NS_OK;
     }
         
     // first check to see if the port is in our blacklist:
-    PRInt32 badPortListCnt = mRestrictedPortList.Length();
+    int32_t badPortListCnt = mRestrictedPortList.Length();
     for (int i=0; i<badPortListCnt; i++)
     {
         if (port == mRestrictedPortList[i])
@@ -870,7 +870,7 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (!pref || strcmp(pref, NECKO_BUFFER_CACHE_COUNT_PREF) == 0) {
-        PRInt32 count;
+        int32_t count;
         if (NS_SUCCEEDED(prefs->GetIntPref(NECKO_BUFFER_CACHE_COUNT_PREF,
                                            &count)))
             /* check for bogus values and default if we find such a value */
@@ -879,7 +879,7 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
     
     if (!pref || strcmp(pref, NECKO_BUFFER_CACHE_SIZE_PREF) == 0) {
-        PRInt32 size;
+        int32_t size;
         if (NS_SUCCEEDED(prefs->GetIntPref(NECKO_BUFFER_CACHE_SIZE_PREF,
                                            &size)))
             /* check for bogus values and default if we find such a value
@@ -903,14 +903,14 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool rem
     if (portList) {
         nsTArray<nsCString> portListArray;
         ParseString(portList, ',', portListArray);
-        PRUint32 index;
+        uint32_t index;
         for (index=0; index < portListArray.Length(); index++) {
             portListArray[index].StripWhitespace();
-            PRInt32 portBegin, portEnd;
+            int32_t portBegin, portEnd;
 
             if (PR_sscanf(portListArray[index].get(), "%d-%d", &portBegin, &portEnd) == 2) {
                if ((portBegin < 65536) && (portEnd < 65536)) {
-                   PRInt32 curPort;
+                   int32_t curPort;
                    if (remove) {
                         for (curPort=portBegin; curPort <= portEnd; curPort++)
                             mRestrictedPortList.RemoveElement(curPort);
@@ -921,7 +921,7 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool rem
                }
             } else {
                nsresult aErrorCode;
-               PRInt32 port = portListArray[index].ToInteger(&aErrorCode);
+               int32_t port = portListArray[index].ToInteger(&aErrorCode);
                if (NS_SUCCEEDED(aErrorCode) && port < 65536) {
                    if (remove)
                        mRestrictedPortList.RemoveElement(port);
@@ -1009,7 +1009,7 @@ nsIOService::ParseContentType(const nsACString &aTypeHeader,
 
 NS_IMETHODIMP
 nsIOService::ProtocolHasFlags(nsIURI   *uri,
-                              PRUint32  flags,
+                              uint32_t  flags,
                               bool     *result)
 {
     NS_ENSURE_ARG(uri);
@@ -1019,7 +1019,7 @@ nsIOService::ProtocolHasFlags(nsIURI   *uri,
     nsresult rv = uri->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
   
-    PRUint32 protocolFlags;
+    uint32_t protocolFlags;
     rv = GetProtocolFlags(scheme.get(), &protocolFlags);
 
     if (NS_SUCCEEDED(rv)) {
@@ -1031,7 +1031,7 @@ nsIOService::ProtocolHasFlags(nsIURI   *uri,
 
 NS_IMETHODIMP
 nsIOService::URIChainHasFlags(nsIURI   *uri,
-                              PRUint32  flags,
+                              uint32_t  flags,
                               bool     *result)
 {
     nsresult rv = ProtocolHasFlags(uri, flags, result);
@@ -1159,7 +1159,7 @@ nsIOService::TrackNetworkLinkStatusForOffline()
 
 NS_IMETHODIMP
 nsIOService::EscapeString(const nsACString& aString,
-                          PRUint32 aEscapeType,
+                          uint32_t aEscapeType,
                           nsACString& aResult)
 {
   NS_ENSURE_ARG_MAX(aEscapeType, 4);
@@ -1177,7 +1177,7 @@ nsIOService::EscapeString(const nsACString& aString,
 
 NS_IMETHODIMP 
 nsIOService::EscapeURL(const nsACString &aStr, 
-                       PRUint32 aFlags, nsACString &aResult)
+                       uint32_t aFlags, nsACString &aResult)
 {
   aResult.Truncate();
   NS_EscapeURL(aStr.BeginReading(), aStr.Length(), 
@@ -1187,7 +1187,7 @@ nsIOService::EscapeURL(const nsACString &aStr,
 
 NS_IMETHODIMP 
 nsIOService::UnescapeString(const nsACString &aStr, 
-                            PRUint32 aFlags, nsACString &aResult)
+                            uint32_t aFlags, nsACString &aResult)
 {
   aResult.Truncate();
   NS_UnescapeURL(aStr.BeginReading(), aStr.Length(), 
@@ -1198,8 +1198,8 @@ nsIOService::UnescapeString(const nsACString &aStr,
 NS_IMETHODIMP
 nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
                                            nsACString &aCharset,
-                                           PRInt32 *aCharsetStart,
-                                           PRInt32 *aCharsetEnd,
+                                           int32_t *aCharsetStart,
+                                           int32_t *aCharsetEnd,
                                            bool *aHadCharset)
 {
     nsCAutoString ignored;

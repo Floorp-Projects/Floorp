@@ -1235,9 +1235,9 @@ PatchFile::LoadSourceFile(FILE* ofile)
     return READ_ERROR;
   }
 
-  if (PRUint32(os.st_size) != header.slen) {
+  if (uint32_t(os.st_size) != header.slen) {
     LOG(("LoadSourceFile: destination file size %d does not match expected size %d\n",
-         PRUint32(os.st_size), header.slen));
+         uint32_t(os.st_size), header.slen));
     return UNEXPECTED_FILE_OPERATION_ERROR;
   }
 

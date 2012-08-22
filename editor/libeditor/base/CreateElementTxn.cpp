@@ -55,7 +55,7 @@ NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 NS_IMETHODIMP CreateElementTxn::Init(nsEditor      *aEditor,
                                      const nsAString &aTag,
                                      nsIDOMNode     *aParent,
-                                     PRUint32        aOffsetInParent)
+                                     uint32_t        aOffsetInParent)
 {
   NS_ASSERTION(aEditor&&aParent, "null args");
   if (!aEditor || !aParent) { return NS_ERROR_NULL_POINTER; }
@@ -102,7 +102,7 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
 #endif
 
   // insert the new node
-  if (CreateElementTxn::eAppend == PRInt32(mOffsetInParent)) {
+  if (CreateElementTxn::eAppend == int32_t(mOffsetInParent)) {
     nsCOMPtr<nsIDOMNode> resultNode;
     return mParent->AppendChild(mNewNode, getter_AddRefs(resultNode));
   }

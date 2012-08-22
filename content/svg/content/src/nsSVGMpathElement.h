@@ -52,10 +52,10 @@ public:
                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep, bool aNullParent);
 
-  virtual nsresult UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
+  virtual nsresult UnsetAttr(int32_t aNamespaceID, nsIAtom* aAttribute,
                              bool aNotify);
   // nsGenericElement specializations
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);

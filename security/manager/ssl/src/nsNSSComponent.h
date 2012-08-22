@@ -78,7 +78,7 @@ class PSMContentDownloader : public nsIStreamListener
 {
 public:
   PSMContentDownloader() {NS_ASSERTION(false, "don't use this constructor."); }
-  PSMContentDownloader(PRUint32 type);
+  PSMContentDownloader(uint32_t type);
   virtual ~PSMContentDownloader();
   void setSilentDownload(bool flag);
   void setCrlAutodownloadKey(nsAutoString key);
@@ -96,9 +96,9 @@ public:
 
 protected:
   char* mByteData;
-  PRInt32 mBufferOffset;
-  PRInt32 mBufferSize;
-  PRUint32 mType;
+  int32_t mBufferOffset;
+  int32_t mBufferSize;
+  uint32_t mType;
   bool mDoSilentDownload;
   nsString mCrlAutoDownloadKey;
   nsCOMPtr<nsIURI> mURI;
@@ -117,14 +117,14 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
                                    nsAString &outString) = 0;
   NS_IMETHOD PIPBundleFormatStringFromName(const char *name,
                                            const PRUnichar **params,
-                                           PRUint32 numParams,
+                                           uint32_t numParams,
                                            nsAString &outString) = 0;
 
   NS_IMETHOD GetNSSBundleString(const char *name,
                                 nsAString &outString) = 0;
   NS_IMETHOD NSSBundleFormatStringFromName(const char *name,
                                            const PRUnichar **params,
-                                           PRUint32 numParams,
+                                           uint32_t numParams,
                                            nsAString &outString) = 0;
 
   // This method will just disable OCSP in NSS, it will not
@@ -234,13 +234,13 @@ public:
                                    nsAString &outString);
   NS_IMETHOD PIPBundleFormatStringFromName(const char *name,
                                            const PRUnichar **params,
-                                           PRUint32 numParams,
+                                           uint32_t numParams,
                                            nsAString &outString);
   NS_IMETHOD GetNSSBundleString(const char *name,
                                nsAString &outString);
   NS_IMETHOD NSSBundleFormatStringFromName(const char *name,
                                            const PRUnichar **params,
-                                           PRUint32 numParams,
+                                           uint32_t numParams,
                                            nsAString &outString);
   NS_IMETHOD SkipOcsp();
   NS_IMETHOD SkipOcspOff();

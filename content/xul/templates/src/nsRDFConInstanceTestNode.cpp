@@ -137,7 +137,7 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                 rv = rdfcontainer->Init(ds, valueres);
                 if (NS_FAILED(rv)) return rv;
 
-                PRInt32 count;
+                int32_t count;
                 rv = rdfcontainer->GetCount(&count);
                 if (NS_FAILED(rv)) return rv;
 

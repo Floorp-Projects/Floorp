@@ -40,8 +40,8 @@ struct SelectionDetails
     MOZ_COUNT_DTOR(SelectionDetails);
   }
 #endif
-  PRInt32 mStart;
-  PRInt32 mEnd;
+  int32_t mStart;
+  int32_t mEnd;
   SelectionType mType;
   nsTextRangeStyle mTextRangeStyle;
   SelectionDetails *mNext;
@@ -60,7 +60,7 @@ struct NS_STACK_CLASS nsPeekOffsetStruct
 {
   nsPeekOffsetStruct(nsSelectionAmount aAmount,
                      nsDirection aDirection,
-                     PRInt32 aStartOffset,
+                     int32_t aStartOffset,
                      nscoord aDesiredX,
                      bool aJumpLines,
                      bool aScrollViewStop,
@@ -107,7 +107,7 @@ struct NS_STACK_CLASS nsPeekOffsetStruct
 
   // mStartOffset: Offset into the content of the current frame where the peek starts.
   //               Used with: eSelectCharacter, eSelectWord
-  PRInt32 mStartOffset;
+  int32_t mStartOffset;
   
   // mDesiredX: The desired x coordinate for the caret.
   //            Used with: eSelectLine.
@@ -145,7 +145,7 @@ struct NS_STACK_CLASS nsPeekOffsetStruct
   nsIFrame *mResultFrame;
 
   // mContentOffset: Offset into content reached as a result of the peek.
-  PRInt32 mContentOffset;
+  int32_t mContentOffset;
 
   // mAttachForward: When the result position is between two frames,
   //                 indicates which of the two frames the caret should be painted in.
@@ -159,8 +159,8 @@ struct nsPrevNextBidiLevels
 {
   void SetData(nsIFrame* aFrameBefore,
                nsIFrame* aFrameAfter,
-               PRUint8 aLevelBefore,
-               PRUint8 aLevelAfter)
+               uint8_t aLevelBefore,
+               uint8_t aLevelAfter)
   {
     mFrameBefore = aFrameBefore;
     mFrameAfter = aFrameAfter;
@@ -169,8 +169,8 @@ struct nsPrevNextBidiLevels
   }
   nsIFrame* mFrameBefore;
   nsIFrame* mFrameAfter;
-  PRUint8 mLevelBefore;
-  PRUint8 mLevelAfter;
+  uint8_t mLevelBefore;
+  uint8_t mLevelAfter;
 };
 
 namespace mozilla {
@@ -214,8 +214,8 @@ public:
    */
   /*unsafe*/
   nsresult HandleClick(nsIContent *aNewFocus,
-                       PRUint32 aContentOffset,
-                       PRUint32 aContentEndOffset,
+                       uint32_t aContentOffset,
+                       uint32_t aContentEndOffset,
                        bool aContinueSelection,
                        bool aMultipleSelection,
                        bool aHint);
@@ -242,8 +242,8 @@ public:
    */
   /*unsafe*/
   nsresult HandleTableSelection(nsINode *aParentContent,
-                                PRInt32 aContentOffset,
-                                PRInt32 aTarget,
+                                int32_t aContentOffset,
+                                int32_t aTarget,
                                 nsMouseEvent *aMouseEvent);
 
   /**
@@ -263,10 +263,10 @@ public:
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
   virtual nsresult AddCellsToSelection(nsIContent *aTable,
-                                       PRInt32 aStartRowIndex,
-                                       PRInt32 aStartColumnIndex,
-                                       PRInt32 aEndRowIndex,
-                                       PRInt32 aEndColumnIndex);
+                                       int32_t aStartRowIndex,
+                                       int32_t aStartColumnIndex,
+                                       int32_t aEndRowIndex,
+                                       int32_t aEndColumnIndex);
 
   /**
    * Remove cells from selection inside of the given cell range.
@@ -278,10 +278,10 @@ public:
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
   virtual nsresult RemoveCellsFromSelection(nsIContent *aTable,
-                                            PRInt32 aStartRowIndex,
-                                            PRInt32 aStartColumnIndex,
-                                            PRInt32 aEndRowIndex,
-                                            PRInt32 aEndColumnIndex);
+                                            int32_t aStartRowIndex,
+                                            int32_t aStartColumnIndex,
+                                            int32_t aEndRowIndex,
+                                            int32_t aEndColumnIndex);
 
   /**
    * Remove cells from selection outside of the given cell range.
@@ -293,10 +293,10 @@ public:
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
   virtual nsresult RestrictCellsToSelection(nsIContent *aTable,
-                                            PRInt32 aStartRowIndex,
-                                            PRInt32 aStartColumnIndex,
-                                            PRInt32 aEndRowIndex,
-                                            PRInt32 aEndColumnIndex);
+                                            int32_t aStartRowIndex,
+                                            int32_t aStartColumnIndex,
+                                            int32_t aEndRowIndex,
+                                            int32_t aEndColumnIndex);
 
   /** StartAutoScrollTimer is responsible for scrolling frames so that
    *  aPoint is always visible, and for selecting any frame that contains
@@ -311,7 +311,7 @@ public:
   /*unsafe*/
   nsresult StartAutoScrollTimer(nsIFrame *aFrame,
                                 nsPoint aPoint,
-                                PRUint32 aDelay);
+                                uint32_t aDelay);
 
   /** StopAutoScrollTimer stops any active auto scroll timer.
    */
@@ -326,8 +326,8 @@ public:
    * @param aSlowCheck will check using slow method with no shortcuts
    */
   SelectionDetails* LookUpSelection(nsIContent *aContent,
-                                    PRInt32 aContentOffset,
-                                    PRInt32 aContentLength,
+                                    int32_t aContentOffset,
+                                    int32_t aContentLength,
                                     bool aSlowCheck) const;
 
   /** SetMouseDownState(bool);
@@ -371,7 +371,7 @@ public:
   /*unsafe*/
   nsresult ScrollSelectionIntoView(SelectionType aType,
                                    SelectionRegion aRegion,
-                                   PRInt16 aFlags) const;
+                                   int16_t aFlags) const;
 
   /** RepaintSelection repaints the selected frames that are inside the selection
    *  specified by aSelectionType.
@@ -386,9 +386,9 @@ public:
    * @param aReturnOffset will contain offset into frame.
    */
   virtual nsIFrame* GetFrameForNodeOffset(nsIContent *aNode,
-                                          PRInt32     aOffset,
+                                          int32_t     aOffset,
                                           HINT        aHint,
-                                          PRInt32    *aReturnOffset) const;
+                                          int32_t    *aReturnOffset) const;
 
   /**
    * Scrolling then moving caret placement code in common to text areas and 
@@ -415,11 +415,11 @@ public:
    *  @param aLevel the caret bidi level
    *  This method is virtual since it gets called from outside of layout.
    */
-  virtual void SetCaretBidiLevel (PRUint8 aLevel);
+  virtual void SetCaretBidiLevel (uint8_t aLevel);
   /** GetCaretBidiLevel gets the caret bidi level
    *  This method is virtual since it gets called from outside of layout.
    */
-  virtual PRUint8 GetCaretBidiLevel() const;
+  virtual uint8_t GetCaretBidiLevel() const;
   /** UndefineCaretBidiLevel sets the caret bidi level to "undefined"
    *  This method is virtual since it gets called from outside of layout.
    */
@@ -485,8 +485,8 @@ public:
 
   /** Sets/Gets The display selection enum.
    */
-  void SetDisplaySelection(PRInt16 aState) { mDisplaySelection = aState; }
-  PRInt16 GetDisplaySelection() const { return mDisplaySelection; }
+  void SetDisplaySelection(int16_t aState) { mDisplaySelection = aState; }
+  int16_t GetDisplaySelection() const { return mDisplaySelection; }
 
   /** This method can be used to store the data received during a MouseDown
    *  event so that we can place the caret during the MouseUp event.
@@ -508,7 +508,7 @@ public:
     NS_ASSERTION(mDelayedMouseEventValid, "No valid delayed caret data");
     return mDelayedMouseEventIsShift;
   }
-  PRUint32 GetClickCountInDelayedCaretData()
+  uint32_t GetClickCountInDelayedCaretData()
   {
     NS_ASSERTION(mDelayedMouseEventValid, "No valid delayed caret data");
     return mDelayedMouseEventClickCount;
@@ -553,7 +553,7 @@ public:
    *  This method is virtual since it gets called from outside of layout. 
    */
   virtual nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent *aNode,
-                                                     PRUint32 aContentOffset,
+                                                     uint32_t aContentOffset,
                                                      bool aJumpLines) const;
 
   /** GetFrameFromLevel will scan in a given direction
@@ -567,7 +567,7 @@ public:
    */
   nsresult GetFrameFromLevel(nsIFrame *aFrameIn,
                              nsDirection aDirection,
-                             PRUint8 aBidiLevel,
+                             uint8_t aBidiLevel,
                              nsIFrame **aFrameOut) const;
 
   /**
@@ -592,30 +592,30 @@ public:
   void DisconnectFromPresShell();
 private:
   nsresult TakeFocus(nsIContent *aNewFocus,
-                     PRUint32 aContentOffset,
-                     PRUint32 aContentEndOffset,
+                     uint32_t aContentOffset,
+                     uint32_t aContentEndOffset,
                      HINT aHint,
                      bool aContinueSelection,
                      bool aMultipleSelection);
 
   void BidiLevelFromMove(nsIPresShell* aPresShell,
                          nsIContent *aNode,
-                         PRUint32 aContentOffset,
-                         PRUint32 aKeycode,
+                         uint32_t aContentOffset,
+                         uint32_t aKeycode,
                          HINT aHint);
-  void BidiLevelFromClick(nsIContent *aNewFocus, PRUint32 aContentOffset);
+  void BidiLevelFromClick(nsIContent *aNewFocus, uint32_t aContentOffset);
   nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent *aNode,
-                                             PRUint32 aContentOffset,
+                                             uint32_t aContentOffset,
                                              HINT aHint,
                                              bool aJumpLines) const;
 
-  bool AdjustForMaintainedSelection(nsIContent *aContent, PRInt32 aOffset);
+  bool AdjustForMaintainedSelection(nsIContent *aContent, int32_t aOffset);
 
 // post and pop reasons for notifications. we may stack these later
-  void    PostReason(PRInt16 aReason) { mSelectionChangeReason = aReason; }
-  PRInt16 PopReason()
+  void    PostReason(int16_t aReason) { mSelectionChangeReason = aReason; }
+  int16_t PopReason()
   {
-    PRInt16 retval = mSelectionChangeReason;
+    int16_t retval = mSelectionChangeReason;
     mSelectionChangeReason = 0;
     return retval;
   }
@@ -625,11 +625,11 @@ private:
   void printSelection();       // for debugging
 #endif /* DEBUG */
 
-  void ResizeBuffer(PRUint32 aNewBufSize);
+  void ResizeBuffer(uint32_t aNewBufSize);
 /*HELPER METHODS*/
-  nsresult     MoveCaret(PRUint32 aKeycode, bool aContinueSelection,
+  nsresult     MoveCaret(uint32_t aKeycode, bool aContinueSelection,
                          nsSelectionAmount aAmount);
-  nsresult     MoveCaret(PRUint32 aKeycode, bool aContinueSelection,
+  nsresult     MoveCaret(uint32_t aKeycode, bool aContinueSelection,
                          nsSelectionAmount aAmount,
                          bool aVisualMovement);
 
@@ -639,7 +639,7 @@ private:
 
   nsresult     ConstrainFrameAndPointToAnchorSubtree(nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint);
 
-  PRUint32     GetBatching() const {return mBatching; }
+  uint32_t     GetBatching() const {return mBatching; }
   bool         GetNotifyFrames() const { return mNotifyFrames; }
   void         SetDirty(bool aDirty=true){if (mBatching) mChangesDuringBatching = aDirty;}
 
@@ -655,13 +655,13 @@ private:
   nsITableCellLayout* GetCellLayout(nsIContent *aCellContent) const;
 
   nsresult SelectBlockOfCells(nsIContent *aStartNode, nsIContent *aEndNode);
-  nsresult SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget);
+  nsresult SelectRowOrColumn(nsIContent *aCellContent, uint32_t aTarget);
   nsresult UnselectCells(nsIContent *aTable,
-                         PRInt32 aStartRowIndex, PRInt32 aStartColumnIndex,
-                         PRInt32 aEndRowIndex, PRInt32 aEndColumnIndex,
+                         int32_t aStartRowIndex, int32_t aStartColumnIndex,
+                         int32_t aEndRowIndex, int32_t aEndColumnIndex,
                          bool aRemoveOutsideOfCellRange);
 
-  nsresult GetCellIndexes(nsIContent *aCell, PRInt32 &aRowIndex, PRInt32 &aColIndex);
+  nsresult GetCellIndexes(nsIContent *aCell, int32_t &aRowIndex, int32_t &aColIndex);
 
   // Get our first range, if its first selected node is a cell.  If this does
   // not return null, then the first node in the returned range is a cell
@@ -676,7 +676,7 @@ private:
   nsIContent* IsInSameTable(nsIContent *aContent1, nsIContent *aContent2) const;
   // Might return null
   nsIContent* GetParentTable(nsIContent *aCellNode) const;
-  nsresult CreateAndAddRange(nsINode *aParentNode, PRInt32 aOffset);
+  nsresult CreateAndAddRange(nsINode *aParentNode, int32_t aOffset);
   nsresult ClearNormalSelection();
 
   nsCOMPtr<nsINode> mCellParent; //used to snap to table selection
@@ -684,15 +684,15 @@ private:
   nsCOMPtr<nsIContent> mEndSelectedCell;
   nsCOMPtr<nsIContent> mAppendStartSelectedCell;
   nsCOMPtr<nsIContent> mUnselectCellOnMouseUp;
-  PRInt32  mSelectingTableCellMode;
-  PRInt32  mSelectedCellIndex;
+  int32_t  mSelectingTableCellMode;
+  int32_t  mSelectedCellIndex;
 
   // maintain selection
   nsRefPtr<nsRange> mMaintainRange;
   nsSelectionAmount mMaintainedAmount;
 
   //batching
-  PRInt32 mBatching;
+  int32_t mBatching;
     
   // Limit selection navigation to a child of this node.
   nsCOMPtr<nsIContent> mLimiter;
@@ -701,16 +701,16 @@ private:
 
   nsIPresShell *mShell;
 
-  PRInt16 mSelectionChangeReason; // reason for notifications of selection changing
-  PRInt16 mDisplaySelection; //for visual display purposes.
+  int16_t mSelectionChangeReason; // reason for notifications of selection changing
+  int16_t mDisplaySelection; //for visual display purposes.
 
   HINT  mHint;   //hint to tell if the selection is at the end of this line or beginning of next
 #ifdef IBMBIDI
-  PRUint8 mCaretBidiLevel;
+  uint8_t mCaretBidiLevel;
 #endif
 
-  PRInt32 mDesiredX;
-  PRUint32 mDelayedMouseEventClickCount;
+  int32_t mDesiredX;
+  uint32_t mDelayedMouseEventClickCount;
   bool mDelayedMouseEventIsShift;
   bool mDelayedMouseEventValid;
 
@@ -721,7 +721,7 @@ private:
   bool mMouseDoubleDownState; //has the doubleclick down happened
   bool mDesiredXSet;
 
-  PRInt8 mCaretMovementStyle;
+  int8_t mCaretMovementStyle;
 };
 
 #endif /* nsFrameSelection_h___ */

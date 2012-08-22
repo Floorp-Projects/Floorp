@@ -39,22 +39,22 @@ public:
 
 protected:
 
-  PRUint32 mUcs4; // cached Unicode character
-  PRUint8 mState; // cached expected number of bytes per UTF8 character sequence
-  PRUint8 mBytes;
+  uint32_t mUcs4; // cached Unicode character
+  uint8_t mState; // cached expected number of bytes per UTF8 character sequence
+  uint8_t mBytes;
   bool mFirst;
 
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
 
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
+  NS_IMETHOD GetMaxLength(const char * aSrc, int32_t aSrcLength, 
+      int32_t * aDestLength);
 
   //--------------------------------------------------------------------
   // Subclassing of nsBasicDecoderSupport class [declaration]
 
-  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength, 
-      PRUnichar * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength, 
+      PRUnichar * aDest, int32_t * aDestLength);
 
   //--------------------------------------------------------------------
   // Subclassing of nsBasicDecoderSupport class [declaration]

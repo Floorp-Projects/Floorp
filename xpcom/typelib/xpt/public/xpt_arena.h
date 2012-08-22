@@ -30,7 +30,7 @@ PR_BEGIN_EXTERN_C
 typedef struct XPTArena XPTArena;
 
 XPT_PUBLIC_API(XPTArena *)
-XPT_NewArena(PRUint32 block_size, size_t alignment, const char* name);
+XPT_NewArena(uint32_t block_size, size_t alignment, const char* name);
 
 XPT_PUBLIC_API(void)
 XPT_DestroyArena(XPTArena *arena);
@@ -82,7 +82,7 @@ XPT_SizeOfArena(XPTArena *arena, xptMallocSizeOfFun mallocSizeOf);
 
 #ifdef DEBUG
 XPT_PUBLIC_API(void)
-XPT_AssertFailed(const char *s, const char *file, PRUint32 lineno);
+XPT_AssertFailed(const char *s, const char *file, uint32_t lineno);
 #define XPT_ASSERT(_expr) \
     ((_expr)?((void)0):XPT_AssertFailed(# _expr, __FILE__, __LINE__))
 #else

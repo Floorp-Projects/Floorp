@@ -38,7 +38,7 @@ public:
 
   // nsISMILAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction();
-  virtual bool GetTargetAttributeName(PRInt32 *aNamespaceID,
+  virtual bool GetTargetAttributeName(int32_t *aNamespaceID,
                                         nsIAtom **aLocalName) const;
   virtual nsSMILTargetAttrType GetTargetAttributeType() const;
 

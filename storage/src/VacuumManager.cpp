@@ -61,7 +61,7 @@ NS_IMETHODIMP
 BaseCallback::HandleError(mozIStorageError *aError)
 {
 #ifdef DEBUG
-  PRInt32 result;
+  int32_t result;
   nsresult rv = aError->GetResult(&result);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCAutoString message;
@@ -86,7 +86,7 @@ BaseCallback::HandleResult(mozIStorageResultSet *aResultSet)
 }
 
 NS_IMETHODIMP
-BaseCallback::HandleCompletion(PRUint16 aReason)
+BaseCallback::HandleCompletion(uint16_t aReason)
 {
   // By default BaseCallback will just be silent on completion.
   return NS_OK;
@@ -141,7 +141,7 @@ Vacuumer::execute()
   // Ask for the expected page size.  Vacuum can change the page size, unless
   // the database is using WAL journaling.
   // TODO Bug 634374: figure out a strategy to fix page size with WAL.
-  PRInt32 expectedPageSize = 0;
+  int32_t expectedPageSize = 0;
   rv = mParticipant->GetExpectedDatabasePageSize(&expectedPageSize);
   if (NS_FAILED(rv) || expectedPageSize < 512 || expectedPageSize > 65536) {
     NS_WARNING("Invalid page size requested for database, will use default ");
@@ -164,8 +164,8 @@ Vacuumer::execute()
   MOZ_ASSERT(!mDBFilename.IsEmpty(), "Database filename cannot be empty");
 
   // Check interval from last vacuum.
-  PRInt32 now = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
-  PRInt32 lastVacuum;
+  int32_t now = static_cast<int32_t>(PR_Now() / PR_USEC_PER_SEC);
+  int32_t lastVacuum;
   nsCAutoString prefName(PREF_VACUUM_BRANCH);
   prefName += mDBFilename;
   rv = Preferences::GetInt(prefName.get(), &lastVacuum);
@@ -225,7 +225,7 @@ NS_IMETHODIMP
 Vacuumer::HandleError(mozIStorageError *aError)
 {
 #ifdef DEBUG
-  PRInt32 result;
+  int32_t result;
   nsresult rv = aError->GetResult(&result);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCAutoString message;
@@ -244,7 +244,7 @@ Vacuumer::HandleError(mozIStorageError *aError)
 
 #ifdef PR_LOGGING
   {
-    PRInt32 result;
+    int32_t result;
     nsresult rv = aError->GetResult(&result);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCAutoString message;
@@ -266,11 +266,11 @@ Vacuumer::HandleResult(mozIStorageResultSet *aResultSet)
 }
 
 NS_IMETHODIMP
-Vacuumer::HandleCompletion(PRUint16 aReason)
+Vacuumer::HandleCompletion(uint16_t aReason)
 {
   if (aReason == REASON_FINISHED) {
     // Update last vacuum time.
-    PRInt32 now = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
+    int32_t now = static_cast<int32_t>(PR_Now() / PR_USEC_PER_SEC);
     MOZ_ASSERT(!mDBFilename.IsEmpty(), "Database filename cannot be empty");
     nsCAutoString prefName(PREF_VACUUM_BRANCH);
     prefName += mDBFilename;
@@ -360,11 +360,11 @@ VacuumManager::Observe(nsISupports *aSubject,
     // If there are more entries than what a month can contain, we could end up
     // skipping some, since we run daily.  So we use a starting index.
     static const char* kPrefName = PREF_VACUUM_BRANCH "index";
-    PRInt32 startIndex = Preferences::GetInt(kPrefName, 0);
+    int32_t startIndex = Preferences::GetInt(kPrefName, 0);
     if (startIndex >= entries.Count()) {
       startIndex = 0;
     }
-    PRInt32 index;
+    int32_t index;
     for (index = startIndex; index < entries.Count(); ++index) {
       nsCOMPtr<Vacuumer> vacuum = new Vacuumer(entries[index]);
       // Only vacuum one database per day.

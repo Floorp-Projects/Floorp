@@ -109,7 +109,7 @@ public:
     return mParentTarget;
   }
 
-  bool HasMutationListeners(PRUint32 aMutationEventType) const
+  bool HasMutationListeners(uint32_t aMutationEventType) const
   {
     const nsPIDOMWindow *win;
 
@@ -134,7 +134,7 @@ public:
     return (win->mMutationBits & aMutationEventType) != 0;
   }
 
-  void SetMutationListeners(PRUint32 aType)
+  void SetMutationListeners(uint32_t aType)
   {
     nsPIDOMWindow *win;
 
@@ -302,13 +302,13 @@ public:
   virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
 
   // Suspend timeouts in this window and in child windows.
-  virtual void SuspendTimeouts(PRUint32 aIncrease = 1,
+  virtual void SuspendTimeouts(uint32_t aIncrease = 1,
                                bool aFreezeChildren = true) = 0;
 
   // Resume suspended timeouts in this window and in child windows.
   virtual nsresult ResumeTimeouts(bool aThawChildren = true) = 0;
 
-  virtual PRUint32 TimeoutSuspendCount() = 0;
+  virtual uint32_t TimeoutSuspendCount() = 0;
 
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
@@ -318,11 +318,11 @@ public:
 
   // Add a timeout to this window.
   virtual nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
-                                        PRInt32 interval,
-                                        bool aIsInterval, PRInt32 *aReturn) = 0;
+                                        int32_t interval,
+                                        bool aIsInterval, int32_t *aReturn) = 0;
 
   // Clear a timeout from this window.
-  virtual nsresult ClearTimeoutOrInterval(PRInt32 aTimerID) = 0;
+  virtual nsresult ClearTimeoutOrInterval(int32_t aTimerID) = 0;
 
   nsPIDOMWindow *GetOuterWindow()
   {
@@ -505,13 +505,13 @@ public:
     return mFocusedNode;
   }
   virtual void SetFocusedNode(nsIContent* aNode,
-                              PRUint32 aFocusMethod = 0,
+                              uint32_t aFocusMethod = 0,
                               bool aNeedsFocus = false) = 0;
 
   /**
    * Retrieves the method that was used to focus the current node.
    */
-  virtual PRUint32 GetFocusMethod() = 0;
+  virtual uint32_t GetFocusMethod() = 0;
 
   /*
    * Tells the window that it now has focus or has lost focus, based on the
@@ -523,7 +523,7 @@ public:
    * aFocusMethod may be set to one of the focus method constants in
    * nsIFocusManager to indicate how focus was set.
    */
-  virtual bool TakeFocus(bool aFocus, PRUint32 aFocusMethod) = 0;
+  virtual bool TakeFocus(bool aFocus, uint32_t aFocusMethod) = 0;
 
   /**
    * Indicates that the window may now accept a document focus event. This
@@ -569,12 +569,12 @@ public:
   /**
    * Tell this window that it should listen for sensor changes of the given type.
    */
-  virtual void EnableDeviceSensor(PRUint32 aType) = 0;
+  virtual void EnableDeviceSensor(uint32_t aType) = 0;
 
   /**
    * Tell this window that it should remove itself from sensor change notifications.
    */
-  virtual void DisableDeviceSensor(PRUint32 aType) = 0;
+  virtual void DisableDeviceSensor(uint32_t aType) = 0;
 
   /**
    * Set a arguments for this window. This will be set on the window
@@ -590,12 +590,12 @@ public:
    * implementation must not do any AddRef/Release or other actions that will
    * mutate internal state.
    */
-  virtual PRUint32 GetSerial() = 0;
+  virtual uint32_t GetSerial() = 0;
 
   /**
    * Return the window id of this window
    */
-  PRUint64 WindowID() const { return mWindowID; }
+  uint64_t WindowID() const { return mWindowID; }
 
   /**
    * Dispatch a custom event with name aEventName targeted at this window.
@@ -646,12 +646,12 @@ protected:
   nsCOMPtr<nsIDOMElement> mFrameElement;
   nsIDocShell           *mDocShell;  // Weak Reference
 
-  PRUint32               mModalStateDepth;
+  uint32_t               mModalStateDepth;
 
   // These variables are only used on inner windows.
   nsTimeout             *mRunningTimeout;
 
-  PRUint32               mMutationBits;
+  uint32_t               mMutationBits;
 
   bool                   mIsDocumentLoaded;
   bool                   mIsHandlingResizeEvent;
@@ -683,7 +683,7 @@ protected:
 
   // A unique (as long as our 64-bit counter doesn't roll over) id for
   // this window.
-  PRUint64 mWindowID;
+  uint64_t mWindowID;
 
   // This is only used by the inner window. Set to true once we've sent
   // the (chrome|content)-document-global-created notification.

@@ -176,8 +176,8 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
     }
   }
 
-  NS_ASSERTION(NSDATETIMEFORMAT_BUFFER_LEN >= (PRUint32) (dateLen + 1), "internal date buffer is not large enough");
-  NS_ASSERTION(NSDATETIMEFORMAT_BUFFER_LEN >= (PRUint32) (timeLen + 1), "internal time buffer is not large enough");
+  NS_ASSERTION(NSDATETIMEFORMAT_BUFFER_LEN >= (uint32_t) (dateLen + 1), "internal date buffer is not large enough");
+  NS_ASSERTION(NSDATETIMEFORMAT_BUFFER_LEN >= (uint32_t) (timeLen + 1), "internal time buffer is not large enough");
 
   // Copy the result
   stringOut.Truncate();

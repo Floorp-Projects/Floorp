@@ -21,22 +21,22 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  PRInt32 HTMLAtomTagToId(nsIAtom* aAtom) const;
+  int32_t HTMLAtomTagToId(nsIAtom* aAtom) const;
 
-  PRInt32 HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom) const;
+  int32_t HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom) const;
 
-  PRInt32 HTMLStringTagToId(const nsAString& aTag) const;
+  int32_t HTMLStringTagToId(const nsAString& aTag) const;
 
-  const PRUnichar *HTMLIdToStringTag(PRInt32 aId) const;
+  const PRUnichar *HTMLIdToStringTag(int32_t aId) const;
   
-  nsIAtom *HTMLIdToAtomTag(PRInt32 aId) const;
+  nsIAtom *HTMLIdToAtomTag(int32_t aId) const;
 
   NS_IMETHOD HTMLConvertEntityToUnicode(const nsAString& aEntity, 
-                                        PRInt32* aUnicode) const;
-  NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
+                                        int32_t* aUnicode) const;
+  NS_IMETHOD HTMLConvertUnicodeToEntity(int32_t aUnicode,
                                         nsCString& aEntity) const;
-  NS_IMETHOD IsContainer(PRInt32 aId, bool& aIsContainer) const;
-  NS_IMETHOD IsBlock(PRInt32 aId, bool& aIsBlock) const;
+  NS_IMETHOD IsContainer(int32_t aId, bool& aIsContainer) const;
+  NS_IMETHOD IsBlock(int32_t aId, bool& aIsBlock) const;
 };
 
 #endif

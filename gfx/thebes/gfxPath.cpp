@@ -68,7 +68,7 @@ gfxFlattenedPath::GetLength()
     gfxPoint current(0, 0);   // current point
     gfxFloat length = 0;      // current summed length
 
-    for (PRInt32 i = 0;
+    for (int32_t i = 0;
          i < mPath->num_data;
          i += mPath->data[i].header.length) {
         length += CalcSubLengthAndAdvance(&mPath->data[i], start, current);
@@ -83,7 +83,7 @@ gfxFlattenedPath::FindPoint(gfxPoint aOffset, gfxFloat *aAngle)
     gfxPoint current(0, 0);   // current point
     gfxFloat length = 0;      // current summed length
 
-    for (PRInt32 i = 0;
+    for (int32_t i = 0;
          i < mPath->num_data;
          i += mPath->data[i].header.length) {
         gfxPoint prev = current;

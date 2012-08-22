@@ -104,7 +104,7 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
 
 /* unsigned long getPathSegAtLength (in float distance); */
 NS_IMETHODIMP
-nsSVGPathElement::GetPathSegAtLength(float distance, PRUint32 *_retval)
+nsSVGPathElement::GetPathSegAtLength(float distance, uint32_t *_retval)
 {
   NS_ENSURE_FINITE(distance, NS_ERROR_ILLEGAL_VALUE);
   *_retval = mD.GetAnimValue().GetPathSegAtLength(distance);

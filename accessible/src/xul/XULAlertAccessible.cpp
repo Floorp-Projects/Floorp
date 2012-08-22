@@ -28,7 +28,7 @@ XULAlertAccessible::NativeRole()
   return roles::ALERT;
 }
 
-PRUint64
+uint64_t
 XULAlertAccessible::NativeState()
 {
   return Accessible::NativeState() | states::ALERT;

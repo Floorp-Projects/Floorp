@@ -16,18 +16,18 @@ public:
   //--------------------------------------------------------------------
   // Interface nsIUnicodeEncoder [declaration]
 
-  NS_IMETHOD Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
-      char * aDest, PRInt32 * aDestLength);
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
-  NS_IMETHOD Finish(char * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD Convert(const PRUnichar * aSrc, int32_t * aSrcLength, 
+      char * aDest, int32_t * aDestLength);
+  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, int32_t aSrcLength, 
+      int32_t * aDestLength);
+  NS_IMETHOD Finish(char * aDest, int32_t * aDestLength);
   NS_IMETHOD Reset();
-  NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
+  NS_IMETHOD SetOutputErrorBehavior(int32_t aBehavior, 
       nsIUnicharEncoder * aEncoder, PRUnichar aChar);
 
 protected:
   PRUnichar mBOM;
-  NS_IMETHOD CopyData(char* aDest, const PRUnichar* aSrc, PRInt32 aLen  );
+  NS_IMETHOD CopyData(char* aDest, const PRUnichar* aSrc, int32_t aLen  );
 };
 
 class nsUnicodeToUTF16LE: public nsUnicodeToUTF16BE
@@ -36,7 +36,7 @@ public:
   nsUnicodeToUTF16LE() { mBOM = 0;}
 
 protected:
-  NS_IMETHOD CopyData(char* aDest, const PRUnichar* aSrc, PRInt32 aLen  );
+  NS_IMETHOD CopyData(char* aDest, const PRUnichar* aSrc, int32_t aLen  );
 };
 
 // XXX In theory, we have to check the endianness at run-time because some

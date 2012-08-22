@@ -72,7 +72,7 @@ nsresult
 nsInternetCiter::StripCitesAndLinebreaks(const nsAString& aInString,
                                          nsAString& aOutString,
                                          bool aLinebreaksToo,
-                                         PRInt32* aCiteLevel)
+                                         int32_t* aCiteLevel)
 {
   if (aCiteLevel)
     *aCiteLevel = 0;
@@ -84,7 +84,7 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsAString& aInString,
   while (beginIter!= endIter)  // loop over lines
   {
     // Clear out cites first, at the beginning of the line:
-    PRInt32 thisLineCiteLevel = 0;
+    int32_t thisLineCiteLevel = 0;
     while (beginIter!= endIter && (*beginIter == gt || nsCRT::IsAsciiSpace(*beginIter)))
     {
       if (*beginIter == gt) ++thisLineCiteLevel;
@@ -118,17 +118,17 @@ nsInternetCiter::StripCites(const nsAString& aInString, nsAString& aOutString)
   return StripCitesAndLinebreaks(aInString, aOutString, false, 0);
 }
 
-static void AddCite(nsAString& aOutString, PRInt32 citeLevel)
+static void AddCite(nsAString& aOutString, int32_t citeLevel)
 {
-  for (PRInt32 i = 0; i < citeLevel; ++i)
+  for (int32_t i = 0; i < citeLevel; ++i)
     aOutString.Append(gt);
   if (citeLevel > 0)
     aOutString.Append(space);
 }
 
 static inline void
-BreakLine(nsAString& aOutString, PRUint32& outStringCol,
-          PRUint32 citeLevel)
+BreakLine(nsAString& aOutString, uint32_t& outStringCol,
+          uint32_t citeLevel)
 {
   aOutString.Append(nl);
   if (citeLevel > 0)
@@ -147,14 +147,14 @@ static inline bool IsSpace(PRUnichar c)
 
 nsresult
 nsInternetCiter::Rewrap(const nsAString& aInString,
-                        PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
+                        uint32_t aWrapCol, uint32_t aFirstLineOffset,
                         bool aRespectNewlines,
                         nsAString& aOutString)
 {
   // There shouldn't be returns in this string, only dom newlines.
   // Check to make sure:
 #ifdef DEBUG
-  PRInt32 cr = aInString.FindChar(PRUnichar('\r'));
+  int32_t cr = aInString.FindChar(PRUnichar('\r'));
   NS_ASSERTION((cr < 0), "Rewrap: CR in string gotten from DOM!\n");
 #endif /* DEBUG */
 
@@ -165,10 +165,10 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Loop over lines in the input string, rewrapping each one.
-  PRUint32 length;
-  PRUint32 posInString = 0;
-  PRUint32 outStringCol = 0;
-  PRUint32 citeLevel = 0;
+  uint32_t length;
+  uint32_t posInString = 0;
+  uint32_t outStringCol = 0;
+  uint32_t citeLevel = 0;
   const nsPromiseFlatString &tString = PromiseFlatString(aInString);
   length = tString.Length();
 #ifdef DEBUG_wrapping
@@ -186,7 +186,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
 #endif
 
     // Get the new cite level here since we're at the beginning of a line
-    PRUint32 newCiteLevel = 0;
+    uint32_t newCiteLevel = 0;
     while (posInString < length && tString[posInString] == gt)
     {
       ++newCiteLevel;
@@ -237,7 +237,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
     }
 
     // find the next newline -- don't want to go farther than that
-    PRInt32 nextNewline = tString.FindChar(nl, posInString);
+    int32_t nextNewline = tString.FindChar(nl, posInString);
     if (nextNewline < 0) nextNewline = length;
 
     // For now, don't wrap unquoted lines at all.
@@ -252,7 +252,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
       aOutString.Append(Substring(tString, posInString,
                                   nextNewline-posInString));
       outStringCol += nextNewline - posInString;
-      if (nextNewline != (PRInt32)length)
+      if (nextNewline != (int32_t)length)
       {
         aOutString.Append(nl);
         outStringCol = 0;
@@ -263,7 +263,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
 
     // Otherwise we have to use the line breaker and loop
     // over this line of the input string to get all of it:
-    while ((PRInt32)posInString < nextNewline)
+    while ((int32_t)posInString < nextNewline)
     {
 #ifdef DEBUG_wrapping
       if (++loopcount > 1000)
@@ -275,7 +275,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
 #endif
 
       // Skip over initial spaces:
-      while ((PRInt32)posInString < nextNewline
+      while ((int32_t)posInString < nextNewline
              && nsCRT::IsAsciiSpace(tString[posInString]))
         ++posInString;
 
@@ -284,12 +284,12 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
       {
         // If this short line is the final one in the in string,
         // then we need to include the final newline, if any:
-        if (nextNewline+1 == (PRInt32)length && tString[nextNewline-1] == nl)
+        if (nextNewline+1 == (int32_t)length && tString[nextNewline-1] == nl)
           ++nextNewline;
 
         // Trim trailing spaces:
-        PRInt32 lastRealChar = nextNewline;
-        while ((PRUint32)lastRealChar > posInString
+        int32_t lastRealChar = nextNewline;
+        while ((uint32_t)lastRealChar > posInString
                && nsCRT::IsAsciiSpace(tString[lastRealChar-1]))
           --lastRealChar;
 
@@ -300,18 +300,18 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
         continue;
       }
 
-      PRInt32 eol = posInString + aWrapCol - citeLevel - outStringCol;
+      int32_t eol = posInString + aWrapCol - citeLevel - outStringCol;
       // eol is the prospective end of line.
       // We'll first look backwards from there for a place to break.
       // If it's already less than our current position,
       // then our line is already too long, so break now.
-      if (eol <= (PRInt32)posInString)
+      if (eol <= (int32_t)posInString)
       {
         BreakLine(aOutString, outStringCol, citeLevel);
         continue;    // continue inner loop, with outStringCol now at bol
       }
 
-      PRInt32 breakPt = 0;
+      int32_t breakPt = 0;
       rv = NS_ERROR_BASE;
       if (lineBreaker)
       {
@@ -364,7 +364,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
 
       nsAutoString sub (Substring(tString, posInString, breakPt));
       // skip newlines or whitespace at the end of the string
-      PRInt32 subend = sub.Length();
+      int32_t subend = sub.Length();
       while (subend > 0 && IsSpace(sub[subend-1]))
         --subend;
       sub.Left(sub, subend);

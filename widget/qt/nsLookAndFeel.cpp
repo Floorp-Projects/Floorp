@@ -311,7 +311,7 @@ static const char *metricToString[] = {
 #endif
 
 nsresult
-nsLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
+nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
 {
 #ifdef NS_LOOKANDFEEL_DEBUG
   qDebug("nsLookAndFeel::GetIntImpl aID = %s", metricToString[aID]);

@@ -53,7 +53,7 @@ public:
     aOriginX = mOriginX;
     aOriginY = mOriginY;
   }
-  PRUint16 Type() const {
+  uint16_t Type() const {
     return mType;
   }
 
@@ -78,7 +78,7 @@ public:
 protected:
   gfxMatrix mMatrix;
   float mAngle, mOriginX, mOriginY;
-  PRUint16 mType;
+  uint16_t mType;
 };
 
 /*
@@ -109,33 +109,33 @@ class SVGTransformSMILData
 public:
   // Number of float-params required in constructor, if constructing one of the
   // 'simple' transform types (all but matrix type)
-  static const PRUint32 NUM_SIMPLE_PARAMS = 3;
+  static const uint32_t NUM_SIMPLE_PARAMS = 3;
 
   // Number of float-params required in constructor for matrix type.
   // This is also the number of params we actually store, regardless of type.
-  static const PRUint32 NUM_STORED_PARAMS = 6;
+  static const uint32_t NUM_STORED_PARAMS = 6;
 
-  explicit SVGTransformSMILData(PRUint16 aType)
+  explicit SVGTransformSMILData(uint16_t aType)
   : mTransformType(aType)
   {
     NS_ABORT_IF_FALSE(aType >= nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX &&
                       aType <= nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY,
                       "Unexpected transform type");
-    for (PRUint32 i = 0; i < NUM_STORED_PARAMS; ++i) {
+    for (uint32_t i = 0; i < NUM_STORED_PARAMS; ++i) {
       mParams[i] = 0.f;
     }
   }
 
-  SVGTransformSMILData(PRUint16 aType, float (&aParams)[NUM_SIMPLE_PARAMS])
+  SVGTransformSMILData(uint16_t aType, float (&aParams)[NUM_SIMPLE_PARAMS])
   : mTransformType(aType)
   {
     NS_ABORT_IF_FALSE(aType >= nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE &&
                       aType <= nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY,
                       "Expected 'simple' transform type");
-    for (PRUint32 i = 0; i < NUM_SIMPLE_PARAMS; ++i) {
+    for (uint32_t i = 0; i < NUM_SIMPLE_PARAMS; ++i) {
       mParams[i] = aParams[i];
     }
-    for (PRUint32 i = NUM_SIMPLE_PARAMS; i < NUM_STORED_PARAMS; ++i) {
+    for (uint32_t i = NUM_SIMPLE_PARAMS; i < NUM_STORED_PARAMS; ++i) {
       mParams[i] = 0.f;
     }
   }
@@ -149,7 +149,7 @@ public:
     if (mTransformType != aOther.mTransformType)
       return false;
 
-    for (PRUint32 i = 0; i < NUM_STORED_PARAMS; ++i) {
+    for (uint32_t i = 0; i < NUM_STORED_PARAMS; ++i) {
       if (mParams[i] != aOther.mParams[i]) {
         return false;
       }
@@ -163,7 +163,7 @@ public:
     return !(*this == aOther);
   }
 
-  PRUint16 mTransformType;
+  uint16_t mTransformType;
   float    mParams[NUM_STORED_PARAMS];
 };
 

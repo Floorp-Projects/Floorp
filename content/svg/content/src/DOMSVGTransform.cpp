@@ -51,7 +51,7 @@ NS_INTERFACE_MAP_END
 // Ctors:
 
 DOMSVGTransform::DOMSVGTransform(DOMSVGTransformList *aList,
-                                 PRUint32 aListIndex,
+                                 uint32_t aListIndex,
                                  bool aIsAnimValItem)
   : mList(aList)
   , mListIndex(aListIndex)
@@ -102,7 +102,7 @@ DOMSVGTransform::DOMSVGTransform(const SVGTransform &aTransform)
 
 /* readonly attribute unsigned short type; */
 NS_IMETHODIMP
-DOMSVGTransform::GetType(PRUint16 *aType)
+DOMSVGTransform::GetType(uint16_t *aType)
 {
   *aType = Transform().Type();
   return NS_OK;
@@ -261,7 +261,7 @@ DOMSVGTransform::SetSkewY(float angle)
 
 void
 DOMSVGTransform::InsertingIntoList(DOMSVGTransformList *aList,
-                                   PRUint32 aListIndex,
+                                   uint32_t aListIndex,
                                    bool aIsAnimValItem)
 {
   NS_ABORT_IF_FALSE(!HasOwner(), "Inserting item that is already in a list");

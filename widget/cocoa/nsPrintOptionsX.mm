@@ -17,7 +17,7 @@ nsPrintOptionsX::~nsPrintOptionsX()
 }
 
 nsresult
-nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags)
+nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, uint32_t aFlags)
 {
   nsresult rv;
   
@@ -52,7 +52,7 @@ nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
 }
 
 nsresult
-nsPrintOptionsX::WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags)
+nsPrintOptionsX::WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, uint32_t aFlags)
 {
   nsresult rv;
 

@@ -31,17 +31,17 @@ private:
     nsresult FillSendBuf();
     
     static NS_METHOD ReadFromPipe(nsIInputStream *, void *, const char *,
-                                  PRUint32, PRUint32, PRUint32 *);
+                                  uint32_t, uint32_t, uint32_t *);
 
     // convenience functions
-    nsAHttpTransaction *Request(PRInt32 i)
+    nsAHttpTransaction *Request(int32_t i)
     {
         if (mRequestQ.Length() == 0)
             return nullptr;
 
         return mRequestQ[i];
     }
-    nsAHttpTransaction *Response(PRInt32 i)
+    nsAHttpTransaction *Response(int32_t i)
     {
         if (mResponseQ.Length() == 0)
             return nullptr;
@@ -81,15 +81,15 @@ private:
 
     // the push back buffer.  not exceeding nsIOService::gDefaultSegmentSize bytes.
     char     *mPushBackBuf;
-    PRUint32  mPushBackLen;
-    PRUint32  mPushBackMax;
+    uint32_t  mPushBackLen;
+    uint32_t  mPushBackMax;
 
     // The number of transactions completed on this pipeline.
-    PRUint32  mHttp1xTransactionCount;
+    uint32_t  mHttp1xTransactionCount;
 
     // For support of OnTransportStatus()
-    PRUint64  mReceivingFromProgress;
-    PRUint64  mSendingToProgress;
+    uint64_t  mReceivingFromProgress;
+    uint64_t  mSendingToProgress;
     bool      mSuppressSendEvents;
 };
 

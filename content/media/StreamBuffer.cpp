@@ -11,7 +11,7 @@ StreamTime
 StreamBuffer::GetEnd() const
 {
   StreamTime t = mTracksKnownTime;
-  for (PRUint32 i = 0; i < mTracks.Length(); ++i) {
+  for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     Track* track = mTracks[i];
     if (!track->IsEnded()) {
       t = NS_MIN(t, track->GetEndTimeRoundDown());
@@ -25,7 +25,7 @@ StreamBuffer::FindTrack(TrackID aID)
 {
   if (aID == TRACK_NONE)
     return nullptr;
-  for (PRUint32 i = 0; i < mTracks.Length(); ++i) {
+  for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     Track* track = mTracks[i];
     if (track->GetID() == aID) {
       return track;
@@ -45,7 +45,7 @@ StreamBuffer::ForgetUpTo(StreamTime aTime)
   }
   mForgottenTime = forget;
 
-  for (PRUint32 i = 0; i < mTracks.Length(); ++i) {
+  for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     Track* track = mTracks[i];
     if (track->IsEnded() && track->GetEndTimeRoundDown() <= forget) {
       mTracks.RemoveElementAt(i);

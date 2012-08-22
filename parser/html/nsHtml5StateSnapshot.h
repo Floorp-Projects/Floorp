@@ -58,30 +58,30 @@ class nsHtml5Portability;
 class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState
 {
   private:
-    autoJArray<nsHtml5StackNode*,PRInt32> stack;
-    autoJArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements;
+    autoJArray<nsHtml5StackNode*,int32_t> stack;
+    autoJArray<nsHtml5StackNode*,int32_t> listOfActiveFormattingElements;
     nsIContent** formPointer;
     nsIContent** headPointer;
     nsIContent** deepTreeSurrogateParent;
-    PRInt32 mode;
-    PRInt32 originalMode;
+    int32_t mode;
+    int32_t originalMode;
     bool framesetOk;
     bool needToDropLF;
     bool quirks;
   public:
-    nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, nsIContent** deepTreeSurrogateParent, PRInt32 mode, PRInt32 originalMode, bool framesetOk, bool needToDropLF, bool quirks);
-    jArray<nsHtml5StackNode*,PRInt32> getStack();
-    jArray<nsHtml5StackNode*,PRInt32> getListOfActiveFormattingElements();
+    nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,int32_t> stack, jArray<nsHtml5StackNode*,int32_t> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, nsIContent** deepTreeSurrogateParent, int32_t mode, int32_t originalMode, bool framesetOk, bool needToDropLF, bool quirks);
+    jArray<nsHtml5StackNode*,int32_t> getStack();
+    jArray<nsHtml5StackNode*,int32_t> getListOfActiveFormattingElements();
     nsIContent** getFormPointer();
     nsIContent** getHeadPointer();
     nsIContent** getDeepTreeSurrogateParent();
-    PRInt32 getMode();
-    PRInt32 getOriginalMode();
+    int32_t getMode();
+    int32_t getOriginalMode();
     bool isFramesetOk();
     bool isNeedToDropLF();
     bool isQuirks();
-    PRInt32 getListOfActiveFormattingElementsLength();
-    PRInt32 getStackLength();
+    int32_t getListOfActiveFormattingElementsLength();
+    int32_t getStackLength();
     ~nsHtml5StateSnapshot();
     static void initializeStatics();
     static void releaseStatics();
