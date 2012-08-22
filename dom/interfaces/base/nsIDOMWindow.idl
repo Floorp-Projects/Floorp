@@ -32,7 +32,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(A1AF6CD9-C6E7-4037-99F8-DBCA1B03E345)]
+[scriptable, uuid(afeb6529-06f1-47e8-98c6-c7bfadb4c1ff)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -375,6 +375,7 @@ interface nsIDOMWindow : nsISupports
 
   readonly attribute float                              mozInnerScreenX;
   readonly attribute float                              mozInnerScreenY;
+  readonly attribute float                              devicePixelRatio;
 
   /* The maximum offset that the window can be scrolled to
      (i.e., the document width/height minus the scrollport width/height) */
