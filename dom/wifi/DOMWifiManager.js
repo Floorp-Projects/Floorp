@@ -167,7 +167,7 @@ DOMWifiManager.prototype = {
 
       case "WifiManager:wps:Return:OK":
         request = this.takeRequest(msg.rid);
-        Services.DOMRequest.fireSuccess(request, true);
+        Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
         break;
 
       case "WifiManager:wps:Return:NO":
