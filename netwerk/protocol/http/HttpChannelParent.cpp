@@ -47,7 +47,7 @@ HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding)
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &handler);
   NS_ASSERTION(handler, "no http handler");
 
-  mTabParent = do_QueryObject(static_cast<TabParent*>(iframeEmbedding));
+  mTabParent = static_cast<mozilla::dom::TabParent*>(iframeEmbedding);
 }
 
 HttpChannelParent::~HttpChannelParent()
@@ -147,8 +147,12 @@ HttpChannelParent::RecvAsyncOpen(const URIParams&           aURI,
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
-  if (loadContext.IsNotNull())
-    mLoadContext = new LoadContext(loadContext);
+  if (loadContext.IsNotNull()) {
+    if (mTabParent)
+      mLoadContext = new LoadContext(loadContext, mTabParent->GetOwnerElement());
+    else
+      mLoadContext = new LoadContext(loadContext);
+  }
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
 

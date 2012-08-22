@@ -14,13 +14,17 @@
 #include "mozilla/net/NeckoCommon.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
-#include "nsITabParent.h"
 #include "nsHttpChannel.h"
 
 class nsICacheEntryDescriptor;
 class nsIAssociatedContentSecurity;
 
 namespace mozilla {
+
+namespace dom{
+class TabParent;
+}
+
 namespace net {
 
 class HttpChannelParentListener;
@@ -83,7 +87,7 @@ protected:
 
 protected:
   friend class mozilla::net::HttpChannelParentListener;
-  nsCOMPtr<nsITabParent> mTabParent;
+  nsRefPtr<mozilla::dom::TabParent> mTabParent;
 
 private:
   nsCOMPtr<nsIChannel>                    mChannel;
