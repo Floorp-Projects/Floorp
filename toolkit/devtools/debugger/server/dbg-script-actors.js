@@ -918,15 +918,16 @@ ThreadActor.prototype = {
    *        A Debugger.Object instance whose referent is the global object.
    */
   onNewScript: function TA_onNewScript(aScript, aGlobal) {
-    this._addScript(aScript);
-    // Notify the client.
-    this.conn.send({
-      from: this.actorID,
-      type: "newScript",
-      url: aScript.url,
-      startLine: aScript.startLine,
-      lineCount: aScript.lineCount
-    });
+    if (this._addScript(aScript)) {
+      // Notify the client.
+      this.conn.send({
+        from: this.actorID,
+        type: "newScript",
+        url: aScript.url,
+        startLine: aScript.startLine,
+        lineCount: aScript.lineCount
+      });
+    }
   },
 
   /**
@@ -934,15 +935,16 @@ ThreadActor.prototype = {
    *
    * @param aScript Debugger.Script
    *        The source script that will be stored.
+   * @returns true, if the script was added, false otherwise.
    */
   _addScript: function TA__addScript(aScript) {
     // Ignore XBL bindings for content debugging.
     if (aScript.url.indexOf("chrome://") == 0) {
-      return;
+      return false;
     }
     // Ignore about:* pages for content debugging.
     if (aScript.url.indexOf("about:") == 0) {
-      return;
+      return false;
     }
     // Use a sparse array for storing the scripts for each URL in order to
     // optimize retrieval.
@@ -965,6 +967,7 @@ ThreadActor.prototype = {
         }
       }
     }
+    return true;
   }
 
 };
