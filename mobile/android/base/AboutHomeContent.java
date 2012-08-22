@@ -52,6 +52,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -86,6 +87,7 @@ public class AboutHomeContent extends ScrollView
     protected GridView mTopSitesGrid;
 
     private AboutHomePromoBox mPromoBox;
+    private AboutHomePromoBox.Type mPrelimPromoBoxType;
     protected AboutHomeSection mAddons;
     protected AboutHomeSection mLastTabs;
     protected AboutHomeSection mRemoteTabs;
@@ -137,6 +139,9 @@ public class AboutHomeContent extends ScrollView
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
             }
         };
+
+        mPrelimPromoBoxType = (new Random()).nextFloat() < 0.5 ? AboutHomePromoBox.Type.SYNC :
+                AboutHomePromoBox.Type.APPS;
     }
 
     private void inflate() {
@@ -220,7 +225,10 @@ public class AboutHomeContent extends ScrollView
         boolean hasTopSites = mTopSitesAdapter.getCount() > 0;
 
         setTopSitesVisibility(hasTopSites);
-        setPromoBoxVisibility(!syncIsSetup, AboutHomePromoBox.Type.SYNC);
+        if (!syncIsSetup && mPrelimPromoBoxType == AboutHomePromoBox.Type.SYNC)
+            setPromoBoxVisibility(true, AboutHomePromoBox.Type.SYNC);
+        else
+            setPromoBoxVisibility(true, AboutHomePromoBox.Type.APPS);
     }
 
     private void updateLayoutForSync() {
