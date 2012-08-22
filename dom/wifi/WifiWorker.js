@@ -278,6 +278,11 @@ var WifiManager = (function() {
     doBooleanCommand("WPS_PBC", "OK", callback);
   }
 
+  function wpsPinCommand(pin, callback) {
+    doStringCommand("WPS_PIN any" + (pin === undefined ? "" : (" " + pin)),
+                    callback);
+  }
+
   function wpsCancelCommand(callback) {
     doBooleanCommand("WPS_CANCEL", "OK", callback);
   }
@@ -1176,6 +1181,7 @@ var WifiManager = (function() {
   }
   manager.scan = scanCommand;
   manager.wpsPbc = wpsPbcCommand;
+  manager.wpsPin = wpsPinCommand;
   manager.wpsCancel = wpsCancelCommand;
   manager.getRssiApprox = getRssiApproxCommand;
   manager.getLinkSpeed = getLinkSpeedCommand;
@@ -2092,6 +2098,13 @@ WifiWorker.prototype = {
         else
           self._sendMessage(message, false, "WPS PBC failed", rid, mid);
       });
+    } else if (detail.method === "pin") {
+      WifiManager.wpsPin(detail.pin, function(pin) {
+        if (pin)
+          self._sendMessage(message, true, pin, rid, mid);
+        else
+          self._sendMessage(message, false, "WPS PIN failed", rid, mid);
+      });
     } else if (detail.method === "cancel") {
       WifiManager.wpsCancel(function(ok) {
         if (ok)
@@ -2100,8 +2113,8 @@ WifiWorker.prototype = {
           self._sendMessage(message, false, "WPS Cancel failed", rid, mid);
       });
     } else {
-      self._sendMessage(message, false, "Unknown wps method=" + detail.method +
-        " was received", rid, mid);
+      self._sendMessage(message, false, "Invalid WPS method=" + detail.method,
+                        rid, mid);
     }
   },
 
