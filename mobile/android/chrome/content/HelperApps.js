@@ -48,7 +48,7 @@ var HelperApps =  {
     return found;
   },
   
-  openUriInApp: function openUriInApp(uri) { 
+  openUriInApp: function openUriInApp(uri) {
     var possibleHandlers = this.getAppsForUri(uri);
     if (possibleHandlers.length == 1) {
       possibleHandlers[0].launchWithURI(uri);
@@ -56,5 +56,50 @@ var HelperApps =  {
       let handlerInfoProto = this.urlHandlerService.getURLHandlerInfoFromOS(uri, {});
       handlerInfoProto.preferredApplicationHandler.launchWithURI(uri);
     }
+  },
+
+  showDoorhanger: function showDoorhanger(aUri, aCallback) {
+    let permValue = Services.perms.testPermission(aUri, "native-intent");
+    if (permValue != Services.perms.UNKNOWN_ACTION) {
+      if (permValue == Services.perms.ALLOW_ACTION) {
+        if (aCallback)
+          aCallback(aUri);
+
+        this.openUriInApp(aUri);
+      } else if (permValue == Services.perms.DENY_ACTION) {
+        // do nothing
+      }
+      return;
+    }
+
+    let apps = this.getAppsForUri(aUri);
+    let strings = Strings.browser;
+
+    let message = "";
+    if (apps.length == 1)
+      message = strings.formatStringFromName("helperapps.openWithApp2", [apps[0].name], 1);
+    else
+      message = strings.GetStringFromName("helperapps.openWithList2");
+  
+    let buttons = [{
+      label: strings.GetStringFromName("helperapps.open"),
+      callback: function(aChecked) {
+        if (aChecked)
+          Services.perms.add(aUri, "native-intent", Ci.nsIPermissionManager.ALLOW_ACTION);
+        if (aCallback)
+          aCallback(aUri);
+        else
+          this.openUriInApp(aUri);
+      }
+    }, {
+      label: strings.GetStringFromName("helperapps.ignore"),
+      callback: function(aChecked) {
+        if (aChecked)
+          Services.perms.add(aUri, "native-intent", Ci.nsIPermissionManager.DENY_ACTION);
+      }
+    }];
+
+    let options = { checkbox: Strings.browser.GetStringFromName("helperapps.dontAskAgain") };
+    NativeWindow.doorhanger.show(message, "helperapps-open", buttons, BrowserApp.selectedTab.id, options);
   }
 };

@@ -247,7 +247,7 @@ var BrowserApp = {
 
     let updated = this.isAppUpdated();
     if (pinned) {
-      WebAppRT.init(updated);
+      WebAppRT.init(updated, url);
     } else {
       SearchEngines.init();
       this.initContextMenu();
@@ -2939,7 +2939,7 @@ Tab.prototype = {
 
     let documentURI = contentWin.document.documentURIObject.spec;
     let contentType = contentWin.document.contentType;
-    
+
     // If fixedURI matches browser.lastURI, we assume this isn't a real location
     // change but rather a spurious addition like a wyciwyg URI prefix. See Bug 747883.
     // Note that we have to ensure fixedURI is not the same as aLocationURI so we
@@ -2953,6 +2953,18 @@ Tab.prototype = {
     this.pluginDoorhangerTimeout = null;
     this.shouldShowPluginDoorhanger = true;
     this.clickToPlayPluginsActivated = false;
+
+    // This is where we might check for helper apps.
+    // For now it is special cased to only check for the marketplace urls
+    if (WebappsUI.isMarketplace(aLocationURI)) {
+      // the marketplace app may not actually be installed, so instead we use a custom
+      // callback that will install and launch it for us if necessary
+      HelperApps.showDoorhanger(aLocationURI, function() {
+        WebappsUI.installAndLaunchMarketplace(aLocationURI.spec);
+        if (aRequest)
+          aRequest.cancel(Cr.NS_OK);
+      });
+    }
 
     let message = {
       gecko: {
@@ -5964,6 +5976,7 @@ var WebappsUI = {
     Services.obs.addObserver(this, "webapps-sync-install", false);
     Services.obs.addObserver(this, "webapps-sync-uninstall", false);
     Services.obs.addObserver(this, "webapps-install-error", false);
+    Services.obs.addObserver(this, "WebApps:InstallMarketplace", false);
   },
   
   uninit: function unint() {
@@ -5972,6 +5985,7 @@ var WebappsUI = {
     Services.obs.removeObserver(this, "webapps-sync-install");
     Services.obs.removeObserver(this, "webapps-sync-uninstall");
     Services.obs.removeObserver(this, "webapps-install-error", false);
+    Services.obs.removeObserver(this, "WebApps:InstallMarketplace", false);
   },
 
   DEFAULT_PREFS_FILENAME: "default-prefs.js",
@@ -6037,6 +6051,61 @@ var WebappsUI = {
           }
         });
         break;
+      case "WebApps:InstallMarketplace":
+        this.installAndLaunchMarketplace(data.url);
+        break;
+    }
+  },
+
+  MARKETPLACE: {
+      MANIFEST: "https://marketplace.mozilla.org/manifest.webapp",
+      get URI() {
+        delete this.URI;
+        return this.URI = Services.io.newURI(this.MANIFEST, null, null);
+      }
+  },
+
+  isMarketplace: function isMarketplace(aUri) {
+    try {
+      return aUri.host == this.MARKETPLACE.URI.host;
+    } catch(ex) {
+      // this can fail for uri's that don't have a host (i.e. about urls)
+      console.log("could not find host for " + aUri.spec + ", " + ex);
+    }
+    return false;
+  },
+
+  // installs the marketplace, if a url is passed in, will launch it when the install
+  // is complete
+  installAndLaunchMarketplace: function installAndLaunchMarketplace(aLaunchUrl) {
+    // TODO: Add a flag to hide other install prompt dialogs. This should be silent if possible
+    let request = navigator.mozApps.getInstalled();
+    request.onsuccess = function() {
+      let foundMarket = false;
+      for (let i = 0; i < request.result.length; i++) {
+        if (request.result[i].origin == this.MARKETPLACE.URI.prePath)
+          foundMarket = true;
+      }
+
+      let launchFun = (function() {
+        if (aLaunchUrl)
+          WebappsUI.openURL(aLaunchUrl || WebappsUI.MARKETPLACE.URI.prePath, WebappsUI.MARKETPLACE.URI.prePath);
+      }).bind(this);
+
+      if (foundMarket) {
+        launchFun();
+      } else {
+        let r = navigator.mozApps.install(WebappsUI.MARKETPLACE.MANIFEST);
+        r.onsuccess = function() {
+          launchFun();
+        };
+        r.onerror = function() {
+          console.log("error installing market " + this.error.name);
+        };
+      }
+    };
+    request.onerror = function() {
+      console.log("error getting installed " + this.error.name);
     }
   },
 
@@ -6076,7 +6145,13 @@ var WebappsUI = {
   doInstall: function doInstall(aData) {
     let manifest = new DOMApplicationManifest(aData.app.manifest, aData.app.origin);
     let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
-    if (Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name)) {
+    let showPrompt = true;
+
+    // skip showing the prompt if this is for the marketplace app
+    if (aData.app.origin == this.MARKETPLACE.URI.prePath)
+      showPrompt = false;
+
+    if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name)) {
       // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
       // a unique ID for Android webapp allocation
       this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
