@@ -90,7 +90,6 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mState(NOTHING),
      mDPI(72),
      mContentPainterStatus(CONTENT_IDLE),
-     mMayHaveTouchListeners(false),
      mDisableNextTouchBatch(false),
      mHandlingTouchQueue(false)
 {
@@ -190,6 +189,12 @@ AsyncPanZoomController::ReceiveInputEvent(const nsInputEvent& aEvent,
 }
 
 nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent) {
+  // If we may have touch listeners, we enable the machinery that allows touch
+  // listeners to preventDefault any touch inputs. This should not happen unless
+  // there are actually touch listeners as it introduces potentially unbounded
+  // lag because it causes a round-trip through content.  Usually, if content is
+  // responding in a timely fashion, this only introduces a nearly constant few
+  // hundred ms of lag.
   if (mFrameMetrics.mMayHaveTouchListeners && aEvent.mInputType == MULTITOUCH_INPUT &&
       (mState == NOTHING || mState == TOUCHING || mState == PANNING)) {
     const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
@@ -947,10 +952,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     // we get a larger displayport. This is very bad because we're wasting a
     // paint and not initializating the displayport correctly.
     RequestContentRepaint();
-
-    // Assuming a first paint means a new page has been loaded, clear the flag
-    // indicating that we may have touch listeners.
-    mMayHaveTouchListeners = false;
   } else if (!mFrameMetrics.mCSSContentRect.IsEqualEdges(aViewportFrame.mCSSContentRect)) {
     mFrameMetrics.mCSSContentRect = aViewportFrame.mCSSContentRect;
     SetPageRect(mFrameMetrics.mCSSContentRect);
@@ -967,9 +968,6 @@ void AsyncPanZoomController::UpdateViewportSize(int aWidth, int aHeight) {
   FrameMetrics metrics = GetFrameMetrics();
   metrics.mViewport = nsIntRect(0, 0, aWidth, aHeight);
   mFrameMetrics = metrics;
-}
-
-void AsyncPanZoomController::NotifyDOMTouchListenerAdded() {
 }
 
 void AsyncPanZoomController::CancelDefaultPanZoom() {

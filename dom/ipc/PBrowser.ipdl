@@ -251,8 +251,6 @@ parent:
                                 nsString aName, nsString aFeatures)
       returns (bool windowOpened);
 
-    NotifyDOMTouchListenerAdded();
-
     /**
      * Instructs the TabParent to forward a request to zoom to a rect given in
      * CSS pixels. This rect is relative to the document.

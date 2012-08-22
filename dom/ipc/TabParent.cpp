@@ -1099,15 +1099,6 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
 }
 
 bool
-TabParent::RecvNotifyDOMTouchListenerAdded()
-{
-  if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->NotifyDOMTouchListenerAdded();
-  }
-  return true;
-}
-
-bool
 TabParent::RecvZoomToRect(const gfxRect& aRect)
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
