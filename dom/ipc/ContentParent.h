@@ -212,7 +212,7 @@ private:
     virtual PStorageParent* AllocPStorage(const StorageConstructData& aData);
     virtual bool DeallocPStorage(PStorageParent* aActor);
 
-    virtual bool RecvReadPrefsArray(InfallibleTArray<PrefTuple> *retValue);
+    virtual bool RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs);
     virtual bool RecvReadFontList(InfallibleTArray<FontListEntry>* retValue);
 
     virtual bool RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions);

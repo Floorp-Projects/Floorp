@@ -136,8 +136,7 @@ public:
     // auto remove when alertfinished is received.
     nsresult AddRemoteAlertObserver(const nsString& aData, nsIObserver* aObserver);
 
-    virtual bool RecvPreferenceUpdate(const PrefTuple& aPref);
-    virtual bool RecvClearUserPreference(const nsCString& aPrefName);
+    virtual bool RecvPreferenceUpdate(const PrefSetting& aPref);
 
     virtual bool RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData);
 
