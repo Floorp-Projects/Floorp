@@ -483,28 +483,23 @@ class AssertCompartmentUnchanged {
 
 class AutoCompartment
 {
-  public:
-    JSContext * const context;
-    JSCompartment * const origin;
-    JSCompartment * const destination;
-  private:
-    bool entered;
+    JSContext * const cx_;
+    JSCompartment * const origin_;
 
   public:
     AutoCompartment(JSContext *cx, JSObject *target)
-      : context(cx),
-        origin(cx->compartment),
-        destination(target->compartment()),
-        entered(false)
-    {}
-
-    ~AutoCompartment() {
-        if (entered)
-            leave();
+      : cx_(cx),
+        origin_(cx->compartment)
+    {
+        cx_->enterCompartment(target->compartment());
     }
 
-    bool enter() { context->enterCompartment(destination); entered = true; return true; }
-    void leave() { JS_ASSERT(entered); context->leaveCompartment(origin); entered = false; }
+    ~AutoCompartment() {
+        cx_->leaveCompartment(origin_);
+    }
+
+    JSContext *context() const { return cx_; }
+    JSCompartment *origin() const { return origin_; }
 
   private:
     AutoCompartment(const AutoCompartment &) MOZ_DELETE;
@@ -544,13 +539,12 @@ class AutoEnterAtomsCompartment
  */
 class ErrorCopier
 {
-    AutoCompartment &ac;
+    Maybe<AutoCompartment> &ac;
     RootedObject scope;
 
   public:
-    ErrorCopier(AutoCompartment &ac, JSObject *scope) : ac(ac), scope(ac.context, scope) {
-        JS_ASSERT(scope->compartment() == ac.origin);
-    }
+    ErrorCopier(Maybe<AutoCompartment> &ac, JSObject *scope)
+      : ac(ac), scope(ac.ref().context(), scope) {}
     ~ErrorCopier();
 };
 

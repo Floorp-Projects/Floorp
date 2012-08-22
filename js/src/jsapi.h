@@ -3318,33 +3318,13 @@ namespace js {
 class AutoCompartment;
 }
 
-class JS_PUBLIC_API(JSAutoEnterCompartment)
+class JS_PUBLIC_API(JSAutoCompartment)
 {
     JSContext *cx_;
     JSCompartment *oldCompartment_;
-    bool entered_;
-
   public:
-    JSAutoEnterCompartment() : entered_(false) {}
-
-    JSAutoEnterCompartment(JSContext *cx, JSRawObject target)
-      : entered_(false)
-    { enter(cx, target); }
-
-    bool enter(JSContext *cx, JSRawObject target);
-
-    void enterAndIgnoreErrors(JSContext *cx, JSRawObject target);
-
-    bool entered() const { return entered_; }
-
-    /*
-     * In general, consumers should try to avoid calling leave() explicitly,
-     * and defer to the destructor by scoping the JSAutoEnterCompartment
-     * appropriately. Sometimes, though, it's unavoidable.
-     */
-    void leave();
-
-    ~JSAutoEnterCompartment() { if (entered_) leave(); }
+    JSAutoCompartment(JSContext *cx, JSRawObject target);
+    ~JSAutoCompartment();
 };
 
 JS_BEGIN_EXTERN_C

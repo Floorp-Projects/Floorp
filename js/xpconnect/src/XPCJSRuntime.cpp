@@ -1858,27 +1858,22 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         if (JSObject *global = JS_GetGlobalForCompartmentOrNull(cx, c)) {
             // Need to enter the compartment, otherwise GetNativeOfWrapper()
             // might crash.
-            JSAutoEnterCompartment aec;
-            if (aec.enter(cx, global)) {
-                nsISupports *native = xpc->GetNativeOfWrapper(cx, global);
-                if (nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(native)) {
-                    // The global is a |window| object.  Use the path prefix that
-                    // we should have already created for it.
-                    if (mWindowPaths->Get(piwindow->WindowID(), &cJSPathPrefix)) {
-                        cDOMPathPrefix.Assign(cJSPathPrefix);
-                        cDOMPathPrefix.AppendLiteral("/dom/");
-                        cJSPathPrefix.AppendLiteral("/js/");
-                    } else {
-                        cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/unknown-window-global/");
-                        cDOMPathPrefix.AssignLiteral("explicit/dom/?!/");
-                    }
+            JSAutoCompartment ac(cx, global);
+            nsISupports *native = xpc->GetNativeOfWrapper(cx, global);
+            if (nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(native)) {
+                // The global is a |window| object.  Use the path prefix that
+                // we should have already created for it.
+                if (mWindowPaths->Get(piwindow->WindowID(), &cJSPathPrefix)) {
+                    cDOMPathPrefix.Assign(cJSPathPrefix);
+                    cDOMPathPrefix.AppendLiteral("/dom/");
+                    cJSPathPrefix.AppendLiteral("/js/");
                 } else {
-                    cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/non-window-global/");
+                    cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/unknown-window-global/");
                     cDOMPathPrefix.AssignLiteral("explicit/dom/?!/");
                 }
             } else {
-                cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/unentered/");
-                cDOMPathPrefix.AssignLiteral("explicit/dom/unentered/");
+                cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/non-window-global/");
+                cDOMPathPrefix.AssignLiteral("explicit/dom/?!/");
             }
         } else {
             cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/no-global/");

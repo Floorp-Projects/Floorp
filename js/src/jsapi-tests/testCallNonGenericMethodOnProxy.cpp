@@ -64,9 +64,7 @@ BEGIN_TEST(test_CallNonGenericMethodOnProxy)
     CHECK(globalB);
 
     // ...and enter it.
-    JSAutoEnterCompartment enter;
-    CHECK(enter.enter(cx, globalB));
-
+    JSAutoCompartment enter(cx, globalB);
     JS::RootedObject customB(cx, JS_NewObject(cx, &CustomClass, NULL, NULL));
     CHECK(customB);
     JS_SetReservedSlot(customB, CUSTOM_SLOT, Int32Value(42));

@@ -535,10 +535,7 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
     JS_ASSERT(cx->stack.space().containsSlow(fp));
-    js::AutoCompartment ac(cx, fp->scopeChain());
-    if (!ac.enter())
-        return NULL;
-
+    AutoCompartment ac(cx, fp->scopeChain());
     return GetDebugScopeForFrame(cx, fp);
 }
 
@@ -576,11 +573,9 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fpArg, jsval *thisv)
     StackFrame *fp = Valueify(fpArg);
 
     js::AutoCompartment ac(cx, fp->scopeChain());
-    if (!ac.enter())
-        return false;
-
     if (!ComputeThis(cx, fp))
         return false;
+
     *thisv = fp->thisValue();
     return true;
 }
@@ -731,11 +726,9 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
     if (!env)
         return false;
 
-    js::AutoCompartment ac(cx, env);
-    if (!ac.enter())
-        return false;
-
     StackFrame *fp = Valueify(fpArg);
+
+    js::AutoCompartment ac(cx, env);
     return EvaluateInEnv(cx, env, fp, chars, length, filename, lineno, rval);
 }
 

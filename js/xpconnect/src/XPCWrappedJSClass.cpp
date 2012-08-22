@@ -36,8 +36,7 @@ bool AutoScriptEvaluate::StartEvaluating(JSObject *scope, JSErrorReporter errorR
     }
 
     JS_BeginRequest(mJSContext);
-    if (!mEnterCompartment.enter(mJSContext, scope))
-        return false;
+    mAutoCompartment.construct(mJSContext, scope);
 
     // Saving the exception state keeps us from interfering with another script
     // that may also be running on this context.  This occurred first with the
@@ -504,9 +503,7 @@ GetContextFromObject(JSObject *obj)
     if (!ccx.IsValid())
         return nullptr;
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(ccx, obj))
-        return nullptr;
+    JSAutoCompartment ac(ccx, obj);
     XPCWrappedNativeScope* scope =
         XPCWrappedNativeScope::FindInJSObjectScope(ccx, obj);
     XPCContext *xpcc = scope->GetContext();
@@ -1147,10 +1144,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     JSObject *obj = wrapper->GetJSObject();
     JSObject *thisObj = obj;
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, obj))
-        return NS_ERROR_FAILURE;
-
+    JSAutoCompartment ac(cx, obj);
     ccx.SetScopeForNewJSObjects(obj);
 
     JS::AutoValueVector args(cx);

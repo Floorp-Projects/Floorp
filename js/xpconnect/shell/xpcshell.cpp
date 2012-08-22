@@ -1876,11 +1876,7 @@ main(int argc, char **argv, char **envp)
 
         JS_BeginRequest(cx);
         {
-            JSAutoEnterCompartment ac;
-            if (!ac.enter(cx, glob)) {
-                JS_EndRequest(cx);
-                return 1;
-            }
+            JSAutoCompartment ac(cx, glob);
 
             if (!JS_InitReflect(cx, glob)) {
                 JS_EndRequest(cx);

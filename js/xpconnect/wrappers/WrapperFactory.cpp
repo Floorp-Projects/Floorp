@@ -82,8 +82,8 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, JSObject *obj)
         return nullptr;
 
     // Create the waiver.
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, obj) || !JS_WrapObject(cx, &proto))
+    JSAutoCompartment ac(cx, obj);
+    if (!JS_WrapObject(cx, &proto))
         return nullptr;
     JSObject *waiver = Wrapper::New(cx, obj, proto,
                                     JS_GetGlobalForObject(cx, obj),
@@ -126,10 +126,7 @@ JSObject *
 WrapperFactory::DoubleWrap(JSContext *cx, JSObject *obj, unsigned flags)
 {
     if (flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, obj))
-            return nullptr;
-
+        JSAutoCompartment ac(cx, obj);
         return WaiveXray(cx, obj);
     }
     return obj;
@@ -169,9 +166,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
 
     XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, obj))
-        return nullptr;
+    JSAutoCompartment ac(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
 
     {
@@ -398,9 +393,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             JSObject *unwrappedProto = NULL;
             if (wrappedProto && IsCrossCompartmentWrapper(wrappedProto) &&
                 (unwrappedProto = Wrapper::wrappedObject(wrappedProto))) {
-                JSAutoEnterCompartment ac;
-                if (!ac.enter(cx, unwrappedProto))
-                    return NULL;
+                JSAutoCompartment ac(cx, unwrappedProto);
                 key = JS_IdentifyClassPrototype(cx, unwrappedProto);
             }
             if (key != JSProto_Null) {
