@@ -119,6 +119,6 @@ public class AboutHomePromoBox extends LinearLayout implements View.OnClickListe
     // Type.SYNC: Setup Firefox sync.
     private void setSyncResources() {
         setResources(R.string.abouthome_about_sync, R.string.abouthome_sync_bold_name,
-                R.drawable.abouthome_sync_logo);
+                R.drawable.abouthome_promo_logo_sync);
     }
 }
