@@ -109,18 +109,12 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   NS_ASSERTION(global, "This should never be null!");
 
   JSAutoRequest ar(cx);
-  JSAutoEnterCompartment ac;
-  if (ac.enter(cx, global)) {
-    AssertIsRooted();
+  JSAutoCompartment ac(cx, global);
+  AssertIsRooted();
 
-    rv = aHelper->GetSuccessResult(cx, &mResultVal);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("GetSuccessResult failed!");
-    }
-  }
-  else {
-    NS_WARNING("Failed to enter correct compartment!");
-    rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  rv = aHelper->GetSuccessResult(cx, &mResultVal);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("GetSuccessResult failed!");
   }
 
   if (NS_SUCCEEDED(rv)) {

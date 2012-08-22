@@ -334,10 +334,7 @@ SystemWorkerManager::InitRIL(JSContext *cx)
   NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(workerval), NS_ERROR_UNEXPECTED);
 
   JSAutoRequest ar(cx);
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, JSVAL_TO_OBJECT(workerval))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(workerval));
 
   WorkerCrossThreadDispatcher *wctd =
     GetWorkerCrossThreadDispatcher(cx, workerval);

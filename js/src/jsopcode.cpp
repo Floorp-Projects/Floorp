@@ -6792,11 +6792,7 @@ GetPCCountScriptContents(JSContext *cx, size_t index)
         return buf.finishString();
 
     {
-        JSAutoEnterCompartment ac;
-        RootedObject target(cx, &script->global());
-        if (!ac.enter(cx, target))
-            return NULL;
-
+        AutoCompartment ac(cx, &script->global());
         if (!GetPCCountJSON(cx, sac, buf))
             return NULL;
     }

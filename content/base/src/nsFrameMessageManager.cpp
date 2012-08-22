@@ -416,10 +416,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         NS_ENSURE_STATE(pusher.Push(ctx, false));
 
         JSAutoRequest ar(ctx);
-
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(ctx, object))
-          return NS_ERROR_FAILURE;
+        JSAutoCompartment ac(ctx, object);
 
         // The parameter for the listener function.
         JSObject* param = JS_NewObject(ctx, NULL, NULL, NULL);
@@ -501,12 +498,10 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         argv.set(OBJECT_TO_JSVAL(param));
 
         {
-          JSAutoEnterCompartment tac;
-
           JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
 
-          if (!tac.enter(ctx, thisObject) ||
-              !JS_WrapValue(ctx, argv.jsval_addr()))
+          JSAutoCompartment tac(ctx, thisObject);
+          if (!JS_WrapValue(ctx, argv.jsval_addr()))
             return NS_ERROR_UNEXPECTED;
 
           JS_CallFunctionValue(ctx, thisObject,
@@ -830,8 +825,8 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
       JSAutoRequest ar(mCx);
       JSObject* global = nullptr;
       mGlobal->GetJSObject(&global);
-      JSAutoEnterCompartment ac;
-      if (global && ac.enter(mCx, global)) {
+      if (global) {
+        JSAutoCompartment ac(mCx, global);
         uint32_t oldopts = JS_GetOptions(mCx);
         JS_SetOptions(mCx, oldopts | JSOPTION_NO_SCRIPT_RVAL);
 

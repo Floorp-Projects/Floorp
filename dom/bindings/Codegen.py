@@ -1381,13 +1381,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
     return NULL;
   }
 
-  JSAutoEnterCompartment ac;
-  if (js::GetGlobalForObjectCrossCompartment(parent) != aScope) {
-    if (!ac.enter(aCx, parent)) {
-      return NULL;
-    }
-  }
-
+  JSAutoCompartment ac(aCx, parent);
   JSObject* global = JS_GetGlobalForObject(aCx, parent);
 %s
   JSObject* proto = GetProtoObject(aCx, global, global);

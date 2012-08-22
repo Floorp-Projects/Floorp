@@ -129,24 +129,20 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
   NS_ASSERTION(global, "Failed to get global object!");
 
   JSAutoRequest ar(cx);
-  JSAutoEnterCompartment ac;
-  if (ac.enter(cx, global)) {
-    switch (mOperation) {
-      case GetFilenames:
-        rv = GetFilenamesResult(cx, &result, aFileList);
-        break;
+  JSAutoCompartment ac(cx, global);
 
-      case GetFile:
-        rv = GetFileResult(cx, &result, aFileList);
-        break;
-    }
+  switch (mOperation) {
+    case GetFilenames:
+      rv = GetFilenamesResult(cx, &result, aFileList);
+      break;
 
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Get*Result failed!");
-    }
-  } else {
-    NS_WARNING("Failed to enter correct compartment!");
-    rv = NS_ERROR_FAILURE;
+    case GetFile:
+      rv = GetFileResult(cx, &result, aFileList);
+      break;
+  }
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Get*Result failed!");
   }
 
   if (NS_SUCCEEDED(rv)) {

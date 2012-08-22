@@ -1486,30 +1486,17 @@ JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
     Foreground::delete_(call);
 }
 
-bool
-JSAutoEnterCompartment::enter(JSContext *cx, JSRawObject target)
+JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSRawObject target)
+  : cx_(cx),
+    oldCompartment_(cx->compartment)
 {
-    enterAndIgnoreErrors(cx, target);
-    return true;
+    AssertHeapIsIdleOrIterating(cx_);
+    cx_->enterCompartment(target->compartment());
 }
 
-void
-JSAutoEnterCompartment::enterAndIgnoreErrors(JSContext *cx, JSRawObject target)
+JSAutoCompartment::~JSAutoCompartment()
 {
-    AssertHeapIsIdleOrIterating(cx);
-    JS_ASSERT(!entered_);
-    cx_ = cx;
-    oldCompartment_ = cx->compartment;
-    cx->enterCompartment(target->compartment());
-    entered_ = true;
-}
-
-void
-JSAutoEnterCompartment::leave()
-{
-    JS_ASSERT(entered_);
     cx_->leaveCompartment(oldCompartment_);
-    entered_ = false;
 }
 
 bool
@@ -1651,9 +1638,9 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
 
     // Lastly, update the original object to point to the new one.
     if (origobj->compartment() != destination) {
-        AutoCompartment ac(cx, origobj);
         RootedObject newIdentityWrapper(cx, newIdentity);
-        if (!ac.enter() || !JS_WrapObject(cx, newIdentityWrapper.address()))
+        AutoCompartment ac(cx, origobj);
+        if (!JS_WrapObject(cx, newIdentityWrapper.address()))
             return NULL;
         if (!origobj->swap(cx, newIdentityWrapper))
             return NULL;
@@ -1730,8 +1717,6 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     // |origobj|.
     {
         AutoCompartment ac(cx, origobj);
-        if (!ac.enter())
-            return NULL;
 
         // We can't be sure that the reflector is completely dead. This is bad,
         // because it is in a weird state. To minimize potential harm we create
