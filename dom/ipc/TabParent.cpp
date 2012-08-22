@@ -1116,5 +1116,14 @@ TabParent::RecvZoomToRect(const gfxRect& aRect)
   return true;
 }
 
+bool
+TabParent::RecvContentReceivedTouch(const bool& aPreventDefault)
+{
+  if (RenderFrameParent* rfp = GetRenderFrame()) {
+    rfp->ContentReceivedTouch(aPreventDefault);
+  }
+  return true;
+}
+
 } // namespace tabs
 } // namespace mozilla

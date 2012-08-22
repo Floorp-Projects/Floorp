@@ -699,7 +699,7 @@ RenderFrameParent::NotifyInputEvent(const nsInputEvent& aEvent,
                                     nsInputEvent* aOutEvent)
 {
   if (mPanZoomController) {
-    mPanZoomController->HandleInputEvent(aEvent, aOutEvent);
+    mPanZoomController->ReceiveInputEvent(aEvent, aOutEvent);
   }
 }
 
@@ -895,6 +895,14 @@ RenderFrameParent::ZoomToRect(const gfxRect& aRect)
 {
   if (mPanZoomController) {
     mPanZoomController->ZoomToRect(aRect);
+  }
+}
+
+void
+RenderFrameParent::ContentReceivedTouch(bool aPreventDefault)
+{
+  if (mPanZoomController) {
+    mPanZoomController->ContentReceivedTouch(aPreventDefault);
   }
 }
 
