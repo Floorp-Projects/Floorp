@@ -368,7 +368,7 @@ class B2GReftest(RefTest):
 user_pref("browser.firstrun.show.localepicker", false);
 user_pref("browser.homescreenURL","app://system.gaiamobile.org");\n
 user_pref("browser.manifestURL","app://system.gaiamobile.org/manifest.webapp");\n
-user_pref("browser.tabs.remote", true);\n
+user_pref("browser.tabs.remote", false);\n
 user_pref("dom.ipc.browser_frames.oop_by_default", true);\n
 user_pref("dom.ipc.tabs.disabled", false);\n
 user_pref("dom.mozBrowserFramesEnabled", true);\n
