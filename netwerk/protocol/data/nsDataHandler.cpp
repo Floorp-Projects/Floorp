@@ -163,9 +163,16 @@ nsDataHandler::ParseURI(nsCString& spec,
 
     // determine if the data is base64 encoded.
     char *base64 = PL_strcasestr(buffer, BASE64_EXTENSION);
-    if (base64 && *(base64 + strlen(BASE64_EXTENSION))==0) {
-        isBase64 = true;
-        *base64 = '\0';
+    if (base64) {
+        char *beyond = base64 + strlen(BASE64_EXTENSION);
+        // per the RFC 2397 grammar, "base64" MUST be followed by a comma
+        // previously substituted by '\0', but we also allow it in between
+        // parameters so a subsequent ";" is ok as well (this deals with
+        // *broken* data URIs, see bug 781693 for an example)
+        if (*beyond == '\0' || *beyond == ';') {
+            isBase64 = true;
+            *base64 = '\0';
+        }
     }
 
     if (comma == buffer) {

@@ -11,13 +11,16 @@ const Cr = Components.results;
 var urls = [
   ["data:,foo",                                     "text/plain",               "foo"],
   ["data:application/octet-stream,foo bar",         "application/octet-stream", "foobar"],
-  ["data:application/octet-stream;base64=y,foobar",         "application/octet-stream", "foobar"],
   ["data:application/octet-stream,foo%20bar",       "application/octet-stream", "foo bar"],
   ["data:application/xhtml+xml,foo bar",            "application/xhtml+xml",    "foo bar"],
   ["data:application/xhtml+xml,foo%20bar",          "application/xhtml+xml",    "foo bar"],
   ["data:text/plain,foo%00 bar",                    "text/plain",               "foo\x00 bar"],
   ["data:text/plain;base64,Zm9 vI%20GJ%0Dhc%0Ag==", "text/plain",               "foo bar"],
-  ["DATA:TEXT/PLAIN;BASE64,Zm9 vI%20GJ%0Dhc%0Ag==", "text/plain",               "foo bar"]
+  ["DATA:TEXT/PLAIN;BASE64,Zm9 vI%20GJ%0Dhc%0Ag==", "text/plain",               "foo bar"],
+  // Bug 774240
+  ["data:application/octet-stream;base64=y,foobar", "application/octet-stream", "foobar"],
+  // Bug 781693
+  ["data:text/plain;base64;x=y,dGVzdA==",           "text/plain",               "test"]
 ];
 
 function run_test() {
@@ -31,7 +34,7 @@ function run_test() {
 
     /* read completed successfully.  now compare the data. */
     if (data != urls[idx][2])
-      do_throw("Stream contents do not match with direct read!");
+      do_throw("Stream contents do not match with direct read! Is <" + data + ">, should be <" + urls[idx][2] + ">");
     do_test_finished();
   }
 
