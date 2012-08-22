@@ -38,6 +38,11 @@ var WebAppRT = {
     if (isUpdate == "new") {
       this.getDefaultPrefs().forEach(this.addPref);
 
+      // prevent offering to use helper apps for things that this app handles
+      // i.e. don't show the "Open in market?" popup when we're showing the market app
+      let uri = Services.io.newURI(url, null, null);
+      Services.perms.add(uri, "native-intent", Ci.nsIPermissionManager.DENY_ACTION);
+
       // update the blocklist url to use a different app id
       let blocklist = Services.prefs.getCharPref("extensions.blocklist.url");
       blocklist = blocklist.replace(/%APP_ID%/g, "webapprt-mobile@mozilla.org");
