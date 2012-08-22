@@ -647,7 +647,7 @@ customMethodCalls = {
         },
     'nsIDOMNode_GetNodeType': {
         'thisType': 'nsINode',
-        'code': 'PRUint16 result = self->NodeType();',
+        'code': 'uint16_t result = self->NodeType();',
         'canFail': False
         },
     'nsIDOMNode_GetNodeName': {
@@ -705,7 +705,7 @@ customMethodCalls = {
         },
     'nsIDOMElement_GetScrollTop': {
         'thisType': 'nsGenericElement',
-        'code': '    PRInt32 result = self->GetScrollTop();',
+        'code': '    int32_t result = self->GetScrollTop();',
         'canFail': False
         },
     'nsIDOMElement_SetScrollTop': {
@@ -714,7 +714,7 @@ customMethodCalls = {
         },
     'nsIDOMElement_GetScrollLeft': {
         'thisType': 'nsGenericElement',
-        'code': '    PRInt32 result = self->GetScrollLeft();',
+        'code': '    int32_t result = self->GetScrollLeft();',
         'canFail': False
         },
     'nsIDOMElement_SetScrollLeft': {
@@ -723,17 +723,17 @@ customMethodCalls = {
         },
     'nsIDOMElement_GetScrollHeight': {
         'thisType': 'nsGenericElement',
-        'code': '    PRInt32 result = self->GetScrollHeight();',
+        'code': '    int32_t result = self->GetScrollHeight();',
         'canFail': False
         },
     'nsIDOMElement_GetScrollWidth': {
         'thisType': 'nsGenericElement',
-        'code': '    PRInt32 result = self->GetScrollWidth();',
+        'code': '    int32_t result = self->GetScrollWidth();',
         'canFail': False
         },
     'nsIDOMElement_GetClientTop': {
         'thisType': 'nsGenericElement',
-        'code': '    PRInt32 result = self->GetClientTop();',
+        'code': '    int32_t result = self->GetClientTop();',
         'canFail': False
         },
     'nsIDOMElement_SetClientTop': {
@@ -742,7 +742,7 @@ customMethodCalls = {
         },
     'nsIDOMElement_GetClientLeft': {
         'thisType': 'nsGenericElement',
-        'code': '    PRInt32 result = self->GetClientLeft();',
+        'code': '    int32_t result = self->GetClientLeft();',
         'canFail': False
         },
     'nsIDOMElement_SetClientLeft': {
@@ -751,12 +751,12 @@ customMethodCalls = {
         },
     'nsIDOMElement_GetClientHeight': {
         'thisType': 'nsGenericElement',
-        'code': '    PRInt32 result = self->GetClientHeight();',
+        'code': '    int32_t result = self->GetClientHeight();',
         'canFail': False
         },
     'nsIDOMElement_GetClientWidth': {
         'thisType': 'nsGenericElement',
-        'code': '    PRInt32 result = self->GetClientWidth();',
+        'code': '    int32_t result = self->GetClientWidth();',
         'canFail': False
         },
     'nsIDOMElement_GetFirstElementChild': {
@@ -817,7 +817,7 @@ customMethodCalls = {
     'nsIDOMNode_CompareDocumentPosition': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
-        'code': '    PRUint16 result;\n'
+        'code': '    uint16_t result;\n'
                 '    rv = self->CompareDocPosition(arg0, &result);',
         'canFail': True
         },

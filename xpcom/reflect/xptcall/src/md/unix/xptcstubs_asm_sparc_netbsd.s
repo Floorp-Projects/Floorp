@@ -30,7 +30,7 @@ SharedStub:
         save    %sp,-(64 + 32),%sp   ! room for the register window and
                                     ! struct pointer, rounded up to 0 % 32
 ! our function now appears to have been called
-! as SharedStub(nsISupports* that, PRUint32 index, PRUint32* args)
+! as SharedStub(nsISupports* that, uint32_t index, uint32_t* args)
 ! so we can just copy these through
         
         mov     %i0, %o0

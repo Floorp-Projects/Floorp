@@ -101,7 +101,7 @@ private:
 class FileInfo##_bits : public FileInfo                                       \
 {                                                                             \
 public:                                                                       \
-  FileInfo##_bits(FileManager* aFileManager, PRInt##_bits aId)                \
+  FileInfo##_bits(FileManager* aFileManager, int##_bits##_t aId)              \
   : FileInfo(aFileManager), mId(aId)                                          \
   { }                                                                         \
                                                                               \
@@ -111,7 +111,7 @@ public:                                                                       \
   }                                                                           \
                                                                               \
 private:                                                                      \
-  PRInt##_bits mId;                                                           \
+  int##_bits##_t mId;                                                         \
 };
 
 FILEINFO_SUBCLASS(16)
