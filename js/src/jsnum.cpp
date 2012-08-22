@@ -538,17 +538,16 @@ js::Int32ToString(JSContext *cx, int32_t si)
     if (!str)
         return NULL;
 
-    jschar *storage = str->inlineStorageBeforeInit();
-    RangedPtr<jschar> end(storage + JSShortString::MAX_SHORT_LENGTH,
-                          storage, JSShortString::MAX_SHORT_LENGTH + 1);
+    jschar buffer[JSShortString::MAX_SHORT_LENGTH + 1];
+    RangedPtr<jschar> end(buffer + JSShortString::MAX_SHORT_LENGTH,
+                          buffer, JSShortString::MAX_SHORT_LENGTH + 1);
     *end = '\0';
-
     RangedPtr<jschar> start = BackfillIndexInCharBuffer(ui, end);
-
     if (si < 0)
         *--start = '-';
 
-    str->initAtOffsetInBuffer(start.get(), end - start);
+    jschar *dst = str->init(end - start);
+    PodCopy(dst, start.get(), end - start + 1);
 
     c->dtoaCache.cache(10, si, str);
     return str;
@@ -1303,14 +1302,14 @@ IndexToString(JSContext *cx, uint32_t index)
     if (!str)
         return NULL;
 
-    jschar *storage = str->inlineStorageBeforeInit();
-    size_t length = JSShortString::MAX_SHORT_LENGTH;
-    const RangedPtr<jschar> end(storage + length, storage, length + 1);
+    jschar buffer[JSShortString::MAX_SHORT_LENGTH + 1];
+    RangedPtr<jschar> end(buffer + JSShortString::MAX_SHORT_LENGTH,
+                          buffer, JSShortString::MAX_SHORT_LENGTH + 1);
     *end = '\0';
-
     RangedPtr<jschar> start = BackfillIndexInCharBuffer(index, end);
 
-    str->initAtOffsetInBuffer(start.get(), end - start);
+    jschar *dst = str->init(end - start);
+    PodCopy(dst, start.get(), end - start + 1);
 
     c->dtoaCache.cache(10, index, str);
     return str;
