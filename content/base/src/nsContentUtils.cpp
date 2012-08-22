@@ -5084,7 +5084,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   }
 
   nsAutoString minScaleStr;
-  aDocument->GetHeaderData(nsGkAtoms::minimum_scale, minScaleStr);
+  aDocument->GetHeaderData(nsGkAtoms::viewport_minimum_scale, minScaleStr);
 
   nsresult errorCode;
   float scaleMinFloat = minScaleStr.ToFloat(&errorCode);
@@ -5097,7 +5097,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   scaleMinFloat = NS_MAX(scaleMinFloat, kViewportMinScale);
 
   nsAutoString maxScaleStr;
-  aDocument->GetHeaderData(nsGkAtoms::maximum_scale, maxScaleStr);
+  aDocument->GetHeaderData(nsGkAtoms::viewport_maximum_scale, maxScaleStr);
 
   // We define a special error code variable for the scale and max scale,
   // because they are used later (see the width calculations).
