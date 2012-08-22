@@ -582,56 +582,6 @@ let Buf = {
  * and acts upon state changes accordingly.
  */
 let RIL = {
-
-  /**
-   * One of the RADIO_STATE_* constants.
-   */
-  radioState: GECKO_RADIOSTATE_UNAVAILABLE,
-  _isInitialRadioState: true,
-
-  /**
-   * ICC status. Keeps a reference of the data response to the
-   * getICCStatus request.
-   */
-  iccStatus: null,
-
-  /**
-   * Card state
-   */
-  cardState: null,
-
-  /**
-   * Strings
-   */
-  IMEI: null,
-  IMEISV: null,
-  SMSC: null,
-
-  /**
-   * ICC information, such as MSISDN, IMSI, ...etc.
-   */
-  iccInfo: {},
-
-  /**
-   * Application identification for apps in ICC.
-   */
-  aid: null,
-
-  networkSelectionMode: null,
-
-  voiceRegistrationState: {},
-  dataRegistrationState: {},
-
-  /**
-   * List of strings identifying the network operator.
-   */
-  operator: null,
-
-  /**
-   * String containing the baseband version.
-   */
-  basebandVersion: null,
-
   /**
    * Valid calls.
    */
@@ -654,21 +604,87 @@ let RIL = {
    */
   _pendingSentSmsMap: {},
 
-  /**
-   * Whether or not the multiple requests in requestNetworkInfo() are currently
-   * being processed
-   */
-  _processingNetworkInfo: false,
+  initRILState: function initRILState() {
+    /**
+     * One of the RADIO_STATE_* constants.
+     */
+    this.radioState = GECKO_RADIOSTATE_UNAVAILABLE;
+    this._isInitialRadioState = true;
 
-  /**
-   * Pending messages to be send in batch from requestNetworkInfo()
-   */
-  _pendingNetworkInfo: {rilMessageType: "networkinfochanged"},
+    /**
+     * ICC status. Keeps a reference of the data response to the
+     * getICCStatus request.
+     */
+    this.iccStatus = null;
 
-  /**
-   * Mute or unmute the radio.
-   */
-  _muted: true,
+    /**
+     * Card state
+     */
+    this.cardState = null;
+
+    /**
+     * Strings
+     */
+    this.IMEI = null;
+    this.IMEISV = null;
+    this.SMSC = null;
+
+    /**
+     * ICC information, such as MSISDN, IMSI, ...etc.
+     */
+    this.iccInfo = {};
+
+    /**
+     * Application identification for apps in ICC.
+     */
+    this.aid = null;
+
+    this.networkSelectionMode = null;
+
+    this.voiceRegistrationState = {};
+    this.dataRegistrationState = {};
+
+    /**
+     * List of strings identifying the network operator.
+     */
+    this.operator = null;
+
+    /**
+     * String containing the baseband version.
+     */
+    this.basebandVersion = null;
+
+    // Clean up this.currentCalls: rild might have restarted.
+    for each (let currentCall in this.currentCalls) {
+      delete this.currentCalls[currentCall.callIndex];
+      this._handleDisconnectedCall(currentCall);
+    }
+
+    // Deactivate this.currentDataCalls: rild might have restarted.
+    for each (let datacall in this.currentDataCalls) {
+      this.deactivateDataCall(datacall);
+    }
+
+    // Don't clean up this._receivedSmsSegmentsMap or this._pendingSentSmsMap
+    // because on rild restart: we may continue with the pending segments.
+
+    /**
+     * Whether or not the multiple requests in requestNetworkInfo() are currently
+     * being processed
+     */
+    this._processingNetworkInfo = false;
+
+    /**
+     * Pending messages to be send in batch from requestNetworkInfo()
+     */
+    this._pendingNetworkInfo = {rilMessageType: "networkinfochanged"};
+
+    /**
+     * Mute or unmute the radio.
+     */
+    this._muted = true;
+  },
+  
   get muted() {
     return this._muted;
   },
@@ -3115,6 +3131,8 @@ let RIL = {
   }
 };
 
+RIL.initRILState();
+
 RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
   if (options.rilRequestError) {
     return;
@@ -3992,6 +4010,8 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
     debug("Detected RIL version " + version);
     debug("RILQUIRKS_V5_LEGACY is " + RILQUIRKS_V5_LEGACY);
   }
+
+  this.initRILState();
 };
 
 /**
