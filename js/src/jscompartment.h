@@ -340,7 +340,7 @@ struct JSCompartment
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
     void markTypes(JSTracer *trc);
-    void discardJitCode(js::FreeOp *fop);
+    void discardJitCode(js::FreeOp *fop, bool discardConstraints);
     bool isDiscardingJitCode(JSTracer *trc);
     void sweep(js::FreeOp *fop, bool releaseTypes);
     void sweepCrossCompartmentWrappers();

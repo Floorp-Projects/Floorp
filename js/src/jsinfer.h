@@ -29,7 +29,6 @@ namespace js {
 
 class CallObject;
 
-
 namespace mjit {
     struct JITScript;
 }
@@ -1263,7 +1262,7 @@ struct TypeCompartment
     void markSetsUnknown(JSContext *cx, TypeObject *obj);
 
     void sweep(FreeOp *fop);
-    void sweepCompilerOutputs(FreeOp *fop);
+    void sweepCompilerOutputs(FreeOp *fop, bool discardConstraints);
 
     void maybePurgeAnalysis(JSContext *cx, bool force = false);
 
