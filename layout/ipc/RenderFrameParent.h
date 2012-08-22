@@ -98,6 +98,8 @@ public:
 
   void ZoomToRect(const gfxRect& aRect);
 
+  void ContentReceivedTouch(bool aPreventDefault);
+
 protected:
   void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
