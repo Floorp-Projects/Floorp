@@ -3181,23 +3181,13 @@ Tab.prototype = {
       aMetadata.allowZoom = true;
       aMetadata.minZoom = aMetadata.maxZoom = NaN;
     }
-
-    let scaleRatio = aMetadata.scaleRatio = ViewportHandler.getScaleRatio();
-
-    if ("defaultZoom" in aMetadata && aMetadata.defaultZoom > 0)
-      aMetadata.defaultZoom *= scaleRatio;
-    if ("minZoom" in aMetadata && aMetadata.minZoom > 0)
-      aMetadata.minZoom *= scaleRatio;
-    if ("maxZoom" in aMetadata && aMetadata.maxZoom > 0)
-      aMetadata.maxZoom *= scaleRatio;
-
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
-    this.updateViewportSize(gScreenWidth);
+    this._updateViewportSize();
     this.sendViewportMetadata();
   },
 
   /** Update viewport when the metadata or the window size changes. */
-  updateViewportSize: function updateViewportSize(aOldScreenWidth) {
+  _updateViewportSize: function _updateViewportSize() {
     // When this function gets called on window resize, we must execute
     // this.sendViewportUpdate() so that refreshDisplayPort is called.
     // Ensure that when making changes to this function that code path
@@ -3210,34 +3200,10 @@ Tab.prototype = {
 
     let screenW = gScreenWidth;
     let screenH = gScreenHeight;
-    let viewportW, viewportH;
 
     let metadata = this.metadata;
-    if (metadata.autoSize) {
-      if ("scaleRatio" in metadata) {
-        viewportW = screenW / metadata.scaleRatio;
-        viewportH = screenH / metadata.scaleRatio;
-      } else {
-        viewportW = screenW;
-        viewportH = screenH;
-      }
-    } else {
-      viewportW = metadata.width;
-      viewportH = metadata.height;
-
-      // If (scale * width) < device-width, increase the width (bug 561413).
-      let maxInitialZoom = metadata.defaultZoom || metadata.maxZoom;
-      if (maxInitialZoom && viewportW)
-        viewportW = Math.max(viewportW, screenW / maxInitialZoom);
-
-      let validW = viewportW > 0;
-      let validH = viewportH > 0;
-
-      if (!validW)
-        viewportW = validH ? (viewportH * (screenW / screenH)) : BrowserApp.defaultBrowserWidth;
-      if (!validH)
-        viewportH = viewportW * (screenH / screenW);
-    }
+    let viewportW = metadata.width;
+    let viewportH = metadata.height;
 
     // Make sure the viewport height is not shorter than the window when
     // the page is zoomed out to show its full width. Note that before
@@ -3288,7 +3254,8 @@ Tab.prototype = {
     // In all of these cases, we maintain how much actual content is visible
     // within the screen width. Note that "actual content" may be different
     // with respect to CSS pixels because of the CSS viewport size changing.
-    let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
+    let oldScreenWidth = ViewportHandler.oldScreenWidth || gScreenWidth;
+    let zoomScale = (screenW * oldBrowserWidth) / (oldScreenWidth * viewportW);
     let zoom = this.clampZoom(this._zoom * zoomScale);
     this.setResolution(zoom, false);
     this.setScrollClampingSize(zoom);
@@ -4630,12 +4597,13 @@ var ViewportHandler = {
         if (window.outerWidth == 0 || window.outerHeight == 0)
           break;
 
-        let oldScreenWidth = gScreenWidth;
+        this.oldScreenWidth = gScreenWidth;
         gScreenWidth = window.outerWidth;
         gScreenHeight = window.outerHeight;
         let tabs = BrowserApp.tabs;
         for (let i = 0; i < tabs.length; i++)
-          tabs[i].updateViewportSize(oldScreenWidth);
+          this.updateMetadata(tabs[i]);
+        this.oldScreenWidth = null;
         break;
     }
   },
@@ -4676,23 +4644,6 @@ var ViewportHandler = {
     return Math.max(min, Math.min(max, num));
   },
 
-  // The device-pixel-to-CSS-px ratio used to adjust meta viewport values.
-  // This is higher on higher-dpi displays, so pages stay about the same physical size.
-  getScaleRatio: function getScaleRatio() {
-    let prefValue = Services.prefs.getIntPref("browser.viewport.scaleRatio");
-    if (prefValue > 0)
-      return prefValue / 100;
-
-    let dpi = this.displayDPI;
-    if (dpi < 200) // Includes desktop displays, and LDPI and MDPI Android devices
-      return 1;
-    else if (dpi < 300) // Includes Nokia N900, and HDPI Android devices
-      return 1.5;
-
-    // For very high-density displays like the iPhone 4, calculate an integer ratio.
-    return Math.floor(dpi / 150);
-  },
-
   get displayDPI() {
     let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     delete this.displayDPI;
@@ -4720,8 +4671,7 @@ var ViewportHandler = {
   getDefaultMetadata: function getDefaultMetadata() {
     return {
       autoSize: false,
-      allowZoom: true,
-      scaleRatio: ViewportHandler.getScaleRatio()
+      allowZoom: true
     };
   }
 };
