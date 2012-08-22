@@ -883,14 +883,6 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 void
-RenderFrameParent::NotifyDOMTouchListenerAdded()
-{
-  if (mPanZoomController) {
-    mPanZoomController->NotifyDOMTouchListenerAdded();
-  }
-}
-
-void
 RenderFrameParent::ZoomToRect(const gfxRect& aRect)
 {
   if (mPanZoomController) {

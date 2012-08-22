@@ -105,7 +105,6 @@ public:
     virtual bool RecvSetBackgroundColor(const nscolor& aValue);
     virtual bool RecvGetDPI(float* aValue);
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue);
-    virtual bool RecvNotifyDOMTouchListenerAdded();
     virtual bool RecvZoomToRect(const gfxRect& aRect);
     virtual bool RecvContentReceivedTouch(const bool& aPreventDefault);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
