@@ -1073,7 +1073,7 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
   NS_ASSERTION(imageSurface->Stride() == width * 4,
                "Image Surfaces being created with weird stride!");
 
-  mGLContext->ReadPixelsIntoImageSurface(0, 0, width, height, imageSurface);
+  mGLContext->ReadPixelsIntoImageSurface(imageSurface);
 
   aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   aTarget->Scale(1.0, -1.0);

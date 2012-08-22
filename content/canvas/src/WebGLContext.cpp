@@ -610,7 +610,7 @@ WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f, PRUint32 aFl
     if (surf->CairoStatus() != 0)
         return NS_ERROR_FAILURE;
 
-    gl->ReadPixelsIntoImageSurface(0, 0, mWidth, mHeight, surf);
+    gl->ReadPixelsIntoImageSurface(surf);
 
     bool srcPremultAlpha = mOptions.premultipliedAlpha;
     bool dstPremultAlpha = aFlags & RenderFlagPremultAlpha;
