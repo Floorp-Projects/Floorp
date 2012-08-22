@@ -388,8 +388,7 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
   if (et) {
     for (PRUint32 tranIdx = 0; tranIdx < et->mPropertyTransitions.Length(); tranIdx++) {
       ElementPropertyTransition* pt = &et->mPropertyTransitions[tranIdx];
-      if (pt->mProperty != aProperty ||
-          !pt->CanPerformOnCompositor(et->mElement, currentTime)) {
+      if (pt->mProperty != aProperty || !pt->IsRunningAt(currentTime)) {
         continue;
       }
 
@@ -419,7 +418,7 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
     for (PRUint32 animIdx = 0; animIdx < ea->mAnimations.Length(); animIdx++) {
       ElementAnimation* anim = &ea->mAnimations[animIdx];
       if (!(anim->HasAnimationOfProperty(aProperty) &&
-            anim->CanPerformOnCompositor(ea->mElement, currentTime))) {
+            anim->IsRunningAt(currentTime))) {
         continue;
       }
       AddAnimationsForProperty(frame, aProperty, anim,
