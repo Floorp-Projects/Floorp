@@ -1136,7 +1136,19 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
                     return false;
                 dn->pn_dflags |= PND_BOUND;
                 JS_ASSERT(dn->kind() == Definition::NAMED_LAMBDA);
-                if (dn->isClosed())
+
+                /*
+                 * Since 'dn' is a placeholder, it has not been defined in the
+                 * ParseContext and hence we must manually flag a closed-over
+                 * callee name as needing a dynamic scope (this is done for all
+                 * definitions in the ParseContext by generateFunctionBindings).
+                 *
+                 * If 'dn' has been assigned to, then we also flag the function
+                 * scope has needing a dynamic scope so that dynamic scope
+                 * setter can either ignore the set (in non-strict mode) or
+                 * produce an error (in strict mode).
+                 */
+                if (dn->isClosed() || dn->isAssigned())
                     funpc->sc->fun()->flags |= JSFUN_HEAVYWEIGHT;
                 continue;
             }
@@ -2222,17 +2234,6 @@ NoteLValue(JSContext *cx, ParseNode *pn, SharedContext *sc)
         pn->pn_lexdef->pn_dflags |= PND_ASSIGNED;
 
     pn->pn_dflags |= PND_ASSIGNED;
-
-    /*
-     * An enclosing function's name is an immutable binding in ES5, so
-     * assignments to them must do nothing or throw a TypeError depending on
-     * code strictness. Outside strict mode, we optimize away assignment to
-     * the function name. For assignment to function name to fail in strict
-     * mode, we must have a binding for it in the scope chain; we ensure this
-     * happens by making such functions heavyweight.
-     */
-    if (sc->inFunction() && pn->pn_atom == sc->fun()->atom)
-        sc->setBindingsAccessedDynamically();
 }
 
 static bool
