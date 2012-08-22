@@ -34,8 +34,8 @@ public:
 
 private:
   bool    mLengthComputable;
-  PRUint64 mLoaded;
-  PRUint64 mTotal;
+  uint64_t mLoaded;
+  uint64_t mTotal;
 };
 
 #endif // nsDOMProgressEvent_h__

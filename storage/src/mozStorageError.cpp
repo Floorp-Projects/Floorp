@@ -32,7 +32,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(
 //// mozIStorageError
 
 NS_IMETHODIMP
-Error::GetResult(PRInt32 *_result)
+Error::GetResult(int32_t *_result)
 {
   *_result = mResult;
   return NS_OK;

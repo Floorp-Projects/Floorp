@@ -28,10 +28,10 @@ parent:
             nsCString aProtocol,
             bool aSecure,
             SerializedLoadContext loadContext);
-  Close(PRUint16 code, nsCString reason);
+  Close(uint16_t code, nsCString reason);
   SendMsg(nsCString aMsg);
   SendBinaryMsg(nsCString aMsg);
-  SendBinaryStream(InputStream aStream, PRUint32 aLength);
+  SendBinaryStream(InputStream aStream, uint32_t aLength);
 
   DeleteSelf();
 
@@ -41,8 +41,8 @@ child:
   OnStop(nsresult aStatusCode);
   OnMessageAvailable(nsCString aMsg);
   OnBinaryMessageAvailable(nsCString aMsg);
-  OnAcknowledge(PRUint32 aSize);
-  OnServerClose(PRUint16 code, nsCString aReason);
+  OnAcknowledge(uint32_t aSize);
+  OnServerClose(uint16_t code, nsCString aReason);
 
   __delete__();
 

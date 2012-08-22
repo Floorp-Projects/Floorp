@@ -158,7 +158,7 @@ private:
  */
 class txStripSpaceTest {
 public:
-    txStripSpaceTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
+    txStripSpaceTest(nsIAtom* aPrefix, nsIAtom* aLocalName, int32_t aNSID,
                      bool stripSpace)
         : mNameTest(aPrefix, aLocalName, aNSID, txXPathNodeType::ELEMENT_NODE),
           mStrips(stripSpace)

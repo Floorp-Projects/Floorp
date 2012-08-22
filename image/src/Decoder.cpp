@@ -66,7 +66,7 @@ Decoder::InitSharedDecoder()
 }
 
 void
-Decoder::Write(const char* aBuffer, PRUint32 aCount)
+Decoder::Write(const char* aBuffer, uint32_t aCount)
 {
   // We're strict about decoder errors
   NS_ABORT_IF_FALSE(!HasDecoderError(),
@@ -157,8 +157,8 @@ Decoder::FlushInvalidations()
     // Bug 703231
     // Because of high quality down sampling on mac we show scan lines while decoding.
     // Bypass this problem by redrawing the border.
-    PRInt32 width;
-    PRInt32 height;
+    int32_t width;
+    int32_t height;
 
     mImage.GetWidth(&width);
     mImage.GetHeight(&height);
@@ -180,7 +180,7 @@ Decoder::FlushInvalidations()
  */
 
 void Decoder::InitInternal() { }
-void Decoder::WriteInternal(const char* aBuffer, PRUint32 aCount) { }
+void Decoder::WriteInternal(const char* aBuffer, uint32_t aCount) { }
 void Decoder::FinishInternal() { }
 
 /*
@@ -188,7 +188,7 @@ void Decoder::FinishInternal() { }
  */
 
 void
-Decoder::PostSize(PRInt32 aWidth, PRInt32 aHeight)
+Decoder::PostSize(int32_t aWidth, int32_t aHeight)
 {
   // Validate
   NS_ABORT_IF_FALSE(aWidth >= 0, "Width can't be negative!");

@@ -77,7 +77,7 @@ nsIdleServiceQt::~nsIdleServiceQt()
 }
 
 bool
-nsIdleServiceQt::PollIdleTime(PRUint32 *aIdleTime)
+nsIdleServiceQt::PollIdleTime(uint32_t *aIdleTime)
 {
 #if !defined(MOZ_PLATFORM_MAEMO) && defined(MOZ_X11)
     // Ask xscreensaver about idle time:

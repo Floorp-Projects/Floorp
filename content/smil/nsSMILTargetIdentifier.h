@@ -39,7 +39,7 @@ struct nsSMILTargetIdentifier
 
   nsRefPtr<mozilla::dom::Element> mElement;
   nsRefPtr<nsIAtom>    mAttributeName;
-  PRInt32              mAttributeNamespaceID;
+  int32_t              mAttributeNamespaceID;
   bool                 mIsCSS;
 };
 

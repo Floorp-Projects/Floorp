@@ -68,9 +68,9 @@ public:
   NS_IMETHOD Run(void);
   NS_IMETHOD Exit(void);
   NS_IMETHOD OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
-                                PRUint32 aRecursionDepth);
+                                uint32_t aRecursionDepth);
   NS_IMETHOD AfterProcessNextEvent(nsIThreadInternal *aThread,
-                                   PRUint32 aRecursionDepth);
+                                   uint32_t aRecursionDepth);
 
   // public only to be visible to Objective-C code that must call it
   void WillTerminate();
@@ -100,18 +100,18 @@ protected:
 
   // mHadMoreEventsCount and kHadMoreEventsCountMax are used in
   // ProcessNextNativeEvent().
-  PRUint32               mHadMoreEventsCount;
+  uint32_t               mHadMoreEventsCount;
   // Setting kHadMoreEventsCountMax to '10' contributed to a fairly large
   // (about 10%) increase in the number of calls to malloc (though without
   // effecting the total amount of memory used).  Cutting it to '3'
   // reduced the number of calls by 6%-7% (reducing the original regression
   // to 3%-4%).  See bmo bug 395397.
-  static const PRUint32  kHadMoreEventsCountMax = 3;
+  static const uint32_t  kHadMoreEventsCountMax = 3;
 
-  PRInt32            mRecursionDepth;
-  PRInt32            mNativeEventCallbackDepth;
+  int32_t            mRecursionDepth;
+  int32_t            mNativeEventCallbackDepth;
   // Can be set from different threads, so must be modified atomically
-  PRInt32            mNativeEventScheduledDepth;
+  int32_t            mNativeEventScheduledDepth;
 };
 
 #endif // nsAppShell_h_

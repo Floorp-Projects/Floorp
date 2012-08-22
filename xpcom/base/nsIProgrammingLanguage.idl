@@ -22,18 +22,18 @@ interface nsIProgrammingLanguage : nsISupports
     /**
      * Identifiers for programming languages.
      */
-    const PRUint32 UNKNOWN     = 0;
-    const PRUint32 CPLUSPLUS   = 1;
-    const PRUint32 JAVASCRIPT  = 2;
-    const PRUint32 PYTHON      = 3;
-    const PRUint32 PERL        = 4;
-    const PRUint32 JAVA        = 5;
-    const PRUint32 ZX81_BASIC  = 6;  // it could happen :)
-    const PRUint32 JAVASCRIPT2 = 7;
-    const PRUint32 RUBY =        8;
-    const PRUint32 PHP =         9;
-    const PRUint32 TCL =         10;
+    const uint32_t UNKNOWN     = 0;
+    const uint32_t CPLUSPLUS   = 1;
+    const uint32_t JAVASCRIPT  = 2;
+    const uint32_t PYTHON      = 3;
+    const uint32_t PERL        = 4;
+    const uint32_t JAVA        = 5;
+    const uint32_t ZX81_BASIC  = 6;  // it could happen :)
+    const uint32_t JAVASCRIPT2 = 7;
+    const uint32_t RUBY =        8;
+    const uint32_t PHP =         9;
+    const uint32_t TCL =         10;
     // This list can grow indefinitely. Just don't ever change an existing item.
-    const PRUint32 MAX         = 10; // keep this as the largest index.
+    const uint32_t MAX         = 10; // keep this as the largest index.
     
 };

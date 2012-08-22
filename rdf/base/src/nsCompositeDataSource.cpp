@@ -95,7 +95,7 @@ protected:
 
 	bool        mAllowNegativeAssertions;
 	bool        mCoalesceDuplicateArcs;
-    PRInt32     mUpdateBatchNest;
+    int32_t     mUpdateBatchNest;
 
     nsFixedSizeAllocator mAllocator;
 
@@ -139,7 +139,7 @@ protected:
 
     nsISimpleEnumerator* mCurrent;
     nsIRDFNode*  mResult;
-    PRInt32      mNext;
+    int32_t      mNext;
     nsAutoTArray<nsCOMPtr<nsIRDFNode>, 8>  mAlreadyReturned;
     bool mAllowNegativeAssertions;
     bool mCoalesceDuplicateArcs;
@@ -207,7 +207,7 @@ CompositeEnumeratorImpl::HasMoreElements(bool* aResult)
         }
 
         do {
-            PRInt32 i;
+            int32_t i;
 
             bool hasMore;
             rv = mCurrent->HasMoreElements(&hasMore);
@@ -578,10 +578,10 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
         sizeof(CompositeAssertionEnumeratorImpl),
         sizeof(CompositeArcsInOutEnumeratorImpl) };
 
-    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
+    static const int32_t kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
 
     // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
-    static const PRInt32 kInitialSize = 256;
+    static const int32_t kInitialSize = 256;
 
     mAllocator.Init("nsCompositeDataSource", kBucketSizes, kNumBuckets, kInitialSize);
 
@@ -598,7 +598,7 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CompositeDataSourceImpl)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CompositeDataSourceImpl)
-    PRUint32 i, count = tmp->mDataSources.Count();
+    uint32_t i, count = tmp->mDataSources.Count();
     for (i = count; i > 0; --i) {
         tmp->mDataSources[i - 1]->RemoveObserver(tmp);
         tmp->mDataSources.RemoveObjectAt(i - 1);
@@ -644,8 +644,8 @@ CompositeDataSourceImpl::GetSource(nsIRDFResource* property,
 	if (!mAllowNegativeAssertions && !tv)
 		return(NS_RDF_NO_VALUE);
 
-    PRInt32 count = mDataSources.Count();
-    for (PRInt32 i = 0; i < count; ++i) {
+    int32_t count = mDataSources.Count();
+    for (int32_t i = 0; i < count; ++i) {
         nsresult rv;
         rv = mDataSources[i]->GetSource(property, target, tv, source);
         if (NS_FAILED(rv)) return rv;
@@ -721,8 +721,8 @@ CompositeDataSourceImpl::GetTarget(nsIRDFResource* aSource,
     if (! mAllowNegativeAssertions && ! aTruthValue)
         return(NS_RDF_NO_VALUE);
 
-    PRInt32 count = mDataSources.Count();
-    for (PRInt32 i = 0; i < count; ++i) {
+    int32_t count = mDataSources.Count();
+    for (int32_t i = 0; i < count; ++i) {
         nsresult rv;
         rv = mDataSources[i]->GetTarget(aSource, aProperty, aTruthValue,
                                         aResult);
@@ -756,7 +756,7 @@ CompositeDataSourceImpl::HasAssertionN(int n,
                                        bool aTruthValue)
 {
     nsresult rv;
-    for (PRInt32 m = 0; m < n; ++m) {
+    for (int32_t m = 0; m < n; ++m) {
         bool result;
         rv = mDataSources[m]->HasAssertion(aSource, aProperty, aTarget,
                                            aTruthValue, &result);
@@ -835,7 +835,7 @@ CompositeDataSourceImpl::Assert(nsIRDFResource* aSource,
     // We iterate backwards from the last data source which was added
     // ("the most remote") to the first ("the most local"), trying to
     // apply the assertion in each.
-    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mDataSources.Count() - 1; i >= 0; --i) {
         rv = mDataSources[i]->Assert(aSource, aProperty, aTarget, aTruthValue);
         if (NS_RDF_ASSERTION_ACCEPTED == rv)
             return rv;
@@ -871,8 +871,8 @@ CompositeDataSourceImpl::Unassert(nsIRDFResource* aSource,
     // most local" and moving to "the most remote". If _any_ of the
     // datasources have the assertion, attempt to unassert it.
     bool unasserted = true;
-    PRInt32 i;
-    PRInt32 count = mDataSources.Count();
+    int32_t i;
+    int32_t count = mDataSources.Count();
     for (i = 0; i < count; ++i) {
         nsIRDFDataSource* ds = mDataSources[i];
 
@@ -944,7 +944,7 @@ CompositeDataSourceImpl::Change(nsIRDFResource* aSource,
     // We iterate backwards from the last data source which was added
     // ("the most remote") to the first ("the most local"), trying to
     // apply the change in each.
-    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mDataSources.Count() - 1; i >= 0; --i) {
         rv = mDataSources[i]->Change(aSource, aProperty, aOldTarget, aNewTarget);
         if (NS_RDF_ASSERTION_ACCEPTED == rv)
             return rv;
@@ -988,7 +988,7 @@ CompositeDataSourceImpl::Move(nsIRDFResource* aOldSource,
     // We iterate backwards from the last data source which was added
     // ("the most remote") to the first ("the most local"), trying to
     // apply the assertion in each.
-    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mDataSources.Count() - 1; i >= 0; --i) {
         rv = mDataSources[i]->Move(aOldSource, aNewSource, aProperty, aTarget);
         if (NS_RDF_ASSERTION_ACCEPTED == rv)
             return rv;
@@ -1031,8 +1031,8 @@ CompositeDataSourceImpl::HasAssertion(nsIRDFResource* aSource,
 
     // Otherwise, look through all the data sources to see if anyone
     // has the positive...
-    PRInt32 count = mDataSources.Count();
-    for (PRInt32 i = 0; i < count; ++i) {
+    int32_t count = mDataSources.Count();
+    for (int32_t i = 0; i < count; ++i) {
         nsIRDFDataSource* datasource = mDataSources[i];
         rv = datasource->HasAssertion(aSource, aProperty, aTarget, aTruthValue, aResult);
         if (NS_FAILED(rv)) return rv;
@@ -1089,8 +1089,8 @@ CompositeDataSourceImpl::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, bool 
 {
     nsresult rv;
     *result = false;
-    PRInt32 count = mDataSources.Count();
-    for (PRInt32 i = 0; i < count; ++i) {
+    int32_t count = mDataSources.Count();
+    for (int32_t i = 0; i < count; ++i) {
         rv = mDataSources[i]->HasArcIn(aNode, aArc, result);
         if (NS_FAILED(rv)) return rv;
         if (*result)
@@ -1104,8 +1104,8 @@ CompositeDataSourceImpl::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc
 {
     nsresult rv;
     *result = false;
-    PRInt32 count = mDataSources.Count();
-    for (PRInt32 i = 0; i < count; ++i) {
+    int32_t count = mDataSources.Count();
+    for (int32_t i = 0; i < count; ++i) {
         rv = mDataSources[i]->HasArcOut(aSource, aArc, result);
         if (NS_FAILED(rv)) return rv;
         if (*result)
@@ -1182,7 +1182,7 @@ CompositeDataSourceImpl::GetAllCmds(nsIRDFResource* source,
     rv = NS_NewISupportsArray(getter_AddRefs(cmdArray));
     if (NS_FAILED(rv)) return(rv);
 
-    for (PRInt32 i = 0; i < mDataSources.Count(); i++)
+    for (int32_t i = 0; i < mDataSources.Count(); i++)
     {
         nsCOMPtr<nsISimpleEnumerator> dsCmds;
 
@@ -1215,7 +1215,7 @@ CompositeDataSourceImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
                                           bool* aResult)
 {
     nsresult rv;
-    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mDataSources.Count() - 1; i >= 0; --i) {
         bool enabled = true;
         rv = mDataSources[i]->IsCommandEnabled(aSources, aCommand, aArguments, &enabled);
         if (NS_FAILED(rv) && (rv != NS_ERROR_NOT_IMPLEMENTED))
@@ -1237,7 +1237,7 @@ CompositeDataSourceImpl::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
                                    nsIRDFResource*   aCommand,
                                    nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mDataSources.Count() - 1; i >= 0; --i) {
         nsresult rv = mDataSources[i]->DoCommand(aSources, aCommand, aArguments);
         if (NS_FAILED(rv) && (rv != NS_ERROR_NOT_IMPLEMENTED))
         {
@@ -1250,7 +1250,7 @@ CompositeDataSourceImpl::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 NS_IMETHODIMP
 CompositeDataSourceImpl::BeginUpdateBatch()
 {
-    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mDataSources.Count() - 1; i >= 0; --i) {
         mDataSources[i]->BeginUpdateBatch();
     }
     return NS_OK;
@@ -1259,7 +1259,7 @@ CompositeDataSourceImpl::BeginUpdateBatch()
 NS_IMETHODIMP
 CompositeDataSourceImpl::EndUpdateBatch()
 {
-    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mDataSources.Count() - 1; i >= 0; --i) {
         mDataSources[i]->EndUpdateBatch();
     }
     return NS_OK;
@@ -1363,7 +1363,7 @@ CompositeDataSourceImpl::OnAssert(nsIRDFDataSource* aDataSource,
 			return(NS_OK);
 	}
 
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mObservers.Count() - 1; i >= 0; --i) {
         mObservers[i]->OnAssert(this, aSource, aProperty, aTarget);
     }
     return NS_OK;
@@ -1394,7 +1394,7 @@ CompositeDataSourceImpl::OnUnassert(nsIRDFDataSource* aDataSource,
 			return NS_OK;
 	}
 
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mObservers.Count() - 1; i >= 0; --i) {
         mObservers[i]->OnUnassert(this, aSource, aProperty, aTarget);
     }
     return NS_OK;
@@ -1414,7 +1414,7 @@ CompositeDataSourceImpl::OnChange(nsIRDFDataSource* aDataSource,
     // XXX Because of aggregation, this could actually mutate into a
     // variety of OnAssert or OnChange notifications, which we'll
     // ignore for now :-/.
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mObservers.Count() - 1; i >= 0; --i) {
         mObservers[i]->OnChange(this, aSource, aProperty,
                                 aOldTarget, aNewTarget);
     }
@@ -1435,7 +1435,7 @@ CompositeDataSourceImpl::OnMove(nsIRDFDataSource* aDataSource,
     // XXX Because of aggregation, this could actually mutate into a
     // variety of OnAssert or OnMove notifications, which we'll
     // ignore for now :-/.
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+    for (int32_t i = mObservers.Count() - 1; i >= 0; --i) {
         mObservers[i]->OnMove(this, aOldSource, aNewSource,
                               aProperty, aTarget);
     }
@@ -1447,7 +1447,7 @@ NS_IMETHODIMP
 CompositeDataSourceImpl::OnBeginUpdateBatch(nsIRDFDataSource* aDataSource)
 {
     if (mUpdateBatchNest++ == 0) {
-        for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        for (int32_t i = mObservers.Count() - 1; i >= 0; --i) {
             mObservers[i]->OnBeginUpdateBatch(this);
         }
     }
@@ -1460,7 +1460,7 @@ CompositeDataSourceImpl::OnEndUpdateBatch(nsIRDFDataSource* aDataSource)
 {
     NS_ASSERTION(mUpdateBatchNest > 0, "badly nested update batch");
     if (--mUpdateBatchNest == 0) {
-        for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        for (int32_t i = mObservers.Count() - 1; i >= 0; --i) {
             mObservers[i]->OnEndUpdateBatch(this);
         }
     }

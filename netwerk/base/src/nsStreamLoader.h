@@ -28,16 +28,16 @@ public:
 
 protected:
   static NS_METHOD WriteSegmentFun(nsIInputStream *, void *, const char *,
-                                   PRUint32, PRUint32, PRUint32 *);
+                                   uint32_t, uint32_t, uint32_t *);
 
   nsCOMPtr<nsIStreamLoaderObserver> mObserver;
   nsCOMPtr<nsISupports>             mContext;  // the observer's context
   nsCOMPtr<nsIRequest>              mRequest;
 
-  PRUint8  *mData;      // buffer to accumulate incoming data
-  PRUint32  mAllocated; // allocated size of data buffer (we preallocate if
+  uint8_t  *mData;      // buffer to accumulate incoming data
+  uint32_t  mAllocated; // allocated size of data buffer (we preallocate if
                         //   contentSize is available)
-  PRUint32  mLength;    // actual length of data in buffer
+  uint32_t  mLength;    // actual length of data in buffer
                         //   (must be <= mAllocated)
 };
 

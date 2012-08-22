@@ -49,8 +49,8 @@ struct nsXBLUncompiledMethod {
     delete mParameters;
   }
 
-  PRInt32 GetParameterCount() {
-    PRInt32 result = 0;
+  int32_t GetParameterCount() {
+    int32_t result = 0;
     for (nsXBLParameter* curr = mParameters; curr; curr=curr->mNext)
       result++;
     return result;
@@ -71,7 +71,7 @@ struct nsXBLUncompiledMethod {
     mLastParameter = param;
   }
 
-  void SetLineNumber(PRUint32 aLineNumber) {
+  void SetLineNumber(uint32_t aLineNumber) {
     mBodyText.SetLineNumber(aLineNumber);
   }
 };
@@ -85,7 +85,7 @@ public:
   void AppendBodyText(const nsAString& aBody);
   void AddParameter(const nsAString& aName);
 
-  void SetLineNumber(PRUint32 aLineNumber);
+  void SetLineNumber(uint32_t aLineNumber);
   
   virtual nsresult InstallMember(nsIScriptContext* aContext,
                                  nsIContent* aBoundElement, 

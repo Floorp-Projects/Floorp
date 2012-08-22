@@ -34,7 +34,7 @@ class nsMappedAttributeElement;
     ((1 << ATTRCHILD_ARRAY_ATTR_SLOTS_BITS) - 1)
 
 #define ATTRCHILD_ARRAY_MAX_CHILD_COUNT \
-    (~PRUint32(0) >> ATTRCHILD_ARRAY_ATTR_SLOTS_BITS)
+    (~uint32_t(0) >> ATTRCHILD_ARRAY_ATTR_SLOTS_BITS)
 
 #define ATTRCHILD_ARRAY_ATTR_SLOTS_COUNT_MASK \
     ((1 << ATTRCHILD_ARRAY_ATTR_SLOTS_BITS) - 1)
@@ -48,50 +48,50 @@ public:
   nsAttrAndChildArray();
   ~nsAttrAndChildArray();
 
-  PRUint32 ChildCount() const
+  uint32_t ChildCount() const
   {
     return mImpl ? (mImpl->mAttrAndChildCount >> ATTRCHILD_ARRAY_ATTR_SLOTS_BITS) : 0;
   }
-  nsIContent* ChildAt(PRUint32 aPos) const
+  nsIContent* ChildAt(uint32_t aPos) const
   {
     NS_ASSERTION(aPos < ChildCount(), "out-of-bounds access in nsAttrAndChildArray");
     return reinterpret_cast<nsIContent*>(mImpl->mBuffer[AttrSlotsSize() + aPos]);
   }
-  nsIContent* GetSafeChildAt(PRUint32 aPos) const;
-  nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
+  nsIContent* GetSafeChildAt(uint32_t aPos) const;
+  nsIContent * const * GetChildArray(uint32_t* aChildCount) const;
   nsresult AppendChild(nsIContent* aChild)
   {
     return InsertChildAt(aChild, ChildCount());
   }
-  nsresult InsertChildAt(nsIContent* aChild, PRUint32 aPos);
-  void RemoveChildAt(PRUint32 aPos);
+  nsresult InsertChildAt(nsIContent* aChild, uint32_t aPos);
+  void RemoveChildAt(uint32_t aPos);
   // Like RemoveChildAt but hands the reference to the child being
   // removed back to the caller instead of just releasing it.
-  already_AddRefed<nsIContent> TakeChildAt(PRUint32 aPos);
-  PRInt32 IndexOfChild(nsINode* aPossibleChild) const;
+  already_AddRefed<nsIContent> TakeChildAt(uint32_t aPos);
+  int32_t IndexOfChild(nsINode* aPossibleChild) const;
 
-  PRUint32 AttrCount() const;
-  const nsAttrValue* GetAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
+  uint32_t AttrCount() const;
+  const nsAttrValue* GetAttr(nsIAtom* aLocalName, int32_t aNamespaceID = kNameSpaceID_None) const;
   // Get an nsAttrValue by qualified name.  Can optionally do
   // ASCII-case-insensitive name matching.
   const nsAttrValue* GetAttr(const nsAString& aName,
                              nsCaseTreatment aCaseSensitive) const;
-  const nsAttrValue* AttrAt(PRUint32 aPos) const;
+  const nsAttrValue* AttrAt(uint32_t aPos) const;
   nsresult SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue);
   nsresult SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue);
 
   // Remove the attr at position aPos.  The value of the attr is placed in
   // aValue; any value that was already in aValue is destroyed.
-  nsresult RemoveAttrAt(PRUint32 aPos, nsAttrValue& aValue);
+  nsresult RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue);
 
   // Returns attribute name at given position, *not* out-of-bounds safe
-  const nsAttrName* AttrNameAt(PRUint32 aPos) const;
+  const nsAttrName* AttrNameAt(uint32_t aPos) const;
 
   // Returns attribute name at given position or null if aPos is out-of-bounds
-  const nsAttrName* GetSafeAttrNameAt(PRUint32 aPos) const;
+  const nsAttrName* GetSafeAttrNameAt(uint32_t aPos) const;
 
   const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
-  PRInt32 IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
+  int32_t IndexOfAttr(nsIAtom* aLocalName, int32_t aNamespaceID = kNameSpaceID_None) const;
 
   nsresult SetAndTakeMappedAttr(nsIAtom* aLocalName, nsAttrValue& aValue,
                                 nsMappedAttributeElement* aContent,
@@ -124,8 +124,8 @@ private:
 
   void Clear();
 
-  PRUint32 NonMappedAttrCount() const;
-  PRUint32 MappedAttrCount() const;
+  uint32_t NonMappedAttrCount() const;
+  uint32_t MappedAttrCount() const;
 
   // Returns a non-null zero-refcount object.
   nsMappedAttributes*
@@ -134,43 +134,43 @@ private:
                       bool aWillAddAttr);
   nsresult MakeMappedUnique(nsMappedAttributes* aAttributes);
 
-  PRUint32 AttrSlotsSize() const
+  uint32_t AttrSlotsSize() const
   {
     return AttrSlotCount() * ATTRSIZE;
   }
 
-  PRUint32 AttrSlotCount() const
+  uint32_t AttrSlotCount() const
   {
     return mImpl ? mImpl->mAttrAndChildCount & ATTRCHILD_ARRAY_ATTR_SLOTS_COUNT_MASK : 0;
   }
 
-  bool AttrSlotIsTaken(PRUint32 aSlot) const
+  bool AttrSlotIsTaken(uint32_t aSlot) const
   {
     NS_PRECONDITION(aSlot < AttrSlotCount(), "out-of-bounds");
     return mImpl->mBuffer[aSlot * ATTRSIZE];
   }
 
-  void SetChildCount(PRUint32 aCount)
+  void SetChildCount(uint32_t aCount)
   {
     mImpl->mAttrAndChildCount = 
         (mImpl->mAttrAndChildCount & ATTRCHILD_ARRAY_ATTR_SLOTS_COUNT_MASK) |
         (aCount << ATTRCHILD_ARRAY_ATTR_SLOTS_BITS);
   }
 
-  void SetAttrSlotCount(PRUint32 aCount)
+  void SetAttrSlotCount(uint32_t aCount)
   {
     mImpl->mAttrAndChildCount =
         (mImpl->mAttrAndChildCount & ~ATTRCHILD_ARRAY_ATTR_SLOTS_COUNT_MASK) |
         aCount;
   }
 
-  void SetAttrSlotAndChildCount(PRUint32 aSlotCount, PRUint32 aChildCount)
+  void SetAttrSlotAndChildCount(uint32_t aSlotCount, uint32_t aChildCount)
   {
     mImpl->mAttrAndChildCount = aSlotCount |
       (aChildCount << ATTRCHILD_ARRAY_ATTR_SLOTS_BITS);
   }
 
-  bool GrowBy(PRUint32 aGrowSize);
+  bool GrowBy(uint32_t aGrowSize);
   bool AddAttrSlot();
 
   /**
@@ -178,8 +178,8 @@ private:
    * index at which aChild is actually being inserted.  aChildCount is the
    * number of kids we had before the insertion.
    */
-  inline void SetChildAtPos(void** aPos, nsIContent* aChild, PRUint32 aIndex,
-                            PRUint32 aChildCount);
+  inline void SetChildAtPos(void** aPos, nsIContent* aChild, uint32_t aIndex,
+                            uint32_t aChildCount);
 
   /**
    * Guts of SetMappedAttrStyleSheet for the rare case when we have mapped attrs
@@ -193,8 +193,8 @@ private:
   };
 
   struct Impl {
-    PRUint32 mAttrAndChildCount;
-    PRUint32 mBufferSize;
+    uint32_t mAttrAndChildCount;
+    uint32_t mBufferSize;
     nsMappedAttributes* mMappedAttrs;
     void* mBuffer[1];
   };

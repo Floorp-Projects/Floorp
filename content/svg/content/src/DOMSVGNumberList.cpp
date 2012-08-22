@@ -22,11 +22,11 @@ namespace {
 using mozilla::DOMSVGNumber;
 
 void UpdateListIndicesFromIndex(nsTArray<DOMSVGNumber*>& aItemsArray,
-                                PRUint32 aStartingIndex)
+                                uint32_t aStartingIndex)
 {
-  PRUint32 length = aItemsArray.Length();
+  uint32_t length = aItemsArray.Length();
 
-  for (PRUint32 i = aStartingIndex; i < length; ++i) {
+  for (uint32_t i = aStartingIndex; i < length; ++i) {
     if (aItemsArray[i]) {
       aItemsArray[i]->UpdateListIndex(i);
     }
@@ -82,7 +82,7 @@ DOMSVGNumberList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 }
 
 nsIDOMSVGNumber*
-DOMSVGNumberList::GetItemAt(PRUint32 aIndex)
+DOMSVGNumberList::GetItemAt(uint32_t aIndex)
 {
   if (IsAnimValList()) {
     Element()->FlushAnimations();
@@ -95,9 +95,9 @@ DOMSVGNumberList::GetItemAt(PRUint32 aIndex)
 }
 
 void
-DOMSVGNumberList::InternalListLengthWillChange(PRUint32 aNewLength)
+DOMSVGNumberList::InternalListLengthWillChange(uint32_t aNewLength)
 {
-  PRUint32 oldLength = mItems.Length();
+  uint32_t oldLength = mItems.Length();
 
   if (aNewLength > DOMSVGNumber::MaxListIndex()) {
     // It's safe to get out of sync with our internal list as long as we have
@@ -113,7 +113,7 @@ DOMSVGNumberList::InternalListLengthWillChange(PRUint32 aNewLength)
   }
 
   // If our length will decrease, notify the items that will be removed:
-  for (PRUint32 i = aNewLength; i < oldLength; ++i) {
+  for (uint32_t i = aNewLength; i < oldLength; ++i) {
     if (mItems[i]) {
       mItems[i]->RemovingFromList();
     }
@@ -127,7 +127,7 @@ DOMSVGNumberList::InternalListLengthWillChange(PRUint32 aNewLength)
   }
 
   // If our length has increased, null out the new pointers:
-  for (PRUint32 i = oldLength; i < aNewLength; ++i) {
+  for (uint32_t i = oldLength; i < aNewLength; ++i) {
     mItems[i] = nullptr;
   }
 }
@@ -143,7 +143,7 @@ DOMSVGNumberList::InternalList() const
 // nsIDOMSVGNumberList implementation:
 
 NS_IMETHODIMP
-DOMSVGNumberList::GetNumberOfItems(PRUint32 *aNumberOfItems)
+DOMSVGNumberList::GetNumberOfItems(uint32_t *aNumberOfItems)
 {
   if (IsAnimValList()) {
     Element()->FlushAnimations();
@@ -206,7 +206,7 @@ DOMSVGNumberList::Initialize(nsIDOMSVGNumber *newItem,
 }
 
 NS_IMETHODIMP
-DOMSVGNumberList::GetItem(PRUint32 index,
+DOMSVGNumberList::GetItem(uint32_t index,
                           nsIDOMSVGNumber **_retval)
 {
   *_retval = GetItemAt(index);
@@ -219,7 +219,7 @@ DOMSVGNumberList::GetItem(PRUint32 index,
 
 NS_IMETHODIMP
 DOMSVGNumberList::InsertItemBefore(nsIDOMSVGNumber *newItem,
-                                   PRUint32 index,
+                                   uint32_t index,
                                    nsIDOMSVGNumber **_retval)
 {
   *_retval = nullptr;
@@ -270,7 +270,7 @@ DOMSVGNumberList::InsertItemBefore(nsIDOMSVGNumber *newItem,
 
 NS_IMETHODIMP
 DOMSVGNumberList::ReplaceItem(nsIDOMSVGNumber *newItem,
-                              PRUint32 index,
+                              uint32_t index,
                               nsIDOMSVGNumber **_retval)
 {
   *_retval = nullptr;
@@ -312,7 +312,7 @@ DOMSVGNumberList::ReplaceItem(nsIDOMSVGNumber *newItem,
 }
 
 NS_IMETHODIMP
-DOMSVGNumberList::RemoveItem(PRUint32 index,
+DOMSVGNumberList::RemoveItem(uint32_t index,
                              nsIDOMSVGNumber **_retval)
 {
   *_retval = nullptr;
@@ -358,13 +358,13 @@ DOMSVGNumberList::AppendItem(nsIDOMSVGNumber *newItem,
 }
 
 NS_IMETHODIMP
-DOMSVGNumberList::GetLength(PRUint32 *aNumberOfItems)
+DOMSVGNumberList::GetLength(uint32_t *aNumberOfItems)
 {
   return GetNumberOfItems(aNumberOfItems);
 }
 
 void
-DOMSVGNumberList::EnsureItemAt(PRUint32 aIndex)
+DOMSVGNumberList::EnsureItemAt(uint32_t aIndex)
 {
   if (!mItems[aIndex]) {
     mItems[aIndex] = new DOMSVGNumber(this, AttrEnum(), aIndex, IsAnimValList());
@@ -372,7 +372,7 @@ DOMSVGNumberList::EnsureItemAt(PRUint32 aIndex)
 }
 
 void
-DOMSVGNumberList::MaybeInsertNullInAnimValListAt(PRUint32 aIndex)
+DOMSVGNumberList::MaybeInsertNullInAnimValListAt(uint32_t aIndex)
 {
   NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
 
@@ -392,7 +392,7 @@ DOMSVGNumberList::MaybeInsertNullInAnimValListAt(PRUint32 aIndex)
 }
 
 void
-DOMSVGNumberList::MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex)
+DOMSVGNumberList::MaybeRemoveItemFromAnimValListAt(uint32_t aIndex)
 {
   NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
 

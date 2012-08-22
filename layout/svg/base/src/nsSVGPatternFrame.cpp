@@ -68,9 +68,9 @@ nsSVGPatternFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 }
 
 NS_IMETHODIMP
-nsSVGPatternFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGPatternFrame::AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
-                                    PRInt32         aModType)
+                                    int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::patternUnits ||
@@ -125,7 +125,7 @@ nsSVGPatternFrame::GetType() const
 // matrix, which depends on our units parameters
 // and X, Y, Width, and Height
 gfxMatrix
-nsSVGPatternFrame::GetCanvasTM(PRUint32 aFor)
+nsSVGPatternFrame::GetCanvasTM(uint32_t aFor)
 {
   if (mCTM) {
     return *mCTM;
@@ -151,7 +151,7 @@ nsSVGPatternFrame::GetCanvasTM(PRUint32 aFor)
 // objectBoundingBox though, since in that case the viewBox is relative to the bbox
 static bool
 IncludeBBoxScale(const nsSVGViewBox& aViewBox,
-                 PRUint32 aPatternContentUnits, PRUint32 aPatternUnits)
+                 uint32_t aPatternContentUnits, uint32_t aPatternUnits)
 {
   return (!aViewBox.IsExplicitlySet() &&
           aPatternContentUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) ||
@@ -162,7 +162,7 @@ IncludeBBoxScale(const nsSVGViewBox& aViewBox,
 // Given the matrix for the pattern element's own transform, this returns a
 // combined matrix including the transforms applicable to its target.
 static gfxMatrix
-GetPatternMatrix(PRUint16 aPatternUnits,
+GetPatternMatrix(uint16_t aPatternUnits,
                  const gfxMatrix &patternTransform,
                  const gfxRect &bbox,
                  const gfxRect &callerBBox,
@@ -188,8 +188,8 @@ GetPatternMatrix(PRUint16 aPatternUnits,
 static nsresult
 GetTargetGeometry(gfxRect *aBBox,
                   const nsSVGViewBox &aViewBox,
-                  PRUint16 aPatternContentUnits,
-                  PRUint16 aPatternUnits,
+                  uint16_t aPatternContentUnits,
+                  uint16_t aPatternUnits,
                   nsIFrame *aTarget,
                   const gfxMatrix &aContextMatrix,
                   const gfxRect *aOverrideBounds)
@@ -241,9 +241,9 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
 
   const nsSVGViewBox& viewBox = GetViewBox();
 
-  PRUint16 patternContentUnits =
+  uint16_t patternContentUnits =
     GetEnumValue(nsSVGPatternElement::PATTERNCONTENTUNITS);
-  PRUint16 patternUnits =
+  uint16_t patternUnits =
     GetEnumValue(nsSVGPatternElement::PATTERNUNITS);
 
   /*
@@ -425,8 +425,8 @@ nsSVGPatternFrame::GetPatternFirstChild()
   return next->GetPatternFirstChild();
 }
 
-PRUint16
-nsSVGPatternFrame::GetEnumValue(PRUint32 aIndex, nsIContent *aDefault)
+uint16_t
+nsSVGPatternFrame::GetEnumValue(uint32_t aIndex, nsIContent *aDefault)
 {
   nsSVGEnum& thisEnum =
     static_cast<nsSVGPatternElement *>(mContent)->mEnumAttributes[aIndex];
@@ -502,7 +502,7 @@ nsSVGPatternFrame::GetPreserveAspectRatio(nsIContent *aDefault)
 }
 
 const nsSVGLength2 *
-nsSVGPatternFrame::GetLengthValue(PRUint32 aIndex, nsIContent *aDefault)
+nsSVGPatternFrame::GetLengthValue(uint32_t aIndex, nsIContent *aDefault)
 {
   const nsSVGLength2 *thisLength =
     &static_cast<nsSVGPatternElement *>(mContent)->mLengthAttributes[aIndex];
@@ -577,7 +577,7 @@ nsSVGPatternFrame::GetReferencedPatternIfNotInUse()
 }
 
 gfxRect
-nsSVGPatternFrame::GetPatternRect(PRUint16 aPatternUnits,
+nsSVGPatternFrame::GetPatternRect(uint16_t aPatternUnits,
                                   const gfxRect &aTargetBBox,
                                   const gfxMatrix &aTargetCTM,
                                   nsIFrame *aTarget)
@@ -610,8 +610,8 @@ nsSVGPatternFrame::GetPatternRect(PRUint16 aPatternUnits,
 
 gfxMatrix
 nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
-                                PRUint16 aPatternContentUnits,
-                                PRUint16 aPatternUnits,
+                                uint16_t aPatternContentUnits,
+                                uint16_t aPatternUnits,
                                 const gfxRect &callerBBox,
                                 const gfxMatrix &callerCTM,
                                 nsIFrame *aTarget)

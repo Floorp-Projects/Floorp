@@ -183,7 +183,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   return NS_OK;
 }
 
-inline PRInt32 ConvertOverflow(PRUint8 aOverflow)
+inline int32_t ConvertOverflow(uint8_t aOverflow)
 {
   switch (aOverflow) {
     case NS_STYLE_OVERFLOW_VISIBLE:
@@ -320,8 +320,8 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayList childItems;
 
-  PRInt32 parentAPD = PresContext()->AppUnitsPerDevPixel();
-  PRInt32 subdocAPD = presContext->AppUnitsPerDevPixel();
+  int32_t parentAPD = PresContext()->AppUnitsPerDevPixel();
+  int32_t subdocAPD = presContext->AppUnitsPerDevPixel();
 
   nsRect dirty;
   if (subdocRootFrame) {
@@ -371,7 +371,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // Add the canvas background color to the bottom of the list. This
       // happens after we've built the list so that AddCanvasBackgroundColorItem
       // can monkey with the contents if necessary.
-      PRUint32 flags = nsIPresShell::FORCE_DRAW;
+      uint32_t flags = nsIPresShell::FORCE_DRAW;
       rv = presShell->AddCanvasBackgroundColorItem(
              *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
              bounds, NS_RGBA(0,0,0,0), flags);
@@ -546,7 +546,7 @@ nsSubDocumentFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 nsSubDocumentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                                PRUint32 aFlags)
+                                uint32_t aFlags)
 {
   nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
   if (subDocRoot) {
@@ -661,9 +661,9 @@ nsSubDocumentFrame::ReflowCallbackCanceled()
 }
 
 NS_IMETHODIMP
-nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
+nsSubDocumentFrame::AttributeChanged(int32_t aNameSpaceID,
                                      nsIAtom* aAttribute,
-                                     PRInt32 aModType)
+                                     int32_t aModType)
 {
   if (aNameSpaceID != kNameSpaceID_None) {
     return NS_OK;
@@ -737,7 +737,7 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
       return NS_OK;
     }
 
-    PRInt32 parentType;
+    int32_t parentType;
     parentItem->GetItemType(&parentType);
 
     if (parentType != nsIDocShellTreeItem::typeChrome) {

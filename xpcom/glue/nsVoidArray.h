@@ -28,22 +28,22 @@ typedef size_t (* nsVoidArraySizeOfElementIncludingThisFunc)(const void* aElemen
 class NS_COM_GLUE nsVoidArray {
 public:
   nsVoidArray();
-  nsVoidArray(PRInt32 aCount);  // initial count of aCount elements set to nullptr
+  nsVoidArray(int32_t aCount);  // initial count of aCount elements set to nullptr
   ~nsVoidArray();
 
   nsVoidArray& operator=(const nsVoidArray& other);
 
-  inline PRInt32 Count() const {
+  inline int32_t Count() const {
     return mImpl ? mImpl->mCount : 0;
   }
   // If the array grows, the newly created entries will all be null
-  bool SetCount(PRInt32 aNewCount);
+  bool SetCount(int32_t aNewCount);
   // returns the max number that can be held without allocating
-  inline PRInt32 GetArraySize() const {
-    return mImpl ? (PRInt32(mImpl->mBits) & kArraySizeMask) : 0;
+  inline int32_t GetArraySize() const {
+    return mImpl ? (int32_t(mImpl->mBits) & kArraySizeMask) : 0;
   }
 
-  void* FastElementAt(PRInt32 aIndex) const
+  void* FastElementAt(int32_t aIndex) const
   {
     NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsVoidArray::FastElementAt: index out of range");
     return mImpl->mArray[aIndex];
@@ -52,16 +52,16 @@ public:
   // This both asserts and bounds-checks, because (1) we don't want
   // people to write bad code, but (2) we don't want to change it to
   // crashing for backwards compatibility.  See bug 96108.
-  void* ElementAt(PRInt32 aIndex) const
+  void* ElementAt(int32_t aIndex) const
   {
     NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsVoidArray::ElementAt: index out of range");
     return SafeElementAt(aIndex);
   }
 
   // bounds-checked version
-  void* SafeElementAt(PRInt32 aIndex) const
+  void* SafeElementAt(int32_t aIndex) const
   {
-    if (PRUint32(aIndex) >= PRUint32(Count())) // handles aIndex < 0 too
+    if (uint32_t(aIndex) >= uint32_t(Count())) // handles aIndex < 0 too
     {
       return nullptr;
     }
@@ -69,17 +69,17 @@ public:
     return mImpl->mArray[aIndex];
   }
 
-  void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
+  void* operator[](int32_t aIndex) const { return ElementAt(aIndex); }
 
-  PRInt32 IndexOf(void* aPossibleElement) const;
+  int32_t IndexOf(void* aPossibleElement) const;
 
-  bool InsertElementAt(void* aElement, PRInt32 aIndex);
-  bool InsertElementsAt(const nsVoidArray &other, PRInt32 aIndex);
+  bool InsertElementAt(void* aElement, int32_t aIndex);
+  bool InsertElementsAt(const nsVoidArray &other, int32_t aIndex);
 
-  bool ReplaceElementAt(void* aElement, PRInt32 aIndex);
+  bool ReplaceElementAt(void* aElement, int32_t aIndex);
 
   // useful for doing LRU arrays, sorting, etc
-  bool MoveElement(PRInt32 aFrom, PRInt32 aTo);
+  bool MoveElement(int32_t aFrom, int32_t aTo);
 
   bool AppendElement(void* aElement) {
     return InsertElementAt(aElement, Count());
@@ -90,12 +90,12 @@ public:
   }
 
   bool RemoveElement(void* aElement);
-  bool RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount);
-  bool RemoveElementAt(PRInt32 aIndex) { return RemoveElementsAt(aIndex,1); }
+  bool RemoveElementsAt(int32_t aIndex, int32_t aCount);
+  bool RemoveElementAt(int32_t aIndex) { return RemoveElementsAt(aIndex,1); }
 
   void   Clear();
 
-  bool SizeTo(PRInt32 aMin);
+  bool SizeTo(int32_t aMin);
   // Subtly different - Compact() tries to be smart about whether we
   // should reallocate the array; SizeTo() always reallocates.
   void Compact();
@@ -114,7 +114,7 @@ public:
            nsMallocSizeOfFun aMallocSizeOf, void* aData = NULL) const;
 
 protected:
-  bool GrowArrayBy(PRInt32 aGrowBy);
+  bool GrowArrayBy(int32_t aGrowBy);
 
   struct Impl {
     /**
@@ -123,12 +123,12 @@ protected:
      * must free() it when destroyed, and whether we have a preallocated
      * nsAutoVoidArray buffer.
      */
-    PRUint32 mBits;
+    uint32_t mBits;
 
     /**
      * The number of elements in the array
      */
-    PRInt32 mCount;
+    int32_t mCount;
 
     /**
      * Array data, padded out to the actual size of the array.
@@ -138,8 +138,8 @@ protected:
 
   Impl* mImpl;
 #if DEBUG_VOIDARRAY
-  PRInt32 mMaxCount;
-  PRInt32 mMaxSize;
+  int32_t mMaxCount;
+  int32_t mMaxSize;
   bool    mIsAuto;
 #endif
 
@@ -152,7 +152,7 @@ protected:
 
 
   // bit twiddlers
-  void SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount, bool aOwner,
+  void SetArray(Impl *newImpl, int32_t aSize, int32_t aCount, bool aOwner,
                 bool aHasAuto);
   inline bool IsArrayOwner() const {
     return mImpl && (mImpl->mBits & kArrayOwnerMask);
@@ -220,43 +220,43 @@ public:
   ~nsSmallVoidArray();
 
   nsSmallVoidArray& operator=(nsSmallVoidArray& other);
-  void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
+  void* operator[](int32_t aIndex) const { return ElementAt(aIndex); }
 
-  PRInt32 GetArraySize() const;
+  int32_t GetArraySize() const;
 
-  PRInt32 Count() const;
-  void* FastElementAt(PRInt32 aIndex) const;
+  int32_t Count() const;
+  void* FastElementAt(int32_t aIndex) const;
   // This both asserts and bounds-checks, because (1) we don't want
   // people to write bad code, but (2) we don't want to change it to
   // crashing for backwards compatibility.  See bug 96108.
-  void* ElementAt(PRInt32 aIndex) const
+  void* ElementAt(int32_t aIndex) const
   {
     NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsSmallVoidArray::ElementAt: index out of range");
     return SafeElementAt(aIndex);
   }
-  void* SafeElementAt(PRInt32 aIndex) const {
+  void* SafeElementAt(int32_t aIndex) const {
     // let compiler inline; it may be able to remove these checks
-    if (PRUint32(aIndex) >= PRUint32(Count())) // handles aIndex < 0 too
+    if (uint32_t(aIndex) >= uint32_t(Count())) // handles aIndex < 0 too
     {
       return nullptr;
     }
     return FastElementAt(aIndex);
   }
-  PRInt32 IndexOf(void* aPossibleElement) const;
-  bool InsertElementAt(void* aElement, PRInt32 aIndex);
-  bool InsertElementsAt(const nsVoidArray &other, PRInt32 aIndex);
-  bool ReplaceElementAt(void* aElement, PRInt32 aIndex);
-  bool MoveElement(PRInt32 aFrom, PRInt32 aTo);
+  int32_t IndexOf(void* aPossibleElement) const;
+  bool InsertElementAt(void* aElement, int32_t aIndex);
+  bool InsertElementsAt(const nsVoidArray &other, int32_t aIndex);
+  bool ReplaceElementAt(void* aElement, int32_t aIndex);
+  bool MoveElement(int32_t aFrom, int32_t aTo);
   bool AppendElement(void* aElement);
   bool AppendElements(nsVoidArray& aElements) {
     return InsertElementsAt(aElements, Count());
   }
   bool RemoveElement(void* aElement);
-  bool RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount);
-  bool RemoveElementAt(PRInt32 aIndex);
+  bool RemoveElementsAt(int32_t aIndex, int32_t aCount);
+  bool RemoveElementAt(int32_t aIndex);
 
   void Clear();
-  bool SizeTo(PRInt32 aMin);
+  bool SizeTo(int32_t aMin);
   void Compact();
   void Sort(nsVoidArrayComparatorFunc aFunc, void* aData);
 

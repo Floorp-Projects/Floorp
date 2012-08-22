@@ -238,7 +238,7 @@ public:
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
-                       PRUint32 argc, jsval* argv);
+                       uint32_t argc, jsval* argv);
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
 
@@ -416,7 +416,7 @@ public:
     else {
       // We use UTF8ToNewUnicode here because it truncates after invalid UTF-8
       // characters, CopyUTF8toUTF16 just doesn't copy in that case.
-      PRUint32 length;
+      uint32_t length;
       PRUnichar* chars = UTF8ToNewUnicode(result, &length);
       aResult.Adopt(chars, length);
     }
@@ -466,13 +466,13 @@ public:
                              bool aUseLSEventWrapper,
                              bool aLengthComputable,
                              // For Progress Events
-                             PRUint64 aLoaded, PRUint64 aTotal,
+                             uint64_t aLoaded, uint64_t aTotal,
                              // For LS Progress Events
-                             PRUint64 aPosition, PRUint64 aTotalSize);
+                             uint64_t aPosition, uint64_t aTotalSize);
   void DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
                              const nsAString& aType,
                              bool aLengthComputable,
-                             PRUint64 aLoaded, PRUint64 aTotal)
+                             uint64_t aLoaded, uint64_t aTotal)
   {
     DispatchProgressEvent(aTarget, aType, false,
                           aLengthComputable, aLoaded, aTotal,
@@ -499,19 +499,19 @@ protected:
   friend class nsMultipartProxyListener;
 
   nsresult DetectCharset();
-  nsresult AppendToResponseText(const char * aBuffer, PRUint32 aBufferLen);
+  nsresult AppendToResponseText(const char * aBuffer, uint32_t aBufferLen);
   static NS_METHOD StreamReaderFunc(nsIInputStream* in,
                 void* closure,
                 const char* fromRawSegment,
-                PRUint32 toOffset,
-                PRUint32 count,
-                PRUint32 *writeCount);
+                uint32_t toOffset,
+                uint32_t count,
+                uint32_t *writeCount);
   nsresult CreateResponseParsedJSON(JSContext* aCx);
   nsresult CreatePartialBlob(void);
   bool CreateDOMFile(nsIRequest *request);
   // Change the state of the object with this. The broadcast argument
   // determines if the onreadystatechange listener should be called.
-  nsresult ChangeState(PRUint32 aState, bool aBroadcast = true);
+  nsresult ChangeState(uint32_t aState, bool aBroadcast = true);
   already_AddRefed<nsILoadGroup> GetLoadGroup() const;
   nsIURI *GetBaseURI();
 
@@ -583,7 +583,7 @@ protected:
   
   // For DEFAULT responseType we use this to keep track of how far we've
   // lazily decoded from mResponseBody to mResponseText
-  PRUint32 mResponseBodyDecodedPos;
+  uint32_t mResponseBodyDecodedPos;
 
   // Decoder used for decoding into mResponseText
   // Only used for DEFAULT, TEXT and JSON responseTypes.
@@ -641,20 +641,20 @@ protected:
 
   nsCOMPtr<nsIURI> mBaseURI;
 
-  PRUint32 mState;
+  uint32_t mState;
 
   nsRefPtr<nsXMLHttpRequestUpload> mUpload;
-  PRUint64 mUploadTransferred;
-  PRUint64 mUploadTotal;
+  uint64_t mUploadTransferred;
+  uint64_t mUploadTotal;
   bool mUploadLengthComputable;
   bool mUploadComplete;
   bool mProgressSinceLastProgressEvent;
-  PRUint64 mUploadProgress; // For legacy
-  PRUint64 mUploadProgressMax; // For legacy
+  uint64_t mUploadProgress; // For legacy
+  uint64_t mUploadProgressMax; // For legacy
 
   // Timeout support
   PRTime mRequestSentTime;
-  PRUint32 mTimeoutMilliseconds;
+  uint32_t mTimeoutMilliseconds;
   nsCOMPtr<nsITimer> mTimeoutTimer;
   void StartTimeoutTimer();
   void HandleTimeoutCallback();
@@ -667,8 +667,8 @@ protected:
   bool mWarnAboutMultipartHtml;
   bool mWarnAboutSyncHtml;
   bool mLoadLengthComputable;
-  PRUint64 mLoadTotal; // 0 if not known.
-  PRUint64 mLoadTransferred;
+  uint64_t mLoadTotal; // 0 if not known.
+  uint64_t mLoadTransferred;
   nsCOMPtr<nsITimer> mProgressNotifier;
   void HandleProgressTimerCallback();
 
@@ -683,7 +683,7 @@ protected:
    * @param aFlag A XML_HTTP_REQUEST_* state flag defined in
    *              nsXMLHttpRequest.cpp.
    */
-  void CloseRequestWithError(const nsAString& aType, const PRUint32 aFlag);
+  void CloseRequestWithError(const nsAString& aType, const uint32_t aFlag);
 
   bool mFirstStartRequestSeen;
   bool mInLoadProgressEvent;
@@ -713,8 +713,8 @@ class nsXMLHttpProgressEvent : public nsIDOMProgressEvent,
 {
 public:
   nsXMLHttpProgressEvent(nsIDOMProgressEvent* aInner,
-                         PRUint64 aCurrentProgress,
-                         PRUint64 aMaxProgress,
+                         uint64_t aCurrentProgress,
+                         uint64_t aMaxProgress,
                          nsPIDOMWindow* aWindow);
   virtual ~nsXMLHttpProgressEvent();
 
@@ -731,8 +731,8 @@ protected:
   // most of the method calls easily.
   nsRefPtr<nsDOMProgressEvent> mInner;
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  PRUint64 mCurProgress;
-  PRUint64 mMaxProgress;
+  uint64_t mCurProgress;
+  uint64_t mMaxProgress;
 };
 
 class nsXHRParseEndListener : public nsIDOMEventListener

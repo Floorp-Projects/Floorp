@@ -21,7 +21,7 @@ class nsSVGInteger
 {
 
 public:
-  void Init(PRUint8 aAttrEnum = 0xff, PRInt32 aValue = 0) {
+  void Init(uint8_t aAttrEnum = 0xff, int32_t aValue = 0) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
     mIsAnimated = false;
@@ -32,8 +32,8 @@ public:
                               nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(PRInt32 aValue, nsSVGElement *aSVGElement);
-  PRInt32 GetBaseValue() const
+  void SetBaseValue(int32_t aValue, nsSVGElement *aSVGElement);
+  int32_t GetBaseValue() const
     { return mBaseVal; }
 
   void SetAnimValue(int aValue, nsSVGElement *aSVGElement);
@@ -55,9 +55,9 @@ public:
   
 private:
 
-  PRInt32 mAnimVal;
-  PRInt32 mBaseVal;
-  PRUint8 mAttrEnum; // element specified tracking for attribute
+  int32_t mAnimVal;
+  int32_t mBaseVal;
+  uint8_t mAttrEnum; // element specified tracking for attribute
   bool mIsAnimated;
   bool mIsBaseSet;
 
@@ -73,14 +73,14 @@ public:
     nsSVGInteger* mVal; // kept alive because it belongs to content
     nsRefPtr<nsSVGElement> mSVGElement;
 
-    NS_IMETHOD GetBaseVal(PRInt32* aResult)
+    NS_IMETHOD GetBaseVal(int32_t* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
-    NS_IMETHOD SetBaseVal(PRInt32 aValue)
+    NS_IMETHOD SetBaseVal(int32_t aValue)
       { mVal->SetBaseValue(aValue, mSVGElement); return NS_OK; }
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    NS_IMETHOD GetAnimVal(PRInt32* aResult)
+    NS_IMETHOD GetAnimVal(int32_t* aResult)
     {
       mSVGElement->FlushAnimations();
       *aResult = mVal->GetAnimValue();

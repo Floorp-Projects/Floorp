@@ -62,9 +62,9 @@ public:
   nsresult  InitializeGlobalPrinters();
 
   bool      PrintersAreAllocated()       { return mGlobalPrinterList != nullptr; }
-  PRUint32  GetNumPrinters()
+  uint32_t  GetNumPrinters()
     { return mGlobalPrinterList ? mGlobalPrinterList->Length() : 0; }
-  nsString* GetStringAt(PRInt32 aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
+  nsString* GetStringAt(int32_t aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
   void      GetDefaultPrinterName(PRUnichar **aDefaultPrinterName);
 
 protected:
@@ -86,40 +86,40 @@ public:
   /* Does this Mozilla print module allow set/change the paper size ? */
   void SetSupportsPaperSizeChange( bool aSupportsPaperSizeChange );
   /* Set number of paper size records and the records itself */
-  void SetNumPaperSizeRecords( PRInt32 aCount );
-  void SetPaperRecord( PRInt32 aIndex, const char *aName, PRInt32 aWidthMM, PRInt32 aHeightMM, bool aIsInch );
+  void SetNumPaperSizeRecords( int32_t aCount );
+  void SetPaperRecord( int32_t aIndex, const char *aName, int32_t aWidthMM, int32_t aHeightMM, bool aIsInch );
 
   /* Does this printer allow to set/change the content orientation ? */
   void SetCanChangeOrientation( bool aCanSetOrientation );
   /* Does this Mozilla print module allow set/change the content orientation ? */
   void SetSupportsOrientationChange( bool aSupportsOrientationChange );
   /* Set number of orientation records and the records itself */
-  void SetNumOrientationRecords( PRInt32 aCount );
-  void SetOrientationRecord( PRInt32 aIndex, const char *aName );
+  void SetNumOrientationRecords( int32_t aCount );
+  void SetOrientationRecord( int32_t aIndex, const char *aName );
 
   /* Does this printer allow to set/change the plex mode ? */
   void SetCanChangePlex( bool aCanSetPlex );
   /* Does this Mozilla print module allow set/change the plex mode ? */
   void SetSupportsPlexChange( bool aSupportsPlexChange );
   /* Set number of plex records and the records itself */
-  void SetNumPlexRecords( PRInt32 aCount );
-  void SetPlexRecord( PRInt32 aIndex, const char *aName );
+  void SetNumPlexRecords( int32_t aCount );
+  void SetPlexRecord( int32_t aIndex, const char *aName );
 
   /* Does this printer allow to set/change the resolution name ? */
   void SetCanChangeResolutionName( bool aCanSetResolutionName );
   /* Does this Mozilla print module allow set/change the resolution name ? */
   void SetSupportsResolutionNameChange( bool aSupportsResolutionChange );
   /* Set number of resolution records and the records itself */
-  void SetNumResolutionNameRecords( PRInt32 aCount );
-  void SetResolutionNameRecord( PRInt32 aIndex, const char *aName );
+  void SetNumResolutionNameRecords( int32_t aCount );
+  void SetResolutionNameRecord( int32_t aIndex, const char *aName );
 
   /* Does this printer allow to set/change the colorspace ? */
   void SetCanChangeColorspace( bool aCanSetColorspace );
   /* Does this Mozilla print module allow set/change the colorspace ? */
   void SetSupportsColorspaceChange( bool aSupportsColorspace );
   /* Set number of colorspace records and the records itself */
-  void SetNumColorspaceRecords( PRInt32 aCount );
-  void SetColorspaceRecord( PRInt32 aIndex, const char *aName );
+  void SetNumColorspaceRecords( int32_t aCount );
+  void SetColorspaceRecord( int32_t aIndex, const char *aName );
 
   /* Does this device allow to set/change the usage of the internal grayscale mode ? */
   void SetCanChangePrintInColor( bool aCanSetPrintInColor );
@@ -147,7 +147,7 @@ public:
 private:
   /* private helper methods */
   void SetBoolValue( const char *tagname, bool value );
-  void SetIntValue(  const char *tagname, PRInt32 value );
+  void SetIntValue(  const char *tagname, int32_t value );
   void SetCharValue(  const char *tagname, const char *value );
 
   nsXPIDLCString          mPrinterName;
@@ -160,7 +160,7 @@ void nsPrinterFeatures::SetBoolValue( const char *tagname, bool value )
   Preferences::SetBool(prefName.get(), value);
 }
 
-void nsPrinterFeatures::SetIntValue(  const char *tagname, PRInt32 value )
+void nsPrinterFeatures::SetIntValue(  const char *tagname, int32_t value )
 {
   nsPrintfCString prefName(PRINTERFEATURES_PREF ".%s.%s",
                            mPrinterName.get(), tagname);
@@ -193,12 +193,12 @@ void nsPrinterFeatures::SetSupportsPaperSizeChange( bool aSupportsPaperSizeChang
 }
 
 /* Set number of paper size records and the records itself */
-void nsPrinterFeatures::SetNumPaperSizeRecords( PRInt32 aCount )
+void nsPrinterFeatures::SetNumPaperSizeRecords( int32_t aCount )
 {
   SetIntValue("paper.count", aCount);          
 }
 
-void nsPrinterFeatures::SetPaperRecord(PRInt32 aIndex, const char *aPaperName, PRInt32 aWidthMM, PRInt32 aHeightMM, bool aIsInch)
+void nsPrinterFeatures::SetPaperRecord(int32_t aIndex, const char *aPaperName, int32_t aWidthMM, int32_t aHeightMM, bool aIsInch)
 {
   SetCharValue(nsPrintfCString("paper.%d.name",      aIndex).get(), aPaperName);
   SetIntValue( nsPrintfCString("paper.%d.width_mm",  aIndex).get(), aWidthMM);
@@ -216,12 +216,12 @@ void nsPrinterFeatures::SetSupportsOrientationChange( bool aSupportsOrientationC
   SetBoolValue("supports_orientation_change", aSupportsOrientationChange);
 }
 
-void nsPrinterFeatures::SetNumOrientationRecords( PRInt32 aCount )
+void nsPrinterFeatures::SetNumOrientationRecords( int32_t aCount )
 {
   SetIntValue("orientation.count", aCount);          
 }
 
-void nsPrinterFeatures::SetOrientationRecord( PRInt32 aIndex, const char *aOrientationName )
+void nsPrinterFeatures::SetOrientationRecord( int32_t aIndex, const char *aOrientationName )
 {
   SetCharValue(nsPrintfCString("orientation.%d.name", aIndex).get(), aOrientationName);
 }
@@ -236,12 +236,12 @@ void nsPrinterFeatures::SetSupportsPlexChange( bool aSupportsPlexChange )
   SetBoolValue("supports_plex_change", aSupportsPlexChange);
 }
 
-void nsPrinterFeatures::SetNumPlexRecords( PRInt32 aCount )
+void nsPrinterFeatures::SetNumPlexRecords( int32_t aCount )
 {
   SetIntValue("plex.count", aCount);          
 }
 
-void nsPrinterFeatures::SetPlexRecord( PRInt32 aIndex, const char *aPlexName )
+void nsPrinterFeatures::SetPlexRecord( int32_t aIndex, const char *aPlexName )
 {
   SetCharValue(nsPrintfCString("plex.%d.name", aIndex).get(), aPlexName);
 }
@@ -256,12 +256,12 @@ void nsPrinterFeatures::SetSupportsResolutionNameChange( bool aSupportsResolutio
   SetBoolValue("supports_resolution_change", aSupportsResolutionNameChange);
 }
 
-void nsPrinterFeatures::SetNumResolutionNameRecords( PRInt32 aCount )
+void nsPrinterFeatures::SetNumResolutionNameRecords( int32_t aCount )
 {
   SetIntValue("resolution.count", aCount);          
 }
 
-void nsPrinterFeatures::SetResolutionNameRecord( PRInt32 aIndex, const char *aResolutionName )
+void nsPrinterFeatures::SetResolutionNameRecord( int32_t aIndex, const char *aResolutionName )
 {
   SetCharValue(nsPrintfCString("resolution.%d.name", aIndex).get(), aResolutionName);
 }
@@ -276,12 +276,12 @@ void nsPrinterFeatures::SetSupportsColorspaceChange( bool aSupportsColorspaceCha
   SetBoolValue("supports_colorspace_change", aSupportsColorspaceChange);
 }
 
-void nsPrinterFeatures::SetNumColorspaceRecords( PRInt32 aCount )
+void nsPrinterFeatures::SetNumColorspaceRecords( int32_t aCount )
 {
   SetIntValue("colorspace.count", aCount);          
 }
 
-void nsPrinterFeatures::SetColorspaceRecord( PRInt32 aIndex, const char *aColorspace )
+void nsPrinterFeatures::SetColorspaceRecord( int32_t aIndex, const char *aColorspace )
 {
   SetCharValue(nsPrintfCString("colorspace.%d.name", aIndex).get(), aColorspace);
 }
@@ -408,7 +408,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   if (NS_FAILED(rv))
     return rv;
 
-  PRInt16 format;
+  int16_t format;
   mPrintSettings->GetOutputFormat(&format);
 
   nsRefPtr<gfxASurface> surface;
@@ -431,8 +431,8 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
             (gtk_major_version == 2 && gtk_minor_version >= 24)) {
           format =
             gtk_printer_accepts_pdf(mGtkPrinter) ?
-            static_cast<PRInt16>(nsIPrintSettings::kOutputFormatPDF) :
-            static_cast<PRInt16>(nsIPrintSettings::kOutputFormatPS);
+            static_cast<int16_t>(nsIPrintSettings::kOutputFormatPDF) :
+            static_cast<int16_t>(nsIPrintSettings::kOutputFormatPS);
         } else {
           format = nsIPrintSettings::kOutputFormatPS;
         }
@@ -448,7 +448,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   if (format == nsIPrintSettings::kOutputFormatPDF) {
     surface = new gfxPDFSurface(stream, surfaceSize);
   } else {
-    PRInt32 orientation;
+    int32_t orientation;
     mPrintSettings->GetOrientation(&orientation);
     if (nsIPrintSettings::kPortraitOrientation == orientation) {
       surface = new gfxPSSurface(stream, surfaceSize, gfxPSSurface::PORTRAIT);
@@ -545,7 +545,7 @@ ns_release_macro(gpointer aData) {
 }
 
 NS_IMETHODIMP nsDeviceContextSpecGTK::BeginDocument(PRUnichar * aTitle, PRUnichar * aPrintToFileName,
-                                                    PRInt32 aStartPage, PRInt32 aEndPage)
+                                                    int32_t aStartPage, int32_t aEndPage)
 {
   if (mToPrinter) {
     if (!GTK_IS_PRINTER(mGtkPrinter))
@@ -677,14 +677,14 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **a
     return rv;
   }
 
-  PRUint32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
+  uint32_t numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
   nsTArray<nsString> *printers = new nsTArray<nsString>(numPrinters);
   if (!printers) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  PRUint32 count = 0;
+  uint32_t count = 0;
   while( count < numPrinters )
   {
     printers->AppendElement(*GlobalPrinters::GetInstance()->GetStringAt(count++));
@@ -733,7 +733,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
   if (type == pmPostScript) {
     /* Strip the printing method name from the printer,
      * e.g. turn "PostScript/foobar" to "foobar" */
-    PRInt32 slash = printerName.FindChar('/');
+    int32_t slash = printerName.FindChar('/');
     if (kNotFound != slash)
       printerName.Cut(0, slash + 1);
   }
@@ -929,7 +929,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     // in this function, we would save one loop here
     nsTArray<nsCString> printerList;
     psMgr.GetPrinterList(printerList);
-    for (PRUint32 i = 0; i < printerList.Length(); i++)
+    for (uint32_t i = 0; i < printerList.Length(); i++)
     {
       mGlobalPrinterList->AppendElement(NS_ConvertUTF8toUTF16(printerList[i]));
     }

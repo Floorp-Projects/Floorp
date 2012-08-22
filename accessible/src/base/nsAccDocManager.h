@@ -96,7 +96,7 @@ private:
    *                           if 0 then no event is fired
    */
   void HandleDOMDocumentLoad(nsIDocument* aDocument,
-                             PRUint32 aLoadEventType);
+                             uint32_t aLoadEventType);
 
   /**
    * Add 'pagehide' and 'DOMContentLoaded' event listeners.

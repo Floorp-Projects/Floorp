@@ -28,7 +28,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMTouch)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMTouch)
 
 NS_IMETHODIMP
-nsDOMTouch::GetIdentifier(PRInt32* aIdentifier)
+nsDOMTouch::GetIdentifier(int32_t* aIdentifier)
 {
   *aIdentifier = mIdentifier;
   return NS_OK;
@@ -42,56 +42,56 @@ nsDOMTouch::GetTarget(nsIDOMEventTarget** aTarget)
 }
 
 NS_IMETHODIMP
-nsDOMTouch::GetScreenX(PRInt32* aScreenX)
+nsDOMTouch::GetScreenX(int32_t* aScreenX)
 {
   *aScreenX = mScreenPoint.x;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouch::GetScreenY(PRInt32* aScreenY)
+nsDOMTouch::GetScreenY(int32_t* aScreenY)
 {
   *aScreenY = mScreenPoint.y;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouch::GetClientX(PRInt32* aClientX)
+nsDOMTouch::GetClientX(int32_t* aClientX)
 {
   *aClientX = mClientPoint.x;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouch::GetClientY(PRInt32* aClientY)
+nsDOMTouch::GetClientY(int32_t* aClientY)
 {
   *aClientY = mClientPoint.y;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouch::GetPageX(PRInt32* aPageX)
+nsDOMTouch::GetPageX(int32_t* aPageX)
 {
   *aPageX = mPagePoint.x;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouch::GetPageY(PRInt32* aPageY)
+nsDOMTouch::GetPageY(int32_t* aPageY)
 {
   *aPageY = mPagePoint.y;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouch::GetRadiusX(PRInt32* aRadiusX)
+nsDOMTouch::GetRadiusX(int32_t* aRadiusX)
 {
   *aRadiusX = mRadius.x;
   return NS_OK;
 }
                                              
 NS_IMETHODIMP
-nsDOMTouch::GetRadiusY(PRInt32* aRadiusY)
+nsDOMTouch::GetRadiusY(int32_t* aRadiusY)
 {
   *aRadiusY = mRadius.y;
   return NS_OK;
@@ -116,7 +116,7 @@ nsDOMTouch::Equals(nsIDOMTouch* aTouch)
 {
   float force;
   float orientation;
-  PRInt32 radiusX, radiusY;
+  int32_t radiusX, radiusY;
   aTouch->GetForce(&force);
   aTouch->GetRotationAngle(&orientation);
   aTouch->GetRadiusX(&radiusX);
@@ -154,26 +154,26 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMTouchList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMTouchList)
 
 NS_IMETHODIMP
-nsDOMTouchList::GetLength(PRUint32* aLength)
+nsDOMTouchList::GetLength(uint32_t* aLength)
 {
   *aLength = mPoints.Length();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchList::Item(PRUint32 aIndex, nsIDOMTouch** aRetVal)
+nsDOMTouchList::Item(uint32_t aIndex, nsIDOMTouch** aRetVal)
 {
   NS_IF_ADDREF(*aRetVal = mPoints.SafeElementAt(aIndex, nullptr));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchList::IdentifiedTouch(PRInt32 aIdentifier, nsIDOMTouch** aRetVal)
+nsDOMTouchList::IdentifiedTouch(int32_t aIdentifier, nsIDOMTouch** aRetVal)
 {
   *aRetVal = nullptr;
-  for (PRUint32 i = 0; i < mPoints.Length(); ++i) {
+  for (uint32_t i = 0; i < mPoints.Length(); ++i) {
     nsCOMPtr<nsIDOMTouch> point = mPoints[i];
-    PRInt32 identifier;
+    int32_t identifier;
     if (point && NS_SUCCEEDED(point->GetIdentifier(&identifier)) &&
         aIdentifier == identifier) {
       point.swap(*aRetVal);
@@ -193,7 +193,7 @@ nsDOMTouchEvent::nsDOMTouchEvent(nsPresContext* aPresContext,
   if (aEvent) {
     mEventIsInternal = false;
 
-    for (PRUint32 i = 0; i < aEvent->touches.Length(); ++i) {
+    for (uint32_t i = 0; i < aEvent->touches.Length(); ++i) {
       nsIDOMTouch *touch = aEvent->touches[i];
       nsDOMTouch *domtouch = static_cast<nsDOMTouch*>(touch);
       domtouch->InitializePoints(mPresContext, aEvent);
@@ -242,7 +242,7 @@ nsDOMTouchEvent::InitTouchEvent(const nsAString& aType,
                                 bool aCanBubble,
                                 bool aCancelable,
                                 nsIDOMWindow* aView,
-                                PRInt32 aDetail,
+                                int32_t aDetail,
                                 bool aCtrlKey,
                                 bool aAltKey,
                                 bool aShiftKey,
@@ -282,7 +282,7 @@ nsDOMTouchEvent::GetTouches(nsIDOMTouchList** aTouches)
     // for touchend events, remove any changed touches from the touches array
     nsTArray<nsCOMPtr<nsIDOMTouch> > unchangedTouches;
     nsTArray<nsCOMPtr<nsIDOMTouch> > touches = touchEvent->touches;
-    for (PRUint32 i = 0; i < touches.Length(); ++i) {
+    for (uint32_t i = 0; i < touches.Length(); ++i) {
       if (!touches[i]->mChanged) {
         unchangedTouches.AppendElement(touches[i]);
       }
@@ -308,7 +308,7 @@ nsDOMTouchEvent::GetTargetTouches(nsIDOMTouchList** aTargetTouches)
   nsTArray<nsCOMPtr<nsIDOMTouch> > targetTouches;
   nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(mEvent);
   nsTArray<nsCOMPtr<nsIDOMTouch> > touches = touchEvent->touches;
-  for (PRUint32 i = 0; i < touches.Length(); ++i) {
+  for (uint32_t i = 0; i < touches.Length(); ++i) {
     // for touchend/cancel events, don't append to the target list if this is a
     // touch that is ending
     if ((mEvent->message != NS_TOUCH_END &&
@@ -336,7 +336,7 @@ nsDOMTouchEvent::GetChangedTouches(nsIDOMTouchList** aChangedTouches)
   nsTArray<nsCOMPtr<nsIDOMTouch> > changedTouches;
   nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(mEvent);
   nsTArray<nsCOMPtr<nsIDOMTouch> > touches = touchEvent->touches;
-  for (PRUint32 i = 0; i < touches.Length(); ++i) {
+  for (uint32_t i = 0; i < touches.Length(); ++i) {
     if (touches[i]->mChanged) {
       changedTouches.AppendElement(touches[i]);
     }

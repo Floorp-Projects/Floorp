@@ -54,14 +54,14 @@
 
 #include "nsHtml5UTF16Buffer.h"
 
-PRInt32 
+int32_t 
 nsHtml5UTF16Buffer::getStart()
 {
   return start;
 }
 
 void 
-nsHtml5UTF16Buffer::setStart(PRInt32 start)
+nsHtml5UTF16Buffer::setStart(int32_t start)
 {
   this->start = start;
 }
@@ -72,7 +72,7 @@ nsHtml5UTF16Buffer::getBuffer()
   return buffer;
 }
 
-PRInt32 
+int32_t 
 nsHtml5UTF16Buffer::getEnd()
 {
   return end;
@@ -93,7 +93,7 @@ nsHtml5UTF16Buffer::adjust(bool lastWasCR)
 }
 
 void 
-nsHtml5UTF16Buffer::setEnd(PRInt32 end)
+nsHtml5UTF16Buffer::setEnd(int32_t end)
 {
   this->end = end;
 }

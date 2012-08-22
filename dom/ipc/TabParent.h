@@ -83,31 +83,31 @@ public:
                                   const ClonedMessageData& aData);
     virtual bool RecvNotifyIMEFocus(const bool& aFocus,
                                     nsIMEUpdatePreference* aPreference,
-                                    PRUint32* aSeqno);
-    virtual bool RecvNotifyIMETextChange(const PRUint32& aStart,
-                                         const PRUint32& aEnd,
-                                         const PRUint32& aNewEnd);
-    virtual bool RecvNotifyIMESelection(const PRUint32& aSeqno,
-                                        const PRUint32& aAnchor,
-                                        const PRUint32& aFocus);
+                                    uint32_t* aSeqno);
+    virtual bool RecvNotifyIMETextChange(const uint32_t& aStart,
+                                         const uint32_t& aEnd,
+                                         const uint32_t& aNewEnd);
+    virtual bool RecvNotifyIMESelection(const uint32_t& aSeqno,
+                                        const uint32_t& aAnchor,
+                                        const uint32_t& aFocus);
     virtual bool RecvNotifyIMETextHint(const nsString& aText);
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        nsString* aComposition);
-    virtual bool RecvGetInputContext(PRInt32* aIMEEnabled,
-                                     PRInt32* aIMEOpen);
-    virtual bool RecvSetInputContext(const PRInt32& aIMEEnabled,
-                                     const PRInt32& aIMEOpen,
+    virtual bool RecvGetInputContext(int32_t* aIMEEnabled,
+                                     int32_t* aIMEOpen);
+    virtual bool RecvSetInputContext(const int32_t& aIMEEnabled,
+                                     const int32_t& aIMEOpen,
                                      const nsString& aType,
                                      const nsString& aActionHint,
-                                     const PRInt32& aCause,
-                                     const PRInt32& aFocusChange);
-    virtual bool RecvSetCursor(const PRUint32& aValue);
+                                     const int32_t& aCause,
+                                     const int32_t& aFocusChange);
+    virtual bool RecvSetCursor(const uint32_t& aValue);
     virtual bool RecvSetBackgroundColor(const nscolor& aValue);
     virtual bool RecvGetDPI(float* aValue);
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue);
     virtual bool RecvNotifyDOMTouchListenerAdded();
     virtual bool RecvZoomToRect(const gfxRect& aRect);
-    virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
+    virtual PContentDialogParent* AllocPContentDialog(const uint32_t& aType,
                                                       const nsCString& aName,
                                                       const nsCString& aFeatures,
                                                       const InfallibleTArray<int>& aIntParams,
@@ -137,10 +137,10 @@ public:
     bool Active();
 
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
-                        PRInt32 aButton, PRInt32 aClickCount,
-                        PRInt32 aModifiers, bool aIgnoreRootScrollFrame);
-    void SendKeyEvent(const nsAString& aType, PRInt32 aKeyCode,
-                      PRInt32 aCharCode, PRInt32 aModifiers,
+                        int32_t aButton, int32_t aClickCount,
+                        int32_t aModifiers, bool aIgnoreRootScrollFrame);
+    void SendKeyEvent(const nsAString& aType, int32_t aKeyCode,
+                      int32_t aCharCode, int32_t aModifiers,
                       bool aPreventDefault);
     bool SendRealMouseEvent(nsMouseEvent& event);
     bool SendMouseWheelEvent(mozilla::widget::WheelEvent& event);
@@ -150,7 +150,7 @@ public:
     virtual PDocumentRendererParent*
     AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,
                            const nsString& bgcolor,
-                           const PRUint32& renderFlags, const bool& flushLayout,
+                           const uint32_t& renderFlags, const bool& flushLayout,
                            const nsIntSize& renderSize);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererParent* actor);
 
@@ -207,7 +207,7 @@ protected:
 
     struct DelayedDialogData
     {
-      DelayedDialogData(PContentDialogParent* aDialog, PRUint32 aType,
+      DelayedDialogData(PContentDialogParent* aDialog, uint32_t aType,
                         const nsCString& aName,
                         const nsCString& aFeatures,
                         nsIDialogParamBlock* aParams)
@@ -215,7 +215,7 @@ protected:
         mParams(aParams) {}
 
       PContentDialogParent* mDialog;
-      PRUint32 mType;
+      uint32_t mType;
       nsCString mName;
       nsCString mFeatures;
       nsCOMPtr<nsIDialogParamBlock> mParams;
@@ -235,15 +235,15 @@ protected:
     // IME
     static TabParent *mIMETabParent;
     nsString mIMECacheText;
-    PRUint32 mIMESelectionAnchor;
-    PRUint32 mIMESelectionFocus;
+    uint32_t mIMESelectionAnchor;
+    uint32_t mIMESelectionFocus;
     bool mIMEComposing;
     bool mIMECompositionEnding;
     // Buffer to store composition text during ResetInputState
     // Compositions in almost all cases are small enough for nsAutoString
     nsAutoString mIMECompositionText;
-    PRUint32 mIMECompositionStart;
-    PRUint32 mIMESeqno;
+    uint32_t mIMECompositionStart;
+    uint32_t mIMESeqno;
 
     float mDPI;
     bool mActive;

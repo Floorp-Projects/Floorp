@@ -43,7 +43,7 @@ SnapLineToPixels(gfxFloat& aOffset, gfxFloat& aSize)
 
 void
 gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
-                             PRUint32* aSpaceGlyph)
+                             uint32_t* aSpaceGlyph)
 {
     NS_PRECONDITION(aMetrics != NULL, "aMetrics must not be NULL");
     NS_PRECONDITION(aSpaceGlyph != NULL, "aSpaceGlyph must not be NULL");
@@ -264,8 +264,8 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
     aMetrics->emDescent = aMetrics->emHeight - aMetrics->emAscent;
 }
 
-PRUint32
-gfxFT2LockedFace::GetGlyph(PRUint32 aCharCode)
+uint32_t
+gfxFT2LockedFace::GetGlyph(uint32_t aCharCode)
 {
     if (NS_UNLIKELY(!mFace))
         return 0;
@@ -292,8 +292,8 @@ typedef FT_UInt (*GetCharVariantFunction)(FT_Face  face,
                                           FT_ULong charcode,
                                           FT_ULong variantSelector);
 
-PRUint32
-gfxFT2LockedFace::GetUVSGlyph(PRUint32 aCharCode, PRUint32 aVariantSelector)
+uint32_t
+gfxFT2LockedFace::GetUVSGlyph(uint32_t aCharCode, uint32_t aVariantSelector)
 {
     NS_PRECONDITION(aVariantSelector, "aVariantSelector should not be NULL");
 
@@ -317,7 +317,7 @@ gfxFT2LockedFace::GetUVSGlyph(PRUint32 aCharCode, PRUint32 aVariantSelector)
 }
 
 bool
-gfxFT2LockedFace::GetFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aBuffer)
+gfxFT2LockedFace::GetFontTable(uint32_t aTag, FallibleTArray<uint8_t>& aBuffer)
 {
     if (!mFace || !FT_IS_SFNT(mFace))
         return false;
@@ -328,7 +328,7 @@ gfxFT2LockedFace::GetFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aBuffer)
     if (error != 0)
         return false;
 
-    if (NS_UNLIKELY(length > static_cast<FallibleTArray<PRUint8>::size_type>(-1))
+    if (NS_UNLIKELY(length > static_cast<FallibleTArray<uint8_t>::size_type>(-1))
         || NS_UNLIKELY(!aBuffer.SetLength(length)))
         return false;
         
@@ -341,7 +341,7 @@ gfxFT2LockedFace::GetFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aBuffer)
     return true;
 }
 
-PRUint32
+uint32_t
 gfxFT2LockedFace::GetCharExtents(char aChar, cairo_text_extents_t* aExtents)
 {
     NS_PRECONDITION(aExtents != NULL, "aExtents must not be NULL");

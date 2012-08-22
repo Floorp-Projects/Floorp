@@ -15,7 +15,7 @@ enum nsStretchDirection {
   NS_STRETCH_DIRECTION_VERTICAL    =  2
 };
 
-typedef PRUint32 nsOperatorFlags;
+typedef uint32_t nsOperatorFlags;
 enum {
   // define the bits used to handle the operator
   NS_MATHML_OPERATOR_MUTABLE            = 1<<30,

@@ -18,10 +18,10 @@ public:
      }
  virtual ~nsShiftJISToUnicode() {}
 
- NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
-     PRUnichar * aDest, PRInt32 * aDestLength) ;
- NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength) 
+ NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
+     PRUnichar * aDest, int32_t * aDestLength) ;
+ NS_IMETHOD GetMaxLength(const char * aSrc, int32_t aSrcLength,
+     int32_t * aDestLength) 
      {
         *aDestLength = aSrcLength;
         return NS_OK;
@@ -37,8 +37,8 @@ public:
 private:
 
 private:
- PRInt32  mState;
- PRInt32 mData;
+ int32_t  mState;
+ int32_t mData;
 };
 
 class nsEUCJPToUnicodeV2 : public nsBasicDecoderSupport
@@ -51,10 +51,10 @@ public:
      }
  virtual ~nsEUCJPToUnicodeV2() {}
 
- NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
-     PRUnichar * aDest, PRInt32 * aDestLength) ;
- NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength) 
+ NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
+     PRUnichar * aDest, int32_t * aDestLength) ;
+ NS_IMETHOD GetMaxLength(const char * aSrc, int32_t aSrcLength,
+     int32_t * aDestLength) 
      {
         *aDestLength = aSrcLength;
         return NS_OK;
@@ -66,8 +66,8 @@ public:
      }
 
 private:
- PRInt32  mState;
- PRInt32 mData;
+ int32_t  mState;
+ int32_t mData;
 };
  
 class nsISO2022JPToUnicodeV2 : public nsBasicDecoderSupport
@@ -92,10 +92,10 @@ public:
         NS_IF_RELEASE(mISO88597Decoder);
      }
 
- NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
-     PRUnichar * aDest, PRInt32 * aDestLength) ;
- NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength) 
+ NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
+     PRUnichar * aDest, int32_t * aDestLength) ;
+ NS_IMETHOD GetMaxLength(const char * aSrc, int32_t aSrcLength,
+     int32_t * aDestLength) 
      {
         *aDestLength = aSrcLength;
         return NS_OK;
@@ -131,8 +131,8 @@ private:
    mState_ESC_4e,
    mState_ERROR
  } mState, mLastLegalState;
- PRInt32 mData;
- PRInt32 mRunLength; // the length of a non-ASCII run
+ int32_t mData;
+ int32_t mRunLength; // the length of a non-ASCII run
  enum {
    G2_unknown,
    G2_ISO88591,

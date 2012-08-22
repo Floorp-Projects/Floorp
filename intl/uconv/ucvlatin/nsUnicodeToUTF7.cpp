@@ -23,9 +23,9 @@ nsBasicUTF7Encoder::nsBasicUTF7Encoder(char aLastChar, char aEscChar)
   Reset();
 }
 
-nsresult nsBasicUTF7Encoder::ShiftEncoding(PRInt32 aEncoding,
+nsresult nsBasicUTF7Encoder::ShiftEncoding(int32_t aEncoding,
                                           char * aDest, 
-                                          PRInt32 * aDestLength)
+                                          int32_t * aDestLength)
 {
   if (aEncoding == mEncoding) {
     *aDestLength = 0;
@@ -65,9 +65,9 @@ nsresult nsBasicUTF7Encoder::ShiftEncoding(PRInt32 aEncoding,
 
 nsresult nsBasicUTF7Encoder::EncodeDirect(
                             const PRUnichar * aSrc, 
-                            PRInt32 * aSrcLength, 
+                            int32_t * aSrcLength, 
                             char * aDest, 
-                            PRInt32 * aDestLength)
+                            int32_t * aDestLength)
 {
   nsresult res = NS_OK;
   const PRUnichar * src = aSrc;
@@ -111,9 +111,9 @@ nsresult nsBasicUTF7Encoder::EncodeDirect(
 
 nsresult nsBasicUTF7Encoder::EncodeBase64(
                              const PRUnichar * aSrc, 
-                             PRInt32 * aSrcLength, 
+                             int32_t * aSrcLength, 
                              char * aDest, 
-                             PRInt32 * aDestLength)
+                             int32_t * aDestLength)
 {
   nsresult res = NS_OK;
   const PRUnichar * src = aSrc;
@@ -121,7 +121,7 @@ nsresult nsBasicUTF7Encoder::EncodeBase64(
   char * dest = aDest;
   char * destEnd = aDest + *aDestLength;
   PRUnichar ch;
-  PRUint32 value;
+  uint32_t value;
 
   while (src < srcEnd) {
     ch = *src;
@@ -180,7 +180,7 @@ nsresult nsBasicUTF7Encoder::EncodeBase64(
   return res;
 }
 
-char nsBasicUTF7Encoder::ValueToChar(PRUint32 aValue) { 
+char nsBasicUTF7Encoder::ValueToChar(uint32_t aValue) { 
   if (aValue < 26) 
     return (char)('A'+aValue);
   else if (aValue < 26 + 26) 
@@ -206,18 +206,18 @@ bool nsBasicUTF7Encoder::DirectEncodable(PRUnichar aChar) {
 
 NS_IMETHODIMP nsBasicUTF7Encoder::ConvertNoBuffNoErr(
                                   const PRUnichar * aSrc, 
-                                  PRInt32 * aSrcLength, 
+                                  int32_t * aSrcLength, 
                                   char * aDest, 
-                                  PRInt32 * aDestLength)
+                                  int32_t * aDestLength)
 {
   nsresult res = NS_OK;
   const PRUnichar * src = aSrc;
   const PRUnichar * srcEnd = aSrc + *aSrcLength;
   char * dest = aDest;
   char * destEnd = aDest + *aDestLength;
-  PRInt32 bcr,bcw;
+  int32_t bcr,bcw;
   PRUnichar ch;
-  PRInt32 enc;
+  int32_t enc;
 
   while (src < srcEnd) {
     // find the encoding for the next char
@@ -252,7 +252,7 @@ NS_IMETHODIMP nsBasicUTF7Encoder::ConvertNoBuffNoErr(
 }
 
 NS_IMETHODIMP nsBasicUTF7Encoder::FinishNoBuff(char * aDest, 
-                                               PRInt32 * aDestLength)
+                                               int32_t * aDestLength)
 {
   return ShiftEncoding(ENC_DIRECT, aDest, aDestLength);
 }

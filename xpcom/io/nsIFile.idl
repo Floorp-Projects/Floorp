@@ -188,8 +188,8 @@ interface nsIFile : nsISupports
      *  midnight (00:00:00), January 1, 1970 Greenwich Mean
      *  Time (GMT).
      */
-    attribute PRInt64 lastModifiedTime;
-    attribute PRInt64 lastModifiedTimeOfLink;
+    attribute int64_t lastModifiedTime;
+    attribute int64_t lastModifiedTimeOfLink;
 
     /**
      *  WARNING!  On the Mac, getting/setting the file size with nsIFile
@@ -197,8 +197,8 @@ interface nsIFile : nsISupports
      *  know the size of the combined data and resource forks use the
      *  GetFileSizeWithResFork() method defined on nsILocalFileMac.
      */
-    attribute PRInt64 fileSize;
-    readonly attribute PRInt64 fileSizeOfLink;
+    attribute int64_t fileSize;
+    readonly attribute int64_t fileSizeOfLink;
 
     /**
      *  target & path
@@ -374,7 +374,7 @@ interface nsIFile : nsISupports
     [noscript] PRLibraryStar  load();
 
     // number of bytes available on disk to non-superuser
-    readonly attribute PRInt64 diskSpaceAvailable;
+    readonly attribute int64_t diskSpaceAvailable;
 
     /**
      *  appendRelative[Native]Path

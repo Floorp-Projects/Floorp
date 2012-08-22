@@ -48,7 +48,7 @@ public:
 
 protected:
     static nsresult createExprInternal(const nsSubstring& aExpression,
-                                       PRUint32 aSubStringPos,
+                                       uint32_t aSubStringPos,
                                        txIParseContext* aContext,
                                        Expr** aExpr);
     /**
@@ -88,7 +88,7 @@ protected:
      */
     static nsresult resolveQName(const nsAString& aQName, nsIAtom** aPrefix,
                                  txIParseContext* aContext,
-                                 nsIAtom** aLocalName, PRInt32& aNamespace,
+                                 nsIAtom** aLocalName, int32_t& aNamespace,
                                  bool aIsNameTest = false);
 
     /**

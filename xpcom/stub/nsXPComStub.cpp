@@ -18,7 +18,7 @@
  * stub implementation that does nothing.
  */
 XPCOM_API(nsresult)
-NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority);
+NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, uint32_t priority);
 
 XPCOM_API(nsresult)
 NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine);
@@ -103,7 +103,7 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* /* libraryPath */)
     if (functions->version != XPCOM_GLUE_VERSION)
         return NS_ERROR_FAILURE;
 
-    PRUint32 size = functions->size;
+    uint32_t size = functions->size;
     if (size > sizeof(XPCOMFunctions))
         size = sizeof(XPCOMFunctions);
 
@@ -217,8 +217,8 @@ NS_Free(void* ptr)
 
 #undef NS_DebugBreak
 EXPORT_XPCOM_API(void)
-NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
-              const char *aFile, PRInt32 aLine)
+NS_DebugBreak(uint32_t aSeverity, const char *aStr, const char *aExpr,
+              const char *aFile, int32_t aLine)
 {
   NS_DebugBreak_P(aSeverity, aStr, aExpr, aFile, aLine);
 }
@@ -240,7 +240,7 @@ NS_LogTerm()
 #undef NS_LogAddRef
 EXPORT_XPCOM_API(void)
 NS_LogAddRef(void* aPtr, nsrefcnt aNewRefCnt,
-             const char *aTypeName, PRUint32 aInstanceSize)
+             const char *aTypeName, uint32_t aInstanceSize)
 {
   NS_LogAddRef_P(aPtr, aNewRefCnt, aTypeName, aInstanceSize);
 }
@@ -254,14 +254,14 @@ NS_LogRelease(void* aPtr, nsrefcnt aNewRefCnt, const char *aTypeName)
 
 #undef NS_LogCtor
 EXPORT_XPCOM_API(void)
-NS_LogCtor(void *aPtr, const char *aTypeName, PRUint32 aInstanceSize)
+NS_LogCtor(void *aPtr, const char *aTypeName, uint32_t aInstanceSize)
 {
   NS_LogCtor_P(aPtr, aTypeName, aInstanceSize);
 }
 
 #undef NS_LogDtor
 EXPORT_XPCOM_API(void)
-NS_LogDtor(void *aPtr, const char *aTypeName, PRUint32 aInstanceSize)
+NS_LogDtor(void *aPtr, const char *aTypeName, uint32_t aInstanceSize)
 {
   NS_LogDtor_P(aPtr, aTypeName, aInstanceSize);
 }
@@ -297,8 +297,8 @@ NS_DestroyXPTCallStub(nsISomeInterface* aStub)
 
 #undef NS_InvokeByIndex
 EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                 PRUint32 paramCount, nsXPTCVariant* params)
+NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
+                 uint32_t paramCount, nsXPTCVariant* params)
 {
   return NS_InvokeByIndex_P(that, methodIndex, paramCount, params);
 }
@@ -308,7 +308,7 @@ NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
  */
 
 EXPORT_XPCOM_API(nsresult)
-NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
+NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, uint32_t priority)
 {
   return NS_OK;
 }
@@ -334,8 +334,8 @@ NS_StringContainerInit(nsStringContainer &aStr)
 EXPORT_XPCOM_API(nsresult)
 NS_StringContainerInit2(nsStringContainer &aStr,
                         const PRUnichar   *aData,
-                        PRUint32           aDataLength,
-                        PRUint32           aFlags)
+                        uint32_t           aDataLength,
+                        uint32_t           aFlags)
 {   
   return NS_StringContainerInit2_P(aStr, aData, aDataLength, aFlags);
 }
@@ -348,15 +348,15 @@ NS_StringContainerFinish(nsStringContainer &aStr)
 }
 
 #undef NS_StringGetData
-EXPORT_XPCOM_API(PRUint32)
+EXPORT_XPCOM_API(uint32_t)
 NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, bool *aTerm)
 {
   return NS_StringGetData_P(aStr, aBuf, aTerm);
 }
 
 #undef NS_StringGetMutableData
-EXPORT_XPCOM_API(PRUint32)
-NS_StringGetMutableData(nsAString &aStr, PRUint32 aLen, PRUnichar **aBuf)
+EXPORT_XPCOM_API(uint32_t)
+NS_StringGetMutableData(nsAString &aStr, uint32_t aLen, PRUnichar **aBuf)
 {
   return NS_StringGetMutableData_P(aStr, aLen, aBuf);
 }
@@ -370,15 +370,15 @@ NS_StringCloneData(const nsAString &aStr)
 
 #undef NS_StringSetData
 EXPORT_XPCOM_API(nsresult)
-NS_StringSetData(nsAString &aStr, const PRUnichar *aBuf, PRUint32 aCount)
+NS_StringSetData(nsAString &aStr, const PRUnichar *aBuf, uint32_t aCount)
 {
   return NS_StringSetData_P(aStr, aBuf, aCount);
 }
 
 #undef NS_StringSetDataRange
 EXPORT_XPCOM_API(nsresult)
-NS_StringSetDataRange(nsAString &aStr, PRUint32 aCutStart, PRUint32 aCutLength,
-                      const PRUnichar *aBuf, PRUint32 aCount)
+NS_StringSetDataRange(nsAString &aStr, uint32_t aCutStart, uint32_t aCutLength,
+                      const PRUnichar *aBuf, uint32_t aCount)
 {
   return NS_StringSetDataRange_P(aStr, aCutStart, aCutLength, aBuf, aCount);
 }
@@ -415,8 +415,8 @@ NS_CStringContainerInit(nsCStringContainer &aStr)
 EXPORT_XPCOM_API(nsresult)
 NS_CStringContainerInit2(nsCStringContainer &aStr,
                          const char         *aData,
-                         PRUint32            aDataLength,
-                         PRUint32            aFlags)
+                         uint32_t            aDataLength,
+                         uint32_t            aFlags)
 {   
   return NS_CStringContainerInit2_P(aStr, aData, aDataLength, aFlags);
 }
@@ -429,15 +429,15 @@ NS_CStringContainerFinish(nsCStringContainer &aStr)
 }
 
 #undef NS_CStringGetData
-EXPORT_XPCOM_API(PRUint32)
+EXPORT_XPCOM_API(uint32_t)
 NS_CStringGetData(const nsACString &aStr, const char **aBuf, bool *aTerm)
 {
   return NS_CStringGetData_P(aStr, aBuf, aTerm);
 }
 
 #undef NS_CStringGetMutableData
-EXPORT_XPCOM_API(PRUint32)
-NS_CStringGetMutableData(nsACString &aStr, PRUint32 aLen, char **aBuf)
+EXPORT_XPCOM_API(uint32_t)
+NS_CStringGetMutableData(nsACString &aStr, uint32_t aLen, char **aBuf)
 {
   return NS_CStringGetMutableData_P(aStr, aLen, aBuf);
 }
@@ -451,15 +451,15 @@ NS_CStringCloneData(const nsACString &aStr)
 
 #undef NS_CStringSetData
 EXPORT_XPCOM_API(nsresult)
-NS_CStringSetData(nsACString &aStr, const char *aBuf, PRUint32 aCount)
+NS_CStringSetData(nsACString &aStr, const char *aBuf, uint32_t aCount)
 {
   return NS_CStringSetData_P(aStr, aBuf, aCount);
 }
 
 #undef NS_CStringSetDataRange
 EXPORT_XPCOM_API(nsresult)
-NS_CStringSetDataRange(nsACString &aStr, PRUint32 aCutStart, PRUint32 aCutLength,
-                       const char *aBuf, PRUint32 aCount)
+NS_CStringSetDataRange(nsACString &aStr, uint32_t aCutStart, uint32_t aCutLength,
+                       const char *aBuf, uint32_t aCount)
 {
   return NS_CStringSetDataRange_P(aStr, aCutStart, aCutLength, aBuf, aCount);
 }

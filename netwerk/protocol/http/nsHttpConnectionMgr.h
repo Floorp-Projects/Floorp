@@ -52,12 +52,12 @@ public:
 
     nsHttpConnectionMgr();
 
-    nsresult Init(PRUint16 maxConnections,
-                  PRUint16 maxPersistentConnectionsPerHost,
-                  PRUint16 maxPersistentConnectionsPerProxy,
-                  PRUint16 maxRequestDelay,
-                  PRUint16 maxPipelinedRequests,
-                  PRUint16 maxOptimisticPipelinedRequests);
+    nsresult Init(uint16_t maxConnections,
+                  uint16_t maxPersistentConnectionsPerHost,
+                  uint16_t maxPersistentConnectionsPerProxy,
+                  uint16_t maxRequestDelay,
+                  uint16_t maxPipelinedRequests,
+                  uint16_t maxOptimisticPipelinedRequests);
     nsresult Shutdown();
 
     //-------------------------------------------------------------------------
@@ -66,7 +66,7 @@ public:
 
     // Schedules next pruning of dead connection to happen after
     // given time.
-    void PruneDeadConnectionsAfter(PRUint32 time);
+    void PruneDeadConnectionsAfter(uint32_t time);
 
     // Stops timer scheduled for next pruning of dead connections if
     // there are no more idle connections or active spdy ones
@@ -77,11 +77,11 @@ public:
     void ConditionallyStopTimeoutTick();
 
     // adds a transaction to the list of managed transactions.
-    nsresult AddTransaction(nsHttpTransaction *, PRInt32 priority);
+    nsresult AddTransaction(nsHttpTransaction *, int32_t priority);
 
     // called to reschedule the given transaction.  it must already have been
     // added to the connection manager via AddTransaction.
-    nsresult RescheduleTransaction(nsHttpTransaction *, PRInt32 priority);
+    nsresult RescheduleTransaction(nsHttpTransaction *, int32_t priority);
 
     // cancels a transaction w/ the given reason.
     nsresult CancelTransaction(nsHttpTransaction *, nsresult reason);
@@ -122,7 +122,7 @@ public:
 
     // called to update a parameter after the connection manager has already
     // been initialized.
-    nsresult UpdateParam(nsParamName name, PRUint16 value);
+    nsresult UpdateParam(nsParamName name, uint16_t value);
 
     // Lookup/Cancel HTTP->SPDY redirections
     bool GetSpdyAlternateProtocol(nsACString &key);
@@ -131,13 +131,13 @@ public:
 
     // Pipielining Interfaces and Datatypes
 
-    const static PRUint32 kPipelineInfoTypeMask = 0xffff0000;
-    const static PRUint32 kPipelineInfoIDMask   = ~kPipelineInfoTypeMask;
+    const static uint32_t kPipelineInfoTypeMask = 0xffff0000;
+    const static uint32_t kPipelineInfoIDMask   = ~kPipelineInfoTypeMask;
 
-    const static PRUint32 kPipelineInfoTypeRed     = 0x00010000;
-    const static PRUint32 kPipelineInfoTypeBad     = 0x00020000;
-    const static PRUint32 kPipelineInfoTypeNeutral = 0x00040000;
-    const static PRUint32 kPipelineInfoTypeGood    = 0x00080000;
+    const static uint32_t kPipelineInfoTypeRed     = 0x00010000;
+    const static uint32_t kPipelineInfoTypeBad     = 0x00020000;
+    const static uint32_t kPipelineInfoTypeNeutral = 0x00040000;
+    const static uint32_t kPipelineInfoTypeGood    = 0x00080000;
 
     enum PipelineFeedbackInfoType
     {
@@ -191,7 +191,7 @@ public:
     void     PipelineFeedbackInfo(nsHttpConnectionInfo *,
                                   PipelineFeedbackInfoType info,
                                   nsHttpConnection *,
-                                  PRUint32);
+                                  uint32_t);
 
     void ReportFailedToProcess(nsIURI *uri);
 
@@ -263,42 +263,42 @@ private:
 
         // calculate the number of half open sockets that have not had at least 1
         // connection complete
-        PRUint32 UnconnectedHalfOpens();
+        uint32_t UnconnectedHalfOpens();
 
         // Remove a particular half open socket from the mHalfOpens array
         void RemoveHalfOpen(nsHalfOpenSocket *);
 
         // Pipeline depths for various states
-        const static PRUint32 kPipelineUnlimited  = 1024; // fully open - extended green
-        const static PRUint32 kPipelineOpen       = 6;    // 6 on each conn - normal green
-        const static PRUint32 kPipelineRestricted = 2;    // 2 on just 1 conn in yellow
+        const static uint32_t kPipelineUnlimited  = 1024; // fully open - extended green
+        const static uint32_t kPipelineOpen       = 6;    // 6 on each conn - normal green
+        const static uint32_t kPipelineRestricted = 2;    // 2 on just 1 conn in yellow
         
         nsHttpConnectionMgr::PipeliningState PipelineState();
         void OnPipelineFeedbackInfo(
             nsHttpConnectionMgr::PipelineFeedbackInfoType info,
-            nsHttpConnection *, PRUint32);
+            nsHttpConnection *, uint32_t);
         bool SupportsPipelining();
-        PRUint32 MaxPipelineDepth(nsAHttpTransaction::Classifier classification);
+        uint32_t MaxPipelineDepth(nsAHttpTransaction::Classifier classification);
         void CreditPenalty();
 
         nsHttpConnectionMgr::PipeliningState mPipelineState;
 
         void SetYellowConnection(nsHttpConnection *);
         void OnYellowComplete();
-        PRUint32                  mYellowGoodEvents;
-        PRUint32                  mYellowBadEvents;
+        uint32_t                  mYellowGoodEvents;
+        uint32_t                  mYellowBadEvents;
         nsHttpConnection         *mYellowConnection;
 
         // initialGreenDepth is the max depth of a pipeline when you first
         // transition to green. Normally this is kPipelineOpen, but it can
         // be kPipelineUnlimited in aggressive mode.
-        PRUint32                  mInitialGreenDepth;
+        uint32_t                  mInitialGreenDepth;
 
         // greenDepth is the current max allowed depth of a pipeline when
         // in the green state. Normally this starts as kPipelineOpen and
         // grows to kPipelineUnlimited after a pipeline of depth 3 has been
         // successfully transacted.
-        PRUint32                  mGreenDepth;
+        uint32_t                  mGreenDepth;
 
         // pipeliningPenalty is the current amount of penalty points this host
         // entry has earned for participating in events that are not conducive
@@ -306,12 +306,12 @@ private:
         // etc.. penalties are paid back either through elapsed time or simply
         // healthy transactions. Having penalty points means that this host is
         // not currently eligible for pipelines.
-        PRInt16                   mPipeliningPenalty;
+        int16_t                   mPipeliningPenalty;
 
         // some penalty points only apply to particular classifications of
         // transactions - this allows a server that perhaps has head of line
         // blocking problems on CGI queries to still serve JS pipelined.
-        PRInt16                   mPipeliningClassPenalty[nsAHttpTransaction::CLASS_MAX];
+        int16_t                   mPipeliningClassPenalty[nsAHttpTransaction::CLASS_MAX];
 
         // for calculating penalty repair credits
         mozilla::TimeStamp        mLastCreditTime;
@@ -379,7 +379,7 @@ private:
 
         nsHalfOpenSocket(nsConnectionEntry *ent,
                          nsAHttpTransaction *trans,
-                         PRUint8 caps);
+                         uint8_t caps);
         ~nsHalfOpenSocket();
         
         nsresult SetupStreams(nsISocketTransport **,
@@ -409,7 +409,7 @@ private:
         nsCOMPtr<nsISocketTransport>   mSocketTransport;
         nsCOMPtr<nsIAsyncOutputStream> mStreamOut;
         nsCOMPtr<nsIAsyncInputStream>  mStreamIn;
-        PRUint8                        mCaps;
+        uint8_t                        mCaps;
 
         // mSpeculative is set if the socket was created from
         // SpeculativeConnect(). It is cleared when a transaction would normally
@@ -437,17 +437,17 @@ private:
     // NOTE: these members may be accessed from any thread (use mReentrantMonitor)
     //-------------------------------------------------------------------------
 
-    PRInt32                      mRef;
+    int32_t                      mRef;
     mozilla::ReentrantMonitor    mReentrantMonitor;
     nsCOMPtr<nsIEventTarget>     mSocketThreadTarget;
 
     // connection limits
-    PRUint16 mMaxConns;
-    PRUint16 mMaxPersistConnsPerHost;
-    PRUint16 mMaxPersistConnsPerProxy;
-    PRUint16 mMaxRequestDelay; // in seconds
-    PRUint16 mMaxPipelinedRequests;
-    PRUint16 mMaxOptimisticPipelinedRequests;
+    uint16_t mMaxConns;
+    uint16_t mMaxPersistConnsPerHost;
+    uint16_t mMaxPersistConnsPerProxy;
+    uint16_t mMaxRequestDelay; // in seconds
+    uint16_t mMaxPipelinedRequests;
+    uint16_t mMaxOptimisticPipelinedRequests;
     bool mIsShuttingDown;
 
     //-------------------------------------------------------------------------
@@ -463,7 +463,7 @@ private:
     bool     ProcessPendingQForEntry(nsConnectionEntry *);
     bool     IsUnderPressure(nsConnectionEntry *ent,
                              nsHttpTransaction::Classifier classification);
-    bool     AtActiveConnectionLimit(nsConnectionEntry *, PRUint8 caps);
+    bool     AtActiveConnectionLimit(nsConnectionEntry *, uint8_t caps);
     nsresult TryDispatchTransaction(nsConnectionEntry *ent,
                                     bool onlyReusedConnection,
                                     nsHttpTransaction *trans);
@@ -472,9 +472,9 @@ private:
                                  nsHttpConnection *);
     nsresult DispatchAbstractTransaction(nsConnectionEntry *,
                                          nsAHttpTransaction *,
-                                         PRUint8,
+                                         uint8_t,
                                          nsHttpConnection *,
-                                         PRInt32);
+                                         int32_t);
     nsresult BuildPipeline(nsConnectionEntry *,
                            nsAHttpTransaction *,
                            nsHttpPipeline **);
@@ -483,7 +483,7 @@ private:
     nsresult EnsureSocketThreadTargetIfOnline();
     void     ClosePersistentConnections(nsConnectionEntry *ent);
     nsresult CreateTransport(nsConnectionEntry *, nsAHttpTransaction *,
-                             PRUint8, bool);
+                             uint8_t, bool);
     void     AddActiveConn(nsHttpConnection *, nsConnectionEntry *);
     void     StartedConnect();
     void     RecvdConnect();
@@ -495,7 +495,7 @@ private:
     bool     AddToShortestPipeline(nsConnectionEntry *ent,
                                    nsHttpTransaction *trans,
                                    nsHttpTransaction::Classifier classification,
-                                   PRUint16 depthLimit);
+                                   uint16_t depthLimit);
 
     // Manage the preferred spdy connection entry for this address
     nsConnectionEntry *GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry);
@@ -513,7 +513,7 @@ private:
         void *closure);
 
     // message handlers have this signature
-    typedef void (nsHttpConnectionMgr:: *nsConnEventHandler)(PRInt32, void *);
+    typedef void (nsHttpConnectionMgr:: *nsConnEventHandler)(int32_t, void *);
 
     // nsConnEvent
     //
@@ -527,7 +527,7 @@ private:
     public:
         nsConnEvent(nsHttpConnectionMgr *mgr,
                     nsConnEventHandler handler,
-                    PRInt32 iparam,
+                    int32_t iparam,
                     void *vparam)
             : mMgr(mgr)
             , mHandler(handler)
@@ -551,37 +551,37 @@ private:
 
         nsHttpConnectionMgr *mMgr;
         nsConnEventHandler   mHandler;
-        PRInt32              mIParam;
+        int32_t              mIParam;
         void                *mVParam;
     };
 
     nsresult PostEvent(nsConnEventHandler  handler,
-                       PRInt32             iparam = 0,
+                       int32_t             iparam = 0,
                        void               *vparam = nullptr);
 
     // message handlers
-    void OnMsgShutdown             (PRInt32, void *);
-    void OnMsgNewTransaction       (PRInt32, void *);
-    void OnMsgReschedTransaction   (PRInt32, void *);
-    void OnMsgCancelTransaction    (PRInt32, void *);
-    void OnMsgProcessPendingQ      (PRInt32, void *);
-    void OnMsgPruneDeadConnections (PRInt32, void *);
-    void OnMsgSpeculativeConnect   (PRInt32, void *);
-    void OnMsgReclaimConnection    (PRInt32, void *);
-    void OnMsgCompleteUpgrade      (PRInt32, void *);
-    void OnMsgUpdateParam          (PRInt32, void *);
-    void OnMsgClosePersistentConnections (PRInt32, void *);
-    void OnMsgProcessFeedback      (PRInt32, void *);
+    void OnMsgShutdown             (int32_t, void *);
+    void OnMsgNewTransaction       (int32_t, void *);
+    void OnMsgReschedTransaction   (int32_t, void *);
+    void OnMsgCancelTransaction    (int32_t, void *);
+    void OnMsgProcessPendingQ      (int32_t, void *);
+    void OnMsgPruneDeadConnections (int32_t, void *);
+    void OnMsgSpeculativeConnect   (int32_t, void *);
+    void OnMsgReclaimConnection    (int32_t, void *);
+    void OnMsgCompleteUpgrade      (int32_t, void *);
+    void OnMsgUpdateParam          (int32_t, void *);
+    void OnMsgClosePersistentConnections (int32_t, void *);
+    void OnMsgProcessFeedback      (int32_t, void *);
 
     // Total number of active connections in all of the ConnectionEntry objects
     // that are accessed from mCT connection table.
-    PRUint16 mNumActiveConns;
+    uint16_t mNumActiveConns;
     // Total number of idle connections in all of the ConnectionEntry objects
     // that are accessed from mCT connection table.
-    PRUint16 mNumIdleConns;
+    uint16_t mNumIdleConns;
 
     // Holds time in seconds for next wake-up to prune dead connections. 
-    PRUint64 mTimeOfNextWakeUp;
+    uint64_t mTimeOfNextWakeUp;
     // Timer for next pruning of dead connections.
     nsCOMPtr<nsITimer> mTimer;
 
@@ -612,7 +612,7 @@ private:
                                          void *closure);
 
     // For diagnostics
-    void OnMsgPrintDiagnostics(PRInt32, void *);
+    void OnMsgPrintDiagnostics(int32_t, void *);
     static PLDHashOperator PrintDiagnosticsCB(const nsACString &key,
                                               nsAutoPtr<nsConnectionEntry> &ent,
                                               void *closure);

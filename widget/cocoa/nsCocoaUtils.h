@@ -144,7 +144,7 @@ class nsCocoaUtils
       @param aResult the resulting NSImage
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */  
-  static nsresult CreateNSImageFromImageContainer(imgIContainer *aImage, PRUint32 aWhichFrame, NSImage **aResult);
+  static nsresult CreateNSImageFromImageContainer(imgIContainer *aImage, uint32_t aWhichFrame, NSImage **aResult);
 
   /**
    * Returns nsAString for aSrc.

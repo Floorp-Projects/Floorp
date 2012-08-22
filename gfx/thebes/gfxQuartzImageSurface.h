@@ -17,7 +17,7 @@ public:
     virtual ~gfxQuartzImageSurface();
 
     already_AddRefed<gfxImageSurface> GetAsImageSurface();
-    virtual PRInt32 KnownMemoryUsed();
+    virtual int32_t KnownMemoryUsed();
 };
 
 #endif /* GFX_QUARTZIMAGESURFACE_H */

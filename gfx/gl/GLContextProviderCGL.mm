@@ -324,7 +324,7 @@ protected:
             mGLContext->fGenBuffers(1, &mPixelBuffer);
         }
         mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPixelBuffer);
-        PRInt32 length = size.width * 4 * size.height;
+        int32_t length = size.width * 4 * size.height;
 
         if (length > mPixelBufferSize) {
             mGLContext->fBufferData(LOCAL_GL_PIXEL_UNPACK_BUFFER, length,
@@ -391,7 +391,7 @@ private:
     {}
     
     GLuint mPixelBuffer;
-    PRInt32 mPixelBufferSize;
+    int32_t mPixelBufferSize;
     bool mBoundPixelBuffer;
 };
 

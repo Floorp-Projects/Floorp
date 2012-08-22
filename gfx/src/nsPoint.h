@@ -25,15 +25,15 @@ struct nsPoint : public mozilla::gfx::BasePoint<nscoord, nsPoint> {
   inline nsIntPoint ToNearestPixels(nscoord aAppUnitsPerPixel) const;
 
   // Converts this point from aFromAPP, an appunits per pixel ratio, to aToAPP.
-  inline nsPoint ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const;
+  inline nsPoint ConvertAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
 };
 
-struct nsIntPoint : public mozilla::gfx::BasePoint<PRInt32, nsIntPoint> {
-  typedef mozilla::gfx::BasePoint<PRInt32, nsIntPoint> Super;
+struct nsIntPoint : public mozilla::gfx::BasePoint<int32_t, nsIntPoint> {
+  typedef mozilla::gfx::BasePoint<int32_t, nsIntPoint> Super;
 
   nsIntPoint() : Super() {}
   nsIntPoint(const nsIntPoint& aPoint) : Super(aPoint) {}
-  nsIntPoint(PRInt32 aX, PRInt32 aY) : Super(aX, aY) {}
+  nsIntPoint(int32_t aX, int32_t aY) : Super(aX, aY) {}
 
   inline nsPoint ToAppUnits(nscoord aAppUnitsPerPixel) const;
 };
@@ -54,7 +54,7 @@ nsPoint::ToNearestPixels(nscoord aAppUnitsPerPixel) const
 }
 
 inline nsPoint
-nsPoint::ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const
+nsPoint::ConvertAppUnits(int32_t aFromAPP, int32_t aToAPP) const
 {
   if (aFromAPP != aToAPP) {
     nsPoint point;

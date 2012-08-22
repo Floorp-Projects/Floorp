@@ -68,23 +68,23 @@ struct list_state
   void           *magic;        /* to determine if previously initialized */
   PRTime         now_time;      /* needed for year determination */
   PRExplodedTime now_tm;        /* needed for year determination */
-  PRInt32        lstyle;        /* LISTing style */
-  PRInt32        parsed_one;    /* returned anything yet? */
+  int32_t        lstyle;        /* LISTing style */
+  int32_t        parsed_one;    /* returned anything yet? */
   char           carry_buf[84]; /* for VMS multiline */
-  PRUint32       carry_buf_len; /* length of name in carry_buf */
-  PRUint32       numlines;      /* number of lines seen */
+  uint32_t       carry_buf_len; /* length of name in carry_buf */
+  uint32_t       numlines;      /* number of lines seen */
 };
 
 struct list_result
 {
-  PRInt32           fe_type;      /* 'd'(dir) or 'l'(link) or 'f'(file) */
+  int32_t           fe_type;      /* 'd'(dir) or 'l'(link) or 'f'(file) */
   const char *      fe_fname;     /* pointer to filename */
-  PRUint32          fe_fnlen;     /* length of filename */
+  uint32_t          fe_fnlen;     /* length of filename */
   const char *      fe_lname;     /* pointer to symlink name */
-  PRUint32          fe_lnlen;     /* length of symlink name */
+  uint32_t          fe_lnlen;     /* length of symlink name */
   char              fe_size[40];  /* size of file in bytes (<= (2^128 - 1)) */
   PRExplodedTime    fe_time;      /* last-modified time */
-  PRInt32           fe_cinfs;     /* file system is definitely case insensitive */
+  int32_t           fe_cinfs;     /* file system is definitely case insensitive */
                                   /* (converting all-upcase names may be desirable) */
 };
 

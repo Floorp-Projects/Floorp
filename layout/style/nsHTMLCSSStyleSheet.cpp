@@ -221,10 +221,10 @@ nsHTMLCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 
 #ifdef DEBUG
 /* virtual */ void
-nsHTMLCSSStyleSheet::List(FILE* out, PRInt32 aIndent) const
+nsHTMLCSSStyleSheet::List(FILE* out, int32_t aIndent) const
 {
   // Indent
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("HTML CSS Style Sheet: ", out);
   nsCAutoString urlSpec;

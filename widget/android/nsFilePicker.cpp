@@ -11,7 +11,7 @@
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
 NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindow *parent, const nsAString& title, 
-                                 PRInt16 mode)
+                                 int16_t mode)
 {
     return (mode == nsIFilePicker::modeOpen ||
             mode == nsIFilePicker::modeOpenMultiple)
@@ -19,7 +19,7 @@ NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindow *parent, const nsAString& title,
         : NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsFilePicker::AppendFilters(PRInt32 aFilterMask)
+NS_IMETHODIMP nsFilePicker::AppendFilters(int32_t aFilterMask)
 {
   if (aFilterMask == (filterAudio | filterAll)) {
     mMimeTypeFilter.AssignLiteral("audio/*");
@@ -113,7 +113,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIURI **aFileURL)
     return CallQueryInterface(uri, aFileURL);
 }
 
-NS_IMETHODIMP nsFilePicker::Show(PRInt16 *_retval)
+NS_IMETHODIMP nsFilePicker::Show(int16_t *_retval)
 {
     if (!mozilla::AndroidBridge::Bridge())
         return NS_ERROR_NOT_IMPLEMENTED;

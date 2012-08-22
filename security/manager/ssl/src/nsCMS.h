@@ -43,10 +43,10 @@ private:
   nsCOMPtr<nsIInterfaceRequestor> m_ctx;
   NSSCMSMessage * m_cmsMsg;
   NSSCMSSignerInfo* GetTopLevelSignerInfo();
-  nsresult CommonVerifySignature(unsigned char* aDigestData, PRUint32 aDigestDataLen);
+  nsresult CommonVerifySignature(unsigned char* aDigestData, uint32_t aDigestDataLen);
 
   nsresult CommonAsyncVerifySignature(nsISMimeVerificationListener *aListener,
-                                      unsigned char* aDigestData, PRUint32 aDigestDataLen);
+                                      unsigned char* aDigestData, uint32_t aDigestDataLen);
 
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();

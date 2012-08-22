@@ -251,9 +251,9 @@ interface nsIPrincipal : nsISerializable
     readonly attribute unsigned short appStatus;
 
     %{C++
-    PRUint16 GetAppStatus()
+    uint16_t GetAppStatus()
     {
-      PRUint16 appStatus;
+      uint16_t appStatus;
       nsresult rv = GetAppStatus(&appStatus);
       if (NS_FAILED(rv)) {
         return APP_STATUS_NOT_INSTALLED;

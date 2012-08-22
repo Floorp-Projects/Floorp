@@ -15,14 +15,14 @@
 #elif defined(__OpenBSD__)
 #include <inttypes.h>
 #elif !defined(ANDROID)
-typedef PRInt8 int8_t;
-typedef PRUint8 uint8_t;
-typedef PRInt16 int16_t;
-typedef PRUint16 uint16_t;
-typedef PRInt32 int32_t;
-typedef PRUint32 uint32_t;
-typedef PRInt64 int64_t;
-typedef PRUint64 uint64_t;
+typedef int8_t int8_t;
+typedef uint8_t uint8_t;
+typedef int16_t int16_t;
+typedef uint16_t uint16_t;
+typedef int32_t int32_t;
+typedef uint32_t uint32_t;
+typedef int64_t int64_t;
+typedef uint64_t uint64_t;
 
 #ifdef __OS2__
 /* OS/2's stdlib typdefs uintptr_t. So we'll just include that so we don't collide */

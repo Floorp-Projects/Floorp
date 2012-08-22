@@ -35,7 +35,7 @@ NS_IMPL_ISUPPORTS1(nsUnicodeToTSCII, nsIUnicodeEncoder)
  *   0x87, 0xC38A             Two consonants combined through a VIRAMA sign. 
  */
 
-static const PRUint8 UnicharToTSCII[] =
+static const uint8_t UnicharToTSCII[] =
 {
      0,    0,    0, 0xb7,    0, 0xab, 0xac, 0xfe, // 0x0B80..0x0B87
   0xae, 0xaf, 0xb0,    0,    0,    0, 0xb1, 0xb2, // 0x0B88..0x0B8F
@@ -55,19 +55,19 @@ static const PRUint8 UnicharToTSCII[] =
      0,    0,    0,    0,    0,    0,    0,    0  // 0x0BF8..0x0BFF
 };
 
-static const PRUint8 consonant_with_u[] =
+static const uint8_t consonant_with_u[] =
 {
   0xcc, 0x99, 0xcd, 0x9a, 0xce, 0xcf, 0xd0, 0xd1, 0xd2,
   0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb
 };
 
-static const PRUint8 consonant_with_uu[] =
+static const uint8_t consonant_with_uu[] =
 {
   0xdc, 0x9b, 0xdd, 0x9c, 0xde, 0xdf, 0xe0, 0xe1, 0xe2,
   0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb
 };
 
-static const PRUint8 consonant_with_virama[18] =
+static const uint8_t consonant_with_virama[18] =
 {
   0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4,
   0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd
@@ -78,8 +78,8 @@ static const PRUint8 consonant_with_virama[18] =
 // Bruno Haible.  My modifications are based on Unicode 3.0 chap. 9 and 
 // the code chart for Tamil. 
 NS_IMETHODIMP 
-nsUnicodeToTSCII::Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
-                          char * aDest, PRInt32 * aDestLength)
+nsUnicodeToTSCII::Convert(const PRUnichar * aSrc, int32_t * aSrcLength, 
+                          char * aDest, int32_t * aDestLength)
 {
   const PRUnichar * src = aSrc;
   const PRUnichar * srcEnd = aSrc + *aSrcLength;
@@ -92,7 +92,7 @@ nsUnicodeToTSCII::Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength,
     PRUnichar ch = *src;
     if (mBuffer) {                        
       // Attempt to combine the last character with this one.
-      PRUint32 last = mBuffer;
+      uint32_t last = mBuffer;
                             
       // last : consonant 
       if (IS_TSC_CONSONANT(last)) {                      
@@ -243,11 +243,11 @@ nsUnicodeToTSCII::Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength,
     if (ch < 0x80)   // Plain ASCII character.
       *dest++ = (char)ch;                    
     else if (IS_UNI_TAMIL(ch)) {                        
-      PRUint8 t = UnicharToTSCII[ch - UNI_TAMIL_START];
+      uint8_t t = UnicharToTSCII[ch - UNI_TAMIL_START];
                             
       if (t != 0) {                      
           if (IS_TSC_CONSONANT(t))
-            mBuffer = (PRUint32) t;              
+            mBuffer = (uint32_t) t;              
           else                    
             *dest++ = t;                  
       }                      
@@ -307,7 +307,7 @@ error_more_output:
 }
 
 NS_IMETHODIMP 
-nsUnicodeToTSCII::Finish(char* aDest, PRInt32* aDestLength)
+nsUnicodeToTSCII::Finish(char* aDest, int32_t* aDestLength)
 {
   if (!mBuffer) {
     *aDestLength = 0;
@@ -347,8 +347,8 @@ nsUnicodeToTSCII::Reset()
 }
 
 NS_IMETHODIMP 
-nsUnicodeToTSCII::GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength,
-                                 PRInt32 * aDestLength)
+nsUnicodeToTSCII::GetMaxLength(const PRUnichar * aSrc, int32_t aSrcLength,
+                                 int32_t * aDestLength)
 {
   // Some Tamil letters  can be decomposed into 2 glyphs in TSCII.
   *aDestLength = aSrcLength *  2;
@@ -357,7 +357,7 @@ nsUnicodeToTSCII::GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength,
 
 
 NS_IMETHODIMP 
-nsUnicodeToTSCII::SetOutputErrorBehavior(PRInt32 aBehavior, 
+nsUnicodeToTSCII::SetOutputErrorBehavior(int32_t aBehavior, 
                                            nsIUnicharEncoder *aEncoder, 
                                            PRUnichar aChar)
 {
@@ -380,11 +380,11 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsUnicodeToTamilTTF, nsUnicodeToTSCII)
 
 NS_IMETHODIMP 
 nsUnicodeToTamilTTF::Convert(const PRUnichar * aSrc, 
-                             PRInt32 * aSrcLength, char * aDest, 
-                             PRInt32 * aDestLength)
+                             int32_t * aSrcLength, char * aDest, 
+                             int32_t * aDestLength)
 {
 
-  PRInt32 medLen, destLen;
+  int32_t medLen, destLen;
   char *med;
 
   GetMaxLength(aSrc, *aSrcLength, &destLen);
@@ -410,18 +410,18 @@ nsUnicodeToTamilTTF::Convert(const PRUnichar * aSrc,
     return rv;
   }
 
-  PRInt32 i, j;
+  int32_t i, j;
 
   // widen 8bit TSCII to pseudo-Unicode font encoding of TSCII-Tamil font
   for (i = 0, j = 0; i < medLen; i++) {
     // Only C1 part(0x80-0x9f) needs to be mapped as if they're CP1251.
     PRUnichar ucs2 = (med[i] & 0xe0) == 0x80 ? 
-                     gTSCIIToTTF[med[i] & 0x7f] : PRUint8(med[i]);
+                     gTSCIIToTTF[med[i] & 0x7f] : uint8_t(med[i]);
     // A lot of TSCII fonts are still based on TSCII 1.6 so that 
     // they have Tamil vowel 'I' at 0xad instead of 0xfe.
     if (ucs2 == 0xfe) ucs2 = 0xad;
-    aDest[j++] = PRUint8((ucs2 & 0xff00) >> 8);
-    aDest[j++] = PRUint8(ucs2 & 0x00ff);
+    aDest[j++] = uint8_t((ucs2 & 0xff00) >> 8);
+    aDest[j++] = uint8_t(ucs2 & 0x00ff);
   }
 
   *aDestLength = j;
@@ -433,7 +433,7 @@ nsUnicodeToTamilTTF::Convert(const PRUnichar * aSrc,
 }
 
 NS_IMETHODIMP
-nsUnicodeToTamilTTF::GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, PRInt32 * aDestLength)
+nsUnicodeToTamilTTF::GetMaxLength(const PRUnichar * aSrc, int32_t aSrcLength, int32_t * aDestLength)
 {
   // Each Tamil character can generate at most two presentation forms,
   // but we're 'extending' them to 16bit shorts, which accounts for 
@@ -444,7 +444,7 @@ nsUnicodeToTamilTTF::GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, PR
 }
 
 NS_IMETHODIMP 
-nsUnicodeToTamilTTF::SetOutputErrorBehavior(PRInt32 aBehavior, 
+nsUnicodeToTamilTTF::SetOutputErrorBehavior(int32_t aBehavior, 
                                             nsIUnicharEncoder *aEncoder, 
                                             PRUnichar aChar)
 {

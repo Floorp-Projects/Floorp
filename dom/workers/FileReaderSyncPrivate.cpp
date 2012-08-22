@@ -41,14 +41,14 @@ FileReaderSyncPrivate::~FileReaderSyncPrivate()
 }
 
 nsresult
-FileReaderSyncPrivate::ReadAsArrayBuffer(nsIDOMBlob* aBlob, PRUint32 aLength,
+FileReaderSyncPrivate::ReadAsArrayBuffer(nsIDOMBlob* aBlob, uint32_t aLength,
                                          uint8* aBuffer)
 {
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = aBlob->GetInternalStream(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 numRead;
+  uint32_t numRead;
   rv = stream->Read((char*)aBuffer, aLength, &numRead);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(numRead == aLength, "failed to read data");
@@ -63,13 +63,13 @@ FileReaderSyncPrivate::ReadAsBinaryString(nsIDOMBlob* aBlob, nsAString& aResult)
   nsresult rv = aBlob->GetInternalStream(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 numRead;
+  uint32_t numRead;
   do {
     char readBuf[4096];
     rv = stream->Read(readBuf, sizeof(readBuf), &numRead);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 oldLength = aResult.Length();
+    uint32_t oldLength = aResult.Length();
     AppendASCIItoUTF16(Substring(readBuf, readBuf + numRead), aResult);
     if (aResult.Length() - oldLength != numRead) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -129,7 +129,7 @@ FileReaderSyncPrivate::ReadAsDataURL(nsIDOMBlob* aBlob, nsAString& aResult)
   nsresult rv = aBlob->GetInternalStream(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint64 size;
+  uint64_t size;
   rv = aBlob->GetSize(&size);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -164,11 +164,11 @@ FileReaderSyncPrivate::ConvertStream(nsIInputStream *aStream,
     do_QueryInterface(converterStream);
   NS_ENSURE_TRUE(unicharStream, NS_ERROR_FAILURE);
 
-  PRUint32 numChars;
+  uint32_t numChars;
   nsString result;
   while (NS_SUCCEEDED(unicharStream->ReadString(8192, result, &numChars)) &&
          numChars > 0) {
-    PRUint32 oldLength = aResult.Length();
+    uint32_t oldLength = aResult.Length();
     aResult.Append(result);
     if (aResult.Length() - oldLength != result.Length()) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -206,7 +206,7 @@ FileReaderSyncPrivate::GuessCharset(nsIInputStream *aStream,
     detector->Init(this);
 
     bool done;
-    PRUint32 numRead;
+    uint32_t numRead;
     do {
       char readBuf[4096];
       rv = aStream->Read(readBuf, sizeof(readBuf), &numRead);
@@ -223,7 +223,7 @@ FileReaderSyncPrivate::GuessCharset(nsIInputStream *aStream,
   } else {
     // no charset detector available, check the BOM
     unsigned char sniffBuf[4];
-    PRUint32 numRead;
+    uint32_t numRead;
     rv = aStream->Read(reinterpret_cast<char*>(sniffBuf),
                        sizeof(sniffBuf), &numRead);
     NS_ENSURE_SUCCESS(rv, rv);

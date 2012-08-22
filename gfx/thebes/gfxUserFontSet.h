@@ -32,7 +32,7 @@ struct gfxFontFaceSrc {
     // format hint flags, union of all possible formats
     // (e.g. TrueType, EOT, SVG, etc.)
     // see FLAG_FORMAT_* enum values below
-    PRUint32               mFormatFlags;
+    uint32_t               mFormatFlags;
 
     nsString               mLocalName;     // full font name if local
     nsCOMPtr<nsIURI>       mURI;           // uri if url 
@@ -54,13 +54,13 @@ public:
     { }
     virtual ~gfxUserFontData() { }
 
-    nsTArray<PRUint8> mMetadata;  // woff metadata block (compressed), if any
+    nsTArray<uint8_t> mMetadata;  // woff metadata block (compressed), if any
     nsCOMPtr<nsIURI>  mURI;       // URI of the source, if it was url()
     nsString          mLocalName; // font name used for the source, if local()
     nsString          mRealName;  // original fullname from the font resource
-    PRUint32          mSrcIndex;  // index in the rule's source list
-    PRUint32          mFormat;    // format hint for the source used, if any
-    PRUint32          mMetaOrigLen; // length needed to decompress metadata
+    uint32_t          mSrcIndex;  // index in the rule's source list
+    uint32_t          mFormat;    // format hint for the source used, if any
+    uint32_t          mMetaOrigLen; // length needed to decompress metadata
 };
 
 // initially contains a set of proxy font entry objects, replaced with
@@ -84,8 +84,8 @@ public:
 
     void ReplaceFontEntry(gfxFontEntry *aOldFontEntry,
                           gfxFontEntry *aNewFontEntry) {
-        PRUint32 numFonts = mAvailableFonts.Length();
-        for (PRUint32 i = 0; i < numFonts; i++) {
+        uint32_t numFonts = mAvailableFonts.Length();
+        for (uint32_t i = 0; i < numFonts; i++) {
             gfxFontEntry *fe = mAvailableFonts[i];
             if (fe == aOldFontEntry) {
                 aOldFontEntry->SetFamily(nullptr);
@@ -100,8 +100,8 @@ public:
     }
 
     void RemoveFontEntry(gfxFontEntry *aFontEntry) {
-        PRUint32 numFonts = mAvailableFonts.Length();
-        for (PRUint32 i = 0; i < numFonts; i++) {
+        uint32_t numFonts = mAvailableFonts.Length();
+        for (uint32_t i = 0; i < numFonts; i++) {
             gfxFontEntry *fe = mAvailableFonts[i];
             if (fe == aFontEntry) {
                 aFontEntry->SetFamily(nullptr);
@@ -116,7 +116,7 @@ public:
     // we need to do this explicitly before inserting the entries into a new
     // family, in case the old one is not actually deleted until later
     void DetachFontEntries() {
-        PRUint32 i = mAvailableFonts.Length();
+        uint32_t i = mAvailableFonts.Length();
         while (i--) {
             gfxFontEntry *fe = mAvailableFonts[i];
             if (fe) {
@@ -129,8 +129,8 @@ public:
     // temp method to determine if all proxies are loaded
     bool AllLoaded() 
     {
-        PRUint32 numFonts = mAvailableFonts.Length();
-        for (PRUint32 i = 0; i < numFonts; i++) {
+        uint32_t numFonts = mAvailableFonts.Length();
+        for (uint32_t i = 0; i < numFonts; i++) {
             gfxFontEntry *fe = mAvailableFonts[i];
             if (fe->mIsProxy)
                 return false;
@@ -180,9 +180,9 @@ public:
     // TODO: support for unicode ranges not yet implemented
     gfxFontEntry *AddFontFace(const nsAString& aFamilyName,
                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                              PRUint32 aWeight,
-                              PRUint32 aStretch,
-                              PRUint32 aItalicStyle,
+                              uint32_t aWeight,
+                              uint32_t aStretch,
+                              uint32_t aItalicStyle,
                               const nsTArray<gfxFontFeature>& aFeatureSettings,
                               const nsString& aLanguageOverride,
                               gfxSparseBitSet *aUnicodeRanges = nullptr);
@@ -215,7 +215,7 @@ public:
     // Ownership of aFontData is passed in here; the font set must
     // ensure that it is eventually deleted with NS_Free().
     bool OnLoadComplete(gfxProxyFontEntry *aProxy,
-                          const PRUint8 *aFontData, PRUint32 aLength,
+                          const uint8_t *aFontData, uint32_t aLength,
                           nsresult aDownloadStatus);
 
     // Replace a proxy with a real fontEntry; this is implemented in
@@ -226,7 +226,7 @@ public:
 
     // generation - each time a face is loaded, generation is
     // incremented so that the change can be recognized 
-    PRUint64 GetGeneration() { return mGeneration; }
+    uint64_t GetGeneration() { return mGeneration; }
 
     // increment the generation on font load
     void IncrementGeneration();
@@ -241,13 +241,13 @@ protected:
     // Ownership of aFontData is passed in here; the font set must
     // ensure that it is eventually deleted with NS_Free().
     gfxFontEntry* LoadFont(gfxProxyFontEntry *aProxy,
-                           const PRUint8 *aFontData, PRUint32 &aLength);
+                           const uint8_t *aFontData, uint32_t &aLength);
 
     // parse data for a data URL
     virtual nsresult SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
                                       const gfxFontFaceSrc *aFontFaceSrc,
-                                      PRUint8* &aBuffer,
-                                      PRUint32 &aBufferLength)
+                                      uint8_t* &aBuffer,
+                                      uint32_t &aBufferLength)
     {
         // implemented in nsUserFontSet
         return NS_ERROR_NOT_IMPLEMENTED;
@@ -258,13 +258,13 @@ protected:
     // report a problem of some kind (implemented in nsUserFontSet)
     virtual nsresult LogMessage(gfxProxyFontEntry *aProxy,
                                 const char *aMessage,
-                                PRUint32 aFlags = nsIScriptError::errorFlag,
+                                uint32_t aFlags = nsIScriptError::errorFlag,
                                 nsresult aStatus = NS_OK) = 0;
 
-    const PRUint8* SanitizeOpenTypeData(gfxProxyFontEntry *aProxy,
-                                        const PRUint8* aData,
-                                        PRUint32 aLength,
-                                        PRUint32& aSaneLength,
+    const uint8_t* SanitizeOpenTypeData(gfxProxyFontEntry *aProxy,
+                                        const uint8_t* aData,
+                                        uint32_t aLength,
+                                        uint32_t& aSaneLength,
                                         bool aIsCompressed);
 
 #ifdef MOZ_OTS_REPORT_ERRORS
@@ -274,15 +274,15 @@ protected:
     // font families defined by @font-face rules
     nsRefPtrHashtable<nsStringHashKey, gfxMixedFontFamily> mFontFamilies;
 
-    PRUint64        mGeneration;
+    uint64_t        mGeneration;
 
     static PRLogModuleInfo *sUserFontsLog;
 
 private:
-    static void CopyWOFFMetadata(const PRUint8* aFontData,
-                                 PRUint32 aLength,
-                                 nsTArray<PRUint8>* aMetadata,
-                                 PRUint32* aMetaOrigLen);
+    static void CopyWOFFMetadata(const uint8_t* aFontData,
+                                 uint32_t aLength,
+                                 nsTArray<uint8_t>* aMetadata,
+                                 uint32_t* aMetaOrigLen);
 };
 
 // acts a placeholder until the real font is downloaded
@@ -293,11 +293,11 @@ class gfxProxyFontEntry : public gfxFontEntry {
 public:
     gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                       gfxMixedFontFamily *aFamily,
-                      PRUint32 aWeight,
-                      PRUint32 aStretch,
-                      PRUint32 aItalicStyle,
+                      uint32_t aWeight,
+                      uint32_t aStretch,
+                      uint32_t aItalicStyle,
                       const nsTArray<gfxFontFeature>& aFeatureSettings,
-                      PRUint32 aLanguageOverride,
+                      uint32_t aLanguageOverride,
                       gfxSparseBitSet *aUnicodeRanges);
 
     virtual ~gfxProxyFontEntry();
@@ -318,7 +318,7 @@ public:
     bool                     mUnsupportedFormat;
 
     nsTArray<gfxFontFaceSrc> mSrcList;
-    PRUint32                 mSrcIndex; // index of loading src item
+    uint32_t                 mSrcIndex; // index of loading src item
     nsFontFaceLoader        *mLoader; // current loader for this entry, if any
 };
 

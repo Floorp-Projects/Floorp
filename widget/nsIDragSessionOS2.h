@@ -49,13 +49,13 @@ public:
   enum { DND_GETDRAGOVERRESULT  = 64 };
   enum { DND_EXITSESSION        = 128 };
 
-  NS_IMETHOD DragOverMsg(PDRAGINFO pdinfo, MRESULT &mr, PRUint32* dragFlags) = 0;
+  NS_IMETHOD DragOverMsg(PDRAGINFO pdinfo, MRESULT &mr, uint32_t* dragFlags) = 0;
   NS_IMETHOD GetDragoverResult(MRESULT& mr) = 0;
-  NS_IMETHOD DragLeaveMsg(PDRAGINFO pdinfo, PRUint32* dragFlags) = 0;
-  NS_IMETHOD DropHelpMsg(PDRAGINFO pdinfo, PRUint32* dragFlags) = 0;
-  NS_IMETHOD ExitSession(PRUint32* dragFlags) = 0;
-  NS_IMETHOD DropMsg(PDRAGINFO pdinfo, HWND hwnd, PRUint32* dragFlags) = 0;
-  NS_IMETHOD RenderCompleteMsg(PDRAGTRANSFER pdxfer, USHORT usResult, PRUint32* dragFlags) = 0;
+  NS_IMETHOD DragLeaveMsg(PDRAGINFO pdinfo, uint32_t* dragFlags) = 0;
+  NS_IMETHOD DropHelpMsg(PDRAGINFO pdinfo, uint32_t* dragFlags) = 0;
+  NS_IMETHOD ExitSession(uint32_t* dragFlags) = 0;
+  NS_IMETHOD DropMsg(PDRAGINFO pdinfo, HWND hwnd, uint32_t* dragFlags) = 0;
+  NS_IMETHOD RenderCompleteMsg(PDRAGTRANSFER pdxfer, USHORT usResult, uint32_t* dragFlags) = 0;
 
 protected:
   NS_IMETHOD NativeDragEnter(PDRAGINFO pdinfo) = 0;

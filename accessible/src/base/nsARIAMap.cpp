@@ -636,7 +636,7 @@ nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
   {&nsGkAtoms::aria_valuetext,         ATTR_BYPASSOBJ                 }
 };
 
-PRUint32
+uint32_t
 nsARIAMap::gWAIUnivAttrMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIUnivAttrMap);
 
 nsRoleMapEntry*
@@ -655,11 +655,11 @@ aria::GetRoleMap(nsINode* aNode)
   while (tokenizer.hasMoreTokens()) {
     // Do a binary search through table for the next role in role list
     const nsDependentSubstring role = tokenizer.nextToken();
-    PRUint32 low = 0;
-    PRUint32 high = ArrayLength(sWAIRoleMaps);
+    uint32_t low = 0;
+    uint32_t high = ArrayLength(sWAIRoleMaps);
     while (low < high) {
-      PRUint32 idx = (low + high) / 2;
-      PRInt32 compare = Compare(role, sWAIRoleMaps[idx].ARIARoleString());
+      uint32_t idx = (low + high) / 2;
+      int32_t compare = Compare(role, sWAIRoleMaps[idx].ARIARoleString());
       if (compare == 0)
         return sWAIRoleMaps + idx;
 
@@ -675,11 +675,11 @@ aria::GetRoleMap(nsINode* aNode)
   return &sLandmarkRoleMap;
 }
 
-PRUint64
+uint64_t
 aria::UniversalStatesFor(mozilla::dom::Element* aElement)
 {
-  PRUint64 state = 0;
-  PRUint32 index = 0;
+  uint64_t state = 0;
+  uint32_t index = 0;
   while (MapToState(sWAIUnivStateMap[index], aElement, &state))
     index++;
 
@@ -701,7 +701,7 @@ AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue)
       if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-")))
         continue; // Not ARIA
 
-      PRUint8 attrFlags = nsAccUtils::GetAttributeCharacteristics(attrAtom);
+      uint8_t attrFlags = nsAccUtils::GetAttributeCharacteristics(attrAtom);
       if (attrFlags & ATTR_BYPASSOBJ)
         continue; // No need to handle exposing as obj attribute here
 

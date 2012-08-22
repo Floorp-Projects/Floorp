@@ -18,16 +18,16 @@ public:
                    const gfxFontStyle *aFontStyle);
     virtual ~gfxFT2FontBase();
 
-    PRUint32 GetGlyph(PRUint32 aCharCode);
-    void GetGlyphExtents(PRUint32 aGlyph,
+    uint32_t GetGlyph(uint32_t aCharCode);
+    void GetGlyphExtents(uint32_t aGlyph,
                          cairo_text_extents_t* aExtents);
     virtual const gfxFont::Metrics& GetMetrics();
-    virtual PRUint32 GetSpaceGlyph();
-    virtual hb_blob_t *GetFontTable(PRUint32 aTag);
+    virtual uint32_t GetSpaceGlyph();
+    virtual hb_blob_t *GetFontTable(uint32_t aTag);
     virtual bool ProvidesGetGlyph() const { return true; }
-    virtual PRUint32 GetGlyph(PRUint32 unicode, PRUint32 variation_selector);
+    virtual uint32_t GetGlyph(uint32_t unicode, uint32_t variation_selector);
     virtual bool ProvidesGlyphWidths() { return true; }
-    virtual PRInt32 GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
+    virtual int32_t GetGlyphWidth(gfxContext *aCtx, uint16_t aGID);
 
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; };
     virtual bool SetupCairoFont(gfxContext *aContext);
@@ -36,7 +36,7 @@ public:
 
     mozilla::gfx::FontOptions* GetFontOptions() { return &mFontOptions; }
 protected:
-    PRUint32 mSpaceGlyph;
+    uint32_t mSpaceGlyph;
     bool mHasMetrics;
     Metrics mMetrics;
 

@@ -33,14 +33,14 @@ class InvokeTestTargetInterface : public nsISupports
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(INVOKETESTTARGET_IID)
-    NS_IMETHOD AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval) = 0;
-    NS_IMETHOD MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval) = 0;
-    NS_IMETHOD AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval) = 0;
-    NS_IMETHOD MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval) = 0;
+    NS_IMETHOD AddTwoInts(int32_t p1, int32_t p2, int32_t* retval) = 0;
+    NS_IMETHOD MultTwoInts(int32_t p1, int32_t p2, int32_t* retval) = 0;
+    NS_IMETHOD AddTwoLLs(int64_t p1, int64_t p2, int64_t* retval) = 0;
+    NS_IMETHOD MultTwoLLs(int64_t p1, int64_t p2, int64_t* retval) = 0;
 
-    NS_IMETHOD AddManyInts(PRInt32 p1, PRInt32 p2, PRInt32 p3, PRInt32 p4,
-                           PRInt32 p5, PRInt32 p6, PRInt32 p7, PRInt32 p8,
-                           PRInt32 p9, PRInt32 p10, PRInt32* retval) = 0;
+    NS_IMETHOD AddManyInts(int32_t p1, int32_t p2, int32_t p3, int32_t p4,
+                           int32_t p5, int32_t p6, int32_t p7, int32_t p8,
+                           int32_t p9, int32_t p10, int32_t* retval) = 0;
 
     NS_IMETHOD AddTwoFloats(float p1, float p2, float* retval) = 0;
 
@@ -59,13 +59,13 @@ public:
                                  float p17, float p18, float p19, float p20, 
                                  float *retval) = 0;
 
-    NS_IMETHOD AddMixedInts(PRInt64 p1, PRInt32 p2, PRInt64 p3, PRInt32 p4,
-                            PRInt32 p5, PRInt64 p6, PRInt32 p7, PRInt32 p8,
-                            PRInt64 p9, PRInt32 p10, PRInt64* retval) = 0;
+    NS_IMETHOD AddMixedInts(int64_t p1, int32_t p2, int64_t p3, int32_t p4,
+                            int32_t p5, int64_t p6, int32_t p7, int32_t p8,
+                            int64_t p9, int32_t p10, int64_t* retval) = 0;
 
-    NS_IMETHOD AddMixedInts2(PRInt32 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
-                             PRInt64 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
-                             PRInt32 p9, PRInt64 p10, PRInt64* retval) = 0;
+    NS_IMETHOD AddMixedInts2(int32_t p1, int64_t p2, int32_t p3, int64_t p4,
+                             int64_t p5, int32_t p6, int64_t p7, int64_t p8,
+                             int32_t p9, int64_t p10, int64_t* retval) = 0;
 
     NS_IMETHOD AddMixedFloats(float p1, float p2, double p3, double p4,
                               float p5, float p6, double p7, double p8,
@@ -74,10 +74,10 @@ public:
 
     NS_IMETHOD PassTwoStrings(const char* s1, const char* s2, char** retval) = 0;
 
-    NS_IMETHOD AddMixedInts3(PRInt64 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
-                             PRInt32 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
-                             PRInt32 p9, PRInt64 p10, PRInt64* retval) = 0;
-    NS_IMETHOD ShouldFail(PRInt32 p) = 0;
+    NS_IMETHOD AddMixedInts3(int64_t p1, int64_t p2, int32_t p3, int64_t p4,
+                             int32_t p5, int32_t p6, int64_t p7, int64_t p8,
+                             int32_t p9, int64_t p10, int64_t* retval) = 0;
+    NS_IMETHOD ShouldFail(int32_t p) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(InvokeTestTargetInterface, INVOKETESTTARGET_IID)
@@ -86,14 +86,14 @@ class InvokeTestTarget : public InvokeTestTargetInterface
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_IMETHOD AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval);
-    NS_IMETHOD MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval);
-    NS_IMETHOD AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval);
-    NS_IMETHOD MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval);
+    NS_IMETHOD AddTwoInts(int32_t p1, int32_t p2, int32_t* retval);
+    NS_IMETHOD MultTwoInts(int32_t p1, int32_t p2, int32_t* retval);
+    NS_IMETHOD AddTwoLLs(int64_t p1, int64_t p2, int64_t* retval);
+    NS_IMETHOD MultTwoLLs(int64_t p1, int64_t p2, int64_t* retval);
 
-    NS_IMETHOD AddManyInts(PRInt32 p1, PRInt32 p2, PRInt32 p3, PRInt32 p4,
-                           PRInt32 p5, PRInt32 p6, PRInt32 p7, PRInt32 p8,
-                           PRInt32 p9, PRInt32 p10, PRInt32* retval);
+    NS_IMETHOD AddManyInts(int32_t p1, int32_t p2, int32_t p3, int32_t p4,
+                           int32_t p5, int32_t p6, int32_t p7, int32_t p8,
+                           int32_t p9, int32_t p10, int32_t* retval);
 
     NS_IMETHOD AddTwoFloats(float p1, float p2, float* retval);
 
@@ -105,13 +105,13 @@ public:
                              float p5, float p6, float p7, float p8,
                              float p9, float p10, float* retval);
 
-    NS_IMETHOD AddMixedInts(PRInt64 p1, PRInt32 p2, PRInt64 p3, PRInt32 p4,
-			    PRInt32 p5, PRInt64 p6, PRInt32 p7, PRInt32 p8,
-			    PRInt64 p9, PRInt32 p10, PRInt64* retval);
+    NS_IMETHOD AddMixedInts(int64_t p1, int32_t p2, int64_t p3, int32_t p4,
+			    int32_t p5, int64_t p6, int32_t p7, int32_t p8,
+			    int64_t p9, int32_t p10, int64_t* retval);
 
-    NS_IMETHOD AddMixedInts2(PRInt32 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
-			     PRInt64 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
-			     PRInt32 p9, PRInt64 p10, PRInt64* retval);
+    NS_IMETHOD AddMixedInts2(int32_t p1, int64_t p2, int32_t p3, int64_t p4,
+			     int64_t p5, int32_t p6, int64_t p7, int64_t p8,
+			     int32_t p9, int64_t p10, int64_t* retval);
 
     NS_IMETHOD AddMixedFloats(float p1, float p2, double p3, double p4,
                               float p5, float p6, double p7, double p8,
@@ -129,10 +129,10 @@ public:
 
     InvokeTestTarget();
 
-    NS_IMETHOD AddMixedInts3(PRInt64 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
-                             PRInt32 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
-                             PRInt32 p9, PRInt64 p10, PRInt64* retval);
-    NS_IMETHOD ShouldFail(PRInt32 p);
+    NS_IMETHOD AddMixedInts3(int64_t p1, int64_t p2, int32_t p3, int64_t p4,
+                             int32_t p5, int32_t p6, int64_t p7, int64_t p8,
+                             int32_t p9, int64_t p10, int64_t* retval);
+    NS_IMETHOD ShouldFail(int32_t p);
 };
 
 NS_IMPL_ISUPPORTS1(InvokeTestTarget, InvokeTestTargetInterface)
@@ -143,41 +143,41 @@ InvokeTestTarget::InvokeTestTarget()
 }
 
 NS_IMETHODIMP
-InvokeTestTarget::ShouldFail(PRInt32 p) {
+InvokeTestTarget::ShouldFail(int32_t p) {
     return NS_ERROR_NULL_POINTER;
 }
 NS_IMETHODIMP
-InvokeTestTarget::AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval)
+InvokeTestTarget::AddTwoInts(int32_t p1, int32_t p2, int32_t* retval)
 {
     *retval = p1 + p2;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-InvokeTestTarget::MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval)
+InvokeTestTarget::MultTwoInts(int32_t p1, int32_t p2, int32_t* retval)
 {
     *retval = p1 * p2;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-InvokeTestTarget::AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval)
+InvokeTestTarget::AddTwoLLs(int64_t p1, int64_t p2, int64_t* retval)
 {
     LL_ADD(*retval, p1, p2);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-InvokeTestTarget::MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval)
+InvokeTestTarget::MultTwoLLs(int64_t p1, int64_t p2, int64_t* retval)
 {
     LL_MUL(*retval, p1, p2);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-InvokeTestTarget::AddManyInts(PRInt32 p1, PRInt32 p2, PRInt32 p3, PRInt32 p4,
-                              PRInt32 p5, PRInt32 p6, PRInt32 p7, PRInt32 p8,
-                              PRInt32 p9, PRInt32 p10, PRInt32* retval)
+InvokeTestTarget::AddManyInts(int32_t p1, int32_t p2, int32_t p3, int32_t p4,
+                              int32_t p5, int32_t p6, int32_t p7, int32_t p8,
+                              int32_t p9, int32_t p10, int32_t* retval)
 {
 #ifdef DEBUG_TESTINVOKE
     printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n", 
@@ -257,27 +257,27 @@ InvokeTestTarget::AddManyManyFloats(float p1, float p2, float p3, float p4,
 }
 
 NS_IMETHODIMP
-InvokeTestTarget::AddMixedInts(PRInt64 p1, PRInt32 p2, PRInt64 p3, PRInt32 p4,
-			       PRInt32 p5, PRInt64 p6, PRInt32 p7, PRInt32 p8,
-			       PRInt64 p9, PRInt32 p10, PRInt64* retval)
+InvokeTestTarget::AddMixedInts(int64_t p1, int32_t p2, int64_t p3, int32_t p4,
+			       int32_t p5, int64_t p6, int32_t p7, int32_t p8,
+			       int64_t p9, int32_t p10, int64_t* retval)
 {
     *retval = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-InvokeTestTarget::AddMixedInts2(PRInt32 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
-				PRInt64 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
-				PRInt32 p9, PRInt64 p10, PRInt64* retval)
+InvokeTestTarget::AddMixedInts2(int32_t p1, int64_t p2, int32_t p3, int64_t p4,
+				int64_t p5, int32_t p6, int64_t p7, int64_t p8,
+				int32_t p9, int64_t p10, int64_t* retval)
 {
     *retval = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-InvokeTestTarget::AddMixedInts3(PRInt64 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
-                             PRInt32 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
-                             PRInt32 p9, PRInt64 p10, PRInt64* retval)
+InvokeTestTarget::AddMixedInts3(int64_t p1, int64_t p2, int32_t p3, int64_t p4,
+                             int32_t p5, int32_t p6, int64_t p7, int64_t p8,
+                             int32_t p9, int64_t p10, int64_t* retval)
 {
 	printf("P1 : %lld\n", p1);
 	printf("P2 : %lld\n", p2);
@@ -315,15 +315,15 @@ int main()
     if(!test)
         return 1;
 
-    PRInt32 out, tmp32 = 0;
-    PRInt64 out64;
+    int32_t out, tmp32 = 0;
+    int64_t out64;
     nsresult failed_rv;
     printf("calling direct:\n");
     if(NS_SUCCEEDED(test->AddTwoInts(1,1,&out)))
         printf("\t1 + 1 = %d\n", out);
     else
         printf("\tFAILED");
-    PRInt64 one, two;
+    int64_t one, two;
     LL_I2L(one, 1);
     LL_I2L(two, 2);
     if(NS_SUCCEEDED(test->AddTwoLLs(one,one,&out64)))
@@ -347,7 +347,7 @@ int main()
 
     double outD;
     float outF;
-    PRInt32 outI;
+    int32_t outI;
     char *outS;
 
     if(NS_SUCCEEDED(test->AddManyInts(1,2,3,4,5,6,7,8,9,10,&outI)))
@@ -1008,8 +1008,8 @@ class nsIFoo : public nsISupports
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(FOO_IID)
-    NS_IMETHOD FooMethod1(PRInt32 i) = 0;
-    NS_IMETHOD FooMethod2(PRInt32 i) = 0;
+    NS_IMETHOD FooMethod1(int32_t i) = 0;
+    NS_IMETHOD FooMethod2(int32_t i) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFoo, FOO_IID)
@@ -1018,8 +1018,8 @@ class nsIBar : public nsISupports
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(BAR_IID)
-    NS_IMETHOD BarMethod1(PRInt32 i) = 0;
-    NS_IMETHOD BarMethod2(PRInt32 i) = 0;
+    NS_IMETHOD BarMethod1(int32_t i) = 0;
+    NS_IMETHOD BarMethod2(int32_t i) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIBar, BAR_IID)
@@ -1029,8 +1029,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIBar, BAR_IID)
 class FooImpl : public nsIFoo
 {
 public:
-    NS_IMETHOD FooMethod1(PRInt32 i);
-    NS_IMETHOD FooMethod2(PRInt32 i);
+    NS_IMETHOD FooMethod1(int32_t i);
+    NS_IMETHOD FooMethod2(int32_t i);
 
     FooImpl();
 
@@ -1048,8 +1048,8 @@ public:
 class BarImpl : public nsIBar
 {
 public:
-    NS_IMETHOD BarMethod1(PRInt32 i);
-    NS_IMETHOD BarMethod2(PRInt32 i);
+    NS_IMETHOD BarMethod1(int32_t i);
+    NS_IMETHOD BarMethod2(int32_t i);
 
     BarImpl();
 
@@ -1070,14 +1070,14 @@ FooImpl::FooImpl() : Name("FooImpl")
 {
 }
 
-NS_IMETHODIMP FooImpl::FooMethod1(PRInt32 i)
+NS_IMETHODIMP FooImpl::FooMethod1(int32_t i)
 {
     printf("\tFooImpl::FooMethod1 called with i == %d, %s part of a %s\n", 
            i, Name, ImplName());
     return NS_OK;
 }
 
-NS_IMETHODIMP FooImpl::FooMethod2(PRInt32 i)
+NS_IMETHODIMP FooImpl::FooMethod2(int32_t i)
 {
     printf("\tFooImpl::FooMethod2 called with i == %d, %s part of a %s\n", 
            i, Name, ImplName());
@@ -1090,14 +1090,14 @@ BarImpl::BarImpl() : Name("BarImpl")
 {
 }
 
-NS_IMETHODIMP BarImpl::BarMethod1(PRInt32 i)
+NS_IMETHODIMP BarImpl::BarMethod1(int32_t i)
 {
     printf("\tBarImpl::BarMethod1 called with i == %d, %s part of a %s\n", 
            i, Name, ImplName());
     return NS_OK;
 }
 
-NS_IMETHODIMP BarImpl::BarMethod2(PRInt32 i)
+NS_IMETHODIMP BarImpl::BarMethod2(int32_t i)
 {
     printf("\tBarImpl::BarMethod2 called with i == %d, %s part of a %s\n", 
            i, Name, ImplName());
@@ -1237,27 +1237,27 @@ static void DoMultipleInheritenceTest()
 class nsIFoo2 : public nsISupports
 {
 public:
-    NS_IMETHOD FooMethod1(PRInt32 i) = 0;
-    NS_IMETHOD FooMethod2(PRInt32 i) = 0;
+    NS_IMETHOD FooMethod1(int32_t i) = 0;
+    NS_IMETHOD FooMethod2(int32_t i) = 0;
 };
 
 class nsIBar2 : public nsISupports
 {
 public:
-    NS_IMETHOD BarMethod1(PRInt32 i) = 0;
-    NS_IMETHOD BarMethod2(PRInt32 i) = 0;
+    NS_IMETHOD BarMethod1(int32_t i) = 0;
+    NS_IMETHOD BarMethod2(int32_t i) = 0;
 };
 
 class FooBarImpl2 : public nsIFoo2, public nsIBar2
 {
 public:
     // Foo interface
-    NS_IMETHOD FooMethod1(PRInt32 i);
-    NS_IMETHOD FooMethod2(PRInt32 i);
+    NS_IMETHOD FooMethod1(int32_t i);
+    NS_IMETHOD FooMethod2(int32_t i);
 
     // Bar interface
-    NS_IMETHOD BarMethod1(PRInt32 i);
-    NS_IMETHOD BarMethod2(PRInt32 i);
+    NS_IMETHOD BarMethod1(int32_t i);
+    NS_IMETHOD BarMethod2(int32_t i);
 
     NS_DECL_ISUPPORTS
 
@@ -1267,7 +1267,7 @@ private:
     ~FooBarImpl2() {}
 
 public:
-    PRInt32 value;
+    int32_t value;
 };
 
 FooBarImpl2::FooBarImpl2() : value(0x12345678)
@@ -1275,28 +1275,28 @@ FooBarImpl2::FooBarImpl2() : value(0x12345678)
     NS_ADDREF_THIS();
 }
 
-NS_IMETHODIMP FooBarImpl2::FooMethod1(PRInt32 i)
+NS_IMETHODIMP FooBarImpl2::FooMethod1(int32_t i)
 {
     printf("\tFooBarImpl2::FooMethod1 called with i == %d, local value = %x\n", 
            i, value);
     return NS_OK;
 }
 
-NS_IMETHODIMP FooBarImpl2::FooMethod2(PRInt32 i)
+NS_IMETHODIMP FooBarImpl2::FooMethod2(int32_t i)
 {
     printf("\tFooBarImpl2::FooMethod2 called with i == %d, local value = %x\n", 
            i, value);
     return NS_OK;
 }
 
-NS_IMETHODIMP FooBarImpl2::BarMethod1(PRInt32 i)
+NS_IMETHODIMP FooBarImpl2::BarMethod1(int32_t i)
 {
     printf("\tFooBarImpl2::BarMethod1 called with i == %d, local value = %x\n", 
            i, value);
     return NS_OK;
 }
 
-NS_IMETHODIMP FooBarImpl2::BarMethod2(PRInt32 i)
+NS_IMETHODIMP FooBarImpl2::BarMethod2(int32_t i)
 {
     printf("\tFooBarImpl2::BarMethod2 called with i == %d, local value = %x\n", 
            i, value);
@@ -1416,9 +1416,9 @@ static void DoSpeedTest()
     var[2].flags = nsXPTCVariant::PTR_IS_DATA;
     var[2].ptr = &var[2].val.i32;
 
-    PRInt32 in1 = 1;
-    PRInt32 in2 = 1;
-    PRInt32 out;
+    int32_t in1 = 1;
+    int32_t in2 = 1;
+    int32_t out;
 
     // Crank this number down if your platform is slow :)
     static const int count = 100000000;

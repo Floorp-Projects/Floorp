@@ -10,11 +10,11 @@
 interface nsICollection : nsISerializable
 {
 
-  PRUint32 Count();
-  nsISupports GetElementAt(in PRUint32 index);
-  void QueryElementAt(in PRUint32 index, in nsIIDRef uuid, 
+  uint32_t Count();
+  nsISupports GetElementAt(in uint32_t index);
+  void QueryElementAt(in uint32_t index, in nsIIDRef uuid, 
                       [iid_is(uuid),retval] out nsQIResult result);
-  void SetElementAt(in PRUint32 index, in nsISupports item);
+  void SetElementAt(in uint32_t index, in nsISupports item);
   void AppendElement(in nsISupports item);
   void RemoveElement(in nsISupports item);
 
@@ -33,7 +33,7 @@ interface nsICollection : nsISerializable
 class nsQueryElementAt : public nsCOMPtr_helper
   {
     public:
-      nsQueryElementAt( nsICollection* aCollection, PRUint32 aIndex, nsresult* aErrorPtr )
+      nsQueryElementAt( nsICollection* aCollection, uint32_t aIndex, nsresult* aErrorPtr )
           : mCollection(aCollection),
             mIndex(aIndex),
             mErrorPtr(aErrorPtr)
@@ -45,13 +45,13 @@ class nsQueryElementAt : public nsCOMPtr_helper
 
     private:
       nsICollection*  mCollection;
-      PRUint32        mIndex;
+      uint32_t        mIndex;
       nsresult*       mErrorPtr;
   };
 
 inline
 const nsQueryElementAt
-do_QueryElementAt( nsICollection* aCollection, PRUint32 aIndex, nsresult* aErrorPtr = 0 )
+do_QueryElementAt( nsICollection* aCollection, uint32_t aIndex, nsresult* aErrorPtr = 0 )
   {
     return nsQueryElementAt(aCollection, aIndex, aErrorPtr);
   }

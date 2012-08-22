@@ -70,7 +70,7 @@ nsObserverList::FillObserverArray(nsCOMArray<nsIObserver> &aArray)
 
     nsTArray<ObserverRef> observers(mObservers);
 
-    for (PRInt32 i = observers.Length() - 1; i >= 0; --i) {
+    for (int32_t i = observers.Length() - 1; i >= 0; --i) {
         if (observers[i].isWeakRef) {
             nsCOMPtr<nsIObserver> o(do_QueryReferent(observers[i].asWeak()));
             if (o) {
@@ -95,7 +95,7 @@ nsObserverList::NotifyObservers(nsISupports *aSubject,
     nsCOMArray<nsIObserver> observers;
     FillObserverArray(observers);
 
-    for (PRInt32 i = 0; i < observers.Count(); ++i) {
+    for (int32_t i = 0; i < observers.Count(); ++i) {
         observers[i]->Observe(aSubject, aTopic, someData);
     }
 }
@@ -103,7 +103,7 @@ nsObserverList::NotifyObservers(nsISupports *aSubject,
 void
 nsObserverList::UnmarkGrayStrongObservers()
 {
-    for (PRUint32 i = 0; i < mObservers.Length(); ++i) {
+    for (uint32_t i = 0; i < mObservers.Length(); ++i) {
         if (!mObservers[i].isWeakRef) {
             xpc_TryUnmarkWrappedGrayObject(mObservers[i].asObserver());
         }

@@ -24,20 +24,20 @@ public:
    : mAnimVal(nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE),
      mBaseVal(nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE) {}
 
-  nsresult SetBaseValue(PRUint16 aValue,
+  nsresult SetBaseValue(uint16_t aValue,
                         nsSVGElement *aSVGElement);
 
   // XXX FIXME like https://bugzilla.mozilla.org/show_bug.cgi?id=545550 but
   // without adding an mIsAnimated member...?
-  void SetBaseValue(PRUint16 aValue)
-    { mAnimVal = mBaseVal = PRUint8(aValue); }
+  void SetBaseValue(uint16_t aValue)
+    { mAnimVal = mBaseVal = uint8_t(aValue); }
   // no need to notify, since nsSVGAngle does that
-  void SetAnimValue(PRUint16 aValue)
-    { mAnimVal = PRUint8(aValue); }
+  void SetAnimValue(uint16_t aValue)
+    { mAnimVal = uint8_t(aValue); }
 
-  PRUint16 GetBaseValue() const
+  uint16_t GetBaseValue() const
     { return mBaseVal; }
-  PRUint16 GetAnimValue() const
+  uint16_t GetAnimValue() const
     { return mAnimVal; }
 
   nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
@@ -59,11 +59,11 @@ private:
     nsSVGOrientType *mVal; // kept alive because it belongs to content
     nsRefPtr<nsSVGElement> mSVGElement;
 
-    NS_IMETHOD GetBaseVal(PRUint16* aResult)
+    NS_IMETHOD GetBaseVal(uint16_t* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
-    NS_IMETHOD SetBaseVal(PRUint16 aValue)
+    NS_IMETHOD SetBaseVal(uint16_t aValue)
       { return mVal->SetBaseValue(aValue, mSVGElement); }
-    NS_IMETHOD GetAnimVal(PRUint16* aResult)
+    NS_IMETHOD GetAnimVal(uint16_t* aResult)
       { *aResult = mVal->GetAnimValue(); return NS_OK; }
   };
 };
@@ -98,9 +98,9 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
 
-  virtual bool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual bool GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                          nsAString& aResult) const;
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
   // nsSVGSVGElement methods:
@@ -121,7 +121,7 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
 
-  virtual bool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual bool ParseAttribute(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
 

@@ -114,7 +114,7 @@ public:
 
     static PLDHashOperator
     DeletePropertyHashEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                           PRUint32 aNumber, void* aArg);
+                           uint32_t aNumber, void* aArg);
 
     Assertion(nsIRDFResource* aSource,      // normal assertion
               nsIRDFResource* aProperty,
@@ -172,7 +172,7 @@ public:
     // also shared between hash/as (see the union above)
     // but placed after union definition to ensure that
     // all 32-bit entries are long aligned
-    PRUint16                    mRefCnt;
+    uint16_t                    mRefCnt;
     bool                        mHashEntry;
 
 private:
@@ -245,7 +245,7 @@ Assertion::~Assertion()
 
 PLDHashOperator
 Assertion::DeletePropertyHashEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                                           PRUint32 aNumber, void* aArg)
+                                           uint32_t aNumber, void* aArg)
 {
     Entry* entry = reinterpret_cast<Entry*>(aHdr);
     nsFixedSizeAllocator* allocator = static_cast<nsFixedSizeAllocator*>(aArg);
@@ -288,19 +288,19 @@ protected:
     PLDHashTable mReverseArcs; 
 
     nsCOMArray<nsIRDFObserver> mObservers;  
-    PRUint32                   mNumObservers;
+    uint32_t                   mNumObservers;
 
     // VisitFoo needs to block writes, [Un]Assert only allowed
     // during mReadCount == 0
-    PRUint32 mReadCount;
+    uint32_t mReadCount;
 
     static PLDHashOperator
     DeleteForwardArcsEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                           PRUint32 aNumber, void* aArg);
+                           uint32_t aNumber, void* aArg);
 
     static PLDHashOperator
     ResourceEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                       PRUint32 aNumber, void* aArg);
+                       uint32_t aNumber, void* aArg);
 
     friend class InMemoryArcsEnumeratorImpl;
     friend class InMemoryAssertionEnumeratorImpl;
@@ -347,7 +347,7 @@ public:
 protected:
     static PLDHashOperator
     SweepForwardArcsEntries(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                            PRUint32 aNumber, void* aArg);
+                            uint32_t aNumber, void* aArg);
 
 public:
     // Implementation methods
@@ -628,7 +628,7 @@ private:
 
     static PLDHashOperator
     ArcEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                       PRUint32 aNumber, void* aArg);
+                       uint32_t aNumber, void* aArg);
 
 public:
     // nsISupports interface
@@ -663,7 +663,7 @@ public:
 PLDHashOperator
 InMemoryArcsEnumeratorImpl::ArcEnumerator(PLDHashTable* aTable,
                                        PLDHashEntryHdr* aHdr,
-                                       PRUint32 aNumber, void* aArg)
+                                       uint32_t aNumber, void* aArg)
 {
     Entry* entry = reinterpret_cast<Entry*>(aHdr);
     nsISupportsArray* resources = static_cast<nsISupportsArray*>(aArg);
@@ -734,7 +734,7 @@ InMemoryArcsEnumeratorImpl::HasMoreElements(bool* aResult)
     }
 
     if (mHashArcs) {
-        PRUint32    itemCount;
+        uint32_t    itemCount;
         nsresult    rv;
         if (NS_FAILED(rv = mHashArcs->Count(&itemCount)))   return(rv);
         if (itemCount > 0) {
@@ -770,7 +770,7 @@ InMemoryArcsEnumeratorImpl::HasMoreElements(bool* aResult)
             while (mAssertion && (next == mAssertion->u.as.mProperty));
 
             bool alreadyReturned = false;
-            for (PRInt32 i = mAlreadyReturned.Length() - 1; i >= 0; --i) {
+            for (int32_t i = mAlreadyReturned.Length() - 1; i >= 0; --i) {
                 if (mAlreadyReturned[i] == next) {
                     alreadyReturned = true;
                     break;
@@ -858,10 +858,10 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
         sizeof(InMemoryArcsEnumeratorImpl),
         sizeof(InMemoryAssertionEnumeratorImpl) };
 
-    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
+    static const int32_t kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
 
     // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
-    static const PRInt32 kInitialSize = 1024;
+    static const int32_t kInitialSize = 1024;
 
     mAllocator.Init("nsInMemoryDataSource", kBucketSizes, kNumBuckets, kInitialSize);
 
@@ -925,7 +925,7 @@ InMemoryDataSource::~InMemoryDataSource()
 
 PLDHashOperator
 InMemoryDataSource::DeleteForwardArcsEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                                           PRUint32 aNumber, void* aArg)
+                                           uint32_t aNumber, void* aArg)
 {
     Entry* entry = reinterpret_cast<Entry*>(aHdr);
     nsFixedSizeAllocator* allocator = static_cast<nsFixedSizeAllocator*>(aArg);
@@ -1348,7 +1348,7 @@ InMemoryDataSource::Assert(nsIRDFResource* aSource,
     if (NS_FAILED(rv)) return rv;
 
     // notify observers
-    for (PRInt32 i = (PRInt32)mNumObservers - 1; mPropagateChanges && i >= 0; --i) {
+    for (int32_t i = (int32_t)mNumObservers - 1; mPropagateChanges && i >= 0; --i) {
         nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
@@ -1508,7 +1508,7 @@ InMemoryDataSource::Unassert(nsIRDFResource* aSource,
     if (NS_FAILED(rv)) return rv;
 
     // Notify the world
-    for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
+    for (int32_t i = int32_t(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
         nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
@@ -1563,7 +1563,7 @@ InMemoryDataSource::Change(nsIRDFResource* aSource,
     if (NS_FAILED(rv)) return rv;
 
     // Notify the world
-    for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
+    for (int32_t i = int32_t(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
         nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
@@ -1618,7 +1618,7 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
     if (NS_FAILED(rv)) return rv;
 
     // Notify the world
-    for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
+    for (int32_t i = int32_t(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
         nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
@@ -1747,7 +1747,7 @@ InMemoryDataSource::ArcLabelsOut(nsIRDFResource* aSource, nsISimpleEnumerator** 
 PLDHashOperator
 InMemoryDataSource::ResourceEnumerator(PLDHashTable* aTable,
                                        PLDHashEntryHdr* aHdr,
-                                       PRUint32 aNumber, void* aArg)
+                                       uint32_t aNumber, void* aArg)
 {
     Entry* entry = reinterpret_cast<Entry*>(aHdr);
     nsISupportsArray* resources = static_cast<nsISupportsArray*>(aArg);
@@ -1800,7 +1800,7 @@ InMemoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 NS_IMETHODIMP
 InMemoryDataSource::BeginUpdateBatch()
 {
-    for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
+    for (int32_t i = int32_t(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
         nsIRDFObserver* obs = mObservers[i];
         obs->OnBeginUpdateBatch(this);
     }
@@ -1810,7 +1810,7 @@ InMemoryDataSource::BeginUpdateBatch()
 NS_IMETHODIMP
 InMemoryDataSource::EndUpdateBatch()
 {
-    for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
+    for (int32_t i = int32_t(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
         nsIRDFObserver* obs = mObservers[i];
         obs->OnEndUpdateBatch(this);
     }
@@ -1987,7 +1987,7 @@ InMemoryDataSource::Sweep()
 #endif
         if (!(as->mHashEntry))
         {
-            for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
+            for (int32_t i = int32_t(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
                 nsIRDFObserver* obs = mObservers[i];
                 // XXXbz other loops over mObservers null-check |obs| here!
                 obs->OnUnassert(this, as->mSource, as->u.as.mProperty, as->u.as.mTarget);
@@ -2010,7 +2010,7 @@ InMemoryDataSource::Sweep()
 PLDHashOperator
 InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
                                             PLDHashEntryHdr* aHdr,
-                                            PRUint32 aNumber, void* aArg)
+                                            uint32_t aNumber, void* aArg)
 {
     PLDHashOperator result = PL_DHASH_NEXT;
     Entry* entry = reinterpret_cast<Entry*>(aHdr);
@@ -2112,7 +2112,7 @@ public:
 
 PLDHashOperator
 SubjectEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                  PRUint32 aNumber, void* aArg) {
+                  uint32_t aNumber, void* aArg) {
     Entry* entry = reinterpret_cast<Entry*>(aHdr);
     VisitorClosure* closure = static_cast<VisitorClosure*>(aArg);
 
@@ -2154,7 +2154,7 @@ public:
 
 PLDHashOperator
 TriplesInnerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                  PRUint32 aNumber, void* aArg) {
+                  uint32_t aNumber, void* aArg) {
     Entry* entry = reinterpret_cast<Entry*>(aHdr);
     Assertion* assertion = entry->mAssertions;
     TriplesInnerClosure* closure = 
@@ -2175,7 +2175,7 @@ TriplesInnerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
 }
 PLDHashOperator
 TriplesEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                  PRUint32 aNumber, void* aArg) {
+                  uint32_t aNumber, void* aArg) {
     Entry* entry = reinterpret_cast<Entry*>(aHdr);
     VisitorClosure* closure = static_cast<VisitorClosure*>(aArg);
 

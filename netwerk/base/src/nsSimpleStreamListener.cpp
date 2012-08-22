@@ -46,10 +46,10 @@ NS_IMETHODIMP
 nsSimpleStreamListener::OnDataAvailable(nsIRequest* request,
                                         nsISupports *aContext,
                                         nsIInputStream *aSource,
-                                        PRUint32 aOffset,
-                                        PRUint32 aCount)
+                                        uint32_t aOffset,
+                                        uint32_t aCount)
 {
-    PRUint32 writeCount;
+    uint32_t writeCount;
     nsresult rv = mSink->WriteFrom(aSource, aCount, &writeCount);
     //
     // Equate zero bytes read and NS_SUCCEEDED to stopping the read.

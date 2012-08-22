@@ -175,7 +175,7 @@ public:
    *
    * The CALLER OWNS the result and is responsible for deleting it.
    */
-  virtual nsISMILAttr* GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName) = 0;
+  virtual nsISMILAttr* GetAnimatedAttr(int32_t aNamespaceID, nsIAtom* aName) = 0;
 
   /**
    * Get the SMIL override style for this element. This is a style declaration
@@ -208,7 +208,7 @@ public:
    * mapped into style data via any type of style rule.
    */
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              PRInt32 aModType) const = 0;
+                                              int32_t aModType) const = 0;
 
   /**
    * Returns an atom holding the name of the "class" attribute on this

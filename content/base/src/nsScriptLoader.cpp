@@ -62,7 +62,7 @@ using namespace mozilla::dom;
 class nsScriptLoadRequest MOZ_FINAL : public nsISupports {
 public:
   nsScriptLoadRequest(nsIScriptElement* aElement,
-                      PRUint32 aVersion,
+                      uint32_t aVersion,
                       CORSMode aCORSMode)
     : mElement(aElement),
       mLoading(true),
@@ -93,10 +93,10 @@ public:
   bool mLoading;             // Are we still waiting for a load to complete?
   bool mIsInline;            // Is the script inline or loaded?
   nsString mScriptText;              // Holds script for loaded scripts
-  PRUint32 mJSVersion;
+  uint32_t mJSVersion;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
-  PRInt32 mLineNo;
+  int32_t mLineNo;
   const CORSMode mCORSMode;
 };
 
@@ -131,25 +131,25 @@ nsScriptLoader::~nsScriptLoader()
     mParserBlockingRequest->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
-  for (PRUint32 i = 0; i < mXSLTRequests.Length(); i++) {
+  for (uint32_t i = 0; i < mXSLTRequests.Length(); i++) {
     mXSLTRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
-  for (PRUint32 i = 0; i < mDeferRequests.Length(); i++) {
+  for (uint32_t i = 0; i < mDeferRequests.Length(); i++) {
     mDeferRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
-  for (PRUint32 i = 0; i < mAsyncRequests.Length(); i++) {
+  for (uint32_t i = 0; i < mAsyncRequests.Length(); i++) {
     mAsyncRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
-  for (PRUint32 i = 0; i < mNonAsyncExternalScriptInsertedRequests.Length(); i++) {
+  for (uint32_t i = 0; i < mNonAsyncExternalScriptInsertedRequests.Length(); i++) {
     mNonAsyncExternalScriptInsertedRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
   // Unblock the kids, in case any of them moved to a different document
   // subtree in the meantime and therefore aren't actually going away.
-  for (PRUint32 j = 0; j < mPendingChildLoaders.Length(); ++j) {
+  for (uint32_t j = 0; j < mPendingChildLoaders.Length(); ++j) {
     mPendingChildLoaders[j]->RemoveExecuteBlocker();
   }  
 }
@@ -215,7 +215,7 @@ nsScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
                                    nsIURI *aURI,
                                    const nsAString &aType)
 {
-  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
                                           aURI,
                                           aDocument->NodePrincipal(),
@@ -465,7 +465,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
         // code to check nsContentUtils::IsJavaScriptLanguage -- that's probably
         // a separate bug, one we may not be able to fix short of XUL2).  See
         // bug 255895 (https://bugzilla.mozilla.org/show_bug.cgi?id=255895).
-        PRUint32 dummy;
+        uint32_t dummy;
         if (!nsContentUtils::IsJavaScriptLanguage(language, &dummy)) {
           return false;
         }
@@ -711,7 +711,7 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   }
 
   nsCOMPtr<nsIScriptElement> oldParserInsertedScript;
-  PRUint32 parserCreated = aRequest->mElement->GetParserCreated();
+  uint32_t parserCreated = aRequest->mElement->GetParserCreated();
   if (parserCreated) {
     oldParserInsertedScript = mCurrentParserInsertedScript;
     mCurrentParserInsertedScript = aRequest->mElement;
@@ -756,7 +756,7 @@ void
 nsScriptLoader::FireScriptAvailable(nsresult aResult,
                                     nsScriptLoadRequest* aRequest)
 {
-  for (PRInt32 i = 0; i < mObservers.Count(); i++) {
+  for (int32_t i = 0; i < mObservers.Count(); i++) {
     nsCOMPtr<nsIScriptLoaderObserver> obs = mObservers[i];
     obs->ScriptAvailable(aResult, aRequest->mElement,
                          aRequest->mIsInline, aRequest->mURI,
@@ -770,7 +770,7 @@ void
 nsScriptLoader::FireScriptEvaluated(nsresult aResult,
                                     nsScriptLoadRequest* aRequest)
 {
-  for (PRInt32 i = 0; i < mObservers.Count(); i++) {
+  for (int32_t i = 0; i < mObservers.Count(); i++) {
     nsCOMPtr<nsIScriptLoaderObserver> obs = mObservers[i];
     obs->ScriptEvaluated(aResult, aRequest->mElement,
                          aRequest->mIsInline);
@@ -882,7 +882,7 @@ nsScriptLoader::ProcessPendingRequests()
     ProcessRequest(request);
   }
 
-  PRUint32 i = 0;
+  uint32_t i = 0;
   while (mEnabled && i < mAsyncRequests.Length()) {
     if (!mAsyncRequests[i]->mLoading) {
       request.swap(mAsyncRequests[i]);
@@ -954,7 +954,7 @@ nsScriptLoader::ReadyToExecuteScripts()
 
 // This function was copied from nsParser.cpp. It was simplified a bit.
 static bool
-DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsCString& oCharset)
+DetectByteOrderMark(const unsigned char* aBytes, int32_t aLen, nsCString& oCharset)
 {
   if (aLen < 2)
     return false;
@@ -986,8 +986,8 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsCString& oChars
 }
 
 /* static */ nsresult
-nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
-                               PRUint32 aLength, const nsAString& aHintCharset,
+nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
+                               uint32_t aLength, const nsAString& aHintCharset,
                                nsIDocument* aDocument, nsString& aString)
 {
   if (!aLength) {
@@ -1038,7 +1038,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
 
   // converts from the charset to unicode
   if (NS_SUCCEEDED(rv)) {
-    PRInt32 unicodeLength = 0;
+    int32_t unicodeLength = 0;
 
     rv = unicodeDecoder->GetMaxLength(reinterpret_cast<const char*>(aData),
                                       aLength, &unicodeLength);
@@ -1048,13 +1048,13 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
 
       PRUnichar *ustr = aString.BeginWriting();
 
-      PRInt32 consumedLength = 0;
-      PRInt32 originalLength = aLength;
-      PRInt32 convertedLength = 0;
-      PRInt32 bufferLength = unicodeLength;
+      int32_t consumedLength = 0;
+      int32_t originalLength = aLength;
+      int32_t convertedLength = 0;
+      int32_t bufferLength = unicodeLength;
       do {
         rv = unicodeDecoder->Convert(reinterpret_cast<const char*>(aData),
-                                     (PRInt32 *) &aLength, ustr,
+                                     (int32_t *) &aLength, ustr,
                                      &unicodeLength);
         if (NS_FAILED(rv)) {
           // if we failed, we consume one byte, replace it with U+FFFD
@@ -1080,8 +1080,8 @@ NS_IMETHODIMP
 nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
                                  nsISupports* aContext,
                                  nsresult aStatus,
-                                 PRUint32 aStringLen,
-                                 const PRUint8* aString)
+                                 uint32_t aStringLen,
+                                 const uint8_t* aString)
 {
   nsScriptLoadRequest* request = static_cast<nsScriptLoadRequest*>(aContext);
   NS_ASSERTION(request, "null request in stream complete handler");
@@ -1127,8 +1127,8 @@ nsresult
 nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
                                      nsIStreamLoader* aLoader,
                                      nsresult aStatus,
-                                     PRUint32 aStringLen,
-                                     const PRUint8* aString)
+                                     uint32_t aStringLen,
+                                     const uint8_t* aString)
 {
   if (NS_FAILED(aStatus)) {
     return aStatus;

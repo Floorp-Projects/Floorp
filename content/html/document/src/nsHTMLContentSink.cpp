@@ -169,10 +169,10 @@ public:
   NS_IMETHOD DidProcessTokens(void);
   NS_IMETHOD WillProcessAToken(void);
   NS_IMETHOD DidProcessAToken(void);
-  NS_IMETHOD BeginContext(PRInt32 aID);
-  NS_IMETHOD EndContext(PRInt32 aID);
+  NS_IMETHOD BeginContext(int32_t aID);
+  NS_IMETHOD EndContext(int32_t aID);
   NS_IMETHOD OpenHead();
-  NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn);
+  NS_IMETHOD IsEnabled(int32_t aTag, bool* aReturn);
 
 #ifdef DEBUG
   // nsIDebugDumpContent
@@ -189,17 +189,17 @@ protected:
   CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType);
 
 #ifdef DEBUG
-  void SinkTraceNode(PRUint32 aBit,
+  void SinkTraceNode(uint32_t aBit,
                      const char* aMsg,
                      const nsHTMLTag aTag,
-                     PRInt32 aStackPos,
+                     int32_t aStackPos,
                      void* aThis);
 #endif
 
   nsCOMPtr<nsIHTMLDocument> mHTMLDocument;
 
   // The maximum length of a text run
-  PRInt32 mMaxTextRun;
+  int32_t mMaxTextRun;
 
   nsRefPtr<nsGenericHTMLElement> mRoot;
   nsRefPtr<nsGenericHTMLElement> mBody;
@@ -217,9 +217,9 @@ protected:
   // yet.  We want to make sure to only do this once.
   bool mNotifiedRootInsertion;
 
-  PRUint8 mScriptEnabled : 1;
-  PRUint8 mFramesEnabled : 1;
-  PRUint8 unused : 6;  // bits available if someone needs one
+  uint8_t mScriptEnabled : 1;
+  uint8_t mFramesEnabled : 1;
+  uint8_t unused : 6;  // bits available if someone needs one
 
   nsINodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
 
@@ -238,7 +238,7 @@ protected:
 
   void NotifyInsert(nsIContent* aContent,
                     nsIContent* aChildContent,
-                    PRInt32 aIndexInContainer);
+                    int32_t aIndexInContainer);
   void NotifyRootInsertion();
   
   bool IsMonolithicContainer(nsHTMLTag aTag);
@@ -255,7 +255,7 @@ public:
   ~SinkContext();
 
   nsresult Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,
-                 PRUint32 aNumFlushed, PRInt32 aInsertionPoint);
+                 uint32_t aNumFlushed, int32_t aInsertionPoint);
   nsresult OpenContainer(const nsIParserNode& aNode);
   nsresult CloseContainer(const nsHTMLTag aTag);
   nsresult AddLeaf(const nsIParserNode& aNode);
@@ -286,26 +286,26 @@ private:
   
 public:
   HTMLContentSink* mSink;
-  PRInt32 mNotifyLevel;
+  int32_t mNotifyLevel;
   nsCOMPtr<nsIContent> mLastTextNode;
-  PRInt32 mLastTextNodeSize;
+  int32_t mLastTextNodeSize;
 
   struct Node {
     nsHTMLTag mType;
     nsGenericHTMLElement* mContent;
-    PRUint32 mNumFlushed;
-    PRInt32 mInsertionPoint;
+    uint32_t mNumFlushed;
+    int32_t mInsertionPoint;
 
     nsIContent *Add(nsIContent *child);
   };
 
   Node* mStack;
-  PRInt32 mStackSize;
-  PRInt32 mStackPos;
+  int32_t mStackSize;
+  int32_t mStackPos;
 
   PRUnichar* mText;
-  PRInt32 mTextLength;
-  PRInt32 mTextSize;
+  int32_t mTextLength;
+  int32_t mTextSize;
 
 private:
   bool mLastTextCharWasCR;
@@ -315,10 +315,10 @@ private:
 
 #ifdef DEBUG
 void
-HTMLContentSink::SinkTraceNode(PRUint32 aBit,
+HTMLContentSink::SinkTraceNode(uint32_t aBit,
                                const char* aMsg,
                                const nsHTMLTag aTag,
-                               PRInt32 aStackPos,
+                               int32_t aStackPos,
                                void* aThis)
 {
   if (SINK_LOG_TEST(gSinkLogModuleInfo, aBit)) {
@@ -340,7 +340,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
 {
   // Add tag attributes to the content attributes
 
-  PRInt32 ac = aNode.GetAttributeCount();
+  int32_t ac = aNode.GetAttributeCount();
 
   if (ac == 0) {
     // No attributes, nothing to do. Do an early return to avoid
@@ -366,7 +366,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
   // multiple <html>, <head>, or <body> tags, so we're doing fixup anyway at
   // that point.
 
-  PRInt32 i, limit, step;
+  int32_t i, limit, step;
   if (aCheckIfPresent) {
     i = 0;
     limit = ac;
@@ -482,7 +482,7 @@ NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
 }
 
 already_AddRefed<nsGenericHTMLElement>
-CreateHTMLElement(PRUint32 aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
+CreateHTMLElement(uint32_t aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
                   FromParser aFromParser)
 {
   NS_ASSERTION(aNodeType <= NS_HTML_TAG_MAX ||
@@ -522,7 +522,7 @@ SinkContext::~SinkContext()
   MOZ_COUNT_DTOR(SinkContext);
 
   if (mStack) {
-    for (PRInt32 i = 0; i < mStackPos; i++) {
+    for (int32_t i = 0; i < mStackPos; i++) {
       NS_RELEASE(mStack[i].mContent);
     }
     delete [] mStack;
@@ -534,8 +534,8 @@ SinkContext::~SinkContext()
 nsresult
 SinkContext::Begin(nsHTMLTag aNodeType,
                    nsGenericHTMLElement* aRoot,
-                   PRUint32 aNumFlushed,
-                   PRInt32 aInsertionPoint)
+                   uint32_t aNumFlushed,
+                   int32_t aInsertionPoint)
 {
   if (mStackSize < 1) {
     nsresult rv = GrowStack();
@@ -597,7 +597,7 @@ SinkContext::DidAddContent(nsIContent* aContent)
     }
 #endif
 
-    PRInt32 childIndex = mStack[mStackPos - 1].mInsertionPoint - 1;
+    int32_t childIndex = mStack[mStackPos - 1].mInsertionPoint - 1;
     NS_ASSERTION(parent->GetChildAt(childIndex) == aContent,
                  "Flushing the wrong child.");
     mSink->NotifyInsert(parent, aContent, childIndex);
@@ -886,7 +886,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
   case eToken_entity:
     {
       nsAutoString tmp;
-      PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
+      int32_t unicode = aNode.TranslateToUnicodeStr(tmp);
       if (unicode < 0) {
         rv = AddText(aNode.GetText());
       } else {
@@ -930,7 +930,7 @@ SinkContext::AddLeaf(nsIContent* aContent)
 nsresult
 SinkContext::End()
 {
-  for (PRInt32 i = 0; i < mStackPos; i++) {
+  for (int32_t i = 0; i < mStackPos; i++) {
     NS_RELEASE(mStack[i].mContent);
   }
 
@@ -943,7 +943,7 @@ SinkContext::End()
 nsresult
 SinkContext::GrowStack()
 {
-  PRInt32 newSize = mStackSize * 2;
+  int32_t newSize = mStackSize * 2;
   if (newSize == 0) {
     newSize = 32;
   }
@@ -975,7 +975,7 @@ SinkContext::GrowStack()
 nsresult
 SinkContext::AddText(const nsAString& aText)
 {
-  PRInt32 addLen = aText.Length();
+  int32_t addLen = aText.Length();
   if (addLen == 0) {
     return NS_OK;
   }
@@ -990,10 +990,10 @@ SinkContext::AddText(const nsAString& aText)
   }
 
   // Copy data from string into our buffer; flush buffer when it fills up
-  PRInt32 offset = 0;
+  int32_t offset = 0;
 
   while (addLen != 0) {
-    PRInt32 amount = mTextSize - mTextLength;
+    int32_t amount = mTextSize - mTextLength;
 
     if (amount > addLen) {
       amount = addLen;
@@ -1038,7 +1038,7 @@ SinkContext::FlushTags()
 {
   mSink->mDeferredFlushTags = false;
   bool oldBeganUpdate = mSink->mBeganUpdate;
-  PRUint32 oldUpdates = mSink->mUpdatesInNotification;
+  uint32_t oldUpdates = mSink->mUpdatesInNotification;
 
   ++(mSink->mInNotification);
   mSink->mUpdatesInNotification = 0;
@@ -1058,9 +1058,9 @@ SinkContext::FlushTags()
     // Note that we can start at stackPos == 0 here, because it's the caller's
     // responsibility to handle flushing interactions between contexts (see
     // HTMLContentSink::BeginContext).
-    PRInt32 stackPos = 0;
+    int32_t stackPos = 0;
     bool flushed = false;
-    PRUint32 childCount;
+    uint32_t childCount;
     nsGenericHTMLElement* content;
 
     while (stackPos < mStackPos) {
@@ -1083,7 +1083,7 @@ SinkContext::FlushTags()
           // but not notified on it yet, which is why we have to get it
           // directly from its parent node.
 
-          PRInt32 childIndex = mStack[stackPos].mInsertionPoint - 1;
+          int32_t childIndex = mStack[stackPos].mInsertionPoint - 1;
           nsIContent* child = content->GetChildAt(childIndex);
           // Child not on stack anymore; can't assert it's correct
           NS_ASSERTION(!(mStackPos > (stackPos + 1)) ||
@@ -1125,7 +1125,7 @@ SinkContext::UpdateChildCounts()
   // have been generated for it and we should make sure that no
   // further reflows occur.  Note that we have to include stackPos == 0
   // to properly notify on kids of <html>.
-  PRInt32 stackPos = mStackPos - 1;
+  int32_t stackPos = mStackPos - 1;
   while (stackPos >= 0) {
     Node & node = mStack[stackPos];
     node.mNumFlushed = node.mContent->GetChildCount();
@@ -1255,14 +1255,14 @@ HTMLContentSink::~HTMLContentSink()
     mNotificationTimer->Cancel();
   }
 
-  PRInt32 numContexts = mContextStack.Length();
+  int32_t numContexts = mContextStack.Length();
 
   if (mCurrentContext == mHeadContext && numContexts > 0) {
     // Pop off the second html context if it's not done earlier
     mContextStack.RemoveElementAt(--numContexts);
   }
 
-  PRInt32 i;
+  int32_t i;
   for (i = 0; i < numContexts; i++) {
     SinkContext* sc = mContextStack.ElementAt(i);
     if (sc) {
@@ -1283,7 +1283,7 @@ HTMLContentSink::~HTMLContentSink()
 
   delete mHeadContext;
 
-  for (i = 0; PRUint32(i) < ArrayLength(mNodeInfoCache); ++i) {
+  for (i = 0; uint32_t(i) < ArrayLength(mNodeInfoCache); ++i) {
     NS_IF_RELEASE(mNodeInfoCache[i]);
   }
 }
@@ -1295,7 +1295,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLContentSink, nsContentSink)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mBody)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mHead)
-  for (PRUint32 i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
     NS_IF_RELEASE(tmp->mNodeInfoCache[i]);
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -1305,7 +1305,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLContentSink,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRoot)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBody)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHead)
-  for (PRUint32 i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mNodeInfoCache[i]");
     cb.NoteXPCOMChild(tmp->mNodeInfoCache[i]);
   }
@@ -1526,7 +1526,7 @@ HTMLContentSink::SetParser(nsParserBase* aParser)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::BeginContext(PRInt32 aPosition)
+HTMLContentSink::BeginContext(int32_t aPosition)
 {
   NS_PRECONDITION(aPosition > -1, "out of bounds");
 
@@ -1546,7 +1546,7 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
     return NS_ERROR_FAILURE;
   }
 
-  PRInt32 insertionPoint = -1;
+  int32_t insertionPoint = -1;
   nsHTMLTag nodeType      = mCurrentContext->mStack[aPosition].mType;
   nsGenericHTMLElement* content = mCurrentContext->mStack[aPosition].mContent;
 
@@ -1570,11 +1570,11 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::EndContext(PRInt32 aPosition)
+HTMLContentSink::EndContext(int32_t aPosition)
 {
   NS_PRECONDITION(mCurrentContext && aPosition > -1, "nonexistent context");
 
-  PRUint32 n = mContextStack.Length() - 1;
+  uint32_t n = mContextStack.Length() - 1;
   SinkContext* sc = mContextStack.ElementAt(n);
 
   const SinkContext::Node &bottom = mCurrentContext->mStack[0];
@@ -1596,7 +1596,7 @@ HTMLContentSink::EndContext(PRInt32 aPosition)
 
   sc->mStack[aPosition].mNumFlushed = bottom.mNumFlushed;
 
-  for (PRInt32 i = 0; i<mCurrentContext->mStackPos; i++) {
+  for (int32_t i = 0; i<mCurrentContext->mStackPos; i++) {
     NS_IF_RELEASE(mCurrentContext->mStack[i].mContent);
   }
 
@@ -1630,7 +1630,7 @@ HTMLContentSink::CloseHTML()
 
   if (mHeadContext) {
     if (mCurrentContext == mHeadContext) {
-      PRUint32 numContexts = mContextStack.Length();
+      uint32_t numContexts = mContextStack.Length();
 
       // Pop off the second html context if it's not done earlier
       mCurrentContext = mContextStack.ElementAt(--numContexts);
@@ -1681,20 +1681,20 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
   mBody = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
 
   if (mCurrentContext->mStackPos > 1) {
-    PRInt32 parentIndex    = mCurrentContext->mStackPos - 2;
+    int32_t parentIndex    = mCurrentContext->mStackPos - 2;
     nsGenericHTMLElement *parent = mCurrentContext->mStack[parentIndex].mContent;
-    PRInt32 numFlushed     = mCurrentContext->mStack[parentIndex].mNumFlushed;
-    PRInt32 childCount = parent->GetChildCount();
+    int32_t numFlushed     = mCurrentContext->mStack[parentIndex].mNumFlushed;
+    int32_t childCount = parent->GetChildCount();
     NS_ASSERTION(numFlushed < childCount, "Already notified on the body?");
     
-    PRInt32 insertionPoint =
+    int32_t insertionPoint =
       mCurrentContext->mStack[parentIndex].mInsertionPoint;
 
     // XXX: I have yet to see a case where numFlushed is non-zero and
     // insertionPoint is not -1, but this code will try to handle
     // those cases too.
 
-    PRUint32 oldUpdates = mUpdatesInNotification;
+    uint32_t oldUpdates = mUpdatesInNotification;
     mUpdatesInNotification = 0;
     if (insertionPoint != -1) {
       NotifyInsert(parent, mBody, insertionPoint - 1);
@@ -1739,7 +1739,7 @@ HTMLContentSink::CloseBody()
 }
 
 NS_IMETHODIMP
-HTMLContentSink::IsEnabled(PRInt32 aTag, bool* aReturn)
+HTMLContentSink::IsEnabled(int32_t aTag, bool* aReturn)
 {
   nsHTMLTag theHTMLTag = nsHTMLTag(aTag);
 
@@ -1930,7 +1930,7 @@ HTMLContentSink::CloseHeadContext()
 
   if (!mContextStack.IsEmpty())
   {
-    PRUint32 n = mContextStack.Length() - 1;
+    uint32_t n = mContextStack.Length() - 1;
     mCurrentContext = mContextStack.ElementAt(n);
     mContextStack.RemoveElementAt(n);
   }
@@ -1947,7 +1947,7 @@ HTMLContentSink::ForceReflow()
 void
 HTMLContentSink::NotifyInsert(nsIContent* aContent,
                               nsIContent* aChildContent,
-                              PRInt32 aIndexInContainer)
+                              int32_t aIndexInContainer)
 {
   if (aContent && aContent->GetCurrentDoc() != mDocument) {
     // aContent is not actually in our document anymore.... Just bail out of
@@ -1982,7 +1982,7 @@ HTMLContentSink::NotifyRootInsertion()
   // document; in those cases we just want to put all the attrs on one
   // tag.
   mNotifiedRootInsertion = true;
-  PRInt32 index = mDocument->IndexOf(mRoot);
+  int32_t index = mDocument->IndexOf(mRoot);
   NS_ASSERTION(index != -1, "mRoot not child of document?");
   NotifyInsert(nullptr, mRoot, index);
 
@@ -2008,8 +2008,8 @@ HTMLContentSink::IsMonolithicContainer(nsHTMLTag aTag)
 void
 HTMLContentSink::UpdateChildCounts()
 {
-  PRUint32 numContexts = mContextStack.Length();
-  for (PRUint32 i = 0; i < numContexts; i++) {
+  uint32_t numContexts = mContextStack.Length();
+  for (uint32_t i = 0; i < numContexts; i++) {
     SinkContext* sc = mContextStack.ElementAt(i);
 
     sc->UpdateChildCounts();

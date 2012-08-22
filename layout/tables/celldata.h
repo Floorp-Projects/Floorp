@@ -66,12 +66,12 @@ public:
   /** get the distance from the current entry to the corresponding origin of the rowspan
     * @return    containing the distance in the column to the originating cell
     */
-  PRUint32 GetRowSpanOffset() const;
+  uint32_t GetRowSpanOffset() const;
 
   /** set the distance from the current entry to the corresponding origin of the rowspan
     * @param    the distance in the column to the originating cell
     */
-  void SetRowSpanOffset(PRUint32 aSpan);
+  void SetRowSpanOffset(uint32_t aSpan);
 
   /** is the entry spanned by colspan
     * @return    is true if the entry is spanned by a colspan
@@ -94,12 +94,12 @@ public:
   /** get the distance from the current entry to the corresponding origin of the colspan
     * @return    containing the distance in the row to the originating cell
     */
-  PRUint32 GetColSpanOffset() const;
+  uint32_t GetColSpanOffset() const;
 
   /** set the distance from the current entry to the corresponding origin of the colspan
     * @param    the distance in the column to the originating cell
     */
-  void SetColSpanOffset(PRUint32 aSpan);
+  void SetColSpanOffset(uint32_t aSpan);
 
   /** is the entry spanned by a row- and a colspan
     * @return    is true if the entry is spanned by a row- and a colspan
@@ -159,20 +159,20 @@ enum BCBorderOwner
   eAjaCellOwner      = 10  // cell to the top or to the left
 };
 
-typedef PRUint16 BCPixelSize;
+typedef uint16_t BCPixelSize;
 
 // These are the max sizes that are stored. If they are exceeded, then the max is stored and
 // the actual value is computed when needed.
 #define MAX_BORDER_WIDTH nscoord(PR_BITMASK(sizeof(BCPixelSize) * 8))
 
 static inline nscoord
-BC_BORDER_TOP_HALF_COORD(PRInt32 p2t, PRUint16 px)    { return (px - px / 2) * p2t; }
+BC_BORDER_TOP_HALF_COORD(int32_t p2t, uint16_t px)    { return (px - px / 2) * p2t; }
 static inline nscoord
-BC_BORDER_RIGHT_HALF_COORD(PRInt32 p2t, PRUint16 px)  { return (     px / 2) * p2t; }
+BC_BORDER_RIGHT_HALF_COORD(int32_t p2t, uint16_t px)  { return (     px / 2) * p2t; }
 static inline nscoord
-BC_BORDER_BOTTOM_HALF_COORD(PRInt32 p2t, PRUint16 px) { return (     px / 2) * p2t; }
+BC_BORDER_BOTTOM_HALF_COORD(int32_t p2t, uint16_t px) { return (     px / 2) * p2t; }
 static inline nscoord
-BC_BORDER_LEFT_HALF_COORD(PRInt32 p2t, PRUint16 px)   { return (px - px / 2) * p2t; }
+BC_BORDER_LEFT_HALF_COORD(int32_t p2t, uint16_t px)   { return (px - px / 2) * p2t; }
 
 #define BC_BORDER_TOP_HALF(px)    ((px) - (px) / 2)
 #define BC_BORDER_RIGHT_HALF(px)  ((px) / 2)
@@ -325,15 +325,15 @@ inline void CellData::SetZeroRowSpan(bool aIsZeroSpan)
   }
 }
 
-inline PRUint32 CellData::GetRowSpanOffset() const
+inline uint32_t CellData::GetRowSpanOffset() const
 {
   if ((SPAN == (SPAN & mBits)) && ((ROW_SPAN == (ROW_SPAN & mBits)))) {
-    return (PRUint32)((mBits & ROW_SPAN_OFFSET) >> ROW_SPAN_SHIFT);
+    return (uint32_t)((mBits & ROW_SPAN_OFFSET) >> ROW_SPAN_SHIFT);
   }
   return 0;
 }
 
-inline void CellData::SetRowSpanOffset(PRUint32 aSpan)
+inline void CellData::SetRowSpanOffset(uint32_t aSpan)
 {
   mBits &= ~ROW_SPAN_OFFSET;
   mBits |= (aSpan << ROW_SPAN_SHIFT);
@@ -366,15 +366,15 @@ inline void CellData::SetZeroColSpan(bool aIsZeroSpan)
   }
 }
 
-inline PRUint32 CellData::GetColSpanOffset() const
+inline uint32_t CellData::GetColSpanOffset() const
 {
   if ((SPAN == (SPAN & mBits)) && ((COL_SPAN == (COL_SPAN & mBits)))) {
-    return (PRUint32)((mBits & COL_SPAN_OFFSET) >> COL_SPAN_SHIFT);
+    return (uint32_t)((mBits & COL_SPAN_OFFSET) >> COL_SPAN_SHIFT);
   }
   return 0;
 }
 
-inline void CellData::SetColSpanOffset(PRUint32 aSpan)
+inline void CellData::SetColSpanOffset(uint32_t aSpan)
 {
   mBits &= ~COL_SPAN_OFFSET;
   mBits |= (aSpan << COL_SPAN_SHIFT);

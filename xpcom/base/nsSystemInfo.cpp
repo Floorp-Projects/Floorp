@@ -77,7 +77,7 @@ nsSystemInfo::Init()
       { PR_SI_RELEASE, "version" }
     };
 
-    for (PRUint32 i = 0; i < (sizeof(items) / sizeof(items[0])); i++) {
+    for (uint32_t i = 0; i < (sizeof(items) / sizeof(items[0])); i++) {
       char buf[SYS_INFO_BUFFER_LENGTH];
       if (PR_GetSystemInfo(items[i].cmd, buf, sizeof(buf)) == PR_SUCCESS) {
         rv = SetPropertyAsACString(NS_ConvertASCIItoUTF16(items[i].name),
@@ -96,7 +96,7 @@ nsSystemInfo::Init()
     SetInt32Property(NS_LITERAL_STRING("cpucount"), PR_GetNumberOfProcessors());
     SetUint64Property(NS_LITERAL_STRING("memsize"), PR_GetPhysicalMemorySize());
 
-    for (PRUint32 i = 0; i < ArrayLength(cpuPropItems); i++) {
+    for (uint32_t i = 0; i < ArrayLength(cpuPropItems); i++) {
         rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16(cpuPropItems[i].name),
                                cpuPropItems[i].propfun());
         NS_ENSURE_SUCCESS(rv, rv);
@@ -173,7 +173,7 @@ nsSystemInfo::Init()
             SetPropertyAsAString(NS_LITERAL_STRING("device"), str);
         if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MANUFACTURER", str))
             SetPropertyAsAString(NS_LITERAL_STRING("manufacturer"), str);
-        PRInt32 version;
+        int32_t version;
         if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &version))
             version = 0;
         android_sdk_version = version;
@@ -204,7 +204,7 @@ nsSystemInfo::Init()
 
 void
 nsSystemInfo::SetInt32Property(const nsAString &aPropertyName,
-                               const PRInt32 aValue)
+                               const int32_t aValue)
 {
   NS_WARN_IF_FALSE(aValue > 0, "Unable to read system value");
   if (aValue > 0) {
@@ -218,7 +218,7 @@ nsSystemInfo::SetInt32Property(const nsAString &aPropertyName,
 
 void
 nsSystemInfo::SetUint64Property(const nsAString &aPropertyName,
-                                const PRUint64 aValue)
+                                const uint64_t aValue)
 {
   NS_WARN_IF_FALSE(aValue > 0, "Unable to read system value");
   if (aValue > 0) {

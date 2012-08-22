@@ -67,9 +67,9 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
           doc->BindingManager()->GetAnonymousNodesFor(bindingParent);
 
         if (anonymousChildren) {
-          PRUint32 length;
+          uint32_t length;
           anonymousChildren->GetLength(&length);
-          for (PRUint32 i = 0; i < length && !mElement; ++i) {
+          for (uint32_t i = 0; i < length && !mElement; ++i) {
             mElement =
               nsContentUtils::MatchElementId(anonymousChildren->GetNodeAt(i), ref);
           }

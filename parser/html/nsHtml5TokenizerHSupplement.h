@@ -80,7 +80,7 @@ void maybeErrSlashInEndTag(bool selfClosing);
 
 PRUnichar errNcrNonCharacter(PRUnichar ch);
 
-void errAstralNonCharacter(PRInt32 ch);
+void errAstralNonCharacter(int32_t ch);
 
 void errNcrSurrogate();
 

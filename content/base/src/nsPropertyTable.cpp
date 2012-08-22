@@ -140,7 +140,7 @@ struct PropertyEnumeratorData
 
 static PLDHashOperator
 PropertyEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                   PRUint32 aNumber, void* aArg)
+                   uint32_t aNumber, void* aArg)
 {
   PropertyListMapEntry* entry = static_cast<PropertyListMapEntry*>(aHdr);
   PropertyEnumeratorData* data = static_cast<PropertyEnumeratorData*>(aArg);
@@ -302,7 +302,7 @@ nsPropertyTable::PropertyList::~PropertyList()
 
 static PLDHashOperator
 DestroyPropertyEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                          PRUint32 number, void *arg)
+                          uint32_t number, void *arg)
 {
   nsPropertyTable::PropertyList *propList =
       static_cast<nsPropertyTable::PropertyList*>(table->data);

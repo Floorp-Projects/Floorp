@@ -36,17 +36,17 @@ public:
   virtual ~nsPrintOptions();
 
 protected:
-  void ReadBitFieldPref(const char * aPrefId, PRInt32 anOption);
-  void WriteBitFieldPref(const char * aPrefId, PRInt32 anOption);
-  void ReadJustification(const char * aPrefId, PRInt16& aJust,
-                         PRInt16 aInitValue);
-  void WriteJustification(const char * aPrefId, PRInt16 aJust);
-  void ReadInchesToTwipsPref(const char * aPrefId, PRInt32&  aTwips,
+  void ReadBitFieldPref(const char * aPrefId, int32_t anOption);
+  void WriteBitFieldPref(const char * aPrefId, int32_t anOption);
+  void ReadJustification(const char * aPrefId, int16_t& aJust,
+                         int16_t aInitValue);
+  void WriteJustification(const char * aPrefId, int16_t aJust);
+  void ReadInchesToTwipsPref(const char * aPrefId, int32_t&  aTwips,
                              const char * aMarginPref);
-  void WriteInchesFromTwipsPref(const char * aPrefId, PRInt32 aTwips);
-  void ReadInchesIntToTwipsPref(const char * aPrefId, PRInt32&  aTwips,
+  void WriteInchesFromTwipsPref(const char * aPrefId, int32_t aTwips);
+  void ReadInchesIntToTwipsPref(const char * aPrefId, int32_t&  aTwips,
                                 const char * aMarginPref);
-  void WriteInchesIntFromTwipsPref(const char * aPrefId, PRInt32 aTwips);
+  void WriteInchesIntFromTwipsPref(const char * aPrefId, int32_t aTwips);
 
   nsresult ReadPrefDouble(const char * aPrefId, double& aVal);
   nsresult WritePrefDouble(const char * aPrefId, double aVal);
@@ -58,7 +58,7 @@ protected:
    * @param aFlags       flag specifying which prefs to read
    */
   virtual nsresult ReadPrefs(nsIPrintSettings* aPS, const nsAString&
-                             aPrinterName, PRUint32 aFlags);
+                             aPrinterName, uint32_t aFlags);
   /**
    * method WritePrefs
    * @param aPS          a pointer to the printer settings
@@ -66,7 +66,7 @@ protected:
    * @param aFlags       flag specifying which prefs to read
    */
   virtual nsresult WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrefName,
-                              PRUint32 aFlags);
+                              uint32_t aFlags);
   const char* GetPrefName(const char *     aPrefName,
                           const nsAString&  aPrinterName);
 

@@ -151,7 +151,7 @@ public:
   void PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxContext *aPushed);
 
   virtual bool IsCompositingCheap() { return false; }
-  virtual PRInt32 GetMaxTextureSize() const { return PR_INT32_MAX; }
+  virtual int32_t GetMaxTextureSize() const { return PR_INT32_MAX; }
 
 protected:
   enum TransactionPhase {
@@ -215,7 +215,7 @@ public:
     return this;
   }
 
-  virtual PRInt32 GetMaxTextureSize() const;
+  virtual int32_t GetMaxTextureSize() const;
 
   virtual void SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, ScreenRotation aRotation) MOZ_OVERRIDE;
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);

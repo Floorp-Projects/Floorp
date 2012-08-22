@@ -116,7 +116,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsEditor)
 NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc, 
                                       nsIContent *aRoot,
                                       nsISelectionController *aSelCon,
-                                      PRUint32 aFlags)
+                                      uint32_t aFlags)
 {
   NS_TIME_FUNCTION;
 
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
   return res;
 }
 
-static PRInt32 sNewlineHandlingPref = -1,
+static int32_t sNewlineHandlingPref = -1,
                sCaretStylePref = -1;
 
 static int
@@ -167,8 +167,8 @@ EditorPrefsChangedCallback(const char *aPrefName, void *)
 
 // static
 void
-nsPlaintextEditor::GetDefaultEditorPrefs(PRInt32 &aNewlineHandling,
-                                         PRInt32 &aCaretStyle)
+nsPlaintextEditor::GetDefaultEditorPrefs(int32_t &aNewlineHandling,
+                                         int32_t &aCaretStyle)
 {
   if (sNewlineHandlingPref == -1) {
     Preferences::RegisterCallback(EditorPrefsChangedCallback,
@@ -269,10 +269,10 @@ nsPlaintextEditor::UpdateMetaCharset(nsIDOMDocument* aDocument,
   NS_ENSURE_SUCCESS(rv, false);
   NS_ENSURE_TRUE(metaList, false);
 
-  PRUint32 listLength = 0;
+  uint32_t listLength = 0;
   metaList->GetLength(&listLength);
 
-  for (PRUint32 i = 0; i < listLength; ++i) {
+  for (uint32_t i = 0; i < listLength; ++i) {
     nsCOMPtr<nsIContent> metaNode = metaList->GetNodeAt(i);
     MOZ_ASSERT(metaNode);
 
@@ -429,7 +429,7 @@ nsPlaintextEditor::TypedText(const nsAString& aString, ETypingAction aAction)
 
 nsresult
 nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
-                                PRInt32* aInOutOffset,
+                                int32_t* aInOutOffset,
                                 nsCOMPtr<nsIDOMNode>* outBRNode,
                                 EDirection aSelect)
 {
@@ -439,14 +439,14 @@ nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
   
   // we need to insert a br.  unfortunately, we may have to split a text node to do it.
   nsCOMPtr<nsIDOMNode> node = *aInOutParent;
-  PRInt32 theOffset = *aInOutOffset;
+  int32_t theOffset = *aInOutOffset;
   nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(node);
   NS_NAMED_LITERAL_STRING(brType, "br");
   nsCOMPtr<nsIDOMNode> brNode;
   if (nodeAsText)  
   {
-    PRInt32 offset;
-    PRUint32 len;
+    int32_t offset;
+    uint32_t len;
     nodeAsText->GetLength(&len);
     nsCOMPtr<nsIDOMNode> tmp = GetNodeLocation(node, &offset);
     NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
@@ -454,7 +454,7 @@ nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
     {
       // we are already set to go
     }
-    else if (theOffset == (PRInt32)len)
+    else if (theOffset == (int32_t)len)
     {
       // update offset to point AFTER the text node
       offset++;
@@ -482,7 +482,7 @@ nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
   *outBRNode = brNode;
   if (*outBRNode && (aSelect != eNone))
   {
-    PRInt32 offset;
+    int32_t offset;
     nsCOMPtr<nsIDOMNode> parent = GetNodeLocation(*outBRNode, &offset);
 
     nsCOMPtr<nsISelection> selection;
@@ -506,10 +506,10 @@ nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
 }
 
 
-NS_IMETHODIMP nsPlaintextEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
+NS_IMETHODIMP nsPlaintextEditor::CreateBR(nsIDOMNode *aNode, int32_t aOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
 {
   nsCOMPtr<nsIDOMNode> parent = aNode;
-  PRInt32 offset = aOffset;
+  int32_t offset = aOffset;
   return CreateBRImpl(address_of(parent), &offset, outBRNode, aSelect);
 }
 
@@ -532,7 +532,7 @@ nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
   }
 
   nsCOMPtr<nsIDOMNode> selNode;
-  PRInt32 selOffset;
+  int32_t selOffset;
   res = GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(res, res);
   
@@ -585,7 +585,7 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
         // to make sure that pressing backspace will only delete the last
         // typed character.
         nsCOMPtr<nsIDOMNode> node;
-        PRInt32 offset;
+        int32_t offset;
         result = GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
         NS_ENSURE_SUCCESS(result, result);
         NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
@@ -756,7 +756,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   {
     // get the (collapsed) selection location
     nsCOMPtr<nsIDOMNode> selNode;
-    PRInt32 selOffset;
+    int32_t selOffset;
     res = GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
     NS_ENSURE_SUCCESS(res, res);
 
@@ -785,7 +785,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
       {
         // see if we're at the end of the editor range
         nsCOMPtr<nsIDOMNode> endNode;
-        PRInt32 endOffset;
+        int32_t endOffset;
         res = GetEndNodeAndOffset(selection, getter_AddRefs(endNode), &endOffset);
 
         if (NS_SUCCEEDED(res) && endNode == selNode && endOffset == selOffset)
@@ -892,7 +892,7 @@ nsPlaintextEditor::GetDocumentIsEmpty(bool *aDocumentIsEmpty)
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::GetTextLength(PRInt32 *aCount)
+nsPlaintextEditor::GetTextLength(int32_t *aCount)
 {
   NS_ASSERTION(aCount, "null pointer");
 
@@ -913,13 +913,13 @@ nsPlaintextEditor::GetTextLength(PRInt32 *aCount)
     do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 totalLength = 0;
+  uint32_t totalLength = 0;
   iter->Init(rootElement);
   for (; !iter->IsDone(); iter->Next()) {
     nsCOMPtr<nsIDOMNode> currentNode = do_QueryInterface(iter->GetCurrentNode());
     nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(currentNode);
     if (textNode && IsEditable(currentNode)) {
-      PRUint32 length;
+      uint32_t length;
       textNode->GetLength(&length);
       totalLength += length;
     }
@@ -930,14 +930,14 @@ nsPlaintextEditor::GetTextLength(PRInt32 *aCount)
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::SetMaxTextLength(PRInt32 aMaxTextLength)
+nsPlaintextEditor::SetMaxTextLength(int32_t aMaxTextLength)
 {
   mMaxTextLength = aMaxTextLength;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::GetMaxTextLength(PRInt32* aMaxTextLength)
+nsPlaintextEditor::GetMaxTextLength(int32_t* aMaxTextLength)
 {
   NS_ENSURE_TRUE(aMaxTextLength, NS_ERROR_INVALID_POINTER);
   *aMaxTextLength = mMaxTextLength;
@@ -948,7 +948,7 @@ nsPlaintextEditor::GetMaxTextLength(PRInt32* aMaxTextLength)
 // Get the wrap width
 //
 NS_IMETHODIMP 
-nsPlaintextEditor::GetWrapWidth(PRInt32 *aWrapColumn)
+nsPlaintextEditor::GetWrapWidth(int32_t *aWrapColumn)
 {
   NS_ENSURE_TRUE( aWrapColumn, NS_ERROR_NULL_POINTER);
 
@@ -963,10 +963,10 @@ nsPlaintextEditor::GetWrapWidth(PRInt32 *aWrapColumn)
 static void CutStyle(const char* stylename, nsString& styleValue)
 {
   // Find the current wrapping type:
-  PRInt32 styleStart = styleValue.Find(stylename, true);
+  int32_t styleStart = styleValue.Find(stylename, true);
   if (styleStart >= 0)
   {
-    PRInt32 styleEnd = styleValue.Find(";", false, styleStart);
+    int32_t styleEnd = styleValue.Find(";", false, styleStart);
     if (styleEnd > styleStart)
       styleValue.Cut(styleStart, styleEnd - styleStart + 1);
     else
@@ -978,7 +978,7 @@ static void CutStyle(const char* stylename, nsString& styleValue)
 // Change the wrap width on the root of this document.
 // 
 NS_IMETHODIMP 
-nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
+nsPlaintextEditor::SetWrapWidth(int32_t aWrapColumn)
 {
   SetWrapColumn(aWrapColumn);
 
@@ -1041,7 +1041,7 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
 }
 
 NS_IMETHODIMP 
-nsPlaintextEditor::SetWrapColumn(PRInt32 aWrapColumn)
+nsPlaintextEditor::SetWrapColumn(int32_t aWrapColumn)
 {
   mWrapColumn = aWrapColumn;
   return NS_OK;
@@ -1051,7 +1051,7 @@ nsPlaintextEditor::SetWrapColumn(PRInt32 aWrapColumn)
 // Get the newline handling for this editor
 //
 NS_IMETHODIMP 
-nsPlaintextEditor::GetNewlineHandling(PRInt32 *aNewlineHandling)
+nsPlaintextEditor::GetNewlineHandling(int32_t *aNewlineHandling)
 {
   NS_ENSURE_ARG_POINTER(aNewlineHandling);
 
@@ -1063,7 +1063,7 @@ nsPlaintextEditor::GetNewlineHandling(PRInt32 *aNewlineHandling)
 // Change the newline handling for this editor
 // 
 NS_IMETHODIMP 
-nsPlaintextEditor::SetNewlineHandling(PRInt32 aNewlineHandling)
+nsPlaintextEditor::SetNewlineHandling(int32_t aNewlineHandling)
 {
   mNewlineHandling = aNewlineHandling;
   
@@ -1071,7 +1071,7 @@ nsPlaintextEditor::SetNewlineHandling(PRInt32 aNewlineHandling)
 }
 
 NS_IMETHODIMP 
-nsPlaintextEditor::Undo(PRUint32 aCount)
+nsPlaintextEditor::Undo(uint32_t aCount)
 {
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
@@ -1100,7 +1100,7 @@ nsPlaintextEditor::Undo(PRUint32 aCount)
 }
 
 NS_IMETHODIMP 
-nsPlaintextEditor::Redo(PRUint32 aCount)
+nsPlaintextEditor::Redo(uint32_t aCount)
 {
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
@@ -1139,7 +1139,7 @@ nsPlaintextEditor::CanCutOrCopy()
 }
 
 bool
-nsPlaintextEditor::FireClipboardEvent(PRInt32 aType)
+nsPlaintextEditor::FireClipboardEvent(int32_t aType)
 {
   if (aType == NS_PASTE)
     ForceCompositionEnd();
@@ -1191,7 +1191,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanCopy(bool *aCanCopy)
 // Shared between OutputToString and OutputToStream
 NS_IMETHODIMP
 nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
-                                        PRUint32 aFlags,
+                                        uint32_t aFlags,
                                         const nsACString& aCharset,
                                         nsIDocumentEncoder** encoder)
 {
@@ -1212,7 +1212,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
     docEncoder->SetCharset(aCharset);
   }
 
-  PRInt32 wc;
+  int32_t wc;
   (void) GetWrapWidth(&wc);
   if (wc >= 0)
     (void) docEncoder->SetWrapColumn(wc);
@@ -1249,7 +1249,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
 
 NS_IMETHODIMP 
 nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
-                                  PRUint32 aFlags,
+                                  uint32_t aFlags,
                                   nsAString& aOutputString)
 {
   // Protect the edit rules object from dying
@@ -1285,7 +1285,7 @@ NS_IMETHODIMP
 nsPlaintextEditor::OutputToStream(nsIOutputStream* aOutputStream,
                              const nsAString& aFormatType,
                              const nsACString& aCharset,
-                             PRUint32 aFlags)
+                             uint32_t aFlags)
 {
   nsresult rv;
 
@@ -1318,7 +1318,7 @@ nsPlaintextEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
+nsPlaintextEditor::PasteAsQuotation(int32_t aSelectionType)
 {
   // Get Clipboard Service
   nsresult rv;
@@ -1339,7 +1339,7 @@ nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
     // it still owns the data, we just have a pointer to it.
     // If it can't support a "text" output of the data the call will fail
     nsCOMPtr<nsISupports> genericDataObj;
-    PRUint32 len;
+    uint32_t len;
     char* flav = nullptr;
     rv = trans->GetAnyTransferData(&flav, getter_AddRefs(genericDataObj),
                                    &len);
@@ -1416,7 +1416,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
 
 NS_IMETHODIMP
 nsPlaintextEditor::PasteAsCitedQuotation(const nsAString& aCitation,
-                                         PRInt32 aSelectionType)
+                                         int32_t aSelectionType)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1431,7 +1431,7 @@ nsPlaintextEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
 }
 
 nsresult
-nsPlaintextEditor::SharedOutputString(PRUint32 aFlags,
+nsPlaintextEditor::SharedOutputString(uint32_t aFlags,
                                       bool* aIsCollapsed,
                                       nsAString& aResult)
 {
@@ -1452,7 +1452,7 @@ nsPlaintextEditor::SharedOutputString(PRUint32 aFlags,
 NS_IMETHODIMP
 nsPlaintextEditor::Rewrap(bool aRespectNewlines)
 {
-  PRInt32 wrapCol;
+  int32_t wrapCol;
   nsresult rv = GetWrapWidth(&wrapCol);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
@@ -1472,7 +1472,7 @@ nsPlaintextEditor::Rewrap(bool aRespectNewlines)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString wrapped;
-  PRUint32 firstLineOffset = 0;   // XXX need to reset this if there is a selection
+  uint32_t firstLineOffset = 0;   // XXX need to reset this if there is a selection
   rv = nsInternetCiter::Rewrap(current, wrapCol, firstLineOffset, aRespectNewlines,
                      wrapped);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1572,7 +1572,7 @@ nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Don't select the trailing BR node if we have one
-  PRInt32 selOffset;
+  int32_t selOffset;
   nsCOMPtr<nsIDOMNode> selNode;
   rv = GetEndNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1580,7 +1580,7 @@ nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
   nsCOMPtr<nsIDOMNode> childNode = GetChildAt(selNode, selOffset - 1);
 
   if (childNode && nsTextEditUtils::IsMozBR(childNode)) {
-    PRInt32 parentOffset;
+    int32_t parentOffset;
     nsCOMPtr<nsIDOMNode> parentNode = GetNodeLocation(childNode, &parentOffset);
 
     return aSelection->Extend(parentNode, parentOffset);

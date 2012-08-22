@@ -11,7 +11,7 @@
 #include "nsVoidArray.h" 
 #include "nsTArray.h" 
 
-nsresult GetSlotWithMechanism(PRUint32 mechanism,
+nsresult GetSlotWithMechanism(uint32_t mechanism,
                               nsIInterfaceRequestor *ctx,
                               PK11SlotInfo **retSlot);
 
@@ -41,7 +41,7 @@ protected:
   nsresult GetPublicKey(nsAString& aValue, nsAString& aChallenge, 
 			nsAFlatString& akeyType, nsAString& aOutPublicKey,
 			nsAString& aPqg);
-  nsresult GetSlot(PRUint32 aMechanism, PK11SlotInfo** aSlot);
+  nsresult GetSlot(uint32_t aMechanism, PK11SlotInfo** aSlot);
 private:
   nsCOMPtr<nsIInterfaceRequestor> m_ctx;
 

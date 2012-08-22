@@ -23,7 +23,7 @@ public:
   ~SharedDIB();
 
   // Create and allocate a new shared dib.
-  nsresult Create(PRUint32 aSize);
+  nsresult Create(uint32_t aSize);
 
   // Destroy or release resources associated with this dib.
   nsresult Close();
@@ -34,7 +34,7 @@ public:
   // Wrap a new shared dib around allocated shared memory. Note aHandle must point
   // to a memory section large enough to hold a dib of size aSize, otherwise this
   // will fail.
-  nsresult Attach(Handle aHandle, PRUint32 aSize);
+  nsresult Attach(Handle aHandle, uint32_t aSize);
 
   // Returns a SharedMemoryHandle suitable for sharing with another process.
   nsresult ShareToProcess(base::ProcessHandle aChildProcess, Handle *aChildHandle);

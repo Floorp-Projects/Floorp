@@ -224,7 +224,7 @@ ListBase<LC>::length_getter(JSContext *cx, JSHandleObject obj, JSHandleId id, JS
 {
     if (!instanceIsListObject(cx, obj, NULL))
         return false;
-    PRUint32 length;
+    uint32_t length;
     getListObject(obj)->GetLength(&length);
     JS_ASSERT(int32_t(length) >= 0);
     vp.set(UINT_TO_JSVAL(length));
@@ -523,7 +523,7 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
             int32_t index = GetArrayIndexFromId(cx, id);
             if (index >= 0) {
                 IndexGetterType result;
-                if (!getItemAt(getListObject(proxy), PRUint32(index), result))
+                if (!getItemAt(getListObject(proxy), uint32_t(index), result))
                     return true;
 
                 jsval v;
@@ -670,7 +670,7 @@ template<class LC>
 bool
 ListBase<LC>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
-    PRUint32 length;
+    uint32_t length;
     getListObject(proxy)->GetLength(&length);
     JS_ASSERT(int32_t(length) >= 0);
     for (int32_t i = 0; i < int32_t(length); ++i) {
@@ -723,7 +723,7 @@ ListBase<LC>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
         int32_t index = GetArrayIndexFromId(cx, id);
         if (index >= 0) {
             IndexGetterType result;
-            *bp = getItemAt(getListObject(proxy), PRUint32(index), result);
+            *bp = getItemAt(getListObject(proxy), uint32_t(index), result);
             return true;
         }
     }
@@ -857,7 +857,7 @@ ListBase<LC>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, V
         int32_t index = GetArrayIndexFromId(cx, id);
         if (index >= 0) {
             IndexGetterType result;
-            if (getItemAt(getListObject(proxy), PRUint32(index), result))
+            if (getItemAt(getListObject(proxy), uint32_t(index), result))
                 return Wrap(cx, proxy, result, vp);
 
             // Even if we don't have this index, we don't forward the

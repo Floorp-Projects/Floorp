@@ -40,7 +40,7 @@ ParseNumberOptionalNumber(const nsAString& aValue,
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < 2 && tokenizer.hasMoreTokens(); ++i) {
     NS_ConvertUTF16toUTF8 utf8Token(tokenizer.nextToken());
     const char *token = utf8Token.get();
@@ -111,7 +111,7 @@ void
 nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
                               nsSVGElement *aSVGElement)
 {
-  PRUint32 index = (aPairIndex == eFirst ? 0 : 1);
+  uint32_t index = (aPairIndex == eFirst ? 0 : 1);
   if (mIsBaseSet && mBaseVal[index] == aValue) {
     return;
   }

@@ -72,7 +72,7 @@ protected:
     static_cast<nsScrollbarButtonFrame*>(aData)->Notify();
   }
   
-  PRInt32 mIncrement;  
+  int32_t mIncrement;  
   bool mCursorOnThis;
 };
 

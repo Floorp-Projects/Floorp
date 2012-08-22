@@ -83,7 +83,7 @@
  * @see NSBIDI_LEVEL_OVERRIDE
  * @see NSBIDI_MAX_EXPLICIT_LEVEL
  */
-typedef PRUint8 nsBidiLevel;
+typedef uint8_t nsBidiLevel;
 
 /** Paragraph level setting.
  *  If there is no strong character, then set the paragraph level to 0 (left-to-right).
@@ -180,7 +180,7 @@ typedef enum nsBidiDirection nsBidiDirection;
  * Abbreviations in these macro names refer to names
  * used in the Bidi algorithm.
  */
-typedef PRUint8 DirProp;
+typedef uint8_t DirProp;
 
 #define DIRPROP_FLAG(dir) (1UL<<(dir))
 
@@ -246,7 +246,7 @@ typedef PRUint8 DirProp;
 /* fast versions, no error-checking */
 
 #define UTF16_APPEND_CHAR_UNSAFE(s, i, c){ \
-                                         if((PRUint32)(c)<=0xffff) { \
+                                         if((uint32_t)(c)<=0xffff) { \
                                          (s)[(i)++]=(PRUnichar)(c); \
                                          } else { \
                                          (s)[(i)++]=(PRUnichar)((c)>>10)+0xd7c0; \
@@ -301,7 +301,7 @@ typedef PRUint8 DirProp;
 }
 
 #define UTF16_BACK_N_UNSAFE(s, i, n) { \
-                                     PRInt32 __N=(n); \
+                                     int32_t __N=(n); \
                                      while(__N>0) { \
                                      UTF16_BACK_1_UNSAFE(s, i); \
                                      --__N; \
@@ -336,7 +336,7 @@ typedef PRUint8 DirProp;
 }
 
 #define UTF16_BACK_N_SAFE(s, start, i, n) { \
-                                          PRInt32 __N=(n); \
+                                          int32_t __N=(n); \
                                           while(__N>0 && (i)>(start)) { \
                                           UTF16_BACK_1_SAFE(s, start, i); \
                                           --__N; \
@@ -360,23 +360,23 @@ typedef PRUint8 DirProp;
 /* Run structure for reordering --------------------------------------------- */
 
 typedef struct Run {
-  PRInt32 logicalStart,  /* first character of the run; b31 indicates even/odd level */
+  int32_t logicalStart,  /* first character of the run; b31 indicates even/odd level */
   visualLimit;  /* last visual position of the run +1 */
 } Run;
 
 /* in a Run, logicalStart will get this bit set if the run level is odd */
 #define INDEX_ODD_BIT (1UL<<31)
 
-#define MAKE_INDEX_ODD_PAIR(index, level) (index|((PRUint32)level<<31))
-#define ADD_ODD_BIT_FROM_LEVEL(x, level)  ((x)|=((PRUint32)level<<31))
+#define MAKE_INDEX_ODD_PAIR(index, level) (index|((uint32_t)level<<31))
+#define ADD_ODD_BIT_FROM_LEVEL(x, level)  ((x)|=((uint32_t)level<<31))
 #define REMOVE_ODD_BIT(x)          ((x)&=~INDEX_ODD_BIT)
 
 #define GET_INDEX(x)   (x&~INDEX_ODD_BIT)
-#define GET_ODD_BIT(x) ((PRUint32)x>>31)
+#define GET_ODD_BIT(x) ((uint32_t)x>>31)
 #define IS_ODD_RUN(x)  ((x&INDEX_ODD_BIT)!=0)
 #define IS_EVEN_RUN(x) ((x&INDEX_ODD_BIT)==0)
 
-typedef PRUint32 Flags;
+typedef uint32_t Flags;
 
 /**
  * This class holds information about a paragraph of text
@@ -475,7 +475,7 @@ public:
    *      <strong>The <code>aEmbeddingLevels</code> array must be
    *      at least <code>aLength</code> long.</strong>
    */
-  nsresult SetPara(const PRUnichar *aText, PRInt32 aLength, nsBidiLevel aParaLevel, nsBidiLevel *aEmbeddingLevels);
+  nsresult SetPara(const PRUnichar *aText, int32_t aLength, nsBidiLevel aParaLevel, nsBidiLevel *aEmbeddingLevels);
 
   /**
    * Get the directionality of the text.
@@ -531,14 +531,14 @@ public:
    *
    * @see SetPara
    */
-  nsresult SetLine(nsIBidi* aParaBidi, PRInt32 aStart, PRInt32 aLimit);  
+  nsresult SetLine(nsIBidi* aParaBidi, int32_t aStart, int32_t aLimit);  
 
   /**
    * Get the length of the text.
    *
    * @param aLength receives the length of the text that the nsBidi object was created for.
    */
-  nsresult GetLength(PRInt32* aLength);
+  nsresult GetLength(int32_t* aLength);
 
   /**
    * Get the level for one character.
@@ -549,7 +549,7 @@ public:
    *
    * @see nsBidiLevel
    */
-  nsresult GetLevelAt(PRInt32 aCharIndex,  nsBidiLevel* aLevel);
+  nsresult GetLevelAt(int32_t aCharIndex,  nsBidiLevel* aLevel);
 
   /**
    * Get an array of levels for each character.<p>
@@ -571,7 +571,7 @@ public:
    *
    * @param aType receives the bidirectional type of the character at aCharIndex.
    */
-  nsresult GetCharTypeAt(PRInt32 aCharIndex,  nsCharType* aType);
+  nsresult GetCharTypeAt(int32_t aCharIndex,  nsCharType* aType);
 
   /**
    * Get a logical run.
@@ -592,7 +592,7 @@ public:
    *      This pointer can be <code>NULL</code> if this
    *      value is not necessary.
    */
-  nsresult GetLogicalRun(PRInt32 aLogicalStart, PRInt32* aLogicalLimit, nsBidiLevel* aLevel);
+  nsresult GetLogicalRun(int32_t aLogicalStart, int32_t* aLogicalLimit, nsBidiLevel* aLevel);
 
   /**
    * Get the number of runs.
@@ -604,7 +604,7 @@ public:
    *
    * @param aRunCount will receive the number of runs.
    */
-  nsresult CountRuns(PRInt32* aRunCount);
+  nsresult CountRuns(int32_t* aRunCount);
 
   /**
    * Get one run's logical start, length, and directionality,
@@ -632,7 +632,7 @@ public:
    *
    * Example:
    * @code
-   *  PRInt32 i, count, logicalStart, visualIndex=0, length;
+   *  int32_t i, count, logicalStart, visualIndex=0, length;
    *  nsBidiDirection dir;
    *  pBidi->CountRuns(&count);
    *  for(i=0; i<count; ++i) {
@@ -654,7 +654,7 @@ public:
    * modifier letters before base characters and second surrogates
    * before first ones.
    */
-  nsresult GetVisualRun(PRInt32 aRunIndex, PRInt32* aLogicalStart, PRInt32* aLength, nsBidiDirection* aDirection);
+  nsresult GetVisualRun(int32_t aRunIndex, int32_t* aLogicalStart, int32_t* aLength, nsBidiDirection* aDirection);
 
 #ifdef FULL_BIDI_ENGINE
   /**
@@ -674,7 +674,7 @@ public:
    * @see GetLogicalMap
    * @see GetLogicalIndex
    */
-  nsresult GetVisualIndex(PRInt32 aLogicalIndex, PRInt32* aVisualIndex);
+  nsresult GetVisualIndex(int32_t aLogicalIndex, int32_t* aVisualIndex);
 
   /**
    * Get the logical text position from a visual position.
@@ -691,7 +691,7 @@ public:
    * @see GetVisualMap
    * @see GetVisualIndex
    */
-  nsresult GetLogicalIndex(PRInt32 aVisualIndex, PRInt32* aLogicalIndex);
+  nsresult GetLogicalIndex(int32_t aVisualIndex, int32_t* aLogicalIndex);
 
   /**
    * Get a logical-to-visual index map (array) for the characters in the nsBidi
@@ -705,7 +705,7 @@ public:
    * @see GetVisualMap
    * @see GetVisualIndex
    */
-  nsresult GetLogicalMap(PRInt32 *aIndexMap);
+  nsresult GetLogicalMap(int32_t *aIndexMap);
 
   /**
    * Get a visual-to-logical index map (array) for the characters in the nsBidi
@@ -719,7 +719,7 @@ public:
    * @see GetLogicalMap
    * @see GetLogicalIndex
    */
-  nsresult GetVisualMap(PRInt32 *aIndexMap);
+  nsresult GetVisualMap(int32_t *aIndexMap);
 
   /**
    * This is a convenience function that does not use a nsBidi object.
@@ -740,7 +740,7 @@ public:
    *      The array does not need to be initialized.<p>
    *      The index map will result in <code>aIndexMap[aLogicalIndex]==aVisualIndex</code>.
    */
-  static nsresult ReorderLogical(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap);
+  static nsresult ReorderLogical(const nsBidiLevel *aLevels, int32_t aLength, int32_t *aIndexMap);
 #endif // FULL_BIDI_ENGINE
   /**
    * This is a convenience function that does not use a nsBidi object.
@@ -761,7 +761,7 @@ public:
    *      The array does not need to be initialized.<p>
    *      The index map will result in <code>aIndexMap[aVisualIndex]==aLogicalIndex</code>.
    */
-  static nsresult ReorderVisual(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap);
+  static nsresult ReorderVisual(const nsBidiLevel *aLevels, int32_t aLength, int32_t *aIndexMap);
 
 #ifdef FULL_BIDI_ENGINE
   /**
@@ -777,7 +777,7 @@ public:
    *
    * @param aLength is the length of each array.
    */
-  nsresult InvertMap(const PRInt32 *aSrcMap, PRInt32 *aDestMap, PRInt32 aLength);
+  nsresult InvertMap(const int32_t *aSrcMap, int32_t *aDestMap, int32_t aLength);
 #endif // FULL_BIDI_ENGINE
   /**
    * Reverse a Right-To-Left run of Unicode text.
@@ -814,13 +814,13 @@ public:
    *
    * @param aDestSize will receive the number of characters that were written to <code>aDest</code>.
    */
-  nsresult WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PRUnichar *aDest, PRUint16 aOptions, PRInt32 *aDestSize);
+  nsresult WriteReverse(const PRUnichar *aSrc, int32_t aSrcLength, PRUnichar *aDest, uint16_t aOptions, int32_t *aDestSize);
 
 protected:
   friend class nsBidiPresUtils;
 
   /** length of the current text */
-  PRInt32 mLength;
+  int32_t mLength;
 
   /** memory sizes in bytes */
   size_t mDirPropsSize, mLevelsSize, mRunsSize;
@@ -847,10 +847,10 @@ protected:
 
   /** characters after trailingWSStart are WS and are */
   /* implicitly at the paraLevel (rule (L1)) - levels may not reflect that */
-  PRInt32 mTrailingWSStart;
+  int32_t mTrailingWSStart;
 
   /** fields for line reordering */
-  PRInt32 mRunCount;     /* ==-1: runs not set up yet */
+  int32_t mRunCount;     /* ==-1: runs not set up yet */
   Run* mRuns;
 
   /** for non-mixed text, we only need a tiny array of runs (no malloc()) */
@@ -872,7 +872,7 @@ private:
 
   nsBidiDirection DirectionFromFlags(Flags aFlags);
 
-  void ResolveImplicitLevels(PRInt32 aStart, PRInt32 aLimit, DirProp aSOR, DirProp aEOR);
+  void ResolveImplicitLevels(int32_t aStart, int32_t aLimit, DirProp aSOR, DirProp aEOR);
 
   void AdjustWSLevels();
 
@@ -884,10 +884,10 @@ private:
 
   void ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel);
 
-  static bool PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
+  static bool PrepareReorder(const nsBidiLevel *aLevels, int32_t aLength, int32_t *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
 
-  PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
-                         PRUnichar *dest, PRUint16 options);
+  int32_t doWriteReverse(const PRUnichar *src, int32_t srcLength,
+                         PRUnichar *dest, uint16_t options);
 
 };
 

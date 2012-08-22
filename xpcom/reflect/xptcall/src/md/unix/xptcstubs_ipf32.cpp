@@ -17,7 +17,7 @@
 /* Implement shared vtbl methods. */
 
 extern "C" nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
+PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
   uint64_t* intargs, uint64_t* floatargs, uint64_t* restargs)
 {
 
@@ -29,12 +29,12 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
   nsresult result = NS_ERROR_FAILURE;
   uint64_t* iargs = intargs;
   uint64_t* fargs = floatargs;
-  PRUint8 paramCount;
-  PRUint8 i;
+  uint8_t paramCount;
+  uint8_t i;
 
   NS_ASSERTION(self,"no self");
 
-  self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+  self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
   NS_ASSERTION(info,"no interface info");
 
   paramCount = info->GetParamCount();
@@ -118,7 +118,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
     }
   }
 
-  result = self->mOuter->CallMethod((PRUint16) methodIndex, info, dispatchParams);
+  result = self->mOuter->CallMethod((uint16_t) methodIndex, info, dispatchParams);
 
   if(dispatchParams != paramBuffer)
     delete [] dispatchParams;
@@ -126,18 +126,18 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
   return result;
 }
 
-extern "C" int SharedStub(PRUint64,PRUint64,PRUint64,PRUint64,
- PRUint64,PRUint64,PRUint64,PRUint64,PRUint64,PRUint64 *);
+extern "C" int SharedStub(uint64_t,uint64_t,uint64_t,uint64_t,
+ uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t *);
 
 /* Variable a0-a7 were put there so we can have access to the 8 input
    registers on Stubxyz entry */
 
 #define STUB_ENTRY(n) \
-nsresult nsXPTCStubBase::Stub##n(PRUint64 a1, \
-PRUint64 a2,PRUint64 a3,PRUint64 a4,PRUint64 a5,PRUint64 a6,PRUint64 a7, \
-PRUint64 a8) \
+nsresult nsXPTCStubBase::Stub##n(uint64_t a1, \
+uint64_t a2,uint64_t a3,uint64_t a4,uint64_t a5,uint64_t a6,uint64_t a7, \
+uint64_t a8) \
 { uint64_t a0 = (uint64_t) this; \
- return SharedStub(a0,a1,a2,a3,a4,a5,a6,a7,(PRUint64) n, &a8); \
+ return SharedStub(a0,a1,a2,a3,a4,a5,a6,a7,(uint64_t) n, &a8); \
 }
 
 #define SENTINEL_ENTRY(n) \

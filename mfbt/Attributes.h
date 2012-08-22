@@ -313,14 +313,14 @@
  * specified by placing MOZ_ENUM_TYPE(type) immediately after the enum name in
  * its declaration, and before the opening curly brace, like
  *
- *   enum MyEnum MOZ_ENUM_TYPE(PRUint16)
+ *   enum MyEnum MOZ_ENUM_TYPE(uint16_t)
  *   {
  *     A,
  *     B = 7,
  *     C
  *   };
  *
- * In supporting compilers, the macro will expand to ": PRUint16".  The
+ * In supporting compilers, the macro will expand to ": uint16_t".  The
  * compiler will allocate exactly two bytes for MyEnum, and will require all
  * enumerators to have values between 0 and 65535.  (Thus specifying "B =
  * 100000" instead of "B = 7" would fail to compile.)  In old compilers, the
@@ -342,7 +342,7 @@
  * "enum EnumName {", and MOZ_END_ENUM_CLASS(EnumName) in place of the closing
  * "};".  For example,
  *
- *   MOZ_BEGIN_ENUM_CLASS(Enum, PRInt32)
+ *   MOZ_BEGIN_ENUM_CLASS(Enum, int32_t)
  *     A, B = 6
  *   MOZ_END_ENUM_CLASS(Enum)
  *

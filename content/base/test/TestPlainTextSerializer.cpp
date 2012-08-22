@@ -61,7 +61,7 @@ TestCJKWithFlowedDelSp()
   nsString result;
 
   test.AssignLiteral("<html><body>");
-  for (PRUint32 i = 0; i < 40; i++) {
+  for (uint32_t i = 0; i < 40; i++) {
     // Insert Kanji (U+5341)
     test.Append(0x5341);
   }
@@ -74,11 +74,11 @@ TestCJKWithFlowedDelSp()
                               nsIDocumentEncoder::OutputFormatDelSp);
 
   // create result case
-  for (PRUint32 i = 0; i < 36; i++) {
+  for (uint32_t i = 0; i < 36; i++) {
     result.Append(0x5341);
   }
   result.Append(NS_LITERAL_STRING(" \r\n"));
-  for (PRUint32 i = 0; i < 4; i++) {
+  for (uint32_t i = 0; i < 4; i++) {
     result.Append(0x5341);
   }
   result.Append(NS_LITERAL_STRING("\r\n"));

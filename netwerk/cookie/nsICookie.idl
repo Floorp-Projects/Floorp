@@ -55,7 +55,7 @@ interface nsICookie : nsISupports {
      * expires = 0 represents a session cookie.
      * expires = 1 represents an expiration time earlier than Jan 1, 1970.
      */
-    readonly attribute PRUint64 expires;
+    readonly attribute uint64_t expires;
 
     /**
      * @DEPRECATED status implementation will return STATUS_UNKNOWN in all cases.

@@ -48,7 +48,7 @@ public:
     return mObjectStore;
   }
 
-  const PRInt64 Id() const
+  const int64_t Id() const
   {
     return mId;
   }
@@ -109,12 +109,12 @@ public:
                           IDBRequest** _retval);
 
   nsresult GetAllInternal(IDBKeyRange* aKeyRange,
-                          PRUint32 aLimit,
+                          uint32_t aLimit,
                           JSContext* aCx,
                           IDBRequest** _retval);
 
   nsresult GetAllKeysInternal(IDBKeyRange* aKeyRange,
-                              PRUint32 aLimit,
+                              uint32_t aLimit,
                               JSContext* aCx,
                               IDBRequest** _retval);
 
@@ -154,7 +154,7 @@ private:
 
   nsRefPtr<IDBObjectStore> mObjectStore;
 
-  PRInt64 mId;
+  int64_t mId;
   nsString mName;
   KeyPath mKeyPath;
   JS::Value mCachedKeyPath;

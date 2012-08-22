@@ -456,7 +456,7 @@ private:
   // frame.
   TimeStamp mLastSampleTime;
   // The last time a touch event came through on the UI thread.
-  PRInt32 mLastEventTime;
+  int32_t mLastEventTime;
 
   // Start time of an animation. This is used for a zoom to animation to mark
   // the beginning.

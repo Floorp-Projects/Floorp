@@ -27,10 +27,10 @@ protected:
   nsresult AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                    const PRUnichar *messageName,
                    const PRUnichar *showAgainName,
-                   bool aAsync, const PRUint32 aBucket);
+                   bool aAsync, const uint32_t aBucket);
   nsresult ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                    const PRUnichar *messageName, 
-                   const PRUnichar *showAgainName, const PRUint32 aBucket,
+                   const PRUnichar *showAgainName, const uint32_t aBucket,
                    bool* _result);
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;

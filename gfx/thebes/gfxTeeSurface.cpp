@@ -12,13 +12,13 @@ gfxTeeSurface::gfxTeeSurface(cairo_surface_t *csurf)
     Init(csurf, true);
 }
 
-gfxTeeSurface::gfxTeeSurface(gfxASurface **aSurfaces, PRInt32 aSurfaceCount)
+gfxTeeSurface::gfxTeeSurface(gfxASurface **aSurfaces, int32_t aSurfaceCount)
 {
     NS_ASSERTION(aSurfaceCount > 0, "Must have a least one surface");
     cairo_surface_t *csurf = cairo_tee_surface_create(aSurfaces[0]->CairoSurface());
     Init(csurf, false);
 
-    for (PRInt32 i = 1; i < aSurfaceCount; ++i) {
+    for (int32_t i = 1; i < aSurfaceCount; ++i) {
         cairo_tee_surface_add(csurf, aSurfaces[i]->CairoSurface());
     }
 }
@@ -33,7 +33,7 @@ gfxTeeSurface::GetSize() const
 void
 gfxTeeSurface::GetSurfaces(nsTArray<nsRefPtr<gfxASurface> >* aSurfaces)
 {
-    for (PRInt32 i = 0; ; ++i) {
+    for (int32_t i = 0; ; ++i) {
         cairo_surface_t *csurf = cairo_tee_surface_index(mSurface, i);
         if (cairo_surface_status(csurf))
             break;

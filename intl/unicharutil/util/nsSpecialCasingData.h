@@ -18,9 +18,9 @@ struct MultiCharMapping {
 
 // Return a pointer to the special case mapping for the given character;
 // returns NULL if no such mapping is defined.
-const MultiCharMapping* SpecialUpper(PRUint32 aCh);
-const MultiCharMapping* SpecialLower(PRUint32 aCh);
-const MultiCharMapping* SpecialTitle(PRUint32 aCh);
+const MultiCharMapping* SpecialUpper(uint32_t aCh);
+const MultiCharMapping* SpecialLower(uint32_t aCh);
+const MultiCharMapping* SpecialTitle(uint32_t aCh);
 
 } // namespace unicode
 } // namespace mozilla

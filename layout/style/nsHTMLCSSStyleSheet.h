@@ -39,7 +39,7 @@ public:
   virtual nsIDocument* GetOwningDocument() const;
   virtual void SetOwningDocument(nsIDocument* aDocument);
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 
   // nsIStyleRuleProcessor

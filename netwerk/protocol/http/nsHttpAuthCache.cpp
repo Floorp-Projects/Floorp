@@ -11,7 +11,7 @@
 #include "prprf.h"
 
 static inline void
-GetAuthKey(const char *scheme, const char *host, PRInt32 port, nsCString &key)
+GetAuthKey(const char *scheme, const char *host, int32_t port, nsCString &key)
 {
     key.Assign(scheme);
     key.AppendLiteral("://");
@@ -69,7 +69,7 @@ nsHttpAuthCache::Init()
 nsresult
 nsHttpAuthCache::GetAuthEntryForPath(const char *scheme,
                                      const char *host,
-                                     PRInt32     port,
+                                     int32_t     port,
                                      const char *path,
                                      nsHttpAuthEntry **entry)
 {
@@ -88,7 +88,7 @@ nsHttpAuthCache::GetAuthEntryForPath(const char *scheme,
 nsresult
 nsHttpAuthCache::GetAuthEntryForDomain(const char *scheme,
                                        const char *host,
-                                       PRInt32     port,
+                                       int32_t     port,
                                        const char *realm,
                                        nsHttpAuthEntry **entry)
 
@@ -108,7 +108,7 @@ nsHttpAuthCache::GetAuthEntryForDomain(const char *scheme,
 nsresult
 nsHttpAuthCache::SetAuthEntry(const char *scheme,
                               const char *host,
-                              PRInt32     port,
+                              int32_t     port,
                               const char *path,
                               const char *realm,
                               const char *creds,
@@ -148,7 +148,7 @@ nsHttpAuthCache::SetAuthEntry(const char *scheme,
 void
 nsHttpAuthCache::ClearAuthEntry(const char *scheme,
                                 const char *host,
-                                PRInt32     port,
+                                int32_t     port,
                                 const char *realm)
 {
     if (!mDB)
@@ -178,7 +178,7 @@ nsHttpAuthCache::ClearAll()
 nsHttpAuthNode *
 nsHttpAuthCache::LookupAuthNode(const char *scheme,
                                 const char *host,
-                                PRInt32     port,
+                                int32_t     port,
                                 nsCString  &key)
 {
     if (!mDB)
@@ -208,7 +208,7 @@ nsHttpAuthCache::AllocEntry(void *self, const void *key)
 }
 
 void
-nsHttpAuthCache::FreeEntry(void *self, PLHashEntry *he, PRUintn flag)
+nsHttpAuthCache::FreeEntry(void *self, PLHashEntry *he, unsigned flag)
 {
     if (flag == HT_FREE_VALUE) {
         // this would only happen if PL_HashTableAdd were to replace an
@@ -445,7 +445,7 @@ nsHttpAuthNode::LookupEntryByPath(const char *path)
     // look for an entry that either matches or contains this directory.
     // ie. we'll give out credentials if the given directory is a sub-
     // directory of an existing entry.
-    for (PRUint32 i=0; i<mList.Length(); ++i) {
+    for (uint32_t i=0; i<mList.Length(); ++i) {
         entry = mList[i];
         nsHttpAuthPath *authPath = entry->RootPath();
         while (authPath) {
@@ -475,7 +475,7 @@ nsHttpAuthNode::LookupEntryByRealm(const char *realm)
         realm = "";
 
     // look for an entry that matches this realm
-    PRUint32 i;
+    uint32_t i;
     for (i=0; i<mList.Length(); ++i) {
         entry = mList[i];
         if (strcmp(realm, entry->Realm()) == 0)

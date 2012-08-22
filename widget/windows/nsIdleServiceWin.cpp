@@ -11,7 +11,7 @@
 NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceWin, nsIdleService)
 
 bool
-nsIdleServiceWin::PollIdleTime(PRUint32 *aIdleTime)
+nsIdleServiceWin::PollIdleTime(uint32_t *aIdleTime)
 {
     LASTINPUTINFO inputInfo;
     inputInfo.cbSize = sizeof(inputInfo);

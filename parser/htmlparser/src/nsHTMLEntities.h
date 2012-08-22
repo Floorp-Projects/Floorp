@@ -19,8 +19,8 @@ public:
  * passed in must NOT have the leading "&" nor the trailing ";"
  * in it.
  */
-  static PRInt32 EntityToUnicode(const nsAString& aEntity);
-  static PRInt32 EntityToUnicode(const nsCString& aEntity);
+  static int32_t EntityToUnicode(const nsAString& aEntity);
+  static int32_t EntityToUnicode(const nsCString& aEntity);
 
 /**
  * Translate a unicode value into an entity string. This call
@@ -28,7 +28,7 @@ public:
  * Note that the string returned DOES NOT have the leading "&" nor 
  * the trailing ";" in it.
  */
-  static const char* UnicodeToEntity(PRInt32 aUnicode);
+  static const char* UnicodeToEntity(int32_t aUnicode);
 };
 
 

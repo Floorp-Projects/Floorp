@@ -63,7 +63,7 @@ AutoConfigSecMan::CanGetService(JSContext *aJSContext, const nsCID & aCID)
 }
 
 NS_IMETHODIMP 
-AutoConfigSecMan::CanAccess(PRUint32 aAction, 
+AutoConfigSecMan::CanAccess(uint32_t aAction, 
                             nsAXPCNativeCallContext *aCallContext, 
                             JSContext *aJSContext, JSObject *aJSObject, 
                             nsISupports *aObj, nsIClassInfo *aClassInfo, 

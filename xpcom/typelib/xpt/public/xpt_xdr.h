@@ -34,19 +34,19 @@ extern XPT_PUBLIC_API(PRBool)
 XPT_DoIID(XPTCursor *cursor, nsID *iidp);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do64(XPTCursor *cursor, PRInt64 *u64p);
+XPT_Do64(XPTCursor *cursor, int64_t *u64p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do32(XPTCursor *cursor, PRUint32 *u32p);
+XPT_Do32(XPTCursor *cursor, uint32_t *u32p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do16(XPTCursor *cursor, PRUint16 *u16p);
+XPT_Do16(XPTCursor *cursor, uint16_t *u16p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do8(XPTCursor *cursor, PRUint8 *u8p);
+XPT_Do8(XPTCursor *cursor, uint8_t *u8p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, PRUint32 * ide_offset);
+XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, uint32_t * ide_offset);
 extern XPT_PUBLIC_API(PRBool)
 XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp);
 
@@ -62,8 +62,8 @@ typedef enum {
 
 struct XPTState {
     XPTMode          mode;
-    PRUint32         data_offset;
-    PRUint32         next_cursor[2];
+    uint32_t         data_offset;
+    uint32_t         next_cursor[2];
     XPTDatapool      *pool;
     XPTArena         *arena;
 };
@@ -71,25 +71,25 @@ struct XPTState {
 struct XPTDatapool {
     XPTHashTable     *offset_map;
     char             *data;
-    PRUint32         count;
-    PRUint32         allocated;
+    uint32_t         count;
+    uint32_t         allocated;
 };
 
 struct XPTCursor {
     XPTState    *state;
     XPTPool     pool;
-    PRUint32    offset;
-    PRUint8     bits;
+    uint32_t    offset;
+    uint8_t     bits;
 };
 
 extern XPT_PUBLIC_API(XPTState *)
-XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len);
+XPT_NewXDRState(XPTMode mode, char *data, uint32_t len);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_MakeCursor(XPTState *state, XPTPool pool, PRUint32 len, XPTCursor *cursor);
+XPT_MakeCursor(XPTState *state, XPTPool pool, uint32_t len, XPTCursor *cursor);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_SeekTo(XPTCursor *cursor, PRUint32 offset);
+XPT_SeekTo(XPTCursor *cursor, uint32_t offset);
 
 extern XPT_PUBLIC_API(void)
 XPT_DestroyXDRState(XPTState *state);
@@ -100,29 +100,29 @@ XPT_UpdateFileLength(XPTState *state);
 
 /* returns the length of the specified data block */
 extern XPT_PUBLIC_API(void)
-XPT_GetXDRDataLength(XPTState *state, XPTPool pool, PRUint32 *len);
+XPT_GetXDRDataLength(XPTState *state, XPTPool pool, uint32_t *len);
 
 extern XPT_PUBLIC_API(void)
-XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, PRUint32 *len);
+XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, uint32_t *len);
 
 /* set or get the data offset for the state, depending on mode */
 extern XPT_PUBLIC_API(void)
-XPT_DataOffset(XPTState *state, PRUint32 *data_offsetp);
+XPT_DataOffset(XPTState *state, uint32_t *data_offsetp);
 
 extern XPT_PUBLIC_API(void)
-XPT_SetDataOffset(XPTState *state, PRUint32 data_offset);
+XPT_SetDataOffset(XPTState *state, uint32_t data_offset);
 
-extern XPT_PUBLIC_API(PRUint32)
+extern XPT_PUBLIC_API(uint32_t)
 XPT_GetOffsetForAddr(XPTCursor *cursor, void *addr);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, PRUint32 offset);
+XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, uint32_t offset);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_SetAddrForOffset(XPTCursor *cursor, PRUint32 offset, void *addr);
+XPT_SetAddrForOffset(XPTCursor *cursor, uint32_t offset, void *addr);
 
 extern XPT_PUBLIC_API(void *)
-XPT_GetAddrForOffset(XPTCursor *cursor, PRUint32 offset);
+XPT_GetAddrForOffset(XPTCursor *cursor, uint32_t offset);
 
 /* all data structures are big-endian */
 

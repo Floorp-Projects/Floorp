@@ -105,7 +105,7 @@ public:
   void NotifyFinished(MediaStreamGraph* aGraph) {}
   void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
     TrackRate aTrackRate, TrackTicks aTrackOffset,
-    PRUint32 aTrackEvents, const MediaSegment& aQueuedMedia) {}
+    uint32_t aTrackEvents, const MediaSegment& aQueuedMedia) {}
 
 private:
   nsRefPtr<MediaEngineSource> mSource;
@@ -138,7 +138,7 @@ public:
   nsresult GetUserMedia(nsPIDOMWindow* aWindow, nsIMediaStreamOptions* aParams,
     nsIDOMGetUserMediaSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError);
-  void OnNavigation(PRUint64 aWindowID);
+  void OnNavigation(uint64_t aWindowID);
 
 private:
   // Make private because we want only one instance of this class

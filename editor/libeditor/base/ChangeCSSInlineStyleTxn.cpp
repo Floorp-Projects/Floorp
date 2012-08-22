@@ -20,7 +20,7 @@
 #include "nsString.h"                   // for nsAutoString, nsString, etc
 #include "nsUnicharUtils.h"
 #include "nsXPCOM.h"                    // for NS_Free
-#include "prtypes.h"                    // for PRUnichar, PRUint32
+#include "prtypes.h"                    // for PRUnichar, uint32_t
 
 class nsIEditor;
 
@@ -225,7 +225,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
   }
 
   // let's be sure we don't keep an empty style attribute
-  PRUint32 length;
+  uint32_t length;
   result = cssDecl->GetLength(&length);
   NS_ENSURE_SUCCESS(result, result);     
   if (!length) {

@@ -43,15 +43,15 @@ public:
                           nsFrameList&    aFrameList);
   NS_IMETHOD RemoveFrame(ChildListID aListID, nsIFrame *aOldFrame);
 
-  NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
-  NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
-  NS_IMETHOD GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval);
-  NS_IMETHOD GetRotationOfChar(PRUint32 charnum, float *_retval);
+  NS_IMETHOD GetStartPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval);
+  NS_IMETHOD GetEndPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval);
+  NS_IMETHOD GetExtentOfChar(uint32_t charnum, nsIDOMSVGRect **_retval);
+  NS_IMETHOD GetRotationOfChar(uint32_t charnum, float *_retval);
 
   /*
    * Returns the number of characters in a string
    */
-  virtual PRUint32 GetNumberOfChars();
+  virtual uint32_t GetNumberOfChars();
 
   /*
    * Determines the length of a string
@@ -61,12 +61,12 @@ public:
   /*
    * Determines the length of a substring
    */
-  virtual float GetSubStringLength(PRUint32 charnum, PRUint32 nchars);
+  virtual float GetSubStringLength(uint32_t charnum, uint32_t nchars);
 
   /*
    * Get the character at the specified position
    */
-  virtual PRInt32 GetCharNumAtPosition(nsIDOMSVGPoint *point);
+  virtual int32_t GetCharNumAtPosition(nsIDOMSVGPoint *point);
   void GetEffectiveXY(nsTArray<float> &aX, nsTArray<float> &aY);
   void GetEffectiveDxDy(nsTArray<float> &aDx, nsTArray<float> &aDy);
   void GetEffectiveRotate(nsTArray<float> &aRotate);
@@ -87,12 +87,12 @@ protected:
   void CopyPositionList(nsTArray<float> *parentList,
                         SVGUserUnitList *selfList,
                         nsTArray<float> &dstList,
-                        PRUint32 aOffset);
+                        uint32_t aOffset);
   void CopyRotateList(nsTArray<float> *parentList,
                       const SVGNumberList *selfList,
                       nsTArray<float> &dstList,
-                      PRUint32 aOffset);
-  PRUint32 BuildPositionList(PRUint32 aOffset, PRUint32 aDepth);
+                      uint32_t aOffset);
+  uint32_t BuildPositionList(uint32_t aOffset, uint32_t aDepth);
 
   void SetWhitespaceCompression();
 private:
@@ -101,8 +101,8 @@ private:
    */
   static nsSVGGlyphFrame *
   GetGlyphFrameAtCharNum(nsISVGGlyphFragmentNode* node,
-                         PRUint32 charnum,
-                         PRUint32 *offset);
+                         uint32_t charnum,
+                         uint32_t *offset);
 
   /*
    * Returns the text frame ancestor of this frame (or the frame itself

@@ -70,7 +70,7 @@ static bool gSupportVisitedPseudo = true;
 static nsTArray< nsCOMPtr<nsIAtom> >* sSystemMetrics = 0;
 
 #ifdef XP_WIN
-PRUint8 nsCSSRuleProcessor::sWinThemeId = LookAndFeel::eWindowsTheme_Generic;
+uint8_t nsCSSRuleProcessor::sWinThemeId = LookAndFeel::eWindowsTheme_Generic;
 #endif
 
 /**
@@ -100,7 +100,7 @@ struct RuleValue : RuleSelectorPair {
     eMaxAncestorHashes = 4
   };
 
-  RuleValue(const RuleSelectorPair& aRuleSelectorPair, PRInt32 aIndex,
+  RuleValue(const RuleSelectorPair& aRuleSelectorPair, int32_t aIndex,
             bool aQuirksMode) :
     RuleSelectorPair(aRuleSelectorPair),
     mIndex(aIndex)
@@ -108,7 +108,7 @@ struct RuleValue : RuleSelectorPair {
     CollectAncestorHashes(aQuirksMode);
   }
 
-  PRInt32 mIndex; // High index means high weight/order.
+  int32_t mIndex; // High index means high weight/order.
   uint32_t mAncestorSelectorHashes[eMaxAncestorHashes];
 
 private:
@@ -464,7 +464,7 @@ protected:
                          const RuleSelectorPair& aRuleInfo);
   void AppendUniversalRule(const RuleSelectorPair& aRuleInfo);
 
-  PRInt32     mRuleCount;
+  int32_t     mRuleCount;
   // The hashtables are lazily initialized; we use a null .ops to
   // indicate that they need initialization.
   PLDHashTable mIdTable;
@@ -478,7 +478,7 @@ protected:
     const RuleValue* mEnd;
   };
   EnumData* mEnumList;
-  PRInt32   mEnumListSize;
+  int32_t   mEnumListSize;
 
   bool mQuirksMode;
 
@@ -488,19 +488,19 @@ protected:
   }
 
 #ifdef RULE_HASH_STATS
-  PRUint32    mUniversalSelectors;
-  PRUint32    mNameSpaceSelectors;
-  PRUint32    mTagSelectors;
-  PRUint32    mClassSelectors;
-  PRUint32    mIdSelectors;
+  uint32_t    mUniversalSelectors;
+  uint32_t    mNameSpaceSelectors;
+  uint32_t    mTagSelectors;
+  uint32_t    mClassSelectors;
+  uint32_t    mIdSelectors;
 
-  PRUint32    mElementsMatched;
+  uint32_t    mElementsMatched;
 
-  PRUint32    mElementUniversalCalls;
-  PRUint32    mElementNameSpaceCalls;
-  PRUint32    mElementTagCalls;
-  PRUint32    mElementClassCalls;
-  PRUint32    mElementIdCalls;
+  uint32_t    mElementUniversalCalls;
+  uint32_t    mElementNameSpaceCalls;
+  uint32_t    mElementTagCalls;
+  uint32_t    mElementClassCalls;
+  uint32_t    mElementIdCalls;
 #endif // RULE_HASH_STATS
 };
 
@@ -551,10 +551,10 @@ RuleHash::~RuleHash()
   {
     if (mUniversalRules.Length() > 0) {
       printf("  Universal rules:\n");
-      for (PRUint32 i = 0; i < mUniversalRules.Length(); ++i) {
+      for (uint32_t i = 0; i < mUniversalRules.Length(); ++i) {
         RuleValue* value = &(mUniversalRules[i]);
         nsAutoString selectorText;
-        PRUint32 lineNumber = value->mRule->GetLineNumber();
+        uint32_t lineNumber = value->mRule->GetLineNumber();
         nsCOMPtr<nsIStyleSheet> sheet;
         value->mRule->GetStyleSheet(*getter_AddRefs(sheet));
         nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(sheet);
@@ -688,18 +688,18 @@ void ContentEnumFunc(const RuleValue &value, nsCSSSelector* selector,
 void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
                                  NodeMatchContext& aNodeContext)
 {
-  PRInt32 nameSpace = aElement->GetNameSpaceID();
+  int32_t nameSpace = aElement->GetNameSpaceID();
   nsIAtom* tag = aElement->Tag();
   nsIAtom* id = aElement->GetID();
   const nsAttrValue* classList = aElement->GetClasses();
 
   NS_ABORT_IF_FALSE(tag, "How could we not have a tag?");
 
-  PRInt32 classCount = classList ? classList->GetAtomCount() : 0;
+  int32_t classCount = classList ? classList->GetAtomCount() : 0;
 
   // assume 1 universal, tag, id, and namespace, rather than wasting
   // time counting
-  PRInt32 testCount = classCount + 4;
+  int32_t testCount = classCount + 4;
 
   if (mEnumListSize < testCount) {
     delete [] mEnumList;
@@ -707,7 +707,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
     mEnumList = new EnumData[mEnumListSize];
   }
 
-  PRInt32 valueCount = 0;
+  int32_t valueCount = 0;
   RULE_HASH_STAT_INCREMENT(mElementsMatched);
 
   if (mUniversalRules.Length() != 0) { // universal rules
@@ -741,7 +741,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
     }
   }
   if (mClassTable.ops) {
-    for (PRInt32 index = 0; index < classCount; ++index) {
+    for (int32_t index = 0; index < classCount; ++index) {
       RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                              (PL_DHashTableOperate(&mClassTable, classList->AtomAt(index),
                              PL_DHASH_LOOKUP));
@@ -764,10 +764,10 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
 #endif
     // Merge the lists while there are still multiple lists to merge.
     while (valueCount > 1) {
-      PRInt32 valueIndex = 0;
-      PRInt32 lowestRuleIndex = mEnumList[valueIndex].mCurValue->mIndex;
-      for (PRInt32 index = 1; index < valueCount; ++index) {
-        PRInt32 ruleIndex = mEnumList[index].mCurValue->mIndex;
+      int32_t valueIndex = 0;
+      int32_t lowestRuleIndex = mEnumList[valueIndex].mCurValue->mIndex;
+      for (int32_t index = 1; index < valueCount; ++index) {
+        int32_t ruleIndex = mEnumList[index].mCurValue->mIndex;
         if (ruleIndex < lowestRuleIndex) {
           valueIndex = index;
           lowestRuleIndex = ruleIndex;
@@ -953,7 +953,7 @@ struct RuleCascadeData {
 #ifdef MOZ_XUL
     PL_DHashTableFinish(&mXULTreeRules);
 #endif
-    for (PRUint32 i = 0; i < ArrayLength(mPseudoElementRuleHashes); ++i) {
+    for (uint32_t i = 0; i < ArrayLength(mPseudoElementRuleHashes); ++i) {
       delete mPseudoElementRuleHashes[i];
     }
   }
@@ -1001,7 +1001,7 @@ RuleCascadeData::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   size_t n = aMallocSizeOf(this);
 
   n += mRuleHash.SizeOfExcludingThis(aMallocSizeOf);
-  for (PRUint32 i = 0; i < ArrayLength(mPseudoElementRuleHashes); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(mPseudoElementRuleHashes); ++i) {
     if (mPseudoElementRuleHashes[i])
       n += mPseudoElementRuleHashes[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
@@ -1048,7 +1048,7 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 //
 
 nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
-                                       PRUint8 aSheetType)
+                                       uint8_t aSheetType)
   : mSheets(aSheets)
   , mRuleCascades(nullptr)
   , mLastPresContext(nullptr)
@@ -1092,7 +1092,7 @@ InitSystemMetrics()
    * nsMediaFeatures.cpp                                                     *
    ***************************************************************************/
 
-  PRInt32 metricResult =
+  int32_t metricResult =
     LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollArrowStyle);
   if (metricResult & LookAndFeel::eScrollArrow_StartBackward) {
     sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_start_backward);
@@ -1171,7 +1171,7 @@ InitSystemMetrics()
   if (NS_SUCCEEDED(
         LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsThemeIdentifier,
                             &metricResult))) {
-    nsCSSRuleProcessor::SetWindowsThemeIdentifier(static_cast<PRUint8>(metricResult));
+    nsCSSRuleProcessor::SetWindowsThemeIdentifier(static_cast<uint8_t>(metricResult));
     switch(metricResult) {
       case LookAndFeel::eWindowsTheme_Aero:
         sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_aero);
@@ -1224,7 +1224,7 @@ nsCSSRuleProcessor::HasSystemMetric(nsIAtom* aMetric)
 }
 
 #ifdef XP_WIN
-/* static */ PRUint8
+/* static */ uint8_t
 nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 {
   if (!sSystemMetrics)
@@ -1468,15 +1468,15 @@ nthChildGenericMatches(Element* aElement,
       parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   }
 
-  const PRInt32 index = aTreeMatchContext.mNthIndexCache.
+  const int32_t index = aTreeMatchContext.mNthIndexCache.
     GetNthIndex(aElement, isOfType, isFromEnd, false);
   if (index <= 0) {
     // Node is anonymous content (not really a child of its parent).
     return false;
   }
 
-  const PRInt32 a = pseudoClass->u.mNumbers[0];
-  const PRInt32 b = pseudoClass->u.mNumbers[1];
+  const int32_t a = pseudoClass->u.mNumbers[0];
+  const int32_t b = pseudoClass->u.mNumbers[1];
   // result should be true if there exists n >= 0 such that
   // a * n + b == index.
   if (a == 0) {
@@ -1486,7 +1486,7 @@ nthChildGenericMatches(Element* aElement,
   // Integer division in C does truncation (towards 0).  So
   // check that the result is nonnegative, and that there was no
   // truncation.
-  const PRInt32 n = (index - b) / a;
+  const int32_t n = (index - b) / a;
   return n >= 0 && (a * n == index - b);
 }
 
@@ -1520,7 +1520,7 @@ checkGenericEmptyMatches(Element* aElement,
                          bool isWhitespaceSignificant)
 {
   nsIContent *child = nullptr;
-  PRInt32 index = -1;
+  int32_t index = -1;
 
   if (aTreeMatchContext.mForStyling)
     aElement->SetFlags(NODE_HAS_EMPTY_SELECTOR);
@@ -1693,7 +1693,7 @@ static bool SelectorMatches(Element* aElement,
         {
           NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
           nsIContent *child = nullptr;
-          PRInt32 index = -1;
+          int32_t index = -1;
 
           if (aTreeMatchContext.mForStyling)
             // FIXME:  This isn't sufficient to handle:
@@ -1747,10 +1747,10 @@ static bool SelectorMatches(Element* aElement,
 
             nsDependentString langString(pseudoClass->u.mString);
             language.StripWhitespace();
-            PRInt32 begin = 0;
-            PRInt32 len = language.Length();
+            int32_t begin = 0;
+            int32_t len = language.Length();
             while (begin < len) {
-              PRInt32 end = language.FindChar(PRUnichar(','), begin);
+              int32_t end = language.FindChar(PRUnichar(','), begin);
               if (end == kNotFound) {
                 end = len;
               }
@@ -1817,7 +1817,7 @@ static bool SelectorMatches(Element* aElement,
             if (aTreeMatchContext.mForStyling)
               parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
 
-            PRInt32 index = -1;
+            int32_t index = -1;
             do {
               firstNode = parent->GetChildAt(++index);
               // stop at first non-comment and non-whitespace node
@@ -1844,7 +1844,7 @@ static bool SelectorMatches(Element* aElement,
             if (aTreeMatchContext.mForStyling)
               parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
             
-            PRUint32 index = parent->GetChildCount();
+            uint32_t index = parent->GetChildCount();
             do {
               lastNode = parent->GetChildAt(--index);
               // stop at first non-comment and non-whitespace node
@@ -1912,7 +1912,7 @@ static bool SelectorMatches(Element* aElement,
       case nsCSSPseudoClasses::ePseudoClass_mozHasHandlerRef:
         {
           nsIContent *child = nullptr;
-          PRInt32 index = -1;
+          int32_t index = -1;
 
           do {
             child = aElement->GetChildAt(++index);
@@ -2091,7 +2091,7 @@ static bool SelectorMatches(Element* aElement,
   bool result = true;
   if (aSelector->mAttrList) {
     // test for attribute match
-    PRUint32 attrCount = aElement->GetAttrCount();
+    uint32_t attrCount = aElement->GetAttrCount();
     if (attrCount == 0) {
       // if no attributes on the content, no match
       return false;
@@ -2113,7 +2113,7 @@ static bool SelectorMatches(Element* aElement,
           // have a chance at matching, of course, are ones that the element
           // actually has attributes in), short-circuiting if we ever match.
           result = false;
-          for (PRUint32 i = 0; i < attrCount; ++i) {
+          for (uint32_t i = 0; i < attrCount; ++i) {
             const nsAttrName* attrName = aElement->GetAttrNameAt(i);
             NS_ASSERTION(attrName, "GetAttrCount lied or GetAttrNameAt failed");
             if (attrName->LocalName() != matchAttribute) {
@@ -2217,7 +2217,7 @@ static bool SelectorMatchesTree(Element* aPrevElement,
         if (aTreeMatchContext.mForStyling)
           parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
 
-        PRInt32 index = parent->IndexOf(prevElement);
+        int32_t index = parent->IndexOf(prevElement);
         while (0 <= --index) {
           nsIContent* content = parent->GetChildAt(index);
           if (content->IsElement()) {
@@ -2569,8 +2569,8 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
     if (aData->mAttribute == aData->mElement->GetClassAttributeName()) {
       const nsAttrValue* elementClasses = aData->mElement->GetClasses();
       if (elementClasses) {
-        PRInt32 atomCount = elementClasses->GetAtomCount();
-        for (PRInt32 i = 0; i < atomCount; ++i) {
+        int32_t atomCount = elementClasses->GetAtomCount();
+        for (int32_t i = 0; i < atomCount; ++i) {
           nsIAtom* curClass = elementClasses->AtomAt(i);
           AtomSelectorEntry *entry =
             static_cast<AtomSelectorEntry*>
@@ -2930,7 +2930,7 @@ struct PerWeightData {
     , mTail(&mRuleSelectorPairs)
   {}
 
-  PRInt32 mWeight;
+  int32_t mWeight;
   PerWeightDataListItem *mRuleSelectorPairs;
   PerWeightDataListItem **mTail;
 };
@@ -2978,7 +2978,7 @@ struct CascadeEnumData {
                   nsTArray<nsFontFaceRuleContainer>& aFontFaceRules,
                   nsTArray<nsCSSKeyframesRule*>& aKeyframesRules,
                   nsMediaQueryResultCacheKey& aKey,
-                  PRUint8 aSheetType)
+                  uint8_t aSheetType)
     : mPresContext(aPresContext),
       mFontFaceRules(aFontFaceRules),
       mKeyframesRules(aKeyframesRules),
@@ -3009,7 +3009,7 @@ struct CascadeEnumData {
   // Hooray, a manual PLDHashTable since nsClassHashtable doesn't
   // provide a getter that gives me a *reference* to the value.
   PLDHashTable mRulesByWeight; // of PerWeightDataListItem linked lists
-  PRUint8 mSheetType;
+  uint8_t mSheetType;
 };
 
 /*
@@ -3025,14 +3025,14 @@ static bool
 CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
 {
   CascadeEnumData* data = (CascadeEnumData*)aData;
-  PRInt32 type = aRule->GetType();
+  int32_t type = aRule->GetType();
 
   if (css::Rule::STYLE_RULE == type) {
     css::StyleRule* styleRule = static_cast<css::StyleRule*>(aRule);
 
     for (nsCSSSelectorList *sel = styleRule->Selector();
          sel; sel = sel->mNext) {
-      PRInt32 weight = sel->mWeight;
+      int32_t weight = sel->mWeight;
       RuleByWeightEntry *entry = static_cast<RuleByWeightEntry*>(
         PL_DHashTableOperate(&data->mRulesByWeight, NS_INT32_TO_PTR(weight),
                              PL_DHASH_ADD));
@@ -3110,14 +3110,14 @@ struct FillWeightArrayData {
     mWeightArray(aArrayData)
   {
   }
-  PRInt32 mIndex;
+  int32_t mIndex;
   PerWeightData* mWeightArray;
 };
 
 
 static PLDHashOperator
 FillWeightArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                PRUint32 number, void *arg)
+                uint32_t number, void *arg)
 {
   FillWeightArrayData* data = static_cast<FillWeightArrayData*>(arg);
   const RuleByWeightEntry *entry = (const RuleByWeightEntry *)hdr;
@@ -3178,13 +3178,13 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
       if (!data.mRulesByWeight.ops)
         return; /* out of memory */
 
-      for (PRUint32 i = 0; i < mSheets.Length(); ++i) {
+      for (uint32_t i = 0; i < mSheets.Length(); ++i) {
         if (!CascadeSheet(mSheets.ElementAt(i), &data))
           return; /* out of memory */
       }
 
       // Sort the hash table of per-weight linked lists by weight.
-      PRUint32 weightCount = data.mRulesByWeight.entryCount;
+      uint32_t weightCount = data.mRulesByWeight.entryCount;
       nsAutoArrayPtr<PerWeightData> weightArray(new PerWeightData[weightCount]);
       FillWeightArrayData fwData(weightArray);
       PL_DHashTableEnumerate(&data.mRulesByWeight, FillWeightArray, &fwData);
@@ -3193,7 +3193,7 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
 
       // Put things into the rule hash.
       // The primary sort is by weight...
-      for (PRUint32 i = 0; i < weightCount; ++i) {
+      for (uint32_t i = 0; i < weightCount; ++i) {
         // and the secondary sort is by order.  mRuleSelectorPairs is already in
         // the right order..
         for (PerWeightDataListItem *cur = weightArray[i].mRuleSelectorPairs;
@@ -3263,7 +3263,7 @@ AncestorFilter::Init(Element *aElement)
     } while (true);
 
     // Now push them in reverse order.
-    for (PRUint32 i = ancestors.Length(); i-- != 0; ) {
+    for (uint32_t i = ancestors.Length(); i-- != 0; ) {
       PushAncestor(ancestors[i]);
     }
   }
@@ -3274,7 +3274,7 @@ AncestorFilter::PushAncestor(Element *aElement)
 {
   MOZ_ASSERT(mFilter);
 
-  PRUint32 oldLength = mHashes.Length();
+  uint32_t oldLength = mHashes.Length();
 
   mPopTargets.AppendElement(oldLength);
 #ifdef DEBUG
@@ -3287,14 +3287,14 @@ AncestorFilter::PushAncestor(Element *aElement)
   }
   const nsAttrValue *classes = aElement->GetClasses();
   if (classes) {
-    PRUint32 classCount = classes->GetAtomCount();
-    for (PRUint32 i = 0; i < classCount; ++i) {
+    uint32_t classCount = classes->GetAtomCount();
+    for (uint32_t i = 0; i < classCount; ++i) {
       mHashes.AppendElement(classes->AtomAt(i)->hash());
     }
   }
 
-  PRUint32 newLength = mHashes.Length();
-  for (PRUint32 i = oldLength; i < newLength; ++i) {
+  uint32_t newLength = mHashes.Length();
+  for (uint32_t i = oldLength; i < newLength; ++i) {
     mFilter->add(mHashes[i]);
   }
 }
@@ -3305,16 +3305,16 @@ AncestorFilter::PopAncestor()
   MOZ_ASSERT(!mPopTargets.IsEmpty());
   MOZ_ASSERT(mPopTargets.Length() == mElements.Length());
 
-  PRUint32 popTargetLength = mPopTargets.Length();
-  PRUint32 newLength = mPopTargets[popTargetLength-1];
+  uint32_t popTargetLength = mPopTargets.Length();
+  uint32_t newLength = mPopTargets[popTargetLength-1];
 
   mPopTargets.TruncateLength(popTargetLength-1);
 #ifdef DEBUG
   mElements.TruncateLength(popTargetLength-1);
 #endif
 
-  PRUint32 oldLength = mHashes.Length();
-  for (PRUint32 i = newLength; i < oldLength; ++i) {
+  uint32_t oldLength = mHashes.Length();
+  for (uint32_t i = newLength; i < oldLength; ++i) {
     mFilter->remove(mHashes[i]);
   }
   mHashes.TruncateLength(newLength);

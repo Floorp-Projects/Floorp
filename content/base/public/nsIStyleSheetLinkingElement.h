@@ -91,7 +91,7 @@ public:
   // This doesn't entirely belong here since they only make sense for
   // some types of linking elements, but it's a better place than
   // anywhere else.
-  virtual void SetLineNumber(PRUint32 aLineNumber) = 0;
+  virtual void SetLineNumber(uint32_t aLineNumber) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleSheetLinkingElement,

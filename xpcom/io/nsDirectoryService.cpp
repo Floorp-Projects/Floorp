@@ -319,7 +319,7 @@ nsDirectoryService::Undefine(const char* prop)
  }
 
 NS_IMETHODIMP
-nsDirectoryService::GetKeys(PRUint32 *count, char ***keys)
+nsDirectoryService::GetKeys(uint32_t *count, char ***keys)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

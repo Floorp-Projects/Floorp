@@ -24,26 +24,26 @@ using namespace mozilla;
 
 #define ENSURE_ANNO_TYPE(_type, _statement)                                    \
   PR_BEGIN_MACRO                                                               \
-  PRInt32 type = _statement->AsInt32(kAnnoIndex_Type);                         \
+  int32_t type = _statement->AsInt32(kAnnoIndex_Type);                         \
   NS_ENSURE_TRUE(type == nsIAnnotationService::_type, NS_ERROR_INVALID_ARG);   \
   PR_END_MACRO
 
 #define NOTIFY_ANNOS_OBSERVERS(_notification)                                  \
   PR_BEGIN_MACRO                                                               \
-  for (PRInt32 i = 0; i < mObservers.Count(); i++)                             \
+  for (int32_t i = 0; i < mObservers.Count(); i++)                             \
     mObservers[i]->_notification;                                              \
   PR_END_MACRO
 
-const PRInt32 nsAnnotationService::kAnnoIndex_ID = 0;
-const PRInt32 nsAnnotationService::kAnnoIndex_PageOrItem = 1;
-const PRInt32 nsAnnotationService::kAnnoIndex_NameID = 2;
-const PRInt32 nsAnnotationService::kAnnoIndex_MimeType = 3;
-const PRInt32 nsAnnotationService::kAnnoIndex_Content = 4;
-const PRInt32 nsAnnotationService::kAnnoIndex_Flags = 5;
-const PRInt32 nsAnnotationService::kAnnoIndex_Expiration = 6;
-const PRInt32 nsAnnotationService::kAnnoIndex_Type = 7;
-const PRInt32 nsAnnotationService::kAnnoIndex_DateAdded = 8;
-const PRInt32 nsAnnotationService::kAnnoIndex_LastModified = 9;
+const int32_t nsAnnotationService::kAnnoIndex_ID = 0;
+const int32_t nsAnnotationService::kAnnoIndex_PageOrItem = 1;
+const int32_t nsAnnotationService::kAnnoIndex_NameID = 2;
+const int32_t nsAnnotationService::kAnnoIndex_MimeType = 3;
+const int32_t nsAnnotationService::kAnnoIndex_Content = 4;
+const int32_t nsAnnotationService::kAnnoIndex_Flags = 5;
+const int32_t nsAnnotationService::kAnnoIndex_Expiration = 6;
+const int32_t nsAnnotationService::kAnnoIndex_Type = 7;
+const int32_t nsAnnotationService::kAnnoIndex_DateAdded = 8;
+const int32_t nsAnnotationService::kAnnoIndex_LastModified = 9;
 
 using namespace mozilla::places;
 
@@ -90,11 +90,11 @@ nsAnnotationService::Init()
 
 nsresult
 nsAnnotationService::SetAnnotationStringInternal(nsIURI* aURI,
-                                                 PRInt64 aItemId,
+                                                 int64_t aItemId,
                                                  const nsACString& aName,
                                                  const nsAString& aValue,
-                                                 PRInt32 aFlags,
-                                                 PRUint16 aExpiration)
+                                                 int32_t aFlags,
+                                                 uint16_t aExpiration)
 {
   mozStorageTransaction transaction(mDB->MainConn(), false);
   nsCOMPtr<mozIStorageStatement> statement;
@@ -123,13 +123,13 @@ NS_IMETHODIMP
 nsAnnotationService::SetPageAnnotation(nsIURI* aURI,
                                        const nsACString& aName,
                                        nsIVariant* aValue,
-                                       PRInt32 aFlags,
-                                       PRUint16 aExpiration)
+                                       int32_t aFlags,
+                                       uint16_t aExpiration)
 {
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG(aValue);
 
-  PRUint16 dataType;
+  uint16_t dataType;
   nsresult rv = aValue->GetDataType(&dataType);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -141,7 +141,7 @@ nsAnnotationService::SetPageAnnotation(nsIURI* aURI,
     case nsIDataType::VTYPE_INT32:
     case nsIDataType::VTYPE_UINT32:
     case nsIDataType::VTYPE_BOOL: {
-      PRInt32 valueInt;
+      int32_t valueInt;
       rv = aValue->GetAsInt32(&valueInt);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
@@ -149,11 +149,11 @@ nsAnnotationService::SetPageAnnotation(nsIURI* aURI,
         NS_ENSURE_SUCCESS(rv, rv);
         return NS_OK;
       }
-      // Fall through PRInt64 case otherwise.
+      // Fall through int64_t case otherwise.
     }
     case nsIDataType::VTYPE_INT64:
     case nsIDataType::VTYPE_UINT64: {
-      PRInt64 valueLong;
+      int64_t valueLong;
       rv = aValue->GetAsInt64(&valueLong);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
@@ -196,11 +196,11 @@ nsAnnotationService::SetPageAnnotation(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::SetItemAnnotation(PRInt64 aItemId,
+nsAnnotationService::SetItemAnnotation(int64_t aItemId,
                                        const nsACString& aName,
                                        nsIVariant* aValue,
-                                       PRInt32 aFlags,
-                                       PRUint16 aExpiration)
+                                       int32_t aFlags,
+                                       uint16_t aExpiration)
 {
   SAMPLE_LABEL("AnnotationService", "SetItemAnnotation");
   NS_ENSURE_ARG_MIN(aItemId, 1);
@@ -209,7 +209,7 @@ nsAnnotationService::SetItemAnnotation(PRInt64 aItemId,
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
-  PRUint16 dataType;
+  uint16_t dataType;
   nsresult rv = aValue->GetDataType(&dataType);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -221,7 +221,7 @@ nsAnnotationService::SetItemAnnotation(PRInt64 aItemId,
     case nsIDataType::VTYPE_INT32:
     case nsIDataType::VTYPE_UINT32:
     case nsIDataType::VTYPE_BOOL: {
-      PRInt32 valueInt;
+      int32_t valueInt;
       rv = aValue->GetAsInt32(&valueInt);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
@@ -229,11 +229,11 @@ nsAnnotationService::SetItemAnnotation(PRInt64 aItemId,
         NS_ENSURE_SUCCESS(rv, rv);
         return NS_OK;
       }
-      // Fall through PRInt64 case otherwise.
+      // Fall through int64_t case otherwise.
     }
     case nsIDataType::VTYPE_INT64:
     case nsIDataType::VTYPE_UINT64: {
-      PRInt64 valueLong;
+      int64_t valueLong;
       rv = aValue->GetAsInt64(&valueLong);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
@@ -279,8 +279,8 @@ NS_IMETHODIMP
 nsAnnotationService::SetPageAnnotationString(nsIURI* aURI,
                                              const nsACString& aName,
                                              const nsAString& aValue,
-                                             PRInt32 aFlags,
-                                             PRUint16 aExpiration)
+                                             int32_t aFlags,
+                                             uint16_t aExpiration)
 {
   NS_ENSURE_ARG(aURI);
 
@@ -298,11 +298,11 @@ nsAnnotationService::SetPageAnnotationString(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::SetItemAnnotationString(PRInt64 aItemId,
+nsAnnotationService::SetItemAnnotationString(int64_t aItemId,
                                              const nsACString& aName,
                                              const nsAString& aValue,
-                                             PRInt32 aFlags,
-                                             PRUint16 aExpiration)
+                                             int32_t aFlags,
+                                             uint16_t aExpiration)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -321,11 +321,11 @@ nsAnnotationService::SetItemAnnotationString(PRInt64 aItemId,
 
 nsresult
 nsAnnotationService::SetAnnotationInt32Internal(nsIURI* aURI,
-                                                PRInt64 aItemId,
+                                                int64_t aItemId,
                                                 const nsACString& aName,
-                                                PRInt32 aValue,
-                                                PRInt32 aFlags,
-                                                PRUint16 aExpiration)
+                                                int32_t aValue,
+                                                int32_t aFlags,
+                                                uint16_t aExpiration)
 {
   mozStorageTransaction transaction(mDB->MainConn(), false);
   nsCOMPtr<mozIStorageStatement> statement;
@@ -353,9 +353,9 @@ nsAnnotationService::SetAnnotationInt32Internal(nsIURI* aURI,
 NS_IMETHODIMP
 nsAnnotationService::SetPageAnnotationInt32(nsIURI* aURI,
                                             const nsACString& aName,
-                                            PRInt32 aValue,
-                                            PRInt32 aFlags,
-                                            PRUint16 aExpiration)
+                                            int32_t aValue,
+                                            int32_t aFlags,
+                                            uint16_t aExpiration)
 {
   NS_ENSURE_ARG(aURI);
 
@@ -373,11 +373,11 @@ nsAnnotationService::SetPageAnnotationInt32(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::SetItemAnnotationInt32(PRInt64 aItemId,
+nsAnnotationService::SetItemAnnotationInt32(int64_t aItemId,
                                             const nsACString& aName,
-                                            PRInt32 aValue,
-                                            PRInt32 aFlags,
-                                            PRUint16 aExpiration)
+                                            int32_t aValue,
+                                            int32_t aFlags,
+                                            uint16_t aExpiration)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -396,11 +396,11 @@ nsAnnotationService::SetItemAnnotationInt32(PRInt64 aItemId,
 
 nsresult
 nsAnnotationService::SetAnnotationInt64Internal(nsIURI* aURI,
-                                                PRInt64 aItemId,
+                                                int64_t aItemId,
                                                 const nsACString& aName,
-                                                PRInt64 aValue,
-                                                PRInt32 aFlags,
-                                                PRUint16 aExpiration)
+                                                int64_t aValue,
+                                                int32_t aFlags,
+                                                uint16_t aExpiration)
 {
   mozStorageTransaction transaction(mDB->MainConn(), false);
   nsCOMPtr<mozIStorageStatement> statement;
@@ -428,9 +428,9 @@ nsAnnotationService::SetAnnotationInt64Internal(nsIURI* aURI,
 NS_IMETHODIMP
 nsAnnotationService::SetPageAnnotationInt64(nsIURI* aURI,
                                             const nsACString& aName,
-                                            PRInt64 aValue,
-                                            PRInt32 aFlags,
-                                            PRUint16 aExpiration)
+                                            int64_t aValue,
+                                            int32_t aFlags,
+                                            uint16_t aExpiration)
 {
   NS_ENSURE_ARG(aURI);
 
@@ -448,11 +448,11 @@ nsAnnotationService::SetPageAnnotationInt64(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::SetItemAnnotationInt64(PRInt64 aItemId,
+nsAnnotationService::SetItemAnnotationInt64(int64_t aItemId,
                                             const nsACString& aName,
-                                            PRInt64 aValue,
-                                            PRInt32 aFlags,
-                                            PRUint16 aExpiration)
+                                            int64_t aValue,
+                                            int32_t aFlags,
+                                            uint16_t aExpiration)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -471,11 +471,11 @@ nsAnnotationService::SetItemAnnotationInt64(PRInt64 aItemId,
 
 nsresult
 nsAnnotationService::SetAnnotationDoubleInternal(nsIURI* aURI,
-                                                 PRInt64 aItemId,
+                                                 int64_t aItemId,
                                                  const nsACString& aName,
                                                  double aValue,
-                                                 PRInt32 aFlags,
-                                                 PRUint16 aExpiration)
+                                                 int32_t aFlags,
+                                                 uint16_t aExpiration)
 {
   mozStorageTransaction transaction(mDB->MainConn(), false);
   nsCOMPtr<mozIStorageStatement> statement;
@@ -504,8 +504,8 @@ NS_IMETHODIMP
 nsAnnotationService::SetPageAnnotationDouble(nsIURI* aURI,
                                              const nsACString& aName,
                                              double aValue,
-                                             PRInt32 aFlags,
-                                             PRUint16 aExpiration)
+                                             int32_t aFlags,
+                                             uint16_t aExpiration)
 {
   NS_ENSURE_ARG(aURI);
 
@@ -523,11 +523,11 @@ nsAnnotationService::SetPageAnnotationDouble(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::SetItemAnnotationDouble(PRInt64 aItemId,
+nsAnnotationService::SetItemAnnotationDouble(int64_t aItemId,
                                              const nsACString& aName,
                                              double aValue,
-                                             PRInt32 aFlags,
-                                             PRUint16 aExpiration)
+                                             int32_t aFlags,
+                                             uint16_t aExpiration)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -546,13 +546,13 @@ nsAnnotationService::SetItemAnnotationDouble(PRInt64 aItemId,
 
 nsresult
 nsAnnotationService::SetAnnotationBinaryInternal(nsIURI* aURI,
-                                                 PRInt64 aItemId,
+                                                 int64_t aItemId,
                                                  const nsACString& aName,
-                                                 const PRUint8* aData,
-                                                 PRUint32 aDataLen,
+                                                 const uint8_t* aData,
+                                                 uint32_t aDataLen,
                                                  const nsACString& aMimeType,
-                                                 PRInt32 aFlags,
-                                                 PRUint16 aExpiration)
+                                                 int32_t aFlags,
+                                                 uint16_t aExpiration)
 {
   if (aMimeType.Length() == 0)
     return NS_ERROR_INVALID_ARG;
@@ -583,11 +583,11 @@ nsAnnotationService::SetAnnotationBinaryInternal(nsIURI* aURI,
 NS_IMETHODIMP
 nsAnnotationService::SetPageAnnotationBinary(nsIURI* aURI,
                                              const nsACString& aName,
-                                             const PRUint8* aData,
-                                             PRUint32 aDataLen,
+                                             const uint8_t* aData,
+                                             uint32_t aDataLen,
                                              const nsACString& aMimeType,
-                                             PRInt32 aFlags,
-                                             PRUint16 aExpiration)
+                                             int32_t aFlags,
+                                             uint16_t aExpiration)
 {
   NS_ENSURE_ARG(aURI);
 
@@ -605,13 +605,13 @@ nsAnnotationService::SetPageAnnotationBinary(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::SetItemAnnotationBinary(PRInt64 aItemId,
+nsAnnotationService::SetItemAnnotationBinary(int64_t aItemId,
                                              const nsACString& aName,
-                                             const PRUint8* aData,
-                                             PRUint32 aDataLen,
+                                             const uint8_t* aData,
+                                             uint32_t aDataLen,
                                              const nsACString& aMimeType,
-                                             PRInt32 aFlags,
-                                             PRUint16 aExpiration)
+                                             int32_t aFlags,
+                                             uint16_t aExpiration)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -651,7 +651,7 @@ nsAnnotationService::GetPageAnnotationString(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotationString(PRInt64 aItemId,
+nsAnnotationService::GetItemAnnotationString(int64_t aItemId,
                                              const nsACString& aName,
                                              nsAString& _retval)
 {
@@ -687,7 +687,7 @@ nsAnnotationService::GetPageAnnotation(nsIURI* aURI,
   mozStorageStatementScoper scoper(statement);
 
   nsCOMPtr<nsIWritableVariant> value = new nsVariant();
-  PRInt32 type = statement->AsInt32(kAnnoIndex_Type);
+  int32_t type = statement->AsInt32(kAnnoIndex_Type);
   switch (type) {
     case nsIAnnotationService::TYPE_INT32:
     case nsIAnnotationService::TYPE_INT64:
@@ -720,7 +720,7 @@ nsAnnotationService::GetPageAnnotation(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotation(PRInt64 aItemId,
+nsAnnotationService::GetItemAnnotation(int64_t aItemId,
                                        const nsACString& aName,
                                        nsIVariant** _retval)
 {
@@ -735,7 +735,7 @@ nsAnnotationService::GetItemAnnotation(PRInt64 aItemId,
   mozStorageStatementScoper scoper(statement);
 
   nsCOMPtr<nsIWritableVariant> value = new nsVariant();
-  PRInt32 type = statement->AsInt32(kAnnoIndex_Type);
+  int32_t type = statement->AsInt32(kAnnoIndex_Type);
   switch (type) {
     case nsIAnnotationService::TYPE_INT32:
     case nsIAnnotationService::TYPE_INT64:
@@ -770,7 +770,7 @@ nsAnnotationService::GetItemAnnotation(PRInt64 aItemId,
 NS_IMETHODIMP
 nsAnnotationService::GetPageAnnotationInt32(nsIURI* aURI,
                                         const nsACString& aName,
-                                        PRInt32* _retval)
+                                        int32_t* _retval)
 {
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -790,9 +790,9 @@ nsAnnotationService::GetPageAnnotationInt32(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotationInt32(PRInt64 aItemId,
+nsAnnotationService::GetItemAnnotationInt32(int64_t aItemId,
                                             const nsACString& aName,
-                                            PRInt32* _retval)
+                                            int32_t* _retval)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -813,7 +813,7 @@ nsAnnotationService::GetItemAnnotationInt32(PRInt64 aItemId,
 NS_IMETHODIMP
 nsAnnotationService::GetPageAnnotationInt64(nsIURI* aURI,
                                             const nsACString& aName,
-                                            PRInt64* _retval)
+                                            int64_t* _retval)
 {
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -832,9 +832,9 @@ nsAnnotationService::GetPageAnnotationInt64(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotationInt64(PRInt64 aItemId,
+nsAnnotationService::GetItemAnnotationInt64(int64_t aItemId,
                                             const nsACString& aName,
-                                            PRInt64* _retval)
+                                            int64_t* _retval)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -855,7 +855,7 @@ nsAnnotationService::GetItemAnnotationInt64(PRInt64 aItemId,
 NS_IMETHODIMP
 nsAnnotationService::GetPageAnnotationType(nsIURI* aURI,
                                            const nsACString& aName,
-                                           PRUint16* _retval)
+                                           uint16_t* _retval)
 {
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -873,9 +873,9 @@ nsAnnotationService::GetPageAnnotationType(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotationType(PRInt64 aItemId,
+nsAnnotationService::GetItemAnnotationType(int64_t aItemId,
                                            const nsACString& aName,
-                                           PRUint16* _retval)
+                                           uint16_t* _retval)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -914,7 +914,7 @@ nsAnnotationService::GetPageAnnotationDouble(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotationDouble(PRInt64 aItemId,
+nsAnnotationService::GetItemAnnotationDouble(int64_t aItemId,
                                              const nsACString& aName,
                                              double* _retval)
 {
@@ -936,8 +936,8 @@ nsAnnotationService::GetItemAnnotationDouble(PRInt64 aItemId,
 NS_IMETHODIMP
 nsAnnotationService::GetPageAnnotationBinary(nsIURI* aURI,
                                              const nsACString& aName,
-                                             PRUint8** _data,
-                                             PRUint32* _dataLen,
+                                             uint8_t** _data,
+                                             uint32_t* _dataLen,
                                              nsACString& _mimeType)
 {
   NS_ENSURE_ARG(aURI);
@@ -961,10 +961,10 @@ nsAnnotationService::GetPageAnnotationBinary(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotationBinary(PRInt64 aItemId,
+nsAnnotationService::GetItemAnnotationBinary(int64_t aItemId,
                                              const nsACString& aName,
-                                             PRUint8** _data,
-                                             PRUint32* _dataLen,
+                                             uint8_t** _data,
+                                             uint32_t* _dataLen,
                                              nsACString& _mimeType)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
@@ -990,10 +990,10 @@ nsAnnotationService::GetItemAnnotationBinary(PRInt64 aItemId,
 NS_IMETHODIMP
 nsAnnotationService::GetPageAnnotationInfo(nsIURI* aURI,
                                            const nsACString& aName,
-                                           PRInt32* _flags,
-                                           PRUint16* _expiration,
+                                           int32_t* _flags,
+                                           uint16_t* _expiration,
                                            nsACString& _mimeType,
-                                           PRUint16* _storageType)
+                                           uint16_t* _storageType)
 {
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(_flags);
@@ -1007,10 +1007,10 @@ nsAnnotationService::GetPageAnnotationInfo(nsIURI* aURI,
 
   mozStorageStatementScoper scoper(statement);
   *_flags = statement->AsInt32(kAnnoIndex_Flags);
-  *_expiration = (PRUint16)statement->AsInt32(kAnnoIndex_Expiration);
+  *_expiration = (uint16_t)statement->AsInt32(kAnnoIndex_Expiration);
   rv = statement->GetUTF8String(kAnnoIndex_MimeType, _mimeType);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRInt32 type = (PRUint16)statement->AsInt32(kAnnoIndex_Type);
+  int32_t type = (uint16_t)statement->AsInt32(kAnnoIndex_Type);
   if (type == 0) {
     // For annotations created before explicit typing,
     // we can't determine type, just return as string type.
@@ -1024,12 +1024,12 @@ nsAnnotationService::GetPageAnnotationInfo(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotationInfo(PRInt64 aItemId,
+nsAnnotationService::GetItemAnnotationInfo(int64_t aItemId,
                                            const nsACString& aName,
-                                           PRInt32* _flags,
-                                           PRUint16* _expiration,
+                                           int32_t* _flags,
+                                           uint16_t* _expiration,
                                            nsACString& _mimeType,
-                                           PRUint16* _storageType)
+                                           uint16_t* _storageType)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG_POINTER(_flags);
@@ -1043,10 +1043,10 @@ nsAnnotationService::GetItemAnnotationInfo(PRInt64 aItemId,
 
   mozStorageStatementScoper scoper(statement);
   *_flags = statement->AsInt32(kAnnoIndex_Flags);
-  *_expiration = (PRUint16)statement->AsInt32(kAnnoIndex_Expiration);
+  *_expiration = (uint16_t)statement->AsInt32(kAnnoIndex_Expiration);
   rv = statement->GetUTF8String(kAnnoIndex_MimeType, _mimeType);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRInt32 type = (PRUint16)statement->AsInt32(kAnnoIndex_Type);
+  int32_t type = (uint16_t)statement->AsInt32(kAnnoIndex_Type);
   if (type == 0) {
     // For annotations created before explicit typing,
     // we can't determine type, just return as string type.
@@ -1062,7 +1062,7 @@ nsAnnotationService::GetItemAnnotationInfo(PRInt64 aItemId,
 
 NS_IMETHODIMP
 nsAnnotationService::GetPagesWithAnnotation(const nsACString& aName,
-                                            PRUint32* _resultCount,
+                                            uint32_t* _resultCount,
                                             nsIURI*** _results)
 {
   NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_INVALID_ARG);
@@ -1085,7 +1085,7 @@ nsAnnotationService::GetPagesWithAnnotation(const nsACString& aName,
   NS_ENSURE_TRUE(*_results, NS_ERROR_OUT_OF_MEMORY);
 
   *_resultCount = results.Count();
-  for (PRUint32 i = 0; i < *_resultCount; i ++) {
+  for (uint32_t i = 0; i < *_resultCount; i ++) {
     (*_results)[i] = results[i];
     NS_ADDREF((*_results)[i]);
   }
@@ -1135,8 +1135,8 @@ nsAnnotationService::GetPagesWithAnnotationCOMArray(const nsACString& aName,
 
 NS_IMETHODIMP
 nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
-                                            PRUint32* _resultCount,
-                                            PRInt64** _results)
+                                            uint32_t* _resultCount,
+                                            int64_t** _results)
 {
   NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_INVALID_ARG);
   NS_ENSURE_ARG_POINTER(_resultCount);
@@ -1144,7 +1144,7 @@ nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
 
   *_resultCount = 0;
   *_results = nullptr;
-  nsTArray<PRInt64> results;
+  nsTArray<int64_t> results;
 
   nsresult rv = GetItemsWithAnnotationTArray(aName, &results);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1153,12 +1153,12 @@ nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
   if (results.Length() == 0)
     return NS_OK;
 
-  *_results = static_cast<PRInt64*>
-                         (nsMemory::Alloc(results.Length() * sizeof(PRInt64)));
+  *_results = static_cast<int64_t*>
+                         (nsMemory::Alloc(results.Length() * sizeof(int64_t)));
   NS_ENSURE_TRUE(*_results, NS_ERROR_OUT_OF_MEMORY);
 
   *_resultCount = results.Length();
-  for (PRUint32 i = 0; i < *_resultCount; i ++) {
+  for (uint32_t i = 0; i < *_resultCount; i ++) {
     (*_results)[i] = results[i];
   }
 
@@ -1168,7 +1168,7 @@ nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
 
 nsresult
 nsAnnotationService::GetItemsWithAnnotationTArray(const nsACString& aName,
-                                                  nsTArray<PRInt64>* _results)
+                                                  nsTArray<int64_t>* _results)
 {
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
     "SELECT a.item_id "
@@ -1195,7 +1195,7 @@ nsAnnotationService::GetItemsWithAnnotationTArray(const nsACString& aName,
 
 NS_IMETHODIMP
 nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI,
-                                            PRUint32* _count,
+                                            uint32_t* _count,
                                             nsIVariant*** _result)
 {
   NS_ENSURE_ARG(aURI);
@@ -1216,11 +1216,11 @@ nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI,
                         (nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
   NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
-  for (PRUint32 i = 0; i < names.Length(); i ++) {
+  for (uint32_t i = 0; i < names.Length(); i ++) {
     nsCOMPtr<nsIWritableVariant> var = new nsVariant();
     if (!var) {
       // need to release all the variants we've already created
-      for (PRUint32 j = 0; j < i; j ++)
+      for (uint32_t j = 0; j < i; j ++)
         NS_RELEASE((*_result)[j]);
       nsMemory::Free(*_result);
       *_result = nullptr;
@@ -1237,7 +1237,7 @@ nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI,
 
 nsresult
 nsAnnotationService::GetAnnotationNamesTArray(nsIURI* aURI,
-                                              PRInt64 aItemId,
+                                              int64_t aItemId,
                                               nsTArray<nsCString>* _result)
 {
   _result->Clear();
@@ -1286,8 +1286,8 @@ nsAnnotationService::GetAnnotationNamesTArray(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotationNames(PRInt64 aItemId,
-                                            PRUint32* _count,
+nsAnnotationService::GetItemAnnotationNames(int64_t aItemId,
+                                            uint32_t* _count,
                                             nsIVariant*** _result)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
@@ -1308,11 +1308,11 @@ nsAnnotationService::GetItemAnnotationNames(PRInt64 aItemId,
                         (nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
   NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
-  for (PRUint32 i = 0; i < names.Length(); i ++) {
+  for (uint32_t i = 0; i < names.Length(); i ++) {
     nsCOMPtr<nsIWritableVariant> var = new nsVariant();
     if (!var) {
       // need to release all the variants we've already created
-      for (PRUint32 j = 0; j < i; j ++)
+      for (uint32_t j = 0; j < i; j ++)
         NS_RELEASE((*_result)[j]);
       nsMemory::Free(*_result);
       *_result = nullptr;
@@ -1343,7 +1343,7 @@ nsAnnotationService::PageHasAnnotation(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::ItemHasAnnotation(PRInt64 aItemId,
+nsAnnotationService::ItemHasAnnotation(int64_t aItemId,
                                        const nsACString& aName,
                                        bool* _retval)
 {
@@ -1364,7 +1364,7 @@ nsAnnotationService::ItemHasAnnotation(PRInt64 aItemId,
  */
 nsresult
 nsAnnotationService::RemoveAnnotationInternal(nsIURI* aURI,
-                                              PRInt64 aItemId,
+                                              int64_t aItemId,
                                               const nsACString& aName)
 {
   bool isItemAnnotation = (aItemId > 0);
@@ -1421,7 +1421,7 @@ nsAnnotationService::RemovePageAnnotation(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::RemoveItemAnnotation(PRInt64 aItemId,
+nsAnnotationService::RemoveItemAnnotation(int64_t aItemId,
                                           const nsACString& aName)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
@@ -1462,7 +1462,7 @@ nsAnnotationService::RemovePageAnnotations(nsIURI* aURI)
 
 
 NS_IMETHODIMP
-nsAnnotationService::RemoveItemAnnotations(PRInt64 aItemId)
+nsAnnotationService::RemoveItemAnnotations(int64_t aItemId)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -1537,12 +1537,12 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
 
   bool hasResult;
   while (NS_SUCCEEDED(sourceStmt->ExecuteStep(&hasResult)) && hasResult) {
-    PRInt64 sourcePlaceId = sourceStmt->AsInt64(0);
-    PRInt64 annoNameID = sourceStmt->AsInt64(1);
+    int64_t sourcePlaceId = sourceStmt->AsInt64(0);
+    int64_t annoNameID = sourceStmt->AsInt64(1);
     nsCAutoString annoName;
     rv = sourceStmt->GetUTF8String(2, annoName);
     NS_ENSURE_SUCCESS(rv, rv);
-    PRInt64 annoExistsOnDest = sourceStmt->AsInt64(3);
+    int64_t annoExistsOnDest = sourceStmt->AsInt64(3);
 
     if (annoExistsOnDest) {
       if (!aOverwriteDest)
@@ -1576,8 +1576,8 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
 
 
 NS_IMETHODIMP
-nsAnnotationService::CopyItemAnnotations(PRInt64 aSourceItemId,
-                                         PRInt64 aDestItemId,
+nsAnnotationService::CopyItemAnnotations(int64_t aSourceItemId,
+                                         int64_t aDestItemId,
                                          bool aOverwriteDest)
 {
   NS_ENSURE_ARG_MIN(aSourceItemId, 1);
@@ -1617,11 +1617,11 @@ nsAnnotationService::CopyItemAnnotations(PRInt64 aSourceItemId,
 
   bool hasResult;
   while (NS_SUCCEEDED(sourceStmt->ExecuteStep(&hasResult)) && hasResult) {
-    PRInt64 annoNameID = sourceStmt->AsInt64(0);
+    int64_t annoNameID = sourceStmt->AsInt64(0);
     nsCAutoString annoName;
     rv = sourceStmt->GetUTF8String(1, annoName);
     NS_ENSURE_SUCCESS(rv, rv);
-    PRInt64 annoExistsOnDest = sourceStmt->AsInt64(2);
+    int64_t annoExistsOnDest = sourceStmt->AsInt64(2);
 
     if (annoExistsOnDest) {
       if (!aOverwriteDest)
@@ -1706,7 +1706,7 @@ nsAnnotationService::GetAnnotationURI(nsIURI* aURI,
 
 nsresult
 nsAnnotationService::HasAnnotationInternal(nsIURI* aURI,
-                                           PRInt64 aItemId,
+                                           int64_t aItemId,
                                            const nsACString& aName,
                                            bool* _hasAnno)
 {
@@ -1758,7 +1758,7 @@ nsAnnotationService::HasAnnotationInternal(nsIURI* aURI,
     *_hasAnno = false;
   }
   else {
-    PRInt64 annotationId = stmt->AsInt64(2);
+    int64_t annotationId = stmt->AsInt64(2);
     *_hasAnno = (annotationId > 0);
   }
 
@@ -1775,7 +1775,7 @@ nsAnnotationService::HasAnnotationInternal(nsIURI* aURI,
 
 nsresult
 nsAnnotationService::StartGetAnnotation(nsIURI* aURI,
-                                        PRInt64 aItemId,
+                                        int64_t aItemId,
                                         const nsACString& aName,
                                         nsCOMPtr<mozIStorageStatement>& aStatement)
 {
@@ -1847,11 +1847,11 @@ nsAnnotationService::InPrivateBrowsingMode() const
  */
 nsresult
 nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
-                                        PRInt64 aItemId,
+                                        int64_t aItemId,
                                         const nsACString& aName,
-                                        PRInt32 aFlags,
-                                        PRUint16 aExpiration,
-                                        PRUint16 aType,
+                                        int32_t aFlags,
+                                        uint16_t aExpiration,
+                                        uint16_t aType,
                                         nsCOMPtr<mozIStorageStatement>& aStatement)
 {
   bool isItemAnnotation = (aItemId > 0);
@@ -1923,10 +1923,10 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
     return NS_ERROR_INVALID_ARG;
   }
 
-  PRInt64 fkId = stmt->AsInt64(0);
-  PRInt64 nameID = stmt->AsInt64(1);
-  PRInt64 oldAnnoId = stmt->AsInt64(2);
-  PRInt64 oldAnnoDate = stmt->AsInt64(3);
+  int64_t fkId = stmt->AsInt64(0);
+  int64_t nameID = stmt->AsInt64(1);
+  int64_t oldAnnoId = stmt->AsInt64(2);
+  int64_t oldAnnoDate = stmt->AsInt64(3);
 
   if (isItemAnnotation) {
     aStatement = mDB->GetStatement(

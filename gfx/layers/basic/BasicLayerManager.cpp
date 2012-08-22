@@ -252,10 +252,10 @@ static void
 MarkLayersHidden(Layer* aLayer, const nsIntRect& aClipRect,
                  const nsIntRect& aDirtyRect,
                  nsIntRegion& aOpaqueRegion,
-                 PRUint32 aFlags)
+                 uint32_t aFlags)
 {
   nsIntRect newClipRect(aClipRect);
-  PRUint32 newFlags = aFlags;
+  uint32_t newFlags = aFlags;
 
   // Allow aLayer or aLayer's descendants to cover underlying layers
   // only if it's opaque.
@@ -354,7 +354,7 @@ ApplyDoubleBuffering(Layer* aLayer, const nsIntRect& aVisibleRect)
         if (aLayer->GetParent()->GetEffectiveTransform().CanDraw2D(&tr)) {
           NS_ASSERTION(!tr.HasNonIntegerTranslation(),
                        "Parent can only have an integer translation");
-          cr += nsIntPoint(PRInt32(tr.x0), PRInt32(tr.y0));
+          cr += nsIntPoint(int32_t(tr.x0), int32_t(tr.y0));
         } else {
           NS_ERROR("Parent can only have an integer translation");
         }
@@ -851,7 +851,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     nsAutoTArray<Layer*, 12> children;
     container->SortChildrenBy3DZOrder(children);
 
-    for (PRUint32 i = 0; i < children.Length(); i++) {
+    for (uint32_t i = 0; i < children.Length(); i++) {
       PaintLayer(groupTarget, children.ElementAt(i), aCallback, aCallbackData, &readback);
       if (mTransactionIncomplete)
         break;
@@ -967,7 +967,7 @@ BasicShadowLayerManager::~BasicShadowLayerManager()
   MOZ_COUNT_DTOR(BasicShadowLayerManager);
 }
 
-PRInt32
+int32_t
 BasicShadowLayerManager::GetMaxTextureSize() const
 {
   if (HasShadowManager()) {

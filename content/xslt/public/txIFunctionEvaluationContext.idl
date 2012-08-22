@@ -10,8 +10,8 @@ interface txINodeSet;
 [scriptable, uuid(0ecbb00c-6a78-11d9-9791-000a95dc234c)]
 interface txIFunctionEvaluationContext : nsISupports
 {
-    readonly attribute PRUint32 position;
-    readonly attribute PRUint32 size;
+    readonly attribute uint32_t position;
+    readonly attribute uint32_t size;
     readonly attribute nsIDOMNode contextNode;
     readonly attribute nsISupports state;
 };

@@ -14,17 +14,17 @@ namespace {
 class AutoTextRun {
 public:
     AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
-                const char* aString, PRInt32 aLength)
+                const char* aString, int32_t aLength)
     {
         mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
-            reinterpret_cast<const PRUint8*>(aString), aLength,
+            reinterpret_cast<const uint8_t*>(aString), aLength,
             aRC->ThebesContext(),
             aMetrics->AppUnitsPerDevPixel(),
             ComputeFlags(aMetrics));
     }
 
     AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
-                const PRUnichar* aString, PRInt32 aLength)
+                const PRUnichar* aString, int32_t aLength)
     {
         mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
             aString, aLength,
@@ -37,8 +37,8 @@ public:
     gfxTextRun *operator->() { return mTextRun; }
 
 private:
-    static PRUint32 ComputeFlags(nsFontMetrics* aMetrics) {
-        PRUint32 flags = 0;
+    static uint32_t ComputeFlags(nsFontMetrics* aMetrics) {
+        uint32_t flags = 0;
         if (aMetrics->GetTextRunRTL()) {
             flags |= gfxTextRunFactory::TEXT_IS_RTL;
         }
@@ -50,11 +50,11 @@ private:
 
 class StubPropertyProvider : public gfxTextRun::PropertyProvider {
 public:
-    virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
+    virtual void GetHyphenationBreaks(uint32_t aStart, uint32_t aLength,
                                       bool* aBreakBefore) {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
     }
-    virtual PRInt8 GetHyphensOption() {
+    virtual int8_t GetHyphensOption() {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
         return NS_STYLE_HYPHENS_NONE;
     }
@@ -62,7 +62,7 @@ public:
         NS_ERROR("This shouldn't be called because we never enable hyphens");
         return 0;
     }
-    virtual void GetSpacing(PRUint32 aStart, PRUint32 aLength,
+    virtual void GetSpacing(uint32_t aStart, uint32_t aLength,
                             Spacing* aSpacing) {
         NS_ERROR("This shouldn't be called because we never enable spacing");
     }
@@ -247,17 +247,17 @@ nsFontMetrics::SpaceWidth()
     return CEIL_TO_TWIPS(GetMetrics().spaceWidth);
 }
 
-PRInt32
+int32_t
 nsFontMetrics::GetMaxStringLength()
 {
     const gfxFont::Metrics& m = GetMetrics();
     const double x = 32767.0 / m.maxAdvance;
-    PRInt32 len = (PRInt32)floor(x);
+    int32_t len = (int32_t)floor(x);
     return NS_MAX(1, len);
 }
 
 nscoord
-nsFontMetrics::GetWidth(const char* aString, PRUint32 aLength,
+nsFontMetrics::GetWidth(const char* aString, uint32_t aLength,
                         nsRenderingContext *aContext)
 {
     if (aLength == 0)
@@ -273,7 +273,7 @@ nsFontMetrics::GetWidth(const char* aString, PRUint32 aLength,
 }
 
 nscoord
-nsFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
+nsFontMetrics::GetWidth(const PRUnichar* aString, uint32_t aLength,
                         nsRenderingContext *aContext)
 {
     if (aLength == 0)
@@ -290,7 +290,7 @@ nsFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
 
 // Draw a string using this font handle on the surface passed in.
 void
-nsFontMetrics::DrawString(const char *aString, PRUint32 aLength,
+nsFontMetrics::DrawString(const char *aString, uint32_t aLength,
                           nscoord aX, nscoord aY,
                           nsRenderingContext *aContext)
 {
@@ -311,7 +311,7 @@ nsFontMetrics::DrawString(const char *aString, PRUint32 aLength,
 }
 
 void
-nsFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
+nsFontMetrics::DrawString(const PRUnichar* aString, uint32_t aLength,
                           nscoord aX, nscoord aY,
                           nsRenderingContext *aContext,
                           nsRenderingContext *aTextRunConstructionContext)
@@ -333,7 +333,7 @@ nsFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
 }
 
 static nsBoundingMetrics
-GetTextBoundingMetrics(nsFontMetrics* aMetrics, const PRUnichar *aString, PRUint32 aLength,
+GetTextBoundingMetrics(nsFontMetrics* aMetrics, const PRUnichar *aString, uint32_t aLength,
                        nsRenderingContext *aContext, gfxFont::BoundingBoxType aType)
 {
     if (aLength == 0)
@@ -358,7 +358,7 @@ GetTextBoundingMetrics(nsFontMetrics* aMetrics, const PRUnichar *aString, PRUint
 }
 
 nsBoundingMetrics
-nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
+nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, uint32_t aLength,
                                   nsRenderingContext *aContext)
 {
   return GetTextBoundingMetrics(this, aString, aLength, aContext, gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS);
@@ -366,7 +366,7 @@ nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
 }
 
 nsBoundingMetrics
-nsFontMetrics::GetInkBoundsForVisualOverflow(const PRUnichar *aString, PRUint32 aLength,
+nsFontMetrics::GetInkBoundsForVisualOverflow(const PRUnichar *aString, uint32_t aLength,
                                              nsRenderingContext *aContext)
 {
   return GetTextBoundingMetrics(this, aString, aLength, aContext, gfxFont::LOOSE_INK_EXTENTS);

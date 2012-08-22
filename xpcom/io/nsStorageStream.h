@@ -48,19 +48,19 @@ private:
     ~nsStorageStream();
 
     nsSegmentedBuffer* mSegmentedBuffer;
-    PRUint32           mSegmentSize;       // All segments, except possibly the last, are of this size
+    uint32_t           mSegmentSize;       // All segments, except possibly the last, are of this size
                                            //   Must be power-of-2
-    PRUint32           mSegmentSizeLog2;   // log2(mSegmentSize)
+    uint32_t           mSegmentSizeLog2;   // log2(mSegmentSize)
     bool               mWriteInProgress;   // true, if an un-Close'ed output stream exists
-    PRInt32            mLastSegmentNum;    // Last segment # in use, -1 initially
+    int32_t            mLastSegmentNum;    // Last segment # in use, -1 initially
     char*              mWriteCursor;       // Pointer to next byte to be written
     char*              mSegmentEnd;        // Pointer to one byte after end of segment
                                            //   containing the write cursor
-    PRUint32           mLogicalLength;     // Number of bytes written to stream
+    uint32_t           mLogicalLength;     // Number of bytes written to stream
 
-    NS_METHOD Seek(PRInt32 aPosition);
-    PRUint32 SegNum(PRUint32 aPosition)    {return aPosition >> mSegmentSizeLog2;}
-    PRUint32 SegOffset(PRUint32 aPosition) {return aPosition & (mSegmentSize - 1);}
+    NS_METHOD Seek(int32_t aPosition);
+    uint32_t SegNum(uint32_t aPosition)    {return aPosition >> mSegmentSizeLog2;}
+    uint32_t SegOffset(uint32_t aPosition) {return aPosition & (mSegmentSize - 1);}
 };
 
 #endif //  _nsStorageStream_h_

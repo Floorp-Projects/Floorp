@@ -33,14 +33,14 @@ nsCertPicker::~nsCertPicker()
 
 NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, 
                                         const PRUnichar *selectedNickname, 
-                                        PRInt32 certUsage, 
+                                        int32_t certUsage, 
                                         bool allowInvalid, 
                                         bool allowDuplicateNicknames, 
                                         bool *canceled, 
                                         nsIX509Cert **_retval)
 {
   nsNSSShutDownPreventionLock locker;
-  PRInt32 selectedIndex = -1;
+  int32_t selectedIndex = -1;
   bool selectionFound = false;
   PRUnichar **certNicknameList = nullptr;
   PRUnichar **certDetailsList = nullptr;
@@ -87,7 +87,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PRInt32 CertsToUse;
+  int32_t CertsToUse;
 
   for (CertsToUse = 0, node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node, certList) && CertsToUse < nicknames->numnicknames;
@@ -151,7 +151,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
     }
   }
 
-  PRInt32 i;
+  int32_t i;
   for (i = 0; i < CertsToUse; ++i) {
     nsMemory::Free(certNicknameList[i]);
     nsMemory::Free(certDetailsList[i]);

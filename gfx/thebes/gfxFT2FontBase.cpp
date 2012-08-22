@@ -25,8 +25,8 @@ gfxFT2FontBase::~gfxFT2FontBase()
     cairo_scaled_font_destroy(mScaledFont);
 }
 
-PRUint32
-gfxFT2FontBase::GetGlyph(PRUint32 aCharCode)
+uint32_t
+gfxFT2FontBase::GetGlyph(uint32_t aCharCode)
 {
     // FcFreeTypeCharIndex needs to lock the FT_Face and can end up searching
     // through all the postscript glyph names in the font.  Therefore use a
@@ -45,10 +45,10 @@ gfxFT2FontBase::GetGlyph(PRUint32 aCharCode)
     // scripts with large character sets as used for East Asian languages.
 
     struct CmapCacheSlot {
-        PRUint32 mCharCode;
-        PRUint32 mGlyphIndex;
+        uint32_t mCharCode;
+        uint32_t mGlyphIndex;
     };
-    const PRUint32 kNumSlots = 256;
+    const uint32_t kNumSlots = 256;
     static cairo_user_data_key_t sCmapCacheKey;
 
     CmapCacheSlot *slots = static_cast<CmapCacheSlot*>
@@ -88,7 +88,7 @@ gfxFT2FontBase::GetGlyph(PRUint32 aCharCode)
 }
 
 void
-gfxFT2FontBase::GetGlyphExtents(PRUint32 aGlyph, cairo_text_extents_t* aExtents)
+gfxFT2FontBase::GetGlyphExtents(uint32_t aGlyph, cairo_text_extents_t* aExtents)
 {
     NS_PRECONDITION(aExtents != NULL, "aExtents must not be NULL");
 
@@ -136,7 +136,7 @@ gfxFT2FontBase::GetMetrics()
 }
 
 // Get the glyphID of a space
-PRUint32
+uint32_t
 gfxFT2FontBase::GetSpaceGlyph()
 {
     NS_ASSERTION(GetStyle()->size != 0,
@@ -146,13 +146,13 @@ gfxFT2FontBase::GetSpaceGlyph()
 }
 
 hb_blob_t *
-gfxFT2FontBase::GetFontTable(PRUint32 aTag)
+gfxFT2FontBase::GetFontTable(uint32_t aTag)
 {
     hb_blob_t *blob;
     if (mFontEntry->GetExistingFontTable(aTag, &blob))
         return blob;
 
-    FallibleTArray<PRUint8> buffer;
+    FallibleTArray<uint8_t> buffer;
     bool haveTable = gfxFT2LockedFace(this).GetFontTable(aTag, buffer);
 
     // Cache even when there is no table to save having to open the FT_Face
@@ -161,11 +161,11 @@ gfxFT2FontBase::GetFontTable(PRUint32 aTag)
                                                 haveTable ? &buffer : nullptr);
 }
 
-PRUint32
-gfxFT2FontBase::GetGlyph(PRUint32 unicode, PRUint32 variation_selector)
+uint32_t
+gfxFT2FontBase::GetGlyph(uint32_t unicode, uint32_t variation_selector)
 {
     if (variation_selector) {
-        PRUint32 id =
+        uint32_t id =
             gfxFT2LockedFace(this).GetUVSGlyph(unicode, variation_selector);
         if (id)
             return id;
@@ -174,8 +174,8 @@ gfxFT2FontBase::GetGlyph(PRUint32 unicode, PRUint32 variation_selector)
     return GetGlyph(unicode);
 }
 
-PRInt32
-gfxFT2FontBase::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
+int32_t
+gfxFT2FontBase::GetGlyphWidth(gfxContext *aCtx, uint16_t aGID)
 {
     cairo_text_extents_t extents;
     GetGlyphExtents(aGID, &extents);

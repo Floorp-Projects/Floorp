@@ -62,7 +62,7 @@ protected:
     nsresult ReadFromCache();
     nsresult OpenCacheEntry(const nsACString & aCacheKey, nsCacheAccessMode aWriteAccess);
 
-    void WriteCharsetAndSourceToCache(PRInt32 aSource,
+    void WriteCharsetAndSourceToCache(int32_t aSource,
                                       const nsCString& aCharset);
 
     void NotifyListener();
@@ -73,10 +73,10 @@ protected:
     bool                                mCharsetAndSourceSet;
     bool                                mNeedToWriteCharset;
     bool                                mPrivateBrowsing;
-    PRInt32                             mCharsetSource;
+    int32_t                             mCharsetSource;
     nsCString                           mCharset;
-    PRInt32                             mContentLength;
-    PRUint32                            mLoadFlags;
+    int32_t                             mContentLength;
+    uint32_t                            mLoadFlags;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsISupports>               mOwner;

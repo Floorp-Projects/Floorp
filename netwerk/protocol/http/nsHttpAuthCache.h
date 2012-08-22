@@ -152,7 +152,7 @@ private:
 
     void ClearAuthEntry(const char *realm);
 
-    PRUint32 EntryCount() { return mList.Length(); }
+    uint32_t EntryCount() { return mList.Length(); }
 
 private:
     nsTArray<nsAutoPtr<nsHttpAuthEntry> > mList;
@@ -178,7 +178,7 @@ public:
     // |entry| is either null or a weak reference
     nsresult GetAuthEntryForPath(const char *scheme,
                                  const char *host,
-                                 PRInt32     port,
+                                 int32_t     port,
                                  const char *path,
                                  nsHttpAuthEntry **entry);
 
@@ -187,7 +187,7 @@ public:
     // |entry| is either null or a weak reference
     nsresult GetAuthEntryForDomain(const char *scheme,
                                    const char *host,
-                                   PRInt32     port,
+                                   int32_t     port,
                                    const char *realm,
                                    nsHttpAuthEntry **entry);
 
@@ -198,7 +198,7 @@ public:
     // null, then the entry is deleted.
     nsresult SetAuthEntry(const char *scheme,
                           const char *host,
-                          PRInt32     port,
+                          int32_t     port,
                           const char *directory,
                           const char *realm,
                           const char *credentials,
@@ -208,7 +208,7 @@ public:
 
     void ClearAuthEntry(const char *scheme,
                         const char *host,
-                        PRInt32     port,
+                        int32_t     port,
                         const char *realm);
 
     // expire all existing auth list entries including proxy auths. 
@@ -217,14 +217,14 @@ public:
 private:
     nsHttpAuthNode *LookupAuthNode(const char *scheme,
                                    const char *host,
-                                   PRInt32     port,
+                                   int32_t     port,
                                    nsCString  &key);
 
     // hash table allocation functions
     static void*        AllocTable(void *, size_t size);
     static void         FreeTable(void *, void *item);
     static PLHashEntry* AllocEntry(void *, const void *key);
-    static void         FreeEntry(void *, PLHashEntry *he, PRUintn flag);
+    static void         FreeEntry(void *, PLHashEntry *he, unsigned flag);
 
     static PLHashAllocOps gHashAllocOps;
     

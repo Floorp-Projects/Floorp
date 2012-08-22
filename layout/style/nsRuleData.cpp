@@ -26,7 +26,7 @@ nsRuleData::GetPoisonOffset()
          sizeof(nsCSSValue);
 }
 
-nsRuleData::nsRuleData(PRUint32 aSIDs, nsCSSValue* aValueStorage,
+nsRuleData::nsRuleData(uint32_t aSIDs, nsCSSValue* aValueStorage,
                        nsPresContext* aContext, nsStyleContext* aStyleContext)
   : mSIDs(aSIDs),
     mCanStoreInRuleTree(true),

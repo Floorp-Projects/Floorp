@@ -23,7 +23,7 @@ int mar_verify_signature_fp(FILE *fp,
 int mar_verify_signature_for_fp(FILE *fp, 
                                 CryptoX_ProviderHandle provider, 
                                 CryptoX_PublicKey key, 
-                                PRUint32 signatureCount,
+                                uint32_t signatureCount,
                                 char *extractedSignature);
 
 /**
@@ -43,7 +43,7 @@ int mar_verify_signature_for_fp(FILE *fp,
 int
 ReadAndUpdateVerifyContext(FILE *fp, 
                            void *buffer,
-                           PRUint32 size, 
+                           uint32_t size, 
                            CryptoX_SignatureHandle *ctx,
                            const char *err) 
 {
@@ -86,7 +86,7 @@ ReadAndUpdateVerifyContext(FILE *fp,
 int
 mar_verify_signature(const char *pathToMARFile, 
                      const char *certData,
-                     PRUint32 sizeOfCertData,
+                     uint32_t sizeOfCertData,
                      const char *certName) {
   int rv;
   CryptoX_ProviderHandle provider = CryptoX_InvalidHandleValue;
@@ -144,7 +144,7 @@ mar_verify_signature(const char *pathToMARFile,
 int
 mar_verify_signatureW(MarFile *mar, 
                       const char *certData,
-                      PRUint32 sizeOfCertData) {
+                      uint32_t sizeOfCertData) {
   int rv;
   CryptoX_ProviderHandle provider = CryptoX_InvalidHandleValue;
   CryptoX_Certificate cert;
@@ -197,11 +197,11 @@ mar_verify_signature_fp(FILE *fp,
                         CryptoX_ProviderHandle provider, 
                         CryptoX_PublicKey key) {
   char buf[5] = {0};
-  PRUint32 signatureAlgorithmID, signatureCount, signatureLen, numVerified = 0;
+  uint32_t signatureAlgorithmID, signatureCount, signatureLen, numVerified = 0;
   int rv = -1;
-  PRInt64 curPos;
+  int64_t curPos;
   char *extractedSignature;
-  PRUint32 i;
+  uint32_t i;
 
   if (!fp) {
     fprintf(stderr, "ERROR: Invalid file pointer passed.\n");
@@ -242,13 +242,13 @@ mar_verify_signature_fp(FILE *fp,
 
   for (i = 0; i < signatureCount && numVerified == 0; i++) {
     /* Get the signature algorithm ID */
-    if (fread(&signatureAlgorithmID, sizeof(PRUint32), 1, fp) != 1) {
+    if (fread(&signatureAlgorithmID, sizeof(uint32_t), 1, fp) != 1) {
       fprintf(stderr, "ERROR: Could not read signatures algorithm ID.\n");
       return CryptoX_Error;
     }
     signatureAlgorithmID = ntohl(signatureAlgorithmID);
   
-    if (fread(&signatureLen, sizeof(PRUint32), 1, fp) != 1) {
+    if (fread(&signatureLen, sizeof(uint32_t), 1, fp) != 1) {
       fprintf(stderr, "ERROR: Could not read signatures length.\n");
       return CryptoX_Error;
     }
@@ -317,12 +317,12 @@ int
 mar_verify_signature_for_fp(FILE *fp, 
                             CryptoX_ProviderHandle provider, 
                             CryptoX_PublicKey key, 
-                            PRUint32 signatureCount,
+                            uint32_t signatureCount,
                             char *extractedSignature) {
   CryptoX_SignatureHandle signatureHandle;
   char buf[BLOCKSIZE];
-  PRUint32 signatureLen;
-  PRUint32 i;
+  uint32_t signatureLen;
+  uint32_t i;
 
   if (!extractedSignature) {
     fprintf(stderr, "ERROR: Invalid parameter specified.\n");
@@ -352,7 +352,7 @@ mar_verify_signature_for_fp(FILE *fp,
    */
   if (CryptoX_Failed(ReadAndUpdateVerifyContext(fp, buf, 
                                                 SIGNATURE_BLOCK_OFFSET +
-                                                sizeof(PRUint32),
+                                                sizeof(uint32_t),
                                                 &signatureHandle,
                                                 "signature block"))) {
     return CryptoX_Error;
@@ -362,7 +362,7 @@ mar_verify_signature_for_fp(FILE *fp,
     /* Get the signature algorithm ID */
     if (CryptoX_Failed(ReadAndUpdateVerifyContext(fp,
                                                   &buf, 
-                                                  sizeof(PRUint32),
+                                                  sizeof(uint32_t),
                                                   &signatureHandle, 
                                                   "signature algorithm ID"))) {
         return CryptoX_Error;
@@ -370,7 +370,7 @@ mar_verify_signature_for_fp(FILE *fp,
 
     if (CryptoX_Failed(ReadAndUpdateVerifyContext(fp, 
                                                   &signatureLen, 
-                                                  sizeof(PRUint32), 
+                                                  sizeof(uint32_t), 
                                                   &signatureHandle, 
                                                   "signature length"))) {
       return CryptoX_Error;

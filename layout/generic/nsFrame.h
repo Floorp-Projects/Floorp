@@ -153,8 +153,8 @@ public:
   NS_IMETHOD  RemoveFrame(ChildListID     aListID,
                           nsIFrame*       aOldFrame);
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
-  virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
-  virtual void SetAdditionalStyleContext(PRInt32 aIndex,
+  virtual nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const;
+  virtual void SetAdditionalStyleContext(int32_t aIndex,
                                          nsStyleContext* aStyleContext);
   virtual void SetParent(nsIFrame* aParent);
   virtual nscoord GetBaseline() const;
@@ -169,25 +169,25 @@ public:
   NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
                         nsIFrame::Cursor& aCursor);
 
-  NS_IMETHOD  GetPointFromOffset(PRInt32                inOffset,
+  NS_IMETHOD  GetPointFromOffset(int32_t                inOffset,
                                  nsPoint*               outPoint);
 
-  NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
+  NS_IMETHOD  GetChildFrameContainingOffset(int32_t     inContentOffset,
                                  bool                   inHint,
-                                 PRInt32*               outFrameContentOffset,
+                                 int32_t*               outFrameContentOffset,
                                  nsIFrame*              *outChildFrame);
 
   static nsresult  GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                         nsPeekOffsetStruct *aPos, 
                                         nsIFrame *aBlockFrame, 
-                                        PRInt32 aLineStart, 
-                                        PRInt8 aOutSideLimit
+                                        int32_t aLineStart, 
+                                        int8_t aOutSideLimit
                                         );
 
   NS_IMETHOD  CharacterDataChanged(CharacterDataChangeInfo* aInfo);
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType);
+                               int32_t         aModType);
   virtual nsSplittableType GetSplittableType() const;
   virtual nsIFrame* GetPrevContinuation() const;
   NS_IMETHOD  SetPrevContinuation(nsIFrame*);
@@ -200,15 +200,15 @@ public:
   NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const;
   virtual nsIAtom* GetType() const;
 
-  NS_IMETHOD  IsSelectable(bool* aIsSelectable, PRUint8* aSelectStyle) const;
+  NS_IMETHOD  IsSelectable(bool* aIsSelectable, uint8_t* aSelectStyle) const;
 
   NS_IMETHOD  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon);
 
-  virtual bool PeekOffsetNoAmount(bool aForward, PRInt32* aOffset);
-  virtual bool PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
+  virtual bool PeekOffsetNoAmount(bool aForward, int32_t* aOffset);
+  virtual bool PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true);
   virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
-                                PRInt32* aOffset, PeekWordState *aState);
+                                int32_t* aOffset, PeekWordState *aState);
   /**
    * Check whether we should break at a boundary between punctuation and
    * non-punctuation. Only call it at a punctuation boundary
@@ -222,9 +222,9 @@ public:
                                      bool aPunctAfter, bool aWhitespaceAfter,
                                      bool aIsKeyboardSelect);
 
-  NS_IMETHOD  CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, bool aRecurse, bool *aFinished, bool *_retval);
+  NS_IMETHOD  CheckVisibility(nsPresContext* aContext, int32_t aStartIndex, int32_t aEndIndex, bool aRecurse, bool *aFinished, bool *_retval);
 
-  NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
+  NS_IMETHOD  GetOffsets(int32_t &aStart, int32_t &aEnd) const;
   virtual void ChildIsDirty(nsIFrame* aChild);
 
 #ifdef ACCESSIBILITY
@@ -262,7 +262,7 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRUint32 aFlags) MOZ_OVERRIDE;
+                             uint32_t aFlags) MOZ_OVERRIDE;
 
   // Compute tight bounds assuming this frame honours its border, background
   // and outline, its children's tight bounds, and nothing else.
@@ -339,7 +339,7 @@ public:
 
   NS_IMETHOD PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                                     nsSelectionAmount aAmountForward,
-                                    PRInt32 aStartPos,
+                                    int32_t aStartPos,
                                     nsPresContext* aPresContext,
                                     bool aJumpLines,
                                     bool aMultipleSelection);
@@ -407,9 +407,9 @@ public:
 
   // Helper function to return the index in parent of the frame's content
   // object. Returns -1 on error or if the frame doesn't have a content object
-  static PRInt32 ContentIndexInContainer(const nsIFrame* aFrame);
+  static int32_t ContentIndexInContainer(const nsIFrame* aFrame);
 
-  static void IndentBy(FILE* out, PRInt32 aIndent) {
+  static void IndentBy(FILE* out, int32_t aIndent) {
     while (--aIndent >= 0) fputs("  ", out);
   }
   
@@ -435,7 +435,7 @@ public:
    * some custom behavior that requires changing how the outer "frame"
    * XML container is dumped.
    */
-  virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+  virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent);
   
   nsresult MakeFrameName(const nsAString& aKind, nsAString& aResult) const;
 
@@ -451,7 +451,7 @@ public:
   static void  DisplayReflowExit(nsPresContext*      aPresContext,
                                  nsIFrame*            aFrame,
                                  nsHTMLReflowMetrics& aMetrics,
-                                 PRUint32             aStatus,
+                                 uint32_t             aStatus,
                                  void*                aFrameTreeNode);
   static void  DisplayLayoutExit(nsIFrame* aFrame,
                                  void* aFrameTreeNode);
@@ -532,9 +532,9 @@ protected:
    * which kind of content this is for
    */
   nsresult DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
-      nsDisplayList* aList, PRUint16 aContentType = nsISelectionDisplay::DISPLAY_FRAMES);
+      nsDisplayList* aList, uint16_t aContentType = nsISelectionDisplay::DISPLAY_FRAMES);
 
-  PRInt16 DisplaySelection(nsPresContext* aPresContext, bool isOkToTurnOn = false);
+  int16_t DisplaySelection(nsPresContext* aPresContext, bool isOkToTurnOn = false);
   
   // Style post processing hook
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
@@ -549,7 +549,7 @@ public:
   // frame.
   // If aScrollLock is true, don't break outside scrollframes when looking for a
   // containing block frame.
-  static PRInt32 GetLineNumber(nsIFrame *aFrame,
+  static int32_t GetLineNumber(nsIFrame *aFrame,
                                bool aLockScroll,
                                nsIFrame** aContainingBlock = nullptr);
 
@@ -603,8 +603,8 @@ protected:
   //  (enums for this are defined in nsIFrame.h)
   NS_IMETHOD GetDataForTableSelection(const nsFrameSelection *aFrameSelection,
                                       nsIPresShell *aPresShell, nsMouseEvent *aMouseEvent, 
-                                      nsIContent **aParentContent, PRInt32 *aContentOffset, 
-                                      PRInt32 *aTarget);
+                                      nsIContent **aParentContent, int32_t *aContentOffset, 
+                                      int32_t *aTarget);
 
   // Fills aCursor with the appropriate information from ui
   static void FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
@@ -640,13 +640,13 @@ private:
 public:
   // Formerly the nsIFrameDebug interface
 
-  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD  List(FILE* out, int32_t aIndent) const;
   /**
    * lists the frames beginning from the root frame
    * - calls root frame's List(...)
    */
   static void RootFrameList(nsPresContext* aPresContext,
-                            FILE* out, PRInt32 aIndent);
+                            FILE* out, int32_t aIndent);
 
   static void DumpFrameTree(nsIFrame* aFrame);
 
@@ -669,7 +669,7 @@ public:
    * For more information, see XXX.
    */
   NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext,
-                                 FILE* out, PRInt32 aIndent);
+                                 FILE* out, int32_t aIndent);
 
   /**
    * See if style tree verification is enabled. To enable style tree

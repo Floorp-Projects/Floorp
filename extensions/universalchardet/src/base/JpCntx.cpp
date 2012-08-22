@@ -7,7 +7,7 @@
 #include "JpCntx.h"
 
 //This is hiragana 2-char sequence table, the number in each cell represents its frequency category
-const PRUint8 jp2CharContext[83][83] = 
+const uint8_t jp2CharContext[83][83] = 
 { 
 { 0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,},
 { 2,4,0,4,0,3,0,4,0,3,4,4,4,2,4,3,3,4,3,2,3,3,4,2,3,3,3,2,4,1,4,3,3,1,5,4,3,4,3,4,3,5,3,0,3,5,4,2,0,3,1,0,3,3,0,3,3,0,1,1,0,4,3,0,3,3,0,4,0,2,0,3,5,5,5,5,4,0,4,1,0,3,4,},
@@ -96,11 +96,11 @@ const PRUint8 jp2CharContext[83][83] =
 
 #define MINIMUM_DATA_THRESHOLD  4
 
-void JapaneseContextAnalysis::HandleData(const char* aBuf, PRUint32 aLen)
+void JapaneseContextAnalysis::HandleData(const char* aBuf, uint32_t aLen)
 {
-  PRUint32 charLen;
-  PRInt32 order;
-  PRUint32 i;
+  uint32_t charLen;
+  int32_t order;
+  uint32_t i;
   
   if (mDone)
     return;
@@ -141,7 +141,7 @@ void JapaneseContextAnalysis::HandleData(const char* aBuf, PRUint32 aLen)
 void JapaneseContextAnalysis::Reset(bool aIsPreferredLanguage)
 {
   mTotalRel = 0;
-  for (PRUint32 i = 0; i < NUM_OF_CATEGORY; i++)
+  for (uint32_t i = 0; i < NUM_OF_CATEGORY; i++)
     mRelSample[i] = 0;
   mNeedToSkipCharNum = 0;
   mLastCharOrder = -1;
@@ -160,7 +160,7 @@ float  JapaneseContextAnalysis::GetConfidence(void)
 }
 
 
-PRInt32 SJISContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
+int32_t SJISContextAnalysis::GetOrder(const char* str, uint32_t *charLen)
 {
   //find out current char's byte length
   if (((unsigned char)*str >= (unsigned char)0x81 && (unsigned char)*str <= (unsigned char)0x9f) ||
@@ -177,7 +177,7 @@ PRInt32 SJISContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
   return -1;
 }
 
-PRInt32 EUCJPContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
+int32_t EUCJPContextAnalysis::GetOrder(const char* str, uint32_t *charLen)
 {
   //find out current char's byte length
   if ((unsigned char)*str == (unsigned char)0x8e ||

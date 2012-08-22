@@ -49,11 +49,11 @@ public:
     return mItems.IsEmpty();
   }
 
-  PRUint32 Length() const {
+  uint32_t Length() const {
     return mItems.Length();
   }
 
-  const SVGPoint& operator[](PRUint32 aIndex) const {
+  const SVGPoint& operator[](uint32_t aIndex) const {
     return mItems[aIndex];
   }
 
@@ -64,7 +64,7 @@ public:
                   mItems.Length() * sizeof(SVGPoint)) == 0;
   }
 
-  bool SetCapacity(PRUint32 aSize) {
+  bool SetCapacity(uint32_t aSize) {
     return mItems.SetCapacity(aSize);
   }
 
@@ -87,7 +87,7 @@ protected:
    */
   nsresult CopyFrom(const SVGPointList& rhs);
 
-  SVGPoint& operator[](PRUint32 aIndex) {
+  SVGPoint& operator[](uint32_t aIndex) {
     return mItems[aIndex];
   }
 
@@ -95,7 +95,7 @@ protected:
    * This may fail (return false) on OOM if the internal capacity is being
    * increased, in which case the list will be left unmodified.
    */
-  bool SetLength(PRUint32 aNumberOfItems) {
+  bool SetLength(uint32_t aNumberOfItems) {
     return mItems.SetLength(aNumberOfItems);
   }
 
@@ -111,20 +111,20 @@ private:
     mItems.Clear();
   }
 
-  bool InsertItem(PRUint32 aIndex, const SVGPoint &aPoint) {
+  bool InsertItem(uint32_t aIndex, const SVGPoint &aPoint) {
     if (aIndex >= mItems.Length()) {
       aIndex = mItems.Length();
     }
     return !!mItems.InsertElementAt(aIndex, aPoint);
   }
 
-  void ReplaceItem(PRUint32 aIndex, const SVGPoint &aPoint) {
+  void ReplaceItem(uint32_t aIndex, const SVGPoint &aPoint) {
     NS_ABORT_IF_FALSE(aIndex < mItems.Length(),
                       "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mItems[aIndex] = aPoint;
   }
 
-  void RemoveItem(PRUint32 aIndex) {
+  void RemoveItem(uint32_t aIndex) {
     NS_ABORT_IF_FALSE(aIndex < mItems.Length(),
                       "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mItems.RemoveElementAt(aIndex);
@@ -185,13 +185,13 @@ public:
   nsresult CopyFrom(const SVGPointList& rhs) {
     return SVGPointList::CopyFrom(rhs);
   }
-  const SVGPoint& operator[](PRUint32 aIndex) const {
+  const SVGPoint& operator[](uint32_t aIndex) const {
     return SVGPointList::operator[](aIndex);
   }
-  SVGPoint& operator[](PRUint32 aIndex) {
+  SVGPoint& operator[](uint32_t aIndex) {
     return SVGPointList::operator[](aIndex);
   }
-  bool SetLength(PRUint32 aNumberOfItems) {
+  bool SetLength(uint32_t aNumberOfItems) {
     return SVGPointList::SetLength(aNumberOfItems);
   }
 

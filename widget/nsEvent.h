@@ -95,7 +95,7 @@ enum Modifier {
   MODIFIER_OS         = 0x0400
 };
 
-typedef PRUint16 Modifiers;
+typedef uint16_t Modifiers;
 
 } // namespace widget
 } // namespace mozilla

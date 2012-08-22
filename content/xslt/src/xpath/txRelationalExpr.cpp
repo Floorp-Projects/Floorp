@@ -31,7 +31,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
         rv = aContext->recycler()->getStringResult(getter_AddRefs(strResult));
         NS_ENSURE_SUCCESS(rv, false);
 
-        PRInt32 i;
+        int32_t i;
         for (i = 0; i < nodeSet->size(); ++i) {
             strResult->mValue.Truncate();
             txXPathNodeUtils::appendNodeValue(nodeSet->get(i),
@@ -56,7 +56,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
         rv = aContext->recycler()->getStringResult(getter_AddRefs(strResult));
         NS_ENSURE_SUCCESS(rv, false);
 
-        PRInt32 i;
+        int32_t i;
         for (i = 0; i < nodeSet->size(); ++i) {
             strResult->mValue.Truncate();
             txXPathNodeUtils::appendNodeValue(nodeSet->get(i),

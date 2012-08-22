@@ -36,17 +36,17 @@ public:
 /**
   see mozITXTToHTMLConv::ScanTXT
  */
-  void ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, PRUint32 whattodo, nsString& aOutString);
+  void ScanTXT(const PRUnichar * aInString, int32_t aInStringLength, uint32_t whattodo, nsString& aOutString);
 
 /**
   see mozITXTToHTMLConv::ScanHTML. We will modify aInString potentially...
  */
-  void ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOutString);
+  void ScanHTML(nsString& aInString, uint32_t whattodo, nsString &aOutString);
 
 /**
   see mozITXTToHTMLConv::CiteLevelTXT
  */
-  PRInt32 CiteLevelTXT(const PRUnichar * line,PRUint32& logLineStart);
+  int32_t CiteLevelTXT(const PRUnichar * line,uint32_t& logLineStart);
 
 
 //////////////////////////////////////////////////////////
@@ -64,8 +64,8 @@ protected:
   @param pos (in): position of "@" (case 1) or first "." (case 2 and 3)
   @return Completed URL at success and empty string at failure
  */
-  void CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aInLength, 
-                              const PRUint32 pos, nsString& aOutString);
+  void CompleteAbbreviatedURL(const PRUnichar * aInString, int32_t aInLength, 
+                              const uint32_t pos, nsString& aOutString);
 
 
 //////////////////////////////////////////////////////////
@@ -92,15 +92,15 @@ private:
   @param after (in): limitation after rep
   @return true, if rep is found and limitation spec is met or rep is empty
 */
-  bool ItMatchesDelimited(const PRUnichar * aInString, PRInt32 aInLength,
-      const PRUnichar * rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after);
+  bool ItMatchesDelimited(const PRUnichar * aInString, int32_t aInLength,
+      const PRUnichar * rep, int32_t aRepLen, LIMTYPE before, LIMTYPE after);
 
 /**
   @param see ItMatchesDelimited
   @return Number of ItMatchesDelimited in text
 */
-  PRUint32 NumberOfMatches(const PRUnichar * aInString, PRInt32 aInStringLength,
-      const PRUnichar* rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after);
+  uint32_t NumberOfMatches(const PRUnichar * aInString, int32_t aInStringLength,
+      const PRUnichar* rep, int32_t aRepLen, LIMTYPE before, LIMTYPE after);
 
 /**
   Currently only changes "<", ">" and "&". All others stay as they are.<p>
@@ -127,8 +127,8 @@ private:
   @param aLength (in) length of the buffer
   @param aOutString (out) unescaped buffer
 */
-  void UnescapeStr(const PRUnichar * aInString, PRInt32 aStartPos,
-                   PRInt32 aLength, nsString& aOutString);
+  void UnescapeStr(const PRUnichar * aInString, int32_t aStartPos,
+                   int32_t aLength, nsString& aOutString);
 
 /**
   <em>Note</em>: I use different strategies to pass context between the
@@ -153,9 +153,9 @@ private:
   @param replaceAfter (out): Number of chars of URL after pos
   @return URL found
 */
-  bool FindURL(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
-          const PRUint32 whathasbeendone,
-          nsString& outputHTML, PRInt32& replaceBefore, PRInt32& replaceAfter);
+  bool FindURL(const PRUnichar * aInString, int32_t aInLength, const uint32_t pos,
+          const uint32_t whathasbeendone,
+          nsString& outputHTML, int32_t& replaceBefore, int32_t& replaceAfter);
 
   enum modetype {
          unknown,
@@ -187,8 +187,8 @@ private:
  *             similar) starts
  * @return |check|-conform start has been found
  */
-  bool FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
-            	               const modetype check, PRUint32& start);
+  bool FindURLStart(const PRUnichar * aInString, int32_t aInLength, const uint32_t pos,
+            	               const modetype check, uint32_t& start);
 
 /**
  * @param text (in), pos (in): see FindURL
@@ -197,8 +197,8 @@ private:
  * @param end (out): Similar to |start| param of FindURLStart
  * @return |check|-conform end has been found
  */
-  bool FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLength, const PRUint32 pos,
-           const modetype check, const PRUint32 start, PRUint32& end);
+  bool FindURLEnd(const PRUnichar * aInString, int32_t aInStringLength, const uint32_t pos,
+           const modetype check, const uint32_t start, uint32_t& end);
 
 /**
  * @param text (in), pos (in), whathasbeendone (in): see FindURL
@@ -210,11 +210,11 @@ private:
  *             Should be placed between the <a> and </a> tags.
  * @param replaceBefore(out), replaceAfter (out): see FindURL
  */
-  void CalculateURLBoundaries(const PRUnichar * aInString, PRInt32 aInStringLength, 
-     const PRUint32 pos, const PRUint32 whathasbeendone,
-     const modetype check, const PRUint32 start, const PRUint32 end,
+  void CalculateURLBoundaries(const PRUnichar * aInString, int32_t aInStringLength, 
+     const uint32_t pos, const uint32_t whathasbeendone,
+     const modetype check, const uint32_t start, const uint32_t end,
      nsString& txtURL, nsString& desc,
-     PRInt32& replaceBefore, PRInt32& replaceAfter);
+     int32_t& replaceBefore, int32_t& replaceAfter);
 
 /**
  * @param txtURL (in), desc (in): see CalculateURLBoundaries
@@ -243,11 +243,11 @@ private:
   @param open (in/out): Number of currently open tags of type tagHTML
   @return Conversion succeeded
 */
-  bool StructPhraseHit(const PRUnichar * aInString, PRInt32 aInStringLength, bool col0,
+  bool StructPhraseHit(const PRUnichar * aInString, int32_t aInStringLength, bool col0,
      const PRUnichar* tagTXT,
-     PRInt32 aTagTxtLen, 
+     int32_t aTagTxtLen, 
      const char* tagHTML, const char* attributeHTML,
-     nsString& aOutputString, PRUint32& openTags);
+     nsString& aOutputString, uint32_t& openTags);
 
 /**
   @param text (in), col0 (in): see GlyphHit
@@ -257,9 +257,9 @@ private:
   @param glyphTextLen (out): see GlyphHit
 */
   bool
-         SmilyHit(const PRUnichar * aInString, PRInt32 aLength, bool col0,
+         SmilyHit(const PRUnichar * aInString, int32_t aLength, bool col0,
          const char* tagTXT, const char* imageName,
-         nsString& outputHTML, PRInt32& glyphTextLen);
+         nsString& outputHTML, int32_t& glyphTextLen);
 
 /**
   Checks, if we can replace some chars at the start of line with prettier HTML
@@ -276,8 +276,8 @@ private:
   @param glyphTextLen (out): Length of original text to replace
   @return see StructPhraseHit
 */
-  bool GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, bool col0,
-       nsString& aOutString, PRInt32& glyphTextLen);
+  bool GlyphHit(const PRUnichar * aInString, int32_t aInLength, bool col0,
+       nsString& aOutString, int32_t& glyphTextLen);
 
 /**
   Check if a given url should be linkified.
@@ -287,8 +287,8 @@ private:
 };
 
 // It's said, that Win32 and Mac don't like static const members
-const PRInt32 mozTXTToHTMLConv_lastMode = 4;
+const int32_t mozTXTToHTMLConv_lastMode = 4;
 	                        // Needed (only) by mozTXTToHTMLConv::FindURL
-const PRInt32 mozTXTToHTMLConv_numberOfModes = 4;  // dito; unknown not counted
+const int32_t mozTXTToHTMLConv_numberOfModes = 4;  // dito; unknown not counted
 
 #endif

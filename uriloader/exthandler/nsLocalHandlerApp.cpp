@@ -81,13 +81,13 @@ nsLocalHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval)
     return NS_OK;
 
   // Check the command line parameter list lengths
-  PRUint32 len;
+  uint32_t len;
   localHandlerApp->GetParameterCount(&len);
   if (mParameters.Length() != len)
     return NS_OK;
 
   // Check the command line params lists
-  for (PRUint32 idx = 0; idx < mParameters.Length(); idx++) {
+  for (uint32_t idx = 0; idx < mParameters.Length(); idx++) {
     nsAutoString param;
     if (NS_FAILED(localHandlerApp->GetParameter(idx, param)) ||
         !param.Equals(mParameters[idx]))
@@ -143,7 +143,7 @@ nsLocalHandlerApp::SetExecutable(nsIFile *aExecutable)
 
 /* readonly attribute unsigned long parameterCount; */
 NS_IMETHODIMP
-nsLocalHandlerApp::GetParameterCount(PRUint32 *aParameterCount)
+nsLocalHandlerApp::GetParameterCount(uint32_t *aParameterCount)
 {
   *aParameterCount = mParameters.Length();
   return NS_OK;
@@ -167,7 +167,7 @@ nsLocalHandlerApp::AppendParameter(const nsAString & aParam)
 
 /* AString getParameter (in unsigned long parameterIndex); */
 NS_IMETHODIMP
-nsLocalHandlerApp::GetParameter(PRUint32 parameterIndex, nsAString & _retval)
+nsLocalHandlerApp::GetParameter(uint32_t parameterIndex, nsAString & _retval)
 {
   if (mParameters.Length() <= parameterIndex)
     return NS_ERROR_INVALID_ARG;

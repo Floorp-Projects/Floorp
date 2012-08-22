@@ -31,7 +31,7 @@ class ErrorCallbackRunnable : public nsRunnable
 {
 public:
   ErrorCallbackRunnable(nsIDOMGetUserMediaErrorCallback* aError,
-    const nsString& aErrorMsg, PRUint64 aWindowID)
+    const nsString& aErrorMsg, uint64_t aWindowID)
     : mError(aError)
     , mErrorMsg(aErrorMsg)
     , mWindowID(aWindowID) {}
@@ -50,7 +50,7 @@ public:
 private:
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
   const nsString mErrorMsg;
-  PRUint64 mWindowID;
+  uint64_t mWindowID;
 };
 
 /**
@@ -63,7 +63,7 @@ class SuccessCallbackRunnable : public nsRunnable
 {
 public:
   SuccessCallbackRunnable(nsIDOMGetUserMediaSuccessCallback* aSuccess,
-    nsIDOMFile* aFile, PRUint64 aWindowID)
+    nsIDOMFile* aFile, uint64_t aWindowID)
     : mSuccess(aSuccess)
     , mFile(aFile)
     , mWindowID(aWindowID) {}
@@ -83,7 +83,7 @@ public:
 private:
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
   nsCOMPtr<nsIDOMFile> mFile;
-  PRUint64 mWindowID;
+  uint64_t mWindowID;
 };
 
 /**
@@ -97,7 +97,7 @@ class GetUserMediaStreamRunnable : public nsRunnable
 public:
   GetUserMediaStreamRunnable(nsIDOMGetUserMediaSuccessCallback* aSuccess,
     MediaEngineSource* aSource, StreamListeners* aListeners,
-    PRUint64 aWindowID, TrackID aTrackID)
+    uint64_t aWindowID, TrackID aTrackID)
     : mSuccess(aSuccess)
     , mSource(aSource)
     , mListeners(aListeners)
@@ -142,7 +142,7 @@ private:
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
   nsRefPtr<MediaEngineSource> mSource;
   StreamListeners* mListeners;
-  PRUint64 mWindowID;
+  uint64_t mWindowID;
   TrackID mTrackID;
 };
 
@@ -161,7 +161,7 @@ public:
   GetUserMediaRunnable(bool aAudio, bool aVideo, bool aPicture,
     nsIDOMGetUserMediaSuccessCallback* aSuccess,
     nsIDOMGetUserMediaErrorCallback* aError,
-    StreamListeners* aListeners, PRUint64 aWindowID)
+    StreamListeners* aListeners, uint64_t aWindowID)
     : mAudio(aAudio)
     , mVideo(aVideo)
     , mPicture(aPicture)
@@ -278,7 +278,7 @@ public:
     nsTArray<nsRefPtr<MediaEngineVideoSource> > videoSources;
     mManager->GetBackend()->EnumerateVideoDevices(&videoSources);
 
-    PRUint32 count = videoSources.Length();
+    uint32_t count = videoSources.Length();
     if (!count) {
       NS_DispatchToMainThread(new ErrorCallbackRunnable(
         mError, NS_LITERAL_STRING("NO_DEVICES_FOUND"), mWindowID
@@ -299,7 +299,7 @@ public:
     nsTArray<nsRefPtr<MediaEngineVideoSource> > videoSources;
     mManager->GetBackend()->EnumerateVideoDevices(&videoSources);
 
-    PRUint32 count = videoSources.Length();
+    uint32_t count = videoSources.Length();
     if (!count) {
       NS_DispatchToMainThread(new ErrorCallbackRunnable(
         mError, NS_LITERAL_STRING("NO_DEVICES_FOUND"), mWindowID
@@ -318,7 +318,7 @@ public:
     nsTArray<nsRefPtr<MediaEngineAudioSource> > audioSources;
     mManager->GetBackend()->EnumerateAudioDevices(&audioSources);
 
-    PRUint32 count = audioSources.Length();
+    uint32_t count = audioSources.Length();
     if (!count) {
       NS_DispatchToMainThread(new ErrorCallbackRunnable(
         mError, NS_LITERAL_STRING("NO_DEVICES_FOUND"), mWindowID
@@ -338,7 +338,7 @@ private:
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
   StreamListeners* mListeners;
-  PRUint64 mWindowID;
+  uint64_t mWindowID;
 
   MediaManager* mManager;
 };
@@ -384,7 +384,7 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow, nsIMediaStreamOptions* aParam
       return NS_ERROR_FAILURE;
     }
 
-    PRUint32 permission;
+    uint32_t permission;
     nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
     pm->TestPermission(doc->NodePrincipal(), &permission);
     if (aWindow && (permission == nsIPopupWindowManager::DENY_POPUP)) {
@@ -410,7 +410,7 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow, nsIMediaStreamOptions* aParam
 
   // Store the WindowID in a hash table and mark as active. The entry is removed
   // when this window is closed or navigated away from.
-  PRUint64 windowID = aWindow->WindowID();
+  uint64_t windowID = aWindow->WindowID();
   StreamListeners* listeners = mActiveWindows.Get(windowID);
   if (!listeners) {
     listeners = new StreamListeners;
@@ -456,7 +456,7 @@ MediaManager::GetActiveWindows()
 }
 
 void
-MediaManager::OnNavigation(PRUint64 aWindowID)
+MediaManager::OnNavigation(uint64_t aWindowID)
 {
   // Invalidate this window. The runnables check this value before making
   // a call to content.
@@ -465,8 +465,8 @@ MediaManager::OnNavigation(PRUint64 aWindowID)
     return;
   }
 
-  PRUint32 length = listeners->Length();
-  for (PRUint32 i = 0; i < length; i++) {
+  uint32_t length = listeners->Length();
+  for (uint32_t i = 0; i < length; i++) {
     nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
       listeners->ElementAt(i);
     listener->Invalidate();

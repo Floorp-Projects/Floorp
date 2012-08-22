@@ -124,7 +124,7 @@ SmsParent::RecvHasSupport(bool* aHasSupport)
 }
 
 bool
-SmsParent::RecvGetNumberOfMessagesForText(const nsString& aText, PRUint16* aResult)
+SmsParent::RecvGetNumberOfMessagesForText(const nsString& aText, uint16_t* aResult)
 {
   *aResult = 0;
 
@@ -137,7 +137,7 @@ SmsParent::RecvGetNumberOfMessagesForText(const nsString& aText, PRUint16* aResu
 
 bool
 SmsParent::RecvSendMessage(const nsString& aNumber, const nsString& aMessage,
-                           const PRInt32& aRequestId, const PRUint64& aProcessId)
+                           const int32_t& aRequestId, const uint64_t& aProcessId)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, true);
@@ -149,7 +149,7 @@ SmsParent::RecvSendMessage(const nsString& aNumber, const nsString& aMessage,
 bool
 SmsParent::RecvSaveReceivedMessage(const nsString& aSender,
                                    const nsString& aBody,
-                                   const PRUint64& aDate, PRInt32* aId)
+                                   const uint64_t& aDate, int32_t* aId)
 {
   *aId = -1;
 
@@ -164,7 +164,7 @@ SmsParent::RecvSaveReceivedMessage(const nsString& aSender,
 bool
 SmsParent::RecvSaveSentMessage(const nsString& aRecipient,
                                const nsString& aBody,
-                               const PRUint64& aDate, PRInt32* aId)
+                               const uint64_t& aDate, int32_t* aId)
 {
   *aId = -1;
 
@@ -177,8 +177,8 @@ SmsParent::RecvSaveSentMessage(const nsString& aRecipient,
 }
 
 bool
-SmsParent::RecvGetMessage(const PRInt32& aMessageId, const PRInt32& aRequestId,
-                          const PRUint64& aProcessId)
+SmsParent::RecvGetMessage(const int32_t& aMessageId, const int32_t& aRequestId,
+                          const uint64_t& aProcessId)
 {
   nsCOMPtr<nsISmsDatabaseService> smsDBService =
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
@@ -189,8 +189,8 @@ SmsParent::RecvGetMessage(const PRInt32& aMessageId, const PRInt32& aRequestId,
 }
 
 bool
-SmsParent::RecvDeleteMessage(const PRInt32& aMessageId, const PRInt32& aRequestId,
-                             const PRUint64& aProcessId)
+SmsParent::RecvDeleteMessage(const int32_t& aMessageId, const int32_t& aRequestId,
+                             const uint64_t& aProcessId)
 {
   nsCOMPtr<nsISmsDatabaseService> smsDBService =
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
@@ -203,8 +203,8 @@ SmsParent::RecvDeleteMessage(const PRInt32& aMessageId, const PRInt32& aRequestI
 bool
 SmsParent::RecvCreateMessageList(const SmsFilterData& aFilter,
                                  const bool& aReverse,
-                                 const PRInt32& aRequestId,
-                                 const PRUint64& aProcessId)
+                                 const int32_t& aRequestId,
+                                 const uint64_t& aProcessId)
 {
   nsCOMPtr<nsISmsDatabaseService> smsDBService =
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
@@ -217,9 +217,9 @@ SmsParent::RecvCreateMessageList(const SmsFilterData& aFilter,
 }
 
 bool
-SmsParent::RecvGetNextMessageInList(const PRInt32& aListId,
-                                    const PRInt32& aRequestId,
-                                    const PRUint64& aProcessId)
+SmsParent::RecvGetNextMessageInList(const int32_t& aListId,
+                                    const int32_t& aRequestId,
+                                    const uint64_t& aProcessId)
 {
   nsCOMPtr<nsISmsDatabaseService> smsDBService =
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
@@ -231,7 +231,7 @@ SmsParent::RecvGetNextMessageInList(const PRInt32& aListId,
 }
 
 bool
-SmsParent::RecvClearMessageList(const PRInt32& aListId)
+SmsParent::RecvClearMessageList(const int32_t& aListId)
 {
   nsCOMPtr<nsISmsDatabaseService> smsDBService =
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
@@ -243,10 +243,10 @@ SmsParent::RecvClearMessageList(const PRInt32& aListId)
 }
 
 bool
-SmsParent::RecvMarkMessageRead(const PRInt32& aMessageId,
+SmsParent::RecvMarkMessageRead(const int32_t& aMessageId,
                                const bool& aValue,
-                               const PRInt32& aRequestId,
-                               const PRUint64& aProcessId)
+                               const int32_t& aRequestId,
+                               const uint64_t& aProcessId)
 {
   nsCOMPtr<nsISmsDatabaseService> smsDBService =
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);

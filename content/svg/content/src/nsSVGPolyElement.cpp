@@ -88,7 +88,7 @@ nsSVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 
   float px = 0.0, py = 0.0, prevAngle = 0.0;
 
-  for (PRUint32 i = 0; i < points.Length(); ++i) {
+  for (uint32_t i = 0; i < points.Length(); ++i) {
     float x = points[i].mX;
     float y = points[i].mY;
     float angle = atan2(y-py, x-px);
@@ -117,7 +117,7 @@ nsSVGPolyElement::ConstructPath(gfxContext *aCtx)
     return;
 
   aCtx->MoveTo(points[0]);
-  for (PRUint32 i = 1; i < points.Length(); ++i) {
+  for (uint32_t i = 1; i < points.Length(); ++i) {
     aCtx->LineTo(points[i]);
   }
 }

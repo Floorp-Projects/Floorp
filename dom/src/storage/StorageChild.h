@@ -32,15 +32,15 @@ public:
   virtual bool CacheStoragePermissions();
   
   virtual nsTArray<nsString>* GetKeys(bool aCallerSecure);
-  virtual nsresult GetLength(bool aCallerSecure, PRUint32* aLength);
-  virtual nsresult GetKey(bool aCallerSecure, PRUint32 aIndex, nsAString& aKey);
+  virtual nsresult GetLength(bool aCallerSecure, uint32_t* aLength);
+  virtual nsresult GetKey(bool aCallerSecure, uint32_t aIndex, nsAString& aKey);
   virtual nsIDOMStorageItem* GetValue(bool aCallerSecure, const nsAString& aKey,
                                       nsresult* rv);
   virtual nsresult SetValue(bool aCallerSecure, const nsAString& aKey,
                             const nsAString& aData, nsAString& aOldValue);
   virtual nsresult RemoveValue(bool aCallerSecure, const nsAString& aKey,
                                nsAString& aOldValue);
-  virtual nsresult Clear(bool aCallerSecure, PRInt32* aOldCount);
+  virtual nsresult Clear(bool aCallerSecure, int32_t* aOldCount);
 
   virtual bool CanUseChromePersist();
 

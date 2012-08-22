@@ -13,7 +13,7 @@ ReusableTileStoreOGL::~ReusableTileStoreOGL()
     return;
 
   mContext->MakeCurrent();
-  for (PRUint32 i = 0; i < mTiles.Length(); i++)
+  for (uint32_t i = 0; i < mTiles.Length(); i++)
     mContext->fDeleteTextures(1, &mTiles[i]->mTexture.mTextureHandle);
   mTiles.Clear();
 }
@@ -55,7 +55,7 @@ ReusableTileStoreOGL::InvalidateTiles(TiledThebesLayerOGL* aLayer,
   // assumption is that anything within this area should be valid, so there's
   // no need to keep invalid tiles there.
   mContext->MakeCurrent();
-  for (PRUint32 i = 0; i < mTiles.Length();) {
+  for (uint32_t i = 0; i < mTiles.Length();) {
     ReusableTiledTextureOGL* tile = mTiles[i];
 
     // Check if the tile region is contained within the new valid region.
@@ -229,7 +229,7 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
   }
 
   // Render old tiles to fill in gaps we haven't had the time to render yet.
-  for (PRUint32 i = 0; i < mTiles.Length(); i++) {
+  for (uint32_t i = 0; i < mTiles.Length(); i++) {
     ReusableTiledTextureOGL* tile = mTiles[i];
 
     // Work out the scaling factor in case of resolution differences.

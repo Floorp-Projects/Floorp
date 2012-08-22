@@ -146,8 +146,8 @@ nsresult TimerThread::Shutdown()
     mTimers.Clear();
   }
 
-  PRUint32 timersCount = timers.Length();
-  for (PRUint32 i = 0; i < timersCount; i++) {
+  uint32_t timersCount = timers.Length();
+  for (uint32_t i = 0; i < timersCount; i++) {
     nsTimerImpl *timer = timers[i];
     timer->ReleaseCallback();
     ReleaseTimerInternal(timer);
@@ -162,12 +162,12 @@ nsresult TimerThread::Shutdown()
 // Keep track of how early (positive slack) or late (negative slack) timers
 // are running, and use the filtered slack number to adaptively estimate how
 // early timers should fire to be "on time".
-void TimerThread::UpdateFilter(PRUint32 aDelay, TimeStamp aTimeout,
+void TimerThread::UpdateFilter(uint32_t aDelay, TimeStamp aTimeout,
                                TimeStamp aNow)
 {
   TimeDuration slack = aTimeout - aNow;
   double smoothSlack = 0;
-  PRUint32 i, filterLength;
+  uint32_t i, filterLength;
   static TimeDuration kFilterFeedbackMaxTicks =
     TimeDuration::FromMilliseconds(FILTER_FEEDBACK_MAX);
   static TimeDuration kFilterFeedbackMinTicks =
@@ -192,7 +192,7 @@ void TimerThread::UpdateFilter(PRUint32 aDelay, TimeStamp aTimeout,
       mMinTimerPeriod = aDelay;
     }
 
-    filterLength = (PRUint32) (FILTER_DURATION / mMinTimerPeriod);
+    filterLength = (uint32_t) (FILTER_DURATION / mMinTimerPeriod);
     if (filterLength > DELAY_LINE_LENGTH)
       filterLength = DELAY_LINE_LENGTH;
     else if (filterLength < 4)
@@ -223,7 +223,7 @@ NS_IMETHODIMP TimerThread::Run()
   // We need to know how many microseconds give a positive PRIntervalTime. This
   // is platform-dependent, we calculate it at runtime now.
   // First we find a value such that PR_MicrosecondsToInterval(high) = 1
-  PRInt32 low = 0, high = 1;
+  int32_t low = 0, high = 1;
   while (PR_MicrosecondsToInterval(high) == 0)
     high <<= 1;
   // We now have
@@ -231,7 +231,7 @@ NS_IMETHODIMP TimerThread::Run()
   //    PR_MicrosecondsToInterval(high) = 1
   // and we can proceed to find the critical value using binary search
   while (high-low > 1) {
-    PRInt32 mid = (high+low) >> 1;
+    int32_t mid = (high+low) >> 1;
     if (PR_MicrosecondsToInterval(mid) == 0)
       low = mid;
     else
@@ -240,7 +240,7 @@ NS_IMETHODIMP TimerThread::Run()
 
   // Half of the amount of microseconds needed to get positive PRIntervalTime.
   // We use this to decide how to round our wait times later
-  PRInt32 halfMicrosecondsIntervalResolution = high >> 1;
+  int32_t halfMicrosecondsIntervalResolution = high >> 1;
 
   while (!mShutdown) {
     // Have to use PRIntervalTime here, since PR_WaitCondVar takes it
@@ -357,7 +357,7 @@ nsresult TimerThread::AddTimer(nsTimerImpl *aTimer)
   MonitorAutoLock lock(mMonitor);
 
   // Add the timer to our list.
-  PRInt32 i = AddTimerInternal(aTimer);
+  int32_t i = AddTimerInternal(aTimer);
   if (i < 0)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -376,7 +376,7 @@ nsresult TimerThread::TimerDelayChanged(nsTimerImpl *aTimer)
   // ReleaseTimerInternal.
   RemoveTimerInternal(aTimer);
 
-  PRInt32 i = AddTimerInternal(aTimer);
+  int32_t i = AddTimerInternal(aTimer);
   if (i < 0)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -409,14 +409,14 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl *aTimer)
 }
 
 // This function must be called from within a lock
-PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
+int32_t TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
 {
   if (mShutdown)
     return -1;
 
   TimeStamp now = TimeStamp::Now();
-  PRUint32 count = mTimers.Length();
-  PRUint32 i = 0;
+  uint32_t count = mTimers.Length();
+  uint32_t i = 0;
   for (; i < count; i++) {
     nsTimerImpl *timer = mTimers[i];
 
@@ -466,10 +466,10 @@ void TimerThread::DoBeforeSleep()
 void TimerThread::DoAfterSleep()
 {
   mSleeping = true; // wake may be notified without preceding sleep notification
-  for (PRUint32 i = 0; i < mTimers.Length(); i ++) {
+  for (uint32_t i = 0; i < mTimers.Length(); i ++) {
     nsTimerImpl *timer = mTimers[i];
     // get and set the delay to cause its timeout to be recomputed
-    PRUint32 delay;
+    uint32_t delay;
     timer->GetDelay(&delay);
     timer->SetDelay(delay);
   }

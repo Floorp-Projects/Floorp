@@ -65,10 +65,10 @@ struct FontListEntry {
     nsString  familyName;
     nsString  faceName;
     nsCString filepath;
-    PRUint16  weight;
-    PRInt16   stretch;
-    PRUint8   italic;
-    PRUint8   index;
+    uint16_t  weight;
+    int16_t   stretch;
+    uint8_t   italic;
+    uint8_t   index;
 };
 
 struct DeviceStorageStatParams
@@ -97,7 +97,7 @@ struct DeviceStorageDeleteParams
 struct DeviceStorageEnumerationParams
 {
   nsString fullpath;
-  PRUint64 since;
+  uint64_t since;
 };
 
 union DeviceStorageParams
@@ -167,7 +167,7 @@ both:
     // window.open(), the parent must validate the app ID used on the
     // parent side.  To do so, the child process must pass a valid
     // PBrowser as its |AppId|.
-    async PBrowser(PRUint32 chromeFlags, bool isBrowserElement, AppId appId);
+    async PBrowser(uint32_t chromeFlags, bool isBrowserElement, AppId appId);
 
     async PBlob(BlobConstructorParams params);
 
@@ -207,21 +207,21 @@ child:
 
     AppInfo(nsCString version, nsCString buildID);
 
-    SetID(PRUint64 id);
+    SetID(uint64_t id);
 
     // Notify child that last-pb-context-exited notification was observed
     LastPrivateDocShellDestroyed();
 
     FilePathUpdate(nsString filepath, nsCString reasons);
 
-    FileSystemUpdate(nsString fsName, nsString mountPoint, PRInt32 fsState);
+    FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState);
 
 parent:
-    PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
+    PAudio(int32_t aNumChannels, int32_t aRate, int32_t aFormat);
 
     PDeviceStorageRequest(DeviceStorageParams params);
 
-    sync PCrashReporter(NativeThreadId tid, PRUint32 processType);
+    sync PCrashReporter(NativeThreadId tid, uint32_t processType);
 
     PHal();
 
@@ -236,14 +236,14 @@ parent:
     // Services remoting
 
     async StartVisitedQuery(URI uri);
-    async VisitURI(URI uri, URI referrer, PRUint32 flags);
+    async VisitURI(URI uri, URI referrer, uint32_t flags);
     async SetURITitle(URI uri, nsString title);
     
     // filepicker remoting
-    sync ShowFilePicker(PRInt16 mode, PRInt16 selectedType, bool addToRecentDocs,
+    sync ShowFilePicker(int16_t mode, int16_t selectedType, bool addToRecentDocs,
                         nsString title, nsString defaultFile, nsString defaultExtension,
                         nsString[] filters, nsString[] filterNames)
-        returns (nsString[] files, PRInt16 retValue, nsresult result);
+        returns (nsString[] files, int16_t retValue, nsresult result);
 
     async LoadURIExternal(URI uri);
 
@@ -264,14 +264,14 @@ parent:
 
     PExternalHelperApp(URI uri, nsCString aMimeContentType,
                        nsCString aContentDisposition, bool aForceSave,
-                       PRInt64 aContentLength, URI aReferrer);
+                       int64_t aContentLength, URI aReferrer);
     
     AddGeolocationListener();
     RemoveGeolocationListener();
 
     ConsoleMessage(nsString message);
     ScriptError(nsString message, nsString sourceName, nsString sourceLine,
-                PRUint32 lineNumber, PRUint32 colNumber, PRUint32 flags,
+                uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
                 nsCString category); 
 
     // nsIPermissionManager messages
@@ -279,18 +279,18 @@ parent:
 
     // These clipboard methods are only really used on Android since
     // the clipboard is not available in the content process.
-    SetClipboardText(nsString text, bool isPrivateData, PRInt32 whichClipboard);
-    sync GetClipboardText(PRInt32 whichClipboard)
+    SetClipboardText(nsString text, bool isPrivateData, int32_t whichClipboard);
+    sync GetClipboardText(int32_t whichClipboard)
         returns (nsString text);
     EmptyClipboard();
     sync ClipboardHasText()
         returns (bool hasText);
 
-    sync GetSystemColors(PRUint32 colorsCount)
-        returns (PRUint32[] colors);
+    sync GetSystemColors(uint32_t colorsCount)
+        returns (uint32_t[] colors);
 
-    sync GetIconForExtension(nsCString aFileExt, PRUint32 aIconSize)
-        returns (PRUint8[] bits);
+    sync GetIconForExtension(nsCString aFileExt, uint32_t aIconSize)
+        returns (uint8_t[] bits);
 
     sync GetShowPasswordSetting()
         returns (bool showPassword);

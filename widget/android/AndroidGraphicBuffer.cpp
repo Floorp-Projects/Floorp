@@ -17,9 +17,9 @@
 
 typedef void *EGLContext;
 typedef void *EGLDisplay;
-typedef PRUint32 EGLenum;
-typedef PRInt32 EGLint;
-typedef PRUint32 EGLBoolean;
+typedef uint32_t EGLenum;
+typedef int32_t EGLint;
+typedef uint32_t EGLBoolean;
 
 typedef gfxASurface::gfxImageFormat gfxImageFormat;
 
@@ -112,16 +112,16 @@ public:
   typedef GLenum (* pfnGLGetError)();
   pfnGLGetError fGLGetError;
 
-  typedef void (*pfnGraphicBufferCtor)(void*, PRUint32 w, PRUint32 h, PRUint32 format, PRUint32 usage);
+  typedef void (*pfnGraphicBufferCtor)(void*, uint32_t w, uint32_t h, uint32_t format, uint32_t usage);
   pfnGraphicBufferCtor fGraphicBufferCtor;
 
   typedef void (*pfnGraphicBufferDtor)(void*);
   pfnGraphicBufferDtor fGraphicBufferDtor;
 
-  typedef int (*pfnGraphicBufferLock)(void*, PRUint32 usage, unsigned char **addr);
+  typedef int (*pfnGraphicBufferLock)(void*, uint32_t usage, unsigned char **addr);
   pfnGraphicBufferLock fGraphicBufferLock;
 
-  typedef int (*pfnGraphicBufferLockRect)(void*, PRUint32 usage, const ARect&, unsigned char **addr);
+  typedef int (*pfnGraphicBufferLockRect)(void*, uint32_t usage, const ARect&, unsigned char **addr);
   pfnGraphicBufferLockRect fGraphicBufferLockRect;
 
   typedef int (*pfnGraphicBufferUnlock)(void*);
@@ -130,7 +130,7 @@ public:
   typedef void* (*pfnGraphicBufferGetNativeBuffer)(void*);
   pfnGraphicBufferGetNativeBuffer fGraphicBufferGetNativeBuffer;
 
-  typedef int (*pfnGraphicBufferReallocate)(void*, PRUint32 w, PRUint32 h, PRUint32 format);
+  typedef int (*pfnGraphicBufferReallocate)(void*, uint32_t w, uint32_t h, uint32_t format);
   pfnGraphicBufferReallocate fGraphicBufferReallocate;
 
   bool EnsureInitialized()
@@ -219,7 +219,7 @@ static bool ensureNoGLError(const char* name)
   return result;
 }
 
-AndroidGraphicBuffer::AndroidGraphicBuffer(PRUint32 width, PRUint32 height, PRUint32 usage,
+AndroidGraphicBuffer::AndroidGraphicBuffer(uint32_t width, uint32_t height, uint32_t usage,
                                            gfxImageFormat format) :
     mWidth(width)
   , mHeight(height)
@@ -292,7 +292,7 @@ AndroidGraphicBuffer::EnsureInitialized()
 }
 
 int
-AndroidGraphicBuffer::Lock(PRUint32 aUsage, unsigned char **bits)
+AndroidGraphicBuffer::Lock(uint32_t aUsage, unsigned char **bits)
 {
   if (!EnsureInitialized())
     return true;
@@ -301,7 +301,7 @@ AndroidGraphicBuffer::Lock(PRUint32 aUsage, unsigned char **bits)
 }
 
 int
-AndroidGraphicBuffer::Lock(PRUint32 aUsage, const nsIntRect& aRect, unsigned char **bits)
+AndroidGraphicBuffer::Lock(uint32_t aUsage, const nsIntRect& aRect, unsigned char **bits)
 {
   if (!EnsureInitialized())
     return false;
@@ -325,7 +325,7 @@ AndroidGraphicBuffer::Unlock()
 }
 
 bool
-AndroidGraphicBuffer::Reallocate(PRUint32 aWidth, PRUint32 aHeight, gfxImageFormat aFormat)
+AndroidGraphicBuffer::Reallocate(uint32_t aWidth, uint32_t aHeight, gfxImageFormat aFormat)
 {
   if (!EnsureInitialized())
     return false;
@@ -346,10 +346,10 @@ AndroidGraphicBuffer::Reallocate(PRUint32 aWidth, PRUint32 aHeight, gfxImageForm
   return true;
 }
 
-PRUint32
-AndroidGraphicBuffer::GetAndroidUsage(PRUint32 aUsage)
+uint32_t
+AndroidGraphicBuffer::GetAndroidUsage(uint32_t aUsage)
 {
-  PRUint32 flags = 0;
+  uint32_t flags = 0;
 
   if (aUsage & UsageSoftwareRead) {
     flags |= GRALLOC_USAGE_SW_READ_OFTEN;
@@ -374,7 +374,7 @@ AndroidGraphicBuffer::GetAndroidUsage(PRUint32 aUsage)
   return flags;
 }
 
-PRUint32
+uint32_t
 AndroidGraphicBuffer::GetAndroidFormat(gfxImageFormat aFormat)
 {
   switch (aFormat) {

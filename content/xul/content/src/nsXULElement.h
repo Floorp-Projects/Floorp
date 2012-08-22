@@ -85,12 +85,12 @@ public:
     nsAttrValue mValue;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
-    static PRUint32   gNumElements;
-    static PRUint32   gNumAttributes;
-    static PRUint32   gNumCacheTests;
-    static PRUint32   gNumCacheHits;
-    static PRUint32   gNumCacheSets;
-    static PRUint32   gNumCacheFills;
+    static uint32_t   gNumElements;
+    static uint32_t   gNumAttributes;
+    static uint32_t   gNumCacheTests;
+    static uint32_t   gNumCacheHits;
+    static uint32_t   gNumCacheSets;
+    static uint32_t   gNumCacheFills;
 #endif /* !XUL_PROTOTYPE_ATTRIBUTE_METERING */
 };
 
@@ -122,7 +122,7 @@ public:
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual const char* ClassName() = 0;
-    virtual PRUint32 ClassSize() = 0;
+    virtual uint32_t ClassSize() = 0;
 #endif
 
     /**
@@ -162,12 +162,12 @@ public:
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual const char* ClassName() { return "nsXULPrototypeElement"; }
-    virtual PRUint32 ClassSize() { return sizeof(*this); }
+    virtual uint32_t ClassSize() { return sizeof(*this); }
 #endif
 
     virtual void ReleaseSubtree()
     {
-        for (PRInt32 i = mChildren.Length() - 1; i >= 0; i--) {
+        for (int32_t i = mChildren.Length() - 1; i >= 0; i--) {
             if (mChildren[i].get())
                 mChildren[i]->ReleaseSubtree();
         }
@@ -183,7 +183,7 @@ public:
                                  nsIURI* aDocumentURI,
                                  const nsCOMArray<nsINodeInfo> *aNodeInfos);
 
-    nsresult SetAttrAt(PRUint32 aPos, const nsAString& aValue, nsIURI* aDocumentURI);
+    nsresult SetAttrAt(uint32_t aPos, const nsAString& aValue, nsIURI* aDocumentURI);
 
     void Unlink();
 
@@ -191,10 +191,10 @@ public:
 
     nsCOMPtr<nsINodeInfo>    mNodeInfo;           // [OWNER]
 
-    PRUint32                 mNumAttributes:29;
-    PRUint32                 mHasIdAttribute:1;
-    PRUint32                 mHasClassAttribute:1;
-    PRUint32                 mHasStyleAttribute:1;
+    uint32_t                 mNumAttributes:29;
+    uint32_t                 mHasIdAttribute:1;
+    uint32_t                 mHasClassAttribute:1;
+    uint32_t                 mHasStyleAttribute:1;
     nsXULPrototypeAttribute* mAttributes;         // [OWNER]
 };
 
@@ -203,12 +203,12 @@ class nsXULDocument;
 class nsXULPrototypeScript : public nsXULPrototypeNode
 {
 public:
-    nsXULPrototypeScript(PRUint32 aLineNo, PRUint32 version);
+    nsXULPrototypeScript(uint32_t aLineNo, uint32_t version);
     virtual ~nsXULPrototypeScript();
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual const char* ClassName() { return "nsXULPrototypeScript"; }
-    virtual PRUint32 ClassSize() { return sizeof(*this); }
+    virtual uint32_t ClassSize() { return sizeof(*this); }
 #endif
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
@@ -223,8 +223,8 @@ public:
     nsresult DeserializeOutOfLine(nsIObjectInputStream* aInput,
                                   nsIScriptGlobalObject* aGlobal);
 
-    nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
-                     nsIURI* aURI, PRUint32 aLineNo,
+    nsresult Compile(const PRUnichar* aText, int32_t aTextLength,
+                     nsIURI* aURI, uint32_t aLineNo,
                      nsIDocument* aDocument,
                      nsIScriptGlobalObjectOwner* aGlobalOwner);
 
@@ -245,11 +245,11 @@ public:
     };
 
     nsCOMPtr<nsIURI>         mSrcURI;
-    PRUint32                 mLineNo;
+    uint32_t                 mLineNo;
     bool                     mSrcLoading;
     bool                     mOutOfLine;
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
-    PRUint32                 mLangVersion;
+    uint32_t                 mLangVersion;
     ScriptObjectHolder       mScriptObject;
 };
 
@@ -267,7 +267,7 @@ public:
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual const char* ClassName() { return "nsXULPrototypeText"; }
-    virtual PRUint32 ClassSize() { return sizeof(*this); }
+    virtual uint32_t ClassSize() { return sizeof(*this); }
 #endif
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
@@ -295,7 +295,7 @@ public:
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual const char* ClassName() { return "nsXULPrototypePI"; }
-    virtual PRUint32 ClassSize() { return sizeof(*this); }
+    virtual uint32_t ClassSize() { return sizeof(*this); }
 #endif
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
@@ -357,27 +357,27 @@ public:
                                 nsIContent* aBindingParent,
                                 bool aCompileEventHandlers);
     virtual void UnbindFromTree(bool aDeep, bool aNullParent);
-    virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
+    virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
     virtual void DestroyContent();
 
 #ifdef DEBUG
-    virtual void List(FILE* out, PRInt32 aIndent) const;
-    virtual void DumpContent(FILE* out, PRInt32 aIndent,bool aDumpAll) const
+    virtual void List(FILE* out, int32_t aIndent) const;
+    virtual void DumpContent(FILE* out, int32_t aIndent,bool aDumpAll) const
     {
     }
 #endif
 
     virtual void PerformAccesskey(bool aKeyCausesActivation,
                                   bool aIsTrustedEvent);
-    nsresult ClickWithInputSource(PRUint16 aInputSource);
+    nsresult ClickWithInputSource(uint16_t aInputSource);
 
     virtual nsIContent *GetBindingParent() const;
-    virtual bool IsNodeOfType(PRUint32 aFlags) const;
-    virtual bool IsFocusable(PRInt32 *aTabIndex = nullptr, bool aWithMouse = false);
+    virtual bool IsNodeOfType(uint32_t aFlags) const;
+    virtual bool IsFocusable(int32_t *aTabIndex = nullptr, bool aWithMouse = false);
 
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
     virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                                PRInt32 aModType) const;
+                                                int32_t aModType) const;
     NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
     // XUL element methods
@@ -462,15 +462,15 @@ protected:
      */
     nsresult MakeHeavyweight(nsXULPrototypeElement* aPrototype);
 
-    virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+    virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                    const nsAttrValueOrString* aValue,
                                    bool aNotify);
-    virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+    virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                   const nsAttrValue* aValue, bool aNotify);
 
     virtual void UpdateEditableState(bool aNotify);
 
-    virtual bool ParseAttribute(PRInt32 aNamespaceID,
+    virtual bool ParseAttribute(int32_t aNamespaceID,
                                   nsIAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult);

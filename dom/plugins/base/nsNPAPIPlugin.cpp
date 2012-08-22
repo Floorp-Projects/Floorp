@@ -244,9 +244,9 @@ nsNPAPIPlugin::PluginCrashed(const nsAString& pluginDumpID,
 }
 
 #if defined(XP_MACOSX) && defined(__i386__)
-static PRInt32 OSXVersion()
+static int32_t OSXVersion()
 {
-  static PRInt32 gOSXVersion = 0x0;
+  static int32_t gOSXVersion = 0x0;
   if (gOSXVersion == 0x0) {
     OSErr err = ::Gestalt(gestaltSystemVersion, (SInt32*)&gOSXVersion);
     if (err != noErr) {
@@ -341,7 +341,7 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   // The "filename.dll" part can contain shell wildcard pattern
 
   nsCAutoString prefFile(aPluginTag->mFullPath.get());
-  PRInt32 slashPos = prefFile.RFindCharInSet("/\\");
+  int32_t slashPos = prefFile.RFindCharInSet("/\\");
   if (kNotFound == slashPos)
     return false;
   prefFile.Cut(0, slashPos + 1);
@@ -366,7 +366,7 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
     return false;
   }
 
-  PRUint32 prefCount;
+  uint32_t prefCount;
   char** prefNames;
   nsresult rv = prefs->GetChildList(prefGroupKey.get(),
                                     &prefCount, &prefNames);
@@ -375,8 +375,8 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   bool prefSet = false;
 
   if (NS_SUCCEEDED(rv) && prefCount > 0) {
-    PRUint32 prefixLength = prefGroupKey.Length();
-    for (PRUint32 currentPref = 0; currentPref < prefCount; currentPref++) {
+    uint32_t prefixLength = prefGroupKey.Length();
+    for (uint32_t currentPref = 0; currentPref < prefCount; currentPref++) {
       // Get the mask
       const char* maskStart = prefNames[currentPref] + prefixLength;
       bool match = false;
@@ -1044,7 +1044,7 @@ _write(NPP npp, NPStream *pstream, int32_t len, void *buffer)
     return -1;
   }
 
-  PRUint32 count = 0;
+  uint32_t count = 0;
   nsresult rv = stream->Write((char *)buffer, len, &count);
 
   if (NS_FAILED(rv)) {
@@ -1432,7 +1432,7 @@ _retainobject(NPObject* npobj)
 #ifdef NS_BUILD_REFCNT_LOGGING
     int32_t refCnt =
 #endif
-      PR_ATOMIC_INCREMENT((PRInt32*)&npobj->referenceCount);
+      PR_ATOMIC_INCREMENT((int32_t*)&npobj->referenceCount);
     NS_LOG_ADDREF(npobj, refCnt, "BrowserNPObject", sizeof(NPObject));
   }
 
@@ -1448,7 +1448,7 @@ _releaseobject(NPObject* npobj)
   if (!npobj)
     return;
 
-  int32_t refCnt = PR_ATOMIC_DECREMENT((PRInt32*)&npobj->referenceCount);
+  int32_t refCnt = PR_ATOMIC_DECREMENT((int32_t*)&npobj->referenceCount);
   NS_LOG_RELEASE(npobj, refCnt, "BrowserNPObject");
 
   if (refCnt == 0) {
@@ -2133,7 +2133,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance*)npp->ndata;
       if (inst) {
         NPDrawingModel drawingModel;
-        inst->GetDrawingModel((PRInt32*)&drawingModel);
+        inst->GetDrawingModel((int32_t*)&drawingModel);
         *(NPDrawingModel*)result = drawingModel;
         return NPERR_NO_ERROR;
       }
@@ -2517,7 +2517,7 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
     return NPERR_GENERIC_ERROR;
   }
 
-  PRInt32 streamtype = NP_NORMAL;
+  int32_t streamtype = NP_NORMAL;
 
   streamlistener->GetStreamType(&streamtype);
 

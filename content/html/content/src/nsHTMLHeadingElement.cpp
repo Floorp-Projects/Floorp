@@ -38,7 +38,7 @@ public:
   // nsIDOMHTMLHeadingElement
   NS_DECL_NSIDOMHTMLHEADINGELEMENT
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -85,7 +85,7 @@ NS_IMPL_STRING_ATTR(nsHTMLHeadingElement, Align, align)
 
 
 bool
-nsHTMLHeadingElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLHeadingElement::ParseAttribute(int32_t aNamespaceID,
                                      nsIAtom* aAttribute,
                                      const nsAString& aValue,
                                      nsAttrValue& aResult)

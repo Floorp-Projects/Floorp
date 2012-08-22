@@ -215,7 +215,7 @@ IDBRequest::CaptureCaller(JSContext* aCx)
   }
 
   const char* filename = nullptr;
-  PRUint32 lineNo = 0;
+  uint32_t lineNo = 0;
   if (!nsJSUtils::GetCallingLocation(aCx, &filename, &lineNo)) {
     NS_WARNING("Failed to get caller.");
     return;

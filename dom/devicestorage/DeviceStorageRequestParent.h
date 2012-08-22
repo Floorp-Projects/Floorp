@@ -87,11 +87,11 @@ private:
   class PostBlobSuccessEvent : public CancelableRunnable
   {
     public:
-      PostBlobSuccessEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile, PRUint32 aLength, nsACString& aMimeType);
+      PostBlobSuccessEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile, uint32_t aLength, nsACString& aMimeType);
       virtual ~PostBlobSuccessEvent();
       virtual nsresult CancelableRun();
     private:
-      PRUint32 mLength;
+      uint32_t mLength;
       nsRefPtr<DeviceStorageFile> mFile;
       nsCString mMimeType;
   };
@@ -151,12 +151,12 @@ private:
   class EnumerateFileEvent : public CancelableRunnable
   {
     public:
-      EnumerateFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile, PRUint64 aSince);
+      EnumerateFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile, uint64_t aSince);
       virtual ~EnumerateFileEvent();
       virtual nsresult CancelableRun();
     private:
       nsRefPtr<DeviceStorageFile> mFile;
-      PRUint64 mSince;
+      uint64_t mSince;
   };
 
   class PostPathResultEvent : public CancelableRunnable
@@ -174,12 +174,12 @@ private:
  {
     public:
       PostStatResultEvent(DeviceStorageRequestParent* aParent,
-                          PRInt64 aFreeBytes,
-                          PRInt64 aTotalBytes);
+                          int64_t aFreeBytes,
+                          int64_t aTotalBytes);
       virtual ~PostStatResultEvent();
       virtual nsresult CancelableRun();
     private:
-      PRInt64 mFreeBytes, mTotalBytes;
+      int64_t mFreeBytes, mTotalBytes;
    };
 
 protected:

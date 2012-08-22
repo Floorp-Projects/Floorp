@@ -74,7 +74,7 @@ public:
                           bool above);
 
   NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child,
-                          PRInt32 zindex);
+                          int32_t zindex);
 
   NS_IMETHOD  RemoveChild(nsIView *parent);
 
@@ -86,7 +86,7 @@ public:
 
   NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility aVisible);
 
-  NS_IMETHOD  SetViewZIndex(nsIView *aView, bool aAuto, PRInt32 aZIndex, bool aTopMost=false);
+  NS_IMETHOD  SetViewZIndex(nsIView *aView, bool aAuto, int32_t aZIndex, bool aTopMost=false);
 
   virtual void SetPresShell(nsIPresShell *aPresShell) { mPresShell = aPresShell; }
   virtual nsIPresShell* GetPresShell() { return mPresShell; }
@@ -99,8 +99,8 @@ public:
   NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
  
   NS_IMETHOD IsPainting(bool& aIsPainting);
-  NS_IMETHOD GetLastUserEventTime(PRUint32& aTime);
-  static PRUint32 gLastUserEventTime;
+  NS_IMETHOD GetLastUserEventTime(uint32_t& aTime);
+  static uint32_t gLastUserEventTime;
 
   /* Update the cached RootViewManager pointer on this view manager. */
   void InvalidateHierarchy();
@@ -177,7 +177,7 @@ public: // NOT in nsIViewManager, so private to the view module
   // pending updates.
   void PostPendingUpdate();
 
-  PRUint32 AppUnitsPerDevPixel() const
+  uint32_t AppUnitsPerDevPixel() const
   {
     return mContext->AppUnitsPerDevPixel();
   }
@@ -199,7 +199,7 @@ private:
   // the root view manager.  Some have accessor functions to enforce
   // this, as noted.
   
-  PRInt32           mRefreshDisableCount;
+  int32_t           mRefreshDisableCount;
   // Use IsPainting() and SetPainting() to access mPainting.
   bool              mPainting;
   bool              mRecursiveRefreshPending;
@@ -208,7 +208,7 @@ private:
   bool              mInScroll;
 
   //from here to public should be static and locked... MMP
-  static PRInt32           mVMCount;        //number of viewmanagers
+  static int32_t           mVMCount;        //number of viewmanagers
 
   //list of view managers
   static nsVoidArray       *gViewManagers;

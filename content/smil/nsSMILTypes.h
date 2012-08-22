@@ -20,6 +20,6 @@
 // For an overview of how this class is related to other SMIL time classes see
 // the documentstation in nsSMILTimeValue.h
 //
-typedef PRInt64 nsSMILTime;
+typedef int64_t nsSMILTime;
 
 #endif // NS_SMILTYPES_H_

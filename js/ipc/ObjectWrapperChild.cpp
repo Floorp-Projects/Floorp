@@ -374,8 +374,8 @@ ObjectWrapperChild::AnswerDelProperty(const nsString& id,
     return jsval_to_JSVariant(cx, aco.Ok() ? val : JSVAL_VOID, vp);
 }
 
-static const PRUint32 sNextIdIndexSlot = 0;
-static const PRUint32 sNumNewEnumerateStateSlots = 1;
+static const uint32_t sNextIdIndexSlot = 0;
+static const uint32_t sNumNewEnumerateStateSlots = 1;
 
 static void
 CPOW_NewEnumerateState_FreeIds(JSObject* state)
@@ -569,13 +569,13 @@ ObjectWrapperChild::AnswerCall(PObjectWrapperChild* receiver, const InfallibleTA
         return false;
 
     AutoJSArgs args;
-    PRUint32 argc = argv.Length();
+    uint32_t argc = argv.Length();
     jsval *jsargs = args.AppendElements(argc);
     if (!jsargs)
         return false;
     AutoArrayRooter tvr(cx, argc, jsargs);
 
-    for (PRUint32 i = 0; i < argc; ++i)
+    for (uint32_t i = 0; i < argc; ++i)
         if (!jsval_from_JSVariant(cx, argv.ElementAt(i), jsargs + i))
             return false;
 
@@ -595,13 +595,13 @@ ObjectWrapperChild::AnswerConstruct(const InfallibleTArray<JSVariant>& argv,
     AutoCheckOperation aco(this, status);
 
     AutoJSArgs args;
-    PRUint32 argc = argv.Length();
+    uint32_t argc = argv.Length();
     jsval* jsargs = args.AppendElements(argc);
     if (!jsargs)
         return false;
     AutoArrayRooter tvr(cx, argc, jsargs);
 
-    for (PRUint32 i = 0; i < argc; ++i)
+    for (uint32_t i = 0; i < argc; ++i)
         if (!jsval_from_JSVariant(cx, argv.ElementAt(i), jsargs + i))
             return false;
 

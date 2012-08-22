@@ -78,21 +78,21 @@ nsPrefixSetReporter::GetPath(nsACString& aPath)
 }
 
 NS_IMETHODIMP
-nsPrefixSetReporter::GetKind(PRInt32* aKind)
+nsPrefixSetReporter::GetKind(int32_t* aKind)
 {
   *aKind = nsIMemoryReporter::KIND_HEAP;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrefixSetReporter::GetUnits(PRInt32* aUnits)
+nsPrefixSetReporter::GetUnits(int32_t* aUnits)
 {
   *aUnits = nsIMemoryReporter::UNITS_BYTES;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrefixSetReporter::GetAmount(PRInt64* aAmount)
+nsPrefixSetReporter::GetAmount(int64_t* aAmount)
 {
   *aAmount = mParent->SizeOfIncludingThis(StoragePrefixSetMallocSizeOf);
   return NS_OK;
@@ -132,7 +132,7 @@ nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet()
 }
 
 NS_IMETHODIMP
-nsUrlClassifierPrefixSet::SetPrefixes(const PRUint32* aArray, PRUint32 aLength)
+nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
 {
   if (aLength <= 0) {
     if (mHasPrefixes) {
@@ -150,14 +150,14 @@ nsUrlClassifierPrefixSet::SetPrefixes(const PRUint32* aArray, PRUint32 aLength)
 }
 
 nsresult
-nsUrlClassifierPrefixSet::MakePrefixSet(const PRUint32* aPrefixes, PRUint32 aLength)
+nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLength)
 {
   if (aLength == 0) {
     return NS_OK;
   }
 
 #ifdef DEBUG
-  for (PRUint32 i = 1; i < aLength; i++) {
+  for (uint32_t i = 1; i < aLength; i++) {
     MOZ_ASSERT(aPrefixes[i] >= aPrefixes[i-1]);
   }
 #endif
@@ -169,16 +169,16 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const PRUint32* aPrefixes, PRUint32 aLen
   mIndexPrefixes.AppendElement(aPrefixes[0]);
   mIndexStarts.AppendElement(mDeltas.Length());
 
-  PRUint32 numOfDeltas = 0;
-  PRUint32 currentItem = aPrefixes[0];
-  for (PRUint32 i = 1; i < aLength; i++) {
+  uint32_t numOfDeltas = 0;
+  uint32_t currentItem = aPrefixes[0];
+  for (uint32_t i = 1; i < aLength; i++) {
     if ((numOfDeltas >= DELTAS_LIMIT) ||
           (aPrefixes[i] - currentItem >= MAX_INDEX_DIFF)) {
       mIndexStarts.AppendElement(mDeltas.Length());
       mIndexPrefixes.AppendElement(aPrefixes[i]);
       numOfDeltas = 0;
     } else {
-      PRUint16 delta = aPrefixes[i] - currentItem;
+      uint16_t delta = aPrefixes[i] - currentItem;
       mDeltas.AppendElement(delta);
       numOfDeltas++;
     }
@@ -198,28 +198,28 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const PRUint32* aPrefixes, PRUint32 aLen
 }
 
 NS_IMETHODIMP
-nsUrlClassifierPrefixSet::GetPrefixes(PRUint32* aCount,
-                                      PRUint32** aPrefixes)
+nsUrlClassifierPrefixSet::GetPrefixes(uint32_t* aCount,
+                                      uint32_t** aPrefixes)
 {
   NS_ENSURE_ARG_POINTER(aCount);
   *aCount = 0;
   NS_ENSURE_ARG_POINTER(aPrefixes);
   *aPrefixes = nullptr;
 
-  nsTArray<PRUint32> aArray;
-  PRUint32 prefixLength = mIndexPrefixes.Length();
+  nsTArray<uint32_t> aArray;
+  uint32_t prefixLength = mIndexPrefixes.Length();
 
-  for (PRUint32 i = 0; i < prefixLength; i++) {
-    PRUint32 prefix = mIndexPrefixes[i];
-    PRUint32 start = mIndexStarts[i];
-    PRUint32 end = (i == (prefixLength - 1)) ? mDeltas.Length()
+  for (uint32_t i = 0; i < prefixLength; i++) {
+    uint32_t prefix = mIndexPrefixes[i];
+    uint32_t start = mIndexStarts[i];
+    uint32_t end = (i == (prefixLength - 1)) ? mDeltas.Length()
                                              : mIndexStarts[i + 1];
     if (end > mDeltas.Length()) {
       return NS_ERROR_FILE_CORRUPTED;
     }
 
     aArray.AppendElement(prefix);
-    for (PRUint32 j = start; j < end; j++) {
+    for (uint32_t j = start; j < end; j++) {
       prefix += mDeltas[j];
       aArray.AppendElement(prefix);
     }
@@ -228,11 +228,11 @@ nsUrlClassifierPrefixSet::GetPrefixes(PRUint32* aCount,
   NS_ASSERTION(mIndexStarts.Length() + mDeltas.Length() == aArray.Length(),
                "Lengths are inconsistent");
 
-  PRUint32 itemCount = aArray.Length();
+  uint32_t itemCount = aArray.Length();
 
-  PRUint32* retval = static_cast<PRUint32*>(nsMemory::Alloc(itemCount * sizeof(PRUint32)));
+  uint32_t* retval = static_cast<uint32_t*>(nsMemory::Alloc(itemCount * sizeof(uint32_t)));
   NS_ENSURE_TRUE(retval, NS_ERROR_OUT_OF_MEMORY);
-  for (PRUint32 i = 0; i < itemCount; i++) {
+  for (uint32_t i = 0; i < itemCount; i++) {
     retval[i] = aArray[i];
   }
 
@@ -242,13 +242,13 @@ nsUrlClassifierPrefixSet::GetPrefixes(PRUint32* aCount,
   return NS_OK;
 }
 
-PRUint32 nsUrlClassifierPrefixSet::BinSearch(PRUint32 start,
-                                             PRUint32 end,
-                                             PRUint32 target)
+uint32_t nsUrlClassifierPrefixSet::BinSearch(uint32_t start,
+                                             uint32_t end,
+                                             uint32_t target)
 {
   while (start != end && end >= start) {
-    PRUint32 i = start + ((end - start) >> 1);
-    PRUint32 value = mIndexPrefixes[i];
+    uint32_t i = start + ((end - start) >> 1);
+    uint32_t value = mIndexPrefixes[i];
     if (value < target) {
       start = i + 1;
     } else if (value > target) {
@@ -261,7 +261,7 @@ PRUint32 nsUrlClassifierPrefixSet::BinSearch(PRUint32 start,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, bool* aFound)
+nsUrlClassifierPrefixSet::Contains(uint32_t aPrefix, bool* aFound)
 {
   *aFound = false;
 
@@ -269,7 +269,7 @@ nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, bool* aFound)
     return NS_OK;
   }
 
-  PRUint32 target = aPrefix;
+  uint32_t target = aPrefix;
 
   // We want to do a "Price is Right" binary search, that is, we want to find
   // the index of the value either equal to the target or the closest value
@@ -285,16 +285,16 @@ nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, bool* aFound)
   // Because of this, we need to check if the target lies before the beginning
   // of the indices.
 
-  PRUint32 i = BinSearch(0, mIndexPrefixes.Length() - 1, target);
+  uint32_t i = BinSearch(0, mIndexPrefixes.Length() - 1, target);
   if (mIndexPrefixes[i] > target && i > 0) {
     i--;
   }
 
   // Now search through the deltas for the target.
-  PRUint32 diff = target - mIndexPrefixes[i];
-  PRUint32 deltaIndex = mIndexStarts[i];
-  PRUint32 deltaSize  = mDeltas.Length();
-  PRUint32 end = (i + 1 < mIndexStarts.Length()) ? mIndexStarts[i+1]
+  uint32_t diff = target - mIndexPrefixes[i];
+  uint32_t deltaIndex = mIndexStarts[i];
+  uint32_t deltaSize  = mDeltas.Length();
+  uint32_t end = (i + 1 < mIndexStarts.Length()) ? mIndexStarts[i+1]
                                                  : deltaSize;
 
   // Sanity check the read values
@@ -335,20 +335,20 @@ nsUrlClassifierPrefixSet::IsEmpty(bool * aEmpty)
 nsresult
 nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
 {
-  PRUint32 magic;
-  PRInt32 read;
+  uint32_t magic;
+  int32_t read;
 
-  read = PR_Read(fileFd, &magic, sizeof(PRUint32));
-  NS_ENSURE_TRUE(read == sizeof(PRUint32), NS_ERROR_FAILURE);
+  read = PR_Read(fileFd, &magic, sizeof(uint32_t));
+  NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FAILURE);
 
   if (magic == PREFIXSET_VERSION_MAGIC) {
-    PRUint32 indexSize;
-    PRUint32 deltaSize;
+    uint32_t indexSize;
+    uint32_t deltaSize;
 
-    read = PR_Read(fileFd, &indexSize, sizeof(PRUint32));
-    NS_ENSURE_TRUE(read == sizeof(PRUint32), NS_ERROR_FILE_CORRUPTED);
-    read = PR_Read(fileFd, &deltaSize, sizeof(PRUint32));
-    NS_ENSURE_TRUE(read == sizeof(PRUint32), NS_ERROR_FILE_CORRUPTED);
+    read = PR_Read(fileFd, &indexSize, sizeof(uint32_t));
+    NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FILE_CORRUPTED);
+    read = PR_Read(fileFd, &deltaSize, sizeof(uint32_t));
+    NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FILE_CORRUPTED);
 
     if (indexSize == 0) {
       LOG(("stored PrefixSet is empty!"));
@@ -363,13 +363,13 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
     mIndexPrefixes.SetLength(indexSize);
     mDeltas.SetLength(deltaSize);
 
-    PRInt32 toRead = indexSize*sizeof(PRUint32);
+    int32_t toRead = indexSize*sizeof(uint32_t);
     read = PR_Read(fileFd, mIndexPrefixes.Elements(), toRead);
     NS_ENSURE_TRUE(read == toRead, NS_ERROR_FILE_CORRUPTED);
     read = PR_Read(fileFd, mIndexStarts.Elements(), toRead);
     NS_ENSURE_TRUE(read == toRead, NS_ERROR_FILE_CORRUPTED);
     if (deltaSize > 0) {
-      toRead = deltaSize*sizeof(PRUint16);
+      toRead = deltaSize*sizeof(uint16_t);
       read = PR_Read(fileFd, mDeltas.Elements(), toRead);
       NS_ENSURE_TRUE(read == toRead, NS_ERROR_FILE_CORRUPTED);
     }
@@ -404,33 +404,33 @@ nsUrlClassifierPrefixSet::StoreToFd(AutoFDClose& fileFd)
 {
   {
       Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FALLOCATE_TIME> timer;
-      PRInt64 size = 4 * sizeof(PRUint32);
-      size += 2 * mIndexStarts.Length() * sizeof(PRUint32);
-      size +=     mDeltas.Length() * sizeof(PRUint16);
+      int64_t size = 4 * sizeof(uint32_t);
+      size += 2 * mIndexStarts.Length() * sizeof(uint32_t);
+      size +=     mDeltas.Length() * sizeof(uint16_t);
 
       mozilla::fallocate(fileFd, size);
   }
 
-  PRInt32 written;
-  PRInt32 writelen = sizeof(PRUint32);
-  PRUint32 magic = PREFIXSET_VERSION_MAGIC;
+  int32_t written;
+  int32_t writelen = sizeof(uint32_t);
+  uint32_t magic = PREFIXSET_VERSION_MAGIC;
   written = PR_Write(fileFd, &magic, writelen);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
-  PRUint32 indexSize = mIndexStarts.Length();
-  PRUint32 deltaSize = mDeltas.Length();
+  uint32_t indexSize = mIndexStarts.Length();
+  uint32_t deltaSize = mDeltas.Length();
   written = PR_Write(fileFd, &indexSize, writelen);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
   written = PR_Write(fileFd, &deltaSize, writelen);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
-  writelen = indexSize * sizeof(PRUint32);
+  writelen = indexSize * sizeof(uint32_t);
   written = PR_Write(fileFd, mIndexPrefixes.Elements(), writelen);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
   written = PR_Write(fileFd, mIndexStarts.Elements(), writelen);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
   if (deltaSize > 0) {
-    writelen = deltaSize * sizeof(PRUint16);
+    writelen = deltaSize * sizeof(uint16_t);
     written = PR_Write(fileFd, mDeltas.Elements(), writelen);
     NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
   }

@@ -69,7 +69,7 @@ nsFormData::AddNameFilePair(const nsAString& aName,
 NS_IMETHODIMP
 nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
 {
-  PRUint16 dataType;
+  uint16_t dataType;
   nsresult rv = aValue->GetDataType(&dataType);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -89,7 +89,7 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
   }
 
   PRUnichar* stringData = nullptr;
-  PRUint32 stringLen = 0;
+  uint32_t stringLen = 0;
   rv = aValue->GetAsWStringWithSize(&stringLen, &stringData);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -108,7 +108,7 @@ nsFormData::GetSendInfo(nsIInputStream** aBody, nsACString& aContentType,
 {
   nsFSMultipartFormData fs(NS_LITERAL_CSTRING("UTF-8"), nullptr);
   
-  for (PRUint32 i = 0; i < mFormData.Length(); ++i) {
+  for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (mFormData[i].valueIsFile) {
       fs.AddNameFilePair(mFormData[i].name, mFormData[i].fileValue);
     }
@@ -132,7 +132,7 @@ NS_IMETHODIMP
 nsFormData::Initialize(nsISupports* aOwner,
                        JSContext* aCx,
                        JSObject* aObj,
-                       PRUint32 aArgc,
+                       uint32_t aArgc,
                        jsval* aArgv)
 {
   if (aArgc > 0) {
