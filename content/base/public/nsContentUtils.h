@@ -1549,6 +1549,11 @@ public:
                                       uint32_t aDisplayWidth,
                                       uint32_t aDisplayHeight);
 
+  /**
+   * The device-pixel-to-CSS-px ratio used to adjust meta viewport values.
+   */
+  static double GetDevicePixelsPerMetaViewportPixel(nsIWidget* aWidget);
+
   // Call EnterMicroTask when you're entering JS execution.
   // Usually the best way to do this is to use nsAutoMicroTask.
   static void EnterMicroTask() { ++sMicroTaskLevel; }
