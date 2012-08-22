@@ -496,7 +496,12 @@
       }
     },
 
-    set textContext(text) {
+    set textContent(text) {
+      // clear parentNodes for existing children
+      for (let i = this.childNodes.length; --i >= 0;) {
+        this.childNodes[i].parentNode = null;
+      }
+
       let node = new Text();
       this.childNodes = [ node ];
       node.textContent = text;
