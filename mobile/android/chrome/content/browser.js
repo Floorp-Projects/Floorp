@@ -375,7 +375,7 @@ var BrowserApp = {
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyEmailAddress"),
-      NativeWindow.contextmenus.emailLinkCopyableContext,
+      NativeWindow.contextmenus.emailLinkContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let emailAddr = NativeWindow.contextmenus._stripScheme(url);
@@ -396,6 +396,15 @@ var BrowserApp = {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let title = aTarget.textContent || aTarget.title;
         NativeWindow.contextmenus._shareStringWithDefault(url, title);
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareEmailAddress"),
+      NativeWindow.contextmenus.emailLinkContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        let emailAddr = NativeWindow.contextmenus._stripScheme(url);
+        let title = aTarget.textContent || aTarget.title;
+        NativeWindow.contextmenus._shareStringWithDefault(emailAddr, title);
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.sharePhoneNumber"),
@@ -1301,22 +1310,12 @@ var NativeWindow = {
       }
     },
 
-    emailLinkCopyableContext: {
-      matches: function emailLinkCopyableContextMatches(aElement) {
-        let uri = NativeWindow.contextmenus._getLink(aElement);
-        if (uri) {
-          return uri.schemeIs("mailto");
-        }
-        return false;
-      }
-    },
-
     linkShareableContext: {
       matches: function linkShareableContextMatches(aElement) {
         let uri = NativeWindow.contextmenus._getLink(aElement);
         if (uri) {
           let scheme = uri.scheme;
-          let dontShare = /^(about|chrome|file|javascript|resource|tel)$/;
+          let dontShare = /^(about|chrome|file|javascript|mailto|resource|tel)$/;
           return (scheme && !dontShare.test(scheme));
         }
         return false;
@@ -1331,6 +1330,15 @@ var NativeWindow = {
           let dontBookmark = /^(mailto|tel)$/;
           return (scheme && !dontBookmark.test(scheme));
         }
+        return false;
+      }
+    },
+
+    emailLinkContext: {
+      matches: function emailLinkContextMatches(aElement) {
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri)
+          return uri.schemeIs("mailto");
         return false;
       }
     },
