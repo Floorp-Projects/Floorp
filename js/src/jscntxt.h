@@ -566,8 +566,8 @@ struct JSRuntime : js::RuntimeFriendFields
     uintptr_t           gcDisableStrictProxyCheckingCount;
 
     /*
-     * The current incremental GC phase. During non-incremental GC, this is
-     * always NO_INCREMENTAL.
+     * The current incremental GC phase. This is also used internally in
+     * non-incremental GC.
      */
     js::gc::State       gcIncrementalState;
 

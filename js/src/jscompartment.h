@@ -170,12 +170,14 @@ struct JSCompartment
         return &rt->gcMarker;
     }
 
-  private:
+  public:
     enum CompartmentGCState {
         NoGC,
-        Collecting
+        Mark,
+        Sweep
     };
 
+  private:
     bool                         gcScheduled;
     CompartmentGCState           gcState;
     bool                         gcPreserveCode;
@@ -201,9 +203,9 @@ struct JSCompartment
         return rt->isHeapCollecting() && gcState != NoGC;
     }
 
-    void setCollecting(bool collecting) {
+    void setGCState(CompartmentGCState state) {
         JS_ASSERT(rt->isHeapBusy());
-        gcState = collecting ? Collecting : NoGC;
+        gcState = state;
     }
 
     void scheduleGC() {
@@ -227,8 +229,12 @@ struct JSCompartment
         return gcState != NoGC;
     }
 
+    bool isGCMarking() {
+        return gcState == Mark;
+    }
+
     bool isGCSweeping() {
-        return gcState != NoGC && rt->gcIncrementalState == js::gc::SWEEP;
+        return gcState == Sweep;
     }
 
     size_t                       gcBytes;
