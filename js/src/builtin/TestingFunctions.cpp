@@ -806,6 +806,7 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "   10: Incremental GC in multiple slices\n"
 "   11: Verify post write barriers between instructions\n"
 "   12: Verify post write barriers between paints\n"
+"   13: Purge analysis state when memory is allocated\n"
 "  Period specifies that collection happens every n allocations.\n"),
 
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
