@@ -105,7 +105,7 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   {"rf-firefox.dll", MAKE_VERSION(7,6,1,0)},
   {"roboform.dll", MAKE_VERSION(7,6,1,0)},
 
-  // Topcrash with Babylon Toolbar on FF16+
+  // Topcrash with Babylon Toolbar on FF16+ (bug 721264)
   {"babyfox.dll", ALL_VERSIONS},
 
   // leave these two in always for tests
