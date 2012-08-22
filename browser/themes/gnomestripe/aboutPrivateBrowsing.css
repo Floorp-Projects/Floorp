@@ -34,7 +34,7 @@ body.normal > #errorPageContainer {
   background: url("moz-icon://stock/gtk-dialog-info?size=menu") no-repeat top left;
 }
 
-body[dir="rtl"] #moreInfo {
+#moreInfo:dir(rtl) {
   background-position: top right;
 }
 

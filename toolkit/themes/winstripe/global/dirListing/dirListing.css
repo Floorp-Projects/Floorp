@@ -45,7 +45,7 @@ p {
   float: left;
 }
 
-body[dir="rtl"] #UI_goUp {
+#UI_goUp:dir(rtl) {
   float: right;
 }
 
@@ -54,7 +54,7 @@ body[dir="rtl"] #UI_goUp {
   float: right;
 }
 
-body[dir="rtl"] #UI_showHidden {
+#UI_showHidden:dir(rtl) {
   float: left;
 }
 

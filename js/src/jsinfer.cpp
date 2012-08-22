@@ -4270,8 +4270,22 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
         }
     }
 
-    /* Handle any remaining 'this' uses on the stack. */
-    if (!pendingPoppedThis.empty() &&
+    /*
+     * There is an invariant that all definite properties come before
+     * non-definite properties in the shape tree. So, we can't process
+     * remaining 'this' uses on the stack unless we have completely analyzed
+     * the function, due to corner cases like the following:
+     *
+     *   this.x = this[this.y = "foo"]++;
+     *
+     * The 'this.y = "foo"' assignment breaks the above loop since the 'this'
+     * in the assignment is popped multiple times, with 'this.x' being left on
+     * the pending stack. But we can't mark 'x' as a definite property, as
+     * that would make it come before 'y' in the shape tree, breaking the
+     * invariant.
+     */
+    if (entirelyAnalyzed &&
+        !pendingPoppedThis.empty() &&
         !AnalyzePoppedThis(cx, &pendingPoppedThis, type, fun, pbaseobj,
                            initializerList)) {
         return false;
@@ -5047,33 +5061,31 @@ JSScript::makeAnalysis(JSContext *cx)
     return true;
 }
 
-bool
-JSFunction::setTypeForScriptedFunction(JSContext *cx, bool singleton)
+/* static */ bool
+JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool singleton)
 {
-    JS_ASSERT(script());
-    JS_ASSERT(script()->function() == this);
+    JS_ASSERT(fun->script());
+    JS_ASSERT(fun->script()->function() == fun);
 
     if (!cx->typeInferenceEnabled())
         return true;
 
     if (singleton) {
-        if (!setSingletonType(cx))
+        if (!setSingletonType(cx, fun))
             return false;
-    } else if (UseNewTypeForClone(this)) {
+    } else if (UseNewTypeForClone(fun)) {
         /*
          * Leave the default unknown-properties type for the function, it
          * should not be used by scripts or appear in type sets.
          */
     } else {
-        RootedFunction self(cx, this);
-
-        TypeObject *type = cx->compartment->types.newTypeObject(cx, script(),
-                                                                JSProto_Function, getProto());
+        TypeObject *type = cx->compartment->types.newTypeObject(cx, fun->script(),
+                                                                JSProto_Function, fun->getProto());
         if (!type)
             return false;
 
-        self->setType(type);
-        type->interpretedFunction = self;
+        fun->setType(type);
+        type->interpretedFunction = fun;
     }
 
     return true;
@@ -5193,7 +5205,7 @@ JSObject::splicePrototype(JSContext *cx, JSObject *proto_)
     return true;
 }
 
-void
+TypeObject *
 JSObject::makeLazyType(JSContext *cx)
 {
     JS_ASSERT(hasLazyType());
@@ -5205,13 +5217,13 @@ JSObject::makeLazyType(JSContext *cx)
     if (!type) {
         if (cx->typeInferenceEnabled())
             cx->compartment->types.setPendingNukeTypes(cx);
-        return;
+        return self->type_;
     }
 
     if (!cx->typeInferenceEnabled()) {
         /* This can only happen if types were previously nuked. */
         self->type_ = type;
-        return;
+        return type;
     }
 
     AutoEnterTypeInference enter(cx);
@@ -5254,6 +5266,8 @@ JSObject::makeLazyType(JSContext *cx)
         type->flags |= OBJECT_FLAG_NON_TYPED_ARRAY;
 
     self->type_ = type;
+
+    return type;
 }
 
 /* static */ inline HashNumber

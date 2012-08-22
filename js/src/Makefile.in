@@ -124,7 +124,6 @@ CPPSRCS		= \
 		ParseMaps.cpp \
 		ParseNode.cpp \
 		Parser.cpp \
-		SemanticAnalysis.cpp \
 		SPSProfiler.cpp \
 		TokenStream.cpp \
 		TestingFunctions.cpp \

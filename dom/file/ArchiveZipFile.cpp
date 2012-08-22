@@ -327,9 +327,6 @@ ArchiveInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 NS_IMETHODIMP
 ArchiveInputStream::Tell(PRInt64 *aResult)
 {
-  if (NS_FAILED(mStatus))
-    return mStatus;
-
   LL_UI2L(*aResult, mData.cursor);
   return NS_OK;
 }

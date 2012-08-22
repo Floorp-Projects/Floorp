@@ -785,6 +785,7 @@ JSRuntime::JSRuntime()
     gcIncrementalState(gc::NO_INCREMENTAL),
     gcLastMarkSlice(false),
     gcSweepOnBackgroundThread(false),
+    gcSweepingCompartments(NULL),
     gcSweepPhase(0),
     gcSweepCompartmentIndex(0),
     gcSweepKindIndex(0),
@@ -830,7 +831,7 @@ JSRuntime::JSRuntime()
 #ifdef JS_THREADSAFE
     sourceCompressorThread(thisFromCtor()),
 #endif
-    defaultFreeOp_(thisFromCtor(), false, false),
+    defaultFreeOp_(thisFromCtor(), false),
     debuggerMutations(0),
     securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),
     DOMcallbacks(NULL),
@@ -1987,9 +1988,9 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *objArg, jsid id, JSBool *resolv
     if (idstr == atom) {
         *resolved = true;
         RootedValue undefinedValue(cx, UndefinedValue());
-        return obj->defineProperty(cx, atom->asPropertyName(), undefinedValue,
-                                   JS_PropertyStub, JS_StrictPropertyStub,
-                                   JSPROP_PERMANENT | JSPROP_READONLY);
+        return JSObject::defineProperty(cx, obj, atom->asPropertyName(), undefinedValue,
+                                        JS_PropertyStub, JS_StrictPropertyStub,
+                                        JSPROP_PERMANENT | JSPROP_READONLY);
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
@@ -2080,9 +2081,9 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *objArg)
     RootedId undefinedId(cx, NameToId(undefinedName));
     RootedValue undefinedValue(cx, UndefinedValue());
     if (!obj->nativeContains(cx, undefinedId) &&
-        !obj->defineProperty(cx, undefinedName, undefinedValue,
-                             JS_PropertyStub, JS_StrictPropertyStub,
-                             JSPROP_PERMANENT | JSPROP_READONLY)) {
+        !JSObject::defineProperty(cx, obj, undefinedName, undefinedValue,
+                                  JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_PERMANENT | JSPROP_READONLY)) {
         return false;
     }
 
@@ -3223,7 +3224,7 @@ JS_DefaultValue(JSContext *cx, JSObject *objArg, JSType hint, jsval *vp)
     JS_ASSERT(hint == JSTYPE_VOID || hint == JSTYPE_STRING || hint == JSTYPE_NUMBER);
 
     RootedValue value(cx);
-    if (!obj->defaultValue(cx, hint, &value))
+    if (!JSObject::defaultValue(cx, obj, hint, &value))
         return false;
 
     *vp = value;
@@ -3394,7 +3395,7 @@ JS_GetConstructor(JSContext *cx, JSObject *protoArg)
     {
         JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
-        if (!proto->getProperty(cx, cx->runtime->atomState.constructorAtom, &cval))
+        if (!JSObject::getProperty(cx, proto, proto, cx->runtime->atomState.constructorAtom, &cval))
             return NULL;
     }
     if (!IsFunctionObject(cval)) {
@@ -3541,7 +3542,7 @@ JS_FreezeObject(JSContext *cx, JSObject *objArg)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    return obj->freeze(cx);
+    return JSObject::freeze(cx, obj);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3556,7 +3557,7 @@ JS_DeepFreezeObject(JSContext *cx, JSObject *objArg)
     if (!obj->isExtensible())
         return true;
 
-    if (!obj->freeze(cx))
+    if (!JSObject::freeze(cx, obj))
         return false;
 
     /* Walk slots in obj and if any value is a non-null object, seal it. */
@@ -3581,7 +3582,7 @@ LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     assertSameCompartment(cx, obj, id);
 
     JSAutoResolveFlags rf(cx, flags);
-    return obj->lookupGeneric(cx, id, objp, propp);
+    return JSObject::lookupGeneric(cx, obj, id, objp, propp);
 }
 
 #define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
@@ -3674,7 +3675,7 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *objArg, jsid id_, unsign
     assertSameCompartment(cx, obj, id);
     if (!(obj->isNative()
           ? LookupPropertyWithFlags(cx, obj, id, flags, &objp, &prop)
-          : obj->lookupGeneric(cx, id, &objp, &prop)))
+          : JSObject::lookupGeneric(cx, obj, id, &objp, &prop)))
         return false;
 
     if (!LookupResult(cx, obj, objp, id, prop, vp))
@@ -3878,7 +3879,7 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
         return !!DefineNativeProperty(cx, obj, id, value, getter, setter,
                                       attrs, flags, tinyid);
     }
-    return obj->defineGeneric(cx, id, value, getter, setter, attrs);
+    return JSObject::defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4093,7 +4094,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
                    ? Proxy::getOwnPropertyDescriptor(cx, obj2, id, false, desc)
                    : Proxy::getPropertyDescriptor(cx, obj2, id, false, desc);
         }
-        if (!obj2->getGenericAttributes(cx, id, &desc->attrs))
+        if (!JSObject::getGenericAttributes(cx, obj2, id, &desc->attrs))
             return false;
         desc->getter = NULL;
         desc->setter = NULL;
@@ -4202,8 +4203,8 @@ SetPropertyAttributesById(JSContext *cx, HandleObject obj, HandleId id, unsigned
         return true;
     }
     JSBool ok = obj->isNative()
-                ? obj->changePropertyAttributes(cx, shape, attrs)
-                : obj->setGenericAttributes(cx, id, &attrs);
+                ? JSObject::changePropertyAttributes(cx, obj, shape, attrs)
+                : JSObject::setGenericAttributes(cx, obj, id, &attrs);
     if (ok)
         *foundp = true;
     return ok;
@@ -4249,7 +4250,7 @@ JS_ForwardGetPropertyTo(JSContext *cx, JSObject *objArg, jsid idArg, JSObject *o
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
     RootedValue value(cx);
-    if (!obj->getGeneric(cx, onBehalfOf, id, &value))
+    if (!JSObject::getGeneric(cx, obj, onBehalfOf, id, &value))
         return false;
 
     *vp = value;
@@ -4288,7 +4289,7 @@ JS_ForwardGetElementTo(JSContext *cx, JSObject *objArg, uint32_t index, JSObject
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
     RootedValue value(cx);
-    if (!obj->getElement(cx, onBehalfOf, index, &value))
+    if (!JSObject::getElement(cx, obj, onBehalfOf, index, &value))
         return false;
 
     *vp = value;
@@ -4307,7 +4308,7 @@ JS_GetElementIfPresent(JSContext *cx, JSObject *objArg, uint32_t index, JSObject
 
     RootedValue value(cx);
     bool isPresent;
-    if (!obj->getElementIfPresent(cx, onBehalfOf, index, &value, &isPresent))
+    if (!JSObject::getElementIfPresent(cx, obj, onBehalfOf, index, &value, &isPresent))
         return false;
 
     *vp = value;
@@ -4377,7 +4378,7 @@ JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid idArg, jsval *vp)
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
 
     RootedValue value(cx, *vp);
-    if (!obj->setGeneric(cx, obj, id, &value, false))
+    if (!JSObject::setGeneric(cx, obj, obj, id, &value, false))
         return false;
 
     *vp = value;
@@ -4394,7 +4395,7 @@ JS_SetElement(JSContext *cx, JSObject *objArg, uint32_t index, jsval *vp)
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
 
     RootedValue value(cx, *vp);
-    if (!obj->setElement(cx, obj, index, &value, false))
+    if (!JSObject::setElement(cx, obj, obj, index, &value, false))
         return false;
 
     *vp = value;
@@ -4430,10 +4431,10 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *objArg, jsid id, jsval *rval)
 
     if (JSID_IS_SPECIAL(id)) {
         Rooted<SpecialId> sid(cx, JSID_TO_SPECIALID(id));
-        if (!obj->deleteSpecial(cx, sid, &value, false))
+        if (!JSObject::deleteSpecial(cx, obj, sid, &value, false))
             return false;
     } else {
-        if (!obj->deleteByValue(cx, IdToValue(id), &value, false))
+        if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &value, false))
             return false;
     }
 
@@ -4451,7 +4452,7 @@ JS_DeleteElement2(JSContext *cx, JSObject *objArg, uint32_t index, jsval *rval)
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
     RootedValue value(cx);
-    if (!obj->deleteElement(cx, index, &value, false))
+    if (!JSObject::deleteElement(cx, obj, index, &value, false))
         return false;
 
     *rval = value;
@@ -4471,7 +4472,7 @@ JS_DeleteProperty2(JSContext *cx, JSObject *objArg, const char *name, jsval *rva
         return false;
 
     RootedValue value(cx);
-    if (!obj->deleteByValue(cx, StringValue(atom), &value, false))
+    if (!JSObject::deleteByValue(cx, obj, StringValue(atom), &value, false))
         return false;
 
     *rval = value;
@@ -4491,7 +4492,7 @@ JS_DeleteUCProperty2(JSContext *cx, JSObject *objArg, const jschar *name, size_t
         return false;
 
     RootedValue value(cx);
-    if (!obj->deleteByValue(cx, StringValue(atom), &value, false))
+    if (!JSObject::deleteByValue(cx, obj, StringValue(atom), &value, false))
         return false;
 
     *rval = value;
@@ -4758,7 +4759,7 @@ JS_GetArrayLength(JSContext *cx, JSObject *objArg, uint32_t *lengthp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    return js_GetLengthProperty(cx, obj, lengthp);
+    return GetLengthProperty(cx, obj, lengthp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4768,7 +4769,7 @@ JS_SetArrayLength(JSContext *cx, JSObject *objArg, uint32_t length)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    return js_SetLengthProperty(cx, obj, length);
+    return SetLengthProperty(cx, obj, length);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5505,7 +5506,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
     if (obj && funAtom) {
         Rooted<jsid> id(cx, AtomToId(funAtom));
         RootedValue value(cx, ObjectValue(*fun));
-        if (!obj->defineGeneric(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
+        if (!JSObject::defineGeneric(cx, obj, id, value, NULL, NULL, JSPROP_ENUMERATE))
             return NULL;
     }
 
@@ -7225,7 +7226,7 @@ AutoGCRooter::AutoGCRooter(JSContext *cx, ptrdiff_t tag)
 AutoEnumStateRooter::~AutoEnumStateRooter()
 {
     if (!stateValue.isNull())
-        MOZ_ALWAYS_TRUE(obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0));
+        MOZ_ALWAYS_TRUE(JSObject::enumerate(context, obj, JSENUMERATE_DESTROY, &stateValue, 0));
 }
 
 #ifdef DEBUG

@@ -9,6 +9,7 @@
 
 #include "ImageContainer.h"
 #include "GonkIOSurfaceImage.h"
+#include "GrallocImages.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ipc/CrossProcessMutex.h"
 #include "SharedTextureImage.h"
@@ -30,6 +31,7 @@
 #endif
 
 using namespace mozilla::ipc;
+using namespace android;
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SourceSurface;
 
@@ -47,22 +49,37 @@ ImageFactory::CreateImage(const ImageFormat *aFormats,
     return nullptr;
   }
   nsRefPtr<Image> img;
+#ifdef MOZ_WIDGET_GONK
+  if (FormatInList(aFormats, aNumFormats, GRALLOC_PLANAR_YCBCR)) {
+    img = new GrallocPlanarYCbCrImage();
+    return img.forget();
+  }
+#endif
   if (FormatInList(aFormats, aNumFormats, PLANAR_YCBCR)) {
     img = new PlanarYCbCrImage(aRecycleBin);
-  } else if (FormatInList(aFormats, aNumFormats, CAIRO_SURFACE)) {
+    return img.forget();
+  }
+  if (FormatInList(aFormats, aNumFormats, CAIRO_SURFACE)) {
     img = new CairoImage();
-  } else if (FormatInList(aFormats, aNumFormats, SHARED_TEXTURE)) {
+    return img.forget();
+  }
+  if (FormatInList(aFormats, aNumFormats, SHARED_TEXTURE)) {
     img = new SharedTextureImage();
+    return img.forget();
+  }
 #ifdef XP_MACOSX
-  } else if (FormatInList(aFormats, aNumFormats, MAC_IO_SURFACE)) {
+  if (FormatInList(aFormats, aNumFormats, MAC_IO_SURFACE)) {
     img = new MacIOSurfaceImage();
+    return img.forget();
+  }
 #endif
 #ifdef MOZ_WIDGET_GONK
-  } else if (FormatInList(aFormats, aNumFormats, GONK_IO_SURFACE)) {
+  if (FormatInList(aFormats, aNumFormats, GONK_IO_SURFACE)) {
     img = new GonkIOSurfaceImage();
-#endif
+    return img.forget();
   }
-  return img.forget();
+#endif
+  return nullptr;
 }
 
 BufferRecycleBin::BufferRecycleBin()
@@ -423,10 +440,7 @@ CopyPlane(PRUint8 *aDst, PRUint8 *aSrc,
 }
 
 void
-PlanarYCbCrImage::CopyData(const Data& aData,
-                           PRInt32 aYOffset, PRInt32 aYSkip,
-                           PRInt32 aCbOffset, PRInt32 aCbSkip,
-                           PRInt32 aCrOffset, PRInt32 aCrSkip)
+PlanarYCbCrImage::CopyData(const Data& aData)
 {
   mData = aData;
 
@@ -445,13 +459,13 @@ PlanarYCbCrImage::CopyData(const Data& aData,
 
   CopyPlane(mData.mYChannel, aData.mYChannel,
             mData.mYSize, mData.mYStride,
-            aYOffset, aYSkip);
+            mData.mYOffset, mData.mYSkip);
   CopyPlane(mData.mCbChannel, aData.mCbChannel,
             mData.mCbCrSize, mData.mCbCrStride,
-            aCbOffset, aCbSkip);
+            mData.mCbOffset, mData.mCbSkip);
   CopyPlane(mData.mCrChannel, aData.mCrChannel,
             mData.mCbCrSize, mData.mCbCrStride,
-            aCrOffset, aCrSkip);
+            mData.mCrOffset, mData.mCrSkip);
 
   mSize = aData.mPicSize;
 }
