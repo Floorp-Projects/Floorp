@@ -424,8 +424,9 @@ RES_DRAWABLE_BASE = \
   res/drawable/abouthome_icon.png \
   res/drawable/abouthome_logo.png \
   res/drawable/abouthome_promo_box_bg.9.png \
-  res/drawable/abouthome_sync_logo.png \
   res/drawable/abouthome_promo_box_pressed_bg.9.png \
+  res/drawable/abouthome_promo_logo_apps.png \
+  res/drawable/abouthome_promo_logo_sync.png \
   res/drawable/abouthome_thumbnail.png \
   res/drawable/address_bar_bg_shadow.png \
   res/drawable/alert_addon.png \
@@ -508,8 +509,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_icon.png \
   res/drawable-hdpi/abouthome_logo.png \
   res/drawable-hdpi/abouthome_promo_box_bg.9.png \
-  res/drawable-hdpi/abouthome_sync_logo.png \
   res/drawable-hdpi/abouthome_promo_box_pressed_bg.9.png \
+  res/drawable-hdpi/abouthome_promo_logo_apps.png \
+  res/drawable-hdpi/abouthome_promo_logo_sync.png \
   res/drawable-hdpi/abouthome_thumbnail.png \
   res/drawable-hdpi/address_bar_bg_shadow.png \
   res/drawable-hdpi/alert_addon.png \
@@ -574,8 +576,9 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/abouthome_icon.png \
   res/drawable-xhdpi/abouthome_logo.png \
   res/drawable-xhdpi/abouthome_promo_box_bg.9.png \
-  res/drawable-xhdpi/abouthome_sync_logo.png \
   res/drawable-xhdpi/abouthome_promo_box_pressed_bg.9.png \
+  res/drawable-xhdpi/abouthome_promo_logo_apps.png \
+  res/drawable-xhdpi/abouthome_promo_logo_sync.png \
   res/drawable-xhdpi/abouthome_thumbnail.png \
   res/drawable-xhdpi/address_bar_bg_curve.png \
   res/drawable-xhdpi/address_bar_bg_shadow.png \
