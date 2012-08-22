@@ -25,7 +25,6 @@
 #include "nsThemeConstants.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLInputElement.h"
-#include <malloc.h>
 
 
 #include "gfxASurface.h"
