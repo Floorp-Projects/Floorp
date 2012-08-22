@@ -40,7 +40,7 @@ interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
 
-[scriptable, uuid(6cf3e8f0-fb82-11e1-a21f-0800200c9a66)]
+[scriptable, uuid(90d8e97b-2c61-4c05-9f1c-e568d22f5bdc)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -102,6 +102,16 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    */
   void setCSSViewport(in float aWidthPx, in float aHeightPx);
+
+  /**
+   * Information retrieved from the <meta name="viewport"> tag.
+   * See nsContentUtils::GetViewportInfo for more information.
+   */
+  void getViewportInfo(in uint32_t aDisplayWidth, in uint32_t aDisplayHeight,
+                       out double aDefaultZoom, out boolean aAllowZoom,
+                       out double aMinZoom, out double aMaxZoom,
+                       out uint32_t aWidth, out uint32_t aHeight,
+                       out boolean aAutoSize);
 
   /**
    * For any scrollable element, this allows you to override the
