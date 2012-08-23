@@ -1096,7 +1096,7 @@ class LIRGraph
     MIRGraph &mir_;
 
   public:
-    LIRGraph(MIRGraph &mir);
+    LIRGraph(MIRGraph *mir);
 
     size_t numBlocks() const {
         return blocks_.length();
