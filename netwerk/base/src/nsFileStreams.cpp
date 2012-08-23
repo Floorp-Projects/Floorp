@@ -496,6 +496,11 @@ nsFileInputStream::Tell(int64_t *aResult)
 NS_IMETHODIMP
 nsFileInputStream::Available(uint64_t *aResult)
 {
+    //if (mFD == nullptr && mBehaviorFlags & REOPEN_ON_REWIND) {
+        //*aResult = 0;
+        //return NS_OK;
+    //}
+
     return nsFileStreamBase::Available(aResult);
 }
 
