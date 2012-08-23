@@ -366,10 +366,7 @@ DebuggerServerConnection.prototype = {
    * Remove a previously-added pool of actors to the connection.
    */
   removeActorPool: function DSC_removeActorPool(aActorPool) {
-    let index = this._extraPools.lastIndexOf(aActorPool);
-    if (index > -1) {
-      this._extraPools.splice(index, 1);
-    }
+    let index = this._extraPools.splice(this._extraPools.lastIndexOf(aActorPool), 1);
   },
 
   /**
