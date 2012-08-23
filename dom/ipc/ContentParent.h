@@ -65,7 +65,7 @@ public:
     /** Shut down the content-process machinery. */
     static void ShutDown();
 
-    static ContentParent* GetNewOrUsed();
+    static ContentParent* GetNewOrUsed(bool aForBrowserElement = false);
 
     /**
      * Get or create a content process for the given app descriptor,
@@ -129,7 +129,7 @@ private:
     using PContentParent::SendPBrowserConstructor;
     using PContentParent::SendPTestShellConstructor;
 
-    ContentParent(const nsAString& aAppManifestURL);
+    ContentParent(const nsAString& aAppManifestURL, bool aIsForBrowser);
     virtual ~ContentParent();
 
     void Init();
