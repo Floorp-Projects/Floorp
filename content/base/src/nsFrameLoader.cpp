@@ -1142,27 +1142,10 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  bool ourContentBoundary, otherContentBoundary;
-  ourDocshell->GetIsContentBoundary(&ourContentBoundary);
-  otherDocshell->GetIsContentBoundary(&otherContentBoundary);
-  if (ourContentBoundary != otherContentBoundary) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  if (ourContentBoundary) {
-    bool ourIsBrowser, otherIsBrowser;
-    ourDocshell->GetIsBrowserElement(&ourIsBrowser);
-    otherDocshell->GetIsBrowserElement(&otherIsBrowser);
-    if (ourIsBrowser != otherIsBrowser) {
+  if (ourDocshell->GetIsBrowserElement() !=
+      otherDocshell->GetIsBrowserElement() ||
+      ourDocshell->GetIsApp() != otherDocshell->GetIsApp()) {
       return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    bool ourIsApp, otherIsApp;
-    ourDocshell->GetIsApp(&ourIsApp);
-    otherDocshell->GetIsApp(&otherIsApp);
-    if (ourIsApp != otherIsApp) {
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
   }
 
   if (mInSwap || aOther->mInSwap) {

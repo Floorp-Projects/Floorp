@@ -5135,9 +5135,7 @@ nsDocShell::SetIsActive(bool aIsActive)
           continue;
       }
 
-      bool isContentBoundary = false;
-      docshell->GetIsContentBoundary(&isContentBoundary);
-      if (!isContentBoundary) {
+      if (!docshell->GetIsContentBoundary()) {
           docshell->SetIsActive(aIsActive);
       }
   }
@@ -12272,7 +12270,6 @@ nsDocShell::GetFrameType()
 nsDocShell::GetIsBrowserElement(bool* aIsBrowser)
 {
     *aIsBrowser = (GetFrameType() == eFrameTypeBrowser);
-
     return NS_OK;
 }
 
