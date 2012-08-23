@@ -50,43 +50,12 @@ req.onerror = function(e) {
   ev = e;
 }
 reqserv.fireError(req, "OhMyError");
-ok(ev, "got error event");
+ok(ev, "got success event");
 is(ev.type, "error", "correct type during error");
 is(ev.target, req, "correct target during error");
 is(req.readyState, "done", "correct readyState after error");
 is(req.error.name, "OhMyError", "correct error after error");
 is(req.result, undefined, "correct result after error");
-
-// fire success
-req = reqserv.createRequest(window);
-ev = null;
-req.onsuccess = function(e) {
-  ev = e;
-  ok(ev, "got async success event");
-  is(ev.type, "success", "correct type during async success");
-  is(ev.target, this, "correct target during async success");
-  is(this.readyState, "done", "correct readyState after async success");
-  is(this.error, null, "correct error after async success");
-  is(this.result, "my async result", "correct result after async success");
-}
-reqserv.fireSuccessAsync(req, "my async result");
-
-// fire error
-req = reqserv.createRequest(window);
-ev = null;
-req.onerror = function(e) {
-  ev = e;
-  ok(ev, "got async error event");
-  is(ev.type, "error", "correct type during async error");
-  is(ev.target, this, "correct target during async error");
-  is(this.readyState, "done", "correct readyState after async error");
-  is(this.error.name, "OhMyAsyncError", "correct error after async error");
-  is(this.result, undefined, "correct result after async error");
-  SimpleTest.finish();
-}
-reqserv.fireErrorAsync(req, "OhMyAsyncError");
-
-SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>
