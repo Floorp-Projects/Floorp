@@ -699,7 +699,10 @@ OutputPanel.prototype.update = function OP_update()
 OutputPanel.prototype.remove = function OP_remove()
 {
   this.canHide = true;
-  this._panel.hidePopup();
+
+  if (this._panel) {
+    this._panel.hidePopup();
+  }
 
   if (this.displayedOutput) {
     this.displayedOutput.onChange.remove(this.update, this);
