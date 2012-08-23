@@ -17,6 +17,7 @@
 #include "nsCDefaultURIFixup.h"
 #include "base/compiler_specific.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/URIUtils.h"
 
 using namespace mozilla::ipc;
 
@@ -163,10 +164,13 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   if (mLoadGroup)
     mLoadGroup->AddRequest(this, nullptr);
 
+  URIParams uri;
+  SerializeURI(nsBaseChannel::URI(), uri);
+
   OptionalInputStreamParams uploadStream;
   SerializeInputStream(mUploadStream, uploadStream);
 
-  SendAsyncOpen(nsBaseChannel::URI(), mStartPos, mEntityID, uploadStream,
+  SendAsyncOpen(uri, mStartPos, mEntityID, uploadStream,
                 IPC::SerializedLoadContext(this));
 
   // The socket transport layer in the chrome process now has a logical ref to
@@ -204,7 +208,7 @@ class FTPStartRequestEvent : public ChannelEvent
  public:
   FTPStartRequestEvent(FTPChannelChild* aChild, const int32_t& aContentLength,
                        const nsCString& aContentType, const PRTime& aLastModified,
-                       const nsCString& aEntityID, const IPC::URI& aURI)
+                       const nsCString& aEntityID, const URIParams& aURI)
   : mChild(aChild), mContentLength(aContentLength), mContentType(aContentType),
     mLastModified(aLastModified), mEntityID(aEntityID), mURI(aURI) {}
   void Run() { mChild->DoOnStartRequest(mContentLength, mContentType,
@@ -215,7 +219,7 @@ class FTPStartRequestEvent : public ChannelEvent
   nsCString mContentType;
   PRTime mLastModified;
   nsCString mEntityID;
-  IPC::URI mURI;
+  URIParams mURI;
 };
 
 bool
@@ -223,7 +227,7 @@ FTPChannelChild::RecvOnStartRequest(const int32_t& aContentLength,
                                     const nsCString& aContentType,
                                     const PRTime& aLastModified,
                                     const nsCString& aEntityID,
-                                    const IPC::URI& aURI)
+                                    const URIParams& aURI)
 {
   if (mEventQ.ShouldEnqueue()) {
     mEventQ.Enqueue(new FTPStartRequestEvent(this, aContentLength, aContentType,
@@ -240,7 +244,7 @@ FTPChannelChild::DoOnStartRequest(const int32_t& aContentLength,
                                   const nsCString& aContentType,
                                   const PRTime& aLastModified,
                                   const nsCString& aEntityID,
-                                  const IPC::URI& aURI)
+                                  const URIParams& aURI)
 {
   LOG(("FTPChannelChild::RecvOnStartRequest [this=%x]\n", this));
 
@@ -250,7 +254,7 @@ FTPChannelChild::DoOnStartRequest(const int32_t& aContentLength,
   mEntityID = aEntityID;
 
   nsCString spec;
-  nsCOMPtr<nsIURI> uri(aURI);
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   uri->GetSpec(spec);
   nsBaseChannel::URI()->SetSpec(spec);
 

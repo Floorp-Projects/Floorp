@@ -18,6 +18,8 @@ include protocol PNecko;
 include protocol PSms;
 include protocol PStorage;
 include protocol PTestShell;
+include DOMTypes;
+include URIParams;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
@@ -25,15 +27,12 @@ include "mozilla/dom/TabMessageUtils.h";
 
 include "nsGeoPositionIPCSerialiser.h";
 
-include DOMTypes;
-
 using GeoPosition;
 using PrefTuple;
 
 using ChromePackage;
 using ResourceMapping;
 using OverrideMapping;
-using IPC::URI;
 using IPC::Permission;
 using mozilla::null_t;
 using mozilla::void_t;
@@ -208,7 +207,7 @@ child:
 
     async SetOffline(bool offline);
 
-    async NotifyVisited(URI uri);
+    async NotifyVisited(URIParams uri);
 
     PreferenceUpdate(PrefSetting pref);
 
@@ -259,9 +258,9 @@ parent:
 
     // Services remoting
 
-    async StartVisitedQuery(URI uri);
-    async VisitURI(URI uri, URI referrer, uint32_t flags);
-    async SetURITitle(URI uri, nsString title);
+    async StartVisitedQuery(URIParams uri);
+    async VisitURI(URIParams uri, OptionalURIParams referrer, uint32_t flags);
+    async SetURITitle(URIParams uri, nsString title);
     
     // filepicker remoting
     sync ShowFilePicker(int16_t mode, int16_t selectedType, bool addToRecentDocs,
@@ -269,7 +268,7 @@ parent:
                         nsString[] filters, nsString[] filterNames)
         returns (nsString[] files, int16_t retValue, nsresult result);
 
-    async LoadURIExternal(URI uri);
+    async LoadURIExternal(URIParams uri);
 
     // PrefService message
     sync ReadPrefsArray() returns (PrefSetting[] prefs);
@@ -286,10 +285,10 @@ parent:
                           nsString cookie,
                           nsString name);
 
-    PExternalHelperApp(URI uri, nsCString aMimeContentType,
+    PExternalHelperApp(OptionalURIParams uri, nsCString aMimeContentType,
                        nsCString aContentDisposition, bool aForceSave,
-                       int64_t aContentLength, URI aReferrer);
-    
+                       int64_t aContentLength, OptionalURIParams aReferrer);
+
     AddGeolocationListener();
     RemoveGeolocationListener();
 

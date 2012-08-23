@@ -5,7 +5,7 @@
 #ifndef mozilla_ipc_InputStreamUtils_h
 #define mozilla_ipc_InputStreamUtils_h
 
-#include "mozilla/ipc/IPCSerializableParams.h"
+#include "mozilla/ipc/InputStreamParams.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
 
