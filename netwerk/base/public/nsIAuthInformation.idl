@@ -21,18 +21,18 @@ interface nsIAuthInformation : nsISupports
   /**
    * This dialog belongs to a network host.
    */
-  const PRUint32 AUTH_HOST = 1;
+  const uint32_t AUTH_HOST = 1;
 
   /**
    * This dialog belongs to a proxy.
    */
-  const PRUint32 AUTH_PROXY = 2;
+  const uint32_t AUTH_PROXY = 2;
 
   /**
    * This dialog needs domain information. The user interface should show a
    * domain field, prefilled with the domain attribute's value.
    */
-  const PRUint32 NEED_DOMAIN = 4;
+  const uint32_t NEED_DOMAIN = 4;
 
   /**
    * This dialog only asks for password information. Authentication prompts
@@ -44,7 +44,7 @@ interface nsIAuthInformation : nsISupports
    *
    * This flag is mutually exclusive with #NEED_DOMAIN.
    */
-  const PRUint32 ONLY_PASSWORD = 8;
+  const uint32_t ONLY_PASSWORD = 8;
 
   /**
    * We have already tried to log in for this channel
@@ -53,7 +53,7 @@ interface nsIAuthInformation : nsISupports
    *
    * @see also RFC 2616, Section 10.4.2
    */
-  const PRUint32 PREVIOUS_FAILED = 16;
+  const uint32_t PREVIOUS_FAILED = 16;
   /* @} */
 
   /**

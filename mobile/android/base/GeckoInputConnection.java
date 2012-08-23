@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 
 import android.R;
@@ -276,8 +275,7 @@ class GeckoInputConnection
     }
 
     private static View getView() {
-        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        return (layerClient == null ? null : layerClient.getView());
+        return GeckoApp.mAppContext.getLayerView();
     }
 
     private Span getSelection() {

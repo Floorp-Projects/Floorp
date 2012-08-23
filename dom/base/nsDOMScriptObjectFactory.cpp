@@ -158,7 +158,7 @@ nsDOMScriptObjectFactory::RegisterDOMClassInfo(const char *aName,
 					       nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
 					       const nsIID *aProtoChainInterface,
 					       const nsIID **aInterfaces,
-					       PRUint32 aScriptableFlags,
+					       uint32_t aScriptableFlags,
 					       bool aHasClassInterface,
 					       const nsCID *aConstructorCID)
 {
@@ -198,7 +198,7 @@ nsresult NS_GetScriptRuntime(const nsAString &aLanguageName,
   return NS_GetJSRuntime(aLanguage);
 }
 
-nsresult NS_GetScriptRuntimeByID(PRUint32 aScriptTypeID,
+nsresult NS_GetScriptRuntimeByID(uint32_t aScriptTypeID,
                                  nsIScriptRuntime **aLanguage)
 {
   *aLanguage = NULL;

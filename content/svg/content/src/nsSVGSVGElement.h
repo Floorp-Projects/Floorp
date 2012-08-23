@@ -173,7 +173,7 @@ public:
   virtual bool HasValidDimensions() const;
  
   // nsSVGSVGElement methods:
-  float GetLength(PRUint8 mCtxType);
+  float GetLength(uint8_t mCtxType);
 
   // public helpers:
 
@@ -266,8 +266,8 @@ private:
   bool SetViewBoxProperty(const nsSVGViewBoxRect& aViewBox);
   const nsSVGViewBoxRect* GetViewBoxProperty() const;
   bool ClearViewBoxProperty();
-  bool SetZoomAndPanProperty(PRUint16 aValue);
-  PRUint16 GetZoomAndPanProperty() const;
+  bool SetZoomAndPanProperty(uint16_t aValue);
+  uint16_t GetZoomAndPanProperty() const;
   bool ClearZoomAndPanProperty();
 
   bool IsRoot() const {

@@ -49,8 +49,8 @@ WidgetUtils::DOMWindowToWidget(nsIDOMWindow *aDOMWindow)
 }
 
 // static
-PRUint32
-WidgetUtils::ComputeKeyCodeFromChar(PRUint32 aCharCode)
+uint32_t
+WidgetUtils::ComputeKeyCodeFromChar(uint32_t aCharCode)
 {
   if (aCharCode >= 'A' && aCharCode <= 'Z') {
     return aCharCode - 'A' + NS_VK_A;
@@ -102,10 +102,10 @@ WidgetUtils::ComputeKeyCodeFromChar(PRUint32 aCharCode)
 
 // static
 void
-WidgetUtils::GetLatinCharCodeForKeyCode(PRUint32 aKeyCode,
+WidgetUtils::GetLatinCharCodeForKeyCode(uint32_t aKeyCode,
                                         bool aIsCapsLock,
-                                        PRUint32* aUnshiftedCharCode,
-                                        PRUint32* aShiftedCharCode)
+                                        uint32_t* aUnshiftedCharCode,
+                                        uint32_t* aShiftedCharCode)
 {
   MOZ_ASSERT(aUnshiftedCharCode && aShiftedCharCode,
              "aUnshiftedCharCode and aShiftedCharCode must not be NULL");

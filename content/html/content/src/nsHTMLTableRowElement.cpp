@@ -43,7 +43,7 @@ public:
   // nsIDOMHTMLTableRowElement
   NS_DECL_NSIDOMHTMLTABLEROWELEMENT
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -139,7 +139,7 @@ nsHTMLTableRowElement::GetTable(nsIDOMHTMLTableElement** aTable)
 }
 
 NS_IMETHODIMP
-nsHTMLTableRowElement::GetRowIndex(PRInt32* aValue)
+nsHTMLTableRowElement::GetRowIndex(int32_t* aValue)
 {
   *aValue = -1;
   nsCOMPtr<nsIDOMHTMLTableElement> table;
@@ -151,10 +151,10 @@ nsHTMLTableRowElement::GetRowIndex(PRInt32* aValue)
   nsCOMPtr<nsIDOMHTMLCollection> rows;
   table->GetRows(getter_AddRefs(rows));
 
-  PRUint32 numRows;
+  uint32_t numRows;
   rows->GetLength(&numRows);
 
-  for (PRUint32 i = 0; i < numRows; i++) {
+  for (uint32_t i = 0; i < numRows; i++) {
     if (rows->GetNodeAt(i) == static_cast<nsIContent*>(this)) {
       *aValue = i;
       break;
@@ -164,7 +164,7 @@ nsHTMLTableRowElement::GetRowIndex(PRInt32* aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
+nsHTMLTableRowElement::GetSectionRowIndex(int32_t* aValue)
 {
   *aValue = -1;
   nsCOMPtr<nsIDOMHTMLTableSectionElement> section;
@@ -176,9 +176,9 @@ nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
   nsCOMPtr<nsIDOMHTMLCollection> rows;
   section->GetRows(getter_AddRefs(rows));
 
-  PRUint32 numRows;
+  uint32_t numRows;
   rows->GetLength(&numRows);
-  for (PRUint32 i = 0; i < numRows; i++) {
+  for (uint32_t i = 0; i < numRows; i++) {
     if (rows->GetNodeAt(i) == static_cast<nsIContent*>(this)) {
       *aValue = i;
       break;
@@ -189,7 +189,7 @@ nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
 }
 
 static bool
-IsCell(nsIContent *aContent, PRInt32 aNamespaceID,
+IsCell(nsIContent *aContent, int32_t aNamespaceID,
        nsIAtom* aAtom, void *aData)
 {
   nsIAtom* tag = aContent->Tag();
@@ -217,7 +217,7 @@ nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
+nsHTMLTableRowElement::InsertCell(int32_t aIndex, nsIDOMHTMLElement** aValue)
 {
   *aValue = nullptr;
 
@@ -242,9 +242,9 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     // this unless we really have to, since this has to walk all our kids.  If
     // we have a nextSibling, we're clearly not past end of list.
     if (!nextSibling) {
-      PRUint32 cellCount;
+      uint32_t cellCount;
       cells->GetLength(&cellCount);
-      if (aIndex > PRInt32(cellCount)) {
+      if (aIndex > int32_t(cellCount)) {
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
       }
     }
@@ -275,7 +275,7 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 
 
 NS_IMETHODIMP
-nsHTMLTableRowElement::DeleteCell(PRInt32 aValue)
+nsHTMLTableRowElement::DeleteCell(int32_t aValue)
 {
   if (aValue < -1) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -285,7 +285,7 @@ nsHTMLTableRowElement::DeleteCell(PRInt32 aValue)
   GetCells(getter_AddRefs(cells));
 
   nsresult rv;
-  PRUint32 refIndex;
+  uint32_t refIndex;
   if (aValue == -1) {
     rv = cells->GetLength(&refIndex);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -297,7 +297,7 @@ nsHTMLTableRowElement::DeleteCell(PRInt32 aValue)
     --refIndex;
   }
   else {
-    refIndex = (PRUint32)aValue;
+    refIndex = (uint32_t)aValue;
   }
 
   nsCOMPtr<nsIDOMNode> cell;
@@ -320,7 +320,7 @@ NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, VAlign, valign)
 
 
 bool
-nsHTMLTableRowElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLTableRowElement::ParseAttribute(int32_t aNamespaceID,
                                       nsIAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsAttrValue& aResult)

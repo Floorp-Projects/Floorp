@@ -160,19 +160,19 @@ static void AppendString(nsAString& aString, nsIContent* aContent)
 }
 
 static void AppendSubString(nsAString& aString, nsIContent* aContent,
-                            PRUint32 aXPOffset, PRUint32 aXPLength)
+                            uint32_t aXPOffset, uint32_t aXPLength)
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "aContent is not a text node!");
   const nsTextFragment* text = aContent->GetText();
   if (!text)
     return;
-  text->AppendTo(aString, PRInt32(aXPOffset), PRInt32(aXPLength));
+  text->AppendTo(aString, int32_t(aXPOffset), int32_t(aXPLength));
 }
 
 #if defined(XP_WIN)
-static PRUint32 CountNewlinesInXPLength(nsIContent* aContent,
-                                        PRUint32 aXPLength)
+static uint32_t CountNewlinesInXPLength(nsIContent* aContent,
+                                        uint32_t aXPLength)
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "aContent is not a text node!");
@@ -183,9 +183,9 @@ static PRUint32 CountNewlinesInXPLength(nsIContent* aContent,
   NS_ABORT_IF_FALSE(
     (aXPLength == PR_UINT32_MAX || aXPLength <= text->GetLength()),
     "aXPLength is out-of-bounds");
-  const PRUint32 length = NS_MIN(aXPLength, text->GetLength());
-  PRUint32 newlines = 0;
-  for (PRUint32 i = 0; i < length; ++i) {
+  const uint32_t length = NS_MIN(aXPLength, text->GetLength());
+  uint32_t newlines = 0;
+  for (uint32_t i = 0; i < length; ++i) {
     if (text->CharAt(i) == '\n') {
       ++newlines;
     }
@@ -193,8 +193,8 @@ static PRUint32 CountNewlinesInXPLength(nsIContent* aContent,
   return newlines;
 }
 
-static PRUint32 CountNewlinesInNativeLength(nsIContent* aContent,
-                                            PRUint32 aNativeLength)
+static uint32_t CountNewlinesInNativeLength(nsIContent* aContent,
+                                            uint32_t aNativeLength)
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "aContent is not a text node!");
@@ -206,9 +206,9 @@ static PRUint32 CountNewlinesInNativeLength(nsIContent* aContent,
   NS_ABORT_IF_FALSE(
     (aNativeLength == PR_UINT32_MAX || aNativeLength <= text->GetLength() * 2),
     "aNativeLength is unexpected value");
-  const PRUint32 xpLength = text->GetLength();
-  PRUint32 newlines = 0;
-  for (PRUint32 i = 0, nativeOffset = 0;
+  const uint32_t xpLength = text->GetLength();
+  uint32_t newlines = 0;
+  for (uint32_t i = 0, nativeOffset = 0;
        i < xpLength && nativeOffset < aNativeLength;
        ++i, ++nativeOffset) {
     // For automated tests, we should abort on debug build.
@@ -222,10 +222,10 @@ static PRUint32 CountNewlinesInNativeLength(nsIContent* aContent,
 }
 #endif
 
-static PRUint32 GetNativeTextLength(nsIContent* aContent, PRUint32 aMaxLength = PR_UINT32_MAX)
+static uint32_t GetNativeTextLength(nsIContent* aContent, uint32_t aMaxLength = PR_UINT32_MAX)
 {
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
-    PRUint32 textLengthDifference =
+    uint32_t textLengthDifference =
 #if defined(XP_MACOSX)
       // On Mac, the length of a native newline ("\r") is equal to the length of
       // the XP newline ("\n"), so the native length is the same as the XP length.
@@ -243,7 +243,7 @@ static PRUint32 GetNativeTextLength(nsIContent* aContent, PRUint32 aMaxLength = 
     const nsTextFragment* text = aContent->GetText();
     if (!text)
       return 0;
-    PRUint32 length = NS_MIN(text->GetLength(), aMaxLength);
+    uint32_t length = NS_MIN(text->GetLength(), aMaxLength);
     return length + textLengthDifference;
   } else if (IsContentBR(aContent)) {
 #if defined(XP_WIN)
@@ -256,7 +256,7 @@ static PRUint32 GetNativeTextLength(nsIContent* aContent, PRUint32 aMaxLength = 
   return 0;
 }
 
-static PRUint32 ConvertToXPOffset(nsIContent* aContent, PRUint32 aNativeOffset)
+static uint32_t ConvertToXPOffset(nsIContent* aContent, uint32_t aNativeOffset)
 {
 #if defined(XP_MACOSX)
   // On Mac, the length of a native newline ("\r") is equal to the length of
@@ -321,7 +321,7 @@ static nsresult GenerateFlatTextContent(nsRange* aRange,
 nsresult
 nsContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
                                                bool aForward,
-                                               PRUint32* aXPOffset)
+                                               uint32_t* aXPOffset)
 {
   // XXX This method assumes that the frame boundaries must be cluster
   // boundaries. It's false, but no problem now, maybe.
@@ -333,10 +333,10 @@ nsContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
                "offset is out of range.");
 
   nsRefPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
-  PRInt32 offsetInFrame;
+  int32_t offsetInFrame;
   nsFrameSelection::HINT hint =
     aForward ? nsFrameSelection::HINTLEFT : nsFrameSelection::HINTRIGHT;
-  nsIFrame* frame = fs->GetFrameForNodeOffset(aContent, PRInt32(*aXPOffset),
+  nsIFrame* frame = fs->GetFrameForNodeOffset(aContent, int32_t(*aXPOffset),
                                               hint, &offsetInFrame);
   if (!frame) {
     // This content doesn't have any frames, we only can check surrogate pair...
@@ -347,15 +347,15 @@ nsContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
       *aXPOffset += aForward ? 1 : -1;
     return NS_OK;
   }
-  PRInt32 startOffset, endOffset;
+  int32_t startOffset, endOffset;
   nsresult rv = frame->GetOffsets(startOffset, endOffset);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (*aXPOffset == PRUint32(startOffset) || *aXPOffset == PRUint32(endOffset))
+  if (*aXPOffset == uint32_t(startOffset) || *aXPOffset == uint32_t(endOffset))
     return NS_OK;
   if (frame->GetType() != nsGkAtoms::textFrame)
     return NS_ERROR_FAILURE;
   nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
-  PRInt32 newOffsetInFrame = *aXPOffset - startOffset;
+  int32_t newOffsetInFrame = *aXPOffset - startOffset;
   newOffsetInFrame += aForward ? -1 : 1;
   textFrame->PeekOffsetCharacter(aForward, &newOffsetInFrame);
   *aXPOffset = startOffset + newOffsetInFrame;
@@ -365,16 +365,16 @@ nsContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
 nsresult
 nsContentEventHandler::SetRangeFromFlatTextOffset(
                               nsRange* aRange,
-                              PRUint32 aNativeOffset,
-                              PRUint32 aNativeLength,
+                              uint32_t aNativeOffset,
+                              uint32_t aNativeLength,
                               bool aExpandToClusterBoundaries)
 {
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
   nsresult rv = iter->Init(mRootContent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 nativeOffset = 0;
-  PRUint32 nativeEndOffset = aNativeOffset + aNativeLength;
+  uint32_t nativeOffset = 0;
+  uint32_t nativeEndOffset = aNativeOffset + aNativeLength;
   nsCOMPtr<nsIContent> content;
   for (; !iter->IsDone(); iter->Next()) {
     nsINode* node = iter->GetCurrentNode();
@@ -384,7 +384,7 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
       continue;
     nsIContent* content = static_cast<nsIContent*>(node);
 
-    PRUint32 nativeTextLength;
+    uint32_t nativeTextLength;
     nativeTextLength = GetNativeTextLength(content);
     if (nativeTextLength == 0)
       continue;
@@ -394,7 +394,7 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
       nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
       NS_ASSERTION(domNode, "aContent doesn't have nsIDOMNode!");
 
-      PRUint32 xpOffset =
+      uint32_t xpOffset =
         content->IsNodeOfType(nsINode::eTEXT) ?
           ConvertToXPOffset(content, aNativeOffset - nativeOffset) : 0;
 
@@ -403,11 +403,11 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      rv = aRange->SetStart(domNode, PRInt32(xpOffset));
+      rv = aRange->SetStart(domNode, int32_t(xpOffset));
       NS_ENSURE_SUCCESS(rv, rv);
       if (aNativeLength == 0) {
         // Ensure that the end offset and the start offset are same.
-        rv = aRange->SetEnd(domNode, PRInt32(xpOffset));
+        rv = aRange->SetEnd(domNode, int32_t(xpOffset));
         NS_ENSURE_SUCCESS(rv, rv);
         return NS_OK;
       }
@@ -416,7 +416,7 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
       nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
       NS_ASSERTION(domNode, "aContent doesn't have nsIDOMNode!");
 
-      PRUint32 xpOffset;
+      uint32_t xpOffset;
       if (content->IsNodeOfType(nsINode::eTEXT)) {
         xpOffset = ConvertToXPOffset(content, nativeEndOffset - nativeOffset);
         if (aExpandToClusterBoundaries) {
@@ -433,7 +433,7 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
         domNode = do_QueryInterface(iter->GetCurrentNode());
       }
 
-      rv = aRange->SetEnd(domNode, PRInt32(xpOffset));
+      rv = aRange->SetEnd(domNode, int32_t(xpOffset));
       NS_ENSURE_SUCCESS(rv, rv);
       return NS_OK;
     }
@@ -450,7 +450,7 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
     rv = aRange->SetStart(domNode, 0);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = aRange->SetEnd(domNode, PRInt32(mRootContent->GetChildCount()));
+  rv = aRange->SetEnd(domNode, int32_t(mRootContent->GetChildCount()));
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsIDOMRange::SetEnd failed");
   return rv;
 }
@@ -475,7 +475,7 @@ nsContentEventHandler::OnQuerySelectedText(nsQueryContentEvent* aEvent)
   rv = mSelection->GetFocusNode(getter_AddRefs(focusDomNode));
   NS_ENSURE_TRUE(focusDomNode, NS_ERROR_FAILURE);
 
-  PRInt32 anchorOffset, focusOffset;
+  int32_t anchorOffset, focusOffset;
   rv = mSelection->GetAnchorOffset(&anchorOffset);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mSelection->GetFocusOffset(&focusOffset);
@@ -485,7 +485,7 @@ nsContentEventHandler::OnQuerySelectedText(nsQueryContentEvent* aEvent)
   nsCOMPtr<nsINode> focusNode(do_QueryInterface(focusDomNode));
   NS_ENSURE_TRUE(anchorNode && focusNode, NS_ERROR_UNEXPECTED);
 
-  PRInt16 compare = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
+  int16_t compare = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
                                                   focusNode, focusOffset);
   aEvent->mReply.mReversed = compare > 0;
 
@@ -524,9 +524,9 @@ nsContentEventHandler::OnQueryTextContent(nsQueryContentEvent* aEvent)
 // Adjust to use a child node if possible
 // to make the returned rect more accurate
 static nsINode* AdjustTextRectNode(nsINode* aNode,
-                                   PRInt32& aOffset)
+                                   int32_t& aOffset)
 {
-  PRInt32 childCount = PRInt32(aNode->GetChildCount());
+  int32_t childCount = int32_t(aNode->GetChildCount());
   nsINode* node = aNode;
   if (childCount) {
     if (aOffset < childCount) {
@@ -544,7 +544,7 @@ static nsINode* AdjustTextRectNode(nsINode* aNode,
 // Similar to nsFrameSelection::GetFrameForNodeOffset,
 // but this is more flexible for OnQueryTextRect to use
 static nsresult GetFrameForTextRect(nsINode* aNode,
-                                    PRInt32 aOffset,
+                                    int32_t aOffset,
                                     bool aHint,
                                     nsIFrame** aReturnFrame)
 {
@@ -553,7 +553,7 @@ static nsresult GetFrameForTextRect(nsINode* aNode,
   nsIContent* content = static_cast<nsIContent*>(aNode);
   nsIFrame* frame = content->GetPrimaryFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-  PRInt32 childOffset = 0;
+  int32_t childOffset = 0;
   return frame->GetChildFrameContainingOffset(aOffset, aHint, &childOffset,
                                               aReturnFrame);
 }
@@ -575,7 +575,7 @@ nsContentEventHandler::OnQueryTextRect(nsQueryContentEvent* aEvent)
   iter->Init(range);
 
   // get the starting frame
-  PRInt32 offset = range->StartOffset();
+  int32_t offset = range->StartOffset();
   nsINode* node = iter->GetCurrentNode();
   if (!node) {
     node = AdjustTextRectNode(range->GetStartParent(), offset);
@@ -691,7 +691,7 @@ nsContentEventHandler::OnQueryCaretRect(nsQueryContentEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (selectionIsCollapsed) {
-    PRUint32 offset;
+    uint32_t offset;
     rv = GetFlatTextOffsetOfRange(mRootContent, mFirstSelectedRange, &offset);
     NS_ENSURE_SUCCESS(rv, rv);
     if (offset == aEvent->mInput.mOffset) {
@@ -713,7 +713,7 @@ nsContentEventHandler::OnQueryCaretRect(nsQueryContentEvent* aEvent)
   rv = SetRangeFromFlatTextOffset(range, aEvent->mInput.mOffset, 0, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 offsetInFrame;
+  int32_t offsetInFrame;
   nsIFrame* frame;
   rv = GetStartFrameAndOffset(range, &frame, &offsetInFrame);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -817,15 +817,15 @@ nsContentEventHandler::OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent)
     return NS_OK;
   }
   nsPoint ptInTarget = ptInRoot + rootFrame->GetOffsetToCrossDoc(targetFrame);
-  PRInt32 rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
-  PRInt32 targetAPD = targetFrame->PresContext()->AppUnitsPerDevPixel();
+  int32_t rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
+  int32_t targetAPD = targetFrame->PresContext()->AppUnitsPerDevPixel();
   ptInTarget = ptInTarget.ConvertAppUnits(rootAPD, targetAPD);
 
   nsTextFrame* textframe = static_cast<nsTextFrame*>(targetFrame);
   nsIFrame::ContentOffsets offsets =
     textframe->GetCharacterOffsetAtFramePoint(ptInTarget);
   NS_ENSURE_TRUE(offsets.content, NS_ERROR_FAILURE);
-  PRUint32 nativeOffset;
+  uint32_t nativeOffset;
   rv = GetFlatTextOffsetOfRange(mRootContent, offsets.content, offsets.offset,
                                 &nativeOffset);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -891,8 +891,8 @@ nsContentEventHandler::OnQueryDOMWidgetHittest(nsQueryContentEvent* aEvent)
 nsresult
 nsContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
                                                 nsINode* aNode,
-                                                PRInt32 aNodeOffset,
-                                                PRUint32* aNativeOffset)
+                                                int32_t aNodeOffset,
+                                                uint32_t* aNativeOffset)
 {
   NS_ASSERTION(aNativeOffset, "param is invalid");
 
@@ -941,11 +941,11 @@ nsContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
 nsresult
 nsContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
                                                 nsRange* aRange,
-                                                PRUint32* aNativeOffset)
+                                                uint32_t* aNativeOffset)
 {
   nsINode* startNode = aRange->GetStartParent();
   NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
-  PRInt32 startOffset = aRange->StartOffset();
+  int32_t startOffset = aRange->StartOffset();
   return GetFlatTextOffsetOfRange(aRootContent, startNode, startOffset,
                                   aNativeOffset);
 }
@@ -953,7 +953,7 @@ nsContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
 nsresult
 nsContentEventHandler::GetStartFrameAndOffset(nsRange* aRange,
                                               nsIFrame** aFrame,
-                                              PRInt32* aOffsetInFrame)
+                                              int32_t* aOffsetInFrame)
 {
   NS_ASSERTION(aRange && aFrame && aOffsetInFrame, "params are invalid");
 
@@ -989,10 +989,10 @@ nsContentEventHandler::ConvertToRootViewRelativeOffset(nsIFrame* aFrame,
 
 static void AdjustRangeForSelection(nsIContent* aRoot,
                                     nsINode** aNode,
-                                    PRInt32* aOffset)
+                                    int32_t* aOffset)
 {
   nsINode* node = *aNode;
-  PRInt32 offset = *aOffset;
+  int32_t offset = *aOffset;
   if (aRoot != node && node->GetParent() &&
       !node->IsNodeOfType(nsINode::eTEXT)) {
     node = node->GetParent();
@@ -1036,8 +1036,8 @@ nsContentEventHandler::OnSelectionEvent(nsSelectionEvent* aEvent)
 
   nsINode* startNode = range->GetStartParent();
   nsINode* endNode = range->GetEndParent();
-  PRInt32 startOffset = range->StartOffset();
-  PRInt32 endOffset = range->EndOffset();
+  int32_t startOffset = range->StartOffset();
+  int32_t endOffset = range->EndOffset();
   AdjustRangeForSelection(mRootContent, &startNode, &startOffset);
   AdjustRangeForSelection(mRootContent, &endNode, &endOffset);
 

@@ -42,10 +42,8 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
-#include "frontend/TreeContext-inl.h"
+#include "frontend/SharedContext-inl.h"
 #include "vm/RegExpObject-inl.h"
-
-#include "frontend/TreeContext-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -520,7 +518,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         if (scriptBits & (1 << OwnSource)) {
             ss = cx->new_<ScriptSource>();
             if (!ss)
-                return NULL;
+                return false;
         } else {
             JS_ASSERT(enclosingScript);
             ss = enclosingScript->scriptSource();
@@ -1883,9 +1881,11 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 unsigned
-js::PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecode *pc)
+js::PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecode *pc,
+                   unsigned *columnp)
 {
     unsigned lineno = startLine;
+    unsigned column = 0;
 
     /*
      * Walk through source notes accumulating their deltas, keeping track of
@@ -1900,25 +1900,41 @@ js::PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbyt
         if (type == SRC_SETLINE) {
             if (offset <= target)
                 lineno = (unsigned) js_GetSrcNoteOffset(sn, 0);
+            column = 0;
         } else if (type == SRC_NEWLINE) {
             if (offset <= target)
                 lineno++;
+            column = 0;
         }
+
         if (offset > target)
             break;
+
+        if (type == SRC_COLSPAN) {
+            ptrdiff_t colspan = js_GetSrcNoteOffset(sn, 0);
+
+            if (colspan >= SN_COLSPAN_DOMAIN / 2)
+                colspan -= SN_COLSPAN_DOMAIN;
+            JS_ASSERT(ptrdiff_t(column) + colspan >= 0);
+            column += colspan;
+        }
     }
+
+    if (columnp)
+        *columnp = column;
 
     return lineno;
 }
 
 unsigned
-js::PCToLineNumber(JSScript *script, jsbytecode *pc)
+js::PCToLineNumber(JSScript *script, jsbytecode *pc, unsigned *columnp)
 {
     /* Cope with StackFrame.pc value prior to entering js_Interpret. */
     if (!pc)
         return 0;
 
-    return PCToLineNumber(script->lineno, script->notes(), script->code, pc);
+    return PCToLineNumber(script->lineno, script->notes(), script->code, pc,
+                          columnp);
 }
 
 /* The line number limit is the same as the jssrcnote offset limit. */

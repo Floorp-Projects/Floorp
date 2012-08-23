@@ -43,7 +43,7 @@ public:
 #define FILTER_DURATION         1e3     /* one second */
 #define FILTER_FEEDBACK_MAX     100     /* 1/10th of a second */
 
-  void UpdateFilter(PRUint32 aDelay, TimeStamp aTimeout,
+  void UpdateFilter(uint32_t aDelay, TimeStamp aTimeout,
                     TimeStamp aNow);
 
   void DoBeforeSleep();
@@ -52,13 +52,13 @@ public:
 private:
   ~TimerThread();
 
-  PRInt32 mInitInProgress;
+  int32_t mInitInProgress;
   bool    mInitialized;
 
   // These two internal helper methods must be called while mLock is held.
   // AddTimerInternal returns the position where the timer was added in the
   // list, or -1 if it failed.
-  PRInt32 AddTimerInternal(nsTimerImpl *aTimer);
+  int32_t AddTimerInternal(nsTimerImpl *aTimer);
   bool    RemoveTimerInternal(nsTimerImpl *aTimer);
   void    ReleaseTimerInternal(nsTimerImpl *aTimer);
 
@@ -75,9 +75,9 @@ private:
 #define DELAY_LINE_LENGTH_MASK  PR_BITMASK(DELAY_LINE_LENGTH_LOG2)
 #define DELAY_LINE_LENGTH       PR_BIT(DELAY_LINE_LENGTH_LOG2)
 
-  PRInt32  mDelayLine[DELAY_LINE_LENGTH]; // milliseconds
-  PRUint32 mDelayLineCounter;
-  PRUint32 mMinTimerPeriod;     // milliseconds
+  int32_t  mDelayLine[DELAY_LINE_LENGTH]; // milliseconds
+  uint32_t mDelayLineCounter;
+  uint32_t mMinTimerPeriod;     // milliseconds
   TimeDuration mTimeoutAdjustment;
 };
 

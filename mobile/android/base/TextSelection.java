@@ -4,9 +4,9 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.Layer.RenderContext;
+import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -60,18 +60,18 @@ class TextSelection extends Layer implements GeckoEventListener {
                         mViewLeft = 0.0f;
                         mViewTop = 0.0f;
                         mViewZoom = 0.0f;
-                        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-                        if (layerClient != null) {
-                            layerClient.getView().addLayer(TextSelection.this);
+                        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+                        if (layerView != null) {
+                            layerView.addLayer(TextSelection.this);
                         }
                     }
                 });
             } else if (event.equals("TextSelection:HideHandles")) {
                 GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
                     public void run() {
-                        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-                        if (layerClient != null) {
-                            layerClient.getView().removeLayer(TextSelection.this);
+                        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+                        if (layerView != null) {
+                            layerView.removeLayer(TextSelection.this);
                         }
 
                         mStartHandle.setVisibility(View.GONE);

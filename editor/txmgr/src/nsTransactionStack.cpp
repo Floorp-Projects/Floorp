@@ -66,7 +66,7 @@ nsTransactionStack::Peek()
 }
 
 already_AddRefed<nsTransactionItem>
-nsTransactionStack::GetItem(PRInt32 aIndex)
+nsTransactionStack::GetItem(int32_t aIndex)
 {
   nsTransactionItem* transaction = nullptr;
   if (aIndex >= 0 && aIndex < mQue.GetSize()) {
@@ -90,7 +90,7 @@ nsTransactionStack::Clear()
 void
 nsTransactionStack::DoTraverse(nsCycleCollectionTraversalCallback &cb)
 {
-  for (PRInt32 i = 0, qcount = mQue.GetSize(); i < qcount; ++i) {
+  for (int32_t i = 0, qcount = mQue.GetSize(); i < qcount; ++i) {
     nsTransactionItem *item =
       static_cast<nsTransactionItem*>(mQue.ObjectAt(i));
     if (item) {

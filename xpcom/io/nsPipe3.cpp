@@ -106,15 +106,15 @@ public:
     nsresult Fill();
     void SetNonBlocking(bool aNonBlocking) { mBlocking = !aNonBlocking; }
 
-    PRUint32 Available() { return mAvailable; }
-    void     ReduceAvailable(PRUint32 avail) { mAvailable -= avail; }
+    uint32_t Available() { return mAvailable; }
+    void     ReduceAvailable(uint32_t avail) { mAvailable -= avail; }
 
     // synchronously wait for the pipe to become readable.
     nsresult Wait();
 
     // these functions return true to indicate that the pipe's monitor should
     // be notified, to wake up a blocked reader if any.
-    bool     OnInputReadable(PRUint32 bytesWritten, nsPipeEvents &);
+    bool     OnInputReadable(uint32_t bytesWritten, nsPipeEvents &);
     bool     OnInputException(nsresult, nsPipeEvents &);
 
 private:
@@ -122,14 +122,14 @@ private:
 
     // separate refcnt so that we know when to close the consumer
     nsrefcnt                       mReaderRefCnt;
-    PRInt64                        mLogicalOffset;
+    int64_t                        mLogicalOffset;
     bool                           mBlocking;
 
     // these variables can only be accessed while inside the pipe's monitor
     bool                           mBlocked;
-    PRUint32                       mAvailable;
+    uint32_t                       mAvailable;
     nsCOMPtr<nsIInputStreamCallback> mCallback;
-    PRUint32                       mCallbackFlags;
+    uint32_t                       mCallbackFlags;
 };
 
 //-----------------------------------------------------------------------------
@@ -176,14 +176,14 @@ private:
 
     // separate refcnt so that we know when to close the producer
     nsrefcnt                        mWriterRefCnt;
-    PRInt64                         mLogicalOffset;
+    int64_t                         mLogicalOffset;
     bool                            mBlocking;
 
     // these variables can only be accessed while inside the pipe's monitor
     bool                            mBlocked;
     bool                            mWritable;
     nsCOMPtr<nsIOutputStreamCallback> mCallback;
-    PRUint32                        mCallbackFlags;
+    uint32_t                        mCallbackFlags;
 };
 
 //-----------------------------------------------------------------------------
@@ -208,17 +208,17 @@ public:
     // methods below may only be called while inside the pipe's monitor
     //
 
-    void PeekSegment(PRUint32 n, char *&cursor, char *&limit);
+    void PeekSegment(uint32_t n, char *&cursor, char *&limit);
 
     //
     // methods below may be called while outside the pipe's monitor
     //
  
-    nsresult GetReadSegment(const char *&segment, PRUint32 &segmentLen);
-    void     AdvanceReadCursor(PRUint32 count);
+    nsresult GetReadSegment(const char *&segment, uint32_t &segmentLen);
+    void     AdvanceReadCursor(uint32_t count);
 
-    nsresult GetWriteSegment(char *&segment, PRUint32 &segmentLen);
-    void     AdvanceWriteCursor(PRUint32 count);
+    nsresult GetWriteSegment(char *&segment, uint32_t &segmentLen);
+    void     AdvanceWriteCursor(uint32_t count);
 
     void     OnPipeException(nsresult reason, bool outputOnly = false);
 
@@ -235,7 +235,7 @@ protected:
     char*               mReadCursor;
     char*               mReadLimit;
 
-    PRInt32             mWriteSegment;
+    int32_t             mWriteSegment;
     char*               mWriteCursor;
     char*               mWriteLimit;
 
@@ -309,8 +309,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsPipe, nsIPipe)
 NS_IMETHODIMP
 nsPipe::Init(bool nonBlockingIn,
              bool nonBlockingOut,
-             PRUint32 segmentSize,
-             PRUint32 segmentCount,
+             uint32_t segmentSize,
+             uint32_t segmentCount,
              nsIMemory *segmentAlloc)
 {
     mInited = true;
@@ -321,7 +321,7 @@ nsPipe::Init(bool nonBlockingIn,
         segmentCount = DEFAULT_SEGMENT_COUNT;
 
     // protect against overflow
-    PRUint32 maxCount = PRUint32(-1) / segmentSize;
+    uint32_t maxCount = uint32_t(-1) / segmentSize;
     if (segmentCount > maxCount)
         segmentCount = maxCount;
 
@@ -350,7 +350,7 @@ nsPipe::GetOutputStream(nsIAsyncOutputStream **aOutputStream)
 }
 
 void
-nsPipe::PeekSegment(PRUint32 index, char *&cursor, char *&limit)
+nsPipe::PeekSegment(uint32_t index, char *&cursor, char *&limit)
 {
     if (index == 0) {
         NS_ASSERTION(!mReadCursor || mBuffer.GetSegmentCount(), "unexpected state");
@@ -358,12 +358,12 @@ nsPipe::PeekSegment(PRUint32 index, char *&cursor, char *&limit)
         limit = mReadLimit;
     }
     else {
-        PRUint32 numSegments = mBuffer.GetSegmentCount();
+        uint32_t numSegments = mBuffer.GetSegmentCount();
         if (index >= numSegments)
             cursor = limit = nullptr;
         else {
             cursor = mBuffer.GetSegment(index);
-            if (mWriteSegment == (PRInt32) index)
+            if (mWriteSegment == (int32_t) index)
                 limit = mWriteCursor;
             else
                 limit = cursor + mBuffer.GetSegmentSize();
@@ -372,7 +372,7 @@ nsPipe::PeekSegment(PRUint32 index, char *&cursor, char *&limit)
 }
 
 nsresult
-nsPipe::GetReadSegment(const char *&segment, PRUint32 &segmentLen)
+nsPipe::GetReadSegment(const char *&segment, uint32_t &segmentLen)
 {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -385,7 +385,7 @@ nsPipe::GetReadSegment(const char *&segment, PRUint32 &segmentLen)
 }
 
 void
-nsPipe::AdvanceReadCursor(PRUint32 bytesRead)
+nsPipe::AdvanceReadCursor(uint32_t bytesRead)
 {
     NS_ASSERTION(bytesRead, "don't call if no bytes read");
 
@@ -444,7 +444,7 @@ nsPipe::AdvanceReadCursor(PRUint32 bytesRead)
 }
 
 nsresult
-nsPipe::GetWriteSegment(char *&segment, PRUint32 &segmentLen)
+nsPipe::GetWriteSegment(char *&segment, uint32_t &segmentLen)
 {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -483,7 +483,7 @@ nsPipe::GetWriteSegment(char *&segment, PRUint32 &segmentLen)
 }
 
 void
-nsPipe::AdvanceWriteCursor(PRUint32 bytesWritten)
+nsPipe::AdvanceWriteCursor(uint32_t bytesWritten)
 {
     NS_ASSERTION(bytesWritten, "don't call if no bytes written");
 
@@ -629,7 +629,7 @@ nsPipeInputStream::Wait()
 }
 
 bool
-nsPipeInputStream::OnInputReadable(PRUint32 bytesWritten, nsPipeEvents &events)
+nsPipeInputStream::OnInputReadable(uint32_t bytesWritten, nsPipeEvents &events)
 {
     bool result = false;
 
@@ -704,7 +704,7 @@ nsPipeInputStream::Close()
 }
 
 NS_IMETHODIMP
-nsPipeInputStream::Available(PRUint64 *result)
+nsPipeInputStream::Available(uint64_t *result)
 {
     // nsPipeInputStream supports under 4GB stream only
     ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
@@ -713,22 +713,22 @@ nsPipeInputStream::Available(PRUint64 *result)
     if (!mAvailable && NS_FAILED(mPipe->mStatus))
         return mPipe->mStatus;
 
-    *result = (PRUint64)mAvailable;
+    *result = (uint64_t)mAvailable;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer, 
                                 void *closure,  
-                                PRUint32 count,
-                                PRUint32 *readCount)
+                                uint32_t count,
+                                uint32_t *readCount)
 {
     LOG(("III ReadSegments [this=%x count=%u]\n", this, count));
 
     nsresult rv = NS_OK;
 
     const char *segment;
-    PRUint32 segmentLen;
+    uint32_t segmentLen;
 
     *readCount = 0;
     while (count) {
@@ -761,7 +761,7 @@ nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
         if (segmentLen > count)
             segmentLen = count;
 
-        PRUint32 writeCount, originalLen = segmentLen;
+        uint32_t writeCount, originalLen = segmentLen;
         while (segmentLen) {
             writeCount = 0;
 
@@ -791,7 +791,7 @@ nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
 }
 
 NS_IMETHODIMP
-nsPipeInputStream::Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount)
+nsPipeInputStream::Read(char* toBuf, uint32_t bufLen, uint32_t *readCount)
 {
     return ReadSegments(NS_CopySegmentToBuffer, toBuf, bufLen, readCount);
 }
@@ -805,8 +805,8 @@ nsPipeInputStream::IsNonBlocking(bool *aNonBlocking)
 
 NS_IMETHODIMP
 nsPipeInputStream::AsyncWait(nsIInputStreamCallback *callback,
-                             PRUint32 flags,
-                             PRUint32 requestedCount,
+                             uint32_t flags,
+                             uint32_t requestedCount,
                              nsIEventTarget *target)
 {
     LOG(("III AsyncWait [this=%x]\n", this));
@@ -845,14 +845,14 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback *callback,
 }
 
 NS_IMETHODIMP
-nsPipeInputStream::Seek(PRInt32 whence, PRInt64 offset)
+nsPipeInputStream::Seek(int32_t whence, int64_t offset)
 {
     NS_NOTREACHED("nsPipeInputStream::Seek");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsPipeInputStream::Tell(PRInt64 *offset)
+nsPipeInputStream::Tell(int64_t *offset)
 {
     ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
 
@@ -873,22 +873,22 @@ nsPipeInputStream::SetEOF()
 
 #define COMPARE(s1, s2, i)                                                 \
     (ignoreCase                                                            \
-     ? nsCRT::strncasecmp((const char *)s1, (const char *)s2, (PRUint32)i) \
-     : nsCRT::strncmp((const char *)s1, (const char *)s2, (PRUint32)i))
+     ? nsCRT::strncasecmp((const char *)s1, (const char *)s2, (uint32_t)i) \
+     : nsCRT::strncmp((const char *)s1, (const char *)s2, (uint32_t)i))
 
 NS_IMETHODIMP
 nsPipeInputStream::Search(const char *forString, 
                           bool ignoreCase,
                           bool *found,
-                          PRUint32 *offsetSearchedTo)
+                          uint32_t *offsetSearchedTo)
 {
     LOG(("III Search [for=%s ic=%u]\n", forString, ignoreCase));
 
     ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
 
     char *cursor1, *limit1;
-    PRUint32 index = 0, offset = 0;
-    PRUint32 strLen = strlen(forString);
+    uint32_t index = 0, offset = 0;
+    uint32_t strLen = strlen(forString);
 
     mPipe->PeekSegment(0, cursor1, limit1);
     if (cursor1 == limit1) {
@@ -899,7 +899,7 @@ nsPipeInputStream::Search(const char *forString,
     }
 
     while (true) {
-        PRUint32 i, len1 = limit1 - cursor1;
+        uint32_t i, len1 = limit1 - cursor1;
 
         // check if the string is in the buffer segment
         for (i = 0; i < len1 - strLen + 1; i++) {
@@ -913,7 +913,7 @@ nsPipeInputStream::Search(const char *forString,
 
         // get the next segment
         char *cursor2, *limit2;
-        PRUint32 len2;
+        uint32_t len2;
 
         index++;
         offset += len1;
@@ -928,12 +928,12 @@ nsPipeInputStream::Search(const char *forString,
         len2 = limit2 - cursor2;
 
         // check if the string is straddling the next buffer segment
-        PRUint32 lim = NS_MIN(strLen, len2 + 1);
+        uint32_t lim = NS_MIN(strLen, len2 + 1);
         for (i = 0; i < lim; ++i) {
-            PRUint32 strPart1Len = strLen - i - 1;
-            PRUint32 strPart2Len = strLen - strPart1Len;
+            uint32_t strPart1Len = strLen - i - 1;
+            uint32_t strPart2Len = strLen - strPart1Len;
             const char* strPart2 = &forString[strLen - strPart2Len];
-            PRUint32 bufSeg1Offset = len1 - strPart1Len;
+            uint32_t bufSeg1Offset = len1 - strPart1Len;
             if (COMPARE(&cursor1[bufSeg1Offset], forString, strPart1Len) == 0 &&
                 COMPARE(cursor2, strPart2, strPart2Len) == 0) {
                 *found = true;
@@ -1064,15 +1064,15 @@ nsPipeOutputStream::Close()
 NS_IMETHODIMP
 nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                                   void* closure,
-                                  PRUint32 count,
-                                  PRUint32 *writeCount)
+                                  uint32_t count,
+                                  uint32_t *writeCount)
 {
     LOG(("OOO WriteSegments [this=%x count=%u]\n", this, count));
 
     nsresult rv = NS_OK;
 
     char *segment;
-    PRUint32 segmentLen;
+    uint32_t segmentLen;
 
     *writeCount = 0;
     while (count) {
@@ -1099,7 +1099,7 @@ nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
         if (segmentLen > count)
             segmentLen = count;
 
-        PRUint32 readCount, originalLen = segmentLen;
+        uint32_t readCount, originalLen = segmentLen;
         while (segmentLen) {
             readCount = 0;
 
@@ -1132,9 +1132,9 @@ static NS_METHOD
 nsReadFromRawBuffer(nsIOutputStream* outStr,
                     void* closure,
                     char* toRawSegment,
-                    PRUint32 offset,
-                    PRUint32 count,
-                    PRUint32 *readCount)
+                    uint32_t offset,
+                    uint32_t count,
+                    uint32_t *readCount)
 {
     const char* fromBuf = (const char*)closure;
     memcpy(toRawSegment, &fromBuf[offset], count);
@@ -1144,8 +1144,8 @@ nsReadFromRawBuffer(nsIOutputStream* outStr,
 
 NS_IMETHODIMP
 nsPipeOutputStream::Write(const char* fromBuf,
-                          PRUint32 bufLen, 
-                          PRUint32 *writeCount)
+                          uint32_t bufLen, 
+                          uint32_t *writeCount)
 {
     return WriteSegments(nsReadFromRawBuffer, (void*)fromBuf, bufLen, writeCount);
 }
@@ -1161,9 +1161,9 @@ static NS_METHOD
 nsReadFromInputStream(nsIOutputStream* outStr,
                       void* closure,
                       char* toRawSegment, 
-                      PRUint32 offset,
-                      PRUint32 count,
-                      PRUint32 *readCount)
+                      uint32_t offset,
+                      uint32_t count,
+                      uint32_t *readCount)
 {
     nsIInputStream* fromStream = (nsIInputStream*)closure;
     return fromStream->Read(toRawSegment, count, readCount);
@@ -1171,8 +1171,8 @@ nsReadFromInputStream(nsIOutputStream* outStr,
 
 NS_IMETHODIMP
 nsPipeOutputStream::WriteFrom(nsIInputStream* fromStream,
-                              PRUint32 count,
-                              PRUint32 *writeCount)
+                              uint32_t count,
+                              uint32_t *writeCount)
 {
     return WriteSegments(nsReadFromInputStream, fromStream, count, writeCount);
 }
@@ -1186,8 +1186,8 @@ nsPipeOutputStream::IsNonBlocking(bool *aNonBlocking)
 
 NS_IMETHODIMP
 nsPipeOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
-                              PRUint32 flags,
-                              PRUint32 requestedCount,
+                              uint32_t flags,
+                              uint32_t requestedCount,
                               nsIEventTarget *target)
 {
     LOG(("OOO AsyncWait [this=%x]\n", this));
@@ -1230,8 +1230,8 @@ nsPipeOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
 nsresult
 NS_NewPipe(nsIInputStream **pipeIn,
            nsIOutputStream **pipeOut,
-           PRUint32 segmentSize,
-           PRUint32 maxSize,
+           uint32_t segmentSize,
+           uint32_t maxSize,
            bool nonBlockingInput,
            bool nonBlockingOutput,
            nsIMemory *segmentAlloc)
@@ -1240,7 +1240,7 @@ NS_NewPipe(nsIInputStream **pipeIn,
         segmentSize = DEFAULT_SEGMENT_SIZE;
 
     // Handle maxSize of PR_UINT32_MAX as a special case
-    PRUint32 segmentCount;
+    uint32_t segmentCount;
     if (maxSize == PR_UINT32_MAX)
         segmentCount = PR_UINT32_MAX;
     else
@@ -1262,8 +1262,8 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
             nsIAsyncOutputStream **pipeOut,
             bool nonBlockingInput,
             bool nonBlockingOutput,
-            PRUint32 segmentSize,
-            PRUint32 segmentCount,
+            uint32_t segmentSize,
+            uint32_t segmentCount,
             nsIMemory *segmentAlloc)
 {
     nsresult rv;

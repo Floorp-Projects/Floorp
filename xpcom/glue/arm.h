@@ -73,6 +73,13 @@
 #    endif
 #  endif
 
+  // ARMv7 support was merged in gcc 4.3.
+#  if __GNUC__> 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+#    if defined(HAVE_ARM_SIMD)
+#      define MOZILLA_MAY_SUPPORT_ARMV7 1
+#    endif
+#  endif
+
   // When using -mfpu=neon, gcc generates neon instructions.
 
 #  if defined(__ARM_NEON__)
@@ -95,6 +102,7 @@
 #  define MOZILLA_MAY_SUPPORT_EDSP 1
 #  if defined(HAVE_ARM_SIMD)
 #    define MOZILLA_MAY_SUPPORT_ARMV6 1
+#    define MOZILLA_MAY_SUPPORT_ARMV7 1
 #  endif
 #  if defined(HAVE_ARM_NEON)
 #    define MOZILLA_MAY_SUPPORT_NEON 1
@@ -111,6 +119,9 @@ namespace mozilla {
 #endif
 #if !defined(MOZILLA_PRESUME_ARMV6)
     extern bool NS_COM_GLUE armv6_enabled;
+#endif
+#if !defined(MOZILLA_PRESUME_ARMV7)
+    extern bool NS_COM_GLUE armv7_enabled;
 #endif
 #if !defined(MOZILLA_PRESUME_NEON)
     extern bool NS_COM_GLUE neon_enabled;
@@ -136,6 +147,16 @@ namespace mozilla {
   inline bool supports_armv6() { return arm_private::armv6_enabled; }
 #else
   inline bool supports_armv6() { return false; }
+#endif
+
+#if defined(MOZILLA_PRESUME_ARMV7)
+#  define MOZILLA_MAY_SUPPORT_ARMV7 1
+  inline bool supports_armv7() { return true; }
+#elif defined(MOZILLA_MAY_SUPPORT_ARMV7) \
+   && defined(MOZILLA_ARM_HAVE_CPUID_DETECTION)
+  inline bool supports_armv7() { return arm_private::armv7_enabled; }
+#else
+  inline bool supports_armv7() { return false; }
 #endif
 
 #if defined(MOZILLA_PRESUME_NEON)

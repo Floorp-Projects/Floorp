@@ -9,6 +9,7 @@ endif
 
 CPPSRCS += \
   HashFunctions.cpp \
+  SHA1.cpp \
   $(NULL)
 
 # Imported double-conversion sources.

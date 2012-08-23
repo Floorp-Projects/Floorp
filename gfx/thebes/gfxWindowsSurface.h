@@ -21,8 +21,8 @@ public:
         FLAG_IS_TRANSPARENT = (1 << 2)
     };
 
-    gfxWindowsSurface(HWND wnd, PRUint32 flags = 0);
-    gfxWindowsSurface(HDC dc, PRUint32 flags = 0);
+    gfxWindowsSurface(HWND wnd, uint32_t flags = 0);
+    gfxWindowsSurface(HDC dc, uint32_t flags = 0);
 
     // Create a DIB surface
     gfxWindowsSurface(const gfxIntSize& size,
@@ -38,7 +38,7 @@ public:
     virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
                                                                const gfxIntSize& aSize);
 
-    void InitWithDC(PRUint32 flags);
+    void InitWithDC(uint32_t flags);
 
     virtual ~gfxWindowsSurface();
 
@@ -58,7 +58,7 @@ public:
     nsresult BeginPage();
     nsresult EndPage();
 
-    virtual PRInt32 GetDefaultContextFlags() const;
+    virtual int32_t GetDefaultContextFlags() const;
 
     const gfxIntSize GetSize() const;
 

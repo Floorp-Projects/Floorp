@@ -11,6 +11,7 @@
 #include "mozilla/layers/SharedImageUtils.h"
 #include "ImageContainer.h"
 #include "GonkIOSurfaceImage.h"
+#include "GrallocImages.h"
 
 namespace mozilla {
 namespace layers {
@@ -205,6 +206,10 @@ SharedImage* ImageContainerChild::CreateSharedImageFromData(Image* image)
   } else if (image->GetFormat() == GONK_IO_SURFACE) {
     GonkIOSurfaceImage* gonkImage = static_cast<GonkIOSurfaceImage*>(image);
     SharedImage* result = new SharedImage(gonkImage->GetSurfaceDescriptor());
+    return result;
+  } else if (image->GetFormat() == GRALLOC_PLANAR_YCBCR) {
+    GrallocPlanarYCbCrImage* GrallocImage = static_cast<GrallocPlanarYCbCrImage*>(image);
+    SharedImage* result = new SharedImage(GrallocImage->GetSurfaceDescriptor());
     return result;
 #endif
   } else {

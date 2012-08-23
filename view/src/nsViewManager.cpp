@@ -62,11 +62,11 @@ IsRefreshDriverPaintingEnabled()
   return sRefreshDriverPaintingEnabled;
 }
 
-PRInt32 nsViewManager::mVMCount = 0;
+int32_t nsViewManager::mVMCount = 0;
 
 // Weakly held references to all of the view managers
 nsVoidArray* nsViewManager::gViewManagers = nullptr;
-PRUint32 nsViewManager::gLastUserEventTime = 0;
+uint32_t nsViewManager::gLastUserEventTime = 0;
 
 nsViewManager::nsViewManager()
   : mDelayedResize(NSCOORD_NONE, NSCOORD_NONE)
@@ -337,6 +337,16 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
     return;
   }
 
+  nsIWidget *widget = aView->GetWidget();
+  if (!widget) {
+    return;
+  }
+
+  if (aView->ForcedRepaint()) {
+    ProcessPendingUpdates();
+    aView->SetForcedRepaint(false);
+  }
+
   NS_ASSERTION(!IsPainting(), "recursive painting not permitted");
   if (IsPainting()) {
     RootViewManager()->mRecursiveRefreshPending = true;
@@ -429,6 +439,7 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
 #ifdef DEBUG_INVALIDATIONS
         printf("---- PAINT END ----\n");
 #endif
+        aView->SetForcedRepaint(false);
         SetPainting(false);
       }
     }
@@ -539,7 +550,7 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
 
         nsTArray<nsIntRect> clipRects;
         childWidget->GetWindowClipRegion(&clipRects);
-        for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
+        for (uint32_t i = 0; i < clipRects.Length(); ++i) {
           nsRect rr = (clipRects[i] + bounds.TopLeft()).
             ToAppUnits(AppUnitsPerDevPixel());
           children.Or(children, rr - aWidgetView->ViewToWidgetOffset()); 
@@ -608,8 +619,8 @@ NS_IMETHODIMP nsViewManager::InvalidateViewNoSuppression(nsIView *aView,
   // can overlap each other and be translucent.  So we have to possibly
   // invalidate our rect in each of the widgets we have lying about.
   damagedRect.MoveBy(view->GetOffsetTo(displayRoot));
-  PRInt32 rootAPD = displayRootVM->AppUnitsPerDevPixel();
-  PRInt32 APD = AppUnitsPerDevPixel();
+  int32_t rootAPD = displayRootVM->AppUnitsPerDevPixel();
+  int32_t APD = AppUnitsPerDevPixel();
   damagedRect = damagedRect.ConvertAppUnitsRoundOut(APD, rootAPD);
 
   // accumulate this rectangle in the view's dirty region, so we can
@@ -889,10 +900,10 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
       }
 #else // don't keep consistent document order, but order things by z-index instead
       // essentially we're emulating the old InsertChild(parent, child, zindex)
-      PRInt32 zIndex = child->GetZIndex();
+      int32_t zIndex = child->GetZIndex();
       while (nullptr != kid)
         {
-          PRInt32 idx = kid->GetZIndex();
+          int32_t idx = kid->GetZIndex();
 
           if (CompareZIndex(zIndex, child->IsTopMost(), child->GetZIndexIsAuto(),
                             idx, kid->IsTopMost(), kid->GetZIndexIsAuto()) >= 0)
@@ -918,7 +929,7 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, PRInt32 aZIndex)
+NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, int32_t aZIndex)
 {
   // no-one really calls this with anything other than aZIndex == 0 on a fresh view
   // XXX this method should simply be eliminated and its callers redirected to the real method
@@ -1092,7 +1103,7 @@ bool nsViewManager::IsViewInserted(nsView *aView)
   }
 }
 
-NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, bool aAutoZIndex, PRInt32 aZIndex, bool aTopMost)
+NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, bool aAutoZIndex, int32_t aZIndex, bool aTopMost)
 {
   nsView* view = static_cast<nsView*>(aView);
   nsresult  rv = NS_OK;
@@ -1112,7 +1123,7 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, bool aAutoZIndex, PRI
     aZIndex = 0;
   }
 
-  PRInt32 oldidx = view->GetZIndex();
+  int32_t oldidx = view->GetZIndex();
   view->SetZIndex(aAutoZIndex, aZIndex, aTopMost);
 
   if (oldidx != aZIndex || oldTopMost != aTopMost ||
@@ -1231,7 +1242,7 @@ nsViewManager::CallWillPaintOnObservers(bool aWillSendDidPaint)
 {
   NS_PRECONDITION(IsRootVM(), "Must be root VM for this to be called!");
 
-  PRInt32 index;
+  int32_t index;
   for (index = 0; index < mVMCount; index++) {
     nsViewManager* vm = (nsViewManager*)gViewManagers->ElementAt(index);
     if (vm->RootViewManager() == this) {
@@ -1260,7 +1271,7 @@ nsViewManager::CallDidPaintOnObserver()
 }
 
 NS_IMETHODIMP
-nsViewManager::GetLastUserEventTime(PRUint32& aTime)
+nsViewManager::GetLastUserEventTime(uint32_t& aTime)
 {
   aTime = gLastUserEventTime;
   return NS_OK;

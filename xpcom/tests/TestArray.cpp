@@ -22,7 +22,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
   NS_IMETHOD_(nsrefcnt) RefCnt() = 0;
-  NS_IMETHOD_(PRInt32) ID() = 0;
+  NS_IMETHOD_(int32_t) ID() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
@@ -30,26 +30,26 @@ NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
 class Foo : public IFoo {
 public:
 
-  Foo(PRInt32 aID);
+  Foo(int32_t aID);
 
   // nsISupports implementation
   NS_DECL_ISUPPORTS
 
   // IFoo implementation
   NS_IMETHOD_(nsrefcnt) RefCnt() { return mRefCnt; }
-  NS_IMETHOD_(PRInt32) ID() { return mID; }
+  NS_IMETHOD_(int32_t) ID() { return mID; }
 
-  static PRInt32 gCount;
+  static int32_t gCount;
 
-  PRInt32 mID;
+  int32_t mID;
 
 private:
   ~Foo();
 };
 
-PRInt32 Foo::gCount;
+int32_t Foo::gCount;
 
-Foo::Foo(PRInt32 aID)
+Foo::Foo(int32_t aID)
 {
   mID = aID;
   ++gCount;
@@ -66,7 +66,7 @@ Foo::~Foo()
 
 NS_IMPL_ISUPPORTS1(Foo, IFoo)
 
-const char* AssertEqual(PRInt32 aValue1, PRInt32 aValue2)
+const char* AssertEqual(int32_t aValue1, int32_t aValue2)
 {
   if (aValue1 == aValue2) {
     return "OK";
@@ -77,16 +77,16 @@ const char* AssertEqual(PRInt32 aValue1, PRInt32 aValue2)
   return "ERROR";
 }
 
-void DumpArray(nsISupportsArray* aArray, PRInt32 aExpectedCount, PRInt32 aElementIDs[], PRInt32 aExpectedTotal)
+void DumpArray(nsISupportsArray* aArray, int32_t aExpectedCount, int32_t aElementIDs[], int32_t aExpectedTotal)
 {
-  PRUint32 cnt = 0;
+  uint32_t cnt = 0;
 #ifdef DEBUG
   nsresult rv =
 #endif
     aArray->Count(&cnt);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-  PRInt32 count = cnt;
-  PRInt32 index;
+  int32_t count = cnt;
+  int32_t index;
 
   fprintf(stdout, "object count %d = %d %s\n", Foo::gCount, aExpectedTotal, 
           AssertEqual(Foo::gCount, aExpectedTotal));
@@ -103,9 +103,9 @@ void DumpArray(nsISupportsArray* aArray, PRInt32 aExpectedCount, PRInt32 aElemen
   }
 }
 
-void FillArray(nsISupportsArray* aArray, PRInt32 aCount)
+void FillArray(nsISupportsArray* aArray, int32_t aCount)
 {
-  PRInt32 index;
+  int32_t index;
   for (index = 0; index < aCount; index++) {
     nsCOMPtr<IFoo> foo = new Foo(index);
     aArray->AppendElement(foo);
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
   if (NS_OK == (rv = NS_NewISupportsArray(&array))) {
     FillArray(array, 10);
     fprintf(stdout, "Array created:\n");
-    PRInt32   fillResult[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    int32_t   fillResult[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     DumpArray(array, 10, fillResult, 10);
 
     // test insert
@@ -132,22 +132,22 @@ int main(int argc, char *argv[])
     foo->Release();  // pre-release to fix ref count for dumps
     array->InsertElementAt(foo, 5);
     fprintf(stdout, "insert 3 at 5:\n");
-    PRInt32   insertResult[11] = {0, 1, 2, 3, 4, 3, 5, 6, 7, 8, 9};
+    int32_t   insertResult[11] = {0, 1, 2, 3, 4, 3, 5, 6, 7, 8, 9};
     DumpArray(array, 11, insertResult, 10);
     fprintf(stdout, "insert 3 at 0:\n");
     array->InsertElementAt(foo, 0);
-    PRInt32   insertResult2[12] = {3, 0, 1, 2, 3, 4, 3, 5, 6, 7, 8, 9};
+    int32_t   insertResult2[12] = {3, 0, 1, 2, 3, 4, 3, 5, 6, 7, 8, 9};
     DumpArray(array, 12, insertResult2, 10);
     fprintf(stdout, "append 3:\n");
     array->AppendElement(foo);
-    PRInt32   appendResult[13] = {3, 0, 1, 2, 3, 4, 3, 5, 6, 7, 8, 9, 3};
+    int32_t   appendResult[13] = {3, 0, 1, 2, 3, 4, 3, 5, 6, 7, 8, 9, 3};
     DumpArray(array, 13, appendResult, 10);
 
 
     // test IndexOf && LastIndexOf
-    PRInt32 expectedIndex[5] = {0, 4, 6, 12, -1};
-    PRInt32 count = 0;
-    PRInt32 index = array->IndexOf(foo);
+    int32_t expectedIndex[5] = {0, 4, 6, 12, -1};
+    int32_t count = 0;
+    int32_t index = array->IndexOf(foo);
     fprintf(stdout, "IndexOf(foo): %d=%d %s\n", index, expectedIndex[count], 
             AssertEqual(index, expectedIndex[count]));
     while (-1 != index) {
@@ -165,25 +165,25 @@ int main(int argc, char *argv[])
     // test ReplaceElementAt
     fprintf(stdout, "ReplaceElementAt(8):\n");
     array->ReplaceElementAt(foo, 8);
-    PRInt32   replaceResult[13] = {3, 0, 1, 2, 3, 4, 3, 5, 3, 7, 8, 9, 3};
+    int32_t   replaceResult[13] = {3, 0, 1, 2, 3, 4, 3, 5, 3, 7, 8, 9, 3};
     DumpArray(array, 13, replaceResult, 9);
 
     // test RemoveElementAt, RemoveElement RemoveLastElement
     fprintf(stdout, "RemoveElementAt(0):\n");
     array->RemoveElementAt(0);
-    PRInt32   removeResult[12] = {0, 1, 2, 3, 4, 3, 5, 3, 7, 8, 9, 3};
+    int32_t   removeResult[12] = {0, 1, 2, 3, 4, 3, 5, 3, 7, 8, 9, 3};
     DumpArray(array, 12, removeResult, 9);
     fprintf(stdout, "RemoveElementAt(7):\n");
     array->RemoveElementAt(7);
-    PRInt32   removeResult2[11] = {0, 1, 2, 3, 4, 3, 5, 7, 8, 9, 3};
+    int32_t   removeResult2[11] = {0, 1, 2, 3, 4, 3, 5, 7, 8, 9, 3};
     DumpArray(array, 11, removeResult2, 9);
     fprintf(stdout, "RemoveElement(foo):\n");
     array->RemoveElement(foo);
-    PRInt32   removeResult3[10] = {0, 1, 2, 4, 3, 5, 7, 8, 9, 3};
+    int32_t   removeResult3[10] = {0, 1, 2, 4, 3, 5, 7, 8, 9, 3};
     DumpArray(array, 10, removeResult3, 9);
     fprintf(stdout, "RemoveLastElement(foo):\n");
     array->RemoveLastElement(foo);
-    PRInt32   removeResult4[9] = {0, 1, 2, 4, 3, 5, 7, 8, 9};
+    int32_t   removeResult4[9] = {0, 1, 2, 4, 3, 5, 7, 8, 9};
     DumpArray(array, 9, removeResult4, 9);
 
     // test clear

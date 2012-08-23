@@ -42,8 +42,8 @@ public:
   NS_IMETHOD_(CToken*)           PushToken(CToken* aToken)=0;
   NS_IMETHOD_(CToken*)           PopToken(void)=0;
   NS_IMETHOD_(CToken*)           PeekToken(void)=0;
-  NS_IMETHOD_(CToken*)           GetTokenAt(PRInt32 anIndex)=0;
-  NS_IMETHOD_(PRInt32)           GetCount(void)=0;
+  NS_IMETHOD_(CToken*)           GetTokenAt(int32_t anIndex)=0;
+  NS_IMETHOD_(int32_t)           GetCount(void)=0;
   NS_IMETHOD_(nsTokenAllocator*) GetTokenAllocator(void)=0;
   NS_IMETHOD_(void)              PrependTokens(nsDeque& aDeque)=0;
   NS_IMETHOD                     CopyState(nsITokenizer* aTokenizer)=0;
@@ -60,8 +60,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsITokenizer, NS_ITOKENIZER_IID)
   NS_IMETHOD_(CToken*)           PushToken(CToken* aToken);\
   NS_IMETHOD_(CToken*)           PopToken(void);\
   NS_IMETHOD_(CToken*)           PeekToken(void);\
-  NS_IMETHOD_(CToken*)           GetTokenAt(PRInt32 anIndex);\
-  NS_IMETHOD_(PRInt32)           GetCount(void);\
+  NS_IMETHOD_(CToken*)           GetTokenAt(int32_t anIndex);\
+  NS_IMETHOD_(int32_t)           GetCount(void);\
   NS_IMETHOD_(nsTokenAllocator*) GetTokenAllocator(void);\
   NS_IMETHOD_(void)              PrependTokens(nsDeque& aDeque);\
   NS_IMETHOD                     CopyState(nsITokenizer* aTokenizer);

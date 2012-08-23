@@ -34,7 +34,7 @@ main(int argc, char* argv[])
         return -1;
     }
 
-    PRUint32 cycles = atoi(argv[1]);
+    uint32_t cycles = atoi(argv[1]);
     char *base = argv[2];
     char *rel  = argv[3];
     {
@@ -53,7 +53,7 @@ main(int argc, char* argv[])
         if (NS_FAILED(rv)) return rv;
 
         char *absURLString;
-        PRUint32 i = 0;
+        uint32_t i = 0;
         while (i++ < cycles) {
             rv = ServiceMakeAbsolute(uri, rel, &absURLString);
             if (NS_FAILED(rv)) return rv;

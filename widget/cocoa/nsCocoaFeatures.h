@@ -10,12 +10,12 @@
 
 class nsCocoaFeatures {
 public:
-  static PRInt32 OSXVersion();
+  static int32_t OSXVersion();
   static bool OnSnowLeopardOrLater();
   static bool OnLionOrLater();
   static bool SupportCoreAnimationPlugins();
 
 private:
-  static PRInt32 mOSXVersion;
+  static int32_t mOSXVersion;
 };
 #endif // nsCocoaFeatures_h_

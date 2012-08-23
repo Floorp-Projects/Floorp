@@ -29,8 +29,8 @@ public:
   void AppendGetterText(const nsAString& aGetter);
   void AppendSetterText(const nsAString& aSetter);
 
-  void SetGetterLineNumber(PRUint32 aLineNumber);
-  void SetSetterLineNumber(PRUint32 aLineNumber);
+  void SetGetterLineNumber(uint32_t aLineNumber);
+  void SetSetterLineNumber(uint32_t aLineNumber);
 
   virtual nsresult InstallMember(nsIScriptContext* aContext,
                                  nsIContent* aBoundElement, 

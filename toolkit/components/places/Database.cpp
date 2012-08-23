@@ -26,7 +26,7 @@
 #include "mozilla/Attributes.h"
 
 // Time between corrupt database backups.
-#define RECENT_BACKUP_TIME_MICROSEC (PRInt64)86400 * PR_USEC_PER_SEC // 24H
+#define RECENT_BACKUP_TIME_MICROSEC (int64_t)86400 * PR_USEC_PER_SEC // 24H
 
 // Filename of the database.
 #define DATABASE_FILENAME NS_LITERAL_STRING("places.sqlite")
@@ -90,7 +90,7 @@ hasRecentCorruptDB()
     if (NS_SUCCEEDED(currFile->GetLeafName(leafName)) &&
         leafName.Length() >= DATABASE_CORRUPT_FILENAME.Length() &&
         leafName.Find(".corrupt", DATABASE_FILENAME.Length()) != -1) {
-      PRInt64 lastMod = 0;
+      int64_t lastMod = 0;
       currFile->GetLastModifiedTime(&lastMod);
       NS_ENSURE_TRUE(lastMod > 0, false);
       return (PR_Now() - lastMod) > RECENT_BACKUP_TIME_MICROSEC;
@@ -260,7 +260,7 @@ CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
   MOZ_ASSERT(NS_IsMainThread());
 
   // The position of the new item in its folder.
-  static PRInt32 itemPosition = 0;
+  static int32_t itemPosition = 0;
 
   // A single creation timestamp for all roots so that the root folder's
   // last modification time isn't earlier than its childrens' creation time.
@@ -565,8 +565,8 @@ Database::InitSchema(bool* aDatabaseMigrated)
     // synchronous = NORMAL mode a crash could cause loss of all the
     // transactions in the journal.  For added safety we will also force
     // checkpointing at strategic moments.
-    PRInt32 checkpointPages =
-      static_cast<PRInt32>(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 1024 / mDBPageSize);
+    int32_t checkpointPages =
+      static_cast<int32_t>(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 1024 / mDBPageSize);
     nsCAutoString checkpointPragma("PRAGMA wal_autocheckpoint = ");
     checkpointPragma.AppendInt(checkpointPages);
     rv = mMainConn->ExecuteSimpleSQL(checkpointPragma);
@@ -603,7 +603,7 @@ Database::InitSchema(bool* aDatabaseMigrated)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the database schema version.
-  PRInt32 currentSchemaVersion;
+  int32_t currentSchemaVersion;
   rv = mMainConn->GetSchemaVersion(&currentSchemaVersion);
   NS_ENSURE_SUCCESS(rv, rv);
   bool databaseInitialized = currentSchemaVersion > 0;
@@ -892,13 +892,13 @@ Database::CreateBookmarkRoots()
   rv = stmt->ExecuteStep(&hasResult);
   if (NS_FAILED(rv)) return rv;
   MOZ_ASSERT(hasResult);
-  PRInt32 bookmarkCount = 0;
+  int32_t bookmarkCount = 0;
   rv = stmt->GetInt32(0, &bookmarkCount);
   if (NS_FAILED(rv)) return rv;
-  PRInt32 rootCount = 0;
+  int32_t rootCount = 0;
   rv = stmt->GetInt32(1, &rootCount);
   if (NS_FAILED(rv)) return rv;
-  PRInt32 positionSum = 0;
+  int32_t positionSum = 0;
   rv = stmt->GetInt32(2, &positionSum);
   if (NS_FAILED(rv)) return rv;
   MOZ_ASSERT(bookmarkCount == 5 && rootCount == 5 && positionSum == 6);
@@ -979,7 +979,7 @@ Database::UpdateBookmarkRootTitles()
     "TagsFolderTitle", "UnsortedBookmarksFolderTitle"
   };
 
-  for (PRUint32 i = 0; i < ArrayLength(rootNames); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(rootNames); ++i) {
     nsXPIDLString title;
     rv = bundle->GetStringFromName(NS_ConvertASCIItoUTF16(titleStringIDs[i]).get(),
                                    getter_Copies(title));
@@ -1035,7 +1035,7 @@ Database::CheckAndUpdateGUIDs()
 
   bool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    PRInt64 itemId;
+    int64_t itemId;
     rv = stmt->GetInt64(0, &itemId);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCAutoString guid;
@@ -1109,7 +1109,7 @@ Database::CheckAndUpdateGUIDs()
   NS_ENSURE_SUCCESS(rv, rv);
 
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    PRInt64 placeId;
+    int64_t placeId;
     rv = stmt->GetInt64(0, &placeId);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCAutoString guid;

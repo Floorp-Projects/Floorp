@@ -11,7 +11,7 @@
 #include "zlib.h"
 
 nsFontFace::nsFontFace(gfxFontEntry*      aFontEntry,
-                       PRUint8            aMatchType,
+                       uint8_t            aMatchType,
                        nsCSSFontFaceRule* aRule)
   : mFontEntry(aFontEntry),
     mRule(aRule),
@@ -89,7 +89,7 @@ nsFontFace::GetRule(nsIDOMCSSFontFaceRule **aRule)
 
 /* readonly attribute long srcIndex; */
 NS_IMETHODIMP
-nsFontFace::GetSrcIndex(PRInt32 * aSrcIndex)
+nsFontFace::GetSrcIndex(int32_t * aSrcIndex)
 {
   if (mFontEntry->IsUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
@@ -145,7 +145,7 @@ nsFontFace::GetFormat(nsAString & aFormat)
   aFormat.Truncate();
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
-    PRUint32 formatFlags = mFontEntry->mUserFontData->mFormat;
+    uint32_t formatFlags = mFontEntry->mUserFontData->mFormat;
     if (formatFlags & gfxUserFontSet::FLAG_FORMAT_OPENTYPE) {
       AppendToFormat(aFormat, "opentype");
     }

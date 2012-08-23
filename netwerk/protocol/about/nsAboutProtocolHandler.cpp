@@ -42,14 +42,14 @@ nsAboutProtocolHandler::GetScheme(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::GetDefaultPort(PRInt32 *result)
+nsAboutProtocolHandler::GetDefaultPort(int32_t *result)
 {
     *result = -1;        // no port for about: URLs
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::GetProtocolFlags(PRUint32 *result)
+nsAboutProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
     *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD;
     return NS_OK;
@@ -82,7 +82,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
     rv = NS_GetAboutModule(url, getter_AddRefs(aboutMod));
     if (NS_SUCCEEDED(rv)) {
         // The standard return case
-        PRUint32 flags;
+        uint32_t flags;
         rv = aboutMod->GetURIFlags(url, &flags);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -162,7 +162,7 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 NS_IMETHODIMP 
-nsAboutProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
+nsAboutProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = false;
@@ -184,14 +184,14 @@ nsSafeAboutProtocolHandler::GetScheme(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsSafeAboutProtocolHandler::GetDefaultPort(PRInt32 *result)
+nsSafeAboutProtocolHandler::GetDefaultPort(int32_t *result)
 {
     *result = -1;        // no port for moz-safe-about: URLs
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSafeAboutProtocolHandler::GetProtocolFlags(PRUint32 *result)
+nsSafeAboutProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
     *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE;
     return NS_OK;
@@ -228,7 +228,7 @@ nsSafeAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 NS_IMETHODIMP 
-nsSafeAboutProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
+nsSafeAboutProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = false;

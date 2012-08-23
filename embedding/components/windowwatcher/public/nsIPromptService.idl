@@ -213,7 +213,7 @@ interface nsIPromptService : nsISupports
    *
    * where "AAA" and "BBB" correspond to one of the button titles.
    */
-  PRInt32 confirmEx(in nsIDOMWindow aParent,
+  int32_t confirmEx(in nsIDOMWindow aParent,
                     in wstring aDialogTitle,
                     in wstring aText,
                     in unsigned long aButtonFlags,
@@ -340,7 +340,7 @@ interface nsIPromptService : nsISupports
   boolean select(in nsIDOMWindow aParent,
                  in wstring aDialogTitle,
                  in wstring aText,
-                 in  PRUint32 aCount,
+                 in  uint32_t aCount,
                  [array, size_is(aCount)] in wstring aSelectList,
                  out long aOutSelection);
 };

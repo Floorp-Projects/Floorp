@@ -83,7 +83,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     // Override bogus IsFrameOfType in nsBoxFrame.
     if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))
@@ -181,7 +181,7 @@ nsRootBoxFrame::RemoveFrame(ChildListID     aListID,
 }
 
 #ifdef DEBUG_REFLOW
-PRInt32 gReflows = 0;
+int32_t gReflows = 0;
 #endif
 
 NS_IMETHODIMP

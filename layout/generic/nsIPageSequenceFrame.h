@@ -39,15 +39,15 @@ public:
                         PRUnichar* aDocTitle,
                         PRUnichar* aDocURL) = 0;
   NS_IMETHOD PrintNextPage() = 0;
-  NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum) = 0;
-  NS_IMETHOD GetNumPages(PRInt32* aNumPages) = 0;
+  NS_IMETHOD GetCurrentPageNum(int32_t* aPageNum) = 0;
+  NS_IMETHOD GetNumPages(int32_t* aNumPages) = 0;
   NS_IMETHOD IsDoingPrintRange(bool* aDoing) = 0;
-  NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage) = 0;
+  NS_IMETHOD GetPrintRange(int32_t* aFromPage, int32_t* aToPage) = 0;
 
   NS_IMETHOD DoPageEnd() = 0;
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) = 0;
 
-  NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) = 0;
+  NS_IMETHOD SetTotalNumPages(int32_t aTotal) = 0;
 
   // For Shrink To Fit
   NS_IMETHOD GetSTFPercent(float& aSTFPercent) = 0;

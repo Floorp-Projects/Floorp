@@ -15,8 +15,8 @@ NS_IMPL_ISUPPORTS1(nsUnicodeToUTF8, nsIUnicodeEncoder)
 // nsUnicodeToUTF8 class [implementation]
 
 NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
+                                              int32_t aSrcLength,
+                                              int32_t * aDestLength)
 {
   // aSrc is interpreted as UTF16, 3 is normally enough.
   // But when previous buffer only contains part of the surrogate pair, we 
@@ -28,15 +28,15 @@ NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const PRUnichar * aSrc,
 }
 
 NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc, 
-                                PRInt32 * aSrcLength, 
+                                int32_t * aSrcLength, 
                                 char * aDest, 
-                                PRInt32 * aDestLength)
+                                int32_t * aDestLength)
 {
   const PRUnichar * src = aSrc;
   const PRUnichar * srcEnd = aSrc + *aSrcLength;
   char * dest = aDest;
-  PRInt32 destLen = *aDestLength;
-  PRUint32 n;
+  int32_t destLen = *aDestLength;
+  uint32_t n;
 
   //complete remaining of last conversion
   if (mHighSurrogate) {
@@ -95,7 +95,7 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
         *dest++ = (char)0x80 | (*src & 0x003f);
         destLen -= 3;
       } else {
-        n = ((*src - (PRUnichar)0xd800) << 10) + (*(src+1) - (PRUnichar)0xdc00) + (PRUint32)0x10000;
+        n = ((*src - (PRUnichar)0xd800) << 10) + (*(src+1) - (PRUnichar)0xdc00) + (uint32_t)0x10000;
         *dest++ = (char)0xf0 | (n >> 18);
         *dest++ = (char)0x80 | ((n >> 12) & 0x3f);
         *dest++ = (char)0x80 | ((n >> 6) & 0x3f);
@@ -124,7 +124,7 @@ error_more_output:
   return NS_OK_UENC_MOREOUTPUT;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF8::Finish(char * aDest, PRInt32 * aDestLength)
+NS_IMETHODIMP nsUnicodeToUTF8::Finish(char * aDest, int32_t * aDestLength)
 {
   char * dest = aDest;
 

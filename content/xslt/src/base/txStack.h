@@ -46,7 +46,7 @@ public:
         NS_ASSERTION(!isEmpty(), "popping from empty stack");
         if (!isEmpty())
         {
-            const PRUint32 count = Length() - 1;
+            const uint32_t count = Length() - 1;
             object = ElementAt(count);
             RemoveElementAt(count);
         }
@@ -68,7 +68,7 @@ public:
      *
      * @return the number of elements in the Stack.
      */
-    inline PRInt32 size()
+    inline int32_t size()
     {
         return Length();
     }
@@ -116,7 +116,7 @@ public:
 
 private:
     txStack* mStack;
-    PRUint32 mPosition;
+    uint32_t mPosition;
 };
 
 #endif /* txStack_h___ */

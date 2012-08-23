@@ -41,10 +41,10 @@ public:
     // FTP Connection list access
     nsresult InsertConnection(nsIURI *aKey, nsFtpControlConnection *aConn);
     nsresult RemoveConnection(nsIURI *aKey, nsFtpControlConnection **aConn);
-    PRUint32 GetSessionId() { return mSessionId; }
+    uint32_t GetSessionId() { return mSessionId; }
 
-    PRUint8 GetDataQoSBits() { return mDataQoSBits; }
-    PRUint8 GetControlQoSBits() { return mControlQoSBits; }
+    uint8_t GetDataQoSBits() { return mDataQoSBits; }
+    uint8_t GetControlQoSBits() { return mControlQoSBits; }
 
 private:
     // Stuff for the timer callback function
@@ -73,17 +73,17 @@ private:
     nsTArray<timerStruct*> mRootConnectionList;
 
     nsCOMPtr<nsICacheSession> mCacheSession;
-    PRInt32 mIdleTimeout;
+    int32_t mIdleTimeout;
 
     // When "clear active logins" is performed, all idle connection are dropped
     // and mSessionId is incremented. When nsFtpState wants to insert idle
     // connection we refuse to cache if its mSessionId is different (i.e.
     // control connection had been created before last "clear active logins" was
     // performed.
-    PRUint32 mSessionId;
+    uint32_t mSessionId;
 
-    PRUint8 mControlQoSBits;
-    PRUint8 mDataQoSBits;
+    uint8_t mControlQoSBits;
+    uint8_t mDataQoSBits;
 };
 
 //-----------------------------------------------------------------------------

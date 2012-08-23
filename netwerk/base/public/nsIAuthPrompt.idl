@@ -10,9 +10,9 @@ interface nsIPrompt;
 [scriptable, uuid(358089f9-ee4b-4711-82fd-bcd07fc62061)]
 interface nsIAuthPrompt : nsISupports
 {         
-    const PRUint32 SAVE_PASSWORD_NEVER             = 0;
-    const PRUint32 SAVE_PASSWORD_FOR_SESSION       = 1;
-    const PRUint32 SAVE_PASSWORD_PERMANENTLY       = 2;
+    const uint32_t SAVE_PASSWORD_NEVER             = 0;
+    const uint32_t SAVE_PASSWORD_FOR_SESSION       = 1;
+    const uint32_t SAVE_PASSWORD_PERMANENTLY       = 2;
 
     /**
      * Puts up a text input dialog with OK and Cancel buttons.
@@ -31,7 +31,7 @@ interface nsIAuthPrompt : nsISupports
     boolean prompt(in wstring dialogTitle,
                    in wstring text,
                    in wstring passwordRealm,
-                   in PRUint32 savePassword,
+                   in uint32_t savePassword,
                    in wstring defaultText, 
                    out wstring result);
 
@@ -51,7 +51,7 @@ interface nsIAuthPrompt : nsISupports
     boolean promptUsernameAndPassword(in wstring dialogTitle,
                                       in wstring text,
                                       in wstring passwordRealm,
-                                      in PRUint32 savePassword,
+                                      in uint32_t savePassword,
                                       inout wstring user, 
                                       inout wstring pwd);
 
@@ -75,6 +75,6 @@ interface nsIAuthPrompt : nsISupports
     boolean promptPassword(in wstring dialogTitle,
                            in wstring text,
                            in wstring passwordRealm,
-                           in PRUint32 savePassword,
+                           in uint32_t savePassword,
                            inout wstring pwd);
 };

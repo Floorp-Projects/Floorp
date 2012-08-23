@@ -93,7 +93,7 @@ nsMathMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 bool
-nsMathMLElement::ParseAttribute(PRInt32 aNamespaceID,
+nsMathMLElement::ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)
@@ -211,9 +211,9 @@ nsMathMLElement::GetAttributeMappingFunction() const
 /* static */ bool
 nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
                                       nsCSSValue&     aCSSValue,
-                                      PRUint32        aFlags)
+                                      uint32_t        aFlags)
 {
-   PRInt32 i = 0;
+   int32_t i = 0;
    // See if it is one of the 'namedspace' (ranging -7/18em, -6/18, ... 7/18em)
    if (aString.EqualsLiteral("veryverythinmathspace")) {
      i = 1;
@@ -293,12 +293,12 @@ nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
 /* static */ bool
 nsMathMLElement::ParseNumericValue(const nsString& aString,
                                    nsCSSValue&     aCSSValue,
-                                   PRUint32        aFlags)
+                                   uint32_t        aFlags)
 {
   nsAutoString str(aString);
   str.CompressWhitespace(); // aString is const in this code...
 
-  PRInt32 stringLength = str.Length();
+  int32_t stringLength = str.Length();
   if (!stringLength)
     return false;
 
@@ -309,7 +309,7 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
   nsAutoString number, unit;
 
   // see if the negative sign is there
-  PRInt32 i = 0;
+  int32_t i = 0;
   PRUnichar c = str[0];
   if (c == '-') {
     number.Append(c);
@@ -444,7 +444,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       str.CompressWhitespace();
       if (str.Length() > 0) {
         nsresult errorCode;
-        PRInt32 intValue = str.ToInteger(&errorCode);
+        int32_t intValue = str.ToInteger(&errorCode);
         if (NS_SUCCEEDED(errorCode)) {
           // This is kind of cheesy ... if the scriptlevel has a sign,
           // then it's a relative value and we store the nsCSSValue as an
@@ -495,12 +495,12 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       if (!ParseNumericValue(str, *fontSize, 0) &&
           parseSizeKeywords) {
         static const char sizes[3][7] = { "small", "normal", "big" };
-        static const PRInt32 values[NS_ARRAY_LENGTH(sizes)] = {
+        static const int32_t values[NS_ARRAY_LENGTH(sizes)] = {
           NS_STYLE_FONT_SIZE_SMALL, NS_STYLE_FONT_SIZE_MEDIUM,
           NS_STYLE_FONT_SIZE_LARGE
         };
         str.CompressWhitespace();
-        for (PRUint32 i = 0; i < ArrayLength(sizes); ++i) {
+        for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
           if (str.EqualsASCII(sizes[i])) {
             fontSize->SetIntValue(values[i], eCSSUnit_Enumerated);
             break;
@@ -627,7 +627,7 @@ nsMathMLElement::IntrinsicState() const
 }
 
 bool
-nsMathMLElement::IsNodeOfType(PRUint32 aFlags) const
+nsMathMLElement::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~eCONTENT);
 }
@@ -646,7 +646,7 @@ nsMathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
 }
 
 bool
-nsMathMLElement::IsFocusable(PRInt32 *aTabIndex, bool aWithMouse)
+nsMathMLElement::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
 {
   nsCOMPtr<nsIURI> uri;
   if (IsLink(getter_AddRefs(uri))) {
@@ -777,7 +777,7 @@ nsMathMLElement::GetHrefURI() const
 }
 
 nsresult
-nsMathMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsMathMLElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                          nsIAtom* aPrefix, const nsAString& aValue,
                          bool aNotify)
 {
@@ -799,7 +799,7 @@ nsMathMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsMathMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
+nsMathMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
                            bool aNotify)
 {
   nsresult rv = nsMathMLElementBase::UnsetAttr(aNameSpaceID, aAttr, aNotify);

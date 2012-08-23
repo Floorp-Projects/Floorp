@@ -22,7 +22,7 @@ class nsSVGNumber2
 {
 
 public:
-  void Init(PRUint8 aAttrEnum = 0xff, float aValue = 0) {
+  void Init(uint8_t aAttrEnum = 0xff, float aValue = 0) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
     mIsAnimated = false;
@@ -57,7 +57,7 @@ private:
 
   float mAnimVal;
   float mBaseVal;
-  PRUint8 mAttrEnum; // element specified tracking for attribute
+  uint8_t mAttrEnum; // element specified tracking for attribute
   bool mIsAnimated;
   bool mIsBaseSet;
 

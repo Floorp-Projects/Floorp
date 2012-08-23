@@ -27,7 +27,7 @@ const nsTArrayHeader* nsTArray_base<Alloc>::GetAutoArrayBufferUnsafe(size_t elem
   // Assuming |this| points to an nsAutoArray, we want to get a pointer to
   // mAutoBuf.  So just cast |this| to nsAutoArray* and read &mAutoBuf!
 
-  const void* autoBuf = &reinterpret_cast<const nsAutoArrayBase<nsTArray<PRUint32>, 1>*>(this)->mAutoBuf;
+  const void* autoBuf = &reinterpret_cast<const nsAutoArrayBase<nsTArray<uint32_t>, 1>*>(this)->mAutoBuf;
 
   // If we're on a 32-bit system and elemAlign is 8, we need to adjust our
   // pointer to take into account the extra alignment in the auto array.
@@ -108,7 +108,7 @@ nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
   // Additionally we couldn't fit in the Header::mCapacity
   // member. Just bail out in cases like that.  We don't want to be
   // allocating 2 GB+ arrays anyway.
-  if ((PRUint64)capacity * elemSize > size_type(-1)/2) {
+  if ((uint64_t)capacity * elemSize > size_type(-1)/2) {
     NS_ERROR("Attempting to allocate excessively large array");
     return false;
   }
@@ -130,11 +130,11 @@ nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
   // We increase our capacity so |capacity * elemSize + sizeof(Header)| is the
   // next power of two, if this value is less than pageSize bytes, or otherwise
   // so it's the next multiple of pageSize.
-  const PRUint32 pageSizeBytes = 12;
-  const PRUint32 pageSize = 1 << pageSizeBytes;
+  const uint32_t pageSizeBytes = 12;
+  const uint32_t pageSize = 1 << pageSizeBytes;
 
-  PRUint32 minBytes = capacity * elemSize + sizeof(Header);
-  PRUint32 bytesToAlloc;
+  uint32_t minBytes = capacity * elemSize + sizeof(Header);
+  uint32_t bytesToAlloc;
   if (minBytes >= pageSize) {
     // Round up to the next multiple of pageSize.
     bytesToAlloc = pageSize * ((minBytes + pageSize - 1) / pageSize);
@@ -170,7 +170,7 @@ nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
   }
 
   // How many elements can we fit in bytesToAlloc?
-  PRUint32 newCapacity = (bytesToAlloc - sizeof(Header)) / elemSize;
+  uint32_t newCapacity = (bytesToAlloc - sizeof(Header)) / elemSize;
   MOZ_ASSERT(newCapacity >= capacity, "Didn't enlarge the array enough!");
   header->mCapacity = newCapacity;
 
@@ -370,7 +370,7 @@ nsTArray_base<Alloc>::SwapArrayElements(nsTArray_base<Allocator>& other,
   // job for AutoTArray!  (One of the two arrays we're swapping is using an
   // auto buffer, so we're likely not allocating a lot of space here.  But one
   // could, in theory, allocate a huge AutoTArray on the heap.)
-  nsAutoTArray<PRUint8, 64, Alloc> temp;
+  nsAutoTArray<uint8_t, 64, Alloc> temp;
   if (!temp.SetCapacity(smallerLength * elemSize)) {
     return false;
   }

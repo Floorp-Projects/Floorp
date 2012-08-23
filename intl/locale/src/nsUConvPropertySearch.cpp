@@ -8,16 +8,16 @@
 // static
 nsresult
 nsUConvPropertySearch::SearchPropertyValue(const char* aProperties[][3],
-                                           PRInt32 aNumberOfProperties,
+                                           int32_t aNumberOfProperties,
                                            const nsACString& aKey,
                                            nsACString& aValue)
 {
   const char* key = PromiseFlatCString(aKey).get();
-  PRInt32 lo = 0;
-  PRInt32 hi = aNumberOfProperties - 1;
+  int32_t lo = 0;
+  int32_t hi = aNumberOfProperties - 1;
   while (lo <= hi) {
-    PRUint32 mid = (lo + hi) / 2;
-    PRInt32 comp = nsCRT::strcmp(aProperties[mid][0], key);
+    uint32_t mid = (lo + hi) / 2;
+    int32_t comp = nsCRT::strcmp(aProperties[mid][0], key);
     if (comp > 0) {
       hi = mid - 1;
     } else if (comp < 0) {

@@ -50,7 +50,7 @@ private:
     static int compareNodes(const void* aIndexA, const void* aIndexB,
                             void* aSortData);
     static bool calcSortValue(txObject*& aSortValue, SortKey* aKey,
-                              SortData* aSortData, PRUint32 aNodeIndex);
+                              SortData* aSortData, uint32_t aNodeIndex);
     txList mSortKeys;
     unsigned int mNKeys;
 };

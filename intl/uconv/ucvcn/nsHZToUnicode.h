@@ -32,13 +32,13 @@ protected:
 
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
-  NS_IMETHOD ConvertNoBuff(const char* aSrc, PRInt32 * aSrcLength, 
-                           PRUnichar *aDest, PRInt32 * aDestLength); 
+  NS_IMETHOD ConvertNoBuff(const char* aSrc, int32_t * aSrcLength, 
+                           PRUnichar *aDest, int32_t * aDestLength); 
   nsGBKConvUtil mUtil;
 
 private:
-  PRInt16 mHZState;
-  PRUint32 mRunLength; // length of a run of 8-bit GB-encoded characters
+  int16_t mHZState;
+  uint32_t mRunLength; // length of a run of 8-bit GB-encoded characters
   char mOddByte; // first byte of a multi-byte sequence from a previous buffer
 
 };

@@ -14,7 +14,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsXMLElement::)
 
   virtual nsIAtom *GetIDAttributeName() const;
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName, 
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -38,7 +38,7 @@ nsXMLEventsElement::GetIDAttributeName() const
 }
 
 nsresult
-nsXMLEventsElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
+nsXMLEventsElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                             const nsAString& aValue, bool aNotify)
 {
   if (mNodeInfo->Equals(nsGkAtoms::listener) && 

@@ -58,8 +58,8 @@ mozilla::dom::indexedDB::CreateGenericEvent(const nsAString& aType,
 // static
 already_AddRefed<nsDOMEvent>
 IDBVersionChangeEvent::CreateInternal(const nsAString& aType,
-                                      PRUint64 aOldVersion,
-                                      PRUint64 aNewVersion)
+                                      uint64_t aOldVersion,
+                                      uint64_t aNewVersion)
 {
   nsRefPtr<IDBVersionChangeEvent> event(new IDBVersionChangeEvent());
 
@@ -80,8 +80,8 @@ IDBVersionChangeEvent::CreateInternal(const nsAString& aType,
 // static
 already_AddRefed<nsIRunnable>
 IDBVersionChangeEvent::CreateRunnableInternal(const nsAString& aType,
-                                              PRUint64 aOldVersion,
-                                              PRUint64 aNewVersion,
+                                              uint64_t aOldVersion,
+                                              uint64_t aNewVersion,
                                               nsIDOMEventTarget* aTarget)
 {
   nsRefPtr<nsDOMEvent> event =
@@ -103,7 +103,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 DOMCI_DATA(IDBVersionChangeEvent, IDBVersionChangeEvent)
 
 NS_IMETHODIMP
-IDBVersionChangeEvent::GetOldVersion(PRUint64* aOldVersion)
+IDBVersionChangeEvent::GetOldVersion(uint64_t* aOldVersion)
 {
   NS_ENSURE_ARG_POINTER(aOldVersion);
   *aOldVersion = mOldVersion;

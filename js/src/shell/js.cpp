@@ -98,7 +98,7 @@ size_t gMaxStackSize = DEFAULT_MAX_STACK_SIZE;
 
 
 #ifdef JS_THREADSAFE
-static PRUintn gStackBaseThreadIndex;
+static unsigned gStackBaseThreadIndex;
 #else
 static uintptr_t gStackBase;
 #endif
@@ -1583,6 +1583,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
            "ofs", "line", "pc", "delta", "desc", "args");
     Sprint(sp, "---- ---- ----- ------ -------- ------\n");
     unsigned offset = 0;
+    unsigned colspan = 0;
     unsigned lineno = script->lineno;
     jssrcnote *notes = script->notes();
     unsigned switchTableEnd = 0, switchTableStart = 0;
@@ -1598,6 +1599,12 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
         }
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", unsigned(sn - notes), lineno, offset, delta, name);
         switch (type) {
+          case SRC_COLSPAN:
+            colspan = js_GetSrcNoteOffset(sn, 0);
+            if (colspan >= SN_COLSPAN_DOMAIN / 2)
+                colspan -= SN_COLSPAN_DOMAIN;
+            Sprint(sp, "%d", colspan);
+            break;
           case SRC_SETLINE:
             lineno = js_GetSrcNoteOffset(sn, 0);
             Sprint(sp, " lineno %u", lineno);
@@ -2730,13 +2737,14 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
         if (!desc.obj)
             return true;
     } else {
-        if (!referent->lookupGeneric(cx, id, objp, &shape))
+        if (!JSObject::lookupGeneric(cx, referent, id, objp, &shape))
             return false;
         if (objp != referent)
             return true;
         RootedValue value(cx);
-        if (!referent->getGeneric(cx, id, &value) ||
-            !referent->getGenericAttributes(cx, id, &desc.attrs)) {
+        if (!JSObject::getGeneric(cx, referent, referent, id, &value) ||
+            !JSObject::getGenericAttributes(cx, referent, id, &desc.attrs))
+        {
             return false;
         }
         desc.value = value;
@@ -3410,6 +3418,7 @@ WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
     if (!obj.isObject() || !proto.isObjectOrNull()) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
                              "wrapWithProto");
+        return false;
     }
 
     JSObject *wrapped = Wrapper::New(cx, &obj.toObject(), proto.toObjectOrNull(),
@@ -4288,7 +4297,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
         prefix = JS_smprintf("%s:", report->filename);
     if (report->lineno) {
         tmp = prefix;
-        prefix = JS_smprintf("%s%u: ", tmp ? tmp : "", report->lineno);
+        prefix = JS_smprintf("%s%u:%u ", tmp ? tmp : "", report->lineno, report->column);
         JS_free(cx, tmp);
     }
     if (JSREPORT_IS_WARNING(report->flags)) {

@@ -17,7 +17,7 @@ public:
 NS_IMPL_ISUPPORTS1(SimpleTest, nsISimpleTest)
 
 NS_IMETHODIMP
-SimpleTest::Add(PRInt32 a, PRInt32 b, PRInt32 *r)
+SimpleTest::Add(int32_t a, int32_t b, int32_t *r)
 {
   printf("add(%d,%d) from C++\n", a, b);
 

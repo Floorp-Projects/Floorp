@@ -38,13 +38,13 @@ protected:
   NS_IMETHOD SendMouseEventCommon(const nsAString& aType,
                                   float aX,
                                   float aY,
-                                  PRInt32 aButton,
-                                  PRInt32 aClickCount,
-                                  PRInt32 aModifiers,
+                                  int32_t aButton,
+                                  int32_t aClickCount,
+                                  int32_t aModifiers,
                                   bool aIgnoreRootScrollFrame,
                                   float aPressure,
                                   unsigned short aInputSourceArg,
                                   bool aToWindow);
 
-  static mozilla::widget::Modifiers GetWidgetModifiers(PRInt32 aModifiers);
+  static mozilla::widget::Modifiers GetWidgetModifiers(int32_t aModifiers);
 };

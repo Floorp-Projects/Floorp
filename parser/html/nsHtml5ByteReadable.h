@@ -14,13 +14,13 @@ class nsHtml5ByteReadable
 {
   public:
 
-    nsHtml5ByteReadable(const PRUint8* current, const PRUint8* end)
+    nsHtml5ByteReadable(const uint8_t* current, const uint8_t* end)
      : current(current),
        end(end)
     {
     }
 
-    inline PRInt32 read() {
+    inline int32_t read() {
       if (current < end) {
         return *(current++);
       } else {
@@ -29,7 +29,7 @@ class nsHtml5ByteReadable
     }
 
   private:
-    const PRUint8* current;
-    const PRUint8* end;
+    const uint8_t* current;
+    const uint8_t* end;
 };
 #endif

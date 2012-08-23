@@ -33,14 +33,14 @@ public:
     static NS_HIDDEN_(nsresult)
                       Create(nsInputStreamPump  **result,
                              nsIInputStream      *stream,
-                             PRInt64              streamPos = -1,
-                             PRInt64              streamLen = -1,
-                             PRUint32             segsize = 0,
-                             PRUint32             segcount = 0,
+                             int64_t              streamPos = -1,
+                             int64_t              streamLen = -1,
+                             uint32_t             segsize = 0,
+                             uint32_t             segcount = 0,
                              bool                 closeWhenDone = false);
 
-    typedef void (*PeekSegmentFun)(void *closure, const PRUint8 *buf,
-                                   PRUint32 bufLen);
+    typedef void (*PeekSegmentFun)(void *closure, const uint8_t *buf,
+                                   uint32_t bufLen);
     /**
      * Peek into the first chunk of data that's in the stream. Note that this
      * method will not call the callback when there is no data in the stream.
@@ -63,24 +63,24 @@ protected:
     };
 
     nsresult EnsureWaiting();
-    PRUint32 OnStateStart();
-    PRUint32 OnStateTransfer();
-    PRUint32 OnStateStop();
+    uint32_t OnStateStart();
+    uint32_t OnStateTransfer();
+    uint32_t OnStateStop();
 
-    PRUint32                      mState;
+    uint32_t                      mState;
     nsCOMPtr<nsILoadGroup>        mLoadGroup;
     nsCOMPtr<nsIStreamListener>   mListener;
     nsCOMPtr<nsISupports>         mListenerContext;
     nsCOMPtr<nsIThread>           mTargetThread;
     nsCOMPtr<nsIInputStream>      mStream;
     nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
-    PRUint64                      mStreamOffset;
-    PRUint64                      mStreamLength;
-    PRUint32                      mSegSize;
-    PRUint32                      mSegCount;
+    uint64_t                      mStreamOffset;
+    uint64_t                      mStreamLength;
+    uint32_t                      mSegSize;
+    uint32_t                      mSegCount;
     nsresult                      mStatus;
-    PRUint32                      mSuspendCount;
-    PRUint32                      mLoadFlags;
+    uint32_t                      mSuspendCount;
+    uint32_t                      mLoadFlags;
     bool                          mIsPending;
     bool                          mWaiting; // true if waiting on async source
     bool                          mCloseWhenDone;

@@ -53,39 +53,23 @@ window.addEventListener('message', function frameload(e) {
         self.assertTrue(isinstance(frame, HTMLElement))
         return frame
 
-    def set_up_test_page(self, emulator, url="test.html", whitelist_prefs=None):
+    def set_up_test_page(self, emulator, url="test.html", permissions=None):
         emulator.set_context("content")
         url = emulator.absolute_url(url)
         emulator.navigate(url)
 
-        if not whitelist_prefs:
+        if not permissions:
             return
 
         emulator.set_context("chrome")
         emulator.execute_script("""
 Components.utils.import("resource://gre/modules/Services.jsm");
-let [url, whitelist_prefs] = arguments;
-let host = Services.io.newURI(url, null, null).prePath;
-whitelist_prefs.forEach(function (pref) {
-  let value;
-  try {
-    value = Services.prefs.getCharPref(pref);
-    log(pref + " has initial value " + value);
-  } catch(ex) {
-    log(pref + " has no initial value.");
-    // Ignore.
-  }
-  let list = value ? value.split(",") : [];
-  if (list.indexOf(host) != -1) {
-    return;
-  }
-  // Some whitelists expect scheme://host, some expect the full URI...
-  list.push(host);
-  list.push(url);
-  Services.prefs.setCharPref(pref, list.join(","))
-  log("Added " + host + " to " + pref);
+let [url, permissions] = arguments;
+let uri = Services.io.newURI(url, null, null);
+permissions.forEach(function (perm) {
+    Services.perms.add(uri, "sms", Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
 });
-        """, [url, whitelist_prefs])
+        """, [url, permissions])
         emulator.set_context("content")
 
     def setUp(self):

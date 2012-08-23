@@ -41,10 +41,6 @@
           gecko:icon="@drawable/ic_menu_desktop_mode"
           gecko:title="@string/desktop_mode"
           gecko:checkable="true" />
-    
-    <item gecko:id="@+id/site_settings"
-          gecko:icon="@drawable/ic_menu_clear_site_settings"
-          gecko:title="@string/site_settings_title" />
 
     <item gecko:id="@+id/addons"
           gecko:title="@string/addons"/>

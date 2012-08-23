@@ -12,7 +12,7 @@
 #if defined(sparc) || defined(__sparc__)
 
 extern "C" nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, PRUint64 methodIndex, PRUint64* args)
+PrepareAndDispatch(nsXPTCStubBase* self, uint64_t methodIndex, uint64_t* args)
 {
 
 #define PARAM_BUFFER_COUNT     16
@@ -20,13 +20,13 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint64 methodIndex, PRUint64* args)
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
     const nsXPTMethodInfo* info;
-    PRUint8 paramCount;
-    PRUint8 i;
+    uint8_t paramCount;
+    uint8_t i;
     nsresult result = NS_ERROR_FAILURE;
 
     NS_ASSERTION(self,"no self");
 
-    self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+    self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
     NS_ASSERTION(info,"no interface info");
 
     paramCount = info->GetParamCount();
@@ -38,7 +38,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint64 methodIndex, PRUint64* args)
         dispatchParams = paramBuffer;
     NS_ASSERTION(dispatchParams,"no place for params");
 
-    PRUint64* ap = args;
+    uint64_t* ap = args;
     for(i = 0; i < paramCount; i++, ap++)
     {
         const nsXPTParamInfo& param = info->GetParam(i);
@@ -53,26 +53,26 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint64 methodIndex, PRUint64* args)
         // else
         switch(type)
         {
-        case nsXPTType::T_I8     : dp->val.i8  = *((PRInt64*) ap);       break;
-        case nsXPTType::T_I16    : dp->val.i16 = *((PRInt64*) ap);       break;
-        case nsXPTType::T_I32    : dp->val.i32 = *((PRInt64*) ap);       break;
+        case nsXPTType::T_I8     : dp->val.i8  = *((int64_t*) ap);       break;
+        case nsXPTType::T_I16    : dp->val.i16 = *((int64_t*) ap);       break;
+        case nsXPTType::T_I32    : dp->val.i32 = *((int64_t*) ap);       break;
         case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap);       break;
-        case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap);       break;
-        case nsXPTType::T_I64    : dp->val.i64 = *((PRInt64*) ap);       break;
-        case nsXPTType::T_U8     : dp->val.u8  = *((PRUint64*)ap);       break;
-        case nsXPTType::T_U16    : dp->val.u16 = *((PRUint64*)ap);       break;
-        case nsXPTType::T_U32    : dp->val.u32 = *((PRUint64*)ap);       break;
+        case nsXPTType::T_U64    : dp->val.u64 = *((uint64_t*)ap);       break;
+        case nsXPTType::T_I64    : dp->val.i64 = *((int64_t*) ap);       break;
+        case nsXPTType::T_U8     : dp->val.u8  = *((uint64_t*)ap);       break;
+        case nsXPTType::T_U16    : dp->val.u16 = *((uint64_t*)ap);       break;
+        case nsXPTType::T_U32    : dp->val.u32 = *((uint64_t*)ap);       break;
         case nsXPTType::T_FLOAT  : dp->val.f   =  ((float*)   ap)[1];    break;
-        case nsXPTType::T_BOOL   : dp->val.b   = *((PRUint64*)ap);       break;
-        case nsXPTType::T_CHAR   : dp->val.c   = *((PRUint64*)ap);       break;
-        case nsXPTType::T_WCHAR  : dp->val.wc  = *((PRInt64*) ap);       break;
+        case nsXPTType::T_BOOL   : dp->val.b   = *((uint64_t*)ap);       break;
+        case nsXPTType::T_CHAR   : dp->val.c   = *((uint64_t*)ap);       break;
+        case nsXPTType::T_WCHAR  : dp->val.wc  = *((int64_t*) ap);       break;
         default:
             NS_ERROR("bad type");
             break;
         }
     }
 
-    result = self->mOuter->CallMethod((PRUint16)methodIndex, info, dispatchParams);
+    result = self->mOuter->CallMethod((uint16_t)methodIndex, info, dispatchParams);
 
     if(dispatchParams != paramBuffer)
         delete [] dispatchParams;

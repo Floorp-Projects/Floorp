@@ -27,6 +27,7 @@ import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -130,6 +131,8 @@ public class GeckoAppShell
     public static final String SHORTCUT_TYPE_WEBAPP = "webapp";
     public static final String SHORTCUT_TYPE_BOOKMARK = "bookmark";
 
+    static private final boolean LOGGING = false;
+
     static public final int RESTORE_NONE = 0;
     static public final int RESTORE_OOM = 1;
     static public final int RESTORE_CRASH = 2;
@@ -202,6 +205,14 @@ public class GeckoAppShell
                 Throwable cause;
                 while ((cause = e.getCause()) != null) {
                     e = cause;
+                }
+
+                if (e instanceof java.lang.OutOfMemoryError) {
+                    SharedPreferences prefs =
+                        GeckoApp.mAppContext.getSharedPreferences(GeckoApp.PREFS_NAME, 0);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
+                    editor.commit();
                 }
 
                 reportJavaCrash(getStackTraceString(e));
@@ -505,7 +516,7 @@ public class GeckoAppShell
         Log.i(LOGTAG, "post native init");
 
         // Tell Gecko where the target byte buffer is for rendering
-        GeckoAppShell.setLayerClient(GeckoApp.mAppContext.getLayerClient());
+        GeckoAppShell.setLayerClient(GeckoApp.mAppContext.getLayerView().getLayerClient());
 
         Log.i(LOGTAG, "setLayerClient called");
 
@@ -535,11 +546,9 @@ public class GeckoAppShell
 
     // Called on the UI thread after Gecko loads.
     private static void geckoLoaded() {
-        final GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        LayerView v = layerClient.getView();
+        LayerView v = GeckoApp.mAppContext.getLayerView();
         mInputConnection = GeckoInputConnection.create(v);
         v.setInputConnectionHandler(mInputConnection);
-        layerClient.setForceRedraw();
     }
 
     static void sendPendingEventsToGecko() {
@@ -810,10 +819,14 @@ public class GeckoAppShell
         if (index == -1)
             return null;
 
+        return getWebAppIntent(index, aURI);
+    }
+
+    public static Intent getWebAppIntent(int aIndex, String aURI) {
         Intent intent = new Intent();
-        intent.setAction(GeckoApp.ACTION_WEBAPP_PREFIX + index);
+        intent.setAction(GeckoApp.ACTION_WEBAPP_PREFIX + aIndex);
         intent.setData(Uri.parse(aURI));
-        intent.setClassName(GeckoApp.mAppContext, GeckoApp.mAppContext.getPackageName() + ".WebApps$WebApp" + index);
+        intent.setClassName(GeckoApp.mAppContext, GeckoApp.mAppContext.getPackageName() + ".WebApps$WebApp" + aIndex);
         return intent;
     }
 
@@ -1321,8 +1334,15 @@ public class GeckoAppShell
         notificationIntent.setClassName(GeckoApp.mAppContext,
             GeckoApp.mAppContext.getPackageName() + ".NotificationHandler");
 
-        // Put the strings into the intent as an URI "alert:<name>#<cookie>"
-        Uri dataUri = Uri.fromParts("alert", aAlertName, aAlertCookie);
+        // Put the strings into the intent as an URI "alert:?name=<alertName>&app=<appName>&cookie=<cookie>"
+        Uri.Builder b = new Uri.Builder();
+        String app = GeckoApp.mAppContext.getClass().getName();
+        Uri dataUri = b.scheme("alert")
+                                 .path(Integer.toString(notificationID))
+                                 .appendQueryParameter("name", aAlertName)
+                                 .appendQueryParameter("app", app)
+                                 .appendQueryParameter("cookie", aAlertCookie)
+                                 .build();
         notificationIntent.setData(dataUri);
 
         PendingIntent contentIntent = PendingIntent.getBroadcast(GeckoApp.mAppContext, 0, notificationIntent, 0);
@@ -1369,10 +1389,11 @@ public class GeckoAppShell
     }
 
     public static void handleNotification(String aAction, String aAlertName, String aAlertCookie) {
+        if (LOGGING) Log.i(LOGTAG, "handleNotification " + aAction + " " + aAlertName + " " + aAlertCookie);
         int notificationID = aAlertName.hashCode();
 
-        if (GeckoApp.ACTION_ALERT_CLICK.equals(aAction)) {
-            Log.i(LOGTAG, "GeckoAppShell.handleNotification: callObserver(alertclickcallback)");
+        if (GeckoApp.ACTION_ALERT_CALLBACK.equals(aAction)) {
+            if (LOGGING) Log.i(LOGTAG, "GeckoAppShell.handleNotification: callObserver(alertclickcallback)");
             callObserver(aAlertName, "alertclickcallback", aAlertCookie);
 
             AlertNotification notification = mAlertNotifications.get(notificationID);
@@ -1383,7 +1404,11 @@ public class GeckoAppShell
         }
 
         callObserver(aAlertName, "alertfinished", aAlertCookie);
-
+        // Also send a notification to the observer service
+        // New listeners should register for these notifications since they will be called even if
+        // Gecko has been killed and restared between when your notification was shown and when the
+        // user clicked on it.
+        sendEventToGecko(GeckoEvent.createBroadcastEvent("Notification:Clicked", aAlertCookie));
         removeObserver(aAlertName);
 
         removeNotification(notificationID);
@@ -1421,8 +1446,7 @@ public class GeckoAppShell
         // Don't perform haptic feedback if a vibration is currently playing,
         // because the haptic feedback will nuke the vibration.
         if (!sVibrationMaybePlaying || System.nanoTime() >= sVibrationEndTime) {
-            GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-            LayerView layerView = layerClient.getView();
+            LayerView layerView = GeckoApp.mAppContext.getLayerView();
             layerView.performHapticFeedback(aIsLongPress ?
                                             HapticFeedbackConstants.LONG_PRESS :
                                             HapticFeedbackConstants.VIRTUAL_KEY);
@@ -1430,9 +1454,7 @@ public class GeckoAppShell
     }
 
     private static Vibrator vibrator() {
-        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        LayerView layerView = layerClient.getView();
-
+        LayerView layerView = GeckoApp.mAppContext.getLayerView();
         return (Vibrator) layerView.getContext().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
@@ -1479,7 +1501,7 @@ public class GeckoAppShell
     public static void notifyDefaultPrevented(final boolean defaultPrevented) {
         getMainHandler().post(new Runnable() {
             public void run() {
-                LayerView view = GeckoApp.mAppContext.getLayerClient().getView();
+                LayerView view = GeckoApp.mAppContext.getLayerView();
                 view.getTouchEventHandler().handleEventListenerAction(!defaultPrevented);
             }
         });
@@ -2344,11 +2366,11 @@ class ScreenshotHandler implements Runnable {
     }
 
     private void screenshotWholePage(int tabId) {
-        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        if (layerClient == null) {
+        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+        if (layerView == null) {
             return;
         }
-        ImmutableViewportMetrics viewport = layerClient.getViewportMetrics();
+        ImmutableViewportMetrics viewport = layerView.getViewportMetrics();
         RectF pageRect = viewport.getCssPageRect();
 
         if (FloatUtils.fuzzyEquals(pageRect.width(), 0) || FloatUtils.fuzzyEquals(pageRect.height(), 0)) {
@@ -2448,14 +2470,14 @@ class ScreenshotHandler implements Runnable {
             return;
         }
 
-        GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        if (layerClient == null) {
+        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+        if (layerView == null) {
             // we could be in the midst of an activity tear-down and re-start, so guard
-            // against a null layer controller.
+            // against a null layer view
             return;
         }
 
-        ImmutableViewportMetrics viewport = layerClient.getViewportMetrics();
+        ImmutableViewportMetrics viewport = layerView.getViewportMetrics();
         if (RectUtils.fuzzyEquals(mPageRect, viewport.getCssPageRect())) {
             // the page size hasn't changed, so our dirty rect is still valid and we can just
             // repaint that area
@@ -2535,9 +2557,9 @@ class ScreenshotHandler implements Runnable {
                                 // this screenshot has all its slices done, so push it out
                                 // to the layer renderer and remove it from the list
                             }
-                            GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-                            if (layerClient != null) {
-                                layerClient.getView().getRenderer().setCheckerboardBitmap(
+                            LayerView layerView = GeckoApp.mAppContext.getLayerView();
+                            if (layerView != null) {
+                                layerView.getRenderer().setCheckerboardBitmap(
                                     data, bufferWidth, bufferHeight, handler.mPageRect,
                                     current.getPaintedRegion());
                             }

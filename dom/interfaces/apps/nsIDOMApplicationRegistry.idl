@@ -42,7 +42,7 @@ interface mozIDOMApplication  : nsISupports
   nsIDOMDOMRequest uninstall();
 };
 
-[scriptable, uuid(bd304874-d532-4e13-8034-544211445583)]
+[scriptable, uuid(4c36ca48-841e-4d5a-8c46-dda14ac633ca)]
 interface mozIDOMApplicationMgmt : nsISupports
 {
   /**
@@ -50,6 +50,12 @@ interface mozIDOMApplicationMgmt : nsISupports
    * to privileged callers.
    */
   nsIDOMDOMRequest getAll();
+
+  /**
+   * the request will return the applications acquired from all origins but
+   * which are not launchable (e.g. by not being natively installed), or null.
+   */
+  nsIDOMDOMRequest getNotInstalled();
 
   /**
    * event listener to get notified of application installs. Only settable by
@@ -66,7 +72,7 @@ interface mozIDOMApplicationMgmt : nsISupports
   attribute nsIDOMEventListener onuninstall;
 };
 
-[scriptable, uuid(6e3d4cf8-ad45-4a8d-8f94-4527ec68673c)]
+[scriptable, uuid(8ce06dd2-4c2e-4523-8ea1-960f4a7f0456)]
 interface mozIDOMApplicationRegistry : nsISupports
 {
   /**
@@ -91,12 +97,6 @@ interface mozIDOMApplicationRegistry : nsISupports
    * the request will return the applications installed from this origin, or null.
    */
   nsIDOMDOMRequest getInstalled();
-
-  /**
-   * the request will return the applications acquired from this origin but which
-   * are not launchable (e.g. by not being natively installed), or null.
-   */
-  nsIDOMDOMRequest getNotInstalled();
 
   /**
    * Install a packaged web app.

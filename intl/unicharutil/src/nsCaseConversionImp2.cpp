@@ -38,7 +38,7 @@ NS_IMETHODIMP nsCaseConversionImp2::ToTitle(PRUnichar aChar, PRUnichar* aReturn)
 
 NS_IMETHODIMP nsCaseConversionImp2::ToUpper(const PRUnichar* anArray,
                                          PRUnichar* aReturn,
-                                         PRUint32 aLen)
+                                         uint32_t aLen)
 {
   ToUpperCase(anArray, aReturn, aLen);
   return NS_OK;
@@ -46,7 +46,7 @@ NS_IMETHODIMP nsCaseConversionImp2::ToUpper(const PRUnichar* anArray,
 
 NS_IMETHODIMP nsCaseConversionImp2::ToLower(const PRUnichar* anArray,
                                          PRUnichar* aReturn,
-                                         PRUint32 aLen)
+                                         uint32_t aLen)
 {
   ToLowerCase(anArray, aReturn, aLen);
   return NS_OK;
@@ -55,7 +55,7 @@ NS_IMETHODIMP nsCaseConversionImp2::ToLower(const PRUnichar* anArray,
 NS_IMETHODIMP
 nsCaseConversionImp2::CaseInsensitiveCompare(const PRUnichar *aLeft,
                                              const PRUnichar *aRight,
-                                             PRUint32 aCount, PRInt32* aResult)
+                                             uint32_t aCount, int32_t* aResult)
 {
   *aResult = ::CaseInsensitiveCompare(aLeft, aRight, aCount);
   return NS_OK;

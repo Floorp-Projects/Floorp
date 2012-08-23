@@ -43,7 +43,7 @@ nsNativeTheme::GetPresShell(nsIFrame* aFrame)
 }
 
 nsEventStates
-nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
+nsNativeTheme::GetContentState(nsIFrame* aFrame, uint8_t aWidgetType)
 {
   if (!aFrame)
     return nsEventStates();
@@ -120,8 +120,8 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
                               NS_LITERAL_STRING("true"), eCaseMatters);
 }
 
-PRInt32
-nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, PRInt32 defaultValue)
+int32_t
+nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, int32_t defaultValue)
 {
   if (!aFrame)
     return defaultValue;
@@ -129,7 +129,7 @@ nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, PRInt32 defaultVal
   nsAutoString attr;
   aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attr);
   nsresult err;
-  PRInt32 value = attr.ToInteger(&err);
+  int32_t value = attr.ToInteger(&err);
   if (attr.IsEmpty() || NS_FAILED(err))
     return defaultValue;
 
@@ -212,7 +212,7 @@ nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
 
 bool
 nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
-                              PRUint8 aWidgetType)
+                              uint8_t aWidgetType)
 {
   // Check for specific widgets to see if HTML has overridden the style.
   if (!aFrame)
@@ -303,7 +303,7 @@ nsNativeTheme::IsFrameRTL(nsIFrame* aFrame)
 }
 
 // scrollbar button:
-PRInt32
+int32_t
 nsNativeTheme::GetScrollbarButtonType(nsIFrame* aFrame)
 {
   if (!aFrame)
@@ -412,7 +412,7 @@ nsNativeTheme::IsHorizontal(nsIFrame* aFrame)
 }
 
 bool
-nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset)
+nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, int32_t aOffset)
 {
   if (!aFrame)
     return false;
@@ -420,10 +420,10 @@ nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset)
   if (aOffset == 0)
     return IsSelectedTab(aFrame);
 
-  PRInt32 thisTabIndex = -1, selectedTabIndex = -1;
+  int32_t thisTabIndex = -1, selectedTabIndex = -1;
 
   nsIFrame* currentTab = aFrame->GetParent()->GetFirstPrincipalChild();
-  for (PRInt32 i = 0; currentTab; currentTab = currentTab->GetNextSibling()) {
+  for (int32_t i = 0; currentTab; currentTab = currentTab->GetNextSibling()) {
     if (currentTab->GetRect().width == 0)
       continue;
     if (aFrame == currentTab)
@@ -517,14 +517,14 @@ nsNativeTheme::IsMenuListEditable(nsIFrame *aFrame)
 
 bool
 nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
-                                              PRUint32 aMinimumFrameRate)
+                                              uint32_t aMinimumFrameRate)
 {
   NS_ASSERTION(aContent, "Null pointer!");
   NS_ASSERTION(aMinimumFrameRate, "aMinimumFrameRate must be non-zero!");
   NS_ASSERTION(aMinimumFrameRate <= 1000,
                "aMinimumFrameRate must be less than 1000!");
 
-  PRUint32 timeout = 1000 / aMinimumFrameRate;
+  uint32_t timeout = 1000 / aMinimumFrameRate;
   timeout = NS_MIN(mAnimatedContentTimeout, timeout);
 
   if (!mAnimatedContentTimer) {
@@ -562,8 +562,8 @@ nsNativeTheme::Notify(nsITimer* aTimer)
   // XXX Assumes that calling nsIFrame::Invalidate won't reenter
   //     QueueAnimatedContentForRefresh.
 
-  PRUint32 count = mAnimatedContentList.Length();
-  for (PRUint32 index = 0; index < count; index++) {
+  uint32_t count = mAnimatedContentList.Length();
+  for (uint32_t index = 0; index < count; index++) {
     nsIFrame* frame = mAnimatedContentList[index]->GetPrimaryFrame();
     if (frame) {
       frame->InvalidateOverflowRect();

@@ -49,7 +49,7 @@ static inline bool IsHTMLContent(nsIFrame *frame)
   return content && content->IsHTML();
 }
 
-static PRInt32 GetTopLevelWindowActiveState(nsIFrame *aFrame)
+static int32_t GetTopLevelWindowActiveState(nsIFrame *aFrame)
 {
   // Get the widget. nsIFrame's GetNearestWidget walks up the view chain
   // until it finds a real window.
@@ -66,7 +66,7 @@ static PRInt32 GetTopLevelWindowActiveState(nsIFrame *aFrame)
   return mozilla::widget::themeconst::FS_INACTIVE;
 }
 
-static PRInt32 GetWindowFrameButtonState(nsIFrame *aFrame, nsEventStates eventState)
+static int32_t GetWindowFrameButtonState(nsIFrame *aFrame, nsEventStates eventState)
 {
   if (GetTopLevelWindowActiveState(aFrame) ==
       mozilla::widget::themeconst::FS_INACTIVE) {
@@ -83,7 +83,7 @@ static PRInt32 GetWindowFrameButtonState(nsIFrame *aFrame, nsEventStates eventSt
   return mozilla::widget::themeconst::BS_NORMAL;
 }
 
-static PRInt32 GetClassicWindowFrameButtonState(nsEventStates eventState)
+static int32_t GetClassicWindowFrameButtonState(nsEventStates eventState)
 {
   if (eventState.HasState(NS_EVENT_STATE_ACTIVE) &&
       eventState.HasState(NS_EVENT_STATE_HOVER))
@@ -321,15 +321,15 @@ static CaptionButtonPadding buttonData[3] = {
  * used by the system. They are very unlikely exact but try to not be too wrong.
  */
 // The width of the overlay used to animate the horizontal progress bar (Vista and later).
-static const PRInt32 kProgressHorizontalVistaOverlaySize = 120;
+static const int32_t kProgressHorizontalVistaOverlaySize = 120;
 // The width of the overlay used for the horizontal indeterminate progress bars on XP.
-static const PRInt32 kProgressHorizontalXPOverlaySize = 55;
+static const int32_t kProgressHorizontalXPOverlaySize = 55;
 // The height of the overlay used to animate the vertical progress bar (Vista and later).
-static const PRInt32 kProgressVerticalOverlaySize = 45;
+static const int32_t kProgressVerticalOverlaySize = 45;
 // The height of the overlay used for the vertical indeterminate progress bar (Vista and later).
-static const PRInt32 kProgressVerticalIndeterminateOverlaySize = 60;
+static const int32_t kProgressVerticalIndeterminateOverlaySize = 60;
 // The width of the overlay used to animate the indeterminate progress bar (Windows Classic).
-static const PRInt32 kProgressClassicOverlaySize = 40;
+static const int32_t kProgressClassicOverlaySize = 40;
 // Speed (px per ms) of the animation for determined Vista and later progress bars.
 static const double kProgressDeterminedVistaSpeed = 0.225;
 // Speed (px per ms) of the animation for indeterminate progress bars.
@@ -337,9 +337,9 @@ static const double kProgressIndeterminateSpeed = 0.175;
 // Speed (px per ms) of the animation for indeterminate progress bars (Windows Classic).
 static const double kProgressClassicIndeterminateSpeed = 0.0875;
 // Delay (in ms) between two indeterminate progress bar cycles.
-static const PRInt32 kProgressIndeterminateDelay = 500;
+static const int32_t kProgressIndeterminateDelay = 500;
 // Delay (in ms) between two determinate progress bar animation on Vista/7.
-static const PRInt32 kProgressDeterminedVistaDelay = 1000;
+static const int32_t kProgressDeterminedVistaDelay = 1000;
 
 // Adds "hot" caption button padding to minimum widget size.
 static void AddPaddingRect(nsIntSize* aSize, CaptionButton button) {
@@ -373,7 +373,7 @@ static void OffsetBackgroundRect(RECT& rect, CaptionButton button) {
 }
 
 HANDLE
-nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
+nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
 { 
   if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
     // On XP or earlier, render dropdowns as textfields;
@@ -484,8 +484,8 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
   return NULL;
 }
 
-PRInt32
-nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType,
+int32_t
+nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, uint8_t aWidgetType,
                                    bool wantFocused)
 {
   nsEventStates eventState = GetContentState(aFrame, aWidgetType);
@@ -500,7 +500,7 @@ nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType,
 }
 
 bool
-nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, PRUint8 aWidgetType)
+nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, uint8_t aWidgetType)
 {
   nsIContent* content = aFrame->GetContent();
   if (content->IsXUL() &&
@@ -518,8 +518,8 @@ nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, PRUint8 aWidgetType)
  * (but isThemeBackgroundPartiallyTransparent may not work).
  */
 nsresult 
-nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType, 
-                                       PRInt32& aPart, PRInt32& aState)
+nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType, 
+                                       int32_t& aPart, int32_t& aState)
 {
   if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
     // See GetTheme
@@ -1172,7 +1172,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 NS_IMETHODIMP
 nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
-                                       PRUint8 aWidgetType,
+                                       uint8_t aWidgetType,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect)
 {
@@ -1209,7 +1209,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
     }
   }
 
-  PRInt32 part, state;
+  int32_t part, state;
   nsresult rv = GetThemePartAndState(aFrame, aWidgetType, part, state);
   if (NS_FAILED(rv))
     return rv;
@@ -1286,7 +1286,7 @@ RENDER_AGAIN:
       // HACK ALERT: There appears to be no way to really obtain this value, so we're forced
       // to just use the default value for Luna (which also happens to be correct for
       // all the other skins I've tried).
-      PRInt32 edgeSize = 2;
+      int32_t edgeSize = 2;
     
       // Armed with the size of the edge, we now need to either shift to the left or to the
       // right.  The clip rect won't include this extra area, so we know that we're
@@ -1322,12 +1322,12 @@ RENDER_AGAIN:
     GetThemePartSize(theme, hdc, part, state, &widgetRect, TS_TRUE, &siz);
 
     if (aWidgetType == NS_THEME_SCALE_HORIZONTAL) {
-      PRInt32 adjustment = (contentRect.bottom - contentRect.top - siz.cy) / 2 + 1;
+      int32_t adjustment = (contentRect.bottom - contentRect.top - siz.cy) / 2 + 1;
       contentRect.top += adjustment;
       contentRect.bottom -= adjustment;
     }
     else {
-      PRInt32 adjustment = (contentRect.right - contentRect.left - siz.cx) / 2 + 1;
+      int32_t adjustment = (contentRect.right - contentRect.left - siz.cx) / 2 + 1;
       // need to subtract one from the left position, otherwise the scale's
       // border isn't visible
       contentRect.left += adjustment - 1;
@@ -1442,7 +1442,7 @@ RENDER_AGAIN:
         POINT vpOrg;
         HPEN hPen = nullptr;
 
-        PRUint8 id = SaveDC(hdc);
+        uint8_t id = SaveDC(hdc);
 
         ::SelectClipRgn(hdc, NULL);
         ::GetViewportOrgEx(hdc, &vpOrg);
@@ -1572,7 +1572,7 @@ RENDER_AGAIN:
        * Thus, we have to change the size and even don't use it for vertical
        * indeterminate progress bars.
        */
-      PRInt32 overlaySize;
+      int32_t overlaySize;
       if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
         if (vertical) {
           overlaySize = indeterminate ? kProgressVerticalIndeterminateOverlaySize
@@ -1587,13 +1587,13 @@ RENDER_AGAIN:
       const double pixelsPerMillisecond = indeterminate
                                             ? kProgressIndeterminateSpeed
                                             : kProgressDeterminedVistaSpeed;
-      const PRInt32 delay = indeterminate ? kProgressIndeterminateDelay
+      const int32_t delay = indeterminate ? kProgressIndeterminateDelay
                                           : kProgressDeterminedVistaDelay;
 
-      const PRInt32 frameSize = vertical ? widgetRect.bottom - widgetRect.top
+      const int32_t frameSize = vertical ? widgetRect.bottom - widgetRect.top
                                          : widgetRect.right - widgetRect.left;
-      const PRInt32 animationSize = frameSize + overlaySize +
-                                     static_cast<PRInt32>(pixelsPerMillisecond * delay);
+      const int32_t animationSize = frameSize + overlaySize +
+                                     static_cast<int32_t>(pixelsPerMillisecond * delay);
       const double interval = animationSize / pixelsPerMillisecond;
       // We have to pass a double* to modf and we can't pass NULL.
       double tempValue;
@@ -1604,7 +1604,7 @@ RENDER_AGAIN:
       if (!vertical && IsFrameRTL(aFrame)) {
         ratio = 1.0 - ratio;
       }
-      PRInt32 dx = static_cast<PRInt32>(animationSize * ratio) - overlaySize;
+      int32_t dx = static_cast<int32_t>(animationSize * ratio) - overlaySize;
 
       RECT overlayRect = widgetRect;
       if (vertical) {
@@ -1615,7 +1615,7 @@ RENDER_AGAIN:
         overlayRect.right = overlayRect.left + overlaySize;
       }
 
-      PRInt32 overlayPart;
+      int32_t overlayPart;
       if (vertical) {
         if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
           overlayPart = indeterminate ? PP_MOVEOVERLAY : PP_MOVEOVERLAYVERT;
@@ -1646,7 +1646,7 @@ RENDER_AGAIN:
 NS_IMETHODIMP
 nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   nsIntMargin* aResult)
 {
   HANDLE theme = GetTheme(aWidgetType);
@@ -1673,7 +1673,7 @@ nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext,
       aWidgetType == NS_THEME_WIN_GLASS || aWidgetType == NS_THEME_WIN_BORDERLESS_GLASS)
     return NS_OK; // Don't worry about it.
 
-  PRInt32 part, state;
+  int32_t part, state;
   nsresult rv = GetThemePartAndState(aFrame, aWidgetType, part, state);
   if (NS_FAILED(rv))
     return rv;
@@ -1730,7 +1730,7 @@ nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext,
 bool
 nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext, 
                                    nsIFrame* aFrame,
-                                   PRUint8 aWidgetType,
+                                   uint8_t aWidgetType,
                                    nsIntMargin* aResult)
 {
   switch (aWidgetType) {
@@ -1768,7 +1768,8 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     // the border padding. This should be addressed in nsWindow,
     // but currently can't be, see UpdateNonClientMargins.
     if (aWidgetType == NS_THEME_WINDOW_TITLEBAR_MAXIMIZED)
-      aResult->top = GetSystemMetrics(SM_CXFRAME);
+      aResult->top = GetSystemMetrics(SM_CXFRAME)
+                   + GetSystemMetrics(SM_CXPADDEDBORDER);
     return true;
   }
 
@@ -1816,7 +1817,7 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     }
   }
 
-  PRInt32 right, left, top, bottom;
+  int32_t right, left, top, bottom;
   right = left = top = bottom = 0;
   switch (aWidgetType)
   {
@@ -1866,7 +1867,7 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
 bool
 nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext, 
                                     nsIFrame* aFrame,
-                                    PRUint8 aOverflowRect,
+                                    uint8_t aOverflowRect,
                                     nsRect* aResult)
 {
   /* This is disabled for now, because it causes invalidation problems --
@@ -1888,7 +1889,7 @@ nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
                         aFrame->GetParent(),
                         NS_THEME_DROPDOWN))
     {
-      PRInt32 p2a = aContext->AppUnitsPerDevPixel();
+      int32_t p2a = aContext->AppUnitsPerDevPixel();
       /* Note: no overflow on the left */
       nsMargin m(0, p2a, p2a, p2a);
       aOverflowRect->Inflate (m);
@@ -1902,7 +1903,7 @@ nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
 
 NS_IMETHODIMP
 nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
-                                       PRUint8 aWidgetType,
+                                       uint8_t aWidgetType,
                                        nsIntSize* aResult, bool* aIsOverridable)
 {
   (*aResult).width = (*aResult).height = 0;
@@ -2103,7 +2104,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
       return NS_OK;
   }
 
-  PRInt32 part, state;
+  int32_t part, state;
   nsresult rv = GetThemePartAndState(aFrame, aWidgetType, part, state);
   if (NS_FAILED(rv))
     return rv;
@@ -2136,7 +2137,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
+nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
                                      nsIAtom* aAttribute, bool* aShouldRepaint)
 {
   // Some widget types just never change state.
@@ -2226,7 +2227,7 @@ nsNativeThemeWin::ThemeChanged()
 bool 
 nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
-                                      PRUint8 aWidgetType)
+                                      uint8_t aWidgetType)
 {
   // XXXdwh We can go even further and call the API to ask if support exists for
   // specific widgets.
@@ -2250,7 +2251,7 @@ nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 bool 
-nsNativeThemeWin::WidgetIsContainer(PRUint8 aWidgetType)
+nsNativeThemeWin::WidgetIsContainer(uint8_t aWidgetType)
 {
   // XXXdwh At some point flesh all of this out.
   if (aWidgetType == NS_THEME_DROPDOWN_BUTTON || 
@@ -2261,7 +2262,7 @@ nsNativeThemeWin::WidgetIsContainer(PRUint8 aWidgetType)
 }
 
 bool
-nsNativeThemeWin::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
+nsNativeThemeWin::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType)
 {
   return false;
 }
@@ -2273,7 +2274,7 @@ nsNativeThemeWin::ThemeNeedsComboboxDropmarker()
 }
 
 nsITheme::Transparency
-nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
+nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
 {
   switch (aWidgetType) {
   case NS_THEME_SCROLLBAR_SMALL:
@@ -2301,7 +2302,7 @@ nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
     return eUnknownTransparency;
   }
 
-  PRInt32 part, state;
+  int32_t part, state;
   nsresult rv = GetThemePartAndState(aFrame, aWidgetType, part, state);
   // Fail conservatively
   NS_ENSURE_SUCCESS(rv, eUnknownTransparency);
@@ -2322,7 +2323,7 @@ nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
 bool 
 nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
-                                      PRUint8 aWidgetType)
+                                      uint8_t aWidgetType)
 {
   switch (aWidgetType) {
     case NS_THEME_RESIZER:
@@ -2401,7 +2402,7 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
 nsresult
 nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   nsIntMargin* aResult)
 {
   switch (aWidgetType) {
@@ -2453,14 +2454,14 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
 bool
 nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
-                                   PRUint8 aWidgetType,
+                                   uint8_t aWidgetType,
                                    nsIntMargin* aResult)
 {
   switch (aWidgetType) {
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM:
     case NS_THEME_RADIOMENUITEM: {
-      PRInt32 part, state;
+      int32_t part, state;
       bool focused;
 
       if (NS_FAILED(ClassicGetThemePartAndState(aFrame, aWidgetType, part, state, focused)))
@@ -2493,7 +2494,7 @@ nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
 
 nsresult
 nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
-                                       PRUint8 aWidgetType,
+                                       uint8_t aWidgetType,
                                        nsIntSize* aResult, bool* aIsOverridable)
 {
   (*aResult).width = (*aResult).height = 0;
@@ -2646,8 +2647,8 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIF
 }
 
 
-nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
-                                 PRInt32& aPart, PRInt32& aState, bool& aFocused)
+nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
+                                 int32_t& aPart, int32_t& aState, bool& aFocused)
 {  
   aFocused = false;
   switch (aWidgetType) {
@@ -2966,12 +2967,12 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
 
 // Draw classic Windows tab
 // (no system API for this, but DrawEdge can draw all the parts of a tab)
-static void DrawTab(HDC hdc, const RECT& R, PRInt32 aPosition, bool aSelected,
+static void DrawTab(HDC hdc, const RECT& R, int32_t aPosition, bool aSelected,
                     bool aDrawLeft, bool aDrawRight)
 {
-  PRInt32 leftFlag, topFlag, rightFlag, lightFlag, shadeFlag;  
+  int32_t leftFlag, topFlag, rightFlag, lightFlag, shadeFlag;  
   RECT topRect, sideRect, bottomRect, lightRect, shadeRect;
-  PRInt32 selectedOffset, lOffset, rOffset;
+  int32_t selectedOffset, lOffset, rOffset;
 
   selectedOffset = aSelected ? 1 : 0;
   lOffset = aDrawLeft ? 2 : 0;
@@ -3054,7 +3055,7 @@ static void DrawTab(HDC hdc, const RECT& R, PRInt32 aPosition, bool aSelected,
     ::DrawEdge(hdc, &shadeRect, EDGE_RAISED, BF_SOFT | shadeFlag);
 }
 
-static void DrawMenuImage(HDC hdc, const RECT& rc, PRInt32 aComponent, PRUint32 aColor)
+static void DrawMenuImage(HDC hdc, const RECT& rc, int32_t aComponent, uint32_t aColor)
 {
   // This procedure creates a memory bitmap to contain the check mark, draws
   // it into the bitmap (it is a mask image), then composes it onto the menu
@@ -3101,7 +3102,7 @@ static void DrawMenuImage(HDC hdc, const RECT& rc, PRInt32 aComponent, PRUint32 
   }
 }
 
-void nsNativeThemeWin::DrawCheckedRect(HDC hdc, const RECT& rc, PRInt32 fore, PRInt32 back,
+void nsNativeThemeWin::DrawCheckedRect(HDC hdc, const RECT& rc, int32_t fore, int32_t back,
                                        HBRUSH defaultBack)
 {
   static WORD patBits[8] = {
@@ -3135,11 +3136,11 @@ void nsNativeThemeWin::DrawCheckedRect(HDC hdc, const RECT& rc, PRInt32 fore, PR
 
 nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect)
 {
-  PRInt32 part, state;
+  int32_t part, state;
   bool focused;
   nsresult rv;
   rv = ClassicGetThemePartAndState(aFrame, aWidgetType, part, state, focused);
@@ -3191,7 +3192,7 @@ RENDER_AGAIN:
     case NS_THEME_SPINNER_DOWN_BUTTON:
     case NS_THEME_DROPDOWN_BUTTON:
     case NS_THEME_RESIZER: {
-      PRInt32 oldTA;
+      int32_t oldTA;
       // setup DC to make DrawFrameControl draw correctly
       oldTA = ::SetTextAlign(hdc, TA_TOP | TA_LEFT | TA_NOUPDATECP);
       ::DrawFrameControl(hdc, &widgetRect, part, state);
@@ -3204,7 +3205,7 @@ RENDER_AGAIN:
         POINT vpOrg;
         ::GetViewportOrgEx(hdc, &vpOrg);
         ::SetBrushOrgEx(hdc, vpOrg.x + widgetRect.left, vpOrg.y + widgetRect.top, NULL);
-        PRInt32 oldColor;
+        int32_t oldColor;
         oldColor = ::SetTextColor(hdc, 0);
         // draw focus rectangle
         ::DrawFocusRect(hdc, &widgetRect);
@@ -3322,12 +3323,12 @@ RENDER_AGAIN:
     case NS_THEME_SCALE_VERTICAL:
     case NS_THEME_SCALE_HORIZONTAL: {
       if (aWidgetType == NS_THEME_SCALE_HORIZONTAL) {
-        PRInt32 adjustment = (widgetRect.bottom - widgetRect.top) / 2 - 2;
+        int32_t adjustment = (widgetRect.bottom - widgetRect.top) / 2 - 2;
         widgetRect.top += adjustment;
         widgetRect.bottom -= adjustment;
       }
       else {
-        PRInt32 adjustment = (widgetRect.right - widgetRect.left) / 2 - 2;
+        int32_t adjustment = (widgetRect.right - widgetRect.left) / 2 - 2;
         widgetRect.left += adjustment;
         widgetRect.right -= adjustment;
       }
@@ -3360,16 +3361,16 @@ RENDER_AGAIN:
       }
 
       const bool vertical = IsVerticalProgress(stateFrame);
-      const PRInt32 overlaySize = kProgressClassicOverlaySize;
+      const int32_t overlaySize = kProgressClassicOverlaySize;
       const double pixelsPerMillisecond = kProgressClassicIndeterminateSpeed;
-      const PRInt32 frameSize = vertical ? widgetRect.bottom - widgetRect.top
+      const int32_t frameSize = vertical ? widgetRect.bottom - widgetRect.top
                                          : widgetRect.right - widgetRect.left;
       const double interval = frameSize / pixelsPerMillisecond;
       // We have to pass a double* to modf and we can't pass NULL.
       double tempValue;
       double ratio = modf(PR_IntervalToMilliseconds(PR_IntervalNow())/interval,
                           &tempValue);
-      PRInt32 dx = 0;
+      int32_t dx = 0;
 
       // If the frame direction is RTL, we want to have the animation going RTL.
       // ratio is in [0.0; 1.0[ range, inverting it reverse the animation.
@@ -3377,7 +3378,7 @@ RENDER_AGAIN:
         ratio = 1.0 - ratio;
         dx -= overlaySize;
       }
-      dx += static_cast<PRInt32>(frameSize * ratio);
+      dx += static_cast<int32_t>(frameSize * ratio);
 
       RECT overlayRect = widgetRect;
       if (vertical) {
@@ -3470,7 +3471,7 @@ RENDER_AGAIN:
       if (!(state & DFCS_CHECKED))
         break; // nothin' to do
     case NS_THEME_MENUARROW: {
-      PRUint32 color = COLOR_MENUTEXT;
+      uint32_t color = COLOR_MENUTEXT;
       if ((state & DFCS_INACTIVE))
         color = COLOR_GRAYTEXT;
       else if ((state & DFCS_HOT))
@@ -3506,7 +3507,7 @@ RENDER_AGAIN:
     case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
     {
       RECT rect = widgetRect;
-      PRInt32 offset = GetSystemMetrics(SM_CXFRAME);
+      int32_t offset = GetSystemMetrics(SM_CXFRAME);
       rect.bottom -= 1;
 
       // first fill the area to the color of the window background
@@ -3589,7 +3590,7 @@ RENDER_AGAIN:
       else if (aWidgetType == NS_THEME_WINDOW_BUTTON_CLOSE) {
         OffsetBackgroundRect(widgetRect, CAPTIONBUTTON_CLOSE);
       }
-      PRInt32 oldTA = SetTextAlign(hdc, TA_TOP | TA_LEFT | TA_NOUPDATECP);
+      int32_t oldTA = SetTextAlign(hdc, TA_TOP | TA_LEFT | TA_NOUPDATECP);
       DrawFrameControl(hdc, &widgetRect, part, state);
       SetTextAlign(hdc, oldTA);
       break;
@@ -3613,8 +3614,8 @@ RENDER_AGAIN:
   return rv;
 }
 
-PRUint32
-nsNativeThemeWin::GetWidgetNativeDrawingFlags(PRUint8 aWidgetType)
+uint32_t
+nsNativeThemeWin::GetWidgetNativeDrawingFlags(uint8_t aWidgetType)
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON:

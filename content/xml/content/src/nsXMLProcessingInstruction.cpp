@@ -101,7 +101,7 @@ nsXMLProcessingInstruction::GetAttrValue(nsIAtom *aName, nsAString& aValue)
 }
 
 bool
-nsXMLProcessingInstruction::IsNodeOfType(PRUint32 aFlags) const
+nsXMLProcessingInstruction::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~(eCONTENT | ePROCESSING_INSTRUCTION | eDATA_NODE));
 }
@@ -118,9 +118,9 @@ nsXMLProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
 
 #ifdef DEBUG
 void
-nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
+nsXMLProcessingInstruction::List(FILE* out, int32_t aIndent) const
 {
-  PRInt32 index;
+  int32_t index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fprintf(out, "Processing instruction refcount=%d<", mRefCnt.get());
@@ -134,7 +134,7 @@ nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
 }
 
 void
-nsXMLProcessingInstruction::DumpContent(FILE* out, PRInt32 aIndent,
+nsXMLProcessingInstruction::DumpContent(FILE* out, int32_t aIndent,
                                         bool aDumpAll) const
 {
 }

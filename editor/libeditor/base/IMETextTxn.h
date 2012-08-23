@@ -43,8 +43,8 @@ public:
     * @param aSelCon used to get and set the selection
     */
   NS_IMETHOD Init(nsIDOMCharacterData *aElement,
-                  PRUint32 aOffset,
-                  PRUint32 aReplaceLength,
+                  uint32_t aOffset,
+                  uint32_t aReplaceLength,
                   nsIPrivateTextRangeList* aTextRangeList,
                   const nsAString& aString,
                   nsIEditor* aEditor);
@@ -75,9 +75,9 @@ protected:
   nsCOMPtr<nsIDOMCharacterData> mElement;
   
   /** the offsets into mElement where the insertion should be placed*/
-  PRUint32 mOffset;
+  uint32_t mOffset;
 
-  PRUint32 mReplaceLength;
+  uint32_t mReplaceLength;
 
   /** the text to insert into mElement at mOffset */
   nsString mStringToInsert;

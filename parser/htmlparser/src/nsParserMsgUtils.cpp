@@ -47,7 +47,7 @@ nsParserMsgUtils::GetLocalizedStringByName(const char * aPropFileName, const cha
 }
 
 nsresult
-nsParserMsgUtils::GetLocalizedStringByID(const char * aPropFileName, PRUint32 aID, nsString& oVal)
+nsParserMsgUtils::GetLocalizedStringByID(const char * aPropFileName, uint32_t aID, nsString& oVal)
 {
   oVal.Truncate();
 

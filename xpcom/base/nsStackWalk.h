@@ -45,7 +45,7 @@ typedef void
  * generation.
  */
 XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread);
 
 typedef struct {
@@ -100,7 +100,7 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails);
  */
 XPCOM_API(nsresult)
 NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
-                            char *aBuffer, PRUint32 aBufferSize);
+                            char *aBuffer, uint32_t aBufferSize);
 
 PR_END_EXTERN_C
 

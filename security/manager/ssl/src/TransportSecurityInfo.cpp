@@ -93,14 +93,14 @@ TransportSecurityInfo::GetHostName(char **host)
 }
 
 nsresult
-TransportSecurityInfo::SetPort(PRInt32 aPort)
+TransportSecurityInfo::SetPort(int32_t aPort)
 {
   mPort = aPort;
   return NS_OK;
 }
 
 nsresult
-TransportSecurityInfo::GetPort(PRInt32 *aPort)
+TransportSecurityInfo::GetPort(int32_t *aPort)
 {
   *aPort = mPort;
   return NS_OK;
@@ -126,14 +126,14 @@ TransportSecurityInfo::SetCanceled(PRErrorCode errorCode,
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetSecurityState(PRUint32* state)
+TransportSecurityInfo::GetSecurityState(uint32_t* state)
 {
   *state = mSecurityState;
   return NS_OK;
 }
 
 nsresult
-TransportSecurityInfo::SetSecurityState(PRUint32 aState)
+TransportSecurityInfo::SetSecurityState(uint32_t aState)
 {
   mSecurityState = aState;
   return NS_OK;
@@ -142,7 +142,7 @@ TransportSecurityInfo::SetSecurityState(PRUint32 aState)
 /* attribute unsigned long countSubRequestsHighSecurity; */
 NS_IMETHODIMP
 TransportSecurityInfo::GetCountSubRequestsHighSecurity(
-  PRInt32 *aSubRequestsHighSecurity)
+  int32_t *aSubRequestsHighSecurity)
 {
   *aSubRequestsHighSecurity = mSubRequestsHighSecurity;
   return NS_OK;
@@ -150,7 +150,7 @@ TransportSecurityInfo::GetCountSubRequestsHighSecurity(
 
 NS_IMETHODIMP
 TransportSecurityInfo::SetCountSubRequestsHighSecurity(
-  PRInt32 aSubRequestsHighSecurity)
+  int32_t aSubRequestsHighSecurity)
 {
   mSubRequestsHighSecurity = aSubRequestsHighSecurity;
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -159,7 +159,7 @@ TransportSecurityInfo::SetCountSubRequestsHighSecurity(
 /* attribute unsigned long countSubRequestsLowSecurity; */
 NS_IMETHODIMP
 TransportSecurityInfo::GetCountSubRequestsLowSecurity(
-  PRInt32 *aSubRequestsLowSecurity)
+  int32_t *aSubRequestsLowSecurity)
 {
   *aSubRequestsLowSecurity = mSubRequestsLowSecurity;
   return NS_OK;
@@ -167,7 +167,7 @@ TransportSecurityInfo::GetCountSubRequestsLowSecurity(
 
 NS_IMETHODIMP
 TransportSecurityInfo::SetCountSubRequestsLowSecurity(
-  PRInt32 aSubRequestsLowSecurity)
+  int32_t aSubRequestsLowSecurity)
 {
   mSubRequestsLowSecurity = aSubRequestsLowSecurity;
   return NS_OK;
@@ -176,7 +176,7 @@ TransportSecurityInfo::SetCountSubRequestsLowSecurity(
 /* attribute unsigned long countSubRequestsBrokenSecurity; */
 NS_IMETHODIMP
 TransportSecurityInfo::GetCountSubRequestsBrokenSecurity(
-  PRInt32 *aSubRequestsBrokenSecurity)
+  int32_t *aSubRequestsBrokenSecurity)
 {
   *aSubRequestsBrokenSecurity = mSubRequestsBrokenSecurity;
   return NS_OK;
@@ -184,7 +184,7 @@ TransportSecurityInfo::GetCountSubRequestsBrokenSecurity(
 
 NS_IMETHODIMP
 TransportSecurityInfo::SetCountSubRequestsBrokenSecurity(
-  PRInt32 aSubRequestsBrokenSecurity)
+  int32_t aSubRequestsBrokenSecurity)
 {
   mSubRequestsBrokenSecurity = aSubRequestsBrokenSecurity;
   return NS_OK;
@@ -193,7 +193,7 @@ TransportSecurityInfo::SetCountSubRequestsBrokenSecurity(
 /* attribute unsigned long countSubRequestsNoSecurity; */
 NS_IMETHODIMP
 TransportSecurityInfo::GetCountSubRequestsNoSecurity(
-  PRInt32 *aSubRequestsNoSecurity)
+  int32_t *aSubRequestsNoSecurity)
 {
   *aSubRequestsNoSecurity = mSubRequestsNoSecurity;
   return NS_OK;
@@ -201,7 +201,7 @@ TransportSecurityInfo::GetCountSubRequestsNoSecurity(
 
 NS_IMETHODIMP
 TransportSecurityInfo::SetCountSubRequestsNoSecurity(
-  PRInt32 aSubRequestsNoSecurity)
+  int32_t aSubRequestsNoSecurity)
 {
   mSubRequestsNoSecurity = aSubRequestsNoSecurity;
   return NS_OK;
@@ -253,13 +253,13 @@ TransportSecurityInfo::GetErrorMessage(PRUnichar** aText)
 }
 
 static nsresult
-formatPlainErrorMessage(nsXPIDLCString const & host, PRInt32 port,
+formatPlainErrorMessage(nsXPIDLCString const & host, int32_t port,
                         PRErrorCode err, nsString &returnedMessage);
 
 static nsresult
 formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
                                   PRErrorCode errorCodeToReport, 
-                                  const nsXPIDLCString & host, PRInt32 port,
+                                  const nsXPIDLCString & host, int32_t port,
                                   nsString & returnedMessage);
 
 // XXX: uses nsNSSComponent string bundles off the main thread when called by
@@ -366,7 +366,7 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
   // field stored in times before versioning has been introduced.
   // This mask value has been chosen as mSecurityState could
   // never be assigned such value.
-  PRUint32 version = 3;
+  uint32_t version = 3;
   stream->Write32(version | 0xFFFF0000);
   stream->Write32(mSecurityState);
   stream->WriteWStringZ(mShortDesc.get());
@@ -379,14 +379,14 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
   stream->WriteCompoundObject(NS_ISUPPORTS_CAST(nsISSLStatus*, status),
                               NS_GET_IID(nsISupports), true);
 
-  stream->Write32((PRUint32)mSubRequestsHighSecurity);
-  stream->Write32((PRUint32)mSubRequestsLowSecurity);
-  stream->Write32((PRUint32)mSubRequestsBrokenSecurity);
-  stream->Write32((PRUint32)mSubRequestsNoSecurity);
+  stream->Write32((uint32_t)mSubRequestsHighSecurity);
+  stream->Write32((uint32_t)mSubRequestsLowSecurity);
+  stream->Write32((uint32_t)mSubRequestsBrokenSecurity);
+  stream->Write32((uint32_t)mSubRequestsNoSecurity);
   return NS_OK;
 }
 
-static bool CheckUUIDEquals(PRUint32 m0,
+static bool CheckUUIDEquals(uint32_t m0,
                             nsIObjectInputStream* stream,
                             const nsCID& id)
 {
@@ -404,11 +404,11 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
 {
   nsresult rv;
 
-  PRUint32 version;
+  uint32_t version;
   bool certificatePresent;
 
   // Check what we have here...
-  PRUint32 UUID_0;
+  uint32_t UUID_0;
   stream->Read32(&UUID_0);
   if (UUID_0 == kTransportSecurityInfoMagic.m0) {
     // It seems this stream begins with our magic ID, check it really is there
@@ -482,10 +482,10 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
   }
 
   if (version >= 2) {
-    stream->Read32((PRUint32*)&mSubRequestsHighSecurity);
-    stream->Read32((PRUint32*)&mSubRequestsLowSecurity);
-    stream->Read32((PRUint32*)&mSubRequestsBrokenSecurity);
-    stream->Read32((PRUint32*)&mSubRequestsNoSecurity);
+    stream->Read32((uint32_t*)&mSubRequestsHighSecurity);
+    stream->Read32((uint32_t*)&mSubRequestsLowSecurity);
+    stream->Read32((uint32_t*)&mSubRequestsBrokenSecurity);
+    stream->Read32((uint32_t*)&mSubRequestsNoSecurity);
   }
   else {
     mSubRequestsHighSecurity = 0;
@@ -497,7 +497,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetInterfaces(PRUint32 *count, nsIID * **array)
+TransportSecurityInfo::GetInterfaces(uint32_t *count, nsIID * **array)
 {
   *count = 0;
   *array = nullptr;
@@ -505,7 +505,7 @@ TransportSecurityInfo::GetInterfaces(PRUint32 *count, nsIID * **array)
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetHelperForLanguage(PRUint32 language,
+TransportSecurityInfo::GetHelperForLanguage(uint32_t language,
                                             nsISupports **_retval)
 {
   *_retval = nullptr;
@@ -537,14 +537,14 @@ TransportSecurityInfo::GetClassID(nsCID * *aClassID)
 
 NS_IMETHODIMP
 TransportSecurityInfo::GetImplementationLanguage(
-  PRUint32 *aImplementationLanguage)
+  uint32_t *aImplementationLanguage)
 {
   *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetFlags(PRUint32 *aFlags)
+TransportSecurityInfo::GetFlags(uint32_t *aFlags)
 {
   *aFlags = 0;
   return NS_OK;
@@ -584,7 +584,7 @@ TransportSecurityInfo::SetSSLStatus(nsSSLStatus *aSSLStatus)
  * for overridable cert errors.
  */
 static nsresult
-formatPlainErrorMessage(const nsXPIDLCString &host, PRInt32 port,
+formatPlainErrorMessage(const nsXPIDLCString &host, int32_t port,
                         PRErrorCode err, nsString &returnedMessage)
 {
   const PRUnichar *params[1];
@@ -653,7 +653,7 @@ AppendErrorTextUntrusted(PRErrorCode errTrust,
       {
         nsCOMPtr<nsIArray> chain;
         ix509->GetChain(getter_AddRefs(chain));
-        PRUint32 length = 0;
+        uint32_t length = 0;
         if (chain && NS_FAILED(chain->GetLength(&length)))
           length = 0;
         if (length == 1)
@@ -702,7 +702,7 @@ static bool
 GetSubjectAltNames(CERTCertificate *nssCert,
                    nsINSSComponent *component,
                    nsString &allNames,
-                   PRUint32 &nameCount)
+                   uint32_t &nameCount)
 {
   allNames.Truncate();
   nameCount = 0;
@@ -807,7 +807,7 @@ AppendErrorTextMismatch(const nsString &host,
   }
 
   nsString allNames;
-  PRUint32 nameCount = 0;
+  uint32_t nameCount = 0;
   bool useSAN = false;
 
   if (nssCert)
@@ -977,7 +977,7 @@ AppendErrorTextCode(PRErrorCode errorCodeToReport,
 static nsresult
 formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
                                   PRErrorCode errorCodeToReport, 
-                                  const nsXPIDLCString & host, PRInt32 port,
+                                  const nsXPIDLCString & host, int32_t port,
                                   nsString & returnedMessage)
 {
   const PRUnichar *params[1];
@@ -1065,7 +1065,7 @@ GetHostPortKey(TransportSecurityInfo* infoObject, nsCAutoString &result)
   rv = infoObject->GetHostName(getter_Copies(hostName));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 port;
+  int32_t port;
   rv = infoObject->GetPort(&port);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1143,7 +1143,7 @@ RememberCertErrorsTable::LookupCertErrorBits(TransportSecurityInfo* infoObject,
 
 void
 TransportSecurityInfo::SetStatusErrorBits(nsIX509Cert & cert,
-                                          PRUint32 collected_errors)
+                                          uint32_t collected_errors)
 {
   MutexAutoLock lock(mMutex);
 

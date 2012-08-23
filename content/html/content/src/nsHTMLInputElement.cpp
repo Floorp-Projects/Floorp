@@ -108,7 +108,7 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 // whether textfields should be selected once focused:
 //  -1: no, 1: yes, 0: uninitialized
-static PRInt32 gSelectTextFieldOnFocus;
+static int32_t gSelectTextFieldOnFocus;
 UploadLastDir* nsHTMLInputElement::gUploadLastDir;
 
 static const nsAttrValue::EnumTable kInputTypeTable[] = {
@@ -133,9 +133,9 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 // Default type is 'text'.
 static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[13];
 
-static const PRUint8 NS_INPUT_AUTOCOMPLETE_OFF     = 0;
-static const PRUint8 NS_INPUT_AUTOCOMPLETE_ON      = 1;
-static const PRUint8 NS_INPUT_AUTOCOMPLETE_DEFAULT = 2;
+static const uint8_t NS_INPUT_AUTOCOMPLETE_OFF     = 0;
+static const uint8_t NS_INPUT_AUTOCOMPLETE_ON      = 1;
+static const uint8_t NS_INPUT_AUTOCOMPLETE_DEFAULT = 2;
 
 static const nsAttrValue::EnumTable kInputAutocompleteTable[] = {
   { "", NS_INPUT_AUTOCOMPLETE_DEFAULT },
@@ -219,7 +219,7 @@ nsHTMLInputElement::nsFilePickerShownCallback::nsFilePickerShownCallback(
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::nsFilePickerShownCallback::Done(PRInt16 aResult)
+nsHTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 {
   if (aResult == nsIFilePicker::returnCancel) {
     return NS_OK;
@@ -321,7 +321,7 @@ nsHTMLInputElement::AsyncClickHandler::Run()
       return NS_OK;
     }
 
-    PRUint32 permission;
+    uint32_t permission;
     pm->TestPermission(doc->NodePrincipal(), &permission);
     if (permission == nsIPopupWindowManager::DENY_POPUP) {
       nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
@@ -343,8 +343,8 @@ nsHTMLInputElement::AsyncClickHandler::Run()
 
   nsresult rv = filePicker->Init(win, title,
                                  multi
-                                  ? static_cast<PRInt16>(nsIFilePicker::modeOpenMultiple)
-                                  : static_cast<PRInt16>(nsIFilePicker::modeOpen));
+                                  ? static_cast<int16_t>(nsIFilePicker::modeOpenMultiple)
+                                  : static_cast<int16_t>(nsIFilePicker::modeOpen));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mInput->HasAttr(kNameSpaceID_None, nsGkAtoms::accept)) {
@@ -699,7 +699,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 }
 
 nsresult
-nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsHTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                   const nsAttrValueOrString* aValue,
                                   bool aNotify)
 {
@@ -732,7 +732,7 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsHTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                  const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
@@ -883,14 +883,14 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type,
                                 kInputDefaultType->tag)
 
 NS_IMETHODIMP
-nsHTMLInputElement::GetHeight(PRUint32 *aHeight)
+nsHTMLInputElement::GetHeight(uint32_t *aHeight)
 {
   *aHeight = GetWidthHeightForImage(mCurrentRequest).height;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::SetHeight(PRUint32 aHeight)
+nsHTMLInputElement::SetHeight(uint32_t aHeight)
 {
   return nsGenericHTMLElement::SetUnsignedIntAttr(nsGkAtoms::height, aHeight);
 }
@@ -927,14 +927,14 @@ nsHTMLInputElement::SetIndeterminate(bool aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::GetWidth(PRUint32 *aWidth)
+nsHTMLInputElement::GetWidth(uint32_t *aWidth)
 {
   *aWidth = GetWidthHeightForImage(mCurrentRequest).width;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::SetWidth(PRUint32 aWidth)
+nsHTMLInputElement::SetWidth(uint32_t aWidth)
 {
   return nsGenericHTMLElement::SetUnsignedIntAttr(nsGkAtoms::width, aWidth);
 }
@@ -1142,7 +1142,7 @@ nsHTMLInputElement::GetStepBase() const
 }
 
 nsresult
-nsHTMLInputElement::ApplyStep(PRInt32 aStep)
+nsHTMLInputElement::ApplyStep(int32_t aStep)
 {
   if (!DoStepDownStepUpApply()) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1212,19 +1212,19 @@ nsHTMLInputElement::ApplyStep(PRInt32 aStep)
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::StepDown(PRInt32 n, PRUint8 optional_argc)
+nsHTMLInputElement::StepDown(int32_t n, uint8_t optional_argc)
 {
   return ApplyStep(optional_argc ? -n : -1);
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::StepUp(PRInt32 n, PRUint8 optional_argc)
+nsHTMLInputElement::StepUp(int32_t n, uint8_t optional_argc)
 {
   return ApplyStep(optional_argc ? n : 1);
 }
 
 NS_IMETHODIMP 
-nsHTMLInputElement::MozGetFileNameArray(PRUint32 *aLength, PRUnichar ***aFileNames)
+nsHTMLInputElement::MozGetFileNameArray(uint32_t *aLength, PRUnichar ***aFileNames)
 {
   if (!nsContentUtils::CallerHasUniversalXPConnect()) {
     // Since this function returns full paths it's important that normal pages
@@ -1239,7 +1239,7 @@ nsHTMLInputElement::MozGetFileNameArray(PRUint32 *aLength, PRUnichar ***aFileNam
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  for (PRInt32 i = 0; i < mFiles.Count(); i++) {
+  for (int32_t i = 0; i < mFiles.Count(); i++) {
     nsString str;
     mFiles[i]->GetMozFullPathInternal(str);
     ret[i] = NS_strdup(str.get());
@@ -1251,7 +1251,7 @@ nsHTMLInputElement::MozGetFileNameArray(PRUint32 *aLength, PRUnichar ***aFileNam
 }
 
 NS_IMETHODIMP 
-nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, PRUint32 aLength)
+nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, uint32_t aLength)
 {
   if (!nsContentUtils::CallerHasUniversalXPConnect()) {
     // setting the value of a "FILE" input widget requires the
@@ -1260,7 +1260,7 @@ nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, PRUint32 a
   }
 
   nsCOMArray<nsIDOMFile> files;
-  for (PRUint32 i = 0; i < aLength; ++i) {
+  for (uint32_t i = 0; i < aLength; ++i) {
     nsCOMPtr<nsIFile> file;
     if (StringBeginsWith(nsDependentString(aFileNames[i]),
                          NS_LITERAL_STRING("file:"),
@@ -1434,7 +1434,7 @@ nsHTMLInputElement::GetDisplayFileName(nsAString& aValue) const
   }
 
   aValue.Truncate();
-  for (PRInt32 i = 0; i < mFiles.Count(); ++i) {
+  for (int32_t i = 0; i < mFiles.Count(); ++i) {
     nsString str;
     mFiles[i]->GetMozFullPathInternal(str);
     if (i == 0) {
@@ -1463,9 +1463,9 @@ nsHTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
   mFiles.Clear();
 
   if (aFiles) {
-    PRUint32 listLength;
+    uint32_t listLength;
     aFiles->GetLength(&listLength);
-    for (PRUint32 i = 0; i < listLength; i++) {
+    for (uint32_t i = 0; i < listLength; i++) {
       nsCOMPtr<nsIDOMFile> file;
       aFiles->Item(i, getter_AddRefs(file));
       mFiles.AppendObject(file);
@@ -1528,7 +1528,7 @@ nsHTMLInputElement::UpdateFileList()
     mFileList->Clear();
 
     const nsCOMArray<nsIDOMFile>& files = GetFiles();
-    for (PRInt32 i = 0; i < files.Count(); ++i) {
+    for (int32_t i = 0; i < files.Count(); ++i) {
       if (!mFileList->Append(files[i])) {
         return NS_ERROR_FAILURE;
       }
@@ -2103,7 +2103,7 @@ static bool
 SelectTextFieldOnFocus()
 {
   if (!gSelectTextFieldOnFocus) {
-    PRInt32 selectTextfieldsOnKeyFocus = -1;
+    int32_t selectTextfieldsOnKeyFocus = -1;
     nsresult rv =
       LookAndFeel::GetInt(LookAndFeel::eIntID_SelectTextfieldsOnKeyFocus,
                           &selectTextfieldsOnKeyFocus);
@@ -2156,7 +2156,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   bool originalCheckedValue =
     !!(aVisitor.mItemFlags & NS_ORIGINAL_CHECKED_VALUE);
   bool noContentDispatch = !!(aVisitor.mItemFlags & NS_NO_CONTENT_DISPATCH);
-  PRUint8 oldType = NS_CONTROL_TYPE(aVisitor.mItemFlags);
+  uint8_t oldType = NS_CONTROL_TYPE(aVisitor.mItemFlags);
   // Ideally we would make the default action for click and space just dispatch
   // DOMActivate, and the default action for DOMActivate flip the checkbox/
   // radio state and fire onchange.  However, for backwards compatibility, we
@@ -2267,7 +2267,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               SelectTextFieldOnFocus()) {
             nsIDocument* document = GetCurrentDoc();
             if (document) {
-              PRUint32 lastFocusMethod;
+              uint32_t lastFocusMethod;
               fm->GetLastFocusMethod(document->GetWindow(), &lastFocusMethod);
               if (lastFocusMethod &
                   (nsIFocusManager::FLAG_BYKEY | nsIFocusManager::FLAG_BYMOVEFOCUS)) {
@@ -2562,7 +2562,7 @@ nsHTMLInputElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 void
-nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
+nsHTMLInputElement::HandleTypeChange(uint8_t aNewType)
 {
   ValueModeType aOldValueMode = GetValueMode();
   nsAutoString aOldValue;
@@ -2673,7 +2673,7 @@ nsHTMLInputElement::SanitizeValue(nsAString& aValue)
 }
 
 bool
-nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLInputElement::ParseAttribute(int32_t aNamespaceID,
                                    nsIAtom* aAttribute,
                                    const nsAString& aValue,
                                    nsAttrValue& aResult)
@@ -2682,7 +2682,7 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
     if (aAttribute == nsGkAtoms::type) {
       // XXX ARG!! This is major evilness. ParseAttribute
       // shouldn't set members. Override SetAttr instead
-      PRInt32 newType;
+      int32_t newType;
       bool success = aResult.ParseEnumValue(aValue, kInputTypeTable, false);
       if (success) {
         newType = aResult.GetEnumValue();
@@ -2773,7 +2773,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 
 nsChangeHint
 nsHTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                           PRInt32 aModType) const
+                                           int32_t aModType) const
 {
   nsChangeHint retval =
     nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
@@ -2860,7 +2860,7 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::GetTextLength(PRInt32* aTextLength)
+nsHTMLInputElement::GetTextLength(int32_t* aTextLength)
 {
   nsAutoString val;
 
@@ -2872,8 +2872,8 @@ nsHTMLInputElement::GetTextLength(PRInt32* aTextLength)
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::SetSelectionRange(PRInt32 aSelectionStart,
-                                      PRInt32 aSelectionEnd,
+nsHTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
+                                      int32_t aSelectionEnd,
                                       const nsAString& aDirection)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -2901,11 +2901,11 @@ nsHTMLInputElement::SetSelectionRange(PRInt32 aSelectionStart,
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::GetSelectionStart(PRInt32* aSelectionStart)
+nsHTMLInputElement::GetSelectionStart(int32_t* aSelectionStart)
 {
   NS_ENSURE_ARG_POINTER(aSelectionStart);
 
-  PRInt32 selEnd;
+  int32_t selEnd;
   nsresult rv = GetSelectionRange(aSelectionStart, &selEnd);
 
   if (NS_FAILED(rv)) {
@@ -2919,7 +2919,7 @@ nsHTMLInputElement::GetSelectionStart(PRInt32* aSelectionStart)
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::SetSelectionStart(PRInt32 aSelectionStart)
+nsHTMLInputElement::SetSelectionStart(int32_t aSelectionStart)
 {
   nsTextEditorState *state = GetEditorState();
   if (state && state->IsSelectionCached()) {
@@ -2930,7 +2930,7 @@ nsHTMLInputElement::SetSelectionStart(PRInt32 aSelectionStart)
   nsAutoString direction;
   nsresult rv = GetSelectionDirection(direction);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRInt32 start, end;
+  int32_t start, end;
   rv = GetSelectionRange(&start, &end);
   NS_ENSURE_SUCCESS(rv, rv);
   start = aSelectionStart;
@@ -2941,11 +2941,11 @@ nsHTMLInputElement::SetSelectionStart(PRInt32 aSelectionStart)
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::GetSelectionEnd(PRInt32* aSelectionEnd)
+nsHTMLInputElement::GetSelectionEnd(int32_t* aSelectionEnd)
 {
   NS_ENSURE_ARG_POINTER(aSelectionEnd);
 
-  PRInt32 selStart;
+  int32_t selStart;
   nsresult rv = GetSelectionRange(&selStart, aSelectionEnd);
 
   if (NS_FAILED(rv)) {
@@ -2960,7 +2960,7 @@ nsHTMLInputElement::GetSelectionEnd(PRInt32* aSelectionEnd)
 
 
 NS_IMETHODIMP
-nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
+nsHTMLInputElement::SetSelectionEnd(int32_t aSelectionEnd)
 {
   nsTextEditorState *state = GetEditorState();
   if (state && state->IsSelectionCached()) {
@@ -2971,7 +2971,7 @@ nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
   nsAutoString direction;
   nsresult rv = GetSelectionDirection(direction);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRInt32 start, end;
+  int32_t start, end;
   rv = GetSelectionRange(&start, &end);
   NS_ENSURE_SUCCESS(rv, rv);
   end = aSelectionEnd;
@@ -3003,8 +3003,8 @@ nsHTMLInputElement::GetFiles(nsIDOMFileList** aFileList)
 }
 
 nsresult
-nsHTMLInputElement::GetSelectionRange(PRInt32* aSelectionStart,
-                                      PRInt32* aSelectionEnd)
+nsHTMLInputElement::GetSelectionRange(int32_t* aSelectionStart,
+                                      int32_t* aSelectionEnd)
 {
   nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
@@ -3074,7 +3074,7 @@ nsHTMLInputElement::SetSelectionDirection(const nsAString& aDirection) {
     return NS_OK;
   }
 
-  PRInt32 start, end;
+  int32_t start, end;
   nsresult rv = GetSelectionRange(&start, &end);
   if (NS_SUCCEEDED(rv)) {
     rv = SetSelectionRange(start, end, aDirection);
@@ -3181,7 +3181,7 @@ nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
     // Get a property set by the frame to find out where it was clicked.
     nsIntPoint* lastClickedPoint =
       static_cast<nsIntPoint*>(GetProperty(nsGkAtoms::imageClickedPoint));
-    PRInt32 x, y;
+    int32_t x, y;
     if (lastClickedPoint) {
       // Convert the values to strings for submission
       x = lastClickedPoint->x;
@@ -3240,7 +3240,7 @@ nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 
     const nsCOMArray<nsIDOMFile>& files = GetFiles();
 
-    for (PRInt32 i = 0; i < files.Count(); ++i) {
+    for (int32_t i = 0; i < files.Count(); ++i) {
       aFormSubmission->AddNameFilePair(name, files[i]);
     }
 
@@ -3595,7 +3595,7 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
 }
 
 bool
-nsHTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex)
+nsHTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex)
 {
   if (nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return true;
@@ -3899,7 +3899,7 @@ nsHTMLInputElement::IsTooLong()
     return false;
   }
 
-  PRInt32 maxLength = -1;
+  int32_t maxLength = -1;
   GetMaxLength(&maxLength);
 
   // Maxlength of -1 means parsing error.
@@ -3907,7 +3907,7 @@ nsHTMLInputElement::IsTooLong()
     return false;
   }
 
-  PRInt32 textLength = -1;
+  int32_t textLength = -1;
   GetTextLength(&textLength);
 
   return textLength > maxLength;
@@ -4206,8 +4206,8 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
     case VALIDITY_STATE_TOO_LONG:
     {
       nsXPIDLString message;
-      PRInt32 maxLength = -1;
-      PRInt32 textLength = -1;
+      int32_t maxLength = -1;
+      int32_t textLength = -1;
       nsAutoString strMaxLength;
       nsAutoString strTextLength;
 
@@ -4384,8 +4384,8 @@ bool
 nsHTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
 {
   nsCAutoString value = NS_ConvertUTF16toUTF8(aValue);
-  PRUint32 i = 0;
-  PRUint32 length = value.Length();
+  uint32_t i = 0;
+  uint32_t length = value.Length();
 
   // Puny-encode the string if needed before running the validation algorithm.
   nsCOMPtr<nsIIDNService> idnSrv = do_GetService(NS_IDNSERVICE_CONTRACTID);
@@ -4477,13 +4477,13 @@ nsHTMLInputElement::IsPasswordTextControl() const
   return mType == NS_FORM_INPUT_PASSWORD;
 }
 
-NS_IMETHODIMP_(PRInt32)
+NS_IMETHODIMP_(int32_t)
 nsHTMLInputElement::GetCols()
 {
   // Else we know (assume) it is an input with size attr
   const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::size);
   if (attr && attr->Type() == nsAttrValue::eInteger) {
-    PRInt32 cols = attr->GetIntegerValue();
+    int32_t cols = attr->GetIntegerValue();
     if (cols > 0) {
       return cols;
     }
@@ -4492,13 +4492,13 @@ nsHTMLInputElement::GetCols()
   return DEFAULT_COLS;
 }
 
-NS_IMETHODIMP_(PRInt32)
+NS_IMETHODIMP_(int32_t)
 nsHTMLInputElement::GetWrapCols()
 {
   return -1; // only textarea's can have wrap cols
 }
 
-NS_IMETHODIMP_(PRInt32)
+NS_IMETHODIMP_(int32_t)
 nsHTMLInputElement::GetRows()
 {
   return DEFAULT_ROWS;
@@ -4625,7 +4625,7 @@ nsHTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
       continue;
     }
 
-    PRInt32 filterMask = 0;
+    int32_t filterMask = 0;
     nsString filterName;
     nsString extensionListStr;
 
@@ -4709,7 +4709,7 @@ nsHTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
 
   // Add each filter, and check if all filters are trusted
   bool allFilterAreTrusted = true;
-  for (PRUint32 i = 0; i < filters.Length(); ++i) {
+  for (uint32_t i = 0; i < filters.Length(); ++i) {
     const nsFilePickerFilter& filter = filters[i];
     if (filter.mFilterMask) {
       filePicker->AppendFilters(filter.mFilterMask);
@@ -4728,14 +4728,14 @@ nsHTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
   }
 }
 
-PRInt32
+int32_t
 nsHTMLInputElement::GetFilterFromAccept()
 {
   NS_ASSERTION(HasAttr(kNameSpaceID_None, nsGkAtoms::accept),
                "You should not call GetFileFiltersFromAccept if the element"
                " has no accept attribute!");
 
-  PRInt32 filter = 0;
+  int32_t filter = 0;
   nsAutoString accept;
   GetAttr(kNameSpaceID_None, nsGkAtoms::accept, accept);
 
@@ -4744,7 +4744,7 @@ nsHTMLInputElement::GetFilterFromAccept()
   while (tokenizer.hasMoreTokens()) {
     const nsDependentSubstring token = tokenizer.nextToken();
 
-    PRInt32 tokenFilter = 0;
+    int32_t tokenFilter = 0;
     if (token.EqualsLiteral("image/*")) {
       tokenFilter = nsIFilePicker::filterImages;
     } else if (token.EqualsLiteral("audio/*")) {

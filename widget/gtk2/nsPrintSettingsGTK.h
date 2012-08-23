@@ -50,14 +50,14 @@ public:
 
   // If not printing the selection, this is stored in the GtkPrintSettings. Printing the
   // selection is stored as a protected boolean (mPrintSelectionOnly).
-  NS_IMETHOD GetPrintRange(PRInt16 *aPrintRange);
-  NS_IMETHOD SetPrintRange(PRInt16 aPrintRange);
+  NS_IMETHOD GetPrintRange(int16_t *aPrintRange);
+  NS_IMETHOD SetPrintRange(int16_t aPrintRange);
 
   // The page range is stored as as single range in the GtkPrintSettings object.
-  NS_IMETHOD GetStartPageRange(PRInt32 *aStartPageRange);
-  NS_IMETHOD SetStartPageRange(PRInt32 aStartPageRange);
-  NS_IMETHOD GetEndPageRange(PRInt32 *aEndPageRange);
-  NS_IMETHOD SetEndPageRange(PRInt32 aEndPageRange);
+  NS_IMETHOD GetStartPageRange(int32_t *aStartPageRange);
+  NS_IMETHOD SetStartPageRange(int32_t aStartPageRange);
+  NS_IMETHOD GetEndPageRange(int32_t *aEndPageRange);
+  NS_IMETHOD SetEndPageRange(int32_t aEndPageRange);
 
   // Reversed, color, orientation and file name are all stored in the GtkPrintSettings.
   // Orientation is also stored in the GtkPageSetup and its setting takes priority when getting the orientation.
@@ -67,8 +67,8 @@ public:
   NS_IMETHOD GetPrintInColor(bool *aPrintInColor);
   NS_IMETHOD SetPrintInColor(bool aPrintInColor);
 
-  NS_IMETHOD GetOrientation(PRInt32 *aOrientation);
-  NS_IMETHOD SetOrientation(PRInt32 aOrientation);
+  NS_IMETHOD GetOrientation(int32_t *aOrientation);
+  NS_IMETHOD SetOrientation(int32_t aOrientation);
 
   NS_IMETHOD GetToFileName(PRUnichar * *aToFileName);
   NS_IMETHOD SetToFileName(const PRUnichar * aToFileName);
@@ -79,8 +79,8 @@ public:
   NS_IMETHOD SetPrinterName(const PRUnichar * aPrinter);
 
   // Number of copies is stored/gotten from the GtkPrintSettings.
-  NS_IMETHOD GetNumCopies(PRInt32 *aNumCopies);
-  NS_IMETHOD SetNumCopies(PRInt32 aNumCopies);
+  NS_IMETHOD GetNumCopies(int32_t *aNumCopies);
+  NS_IMETHOD SetNumCopies(int32_t aNumCopies);
 
   NS_IMETHOD GetScaling(double *aScaling);
   NS_IMETHOD SetScaling(double aScaling);
@@ -101,13 +101,13 @@ public:
   NS_IMETHOD GetPaperHeight(double *aPaperHeight);
   NS_IMETHOD SetPaperHeight(double aPaperHeight);
 
-  NS_IMETHOD SetPaperSizeUnit(PRInt16 aPaperSizeUnit);
+  NS_IMETHOD SetPaperSizeUnit(int16_t aPaperSizeUnit);
 
   NS_IMETHOD GetEffectivePageSize(double *aWidth, double *aHeight);
 
   NS_IMETHOD SetupSilentPrinting();
 
-  NS_IMETHOD GetPageRanges(nsTArray<PRInt32> &aPages);
+  NS_IMETHOD GetPageRanges(nsTArray<int32_t> &aPages);
 
 protected:
   nsPrintSettingsGTK(const nsPrintSettingsGTK& src);
@@ -116,7 +116,7 @@ protected:
   virtual nsresult _Clone(nsIPrintSettings **_retval);
   virtual nsresult _Assign(nsIPrintSettings *aPS);
 
-  GtkUnit GetGTKUnit(PRInt16 aGeckoUnit);
+  GtkUnit GetGTKUnit(int16_t aGeckoUnit);
   void SaveNewPageSize();
 
   /**

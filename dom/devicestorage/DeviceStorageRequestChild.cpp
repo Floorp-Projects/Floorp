@@ -75,8 +75,8 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
       EnumerationResponse r = aValue;
       nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
 
-      PRUint32 count = r.paths().Length();
-      for (PRUint32 i = 0; i < count; i++) {
+      uint32_t count = r.paths().Length();
+      for (uint32_t i = 0; i < count; i++) {
         nsCOMPtr<nsIFile> f;
         nsresult rv = NS_NewLocalFile(r.paths()[i].fullpath(), false, getter_AddRefs(f));
         if (NS_FAILED(rv)) {

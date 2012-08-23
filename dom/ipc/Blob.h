@@ -173,11 +173,11 @@ public:
   // Use this for files.
   bool
   SetMysteryBlobInfo(const nsString& aName, const nsString& aContentType,
-                     PRUint64 aLength);
+                     uint64_t aLength);
 
   // Use this for non-file blobs.
   bool
-  SetMysteryBlobInfo(const nsString& aContentType, PRUint64 aLength);
+  SetMysteryBlobInfo(const nsString& aContentType, uint64_t aLength);
 
 private:
   // This constructor is called on the sending side.

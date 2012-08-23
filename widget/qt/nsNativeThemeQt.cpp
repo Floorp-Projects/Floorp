@@ -25,7 +25,6 @@
 #include "nsThemeConstants.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLInputElement.h"
-#include <malloc.h>
 
 
 #include "gfxASurface.h"
@@ -50,7 +49,7 @@ nsNativeThemeQt::~nsNativeThemeQt()
 NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeQt, nsNativeTheme, nsITheme)
 
 static inline QRect qRectInPixels(const nsRect &aRect,
-                                  const PRInt32 p2a)
+                                  const int32_t p2a)
 {
     return QRect(NSAppUnitsToIntPixels(aRect.x, p2a),
                  NSAppUnitsToIntPixels(aRect.y, p2a),
@@ -86,7 +85,7 @@ _qimage_from_gfximage_format (gfxASurface::gfxImageFormat aFormat)
 NS_IMETHODIMP
 nsNativeThemeQt::DrawWidgetBackground(nsRenderingContext* aContext,
                                       nsIFrame* aFrame,
-                                      PRUint8 aWidgetType,
+                                      uint8_t aWidgetType,
                                       const nsRect& aRect,
                                       const nsRect& aClipRect)
 {
@@ -135,7 +134,7 @@ nsresult
 nsNativeThemeQt::DrawWidgetBackground(QPainter *qPainter,
                                       nsRenderingContext* aContext,
                                       nsIFrame* aFrame,
-                                      PRUint8 aWidgetType,
+                                      uint8_t aWidgetType,
                                       const nsRect& aRect,
                                       const nsRect& aClipRect)
 
@@ -161,7 +160,7 @@ nsNativeThemeQt::DrawWidgetBackground(QPainter *qPainter,
     QMatrix qctm(ctm.xx, ctm.yx, ctm.xy, ctm.yy, ctm.x0, ctm.y0);
     qPainter->setWorldMatrix(qctm, true);
 
-    PRInt32 p2a = aContext->AppUnitsPerDevPixel();
+    int32_t p2a = aContext->AppUnitsPerDevPixel();
 
     QRect r = qRectInPixels(aRect, p2a);
     QRect cr = qRectInPixels(aClipRect, p2a);
@@ -310,7 +309,7 @@ nsNativeThemeQt::DrawWidgetBackground(QPainter *qPainter,
 NS_IMETHODIMP
 nsNativeThemeQt::GetWidgetBorder(nsDeviceContext* ,
                                  nsIFrame* aFrame,
-                                 PRUint8 aWidgetType,
+                                 uint8_t aWidgetType,
                                  nsIntMargin* aResult)
 {
     (*aResult).top = (*aResult).bottom = (*aResult).left = (*aResult).right = 0;
@@ -332,7 +331,7 @@ nsNativeThemeQt::GetWidgetBorder(nsDeviceContext* ,
 
 bool
 nsNativeThemeQt::GetWidgetPadding(nsDeviceContext* ,
-                                  nsIFrame*, PRUint8 aWidgetType,
+                                  nsIFrame*, uint8_t aWidgetType,
                                   nsIntMargin* aResult)
 {
     // XXX: Where to get padding values, framewidth?
@@ -348,7 +347,7 @@ nsNativeThemeQt::GetWidgetPadding(nsDeviceContext* ,
 
 NS_IMETHODIMP
 nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
-                                      PRUint8 aWidgetType,
+                                      uint8_t aWidgetType,
                                       nsIntSize* aResult, bool* aIsOverridable)
 {
     (*aResult).width = (*aResult).height = 0;
@@ -356,7 +355,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aF
 
     QStyle *s = qApp->style();
 
-    PRInt32 p2a = aContext->AppUnitsPerDevPixel();
+    int32_t p2a = aContext->AppUnitsPerDevPixel();
 
     switch (aWidgetType) {
     case NS_THEME_RADIO:
@@ -510,7 +509,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aF
 }
 
 NS_IMETHODIMP
-nsNativeThemeQt::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
+nsNativeThemeQt::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
                                     nsIAtom* aAttribute, bool* aShouldRepaint)
 {
     *aShouldRepaint = TRUE;
@@ -530,7 +529,7 @@ nsNativeThemeQt::ThemeChanged()
 bool
 nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
                                      nsIFrame* aFrame,
-                                     PRUint8 aWidgetType)
+                                     uint8_t aWidgetType)
 {
     switch (aWidgetType) {
     case NS_THEME_SCROLLBAR:
@@ -564,7 +563,7 @@ nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 bool
-nsNativeThemeQt::WidgetIsContainer(PRUint8 aWidgetType)
+nsNativeThemeQt::WidgetIsContainer(uint8_t aWidgetType)
 {
 //     if (aWidgetType == NS_THEME_DROPDOWN_BUTTON ||
 //         aWidgetType == NS_THEME_RADIO ||
@@ -576,7 +575,7 @@ nsNativeThemeQt::WidgetIsContainer(PRUint8 aWidgetType)
 }
 
 bool
-nsNativeThemeQt::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
+nsNativeThemeQt::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType)
 {
     if (aWidgetType == NS_THEME_DROPDOWN ||
         aWidgetType == NS_THEME_BUTTON || 
@@ -594,7 +593,7 @@ nsNativeThemeQt::ThemeNeedsComboboxDropmarker()
 }
 
 void
-nsNativeThemeQt::InitButtonStyle(PRUint8 aWidgetType,
+nsNativeThemeQt::InitButtonStyle(uint8_t aWidgetType,
                                  nsIFrame* aFrame,
                                  QRect rect,
                                  QStyleOptionButton &opt)
@@ -633,7 +632,7 @@ nsNativeThemeQt::InitButtonStyle(PRUint8 aWidgetType,
 }
 
 void
-nsNativeThemeQt::InitPlainStyle(PRUint8 aWidgetType,
+nsNativeThemeQt::InitPlainStyle(uint8_t aWidgetType,
                                 nsIFrame* aFrame,
                                 QRect rect,
                                 QStyleOption &opt,
@@ -654,7 +653,7 @@ nsNativeThemeQt::InitPlainStyle(PRUint8 aWidgetType,
 }
 
 void
-nsNativeThemeQt::InitComboStyle(PRUint8 aWidgetType,
+nsNativeThemeQt::InitComboStyle(uint8_t aWidgetType,
                                 nsIFrame* aFrame,
                                 QRect rect,
                                 QStyleOptionComboBox &opt)

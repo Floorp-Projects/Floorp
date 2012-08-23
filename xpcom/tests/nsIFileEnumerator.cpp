@@ -73,11 +73,11 @@ main(int argc, char* argv[])
            printf("No Top Dir\n");
            return -1;
         }
-        PRInt32 startTime = PR_IntervalNow();
+        int32_t startTime = PR_IntervalNow();
     
         LoopInDir(topDir);
     
-        PRInt32 endTime = PR_IntervalNow();
+        int32_t endTime = PR_IntervalNow();
     
         printf("\nTime: %d\n", PR_IntervalToMilliseconds(endTime - startTime));
     } // this scopes the nsCOMPtrs

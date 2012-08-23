@@ -64,7 +64,7 @@ using namespace mozilla::gfx;
 
 // c = n / 255
 // (c <= 0.0031308 ? c * 12.92 : 1.055 * pow(c, 1 / 2.4) - 0.055) * 255 + 0.5
-static const PRUint8 glinearRGBTosRGBMap[256] = {
+static const uint8_t glinearRGBTosRGBMap[256] = {
   0,  13,  22,  28,  34,  38,  42,  46,
  50,  53,  56,  59,  61,  64,  66,  69,
  71,  73,  75,  77,  79,  81,  83,  85,
@@ -101,7 +101,7 @@ static const PRUint8 glinearRGBTosRGBMap[256] = {
 
 // c = n / 255
 // c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)) * 255 + 0.5
-static const PRUint8 gsRGBToLinearRGBMap[256] = {
+static const uint8_t gsRGBToLinearRGBMap[256] = {
   0,   0,   0,   0,   0,   0,   0,   1,
   1,   1,   1,   1,   1,   1,   1,   1,
   1,   1,   2,   2,   2,   2,   2,   2,
@@ -346,15 +346,15 @@ nsSVGUtils::GetFontXHeight(nsStyleContext *aStyleContext)
 }
 
 void
-nsSVGUtils::UnPremultiplyImageDataAlpha(PRUint8 *data, 
-                                        PRInt32 stride,
+nsSVGUtils::UnPremultiplyImageDataAlpha(uint8_t *data, 
+                                        int32_t stride,
                                         const nsIntRect &rect)
 {
-  for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
-    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
-      PRUint8 *pixel = data + stride * y + 4 * x;
+  for (int32_t y = rect.y; y < rect.YMost(); y++) {
+    for (int32_t x = rect.x; x < rect.XMost(); x++) {
+      uint8_t *pixel = data + stride * y + 4 * x;
 
-      PRUint8 a = pixel[GFX_ARGB32_OFFSET_A];
+      uint8_t a = pixel[GFX_ARGB32_OFFSET_A];
       if (a == 255)
         continue;
 
@@ -372,15 +372,15 @@ nsSVGUtils::UnPremultiplyImageDataAlpha(PRUint8 *data,
 }
 
 void
-nsSVGUtils::PremultiplyImageDataAlpha(PRUint8 *data, 
-                                      PRInt32 stride,
+nsSVGUtils::PremultiplyImageDataAlpha(uint8_t *data, 
+                                      int32_t stride,
                                       const nsIntRect &rect)
 {
-  for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
-    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
-      PRUint8 *pixel = data + stride * y + 4 * x;
+  for (int32_t y = rect.y; y < rect.YMost(); y++) {
+    for (int32_t x = rect.x; x < rect.XMost(); x++) {
+      uint8_t *pixel = data + stride * y + 4 * x;
 
-      PRUint8 a = pixel[GFX_ARGB32_OFFSET_A];
+      uint8_t a = pixel[GFX_ARGB32_OFFSET_A];
       if (a == 255)
         continue;
 
@@ -395,13 +395,13 @@ nsSVGUtils::PremultiplyImageDataAlpha(PRUint8 *data,
 }
 
 void
-nsSVGUtils::ConvertImageDataToLinearRGB(PRUint8 *data, 
-                                        PRInt32 stride,
+nsSVGUtils::ConvertImageDataToLinearRGB(uint8_t *data, 
+                                        int32_t stride,
                                         const nsIntRect &rect)
 {
-  for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
-    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
-      PRUint8 *pixel = data + stride * y + 4 * x;
+  for (int32_t y = rect.y; y < rect.YMost(); y++) {
+    for (int32_t x = rect.x; x < rect.XMost(); x++) {
+      uint8_t *pixel = data + stride * y + 4 * x;
 
       pixel[GFX_ARGB32_OFFSET_B] =
         gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_B]];
@@ -414,13 +414,13 @@ nsSVGUtils::ConvertImageDataToLinearRGB(PRUint8 *data,
 }
 
 void
-nsSVGUtils::ConvertImageDataFromLinearRGB(PRUint8 *data, 
-                                          PRInt32 stride,
+nsSVGUtils::ConvertImageDataFromLinearRGB(uint8_t *data, 
+                                          int32_t stride,
                                           const nsIntRect &rect)
 {
-  for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
-    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
-      PRUint8 *pixel = data + stride * y + 4 * x;
+  for (int32_t y = rect.y; y < rect.YMost(); y++) {
+    for (int32_t x = rect.x; x < rect.XMost(); x++) {
+      uint8_t *pixel = data + stride * y + 4 * x;
 
       pixel[GFX_ARGB32_OFFSET_B] =
         glinearRGBTosRGBMap[pixel[GFX_ARGB32_OFFSET_B]];
@@ -436,7 +436,7 @@ nsresult
 nsSVGUtils::ReportToConsole(nsIDocument* doc,
                             const char* aWarning,
                             const PRUnichar **aParams,
-                            PRUint32 aParamsLength)
+                            uint32_t aParamsLength)
 {
   return nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                          "SVG", doc,
@@ -615,7 +615,7 @@ nsSVGUtils::OuterSVGIsCallingReflowSVG(nsIFrame *aFrame)
 
 void
 nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
-                             const nsRect *aBoundsSubArea, PRUint32 aFlags)
+                             const nsRect *aBoundsSubArea, uint32_t aFlags)
 {
   NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG) &&
                     !(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG),
@@ -667,7 +667,7 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
     aFrame = aFrame->GetParent();
   }
 
-  PRInt32 appUnitsPerCSSPx = aFrame->PresContext()->AppUnitsPerCSSPixel();
+  int32_t appUnitsPerCSSPx = aFrame->PresContext()->AppUnitsPerCSSPixel();
 
   while (aFrame) {
     if ((aFrame->GetStateBits() & NS_FRAME_IS_DIRTY)) {
@@ -945,8 +945,8 @@ nsSVGUtils::GetViewBoxTransform(const nsSVGElement* aElement,
   NS_ASSERTION(aViewboxWidth  > 0, "viewBox width must be greater than zero!");
   NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
 
-  PRUint16 align = aPreserveAspectRatio.GetAlign();
-  PRUint16 meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
+  uint16_t align = aPreserveAspectRatio.GetAlign();
+  uint16_t meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
 
   // default to the defaults
   if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)
@@ -1021,7 +1021,7 @@ nsSVGUtils::GetViewBoxTransform(const nsSVGElement* aElement,
 }
 
 gfxMatrix
-nsSVGUtils::GetCanvasTM(nsIFrame *aFrame, PRUint32 aFor)
+nsSVGUtils::GetCanvasTM(nsIFrame *aFrame, uint32_t aFor)
 {
   // XXX yuck, we really need a common interface for GetCanvasTM
 
@@ -1055,7 +1055,7 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame, PRUint32 aFor)
 }
 
 gfxMatrix
-nsSVGUtils::GetUserToCanvasTM(nsIFrame *aFrame, PRUint32 aFor)
+nsSVGUtils::GetUserToCanvasTM(nsIFrame *aFrame, uint32_t aFor)
 {
   NS_ASSERTION(aFor == nsISVGChildFrame::FOR_OUTERSVG_TM,
                "Unexpected aFor?");
@@ -1074,7 +1074,7 @@ nsSVGUtils::GetUserToCanvasTM(nsIFrame *aFrame, PRUint32 aFor)
 }
 
 void 
-nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
+nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags)
 {
   nsIFrame *kid = aFrame->GetFirstPrincipalChild();
 
@@ -1083,10 +1083,13 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
     if (SVGFrame) {
       SVGFrame->NotifySVGChanged(aFlags); 
     } else {
-      NS_ASSERTION(kid->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
+      NS_ASSERTION(kid->IsFrameOfType(nsIFrame::eSVG) || kid->IsSVGText(),
+                   "SVG frame expected");
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
-      NotifyChildrenOfSVGChange(kid, aFlags);
+      if (kid->IsFrameOfType(nsIFrame::eSVG)) {
+        NotifyChildrenOfSVGChange(kid, aFlags);
+      }
     }
     kid = kid->GetNextSibling();
   }
@@ -1171,7 +1174,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       // GetCanvasTM().
       overflowRect = overflowRect + aFrame->GetPosition();
     }
-    PRUint32 appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
+    uint32_t appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
     gfxMatrix tm = GetCanvasTM(aFrame, nsISVGChildFrame::FOR_PAINTING);
     if (aFrame->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
       gfxMatrix childrenOnlyTM;
@@ -1569,12 +1572,12 @@ nsSVGUtils::ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect)
   r.RoundOut();
   gfxRect r2(aRect->x, aRect->y, aRect->width, aRect->height);
   r = r.Intersect(r2);
-  *aRect = nsIntRect(PRInt32(r.X()), PRInt32(r.Y()),
-                     PRInt32(r.Width()), PRInt32(r.Height()));
+  *aRect = nsIntRect(int32_t(r.X()), int32_t(r.Y()),
+                     int32_t(r.Width()), int32_t(r.Height()));
 }
 
 gfxRect
-nsSVGUtils::GetBBox(nsIFrame *aFrame, PRUint32 aFlags)
+nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
 {
   if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
     aFrame = aFrame->GetParent();
@@ -1625,7 +1628,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, PRUint32 aFlags)
 }
 
 gfxRect
-nsSVGUtils::GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH,
+nsSVGUtils::GetRelativeRect(uint16_t aUnits, const nsSVGLength2 *aXYWH,
                             const gfxRect &aBBox, nsIFrame *aFrame)
 {
   float x, y, width, height;
@@ -1728,7 +1731,7 @@ nsSVGUtils::WritePPM(const char *fname, gfxImageSurface *aSurface)
   gfxIntSize size = aSurface->GetSize();
   fprintf(f, "P6\n%d %d\n255\n", size.width, size.height);
   unsigned char *data = aSurface->Data();
-  PRInt32 stride = aSurface->Stride();
+  int32_t stride = aSurface->Stride();
   for (int y=0; y<size.height; y++) {
     for (int x=0; x<size.width; x++) {
       unused << fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_R, 1, 1, f);
@@ -1999,7 +2002,7 @@ GetStrokeDashData(nsIFrame* aFrame,
 {
   const nsStyleSVG* style = aFrame->GetStyleSVG();
 
-  PRUint32 count = style->mStrokeDasharrayLength;
+  uint32_t count = style->mStrokeDasharrayLength;
   if (!count || !aDashes.SetLength(count)) {
     return false;
   }
@@ -2025,7 +2028,7 @@ GetStrokeDashData(nsIFrame* aFrame,
   nsPresContext *presContext = aFrame->PresContext();
   gfxFloat totalLength = 0.0;
 
-  for (PRUint32 i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     aDashes[i] =
       nsSVGUtils::CoordToFloat(presContext,
                                ctx,
@@ -2055,10 +2058,10 @@ nsSVGUtils::SetupCairoStrokeHitGeometry(nsIFrame* aFrame, gfxContext* aContext)
   }
 }
 
-PRUint16
+uint16_t
 nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
 {
-  PRUint16 flags = 0;
+  uint16_t flags = 0;
 
   switch(aFrame->GetStyleVisibility()->mPointerEvents) {
   case NS_STYLE_POINTER_EVENTS_NONE:

@@ -26,7 +26,7 @@ nsQueryContentEventResult::~nsQueryContentEventResult()
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetOffset(PRUint32 *aOffset)
+nsQueryContentEventResult::GetOffset(uint32_t *aOffset)
 {
   bool notFound;
   nsresult rv = GetNotFound(&notFound);
@@ -36,7 +36,7 @@ nsQueryContentEventResult::GetOffset(PRUint32 *aOffset)
   return NS_OK;
 }
 
-static bool IsRectEnabled(PRUint32 aEventID)
+static bool IsRectEnabled(uint32_t aEventID)
 {
   return aEventID == NS_QUERY_CARET_RECT ||
          aEventID == NS_QUERY_TEXT_RECT ||
@@ -55,7 +55,7 @@ nsQueryContentEventResult::GetReversed(bool *aReversed)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetLeft(PRInt32 *aLeft)
+nsQueryContentEventResult::GetLeft(int32_t *aLeft)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(IsRectEnabled(mEventID),
@@ -65,7 +65,7 @@ nsQueryContentEventResult::GetLeft(PRInt32 *aLeft)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetWidth(PRInt32 *aWidth)
+nsQueryContentEventResult::GetWidth(int32_t *aWidth)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(IsRectEnabled(mEventID),
@@ -75,7 +75,7 @@ nsQueryContentEventResult::GetWidth(PRInt32 *aWidth)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetTop(PRInt32 *aTop)
+nsQueryContentEventResult::GetTop(int32_t *aTop)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(IsRectEnabled(mEventID),
@@ -85,7 +85,7 @@ nsQueryContentEventResult::GetTop(PRInt32 *aTop)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetHeight(PRInt32 *aHeight)
+nsQueryContentEventResult::GetHeight(int32_t *aHeight)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(IsRectEnabled(mEventID),

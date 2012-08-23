@@ -82,14 +82,14 @@ public:
   }
 
   NS_IMETHOD
-  UpdatePresentationData(PRUint32        aFlagsValues,
-                         PRUint32        aFlagsToUpdate);
+  UpdatePresentationData(uint32_t        aFlagsValues,
+                         uint32_t        aFlagsToUpdate);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
-                                    PRInt32         aLastIndex,
-                                    PRUint32        aFlagsValues,
-                                    PRUint32        aFlagsToUpdate)
+  UpdatePresentationDataFromChildAt(int32_t         aFirstIndex,
+                                    int32_t         aLastIndex,
+                                    uint32_t        aFlagsValues,
+                                    uint32_t        aFlagsToUpdate)
   {
     return NS_OK;
   }
@@ -156,7 +156,7 @@ public:
   // @post aLengthValue is the length value computed from the attribute.
   static void ParseNumericValue(const nsString&   aString,
                                 nscoord*          aLengthValue,
-                                PRUint32          aFlags,
+                                uint32_t          aFlags,
                                 nsPresContext*    aPresContext,
                                 nsStyleContext*   aStyleContext);
 

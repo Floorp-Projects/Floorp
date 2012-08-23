@@ -21,7 +21,7 @@ public:
 
   nsVolume(const Volume *aVolume);
 
-  nsVolume(const nsAString &aName, const nsAString &aMountPoint, const PRInt32 &aState)
+  nsVolume(const nsAString &aName, const nsAString &aMountPoint, const int32_t &aState)
     : mName(aName), mMountPoint(aMountPoint), mState(aState)
   {
   }
@@ -52,7 +52,7 @@ public:
   const nsString &MountPoint() const  { return mMountPoint; }
   const char *MountPointStr() const   { return NS_LossyConvertUTF16toASCII(mMountPoint).get(); }
 
-  PRInt32 State() const               { return mState; }
+  int32_t State() const               { return mState; }
   const char *StateStr() const        { return NS_VolumeStateStr(mState); }
 
   typedef nsTArray<nsRefPtr<nsVolume> > Array;
@@ -63,7 +63,7 @@ private:
 protected:
   nsString mName;
   nsString mMountPoint;
-  PRInt32  mState;
+  int32_t  mState;
 };
 
 } // system

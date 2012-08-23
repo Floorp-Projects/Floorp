@@ -78,10 +78,10 @@ public:
         mItalic = (aFont->GetStyle() == DWRITE_FONT_STYLE_ITALIC ||
                    aFont->GetStyle() == DWRITE_FONT_STYLE_OBLIQUE);
         mStretch = FontStretchFromDWriteStretch(aFont->GetStretch());
-        PRUint16 weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
+        uint16_t weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
 
-        weight = NS_MAX<PRUint16>(100, weight);
-        weight = NS_MIN<PRUint16>(900, weight);
+        weight = NS_MAX<uint16_t>(100, weight);
+        weight = NS_MIN<uint16_t>(900, weight);
         mWeight = weight;
 
         mIsCJK = UNINITIALIZED_VALUE;
@@ -100,8 +100,8 @@ public:
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFont *aFont,
-                              PRUint16 aWeight,
-                              PRInt16 aStretch,
+                              uint16_t aWeight,
+                              int16_t aStretch,
                               bool aItalic)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
         mForceGDIClassic(false)
@@ -125,8 +125,8 @@ public:
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFontFile *aFontFile,
-                              PRUint16 aWeight,
-                              PRInt16 aStretch,
+                              uint16_t aWeight,
+                              int16_t aStretch,
                               bool aItalic)
       : gfxFontEntry(aFaceName), mFont(nullptr), mFontFile(aFontFile),
         mForceGDIClassic(false)
@@ -142,8 +142,8 @@ public:
 
     virtual bool IsSymbolFont();
 
-    virtual nsresult GetFontTable(PRUint32 aTableTag,
-                                  FallibleTArray<PRUint8>& aBuffer);
+    virtual nsresult GetFontTable(uint32_t aTableTag,
+                                  FallibleTArray<uint8_t>& aBuffer);
 
     nsresult ReadCMAP();
 
@@ -178,7 +178,7 @@ protected:
     nsRefPtr<IDWriteFontFile> mFontFile;
     DWRITE_FONT_FACE_TYPE mFaceType;
 
-    PRInt8 mIsCJK;
+    int8_t mIsCJK;
     bool mForceGDIClassic;
 };
 
@@ -340,8 +340,8 @@ public:
                                           const nsAString& aFontName);
 
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                           const PRUint8 *aFontData,
-                                           PRUint32 aLength);
+                                           const uint8_t *aFontData,
+                                           uint32_t aLength);
     
     virtual bool ResolveFontName(const nsAString& aFontName,
                                    nsAString& aResolvedFontName);
@@ -371,10 +371,10 @@ private:
     void GetDirectWriteSubstitutes();
 
     // search fonts system-wide for a given character, null otherwise
-    virtual gfxFontEntry* GlobalFontFallback(const PRUint32 aCh,
-                                             PRInt32 aRunScript,
+    virtual gfxFontEntry* GlobalFontFallback(const uint32_t aCh,
+                                             int32_t aRunScript,
                                              const gfxFontStyle* aMatchStyle,
-                                             PRUint32& aCmapCount);
+                                             uint32_t& aCmapCount);
 
     virtual bool UsesSystemFallback() { return true; }
 

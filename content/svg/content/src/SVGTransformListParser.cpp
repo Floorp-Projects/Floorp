@@ -85,7 +85,7 @@ SVGTransformListParser::GetTransformToken(nsIAtom** aKeyAtom,
     char holdingChar = *delimiterStart;
     *delimiterStart = '\0';
 
-    PRUint32 len;
+    uint32_t len;
     if ((len = strlen(mTokenPos)) > 0) {
       *aKeyAtom = NS_NewAtom(Substring(mTokenPos, mTokenPos + len));
 
@@ -160,8 +160,8 @@ SVGTransformListParser::IsTokenTransformStarter()
 
 nsresult
 SVGTransformListParser::MatchNumberArguments(float *aResult,
-                                             PRUint32 aMaxNum,
-                                             PRUint32 *aParsedNum)
+                                             uint32_t aMaxNum,
+                                             uint32_t *aParsedNum)
 {
   *aParsedNum = 0;
 
@@ -201,7 +201,7 @@ SVGTransformListParser::MatchTranslate()
   GetNextToken();
 
   float t[2];
-  PRUint32 count;
+  uint32_t count;
 
   ENSURE_MATCHED(MatchNumberArguments(t, ArrayLength(t), &count));
 
@@ -230,7 +230,7 @@ SVGTransformListParser::MatchScale()
   GetNextToken();
 
   float s[2];
-  PRUint32 count;
+  uint32_t count;
 
   ENSURE_MATCHED(MatchNumberArguments(s, ArrayLength(s), &count));
 
@@ -259,7 +259,7 @@ SVGTransformListParser::MatchRotate()
   GetNextToken();
 
   float r[3];
-  PRUint32 count;
+  uint32_t count;
 
   ENSURE_MATCHED(MatchNumberArguments(r, ArrayLength(r), &count));
 
@@ -288,7 +288,7 @@ SVGTransformListParser::MatchSkewX()
   GetNextToken();
 
   float skew;
-  PRUint32 count;
+  uint32_t count;
 
   ENSURE_MATCHED(MatchNumberArguments(&skew, 1, &count));
 
@@ -310,7 +310,7 @@ SVGTransformListParser::MatchSkewY()
   GetNextToken();
 
   float skew;
-  PRUint32 count;
+  uint32_t count;
 
   ENSURE_MATCHED(MatchNumberArguments(&skew, 1, &count));
 
@@ -332,7 +332,7 @@ SVGTransformListParser::MatchMatrix()
   GetNextToken();
 
   float m[6];
-  PRUint32 count;
+  uint32_t count;
 
   ENSURE_MATCHED(MatchNumberArguments(m, ArrayLength(m), &count));
 

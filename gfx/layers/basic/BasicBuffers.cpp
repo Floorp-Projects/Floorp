@@ -59,7 +59,7 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
 
 already_AddRefed<gfxASurface>
 BasicThebesLayerBuffer::CreateBuffer(ContentType aType, 
-                                     const nsIntSize& aSize, PRUint32 aFlags)
+                                     const nsIntSize& aSize, uint32_t aFlags)
 {
   return mLayer->CreateBuffer(aType, aSize);
 }

@@ -98,3 +98,8 @@ SettingsListener.observe('devtools.debugger.remote-port', 6000, function(value) 
 SettingsListener.observe('devtools.debugger.force-local', true, function(value) {
   Services.prefs.setBoolPref('devtools.debugger.force-local', value);
 });
+
+SettingsListener.observe('debug.log-animations.enabled', false, function(value) {
+  Services.prefs.setBoolPref('layers.offmainthreadcomposition.log-animations', value);
+});
+

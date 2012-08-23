@@ -80,7 +80,7 @@ class CameraHardwareInterface {
       return CAMERA_DEFAULT;
     }
 
-    static CameraHardwareInterface* openCamera(PRUint32 aCamera);
+    static CameraHardwareInterface* openCamera(uint32_t aCamera);
     
     virtual ~CameraHardwareInterface() { }
     
@@ -99,7 +99,7 @@ class CameraHardwareInterface {
     virtual CameraParameters getParameters() const = 0;
 
   protected:
-    CameraHardwareInterface(PRUint32 aCamera = 0) { };
+    CameraHardwareInterface(uint32_t aCamera = 0) { };
 };
 
 // Intentionally not trying to dlclose() this handle.  That's playing
@@ -128,7 +128,7 @@ template<class T> class CameraImpl : public CameraHardwareInterface {
     typedef sp<T> (*HAL_openCameraHardware_SGS2)(int);
     typedef sp<T> (*HAL_openCameraHardware_MAGURO)(int, int);
 
-    CameraImpl(PRUint32 aCamera = 0) : mOk(false), mCamera(nullptr) {
+    CameraImpl(uint32_t aCamera = 0) : mOk(false), mCamera(nullptr) {
       void* cameraLib = GetCameraLibHandle();
       if (!cameraLib) {
         printf_stderr("CameraImpl: Failed to dlopen() camera library.");
@@ -207,7 +207,7 @@ template<class T> class CameraImpl : public CameraHardwareInterface {
     sp<T> mCamera;  
 };
 
-CameraHardwareInterface* CameraHardwareInterface::openCamera(PRUint32 aCamera)  {
+CameraHardwareInterface* CameraHardwareInterface::openCamera(uint32_t aCamera)  {
   nsAutoPtr<CameraHardwareInterface> instance;
   switch(getType()) {
     case CAMERA_SGS2:
@@ -260,7 +260,7 @@ GonkCameraInputStream::DataCallback(int32_t aMsgType, const sp<IMemory>& aDataPt
   stream->ReceiveFrame((char*)aDataPtr->pointer(), aDataPtr->size());
 }
 
-PRUint32
+uint32_t
 GonkCameraInputStream::getNumberOfCameras() {
   typedef int (*HAL_getNumberOfCamerasFunct)(void);
   void* cameraLib = GetCameraLibHandle();
@@ -286,7 +286,7 @@ GonkCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParams)
   mHeight = aParams->height;
   mCamera = aParams->camera;
 
-  PRUint32 maxNumCameras = getNumberOfCameras();
+  uint32_t maxNumCameras = getNumberOfCameras();
 
   if (maxNumCameras == 0)
     return NS_ERROR_FAILURE;
@@ -311,12 +311,12 @@ GonkCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParams)
   params.getSupportedPreviewSizes(previewSizes);
 
   // find the available preview size closest to the requested size.
-  PRUint32 minSizeDelta = PR_UINT32_MAX;
-  PRUint32 bestWidth = mWidth;
-  PRUint32 bestHeight = mHeight;
-  for (PRUint32 i = 0; i < previewSizes.size(); i++) {
+  uint32_t minSizeDelta = PR_UINT32_MAX;
+  uint32_t bestWidth = mWidth;
+  uint32_t bestHeight = mHeight;
+  for (uint32_t i = 0; i < previewSizes.size(); i++) {
     Size size = previewSizes[i];
-    PRUint32 delta = abs(size.width * size.height - mWidth * mHeight); 
+    uint32_t delta = abs(size.width * size.height - mWidth * mHeight); 
     if (delta < minSizeDelta) {
       minSizeDelta = delta;
       bestWidth = size.width;
@@ -345,7 +345,7 @@ GonkCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParams)
 
 
 void 
-GonkCameraInputStream::ReceiveFrame(char* frame, PRUint32 length) {
+GonkCameraInputStream::ReceiveFrame(char* frame, uint32_t length) {
   {
     ReentrantMonitorAutoEnter enter(mMonitor);
     if (mFrameQueue.GetSize() > MAX_FRAMES_QUEUED) {
@@ -369,14 +369,14 @@ GonkCameraInputStream::ReceiveFrame(char* frame, PRUint32 length) {
     memcpy(fullFrame + sizeof(nsRawPacketHeader), frame, length);
   } else {
     // we copy the Y plane, and de-interlace the CrCb
-    PRUint32 yFrameSize = mWidth * mHeight;
-    PRUint32 uvFrameSize = yFrameSize / 4;
+    uint32_t yFrameSize = mWidth * mHeight;
+    uint32_t uvFrameSize = yFrameSize / 4;
     memcpy(fullFrame + sizeof(nsRawPacketHeader), frame, yFrameSize);
 
     char* uFrame = fullFrame + sizeof(nsRawPacketHeader) + yFrameSize;
     char* vFrame = fullFrame + sizeof(nsRawPacketHeader) + yFrameSize + uvFrameSize;
     const char* yFrame = frame + yFrameSize;
-    for (PRUint32 i = 0; i < uvFrameSize; i++) {
+    for (uint32_t i = 0; i < uvFrameSize; i++) {
       uFrame[i] = yFrame[2 * i + 1];
       vFrame[i] = yFrame[2 * i];
     }
@@ -393,7 +393,7 @@ GonkCameraInputStream::ReceiveFrame(char* frame, PRUint32 length) {
 }
 
 NS_IMETHODIMP
-GonkCameraInputStream::Available(PRUint64 *aAvailable)
+GonkCameraInputStream::Available(uint64_t *aAvailable)
 {
   ReentrantMonitorAutoEnter enter(mMonitor);
 
@@ -407,11 +407,11 @@ NS_IMETHODIMP GonkCameraInputStream::IsNonBlocking(bool *aNonBlock) {
   return NS_OK;
 }
 
-NS_IMETHODIMP GonkCameraInputStream::Read(char *aBuffer, PRUint32 aCount, PRUint32 *aRead) {
+NS_IMETHODIMP GonkCameraInputStream::Read(char *aBuffer, uint32_t aCount, uint32_t *aRead) {
   return ReadSegments(NS_CopySegmentToBuffer, aBuffer, aCount, aRead);
 }
 
-NS_IMETHODIMP GonkCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, PRUint32 aCount, PRUint32 *aRead) {
+NS_IMETHODIMP GonkCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, uint32_t aCount, uint32_t *aRead) {
   *aRead = 0;
   
   nsresult rv;
@@ -456,7 +456,7 @@ NS_IMETHODIMP GonkCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, voi
   {
     ReentrantMonitorAutoEnter enter(mMonitor);
     while ((mAvailable > 0) && (aCount >= mFrameSize)) {
-      PRUint32 readThisTime = 0;
+      uint32_t readThisTime = 0;
 
       char* frame = (char*)mFrameQueue.PopFront();
       rv = aWriter(this, aClosure, (const char*)frame, *aRead, mFrameSize, &readThisTime);
@@ -520,7 +520,7 @@ void GonkCameraInputStream::NotifyListeners() {
   }
 }
 
-NS_IMETHODIMP GonkCameraInputStream::AsyncWait(nsIInputStreamCallback *aCallback, PRUint32 aFlags, PRUint32 aRequestedCount, nsIEventTarget *aTarget)
+NS_IMETHODIMP GonkCameraInputStream::AsyncWait(nsIInputStreamCallback *aCallback, uint32_t aFlags, uint32_t aRequestedCount, nsIEventTarget *aTarget)
 {
   if (aFlags != 0)
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -537,7 +537,7 @@ NS_IMETHODIMP GonkCameraInputStream::AsyncWait(nsIInputStreamCallback *aCallback
 }
 
 
-NS_IMETHODIMP GonkCameraInputStream::CloseWithStatus(PRUint32 status)
+NS_IMETHODIMP GonkCameraInputStream::CloseWithStatus(uint32_t status)
 {
   GonkCameraInputStream::doClose();
   return NS_OK;

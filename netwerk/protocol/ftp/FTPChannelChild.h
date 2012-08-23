@@ -68,26 +68,26 @@ public:
   bool IsSuspended();
 
 protected:
-  bool RecvOnStartRequest(const PRInt32& aContentLength,
+  bool RecvOnStartRequest(const int32_t& aContentLength,
                           const nsCString& aContentType,
                           const PRTime& aLastModified,
                           const nsCString& aEntityID,
                           const IPC::URI& aURI) MOZ_OVERRIDE;
   bool RecvOnDataAvailable(const nsCString& data,
-                           const PRUint32& offset,
-                           const PRUint32& count) MOZ_OVERRIDE;
+                           const uint32_t& offset,
+                           const uint32_t& count) MOZ_OVERRIDE;
   bool RecvOnStopRequest(const nsresult& statusCode) MOZ_OVERRIDE;
   bool RecvFailedAsyncOpen(const nsresult& statusCode) MOZ_OVERRIDE;
   bool RecvDeleteSelf() MOZ_OVERRIDE;
 
-  void DoOnStartRequest(const PRInt32& aContentLength,
+  void DoOnStartRequest(const int32_t& aContentLength,
                         const nsCString& aContentType,
                         const PRTime& aLastModified,
                         const nsCString& aEntityID,
                         const IPC::URI& aURI);
   void DoOnDataAvailable(const nsCString& data,
-                         const PRUint32& offset,
-                         const PRUint32& count);
+                         const uint32_t& offset,
+                         const uint32_t& count);
   void DoOnStopRequest(const nsresult& statusCode);
   void DoFailedAsyncOpen(const nsresult& statusCode);
   void DoDeleteSelf();
@@ -109,12 +109,12 @@ private:
   bool mIPCOpen;
   ChannelEventQueue mEventQ;
   bool mCanceled;
-  PRUint32 mSuspendCount;
+  uint32_t mSuspendCount;
   bool mIsPending;
   bool mWasOpened;
   
   PRTime mLastModifiedTime;
-  PRUint64 mStartPos;
+  uint64_t mStartPos;
   nsCString mEntityID;
 };
 

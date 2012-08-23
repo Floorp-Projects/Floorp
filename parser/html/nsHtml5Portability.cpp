@@ -9,7 +9,7 @@
 #include "nsHtml5Portability.h"
 
 nsIAtom*
-nsHtml5Portability::newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length, nsHtml5AtomTable* interner)
+nsHtml5Portability::newLocalNameFromBuffer(PRUnichar* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
 {
   NS_ASSERTION(!offset, "The offset should always be zero here.");
   NS_ASSERTION(interner, "Didn't get an atom service.");
@@ -17,7 +17,7 @@ nsHtml5Portability::newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt
 }
 
 nsString*
-nsHtml5Portability::newStringFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length)
+nsHtml5Portability::newStringFromBuffer(PRUnichar* buf, int32_t offset, int32_t length)
 {
   return new nsString(buf + offset, length);
 }
@@ -43,22 +43,22 @@ nsHtml5Portability::newStringFromString(nsString* string) {
   return newStr;
 }
 
-jArray<PRUnichar,PRInt32>
+jArray<PRUnichar,int32_t>
 nsHtml5Portability::newCharArrayFromLocal(nsIAtom* local)
 {
   nsAutoString temp;
   local->ToString(temp);
-  PRInt32 len = temp.Length();
-  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>::newJArray(len);
+  int32_t len = temp.Length();
+  jArray<PRUnichar,int32_t> arr = jArray<PRUnichar,int32_t>::newJArray(len);
   memcpy(arr, temp.BeginReading(), len * sizeof(PRUnichar));
   return arr;
 }
 
-jArray<PRUnichar,PRInt32>
+jArray<PRUnichar,int32_t>
 nsHtml5Portability::newCharArrayFromString(nsString* string)
 {
-  PRInt32 len = string->Length();
-  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>::newJArray(len);
+  int32_t len = string->Length();
+  jArray<PRUnichar,int32_t> arr = jArray<PRUnichar,int32_t>::newJArray(len);
   memcpy(arr, string->BeginReading(), len * sizeof(PRUnichar));
   return arr;
 }
@@ -83,7 +83,7 @@ nsHtml5Portability::releaseString(nsString* str)
 }
 
 bool
-nsHtml5Portability::localEqualsBuffer(nsIAtom* local, PRUnichar* buf, PRInt32 offset, PRInt32 length)
+nsHtml5Portability::localEqualsBuffer(nsIAtom* local, PRUnichar* buf, int32_t offset, int32_t length)
 {
   return local->Equals(nsDependentSubstring(buf + offset, buf + offset + length));
 }

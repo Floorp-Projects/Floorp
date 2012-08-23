@@ -207,7 +207,7 @@ nsPKCS11Slot::GetTokenName(PRUnichar **aName)
 }
 
 NS_IMETHODIMP
-nsPKCS11Slot::GetStatus(PRUint32 *_retval)
+nsPKCS11Slot::GetStatus(uint32_t *_retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())

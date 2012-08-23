@@ -474,7 +474,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
         return;
 
     report->filename = iter.script()->filename;
-    report->lineno = PCToLineNumber(iter.script(), iter.pc());
+    report->lineno = PCToLineNumber(iter.script(), iter.pc(), &report->column);
     report->originPrincipals = iter.script()->originPrincipals;
 }
 
@@ -935,7 +935,7 @@ js_ReportMissingArg(JSContext *cx, HandleValue v, unsigned arg)
     JS_snprintf(argbuf, sizeof argbuf, "%u", arg);
     bytes = NULL;
     if (IsFunctionObject(v)) {
-        atom = v.toObject().toFunction()->atom;
+        atom = v.toObject().toFunction()->atom();
         bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
                                         v, atom);
         if (!bytes)

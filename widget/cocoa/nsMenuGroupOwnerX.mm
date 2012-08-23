@@ -87,7 +87,7 @@ void nsMenuGroupOwnerX::CharacterDataChanged(nsIDocument* aDocument,
 void nsMenuGroupOwnerX::ContentAppended(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aFirstNewContent,
-                                        PRInt32 /* unused */)
+                                        int32_t /* unused */)
 {
   for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
     ContentInserted(aDocument, aContainer, cur, 0);
@@ -104,18 +104,18 @@ void nsMenuGroupOwnerX::NodeWillBeDestroyed(const nsINode * aNode)
 
 void nsMenuGroupOwnerX::AttributeWillChange(nsIDocument* aDocument,
                                             dom::Element* aContent,
-                                            PRInt32 aNameSpaceID,
+                                            int32_t aNameSpaceID,
                                             nsIAtom* aAttribute,
-                                            PRInt32 aModType)
+                                            int32_t aModType)
 {
 }
 
 
 void nsMenuGroupOwnerX::AttributeChanged(nsIDocument* aDocument,
                                          dom::Element* aElement,
-                                         PRInt32 aNameSpaceID,
+                                         int32_t aNameSpaceID,
                                          nsIAtom* aAttribute,
-                                         PRInt32 aModType)
+                                         int32_t aModType)
 {
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   nsChangeObserver* obs = LookupContentChangeObserver(aElement);
@@ -127,7 +127,7 @@ void nsMenuGroupOwnerX::AttributeChanged(nsIDocument* aDocument,
 void nsMenuGroupOwnerX::ContentRemoved(nsIDocument * aDocument,
                                        nsIContent * aContainer,
                                        nsIContent * aChild,
-                                       PRInt32 aIndexInContainer,
+                                       int32_t aIndexInContainer,
                                        nsIContent * aPreviousSibling)
 {
   if (!aContainer) {
@@ -155,7 +155,7 @@ void nsMenuGroupOwnerX::ContentRemoved(nsIDocument * aDocument,
 void nsMenuGroupOwnerX::ContentInserted(nsIDocument * aDocument,
                                         nsIContent * aContainer,
                                         nsIContent * aChild,
-                                        PRInt32 /* unused */)
+                                        int32_t /* unused */)
 {
   if (!aContainer) {
     return;
@@ -213,7 +213,7 @@ nsChangeObserver* nsMenuGroupOwnerX::LookupContentChangeObserver(nsIContent* aCo
 
 // Given a menu item, creates a unique 4-character command ID and
 // maps it to the item. Returns the id for use by the client.
-PRUint32 nsMenuGroupOwnerX::RegisterForCommand(nsMenuItemX* inMenuItem)
+uint32_t nsMenuGroupOwnerX::RegisterForCommand(nsMenuItemX* inMenuItem)
 {
   // no real need to check for uniqueness. We always start afresh with each
   // window at 1. Even if we did get close to the reserved Apple command id's,
@@ -232,13 +232,13 @@ PRUint32 nsMenuGroupOwnerX::RegisterForCommand(nsMenuItemX* inMenuItem)
 
 // Removes the mapping between the given 4-character command ID
 // and its associated menu item.
-void nsMenuGroupOwnerX::UnregisterCommand(PRUint32 inCommandID)
+void nsMenuGroupOwnerX::UnregisterCommand(uint32_t inCommandID)
 {
   mCommandToMenuObjectTable.Remove(inCommandID);
 }
 
 
-nsMenuItemX* nsMenuGroupOwnerX::GetMenuItemForCommandID(PRUint32 inCommandID)
+nsMenuItemX* nsMenuGroupOwnerX::GetMenuItemForCommandID(uint32_t inCommandID)
 {
   nsMenuItemX * result;
   if (mCommandToMenuObjectTable.Get(inCommandID, &result))

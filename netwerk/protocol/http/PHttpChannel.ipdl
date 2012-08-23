@@ -36,17 +36,17 @@ parent:
             URI                 original,
             URI                 doc,
             URI                 referrer,
-            PRUint32            loadFlags,
+            uint32_t            loadFlags,
             RequestHeaderTuples requestHeaders,
             nsHttpAtom          requestMethod,
             InputStream         uploadStream,
             bool                uploadStreamHasHeaders,
-            PRUint16            priority,
-            PRUint8             redirectionLimit,
+            uint16_t            priority,
+            uint8_t             redirectionLimit,
             bool                allowPipelining,
             bool                forceAllowThirdPartyCookie,
             bool                resumeAt,
-            PRUint64            startPos,
+            uint64_t            startPos,
             nsCString           entityID,
             bool                chooseApplicationCache,
             nsCString           appCacheClientID,
@@ -55,16 +55,16 @@ parent:
 
   // Used to connect redirected-to channel on the parent with redirected-to
   // channel on the child.
-  ConnectChannel(PRUint32 channelId);
+  ConnectChannel(uint32_t channelId);
 
-  SetPriority(PRUint16 priority);
+  SetPriority(uint16_t priority);
 
   SetCacheTokenCachedCharset(nsCString charset);
 
-  UpdateAssociatedContentSecurity(PRInt32 high,
-                                  PRInt32 low,
-                                  PRInt32 broken,
-                                  PRInt32 no);
+  UpdateAssociatedContentSecurity(int32_t high,
+                                  int32_t low,
+                                  int32_t broken,
+                                  int32_t no);
   Suspend();
   Resume();
 
@@ -101,7 +101,7 @@ child:
                  nsHttpHeaderArray   requestHeaders,
                  bool                isFromCache,
                  bool                cacheEntryAvailable,
-                 PRUint32            cacheExpirationTime,
+                 uint32_t            cacheExpirationTime,
                  nsCString           cachedCharset,
                  nsCString           securityInfoSerialization,
                  PRNetAddr           selfAddr,
@@ -110,15 +110,15 @@ child:
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message
   OnTransportAndData(nsresult  status,
-                     PRUint64  progress,
-                     PRUint64  progressMax,
+                     uint64_t  progress,
+                     uint64_t  progressMax,
                      nsCString data,
-                     PRUint32  offset,
-                     PRUint32  count);
+                     uint32_t  offset,
+                     uint32_t  count);
 
   OnStopRequest(nsresult statusCode);
 
-  OnProgress(PRUint64 progress, PRUint64 progressMax);
+  OnProgress(uint64_t progress, uint64_t progressMax);
 
   OnStatus(nsresult status);
 
@@ -128,9 +128,9 @@ child:
 
   // Called to initiate content channel redirect, starts talking to sinks
   // on the content process and reports result via Redirect2Verify above
-  Redirect1Begin(PRUint32           newChannelId,
+  Redirect1Begin(uint32_t           newChannelId,
                  URI                newUri,
-                 PRUint32           redirectFlags,
+                 uint32_t           redirectFlags,
                  nsHttpResponseHead responseHead);
 
   // Called if redirect successful so that child can complete setup.

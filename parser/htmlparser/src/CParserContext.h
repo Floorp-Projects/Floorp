@@ -66,7 +66,7 @@ public:
     bool                 mMultipart;
     bool                 mCopyUnused;
 
-    PRUint32             mNumConsumed;
+    uint32_t             mNumConsumed;
 };
 
 #endif

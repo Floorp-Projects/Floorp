@@ -42,6 +42,8 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 
+#include "Layers.h"
+
 using namespace mozilla;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
@@ -334,7 +336,7 @@ WebGLContext::SetContextOptions(nsIPropertyBag *aOptions)
 }
 
 NS_IMETHODIMP
-WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
+WebGLContext::SetDimensions(int32_t width, int32_t height)
 {
     /*** early success return cases ***/
 
@@ -457,13 +459,13 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     bool forceMSAA =
         Preferences::GetBool("webgl.msaa-force", false);
 
-    PRInt32 status;
+    int32_t status;
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     if (mOptions.antialias &&
         gfxInfo &&
         NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_MSAA, &status))) {
         if (status == nsIGfxInfo::FEATURE_NO_INFO || forceMSAA) {
-            PRUint32 msaaLevel = Preferences::GetUint("webgl.msaa-level", 2);
+            uint32_t msaaLevel = Preferences::GetUint("webgl.msaa-level", 2);
             format.samples = msaaLevel*msaaLevel;
         }
     }
@@ -598,7 +600,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 }
 
 NS_IMETHODIMP
-WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f, PRUint32 aFlags)
+WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f, uint32_t aFlags)
 {
     if (!gl)
         return NS_OK;
@@ -608,7 +610,7 @@ WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f, PRUint32 aFl
     if (surf->CairoStatus() != 0)
         return NS_ERROR_FAILURE;
 
-    gl->ReadPixelsIntoImageSurface(0, 0, mWidth, mHeight, surf);
+    gl->ReadPixelsIntoImageSurface(surf);
 
     bool srcPremultAlpha = mOptions.premultipliedAlpha;
     bool dstPremultAlpha = aFlags & RenderFlagPremultAlpha;
@@ -738,7 +740,7 @@ WebGLContext::GetInputStream(const char* aMimeType,
 
     nsRefPtr<gfxContext> tmpcx = new gfxContext(surf);
     // Use Render() to make sure that appropriate y-flip gets applied
-    PRUint32 flags = mOptions.premultipliedAlpha ? RenderFlagPremultAlpha : 0;
+    uint32_t flags = mOptions.premultipliedAlpha ? RenderFlagPremultAlpha : 0;
     nsresult rv = Render(tmpcx, gfxPattern::FILTER_NEAREST, flags);
     if (NS_FAILED(rv))
         return rv;
@@ -799,7 +801,7 @@ void WebGLContext::UpdateLastUseIndex()
     mLastUseIndex = sIndex.value();
 }
 
-static PRUint8 gWebGLLayerUserData;
+static uint8_t gWebGLLayerUserData;
 
 namespace mozilla {
 
@@ -886,7 +888,7 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     data.mGLBufferIsPremultiplied = mOptions.premultipliedAlpha ? true : false;
 
     canvasLayer->Initialize(data);
-    PRUint32 flags = gl->CreationFormat().alpha == 0 ? Layer::CONTENT_OPAQUE : 0;
+    uint32_t flags = gl->CreationFormat().alpha == 0 ? Layer::CONTENT_OPAQUE : 0;
     canvasLayer->SetContentFlags(flags);
     canvasLayer->Updated();
 
@@ -953,7 +955,7 @@ WebGLContext::GetContextAttributes(ErrorResult &rv)
 
 /* [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname); */
 NS_IMETHODIMP
-WebGLContext::MozGetUnderlyingParamString(PRUint32 pname, nsAString& retval)
+WebGLContext::MozGetUnderlyingParamString(uint32_t pname, nsAString& retval)
 {
     if (!IsContextStable())
         return NS_OK;
@@ -1126,7 +1128,7 @@ WebGLContext::GetExtension(const nsAString& aName)
 }
 
 void
-WebGLContext::ForceClearFramebufferWithDefaultValues(PRUint32 mask, const nsIntRect& viewportRect)
+WebGLContext::ForceClearFramebufferWithDefaultValues(uint32_t mask, const nsIntRect& viewportRect)
 {
     MakeContextCurrent();
 
@@ -1647,7 +1649,7 @@ WebGLContext::GetSupportedExtensions(nsIVariant **retval)
         // DOMString type, so we have to spoon-feed it something it
         // knows how to handle.
         nsTArray<const PRUnichar*> exts(extList.Length());
-        for (PRUint32 i = 0; i < extList.Length(); ++i) {
+        for (uint32_t i = 0; i < extList.Length(); ++i) {
             exts.AppendElement(extList[i].get());
         }
         rv = wrval->SetAsArray(nsIDataType::VTYPE_WCHAR_STR, nullptr,

@@ -108,6 +108,8 @@ DOMWifiManager.prototype = {
     this._onConnectionInfoUpdate = null;
     this._onEnabled = null;
     this._onDisabled = null;
+
+    this._mm.sendAsyncMessage("WifiManager:managerFinished");
   },
 
   _sendMessageForRequest: function(name, data, request) {
@@ -167,7 +169,7 @@ DOMWifiManager.prototype = {
 
       case "WifiManager:wps:Return:OK":
         request = this.takeRequest(msg.rid);
-        Services.DOMRequest.fireSuccess(request, true);
+        Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
         break;
 
       case "WifiManager:wps:Return:NO":

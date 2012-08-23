@@ -59,7 +59,7 @@ struct nsGlobalNameStruct
   bool mDisabled;
 
   union {
-    PRInt32 mDOMClassInfoID; // eTypeClassConstructor
+    int32_t mDOMClassInfoID; // eTypeClassConstructor
     nsIID mIID; // eTypeInterface, eTypeClassProto
     nsExternalDOMClassInfoData* mData; // eTypeExternalClassInfo
     ConstructorAlias* mAlias; // eTypeExternalConstructorAlias
@@ -112,7 +112,7 @@ public:
                                const nsGlobalNameStruct **aNameStruct);
 
   nsresult RegisterClassName(const char *aClassName,
-                             PRInt32 aDOMClassInfoID,
+                             int32_t aDOMClassInfoID,
                              bool aPrivileged,
                              bool aDisabled,
                              const PRUnichar **aResult);
@@ -132,7 +132,7 @@ public:
                              nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
                              const nsIID *aProtoChainInterface,
                              const nsIID **aInterfaces,
-                             PRUint32 aScriptableFlags,
+                             uint32_t aScriptableFlags,
                              bool aHasClassInterface,
                              const nsCID *aConstructorCID);
 

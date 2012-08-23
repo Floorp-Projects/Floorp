@@ -17,7 +17,6 @@ MOCHITEST_BROWSER_FILES =	\
 		browser_bug349769.js \
 		browser_bug388121-1.js \
 		browser_bug388121-2.js \
-		browser_bug435325.js \
 		browser_bug441169.js \
 		browser_bug420605.js \
 		file_bug420605.html \

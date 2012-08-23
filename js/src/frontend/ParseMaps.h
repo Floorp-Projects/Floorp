@@ -324,7 +324,7 @@ class DefinitionList
 
 /*
  * AtomDecls is a map of atoms to (sequences of) Definitions. It is used by
- * TreeContext to store declarations. A declaration associates a name with a
+ * ParseContext to store declarations. A declaration associates a name with a
  * Definition.
  * 
  * Declarations with function scope (such as const, var, and function) are

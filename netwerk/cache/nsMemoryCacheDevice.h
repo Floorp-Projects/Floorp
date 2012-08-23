@@ -35,28 +35,28 @@ public:
 
     virtual nsresult OpenInputStreamForEntry(nsCacheEntry *     entry,
                                              nsCacheAccessMode  mode,
-                                             PRUint32           offset,
+                                             uint32_t           offset,
                                              nsIInputStream **  result);
 
     virtual nsresult OpenOutputStreamForEntry(nsCacheEntry *     entry,
                                               nsCacheAccessMode  mode,
-                                              PRUint32           offset,
+                                              uint32_t           offset,
                                               nsIOutputStream ** result);
 
     virtual nsresult GetFileForEntry( nsCacheEntry *    entry,
                                       nsIFile **        result );
 
-    virtual nsresult OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize );
+    virtual nsresult OnDataSizeChange( nsCacheEntry * entry, int32_t deltaSize );
 
     virtual nsresult Visit( nsICacheVisitor * visitor );
 
     virtual nsresult EvictEntries(const char * clientID);
     nsresult EvictPrivateEntries();
     
-    void             SetCapacity(PRInt32  capacity);
-    void             SetMaxEntrySize(PRInt32  maxSizeInKilobytes);
+    void             SetCapacity(int32_t  capacity);
+    void             SetMaxEntrySize(int32_t  maxSizeInKilobytes);
 
-    bool             EntryIsTooBig(PRInt64 entrySize);
+    bool             EntryIsTooBig(int64_t entrySize);
 
     size_t           TotalSize();
 
@@ -65,10 +65,10 @@ private:
     enum      { DELETE_ENTRY        = true,
                 DO_NOT_DELETE_ENTRY = false };
 
-    void      AdjustMemoryLimits( PRInt32  softLimit, PRInt32  hardLimit);
+    void      AdjustMemoryLimits( int32_t  softLimit, int32_t  hardLimit);
     void      EvictEntry( nsCacheEntry * entry , bool deleteEntry);
     void      EvictEntriesIfNecessary();
-    int       EvictionList(nsCacheEntry * entry, PRInt32  deltaSize);
+    int       EvictionList(nsCacheEntry * entry, int32_t  deltaSize);
 
     typedef bool (*EvictionMatcherFn)(nsCacheEntry* entry, void* args);
     nsresult DoEvictEntries(EvictionMatcherFn matchFn, void* args);
@@ -88,15 +88,15 @@ private:
 
     PRCList                mEvictionList[kQueueCount];
 
-    PRInt32                mHardLimit;
-    PRInt32                mSoftLimit;
+    int32_t                mHardLimit;
+    int32_t                mSoftLimit;
 
-    PRInt32                mTotalSize;
-    PRInt32                mInactiveSize;
+    int32_t                mTotalSize;
+    int32_t                mInactiveSize;
 
-    PRInt32                mEntryCount;
-    PRInt32                mMaxEntryCount;
-    PRInt32                mMaxEntrySize; // internal unit is bytes
+    int32_t                mEntryCount;
+    int32_t                mMaxEntryCount;
+    int32_t                mMaxEntrySize; // internal unit is bytes
 
     // XXX what other stats do we want to keep?
 };

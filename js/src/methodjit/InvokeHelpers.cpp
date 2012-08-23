@@ -867,7 +867,10 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         if (!obj)
             return js_InternalThrow(f);
         fp->thisValue() = ObjectValue(*obj);
+        /* FALLTHROUGH */
+      }
 
+      case REJOIN_THIS_CREATED: {
         Probes::enterScript(f.cx, f.script(), f.script()->function(), fp);
 
         if (script->debugMode) {
@@ -875,9 +878,13 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             switch (status) {
               case JSTRAP_CONTINUE:
                 break;
-              case JSTRAP_RETURN:
-                *f.returnAddressLocation() = f.cx->jaegerRuntime().forceReturnFromExternC();
-                return NULL;
+              case JSTRAP_RETURN: {
+                /* Advance to the JSOP_STOP at the end of the script. */
+                f.regs.pc = script->code + script->length - 1;
+                nextDepth = 0;
+                JS_ASSERT(*f.regs.pc == JSOP_STOP);
+                break;
+              }
               case JSTRAP_THROW:
               case JSTRAP_ERROR:
                 return js_InternalThrow(f);

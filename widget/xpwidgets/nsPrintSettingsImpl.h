@@ -42,8 +42,8 @@ protected:
   } nsHeaderFooterEnum;
 
 
-  nsresult GetMarginStrs(PRUnichar * *aTitle, nsHeaderFooterEnum aType, PRInt16 aJust);
-  nsresult SetMarginStrs(const PRUnichar * aTitle, nsHeaderFooterEnum aType, PRInt16 aJust);
+  nsresult GetMarginStrs(PRUnichar * *aTitle, nsHeaderFooterEnum aType, int16_t aJust);
+  nsresult SetMarginStrs(const PRUnichar * aTitle, nsHeaderFooterEnum aType, int16_t aJust);
 
   // Members
   nsWeakPtr     mSession; // Should never be touched by Clone or Assign
@@ -53,25 +53,25 @@ protected:
   nsIntMargin   mEdge;
   nsIntMargin   mUnwriteableMargin;
 
-  PRInt32       mPrintOptions;
+  int32_t       mPrintOptions;
 
   // scriptable data members
-  PRInt16       mPrintRange;
-  PRInt32       mStartPageNum; // only used for ePrintRange_SpecifiedRange
-  PRInt32       mEndPageNum;
+  int16_t       mPrintRange;
+  int32_t       mStartPageNum; // only used for ePrintRange_SpecifiedRange
+  int32_t       mEndPageNum;
   double        mScaling;
   bool          mPrintBGColors;  // print background colors
   bool          mPrintBGImages;  // print background images
 
-  PRInt16       mPrintFrameTypeUsage;
-  PRInt16       mPrintFrameType;
-  PRInt16       mHowToEnableFrameUI;
+  int16_t       mPrintFrameTypeUsage;
+  int16_t       mPrintFrameType;
+  int16_t       mHowToEnableFrameUI;
   bool          mIsCancelled;
   bool          mPrintSilent;
   bool          mPrintPreview;
   bool          mShrinkToFit;
   bool          mShowPrintProgress;
-  PRInt32       mPrintPageDelay;
+  int32_t       mPrintPageDelay;
 
   nsString      mTitle;
   nsString      mURL;
@@ -81,24 +81,24 @@ protected:
 
   nsString      mPaperName;
   nsString      mPlexName;
-  PRInt16       mPaperData;
-  PRInt16       mPaperSizeType;
+  int16_t       mPaperData;
+  int16_t       mPaperSizeType;
   double        mPaperWidth;
   double        mPaperHeight;
-  PRInt16       mPaperSizeUnit;
+  int16_t       mPaperSizeUnit;
 
   bool          mPrintReversed;
   bool          mPrintInColor; // a false means grayscale
-  PRInt32       mOrientation;  // see orientation consts
+  int32_t       mOrientation;  // see orientation consts
   nsString      mColorspace;
   nsString      mResolutionName;
   bool          mDownloadFonts;
   nsString      mPrintCommand;
-  PRInt32       mNumCopies;
+  int32_t       mNumCopies;
   nsXPIDLString mPrinter;
   bool          mPrintToFile;
   nsString      mToFileName;
-  PRInt16       mOutputFormat;
+  int16_t       mOutputFormat;
   bool          mIsInitedFromPrinter;
   bool          mIsInitedFromPrefs;
 

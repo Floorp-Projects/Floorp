@@ -7,22 +7,23 @@
 #include "base/basictypes.h"
 #include "BluetoothAdapter.h"
 #include "BluetoothDevice.h"
-#include "BluetoothDeviceEvent.h"
 #include "BluetoothPropertyEvent.h"
-#include "BluetoothPairingEvent.h"
 #include "BluetoothService.h"
 #include "BluetoothTypes.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUtils.h"
 #include "GeneratedEvents.h"
 
+#include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
+#include "nsIDOMBluetoothAuthorizeEvent.h"
+#include "nsIDOMBluetoothDeviceEvent.h"
+#include "nsIDOMBluetoothDeviceAddressEvent.h"
+#include "nsIDOMBluetoothPairingEvent.h"
+#include "nsIDOMDOMRequest.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
-#include "nsIDOMDOMRequest.h"
-#include "nsIDOMBluetoothDeviceAddressEvent.h"
-#include "nsContentUtils.h"
 
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Util.h"
@@ -297,9 +298,16 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
   InfallibleTArray<BluetoothNamedValue> arr;
 
   if (aData.name().EqualsLiteral("DeviceFound")) {
-    nsRefPtr<BluetoothDevice> d = BluetoothDevice::Create(GetOwner(), mPath, aData.value());
-    nsRefPtr<BluetoothDeviceEvent> e = BluetoothDeviceEvent::Create(d);
-    e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("devicefound"));
+    nsRefPtr<BluetoothDevice> device = BluetoothDevice::Create(GetOwner(), mPath, aData.value());
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMBluetoothDeviceEvent(getter_AddRefs(event), nullptr, nullptr);
+
+    nsCOMPtr<nsIDOMBluetoothDeviceEvent> e = do_QueryInterface(event);
+    e->InitBluetoothDeviceEvent(NS_LITERAL_STRING("devicefound"),
+                                false, false, device);
+    e->SetTrusted(true);
+    bool dummy;
+    DispatchEvent(event, &dummy);
   } else if (aData.name().EqualsLiteral("DeviceDisappeared")) {
 		const nsAString& deviceAddress = aData.value().get_nsString();
 
@@ -315,66 +323,100 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
   } else if (aData.name().EqualsLiteral("PropertyChanged")) {
     // Get BluetoothNamedValue, make sure array length is 1
     arr = aData.value().get_ArrayOfBluetoothNamedValue();
-    if(arr.Length() != 1) {
-      // This really should not happen
-      NS_ERROR("Got more than one property in a change message!");
-      return;
-    }
+
+    NS_ASSERTION(arr.Length() == 1, "Got more than one property in a change message!");
+    NS_ASSERTION(arr[0].value().type() == BluetoothValue::TArrayOfBluetoothNamedValue,
+                 "PropertyChanged: Invalid value type");
+
     BluetoothNamedValue v = arr[0];
     SetPropertyByValue(v);
     nsRefPtr<BluetoothPropertyEvent> e = BluetoothPropertyEvent::Create(v.name());
     e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("propertychanged"));
   } else if (aData.name().EqualsLiteral("RequestConfirmation")) {
     arr = aData.value().get_ArrayOfBluetoothNamedValue();
-    if(arr.Length() != 2) {
-      NS_ERROR("RequestConfirmation: Length of parameters is wrong");
-      return;
-    }
 
-    nsString deviceAddress = arr[0].value().get_nsString();
-    uint32_t passkey = arr[1].value().get_uint32_t();
+    NS_ASSERTION(arr.Length() == 2, "RequestConfirmation: Wrong length of parameters");
+    NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString,
+                 "RequestConfirmation: Invalid value type");
+    NS_ASSERTION(arr[1].value().type() == BluetoothValue::Tuint32_t,
+                 "RequestConfirmation: Invalid value type");
 
-    nsRefPtr<BluetoothPairingEvent> e = BluetoothPairingEvent::Create(deviceAddress, passkey);
-    e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("requestconfirmation"));
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMBluetoothPairingEvent(getter_AddRefs(event), nullptr, nullptr);
+
+    nsCOMPtr<nsIDOMBluetoothPairingEvent> e = do_QueryInterface(event);
+    e->InitBluetoothPairingEvent(NS_LITERAL_STRING("requestconfirmation"),
+                                 false,
+                                 false,
+                                 arr[0].value().get_nsString(),
+                                 arr[1].value().get_uint32_t());
+    e->SetTrusted(true);
+    bool dummy;
+    DispatchEvent(event, &dummy);
   } else if (aData.name().EqualsLiteral("RequestPinCode")) {
     arr = aData.value().get_ArrayOfBluetoothNamedValue();
-    if(arr.Length() != 1) {
-      NS_ERROR("RequestPinCode: Length of parameters is wrong");
-      return;
-    }
 
-    nsString deviceAddress = arr[0].value().get_nsString();
+    NS_ASSERTION(arr.Length() == 1, "RequestPinCode: Wrong length of parameters");
+    NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString,
+                 "RequestPinCode: Invalid value type");
 
-    nsRefPtr<BluetoothPairingEvent> e = BluetoothPairingEvent::Create(deviceAddress, 0);
-    e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("requestpincode"));
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMBluetoothDeviceAddressEvent(getter_AddRefs(event), nullptr, nullptr);
+
+    nsCOMPtr<nsIDOMBluetoothDeviceAddressEvent> e = do_QueryInterface(event);
+    e->InitBluetoothDeviceAddressEvent(NS_LITERAL_STRING("requestpincode"),
+                                       false, false, arr[0].value().get_nsString());
+    e->SetTrusted(true);
+    bool dummy;
+    DispatchEvent(event, &dummy);
   } else if (aData.name().EqualsLiteral("RequestPasskey")) {
     arr = aData.value().get_ArrayOfBluetoothNamedValue();
-    if(arr.Length() != 1) {
-      NS_ERROR("RequestPasskey: Length of parameters is wrong");
-      return;
-    }
 
-    nsString deviceAddress = arr[0].value().get_nsString();
+    NS_ASSERTION(arr.Length() == 1, "RequestPasskey: Wrong length of parameters");
+    NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString,
+                 "RequestPasskey: Invalid value type");
 
-    nsRefPtr<BluetoothPairingEvent> e = BluetoothPairingEvent::Create(deviceAddress, 0);
-    e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("requestpasskey"));
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMBluetoothDeviceAddressEvent(getter_AddRefs(event), nullptr, nullptr);
+
+    nsCOMPtr<nsIDOMBluetoothDeviceAddressEvent> e = do_QueryInterface(event);
+    e->InitBluetoothDeviceAddressEvent(NS_LITERAL_STRING("requestpasskey"),
+                                       false, false, arr[0].value().get_nsString());
+    e->SetTrusted(true);
+    bool dummy;
+    DispatchEvent(event, &dummy);
   } else if (aData.name().EqualsLiteral("Authorize")) {
     arr = aData.value().get_ArrayOfBluetoothNamedValue();
-    if(arr.Length() != 2) {
-      NS_ERROR("Authorize: Length of parameters is wrong");
-      return;
-    }
 
-    nsString deviceAddress = arr[0].value().get_nsString();
-    nsString serviceUuid = arr[1].value().get_nsString();
+    NS_ASSERTION(arr.Length() == 2, "Authorize: Wrong length of parameters");
+    NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString,
+                 "Authorize: Invalid value type");
+    NS_ASSERTION(arr[1].value().type() == BluetoothValue::TnsString,
+                 "Authorize: Invalid value type");
 
-    nsRefPtr<BluetoothPairingEvent> e = BluetoothPairingEvent::Create(deviceAddress, serviceUuid);
-    e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("authorize"));
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMBluetoothAuthorizeEvent(getter_AddRefs(event), nullptr, nullptr);
+
+    nsCOMPtr<nsIDOMBluetoothAuthorizeEvent> e = do_QueryInterface(event);
+    e->InitBluetoothAuthorizeEvent(NS_LITERAL_STRING("authorize"),
+                                   false,
+                                   false,
+                                   arr[0].value().get_nsString(),
+                                   arr[1].value().get_nsString());
+    e->SetTrusted(true);
+    bool dummy;
+    DispatchEvent(event, &dummy);
   } else if (aData.name().EqualsLiteral("Cancel")) {
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMBluetoothDeviceAddressEvent(getter_AddRefs(event), nullptr, nullptr);
+
+    nsCOMPtr<nsIDOMBluetoothDeviceAddressEvent> e = do_QueryInterface(event);
     // Just send a null nsString, won't be used
-    nsString deviceObjectPath = EmptyString();
-    nsRefPtr<BluetoothPairingEvent> e = BluetoothPairingEvent::Create(deviceObjectPath, 0);
-    e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("cancel"));
+    e->InitBluetoothDeviceAddressEvent(NS_LITERAL_STRING("cancel"),
+                                       false, false, EmptyString());
+    e->SetTrusted(true);
+    bool dummy;
+    DispatchEvent(event, &dummy);
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
@@ -454,7 +496,7 @@ BluetoothAdapter::GetAddress(nsAString& aAddress)
 }
 
 NS_IMETHODIMP
-BluetoothAdapter::GetAdapterClass(PRUint32* aClass)
+BluetoothAdapter::GetAdapterClass(uint32_t* aClass)
 {
   *aClass = mClass;
   return NS_OK;
@@ -482,7 +524,7 @@ BluetoothAdapter::GetDiscoverable(bool* aDiscoverable)
 }
 
 NS_IMETHODIMP
-BluetoothAdapter::GetDiscoverableTimeout(PRUint32* aDiscoverableTimeout)
+BluetoothAdapter::GetDiscoverableTimeout(uint32_t* aDiscoverableTimeout)
 {
   *aDiscoverableTimeout = mDiscoverableTimeout;
   return NS_OK;
@@ -540,7 +582,7 @@ BluetoothAdapter::SetDiscoverable(const bool aDiscoverable,
 }
  
 NS_IMETHODIMP
-BluetoothAdapter::SetDiscoverableTimeout(const PRUint32 aDiscoverableTimeout,
+BluetoothAdapter::SetDiscoverableTimeout(const uint32_t aDiscoverableTimeout,
                                          nsIDOMDOMRequest** aRequest)
 {
   if (aDiscoverableTimeout == mDiscoverableTimeout) {
@@ -656,7 +698,7 @@ BluetoothAdapter::SetPinCode(const nsAString& aDeviceAddress, const nsAString& a
 }
 
 nsresult
-BluetoothAdapter::SetPasskey(const nsAString& aDeviceAddress, PRUint32 aPasskey)
+BluetoothAdapter::SetPasskey(const nsAString& aDeviceAddress, uint32_t aPasskey)
 {
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {

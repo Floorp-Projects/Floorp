@@ -27,7 +27,7 @@ SVGTransformList::GetConsolidationMatrix() const
   if (mItems.Length() == 1)
     return result;
 
-  for (PRUint32 i = 1; i < mItems.Length(); ++i) {
+  for (uint32_t i = 1; i < mItems.Length(); ++i) {
     result.PreMultiply(mItems[i].Matrix());
   }
 
@@ -55,8 +55,8 @@ void
 SVGTransformList::GetValueAsString(nsAString& aValue) const
 {
   aValue.Truncate();
-  PRUint32 last = mItems.Length() - 1;
-  for (PRUint32 i = 0; i < mItems.Length(); ++i) {
+  uint32_t last = mItems.Length() - 1;
+  for (uint32_t i = 0; i < mItems.Length(); ++i) {
     nsAutoString length;
     mItems[i].GetValueAsString(length);
     // We ignore OOM, since it's not useful for us to return an error.

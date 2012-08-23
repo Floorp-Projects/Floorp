@@ -24,7 +24,7 @@ public:
     }
 
 
-    nsresult Init(PRUint32 segmentSize, PRUint32 maxSize,
+    nsresult Init(uint32_t segmentSize, uint32_t maxSize,
                   nsIMemory* allocator = nullptr);
 
     char* AppendNewSegment();   // pushes at end
@@ -41,26 +41,26 @@ public:
 
     void Empty();               // frees all segments
 
-    inline PRUint32 GetSegmentCount() {
+    inline uint32_t GetSegmentCount() {
         if (mFirstSegmentIndex <= mLastSegmentIndex)
             return mLastSegmentIndex - mFirstSegmentIndex;
         else 
             return mSegmentArrayCount + mLastSegmentIndex - mFirstSegmentIndex;
     }
 
-    inline PRUint32 GetSegmentSize() { return mSegmentSize; }
-    inline PRUint32 GetMaxSize() { return mMaxSize; }
-    inline PRUint32 GetSize() { return GetSegmentCount() * mSegmentSize; }
+    inline uint32_t GetSegmentSize() { return mSegmentSize; }
+    inline uint32_t GetMaxSize() { return mMaxSize; }
+    inline uint32_t GetSize() { return GetSegmentCount() * mSegmentSize; }
 
-    inline char* GetSegment(PRUint32 indx) {
+    inline char* GetSegment(uint32_t indx) {
         NS_ASSERTION(indx < GetSegmentCount(), "index out of bounds");
-        PRInt32 i = ModSegArraySize(mFirstSegmentIndex + (PRInt32)indx);
+        int32_t i = ModSegArraySize(mFirstSegmentIndex + (int32_t)indx);
         return mSegmentArray[i];
     }
 
 protected:
-    inline PRInt32 ModSegArraySize(PRInt32 n) {
-        PRUint32 result = n & (mSegmentArrayCount - 1);
+    inline int32_t ModSegArraySize(int32_t n) {
+        uint32_t result = n & (mSegmentArrayCount - 1);
         NS_ASSERTION(result == n % mSegmentArrayCount,
                      "non-power-of-2 mSegmentArrayCount");
         return result;
@@ -71,13 +71,13 @@ protected:
     }
 
 protected:
-    PRUint32            mSegmentSize;
-    PRUint32            mMaxSize;
+    uint32_t            mSegmentSize;
+    uint32_t            mMaxSize;
     nsIMemory*       mSegAllocator;
     char**              mSegmentArray;
-    PRUint32            mSegmentArrayCount;
-    PRInt32             mFirstSegmentIndex;
-    PRInt32             mLastSegmentIndex;
+    uint32_t            mSegmentArrayCount;
+    int32_t             mFirstSegmentIndex;
+    int32_t             mLastSegmentIndex;
 };
 
 // NS_SEGMENTARRAY_INITIAL_SIZE: This number needs to start out as a

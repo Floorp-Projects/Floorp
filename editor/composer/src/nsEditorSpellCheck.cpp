@@ -278,7 +278,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-    PRInt32 count = 0;
+    int32_t count = 0;
 
     rv = selection->GetRangeCount(&count);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -351,7 +351,7 @@ NS_IMETHODIMP
 nsEditorSpellCheck::GetSuggestedWord(PRUnichar **aSuggestedWord)
 {
   nsAutoString word;
-  if ( mSuggestedWordIndex < PRInt32(mSuggestedWordList.Length()))
+  if ( mSuggestedWordIndex < int32_t(mSuggestedWordList.Length()))
   {
     *aSuggestedWord = ToNewUnicode(mSuggestedWordList[mSuggestedWordIndex]);
     mSuggestedWordIndex++;
@@ -416,7 +416,7 @@ nsEditorSpellCheck::GetPersonalDictionary()
 NS_IMETHODIMP    
 nsEditorSpellCheck::GetPersonalDictionaryWord(PRUnichar **aDictionaryWord)
 {
-  if ( mDictionaryIndex < PRInt32( mDictionaryList.Length()))
+  if ( mDictionaryIndex < int32_t( mDictionaryList.Length()))
   {
     *aDictionaryWord = ToNewUnicode(mDictionaryList[mDictionaryIndex]);
     mDictionaryIndex++;
@@ -445,7 +445,7 @@ nsEditorSpellCheck::RemoveWordFromDictionary(const PRUnichar *aWord)
 }
 
 NS_IMETHODIMP    
-nsEditorSpellCheck::GetDictionaryList(PRUnichar ***aDictionaryList, PRUint32 *aCount)
+nsEditorSpellCheck::GetDictionaryList(PRUnichar ***aDictionaryList, uint32_t *aCount)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
@@ -485,7 +485,7 @@ nsEditorSpellCheck::GetDictionaryList(PRUnichar ***aDictionaryList, PRUint32 *aC
   *aDictionaryList = tmpPtr;
   *aCount          = dictList.Length();
 
-  PRUint32 i;
+  uint32_t i;
 
   for (i = 0; i < *aCount; i++)
   {
@@ -514,7 +514,7 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
 
     nsDefaultStringComparator comparator;
     nsAutoString langCode;
-    PRInt32 dashIdx = aDictionary.FindChar('-');
+    int32_t dashIdx = aDictionary.FindChar('-');
     if (dashIdx != -1) {
       langCode.Assign(Substring(aDictionary, 0, dashIdx));
     } else {
@@ -672,7 +672,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
       // matching at least language part of dictName: 
 
       nsAutoString langCode;
-      PRInt32 dashIdx = dictName.FindChar('-');
+      int32_t dashIdx = dictName.FindChar('-');
       if (dashIdx != -1) {
         langCode.Assign(Substring(dictName, 0, dashIdx));
       } else {
@@ -702,7 +702,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
         nsTArray<nsString> dictList;
         rv = mSpellChecker->GetDictionaryList(&dictList);
         NS_ENSURE_SUCCESS(rv, rv);
-        PRInt32 i, count = dictList.Length();
+        int32_t i, count = dictList.Length();
         for (i = 0; i < count; i++) {
           nsAutoString dictStr(dictList.ElementAt(i));
 
@@ -734,7 +734,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
       if (env_lang != nullptr) {
         nsString lang = NS_ConvertUTF8toUTF16(env_lang);
         // Strip trailing charset if there is any
-        PRInt32 dot_pos = lang.FindChar('.');
+        int32_t dot_pos = lang.FindChar('.');
         if (dot_pos != -1) {
           lang = Substring(lang, 0, dot_pos - 1);
         }

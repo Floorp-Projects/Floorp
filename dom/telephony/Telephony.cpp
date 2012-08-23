@@ -56,14 +56,14 @@ nsTArrayToJSArray(JSContext* aCx, JSObject* aGlobal,
   } else {
     uint32_t valLength = aSourceArray.Length();
     mozilla::ScopedDeleteArray<jsval> valArray(new jsval[valLength]);
-    JS::AutoArrayRooter tvr(aCx, valLength, valArray);
-    for (PRUint32 index = 0; index < valLength; index++) {
+    JS::AutoArrayRooter tvr(aCx, 0, valArray);
+    for (uint32_t index = 0; index < valLength; index++) {
       nsISupports* obj = aSourceArray[index]->ToISupports();
       nsresult rv =
         nsContentUtils::WrapNative(aCx, aGlobal, obj, &valArray[index]);
       NS_ENSURE_SUCCESS(rv, rv);
+      tvr.changeLength(index + 1);
     }
-
     arrayObj = JS_NewArrayObject(aCx, valLength, valArray);
   }
 
@@ -187,7 +187,7 @@ Telephony::DialInternal(bool isEmergency,
 {
   NS_ENSURE_ARG(!aNumber.IsEmpty());
 
-  for (PRUint32 index = 0; index < mCalls.Length(); index++) {
+  for (uint32_t index = 0; index < mCalls.Length(); index++) {
     const nsRefPtr<TelephonyCall>& tempCall = mCalls[index];
     if (tempCall->IsOutgoing() &&
         tempCall->CallState() < nsIRadioInterfaceLayer::CALL_STATE_CONNECTED) {
@@ -209,7 +209,7 @@ Telephony::DialInternal(bool isEmergency,
   nsRefPtr<TelephonyCall> call = CreateNewDialingCall(aNumber);
 
   // Notify other telephony objects that we just dialed.
-  for (PRUint32 index = 0; index < gTelephonyList->Length(); index++) {
+  for (uint32_t index = 0; index < gTelephonyList->Length(); index++) {
     Telephony*& telephony = gTelephonyList->ElementAt(index);
     if (telephony != this) {
       nsRefPtr<Telephony> kungFuDeathGrip = telephony;
@@ -228,7 +228,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Telephony,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(incoming)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(callschanged)
-  for (PRUint32 index = 0; index < tmp->mCalls.Length(); index++) {
+  for (uint32_t index = 0; index < tmp->mCalls.Length(); index++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCalls[i]");
     cb.NoteXPCOMChild(tmp->mCalls[index]->ToISupports());
   }
@@ -393,7 +393,7 @@ NS_IMPL_EVENT_HANDLER(Telephony, incoming)
 NS_IMPL_EVENT_HANDLER(Telephony, callschanged)
 
 NS_IMETHODIMP
-Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
+Telephony::CallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
                             const nsAString& aNumber, bool aIsActive)
 {
   NS_ASSERTION(aCallIndex != kOutgoingPlaceholderCallIndex,
@@ -402,7 +402,7 @@ Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
   nsRefPtr<TelephonyCall> modifiedCall;
   nsRefPtr<TelephonyCall> outgoingCall;
 
-  for (PRUint32 index = 0; index < mCalls.Length(); index++) {
+  for (uint32_t index = 0; index < mCalls.Length(); index++) {
     nsRefPtr<TelephonyCall>& tempCall = mCalls[index];
     if (tempCall->CallIndex() == kOutgoingPlaceholderCallIndex) {
       NS_ASSERTION(!outgoingCall, "More than one outgoing call not supported!");
@@ -473,13 +473,13 @@ Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
 }
 
 NS_IMETHODIMP
-Telephony::EnumerateCallState(PRUint32 aCallIndex, PRUint16 aCallState,
+Telephony::EnumerateCallState(uint32_t aCallIndex, uint16_t aCallState,
                               const nsAString& aNumber, bool aIsActive,
                               bool* aContinue)
 {
 #ifdef DEBUG
   // Make sure we don't somehow add duplicates.
-  for (PRUint32 index = 0; index < mCalls.Length(); index++) {
+  for (uint32_t index = 0; index < mCalls.Length(); index++) {
     NS_ASSERTION(mCalls[index]->CallIndex() != aCallIndex,
                  "Something is really wrong here!");
   }
@@ -500,7 +500,7 @@ Telephony::EnumerateCallState(PRUint32 aCallIndex, PRUint16 aCallState,
 }
 
 NS_IMETHODIMP
-Telephony::NotifyError(PRInt32 aCallIndex,
+Telephony::NotifyError(int32_t aCallIndex,
                        const nsAString& aError)
 {
   nsRefPtr<TelephonyCall> callToNotify;
@@ -510,7 +510,7 @@ Telephony::NotifyError(PRInt32 aCallIndex,
       callToNotify = mCalls[mCalls.Length() - 1];
     } else {
       // The connection has been established. Get the failed call.
-      for (PRUint32 index = 0; index < mCalls.Length(); index++) {
+      for (uint32_t index = 0; index < mCalls.Length(); index++) {
         nsRefPtr<TelephonyCall>& call = mCalls[index];
         if (call->CallIndex() == aCallIndex) {
           callToNotify = call;
@@ -556,7 +556,7 @@ NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony)
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(permMgr, NS_ERROR_UNEXPECTED);
 
-  PRUint32 permission;
+  uint32_t permission;
   nsresult rv =
     permMgr->TestPermissionFromPrincipal(principal, "telephony", &permission);
   NS_ENSURE_SUCCESS(rv, rv);

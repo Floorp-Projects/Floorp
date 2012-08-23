@@ -59,14 +59,14 @@ public:
 
     // nsIStreamListener method
     NS_IMETHOD OnDataAvailable(nsIRequest* request, nsISupports *ctxt, nsIInputStream *inStr, 
-                               PRUint32 sourceOffset, PRUint32 count)
+                               uint32_t sourceOffset, uint32_t count)
     {
         nsresult rv;
-        PRUint32 read;
-        PRUint64 len64;
+        uint32_t read;
+        uint64_t len64;
         rv = inStr->Available(&len64);
         if (NS_FAILED(rv)) return rv;
-        PRUint32 len = (PRUint32)NS_MIN(len64, (PRUint64)(PR_UINT32_MAX - 1));
+        uint32_t len = (uint32_t)NS_MIN(len64, (uint64_t)(PR_UINT32_MAX - 1));
 
         char *buffer = (char*)nsMemory::Alloc(len + 1);
         if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
@@ -97,10 +97,10 @@ NS_IMPL_ISUPPORTS2(EndListener,
 // EndListener END
 ////////////////////////////////////////////////////////////////////////
 
-static PRUint32 
-saturated(PRUint64 aValue)
+static uint32_t 
+saturated(uint64_t aValue)
 {
-    return (PRUint32)NS_MIN(aValue, (PRUint64)PR_UINT32_MAX);
+    return (uint32_t)NS_MIN(aValue, (uint64_t)PR_UINT32_MAX);
 }
  
 nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* request) {
@@ -113,12 +113,12 @@ nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* 
     rv = dataStream->SetData(aData, strlen(aData));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint64 avail = 0;
+    uint64_t avail = 0;
     dataStream->Available(&avail);
 
-    PRUint64 offset = 0;
+    uint64_t offset = 0;
     while (avail > 0) {
-        PRUint32 count = saturated(avail);
+        uint32_t count = saturated(avail);
         rv = aListener->OnDataAvailable(request, nullptr, dataStream,
                                         saturated(offset), count);
         if (NS_FAILED(rv)) return rv;

@@ -7,8 +7,11 @@
 #include <stagefright/MediaExtractor.h>
 #include <stagefright/MetaData.h>
 #include <stagefright/OMXCodec.h>
+#ifdef MOZ_WIDGET_GONK
 #include <OMX.h>
-
+#else
+#include <stagefright/OMXClient.h>
+#endif
 #include "mozilla/Types.h"
 #include "MPAPI.h"
 
@@ -101,6 +104,9 @@ using namespace android;
 class OmxDecoder {
   PluginHost *mPluginHost;
   Decoder *mDecoder;
+#ifndef MOZ_WIDGET_GONK
+  OMXClient mClient;
+#endif
   sp<MediaSource> mVideoTrack;
   sp<MediaSource> mVideoSource;
   sp<MediaSource> mAudioTrack;
@@ -129,6 +135,7 @@ class OmxDecoder {
   void CbYCrYFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   void SemiPlanarYUV420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   void SemiPlanarYVU420Frame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
+  void SemiPlanarYVU420Packed32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   bool ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame);
   bool ToAudioFrame(AudioFrame *aFrame, int64_t aTimeUs, void *aData, size_t aDataOffset, size_t aSize,
                     int32_t aAudioChannels, int32_t aAudioSampleRate);
@@ -196,6 +203,9 @@ OmxDecoder::~OmxDecoder()
   if (mAudioSource.get()) {
     mAudioSource->stop();
   }
+#ifndef MOZ_WIDGET_GONK
+  mClient.disconnect();
+#endif
 }
 
 class AutoStopMediaSource {
@@ -209,6 +219,7 @@ public:
   }
 };
 
+#ifdef MOZ_WIDGET_GONK
 static sp<IOMX> sOMX = NULL;
 static sp<IOMX> GetOMX() {
   if(sOMX.get() == NULL) {
@@ -216,6 +227,7 @@ static sp<IOMX> GetOMX() {
   }
   return sOMX;
 }
+#endif
 
 bool OmxDecoder::Init() {
   //register sniffers, if they are not registered in this process.
@@ -265,15 +277,30 @@ bool OmxDecoder::Init() {
 
   int64_t totalDurationUs = 0;
 
+#ifdef MOZ_WIDGET_GONK
+  sp<IOMX> omx = GetOMX();
+#else
+  // OMXClient::connect() always returns OK and abort's fatally if
+  // it can't connect. We may need to implement the connect functionality
+  // ourselves if this proves to be an issue.
+  if (mClient.connect() != OK) {
+    LOG("OMXClient failed to connect");
+  }
+  sp<IOMX> omx = mClient.interface();
+#endif
+  // Flag value of zero means return a hardware or software decoder
+  // depending on what the device supports.
+  uint32_t flags = 0;
+
   sp<MediaSource> videoTrack;
   sp<MediaSource> videoSource;
   if (videoTrackIndex != -1 && (videoTrack = extractor->getTrack(videoTrackIndex)) != NULL) {
-    videoSource = OMXCodec::Create(GetOMX(),
+    videoSource = OMXCodec::Create(omx,
                                    videoTrack->getFormat(),
                                    false, // decoder
                                    videoTrack,
                                    NULL,
-                                   OMXCodec::kSoftwareCodecsOnly);
+                                   flags);
     if (videoSource == NULL) {
       return false;
     }
@@ -296,7 +323,7 @@ bool OmxDecoder::Init() {
     if (!strcasecmp(audioMime, "audio/raw")) {
       audioSource = audioTrack;
     } else {
-      audioSource = OMXCodec::Create(GetOMX(),
+      audioSource = OMXCodec::Create(omx,
                                      audioTrack->getFormat(),
                                      false, // decoder
                                      audioTrack);
@@ -439,8 +466,21 @@ void OmxDecoder::SemiPlanarYVU420Frame(VideoFrame *aFrame, int64_t aTimeUs, void
   aFrame->Cr.mOffset = 0;
 }
 
+void OmxDecoder::SemiPlanarYVU420Packed32m4ka(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+  size_t roundedSliceHeight = (mVideoSliceHeight + 31) & ~31;
+  size_t roundedStride = (mVideoStride + 31) & ~31;
+  void *y = aData;
+  void *uv = static_cast<uint8_t *>(y) + (roundedStride * roundedSliceHeight);
+  aFrame->Set(aTimeUs, aKeyFrame,
+              aData, aSize, mVideoStride, mVideoSliceHeight, mVideoRotation,
+              y, mVideoStride, mVideoWidth, mVideoHeight, 0, 0,
+              uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 1, 1,
+              uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 0, 1);
+}
+
 bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
   const int OMX_QCOM_COLOR_FormatYVU420SemiPlanar = 0x7FA30C00;
+  const int OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka = 0x7FA30C01;
 
   switch (mVideoColorFormat) {
   case OMX_COLOR_FormatYUV420Planar:
@@ -455,7 +495,11 @@ bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, 
   case OMX_QCOM_COLOR_FormatYVU420SemiPlanar:
     SemiPlanarYVU420Frame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
+  case OMX_QCOM_COLOR_FormatYVU420PackedSemiPlanar32m4ka:
+    SemiPlanarYVU420Packed32m4ka(aFrame, aTimeUs, aData, aSize, aKeyFrame);
+    break;
   default:
+    LOG("Unknown video color format: %x", mVideoColorFormat);
     return false;
   }
   return true;
@@ -502,19 +546,8 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
       unreadable = 0;
     }
 
-    LOG("data: %p size: %u offset: %u length: %u unreadable: %d",
-        mVideoBuffer->data(), 
-        mVideoBuffer->size(),
-        mVideoBuffer->range_offset(),
-        mVideoBuffer->range_length(),
-        unreadable);
-
     char *data = reinterpret_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
     size_t length = mVideoBuffer->range_length();
-
-    if (unreadable) {
-      LOG("video frame is unreadable");
-    }
 
     if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame)) {
       return false;
@@ -537,7 +570,6 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
 bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
 {
   status_t err;
-
   if (mAudioMetadataRead && aSeekTimeUs == -1) {
     // Use the data read into the buffer during metadata time
     err = OK;
@@ -574,10 +606,8 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
     else
       return ReadAudio(aFrame, aSeekTimeUs);
   }
-  else if (err == ERROR_END_OF_STREAM)
-    return false;
-  else
-    return false; 
+
+  return err == OK;
 }
 
 static OmxDecoder *cast(Decoder *decoder) {

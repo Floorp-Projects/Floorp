@@ -12,20 +12,20 @@
 extern "C" {
 static nsresult ATTRIBUTE_USED
 __attribute__ ((regparm (3)))
-PrepareAndDispatch(uint32 methodIndex, nsXPTCStubBase* self, PRUint32* args)
+PrepareAndDispatch(uint32 methodIndex, nsXPTCStubBase* self, uint32_t* args)
 {
 #define PARAM_BUFFER_COUNT     16
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
     const nsXPTMethodInfo* info;
-    PRUint8 paramCount;
-    PRUint8 i;
+    uint8_t paramCount;
+    uint8_t i;
     nsresult result = NS_ERROR_FAILURE;
 
     NS_ASSERTION(self,"no self");
 
-    self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+    self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
     paramCount = info->GetParamCount();
 
     // setup variant array pointer
@@ -35,7 +35,7 @@ PrepareAndDispatch(uint32 methodIndex, nsXPTCStubBase* self, PRUint32* args)
         dispatchParams = paramBuffer;
     NS_ASSERTION(dispatchParams,"no place for params");
 
-    PRUint32* ap = args;
+    uint32_t* ap = args;
     for(i = 0; i < paramCount; i++, ap++)
     {
         const nsXPTParamInfo& param = info->GetParam(i);
@@ -51,13 +51,13 @@ PrepareAndDispatch(uint32 methodIndex, nsXPTCStubBase* self, PRUint32* args)
 	    dp->val.p = (void*) *ap;
         switch(type)
         {
-        case nsXPTType::T_I64    : dp->val.i64 = *((PRInt64*) ap); ap++; break;
-        case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap); ap++; break;
+        case nsXPTType::T_I64    : dp->val.i64 = *((int64_t*) ap); ap++; break;
+        case nsXPTType::T_U64    : dp->val.u64 = *((uint64_t*)ap); ap++; break;
         case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
         }
     }
 
-    result = self->mOuter->CallMethod((PRUint16)methodIndex, info, dispatchParams);
+    result = self->mOuter->CallMethod((uint16_t)methodIndex, info, dispatchParams);
 
     if(dispatchParams != paramBuffer)
         delete [] dispatchParams;
@@ -100,7 +100,7 @@ asm(".text\n\t" \
     ".size	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev,.-" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
     ".endif");
 
-// static nsresult SharedStub(PRUint32 methodIndex) __attribute__((regparm(1)))
+// static nsresult SharedStub(uint32_t methodIndex) __attribute__((regparm(1)))
 asm(".text\n\t"
     ".align	2\n\t"
     ".type	" SYMBOL_UNDERSCORE "SharedStub,@function\n\t"

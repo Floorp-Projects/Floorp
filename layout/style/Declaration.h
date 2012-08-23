@@ -67,10 +67,10 @@ public:
   bool GetValueIsImportant(nsCSSProperty aProperty) const;
   bool GetValueIsImportant(const nsAString& aProperty) const;
 
-  PRUint32 Count() const {
+  uint32_t Count() const {
     return mOrder.Length();
   }
-  void GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const;
+  void GetNthProperty(uint32_t aIndex, nsAString& aReturn) const;
 
   void ToString(nsAString& aString) const;
 
@@ -205,7 +205,7 @@ public:
   }
 
 #ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 
 private:
@@ -221,14 +221,14 @@ private:
                                       nsAString& aResult) const;
 
 public:
-  nsCSSProperty OrderValueAt(PRUint32 aValue) const {
+  nsCSSProperty OrderValueAt(uint32_t aValue) const {
     return nsCSSProperty(mOrder.ElementAt(aValue));
   }
 
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 private:
-  nsAutoTArray<PRUint8, 8> mOrder;
+  nsAutoTArray<uint8_t, 8> mOrder;
 
   // never null, except while expanded, or before the first call to
   // InitializeEmpty or CompressFrom.

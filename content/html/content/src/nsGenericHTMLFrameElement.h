@@ -37,18 +37,18 @@ public:
   NS_DECL_NSIMOZBROWSERFRAME
 
   // nsIContent
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
   virtual void DestroyContent();
@@ -56,8 +56,8 @@ public:
   nsresult CopyInnerTo(nsGenericElement* aDest);
 
   // nsIDOMHTMLElement
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  NS_IMETHOD GetTabIndex(int32_t *aTabIndex);
+  NS_IMETHOD SetTabIndex(int32_t aTabIndex);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGenericHTMLFrameElement,
                                                      nsGenericHTMLElement)

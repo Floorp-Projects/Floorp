@@ -32,12 +32,13 @@
 }
 
 #downloadsPanel[hasdownloads] > #downloadsHistory {
-  border-top: 1px solid hsla(0,0%,100%,.1);
-  background-color: hsla(0,0%,7%,.3);
-  box-shadow: 0 1px 1px hsla(0,0%,0%,.25) inset;
+  background: #e5e5e5;
+  border-top: 1px solid hsla(0,0%,0%,.1);
+  box-shadow: 0 -1px hsla(0,0%,100%,.5) inset, 0 1px 1px hsla(0,0%,0%,.03) inset;
 }
 
 #downloadsHistory > .button-box {
+  color: #808080;
   margin: 1em;
 }
 
@@ -78,7 +79,6 @@ richlistitem[type="download"]:last-child {
 }
 
 .downloadInfo {
-  color: white;
   padding: 8px;
   -moz-padding-end: 0;
 }

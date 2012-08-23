@@ -66,7 +66,7 @@ getColumnAtIndexCB(AtkTable *aTable, gint aIndex)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, -1);
 
-    PRInt32 col;
+    int32_t col;
     nsresult rv = accTable->GetColumnIndexAt(aIndex, &col);
     NS_ENSURE_SUCCESS(rv, -1);
 
@@ -85,7 +85,7 @@ getRowAtIndexCB(AtkTable *aTable, gint aIndex)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, -1);
 
-    PRInt32 row;
+    int32_t row;
     nsresult rv = accTable->GetRowIndexAt(aIndex, &row);
     NS_ENSURE_SUCCESS(rv, -1);
 
@@ -104,7 +104,7 @@ getColumnCountCB(AtkTable *aTable)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, -1);
 
-    PRInt32 count;
+    int32_t count;
     nsresult rv = accTable->GetColumnCount(&count);
     NS_ENSURE_SUCCESS(rv, -1);
 
@@ -123,7 +123,7 @@ getRowCountCB(AtkTable *aTable)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, -1);
 
-    PRInt32 count;
+    int32_t count;
     nsresult rv = accTable->GetRowCount(&count);
     NS_ENSURE_SUCCESS(rv, -1);
 
@@ -143,7 +143,7 @@ getColumnExtentAtCB(AtkTable *aTable,
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, -1);
 
-    PRInt32 extent;
+    int32_t extent;
     nsresult rv = accTable->GetColumnExtentAt(aRow, aColumn, &extent);
     NS_ENSURE_SUCCESS(rv, -1);
 
@@ -163,7 +163,7 @@ getRowExtentAtCB(AtkTable *aTable,
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, -1);
 
-    PRInt32 extent;
+    int32_t extent;
     nsresult rv = accTable->GetRowExtentAt(aRow, aColumn, &extent);
     NS_ENSURE_SUCCESS(rv, -1);
 
@@ -328,8 +328,8 @@ getSelectedColumnsCB(AtkTable *aTable, gint **aSelected)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, 0);
 
-    PRUint32 size = 0;
-    PRInt32 *columns = NULL;
+    uint32_t size = 0;
+    int32_t *columns = NULL;
     nsresult rv = accTable->GetSelectedColumnIndices(&size, &columns);
     if (NS_FAILED(rv) || (size == 0) || !columns) {
         *aSelected = nullptr;
@@ -343,7 +343,7 @@ getSelectedColumnsCB(AtkTable *aTable, gint **aSelected)
     }
 
     //copy
-    for (PRUint32 index = 0; index < size; ++index)
+    for (uint32_t index = 0; index < size; ++index)
         atkColumns[index] = static_cast<gint>(columns[index]);
     nsMemory::Free(columns);
 
@@ -363,8 +363,8 @@ getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, 0);
 
-    PRUint32 size = 0;
-    PRInt32 *rows = NULL;
+    uint32_t size = 0;
+    int32_t *rows = NULL;
     nsresult rv = accTable->GetSelectedRowIndices(&size, &rows);
     if (NS_FAILED(rv) || (size == 0) || !rows) {
         *aSelected = nullptr;
@@ -378,7 +378,7 @@ getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
     }
 
     //copy
-    for (PRUint32 index = 0; index < size; ++index)
+    for (uint32_t index = 0; index < size; ++index)
         atkRows[index] = static_cast<gint>(rows[index]);
     nsMemory::Free(rows);
 

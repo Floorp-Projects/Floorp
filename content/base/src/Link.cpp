@@ -188,7 +188,7 @@ Link::SetHost(const nsAString &aHost)
     if (iter != end) {
       nsAutoString portStr(Substring(iter, end));
       nsresult rv;
-      PRInt32 port = portStr.ToInteger(&rv);
+      int32_t port = portStr.ToInteger(&rv);
       if (NS_SUCCEEDED(rv)) {
         (void)uri->SetPort(port);
       }
@@ -254,7 +254,7 @@ Link::SetPort(const nsAString &aPort)
 
   nsresult rv;
   nsAutoString portStr(aPort);
-  PRInt32 port = portStr.ToInteger(&rv);
+  int32_t port = portStr.ToInteger(&rv);
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
@@ -386,7 +386,7 @@ Link::GetPort(nsAString &_port)
     return NS_OK;
   }
 
-  PRInt32 port;
+  int32_t port;
   nsresult rv = uri->GetPort(&port);
   // Note that failure to get the port from the URI is not necessarily a bad
   // thing.  Some URIs do not have a port.

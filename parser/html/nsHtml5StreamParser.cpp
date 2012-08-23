@@ -28,8 +28,8 @@
 using namespace mozilla;
 
 
-PRInt32 nsHtml5StreamParser::sTimerInitialDelay = 120;
-PRInt32 nsHtml5StreamParser::sTimerSubsequentDelay = 120;
+int32_t nsHtml5StreamParser::sTimerInitialDelay = 120;
+int32_t nsHtml5StreamParser::sTimerSubsequentDelay = 120;
 
 // static
 void
@@ -288,9 +288,9 @@ nsHtml5StreamParser::SetViewSourceTitle(nsIURI* aURL)
 }
 
 nsresult
-nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment, // can be null
-                                                                          PRUint32 aCount,
-                                                                          PRUint32* aWriteCount)
+nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const uint8_t* aFromSegment, // can be null
+                                                                          uint32_t aCount,
+                                                                          uint32_t* aWriteCount)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   nsresult rv = NS_OK;
@@ -309,14 +309,14 @@ nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const 
 }
 
 nsresult
-nsHtml5StreamParser::WriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment, // can be null
-                                                          PRUint32 aCount,
-                                                          PRUint32* aWriteCount)
+nsHtml5StreamParser::WriteSniffingBufferAndCurrentSegment(const uint8_t* aFromSegment, // can be null
+                                                          uint32_t aCount,
+                                                          uint32_t* aWriteCount)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   nsresult rv = NS_OK;
   if (mSniffingBuffer) {
-    PRUint32 writeCount;
+    uint32_t writeCount;
     rv = WriteStreamBytes(mSniffingBuffer, mSniffingLength, &writeCount);
     NS_ENSURE_SUCCESS(rv, rv);
     mSniffingBuffer = nullptr;
@@ -349,8 +349,8 @@ nsHtml5StreamParser::SetupDecodingFromBom(const char* aCharsetName, const char* 
 }
 
 void
-nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(const PRUint8* aFromSegment,
-                                                 PRUint32 aCountToSniffingLimit)
+nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(const uint8_t* aFromSegment,
+                                                 uint32_t aCountToSniffingLimit)
 {
   // Avoid underspecified heuristic craziness for XHR
   if (mMode == LOAD_AS_DATA) {
@@ -363,7 +363,7 @@ nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(const PRUint8* aFromSegment,
   // even-numbered bytes tracked at 0, odd-numbered bytes tracked at 1
   bool byteZero[2] = { false, false };
   bool byteNonZero[2] = { false, false };
-  PRUint32 i = 0;
+  uint32_t i = 0;
   if (mSniffingBuffer) {
     for (; i < mSniffingLength; ++i) {
       if (mSniffingBuffer[i]) {
@@ -380,7 +380,7 @@ nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(const PRUint8* aFromSegment,
     }
   }
   if (aFromSegment) {
-    for (PRUint32 j = 0; j < aCountToSniffingLimit; ++j) {
+    for (uint32_t j = 0; j < aCountToSniffingLimit; ++j) {
       if (aFromSegment[j]) {
         if (byteNonZero[1 - ((i + j) % 2)]) {
           return;
@@ -489,10 +489,10 @@ HandleProcessingInstruction(void* aUserData,
 }
 
 nsresult
-nsHtml5StreamParser::FinalizeSniffing(const PRUint8* aFromSegment, // can be null
-                                      PRUint32 aCount,
-                                      PRUint32* aWriteCount,
-                                      PRUint32 aCountToSniffingLimit)
+nsHtml5StreamParser::FinalizeSniffing(const uint8_t* aFromSegment, // can be null
+                                      uint32_t aCount,
+                                      uint32_t* aWriteCount,
+                                      uint32_t aCountToSniffingLimit)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   NS_ASSERTION(mCharsetSource < kCharsetFromMetaTag,
@@ -627,14 +627,14 @@ nsHtml5StreamParser::FinalizeSniffing(const PRUint8* aFromSegment, // can be nul
 }
 
 nsresult
-nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
-                                      PRUint32 aCount,
-                                      PRUint32* aWriteCount)
+nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
+                                      uint32_t aCount,
+                                      uint32_t* aWriteCount)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   nsresult rv = NS_OK;
-  PRUint32 writeCount;
-  for (PRUint32 i = 0; i < aCount && mBomState != BOM_SNIFFING_OVER; i++) {
+  uint32_t writeCount;
+  for (uint32_t i = 0; i < aCount && mBomState != BOM_SNIFFING_OVER; i++) {
     switch (mBomState) {
       case BOM_SNIFFING_NOT_STARTED:
         NS_ASSERTION(i == 0, "Bad BOM sniffing state.");
@@ -657,7 +657,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
         if (aFromSegment[i] == 0xFE) {
           rv = SetupDecodingFromBom("UTF-16", "UTF-16LE"); // upper case is the raw form
           NS_ENSURE_SUCCESS(rv, rv);
-          PRUint32 count = aCount - (i + 1);
+          uint32_t count = aCount - (i + 1);
           rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
           NS_ENSURE_SUCCESS(rv, rv);
           *aWriteCount = writeCount + (i + 1);
@@ -669,7 +669,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
         if (aFromSegment[i] == 0xFF) {
           rv = SetupDecodingFromBom("UTF-16", "UTF-16BE"); // upper case is the raw form
           NS_ENSURE_SUCCESS(rv, rv);
-          PRUint32 count = aCount - (i + 1);
+          uint32_t count = aCount - (i + 1);
           rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
           NS_ENSURE_SUCCESS(rv, rv);
           *aWriteCount = writeCount + (i + 1);
@@ -688,7 +688,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
         if (aFromSegment[i] == 0xBF) {
           rv = SetupDecodingFromBom("UTF-8", "UTF-8"); // upper case is the raw form
           NS_ENSURE_SUCCESS(rv, rv);
-          PRUint32 count = aCount - (i + 1);
+          uint32_t count = aCount - (i + 1);
           rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
           NS_ENSURE_SUCCESS(rv, rv);
           *aWriteCount = writeCount + (i + 1);
@@ -711,7 +711,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
   
   if (mSniffingLength + aCount >= NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE) {
     // this is the last buffer
-    PRUint32 countToSniffingLimit =
+    uint32_t countToSniffingLimit =
         NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE - mSniffingLength;
     if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA) {
       nsHtml5ByteReadable readable(aFromSegment, aFromSegment +
@@ -754,7 +754,7 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
   if (!mSniffingBuffer) {
     const mozilla::fallible_t fallible = mozilla::fallible_t();
     mSniffingBuffer = new (fallible)
-      PRUint8[NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE];
+      uint8_t[NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE];
     if (!mSniffingBuffer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -766,9 +766,9 @@ nsHtml5StreamParser::SniffStreamBytes(const PRUint8* aFromSegment,
 }
 
 nsresult
-nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
-                                      PRUint32 aCount,
-                                      PRUint32* aWriteCount)
+nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
+                                      uint32_t aCount,
+                                      uint32_t* aWriteCount)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   // mLastBuffer always points to a buffer of the size
@@ -782,11 +782,11 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
     }
     mLastBuffer = (mLastBuffer->next = newBuf.forget());
   }
-  PRInt32 totalByteCount = 0;
+  int32_t totalByteCount = 0;
   for (;;) {
-    PRInt32 end = mLastBuffer->getEnd();
-    PRInt32 byteCount = aCount - totalByteCount;
-    PRInt32 utf16Count = NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE - end;
+    int32_t end = mLastBuffer->getEnd();
+    int32_t byteCount = aCount - totalByteCount;
+    int32_t utf16Count = NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE - end;
 
     NS_ASSERTION(utf16Count, "Trying to convert into a buffer with no free space!");
     // byteCount may be zero to force the decoder to output a pending surrogate
@@ -813,7 +813,7 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
       // of this calling code to output a U+FFFD REPLACEMENT CHARACTER and
       // reset the decoder.
 
-      if (totalByteCount < (PRInt32)aCount) {
+      if (totalByteCount < (int32_t)aCount) {
         // advance over the bad byte
         ++totalByteCount;
         ++aFromSegment;
@@ -821,7 +821,7 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
         NS_NOTREACHED("The decoder signaled an error but consumed all input.");
         // Recovering from this situation in case there are still broken
         // decoders, since nsScanner had recovery code, too.
-        totalByteCount = (PRInt32)aCount;
+        totalByteCount = (int32_t)aCount;
       }
 
       // Emit the REPLACEMENT CHARACTER
@@ -849,8 +849,8 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
       }
 
       mUnicodeDecoder->Reset();
-      if (totalByteCount == (PRInt32)aCount) {
-        *aWriteCount = (PRUint32)totalByteCount;
+      if (totalByteCount == (int32_t)aCount) {
+        *aWriteCount = (uint32_t)totalByteCount;
         return NS_OK;
       }
     } else if (convResult == NS_PARTIAL_MORE_OUTPUT) {
@@ -865,9 +865,9 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
       // that doesn't fit in the output buffer. Loop back to push a zero-length
       // input to the decoder in that case.
     } else {
-      NS_ASSERTION(totalByteCount == (PRInt32)aCount,
+      NS_ASSERTION(totalByteCount == (int32_t)aCount,
           "The Unicode decoder consumed the wrong number of bytes.");
-      *aWriteCount = (PRUint32)totalByteCount;
+      *aWriteCount = (uint32_t)totalByteCount;
       return NS_OK;
     }
   }
@@ -997,7 +997,7 @@ nsHtml5StreamParser::DoStopRequest()
   mStreamState = STREAM_ENDED;
 
   if (!mUnicodeDecoder) {
-    PRUint32 writeCount;
+    uint32_t writeCount;
     if (NS_FAILED(FinalizeSniffing(nullptr, 0, &writeCount, 0))) {
       MarkAsBroken();
       return;
@@ -1047,7 +1047,7 @@ nsHtml5StreamParser::OnStopRequest(nsIRequest* aRequest,
 }
 
 void
-nsHtml5StreamParser::DoDataAvailable(PRUint8* aBuffer, PRUint32 aLength)
+nsHtml5StreamParser::DoDataAvailable(uint8_t* aBuffer, uint32_t aLength)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   NS_PRECONDITION(STREAM_BEING_READ == mStreamState,
@@ -1058,7 +1058,7 @@ nsHtml5StreamParser::DoDataAvailable(PRUint8* aBuffer, PRUint32 aLength)
     return;
   }
 
-  PRUint32 writeCount;
+  uint32_t writeCount;
   nsresult rv;
   if (HasDecoder()) {
     if (mFeedChardet) {
@@ -1099,12 +1099,12 @@ class nsHtml5DataAvailable : public nsRunnable
 {
   private:
     nsHtml5RefPtr<nsHtml5StreamParser> mStreamParser;
-    nsAutoArrayPtr<PRUint8>            mData;
-    PRUint32                           mLength;
+    nsAutoArrayPtr<uint8_t>            mData;
+    uint32_t                           mLength;
   public:
     nsHtml5DataAvailable(nsHtml5StreamParser* aStreamParser,
-                         PRUint8*             aData,
-                         PRUint32             aLength)
+                         uint8_t*             aData,
+                         uint32_t             aLength)
       : mStreamParser(aStreamParser)
       , mData(aData)
       , mLength(aLength)
@@ -1122,8 +1122,8 @@ nsresult
 nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
                                nsISupports* aContext,
                                nsIInputStream* aInStream,
-                               PRUint32 aSourceOffset,
-                               PRUint32 aLength)
+                               uint32_t aSourceOffset,
+                               uint32_t aLength)
 {
   nsresult rv;
   if (NS_FAILED(rv = mExecutor->IsBroken())) {
@@ -1131,9 +1131,9 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
   }
 
   NS_ASSERTION(mRequest == aRequest, "Got data on wrong stream.");
-  PRUint32 totalRead;
+  uint32_t totalRead;
   const mozilla::fallible_t fallible = mozilla::fallible_t();
-  nsAutoArrayPtr<PRUint8> data(new (fallible) PRUint8[aLength]);
+  nsAutoArrayPtr<uint8_t> data(new (fallible) uint8_t[aLength]);
   if (!data) {
     return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
   }

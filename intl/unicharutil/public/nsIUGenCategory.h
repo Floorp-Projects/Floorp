@@ -39,7 +39,7 @@ public:
    /**
     * Give a Unichar, return a nsUGenCategory
     */
-   virtual nsUGenCategory Get(PRUint32 aChar) = 0;
+   virtual nsUGenCategory Get(uint32_t aChar) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIUGenCategory, NS_IUGENCATEGORY_IID)

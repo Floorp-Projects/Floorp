@@ -151,15 +151,15 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType);
+                              int32_t aModType);
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                  PRUint32 aFlags);
+                                  uint32_t aFlags);
 
   // returns true if the popup is a panel with the noautohide attribute set to
   // true. These panels do not roll up automatically.
@@ -173,7 +173,7 @@ public:
   void EnsureWidget();
 
   nsresult CreateWidgetForView(nsIView* aView);
-  PRUint8 GetShadowStyle();
+  uint8_t GetShadowStyle();
 
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList);
@@ -230,7 +230,7 @@ public:
   void InitializePopup(nsIContent* aAnchorContent,
                        nsIContent* aTriggerContent,
                        const nsAString& aPosition,
-                       PRInt32 aXPos, PRInt32 aYPos,
+                       int32_t aXPos, int32_t aYPos,
                        bool aAttributesOverride);
 
   /**
@@ -239,13 +239,13 @@ public:
    * (presumed) mouse position is not over the menu.
    */
   void InitializePopupAtScreen(nsIContent* aTriggerContent,
-                               PRInt32 aXPos, PRInt32 aYPos,
+                               int32_t aXPos, int32_t aYPos,
                                bool aIsContextMenu);
 
   void InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
                                       nsAString& aAnchor,
                                       nsAString& aAlign,
-                                      PRInt32 aXPos, PRInt32 aYPos);
+                                      int32_t aXPos, int32_t aYPos);
 
   // indicate that the popup should be opened
   void ShowPopup(bool aIsContextMenu, bool aSelectFirstItem);
@@ -278,11 +278,11 @@ public:
   // is true, and the popup already has left or top attributes, then those
   // attributes are updated to the new location.
   // The frame may be destroyed by this method.
-  void MoveTo(PRInt32 aLeft, PRInt32 aTop, bool aUpdateAttrs);
+  void MoveTo(int32_t aLeft, int32_t aTop, bool aUpdateAttrs);
 
   bool GetAutoPosition();
   void SetAutoPosition(bool aShouldAutoPosition);
-  void SetConsumeRollupEvent(PRUint32 aConsumeMode);
+  void SetConsumeRollupEvent(uint32_t aConsumeMode);
 
   nsIScrollableFrame* GetScrollFrame(nsIFrame* aStart);
 
@@ -303,7 +303,7 @@ public:
   // Later, when bug 357725 is implemented, we can make this adjust aChange by
   // the amount that the side can be resized, so that minimums and maximums
   // can be taken into account.
-  void CanAdjustEdges(PRInt8 aHorizontalSide, PRInt8 aVerticalSide, nsIntPoint& aChange);
+  void CanAdjustEdges(int8_t aHorizontalSide, int8_t aVerticalSide, nsIntPoint& aChange);
 
   // Return true if the popup is positioned relative to an anchor.
   bool IsAnchored() const { return mScreenXPos == -1 && mScreenYPos == -1; }
@@ -326,7 +326,7 @@ protected:
   nsPopupLevel PopupLevel(bool aIsNoAutoHide) const;
 
   // redefine to tell the box system not to move the views.
-  virtual void GetLayoutFlags(PRUint32& aFlags);
+  virtual void GetLayoutFlags(uint32_t& aFlags);
 
   void InitPositionFromAnchorAlign(const nsAString& aAnchor,
                                    const nsAString& aAlign);
@@ -399,10 +399,10 @@ protected:
 
   // the position of the popup. The screen coordinates, if set to values other
   // than -1, override mXPos and mYPos.
-  PRInt32 mXPos;
-  PRInt32 mYPos;
-  PRInt32 mScreenXPos;
-  PRInt32 mScreenYPos;
+  int32_t mXPos;
+  int32_t mYPos;
+  int32_t mScreenXPos;
+  int32_t mScreenYPos;
   // The value of the client offset of our widget the last time we positioned
   // ourselves. We store this so that we can detect when it changes but the
   // position of our widget didn't change.
@@ -412,10 +412,10 @@ protected:
   nsPopupState mPopupState; // open state of the popup
 
   // popup alignment relative to the anchor node
-  PRInt8 mPopupAlignment;
-  PRInt8 mPopupAnchor;
+  int8_t mPopupAlignment;
+  int8_t mPopupAnchor;
   // One of nsIPopupBoxObject::ROLLUP_DEFAULT/ROLLUP_CONSUME/ROLLUP_NO_CONSUME
-  PRInt8 mConsumeRollupEvent;
+  int8_t mConsumeRollupEvent;
   bool mFlipBoth; // flip in both directions
 
   bool mIsOpenChanged; // true if the open state changed since the last layout
@@ -434,7 +434,7 @@ protected:
   bool mHFlip;
   bool mVFlip;
 
-  static PRInt8 sDefaultLevelIsTop;
+  static int8_t sDefaultLevelIsTop;
 }; // class nsMenuPopupFrame
 
 #endif

@@ -173,7 +173,7 @@ nsCaretAccessible::RemoveDocSelectionListener(nsIPresShell *aShell)
 NS_IMETHODIMP
 nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
                                           nsISelection* aSelection,
-                                          PRInt16 aReason)
+                                          int16_t aReason)
 {
   NS_ENSURE_ARG(aDOMDocument);
   NS_ENSURE_STATE(mRootAccessible);
@@ -204,7 +204,7 @@ nsCaretAccessible::ProcessSelectionChanged(nsISelection* aSelection)
 {
   nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(aSelection));
 
-  PRInt16 type = 0;
+  int16_t type = 0;
   privSel->GetType(&type);
 
   if (type == nsISelectionController::SELECTION_NORMAL)
@@ -219,7 +219,7 @@ nsCaretAccessible::NormalSelectionChanged(nsISelection* aSelection)
 {
   mLastUsedSelection = do_GetWeakReference(aSelection);
 
-  PRInt32 rangeCount = 0;
+  int32_t rangeCount = 0;
   aSelection->GetRangeCount(&rangeCount);
   if (rangeCount == 0) {
     mLastTextAccessible = nullptr;
@@ -231,13 +231,13 @@ nsCaretAccessible::NormalSelectionChanged(nsISelection* aSelection)
   if (!textAcc)
     return;
 
-  PRInt32 caretOffset = -1;
+  int32_t caretOffset = -1;
   nsresult rv = textAcc->GetCaretOffset(&caretOffset);
   if (NS_FAILED(rv))
     return;
 
   if (textAcc == mLastTextAccessible && caretOffset == mLastCaretOffset) {
-    PRInt32 selectionCount = 0;
+    int32_t selectionCount = 0;
     textAcc->GetSelectionCount(&selectionCount);   // Don't swallow similar events when selecting text
     if (!selectionCount)
       return;  // Swallow duplicate caret event
@@ -322,7 +322,7 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   // Correct for character size, so that caret always matches the size of the character
   // This is important for font size transitions, and is necessary because the Gecko caret uses the
   // previous character's size as the user moves forward in the text by character.
-  PRInt32 charX, charY, charWidth, charHeight;
+  int32_t charX, charY, charWidth, charHeight;
   if (NS_SUCCEEDED(mLastTextAccessible->GetCharacterExtents(mLastCaretOffset, &charX, &charY,
                                                             &charWidth, &charHeight,
                                                             nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE))) {

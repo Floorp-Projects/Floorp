@@ -159,7 +159,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   nsCOMPtr<nsISupportsPRInt32> scriptableOrigin (do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID));
   NS_ENSURE_TRUE(scriptableOrigin, NS_ERROR_FAILURE);
 
-  PRInt32 origin =
+  int32_t origin =
     LookAndFeel::GetInt(LookAndFeel::eIntID_AlertNotificationOrigin);
   scriptableOrigin->SetData(origin);
 
@@ -186,8 +186,8 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
 }
 
 NS_IMETHODIMP nsAlertsService::OnProgress(const nsAString & aAlertName,
-                                          PRInt64 aProgress,
-                                          PRInt64 aProgressMax,
+                                          int64_t aProgress,
+                                          int64_t aProgressMax,
                                           const nsAString & aAlertText)
 {
 #ifdef MOZ_WIDGET_ANDROID

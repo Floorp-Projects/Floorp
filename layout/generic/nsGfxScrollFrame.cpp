@@ -85,7 +85,7 @@ nsHTMLScrollFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
 void
 nsHTMLScrollFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                            PRUint32 aFilter)
+                                            uint32_t aFilter)
 {
   mInner.AppendAnonymousContentTo(aElements, aFilter);
 }
@@ -162,7 +162,7 @@ nsHTMLScrollFrame::GetType() const
 void
 nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
                                       nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                      PRUint32 aFlags)
+                                      uint32_t aFlags)
 {
   if (aForChild) {
     if (aForChild == mInner.mScrolledFrame) {
@@ -1024,7 +1024,7 @@ nsXULScrollFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
 void
 nsXULScrollFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                           PRUint32 aFilter)
+                                           uint32_t aFilter)
 {
   mInner.AppendAnonymousContentTo(aElements, aFilter);
 }
@@ -1102,7 +1102,7 @@ nsXULScrollFrame::GetType() const
 void
 nsXULScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
                                      nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                     PRUint32 aFlags)
+                                     uint32_t aFlags)
 {
   if (aForChild == mInner.mScrolledFrame) {
     nsRect damage = aDamageRect + nsPoint(aX, aY);
@@ -1266,7 +1266,7 @@ nsXULScrollFrame::GetFrameName(nsAString& aResult) const
 NS_IMETHODIMP
 nsXULScrollFrame::DoLayout(nsBoxLayoutState& aState)
 {
-  PRUint32 flags = aState.LayoutFlags();
+  uint32_t flags = aState.LayoutFlags();
   nsresult rv = Layout(aState);
   aState.SetLayoutFlags(flags);
 
@@ -1334,8 +1334,8 @@ public:
   // compared to the average recent events intervals (such that for a relatively
   // consistent events rate, the next event arrives before current animation ends)
   nsCOMPtr<nsIAtom> mOrigin;
-  PRInt32 mOriginMinMS;
-  PRInt32 mOriginMaxMS;
+  int32_t mOriginMinMS;
+  int32_t mOriginMaxMS;
   double  mIntervalRatio;
 
   TimeDuration mDuration;
@@ -1445,7 +1445,7 @@ nsGfxScrollFrameInner::AsyncScroll::InitDuration(nsIAtom *aOrigin) {
     mIntervalRatio = 1;
 
     // Default values for all preferences are defined in all.js
-    static const PRInt32 kDefaultMinMS = 150, kDefaultMaxMS = 150;
+    static const int32_t kDefaultMinMS = 150, kDefaultMaxMS = 150;
     static const bool kDefaultIsSmoothEnabled = true;
 
     nsCAutoString originName;
@@ -1459,7 +1459,7 @@ nsGfxScrollFrameInner::AsyncScroll::InitDuration(nsIAtom *aOrigin) {
       mOriginMinMS = Preferences::GetInt(prefMin.get(), kDefaultMinMS);
       mOriginMaxMS = Preferences::GetInt(prefMax.get(), kDefaultMaxMS);
 
-      static const PRInt32 kSmoothScrollMaxAllowedAnimationDurationMS = 10000;
+      static const int32_t kSmoothScrollMaxAllowedAnimationDurationMS = 10000;
       mOriginMaxMS = clamped(mOriginMaxMS, 0, kSmoothScrollMaxAllowedAnimationDurationMS);
       mOriginMinMS = clamped(mOriginMinMS, 0, mOriginMaxMS);
     }
@@ -1487,7 +1487,7 @@ nsGfxScrollFrameInner::AsyncScroll::InitDuration(nsIAtom *aOrigin) {
   }
 
   // Average last 3 delta durations (rounding errors up to 2ms are negligible for us)
-  PRInt32 eventsDeltaMs = (mStartTime - mPrevStartTime[2]).ToMilliseconds() / 3;
+  int32_t eventsDeltaMs = (mStartTime - mPrevStartTime[2]).ToMilliseconds() / 3;
   mPrevStartTime[2] = mPrevStartTime[1];
   mPrevStartTime[1] = mPrevStartTime[0];
   mPrevStartTime[0] = mStartTime;
@@ -1497,7 +1497,7 @@ nsGfxScrollFrameInner::AsyncScroll::InitDuration(nsIAtom *aOrigin) {
   // it's easier to follow, but reduce the duration to make it feel more snappy when
   // scrolling quickly. To reduce fluctuations of the duration, we average event
   // intervals using the recent 4 timestamps (now + three prev -> 3 intervals).
-  PRInt32 durationMS = clamped<PRInt32>(eventsDeltaMs * mIntervalRatio, mOriginMinMS, mOriginMaxMS);
+  int32_t durationMS = clamped<int32_t>(eventsDeltaMs * mIntervalRatio, mOriginMinMS, mOriginMaxMS);
 
   mDuration = TimeDuration::FromMilliseconds(durationMS);
 }
@@ -1938,7 +1938,7 @@ void nsGfxScrollFrameInner::ScrollVisual(nsPoint aOldScrolledFramePos)
   AdjustViews(mScrolledFrame);
   // We need to call this after fixing up the view positions
   // to be consistent with the frame hierarchy.
-  PRUint32 flags = nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT;
+  uint32_t flags = nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT;
   bool canScrollWithBlitting = CanScrollWithBlitting(mOuter);
   mOuter->RemoveStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
   if (IsScrollingActive()) {
@@ -2094,7 +2094,7 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt, const nsRect& aRange)
   }
 
   // notify the listeners.
-  for (PRUint32 i = 0; i < mListeners.Length(); i++) {
+  for (uint32_t i = 0; i < mListeners.Length(); i++) {
     mListeners[i]->ScrollPositionWillChange(pt.x, pt.y);
   }
 
@@ -2110,7 +2110,7 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt, const nsRect& aRange)
   PostScrollEvent();
 
   // notify the listeners.
-  for (PRUint32 i = 0; i < mListeners.Length(); i++) {
+  for (uint32_t i = 0; i < mListeners.Length(); i++) {
     mListeners[i]->ScrollPositionDidChange(pt.x, pt.y);
   }
 }
@@ -2338,10 +2338,10 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return NS_OK;
 }
 
-static void HandleScrollPref(nsIScrollable *aScrollable, PRInt32 aOrientation,
-                             PRUint8& aValue)
+static void HandleScrollPref(nsIScrollable *aScrollable, int32_t aOrientation,
+                             uint8_t& aValue)
 {
-  PRInt32 pref;
+  int32_t pref;
   aScrollable->GetDefaultScrollbarPreferences(aOrientation, &pref);
   switch (pref) {
     case nsIScrollable::Scrollbar_Auto:
@@ -2429,7 +2429,7 @@ nsGfxScrollFrameInner::GetScrollPositionClampingScrollPortSize() const
 }
 
 static void
-AdjustForWholeDelta(PRInt32 aDelta, nscoord* aCoord)
+AdjustForWholeDelta(int32_t aDelta, nscoord* aCoord)
 {
   if (aDelta < 0) {
     *aCoord = nscoord_MIN;
@@ -2447,7 +2447,7 @@ AdjustForWholeDelta(PRInt32 aDelta, nscoord* aCoord)
  * @param aMultiplier used for conversion of tolerance into appUnis
  */
 static void
-CalcRangeForScrollBy(PRInt32 aDelta, nscoord aPos,
+CalcRangeForScrollBy(int32_t aDelta, nscoord aPos,
                      float aNegTolerance,
                      float aPosTolerance,
                      nscoord aMultiplier,
@@ -2553,7 +2553,7 @@ nsGfxScrollFrameInner::GetLineScrollAmount() const
     Preferences::AddIntVarCache(&sMinLineScrollAmountInPixels,
                                 "mousewheel.min_line_scroll_amount", 1);
   }
-  PRUint32 appUnitsPerDevPixel = mOuter->PresContext()->AppUnitsPerDevPixel();
+  uint32_t appUnitsPerDevPixel = mOuter->PresContext()->AppUnitsPerDevPixel();
   nscoord fontHeight =
     NS_MAX(1, sMinLineScrollAmountInPixels) * appUnitsPerDevPixel;
   if (fm) {
@@ -2785,7 +2785,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
   }
 
   // Check if the frame is resizable.
-  PRInt8 resizeStyle = mOuter->GetStyleDisplay()->mResize;
+  int8_t resizeStyle = mOuter->GetStyleDisplay()->mResize;
   bool isResizable = resizeStyle != NS_STYLE_RESIZE_NONE;
 
   nsIScrollableFrame *scrollable = do_QueryFrame(mOuter);
@@ -2912,7 +2912,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
 
 void
 nsGfxScrollFrameInner::AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                                PRUint32 aFilter)
+                                                uint32_t aFilter)
 {
   aElements.MaybeAppendElement(mHScrollbarContent);
   aElements.MaybeAppendElement(mVScrollbarContent);
@@ -3197,10 +3197,10 @@ void
 nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState,
                                    const nsPoint& aScrollPosition)
 {
-  PRUint32 oldflags = aState.LayoutFlags();
+  uint32_t oldflags = aState.LayoutFlags();
   nsRect childRect = nsRect(mInner.mScrollPort.TopLeft() - aScrollPosition,
                             mInner.mScrollPort.Size());
-  PRInt32 flags = NS_FRAME_NO_MOVE_VIEW;
+  int32_t flags = NS_FRAME_NO_MOVE_VIEW;
 
   nsRect originalRect = mInner.mScrolledFrame->GetRect();
   nsRect originalVisOverflow = mInner.mScrolledFrame->GetVisualOverflowRect();

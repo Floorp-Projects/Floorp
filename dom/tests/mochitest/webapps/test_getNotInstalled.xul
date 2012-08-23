@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 781379">
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript" src="apphelper.js"/>
+<script type="application/javascript" src="jshelper.js"/>
+<script type="application/javascript;version=1.8">
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+Cu.import("resource://gre/modules/Webapps.jsm");
+
+let _isLaunchable;
+let steps = [
+  cleanUp, installApp, monkeyPatchDOMApplicationRegistry, getNotInstalled,
+  unmonkeyPatchDOMApplicationRegistry, cleanUp, tearDown
+];
+runAll(steps);
+
+// Remove all installed apps and apps from the appregistry
+function cleanUp (next) { 
+  uninstallAll(next);
+}
+
+// Add an app to the appregistry
+function installApp (next) {
+  let appURL = SERVERS["super_crazy"];
+  install(appURL, ok, next);
+}
+
+// Monkey patch DOMApplicationRegistry._isLaunchable for testing.
+// This way, we don't have to create a platform specific application with a
+// status other than "installed".
+function monkeyPatchDOMApplicationRegistry (next) {
+  _isLaunchable = DOMApplicationRegistry._isLaunchable;
+  DOMApplicationRegistry._isLaunchable = function mockIsLaunchable (aOrigin) {
+    return false;
+  }
+  next();
+}
+
+// Call navigator.mozApps.mgmt.getNotInstalled
+function getNotInstalled (next) {
+  let results;
+  function getNotInstalledError () {
+    ok(false, "window.mozApps.mgmt.getNotInstalled onerror called");
+    next();
+  }
+  function getNotInstalledSuccess () {
+    ok(true, "window.mozApps.mgmt.getNotInstalled onsuccess called");
+    if (this.result.length === 1) {
+      ok(true, "got the single notInstalled app back")
+      is(this.result[0].origin, "http://www.example.com",
+        "getNotInstalled returned the expected app");
+    } else {
+      ok(false, "got an unexpected result from the call to getNotInstalled");
+    }
+    next();
+  }
+
+  let type = typeof window.navigator.mozApps.getNotInstalled;
+  is(type, "undefined", "getNotInstalled moved from window.navigator");
+  type = typeof window.navigator.mozApps.mgmt.getNotInstalled;
+  if (type === "function") {
+    is(type, "function", "getNotInstalled moved to window.navigator.mgmt");
+    results = window.navigator.mozApps.mgmt.getNotInstalled();
+    results.onerror = getNotInstalledError;
+    results.onsuccess = getNotInstalledSuccess;
+  } else {
+    ok(false, "getNotInstalled not a function");
+    next();
+  }
+}
+
+function unmonkeyPatchDOMApplicationRegistry (next) {
+  if (typeof _isLaunchable === "function") {
+    DOMApplicationRegistry._isLaunchable = _isLaunchable;
+    ok(true, "restored DOMApplicationRegistry._isLaunchable")
+  } else {
+    ok(false, "can't restore DOMApplicationRegistry._isLaunchable")
+  }
+  next();
+}
+</script>
+</window>

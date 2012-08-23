@@ -52,19 +52,19 @@ public:
   NS_IMETHOD Initialize(nsISupports* aOwner,
                         JSContext* aCx,
                         JSObject* aObj,
-                        PRUint32 aArgc,
+                        uint32_t aArgc,
                         jsval* aArgv);
 
   typedef nsIDOMBlob* (*UnwrapFuncPtr)(JSContext*, JSObject*);
   nsresult InitInternal(JSContext* aCx,
-                        PRUint32 aArgc,
+                        uint32_t aArgc,
                         jsval* aArgv,
                         UnwrapFuncPtr aUnwrapFunc);
 
   already_AddRefed<nsIDOMBlob>
-  CreateSlice(PRUint64 aStart, PRUint64 aLength, const nsAString& aContentType);
+  CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType);
 
-  NS_IMETHOD GetSize(PRUint64*);
+  NS_IMETHOD GetSize(uint64_t*);
   NS_IMETHOD GetInternalStream(nsIInputStream**);
 
   static nsresult
@@ -87,7 +87,7 @@ public:
     : mData(nullptr), mDataLen(0), mDataBufferLen(0)
   {}
 
-  nsresult AppendVoidPtr(const void* aData, PRUint32 aLength);
+  nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
   nsresult AppendString(JSString* aString, bool nativeEOL, JSContext* aCx);
   nsresult AppendBlob(nsIDOMBlob* aBlob);
   nsresult AppendArrayBuffer(JSObject* aBuffer, JSContext *aCx);
@@ -96,7 +96,7 @@ public:
   nsTArray<nsCOMPtr<nsIDOMBlob> >& GetBlobs() { Flush(); return mBlobs; }
 
 protected:
-  bool ExpandBufferSize(PRUint64 aSize)
+  bool ExpandBufferSize(uint64_t aSize)
   {
     if (mDataBufferLen >= mDataLen + aSize) {
       mDataLen += aSize;
@@ -104,7 +104,7 @@ protected:
     }
 
     // Start at 1 or we'll loop forever.
-    CheckedUint32 bufferLen = NS_MAX<PRUint32>(mDataBufferLen, 1);
+    CheckedUint32 bufferLen = NS_MAX<uint32_t>(mDataBufferLen, 1);
     while (bufferLen.isValid() && bufferLen.value() < mDataLen + aSize)
       bufferLen *= 2;
 
@@ -138,8 +138,8 @@ protected:
 
   nsTArray<nsCOMPtr<nsIDOMBlob> > mBlobs;
   void* mData;
-  PRUint64 mDataLen;
-  PRUint64 mDataBufferLen;
+  uint64_t mDataLen;
+  uint64_t mDataBufferLen;
 };
 
 class nsDOMBlobBuilder MOZ_FINAL : public nsIDOMMozBlobBuilder,
@@ -153,7 +153,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMMOZBLOBBUILDER
 
-  nsresult AppendVoidPtr(const void* aData, PRUint32 aLength)
+  nsresult AppendVoidPtr(const void* aData, uint32_t aLength)
   { return mBlobSet.AppendVoidPtr(aData, aLength); }
 
   nsresult GetBlobInternal(const nsAString& aContentType,
@@ -163,7 +163,7 @@ public:
   NS_IMETHOD Initialize(nsISupports* aOwner,
                         JSContext* aCx,
                         JSObject* aObj,
-                        PRUint32 aArgc,
+                        uint32_t aArgc,
                         jsval* aArgv);
 protected:
   BlobSet mBlobSet;

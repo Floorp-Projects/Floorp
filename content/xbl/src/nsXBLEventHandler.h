@@ -48,7 +48,7 @@ private:
 class nsXBLKeyEventHandler : public nsIDOMEventListener
 {
 public:
-  nsXBLKeyEventHandler(nsIAtom* aEventType, PRUint8 aPhase, PRUint8 aType);
+  nsXBLKeyEventHandler(nsIAtom* aEventType, uint8_t aPhase, uint8_t aType);
   virtual ~nsXBLKeyEventHandler();
 
   NS_DECL_ISUPPORTS
@@ -60,7 +60,7 @@ public:
     mProtoHandlers.AppendElement(aProtoHandler);
   }
 
-  bool Matches(nsIAtom* aEventType, PRUint8 aPhase, PRUint8 aType) const
+  bool Matches(nsIAtom* aEventType, uint8_t aPhase, uint8_t aType) const
   {
     return (mEventType == aEventType && mPhase == aPhase && mType == aType);
   }
@@ -70,12 +70,12 @@ public:
     mEventType->ToString(aString);
   }
 
-  PRUint8 GetPhase() const
+  uint8_t GetPhase() const
   {
     return mPhase;
   }
 
-  PRUint8 GetType() const
+  uint8_t GetType() const
   {
     return mType;
   }
@@ -86,13 +86,13 @@ public:
   }
 private:
   nsXBLKeyEventHandler();
-  bool ExecuteMatchedHandlers(nsIDOMKeyEvent* aEvent, PRUint32 aCharCode,
+  bool ExecuteMatchedHandlers(nsIDOMKeyEvent* aEvent, uint32_t aCharCode,
                                 bool aIgnoreShiftKey);
 
   nsTArray<nsXBLPrototypeHandler*> mProtoHandlers;
   nsCOMPtr<nsIAtom> mEventType;
-  PRUint8 mPhase;
-  PRUint8 mType;
+  uint8_t mPhase;
+  uint8_t mType;
   bool mIsBoundToChrome;
 };
 
@@ -102,7 +102,7 @@ NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
                       nsXBLEventHandler** aResult);
 
 nsresult
-NS_NewXBLKeyEventHandler(nsIAtom* aEventType, PRUint8 aPhase,
-                         PRUint8 aType, nsXBLKeyEventHandler** aResult);
+NS_NewXBLKeyEventHandler(nsIAtom* aEventType, uint8_t aPhase,
+                         uint8_t aType, nsXBLKeyEventHandler** aResult);
 
 #endif

@@ -151,7 +151,7 @@ size. -->
 <!ENTITY bookmark_edit_location "Location">
 <!ENTITY bookmark_edit_keyword "Keyword">
 
-<!ENTITY site_settings_title        "Clear Site Settings">
+<!ENTITY site_settings_title2       "Site Settings…">
 <!ENTITY site_settings_cancel       "Cancel">
 <!ENTITY site_settings_clear        "Clear">
 <!ENTITY site_settings_no_settings  "There are no settings to clear.">
@@ -177,9 +177,19 @@ size. -->
 <!ENTITY abouthome_last_tabs_open "Open all tabs from last time">
 <!ENTITY abouthome_top_sites_title "Top sites">
 <!ENTITY abouthome_top_sites_browse "Browse all your top sites">
-<!ENTITY abouthome_no_top_sites "You do not have any top sites yet. Tap the Title Bar to start browsing.">
-<!ENTITY abouthome_about_sync "Set up Firefox Sync to access bookmarks, history and tabs from your other devices">
+<!-- Localization note (abouthome_about_sync2, abouthome_about_apps): The
+     chevron (ex: "»"; unicode= U+00BB) is used as an arrow to show that
+     clicking this text in the promotions box will perform some action. Note
+     that a non-breaking space (unicode= U+00A0) should be used between this
+     character and the remainder of the string to prevent word wrap. -->
+<!ENTITY abouthome_about_sync2 "Set up Firefox Sync to access bookmarks, history and tabs from your other devices »">
+<!ENTITY abouthome_about_apps "Get apps from the Mozilla Marketplace and discover the best the Web has to offer »">
+<!-- Localization note (abouthome_sync_bold_name, abouthome_apps_bold_name):
+     These strings are accentuated as bold text in the "abouthome_about_..."
+     strings above. These strings should be a subset of the strings above and
+     generally be the name of the product the string describes. -->
 <!ENTITY abouthome_sync_bold_name "Firefox Sync">
+<!ENTITY abouthome_apps_bold_name "Mozilla Marketplace">
 
 <!ENTITY filepicker_title "Choose File">
 <!ENTITY filepicker_audio_title "Choose or record a sound">

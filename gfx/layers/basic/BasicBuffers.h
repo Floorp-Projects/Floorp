@@ -37,7 +37,7 @@ public:
               Layer* aMaskLayer);
 
   virtual already_AddRefed<gfxASurface>
-  CreateBuffer(ContentType aType, const nsIntSize& aSize, PRUint32 aFlags);
+  CreateBuffer(ContentType aType, const nsIntSize& aSize, uint32_t aFlags);
 
   /**
    * Swap out the old backing buffer for |aBuffer| and attributes.
@@ -133,7 +133,7 @@ public:
 
 protected:
   virtual already_AddRefed<gfxASurface>
-  CreateBuffer(ContentType, const nsIntSize&, PRUint32)
+  CreateBuffer(ContentType, const nsIntSize&, uint32_t)
   {
     NS_RUNTIMEABORT("ShadowThebesLayer can't paint content");
     return nullptr;

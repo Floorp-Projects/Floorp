@@ -23,7 +23,7 @@ protected:
   virtual void     Destroy(nsSMILValue&) const;
   virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const;
   virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                       PRUint32 aCount) const;
+                       uint32_t aCount) const;
   virtual bool IsEqual(const nsSMILValue& aLeft,
                          const nsSMILValue& aRight) const;
   virtual nsresult ComputeDistance(const nsSMILValue& aFrom,

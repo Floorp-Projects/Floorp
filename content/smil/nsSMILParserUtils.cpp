@@ -23,10 +23,10 @@
 
 namespace {
 
-const PRUint32 MSEC_PER_SEC  = 1000;
-const PRUint32 MSEC_PER_MIN  = 1000 * 60;
-const PRUint32 MSEC_PER_HOUR = 1000 * 60 * 60;
-const PRInt32  DECIMAL_BASE  = 10;
+const uint32_t MSEC_PER_SEC  = 1000;
+const uint32_t MSEC_PER_MIN  = 1000 * 60;
+const uint32_t MSEC_PER_HOUR = 1000 * 60 * 60;
+const int32_t  DECIMAL_BASE  = 10;
 
 #define ACCESSKEY_PREFIX_LC NS_LITERAL_STRING("accesskey(") // SMIL2+
 #define ACCESSKEY_PREFIX_CC NS_LITERAL_STRING("accessKey(") // SVG/SMIL ANIM
@@ -82,23 +82,23 @@ GetFloat(const char*& aStart, const char* aEnd, nsresult* aErrorCode)
 }
 
 size_t
-GetUnsignedInt(const nsAString& aStr, PRUint32& aResult)
+GetUnsignedInt(const nsAString& aStr, uint32_t& aResult)
 {
   NS_ConvertUTF16toUTF8 cstr(aStr);
   const char* str = cstr.get();
 
   char* rest;
-  PRInt32 value = strtol(str, &rest, DECIMAL_BASE);
+  int32_t value = strtol(str, &rest, DECIMAL_BASE);
 
   if (rest == str || value < 0)
     return 0;
 
-  aResult = static_cast<PRUint32>(value);
+  aResult = static_cast<uint32_t>(value);
   return rest - str;
 }
 
 bool
-GetUnsignedIntAndEndParen(const nsAString& aStr, PRUint32& aResult)
+GetUnsignedIntAndEndParen(const nsAString& aStr, uint32_t& aResult)
 {
   size_t intLen = GetUnsignedInt(aStr, aResult);
 
@@ -174,7 +174,7 @@ ParseClockComponent(const char*& aStart,
 bool
 ParseMetricMultiplicand(const char*& aStart,
                         const char* aEnd,
-                        PRInt32& multiplicand)
+                        int32_t& multiplicand)
 {
   bool result = false;
 
@@ -249,13 +249,13 @@ ParseAccessKey(const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult)
   if (end - start < 2)
     return NS_ERROR_FAILURE;
 
-  PRUint32 c = *start++;
+  uint32_t c = *start++;
 
   // Process 32-bit codepoints
   if (NS_IS_HIGH_SURROGATE(c)) {
     if (end - start < 2) // Expecting at least low-surrogate + ')'
       return NS_ERROR_FAILURE;
-    PRUint32 lo = *start++;
+    uint32_t lo = *start++;
     if (!NS_IS_LOW_SURROGATE(lo))
       return NS_ERROR_FAILURE;
     c = SURROGATE_TO_UCS4(c, lo);
@@ -685,20 +685,20 @@ nsSMILParserUtils::ParseTimeValueSpecParams(const nsAString& aSpec,
 nsresult
 nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
                                    nsSMILTimeValue* aResult,
-                                   PRUint32 aFlags,   // = 0
+                                   uint32_t aFlags,   // = 0
                                    bool* aIsMedia)  // = nullptr
 {
   nsSMILTime offset = 0L;
   double component = 0.0;
 
-  PRInt8 sign = 0;
-  PRUint8 colonCount = 0;
+  int8_t sign = 0;
+  uint8_t colonCount = 0;
 
   // Indicates we have started parsing a clock-value (not including the optional
   // +/- that precedes the clock-value) or keyword ("media", "indefinite")
   bool started = false;
 
-  PRInt32 metricMultiplicand = MSEC_PER_SEC;
+  int32_t metricMultiplicand = MSEC_PER_SEC;
 
   bool numIsReal = false;
   bool prevNumCouldBeMin = false;
@@ -841,10 +841,10 @@ nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
   return NS_OK;
 }
 
-PRInt32
+int32_t
 nsSMILParserUtils::CheckForNegativeNumber(const nsAString& aStr)
 {
-  PRInt32 absValLocation = -1;
+  int32_t absValLocation = -1;
 
   nsAString::const_iterator start, end;
   aStr.BeginReading(start);

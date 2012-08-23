@@ -183,8 +183,8 @@ ContainerRender(Container* aContainer,
         RECT dest = { 0, 0, visibleRect.width, visibleRect.height };
         RECT src = dest;
         ::OffsetRect(&src,
-                     visibleRect.x + PRInt32(transform.x0),
-                     visibleRect.y + PRInt32(transform.y0));
+                     visibleRect.x + int32_t(transform.x0),
+                     visibleRect.y + int32_t(transform.y0));
         if (!aManager->CompositingDisabled()) {
           hr = aManager->device()->
             StretchRect(previousRenderTarget, &src, renderSurface, &dest, D3DTEXF_NONE);
@@ -232,7 +232,7 @@ ContainerRender(Container* aContainer,
   /*
    * Render this container's contents.
    */
-  for (PRUint32 i = 0; i < children.Length(); i++) {
+  for (uint32_t i = 0; i < children.Length(); i++) {
     LayerD3D9* layerToRender = static_cast<LayerD3D9*>(children.ElementAt(i)->ImplData());
 
     if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {

@@ -48,7 +48,7 @@
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsServiceManagerUtils.h"      // for do_GetService
 #include "nsString.h"                   // for nsAutoString
-#include "prtypes.h"                    // for PRInt32, PRUint16, PRUint32
+#include "prtypes.h"                    // for int32_t, uint16_t, uint32_t
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
 #include "nsContentUtils.h"             // for nsContentUtils, etc
 #include "nsIBidiKeyboard.h"            // for nsIBidiKeyboard
@@ -398,7 +398,7 @@ nsEditorEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
       return NS_OK;
     }
 
-    PRUint32 keyCode = 0;
+    uint32_t keyCode = 0;
     keyEvent->GetKeyCode(&keyCode);
     if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT ||
         keyCode == nsIDOMKeyEvent::DOM_VK_CONTROL) {
@@ -424,7 +424,7 @@ nsEditorEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
       return NS_OK;
     }
 
-    PRUint32 keyCode = 0;
+    uint32_t keyCode = 0;
     keyEvent->GetKeyCode(&keyCode);
     if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT) {
       bool switchToRTL;
@@ -515,7 +515,7 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   // IME to commit before we change the cursor position
   mEditor->ForceCompositionEnd();
 
-  PRUint16 button = (PRUint16)-1;
+  uint16_t button = (uint16_t)-1;
   mouseEvent->GetButton(&button);
   // middle-mouse click (paste);
   if (button == 1)
@@ -526,7 +526,7 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
       nsCOMPtr<nsIDOMNode> parent;
       if (NS_FAILED(mouseEvent->GetRangeParent(getter_AddRefs(parent))))
         return NS_ERROR_NULL_POINTER;
-      PRInt32 offset = 0;
+      int32_t offset = 0;
       if (NS_FAILED(mouseEvent->GetRangeOffset(&offset)))
         return NS_ERROR_NULL_POINTER;
 
@@ -543,7 +543,7 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
       if (ctrlKey)
         mailEditor = do_QueryObject(mEditor);
 
-      PRInt32 clipboard = nsIClipboard::kGlobalClipboard;
+      int32_t clipboard = nsIClipboard::kGlobalClipboard;
       nsCOMPtr<nsIClipboard> clipboardService =
         do_GetService("@mozilla.org/widget/clipboard;1", &rv);
       if (NS_SUCCEEDED(rv)) {
@@ -650,7 +650,7 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
     aDragEvent->PreventDefault(); // consumed
 
     if (mCaret) {
-      PRInt32 offset = 0;
+      int32_t offset = 0;
       nsresult rv = aDragEvent->GetRangeOffset(&offset);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -802,15 +802,15 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
       rv = aEvent->GetRangeParent(getter_AddRefs(parent));
       if (NS_FAILED(rv) || !parent) return false;
 
-      PRInt32 offset = 0;
+      int32_t offset = 0;
       rv = aEvent->GetRangeOffset(&offset);
       NS_ENSURE_SUCCESS(rv, false);
 
-      PRInt32 rangeCount;
+      int32_t rangeCount;
       rv = selection->GetRangeCount(&rangeCount);
       NS_ENSURE_SUCCESS(rv, false);
 
-      for (PRInt32 i = 0; i < rangeCount; i++)
+      for (int32_t i = 0; i < rangeCount; i++)
       {
         nsCOMPtr<nsIDOMRange> range;
         rv = selection->GetRangeAt(i, getter_AddRefs(range));
@@ -966,7 +966,7 @@ void
 nsEditorEventListener::SpellCheckIfNeeded() {
   // If the spell check skip flag is still enabled from creation time,
   // disable it because focused editors are allowed to spell check.
-  PRUint32 currentFlags = 0;
+  uint32_t currentFlags = 0;
   mEditor->GetFlags(&currentFlags);
   if(currentFlags & nsIPlaintextEditor::eEditorSkipSpellCheck)
   {

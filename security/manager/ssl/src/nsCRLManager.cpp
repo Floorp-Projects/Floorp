@@ -46,7 +46,7 @@ nsCRLManager::~nsCRLManager()
 }
 
 NS_IMETHODIMP 
-nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType, bool doSilentDownload, const PRUnichar* crlKey)
+nsCRLManager::ImportCrl (uint8_t *aData, uint32_t aLength, nsIURI * aURI, uint32_t aType, bool doSilentDownload, const PRUnichar* crlKey)
 {
   if (!NS_IsMainThread()) {
     NS_ERROR("nsCRLManager::ImportCrl called off the main thread");
@@ -65,7 +65,7 @@ nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint
   nsCAutoString url;
   nsCOMPtr<nsICRLInfo> crlData;
   bool importSuccessful;
-  PRInt32 errorCode;
+  int32_t errorCode;
   nsString errorMessage;
   
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
@@ -197,7 +197,7 @@ done:
       PRUnichar *updateTime;
       nsCAutoString updateTimeStr;
       nsCString updateURL;
-      PRInt32 timingTypePref;
+      int32_t timingTypePref;
       double dayCnt;
       char *dayCntStr;
       nsCAutoString updateTypePrefStr(CRL_AUTOUPDATE_TIMIINGTYPE_PREF);
@@ -250,7 +250,7 @@ done:
       }
 
     } else{
-      PRInt32 errCnt;
+      int32_t errCnt;
       nsCAutoString errMsg;
       nsCAutoString updateErrDetailPrefStr(CRL_AUTOUPDATE_ERRDETAIL_PREF);
       LossyAppendUTF16toASCII(crlKey, updateErrDetailPrefStr);
@@ -347,14 +347,14 @@ nsCRLManager::GetCrls(nsIArray ** aCrls)
  * Delete a Crl entry from the cert db.
  */
 NS_IMETHODIMP 
-nsCRLManager::DeleteCrl(PRUint32 aCrlIndex)
+nsCRLManager::DeleteCrl(uint32_t aCrlIndex)
 {
   nsNSSShutDownPreventionLock locker;
   CERTSignedCrl *realCrl = nullptr;
   CERTCrlHeadNode *head = nullptr;
   CERTCrlNode *node = nullptr;
   SECStatus sec_rv;
-  PRUint32 i;
+  uint32_t i;
 
   // Get the list of certs //
   sec_rv = SEC_LookupCrls(CERT_GetDefaultCertDB(), &head, -1);
@@ -379,7 +379,7 @@ nsCRLManager::DeleteCrl(PRUint32 aCrlIndex)
 
 NS_IMETHODIMP
 nsCRLManager::ComputeNextAutoUpdateTime(nsICRLInfo *info, 
-  PRUint32 autoUpdateType, double dayCnt, PRUnichar **nextAutoUpdate)
+  uint32_t autoUpdateType, double dayCnt, PRUnichar **nextAutoUpdate)
 {
   if (!info)
     return NS_ERROR_FAILURE;
@@ -388,11 +388,11 @@ nsCRLManager::ComputeNextAutoUpdateTime(nsICRLInfo *info,
   PRTime microsecInDayCnt;
   PRTime now = PR_Now();
   PRTime tempTime;
-  PRInt64 diff = 0;
-  PRInt64 secsInDay = 86400UL;
-  PRInt64 temp;
-  PRInt64 cycleCnt = 0;
-  PRInt64 secsInDayCnt;
+  int64_t diff = 0;
+  int64_t secsInDay = 86400UL;
+  int64_t temp;
+  int64_t cycleCnt = 0;
+  int64_t secsInDayCnt;
   double tmpData;
   
   LL_L2F(tmpData,secsInDay);

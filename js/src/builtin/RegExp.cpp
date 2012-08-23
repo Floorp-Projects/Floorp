@@ -219,7 +219,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
          * use generic (proxyable) operations on sourceObj that do not assume
          * sourceObj.isRegExp().
          */
-        JSObject &sourceObj = sourceValue.toObject();
+        RootedObject sourceObj(cx, &sourceValue.toObject());
 
         if (args.hasDefined(1)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEWREGEXP_FLAGGED);
@@ -233,7 +233,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         RegExpFlag flags;
         {
             RegExpGuard g;
-            if (!RegExpToShared(cx, sourceObj, &g))
+            if (!RegExpToShared(cx, *sourceObj, &g))
                 return false;
 
             flags = g->getFlags();
@@ -244,7 +244,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
          * to executing RegExpObject::getSource on the unwrapped object.
          */
         RootedValue v(cx);
-        if (!sourceObj.getProperty(cx, cx->runtime->atomState.sourceAtom, &v))
+        if (!JSObject::getProperty(cx, sourceObj, sourceObj, cx->runtime->atomState.sourceAtom, &v))
             return false;
 
         Rooted<JSAtom*> sourceAtom(cx, &v.toString()->asAtom());

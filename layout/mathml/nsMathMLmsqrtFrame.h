@@ -47,9 +47,9 @@ public:
   InheritAutomaticData(nsIFrame* aParent);
 
   NS_IMETHOD
-  AttributeChanged(PRInt32         aNameSpaceID,
+  AttributeChanged(int32_t         aNameSpaceID,
                    nsIAtom*        aAttribute,
-                   PRInt32         aModType);
+                   int32_t         aModType);
 
 protected:
   nsMathMLmsqrtFrame(nsStyleContext* aContext);

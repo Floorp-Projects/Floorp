@@ -134,8 +134,8 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
             nsIAsyncOutputStream **pipeOut,
             bool nonBlockingInput = PR_FALSE,
             bool nonBlockingOutput = PR_FALSE,
-            PRUint32 segmentSize = 0,
-            PRUint32 segmentCount = 0,
+            uint32_t segmentSize = 0,
+            uint32_t segmentCount = 0,
             nsIMemory *segmentAlloc = nullptr);
 
 /**
@@ -169,8 +169,8 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
 extern nsresult
 NS_NewPipe(nsIInputStream **pipeIn,
            nsIOutputStream **pipeOut,
-           PRUint32 segmentSize = 0,
-           PRUint32 maxSize = 0,
+           uint32_t segmentSize = 0,
+           uint32_t maxSize = 0,
            bool nonBlockingInput = PR_FALSE,
            bool nonBlockingOutput = PR_FALSE,
            nsIMemory *segmentAlloc = nullptr);

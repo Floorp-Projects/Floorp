@@ -18,7 +18,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // ask the DSSaver DLL (sscore.dll) for the time of the last activity
-  bool PollIdleTime(PRUint32 *aIdleTime);
+  bool PollIdleTime(uint32_t *aIdleTime);
 
   static already_AddRefed<nsIdleServiceOS2> GetInstance()
   {

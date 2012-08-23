@@ -126,7 +126,7 @@ MSG_DEF(JSMSG_CURLY_BEFORE_BODY,       72, 0, JSEXN_SYNTAXERR, "missing { before
 MSG_DEF(JSMSG_CURLY_AFTER_BODY,        73, 0, JSEXN_SYNTAXERR, "missing } after function body")
 MSG_DEF(JSMSG_PAREN_BEFORE_COND,       74, 0, JSEXN_SYNTAXERR, "missing ( before condition")
 MSG_DEF(JSMSG_PAREN_AFTER_COND,        75, 0, JSEXN_SYNTAXERR, "missing ) after condition")
-MSG_DEF(JSMSG_DESTRUCT_DUP_ARG,        76, 0, JSEXN_SYNTAXERR, "duplicate argument is mixed with destructuring pattern")
+MSG_DEF(JSMSG_BAD_DUP_ARGS,            76, 0, JSEXN_SYNTAXERR, "duplicate argument names not allowed in this context")
 MSG_DEF(JSMSG_NAME_AFTER_DOT,          77, 0, JSEXN_SYNTAXERR, "missing name after . operator")
 MSG_DEF(JSMSG_BRACKET_IN_INDEX,        78, 0, JSEXN_SYNTAXERR, "missing ] in index expression")
 MSG_DEF(JSMSG_XML_WHOLE_PROGRAM,       79, 0, JSEXN_SYNTAXERR, "XML can't be the whole program")

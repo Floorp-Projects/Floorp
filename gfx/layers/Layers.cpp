@@ -27,6 +27,8 @@ const ViewID FrameMetrics::NULL_SCROLL_ID = 0;
 const ViewID FrameMetrics::ROOT_SCROLL_ID = 1;
 const ViewID FrameMetrics::START_SCROLL_ID = 2;
 
+uint8_t gLayerManagerLayerBuilder;
+
 #ifdef MOZ_LAYERS_HAVE_LOG
 FILE*
 FILEOrDefault(FILE* aFile)
@@ -83,7 +85,7 @@ AppendToString(nsACString& s, const gfxRGBA& c,
   s += pfx;
   s += nsPrintfCString(
     "rgba(%d, %d, %d, %g)",
-    PRUint8(c.r*255.0), PRUint8(c.g*255.0), PRUint8(c.b*255.0), c.a);
+    uint8_t(c.r*255.0), uint8_t(c.g*255.0), uint8_t(c.b*255.0), c.a);
   return s += sfx;
 }
 
@@ -118,6 +120,15 @@ AppendToString(nsACString& s, const nsIntPoint& p,
 {
   s += pfx;
   s += nsPrintfCString("(x=%d, y=%d)", p.x, p.y);
+  return s += sfx;
+}
+
+nsACString&
+AppendToString(nsACString& s, const Point& p,
+               const char* pfx="", const char* sfx="")
+{
+  s += pfx;
+  s += nsPrintfCString("(x=%f, y=%f)", p.x, p.y);
   return s += sfx;
 }
 
@@ -241,16 +252,20 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
 Layer::~Layer()
 {}
 
-void
-Layer::AddAnimation(const Animation& aAnimation)
+Animation*
+Layer::AddAnimation(TimeStamp aStart, TimeDuration aDuration, float aIterations,
+                    int aDirection, nsCSSProperty aProperty, const AnimationData& aData)
 {
-  if (!AsShadowableLayer() || !AsShadowableLayer()->HasShadow())
-    return;
+  Animation* anim = mAnimations.AppendElement();
+  anim->startTime() = aStart;
+  anim->duration() = aDuration;
+  anim->numIterations() = aIterations;
+  anim->direction() = aDirection;
+  anim->property() = aProperty;
+  anim->data() = aData;
 
-  MOZ_ASSERT(aAnimation.segments().Length() >= 1);
-
-  mAnimations.AppendElement(aAnimation);
   Mutated();
+  return anim;
 }
 
 void
@@ -266,7 +281,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
 {
   nsAutoPtr<nsCSSValueList> result;
   nsCSSValueList** resultTail = getter_Transfers(result);
-  for (PRUint32 i = 0; i < aFunctions.Length(); i++) {
+  for (uint32_t i = 0; i < aFunctions.Length(); i++) {
     nsRefPtr<nsCSSValue::Array> arr;
     switch (aFunctions[i].type()) {
       case TransformFunction::TRotationX:
@@ -373,6 +388,10 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
         NS_ASSERTION(false, "All functions should be implemented?");
     }
   }
+  if (aFunctions.Length() == 0) {
+    result = new nsCSSValueList();
+    result->mValue.SetNoneValue();
+  }
   return result.forget();
 }
 
@@ -381,12 +400,11 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
 {
   mAnimations = aAnimations;
   mAnimationData.Clear();
-  for (PRUint32 i = 0; i < mAnimations.Length(); i++) {
-    AnimData data;
-    InfallibleTArray<css::ComputedTimingFunction*>* functions =
-      &data.mFunctions;
+  for (uint32_t i = 0; i < mAnimations.Length(); i++) {
+    AnimData* data = mAnimationData.AppendElement();
+    InfallibleTArray<css::ComputedTimingFunction*>& functions = data->mFunctions;
     nsTArray<AnimationSegment> segments = mAnimations.ElementAt(i).segments();
-    for (PRUint32 j = 0; j < segments.Length(); j++) {
+    for (uint32_t j = 0; j < segments.Length(); j++) {
       TimingFunction tf = segments.ElementAt(j).sampleFn();
       css::ComputedTimingFunction* ctf = new css::ComputedTimingFunction();
       switch (tf.type()) {
@@ -405,56 +423,34 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
           break;
         }
       }
-      functions->AppendElement(ctf);
+      functions.AppendElement(ctf);
     }
 
     // Precompute the nsStyleAnimation::Values that we need if this is a transform
     // animation.
-    InfallibleTArray<nsStyleAnimation::Value>* startValues =
-      &data.mStartValues;
-    InfallibleTArray<nsStyleAnimation::Value>* endValues =
-      &data.mEndValues;
-    for (PRUint32 j = 0; j < mAnimations[i].segments().Length(); j++) {
+    InfallibleTArray<nsStyleAnimation::Value>& startValues = data->mStartValues;
+    InfallibleTArray<nsStyleAnimation::Value>& endValues = data->mEndValues;
+    for (uint32_t j = 0; j < mAnimations[i].segments().Length(); j++) {
       const AnimationSegment& segment = mAnimations[i].segments()[j];
+      nsStyleAnimation::Value* startValue = startValues.AppendElement();
+      nsStyleAnimation::Value* endValue = endValues.AppendElement();
       if (segment.endState().type() == Animatable::TArrayOfTransformFunction) {
         const InfallibleTArray<TransformFunction>& startFunctions =
           segment.startState().get_ArrayOfTransformFunction();
-        nsStyleAnimation::Value startValue;
-        nsCSSValueList* startList;
-        if (startFunctions.Length() > 0) {
-          startList = CreateCSSValueList(startFunctions);
-        } else {
-          startList = new nsCSSValueList();
-          startList->mValue.SetNoneValue();
-        }
-        startValue.SetAndAdoptCSSValueListValue(startList, nsStyleAnimation::eUnit_Transform);
-        startValues->AppendElement(startValue);
+        startValue->SetAndAdoptCSSValueListValue(CreateCSSValueList(startFunctions),
+                                                 nsStyleAnimation::eUnit_Transform);
 
         const InfallibleTArray<TransformFunction>& endFunctions =
           segment.endState().get_ArrayOfTransformFunction();
-        nsStyleAnimation::Value endValue;
-        nsCSSValueList* endList;
-        if (endFunctions.Length() > 0) {
-          endList = CreateCSSValueList(endFunctions);
-        } else {
-          endList = new nsCSSValueList();
-          endList->mValue.SetNoneValue();
-        }
-        endValue.SetAndAdoptCSSValueListValue(endList, nsStyleAnimation::eUnit_Transform);
-        endValues->AppendElement(endValue);
+        endValue->SetAndAdoptCSSValueListValue(CreateCSSValueList(endFunctions),
+                                               nsStyleAnimation::eUnit_Transform);
       } else {
-        NS_ASSERTION(segment.endState().type() == Animatable::TOpacity,
+        NS_ASSERTION(segment.endState().type() == Animatable::Tfloat,
                      "Unknown Animatable type");
-        nsStyleAnimation::Value startValue;
-        startValue.SetFloatValue(segment.startState().get_Opacity().value());
-        startValues->AppendElement(startValue);
-
-        nsStyleAnimation::Value endValue;
-        endValue.SetFloatValue(segment.endState().get_Opacity().value());
-        endValues->AppendElement(endValue);
+        startValue->SetFloatValue(segment.startState().get_float());
+        endValue->SetFloatValue(segment.endState().get_float());
       }
     }
-    mAnimationData.AppendElement(data);
   }
 
   Mutated();
@@ -670,7 +666,7 @@ ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 bool
 ContainerLayer::HasMultipleChildren()
 {
-  PRUint32 count = 0;
+  uint32_t count = 0;
   for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
     const nsIntRect *clipRect = child->GetEffectiveClipRect();
     if (clipRect && clipRect->IsEmpty())
@@ -842,7 +838,7 @@ void WriteSnapshotLinkToDumpFile(T* aObj, FILE* aFile)
 {
   nsCString string(aObj->Name());
   string.Append("-");
-  string.AppendInt((PRUint64)aObj);
+  string.AppendInt((uint64_t)aObj);
   fprintf(aFile, "href=\"javascript:ViewImage('%s')\"", string.BeginReading());
 }
 
@@ -851,7 +847,7 @@ void WriteSnapshotToDumpFile_internal(T* aObj, gfxASurface* aSurf)
 {
   nsCString string(aObj->Name());
   string.Append("-");
-  string.AppendInt((PRUint64)aObj);
+  string.AppendInt((uint64_t)aObj);
   if (gfxUtils::sDumpPaintFile)
     fprintf(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
   aSurf->DumpAsDataURL(gfxUtils::sDumpPaintFile);
@@ -1043,7 +1039,7 @@ nsACString&
 RefLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   ContainerLayer::PrintInfo(aTo, aPrefix);
-  if (-1 != mId) {
+  if (0 != mId) {
     AppendToString(aTo, mId, " [id=", "]");
   }
   return aTo;

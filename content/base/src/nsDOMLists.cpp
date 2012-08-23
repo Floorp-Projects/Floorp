@@ -33,7 +33,7 @@ NS_INTERFACE_TABLE_HEAD(nsDOMStringList)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
+nsDOMStringList::Item(uint32_t aIndex, nsAString& aResult)
 {
   if (aIndex >= mNames.Length()) {
     SetDOMStringToNull(aResult);
@@ -45,7 +45,7 @@ nsDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
 }
 
 NS_IMETHODIMP
-nsDOMStringList::GetLength(PRUint32 *aLength)
+nsDOMStringList::GetLength(uint32_t *aLength)
 {
   *aLength = mNames.Length();
 

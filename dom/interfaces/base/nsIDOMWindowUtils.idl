@@ -121,12 +121,17 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * It's legal to set a displayport that extends beyond the overflow
    * area in any direction (left/right/top/bottom).
-   * 
+   *
    * It's also legal to set a displayport that extends beyond the
    * area's bounds.  No pixels are rendered outside the area bounds.
    *
    * The caller of this method must have UniversalXPConnect
    * privileges.
+   *
+   * Calling this will always force a recomposite, so it should be
+   * avoided if at all possible. Client code should do checks before
+   * calling this so that duplicate sets are not made with the same
+   * displayport.
    */
   void setDisplayPortForElement(in float aXPx, in float aYPx,
                                 in float aWidthPx, in float aHeightPx,
@@ -257,14 +262,14 @@ interface nsIDOMWindowUtils : nsISupports {
    * returns true if the page called prevent default on this touch event
    */
   boolean sendTouchEvent(in AString aType,
-                         [array, size_is(count)] in PRUint32 aIdentifiers,
-                         [array, size_is(count)] in PRInt32 aXs,
-                         [array, size_is(count)] in PRInt32 aYs,
-                         [array, size_is(count)] in PRUint32 aRxs,
-                         [array, size_is(count)] in PRUint32 aRys,
+                         [array, size_is(count)] in uint32_t aIdentifiers,
+                         [array, size_is(count)] in int32_t aXs,
+                         [array, size_is(count)] in int32_t aYs,
+                         [array, size_is(count)] in uint32_t aRxs,
+                         [array, size_is(count)] in uint32_t aRys,
                          [array, size_is(count)] in float aRotationAngles,
                          [array, size_is(count)] in float aForces,
-                         in PRUint32 count,
+                         in uint32_t count,
                          in long aModifiers,
                          [optional] in boolean aIgnoreRootScrollFrame);
 
@@ -579,7 +584,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * This method requires UniversalXPConnect privileges.
    */
-  PRUint32 compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
+  uint32_t compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
                            in nsIDOMHTMLCanvasElement aCanvas2,
                            out unsigned long aMaxDifference);
 
@@ -1009,7 +1014,7 @@ interface nsIDOMWindowUtils : nsISupports {
   nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
 
   [noscript] void RenderDocument(in nsConstRect aRect,
-                                 in PRUint32 aFlags,
+                                 in uint32_t aFlags,
                                  in nscolor aBackgroundColor,
                                  in gfxContext aThebesContext);
 

@@ -6,10 +6,21 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(b905b05e-2141-444c-a90d-525b6c0daff1)]
+[scriptable, builtinclass, uuid(333022b8-a7e5-4fff-8588-36f2eedff17e)]
 interface nsIDOMBluetoothPairingEvent : nsIDOMEvent
 {
   readonly attribute DOMString deviceAddress;
-  readonly attribute DOMString uuid;
   readonly attribute unsigned long passkey;
+
+  [noscript] void initBluetoothPairingEvent(in DOMString aType,
+                                            in boolean aCanBubble,
+                                            in boolean aCancelable,
+                                            in DOMString aDeviceAddress,
+                                            in unsigned long aPasskey);
+};
+
+dictionary BluetoothPairingEventInit : EventInit
+{
+  DOMString deviceAddress;
+  unsigned long passkey;
 };

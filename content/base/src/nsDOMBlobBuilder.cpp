@@ -21,16 +21,16 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsDOMMultipartFile, nsDOMFile,
                              nsIJSNativeInitializer)
 
 NS_IMETHODIMP
-nsDOMMultipartFile::GetSize(PRUint64* aLength)
+nsDOMMultipartFile::GetSize(uint64_t* aLength)
 {
   if (mLength == UINT64_MAX) {
     CheckedUint64 length = 0;
   
-    PRUint32 i;
-    PRUint32 len = mBlobs.Length();
+    uint32_t i;
+    uint32_t len = mBlobs.Length();
     for (i = 0; i < len; i++) {
       nsIDOMBlob* blob = mBlobs.ElementAt(i).get();
-      PRUint64 l = 0;
+      uint64_t l = 0;
   
       nsresult rv = blob->GetSize(&l);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -57,7 +57,7 @@ nsDOMMultipartFile::GetInternalStream(nsIInputStream** aStream)
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
   NS_ENSURE_TRUE(stream, NS_ERROR_FAILURE);
 
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < mBlobs.Length(); i++) {
     nsCOMPtr<nsIInputStream> scratchStream;
     nsIDOMBlob* blob = mBlobs.ElementAt(i).get();
@@ -73,26 +73,26 @@ nsDOMMultipartFile::GetInternalStream(nsIInputStream** aStream)
 }
 
 already_AddRefed<nsIDOMBlob>
-nsDOMMultipartFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
+nsDOMMultipartFile::CreateSlice(uint64_t aStart, uint64_t aLength,
                                 const nsAString& aContentType)
 {
   // If we clamped to nothing we create an empty blob
   nsTArray<nsCOMPtr<nsIDOMBlob> > blobs;
 
-  PRUint64 length = aLength;
-  PRUint64 skipStart = aStart;
+  uint64_t length = aLength;
+  uint64_t skipStart = aStart;
 
   // Prune the list of blobs if we can
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; length && skipStart && i < mBlobs.Length(); i++) {
     nsIDOMBlob* blob = mBlobs[i].get();
 
-    PRUint64 l;
+    uint64_t l;
     nsresult rv = blob->GetSize(&l);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     if (skipStart < l) {
-      PRUint64 upperBound = NS_MIN<PRUint64>(l - skipStart, length);
+      uint64_t upperBound = NS_MIN<uint64_t>(l - skipStart, length);
 
       nsCOMPtr<nsIDOMBlob> firstBlob;
       rv = blob->Slice(skipStart, skipStart + upperBound,
@@ -117,7 +117,7 @@ nsDOMMultipartFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
   for (; length && i < mBlobs.Length(); i++) {
     nsIDOMBlob* blob = mBlobs[i].get();
 
-    PRUint64 l;
+    uint64_t l;
     nsresult rv = blob->GetSize(&l);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
@@ -131,7 +131,7 @@ nsDOMMultipartFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
     } else {
       blobs.AppendElement(blob);
     }
-    length -= NS_MIN<PRUint64>(l, length);
+    length -= NS_MIN<uint64_t>(l, length);
   }
 
   // we can create our blob now
@@ -167,7 +167,7 @@ NS_IMETHODIMP
 nsDOMMultipartFile::Initialize(nsISupports* aOwner,
                                JSContext* aCx,
                                JSObject* aObj,
-                               PRUint32 aArgc,
+                               uint32_t aArgc,
                                jsval* aArgv)
 {
   return InitInternal(aCx, aArgc, aArgv, GetXPConnectNative);
@@ -175,7 +175,7 @@ nsDOMMultipartFile::Initialize(nsISupports* aOwner,
 
 nsresult
 nsDOMMultipartFile::InitInternal(JSContext* aCx,
-                                 PRUint32 aArgc,
+                                 uint32_t aArgc,
                                  jsval* aArgv,
                                  UnwrapFuncPtr aUnwrapFunc)
 {
@@ -254,11 +254,11 @@ nsDOMMultipartFile::InitInternal(JSContext* aCx,
 }
 
 nsresult
-BlobSet::AppendVoidPtr(const void* aData, PRUint32 aLength)
+BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
 {
   NS_ENSURE_ARG_POINTER(aData);
 
-  PRUint64 offset = mDataLen;
+  uint64_t offset = mDataLen;
 
   if (!ExpandBufferSize(aLength))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -440,7 +440,7 @@ NS_IMETHODIMP
 nsDOMBlobBuilder::Initialize(nsISupports* aOwner,
                              JSContext* aCx,
                              JSObject* aObj,
-                             PRUint32 aArgc,
+                             uint32_t aArgc,
                              jsval* aArgv)
 {
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aOwner));

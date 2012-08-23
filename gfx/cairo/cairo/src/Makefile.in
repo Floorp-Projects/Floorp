@@ -210,9 +210,12 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-# Disable spammy "missing initializer" GCC warning
 ifdef GNU_CC
+# Disable spammy "missing initializer" GCC warning
 CFLAGS += -Wno-missing-field-initializers
+
+# Disable spammy "implicit conversion from enumeration type 'cairo_" warnings.
+CFLAGS += -Wno-conversion
 endif # GNU_CC
 
 DEFINES += -DPACKAGE_VERSION="\"moz\"" -DPACKAGE_BUGREPORT="\"http://bugzilla.mozilla.org/\""

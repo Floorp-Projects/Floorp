@@ -24,22 +24,22 @@ public:
   nsUnicodeToTSCII() { mBuffer = 0; }
   virtual ~nsUnicodeToTSCII() {}
 
-  NS_IMETHOD Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength,
-                     char * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD Convert(const PRUnichar * aSrc, int32_t * aSrcLength,
+                     char * aDest, int32_t * aDestLength);
 
-  NS_IMETHOD Finish(char * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD Finish(char * aDest, int32_t * aDestLength);
 
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength,
-                          PRInt32 * aDestLength);
+  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, int32_t aSrcLength,
+                          int32_t * aDestLength);
 
   NS_IMETHOD Reset();
 
-  NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior,
+  NS_IMETHOD SetOutputErrorBehavior(int32_t aBehavior,
                                     nsIUnicharEncoder * aEncoder, 
                                     PRUnichar aChar);
 
 private:
-  PRUint32 mBuffer; // buffer for character(s) to be combined with the following
+  uint32_t mBuffer; // buffer for character(s) to be combined with the following
                     // character. Up to 4 single byte characters can be 
                     // stored. 
 };
@@ -57,18 +57,18 @@ public:
   nsUnicodeToTamilTTF() : nsUnicodeToTSCII() {}
   virtual ~nsUnicodeToTamilTTF() {}
 
-  NS_IMETHOD Convert      (const PRUnichar * aSrc, PRInt32 * aSrcLength,
-                           char * aDest, PRInt32 * aDestLength);
-  NS_IMETHOD GetMaxLength (const PRUnichar * aSrc, PRInt32  aSrcLength,
-                           PRInt32 * aDestLength);
+  NS_IMETHOD Convert      (const PRUnichar * aSrc, int32_t * aSrcLength,
+                           char * aDest, int32_t * aDestLength);
+  NS_IMETHOD GetMaxLength (const PRUnichar * aSrc, int32_t  aSrcLength,
+                           int32_t * aDestLength);
 
-  NS_IMETHOD SetOutputErrorBehavior (PRInt32 aBehavior, 
+  NS_IMETHOD SetOutputErrorBehavior (int32_t aBehavior, 
                                      nsIUnicharEncoder *aEncoder, 
                                      PRUnichar aChar);
 
 private:
   char mStaticBuffer[CHAR_BUFFER_SIZE];
-  PRInt32 mErrBehavior;
+  int32_t mErrBehavior;
   PRUnichar mErrChar;
   nsCOMPtr<nsIUnicharEncoder> mErrEncoder;
 };

@@ -46,7 +46,7 @@ NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP SplitElementTxn::Init(nsEditor   *aEditor,
                                     nsIDOMNode *aNode,
-                                    PRInt32     aOffset)
+                                    int32_t     aOffset)
 {
   NS_ASSERTION(aEditor && aNode, "bad args");
   if (!aEditor || !aNode) { return NS_ERROR_NOT_INITIALIZED; }
@@ -196,7 +196,7 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
     nsCOMPtr<nsIDOMNode>child;
     nsCOMPtr<nsIDOMNode>nextSibling;
     result = mExistingRightNode->GetFirstChild(getter_AddRefs(child));
-    PRInt32 i;
+    int32_t i;
     for (i=0; i<mOffset; i++)
     {
       if (NS_FAILED(result)) {return result;}

@@ -14,21 +14,21 @@
 class nsIAtom;
 class nsIDOMDocument;
 
-class txUint32Array : public nsTArray<PRUint32>
+class txUint32Array : public nsTArray<uint32_t>
 {
 public:
-    bool AppendValue(PRUint32 aValue)
+    bool AppendValue(uint32_t aValue)
     {
         return AppendElement(aValue) != nullptr;
     }
-    bool RemoveValueAt(PRUint32 aIndex)
+    bool RemoveValueAt(uint32_t aIndex)
     {
         if (aIndex < Length()) {
             RemoveElementAt(aIndex);
         }
         return true;
     }
-    PRUint32 ValueAt(PRUint32 aIndex) const
+    uint32_t ValueAt(uint32_t aIndex) const
     {
         return (aIndex < Length()) ? ElementAt(aIndex) : 0;
     }
@@ -40,9 +40,9 @@ public:
     txXPathTreeWalker(const txXPathTreeWalker& aOther);
     explicit txXPathTreeWalker(const txXPathNode& aNode);
 
-    bool getAttr(nsIAtom* aLocalName, PRInt32 aNSID, nsAString& aValue) const;
-    PRInt32 getNamespaceID() const;
-    PRUint16 getNodeType() const;
+    bool getAttr(nsIAtom* aLocalName, int32_t aNSID, nsAString& aValue) const;
+    int32_t getNamespaceID() const;
+    uint16_t getNodeType() const;
     void appendNodeValue(nsAString& aResult) const;
     void getNodeName(nsAString& aName) const;
 
@@ -53,7 +53,7 @@ public:
     bool moveToElementById(const nsAString& aID);
     bool moveToFirstAttribute();
     bool moveToNextAttribute();
-    bool moveToNamedAttribute(nsIAtom* aLocalName, PRInt32 aNSID);
+    bool moveToNamedAttribute(nsIAtom* aLocalName, int32_t aNSID);
     bool moveToFirstChild();
     bool moveToLastChild();
     bool moveToNextSibling();
@@ -66,10 +66,10 @@ public:
 private:
     txXPathNode mPosition;
 
-    bool moveToValidAttribute(PRUint32 aStartIndex);
-    bool moveToSibling(PRInt32 aDir);
+    bool moveToValidAttribute(uint32_t aStartIndex);
+    bool moveToSibling(int32_t aDir);
 
-    PRUint32 mCurrentIndex;
+    uint32_t mCurrentIndex;
     txUint32Array mDescendants;
 };
 
@@ -77,19 +77,19 @@ class txXPathNodeUtils
 {
 public:
     static bool getAttr(const txXPathNode& aNode, nsIAtom* aLocalName,
-                          PRInt32 aNSID, nsAString& aValue);
+                          int32_t aNSID, nsAString& aValue);
     static already_AddRefed<nsIAtom> getLocalName(const txXPathNode& aNode);
     static nsIAtom* getPrefix(const txXPathNode& aNode);
     static void getLocalName(const txXPathNode& aNode, nsAString& aLocalName);
     static void getNodeName(const txXPathNode& aNode,
                             nsAString& aName);
-    static PRInt32 getNamespaceID(const txXPathNode& aNode);
+    static int32_t getNamespaceID(const txXPathNode& aNode);
     static void getNamespaceURI(const txXPathNode& aNode, nsAString& aURI);
-    static PRUint16 getNodeType(const txXPathNode& aNode);
+    static uint16_t getNodeType(const txXPathNode& aNode);
     static void appendNodeValue(const txXPathNode& aNode, nsAString& aResult);
     static bool isWhitespace(const txXPathNode& aNode);
     static txXPathNode* getOwnerDocument(const txXPathNode& aNode);
-    static PRInt32 getUniqueIdentifier(const txXPathNode& aNode);
+    static int32_t getUniqueIdentifier(const txXPathNode& aNode);
     static nsresult getXSLTId(const txXPathNode& aNode,
                               const txXPathNode& aBase, nsAString& aResult);
     static void release(txXPathNode* aNode);
@@ -143,13 +143,13 @@ txXPathTreeWalker::getCurrentPosition() const
 }
 
 inline bool
-txXPathTreeWalker::getAttr(nsIAtom* aLocalName, PRInt32 aNSID,
+txXPathTreeWalker::getAttr(nsIAtom* aLocalName, int32_t aNSID,
                            nsAString& aValue) const
 {
     return txXPathNodeUtils::getAttr(mPosition, aLocalName, aNSID, aValue);
 }
 
-inline PRInt32
+inline int32_t
 txXPathTreeWalker::getNamespaceID() const
 {
     return txXPathNodeUtils::getNamespaceID(mPosition);
@@ -197,7 +197,7 @@ txXPathTreeWalker::isOnNode(const txXPathNode& aNode) const
 }
 
 /* static */
-inline PRInt32
+inline int32_t
 txXPathNodeUtils::getUniqueIdentifier(const txXPathNode& aNode)
 {
     NS_PRECONDITION(!aNode.isAttribute(),

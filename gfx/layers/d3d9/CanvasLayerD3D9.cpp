@@ -44,7 +44,6 @@ CanvasLayerD3D9::Initialize(const Data& aData)
   } else if (aData.mGLContext) {
     NS_ASSERTION(aData.mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
     mGLContext = aData.mGLContext;
-    mCanvasFramebuffer = mGLContext->GetOffscreenFBO();
     mDataIsPremultiplied = aData.mGLBufferIsPremultiplied;
     mNeedsYFlip = true;
   } else {
@@ -84,42 +83,27 @@ CanvasLayerD3D9::UpdateSurface()
 
     const bool stridesMatch = r.Pitch == mBounds.width * 4;
 
-    PRUint8 *destination;
+    uint8_t *destination;
     if (!stridesMatch) {
       destination = GetTempBlob(mBounds.width * mBounds.height * 4);
     } else {
       DiscardTempBlob();
-      destination = (PRUint8*)r.pBits;
+      destination = (uint8_t*)r.pBits;
     }
 
     mGLContext->MakeCurrent();
-
-    PRUint32 currentFramebuffer = 0;
-
-    mGLContext->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*)&currentFramebuffer);
-
-    // Make sure that we read pixels from the correct framebuffer, regardless
-    // of what's currently bound.
-    if (currentFramebuffer != mCanvasFramebuffer)
-      mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mCanvasFramebuffer);
 
     nsRefPtr<gfxImageSurface> tmpSurface =
       new gfxImageSurface(destination,
                           gfxIntSize(mBounds.width, mBounds.height),
                           mBounds.width * 4,
                           gfxASurface::ImageFormatARGB32);
-    mGLContext->ReadPixelsIntoImageSurface(0, 0,
-                                           mBounds.width, mBounds.height,
-                                           tmpSurface);
+    mGLContext->ReadScreenIntoImageSurface(tmpSurface);
     tmpSurface = nullptr;
-
-    // Put back the previous framebuffer binding.
-    if (currentFramebuffer != mCanvasFramebuffer)
-      mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, currentFramebuffer);
 
     if (!stridesMatch) {
       for (int y = 0; y < mBounds.height; y++) {
-        memcpy((PRUint8*)r.pBits + r.Pitch * y,
+        memcpy((uint8_t*)r.pBits + r.Pitch * y,
                destination + mBounds.width * 4 * y,
                mBounds.width * 4);
       }
@@ -159,8 +143,8 @@ CanvasLayerD3D9::UpdateSurface()
       ctx->Paint();
     }
 
-    PRUint8 *startBits = sourceSurface->Data();
-    PRUint32 sourceStride = sourceSurface->Stride();
+    uint8_t *startBits = sourceSurface->Data();
+    uint32_t sourceStride = sourceSurface->Stride();
 
     if (sourceSurface->Format() != gfxASurface::ImageFormatARGB32) {
       mHasAlpha = false;
@@ -169,7 +153,7 @@ CanvasLayerD3D9::UpdateSurface()
     }
 
     for (int y = 0; y < mBounds.height; y++) {
-      memcpy((PRUint8*)lockedRect.pBits + lockedRect.Pitch * y,
+      memcpy((uint8_t*)lockedRect.pBits + lockedRect.Pitch * y,
              startBits + sourceStride * y,
              mBounds.width * 4);
     }

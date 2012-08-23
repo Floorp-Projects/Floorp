@@ -109,7 +109,7 @@ gfxQtPlatform::gfxQtPlatform()
     nsresult rv;
     // 0 - default gfxQPainterSurface
     // 1 - gfxImageSurface
-    PRInt32 ival = Preferences::GetInt("mozilla.widget-qt.render-mode", DEFAULT_RENDER_MODE);
+    int32_t ival = Preferences::GetInt("mozilla.widget-qt.render-mode", DEFAULT_RENDER_MODE);
 
     const char *envTypeOverride = getenv("MOZ_QT_RENDER_TYPE");
     if (envTypeOverride)
@@ -468,7 +468,7 @@ gfxQtPlatform::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 
 gfxFontEntry*
 gfxQtPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                 const PRUint8 *aFontData, PRUint32 aLength)
+                                 const uint8_t *aFontData, uint32_t aLength)
 {
     // passing ownership of the font data to the new font entry
     return gfxPangoFontGroup::NewFontEntry(*aProxyEntry,
@@ -476,7 +476,7 @@ gfxQtPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 }
 
 bool
-gfxQtPlatform::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
+gfxQtPlatform::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags)
 {
     // check for strange format flags
     NS_ASSERTION(!(aFormatFlags & gfxUserFontSet::FLAG_FORMAT_NOT_USED),
@@ -549,7 +549,7 @@ FindFontForCharProc(nsStringHashKey::KeyType aKey,
 }
 
 already_AddRefed<gfxFont>
-gfxQtPlatform::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
+gfxQtPlatform::FindFontForChar(uint32_t aCh, gfxFont *aFont)
 {
     if (!gPlatformFonts || !gCodepointsWithNoFonts)
         return nullptr;
@@ -593,11 +593,11 @@ gfxQtPlatform::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxFo
 
 #endif
 
-PRInt32
+int32_t
 gfxQtPlatform::GetDPI()
 {
     QDesktopWidget* rootWindow = qApp->desktop();
-    PRInt32 dpi = rootWindow->logicalDpiY(); // y-axis DPI for fonts
+    int32_t dpi = rootWindow->logicalDpiY(); // y-axis DPI for fonts
     return dpi <= 0 ? 96 : dpi;
 }
 

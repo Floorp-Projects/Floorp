@@ -20,10 +20,207 @@
 
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
-#include "frontend/TreeContext.h"
+#include "frontend/SharedContext.h"
 
 namespace js {
 namespace frontend {
+
+struct StmtInfoPC : public StmtInfoBase {
+    StmtInfoPC      *down;          /* info for enclosing statement */
+    StmtInfoPC      *downScope;     /* next enclosing lexical scope */
+
+    uint32_t        blockid;        /* for simplified dominance computation */
+
+    /* True if type == STMT_BLOCK and this block is a function body. */
+    bool            isFunctionBodyBlock;
+
+    StmtInfoPC(JSContext *cx) : StmtInfoBase(cx), isFunctionBodyBlock(false) {}
+};
+
+typedef HashSet<JSAtom *> FuncStmtSet;
+struct Parser;
+struct SharedContext;
+
+typedef Vector<Definition *, 16> DeclVector;
+
+/*
+ * The struct ParseContext stores information about the current parsing context,
+ * which is part of the parser state (see the field Parser::pc). The current
+ * parsing context is either the global context, or the function currently being
+ * parsed. When the parser encounters a function definition, it creates a new
+ * ParseContext, makes it the new current context, and sets its parent to the
+ * context in which it encountered the definition.
+ */
+struct ParseContext                 /* tree context for semantic checks */
+{
+    typedef StmtInfoPC StmtInfo;
+
+    SharedContext   *sc;            /* context shared between parsing and bytecode generation */
+
+    uint32_t        bodyid;         /* block number of program/function body */
+    uint32_t        blockidGen;     /* preincremented block number generator */
+
+    StmtInfoPC      *topStmt;       /* top of statement info stack */
+    StmtInfoPC      *topScopeStmt;  /* top lexical scope statement */
+    Rooted<StaticBlockObject *> blockChain;
+                                    /* compile time block scope chain */
+
+    const unsigned  staticLevel;    /* static compilation unit nesting level */
+
+    uint32_t        parenDepth;     /* nesting depth of parens that might turn out
+                                       to be generator expressions */
+    uint32_t        yieldCount;     /* number of |yield| tokens encountered at
+                                       non-zero depth in current paren tree */
+    ParseNode       *blockNode;     /* parse node for a block with let declarations
+                                       (block with its own lexical scope)  */
+  private:
+    AtomDecls       decls_;         /* function, const, and var declarations */
+    DeclVector      args_;          /* argument definitions */
+    DeclVector      vars_;          /* var/const definitions */
+
+  public:
+    const AtomDecls &decls() const {
+        return decls_;
+    }
+
+    uint32_t numArgs() const {
+        JS_ASSERT(sc->inFunction());
+        return args_.length();
+    }
+
+    uint32_t numVars() const {
+        JS_ASSERT(sc->inFunction());
+        return vars_.length();
+    }
+
+    /*
+     * This function adds a definition to the lexical scope represented by this
+     * ParseContext.
+     *
+     * Pre-conditions:
+     *  + The caller must have already taken care of name collisions:
+     *    - For non-let definitions, this means 'name' isn't in 'decls'.
+     *    - For let definitions, this means 'name' isn't already a name in the
+     *      current block.
+     *  + The given 'pn' is either a placeholder (created by a previous unbound
+     *    use) or an un-bound un-linked name node.
+     *  + The given 'kind' is one of ARG, CONST, VAR, or LET. In particular,
+     *    NAMED_LAMBDA is handled in an ad hoc special case manner (see
+     *    LeaveFunction) that we should consider rewriting.
+     *
+     * Post-conditions:
+     *  + pc->decls().lookupFirst(name) == pn
+     *  + The given name 'pn' has been converted in-place into a
+     *    non-placeholder definition.
+     *  + If this is a function scope (sc->inFunction), 'pn' is bound to a
+     *    particular local/argument slot.
+     *  + PND_CONST is set for Definition::COSNT
+     *  + Pre-existing uses of pre-existing placeholders have been linked to
+     *    'pn' if they are in the scope of 'pn'.
+     *  + Pre-existing placeholders in the scope of 'pn' have been removed.
+     */
+    bool define(JSContext *cx, PropertyName *name, ParseNode *pn, Definition::Kind);
+
+    /*
+     * Let definitions may shadow same-named definitions in enclosing scopes.
+     * To represesent this, 'decls' is not a plain map, but actually:
+     *   decls :: name -> stack of definitions
+     * New bindings are pushed onto the stack, name lookup always refers to the
+     * top of the stack, and leaving a block scope calls popLetDecl for each
+     * name in the block's scope.
+     */
+    void popLetDecl(JSAtom *atom);
+
+    /* See the sad story in DefineArg. */
+    void prepareToAddDuplicateArg(Definition *prevDecl);
+
+    /* See the sad story in MakeDefIntoUse. */
+    void updateDecl(JSAtom *atom, ParseNode *newDecl);
+
+    /*
+     * After a function body has been parsed, the parser generates the
+     * function's "bindings". Bindings are a data-structure, ultimately stored
+     * in the compiled JSScript, that serve three purposes:
+     *  - After parsing, the ParseContext is destroyed and 'decls' along with
+     *    it. Mostly, the emitter just uses the binding information stored in
+     *    the use/def nodes, but the emitter occasionally needs 'bindings' for
+     *    various scope-related queries.
+     *  - Bindings provide the initial js::Shape to use when creating a dynamic
+     *    scope object (js::CallObject) for the function. This shape is used
+     *    during dynamic name lookup.
+     *  - Sometimes a script's bindings are accessed at runtime to retrieve the
+     *    contents of the lexical scope (e.g., from the debugger).
+     */
+    bool generateFunctionBindings(JSContext *cx, Bindings *bindings) const;
+
+  public:
+    ParseNode       *yieldNode;     /* parse node for a yield expression that might
+                                       be an error if we turn out to be inside a
+                                       generator expression */
+    FunctionBox     *functionList;
+
+    // A strict mode error found in this scope or one of its children. It is
+    // used only when strictModeState is UNKNOWN. If the scope turns out to be
+    // strict and this is non-null, it is thrown.
+    CompileError    *queuedStrictModeError;
+
+  private:
+    ParseContext    **parserPC;     /* this points to the Parser's active pc
+                                       and holds either |this| or one of
+                                       |this|'s descendents */
+
+  public:
+    OwnedAtomDefnMapPtr lexdeps;    /* unresolved lexical name dependencies */
+
+    ParseContext     *parent;       /* Enclosing function or global context.  */
+
+    ParseNode       *innermostWith; /* innermost WITH parse node */
+
+    FuncStmtSet     *funcStmts;     /* Set of (non-top-level) function statements
+                                       that will alias any top-level bindings with
+                                       the same name. */
+
+    /*
+     * Flags that are set for a short time during parsing to indicate context
+     * or the presence of a code feature.
+     */
+    bool            hasReturnExpr:1; /* function has 'return <expr>;' */
+    bool            hasReturnVoid:1; /* function has 'return;' */
+
+    bool            inForInit:1;    /* parsing init expr of for; exclude 'in' */
+
+    // Set when parsing a declaration-like destructuring pattern.  This flag
+    // causes PrimaryExpr to create PN_NAME parse nodes for variable references
+    // which are not hooked into any definition's use chain, added to any tree
+    // context's AtomList, etc. etc.  CheckDestructuring will do that work
+    // later.
+    //
+    // The comments atop CheckDestructuring explain the distinction between
+    // assignment-like and declaration-like destructuring patterns, and why
+    // they need to be treated differently.
+    bool            inDeclDestructuring:1;
+
+    inline ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
+    inline ~ParseContext();
+
+    inline bool init();
+
+    inline void setQueuedStrictModeError(CompileError *e);
+
+    unsigned blockid();
+
+    // True if we are at the topmost level of a entire script or function body.
+    // For example, while parsing this code we would encounter f1 and f2 at
+    // body level, but we would not encounter f3 or f4 at body level:
+    //
+    //   function f1() { function f2() { } }
+    //   if (cond) { function f3() { if (cond) { function f4() { } } } }
+    //
+    bool atBodyLevel();
+};
+
+bool
+GenerateBlockId(ParseContext *pc, uint32_t &blockid);
 
 struct BindData;
 
@@ -40,7 +237,7 @@ struct Parser : private AutoGCRooter
     ParseNodeAllocator  allocator;
     ObjectBox           *traceListHead; /* list of parsed object for GC tracing */
 
-    TreeContext         *tc;            /* innermost tree context (stack-allocated) */
+    ParseContext        *pc;            /* innermost parse context (stack-allocated) */
 
     SourceCompressionToken *sct;        /* compression token for aborting */
 
@@ -103,14 +300,14 @@ struct Parser : private AutoGCRooter
      */
     ObjectBox *newObjectBox(JSObject *obj);
 
-    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc,
+    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, ParseContext *pc,
                                 StrictMode::StrictModeState sms);
 
     /*
-     * Create a new function object given tree context (tc) and a name (which
+     * Create a new function object given parse context (pc) and a name (which
      * is optional if this is a function expression).
      */
-    JSFunction *newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind);
+    JSFunction *newFunction(ParseContext *pc, JSAtom *atom, FunctionSyntaxKind kind);
 
     void trace(JSTracer *trc);
 
@@ -168,8 +365,8 @@ struct Parser : private AutoGCRooter
     /*
      * JS parsers, from lowest to highest precedence.
      *
-     * Each parser must be called during the dynamic scope of a TreeContext
-     * object, pointed to by this->tc.
+     * Each parser must be called during the dynamic scope of a ParseContext
+     * object, pointed to by this->pc.
      *
      * Each returns a parse node tree or null on error.
      *
@@ -259,7 +456,7 @@ struct Parser : private AutoGCRooter
     // strict. This also effectively bans XML in function defaults. See bug
     // 772691.
     bool allowsXML() const {
-        return tc->sc->strictModeState == StrictMode::NOTSTRICT && tokenStream.allowsXML();
+        return pc->sc->strictModeState == StrictMode::NOTSTRICT && tokenStream.allowsXML();
     }
 
     ParseNode *endBracketedExpr();
@@ -337,8 +534,8 @@ Parser::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
 }
 
 bool
-DefineArg(Parser *parser, ParseNode *funcpn, HandlePropertyName name, bool destructuringArg = false,
-          Definition **duplicatedArg = NULL);
+DefineArg(Parser *parser, ParseNode *funcpn, HandlePropertyName name,
+          bool disallowDuplicateArgs = false, Definition **duplicatedArg = NULL);
 
 } /* namespace frontend */
 } /* namespace js */

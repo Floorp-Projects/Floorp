@@ -50,7 +50,7 @@ public:
                         const PRUnichar* aPreventDefault,
                         const PRUnichar* aAllowUntrusted,
                         nsXBLPrototypeBinding* aBinding,
-                        PRUint32 aLineNumber);
+                        uint32_t aLineNumber);
 
   // This constructor is used only by XUL key handlers (e.g., <key>)
   nsXBLPrototypeHandler(nsIContent* aKeyElement);
@@ -62,11 +62,11 @@ public:
 
   // if aCharCode is not zero, it is used instead of the charCode of aKeyEvent.
   bool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
-                         PRUint32 aCharCode = 0,
+                         uint32_t aCharCode = 0,
                          bool aIgnoreShiftKey = false);
   inline bool KeyEventMatched(nsIAtom* aEventType,
                                 nsIDOMKeyEvent* aEvent,
-                                PRUint32 aCharCode = 0,
+                                uint32_t aCharCode = 0,
                                 bool aIgnoreShiftKey = false)
   {
     if (aEventType != mEventName)
@@ -89,8 +89,8 @@ public:
 
   void AppendHandlerText(const nsAString& aText);
 
-  PRUint8 GetPhase() { return mPhase; }
-  PRUint8 GetType() { return mType; }
+  uint8_t GetPhase() { return mPhase; }
+  uint8_t GetType() { return mType; }
 
   nsXBLPrototypeHandler* GetNextHandler() { return mNextHandler; }
   void SetNextHandler(nsXBLPrototypeHandler* aHandler) { mNextHandler = aHandler; }
@@ -131,7 +131,7 @@ public:
   nsresult Write(nsIScriptContext* aContext, nsIObjectOutputStream* aStream);
 
 public:
-  static PRUint32 gRefCnt;
+  static uint32_t gRefCnt;
   
 protected:
   void Init() {
@@ -143,7 +143,7 @@ protected:
 
   already_AddRefed<nsIController> GetController(nsIDOMEventTarget* aTarget);
   
-  inline PRInt32 GetMatchingKeyCode(const nsAString& aKeyName);
+  inline int32_t GetMatchingKeyCode(const nsAString& aKeyName);
   void ConstructPrototype(nsIContent* aKeyElement, 
                           const PRUnichar* aEvent=nullptr, const PRUnichar* aPhase=nullptr,
                           const PRUnichar* aAction=nullptr, const PRUnichar* aCommand=nullptr,
@@ -162,25 +162,25 @@ protected:
   nsresult EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
                               nsIScriptContext *aBoundContext, nsIAtom *aName,
                               nsScriptObjectHolder<JSObject>& aHandler);
-  static PRInt32 KeyToMask(PRInt32 key);
+  static int32_t KeyToMask(int32_t key);
   
-  static PRInt32 kAccelKey;
-  static PRInt32 kMenuAccessKey;
+  static int32_t kAccelKey;
+  static int32_t kMenuAccessKey;
   static void InitAccessKeys();
 
-  static const PRInt32 cShift;
-  static const PRInt32 cAlt;
-  static const PRInt32 cControl;
-  static const PRInt32 cMeta;
-  static const PRInt32 cOS;
+  static const int32_t cShift;
+  static const int32_t cAlt;
+  static const int32_t cControl;
+  static const int32_t cMeta;
+  static const int32_t cOS;
 
-  static const PRInt32 cShiftMask;
-  static const PRInt32 cAltMask;
-  static const PRInt32 cControlMask;
-  static const PRInt32 cMetaMask;
-  static const PRInt32 cOSMask;
+  static const int32_t cShiftMask;
+  static const int32_t cAltMask;
+  static const int32_t cControlMask;
+  static const int32_t cMetaMask;
+  static const int32_t cOSMask;
 
-  static const PRInt32 cAllModifiers;
+  static const int32_t cAllModifiers;
 
 protected:
   union {
@@ -191,23 +191,23 @@ protected:
                                         // that we should use.
   };
 
-  PRUint32 mLineNumber;  // The line number we started at in the XBL file
+  uint32_t mLineNumber;  // The line number we started at in the XBL file
   
   // The following four values make up 32 bits.
-  PRUint8 mPhase;            // The phase (capturing, bubbling)
-  PRUint8 mType;             // The type of the handler.  The handler is either a XUL key
+  uint8_t mPhase;            // The phase (capturing, bubbling)
+  uint8_t mType;             // The type of the handler.  The handler is either a XUL key
                              // handler, an XBL "command" event, or a normal XBL event with
                              // accompanying JavaScript.  The high bit is used to indicate
                              // whether this handler should prevent the default action.
-  PRUint8 mMisc;             // Miscellaneous extra information.  For key events,
+  uint8_t mMisc;             // Miscellaneous extra information.  For key events,
                              // stores whether or not we're a key code or char code.
                              // For mouse events, stores the clickCount.
 
-  PRInt32 mKeyMask;          // Which modifier keys this event handler expects to have down
+  int32_t mKeyMask;          // Which modifier keys this event handler expects to have down
                              // in order to be matched.
  
   // The primary filter information for mouse/key events.
-  PRInt32 mDetail;           // For key events, contains a charcode or keycode. For
+  int32_t mDetail;           // For key events, contains a charcode or keycode. For
                              // mouse events, stores the button info.
 
   // Prototype handlers are chained. We own the next handler in the chain.

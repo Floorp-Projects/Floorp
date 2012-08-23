@@ -44,9 +44,9 @@ private:
 
 protected:
 
-  void ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
-                          PRUint32 aPixelWidth);
-  void ConvertRGBARow(const PRUint8* aSrc, PRUint8* aDest, PRUint32 aPixelWidth);
+  void ConvertHostARGBRow(const uint8_t* aSrc, uint8_t* aDest,
+                          uint32_t aPixelWidth);
+  void ConvertRGBARow(const uint8_t* aSrc, uint8_t* aDest, uint32_t aPixelWidth);
 
   static void initDestination(jpeg_compress_struct* cinfo);
   static boolean emptyOutputBuffer(jpeg_compress_struct* cinfo);
@@ -59,15 +59,15 @@ protected:
   bool mFinished;
 
   // image buffer
-  PRUint8* mImageBuffer;
-  PRUint32 mImageBufferSize;
-  PRUint32 mImageBufferUsed;
+  uint8_t* mImageBuffer;
+  uint32_t mImageBufferSize;
+  uint32_t mImageBufferUsed;
 
-  PRUint32 mImageBufferReadPoint;
+  uint32_t mImageBufferReadPoint;
 
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget> mCallbackTarget;
-  PRUint32 mNotifyThreshold;
+  uint32_t mNotifyThreshold;
 
   /*
     nsJPEGEncoder is designed to allow one thread to pump data into it while another

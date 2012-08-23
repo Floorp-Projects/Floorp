@@ -24,7 +24,7 @@ nsConverterOutputStream::~nsConverterOutputStream()
 NS_IMETHODIMP
 nsConverterOutputStream::Init(nsIOutputStream* aOutStream,
                               const char*      aCharset,
-                              PRUint32         aBufferSize /* ignored */,
+                              uint32_t         aBufferSize /* ignored */,
                               PRUnichar        aReplacementChar)
 {
     NS_PRECONDITION(aOutStream, "Null output stream!");
@@ -43,7 +43,7 @@ nsConverterOutputStream::Init(nsIOutputStream* aOutStream,
 
     mOutStream = aOutStream;
 
-    PRInt32 behaviour = aReplacementChar ? nsIUnicodeEncoder::kOnError_Replace
+    int32_t behaviour = aReplacementChar ? nsIUnicodeEncoder::kOnError_Replace
                                          : nsIUnicodeEncoder::kOnError_Signal;
     return mConverter->
         SetOutputErrorBehavior(behaviour,
@@ -52,7 +52,7 @@ nsConverterOutputStream::Init(nsIOutputStream* aOutStream,
 }
 
 NS_IMETHODIMP
-nsConverterOutputStream::Write(PRUint32 aCount, const PRUnichar* aChars,
+nsConverterOutputStream::Write(uint32_t aCount, const PRUnichar* aChars,
                                bool* aSuccess)
 {
     if (!mOutStream) {
@@ -61,18 +61,18 @@ nsConverterOutputStream::Write(PRUint32 aCount, const PRUnichar* aChars,
     }
     NS_ASSERTION(mConverter, "Must have a converter when not closed");
 
-    PRInt32 inLen = aCount;
+    int32_t inLen = aCount;
 
-    PRInt32 maxLen;
+    int32_t maxLen;
     nsresult rv = mConverter->GetMaxLength(aChars, inLen, &maxLen);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCAutoString buf;
     buf.SetLength(maxLen);
-    if (buf.Length() != (PRUint32) maxLen)
+    if (buf.Length() != (uint32_t) maxLen)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PRInt32 outLen = maxLen;
+    int32_t outLen = maxLen;
     rv = mConverter->Convert(aChars, &inLen, buf.BeginWriting(), &outLen);
     if (NS_FAILED(rv))
         return rv;
@@ -80,12 +80,12 @@ nsConverterOutputStream::Write(PRUint32 aCount, const PRUnichar* aChars,
         // Yes, NS_ERROR_UENC_NOMAPPING is a success code
         return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
     }
-    NS_ASSERTION((PRUint32) inLen == aCount,
+    NS_ASSERTION((uint32_t) inLen == aCount,
                  "Converter didn't consume all the data!");
 
-    PRUint32 written;
+    uint32_t written;
     rv = mOutStream->Write(buf.get(), outLen, &written);
-    *aSuccess = NS_SUCCEEDED(rv) && written == PRUint32(outLen);
+    *aSuccess = NS_SUCCEEDED(rv) && written == uint32_t(outLen);
     return rv;
 
 }
@@ -93,7 +93,7 @@ nsConverterOutputStream::Write(PRUint32 aCount, const PRUnichar* aChars,
 NS_IMETHODIMP
 nsConverterOutputStream::WriteString(const nsAString& aString, bool* aSuccess)
 {
-    PRInt32 inLen = aString.Length();
+    int32_t inLen = aString.Length();
     nsAString::const_iterator i;
     aString.BeginReading(i);
     return Write(inLen, i.get(), aSuccess);
@@ -106,7 +106,7 @@ nsConverterOutputStream::Flush()
         return NS_OK; // Already closed.
 
     char buf[1024];
-    PRInt32 size = sizeof(buf);
+    int32_t size = sizeof(buf);
     nsresult rv = mConverter->Finish(buf, &size);
     NS_ASSERTION(rv != NS_OK_UENC_MOREOUTPUT,
                  "1024 bytes ought to be enough for everyone");
@@ -115,13 +115,13 @@ nsConverterOutputStream::Flush()
     if (size == 0)
         return NS_OK;
 
-    PRUint32 written;
+    uint32_t written;
     rv = mOutStream->Write(buf, size, &written);
     if (NS_FAILED(rv)) {
         NS_WARNING("Flush() lost data!");
         return rv;
     }
-    if (written != PRUint32(size)) {
+    if (written != uint32_t(size)) {
         NS_WARNING("Flush() lost data!");
         return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
     }

@@ -107,7 +107,7 @@ NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::AddRef(void)                                              \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
-    NS_PRECONDITION(PRInt32(agg->mRefCnt) >= 0, "illegal refcnt");          \
+    NS_PRECONDITION(int32_t(agg->mRefCnt) >= 0, "illegal refcnt");          \
     NS_ASSERT_OWNINGTHREAD(_class);                                         \
     ++agg->mRefCnt;                                                         \
     NS_LOG_ADDREF(this, agg->mRefCnt, #_class, sizeof(*this));              \
@@ -138,7 +138,7 @@ NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::AddRef(void)                                              \
 {                                                                           \
     _class* agg = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Downcast(this);    \
-    NS_PRECONDITION(PRInt32(agg->mRefCnt) >= 0, "illegal refcnt");          \
+    NS_PRECONDITION(int32_t(agg->mRefCnt) >= 0, "illegal refcnt");          \
     NS_CheckThreadSafe(agg->_mOwningThread.GetThread(),                     \
                        #_class " not thread-safe");                         \
     nsrefcnt count = agg->mRefCnt.incr(this);                               \

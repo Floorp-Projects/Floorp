@@ -125,7 +125,7 @@ class Navigator;
 extern nsresult
 NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
                           bool *aIsInterval,
-                          PRInt32 *aInterval,
+                          int32_t *aInterval,
                           nsIScriptTimeoutHandler **aRet);
 
 /*
@@ -153,7 +153,7 @@ struct nsTimeout : PRCList
     return static_cast<nsTimeout*>(PR_PREV_LINK(this));
   }
 
-  nsresult InitTimer(nsTimerCallbackFunc aFunc, PRUint64 delay) {
+  nsresult InitTimer(nsTimerCallbackFunc aFunc, uint64_t delay) {
     return mTimer->InitWithFuncCallback(aFunc, this, delay,
                                         nsITimer::TYPE_ONE_SHOT);
   }
@@ -174,10 +174,10 @@ struct nsTimeout : PRCList
   bool mIsInterval;
 
   // Returned as value of setTimeout()
-  PRUint32 mPublicId;
+  uint32_t mPublicId;
 
   // Interval in milliseconds
-  PRUint32 mInterval;
+  uint32_t mInterval;
 
   // mWhen and mTimeRemaining can't be in a union, sadly, because they
   // have constructors.
@@ -191,10 +191,10 @@ struct nsTimeout : PRCList
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   // stack depth at which timeout is firing
-  PRUint32 mFiringDepth;
+  uint32_t mFiringDepth;
 
   // 
-  PRUint32 mNestingLevel;
+  uint32_t mNestingLevel;
 
   // The popup state at timeout creation time if not created from
   // another timeout
@@ -211,7 +211,7 @@ private:
 struct IdleObserverHolder
 {
   nsCOMPtr<nsIIdleObserver> mIdleObserver;
-  PRUint32 mTimeInS;
+  uint32_t mTimeInS;
   bool mPrevNotificationIdle;
 
   IdleObserverHolder()
@@ -351,10 +351,10 @@ public:
 
   virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
-  virtual NS_HIDDEN_(void) SuspendTimeouts(PRUint32 aIncrease = 1,
+  virtual NS_HIDDEN_(void) SuspendTimeouts(uint32_t aIncrease = 1,
                                            bool aFreezeChildren = true);
   virtual NS_HIDDEN_(nsresult) ResumeTimeouts(bool aThawChildren = true);
-  virtual NS_HIDDEN_(PRUint32) TimeoutSuspendCount();
+  virtual NS_HIDDEN_(uint32_t) TimeoutSuspendCount();
   virtual NS_HIDDEN_(nsresult) FireDelayedDOMEvents();
   virtual NS_HIDDEN_(bool) IsFrozen() const
   {
@@ -466,7 +466,7 @@ public:
     return mContext;
   }
 
-  nsIScriptContext *GetScriptContextInternal(PRUint32 aLangID)
+  nsIScriptContext *GetScriptContextInternal(uint32_t aLangID)
   {
     NS_ASSERTION(aLangID == nsIProgrammingLanguage::JAVASCRIPT,
                  "We don't support this language ID");
@@ -526,14 +526,14 @@ public:
     CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
                              nsScriptObjectHolder<JSObject>& aHandler);
 
-  virtual bool TakeFocus(bool aFocus, PRUint32 aFocusMethod);
+  virtual bool TakeFocus(bool aFocus, uint32_t aFocusMethod);
   virtual void SetReadyForFocus();
   virtual void PageHidden();
   virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI);
   virtual nsresult DispatchSyncPopState();
 
-  virtual void EnableDeviceSensor(PRUint32 aType);
-  virtual void DisableDeviceSensor(PRUint32 aType);
+  virtual void EnableDeviceSensor(uint32_t aType);
+  virtual void DisableDeviceSensor(uint32_t aType);
 
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
 
@@ -552,11 +552,11 @@ public:
                                     const nsAString &aPopupWindowName,
                                     const nsAString &aPopupWindowFeatures);
 
-  virtual PRUint32 GetSerial() {
+  virtual uint32_t GetSerial() {
     return mSerial;
   }
 
-  static nsGlobalWindow* GetOuterWindowWithId(PRUint64 aWindowID) {
+  static nsGlobalWindow* GetOuterWindowWithId(uint64_t aWindowID) {
     if (!sWindowsById) {
       return nullptr;
     }
@@ -565,7 +565,7 @@ public:
     return outerWindow && !outerWindow->IsInnerWindow() ? outerWindow : nullptr;
   }
 
-  static nsGlobalWindow* GetInnerWindowWithId(PRUint64 aInnerWindowID) {
+  static nsGlobalWindow* GetInnerWindowWithId(uint64_t aInnerWindowID) {
     if (!sWindowsById) {
       return nullptr;
     }
@@ -592,7 +592,7 @@ public:
   void NotifyIdleObserver(IdleObserverHolder* aIdleObserverHolder,
                           bool aCallOnidle);
   nsresult HandleIdleActiveEvent();
-  bool ContainsIdleObserver(nsIIdleObserver* aIdleObserver, PRUint32 timeInS);
+  bool ContainsIdleObserver(nsIIdleObserver* aIdleObserver, uint32_t timeInS);
   void HandleIdleObserverCallback();
 
 protected:
@@ -603,11 +603,11 @@ protected:
   nsCOMPtr<nsITimer> mIdleTimer;
 
   // Idle fuzz time added to idle timer callbacks.
-  PRUint32 mIdleFuzzFactor;
+  uint32_t mIdleFuzzFactor;
 
   // Index in mArrayIdleObservers
   // Next idle observer to notify user idle status
-  PRInt32 mIdleCallbackIndex;
+  int32_t mIdleCallbackIndex;
 
   // If false then the topic is "active"
   // If true then the topic is "idle"
@@ -743,12 +743,12 @@ protected:
   // Language agnostic timeout function (all args passed).
   // |interval| is in milliseconds.
   nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
-                                PRInt32 interval,
-                                bool aIsInterval, PRInt32 *aReturn);
-  nsresult ClearTimeoutOrInterval(PRInt32 aTimerID);
+                                int32_t interval,
+                                bool aIsInterval, int32_t *aReturn);
+  nsresult ClearTimeoutOrInterval(int32_t aTimerID);
 
   // JS specific timeout functions (JS args grabbed from context).
-  nsresult SetTimeoutOrInterval(bool aIsInterval, PRInt32* aReturn);
+  nsresult SetTimeoutOrInterval(bool aIsInterval, int32_t* aReturn);
   nsresult ResetTimersForNonBackgroundWindow();
 
   // The timeout implementation functions.
@@ -786,25 +786,25 @@ protected:
   void FireOfflineStatusEvent();
 
   nsresult ScheduleNextIdleObserverCallback();
-  PRUint32 GetFuzzTimeMS();
+  uint32_t GetFuzzTimeMS();
   nsresult ScheduleActiveTimerCallback();
-  PRUint32 FindInsertionIndex(IdleObserverHolder* aIdleObserver);
+  uint32_t FindInsertionIndex(IdleObserverHolder* aIdleObserver);
   virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserverPtr);
   nsresult FindIndexOfElementToRemove(nsIIdleObserver* aIdleObserver,
-                                      PRInt32* aRemoveElementIndex);
+                                      int32_t* aRemoveElementIndex);
   virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserverPtr);
 
   nsresult FireHashchange(const nsAString &aOldURL, const nsAString &aNewURL);
 
   void FlushPendingNotifications(mozFlushType aType);
   void EnsureReflowFlushAndPaint();
-  nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
-  nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
+  nsresult CheckSecurityWidthAndHeight(int32_t* width, int32_t* height);
+  nsresult CheckSecurityLeftAndTop(int32_t* left, int32_t* top);
 
   // Arguments to this function should have values in app units
   nsresult SetCSSViewportWidthAndHeight(nscoord width, nscoord height);
   // Arguments to this function should have values in device pixels
-  nsresult SetDocShellWidthAndHeight(PRInt32 width, PRInt32 height);
+  nsresult SetDocShellWidthAndHeight(int32_t width, int32_t height);
 
   static bool CanSetProperty(const char *aPrefName);
 
@@ -816,12 +816,12 @@ protected:
 
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
   // just flush our parent and only flush ourselves if we think we need to.
-  nsresult GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY,
+  nsresult GetScrollXY(int32_t* aScrollX, int32_t* aScrollY,
                        bool aDoFlush);
-  nsresult GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY);
+  nsresult GetScrollMaxXY(int32_t* aScrollMaxX, int32_t* aScrollMaxY);
 
   nsresult GetOuterSize(nsIntSize* aSizeCSSPixels);
-  nsresult SetOuterSize(PRInt32 aLengthCSSPixels, bool aIsWidth);
+  nsresult SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth);
   nsRect GetInnerScreenRect();
 
   bool IsFrame()
@@ -869,16 +869,16 @@ protected:
   // Convenience functions for the many methods that need to scale
   // from device to CSS pixels or vice versa.  Note: if a presentation
   // context is not available, they will assume a 1:1 ratio.
-  PRInt32 DevToCSSIntPixels(PRInt32 px);
-  PRInt32 CSSToDevIntPixels(PRInt32 px);
+  int32_t DevToCSSIntPixels(int32_t px);
+  int32_t CSSToDevIntPixels(int32_t px);
   nsIntSize DevToCSSIntPixels(nsIntSize px);
   nsIntSize CSSToDevIntPixels(nsIntSize px);
 
   virtual void SetFocusedNode(nsIContent* aNode,
-                              PRUint32 aFocusMethod = 0,
+                              uint32_t aFocusMethod = 0,
                               bool aNeedsFocus = false);
 
-  virtual PRUint32 GetFocusMethod();
+  virtual uint32_t GetFocusMethod();
 
   virtual bool ShouldShowFocusRing();
 
@@ -903,7 +903,7 @@ protected:
 
   bool GetIsTabModalPromptAllowed();
 
-  inline PRInt32 DOMMinTimeoutValue() const;
+  inline int32_t DOMMinTimeoutValue() const;
 
   nsresult CreateOuterObject(nsGlobalWindow* aNewInner);
   nsresult SetOuterObject(JSContext* aCx, JSObject* aOuterObject);
@@ -1028,8 +1028,8 @@ protected:
   // This is a dummy timeout at the moment; if that ever changes, the logic in
   // ResetTimersForNonBackgroundWindow needs to change.
   nsTimeout*                    mTimeoutInsertionPoint;
-  PRUint32                      mTimeoutPublicIdCounter;
-  PRUint32                      mTimeoutFiringDepth;
+  uint32_t                      mTimeoutPublicIdCounter;
+  uint32_t                      mTimeoutFiringDepth;
   nsRefPtr<nsLocation>          mLocation;
   nsRefPtr<nsHistory>           mHistory;
 
@@ -1040,12 +1040,12 @@ protected:
   typedef nsCOMArray<nsIDOMStorageEvent> nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;
 
-  PRUint32 mTimeoutsSuspendDepth;
+  uint32_t mTimeoutsSuspendDepth;
 
   // the method that was used to focus mFocusedNode
-  PRUint32 mFocusMethod;
+  uint32_t mFocusMethod;
 
-  PRUint32 mSerial;
+  uint32_t mSerial;
 
 #ifdef DEBUG
   bool mSetOpenerWindowCalled;
@@ -1066,7 +1066,7 @@ protected:
   // (i.e. within dom.successive_dialog_time_limit of each other). It is reset
   // to 0 once a dialog is opened after dom.successive_dialog_time_limit seconds
   // have elapsed without any other dialogs.
-  PRUint32                      mDialogAbuseCount;
+  uint32_t                      mDialogAbuseCount;
 
   // This holds the time when the last modal dialog was shown. If more than
   // MAX_DIALOG_LIMIT dialogs are shown within the time span defined by
@@ -1088,7 +1088,7 @@ protected:
 
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
 
-  nsTArray<PRUint32> mEnabledSensors;
+  nsTArray<uint32_t> mEnabledSensors;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

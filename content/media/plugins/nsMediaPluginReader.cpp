@@ -108,11 +108,11 @@ nsresult nsMediaPluginReader::ResetDecode()
 }
 
 bool nsMediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
-                                           PRInt64 aTimeThreshold)
+                                           int64_t aTimeThreshold)
 {
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
-  PRUint32 parsed = 0, decoded = 0;
+  uint32_t parsed = 0, decoded = 0;
   nsMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
 
   // Throw away the currently buffered frame if we are seeking.
@@ -156,21 +156,21 @@ bool nsMediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
     }
 
     VideoData::YCbCrBuffer b;
-    b.mPlanes[0].mData = static_cast<PRUint8 *>(frame.Y.mData);
+    b.mPlanes[0].mData = static_cast<uint8_t *>(frame.Y.mData);
     b.mPlanes[0].mStride = frame.Y.mStride;
     b.mPlanes[0].mHeight = frame.Y.mHeight;
     b.mPlanes[0].mWidth = frame.Y.mWidth;
     b.mPlanes[0].mOffset = frame.Y.mOffset;
     b.mPlanes[0].mSkip = frame.Y.mSkip;
 
-    b.mPlanes[1].mData = static_cast<PRUint8 *>(frame.Cb.mData);
+    b.mPlanes[1].mData = static_cast<uint8_t *>(frame.Cb.mData);
     b.mPlanes[1].mStride = frame.Cb.mStride;
     b.mPlanes[1].mHeight = frame.Cb.mHeight;
     b.mPlanes[1].mWidth = frame.Cb.mWidth;
     b.mPlanes[1].mOffset = frame.Cb.mOffset;
     b.mPlanes[1].mSkip = frame.Cb.mSkip;
 
-    b.mPlanes[2].mData = static_cast<PRUint8 *>(frame.Cr.mData);
+    b.mPlanes[2].mData = static_cast<uint8_t *>(frame.Cr.mData);
     b.mPlanes[2].mStride = frame.Cr.mStride;
     b.mPlanes[2].mHeight = frame.Cr.mHeight;
     b.mPlanes[2].mWidth = frame.Cr.mWidth;
@@ -191,7 +191,7 @@ bool nsMediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
     }
 
     // This is the approximate byte position in the stream.
-    PRInt64 pos = mDecoder->GetResource()->Tell();
+    int64_t pos = mDecoder->GetResource()->Tell();
 
     VideoData *v = VideoData::Create(mInfo,
                                      mDecoder->GetImageContainer(),
@@ -246,7 +246,7 @@ bool nsMediaPluginReader::DecodeAudioData()
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   // This is the approximate byte position in the stream.
-  PRInt64 pos = mDecoder->GetResource()->Tell();
+  int64_t pos = mDecoder->GetResource()->Tell();
 
   // Read next frame
   MPAPI::AudioFrame frame;
@@ -256,13 +256,17 @@ bool nsMediaPluginReader::DecodeAudioData()
   }
   mAudioSeekTimeUs = -1;
 
+  // Ignore empty buffers which stagefright media read will sporadically return
+  if (frame.mSize == 0)
+    return true;
+
   nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frame.mSize/2] );
   memcpy(buffer.get(), frame.mData, frame.mSize);
 
-  PRUint32 frames = frame.mSize / (2 * frame.mAudioChannels);
+  uint32_t frames = frame.mSize / (2 * frame.mAudioChannels);
   CheckedInt64 duration = FramesToUsecs(frames, frame.mAudioSampleRate);
   if (!duration.isValid()) {
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
   mAudioQueue.Push(new AudioData(pos,
@@ -274,7 +278,7 @@ bool nsMediaPluginReader::DecodeAudioData()
   return true;
 }
 
-nsresult nsMediaPluginReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime)
+nsresult nsMediaPluginReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -293,7 +297,7 @@ static uint64_t BytesToTime(int64_t offset, uint64_t length, uint64_t durationUs
   return uint64_t(double(durationUs) * perc);
 }
 
-nsresult nsMediaPluginReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
+nsresult nsMediaPluginReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
 {
   if (!mPlugin)
     return NS_OK;
@@ -321,9 +325,9 @@ nsresult nsMediaPluginReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStar
   if (totalBytes == -1)
     return NS_OK;
 
-  PRInt64 startOffset = stream->GetNextCachedData(0);
+  int64_t startOffset = stream->GetNextCachedData(0);
   while (startOffset >= 0) {
-    PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
+    int64_t endOffset = stream->GetCachedDataEnd(startOffset);
     // Bytes [startOffset..endOffset] are cached.
     NS_ASSERTION(startOffset >= 0, "Integer underflow in GetBuffered");
     NS_ASSERTION(endOffset >= 0, "Integer underflow in GetBuffered");

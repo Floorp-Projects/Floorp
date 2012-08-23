@@ -51,10 +51,12 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcBytes(0),
     gcTriggerBytes(0),
     gcHeapGrowthFactor(3.0),
+    gcNextCompartment(NULL),
     hold(false),
     isSystemCompartment(false),
     lastCodeRelease(0),
-    typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    analysisLifoAlloc(LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    typeLifoAlloc(LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     data(NULL),
     active(false),
     lastAnimationTime(0),
@@ -444,7 +446,7 @@ JSCompartment::markTypes(JSTracer *trc)
 }
 
 void
-JSCompartment::discardJitCode(FreeOp *fop)
+JSCompartment::discardJitCode(FreeOp *fop, bool discardConstraints)
 {
 #ifdef JS_METHODJIT
 
@@ -482,7 +484,7 @@ JSCompartment::discardJitCode(FreeOp *fop)
             script->resetUseCount();
         }
 
-        types.sweepCompilerOutputs(fop);
+        types.sweepCompilerOutputs(fop, discardConstraints);
     }
 
 #endif /* JS_METHODJIT */
@@ -502,7 +504,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 {
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_DISCARD_CODE);
-        discardJitCode(fop);
+        discardJitCode(fop, !activeAnalysis && !gcPreserveCode);
     }
 
     /* This function includes itself in PHASE_SWEEP_TABLES. */
@@ -531,6 +533,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
     }
 
     if (!activeAnalysis && !gcPreserveCode) {
+        JS_ASSERT(!types.constrainedOutputs);
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
 
         /*
@@ -578,11 +581,13 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
             for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
                 script->clearAnalysis();
+                script->clearPropertyReadTypes();
             }
         }
 
         {
             gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_FREE_TI_ARENA);
+            rt->freeLifoAlloc.transferFrom(&analysisLifoAlloc);
             rt->freeLifoAlloc.transferFrom(&oldAlloc);
         }
     }

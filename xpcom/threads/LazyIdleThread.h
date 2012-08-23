@@ -54,7 +54,7 @@ public:
    * Create a new LazyIdleThread that will destroy its thread after the given
    * number of milliseconds.
    */
-  LazyIdleThread(PRUint32 aIdleTimeoutMS,
+  LazyIdleThread(uint32_t aIdleTimeoutMS,
                  const nsCSubstring& aName,
                  ShutdownMethod aShutdownMethod = AutomaticShutdown,
                  nsIObserver* aIdleObserver = nullptr);
@@ -170,20 +170,20 @@ private:
   /**
    * The number of milliseconds a thread should be idle before dying.
    */
-  const PRUint32 mIdleTimeoutMS;
+  const uint32_t mIdleTimeoutMS;
 
   /**
    * The number of events that are pending on mThread. A nonzero value means
    * that the thread cannot be cleaned up.
    */
-  PRUint32 mPendingEventCount;
+  uint32_t mPendingEventCount;
 
   /**
    * The number of times that mThread has dispatched an idle notification. Any
    * timer that fires while this count is nonzero can safely be ignored as
    * another timer will be on the way.
    */
-  PRUint32 mIdleNotificationCount;
+  uint32_t mIdleNotificationCount;
 
   /**
    * Whether or not the thread should automatically shutdown. If the owner

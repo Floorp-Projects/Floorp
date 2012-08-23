@@ -65,12 +65,12 @@ public:
   virtual void ReflowSVG();
 
   // nsSVGPathGeometryFrame methods:
-  virtual PRUint16 GetHitTestFlags();
+  virtual uint16_t GetHitTestFlags();
 
   // nsIFrame interface:
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType);
+                               int32_t         aModType);
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
@@ -91,10 +91,10 @@ public:
 #endif
 
 private:
-  gfxMatrix GetRasterImageTransform(PRInt32 aNativeWidth,
-                                    PRInt32 aNativeHeight,
-                                    PRUint32 aFor);
-  gfxMatrix GetVectorImageTransform(PRUint32 aFor);
+  gfxMatrix GetRasterImageTransform(int32_t aNativeWidth,
+                                    int32_t aNativeHeight,
+                                    uint32_t aFor);
+  gfxMatrix GetVectorImageTransform(uint32_t aFor);
   bool      TransformContextForPainting(gfxContext* aGfxContext);
 
   nsCOMPtr<imgIDecoderObserver> mListener;
@@ -184,9 +184,9 @@ nsSVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 // nsIFrame methods:
 
 NS_IMETHODIMP
-nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsSVGImageFrame::AttributeChanged(int32_t         aNameSpaceID,
                                   nsIAtom*        aAttribute,
-                                  PRInt32         aModType)
+                                  int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::x ||
@@ -222,9 +222,9 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 gfxMatrix
-nsSVGImageFrame::GetRasterImageTransform(PRInt32 aNativeWidth,
-                                         PRInt32 aNativeHeight,
-                                         PRUint32 aFor)
+nsSVGImageFrame::GetRasterImageTransform(int32_t aNativeWidth,
+                                         int32_t aNativeHeight,
+                                         uint32_t aFor)
 {
   float x, y, width, height;
   nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
@@ -240,7 +240,7 @@ nsSVGImageFrame::GetRasterImageTransform(PRInt32 aNativeWidth,
 }
 
 gfxMatrix
-nsSVGImageFrame::GetVectorImageTransform(PRUint32 aFor)
+nsSVGImageFrame::GetVectorImageTransform(uint32_t aFor)
 {
   float x, y, width, height;
   nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
@@ -260,7 +260,7 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext)
   if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
     imageTransform = GetVectorImageTransform(FOR_PAINTING);
   } else {
-    PRInt32 nativeWidth, nativeHeight;
+    int32_t nativeWidth, nativeHeight;
     if (NS_FAILED(mImageContainer->GetWidth(&nativeWidth)) ||
         NS_FAILED(mImageContainer->GetHeight(&nativeHeight)) ||
         nativeWidth == 0 || nativeHeight == 0) {
@@ -356,7 +356,7 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
     // warrant worrying about the responsiveness impact of doing synchronous
     // decodes. The extra code complexity of determinining when we want to
     // force sync probably just isn't worth it, so always pass FLAG_SYNC_DECODE
-    PRUint32 drawFlags = imgIContainer::FLAG_SYNC_DECODE;
+    uint32_t drawFlags = imgIContainer::FLAG_SYNC_DECODE;
 
     if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
       nsIFrame* imgRootFrame = mImageContainer->GetRootLayoutFrame();
@@ -425,7 +425,7 @@ nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
   // to filter out points that fall outside that area.
   if (GetStyleDisplay()->IsScrollableOverflow() && mImageContainer) {
     if (mImageContainer->GetType() == imgIContainer::TYPE_RASTER) {
-      PRInt32 nativeWidth, nativeHeight;
+      int32_t nativeWidth, nativeHeight;
       if (NS_FAILED(mImageContainer->GetWidth(&nativeWidth)) ||
           NS_FAILED(mImageContainer->GetHeight(&nativeHeight)) ||
           nativeWidth == 0 || nativeHeight == 0) {
@@ -517,10 +517,10 @@ nsSVGImageFrame::ReflowSVG()
   }
 }
 
-PRUint16
+uint16_t
 nsSVGImageFrame::GetHitTestFlags()
 {
-  PRUint16 flags = 0;
+  uint16_t flags = 0;
 
   switch(GetStyleVisibility()->mPointerEvents) {
     case NS_STYLE_POINTER_EVENTS_NONE:

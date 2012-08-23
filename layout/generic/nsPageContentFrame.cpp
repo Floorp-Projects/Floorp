@@ -28,7 +28,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsPageContentFrame)
 nsPageContentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                                PRUint32 aFlags)
+                                uint32_t aFlags)
 {
   NS_ASSERTION(mPD, "Pages are supposed to have page data");
   nscoord height = (!mPD || mPD->mReflowSize.height == NS_UNCONSTRAINEDSIZE)

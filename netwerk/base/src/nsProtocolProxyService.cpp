@@ -52,8 +52,8 @@ static PRLogModuleInfo *sLog = PR_NewLogModule("proxy");
 // This structure is intended to be allocated on the stack
 struct nsProtocolInfo {
     nsCAutoString scheme;
-    PRUint32 flags;
-    PRInt32 defaultPort;
+    uint32_t flags;
+    int32_t defaultPort;
 };
 
 //----------------------------------------------------------------------------
@@ -66,7 +66,7 @@ public:
     NS_DECL_ISUPPORTS
 
     nsAsyncResolveRequest(nsProtocolProxyService *pps, nsIURI *uri,
-                          PRUint32 aResolveFlags,
+                          uint32_t aResolveFlags,
                           nsIProtocolProxyCallback *callback)
         : mStatus(NS_OK)
         , mDispatched(false)
@@ -168,7 +168,7 @@ private:
     nsresult  mStatus;
     nsCString mPACString;
     bool      mDispatched;
-    PRUint32  mResolveFlags;
+    uint32_t  mResolveFlags;
 
     nsRefPtr<nsProtocolProxyService>   mPPS;
     nsCOMPtr<nsIURI>                   mURI;
@@ -188,7 +188,7 @@ NS_IMPL_ISUPPORTS2(nsAsyncResolveRequest, nsICancelable, nsIRunnable)
 // NOTE: we do the byte swapping here to minimize overall swapping.
 //
 static void
-proxy_MaskIPv6Addr(PRIPv6Addr &addr, PRUint16 mask_len)
+proxy_MaskIPv6Addr(PRIPv6Addr &addr, uint16_t mask_len)
 {
     if (mask_len == 128)
         return;
@@ -237,9 +237,9 @@ proxy_GetStringPref(nsIPrefBranch *aPrefBranch,
 static void
 proxy_GetIntPref(nsIPrefBranch *aPrefBranch,
                  const char    *aPref,
-                 PRInt32       &aResult)
+                 int32_t       &aResult)
 {
-    PRInt32 temp;
+    int32_t temp;
     nsresult rv = aPrefBranch->GetIntPref(aPref, &temp);
     if (NS_FAILED(rv)) 
         aResult = -1;
@@ -262,8 +262,8 @@ proxy_GetBoolPref(nsIPrefBranch *aPrefBranch,
 
 //----------------------------------------------------------------------------
 
-static const PRInt32 PROXYCONFIG_DIRECT4X = 3;
-static const PRInt32 PROXYCONFIG_COUNT = 6;
+static const int32_t PROXYCONFIG_DIRECT4X = 3;
+static const int32_t PROXYCONFIG_COUNT = 6;
 
 NS_IMPL_ADDREF(nsProtocolProxyService)
 NS_IMPL_RELEASE(nsProtocolProxyService)
@@ -363,7 +363,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
     nsXPIDLCString tempString;
 
     if (!pref || !strcmp(pref, PROXY_PREF("type"))) {
-        PRInt32 type = -1;
+        int32_t type = -1;
         rv = prefBranch->GetIntPref(PROXY_PREF("type"), &type);
         if (NS_SUCCEEDED(rv)) {
             // bug 115720 - for ns4.x backwards compatibility
@@ -417,7 +417,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
         proxy_GetIntPref(prefBranch, PROXY_PREF("socks_port"), mSOCKSProxyPort);
 
     if (!pref || !strcmp(pref, PROXY_PREF("socks_version"))) {
-        PRInt32 version;
+        int32_t version;
         proxy_GetIntPref(prefBranch, PROXY_PREF("socks_version"), version);
         // make sure this preference value remains sane
         if (version == 5)
@@ -477,12 +477,12 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
 }
 
 bool
-nsProtocolProxyService::CanUseProxy(nsIURI *aURI, PRInt32 defaultPort) 
+nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort) 
 {
     if (mHostFiltersArray.Length() == 0)
         return true;
 
-    PRInt32 port;
+    int32_t port;
     nsCAutoString host;
  
     nsresult rv = aURI->GetAsciiHost(host);
@@ -521,8 +521,8 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, PRInt32 defaultPort)
         return false; // don't allow proxying
     }
 
-    PRInt32 index = -1;
-    while (++index < PRInt32(mHostFiltersArray.Length())) {
+    int32_t index = -1;
+    while (++index < int32_t(mHostFiltersArray.Length())) {
         HostInfo *hinfo = mHostFiltersArray[index];
 
         if (is_ipaddr != hinfo->is_ipaddr)
@@ -541,8 +541,8 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, PRInt32 defaultPort)
                 return false; // proxy disallowed
         }
         else {
-            PRUint32 host_len = host.Length();
-            PRUint32 filter_host_len = hinfo->name.host_len;
+            uint32_t host_len = host.Length();
+            uint32_t filter_host_len = hinfo->name.host_len;
 
             if (host_len >= filter_host_len) {
                 //
@@ -567,11 +567,11 @@ static const char kProxyType_UNKNOWN[] = "unknown";
 
 const char *
 nsProtocolProxyService::ExtractProxyInfo(const char *start,
-                                         PRUint32 aResolveFlags,
+                                         uint32_t aResolveFlags,
                                          nsProxyInfo **result)
 {
     *result = nullptr;
-    PRUint32 flags = 0;
+    uint32_t flags = 0;
 
     // see BNF in nsIProxyAutoConfig.idl
 
@@ -583,7 +583,7 @@ nsProtocolProxyService::ExtractProxyInfo(const char *start,
     const char *sp = start;
     while (sp < end && *sp != ' ' && *sp != '\t') ++sp;
 
-    PRUint32 len = sp - start;
+    uint32_t len = sp - start;
     const char *type = nullptr;
     switch (len) {
     case 5:
@@ -605,7 +605,7 @@ nsProtocolProxyService::ExtractProxyInfo(const char *start,
     }
     if (type) {
         const char *host = nullptr, *hostEnd = nullptr;
-        PRInt32 port = -1;
+        int32_t port = -1;
 
         // If it's a SOCKS5 proxy, do name resolution on the server side.
         // We could use this with SOCKS4a servers too, but they might not
@@ -663,13 +663,13 @@ nsProtocolProxyService::GetProxyKey(nsProxyInfo *pi, nsCString &key)
     }
 } 
 
-PRUint32
+uint32_t
 nsProtocolProxyService::SecondsSinceSessionStart()
 {
     PRTime now = PR_Now();
 
     // get time elapsed since session start
-    PRInt64 diff;
+    int64_t diff;
     LL_SUB(diff, now, mSessionStart);
 
     // convert microseconds to seconds
@@ -678,7 +678,7 @@ nsProtocolProxyService::SecondsSinceSessionStart()
     LL_DIV(diff, diff, ups);
 
     // convert to 32 bit value
-    PRUint32 dsec;
+    uint32_t dsec;
     LL_L2UI(dsec, diff);
 
     return dsec;
@@ -698,7 +698,7 @@ nsProtocolProxyService::DisableProxy(nsProxyInfo *pi)
     nsCAutoString key;
     GetProxyKey(pi, key);
 
-    PRUint32 dsec = SecondsSinceSessionStart();
+    uint32_t dsec = SecondsSinceSessionStart();
 
     // Add timeout to interval (this is the time when the proxy can
     // be tried again).
@@ -725,11 +725,11 @@ nsProtocolProxyService::IsProxyDisabled(nsProxyInfo *pi)
     nsCAutoString key;
     GetProxyKey(pi, key);
 
-    PRUint32 val;
+    uint32_t val;
     if (!mFailedProxies.Get(key, &val))
         return false;
 
-    PRUint32 dsec = SecondsSinceSessionStart();
+    uint32_t dsec = SecondsSinceSessionStart();
 
     // if time passed has exceeded interval, then try proxy again.
     if (dsec > val) {
@@ -765,7 +765,7 @@ nsProtocolProxyService::ConfigureFromPAC(const nsCString &spec,
 
 void
 nsProtocolProxyService::ProcessPACString(const nsCString &pacString,
-                                         PRUint32 aResolveFlags,
+                                         uint32_t aResolveFlags,
                                          nsIProxyInfo **result)
 {
     if (pacString.IsEmpty()) {
@@ -799,7 +799,7 @@ nsProtocolProxyService::ReloadPAC()
     if (!prefs)
         return NS_OK;
 
-    PRInt32 type;
+    int32_t type;
     nsresult rv = prefs->GetIntPref(PROXY_PREF("type"), &type);
     if (NS_FAILED(rv))
         return NS_OK;
@@ -817,7 +817,7 @@ nsProtocolProxyService::ReloadPAC()
 
 // nsIProtocolProxyService
 NS_IMETHODIMP
-nsProtocolProxyService::Resolve(nsIURI *uri, PRUint32 flags,
+nsProtocolProxyService::Resolve(nsIURI *uri, uint32_t flags,
                                 nsIProxyInfo **result)
 {
     nsProtocolInfo info;
@@ -861,7 +861,7 @@ nsProtocolProxyService::Resolve(nsIURI *uri, PRUint32 flags,
 }
 
 NS_IMETHODIMP
-nsProtocolProxyService::AsyncResolve(nsIURI *uri, PRUint32 flags,
+nsProtocolProxyService::AsyncResolve(nsIURI *uri, uint32_t flags,
                                      nsIProtocolProxyCallback *callback,
                                      nsICancelable **result)
 {
@@ -900,9 +900,9 @@ nsProtocolProxyService::AsyncResolve(nsIURI *uri, PRUint32 flags,
 NS_IMETHODIMP
 nsProtocolProxyService::NewProxyInfo(const nsACString &aType,
                                      const nsACString &aHost,
-                                     PRInt32 aPort,
-                                     PRUint32 aFlags,
-                                     PRUint32 aFailoverTimeout,
+                                     int32_t aPort,
+                                     uint32_t aFlags,
+                                     uint32_t aFailoverTimeout,
                                      nsIProxyInfo *aFailoverProxy,
                                      nsIProxyInfo **aResult)
 {
@@ -916,7 +916,7 @@ nsProtocolProxyService::NewProxyInfo(const nsACString &aType,
     // resolve type; this allows us to avoid copying the type string into each
     // proxy info instance.  we just reference the string literals directly :)
     const char *type = nullptr;
-    for (PRUint32 i=0; i<ArrayLength(types); ++i) {
+    for (uint32_t i=0; i<ArrayLength(types); ++i) {
         if (aType.LowerCaseEqualsASCII(types[i])) {
             type = types[i];
             break;
@@ -968,7 +968,7 @@ nsProtocolProxyService::GetFailoverForProxy(nsIProxyInfo  *aProxy,
 
 NS_IMETHODIMP
 nsProtocolProxyService::RegisterFilter(nsIProtocolProxyFilter *filter,
-                                       PRUint32 position)
+                                       uint32_t position)
 {
     UnregisterFilter(filter);  // remove this filter if we already have it
 
@@ -1028,7 +1028,7 @@ nsProtocolProxyService::UnregisterFilter(nsIProtocolProxyFilter *filter)
 }
 
 NS_IMETHODIMP
-nsProtocolProxyService::GetProxyConfigType(PRUint32* aProxyConfigType)
+nsProtocolProxyService::GetProxyConfigType(uint32_t* aProxyConfigType)
 {
   *aProxyConfigType = mProxyConfig;
   return NS_OK;
@@ -1125,7 +1125,7 @@ nsProtocolProxyService::LoadHostFilters(const char *filters)
             proxy_MaskIPv6Addr(hinfo->ip.addr, hinfo->ip.mask_len);
         }
         else {
-            PRUint32 startIndex, endIndex;
+            uint32_t startIndex, endIndex;
             if (str.First() == '*')
                 startIndex = 1; // *.domain -> .domain
             else
@@ -1200,11 +1200,11 @@ nsProtocolProxyService::GetProtocolInfo(nsIURI *uri, nsProtocolInfo *info)
 nsresult
 nsProtocolProxyService::NewProxyInfo_Internal(const char *aType,
                                               const nsACString &aHost,
-                                              PRInt32 aPort,
-                                              PRUint32 aFlags,
-                                              PRUint32 aFailoverTimeout,
+                                              int32_t aPort,
+                                              uint32_t aFlags,
+                                              uint32_t aFailoverTimeout,
                                               nsIProxyInfo *aFailoverProxy,
-                                              PRUint32 aResolveFlags,
+                                              uint32_t aResolveFlags,
                                               nsIProxyInfo **aResult)
 {
     nsCOMPtr<nsProxyInfo> failover;
@@ -1233,7 +1233,7 @@ nsProtocolProxyService::NewProxyInfo_Internal(const char *aType,
 nsresult
 nsProtocolProxyService::Resolve_Internal(nsIURI *uri,
                                          const nsProtocolInfo &info,
-                                         PRUint32 flags,
+                                         uint32_t flags,
                                          bool *usePAC,
                                          nsIProxyInfo **result)
 {
@@ -1290,9 +1290,9 @@ nsProtocolProxyService::Resolve_Internal(nsIURI *uri,
     // proxy info values
     const char *type = nullptr;
     const nsACString *host = nullptr;
-    PRInt32 port = -1;
+    int32_t port = -1;
 
-    PRUint32 proxyFlags = 0;
+    uint32_t proxyFlags = 0;
 
     if ((flags & RESOLVE_PREFER_SOCKS_PROXY) &&
         !mSOCKSProxyHost.IsEmpty() && mSOCKSProxyPort > 0) {

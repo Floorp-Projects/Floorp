@@ -72,9 +72,9 @@ private:
     nsPrefetchNode                   *mQueueHead;
     nsPrefetchNode                   *mQueueTail;
     nsRefPtr<nsPrefetchNode>          mCurrentNode;
-    PRInt32                           mStopCount;
+    int32_t                           mStopCount;
     // true if pending document loads have ever reached zero.
-    PRInt32                           mHaveProcessed;
+    int32_t                           mHaveProcessed;
     bool                              mDisabled;
 };
 
@@ -116,8 +116,8 @@ private:
     nsRefPtr<nsPrefetchService> mService;
     nsCOMPtr<nsIChannel>        mChannel;
     nsCOMPtr<nsIChannel>        mRedirectChannel;
-    PRUint16                    mState;
-    PRInt32                     mBytesRead;
+    uint16_t                    mState;
+    int32_t                     mBytesRead;
 };
 
 #endif // !nsPrefetchService_h__

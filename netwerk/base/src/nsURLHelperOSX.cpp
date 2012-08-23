@@ -57,7 +57,7 @@ static bool pathBeginsWithVolName(const nsACString& path, nsACString& firstPathC
   
   nsCAutoString flatComponent((Substring(start, component_end)));
   NS_UnescapeURL(flatComponent);
-  PRInt32 foundIndex = gVolumeList->IndexOf(flatComponent);
+  int32_t foundIndex = gVolumeList->IndexOf(flatComponent);
   firstPathComponent = flatComponent;
   return (foundIndex != -1);
 }

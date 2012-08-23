@@ -98,11 +98,11 @@ NS_IMETHODIMP
 nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, 
                                     nsISupports *aContext, 
                                     nsIInputStream *iStr, 
-                                    PRUint32 aSourceOffset, 
-                                    PRUint32 aCount)
+                                    uint32_t aSourceOffset, 
+                                    uint32_t aCount)
 {
     nsresult rv = NS_ERROR_INVALID_CONTENT_ENCODING;
-    PRUint32 streamLen = aCount;
+    uint32_t streamLen = aCount;
 
     if (streamLen == 0)
     {
@@ -115,7 +115,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
         // Hmm... this may just indicate that the data stream is done and that
         // what's left is either metadata or padding of some sort.... throwing
         // it out is probably the safe thing to do.
-        PRUint32 n;
+        uint32_t n;
         return iStr->ReadSegments(NS_DiscardSegment, nullptr, streamLen, &n);
     }
 
@@ -154,7 +154,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
             if (mInpBuffer == NULL || mOutBuffer == NULL)
                 return NS_ERROR_OUT_OF_MEMORY;
 
-            PRUint32 unused;
+            uint32_t unused;
             iStr->Read((char *)mInpBuffer, streamLen, &unused);
 
             if (mMode == HTTP_COMPRESS_DEFLATE)
@@ -329,8 +329,8 @@ nsHTTPCompressConv::Convert(nsIInputStream *aFromStream,
 
 nsresult
 nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
-                                       nsISupports *context, PRUint32 offset,
-                                       const char *buffer, PRUint32 count)
+                                       nsISupports *context, uint32_t offset,
+                                       const char *buffer, uint32_t count)
 {
     if (!mStream) {
         mStream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID);
@@ -358,8 +358,8 @@ nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
 
 static unsigned gz_magic[2] = {0x1f, 0x8b}; /* gzip magic header */
 
-PRUint32
-nsHTTPCompressConv::check_header(nsIInputStream *iStr, PRUint32 streamLen, nsresult *rs)
+uint32_t
+nsHTTPCompressConv::check_header(nsIInputStream *iStr, uint32_t streamLen, nsresult *rs)
 {
     enum  { GZIP_INIT = 0, GZIP_OS, GZIP_EXTRA0, GZIP_EXTRA1, GZIP_EXTRA2, GZIP_ORIG, GZIP_COMMENT, GZIP_CRC };
     char c;
@@ -374,7 +374,7 @@ nsHTTPCompressConv::check_header(nsIInputStream *iStr, PRUint32 streamLen, nsres
         switch (hMode)
         {
             case GZIP_INIT:
-                PRUint32 unused;
+                uint32_t unused;
                 iStr->Read(&c, 1, &unused);
                 streamLen--;
                 

@@ -81,7 +81,7 @@ const wchar_t kOldWndProcProp[] = L"MozillaIPCOldWndProc";
 enum { WM_XP_THEMECHANGED = 0x031A };
 
 PRUnichar gAppMessageWindowName[256] = { 0 };
-PRInt32 gAppMessageWindowNameLength = 0;
+int32_t gAppMessageWindowNameLength = 0;
 
 nsTArray<HWND>* gNeuteredWindows = nullptr;
 
@@ -126,8 +126,8 @@ DeferredMessageHook(int nCode,
     gDeferredMessages = nullptr;
 
     // Run all the deferred messages in order.
-    PRUint32 count = messages->Length();
-    for (PRUint32 index = 0; index < count; index++) {
+    uint32_t count = messages->Length();
+    for (uint32_t index = 0; index < count; index++) {
       messages->ElementAt(index)->Run();
     }
   }
@@ -282,7 +282,7 @@ ProcessOrDeferMessage(HWND hwnd,
         nsCAutoString log("Received \"nonqueued\" message ");
         log.AppendInt(uMsg);
         log.AppendLiteral(" during a synchronous IPC message for window ");
-        log.AppendInt((PRInt64)hwnd);
+        log.AppendInt((int64_t)hwnd);
 
         wchar_t className[256] = { 0 };
         if (GetClassNameW(hwnd, className, sizeof(className) - 1) > 0) {
@@ -506,8 +506,8 @@ UnhookNeuteredWindows()
 {
   if (!gNeuteredWindows)
     return;
-  PRUint32 count = gNeuteredWindows->Length();
-  for (PRUint32 index = 0; index < count; index++) {
+  uint32_t count = gNeuteredWindows->Length();
+  for (uint32_t index = 0; index < count; index++) {
     RestoreWindowProcedure(gNeuteredWindows->ElementAt(index));
   }
   gNeuteredWindows->Clear();

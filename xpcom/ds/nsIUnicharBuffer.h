@@ -17,11 +17,11 @@ class nsIUnicharBuffer : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUNICHARBUFFER_IID)
 
-  NS_IMETHOD Init(PRUint32 aBufferSize) = 0;
-  NS_IMETHOD_(PRInt32) GetLength() const = 0;
-  NS_IMETHOD_(PRInt32) GetBufferSize() const = 0;
+  NS_IMETHOD Init(uint32_t aBufferSize) = 0;
+  NS_IMETHOD_(int32_t) GetLength() const = 0;
+  NS_IMETHOD_(int32_t) GetBufferSize() const = 0;
   NS_IMETHOD_(PRUnichar*) GetBuffer() const = 0;
-  NS_IMETHOD_(bool) Grow(PRInt32 aNewSize) = 0;
+  NS_IMETHOD_(bool) Grow(int32_t aNewSize) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharBuffer, NS_IUNICHARBUFFER_IID)
@@ -30,7 +30,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharBuffer, NS_IUNICHARBUFFER_IID)
 extern nsresult
 NS_NewUnicharBuffer(nsIUnicharBuffer** aInstancePtrResult,
                     nsISupports* aOuter,
-                    PRUint32 aBufferSize = 0);
+                    uint32_t aBufferSize = 0);
 
 #define NS_UNICHARBUFFER_CID                         \
 { /* c81fd8f0-0d6b-11d3-9331-00104ba0fd40 */         \

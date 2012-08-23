@@ -310,7 +310,7 @@ class StaticBlockObject : public BlockObject
     frontend::Definition *maybeDefinitionParseNode(unsigned i);
 
     /*
-     * The parser uses 'enclosingBlock' as the prev-link in the tc->blockChain
+     * The parser uses 'enclosingBlock' as the prev-link in the pc->blockChain
      * stack. Note: in the case of hoisting, this prev-link will not ultimately
      * be the same as enclosingBlock, initEnclosingStaticScope must be called
      * separately in the emitter. 'reset' is just for asserting stackiness.

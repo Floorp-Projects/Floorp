@@ -59,7 +59,7 @@ public:
          bool aCreating);
 
   static nsresult
-  AppendIndexUpdateInfo(PRInt64 aIndexID,
+  AppendIndexUpdateInfo(int64_t aIndexID,
                         const KeyPath& aKeyPath,
                         bool aUnique,
                         bool aMultiEntry,
@@ -69,16 +69,16 @@ public:
 
   static nsresult
   UpdateIndexes(IDBTransaction* aTransaction,
-                PRInt64 aObjectStoreId,
+                int64_t aObjectStoreId,
                 const Key& aObjectStoreKey,
                 bool aOverwrite,
-                PRInt64 aObjectDataId,
+                int64_t aObjectDataId,
                 const nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
 
   static nsresult
   GetStructuredCloneReadInfoFromStatement(mozIStorageStatement* aStatement,
-                                          PRUint32 aDataIndex,
-                                          PRUint32 aFileIdsIndex,
+                                          uint32_t aDataIndex,
+                                          uint32_t aFileIdsIndex,
                                           IDBDatabase* aDatabase,
                                           StructuredCloneReadInfo& aInfo);
 
@@ -109,7 +109,7 @@ public:
 
   static nsresult
   ConvertFileIdsToArray(const nsAString& aFileIds,
-                        nsTArray<PRInt64>& aResult);
+                        nsTArray<int64_t>& aResult);
 
   // Called only in the main process.
   static nsresult
@@ -138,7 +138,7 @@ public:
     return mTransaction->IsWriteAllowed();
   }
 
-  PRInt64 Id() const
+  int64_t Id() const
   {
     NS_ASSERTION(mId != LL_MININT, "Don't ask for this yet!");
     return mId;
@@ -212,7 +212,7 @@ public:
                        IDBRequest** _retval);
 
   nsresult GetAllInternal(IDBKeyRange* aKeyRange,
-                          PRUint32 aLimit,
+                          uint32_t aLimit,
                           JSContext* aCx,
                           IDBRequest** _retval);
 
@@ -259,14 +259,14 @@ protected:
   nsresult AddOrPut(const jsval& aValue,
                     const jsval& aKey,
                     JSContext* aCx,
-                    PRUint8 aOptionalArgCount,
+                    uint8_t aOptionalArgCount,
                     bool aOverwrite,
                     IDBRequest** _retval);
 
 private:
   nsRefPtr<IDBTransaction> mTransaction;
 
-  PRInt64 mId;
+  int64_t mId;
   nsString mName;
   KeyPath mKeyPath;
   JS::Value mCachedKeyPath;

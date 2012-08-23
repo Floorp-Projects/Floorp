@@ -14,7 +14,7 @@
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED
 #include "nsString.h"                   // for nsString
 #include "nscore.h"                     // for NS_IMETHOD, nsAString
-#include "prtypes.h"                    // for PRUint32
+#include "prtypes.h"                    // for uint32_t
 
 class nsIEditor;
 class nsITransaction;
@@ -41,7 +41,7 @@ public:
     * @param aPresShell used to get and set the selection
     */
   NS_IMETHOD Init(nsIDOMCharacterData *aElement,
-                  PRUint32 aOffset,
+                  uint32_t aOffset,
                   const nsAString& aString,
                   nsIEditor *aEditor);
 
@@ -66,7 +66,7 @@ protected:
   nsCOMPtr<nsIDOMCharacterData> mElement;
   
   /** the offset into mElement where the insertion is to take place */
-  PRUint32 mOffset;
+  uint32_t mOffset;
 
   /** the text to insert into mElement at mOffset */
   nsString mStringToInsert;

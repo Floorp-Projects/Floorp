@@ -193,6 +193,10 @@ public:
         return succeeded;
     }
 
+    virtual bool IsCurrent() {
+        return sOSMesaLibrary.fGetCurrentContext() == mContext;
+    }
+
     bool SetupLookupFunction()
     {
         mLookupFunc = (PlatformLookupFunction)sOSMesaLibrary.fGetProcAddress;

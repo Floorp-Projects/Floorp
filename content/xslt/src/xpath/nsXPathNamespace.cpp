@@ -35,7 +35,7 @@ NS_IMETHODIMP nsXPathNamespace::SetNodeValue(const nsAString & aNodeValue)
 }
 
 /* readonly attribute unsigned short nodeType; */
-NS_IMETHODIMP nsXPathNamespace::GetNodeType(PRUint16 *aNodeType)
+NS_IMETHODIMP nsXPathNamespace::GetNodeType(uint16_t *aNodeType)
 {
     *aNodeType = XPATH_NAMESPACE_NODE;
     return NS_OK;
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsXPathNamespace::HasChildNodes(bool *aResult)
 }
 
 /* nsIDOMNode cloneNode (in boolean deep); */
-NS_IMETHODIMP nsXPathNamespace::CloneNode(bool deep, PRUint8 aOptionalArgc, nsIDOMNode **aResult)
+NS_IMETHODIMP nsXPathNamespace::CloneNode(bool deep, uint8_t aOptionalArgc, nsIDOMNode **aResult)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -195,7 +195,7 @@ public:
     NS_ABORT_IF_FALSE(aUnit <= eCSSUnit_DummyInherit, "not a valueless unit");
   }
 
-  nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit);
+  nsCSSValue(int32_t aValue, nsCSSUnit aUnit);
   nsCSSValue(float aValue, nsCSSUnit aUnit);
   nsCSSValue(const nsString& aValue, nsCSSUnit aUnit);
   nsCSSValue(Array* aArray, nsCSSUnit aUnit);
@@ -259,7 +259,7 @@ public:
   bool      UnitHasArrayValue() const
     { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Divided; }
 
-  PRInt32 GetIntValue() const
+  int32_t GetIntValue() const
   {
     NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Integer ||
                       mUnit == eCSSUnit_Enumerated ||
@@ -294,7 +294,7 @@ public:
   {
     NS_ABORT_IF_FALSE(UnitHasStringValue(), "not a string value");
     aBuffer.Truncate();
-    PRUint32 len = NS_strlen(GetBufferValue(mValue.mString));
+    uint32_t len = NS_strlen(GetBufferValue(mValue.mString));
     mValue.mString->ToString(len, aBuffer);
     return aBuffer;
   }
@@ -389,7 +389,7 @@ private:
   void DoReset();
 
 public:
-  void SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
+  void SetIntValue(int32_t aValue, nsCSSUnit aUnit);
   void SetPercentValue(float aValue);
   void SetFloatValue(float aValue, nsCSSUnit aUnit);
   void SetStringValue(const nsString& aValue, nsCSSUnit aUnit);
@@ -423,7 +423,7 @@ public:
   void StartImageLoad(nsIDocument* aDocument) const;  // Only pretend const
 
   // Initializes as a function value with the specified function id.
-  Array* InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs);
+  Array* InitFunction(nsCSSKeyword aFunctionId, uint32_t aNumArgs);
   // Checks if this is a function value with the specified function id.
   bool EqualsFunction(nsCSSKeyword aFunctionId) const;
 
@@ -509,7 +509,7 @@ private:
 protected:
   nsCSSUnit mUnit;
   union {
-    PRInt32    mInt;
+    int32_t    mInt;
     float      mFloat;
     // Note: the capacity of the buffer may exceed the length of the string.
     // If we're of a string type, mString is not null.
@@ -1088,7 +1088,7 @@ public:
     if (mStops.Length() != aOther.mStops.Length())
       return false;
 
-    for (PRUint32 i = 0; i < mStops.Length(); i++) {
+    for (uint32_t i = 0; i < mStops.Length(); i++) {
       if (mStops[i] != aOther.mStops[i])
         return false;
     }
@@ -1116,10 +1116,10 @@ struct nsCSSCornerSizes {
   ~nsCSSCornerSizes();
 
   // argument is a "full corner" constant from nsStyleConsts.h
-  nsCSSValue const & GetCorner(PRUint32 aCorner) const {
+  nsCSSValue const & GetCorner(uint32_t aCorner) const {
     return this->*corners[aCorner];
   }
-  nsCSSValue & GetCorner(PRUint32 aCorner) {
+  nsCSSValue & GetCorner(uint32_t aCorner) {
     return this->*corners[aCorner];
   }
 

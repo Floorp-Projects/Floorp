@@ -16,7 +16,7 @@
 
 using namespace mozilla::a11y;
 
-ia2AccessibleRelation::ia2AccessibleRelation(PRUint32 aType, Relation* aRel) :
+ia2AccessibleRelation::ia2AccessibleRelation(uint32_t aType, Relation* aRel) :
   mType(aType), mReferences(0)
 {
   Accessible* target = nullptr;
@@ -176,11 +176,11 @@ __try {
     return E_INVALIDARG;
 
   *aNTargets = 0;
-  PRUint32 maxTargets = mTargets.Length();
+  uint32_t maxTargets = mTargets.Length();
   if (maxTargets > aMaxTargets)
     maxTargets = aMaxTargets;
 
-  for (PRUint32 idx = 0; idx < maxTargets; idx++)
+  for (uint32_t idx = 0; idx < maxTargets; idx++)
     get_target(idx, aTargets + idx);
 
   *aNTargets = maxTargets;

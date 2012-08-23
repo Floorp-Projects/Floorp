@@ -62,7 +62,7 @@ public:
   NS_DECL_NSIDOMNODELIST
 
   // nsINodeList interface
-  virtual PRInt32 IndexOf(nsIContent* aContent);
+  virtual int32_t IndexOf(nsIContent* aContent);
 
   void DropReference()
   {
@@ -208,28 +208,28 @@ public:
   nsresult PostQueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsINode interface methods
-  virtual PRUint32 GetChildCount() const;
-  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-  virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
-  virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+  virtual uint32_t GetChildCount() const;
+  virtual nsIContent *GetChildAt(uint32_t aIndex) const;
+  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const;
+  virtual int32_t IndexOf(nsINode* aPossibleChild) const;
+  virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify);
-  virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
   NS_IMETHOD GetTextContent(nsAString &aTextContent);
   NS_IMETHOD SetTextContent(const nsAString& aTextContent);
 
   // nsIContent interface methods
-  virtual already_AddRefed<nsINodeList> GetChildren(PRUint32 aFilter);
+  virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter);
   virtual const nsTextFragment *GetText();
-  virtual PRUint32 TextLength() const;
-  virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
+  virtual uint32_t TextLength() const;
+  virtual nsresult SetText(const PRUnichar* aBuffer, uint32_t aLength,
                            bool aNotify);
   // Need to implement this here too to avoid hiding.
   nsresult SetText(const nsAString& aStr, bool aNotify)
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
-  virtual nsresult AppendText(const PRUnichar* aBuffer, PRUint32 aLength,
+  virtual nsresult AppendText(const PRUnichar* aBuffer, uint32_t aLength,
                               bool aNotify);
   virtual bool TextIsOnlyWhitespace();
   virtual void AppendTextTo(nsAString& aResult);
@@ -248,7 +248,7 @@ public:
   NS_IMETHOD GetLocalName(nsAString& aLocalName);
   NS_IMETHOD GetNodeValue(nsAString& aNodeValue);
   NS_IMETHOD SetNodeValue(const nsAString& aNodeValue);
-  NS_IMETHOD GetNodeType(PRUint16* aNodeType);
+  NS_IMETHOD GetNodeType(uint16_t* aNodeType);
   NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes);
   NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI);
   NS_IMETHOD GetPrefix(nsAString& aPrefix);
@@ -275,7 +275,7 @@ public:
     return InsertBefore(aNewChild, nullptr, aReturn);
   }
 
-  nsresult CloneNode(bool aDeep, PRUint8 aOptionalArgc, nsIDOMNode **aResult)
+  nsresult CloneNode(bool aDeep, uint8_t aOptionalArgc, nsIDOMNode **aResult)
   {
     if (!aOptionalArgc) {
       aDeep = true;
@@ -325,7 +325,7 @@ public:
 
   virtual bool OwnedOnlyByTheDOMTree()
   {
-    PRUint32 rc = mRefCnt.get();
+    uint32_t rc = mRefCnt.get();
     if (GetParent()) {
       --rc;
     }

@@ -18,11 +18,11 @@ TextUpdater::Run(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf,
   NS_ASSERTION(aTextLeaf, "No text leaf accessible?");
 
   const nsString& oldText = aTextLeaf->Text();
-  PRUint32 oldLen = oldText.Length(), newLen = aNewText.Length();
-  PRUint32 minLen = NS_MIN(oldLen, newLen);
+  uint32_t oldLen = oldText.Length(), newLen = aNewText.Length();
+  uint32_t minLen = NS_MIN(oldLen, newLen);
 
   // Skip coinciding begin substrings.
-  PRUint32 skipStart = 0;
+  uint32_t skipStart = 0;
   for (; skipStart < minLen; skipStart++) {
     if (aNewText[skipStart] != oldText[skipStart])
       break;
@@ -37,7 +37,7 @@ TextUpdater::Run(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf,
 
 void
 TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
-                      PRUint32 aSkipStart)
+                      uint32_t aSkipStart)
 {
   Accessible* parent = mTextLeaf->Parent();
   if (!parent)
@@ -54,18 +54,18 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   NS_ASSERTION(mTextOffset != -1,
                "Text leaf hasn't offset within hyper text!");
 
-  PRUint32 oldLen = aOldText.Length(), newLen = aNewText.Length();
-  PRUint32 minLen = NS_MIN(oldLen, newLen);
+  uint32_t oldLen = aOldText.Length(), newLen = aNewText.Length();
+  uint32_t minLen = NS_MIN(oldLen, newLen);
 
   // Trim coinciding substrings from the end.
-  PRUint32 skipEnd = 0;
+  uint32_t skipEnd = 0;
   while (minLen - skipEnd > aSkipStart &&
          aNewText[newLen - skipEnd - 1] == aOldText[oldLen - skipEnd - 1]) {
     skipEnd++;
   }
 
-  PRUint32 strLen1 = oldLen - aSkipStart - skipEnd;
-  PRUint32 strLen2 = newLen - aSkipStart - skipEnd;
+  uint32_t strLen1 = oldLen - aSkipStart - skipEnd;
+  uint32_t strLen2 = newLen - aSkipStart - skipEnd;
 
   const nsAString& str1 = Substring(aOldText, aSkipStart, strLen1);
   const nsAString& str2 = Substring(aNewText, aSkipStart, strLen2);
@@ -104,22 +104,22 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   // affect the Levenshtein distance.
 
   // Compute the flat structured matrix need to compute the difference.
-  PRUint32 len1 = strLen1 + 1, len2 = strLen2 + 1;
-  PRUint32* entries = new PRUint32[len1 * len2];
+  uint32_t len1 = strLen1 + 1, len2 = strLen2 + 1;
+  uint32_t* entries = new uint32_t[len1 * len2];
 
-  for (PRUint32 colIdx = 0; colIdx < len1; colIdx++)
+  for (uint32_t colIdx = 0; colIdx < len1; colIdx++)
     entries[colIdx] = colIdx;
 
-  PRUint32* row = entries;
-  for (PRUint32 rowIdx = 1; rowIdx < len2; rowIdx++) {
-    PRUint32* prevRow = row;
+  uint32_t* row = entries;
+  for (uint32_t rowIdx = 1; rowIdx < len2; rowIdx++) {
+    uint32_t* prevRow = row;
     row += len1;
     row[0] = rowIdx;
-    for (PRUint32 colIdx = 1; colIdx < len1; colIdx++) {
+    for (uint32_t colIdx = 1; colIdx < len1; colIdx++) {
       if (str1[colIdx - 1] != str2[rowIdx - 1]) {
-        PRUint32 left = row[colIdx - 1];
-        PRUint32 up = prevRow[colIdx];
-        PRUint32 upleft = prevRow[colIdx - 1];
+        uint32_t left = row[colIdx - 1];
+        uint32_t up = prevRow[colIdx];
+        uint32_t upleft = prevRow[colIdx - 1];
         row[colIdx] = NS_MIN(upleft, NS_MIN(left, up)) + 1;
       } else {
         row[colIdx] = prevRow[colIdx - 1];
@@ -134,7 +134,7 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   delete [] entries;
 
   // Fire events.
-  for (PRInt32 idx = events.Length() - 1; idx >= 0; idx--)
+  for (int32_t idx = events.Length() - 1; idx >= 0; idx--)
     mDocument->FireDelayedAccessibleEvent(events[idx]);
 
   mDocument->MaybeNotifyOfValueChange(mHyperText);
@@ -146,18 +146,18 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
 void
 TextUpdater::ComputeTextChangeEvents(const nsAString& aStr1,
                                      const nsAString& aStr2,
-                                     PRUint32* aEntries,
+                                     uint32_t* aEntries,
                                      nsTArray<nsRefPtr<AccEvent> >& aEvents)
 {
-  PRInt32 colIdx = aStr1.Length(), rowIdx = aStr2.Length();
+  int32_t colIdx = aStr1.Length(), rowIdx = aStr2.Length();
 
   // Point at which strings last matched.
-  PRInt32 colEnd = colIdx;
-  PRInt32 rowEnd = rowIdx;
+  int32_t colEnd = colIdx;
+  int32_t rowEnd = rowIdx;
 
-  PRInt32 colLen = colEnd + 1;
-  PRUint32* row = aEntries + rowIdx * colLen;
-  PRUint32 dist = row[colIdx]; // current Levenshtein distance
+  int32_t colLen = colEnd + 1;
+  uint32_t* row = aEntries + rowIdx * colLen;
+  uint32_t dist = row[colIdx]; // current Levenshtein distance
   while (rowIdx && colIdx) { // stop when we can't move diagonally
     if (aStr1[colIdx - 1] == aStr2[rowIdx - 1]) { // match
       if (rowIdx < rowEnd) { // deal with any pending insertion

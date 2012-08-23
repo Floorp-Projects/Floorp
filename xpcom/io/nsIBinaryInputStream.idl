@@ -28,10 +28,10 @@ interface nsIBinaryInputStream : nsIInputStream {
      */
     boolean readBoolean();
 
-    PRUint8 read8();
-    PRUint16 read16();
-    PRUint32 read32();
-    PRUint64 read64();
+    uint8_t read8();
+    uint16_t read16();
+    uint32_t read32();
+    uint64_t read64();
 
     float readFloat();
     double readDouble();
@@ -55,7 +55,7 @@ interface nsIBinaryInputStream : nsIInputStream {
      *
      * @throws NS_ERROR_FAILURE if it can't read aLength bytes
      */
-    void readBytes(in PRUint32 aLength,
+    void readBytes(in uint32_t aLength,
                    [size_is(aLength), retval] out string aString);
 
     /**
@@ -66,8 +66,8 @@ interface nsIBinaryInputStream : nsIInputStream {
      *
      * @throws NS_ERROR_FAILURE if it can't read aLength bytes
      */
-    void readByteArray(in PRUint32 aLength,
-                       [array, size_is(aLength), retval] out PRUint8 aBytes);
+    void readByteArray(in uint32_t aLength,
+                       [array, size_is(aLength), retval] out uint8_t aBytes);
 };
 
 %{C++

@@ -72,7 +72,7 @@ class ContinueHelper : public CursorHelper
 {
 public:
   ContinueHelper(IDBCursor* aCursor,
-                 PRInt32 aCount)
+                 int32_t aCount)
   : CursorHelper(aCursor), mCount(aCount)
   {
     NS_ASSERTION(aCount > 0, "Must have a count!");
@@ -133,7 +133,7 @@ protected:
     }
   }
 
-  PRInt32 mCount;
+  int32_t mCount;
   Key mKey;
   Key mObjectKey;
   StructuredCloneReadInfo mCloneReadInfo;
@@ -143,7 +143,7 @@ class ContinueObjectStoreHelper : public ContinueHelper
 {
 public:
   ContinueObjectStoreHelper(IDBCursor* aCursor,
-                            PRUint32 aCount)
+                            uint32_t aCount)
   : ContinueHelper(aCursor, aCount)
   { }
 
@@ -156,7 +156,7 @@ class ContinueIndexHelper : public ContinueHelper
 {
 public:
   ContinueIndexHelper(IDBCursor* aCursor,
-                      PRUint32 aCount)
+                      uint32_t aCount)
   : ContinueHelper(aCursor, aCount)
   { }
 
@@ -169,7 +169,7 @@ class ContinueIndexObjectHelper : public ContinueIndexHelper
 {
 public:
   ContinueIndexObjectHelper(IDBCursor* aCursor,
-                            PRUint32 aCount)
+                            uint32_t aCount)
   : ContinueIndexHelper(aCursor, aCount)
   { }
 
@@ -375,7 +375,7 @@ IDBCursor::~IDBCursor()
 
 nsresult
 IDBCursor::ContinueInternal(const Key& aKey,
-                            PRInt32 aCount)
+                            int32_t aCount)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aCount > 0, "Must have a count!");
@@ -740,7 +740,7 @@ IDBCursor::Delete(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-IDBCursor::Advance(PRInt64 aCount)
+IDBCursor::Advance(int64_t aCount)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -749,7 +749,7 @@ IDBCursor::Advance(PRInt64 aCount)
   }
 
   Key key;
-  return ContinueInternal(key, PRInt32(aCount));
+  return ContinueInternal(key, int32_t(aCount));
 }
 
 void
@@ -816,7 +816,7 @@ ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ASSERTION(mCount > 0, "Not ok!");
 
   bool hasResult;
-  for (PRInt32 index = 0; index < mCount; index++) {
+  for (int32_t index = 0; index < mCount; index++) {
     rv = stmt->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 

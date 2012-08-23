@@ -11,18 +11,18 @@ const txXPathNode& txNodeSetContext::getContextNode()
     return mContextSet->get(mPosition - 1);
 }
 
-PRUint32 txNodeSetContext::size()
+uint32_t txNodeSetContext::size()
 {
-    return (PRUint32)mContextSet->size();
+    return (uint32_t)mContextSet->size();
 }
 
-PRUint32 txNodeSetContext::position()
+uint32_t txNodeSetContext::position()
 {
     NS_ASSERTION(mPosition, "Should have called next() at least once");
     return mPosition;
 }
 
-nsresult txNodeSetContext::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
+nsresult txNodeSetContext::getVariable(int32_t aNamespace, nsIAtom* aLName,
                                        txAExprResult*& aResult)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");

@@ -307,11 +307,11 @@ nsLayoutDebuggingTools::SetReflowCounts(bool aShow)
     return NS_OK;
 }
 
-static void DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* out, PRInt32 aIndent)
+static void DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* out, int32_t aIndent)
 {
     nsXPIDLString name;
     nsCOMPtr<nsIDocShellTreeItem> parent;
-    PRInt32 i, n;
+    int32_t i, n;
 
     for (i = aIndent; --i >= 0; )
         fprintf(out, "  ");
@@ -365,7 +365,7 @@ DumpContentRecur(nsIDocShell* aDocShell, FILE* out)
             fputs("no document\n", out);
         }
         // dump the frames of the sub documents
-        PRInt32 i, n;
+        int32_t i, n;
         nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
         docShellAsNode->GetChildCount(&n);
         for (i = 0; i < n; ++i) {
@@ -405,7 +405,7 @@ DumpFramesRecur(nsIDocShell* aDocShell, FILE* out)
     }
 
     // dump the frames of the sub documents
-    PRInt32 i, n;
+    int32_t i, n;
     nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
     docShellAsNode->GetChildCount(&n);
     for (i = 0; i < n; ++i) {
@@ -445,7 +445,7 @@ DumpViewsRecur(nsIDocShell* aDocShell, FILE* out)
     }
 
     // dump the views of the sub documents
-    PRInt32 i, n;
+    int32_t i, n;
     nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
     docShellAsNode->GetChildCount(&n);
     for (i = 0; i < n; i++) {

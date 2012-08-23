@@ -82,7 +82,7 @@ public:
     class TemplateRule {
     public:
         txStylesheet::ImportFrame* mFrame;
-        PRInt32 mModeNsId;
+        int32_t mModeNsId;
         nsCOMPtr<nsIAtom> mModeLocalName;
         txVariableMap* mParams;
     };
@@ -148,7 +148,7 @@ private:
     txVariableMap* mLocalVariables;
     txVariableMap mGlobalVariableValues;
     nsRefPtr<txAExprResult> mGlobalVarPlaceholderValue;
-    PRInt32 mRecursionDepth;
+    int32_t mRecursionDepth;
 
     AutoInfallibleTArray<TemplateRule, 10> mTemplateRules;
 
@@ -162,7 +162,7 @@ private:
     nsRefPtr<txResultRecycler> mRecycler;
     bool mDisableLoads;
 
-    static const PRInt32 kMaxRecursionDepth;
+    static const int32_t kMaxRecursionDepth;
 };
 
 #endif

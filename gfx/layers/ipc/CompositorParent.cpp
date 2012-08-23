@@ -580,9 +580,6 @@ SetShadowProperties(Layer* aLayer)
   }
 }
 
-// SampleValue should eventually take the CSS property as an argument.  This
-// will be needed if we ever animate two values with the same type but different
-// interpolation rules.
 static void
 SampleValue(float aPortion, Animation& aAnimation, nsStyleAnimation::Value& aStart,
             nsStyleAnimation::Value& aEnd, Animatable* aValue)
@@ -591,28 +588,24 @@ SampleValue(float aPortion, Animation& aAnimation, nsStyleAnimation::Value& aSta
   NS_ASSERTION(aStart.GetUnit() == aEnd.GetUnit() ||
                aStart.GetUnit() == nsStyleAnimation::eUnit_None ||
                aEnd.GetUnit() == nsStyleAnimation::eUnit_None, "Must have same unit");
-  if (aStart.GetUnit() == nsStyleAnimation::eUnit_Transform ||
-      aEnd.GetUnit() == nsStyleAnimation::eUnit_Transform) {
-    nsStyleAnimation::Interpolate(eCSSProperty_transform, aStart, aEnd,
-                                  aPortion, interpolatedValue);
-    nsCSSValueList* interpolatedList = interpolatedValue.GetCSSValueListValue();
-
-    TransformData& data = aAnimation.data().get_TransformData();
-    gfx3DMatrix transform =
-      nsDisplayTransform::GetResultingTransformMatrix(nullptr, data.origin(), nsDeviceContext::AppUnitsPerCSSPixel(),
-                                                      &data.bounds(), interpolatedList, &data.mozOrigin(),
-                                                      &data.perspectiveOrigin(), &data.perspective());
-
-    InfallibleTArray<TransformFunction>* functions = new InfallibleTArray<TransformFunction>();
-    functions->AppendElement(TransformMatrix(transform));
-    *aValue = *functions;
+  nsStyleAnimation::Interpolate(aAnimation.property(), aStart, aEnd,
+                                aPortion, interpolatedValue);
+  if (aAnimation.property() == eCSSProperty_opacity) {
+    *aValue = interpolatedValue.GetFloatValue();
     return;
   }
 
-  NS_ASSERTION(aStart.GetUnit() == nsStyleAnimation::eUnit_Float, "Should be opacity");
-  nsStyleAnimation::Interpolate(eCSSProperty_opacity, aStart, aEnd,
-                                aPortion, interpolatedValue);
-  *aValue = interpolatedValue.GetFloatValue();
+  nsCSSValueList* interpolatedList = interpolatedValue.GetCSSValueListValue();
+
+  TransformData& data = aAnimation.data().get_TransformData();
+  gfx3DMatrix transform =
+    nsDisplayTransform::GetResultingTransformMatrix(nullptr, data.origin(), nsDeviceContext::AppUnitsPerCSSPixel(),
+                                                    &data.bounds(), interpolatedList, &data.mozOrigin(),
+                                                    &data.perspectiveOrigin(), &data.perspective());
+
+  InfallibleTArray<TransformFunction>* functions = new InfallibleTArray<TransformFunction>();
+  functions->AppendElement(TransformMatrix(transform));
+  *aValue = *functions;
 }
 
 static bool
@@ -623,7 +616,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 
   bool activeAnimations = false;
 
-  for (PRUint32 i = animations.Length(); i-- !=0; ) {
+  for (uint32_t i = animations.Length(); i-- !=0; ) {
     Animation& animation = animations[i];
     AnimData& animData = animationData[i];
 
@@ -637,14 +630,14 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                                                 animation.direction());
 
     if (positionInIteration == -1) {
-        animations.RemoveElementAt(i);
-        animationData.RemoveElementAt(i);
-        continue;
+      animations.RemoveElementAt(i);
+      animationData.RemoveElementAt(i);
+      continue;
     }
 
     NS_ABORT_IF_FALSE(0.0 <= positionInIteration &&
-                          positionInIteration <= 1.0,
-                        "position should be in [0-1]");
+                      positionInIteration <= 1.0,
+                      "position should be in [0-1]");
 
     int segmentIndex = 0;
     AnimationSegment* segment = animation.segments().Elements();
@@ -665,11 +658,14 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     SampleValue(portion, animation, animData.mStartValues[segmentIndex],
                 animData.mEndValues[segmentIndex], &interpolatedValue);
     ShadowLayer* shadow = aLayer->AsShadowLayer();
-    switch (interpolatedValue.type()) {
-    case Animatable::TOpacity:
-      shadow->SetShadowOpacity(interpolatedValue.get_Opacity().value());
+    switch (animation.property()) {
+    case eCSSProperty_opacity:
+    {
+      shadow->SetShadowOpacity(interpolatedValue.get_float());
       break;
-   case Animatable::TArrayOfTransformFunction: {
+    }
+    case eCSSProperty_transform:
+    {
       gfx3DMatrix matrix = interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value();
       shadow->SetShadowTransform(matrix);
       break;
@@ -765,7 +761,9 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 
     if (mIsFirstPaint) {
       mContentRect = metrics.mContentRect;
-      SetFirstPaintViewport(metrics.mViewportScrollOffset,
+      const gfx::Point& scrollOffset = metrics.mViewportScrollOffset;
+      SetFirstPaintViewport(nsIntPoint(NS_lround(scrollOffset.x),
+                                       NS_lround(scrollOffset.y)),
                             1/rootScaleX,
                             mContentRect,
                             metrics.mCSSContentRect);
@@ -779,9 +777,9 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     // notifications, so that Java can take these into account in its response.
     // Calculate the absolute display port to send to Java
     nsIntRect displayPort = metrics.mDisplayPort;
-    nsIntPoint scrollOffset = metrics.mViewportScrollOffset;
-    displayPort.x += scrollOffset.x;
-    displayPort.y += scrollOffset.y;
+    gfx::Point scrollOffset = metrics.mViewportScrollOffset;
+    displayPort.x += NS_lround(scrollOffset.x);
+    displayPort.y += NS_lround(scrollOffset.y);
 
     SyncViewportInfo(displayPort, 1/rootScaleX, mLayersUpdated,
                      mScrollOffset, mXScale, mYScale);
@@ -798,7 +796,8 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 
     nsIntPoint metricsScrollOffset(0, 0);
     if (metrics.IsScrollable()) {
-      metricsScrollOffset = metrics.mViewportScrollOffset;
+      metricsScrollOffset =
+        nsIntPoint(NS_lround(scrollOffset.x), NS_lround(scrollOffset.y));
     }
 
     nsIntPoint scrollCompensation(
@@ -953,7 +952,7 @@ CompositorParent::DeallocPLayers(PLayersParent* actor)
 }
 
 
-typedef map<PRUint64,CompositorParent*> CompositorMap;
+typedef map<uint64_t,CompositorParent*> CompositorMap;
 static CompositorMap* sCompositorMap;
 
 void CompositorParent::CreateCompositorMap()
@@ -973,22 +972,22 @@ void CompositorParent::DestroyCompositorMap()
   }
 }
 
-CompositorParent* CompositorParent::GetCompositor(PRUint64 id)
+CompositorParent* CompositorParent::GetCompositor(uint64_t id)
 {
   CompositorMap::iterator it = sCompositorMap->find(id);
   return it != sCompositorMap->end() ? it->second : nullptr;
 }
 
-void CompositorParent::AddCompositor(CompositorParent* compositor, PRUint64* outID)
+void CompositorParent::AddCompositor(CompositorParent* compositor, uint64_t* outID)
 {
-  static PRUint64 sNextID = 1;
+  static uint64_t sNextID = 1;
   
   ++sNextID;
   (*sCompositorMap)[sNextID] = compositor;
   *outID = sNextID;
 }
 
-CompositorParent* CompositorParent::RemoveCompositor(PRUint64 id)
+CompositorParent* CompositorParent::RemoveCompositor(uint64_t id)
 {
   CompositorMap::iterator it = sCompositorMap->find(id);
   if (it == sCompositorMap->end()) {

@@ -38,10 +38,10 @@ NS_GFX_(bool) IsConvertYCbCrToRGB565Fast(int pic_x,
                                          YUVType yuv_type);
 
 // Scale a frame of YUV to 16 bit RGB565.
-NS_GFX_(void) ScaleYCbCrToRGB565(const PRUint8 *yplane,
-                                 const PRUint8 *uplane,
-                                 const PRUint8 *vplane,
-                                 PRUint8 *rgbframe,
+NS_GFX_(void) ScaleYCbCrToRGB565(const uint8_t *yplane,
+                                 const uint8_t *uplane,
+                                 const uint8_t *vplane,
+                                 uint8_t *rgbframe,
                                  int source_x0,
                                  int source_y0,
                                  int source_width,

@@ -81,7 +81,7 @@ nsHTMLLegendElement::GetFieldSet()
 }
 
 bool
-nsHTMLLegendElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLLegendElement::ParseAttribute(int32_t aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
@@ -96,7 +96,7 @@ nsHTMLLegendElement::ParseAttribute(PRInt32 aNamespaceID,
 
 nsChangeHint
 nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                            PRInt32 aModType) const
+                                            int32_t aModType) const
 {
   nsChangeHint retval =
       nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
@@ -107,7 +107,7 @@ nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 nsresult
-nsHTMLLegendElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+nsHTMLLegendElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              nsIAtom* aPrefix, const nsAString& aValue,
                              bool aNotify)
 {
@@ -115,7 +115,7 @@ nsHTMLLegendElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                        aPrefix, aValue, aNotify);
 }
 nsresult
-nsHTMLLegendElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+nsHTMLLegendElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                                bool aNotify)
 {
   return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
@@ -144,7 +144,7 @@ nsHTMLLegendElement::Focus()
   if (!frame)
     return NS_OK;
 
-  PRInt32 tabIndex;
+  int32_t tabIndex;
   if (frame->IsFocusable(&tabIndex, false))
     return nsGenericHTMLElement::Focus();
 

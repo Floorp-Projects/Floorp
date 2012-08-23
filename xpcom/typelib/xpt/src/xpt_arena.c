@@ -84,25 +84,25 @@ struct BLK_HDR
 struct XPTArena
 {
     BLK_HDR *first;
-    PRUint8 *next;
+    uint8_t *next;
     size_t   space;
     size_t   alignment;
     size_t   block_size;
     char    *name;
 
 #ifdef XPT_ARENA_LOGGING
-    PRUint32 LOG_MallocCallCount;
-    PRUint32 LOG_MallocTotalBytesRequested;
-    PRUint32 LOG_MallocTotalBytesUsed;
-    PRUint32 LOG_FreeCallCount;
-    PRUint32 LOG_LoadingFreeCallCount;
-    PRUint32 LOG_RealMallocCallCount;
-    PRUint32 LOG_RealMallocTotalBytesRequested;
+    uint32_t LOG_MallocCallCount;
+    uint32_t LOG_MallocTotalBytesRequested;
+    uint32_t LOG_MallocTotalBytesUsed;
+    uint32_t LOG_FreeCallCount;
+    uint32_t LOG_LoadingFreeCallCount;
+    uint32_t LOG_RealMallocCallCount;
+    uint32_t LOG_RealMallocTotalBytesRequested;
 #endif /* XPT_ARENA_LOGGING */
 };
 
 XPT_PUBLIC_API(XPTArena *)
-XPT_NewArena(PRUint32 block_size, size_t alignment, const char* name)
+XPT_NewArena(uint32_t block_size, size_t alignment, const char* name)
 {
     XPTArena *arena = calloc(1, sizeof(XPTArena));
     if (arena) {
@@ -163,7 +163,7 @@ XPT_DumpStats(XPTArena *arena)
 XPT_PUBLIC_API(void *)
 XPT_ArenaMalloc(XPTArena *arena, size_t size)
 {
-    PRUint8 *cur;
+    uint8_t *cur;
     size_t bytes;
 
     if (!size)
@@ -204,7 +204,7 @@ XPT_ArenaMalloc(XPTArena *arena, size_t size)
         new_block->size = new_space;
 
         /* set info for current block */
-        arena->next  = ((PRUint8*)new_block) + block_header_size;
+        arena->next  = ((uint8_t*)new_block) + block_header_size;
         arena->space = new_space - block_header_size;
 
 #ifdef DEBUG
@@ -297,7 +297,7 @@ static void xpt_DebugPrintArenaStats(XPTArena *arena)
 
 #ifdef DEBUG
 XPT_PUBLIC_API(void)
-XPT_AssertFailed(const char *s, const char *file, PRUint32 lineno)
+XPT_AssertFailed(const char *s, const char *file, uint32_t lineno)
 {
     fprintf(stderr, "Assertion failed: %s, file %s, line %d\n",
             s, file, lineno);

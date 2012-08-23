@@ -28,7 +28,7 @@ struct TestContext {
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIInputStream> inputStream;
     PRTime t1, t2;
-    PRUint32 bytesRead, totalRead;
+    uint32_t bytesRead, totalRead;
 
     TestContext()
         : t1(0), t2(0), bytesRead(0), totalRead(0)

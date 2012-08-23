@@ -117,7 +117,7 @@ public:
                     bool sweepFlag);
   bool GetNextSegment(gfxPoint *cp1, gfxPoint *cp2, gfxPoint *to);
 protected:
-  PRInt32 mNumSegs, mSegIndex;
+  int32_t mNumSegs, mSegIndex;
   double mTheta, mDelta, mT;
   double mSinPhi, mCosPhi;
   double mRx, mRy;

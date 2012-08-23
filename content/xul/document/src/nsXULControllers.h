@@ -22,7 +22,7 @@
 class nsXULControllerData
 {
 public:
-                            nsXULControllerData(PRUint32 inControllerID, nsIController* inController)
+                            nsXULControllerData(uint32_t inControllerID, nsIController* inController)
                             : mControllerID(inControllerID)
                             , mController(inController)
                             {                            
@@ -30,7 +30,7 @@ public:
 
                             ~nsXULControllerData() {}
 
-    PRUint32                GetControllerID()   { return mControllerID; }
+    uint32_t                GetControllerID()   { return mControllerID; }
 
     nsresult                GetController(nsIController **outController)
                             {
@@ -38,7 +38,7 @@ public:
                               return NS_OK;
                             }
     
-    PRUint32                mControllerID;
+    uint32_t                mControllerID;
     nsCOMPtr<nsIController> mController;
 };
 
@@ -64,7 +64,7 @@ protected:
     void        DeleteControllers();
 
     nsTArray<nsXULControllerData*>   mControllers;
-    PRUint32                         mCurControllerID;
+    uint32_t                         mCurControllerID;
 };
 
 

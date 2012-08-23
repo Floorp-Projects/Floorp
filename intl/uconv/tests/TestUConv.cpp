@@ -311,8 +311,8 @@ nsresult nsTestUConv::DisplayCharsets()
 
   printf("***** Character Sets *****\n");
 
-  PRUint32 encCount = 0, decCount = 0;
-  PRUint32 basicEncCount = 0, basicDecCount = 0;
+  uint32_t encCount = 0, decCount = 0;
+  uint32_t basicEncCount = 0, basicDecCount = 0;
 
   nsTArray<nsCString> allCharsets;
   
@@ -328,8 +328,8 @@ nsresult nsTestUConv::DisplayCharsets()
   }
 
   nsAutoString prop, str;
-  PRUint32 count = allCharsets.Length();
-  for (PRUint32 i = 0; i < count; i++) {
+  uint32_t count = allCharsets.Length();
+  for (uint32_t i = 0; i < count; i++) {
 
     const nsCString& charset = allCharsets[i];
     printf("%s", charset.get());
@@ -479,8 +479,8 @@ nsresult nsTestUConv::ConvertEncode(PRUnichar ** aSrc, PRUnichar * aSrcEnd,
 {
   PRUnichar * src = (*aSrc);
   char * dest = (*aDest);
-  PRInt32 srcLen = aSrcEnd - src;
-  PRInt32 destLen = aDestEnd - dest;
+  int32_t srcLen = aSrcEnd - src;
+  int32_t destLen = aDestEnd - dest;
 
   nsresult res = aEncoder->Convert(src, &srcLen, dest, &destLen);
 
@@ -493,7 +493,7 @@ nsresult nsTestUConv::FinishEncode(char ** aDest, char * aDestEnd,
                                    nsIUnicodeEncoder * aEncoder)
 {
   char * dest = (*aDest);
-  PRInt32 destLen = aDestEnd - dest;
+  int32_t destLen = aDestEnd - dest;
 
   nsresult res = aEncoder->Finish(dest, &destLen);
 

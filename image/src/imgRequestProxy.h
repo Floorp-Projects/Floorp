@@ -137,9 +137,9 @@ protected:
   /* non-virtual imgIDecoderObserver methods */
   void OnStartDecode     ();
   void OnStartContainer  (imgIContainer *aContainer);
-  void OnStartFrame      (PRUint32 aFrame);
+  void OnStartFrame      (uint32_t aFrame);
   void OnDataAvailable   (bool aCurrentFrame, const nsIntRect * aRect);
-  void OnStopFrame       (PRUint32 aFrame);
+  void OnStopFrame       (uint32_t aFrame);
   void OnStopContainer   (imgIContainer *aContainer);
   void OnStopDecode      (nsresult status, const PRUnichar *statusArg);
   void OnDiscard         ();
@@ -212,8 +212,8 @@ private:
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;
-  PRUint32    mLockCount;
-  PRUint32    mAnimationConsumers;
+  uint32_t    mLockCount;
+  uint32_t    mAnimationConsumers;
   bool mCanceled;
   bool mIsInLoadGroup;
   bool mListenerIsStrongRef;

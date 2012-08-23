@@ -9,6 +9,7 @@
 
 #include "ImageContainer.h"
 #include "GonkIOSurfaceImage.h"
+#include "GrallocImages.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ipc/CrossProcessMutex.h"
 #include "SharedTextureImage.h"
@@ -30,6 +31,7 @@
 #endif
 
 using namespace mozilla::ipc;
+using namespace android;
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SourceSurface;
 
@@ -37,9 +39,11 @@ using mozilla::gfx::SourceSurface;
 namespace mozilla {
 namespace layers {
 
+int32_t Image::sSerialCounter = 0;
+
 already_AddRefed<Image>
 ImageFactory::CreateImage(const ImageFormat *aFormats,
-                          PRUint32 aNumFormats,
+                          uint32_t aNumFormats,
                           const gfxIntSize &,
                           BufferRecycleBin *aRecycleBin)
 {
@@ -47,22 +51,37 @@ ImageFactory::CreateImage(const ImageFormat *aFormats,
     return nullptr;
   }
   nsRefPtr<Image> img;
+#ifdef MOZ_WIDGET_GONK
+  if (FormatInList(aFormats, aNumFormats, GRALLOC_PLANAR_YCBCR)) {
+    img = new GrallocPlanarYCbCrImage();
+    return img.forget();
+  }
+#endif
   if (FormatInList(aFormats, aNumFormats, PLANAR_YCBCR)) {
     img = new PlanarYCbCrImage(aRecycleBin);
-  } else if (FormatInList(aFormats, aNumFormats, CAIRO_SURFACE)) {
+    return img.forget();
+  }
+  if (FormatInList(aFormats, aNumFormats, CAIRO_SURFACE)) {
     img = new CairoImage();
-  } else if (FormatInList(aFormats, aNumFormats, SHARED_TEXTURE)) {
+    return img.forget();
+  }
+  if (FormatInList(aFormats, aNumFormats, SHARED_TEXTURE)) {
     img = new SharedTextureImage();
+    return img.forget();
+  }
 #ifdef XP_MACOSX
-  } else if (FormatInList(aFormats, aNumFormats, MAC_IO_SURFACE)) {
+  if (FormatInList(aFormats, aNumFormats, MAC_IO_SURFACE)) {
     img = new MacIOSurfaceImage();
+    return img.forget();
+  }
 #endif
 #ifdef MOZ_WIDGET_GONK
-  } else if (FormatInList(aFormats, aNumFormats, GONK_IO_SURFACE)) {
+  if (FormatInList(aFormats, aNumFormats, GONK_IO_SURFACE)) {
     img = new GonkIOSurfaceImage();
-#endif
+    return img.forget();
   }
-  return img.forget();
+#endif
+  return nullptr;
 }
 
 BufferRecycleBin::BufferRecycleBin()
@@ -71,7 +90,7 @@ BufferRecycleBin::BufferRecycleBin()
 }
 
 void
-BufferRecycleBin::RecycleBuffer(PRUint8* aBuffer, PRUint32 aSize)
+BufferRecycleBin::RecycleBuffer(uint8_t* aBuffer, uint32_t aSize)
 {
   MutexAutoLock lock(mLock);
 
@@ -82,16 +101,16 @@ BufferRecycleBin::RecycleBuffer(PRUint8* aBuffer, PRUint32 aSize)
   mRecycledBuffers.AppendElement(aBuffer);
 }
 
-PRUint8*
-BufferRecycleBin::GetBuffer(PRUint32 aSize)
+uint8_t*
+BufferRecycleBin::GetBuffer(uint32_t aSize)
 {
   MutexAutoLock lock(mLock);
 
   if (mRecycledBuffers.IsEmpty() || mRecycledBufferSize != aSize)
-    return new PRUint8[aSize];
+    return new uint8_t[aSize];
 
-  PRUint32 last = mRecycledBuffers.Length() - 1;
-  PRUint8* result = mRecycledBuffers[last].forget();
+  uint32_t last = mRecycledBuffers.Length() - 1;
+  uint8_t* result = mRecycledBuffers[last].forget();
   mRecycledBuffers.RemoveElementAt(last);
   return result;
 }
@@ -122,7 +141,7 @@ ImageContainer::~ImageContainer()
 
 already_AddRefed<Image>
 ImageContainer::CreateImage(const ImageFormat *aFormats,
-                            PRUint32 aNumFormats)
+                            uint32_t aNumFormats)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   return mImageFactory->CreateImage(aFormats, aNumFormats, mScaleHint, mRecycleBin);
@@ -177,7 +196,7 @@ bool ImageContainer::IsAsync() const {
   return mImageContainerChild != nullptr;
 }
 
-PRUint64 ImageContainer::GetAsyncContainerID() const
+uint64_t ImageContainer::GetAsyncContainerID() const
 {
   NS_ASSERTION(IsAsync(),"Shared image ID is only relevant to async ImageContainers");
   if (IsAsync()) {
@@ -386,26 +405,26 @@ PlanarYCbCrImage::~PlanarYCbCrImage()
   }
 }
 
-PRUint8* 
-PlanarYCbCrImage::AllocateBuffer(PRUint32 aSize)
+uint8_t* 
+PlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 {
   return mRecycleBin->GetBuffer(aSize); 
 }
 
 static void
-CopyPlane(PRUint8 *aDst, PRUint8 *aSrc,
-          const gfxIntSize &aSize, PRInt32 aStride,
-          PRInt32 aOffset, PRInt32 aSkip)
+CopyPlane(uint8_t *aDst, uint8_t *aSrc,
+          const gfxIntSize &aSize, int32_t aStride,
+          int32_t aOffset, int32_t aSkip)
 {
   if (!aOffset && !aSkip) {
     // Fast path: planar input.
     memcpy(aDst, aSrc, aSize.height * aStride);
   } else {
-    PRInt32 height = aSize.height;
-    PRInt32 width = aSize.width;
+    int32_t height = aSize.height;
+    int32_t width = aSize.width;
     for (int y = 0; y < height; ++y) {
-      PRUint8 *src = aSrc + aOffset;
-      PRUint8 *dst = aDst;
+      uint8_t *src = aSrc + aOffset;
+      uint8_t *dst = aDst;
       if (!aSkip) {
         // Fast path: offset only, no per-pixel skip.
         memcpy(dst, src, width);
@@ -423,10 +442,7 @@ CopyPlane(PRUint8 *aDst, PRUint8 *aSrc,
 }
 
 void
-PlanarYCbCrImage::CopyData(const Data& aData,
-                           PRInt32 aYOffset, PRInt32 aYSkip,
-                           PRInt32 aCbOffset, PRInt32 aCbSkip,
-                           PRInt32 aCrOffset, PRInt32 aCrSkip)
+PlanarYCbCrImage::CopyData(const Data& aData)
 {
   mData = aData;
 
@@ -445,13 +461,13 @@ PlanarYCbCrImage::CopyData(const Data& aData,
 
   CopyPlane(mData.mYChannel, aData.mYChannel,
             mData.mYSize, mData.mYStride,
-            aYOffset, aYSkip);
+            mData.mYOffset, mData.mYSkip);
   CopyPlane(mData.mCbChannel, aData.mCbChannel,
             mData.mCbCrSize, mData.mCbCrStride,
-            aCbOffset, aCbSkip);
+            mData.mCbOffset, mData.mCbSkip);
   CopyPlane(mData.mCrChannel, aData.mCrChannel,
             mData.mCbCrSize, mData.mCbCrStride,
-            aCrOffset, aCrSkip);
+            mData.mCrOffset, mData.mCrSkip);
 
   mSize = aData.mPicSize;
 }

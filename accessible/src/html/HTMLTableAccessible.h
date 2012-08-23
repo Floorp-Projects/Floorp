@@ -39,8 +39,8 @@ public:
   // Accessible
   virtual void Shutdown();
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeState();
-  virtual PRUint64 NativeInteractiveState() const;
+  virtual uint64_t NativeState();
+  virtual uint64_t NativeInteractiveState() const;
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
 protected:
@@ -57,12 +57,12 @@ protected:
   /**
    * Return row and column indices of the cell.
    */
-  nsresult GetCellIndexes(PRInt32& aRowIdx, PRInt32& aColIdx);
+  nsresult GetCellIndexes(int32_t& aRowIdx, int32_t& aColIdx);
 
   /**
    * Return an array of row or column header cells.
    */
-  nsresult GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
+  nsresult GetHeaderCells(int32_t aRowOrColumnHeaderCell,
                           nsIArray **aHeaderCells);
 };
 
@@ -105,30 +105,30 @@ public:
   // TableAccessible
   virtual Accessible* Caption();
   virtual void Summary(nsString& aSummary);
-  virtual PRUint32 ColCount();
-  virtual PRUint32 RowCount();
-  virtual Accessible* CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex);
-  virtual PRInt32 CellIndexAt(PRUint32 aRowIdx, PRUint32 aColIdx);
-  virtual PRInt32 ColIndexAt(PRUint32 aCellIdx);
-  virtual PRInt32 RowIndexAt(PRUint32 aCellIdx);
-  virtual void RowAndColIndicesAt(PRUint32 aCellIdx, PRInt32* aRowIdx,
-                                  PRInt32* aColIdx);
-  virtual PRUint32 ColExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx);
-  virtual PRUint32 RowExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx);
-  virtual bool IsColSelected(PRUint32 aColIdx);
-  virtual bool IsRowSelected(PRUint32 aRowIdx);
-  virtual bool IsCellSelected(PRUint32 aRowIdx, PRUint32 aColIdx);
-  virtual PRUint32 SelectedCellCount();
-  virtual PRUint32 SelectedColCount();
-  virtual PRUint32 SelectedRowCount();
+  virtual uint32_t ColCount();
+  virtual uint32_t RowCount();
+  virtual Accessible* CellAt(uint32_t aRowIndex, uint32_t aColumnIndex);
+  virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx);
+  virtual int32_t ColIndexAt(uint32_t aCellIdx);
+  virtual int32_t RowIndexAt(uint32_t aCellIdx);
+  virtual void RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
+                                  int32_t* aColIdx);
+  virtual uint32_t ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx);
+  virtual uint32_t RowExtentAt(uint32_t aRowIdx, uint32_t aColIdx);
+  virtual bool IsColSelected(uint32_t aColIdx);
+  virtual bool IsRowSelected(uint32_t aRowIdx);
+  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx);
+  virtual uint32_t SelectedCellCount();
+  virtual uint32_t SelectedColCount();
+  virtual uint32_t SelectedRowCount();
   virtual void SelectedCells(nsTArray<Accessible*>* aCells);
-  virtual void SelectedCellIndices(nsTArray<PRUint32>* aCells);
-  virtual void SelectedColIndices(nsTArray<PRUint32>* aCols);
-  virtual void SelectedRowIndices(nsTArray<PRUint32>* aRows);
-  virtual void SelectCol(PRUint32 aColIdx);
-  virtual void SelectRow(PRUint32 aRowIdx);
-  virtual void UnselectCol(PRUint32 aColIdx);
-  virtual void UnselectRow(PRUint32 aRowIdx);
+  virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells);
+  virtual void SelectedColIndices(nsTArray<uint32_t>* aCols);
+  virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows);
+  virtual void SelectCol(uint32_t aColIdx);
+  virtual void SelectRow(uint32_t aRowIdx);
+  virtual void UnselectCol(uint32_t aColIdx);
+  virtual void UnselectRow(uint32_t aRowIdx);
   virtual bool IsProbablyLayoutTable();
 
   // nsAccessNode
@@ -139,16 +139,16 @@ public:
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeState();
+  virtual uint64_t NativeState();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
-  virtual Relation RelationByType(PRUint32 aRelationType);
+  virtual Relation RelationByType(uint32_t aRelationType);
 
   // HTMLTableAccessible
 
   /**
    * Retun cell element at the given row and column index.
    */
-  nsresult GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex,
+  nsresult GetCellAt(int32_t aRowIndex, int32_t aColIndex,
                      nsIDOMElement* &aCell);
 
   /**
@@ -170,7 +170,7 @@ protected:
    * @param aTarget  [in] indicates what should be selected, either row or column
    *                  (see nsISelectionPrivate)
    */
-  nsresult AddRowOrColumnToSelection(PRInt32 aIndex, PRUint32 aTarget);
+  nsresult AddRowOrColumnToSelection(int32_t aIndex, uint32_t aTarget);
 
   /**
    * Removes rows or columns at the given index or outside it from selection.
@@ -181,8 +181,8 @@ protected:
    *                    the given one should be unselected or the given one
    *                    should be unselected only
    */
-  nsresult RemoveRowsOrColumnsFromSelection(PRInt32 aIndex,
-                                            PRUint32 aTarget,
+  nsresult RemoveRowsOrColumnsFromSelection(int32_t aIndex,
+                                            uint32_t aTarget,
                                             bool aIsOuter);
 
   /**
@@ -213,7 +213,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole();
-  virtual Relation RelationByType(PRUint32 aRelationType);
+  virtual Relation RelationByType(uint32_t aRelationType);
 };
 
 } // namespace a11y

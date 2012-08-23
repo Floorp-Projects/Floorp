@@ -19,7 +19,7 @@
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(LayoutStyleSheetCacheMallocSizeOf,
                                      "layout/style-sheet-cache")
 
-static PRInt64
+static int64_t
 GetStylesheetCacheSize()
 {
   return nsLayoutStylesheetCache::SizeOfIncludingThis(

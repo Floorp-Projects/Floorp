@@ -24,7 +24,7 @@
  * free function.
  *
  * @param size      Number of elements in the array.  If not a constant, this 
- *                  should be a PRInt32.  Note that this means this macro 
+ *                  should be a int32_t.  Note that this means this macro 
  *                  will not work if size >= 2^31.
  * @param array     The array to be freed.
  */

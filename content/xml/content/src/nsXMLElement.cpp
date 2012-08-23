@@ -32,7 +32,7 @@ NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
 NS_IMPL_ELEMENT_CLONE(nsXMLElement)
 
 nsresult
-nsXMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+nsXMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                         bool aNotify)
 {
   nsAutoScriptBlocker scriptBlocker;
@@ -112,7 +112,7 @@ nsXMLElement::NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
 }
 
 bool
-nsXMLElement::ParseAttribute(PRInt32 aNamespaceID,
+nsXMLElement::ParseAttribute(int32_t aNamespaceID,
                              nsIAtom* aAttribute,
                              const nsAString& aValue,
                              nsAttrValue& aResult)

@@ -29,7 +29,7 @@ public:
     // the socket transport service will check these flags before calling
     // PR_Poll.
     //
-    PRUint16 mPollFlags;
+    uint16_t mPollFlags;
 
     //
     // this value specifies the maximum amount of time in seconds that may be
@@ -40,7 +40,7 @@ public:
     // timeout error checking.  (i.e., a timeout value of PR_UINT16_MAX is
     // never reached.)
     //
-    PRUint16 mPollTimeout;
+    uint16_t mPollTimeout;
 
     //
     // called to service a socket
@@ -51,7 +51,7 @@ public:
     //   outFlags  - value of PR_PollDesc::out_flags after PR_Poll returns
     //               or -1 if a timeout occurred
     //
-    virtual void OnSocketReady(PRFileDesc *fd, PRInt16 outFlags) = 0;
+    virtual void OnSocketReady(PRFileDesc *fd, int16_t outFlags) = 0;
 
     //
     // called when a socket is no longer under the control of the socket

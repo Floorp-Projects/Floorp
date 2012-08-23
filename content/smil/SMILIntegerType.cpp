@@ -49,7 +49,7 @@ SMILIntegerType::IsEqual(const nsSMILValue& aLeft,
 
 nsresult
 SMILIntegerType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                     PRUint32 aCount) const
+                     uint32_t aCount) const
 {
   NS_PRECONDITION(aValueToAdd.mType == aDest.mType,
                   "Trying to add invalid types");
@@ -90,9 +90,9 @@ SMILIntegerType::Interpolate(const nsSMILValue& aStartVal,
   // consistent behaviour (from the SMIL author's point of view).
 
   if (startVal < endVal) {
-    aResult.mU.mInt = PRInt64(floor(currentVal + 0.5)); // round mid up
+    aResult.mU.mInt = int64_t(floor(currentVal + 0.5)); // round mid up
   } else {
-    aResult.mU.mInt = PRInt64(ceil(currentVal - 0.5)); // round mid down
+    aResult.mU.mInt = int64_t(ceil(currentVal - 0.5)); // round mid down
   }
 
   return NS_OK;

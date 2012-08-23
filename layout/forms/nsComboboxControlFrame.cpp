@@ -84,7 +84,7 @@ class nsPresState;
 
 //XXX: This is temporary. It simulates pseudo states by using a attribute selector on 
 
-const PRInt32 kSizeNotSet = -1;
+const int32_t kSizeNotSet = -1;
 
 /**
  * Helper class that listens to the combo boxes button. If the button is pressed the 
@@ -119,7 +119,7 @@ NS_IMPL_ISUPPORTS1(nsComboButtonListener,
 nsComboboxControlFrame* nsComboboxControlFrame::sFocused = nullptr;
 
 nsIFrame*
-NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aStateFlags)
+NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aStateFlags)
 {
   nsComboboxControlFrame* it = new (aPresShell) nsComboboxControlFrame(aContext);
 
@@ -194,11 +194,11 @@ nsIWidget* DestroyWidgetRunnable::GetWidget(nsIView** aOutView) const
 #ifdef DO_REFLOW_COUNTER
 
 #define MAX_REFLOW_CNT 1024
-static PRInt32 gTotalReqs    = 0;;
-static PRInt32 gTotalReflows = 0;;
-static PRInt32 gReflowControlCntRQ[MAX_REFLOW_CNT];
-static PRInt32 gReflowControlCnt[MAX_REFLOW_CNT];
-static PRInt32 gReflowInx = -1;
+static int32_t gTotalReqs    = 0;;
+static int32_t gTotalReflows = 0;;
+static int32_t gReflowControlCntRQ[MAX_REFLOW_CNT];
+static int32_t gReflowControlCnt[MAX_REFLOW_CNT];
+static int32_t gReflowInx = -1;
 
 #define REFLOW_COUNTER() \
   if (mReflowId > -1) \
@@ -526,7 +526,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   
   // Allow the child to move/size/change-visibility its view if it's currently
   // dropped down
-  PRInt32 flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_VISIBILITY | NS_FRAME_NO_SIZE_VIEW;
+  int32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_VISIBILITY | NS_FRAME_NO_SIZE_VIEW;
   if (mDroppedDown) {
     flags = 0;
   }
@@ -565,7 +565,7 @@ nsComboboxControlFrame::GetCSSTransformTranslation()
   if (!is3DTransform && !transform.HasNonTranslation()) {
     nsPresContext* pc = PresContext();
     gfxPoint pixelTranslation = transform.GetTranslation();
-    PRInt32 apd = pc->AppUnitsPerDevPixel();
+    int32_t apd = pc->AppUnitsPerDevPixel();
     translation.x = NSFloatPixelsToAppUnits(float(pixelTranslation.x), apd);
     translation.y = NSFloatPixelsToAppUnits(float(pixelTranslation.y), apd);
     // To get the translation introduced only by transforms we subtract the
@@ -855,7 +855,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   // Make sure the displayed text is the same as the selected option, bug 297389.
-  PRInt32 selectedIndex;
+  int32_t selectedIndex;
   nsAutoString selectedOptionText;
   if (!mDroppedDown) {
     selectedIndex = mListControlFrame->GetSelectedIndex();
@@ -1016,7 +1016,7 @@ nsComboboxControlFrame::RedisplaySelectedText()
 }
 
 nsresult
-nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
+nsComboboxControlFrame::RedisplayText(int32_t aIndex)
 {
   // Get the text to display
   if (aIndex != -1) {
@@ -1096,7 +1096,7 @@ nsComboboxControlFrame::ActuallyDisplayText(bool aNotify)
   }
 }
 
-PRInt32
+int32_t
 nsComboboxControlFrame::GetIndexOfDisplayArea()
 {
   return mDisplayedIndex;
@@ -1116,7 +1116,7 @@ nsComboboxControlFrame::DoneAddingChildren(bool aIsDone)
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::AddOption(PRInt32 aIndex)
+nsComboboxControlFrame::AddOption(int32_t aIndex)
 {
   if (aIndex <= mDisplayedIndex) {
     ++mDisplayedIndex;
@@ -1128,7 +1128,7 @@ nsComboboxControlFrame::AddOption(PRInt32 aIndex)
   
 
 NS_IMETHODIMP
-nsComboboxControlFrame::RemoveOption(PRInt32 aIndex)
+nsComboboxControlFrame::RemoveOption(int32_t aIndex)
 {
   nsWeakFrame weakThis(this);
   if (mListControlFrame->GetNumberOfOptions() > 0) {
@@ -1152,7 +1152,7 @@ nsComboboxControlFrame::RemoveOption(PRInt32 aIndex)
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
+nsComboboxControlFrame::OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex)
 {
   nsAutoScriptBlocker scriptBlocker;
   RedisplayText(aNewIndex);
@@ -1287,7 +1287,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
 void
 nsComboboxControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                                 PRUint32 aFilter)
+                                                 uint32_t aFilter)
 {
   aElements.MaybeAppendElement(mDisplayContent);
   aElements.MaybeAppendElement(mButtonContent);
@@ -1309,7 +1309,7 @@ public:
   // depends on the available width.
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplacedContainsBlock));
@@ -1516,7 +1516,7 @@ nsComboboxControlFrame::SetInitialChildList(ChildListID     aListID,
   //nsIRollupListener
 //----------------------------------------------------------------------
 nsIContent*
-nsComboboxControlFrame::Rollup(PRUint32 aCount, bool aGetLastRolledUp)
+nsComboboxControlFrame::Rollup(uint32_t aCount, bool aGetLastRolledUp)
 {
   if (mDroppedDown) {
     nsWeakFrame weakFrame(this);
@@ -1539,10 +1539,10 @@ nsComboboxControlFrame::RollupFromList()
     mListControlFrame->CaptureMouseEvents(false);
 }
 
-PRInt32
-nsComboboxControlFrame::UpdateRecentIndex(PRInt32 aIndex)
+int32_t
+nsComboboxControlFrame::UpdateRecentIndex(int32_t aIndex)
 {
-  PRInt32 index = mRecentSelectedIndex;
+  int32_t index = mRecentSelectedIndex;
   if (mRecentSelectedIndex == NS_SKIP_NOTIFY_INDEX || aIndex == NS_SKIP_NOTIFY_INDEX)
     mRecentSelectedIndex = aIndex;
   return index;
@@ -1655,7 +1655,7 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
 // being selected or not selected
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::OnOptionSelected(PRInt32 aIndex, bool aSelected)
+nsComboboxControlFrame::OnOptionSelected(int32_t aIndex, bool aSelected)
 {
   if (mDroppedDown) {
     nsISelectControlFrame *selectFrame = do_QueryFrame(mListControlFrame);

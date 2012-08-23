@@ -87,23 +87,23 @@ public:
    * At some point in the future we will likely want to encode other
    * information into the float, such as whether the command was explicit or
    * not. For now all this method does is save on int to float runtime
-   * conversion by requiring PRUint32 and float to be of the same size so we
-   * can simply do a bitwise PRUint32<->float copy.
+   * conversion by requiring uint32_t and float to be of the same size so we
+   * can simply do a bitwise uint32_t<->float copy.
    */
-  static float EncodeType(PRUint32 aType) {
-    PR_STATIC_ASSERT(sizeof(PRUint32) == sizeof(float));
+  static float EncodeType(uint32_t aType) {
+    PR_STATIC_ASSERT(sizeof(uint32_t) == sizeof(float));
     NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
     return *(reinterpret_cast<float*>(&aType));
   }
 
-  static PRUint32 DecodeType(float aType) {
-    PR_STATIC_ASSERT(sizeof(PRUint32) == sizeof(float));
-    PRUint32 type = *(reinterpret_cast<PRUint32*>(&aType));
+  static uint32_t DecodeType(float aType) {
+    PR_STATIC_ASSERT(sizeof(uint32_t) == sizeof(float));
+    uint32_t type = *(reinterpret_cast<uint32_t*>(&aType));
     NS_ABORT_IF_FALSE(IsValidType(type), "Seg type not recognized");
     return type;
   }
 
-  static PRUnichar GetPathSegTypeAsLetter(PRUint32 aType) {
+  static PRUnichar GetPathSegTypeAsLetter(uint32_t aType) {
     NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
 
     static const PRUnichar table[] = {
@@ -133,10 +133,10 @@ public:
     return table[aType];
   }
 
-  static PRUint32 ArgCountForType(PRUint32 aType) {
+  static uint32_t ArgCountForType(uint32_t aType) {
     NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
 
-    static const PRUint8 table[] = {
+    static const uint8_t table[] = {
       0,  //  0 == PATHSEG_UNKNOWN
       0,  //  1 == PATHSEG_CLOSEPATH
       2,  //  2 == PATHSEG_MOVETO_ABS
@@ -167,35 +167,35 @@ public:
    * Convenience so that callers can pass a float containing an encoded type
    * and have it decoded implicitly.
    */
-  static PRUint32 ArgCountForType(float aType) {
+  static uint32_t ArgCountForType(float aType) {
     return ArgCountForType(DecodeType(aType));
   }
 
-  static bool IsValidType(PRUint32 aType) {
+  static bool IsValidType(uint32_t aType) {
     return aType >= NS_SVG_PATH_SEG_FIRST_VALID_TYPE &&
            aType <= NS_SVG_PATH_SEG_LAST_VALID_TYPE;
   }
 
-  static bool IsCubicType(PRUint32 aType) {
+  static bool IsCubicType(uint32_t aType) {
     return aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS;
   }
 
-  static bool IsQuadraticType(PRUint32 aType) {
+  static bool IsQuadraticType(uint32_t aType) {
     return aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL ||
            aType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS;
   }
 
-  static bool IsArcType(PRUint32 aType) {
+  static bool IsArcType(uint32_t aType) {
     return aType == nsIDOMSVGPathSeg::PATHSEG_ARC_ABS || 
            aType == nsIDOMSVGPathSeg::PATHSEG_ARC_REL;
   }
 
-  static bool IsRelativeOrAbsoluteType(PRUint32 aType) {
+  static bool IsRelativeOrAbsoluteType(uint32_t aType) {
     NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
 
     // When adding a new path segment type, ensure that the returned condition
@@ -206,7 +206,7 @@ public:
     return aType >= nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS;
   }
 
-  static bool IsRelativeType(PRUint32 aType) {
+  static bool IsRelativeType(uint32_t aType) {
     NS_ABORT_IF_FALSE
       (IsRelativeOrAbsoluteType(aType),
        "IsRelativeType called with segment type that does not come in relative and absolute forms");
@@ -219,7 +219,7 @@ public:
     return aType & 1;
   }
 
-  static PRUint32 RelativeVersionOfType(PRUint32 aType) {
+  static uint32_t RelativeVersionOfType(uint32_t aType) {
     NS_ABORT_IF_FALSE
       (IsRelativeOrAbsoluteType(aType),
        "RelativeVersionOfType called with segment type that does not come in relative and absolute forms");
@@ -232,7 +232,7 @@ public:
     return aType | 1;
   }
 
-  static PRUint32 SameTypeModuloRelativeness(PRUint32 aType1, PRUint32 aType2) {
+  static uint32_t SameTypeModuloRelativeness(uint32_t aType1, uint32_t aType2) {
     if (!IsRelativeOrAbsoluteType(aType1)) {
       return aType1 == aType2;
     }

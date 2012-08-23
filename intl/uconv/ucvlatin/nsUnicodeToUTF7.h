@@ -28,27 +28,27 @@ public:
 
 protected:
 
-  PRInt32                   mEncoding;      // current encoding
-  PRUint32                  mEncBits;
-  PRInt32                   mEncStep;
+  int32_t                   mEncoding;      // current encoding
+  uint32_t                  mEncBits;
+  int32_t                   mEncStep;
   char                      mLastChar;
   char                      mEscChar;
 
-  nsresult ShiftEncoding(PRInt32 aEncoding, char * aDest, 
-      PRInt32 * aDestLength);
-  nsresult EncodeDirect(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
-      char * aDest, PRInt32 * aDestLength);
-  nsresult EncodeBase64(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
-      char * aDest, PRInt32 * aDestLength);
-  char ValueToChar(PRUint32 aValue);
+  nsresult ShiftEncoding(int32_t aEncoding, char * aDest, 
+      int32_t * aDestLength);
+  nsresult EncodeDirect(const PRUnichar * aSrc, int32_t * aSrcLength, 
+      char * aDest, int32_t * aDestLength);
+  nsresult EncodeBase64(const PRUnichar * aSrc, int32_t * aSrcLength, 
+      char * aDest, int32_t * aDestLength);
+  char ValueToChar(uint32_t aValue);
   virtual bool DirectEncodable(PRUnichar aChar);
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
 
-  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
-      char * aDest, PRInt32 * aDestLength);
-  NS_IMETHOD FinishNoBuff(char * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, int32_t * aSrcLength, 
+      char * aDest, int32_t * aDestLength);
+  NS_IMETHOD FinishNoBuff(char * aDest, int32_t * aDestLength);
   NS_IMETHOD Reset();
 };
 

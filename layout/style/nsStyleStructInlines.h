@@ -33,7 +33,7 @@ nsStyleBorder::GetBorderImage() const
 
 inline bool nsStyleBorder::IsBorderImageLoaded() const
 {
-  PRUint32 status;
+  uint32_t status;
   return mBorderImageSource &&
          NS_SUCCEEDED(mBorderImageSource->GetImageStatus(&status)) &&
          (status & imgIRequest::STATUS_LOAD_COMPLETE) &&
@@ -41,13 +41,13 @@ inline bool nsStyleBorder::IsBorderImageLoaded() const
 }
 
 inline void
-nsStyleBorder::SetSubImage(PRUint8 aIndex, imgIContainer* aSubImage) const
+nsStyleBorder::SetSubImage(uint8_t aIndex, imgIContainer* aSubImage) const
 {
   const_cast<nsStyleBorder*>(this)->mSubImages.ReplaceObjectAt(aSubImage, aIndex);
 }
 
 inline imgIContainer*
-nsStyleBorder::GetSubImage(PRUint8 aIndex) const
+nsStyleBorder::GetSubImage(uint8_t aIndex) const
 {
   imgIContainer* subImage = nullptr;
   if (aIndex < mSubImages.Count())
@@ -106,7 +106,7 @@ nsStyleDisplay::IsOriginalDisplayInlineOutside(const nsIFrame* aFrame) const
   return IsOriginalDisplayInlineOutsideStyle();
 }
 
-PRUint8
+uint8_t
 nsStyleDisplay::GetDisplay(const nsIFrame* aFrame) const
 {
   if ((aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) &&

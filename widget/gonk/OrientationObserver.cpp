@@ -30,7 +30,7 @@ using namespace dom;
 namespace {
 
 struct OrientationMapping {
-  PRUint32 mScreenRotation;
+  uint32_t mScreenRotation;
   ScreenOrientation mDomOrientation;
 };
 
@@ -46,7 +46,7 @@ static OrientationMapping sOrientationMappings[] = {
 const static int sDefaultLandscape = 3;
 const static int sDefaultPortrait = 0;
 
-static PRUint32 sOrientationOffset = 0;
+static uint32_t sOrientationOffset = 0;
 
 static already_AddRefed<nsIScreen>
 GetPrimaryScreen()
@@ -68,12 +68,12 @@ DetectDefaultOrientation()
     return;
   }
 
-  PRInt32 left, top, width, height;
+  int32_t left, top, width, height;
   if (NS_FAILED(screen->GetRect(&left, &top, &width, &height))) {
     return;
   }
 
-  PRUint32 rotation;
+  uint32_t rotation;
   if (NS_FAILED(screen->GetRotation(&rotation))) {
     return;
   }
@@ -106,7 +106,7 @@ DetectDefaultOrientation()
  * @return NS_OK on success. NS_ILLEGAL_VALUE on failure.
  */
 static nsresult
-ConvertToScreenRotation(ScreenOrientation aOrientation, PRUint32 *aResult)
+ConvertToScreenRotation(ScreenOrientation aOrientation, uint32_t *aResult)
 {
   for (int i = 0; i < ArrayLength(sOrientationMappings); i++) {
     if (aOrientation == sOrientationMappings[i].mDomOrientation) {
@@ -132,7 +132,7 @@ ConvertToScreenRotation(ScreenOrientation aOrientation, PRUint32 *aResult)
  * @return NS_OK on success. NS_ILLEGAL_VALUE on failure.
  */
 nsresult
-ConvertToDomOrientation(PRUint32 aRotation, ScreenOrientation *aResult)
+ConvertToDomOrientation(uint32_t aRotation, ScreenOrientation *aResult)
 {
   for (int i = 0; i < ArrayLength(sOrientationMappings); i++) {
     if (aRotation == sOrientationMappings[i].mScreenRotation) {
@@ -208,7 +208,7 @@ OrientationObserver::Notify(const hal::SensorData& aSensorData)
   float pitch = values[1];
   float roll = values[2];
 
-  PRUint32 rotation;
+  uint32_t rotation;
   if (roll > 45) {
     rotation = nsIScreen::ROTATION_90_DEG;
   } else if (roll < -45) {
@@ -227,7 +227,7 @@ OrientationObserver::Notify(const hal::SensorData& aSensorData)
     return;
   }
 
-  PRUint32 currRotation;
+  uint32_t currRotation;
   if (NS_FAILED(screen->GetRotation(&currRotation)) ||
       rotation == currRotation) {
     return;
@@ -302,7 +302,7 @@ OrientationObserver::LockScreenOrientation(ScreenOrientation aOrientation)
   nsCOMPtr<nsIScreen> screen = GetPrimaryScreen();
   NS_ENSURE_TRUE(screen, false);
 
-  PRUint32 currRotation;
+  uint32_t currRotation;
   nsresult rv = screen->GetRotation(&currRotation);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -317,7 +317,7 @@ OrientationObserver::LockScreenOrientation(ScreenOrientation aOrientation)
   }
 
   // Return false on invalid orientation value.
-  PRUint32 rotation;
+  uint32_t rotation;
   rv = ConvertToScreenRotation(aOrientation, &rotation);
   NS_ENSURE_SUCCESS(rv, false);
 

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ReadbackProcessor.h"
+#include "ReadbackLayer.h"
 
 namespace mozilla {
 namespace layers {
@@ -34,7 +35,7 @@ FindBackgroundLayer(ReadbackLayer* aLayer, nsIntPoint* aOffset)
   if (!aLayer->GetTransform().Is2D(&transform) ||
       transform.HasNonIntegerTranslation())
     return nullptr;
-  nsIntPoint transformOffset(PRInt32(transform.x0), PRInt32(transform.y0));
+  nsIntPoint transformOffset(int32_t(transform.x0), int32_t(transform.y0));
 
   for (Layer* l = aLayer->GetPrevSibling(); l; l = l->GetPrevSibling()) {
     gfxMatrix backgroundTransform;
@@ -42,7 +43,7 @@ FindBackgroundLayer(ReadbackLayer* aLayer, nsIntPoint* aOffset)
         backgroundTransform.HasNonIntegerTranslation())
       return nullptr;
 
-    nsIntPoint backgroundOffset(PRInt32(backgroundTransform.x0), PRInt32(backgroundTransform.y0));
+    nsIntPoint backgroundOffset(int32_t(backgroundTransform.x0), int32_t(backgroundTransform.y0));
     nsIntRect rectInBackground(transformOffset - backgroundOffset, aLayer->GetSize());
     const nsIntRegion& visibleRegion = l->GetEffectiveVisibleRegion();
     if (!visibleRegion.Intersects(rectInBackground))
@@ -136,7 +137,7 @@ ReadbackProcessor::GetThebesLayerUpdates(ThebesLayer* aLayer,
   if (aUpdateRegion) {
     aUpdateRegion->SetEmpty();
   }
-  for (PRUint32 i = mAllUpdates.Length(); i > 0; --i) {
+  for (uint32_t i = mAllUpdates.Length(); i > 0; --i) {
     const Update& update = mAllUpdates[i - 1];
     if (update.mLayer->mBackgroundLayer == aLayer) {
       aLayer->SetUsedForReadback(true);
@@ -154,7 +155,7 @@ ReadbackProcessor::GetThebesLayerUpdates(ThebesLayer* aLayer,
 
 ReadbackProcessor::~ReadbackProcessor()
 {
-  for (PRUint32 i = mAllUpdates.Length(); i > 0; --i) {
+  for (uint32_t i = mAllUpdates.Length(); i > 0; --i) {
     const Update& update = mAllUpdates[i - 1];
     // Unprocessed update. Notify the readback sink that this content is
     // unknown.

@@ -15,7 +15,7 @@ static bool gInitToGBKTable = false;
 static const PRUnichar gGBKToUnicodeTable[MAX_GBK_LENGTH] = {
 #include "cp936map.h"
 };
-static PRUint16 gUnicodeToGBKTable[0xA000-0x4e00];
+static uint16_t gUnicodeToGBKTable[0xA000-0x4e00];
 
 bool nsGBKConvUtil::UnicodeToGBKChar(
   PRUnichar aChar, bool aToGL, char* 
@@ -31,7 +31,7 @@ bool nsGBKConvUtil::UnicodeToGBKChar(
   }
   if(UNICHAR_IN_RANGE(0x4e00, aChar, 0x9FFF))
   {
-    PRUint16 item = gUnicodeToGBKTable[aChar - 0x4e00];
+    uint16_t item = gUnicodeToGBKTable[aChar - 0x4e00];
     if(item != 0) 
     {
       *aOutByte1 = item >> 8;
@@ -42,7 +42,7 @@ bool nsGBKConvUtil::UnicodeToGBKChar(
     }
   } else {
     // ugly linear search
-    for( PRInt32 i = 0; i < MAX_GBK_LENGTH; i++ )
+    for( int32_t i = 0; i < MAX_GBK_LENGTH; i++ )
     {
       if( aChar == gGBKToUnicodeTable[i])
       {
@@ -79,9 +79,9 @@ PRUnichar nsGBKConvUtil::GBKCharToUnicode(char aByte1, char aByte2)
   NS_ASSERTION(UINT8_IN_RANGE(0x81,aByte1, 0xFE), "first byte out of range");
   NS_ASSERTION(UINT8_IN_RANGE(0x40,aByte2, 0xFE), "second byte out of range");
 
-  PRUint8 i1 = (PRUint8)aByte1;
-  PRUint8 i2 = (PRUint8)aByte2;
-  PRUint16 idx = (i1 - 0x0081) * 0x00bf + i2 - 0x0040 ;
+  uint8_t i1 = (uint8_t)aByte1;
+  uint8_t i2 = (uint8_t)aByte2;
+  uint16_t idx = (i1 - 0x0081) * 0x00bf + i2 - 0x0040 ;
 
   NS_ASSERTION(idx < MAX_GBK_LENGTH, "ARB");
   // play it safe- add if statement here ot protect ARB

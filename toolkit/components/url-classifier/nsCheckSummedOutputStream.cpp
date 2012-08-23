@@ -52,8 +52,8 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsCheckSummedOutputStream,
                              nsIFileOutputStream)
 
 NS_IMETHODIMP
-nsCheckSummedOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
-                                PRInt32 behaviorFlags)
+nsCheckSummedOutputStream::Init(nsIFile* file, int32_t ioFlags, int32_t perm,
+                                int32_t behaviorFlags)
 {
   nsresult rv;
   mHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
@@ -71,7 +71,7 @@ nsCheckSummedOutputStream::Finish()
   nsresult rv = mHash->Finish(false, mCheckSum);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 written;
+  uint32_t written;
   rv = nsSafeFileOutputStream::Write(reinterpret_cast<const char*>(mCheckSum.BeginReading()),
                                      mCheckSum.Length(), &written);
   NS_ASSERTION(written == mCheckSum.Length(), "Error writing stream checksum");
@@ -81,7 +81,7 @@ nsCheckSummedOutputStream::Finish()
 }
 
 NS_IMETHODIMP
-nsCheckSummedOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *result)
+nsCheckSummedOutputStream::Write(const char *buf, uint32_t count, uint32_t *result)
 {
   nsresult rv = mHash->Update(reinterpret_cast<const uint8*>(buf), count);
   NS_ENSURE_SUCCESS(rv, rv);

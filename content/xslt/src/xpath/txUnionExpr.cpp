@@ -30,7 +30,7 @@ UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 i, len = mExpressions.Length();
+    uint32_t i, len = mExpressions.Length();
     for (i = 0; i < len; ++i) {
         nsRefPtr<txAExprResult> exprResult;
         rv = mExpressions[i]->evaluate(aContext, getter_AddRefs(exprResult));
@@ -70,7 +70,7 @@ TX_IMPL_EXPR_STUBS_LIST(UnionExpr, NODESET_RESULT, mExpressions)
 bool
 UnionExpr::isSensitiveTo(ContextSensitivity aContext)
 {
-    PRUint32 i, len = mExpressions.Length();
+    uint32_t i, len = mExpressions.Length();
     for (i = 0; i < len; ++i) {
         if (mExpressions[i]->isSensitiveTo(aContext)) {
             return true;
@@ -84,7 +84,7 @@ UnionExpr::isSensitiveTo(ContextSensitivity aContext)
 void
 UnionExpr::toString(nsAString& dest)
 {
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < mExpressions.Length(); ++i) {
         if (i > 0)
             dest.AppendLiteral(" | ");

@@ -52,7 +52,7 @@ public:
 
   nsresult SetBaseValueString(const nsAString& aValue);
 
-  void ClearBaseValue(PRUint32 aAttrEnum);
+  void ClearBaseValue(uint32_t aAttrEnum);
 
   const SVGNumberList& GetAnimValue() const {
     return mAnimVal ? *mAnimVal : mBaseVal;
@@ -60,10 +60,10 @@ public:
 
   nsresult SetAnimValue(const SVGNumberList& aValue,
                         nsSVGElement *aElement,
-                        PRUint32 aAttrEnum);
+                        uint32_t aAttrEnum);
 
   void ClearAnimValue(nsSVGElement *aElement,
-                      PRUint32 aAttrEnum);
+                      uint32_t aAttrEnum);
 
   // Returns true if the animated value of this list has been explicitly
   // set (either by animation, or by taking on the base value which has been
@@ -78,7 +78,7 @@ public:
   }
 
   /// Callers own the returned nsISMILAttr
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement, PRUint8 aAttrEnum);
+  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement, uint8_t aAttrEnum);
 
 private:
 
@@ -96,7 +96,7 @@ private:
   public:
     SMILAnimatedNumberList(SVGAnimatedNumberList* aVal,
                            nsSVGElement* aSVGElement,
-                           PRUint8 aAttrEnum)
+                           uint8_t aAttrEnum)
       : mVal(aVal)
       , mElement(aSVGElement)
       , mAttrEnum(aAttrEnum)
@@ -107,7 +107,7 @@ private:
     // die during that.
     SVGAnimatedNumberList* mVal;
     nsSVGElement* mElement;
-    PRUint8 mAttrEnum;
+    uint8_t mAttrEnum;
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(const nsAString& aStr,

@@ -187,6 +187,7 @@ CanvasLayerOGL::UpdateSurface()
 #endif
 
   if (mCanvasGLContext &&
+      !mForceReadback &&
       mCanvasGLContext->GetContextType() == gl()->GetContextType())
   {
     DiscardTempSurface();
@@ -211,10 +212,9 @@ CanvasLayerOGL::UpdateSurface()
       nsRefPtr<gfxImageSurface> updatedAreaImageSurface =
         GetTempSurface(size, gfxASurface::ImageFormatARGB32);
 
-      mCanvasGLContext->ReadPixelsIntoImageSurface(0, 0,
-                                                   mBounds.width,
-                                                   mBounds.height,
-                                                   updatedAreaImageSurface);
+      updatedAreaImageSurface->Flush();
+      mCanvasGLContext->ReadScreenIntoImageSurface(updatedAreaImageSurface);
+      updatedAreaImageSurface->MarkDirty();
 
       updatedAreaSurface = updatedAreaImageSurface;
     }
@@ -253,7 +253,8 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   ShaderProgramOGL *program = nullptr;
 
   bool useGLContext = mCanvasGLContext &&
-    mCanvasGLContext->GetContextType() == gl()->GetContextType();
+                      !mForceReadback &&
+                      mCanvasGLContext->GetContextType() == gl()->GetContextType();
 
   nsIntRect drawRect = mBounds;
 

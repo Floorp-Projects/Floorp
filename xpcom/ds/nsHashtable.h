@@ -49,7 +49,7 @@ class nsHashKey {
     // nsHashKey pointer.
 
     virtual ~nsHashKey(void);
-    virtual PRUint32 HashCode(void) const = 0;
+    virtual uint32_t HashCode(void) const = 0;
     virtual bool Equals(const nsHashKey *aKey) const = 0;
     virtual nsHashKey *Clone() const = 0;
     virtual nsresult Write(nsIObjectOutputStream* aStream) const;
@@ -103,10 +103,10 @@ class nsHashtable {
     bool            mEnumerating;
 
   public:
-    nsHashtable(PRUint32 aSize = 16, bool threadSafe = false);
+    nsHashtable(uint32_t aSize = 16, bool threadSafe = false);
     virtual ~nsHashtable();
 
-    PRInt32 Count(void) { return mHashtable.entryCount; }
+    int32_t Count(void) { return mHashtable.entryCount; }
     bool Exists(nsHashKey *aKey);
     void *Put(nsHashKey *aKey, void *aData);
     void *Get(nsHashKey *aKey);
@@ -136,7 +136,7 @@ class nsObjectHashtable : public nsHashtable {
                       void* cloneElementClosure,
                       nsHashtableEnumFunc destroyElementFun,
                       void* destroyElementClosure,
-                      PRUint32 aSize = 16, bool threadSafe = false);
+                      uint32_t aSize = 16, bool threadSafe = false);
     ~nsObjectHashtable();
 
     nsHashtable *Clone();
@@ -146,7 +146,7 @@ class nsObjectHashtable : public nsHashtable {
   protected:
     static PLDHashOperator CopyElement(PLDHashTable* table,
                                        PLDHashEntryHdr* hdr,
-                                       PRUint32 i, void *arg);
+                                       uint32_t i, void *arg);
     
     nsHashtableCloneElementFunc mCloneElementFun;
     void*                       mCloneElementClosure;
@@ -163,11 +163,11 @@ class nsSupportsHashtable
   : private nsHashtable
 {
   public:
-    nsSupportsHashtable(PRUint32 aSize = 16, bool threadSafe = false)
+    nsSupportsHashtable(uint32_t aSize = 16, bool threadSafe = false)
       : nsHashtable(aSize, threadSafe) {}
     ~nsSupportsHashtable();
 
-    PRInt32 Count(void) {
+    int32_t Count(void) {
         return nsHashtable::Count();
     }
     bool Exists(nsHashKey *aKey) {
@@ -188,7 +188,7 @@ class nsSupportsHashtable
     static bool ReleaseElement(nsHashKey *, void *, void *);
     static PLDHashOperator EnumerateCopy(PLDHashTable*,
                                          PLDHashEntryHdr* hdr,
-                                         PRUint32 i, void *arg);
+                                         uint32_t i, void *arg);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +220,7 @@ class nsISupportsKey : public nsHashKey {
         NS_IF_RELEASE(mKey);
     }
     
-    PRUint32 HashCode(void) const {
+    uint32_t HashCode(void) const {
         return NS_PTR_TO_INT32(mKey);
     }
 
@@ -242,16 +242,16 @@ class nsISupportsKey : public nsHashKey {
 
 class nsPRUint32Key : public nsHashKey {
 protected:
-    PRUint32 mKey;
+    uint32_t mKey;
 public:
-    nsPRUint32Key(PRUint32 key) {
+    nsPRUint32Key(uint32_t key) {
 #ifdef DEBUG
         mKeyType = PRUint32Key;
 #endif
         mKey = key;
     }
 
-    PRUint32 HashCode(void) const {
+    uint32_t HashCode(void) const {
         return mKey;
     }
 
@@ -261,7 +261,7 @@ public:
     nsHashKey *Clone() const {
         return new nsPRUint32Key(mKey);
     }
-    PRUint32 GetValue() { return mKey; }
+    uint32_t GetValue() { return mKey; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -285,7 +285,7 @@ class nsVoidKey : public nsHashKey {
         mKey = key;
     }
     
-    PRUint32 HashCode(void) const {
+    uint32_t HashCode(void) const {
         return NS_PTR_TO_INT32(mKey);
     }
 
@@ -315,12 +315,12 @@ class nsCStringKey : public nsHashKey {
     };
 
     nsCStringKey(const nsCStringKey& aStrKey);
-    nsCStringKey(const char* str, PRInt32 strLen = -1, Ownership own = OWN_CLONE);
+    nsCStringKey(const char* str, int32_t strLen = -1, Ownership own = OWN_CLONE);
     nsCStringKey(const nsAFlatCString& str);
     nsCStringKey(const nsACString& str);
     ~nsCStringKey(void);
 
-    PRUint32 HashCode(void) const;
+    uint32_t HashCode(void) const;
     bool Equals(const nsHashKey* aKey) const;
     nsHashKey* Clone() const;
     nsCStringKey(nsIObjectInputStream* aStream, nsresult *aResult);
@@ -329,11 +329,11 @@ class nsCStringKey : public nsHashKey {
     // For when the owner of the hashtable wants to peek at the actual
     // string in the key. No copy is made, so be careful.
     const char* GetString() const { return mStr; }
-    PRUint32 GetStringLength() const { return mStrLen; }
+    uint32_t GetStringLength() const { return mStrLen; }
 
   protected:
     char*       mStr;
-    PRUint32    mStrLen;
+    uint32_t    mStrLen;
     Ownership   mOwnership;
 };
 
@@ -349,12 +349,12 @@ class nsStringKey : public nsHashKey {
     };
 
     nsStringKey(const nsStringKey& aKey);
-    nsStringKey(const PRUnichar* str, PRInt32 strLen = -1, Ownership own = OWN_CLONE);
+    nsStringKey(const PRUnichar* str, int32_t strLen = -1, Ownership own = OWN_CLONE);
     nsStringKey(const nsAFlatString& str);
     nsStringKey(const nsAString& str);
     ~nsStringKey(void);
 
-    PRUint32 HashCode(void) const;
+    uint32_t HashCode(void) const;
     bool Equals(const nsHashKey* aKey) const;
     nsHashKey* Clone() const;
     nsStringKey(nsIObjectInputStream* aStream, nsresult *aResult);
@@ -363,11 +363,11 @@ class nsStringKey : public nsHashKey {
     // For when the owner of the hashtable wants to peek at the actual
     // string in the key. No copy is made, so be careful.
     const PRUnichar* GetString() const { return mStr; }
-    PRUint32 GetStringLength() const { return mStrLen; }
+    uint32_t GetStringLength() const { return mStrLen; }
 
   protected:
     PRUnichar*  mStr;
-    PRUint32    mStrLen;
+    uint32_t    mStrLen;
     Ownership   mOwnership;
 };
 

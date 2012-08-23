@@ -706,7 +706,7 @@ loadTestEVInfos()
       continue;
     }
 
-    PRInt32 seperatorIndex = buffer.FindChar(' ', 0);
+    int32_t seperatorIndex = buffer.FindChar(' ', 0);
     if (seperatorIndex == 0) {
       found_error = true;
       break;
@@ -1134,7 +1134,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
     cert_revocation_method_ocsp
   };
 
-  PRUint64 revMethodFlags = 
+  uint64_t revMethodFlags = 
     CERT_REV_M_TEST_USING_THIS_METHOD
     | CERT_REV_M_ALLOW_NETWORK_FETCHING
     | CERT_REV_M_ALLOW_IMPLICIT_DEFAULT_SOURCE
@@ -1142,11 +1142,11 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
     | CERT_REV_M_IGNORE_MISSING_FRESH_INFO
     | CERT_REV_M_STOP_TESTING_ON_FRESH_INFO;
 
-  PRUint64 revMethodIndependentFlags = 
+  uint64_t revMethodIndependentFlags = 
     CERT_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST
     | CERT_REV_MI_REQUIRE_SOME_FRESH_INFO_AVAILABLE;
 
-  PRUint64 methodFlags[2];
+  uint64_t methodFlags[2];
   methodFlags[cert_revocation_method_crl] = revMethodFlags;
   methodFlags[cert_revocation_method_ocsp] = revMethodFlags;
 

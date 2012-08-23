@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.GeckoLayerClient;
+import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.GeckoEventResponder;
 
 import org.json.JSONArray;
@@ -182,11 +182,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     public void show(String aTitle, String aText, PromptButton[] aButtons, PromptListItem[] aMenuList, boolean aMultipleSelection) {
-        final GeckoLayerClient layerClient = GeckoApp.mAppContext.getLayerClient();
-        layerClient.post(new Runnable() {
+        final LayerView layerView = GeckoApp.mAppContext.getLayerView();
+        layerView.post(new Runnable() {
             public void run() {
                 // treat actions that show a dialog as if preventDefault by content to prevent panning
-                layerClient.getPanZoomController().abortPanning();
+                layerView.abortPanning();
             }
         });
 

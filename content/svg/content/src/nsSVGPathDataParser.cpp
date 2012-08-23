@@ -973,11 +973,11 @@ nsSVGPathDataParserToInternal::StoreMoveTo(bool absCoords, float x, float y)
   //
   // Unfortunately we need to support older versions of GCC. Instead, to
   // eliminate this warning noise being sent to the console, we wrap the
-  // operands with PRUint32(...).
+  // operands with uint32_t(...).
 
-  PRUint32 type = absCoords ?
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS) :
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL);
+  uint32_t type = absCoords ?
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS) :
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL);
 
   return mPathSegList->AppendSeg(type, x, y);
 }
@@ -991,9 +991,9 @@ nsSVGPathDataParserToInternal::StoreClosePath()
 nsresult
 nsSVGPathDataParserToInternal::StoreLineTo(bool absCoords, float x, float y)
 {
-  PRUint32 type = absCoords ?
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_LINETO_ABS) :
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_LINETO_REL);
+  uint32_t type = absCoords ?
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_ABS) :
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_REL);
 
   return mPathSegList->AppendSeg(type, x, y);
 }
@@ -1001,9 +1001,9 @@ nsSVGPathDataParserToInternal::StoreLineTo(bool absCoords, float x, float y)
 nsresult
 nsSVGPathDataParserToInternal::StoreHLineTo(bool absCoords, float x)
 {
-  PRUint32 type = absCoords ?
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS) :
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL);
+  uint32_t type = absCoords ?
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS) :
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL);
 
   return mPathSegList->AppendSeg(type, x);
 }
@@ -1011,9 +1011,9 @@ nsSVGPathDataParserToInternal::StoreHLineTo(bool absCoords, float x)
 nsresult
 nsSVGPathDataParserToInternal::StoreVLineTo(bool absCoords, float y)
 {
-  PRUint32 type = absCoords ?
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS) :
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_REL);
+  uint32_t type = absCoords ?
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS) :
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_REL);
 
   return mPathSegList->AppendSeg(type, y);
 }
@@ -1024,9 +1024,9 @@ nsSVGPathDataParserToInternal::StoreCurveTo(bool absCoords,
                                             float x1, float y1,
                                             float x2, float y2)
 {
-  PRUint32 type = absCoords ?
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS) :
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL);
+  uint32_t type = absCoords ?
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS) :
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL);
 
   return mPathSegList->AppendSeg(type, x1, y1, x2, y2, x, y);
 }
@@ -1036,9 +1036,9 @@ nsSVGPathDataParserToInternal::StoreSmoothCurveTo(bool absCoords,
                                                   float x, float y,
                                                   float x2, float y2)
 {
-  PRUint32 type = absCoords ?
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS) :
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL);
+  uint32_t type = absCoords ?
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS) :
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL);
 
   return mPathSegList->AppendSeg(type, x2, y2, x, y);
 }
@@ -1048,9 +1048,9 @@ nsSVGPathDataParserToInternal::StoreQuadCurveTo(bool absCoords,
                                                 float x, float y,
                                                 float x1, float y1)
 {
-  PRUint32 type = absCoords ?
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS) :
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL);
+  uint32_t type = absCoords ?
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS) :
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL);
 
   return mPathSegList->AppendSeg(type, x1, y1, x, y);
 }
@@ -1059,9 +1059,9 @@ nsresult
 nsSVGPathDataParserToInternal::StoreSmoothQuadCurveTo(bool absCoords,
                                                       float x, float y)
 {
-  PRUint32 type = absCoords ?
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS) :
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL);
+  uint32_t type = absCoords ?
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS) :
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL);
 
   return mPathSegList->AppendSeg(type, x, y);
 }
@@ -1074,9 +1074,9 @@ nsSVGPathDataParserToInternal::StoreEllipticalArc(bool absCoords,
                                                   bool largeArcFlag,
                                                   bool sweepFlag)
 {
-  PRUint32 type = absCoords ?
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_ARC_ABS) :
-    PRUint32(nsIDOMSVGPathSeg::PATHSEG_ARC_REL);
+  uint32_t type = absCoords ?
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_ARC_ABS) :
+    uint32_t(nsIDOMSVGPathSeg::PATHSEG_ARC_REL);
 
   // We can only pass floats after 'type', and per the SVG spec for arc,
   // non-zero args are treated at 'true'.

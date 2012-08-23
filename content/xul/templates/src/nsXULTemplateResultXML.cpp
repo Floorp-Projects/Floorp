@@ -13,7 +13,7 @@
 #include "nsXULTemplateResultXML.h"
 #include "nsXMLBinding.h"
 
-static PRUint32 sTemplateId = 0;
+static uint32_t sTemplateId = 0;
 
 NS_IMPL_ISUPPORTS1(nsXULTemplateResultXML, nsIXULTemplateResult)
 
@@ -115,7 +115,7 @@ nsXULTemplateResultXML::GetBindingFor(nsIAtom* aVar, nsAString& aValue)
     // get the position of the atom in the variables table
     nsXMLBinding* binding;
 
-    PRInt32 idx = mRequiredValues.LookupTargetIndex(aVar, &binding);
+    int32_t idx = mRequiredValues.LookupTargetIndex(aVar, &binding);
     if (idx >= 0) {
         mRequiredValues.GetStringAssignmentFor(this, binding, idx, aValue);
         return NS_OK;
@@ -154,7 +154,7 @@ nsXULTemplateResultXML::GetBindingObjectFor(nsIAtom* aVar, nsISupports** aValue)
         node = mNode;
     }
     else {
-        PRInt32 idx = mRequiredValues.LookupTargetIndex(aVar, &binding);
+        int32_t idx = mRequiredValues.LookupTargetIndex(aVar, &binding);
         if (idx > 0) {
             mRequiredValues.GetNodeAssignmentFor(this, binding, idx,
                                                  getter_AddRefs(node));

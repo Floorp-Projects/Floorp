@@ -41,32 +41,32 @@ protected:
 
   // See InitData in the cpp for valid parse options
   nsresult ParseOptions(const nsAString& aOptions, Version* version,
-                        PRUint32* bpp);
+                        uint32_t* bpp);
   // Obtains data with no alpha in machine-independent byte order
-  void ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
-                          PRUint32 aPixelWidth);
+  void ConvertHostARGBRow(const uint8_t* aSrc, uint8_t* aDest,
+                          uint32_t aPixelWidth);
   // Thread safe notify listener
   void NotifyListener();
 
   // Initializes the bitmap file header member mBMPFileHeader
-  void InitFileHeader(Version aVersion, PRUint32 aBPP, PRUint32 aWidth,
-                      PRUint32 aHeight);
+  void InitFileHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
+                      uint32_t aHeight);
   // Initializes the bitmap info header member mBMPInfoHeader
-  void InitInfoHeader(Version aVersion, PRUint32 aBPP, PRUint32 aWidth,
-                      PRUint32 aHeight);
+  void InitInfoHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
+                      uint32_t aHeight);
 
   // Encodes the bitmap file header member mBMPFileHeader
   void EncodeFileHeader();
   // Encodes the bitmap info header member mBMPInfoHeader
   void EncodeInfoHeader();
   // Encodes a row of image data which does not have alpha data
-  void EncodeImageDataRow24(const PRUint8* aData);
+  void EncodeImageDataRow24(const uint8_t* aData);
   // Encodes a row of image data which does have alpha data
-  void EncodeImageDataRow32(const PRUint8* aData);
+  void EncodeImageDataRow32(const uint8_t* aData);
   // Obtains the current offset filled up to for the image buffer
-  inline PRInt32 GetCurrentImageBufferOffset()
+  inline int32_t GetCurrentImageBufferOffset()
   {
-    return static_cast<PRInt32>(mImageBufferCurr - mImageBufferStart);
+    return static_cast<int32_t>(mImageBufferCurr - mImageBufferStart);
   }
 
   // These headers will always contain endian independent stuff 
@@ -75,17 +75,17 @@ protected:
   mozilla::image::BITMAPV5HEADER mBMPInfoHeader;
 
   // Keeps track of the start of the image buffer
-  PRUint8* mImageBufferStart;
+  uint8_t* mImageBufferStart;
   // Keeps track of the current position in the image buffer
-  PRUint8* mImageBufferCurr;
+  uint8_t* mImageBufferCurr;
   // Keeps track of the image buffer size
-  PRUint32 mImageBufferSize;
+  uint32_t mImageBufferSize;
   // Keeps track of the number of bytes in the image buffer which are read
-  PRUint32 mImageBufferReadPoint;
+  uint32_t mImageBufferReadPoint;
   // Stores true if the image is done being encoded
   bool mFinished;
 
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget> mCallbackTarget;
-  PRUint32 mNotifyThreshold;
+  uint32_t mNotifyThreshold;
 };

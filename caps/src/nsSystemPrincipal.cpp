@@ -31,7 +31,7 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsSystemPrincipal,
 NS_IMETHODIMP_(nsrefcnt) 
 nsSystemPrincipal::AddRef()
 {
-  NS_PRECONDITION(PRInt32(refcount) >= 0, "illegal refcnt");
+  NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
   nsrefcnt count = PR_ATOMIC_INCREMENT(&refcount);
   NS_LOG_ADDREF(this, count, "nsSystemPrincipal", sizeof(*this));
   return count;
@@ -115,13 +115,13 @@ nsSystemPrincipal::SubsumesIgnoringDomain(nsIPrincipal *other, bool *result)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::CheckMayLoad(nsIURI* uri, bool aReport)
+nsSystemPrincipal::CheckMayLoad(nsIURI* uri, bool aReport, bool aAllowIfInheritsPrincipal)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetHashValue(PRUint32 *result)
+nsSystemPrincipal::GetHashValue(uint32_t *result)
 {
     *result = NS_PTR_TO_INT32(this);
     return NS_OK;
@@ -129,7 +129,7 @@ nsSystemPrincipal::GetHashValue(PRUint32 *result)
 
 NS_IMETHODIMP 
 nsSystemPrincipal::CanEnableCapability(const char *capability, 
-                                       PRInt16 *result)
+                                       int16_t *result)
 {
     // System principal can enable all capabilities.
     *result = nsIPrincipal::ENABLE_GRANTED;
@@ -245,14 +245,14 @@ nsSystemPrincipal::GetExtendedOrigin(nsACString& aExtendedOrigin)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetAppStatus(PRUint16* aAppStatus)
+nsSystemPrincipal::GetAppStatus(uint16_t* aAppStatus)
 {
   *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetAppId(PRUint32* aAppId)
+nsSystemPrincipal::GetAppId(uint32_t* aAppId)
 {
   *aAppId = nsIScriptSecurityManager::NO_APP_ID;
   return NS_OK;

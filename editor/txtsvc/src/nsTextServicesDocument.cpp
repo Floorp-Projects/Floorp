@@ -46,7 +46,7 @@ using namespace mozilla;
 class OffsetEntry
 {
 public:
-  OffsetEntry(nsIDOMNode *aNode, PRInt32 aOffset, PRInt32 aLength)
+  OffsetEntry(nsIDOMNode *aNode, int32_t aOffset, int32_t aLength)
     : mNode(aNode), mNodeOffset(0), mStrOffset(aOffset), mLength(aLength),
       mIsInsertedText(false), mIsValid(true)
   {
@@ -67,9 +67,9 @@ public:
   }
 
   nsIDOMNode *mNode;
-  PRInt32 mNodeOffset;
-  PRInt32 mStrOffset;
-  PRInt32 mLength;
+  int32_t mNodeOffset;
+  int32_t mStrOffset;
+  int32_t mLength;
   bool    mIsInsertedText;
   bool    mIsValid;
 };
@@ -274,7 +274,7 @@ nsTextServicesDocument::ExpandRangeToWordBoundaries(nsIDOMRange *aRange)
   // Get the end points of the range.
 
   nsCOMPtr<nsIDOMNode> rngStartNode, rngEndNode;
-  PRInt32 rngStartOffset, rngEndOffset;
+  int32_t rngStartOffset, rngEndOffset;
 
   nsresult result =  GetRangeEndPoints(aRange,
                                        getter_AddRefs(rngStartNode),
@@ -374,7 +374,7 @@ nsTextServicesDocument::ExpandRangeToWordBoundaries(nsIDOMRange *aRange)
   }
 
   nsCOMPtr<nsIDOMNode> wordStartNode, wordEndNode;
-  PRInt32 wordStartOffset, wordEndOffset;
+  int32_t wordStartOffset, wordEndOffset;
 
   result = FindWordBounds(&offsetTable, &blockStr,
                           rngStartNode, rngStartOffset,
@@ -501,8 +501,8 @@ nsTextServicesDocument::FirstBlock()
 
 NS_IMETHODIMP
 nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
-                                          PRInt32 *aSelOffset,
-                                          PRInt32 *aSelLength)
+                                          int32_t *aSelOffset,
+                                          int32_t *aSelLength)
 {
   nsresult result = NS_OK;
 
@@ -543,7 +543,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
   nsCOMPtr<nsIContentIterator> iter;
   nsCOMPtr<nsIDOMRange>        range;
   nsCOMPtr<nsIDOMNode>         parent;
-  PRInt32                      i, rangeCount, offset;
+  int32_t                      i, rangeCount, offset;
 
   if (isCollapsed)
   {
@@ -1138,7 +1138,7 @@ nsTextServicesDocument::IsDone(bool *aIsDone)
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::SetSelection(PRInt32 aOffset, PRInt32 aLength)
+nsTextServicesDocument::SetSelection(int32_t aOffset, int32_t aLength)
 {
   nsresult result;
 
@@ -1205,7 +1205,7 @@ nsTextServicesDocument::DeleteSelection()
   // set after the deletion of the content.
 
   nsCOMPtr<nsIDOMNode> origStartNode, origEndNode;
-  PRInt32 origStartOffset = 0, origEndOffset = 0;
+  int32_t origStartOffset = 0, origEndOffset = 0;
 
   if (mExtent)
   {
@@ -1220,7 +1220,7 @@ nsTextServicesDocument::DeleteSelection()
     }
   }
 
-  PRInt32 i, selLength;
+  int32_t i, selLength;
   OffsetEntry *entry, *newEntry;
 
   for (i = mSelStartIndex; i <= mSelEndIndex; i++)
@@ -1364,7 +1364,7 @@ nsTextServicesDocument::DeleteSelection()
   if (origStartNode && origEndNode)
   {
     nsCOMPtr<nsIDOMNode> curStartNode, curEndNode;
-    PRInt32 curStartOffset = 0, curEndOffset = 0;
+    int32_t curStartOffset = 0, curEndOffset = 0;
 
     result = GetRangeEndPoints(mExtent,
                                getter_AddRefs(curStartNode), &curStartOffset,
@@ -1438,7 +1438,7 @@ nsTextServicesDocument::DeleteSelection()
   // If we still don't have a valid entry, move the caret
   // to the next valid entry after the selection:
 
-  for (i = mSelEndIndex; !entry && i < PRInt32(mOffsetTable.Length()); i++)
+  for (i = mSelEndIndex; !entry && i < int32_t(mOffsetTable.Length()); i++)
   {
     entry = mOffsetTable[i];
 
@@ -1498,8 +1498,8 @@ nsTextServicesDocument::InsertText(const nsString *aText)
   // being deleted.
 
   bool collapsedSelection = SelectionIsCollapsed();
-  PRInt32 savedSelOffset = mSelStartOffset;
-  PRInt32 savedSelLength = mSelEndOffset - mSelStartOffset;
+  int32_t savedSelOffset = mSelStartOffset;
+  int32_t savedSelLength = mSelEndOffset - mSelStartOffset;
 
   if (!collapsedSelection)
   {
@@ -1539,8 +1539,8 @@ nsTextServicesDocument::InsertText(const nsString *aText)
   // PrintOffsetTable();
   //**** KDEBUG ****
 
-  PRInt32 strLength = aText->Length();
-  PRUint32 i;
+  int32_t strLength = aText->Length();
+  uint32_t i;
 
   nsCOMPtr<nsISelection> selection;
   OffsetEntry *itEntry;
@@ -1754,7 +1754,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 NS_IMETHODIMP
 nsTextServicesDocument::DidInsertNode(nsIDOMNode *aNode,
                                       nsIDOMNode *aParent,
-                                      PRInt32     aPosition,
+                                      int32_t     aPosition,
                                       nsresult    aResult)
 {
   return NS_OK;
@@ -1774,7 +1774,7 @@ nsTextServicesDocument::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
 
   LOCK_DOC(this);
 
-  PRInt32 nodeIndex = 0;
+  int32_t nodeIndex = 0;
   bool hasEntry = false;
   OffsetEntry *entry;
 
@@ -1809,7 +1809,7 @@ nsTextServicesDocument::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
     NS_ERROR("DeleteNode called for current iterator node."); 
   }
 
-  PRInt32 tcount = mOffsetTable.Length();
+  int32_t tcount = mOffsetTable.Length();
 
   while (nodeIndex < tcount)
   {
@@ -1836,7 +1836,7 @@ nsTextServicesDocument::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
 
 NS_IMETHODIMP
 nsTextServicesDocument::DidSplitNode(nsIDOMNode *aExistingRightNode,
-                                     PRInt32     aOffset,
+                                     int32_t     aOffset,
                                      nsIDOMNode *aNewLeftNode,
                                      nsresult    aResult)
 {
@@ -1855,8 +1855,8 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
 {
   NS_ENSURE_SUCCESS(aResult, NS_OK);
 
-  PRInt32 i;
-  PRUint16 type;
+  int32_t i;
+  uint16_t type;
   nsresult result;
 
   //**** KDEBUG ****
@@ -1881,8 +1881,8 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
   // Note: The editor merges the contents of the left node into the
   //       contents of the right.
 
-  PRInt32 leftIndex = 0;
-  PRInt32 rightIndex = 0;
+  int32_t leftIndex = 0;
+  int32_t rightIndex = 0;
   bool leftHasEntry = false;
   bool rightHasEntry = false;
 
@@ -1926,7 +1926,7 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
 
   nsAutoString str;
   result = aLeftNode->GetNodeValue(str);
-  PRInt32 nodeLength = str.Length();
+  int32_t nodeLength = str.Length();
 
   for (i = leftIndex; i < rightIndex; i++)
   {
@@ -1944,7 +1944,7 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
   // Run through the table and adjust the node offsets
   // for all entries referring to the right node.
 
-  for (i = rightIndex; i < PRInt32(mOffsetTable.Length()); i++)
+  for (i = rightIndex; i < int32_t(mOffsetTable.Length()); i++)
   {
     entry = mOffsetTable[i];
 
@@ -2079,7 +2079,7 @@ nsTextServicesDocument::CreateDocumentContentRange(nsIDOMRange **aRange)
 }
 
 nsresult
-nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, bool aToStart, nsIDOMRange **aRange)
+nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, int32_t aOffset, bool aToStart, nsIDOMRange **aRange)
 {
   NS_ENSURE_TRUE(aParent && aRange, NS_ERROR_NULL_POINTER);
 
@@ -2097,7 +2097,7 @@ nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *a
 
   nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIDOMNode> endNode;
-  PRInt32 startOffset, endOffset;
+  int32_t startOffset, endOffset;
 
   if (aToStart) {
     // The range should begin at the start of the document
@@ -2116,7 +2116,7 @@ nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *a
     endNode     = bodyNode;
 
     nsCOMPtr<nsINode> body = do_QueryInterface(bodyNode);
-    endOffset = body ? PRInt32(body->GetChildCount()) : 0;
+    endOffset = body ? int32_t(body->GetChildCount()) : 0;
   }
 
   return nsRange::CreateRange(startNode, startOffset, endNode, endOffset,
@@ -2153,14 +2153,14 @@ nsTextServicesDocument::AdjustContentIterator()
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
   nsIDOMNode *nodePtr = node.get();
-  PRInt32 tcount      = mOffsetTable.Length();
+  int32_t tcount      = mOffsetTable.Length();
 
   nsIDOMNode *prevValidNode = 0;
   nsIDOMNode *nextValidNode = 0;
   bool foundEntry = false;
   OffsetEntry *entry;
 
-  for (PRInt32 i = 0; i < tcount && !nextValidNode; i++)
+  for (int32_t i = 0; i < tcount && !nextValidNode; i++)
   {
     entry = mOffsetTable[i];
 
@@ -2357,19 +2357,19 @@ nsTextServicesDocument::IsTextNode(nsIDOMNode *aNode)
 }
 
 nsresult
-nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, bool aDoUpdate)
+nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, bool aDoUpdate)
 {
   nsresult result = NS_OK;
 
   NS_ENSURE_TRUE(mSelCon && aOffset >= 0 && aLength >= 0, NS_ERROR_FAILURE);
 
   nsIDOMNode *sNode = 0, *eNode = 0;
-  PRInt32 i, sOffset = 0, eOffset = 0;
+  int32_t i, sOffset = 0, eOffset = 0;
   OffsetEntry *entry;
 
   // Find start of selection in node offset terms:
 
-  for (i = 0; !sNode && i < PRInt32(mOffsetTable.Length()); i++)
+  for (i = 0; !sNode && i < int32_t(mOffsetTable.Length()); i++)
   {
     entry = mOffsetTable[i];
     if (entry->mIsValid)
@@ -2389,7 +2389,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, b
       else if (aOffset >= entry->mStrOffset)
       {
         bool foundEntry = false;
-        PRInt32 strEndOffset = entry->mStrOffset + entry->mLength;
+        int32_t strEndOffset = entry->mStrOffset + entry->mLength;
 
         if (aOffset < strEndOffset)
           foundEntry = true;
@@ -2400,7 +2400,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, b
           // entry->mNode. If so, we have to place the selection
           // after it!
 
-          if ((i+1) < PRInt32(mOffsetTable.Length()))
+          if ((i+1) < int32_t(mOffsetTable.Length()))
           {
             OffsetEntry *nextEntry = mOffsetTable[i+1];
 
@@ -2462,7 +2462,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, b
 
   // Find the end of the selection in node offset terms:
 
-  PRInt32 endOffset = aOffset + aLength;
+  int32_t endOffset = aOffset + aLength;
 
   for (i = mOffsetTable.Length() - 1; !eNode && i >= 0; i--)
   {
@@ -2510,7 +2510,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, b
 }
 
 nsresult
-nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength)
+nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionStatus *aSelStatus, int32_t *aSelOffset, int32_t *aSelLength)
 {
   nsresult result;
 
@@ -2554,7 +2554,7 @@ nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionS
 }
 
 nsresult
-nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength)
+nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockSelectionStatus *aSelStatus, int32_t *aSelOffset, int32_t *aSelLength)
 {
   nsCOMPtr<nsISelection> selection;
   nsresult result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
@@ -2566,7 +2566,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   *aSelStatus = nsITextServicesDocument::eBlockOutside;
   *aSelOffset = *aSelLength = -1;
 
-  PRInt32 tableCount = mOffsetTable.Length();
+  int32_t tableCount = mOffsetTable.Length();
 
   if (tableCount == 0)
     return NS_OK;
@@ -2581,8 +2581,8 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   else
     eEnd = eStart;
 
-  PRInt32 eStartOffset = eStart->mNodeOffset;
-  PRInt32 eEndOffset   = eEnd->mNodeOffset + eEnd->mLength;
+  int32_t eStartOffset = eStart->mNodeOffset;
+  int32_t eEndOffset   = eEnd->mNodeOffset + eEnd->mLength;
 
   nsCOMPtr<nsIDOMRange> range;
   result = selection->GetRangeAt(0, getter_AddRefs(range));
@@ -2595,13 +2595,13 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   nsCOMPtr<nsINode> parent = do_QueryInterface(domParent);
   MOZ_ASSERT(parent);
 
-  PRInt32 offset;
+  int32_t offset;
   result = range->GetStartOffset(&offset);
   NS_ENSURE_SUCCESS(result, result);
 
-  PRInt32 e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
+  int32_t e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
                                                domParent, offset);
-  PRInt32 e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
+  int32_t e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
                                                domParent, offset);
 
   if (e1s1 > 0 || e2s1 < 0) {
@@ -2614,7 +2614,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
     // through the offset table for the entry that
     // matches its parent and offset.
 
-    for (PRInt32 i = 0; i < tableCount; i++) {
+    for (int32_t i = 0; i < tableCount; i++) {
       OffsetEntry* entry = mOffsetTable[i];
       NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
@@ -2657,10 +2657,10 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
     // If the parent has children, position the iterator
     // on the child that is to the left of the offset.
 
-    PRUint32 childIndex = (PRUint32)offset;
+    uint32_t childIndex = (uint32_t)offset;
 
     if (childIndex > 0) {
-      PRUint32 numChildren = parent->GetChildCount();
+      uint32_t numChildren = parent->GetChildCount();
       NS_ASSERTION(childIndex <= numChildren, "Invalid selection offset!");
 
       if (childIndex > numChildren) {
@@ -2738,7 +2738,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
     offset = 0;
   }
 
-  for (PRInt32 i = 0; i < tableCount; i++) {
+  for (int32_t i = 0; i < tableCount; i++) {
     OffsetEntry* entry = mOffsetTable[i];
     NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
@@ -2765,7 +2765,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
 }
 
 nsresult
-nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength)
+nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBlockSelectionStatus *aSelStatus, int32_t *aSelOffset, int32_t *aSelLength)
 {
   nsresult result;
 
@@ -2784,12 +2784,12 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   // method are initialized to some defaults.
 
   nsCOMPtr<nsIDOMNode> startParent, endParent;
-  PRInt32 startOffset, endOffset;
-  PRInt32 rangeCount, tableCount, i;
-  PRInt32 e1s1, e1s2, e2s1, e2s2;
+  int32_t startOffset, endOffset;
+  int32_t rangeCount, tableCount, i;
+  int32_t e1s1, e1s2, e2s1, e2s2;
 
   OffsetEntry *eStart, *eEnd;
-  PRInt32 eStartOffset, eEndOffset;
+  int32_t eStartOffset, eEndOffset;
 
   tableCount = mOffsetTable.Length();
 
@@ -2885,7 +2885,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   // text block and range:
 
   nsCOMPtr<nsIDOMNode> p1, p2;
-  PRInt32     o1,  o2;
+  int32_t     o1,  o2;
 
   // The start of the range will be the rightmost
   // start node.
@@ -3070,8 +3070,8 @@ nsTextServicesDocument::SelectionIsValid()
 
 nsresult
 nsTextServicesDocument::GetRangeEndPoints(nsIDOMRange *aRange,
-                                          nsIDOMNode **aStartParent, PRInt32 *aStartOffset,
-                                          nsIDOMNode **aEndParent, PRInt32 *aEndOffset)
+                                          nsIDOMNode **aStartParent, int32_t *aStartOffset,
+                                          nsIDOMNode **aEndParent, int32_t *aEndOffset)
 {
   nsresult result;
 
@@ -3100,8 +3100,8 @@ nsTextServicesDocument::GetRangeEndPoints(nsIDOMRange *aRange,
 
 
 nsresult
-nsTextServicesDocument::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset,
-                                    nsIDOMNode *aEndParent, PRInt32 aEndOffset,
+nsTextServicesDocument::CreateRange(nsIDOMNode *aStartParent, int32_t aStartOffset,
+                                    nsIDOMNode *aEndParent, int32_t aEndOffset,
                                     nsIDOMRange **aRange)
 {
   return nsRange::CreateRange(aStartParent, aStartOffset, aEndParent,
@@ -3360,7 +3360,7 @@ nsTextServicesDocument::CreateOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable,
   // for text nodes that are partially selected by aIterRange.
   
   nsCOMPtr<nsIDOMNode> rngStartNode, rngEndNode;
-  PRInt32 rngStartOffset = 0, rngEndOffset = 0;
+  int32_t rngStartOffset = 0, rngEndOffset = 0;
 
   if (aIterRange)
   {
@@ -3379,7 +3379,7 @@ nsTextServicesDocument::CreateOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable,
 
   NS_ENSURE_SUCCESS(result, result);
 
-  PRInt32 offset = 0;
+  int32_t offset = 0;
 
   ClearDidSkip(aIterator);
 
@@ -3413,8 +3413,8 @@ nsTextServicesDocument::CreateOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable,
           // only accounts for the portion of the text node that is
           // in the range.
 
-          PRInt32 startOffset = 0;
-          PRInt32 endOffset   = str.Length();
+          int32_t startOffset = 0;
+          int32_t endOffset   = str.Length();
           bool adjustStr    = false;
 
           if (entry->mNode == rngStartNode)
@@ -3489,9 +3489,9 @@ nsresult
 nsTextServicesDocument::RemoveInvalidOffsetEntries()
 {
   OffsetEntry *entry;
-  PRInt32 i = 0;
+  int32_t i = 0;
 
-  while (PRUint32(i) < mOffsetTable.Length())
+  while (uint32_t(i) < mOffsetTable.Length())
   {
     entry = mOffsetTable[i];
 
@@ -3521,7 +3521,7 @@ nsTextServicesDocument::RemoveInvalidOffsetEntries()
 nsresult
 nsTextServicesDocument::ClearOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable)
 {
-  PRUint32 i;
+  uint32_t i;
 
   for (i = 0; i < aOffsetTable->Length(); i++)
   {
@@ -3534,7 +3534,7 @@ nsTextServicesDocument::ClearOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable)
 }
 
 nsresult
-nsTextServicesDocument::SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aNewEntryLength)
+nsTextServicesDocument::SplitOffsetEntry(int32_t aTableIndex, int32_t aNewEntryLength)
 {
   OffsetEntry *entry = mOffsetTable[aTableIndex];
 
@@ -3544,7 +3544,7 @@ nsTextServicesDocument::SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aNewEntryL
   if (aNewEntryLength < 1 || aNewEntryLength >= entry->mLength)
     return NS_ERROR_FAILURE;
 
-  PRInt32 oldLength = entry->mLength - aNewEntryLength;
+  int32_t oldLength = entry->mLength - aNewEntryLength;
 
   OffsetEntry *newEntry = new OffsetEntry(entry->mNode,
                                           entry->mStrOffset + oldLength,
@@ -3565,10 +3565,10 @@ nsTextServicesDocument::SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aNewEntryL
 }
 
 nsresult
-nsTextServicesDocument::NodeHasOffsetEntry(nsTArray<OffsetEntry*> *aOffsetTable, nsIDOMNode *aNode, bool *aHasEntry, PRInt32 *aEntryIndex)
+nsTextServicesDocument::NodeHasOffsetEntry(nsTArray<OffsetEntry*> *aOffsetTable, nsIDOMNode *aNode, bool *aHasEntry, int32_t *aEntryIndex)
 {
   OffsetEntry *entry;
-  PRUint32 i;
+  uint32_t i;
 
   NS_ENSURE_TRUE(aNode && aHasEntry && aEntryIndex, NS_ERROR_NULL_POINTER);
 
@@ -3600,11 +3600,11 @@ nsresult
 nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
                                        nsString *aBlockStr,
                                        nsIDOMNode *aNode,
-                                       PRInt32 aNodeOffset,
+                                       int32_t aNodeOffset,
                                        nsIDOMNode **aWordStartNode,
-                                       PRInt32 *aWordStartOffset,
+                                       int32_t *aWordStartOffset,
                                        nsIDOMNode **aWordEndNode,
-                                       PRInt32 *aWordEndOffset)
+                                       int32_t *aWordEndOffset)
 {
   // Initialize return values.
 
@@ -3617,7 +3617,7 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
   if (aWordEndOffset)
     *aWordEndOffset = 0;
 
-  PRInt32 entryIndex = 0;
+  int32_t entryIndex = 0;
   bool hasEntry = false;
 
   // It's assumed that aNode is a text node. The first thing
@@ -3631,13 +3631,13 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
   // Next we map aNodeOffset into a string offset.
 
   OffsetEntry *entry = (*aOffsetTable)[entryIndex];
-  PRUint32 strOffset = entry->mStrOffset + aNodeOffset - entry->mNodeOffset;
+  uint32_t strOffset = entry->mStrOffset + aNodeOffset - entry->mNodeOffset;
 
   // Now we use the word breaker to find the beginning and end
   // of the word from our calculated string offset.
 
   const PRUnichar *str = aBlockStr->get();
-  PRUint32 strLen = aBlockStr->Length();
+  uint32_t strLen = aBlockStr->Length();
 
   nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
   nsWordRange res = wordBreaker->FindWord(str, strLen, strOffset);
@@ -3650,7 +3650,7 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
     res.mBegin++;
   if (str[res.mEnd] == (unsigned char)0x20)
   {
-    PRUint32 realEndWord = res.mEnd - 1;
+    uint32_t realEndWord = res.mEnd - 1;
     while ((realEndWord > res.mBegin) && (IS_NBSP_CHAR(str[realEndWord]))) 
       realEndWord--;
     if (realEndWord < res.mEnd - 1) 
@@ -3661,22 +3661,22 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
   // and end of the word, run through the offset table and
   // convert them back into dom points.
 
-  PRInt32 i, lastIndex = aOffsetTable->Length() - 1;
+  int32_t i, lastIndex = aOffsetTable->Length() - 1;
 
   for (i=0; i <= lastIndex; i++)
   {
     entry = (*aOffsetTable)[i];
 
-    PRInt32 strEndOffset = entry->mStrOffset + entry->mLength;
+    int32_t strEndOffset = entry->mStrOffset + entry->mLength;
 
     // Check to see if res.mBegin is within the range covered
     // by this entry. Note that if res.mBegin is after the last
     // character covered by this entry, we will use the next
     // entry if there is one.
 
-    if (PRUint32(entry->mStrOffset) <= res.mBegin &&
-        (res.mBegin < PRUint32(strEndOffset) ||
-        (res.mBegin == PRUint32(strEndOffset) && i == lastIndex)))
+    if (uint32_t(entry->mStrOffset) <= res.mBegin &&
+        (res.mBegin < uint32_t(strEndOffset) ||
+        (res.mBegin == uint32_t(strEndOffset) && i == lastIndex)))
     {
       if (aWordStartNode)
       {
@@ -3699,9 +3699,9 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
     // Check to see if res.mEnd is within the range covered
     // by this entry.
 
-    if (PRUint32(entry->mStrOffset) <= res.mEnd && res.mEnd <= PRUint32(strEndOffset))
+    if (uint32_t(entry->mStrOffset) <= res.mEnd && res.mEnd <= uint32_t(strEndOffset))
     {
-      if (res.mBegin == res.mEnd && res.mEnd == PRUint32(strEndOffset) && i != lastIndex)
+      if (res.mBegin == res.mEnd && res.mEnd == uint32_t(strEndOffset) && i != lastIndex)
       {
         // Wait for the next round so that we use the same entry
         // we did for aWordStartNode.
@@ -3731,7 +3731,7 @@ void
 nsTextServicesDocument::PrintOffsetTable()
 {
   OffsetEntry *entry;
-  PRUint32 i;
+  uint32_t i;
 
   for (i = 0; i < mOffsetTable.Length(); i++)
   {
@@ -3767,7 +3767,7 @@ nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
 NS_IMETHODIMP
 nsTextServicesDocument::WillInsertNode(nsIDOMNode *aNode,
                               nsIDOMNode *aParent,
-                              PRInt32     aPosition)
+                              int32_t     aPosition)
 {
   return NS_OK;
 }
@@ -3780,7 +3780,7 @@ nsTextServicesDocument::WillDeleteNode(nsIDOMNode *aChild)
 
 NS_IMETHODIMP
 nsTextServicesDocument::WillSplitNode(nsIDOMNode *aExistingRightNode,
-                             PRInt32     aOffset)
+                             int32_t     aOffset)
 {
   return NS_OK;
 }
@@ -3799,37 +3799,37 @@ nsTextServicesDocument::WillJoinNodes(nsIDOMNode  *aLeftNode,
 // -------------------------------
 
 NS_IMETHODIMP
-nsTextServicesDocument::WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
+nsTextServicesDocument::WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, int32_t aPosition)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult)
+nsTextServicesDocument::DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAString &aString)
+nsTextServicesDocument::WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAString &aString, nsresult aResult)
+nsTextServicesDocument::DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString, nsresult aResult)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength)
+nsTextServicesDocument::WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult)
+nsTextServicesDocument::DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult)
 {
   return NS_OK;
 }

@@ -307,6 +307,10 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
     printf("LoadPlugin() %s returned %lx\n", 
            libSpec.value.pathname, (unsigned long)pLibrary);
 #endif
+
+    if (!pLibrary) {
+        return NS_ERROR_FAILURE;
+    }
     
     return NS_OK;
 }
@@ -388,7 +392,7 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     if (info.fDescription != nullptr)
         PL_strfree(info.fDescription);
 
-    for (PRUint32 i = 0; i < info.fVariantCount; i++) {
+    for (uint32_t i = 0; i < info.fVariantCount; i++) {
         if (info.fMimeTypeArray[i] != nullptr)
             PL_strfree(info.fMimeTypeArray[i]);
 

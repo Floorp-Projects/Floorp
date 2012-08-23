@@ -9,12 +9,12 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static const PRUint16 g_T61MappingTable[] = {
+static const uint16_t g_T61MappingTable[] = {
 #include "t61.ut"
 };
 
 
-static const PRInt16 g_T61ShiftInTable[] =  {
+static const int16_t g_T61ShiftInTable[] =  {
     3,  
     ShiftInCell(u1ByteChar,   1, 0x00, 0xBF),
     ShiftInCell(u1ByteChar,   1, 0xD0, 0xFF),

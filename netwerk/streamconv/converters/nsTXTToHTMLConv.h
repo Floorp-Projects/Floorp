@@ -92,11 +92,11 @@ public:
 
 protected:
     // return the token and it's location in the underlying buffer.
-    PRInt32 FindToken(PRInt32 cursor, convToken* *_retval);
+    int32_t FindToken(int32_t cursor, convToken* *_retval);
 
     // return the cursor location after munging HTML into the 
     // underlying buffer, according to mToken
-    PRInt32 CatHTML(PRInt32 front, PRInt32 back);
+    int32_t CatHTML(int32_t front, int32_t back);
 
     nsCOMPtr<nsIStreamListener>     mListener; // final listener (consumer)
     nsString                        mBuffer;   // any carry over data

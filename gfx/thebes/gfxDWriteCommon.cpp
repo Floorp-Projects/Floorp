@@ -27,7 +27,7 @@ gfxDWriteFontFileLoader::CreateStreamFromKey(const void *fontFileReferenceKey,
     return S_OK;
 }
 
-gfxDWriteFontFileStream::gfxDWriteFontFileStream(FallibleTArray<PRUint8> *aData)
+gfxDWriteFontFileStream::gfxDWriteFontFileStream(FallibleTArray<uint8_t> *aData)
 {
     mData.SwapElements(*aData);
 }

@@ -46,7 +46,7 @@ SVGAnimatedLengthList::SetBaseValueString(const nsAString& aValue)
 }
 
 void
-SVGAnimatedLengthList::ClearBaseValue(PRUint32 aAttrEnum)
+SVGAnimatedLengthList::ClearBaseValue(uint32_t aAttrEnum)
 {
   DOMSVGAnimatedLengthList *domWrapper =
     DOMSVGAnimatedLengthList::GetDOMWrapperIfExists(this);
@@ -61,7 +61,7 @@ SVGAnimatedLengthList::ClearBaseValue(PRUint32 aAttrEnum)
 nsresult
 SVGAnimatedLengthList::SetAnimValue(const SVGLengthList& aNewAnimValue,
                                     nsSVGElement *aElement,
-                                    PRUint32 aAttrEnum)
+                                    uint32_t aAttrEnum)
 {
   DOMSVGAnimatedLengthList *domWrapper =
     DOMSVGAnimatedLengthList::GetDOMWrapperIfExists(this);
@@ -100,7 +100,7 @@ SVGAnimatedLengthList::SetAnimValue(const SVGLengthList& aNewAnimValue,
 
 void
 SVGAnimatedLengthList::ClearAnimValue(nsSVGElement *aElement,
-                                      PRUint32 aAttrEnum)
+                                      uint32_t aAttrEnum)
 {
   DOMSVGAnimatedLengthList *domWrapper =
     DOMSVGAnimatedLengthList::GetDOMWrapperIfExists(this);
@@ -118,8 +118,8 @@ SVGAnimatedLengthList::ClearAnimValue(nsSVGElement *aElement,
 
 nsISMILAttr*
 SVGAnimatedLengthList::ToSMILAttr(nsSVGElement *aSVGElement,
-                                  PRUint8 aAttrEnum,
-                                  PRUint8 aAxis,
+                                  uint8_t aAttrEnum,
+                                  uint8_t aAxis,
                                   bool aCanZeroPadList)
 {
   return new SMILAnimatedLengthList(this, aSVGElement, aAttrEnum, aAxis, aCanZeroPadList);
@@ -154,8 +154,8 @@ SVGAnimatedLengthList::
     // single sample.
 
     aPreventCachingOfSandwich = false;
-    for (PRUint32 i = 0; i < llai->Length(); ++i) {
-      PRUint8 unit = (*llai)[i].GetUnit();
+    for (uint32_t i = 0; i < llai->Length(); ++i) {
+      uint8_t unit = (*llai)[i].GetUnit();
       if (unit == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE ||
           unit == nsIDOMSVGLength::SVG_LENGTHTYPE_EMS ||
           unit == nsIDOMSVGLength::SVG_LENGTHTYPE_EXS) {

@@ -95,12 +95,10 @@ function COWTests() {
     const PROPS_TO_TEST = ['foo', 'bar', 'prototype'];
 
     var empty = {};
-    var nonempty = {foo: 42, bar: 33};
+    // Once we flip the default for __exposedProps__, this should behave
+    // the same as for function objects below.
     is(getCOW(empty).foo, undefined,
        "shouldn't throw when accessing exposed properties that doesn't exist");
-    PROPS_TO_TEST.forEach(function(name) {
-        isPropHidden(getCOW(nonempty), name, "object without exposedProps");
-    });
 
     // Test function objects without __exposedProps__
     var func = function(x) { return 42; };

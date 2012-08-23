@@ -306,8 +306,8 @@ protected:
     pixman_region32& get() { return *this; }
 };
 
-static inline PRInt32
-GetBitmapStride(PRInt32 width)
+static inline int32_t
+GetBitmapStride(int32_t width)
 {
 #if defined(MOZ_X11) || defined(MOZ_WIDGET_GTK2)
   return (width+7)/8;
@@ -401,7 +401,7 @@ nsWindow::~nsWindow()
 /* static */ void
 nsWindow::ReleaseGlobals()
 {
-  for (PRUint32 i = 0; i < ArrayLength(gCursorCache); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(gCursorCache); ++i) {
     if (gCursorCache[i]) {
       gdk_cursor_unref(gCursorCache[i]);
       gCursorCache[i] = nullptr;
@@ -899,11 +899,11 @@ nsWindow::IsVisible() const
 }
 
 NS_IMETHODIMP
-nsWindow::ConstrainPosition(bool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
+nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
 {
     if (mIsTopLevel && mShell) {
-        PRInt32 screenWidth = gdk_screen_width();
-        PRInt32 screenHeight = gdk_screen_height();
+        int32_t screenWidth = gdk_screen_width();
+        int32_t screenHeight = gdk_screen_height();
         if (aAllowSlop) {
             if (*aX < (kWindowPositionSlop - mBounds.width))
                 *aX = kWindowPositionSlop - mBounds.width;
@@ -936,7 +936,7 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
     geometry.max_width = aConstraints.mMaxSize.width;
     geometry.max_height = aConstraints.mMaxSize.height;
 
-    PRUint32 hints = GDK_HINT_MIN_SIZE | GDK_HINT_MAX_SIZE;
+    uint32_t hints = GDK_HINT_MIN_SIZE | GDK_HINT_MAX_SIZE;
     gtk_window_set_geometry_hints(GTK_WINDOW(mShell), nullptr,
                                   &geometry, GdkWindowHints(hints));
   }
@@ -1000,7 +1000,7 @@ nsWindow::Show(bool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
+nsWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
 {
     ConstrainSize(&aWidth, &aHeight);
 
@@ -1077,7 +1077,7 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+nsWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
                        bool aRepaint)
 {
     ConstrainSize(&aWidth, &aHeight);
@@ -1159,7 +1159,7 @@ nsWindow::IsEnabled() const
 
 
 NS_IMETHODIMP
-nsWindow::Move(PRInt32 aX, PRInt32 aY)
+nsWindow::Move(int32_t aX, int32_t aY)
 {
     LOG(("nsWindow::Move [%p] %d %d\n", (void *)this,
          aX, aY));
@@ -1206,7 +1206,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
 }
 
 NS_IMETHODIMP
-nsWindow::SetZIndex(PRInt32 aZIndex)
+nsWindow::SetZIndex(int32_t aZIndex)
 {
     nsIWidget* oldPrev = GetPrevSibling();
 
@@ -1237,7 +1237,7 @@ nsWindow::SetZIndex(PRInt32 aZIndex)
 }
 
 NS_IMETHODIMP
-nsWindow::SetSizeMode(PRInt32 aMode)
+nsWindow::SetSizeMode(int32_t aMode)
 {
     nsresult rv;
 
@@ -1295,7 +1295,7 @@ SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
         // approximation ... using the timestamp of the remote command
         // being received as a guess for the timestamp of the user event
         // that triggered it.
-        PRUint32 timestamp = GTKToolkit->GetFocusTimestamp();
+        uint32_t timestamp = GTKToolkit->GetFocusTimestamp();
         if (timestamp) {
             gdk_window_focus(gtk_widget_get_window(aWindow), timestamp);
             GTKToolkit->SetFocusTimestamp(0);
@@ -1403,7 +1403,7 @@ nsWindow::SetFocus(bool aRaise)
         if (gRaiseWindows && owningWindow->mIsShown && owningWindow->mShell &&
             !gtk_window_is_active(GTK_WINDOW(owningWindow->mShell))) {
 
-            PRUint32 timestamp = GDK_CURRENT_TIME;
+            uint32_t timestamp = GDK_CURRENT_TIME;
 
             nsGTKToolkit* GTKToolkit = nsGTKToolkit::GetToolkit();
             if (GTKToolkit)
@@ -1524,8 +1524,8 @@ nsWindow::GetClientOffset()
     }
 
     // data returned is in the order left, right, top, bottom
-    PRInt32 left = PRInt32(frame_extents[0]);
-    PRInt32 top = PRInt32(frame_extents[2]);
+    int32_t left = int32_t(frame_extents[0]);
+    int32_t top = int32_t(frame_extents[2]);
 
     g_free(frame_extents);
 
@@ -1578,7 +1578,7 @@ nsWindow::SetCursor(nsCursor aCursor)
 
 NS_IMETHODIMP
 nsWindow::SetCursor(imgIContainer* aCursor,
-                    PRUint32 aHotspotX, PRUint32 aHotspotY)
+                    uint32_t aHotspotX, uint32_t aHotspotY)
 {
     // if we're not the toplevel window pass up the cursor request to
     // the toplevel window to handle it.
@@ -1657,7 +1657,7 @@ nsWindow::Invalidate(const nsIntRect &aRect)
 }
 
 void*
-nsWindow::GetNativeData(PRUint32 aDataType)
+nsWindow::GetNativeData(uint32_t aDataType)
 {
     switch (aDataType) {
     case NS_NATIVE_WINDOW:
@@ -1716,7 +1716,7 @@ nsWindow::SetTitle(const nsAString& aTitle)
     if (titleUTF8.Length() > NS_WINDOW_TITLE_MAX_LENGTH) {
         // Truncate overlong titles (bug 167315). Make sure we chop after a
         // complete sequence by making sure the next char isn't a follow-byte.
-        PRUint32 len = NS_WINDOW_TITLE_MAX_LENGTH;
+        uint32_t len = NS_WINDOW_TITLE_MAX_LENGTH;
         while(UTF8_FOLLOWBYTE(titleUTF8[len]))
             --len;
         titleUTF8.Truncate(len);
@@ -1760,7 +1760,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
         const char extensions[6][7] = { ".png", "16.png", "32.png", "48.png",
                                     ".xpm", "16.xpm" };
 
-        for (PRUint32 i = 0; i < ArrayLength(extensions); i++) {
+        for (uint32_t i = 0; i < ArrayLength(extensions); i++) {
             // Don't bother looking for XPM versions if we found a PNG.
             if (i == ArrayLength(extensions) - 2 && foundIcon)
                 break;
@@ -1875,7 +1875,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
 }
 
 NS_IMETHODIMP
-nsWindow::GetAttention(PRInt32 aCycleCount)
+nsWindow::GetAttention(int32_t aCycleCount)
 {
     LOG(("nsWindow::GetAttention [%p]\n", (void *)this));
 
@@ -2092,7 +2092,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
                 kid->GetWindowClipRegion(&clipRects);
                 nsIntRect bounds;
                 kid->GetBounds(bounds);
-                for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
+                for (uint32_t i = 0; i < clipRects.Length(); ++i) {
                     nsIntRect r = clipRects[i] + bounds.TopLeft();
                     region.Sub(region, r);
                 }
@@ -2577,7 +2577,7 @@ nsWindow::DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent)
          buttonMask <<= 1) {
 
         if (released & buttonMask) {
-            PRInt16 buttonType;
+            int16_t buttonType;
             switch (buttonMask) {
             case GDK_BUTTON1_MASK:
                 buttonType = nsMouseEvent::eLeftButton;
@@ -2698,7 +2698,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
     mLastMotionPressure = pressure;
 
-    PRUint16 domButton;
+    uint16_t domButton;
     switch (aEvent->button) {
     case 1:
         domButton = nsMouseEvent::eLeftButton;
@@ -2750,7 +2750,7 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 {
     LOG(("Button %u release on %p\n", aEvent->button, (void *)this));
 
-    PRUint16 domButton;
+    uint16_t domButton;
     switch (aEvent->button) {
     case 1:
         domButton = nsMouseEvent::eLeftButton;
@@ -2869,7 +2869,7 @@ nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 }
 
 bool
-nsWindow::DispatchContentCommandEvent(PRInt32 aMsg)
+nsWindow::DispatchContentCommandEvent(int32_t aMsg)
 {
   nsEventStatus status;
   nsContentCommandEvent event(true, aMsg, this);
@@ -3246,7 +3246,7 @@ nsWindow::ThemeChanged()
 }
 
 void
-nsWindow::DispatchDragEvent(PRUint32 aMsg, const nsIntPoint& aRefPoint,
+nsWindow::DispatchDragEvent(uint32_t aMsg, const nsIntPoint& aRefPoint,
                             guint aTime)
 {
     nsDragEvent event(true, aMsg, this);
@@ -3814,7 +3814,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
 }
 
 void
-nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, bool    aRepaint)
+nsWindow::NativeResize(int32_t aWidth, int32_t aHeight, bool    aRepaint)
 {
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
          aWidth, aHeight));
@@ -3843,8 +3843,8 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, bool    aRepaint)
 }
 
 void
-nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
-                       PRInt32 aWidth, PRInt32 aHeight,
+nsWindow::NativeResize(int32_t aX, int32_t aY,
+                       int32_t aWidth, int32_t aHeight,
                        bool    aRepaint)
 {
     mNeedsResize = false;
@@ -3969,7 +3969,7 @@ nsIntSize
 nsWindow::GetSafeWindowSize(nsIntSize aSize)
 {
     nsIntSize result = aSize;
-    const PRInt32 kInt16Max = 32767;
+    const int32_t kInt16Max = 32767;
     if (result.width > kInt16Max) {
         NS_WARNING("Clamping huge window width");
         result.width = kInt16Max;
@@ -4053,7 +4053,7 @@ nsWindow::GetTransparencyMode()
 nsresult
 nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 {
-    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    for (uint32_t i = 0; i < aConfigurations.Length(); ++i) {
         const Configuration& configuration = aConfigurations[i];
         nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
         NS_ASSERTION(w->GetParent() == this,
@@ -4099,7 +4099,7 @@ InitRegion(pixman_region32* aRegion,
 {
     nsAutoTArray<pixman_box32,10> rects;
     rects.SetCapacity(aRects.Length());
-    for (PRUint32 i = 0; i < aRects.Length (); ++i) {
+    for (uint32_t i = 0; i < aRects.Length (); ++i) {
         if (!aRects[i].IsEmpty()) {
             rects.AppendElement(ToPixmanBox(aRects[i]));
         }
@@ -4161,7 +4161,7 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
 
 #if defined(MOZ_WIDGET_GTK2)
     GdkRegion *region = gdk_region_new(); // aborts on OOM
-    for (PRUint32 i = 0; i < newRects->Length(); ++i) {
+    for (uint32_t i = 0; i < newRects->Length(); ++i) {
         const nsIntRect& r = newRects->ElementAt(i);
         GdkRectangle rect = { r.x, r.y, r.width, r.height };
         gdk_region_union_with_rect(region, &rect);
@@ -4171,7 +4171,7 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
     gdk_region_destroy(region);
 #else
     cairo_region_t *region = cairo_region_create();
-    for (PRUint32 i = 0; i < newRects->Length(); ++i) {
+    for (uint32_t i = 0; i < newRects->Length(); ++i) {
         const nsIntRect& r = newRects->ElementAt(i);
         cairo_rectangle_int_t rect = { r.x, r.y, r.width, r.height };
         cairo_region_union_rectangle(region, &rect);
@@ -4185,7 +4185,7 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
 }
 
 void
-nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
+nsWindow::ResizeTransparencyBitmap(int32_t aNewWidth, int32_t aNewHeight)
 {
     if (!mTransparencyBitmap)
         return;
@@ -4194,7 +4194,7 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
         aNewHeight == mTransparencyBitmapHeight)
         return;
 
-    PRInt32 newSize = GetBitmapStride(aNewWidth)*aNewHeight;
+    int32_t newSize = GetBitmapStride(aNewWidth)*aNewHeight;
     gchar* newBits = new gchar[newSize];
     if (!newBits) {
         delete[] mTransparencyBitmap;
@@ -4207,13 +4207,13 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
     memset(newBits, 255, newSize);
 
     // Now copy the intersection of the old and new areas into the new mask
-    PRInt32 copyWidth = NS_MIN(aNewWidth, mTransparencyBitmapWidth);
-    PRInt32 copyHeight = NS_MIN(aNewHeight, mTransparencyBitmapHeight);
-    PRInt32 oldRowBytes = GetBitmapStride(mTransparencyBitmapWidth);
-    PRInt32 newRowBytes = GetBitmapStride(aNewWidth);
-    PRInt32 copyBytes = GetBitmapStride(copyWidth);
+    int32_t copyWidth = NS_MIN(aNewWidth, mTransparencyBitmapWidth);
+    int32_t copyHeight = NS_MIN(aNewHeight, mTransparencyBitmapHeight);
+    int32_t oldRowBytes = GetBitmapStride(mTransparencyBitmapWidth);
+    int32_t newRowBytes = GetBitmapStride(aNewWidth);
+    int32_t copyBytes = GetBitmapStride(copyWidth);
 
-    PRInt32 i;
+    int32_t i;
     gchar* fromPtr = mTransparencyBitmap;
     gchar* toPtr = newBits;
     for (i = 0; i < copyHeight; i++) {
@@ -4229,14 +4229,14 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
 }
 
 static bool
-ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
-        const nsIntRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
+ChangedMaskBits(gchar* aMaskBits, int32_t aMaskWidth, int32_t aMaskHeight,
+        const nsIntRect& aRect, uint8_t* aAlphas, int32_t aStride)
 {
-    PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
-    PRInt32 maskBytesPerRow = GetBitmapStride(aMaskWidth);
+    int32_t x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
+    int32_t maskBytesPerRow = GetBitmapStride(aMaskWidth);
     for (y = aRect.y; y < yMax; y++) {
         gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
-        PRUint8* alphas = aAlphas;
+        uint8_t* alphas = aAlphas;
         for (x = aRect.x; x < xMax; x++) {
             bool newBit = *alphas > 0;
             alphas++;
@@ -4255,14 +4255,14 @@ ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
 }
 
 static
-void UpdateMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
-        const nsIntRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
+void UpdateMaskBits(gchar* aMaskBits, int32_t aMaskWidth, int32_t aMaskHeight,
+        const nsIntRect& aRect, uint8_t* aAlphas, int32_t aStride)
 {
-    PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
-    PRInt32 maskBytesPerRow = GetBitmapStride(aMaskWidth);
+    int32_t x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
+    int32_t maskBytesPerRow = GetBitmapStride(aMaskWidth);
     for (y = aRect.y; y < yMax; y++) {
         gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
-        PRUint8* alphas = aAlphas;
+        uint8_t* alphas = aAlphas;
         for (x = aRect.x; x < xMax; x++) {
             bool newBit = *alphas > 0;
             alphas++;
@@ -4326,7 +4326,7 @@ nsWindow::ApplyTransparencyBitmap()
 
 nsresult
 nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
-                                               PRUint8* aAlphas, PRInt32 aStride)
+                                               uint8_t* aAlphas, int32_t aStride)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
@@ -4345,7 +4345,7 @@ nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
     NS_ASSERTION(mIsTransparent, "Window is not transparent");
 
     if (mTransparencyBitmap == nullptr) {
-        PRInt32 size = GetBitmapStride(mBounds.width)*mBounds.height;
+        int32_t size = GetBitmapStride(mBounds.width)*mBounds.height;
         mTransparencyBitmap = new gchar[size];
         if (mTransparencyBitmap == nullptr)
             return NS_ERROR_FAILURE;
@@ -4741,11 +4741,11 @@ check_for_rollup(gdouble aMouseX, gdouble aMouseY,
             // if we're dealing with menus, we probably have submenus and
             // we don't want to rollup if the click is in a parent menu of
             // the current submenu
-            PRUint32 popupsToRollup = PR_UINT32_MAX;
+            uint32_t popupsToRollup = PR_UINT32_MAX;
             if (!aAlwaysRollup) {
                 nsAutoTArray<nsIWidget*, 5> widgetChain;
-                PRUint32 sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
-                for (PRUint32 i=0; i<widgetChain.Length(); ++i) {
+                uint32_t sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
+                for (uint32_t i=0; i<widgetChain.Length(); ++i) {
                     nsIWidget* widget = widgetChain[i];
                     GdkWindow* currWindow =
                         (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
@@ -4872,7 +4872,7 @@ static GdkCursor *
 get_gtk_cursor(nsCursor aCursor)
 {
     GdkCursor *gdkcursor = nullptr;
-    PRUint8 newType = 0xff;
+    uint8_t newType = 0xff;
 
     if ((gdkcursor = gCursorCache[aCursor])) {
         return gdkcursor;
@@ -5790,7 +5790,7 @@ nsWindow::CreateRootAccessible()
 }
 
 void
-nsWindow::DispatchEventToRootAccessible(PRUint32 aEventType)
+nsWindow::DispatchEventToRootAccessible(uint32_t aEventType)
 {
     if (!a11y::ShouldA11yBeEnabled()) {
         return;
@@ -5897,7 +5897,7 @@ nsWindow::OnIMEFocusChange(bool aFocus)
 }
 
 NS_IMETHODIMP
-nsWindow::GetToggledKeyState(PRUint32 aKeyCode, bool* aLEDState)
+nsWindow::GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState)
 {
     NS_ENSURE_ARG_POINTER(aLEDState);
 
@@ -6096,7 +6096,7 @@ nsWindow::BeginMoveDrag(nsMouseEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical)
+nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical)
 {
     NS_ENSURE_ARG_POINTER(aEvent);
 
@@ -6168,8 +6168,8 @@ nsWindow::ClearCachedResources()
 
 nsresult
 nsWindow::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
-                                     PRUint32 aNativeMessage,
-                                     PRUint32 aModifierFlags)
+                                     uint32_t aNativeMessage,
+                                     uint32_t aModifierFlags)
 {
   if (!mGdkWindow) {
     return NS_OK;

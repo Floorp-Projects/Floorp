@@ -66,7 +66,7 @@ nsSMILValue::Swap(nsSMILValue& aOther)
 }
 
 nsresult
-nsSMILValue::Add(const nsSMILValue& aValueToAdd, PRUint32 aCount)
+nsSMILValue::Add(const nsSMILValue& aValueToAdd, uint32_t aCount)
 {
   if (aValueToAdd.mType != mType) {
     NS_ERROR("Trying to add incompatible types");

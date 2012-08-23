@@ -135,7 +135,7 @@ nsXBLSpecialDocInfo::GetAllHandlers(const char* aType,
 
 // Init statics
 nsXBLSpecialDocInfo* nsXBLWindowKeyHandler::sXBLSpecialDocInfo = nullptr;
-PRUint32 nsXBLWindowKeyHandler::sRefCnt = 0;
+uint32_t nsXBLWindowKeyHandler::sRefCnt = 0;
 
 nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement,
                                              nsIDOMEventTarget* aTarget)
@@ -370,7 +370,7 @@ bool
 nsXBLWindowKeyHandler::EventMatched(nsXBLPrototypeHandler* inHandler,
                                     nsIAtom* inEventType,
                                     nsIDOMKeyEvent* inEvent,
-                                    PRUint32 aCharCode, bool aIgnoreShiftKey)
+                                    uint32_t aCharCode, bool aIgnoreShiftKey)
 {
   return inHandler->KeyEventMatched(inEventType, inEvent, aCharCode,
                                     aIgnoreShiftKey);
@@ -435,7 +435,7 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
     return NS_OK;
   }
 
-  for (PRUint32 i = 0; i < accessKeys.Length(); ++i) {
+  for (uint32_t i = 0; i < accessKeys.Length(); ++i) {
     nsShortcutCandidate &key = accessKeys[i];
     if (WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler,
                                key.mCharCode, key.mIgnoreShift))
@@ -448,7 +448,7 @@ bool
 nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
                                               nsIAtom* aEventType,
                                               nsXBLPrototypeHandler* aHandler,
-                                              PRUint32 aCharCode,
+                                              uint32_t aCharCode,
                                               bool aIgnoreShiftKey)
 {
   nsresult rv;

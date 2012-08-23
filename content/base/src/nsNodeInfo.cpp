@@ -34,15 +34,15 @@ static const size_t kNodeInfoPoolSizes[] = {
   sizeof(nsNodeInfo)
 };
 
-static const PRInt32 kNodeInfoPoolInitialSize = sizeof(nsNodeInfo) * 64;
+static const int32_t kNodeInfoPoolInitialSize = sizeof(nsNodeInfo) * 64;
 
 // static
 nsFixedSizeAllocator* nsNodeInfo::sNodeInfoPool = nullptr;
 
 // static
 nsNodeInfo*
-nsNodeInfo::Create(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
-                   PRUint16 aNodeType, nsIAtom *aExtraName,
+nsNodeInfo::Create(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
+                   uint16_t aNodeType, nsIAtom *aExtraName,
                    nsNodeInfoManager *aOwnerManager)
 {
   if (!sNodeInfoPool) {
@@ -78,8 +78,8 @@ nsNodeInfo::~nsNodeInfo()
 }
 
 
-nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
-                       PRUint16 aNodeType, nsIAtom* aExtraName,
+nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
+                       uint16_t aNodeType, nsIAtom* aExtraName,
                        nsNodeInfoManager *aOwnerManager)
 {
   CheckValidNodeInfo(aNodeType, aName, aNamespaceID, aExtraName);
@@ -161,7 +161,7 @@ static const char* kNSURIs[] = {
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsNodeInfo)
   if (NS_UNLIKELY(cb.WantDebugInfo())) {
     char name[72];
-    PRUint32 nsid = tmp->NamespaceID();
+    uint32_t nsid = tmp->NamespaceID();
     nsAtomCString localName(tmp->NameAtom());
     if (nsid < ArrayLength(kNSURIs)) {
       PR_snprintf(name, sizeof(name), "nsNodeInfo%s %s", kNSURIs[nsid],
@@ -208,7 +208,7 @@ nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
 bool
 nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
-  PRInt32 nsid =
+  int32_t nsid =
     nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
   return nsINodeInfo::NamespaceEquals(nsid);

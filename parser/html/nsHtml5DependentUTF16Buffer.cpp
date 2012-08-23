@@ -19,7 +19,7 @@ nsHtml5DependentUTF16Buffer::~nsHtml5DependentUTF16Buffer()
 already_AddRefed<nsHtml5OwningUTF16Buffer>
 nsHtml5DependentUTF16Buffer::FalliblyCopyAsOwningBuffer()
 {
-  PRInt32 newLength = getEnd() - getStart();
+  int32_t newLength = getEnd() - getStart();
   nsRefPtr<nsHtml5OwningUTF16Buffer> newObj =
     nsHtml5OwningUTF16Buffer::FalliblyCreate(newLength);
   if (!newObj) {

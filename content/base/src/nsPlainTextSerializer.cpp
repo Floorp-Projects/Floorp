@@ -28,29 +28,29 @@ using namespace mozilla::dom;
 #define PREF_STRUCTS "converter.html2txt.structs"
 #define PREF_HEADER_STRATEGY "converter.html2txt.header_strategy"
 
-static const  PRInt32 kTabSize=4;
-static const  PRInt32 kOLNumberWidth = 3;
-static const  PRInt32 kIndentSizeHeaders = 2;  /* Indention of h1, if
+static const  int32_t kTabSize=4;
+static const  int32_t kOLNumberWidth = 3;
+static const  int32_t kIndentSizeHeaders = 2;  /* Indention of h1, if
                                                 mHeaderStrategy = 1 or = 2.
                                                 Indention of other headers
                                                 is derived from that.
                                                 XXX center h1? */
-static const  PRInt32 kIndentIncrementHeaders = 2;  /* If mHeaderStrategy = 1,
+static const  int32_t kIndentIncrementHeaders = 2;  /* If mHeaderStrategy = 1,
                                                 indent h(x+1) this many
                                                 columns more than h(x) */
-static const  PRInt32 kIndentSizeList = kTabSize;
+static const  int32_t kIndentSizeList = kTabSize;
                                // Indention of non-first lines of ul and ol
-static const  PRInt32 kIndentSizeDD = kTabSize;  // Indention of <dd>
+static const  int32_t kIndentSizeDD = kTabSize;  // Indention of <dd>
 static const  PRUnichar  kNBSP = 160;
 static const  PRUnichar kSPACE = ' ';
 
-static PRInt32 HeaderLevel(nsIAtom* aTag);
-static PRInt32 GetUnicharWidth(PRUnichar ucs);
-static PRInt32 GetUnicharStringWidth(const PRUnichar* pwcs, PRInt32 n);
+static int32_t HeaderLevel(nsIAtom* aTag);
+static int32_t GetUnicharWidth(PRUnichar ucs);
+static int32_t GetUnicharStringWidth(const PRUnichar* pwcs, int32_t n);
 
 // Someday may want to make this non-const:
-static const PRUint32 TagStackSize = 500;
-static const PRUint32 OLStackSize = 100;
+static const uint32_t TagStackSize = 500;
+static const uint32_t OLStackSize = 100;
 
 nsresult NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer)
 {
@@ -76,7 +76,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mDontWrapAnyQuotes = false;                 // ditto
   mHasWrittenCiteBlockquote = false;
   mSpanLevel = 0;
-  for (PRInt32 i = 0; i <= 6; i++) {
+  for (int32_t i = 0; i <= 6; i++) {
     mHeaderCounter[i] = 0;
   }
 
@@ -95,10 +95,10 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   // need refcounting.
   mTagStack = new nsIAtom*[TagStackSize];
   mTagStackIndex = 0;
-  mIgnoreAboveIndex = (PRUint32)kNotFound;
+  mIgnoreAboveIndex = (uint32_t)kNotFound;
 
   // initialize the OL stack, where numbers for ordered lists are kept
-  mOLStack = new PRInt32[OLStackSize];
+  mOLStack = new int32_t[OLStackSize];
   mOLStackIndex = 0;
 
   mULCount = 0;
@@ -116,7 +116,7 @@ NS_IMPL_ISUPPORTS1(nsPlainTextSerializer,
 
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
+nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
                             const char* aCharSet, bool aIsCopying,
                             bool aIsWholeDocument)
 {
@@ -195,7 +195,7 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
 bool
 nsPlainTextSerializer::GetLastBool(const nsTArray<bool>& aStack)
 {
-  PRUint32 size = aStack.Length();
+  uint32_t size = aStack.Length();
   if (size == 0) {
     return false;
   }
@@ -205,7 +205,7 @@ nsPlainTextSerializer::GetLastBool(const nsTArray<bool>& aStack)
 void
 nsPlainTextSerializer::SetLastBool(nsTArray<bool>& aStack, bool aValue)
 {
-  PRUint32 size = aStack.Length();
+  uint32_t size = aStack.Length();
   if (size > 0) {
     aStack.ElementAt(size-1) = aValue;
   }
@@ -224,7 +224,7 @@ bool
 nsPlainTextSerializer::PopBool(nsTArray<bool>& aStack)
 {
   bool returnValue = false;
-  PRUint32 size = aStack.Length();
+  uint32_t size = aStack.Length();
   if (size > 0) {
     returnValue = aStack.ElementAt(size-1);
     aStack.RemoveElementAt(size-1);
@@ -234,11 +234,11 @@ nsPlainTextSerializer::PopBool(nsTArray<bool>& aStack)
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::AppendText(nsIContent* aText,
-                                  PRInt32 aStartOffset,
-                                  PRInt32 aEndOffset, 
+                                  int32_t aStartOffset,
+                                  int32_t aEndOffset, 
                                   nsAString& aStr)
 {
-  if (mIgnoreAboveIndex != (PRUint32)kNotFound) {
+  if (mIgnoreAboveIndex != (uint32_t)kNotFound) {
     return NS_OK;
   }
     
@@ -256,10 +256,10 @@ nsPlainTextSerializer::AppendText(nsIContent* aText,
     return NS_ERROR_FAILURE;
   }
   
-  PRInt32 endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
+  int32_t endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
   NS_ASSERTION(aStartOffset <= endoffset, "A start offset is beyond the end of the text fragment!");
 
-  PRInt32 length = endoffset - aStartOffset;
+  int32_t length = endoffset - aStartOffset;
   if (length <= 0) {
     return NS_OK;
   }
@@ -278,8 +278,8 @@ nsPlainTextSerializer::AppendText(nsIContent* aText,
 
   // We have to split the string across newlines
   // to match parser behavior
-  PRInt32 start = 0;
-  PRInt32 offset = textstr.FindCharInSet("\n\r");
+  int32_t start = 0;
+  int32_t offset = textstr.FindCharInSet("\n\r");
   while (offset != kNotFound) {
 
     if (offset>start) {
@@ -312,8 +312,8 @@ nsPlainTextSerializer::AppendText(nsIContent* aText,
 
 NS_IMETHODIMP
 nsPlainTextSerializer::AppendCDATASection(nsIContent* aCDATASection,
-                                          PRInt32 aStartOffset,
-                                          PRInt32 aEndOffset,
+                                          int32_t aStartOffset,
+                                          int32_t aEndOffset,
                                           nsAString& aStr)
 {
   return AppendText(aCDATASection, aStartOffset, aEndOffset, aStr);
@@ -416,7 +416,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
     mTagStack[mTagStackIndex++] = aTag;
   }
 
-  if (mIgnoreAboveIndex != (PRUint32)kNotFound) {
+  if (mIgnoreAboveIndex != (uint32_t)kNotFound) {
     return NS_OK;
   }
 
@@ -459,7 +459,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
     // Also set mWrapColumn to the value given there
     // (which arguably we should only do if told to do so).
     nsAutoString style;
-    PRInt32 whitespace;
+    int32_t whitespace;
     if (NS_SUCCEEDED(GetAttributeValue(nsGkAtoms::style, style)) &&
        (kNotFound != (whitespace = style.Find("white-space:")))) {
 
@@ -468,23 +468,23 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
         printf("Set mPreFormatted based on style pre-wrap\n");
 #endif
         mPreFormatted = true;
-        PRInt32 widthOffset = style.Find("width:");
+        int32_t widthOffset = style.Find("width:");
         if (widthOffset >= 0) {
           // We have to search for the ch before the semicolon,
           // not for the semicolon itself, because nsString::ToInteger()
           // considers 'c' to be a valid numeric char (even if radix=10)
           // but then gets confused if it sees it next to the number
           // when the radix specified was 10, and returns an error code.
-          PRInt32 semiOffset = style.Find("ch", false, widthOffset+6);
-          PRInt32 length = (semiOffset > 0 ? semiOffset - widthOffset - 6
+          int32_t semiOffset = style.Find("ch", false, widthOffset+6);
+          int32_t length = (semiOffset > 0 ? semiOffset - widthOffset - 6
                             : style.Length() - widthOffset);
           nsAutoString widthstr;
           style.Mid(widthstr, widthOffset+6, length);
           nsresult err;
-          PRInt32 col = widthstr.ToInteger(&err);
+          int32_t col = widthstr.ToInteger(&err);
 
           if (NS_SUCCEEDED(err)) {
-            mWrapColumn = (PRUint32)col;
+            mWrapColumn = (uint32_t)col;
 #ifdef DEBUG_preformatted
             printf("Set wrap column to %d based on style\n", mWrapColumn);
 #endif
@@ -561,7 +561,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
       // Must end the current line before we change indention
       if (mOLStackIndex < OLStackSize) {
         nsAutoString startAttr;
-        PRInt32 startVal = 1;
+        int32_t startVal = 1;
         if (NS_SUCCEEDED(GetAttributeValue(nsGkAtoms::start, startAttr))) {
           nsresult rv = NS_OK;
           startVal = startAttr.ToInteger(&rv);
@@ -582,7 +582,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
         nsAutoString valueAttr;
         if (NS_SUCCEEDED(GetAttributeValue(nsGkAtoms::value, valueAttr))) {
           nsresult rv = NS_OK;
-          PRInt32 valueAttrVal = valueAttr.ToInteger(&rv);
+          int32_t valueAttrVal = valueAttr.ToInteger(&rv);
           if (NS_SUCCEEDED(rv))
             mOLStack[mOLStackIndex-1] = valueAttrVal;
         }
@@ -598,7 +598,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
     }
     else {
       static char bulletCharArray[] = "*o+#";
-      PRUint32 index = mULCount > 0 ? (mULCount - 1) : 3;
+      uint32_t index = mULCount > 0 ? (mULCount - 1) : 3;
       char bulletChar = bulletCharArray[index % 4];
       mInIndentString.Append(PRUnichar(bulletChar));
     }
@@ -660,11 +660,11 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
     if (mHeaderStrategy == 2) {  // numbered
       mIndent += kIndentSizeHeaders;
       // Caching
-      PRInt32 level = HeaderLevel(aTag);
+      int32_t level = HeaderLevel(aTag);
       // Increase counter for current level
       mHeaderCounter[level]++;
       // Reset all lower levels
-      PRInt32 i;
+      int32_t i;
 
       for (i = level + 1; i <= 6; i++) {
         mHeaderCounter[i] = 0;
@@ -681,7 +681,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
     }
     else if (mHeaderStrategy == 1) { // indent increasingly
       mIndent += kIndentSizeHeaders;
-      for (PRInt32 i = HeaderLevel(aTag); i > 1; i--) {
+      for (int32_t i = HeaderLevel(aTag); i > 1; i--) {
            // for h(x), run x-1 times
         mIndent += kIndentIncrementHeaders;
       }
@@ -746,7 +746,7 @@ nsPlainTextSerializer::DoCloseContainer(nsIAtom* aTag)
       // We're dealing with the close tag whose matching
       // open tag had set the mIgnoreAboveIndex value.
       // Reset mIgnoreAboveIndex before discarding this tag.
-      mIgnoreAboveIndex = (PRUint32)kNotFound;
+      mIgnoreAboveIndex = (uint32_t)kNotFound;
     }
     return NS_OK;
   }
@@ -883,7 +883,7 @@ nsPlainTextSerializer::DoCloseContainer(nsIAtom* aTag)
       mIndent -= kIndentSizeHeaders;
     }
     if (mHeaderStrategy == 1 /*indent increasingly*/ ) {
-      for (PRInt32 i = HeaderLevel(aTag); i > 1; i--) {
+      for (int32_t i = HeaderLevel(aTag); i > 1; i--) {
            // for h(x), run x-1 times
         mIndent -= kIndentIncrementHeaders;
       }
@@ -1022,7 +1022,7 @@ nsPlainTextSerializer::DoAddLeaf(nsIAtom* aTag)
     // Make a line of dashes as wide as the wrap width
     // XXX honoring percentage would be nice
     nsAutoString line;
-    PRUint32 width = (mWrapColumn > 0 ? mWrapColumn : 25);
+    uint32_t width = (mWrapColumn > 0 ? mWrapColumn : 25);
     while (line.Length() < width) {
       line.Append(PRUnichar('-'));
     }
@@ -1061,7 +1061,7 @@ nsPlainTextSerializer::DoAddLeaf(nsIAtom* aTag)
  * noOfRows =  n>0  :   Having n empty lines before the current line.
  */
 void
-nsPlainTextSerializer::EnsureVerticalSpace(PRInt32 noOfRows)
+nsPlainTextSerializer::EnsureVerticalSpace(int32_t noOfRows)
 {
   // If we have something in the indent we probably want to output
   // it and it's not included in the count for empty lines so we don't
@@ -1141,14 +1141,14 @@ IsSpaceStuffable(const PRUnichar *s)
  */
 void
 nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment, 
-                                 PRInt32 aLineFragmentLength)
+                                 int32_t aLineFragmentLength)
 {
-  PRUint32 prefixwidth = (mCiteQuoteLevel > 0 ? mCiteQuoteLevel + 1:0)+mIndent;
+  uint32_t prefixwidth = (mCiteQuoteLevel > 0 ? mCiteQuoteLevel + 1:0)+mIndent;
   
   if (mLineBreakDue)
     EnsureVerticalSpace(mFloatingLines);
 
-  PRInt32 linelength = mCurrentLine.Length();
+  int32_t linelength = mCurrentLine.Length();
   if (0 == linelength) {
     if (0 == aLineFragmentLength) {
       // Nothing at all. Are you kidding me?
@@ -1168,7 +1168,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
 #ifdef DEBUG_wrapping
             NS_ASSERTION(GetUnicharStringWidth(mCurrentLine.get(),
                                                mCurrentLine.Length()) ==
-                         (PRInt32)mCurrentLineWidth,
+                         (int32_t)mCurrentLineWidth,
                          "mCurrentLineWidth and reality out of sync!");
 #endif
           }
@@ -1184,7 +1184,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
 #ifdef DEBUG_wrapping
     NS_ASSERTION(GetUnicharstringWidth(mCurrentLine.get(),
                                        mCurrentLine.Length()) ==
-                 (PRInt32)mCurrentLineWidth,
+                 (int32_t)mCurrentLineWidth,
                  "mCurrentLineWidth and reality out of sync!");
 #endif
   }
@@ -1197,21 +1197,21 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
 #ifdef DEBUG_wrapping
     NS_ASSERTION(GetUnicharstringWidth(mCurrentLine.get(),
                                   mCurrentLine.Length()) ==
-                 (PRInt32)mCurrentLineWidth,
+                 (int32_t)mCurrentLineWidth,
                  "mCurrentLineWidth and reality out of sync!");
 #endif
     // Yes, wrap!
     // The "+4" is to avoid wrap lines that only would be a couple
     // of letters too long. We give this bonus only if the
     // wrapcolumn is more than 20.
-    PRUint32 bonuswidth = (mWrapColumn > 20) ? 4 : 0;
+    uint32_t bonuswidth = (mWrapColumn > 20) ? 4 : 0;
 
     // XXX: Should calculate prefixwidth with GetUnicharStringWidth
     while(mCurrentLineWidth+prefixwidth > mWrapColumn+bonuswidth) {      
       // We go from the end removing one letter at a time until
       // we have a reasonable width
-      PRInt32 goodSpace = mCurrentLine.Length();
-      PRUint32 width = mCurrentLineWidth;
+      int32_t goodSpace = mCurrentLine.Length();
+      uint32_t width = mCurrentLineWidth;
       while(goodSpace > 0 && (width+prefixwidth > mWrapColumn)) {
         goodSpace--;
         width -= GetUnicharWidth(mCurrentLine[goodSpace]);
@@ -1242,7 +1242,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
         // try to find another place to break
         goodSpace=(prefixwidth>mWrapColumn+1)?1:mWrapColumn-prefixwidth+1;
         if (mLineBreaker) {
-          if ((PRUint32)goodSpace < mCurrentLine.Length())
+          if ((uint32_t)goodSpace < mCurrentLine.Length())
             goodSpace = mLineBreaker->Next(mCurrentLine.get(), 
                                            mCurrentLine.Length(), goodSpace);
           if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT)
@@ -1312,7 +1312,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
 void
 nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace)
 {
-  PRUint32 currentlinelength = mCurrentLine.Length();
+  uint32_t currentlinelength = mCurrentLine.Length();
 
   if (aSoftlinebreak && 0 == currentlinelength) {
     // No meaning
@@ -1411,7 +1411,7 @@ nsPlainTextSerializer::OutputQuotesAndIndent(bool stripTrailingSpaces /* = false
   }
   
   // Indent if necessary
-  PRInt32 indentwidth = mIndent - mInIndentString.Length();
+  int32_t indentwidth = mIndent - mInIndentString.Length();
   if (indentwidth > 0
       && (!mCurrentLine.IsEmpty() || !mInIndentString.IsEmpty())
       // Don't make empty lines look flowed
@@ -1430,7 +1430,7 @@ nsPlainTextSerializer::OutputQuotesAndIndent(bool stripTrailingSpaces /* = false
   }
 
   if (stripTrailingSpaces) {
-    PRInt32 lineLength = stringToOutput.Length();
+    int32_t lineLength = stringToOutput.Length();
     while(lineLength > 0 &&
           ' ' == stringToOutput[lineLength-1]) {
       --lineLength;
@@ -1461,10 +1461,10 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
          NS_ConvertUTF16toUTF8(str).get(), mWrapColumn);
 #endif
 
-  PRInt32 bol = 0;
-  PRInt32 newline;
+  int32_t bol = 0;
+  int32_t newline;
   
-  PRInt32 totLen = str.Length();
+  int32_t totLen = str.Length();
 
   // If the string is empty, do nothing:
   if (totLen <= 0) return;
@@ -1472,7 +1472,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
   // For Flowed text change nbsp-ses to spaces at end of lines to allow them
   // to be cut off along with usual spaces if required. (bug #125928)
   if (mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
-    for (PRInt32 i = totLen-1; i >= 0; i--) {
+    for (int32_t i = totLen-1; i >= 0; i--) {
       PRUnichar c = str[i];
       if ('\n' == c || '\r' == c || ' ' == c || '\t' == c)
         continue;
@@ -1512,7 +1512,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
       nsAString::const_iterator iter;           str.BeginReading(iter);
       nsAString::const_iterator done_searching; str.EndReading(done_searching);
       iter.advance(bol); 
-      PRInt32 new_newline = bol;
+      int32_t new_newline = bol;
       newline = kNotFound;
       while(iter != done_searching) {
         if ('\n' == *iter || '\r' == *iter) {
@@ -1596,7 +1596,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
   // Intelligent handling of text
   // If needed, strip out all "end of lines"
   // and multiple whitespace between words
-  PRInt32 nextpos;
+  int32_t nextpos;
   const PRUnichar * offsetIntoBuffer = nullptr;
   
   while (bol < totLen) {    // Loop over lines
@@ -1721,7 +1721,7 @@ nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
 bool
 nsPlainTextSerializer::IsInPre()
 {
-  PRInt32 i = mTagStackIndex;
+  int32_t i = mTagStackIndex;
   while(i > 0) {
     if (mTagStack[i - 1] == nsGkAtoms::pre)
       return true;
@@ -1743,7 +1743,7 @@ nsPlainTextSerializer::IsInPre()
 bool
 nsPlainTextSerializer::IsInOL()
 {
-  PRInt32 i = mTagStackIndex;
+  int32_t i = mTagStackIndex;
   while(--i >= 0) {
     if (mTagStack[i] == nsGkAtoms::ol)
       return true;
@@ -1759,7 +1759,7 @@ nsPlainTextSerializer::IsInOL()
 /*
   @return 0 = no header, 1 = h1, ..., 6 = h6
 */
-PRInt32 HeaderLevel(nsIAtom* aTag)
+int32_t HeaderLevel(nsIAtom* aTag)
 {
   if (aTag == nsGkAtoms::h1) {
     return 1;
@@ -1818,12 +1818,12 @@ PRInt32 HeaderLevel(nsIAtom* aTag)
  * in ISO 10646.
  */
 
-PRInt32 GetUnicharWidth(PRUnichar ucs)
+int32_t GetUnicharWidth(PRUnichar ucs)
 {
   /* sorted list of non-overlapping intervals of non-spacing characters */
   static const struct interval {
-    PRUint16 first;
-    PRUint16 last;
+    uint16_t first;
+    uint16_t last;
   } combining[] = {
     { 0x0300, 0x034E }, { 0x0360, 0x0362 }, { 0x0483, 0x0486 },
     { 0x0488, 0x0489 }, { 0x0591, 0x05A1 }, { 0x05A3, 0x05B9 },
@@ -1857,9 +1857,9 @@ PRInt32 GetUnicharWidth(PRUnichar ucs)
     { 0x20D0, 0x20E3 }, { 0x302A, 0x302F }, { 0x3099, 0x309A },
     { 0xFB1E, 0xFB1E }, { 0xFE20, 0xFE23 }
   };
-  PRInt32 min = 0;
-  PRInt32 max = sizeof(combining) / sizeof(struct interval) - 1;
-  PRInt32 mid;
+  int32_t min = 0;
+  int32_t max = sizeof(combining) / sizeof(struct interval) - 1;
+  int32_t mid;
 
   /* test for 8-bit control characters */
   if (ucs == 0)
@@ -1900,9 +1900,9 @@ PRInt32 GetUnicharWidth(PRUnichar ucs)
 }
 
 
-PRInt32 GetUnicharStringWidth(const PRUnichar* pwcs, PRInt32 n)
+int32_t GetUnicharStringWidth(const PRUnichar* pwcs, int32_t n)
 {
-  PRInt32 w, width = 0;
+  int32_t w, width = 0;
 
   for (;*pwcs && n-- > 0; pwcs++)
     if ((w = GetUnicharWidth(*pwcs)) < 0)

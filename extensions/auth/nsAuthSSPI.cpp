@@ -137,7 +137,7 @@ NS_IMPL_ISUPPORTS1(nsAuthSSPI, nsIAuthModule)
 
 NS_IMETHODIMP
 nsAuthSSPI::Init(const char *serviceName,
-                 PRUint32    serviceFlags,
+                 uint32_t    serviceFlags,
                  const PRUnichar *domain,
                  const PRUnichar *username,
                  const PRUnichar *password)
@@ -167,7 +167,7 @@ nsAuthSSPI::Init(const char *serviceName,
     // The incoming serviceName is in the format: "protocol@hostname", SSPI expects
     // "<service class>/<hostname>", so swap the '@' for a '/'.
     mServiceName.Assign(serviceName);
-    PRInt32 index = mServiceName.FindChar('@');
+    int32_t index = mServiceName.FindChar('@');
     if (index == kNotFound)
         return NS_ERROR_UNEXPECTED;
     mServiceName.Replace(index, 1, '/');
@@ -228,9 +228,9 @@ nsAuthSSPI::Init(const char *serviceName,
 // second time these arguments hold an input token. 
 NS_IMETHODIMP
 nsAuthSSPI::GetNextToken(const void *inToken,
-                         PRUint32    inTokenLen,
+                         uint32_t    inTokenLen,
                          void      **outToken,
-                         PRUint32   *outTokenLen)
+                         uint32_t   *outTokenLen)
 {
     // String for end-point bindings.
     const char end_point[] = "tls-server-end-point:"; 
@@ -442,9 +442,9 @@ nsAuthSSPI::GetNextToken(const void *inToken,
 
 NS_IMETHODIMP
 nsAuthSSPI::Unwrap(const void *inToken,
-                   PRUint32    inTokenLen,
+                   uint32_t    inTokenLen,
                    void      **outToken,
-                   PRUint32   *outTokenLen)
+                   uint32_t   *outTokenLen)
 {
     SECURITY_STATUS rc;
     SecBufferDesc ibd;
@@ -523,10 +523,10 @@ public:
 
 NS_IMETHODIMP
 nsAuthSSPI::Wrap(const void *inToken,
-                 PRUint32    inTokenLen,
+                 uint32_t    inTokenLen,
                  bool        confidential,
                  void      **outToken,
-                 PRUint32   *outTokenLen)
+                 uint32_t   *outTokenLen)
 {
     SECURITY_STATUS rc;
 
@@ -601,7 +601,7 @@ nsAuthSSPI::Wrap(const void *inToken,
 }
 
 NS_IMETHODIMP
-nsAuthSSPI::GetModuleProperties(PRUint32 *flags)
+nsAuthSSPI::GetModuleProperties(uint32_t *flags)
 {
     *flags = 0;
 

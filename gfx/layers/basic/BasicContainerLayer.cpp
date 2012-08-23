@@ -30,7 +30,7 @@ BasicContainerLayer::ChildrenPartitionVisibleRegion(const nsIntRect& aInRect)
       transform.HasNonIntegerTranslation())
     return false;
 
-  nsIntPoint offset(PRInt32(transform.x0), PRInt32(transform.y0));
+  nsIntPoint offset(int32_t(transform.x0), int32_t(transform.y0));
   nsIntRect rect = aInRect.Intersect(GetEffectiveVisibleRegion().GetBounds() + offset);
   nsIntRegion covered;
 
@@ -44,7 +44,7 @@ BasicContainerLayer::ChildrenPartitionVisibleRegion(const nsIntRect& aInRect)
         l->GetEffectiveOpacity() != 1.0)
       return false;
     nsIntRegion childRegion = l->GetEffectiveVisibleRegion();
-    childRegion.MoveBy(PRInt32(childTransform.x0), PRInt32(childTransform.y0));
+    childRegion.MoveBy(int32_t(childTransform.x0), int32_t(childTransform.y0));
     childRegion.And(childRegion, rect);
     if (l->GetClipRect()) {
       childRegion.And(childRegion, *l->GetClipRect() + offset);

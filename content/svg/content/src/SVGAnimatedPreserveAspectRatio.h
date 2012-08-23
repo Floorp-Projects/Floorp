@@ -27,7 +27,7 @@ class SVGPreserveAspectRatio
   friend class SVGAnimatedPreserveAspectRatio;
 
 public:
-  SVGPreserveAspectRatio(PRUint16 aAlign, PRUint16 aMeetOrSlice, bool aDefer = false)
+  SVGPreserveAspectRatio(uint16_t aAlign, uint16_t aMeetOrSlice, bool aDefer = false)
     : mAlign(aAlign)
     , mMeetOrSlice(aMeetOrSlice)
     , mDefer(aDefer)
@@ -41,27 +41,27 @@ public:
 
   bool operator==(const SVGPreserveAspectRatio& aOther) const;
 
-  nsresult SetAlign(PRUint16 aAlign) {
+  nsresult SetAlign(uint16_t aAlign) {
     if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
         aAlign > nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX)
       return NS_ERROR_FAILURE;
-    mAlign = static_cast<PRUint8>(aAlign);
+    mAlign = static_cast<uint8_t>(aAlign);
     return NS_OK;
   }
 
-  PRUint16 GetAlign() const {
+  uint16_t GetAlign() const {
     return mAlign;
   }
 
-  nsresult SetMeetOrSlice(PRUint16 aMeetOrSlice) {
+  nsresult SetMeetOrSlice(uint16_t aMeetOrSlice) {
     if (aMeetOrSlice < nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET ||
         aMeetOrSlice > nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE)
       return NS_ERROR_FAILURE;
-    mMeetOrSlice = static_cast<PRUint8>(aMeetOrSlice);
+    mMeetOrSlice = static_cast<uint8_t>(aMeetOrSlice);
     return NS_OK;
   }
 
-  PRUint16 GetMeetOrSlice() const {
+  uint16_t GetMeetOrSlice() const {
     return mMeetOrSlice;
   }
 
@@ -74,8 +74,8 @@ public:
   }
 
 private:
-  PRUint8 mAlign;
-  PRUint8 mMeetOrSlice;
+  uint8_t mAlign;
+  uint8_t mMeetOrSlice;
   bool mDefer;
 };
 
@@ -97,7 +97,7 @@ public:
 
   void SetBaseValue(const SVGPreserveAspectRatio &aValue,
                     nsSVGElement *aSVGElement);
-  nsresult SetBaseAlign(PRUint16 aAlign, nsSVGElement *aSVGElement) {
+  nsresult SetBaseAlign(uint16_t aAlign, nsSVGElement *aSVGElement) {
     if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
         aAlign > nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX) {
       return NS_ERROR_FAILURE;
@@ -107,7 +107,7 @@ public:
                  aSVGElement);
     return NS_OK;
   }
-  nsresult SetBaseMeetOrSlice(PRUint16 aMeetOrSlice, nsSVGElement *aSVGElement) {
+  nsresult SetBaseMeetOrSlice(uint16_t aMeetOrSlice, nsSVGElement *aSVGElement) {
     if (aMeetOrSlice < nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET ||
         aMeetOrSlice > nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE) {
       return NS_ERROR_FAILURE;
@@ -117,7 +117,7 @@ public:
                  aSVGElement);
     return NS_OK;
   }
-  void SetAnimValue(PRUint64 aPackedValue, nsSVGElement *aSVGElement);
+  void SetAnimValue(uint64_t aPackedValue, nsSVGElement *aSVGElement);
 
   const SVGPreserveAspectRatio &GetBaseValue() const
     { return mBaseVal; }
@@ -158,14 +158,14 @@ public:
     SVGAnimatedPreserveAspectRatio* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
     
-    NS_IMETHOD GetAlign(PRUint16* aAlign)
+    NS_IMETHOD GetAlign(uint16_t* aAlign)
       { *aAlign = mVal->GetBaseValue().GetAlign(); return NS_OK; }
-    NS_IMETHOD SetAlign(PRUint16 aAlign)
+    NS_IMETHOD SetAlign(uint16_t aAlign)
       { return mVal->SetBaseAlign(aAlign, mSVGElement); }
 
-    NS_IMETHOD GetMeetOrSlice(PRUint16* aMeetOrSlice)
+    NS_IMETHOD GetMeetOrSlice(uint16_t* aMeetOrSlice)
       { *aMeetOrSlice = mVal->GetBaseValue().GetMeetOrSlice(); return NS_OK; }
-    NS_IMETHOD SetMeetOrSlice(PRUint16 aMeetOrSlice)
+    NS_IMETHOD SetMeetOrSlice(uint16_t aMeetOrSlice)
       { return mVal->SetBaseMeetOrSlice(aMeetOrSlice, mSVGElement); }
   };
 
@@ -182,22 +182,22 @@ public:
     
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    NS_IMETHOD GetAlign(PRUint16* aAlign)
+    NS_IMETHOD GetAlign(uint16_t* aAlign)
     {
       mSVGElement->FlushAnimations();
       *aAlign = mVal->GetAnimValue().GetAlign();
       return NS_OK;
     }
-    NS_IMETHOD SetAlign(PRUint16 aAlign)
+    NS_IMETHOD SetAlign(uint16_t aAlign)
       { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
 
-    NS_IMETHOD GetMeetOrSlice(PRUint16* aMeetOrSlice)
+    NS_IMETHOD GetMeetOrSlice(uint16_t* aMeetOrSlice)
     {
       mSVGElement->FlushAnimations();
       *aMeetOrSlice = mVal->GetAnimValue().GetMeetOrSlice();
       return NS_OK;
     }
-    NS_IMETHOD SetMeetOrSlice(PRUint16 aValue)
+    NS_IMETHOD SetMeetOrSlice(uint16_t aValue)
       { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
   };
 

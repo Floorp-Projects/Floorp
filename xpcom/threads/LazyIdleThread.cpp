@@ -29,7 +29,7 @@
 
 namespace mozilla {
 
-LazyIdleThread::LazyIdleThread(PRUint32 aIdleTimeoutMS,
+LazyIdleThread::LazyIdleThread(uint32_t aIdleTimeoutMS,
                                const nsCSubstring& aName,
                                ShutdownMethod aShutdownMethod,
                                nsIObserver* aIdleObserver)
@@ -305,7 +305,7 @@ LazyIdleThread::ShutdownThread()
     }
 
     // Re-dispatch the queued runnables.
-    for (PRUint32 index = 0; index < queuedRunnables.Length(); index++) {
+    for (uint32_t index = 0; index < queuedRunnables.Length(); index++) {
       nsCOMPtr<nsIRunnable> runnable;
       runnable.swap(queuedRunnables[index]);
       NS_ASSERTION(runnable, "Null runnable?!");
@@ -363,7 +363,7 @@ NS_IMPL_THREADSAFE_QUERY_INTERFACE5(LazyIdleThread, nsIThread,
 
 NS_IMETHODIMP
 LazyIdleThread::Dispatch(nsIRunnable* aEvent,
-                         PRUint32 aFlags)
+                         uint32_t aFlags)
 {
   ASSERT_OWNING_THREAD();
 
@@ -474,14 +474,14 @@ LazyIdleThread::OnDispatchedEvent(nsIThreadInternal* /*aThread */)
 NS_IMETHODIMP
 LazyIdleThread::OnProcessNextEvent(nsIThreadInternal* /* aThread */,
                                    bool /* aMayWait */,
-                                   PRUint32 /* aRecursionDepth */)
+                                   uint32_t /* aRecursionDepth */)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 LazyIdleThread::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
-                                      PRUint32 /* aRecursionDepth */)
+                                      uint32_t /* aRecursionDepth */)
 {
   bool shouldNotifyIdle;
   {

@@ -62,7 +62,7 @@ public:
    *         percent value.  Otherwise, true.
    *
    */
-  bool      GetWidthOrHeight(Dimension aDimension, PRInt32& aResult);
+  bool      GetWidthOrHeight(Dimension aDimension, int32_t& aResult);
 
   /**
    * Returns the root <svg> element for the wrapped document, or nullptr on

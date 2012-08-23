@@ -26,7 +26,7 @@ bool
 CrashReporterParent::RecvAddLibraryMappings(const InfallibleTArray<Mapping>& mappings)
 {
 #if defined(MOZ_WIDGET_ANDROID) && defined(MOZ_CRASHREPORTER)
-  for (PRUint32 i = 0; i < mappings.Length(); i++) {
+  for (uint32_t i = 0; i < mappings.Length(); i++) {
     const Mapping& m = mappings[i];
     CrashReporter::AddLibraryMappingForChild(ProcessId(OtherProcess()),
                                              m.library_name().get(),
@@ -74,7 +74,7 @@ CrashReporterParent::~CrashReporterParent()
 
 void
 CrashReporterParent::SetChildData(const NativeThreadId& tid,
-                                  const PRUint32& processType)
+                                  const uint32_t& processType)
 {
     mInitialized = true;
     mMainThread = tid;

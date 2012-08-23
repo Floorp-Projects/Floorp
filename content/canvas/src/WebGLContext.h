@@ -483,14 +483,14 @@ public:
     NS_DECL_NSITIMERCALLBACK
 
     // nsICanvasRenderingContextInternal
-    NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
-    NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, PRInt32 width, PRInt32 height)
+    NS_IMETHOD SetDimensions(int32_t width, int32_t height);
+    NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, int32_t width, int32_t height)
         { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Reset()
         { /* (InitializeWithSurface) */ return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Render(gfxContext *ctx,
                       gfxPattern::GraphicsFilter f,
-                      PRUint32 aFlags = RenderFlagPremultAlpha);
+                      uint32_t aFlags = RenderFlagPremultAlpha);
     NS_IMETHOD GetInputStream(const char* aMimeType,
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
@@ -504,10 +504,10 @@ public:
     NS_IMETHOD SetIsIPC(bool b) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Redraw(const gfxRect&) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Swap(mozilla::ipc::Shmem& aBack,
-                    PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
+                    int32_t x, int32_t y, int32_t w, int32_t h)
                     { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD Swap(PRUint32 nativeID,
-                    PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
+    NS_IMETHOD Swap(uint32_t nativeID,
+                    int32_t x, int32_t y, int32_t w, int32_t h)
                     { return NS_ERROR_NOT_IMPLEMENTED; }
 
     bool LoseContext();

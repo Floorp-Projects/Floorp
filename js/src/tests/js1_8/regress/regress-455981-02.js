@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'SyntaxError: duplicate argument is mixed with destructuring pattern';
+  expect = 'SyntaxError: duplicate argument names not allowed in this context';
 
   try
   {

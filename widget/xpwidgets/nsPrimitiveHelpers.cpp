@@ -47,7 +47,7 @@
 //
 void
 nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, 
-                                                 PRUint32 aDataLen, nsISupports** aPrimitive )
+                                                 uint32_t aDataLen, nsISupports** aPrimitive )
 {
   if ( !aPrimitive )
     return;
@@ -96,7 +96,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
 //
 void
 nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, 
-                                                   void** aDataBuff, PRUint32 aDataLen )
+                                                   void** aDataBuff, uint32_t aDataLen )
 {
   if ( !aDataBuff )
     return;
@@ -132,8 +132,8 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
 // but its length parameter, |outPlainTextLen|, does not reflect that.
 //
 nsresult
-nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, PRInt32 inUnicodeLen, 
-                                                            char** outPlainTextData, PRInt32* outPlainTextLen )
+nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, int32_t inUnicodeLen, 
+                                                            char** outPlainTextData, int32_t* outPlainTextLen )
 {
   if ( !outPlainTextData || !outPlainTextLen )
     return NS_ERROR_INVALID_ARG;
@@ -177,8 +177,8 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
 // the length of the string in characters, not bytes.
 //
 nsresult
-nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PRInt32 inTextLen, 
-                                                            PRUnichar** outUnicode, PRInt32* outUnicodeLen )
+nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, int32_t inTextLen, 
+                                                            PRUnichar** outUnicode, int32_t* outUnicodeLen )
 {
   if ( !outUnicode || !outUnicodeLen )
     return NS_ERROR_INVALID_ARG;
@@ -239,7 +239,7 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
 //
 nsresult
 nsLinebreakHelpers :: ConvertPlatformToDOMLinebreaks ( const char* inFlavor, void** ioData, 
-                                                          PRInt32* ioLengthInBytes )
+                                                          int32_t* ioLengthInBytes )
 {
   NS_ASSERTION ( ioData && *ioData && ioLengthInBytes, "Bad Params");
   if ( !(ioData && *ioData && ioLengthInBytes) )
@@ -265,7 +265,7 @@ nsLinebreakHelpers :: ConvertPlatformToDOMLinebreaks ( const char* inFlavor, voi
   else {       
     PRUnichar* buffAsUnichar = reinterpret_cast<PRUnichar*>(*ioData);
     PRUnichar* oldBuffer = buffAsUnichar;
-    PRInt32 newLengthInChars;
+    int32_t newLengthInChars;
     retVal = nsLinebreakConverter::ConvertUnicharLineBreaksInSitu ( &buffAsUnichar, nsLinebreakConverter::eLinebreakAny, 
                                                                      nsLinebreakConverter::eLinebreakContent, 
                                                                      *ioLengthInBytes / sizeof(PRUnichar), &newLengthInChars );

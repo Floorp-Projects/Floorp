@@ -81,8 +81,8 @@ nsPluginTag::nsPluginTag(const char* aName,
                          const char* const* aMimeTypes,
                          const char* const* aMimeDescriptions,
                          const char* const* aExtensions,
-                         PRInt32 aVariants,
-                         PRInt64 aLastModifiedTime,
+                         int32_t aVariants,
+                         int64_t aLastModifiedTime,
                          bool aArgsAreUTF8)
 : mPluginHost(nullptr),
 mName(aName),
@@ -96,7 +96,7 @@ mVersion(aVersion),
 mLastModifiedTime(aLastModifiedTime),
 mFlags(0) // Caller will read in our flags from cache
 {
-  InitMime(aMimeTypes, aMimeDescriptions, aExtensions, static_cast<PRUint32>(aVariants));
+  InitMime(aMimeTypes, aMimeDescriptions, aExtensions, static_cast<uint32_t>(aVariants));
   if (!aArgsAreUTF8)
     EnsureMembersAreUTF8();
 }
@@ -111,13 +111,13 @@ NS_IMPL_ISUPPORTS1(nsPluginTag, nsIPluginTag)
 void nsPluginTag::InitMime(const char* const* aMimeTypes,
                            const char* const* aMimeDescriptions,
                            const char* const* aExtensions,
-                           PRUint32 aVariantCount)
+                           uint32_t aVariantCount)
 {
   if (!aMimeTypes) {
     return;
   }
 
-  for (PRUint32 i = 0; i < aVariantCount; i++) {
+  for (uint32_t i = 0; i < aVariantCount; i++) {
     if (!aMimeTypes[i] || !nsPluginHost::IsTypeWhitelisted(aMimeTypes[i])) {
       continue;
     }
@@ -175,8 +175,8 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
 static nsresult ConvertToUTF8(nsIUnicodeDecoder *aUnicodeDecoder,
                               nsAFlatCString& aString)
 {
-  PRInt32 numberOfBytes = aString.Length();
-  PRInt32 outUnicodeLen;
+  int32_t numberOfBytes = aString.Length();
+  int32_t outUnicodeLen;
   nsAutoString buffer;
   nsresult rv = aUnicodeDecoder->GetMaxLength(aString.get(), numberOfBytes,
                                               &outUnicodeLen);
@@ -230,7 +230,7 @@ nsresult nsPluginTag::EnsureMembersAreUTF8()
     
     ConvertToUTF8(decoder, mName);
     ConvertToUTF8(decoder, mDescription);
-    for (PRUint32 i = 0; i < mMimeDescriptions.Length(); ++i) {
+    for (uint32_t i = 0; i < mMimeDescriptions.Length(); ++i) {
       ConvertToUTF8(decoder, mMimeDescriptions[i]);
     }
   }
@@ -344,7 +344,7 @@ nsPluginTag::SetClicktoplay(bool aClicktoplay)
   return NS_OK;
 }
 
-void nsPluginTag::Mark(PRUint32 mask)
+void nsPluginTag::Mark(uint32_t mask)
 {
   bool wasEnabled = IsEnabled();
   mFlags |= mask;
@@ -354,7 +354,7 @@ void nsPluginTag::Mark(PRUint32 mask)
   }
 }
 
-void nsPluginTag::UnMark(PRUint32 mask)
+void nsPluginTag::UnMark(uint32_t mask)
 {
   bool wasEnabled = IsEnabled();
   mFlags &= ~mask;
@@ -364,12 +364,12 @@ void nsPluginTag::UnMark(PRUint32 mask)
   }
 }
 
-bool nsPluginTag::HasFlag(PRUint32 flag)
+bool nsPluginTag::HasFlag(uint32_t flag)
 {
   return (mFlags & flag) != 0;
 }
 
-PRUint32 nsPluginTag::Flags()
+uint32_t nsPluginTag::Flags()
 {
   return mFlags;
 }
@@ -389,7 +389,7 @@ nsPluginTag::HasSameNameAndMimes(const nsPluginTag *aPluginTag) const
     return false;
   }
 
-  for (PRUint32 i = 0; i < mMimeTypes.Length(); i++) {
+  for (uint32_t i = 0; i < mMimeTypes.Length(); i++) {
     if (!mMimeTypes[i].Equals(aPluginTag->mMimeTypes[i])) {
       return false;
     }
