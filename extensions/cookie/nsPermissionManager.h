@@ -154,7 +154,7 @@ public:
     eNotify
   };
 
-  nsresult AddInternal(const nsAFlatCString &aHost,
+  nsresult AddInternal(nsIPrincipal* aPrincipal,
                        const nsAFlatCString &aType,
                        uint32_t aPermission,
                        int64_t aID,
@@ -172,7 +172,7 @@ private:
                             uint32_t              aType,
                             bool                  aExactHostMatch);
 
-  nsresult CommonTestPermission(nsIURI     *aURI,
+  nsresult CommonTestPermission(nsIPrincipal* aPrincipal,
                                 const char *aType,
                                 uint32_t   *aPermission,
                                 bool        aExactHostMatch);
