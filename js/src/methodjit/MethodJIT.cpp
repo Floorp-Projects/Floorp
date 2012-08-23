@@ -21,6 +21,7 @@
 #include "jsscope.h"
 #include "ion/Ion.h"
 #include "ion/IonCompartment.h"
+#include "methodjit/Retcon.h"
 
 #include "jsgcinlines.h"
 #include "jsinterpinlines.h"
@@ -1507,6 +1508,16 @@ JSScript::ReleaseCode(FreeOp *fop, JITScriptHandle *jith)
         jit->destroy(fop);
         fop->free_(jit);
         jith->setEmpty();
+    }
+}
+
+void
+mjit::ReleaseScriptCodeFromVM(JSContext *cx, JSScript *script)
+{
+    if (script->hasMJITInfo()) {
+        ExpandInlineFrames(cx->compartment);
+        Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
+        ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
     }
 }
 

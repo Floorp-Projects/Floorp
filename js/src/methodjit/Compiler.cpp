@@ -51,12 +51,6 @@ using namespace js::analyze;
             return retval;                                      \
     JS_END_MACRO
 
-/*
- * Number of times a script must be called or had a backedge before we try to
- * inline its calls. This number should match IonMonkey's usesBeforeCompile.
- */
-static const size_t USES_BEFORE_INLINING = 10240;
-
 mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
                          unsigned chunkIndex, bool isConstructing)
   : BaseCompiler(cx),
@@ -104,12 +98,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
     gcNumber(cx->runtime->gcNumber),
     pcLengths(NULL)
 {
-    /* Once a script starts getting really hot we will inline calls in it. */
-    if (!debugMode() && cx->typeInferenceEnabled() && globalObj &&
-        (outerScript->getUseCount() >= USES_BEFORE_INLINING ||
-         cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS))) {
-        inlining_ = true;
-    }
 }
 
 CompileStatus
@@ -961,6 +949,11 @@ IonGetsFirstChance(JSContext *cx, JSScript *script, CompileRequest request)
     if (script->hasIonScript() && script->ion->bailoutExpected())
         return false;
 
+    // If ion compilation is pending or in progress on another thread, continue
+    // using JM until that compilation finishes.
+    if (script->ion == ION_COMPILING_SCRIPT)
+        return false;
+
     return true;
 #endif
     return false;
@@ -1035,19 +1028,6 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
 
     unsigned chunkIndex = jit->chunkIndex(pc);
     ChunkDescriptor &desc = jit->chunkDescriptor(chunkIndex);
-
-    if (jit->mustDestroyEntryChunk) {
-        // We kept this chunk around so that Ion can get info from its caches.
-        // If we end up here, we decided not to use Ion so we can destroy the
-        // chunk now.
-        JS_ASSERT(jit->nchunks == 1);
-        jit->mustDestroyEntryChunk = false;
-
-        if (desc.chunk) {
-            jit->destroyChunk(cx->runtime->defaultFreeOp(), chunkIndex, /* resetUses = */ false);
-            return Compile_Skipped;
-        }
-    }
 
     if (desc.chunk)
         return Compile_Okay;
@@ -1230,7 +1210,7 @@ mjit::Compiler::generatePrologue()
 
     CompileStatus status = methodEntryHelper();
     if (status == Compile_Okay)
-        recompileCheckHelper();
+        ionCompileHelper();
 
     return status;
 }
@@ -3269,7 +3249,7 @@ mjit::Compiler::generateMethod()
             // Insert the recompile check here so that we can immediately
             // enter Ion.
             if (loop)
-                recompileCheckHelper();
+                ionCompileHelper();
           END_CASE(JSOP_LOOPENTRY)
 
           BEGIN_CASE(JSOP_DEBUGGER)
@@ -3971,56 +3951,61 @@ MaybeIonCompileable(JSContext *cx, JSScript *script, bool *recompileCheckForIon)
     return false;
 }
 
-void
-mjit::Compiler::recompileCheckHelper()
-{
-    if (inlining() || debugMode() || !globalObj || !cx->typeInferenceEnabled())
-        return;
-
-    bool recompileCheckForIon = true;
-    bool maybeIonCompileable = MaybeIonCompileable(cx, outerScript, &recompileCheckForIon);
-    bool hasFunctionCalls = analysis->hasFunctionCalls();
-
-    // Insert a recompile check if either:
-    // 1) IonMonkey is enabled, to optimize the function when it becomes hot.
-    // 2) The script contains function calls JM can inline.
-    if (!maybeIonCompileable && !hasFunctionCalls)
-        return;
-
-    uint32_t minUses = USES_BEFORE_INLINING;
-
 #ifdef JS_ION
-    if (recompileCheckForIon)
-        minUses = ion::UsesBeforeIonRecompile(outerScript, PC);
-#endif
-
-    uint32_t *addr = script->addressOfUseCount();
-    masm.add32(Imm32(1), AbsoluteAddress(addr));
-
-    // If there are no function calls, and we don't want to do a recompileCheck for
-    // Ion, then this just needs to increment the useCount so that we know when to
-    // recompile this function from an Ion call.  No need to call out to recompiler
-    // stub.
-    if (!hasFunctionCalls && !recompileCheckForIon)
+void
+mjit::Compiler::ionCompileHelper()
+{
+    if (debugMode() || !globalObj || !cx->typeInferenceEnabled())
         return;
 
+    bool recompileCheckForIon = false;
+    if (!MaybeIonCompileable(cx, outerScript, &recompileCheckForIon))
+        return;
+
+    uint32_t minUses = ion::UsesBeforeIonRecompile(outerScript, PC);
+
+    uint32_t *useCountAddress = script->addressOfUseCount();
+    masm.add32(Imm32(1), AbsoluteAddress(useCountAddress));
+
+    // If we don't want to do a recompileCheck for Ion, then this just needs to
+    // increment the useCount so that we know when to recompile this function
+    // from an Ion call.  No need to call out to recompiler stub.
+    if (!recompileCheckForIon)
+        return;
+
+    void *ionScriptAddress = &script->ion;
+
+    // Trigger ion compilation if (a) the script has been used enough times for
+    // this opcode, and (b) the script does not already have ion information
+    // (whether successful, failed, or in progress off thread compilation).
 #if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
-    Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, AbsoluteAddress(addr),
-                              Imm32(minUses));
+    Jump first = masm.branch32(Assembler::LessThan, AbsoluteAddress(useCountAddress),
+                               Imm32(minUses));
+    Jump second = masm.branch32(Assembler::Equal, AbsoluteAddress(ionScriptAddress),
+                                Imm32(0));
 #else
     /* Handle processors that can't load from absolute addresses. */
     RegisterID reg = frame.allocReg();
-    masm.move(ImmPtr(addr), reg);
-    Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, Address(reg, 0),
-                              Imm32(minUses));
+    masm.move(ImmPtr(useCountAddress), reg);
+    Jump first = masm.branch32(Assembler::LessThan, Address(reg), Imm32(minUses));
+    masm.move(ImmPtr(ionScriptAddress), reg);
+    Jump second = masm.branchPtr(Assembler::Equal, Address(reg), ImmPtr(NULL));
     frame.freeReg(reg);
 #endif
-    stubcc.linkExit(jump, Uses(0));
+    first.linkTo(masm.label(), &masm);
+
+    stubcc.linkExit(second, Uses(0));
     stubcc.leave();
 
-    OOL_STUBCALL(stubs::RecompileForInline, REJOIN_RESUME);
+    OOL_STUBCALL(stubs::TriggerIonCompile, REJOIN_RESUME);
     stubcc.rejoin(Changes(0));
 }
+#else /* JS_ION */
+void
+mjit::Compiler::ionCompileHelper()
+{
+}
+#endif /* JS_ION */
 
 CompileStatus
 mjit::Compiler::methodEntryHelper()

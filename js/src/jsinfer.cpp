@@ -20,6 +20,7 @@
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jsiter.h"
+#include "jsworkers.h"
 
 #include "ion/Ion.h"
 #include "ion/IonCompartment.h"
@@ -2253,6 +2254,9 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
     if (co->pendingRecompilation)
         return;
 
+    if (co->isValid())
+        CancelOffThreadIonCompile(cx->compartment, co->script);
+
     if (!co->isValid()) {
         JS_ASSERT(co->script == NULL);
         return;
@@ -2319,6 +2323,8 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode
     }
 
 # ifdef JS_ION
+    CancelOffThreadIonCompile(cx->compartment, script);
+
     if (script->hasIonScript())
         addPendingRecompile(cx, script->ionScript()->recompileInfo());
 # endif
@@ -5849,7 +5855,6 @@ TypeCompartment::sweep(FreeOp *fop)
 void
 TypeCompartment::sweepCompilerOutputs(FreeOp *fop)
 {
-
     if (constrainedOutputs) {
         bool isCompiling = compiledInfo.outputIndex != RecompileInfo::NoCompilerRunning;
         if (isCompiling && !compartment()->activeAnalysis)
@@ -5860,6 +5865,7 @@ TypeCompartment::sweepCompilerOutputs(FreeOp *fop)
                 JS_ASSERT(!co.isValid());
             }
 #endif
+
             fop->delete_(constrainedOutputs);
             constrainedOutputs = NULL;
         } else {
@@ -5868,14 +5874,12 @@ TypeCompartment::sweepCompilerOutputs(FreeOp *fop)
             // potentially created multiple types with this index.  Instead, we
             // invalidate all compilations except the one running now.
             size_t len = constrainedOutputs->length();
-            if (isCompiling) {
-                len--;
-                JS_ASSERT(compiledInfo.outputIndex == len);
-            }
             for (unsigned i = 0; i < len; i++) {
-                CompilerOutput &co = (*constrainedOutputs)[i];
-                JS_ASSERT(!co.isValid());
-                co.invalidate();
+                if (i != compiledInfo.outputIndex) {
+                    CompilerOutput &co = (*constrainedOutputs)[i];
+                    JS_ASSERT(!co.isValid());
+                    co.invalidate();
+                }
             }
         }
     }

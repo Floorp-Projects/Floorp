@@ -621,10 +621,9 @@ ion::MarkIonActivations(JSRuntime *rt, JSTracer *trc)
 }
 
 void
-ion::MarkIonCompilerRoots(JSTracer *trc)
+ion::AutoTempAllocatorRooter::trace(JSTracer *trc)
 {
-    JSRuntime *rt = trc->runtime;
-    for (CompilerRootNode *root = rt->ionCompilerRootList; root != NULL; root = root->next)
+    for (CompilerRootNode *root = temp->rootList(); root != NULL; root = root->next)
         gc::MarkGCThingRoot(trc, root->address(), "ion-compiler-root");
 }
 
