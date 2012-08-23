@@ -73,6 +73,14 @@ struct YUVImage {
   Shmem Udata;
   Shmem Vdata;
   nsIntRect picture;
+  /**
+   * An ID meant to tell if the shared buffers are being reference counted
+   * on the content side and making it possible to find the reference counted
+   * object on the content side if needed.
+   * If this ID is zero, it means the data is not reference counted and can 
+   * be recycled right after being sent back to the content side.
+   */
+  uintptr_t imageID;
 };
 
 union SharedImage {

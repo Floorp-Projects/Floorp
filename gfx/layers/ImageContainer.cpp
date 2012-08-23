@@ -139,11 +139,45 @@ ImageContainer::~ImageContainer()
   }
 }
 
+void ImageContainer::CopyPlane(uint8_t *aDst, uint8_t *aSrc,
+                               const gfxIntSize &aSize,
+                               int32_t aSrcStride, int32_t aDstStride,
+                               int32_t aOffset, int32_t aSkip)
+{
+  if (!aOffset && !aSkip && aSrcStride == aDstStride) {
+    // Fast path: planar input.
+    memcpy(aDst, aSrc, aSize.height * aSrcStride);
+  } else {
+    int32_t height = aSize.height;
+    int32_t width = aSize.width;
+    for (int y = 0; y < height; ++y) {
+      uint8_t *src = aSrc + aOffset;
+      uint8_t *dst = aDst;
+      if (!aSkip) {
+        // Fast path: offset only, no per-pixel skip.
+        memcpy(dst, src, width);
+      } else {
+        // Slow path
+        for (int x = 0; x < width; ++x) {
+          *dst++ = *src++;
+          src += aSkip;
+        }
+      }
+      aSrc += aSrcStride;
+      aDst += aDstStride;
+    }
+  }
+}
+
+
 already_AddRefed<Image>
 ImageContainer::CreateImage(const ImageFormat *aFormats,
                             uint32_t aNumFormats)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  if (IsAsync()) {
+    return mImageContainerChild->CreateImage(aFormats, aNumFormats);
+  }
   return mImageFactory->CreateImage(aFormats, aNumFormats, mScaleHint, mRecycleBin);
 }
 
@@ -411,71 +445,39 @@ PlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
   return mRecycleBin->GetBuffer(aSize); 
 }
 
-static void
-CopyPlane(uint8_t *aDst, uint8_t *aSrc,
-          const gfxIntSize &aSize, int32_t aStride,
-          int32_t aOffset, int32_t aSkip)
+void PlanarYCbCrImage::Allocate(Data& aData)
 {
-  if (!aOffset && !aSkip) {
-    // Fast path: planar input.
-    memcpy(aDst, aSrc, aSize.height * aStride);
-  } else {
-    int32_t height = aSize.height;
-    int32_t width = aSize.width;
-    for (int y = 0; y < height; ++y) {
-      uint8_t *src = aSrc + aOffset;
-      uint8_t *dst = aDst;
-      if (!aSkip) {
-        // Fast path: offset only, no per-pixel skip.
-        memcpy(dst, src, width);
-      } else {
-        // Slow path
-        for (int x = 0; x < width; ++x) {
-          *dst++ = *src++;
-          src += aSkip;
-        }
-      }
-      aSrc += aStride;
-      aDst += aStride;
-    }
-  }
-}
-
-void
-PlanarYCbCrImage::CopyData(const Data& aData)
-{
-  mData = aData;
-
   // update buffer size
-  mBufferSize = mData.mCbCrStride * mData.mCbCrSize.height * 2 +
-                mData.mYStride * mData.mYSize.height;
-
+  int bufferSize = aData.mCbCrStride * aData.mCbCrSize.height * 2 +
+                aData.mYStride * aData.mYSize.height;
   // get new buffer
-  mBuffer = AllocateBuffer(mBufferSize); 
-  if (!mBuffer)
+  uint8_t* buffer = AllocateBuffer(bufferSize); 
+  if (!buffer)
     return;
 
-  mData.mYChannel = mBuffer;
-  mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
-  mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
-
-  CopyPlane(mData.mYChannel, aData.mYChannel,
-            mData.mYSize, mData.mYStride,
-            mData.mYOffset, mData.mYSkip);
-  CopyPlane(mData.mCbChannel, aData.mCbChannel,
-            mData.mCbCrSize, mData.mCbCrStride,
-            mData.mCbOffset, mData.mCbSkip);
-  CopyPlane(mData.mCrChannel, aData.mCrChannel,
-            mData.mCbCrSize, mData.mCbCrStride,
-            mData.mCrOffset, mData.mCrSkip);
-
-  mSize = aData.mPicSize;
+  aData.mYChannel = buffer;
+  aData.mCbChannel = aData.mYChannel + aData.mYStride * aData.mYSize.height;
+  aData.mCrChannel = aData.mCbChannel + aData.mCbCrStride * aData.mCbCrSize.height;
+  mBuffer = buffer;
 }
 
 void
 PlanarYCbCrImage::SetData(const Data &aData)
 {
-  CopyData(aData);
+  mData = aData;
+  mBufferSize = mData.mCbCrStride * mData.mCbCrSize.height * 2 +
+                 mData.mYStride * mData.mYSize.height;
+  mSize = mData.mPicSize;
+  // If mBuffer has not been allocated (through Allocate(aData)), allocate it.
+  // This code path is slower than the one used when Allocate has been called
+  // since it will trigger a full copy.
+  if (!mBuffer) {
+    mBuffer = AllocateBuffer(mBufferSize);
+    NS_ASSERTION(mBuffer, "Failed to Allocate!");
+  }
+  if (aData.mYChannel != mBuffer) {
+    memcpy(mBuffer.get(), aData.mYChannel, mBufferSize);
+  }
 }
 
 already_AddRefed<gfxASurface>
