@@ -323,6 +323,7 @@ endif
 
 ifneq (,$(filter arm% sparc %86 x86_64 mips%,$(TARGET_CPU)))
 ENABLE_YARR_JIT = 1
+DEFINES += -DENABLE_YARR_JIT=1
 
 VPATH += 	$(srcdir)/assembler/assembler \
 		$(srcdir)/methodjit \
