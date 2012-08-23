@@ -326,14 +326,6 @@ struct JSObject : public js::ObjectImpl
 
     inline bool isBoundFunction() const;
 
-    /*
-     * The meaning of the system object bit is defined by the API client. It is
-     * set in JS_NewSystemObject and is queried by JS_IsSystemObject, but it
-     * has no intrinsic meaning to SpiderMonkey.
-     */
-    inline bool isSystem() const;
-    inline bool setSystem(JSContext *cx);
-
     inline bool hasSpecialEquality() const;
 
     inline bool watched() const;
