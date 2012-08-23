@@ -74,14 +74,13 @@ DOMSVGPointList::GetDOMWrapper(void *aList,
                                nsSVGElement *aElement,
                                bool aIsAnimValList)
 {
-  DOMSVGPointList *wrapper =
+  nsRefPtr<DOMSVGPointList> wrapper =
     sSVGPointListTearoffTable.GetTearoff(aList);
   if (!wrapper) {
     wrapper = new DOMSVGPointList(aElement, aIsAnimValList);
     sSVGPointListTearoffTable.AddTearoff(aList, wrapper);
   }
-  NS_ADDREF(wrapper);
-  return wrapper;
+  return wrapper.forget();
 }
 
 /* static */ DOMSVGPointList*
