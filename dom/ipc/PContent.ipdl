@@ -192,6 +192,17 @@ child:
 
     PTestShell();
 
+    /**
+     * Tell the content process some attributes of itself.  This is
+     * the first message received by content processes after startup.
+     *
+     * |id| is a unique ID among all subprocesses.  When |isForApp &&
+     * isForBrowser|, we're loading <browser> for an app.  When
+     * |isForBrowser|, we're loading <browser>.  When |!isForApp &&
+     * !isForBrowser|, we're probably loading <xul:browser remote>.
+     */
+    SetProcessAttributes(uint64_t id, bool isForApp, bool isForBrowser);
+
     RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
                    OverrideMapping[] overrides, nsCString locale);
 
@@ -221,8 +232,6 @@ child:
     ActivateA11y();
 
     AppInfo(nsCString version, nsCString buildID);
-
-    SetID(uint64_t id);
 
     // Notify child that last-pb-context-exited notification was observed
     LastPrivateDocShellDestroyed();
