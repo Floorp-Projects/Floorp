@@ -1,11 +1,12 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "base/basictypes.h"
+
 #include "prefapi.h"
 #include "prefapi_private_data.h"
-#include "PrefTuple.h"
 #include "prefread.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -26,6 +27,7 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "prprf.h"
+#include "mozilla/dom/PContent.h"
 #include "nsQuickSort.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
@@ -35,6 +37,8 @@
 #define INCL_DOS
 #include <os2.h>
 #endif
+
+using namespace mozilla;
 
 static void
 clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
@@ -121,6 +125,7 @@ static char *ArenaStrDup(const char* str, PLArenaPool* aArena)
 /*---------------------------------------------------------------------------*/
 
 #define PREF_IS_LOCKED(pref)            ((pref)->flags & PREF_LOCKED)
+#define PREF_HAS_DEFAULT_VALUE(pref)    ((pref)->flags & PREF_HAS_DEFAULT)
 #define PREF_HAS_USER_VALUE(pref)       ((pref)->flags & PREF_USERSET)
 #define PREF_TYPE(pref)                 (PrefType)((pref)->flags & PREF_VALUETYPE_MASK)
 
@@ -271,22 +276,53 @@ PREF_SetBoolPref(const char *pref_name, bool value, bool set_default)
     return pref_HashPref(pref_name, pref, PREF_BOOL, set_default ? kPrefSetDefault : 0);
 }
 
-nsresult
-pref_SetPrefTuple(const PrefTuple &aPref, bool set_default)
+enum WhichValue { DEFAULT_VALUE, USER_VALUE };
+static nsresult
+SetPrefValue(const char* aPrefName, const dom::PrefValue& aValue,
+             WhichValue aWhich)
 {
-    switch (aPref.type) {
-        case PrefTuple::PREF_STRING:
-            return PREF_SetCharPref(aPref.key.get(), aPref.stringVal.get(), set_default);
+    bool setDefault = (aWhich == DEFAULT_VALUE);
+    switch (aValue.type()) {
+    case dom::PrefValue::TnsCString:
+        return PREF_SetCharPref(aPrefName, aValue.get_nsCString().get(),
+                                setDefault);
+    case dom::PrefValue::Tint32_t:
+        return PREF_SetIntPref(aPrefName, aValue.get_int32_t(),
+                               setDefault);
+    case dom::PrefValue::Tbool:
+        return PREF_SetBoolPref(aPrefName, aValue.get_bool(),
+                                setDefault);
+    default:
+        MOZ_NOT_REACHED();
+        return NS_ERROR_FAILURE;
+    }
+}
 
-        case PrefTuple::PREF_INT:
-            return PREF_SetIntPref(aPref.key.get(), aPref.intVal, set_default);
+nsresult
+pref_SetPref(const dom::PrefSetting& aPref)
+{
+    const char* prefName = aPref.name().get();
+    const dom::MaybePrefValue& defaultValue = aPref.defaultValue();
+    const dom::MaybePrefValue& userValue = aPref.userValue();
 
-        case PrefTuple::PREF_BOOL:
-            return PREF_SetBoolPref(aPref.key.get(), aPref.boolVal, set_default);
+    nsresult rv;
+    if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
+        rv = SetPrefValue(prefName, defaultValue.get_PrefValue(), DEFAULT_VALUE);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
     }
 
-    NS_NOTREACHED("Unknown type");
-    return NS_ERROR_INVALID_ARG;
+    if (userValue.type() == dom::MaybePrefValue::TPrefValue) {
+        rv = SetPrefValue(prefName, userValue.get_PrefValue(), USER_VALUE);
+    } else {
+        rv = PREF_ClearUserPref(prefName);      
+    }
+
+    // NB: we should never try to clear a default value, that doesn't
+    // make sense
+
+    return rv;
 }
 
 PLDHashOperator
@@ -348,45 +384,71 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg)
 }
 
 PLDHashOperator
-pref_MirrorPrefs(PLDHashTable *table,
-                 PLDHashEntryHdr *heh,
-                 uint32_t i,
-                 void *arg)
+pref_GetPrefs(PLDHashTable *table,
+              PLDHashEntryHdr *heh,
+              uint32_t i,
+              void *arg)
 {
     if (heh) {
         PrefHashEntry *entry = static_cast<PrefHashEntry *>(heh);
-        PrefTuple *newEntry =
-            static_cast<nsTArray<PrefTuple> *>(arg)->AppendElement();
+        dom::PrefSetting *pref =
+            static_cast<InfallibleTArray<dom::PrefSetting>*>(arg)->AppendElement();
 
-        pref_GetTupleFromEntry(entry, newEntry);
+        pref_GetPrefFromEntry(entry, pref);
     }
     return PL_DHASH_NEXT;
 }
 
-void
-pref_GetTupleFromEntry(PrefHashEntry *aHashEntry, PrefTuple *aTuple)
+static void
+GetPrefValueFromEntry(PrefHashEntry *aHashEntry, dom::PrefSetting* aPref,
+                      WhichValue aWhich)
 {
-    aTuple->key = aHashEntry->key;
-
-    PrefValue *value = PREF_HAS_USER_VALUE(aHashEntry) ?
-        &(aHashEntry->userPref) : &(aHashEntry->defaultPref);
+    PrefValue* value;
+    dom::PrefValue* settingValue;
+    if (aWhich == USER_VALUE) {
+        value = &aHashEntry->userPref;
+        aPref->userValue() = dom::PrefValue();
+        settingValue = &aPref->userValue().get_PrefValue();
+    } else {
+        value = &aHashEntry->defaultPref;
+        aPref->defaultValue() = dom::PrefValue();
+        settingValue = &aPref->defaultValue().get_PrefValue();
+    }
 
     switch (aHashEntry->flags & PREF_VALUETYPE_MASK) {
-        case PREF_STRING:
-            aTuple->stringVal = value->stringVal;
-            aTuple->type = PrefTuple::PREF_STRING;
-            return;
-
-        case PREF_INT:
-            aTuple->intVal = value->intVal;
-            aTuple->type = PrefTuple::PREF_INT;
-            return;
-
-        case PREF_BOOL:
-            aTuple->boolVal = !!value->boolVal;
-            aTuple->type = PrefTuple::PREF_BOOL;
-            return;
+    case PREF_STRING:
+        *settingValue = nsDependentCString(value->stringVal);
+        return;
+    case PREF_INT:
+        *settingValue = value->intVal;
+        return;
+    case PREF_BOOL:
+        *settingValue = !!value->boolVal;
+        return;
+    default:
+        MOZ_NOT_REACHED();
     }
+}
+
+void
+pref_GetPrefFromEntry(PrefHashEntry *aHashEntry, dom::PrefSetting* aPref)
+{
+    aPref->name() = aHashEntry->key;
+    if (PREF_HAS_DEFAULT_VALUE(aHashEntry)) {
+        GetPrefValueFromEntry(aHashEntry, aPref, DEFAULT_VALUE);
+    } else {
+        aPref->defaultValue() = null_t();
+    }
+    if (PREF_HAS_USER_VALUE(aHashEntry)) {
+        GetPrefValueFromEntry(aHashEntry, aPref, USER_VALUE);
+    } else {
+        aPref->userValue() = null_t();
+    }
+
+    MOZ_ASSERT(aPref->defaultValue().type() == dom::MaybePrefValue::Tnull_t ||
+               aPref->userValue().type() == dom::MaybePrefValue::Tnull_t ||
+               (aPref->defaultValue().get_PrefValue().type() ==
+                aPref->userValue().get_PrefValue().type()));
 }
 
 

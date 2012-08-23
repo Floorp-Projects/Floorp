@@ -807,6 +807,8 @@ JSRuntime::JSRuntime()
     gcCallback(NULL),
     gcSliceCallback(NULL),
     gcFinalizeCallback(NULL),
+    analysisPurgeCallback(NULL),
+    analysisPurgeTriggerBytes(0),
     gcMallocBytes(0),
     gcBlackRootsTraceOp(NULL),
     gcBlackRootsData(NULL),
@@ -2678,10 +2680,10 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
                 } else if (fun != obj) {
                     JS_snprintf(buf, bufsize, " %p", fun);
                 } else {
-                    if (fun->atom) {
+                    if (fun->displayAtom()) {
                         *buf++ = ' ';
                         bufsize--;
-                        PutEscapedString(buf, bufsize, fun->atom, 0);
+                        PutEscapedString(buf, bufsize, fun->displayAtom(), 0);
                     }
                 }
             } else if (clasp->flags & JSCLASS_HAS_PRIVATE) {
@@ -3062,6 +3064,9 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
       case JSGC_DYNAMIC_MARK_SLICE:
         rt->gcDynamicMarkSlice = value;
         break;
+      case JSGC_ANALYSIS_PURGE_TRIGGER:
+        rt->analysisPurgeTriggerBytes = value * 1024 * 1024;
+        break;
       default:
         JS_ASSERT(key == JSGC_MODE);
         rt->gcMode = JSGCMode(value);
@@ -3108,6 +3113,8 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return rt->gcDynamicHeapGrowth;
       case JSGC_DYNAMIC_MARK_SLICE:
         return rt->gcDynamicMarkSlice;
+      case JSGC_ANALYSIS_PURGE_TRIGGER:
+        return rt->analysisPurgeTriggerBytes / 1024 / 1024;
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return uint32_t(rt->gcNumber);
@@ -4914,7 +4921,13 @@ JS_GetFunctionObject(JSFunction *fun)
 JS_PUBLIC_API(JSString *)
 JS_GetFunctionId(JSFunction *fun)
 {
-    return fun->atom;
+    return fun->atom();
+}
+
+JS_PUBLIC_API(JSString *)
+JS_GetFunctionDisplayId(JSFunction *fun)
+{
+    return fun->displayAtom();
 }
 
 JS_PUBLIC_API(unsigned)
@@ -7101,7 +7114,8 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
                    "  9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
                    " 10: Incremental GC in multiple slices\n"
                    " 11: Verify post write barriers between instructions\n"
-                   " 12: Verify post write barriers between paints\n");
+                   " 12: Verify post write barriers between paints\n"
+                   " 13: Purge analysis state every F allocations (default: 100)\n");
         }
         const char *p = strchr(env, ',');
         zeal = atoi(env);

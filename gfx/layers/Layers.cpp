@@ -124,6 +124,15 @@ AppendToString(nsACString& s, const nsIntPoint& p,
 }
 
 nsACString&
+AppendToString(nsACString& s, const Point& p,
+               const char* pfx="", const char* sfx="")
+{
+  s += pfx;
+  s += nsPrintfCString("(x=%f, y=%f)", p.x, p.y);
+  return s += sfx;
+}
+
+nsACString&
 AppendToString(nsACString& s, const nsIntRect& r,
                const char* pfx="", const char* sfx="")
 {

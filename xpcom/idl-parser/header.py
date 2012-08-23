@@ -138,6 +138,11 @@ jspubtd_include = """
 #include "jspubtd.h"
 """
 
+infallible_includes = """
+#include "mozilla/Assertions.h"
+#include "mozilla/Util.h"
+"""
+
 header_end = """/* For IDL files that don't want to include root IDL files. */
 #ifndef NS_NO_VTABLE
 #define NS_NO_VTABLE
@@ -169,6 +174,13 @@ def print_header(idl, fd, filename):
 
     if idl.needsJSTypes():
         fd.write(jspubtd_include)
+
+    # Include some extra files if any attributes are infallible.
+    for iface in [p for p in idl.productions if p.kind == 'interface']:
+        for attr in [m for m in iface.members if isinstance(m, xpidl.Attribute)]:
+            if attr.infallible:
+                fd.write(infallible_includes)
+                break
 
     fd.write('\n')
     fd.write(header_end)
@@ -280,6 +292,16 @@ iface_template_epilog = """/* End of implementation class template. */
 
 """
 
+attr_infallible_tmpl = """\
+  inline %(realtype)s%(nativename)s(%(args)s)
+  {
+    %(realtype)sresult;
+    mozilla::DebugOnly<nsresult> rv = %(nativename)s(%(argnames)s&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+"""
+
 def write_interface(iface, fd):
     if iface.namemap is None:
         raise Exception("Interface was not resolved.")
@@ -310,6 +332,13 @@ def write_interface(iface, fd):
         fd.write("  /* %s */\n" % a.toIDL());
 
         fd.write("  %s = 0;\n" % attributeAsNative(a, True))
+        if a.infallible:
+            fd.write(attr_infallible_tmpl %
+                     {'realtype': a.realtype.nativeType('in'),
+                      'nativename': attributeNativeName(a, getter=True),
+                      'args': '' if not a.implicit_jscontext else 'JSContext* cx',
+                      'argnames': '' if not a.implicit_jscontext else 'cx, '})
+
         if not a.readonly:
             fd.write("  %s = 0;\n" % attributeAsNative(a, False))
         fd.write("\n")

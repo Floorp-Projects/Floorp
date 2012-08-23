@@ -1820,6 +1820,8 @@ ASTSerializer::statements(ParseNode *pn, NodeVector &elts)
         return false;
 
     for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
+        JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
+
         Value elt;
         if (!sourceElement(next, &elt))
             return false;
@@ -1836,6 +1838,8 @@ ASTSerializer::expressions(ParseNode *pn, NodeVector &elts)
         return false;
 
     for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
+        JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
+
         Value elt;
         if (!expression(next, &elt))
             return false;
@@ -1852,6 +1856,8 @@ ASTSerializer::xmls(ParseNode *pn, NodeVector &elts)
         return false;
 
     for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
+        JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
+
         Value elt;
         if (!xml(next, &elt))
             return false;
@@ -1953,10 +1959,13 @@ ASTSerializer::variableDeclarator(ParseNode *pn, VarDeclKind *pkind, Value *dst)
     if (pn->isKind(PNK_NAME)) {
         pnleft = pn;
         pnright = pn->isUsed() ? NULL : pn->pn_expr;
+        JS_ASSERT_IF(pnright, pn->pn_pos.encloses(pnright->pn_pos));
     } else {
         JS_ASSERT(pn->isKind(PNK_ASSIGN));
         pnleft = pn->pn_left;
         pnright = pn->pn_right;
+        JS_ASSERT(pn->pn_pos.encloses(pnleft->pn_pos));
+        JS_ASSERT(pn->pn_pos.encloses(pnright->pn_pos));
     }
 
     Value left, right;
@@ -1968,6 +1977,9 @@ ASTSerializer::variableDeclarator(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 bool
 ASTSerializer::let(ParseNode *pn, bool expr, Value *dst)
 {
+    JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+    JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
     ParseNode *letHead = pn->pn_left;
     LOCAL_ASSERT(letHead->isArity(PN_LIST));
 
@@ -2002,6 +2014,9 @@ ASTSerializer::let(ParseNode *pn, bool expr, Value *dst)
 bool
 ASTSerializer::switchCase(ParseNode *pn, Value *dst)
 {
+    JS_ASSERT_IF(pn->pn_left, pn->pn_pos.encloses(pn->pn_left->pn_pos));
+    JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
     NodeVector stmts(cx);
 
     Value expr;
@@ -2014,6 +2029,9 @@ ASTSerializer::switchCase(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::switchStatement(ParseNode *pn, Value *dst)
 {
+    JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+    JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
     Value disc;
 
     if (!expression(pn->pn_left, &disc))
@@ -2050,6 +2068,10 @@ ASTSerializer::switchStatement(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::catchClause(ParseNode *pn, Value *dst)
 {
+    JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
+    JS_ASSERT_IF(pn->pn_kid2, pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
+    JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid3->pn_pos));
+
     Value var, guard, body;
 
     return pattern(pn->pn_kid1, NULL, &var) &&
@@ -2061,6 +2083,10 @@ ASTSerializer::catchClause(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::tryStatement(ParseNode *pn, Value *dst)
 {
+    JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
+    JS_ASSERT_IF(pn->pn_kid2, pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
+    JS_ASSERT_IF(pn->pn_kid3, pn->pn_pos.encloses(pn->pn_kid3->pn_pos));
+
     Value body;
     if (!statement(pn->pn_kid1, &body))
         return false;
@@ -2147,6 +2173,10 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 
       case PNK_IF:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
+        JS_ASSERT_IF(pn->pn_kid3, pn->pn_pos.encloses(pn->pn_kid3->pn_pos));
+
         Value test, cons, alt;
 
         return expression(pn->pn_kid1, &test) &&
@@ -2164,6 +2194,9 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
       case PNK_WITH:
       case PNK_WHILE:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
         Value expr, stmt;
 
         return expression(pn->pn_left, &expr) &&
@@ -2175,6 +2208,9 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 
       case PNK_DOWHILE:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
         Value stmt, test;
 
         return statement(pn->pn_left, &stmt) &&
@@ -2184,7 +2220,14 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 
       case PNK_FOR:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
         ParseNode *head = pn->pn_left;
+
+        JS_ASSERT_IF(head->pn_kid1, head->pn_pos.encloses(head->pn_kid1->pn_pos));
+        JS_ASSERT_IF(head->pn_kid2, head->pn_pos.encloses(head->pn_kid2->pn_pos));
+        JS_ASSERT_IF(head->pn_kid3, head->pn_pos.encloses(head->pn_kid3->pn_pos));
 
         Value stmt;
         if (!statement(pn->pn_right, &stmt))
@@ -2243,6 +2286,8 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 
       case PNK_COLON:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
+
         Value label, stmt;
 
         return identifier(pn->pn_atom, NULL, &label) &&
@@ -2253,6 +2298,8 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
       case PNK_THROW:
       case PNK_RETURN:
       {
+        JS_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+
         Value arg;
 
         return optExpression(pn->pn_kid, &arg) &&
@@ -2267,6 +2314,8 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 #if JS_HAS_XML_SUPPORT
       case PNK_DEFXMLNS:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+
         LOCAL_ASSERT(pn->isArity(PN_UNARY));
 
         Value ns;
@@ -2423,6 +2472,10 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
       case PNK_CONDITIONAL:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid3->pn_pos));
+
         Value test, cons, alt;
 
         return expression(pn->pn_kid1, &test) &&
@@ -2435,6 +2488,9 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case PNK_AND:
       {
         if (pn->isArity(PN_BINARY)) {
+            JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+            JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
             Value left, right;
             return expression(pn->pn_left, &left) &&
                    expression(pn->pn_right, &right) &&
@@ -2446,6 +2502,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case PNK_PREINCREMENT:
       case PNK_PREDECREMENT:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+
         bool inc = pn->isKind(PNK_PREINCREMENT);
         Value expr;
         return expression(pn->pn_kid, &expr) &&
@@ -2455,6 +2513,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case PNK_POSTINCREMENT:
       case PNK_POSTDECREMENT:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+
         bool inc = pn->isKind(PNK_POSTINCREMENT);
         Value expr;
         return expression(pn->pn_kid, &expr) &&
@@ -2474,6 +2534,9 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
         AssignmentOperator op = aop(pn->getOp());
         LOCAL_ASSERT(op > AOP_ERR && op < AOP_LIMIT);
 
@@ -2506,6 +2569,9 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case PNK_INSTANCEOF:
       case PNK_DBLDOT:
         if (pn->isArity(PN_BINARY)) {
+            JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+            JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
             BinaryOperator op = binop(pn->getKind(), pn->getOp());
             LOCAL_ASSERT(op > BINOP_ERR && op < BINOP_LIMIT);
 
@@ -2523,6 +2589,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case PNK_BITNOT:
       case PNK_POS:
       case PNK_NEG: {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+
         UnaryOperator op = unop(pn->getKind(), pn->getOp());
         LOCAL_ASSERT(op > UNOP_ERR && op < UNOP_LIMIT);
 
@@ -2540,6 +2608,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 #endif
 
         ParseNode *next = pn->pn_head;
+        JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
         Value callee;
         if (!expression(next, &callee))
@@ -2550,6 +2619,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
             return false;
 
         for (next = next->pn_next; next; next = next->pn_next) {
+            JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
+
             Value arg;
             if (!expression(next, &arg))
                 return false;
@@ -2564,6 +2635,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
       case PNK_DOT:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
+
         Value expr, id;
         return expression(pn->pn_expr, &expr) &&
                identifier(pn->pn_atom, NULL, &id) &&
@@ -2572,6 +2645,9 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
       case PNK_LB:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
         Value left, right;
         return expression(pn->pn_left, &left) &&
                expression(pn->pn_right, &right) &&
@@ -2585,6 +2661,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
             return false;
 
         for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
+            JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
+
             if (next->isKind(PNK_COMMA)) {
                 elts.infallibleAppend(MagicValue(JS_SERIALIZE_NO_NODE));
             } else {
@@ -2617,6 +2695,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
             return false;
 
         for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
+            JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
+
             Value prop;
             if (!property(next, &prop))
                 return false;
@@ -2642,12 +2722,16 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
       case PNK_YIELD:
       {
+        JS_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+
         Value arg;
         return optExpression(pn->pn_kid, &arg) &&
                builder.yieldExpression(arg, &pn->pn_pos, dst);
       }
 
       case PNK_ARRAYCOMP:
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_head->pn_pos));
+
         /* NB: it's no longer the case that pn_count could be 2. */
         LOCAL_ASSERT(pn->pn_count == 1);
         LOCAL_ASSERT(pn->pn_head->isKind(PNK_LEXICALSCOPE));
@@ -2677,12 +2761,17 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         bool computed;
 
         if (pn->isArity(PN_BINARY)) {
+            JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+            JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
             computed = true;
             pnleft = pn->pn_left;
             if (!expression(pn->pn_right, &right))
                 return false;
         } else {
             JS_ASSERT(pn->isArity(PN_NAME));
+            JS_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
+
             computed = false;
             pnleft = pn->pn_expr;
             if (!identifier(pn->pn_atom, NULL, &right))
@@ -2699,6 +2788,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
       case PNK_AT:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+
         Value expr;
         ParseNode *kid = pn->pn_kid;
         bool computed = ((!kid->isKind(PNK_NAME) || !kid->isOp(JSOP_QNAMEPART)) &&
@@ -2710,6 +2801,9 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
       case PNK_FILTER:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
         Value left, right;
         return expression(pn->pn_left, &left) &&
                expression(pn->pn_right, &right) &&
@@ -2734,6 +2828,8 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
 #if JS_HAS_XML_SUPPORT
       case PNK_XMLCURLYEXPR:
       {
+        JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+
         Value expr;
         return expression(pn->pn_kid, &expr) &&
                builder.xmlEscapeExpression(expr, &pn->pn_pos, dst);
@@ -3009,7 +3105,7 @@ ASTSerializer::function(ParseNode *pn, ASTType type, Value *dst)
 #endif
 
     Value id;
-    if (!optIdentifier(func->atom, NULL, &id))
+    if (!optIdentifier(func->atom(), NULL, &id))
         return false;
 
     NodeVector args(cx);

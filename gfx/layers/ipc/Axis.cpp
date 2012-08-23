@@ -23,13 +23,13 @@ static const float MAX_EVENT_ACCELERATION = 0.5f;
 /**
  * Amount of friction applied during flings.
  */
-static const float FLING_FRICTION = 0.013f;
+static const float FLING_FRICTION = 0.007f;
 
 /**
  * Threshold for velocity beneath which we turn off any acceleration we had
  * during repeated flings.
  */
-static const float VELOCITY_THRESHOLD = 0.1f;
+static const float VELOCITY_THRESHOLD = 0.14f;
 
 /**
  * Amount of acceleration we multiply in each time the user flings in one
@@ -94,10 +94,10 @@ void Axis::StartTouch(int32_t aPos) {
   mLockPanning = false;
 }
 
-int32_t Axis::GetDisplacementForDuration(float aScale, const TimeDuration& aDelta) {
+float Axis::GetDisplacementForDuration(float aScale, const TimeDuration& aDelta) {
   float velocityFactor = powf(ACCELERATION_MULTIPLIER,
                               NS_MAX(0, (mAcceleration - 4) * 3));
-  int32_t displacement = NS_lround(mVelocity * aScale * aDelta.ToMilliseconds() * velocityFactor);
+  float displacement = mVelocity * aScale * aDelta.ToMilliseconds() * velocityFactor;
   // If this displacement will cause an overscroll, throttle it. Can potentially
   // bring it to 0 even if the velocity is high.
   if (DisplacementWillOverscroll(displacement) != OVERSCROLL_NONE) {
@@ -158,7 +158,7 @@ Axis::Overscroll Axis::GetOverscroll() {
   return OVERSCROLL_NONE;
 }
 
-int32_t Axis::GetExcess() {
+float Axis::GetExcess() {
   switch (GetOverscroll()) {
   case OVERSCROLL_MINUS: return GetOrigin() - GetPageStart();
   case OVERSCROLL_PLUS: return GetViewportEnd() - GetPageEnd();
@@ -186,7 +186,7 @@ Axis::Overscroll Axis::DisplacementWillOverscroll(int32_t aDisplacement) {
   return OVERSCROLL_NONE;
 }
 
-int32_t Axis::DisplacementWillOverscrollAmount(int32_t aDisplacement) {
+float Axis::DisplacementWillOverscrollAmount(int32_t aDisplacement) {
   switch (DisplacementWillOverscroll(aDisplacement)) {
   case OVERSCROLL_MINUS: return (GetOrigin() + aDisplacement) - GetPageStart();
   case OVERSCROLL_PLUS: return (GetViewportEnd() + aDisplacement) - GetPageEnd();
@@ -197,11 +197,11 @@ int32_t Axis::DisplacementWillOverscrollAmount(int32_t aDisplacement) {
 }
 
 Axis::Overscroll Axis::ScaleWillOverscroll(float aScale, int32_t aFocus) {
-  int32_t originAfterScale = NS_lround((GetOrigin() + aFocus) * aScale - aFocus);
+  float originAfterScale = (GetOrigin() + aFocus) * aScale - aFocus;
 
   bool both = ScaleWillOverscrollBothSides(aScale);
-  bool minus = originAfterScale < NS_lround(GetPageStart() * aScale);
-  bool plus = (originAfterScale + GetViewportLength()) > NS_lround(GetPageEnd() * aScale);
+  bool minus = originAfterScale < GetPageStart() * aScale;
+  bool plus = (originAfterScale + GetViewportLength()) > GetPageEnd() * aScale;
 
   if ((minus && plus) || both) {
     return OVERSCROLL_BOTH;
@@ -215,11 +215,11 @@ Axis::Overscroll Axis::ScaleWillOverscroll(float aScale, int32_t aFocus) {
   return OVERSCROLL_NONE;
 }
 
-int32_t Axis::ScaleWillOverscrollAmount(float aScale, int32_t aFocus) {
-  int32_t originAfterScale = NS_lround((GetOrigin() + aFocus) * aScale - aFocus);
+float Axis::ScaleWillOverscrollAmount(float aScale, int32_t aFocus) {
+  float originAfterScale = (GetOrigin() + aFocus) * aScale - aFocus;
   switch (ScaleWillOverscroll(aScale, aFocus)) {
-  case OVERSCROLL_MINUS: return originAfterScale - NS_lround(GetPageStart() * aScale);
-  case OVERSCROLL_PLUS: return (originAfterScale + GetViewportLength()) - NS_lround(GetPageEnd() * aScale);
+  case OVERSCROLL_MINUS: return originAfterScale - GetPageStart() * aScale;
+  case OVERSCROLL_PLUS: return (originAfterScale + GetViewportLength()) - GetPageEnd() * aScale;
   // Don't handle OVERSCROLL_BOTH. Client code is expected to deal with it.
   default: return 0;
   }
@@ -229,32 +229,32 @@ float Axis::GetVelocity() {
   return mVelocity;
 }
 
-int32_t Axis::GetViewportEnd() {
+float Axis::GetViewportEnd() {
   return GetOrigin() + GetViewportLength();
 }
 
-int32_t Axis::GetPageEnd() {
+float Axis::GetPageEnd() {
   return GetPageStart() + GetPageLength();
 }
 
-int32_t Axis::GetOrigin() {
-  nsIntPoint origin = mAsyncPanZoomController->GetFrameMetrics().mViewportScrollOffset;
+float Axis::GetOrigin() {
+  gfx::Point origin = mAsyncPanZoomController->GetFrameMetrics().mViewportScrollOffset;
   return GetPointOffset(origin);
 }
 
-int32_t Axis::GetViewportLength() {
+float Axis::GetViewportLength() {
   nsIntRect viewport = mAsyncPanZoomController->GetFrameMetrics().mViewport;
   gfx::Rect scaledViewport = gfx::Rect(viewport.x, viewport.y, viewport.width, viewport.height);
   scaledViewport.ScaleRoundIn(1 / mAsyncPanZoomController->GetFrameMetrics().mResolution.width);
   return GetRectLength(scaledViewport);
 }
 
-int32_t Axis::GetPageStart() {
+float Axis::GetPageStart() {
   gfx::Rect pageRect = mAsyncPanZoomController->GetFrameMetrics().mCSSContentRect;
   return GetRectOffset(pageRect);
 }
 
-int32_t Axis::GetPageLength() {
+float Axis::GetPageLength() {
   gfx::Rect pageRect = mAsyncPanZoomController->GetFrameMetrics().mCSSContentRect;
   return GetRectLength(pageRect);
 }
@@ -280,19 +280,19 @@ AxisX::AxisX(AsyncPanZoomController* aAsyncPanZoomController)
 
 }
 
-int32_t AxisX::GetPointOffset(const nsIntPoint& aPoint)
+float AxisX::GetPointOffset(const gfx::Point& aPoint)
 {
   return aPoint.x;
 }
 
-int32_t AxisX::GetRectLength(const gfx::Rect& aRect)
+float AxisX::GetRectLength(const gfx::Rect& aRect)
 {
-  return NS_lround(aRect.width);
+  return aRect.width;
 }
 
-int32_t AxisX::GetRectOffset(const gfx::Rect& aRect)
+float AxisX::GetRectOffset(const gfx::Rect& aRect)
 {
-  return NS_lround(aRect.x);
+  return aRect.x;
 }
 
 AxisY::AxisY(AsyncPanZoomController* aAsyncPanZoomController)
@@ -301,19 +301,19 @@ AxisY::AxisY(AsyncPanZoomController* aAsyncPanZoomController)
 
 }
 
-int32_t AxisY::GetPointOffset(const nsIntPoint& aPoint)
+float AxisY::GetPointOffset(const gfx::Point& aPoint)
 {
   return aPoint.y;
 }
 
-int32_t AxisY::GetRectLength(const gfx::Rect& aRect)
+float AxisY::GetRectLength(const gfx::Rect& aRect)
 {
-  return NS_lround(aRect.height);
+  return aRect.height;
 }
 
-int32_t AxisY::GetRectOffset(const gfx::Rect& aRect)
+float AxisY::GetRectOffset(const gfx::Rect& aRect)
 {
-  return NS_lround(aRect.y);
+  return aRect.y;
 }
 
 }

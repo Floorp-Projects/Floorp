@@ -147,6 +147,7 @@ static bool sCCLockedOut;
 static PRTime sCCLockedOutTime;
 
 static js::GCSliceCallback sPrevGCSliceCallback;
+static js::AnalysisPurgeCallback sPrevAnalysisPurgeCallback;
 
 // The number of currently pending document loads. This count isn't
 // guaranteed to always reflect reality and can't easily as we don't
@@ -198,6 +199,17 @@ static nsIScriptSecurityManager *sSecurityManager;
 // the appropriate pref is set.
 
 static bool sGCOnMemoryPressure;
+
+static PRTime
+GetCollectionTimeDelta()
+{
+  PRTime now = PR_Now();
+  if (sFirstCollectionTime) {
+    return now - sFirstCollectionTime;
+  }
+  sFirstCollectionTime = now;
+  return 0;
+}
 
 class nsMemoryPressureObserver MOZ_FINAL : public nsIObserver
 {
@@ -3117,12 +3129,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_MAX,
                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC);
 
-  PRTime delta = 0;
-  if (sFirstCollectionTime) {
-    delta = now - sFirstCollectionTime;
-  } else {
-    sFirstCollectionTime = now;
-  }
+  PRTime delta = GetCollectionTimeDelta();
 
   uint32_t cleanups = sForgetSkippableBeforeCC ? sForgetSkippableBeforeCC : 1;
   uint32_t minForgetSkippableTime = (sMinForgetSkippableTime == PR_UINT32_MAX)
@@ -3508,13 +3515,7 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
   NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
 
   if (aProgress == js::GC_CYCLE_END) {
-    PRTime now = PR_Now();
-    PRTime delta = 0;
-    if (sFirstCollectionTime) {
-      delta = now - sFirstCollectionTime;
-    } else {
-      sFirstCollectionTime = now;
-    }
+    PRTime delta = GetCollectionTimeDelta();
 
     if (sPostGCEventsToConsole) {
       NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f) ");
@@ -3531,7 +3532,7 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
 
     if (sPostGCEventsToConsole || sPostGCEventsToObserver) {
       nsString json;
-      json.Adopt(aDesc.formatJSON(aRt, now));
+      json.Adopt(aDesc.formatJSON(aRt, PR_Now()));
       nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
       NS_DispatchToMainThread(notify);
     }
@@ -3586,6 +3587,32 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
 
   if (sPrevGCSliceCallback)
     (*sPrevGCSliceCallback)(aRt, aProgress, aDesc);
+}
+
+static void
+DOMAnalysisPurgeCallback(JSRuntime *aRt, JSFlatString *aDesc)
+{
+  NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
+
+  PRTime delta = GetCollectionTimeDelta();
+
+  if (sPostGCEventsToConsole) {
+    NS_NAMED_LITERAL_STRING(kFmt, "Analysis Purge (T+%.1f) ");
+    nsString prefix;
+    prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
+                                           double(delta) / PR_USEC_PER_SEC));
+
+    nsDependentJSString stats(aDesc);
+    nsString msg = prefix + stats;
+
+    nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    if (cs) {
+      cs->LogStringMessage(msg.get());
+    }
+  }
+
+  if (sPrevAnalysisPurgeCallback)
+    (*sPrevAnalysisPurgeCallback)(aRt, aDesc);
 }
 
 // Script object mananagement - note duplicate implementation
@@ -4004,6 +4031,7 @@ nsJSRuntime::Init()
   NS_ASSERTION(NS_IsMainThread(), "bad");
 
   sPrevGCSliceCallback = js::SetGCSliceCallback(sRuntime, DOMGCSliceCallback);
+  sPrevAnalysisPurgeCallback = js::SetAnalysisPurgeCallback(sRuntime, DOMAnalysisPurgeCallback);
 
   // Set up the structured clone callbacks.
   static JSStructuredCloneCallbacks cloneCallbacks = {
@@ -4097,6 +4125,12 @@ nsJSRuntime::Init()
                                 "javascript.options.mem.gc_high_frequency_high_limit_mb");
   SetMemoryGCPrefChangedCallback("javascript.options.mem.gc_high_frequency_high_limit_mb",
                                  (void *)JSGC_HIGH_FREQUENCY_HIGH_LIMIT);
+
+  Preferences::RegisterCallback(SetMemoryGCPrefChangedCallback,
+                                "javascript.options.mem.analysis_purge_mb",
+                                (void *)JSGC_ANALYSIS_PURGE_TRIGGER);
+  SetMemoryGCPrefChangedCallback("javascript.options.mem.analysis_purge_mb",
+                                 (void *)JSGC_ANALYSIS_PURGE_TRIGGER);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs)
