@@ -39,7 +39,6 @@ class Shmem;
 namespace layers {
 
 class ImageContainerChild;
-class SharedPlanarYCbCrImage;
 
 struct ImageBackendData
 {
@@ -484,14 +483,6 @@ public:
    */
   RemoteImageData *GetRemoteImageData() { return mRemoteData; }
 
-  /**
-   * Helper function to copy an image buffer respecting stride, offset and skip.
-   */
-  static void CopyPlane(uint8_t *aDst, uint8_t *aSrc,
-                        const gfxIntSize &aSize,
-                        int32_t aSrcStride, int32_t aDstStride,
-                        int32_t aOffset, int32_t aSkip);
-
 protected:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 
@@ -660,15 +651,9 @@ public:
 
   virtual ~PlanarYCbCrImage();
 
-  virtual SharedPlanarYCbCrImage* AsSharedPlanarYCbCrImage()
-  {
-    return nullptr;
-  }
-
   /**
-   * If Allocate has been invoked on aData, simply acquire aData's buffers.
-   * Otherwise make a copy of the data buffers, in order to support 
-   * functioning in all different layer managers.
+   * This makes a copy of the data buffers, in order to support functioning
+   * in all different layer managers.
    */
   virtual void SetData(const Data& aData);
 
@@ -683,23 +668,6 @@ public:
    * Grab the original YUV data. This is optional.
    */
   virtual const Data* GetData() { return &mData; }
-
-  /**
-   * Allocate image buffer(s) and give aData ownership of the image by filling
-   * the pointers in aData.
-   * The information about the size, stride, etc. must be set in aData
-   * prior to calling this method.
-   *
-   * This method is meant to be used with SetData in the following order:
-   * - The caller first fills the necessary information in aData for the data to
-   * be allocated properly.
-   * - The caller invoke Allocate(aData) which will fill the remaining pointers
-   * in aData with allocated memory.
-   * - The caller can fill the allocated buffer with actual image data.
-   * - The caller then invoke SetData(aData) with the same aData that was 
-   * passed in Allocate.
-   */
-  virtual void Allocate(Data& aData);
 
   /**
    * Return the number of bytes of heap memory used to store this image.
