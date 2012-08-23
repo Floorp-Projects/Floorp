@@ -446,18 +446,9 @@ BrowserTabActor.prototype = {
         return;
       }
       if (this._attached) {
-        this.threadActor.clearDebuggees();
-        this.threadActor.dbg.enabled = true;
-        if (this._progressListener) {
-          delete this._progressListener._needsTabNavigated;
-        }
         this.conn.send({ from: this.actorID, type: "tabNavigated",
                          url: this.browser.contentDocument.URL });
       }
-    }
-
-    if (this._attached) {
-      this._addDebuggees(evt.target.defaultView.wrappedJSObject);
     }
   }
 };
@@ -508,13 +499,10 @@ DebuggerProgressListener.prototype = {
       }
 
       aRequest.suspend();
-      this._tabActor.threadActor.onResume();
-      this._tabActor.threadActor.dbg.enabled = false;
       this._tabActor._pendingNavigation = aRequest;
+      this._tabActor._detach();
       this._needsTabNavigated = true;
     } else if (isStop && isWindow && isNetwork && this._needsTabNavigated) {
-      delete this._needsTabNavigated;
-      this._tabActor.threadActor.dbg.enabled = true;
       this._tabActor.conn.send({
         from: this._tabActor.actorID,
         type: "tabNavigated",
