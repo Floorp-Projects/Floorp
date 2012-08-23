@@ -557,7 +557,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                                const nsRect& aViewport,
                                nsRect* aDisplayPort,
                                ViewID aScrollId,
-                               const nsDisplayItem::ContainerParameters& aContainerParameters) {
+                               const nsDisplayItem::ContainerParameters& aContainerParameters,
+                               bool aMayHaveTouchListeners) {
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
 
@@ -590,8 +591,10 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                          nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.height));
     metrics.mContentRect = contentBounds.ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
-    metrics.mViewportScrollOffset = scrollableFrame->GetScrollPosition().ScaleToNearestPixels(
-      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+    nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
+    metrics.mViewportScrollOffset = mozilla::gfx::Point(
+      NSAppUnitsToDoublePixels(scrollPosition.x, auPerDevPixel) * aContainerParameters.mXScale,
+      NSAppUnitsToDoublePixels(scrollPosition.y, auPerDevPixel) * aContainerParameters.mYScale);
   }
   else {
     nsRect contentBounds = aForFrame->GetRect();
@@ -608,6 +611,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   nsIPresShell* presShell = presContext->GetPresShell();
   metrics.mResolution = gfxSize(presShell->GetXResolution(), presShell->GetYResolution());
+
+  metrics.mMayHaveTouchListeners = aMayHaveTouchListeners;
 
   aRoot->SetFrameMetrics(metrics);
 }
@@ -1020,10 +1025,22 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       usingDisplayport = nsLayoutUtils::GetDisplayPort(content, &displayport);
     }
   }
+
+  bool mayHaveTouchListeners = false;
+  if (presShell) {
+    nsIDocument* document = presShell->GetDocument();
+    if (document) {
+      nsCOMPtr<nsPIDOMWindow> innerWin(document->GetInnerWindow());
+      if (innerWin) {
+        mayHaveTouchListeners = innerWin->HasTouchEventListeners();
+      }
+    }
+  }
+
   RecordFrameMetrics(aForFrame, rootScrollFrame,
                      root, mVisibleRect, mVisibleRect,
                      (usingDisplayport ? &displayport : nullptr), id,
-                     containerParameters);
+                     containerParameters, mayHaveTouchListeners);
   if (usingDisplayport &&
       !(root->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
     // See bug 693938, attachment 567017
@@ -2624,7 +2641,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   }
   RecordFrameMetrics(mScrolledFrame, mScrollFrame, layer, mVisibleRect, viewport,
                      (usingDisplayport ? &displayport : nullptr), scrollId,
-                     aContainerParameters);
+                     aContainerParameters, false);
 
   return layer.forget();
 }

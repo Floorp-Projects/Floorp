@@ -122,6 +122,7 @@ abstract public class GeckoApp
 
     public static final String ACTION_ALERT_CLICK   = "org.mozilla.gecko.ACTION_ALERT_CLICK";
     public static final String ACTION_ALERT_CLEAR   = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
+    public static final String ACTION_ALERT_CALLBACK = "org.mozilla.gecko.ACTION_ALERT_CALLBACK";
     public static final String ACTION_WEBAPP_PREFIX = "org.mozilla.gecko.WEBAPP";
     public static final String ACTION_DEBUG         = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_BOOKMARK      = "org.mozilla.gecko.BOOKMARK";
@@ -171,7 +172,7 @@ abstract public class GeckoApp
     private HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
 
     protected int mRestoreMode = GeckoAppShell.RESTORE_NONE;
-    private boolean mInitialized = false;
+    protected boolean mInitialized = false;
 
     public enum LaunchState {Launching, WaitForDebugger,
                              Launched, GeckoRunning, GeckoExiting};
@@ -1915,13 +1916,27 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
             Log.i(LOGTAG,"Intent : BOOKMARK - " + uri);
         }
+        else if (ACTION_ALERT_CALLBACK.equals(action)) {
+            String alertName = "";
+            String alertCookie = "";
+            Uri data = intent.getData();
+            if (data != null) {
+                alertName = data.getQueryParameter("name");
+                if (alertName == null)
+                    alertName = "";
+                alertCookie = data.getQueryParameter("cookie");
+                if (alertCookie == null)
+                    alertCookie = "";
+            }
+            handleNotification(ACTION_ALERT_CALLBACK, alertName, alertCookie);
+        }
     }
 
     /*
      * Handles getting a uri from and intent in a way that is backwards
      * compatable with our previous implementations
      */
-    private String getURIFromIntent(Intent intent) {
+    protected String getURIFromIntent(Intent intent) {
         String uri = intent.getDataString();
         if (uri != null)
             return uri;
@@ -2252,7 +2267,7 @@ abstract public class GeckoApp
             GeckoAppShell.killAnyZombies();
             startActivity(intent);
         } catch (Exception e) {
-            Log.i(LOGTAG, "error doing restart", e);
+            Log.e(LOGTAG, "error doing restart", e);
         }
         finish();
         // Give the restart process time to start before we die

@@ -30,6 +30,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SmsManager,
                                            nsDOMEventTargetHelper)
 
+  static already_AddRefed<SmsManager>
+  CheckPermissionAndCreateInstance(nsPIDOMWindow *aWindow);
+
   void Init(nsPIDOMWindow *aWindow);
   void Shutdown();
 

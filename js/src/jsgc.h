@@ -50,6 +50,7 @@ enum State {
     MARK_ROOTS,
     MARK,
     SWEEP,
+    SWEEP_END,
     INVALID
 };
 
@@ -1164,6 +1165,7 @@ const int ZealIncrementalMarkAllThenFinish = 9;
 const int ZealIncrementalMultipleSlices = 10;
 const int ZealVerifierPostValue = 11;
 const int ZealFrameVerifierPostValue = 12;
+const int ZealPurgeAnalysisValue = 13;
 
 enum VerifierType {
     PreBarrierVerifier,

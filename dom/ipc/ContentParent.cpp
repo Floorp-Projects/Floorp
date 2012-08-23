@@ -732,9 +732,9 @@ ContentParent::IsForApp()
 }
 
 bool
-ContentParent::RecvReadPrefsArray(InfallibleTArray<PrefTuple> *prefs)
+ContentParent::RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs)
 {
-    Preferences::MirrorPreferences(prefs);
+    Preferences::GetPreferences(aPrefs);
     return true;
 }
 
@@ -954,17 +954,10 @@ ContentParent::Observe(nsISupports* aSubject,
         // We know prefs are ASCII here.
         NS_LossyConvertUTF16toASCII strData(aData);
 
-        PrefTuple pref;
-        bool prefNeedUpdate = Preferences::MirrorPreference(strData.get(), &pref);
-        if (prefNeedUpdate) {
-          if (!SendPreferenceUpdate(pref)) {
-              return NS_ERROR_NOT_AVAILABLE;
-          }
-        } else {
-          // Pref wasn't found.  It was probably removed.
-          if (!SendClearUserPreference(strData)) {
-              return NS_ERROR_NOT_AVAILABLE;
-          }
+        PrefSetting pref(strData, null_t(), null_t());
+        Preferences::GetPreference(&pref);
+        if (!SendPreferenceUpdate(pref)) {
+            return NS_ERROR_NOT_AVAILABLE;
         }
     }
     else if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC)) {

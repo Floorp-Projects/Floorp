@@ -798,6 +798,14 @@ GCDescription::formatJSON(JSRuntime *rt, uint64_t timestamp) const
     return rt->gcStats.formatJSON(timestamp);
 }
 
+JS_FRIEND_API(AnalysisPurgeCallback)
+SetAnalysisPurgeCallback(JSRuntime *rt, AnalysisPurgeCallback callback)
+{
+    AnalysisPurgeCallback old = rt->analysisPurgeCallback;
+    rt->analysisPurgeCallback = callback;
+    return old;
+}
+
 JS_FRIEND_API(void)
 NotifyDidPaint(JSRuntime *rt)
 {

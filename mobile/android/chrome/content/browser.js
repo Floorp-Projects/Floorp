@@ -247,7 +247,7 @@ var BrowserApp = {
 
     let updated = this.isAppUpdated();
     if (pinned) {
-      WebAppRT.init(updated);
+      WebAppRT.init(updated, url);
     } else {
       SearchEngines.init();
       this.initContextMenu();
@@ -375,7 +375,7 @@ var BrowserApp = {
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyEmailAddress"),
-      NativeWindow.contextmenus.emailLinkCopyableContext,
+      NativeWindow.contextmenus.emailLinkContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let emailAddr = NativeWindow.contextmenus._stripScheme(url);
@@ -383,20 +383,37 @@ var BrowserApp = {
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyPhoneNumber"),
-      NativeWindow.contextmenus.phoneNumberLinkCopyableContext,
+      NativeWindow.contextmenus.phoneNumberLinkContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(phoneNumber);
-    });
+      });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareLink"),
       NativeWindow.contextmenus.linkShareableContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let title = aTarget.textContent || aTarget.title;
-        let sharing = Cc["@mozilla.org/uriloader/external-sharing-app-service;1"].getService(Ci.nsIExternalSharingAppService);
-        sharing.shareWithDefault(url, "text/plain", title);
+        NativeWindow.contextmenus._shareStringWithDefault(url, title);
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareEmailAddress"),
+      NativeWindow.contextmenus.emailLinkContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        let emailAddr = NativeWindow.contextmenus._stripScheme(url);
+        let title = aTarget.textContent || aTarget.title;
+        NativeWindow.contextmenus._shareStringWithDefault(emailAddr, title);
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.sharePhoneNumber"),
+      NativeWindow.contextmenus.phoneNumberLinkContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
+        let title = aTarget.textContent || aTarget.title;
+        NativeWindow.contextmenus._shareStringWithDefault(phoneNumber, title);
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.bookmarkLink"),
@@ -1274,7 +1291,7 @@ var NativeWindow = {
         let uri = NativeWindow.contextmenus._getLink(aElement);
         if (uri) {
           let scheme = uri.scheme;
-          let dontOpen = /^(mailto|javascript|news|snews)$/;
+          let dontOpen = /^(javascript|mailto|news|snews|tel)$/;
           return (scheme && !dontOpen.test(scheme));
         }
         return false;
@@ -1293,32 +1310,12 @@ var NativeWindow = {
       }
     },
 
-    emailLinkCopyableContext: {
-      matches: function emailLinkCopyableContextMatches(aElement) {
-        let uri = NativeWindow.contextmenus._getLink(aElement);
-        if (uri) {
-          return uri.schemeIs("mailto");
-        }
-        return false;
-      }
-    },
-
-    phoneNumberLinkCopyableContext: {
-      matches: function phoneNumberLinkCopyableContextMatches(aElement) {
-        let uri = NativeWindow.contextmenus._getLink(aElement);
-        if (uri) {
-          return uri.schemeIs("tel");
-        }
-        return false;
-      }
-    },
-
     linkShareableContext: {
       matches: function linkShareableContextMatches(aElement) {
         let uri = NativeWindow.contextmenus._getLink(aElement);
         if (uri) {
           let scheme = uri.scheme;
-          let dontShare = /^(chrome|about|file|javascript|resource)$/;
+          let dontShare = /^(about|chrome|file|javascript|mailto|resource|tel)$/;
           return (scheme && !dontShare.test(scheme));
         }
         return false;
@@ -1330,9 +1327,27 @@ var NativeWindow = {
         let uri = NativeWindow.contextmenus._getLink(aElement);
         if (uri) {
           let scheme = uri.scheme;
-          let dontBookmark = /^(mailto)$/;
+          let dontBookmark = /^(mailto|tel)$/;
           return (scheme && !dontBookmark.test(scheme));
         }
+        return false;
+      }
+    },
+
+    emailLinkContext: {
+      matches: function emailLinkContextMatches(aElement) {
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri)
+          return uri.schemeIs("mailto");
+        return false;
+      }
+    },
+
+    phoneNumberLinkContext: {
+      matches: function phoneNumberLinkContextMatches(aElement) {
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri)
+          return uri.schemeIs("tel");
         return false;
       }
     },
@@ -1369,7 +1384,7 @@ var NativeWindow = {
 
       while (element) {
         for each (let item in this.items) {
-          if (!this.menuitems[item.id] && item.matches(element)) {
+          if (!this.menuitems[item.id] && item.matches(element, aX, aY)) {
             this.menuitems[item.id] = item;
             menuitemsSet = true;
           }
@@ -1495,6 +1510,11 @@ var NativeWindow = {
     _copyStringToDefaultClipboard: function(aString) {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
       clipboard.copyString(aString);
+    },
+
+    _shareStringWithDefault: function(aSharedString, aTitle) {
+      let sharing = Cc["@mozilla.org/uriloader/external-sharing-app-service;1"].getService(Ci.nsIExternalSharingAppService);
+      sharing.shareWithDefault(aSharedString, "text/plain", aTitle);
     },
 
     _stripScheme: function(aString) {
@@ -2338,11 +2358,24 @@ Tab.prototype = {
     aDisplayPort = this._dirtiestHackEverToWorkAroundGeckoRounding(aDisplayPort, geckoScrollX, geckoScrollY);
 
     cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.setDisplayPortForElement((aDisplayPort.left / resolution) - geckoScrollX,
-                                 (aDisplayPort.top / resolution) - geckoScrollY,
-                                 (aDisplayPort.right - aDisplayPort.left) / resolution,
-                                 (aDisplayPort.bottom - aDisplayPort.top) / resolution,
-                                 element);
+
+    let displayPort = {
+      x: (aDisplayPort.left / resolution) - geckoScrollX,
+      y: (aDisplayPort.top / resolution) - geckoScrollY,
+      width: (aDisplayPort.right - aDisplayPort.left) / resolution,
+      height: (aDisplayPort.bottom - aDisplayPort.top) / resolution
+    };
+
+    let epsilon = 0.001;
+    if (this._oldDisplayPort == null ||
+        Math.abs(displayPort.x - this._oldDisplayPort.x) > epsilon ||
+        Math.abs(displayPort.y - this._oldDisplayPort.y) > epsilon ||
+        Math.abs(displayPort.width - this._oldDisplayPort.width) > epsilon ||
+        Math.abs(displayPort.height - this._oldDisplayPort.height) > epsilon) {
+      cwu.setDisplayPortForElement(displayPort.x, displayPort.y, displayPort.width, displayPort.height, element);
+    }
+
+    this._oldDisplayPort = displayPort;
   },
 
   /*
@@ -2926,7 +2959,7 @@ Tab.prototype = {
 
     let documentURI = contentWin.document.documentURIObject.spec;
     let contentType = contentWin.document.contentType;
-    
+
     // If fixedURI matches browser.lastURI, we assume this isn't a real location
     // change but rather a spurious addition like a wyciwyg URI prefix. See Bug 747883.
     // Note that we have to ensure fixedURI is not the same as aLocationURI so we
@@ -2940,6 +2973,18 @@ Tab.prototype = {
     this.pluginDoorhangerTimeout = null;
     this.shouldShowPluginDoorhanger = true;
     this.clickToPlayPluginsActivated = false;
+
+    // This is where we might check for helper apps.
+    // For now it is special cased to only check for the marketplace urls
+    if (WebappsUI.isMarketplace(aLocationURI)) {
+      // the marketplace app may not actually be installed, so instead we use a custom
+      // callback that will install and launch it for us if necessary
+      HelperApps.showDoorhanger(aLocationURI, function() {
+        WebappsUI.installAndLaunchMarketplace(aLocationURI.spec);
+        if (aRequest)
+          aRequest.cancel(Cr.NS_OK);
+      });
+    }
 
     let message = {
       gecko: {
@@ -3054,16 +3099,16 @@ Tab.prototype = {
       aMetadata.allowZoom = true;
       aMetadata.minZoom = aMetadata.maxZoom = NaN;
     }
-    if (aMetadata && aMetadata.autoScale) {
-      let scaleRatio = aMetadata.scaleRatio = ViewportHandler.getScaleRatio();
 
-      if ("defaultZoom" in aMetadata && aMetadata.defaultZoom > 0)
-        aMetadata.defaultZoom *= scaleRatio;
-      if ("minZoom" in aMetadata && aMetadata.minZoom > 0)
-        aMetadata.minZoom *= scaleRatio;
-      if ("maxZoom" in aMetadata && aMetadata.maxZoom > 0)
-        aMetadata.maxZoom *= scaleRatio;
-    }
+    let scaleRatio = aMetadata.scaleRatio = ViewportHandler.getScaleRatio();
+
+    if ("defaultZoom" in aMetadata && aMetadata.defaultZoom > 0)
+      aMetadata.defaultZoom *= scaleRatio;
+    if ("minZoom" in aMetadata && aMetadata.minZoom > 0)
+      aMetadata.minZoom *= scaleRatio;
+    if ("maxZoom" in aMetadata && aMetadata.maxZoom > 0)
+      aMetadata.maxZoom *= scaleRatio;
+
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
     this.updateViewportSize(gScreenWidth);
     this.sendViewportMetadata();
@@ -4522,12 +4567,8 @@ var ViewportHandler = {
    *   height (optional int): The CSS viewport height in px.
    *   autoSize (boolean): Resize the CSS viewport when the window resizes.
    *   allowZoom (boolean): Let the user zoom in or out.
-   *   autoScale (boolean): Adjust the viewport properties to account for display density.
    */
   getViewportMetadata: function getViewportMetadata(aWindow) {
-    if (aWindow.document instanceof XULDocument)
-      return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
-
     let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
     // viewport details found here
@@ -4552,11 +4593,11 @@ var ViewportHandler = {
       // Only check for HandheldFriendly if we don't have a viewport meta tag
       let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
       if (handheldFriendly == "true")
-        return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
+        return { defaultZoom: 1, autoSize: true, allowZoom: true };
 
       let doctype = aWindow.document.doctype;
       if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
-        return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
+        return { defaultZoom: 1, autoSize: true, allowZoom: true };
     }
 
     scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
@@ -4574,8 +4615,7 @@ var ViewportHandler = {
       width: width,
       height: height,
       autoSize: autoSize,
-      allowZoom: allowZoom,
-      autoScale: true
+      allowZoom: allowZoom
     };
   },
 
@@ -4628,7 +4668,6 @@ var ViewportHandler = {
     return {
       autoSize: false,
       allowZoom: true,
-      autoScale: true,
       scaleRatio: ViewportHandler.getScaleRatio()
     };
   }
@@ -5951,6 +5990,7 @@ var WebappsUI = {
     Services.obs.addObserver(this, "webapps-sync-install", false);
     Services.obs.addObserver(this, "webapps-sync-uninstall", false);
     Services.obs.addObserver(this, "webapps-install-error", false);
+    Services.obs.addObserver(this, "WebApps:InstallMarketplace", false);
   },
   
   uninit: function unint() {
@@ -5959,6 +5999,7 @@ var WebappsUI = {
     Services.obs.removeObserver(this, "webapps-sync-install");
     Services.obs.removeObserver(this, "webapps-sync-uninstall");
     Services.obs.removeObserver(this, "webapps-install-error", false);
+    Services.obs.removeObserver(this, "WebApps:InstallMarketplace", false);
   },
 
   DEFAULT_PREFS_FILENAME: "default-prefs.js",
@@ -6024,6 +6065,61 @@ var WebappsUI = {
           }
         });
         break;
+      case "WebApps:InstallMarketplace":
+        this.installAndLaunchMarketplace(data.url);
+        break;
+    }
+  },
+
+  MARKETPLACE: {
+      MANIFEST: "https://marketplace.mozilla.org/manifest.webapp",
+      get URI() {
+        delete this.URI;
+        return this.URI = Services.io.newURI(this.MANIFEST, null, null);
+      }
+  },
+
+  isMarketplace: function isMarketplace(aUri) {
+    try {
+      return aUri.host == this.MARKETPLACE.URI.host;
+    } catch(ex) {
+      // this can fail for uri's that don't have a host (i.e. about urls)
+      console.log("could not find host for " + aUri.spec + ", " + ex);
+    }
+    return false;
+  },
+
+  // installs the marketplace, if a url is passed in, will launch it when the install
+  // is complete
+  installAndLaunchMarketplace: function installAndLaunchMarketplace(aLaunchUrl) {
+    // TODO: Add a flag to hide other install prompt dialogs. This should be silent if possible
+    let request = navigator.mozApps.getInstalled();
+    request.onsuccess = function() {
+      let foundMarket = false;
+      for (let i = 0; i < request.result.length; i++) {
+        if (request.result[i].origin == this.MARKETPLACE.URI.prePath)
+          foundMarket = true;
+      }
+
+      let launchFun = (function() {
+        if (aLaunchUrl)
+          WebappsUI.openURL(aLaunchUrl || WebappsUI.MARKETPLACE.URI.prePath, WebappsUI.MARKETPLACE.URI.prePath);
+      }).bind(this);
+
+      if (foundMarket) {
+        launchFun();
+      } else {
+        let r = navigator.mozApps.install(WebappsUI.MARKETPLACE.MANIFEST);
+        r.onsuccess = function() {
+          launchFun();
+        };
+        r.onerror = function() {
+          console.log("error installing market " + this.error.name);
+        };
+      }
+    };
+    request.onerror = function() {
+      console.log("error getting installed " + this.error.name);
     }
   },
 
@@ -6063,7 +6159,13 @@ var WebappsUI = {
   doInstall: function doInstall(aData) {
     let manifest = new DOMApplicationManifest(aData.app.manifest, aData.app.origin);
     let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
-    if (Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name)) {
+    let showPrompt = true;
+
+    // skip showing the prompt if this is for the marketplace app
+    if (aData.app.origin == this.MARKETPLACE.URI.prePath)
+      showPrompt = false;
+
+    if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name)) {
       // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
       // a unique ID for Android webapp allocation
       this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),

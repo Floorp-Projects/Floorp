@@ -2105,6 +2105,7 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
   }
   else if (frame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
     mComputedPadding.SizeTo(0, 0, 0, 0);
+    needPaddingProp = false;
   }
   else if (aPadding) { // padding is an input arg
     mComputedPadding = *aPadding;

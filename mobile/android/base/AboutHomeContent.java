@@ -52,6 +52,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -86,6 +87,7 @@ public class AboutHomeContent extends ScrollView
     protected GridView mTopSitesGrid;
 
     private AboutHomePromoBox mPromoBox;
+    private AboutHomePromoBox.Type mPrelimPromoBoxType;
     protected AboutHomeSection mAddons;
     protected AboutHomeSection mLastTabs;
     protected AboutHomeSection mRemoteTabs;
@@ -137,6 +139,9 @@ public class AboutHomeContent extends ScrollView
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
             }
         };
+
+        mPrelimPromoBoxType = (new Random()).nextFloat() < 0.5 ? AboutHomePromoBox.Type.SYNC :
+                AboutHomePromoBox.Type.APPS;
     }
 
     private void inflate() {
@@ -201,15 +206,12 @@ public class AboutHomeContent extends ScrollView
             mLastTabs.hide();
     }
 
-    private void setTopSitesVisibility(boolean visible, boolean hasTopSites) {
-        int visibility = visible ? View.VISIBLE : View.GONE;
-        int visibilityWithTopSites = visible && hasTopSites ? View.VISIBLE : View.GONE;
-        int visibilityWithoutTopSites = visible && !hasTopSites ? View.VISIBLE : View.GONE;
+    private void setTopSitesVisibility(boolean hasTopSites) {
+        int visibility = hasTopSites ? View.VISIBLE : View.GONE;
 
-        findViewById(R.id.top_sites_grid).setVisibility(visibilityWithTopSites);
         findViewById(R.id.top_sites_title).setVisibility(visibility);
-        findViewById(R.id.all_top_sites_text).setVisibility(visibilityWithTopSites);
-        findViewById(R.id.no_top_sites_text).setVisibility(visibilityWithoutTopSites);
+        findViewById(R.id.top_sites_grid).setVisibility(visibility);
+        findViewById(R.id.all_top_sites_text).setVisibility(visibility);
     }
 
     private void setPromoBoxVisibility(boolean visible, AboutHomePromoBox.Type type) {
@@ -219,16 +221,14 @@ public class AboutHomeContent extends ScrollView
             mPromoBox.hide();
     }
 
-    private void updateLayout(GeckoApp.StartupMode startupMode, boolean syncIsSetup) {
-        // The idea here is that we only show the sync invitation
-        // on the very first run. Show sync banner below the top
-        // sites section in all other cases.
-
+    private void updateLayout(boolean syncIsSetup) {
         boolean hasTopSites = mTopSitesAdapter.getCount() > 0;
-        boolean isFirstRun = (startupMode == GeckoApp.StartupMode.NEW_PROFILE);
 
-        setTopSitesVisibility(!isFirstRun || hasTopSites, hasTopSites);
-        setPromoBoxVisibility(!syncIsSetup, AboutHomePromoBox.Type.SYNC);
+        setTopSitesVisibility(hasTopSites);
+        if (!syncIsSetup && mPrelimPromoBoxType == AboutHomePromoBox.Type.SYNC)
+            setPromoBoxVisibility(true, AboutHomePromoBox.Type.SYNC);
+        else
+            setPromoBoxVisibility(true, AboutHomePromoBox.Type.APPS);
     }
 
     private void updateLayoutForSync() {
@@ -241,17 +241,12 @@ public class AboutHomeContent extends ScrollView
                 // In this case, we should simply wait for the initial setup
                 // to happen.
                 if (mTopSitesAdapter != null)
-                    updateLayout(startupMode, syncIsSetup);
+                    updateLayout(syncIsSetup);
             }
         });
     }
 
     private void loadTopSites() {
-        // Ensure we initialize GeckoApp's startup mode in
-        // background thread before we use it when updating
-        // the top sites section layout in main thread.
-        final GeckoApp.StartupMode startupMode = mActivity.getStartupMode();
-
         // The SyncAccounts.syncAccountsExist method should not be called on
         // UI thread as it touches disk to access a sqlite DB.
         final boolean syncIsSetup = SyncAccounts.syncAccountsExist(mActivity);
@@ -277,7 +272,7 @@ public class AboutHomeContent extends ScrollView
                     mTopSitesAdapter.changeCursor(mCursor);
                 }
 
-                updateLayout(startupMode, syncIsSetup);
+                updateLayout(syncIsSetup);
 
                 // Free the old Cursor in the right thread now.
                 if (oldCursor != null && !oldCursor.isClosed())
