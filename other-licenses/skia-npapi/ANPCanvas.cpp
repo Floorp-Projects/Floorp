@@ -79,8 +79,7 @@ static void anp_getTotalMatrix(ANPCanvas* canvas, ANPMatrix* matrix) {
 static bool anp_getLocalClipBounds(ANPCanvas* canvas, ANPRectF* r,
                                    bool antialias) {
     SkRect bounds;
-    if (canvas->skcanvas->getClipBounds(&bounds,
-                antialias ? SkCanvas::kAA_EdgeType : SkCanvas::kBW_EdgeType)) {
+    if (canvas->skcanvas->getClipBounds(&bounds)) {
         SkANP::SetRect(r, bounds);
         return true;
     }
