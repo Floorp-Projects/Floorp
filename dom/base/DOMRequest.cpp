@@ -236,7 +236,7 @@ public:
     JS_AddValueRoot(cx, &mResult);
   }
 
-  nsresult
+  NS_IMETHODIMP
   Run()
   {
     static_cast<DOMRequest*>(mReq)->FireSuccess(mResult);
@@ -263,7 +263,7 @@ public:
   {
   }
 
-  nsresult
+  NS_IMETHODIMP  
   Run()
   {
     static_cast<DOMRequest*>(mReq)->FireError(mError);
