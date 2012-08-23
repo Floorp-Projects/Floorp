@@ -71,28 +71,6 @@ ChildProcess()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define PL_ARENA_CONST_ALIGN_MASK 3
-#include "plarena.h"
-
-static PLArenaPool *gHostArena = nullptr;
-
-// making sHostArena 512b for nice allocation
-// growing is quite cheap
-#define HOST_ARENA_SIZE 512
-
-// equivalent to strdup() - does no error checking,
-// we're assuming we're only called with a valid pointer
-static char *
-ArenaStrDup(const char* str, PLArenaPool* aArena)
-{
-  void* mem;
-  const uint32_t size = strlen(str) + 1;
-  PL_ARENA_ALLOCATE(mem, aArena, size);
-  if (mem)
-    memcpy(mem, str, size);
-  return static_cast<char*>(mem);
-}
-
 namespace {
 
 nsresult
@@ -109,22 +87,34 @@ GetPrincipalForHost(const nsACString& aHost, nsIPrincipal** aPrincipal)
   return secMan->GetNoAppCodebasePrincipal(uri, aPrincipal);
 }
 
+nsresult
+GetHostForPrincipal(nsIPrincipal* aPrincipal, nsACString& aHost)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uri = NS_GetInnermostURI(uri);
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+  rv = uri->GetAsciiHost(aHost);
+  if (NS_FAILED(rv) || aHost.IsEmpty()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
 } // anonymous namespace
-
-nsHostEntry::nsHostEntry(const char* aHost)
-{
-  mHost = ArenaStrDup(aHost, gHostArena);
-}
-
-// XXX this can fail on OOM
-nsHostEntry::nsHostEntry(const nsHostEntry& toCopy)
- : mHost(toCopy.mHost)
- , mPermissions(toCopy.mPermissions)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
+nsPermissionManager::PermissionKey::PermissionKey(nsIPrincipal* aPrincipal)
+{
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(GetHostForPrincipal(aPrincipal, mHost)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aPrincipal->GetAppId(&mAppId)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aPrincipal->GetIsInBrowserElement(&mIsInBrowserElement)));
+}
 
 /**
  * Simple callback used by |AsyncClose| to trigger a treatment once
@@ -287,7 +277,7 @@ nsPermissionManager::Init()
 {
   nsresult rv;
 
-  mHostTable.Init();
+  mPermissionTable.Init();
 
   mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
@@ -558,12 +548,8 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                  NotifyOperationType   aNotifyOperation,
                                  DBOperationType       aDBOperation)
 {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCAutoString host;
-  rv = GetHost(uri, host);
+  nsresult rv = GetHostForPrincipal(aPrincipal, host);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!IsChildProcess()) {
@@ -580,23 +566,17 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
     }
   }
 
-  if (!gHostArena) {
-    gHostArena = new PLArenaPool;
-    if (!gHostArena)
-      return NS_ERROR_OUT_OF_MEMORY;    
-    PL_INIT_ARENA_POOL(gHostArena, "PermissionHostArena", HOST_ARENA_SIZE);
-  }
-
   // look up the type index
   int32_t typeIndex = GetTypeIndex(aType.get(), true);
   NS_ENSURE_TRUE(typeIndex != -1, NS_ERROR_OUT_OF_MEMORY);
 
   // When an entry already exists, PutEntry will return that, instead
   // of adding a new one
-  nsHostEntry *entry = mHostTable.PutEntry(host.get());
+  nsRefPtr<PermissionKey> key = new PermissionKey(aPrincipal);
+  PermissionHashKey* entry = mPermissionTable.PutEntry(key);
   if (!entry) return NS_ERROR_FAILURE;
   if (!entry->GetKey()) {
-    mHostTable.RawRemoveEntry(entry);
+    mPermissionTable.RawRemoveEntry(entry);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -610,7 +590,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
       op = eOperationAdding;
 
   } else {
-    nsPermissionEntry oldPermissionEntry = entry->GetPermissions()[index];
+    PermissionEntry oldPermissionEntry = entry->GetPermissions()[index];
 
     // remove the permission if the permission is UNKNOWN, update the
     // permission if its value or expire type have changed OR if the time has
@@ -648,7 +628,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
         id = aID;
       }
 
-      entry->GetPermissions().AppendElement(nsPermissionEntry(typeIndex, aPermission, id, aExpireType, aExpireTime));
+      entry->GetPermissions().AppendElement(PermissionEntry(id, typeIndex, aPermission, aExpireType, aExpireTime));
 
       if (aDBOperation == eWriteToDB && aExpireType != nsIPermissionManager::EXPIRE_SESSION)
         UpdateDB(op, mStmtInsert, id, host, aType, aPermission, aExpireType, aExpireTime);
@@ -667,13 +647,13 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
 
   case eOperationRemoving:
     {
-      nsPermissionEntry oldPermissionEntry = entry->GetPermissions()[index];
+      PermissionEntry oldPermissionEntry = entry->GetPermissions()[index];
       id = oldPermissionEntry.mID;
       entry->GetPermissions().RemoveElementAt(index);
 
       // If no more types are present, remove the entry
       if (entry->GetPermissions().IsEmpty())
-        mHostTable.RawRemoveEntry(entry);
+        mPermissionTable.RawRemoveEntry(entry);
 
       if (aDBOperation == eWriteToDB)
         UpdateDB(op, mStmtDelete, id, EmptyCString(), EmptyCString(), 0, 
@@ -888,7 +868,7 @@ nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString host;
-  rv = GetHost(uri, host);
+  rv = GetHostForPrincipal(aPrincipal, host);
 
   // No host doesn't mean an error. Just return the default. Unless this is
   // a file uri. In that case use a magic host.
@@ -909,38 +889,64 @@ nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
   // so just return NS_OK
   if (typeIndex == -1) return NS_OK;
 
-  nsHostEntry *entry = GetHostEntry(host, typeIndex, aExactHostMatch);
-  if (entry)
+  uint32_t appId;
+  rv = aPrincipal->GetAppId(&appId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isInBrowserElement;
+  rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PermissionHashKey* entry = GetPermissionHashKey(host, appId, isInBrowserElement,
+                                                  typeIndex, aExactHostMatch);
+  if (entry) {
     *aPermission = entry->GetPermission(typeIndex).mPermission;
+  }
 
   return NS_OK;
 }
 
-// Get hostentry for given host string and permission type.
-// walk up the domain if needed.
-// return null if nothing found.
+// Returns PermissionHashKey for a given { host, appId, isInBrowserElement } tuple.
+// This is not simply using PermissionKey because we will walk-up domains in
+// case of |host| contains sub-domains.
+// Returns null if nothing found.
 // Also accepts host on the format "<foo>". This will perform an exact match
 // lookup as the string doesn't contain any dots.
-nsHostEntry *
-nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
-                                  uint32_t              aType,
-                                  bool                  aExactHostMatch)
+nsPermissionManager::PermissionHashKey*
+nsPermissionManager::GetPermissionHashKey(const nsACString& aHost,
+                                          uint32_t aAppId,
+                                          bool aIsInBrowserElement,
+                                          uint32_t aType,
+                                          bool aExactHostMatch)
 {
   uint32_t offset = 0;
-  nsHostEntry *entry;
+  PermissionHashKey* entry;
   int64_t now = PR_Now() / 1000;
 
   do {
-    entry = mHostTable.GetEntry(aHost.get() + offset);
+    nsRefPtr<PermissionKey> key = new PermissionKey(Substring(aHost, offset), aAppId, aIsInBrowserElement);
+    entry = mPermissionTable.GetEntry(key);
     if (entry) {
-      nsPermissionEntry permEntry = entry->GetPermission(aType);
+      PermissionEntry permEntry = entry->GetPermission(aType);
 
       // if the entry is expired, remove and keep looking for others.
       if (permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME &&
-          permEntry.mExpireTime <= now)
-        Remove(aHost, mTypeArray[aType].get());
-      else if (permEntry.mPermission != nsIPermissionManager::UNKNOWN_ACTION)
+          permEntry.mExpireTime <= now) {
+        nsCOMPtr<nsIPrincipal> principal;
+        nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+        MOZ_ASSERT(secMan, "No security manager!?");
+
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + aHost);
+
+        if (NS_FAILED(secMan->GetAppCodebasePrincipal(uri, aAppId, aIsInBrowserElement, getter_AddRefs(principal)))) {
+          return nullptr;
+        }
+
+        RemoveFromPrincipal(principal, mTypeArray[aType].get());
+      } else if (permEntry.mPermission != nsIPermissionManager::UNKNOWN_ACTION) {
         break;
+      }
 
       // reset entry, to be able to return null on failure
       entry = nullptr;
@@ -968,14 +974,14 @@ struct nsGetEnumeratorData
 };
 
 static PLDHashOperator
-AddPermissionsToList(nsHostEntry *entry, void *arg)
+AddPermissionsToList(nsPermissionManager::PermissionHashKey* entry, void *arg)
 {
   nsGetEnumeratorData *data = static_cast<nsGetEnumeratorData *>(arg);
 
   for (uint32_t i = 0; i < entry->GetPermissions().Length(); ++i) {
-    nsPermissionEntry &permEntry = entry->GetPermissions()[i];
+    nsPermissionManager::PermissionEntry& permEntry = entry->GetPermissions()[i];
 
-    nsPermission *perm = new nsPermission(entry->GetHost(), 
+    nsPermission *perm = new nsPermission(entry->GetKey()->mHost,
                                           data->types->ElementAt(permEntry.mType),
                                           permEntry.mPermission,
                                           permEntry.mExpireType,
@@ -993,7 +999,7 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
   nsCOMArray<nsIPermission> array;
   nsGetEnumeratorData data(&array, &mTypeArray);
 
-  mHostTable.EnumerateEntries(AddPermissionsToList, &data);
+  mPermissionTable.EnumerateEntries(AddPermissionsToList, &data);
 
   return NS_NewArrayEnumerator(aEnum, array);
 }
@@ -1031,12 +1037,8 @@ nsPermissionManager::RemoveAllFromMemory()
 {
   mLargestID = 0;
   mTypeArray.Clear();
-  mHostTable.Clear();
-  if (gHostArena) {
-    PL_FinishArenaPool(gHostArena);
-    delete gHostArena;
-  }
-  gHostArena = nullptr;
+  mPermissionTable.Clear();
+
   return NS_OK;
 }
 
@@ -1255,20 +1257,6 @@ nsPermissionManager::NormalizeToACE(nsCString &aHost)
   }
 
   return mIDNService->ConvertUTF8toACE(aHost, aHost);
-}
-
-nsresult
-nsPermissionManager::GetHost(nsIURI *aURI, nsACString &aResult)
-{
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
-  if (!innerURI) return NS_ERROR_FAILURE;
-
-  nsresult rv = innerURI->GetAsciiHost(aResult);
-
-  if (NS_FAILED(rv) || aResult.IsEmpty())
-    return NS_ERROR_UNEXPECTED;
-
-  return NS_OK;
 }
 
 void
