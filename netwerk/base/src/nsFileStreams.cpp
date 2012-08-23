@@ -28,7 +28,7 @@
 #include "nsReadLine.h"
 #include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
-#include "mozilla/ipc/IPCSerializableParams.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 
 #define NS_NO_INPUT_BUFFERING 1 // see http://bugzilla.mozilla.org/show_bug.cgi?id=41067
 
@@ -329,7 +329,6 @@ NS_INTERFACE_MAP_BEGIN(nsFileInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIFileInputStream)
     NS_INTERFACE_MAP_ENTRY(nsILineInputStream)
-    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableObsolete)
     NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
     NS_IMPL_QUERY_CLASSINFO(nsFileInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsFileStreamBase)
@@ -473,47 +472,6 @@ nsFileInputStream::Seek(int32_t aWhence, int64_t aOffset)
     return nsFileStreamBase::Seek(aWhence, aOffset);
 }
 
-bool
-nsFileInputStream::Read(const IPC::Message *aMsg, void **aIter)
-{
-    using IPC::ReadParam;
-
-    nsCString path;
-    bool followLinks;
-    int32_t flags;
-    if (!ReadParam(aMsg, aIter, &path) ||
-        !ReadParam(aMsg, aIter, &followLinks) ||
-        !ReadParam(aMsg, aIter, &flags))
-        return false;
-
-    nsCOMPtr<nsIFile> file;
-    nsresult rv = NS_NewNativeLocalFile(path, followLinks, getter_AddRefs(file));
-    if (NS_FAILED(rv))
-        return false;
-
-    // IO flags = -1 means readonly, and
-    // permissions are unimportant since we're reading
-    rv = Init(file, -1, -1, flags);
-    if (NS_FAILED(rv))
-        return false;
-
-    return true;
-}
-
-void
-nsFileInputStream::Write(IPC::Message *aMsg)
-{
-    using IPC::WriteParam;
-
-    nsCString path;
-    mFile->GetNativePath(path);
-    WriteParam(aMsg, path);
-    bool followLinks;
-    mFile->GetFollowLinks(&followLinks);
-    WriteParam(aMsg, followLinks);
-    WriteParam(aMsg, mBehaviorFlags);
-}
-
 void
 nsFileInputStream::Serialize(InputStreamParams& aParams)
 {
@@ -599,7 +557,6 @@ NS_INTERFACE_MAP_BEGIN(nsPartialFileInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIPartialFileInputStream)
     NS_INTERFACE_MAP_ENTRY(nsILineInputStream)
-    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableObsolete)
     NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
     NS_IMPL_QUERY_CLASSINFO(nsPartialFileInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsFileStreamBase)
@@ -706,57 +663,6 @@ nsPartialFileInputStream::Seek(int32_t aWhence, int64_t aOffset)
         mPosition = offset - mStart;
     }
     return rv;
-}
-
-bool
-nsPartialFileInputStream::Read(const IPC::Message *aMsg, void **aIter)
-{
-    using IPC::ReadParam;
-
-    // Grab our members first.
-    uint64_t start;
-    uint64_t length;
-    if (!ReadParam(aMsg, aIter, &start) ||
-        !ReadParam(aMsg, aIter, &length))
-        return false;
-
-    // Then run base class deserialization.
-    if (!nsFileInputStream::Read(aMsg, aIter))
-        return false;
-
-    // Set members.
-    mStart = start;
-    mLength = length;
-
-    // XXX This isn't really correct, we should probably set this to whatever
-    //     the sender had. However, it doesn't look like nsFileInputStream deals
-    //     with sending a partially-consumed stream either, so...
-    mPosition = 0;
-
-    // Mirror nsPartialFileInputStream::Init here. We can't call it directly
-    // because nsFileInputStream::Read() already calls the base class Init
-    // method.
-    return NS_SUCCEEDED(nsFileInputStream::Seek(NS_SEEK_SET, start));
-}
-
-void
-nsPartialFileInputStream::Write(IPC::Message *aMsg)
-{
-    using IPC::WriteParam;
-
-    // Write our members first.
-    WriteParam(aMsg, mStart);
-    WriteParam(aMsg, mLength);
-
-    // XXX This isn't really correct, we should probably send this too. However,
-    //     it doesn't look like nsFileInputStream deals with sending a
-    //     partially-consumed stream either, so...
-    if (mPosition) {
-      NS_WARNING("No support for sending a partially-consumed input stream!");
-    }
-
-    // Now run base class serialization.
-    nsFileInputStream::Write(aMsg);
 }
 
 void

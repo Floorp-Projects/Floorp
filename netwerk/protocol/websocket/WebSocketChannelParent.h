@@ -8,6 +8,7 @@
 #define mozilla_net_WebSocketChannelParent_h
 
 #include "mozilla/net/PWebSocketParent.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIWebSocketListener.h"
 #include "nsIWebSocketChannel.h"
 #include "nsILoadContext.h"
@@ -31,7 +32,7 @@ class WebSocketChannelParent : public PWebSocketParent,
   WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvider);
 
  private:
-  bool RecvAsyncOpen(const IPC::URI& aURI,
+  bool RecvAsyncOpen(const URIParams& aURI,
                      const nsCString& aOrigin,
                      const nsCString& aProtocol,
                      const bool& aSecure,

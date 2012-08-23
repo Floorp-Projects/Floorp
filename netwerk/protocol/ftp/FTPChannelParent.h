@@ -34,7 +34,7 @@ public:
   virtual ~FTPChannelParent();
 
 protected:
-  virtual bool RecvAsyncOpen(const IPC::URI& uri,
+  virtual bool RecvAsyncOpen(const URIParams& uri,
                              const uint64_t& startPos,
                              const nsCString& entityID,
                              const OptionalInputStreamParams& uploadStream,

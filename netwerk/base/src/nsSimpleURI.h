@@ -9,11 +9,11 @@
 #include "nsIURL.h"
 #include "nsAgg.h"
 #include "nsISerializable.h"
-#include "nsIIPCSerializableObsolete.h"
 #include "nsString.h"
 #include "nsIClassInfo.h"
 #include "nsIMutable.h"
 #include "nsISizeOf.h"
+#include "nsIIPCSerializableURI.h"
 
 #define NS_THIS_SIMPLEURI_IMPLEMENTATION_CID         \
 { /* 0b9bb0c2-fee6-470b-b9b9-9fd9462b5e19 */         \
@@ -25,18 +25,18 @@
 
 class nsSimpleURI : public nsIURI,
                     public nsISerializable,
-                    public nsIIPCSerializableObsolete,
                     public nsIClassInfo,
                     public nsIMutable,
-                    public nsISizeOf
+                    public nsISizeOf,
+                    public nsIIPCSerializableURI
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURI
     NS_DECL_NSISERIALIZABLE
-    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
     NS_DECL_NSICLASSINFO
     NS_DECL_NSIMUTABLE
+    NS_DECL_NSIIPCSERIALIZABLEURI
 
     // nsSimpleURI methods:
 

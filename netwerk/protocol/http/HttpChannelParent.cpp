@@ -25,7 +25,9 @@
 #include "mozilla/LoadContext.h"
 #include "prinit.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/URIUtils.h"
 
+using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
 namespace mozilla {
@@ -104,10 +106,10 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 //-----------------------------------------------------------------------------
 
 bool 
-HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
-                                 const IPC::URI&            aOriginalURI,
-                                 const IPC::URI&            aDocURI,
-                                 const IPC::URI&            aReferrerURI,
+HttpChannelParent::RecvAsyncOpen(const URIParams&           aURI,
+                                 const OptionalURIParams&   aOriginalURI,
+                                 const OptionalURIParams&   aDocURI,
+                                 const OptionalURIParams&   aReferrerURI,
                                  const uint32_t&            loadFlags,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsHttpAtom&          requestMethod,
@@ -125,10 +127,10 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const bool&                allowSpdy,
                                  const IPC::SerializedLoadContext& loadContext)
 {
-  nsCOMPtr<nsIURI> uri(aURI);
-  nsCOMPtr<nsIURI> originalUri(aOriginalURI);
-  nsCOMPtr<nsIURI> docUri(aDocURI);
-  nsCOMPtr<nsIURI> referrerUri(aReferrerURI);
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  nsCOMPtr<nsIURI> originalUri = DeserializeURI(aOriginalURI);
+  nsCOMPtr<nsIURI> docUri = DeserializeURI(aDocURI);
+  nsCOMPtr<nsIURI> referrerUri = DeserializeURI(aReferrerURI);
 
   nsCString uriSpec;
   uri->GetSpec(uriSpec);
@@ -563,11 +565,12 @@ HttpChannelParent::StartRedirect(uint32_t newChannelId,
   nsCOMPtr<nsIURI> newURI;
   newChannel->GetURI(getter_AddRefs(newURI));
 
+  URIParams uriParams;
+  SerializeURI(newURI, uriParams);
+
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
   nsHttpResponseHead *responseHead = httpChan->GetResponseHead();
-  bool result = SendRedirect1Begin(newChannelId,
-                                   IPC::URI(newURI),
-                                   redirectFlags,
+  bool result = SendRedirect1Begin(newChannelId, uriParams, redirectFlags,
                                    responseHead ? *responseHead
                                                 : nsHttpResponseHead());
   if (!result) {

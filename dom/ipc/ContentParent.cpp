@@ -76,6 +76,7 @@
 #include "SandboxHal.h"
 #include "StructuredCloneUtils.h"
 #include "TabParent.h"
+#include "URIUtils.h"
 
 #ifdef ANDROID
 # include "gfxAndroidPlatform.h"
@@ -1347,12 +1348,12 @@ ContentParent::DeallocPNecko(PNeckoParent* necko)
 }
 
 PExternalHelperAppParent*
-ContentParent::AllocPExternalHelperApp(const IPC::URI& uri,
+ContentParent::AllocPExternalHelperApp(const OptionalURIParams& uri,
                                        const nsCString& aMimeContentType,
                                        const nsCString& aContentDisposition,
                                        const bool& aForceSave,
                                        const int64_t& aContentLength,
-                                       const IPC::URI& aReferrer)
+                                       const OptionalURIParams& aReferrer)
 {
     ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
     parent->AddRef();
@@ -1424,43 +1425,52 @@ ContentParent::RequestRunToCompletion()
 }
 
 bool
-ContentParent::RecvStartVisitedQuery(const IPC::URI& aURI)
+ContentParent::RecvStartVisitedQuery(const URIParams& aURI)
 {
-    nsCOMPtr<nsIURI> newURI(aURI);
+    nsCOMPtr<nsIURI> newURI = DeserializeURI(aURI);
+    if (!newURI) {
+        return false;
+    }
     nsCOMPtr<IHistory> history = services::GetHistoryService();
     NS_ABORT_IF_FALSE(history, "History must exist at this point.");
     if (history) {
-      history->RegisterVisitedCallback(newURI, nullptr);
+        history->RegisterVisitedCallback(newURI, nullptr);
     }
     return true;
 }
 
 
 bool
-ContentParent::RecvVisitURI(const IPC::URI& uri,
-                                   const IPC::URI& referrer,
-                                   const uint32_t& flags)
+ContentParent::RecvVisitURI(const URIParams& uri,
+                            const OptionalURIParams& referrer,
+                            const uint32_t& flags)
 {
-    nsCOMPtr<nsIURI> ourURI(uri);
-    nsCOMPtr<nsIURI> ourReferrer(referrer);
+    nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
+    if (!ourURI) {
+        return false;
+    }
+    nsCOMPtr<nsIURI> ourReferrer = DeserializeURI(referrer);
     nsCOMPtr<IHistory> history = services::GetHistoryService();
     NS_ABORT_IF_FALSE(history, "History must exist at this point");
     if (history) {
-      history->VisitURI(ourURI, ourReferrer, flags);
+        history->VisitURI(ourURI, ourReferrer, flags);
     }
     return true;
 }
 
 
 bool
-ContentParent::RecvSetURITitle(const IPC::URI& uri,
-                                      const nsString& title)
+ContentParent::RecvSetURITitle(const URIParams& uri,
+                               const nsString& title)
 {
-    nsCOMPtr<nsIURI> ourURI(uri);
+    nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
+    if (!ourURI) {
+        return false;
+    }
     nsCOMPtr<IHistory> history = services::GetHistoryService();
     NS_ABORT_IF_FALSE(history, "History must exist at this point");
     if (history) {
-      history->SetURITitle(ourURI, title);
+        history->SetURITitle(ourURI, title);
     }
     return true;
 }
@@ -1541,12 +1551,16 @@ ContentParent::RecvShowFilePicker(const int16_t& mode,
 }
 
 bool
-ContentParent::RecvLoadURIExternal(const IPC::URI& uri)
+ContentParent::RecvLoadURIExternal(const URIParams& uri)
 {
     nsCOMPtr<nsIExternalProtocolService> extProtService(do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
-    if (!extProtService)
+    if (!extProtService) {
         return true;
-    nsCOMPtr<nsIURI> ourURI(uri);
+    }
+    nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
+    if (!ourURI) {
+        return false;
+    }
     extProtService->LoadURI(ourURI, nullptr);
     return true;
 }

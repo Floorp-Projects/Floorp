@@ -13,6 +13,7 @@
 #include "nsFtpProtocolHandler.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/URIUtils.h"
 
 using namespace mozilla::ipc;
 
@@ -58,13 +59,15 @@ NS_IMPL_ISUPPORTS4(FTPChannelParent,
 //-----------------------------------------------------------------------------
 
 bool
-FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
+FTPChannelParent::RecvAsyncOpen(const URIParams& aURI,
                                 const uint64_t& aStartPos,
                                 const nsCString& aEntityID,
                                 const OptionalInputStreamParams& aUploadStream,
                                 const IPC::SerializedLoadContext& loadContext)
 {
-  nsCOMPtr<nsIURI> uri(aURI);
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (!uri)
+      return false;
 
 #ifdef DEBUG
   nsCString uriSpec;
@@ -167,8 +170,11 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   PRTime lastModified;
   chan->GetLastModifiedTime(&lastModified);
 
+  URIParams uri;
+  SerializeURI(chan->URI(), uri);
+
   if (mIPCClosed || !SendOnStartRequest(aContentLength, contentType,
-                                       lastModified, entityID, chan->URI())) {
+                                       lastModified, entityID, uri)) {
     return NS_ERROR_UNEXPECTED;
   }
 

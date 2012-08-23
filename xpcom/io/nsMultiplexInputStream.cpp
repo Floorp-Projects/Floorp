@@ -8,19 +8,17 @@
  * stream.
  */
 
-#include "IPC/IPCMessageUtils.h"
-#include "mozilla/Attributes.h"
+#include "base/basictypes.h"
 
 #include "nsMultiplexInputStream.h"
+#include "mozilla/Attributes.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsISeekableStream.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsIIPCSerializableObsolete.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/IPCSerializableParams.h"
 
 using namespace mozilla::ipc;
 

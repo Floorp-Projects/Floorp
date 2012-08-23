@@ -21,12 +21,12 @@ public:
   virtual ~CookieServiceParent();
 
 protected:
-  virtual bool RecvGetCookieString(const IPC::URI& aHost,
+  virtual bool RecvGetCookieString(const URIParams& aHost,
                                    const bool& aIsForeign,
                                    const bool& aFromHttp,
                                    nsCString* aResult);
 
-  virtual bool RecvSetCookieString(const IPC::URI& aHost,
+  virtual bool RecvSetCookieString(const URIParams& aHost,
                                    const bool& aIsForeign,
                                    const nsCString& aCookieString,
                                    const nsCString& aServerTime,

@@ -18,7 +18,6 @@
 #include "prlog.h"
 #include "prio.h"
 #include "nsIIPCSerializableInputStream.h"
-#include "nsIIPCSerializableObsolete.h"
 
 template<class CharType> class nsLineBuffer;
 
@@ -103,14 +102,12 @@ protected:
 class nsFileInputStream : public nsFileStreamBase,
                           public nsIFileInputStream,
                           public nsILineInputStream,
-                          public nsIIPCSerializableObsolete,
                           public nsIIPCSerializableInputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIFILEINPUTSTREAM
     NS_DECL_NSILINEINPUTSTREAM
-    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
     NS_IMETHOD Close();
@@ -184,7 +181,6 @@ public:
     using nsFileInputStream::Init;
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIPARTIALFILEINPUTSTREAM
-    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
     nsPartialFileInputStream()
