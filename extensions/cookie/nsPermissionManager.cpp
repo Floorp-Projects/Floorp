@@ -408,6 +408,8 @@ nsPermissionManager::InitDB(bool aRemoveFile)
 
       // fall through to the next upgrade
 
+    // TODO: we want to make default version as version 2 in order to fix bug 784875.
+    case 0:
     case 2:
       {
         // Add appId/isInBrowserElement fields.
@@ -428,20 +430,6 @@ nsPermissionManager::InitDB(bool aRemoveFile)
     // current version.
     case HOSTS_SCHEMA_VERSION:
       break;
-
-    case 0:
-      {
-        NS_WARNING("couldn't get schema version!");
-          
-        // the table may be usable; someone might've just clobbered the schema
-        // version. we can treat this case like a downgrade using the codepath
-        // below, by verifying the columns we care about are all there. for now,
-        // re-set the schema version in the db, in case the checks succeed (if
-        // they don't, we're dropping the table anyway).
-        rv = mDBConn->SetSchemaVersion(HOSTS_SCHEMA_VERSION);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      // fall through to downgrade check
 
     // downgrading.
     // if columns have been added to the table, we can still use the ones we
