@@ -4878,7 +4878,24 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 
     if (op->getBoolOption("ion-eager"))
         ion::js_IonOptions.setEagerCompilation();
-#endif
+
+#ifdef JS_THREADSAFE
+    if (const char *str = op->getStringOption("ion-parallel-compile")) {
+        if (strcmp(str, "on") == 0) {
+            if (GetCPUCount() <= 1) {
+                fprintf(stderr, "Parallel compilation not available on single core machines");
+                return EXIT_FAILURE;
+            }
+            ion::js_IonOptions.parallelCompilation = true;
+        } else if (strcmp(str, "off") == 0) {
+            ion::js_IonOptions.parallelCompilation = false;
+        } else {
+            return OptionFailure("ion-parallel-compile", str);
+        }
+    }
+#endif /* JS_THREADSAFE */
+
+#endif /* JS_ION */
 
     /* |scriptArgs| gets bound on the global before any code is run. */
     if (!BindScriptArgs(cx, obj, op))
@@ -5084,6 +5101,10 @@ main(int argc, char **argv, char **envp)
                                "Specify Ion register allocation:\n"
                                "  lsra: Linear Scan register allocation (default)")
         || !op.addBoolOption('\0', "ion-eager", "Always ion-compile methods")
+#ifdef JS_THREADSAFE
+        || !op.addStringOption('\0', "ion-parallel-compile", "on/off",
+                               "Compile scripts off thread (default: off)")
+#endif
     )
     {
         return EXIT_FAILURE;

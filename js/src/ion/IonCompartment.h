@@ -23,6 +23,9 @@ typedef void (*EnterIonCode)(void *code, int argc, Value *argv, StackFrame *fp,
                              CalleeToken calleeToken, Value *vp);
 
 class IonActivation;
+class IonBuilder;
+
+typedef Vector<IonBuilder*, 0, SystemAllocPolicy> OffThreadCompilationVector;
 
 class IonCompartment
 {
@@ -37,7 +40,7 @@ class IonCompartment
     ReadBarriered<IonCode> enterJIT_;
 
     // Vector mapping frame class sizes to bailout tables.
-    js::Vector<ReadBarriered<IonCode>, 4, SystemAllocPolicy> bailoutTables_;
+    Vector<ReadBarriered<IonCode>, 4, SystemAllocPolicy> bailoutTables_;
 
     // Generic bailout table; used if the bailout table overflows.
     ReadBarriered<IonCode> bailoutHandler_;
@@ -55,8 +58,14 @@ class IonCompartment
     // Map VMFunction addresses to the IonCode of the wrapper.
     VMWrapperMap *functionWrappers_;
 
+    // Any scripts for which off thread compilation has successfully finished,
+    // failed, or been cancelled. All off thread compilations which are started
+    // will eventually appear in this list asynchronously. Protected by the
+    // runtime's analysis lock.
+    OffThreadCompilationVector finishedOffThreadCompilations_;
+
     // Keep track of memoryregions that are going to be flushed.
-    js::ion::AutoFlushCache *flusher_;
+    AutoFlushCache *flusher_;
 
   private:
     IonCode *generateEnterJIT(JSContext *cx);
@@ -69,6 +78,10 @@ class IonCompartment
 
   public:
     IonCode *generateVMWrapper(JSContext *cx, const VMFunction &f);
+
+    OffThreadCompilationVector &finishedOffThreadCompilations() {
+        return finishedOffThreadCompilations_;
+    }
 
   public:
     bool initialize(JSContext *cx);
