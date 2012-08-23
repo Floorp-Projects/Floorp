@@ -18,7 +18,6 @@
 #include "RangeAnalysis.h"
 #include "LinearScan.h"
 #include "jscompartment.h"
-#include "jsworkers.h"
 #include "IonCompartment.h"
 #include "CodeGenerator.h"
 
@@ -148,29 +147,6 @@ IonCompartment::initialize(JSContext *cx)
 }
 
 void
-ion::FinishOffThreadBuilder(IonBuilder *builder)
-{
-    if (builder->script->isIonCompilingOffThread()) {
-        types::TypeCompartment &types = builder->script->compartment()->types;
-        builder->recompileInfo.compilerOutput(types)->invalidate();
-        builder->script->ion = NULL;
-    }
-    Foreground::delete_(builder->temp().lifoAlloc());
-}
-
-static inline void
-FinishAllOffThreadCompilations(IonCompartment *ion)
-{
-    OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
-
-    for (size_t i = 0; i < compilations.length(); i++) {
-        IonBuilder *builder = compilations[i];
-        FinishOffThreadBuilder(builder);
-    }
-    compilations.clear();
-}
-
-void
 IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 {
     // This function marks Ion code objects that must be kept alive if there is
@@ -203,10 +179,6 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 
     // functionWrappers_ are not marked because this is a WeakCache of VM
     // function implementations.
-
-    // Cancel any active or pending off thread compilations.
-    CancelOffThreadIonCompile(compartment, NULL);
-    FinishAllOffThreadCompilations(this);
 }
 
 void
@@ -728,16 +700,16 @@ ion::ToggleBarriers(JSCompartment *comp, bool needs)
 namespace js {
 namespace ion {
 
-bool
-CompileBackEnd(IonBuilder *builder)
+static bool
+BuildMIR(IonBuilder &builder, MIRGraph &graph)
 {
+    if (!builder.build())
+        return false;
     IonSpewPass("BuildSSA");
     // Note: don't call AssertGraphCoherency before SplitCriticalEdges,
     // the graph is not in RPO at this point.
 
-    MIRGraph &graph = builder->graph();
-
-    if (!SplitCriticalEdges(builder, graph))
+    if (!SplitCriticalEdges(&builder, graph))
         return false;
     IonSpewPass("Split Critical Edges");
     AssertGraphCoherency(graph);
@@ -841,141 +813,50 @@ CompileBackEnd(IonBuilder *builder)
     IonSpewPass("Bounds Check Elimination");
     AssertGraphCoherency(graph);
 
-    LIRGraph *lir = builder->temp().lifoAlloc()->new_<LIRGraph>(graph);
-    if (!lir)
-        return false;
+    return true;
+}
 
-    LIRGenerator lirgen(builder, graph, *lir);
+static bool
+GenerateCode(IonBuilder &builder, MIRGraph &graph)
+{
+    LIRGraph lir(graph);
+    LIRGenerator lirgen(&builder, graph, lir);
     if (!lirgen.generate())
         return false;
     IonSpewPass("Generate LIR");
 
     if (js_IonOptions.lsra) {
-        LinearScanAllocator regalloc(&lirgen, *lir);
+        LinearScanAllocator regalloc(&lirgen, lir);
         if (!regalloc.go())
             return false;
         IonSpewPass("Allocate Registers", &regalloc);
     }
 
-    builder->lir = lir;
+    CodeGenerator codegen(&builder, lir);
+    if (!codegen.generate())
+        return false;
+    // No spew: graph not changed.
+
     return true;
 }
 
-class AutoDestroyAllocator
-{
-    LifoAlloc *alloc;
-
-  public:
-    AutoDestroyAllocator(LifoAlloc *alloc) : alloc(alloc) {}
-
-    void cancel()
-    {
-        alloc = NULL;
-    }
-
-    ~AutoDestroyAllocator()
-    {
-        if (alloc)
-            Foreground::delete_(alloc);
-    }
-};
-
 /* static */ bool
-TestCompiler(IonBuilder *builder, MIRGraph *graph, AutoDestroyAllocator &autoDestroy)
+TestCompiler(IonBuilder &builder, MIRGraph &graph)
 {
-    JS_ASSERT(!builder->script->ion);
-    JSContext *cx = GetIonContext()->cx;
+    IonSpewNewFunction(&graph, builder.script);
 
-    IonSpewNewFunction(graph, builder->script);
-
-    if (!builder->build())
-        return false;
-    builder->clearForBackEnd();
-
-    if (js_IonOptions.parallelCompilation) {
-        builder->script->ion = ION_COMPILING_SCRIPT;
-
-        if (!StartOffThreadIonCompile(cx, builder))
-            return false;
-
-        // The allocator and associated data will be destroyed after being
-        // processed in the finishedOffThreadCompilations list.
-        autoDestroy.cancel();
-
-        return true;
-    }
-
-    if (!CompileBackEnd(builder))
+    if (!BuildMIR(builder, graph))
         return false;
 
-    CodeGenerator codegen(builder, *builder->lir);
-    if (!codegen.generate())
+    if (!GenerateCode(builder, graph))
         return false;
-
-    if (builder->script->hasIonScript()) {
-        // After Ion has finished compiling a script, remove any JITScripts it
-        // has to force continued execution in Ion code.
-        mjit::ReleaseScriptCodeFromVM(cx, builder->script);
-    }
 
     IonSpewEndFunction();
 
     return true;
 }
 
-void
-AttachFinishedCompilations(JSContext *cx)
-{
-    IonCompartment *ion = cx->compartment->ionCompartment();
-    if (!ion)
-        return;
-
-    AutoLockWorkerThreadState lock(cx->runtime);
-
-    OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
-
-    // Incorporate any off thread compilations which have finished, failed or
-    // have been cancelled, and destroy JM jitcode for any compilations which
-    // succeeded, to allow entering the Ion code from the interpreter.
-    while (!compilations.empty()) {
-        IonBuilder *builder = compilations.popCopy();
-
-        if (builder->lir) {
-            JSScript *script = builder->script;
-            IonContext ictx(cx, cx->compartment, &builder->temp());
-
-            CodeGenerator codegen(builder, *builder->lir);
-
-            types::AutoEnterCompilation enterCompiler(cx, types::AutoEnterCompilation::Ion);
-            enterCompiler.initExisting(builder->recompileInfo);
-
-            bool success;
-            {
-                // Release the worker thread lock and root the compiler for GC.
-                AutoTempAllocatorRooter root(cx, &builder->temp());
-                AutoUnlockWorkerThreadState unlock(cx->runtime);
-                success = codegen.generate();
-            }
-
-            if (success) {
-                if (script->hasIonScript())
-                    mjit::ReleaseScriptCodeFromVM(cx, script);
-            } else {
-                // Silently ignore OOM during code generation, we're at an
-                // operation callback and can't propagate failures.
-                cx->clearPendingException();
-            }
-        }
-
-        FinishOffThreadBuilder(builder);
-    }
-
-    compilations.clear();
-}
-
-static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
-
-template <bool Compiler(IonBuilder *, MIRGraph *, AutoDestroyAllocator &)>
+template <bool Compiler(IonBuilder &, MIRGraph &)>
 static bool
 IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
 {
@@ -986,23 +867,14 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
                         script);
 #endif
 
-    LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-    if (!alloc)
-        return false;
-
-    AutoDestroyAllocator autoDestroy(alloc);
-
-    TempAllocator *temp = alloc->new_<TempAllocator>(alloc);
-    if (!temp)
-        return false;
-
-    IonContext ictx(cx, cx->compartment, temp);
+    TempAllocator temp(&cx->tempLifoAlloc());
+    IonContext ictx(cx, cx->compartment, &temp);
 
     if (!cx->compartment->ensureIonCompartmentExists(cx))
         return false;
 
-    MIRGraph *graph = alloc->new_<MIRGraph>(temp);
-    CompileInfo *info = alloc->new_<CompileInfo>(script, fun, osrPc, constructing);
+    MIRGraph graph(&temp);
+    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(script, fun, osrPc, constructing);
     if (!info)
         return false;
 
@@ -1016,26 +888,14 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
 
     types::AutoEnterCompilation enterCompiler(cx, types::AutoEnterCompilation::Ion);
     enterCompiler.init(script, false, 0);
+    AutoCompilerRoots roots(script->compartment()->rt);
 
-    AutoTempAllocatorRooter root(cx, temp);
-
-    IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, &oracle, info);
-    if (!Compiler(builder, graph, autoDestroy)) {
+    IonBuilder builder(cx, &temp, &graph, &oracle, info);
+    if (!Compiler(builder, graph)) {
         IonSpew(IonSpew_Abort, "IM Compilation failed.");
         return false;
     }
 
-    return true;
-}
-
-bool
-TestIonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
-{
-    if (!IonCompile<TestCompiler>(cx, script, fun, osrPc, constructing)) {
-        if (!cx->isExceptionPending())
-            ForbidCompilation(script);
-        return false;
-    }
     return true;
 }
 
@@ -1119,7 +979,7 @@ CheckScriptSize(JSScript *script)
     return true;
 }
 
-template <bool Compiler(IonBuilder *, MIRGraph *, AutoDestroyAllocator &)>
+template <bool Compiler(IonBuilder &, MIRGraph &)>
 static MethodStatus
 Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
 {
@@ -1174,10 +1034,6 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecod
     if (script->ion == ION_DISABLED_SCRIPT)
         return Method_Skipped;
 
-    // Skip if the script is being compiled off thread.
-    if (script->ion == ION_COMPILING_SCRIPT)
-        return Method_Skipped;
-
     // Skip if the code is expected to result in a bailout.
     if (script->ion && script->ion->bailoutExpected())
         return Method_Skipped;
@@ -1221,10 +1077,6 @@ ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
 
     // Skip if the script has been disabled.
     if (script->ion == ION_DISABLED_SCRIPT)
-        return Method_Skipped;
-
-    // Skip if the script is being compiled off thread.
-    if (script->ion == ION_COMPILING_SCRIPT)
         return Method_Skipped;
 
     // Skip if the code is expected to result in a bailout.
@@ -1527,13 +1379,6 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
 void
 ion::InvalidateAll(FreeOp *fop, JSCompartment *c)
 {
-    if (!c->ionCompartment())
-        return;
-
-    CancelOffThreadIonCompile(c, NULL);
-
-    FinishAllOffThreadCompilations(c->ionCompartment());
-
     for (IonActivationIterator iter(fop->runtime()); iter.more(); ++iter) {
         if (iter.activation()->compartment() == c) {
             AutoFlushCache afc ("InvalidateAll", c->ionCompartment());

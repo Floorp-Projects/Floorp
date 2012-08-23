@@ -80,13 +80,10 @@ CompilerOutput::isValid() const
 #endif
 
     if (isIon()) {
-        if (script->hasIonScript()) {
-            JS_ASSERT(this == script->ion->recompileInfo().compilerOutput(types));
-            return true;
-        }
-        if (script->isIonCompilingOffThread())
-            return true;
-        return false;
+        if (!script->hasIonScript())
+            return false;
+        JS_ASSERT(this == script->ion->recompileInfo().compilerOutput(types));
+        return true;
     }
     return false;
 }
@@ -373,13 +370,6 @@ struct AutoEnterCompilation
         if (!cx->compartment->types.constrainedOutputs->append(co))
             return false;
         return true;
-    }
-
-    void initExisting(RecompileInfo oldInfo)
-    {
-        // Initialize the active compilation index from that produced during a
-        // previous compilation, for finishing an off thread compilation.
-        info = oldInfo;
     }
 
     ~AutoEnterCompilation()

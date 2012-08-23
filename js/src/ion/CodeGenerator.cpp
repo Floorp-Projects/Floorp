@@ -2803,7 +2803,7 @@ CodeGenerator::generate()
     encodeSafepoints();
 
     JSScript *script = gen->info().script();
-    JS_ASSERT(!script->hasIonScript());
+    JS_ASSERT(!script->ion);
 
     uint32 scriptFrameSize = frameClass_ == FrameSizeClass::None()
                            ? frameDepth_

@@ -631,7 +631,7 @@ private:
     void emitInlineReturnValue(FrameEntry *fe);
     void dispatchCall(VoidPtrStubUInt32 stub, uint32_t argc);
     void interruptCheckHelper();
-    void ionCompileHelper();
+    void recompileCheckHelper();
     CompileStatus methodEntryHelper();
     CompileStatus profilingPushHelper();
     void profilingPopHelper();

@@ -795,6 +795,13 @@ struct JITScript
      */
     uint32_t        ionCalls;
 
+    /*
+     * If set, we decided to keep the JITChunk so that Ion can access its caches.
+     * The chunk has to be destroyed the next time the script runs in JM.
+     * Note that this flag implies nchunks == 1.
+     */
+    bool mustDestroyEntryChunk;
+
 #ifdef JS_MONOIC
     /* Inline cache at function entry for checking this/argument types. */
     JSC::CodeLocationLabel argsCheckStub;
@@ -901,10 +908,6 @@ ReleaseScriptCode(FreeOp *fop, JSScript *script)
 
     script->destroyMJITInfo(fop);
 }
-
-/* Can be called at any time. */
-void
-ReleaseScriptCodeFromVM(JSContext *cx, JSScript *script);
 
 // Expand all stack frames inlined by the JIT within a compartment.
 void

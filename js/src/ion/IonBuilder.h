@@ -17,8 +17,6 @@
 namespace js {
 namespace ion {
 
-class LIRGraph;
-
 class IonBuilder : public MIRGenerator
 {
     enum ControlStatus {
@@ -426,12 +424,6 @@ class IonBuilder : public MIRGenerator
   public:
     // A builder is inextricably tied to a particular script.
     JSScript * const script;
-
-    // Compilation index for this attempt.
-    types::RecompileInfo const recompileInfo;
-
-    // If off thread compilation is successful, final LIR is attached here.
-    LIRGraph *lir;
 
     void clearForBackEnd();
 

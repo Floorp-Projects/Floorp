@@ -1064,8 +1064,7 @@ class JS_PUBLIC_API(AutoGCRooter) {
         REGEXPSTATICS=-25, /* js::RegExpStatics::AutoRooter */
         NAMEVECTOR =  -26, /* js::AutoNameVector */
         HASHABLEVALUE=-27,
-        IONMASM =     -28, /* js::ion::MacroAssembler */
-        IONALLOC =    -29  /* js::ion::AutoTempAllocatorRooter */
+        IONMASM =     -28  /* js::ion::MacroAssembler */
     };
 
   private:
