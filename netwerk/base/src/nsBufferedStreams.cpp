@@ -12,7 +12,6 @@
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/IPCSerializableParams.h"
 
 #ifdef DEBUG_brendan
 # define METERING

@@ -9,6 +9,7 @@
 #include "nsIAuthPromptProvider.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/URIUtils.h"
 
 using namespace mozilla::ipc;
 
@@ -43,14 +44,17 @@ WebSocketChannelParent::RecvDeleteSelf()
 }
 
 bool
-WebSocketChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
+WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
                                       const nsCString& aOrigin,
                                       const nsCString& aProtocol,
                                       const bool& aSecure,
                                       const IPC::SerializedLoadContext& loadContext)
 {
   LOG(("WebSocketChannelParent::RecvAsyncOpen() %p\n", this));
+
   nsresult rv;
+  nsCOMPtr<nsIURI> uri;
+
   if (aSecure) {
     mChannel =
       do_CreateInstance("@mozilla.org/network/protocol;1?name=wss", &rv);
@@ -72,7 +76,13 @@ WebSocketChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
   if (NS_FAILED(rv))
     goto fail;
 
-  rv = mChannel->AsyncOpen(aURI, aOrigin, this, nullptr);
+  uri = DeserializeURI(aURI);
+  if (!uri) {
+    rv = NS_ERROR_FAILURE;
+    goto fail;
+  }
+
+  rv = mChannel->AsyncOpen(uri, aOrigin, this, nullptr);
   if (NS_FAILED(rv))
     goto fail;
 

@@ -39,6 +39,8 @@
 #include "MobileConnection.h"
 #include "nsIIdleObserver.h"
 #include "nsIPermissionManager.h"
+#include "nsNetUtil.h"
+#include "nsIHttpChannel.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"

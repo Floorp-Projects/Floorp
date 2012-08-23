@@ -21,7 +21,6 @@
 #include "nsIClassInfoImpl.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/IPCSerializableParams.h"
 
 using namespace mozilla::ipc;
 

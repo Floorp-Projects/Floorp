@@ -804,6 +804,10 @@ class GatherDecls(TcheckVisitor):
             ipdltype = FDType(using.type.spec)
         else:
             ipdltype = ImportedCxxType(using.type.spec)
+            existingType = self.symtab.lookup(ipdltype.fullname())
+            if existingType and existingType.fullname == ipdltype.fullname():
+                using.decl = existingType
+                return
         using.decl = self.declare(
             loc=using.loc,
             type=ipdltype,

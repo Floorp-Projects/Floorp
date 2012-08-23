@@ -4,10 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CookieServiceChild.h"
+
+#include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
@@ -108,9 +112,12 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
   if (RequireThirdPartyCheck())
     mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
+  URIParams uriParams;
+  SerializeURI(aHostURI, uriParams);
+
   // Synchronously call the parent.
   nsCAutoString result;
-  SendGetCookieString(IPC::URI(aHostURI), !!isForeign, aFromHttp, &result);
+  SendGetCookieString(uriParams, !!isForeign, aFromHttp, &result);
   if (!result.IsEmpty())
     *aCookieString = ToNewCString(result);
 
@@ -137,9 +144,12 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   if (aServerTime)
     serverTime.Rebind(aServerTime);
 
+  URIParams uriParams;
+  SerializeURI(aHostURI, uriParams);
+
   // Synchronously call the parent.
-  SendSetCookieString(IPC::URI(aHostURI), !!isForeign,
-                      cookieString, serverTime, aFromHttp);
+  SendSetCookieString(uriParams, !!isForeign, cookieString, serverTime,
+                      aFromHttp);
   return NS_OK;
 }
 

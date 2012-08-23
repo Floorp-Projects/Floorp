@@ -6,18 +6,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
+include InputStreamParams;
+include URIParams;
 
 include "mozilla/net/PHttpChannelParams.h";
 include "mozilla/net/NeckoMessageUtils.h";
 include "prio.h";
-
-include IPCSerializableParams;
+include "SerializedLoadContext.h";
 
 using RequestHeaderTuples;
 using nsHttpHeaderArray;
 using nsHttpResponseHead;
 using nsHttpAtom;
-using IPC::URI;
 using IPC::SerializedLoadContext;
 using PRNetAddr;
 
@@ -30,13 +30,13 @@ protocol PHttpChannel
   manager PNecko;
 
 parent:
-  AsyncOpen(URI                 uri,
+  AsyncOpen(URIParams           uri,
             // - TODO: bug 571161: unclear if any HTTP channel clients ever
             // set originalURI != uri (about:credits?); also not clear if
             // chrome channel would ever need to know.  Get rid of next arg?
-            URI                 original,
-            URI                 doc,
-            URI                 referrer,
+            OptionalURIParams   original,
+            OptionalURIParams   doc,
+            OptionalURIParams   referrer,
             uint32_t            loadFlags,
             RequestHeaderTuples requestHeaders,
             nsHttpAtom          requestMethod,
@@ -130,7 +130,7 @@ child:
   // Called to initiate content channel redirect, starts talking to sinks
   // on the content process and reports result via Redirect2Verify above
   Redirect1Begin(uint32_t           newChannelId,
-                 URI                newUri,
+                 URIParams          newUri,
                  uint32_t           redirectFlags,
                  nsHttpResponseHead responseHead);
 

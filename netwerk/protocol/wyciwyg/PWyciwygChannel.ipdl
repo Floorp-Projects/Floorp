@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
+include URIParams;
 
-include "mozilla/net/NeckoMessageUtils.h";
+include "SerializedLoadContext.h";
 
-using IPC::URI;
 using IPC::SerializedLoadContext;
 
 namespace mozilla {
@@ -20,8 +20,8 @@ protocol PWyciwygChannel
 parent:
   __delete__();
 
-  Init(URI uri);
-  AsyncOpen(URI                   originalURI,
+  Init(URIParams uri);
+  AsyncOpen(URIParams             originalURI,
             uint32_t              loadFlags,
             SerializedLoadContext loadContext);
 

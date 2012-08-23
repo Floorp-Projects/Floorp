@@ -42,14 +42,14 @@ SerializeInputStream(nsIInputStream* aInputStream,
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
     do_QueryInterface(aInputStream);
   if (!serializable) {
-    NS_WARNING("Input stream is not serializable!");
-    return;
+    MOZ_NOT_REACHED("Input stream is not serializable!");
   }
 
   serializable->Serialize(aParams);
 
-  NS_WARN_IF_FALSE(aParams.type() != InputStreamParams::T__None,
-                   "Serialize failed!");
+  if (aParams.type() == InputStreamParams::T__None) {
+    MOZ_NOT_REACHED("Serialize failed!");
+  }
 }
 
 void
