@@ -46,11 +46,11 @@ ParseContext::ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel,
     parserPC(&prs->pc),
     lexdeps(prs->context),
     parent(prs->pc),
-    innermostWith(NULL),
     funcStmts(NULL),
     funHasReturnExpr(false),
     funHasReturnVoid(false),
     parsingForInit(false),
+    parsingWith(prs->pc ? prs->pc->parsingWith : false), // inherit from parent context
     inDeclDestructuring(false)
 {
     prs->pc = this;
