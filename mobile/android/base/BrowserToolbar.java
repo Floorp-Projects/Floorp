@@ -30,6 +30,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
@@ -47,6 +48,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private static final String LOGTAG = "GeckoToolbar";
     private LinearLayout mLayout;
     private Button mAwesomeBar;
+    private TextView mTitle;
+    private int mTitlePadding;
     private ImageButton mTabs;
     private ImageView mBack;
     private ImageView mForward;
@@ -65,7 +68,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     final private BrowserApp mActivity;
     private LayoutInflater mInflater;
     private Handler mHandler;
-    private int[] mPadding;
     private boolean mHasSoftMenuButton;
 
     private boolean mShowSiteSecurity;
@@ -98,6 +100,11 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
         mShowSiteSecurity = false;
         mShowReader = false;
+
+        mTitle = (TextView) mLayout.findViewById(R.id.awesome_bar_title);
+        mTitlePadding = mTitle.getPaddingRight();
+        if (Build.VERSION.SDK_INT >= 16)
+            mTitle.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
         mAwesomeBar = (Button) mLayout.findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
@@ -133,11 +140,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 }
             }
         });
-
-        mPadding = new int[] { mAwesomeBar.getPaddingLeft(),
-                               mAwesomeBar.getPaddingTop(),
-                               mAwesomeBar.getPaddingRight(),
-                               mAwesomeBar.getPaddingBottom() };
 
         mTabs = (ImageButton) mLayout.findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
@@ -178,21 +180,22 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             }
         });
 
-        mFavicon = (ImageButton) mLayout.findViewById(R.id.favicon);
-        mSiteSecurity = (ImageButton) mLayout.findViewById(R.id.site_security);
-        mSiteSecurity.setOnClickListener(new Button.OnClickListener() {
+        Button.OnClickListener faviconListener = new Button.OnClickListener() {
             public void onClick(View view) {
-                int[] lockLocation = new int[2];
-                view.getLocationOnScreen(lockLocation);
+                if (mSiteSecurity.getVisibility() != View.VISIBLE)
+                    return;
 
-                RelativeLayout.LayoutParams iconsLayoutParams =
-                        (RelativeLayout.LayoutParams) ((View) view.getParent()).getLayoutParams();
-
-                // Calculate the left margin for the arrow based on the position of the lock icon.
-                int leftMargin = lockLocation[0] - iconsLayoutParams.rightMargin;
-                SiteIdentityPopup.getInstance().show(mSiteSecurity, leftMargin);
+                SiteIdentityPopup.getInstance().show(mSiteSecurity);
             }
-        });
+        };
+
+        mFavicon = (ImageButton) mLayout.findViewById(R.id.favicon);
+        mFavicon.setOnClickListener(faviconListener);
+        if (Build.VERSION.SDK_INT >= 16)
+            mFavicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+        mSiteSecurity = (ImageButton) mLayout.findViewById(R.id.site_security);
+        mSiteSecurity.setOnClickListener(faviconListener);
 
         mProgressSpinner = (AnimationDrawable) mActivity.getResources().getDrawable(R.drawable.progress_spinner);
         
@@ -439,13 +442,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mSiteSecurity.setVisibility(mShowSiteSecurity && !isLoading ? View.VISIBLE : View.GONE);
         mReader.setVisibility(mShowReader && !isLoading ? View.VISIBLE : View.GONE);
 
-        if (!isLoading && !mShowSiteSecurity && !mShowReader) {
-            // No visible page actions
-            mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[2], mPadding[3]);
-        } else {
-            // At least one visible page action
-            mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[0], mPadding[3]);
-        }
+        // We want title to fill the whole space available for it when there are icons
+        // being shown on the right side of the toolbar as the icons already have some
+        // padding in them. This is just to avoid wasting space when icons are shown.
+        mTitle.setPadding(0, 0, (!mShowReader && !isLoading ? mTitlePadding : 0), 0);
 
         updateFocusOrder();
     }
@@ -483,7 +483,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         if (tab != null && "about:home".equals(tab.getURL()))
             title = null;
 
-        mAwesomeBar.setText(title);
+        mTitle.setText(title);
+        mAwesomeBar.setContentDescription(title != null ? title : mTitle.getHint());
     }
 
     public void setFavicon(Drawable image) {
