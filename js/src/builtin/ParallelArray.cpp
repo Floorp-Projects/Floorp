@@ -804,7 +804,6 @@ Class ParallelArrayObject::class_ = {
         enumerate,
         NULL,                // typeof
         NULL,                // thisObject
-        NULL,                // clear
     }
 };
 

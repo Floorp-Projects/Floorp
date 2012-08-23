@@ -5444,39 +5444,6 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     }
 }
 
-static Shape *
-LastConfigurableShape(JSObject *obj)
-{
-    for (Shape::Range r(obj->lastProperty()->all()); !r.empty(); r.popFront()) {
-        Shape *shape = &r.front();
-        if (shape->configurable())
-            return shape;
-    }
-    return NULL;
-}
-
-bool
-js_ClearNative(JSContext *cx, JSObject *obj)
-{
-    /* Remove all configurable properties from obj. */
-    while (Shape *shape = LastConfigurableShape(obj)) {
-        if (!obj->removeProperty(cx, shape->propid()))
-            return false;
-    }
-
-    /* Set all remaining writable plain data properties to undefined. */
-    for (Shape::Range r(obj->lastProperty()->all()); !r.empty(); r.popFront()) {
-        Shape *shape = &r.front();
-        if (shape->isDataDescriptor() &&
-            shape->writable() &&
-            shape->hasDefaultSetter() &&
-            shape->hasSlot()) {
-            obj->nativeSetSlot(shape->slot(), UndefinedValue());
-        }
-    }
-    return true;
-}
-
 JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx)
 {
