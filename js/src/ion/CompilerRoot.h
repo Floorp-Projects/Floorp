@@ -35,12 +35,12 @@ class CompilerRoot : public CompilerRootNode
   public:
     // Sets the pointer and inserts into root list. The pointer becomes read-only.
     void setRoot(T root) {
-        JS::CompilerRootNode *&rootList = GetIonContext()->temp->rootList();
+        JSRuntime *rt = root->compartment()->rt;
 
         JS_ASSERT(!ptr);
         ptr = root;
-        next = rootList;
-        rootList = this;
+        next = rt->ionCompilerRootList;
+        rt->ionCompilerRootList = this;
     }
 
   public:
@@ -52,6 +52,24 @@ typedef CompilerRoot<JSObject*>   CompilerRootObject;
 typedef CompilerRoot<JSFunction*> CompilerRootFunction;
 typedef CompilerRoot<PropertyName*> CompilerRootPropertyName;
 typedef CompilerRoot<Value> CompilerRootValue;
+
+// Automatically clears the compiler root list when compilation finishes.
+class AutoCompilerRoots
+{
+    JSRuntime *rt_;
+
+  public:
+    AutoCompilerRoots(JSRuntime *rt)
+      : rt_(rt)
+    {
+        JS_ASSERT(rt_->ionCompilerRootList == NULL);
+    }
+
+    ~AutoCompilerRoots()
+    {
+        rt_->ionCompilerRootList = NULL;
+    }
+};
 
 } // namespace ion
 } // namespace js

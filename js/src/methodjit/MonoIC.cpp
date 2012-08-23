@@ -591,7 +591,7 @@ class CallCompiler : public BaseCompiler
 
         /* Guard that the ion pointer is valid. */
         Jump noIonCode = masm.branchPtr(Assembler::BelowOrEqual, ionScript,
-                                        ImmPtr(ION_COMPILING_SCRIPT));
+                                        ImmPtr(ION_DISABLED_SCRIPT));
 
         RegisterID t0 = regs.takeAnyReg().reg();
         RegisterID t1 = Registers::ClobberInCall;

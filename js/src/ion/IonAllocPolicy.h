@@ -22,14 +22,10 @@ class TempAllocator
     LifoAlloc *lifoAlloc_;
     void *mark_;
 
-    // Linked list of GCThings rooted by this allocator.
-    JS::CompilerRootNode *rootList_;
-
   public:
     TempAllocator(LifoAlloc *lifoAlloc)
       : lifoAlloc_(lifoAlloc),
-        mark_(lifoAlloc->mark()),
-        rootList_(NULL)
+        mark_(lifoAlloc->mark())
     { }
 
     ~TempAllocator()
@@ -57,35 +53,11 @@ class TempAllocator
         return lifoAlloc_;
     }
 
-    JS::CompilerRootNode *&rootList()
-    {
-        return rootList_;
-    }
-
     bool ensureBallast() {
         // Most infallible Ion allocations are small, so we use a ballast of
         // ~16K for now.
         return lifoAlloc_->ensureUnusedApproximate(16 * 1024);
     }
-};
-
-// Stack allocated rooter for all roots associated with a TempAllocator
-class AutoTempAllocatorRooter : private AutoGCRooter
-{
-  public:
-    explicit AutoTempAllocatorRooter(JSContext *cx, TempAllocator *temp
-                                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, IONALLOC), temp(temp)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-    void trace(JSTracer *trc);
-
-  private:
-    TempAllocator *temp;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class IonAllocPolicy

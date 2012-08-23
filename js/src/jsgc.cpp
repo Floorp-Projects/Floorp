@@ -2494,13 +2494,6 @@ AutoGCRooter::trace(JSTracer *trc)
 #endif
         return;
       }
-
-      case IONALLOC: {
-#ifdef JS_ION
-        static_cast<js::ion::AutoTempAllocatorRooter *>(this)->trace(trc);
-#endif
-        return;
-      }
     }
 
     JS_ASSERT(tag >= 0);
@@ -2630,6 +2623,7 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
 	
 #ifdef JS_ION
     ion::MarkIonActivations(rt, trc);
+    ion::MarkIonCompilerRoots(trc);
 #endif
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
@@ -2924,7 +2918,7 @@ AssertBackgroundSweepingFinshed(JSRuntime *rt)
 #endif
 
 #ifdef JS_THREADSAFE
-unsigned
+static unsigned
 GetCPUCount()
 {
     static unsigned ncpus = 0;
