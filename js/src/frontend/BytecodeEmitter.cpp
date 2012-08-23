@@ -1686,10 +1686,8 @@ BytecodeEmitter::needsImplicitThis()
         return true;
 
     if (sc->inFunction()) {
-        for (const FunctionBox *funbox = this->sc->funbox(); funbox; funbox = funbox->parent) {
-            if (funbox->inWith)
-                return true;
-        }
+        if (sc->funbox()->inWith)
+            return true;
     } else {
         JSObject *scope = sc->scopeChain();
         while (scope) {

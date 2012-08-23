@@ -174,8 +174,6 @@ struct ParseContext                 /* tree context for semantic checks */
 
     ParseContext     *parent;       /* Enclosing function or global context.  */
 
-    ParseNode       *innermostWith; /* innermost WITH parse node */
-
     FuncStmtSet     *funcStmts;     /* Set of (non-top-level) function statements
                                        that will alias any top-level bindings with
                                        the same name. */
@@ -189,6 +187,9 @@ struct ParseContext                 /* tree context for semantic checks */
     // source code, and cleared when that region is exited.
     bool            parsingForInit:1;   /* true while parsing init expr of for;
                                            exclude 'in' */
+    bool            parsingWith:1;  /* true while we are within a
+                                       with-statement or E4X filter-expression
+                                       in the current ParseContext chain */
 
     // Set when parsing a declaration-like destructuring pattern.  This flag
     // causes PrimaryExpr to create PN_NAME parse nodes for variable references

@@ -398,7 +398,7 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *
     bufEnd(0),
     ndefaults(0),
     strictModeState(sms),
-    inWith(!!outerpc->innermostWith),
+    inWith(outerpc->parsingWith),
     inGenexpLambda(false),
     cxFlags(outerpc->sc->context)     // the cxFlags are set in LeaveFunction
 {
@@ -1151,7 +1151,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
              * by eval and function statements (which both flag the function as
              * having an extensible scope) or any enclosing 'with'.
              */
-            if (funpc->sc->funHasExtensibleScope() || pc->innermostWith)
+            if (funpc->sc->funHasExtensibleScope() || pc->parsingWith)
                 DeoptimizeUsesWithin(dn, fn->pn_pos);
 
             if (!outer_dn) {
@@ -3482,8 +3482,8 @@ Parser::withStatement()
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_WITH);
     pn->pn_left = pn2;
 
-    ParseNode *oldWith = pc->innermostWith;
-    pc->innermostWith = pn;
+    bool oldParsingWith = pc->parsingWith;
+    pc->parsingWith = true;
 
     StmtInfoPC stmtInfo(context);
     PushStatementPC(pc, &stmtInfo, STMT_WITH);
@@ -3496,7 +3496,7 @@ Parser::withStatement()
     pn->pn_right = pn2;
 
     pc->sc->setBindingsAccessedDynamically();
-    pc->innermostWith = oldWith;
+    pc->parsingWith = oldParsingWith;
 
     /*
      * Make sure to deoptimize lexical dependencies inside the |with|
@@ -5523,8 +5523,8 @@ Parser::memberExpr(bool allowCallSyntax)
                     pc->sc->setBindingsAccessedDynamically();
 
                     StmtInfoPC stmtInfo(context);
-                    ParseNode *oldWith = pc->innermostWith;
-                    pc->innermostWith = lhs;
+                    bool oldParsingWith = pc->parsingWith;
+                    pc->parsingWith = true;
                     PushStatementPC(pc, &stmtInfo, STMT_WITH);
 
                     ParseNode *filter = bracketedExpr();
@@ -5533,7 +5533,7 @@ Parser::memberExpr(bool allowCallSyntax)
                     filter->setInParens(true);
                     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
 
-                    pc->innermostWith = oldWith;
+                    pc->parsingWith = oldParsingWith;
                     PopStatementPC(context, pc);
 
                     nextMember =
