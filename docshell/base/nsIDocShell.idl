@@ -589,23 +589,23 @@ interface nsIDocShell : nsISupports
   /**
    * Returns true iff the docshell is marked as a browser frame.
    */
-  readonly attribute boolean isBrowserElement;
+  [infallible] readonly attribute boolean isBrowserElement;
 
   /**
    * Returns true iif the docshell is marked as an app frame.
    */
-  readonly attribute boolean isApp;
+  [infallible] readonly attribute boolean isApp;
 
   /**
    * Returns true iif the docshell is marked as a type that behaves like a
    * content boundary.
    */
-  readonly attribute boolean isContentBoundary;
+  [infallible] readonly attribute boolean isContentBoundary;
 
   /**
    * Returns true iif the docshell is inside a browser element.
    */
-  readonly attribute boolean isInBrowserElement;
+  [infallible] readonly attribute boolean isInBrowserElement;
 
   /**
    * Returns true iif the docshell is inside an application.  However, it will
@@ -625,13 +625,13 @@ interface nsIDocShell : nsISupports
    * If you're doing a security check, use the content's principal instead of
    * this method.
    */
-  readonly attribute boolean isInApp;
+  [infallible] readonly attribute boolean isInApp;
 
   /**
    * Returns if the docshell has a docshell that behaves as a content boundary
    * in his parent hierarchy.
    */
-  readonly attribute boolean isBelowContentBoundary;
+  [infallible] readonly attribute boolean isBelowContentBoundary;
 
   /**
    * Set the app id this docshell is associated with. The id has to be a valid
@@ -650,7 +650,7 @@ interface nsIDocShell : nsISupports
    * Returns the app id of the app the docshell is in. Returns
    * nsIScriptSecurityManager::NO_APP_ID if the docshell is not in an app.
    */
-  readonly attribute unsigned long appId;
+  [infallible] readonly attribute unsigned long appId;
 
   /** 
    * True iff asynchronous panning and zooming is enabled for this
