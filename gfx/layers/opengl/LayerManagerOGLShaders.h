@@ -233,6 +233,7 @@ gl_FragColor = texture2D(uTexture, vTexCoord) * uLayerOpacity * mask;\n\
 ";
 
 static const char sRGBATextureLayerExternalFS[] = "/* sRGBATextureLayerExternalFS */\n\
+#extension GL_OES_EGL_image_external : require\n\
 /* Fragment Shader */\n\
 #ifdef GL_ES\n\
 precision lowp float;\n\
@@ -247,7 +248,6 @@ varying mediump vec2 vTexCoord;\n\
 varying vec2 vTexCoord;\n\
 #endif\n\
 \n\
-#extension GL_OES_EGL_image_external : require\n\
 uniform samplerExternalOES uTexture;\n\
 uniform mat4 uTextureTransform;\n\
 void main()\n\
@@ -259,6 +259,7 @@ gl_FragColor = texture2D(uTexture, (uTextureTransform * vec4(vTexCoord.x, vTexCo
 ";
 
 static const char sRGBATextureLayerExternalMaskFS[] = "/* sRGBATextureLayerExternalMaskFS */\n\
+#extension GL_OES_EGL_image_external : require\n\
 /* Fragment Shader */\n\
 #ifdef GL_ES\n\
 precision lowp float;\n\
@@ -276,7 +277,6 @@ varying vec2 vTexCoord;\n\
 varying vec2 vMaskCoord;\n\
 uniform sampler2D uMaskTexture;\n\
 \n\
-#extension GL_OES_EGL_image_external : require\n\
 uniform samplerExternalOES uTexture;\n\
 uniform mat4 uTextureTransform;\n\
 void main()\n\
@@ -288,6 +288,7 @@ gl_FragColor = texture2D(uTexture, (uTextureTransform * vec4(vTexCoord.x, vTexCo
 ";
 
 static const char sRGBATextureLayerExternalMask3DFS[] = "/* sRGBATextureLayerExternalMask3DFS */\n\
+#extension GL_OES_EGL_image_external : require\n\
 /* Fragment Shader */\n\
 #ifdef GL_ES\n\
 precision lowp float;\n\
@@ -305,7 +306,6 @@ varying vec2 vTexCoord;\n\
 varying vec3 vMaskCoord;\n\
 uniform sampler2D uMaskTexture;\n\
 \n\
-#extension GL_OES_EGL_image_external : require\n\
 uniform samplerExternalOES uTexture;\n\
 uniform mat4 uTextureTransform;\n\
 void main()\n\

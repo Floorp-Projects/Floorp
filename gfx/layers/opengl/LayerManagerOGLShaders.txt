@@ -213,8 +213,10 @@ $FRAGMENT_CALC_MASK<mask>$
 
 // Single texture in RGBA format for use with GL_TEXTURE_EXTERNAL_OES
 @shader sRGBATextureLayerExternal<mask:,Mask,Mask3D>FS
-$LAYER_FRAGMENT<mask>$
 #extension GL_OES_EGL_image_external : require
+
+$LAYER_FRAGMENT<mask>$
+
 uniform samplerExternalOES uTexture;
 uniform mat4 uTextureTransform;
 
