@@ -1102,9 +1102,7 @@
 #if WTF_PLATFORM_CHROMIUM
 #define ENABLE_YARR_JIT 0
 
-#elif ENABLE_JIT && !defined(ENABLE_YARR_JIT)
-#define ENABLE_YARR_JIT 1
-
+#elif ENABLE_YARR_JIT
 /* Setting this flag compares JIT results with interpreter results. */
 #define ENABLE_YARR_JIT_DEBUG 0
 #endif

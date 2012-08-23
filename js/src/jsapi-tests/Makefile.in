@@ -65,6 +65,7 @@ CPPSRCS = \
   testXDR.cpp \
   testProfileStrings.cpp \
   testJSEvaluateScript.cpp \
+  testErrorCopying.cpp \
   $(NULL)
 
 CSRCS = \

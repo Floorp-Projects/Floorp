@@ -74,7 +74,7 @@ stubs::SetName(VMFrame &f, PropertyName *name)
     RootedObject scope(cx, &f.regs.sp[-2].toObject());
     HandleValue value = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
 
-    if (!SetNameOperation(cx, f.pc(), scope, value))
+    if (!SetNameOperation(cx, f.script(), f.pc(), scope, value))
         THROW();
 
     f.regs.sp[-2] = f.regs.sp[-1];
@@ -326,7 +326,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
     Rooted<JSObject*> parent(cx, &fp->varObj());
 
     /* ES5 10.5 (NB: with subsequent errata). */
-    RootedPropertyName name(cx, fun->atom->asPropertyName());
+    RootedPropertyName name(cx, fun->atom()->asPropertyName());
     RootedShape shape(cx);
     RootedObject pobj(cx);
     if (!JSObject::lookupProperty(cx, parent, name, &pobj, &shape))

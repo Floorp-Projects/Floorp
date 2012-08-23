@@ -963,8 +963,8 @@ ParallelArrayObject::create(JSContext *cx, HandleObject buffer, uint32_t offset,
         TypeObject *bufferType = buffer->getType(cx);
         TypeObject *resultType = result->getType(cx);
         if (!bufferType->unknownProperties() && !resultType->unknownProperties()) {
-            TypeSet *bufferIndexTypes = bufferType->getProperty(cx, JSID_VOID, false);
-            TypeSet *resultIndexTypes = resultType->getProperty(cx, JSID_VOID, true);
+            HeapTypeSet *bufferIndexTypes = bufferType->getProperty(cx, JSID_VOID, false);
+            HeapTypeSet *resultIndexTypes = resultType->getProperty(cx, JSID_VOID, true);
             bufferIndexTypes->addSubset(cx, resultIndexTypes);
         }
     }

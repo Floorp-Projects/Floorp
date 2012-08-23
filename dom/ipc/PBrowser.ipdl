@@ -251,13 +251,20 @@ parent:
                                 nsString aName, nsString aFeatures)
       returns (bool windowOpened);
 
-    NotifyDOMTouchListenerAdded();
-
     /**
      * Instructs the TabParent to forward a request to zoom to a rect given in
      * CSS pixels. This rect is relative to the document.
      */
     ZoomToRect(gfxRect aRect);
+
+    /**
+     * We know for sure that content has either preventDefaulted or not
+     * preventDefaulted. This applies to an entire batch of touch events. It is
+     * expected that, if there are any DOM touch listeners, touch events will be
+     * batched and only processed for panning and zooming if content does not
+     * preventDefault.
+     */
+    ContentReceivedTouch(bool aPreventDefault);
 
     __delete__();
 

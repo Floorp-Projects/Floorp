@@ -635,8 +635,8 @@ ReportBadReturn(JSContext *cx, Parser *parser, ParseNode *pn, Parser::Reporter r
                 unsigned errnum, unsigned anonerrnum)
 {
     JSAutoByteString name;
-    if (parser->pc->sc->fun()->atom) {
-        if (!js_AtomToPrintableString(cx, parser->pc->sc->fun()->atom, &name))
+    if (parser->pc->sc->fun()->atom()) {
+        if (!js_AtomToPrintableString(cx, parser->pc->sc->fun()->atom(), &name))
             return false;
     } else {
         errnum = anonerrnum;
@@ -916,6 +916,7 @@ MakeAssignment(ParseNode *pn, ParseNode *rhs, Parser *parser)
     pn->setDefn(false);
     pn->pn_left = lhs;
     pn->pn_right = rhs;
+    pn->pn_pos.end = rhs->pn_pos.end;
     return lhs;
 }
 
@@ -1136,7 +1137,19 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
                     return false;
                 dn->pn_dflags |= PND_BOUND;
                 JS_ASSERT(dn->kind() == Definition::NAMED_LAMBDA);
-                if (dn->isClosed())
+
+                /*
+                 * Since 'dn' is a placeholder, it has not been defined in the
+                 * ParseContext and hence we must manually flag a closed-over
+                 * callee name as needing a dynamic scope (this is done for all
+                 * definitions in the ParseContext by generateFunctionBindings).
+                 *
+                 * If 'dn' has been assigned to, then we also flag the function
+                 * scope has needing a dynamic scope so that dynamic scope
+                 * setter can either ignore the set (in non-strict mode) or
+                 * produce an error (in strict mode).
+                 */
+                if (dn->isClosed() || dn->isAssigned())
                     funpc->sc->fun()->flags |= JSFUN_HEAVYWEIGHT;
                 continue;
             }
@@ -1387,14 +1400,15 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                 ParseNode *item = new_<BinaryNode>(PNK_ASSIGN, JSOP_NOP, lhs->pn_pos, lhs, rhs);
                 if (!item)
                     return false;
-                if (!list) {
+                if (list) {
+                    list->append(item);
+                } else {
                     list = ListNode::create(PNK_VAR, this);
                     if (!list)
                         return false;
-                    list->makeEmpty();
+                    list->initList(item);
                     *listp = list;
                 }
-                list->append(item);
                 break;
               }
 #endif /* JS_HAS_DESTRUCTURING */
@@ -2222,17 +2236,6 @@ NoteLValue(JSContext *cx, ParseNode *pn, SharedContext *sc)
         pn->pn_lexdef->pn_dflags |= PND_ASSIGNED;
 
     pn->pn_dflags |= PND_ASSIGNED;
-
-    /*
-     * An enclosing function's name is an immutable binding in ES5, so
-     * assignments to them must do nothing or throw a TypeError depending on
-     * code strictness. Outside strict mode, we optimize away assignment to
-     * the function name. For assignment to function name to fail in strict
-     * mode, we must have a binding for it in the scope chain; we ensure this
-     * happens by making such functions heavyweight.
-     */
-    if (sc->inFunction() && pn->pn_atom == sc->fun()->atom)
-        sc->setBindingsAccessedDynamically();
 }
 
 static bool
@@ -2721,6 +2724,7 @@ Parser::letBlock(LetContext letContext)
             return NULL;
 
         semi->pn_kid = pnlet;
+        semi->pn_pos = pnlet->pn_pos;
 
         letContext = LetExpresion;
         ret = semi;
@@ -2741,6 +2745,9 @@ Parser::letBlock(LetContext letContext)
         if (!block->pn_expr)
             return NULL;
     }
+
+    ret->pn_pos.begin = pnlet->pn_pos.begin = pnlet->pn_left->pn_pos.begin;
+    ret->pn_pos.end = pnlet->pn_pos.end = pnlet->pn_right->pn_pos.end;
 
     PopStatementPC(context, pc);
     return ret;
@@ -2774,6 +2781,7 @@ NewBindingNode(JSAtom *atom, Parser *parser, VarContext varContext = HoistVars)
             if (lexdep->pn_blockid >= pc->blockid()) {
                 lexdep->pn_blockid = pc->blockid();
                 pc->lexdeps->remove(p);
+                lexdep->pn_pos = parser->tokenStream.currentToken().pos;
                 return lexdep;
             }
         }
@@ -2939,6 +2947,7 @@ Parser::forStatement()
             tokenStream.ungetToken();
     }
 
+    TokenPos lp_pos = tokenStream.currentToken().pos;
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
     /*
@@ -3132,6 +3141,7 @@ Parser::forStatement()
                               pn2->isKind(PNK_NAME));
                 }
 #endif
+                pnseq->pn_pos.begin = pn->pn_pos.begin;
                 pnseq->append(pn);
                 forParent = pnseq;
             }
@@ -3161,6 +3171,7 @@ Parser::forStatement()
                 return NULL;
             letStmt.isForLetBlock = true;
             block->pn_expr = pn1;
+            block->pn_pos = pn1->pn_pos;
             pn1 = block;
         }
 
@@ -3261,6 +3272,8 @@ Parser::forStatement()
     forHead->pn_kid1 = pn1;
     forHead->pn_kid2 = pn2;
     forHead->pn_kid3 = pn3;
+    forHead->pn_pos.begin = lp_pos.begin;
+    forHead->pn_pos.end   = tokenStream.currentToken().pos.end;
     pn->pn_left = forHead;
 
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
@@ -3425,6 +3438,8 @@ Parser::tryStatement()
             MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_CATCH);
             PopStatementPC(context, pc);
 
+            pnblock->pn_pos.end = pn2->pn_pos.end = tokenStream.currentToken().pos.end;
+
             catchList->append(pnblock);
             lastCatch = pn2;
             tt = tokenStream.getToken(TSF_OPERAND);
@@ -3448,6 +3463,7 @@ Parser::tryStatement()
         reportError(NULL, JSMSG_CATCH_OR_FINALLY);
         return NULL;
     }
+    pn->pn_pos.end = (pn->pn_kid3 ? pn->pn_kid3 : catchList)->pn_pos.end;
     return pn;
 }
 
@@ -5882,6 +5898,7 @@ Parser::attributeIdentifier()
     if (!pn2)
         return NULL;
     pn->pn_kid = pn2;
+    pn->pn_pos.end = pn2->pn_pos.end;
     return pn;
 }
 
@@ -5914,6 +5931,7 @@ Parser::xmlExpr(bool inTag)
     tokenStream.setXMLTagMode(oldflag);
     pn->pn_kid = pn2;
     pn->setOp(inTag ? JSOP_XMLTAGEXPR : JSOP_XMLELTEXPR);
+    pn->pn_pos.end = pn2->pn_pos.end;
     return pn;
 }
 
@@ -6051,7 +6069,6 @@ Parser::xmlTagContent(ParseNodeKind tagkind, JSAtom **namep)
         }
         if (!pn2)
             return NULL;
-        pn->pn_pos.end = pn2->pn_pos.end;
         pn->append(pn2);
     }
 
@@ -6091,7 +6108,6 @@ Parser::xmlElementContent(ParseNode *pn)
                                       JSOP_STRING);
             if (!pn2)
                 return false;
-            pn->pn_pos.end = pn2->pn_pos.end;
             pn->append(pn2);
         }
 
@@ -6124,7 +6140,6 @@ Parser::xmlElementContent(ParseNode *pn)
             if (!pn2)
                 return false;
         }
-        pn->pn_pos.end = pn2->pn_pos.end;
         pn->append(pn2);
     }
     tokenStream.setXMLTagMode(true);
@@ -6198,6 +6213,7 @@ Parser::xmlElementOrList(bool allowList)
                 pn = ListNode::create(PNK_XMLTAGC, this);
                 if (!pn)
                     return NULL;
+                pn->pn_pos = pn2->pn_pos;
             }
 
             /* Now make pn a nominal-root TOK_XMLELEM list containing pn2. */

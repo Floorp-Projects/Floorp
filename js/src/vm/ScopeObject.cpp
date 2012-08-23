@@ -256,7 +256,7 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
     if (!obj->asScope().setEnclosingScope(cx, fp->scopeChain()))
         return NULL;
 
-    Rooted<jsid> id(cx, AtomToId(fp->fun()->atom));
+    Rooted<jsid> id(cx, AtomToId(fp->fun()->atom()));
     RootedValue value(cx, ObjectValue(fp->callee()));
     if (!DefineNativeProperty(cx, obj, id, value, NULL, NULL,
                               JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,

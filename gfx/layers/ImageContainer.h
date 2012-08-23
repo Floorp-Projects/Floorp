@@ -80,16 +80,21 @@ public:
   void SetBackendData(LayersBackend aBackend, ImageBackendData* aData)
   { mBackendData[aBackend] = aData; }
 
+  int32_t GetSerial() { return mSerial; }
+
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
     mImplData(aImplData),
+    mSerial(PR_ATOMIC_INCREMENT(&sSerialCounter)),
     mFormat(aFormat)
   {}
 
   nsAutoPtr<ImageBackendData> mBackendData[mozilla::layers::LAYERS_LAST];
 
   void* mImplData;
+  int32_t mSerial;
   ImageFormat mFormat;
+  static int32_t sSerialCounter;
 };
 
 /**
