@@ -15,6 +15,12 @@
 #pragma pack(push, 1)
 
 struct SkOTTableHead {
+    static const SK_OT_CHAR TAG0 = 'h';
+    static const SK_OT_CHAR TAG1 = 'e';
+    static const SK_OT_CHAR TAG2 = 'a';
+    static const SK_OT_CHAR TAG3 = 'd';
+    static const SK_OT_ULONG TAG = SkOTTableTAG<SkOTTableHead>::value;
+
     SK_OT_Fixed version;
     static const SK_OT_Fixed version1 = SkTEndian_SwapBE32(0x00010000);
     SK_OT_Fixed fontRevision;
@@ -114,8 +120,8 @@ struct SkOTTableHead {
             ((FullyMixedDirectionalGlyphs, SkTEndian_SwapBE16(0)))
             ((OnlyStronglyLTR, SkTEndian_SwapBE16(1)))
             ((StronglyLTR, SkTEndian_SwapBE16(2)))
-            ((OnlyStronglyRTL, static_cast<SK_OT_SHORT>(SkTEndian_SwapBE16(static_cast<SK_OT_USHORT>(-1)))))
-            ((StronglyRTL, static_cast<SK_OT_SHORT>(SkTEndian_SwapBE16(static_cast<SK_OT_USHORT>(-2)))))
+            ((OnlyStronglyRTL, static_cast<SK_OT_SHORT>(SkTEndian_SwapBE16((uint16_t)-1))))
+            ((StronglyRTL, static_cast<SK_OT_SHORT>(SkTEndian_SwapBE16((uint16_t)-2))))
             SK_SEQ_END,
         (value)SK_SEQ_END)
     } fontDirectionHint;

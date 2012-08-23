@@ -10,8 +10,10 @@
 #ifndef SkPath_DEFINED
 #define SkPath_DEFINED
 
+#include "SkInstCnt.h"
 #include "SkMatrix.h"
 #include "SkTDArray.h"
+#include "SkRefCnt.h"
 
 #ifdef SK_BUILD_FOR_ANDROID
 #define GEN_ID_INC              fGenerationID++
@@ -25,6 +27,7 @@ class SkReader32;
 class SkWriter32;
 class SkAutoPathBoundsUpdate;
 class SkString;
+class SkPathRef;
 
 /** \class SkPath
 
@@ -33,13 +36,15 @@ class SkString;
 */
 class SK_API SkPath {
 public:
+    SK_DECLARE_INST_COUNT_ROOT(SkPath);
+
     SkPath();
     SkPath(const SkPath&);
     ~SkPath();
 
     SkPath& operator=(const SkPath&);
 
-    friend bool operator==(const SkPath&, const SkPath&);
+    friend  SK_API bool operator==(const SkPath&, const SkPath&);
     friend bool operator!=(const SkPath& a, const SkPath& b) {
         return !(a == b);
     }
@@ -178,7 +183,7 @@ public:
         This does NOT change the fill-type setting nor isConvex
     */
     void reset();
-    
+
     /** Similar to reset(), in that all lines and curves are removed from the
         path. However, any internal storage for those lines/curves is retained,
         making reuse of the path potentially faster.
@@ -191,6 +196,17 @@ public:
         @return true if the path is empty (contains no lines or curves)
     */
     bool isEmpty() const;
+
+    /**
+     *  Returns true if all of the points in this path are finite, meaning there
+     *  are no infinities and no NaNs.
+     */
+    bool isFinite() const {
+        if (fBoundsIsDirty) {
+            this->computeBounds();
+        }
+        return SkToBool(fIsFinite);
+    }
 
     /** Test a line for zero length
 
@@ -232,7 +248,7 @@ public:
     /** Returns true if the path specifies a rectangle. If so, and if rect is
         not null, set rect to the bounds of the path. If the path does not
         specify a rectangle, return false and ignore rect.
-     
+
         @param rect If not null, returns the bounds of the path if it specifies
                     a rectangle
         @return true if the path specifies a rectangle
@@ -241,9 +257,7 @@ public:
 
     /** Return the number of points in the path
      */
-    int countPoints() const {
-        return this->getPoints(NULL, 0);
-    }
+    int countPoints() const;
 
     /** Return the point at the specified index. If the index is out of range
          (i.e. is not 0 <= index < countPoints()) then the returned coordinates
@@ -252,12 +266,25 @@ public:
     SkPoint getPoint(int index) const;
 
     /** Returns the number of points in the path. Up to max points are copied.
-     
+
         @param points If not null, receives up to max points
         @param max The maximum number of points to copy into points
         @return the actual number of points in the path
     */
     int getPoints(SkPoint points[], int max) const;
+
+    /** Return the number of verbs in the path
+     */
+    int countVerbs() const;
+
+    /** Returns the number of verbs in the path. Up to max verbs are copied. The
+        verbs are copied as one byte per verb.
+
+        @param verbs If not null, receives up to max verbs
+        @param max The maximum number of verbs to copy into verbs
+        @return the actual number of verbs in the path
+    */
+    int getVerbs(uint8_t verbs[], int max) const;
 
     //! Swap contents of this and other. Guaranteed not to throw
     void swap(SkPath& other);
@@ -288,21 +315,21 @@ public:
 
     /** Hint to the path to prepare for adding more points. This can allow the
         path to more efficiently grow its storage.
-    
+
         @param extraPtCount The number of extra points the path should
                             preallocate for.
     */
     void incReserve(unsigned extraPtCount);
 
     /** Set the beginning of the next contour to the point (x,y).
-     
+
         @param x    The x-coordinate of the start of a new contour
         @param y    The y-coordinate of the start of a new contour
     */
     void moveTo(SkScalar x, SkScalar y);
 
     /** Set the beginning of the next contour to the point
-     
+
         @param p    The start of a new contour
     */
     void moveTo(const SkPoint& p) {
@@ -312,7 +339,7 @@ public:
     /** Set the beginning of the next contour relative to the last point on the
         previous contour. If there is no previous contour, this is treated the
         same as moveTo().
-     
+
         @param dx   The amount to add to the x-coordinate of the end of the
                     previous contour, to specify the start of a new contour
         @param dy   The amount to add to the y-coordinate of the end of the
@@ -342,7 +369,7 @@ public:
     /** Same as lineTo, but the coordinates are considered relative to the last
         point on this contour. If there is no previous point, then a moveTo(0,0)
         is inserted automatically.
-     
+
         @param dx   The amount to add to the x-coordinate of the previous point
                     on this contour, to specify a line
         @param dy   The amount to add to the y-coordinate of the previous point
@@ -353,7 +380,7 @@ public:
     /** Add a quadratic bezier from the last point, approaching control point
         (x1,y1), and ending at (x2,y2). If no moveTo() call has been made for
         this contour, the first point is automatically set to (0,0).
-     
+
         @param x1   The x-coordinate of the control point on a quadratic curve
         @param y1   The y-coordinate of the control point on a quadratic curve
         @param x2   The x-coordinate of the end point on a quadratic curve
@@ -364,7 +391,7 @@ public:
     /** Add a quadratic bezier from the last point, approaching control point
         p1, and ending at p2. If no moveTo() call has been made for this
         contour, the first point is automatically set to (0,0).
-     
+
         @param p1   The control point on a quadratic curve
         @param p2   The end point on a quadratic curve
     */
@@ -390,7 +417,7 @@ public:
     /** Add a cubic bezier from the last point, approaching control points
         (x1,y1) and (x2,y2), and ending at (x3,y3). If no moveTo() call has been
         made for this contour, the first point is automatically set to (0,0).
-     
+
         @param x1   The x-coordinate of the 1st control point on a cubic curve
         @param y1   The y-coordinate of the 1st control point on a cubic curve
         @param x2   The x-coordinate of the 2nd control point on a cubic curve
@@ -404,7 +431,7 @@ public:
     /** Add a cubic bezier from the last point, approaching control points p1
         and p2, and ending at p3. If no moveTo() call has been made for this
         contour, the first point is automatically set to (0,0).
-     
+
         @param p1   The 1st control point on a cubic curve
         @param p2   The 2nd control point on a cubic curve
         @param p3   The end point on a cubic curve
@@ -416,7 +443,7 @@ public:
     /** Same as cubicTo, but the coordinates are considered relative to the
         current point on this contour. If there is no previous point, then a
         moveTo(0,0) is inserted automatically.
-     
+
         @param dx1   The amount to add to the x-coordinate of the last point on
                 this contour, to specify the 1st control point of a cubic curve
         @param dy1   The amount to add to the y-coordinate of the last point on
@@ -438,7 +465,7 @@ public:
         automatic lineTo() is added to connect the current contour to the start
         of the arc. However, if the path is empty, then we call moveTo() with
         the first point of the arc. The sweep angle is treated mod 360.
-     
+
         @param oval The bounding oval defining the shape and size of the arc
         @param startAngle Starting angle (in degrees) where the arc begins
         @param sweepAngle Sweep angle (in degrees) measured clockwise. This is
@@ -533,7 +560,7 @@ public:
                    Direction dir = kCW_Direction);
 
     /** Add the specified arc to the path as a new contour.
-     
+
         @param oval The bounds of oval used to define the size of the arc
         @param startAngle Starting angle (in degrees) where the arc begins
         @param sweepAngle Sweep angle (in degrees) measured clockwise
@@ -558,6 +585,19 @@ public:
         */
     void addRoundRect(const SkRect& rect, const SkScalar radii[],
                       Direction dir = kCW_Direction);
+
+    /**
+     *  Add a new contour made of just lines. This is just a fast version of
+     *  the following:
+     *      this->moveTo(pts[0]);
+     *      for (int i = 1; i < count; ++i) {
+     *          this->lineTo(pts[i]);
+     *      }
+     *      if (close) {
+     *          this->close();
+     *      }
+     */
+    void addPoly(const SkPoint pts[], int count, bool close);
 
     /** Add a copy of src to the path, offset by (dx,dy)
         @param src  The path to add as a new contour
@@ -585,17 +625,17 @@ public:
     void reverseAddPath(const SkPath& src);
 
     /** Offset the path by (dx,dy), returning true on success
-     
-        @param dx   The amount in the X direction to offset the entire path 
-        @param dy   The amount in the Y direction to offset the entire path 
+
+        @param dx   The amount in the X direction to offset the entire path
+        @param dy   The amount in the Y direction to offset the entire path
         @param dst  The translated path is written here
     */
     void offset(SkScalar dx, SkScalar dy, SkPath* dst) const;
 
     /** Offset the path by (dx,dy), returning true on success
-     
-        @param dx   The amount in the X direction to offset the entire path 
-        @param dy   The amount in the Y direction to offset the entire path 
+
+        @param dx   The amount in the X direction to offset the entire path
+        @param dy   The amount in the Y direction to offset the entire path
     */
     void offset(SkScalar dx, SkScalar dy) {
         this->offset(dx, dy, this);
@@ -603,7 +643,7 @@ public:
 
     /** Transform the points in this path by matrix, and write the answer into
         dst.
-     
+
         @param matrix   The matrix to apply to the path
         @param dst      The transformed path is written here
     */
@@ -620,14 +660,14 @@ public:
     /** Return the last point on the path. If no points have been added, (0,0)
         is returned. If there are no points, this returns false, otherwise it
         returns true.
-     
+
         @param lastPt   The last point on the path is returned here
     */
     bool getLastPt(SkPoint* lastPt) const;
 
     /** Set the last point on the path. If no points have been added,
         moveTo(x,y) is automatically called.
-     
+
         @param x    The new x-coordinate for the last point
         @param y    The new y-coordinate for the last point
     */
@@ -738,8 +778,9 @@ public:
 
         /** Return the next verb in this iteration of the path. When all
             segments have been visited, return kDone_Verb.
-         
+
             @param  pts The points representing the current verb and/or segment
+                        This must not be NULL.
             @return The verb for the current segment
         */
         Verb next(SkPoint pts[4]);
@@ -752,11 +793,25 @@ public:
         SkPoint         fLastPt;
     };
 
+    /**
+     *  Returns true if the point { x, y } is contained by the path, taking into
+     *  account the FillType.
+     */
+    bool contains(SkScalar x, SkScalar y) const;
+
     void dump(bool forceClose, const char title[] = NULL) const;
     void dump() const;
 
-    void flatten(SkWriter32&) const;
-    void unflatten(SkReader32&);
+    /**
+     *  Write the region to the buffer, and return the number of bytes written.
+     *  If buffer is NULL, it still returns the number of bytes.
+     */
+    uint32_t writeToMemory(void* buffer) const;
+    /**
+     *  Initialized the region from the buffer, returning the number
+     *  of bytes actually read.
+     */
+    uint32_t readFromMemory(const void* buffer);
 
 #ifdef SK_BUILD_FOR_ANDROID
     uint32_t getGenerationID() const;
@@ -767,15 +822,22 @@ public:
     SkDEBUGCODE(void validate() const;)
 
 private:
-    SkTDArray<SkPoint>  fPts;
-    SkTDArray<uint8_t>  fVerbs;
+    enum SerializationOffsets {
+        kIsFinite_SerializationShift = 25,
+        kIsOval_SerializationShift = 24,
+        kConvexity_SerializationShift = 16,
+        kFillType_SerializationShift = 8,
+        kSegmentMask_SerializationShift = 0
+    };
+
+    SkAutoTUnref<SkPathRef>   fPathRef;
     mutable SkRect      fBounds;
     int                 fLastMoveToIndex;
     uint8_t             fFillType;
     uint8_t             fSegmentMask;
     mutable uint8_t     fBoundsIsDirty;
     mutable uint8_t     fConvexity;
-
+    mutable SkBool8     fIsFinite;    // only meaningful if bounds are valid
     mutable SkBool8     fIsOval;
 #ifdef SK_BUILD_FOR_ANDROID
     uint32_t            fGenerationID;
@@ -812,6 +874,7 @@ private:
 
     friend class SkAutoPathBoundsUpdate;
     friend class SkAutoDisableOvalCheck;
+    friend class SkBench_AddPathTest; // perf test pathTo/reversePathTo
 };
 
 #endif

@@ -10,6 +10,12 @@
 #include "SkAdvancedTypefaceMetrics.h"
 #include "SkTypes.h"
 
+SK_DEFINE_INST_COUNT(SkAdvancedTypefaceMetrics)
+
+#if defined(SK_BUILD_FOR_WIN)
+#include <DWrite.h>
+#endif
+
 #if defined(SK_BUILD_FOR_UNIX) || defined(SK_BUILD_FOR_ANDROID)
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -40,12 +46,12 @@ template <>
 void stripUninterestingTrailingAdvancesFromRange<int16_t>(
                                                           SkAdvancedTypefaceMetrics::AdvanceMetric<int16_t>* range) {
     SkASSERT(range);
-    
+
     int expectedAdvanceCount = range->fEndId - range->fStartId + 1;
     if (range->fAdvance.count() < expectedAdvanceCount) {
         return;
     }
-    
+
     for (int i = expectedAdvanceCount - 1; i >= 0; --i) {
         if (range->fAdvance[i] != kDontCareAdvance &&
             range->fAdvance[i] != kInvalidAdvance &&
@@ -86,7 +92,7 @@ void zeroWildcardsInRange<int16_t>(
         return;
     }
     SkASSERT(range->fAdvance.count() == range->fEndId - range->fStartId + 1);
-    
+
     // Zero out wildcards.
     for (int i = 0; i < range->fAdvance.count(); ++i) {
         if (range->fAdvance[i] == kDontCareAdvance) {
@@ -94,7 +100,7 @@ void zeroWildcardsInRange<int16_t>(
         }
     }
 }
-    
+
 template <typename Data>
 void finishRange(
         SkAdvancedTypefaceMetrics::AdvanceMetric<Data>* range,
@@ -258,6 +264,12 @@ template SkAdvancedTypefaceMetrics::WidthRange* getAdvanceData(
         const uint32_t* subsetGlyphIDs,
         uint32_t subsetGlyphIDsLength,
         bool (*getAdvance)(HDC hdc, int gId, int16_t* data));
+template SkAdvancedTypefaceMetrics::WidthRange* getAdvanceData(
+        IDWriteFontFace* fontFace,
+        int num_glyphs,
+        const uint32_t* subsetGlyphIDs,
+        uint32_t subsetGlyphIDsLength,
+        bool (*getAdvance)(IDWriteFontFace* fontFace, int gId, int16_t* data));
 #elif defined(SK_BUILD_FOR_UNIX) || defined(SK_BUILD_FOR_ANDROID)
 template SkAdvancedTypefaceMetrics::WidthRange* getAdvanceData(
         FT_Face face,
@@ -295,5 +307,13 @@ template void finishRange<SkAdvancedTypefaceMetrics::VerticalMetric>(
         SkAdvancedTypefaceMetrics::VerticalAdvanceRange* range,
         int endId,
         SkAdvancedTypefaceMetrics::VerticalAdvanceRange::MetricType type);
+
+// additional declaration needed for testing with a face of an unknown type
+template SkAdvancedTypefaceMetrics::WidthRange* getAdvanceData(
+        void* fontData,
+        int num_glyphs,
+        const uint32_t* subsetGlyphIDs,
+        uint32_t subsetGlyphIDsLength,
+        bool (*getAdvance)(void* fontData, int gId, int16_t* data));
 
 } // namespace skia_advanced_typeface_metrics_utils

@@ -9,13 +9,12 @@
 #ifndef SkBlurImageFilter_DEFINED
 #define SkBlurImageFilter_DEFINED
 
-#include "SkImageFilter.h"
+#include "SkSingleInputImageFilter.h"
+#include "SkSize.h"
 
-class SK_API SkBlurImageFilter : public SkImageFilter {
+class SK_API SkBlurImageFilter : public SkSingleInputImageFilter {
 public:
-    SkBlurImageFilter(SkScalar sigmaX, SkScalar sigmaY);
-
-    virtual bool asABlur(SkSize* sigma) const SK_OVERRIDE;
+    SkBlurImageFilter(SkScalar sigmaX, SkScalar sigmaY, SkImageFilter* input = NULL);
 
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkBlurImageFilter)
 
@@ -26,9 +25,12 @@ protected:
     virtual bool onFilterImage(Proxy*, const SkBitmap& src, const SkMatrix&,
                                SkBitmap* result, SkIPoint* offset) SK_OVERRIDE;
 
+    bool canFilterImageGPU() const SK_OVERRIDE { return true; }
+    virtual GrTexture* onFilterImageGPU(GrTexture* src, const SkRect& rect) SK_OVERRIDE;
+
 private:
     SkSize   fSigma;
-    typedef SkImageFilter INHERITED;
+    typedef SkSingleInputImageFilter INHERITED;
 };
 
 #endif

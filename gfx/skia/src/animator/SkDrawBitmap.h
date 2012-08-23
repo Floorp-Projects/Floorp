@@ -50,22 +50,22 @@ protected:
     typedef SkBaseBitmap INHERITED;
 };
 
-class SkImage : public SkBaseBitmap {
-    DECLARE_MEMBER_INFO(Image);
-    SkImage();
-    virtual ~SkImage();
+class SkImageBaseBitmap : public SkBaseBitmap {
+    DECLARE_MEMBER_INFO(ImageBaseBitmap);
+    SkImageBaseBitmap();
+    virtual ~SkImageBaseBitmap();
     virtual SkDisplayable* deepCopy(SkAnimateMaker* );
     virtual void dirty();
     virtual bool draw(SkAnimateMaker& );
     virtual bool getProperty(int index, SkScriptValue* value) const;
     virtual void onEndElement(SkAnimateMaker& maker);
 private:
-    void resolve() const { (const_cast<SkImage*>(this))->resolve(); }
+    void resolve() const { (const_cast<SkImageBaseBitmap*>(this))->resolve(); }
     void resolve();
 protected:
     SkBase64 base64;
     SkString src;
-    SkString fLast; // cache of src so that stream isn't unnecessarily decoded 
+    SkString fLast; // cache of src so that stream isn't unnecessarily decoded
     SkBool fDirty;
     const char* fUriBase;
     typedef SkBaseBitmap INHERITED;

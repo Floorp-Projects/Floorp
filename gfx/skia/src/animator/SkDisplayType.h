@@ -14,9 +14,7 @@
 #include "SkScalar.h"
 
 #ifdef SK_DEBUG
-    #ifdef SK_CAN_USE_FLOAT
-        #define SK_DUMP_ENABLED
-    #endif
+    #define SK_DUMP_ENABLED
     #ifdef SK_BUILD_FOR_MAC
         #define SK_FIND_LEAKS
     #endif
@@ -86,18 +84,18 @@ enum SkDisplayTypes {
     SkType_FromPath,
     SkType_FromPathMode,
     SkType_Full,
-    SkType_Gradient,
+    SkType_DrawGradient,
     SkType_Group,
     SkType_HitClear,
     SkType_HitTest,
-    SkType_Image,
+    SkType_ImageBaseBitmap,
     SkType_Include,
     SkType_Input,
     SkType_Int,
     SkType_Join,
     SkType_Line, // simple line primitive
     SkType_LineTo, // used as part of path construction
-    SkType_LinearGradient,
+    SkType_DrawLinearGradient,
     SkType_MaskFilter,
     SkType_MaskFilterBlurStyle,
     SkType_MaskFilterLight,
@@ -124,7 +122,7 @@ enum SkDisplayTypes {
     SkType_RLineTo,
     SkType_RMoveTo,
     SkType_RQuadTo,
-    SkType_RadialGradient,
+    SkType_DrawRadialGradient,
     SkType_Random,
     SkType_Rect,
     SkType_RectToRect,
@@ -189,7 +187,7 @@ public:
     static SkDisplayTypes RegisterNewType();
     static SkDisplayTypes Resolve(const char[] , const SkMemberInfo** );
 #ifdef SK_DEBUG
-    static bool IsAnimate(SkDisplayTypes type ) { return type == SkType_Animate || 
+    static bool IsAnimate(SkDisplayTypes type ) { return type == SkType_Animate ||
         type == SkType_Set; }
     static const char* GetName(SkAnimateMaker* , SkDisplayTypes );
 #endif

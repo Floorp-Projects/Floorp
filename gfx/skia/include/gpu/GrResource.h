@@ -12,14 +12,19 @@
 
 #include "GrRefCnt.h"
 
+#include "SkTDLinkedList.h"
+
 class GrGpu;
 class GrContext;
+class GrResourceEntry;
 
 /**
  * Base class for the GPU resources created by a GrContext.
  */
 class GrResource : public GrRefCnt {
 public:
+    SK_DECLARE_INST_COUNT(GrResource)
+
     /**
      * Frees the resource in the underlying 3D API. It must be safe to call this
      * when the resource has been previously abandoned.
@@ -50,7 +55,7 @@ public:
      *
      * @return the size of the buffer in bytes
      */
-     virtual size_t sizeInBytes() const = 0;
+    virtual size_t sizeInBytes() const = 0;
 
      /**
       * Retrieves the context that owns the resource. Note that it is possible
@@ -58,8 +63,11 @@ public:
       * abandon()ed they no longer have an owning context. Destroying a
       * GrContext automatically releases all its resources.
       */
-     const GrContext* getContext() const;
-     GrContext* getContext();
+    const GrContext* getContext() const;
+    GrContext* getContext();
+
+    void setCacheEntry(GrResourceEntry* cacheEntry) { fCacheEntry = cacheEntry; }
+    GrResourceEntry* getCacheEntry() { return fCacheEntry; }
 
 protected:
     explicit GrResource(GrGpu* gpu);
@@ -67,19 +75,28 @@ protected:
 
     GrGpu* getGpu() const { return fGpu; }
 
-    virtual void onRelease() = 0;
-    virtual void onAbandon() = 0;
+    // Derived classes should always call their parent class' onRelease
+    // and onAbandon methods in their overrides.
+    virtual void onRelease() {};
+    virtual void onAbandon() {};
+
+    bool isInCache() const { return NULL != fCacheEntry; }
 
 private:
 
-    friend class GrGpu; // GrGpu manages list of resources.
+#if GR_DEBUG
+    friend class GrGpu; // for assert in GrGpu to access getGpu
+#endif
 
     GrGpu*      fGpu;       // not reffed. The GrGpu can be deleted while there
                             // are still live GrResources. It will call
                             // release() on all such resources in its
                             // destructor.
-    GrResource* fNext;      // dl-list of resources per-GrGpu
-    GrResource* fPrevious;
+
+    // we're a dlinklist
+    SK_DEFINE_DLINKEDLIST_INTERFACE(GrResource);
+
+    GrResourceEntry* fCacheEntry;  // NULL if not in cache
 
     typedef GrRefCnt INHERITED;
 };
