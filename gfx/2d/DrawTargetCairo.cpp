@@ -810,15 +810,21 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
 }
 
 bool
-DrawTargetCairo::Init(cairo_surface_t* aSurface, const IntSize& aSize)
+DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize& aSize)
 {
   mContext = cairo_create(aSurface);
   mSurface = aSurface;
-  cairo_surface_reference(mSurface);
   mSize = aSize;
   mFormat = CairoContentToGfxFormat(cairo_surface_get_content(aSurface));
 
   return true;
+}
+
+bool
+DrawTargetCairo::Init(cairo_surface_t* aSurface, const IntSize& aSize)
+{
+  cairo_surface_reference(aSurface);
+  return InitAlreadyReferenced(aSurface, aSize);
 }
 
 void *
