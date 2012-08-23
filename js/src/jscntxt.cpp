@@ -42,6 +42,8 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsworkers.h"
+#include "ion/Ion.h"
 #include "ion/IonFrames.h"
 
 #ifdef JS_METHODJIT
@@ -388,6 +390,10 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
          */
         for (CompartmentsIter c(rt); !c.done(); c.next())
             c->types.print(cx, false);
+
+        /* Off thread ion compilations depend on atoms still existing. */
+        for (CompartmentsIter c(rt); !c.done(); c.next())
+            CancelOffThreadIonCompile(c, NULL);
 
         /* Unpin all common atoms before final GC. */
         FinishCommonAtoms(rt);
@@ -1009,6 +1015,12 @@ js_InvokeOperationCallback(JSContext *cx)
 
     if (rt->gcIsNeeded)
         GCSlice(rt, GC_NORMAL, rt->gcTriggerReason);
+
+    /*
+     * A worker thread may have set the callback after finishing an Ion
+     * compilation.
+     */
+    ion::AttachFinishedCompilations(cx);
 
     /*
      * Important: Additional callbacks can occur inside the callback handler

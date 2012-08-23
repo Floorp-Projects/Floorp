@@ -48,6 +48,7 @@
 #include "jsstr.h"
 #include "prmjtime.h"
 #include "jsweakmap.h"
+#include "jsworkers.h"
 #include "jswrapper.h"
 #include "jstypedarray.h"
 #include "jsxml.h"
@@ -864,7 +865,6 @@ JSRuntime::JSRuntime()
     ionJSContext(NULL),
     ionStackLimit(0),
     ionActivation(NULL),
-    ionCompilerRootList(NULL),
     ionReturnOverride_(MagicValue(JS_ARG_POISON))
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
@@ -928,6 +928,10 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
 
 #ifdef JS_THREADSAFE
+    workerThreadState = this->new_<WorkerThreadState>();
+    if (!workerThreadState || !workerThreadState->init(this))
+        return false;
+
     if (!sourceCompressorThread.init())
         return false;
 #endif
@@ -958,6 +962,7 @@ JSRuntime::~JSRuntime()
     FreeScriptFilenames(this);
 
 #ifdef JS_THREADSAFE
+    delete_(workerThreadState);
     sourceCompressorThread.finish();
 #endif
 
