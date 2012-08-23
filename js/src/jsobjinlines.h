@@ -692,16 +692,6 @@ inline bool JSObject::setIteratedSingleton(JSContext *cx)
     return setFlag(cx, js::BaseShape::ITERATED_SINGLETON);
 }
 
-inline bool JSObject::isSystem() const
-{
-    return lastProperty()->hasObjectFlag(js::BaseShape::SYSTEM);
-}
-
-inline bool JSObject::setSystem(JSContext *cx)
-{
-    return setFlag(cx, js::BaseShape::SYSTEM);
-}
-
 inline bool JSObject::setDelegate(JSContext *cx)
 {
     return setFlag(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
