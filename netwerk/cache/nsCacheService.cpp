@@ -2137,7 +2137,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 nsCacheEntry *
 nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy, bool *collision)
 {
-    Telemetry::AutoTimer<Telemetry::CACHE_DEVICE_SEARCH> timer;
+    Telemetry::AutoTimer<Telemetry::CACHE_DEVICE_SEARCH_2> timer;
     nsCacheEntry * entry = nullptr;
 
     CACHE_LOG_DEBUG(("mMemoryDevice: 0x%p\n", mMemoryDevice));
@@ -2592,10 +2592,10 @@ nsCacheService::Lock(mozilla::Telemetry::ID mainThreadLockerID)
 
     if (NS_IsMainThread()) {
         lockerID = mainThreadLockerID;
-        generalID = mozilla::Telemetry::CACHE_SERVICE_LOCK_WAIT_MAINTHREAD;
+        generalID = mozilla::Telemetry::CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_2;
     } else {
         lockerID = mozilla::Telemetry::HistogramCount;
-        generalID = mozilla::Telemetry::CACHE_SERVICE_LOCK_WAIT;
+        generalID = mozilla::Telemetry::CACHE_SERVICE_LOCK_WAIT_2;
 	}
 
     TimeStamp start(TimeStamp::Now());
