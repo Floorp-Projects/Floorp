@@ -25,6 +25,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -44,12 +47,14 @@ import java.util.List;
 
 public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                        Tabs.OnTabsChangedListener,
-                                       GeckoMenu.ActionItemBarPresenter {
+                                       GeckoMenu.ActionItemBarPresenter,
+                                       Animation.AnimationListener {
     private static final String LOGTAG = "GeckoToolbar";
     private LinearLayout mLayout;
     private Button mAwesomeBar;
     private TextView mTitle;
     private int mTitlePadding;
+    private boolean mSiteSecurityVisible;
     private ImageButton mTabs;
     private ImageView mBack;
     private ImageView mForward;
@@ -80,6 +85,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private TranslateAnimation mSlideUpOut;
     private TranslateAnimation mSlideDownIn;
     private TranslateAnimation mSlideDownOut;
+
+    private AlphaAnimation mLockFadeIn;
+    private TranslateAnimation mTitleSlideLeft;
+    private TranslateAnimation mTitleSlideRight;
 
     private int mCount;
 
@@ -196,6 +205,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
         mSiteSecurity = (ImageButton) mLayout.findViewById(R.id.site_security);
         mSiteSecurity.setOnClickListener(faviconListener);
+        mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
 
         mProgressSpinner = (AnimationDrawable) mActivity.getResources().getDrawable(R.drawable.progress_spinner);
         
@@ -230,6 +240,26 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mSlideUpOut.setDuration(mDuration);
         mSlideDownIn.setDuration(mDuration);
         mSlideDownOut.setDuration(mDuration);
+
+        float slideWidth = mActivity.getResources().getDimension(R.dimen.browser_toolbar_lock_width);
+
+        LinearLayout.LayoutParams siteSecParams = (LinearLayout.LayoutParams) mSiteSecurity.getLayoutParams();
+        final float scale = mActivity.getResources().getDisplayMetrics().density;
+        slideWidth += (siteSecParams.leftMargin + siteSecParams.rightMargin) * scale + 0.5f;
+
+        mLockFadeIn = new AlphaAnimation(0.0f, 1.0f);
+        mLockFadeIn.setAnimationListener(this);
+
+        mTitleSlideLeft = new TranslateAnimation(slideWidth, 0, 0, 0);
+        mTitleSlideLeft.setAnimationListener(this);
+
+        mTitleSlideRight = new TranslateAnimation(-slideWidth, 0, 0, 0);
+        mTitleSlideRight.setAnimationListener(this);
+
+        final int lockAnimDuration = 300;
+        mLockFadeIn.setDuration(lockAnimDuration);
+        mTitleSlideLeft.setDuration(lockAnimDuration);
+        mTitleSlideRight.setDuration(lockAnimDuration);
 
         mMenu = (ImageButton) mLayout.findViewById(R.id.menu);
         mActionItemBar = (LinearLayout) mLayout.findViewById(R.id.menu_items);
@@ -326,6 +356,27 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 updateBackButton(false);
                 updateForwardButton(false);
                 break;
+        }
+    }
+
+    @Override
+    public void onAnimationStart(Animation animation) {
+        if (animation.equals(mLockFadeIn)) {
+            if (mSiteSecurityVisible)
+                mSiteSecurity.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void onAnimationRepeat(Animation animation) {
+    }
+
+    @Override
+    public void onAnimationEnd(Animation animation) {
+        if (animation.equals(mTitleSlideLeft)) {
+            mSiteSecurity.setVisibility(View.GONE);
+        } else if (animation.equals(mTitleSlideRight)) {
+            mSiteSecurity.startAnimation(mLockFadeIn);
         }
     }
 
@@ -439,7 +490,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mStop.setVisibility(isLoading ? View.VISIBLE : View.GONE);
 
         // Handle the viewing mode page actions
-        mSiteSecurity.setVisibility(mShowSiteSecurity && !isLoading ? View.VISIBLE : View.GONE);
+        setSiteSecurityVisibility(mShowSiteSecurity && !isLoading);
         mReader.setVisibility(mShowReader && !isLoading ? View.VISIBLE : View.GONE);
 
         // We want title to fill the whole space available for it when there are icons
@@ -448,6 +499,29 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mTitle.setPadding(0, 0, (!mShowReader && !isLoading ? mTitlePadding : 0), 0);
 
         updateFocusOrder();
+    }
+
+    private void setSiteSecurityVisibility(final boolean visible) {
+        if (visible == mSiteSecurityVisible)
+            return;
+
+        mSiteSecurityVisible = visible;
+
+        mTitle.clearAnimation();
+        mSiteSecurity.clearAnimation();
+
+        // If any of these animations were cancelled as a result of the
+        // clearAnimation() calls above, we need to reset them.
+        mLockFadeIn.reset();
+        mTitleSlideLeft.reset();
+        mTitleSlideRight.reset();
+
+        if (visible)
+            mSiteSecurity.setVisibility(View.INVISIBLE);
+        else
+            mSiteSecurity.setVisibility(View.GONE);
+
+        mTitle.startAnimation(visible ? mTitleSlideRight : mTitleSlideLeft);
     }
 
     private void updateFocusOrder() {
