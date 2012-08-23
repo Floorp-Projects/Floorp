@@ -2078,7 +2078,7 @@ MediaInputPort::Init()
       this, mSource, mDest));
   mSource->AddConsumer(this);
   mDest->AddInput(this);
-  // mPortCount decremented in Disconnect()
+  // mPortCount decremented via MediaInputPort::Destroy's message
   ++mDest->GraphImpl()->mPortCount;
 }
 
@@ -2090,7 +2090,6 @@ MediaInputPort::Disconnect()
   if (!mSource)
     return;
 
-  --mDest->GraphImpl()->mPortCount;
   mSource->RemoveConsumer(this);
   mSource = nullptr;
   mDest->RemoveInput(this);
@@ -2123,10 +2122,11 @@ MediaInputPort::Destroy()
   class Message : public ControlMessage {
   public:
     Message(MediaInputPort* aPort)
-      : ControlMessage(aPort->GetDestination()), mPort(aPort) {}
+      : ControlMessage(nullptr), mPort(aPort) {}
     virtual void Run()
     {
       mPort->Disconnect();
+      --mPort->GraphImpl()->mPortCount;
       NS_RELEASE(mPort);
     }
     virtual void RunDuringShutdown()
@@ -2138,7 +2138,19 @@ MediaInputPort::Destroy()
     // last message for the port.
     MediaInputPort* mPort;
   };
-  mSource->GraphImpl()->AppendMessage(new Message(this));
+  GraphImpl()->AppendMessage(new Message(this));
+}
+
+MediaStreamGraphImpl*
+MediaInputPort::GraphImpl()
+{
+  return gGraph;
+}
+
+MediaStreamGraph*
+MediaInputPort::Graph()
+{
+  return gGraph;
 }
 
 MediaInputPort*
