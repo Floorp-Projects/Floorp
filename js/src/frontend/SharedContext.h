@@ -291,7 +291,6 @@ struct StmtInfoBase {
 
 struct FunctionBox : public ObjectBox
 {
-    ParseNode       *node;
     FunctionBox     *siblings;
     FunctionBox     *kids;
     FunctionBox     *parent;
@@ -306,7 +305,7 @@ struct FunctionBox : public ObjectBox
 
     ContextFlags    cxFlags;
 
-    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, ParseContext *pc,
+    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *pc,
                 StrictMode::StrictModeState sms);
 
     bool funIsGenerator()        const { return cxFlags.funIsGenerator; }
