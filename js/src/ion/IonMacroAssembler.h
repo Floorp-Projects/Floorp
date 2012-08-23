@@ -16,6 +16,7 @@
 # include "ion/arm/MacroAssembler-arm.h"
 #endif
 #include "ion/IonCompartment.h"
+#include "ion/IonInstrumentation.h"
 #include "ion/TypeOracle.h"
 
 #include "jsscope.h"
@@ -24,10 +25,6 @@
 
 namespace js {
 namespace ion {
-
-class MacroAssembler;
-
-typedef SPSInstrumentation<MacroAssembler, Register> IonInstrumentation;
  
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
@@ -60,15 +57,21 @@ class MacroAssembler : public MacroAssemblerSpecific
     bool enoughMemory_;
 
   private:
-    IonInstrumentation *sps;
-    jsbytecode **pc_;
+    // This field is used to manage profiling instrumentation output. If
+    // provided and enabled, then instrumentation will be emitted around call
+    // sites. The IonInstrumentation instance is hosted inside of
+    // CodeGeneratorShared and is the manager of when instrumentation is
+    // actually emitted or not. If NULL, then no instrumentation is emitted.
+    IonInstrumentation *sps_;
 
   public:
-    MacroAssembler(IonInstrumentation *sps = NULL, jsbytecode **pc = NULL)
+    // If instrumentation should be emitted, then the sps parameter should be
+    // provided, but otherwise it can be safely omitted to prevent all
+    // instrumentation from being emitted.
+    MacroAssembler(IonInstrumentation *sps = NULL)
       : autoRooter_(GetIonContext()->cx, thisFromCtor()),
         enoughMemory_(true),
-        sps(sps),
-        pc_(pc)
+        sps_(sps)
     {
         if (!GetIonContext()->temp)
             alloc_.construct(GetIonContext()->cx);
@@ -82,8 +85,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     MacroAssembler(JSContext *cx)
       : autoRooter_(cx, thisFromCtor()),
         enoughMemory_(true),
-        sps(NULL),
-        pc_(NULL)
+        sps_(NULL) // no need for instrumentation in trampolines and such
     {
         ionContext_.construct(cx, cx->compartment, (js::ion::TempAllocator *)NULL);
         alloc_.construct(cx);
@@ -481,27 +483,86 @@ class MacroAssembler : public MacroAssemblerSpecific
     // These functions exist as small wrappers around sites where execution can
     // leave the currently running stream of instructions. They exist so that
     // instrumentation may be put in place around them if necessary and the
-    // instrumentation is enabled.
+    // instrumentation is enabled. For the functions that return a uint32_t,
+    // they are returning the offset of the assembler just after the call has
+    // been made so that a safepoint can be made at that location.
 
     void callWithABI(void *fun, Result result = GENERAL) {
-        leaveBeforeCall();
+        leaveSPSFrame();
         MacroAssemblerSpecific::callWithABI(fun, result);
-        reenterAfterCall();
+        reenterSPSFrame();
     }
 
     void handleException() {
         // Re-entry code is irrelevant because the exception will leave the
         // running function and never come back
-        if (sps)
-            sps->skipNextReenter();
-        leaveBeforeCall();
+        if (sps_)
+            sps_->skipNextReenter();
+        leaveSPSFrame();
         MacroAssemblerSpecific::handleException();
         // Doesn't actually emit code, but balances the leave()
-        if (sps)
-            sps->reenter(*this, InvalidReg);
+        if (sps_)
+            sps_->reenter(*this, InvalidReg);
+    }
+
+    // see above comment for what is returned
+    uint32 callIon(const Register &callee) {
+        leaveSPSFrame();
+        MacroAssemblerSpecific::callIon(callee);
+        uint32 ret = currentOffset();
+        reenterSPSFrame();
+        return ret;
+    }
+
+    // see above comment for what is returned
+    uint32 callWithExitFrame(IonCode *target) {
+        leaveSPSFrame();
+        MacroAssemblerSpecific::callWithExitFrame(target);
+        uint32 ret = currentOffset();
+        reenterSPSFrame();
+        return ret;
+    }
+
+    // see above comment for what is returned
+    uint32 callWithExitFrame(IonCode *target, Register dynStack) {
+        leaveSPSFrame();
+        MacroAssemblerSpecific::callWithExitFrame(target, dynStack);
+        uint32 ret = currentOffset();
+        reenterSPSFrame();
+        return ret;
     }
 
   private:
+    // These two functions are helpers used around call sites throughout the
+    // assembler. They are called from the above call wrappers to emit the
+    // necessary instrumentation.
+    void leaveSPSFrame() {
+        if (!sps_ || !sps_->enabled())
+            return;
+        // No registers are guaranteed to be available, so push/pop a register
+        // so we can use one
+        push(CallTempReg0);
+        sps_->leave(*this, CallTempReg0);
+        pop(CallTempReg0);
+    }
+
+    void reenterSPSFrame() {
+        if (!sps_ || !sps_->enabled())
+            return;
+        // Attempt to use a now-free register within a given set, but if the
+        // architecture being built doesn't have an available register, resort
+        // to push/pop
+        GeneralRegisterSet regs(Registers::TempMask & ~Registers::JSCallMask &
+                                                      ~Registers::CallMask);
+        if (regs.empty()) {
+            push(CallTempReg0);
+            sps_->reenter(*this, CallTempReg0);
+            pop(CallTempReg0);
+        } else {
+            sps_->reenter(*this, regs.getAny());
+        }
+    }
+
     void spsProfileEntryAddress(SPSProfiler *p, int offset, Register temp,
                                 Label *full)
     {
@@ -550,36 +611,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     void spsPopFrame(SPSProfiler *p, Register temp) {
         movePtr(ImmWord(p->sizePointer()), temp);
         add32(Imm32(-1), Address(temp, 0));
-    }
-
-    // These two functions are helpers used around call sites throughout the
-    // assembler. They are mainly called from the call wrappers above, but can
-    // also be found within callVM and around callIon.
-
-    void leaveBeforeCall() {
-        if (!sps || !sps->enabled())
-            return;
-        GeneralRegisterSet regs(Registers::TempMask);
-        Register r = regs.getAny();
-        push(r);
-        sps->leave(*pc_, *this, r);
-        pop(r);
-    }
-
-    void reenterAfterCall() {
-        if (!sps || !sps->enabled())
-            return;
-        GeneralRegisterSet regs(Registers::TempMask & ~Registers::JSCallMask &
-                                                      ~Registers::CallMask);
-        if (regs.empty()) {
-            regs = GeneralRegisterSet(Registers::TempMask);
-            Register r = regs.getAny();
-            push(r);
-            sps->reenter(*this, r);
-            pop(r);
-        } else {
-            sps->reenter(*this, regs.getAny());
-        }
     }
 };
 

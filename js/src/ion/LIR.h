@@ -660,7 +660,7 @@ class LInstructionVisitor
     LInstruction *ins_;
 
   protected:
-    jsbytecode *lastPC;
+    jsbytecode *lastPC_;
 
     LInstruction *instruction() {
         return ins_;
@@ -670,14 +670,14 @@ class LInstructionVisitor
     void setInstruction(LInstruction *ins) {
         ins_ = ins;
         if (ins->mirRaw()) {
-            lastPC = ins->mirRaw()->trackedPc();
-            JS_ASSERT(lastPC != NULL);
+            lastPC_ = ins->mirRaw()->trackedPc();
+            JS_ASSERT(lastPC_ != NULL);
         }
     }
 
     LInstructionVisitor()
       : ins_(NULL),
-        lastPC(NULL)
+        lastPC_(NULL)
     {}
 
   public:
