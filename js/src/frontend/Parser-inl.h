@@ -48,9 +48,9 @@ ParseContext::ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel,
     parent(prs->pc),
     innermostWith(NULL),
     funcStmts(NULL),
-    hasReturnExpr(false),
-    hasReturnVoid(false),
-    inForInit(false),
+    funHasReturnExpr(false),
+    funHasReturnVoid(false),
+    parsingForInit(false),
     inDeclDestructuring(false)
 {
     prs->pc = this;
