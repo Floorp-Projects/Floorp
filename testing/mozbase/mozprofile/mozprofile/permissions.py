@@ -239,7 +239,9 @@ class Permissions(object):
            type TEXT,
            permission INTEGER,
            expireType INTEGER,
-           expireTime INTEGER)""")
+           expireTime INTEGER,
+           appId INTEGER,
+           isInBrowserElement INTEGER)""")
 
         for location in locations:
             # set the permissions
@@ -250,7 +252,7 @@ class Permissions(object):
                     permission_type = 1
                 else:
                     permission_type = 2
-                cursor.execute("INSERT INTO moz_hosts values(?, ?, ?, ?, 0, 0)",
+                cursor.execute("INSERT INTO moz_hosts values(?, ?, ?, ?, 0, 0, 0, 0)",
                                (self._num_permissions, location.host, perm,
                                 permission_type))
 
