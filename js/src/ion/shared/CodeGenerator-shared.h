@@ -65,7 +65,10 @@ class CodeGeneratorShared : public LInstructionVisitor
     // List of stack slots that have been pushed as arguments to an MCall.
     js::Vector<uint32, 0, SystemAllocPolicy> pushedArgumentSlots_;
 
-    IonInstrumentation sps;
+    // When profiling is enabled, this is the instrumentation manager which
+    // maintains state of what script is currently being generated (for inline
+    // scripts) and when instrumentation needs to be emitted or skipped.
+    IonInstrumentation sps_;
 
   protected:
     // The offset of the first instruction of the OSR entry block from the
