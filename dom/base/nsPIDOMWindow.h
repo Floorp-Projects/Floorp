@@ -24,7 +24,6 @@
 
 class nsIIdleObserver;
 class nsIPrincipal;
-class nsIDocShellTreeItem; // XXX - Temporary! Goes away in the next patch
 
 // Popup control state enum. The values in this enum must go from most
 // permissive to least permissive so that it's safe to push state in
@@ -287,8 +286,7 @@ public:
   // preloaded into it when it was created, or created by
   // CreateAboutBlankContentViewer()).
   virtual void SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal) = 0;
-  virtual void SetInitialPrincipalToSubject(nsIDocShellTreeItem* aItem,
-                                            nsIDOMWindow* aParent) = 0;
+  virtual void SetInitialPrincipalToSubject() = 0;
 
   // Ask this window who opened it.
   virtual nsIPrincipal* GetOpenerScriptPrincipal() = 0;
