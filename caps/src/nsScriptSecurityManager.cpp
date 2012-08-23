@@ -3048,7 +3048,6 @@ nsresult nsScriptSecurityManager::Init()
 
     static const JSSecurityCallbacks securityCallbacks = {
         CheckObjectAccess,
-        nsJSPrincipals::Subsume,
         ObjectPrincipalFinder,
         ContentSecurityPolicyPermitsJSAction
     };
