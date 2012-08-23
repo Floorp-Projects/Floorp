@@ -116,17 +116,11 @@ static void glxtest()
   typedef XVisualInfo* (* PFNGLXGETVISUALFROMFBCONFIG) (Display *, GLXFBConfig);
   PFNGLXGETVISUALFROMFBCONFIG glXGetVisualFromFBConfig = cast<PFNGLXGETVISUALFROMFBCONFIG>(glXGetProcAddress("glXGetVisualFromFBConfig"));
 
-  typedef GLXPixmap (* PFNGLXCREATEPIXMAP) (Display *, GLXFBConfig, Pixmap, const int *);
-  PFNGLXCREATEPIXMAP glXCreatePixmap = cast<PFNGLXCREATEPIXMAP>(glXGetProcAddress("glXCreatePixmap"));
-
   typedef GLXContext (* PFNGLXCREATENEWCONTEXT) (Display *, GLXFBConfig, int, GLXContext, Bool);
   PFNGLXCREATENEWCONTEXT glXCreateNewContext = cast<PFNGLXCREATENEWCONTEXT>(glXGetProcAddress("glXCreateNewContext"));
 
   typedef Bool (* PFNGLXMAKECURRENT) (Display*, GLXDrawable, GLXContext);
   PFNGLXMAKECURRENT glXMakeCurrent = cast<PFNGLXMAKECURRENT>(glXGetProcAddress("glXMakeCurrent"));
-
-  typedef void (* PFNGLXDESTROYPIXMAP) (Display *, GLXPixmap);
-  PFNGLXDESTROYPIXMAP glXDestroyPixmap = cast<PFNGLXDESTROYPIXMAP>(glXGetProcAddress("glXDestroyPixmap"));
 
   typedef void (* PFNGLXDESTROYCONTEXT) (Display*, GLXContext);
   PFNGLXDESTROYCONTEXT glXDestroyContext = cast<PFNGLXDESTROYCONTEXT>(glXGetProcAddress("glXDestroyContext"));
@@ -138,10 +132,8 @@ static void glxtest()
       !glXQueryVersion ||
       !glXChooseFBConfig ||
       !glXGetVisualFromFBConfig ||
-      !glXCreatePixmap ||
       !glXCreateNewContext ||
       !glXMakeCurrent ||
-      !glXDestroyPixmap ||
       !glXDestroyContext ||
       !glGetString)
   {
@@ -155,38 +147,34 @@ static void glxtest()
   ///// Check that the GLX extension is present /////
   if (!glXQueryExtension(dpy, NULL, NULL))
     fatal_error("GLX extension missing");
-  
-  ///// Check that the GLX version is >= 1.3, needed for glXCreatePixmap, bug 659932 /////
-  int majorVersion, minorVersion;
-  if (!glXQueryVersion(dpy, &majorVersion, &minorVersion))
-    fatal_error("Unable to query GLX version");
-
-  if (majorVersion < 1 || (majorVersion == 1 && minorVersion < 3))
-    fatal_error("GLX version older than the required 1.3");
 
   XSetErrorHandler(x_error_handler);
 
   ///// Get a FBConfig and a visual /////
-  int attribs[] = {
-    GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT,
-    GLX_X_RENDERABLE, True,
-    0
-  };
   int numReturned;
-  GLXFBConfig *fbConfigs = glXChooseFBConfig(dpy, DefaultScreen(dpy), attribs, &numReturned );
+  GLXFBConfig *fbConfigs = glXChooseFBConfig(dpy, DefaultScreen(dpy), NULL, &numReturned );
   if (!fbConfigs)
     fatal_error("No FBConfigs found");
   XVisualInfo *vInfo = glXGetVisualFromFBConfig(dpy, fbConfigs[0]);
   if (!vInfo)
     fatal_error("No visual found for first FBConfig");
 
-  ///// Get a Pixmap and a GLXPixmap /////
-  Pixmap pixmap = XCreatePixmap(dpy, RootWindow(dpy, vInfo->screen), 4, 4, vInfo->depth);
-  GLXPixmap glxpixmap = glXCreatePixmap(dpy, fbConfigs[0], pixmap, NULL);
+  // using a X11 Window instead of a GLXPixmap does not crash
+  // fglrx in indirect rendering. bug 680644
+  Window win1;
+  XSetWindowAttributes swa;
+  swa.colormap = XCreateColormap(dpy, RootWindow(dpy, vInfo->screen),
+                                 vInfo->visual, AllocNone);
+  swa.border_pixel = 0;
+  win1 = XCreateWindow(dpy, RootWindow(dpy, vInfo->screen),
+                       10, 10, 16, 16,
+                       0, vInfo->depth, InputOutput, vInfo->visual,
+                       CWBorderPixel | CWColormap, &swa);
+
 
   ///// Get a GL context and make it current //////
   GLXContext context = glXCreateNewContext(dpy, fbConfigs[0], GLX_RGBA_TYPE, NULL, True);
-  glXMakeCurrent(dpy, glxpixmap, context);
+  glXMakeCurrent(dpy, win1, context);
 
   ///// Look for this symbol to determine texture_from_pixmap support /////
   void* glXBindTexImageEXT = glXGetProcAddress("glXBindTexImageEXT"); 
@@ -215,8 +203,7 @@ static void glxtest()
   ///// possible. Also we want to check that we're able to do that too without generating X errors.
   glXMakeCurrent(dpy, None, NULL); // must release the GL context before destroying it
   glXDestroyContext(dpy, context);
-  glXDestroyPixmap(dpy, glxpixmap);
-  XFreePixmap(dpy, pixmap);
+  XDestroyWindow(dpy,win1);
   XCloseDisplay(dpy);
   dlclose(libgl);
 
