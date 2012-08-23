@@ -1180,11 +1180,6 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     if (!ac.enter(ccx, global))
         return NS_ERROR_UNEXPECTED;
 
-    // Apply the system flag, if requested.
-    bool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
-    if (system && !JS_MakeSystemObject(aJSContext, global))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
     if (!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {
         // XPCCallContext gives us an active request needed to save/restore.
         if (!nsXPCComponents::AttachComponentsObject(ccx, wrappedGlobal->GetScope(), global))
