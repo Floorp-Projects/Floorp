@@ -60,6 +60,11 @@ MOCHITEST_FILES := \
   test_forOf.html \
   forOf_iframe.html \
   test_sequence_wrapping.html \
+  file_bug775543.html \
+  $(NULL)
+
+MOCHITEST_CHROME_FILES = \
+  test_bug775543.html \
   $(NULL)
 
 # Include rules.mk before any of our targets so our first target is coming from
