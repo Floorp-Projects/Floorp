@@ -88,6 +88,19 @@ function waitForCondition(condition, nextTest, errorMsg) {
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
+function getTestPlugin() {
+  var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+  var tags = ph.getPluginTags();
+
+  // Find the test plugin
+  for (var i = 0; i < tags.length; i++) {
+    if (tags[i].name == "Test Plug-in")
+      return tags[i];
+  }
+  ok(false, "Unable to find plugin");
+  return null;
+}
+
 function runSocialTestWithProvider(manifest, callback) {
   let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
