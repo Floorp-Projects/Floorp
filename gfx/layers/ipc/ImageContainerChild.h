@@ -8,12 +8,8 @@
 
 #include "mozilla/layers/PImageContainerChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "ImageTypes.h"
 
 namespace mozilla {
-
-class ReentrantMonitor;
-
 namespace layers {
 
 class ImageBridgeCopyAndSendTask;
@@ -119,32 +115,7 @@ public:
    * Must be called on the ImageBridgeChild's thread.
    */
   void SetIdleNow();
-
-  /**
-   * Returns an instance of Image that should be of a Shared* subclass of Image
-   * and that should not need to be copied in order to be sent to the compositor.
-   */
-  already_AddRefed<Image> CreateImage(const ImageFormat *aFormats,
-                                      uint32_t aNumFormats);
-
-  /**
-   * Allocate shared buffers for the image.
-   *
-   * Can be called from any thread. If not called from the ImageBridge thread,
-   * it will synchronously proxy the call to the ImageBirdgeThread since shared
-   * memory can only be allocated in the IPDL thread. 
-   */
-  void AllocateSharedBufferForImage(Image* aImage);
-
-  /**
-   * Can be called from any thread.
-   * Deallocates or places aImage in the pool.
-   * If this method is not called from the ImageBridgeChild thread,
-   * a task is dispatched and the recycling is done asynchronously on
-   * the ImageBridgeChild thread.
-   */
-  void RecycleSharedImage(SharedImage* aImage);
-
+  
 protected:
   virtual PGrallocBufferChild*
   AllocPGrallocBuffer(const gfxIntSize&, const gfxContentType&,
@@ -217,28 +188,6 @@ protected:
    * Called by ImageToSharedImage.
    */
   SharedImage * CreateSharedImageFromData(Image* aImage);
-  /**
-   * Allocate shared buffers for the image.
-   * Must be called on the ImageBridgeChild thread.
-   */
-  void AllocateSharedBufferForImageNow(Image* aImage);
-
-  /**
-   * Calls AllocateSharedBufferForImageNow and notify the barrier monitor.
-   * This is meant to be called by AllocateSharedBufferForImage if the
-   * call must be proxied synchronously to the ImageBridgeChild's thread.
-   */
-  void AllocateSharedBufferForImageSync(ReentrantMonitor* aBarrier,
-                                        bool* aDone,
-                                        Image* aImage);
-
-  /**
-   * Either deallocate or place aImage in the shared image pool.
-   * Must be called on the ImageBridgeChild thread.
-   * aImage should not be used after this method is called.
-   */
-  void RecycleSharedImageNow(SharedImage* aImage);
-
 
 private:
   uint64_t mImageContainerID;
