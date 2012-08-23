@@ -344,7 +344,6 @@ public:
 
   virtual NS_HIDDEN_(void) SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal);
   virtual NS_HIDDEN_(void) SetInitialPrincipalToSubject();
-  virtual NS_HIDDEN_(nsIPrincipal*) GetOpenerScriptPrincipal();
 
   virtual NS_HIDDEN_(PopupControlState) PushPopupControlState(PopupControlState state, bool aForce) const;
   virtual NS_HIDDEN_(void) PopPopupControlState(PopupControlState state) const;
@@ -1015,8 +1014,6 @@ protected:
   nsCOMPtr<nsIDOMStorage>      mSessionStorage;
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> mInnerWindowHolder;
-  nsCOMPtr<nsIPrincipal> mOpenerScriptPrincipal; // strong; used to determine
-                                                 // whether to clear scope
 
   // These member variable are used only on inner windows.
   nsRefPtr<nsEventListenerManager> mListenerManager;
