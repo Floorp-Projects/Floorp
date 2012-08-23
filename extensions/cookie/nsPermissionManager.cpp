@@ -74,7 +74,8 @@ ChildProcess()
 namespace {
 
 nsresult
-GetPrincipalForHost(const nsACString& aHost, nsIPrincipal** aPrincipal)
+GetPrincipal(const nsACString& aHost, uint32_t aAppId, bool aIsInBrowserElement,
+             nsIPrincipal** aPrincipal)
 {
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
@@ -84,7 +85,22 @@ GetPrincipalForHost(const nsACString& aHost, nsIPrincipal** aPrincipal)
   // doesn't really matter.
   NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + aHost);
 
-  return secMan->GetNoAppCodebasePrincipal(uri, aPrincipal);
+  return secMan->GetAppCodebasePrincipal(uri, aAppId, aIsInBrowserElement, aPrincipal);
+}
+
+nsresult
+GetPrincipal(nsIURI* aURI, nsIPrincipal** aPrincipal)
+{
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
+
+  return secMan->GetNoAppCodebasePrincipal(aURI, aPrincipal);
+}
+
+nsresult
+GetPrincipal(const nsACString& aHost, nsIPrincipal** aPrincipal)
+{
+  return GetPrincipal(aHost, nsIScriptSecurityManager::NO_APP_ID, false, aPrincipal);
 }
 
 nsresult
@@ -226,7 +242,7 @@ NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(uint16_t aReason)
 // nsPermissionManager Implementation
 
 static const char kPermissionsFileName[] = "permissions.sqlite";
-#define HOSTS_SCHEMA_VERSION 2
+#define HOSTS_SCHEMA_VERSION 3
 
 static const char kHostpermFileName[] = "hostperm.1";
 
@@ -294,13 +310,7 @@ nsPermissionManager::Init()
       const IPC::Permission &perm = perms[i];
 
       nsCOMPtr<nsIPrincipal> principal;
-      nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-      MOZ_ASSERT(secMan, "No security manager!?");
-
-      nsCOMPtr<nsIURI> uri;
-      NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + perm.host);
-
-      rv = secMan->GetAppCodebasePrincipal(uri, perm.appId, perm.isInBrowserElement, getter_AddRefs(principal));
+      rv = GetPrincipal(perm.host, perm.appId, perm.isInBrowserElement, getter_AddRefs(principal));
       NS_ENSURE_SUCCESS(rv, rv);
 
       AddInternal(principal, perm.type, perm.capability, 0, perm.expireType,
@@ -394,13 +404,27 @@ nsPermissionManager::InitDB(bool aRemoveFile)
         rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
               "ALTER TABLE moz_hosts ADD expireTime INTEGER"));
         NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // fall through to the next upgrade
+
+    case 2:
+      {
+        // Add appId/isInBrowserElement fields.
+        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+              "ALTER TABLE moz_hosts ADD appId INTEGER"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+              "ALTER TABLE moz_hosts ADD isInBrowserElement INTEGER"));
+        NS_ENSURE_SUCCESS(rv, rv);
 
         rv = mDBConn->SetSchemaVersion(HOSTS_SCHEMA_VERSION);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
       // fall through to the next upgrade
-      
+
     // current version.
     case HOSTS_SCHEMA_VERSION:
       break;
@@ -430,7 +454,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
         // check if all the expected columns exist
         nsCOMPtr<mozIStorageStatement> stmt;
         rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT host, type, permission, expireType, expireTime FROM moz_hosts"),
+          "SELECT host, type, permission, expireType, expireTime, appId, isInBrowserElement FROM moz_hosts"),
           getter_AddRefs(stmt));
         if (NS_SUCCEEDED(rv))
           break;
@@ -452,8 +476,8 @@ nsPermissionManager::InitDB(bool aRemoveFile)
   // cache frequently used statements (for insertion, deletion, and updating)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_hosts "
-    "(id, host, type, permission, expireType, expireTime) "
-    "VALUES (?1, ?2, ?3, ?4, ?5, ?6)"), getter_AddRefs(mStmtInsert));
+    "(id, host, type, permission, expireType, expireTime, appId, isInBrowserElement) "
+    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)"), getter_AddRefs(mStmtInsert));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -493,6 +517,8 @@ nsPermissionManager::CreateTable()
       ",permission INTEGER"
       ",expireType INTEGER"
       ",expireTime INTEGER"
+      ",appId INTEGER"
+      ",isInBrowserElement INTEGER"
     ")"));
 }
 
@@ -506,10 +532,7 @@ nsPermissionManager::Add(nsIURI     *aURI,
   NS_ENSURE_ARG_POINTER(aURI);
 
   nsCOMPtr<nsIPrincipal> principal;
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  MOZ_ASSERT(secMan, "No security manager!?");
-
-  nsresult rv = secMan->GetNoAppCodebasePrincipal(aURI, getter_AddRefs(principal));
+  nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return AddFromPrincipal(principal, aType, aPermission, aExpireType, aExpireTime);
@@ -643,8 +666,17 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
 
       entry->GetPermissions().AppendElement(PermissionEntry(id, typeIndex, aPermission, aExpireType, aExpireTime));
 
-      if (aDBOperation == eWriteToDB && aExpireType != nsIPermissionManager::EXPIRE_SESSION)
-        UpdateDB(op, mStmtInsert, id, host, aType, aPermission, aExpireType, aExpireTime);
+      if (aDBOperation == eWriteToDB && aExpireType != nsIPermissionManager::EXPIRE_SESSION) {
+        uint32_t appId;
+        rv = aPrincipal->GetAppId(&appId);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        bool isInBrowserElement;
+        rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        UpdateDB(op, mStmtInsert, id, host, aType, aPermission, aExpireType, aExpireTime, appId, isInBrowserElement);
+      }
 
       if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(host,
@@ -671,8 +703,10 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
         mPermissionTable.RawRemoveEntry(entry);
 
       if (aDBOperation == eWriteToDB)
-        UpdateDB(op, mStmtDelete, id, EmptyCString(), EmptyCString(), 0, 
-                 nsIPermissionManager::EXPIRE_NEVER, 0);
+        // We care only about the id here so we pass dummy values for all other
+        // parameters.
+        UpdateDB(op, mStmtDelete, id, EmptyCString(), EmptyCString(), 0,
+                 nsIPermissionManager::EXPIRE_NEVER, 0, 0, false);
 
       if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(host,
@@ -694,7 +728,10 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
       entry->GetPermissions()[index].mPermission = aPermission;
 
       if (aDBOperation == eWriteToDB && aExpireType != nsIPermissionManager::EXPIRE_SESSION)
-        UpdateDB(op, mStmtUpdate, id, EmptyCString(), EmptyCString(), aPermission, aExpireType, aExpireTime);
+        // We care only about the id, the permission and expireType/expireTime here.
+        // We pass dummy values for all other parameters.
+        UpdateDB(op, mStmtUpdate, id, EmptyCString(), EmptyCString(),
+                 aPermission, aExpireType, aExpireTime, 0, false);
 
       if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(host,
@@ -719,8 +756,7 @@ nsPermissionManager::Remove(const nsACString &aHost,
                             const char       *aType)
 {
   nsCOMPtr<nsIPrincipal> principal;
-
-  nsresult rv = GetPrincipalForHost(aHost, getter_AddRefs(principal));
+  nsresult rv = GetPrincipal(aHost, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return RemoveFromPrincipal(principal, aType);
@@ -812,10 +848,7 @@ nsPermissionManager::TestExactPermission(nsIURI     *aURI,
                                          uint32_t   *aPermission)
 {
   nsCOMPtr<nsIPrincipal> principal;
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  MOZ_ASSERT(secMan, "No security manager!?");
-
-  nsresult rv = secMan->GetNoAppCodebasePrincipal(aURI, getter_AddRefs(principal));
+  nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return TestExactPermissionFromPrincipal(principal, aType, aPermission);
@@ -844,10 +877,7 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
                                     uint32_t   *aPermission)
 {
   nsCOMPtr<nsIPrincipal> principal;
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  MOZ_ASSERT(secMan, "No security manager!?");
-
-  nsresult rv = secMan->GetNoAppCodebasePrincipal(aURI, getter_AddRefs(principal));
+  nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return TestPermissionFromPrincipal(principal, aType, aPermission);
@@ -952,13 +982,7 @@ nsPermissionManager::GetPermissionHashKey(const nsACString& aHost,
       if (permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME &&
           permEntry.mExpireTime <= now) {
         nsCOMPtr<nsIPrincipal> principal;
-        nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-        MOZ_ASSERT(secMan, "No security manager!?");
-
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + aHost);
-
-        if (NS_FAILED(secMan->GetAppCodebasePrincipal(uri, aAppId, aIsInBrowserElement, getter_AddRefs(principal)))) {
+        if (NS_FAILED(GetPrincipal(aHost, aAppId, aIsInBrowserElement, getter_AddRefs(principal)))) {
           return nullptr;
         }
 
@@ -1151,7 +1175,7 @@ nsPermissionManager::Read()
 
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, host, type, permission, expireType, expireTime "
+    "SELECT id, host, type, permission, expireType, expireTime, appId, isInBrowserElement "
     "FROM moz_hosts"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1160,6 +1184,8 @@ nsPermissionManager::Read()
   uint32_t permission;
   uint32_t expireType;
   int64_t expireTime;
+  uint32_t appId;
+  bool isInBrowserElement;
   bool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     // explicitly set our entry id counter for use in AddInternal(),
@@ -1180,8 +1206,12 @@ nsPermissionManager::Read()
     // convert into int64_t value (milliseconds)
     expireTime = stmt->AsInt64(5);
 
+    MOZ_ASSERT(stmt->AsInt64(6) >= 0);
+    appId = static_cast<uint32_t>(stmt->AsInt64(6));
+    isInBrowserElement = static_cast<bool>(stmt->AsInt32(7));
+
     nsCOMPtr<nsIPrincipal> principal;
-    nsresult rv = GetPrincipalForHost(host, getter_AddRefs(principal));
+    nsresult rv = GetPrincipal(host, appId, isInBrowserElement, getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = AddInternal(principal, type, permission, id, expireType, expireTime,
@@ -1255,7 +1285,7 @@ nsPermissionManager::Import()
       }
 
       nsCOMPtr<nsIPrincipal> principal;
-      nsresult rv = GetPrincipalForHost(lineArray[3], getter_AddRefs(principal));
+      nsresult rv = GetPrincipal(lineArray[3], getter_AddRefs(principal));
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = AddInternal(principal, lineArray[1], permission, 0,
@@ -1291,7 +1321,9 @@ nsPermissionManager::UpdateDB(OperationType         aOp,
                               const nsACString     &aType,
                               uint32_t              aPermission,
                               uint32_t              aExpireType,
-                              int64_t               aExpireTime)
+                              int64_t               aExpireTime,
+                              uint32_t              aAppId,
+                              bool                  aIsInBrowserElement)
 {
   ENSURE_NOT_CHILD_PROCESS_NORET;
 
@@ -1320,6 +1352,12 @@ nsPermissionManager::UpdateDB(OperationType         aOp,
       if (NS_FAILED(rv)) break;
 
       rv = aStmt->BindInt64ByIndex(5, aExpireTime);
+      if (NS_FAILED(rv)) break;
+
+      rv = aStmt->BindInt64ByIndex(6, aAppId);
+      if (NS_FAILED(rv)) break;
+
+      rv = aStmt->BindInt64ByIndex(7, aIsInBrowserElement);
       break;
     }
 
