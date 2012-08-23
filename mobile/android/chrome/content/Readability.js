@@ -75,7 +75,6 @@ Readability.prototype = {
     negative: /combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|widget/i,
     extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single/i,
     byline: /byline|author|dateline|writtenby/i,
-    stripTags: /(<([^>]+)>)/ig,
     divToPElements: /<(a|blockquote|dl|div|img|ol|p|pre|table|ul)/i,
     replaceFonts: /<(\/?)font[^>]*>/gi,
     trim: /^\s+|\s+$/g,
@@ -434,16 +433,20 @@ Readability.prototype = {
         if (!(node = allElements[nodeIndex]))
           continue;
 
-        if (node.className.search(this.REGEXPS.byline) !== -1 && !this._articleByline)
-          this._articleByline = node.innerHTML.replace(this.REGEXPS.stripTags, "");
+        let matchString = node.className + node.id;
+        if (matchString.search(this.REGEXPS.byline) !== -1 && !this._articleByline) {
+          this._articleByline = node.textContent;
+          node.parentNode.removeChild(node);
+          purgeNode(node);
+          continue;
+        }
 
         // Remove unlikely candidates
         if (stripUnlikelyCandidates) {
-          let unlikelyMatchString = node.className + node.id;
-          if (unlikelyMatchString.search(this.REGEXPS.unlikelyCandidates) !== -1 &&
-            unlikelyMatchString.search(this.REGEXPS.okMaybeItsACandidate) === -1 &&
+          if (matchString.search(this.REGEXPS.unlikelyCandidates) !== -1 &&
+            matchString.search(this.REGEXPS.okMaybeItsACandidate) === -1 &&
             node.tagName !== "BODY") {
-            this.log("Removing unlikely candidate - " + unlikelyMatchString);
+            this.log("Removing unlikely candidate - " + matchString);
             node.parentNode.removeChild(node);
             purgeNode(node);
             continue;
