@@ -192,8 +192,8 @@
           <hbox pack="end" align="center" class="popup-notification-button-container">
 #ifdef XP_UNIX
         <button id="social-undoactivation-button"
-                label="&social.activated.button.label;"
-                accesskey="&social.activated.button.accesskey;"
+                label="&social.activated.undobutton.label;"
+                accesskey="&social.activated.undobutton.accesskey;"
                 onclick="SocialUI.undoActivation();"/>
         <button default="true"
                 autofocus="autofocus"
@@ -207,8 +207,8 @@
                 accesskey="&social.ok.accesskey;"
                 oncommand="SocialUI.notificationPanel.hidePopup();"/>
         <button id="social-undoactivation-button"
-                label="&social.activated.button.label;"
-                accesskey="&social.activated.button.accesskey;"
+                label="&social.activated.undobutton.label;"
+                accesskey="&social.activated.undobutton.accesskey;"
                 onclick="SocialUI.undoActivation();"/>
 #endif
           </hbox>
