@@ -109,6 +109,7 @@ browser.jar:
   skin/classic/browser/devtools/webconsole.png                  (devtools/webconsole.png)
   skin/classic/browser/devtools/gcli.css              (devtools/gcli.css)
   skin/classic/browser/devtools/htmlpanel.css         (devtools/htmlpanel.css)
+  skin/classic/browser/devtools/markup-view.css      (devtools/markup-view.css)
   skin/classic/browser/devtools/orion.css             (devtools/orion.css)
   skin/classic/browser/devtools/orion-container.css   (devtools/orion-container.css)
   skin/classic/browser/devtools/orion-task.png        (devtools/orion-task.png)

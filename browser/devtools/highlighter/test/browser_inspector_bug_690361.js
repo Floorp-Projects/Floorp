@@ -43,7 +43,7 @@ function runInspectorTests()
   ok(InspectorUI.toolbar, "we have the toolbar.");
   ok(!InspectorUI.toolbar.hidden, "toolbar is visible");
   ok(InspectorUI.inspecting, "Inspector is inspecting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
+  ok(!InspectorUI.currentInspector._markupOpen, "Inspector Tree Panel is not open");
   ok(InspectorUI.highlighter, "Highlighter is up");
 
   salutation = doc.getElementById("salutation");
@@ -60,7 +60,7 @@ function closeInspectorTests()
   Services.obs.addObserver(inspectorOpenedTrap,
     InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
 
-  ok(!InspectorUI.isInspectorOpen, "Inspector Tree Panel is not open");
+  ok(!InspectorUI.isInspectorOpen, "Inspector is not open");
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {
