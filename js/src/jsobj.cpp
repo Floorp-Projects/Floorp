@@ -661,25 +661,12 @@ obj_watch_handler(JSContext *cx, JSObject *obj_, jsid id_, jsval old,
     RootedObject obj(cx, obj_);
     RootedId id(cx, id_);
 
-    JSObject *callable = (JSObject *) closure;
-    if (JSSubsumePrincipalsOp subsume = cx->runtime->securityCallbacks->subsumePrincipals) {
-        if (JSPrincipals *watcher = callable->principals(cx)) {
-            if (JSObject *scopeChain = cx->stack.currentScriptedScopeChain()) {
-                if (JSPrincipals *subject = scopeChain->principals(cx)) {
-                    if (!subsume(watcher, subject)) {
-                        /* Silently don't call the watch handler. */
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-
     /* Avoid recursion on (obj, id) already being watched on cx. */
     AutoResolving resolving(cx, obj, id, AutoResolving::WATCH);
     if (resolving.alreadyStarted())
         return true;
 
+    JSObject *callable = (JSObject *)closure;
     Value argv[] = { IdToValue(id), old, *nvp };
     return Invoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable), ArrayLength(argv), argv, nvp);
 }

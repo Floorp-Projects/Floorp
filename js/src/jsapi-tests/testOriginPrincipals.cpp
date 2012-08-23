@@ -16,7 +16,6 @@ ObjectPrincipalsFinder(JSObject *)
 
 static const JSSecurityCallbacks seccb = {
     NULL,
-    NULL,
     ObjectPrincipalsFinder,
     NULL
 };
