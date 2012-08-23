@@ -311,6 +311,7 @@
  "toolkit/content/tests/widgets/test_menubar.xul": "W/SharedBufferStack(21799): waitForCondition(LockCondition) timed out (identity=34, status=0). CPU may be pegged. trying again",
  "toolkit/content/tests/widgets/test_videocontrols.html": "TIMED_OUT",
  "uriloader/exthandler/tests/mochitest/test_handlerApps.xhtml": "",
+ "widget/tests/test_bug760802.html": "",
  "dom/tests/mochitest/ajax/offline": "SLOW_DIRECTORY",
  "layout/base/tests": "SLOW_DIRECTORY"
  }
