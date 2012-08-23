@@ -1663,7 +1663,7 @@ DebugScopes::onPopCall(StackFrame *fp, JSContext *cx)
     /*
      * When the StackFrame is popped, the values of unaliased variables
      * are lost. If there is any debug scope referring to this scope, save a
-     * copy of the unaliased variables' values in an array for latter debugger
+     * copy of the unaliased variables' values in an array for later debugger
      * access via DebugScopeProxy::handleUnaliasedAccess.
      *
      * Note: since it is simplest for this function to be infallible, failure
@@ -1776,6 +1776,10 @@ DebugScopes::onGeneratorFrameChange(StackFrame *from, StackFrame *to, JSContext 
 void
 DebugScopes::onCompartmentLeaveDebugMode(JSCompartment *c)
 {
+    for (ObjectWeakMap::Enum e(proxiedScopes); !e.empty(); e.popFront()) {
+        if (e.front().key->compartment() == c)
+            e.removeFront();
+    }
     for (MissingScopeMap::Enum e(missingScopes); !e.empty(); e.popFront()) {
         if (e.front().key.fp()->compartment() == c)
             e.removeFront();
