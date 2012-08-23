@@ -4890,7 +4890,6 @@ CheckObjectAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mod
 
 JSSecurityCallbacks securityCallbacks = {
     CheckObjectAccess,
-    NULL,
     NULL
 };
 
