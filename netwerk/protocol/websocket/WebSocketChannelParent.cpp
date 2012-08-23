@@ -8,6 +8,9 @@
 #include "WebSocketChannelParent.h"
 #include "nsIAuthPromptProvider.h"
 #include "mozilla/LoadContext.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
@@ -114,12 +117,16 @@ WebSocketChannelParent::RecvSendBinaryMsg(const nsCString& aMsg)
 }
 
 bool
-WebSocketChannelParent::RecvSendBinaryStream(const InputStream& aStream,
+WebSocketChannelParent::RecvSendBinaryStream(const InputStreamParams& aStream,
                                              const uint32_t& aLength)
 {
   LOG(("WebSocketChannelParent::RecvSendBinaryStream() %p\n", this));
   if (mChannel) {
-    nsresult rv = mChannel->SendBinaryStream(aStream, aLength);
+    nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aStream);
+    if (!stream) {
+      return false;
+    }
+    nsresult rv = mChannel->SendBinaryStream(stream, aLength);
     NS_ENSURE_SUCCESS(rv, true);
   }
   return true;

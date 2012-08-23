@@ -16,6 +16,9 @@
 #include "nsNetUtil.h"
 #include "nsSerializationHelper.h"
 #include "base/compiler_specific.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
@@ -1034,12 +1037,14 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
   gNeckoChild->SendPHttpChannelConstructor(this, tabChild);
 
+  OptionalInputStreamParams uploadStream;
+  SerializeInputStream(mUploadStream, uploadStream);
+
   SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI),
                 IPC::URI(mDocumentURI), IPC::URI(mReferrer), mLoadFlags,
-                mClientSetRequestHeaders, mRequestHead.Method(),
-                IPC::InputStream(mUploadStream), mUploadStreamHasHeaders,
-                mPriority, mRedirectionLimit, mAllowPipelining,
-                mForceAllowThirdPartyCookie, mSendResumeAt,
+                mClientSetRequestHeaders, mRequestHead.Method(), uploadStream,
+                mUploadStreamHasHeaders, mPriority, mRedirectionLimit,
+                mAllowPipelining, mForceAllowThirdPartyCookie, mSendResumeAt,
                 mStartPos, mEntityID, mChooseApplicationCache,
                 appCacheClientId, mAllowSpdy, IPC::SerializedLoadContext(this));
 
