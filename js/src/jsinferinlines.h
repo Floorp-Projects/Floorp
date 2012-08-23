@@ -1375,7 +1375,7 @@ TypeObject::setBasePropertyCount(uint32_t count)
 }
 
 inline HeapTypeSet *
-TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
+TypeObject::getProperty(JSContext *cx, jsid id, bool own)
 {
     JS_ASSERT(cx->compartment->activeInference);
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
@@ -1416,37 +1416,8 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
     }
 
     HeapTypeSet *types = &(*pprop)->types;
-
-    if (assign && !types->ownProperty(false)) {
-        /*
-         * Normally, we just want to set the property as being an own property
-         * when we got a set to it. The exception is when the set is actually
-         * calling a setter higher on the prototype chain. Check to see if there
-         * is a setter higher on the prototype chain, setter the property as an
-         * own property if that is not the case.
-         */
-        bool foundSetter = false;
-
-        JSObject *protoWalk = proto;
-        while (protoWalk) {
-            if (!protoWalk->isNative()) {
-                protoWalk = protoWalk->getProto();
-                continue;
-            }
-
-            Shape *shape = protoWalk->nativeLookup(cx, id);
-
-            foundSetter = shape &&
-                          !shape->hasDefaultSetter();
-            if (foundSetter)
-                break;
-
-            protoWalk = protoWalk->getProto();
-        }
-
-        if (!foundSetter)
-            types->setOwnProperty(cx, false);
-    }
+    if (own)
+        types->setOwnProperty(cx, false);
 
     return types;
 }
