@@ -2842,8 +2842,9 @@ SweepBackgroundThings(JSRuntime* rt, bool onBackgroundThread)
     }
 }
 
+#ifdef JS_THREADSAFE
 static void
-AssertBackgroundSweepingFinshed(JSRuntime *rt)
+AssertBackgroundSweepingFinished(JSRuntime *rt)
 {
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         JS_ASSERT(!c->gcNextCompartment);
@@ -2854,7 +2855,6 @@ AssertBackgroundSweepingFinshed(JSRuntime *rt)
     }
 }
 
-#ifdef JS_THREADSAFE
 static unsigned
 GetCPUCount()
 {
@@ -3040,7 +3040,7 @@ GCHelperThread::waitBackgroundSweepEnd()
     while (state == SWEEPING)
         PR_WaitCondVar(done, PR_INTERVAL_NO_TIMEOUT);
     if (rt->gcIncrementalState == NO_INCREMENTAL)
-        AssertBackgroundSweepingFinshed(rt);
+        AssertBackgroundSweepingFinished(rt);
 #else
     JS_ASSERT(state == IDLE);
 #endif /* JS_THREADSAFE */
@@ -3056,7 +3056,7 @@ GCHelperThread::waitBackgroundSweepOrAllocEnd()
     while (state == SWEEPING || state == CANCEL_ALLOCATION)
         PR_WaitCondVar(done, PR_INTERVAL_NO_TIMEOUT);
     if (rt->gcIncrementalState == NO_INCREMENTAL)
-        AssertBackgroundSweepingFinshed(rt);
+        AssertBackgroundSweepingFinished(rt);
 #else
     JS_ASSERT(state == IDLE);
 #endif /* JS_THREADSAFE */
