@@ -55,7 +55,7 @@ interface CanvasRenderingContext2D {
            attribute any fillStyle; // (default black)
   CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
   CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
-  CanvasPattern createPattern((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, DOMString? repetition);
+  CanvasPattern createPattern((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, DOMString repetition);
 
   // shadows
            [Infallible]
