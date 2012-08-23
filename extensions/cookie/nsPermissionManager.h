@@ -233,7 +233,9 @@ private:
                        const nsACString     &aType,
                        uint32_t              aPermission,
                        uint32_t              aExpireType,
-                       int64_t               aExpireTime);
+                       int64_t               aExpireTime,
+                       uint32_t              aAppId,
+                       bool                  aIsInBrowserElement);
 
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<nsIIDNService>      mIDNService;
