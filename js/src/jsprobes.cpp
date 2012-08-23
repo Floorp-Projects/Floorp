@@ -163,9 +163,9 @@ FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString* bytes)
 {
     if (!fun)
         return Probes::nullName;
-    if (!fun->atom)
+    if (!fun->displayAtom())
         return Probes::anonymousName;
-    return bytes->encode(cx, fun->atom) ? bytes->ptr() : Probes::nullName;
+    return bytes->encode(cx, fun->displayAtom()) ? bytes->ptr() : Probes::nullName;
 }
 
 /*
