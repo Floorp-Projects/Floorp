@@ -48,8 +48,6 @@ let AboutReader = {
 
     this._toolbarEnabled = false;
 
-    this._scrollOffset = window.pageYOffset;
-
     this._frame.contentDocument.addEventListener("DOMSubtreeModified", this, false);
     this._frame.contentDocument.addEventListener("MozScrolledAreaChanged", this, false);
     this._frame.contentDocument.addEventListener("touchstart", this, false);
@@ -146,7 +144,7 @@ let AboutReader = {
   uninit: function Reader_uninit() {
     dump("Uninit()");
 
-    Services.obs.removeObserver(this, "Reader:FaviconReturn", false);
+    Services.obs.removeObserver(this, "Reader:FaviconReturn");
 
     this._frame.contentDocument.removeEventListener("touchstart", this, false);
     this._frame.contentDocument.removeEventListener("click", this, false);
