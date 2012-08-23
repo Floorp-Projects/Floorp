@@ -298,7 +298,6 @@ struct FunctionBox : public ObjectBox
     Bindings        bindings;               /* bindings for this function */
     size_t          bufStart;
     size_t          bufEnd;
-    uint16_t        level;
     uint16_t        ndefaults;
     StrictMode::StrictModeState strictModeState;
     bool            inWith:1;               /* some enclosing scope is a with-statement
