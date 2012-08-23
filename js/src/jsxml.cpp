@@ -5136,11 +5136,6 @@ xml_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-static void
-xml_clear(JSContext *cx, HandleObject obj)
-{
-}
-
 static JSBool
 HasSimpleContent(JSXML *xml)
 {
@@ -5360,7 +5355,6 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_enumerate,
         xml_typeOf,
         NULL,       /* thisObject     */
-        xml_clear
     }
 };
 

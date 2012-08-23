@@ -1396,9 +1396,6 @@ ToObjectFromStack(JSContext *cx, HandleValue vp)
 extern void
 js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 
-extern bool
-js_ClearNative(JSContext *cx, JSObject *obj);
-
 extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);
 
