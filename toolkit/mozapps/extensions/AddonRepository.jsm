@@ -1250,7 +1250,7 @@ var AddonRepository = {
       if (aResult.xpiURL) {
         AddonManager.getInstallForURL(aResult.xpiURL, callback,
                                       "application/x-xpinstall", aResult.xpiHash,
-                                      addon.name, addon.iconURL, addon.version);
+                                      addon.name, addon.icons, addon.version);
       }
       else {
         callback(null);
