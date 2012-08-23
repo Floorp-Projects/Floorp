@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=758258
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for nsIPrincipal extendedOrigin, appStatus and appId</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=758258">Mozilla Bug 758258</a>
+<p id="display"></p>
+<div id="content">
+  
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 758258 **/
+
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+
+SimpleTest.waitForExplicitFinish();
+
+var permManager = Cc["@mozilla.org/permissionmanager;1"]
+                    .getService(Ci.nsIPermissionManager);
+
+const gPermName = 'foobar';
+
+var previousPrefs = {
+  mozBrowserFramesEnabled: undefined,
+};
+
+try {
+  previousPrefs.mozBrowserFramesEnabled = SpecialPowers.getBoolPref('dom.mozBrowserFramesEnabled');
+} catch(e)
+{
+}
+
+SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
+
+// We use http://test/ as url so all apps use the same url and app isolation is
+// more obvious.
+var gData = [
+  // APP 1
+  {
+    app: 'http://example.org/manifest.webapp',
+    action: 'read-no',
+    src: 'http://test/',
+  },
+  {
+    app: 'http://example.org/manifest.webapp',
+    action: 'write',
+    src: 'http://test/',
+  },
+  {
+    app: 'http://example.org/manifest.webapp',
+    action: 'read-yes',
+    src: 'http://test/',
+  },
+  // APP 2
+  {
+    app: 'https://example.com/manifest.webapp',
+    action: 'read-no',
+    src: 'http://test/',
+  },
+  {
+    app: 'https://example.com/manifest.webapp',
+    action: 'write',
+    src: 'http://test/',
+  },
+  {
+    app: 'https://example.com/manifest.webapp',
+    action: 'read-yes',
+    src: 'http://test/',
+  },
+  // Browser
+  {
+    browser: true,
+    action: 'read-no',
+    src: 'http://test/',
+  },
+  {
+    browser: true,
+    action: 'write',
+    src: 'http://test/',
+  },
+  {
+    browser: true,
+    action: 'read-yes',
+    src: 'http://test/',
+  },
+];
+
+function runTest() {
+  for (var i in gData) {
+    var iframe = document.createElement('iframe');
+    var data = gData[i];
+
+    if (data.app) {
+      iframe.setAttribute('mozbrowser', '');
+      iframe.setAttribute('mozapp', data.app);
+    } else if (data.browser) {
+      iframe.setAttribute('mozbrowser', '');
+    }
+
+    if (data.app || data.browser) {
+      iframe.addEventListener('load', function(e) {
+        var principal = iframe.contentDocument.nodePrincipal;
+
+        switch (data.action) {
+          case 'read-no':
+            is(permManager.testPermissionFromPrincipal(principal, gPermName),
+               Ci.nsIPermissionManager.UNKNOWN_ACTION,
+               "Permission should not be set yet");
+            is(permManager.testExactPermissionFromPrincipal(principal, gPermName),
+               Ci.nsIPermissionManager.UNKNOWN_ACTION,
+               "Permission should not be set yet");
+            break;
+          case 'write':
+            permManager.addFromPrincipal(principal, gPermName, Ci.nsIPermissionManager.ALLOW_ACTION);
+            break;
+          case 'read-yes':
+            is(permManager.testPermissionFromPrincipal(principal, gPermName),
+               Ci.nsIPermissionManager.ALLOW_ACTION,
+               "Permission should be set");
+            is(permManager.testExactPermissionFromPrincipal(principal, gPermName),
+               Ci.nsIPermissionManager.ALLOW_ACTION,
+               "Permission should be set");
+            break;
+          default:
+            ok(false, "shouldn't be there");
+        }
+
+        // Calling removeChild() produces an error that creates failures.
+        //document.getElementById('content').removeChild(iframe);
+
+        i++;
+        if (i >= gData.length) {
+          if (previousPrefs.mozBrowserFramesEnabled !== undefined) {
+            SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', previousPrefs.mozBrowserFramesEnabled);
+          }
+
+          SimpleTest.finish();
+        } else {
+          gTestRunner.next();
+        }
+      });
+    }
+
+    iframe.src = data.src;
+
+    document.getElementById('content').appendChild(iframe);
+
+    yield;
+  }
+}
+
+var gTestRunner = runTest();
+gTestRunner.next();
+
+</script>
+</pre>
+</body>
+</html>
