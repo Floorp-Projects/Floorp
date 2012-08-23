@@ -16078,9 +16078,17 @@ function test_2d_pattern_repeat_null() {
 var canvas = document.getElementById('c494');
 var ctx = canvas.getContext('2d');
 
-var _thrown = undefined; try {
-  ctx.createPattern(canvas, null);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "SyntaxError" && _thrown.code == DOMException.SYNTAX_ERR, "should throw SyntaxError");
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+var img = document.getElementById('green-1x1_2.png');
+var pattern = ctx.createPattern(img, null);
+ctx.fillStyle = pattern;
+ctx.fillRect(0, 0, 100, 50);
+
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
 
 
 }
@@ -16119,7 +16127,8 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern(canvas, undefined);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "SyntaxError" && _thrown.code == DOMException.SYNTAX_ERR, "should throw SyntaxError");
+  // XXXbz TODO fix bug 784869
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "SyntaxError" && _thrown.code == DOMException.SYNTAX_ERR, "should throw SyntaxError");
 
 
 }
