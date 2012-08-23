@@ -54,11 +54,7 @@ ParseNode::become(ParseNode *pn2)
      * If any pointers are pointing to pn2, change them to point to this
      * instead, since pn2 will be cleared and probably recycled.
      */
-    if (this->isKind(PNK_FUNCTION) && isArity(PN_FUNC)) {
-        /* Function node: fix up the pn_funbox->node back-pointer. */
-        JS_ASSERT(pn_funbox->node == pn2);
-        pn_funbox->node = this;
-    } else if (pn_arity == PN_LIST && !pn_head) {
+    if (pn_arity == PN_LIST && !pn_head) {
         /* Empty list: fix up the pn_tail pointer. */
         JS_ASSERT(pn_count == 0);
         JS_ASSERT(pn_tail == &pn2->pn_head);
@@ -259,24 +255,6 @@ void
 ParseNodeAllocator::prepareNodeForMutation(ParseNode *pn)
 {
     if (!pn->isArity(PN_NULLARY)) {
-        if (pn->isArity(PN_FUNC)) {
-            /*
-             * Since this node could be turned into anything, we can't
-             * ensure it won't be subsequently recycled, so we must
-             * disconnect it from the funbox tree entirely.
-             *
-             * Note that pn_funbox may legitimately be NULL. functionDef
-             * applies MakeDefIntoUse to definition nodes, which can come
-             * from prior iterations of the big loop in compileScript. In
-             * such cases, the defn nodes have been visited by the recycler
-             * (but not actually recycled!), and their funbox pointers
-             * cleared. But it's fine to mutate them into uses of some new
-             * definition.
-             */
-            if (pn->pn_funbox)
-                pn->pn_funbox->node = NULL;
-        }
-
         /* Put |pn|'s children (but not |pn| itself) on a work stack. */
         NodeStack stack;
         PushNodeChildren(pn, &stack);
@@ -477,7 +455,7 @@ CloneParseTree(ParseNode *opn, Parser *parser)
 
       case PN_FUNC:
         NULLCHECK(pn->pn_funbox =
-                  parser->newFunctionBox(opn->pn_funbox->object, pn, pc, opn->pn_funbox->strictModeState));
+                  parser->newFunctionBox(opn->pn_funbox->object, pc, opn->pn_funbox->strictModeState));
         NULLCHECK(pn->pn_body = CloneParseTree(opn->pn_body, parser));
         pn->pn_cookie = opn->pn_cookie;
         pn->pn_dflags = opn->pn_dflags;

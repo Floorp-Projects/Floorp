@@ -387,10 +387,9 @@ Parser::newObjectBox(JSObject *obj)
     return objbox;
 }
 
-FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, ParseContext *pc,
+FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *pc,
                          StrictMode::StrictModeState sms)
   : ObjectBox(traceListHead, obj),
-    node(fn),
     siblings(pc->functionList),
     kids(NULL),
     parent(pc->sc->inFunction() ? pc->sc->funbox() : NULL),
@@ -415,8 +414,7 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn,
 }
 
 FunctionBox *
-Parser::newFunctionBox(JSObject *obj, ParseNode *fn, ParseContext *pc,
-                       StrictMode::StrictModeState sms)
+Parser::newFunctionBox(JSObject *obj, ParseContext *pc, StrictMode::StrictModeState sms)
 {
     JS_ASSERT(obj && !IsPoisonedPtr(obj));
     JS_ASSERT(obj->isFunction());
@@ -429,7 +427,7 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, ParseContext *pc,
      * function.
      */
     FunctionBox *funbox =
-        context->tempLifoAlloc().new_<FunctionBox>(traceListHead, obj, fn, pc, sms);
+        context->tempLifoAlloc().new_<FunctionBox>(traceListHead, obj, pc, sms);
     if (!funbox) {
         js_ReportOutOfMemory(context);
         return NULL;
@@ -1310,7 +1308,7 @@ BindDestructuringArg(JSContext *cx, BindData *data, HandlePropertyName name, Par
 #endif /* JS_HAS_DESTRUCTURING */
 
 bool
-Parser::functionArguments(ParseNode **listp, bool &hasRest)
+Parser::functionArguments(ParseNode **listp, ParseNode* funcpn, bool &hasRest)
 {
     if (tokenStream.getToken() != TOK_LP) {
         reportError(NULL, JSMSG_PAREN_BEFORE_FORMAL);
@@ -1328,7 +1326,6 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
     argsbody->setOp(JSOP_NOP);
     argsbody->makeEmpty();
 
-    ParseNode *funcpn = funbox->node;
     funcpn->pn_body = argsbody;
 
     if (!tokenStream.matchToken(TOK_RP)) {
@@ -1589,7 +1586,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         StrictMode::STRICT : StrictMode::UNKNOWN;
 
     // Create box for fun->object early to protect against last-ditch GC.
-    FunctionBox *funbox = newFunctionBox(fun, pn, outerpc, sms);
+    FunctionBox *funbox = newFunctionBox(fun, outerpc, sms);
     if (!funbox)
         return NULL;
 
@@ -1602,7 +1599,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     /* Now parse formal argument list and compute fun->nargs. */
     ParseNode *prelude = NULL;
     bool hasRest;
-    if (!functionArguments(&prelude, hasRest))
+    if (!functionArguments(&prelude, pn, hasRest))
         return NULL;
 
     fun->setArgCount(funpc.numArgs());
@@ -5317,7 +5314,7 @@ Parser::generatorExpr(ParseNode *kid)
             return NULL;
 
         /* Create box for fun->object early to protect against last-ditch GC. */
-        FunctionBox *funbox = newFunctionBox(fun, genfn, outerpc, outerpc->sc->strictModeState);
+        FunctionBox *funbox = newFunctionBox(fun, outerpc, outerpc->sc->strictModeState);
         if (!funbox)
             return NULL;
 

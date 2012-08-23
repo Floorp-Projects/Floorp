@@ -300,8 +300,7 @@ struct Parser : private AutoGCRooter
      */
     ObjectBox *newObjectBox(JSObject *obj);
 
-    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, ParseContext *pc,
-                                StrictMode::StrictModeState sms);
+    FunctionBox *newFunctionBox(JSObject *obj, ParseContext *pc, StrictMode::StrictModeState sms);
 
     /*
      * Create a new function object given parse context (pc) and a name (which
@@ -424,7 +423,7 @@ struct Parser : private AutoGCRooter
      * Additional JS parsers.
      */
     enum FunctionType { Getter, Setter, Normal };
-    bool functionArguments(ParseNode **list, bool &hasRest);
+    bool functionArguments(ParseNode **list, ParseNode *funcpn, bool &hasRest);
 
     ParseNode *functionDef(HandlePropertyName name, FunctionType type, FunctionSyntaxKind kind);
 
