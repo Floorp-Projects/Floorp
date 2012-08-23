@@ -336,6 +336,8 @@ var SocialToolbar = {
     let iconNames = Object.keys(provider.ambientNotificationIcons);
     let iconBox = document.getElementById("social-status-iconbox");
     let notifBox = document.getElementById("social-notification-box");
+    let panel = document.getElementById("social-notification-panel");
+    panel.hidden = false;
     let notificationFrames = document.createDocumentFragment();
     let iconContainers = document.createDocumentFragment();
 
@@ -395,8 +397,6 @@ var SocialToolbar = {
     let notifBox = document.getElementById("social-notification-box");
     let notificationFrame = document.getElementById(iconImage.getAttribute("notificationFrameId"));
 
-    panel.hidden = false;
-
     function sizePanelToContent() {
       // FIXME: bug 764787: Maybe we can use nsIDOMWindowUtils.getRootBounds() here?
       // Need to handle dynamic sizing
@@ -415,7 +415,7 @@ var SocialToolbar = {
       // only use the selected browser.
       let frameIter = notifBox.firstElementChild;
       while (frameIter) {
-        frameIter.hidden = (frameIter != notificationFrame);
+        frameIter.collapsed = (frameIter != notificationFrame);
         frameIter = frameIter.nextElementSibling;
       }
 
