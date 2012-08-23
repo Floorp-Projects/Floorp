@@ -1528,13 +1528,13 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   list-style-image: url("chrome://browser/skin/panel-expander-closed.png");
 }
 
-#editBookmarkPanel .expander-up .button-icon,
-#editBookmarkPanel .expander-down .button-icon {
+#editBookmarkPanel .expander-up > .button-box > .button-icon,
+#editBookmarkPanel .expander-down > .button-box > .button-icon {
   margin: 1px 0 0;
 }
 
-#editBookmarkPanel .expander-up .button-text,
-#editBookmarkPanel .expander-down .button-text {
+#editBookmarkPanel .expander-up > .button-box > .button-text,
+#editBookmarkPanel .expander-down > .button-box > .button-text {
   display: none;
 }
 

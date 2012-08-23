@@ -175,14 +175,17 @@ SpecialPowersObserverAPI.prototype = {
         let perms =
           Components.classes["@mozilla.org/permissionmanager;1"]
                     .getService(Components.interfaces.nsIPermissionManager);
-        let uri = this._getURI(aMessage.json.url);
+        let msg = aMessage.json;
 
-        switch (aMessage.json.op) {
+        let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
+        let principal = secMan.getAppCodebasePrincipal(this._getURI(msg.url), msg.appId, msg.isInBrowserElement);
+
+        switch (msg.op) {
           case "add":
-            perms.add(uri, aMessage.json.type, aMessage.json.permission);
+            perms.addFromPrincipal(principal, msg.type, msg.permission);
             break;
           case "remove":
-            perms.remove(uri.host, aMessage.json.type);
+            perms.removeFromPrincipal(principal, msg.type);
             break;
           default:
             throw new SpecialPowersException("Invalid operation for " +
