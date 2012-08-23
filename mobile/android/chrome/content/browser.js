@@ -321,18 +321,8 @@ var BrowserApp = {
 #endif
     }
 
-    if (updated) {
-        // creating the form history and passwords databases can be expensive
-        // delay it until after the first page has loaded
-        let browser = BrowserApp.selectedTab.browser;
-        let updatedFun = function updatedFun() {
-            browser.removeEventListener("DOMContentLoaded", updatedFun, false);
-            // initialize the form history and passwords databases on upgrades
-            Services.obs.notifyObservers(null, "FormHistory:Init", "");
-            Services.obs.notifyObservers(null, "Passwords:Init", "");
-        }
-        browser.addEventListener("DOMContentLoaded", updatedFun, false);
-    }
+    if (updated)
+      this.onAppUpdated();
 
     // notify java that gecko has loaded
     sendMessageToJava({
@@ -483,6 +473,12 @@ var BrowserApp = {
         }
         ContentAreaUtils.internalSave(aTarget.currentURI.spec, null, null, contentDisposition, type, false, "SaveImageTitle", null, aTarget.ownerDocument.documentURIObject, true, null);
       });
+  },
+
+  onAppUpdated: function() {
+    // initialize the form history and passwords databases on upgrades
+    Services.obs.notifyObservers(null, "FormHistory:Init", "");
+    Services.obs.notifyObservers(null, "Passwords:Init", "");
   },
 
   shutdown: function shutdown() {
