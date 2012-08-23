@@ -5849,16 +5849,16 @@ TypeCompartment::sweep(FreeOp *fop)
     pendingArray = NULL;
     pendingCapacity = 0;
 
-    sweepCompilerOutputs(fop, true);
+    sweepCompilerOutputs(fop);
 }
 
 void
-TypeCompartment::sweepCompilerOutputs(FreeOp *fop, bool discardConstraints)
+TypeCompartment::sweepCompilerOutputs(FreeOp *fop)
 {
     if (constrainedOutputs) {
         bool isCompiling = compiledInfo.outputIndex != RecompileInfo::NoCompilerRunning;
-        if (discardConstraints) {
-            JS_ASSERT(!isCompiling);
+        if (isCompiling && !compartment()->activeAnalysis)
+        {
 #if DEBUG
             for (unsigned i = 0; i < constrainedOutputs->length(); i++) {
                 CompilerOutput &co = (*constrainedOutputs)[i];
@@ -5869,9 +5869,10 @@ TypeCompartment::sweepCompilerOutputs(FreeOp *fop, bool discardConstraints)
             fop->delete_(constrainedOutputs);
             constrainedOutputs = NULL;
         } else {
-            // Constraints have captured an index to the constrained outputs
-            // vector.  Thus, we invalidate all compilations except the one
-            // which is potentially running now.
+            // A Compilation is running and the AutoEnterCompilation class has
+            // captured an index into the constrained outputs vector and
+            // potentially created multiple types with this index.  Instead, we
+            // invalidate all compilations except the one running now.
             size_t len = constrainedOutputs->length();
             for (unsigned i = 0; i < len; i++) {
                 if (i != compiledInfo.outputIndex) {
