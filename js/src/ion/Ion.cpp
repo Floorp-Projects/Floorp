@@ -841,7 +841,7 @@ CompileBackEnd(IonBuilder *builder)
     IonSpewPass("Bounds Check Elimination");
     AssertGraphCoherency(graph);
 
-    LIRGraph *lir = builder->temp().lifoAlloc()->new_<LIRGraph>(graph);
+    LIRGraph *lir = builder->temp().lifoAlloc()->new_<LIRGraph>(&graph);
     if (!lir)
         return false;
 
