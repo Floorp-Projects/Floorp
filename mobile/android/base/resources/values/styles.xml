@@ -54,8 +54,7 @@
 
     <!-- Address bar - Image Button -->
     <style name="AddressBar.ImageButton" parent="AddressBar.Button">
-        <item name="android:scaleType">center</item>
-        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:scaleType">fitCenter</item>
         <item name="android:background">@android:color/transparent</item>
     </style>
 
@@ -68,9 +67,8 @@
 
     <!-- Address bar - Image Button - Icon -->
     <style name="AddressBar.ImageButton.Icon">
-         <item name="android:layout_width">@dimen/browser_toolbar_icon_width</item>
+         <item name="android:layout_width">@dimen/browser_toolbar_height</item>
          <item name="android:layout_height">@dimen/browser_toolbar_height</item>
-         <item name="android:layout_weight">0.0</item>
     </style>
 
     <!-- AwesomeBar -->
