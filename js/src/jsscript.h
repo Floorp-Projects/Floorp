@@ -551,10 +551,13 @@ struct JSScript : public js::gc::Cell
 #endif
 
     bool hasIonScript() const {
-        return ion && ion != ION_DISABLED_SCRIPT;
+        return ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
     }
     bool canIonCompile() const {
         return ion != ION_DISABLED_SCRIPT;
+    }
+    bool isIonCompilingOffThread() const {
+        return ion == ION_COMPILING_SCRIPT;
     }
     js::ion::IonScript *ionScript() const {
         JS_ASSERT(hasIonScript());
