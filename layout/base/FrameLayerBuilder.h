@@ -42,7 +42,9 @@ enum LayerState {
 
 class RefCountedRegion : public RefCounted<RefCountedRegion> {
 public:
+  RefCountedRegion() : mIsInfinite(false) {}
   nsRegion mRegion;
+  bool mIsInfinite;
 };
 
 /**
