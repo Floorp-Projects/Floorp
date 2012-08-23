@@ -28,7 +28,6 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Util.h" // for DebugOnly
 #include "nsContentUtils.h"
-#include "nsBlobProtocolHandler.h"
 
 static const PRUint32 HTTP_OK_CODE = 200;
 static const PRUint32 HTTP_PARTIAL_RESPONSE_CODE = 206;
@@ -1039,15 +1038,14 @@ nsresult FileMediaResource::Open(nsIStreamListener** aStreamListener)
     // implements nsISeekableStream, so we have to find the underlying
     // file and reopen it
     nsCOMPtr<nsIFileChannel> fc(do_QueryInterface(mChannel));
-    if (fc) {
-      nsCOMPtr<nsIFile> file;
-      rv = fc->GetFile(getter_AddRefs(file));
-      NS_ENSURE_SUCCESS(rv, rv);
+    if (!fc)
+      return NS_ERROR_UNEXPECTED;
 
-      rv = NS_NewLocalFileInputStream(getter_AddRefs(mInput), file);
-    } else if (IsBlobURI(mURI)) {
-      rv = NS_GetStreamForBlobURI(mURI, getter_AddRefs(mInput));
-    }
+    nsCOMPtr<nsIFile> file;
+    rv = fc->GetFile(getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(mInput), file);
   } else {
     // Ensure that we never load a local file from some page on a
     // web server.
@@ -1203,7 +1201,7 @@ MediaResource*
 MediaResource::Create(nsMediaDecoder* aDecoder, nsIChannel* aChannel)
 {
   NS_ASSERTION(NS_IsMainThread(),
-               "MediaResource::Open called on non-main thread");
+	             "MediaResource::Open called on non-main thread");
 
   // If the channel was redirected, we want the post-redirect URI;
   // but if the URI scheme was expanded, say from chrome: to jar:file:,
@@ -1213,7 +1211,7 @@ MediaResource::Create(nsMediaDecoder* aDecoder, nsIChannel* aChannel)
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
-  if (fc || IsBlobURI(uri)) {
+  if (fc) {
     return new FileMediaResource(aDecoder, aChannel, uri);
   }
   return new ChannelMediaResource(aDecoder, aChannel, uri);
