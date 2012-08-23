@@ -12,27 +12,26 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 
-DIRS		= \
-		base \
-		cookie \
-		dns \
-		socket \
-		mime \
-		streamconv \
-		cache \
-		protocol \
-		system \
-		ipc  \
-        $(NULL)
+PARALLEL_DIRS = \
+  base \
+  cookie \
+  dns \
+  socket \
+  mime \
+  streamconv \
+  cache \
+  protocol \
+  system \
+  ipc  \
+  $(NULL)
 
 ifdef NECKO_WIFI
-DIRS 		+= wifi
+PARALLEL_DIRS += wifi
 endif
 
-DIRS		+= \
-		build \
-		locales \
-		$(NULL)
+PARALLEL_DIRS += locales
+
+DIRS = build
 
 ifdef ENABLE_TESTS
 TOOL_DIRS  += test
