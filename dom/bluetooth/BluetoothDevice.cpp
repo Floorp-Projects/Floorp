@@ -30,13 +30,17 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothDevice, 
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(propertychanged)  
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(propertychanged)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(connected)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(disconnected)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BluetoothDevice, 
                                                 nsDOMEventTargetHelper)
   tmp->Unroot();
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(propertychanged)  
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(propertychanged)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(connected)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(disconnected)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothDevice)
@@ -170,9 +174,29 @@ BluetoothDevice::Notify(const BluetoothSignal& aData)
     // Get BluetoothNamedValue, make sure array length is 1
     BluetoothNamedValue v = aData.value().get_ArrayOfBluetoothNamedValue()[0];
     nsString name = v.name();
-    SetPropertyByValue(v);
-    nsRefPtr<BluetoothPropertyEvent> e = BluetoothPropertyEvent::Create(name);
-    e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("propertychanged"));
+
+    if (name.EqualsLiteral("Connected")) {
+      bool isConnected = v.value();
+      nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
+      nsresult rv;
+      if (isConnected) {
+        rv = event->InitEvent(NS_LITERAL_STRING("connected"), false, false);
+      } else {
+        rv = event->InitEvent(NS_LITERAL_STRING("disconnected"), false, false);
+      }
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to init the connected/disconnected event!!!");
+        return;
+      }
+
+      event->SetTrusted(true);
+      bool dummy;
+      DispatchEvent(event, &dummy);
+    } else {
+      SetPropertyByValue(v);
+      nsRefPtr<BluetoothPropertyEvent> e = BluetoothPropertyEvent::Create(name);
+      e->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("propertychanged"));
+    }
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
@@ -231,3 +255,5 @@ BluetoothDevice::GetUuids(JSContext* aCx, jsval* aUuids)
 }
 
 NS_IMPL_EVENT_HANDLER(BluetoothDevice, propertychanged)
+NS_IMPL_EVENT_HANDLER(BluetoothDevice, connected)
+NS_IMPL_EVENT_HANDLER(BluetoothDevice, disconnected)
