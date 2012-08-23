@@ -347,7 +347,7 @@ struct JSCompartment
 
     void mark(JSTracer *trc);
     void markTypes(JSTracer *trc);
-    void discardJitCode(js::FreeOp *fop, bool discardConstraints);
+    void discardJitCode(js::FreeOp *fop);
     bool isDiscardingJitCode(JSTracer *trc);
     void sweep(js::FreeOp *fop, bool releaseTypes);
     void sweepCrossCompartmentWrappers();

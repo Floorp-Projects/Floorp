@@ -491,7 +491,7 @@ JSCompartment::markTypes(JSTracer *trc)
 }
 
 void
-JSCompartment::discardJitCode(FreeOp *fop, bool discardConstraints)
+JSCompartment::discardJitCode(FreeOp *fop)
 {
 #ifdef JS_METHODJIT
 
@@ -527,7 +527,7 @@ JSCompartment::discardJitCode(FreeOp *fop, bool discardConstraints)
             script->resetUseCount();
         }
 
-        types.sweepCompilerOutputs(fop, discardConstraints);
+        types.sweepCompilerOutputs(fop);
     }
 
 #endif /* JS_METHODJIT */
@@ -547,7 +547,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 {
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_DISCARD_CODE);
-        discardJitCode(fop, !activeAnalysis && !gcPreserveCode);
+        discardJitCode(fop);
     }
 
     /* This function includes itself in PHASE_SWEEP_TABLES. */
@@ -581,7 +581,6 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
     }
 
     if (!activeAnalysis && !gcPreserveCode) {
-        JS_ASSERT(!types.constrainedOutputs);
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
 
         /*
