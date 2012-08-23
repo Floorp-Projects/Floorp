@@ -77,6 +77,7 @@ class IonActivation;
 class WeakMapBase;
 class InterpreterFrames;
 class DebugScopes;
+class WorkerThreadState;
 
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -789,6 +790,8 @@ struct JSRuntime : js::RuntimeFriendFields
     js::GCHelperThread  gcHelperThread;
 
 #ifdef JS_THREADSAFE
+    js::WorkerThreadState *workerThreadState;
+
     js::SourceCompressorThread sourceCompressorThread;
 #endif
 
@@ -893,9 +896,6 @@ struct JSRuntime : js::RuntimeFriendFields
 
     // This points to the most recent Ion activation running on the thread.
     js::ion::IonActivation  *ionActivation;
-
-    // Linked list of GCThings rooted for the current compilation.
-    JS::CompilerRootNode *ionCompilerRootList;
 
   private:
     // In certain cases, we want to optimize certain opcodes to typed instructions,

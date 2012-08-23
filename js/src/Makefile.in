@@ -106,6 +106,7 @@ CPPSRCS		= \
 		jsutil.cpp \
 		jswatchpoint.cpp \
 		jsweakmap.cpp \
+		jsworkers.cpp \
 		jswrapper.cpp \
 		jsxml.cpp \
 		prmjtime.cpp \

@@ -67,6 +67,11 @@ struct IonOptions
     // Default: false
     bool rangeAnalysis;
 
+    // Toggles whether compilation occurs off the main thread.
+    //
+    // Default: true iff there are at least two CPUs available
+    bool parallelCompilation;
+
     // How many invocations or loop iterations are needed before functions
     // are compiled.
     //
@@ -140,6 +145,8 @@ struct IonOptions
         // Eagerly inline calls to improve test coverage.
         usesBeforeInlining = 0;
         smallFunctionUsesBeforeInlining = 0;
+
+        parallelCompilation = false;
     }
 
     IonOptions()
@@ -152,6 +159,7 @@ struct IonOptions
         inlining(true),
         edgeCaseAnalysis(true),
         rangeAnalysis(false),
+        parallelCompilation(false),
         usesBeforeCompile(10240),
         usesBeforeCompileNoJaeger(40),
         usesBeforeInlining(usesBeforeCompile),
@@ -163,7 +171,8 @@ struct IonOptions
         inlineMaxTotalBytecodeLength(800),
         eagerCompilation(false),
         slowCallLimit(512)
-    { }
+    {
+    }
 };
 
 enum MethodStatus
@@ -229,6 +238,13 @@ bool Invalidate(JSContext *cx, JSScript *script, bool resetUses = true);
 void MarkFromIon(JSCompartment *comp, Value *vp);
 
 void ToggleBarriers(JSCompartment *comp, bool needs);
+
+class IonBuilder;
+
+bool CompileBackEnd(IonBuilder *builder);
+void AttachFinishedCompilations(JSContext *cx);
+void FinishOffThreadBuilder(IonBuilder *builder);
+bool TestIonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing);
 
 static inline bool IsEnabled(JSContext *cx)
 {
