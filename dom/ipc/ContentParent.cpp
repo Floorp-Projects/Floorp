@@ -186,8 +186,7 @@ ContentParent::PreallocateAppProcess()
     }
 
     sPreallocatedAppProcess =
-        new ContentParent(MAGIC_PREALLOCATED_APP_MANIFEST_URL,
-                          /*isBrowserElement=*/false);
+        new ContentParent(MAGIC_PREALLOCATED_APP_MANIFEST_URL);
     sPreallocatedAppProcess->Init();
 }
 
@@ -249,7 +248,7 @@ ContentParent::ShutDown()
 }
 
 /*static*/ ContentParent*
-ContentParent::GetNewOrUsed(bool aForBrowserElement)
+ContentParent::GetNewOrUsed()
 {
     if (!gNonAppContentParents)
         gNonAppContentParents = new nsTArray<ContentParent*>();
@@ -266,8 +265,7 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
     }
 
     nsRefPtr<ContentParent> p =
-        new ContentParent(/* appManifestURL = */ EmptyString(),
-                          aForBrowserElement);
+        new ContentParent(/* appManifestURL = */ EmptyString());
     p->Init();
     gNonAppContentParents->AppendElement(p);
     return p;
@@ -276,14 +274,8 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
 /*static*/ TabParent*
 ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
 {
-    // We currently don't set the <app> ancestor for <browser> content
-    // correctly.  This assertion is to notify the person who fixes
-    // this code that they need to reevaluate places here where we may
-    // make bad assumptions based on that bug.
-    MOZ_ASSERT(!aApp || !aIsBrowserElement);
-
     if (!aApp) {
-        if (ContentParent* cp = GetNewOrUsed(aIsBrowserElement)) {
+        if (ContentParent* cp = GetNewOrUsed()) {
             nsRefPtr<TabParent> tp(new TabParent(aApp, aIsBrowserElement));
             return static_cast<TabParent*>(
                 cp->SendPBrowserConstructor(
@@ -329,7 +321,7 @@ ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
             p->SetManifestFromPreallocated(manifestURL);
         } else {
             NS_WARNING("Unable to use pre-allocated app process");
-            p = new ContentParent(manifestURL, aIsBrowserElement);
+            p = new ContentParent(manifestURL);
             p->Init();
         }
         gAppContentParents->Put(manifestURL, p);
@@ -655,8 +647,7 @@ ContentParent::GetTestShellSingleton()
     return static_cast<TestShellParent*>(ManagedPTestShellParent()[0]);
 }
 
-ContentParent::ContentParent(const nsAString& aAppManifestURL,
-                             bool aIsForBrowser)
+ContentParent::ContentParent(const nsAString& aAppManifestURL)
     : mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
@@ -680,8 +671,7 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
         mSubprocess->AsyncLaunch();
     }
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
-    unused << SendSetProcessAttributes(gContentChildID++,
-                                       IsForApp(), aIsForBrowser);
+    unused << SendSetID(gContentChildID++);
 
     // NB: internally, this will send an IPC message to the child
     // process to get it to create the CompositorChild.  This
