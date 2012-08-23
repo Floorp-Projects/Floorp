@@ -3706,7 +3706,7 @@ WebGLContext::LinkProgram(WebGLProgram *program, ErrorResult& rv)
 
     if (!ValidateObject("linkProgram", program))
         return;
-
+    
     GLuint progname = program->GLName();
 
     if (!program->NextGeneration()) {
@@ -3722,13 +3722,13 @@ WebGLContext::LinkProgram(WebGLProgram *program, ErrorResult& rv)
 
     // bug 777028
     // Mesa can't handle more than 16 samplers per program, counting each array entry.
-    if (gl->WorkAroundDriverBugs() &&
-        mIsMesa &&
-        program->UpperBoundNumSamplerUniforms() > 16)
-    {
-        GenerateWarning("Programs with more than 16 samplers are disallowed on Mesa drivers " "to avoid a Mesa crasher.");
-        program->SetLinkStatus(false);
-        return;
+    if (mIsMesa) {
+        if (program->UpperBoundNumSamplerUniforms() > 16) {
+            GenerateWarning("Programs with more than 16 samplers are disallowed on Mesa drivers "
+                            "to avoid a Mesa crasher.");
+            program->SetLinkStatus(false);
+            return;
+        }
     }
 
     GLint ok;
