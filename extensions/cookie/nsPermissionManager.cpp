@@ -294,7 +294,13 @@ nsPermissionManager::Init()
       const IPC::Permission &perm = perms[i];
 
       nsCOMPtr<nsIPrincipal> principal;
-      nsresult rv = GetPrincipalForHost(perm.host, getter_AddRefs(principal));
+      nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+      MOZ_ASSERT(secMan, "No security manager!?");
+
+      nsCOMPtr<nsIURI> uri;
+      NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + perm.host);
+
+      rv = secMan->GetAppCodebasePrincipal(uri, perm.appId, perm.isInBrowserElement, getter_AddRefs(principal));
       NS_ENSURE_SUCCESS(rv, rv);
 
       AddInternal(principal, perm.type, perm.capability, 0, perm.expireType,
@@ -553,8 +559,15 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!IsChildProcess()) {
-    IPC::Permission permission((host),
-                               (aType),
+    uint32_t appId;
+    rv = aPrincipal->GetAppId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool isInBrowserElement;
+    rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    IPC::Permission permission(host, appId, isInBrowserElement, aType,
                                aPermission, aExpireType, aExpireTime);
 
     nsTArray<ContentParent*> cplist;

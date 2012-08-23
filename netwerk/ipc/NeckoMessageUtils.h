@@ -20,9 +20,13 @@ struct Permission
   nsCString host, type;
   uint32_t capability, expireType;
   int64_t expireTime;
+  uint32_t appId;
+  bool isInBrowserElement;
 
   Permission() { }
   Permission(const nsCString& aHost,
+             const uint32_t aAppId,
+             const bool aIsInBrowserElement,
              const nsCString& aType,
              const uint32_t aCapability,
              const uint32_t aExpireType,
@@ -30,7 +34,10 @@ struct Permission
                                           type(aType),
                                           capability(aCapability),
                                           expireType(aExpireType),
-                                          expireTime(aExpireTime) { }
+                                          expireTime(aExpireTime),
+                                          appId(aAppId),
+                                          isInBrowserElement(aIsInBrowserElement)
+  {}
 };
 
 template<>
@@ -43,6 +50,8 @@ struct ParamTraits<Permission>
     WriteParam(aMsg, aParam.capability);
     WriteParam(aMsg, aParam.expireType);
     WriteParam(aMsg, aParam.expireTime);
+    WriteParam(aMsg, aParam.appId);
+    WriteParam(aMsg, aParam.isInBrowserElement);
   }
 
   static bool Read(const Message* aMsg, void** aIter, Permission* aResult)
@@ -51,12 +60,26 @@ struct ParamTraits<Permission>
            ReadParam(aMsg, aIter, &aResult->type) &&
            ReadParam(aMsg, aIter, &aResult->capability) &&
            ReadParam(aMsg, aIter, &aResult->expireType) &&
-           ReadParam(aMsg, aIter, &aResult->expireTime);
+           ReadParam(aMsg, aIter, &aResult->expireTime) &&
+           ReadParam(aMsg, aIter, &aResult->appId) &&
+           ReadParam(aMsg, aIter, &aResult->isInBrowserElement);
   }
 
-  static void Log(const Permission& aParam, std::wstring* aLog)
+  static void Log(const Permission& p, std::wstring* l)
   {
-    aLog->append(StringPrintf(L"[%s]", aParam.host.get()));
+    l->append(L"(");
+    LogParam(p.host, l);
+    l->append(L", ");
+    LogParam(p.appId, l);
+    l->append(L", ");
+    LogParam(p.isInBrowserElement, l);
+    l->append(L", ");
+    LogParam(p.capability, l);
+    l->append(L", ");
+    LogParam(p.expireTime, l);
+    l->append(L", ");
+    LogParam(p.expireType, l);
+    l->append(L")");
   }
 };
 
