@@ -1458,6 +1458,13 @@ MarionetteDriverActor.prototype = {
     }
   },
 
+  /**
+   * Returns the current status of the Application Cache
+   */
+  getAppCacheStatus: function MDA_getAppCacheStatus(aRequest) {
+    this.sendAsync("getAppCacheStatus");
+  },
+
   _emu_cb_id: 0,
   _emu_cbs: null,
   runEmulatorCmd: function runEmulatorCmd(cmd, callback) {
@@ -1681,6 +1688,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "deleteSession": MarionetteDriverActor.prototype.deleteSession,
   "emulatorCmdResult": MarionetteDriverActor.prototype.emulatorCmdResult,
   "importScript": MarionetteDriverActor.prototype.importScript,
+  "getAppCacheStatus": MarionetteDriverActor.prototype.getAppCacheStatus,
   "closeWindow": MarionetteDriverActor.prototype.closeWindow
 };
 
