@@ -20,7 +20,7 @@ namespace ion {
 
 CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
   : oolIns(NULL),
-    masm(&sps, &lastPC),
+    masm(&sps_),
     gen(gen),
     graph(graph),
     current(NULL),
@@ -29,7 +29,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
     pushedArgs_(0),
 #endif
     lastOsiPointOffset_(0),
-    sps(&gen->compartment->rt->spsProfiler),
+    sps_(&gen->compartment->rt->spsProfiler, &lastPC_),
     osrEntryOffset_(0),
     frameDepth_(graph.localSlotCount() * sizeof(STACK_SLOT_SIZE) +
                 graph.argumentSlotCount() * sizeof(Value))
@@ -44,8 +44,8 @@ CodeGeneratorShared::generateOutOfLineCode()
         if (!gen->temp().ensureBallast())
             return false;
         masm.setFramePushed(outOfLineCode_[i]->framePushed());
-        lastPC = outOfLineCode_[i]->pc();
-        sps.setPushed(outOfLineCode_[i]->script());
+        lastPC_ = outOfLineCode_[i]->pc();
+        sps_.setPushed(outOfLineCode_[i]->script());
         outOfLineCode_[i]->bind(&masm);
 
         oolIns = outOfLineCode_[i];
@@ -67,7 +67,7 @@ CodeGeneratorShared::addOutOfLineCode(OutOfLineCode *code)
     if (oolIns)
         code->setSource(oolIns->script(), oolIns->pc());
     else
-        code->setSource(current ? current->mir()->info().script() : NULL, lastPC);
+        code->setSource(current ? current->mir()->info().script() : NULL, lastPC_);
     return outOfLineCode_.append(code);
 }
 
@@ -358,20 +358,19 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
     IonCode *wrapper = ion->generateVMWrapper(cx, fun);
     if (!wrapper)
         return false;
-    masm.leaveBeforeCall();
 
     // Call the wrapper function.  The wrapper is in charge to unwind the stack
     // when returning from the call.  Failures are handled with exceptions based
     // on the return value of the C functions.  To guard the outcome of the
     // returned value, use another LIR instruction.
+    uint32 callOffset;
     if (dynStack)
-        masm.callWithExitFrame(wrapper, *dynStack);
+        callOffset = masm.callWithExitFrame(wrapper, *dynStack);
     else
-        masm.callWithExitFrame(wrapper);
+        callOffset = masm.callWithExitFrame(wrapper);
 
-    if (!markSafepoint(ins))
+    if (!markSafepointAt(callOffset, ins))
         return false;
-    masm.reenterAfterCall();
 
     // Remove rest of the frame left on the stack. We remove the return address
     // which is implicitly poped when returning.
