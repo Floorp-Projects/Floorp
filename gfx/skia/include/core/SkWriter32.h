@@ -13,6 +13,7 @@
 #include "SkTypes.h"
 
 #include "SkScalar.h"
+#include "SkPath.h"
 #include "SkPoint.h"
 #include "SkRect.h"
 #include "SkMatrix.h"
@@ -48,6 +49,14 @@ public:
      */
     void* getSingleBlock() const { return fSingleBlock; }
 
+    // return the current offset (will always be a multiple of 4)
+    uint32_t bytesWritten() const { return fSize; }
+    // DEPRECATED: use byetsWritten instead
+    uint32_t  size() const { return this->bytesWritten(); }
+
+    void      reset();
+    uint32_t* reserve(size_t size); // size MUST be multiple of 4
+
     /**
      *  Specify the single block to back the writer, rathern than dynamically
      *  allocating the memory. If block == NULL, then the writer reverts to
@@ -59,45 +68,62 @@ public:
         this->writeInt(value);
         return value;
     }
-    
+
     void writeInt(int32_t value) {
         *(int32_t*)this->reserve(sizeof(value)) = value;
     }
-    
+
     void write8(int32_t value) {
         *(int32_t*)this->reserve(sizeof(value)) = value & 0xFF;
     }
-    
+
     void write16(int32_t value) {
         *(int32_t*)this->reserve(sizeof(value)) = value & 0xFFFF;
     }
-    
+
     void write32(int32_t value) {
         *(int32_t*)this->reserve(sizeof(value)) = value;
     }
-    
+
+    void writePtr(void* ptr) {
+        // Since we "know" that we're always 4-byte aligned, we can tell the
+        // compiler that here, by assigning to an int32 ptr.
+        int32_t* addr = (int32_t*)this->reserve(sizeof(void*));
+        if (4 == sizeof(void*)) {
+            *(void**)addr = ptr;
+        } else {
+            memcpy(addr, &ptr, sizeof(void*));
+        }
+    }
+
     void writeScalar(SkScalar value) {
         *(SkScalar*)this->reserve(sizeof(value)) = value;
     }
-    
+
     void writePoint(const SkPoint& pt) {
         *(SkPoint*)this->reserve(sizeof(pt)) = pt;
     }
-    
+
     void writeRect(const SkRect& rect) {
         *(SkRect*)this->reserve(sizeof(rect)) = rect;
     }
 
-    void writeMatrix(const SkMatrix& matrix) {
-        size_t size = matrix.flatten(NULL);
+    void writePath(const SkPath& path) {
+        size_t size = path.writeToMemory(NULL);
         SkASSERT(SkAlign4(size) == size);
-        matrix.flatten(this->reserve(size));
+        path.writeToMemory(this->reserve(size));
     }
-    
-    void writeRegion(const SkRegion& rgn) {
-        size_t size = rgn.flatten(NULL);
+
+    void writeMatrix(const SkMatrix& matrix) {
+        size_t size = matrix.writeToMemory(NULL);
         SkASSERT(SkAlign4(size) == size);
-        rgn.flatten(this->reserve(size));
+        matrix.writeToMemory(this->reserve(size));
+    }
+
+    void writeRegion(const SkRegion& rgn) {
+        size_t size = rgn.writeToMemory(NULL);
+        SkASSERT(SkAlign4(size) == size);
+        rgn.writeToMemory(this->reserve(size));
     }
 
     // write count bytes (must be a multiple of 4)
@@ -116,7 +142,7 @@ public:
         // in the current block
         memcpy(this->reserve(size), values, size);
     }
-    
+
     void writePad(const void* src, size_t size);
 
     /**
@@ -134,23 +160,25 @@ public:
      */
     static size_t WriteStringSize(const char* str, size_t len = (size_t)-1);
 
-    // return the current offset (will always be a multiple of 4)
-    uint32_t  size() const { return fSize; }
-    void      reset();
-    uint32_t* reserve(size_t size); // size MUST be multiple of 4
-
     // return the address of the 4byte int at the specified offset (which must
     // be a multiple of 4. This does not allocate any new space, so the returned
     // address is only valid for 1 int.
     uint32_t* peek32(size_t offset);
-    
+
+    /**
+     *  Move the cursor back to offset bytes from the beginning.
+     *  This has the same restrictions as peek32: offset must be <= size() and
+     *  offset must be a multiple of 4.
+     */
+    void rewindToOffset(size_t offset);
+
     // copy into a single buffer (allocated by caller). Must be at least size()
     void flatten(void* dst) const;
-    
+
     // read from the stream, and write up to length bytes. Return the actual
     // number of bytes written.
     size_t readFromStream(SkStream*, size_t length);
-    
+
     bool writeToStream(SkWStream*);
 
 private:
@@ -167,6 +195,26 @@ private:
     bool fHeadIsExternalStorage;
 
     Block* newBlock(size_t bytes);
+
+    SkDEBUGCODE(void validate() const;)
+};
+
+/**
+ *  Helper class to allocated SIZE bytes as part of the writer, and to provide
+ *  that storage to the constructor as its initial storage buffer.
+ *
+ *  This wrapper ensures proper alignment rules are met for the storage.
+ */
+template <size_t SIZE> class SkSWriter32 : public SkWriter32 {
+public:
+    SkSWriter32(size_t minSize) : SkWriter32(minSize, fData.fStorage, SIZE) {}
+
+private:
+    union {
+        void*   fPtrAlignment;
+        double  fDoubleAlignment;
+        char    fStorage[SIZE];
+    } fData;
 };
 
 #endif

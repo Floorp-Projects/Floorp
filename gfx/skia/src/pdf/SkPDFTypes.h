@@ -27,10 +27,7 @@ class SkWStream;
 */
 class SkPDFObject : public SkRefCnt {
 public:
-    /** Create a PDF object.
-     */
-    SkPDFObject();
-    virtual ~SkPDFObject();
+    SK_DECLARE_INST_COUNT(SkPDFObject)
 
     /** Return the size (number of bytes) of this object in the final output
      *  file. Compound objects or objects that are computationally intensive
@@ -91,6 +88,8 @@ protected:
      */
     virtual void emitObject(SkWStream* stream, SkPDFCatalog* catalog,
                             bool indirect) = 0;
+
+        typedef SkRefCnt INHERITED;
 };
 
 /** \class SkPDFObjRef
@@ -99,6 +98,8 @@ protected:
 */
 class SkPDFObjRef : public SkPDFObject {
 public:
+    SK_DECLARE_INST_COUNT(SkPDFObjRef)
+
     /** Create a reference to an existing SkPDFObject.
      *  @param obj The object to reference.
      */
@@ -112,6 +113,8 @@ public:
 
 private:
     SkRefPtr<SkPDFObject> fObj;
+
+    typedef SkPDFObject INHERITED;
 };
 
 /** \class SkPDFInt
@@ -120,6 +123,8 @@ private:
 */
 class SkPDFInt : public SkPDFObject {
 public:
+    SK_DECLARE_INST_COUNT(SkPDFInt)
+
     /** Create a PDF integer (usually for indirect reference purposes).
      *  @param value An integer value between 2^31 - 1 and -2^31.
      */
@@ -132,6 +137,8 @@ public:
 
 private:
     int32_t fValue;
+
+    typedef SkPDFObject INHERITED;
 };
 
 /** \class SkPDFBool
@@ -140,6 +147,8 @@ private:
 */
 class SkPDFBool : public SkPDFObject {
 public:
+    SK_DECLARE_INST_COUNT(SkPDFBool)
+
     /** Create a PDF boolean.
      *  @param value true or false.
      */
@@ -153,6 +162,8 @@ public:
 
 private:
     bool fValue;
+
+    typedef SkPDFObject INHERITED;
 };
 
 /** \class SkPDFScalar
@@ -161,6 +172,8 @@ private:
 */
 class SkPDFScalar : public SkPDFObject {
 public:
+    SK_DECLARE_INST_COUNT(SkPDFScalar)
+
     /** Create a PDF real number.
      *  @param value A real value.
      */
@@ -175,6 +188,8 @@ public:
 
 private:
     SkScalar fValue;
+
+    typedef SkPDFObject INHERITED;
 };
 
 /** \class SkPDFString
@@ -183,6 +198,8 @@ private:
 */
 class SkPDFString : public SkPDFObject {
 public:
+    SK_DECLARE_INST_COUNT(SkPDFString)
+
     /** Create a PDF string. Maximum length (in bytes) is 65,535.
      *  @param value A string value.
      */
@@ -213,6 +230,8 @@ private:
 
     static SkString DoFormatString(const void* input, size_t len,
                                  bool wideInput, bool wideOutput);
+
+    typedef SkPDFObject INHERITED;
 };
 
 /** \class SkPDFName
@@ -221,6 +240,8 @@ private:
 */
 class SkPDFName : public SkPDFObject {
 public:
+    SK_DECLARE_INST_COUNT(SkPDFName)
+
     /** Create a PDF name object. Maximum length is 127 bytes.
      *  @param value The name.
      */
@@ -241,6 +262,8 @@ private:
     const SkString fValue;
 
     static SkString FormatName(const SkString& input);
+
+    typedef SkPDFObject INHERITED;
 };
 
 /** \class SkPDFArray
@@ -249,6 +272,8 @@ private:
 */
 class SkPDFArray : public SkPDFObject {
 public:
+    SK_DECLARE_INST_COUNT(SkPDFArray)
+
     /** Create a PDF array. Maximum length is 8191.
      */
     SkPDFArray();
@@ -304,6 +329,8 @@ public:
 private:
     static const int kMaxLen = 8191;
     SkTDArray<SkPDFObject*> fValue;
+
+    typedef SkPDFObject INHERITED;
 };
 
 /** \class SkPDFDict
@@ -312,6 +339,8 @@ private:
 */
 class SkPDFDict : public SkPDFObject {
 public:
+    SK_DECLARE_INST_COUNT(SkPDFDict)
+
     /** Create a PDF dictionary. Maximum number of entries is 4095.
      */
     SkPDFDict();
@@ -398,6 +427,8 @@ private:
     static const int kMaxLen = 4095;
 
     SkTDArray<struct Rec> fValue;
+
+    typedef SkPDFObject INHERITED;
 };
 
 #endif

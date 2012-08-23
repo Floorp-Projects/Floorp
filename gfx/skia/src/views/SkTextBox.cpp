@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2006 The Android Open Source Project
  *
@@ -6,62 +5,93 @@
  * found in the LICENSE file.
  */
 
-
 #include "SkTextBox.h"
-#include "../core/SkGlyphCache.h"
 #include "SkUtils.h"
-#include "SkAutoKern.h"
 
 static inline int is_ws(int c)
 {
     return !((c - 1) >> 5);
 }
 
-static size_t linebreak(const char text[], const char stop[], const SkPaint& paint, SkScalar margin)
+static size_t linebreak(const char text[], const char stop[],
+                        const SkPaint& paint, SkScalar margin,
+                        size_t* trailing = NULL)
 {
+    size_t lengthBreak = paint.breakText(text, stop - text, margin);
+
+    //Check for white space or line breakers before the lengthBreak
     const char* start = text;
-
-    SkAutoGlyphCache    ac(paint, NULL);
-    SkGlyphCache*       cache = ac.getCache();
-    SkFixed             w = 0;
-    SkFixed             limit = SkScalarToFixed(margin);
-    SkAutoKern          autokern;
-
     const char* word_start = text;
-    int         prevWS = true;
+    int prevWS = true;
+    if (trailing) {
+        *trailing = 0;
+    }
 
-    while (text < stop)
-    {
+    while (text < stop) {
         const char* prevText = text;
-        SkUnichar   uni = SkUTF8_NextUnichar(&text);
-        int         currWS = is_ws(uni);
-        const SkGlyph&  glyph = cache->getUnicharMetrics(uni);
+        SkUnichar uni = SkUTF8_NextUnichar(&text);
+        int currWS = is_ws(uni);
 
-        if (!currWS && prevWS)
+        if (!currWS && prevWS) {
             word_start = prevText;
+        }
         prevWS = currWS;
 
-        w += autokern.adjust(glyph) + glyph.fAdvanceX;
-        if (w > limit)
-        {
-            if (currWS) // eat the rest of the whitespace
-            {
-                while (text < stop && is_ws(SkUTF8_ToUnichar(text)))
+        if (text > start + lengthBreak) {
+            if (currWS) {
+                // eat the rest of the whitespace
+                while (text < stop && is_ws(SkUTF8_ToUnichar(text))) {
                     text += SkUTF8_CountUTF8Bytes(text);
-            }
-            else    // backup until a whitespace (or 1 char)
-            {
-                if (word_start == start)
-                {
-                    if (prevText > start)
-                        text = prevText;
                 }
-                else
+                if (trailing) {
+                    *trailing = text - prevText;
+                }
+            } else {
+                // backup until a whitespace (or 1 char)
+                if (word_start == start) {
+                    if (prevText > start) {
+                        text = prevText;
+                    }
+                } else {
                     text = word_start;
+                }
             }
             break;
         }
+
+        if ('\n' == uni) {
+            size_t ret = text - start;
+            size_t lineBreakSize = 1;
+            if (text < stop) {
+                uni = SkUTF8_NextUnichar(&text);
+                if ('\r' == uni) {
+                    ret = text - start;
+                    ++lineBreakSize;
+                }
+            }
+            if (trailing) {
+                *trailing = lineBreakSize;
+            }
+            return ret;
+        }
+
+        if ('\r' == uni) {
+            size_t ret = text - start;
+            size_t lineBreakSize = 1;
+            if (text < stop) {
+                uni = SkUTF8_NextUnichar(&text);
+                if ('\n' == uni) {
+                    ret = text - start;
+                    ++lineBreakSize;
+                }
+            }
+            if (trailing) {
+                *trailing = lineBreakSize;
+            }
+            return ret;
+        }
     }
+
     return text - start;
 }
 
@@ -194,16 +224,17 @@ void SkTextBox::draw(SkCanvas* canvas, const char text[], size_t len, const SkPa
 
     for (;;)
     {
-        len = linebreak(text, textStop, paint, marginWidth);
+        size_t trailing;
+        len = linebreak(text, textStop, paint, marginWidth, &trailing);
         if (y + metrics.fDescent + metrics.fLeading > 0)
-            canvas->drawText(text, len, x, y, paint);
+            canvas->drawText(text, len - trailing, x, y, paint);
         text += len;
         if (text >= textStop)
             break;
         y += scaledSpacing;
         if (y + metrics.fAscent >= height)
             break;
-    } 
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

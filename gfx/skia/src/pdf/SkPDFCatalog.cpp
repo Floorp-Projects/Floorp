@@ -38,7 +38,7 @@ SkPDFObject* SkPDFCatalog::addObject(SkPDFObject* obj, bool onFirstPage) {
     return obj;
 }
 
-size_t SkPDFCatalog::setFileOffset(SkPDFObject* obj, size_t offset) {
+size_t SkPDFCatalog::setFileOffset(SkPDFObject* obj, off_t offset) {
     int objIndex = assignObjNum(obj) - 1;
     SkASSERT(fCatalog[objIndex].fObjNumAssigned);
     SkASSERT(fCatalog[objIndex].fFileOffset == 0);

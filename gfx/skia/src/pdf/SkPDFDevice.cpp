@@ -9,6 +9,7 @@
 
 #include "SkPDFDevice.h"
 
+#include "SkAnnotation.h"
 #include "SkColor.h"
 #include "SkClipStack.h"
 #include "SkData.h"
@@ -216,21 +217,20 @@ void GraphicStackState::pop() {
     fStackDepth--;
 }
 
-// This function initializes iter to be an interator on the "stack" argument
+// This function initializes iter to be an iterator on the "stack" argument
 // and then skips over the leading entries as specified in prefix.  It requires
 // and asserts that "prefix" will be a prefix to "stack."
 static void skip_clip_stack_prefix(const SkClipStack& prefix,
                                    const SkClipStack& stack,
-                                   SkClipStack::B2FIter* iter) {
-    SkClipStack::B2FIter prefixIter(prefix);
-    iter->reset(stack);
+                                   SkClipStack::Iter* iter) {
+    SkClipStack::B2TIter prefixIter(prefix);
+    iter->reset(stack, SkClipStack::Iter::kBottom_IterStart);
 
-    const SkClipStack::B2FIter::Clip* prefixEntry;
-    const SkClipStack::B2FIter::Clip* iterEntry;
+    const SkClipStack::B2TIter::Clip* prefixEntry;
+    const SkClipStack::B2TIter::Clip* iterEntry;
 
-    int count = 0;
     for (prefixEntry = prefixIter.next(); prefixEntry;
-            prefixEntry = prefixIter.next(), count++) {
+            prefixEntry = prefixIter.next()) {
         iterEntry = iter->next();
         SkASSERT(iterEntry);
         // Because of SkClipStack does internal intersection, the last clip
@@ -242,12 +242,8 @@ static void skip_clip_stack_prefix(const SkClipStack& prefix,
                     (prefixEntry->fRect == NULL));
             SkASSERT((iterEntry->fPath == NULL) ==
                     (prefixEntry->fPath == NULL));
-            // We need to back up the iterator by one but don't have that
-            // function, so reset and go forward by one less.
-            iter->reset(stack);
-            for (int i = 0; i < count; i++) {
-                iter->next();
-            }
+            // back up the iterator by one
+            iter->prev();
             prefixEntry = prefixIter.next();
             break;
         }
@@ -304,13 +300,13 @@ void GraphicStackState::updateClip(const SkClipStack& clipStack,
     // initial clip on the parent layer.  (This means there's a bug if the user
     // expands the clip and then uses any xfer mode that uses dst:
     // http://code.google.com/p/skia/issues/detail?id=228 )
-    SkClipStack::B2FIter iter;
+    SkClipStack::Iter iter;
     skip_clip_stack_prefix(fEntries[0].fClipStack, clipStack, &iter);
 
     // If the clip stack does anything other than intersect or if it uses
     // an inverse fill type, we have to fall back to the clip region.
     bool needRegion = false;
-    const SkClipStack::B2FIter::Clip* clipEntry;
+    const SkClipStack::B2TIter::Clip* clipEntry;
     for (clipEntry = iter.next(); clipEntry; clipEntry = iter.next()) {
         if (clipEntry->fOp != SkRegion::kIntersect_Op ||
                 (clipEntry->fPath && clipEntry->fPath->isInverseFillType())) {
@@ -327,7 +323,7 @@ void GraphicStackState::updateClip(const SkClipStack& clipStack,
         skip_clip_stack_prefix(fEntries[0].fClipStack, clipStack, &iter);
         SkMatrix transform;
         transform.setTranslate(translation.fX, translation.fY);
-        const SkClipStack::B2FIter::Clip* clipEntry;
+        const SkClipStack::B2TIter::Clip* clipEntry;
         for (clipEntry = iter.next(); clipEntry; clipEntry = iter.next()) {
             SkASSERT(clipEntry->fOp == SkRegion::kIntersect_Op);
             if (clipEntry->fRect) {
@@ -514,7 +510,8 @@ SkPDFDevice::SkPDFDevice(const SkISize& pageSize, const SkISize& contentSize,
       fPageSize(pageSize),
       fContentSize(contentSize),
       fLastContentEntry(NULL),
-      fLastMarginContentEntry(NULL) {
+      fLastMarginContentEntry(NULL),
+      fClipStack(NULL) {
     // Skia generally uses the top left as the origin but PDF natively has the
     // origin at the bottom left. This matrix corrects for that.  But that only
     // needs to be done once, we don't do it when layering.
@@ -538,7 +535,8 @@ SkPDFDevice::SkPDFDevice(const SkISize& layerSize,
       fExistingClipStack(existingClipStack),
       fExistingClipRegion(existingClipRegion),
       fLastContentEntry(NULL),
-      fLastMarginContentEntry(NULL) {
+      fLastMarginContentEntry(NULL),
+      fClipStack(NULL) {
     fInitialTransform.reset();
     this->init();
 }
@@ -709,6 +707,10 @@ void SkPDFDevice::drawRect(const SkDraw& d, const SkRect& r,
         return;
     }
 
+    if (handleAnnotations(r, *d.fMatrix, paint)) {
+        return;
+    }
+
     ScopedContentEntry content(this, d, paint);
     if (!content.entry()) {
         return;
@@ -758,6 +760,10 @@ void SkPDFDevice::drawPath(const SkDraw& d, const SkPath& origPath,
             noEffectPaint.setStrokeWidth(0);
         }
         drawPath(d, *pathPtr, noEffectPaint, NULL, true);
+        return;
+    }
+
+    if (handleAnnotations(pathPtr->getBounds(), *d.fMatrix, paint)) {
         return;
     }
 
@@ -945,6 +951,19 @@ void SkPDFDevice::drawDevice(const SkDraw& d, SkDevice* device, int x, int y,
     fFontGlyphUsage->merge(pdfDevice->getFontGlyphUsage());
 }
 
+void SkPDFDevice::onAttachToCanvas(SkCanvas* canvas) {
+    INHERITED::onAttachToCanvas(canvas);
+
+    // Canvas promises that this ptr is valid until onDetachFromCanvas is called
+    fClipStack = canvas->getClipStack();
+}
+
+void SkPDFDevice::onDetachFromCanvas() {
+    INHERITED::onDetachFromCanvas();
+
+    fClipStack = NULL;
+}
+
 ContentEntry* SkPDFDevice::getLastContentEntry() {
     if (fDrawingArea == kContent_DrawingArea) {
         return fLastContentEntry;
@@ -1098,6 +1117,10 @@ SkRefPtr<SkPDFArray> SkPDFDevice::getMediaBox() const {
     return mediaBox;
 }
 
+SkRefPtr<SkPDFArray> SkPDFDevice::getAnnotations() const {
+    return SkRefPtr<SkPDFArray>(fAnnotations);
+}
+
 SkStream* SkPDFDevice::content() const {
     SkMemoryStream* result = new SkMemoryStream;
     result->setData(this->copyContentToData())->unref();
@@ -1119,7 +1142,7 @@ void SkPDFDevice::copyContentEntriesToData(ContentEntry* entry,
         gsState.updateDrawingState(entry->fState);
 
         SkAutoDataUnref copy(entry->fContent.copyToData());
-        data->write(copy.data(), copy.size());
+        data->write(copy->data(), copy->size());
         entry = entry->fNext.get();
     }
     gsState.drainStack();
@@ -1153,6 +1176,55 @@ SkData* SkPDFDevice::copyContentToData() const {
     // potentially we could cache this SkData, and only rebuild it if we
     // see that our state has changed.
     return data.copyToData();
+}
+
+bool SkPDFDevice::handleAnnotations(const SkRect& r, const SkMatrix& matrix,
+                                    const SkPaint& p) {
+    SkAnnotation* annotationInfo = p.getAnnotation();
+    if (!annotationInfo) {
+        return false;
+    }
+    SkData* urlData = annotationInfo->find(SkAnnotationKeys::URL_Key());
+    if (!urlData) {
+        return false;
+    }
+
+    SkString url(static_cast<const char *>(urlData->data()),
+                 urlData->size() - 1);
+    SkMatrix transform = matrix;
+    transform.postConcat(fInitialTransform);
+    SkRect translatedRect;
+    transform.mapRect(&translatedRect, r);
+
+    if (fAnnotations.get() == NULL) {
+        fAnnotations = new SkPDFArray;
+        fAnnotations->unref();  // Both new and SkRefPtr took a reference.
+    }
+    SkAutoTUnref<SkPDFDict> annotation(new SkPDFDict("Annot"));
+    annotation->insertName("Subtype", "Link");
+    fAnnotations->append(annotation.get());
+
+    SkAutoTUnref<SkPDFArray> border(new SkPDFArray);
+    border->reserve(3);
+    border->appendInt(0);  // Horizontal corner radius.
+    border->appendInt(0);  // Vertical corner radius.
+    border->appendInt(0);  // Width, 0 = no border.
+    annotation->insert("Border", border.get());
+
+    SkAutoTUnref<SkPDFArray> rect(new SkPDFArray);
+    rect->reserve(4);
+    rect->appendScalar(translatedRect.fLeft);
+    rect->appendScalar(translatedRect.fTop);
+    rect->appendScalar(translatedRect.fRight);
+    rect->appendScalar(translatedRect.fBottom);
+    annotation->insert("Rect", rect.get());
+
+    SkAutoTUnref<SkPDFDict> action(new SkPDFDict("Action"));
+    action->insertName("S", "URI");
+    action->insert("URI", new SkPDFString(url))->unref();
+    annotation->insert("A", action.get());
+
+    return p.isNoDrawAnnotation();
 }
 
 void SkPDFDevice::createFormXObjectFromDevice(
@@ -1401,6 +1473,8 @@ void SkPDFDevice::populateGraphicStateEntryFromPaint(
     entry->fMatrix = matrix;
     entry->fClipStack = clipStack;
     entry->fClipRegion = clipRegion;
+    entry->fColor = SkColorSetA(paint.getColor(), 0xFF);
+    entry->fShaderIndex = -1;
 
     // PDF treats a shader as a color, so we only set one or the other.
     SkRefPtr<SkPDFObject> pdfShader;
@@ -1439,11 +1513,6 @@ void SkPDFDevice::populateGraphicStateEntryFromPaint(
         } else {
             // A color shader is treated as an invalid shader so we don't have
             // to set a shader just for a color.
-            entry->fShaderIndex = -1;
-            entry->fColor = 0;
-            color = 0;
-
-            // Check for a color shader.
             SkShader::GradientInfo gradientInfo;
             SkColor gradientColor;
             gradientInfo.fColors = &gradientColor;
@@ -1455,10 +1524,6 @@ void SkPDFDevice::populateGraphicStateEntryFromPaint(
                 color = gradientColor;
             }
         }
-    } else {
-        entry->fShaderIndex = -1;
-        entry->fColor = SkColorSetA(paint.getColor(), 0xFF);
-        color = paint.getColor();
     }
 
     SkRefPtr<SkPDFGraphicState> newGraphicState;

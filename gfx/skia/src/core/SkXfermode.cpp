@@ -9,6 +9,10 @@
 
 #include "SkXfermode.h"
 #include "SkColorPriv.h"
+#include "SkFlattenableBuffers.h"
+#include "SkMathPriv.h"
+
+SK_DEFINE_INST_COUNT(SkXfermode)
 
 #define SkAlphaMulAlpha(a, b)   SkMulDiv255Round(a, b)
 
@@ -681,17 +685,15 @@ void SkProcXfermode::xferA8(SkAlpha* SK_RESTRICT dst,
 
 SkProcXfermode::SkProcXfermode(SkFlattenableReadBuffer& buffer)
         : SkXfermode(buffer) {
-    // Might be a NULL if the Xfermode is recorded using the CrossProcess flag
-    fProc = (SkXfermodeProc)buffer.readFunctionPtr();
+    fProc = NULL;
+    if (!buffer.isCrossProcess()) {
+        fProc = (SkXfermodeProc)buffer.readFunctionPtr();
+    }
 }
 
 void SkProcXfermode::flatten(SkFlattenableWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
-    if (buffer.isCrossProcess()) {
-        // function pointer is only valid in the current process. Write a NULL
-        // so it can't be accidentally used
-        buffer.writeFunctionPtr(NULL);
-    } else {
+    if (!buffer.isCrossProcess()) {
         buffer.writeFunctionPtr((void*)fProc);
     }
 }
@@ -734,7 +736,7 @@ public:
 
 protected:
     SkProcCoeffXfermode(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {
-        fMode = (SkXfermode::Mode)buffer.readU32();
+        fMode = (SkXfermode::Mode)buffer.read32();
 
         const ProcCoeff& rec = gProcCoeffs[fMode];
         // these may be valid, or may be CANNOT_USE_COEFF

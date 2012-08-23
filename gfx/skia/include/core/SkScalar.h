@@ -53,12 +53,19 @@
     /** SkScalarIsNaN(n) returns true if argument is not a number
     */
     static inline bool SkScalarIsNaN(float x) { return x != x; }
+
     /** Returns true if x is not NaN and not infinite */
     static inline bool SkScalarIsFinite(float x) {
-        uint32_t bits = SkFloat2Bits(x);    // need unsigned for our shifts
-        int exponent = bits << 1 >> 24;
-        return exponent != 0xFF;
+        // We rely on the following behavior of infinities and nans
+        // 0 * finite --> 0
+        // 0 * infinity --> NaN
+        // 0 * NaN --> NaN
+        float prod = x * 0;
+        // At this point, prod will either be NaN or 0
+        // Therefore we can return (prod == prod) or (0 == prod).
+        return prod == prod;
     }
+
 #ifdef SK_DEBUG
     /** SkIntToScalar(n) returns its integer argument as an SkScalar
      *
@@ -84,7 +91,7 @@
     static inline float SkIntToScalar(unsigned long param) {
         return (float)param;
     }
-    static inline float SkIntToScalar(float param) {
+    static inline float SkIntToScalar(float /* param */) {
         /* If the parameter passed into SkIntToScalar is a float,
          * one of two things has happened:
          * 1. the parameter was an SkScalar (which is typedef'd to float)
@@ -175,6 +182,9 @@
     /** Returns the square root of the SkScalar
     */
     #define SkScalarSqrt(x)         sk_float_sqrt(x)
+    /** Returns b to the e
+    */
+    #define SkScalarPow(b, e)       sk_float_pow(b, e)
     /** Returns the average of two SkScalars (a+b)/2
     */
     #define SkScalarAve(a, b)       (((a) + (b)) * 0.5f)
@@ -222,13 +232,11 @@
     #define SkIntToScalar(n)        SkIntToFixed(n)
     #define SkFixedToScalar(x)      (x)
     #define SkScalarToFixed(x)      (x)
-    #ifdef SK_CAN_USE_FLOAT
-        #define SkScalarToFloat(n)  SkFixedToFloat(n)
-        #define SkFloatToScalar(n)  SkFloatToFixed(n)
+    #define SkScalarToFloat(n)  SkFixedToFloat(n)
+    #define SkFloatToScalar(n)  SkFloatToFixed(n)
 
-        #define SkScalarToDouble(n) SkFixedToDouble(n)
-        #define SkDoubleToScalar(n) SkDoubleToFixed(n)
-    #endif
+    #define SkScalarToDouble(n) SkFixedToDouble(n)
+    #define SkDoubleToScalar(n) SkDoubleToFixed(n)
     #define SkScalarFraction(x)     SkFixedFraction(x)
 
     #define SkScalarFloorToScalar(x)    SkFixedFloorToFixed(x)
@@ -326,6 +334,12 @@ static inline bool SkScalarNearlyEqual(SkScalar x, SkScalar y,
 static inline SkScalar SkScalarInterp(SkScalar A, SkScalar B, SkScalar t) {
     SkASSERT(t >= 0 && t <= SK_Scalar1);
     return A + SkScalarMul(B - A, t);
+}
+
+static inline SkScalar SkScalarLog2(SkScalar x) {
+    static const SkScalar log2_conversion_factor = SkScalarDiv(1, SkScalarLog(2));
+
+    return SkScalarMul(SkScalarLog(x), log2_conversion_factor);
 }
 
 /** Interpolate along the function described by (keys[length], values[length])

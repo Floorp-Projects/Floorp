@@ -8,9 +8,10 @@
 
 
 #include "Sk1DPathEffect.h"
+#include "SkFlattenableBuffers.h"
 #include "SkPathMeasure.h"
 
-bool Sk1DPathEffect::filterPath(SkPath* dst, const SkPath& src, SkScalar* width) {
+bool Sk1DPathEffect::filterPath(SkPath* dst, const SkPath& src, SkStrokeRec*) {
     SkPathMeasure   meas(src, false);
     do {
         SkScalar    length = meas.getLength();
@@ -28,7 +29,7 @@ bool Sk1DPathEffect::filterPath(SkPath* dst, const SkPath& src, SkScalar* width)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPath1DPathEffect::SkPath1DPathEffect(const SkPath& path, SkScalar advance, 
+SkPath1DPathEffect::SkPath1DPathEffect(const SkPath& path, SkScalar advance,
     SkScalar phase, Style style) : fPath(path)
 {
     if (advance <= 0 || path.isEmpty()) {
@@ -58,7 +59,7 @@ SkPath1DPathEffect::SkPath1DPathEffect(const SkPath& path, SkScalar advance,
 
         fAdvance = advance;
         fInitialOffset = phase;
-        
+
         if ((unsigned)style >= kStyleCount) {
             SkDEBUGF(("SkPath1DPathEffect style enum out of range %d\n", style));
         }
@@ -67,10 +68,10 @@ SkPath1DPathEffect::SkPath1DPathEffect(const SkPath& path, SkScalar advance,
 }
 
 bool SkPath1DPathEffect::filterPath(SkPath* dst, const SkPath& src,
-                                    SkScalar* width) {
+                                    SkStrokeRec* rec) {
     if (fAdvance > 0) {
-        *width = -1;
-        return this->INHERITED::filterPath(dst, src, width);
+        rec->setFillStyle();
+        return this->INHERITED::filterPath(dst, src, rec);
     }
     return false;
 }
@@ -80,17 +81,17 @@ static bool morphpoints(SkPoint dst[], const SkPoint src[], int count,
     for (int i = 0; i < count; i++) {
         SkPoint pos;
         SkVector tangent;
-        
+
         SkScalar sx = src[i].fX;
         SkScalar sy = src[i].fY;
-        
+
         if (!meas.getPosTan(dist + sx, &pos, &tangent)) {
             return false;
         }
-        
+
         SkMatrix    matrix;
         SkPoint     pt;
-        
+
         pt.set(sx, sy);
         matrix.setSinCos(tangent.fY, tangent.fX, 0, 0);
         matrix.preTranslate(-sx, 0);
@@ -149,7 +150,7 @@ SkPath1DPathEffect::SkPath1DPathEffect(SkFlattenableReadBuffer& buffer) {
     if (fAdvance > 0) {
         buffer.readPath(&fPath);
         fInitialOffset = buffer.readScalar();
-        fStyle = (Style) buffer.readU8();
+        fStyle = (Style) buffer.readUInt();
     } else {
         SkDEBUGF(("SkPath1DPathEffect can't use advance <= 0\n"));
         // Make Coverity happy.
@@ -168,7 +169,7 @@ void SkPath1DPathEffect::flatten(SkFlattenableWriteBuffer& buffer) const {
     if (fAdvance > 0) {
         buffer.writePath(fPath);
         buffer.writeScalar(fInitialOffset);
-        buffer.write8(fStyle);
+        buffer.writeUInt(fStyle);
     }
 }
 

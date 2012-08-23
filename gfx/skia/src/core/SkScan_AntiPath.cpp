@@ -85,7 +85,7 @@ BaseSuperBlitter::BaseSuperBlitter(SkBlitter* realBlitter, const SkIRect& ir,
      */
     const int left = clip.getBounds().fLeft;
     const int right = clip.getBounds().fRight;
-    
+
     fLeft = left;
     fSuperLeft = left << SHIFT;
     fWidth = right - left;
@@ -197,7 +197,7 @@ void SuperBlitter::blitH(int x, int y, int width) {
         fOffsetX = 0;
         fCurrY = y;
     }
-    
+
     if (iy != fCurrIY) {  // new scanline
         this->flush();
         fCurrIY = iy;
@@ -234,6 +234,44 @@ void SuperBlitter::blitH(int x, int y, int width) {
     fCurrX = x + width;
 #endif
 }
+
+#if 0 // UNUSED
+static void set_left_rite_runs(SkAlphaRuns& runs, int ileft, U8CPU leftA,
+                               int n, U8CPU riteA) {
+    SkASSERT(leftA <= 0xFF);
+    SkASSERT(riteA <= 0xFF);
+
+    int16_t* run = runs.fRuns;
+    uint8_t* aa = runs.fAlpha;
+
+    if (ileft > 0) {
+        run[0] = ileft;
+        aa[0] = 0;
+        run += ileft;
+        aa += ileft;
+    }
+
+    SkASSERT(leftA < 0xFF);
+    if (leftA > 0) {
+        *run++ = 1;
+        *aa++ = leftA;
+    }
+
+    if (n > 0) {
+        run[0] = n;
+        aa[0] = 0xFF;
+        run += n;
+        aa += n;
+    }
+
+    SkASSERT(riteA < 0xFF);
+    if (riteA > 0) {
+        *run++ = 1;
+        *aa++ = riteA;
+    }
+    run[0] = 0;
+}
+#endif
 
 void SuperBlitter::blitRect(int x, int y, int width, int height) {
     SkASSERT(width > 0);
@@ -384,7 +422,7 @@ MaskSuperBlitter::MaskSuperBlitter(SkBlitter* realBlitter, const SkIRect& ir,
     fMask.fBounds   = ir;
     fMask.fRowBytes = ir.width();
     fMask.fFormat   = SkMask::kA8_Format;
-            
+
     fClipRect = ir;
     fClipRect.intersect(clip.getBounds());
 
@@ -676,13 +714,13 @@ void SkScan::FillPath(const SkPath& path, const SkRasterClip& clip,
     if (clip.isEmpty()) {
         return;
     }
-    
+
     if (clip.isBW()) {
         FillPath(path, clip.bwRgn(), blitter);
     } else {
         SkRegion        tmp;
         SkAAClipBlitter aaBlitter;
-        
+
         tmp.setRect(clip.getBounds());
         aaBlitter.init(blitter, &clip.aaRgn());
         SkScan::FillPath(path, tmp, &aaBlitter);
