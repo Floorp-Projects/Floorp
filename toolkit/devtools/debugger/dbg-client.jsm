@@ -178,17 +178,6 @@ const UnsolicitedNotifications = {
 };
 
 /**
- * Set of pause types that are sent by the server and not as an immediate
- * response to a client request.
- */
-const UnsolicitedPauses = {
-  "resumeLimit": "resumeLimit",
-  "debuggerStatement": "debuggerStatement",
-  "breakpoint": "breakpoint",
-  "watchpoint": "watchpoint"
-};
-
-/**
  * Set of debug protocol request types that specify the protocol request being
  * sent to the server.
  */
@@ -411,27 +400,17 @@ DebuggerClient.prototype = {
       }
 
       let onResponse;
-      // Don't count unsolicited notifications or pauses as responses.
+      // Don't count unsolicited notifications as responses.
       if (aPacket.from in this._activeRequests &&
-          !(aPacket.type in UnsolicitedNotifications) &&
-          !(aPacket.type == ThreadStateTypes.paused &&
-            aPacket.why.type in UnsolicitedPauses)) {
+          !(aPacket.type in UnsolicitedNotifications)) {
         onResponse = this._activeRequests[aPacket.from].onResponse;
         delete this._activeRequests[aPacket.from];
       }
 
-      // Packets that indicate thread state changes get special treatment.
+      // paused/resumed/detached get special treatment...
       if (aPacket.type in ThreadStateTypes &&
           aPacket.from in this._threadClients) {
         this._threadClients[aPacket.from]._onThreadState(aPacket);
-      }
-      // On navigation the server resumes, so the client must resume as well.
-      // We achive that by generating a fake resumption packet that triggers
-      // the client's thread state change listeners.
-      if (aPacket.type == UnsolicitedNotifications.tabNavigated &&
-          aPacket.from in this._tabClients) {
-        let resumption = { from: this.activeThread._actor, type: "resumed" };
-        this.activeThread._onThreadState(resumption);
       }
       this.notify(aPacket.type, aPacket);
 
@@ -746,20 +725,12 @@ ThreadClient.prototype = {
     this._client.request(packet, aOnResponse);
   },
 
-  _doInterrupted: function TC_doInterrupted(aAction, aError) {
-    if (this.paused) {
-      aAction();
-      return;
-    }
-    this.interrupt(function(aResponse) {
-      if (aResponse) {
-        aError(aResponse);
-        return;
-      }
-      aAction();
-      this.resume(function() {});
-    }.bind(this));
-  },
+  /**
+   * A cache of source scripts. Clients can observe the scriptsadded and
+   * scriptscleared event to keep up to date on changes to this cache,
+   * and can fill it using the fillScripts method.
+   */
+  get cachedScripts() { return this._scriptCache; },
 
   /**
    * Ensure that source scripts have been loaded in the
