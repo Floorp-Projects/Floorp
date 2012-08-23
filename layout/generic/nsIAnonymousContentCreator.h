@@ -65,7 +65,7 @@ public:
    * @see nsIContent::GetChildren for set of values used for filter.
    */
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                        PRUint32 aFilter) = 0;
+                                        uint32_t aFilter) = 0;
 
   /**
    * Implementations can override this method to create special frames for the

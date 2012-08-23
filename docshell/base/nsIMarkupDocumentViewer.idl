@@ -59,14 +59,14 @@ interface nsIMarkupDocumentViewer : nsISupports
 	/*
 	XXX Comment here!
 	*/
-	attribute PRInt32 hintCharacterSetSource;
+	attribute int32_t hintCharacterSetSource;
 
 	/*
 	character set from prev document 
 	*/
 	attribute ACString prevDocCharacterSet;
 
-	//void GetCharacterSetHint(in wstring hintCharset, in PRInt32 charsetSource);
+	//void GetCharacterSetHint(in wstring hintCharset, in int32_t charsetSource);
 
 	/**
 	* Tell the container to shrink-to-fit or grow-to-fit its contents
@@ -116,7 +116,7 @@ interface nsIMarkupDocumentViewer : nsISupports
   /**
    * Use this attribute to access all the Bidi options in one operation
    */
-  attribute PRUint32 bidiOptions;
+  attribute uint32_t bidiOptions;
 
   /** The minimum font size  */
   attribute long minFontSize;

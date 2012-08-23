@@ -106,7 +106,7 @@ const uint32 STORE_MAGIC = 0x1231af3b;
 const uint32 CURRENT_VERSION = 2;
 
 void
-TableUpdate::NewAddPrefix(PRUint32 aAddChunk, const Prefix& aHash)
+TableUpdate::NewAddPrefix(uint32_t aAddChunk, const Prefix& aHash)
 {
   AddPrefix *add = mAddPrefixes.AppendElement();
   add->addChunk = aAddChunk;
@@ -114,7 +114,7 @@ TableUpdate::NewAddPrefix(PRUint32 aAddChunk, const Prefix& aHash)
 }
 
 void
-TableUpdate::NewSubPrefix(PRUint32 aAddChunk, const Prefix& aHash, PRUint32 aSubChunk)
+TableUpdate::NewSubPrefix(uint32_t aAddChunk, const Prefix& aHash, uint32_t aSubChunk)
 {
   SubPrefix *sub = mSubPrefixes.AppendElement();
   sub->addChunk = aAddChunk;
@@ -123,7 +123,7 @@ TableUpdate::NewSubPrefix(PRUint32 aAddChunk, const Prefix& aHash, PRUint32 aSub
 }
 
 void
-TableUpdate::NewAddComplete(PRUint32 aAddChunk, const Completion& aHash)
+TableUpdate::NewAddComplete(uint32_t aAddChunk, const Completion& aHash)
 {
   AddComplete *add = mAddCompletes.AppendElement();
   add->addChunk = aAddChunk;
@@ -131,7 +131,7 @@ TableUpdate::NewAddComplete(PRUint32 aAddChunk, const Completion& aHash)
 }
 
 void
-TableUpdate::NewSubComplete(PRUint32 aAddChunk, const Completion& aHash, PRUint32 aSubChunk)
+TableUpdate::NewSubComplete(uint32_t aAddChunk, const Completion& aHash, uint32_t aSubChunk)
 {
   SubComplete *sub = mSubCompletes.AppendElement();
   sub->addChunk = aAddChunk;
@@ -179,9 +179,9 @@ HashStore::CheckChecksum(nsIFile* aStoreFile)
   nsCAutoString hash;
   nsCAutoString compareHash;
   char *data;
-  PRUint32 read;
+  uint32_t read;
 
-  PRInt64 fileSize;
+  int64_t fileSize;
   nsresult rv = aStoreFile->GetFileSize(&fileSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -235,7 +235,7 @@ HashStore::Open()
     return NS_OK;
   }
 
-  PRInt64 fileSize;
+  int64_t fileSize;
   rv = storeFile->GetFileSize(&fileSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -359,7 +359,7 @@ HashStore::CalculateChecksum(nsCAutoString& aChecksum, bool aChecksumPresent)
     return rv;
   }
 
-  PRInt64 fileSize;
+  int64_t fileSize;
   rv = storeFile->GetFileSize(&fileSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -617,8 +617,8 @@ nsresult DeflateWriteTArray(nsIOutputStream* aStream, nsTArray<T>& aIn)
   outBuff.TruncateLength(outsize);
 
   // Length of compressed data stream
-  PRUint32 dataLen = outBuff.Length();
-  PRUint32 written;
+  uint32_t dataLen = outBuff.Length();
+  uint32_t written;
   nsresult rv = aStream->Write(reinterpret_cast<char*>(&dataLen), sizeof(dataLen), &written);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -633,11 +633,11 @@ nsresult DeflateWriteTArray(nsIOutputStream* aStream, nsTArray<T>& aIn)
 
 template<class T>
 nsresult InflateReadTArray(nsIInputStream* aStream, nsTArray<T>* aOut,
-                           PRUint32 aExpectedSize)
+                           uint32_t aExpectedSize)
 {
 
-  PRUint32 inLen;
-  PRUint32 read;
+  uint32_t inLen;
+  uint32_t read;
   nsresult rv = aStream->Read(reinterpret_cast<char*>(&inLen), sizeof(inLen), &read);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -668,20 +668,20 @@ nsresult InflateReadTArray(nsIInputStream* aStream, nsTArray<T>* aOut,
 }
 
 static nsresult
-ByteSliceWrite(nsIOutputStream* aOut, nsTArray<PRUint32>& aData)
+ByteSliceWrite(nsIOutputStream* aOut, nsTArray<uint32_t>& aData)
 {
-  nsTArray<PRUint8> slice1;
-  nsTArray<PRUint8> slice2;
-  nsTArray<PRUint8> slice3;
-  nsTArray<PRUint8> slice4;
-  PRUint32 count = aData.Length();
+  nsTArray<uint8_t> slice1;
+  nsTArray<uint8_t> slice2;
+  nsTArray<uint8_t> slice3;
+  nsTArray<uint8_t> slice4;
+  uint32_t count = aData.Length();
 
   slice1.SetCapacity(count);
   slice2.SetCapacity(count);
   slice3.SetCapacity(count);
   slice4.SetCapacity(count);
 
-  for (PRUint32 i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     slice1.AppendElement( aData[i] >> 24);
     slice2.AppendElement((aData[i] >> 16) & 0xFF);
     slice3.AppendElement((aData[i] >>  8) & 0xFF);
@@ -703,12 +703,12 @@ ByteSliceWrite(nsIOutputStream* aOut, nsTArray<PRUint32>& aData)
 }
 
 static nsresult
-ByteSliceRead(nsIInputStream* aInStream, nsTArray<PRUint32>* aData, PRUint32 count)
+ByteSliceRead(nsIInputStream* aInStream, nsTArray<uint32_t>* aData, uint32_t count)
 {
-  nsTArray<PRUint8> slice1;
-  nsTArray<PRUint8> slice2;
-  nsTArray<PRUint8> slice3;
-  nsTArray<PRUint8> slice4;
+  nsTArray<uint8_t> slice1;
+  nsTArray<uint8_t> slice2;
+  nsTArray<uint8_t> slice3;
+  nsTArray<uint8_t> slice4;
 
   nsresult rv = InflateReadTArray(aInStream, &slice1, count);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -735,14 +735,14 @@ ByteSliceRead(nsIInputStream* aInStream, nsTArray<PRUint32>* aData, PRUint32 cou
 nsresult
 HashStore::ReadAddPrefixes()
 {
-  nsTArray<PRUint32> chunks;
-  PRUint32 count = mHeader.numAddPrefixes;
+  nsTArray<uint32_t> chunks;
+  uint32_t count = mHeader.numAddPrefixes;
 
   nsresult rv = ByteSliceRead(mInputStream, &chunks, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mAddPrefixes.SetCapacity(count);
-  for (PRUint32 i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     AddPrefix *add = mAddPrefixes.AppendElement();
     add->prefix.FromUint32(0);
     add->addChunk = chunks[i];
@@ -754,10 +754,10 @@ HashStore::ReadAddPrefixes()
 nsresult
 HashStore::ReadSubPrefixes()
 {
-  nsTArray<PRUint32> addchunks;
-  nsTArray<PRUint32> subchunks;
-  nsTArray<PRUint32> prefixes;
-  PRUint32 count = mHeader.numSubPrefixes;
+  nsTArray<uint32_t> addchunks;
+  nsTArray<uint32_t> subchunks;
+  nsTArray<uint32_t> prefixes;
+  uint32_t count = mHeader.numSubPrefixes;
 
   nsresult rv = ByteSliceRead(mInputStream, &addchunks, count);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -783,8 +783,8 @@ HashStore::ReadSubPrefixes()
 nsresult
 HashStore::WriteAddPrefixes(nsIOutputStream* aOut)
 {
-  nsTArray<PRUint32> chunks;
-  PRUint32 count = mAddPrefixes.Length();
+  nsTArray<uint32_t> chunks;
+  uint32_t count = mAddPrefixes.Length();
   chunks.SetCapacity(count);
 
   for (uint32 i = 0; i < count; i++) {
@@ -800,10 +800,10 @@ HashStore::WriteAddPrefixes(nsIOutputStream* aOut)
 nsresult
 HashStore::WriteSubPrefixes(nsIOutputStream* aOut)
 {
-  nsTArray<PRUint32> addchunks;
-  nsTArray<PRUint32> subchunks;
-  nsTArray<PRUint32> prefixes;
-  PRUint32 count = mSubPrefixes.Length();
+  nsTArray<uint32_t> addchunks;
+  nsTArray<uint32_t> subchunks;
+  nsTArray<uint32_t> prefixes;
+  uint32_t count = mSubPrefixes.Length();
   addchunks.SetCapacity(count);
   subchunks.SetCapacity(count);
   prefixes.SetCapacity(count);
@@ -847,7 +847,7 @@ HashStore::WriteFile()
                                      PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 written;
+  uint32_t written;
   rv = out->Write(reinterpret_cast<char*>(&mHeader), sizeof(mHeader), &written);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -877,7 +877,7 @@ HashStore::WriteFile()
   rv = safeOut->Finish();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt64 fileSize;
+  int64_t fileSize;
   rv = storeFile->GetFileSize(&fileSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1086,7 +1086,7 @@ HashStore::ProcessSubs()
 }
 
 nsresult
-HashStore::AugmentAdds(const nsTArray<PRUint32>& aPrefixes)
+HashStore::AugmentAdds(const nsTArray<uint32_t>& aPrefixes)
 {
   uint32 cnt = aPrefixes.Length();
   if (cnt != mAddPrefixes.Length()) {

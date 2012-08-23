@@ -131,20 +131,20 @@ public:
     * @result            - if there is no table frame or the table frame is not
     *                      the first in flow it will return an error
     */
-  nsresult AddColsToTable(PRInt32                   aFirstColIndex,
+  nsresult AddColsToTable(int32_t                   aFirstColIndex,
                           bool                      aResetSubsequentColIndices,
                           const nsFrameList::Slice& aCols);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
-  void Dump(PRInt32 aIndent);
+  void Dump(int32_t aIndent);
 #endif
 
   /** returns the number of columns represented by this group.
     * if there are col children, count them (taking into account the span of each)
     * else, check my own span attribute.
     */
-  virtual PRInt32 GetColCount() const;
+  virtual int32_t GetColCount() const;
 
   /** first column on the child list */
   nsTableColFrame * GetFirstColumn();
@@ -156,15 +156,15 @@ public:
   /** @return - the position of the first column in this colgroup in the table
     * colframe cache.
     */
-  PRInt32 GetStartColumnIndex();
+  int32_t GetStartColumnIndex();
   
   /** set the position of the first column in this colgroup in the table
     * colframe cache.
     */
-  void SetStartColumnIndex(PRInt32 aIndex);
+  void SetStartColumnIndex(int32_t aIndex);
 
   /** helper method to get the span attribute for this colgroup */
-  PRInt32 GetSpan();
+  int32_t GetSpan();
 
   /** provide access to the mFrames list
     */
@@ -179,7 +179,7 @@ public:
     *                         starts with the first column
     */
   static void ResetColIndices(nsIFrame*       aFirstColGroup,
-                              PRInt32         aFirstColIndex,
+                              int32_t         aFirstColIndex,
                               nsIFrame*       aStartColFrame = nullptr);
 
   /**
@@ -193,21 +193,21 @@ public:
    * Set full border widths before collapsing with cell borders
    * @param aForSide - side to set; only accepts top and bottom
    */
-  void SetContinuousBCBorderWidth(PRUint8     aForSide,
+  void SetContinuousBCBorderWidth(uint8_t     aForSide,
                                   BCPixelSize aPixelValue);
 protected:
   nsTableColGroupFrame(nsStyleContext* aContext);
 
-  void InsertColsReflow(PRInt32                   aColIndex,
+  void InsertColsReflow(int32_t                   aColIndex,
                         const nsFrameList::Slice& aCols);
 
   /** implement abstract method on nsContainerFrame */
   virtual int GetSkipSides() const;
 
   // data members
-  PRInt32 mColCount;
+  int32_t mColCount;
   // the starting column index this col group represents. Must be >= 0. 
-  PRInt32 mStartColIndex;
+  int32_t mStartColIndex;
 
   // border width in pixels
   BCPixelSize mTopContBorderWidth;
@@ -220,17 +220,17 @@ inline nsTableColGroupFrame::nsTableColGroupFrame(nsStyleContext *aContext)
   SetColType(eColGroupContent);
 }
   
-inline PRInt32 nsTableColGroupFrame::GetStartColumnIndex()
+inline int32_t nsTableColGroupFrame::GetStartColumnIndex()
 {  
   return mStartColIndex;
 }
 
-inline void nsTableColGroupFrame::SetStartColumnIndex (PRInt32 aIndex)
+inline void nsTableColGroupFrame::SetStartColumnIndex (int32_t aIndex)
 {
   mStartColIndex = aIndex;
 }
 
-inline PRInt32 nsTableColGroupFrame::GetColCount() const
+inline int32_t nsTableColGroupFrame::GetColCount() const
 {  
   return mColCount;
 }

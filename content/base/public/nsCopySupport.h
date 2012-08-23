@@ -23,7 +23,7 @@ class nsCopySupport
 {
   // class of static helper functions for copy support
   public:
-    static nsresult HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 aClipboardID);
+    static nsresult HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, int16_t aClipboardID);
     static nsresult DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
                             bool *aDoPutOnClipboard);
     static nsresult IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc, bool *aIsPlainTextContext);
@@ -31,11 +31,11 @@ class nsCopySupport
     // Get the selection, or entire document, in the format specified by the mime type
     // (text/html or text/plain). If aSel is non-null, use it, otherwise get the entire
     // doc.
-    static nsresult GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata);
+    static nsresult GetContents(const nsACString& aMimeType, uint32_t aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata);
     
     static nsresult ImageCopy(nsIImageLoadingContent* aImageElement,
                               nsILoadContext* aLoadContext,
-                              PRInt32 aCopyFlags);
+                              int32_t aCopyFlags);
 
     // Get the selection as a transferable. Similar to HTMLCopy except does
     // not deal with the clipboard.
@@ -83,7 +83,7 @@ class nsCopySupport
      *
      * If the event is cancelled or an error occurs, false will be returned.
      */
-    static bool FireClipboardEvent(PRInt32 aType,
+    static bool FireClipboardEvent(int32_t aType,
                                      nsIPresShell* aPresShell,
                                      nsISelection* aSelection);
 };

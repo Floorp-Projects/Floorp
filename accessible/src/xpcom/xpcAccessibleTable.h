@@ -26,39 +26,39 @@ public:
 
   nsresult GetCaption(nsIAccessible** aCaption);
   nsresult GetSummary(nsAString& aSummary);
-  nsresult GetColumnCount(PRInt32* aColumnCount);
-  nsresult GetRowCount(PRInt32* aRowCount);
-  nsresult GetCellAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
+  nsresult GetColumnCount(int32_t* aColumnCount);
+  nsresult GetRowCount(int32_t* aRowCount);
+  nsresult GetCellAt(int32_t aRowIndex, int32_t aColumnIndex,
                      nsIAccessible** aCell);
-  nsresult GetCellIndexAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
-                          PRInt32* aCellIndex);
-  nsresult GetColumnIndexAt(PRInt32 aCellIndex, PRInt32* aColumnIndex);
-  nsresult GetRowIndexAt(PRInt32 aCellIndex, PRInt32* aRowIndex);
-  nsresult GetRowAndColumnIndicesAt(PRInt32 aCellIndex, PRInt32* aRowIndex,
-                                    PRInt32* aColumnIndex);
-  nsresult GetColumnExtentAt(PRInt32 row, PRInt32 column,
-                             PRInt32* aColumnExtent);
-  nsresult GetRowExtentAt(PRInt32 row, PRInt32 column,
-                          PRInt32* aRowExtent);
-  nsresult GetColumnDescription(PRInt32 aColIdx, nsAString& aDescription);
-  nsresult GetRowDescription(PRInt32 aRowIdx, nsAString& aDescription);
-  nsresult IsColumnSelected(PRInt32 aColIdx, bool* _retval);
-  nsresult IsRowSelected(PRInt32 aRowIdx, bool* _retval);
-  nsresult IsCellSelected(PRInt32 aRowIdx, PRInt32 aColIdx, bool* _retval);
-  nsresult GetSelectedCellCount(PRUint32* aSelectedCellCount);
-  nsresult GetSelectedColumnCount(PRUint32* aSelectedColumnCount);
-  nsresult GetSelectedRowCount(PRUint32* aSelectedRowCount);
+  nsresult GetCellIndexAt(int32_t aRowIndex, int32_t aColumnIndex,
+                          int32_t* aCellIndex);
+  nsresult GetColumnIndexAt(int32_t aCellIndex, int32_t* aColumnIndex);
+  nsresult GetRowIndexAt(int32_t aCellIndex, int32_t* aRowIndex);
+  nsresult GetRowAndColumnIndicesAt(int32_t aCellIndex, int32_t* aRowIndex,
+                                    int32_t* aColumnIndex);
+  nsresult GetColumnExtentAt(int32_t row, int32_t column,
+                             int32_t* aColumnExtent);
+  nsresult GetRowExtentAt(int32_t row, int32_t column,
+                          int32_t* aRowExtent);
+  nsresult GetColumnDescription(int32_t aColIdx, nsAString& aDescription);
+  nsresult GetRowDescription(int32_t aRowIdx, nsAString& aDescription);
+  nsresult IsColumnSelected(int32_t aColIdx, bool* _retval);
+  nsresult IsRowSelected(int32_t aRowIdx, bool* _retval);
+  nsresult IsCellSelected(int32_t aRowIdx, int32_t aColIdx, bool* _retval);
+  nsresult GetSelectedCellCount(uint32_t* aSelectedCellCount);
+  nsresult GetSelectedColumnCount(uint32_t* aSelectedColumnCount);
+  nsresult GetSelectedRowCount(uint32_t* aSelectedRowCount);
   nsresult GetSelectedCells(nsIArray** aSelectedCell);
-  nsresult GetSelectedCellIndices(PRUint32* aCellsArraySize,
-                                  PRInt32** aCellsArray);
-  nsresult GetSelectedColumnIndices(PRUint32* aColsArraySize,
-                                    PRInt32** aColsArray);
-  nsresult GetSelectedRowIndices(PRUint32* aRowsArraySize,
-                                 PRInt32** aRowsArray);
-  nsresult SelectColumn(PRInt32 aColIdx);
-  nsresult SelectRow(PRInt32 aRowIdx);
-  nsresult UnselectColumn(PRInt32 aColIdx);
-  nsresult UnselectRow(PRInt32 aRowIdx);
+  nsresult GetSelectedCellIndices(uint32_t* aCellsArraySize,
+                                  int32_t** aCellsArray);
+  nsresult GetSelectedColumnIndices(uint32_t* aColsArraySize,
+                                    int32_t** aColsArray);
+  nsresult GetSelectedRowIndices(uint32_t* aRowsArraySize,
+                                 int32_t** aRowsArray);
+  nsresult SelectColumn(int32_t aColIdx);
+  nsresult SelectRow(int32_t aRowIdx);
+  nsresult UnselectColumn(int32_t aColIdx);
+  nsresult UnselectRow(int32_t aRowIdx);
   nsresult IsProbablyForLayout(bool* aIsForLayout);
 
 protected:

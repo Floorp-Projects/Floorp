@@ -15,7 +15,7 @@ class nsCString;
 
 // A color is a 32 bit unsigned integer with four components: R, G, B
 // and A.
-typedef PRUint32 nscolor;
+typedef uint32_t nscolor;
 
 // Make a color out of r,g,b values. This assumes that the r,g,b values are
 // properly constrained to 0-255. This also assumes that a is 255.
@@ -28,10 +28,10 @@ typedef PRUint32 nscolor;
   ((nscolor) (((_a) << 24) | ((_b)<<16) | ((_g)<<8) | (_r)))
 
 // Extract color components from nscolor
-#define NS_GET_R(_rgba) ((PRUint8) ((_rgba) & 0xff))
-#define NS_GET_G(_rgba) ((PRUint8) (((_rgba) >> 8) & 0xff))
-#define NS_GET_B(_rgba) ((PRUint8) (((_rgba) >> 16) & 0xff))
-#define NS_GET_A(_rgba) ((PRUint8) (((_rgba) >> 24) & 0xff))
+#define NS_GET_R(_rgba) ((uint8_t) ((_rgba) & 0xff))
+#define NS_GET_G(_rgba) ((uint8_t) (((_rgba) >> 8) & 0xff))
+#define NS_GET_B(_rgba) ((uint8_t) (((_rgba) >> 16) & 0xff))
+#define NS_GET_A(_rgba) ((uint8_t) (((_rgba) >> 24) & 0xff))
 
 // Fast approximate division by 255. It has the property that
 // for all 0 <= n <= 255*255, FAST_DIVIDE_BY_255(n) == n/255.

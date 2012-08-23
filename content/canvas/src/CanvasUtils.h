@@ -25,8 +25,8 @@ using namespace gfx;
 
 // Check that the rectangle [x,y,w,h] is a subrectangle of [0,0,realWidth,realHeight]
 
-inline bool CheckSaneSubrectSize(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
-                            PRInt32 realWidth, PRInt32 realHeight) {
+inline bool CheckSaneSubrectSize(int32_t x, int32_t y, int32_t w, int32_t h,
+                            int32_t realWidth, int32_t realHeight) {
     CheckedInt32 checked_xmost  = CheckedInt32(x) + w;
     CheckedInt32 checked_ymost  = CheckedInt32(y) + h;
 
@@ -172,7 +172,7 @@ DashArrayToJSVal(FallibleTArray<T>& dashes,
         if (!obj) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        for (PRUint32 i = 0; i < dashes.Length(); ++i) {
+        for (uint32_t i = 0; i < dashes.Length(); ++i) {
             double d = dashes[i];
             jsval elt = DOUBLE_TO_JSVAL(d);
             if (!JS_SetElement(cx, obj, i, &elt)) {

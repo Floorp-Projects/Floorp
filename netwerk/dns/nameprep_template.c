@@ -75,7 +75,7 @@
 #endif /* NAMEPREP_TEMPLATE_INIT */
 
 static const char *
-compose_sym2(nameprep_map_, VERSION) (PRUint32 v) {
+compose_sym2(nameprep_map_, VERSION) (uint32_t v) {
 	int idx0 = IDX0(MAP, v);
 	int idx1 = IDX1(MAP, v);
 	int idx2 = IDX2(MAP, v);
@@ -94,7 +94,7 @@ compose_sym2(nameprep_map_, VERSION) (PRUint32 v) {
 }
 
 static int
-compose_sym2(nameprep_prohibited_, VERSION) (PRUint32 v) {
+compose_sym2(nameprep_prohibited_, VERSION) (uint32_t v) {
 	int idx0 = IDX0(PROH, v);
 	int idx1 = IDX1(PROH, v);
 	int idx2 = IDX2(PROH, v);
@@ -109,7 +109,7 @@ compose_sym2(nameprep_prohibited_, VERSION) (PRUint32 v) {
 }
 
 static int
-compose_sym2(nameprep_unassigned_, VERSION) (PRUint32 v) {
+compose_sym2(nameprep_unassigned_, VERSION) (uint32_t v) {
 	int idx0 = IDX0(UNAS, v);
 	int idx1 = IDX1(UNAS, v);
 	int idx2 = IDX2(UNAS, v);
@@ -124,7 +124,7 @@ compose_sym2(nameprep_unassigned_, VERSION) (PRUint32 v) {
 }
 
 static idn_biditype_t
-compose_sym2(nameprep_biditype_, VERSION) (PRUint32 v) {
+compose_sym2(nameprep_biditype_, VERSION) (uint32_t v) {
 	int idx0 = IDX0(BIDI, v);
 	int idx1 = IDX1(BIDI, v);
 	int idx2 = IDX2(BIDI, v);

@@ -47,7 +47,7 @@ int main(int argc, char** argv)
   // be in the table. Futz with the case to make sure any case will
   // work
 
-  for (PRUint32 index = 0 ; index < ArrayLength(kColorNames); index++) {
+  for (uint32_t index = 0 ; index < ArrayLength(kColorNames); index++) {
     // Lookup color by name and make sure it has the right id
     nsCString tagName(kColorNames[index]);
 
@@ -75,10 +75,10 @@ int main(int argc, char** argv)
     }
 
     // Check that parsing an RGB value in hex gets the right values
-    PRUint8 r = NS_GET_R(rgb);
-    PRUint8 g = NS_GET_G(rgb);
-    PRUint8 b = NS_GET_B(rgb);
-    PRUint8 a = NS_GET_A(rgb);
+    uint8_t r = NS_GET_R(rgb);
+    uint8_t g = NS_GET_G(rgb);
+    uint8_t b = NS_GET_B(rgb);
+    uint8_t a = NS_GET_A(rgb);
     if (a != PR_UINT8_MAX) {
       // NS_HexToRGB() can not handle a color with alpha channel
       rgb = NS_RGB(r, g, b);
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
   }
 
   // Now make sure we don't find some garbage
-  for (PRUint32 i = 0; i < ArrayLength(kJunkNames); i++) {
+  for (uint32_t i = 0; i < ArrayLength(kJunkNames); i++) {
     nsCString tag(kJunkNames[i]);
     if (NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tag), &rgb)) {
       fail("found '%s'", kJunkNames[i] ? kJunkNames[i] : "(null)");

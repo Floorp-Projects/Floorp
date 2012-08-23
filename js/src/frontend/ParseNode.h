@@ -18,7 +18,7 @@
 namespace js {
 namespace frontend {
 
-struct TreeContext;
+struct ParseContext;
 
 /*
  * Indicates a location in the stack that an upvar value can be retrieved from
@@ -850,6 +850,9 @@ struct ParseNode {
 
     void initList(ParseNode *pn) {
         JS_ASSERT(pn_arity == PN_LIST);
+        if (pn->pn_pos.begin < pn_pos.begin)
+            pn_pos.begin = pn->pn_pos.begin;
+        pn_pos.end = pn->pn_pos.end;
         pn_head = pn;
         pn_tail = &pn->pn_next;
         pn_count = 1;
@@ -859,6 +862,8 @@ struct ParseNode {
 
     void append(ParseNode *pn) {
         JS_ASSERT(pn_arity == PN_LIST);
+        JS_ASSERT(pn->pn_pos.begin >= pn_pos.begin);
+        pn_pos.end = pn->pn_pos.end;
         *pn_tail = pn;
         pn_tail = &pn->pn_next;
         pn_count++;
@@ -978,9 +983,9 @@ struct FunctionNode : public ParseNode {
 };
 
 struct NameNode : public ParseNode {
-    static NameNode *create(ParseNodeKind kind, JSAtom *atom, Parser *parser, TreeContext *tc);
+    static NameNode *create(ParseNodeKind kind, JSAtom *atom, Parser *parser, ParseContext *pc);
 
-    inline void initCommon(TreeContext *tc);
+    inline void initCommon(ParseContext *pc);
 
 #ifdef DEBUG
     inline void dump(int indent);
@@ -1273,33 +1278,33 @@ void DumpParseTree(ParseNode *pn, int indent = 0);
  *
  *   for (each use of unqualified name x in parse order) {
  *       if (this use of x is a declaration) {
- *           if (x in tc->decls) {                          // redeclaring
+ *           if (x in pc->decls) {                          // redeclaring
  *               pn = allocate a PN_NAME ParseNode;
  *           } else {                                       // defining
- *               dn = lookup x in tc->lexdeps;
+ *               dn = lookup x in pc->lexdeps;
  *               if (dn)                                    // use before def
- *                   remove x from tc->lexdeps;
+ *                   remove x from pc->lexdeps;
  *               else                                       // def before use
  *                   dn = allocate a PN_NAME Definition;
- *               map x to dn via tc->decls;
+ *               map x to dn via pc->decls;
  *               pn = dn;
  *           }
  *           insert pn into its parent PNK_VAR/PNK_CONST list;
  *       } else {
  *           pn = allocate a ParseNode for this reference to x;
- *           dn = lookup x in tc's lexical scope chain;
+ *           dn = lookup x in pc's lexical scope chain;
  *           if (!dn) {
- *               dn = lookup x in tc->lexdeps;
+ *               dn = lookup x in pc->lexdeps;
  *               if (!dn) {
  *                   dn = pre-allocate a Definition for x;
- *                   map x to dn in tc->lexdeps;
+ *                   map x to dn in pc->lexdeps;
  *               }
  *           }
  *           append pn to dn's use chain;
  *       }
  *   }
  *
- * See frontend/BytecodeEmitter.h for js::TreeContext and its top*Stmt,
+ * See frontend/BytecodeEmitter.h for js::ParseContext and its top*Stmt,
  * decls, and lexdeps members.
  *
  * Notes:
@@ -1311,9 +1316,9 @@ void DumpParseTree(ParseNode *pn, int indent = 0);
  *     statement" (ECMA-262 12.2) can be proven to be dead code. RecycleTree in
  *     ParseNode.cpp will not recycle a node whose pn_defn bit is set.
  *
- *  2. "lookup x in tc's lexical scope chain" gives up on def/use chaining if a
- *     with statement is found along the the scope chain, which includes tc,
- *     tc->parent, etc. Thus we eagerly connect an inner function's use of an
+ *  2. "lookup x in pc's lexical scope chain" gives up on def/use chaining if a
+ *     with statement is found along the the scope chain, which includes pc,
+ *     pc->parent, etc. Thus we eagerly connect an inner function's use of an
  *     outer's var x if the var x was parsed before the inner function.
  *
  *  3. A use may be eliminated as dead by the constant folder, which therefore
@@ -1322,15 +1327,15 @@ void DumpParseTree(ParseNode *pn, int indent = 0);
  *     the pn_link pointing at the use to be removed. This is costly, so as for
  *     dead definitions, we do not recycle dead pn_used nodes.
  *
- * At the end of parsing a function body or global or eval program, tc->lexdeps
+ * At the end of parsing a function body or global or eval program, pc->lexdeps
  * holds the lexical dependencies of the parsed unit. The name to def/use chain
- * mappings are then merged into the parent tc->lexdeps.
+ * mappings are then merged into the parent pc->lexdeps.
  *
  * Thus if a later var x is parsed in the outer function satisfying an earlier
- * inner function's use of x, we will remove dn from tc->lexdeps and re-use it
+ * inner function's use of x, we will remove dn from pc->lexdeps and re-use it
  * as the new definition node in the outer function's parse tree.
  *
- * When the compiler unwinds from the outermost tc, tc->lexdeps contains the
+ * When the compiler unwinds from the outermost pc, pc->lexdeps contains the
  * definition nodes with use chains for all free variables. These are either
  * global variables or reference errors.
  */

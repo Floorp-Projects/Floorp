@@ -37,11 +37,11 @@ private:
     const char *ProxyHost() const
     { return mProxyInfo ? mProxyInfo->Host().get() : nullptr; }
 
-    PRInt32     ProxyPort() const
+    int32_t     ProxyPort() const
     { return mProxyInfo ? mProxyInfo->Port() : -1; }
 
     const char *Host() const      { return mHost.get(); }
-    PRInt32     Port() const      { return mPort; }
+    int32_t     Port() const      { return mPort; }
     bool        UsingSSL() const  { return mUsingSSL; }
 
     bool        UsingHttpProxy() const
@@ -50,14 +50,14 @@ private:
     nsresult PrepareForAuthentication(bool proxyAuth);
     nsresult GenCredsAndSetEntry(nsIHttpAuthenticator *, bool proxyAuth,
                                  const char *scheme, const char *host,
-                                 PRInt32 port, const char *dir,
+                                 int32_t port, const char *dir,
                                  const char *realm, const char *challenge,
                                  const nsHttpAuthIdentity &ident,
                                  nsCOMPtr<nsISupports> &session, char **result);
     nsresult GetAuthenticator(const char *challenge, nsCString &scheme,
                               nsIHttpAuthenticator **auth);
     void     ParseRealm(const char *challenge, nsACString &realm);
-    void     GetIdentityFromURI(PRUint32 authFlags, nsHttpAuthIdentity&);
+    void     GetIdentityFromURI(uint32_t authFlags, nsHttpAuthIdentity&);
     bool     AuthModuleRequiresCanonicalName(nsISupports *state);
     nsresult ResolveHost();
 
@@ -73,14 +73,14 @@ private:
                                         const char *scheme,  bool proxyAuth,
                                         nsIHttpAuthenticator *auth,
                                         nsAFlatCString &creds);
-    nsresult PromptForIdentity(PRUint32 level, bool proxyAuth,
+    nsresult PromptForIdentity(uint32_t level, bool proxyAuth,
                                const char *realm, const char *authType,
-                               PRUint32 authFlags, nsHttpAuthIdentity &);
+                               uint32_t authFlags, nsHttpAuthIdentity &);
 
     bool     ConfirmAuth(const nsString &bundleKey, bool doYesNoPrompt);
     void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header,
                                     const char *scheme, const char *host,
-                                    PRInt32 port, const char *path,
+                                    int32_t port, const char *path,
                                     nsHttpAuthIdentity &ident);
     nsresult GetCurrentPath(nsACString &);
     /**
@@ -89,7 +89,7 @@ private:
      * with what authorization we work (WWW or proxy).
      */
     nsresult GetAuthorizationMembers(bool proxyAuth, nsCSubstring& scheme,
-                                     const char*& host, PRInt32& port,
+                                     const char*& host, int32_t& port,
                                      nsCSubstring& path,
                                      nsHttpAuthIdentity*& ident,
                                      nsISupports**& continuationState);
@@ -120,7 +120,7 @@ private:
     nsCOMPtr<nsProxyInfo>             mProxyInfo;
     nsCString                         mHost;
     nsCString                         mCanonicalizedHost;
-    PRInt32                           mPort;
+    int32_t                           mPort;
     bool                              mUsingSSL;
 
     nsISupports                      *mProxyAuthContinuationState;
@@ -145,11 +145,11 @@ private:
 
     // True when we need to authenticate to proxy, i.e. when we get 407
     // response. Used in OnAuthAvailable and OnAuthCancelled callbacks.
-    PRUint32                          mProxyAuth                : 1;
-    PRUint32                          mTriedProxyAuth           : 1;
-    PRUint32                          mTriedHostAuth            : 1;
-    PRUint32                          mSuppressDefensiveAuth    : 1;
-    PRUint32                          mResolvedHost             : 1;
+    uint32_t                          mProxyAuth                : 1;
+    uint32_t                          mTriedProxyAuth           : 1;
+    uint32_t                          mTriedHostAuth            : 1;
+    uint32_t                          mSuppressDefensiveAuth    : 1;
+    uint32_t                          mResolvedHost             : 1;
 
     // define a separate threadsafe class for use with the DNS callback
     class DNSCallback MOZ_FINAL : public nsIDNSListener

@@ -91,7 +91,7 @@ td {
   width: 30%;
 }
 
-body[dir="rtl"] > #reset-box {
+#reset-box:dir(rtl) {
   float: left;
 }
 

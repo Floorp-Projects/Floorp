@@ -48,8 +48,8 @@ private:
         void* mClosure;
     };
     static NS_METHOD ReadSegCb(nsIInputStream* aIn, void* aClosure,
-                               const char* aFromRawSegment, PRUint32 aToOffset,
-                               PRUint32 aCount, PRUint32 *aWriteCount);
+                               const char* aFromRawSegment, uint32_t aToOffset,
+                               uint32_t aCount, uint32_t *aWriteCount);
 
     nsCString mHeaders;
     nsCOMPtr<nsIStringInputStream> mHeaderStream;
@@ -170,7 +170,7 @@ void nsMIMEInputStream::InitStreams()
 
     // We'll use the content-length stream to add the final \r\n
     if (mAddContentLength) {
-        PRUint64 cl = 0;
+        uint64_t cl = 0;
         if (mData) {
             mData->Available(&cl);
         }
@@ -194,7 +194,7 @@ if (!mStartedReading) {     \
 
 // Reset mStartedReading when Seek-ing to start
 NS_IMETHODIMP
-nsMIMEInputStream::Seek(PRInt32 whence, PRInt64 offset)
+nsMIMEInputStream::Seek(int32_t whence, int64_t offset)
 {
     nsresult rv;
     nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(mStream);
@@ -213,8 +213,8 @@ nsMIMEInputStream::Seek(PRInt32 whence, PRInt64 offset)
 
 // Proxy ReadSegments since we need to be a good little nsIInputStream
 NS_IMETHODIMP nsMIMEInputStream::ReadSegments(nsWriteSegmentFun aWriter,
-                                              void *aClosure, PRUint32 aCount,
-                                              PRUint32 *_retval)
+                                              void *aClosure, uint32_t aCount,
+                                              uint32_t *_retval)
 {
     INITSTREAMS;
     ReadSegmentsState state;
@@ -227,8 +227,8 @@ NS_IMETHODIMP nsMIMEInputStream::ReadSegments(nsWriteSegmentFun aWriter,
 NS_METHOD
 nsMIMEInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
                              const char* aFromRawSegment,
-                             PRUint32 aToOffset, PRUint32 aCount,
-                             PRUint32 *aWriteCount)
+                             uint32_t aToOffset, uint32_t aCount,
+                             uint32_t *aWriteCount)
 {
     ReadSegmentsState* state = (ReadSegmentsState*)aClosure;
     return  (state->mWriter)(state->mThisStream,
@@ -245,12 +245,12 @@ nsMIMEInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
 
 // nsIInputStream
 NS_IMETHODIMP nsMIMEInputStream::Close(void) { INITSTREAMS; return mStream->Close(); }
-NS_IMETHODIMP nsMIMEInputStream::Available(PRUint64 *_retval) { INITSTREAMS; return mStream->Available(_retval); }
-NS_IMETHODIMP nsMIMEInputStream::Read(char * buf, PRUint32 count, PRUint32 *_retval) { INITSTREAMS; return mStream->Read(buf, count, _retval); }
+NS_IMETHODIMP nsMIMEInputStream::Available(uint64_t *_retval) { INITSTREAMS; return mStream->Available(_retval); }
+NS_IMETHODIMP nsMIMEInputStream::Read(char * buf, uint32_t count, uint32_t *_retval) { INITSTREAMS; return mStream->Read(buf, count, _retval); }
 NS_IMETHODIMP nsMIMEInputStream::IsNonBlocking(bool *aNonBlocking) { INITSTREAMS; return mStream->IsNonBlocking(aNonBlocking); }
 
 // nsISeekableStream
-NS_IMETHODIMP nsMIMEInputStream::Tell(PRInt64 *_retval)
+NS_IMETHODIMP nsMIMEInputStream::Tell(int64_t *_retval)
 {
     INITSTREAMS;
     nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(mStream);

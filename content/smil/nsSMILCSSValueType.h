@@ -42,7 +42,7 @@ protected:
                            const nsSMILValue& aRight) const MOZ_OVERRIDE;
   virtual nsresult Add(nsSMILValue& aDest,
                        const nsSMILValue& aValueToAdd,
-                       PRUint32 aCount) const MOZ_OVERRIDE;
+                       uint32_t aCount) const MOZ_OVERRIDE;
   virtual nsresult ComputeDistance(const nsSMILValue& aFrom,
                                    const nsSMILValue& aTo,
                                    double& aDistance) const MOZ_OVERRIDE;

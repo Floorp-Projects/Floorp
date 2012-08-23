@@ -80,9 +80,9 @@ void OOPInit();
 // path in |dump|.  The caller owns the last reference to |dump| if it
 // is non-NULL. The sequence parameter will be filled with an ordinal
 // indicating which remote process crashed first.
-bool TakeMinidumpForChild(PRUint32 childPid,
+bool TakeMinidumpForChild(uint32_t childPid,
                           nsIFile** dump,
-                          PRUint32* aSequence = NULL);
+                          uint32_t* aSequence = NULL);
 
 #if defined(XP_WIN)
 typedef HANDLE ProcessHandle;
@@ -179,13 +179,13 @@ void AddLibraryMapping(const char* library_name,
                        size_t      mapping_length,
                        size_t      file_offset);
 
-void AddLibraryMappingForChild(PRUint32    childPid,
+void AddLibraryMappingForChild(uint32_t    childPid,
                                const char* library_name,
                                const char* file_id,
                                uintptr_t   start_address,
                                size_t      mapping_length,
                                size_t      file_offset);
-void RemoveLibraryMappingsForChild(PRUint32 childPid);
+void RemoveLibraryMappingsForChild(uint32_t childPid);
 #endif
 }
 

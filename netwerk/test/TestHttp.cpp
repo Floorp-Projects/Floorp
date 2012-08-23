@@ -55,16 +55,16 @@ MyListener::OnStopRequest(nsIRequest *req, nsISupports *ctxt, nsresult status)
 NS_IMETHODIMP
 MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctxt,
                             nsIInputStream *stream,
-                            PRUint32 offset, PRUint32 count)
+                            uint32_t offset, uint32_t count)
 {
     printf(">>> OnDataAvailable [count=%u]\n", count);
 
     char buf[256];
     nsresult rv;
-    PRUint32 bytesRead=0;
+    uint32_t bytesRead=0;
 
     while (count) {
-        PRUint32 amount = NS_MIN<PRUint32>(count, sizeof(buf));
+        uint32_t amount = NS_MIN<uint32_t>(count, sizeof(buf));
 
         rv = stream->Read(buf, amount, &bytesRead);
         if (NS_FAILED(rv)) {
@@ -115,7 +115,7 @@ MyNotifications::OnStatus(nsIRequest *req, nsISupports *ctx,
 
 NS_IMETHODIMP
 MyNotifications::OnProgress(nsIRequest *req, nsISupports *ctx,
-                            PRUint64 progress, PRUint64 progressMax)
+                            uint64_t progress, uint64_t progressMax)
 {
     printf("progress: %llu/%llu\n", progress, progressMax);
     return NS_OK;

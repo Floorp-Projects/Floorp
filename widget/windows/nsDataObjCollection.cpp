@@ -123,7 +123,7 @@ STDMETHODIMP nsDataObjCollection::QueryGetData(LPFORMATETC pFE)
     return S_OK;
   }
 
-  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+  for (uint32_t i = 0; i < mDataObjects.Length(); ++i) {
     IDataObject * dataObj = mDataObjects.ElementAt(i);
     if (S_OK == dataObj->QueryGetData(pFE)) {
       return S_OK;
@@ -232,14 +232,14 @@ HRESULT nsDataObjCollection::GetFile(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   HGLOBAL hGlobalMemory;
   HRESULT hr;
   // Make enough space for the header and the trailing null
-  PRUint32 buffersize = sizeof(DROPFILES) + sizeof(PRUnichar);
-  PRUint32 alloclen = 0;
+  uint32_t buffersize = sizeof(DROPFILES) + sizeof(PRUnichar);
+  uint32_t alloclen = 0;
   PRUnichar* realbuffer;
   nsAutoString filename;
   
   hGlobalMemory = GlobalAlloc(GHND, buffersize);
 
-  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+  for (uint32_t i = 0; i < mDataObjects.Length(); ++i) {
     nsDataObj* dataObj = mDataObjects.ElementAt(i);
     hr = dataObj->GetData(&fe, &workingmedium);
     if (hr != S_OK) {
@@ -296,14 +296,14 @@ HRESULT nsDataObjCollection::GetText(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   FORMATETC fe = *pFE;
   HGLOBAL hGlobalMemory;
   HRESULT hr;
-  PRUint32 buffersize = 1;
-  PRUint32 alloclen = 0;
+  uint32_t buffersize = 1;
+  uint32_t alloclen = 0;
 
   hGlobalMemory = GlobalAlloc(GHND, buffersize);
 
   if (pFE->cfFormat == CF_TEXT) {
     nsCAutoString text;
-    for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+    for (uint32_t i = 0; i < mDataObjects.Length(); ++i) {
       nsDataObj* dataObj = mDataObjects.ElementAt(i);
       hr = dataObj->GetData(&fe, &workingmedium);
       if (hr != S_OK) {
@@ -343,7 +343,7 @@ HRESULT nsDataObjCollection::GetText(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   if (pFE->cfFormat == CF_UNICODETEXT) {
     buffersize = sizeof(PRUnichar);
     nsAutoString text;
-    for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+    for (uint32_t i = 0; i < mDataObjects.Length(); ++i) {
       nsDataObj* dataObj = mDataObjects.ElementAt(i);
       hr = dataObj->GetData(&fe, &workingmedium);
       if (hr != S_OK) {
@@ -391,12 +391,12 @@ HRESULT nsDataObjCollection::GetFileDescriptors(LPFORMATETC pFE,
   FORMATETC fe = *pFE;
   HGLOBAL hGlobalMemory;
   HRESULT hr;
-  PRUint32 buffersize = sizeof(FILEGROUPDESCRIPTOR);
-  PRUint32 alloclen = sizeof(FILEDESCRIPTOR);
+  uint32_t buffersize = sizeof(FILEGROUPDESCRIPTOR);
+  uint32_t alloclen = sizeof(FILEDESCRIPTOR);
 
   hGlobalMemory = GlobalAlloc(GHND, buffersize);
 
-  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+  for (uint32_t i = 0; i < mDataObjects.Length(); ++i) {
     nsDataObj* dataObj = mDataObjects.ElementAt(i);
     hr = dataObj->GetData(&fe, &workingmedium);
     if (hr != S_OK) {
@@ -442,7 +442,7 @@ HRESULT nsDataObjCollection::GetFileContents(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 
   // The key for this data type is to figure out which data object the index
   // corresponds to and then just pass it along
-  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+  for (uint32_t i = 0; i < mDataObjects.Length(); ++i) {
     nsDataObj* dataObj = mDataObjects.ElementAt(i);
     if (dataObj->QueryGetData(&fEtc) != S_OK)
       continue;
@@ -458,7 +458,7 @@ HRESULT nsDataObjCollection::GetFirstSupporting(LPFORMATETC pFE,
 {
   // There is no way to pass more than one of this, so just find the first data
   // object that supports it and pass it along
-  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+  for (uint32_t i = 0; i < mDataObjects.Length(); ++i) {
     if (mDataObjects.ElementAt(i)->QueryGetData(pFE) == S_OK)
       return mDataObjects.ElementAt(i)->GetData(pFE, pSTM);
   }

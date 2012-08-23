@@ -40,7 +40,7 @@ nsresult NS_GetJSRuntime(nsIScriptRuntime** aLanguage);
 nsresult NS_GetScriptRuntime(const nsAString &aLanguageName,
                              nsIScriptRuntime **aRuntime);
 
-nsresult NS_GetScriptRuntimeByID(PRUint32 aLanguageID,
+nsresult NS_GetScriptRuntimeByID(uint32_t aLanguageID,
                                  nsIScriptRuntime **aRuntime);
 
 #endif // nsIScriptRuntime_h__

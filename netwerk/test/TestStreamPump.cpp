@@ -54,7 +54,7 @@ public:
 
     NS_IMETHOD OnDataAvailable(nsIRequest *req, nsISupports *ctx,
                                nsIInputStream *stream,
-                               PRUint32 offset, PRUint32 count)
+                               uint32_t offset, uint32_t count)
     {
         LOG(("MyListener::OnDataAvailable [offset=%u count=%u]\n", offset, count));
 
@@ -62,7 +62,7 @@ public:
         nsresult rv;
 
         while (count) {
-            PRUint32 n, amt = NS_MIN<PRUint32>(count, sizeof(buf));
+            uint32_t n, amt = NS_MIN<uint32_t>(count, sizeof(buf));
 
             rv = stream->Read(buf, amt, &n);
             if (NS_FAILED(rv)) {
@@ -98,7 +98,7 @@ NS_IMPL_ISUPPORTS2(MyListener,
  * asynchronously copy file.
  */
 static nsresult
-RunTest(nsIFile *file, PRInt64 offset, PRInt64 length)
+RunTest(nsIFile *file, int64_t offset, int64_t length)
 {
     nsresult rv;
 
@@ -134,7 +134,7 @@ main(int argc, char* argv[])
         return -1;
     }
     char* fileName = argv[1];
-    PRInt64 offset, length;
+    int64_t offset, length;
     int err = PR_sscanf(argv[2], "%lld", &offset);
     if (err == -1) {
       printf("Start offset must be an integer!\n");

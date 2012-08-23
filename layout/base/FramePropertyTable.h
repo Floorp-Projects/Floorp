@@ -57,7 +57,7 @@ struct FramePropertyDescriptor {
  * 
  * Property values are passed as void* but do not actually have to be
  * valid pointers. You can use NS_INT32_TO_PTR/NS_PTR_TO_INT32 to
- * store PRInt32 values. Null/zero values can be stored and retrieved.
+ * store int32_t values. Null/zero values can be stored and retrieved.
  * Of course, the destructor function (if any) must handle such values
  * correctly.
  */

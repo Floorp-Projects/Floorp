@@ -15,7 +15,7 @@ nsICharsetConverterManager* OS2Uni::gCharsetManager = nullptr;
 
 struct ConverterInfo
 {
-  PRUint16            mCodePage;
+  uint16_t            mCodePage;
   const char*         mConvName;
   nsIUnicodeEncoder*  mEncoder;
   nsIUnicodeDecoder*  mDecoder;
@@ -105,8 +105,8 @@ void OS2Uni::FreeUconvObjects()
  **********************************************************/
 nsresult
 WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
-                    PRInt32 aSrcLength, nsAutoCharBuffer& aResult,
-                    PRInt32& aResultLength)
+                    int32_t aSrcLength, nsAutoCharBuffer& aResult,
+                    int32_t& aResultLength)
 {
   nsresult rv;
   nsISupports* sup = OS2Uni::GetUconvObject(aCodePage, eConv_Encoder);
@@ -129,8 +129,8 @@ WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
  **********************************************************/
 nsresult
 MultiByteToWideChar(int aCodePage, const char* aSrc,
-                    PRInt32 aSrcLength, nsAutoChar16Buffer& aResult,
-                    PRInt32& aResultLength)
+                    int32_t aSrcLength, nsAutoChar16Buffer& aResult,
+                    int32_t& aResultLength)
 {
   nsresult rv;
   nsISupports* sup = OS2Uni::GetUconvObject(aCodePage, eConv_Decoder);

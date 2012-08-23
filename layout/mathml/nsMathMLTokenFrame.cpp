@@ -88,8 +88,8 @@ nsMathMLTokenFrame::GetMathMLFrameType()
 static void
 CompressWhitespace(nsIContent* aContent)
 {
-  PRUint32 numKids = aContent->GetChildCount();
-  for (PRUint32 kid = 0; kid < numKids; kid++) {
+  uint32_t numKids = aContent->GetChildCount();
+  for (uint32_t kid = 0; kid < numKids; kid++) {
     nsIContent* cont = aContent->GetChildAt(kid);
     if (cont && cont->IsNodeOfType(nsINode::eTEXT)) {
       nsAutoString text;
@@ -233,9 +233,9 @@ nsMathMLTokenFrame::MarkIntrinsicWidthsDirty()
 }
 
 NS_IMETHODIMP
-nsMathMLTokenFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsMathMLTokenFrame::AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
-                                     PRInt32         aModType)
+                                     int32_t         aModType)
 {
   if (nsGkAtoms::lquote_ == aAttribute ||
       nsGkAtoms::rquote_ == aAttribute) {
@@ -297,7 +297,7 @@ nsMathMLTokenFrame::SetTextStyle()
   // Get the text content that we enclose and its length
   nsAutoString data;
   nsContentUtils::GetNodeTextContent(mContent, false, data);
-  PRInt32 length = data.Length();
+  int32_t length = data.Length();
   if (!length)
     return false;
 

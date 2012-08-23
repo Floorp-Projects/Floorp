@@ -19,9 +19,9 @@ public:
     virtual ~DocumentRendererNativeIDParent();
 
     void SetCanvas(nsICanvasRenderingContextInternal* aCanvas);
-    virtual bool Recv__delete__(const PRInt32& x, const PRInt32& y,
-                                const PRInt32& w, const PRInt32& h,
-                                const PRUint32& nativeID);
+    virtual bool Recv__delete__(const int32_t& x, const int32_t& y,
+                                const int32_t& w, const int32_t& h,
+                                const uint32_t& nativeID);
 
 private:
     nsCOMPtr<nsICanvasRenderingContextInternal> mCanvas;

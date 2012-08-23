@@ -39,10 +39,10 @@ public:
 private:
     ~nsInputStreamTee() {}
 
-    nsresult TeeSegment(const char *buf, PRUint32 count);
+    nsresult TeeSegment(const char *buf, uint32_t count);
     
     static NS_METHOD WriteSegmentFun(nsIInputStream *, void *, const char *,
-                                     PRUint32, PRUint32, PRUint32 *);
+                                     uint32_t, uint32_t, uint32_t *);
 
 private:
     nsCOMPtr<nsIInputStream>  mSource;
@@ -57,7 +57,7 @@ private:
 class nsInputStreamTeeWriteEvent : public nsRunnable {
 public:
     // aTee's lock is held across construction of this object
-    nsInputStreamTeeWriteEvent(const char *aBuf, PRUint32 aCount,
+    nsInputStreamTeeWriteEvent(const char *aBuf, uint32_t aCount,
                                nsIOutputStream  *aSink, 
                                nsInputStreamTee *aTee)
     {
@@ -91,10 +91,10 @@ public:
              "will write %u bytes to %p\n",
               this, mCount, mSink.get()));
 
-        PRUint32 totalBytesWritten = 0;
+        uint32_t totalBytesWritten = 0;
         while (mCount) {
             nsresult rv;
-            PRUint32 bytesWritten = 0;
+            uint32_t bytesWritten = 0;
             rv = mSink->Write(mBuf + totalBytesWritten, mCount, &bytesWritten);
             if (NS_FAILED(rv)) {
                 LOG(("nsInputStreamTeeWriteEvent::Run[%p] error %x in writing",
@@ -118,7 +118,7 @@ protected:
     
 private:
     char *mBuf;
-    PRUint32 mCount;
+    uint32_t mCount;
     nsCOMPtr<nsIOutputStream> mSink;
     // back pointer to the tee that created this runnable
     nsRefPtr<nsInputStreamTee> mTee;
@@ -144,7 +144,7 @@ nsInputStreamTee::InvalidateSink()
 }
 
 nsresult
-nsInputStreamTee::TeeSegment(const char *buf, PRUint32 count)
+nsInputStreamTee::TeeSegment(const char *buf, uint32_t count)
 {
     if (!mSink) return NS_OK; // nothing to do
     if (mLock) { // asynchronous case
@@ -161,9 +161,9 @@ nsInputStreamTee::TeeSegment(const char *buf, PRUint32 count)
     } else { // synchronous case
         NS_ASSERTION(!mEventTarget, "mEventTarget is not null, mLock is null.");
         nsresult rv;
-        PRUint32 totalBytesWritten = 0;
+        uint32_t totalBytesWritten = 0;
         while (count) {
-            PRUint32 bytesWritten = 0;
+            uint32_t bytesWritten = 0;
             rv = mSink->Write(buf + totalBytesWritten, count, &bytesWritten);
             if (NS_FAILED(rv)) {
                 // ok, this is not a fatal error... just drop our reference to mSink
@@ -184,7 +184,7 @@ nsInputStreamTee::TeeSegment(const char *buf, PRUint32 count)
 
 NS_METHOD
 nsInputStreamTee::WriteSegmentFun(nsIInputStream *in, void *closure, const char *fromSegment,
-                                  PRUint32 offset, PRUint32 count, PRUint32 *writeCount)
+                                  uint32_t offset, uint32_t count, uint32_t *writeCount)
 {
     nsInputStreamTee *tee = reinterpret_cast<nsInputStreamTee *>(closure);
 
@@ -212,14 +212,14 @@ nsInputStreamTee::Close()
 }
 
 NS_IMETHODIMP
-nsInputStreamTee::Available(PRUint64 *avail)
+nsInputStreamTee::Available(uint64_t *avail)
 {
     NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
     return mSource->Available(avail);
 }
 
 NS_IMETHODIMP
-nsInputStreamTee::Read(char *buf, PRUint32 count, PRUint32 *bytesRead)
+nsInputStreamTee::Read(char *buf, uint32_t count, uint32_t *bytesRead)
 {
     NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
 
@@ -233,8 +233,8 @@ nsInputStreamTee::Read(char *buf, PRUint32 count, PRUint32 *bytesRead)
 NS_IMETHODIMP
 nsInputStreamTee::ReadSegments(nsWriteSegmentFun writer, 
                                void *closure,
-                               PRUint32 count,
-                               PRUint32 *bytesRead)
+                               uint32_t count,
+                               uint32_t *bytesRead)
 {
     NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
 

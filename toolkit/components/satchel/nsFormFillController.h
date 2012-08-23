@@ -61,11 +61,11 @@ protected:
   void StopControllingInput();
 
   void RevalidateDataList();
-  bool RowMatch(nsFormHistory *aHistory, PRUint32 aIndex, const nsAString &aInputName, const nsAString &aInputValue);
+  bool RowMatch(nsFormHistory *aHistory, uint32_t aIndex, const nsAString &aInputName, const nsAString &aInputValue);
 
   inline nsIDocShell *GetDocShellForInput(nsIDOMHTMLInputElement *aInput);
   inline nsIDOMWindow *GetWindowForDocShell(nsIDocShell *aDocShell);
-  inline PRInt32 GetIndexOfDocShell(nsIDocShell *aDocShell);
+  inline int32_t GetIndexOfDocShell(nsIDocShell *aDocShell);
 
   void MaybeRemoveMutationObserver(nsINode* aNode);
 
@@ -92,9 +92,9 @@ protected:
 
   nsDataHashtable<nsPtrHashKey<const nsINode>, bool> mPwmgrInputs;
 
-  PRUint32 mTimeout;
-  PRUint32 mMinResultsForPopup;
-  PRUint32 mMaxRows;
+  uint32_t mTimeout;
+  uint32_t mMinResultsForPopup;
+  uint32_t mMaxRows;
   bool mDisableAutoComplete;
   bool mCompleteDefaultIndex;
   bool mCompleteSelectedIndex;

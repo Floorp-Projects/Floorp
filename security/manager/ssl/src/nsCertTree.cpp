@@ -41,8 +41,8 @@ static NS_DEFINE_CID(kCertOverrideCID, NS_CERTOVERRIDE_CID);
 struct treeArrayElStr {
   nsString   orgName;     /* heading for thread                   */
   bool       open;        /* toggle open state for thread         */
-  PRInt32    certIndex;   /* index into cert array for 1st cert   */
-  PRInt32    numChildren; /* number of chidren (certs) for thread */
+  int32_t    certIndex;   /* index into cert array for 1st cert   */
+  int32_t    numChildren; /* number of chidren (certs) for thread */
 };
 
 CompareCacheHashEntryPtr::CompareCacheHashEntryPtr()
@@ -223,10 +223,10 @@ void nsCertTree::RemoveCacheEntry(void *key)
 //
 // Count the number of different organizations encountered in the cert
 // list.
-PRInt32
+int32_t
 nsCertTree::CountOrganizations()
 {
-  PRUint32 i, certCount;
+  uint32_t i, certCount;
   certCount = mDispInfo.Length();
   if (certCount == 0) return 0;
   nsCOMPtr<nsIX509Cert> orgCert = nullptr;
@@ -235,7 +235,7 @@ nsCertTree::CountOrganizations()
     orgCert = addonInfo->mCert;
   }
   nsCOMPtr<nsIX509Cert> nextCert = nullptr;
-  PRInt32 orgCount = 1;
+  int32_t orgCount = 1;
   for (i=1; i<certCount; i++) {
     nextCert = nullptr;
     addonInfo = mDispInfo.SafeElementAt(i, NULL)->mAddonInfo;
@@ -256,7 +256,7 @@ nsCertTree::CountOrganizations()
 // If the row at index is an organization thread, return the collection
 // associated with that thread.  Otherwise, return null.
 treeArrayEl *
-nsCertTree::GetThreadDescAtIndex(PRInt32 index)
+nsCertTree::GetThreadDescAtIndex(int32_t index)
 {
   int i, idx=0;
   if (index < 0) return nullptr;
@@ -277,7 +277,7 @@ nsCertTree::GetThreadDescAtIndex(PRInt32 index)
 //
 //  If the row at index is a cert, return that cert.  Otherwise, return null.
 already_AddRefed<nsIX509Cert>
-nsCertTree::GetCertAtIndex(PRInt32 index, PRInt32 *outAbsoluteCertOffset)
+nsCertTree::GetCertAtIndex(int32_t index, int32_t *outAbsoluteCertOffset)
 {
   nsRefPtr<nsCertTreeDispInfo> certdi =
     GetDispInfoAtIndex(index, outAbsoluteCertOffset);
@@ -296,8 +296,8 @@ nsCertTree::GetCertAtIndex(PRInt32 index, PRInt32 *outAbsoluteCertOffset)
 
 //  If the row at index is a cert, return that cert.  Otherwise, return null.
 already_AddRefed<nsCertTreeDispInfo>
-nsCertTree::GetDispInfoAtIndex(PRInt32 index, 
-                               PRInt32 *outAbsoluteCertOffset)
+nsCertTree::GetDispInfoAtIndex(int32_t index, 
+                               int32_t *outAbsoluteCertOffset)
 {
   int i, idx = 0, cIndex = 0, nc;
   if (index < 0) return nullptr;
@@ -307,7 +307,7 @@ nsCertTree::GetDispInfoAtIndex(PRInt32 index,
     idx++; // get past the thread
     nc = (mTreeArray[i].open) ? mTreeArray[i].numChildren : 0;
     if (index < idx + nc) { // cert is within range of this thread
-      PRInt32 certIndex = cIndex + index - idx;
+      int32_t certIndex = cIndex + index - idx;
       if (outAbsoluteCertOffset)
         *outAbsoluteCertOffset = certIndex;
       nsRefPtr<nsCertTreeDispInfo> certdi = mDispInfo.SafeElementAt(certIndex, NULL);
@@ -327,7 +327,7 @@ nsCertTree::GetDispInfoAtIndex(PRInt32 index,
 }
 
 nsCertTree::nsCertCompareFunc
-nsCertTree::GetCompareFuncFromCertType(PRUint32 aType)
+nsCertTree::GetCompareFuncFromCertType(uint32_t aType)
 {
   switch (aType) {
     case nsIX509Cert2::ANY_CERT:
@@ -451,7 +451,7 @@ AddRemaningHostPortOverridesCallback(const nsCertOverride &aSettings,
 
 nsresult
 nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
-                                       PRUint32 aWantedType,
+                                       uint32_t aWantedType,
                                        nsCertCompareFunc  aCertCmpFn,
                                        void *aCertCmpFnArg)
 {
@@ -484,7 +484,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
     bool addOverrides = false;
 
     if (!wantThisCert) {
-      PRUint32 thisCertType = getCertType(node->cert);
+      uint32_t thisCertType = getCertType(node->cert);
 
       // The output from getCertType is a "guess", which can be wrong.
       // The guess is based on stored trust flags, but for the host:port
@@ -554,7 +554,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
       return NS_ERROR_OUT_OF_MEMORY;
 
     if (wantThisCertIfNoOverrides || wantThisCertIfHaveOverrides) {
-      PRUint32 ocount = 0;
+      uint32_t ocount = 0;
       nsresult rv = 
         mOverrideService->IsCertUsedForOverrides(pipCert, 
                                                  true, // we want temporaries
@@ -638,7 +638,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
 }
 
 nsresult 
-nsCertTree::GetCertsByType(PRUint32           aType,
+nsCertTree::GetCertsByType(uint32_t           aType,
                            nsCertCompareFunc  aCertCmpFn,
                            void              *aCertCmpFnArg)
 {
@@ -654,7 +654,7 @@ nsCertTree::GetCertsByType(PRUint32           aType,
 
 nsresult 
 nsCertTree::GetCertsByTypeFromCache(nsINSSCertCache   *aCache,
-                                    PRUint32           aType,
+                                    uint32_t           aType,
                                     nsCertCompareFunc  aCertCmpFn,
                                     void              *aCertCmpFnArg)
 {
@@ -670,7 +670,7 @@ nsCertTree::GetCertsByTypeFromCache(nsINSSCertCache   *aCache,
 // Load all of the certificates in the DB for this type.  Sort them
 // by token, organization, then common name.
 NS_IMETHODIMP 
-nsCertTree::LoadCertsFromCache(nsINSSCertCache *aCache, PRUint32 aType)
+nsCertTree::LoadCertsFromCache(nsINSSCertCache *aCache, uint32_t aType)
 {
   if (mTreeArray) {
     FreeCertArray();
@@ -688,7 +688,7 @@ nsCertTree::LoadCertsFromCache(nsINSSCertCache *aCache, PRUint32 aType)
 }
 
 NS_IMETHODIMP 
-nsCertTree::LoadCerts(PRUint32 aType)
+nsCertTree::LoadCerts(uint32_t aType)
 {
   if (mTreeArray) {
     FreeCertArray();
@@ -708,7 +708,7 @@ nsCertTree::LoadCerts(PRUint32 aType)
 nsresult
 nsCertTree::UpdateUIContents()
 {
-  PRUint32 count = mDispInfo.Length();
+  uint32_t count = mDispInfo.Length();
   mNumOrgs = CountOrganizations();
   mTreeArray = new treeArrayEl[mNumOrgs];
   if (!mTreeArray)
@@ -717,13 +717,13 @@ nsCertTree::UpdateUIContents()
   mCellText = do_CreateInstance(NS_ARRAY_CONTRACTID);
 
 if (count) {
-  PRUint32 j = 0;
+  uint32_t j = 0;
   nsCOMPtr<nsIX509Cert> orgCert = nullptr;
   nsCertAddonInfo *addonInfo = mDispInfo.ElementAt(j)->mAddonInfo;
   if (addonInfo) {
     orgCert = addonInfo->mCert;
   }
-  for (PRInt32 i=0; i<mNumOrgs; i++) {
+  for (int32_t i=0; i<mNumOrgs; i++) {
     nsString &orgNameRef = mTreeArray[i].orgName;
     if (!orgCert) {
       mNSSComponent->GetPIPNSSBundleString("CertOrgUnknown", orgNameRef);
@@ -765,7 +765,7 @@ if (count) {
 }
 
 NS_IMETHODIMP 
-nsCertTree::DeleteEntryObject(PRUint32 index)
+nsCertTree::DeleteEntryObject(uint32_t index)
 {
   if (!mTreeArray) {
     return NS_ERROR_FAILURE;
@@ -778,7 +778,7 @@ nsCertTree::DeleteEntryObject(PRUint32 index)
   }
 
   int i;
-  PRUint32 idx = 0, cIndex = 0, nc;
+  uint32_t idx = 0, cIndex = 0, nc;
   // Loop over the threads
   for (i=0; i<mNumOrgs; i++) {
     if (index == idx)
@@ -786,7 +786,7 @@ nsCertTree::DeleteEntryObject(PRUint32 index)
     idx++; // get past the thread
     nc = (mTreeArray[i].open) ? mTreeArray[i].numChildren : 0;
     if (index < idx + nc) { // cert is within range of this thread
-      PRInt32 certIndex = cIndex + index - idx;
+      int32_t certIndex = cIndex + index - idx;
 
       bool canRemoveEntry = false;
       nsRefPtr<nsCertTreeDispInfo> certdi = mDispInfo.SafeElementAt(certIndex, NULL);
@@ -870,7 +870,7 @@ nsCertTree::DeleteEntryObject(PRUint32 index)
 
 /* nsIX509Cert getCert(in unsigned long index); */
 NS_IMETHODIMP
-nsCertTree::GetCert(PRUint32 aIndex, nsIX509Cert **_cert)
+nsCertTree::GetCert(uint32_t aIndex, nsIX509Cert **_cert)
 {
   NS_ENSURE_ARG(_cert);
   *_cert = GetCertAtIndex(aIndex).get();
@@ -878,7 +878,7 @@ nsCertTree::GetCert(PRUint32 aIndex, nsIX509Cert **_cert)
 }
 
 NS_IMETHODIMP
-nsCertTree::GetTreeItem(PRUint32 aIndex, nsICertTreeItem **_treeitem)
+nsCertTree::GetTreeItem(uint32_t aIndex, nsICertTreeItem **_treeitem)
 {
   NS_ENSURE_ARG(_treeitem);
 
@@ -893,7 +893,7 @@ nsCertTree::GetTreeItem(PRUint32 aIndex, nsICertTreeItem **_treeitem)
 }
 
 NS_IMETHODIMP
-nsCertTree::IsHostPortOverride(PRUint32 aIndex, bool *_retval)
+nsCertTree::IsHostPortOverride(uint32_t aIndex, bool *_retval)
 {
   NS_ENSURE_ARG(_retval);
 
@@ -908,12 +908,12 @@ nsCertTree::IsHostPortOverride(PRUint32 aIndex, bool *_retval)
 
 /* readonly attribute long rowCount; */
 NS_IMETHODIMP 
-nsCertTree::GetRowCount(PRInt32 *aRowCount)
+nsCertTree::GetRowCount(int32_t *aRowCount)
 {
   if (!mTreeArray)
     return NS_ERROR_NOT_INITIALIZED;
-  PRUint32 count = 0;
-  for (PRInt32 i=0; i<mNumOrgs; i++) {
+  uint32_t count = 0;
+  for (int32_t i=0; i<mNumOrgs; i++) {
     if (mTreeArray[i].open) {
       count += mTreeArray[i].numChildren;
     }
@@ -941,7 +941,7 @@ nsCertTree::SetSelection(nsITreeSelection * aSelection)
 
 /* void getRowProperties (in long index, in nsISupportsArray properties); */
 NS_IMETHODIMP 
-nsCertTree::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
+nsCertTree::GetRowProperties(int32_t index, nsISupportsArray *properties)
 {
   return NS_OK;
 }
@@ -950,7 +950,7 @@ nsCertTree::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
  *                         in nsISupportsArray properties); 
  */
 NS_IMETHODIMP 
-nsCertTree::GetCellProperties(PRInt32 row, nsITreeColumn* col, 
+nsCertTree::GetCellProperties(int32_t row, nsITreeColumn* col, 
                               nsISupportsArray* properties)
 {
   return NS_OK;
@@ -968,7 +968,7 @@ nsCertTree::GetColumnProperties(nsITreeColumn* col,
 
 /* boolean isContainer (in long index); */
 NS_IMETHODIMP 
-nsCertTree::IsContainer(PRInt32 index, bool *_retval)
+nsCertTree::IsContainer(int32_t index, bool *_retval)
 {
   if (!mTreeArray)
     return NS_ERROR_NOT_INITIALIZED;
@@ -983,7 +983,7 @@ nsCertTree::IsContainer(PRInt32 index, bool *_retval)
 
 /* boolean isContainerOpen (in long index); */
 NS_IMETHODIMP 
-nsCertTree::IsContainerOpen(PRInt32 index, bool *_retval)
+nsCertTree::IsContainerOpen(int32_t index, bool *_retval)
 {
   if (!mTreeArray)
     return NS_ERROR_NOT_INITIALIZED;
@@ -998,7 +998,7 @@ nsCertTree::IsContainerOpen(PRInt32 index, bool *_retval)
 
 /* boolean isContainerEmpty (in long index); */
 NS_IMETHODIMP 
-nsCertTree::IsContainerEmpty(PRInt32 index, bool *_retval)
+nsCertTree::IsContainerEmpty(int32_t index, bool *_retval)
 {
   *_retval = !mTreeArray;
   return NS_OK;
@@ -1006,7 +1006,7 @@ nsCertTree::IsContainerEmpty(PRInt32 index, bool *_retval)
 
 /* boolean isSeparator (in long index); */
 NS_IMETHODIMP 
-nsCertTree::IsSeparator(PRInt32 index, bool *_retval)
+nsCertTree::IsSeparator(int32_t index, bool *_retval)
 {
   *_retval = false;
   return NS_OK;
@@ -1014,7 +1014,7 @@ nsCertTree::IsSeparator(PRInt32 index, bool *_retval)
 
 /* long getParentIndex (in long rowIndex); */
 NS_IMETHODIMP 
-nsCertTree::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
+nsCertTree::GetParentIndex(int32_t rowIndex, int32_t *_retval)
 {
   if (!mTreeArray)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1034,7 +1034,7 @@ nsCertTree::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 
 /* boolean hasNextSibling (in long rowIndex, in long afterIndex); */
 NS_IMETHODIMP 
-nsCertTree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
+nsCertTree::HasNextSibling(int32_t rowIndex, int32_t afterIndex, 
                                bool *_retval)
 {
   if (!mTreeArray)
@@ -1056,7 +1056,7 @@ nsCertTree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex,
 
 /* long getLevel (in long index); */
 NS_IMETHODIMP 
-nsCertTree::GetLevel(PRInt32 index, PRInt32 *_retval)
+nsCertTree::GetLevel(int32_t index, int32_t *_retval)
 {
   if (!mTreeArray)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1071,7 +1071,7 @@ nsCertTree::GetLevel(PRInt32 index, PRInt32 *_retval)
 
 /* Astring getImageSrc (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::GetImageSrc(PRInt32 row, nsITreeColumn* col, 
+nsCertTree::GetImageSrc(int32_t row, nsITreeColumn* col, 
                         nsAString& _retval)
 {
   _retval.Truncate();
@@ -1080,14 +1080,14 @@ nsCertTree::GetImageSrc(PRInt32 row, nsITreeColumn* col,
 
 /* long getProgressMode (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP
-nsCertTree::GetProgressMode(PRInt32 row, nsITreeColumn* col, PRInt32* _retval)
+nsCertTree::GetProgressMode(int32_t row, nsITreeColumn* col, int32_t* _retval)
 {
   return NS_OK;
 }
 
 /* Astring getCellValue (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::GetCellValue(PRInt32 row, nsITreeColumn* col, 
+nsCertTree::GetCellValue(int32_t row, nsITreeColumn* col, 
                          nsAString& _retval)
 {
   _retval.Truncate();
@@ -1096,7 +1096,7 @@ nsCertTree::GetCellValue(PRInt32 row, nsITreeColumn* col,
 
 /* Astring getCellText (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col, 
+nsCertTree::GetCellText(int32_t row, nsITreeColumn* col, 
                         nsAString& _retval)
 {
   if (!mTreeArray)
@@ -1117,7 +1117,7 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
     return NS_OK;
   }
 
-  PRInt32 absoluteCertOffset;
+  int32_t absoluteCertOffset;
   nsRefPtr<nsCertTreeDispInfo> certdi = 
     GetDispInfoAtIndex(row, &absoluteCertOffset);
   if (!certdi)
@@ -1128,10 +1128,10 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
     cert = certdi->mAddonInfo->mCert;
   }
 
-  PRInt32 colIndex;
+  int32_t colIndex;
   col->GetIndex(&colIndex);
-  PRUint32 arrayIndex=absoluteCertOffset+colIndex*(mNumRows-mNumOrgs);
-  PRUint32 arrayLength=0;
+  uint32_t arrayIndex=absoluteCertOffset+colIndex*(mNumRows-mNumOrgs);
+  uint32_t arrayLength=0;
   if (mCellText) {
     mCellText->GetLength(&arrayLength);
   }
@@ -1175,7 +1175,7 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
   } else if (NS_LITERAL_STRING("emailcol").Equals(colID) && cert) {
     rv = cert->GetEmailAddress(_retval);
   } else if (NS_LITERAL_STRING("purposecol").Equals(colID) && mNSSComponent && cert) {
-    PRUint32 verified;
+    uint32_t verified;
 
     nsAutoString theUsages;
     rv = cert->GetUsagesString(false, &verified, theUsages); // allow OCSP
@@ -1257,7 +1257,7 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
     rv = mNSSComponent->GetPIPNSSBundleString(stringID, _retval);
   } else if (NS_LITERAL_STRING("typecol").Equals(colID) && cert) {
     nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
-    PRUint32 type = nsIX509Cert::UNKNOWN_CERT;
+    uint32_t type = nsIX509Cert::UNKNOWN_CERT;
 
     if (pipCert) {
 	rv = pipCert->GetCertType(&type);
@@ -1303,14 +1303,14 @@ nsCertTree::SetTree(nsITreeBoxObject *tree)
 
 /* void toggleOpenState (in long index); */
 NS_IMETHODIMP 
-nsCertTree::ToggleOpenState(PRInt32 index)
+nsCertTree::ToggleOpenState(int32_t index)
 {
   if (!mTreeArray)
     return NS_ERROR_NOT_INITIALIZED;
   treeArrayEl *el = GetThreadDescAtIndex(index);
   if (el) {
     el->open = !el->open;
-    PRInt32 newChildren = (el->open) ? el->numChildren : -el->numChildren;
+    int32_t newChildren = (el->open) ? el->numChildren : -el->numChildren;
     if (mTree) mTree->RowCountChanged(index + 1, newChildren);
   }
   return NS_OK;
@@ -1332,14 +1332,14 @@ nsCertTree::SelectionChanged()
 
 /* void cycleCell (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::CycleCell(PRInt32 row, nsITreeColumn* col)
+nsCertTree::CycleCell(int32_t row, nsITreeColumn* col)
 {
   return NS_OK;
 }
 
 /* boolean isEditable (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::IsEditable(PRInt32 row, nsITreeColumn* col, bool *_retval)
+nsCertTree::IsEditable(int32_t row, nsITreeColumn* col, bool *_retval)
 {
   *_retval = false;
   return NS_OK;
@@ -1347,7 +1347,7 @@ nsCertTree::IsEditable(PRInt32 row, nsITreeColumn* col, bool *_retval)
 
 /* boolean isSelectable (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::IsSelectable(PRInt32 row, nsITreeColumn* col, bool *_retval)
+nsCertTree::IsSelectable(int32_t row, nsITreeColumn* col, bool *_retval)
 {
   *_retval = false;
   return NS_OK;
@@ -1355,7 +1355,7 @@ nsCertTree::IsSelectable(PRInt32 row, nsITreeColumn* col, bool *_retval)
 
 /* void setCellValue (in long row, in nsITreeColumn col, in AString value); */
 NS_IMETHODIMP 
-nsCertTree::SetCellValue(PRInt32 row, nsITreeColumn* col, 
+nsCertTree::SetCellValue(int32_t row, nsITreeColumn* col, 
                          const nsAString& value)
 {
   return NS_OK;
@@ -1363,7 +1363,7 @@ nsCertTree::SetCellValue(PRInt32 row, nsITreeColumn* col,
 
 /* void setCellText (in long row, in nsITreeColumn col, in AString value); */
 NS_IMETHODIMP 
-nsCertTree::SetCellText(PRInt32 row, nsITreeColumn* col, 
+nsCertTree::SetCellText(int32_t row, nsITreeColumn* col, 
                         const nsAString& value)
 {
   return NS_OK;
@@ -1378,7 +1378,7 @@ nsCertTree::PerformAction(const PRUnichar *action)
 
 /* void performActionOnRow (in wstring action, in long row); */
 NS_IMETHODIMP 
-nsCertTree::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
+nsCertTree::PerformActionOnRow(const PRUnichar *action, int32_t row)
 {
   return NS_OK;
 }
@@ -1387,7 +1387,7 @@ nsCertTree::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
  *                           in wstring colID); 
  */
 NS_IMETHODIMP 
-nsCertTree::PerformActionOnCell(const PRUnichar *action, PRInt32 row, 
+nsCertTree::PerformActionOnCell(const PRUnichar *action, int32_t row, 
                                 nsITreeColumn* col)
 {
   return NS_OK;
@@ -1424,7 +1424,7 @@ nsCertTree::dumpMap()
 //
 // CanDrop
 //
-NS_IMETHODIMP nsCertTree::CanDrop(PRInt32 index, PRInt32 orientation,
+NS_IMETHODIMP nsCertTree::CanDrop(int32_t index, int32_t orientation,
                                   nsIDOMDataTransfer* aDataTransfer, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -1437,7 +1437,7 @@ NS_IMETHODIMP nsCertTree::CanDrop(PRInt32 index, PRInt32 orientation,
 //
 // Drop
 //
-NS_IMETHODIMP nsCertTree::Drop(PRInt32 row, PRInt32 orient, nsIDOMDataTransfer* aDataTransfer)
+NS_IMETHODIMP nsCertTree::Drop(int32_t row, int32_t orient, nsIDOMDataTransfer* aDataTransfer)
 {
   return NS_OK;
 }
@@ -1458,7 +1458,7 @@ NS_IMETHODIMP nsCertTree::IsSorted(bool *_retval)
 
 void 
 nsCertTree::CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
-                             sortCriterion crit, PRInt32 level)
+                             sortCriterion crit, int32_t level)
 {
   NS_ENSURE_TRUE( (cert!=0 && entry!=0), RETURN_NOTHING );
 
@@ -1510,10 +1510,10 @@ nsCertTree::CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
   }
 }
 
-PRInt32
+int32_t
 nsCertTree::CmpByCrit(nsIX509Cert *a, CompareCacheHashEntry *ace, 
                       nsIX509Cert *b, CompareCacheHashEntry *bce, 
-                      sortCriterion crit, PRInt32 level)
+                      sortCriterion crit, int32_t level)
 {
   NS_ENSURE_TRUE( (a!=0 && ace!=0 && b!=0 && bce!=0), 0 );
 
@@ -1528,7 +1528,7 @@ nsCertTree::CmpByCrit(nsIX509Cert *a, CompareCacheHashEntry *ace,
   nsXPIDLString &str_a = ace->mCrit[level];
   nsXPIDLString &str_b = bce->mCrit[level];
 
-  PRInt32 result;
+  int32_t result;
   if (str_a && str_b)
     result = Compare(str_a, str_b, nsCaseInsensitiveStringComparator());
   else
@@ -1540,7 +1540,7 @@ nsCertTree::CmpByCrit(nsIX509Cert *a, CompareCacheHashEntry *ace,
   return result;
 }
 
-PRInt32
+int32_t
 nsCertTree::CmpBy(void *cache, nsIX509Cert *a, nsIX509Cert *b, 
                   sortCriterion c0, sortCriterion c1, sortCriterion c2)
 {
@@ -1565,7 +1565,7 @@ nsCertTree::CmpBy(void *cache, nsIX509Cert *a, nsIX509Cert *b,
   CompareCacheHashEntry *ace = getCacheEntry(cache, a);
   CompareCacheHashEntry *bce = getCacheEntry(cache, b);
 
-  PRInt32 cmp;
+  int32_t cmp;
   cmp = CmpByCrit(a, ace, b, bce, c0, 0);
   if (cmp != 0)
     return cmp;
@@ -1583,28 +1583,28 @@ nsCertTree::CmpBy(void *cache, nsIX509Cert *a, nsIX509Cert *b,
   return cmp;
 }
 
-PRInt32
+int32_t
 nsCertTree::CmpCACert(void *cache, nsIX509Cert *a, nsIX509Cert *b)
 {
   // XXX we assume issuer org is always criterion 1
   return CmpBy(cache, a, b, sort_IssuerOrg, sort_Org, sort_Token);
 }
 
-PRInt32
+int32_t
 nsCertTree::CmpWebSiteCert(void *cache, nsIX509Cert *a, nsIX509Cert *b)
 {
   // XXX we assume issuer org is always criterion 1
   return CmpBy(cache, a, b, sort_IssuerOrg, sort_CommonName, sort_None);
 }
 
-PRInt32
+int32_t
 nsCertTree::CmpUserCert(void *cache, nsIX509Cert *a, nsIX509Cert *b)
 {
   // XXX we assume issuer org is always criterion 1
   return CmpBy(cache, a, b, sort_IssuerOrg, sort_Token, sort_IssuedDateDescending);
 }
 
-PRInt32
+int32_t
 nsCertTree::CmpEmailCert(void *cache, nsIX509Cert *a, nsIX509Cert *b)
 {
   // XXX we assume issuer org is always criterion 1

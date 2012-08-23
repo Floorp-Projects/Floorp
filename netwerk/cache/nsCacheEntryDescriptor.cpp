@@ -87,7 +87,7 @@ nsCacheEntryDescriptor::GetKey(nsACString &result)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetFetchCount(PRInt32 *result)
+nsCacheEntryDescriptor::GetFetchCount(int32_t *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETFETCHCOUNT));
@@ -99,7 +99,7 @@ nsCacheEntryDescriptor::GetFetchCount(PRInt32 *result)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetLastFetched(PRUint32 *result)
+nsCacheEntryDescriptor::GetLastFetched(uint32_t *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETLASTFETCHED));
@@ -111,7 +111,7 @@ nsCacheEntryDescriptor::GetLastFetched(PRUint32 *result)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetLastModified(PRUint32 *result)
+nsCacheEntryDescriptor::GetLastModified(uint32_t *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETLASTMODIFIED));
@@ -123,7 +123,7 @@ nsCacheEntryDescriptor::GetLastModified(PRUint32 *result)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetExpirationTime(PRUint32 *result)
+nsCacheEntryDescriptor::GetExpirationTime(uint32_t *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETEXPIRATIONTIME));
@@ -135,7 +135,7 @@ nsCacheEntryDescriptor::GetExpirationTime(PRUint32 *result)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::SetExpirationTime(PRUint32 expirationTime)
+nsCacheEntryDescriptor::SetExpirationTime(uint32_t expirationTime)
 {
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETEXPIRATIONTIME));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
@@ -156,7 +156,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::IsStreamBased(bool *result)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryDescriptor::GetPredictedDataSize(PRInt64 *result)
+NS_IMETHODIMP nsCacheEntryDescriptor::GetPredictedDataSize(int64_t *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETPREDICTEDDATASIZE));
@@ -166,7 +166,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetPredictedDataSize(PRInt64 *result)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryDescriptor::SetPredictedDataSize(PRInt64
+NS_IMETHODIMP nsCacheEntryDescriptor::SetPredictedDataSize(int64_t
                                                            predictedSize)
 {
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETPREDICTEDDATASIZE));
@@ -176,7 +176,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::SetPredictedDataSize(PRInt64
     return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *result)
+NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(uint32_t *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETDATASIZE));
@@ -193,7 +193,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *result)
 }
 
 
-NS_IMETHODIMP nsCacheEntryDescriptor::GetStorageDataSize(PRUint32 *result)
+NS_IMETHODIMP nsCacheEntryDescriptor::GetStorageDataSize(uint32_t *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETSTORAGEDATASIZE));
@@ -206,7 +206,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetStorageDataSize(PRUint32 *result)
 
 
 nsresult
-nsCacheEntryDescriptor::RequestDataSizeChange(PRInt32 deltaSize)
+nsCacheEntryDescriptor::RequestDataSizeChange(int32_t deltaSize)
 {
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_REQUESTDATASIZECHANGE));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
@@ -215,7 +215,7 @@ nsCacheEntryDescriptor::RequestDataSizeChange(PRInt32 deltaSize)
     rv = nsCacheService::OnDataSizeChange(mCacheEntry, deltaSize);
     if (NS_SUCCEEDED(rv)) {
         // XXX review for signed/unsigned math errors
-        PRUint32  newDataSize = mCacheEntry->DataSize() + deltaSize;
+        uint32_t  newDataSize = mCacheEntry->DataSize() + deltaSize;
         mCacheEntry->SetDataSize(newDataSize);
         mCacheEntry->TouchData();
     }
@@ -224,20 +224,20 @@ nsCacheEntryDescriptor::RequestDataSizeChange(PRInt32 deltaSize)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
+nsCacheEntryDescriptor::SetDataSize(uint32_t dataSize)
 {
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETDATASIZE));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     // XXX review for signed/unsigned math errors
-    PRInt32  deltaSize = dataSize - mCacheEntry->DataSize();
+    int32_t  deltaSize = dataSize - mCacheEntry->DataSize();
 
     nsresult  rv;
     rv = nsCacheService::OnDataSizeChange(mCacheEntry, deltaSize);
     // this had better be NS_OK, this call instance is advisory for memory cache objects
     if (NS_SUCCEEDED(rv)) {
         // XXX review for signed/unsigned math errors
-        PRUint32  newDataSize = mCacheEntry->DataSize() + deltaSize;
+        uint32_t  newDataSize = mCacheEntry->DataSize() + deltaSize;
         mCacheEntry->SetDataSize(newDataSize);
         mCacheEntry->TouchData();
     } else {
@@ -249,7 +249,7 @@ nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::OpenInputStream(PRUint32 offset, nsIInputStream ** result)
+nsCacheEntryDescriptor::OpenInputStream(uint32_t offset, nsIInputStream ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
 
@@ -278,7 +278,7 @@ nsCacheEntryDescriptor::OpenInputStream(PRUint32 offset, nsIInputStream ** resul
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::OpenOutputStream(PRUint32 offset, nsIOutputStream ** result)
+nsCacheEntryDescriptor::OpenOutputStream(uint32_t offset, nsIOutputStream ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
 
@@ -293,7 +293,7 @@ nsCacheEntryDescriptor::OpenOutputStream(PRUint32 offset, nsIOutputStream ** res
     }
 
     nsOutputStreamWrapper* cacheOutput = nullptr;
-    PRInt32 compressionLevel = nsCacheService::CacheCompressionLevel();
+    int32_t compressionLevel = nsCacheService::CacheCompressionLevel();
     const char *val;
     val = mCacheEntry->GetMetaDataElement("uncompressed-len");
     if ((compressionLevel > 0) && val) {
@@ -562,7 +562,7 @@ nsInputStreamWrapper::Close()
 }
 
 nsresult nsCacheEntryDescriptor::
-nsInputStreamWrapper::Available(PRUint64 *avail)
+nsInputStreamWrapper::Available(uint64_t *avail)
 {
     nsresult rv = EnsureInit();
     if (NS_FAILED(rv)) return rv;
@@ -571,7 +571,7 @@ nsInputStreamWrapper::Available(PRUint64 *avail)
 }
 
 nsresult nsCacheEntryDescriptor::
-nsInputStreamWrapper::Read(char *buf, PRUint32 count, PRUint32 *countRead)
+nsInputStreamWrapper::Read(char *buf, uint32_t count, uint32_t *countRead)
 {
     nsresult rv = EnsureInit();
     if (NS_SUCCEEDED(rv))
@@ -586,7 +586,7 @@ nsInputStreamWrapper::Read(char *buf, PRUint32 count, PRUint32 *countRead)
 
 nsresult nsCacheEntryDescriptor::
 nsInputStreamWrapper::ReadSegments(nsWriteSegmentFun writer, void *closure,
-                                   PRUint32 count, PRUint32 *countRead)
+                                   uint32_t count, uint32_t *countRead)
 {
     // cache stream not buffered
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -610,8 +610,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheEntryDescriptor::nsDecompressInputStreamWra
 
 NS_IMETHODIMP nsCacheEntryDescriptor::
 nsDecompressInputStreamWrapper::Read(char *    buf, 
-                                     PRUint32  count, 
-                                     PRUint32 *countRead)
+                                     uint32_t  count, 
+                                     uint32_t *countRead)
 {
     int zerr = Z_OK;
     nsresult rv = NS_OK;
@@ -632,7 +632,7 @@ nsDecompressInputStreamWrapper::Read(char *    buf,
         // input stream at one time. Making the buffer size proportional
         // to the request size is not necessary, but helps minimize the
         // number of read requests to the input stream.
-        PRUint32 newBufLen = NS_MAX(count, (PRUint32)kMinDecompressReadBufLen);
+        uint32_t newBufLen = NS_MAX(count, (uint32_t)kMinDecompressReadBufLen);
         unsigned char* newBuf;
         newBuf = (unsigned char*)nsMemory::Realloc(mReadBuffer, 
             newBufLen);
@@ -762,7 +762,7 @@ nsOutputStreamWrapper::LazyInit()
     nsCacheDevice* device = cacheEntry->CacheDevice();
     if (device) {
         // the entry has been truncated to mStartOffset bytes, inform device
-        PRInt32 size = cacheEntry->DataSize();
+        int32_t size = cacheEntry->DataSize();
         rv = device->OnDataSizeChange(cacheEntry, mStartOffset - size);
         if (NS_SUCCEEDED(rv))
             cacheEntry->SetDataSize(mStartOffset);
@@ -784,10 +784,10 @@ nsOutputStreamWrapper::LazyInit()
 }
 
 nsresult nsCacheEntryDescriptor::
-nsOutputStreamWrapper::OnWrite(PRUint32 count)
+nsOutputStreamWrapper::OnWrite(uint32_t count)
 {
     if (count > PR_INT32_MAX)  return NS_ERROR_UNEXPECTED;
-    return mDescriptor->RequestDataSizeChange((PRInt32)count);
+    return mDescriptor->RequestDataSizeChange((int32_t)count);
 }
 
 NS_IMETHODIMP nsCacheEntryDescriptor::
@@ -810,8 +810,8 @@ nsOutputStreamWrapper::Flush()
 
 NS_IMETHODIMP nsCacheEntryDescriptor::
 nsOutputStreamWrapper::Write(const char * buf,
-                             PRUint32     count,
-                             PRUint32 *   result)
+                             uint32_t     count,
+                             uint32_t *   result)
 {
     nsresult rv = EnsureInit();
     if (NS_FAILED(rv)) return rv;
@@ -824,8 +824,8 @@ nsOutputStreamWrapper::Write(const char * buf,
 
 NS_IMETHODIMP nsCacheEntryDescriptor::
 nsOutputStreamWrapper::WriteFrom(nsIInputStream * inStr,
-                                 PRUint32         count,
-                                 PRUint32 *       result)
+                                 uint32_t         count,
+                                 uint32_t *       result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -833,8 +833,8 @@ nsOutputStreamWrapper::WriteFrom(nsIInputStream * inStr,
 NS_IMETHODIMP nsCacheEntryDescriptor::
 nsOutputStreamWrapper::WriteSegments(nsReadSegmentFun  reader,
                                      void *            closure,
-                                     PRUint32          count,
-                                     PRUint32 *        result)
+                                     uint32_t          count,
+                                     uint32_t *        result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -858,8 +858,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheEntryDescriptor::nsCompressOutputStreamWrap
 
 NS_IMETHODIMP nsCacheEntryDescriptor::
 nsCompressOutputStreamWrapper::Write(const char * buf,
-                                     PRUint32     count,
-                                     PRUint32 *   result)
+                                     uint32_t     count,
+                                     uint32_t *   result)
 {
     int zerr = Z_OK;
     nsresult rv = NS_OK;
@@ -875,7 +875,7 @@ nsCompressOutputStreamWrapper::Write(const char * buf,
         // Once allocated, this buffer is referenced by the zlib stream and
         // cannot be grown. We use 2x(initial write request) to approximate
         // a stream buffer size proportional to request buffers.
-        mWriteBufferLen = NS_MAX(count*2, (PRUint32)kMinCompressWriteBufLen);
+        mWriteBufferLen = NS_MAX(count*2, (uint32_t)kMinCompressWriteBufLen);
         mWriteBuffer = (unsigned char*)nsMemory::Alloc(mWriteBufferLen);
         if (!mWriteBuffer) {
             mWriteBufferLen = 0;
@@ -934,7 +934,7 @@ nsCompressOutputStreamWrapper::Close()
         rv = mDescriptor->GetMetaDataElement("uncompressed-len",
                                              getter_Copies(uncompressedLenStr));
         if (NS_SUCCEEDED(rv)) {
-            PRInt32 oldCount = uncompressedLenStr.ToInteger(&rv);
+            int32_t oldCount = uncompressedLenStr.ToInteger(&rv);
             if (NS_SUCCEEDED(rv)) {
                 mUncompressedCount += oldCount;
             }
@@ -961,7 +961,7 @@ nsCompressOutputStreamWrapper::InitZstream()
     // may impact performance on mobile devices, while a
     // lower compression level still provides substantial
     // space savings for many text streams.
-    PRInt32 compressionLevel = nsCacheService::CacheCompressionLevel();
+    int32_t compressionLevel = nsCacheService::CacheCompressionLevel();
 
     // Initialize zlib deflate stream
     mZstream.zalloc = Z_NULL;
@@ -982,8 +982,8 @@ nsCompressOutputStreamWrapper::InitZstream()
 nsresult nsCacheEntryDescriptor::
 nsCompressOutputStreamWrapper::WriteBuffer()
 {
-    PRUint32 bytesToWrite = mWriteBufferLen - mZstream.avail_out;
-    PRUint32 result = 0;
+    uint32_t bytesToWrite = mWriteBufferLen - mZstream.avail_out;
+    uint32_t result = 0;
     nsresult rv = nsCacheEntryDescriptor::nsOutputStreamWrapper::Write(
         (const char *)mWriteBuffer, bytesToWrite, &result);
     mZstream.next_out = mWriteBuffer;

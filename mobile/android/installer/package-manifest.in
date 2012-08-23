@@ -352,6 +352,9 @@
 @BINPATH@/components/AppsService.js
 @BINPATH@/components/AppsService.manifest
 
+@BINPATH@/components/TCPSocket.js
+@BINPATH@/components/TCPSocket.manifest
+
 ; Modules
 @BINPATH@/modules/*
 

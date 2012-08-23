@@ -29,12 +29,12 @@ private:
 
   enum {kNumInts = 8, kNumStrings = 16};
 
-  nsresult InBounds(PRInt32 inIndex, PRInt32 inMax) {
+  nsresult InBounds(int32_t inIndex, int32_t inMax) {
     return inIndex >= 0 && inIndex < inMax ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
   }
   
-  PRInt32 mInt[kNumInts];
-  PRInt32 mNumStrings;
+  int32_t mInt[kNumInts];
+  int32_t mNumStrings;
   nsString* mString;
   nsCOMPtr<nsIMutableArray> mObjects;	
 };

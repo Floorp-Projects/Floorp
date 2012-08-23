@@ -47,7 +47,7 @@ class nsChromeRegistryChrome : public nsChromeRegistry
  private:
   static PLDHashOperator CollectPackages(PLDHashTable *table,
                                          PLDHashEntryHdr *entry,
-                                         PRUint32 number, void *arg);
+                                         uint32_t number, void *arg);
 
   nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
   nsresult UpdateSelectedLocale() MOZ_OVERRIDE;
@@ -55,7 +55,7 @@ class nsChromeRegistryChrome : public nsChromeRegistry
                                  const nsCString& aProvider,
                                  const nsCString& aPath) MOZ_OVERRIDE;
   nsresult GetFlagsFromPackage(const nsCString& aPackage,
-                               PRUint32* aFlags) MOZ_OVERRIDE;
+                               uint32_t* aFlags) MOZ_OVERRIDE;
 
   static const PLDHashTableOps kTableOps;
   static PLDHashNumber HashKey(PLDHashTable *table, const void *key);
@@ -111,7 +111,7 @@ class nsChromeRegistryChrome : public nsChromeRegistry
 
     nsCString        package;
     nsCOMPtr<nsIURI> baseURI;
-    PRUint32         flags;
+    uint32_t         flags;
     nsProviderArray  locales;
     nsProviderArray  skins;
   };

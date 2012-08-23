@@ -96,13 +96,13 @@ const bool kUseNativeRole = false;
  * This means it either isn't mean't to be exposed as an object attribute, or
  * that it should, but is already handled in other code.
  */
-const PRUint8 ATTR_BYPASSOBJ  = 0x0001;
+const uint8_t ATTR_BYPASSOBJ  = 0x0001;
 
 /**
  * This mask indicates the attribute is expected to have an NMTOKEN or bool value.
  * (See for example usage in Accessible::GetAttributes)
  */
-const PRUint8 ATTR_VALTOKEN   = 0x0010;
+const uint8_t ATTR_VALTOKEN   = 0x0010;
 
 /**
  * Small footprint storage of persistent aria attribute characteristics.
@@ -110,7 +110,7 @@ const PRUint8 ATTR_VALTOKEN   = 0x0010;
 struct nsAttributeCharacteristics
 {
   nsIAtom** attributeName;
-  const PRUint8 characteristics;
+  const uint8_t characteristics;
 };
 
 
@@ -169,7 +169,7 @@ struct nsRoleMapEntry
   ELiveAttrRule liveAttRule;
 
   // Automatic state mapping rule: always include in nsIAccessibleStates
-  PRUint64 state;   // or kNoReqStates if no nsIAccessibleStates are automatic for this role.
+  uint64_t state;   // or kNoReqStates if no nsIAccessibleStates are automatic for this role.
 
   // ARIA properties supported for this role
   // (in other words, the aria-foo attribute to nsIAccessibleStates mapping rules)
@@ -203,7 +203,7 @@ struct nsARIAMap
    * Map of attribute to attribute characteristics.
    */
   static nsAttributeCharacteristics gWAIUnivAttrMap[];
-  static PRUint32 gWAIUnivAttrMapLength;
+  static uint32_t gWAIUnivAttrMapLength;
 };
 
 namespace mozilla {
@@ -224,7 +224,7 @@ nsRoleMapEntry* GetRoleMap(nsINode* aNode);
  * Return accessible state from ARIA universal states applied to the given
  * element.
  */
-PRUint64 UniversalStatesFor(mozilla::dom::Element* aElement);
+uint64_t UniversalStatesFor(mozilla::dom::Element* aElement);
 
  /**
   * Represents a simple enumerator for iterating through ARIA attributes 
@@ -247,8 +247,8 @@ private:
   AttrIterator& operator= (const AttrIterator&) MOZ_DELETE;
 
   nsIContent* mContent;
-  PRUint32 mAttrIdx;
-  PRUint32 mAttrCount;
+  uint32_t mAttrIdx;
+  uint32_t mAttrCount;
 };
 
 } // namespace aria

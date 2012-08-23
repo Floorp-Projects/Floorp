@@ -46,7 +46,7 @@ public:
   nsFilePicker(); 
   virtual ~nsFilePicker();
 
-  NS_IMETHOD Init(nsIDOMWindow *aParent, const nsAString& aTitle, PRInt16 aMode);
+  NS_IMETHOD Init(nsIDOMWindow *aParent, const nsAString& aTitle, int16_t aMode);
                   
   NS_DECL_ISUPPORTS
   
@@ -58,13 +58,13 @@ public:
   NS_IMETHOD SetDefaultString(const nsAString& aDefaultString);
   NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension);
   NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
-  NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
-  NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
+  NS_IMETHOD GetFilterIndex(int32_t *aFilterIndex);
+  NS_IMETHOD SetFilterIndex(int32_t aFilterIndex);
   NS_IMETHOD GetFile(nsIFile * *aFile);
   NS_IMETHOD GetFileURL(nsIURI * *aFileURL);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
-  NS_IMETHOD Show(PRInt16 *aReturnVal); 
-  NS_IMETHOD ShowW(PRInt16 *aReturnVal); 
+  NS_IMETHOD Show(int16_t *aReturnVal); 
+  NS_IMETHOD ShowW(int16_t *aReturnVal); 
   NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
 
   // IFileDialogEvents
@@ -85,7 +85,7 @@ protected:
   /* method from nsBaseFilePicker */
   virtual void InitNative(nsIWidget *aParent,
                           const nsAString& aTitle,
-                          PRInt16 aMode);
+                          int16_t aMode);
   static void GetQualifiedPath(const PRUnichar *aInPath, nsString &aOutPath);
   void GetFilterListArray(nsString& aFilterList);
   bool FilePickerWrapper(OPENFILENAMEW* ofn, PickerType aType);
@@ -107,13 +107,13 @@ protected:
   nsCOMPtr<nsILoadContext> mLoadContext;
   nsCOMPtr<nsIWidget>    mParentWidget;
   nsString               mTitle;
-  PRInt16                mMode;
+  int16_t                mMode;
   nsCString              mFile;
   nsString               mDefaultFilePath;
   nsString               mDefaultFilename;
   nsString               mDefaultExtension;
   nsString               mFilterList;
-  PRInt16                mSelectedType;
+  int16_t                mSelectedType;
   nsCOMArray<nsIFile>    mFiles;
   static char            mLastUsedDirectory[];
   nsString               mUnicodeFile;
@@ -126,7 +126,7 @@ protected:
     ComDlgFilterSpec() {}
     ~ComDlgFilterSpec() {}
     
-    const PRUint32 Length() {
+    const uint32_t Length() {
       return mSpecList.Length();
     }
 

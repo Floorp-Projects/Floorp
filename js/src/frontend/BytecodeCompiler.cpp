@@ -11,12 +11,14 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
-#include "frontend/SemanticAnalysis.h"
+#include "frontend/NameFunctions.h"
 #include "vm/GlobalObject.h"
 
 #include "jsinferinlines.h"
 
-#include "frontend/TreeContext-inl.h"
+#include "frontend/ParseMaps-inl.h"
+#include "frontend/Parser-inl.h"
+#include "frontend/SharedContext-inl.h"
 
 using namespace js;
 using namespace js::frontend;
@@ -100,8 +102,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
     SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL, StrictModeFromContext(cx));
 
-    TreeContext tc(&parser, &sc, staticLevel, /* bodyid = */ 0);
-    if (!tc.init())
+    ParseContext pc(&parser, &sc, staticLevel, /* bodyid = */ 0);
+    if (!pc.init())
         return NULL;
 
     bool savedCallerFun = options.compileAndGo && callerFrame && callerFrame->isFunctionFrame();
@@ -190,10 +192,10 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
         if (!FoldConstants(cx, pn, &parser))
             return NULL;
-
-        if (!AnalyzeFunctions(&parser))
+        if (!NameFunctions(cx, pn))
             return NULL;
-        tc.functionList = NULL;
+
+        pc.functionList = NULL;
 
         if (!EmitTree(cx, &bce, pn))
             return NULL;
@@ -224,7 +226,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     // It's an error to use |arguments| in a function that has a rest parameter.
     if (callerFrame && callerFrame->isFunctionFrame() && callerFrame->fun()->hasRest()) {
         PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
-        for (AtomDefnRange r = tc.lexdeps->all(); !r.empty(); r.popFront()) {
+        for (AtomDefnRange r = pc.lexdeps->all(); !r.empty(); r.popFront()) {
             if (r.front().key() == arguments) {
                 parser.reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
                 return NULL;
@@ -254,16 +256,16 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
                               const AutoNameVector &formals, const jschar *chars, size_t length)
 {
     if (!CheckLength(cx, length))
-        return NULL;
+        return false;
     ScriptSource *ss = cx->new_<ScriptSource>();
     if (!ss)
-        return NULL;
+        return false;
     ScriptSourceHolder ssh(cx->runtime, ss);
     SourceCompressionToken sct(cx);
     JS_ASSERT(options.sourcePolicy != CompileOptions::LAZY_SOURCE);
     if (options.sourcePolicy == CompileOptions::SAVE_SOURCE) {
         if (!ss->setSourceCopy(cx, chars, length, true, &sct))
-            return NULL;
+            return false;
     }
 
     options.setCompileAndGo(false);
@@ -278,8 +280,8 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     fun->setArgCount(formals.length());
 
     unsigned staticLevel = 0;
-    TreeContext funtc(&parser, &funsc, staticLevel, /* bodyid = */ 0);
-    if (!funtc.init())
+    ParseContext funpc(&parser, &funsc, staticLevel, /* bodyid = */ 0);
+    if (!funpc.init())
         return false;
 
     /* FIXME: make Function format the source for a function definition. */
@@ -324,7 +326,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     if (!script)
         return false;
 
-    if (!funtc.generateFunctionBindings(cx, &script->bindings))
+    if (!funpc.generateFunctionBindings(cx, &script->bindings))
         return false;
 
     BytecodeEmitter funbce(/* parent = */ NULL, &parser, &funsc, script, /* callerFrame = */ NULL,
@@ -332,8 +334,8 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     if (!funbce.init())
         return false;
 
-    if (!AnalyzeFunctions(&parser))
-        return false;
+    if (!NameFunctions(cx, pn))
+        return NULL;
 
     if (fn->pn_body) {
         JS_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));

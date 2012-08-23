@@ -45,6 +45,7 @@ endif
 
 CPPSRCS	= \
 	GLContext.cpp \
+	GLContextUtils.cpp \
 	GLLibraryLoader.cpp \
 	GLContextProviderOSMesa.cpp \
 	$(NULL)

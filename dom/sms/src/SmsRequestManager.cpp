@@ -24,13 +24,13 @@ NS_IMPL_ISUPPORTS1(SmsRequestManager, nsISmsRequestManager)
 
 NS_IMETHODIMP
 SmsRequestManager::AddRequest(nsIDOMMozSmsRequest* aRequest,
-                              PRInt32* aRequestId)
+                              int32_t* aRequestId)
 {
   // TODO: merge with CreateRequest
-  PRInt32 size = mRequests.Count();
+  int32_t size = mRequests.Count();
 
   // Look for empty slots.
-  for (PRInt32 i=0; i<size; ++i) {
+  for (int32_t i=0; i<size; ++i) {
     if (mRequests[i]) {
       continue;
     }
@@ -49,15 +49,15 @@ SmsRequestManager::AddRequest(nsIDOMMozSmsRequest* aRequest,
 NS_IMETHODIMP
 SmsRequestManager::CreateRequest(nsIDOMMozSmsManager* aManager,
                                  nsIDOMMozSmsRequest** aRequest,
-                                 PRInt32* aRequestId)
+                                 int32_t* aRequestId)
 {
   nsCOMPtr<nsIDOMMozSmsRequest> request =
     new SmsRequest(static_cast<SmsManager*>(aManager));
 
-  PRInt32 size = mRequests.Count();
+  int32_t size = mRequests.Count();
 
   // Look for empty slots.
-  for (PRInt32 i=0; i<size; ++i) {
+  for (int32_t i=0; i<size; ++i) {
     if (mRequests[i]) {
       continue;
     }
@@ -90,7 +90,7 @@ SmsRequestManager::DispatchTrustedEventToRequest(const nsAString& aEventName,
 }
 
 SmsRequest*
-SmsRequestManager::GetRequest(PRInt32 aRequestId)
+SmsRequestManager::GetRequest(int32_t aRequestId)
 {
   NS_ASSERTION(mRequests.Count() > aRequestId && mRequests[aRequestId],
                "Got an invalid request id or it has been already deleted!");
@@ -102,7 +102,7 @@ SmsRequestManager::GetRequest(PRInt32 aRequestId)
 
 template <class T>
 nsresult
-SmsRequestManager::NotifySuccess(PRInt32 aRequestId, T aParam)
+SmsRequestManager::NotifySuccess(int32_t aRequestId, T aParam)
 {
   SmsRequest* request = GetRequest(aRequestId);
   request->SetSuccess(aParam);
@@ -114,7 +114,7 @@ SmsRequestManager::NotifySuccess(PRInt32 aRequestId, T aParam)
 }
 
 nsresult
-SmsRequestManager::NotifyError(PRInt32 aRequestId, PRInt32 aError)
+SmsRequestManager::NotifyError(int32_t aRequestId, int32_t aError)
 {
   SmsRequest* request = GetRequest(aRequestId);
   request->SetError(aError);
@@ -126,43 +126,43 @@ SmsRequestManager::NotifyError(PRInt32 aRequestId, PRInt32 aError)
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
+SmsRequestManager::NotifySmsSent(int32_t aRequestId, nsIDOMMozSmsMessage* aMessage)
 {
   return NotifySuccess<nsIDOMMozSmsMessage*>(aRequestId, aMessage);
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifySmsSendFailed(PRInt32 aRequestId, PRInt32 aError)
+SmsRequestManager::NotifySmsSendFailed(int32_t aRequestId, int32_t aError)
 {
   return NotifyError(aRequestId, aError);
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifyGotSms(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
+SmsRequestManager::NotifyGotSms(int32_t aRequestId, nsIDOMMozSmsMessage* aMessage)
 {
   return NotifySuccess<nsIDOMMozSmsMessage*>(aRequestId, aMessage);
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifyGetSmsFailed(PRInt32 aRequestId, PRInt32 aError)
+SmsRequestManager::NotifyGetSmsFailed(int32_t aRequestId, int32_t aError)
 {
   return NotifyError(aRequestId, aError);
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifySmsDeleted(PRInt32 aRequestId, bool aDeleted)
+SmsRequestManager::NotifySmsDeleted(int32_t aRequestId, bool aDeleted)
 {
   return NotifySuccess<bool>(aRequestId, aDeleted);
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifySmsDeleteFailed(PRInt32 aRequestId, PRInt32 aError)
+SmsRequestManager::NotifySmsDeleteFailed(int32_t aRequestId, int32_t aError)
 {
   return NotifyError(aRequestId, aError);
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifyNoMessageInList(PRInt32 aRequestId)
+SmsRequestManager::NotifyNoMessageInList(int32_t aRequestId)
 {
   SmsRequest* request = GetRequest(aRequestId);
 
@@ -177,7 +177,7 @@ SmsRequestManager::NotifyNoMessageInList(PRInt32 aRequestId)
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId,
+SmsRequestManager::NotifyCreateMessageList(int32_t aRequestId, int32_t aListId,
                                            nsIDOMMozSmsMessage* aMessage)
 {
   SmsRequest* request = GetRequest(aRequestId);
@@ -189,7 +189,7 @@ SmsRequestManager::NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId,
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifyGotNextMessage(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
+SmsRequestManager::NotifyGotNextMessage(int32_t aRequestId, nsIDOMMozSmsMessage* aMessage)
 {
   SmsRequest* request = GetRequest(aRequestId);
 
@@ -201,7 +201,7 @@ SmsRequestManager::NotifyGotNextMessage(PRInt32 aRequestId, nsIDOMMozSmsMessage*
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifyReadMessageListFailed(PRInt32 aRequestId, PRInt32 aError)
+SmsRequestManager::NotifyReadMessageListFailed(int32_t aRequestId, int32_t aError)
 {
   SmsRequest* request = GetRequest(aRequestId);
 
@@ -214,13 +214,13 @@ SmsRequestManager::NotifyReadMessageListFailed(PRInt32 aRequestId, PRInt32 aErro
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifyMarkedMessageRead(PRInt32 aRequestId, bool aRead)
+SmsRequestManager::NotifyMarkedMessageRead(int32_t aRequestId, bool aRead)
 {
   return NotifySuccess<bool>(aRequestId, aRead);
 }
 
 NS_IMETHODIMP
-SmsRequestManager::NotifyMarkMessageReadFailed(PRInt32 aRequestId, PRInt32 aError)
+SmsRequestManager::NotifyMarkMessageReadFailed(int32_t aRequestId, int32_t aError)
 {
   return NotifyError(aRequestId, aError);
 }

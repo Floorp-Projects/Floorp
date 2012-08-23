@@ -17,11 +17,11 @@ namespace {
 
 void UpdateListIndicesFromIndex(
   nsTArray<mozilla::DOMSVGTransform*>& aItemsArray,
-  PRUint32 aStartingIndex)
+  uint32_t aStartingIndex)
 {
-  PRUint32 length = aItemsArray.Length();
+  uint32_t length = aItemsArray.Length();
 
-  for (PRUint32 i = aStartingIndex; i < length; ++i) {
+  for (uint32_t i = aStartingIndex; i < length; ++i) {
     if (aItemsArray[i]) {
       aItemsArray[i]->UpdateListIndex(i);
     }
@@ -82,7 +82,7 @@ DOMSVGTransformList::WrapObject(JSContext *cx, JSObject *scope,
 }
 
 nsIDOMSVGTransform*
-DOMSVGTransformList::GetItemAt(PRUint32 aIndex)
+DOMSVGTransformList::GetItemAt(uint32_t aIndex)
 {
   if (IsAnimValList()) {
     Element()->FlushAnimations();
@@ -95,9 +95,9 @@ DOMSVGTransformList::GetItemAt(PRUint32 aIndex)
 }
 
 void
-DOMSVGTransformList::InternalListLengthWillChange(PRUint32 aNewLength)
+DOMSVGTransformList::InternalListLengthWillChange(uint32_t aNewLength)
 {
-  PRUint32 oldLength = mItems.Length();
+  uint32_t oldLength = mItems.Length();
 
   if (aNewLength > DOMSVGTransform::MaxListIndex()) {
     // It's safe to get out of sync with our internal list as long as we have
@@ -113,7 +113,7 @@ DOMSVGTransformList::InternalListLengthWillChange(PRUint32 aNewLength)
   }
 
   // If our length will decrease, notify the items that will be removed:
-  for (PRUint32 i = aNewLength; i < oldLength; ++i) {
+  for (uint32_t i = aNewLength; i < oldLength; ++i) {
     if (mItems[i]) {
       mItems[i]->RemovingFromList();
     }
@@ -127,7 +127,7 @@ DOMSVGTransformList::InternalListLengthWillChange(PRUint32 aNewLength)
   }
 
   // If our length has increased, null out the new pointers:
-  for (PRUint32 i = oldLength; i < aNewLength; ++i) {
+  for (uint32_t i = oldLength; i < aNewLength; ++i) {
     mItems[i] = nullptr;
   }
 }
@@ -146,7 +146,7 @@ DOMSVGTransformList::InternalList() const
 
 /* readonly attribute unsigned long numberOfItems; */
 NS_IMETHODIMP
-DOMSVGTransformList::GetNumberOfItems(PRUint32 *aNumberOfItems)
+DOMSVGTransformList::GetNumberOfItems(uint32_t *aNumberOfItems)
 {
   if (IsAnimValList()) {
     Element()->FlushAnimations();
@@ -157,7 +157,7 @@ DOMSVGTransformList::GetNumberOfItems(PRUint32 *aNumberOfItems)
 
 /* readonly attribute unsigned long length; */
 NS_IMETHODIMP
-DOMSVGTransformList::GetLength(PRUint32 *aLength)
+DOMSVGTransformList::GetLength(uint32_t *aLength)
 {
   return GetNumberOfItems(aLength);
 }
@@ -219,7 +219,7 @@ DOMSVGTransformList::Initialize(nsIDOMSVGTransform *newItem,
 
 /* nsIDOMSVGTransform getItem (in unsigned long index); */
 NS_IMETHODIMP
-DOMSVGTransformList::GetItem(PRUint32 index, nsIDOMSVGTransform **_retval)
+DOMSVGTransformList::GetItem(uint32_t index, nsIDOMSVGTransform **_retval)
 {
   *_retval = GetItemAt(index);
   if (!*_retval) {
@@ -233,7 +233,7 @@ DOMSVGTransformList::GetItem(PRUint32 index, nsIDOMSVGTransform **_retval)
  *                                      in unsigned long index); */
 NS_IMETHODIMP
 DOMSVGTransformList::InsertItemBefore(nsIDOMSVGTransform *newItem,
-                                      PRUint32 index,
+                                      uint32_t index,
                                       nsIDOMSVGTransform **_retval)
 {
   *_retval = nullptr;
@@ -286,7 +286,7 @@ DOMSVGTransformList::InsertItemBefore(nsIDOMSVGTransform *newItem,
  *                                 in unsigned long index); */
 NS_IMETHODIMP
 DOMSVGTransformList::ReplaceItem(nsIDOMSVGTransform *newItem,
-                                 PRUint32 index,
+                                 uint32_t index,
                                  nsIDOMSVGTransform **_retval)
 {
   *_retval = nullptr;
@@ -329,7 +329,7 @@ DOMSVGTransformList::ReplaceItem(nsIDOMSVGTransform *newItem,
 
 /* nsIDOMSVGTransform removeItem (in unsigned long index); */
 NS_IMETHODIMP
-DOMSVGTransformList::RemoveItem(PRUint32 index, nsIDOMSVGTransform **_retval)
+DOMSVGTransformList::RemoveItem(uint32_t index, nsIDOMSVGTransform **_retval)
 {
   *_retval = nullptr;
   if (IsAnimValList()) {
@@ -421,7 +421,7 @@ DOMSVGTransformList::Consolidate(nsIDOMSVGTransform **_retval)
 // Implementation helpers:
 
 void
-DOMSVGTransformList::EnsureItemAt(PRUint32 aIndex)
+DOMSVGTransformList::EnsureItemAt(uint32_t aIndex)
 {
   if (!mItems[aIndex]) {
     mItems[aIndex] = new DOMSVGTransform(this, aIndex, IsAnimValList());
@@ -429,7 +429,7 @@ DOMSVGTransformList::EnsureItemAt(PRUint32 aIndex)
 }
 
 void
-DOMSVGTransformList::MaybeInsertNullInAnimValListAt(PRUint32 aIndex)
+DOMSVGTransformList::MaybeInsertNullInAnimValListAt(uint32_t aIndex)
 {
   NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
 
@@ -450,7 +450,7 @@ DOMSVGTransformList::MaybeInsertNullInAnimValListAt(PRUint32 aIndex)
 }
 
 void
-DOMSVGTransformList::MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex)
+DOMSVGTransformList::MaybeRemoveItemFromAnimValListAt(uint32_t aIndex)
 {
   NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
 

@@ -84,10 +84,10 @@ nsHyphenator::Hyphenate(const nsAString& aString,
   memset(aHyphens.Elements(), false, aHyphens.Length());
 
   bool inWord = false;
-  PRUint32 wordStart = 0, wordLimit = 0;
-  PRUint32 chLen;
-  for (PRUint32 i = 0; i < aString.Length(); i += chLen) {
-    PRUint32 ch = aString[i];
+  uint32_t wordStart = 0, wordLimit = 0;
+  uint32_t chLen;
+  for (uint32_t i = 0; i < aString.Length(); i += chLen) {
+    uint32_t ch = aString[i];
     chLen = 1;
 
     if (NS_IS_HIGH_SURROGATE(ch)) {

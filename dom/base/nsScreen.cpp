@@ -27,7 +27,7 @@ IsChromeType(nsIDocShell *aDocShell)
     return false;
   }
 
-  PRInt32 itemType;
+  int32_t itemType;
   ds->GetItemType(&itemType);
   return itemType == nsIDocShellTreeItem::typeChrome;
 }
@@ -113,7 +113,7 @@ NS_IMPL_RELEASE_INHERITED(nsScreen, nsDOMEventTargetHelper)
 NS_IMPL_EVENT_HANDLER(nsScreen, mozorientationchange)
 
 NS_IMETHODIMP
-nsScreen::GetTop(PRInt32* aTop)
+nsScreen::GetTop(int32_t* aTop)
 {
   nsRect rect;
   nsresult rv = GetRect(rect);
@@ -125,7 +125,7 @@ nsScreen::GetTop(PRInt32* aTop)
 
 
 NS_IMETHODIMP
-nsScreen::GetLeft(PRInt32* aLeft)
+nsScreen::GetLeft(int32_t* aLeft)
 {
   nsRect rect;
   nsresult rv = GetRect(rect);
@@ -137,7 +137,7 @@ nsScreen::GetLeft(PRInt32* aLeft)
 
 
 NS_IMETHODIMP
-nsScreen::GetWidth(PRInt32* aWidth)
+nsScreen::GetWidth(int32_t* aWidth)
 {
   nsRect rect;
   nsresult rv = GetRect(rect);
@@ -148,7 +148,7 @@ nsScreen::GetWidth(PRInt32* aWidth)
 }
 
 NS_IMETHODIMP
-nsScreen::GetHeight(PRInt32* aHeight)
+nsScreen::GetHeight(int32_t* aHeight)
 {
   nsRect rect;
   nsresult rv = GetRect(rect);
@@ -159,7 +159,7 @@ nsScreen::GetHeight(PRInt32* aHeight)
 }
 
 NS_IMETHODIMP
-nsScreen::GetPixelDepth(PRInt32* aPixelDepth)
+nsScreen::GetPixelDepth(int32_t* aPixelDepth)
 {
   nsDeviceContext* context = GetDeviceContext();
 
@@ -169,7 +169,7 @@ nsScreen::GetPixelDepth(PRInt32* aPixelDepth)
     return NS_ERROR_FAILURE;
   }
 
-  PRUint32 depth;
+  uint32_t depth;
   context->GetDepth(depth);
 
   *aPixelDepth = depth;
@@ -178,13 +178,13 @@ nsScreen::GetPixelDepth(PRInt32* aPixelDepth)
 }
 
 NS_IMETHODIMP
-nsScreen::GetColorDepth(PRInt32* aColorDepth)
+nsScreen::GetColorDepth(int32_t* aColorDepth)
 {
   return GetPixelDepth(aColorDepth);
 }
 
 NS_IMETHODIMP
-nsScreen::GetAvailWidth(PRInt32* aAvailWidth)
+nsScreen::GetAvailWidth(int32_t* aAvailWidth)
 {
   nsRect rect;
   nsresult rv = GetAvailRect(rect);
@@ -195,7 +195,7 @@ nsScreen::GetAvailWidth(PRInt32* aAvailWidth)
 }
 
 NS_IMETHODIMP
-nsScreen::GetAvailHeight(PRInt32* aAvailHeight)
+nsScreen::GetAvailHeight(int32_t* aAvailHeight)
 {
   nsRect rect;
   nsresult rv = GetAvailRect(rect);
@@ -206,7 +206,7 @@ nsScreen::GetAvailHeight(PRInt32* aAvailHeight)
 }
 
 NS_IMETHODIMP
-nsScreen::GetAvailLeft(PRInt32* aAvailLeft)
+nsScreen::GetAvailLeft(int32_t* aAvailLeft)
 {
   nsRect rect;
   nsresult rv = GetAvailRect(rect);
@@ -217,7 +217,7 @@ nsScreen::GetAvailLeft(PRInt32* aAvailLeft)
 }
 
 NS_IMETHODIMP
-nsScreen::GetAvailTop(PRInt32* aAvailTop)
+nsScreen::GetAvailTop(int32_t* aAvailTop)
 {
   nsRect rect;
   nsresult rv = GetAvailRect(rect);

@@ -47,10 +47,10 @@ public:
 
     ~RefCountedJavaObject();
 
-    PRInt32 AddRef() { return ++mRefCnt; }
+    int32_t AddRef() { return ++mRefCnt; }
 
-    PRInt32 Release() {
-        PRInt32 refcnt = --mRefCnt;
+    int32_t Release() {
+        int32_t refcnt = --mRefCnt;
         if (refcnt == 0)
             delete this;
         return refcnt;
@@ -58,7 +58,7 @@ public:
 
     jobject GetObject() { return mObject; }
 private:
-    PRInt32 mRefCnt;
+    int32_t mRefCnt;
     jobject mObject;
 };
 
@@ -630,15 +630,15 @@ protected:
     void ReadIntArray(nsTArray<int> &aVals,
                       JNIEnv *jenv,
                       jfieldID field,
-                      PRInt32 count);
+                      int32_t count);
     void ReadFloatArray(nsTArray<float> &aVals,
                         JNIEnv *jenv,
                         jfieldID field,
-                        PRInt32 count);
+                        int32_t count);
     void ReadPointArray(nsTArray<nsIntPoint> &mPoints,
                         JNIEnv *jenv,
                         jfieldID field,
-                        PRInt32 count);
+                        int32_t count);
     void ReadRectField(JNIEnv *jenv);
     void ReadCharactersField(JNIEnv *jenv);
     void ReadCharactersExtraField(JNIEnv *jenv);

@@ -4,12 +4,8 @@
 
 "use strict";
 
-/* static functions */
-let DEBUG = 0;
-if (DEBUG)
-  debug = function (s) { dump("-*- ContactManager: " + s + "\n"); }
-else
-  debug = function (s) {}
+const DEBUG = false;
+function debug(s) { dump("-*- ContactManager: " + s + "\n"); }
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -37,7 +33,7 @@ const nsIDOMContactProperties = Ci.nsIDOMContactProperties;
 
 // ContactProperties is not directly instantiated. It is used as interface.
 
-function ContactProperties(aProp) { debug("ContactProperties Constructor"); }
+function ContactProperties(aProp) { if (DEBUG) debug("ContactProperties Constructor"); }
 
 ContactProperties.prototype = {
 
@@ -67,6 +63,14 @@ function ContactAddress(aType, aStreetAddress, aLocality, aRegion, aPostalCode, 
 };
 
 ContactAddress.prototype = {
+  __exposedProps__: {
+                      type: 'rw',
+                      streetAddress: 'rw',
+                      locality: 'rw',
+                      region: 'rw',
+                      postalCode: 'rw',
+                      countryName: 'rw'
+                     },
 
   classID : CONTACTADDRESS_CID,
   classInfo : XPCOMUtils.generateCI({classID: CONTACTADDRESS_CID,
@@ -90,6 +94,10 @@ function ContactField(aType, aValue) {
 };
 
 ContactField.prototype = {
+  __exposedProps__: {
+                      type: 'rw',
+                      value: 'rw'
+                     },
 
   classID : CONTACTFIELD_CID,
   classInfo : XPCOMUtils.generateCI({classID: CONTACTFIELD_CID,
@@ -114,6 +122,11 @@ function ContactTelField(aType, aValue, aCarrier) {
 };
 
 ContactTelField.prototype = {
+  __exposedProps__: {
+                      type: 'rw',
+                      value: 'rw',
+                      carrier: 'rw'
+                     },
 
   classID : CONTACTTELFIELD_CID,
   classInfo : XPCOMUtils.generateCI({classID: CONTACTTELFIELD_CID,
@@ -151,13 +164,38 @@ const CONTACT_CONTRACTID = "@mozilla.org/contact;1";
 const CONTACT_CID        = Components.ID("{da0f7040-388b-11e1-b86c-0800200c9a66}");
 const nsIDOMContact      = Components.interfaces.nsIDOMContact;
 
-// The wrappedJSObject magic here allows callers to get at the underlying JS object
-// of the XPCOM component. We use this below to modify properties that are read-only
-// per-idl. See https://developer.mozilla.org/en-US/docs/wrappedJSObject.
-function Contact() { debug("Contact constr: "); this.wrappedJSObject = this; };
+function Contact() {
+  if (DEBUG) debug("Contact constr: ");
+};
 
 Contact.prototype = {
-  
+  __exposedProps__: {
+                      id: 'rw',
+                      updated: 'rw',
+                      published:  'rw',
+                      name: 'rw',
+                      honorificPrefix: 'rw',
+                      givenName: 'rw',
+                      additionalName: 'rw',
+                      familyName: 'rw',
+                      honorificSuffix: 'rw',
+                      nickname: 'rw',
+                      email: 'rw',
+                      photo: 'rw',
+                      url: 'rw',
+                      category: 'rw',
+                      adr: 'rw',
+                      tel: 'rw',
+                      org: 'rw',
+                      jobTitle: 'rw',
+                      bday: 'rw',
+                      note: 'rw',
+                      impp: 'rw',
+                      anniversary: 'rw',
+                      sex: 'rw',
+                      genderIdentity: 'rw'
+                     },
+
   init: function init(aProp) {
     // Accept non-array strings for DOMString[] properties and convert them.
     function _create(aField) {   
@@ -290,7 +328,7 @@ const nsIDOMContactManager      = Components.interfaces.nsIDOMContactManager;
 
 function ContactManager()
 {
-  debug("Constructor");
+  if (DEBUG) debug("Constructor");
 }
 
 ContactManager.prototype = {
@@ -298,7 +336,7 @@ ContactManager.prototype = {
   _oncontactchange: null,
 
   set oncontactchange(aCallback) {
-    debug("set oncontactchange");
+    if (DEBUG) debug("set oncontactchange");
     let allowCallback = function() {
       this._oncontactchange = aCallback;
     }.bind(this);
@@ -321,16 +359,16 @@ ContactManager.prototype = {
   _convertContactsArray: function(aContacts) {
     let contacts = new Array();
     for (let i in aContacts) {
-      let newContact = Components.classes['@mozilla.org/contact;1'].createInstance();
+      let newContact = new Contact();
       newContact.init(aContacts[i].properties);
-      this._setMetaData(newContact.wrappedJSObject, aContacts[i]);
+      this._setMetaData(newContact, aContacts[i]);
       contacts.push(newContact);
     }
     return contacts;
   },
 
   receiveMessage: function(aMessage) {
-    debug("Contactmanager::receiveMessage: " + aMessage.name);
+    if (DEBUG) debug("Contactmanager::receiveMessage: " + aMessage.name);
     let msg = aMessage.json;
     let contacts = msg.contacts;
 
@@ -339,10 +377,9 @@ ContactManager.prototype = {
         let req = this.getRequest(msg.requestID);
         if (req) {
           let result = this._convertContactsArray(contacts);
-          debug("result: " + JSON.stringify(result));
           Services.DOMRequest.fireSuccess(req.request, result);
         } else {
-          debug("no request stored!" + msg.requestID);
+          if (DEBUG) debug("no request stored!" + msg.requestID);
         }
         break;
       case "Contact:Save:Return:OK":
@@ -370,7 +407,7 @@ ContactManager.prototype = {
           Services.DOMRequest.fireError(req.request, msg.errorMsg);
         break;
       case "PermissionPromptHelper:AskPermission:OK":
-        debug("id: " + msg.requestID);
+        if (DEBUG) debug("id: " + msg.requestID);
         req = this.getRequest(msg.requestID);
         if (!req) {
           break;
@@ -383,13 +420,13 @@ ContactManager.prototype = {
         }
         break;
       default: 
-        debug("Wrong message: " + aMessage.name);
+        if (DEBUG) debug("Wrong message: " + aMessage.name);
     }
     this.removeRequest(msg.requestID);
   },
 
   askPermission: function (aAccess, aReqeust, aAllowCallback, aCancelCallback) {
-    debug("askPermission for contacts");
+    if (DEBUG) debug("askPermission for contacts");
     let requestID = this.getRequestId({
       request: aReqeust,
       allow: function() {
@@ -417,7 +454,7 @@ ContactManager.prototype = {
 
   save: function save(aContact) {
     let request;
-    debug("save: " + JSON.stringify(aContact) + " :" + aContact.id);
+    if (DEBUG) debug("save: " + JSON.stringify(aContact) + " :" + aContact.id);
     let newContact = {};
     newContact.properties = {
       name:            [],
@@ -457,7 +494,7 @@ ContactManager.prototype = {
     }
 
     this._setMetaData(newContact, aContact);
-    debug("send: " + JSON.stringify(newContact));
+    if (DEBUG) debug("send: " + JSON.stringify(newContact));
     request = this.createRequest();
     let options = { contact: newContact };
     let allowCallback = function() {
@@ -468,7 +505,7 @@ ContactManager.prototype = {
   },
 
   find: function(aOptions) {
-    debug("find! " + JSON.stringify(aOptions));
+    if (DEBUG) debug("find! " + JSON.stringify(aOptions));
     let request;
     request = this.createRequest();
     let options = { findOptions: aOptions };
@@ -491,7 +528,7 @@ ContactManager.prototype = {
   },
 
   clear: function() {
-    debug("clear");
+    if (DEBUG) debug("clear");
     let request;
     request = this.createRequest();
     let options = {};
@@ -508,16 +545,16 @@ ContactManager.prototype = {
 
     let allowCallback = function() {
       let callback = function(aType, aContacts) {
-        debug("got SIM contacts: " + aType + " " + JSON.stringify(aContacts));
+        if (DEBUG) debug("got SIM contacts: " + aType + " " + JSON.stringify(aContacts));
         let result = aContacts.map(function(c) {
           var contact = new Contact();
           contact.init( { name: [c.alphaId], tel: [ { number: c.number } ] } );
           return contact;
         });
-        debug("result: " + JSON.stringify(result));
+        if (DEBUG) debug("result: " + JSON.stringify(result));
         Services.DOMRequest.fireSuccess(request, result);
       };
-      debug("getSimContacts " + aType);
+      if (DEBUG) debug("getSimContacts " + aType);
 
       mRIL.getICCContacts(aType, callback);
     }.bind(this);
@@ -543,7 +580,7 @@ ContactManager.prototype = {
 
   // Called from DOMRequestIpcHelper
   uninit: function uninit() {
-    debug("uninit call");
+    if (DEBUG) debug("uninit call");
     if (this._oncontactchange)
       this._oncontactchange = null;
   },

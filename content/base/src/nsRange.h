@@ -33,11 +33,11 @@ public:
   {}
   virtual ~nsRange();
 
-  static nsresult CreateRange(nsIDOMNode* aStartParent, PRInt32 aStartOffset,
-                              nsIDOMNode* aEndParent, PRInt32 aEndOffset,
+  static nsresult CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
+                              nsIDOMNode* aEndParent, int32_t aEndOffset,
                               nsRange** aRange);
-  static nsresult CreateRange(nsIDOMNode* aStartParent, PRInt32 aStartOffset,
-                              nsIDOMNode* aEndParent, PRInt32 aEndOffset,
+  static nsresult CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
+                              nsIDOMNode* aEndParent, int32_t aEndOffset,
                               nsIDOMRange** aRange);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -61,12 +61,12 @@ public:
     return mEndParent;
   }
 
-  PRInt32 StartOffset() const
+  int32_t StartOffset() const
   {
     return mStartOffset;
   }
 
-  PRInt32 EndOffset() const
+  int32_t EndOffset() const
   {
     return mEndOffset;
   }
@@ -116,12 +116,12 @@ public:
 
   nsINode* GetCommonAncestor() const;
   void Reset();
-  nsresult SetStart(nsINode* aParent, PRInt32 aOffset);
-  nsresult SetEnd(nsINode* aParent, PRInt32 aOffset);
+  nsresult SetStart(nsINode* aParent, int32_t aOffset);
+  nsresult SetEnd(nsINode* aParent, int32_t aOffset);
   already_AddRefed<nsRange> CloneRange() const;
 
-  nsresult Set(nsINode* aStartParent, PRInt32 aStartOffset,
-               nsINode* aEndParent, PRInt32 aEndOffset)
+  nsresult Set(nsINode* aStartParent, int32_t aStartOffset,
+               nsINode* aEndParent, int32_t aEndOffset)
   {
     // If this starts being hot, we may be able to optimize this a bit,
     // but for now just set start and end separately.
@@ -170,8 +170,8 @@ public:
                                      bool *outNodeBefore,
                                      bool *outNodeAfter);
 
-  static bool IsNodeSelected(nsINode* aNode, PRUint32 aStartOffset,
-                             PRUint32 aEndOffset);
+  static bool IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
+                             uint32_t aEndOffset);
 
   typedef nsTHashtable<nsPtrHashKey<nsRange> > RangeHashTable;
 protected:
@@ -183,8 +183,8 @@ protected:
   // and suppress re-registering a range common ancestor node since
   // the new text node of a splitText hasn't been inserted yet.
   // CharacterDataChanged does the re-registering when needed.
-  void DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
-                  nsINode* aEndN, PRInt32 aEndOffset,
+  void DoSetRange(nsINode* aStartN, int32_t aStartOffset,
+                  nsINode* aEndN, int32_t aEndOffset,
                   nsINode* aRoot, bool aNotInsertedYet = false);
 
   /**
@@ -222,8 +222,8 @@ protected:
   nsCOMPtr<nsINode> mRoot;
   nsCOMPtr<nsINode> mStartParent;
   nsCOMPtr<nsINode> mEndParent;
-  PRInt32 mStartOffset;
-  PRInt32 mEndOffset;
+  int32_t mStartOffset;
+  int32_t mEndOffset;
 
   bool mIsPositioned;
   bool mIsDetached;

@@ -755,6 +755,22 @@ EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static JSBool
+DisplayName(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (argc == 0 || !args[0].isObject() || !args[0].toObject().isFunction()) {
+        RootedObject arg(cx, &args.callee());
+        ReportUsageError(cx, arg, "Must have one function argument");
+        return false;
+    }
+
+    JSFunction *fun = args[0].toObject().toFunction();
+    JSString *str = fun->displayAtom();
+    vp->setString(str == NULL ? cx->runtime->emptyString : str);
+    return true;
+}
+
 static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -806,6 +822,7 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "   10: Incremental GC in multiple slices\n"
 "   11: Verify post write barriers between instructions\n"
 "   12: Verify post write barriers between paints\n"
+"   13: Purge analysis state when memory is allocated\n"
 "  Period specifies that collection happens every n allocations.\n"),
 
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
@@ -866,6 +883,12 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  true, then even slower assertions are enabled for all generated JIT code.\n"
 "  When 'slow' is false, then instrumentation is enabled, but the slow\n"
 "  assertions are disabled."),
+
+    JS_FN_HELP("displayName", DisplayName, 1, 0,
+"displayName(fn)",
+"  Gets the display name for a function, which can possibly be a guessed or\n"
+"  inferred name based on where the function was defined. This can be\n"
+"  different from the 'name' property on the function."),
 
     JS_FS_HELP_END
 };

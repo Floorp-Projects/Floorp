@@ -127,12 +127,12 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
 
   // If we're holding locks, unlock the old image.
   // Note that UnlockImage decrements mLockCount each time it's called.
-  PRUint32 oldLockCount = mLockCount;
+  uint32_t oldLockCount = mLockCount;
   while (mLockCount)
     UnlockImage();
 
   // If we're holding animation requests, undo them.
-  PRUint32 oldAnimationConsumers = mAnimationConsumers;
+  uint32_t oldAnimationConsumers = mAnimationConsumers;
   ClearAnimationConsumers();
 
   // Even if we are cancelled, we MUST change our image, because the image
@@ -140,13 +140,13 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   mImage = aNewOwner->mImage;
 
   // If we were locked, apply the locks here
-  for (PRUint32 i = 0; i < oldLockCount; i++)
+  for (uint32_t i = 0; i < oldLockCount; i++)
     LockImage();
 
   if (mCanceled) {
     // If we had animation requests, restore them before exiting
     // (otherwise we restore them later below)
-    for (PRUint32 i = 0; i < oldAnimationConsumers; i++)
+    for (uint32_t i = 0; i < oldAnimationConsumers; i++)
       IncrementAnimationConsumers();
 
     return NS_OK;
@@ -167,7 +167,7 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   // If we had animation requests, restore them here. Note that we
   // do this *after* RemoveProxy, which clears out animation consumers
   // (see bug 601723).
-  for (PRUint32 i = 0; i < oldAnimationConsumers; i++)
+  for (uint32_t i = 0; i < oldAnimationConsumers; i++)
     IncrementAnimationConsumers();
 
   mOwner = aNewOwner;
@@ -437,7 +437,7 @@ NS_IMETHODIMP imgRequestProxy::GetImage(imgIContainer * *aImage)
 }
 
 /* readonly attribute unsigned long imageStatus; */
-NS_IMETHODIMP imgRequestProxy::GetImageStatus(PRUint32 *aStatus)
+NS_IMETHODIMP imgRequestProxy::GetImageStatus(uint32_t *aStatus)
 {
   *aStatus = GetStatusTracker().GetImageStatus();
 
@@ -537,8 +537,8 @@ NS_IMETHODIMP imgRequestProxy::GetMultipart(bool *aMultipart)
   return NS_OK;
 }
 
-/* readonly attribute PRInt32 CORSMode; */
-NS_IMETHODIMP imgRequestProxy::GetCORSMode(PRInt32* aCorsMode)
+/* readonly attribute int32_t CORSMode; */
+NS_IMETHODIMP imgRequestProxy::GetCORSMode(int32_t* aCorsMode)
 {
   if (!mOwner)
     return NS_ERROR_FAILURE;
@@ -550,21 +550,21 @@ NS_IMETHODIMP imgRequestProxy::GetCORSMode(PRInt32* aCorsMode)
 
 /** nsISupportsPriority methods **/
 
-NS_IMETHODIMP imgRequestProxy::GetPriority(PRInt32 *priority)
+NS_IMETHODIMP imgRequestProxy::GetPriority(int32_t *priority)
 {
   NS_ENSURE_STATE(mOwner);
   *priority = mOwner->Priority();
   return NS_OK;
 }
 
-NS_IMETHODIMP imgRequestProxy::SetPriority(PRInt32 priority)
+NS_IMETHODIMP imgRequestProxy::SetPriority(int32_t priority)
 {
   NS_ENSURE_STATE(mOwner && !mCanceled);
   mOwner->AdjustPriority(this, priority - mOwner->Priority());
   return NS_OK;
 }
 
-NS_IMETHODIMP imgRequestProxy::AdjustPriority(PRInt32 priority)
+NS_IMETHODIMP imgRequestProxy::AdjustPriority(int32_t priority)
 {
   NS_ENSURE_STATE(mOwner && !mCanceled);
   mOwner->AdjustPriority(this, priority);
@@ -632,7 +632,7 @@ void imgRequestProxy::OnStartContainer(imgIContainer *image)
   }
 }
 
-void imgRequestProxy::OnStartFrame(PRUint32 frame)
+void imgRequestProxy::OnStartFrame(uint32_t frame)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartFrame");
 
@@ -654,7 +654,7 @@ void imgRequestProxy::OnDataAvailable(bool aCurrentFrame, const nsIntRect * rect
   }
 }
 
-void imgRequestProxy::OnStopFrame(PRUint32 frame)
+void imgRequestProxy::OnStopFrame(uint32_t frame)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopFrame");
 
@@ -829,8 +829,8 @@ imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
   }
 
   // We are animated. We need to extract the current frame from this image.
-  PRInt32 w = 0;
-  PRInt32 h = 0;
+  int32_t w = 0;
+  int32_t h = 0;
   mImage->GetWidth(&w);
   mImage->GetHeight(&h);
   nsIntRect rect(0, 0, w, h);
@@ -897,11 +897,11 @@ imgRequestProxy::SetImage(Image* aImage)
   mImage = aImage;
 
   // Apply any locks we have
-  for (PRUint32 i = 0; i < mLockCount; ++i)
+  for (uint32_t i = 0; i < mLockCount; ++i)
     mImage->LockImage();
 
   // Apply any animation consumers we have
-  for (PRUint32 i = 0; i < mAnimationConsumers; i++)
+  for (uint32_t i = 0; i < mAnimationConsumers; i++)
     mImage->IncrementAnimationConsumers();
 }
 

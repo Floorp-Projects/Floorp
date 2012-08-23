@@ -36,7 +36,7 @@ protected:
 
   nscolor mColor;
 
-  PRUint16 mThickness;
+  uint16_t mThickness;
   bool mInvert;
 };
 

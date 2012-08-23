@@ -304,8 +304,8 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
         mData.u.wstr.mWStringValue = const_cast<jschar *>(chars);
         // Use C-style cast, because reinterpret cast from size_t to
-        // PRUint32 is not valid on some platforms.
-        mData.u.wstr.mWStringLength = (PRUint32)length;
+        // uint32_t is not valid on some platforms.
+        mData.u.wstr.mWStringLength = (uint32_t)length;
         mData.mType = nsIDataType::VTYPE_WSTRING_SIZE_IS;
 
         return true;
@@ -379,7 +379,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
                             nsresult* pErr, jsval* pJSVal)
 {
     // Get the type early because we might need to spoof it below.
-    PRUint16 type;
+    uint16_t type;
     if (NS_FAILED(variant->GetDataType(&type)))
         return false;
 
@@ -426,7 +426,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
     nsAutoString astring;
     nsCAutoString cString;
     nsUTF8String utf8String;
-    PRUint32 size;
+    uint32_t size;
     xpctvar.flags = 0;
     JSBool success;
 
@@ -559,7 +559,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
             success = false;
 
             nsXPTType conversionType;
-            PRUint16 elementType = du.u.array.mArrayType;
+            uint16_t elementType = du.u.array.mArrayType;
             const nsID* pid = nullptr;
 
             switch (elementType) {
@@ -673,57 +673,57 @@ VARIANT_DONE:
 // some more interesting conversions.
 
 
-/* readonly attribute PRUint16 dataType; */
-NS_IMETHODIMP XPCVariant::GetDataType(PRUint16 *aDataType)
+/* readonly attribute uint16_t dataType; */
+NS_IMETHODIMP XPCVariant::GetDataType(uint16_t *aDataType)
 {
     *aDataType = mData.mType;
     return NS_OK;
 }
 
-/* PRUint8 getAsInt8 (); */
-NS_IMETHODIMP XPCVariant::GetAsInt8(PRUint8 *_retval)
+/* uint8_t getAsInt8 (); */
+NS_IMETHODIMP XPCVariant::GetAsInt8(uint8_t *_retval)
 {
     return nsVariant::ConvertToInt8(mData, _retval);
 }
 
-/* PRInt16 getAsInt16 (); */
-NS_IMETHODIMP XPCVariant::GetAsInt16(PRInt16 *_retval)
+/* int16_t getAsInt16 (); */
+NS_IMETHODIMP XPCVariant::GetAsInt16(int16_t *_retval)
 {
     return nsVariant::ConvertToInt16(mData, _retval);
 }
 
-/* PRInt32 getAsInt32 (); */
-NS_IMETHODIMP XPCVariant::GetAsInt32(PRInt32 *_retval)
+/* int32_t getAsInt32 (); */
+NS_IMETHODIMP XPCVariant::GetAsInt32(int32_t *_retval)
 {
     return nsVariant::ConvertToInt32(mData, _retval);
 }
 
-/* PRInt64 getAsInt64 (); */
-NS_IMETHODIMP XPCVariant::GetAsInt64(PRInt64 *_retval)
+/* int64_t getAsInt64 (); */
+NS_IMETHODIMP XPCVariant::GetAsInt64(int64_t *_retval)
 {
     return nsVariant::ConvertToInt64(mData, _retval);
 }
 
-/* PRUint8 getAsUint8 (); */
-NS_IMETHODIMP XPCVariant::GetAsUint8(PRUint8 *_retval)
+/* uint8_t getAsUint8 (); */
+NS_IMETHODIMP XPCVariant::GetAsUint8(uint8_t *_retval)
 {
     return nsVariant::ConvertToUint8(mData, _retval);
 }
 
-/* PRUint16 getAsUint16 (); */
-NS_IMETHODIMP XPCVariant::GetAsUint16(PRUint16 *_retval)
+/* uint16_t getAsUint16 (); */
+NS_IMETHODIMP XPCVariant::GetAsUint16(uint16_t *_retval)
 {
     return nsVariant::ConvertToUint16(mData, _retval);
 }
 
-/* PRUint32 getAsUint32 (); */
-NS_IMETHODIMP XPCVariant::GetAsUint32(PRUint32 *_retval)
+/* uint32_t getAsUint32 (); */
+NS_IMETHODIMP XPCVariant::GetAsUint32(uint32_t *_retval)
 {
     return nsVariant::ConvertToUint32(mData, _retval);
 }
 
-/* PRUint64 getAsUint64 (); */
-NS_IMETHODIMP XPCVariant::GetAsUint64(PRUint64 *_retval)
+/* uint64_t getAsUint64 (); */
+NS_IMETHODIMP XPCVariant::GetAsUint64(uint64_t *_retval)
 {
     return nsVariant::ConvertToUint64(mData, _retval);
 }
@@ -815,20 +815,20 @@ NS_IMETHODIMP XPCVariant::GetAsInterface(nsIID * *iid, void * *iface)
 }
 
 
-/* [notxpcom] nsresult getAsArray (out PRUint16 type, out nsIID iid, out PRUint32 count, out voidPtr ptr); */
-NS_IMETHODIMP_(nsresult) XPCVariant::GetAsArray(PRUint16 *type, nsIID *iid, PRUint32 *count, void * *ptr)
+/* [notxpcom] nsresult getAsArray (out uint16_t type, out nsIID iid, out uint32_t count, out voidPtr ptr); */
+NS_IMETHODIMP_(nsresult) XPCVariant::GetAsArray(uint16_t *type, nsIID *iid, uint32_t *count, void * *ptr)
 {
     return nsVariant::ConvertToArray(mData, type, iid, count, ptr);
 }
 
-/* void getAsStringWithSize (out PRUint32 size, [size_is (size), retval] out string str); */
-NS_IMETHODIMP XPCVariant::GetAsStringWithSize(PRUint32 *size, char **str)
+/* void getAsStringWithSize (out uint32_t size, [size_is (size), retval] out string str); */
+NS_IMETHODIMP XPCVariant::GetAsStringWithSize(uint32_t *size, char **str)
 {
     return nsVariant::ConvertToStringWithSize(mData, size, str);
 }
 
-/* void getAsWStringWithSize (out PRUint32 size, [size_is (size), retval] out wstring str); */
-NS_IMETHODIMP XPCVariant::GetAsWStringWithSize(PRUint32 *size, PRUnichar **str)
+/* void getAsWStringWithSize (out uint32_t size, [size_is (size), retval] out wstring str); */
+NS_IMETHODIMP XPCVariant::GetAsWStringWithSize(uint32_t *size, PRUnichar **str)
 {
     return nsVariant::ConvertToWStringWithSize(mData, size, str);
 }

@@ -33,8 +33,8 @@ nsXULControllers::~nsXULControllers(void)
 void
 nsXULControllers::DeleteControllers()
 {
-  PRUint32 count = mControllers.Length();
-  for (PRUint32 i = 0; i < count; i++)
+  uint32_t count = mControllers.Length();
+  for (uint32_t i = 0; i < count; i++)
   {
     nsXULControllerData* controllerData = mControllers.ElementAt(i);
     delete controllerData;    // releases the nsIController
@@ -68,7 +68,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULControllers)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULControllers)
   {
-    PRUint32 i, count = tmp->mControllers.Length();
+    uint32_t i, count = tmp->mControllers.Length();
     for (i = 0; i < count; ++i) {
       nsXULControllerData* controllerData = tmp->mControllers[i];
       if (controllerData) {
@@ -96,8 +96,8 @@ nsXULControllers::GetControllerForCommand(const char *aCommand, nsIController** 
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nullptr;
 
-  PRUint32 count = mControllers.Length();
-  for (PRUint32 i=0; i < count; i++)
+  uint32_t count = mControllers.Length();
+  for (uint32_t i=0; i < count; i++)
   {
     nsXULControllerData* controllerData = mControllers.ElementAt(i);
     if (controllerData)
@@ -121,7 +121,7 @@ nsXULControllers::GetControllerForCommand(const char *aCommand, nsIController** 
 }
 
 NS_IMETHODIMP
-nsXULControllers::InsertControllerAt(PRUint32 aIndex, nsIController *controller)
+nsXULControllers::InsertControllerAt(uint32_t aIndex, nsIController *controller)
 {
   nsXULControllerData*  controllerData = new nsXULControllerData(++mCurControllerID, controller);
   if (!controllerData) return NS_ERROR_OUT_OF_MEMORY;
@@ -134,7 +134,7 @@ nsXULControllers::InsertControllerAt(PRUint32 aIndex, nsIController *controller)
 }
 
 NS_IMETHODIMP
-nsXULControllers::RemoveControllerAt(PRUint32 aIndex, nsIController **_retval)
+nsXULControllers::RemoveControllerAt(uint32_t aIndex, nsIController **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nullptr;
@@ -152,7 +152,7 @@ nsXULControllers::RemoveControllerAt(PRUint32 aIndex, nsIController **_retval)
 
 
 NS_IMETHODIMP
-nsXULControllers::GetControllerAt(PRUint32 aIndex, nsIController **_retval)
+nsXULControllers::GetControllerAt(uint32_t aIndex, nsIController **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nullptr;
@@ -184,8 +184,8 @@ nsXULControllers::RemoveController(nsIController *controller)
   // first get the identity pointer
   nsCOMPtr<nsISupports> controllerSup(do_QueryInterface(controller));
   // then find it
-  PRUint32 count = mControllers.Length();
-  for (PRUint32 i = 0; i < count; i++)
+  uint32_t count = mControllers.Length();
+  for (uint32_t i = 0; i < count; i++)
   {
     nsXULControllerData* controllerData = mControllers.ElementAt(i);
     if (controllerData)
@@ -206,12 +206,12 @@ nsXULControllers::RemoveController(nsIController *controller)
     
 /* unsigned long getControllerId (in nsIController controller); */
 NS_IMETHODIMP
-nsXULControllers::GetControllerId(nsIController *controller, PRUint32 *_retval)
+nsXULControllers::GetControllerId(nsIController *controller, uint32_t *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  PRUint32 count = mControllers.Length();
-  for (PRUint32 i = 0; i < count; i++)
+  uint32_t count = mControllers.Length();
+  for (uint32_t i = 0; i < count; i++)
   {
     nsXULControllerData* controllerData = mControllers.ElementAt(i);
     if (controllerData)
@@ -230,12 +230,12 @@ nsXULControllers::GetControllerId(nsIController *controller, PRUint32 *_retval)
 
 /* nsIController getControllerById (in unsigned long controllerID); */
 NS_IMETHODIMP
-nsXULControllers::GetControllerById(PRUint32 controllerID, nsIController **_retval)
+nsXULControllers::GetControllerById(uint32_t controllerID, nsIController **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
     
-  PRUint32 count = mControllers.Length();
-  for (PRUint32 i = 0; i < count; i++)
+  uint32_t count = mControllers.Length();
+  for (uint32_t i = 0; i < count; i++)
   {
     nsXULControllerData* controllerData = mControllers.ElementAt(i);
     if (controllerData && controllerData->GetControllerID() == controllerID)
@@ -247,7 +247,7 @@ nsXULControllers::GetControllerById(PRUint32 controllerID, nsIController **_retv
 }
 
 NS_IMETHODIMP
-nsXULControllers::GetControllerCount(PRUint32 *_retval)
+nsXULControllers::GetControllerCount(uint32_t *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = mControllers.Length();

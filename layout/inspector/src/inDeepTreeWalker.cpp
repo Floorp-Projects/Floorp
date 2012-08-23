@@ -71,7 +71,7 @@ inDeepTreeWalker::SetShowSubDocuments(bool aShowSubDocuments)
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::Init(nsIDOMNode* aRoot, PRUint32 aWhatToShow)
+inDeepTreeWalker::Init(nsIDOMNode* aRoot, uint32_t aWhatToShow)
 {
   mRoot = aRoot;
   mWhatToShow = aWhatToShow;
@@ -94,7 +94,7 @@ inDeepTreeWalker::GetRoot(nsIDOMNode** aRoot)
 }
 
 NS_IMETHODIMP 
-inDeepTreeWalker::GetWhatToShow(PRUint32* aWhatToShow)
+inDeepTreeWalker::GetWhatToShow(uint32_t* aWhatToShow)
 {
   *aWhatToShow = mWhatToShow;
   return NS_OK;
@@ -177,7 +177,7 @@ inDeepTreeWalker::LastChild(nsIDOMNode **_retval)
 
   DeepTreeStackItem& top = mStack.ElementAt(mStack.Length() - 1);
   nsCOMPtr<nsIDOMNode> kid;
-  PRUint32 length;
+  uint32_t length;
   top.kids->GetLength(&length);
   top.kids->Item(length - 1, getter_AddRefs(kid));
   if (!kid) {
@@ -297,7 +297,7 @@ inDeepTreeWalker::NextNode(nsIDOMNode **_retval)
 #ifdef DEBUG
   nsIDOMNode* origCurrentNode = mCurrentNode;
 #endif
-  PRUint32 lastChildCallsToMake = 0;
+  uint32_t lastChildCallsToMake = 0;
   while (1) {
     NextSibling(_retval);
 

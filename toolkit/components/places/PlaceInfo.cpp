@@ -15,11 +15,11 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// PlaceInfo
 
-PlaceInfo::PlaceInfo(PRInt64 aId,
+PlaceInfo::PlaceInfo(int64_t aId,
                      const nsCString& aGUID,
                      already_AddRefed<nsIURI> aURI,
                      const nsString& aTitle,
-                     PRInt64 aFrecency,
+                     int64_t aFrecency,
                      const VisitsArray& aVisits)
 : mId(aId)
 , mGUID(aGUID)
@@ -35,7 +35,7 @@ PlaceInfo::PlaceInfo(PRInt64 aId,
 //// mozIPlaceInfo
 
 NS_IMETHODIMP
-PlaceInfo::GetPlaceId(PRInt64* _placeId)
+PlaceInfo::GetPlaceId(int64_t* _placeId)
 {
   *_placeId = mId;
   return NS_OK;
@@ -63,7 +63,7 @@ PlaceInfo::GetTitle(nsAString& _title)
 }
 
 NS_IMETHODIMP
-PlaceInfo::GetFrecency(PRInt64* _frecency)
+PlaceInfo::GetFrecency(int64_t* _frecency)
 {
   *_frecency = mFrecency;
   return NS_OK;

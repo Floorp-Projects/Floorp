@@ -101,7 +101,7 @@ static nsresult
 NewURI(const nsACString &aSpec,
        const char *aCharset,
        nsIURI *aBaseURI,
-       PRInt32 aDefaultPort,
+       int32_t aDefaultPort,
        nsIURI **aURI)
 {
     nsStandardURL *url = new nsStandardURL();
@@ -332,7 +332,7 @@ nsHttpHandler::InitConnectionMgr()
 
 nsresult
 nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
-                                         PRUint8 caps,
+                                         uint8_t caps,
                                          bool useProxy)
 {
     nsresult rv;
@@ -442,7 +442,7 @@ nsHttpHandler::GetIOService(nsIIOService** result)
     return NS_OK;
 }
 
-PRUint32
+uint32_t
 nsHttpHandler::Get32BitsOfPseudoRandom()
 {
     // only confirm rand seeding on socket thread
@@ -454,13 +454,13 @@ nsHttpHandler::Get32BitsOfPseudoRandom()
     PR_STATIC_ASSERT(RAND_MAX >= 0xfff);
     
 #if RAND_MAX < 0xffffU
-    return ((PRUint16) rand() << 20) |
-            (((PRUint16) rand() & 0xfff) << 8) |
-            ((PRUint16) rand() & 0xff);
+    return ((uint16_t) rand() << 20) |
+            (((uint16_t) rand() & 0xfff) << 8) |
+            ((uint16_t) rand() & 0xff);
 #elif RAND_MAX < 0xffffffffU
-    return ((PRUint16) rand() << 16) | ((PRUint16) rand() & 0xffff);
+    return ((uint16_t) rand() << 16) | ((uint16_t) rand() & 0xffff);
 #else
-    return (PRUint32) rand();
+    return (uint32_t) rand();
 #endif
 }
 
@@ -474,7 +474,7 @@ nsHttpHandler::NotifyObservers(nsIHttpChannel *chan, const char *event)
 
 nsresult
 nsHttpHandler::AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
-                                 PRUint32 flags)
+                                 uint32_t flags)
 {
     // TODO E10S This helper has to be initialized on the other process
     nsRefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
@@ -484,7 +484,7 @@ nsHttpHandler::AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
 }
 
 /* static */ nsresult
-nsHttpHandler::GenerateHostPort(const nsCString& host, PRInt32 port,
+nsHttpHandler::GenerateHostPort(const nsCString& host, int32_t port,
                                 nsCString& hostLine)
 {
     return NS_GenerateHostPort(host, port, hostLine);
@@ -613,9 +613,9 @@ nsHttpHandler::InitUserAgentComponents()
     nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
     NS_ASSERTION(infoService, "Could not find a system info service");
 
-    bool isTablet = false;
-    infoService->GetPropertyAsBool(NS_LITERAL_STRING("tablet"), &isTablet);
-    if (isTablet)
+    bool isTablet;
+    nsresult rv = infoService->GetPropertyAsBool(NS_LITERAL_STRING("tablet"), &isTablet);
+    if (NS_SUCCEEDED(rv) && isTablet)
         mCompatDevice.AssignLiteral("Tablet");
     else
         mCompatDevice.AssignLiteral("Mobile");
@@ -681,7 +681,7 @@ nsHttpHandler::InitUserAgentComponents()
         buf =  (char*)name.sysname;
 
         if (strcmp(name.machine, "x86_64") == 0 &&
-            sizeof(void *) == sizeof(PRInt32)) {
+            sizeof(void *) == sizeof(int32_t)) {
             // We're running 32-bit code on x86_64. Make this browser
             // look like it's running on i686 hardware, but append "
             // (x86_64)" to the end of the oscpu identifier to be able
@@ -712,7 +712,7 @@ nsHttpHandler::InitUserAgentComponents()
     mUserAgentIsDirty = true;
 }
 
-PRUint32
+uint32_t
 nsHttpHandler::MaxSocketCount()
 {
     PR_CallOnce(&nsSocketTransportService::gMaxCountInitOnce,
@@ -721,7 +721,7 @@ nsHttpHandler::MaxSocketCount()
     // the persistent connection pool for a long time and that could
     // starve other users.
 
-    PRUint32 maxCount = nsSocketTransportService::gMaxCount;
+    uint32_t maxCount = nsSocketTransportService::gMaxCount;
     if (maxCount <= 8)
         maxCount = 1;
     else
@@ -734,7 +734,7 @@ void
 nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 {
     nsresult rv = NS_OK;
-    PRInt32 val;
+    int32_t val;
 
     LOG(("nsHttpHandler::PrefsChanged [pref=%s]\n", pref));
 
@@ -774,13 +774,13 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("request.max-attempts"))) {
         rv = prefs->GetIntPref(HTTP_PREF("request.max-attempts"), &val);
         if (NS_SUCCEEDED(rv))
-            mMaxRequestAttempts = (PRUint16) clamped(val, 1, 0xffff);
+            mMaxRequestAttempts = (uint16_t) clamped(val, 1, 0xffff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("request.max-start-delay"))) {
         rv = prefs->GetIntPref(HTTP_PREF("request.max-start-delay"), &val);
         if (NS_SUCCEEDED(rv)) {
-            mMaxRequestDelay = (PRUint16) clamped(val, 0, 0xffff);
+            mMaxRequestDelay = (uint16_t) clamped(val, 0, 0xffff);
             if (mConnMgr)
                 mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_REQUEST_DELAY,
                                       mMaxRequestDelay);
@@ -791,8 +791,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("max-connections"), &val);
         if (NS_SUCCEEDED(rv)) {
 
-            mMaxConnections = (PRUint16) clamped((PRUint32)val,
-                                                 (PRUint32)1, MaxSocketCount());
+            mMaxConnections = (uint16_t) clamped((uint32_t)val,
+                                                 (uint32_t)1, MaxSocketCount());
 
             if (mConnMgr)
                 mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_CONNECTIONS,
@@ -803,7 +803,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("max-persistent-connections-per-server"))) {
         rv = prefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-server"), &val);
         if (NS_SUCCEEDED(rv)) {
-            mMaxPersistentConnectionsPerServer = (PRUint8) clamped(val, 1, 0xff);
+            mMaxPersistentConnectionsPerServer = (uint8_t) clamped(val, 1, 0xff);
             if (mConnMgr)
                 mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_PERSISTENT_CONNECTIONS_PER_HOST,
                                       mMaxPersistentConnectionsPerServer);
@@ -813,7 +813,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("max-persistent-connections-per-proxy"))) {
         rv = prefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-proxy"), &val);
         if (NS_SUCCEEDED(rv)) {
-            mMaxPersistentConnectionsPerProxy = (PRUint8) clamped(val, 1, 0xff);
+            mMaxPersistentConnectionsPerProxy = (uint8_t) clamped(val, 1, 0xff);
             if (mConnMgr)
                 mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_PERSISTENT_CONNECTIONS_PER_PROXY,
                                       mMaxPersistentConnectionsPerProxy);
@@ -823,19 +823,19 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("sendRefererHeader"))) {
         rv = prefs->GetIntPref(HTTP_PREF("sendRefererHeader"), &val);
         if (NS_SUCCEEDED(rv))
-            mReferrerLevel = (PRUint8) clamped(val, 0, 0xff);
+            mReferrerLevel = (uint8_t) clamped(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("redirection-limit"))) {
         rv = prefs->GetIntPref(HTTP_PREF("redirection-limit"), &val);
         if (NS_SUCCEEDED(rv))
-            mRedirectionLimit = (PRUint8) clamped(val, 0, 0xff);
+            mRedirectionLimit = (uint8_t) clamped(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("connection-retry-timeout"))) {
         rv = prefs->GetIntPref(HTTP_PREF("connection-retry-timeout"), &val);
         if (NS_SUCCEEDED(rv))
-            mIdleSynTimeout = (PRUint16) clamped(val, 0, 3000);
+            mIdleSynTimeout = (uint16_t) clamped(val, 0, 3000);
     }
 
     if (PREF_CHANGED(HTTP_PREF("fast-fallback-to-IPv4"))) {
@@ -911,7 +911,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("pipelining.maxsize"), &val);
         if (NS_SUCCEEDED(rv)) {
             mMaxPipelineObjectSize =
-                static_cast<PRInt64>(clamped(val, 1000, 100000000));
+                static_cast<int64_t>(clamped(val, 1000, 100000000));
         }
     }
 
@@ -931,7 +931,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                                &val);
         if (NS_SUCCEEDED(rv)) {
             mPipelineRescheduleTimeout =
-                PR_MillisecondsToInterval((PRUint16) clamped(val, 500, 0xffff));
+                PR_MillisecondsToInterval((uint16_t) clamped(val, 500, 0xffff));
         }
     }
 
@@ -941,7 +941,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("pipelining.read-timeout"), &val);
         if (NS_SUCCEEDED(rv)) {
             mPipelineReadTimeout =
-                PR_MillisecondsToInterval((PRUint16) clamped(val, 5000,
+                PR_MillisecondsToInterval((uint16_t) clamped(val, 5000,
                                                              0xffff));
         }
     }
@@ -965,7 +965,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("qos"))) {
         rv = prefs->GetIntPref(HTTP_PREF("qos"), &val);
         if (NS_SUCCEEDED(rv))
-            mQoSBits = (PRUint8) clamped(val, 0, 0xff);
+            mQoSBits = (uint8_t) clamped(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("sendSecureXSiteReferrer"))) {
@@ -1045,7 +1045,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("phishy-userpass-length"))) {
         rv = prefs->GetIntPref(HTTP_PREF("phishy-userpass-length"), &val);
         if (NS_SUCCEEDED(rv))
-            mPhishyUserPassLength = (PRUint8) clamped(val, 0, 0xff);
+            mPhishyUserPassLength = (uint8_t) clamped(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.enabled"))) {
@@ -1088,7 +1088,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("spdy.chunk-size"))) {
         rv = prefs->GetIntPref(HTTP_PREF("spdy.chunk-size"), &val);
         if (NS_SUCCEEDED(rv))
-            mSpdySendingChunkSize = (PRUint32) clamped(val, 1, 0x7fffffff);
+            mSpdySendingChunkSize = (uint32_t) clamped(val, 1, 0x7fffffff);
     }
 
     // The amount of idle seconds on a spdy connection before initiating a
@@ -1097,7 +1097,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("spdy.ping-threshold"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdyPingThreshold =
-                PR_SecondsToInterval((PRUint16) clamped(val, 0, 0x7fffffff));
+                PR_SecondsToInterval((uint16_t) clamped(val, 0, 0x7fffffff));
     }
 
     // The amount of seconds to wait for a spdy ping response before
@@ -1106,7 +1106,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("spdy.ping-timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdyPingTimeout =
-                PR_SecondsToInterval((PRUint16) clamped(val, 0, 0x7fffffff));
+                PR_SecondsToInterval((uint16_t) clamped(val, 0, 0x7fffffff));
     }
 
     // The maximum amount of time to wait for socket transport to be
@@ -1221,11 +1221,11 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
     if (!i_AcceptLanguages)
         return NS_OK;
 
-    PRUint32 n, size, wrote;
+    uint32_t n, size, wrote;
     double q, dec;
     char *p, *p2, *token, *q_Accept, *o_Accept;
     const char *comma;
-    PRInt32 available;
+    int32_t available;
 
     o_Accept = nsCRT::strdup(i_AcceptLanguages);
     if (!o_Accept)
@@ -1258,7 +1258,7 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
 
         if (*token != '\0') {
             comma = n++ != 0 ? "," : ""; // delimiter if not first item
-            PRUint32 u = QVAL_TO_UINT(q);
+            uint32_t u = QVAL_TO_UINT(q);
             if (u < 10)
                 wrote = PR_snprintf(p2, available, "%s%s;q=0.%u", comma, token, u);
             else
@@ -1325,14 +1325,14 @@ nsHttpHandler::GetScheme(nsACString &aScheme)
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetDefaultPort(PRInt32 *result)
+nsHttpHandler::GetDefaultPort(int32_t *result)
 {
     *result = NS_HTTP_DEFAULT_PORT;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetProtocolFlags(PRUint32 *result)
+nsHttpHandler::GetProtocolFlags(uint32_t *result)
 {
     *result = NS_HTTP_PROTOCOL_FLAGS;
     return NS_OK;
@@ -1374,7 +1374,7 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsIChannel **result)
 }
 
 NS_IMETHODIMP 
-nsHttpHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
+nsHttpHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = false;
@@ -1414,7 +1414,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
 
     // select proxy caps if using a non-transparent proxy.  SSL tunneling
     // should not use proxy settings.
-    PRInt8 caps;
+    int8_t caps;
     if (proxyInfo && !nsCRT::strcmp(proxyInfo->Type(), "http") && !https)
         caps = mProxyCapabilities;
     else
@@ -1584,7 +1584,7 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
     if (NS_FAILED(rv))
         return rv;
 
-    PRInt32 port = -1;
+    int32_t port = -1;
     rv = aURI->GetPort(&port);
     if (NS_FAILED(rv))
         return rv;
@@ -1623,14 +1623,14 @@ nsHttpsHandler::GetScheme(nsACString &aScheme)
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::GetDefaultPort(PRInt32 *aPort)
+nsHttpsHandler::GetDefaultPort(int32_t *aPort)
 {
     *aPort = NS_HTTPS_DEFAULT_PORT;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::GetProtocolFlags(PRUint32 *aProtocolFlags)
+nsHttpsHandler::GetProtocolFlags(uint32_t *aProtocolFlags)
 {
     *aProtocolFlags = NS_HTTP_PROTOCOL_FLAGS;
     return NS_OK;
@@ -1655,7 +1655,7 @@ nsHttpsHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::AllowPort(PRInt32 aPort, const char *aScheme, bool *_retval)
+nsHttpsHandler::AllowPort(int32_t aPort, const char *aScheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = false;

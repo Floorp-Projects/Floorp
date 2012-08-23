@@ -27,24 +27,24 @@ class nsIContentSerializer : public nsISupports {
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTSERIALIZER_IID)
 
-  NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
+  NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const char* aCharSet, bool aIsCopying,
                   bool aIsWholeDocument) = 0;
 
-  NS_IMETHOD AppendText(nsIContent* aText, PRInt32 aStartOffset,
-                        PRInt32 aEndOffset, nsAString& aStr) = 0;
+  NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
+                        int32_t aEndOffset, nsAString& aStr) = 0;
 
   NS_IMETHOD AppendCDATASection(nsIContent* aCDATASection,
-                                PRInt32 aStartOffset, PRInt32 aEndOffset,
+                                int32_t aStartOffset, int32_t aEndOffset,
                                 nsAString& aStr) = 0;
 
   NS_IMETHOD AppendProcessingInstruction(nsIContent* aPI,
-                                         PRInt32 aStartOffset,
-                                         PRInt32 aEndOffset,
+                                         int32_t aStartOffset,
+                                         int32_t aEndOffset,
                                          nsAString& aStr) = 0;
 
-  NS_IMETHOD AppendComment(nsIContent* aComment, PRInt32 aStartOffset,
-                           PRInt32 aEndOffset, nsAString& aStr) = 0;
+  NS_IMETHOD AppendComment(nsIContent* aComment, int32_t aStartOffset,
+                           int32_t aEndOffset, nsAString& aStr) = 0;
 
   NS_IMETHOD AppendDoctype(nsIContent *aDoctype,
                            nsAString& aStr) = 0;

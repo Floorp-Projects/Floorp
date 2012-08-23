@@ -80,16 +80,16 @@ public:
     CAMERA_PARAM_SUPPORTED_ZOOMRATIOS
   };
   virtual const char* GetParameter(const char* aKey) = 0;
-  virtual const char* GetParameterConstChar(PRUint32 aKey) = 0;
-  virtual double GetParameterDouble(PRUint32 aKey) = 0;
-  virtual void GetParameter(PRUint32 aKey, nsTArray<CameraRegion>& aRegions) = 0;
+  virtual const char* GetParameterConstChar(uint32_t aKey) = 0;
+  virtual double GetParameterDouble(uint32_t aKey) = 0;
+  virtual void GetParameter(uint32_t aKey, nsTArray<CameraRegion>& aRegions) = 0;
   virtual void SetParameter(const char* aKey, const char* aValue) = 0;
-  virtual void SetParameter(PRUint32 aKey, const char* aValue) = 0;
-  virtual void SetParameter(PRUint32 aKey, double aValue) = 0;
-  virtual void SetParameter(PRUint32 aKey, const nsTArray<CameraRegion>& aRegions) = 0;
+  virtual void SetParameter(uint32_t aKey, const char* aValue) = 0;
+  virtual void SetParameter(uint32_t aKey, double aValue) = 0;
+  virtual void SetParameter(uint32_t aKey, const nsTArray<CameraRegion>& aRegions) = 0;
   virtual void PushParameters() = 0;
 
-  nsCameraControl(PRUint32 aCameraId, nsIThread* aCameraThread)
+  nsCameraControl(uint32_t aCameraId, nsIThread* aCameraThread)
     : mCameraId(aCameraId)
     , mCameraThread(aCameraThread)
     , mCapabilities(nullptr)
@@ -106,18 +106,18 @@ public:
     , mOnShutterCb(nullptr)
   { }
 
-  void TakePictureComplete(PRUint8 *aData, PRUint32 aLength);
+  void TakePictureComplete(uint8_t *aData, uint32_t aLength);
   void AutoFocusComplete(bool aSuccess);
 
 protected:
   virtual ~nsCameraControl() { }
 
-  nsresult SetHelper(PRUint32 aKey, const nsAString& aValue);
-  nsresult GetHelper(PRUint32 aKey, nsAString& aValue);
-  nsresult SetHelper(PRUint32 aKey, double aValue);
-  nsresult GetHelper(PRUint32 aKey, double* aValue);
-  nsresult SetHelper(JSContext* aCx, PRUint32 aKey, const JS::Value& aValue, PRUint32 aLimit);
-  nsresult GetHelper(JSContext* aCx, PRUint32 aKey, JS::Value* aValue);
+  nsresult SetHelper(uint32_t aKey, const nsAString& aValue);
+  nsresult GetHelper(uint32_t aKey, nsAString& aValue);
+  nsresult SetHelper(uint32_t aKey, double aValue);
+  nsresult GetHelper(uint32_t aKey, double* aValue);
+  nsresult SetHelper(JSContext* aCx, uint32_t aKey, const JS::Value& aValue, uint32_t aLimit);
+  nsresult GetHelper(JSContext* aCx, uint32_t aKey, JS::Value* aValue);
 
   virtual nsresult GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStream) = 0;
   virtual nsresult AutoFocusImpl(AutoFocusTask* aAutoFocus) = 0;
@@ -133,15 +133,15 @@ private:
 
 protected:
   /* additional members */
-  PRUint32                        mCameraId;
+  uint32_t                        mCameraId;
   nsCOMPtr<nsIThread>             mCameraThread;
   nsCOMPtr<nsICameraCapabilities> mCapabilities;
-  PRUint32                        mPreviewWidth;
-  PRUint32                        mPreviewHeight;
+  uint32_t                        mPreviewWidth;
+  uint32_t                        mPreviewHeight;
   nsCOMPtr<CameraPreview>         mPreview;
   nsString                        mFileFormat;
-  PRUint32                        mMaxMeteringAreas;
-  PRUint32                        mMaxFocusAreas;
+  uint32_t                        mMaxMeteringAreas;
+  uint32_t                        mMaxFocusAreas;
 
   nsCOMPtr<nsICameraAutoFocusCallback>      mAutoFocusOnSuccessCb;
   nsCOMPtr<nsICameraErrorCallback>          mAutoFocusOnErrorCb;
@@ -284,7 +284,7 @@ protected:
 class TakePictureTask : public nsRunnable
 {
 public:
-  TakePictureTask(nsCameraControl* aCameraControl, CameraSize aSize, PRInt32 aRotation, const nsAString& aFileFormat, CameraPosition aPosition, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
+  TakePictureTask(nsCameraControl* aCameraControl, CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, CameraPosition aPosition, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
     : mCameraControl(aCameraControl)
     , mSize(aSize)
     , mRotation(aRotation)
@@ -309,7 +309,7 @@ public:
 
   nsCOMPtr<nsCameraControl> mCameraControl;
   CameraSize mSize;
-  PRInt32 mRotation;
+  int32_t mRotation;
   nsString mFileFormat;
   CameraPosition mPosition;
   nsCOMPtr<nsICameraTakePictureCallback> mOnSuccessCb;

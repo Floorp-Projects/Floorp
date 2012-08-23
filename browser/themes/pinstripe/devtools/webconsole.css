@@ -20,7 +20,7 @@
   color: GrayText;
   margin-top: 0;
   margin-bottom: 0;
-  font: 11px Menlo, Monaco, monospace;
+  font-family: Menlo, Monaco, monospace;
 }
 
 .hud-msg-node {
@@ -45,7 +45,7 @@
   -moz-margin-start: 3px;
   -moz-margin-end: 6px;
   white-space: pre-wrap;
-  font: 11px Menlo, Monaco, monospace;
+  font-family: Menlo, Monaco, monospace;
 }
 
 .webconsole-msg-body-piece {
@@ -65,7 +65,7 @@
   background-color: red;
   border-radius: 40px;
   font: message-box;
-  font-size: 10px;
+  font-size: 0.9em;
   font-weight: 600;
 }
 
@@ -90,7 +90,7 @@
 
 .jsterm-input-node,
 .jsterm-complete-node {
-  font: 11px Menlo, Monaco, monospace;
+  font: Menlo, Monaco, monospace;
 }
 
 .hud-output-node {
@@ -282,36 +282,6 @@
 }
 
 /* JSTerm Styles */
-
-.jsterm-wrapper-node {
-  font-family: monospace;
-  font-size: 1em;
-  background-color: #000;
-  border: 1px solid #333;
-  padding: 0.1em;
-  width: 100%;
-  height: 400px;
-}
-
-.jsterm-output-node {
-  width: 100%;
-  height: 400px;
-  color: white;
-  background-color: black;
-  overflow: auto;
-  overflow-x: auto;
-  position: absolute;
-  -moz-box-direction: reverse;
-}
-
-.jsterm-scroll-to-node {
-  height: 1px;
-  width: 1px;
-  position: relative;
-  top: 92%;
-  display: block;
-}
-
 .jsterm-input-container {
   background: white;
 }
@@ -334,10 +304,6 @@
 
 .jsterm-complete-node > .textbox-input-box > .textbox-textarea {
   color: GrayText;
-}
-
-.jsterm-output-line {
-  font-size: 1em;
 }
 
 .hud-console-filter-toolbar {

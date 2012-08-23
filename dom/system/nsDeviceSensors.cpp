@@ -62,7 +62,7 @@ nsDeviceSensorData::~nsDeviceSensorData()
 {
 }
 
-NS_IMETHODIMP nsDeviceSensorData::GetType(PRUint32 *aType)
+NS_IMETHODIMP nsDeviceSensorData::GetType(uint32_t *aType)
 {
   NS_ENSURE_ARG_POINTER(aType);
   *aType = mType;
@@ -118,7 +118,7 @@ nsDeviceSensors::~nsDeviceSensors()
   }
 }
 
-NS_IMETHODIMP nsDeviceSensors::ListenerCount(PRUint32 aType, PRInt32 *aRetVal)
+NS_IMETHODIMP nsDeviceSensors::ListenerCount(uint32_t aType, int32_t *aRetVal)
 {
   if (!mEnabled) {
     *aRetVal = 0;
@@ -129,7 +129,7 @@ NS_IMETHODIMP nsDeviceSensors::ListenerCount(PRUint32 aType, PRInt32 *aRetVal)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceSensors::AddWindowListener(PRUint32 aType, nsIDOMWindow *aWindow)
+NS_IMETHODIMP nsDeviceSensors::AddWindowListener(uint32_t aType, nsIDOMWindow *aWindow)
 {
   if (!mEnabled)
     return NS_OK;
@@ -145,7 +145,7 @@ NS_IMETHODIMP nsDeviceSensors::AddWindowListener(PRUint32 aType, nsIDOMWindow *a
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceSensors::RemoveWindowListener(PRUint32 aType, nsIDOMWindow *aWindow)
+NS_IMETHODIMP nsDeviceSensors::RemoveWindowListener(uint32_t aType, nsIDOMWindow *aWindow)
 {
   if (mWindowListeners[aType]->IndexOf(aWindow) == NoIndex)
     return NS_OK;
@@ -169,7 +169,7 @@ NS_IMETHODIMP nsDeviceSensors::RemoveWindowAsListener(nsIDOMWindow *aWindow)
 void 
 nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
 {
-  PRUint32 type = aSensorData.sensor();
+  uint32_t type = aSensorData.sensor();
 
   const InfallibleTArray<float>& values = aSensorData.values();
   size_t len = values.Length();
@@ -178,11 +178,11 @@ nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
   double z = len > 2 ? values[2] : 0.0;
 
   nsCOMArray<nsIDOMWindow> windowListeners;
-  for (PRUint32 i = 0; i < mWindowListeners[type]->Length(); i++) {
+  for (uint32_t i = 0; i < mWindowListeners[type]->Length(); i++) {
     windowListeners.AppendObject(mWindowListeners[type]->SafeElementAt(i));
   }
 
-  for (PRUint32 i = windowListeners.Count(); i > 0 ; ) {
+  for (uint32_t i = windowListeners.Count(); i > 0 ; ) {
     --i;
 
     // check to see if this window is in the background.  if
@@ -318,7 +318,7 @@ nsDeviceSensors::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
 void
 nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,
                                    nsIDOMEventTarget *target,
-                                   PRUint32 type,
+                                   uint32_t type,
                                    double x,
                                    double y,
                                    double z) {

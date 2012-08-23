@@ -125,7 +125,7 @@ nsStrictTransportSecurityService::GetHost(nsIURI *aURI, nsACString &aResult)
 
 nsresult
 nsStrictTransportSecurityService::SetStsState(nsIURI* aSourceURI,
-                                              PRInt64 maxage,
+                                              int64_t maxage,
                                               bool includeSubdomains)
 {
   // If max-age is zero, that's an indication to immediately remove the
@@ -135,14 +135,14 @@ nsStrictTransportSecurityService::SetStsState(nsIURI* aSourceURI,
 
   // Expire time is millis from now.  Since STS max-age is in seconds, and
   // PR_Now() is in micros, must equalize the units at milliseconds.
-  PRInt64 expiretime = (PR_Now() / 1000) + (maxage * 1000);
+  int64_t expiretime = (PR_Now() / 1000) + (maxage * 1000);
 
   // record entry for this host with max-age in the permissions manager
   STSLOG(("STS: maxage permission SET, adding permission\n"));
   nsresult rv = AddPermission(aSourceURI,
                               STS_PERMISSION,
-                              (PRUint32) nsIPermissionManager::ALLOW_ACTION,
-                              (PRUint32) nsIPermissionManager::EXPIRE_TIME,
+                              (uint32_t) nsIPermissionManager::ALLOW_ACTION,
+                              (uint32_t) nsIPermissionManager::EXPIRE_TIME,
                               expiretime);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -151,8 +151,8 @@ nsStrictTransportSecurityService::SetStsState(nsIURI* aSourceURI,
     STSLOG(("STS: subdomains permission SET, adding permission\n"));
     rv = AddPermission(aSourceURI,
                        STS_SUBDOMAIN_PERMISSION,
-                       (PRUint32) nsIPermissionManager::ALLOW_ACTION,
-                       (PRUint32) nsIPermissionManager::EXPIRE_TIME,
+                       (uint32_t) nsIPermissionManager::ALLOW_ACTION,
+                       (uint32_t) nsIPermissionManager::EXPIRE_TIME,
                        expiretime);
     NS_ENSURE_SUCCESS(rv, rv);
   } else { // !includeSubdomains
@@ -225,7 +225,7 @@ nsStrictTransportSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
   bool foundMaxAge = false;
   bool foundUnrecognizedTokens = false;
   bool includeSubdomains = false;
-  PRInt64 maxAge = 0;
+  int64_t maxAge = 0;
 
   NS_NAMED_LITERAL_CSTRING(max_age_var, "max-age");
   NS_NAMED_LITERAL_CSTRING(include_subd_var, "includesubdomains");
@@ -327,7 +327,7 @@ nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, bool* aResult)
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
 
   nsresult rv;
-  PRUint32 permExact, permGeneral;
+  uint32_t permExact, permGeneral;
   // If this domain has the forcehttps permission, this is an STS host.
   rv = TestPermission(aURI, STS_PERMISSION, &permExact, true);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -410,9 +410,9 @@ nsStrictTransportSecurityService::Observe(nsISupports *subject,
 nsresult
 nsStrictTransportSecurityService::AddPermission(nsIURI     *aURI,
                                                 const char *aType,
-                                                PRUint32   aPermission,
-                                                PRUint32   aExpireType,
-                                                PRInt64    aExpireTime)
+                                                uint32_t   aPermission,
+                                                uint32_t   aExpireType,
+                                                int64_t    aExpireTime)
 {
     // Private mode doesn't address user-set (EXPIRE_NEVER) permissions: let
     // those be stored persistently.
@@ -489,7 +489,7 @@ nsStrictTransportSecurityService::RemovePermission(const nsCString  &aHost,
 
     // Check to see if there's STS data stored for this host in the
     // permission manager (probably set outside private mode).
-    PRUint32 permmgrValue;
+    uint32_t permmgrValue;
     rv = mPermMgr->TestExactPermissionFromPrincipal(principal, aType,
                                                     &permmgrValue);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -521,7 +521,7 @@ nsStrictTransportSecurityService::RemovePermission(const nsCString  &aHost,
 nsresult
 nsStrictTransportSecurityService::TestPermission(nsIURI     *aURI,
                                                  const char *aType,
-                                                 PRUint32   *aPermission,
+                                                 uint32_t   *aPermission,
                                                  bool       testExact)
 {
     // set default for if we can't find any STS information
@@ -544,9 +544,9 @@ nsStrictTransportSecurityService::TestPermission(nsIURI     *aURI,
     if (NS_FAILED(rv)) return NS_OK;
 
     nsSTSHostEntry *entry;
-    PRUint32 actualExactPermission;
-    PRUint32 offset = 0;
-    PRInt64 now = PR_Now() / 1000;
+    uint32_t actualExactPermission;
+    uint32_t offset = 0;
+    int64_t now = PR_Now() / 1000;
 
     // Used for testing permissions as we walk up the domain tree.
     nsCOMPtr<nsIURI> domainWalkURI;

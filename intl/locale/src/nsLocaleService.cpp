@@ -267,7 +267,7 @@ nsLocaleService::NewLocale(const nsAString &aLocale, nsILocale **_retval)
     nsRefPtr<nsLocale> resultLocale(new nsLocale());
     if (!resultLocale) return NS_ERROR_OUT_OF_MEMORY;
 
-    for (PRInt32 i = 0; i < LocaleListLength; i++) {
+    for (int32_t i = 0; i < LocaleListLength; i++) {
       NS_ConvertASCIItoUTF16 category(LocaleList[i]);
       result = resultLocale->AddCategory(category, aLocale);
       if (NS_FAILED(result)) return result;

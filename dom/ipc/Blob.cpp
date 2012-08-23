@@ -86,7 +86,7 @@ public:
   }
 
   NS_IMETHOD
-  Available(PRUint64* aAvailable) MOZ_OVERRIDE
+  Available(uint64_t* aAvailable) MOZ_OVERRIDE
   {
     // See large comment in FileInputStreamWrapper::Available.
     if (NS_IsMainThread()) {
@@ -103,7 +103,7 @@ public:
   }
 
   NS_IMETHOD
-  Read(char* aBuffer, PRUint32 aCount, PRUint32* aResult) MOZ_OVERRIDE
+  Read(char* aBuffer, uint32_t aCount, uint32_t* aResult) MOZ_OVERRIDE
   {
     nsresult rv = BlockAndWaitForStream();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -115,8 +115,8 @@ public:
   }
 
   NS_IMETHOD
-  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, PRUint32 aCount,
-               PRUint32* aResult) MOZ_OVERRIDE
+  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, uint32_t aCount,
+               uint32_t* aResult) MOZ_OVERRIDE
   {
     nsresult rv = BlockAndWaitForStream();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -137,7 +137,7 @@ public:
   }
 
   NS_IMETHOD
-  Seek(PRInt32 aWhence, PRInt64 aOffset) MOZ_OVERRIDE
+  Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE
   {
     nsresult rv = BlockAndWaitForStream();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -154,7 +154,7 @@ public:
   }
 
   NS_IMETHOD
-  Tell(PRInt64* aResult)
+  Tell(int64_t* aResult)
   {
     nsresult rv = BlockAndWaitForStream();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -448,8 +448,8 @@ private:
     mozilla::Monitor mMonitor;
     ActorType* mActor;
     nsCOMPtr<nsIDOMBlob> mSlice;
-    PRUint64 mStart;
-    PRUint64 mLength;
+    uint64_t mStart;
+    uint64_t mLength;
     nsString mContentType;
     bool mDone;
 
@@ -463,7 +463,7 @@ private:
     }
 
     nsresult
-    GetSlice(PRUint64 aStart, PRUint64 aLength, const nsAString& aContentType,
+    GetSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
              nsIDOMBlob** aSlice)
     {
       // This may be called on any thread.
@@ -556,13 +556,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   RemoteBlob(const nsAString& aName, const nsAString& aContentType,
-             PRUint64 aLength)
+             uint64_t aLength)
   : nsDOMFile(aName, aContentType, aLength), mActor(nullptr)
   {
     mImmutable = true;
   }
 
-  RemoteBlob(const nsAString& aContentType, PRUint64 aLength)
+  RemoteBlob(const nsAString& aContentType, uint64_t aLength)
   : nsDOMFile(aContentType, aLength), mActor(nullptr)
   {
     mImmutable = true;
@@ -589,7 +589,7 @@ public:
   }
 
   virtual already_AddRefed<nsIDOMBlob>
-  CreateSlice(PRUint64 aStart, PRUint64 aLength, const nsAString& aContentType)
+  CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType)
               MOZ_OVERRIDE
   {
     if (!mActor) {
@@ -741,7 +741,7 @@ template <ActorFlavorEnum ActorFlavor>
 bool
 Blob<ActorFlavor>::SetMysteryBlobInfo(const nsString& aName,
                                       const nsString& aContentType,
-                                      PRUint64 aLength)
+                                      uint64_t aLength)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
@@ -757,7 +757,7 @@ Blob<ActorFlavor>::SetMysteryBlobInfo(const nsString& aName,
 template <ActorFlavorEnum ActorFlavor>
 bool
 Blob<ActorFlavor>::SetMysteryBlobInfo(const nsString& aContentType,
-                                      PRUint64 aLength)
+                                      uint64_t aLength)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
@@ -975,7 +975,7 @@ BlobTraits<Parent>::BaseType::NoteRunnableCompleted(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  for (PRUint32 index = 0; index < mOpenStreamRunnables.Length(); index++) {
+  for (uint32_t index = 0; index < mOpenStreamRunnables.Length(); index++) {
     nsRevocableEventPtr<BaseType::OpenStreamRunnable>& runnable =
       mOpenStreamRunnables[index];
 
@@ -1059,7 +1059,7 @@ BlobTraits<Parent>::BaseType::OpenStreamRunnable::Run()
   if (!mClosing) {
     // To force the stream open we call Available(). We don't actually care how
     // much data is available.
-    PRUint64 available;
+    uint64_t available;
     if (NS_FAILED(mStream->Available(&available))) {
       NS_WARNING("Available failed on this stream!");
     }

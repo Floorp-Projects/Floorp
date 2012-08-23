@@ -12,7 +12,7 @@
 
 
 
-static const PRUint16 *g_Big5HKSCSMappingTable[] = {
+static const uint16_t *g_Big5HKSCSMappingTable[] = {
   g_ufBig5HKSCSMapping
 };
 

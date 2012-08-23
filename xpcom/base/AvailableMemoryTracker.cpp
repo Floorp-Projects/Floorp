@@ -74,14 +74,14 @@ void safe_write(const char *a)
   fputs(a, stdout);
 }
 
-void safe_write(PRUint64 x)
+void safe_write(uint64_t x)
 {
   // 2^64 is 20 decimal digits.
   const int max_len = 21;
   char buf[max_len];
   buf[max_len - 1] = '\0';
 
-  PRUint32 i;
+  uint32_t i;
   for (i = max_len - 2; i >= 0 && x > 0; i--)
   {
     buf[i] = "0123456789"[x % 10];
@@ -107,14 +107,14 @@ void safe_write(PRUint64 x)
 #define DEBUG_WARN_IF_FALSE(cond, msg)
 #endif
 
-PRUint32 sLowVirtualMemoryThreshold = 0;
-PRUint32 sLowCommitSpaceThreshold = 0;
-PRUint32 sLowPhysicalMemoryThreshold = 0;
-PRUint32 sLowMemoryNotificationIntervalMS = 0;
+uint32_t sLowVirtualMemoryThreshold = 0;
+uint32_t sLowCommitSpaceThreshold = 0;
+uint32_t sLowPhysicalMemoryThreshold = 0;
+uint32_t sLowMemoryNotificationIntervalMS = 0;
 
-PRUint32 sNumLowVirtualMemEvents = 0;
-PRUint32 sNumLowCommitSpaceEvents = 0;
-PRUint32 sNumLowPhysicalMemEvents = 0;
+uint32_t sNumLowVirtualMemEvents = 0;
+uint32_t sNumLowCommitSpaceEvents = 0;
+uint32_t sNumLowPhysicalMemEvents = 0;
 
 WindowsDllInterceptor sKernel32Intercept;
 WindowsDllInterceptor sGdi32Intercept;
@@ -275,7 +275,7 @@ CreateDIBSectionHook(HDC aDC,
   // If aSection is non-null, CreateDIBSection won't allocate any new memory.
   bool doCheck = false;
   if (sHooksActive && !aSection && aBitmapInfo) {
-    PRUint16 bitCount = aBitmapInfo->bmiHeader.biBitCount;
+    uint16_t bitCount = aBitmapInfo->bmiHeader.biBitCount;
     if (bitCount == 0) {
       // MSDN says bitCount == 0 means that it figures out how many bits each
       // pixel gets by examining the corresponding JPEG or PNG data.  We'll just
@@ -286,7 +286,7 @@ CreateDIBSectionHook(HDC aDC,
     // |size| contains the expected allocation size in *bits*.  Height may be
     // negative (indicating the direction the DIB is drawn in), so we take the
     // absolute value.
-    PRInt64 size = bitCount * aBitmapInfo->bmiHeader.biWidth *
+    int64_t size = bitCount * aBitmapInfo->bmiHeader.biWidth *
                               aBitmapInfo->bmiHeader.biHeight;
     if (size < 0)
       size *= -1;
@@ -341,7 +341,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetAmount(PRInt64 *aAmount)
+  NS_IMETHOD GetAmount(int64_t *aAmount)
   {
     // This memory reporter shouldn't be installed on 64-bit machines, since we
     // force-disable virtual-memory tracking there.
@@ -387,7 +387,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetAmount(PRInt64 *aAmount)
+  NS_IMETHOD GetAmount(int64_t *aAmount)
   {
     *aAmount = sNumLowCommitSpaceEvents;
     return NS_OK;
@@ -429,7 +429,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetAmount(PRInt64 *aAmount)
+  NS_IMETHOD GetAmount(int64_t *aAmount)
   {
     *aAmount = sNumLowPhysicalMemEvents;
     return NS_OK;

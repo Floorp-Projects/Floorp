@@ -150,7 +150,7 @@ nsPopupSetFrame::AddPopupFrameList(nsFrameList& aPopupFrameList)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsPopupSetFrame::List(FILE* out, PRInt32 aIndent) const
+nsPopupSetFrame::List(FILE* out, int32_t aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);

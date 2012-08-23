@@ -88,7 +88,7 @@ protected:
   virtual void ListBox(nsAutoString& aResult);
 #endif
   
-  virtual void GetLayoutFlags(PRUint32& aFlags);
+  virtual void GetLayoutFlags(uint32_t& aFlags);
 
   NS_HIDDEN_(nsresult) BeginLayout(nsBoxLayoutState& aState);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);

@@ -73,5 +73,5 @@ interface mozIPersonalDictionary : nsISupports {
   /**
    * Get a list of previous corrections for the word
    */
-  void getCorrection(in wstring word, [array, size_is(count)] out wstring words, out PRUint32 count);
+  void getCorrection(in wstring word, [array, size_is(count)] out wstring words, out uint32_t count);
 };

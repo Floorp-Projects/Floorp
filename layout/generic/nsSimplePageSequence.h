@@ -64,9 +64,9 @@ public:
                                const nsDisplayListSet& aLists);
 
   // nsIPageSequenceFrame
-  NS_IMETHOD SetPageNo(PRInt32 aPageNo) { return NS_OK;}
+  NS_IMETHOD SetPageNo(int32_t aPageNo) { return NS_OK;}
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
-  NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) { mTotalPages = aTotal; return NS_OK; }
+  NS_IMETHOD SetTotalNumPages(int32_t aTotal) { mTotalPages = aTotal; return NS_OK; }
   
   // For Shrink To Fit
   NS_IMETHOD GetSTFPercent(float& aSTFPercent);
@@ -77,10 +77,10 @@ public:
                         PRUnichar*        aDocTitle,
                         PRUnichar*        aDocURL);
   NS_IMETHOD PrintNextPage();
-  NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum);
-  NS_IMETHOD GetNumPages(PRInt32* aNumPages);
+  NS_IMETHOD GetCurrentPageNum(int32_t* aPageNum);
+  NS_IMETHOD GetNumPages(int32_t* aNumPages);
   NS_IMETHOD IsDoingPrintRange(bool* aDoing);
-  NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage);
+  NS_IMETHOD GetPrintRange(int32_t* aFromPage, int32_t* aToPage);
   NS_IMETHOD DoPageEnd();
 
   // We must allow Print Preview UI to have a background, no matter what the
@@ -128,12 +128,12 @@ protected:
 
   // Asynch Printing
   nsIFrame *   mCurrentPageFrame;
-  PRInt32      mPageNum;
-  PRInt32      mTotalPages;
-  PRInt32      mPrintRangeType;
-  PRInt32      mFromPageNum;
-  PRInt32      mToPageNum;
-  nsTArray<PRInt32> mPageRanges;
+  int32_t      mPageNum;
+  int32_t      mTotalPages;
+  int32_t      mPrintRangeType;
+  int32_t      mFromPageNum;
+  int32_t      mToPageNum;
+  nsTArray<int32_t> mPageRanges;
 
   // Selection Printing Info
   nscoord      mSelectionHeight;

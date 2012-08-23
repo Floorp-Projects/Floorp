@@ -53,9 +53,9 @@ public:
    * Generic ctor for DOMSVGNumber objects that are created for an attribute.
    */
   DOMSVGNumber(DOMSVGNumberList *aList,
-               PRUint8 aAttrEnum,
-               PRUint32 aListIndex,
-               PRUint8 aIsAnimValItem);
+               uint8_t aAttrEnum,
+               uint32_t aListIndex,
+               uint8_t aIsAnimValItem);
 
   /**
    * Ctor for creating the objects returned by SVGSVGElement.createSVGNumber(),
@@ -103,16 +103,16 @@ public:
    * the necessary notifications) is located elsewhere (in DOMSVGNumberList).)
    */
   void InsertingIntoList(DOMSVGNumberList *aList,
-                         PRUint8 aAttrEnum,
-                         PRUint32 aListIndex,
-                         PRUint8 aIsAnimValItem);
+                         uint8_t aAttrEnum,
+                         uint32_t aListIndex,
+                         uint8_t aIsAnimValItem);
 
-  static PRUint32 MaxListIndex() {
+  static uint32_t MaxListIndex() {
     return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
   }
 
   /// This method is called to notify this object that its list index changed.
-  void UpdateListIndex(PRUint32 aListIndex) {
+  void UpdateListIndex(uint32_t aListIndex) {
     mListIndex = aListIndex;
   }
 
@@ -132,7 +132,7 @@ private:
     return mList->Element();
   }
 
-  PRUint8 AttrEnum() const {
+  uint8_t AttrEnum() const {
     return mAttrEnum;
   }
 
@@ -156,9 +156,9 @@ private:
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
 
-  PRUint32 mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
-  PRUint32 mAttrEnum:4; // supports up to 16 attributes
-  PRUint32 mIsAnimValItem:1;
+  uint32_t mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
+  uint32_t mAttrEnum:4; // supports up to 16 attributes
+  uint32_t mIsAnimValItem:1;
 
   // The following member is only used when we're not in a list:
   float mValue;

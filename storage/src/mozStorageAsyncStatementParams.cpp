@@ -86,7 +86,7 @@ AsyncStatementParams::NewResolve(
   JSContext *aCtx,
   JSObject *aScopeObj,
   jsid aId,
-  PRUint32 aFlags,
+  uint32_t aFlags,
   JSObject **_objp,
   bool *_retval
 )
@@ -98,7 +98,7 @@ AsyncStatementParams::NewResolve(
   bool resolved = false;
   bool ok = true;
   if (JSID_IS_INT(aId)) {
-    PRUint32 idx = JSID_TO_INT(aId);
+    uint32_t idx = JSID_TO_INT(aId);
     // All indexes are good because we don't know how many parameters there
     // really are.
     ok = ::JS_DefineElement(aCtx, aScopeObj, idx, JSVAL_VOID, nullptr,

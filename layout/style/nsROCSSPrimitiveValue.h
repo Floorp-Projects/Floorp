@@ -35,16 +35,16 @@ public:
   virtual ~nsROCSSPrimitiveValue();
 
   void SetNumber(float aValue);
-  void SetNumber(PRInt32 aValue);
-  void SetNumber(PRUint32 aValue);
+  void SetNumber(int32_t aValue);
+  void SetNumber(uint32_t aValue);
   void SetPercent(float aValue);
   void SetAppUnits(nscoord aValue);
   void SetAppUnits(float aValue);
   void SetIdent(nsCSSKeyword aKeyword);
   // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
-  void SetString(const nsACString& aString, PRUint16 aType = CSS_STRING);
+  void SetString(const nsACString& aString, uint16_t aType = CSS_STRING);
   // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
-  void SetString(const nsAString& aString, PRUint16 aType = CSS_STRING);
+  void SetString(const nsAString& aString, uint16_t aType = CSS_STRING);
   void SetURI(nsIURI *aURI);
   void SetColor(nsDOMCSSRGBColor* aColor);
   void SetRect(nsIDOMRect* aRect);
@@ -52,7 +52,7 @@ public:
   void Reset();
 
 private:
-  PRUint16 mType;
+  uint16_t mType;
 
   union {
     nscoord         mAppUnits;

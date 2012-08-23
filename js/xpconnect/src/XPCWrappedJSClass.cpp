@@ -412,7 +412,7 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
             return NS_ERROR_FAILURE;
 
         nsCOMPtr<nsIProperty> property =
-            new xpcProperty(chars, (PRUint32) length, value);
+            new xpcProperty(chars, (uint32_t) length, value);
 
         if (!propertyArray.AppendObject(property))
             return NS_ERROR_FAILURE;
@@ -425,7 +425,7 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
 
 NS_IMPL_ISUPPORTS1(xpcProperty, nsIProperty)
 
-xpcProperty::xpcProperty(const PRUnichar* aName, PRUint32 aNameLen,
+xpcProperty::xpcProperty(const PRUnichar* aName, uint32_t aNameLen,
                          nsIVariant* aValue)
     : mName(aName, aNameLen), mValue(aValue)
 {
@@ -1067,7 +1067,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
 
                                 // try to get filename, lineno from the first
                                 // stack frame location.
-                                PRInt32 lineNumber = 0;
+                                int32_t lineNumber = 0;
                                 nsXPIDLCString sourceName;
 
                                 nsCOMPtr<nsIStackFrame> location;
@@ -1658,7 +1658,7 @@ nsXPCWrappedJSClass::NewOutObject(JSContext* cx, JSObject* scope)
 
 
 NS_IMETHODIMP
-nsXPCWrappedJSClass::DebugDump(PRInt16 depth)
+nsXPCWrappedJSClass::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
     depth-- ;

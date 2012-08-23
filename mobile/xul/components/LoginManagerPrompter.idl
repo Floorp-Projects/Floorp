@@ -61,7 +61,7 @@ interface nsILoginManagerPrompter : nsISupports {
      */
     void promptToChangePasswordWithUsernames(
             [array, size_is(count)] in nsILoginInfo logins,
-            in PRUint32 count,
+            in uint32_t count,
             in nsILoginInfo aNewLogin);
 };
 

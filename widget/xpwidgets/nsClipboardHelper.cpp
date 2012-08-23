@@ -39,7 +39,7 @@ nsClipboardHelper::~nsClipboardHelper()
 
 NS_IMETHODIMP
 nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
-                                         PRInt32 aClipboardID,
+                                         int32_t aClipboardID,
                                          nsIDOMDocument* aDocument)
 {
   nsresult rv;

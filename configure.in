@@ -4144,6 +4144,8 @@ MOZ_CUBEB=
 MOZ_VORBIS=
 MOZ_TREMOR=
 MOZ_WAVE=1
+MOZ_SAMPLE_TYPE_FLOAT32=
+MOZ_SAMPLE_TYPE_S16LE=
 MOZ_MEDIA=
 MOZ_OPUS=1
 MOZ_WEBM=1
@@ -4335,7 +4337,7 @@ if test -z "$gonkdir" ; then
         android_min_api_level=13
         ;;
     mobile/android)
-        android_min_api_level=14
+        android_min_api_level=16
         ;;
     esac
 
@@ -5192,6 +5194,19 @@ fi
 
 AC_SUBST(MOZ_WEBRTC)
 
+case "$target_cpu" in
+arm*)
+    MOZ_SAMPLE_TYPE_S16LE=1
+    AC_DEFINE(MOZ_SAMPLE_TYPE_S16LE)
+    AC_SUBST(MOZ_SAMPLE_TYPE_S16LE)
+;;
+*)
+    MOZ_SAMPLE_TYPE_FLOAT32=1
+    AC_DEFINE(MOZ_SAMPLE_TYPE_FLOAT32)
+    AC_SUBST(MOZ_SAMPLE_TYPE_FLOAT32)
+;;
+esac
+
 dnl ========================================================
 dnl = Enable Raw Codecs
 dnl ========================================================
@@ -5220,14 +5235,6 @@ if test -n "$MOZ_OGG"; then
     MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
-    case "$target_cpu" in
-    arm*)
-        MOZ_TREMOR=1
-    ;;
-    *)
-        MOZ_VORBIS=1
-    ;;
-    esac
 
     dnl Checks for __attribute__(aligned()) directive
     AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
@@ -5367,14 +5374,11 @@ if test "$MOZ_WEBM"; then
     MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
-    case "$target_cpu" in
-    arm*)
-        MOZ_TREMOR=1
-    ;;
-    *)
+    if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
         MOZ_VORBIS=1
-    ;;
-    esac
+    else
+        MOZ_TREMOR=1
+    fi
 fi
 
 if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
@@ -5769,6 +5773,10 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
 
   MOZ_D3DX9_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *d3dx9_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
   MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
+
+  if test -z "$MOZ_D3DX9_CAB" -o -z "$MOZ_D3DCOMPILER_CAB"; then
+    AC_MSG_ERROR([Couldn't find the DirectX redistributable files. Either reinstall the DirectX SDK (making sure the "DirectX Redistributable Files" option is selected), or reconfigure with --disable-webgl.])
+  fi
 
   MOZ_D3DX9_DLL=d3dx9_$MOZ_D3DX9_VERSION.dll
   MOZ_D3DCOMPILER_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll

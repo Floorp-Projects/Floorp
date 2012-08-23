@@ -109,7 +109,7 @@
 
 */
 
-static PRUint16 gJISx4051SimplifiedPair[9] = {
+static uint16_t gJISx4051SimplifiedPair[9] = {
   0x01FF, 0x0002, 0x0006, 0x0042, 0x0002, 0x0042, 0x0152, 0x0182, 0x01C2
 };
 

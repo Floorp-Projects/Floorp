@@ -12,9 +12,9 @@
 
 nsresult
 nsHttpChunkedDecoder::HandleChunkedContent(char *buf,
-                                           PRUint32 count,
-                                           PRUint32 *contentRead,
-                                           PRUint32 *contentRemaining)
+                                           uint32_t count,
+                                           uint32_t *contentRead,
+                                           uint32_t *contentRemaining)
 {
     LOG(("nsHttpChunkedDecoder::HandleChunkedContent [count=%u]\n", count));
 
@@ -43,7 +43,7 @@ nsHttpChunkedDecoder::HandleChunkedContent(char *buf,
 
     while (count) {
         if (mChunkRemaining) {
-            PRUint32 amt = NS_MIN(mChunkRemaining, count);
+            uint32_t amt = NS_MIN(mChunkRemaining, count);
 
             count -= amt;
             mChunkRemaining -= amt;
@@ -54,7 +54,7 @@ nsHttpChunkedDecoder::HandleChunkedContent(char *buf,
         else if (mReachedEOF)
             break; // done
         else {
-            PRUint32 bytesConsumed = 0;
+            uint32_t bytesConsumed = 0;
 
             nsresult rv = ParseChunkRemaining(buf, count, &bytesConsumed);
             if (NS_FAILED(rv)) return rv;
@@ -78,8 +78,8 @@ nsHttpChunkedDecoder::HandleChunkedContent(char *buf,
 
 nsresult
 nsHttpChunkedDecoder::ParseChunkRemaining(char *buf,
-                                          PRUint32 count,
-                                          PRUint32 *bytesConsumed)
+                                          uint32_t count,
+                                          uint32_t *bytesConsumed)
 {
     NS_PRECONDITION(mChunkRemaining == 0, "chunk remaining should be zero");
     NS_PRECONDITION(count, "unexpected");

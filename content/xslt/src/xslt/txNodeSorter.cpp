@@ -143,11 +143,11 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create and set up memoryblock for sort-values and indexarray
-    PRUint32 len = static_cast<PRUint32>(aNodes->size());
+    uint32_t len = static_cast<uint32_t>(aNodes->size());
 
     // Limit resource use to something sane.
-    PRUint32 itemSize = sizeof(PRUint32) + mNKeys * sizeof(txObject*);
-    if (mNKeys > (PR_UINT32_MAX - sizeof(PRUint32)) / sizeof(txObject*) ||
+    uint32_t itemSize = sizeof(uint32_t) + mNKeys * sizeof(txObject*);
+    if (mNKeys > (PR_UINT32_MAX - sizeof(uint32_t)) / sizeof(txObject*) ||
         len >= PR_UINT32_MAX / itemSize) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -155,10 +155,10 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
     void* mem = PR_Malloc(len * itemSize);
     NS_ENSURE_TRUE(mem, NS_ERROR_OUT_OF_MEMORY);
 
-    PRUint32* indexes = static_cast<PRUint32*>(mem);
+    uint32_t* indexes = static_cast<uint32_t*>(mem);
     txObject** sortValues = reinterpret_cast<txObject**>(indexes + len);
 
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < len; ++i) {
         indexes[i] = i;
     }
@@ -170,11 +170,11 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
     sortData.mContext = evalContext;
     sortData.mSortValues = sortValues;
     sortData.mRv = NS_OK;
-    NS_QuickSort(indexes, len, sizeof(PRUint32), compareNodes, &sortData);
+    NS_QuickSort(indexes, len, sizeof(uint32_t), compareNodes, &sortData);
 
     // Delete these here so we don't have to deal with them at every possible
     // failurepoint
-    PRUint32 numSortValues = len * mNKeys;
+    uint32_t numSortValues = len * mNKeys;
     for (i = 0; i < numSortValues; ++i) {
         delete sortValues[i];
     }
@@ -212,8 +212,8 @@ txNodeSorter::compareNodes(const void* aIndexA, const void* aIndexB,
     NS_ENSURE_SUCCESS(sortData->mRv, -1);
 
     txListIterator iter(&sortData->mNodeSorter->mSortKeys);
-    PRUint32 indexA = *static_cast<const PRUint32*>(aIndexA);
-    PRUint32 indexB = *static_cast<const PRUint32*>(aIndexB);
+    uint32_t indexA = *static_cast<const uint32_t*>(aIndexA);
+    uint32_t indexB = *static_cast<const uint32_t*>(aIndexB);
     txObject** sortValuesA = sortData->mSortValues +
                              indexA * sortData->mNodeSorter->mNKeys;
     txObject** sortValuesB = sortData->mSortValues +
@@ -247,7 +247,7 @@ txNodeSorter::compareNodes(const void* aIndexA, const void* aIndexB,
 //static
 bool
 txNodeSorter::calcSortValue(txObject*& aSortValue, SortKey* aKey,
-                            SortData* aSortData, PRUint32 aNodeIndex)
+                            SortData* aSortData, uint32_t aNodeIndex)
 {
     aSortData->mContext->setPosition(aNodeIndex + 1); // position is 1-based
 

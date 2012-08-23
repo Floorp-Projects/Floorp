@@ -57,7 +57,7 @@ nsGfxButtonControlFrame::GetType() const
 // We'll return true if type is NS_FORM_INPUT_BUTTON and our parent
 // is a file input.
 bool
-nsGfxButtonControlFrame::IsFileBrowseButton(PRInt32 type)
+nsGfxButtonControlFrame::IsFileBrowseButton(int32_t type)
 {
   bool rv = false;
   if (NS_FORM_INPUT_BUTTON == type) {
@@ -101,7 +101,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements
 
 void
 nsGfxButtonControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
-                                                  PRUint32 aFilter)
+                                                  uint32_t aFilter)
 {
   aElements.MaybeAppendElement(mTextContent);
 }
@@ -166,7 +166,7 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsXPIDLString& aString)
   nsCOMPtr<nsIFormControl> form = do_QueryInterface(mContent);
   NS_ENSURE_TRUE(form, NS_ERROR_UNEXPECTED);
 
-  PRInt32 type = form->GetType();
+  int32_t type = form->GetType();
   const char *prop;
   if (type == NS_FORM_INPUT_RESET) {
     prop = "Reset";
@@ -233,9 +233,9 @@ nsGfxButtonControlFrame::GetLabel(nsXPIDLString& aLabel)
 }
 
 NS_IMETHODIMP
-nsGfxButtonControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsGfxButtonControlFrame::AttributeChanged(int32_t         aNameSpaceID,
                                           nsIAtom*        aAttribute,
-                                          PRInt32         aModType)
+                                          int32_t         aModType)
 {
   nsresult rv = NS_OK;
 

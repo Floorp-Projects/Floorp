@@ -140,7 +140,7 @@ protected:
    */
   virtual nsresult Add(nsSMILValue& aDest,
                        const nsSMILValue& aValueToAdd,
-                       PRUint32 aCount) const = 0;
+                       uint32_t aCount) const = 0;
 
   /**
    * Adds aValueToAdd to the underlying value in the animation sandwich, aDest.

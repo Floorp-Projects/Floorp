@@ -41,9 +41,9 @@ public:
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
   
-  PRInt32 GetColIndex() const;
+  int32_t GetColIndex() const;
   
-  void SetColIndex (PRInt32 aColIndex);
+  void SetColIndex (int32_t aColIndex);
 
   nsTableColFrame* GetNextCol() const;
 
@@ -73,10 +73,10 @@ public:
   virtual nsSplittableType GetSplittableType() const;
 
   /** return the number of the columns the col represents.  always >= 1 */
-  PRInt32 GetSpan();
+  int32_t GetSpan();
 
   /** convenience method, calls into cellmap */
-  PRInt32 Count() const;
+  int32_t Count() const;
 
   nscoord GetLeftBorderWidth();
   void    SetLeftBorderWidth(BCPixelSize aWidth);
@@ -96,10 +96,10 @@ public:
    * Set full border widths before collapsing with cell borders
    * @param aForSide - side to set; only valid for top, right, and bottom
    */
-  void SetContinuousBCBorderWidth(PRUint8     aForSide,
+  void SetContinuousBCBorderWidth(uint8_t     aForSide,
                                   BCPixelSize aPixelValue);
 #ifdef DEBUG
-  void Dump(PRInt32 aIndent);
+  void Dump(int32_t aIndent);
 #endif
 
   /**
@@ -283,7 +283,7 @@ protected:
   // the index of the column with respect to the whole tabble (starting at 0) 
   // it should never be smaller then the start column index of the parent 
   // colgroup
-  PRUint32 mColIndex:        16;
+  uint32_t mColIndex:        16;
   
   // border width in pixels of the inner half of the border only
   BCPixelSize mLeftBorderWidth;
@@ -295,12 +295,12 @@ protected:
   bool mHasSpecifiedCoord;
 };
 
-inline PRInt32 nsTableColFrame::GetColIndex() const
+inline int32_t nsTableColFrame::GetColIndex() const
 {
   return mColIndex; 
 }
 
-inline void nsTableColFrame::SetColIndex (PRInt32 aColIndex)
+inline void nsTableColFrame::SetColIndex (int32_t aColIndex)
 { 
   mColIndex = aColIndex; 
 }
@@ -328,7 +328,7 @@ inline void nsTableColFrame::SetRightBorderWidth(BCPixelSize aWidth)
 inline nscoord
 nsTableColFrame::GetContinuousBCBorderWidth(nsMargin& aBorder)
 {
-  PRInt32 aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
+  int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
   aBorder.top = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips,
                                             mTopContBorderWidth);
   aBorder.right = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips,

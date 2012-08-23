@@ -158,7 +158,7 @@ private:
    * Get the number of seconds for which a window must satisfy ghost criteria
    * (1) and (2) before we deem that it satisfies criterion (3).
    */
-  PRUint32 GetGhostTimeout();
+  uint32_t GetGhostTimeout();
 
   void ObserveDOMWindowDetached(nsISupports* aWindow);
   void ObserveAfterMinimizeMemoryUsage();

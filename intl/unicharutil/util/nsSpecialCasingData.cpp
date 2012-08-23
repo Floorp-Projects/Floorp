@@ -176,14 +176,14 @@ static const MultiCharMapping CaseSpecials_Title[] = {
 
 static int CompareMCM(const void* aKey, const void* aElement)
 {
-  const PRUint32 ch = *static_cast<const PRUint32*>(aKey);
+  const uint32_t ch = *static_cast<const uint32_t*>(aKey);
   const MultiCharMapping* mcm = static_cast<const MultiCharMapping*>(aElement);
   return int(ch) - int(mcm->mOriginalChar);
 }
 
 #define MAKE_SPECIAL_CASE_ACCESSOR(which) \
   const MultiCharMapping* \
-  Special##which(PRUint32 aChar) \
+  Special##which(uint32_t aChar) \
   { \
     const void* p = bsearch(&aChar, CaseSpecials_##which, \
                             mozilla::ArrayLength(CaseSpecials_##which), \

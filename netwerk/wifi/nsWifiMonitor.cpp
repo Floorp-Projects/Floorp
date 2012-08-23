@@ -94,7 +94,7 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  for (PRUint32 i = 0; i < mListeners.Length(); i++) {
+  for (uint32_t i = 0; i < mListeners.Length(); i++) {
 
     if (mListeners[i].mListener == aListener) {
       mListeners.RemoveElementAt(i);
@@ -134,7 +134,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsPassErrorToWifiListeners,
 NS_IMETHODIMP nsPassErrorToWifiListeners::Run()
 {
   LOG(("About to send error to the wifi listeners\n"));
-  for (PRInt32 i = 0; i < mListeners->Count(); i++) {
+  for (int32_t i = 0; i < mListeners->Count(); i++) {
     (*mListeners)[i]->OnError(mResult);
   }
   return NS_OK;
@@ -154,7 +154,7 @@ NS_IMETHODIMP nsWifiMonitor::Run()
     if (!currentListeners)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    for (PRUint32 i = 0; i < mListeners.Length(); i++)
+    for (uint32_t i = 0; i < mListeners.Length(); i++)
       currentListeners->AppendObject(mListeners[i].mListener);
 
     nsCOMPtr<nsIThread> thread = do_GetMainThread();
@@ -194,7 +194,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCallWifiListeners,
 NS_IMETHODIMP nsCallWifiListeners::Run()
 {
   LOG(("About to send data to the wifi listeners\n"));
-  for (PRInt32 i = 0; i < mListeners->Count(); i++) {
+  for (int32_t i = 0; i < mListeners->Count(); i++) {
     (*mListeners)[i]->OnChange(mAccessPoints->Elements(), mAccessPoints->Length());
   }
   return NS_OK;
@@ -212,7 +212,7 @@ nsWifiMonitor::CallWifiListeners(const nsCOMArray<nsWifiAccessPoint> &aAccessPoi
     {
       ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-      for (PRUint32 i = 0; i < mListeners.Length(); i++) {
+      for (uint32_t i = 0; i < mListeners.Length(); i++) {
         if (!mListeners[i].mHasSentData || aAccessPointsChanged) {
           mListeners[i].mHasSentData = true;
           currentListeners->AppendObject(mListeners[i].mListener);
@@ -222,13 +222,13 @@ nsWifiMonitor::CallWifiListeners(const nsCOMArray<nsWifiAccessPoint> &aAccessPoi
 
     if (currentListeners->Count() > 0)
     {
-      PRUint32 resultCount = aAccessPoints.Count();
+      uint32_t resultCount = aAccessPoints.Count();
       nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > accessPoints(
                                new nsTArray<nsIWifiAccessPoint *>(resultCount));
       if (!accessPoints)
         return NS_ERROR_OUT_OF_MEMORY;
 
-      for (PRUint32 i = 0; i < resultCount; i++)
+      for (uint32_t i = 0; i < resultCount; i++)
         accessPoints->AppendElement(aAccessPoints[i]);
 
       nsCOMPtr<nsIThread> thread = do_GetMainThread();

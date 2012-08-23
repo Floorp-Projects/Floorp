@@ -80,10 +80,10 @@ private:
   nsCOMPtr<nsIContent>            mNextTextBlock;
   nsTArray<OffsetEntry*>          mOffsetTable;
 
-  PRInt32                         mSelStartIndex;
-  PRInt32                         mSelStartOffset;
-  PRInt32                         mSelEndIndex;
-  PRInt32                         mSelEndOffset;
+  int32_t                         mSelStartIndex;
+  int32_t                         mSelStartOffset;
+  int32_t                         mSelEndIndex;
+  int32_t                         mSelEndOffset;
 
   nsCOMPtr<nsIDOMRange>           mExtent;
 
@@ -115,11 +115,11 @@ public:
   NS_IMETHOD SetFilter(nsITextServicesFilter *aFilter);
   NS_IMETHOD GetCurrentTextBlock(nsString *aStr);
   NS_IMETHOD FirstBlock();
-  NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
+  NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, int32_t *aSelOffset, int32_t *aSelLength);
   NS_IMETHOD PrevBlock();
   NS_IMETHOD NextBlock();
   NS_IMETHOD IsDone(bool *aIsDone);
-  NS_IMETHOD SetSelection(PRInt32 aOffset, PRInt32 aLength);
+  NS_IMETHOD SetSelection(int32_t aOffset, int32_t aLength);
   NS_IMETHOD ScrollSelectionIntoView();
   NS_IMETHOD DeleteSelection();
   NS_IMETHOD InsertText(const nsString *aText);
@@ -127,19 +127,19 @@ public:
   /* nsIEditActionListener method implementations. */
   NS_IMETHOD WillInsertNode(nsIDOMNode *aNode,
                             nsIDOMNode *aParent,
-                            PRInt32      aPosition);
+                            int32_t      aPosition);
   NS_IMETHOD DidInsertNode(nsIDOMNode *aNode,
                            nsIDOMNode *aParent,
-                           PRInt32     aPosition,
+                           int32_t     aPosition,
                            nsresult    aResult);
 
   NS_IMETHOD WillDeleteNode(nsIDOMNode *aChild);
   NS_IMETHOD DidDeleteNode(nsIDOMNode *aChild, nsresult aResult);
 
   NS_IMETHOD WillSplitNode(nsIDOMNode * aExistingRightNode,
-                           PRInt32      aOffset);
+                           int32_t      aOffset);
   NS_IMETHOD DidSplitNode(nsIDOMNode *aExistingRightNode,
-                          PRInt32     aOffset,
+                          int32_t     aOffset,
                           nsIDOMNode *aNewLeftNode,
                           nsresult    aResult);
 
@@ -151,18 +151,18 @@ public:
                           nsIDOMNode  *aParent,
                           nsresult     aResult);
   // these listen methods are unused:
-  NS_IMETHOD WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, PRInt32 aPosition);
-  NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult);
-  NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAString &aString);
-  NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAString &aString, nsresult aResult);
-  NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength);
-  NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult);
+  NS_IMETHOD WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, int32_t aPosition);
+  NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult);
+  NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString);
+  NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString, nsresult aResult);
+  NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength);
+  NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult);
   NS_IMETHOD WillDeleteSelection(nsISelection *aSelection);
   NS_IMETHOD DidDeleteSelection(nsISelection *aSelection);
 
   /* Helper functions */
-  static nsresult GetRangeEndPoints(nsIDOMRange *aRange, nsIDOMNode **aParent1, PRInt32 *aOffset1, nsIDOMNode **aParent2, PRInt32 *aOffset2);
-  static nsresult CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset, nsIDOMNode *aEndParent, PRInt32 aEndOffset, nsIDOMRange **aRange);
+  static nsresult GetRangeEndPoints(nsIDOMRange *aRange, nsIDOMNode **aParent1, int32_t *aOffset1, nsIDOMNode **aParent2, int32_t *aOffset2);
+  static nsresult CreateRange(nsIDOMNode *aStartParent, int32_t aStartOffset, nsIDOMNode *aEndParent, int32_t aEndOffset, nsIDOMRange **aRange);
 
 private:
   /* nsTextServicesDocument private methods. */
@@ -171,7 +171,7 @@ private:
 
   nsresult GetDocumentContentRootNode(nsIDOMNode **aNode);
   nsresult CreateDocumentContentRange(nsIDOMRange **aRange);
-  nsresult CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, bool aToStart, nsIDOMRange **aRange);
+  nsresult CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, int32_t aOffset, bool aToStart, nsIDOMRange **aRange);
   nsresult CreateDocumentContentIterator(nsIContentIterator **aIterator);
 
   nsresult AdjustContentIterator();
@@ -195,10 +195,10 @@ private:
 
   static bool HasSameBlockNodeParent(nsIContent *aContent1, nsIContent *aContent2);
 
-  nsresult SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, bool aDoUpdate);
-  nsresult GetSelection(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
-  nsresult GetCollapsedSelection(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
-  nsresult GetUncollapsedSelection(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
+  nsresult SetSelectionInternal(int32_t aOffset, int32_t aLength, bool aDoUpdate);
+  nsresult GetSelection(TSDBlockSelectionStatus *aSelStatus, int32_t *aSelOffset, int32_t *aSelLength);
+  nsresult GetCollapsedSelection(TSDBlockSelectionStatus *aSelStatus, int32_t *aSelOffset, int32_t *aSelLength);
+  nsresult GetUncollapsedSelection(TSDBlockSelectionStatus *aSelStatus, int32_t *aSelOffset, int32_t *aSelLength);
 
   bool SelectionIsCollapsed();
   bool SelectionIsValid();
@@ -213,18 +213,18 @@ private:
   static nsresult NodeHasOffsetEntry(nsTArray<OffsetEntry*> *aOffsetTable,
                                      nsIDOMNode *aNode,
                                      bool *aHasEntry,
-                                     PRInt32 *aEntryIndex);
+                                     int32_t *aEntryIndex);
 
   nsresult RemoveInvalidOffsetEntries();
-  nsresult SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aOffsetIntoEntry);
+  nsresult SplitOffsetEntry(int32_t aTableIndex, int32_t aOffsetIntoEntry);
 
   static nsresult FindWordBounds(nsTArray<OffsetEntry*> *offsetTable,
                                  nsString *blockStr,
-                                 nsIDOMNode *aNode, PRInt32 aNodeOffset,
+                                 nsIDOMNode *aNode, int32_t aNodeOffset,
                                  nsIDOMNode **aWordStartNode,
-                                 PRInt32 *aWordStartOffset,
+                                 int32_t *aWordStartOffset,
                                  nsIDOMNode **aWordEndNode,
-                                 PRInt32 *aWordEndOffset);
+                                 int32_t *aWordEndOffset);
 
 #ifdef DEBUG_kin
   void PrintOffsetTable();

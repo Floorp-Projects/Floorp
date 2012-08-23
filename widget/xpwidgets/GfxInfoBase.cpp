@@ -53,10 +53,10 @@ public:
     delete GfxInfoBase::mDriverInfo;
     GfxInfoBase::mDriverInfo = nullptr;
 
-    for (PRUint32 i = 0; i < DeviceFamilyMax; i++)
+    for (uint32_t i = 0; i < DeviceFamilyMax; i++)
       delete GfxDriverInfo::mDeviceFamilies[i];
 
-    for (PRUint32 i = 0; i < DeviceVendorMax; i++)
+    for (uint32_t i = 0; i < DeviceVendorMax; i++)
       delete GfxDriverInfo::mDeviceVendors[i];
 
     return NS_OK;
@@ -92,7 +92,7 @@ NS_IMPL_ISUPPORTS3(GfxInfoBase, nsIGfxInfo, nsIObserver, nsISupportsWeakReferenc
 #define BLACKLIST_ENTRY_TAG_NAME "gfxBlacklistEntry"
 
 static const char*
-GetPrefNameForFeature(PRInt32 aFeature)
+GetPrefNameForFeature(int32_t aFeature)
 {
   const char* name = nullptr;
   switch(aFeature) {
@@ -130,7 +130,7 @@ GetPrefNameForFeature(PRInt32 aFeature)
 // Returns the value of the pref for the relevant feature in aValue.
 // If the pref doesn't exist, aValue is not touched, and returns false.
 static bool
-GetPrefValueForFeature(PRInt32 aFeature, PRInt32& aValue)
+GetPrefValueForFeature(int32_t aFeature, int32_t& aValue)
 {
   const char *prefname = GetPrefNameForFeature(aFeature);
   if (!prefname)
@@ -141,7 +141,7 @@ GetPrefValueForFeature(PRInt32 aFeature, PRInt32& aValue)
 }
 
 static void
-SetPrefValueForFeature(PRInt32 aFeature, PRInt32 aValue)
+SetPrefValueForFeature(int32_t aFeature, int32_t aValue)
 {
   const char *prefname = GetPrefNameForFeature(aFeature);
   if (!prefname)
@@ -151,7 +151,7 @@ SetPrefValueForFeature(PRInt32 aFeature, PRInt32 aValue)
 }
 
 static void
-RemovePrefForFeature(PRInt32 aFeature)
+RemovePrefForFeature(int32_t aFeature)
 {
   const char *prefname = GetPrefNameForFeature(aFeature);
   if (!prefname)
@@ -223,7 +223,7 @@ BlacklistOSToOperatingSystem(const nsAString& os)
 static GfxDeviceFamily*
 BlacklistDevicesToDeviceFamily(nsIDOMNodeList* aDevices)
 {
-  PRUint32 length;
+  uint32_t length;
   if (NS_FAILED(aDevices->GetLength(&length)))
     return nullptr;
 
@@ -231,7 +231,7 @@ BlacklistDevicesToDeviceFamily(nsIDOMNodeList* aDevices)
   // GfxDeviceFamily with the contents of that array.
   GfxDeviceFamily* deviceIds = new GfxDeviceFamily;
 
-  for (PRUint32 i = 0; i < length; ++i) {
+  for (uint32_t i = 0; i < length; ++i) {
     nsCOMPtr<nsIDOMNode> node;
     if (NS_FAILED(aDevices->Item(i, getter_AddRefs(node))) || !node)
       continue;
@@ -246,7 +246,7 @@ BlacklistDevicesToDeviceFamily(nsIDOMNodeList* aDevices)
   return deviceIds;
 }
 
-static PRInt32
+static int32_t
 BlacklistFeatureToGfxFeature(const nsAString& aFeature)
 {
   if (aFeature == NS_LITERAL_STRING("DIRECT2D"))
@@ -269,7 +269,7 @@ BlacklistFeatureToGfxFeature(const nsAString& aFeature)
   return 0;
 }
 
-static PRInt32
+static int32_t
 BlacklistFeatureStatusToGfxFeatureStatus(const nsAString& aStatus)
 {
   if (aStatus == NS_LITERAL_STRING("NO_INFO"))
@@ -423,7 +423,7 @@ BlacklistEntryToDriverInfo(nsIDOMNode* aBlacklistEntry,
   if (BlacklistNodeGetChildByName(element, NS_LITERAL_STRING("driverVersion"),
                                   getter_AddRefs(dataNode))) {
     BlacklistNodeToTextValue(dataNode, dataValue);
-    PRUint64 version;
+    uint64_t version;
     if (ParseDriverVersion(dataValue, &version))
       aDriverInfo.mDriverVersion = version;
   }
@@ -444,13 +444,13 @@ static void
 BlacklistEntriesToDriverInfo(nsIDOMNodeList* aBlacklistEntries,
                              nsTArray<GfxDriverInfo>& aDriverInfo)
 {
-  PRUint32 length;
+  uint32_t length;
   if (NS_FAILED(aBlacklistEntries->GetLength(&length)))
     return;
 
   aDriverInfo.Clear();
   aDriverInfo.SetLength(length);
-  for (PRUint32 i = 0; i < length; ++i) {
+  for (uint32_t i = 0; i < length; ++i) {
     nsCOMPtr<nsIDOMNode> blacklistEntry;
     if (NS_SUCCEEDED(aBlacklistEntries->Item(i,
                                              getter_AddRefs(blacklistEntry))) &&
@@ -511,7 +511,7 @@ GfxInfoBase::Init()
 }
 
 NS_IMETHODIMP
-GfxInfoBase::GetFeatureStatus(PRInt32 aFeature, PRInt32* aStatus)
+GfxInfoBase::GetFeatureStatus(int32_t aFeature, int32_t* aStatus)
 {
   if (GetPrefValueForFeature(aFeature, *aStatus))
     return NS_OK;
@@ -521,13 +521,13 @@ GfxInfoBase::GetFeatureStatus(PRInt32 aFeature, PRInt32* aStatus)
   return GetFeatureStatusImpl(aFeature, aStatus, version, driverInfo);
 }
 
-PRInt32
+int32_t
 GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
                                          nsAString& aSuggestedVersion,
-                                         PRInt32 aFeature,
+                                         int32_t aFeature,
                                          OperatingSystem os)
 {
-  PRInt32 status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+  int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
 
   nsAutoString adapterVendorID;
   nsAutoString adapterDeviceID;
@@ -539,10 +539,10 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
     return 0;
   }
 
-  PRUint64 driverVersion;
+  uint64_t driverVersion;
   ParseDriverVersion(adapterDriverVersionString, &driverVersion);
 
-  PRUint32 i = 0;
+  uint32_t i = 0;
   for (; i < info.Length(); i++) {
     if (info[i].mOperatingSystem != DRIVER_OS_ALL &&
         info[i].mOperatingSystem != os)
@@ -557,7 +557,7 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
 
     if (info[i].mDevices != GfxDriverInfo::allDevices && info[i].mDevices->Length()) {
         bool deviceMatches = false;
-        for (PRUint32 j = 0; j < info[i].mDevices->Length(); j++) {
+        for (uint32_t j = 0; j < info[i].mDevices->Length(); j++) {
             if ((*info[i].mDevices)[j].Equals(adapterDeviceID, nsCaseInsensitiveStringComparator())) {
                 deviceMatches = true;
                 break;
@@ -646,8 +646,8 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
 }
 
 nsresult
-GfxInfoBase::GetFeatureStatusImpl(PRInt32 aFeature,
-                                  PRInt32* aStatus,
+GfxInfoBase::GetFeatureStatusImpl(int32_t aFeature,
+                                  int32_t* aStatus,
                                   nsAString& aSuggestedVersion,
                                   const nsTArray<GfxDriverInfo>& aDriverInfo,
                                   OperatingSystem* aOS /* = nullptr */)
@@ -674,14 +674,14 @@ GfxInfoBase::GetFeatureStatusImpl(PRInt32 aFeature,
     return NS_OK;
   }
 
-  PRUint64 driverVersion;
+  uint64_t driverVersion;
   ParseDriverVersion(adapterDriverVersionString, &driverVersion);
 
   // Check if the device is blocked from the downloaded blocklist. If not, check
   // the static list after that. This order is used so that we can later escape
   // out of static blocks (i.e. if we were wrong or something was patched, we
   // can back out our static block without doing a release).
-  PRInt32 status;
+  int32_t status;
   if (aDriverInfo.Length()) {
     status = FindBlocklistedDeviceInList(aDriverInfo, aSuggestedVersion, aFeature, os);
   } else {
@@ -702,7 +702,7 @@ GfxInfoBase::GetFeatureStatusImpl(PRInt32 aFeature,
 }
 
 NS_IMETHODIMP
-GfxInfoBase::GetFeatureSuggestedDriverVersion(PRInt32 aFeature,
+GfxInfoBase::GetFeatureSuggestedDriverVersion(int32_t aFeature,
                                               nsAString& aVersion)
 {
   nsCString version;
@@ -711,7 +711,7 @@ GfxInfoBase::GetFeatureSuggestedDriverVersion(PRInt32 aFeature,
     return NS_OK;
   }
 
-  PRInt32 status;
+  int32_t status;
   nsTArray<GfxDriverInfo> driverInfo;
   return GetFeatureStatusImpl(aFeature, &status, aVersion, driverInfo);
 }
@@ -727,7 +727,7 @@ GfxInfoBase::GetWebGLParameter(const nsAString& aParam,
 void
 GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
 {
-  PRInt32 features[] = {
+  int32_t features[] = {
     nsIGfxInfo::FEATURE_DIRECT2D,
     nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS,
     nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS,
@@ -745,7 +745,7 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
   // anywhere permanent.
   int i = 0;
   while (features[i]) {
-    PRInt32 status;
+    int32_t status;
     nsAutoString suggestedVersion;
     if (NS_SUCCEEDED(GetFeatureStatusImpl(features[i], &status,
                                           suggestedVersion,
@@ -793,7 +793,7 @@ GfxInfoBase::LogFailure(const nsACString &failure)
 
 /* void getFailures ([optional] out unsigned long failureCount, [array, size_is (failureCount), retval] out string failures); */
 /* XPConnect method of returning arrays is very ugly. Would not recommend. Fallable nsMemory::Alloc makes things worse */
-NS_IMETHODIMP GfxInfoBase::GetFailures(PRUint32 *failureCount, char ***failures)
+NS_IMETHODIMP GfxInfoBase::GetFailures(uint32_t *failureCount, char ***failures)
 {
 
   NS_ENSURE_ARG_POINTER(failureCount);
@@ -808,7 +808,7 @@ NS_IMETHODIMP GfxInfoBase::GetFailures(PRUint32 *failureCount, char ***failures)
       return NS_ERROR_OUT_OF_MEMORY;
 
     /* copy over the failure messages into the array we just allocated */
-    for (PRUint32 i = 0; i < *failureCount; i++) {
+    for (uint32_t i = 0; i < *failureCount; i++) {
       nsCString& flattenedFailureMessage(mFailures[i]);
       (*failures)[i] = (char*)nsMemory::Clone(flattenedFailureMessage.get(), flattenedFailureMessage.Length() + 1);
 
@@ -837,7 +837,7 @@ nsresult GfxInfoBase::GetInfo(JSContext* aCx, jsval* aResult)
   InitCollectors();
   InfoObject obj(aCx);
 
-  for (PRUint32 i = 0; i < sCollectors->Length(); i++) {
+  for (uint32_t i = 0; i < sCollectors->Length(); i++) {
     (*sCollectors)[i]->GetInfo(obj);
   }
 
@@ -865,7 +865,7 @@ void
 GfxInfoBase::RemoveCollector(GfxInfoCollectorBase* collector)
 {
   InitCollectors();
-  for (PRUint32 i = 0; i < sCollectors->Length(); i++) {
+  for (uint32_t i = 0; i < sCollectors->Length(); i++) {
     if ((*sCollectors)[i] == collector) {
       sCollectors->RemoveElementAt(i);
       break;

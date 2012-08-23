@@ -51,8 +51,8 @@ interface nsIWindowCreator2 : nsIWindowCreator {
       @return the new window. Will be null if canceled or an error occurred.
   */
   nsIWebBrowserChrome createChromeWindow2(in nsIWebBrowserChrome parent,
-                                          in PRUint32 chromeFlags,
-                                          in PRUint32 contextFlags,
+                                          in uint32_t chromeFlags,
+                                          in uint32_t contextFlags,
                                           in nsIURI uri,
                                           out boolean cancel);
 };

@@ -113,7 +113,7 @@ nsHyphenationManager::GetHyphenator(nsIAtom *aLocale)
       if (StringEndsWith(localeStr, NS_LITERAL_CSTRING("-*"))) {
         localeStr.Truncate(localeStr.Length() - 2);
       }
-      PRInt32 i = localeStr.RFindChar('-');
+      int32_t i = localeStr.RFindChar('-');
       if (i > 1) {
         localeStr.Replace(i, localeStr.Length() - i, "-*");
         nsCOMPtr<nsIAtom> fuzzyLocale = do_GetAtom(localeStr);
@@ -195,7 +195,7 @@ nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType)
   }
 
   const char *result;
-  PRUint16 len;
+  uint16_t len;
   while (NS_SUCCEEDED(find->FindNext(&result, &len))) {
     nsCString uriString(base);
     uriString.Append(result, len);
@@ -215,7 +215,7 @@ nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType)
     if (StringBeginsWith(locale, NS_LITERAL_CSTRING("hyph_"))) {
       locale.Cut(0, 5);
     }
-    for (PRUint32 i = 0; i < locale.Length(); ++i) {
+    for (uint32_t i = 0; i < locale.Length(); ++i) {
       if (locale[i] == '_') {
         locale.Replace(i, 1, '-');
       }
@@ -269,7 +269,7 @@ nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir)
       locale.Cut(0, 5);
     }
     locale.SetLength(locale.Length() - 4); // strip ".dic"
-    for (PRUint32 i = 0; i < locale.Length(); ++i) {
+    for (uint32_t i = 0; i < locale.Length(); ++i) {
       if (locale[i] == '_') {
         locale.Replace(i, 1, '-');
       }
@@ -294,12 +294,12 @@ nsHyphenationManager::LoadAliases()
   if (!prefRootBranch) {
     return;
   }
-  PRUint32 prefCount;
+  uint32_t prefCount;
   char **prefNames;
   nsresult rv = prefRootBranch->GetChildList(INTL_HYPHENATIONALIAS_PREFIX,
                                              &prefCount, &prefNames);
   if (NS_SUCCEEDED(rv) && prefCount > 0) {
-    for (PRUint32 i = 0; i < prefCount; ++i) {
+    for (uint32_t i = 0; i < prefCount; ++i) {
       nsAdoptingCString value = Preferences::GetCString(prefNames[i]);
       if (value) {
         nsCAutoString alias(prefNames[i]);

@@ -325,7 +325,7 @@ DisplayTable::GetColormapAndVisual(Screen* aScreen, XRenderPictFormat* aFormat,
     }
 
     nsTArray<DisplayInfo>* displays = &sDisplayTable->mDisplays;
-    PRUint32 d = displays->IndexOf(display, 0, FindDisplay());
+    uint32_t d = displays->IndexOf(display, 0, FindDisplay());
 
     if (d == displays->NoIndex) {
         d = displays->Length();
@@ -345,7 +345,7 @@ DisplayTable::GetColormapAndVisual(Screen* aScreen, XRenderPictFormat* aFormat,
 
     // Only a small number of formats are expected to be used, so just do a
     // simple linear search.
-    for (PRUint32 i = 0; i < entries->Length(); ++i) {
+    for (uint32_t i = 0; i < entries->Length(); ++i) {
         const ColormapEntry& entry = entries->ElementAt(i);
         // Only the format and screen need to match.  (The visual may differ.)
         // If there is no format (e.g. no RENDER extension) then just compare

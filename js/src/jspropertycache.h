@@ -33,13 +33,10 @@ struct PropertyCacheEntry
     friend class PropertyCache;
 
   private:
-    /* Index into scope chain; inapplicable to property lookup entries. */
-    uint8_t       scopeIndex;
     /* Index into the prototype chain from the object for this entry. */
     uint8_t       protoIndex;
 
   public:
-    static const size_t MaxScopeIndex = 15;
     static const size_t MaxProtoIndex = 15;
 
     /*
@@ -50,7 +47,7 @@ struct PropertyCacheEntry
      * lookups.  It is meaningless to ask this question of an entry for an
      * identifier lookup.
      */
-    bool isOwnPropertyHit() const { return scopeIndex == 0 && protoIndex == 0; }
+    bool isOwnPropertyHit() const { return protoIndex == 0; }
 
     /*
      * True iff the property lookup will find the property on the prototype of
@@ -60,18 +57,15 @@ struct PropertyCacheEntry
      * lookups.  It is meaningless to ask this question of an entry for an
      * identifier lookup.
      */
-    bool isPrototypePropertyHit() const { return scopeIndex == 0 && protoIndex == 1; }
+    bool isPrototypePropertyHit() const { return protoIndex == 1; }
 
-    void assign(jsbytecode *kpc, Shape *kshape, Shape *pshape,
-                Shape *prop, unsigned scopeIndex, unsigned protoIndex) {
-        JS_ASSERT(scopeIndex <= MaxScopeIndex);
+    void assign(jsbytecode *kpc, Shape *kshape, Shape *pshape, Shape *prop, unsigned protoIndex) {
         JS_ASSERT(protoIndex <= MaxProtoIndex);
 
         this->kpc = kpc;
         this->kshape = kshape;
         this->pshape = pshape;
         this->prop = prop;
-        this->scopeIndex = uint8_t(scopeIndex);
         this->protoIndex = uint8_t(protoIndex);
     }
 };
@@ -177,14 +171,13 @@ class PropertyCache
 
     /*
      * Fill property cache entry for key cx->fp->pc, optimized value word
-     * computed from obj and shape, and entry capability forged from 24-bit
-     * obj->shape(), 4-bit scopeIndex, and 4-bit protoIndex.
+     * computed from obj and shape, and entry capability forged from
+     * obj->shape() and an 8-bit protoIndex.
      *
      * Return the filled cache entry or JS_NO_PROP_CACHE_FILL if caching was
      * not possible.
      */
-    PropertyCacheEntry *fill(JSContext *cx, JSObject *obj, unsigned scopeIndex,
-                             JSObject *pobj, js::Shape *shape);
+    PropertyCacheEntry *fill(JSContext *cx, JSObject *obj, JSObject *pobj, js::Shape *shape);
 
     void purge(JSRuntime *rt);
 

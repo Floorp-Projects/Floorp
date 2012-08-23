@@ -49,9 +49,9 @@ public:
                                 JSContext* aCx, jsval* aVal);
 private:
   nsCOMPtr<nsIVariant> mNetwork;
-  PRInt16 mSignalStrength;
-  PRInt16 mRelSignalStrength;
-  PRInt32 mLinkSpeed;
+  int16_t mSignalStrength;
+  int16_t mRelSignalStrength;
+  int32_t mLinkSpeed;
 };
 
 #endif // nsDOMWifiEvent_h__

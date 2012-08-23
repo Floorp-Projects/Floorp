@@ -70,7 +70,7 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     res = nullptr; // To allow recycling
 
     // Evaluate remaining steps
-    PRUint32 i, len = mItems.Length();
+    uint32_t i, len = mItems.Length();
     for (i = 1; i < len; ++i) {
         PathExprItem& pxi = mItems[i];
         nsRefPtr<txNodeSet> tmpNodes;
@@ -188,12 +188,12 @@ PathExpr::getType()
 TX_IMPL_EXPR_STUBS_BASE(PathExpr, NODESET_RESULT)
 
 Expr*
-PathExpr::getSubExprAt(PRUint32 aPos)
+PathExpr::getSubExprAt(uint32_t aPos)
 {
     return aPos < mItems.Length() ? mItems[aPos].expr.get() : nullptr;
 }
 void
-PathExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+PathExpr::setSubExprAt(uint32_t aPos, Expr* aExpr)
 {
     NS_ASSERTION(aPos < mItems.Length(), "setting bad subexpression index");
     mItems[aPos].expr.forget();
@@ -215,7 +215,7 @@ PathExpr::isSensitiveTo(ContextSensitivity aContext)
         return false;
     }
 
-    PRUint32 i, len = mItems.Length();
+    uint32_t i, len = mItems.Length();
     for (i = 0; i < len; ++i) {
         NS_ASSERTION(!mItems[i].expr->isSensitiveTo(Expr::NODESET_CONTEXT),
                      "Step cannot depend on nodeset-context");
@@ -237,7 +237,7 @@ PathExpr::toString(nsAString& dest)
         mItems[0].expr->toString(dest);
     }
     
-    PRUint32 i, len = mItems.Length();
+    uint32_t i, len = mItems.Length();
     for (i = 1; i < len; ++i) {
         switch (mItems[i].pathOp) {
             case DESCENDANT_OP:

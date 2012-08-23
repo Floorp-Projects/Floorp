@@ -21,16 +21,16 @@ typedef bool (*nsFontFamilyEnumFunc)(const nsString& aFamily, bool aGeneric, voi
 // IDs for generic fonts
 // NOTE: 0, 1 are reserved for the special IDs of the default variable
 // and fixed fonts in the presentation context, see nsPresContext.h
-const PRUint8 kGenericFont_NONE         = 0x00;
+const uint8_t kGenericFont_NONE         = 0x00;
 // Special
-const PRUint8 kGenericFont_moz_variable = 0x00; // for the default variable width font
-const PRUint8 kGenericFont_moz_fixed    = 0x01; // our special "use the user's fixed font"
+const uint8_t kGenericFont_moz_variable = 0x00; // for the default variable width font
+const uint8_t kGenericFont_moz_fixed    = 0x01; // our special "use the user's fixed font"
 // CSS
-const PRUint8 kGenericFont_serif        = 0x02;
-const PRUint8 kGenericFont_sans_serif   = 0x04;
-const PRUint8 kGenericFont_monospace    = 0x08;
-const PRUint8 kGenericFont_cursive      = 0x10;
-const PRUint8 kGenericFont_fantasy      = 0x20;
+const uint8_t kGenericFont_serif        = 0x02;
+const uint8_t kGenericFont_sans_serif   = 0x04;
+const uint8_t kGenericFont_monospace    = 0x08;
+const uint8_t kGenericFont_cursive      = 0x10;
+const uint8_t kGenericFont_fantasy      = 0x20;
 
 struct gfxFontStyle;
 
@@ -40,25 +40,25 @@ struct NS_GFX nsFont {
   nsString name;
 
   // The style of font (normal, italic, oblique; see gfxFontConstants.h)
-  PRUint8 style;
+  uint8_t style;
 
   // Force this font to not be considered a 'generic' font, even if
   // the name is the same as a CSS generic font family.
-  PRUint8 systemFont;
+  uint8_t systemFont;
 
   // The variant of the font (normal, small-caps)
-  PRUint8 variant;
+  uint8_t variant;
 
   // The decorations on the font (underline, overline,
   // line-through). The decorations can be binary or'd together.
-  PRUint8 decorations;
+  uint8_t decorations;
 
   // The weight of the font; see gfxFontConstants.h.
-  PRUint16 weight;
+  uint16_t weight;
 
   // The stretch of the font (the sum of various NS_FONT_STRETCH_*
   // constants; see gfxFontConstants.h).
-  PRInt16 stretch;
+  int16_t stretch;
 
   // The logical size of the font, in nscoord units
   nscoord size;
@@ -78,14 +78,14 @@ struct NS_GFX nsFont {
   nsString languageOverride;
 
   // Initialize the font struct with an ASCII name
-  nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
-         PRUint16 aWeight, PRInt16 aStretch, PRUint8 aDecoration,
+  nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
+         uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
          nscoord aSize, float aSizeAdjust=0.0f,
          const nsString* aLanguageOverride = nullptr);
 
   // Initialize the font struct with a (potentially) unicode name
-  nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
-         PRUint16 aWeight, PRInt16 aStretch, PRUint8 aDecoration,
+  nsFont(const nsString& aName, uint8_t aStyle, uint8_t aVariant,
+         uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
          nscoord aSize, float aSizeAdjust=0.0f,
          const nsString* aLanguageOverride = nullptr);
 
@@ -116,7 +116,7 @@ struct NS_GFX nsFont {
   void GetFirstFamily(nsString& aFamily) const;
 
   // Utility method to return the ID of a generic font
-  static void GetGenericID(const nsString& aGeneric, PRUint8* aID);
+  static void GetGenericID(const nsString& aGeneric, uint8_t* aID);
 };
 
 #define NS_FONT_VARIANT_NORMAL            0

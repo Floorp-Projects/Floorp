@@ -30,8 +30,8 @@ nsDOMCameraManager::GetListOfCameras(JSContext* cx, JS::Value* _retval)
 {
   JSObject* a = JS_NewArrayObject(cx, 0, nullptr);
   camera_module_t* module;
-  PRUint32 index = 0;
-  PRUint32 count;
+  uint32_t index = 0;
+  uint32_t count;
 
   if (!a) {
     DOM_CAMERA_LOGE("getListOfCameras : Could not create array object");
@@ -69,7 +69,7 @@ nsDOMCameraManager::GetListOfCameras(JSContext* cx, JS::Value* _retval)
       default:
         // TODO: handle extra cameras in getCamera().
         {
-          static PRUint32 extraIndex = 2;
+          static uint32_t extraIndex = 2;
           nsCString s;
           s.AppendPrintf("extra-camera-%d", count);
           v = JS_NewStringCopyZ(cx, s.get());

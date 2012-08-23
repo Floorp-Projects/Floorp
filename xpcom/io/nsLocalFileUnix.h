@@ -116,15 +116,15 @@ protected:
                               nsACString::const_iterator &);
 
     nsresult CopyDirectoryTo(nsIFile *newParent);
-    nsresult CreateAllAncestors(PRUint32 permissions);
+    nsresult CreateAllAncestors(uint32_t permissions);
     nsresult GetNativeTargetPathName(nsIFile *newParent,
                                      const nsACString &newName,
                                      nsACString &_retval);
 
     bool FillStatCache();
 
-    nsresult CreateAndKeepOpen(PRUint32 type, int flags,
-                               PRUint32 permissions, PRFileDesc **_retval);
+    nsresult CreateAndKeepOpen(uint32_t type, int flags,
+                               uint32_t permissions, PRFileDesc **_retval);
 };
 
 #endif /* _nsLocalFileUNIX_H_ */

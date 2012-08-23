@@ -181,7 +181,7 @@ struct ParamTraits<InputStream>
                  "nsIIPCSerializableObsolete; falling back to copying data");
 
       nsCString streamString;
-      PRUint64 bytes;
+      uint64_t bytes;
 
       nsresult rv = aParam.mStream->Available(&bytes);
       if (NS_SUCCEEDED(rv) && bytes > 0) {
@@ -189,7 +189,7 @@ struct ParamTraits<InputStream>
         // and 64-bit process, we shouldn't handle over 4GB message.
         NS_ABORT_IF_FALSE(bytes < PR_UINT32_MAX, "nsIInputStream has over 4GB data");
         mozilla::DebugOnly<nsresult> rv =
-          NS_ReadInputStreamToString(aParam.mStream, streamString, (PRUint32)bytes);
+          NS_ReadInputStreamToString(aParam.mStream, streamString, (uint32_t)bytes);
         NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Can't read input stream into a string!");
       }
 
@@ -260,15 +260,15 @@ struct ParamTraits<InputStream>
 struct Permission
 {
   nsCString host, type;
-  PRUint32 capability, expireType;
-  PRInt64 expireTime;
+  uint32_t capability, expireType;
+  int64_t expireTime;
 
   Permission() { }
   Permission(const nsCString& aHost,
              const nsCString& aType,
-             const PRUint32 aCapability,
-             const PRUint32 aExpireType,
-             const PRInt64 aExpireTime) : host(aHost),
+             const uint32_t aCapability,
+             const uint32_t aExpireType,
+             const int64_t aExpireTime) : host(aHost),
                                           type(aType),
                                           capability(aCapability),
                                           expireType(aExpireType),

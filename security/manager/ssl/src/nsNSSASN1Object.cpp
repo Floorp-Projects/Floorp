@@ -53,12 +53,12 @@ getInteger256(unsigned char *data, unsigned int nb)
 // A DER encoded item has the following structure:
 //
 //  <tag><length<data consisting of lenght bytes>
-static PRInt32
+static int32_t
 getDERItemLength(unsigned char *data, unsigned char *end,
                  unsigned long *bytesUsed, bool *indefinite)
 {
   unsigned char lbyte = *data++;
-  PRInt32 length = -1;
+  int32_t length = -1;
   
   *indefinite = false;
   if (lbyte >= 0x80) {
@@ -112,8 +112,8 @@ buildASN1ObjectFromDER(unsigned char *data,
   //      interpreted according to its type.
   unsigned long bytesUsed;
   bool indefinite;
-  PRInt32 len;
-  PRUint32 type;
+  int32_t len;
+  uint32_t type;
 
   rv = parent->GetASN1Objects(getter_AddRefs(parentObjects));
   if (NS_FAILED(rv) || parentObjects == nullptr)
@@ -234,28 +234,28 @@ nsNSSASN1Sequence::SetASN1Objects(nsIMutableArray * aASN1Objects)
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Sequence::GetTag(PRUint32 *aTag)
+nsNSSASN1Sequence::GetTag(uint32_t *aTag)
 {
   *aTag = mTag;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Sequence::SetTag(PRUint32 aTag)
+nsNSSASN1Sequence::SetTag(uint32_t aTag)
 {
   mTag = aTag;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Sequence::GetType(PRUint32 *aType)
+nsNSSASN1Sequence::GetType(uint32_t *aType)
 {
   *aType = mType;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Sequence::SetType(PRUint32 aType)
+nsNSSASN1Sequence::SetType(uint32_t aType)
 {
   mType = aType;
   return NS_OK;
@@ -352,35 +352,35 @@ nsNSSASN1PrintableItem::SetDisplayValue(const nsAString &aValue)
 }
 
 NS_IMETHODIMP 
-nsNSSASN1PrintableItem::GetTag(PRUint32 *aTag)
+nsNSSASN1PrintableItem::GetTag(uint32_t *aTag)
 {
   *aTag = mTag;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1PrintableItem::SetTag(PRUint32 aTag)
+nsNSSASN1PrintableItem::SetTag(uint32_t aTag)
 {
   mTag = aTag;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1PrintableItem::GetType(PRUint32 *aType)
+nsNSSASN1PrintableItem::GetType(uint32_t *aType)
 {
   *aType = mType;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1PrintableItem::SetType(PRUint32 aType)
+nsNSSASN1PrintableItem::SetType(uint32_t aType)
 {
   mType = aType;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1PrintableItem::SetData(char *data, PRUint32 len)
+nsNSSASN1PrintableItem::SetData(char *data, uint32_t len)
 {
   if (len > 0) {
     if (mLen < len) {
@@ -403,7 +403,7 @@ nsNSSASN1PrintableItem::SetData(char *data, PRUint32 len)
 }
 
 NS_IMETHODIMP
-nsNSSASN1PrintableItem::GetData(char **outData, PRUint32 *outLen)
+nsNSSASN1PrintableItem::GetData(char **outData, uint32_t *outLen)
 {
   NS_ENSURE_ARG_POINTER(outData);
   NS_ENSURE_ARG_POINTER(outLen);

@@ -45,10 +45,10 @@ interface nsIHttpActivityObserver : nsISupports
      *        this activity
      */
     void observeActivity(in nsISupports  aHttpChannel,
-                         in PRUint32     aActivityType,
-                         in PRUint32     aActivitySubtype,
+                         in uint32_t     aActivityType,
+                         in uint32_t     aActivitySubtype,
                          in PRTime       aTimestamp,
-                         in PRUint64     aExtraSizeData,
+                         in uint64_t     aExtraSizeData,
                          in ACString     aExtraStringData);
 
     /**

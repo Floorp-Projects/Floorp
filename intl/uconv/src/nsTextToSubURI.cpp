@@ -45,8 +45,8 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
        {
           char buf[256];
           char *pBuf = buf;
-          PRInt32 ulen = NS_strlen(text);
-          PRInt32 outlen = 0;
+          int32_t ulen = NS_strlen(text);
+          int32_t outlen = 0;
           if(NS_SUCCEEDED(rv = encoder->GetMaxLength(text, ulen, &outlen))) 
           {
              if(outlen >= 256) {
@@ -56,10 +56,10 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
                 outlen = 255;
                 pBuf = buf;
              }
-             PRInt32 bufLen = outlen;
+             int32_t bufLen = outlen;
              if(NS_SUCCEEDED(rv = encoder->Convert(text,&ulen, pBuf, &outlen))) {
                 // put termination characters (e.g. ESC(B of ISO-2022-JP) if necessary
-                PRInt32 finLen = bufLen - outlen;
+                int32_t finLen = bufLen - outlen;
                 if (finLen > 0) {
                   if (NS_SUCCEEDED(encoder->Finish((char *)(pBuf+outlen), &finLen)))
                     outlen += finLen;
@@ -108,8 +108,8 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
     rv = ccm->GetUnicodeDecoder(charset, &decoder);
     if (NS_SUCCEEDED(rv)) {
       PRUnichar *pBuf = nullptr;
-      PRInt32 len = strlen(unescaped);
-      PRInt32 outlen = 0;
+      int32_t len = strlen(unescaped);
+      int32_t outlen = 0;
       if (NS_SUCCEEDED(rv = decoder->GetMaxLength(unescaped, len, &outlen))) {
         pBuf = (PRUnichar *) NS_Alloc((outlen+1)*sizeof(PRUnichar));
         if (nullptr == pBuf)
@@ -176,8 +176,8 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
                                                   getter_AddRefs(unicodeDecoder));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 srcLen = aURI.Length();
-  PRInt32 dstLen;
+  int32_t srcLen = aURI.Length();
+  int32_t dstLen;
   rv = unicodeDecoder->GetMaxLength(aURI.get(), srcLen, &dstLen);
   NS_ENSURE_SUCCESS(rv, rv);
 

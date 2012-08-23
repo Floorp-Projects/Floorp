@@ -22,7 +22,7 @@ ChannelEventQueue::FlushQueue()
   // Prevent flushed events from flushing the queue recursively
   mFlushing = true;
 
-  PRUint32 i;
+  uint32_t i;
   for (i = 0; i < mEventQueue.Length(); i++) {
     mEventQueue[i]->Run();
     if (mSuspended)

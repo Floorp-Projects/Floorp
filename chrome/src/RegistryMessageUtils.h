@@ -21,7 +21,7 @@ struct ChromePackage
   SerializedURI contentBaseURI;
   SerializedURI localeBaseURI;
   SerializedURI skinBaseURI;
-  PRUint32 flags;
+  uint32_t flags;
 };
 
 struct ResourceMapping
@@ -80,7 +80,7 @@ struct ParamTraits<ChromePackage>
   {
     nsCString package;
     SerializedURI contentBaseURI, localeBaseURI, skinBaseURI;
-    PRUint32 flags;
+    uint32_t flags;
     
     if (ReadParam(aMsg, aIter, &package) &&
         ReadParam(aMsg, aIter, &contentBaseURI) &&

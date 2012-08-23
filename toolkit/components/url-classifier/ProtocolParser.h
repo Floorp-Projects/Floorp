@@ -23,7 +23,7 @@ public:
     nsCString mac;
   };
 
-  ProtocolParser(PRUint32 aHashKey);
+  ProtocolParser(uint32_t aHashKey);
   ~ProtocolParser();
 
   nsresult Status() const { return mUpdateStatus; }
@@ -61,14 +61,14 @@ private:
   nsresult ProcessChunk(bool* done);
   nsresult ProcessPlaintextChunk(const nsACString& aChunk);
   nsresult ProcessShaChunk(const nsACString& aChunk);
-  nsresult ProcessHostAdd(const Prefix& aDomain, PRUint8 aNumEntries,
-                          const nsACString& aChunk, PRUint32* aStart);
-  nsresult ProcessHostSub(const Prefix& aDomain, PRUint8 aNumEntries,
-                          const nsACString& aChunk, PRUint32* aStart);
-  nsresult ProcessHostAddComplete(PRUint8 aNumEntries, const nsACString& aChunk,
-                                  PRUint32 *aStart);
-  nsresult ProcessHostSubComplete(PRUint8 numEntries, const nsACString& aChunk,
-                                  PRUint32* start);
+  nsresult ProcessHostAdd(const Prefix& aDomain, uint8_t aNumEntries,
+                          const nsACString& aChunk, uint32_t* aStart);
+  nsresult ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
+                          const nsACString& aChunk, uint32_t* aStart);
+  nsresult ProcessHostAddComplete(uint8_t aNumEntries, const nsACString& aChunk,
+                                  uint32_t *aStart);
+  nsresult ProcessHostSubComplete(uint8_t numEntries, const nsACString& aChunk,
+                                  uint32_t* start);
   bool NextLine(nsACString& aLine);
 
   void CleanupUpdates();
@@ -93,7 +93,7 @@ private:
   };
   ChunkState mChunkState;
 
-  PRUint32 mHashKey;
+  uint32_t mHashKey;
   bool mPerClientRandomize;
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 

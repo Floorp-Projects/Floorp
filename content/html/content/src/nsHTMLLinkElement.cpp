@@ -64,15 +64,15 @@ public:
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -272,7 +272,7 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 }
 
 nsresult
-nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsHTMLLinkElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify)
 {
@@ -296,7 +296,7 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
        aName == nsGkAtoms::type)) {
     bool dropSheet = false;
     if (aName == nsGkAtoms::rel && GetStyleSheet()) {
-      PRUint32 linkTypes = nsStyleLinkElement::ParseLinkTypes(aValue);
+      uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(aValue);
       dropSheet = !(linkTypes & STYLESHEET);          
     }
     
@@ -311,7 +311,7 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsHTMLLinkElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+nsHTMLLinkElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
@@ -403,7 +403,7 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
 
   nsAutoString rel;
   GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel);
-  PRUint32 linkTypes = nsStyleLinkElement::ParseLinkTypes(rel);
+  uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(rel);
   // Is it a stylesheet link?
   if (!(linkTypes & STYLESHEET)) {
     return;

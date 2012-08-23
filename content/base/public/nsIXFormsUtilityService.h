@@ -71,7 +71,7 @@ public:
    * is used if element can't have in-range or out-of-range state, for exmple,
    * xforms:input.
    */
-  NS_IMETHOD IsInRange(nsIDOMNode *aElement, PRUint32 *aState) = 0;
+  NS_IMETHOD IsInRange(nsIDOMNode *aElement, uint32_t *aState) = 0;
 
   /**
    * Return value of instance node that given node is bound to. If given node is

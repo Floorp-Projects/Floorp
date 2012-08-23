@@ -57,7 +57,7 @@ public:
    * instead to take care of creating instances of the correct sub-class.
    */
   static DOMSVGPathSeg *CreateFor(DOMSVGPathSegList *aList,
-                                  PRUint32 aListIndex,
+                                  uint32_t aListIndex,
                                   bool aIsAnimValItem);
 
   /**
@@ -88,15 +88,15 @@ public:
    * the necessary notifications) is located elsewhere (in DOMSVGPathSegList).)
    */
   void InsertingIntoList(DOMSVGPathSegList *aList,
-                         PRUint32 aListIndex,
+                         uint32_t aListIndex,
                          bool aIsAnimValItem);
 
-  static PRUint32 MaxListIndex() {
+  static uint32_t MaxListIndex() {
     return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
   }
 
   /// This method is called to notify this object that its list index changed.
-  void UpdateListIndex(PRUint32 aListIndex) {
+  void UpdateListIndex(uint32_t aListIndex) {
     mListIndex = aListIndex;
   }
 
@@ -119,7 +119,7 @@ public:
   /**
    * The type of this path segment.
    */
-  virtual PRUint32 Type() const = 0;
+  virtual uint32_t Type() const = 0;
 
 protected:
 
@@ -127,7 +127,7 @@ protected:
    * Generic ctor for DOMSVGPathSeg objects that are created for an attribute.
    */
   DOMSVGPathSeg(DOMSVGPathSegList *aList,
-                PRUint32 aListIndex,
+                uint32_t aListIndex,
                 bool aIsAnimValItem);
 
   /**
@@ -172,8 +172,8 @@ protected:
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
 
-  PRUint32 mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
-  PRUint32 mIsAnimValItem:1; // PRUint32 because MSVC won't pack otherwise
+  uint32_t mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
+  uint32_t mIsAnimValItem:1; // uint32_t because MSVC won't pack otherwise
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGPathSeg, MOZILLA_DOMSVGPATHSEG_IID)

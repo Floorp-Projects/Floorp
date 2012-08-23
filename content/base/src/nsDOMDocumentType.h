@@ -65,7 +65,7 @@ public:
   }
 
   // nsINode
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(uint32_t aFlags) const;
 
   // nsIContent overrides
   virtual const nsTextFragment* GetText();

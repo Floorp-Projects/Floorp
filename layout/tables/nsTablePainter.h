@@ -48,7 +48,7 @@ class TableBackgroundPainter
                            nsRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
                            const nsPoint&       aPt,
-                           PRUint32             aBGPaintFlags);
+                           uint32_t             aBGPaintFlags);
 
     /** Destructor */
     ~TableBackgroundPainter();
@@ -211,13 +211,13 @@ class TableBackgroundPainter
     Origin               mOrigin; //user's table frame type
 
     ColData*             mCols;  //array of columns' ColData
-    PRUint32             mNumCols;
+    uint32_t             mNumCols;
     TableBackgroundData  mRowGroup; //current row group
     TableBackgroundData  mRow;      //current row
     nsRect               mCellRect; //current cell's rect
 
     nsStyleBorder        mZeroBorder;  //cached zero-width border
-    PRUint32             mBGPaintFlags;
+    uint32_t             mBGPaintFlags;
 };
 
 #endif

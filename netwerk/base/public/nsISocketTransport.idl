@@ -109,7 +109,7 @@ interface nsISocketTransport : nsITransport
      * resolved.  STATUS_WAITING_FOR is an optional status code, which the impl
      * of this interface may choose not to generate.
      *
-     * In C++, these constants have a type of PRUint32, so C++ callers must use
+     * In C++, these constants have a type of uint32_t, so C++ callers must use
      * the NS_NET_STATUS_* constants defined below, which have a type of
      * nsresult.
      */

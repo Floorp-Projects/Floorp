@@ -48,7 +48,7 @@ NS_IMETHODIMP nsWifiAccessPoint::GetRawSSID(nsACString& aRawSsid)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWifiAccessPoint::GetSignal(PRInt32 *aSignal)
+NS_IMETHODIMP nsWifiAccessPoint::GetSignal(int32_t *aSignal)
 {
   NS_ENSURE_ARG(aSignal);
   *aSignal = mSignal;
@@ -64,10 +64,10 @@ bool AccessPointsEqual(nsCOMArray<nsWifiAccessPoint>& a, nsCOMArray<nsWifiAccess
     return false;
   }
 
-  for (PRInt32 i = 0; i < a.Count(); i++) {
+  for (int32_t i = 0; i < a.Count(); i++) {
     LOG(("++ Looking for %s\n", a[i]->mSsid));
     bool found = false;
-    for (PRInt32 j = 0; j < b.Count(); j++) {
+    for (int32_t j = 0; j < b.Count(); j++) {
       LOG(("   %s->%s | %s->%s\n", a[i]->mSsid, b[j]->mSsid, a[i]->mMac, b[j]->mMac));
       if (!strcmp(a[i]->mSsid, b[j]->mSsid) &&
           !strcmp(a[i]->mMac, b[j]->mMac)) {
@@ -86,7 +86,7 @@ void ReplaceArray(nsCOMArray<nsWifiAccessPoint>& a, nsCOMArray<nsWifiAccessPoint
   a.Clear();
 
   // better way to copy?
-  for (PRInt32 i = 0; i < b.Count(); i++) {
+  for (int32_t i = 0; i < b.Count(); i++) {
     a.AppendObject(b[i]);
   }
 

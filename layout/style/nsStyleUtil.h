@@ -37,9 +37,9 @@ public:
 
   // Append a bitmask-valued property's value(s) (space-separated) to aResult.
   static void AppendBitmaskCSSValue(nsCSSProperty aProperty,
-                                    PRInt32 aMaskedValue,
-                                    PRInt32 aFirstMask,
-                                    PRInt32 aLastMask,
+                                    int32_t aMaskedValue,
+                                    int32_t aFirstMask,
+                                    int32_t aLastMask,
                                     nsAString& aResult);
 
   static void AppendFontFeatureSettings(const nsTArray<gfxFontFeature>& aFeatures,
@@ -52,7 +52,7 @@ public:
    * Convert an author-provided floating point number to an integer (0
    * ... 255) appropriate for use in the alpha component of a color.
    */
-  static PRUint8 FloatToColorComponent(float aAlpha)
+  static uint8_t FloatToColorComponent(float aAlpha)
   {
     NS_ASSERTION(0.0 <= aAlpha && aAlpha <= 1.0, "out of range");
     return NSToIntRound(aAlpha * 255);
@@ -65,7 +65,7 @@ public:
    *
    * Should be used only by serialization code.
    */
-  static float ColorComponentToFloat(PRUint8 aAlpha);
+  static float ColorComponentToFloat(uint8_t aAlpha);
 
   /*
    * Does this child count as significant for selector matching?

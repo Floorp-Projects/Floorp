@@ -25,12 +25,12 @@ public:
 
   NS_IMETHOD Init(nsIDOMWindow *aParent,
                   const nsAString& aTitle,
-                  PRInt16 aMode);
+                  int16_t aMode);
 
   NS_IMETHOD Open(nsIFilePickerShownCallback *aCallback);
-  NS_IMETHOD AppendFilters(PRInt32 filterMask);
-  NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
-  NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
+  NS_IMETHOD AppendFilters(int32_t filterMask);
+  NS_IMETHOD GetFilterIndex(int32_t *aFilterIndex);
+  NS_IMETHOD SetFilterIndex(int32_t aFilterIndex);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
 #ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY 
   NS_IMETHOD GetDisplayDirectory(nsIFile * *aDisplayDirectory);
@@ -42,7 +42,7 @@ public:
 protected:
 
   virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
-                          PRInt16 aMode) = 0;
+                          int16_t aMode) = 0;
 
   bool mAddToRecentDocs;
 #ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY 

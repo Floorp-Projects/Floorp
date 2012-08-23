@@ -3,11 +3,11 @@
 %define loweredShadow 0 1px rgba(255, 255, 255, .4)
 %define focusRingShadow 0 0 1px -moz-mac-focusring inset, 0 0 4px 1px -moz-mac-focusring, 0 0 1.5px 1px -moz-mac-focusring
 
-%define roundButtonBorder 1px solid rgba(0, 0, 0, .4)
-%define roundButtonBackground -moz-linear-gradient(top, #FFF, #CACACA) repeat-x
-%define roundButtonShadow 0 1px rgba(255, 255, 255, .4)
-%define roundButtonPressedBackground #CCC
-%define roundButtonPressedShadow inset 0 1px 3px rgba(0, 0, 0, .2), 0 1px rgba(255, 255, 255, .4)
+%define roundButtonBorder 1px solid rgba(0,0,0,.35)
+%define roundButtonBackground linear-gradient(#f6f6f6, #e9e9e9)
+%define roundButtonShadow 0 1px rgba(255,255,255,.5), inset 0 1px 1px rgba(255,255,255,.5)
+%define roundButtonPressedBackground #dadada
+%define roundButtonPressedShadow 0 1px rgba(255,255,255,.4), inset 0 1px 3px rgba(0,0,0,.2)
 
 %define scopeBarBackground -moz-linear-gradient(top, #E8E8E8, #D0D0D0) repeat-x
 %define scopeBarSeparatorBorder 1px solid #888

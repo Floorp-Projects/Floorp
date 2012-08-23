@@ -21,7 +21,7 @@
 
 #define UNICODE_ZWSP 0x200B
   
-static bool IsDiscardable(PRUnichar ch, PRUint32* aFlags)
+static bool IsDiscardable(PRUnichar ch, uint32_t* aFlags)
 {
   // Unlike IS_DISCARDABLE, we don't discard \r. \r will be ignored by gfxTextRun
   // and discarding it would force us to copy text in many cases of preformatted
@@ -37,7 +37,7 @@ static bool IsDiscardable(PRUnichar ch, PRUint32* aFlags)
   return IS_BIDI_CONTROL_CHAR(ch);
 }
 
-static bool IsDiscardable(PRUint8 ch, PRUint32* aFlags)
+static bool IsDiscardable(uint8_t ch, uint32_t* aFlags)
 {
   if (ch == CH_SHY) {
     *aFlags |= nsTextFrameUtils::TEXT_HAS_SHY;
@@ -47,21 +47,21 @@ static bool IsDiscardable(PRUint8 ch, PRUint32* aFlags)
 }
 
 PRUnichar*
-nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
+nsTextFrameUtils::TransformText(const PRUnichar* aText, uint32_t aLength,
                                 PRUnichar* aOutput,
                                 CompressionMode aCompression,
-                                PRUint8* aIncomingFlags,
+                                uint8_t* aIncomingFlags,
                                 gfxSkipCharsBuilder* aSkipChars,
-                                PRUint32* aAnalysisFlags)
+                                uint32_t* aAnalysisFlags)
 {
-  PRUint32 flags = 0;
+  uint32_t flags = 0;
   PRUnichar* outputStart = aOutput;
 
   bool lastCharArabic = false;
 
   if (aCompression == COMPRESS_NONE) {
     // Skip discardables.
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < aLength; ++i) {
       PRUnichar ch = *aText++;
       if (IsDiscardable(ch, &flags)) {
@@ -84,7 +84,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
     *aIncomingFlags &= ~INCOMING_WHITESPACE;
   } else {
     bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < aLength; ++i) {
       PRUnichar ch = *aText++;
       bool nowInWhitespace;
@@ -146,22 +146,22 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
   return aOutput;
 }
 
-PRUint8*
-nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
-                                PRUint8* aOutput,
+uint8_t*
+nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
+                                uint8_t* aOutput,
                                 CompressionMode aCompression,
-                                PRUint8* aIncomingFlags,
+                                uint8_t* aIncomingFlags,
                                 gfxSkipCharsBuilder* aSkipChars,
-                                PRUint32* aAnalysisFlags)
+                                uint32_t* aAnalysisFlags)
 {
-  PRUint32 flags = 0;
-  PRUint8* outputStart = aOutput;
+  uint32_t flags = 0;
+  uint8_t* outputStart = aOutput;
 
   if (aCompression == COMPRESS_NONE) {
     // Skip discardables.
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      PRUint8 ch = *aText++;
+      uint8_t ch = *aText++;
       if (IsDiscardable(ch, &flags)) {
         aSkipChars->SkipChar();
       } else {
@@ -175,9 +175,9 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
     *aIncomingFlags &= ~(INCOMING_ARABICCHAR | INCOMING_WHITESPACE);
   } else {
     bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
-    PRUint32 i;
+    uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      PRUint8 ch = *aText++;
+      uint8_t ch = *aText++;
       bool nowInWhitespace = ch == ' ' || ch == '\t' ||
         (ch == '\n' && aCompression == COMPRESS_WHITESPACE_NEWLINE);
       if (!nowInWhitespace) {
@@ -216,14 +216,14 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
   return aOutput;
 }
 
-PRUint32
+uint32_t
 nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
                     nsIContent *aContent, const nsStyleText *aStyleText)
 {
   const nsTextFragment *frag = aContent->GetText();
   // This is an approximation so we don't really need anything
   // too fancy here.
-  PRUint32 len;
+  uint32_t len;
   if (aStyleText->WhiteSpaceIsSignificant()) {
     len = frag->GetLength();
   } else {
@@ -241,7 +241,7 @@ nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
                         // only whitespace than get inline boundaries
                         // exactly right
     len = 0;
-    for (PRUint32 i = 0, i_end = frag->GetLength(); i < i_end; ++i) {
+    for (uint32_t i = 0, i_end = frag->GetLength(); i < i_end; ++i) {
       PRUnichar c = is2b ? u.s2b[i] : u.s1b[i];
       if (c == ' ' || c == '\n' || c == '\t' || c == '\r') {
         if (!prevWS) {
@@ -268,7 +268,7 @@ bool nsSkipCharsRunIterator::NextRun() {
     }
     if (!mRemainingLength)
       return false;
-    PRInt32 length;
+    int32_t length;
     mSkipped = mIterator.IsOriginalCharSkipped(&length);
     mRunLength = NS_MIN(length, mRemainingLength);
   } while (!mVisitSkipped && mSkipped);

@@ -114,7 +114,7 @@ nsIWidget         * gRollupWidget   = nullptr;
 
 bool gUserCancelledDrag = false;
 
-PRUint32 nsChildView::sLastInputEventCount = 0;
+uint32_t nsChildView::sLastInputEventCount = 0;
 
 @interface ChildView(Private)
 
@@ -452,7 +452,7 @@ static void PrintViewHierarchy(NSView *view)
 #endif
 
 // Return native data according to aDataType
-void* nsChildView::GetNativeData(PRUint32 aDataType)
+void* nsChildView::GetNativeData(uint32_t aDataType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
 
@@ -614,8 +614,8 @@ void nsChildView::UpdatePluginPort()
 
       // need to convert view's origin to window coordinates.
       // then, encode as "SetOrigin" ready values.
-      mPluginQDPort.portx = (PRInt32)-viewOrigin.x;
-      mPluginQDPort.porty = (PRInt32)-viewOrigin.y;
+      mPluginQDPort.portx = (int32_t)-viewOrigin.x;
+      mPluginQDPort.porty = (int32_t)-viewOrigin.y;
     } else {
       mPluginQDPort.port = NULL;
     }
@@ -788,7 +788,7 @@ NS_IMETHODIMP nsChildView::SetCursor(nsCursor aCursor)
 
 // implement to fix "hidden virtual function" warning
 NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
-                                      PRUint32 aHotspotX, PRUint32 aHotspotY)
+                                      uint32_t aHotspotX, uint32_t aHotspotY)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -813,13 +813,13 @@ NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
 }
 
 NS_IMETHODIMP nsChildView::ConstrainPosition(bool aAllowSlop,
-                                             PRInt32 *aX, PRInt32 *aY)
+                                             int32_t *aX, int32_t *aY)
 {
   return NS_OK;
 }
 
 // Move this component, aX and aY are in the parent widget coordinate system
-NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
+NS_IMETHODIMP nsChildView::Move(int32_t aX, int32_t aY)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -844,7 +844,7 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
+NS_IMETHODIMP nsChildView::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -869,7 +869,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
+NS_IMETHODIMP nsChildView::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, bool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -908,8 +908,8 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-static const PRInt32 resizeIndicatorWidth = 15;
-static const PRInt32 resizeIndicatorHeight = 15;
+static const int32_t resizeIndicatorWidth = 15;
+static const int32_t resizeIndicatorHeight = 15;
 bool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
 {
   NSView *topLevelView = mView, *superView = nil;
@@ -980,7 +980,7 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
 
     if (mClipRects) {
       nsIntRect clipBounds;
-      for (PRUint32 i = 0; i < mClipRectCount; ++i) {
+      for (uint32_t i = 0; i < mClipRectCount; ++i) {
         clipBounds.UnionRect(clipBounds, mClipRects[i]);
       }
       outClipRect.IntersectRect(outClipRect, clipBounds - outOrigin);
@@ -1170,9 +1170,9 @@ NS_IMETHODIMP nsChildView::StartComplexTextInputForCurrentEvent()
   return mTextInputHandler->StartComplexTextInputForCurrentEvent();
 }
 
-nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
-                                               PRInt32 aNativeKeyCode,
-                                               PRUint32 aModifierFlags,
+nsresult nsChildView::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
+                                               int32_t aNativeKeyCode,
+                                               uint32_t aModifierFlags,
                                                const nsAString& aCharacters,
                                                const nsAString& aUnmodifiedCharacters)
 {
@@ -1184,8 +1184,8 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
 }
 
 nsresult nsChildView::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
-                                                 PRUint32 aNativeMessage,
-                                                 PRUint32 aModifierFlags)
+                                                 uint32_t aNativeMessage,
+                                                 uint32_t aModifierFlags)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1406,7 +1406,7 @@ nsChildView::UseOffMainThreadCompositing()
   return nsBaseWidget::UseOffMainThreadCompositing() && GetShouldAccelerate();
 }
 
-inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
+inline uint16_t COLOR8TOCOLOR16(uint8_t color8)
 {
   // return (color8 == 0xFF ? 0xFFFF : (color8 << 8));
   return (color8 << 8) | color8;  /* (color8 * 257) == (color8 * 0x0101) */
@@ -1416,7 +1416,7 @@ inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 
 nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 {
-  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+  for (uint32_t i = 0; i < aConfigurations.Length(); ++i) {
     const Configuration& config = aConfigurations[i];
     nsChildView* child = static_cast<nsChildView*>(config.mChild);
 #ifdef DEBUG
@@ -1576,7 +1576,7 @@ NS_IMETHODIMP nsChildView::SetTitle(const nsAString& title)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
+NS_IMETHODIMP nsChildView::GetAttention(int32_t aCycleCount)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1593,7 +1593,7 @@ bool nsChildView::DoHasPendingInputEvent()
 }
 
 /* static */
-PRUint32 nsChildView::GetCurrentInputEventCount()
+uint32_t nsChildView::GetCurrentInputEventCount()
 {
   // Can't use kCGAnyInputEventType because that updates too rarely for us (and
   // always in increments of 30+!) and because apparently it's sort of broken
@@ -1615,8 +1615,8 @@ PRUint32 nsChildView::GetCurrentInputEventCount()
     kCGEventOtherMouseDragged
   };
 
-  PRUint32 eventCount = 0;
-  for (PRUint32 i = 0; i < ArrayLength(eventTypes); ++i) {
+  uint32_t eventCount = 0;
+  for (uint32_t i = 0; i < ArrayLength(eventTypes); ++i) {
     eventCount +=
       CGEventSourceCounterForEventType(kCGEventSourceStateCombinedSessionState,
                                        eventTypes[i]);
@@ -1703,13 +1703,13 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
+NS_IMETHODIMP nsChildView::GetToggledKeyState(uint32_t aKeyCode,
                                               bool* aLEDState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG_POINTER(aLEDState);
-  PRUint32 key;
+  uint32_t key;
   switch (aKeyCode) {
     case NS_VK_CAPS_LOCK:
       key = alphaLock;
@@ -1721,7 +1721,7 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
-  PRUint32 modifierFlags = ::GetCurrentKeyModifiers();
+  uint32_t modifierFlags = ::GetCurrentKeyModifiers();
   *aLEDState = (modifierFlags & key) != 0;
   return NS_OK;
 
@@ -1885,7 +1885,7 @@ nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometri
   float unifiedToolbarHeight = 0;
   nsIntRect topPixelStrip(0, 0, [win frame].size.width, 1);
 
-  for (PRUint32 i = 0; i < aThemeGeometries.Length(); ++i) {
+  for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
     const ThemeGeometry& g = aThemeGeometries[i];
     if ((g.mWidgetType == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
          g.mWidgetType == NS_THEME_TOOLBAR) &&
@@ -2341,7 +2341,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return mPluginDrawingModel;
 }
 
-- (void)sendFocusEvent:(PRUint32)eventType
+- (void)sendFocusEvent:(uint32_t)eventType
 {
   if (!mGeckoChild)
     return;
@@ -2783,11 +2783,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // if we're dealing with menus, we probably have submenus and
       // we don't want to rollup if the click is in a parent menu of
       // the current submenu
-      PRUint32 popupsToRollup = PR_UINT32_MAX;
+      uint32_t popupsToRollup = PR_UINT32_MAX;
       if (gRollupListener) {
         nsAutoTArray<nsIWidget*, 5> widgetChain;
-        PRUint32 sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
-        for (PRUint32 i = 0; i < widgetChain.Length(); i++) {
+        uint32_t sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
+        for (uint32_t i = 0; i < widgetChain.Length(); i++) {
           nsIWidget* widget = widgetChain[i];
           NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
           if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
@@ -2886,7 +2886,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   float deltaZ = [anEvent deltaZ];
 
-  PRUint32 msg;
+  uint32_t msg;
   switch (mGestureState) {
   case eGestureState_StartGesture:
     msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
@@ -2927,7 +2927,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   float rotation = [anEvent rotation];
 
-  PRUint32 msg;
+  uint32_t msg;
   switch (mGestureState) {
   case eGestureState_StartGesture:
     msg = NS_SIMPLE_GESTURE_ROTATE_START;
@@ -3371,10 +3371,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(aEvent, [self window]);
   NSPoint localEventLocation = [self convertPoint:windowEventLocation fromView:nil];
 
-  PRUint32 msg = aEnter ? NS_MOUSE_ENTER : NS_MOUSE_EXIT;
+  uint32_t msg = aEnter ? NS_MOUSE_ENTER : NS_MOUSE_EXIT;
   nsMouseEvent event(true, msg, mGeckoChild, nsMouseEvent::eReal);
-  event.refPoint.x = nscoord((PRInt32)localEventLocation.x);
-  event.refPoint.y = nscoord((PRInt32)localEventLocation.y);
+  event.refPoint.x = nscoord((int32_t)localEventLocation.x);
+  event.refPoint.y = nscoord((int32_t)localEventLocation.y);
 
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
@@ -3686,10 +3686,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
-static PRInt32 RoundUp(double aDouble)
+static int32_t RoundUp(double aDouble)
 {
-  return aDouble < 0 ? static_cast<PRInt32>(floor(aDouble)) :
-                       static_cast<PRInt32>(ceil(aDouble));
+  return aDouble < 0 ? static_cast<int32_t>(floor(aDouble)) :
+                       static_cast<int32_t>(ceil(aDouble));
 }
 
 - (void)scrollWheel:(NSEvent*)theEvent
@@ -4355,7 +4355,7 @@ static PRInt32 RoundUp(double aDouble)
 
 - (NSDragOperation)dragOperationForSession:(nsIDragSession*)aDragSession
 {
-  PRUint32 dragAction;
+  uint32_t dragAction;
   aDragSession->GetDragAction(&dragAction);
   if (nsIDragService::DRAGDROP_ACTION_LINK & dragAction)
     return NSDragOperationLink;
@@ -4369,7 +4369,7 @@ static PRInt32 RoundUp(double aDouble)
 // This is a utility function used by NSView drag event methods
 // to send events. It contains all of the logic needed for Gecko
 // dragging to work. Returns the appropriate cocoa drag operation code.
-- (NSDragOperation)doDragAction:(PRUint32)aMessage sender:(id)aSender
+- (NSDragOperation)doDragAction:(uint32_t)aMessage sender:(id)aSender
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -4414,7 +4414,7 @@ static PRInt32 RoundUp(double aDouble)
     }
     
     unsigned int modifierFlags = [[NSApp currentEvent] modifierFlags];
-    PRUint32 action = nsIDragService::DRAGDROP_ACTION_MOVE;
+    uint32_t action = nsIDragService::DRAGDROP_ACTION_MOVE;
     // force copy = option, alias = cmd-option, default is move
     if (modifierFlags & NSAlternateKeyMask) {
       if (modifierFlags & NSCommandKeyMask)
@@ -4611,12 +4611,12 @@ static PRInt32 RoundUp(double aDouble)
   if (!gDraggedTransferables)
     return nil;
 
-  PRUint32 transferableCount;
+  uint32_t transferableCount;
   rv = gDraggedTransferables->Count(&transferableCount);
   if (NS_FAILED(rv))
     return nil;
 
-  for (PRUint32 i = 0; i < transferableCount; i++) {
+  for (uint32_t i = 0; i < transferableCount; i++) {
     nsCOMPtr<nsISupports> genericItem;
     gDraggedTransferables->GetElementAt(i, getter_AddRefs(genericItem));
     nsCOMPtr<nsITransferable> item(do_QueryInterface(genericItem));
@@ -4631,7 +4631,7 @@ static PRInt32 RoundUp(double aDouble)
     // now request the kFilePromiseMime data, which will invoke the data provider
     // If successful, the returned data is a reference to the resulting file.
     nsCOMPtr<nsISupports> fileDataPrimitive;
-    PRUint32 dataSize = 0;
+    uint32_t dataSize = 0;
     item->GetTransferData(kFilePromiseMime, getter_AddRefs(fileDataPrimitive), &dataSize);
   }
   
@@ -4820,16 +4820,15 @@ static PRInt32 RoundUp(double aDouble)
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   nsCOMPtr<nsIWidget> kungFuDeathGrip2(mGeckoChild);
   nsRefPtr<Accessible> accessible = mGeckoChild->GetDocumentAccessible();
-  if (!mGeckoChild)
+  if (!accessible)
     return nil;
 
-  if (accessible)
-    accessible->GetNativeInterface((void**)&nativeAccessible);
+  accessible->GetNativeInterface((void**)&nativeAccessible);
 
 #ifdef DEBUG_hakan
   NSAssert(![nativeAccessible isExpired], @"native acc is expired!!!");
 #endif
-  
+
   return nativeAccessible;
 }
 
@@ -4864,16 +4863,25 @@ static PRInt32 RoundUp(double aDouble)
 
 - (BOOL)accessibilityIsIgnored
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityIsIgnored];
+
   return [[self accessible] accessibilityIsIgnored];
 }
 
 - (id)accessibilityHitTest:(NSPoint)point
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityHitTest:point];
+
   return [[self accessible] accessibilityHitTest:point];
 }
 
 - (id)accessibilityFocusedUIElement
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityFocusedUIElement];
+
   return [[self accessible] accessibilityFocusedUIElement];
 }
 
@@ -4881,16 +4889,25 @@ static PRInt32 RoundUp(double aDouble)
 
 - (NSArray*)accessibilityActionNames
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityActionNames];
+
   return [[self accessible] accessibilityActionNames];
 }
 
 - (NSString*)accessibilityActionDescription:(NSString*)action
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityActionDescription:action];
+
   return [[self accessible] accessibilityActionDescription:action];
 }
 
 - (void)accessibilityPerformAction:(NSString*)action
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityPerformAction:action];
+
   return [[self accessible] accessibilityPerformAction:action];
 }
 
@@ -4898,11 +4915,17 @@ static PRInt32 RoundUp(double aDouble)
 
 - (NSArray*)accessibilityAttributeNames
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityAttributeNames];
+
   return [[self accessible] accessibilityAttributeNames];
 }
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityIsAttributeSettable:attribute];
+
   return [[self accessible] accessibilityIsAttributeSettable:attribute];
 }
 
@@ -4910,8 +4933,11 @@ static PRInt32 RoundUp(double aDouble)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return [super accessibilityAttributeValue:attribute];
+
   id<mozAccessible> accessible = [self accessible];
-  
+
   // if we're the root (topmost) accessible, we need to return our native AXParent as we
   // traverse outside to the hierarchy of whoever embeds us. thus, fall back on NSView's
   // default implementation for this attribute.

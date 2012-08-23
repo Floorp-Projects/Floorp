@@ -200,7 +200,7 @@ StorageBaseStatementInternal::EscapeStringForLIKE(
 
   _escapedString.Truncate(0);
 
-  for (PRUint32 i = 0; i < aValue.Length(); i++) {
+  for (uint32_t i = 0; i < aValue.Length(); i++) {
     if (aValue[i] == aEscapeChar || aValue[i] == MATCH_ALL ||
         aValue[i] == MATCH_ONE) {
       _escapedString += aEscapeChar;

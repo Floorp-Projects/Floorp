@@ -168,7 +168,7 @@ MediaEngineWebRTCAudioSource::Stop()
 }
 
 nsresult
-MediaEngineWebRTCAudioSource::Snapshot(PRUint32 aDuration, nsIDOMFile** aFile)
+MediaEngineWebRTCAudioSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
 {
    return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -108,7 +108,7 @@ NS_IMETHODIMP mozPersonalDictionary::Load()
   mDictionaryTable.Clear();
 
   PRUnichar c;
-  PRUint32 nRead;
+  uint32_t nRead;
   bool done = false;
   do{  // read each line of text into the string array.
     if( (NS_OK != convStream->Read(&c, 1, &nRead)) || (nRead != 1)) break;
@@ -165,9 +165,9 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
   nsTArray<nsString> array(mDictionaryTable.Count());
   mDictionaryTable.EnumerateEntries(AddHostToStringArray, &array);
 
-  PRUint32 bytesWritten;
+  uint32_t bytesWritten;
   nsCAutoString utf8Key;
-  for (PRUint32 i = 0; i < array.Length(); ++i ) {
+  for (uint32_t i = 0; i < array.Length(); ++i ) {
     CopyUTF16toUTF8(array[i], utf8Key);
 
     bufferedOutputStream->Write(utf8Key.get(), utf8Key.Length(), &bytesWritten);
@@ -248,8 +248,8 @@ NS_IMETHODIMP mozPersonalDictionary::RemoveCorrection(const PRUnichar *word, con
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void GetCorrection (in wstring word, [array, size_is (count)] out wstring words, out PRUint32 count); */
-NS_IMETHODIMP mozPersonalDictionary::GetCorrection(const PRUnichar *word, PRUnichar ***words, PRUint32 *count)
+/* void GetCorrection (in wstring word, [array, size_is (count)] out wstring words, out uint32_t count); */
+NS_IMETHODIMP mozPersonalDictionary::GetCorrection(const PRUnichar *word, PRUnichar ***words, uint32_t *count)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

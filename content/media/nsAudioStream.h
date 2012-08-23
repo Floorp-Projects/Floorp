@@ -11,6 +11,14 @@
 #include "nsIThread.h"
 #include "nsAutoPtr.h"
 
+#ifdef MOZ_SAMPLE_TYPE_S16LE
+#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_S16_LE)
+typedef short SampleType;
+#else
+#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_FLOAT32)
+typedef float SampleType;
+#endif
+
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
 // GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels,Format}
@@ -28,8 +36,7 @@ public:
 
   nsAudioStream()
     : mRate(0),
-      mChannels(0),
-      mFormat(FORMAT_S16_LE)
+      mChannels(0)
   {}
 
   virtual ~nsAudioStream();
@@ -56,7 +63,7 @@ public:
   // (22050Hz, 44100Hz, etc).
   // Unsafe to call with a monitor held due to synchronous event execution
   // on the main thread, which may attempt to acquire any held monitor.
-  virtual nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat) = 0;
+  virtual nsresult Init(int32_t aNumChannels, int32_t aRate) = 0;
 
   // Closes the stream. All future use of the stream is an error.
   // Unsafe to call with a monitor held due to synchronous event execution
@@ -67,10 +74,10 @@ public:
   // the format specified by mFormat of length aCount.  If aFrames is larger
   // than the result of Available(), the write will block until sufficient
   // buffer space is available.
-  virtual nsresult Write(const void* aBuf, PRUint32 aFrames) = 0;
+  virtual nsresult Write(const void* aBuf, uint32_t aFrames) = 0;
 
   // Return the number of audio frames that can be written without blocking.
-  virtual PRUint32 Available() = 0;
+  virtual uint32_t Available() = 0;
 
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).  Thread-safe.
@@ -89,11 +96,11 @@ public:
 
   // Return the position in microseconds of the audio frame being played by
   // the audio hardware.  Thread-safe.
-  virtual PRInt64 GetPosition() = 0;
+  virtual int64_t GetPosition() = 0;
 
   // Return the position, measured in audio frames played since the stream
   // was opened, of the audio hardware.  Thread-safe.
-  virtual PRInt64 GetPositionInFrames() = 0;
+  virtual int64_t GetPositionInFrames() = 0;
 
   // Returns true when the audio stream is paused.
   virtual bool IsPaused() = 0;
@@ -102,11 +109,11 @@ public:
   // you can be sure that something will be played.
   // Unsafe to call with a monitor held due to synchronous event execution
   // on the main thread, which may attempt to acquire any held monitor.
-  virtual PRInt32 GetMinWriteSize() = 0;
+  virtual int32_t GetMinWriteSize() = 0;
 
   int GetRate() { return mRate; }
   int GetChannels() { return mChannels; }
-  SampleFormat GetFormat() { return mFormat; }
+  SampleFormat GetFormat() { return MOZ_AUDIO_DATA_FORMAT; }
 
 protected:
   nsCOMPtr<nsIThread> mAudioPlaybackThread;

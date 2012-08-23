@@ -36,11 +36,11 @@ class WebSocketChannelParent : public PWebSocketParent,
                      const nsCString& aProtocol,
                      const bool& aSecure,
                      const IPC::SerializedLoadContext& loadContext);
-  bool RecvClose(const PRUint16 & code, const nsCString & reason);
+  bool RecvClose(const uint16_t & code, const nsCString & reason);
   bool RecvSendMsg(const nsCString& aMsg);
   bool RecvSendBinaryMsg(const nsCString& aMsg);
   bool RecvSendBinaryStream(const InputStream& aStream,
-                            const PRUint32& aLength);
+                            const uint32_t& aLength);
   bool RecvDeleteSelf();
 
   void ActorDestroy(ActorDestroyReason why);

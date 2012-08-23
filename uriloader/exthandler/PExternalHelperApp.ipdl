@@ -13,7 +13,7 @@ protocol PExternalHelperApp
 
 parent:
   OnStartRequest(nsCString entityID);
-  OnDataAvailable(nsCString data, PRUint32 offset, PRUint32 count);
+  OnDataAvailable(nsCString data, uint32_t offset, uint32_t count);
   OnStopRequest(nsresult code);
 
 child:

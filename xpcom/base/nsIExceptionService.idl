@@ -50,8 +50,8 @@ interface nsIExceptionService : nsIExceptionManager
         in a single function rather than at each XPCOM entry point.
         NOTE: This interface must be thread-safe - it will be called
         on whatever thread needs the error translation performed.*/
-    void registerExceptionProvider( in nsIExceptionProvider provider, in PRUint32 moduleCode );
-    void unregisterExceptionProvider( in nsIExceptionProvider provider, in PRUint32 moduleCode );
+    void registerExceptionProvider( in nsIExceptionProvider provider, in uint32_t moduleCode );
+    void unregisterExceptionProvider( in nsIExceptionProvider provider, in uint32_t moduleCode );
 };
 
 

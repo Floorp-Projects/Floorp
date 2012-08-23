@@ -202,7 +202,7 @@ class Image;
 } //namespace
 } //namespace
 
-typedef mozilla::layers::Image Image; 
+typedef mozilla::layers::Image Image;
 
 class nsAudioStream;
 
@@ -242,22 +242,22 @@ public:
 
   // Called from the main thread to get the duration. The decoder monitor
   // must be obtained before calling this. It is in units of microseconds.
-  virtual PRInt64 GetDuration() = 0;
+  virtual int64_t GetDuration() = 0;
 
   // Called from the main thread to set the duration of the media resource
   // if it is able to be obtained via HTTP headers. Called from the 
   // state machine thread to set the duration if it is obtained from the
   // media metadata. The decoder monitor must be obtained before calling this.
   // aDuration is in microseconds.
-  virtual void SetDuration(PRInt64 aDuration) = 0;
+  virtual void SetDuration(int64_t aDuration) = 0;
 
   // Called while decoding metadata to set the end time of the media
   // resource. The decoder monitor must be obtained before calling this.
   // aEndTime is in microseconds.
-  virtual void SetEndTime(PRInt64 aEndTime) = 0;
+  virtual void SetEndTime(int64_t aEndTime) = 0;
 
   // Set the media fragment end time. aEndTime is in microseconds.
-  virtual void SetFragmentEndTime(PRInt64 aEndTime) = 0;
+  virtual void SetFragmentEndTime(int64_t aEndTime) = 0;
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
@@ -301,17 +301,17 @@ public:
   // there is no such event currently queued.
   // Only called on the decoder thread. Must be called with
   // the decode monitor held.
-  virtual void UpdatePlaybackPosition(PRInt64 aTime) = 0;
+  virtual void UpdatePlaybackPosition(int64_t aTime) = 0;
 
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered) = 0;
 
   // Return true if the media is seekable using only buffered ranges.
   virtual bool IsSeekableInBufferedRanges() = 0;
 
-  virtual PRInt64 VideoQueueMemoryInUse() = 0;
-  virtual PRInt64 AudioQueueMemoryInUse() = 0;
+  virtual int64_t VideoQueueMemoryInUse() = 0;
+  virtual int64_t AudioQueueMemoryInUse() = 0;
 
-  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset) = 0;
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) = 0;
 
   // Causes the state machine to switch to buffering state, and to
   // immediately stop playback and buffer downloaded data. Must be called
@@ -321,7 +321,7 @@ public:
 
   // Sets the current size of the framebuffer used in MozAudioAvailable events.
   // Called on the state machine thread and the main thread.
-  virtual void SetFrameBufferLength(PRUint32 aLength) = 0;
+  virtual void SetFrameBufferLength(uint32_t aLength) = 0;
 
   // Called when a "MozAudioAvailable" event listener is added to the media
   // element. Called on the main thread.
@@ -380,30 +380,22 @@ public:
   virtual void AddOutputStream(SourceMediaStream* aStream, bool aFinishWhenEnded);
   // Protected by mReentrantMonitor. All decoder output is copied to these streams.
   struct OutputMediaStream {
-    void Init(PRInt64 aInitialTime, SourceMediaStream* aStream, bool aFinishWhenEnded)
-    {
-      mLastAudioPacketTime = -1;
-      mLastAudioPacketEndTime = -1;
-      mAudioFramesWrittenBaseTime = aInitialTime;
-      mAudioFramesWritten = 0;
-      mNextVideoTime = aInitialTime;
-      mStream = aStream;
-      mStreamInitialized = false;
-      mFinishWhenEnded = aFinishWhenEnded;
-      mHaveSentFinish = false;
-      mHaveSentFinishAudio = false;
-      mHaveSentFinishVideo = false;
-    }
-    PRInt64 mLastAudioPacketTime; // microseconds
-    PRInt64 mLastAudioPacketEndTime; // microseconds
+    OutputMediaStream();
+    ~OutputMediaStream();
+    OutputMediaStream(const OutputMediaStream& rhs);
+
+    void Init(int64_t aInitialTime, SourceMediaStream* aStream, bool aFinishWhenEnded);
+    
+    int64_t mLastAudioPacketTime; // microseconds
+    int64_t mLastAudioPacketEndTime; // microseconds
     // Count of audio frames written to the stream
-    PRInt64 mAudioFramesWritten;
+    int64_t mAudioFramesWritten;
     // Timestamp of the first audio packet whose frames we wrote.
-    PRInt64 mAudioFramesWrittenBaseTime; // microseconds
+    int64_t mAudioFramesWrittenBaseTime; // microseconds
     // mNextVideoTime is the end timestamp for the last packet sent to the stream.
     // Therefore video packets starting at or after this time need to be copied
     // to the output stream.
-    PRInt64 mNextVideoTime; // microseconds
+    int64_t mNextVideoTime; // microseconds
     // The last video image sent to the stream. Useful if we need to replicate
     // the image.
     nsRefPtr<Image> mLastVideoImage;
@@ -437,7 +429,7 @@ public:
   virtual void NotifyPrincipalChanged();
   // Called by the decode thread to keep track of the number of bytes read
   // from the resource.
-  void NotifyBytesConsumed(PRInt64 aBytes);
+  void NotifyBytesConsumed(int64_t aBytes);
 
   // Called when the video file has completed downloading.
   // Call on the main thread only.
@@ -487,7 +479,7 @@ public:
   // Tells our MediaResource to put all loads in the background.
   virtual void MoveLoadsToBackground();
 
-  void AudioAvailable(float* aFrameBuffer, PRUint32 aFrameBufferLength, float aTime);
+  void AudioAvailable(float* aFrameBuffer, uint32_t aFrameBufferLength, float aTime);
 
   // Called by the state machine to notify the decoder that the duration
   // has changed.
@@ -514,21 +506,21 @@ public:
     return NS_ERROR_FAILURE;
   }
 
-  virtual PRInt64 VideoQueueMemoryInUse() {
+  virtual int64_t VideoQueueMemoryInUse() {
     if (mDecoderStateMachine) {
       return mDecoderStateMachine->VideoQueueMemoryInUse();
     }
     return 0;
   }
 
-  virtual PRInt64 AudioQueueMemoryInUse() {
+  virtual int64_t AudioQueueMemoryInUse() {
     if (mDecoderStateMachine) {
       return mDecoderStateMachine->AudioQueueMemoryInUse();
     }
     return 0;
   }
 
-  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset) {
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) {
     if (mDecoderStateMachine) {
       mDecoderStateMachine->NotifyDataArrived(aBuffer, aLength, aOffset);
     }
@@ -536,7 +528,7 @@ public:
 
   // Sets the length of the framebuffer used in MozAudioAvailable events.
   // The new size must be between 512 and 16384.
-  virtual nsresult RequestFrameBufferLength(PRUint32 aLength);
+  virtual nsresult RequestFrameBufferLength(uint32_t aLength);
 
   // Return the current state. Can be called on any thread. If called from
   // a non-main thread, the decoder monitor must be held.
@@ -564,7 +556,7 @@ public:
   // the reader on the decoder thread (Assertions for this checked by 
   // mDecoderStateMachine). This must be called with the decode monitor
   // held.
-  void UpdatePlaybackPosition(PRInt64 aTime)
+  void UpdatePlaybackPosition(int64_t aTime)
   {
     mDecoderStateMachine->UpdatePlaybackPosition(aTime);
   }
@@ -581,8 +573,8 @@ public:
 
   // Called when the metadata from the media file has been read.
   // Call on the main thread only.
-  void MetadataLoaded(PRUint32 aChannels,
-                      PRUint32 aRate,
+  void MetadataLoaded(uint32_t aChannels,
+                      uint32_t aRate,
                       bool aHasAudio,
                       const nsHTMLMediaElement::MetadataTags* aTags);
 
@@ -623,11 +615,11 @@ public:
 
   // Find the end of the cached data starting at the current decoder
   // position.
-  PRInt64 GetDownloadPosition();
+  int64_t GetDownloadPosition();
 
   // Updates the approximate byte offset which playback has reached. This is
   // used to calculate the readyState transitions.
-  void UpdatePlaybackOffset(PRInt64 aOffset);
+  void UpdatePlaybackOffset(int64_t aOffset);
 
   // Provide access to the state machine object
   nsDecoderStateMachine* GetStateMachine() { return mDecoderStateMachine; }
@@ -658,12 +650,12 @@ public:
   // is up to consuming the stream. This is not adjusted during decoder
   // seek operations, but it's updated at the end when we start playing
   // back again.
-  PRInt64 mDecoderPosition;
+  int64_t mDecoderPosition;
   // Current playback position in the stream. This is (approximately)
   // where we're up to playing back the stream. This is not adjusted
   // during decoder seek operations, but it's updated at the end when we
   // start playing back again.
-  PRInt64 mPlaybackPosition;
+  int64_t mPlaybackPosition;
   // Data needed to estimate playback data rate. The timeline used for
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
@@ -689,7 +681,7 @@ public:
   // Duration of the media resource. Set to -1 if unknown.
   // Set when the metadata is loaded. Accessed on the main thread
   // only.
-  PRInt64 mDuration;
+  int64_t mDuration;
 
   // True when playback should start with audio captured (not playing).
   bool mInitialAudioCaptured;

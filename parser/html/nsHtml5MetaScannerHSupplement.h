@@ -5,7 +5,7 @@
 private:
   nsCOMPtr<nsIUnicodeDecoder>  mUnicodeDecoder;
   nsCString mCharset;
-  inline PRInt32 read() {
+  inline int32_t read() {
     return readable->read();
   }
 public:

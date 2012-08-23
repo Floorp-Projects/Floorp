@@ -93,7 +93,7 @@ nsGIOMimeApp::GetCommand(nsACString& aCommand)
 }
 
 NS_IMETHODIMP
-nsGIOMimeApp::GetExpectsURIs(PRInt32* aExpects)
+nsGIOMimeApp::GetExpectsURIs(int32_t* aExpects)
 {
   *aExpects = g_app_info_supports_uris(mApp);
   return NS_OK;
@@ -128,7 +128,7 @@ public:
   NS_DECL_NSIUTF8STRINGENUMERATOR
 
   nsTArray<nsCString> mStrings;
-  PRUint32            mIndex;
+  uint32_t            mIndex;
 };
 
 NS_IMPL_ISUPPORTS1(GIOUTF8StringEnumerator, nsIUTF8StringEnumerator)

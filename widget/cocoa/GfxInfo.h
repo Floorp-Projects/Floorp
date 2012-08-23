@@ -55,8 +55,8 @@ public:
 
 protected:
 
-  virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, 
-                                        PRInt32 *aStatus, 
+  virtual nsresult GetFeatureStatusImpl(int32_t aFeature, 
+                                        int32_t *aStatus, 
                                         nsAString & aSuggestedDriverVersion, 
                                         const nsTArray<GfxDriverInfo>& aDriverInfo,
                                         OperatingSystem* aOS = nullptr);
@@ -77,9 +77,9 @@ private:
   nsString mAdapterVendorID;
   nsString mAdapterDeviceID;
 
-  PRUint32 mRendererIDs[16];
+  uint32_t mRendererIDs[16];
 
-  PRUint32 mOSXVersion;
+  uint32_t mOSXVersion;
 };
 
 } // namespace widget

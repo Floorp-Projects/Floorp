@@ -94,8 +94,8 @@ public:
 };
 
 
-TabChild::TabChild(PRUint32 aChromeFlags, bool aIsBrowserElement,
-                   PRUint32 aAppId)
+TabChild::TabChild(uint32_t aChromeFlags, bool aIsBrowserElement,
+                   uint32_t aAppId)
   : mRemoteFrame(nullptr)
   , mTabChildGlobal(nullptr)
   , mChromeFlags(aChromeFlags)
@@ -114,15 +114,7 @@ TabChild::Observe(nsISupports *aSubject,
                   const char *aTopic,
                   const PRUnichar *aData)
 {
-  if (!strcmp(aTopic, "dom-touch-listener-added")) {
-    nsCOMPtr<nsIDOMWindow> subject(do_QueryInterface(aSubject));
-    nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mWebNav));
-    nsCOMPtr<nsIDOMWindow> topSubject;
-    subject->GetTop(getter_AddRefs(topSubject));
-    if (win == topSubject) {
-      SendNotifyDOMTouchListenerAdded();
-    }
-  } else if (!strcmp(aTopic, "cancel-default-pan-zoom")) {
+  if (!strcmp(aTopic, "cancel-default-pan-zoom")) {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
     nsCOMPtr<nsITabChild> tabChild(GetTabChildFrom(docShell));
     if (tabChild == this) {
@@ -164,9 +156,6 @@ TabChild::Init()
 
   if (observerService) {
     observerService->AddObserver(this,
-                                 "dom-touch-listener-added",
-                                 false);
-    observerService->AddObserver(this,
                                  "cancel-default-pan-zoom",
                                  false);
     observerService->AddObserver(this,
@@ -194,7 +183,7 @@ NS_IMPL_ADDREF(TabChild)
 NS_IMPL_RELEASE(TabChild)
 
 NS_IMETHODIMP
-TabChild::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
+TabChild::SetStatus(uint32_t aStatusType, const PRUnichar* aStatus)
 {
   // FIXME/bug 617804: should the platform support this?
   return NS_OK;
@@ -217,14 +206,14 @@ TabChild::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 }
 
 NS_IMETHODIMP
-TabChild::GetChromeFlags(PRUint32* aChromeFlags)
+TabChild::GetChromeFlags(uint32_t* aChromeFlags)
 {
   *aChromeFlags = mChromeFlags;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TabChild::SetChromeFlags(PRUint32 aChromeFlags)
+TabChild::SetChromeFlags(uint32_t aChromeFlags)
 {
   NS_NOTREACHED("trying to SetChromeFlags from content process?");
 
@@ -240,7 +229,7 @@ TabChild::DestroyBrowserWindow()
 }
 
 NS_IMETHODIMP
-TabChild::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
+TabChild::SizeBrowserTo(int32_t aCX, int32_t aCY)
 {
   NS_NOTREACHED("TabChild::SizeBrowserTo not supported in TabChild");
 
@@ -271,7 +260,7 @@ TabChild::ExitModalEventLoop(nsresult aStatus)
 }
 
 NS_IMETHODIMP
-TabChild::SetStatusWithContext(PRUint32 aStatusType,
+TabChild::SetStatusWithContext(uint32_t aStatusType,
                                     const nsAString& aStatusText,
                                     nsISupports* aStatusContext)
 {
@@ -280,8 +269,8 @@ TabChild::SetStatusWithContext(PRUint32 aStatusType,
 }
 
 NS_IMETHODIMP
-TabChild::SetDimensions(PRUint32 aFlags, PRInt32 aX, PRInt32 aY,
-                             PRInt32 aCx, PRInt32 aCy)
+TabChild::SetDimensions(uint32_t aFlags, int32_t aX, int32_t aY,
+                             int32_t aCx, int32_t aCy)
 {
   NS_NOTREACHED("TabChild::SetDimensions not supported in TabChild");
 
@@ -289,8 +278,8 @@ TabChild::SetDimensions(PRUint32 aFlags, PRInt32 aX, PRInt32 aY,
 }
 
 NS_IMETHODIMP
-TabChild::GetDimensions(PRUint32 aFlags, PRInt32* aX,
-                             PRInt32* aY, PRInt32* aCx, PRInt32* aCy)
+TabChild::GetDimensions(uint32_t aFlags, int32_t* aX,
+                             int32_t* aY, int32_t* aCx, int32_t* aCy)
 {
   if (aX) {
     *aX = mOuterRect.x;
@@ -384,7 +373,7 @@ TabChild::GetInterface(const nsIID & aIID, void **aSink)
 }
 
 NS_IMETHODIMP
-TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
+TabChild::ProvideWindow(nsIDOMWindow* aParent, uint32_t aChromeFlags,
                         bool aCalledFromJS,
                         bool aPositionSpecified, bool aSizeSpecified,
                         nsIURI* aURI, const nsAString& aName,
@@ -397,12 +386,7 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
     // open a modal-type window, we're going to create a new <iframe mozbrowser>
     // and return its window here.
     nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
-    bool isInContentBoundary = false;
-    if (docshell) {
-      docshell->GetIsBelowContentBoundary(&isInContentBoundary);
-    }
-
-    if (isInContentBoundary &&
+    if (docshell && docshell->GetIsBelowContentBoundary() &&
         !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
                           nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                           nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
@@ -437,7 +421,7 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
 {
   *aReturn = nullptr;
 
-  PRUint32 chromeFlags = 0;
+  uint32_t chromeFlags = 0;
   nsRefPtr<TabChild> newChild = new TabChild(chromeFlags,
                                              mIsBrowserElement, mAppId);
   if (!NS_SUCCEEDED(newChild->Init())) {
@@ -474,7 +458,7 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
 static nsInterfaceHashtable<nsPtrHashKey<PContentDialogChild>, nsIDialogParamBlock> gActiveDialogs;
 
 NS_IMETHODIMP
-TabChild::OpenDialog(PRUint32 aType, const nsACString& aName,
+TabChild::OpenDialog(uint32_t aType, const nsACString& aName,
                      const nsACString& aFeatures,
                      nsIDialogParamBlock* aArguments,
                      nsIDOMElement* aFrameElement)
@@ -482,7 +466,7 @@ TabChild::OpenDialog(PRUint32 aType, const nsACString& aName,
   if (!gActiveDialogs.IsInitialized()) {
     gActiveDialogs.Init();
   }
-  InfallibleTArray<PRInt32> intParams;
+  InfallibleTArray<int32_t> intParams;
   InfallibleTArray<nsString> stringParams;
   ParamsToArrays(aArguments, intParams, stringParams);
   PContentDialogChild* dialog =
@@ -516,12 +500,12 @@ TabChild::ParamsToArrays(nsIDialogParamBlock* aParams,
                          InfallibleTArray<nsString>& aStringParams)
 {
   if (aParams) {
-    for (PRInt32 i = 0; i < 8; ++i) {
-      PRInt32 val = 0;
+    for (int32_t i = 0; i < 8; ++i) {
+      int32_t val = 0;
       aParams->GetInt(i, &val);
       aIntParams.AppendElement(val);
     }
-    PRInt32 j = 0;
+    int32_t j = 0;
     nsXPIDLString strVal;
     while (NS_SUCCEEDED(aParams->GetString(j, getter_Copies(strVal)))) {
       aStringParams.AppendElement(strVal);
@@ -536,10 +520,10 @@ TabChild::ArraysToParams(const InfallibleTArray<int>& aIntParams,
                          nsIDialogParamBlock* aParams)
 {
   if (aParams) {
-    for (PRInt32 i = 0; PRUint32(i) < aIntParams.Length(); ++i) {
+    for (int32_t i = 0; uint32_t(i) < aIntParams.Length(); ++i) {
       aParams->SetInt(i, aIntParams[i]);
     }
-    for (PRInt32 j = 0; PRUint32(j) < aStringParams.Length(); ++j) {
+    for (int32_t j = 0; uint32_t(j) < aStringParams.Length(); ++j) {
       aParams->SetString(j, aStringParams[j].get());
     }
   }
@@ -737,8 +721,8 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
     }
 
     nsCString data;
-    data += nsPrintfCString("{ \"x\" : %d", aFrameMetrics.mViewportScrollOffset.x);
-    data += nsPrintfCString(", \"y\" : %d", aFrameMetrics.mViewportScrollOffset.y);
+    data += nsPrintfCString("{ \"x\" : %d", NS_lround(aFrameMetrics.mViewportScrollOffset.x));
+    data += nsPrintfCString(", \"y\" : %d", NS_lround(aFrameMetrics.mViewportScrollOffset.y));
     // We don't treat the x and y scales any differently for this
     // semi-platform-specific code.
     data += nsPrintfCString(", \"zoom\" : %f", aFrameMetrics.mResolution.width);
@@ -802,9 +786,9 @@ bool
 TabChild::RecvMouseEvent(const nsString& aType,
                          const float&    aX,
                          const float&    aY,
-                         const PRInt32&  aButton,
-                         const PRInt32&  aClickCount,
-                         const PRInt32&  aModifiers,
+                         const int32_t&  aButton,
+                         const int32_t&  aClickCount,
+                         const int32_t&  aModifiers,
                          const bool&     aIgnoreRootScrollFrame)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
@@ -836,12 +820,19 @@ TabChild::RecvRealTouchEvent(const nsTouchEvent& aEvent)
 {
     nsTouchEvent localEvent(aEvent);
     nsEventStatus status = DispatchWidgetEvent(localEvent);
+
+    nsCOMPtr<nsPIDOMWindow> outerWindow = do_GetInterface(mWebNav);
+    nsCOMPtr<nsPIDOMWindow> innerWindow = outerWindow->GetCurrentInnerWindow();
+    if (innerWindow && innerWindow->HasTouchEventListeners()) {
+      SendContentReceivedTouch(nsIPresShell::gPreventMouseEvents);
+    }
+
     if (status == nsEventStatus_eConsumeNoDefault) {
         return true;
     }
 
     // Synthesize a phony mouse event.
-    PRUint32 msg;
+    uint32_t msg;
     switch (aEvent.message) {
     case NS_TOUCH_START:
         msg = NS_MOUSE_BUTTON_DOWN;
@@ -885,9 +876,9 @@ TabChild::RecvRealKeyEvent(const nsKeyEvent& event)
 
 bool
 TabChild::RecvKeyEvent(const nsString& aType,
-                       const PRInt32& aKeyCode,
-                       const PRInt32& aCharCode,
-                       const PRInt32& aModifiers,
+                       const int32_t& aKeyCode,
+                       const int32_t& aCharCode,
+                       const int32_t& aModifiers,
                        const bool& aPreventDefault)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
@@ -941,7 +932,7 @@ PDocumentRendererChild*
 TabChild::AllocPDocumentRenderer(const nsRect& documentRect,
                                  const gfxMatrix& transform,
                                  const nsString& bgcolor,
-                                 const PRUint32& renderFlags,
+                                 const uint32_t& renderFlags,
                                  const bool& flushLayout,
                                  const nsIntSize& renderSize)
 {
@@ -960,7 +951,7 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                            const nsRect& documentRect,
                                            const gfxMatrix& transform,
                                            const nsString& bgcolor,
-                                           const PRUint32& renderFlags,
+                                           const uint32_t& renderFlags,
                                            const bool& flushLayout,
                                            const nsIntSize& renderSize)
 {
@@ -989,7 +980,7 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
 }
 
 PContentDialogChild*
-TabChild::AllocPContentDialog(const PRUint32&,
+TabChild::AllocPContentDialog(const uint32_t&,
                               const nsCString&,
                               const nsCString&,
                               const InfallibleTArray<int>&,
@@ -1083,9 +1074,9 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
     cloneData.mDataLength = buffer.dataLength;
 
     if (!blobChildList.IsEmpty()) {
-      PRUint32 length = blobChildList.Length();
+      uint32_t length = blobChildList.Length();
       cloneData.mClosure.mBlobs.SetCapacity(length);
-      for (PRUint32 i = 0; i < length; ++i) {
+      for (uint32_t i = 0; i < length; ++i) {
         BlobChild* blobChild = static_cast<BlobChild*>(blobChildList[i]);
         MOZ_ASSERT(blobChild);
 
@@ -1323,9 +1314,9 @@ SendSyncMessageToParent(void* aCallbackData,
   const nsTArray<nsCOMPtr<nsIDOMBlob> >& blobs = aData.mClosure.mBlobs;
   if (!blobs.IsEmpty()) {
     InfallibleTArray<PBlobChild*>& blobChildList = data.blobsChild();
-    PRUint32 length = blobs.Length();
+    uint32_t length = blobs.Length();
     blobChildList.SetCapacity(length);
-    for (PRUint32 i = 0; i < length; ++i) {
+    for (uint32_t i = 0; i < length; ++i) {
       BlobChild* blobChild = cc->GetOrCreateActorForBlob(blobs[i]);
       if (!blobChild) {
         return false;
@@ -1351,9 +1342,9 @@ SendAsyncMessageToParent(void* aCallbackData,
   const nsTArray<nsCOMPtr<nsIDOMBlob> >& blobs = aData.mClosure.mBlobs;
   if (!blobs.IsEmpty()) {
     InfallibleTArray<PBlobChild*>& blobChildList = data.blobsChild();
-    PRUint32 length = blobs.Length();
+    uint32_t length = blobs.Length();
     blobChildList.SetCapacity(length);
-    for (PRUint32 i = 0; i < length; ++i) {
+    for (uint32_t i = 0; i < length; ++i) {
       BlobChild* blobChild = cc->GetOrCreateActorForBlob(blobs[i]);
       if (!blobChild) {
         return false;

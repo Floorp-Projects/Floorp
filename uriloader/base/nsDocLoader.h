@@ -107,21 +107,21 @@ protected:
     void Destroy();
     virtual void DestroyChildren();
 
-    nsIDocumentLoader* ChildAt(PRInt32 i) {
+    nsIDocumentLoader* ChildAt(int32_t i) {
         return static_cast<nsDocLoader*>(mChildList[i]);
     }
 
-    nsIDocumentLoader* SafeChildAt(PRInt32 i) {
+    nsIDocumentLoader* SafeChildAt(int32_t i) {
         return static_cast<nsDocLoader*>(mChildList.SafeElementAt(i));
     }
 
     void FireOnProgressChange(nsDocLoader* aLoadInitiator,
                               nsIRequest *request,
-                              PRInt64 aProgress,
-                              PRInt64 aProgressMax,
-                              PRInt64 aProgressDelta,
-                              PRInt64 aTotalProgress,
-                              PRInt64 aMaxTotalProgress);
+                              int64_t aProgress,
+                              int64_t aProgressMax,
+                              int64_t aProgressDelta,
+                              int64_t aTotalProgress,
+                              int64_t aMaxTotalProgress);
 
     // This should be at least 2 long since we'll generally always
     // have the current page and the global docloader on the ancestor
@@ -133,7 +133,7 @@ protected:
 
     void FireOnStateChange(nsIWebProgress *aProgress,
                            nsIRequest* request,
-                           PRInt32 aStateFlags,
+                           int32_t aStateFlags,
                            nsresult aStatus);
 
     // The guts of FireOnStateChange, but does not call itself on our ancestors.
@@ -143,7 +143,7 @@ protected:
     // changes can be propagated.
     void DoFireOnStateChange(nsIWebProgress * const aProgress,
                              nsIRequest* const request,
-                             PRInt32 &aStateFlags,
+                             int32_t &aStateFlags,
                              const nsresult aStatus);
 
     void FireOnStatusChange(nsIWebProgress *aWebProgress,
@@ -154,11 +154,11 @@ protected:
     void FireOnLocationChange(nsIWebProgress* aWebProgress,
                               nsIRequest* aRequest,
                               nsIURI *aUri,
-                              PRUint32 aFlags);
+                              uint32_t aFlags);
 
     bool RefreshAttempted(nsIWebProgress* aWebProgress,
                             nsIURI *aURI,
-                            PRInt32 aDelay,
+                            int32_t aDelay,
                             bool aSameURI);
 
     // this function is overridden by the docshell, it is provided so that we
@@ -169,8 +169,8 @@ protected:
     // @param aStateFlags    The channel flags normally sent to OnStateChange.
     virtual void OnRedirectStateChange(nsIChannel* aOldChannel,
                                        nsIChannel* aNewChannel,
-                                       PRUint32 aRedirectFlags,
-                                       PRUint32 aStateFlags) {}
+                                       uint32_t aRedirectFlags,
+                                       uint32_t aStateFlags) {}
 
     void doStartDocumentLoad();
     void doStartURLLoad(nsIRequest *request);
@@ -212,16 +212,16 @@ protected:
 
     // The following member variables are related to the new nsIWebProgress 
     // feedback interfaces that travis cooked up.
-    PRInt32 mProgressStateFlags;
+    int32_t mProgressStateFlags;
 
-    PRInt64 mCurrentSelfProgress;
-    PRInt64 mMaxSelfProgress;
+    int64_t mCurrentSelfProgress;
+    int64_t mMaxSelfProgress;
 
-    PRInt64 mCurrentTotalProgress;
-    PRInt64 mMaxTotalProgress;
+    int64_t mCurrentTotalProgress;
+    int64_t mMaxTotalProgress;
 
     PLDHashTable mRequestInfoHash;
-    PRInt64 mCompletedTotalProgress;
+    int64_t mCompletedTotalProgress;
 
     PRCList mStatusInfoList;
 
@@ -261,13 +261,13 @@ private:
 
     nsListenerInfo *GetListenerInfo(nsIWebProgressListener* aListener);
 
-    PRInt64 GetMaxTotalProgress();
+    int64_t GetMaxTotalProgress();
 
     nsresult AddRequestInfo(nsIRequest* aRequest);
     void RemoveRequestInfo(nsIRequest* aRequest);
     nsRequestInfo *GetRequestInfo(nsIRequest* aRequest);
     void ClearRequestInfoHash();
-    PRInt64 CalculateMaxProgress();
+    int64_t CalculateMaxProgress();
 ///    void DumpChannelInfo(void);
 
     // used to clear our internal progress state between loads...

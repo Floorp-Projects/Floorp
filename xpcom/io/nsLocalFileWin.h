@@ -93,7 +93,7 @@ private:
                             bool followSymlinks, bool move,
                             bool skipNtfsAclReset = false);
 
-    nsresult SetModDate(PRInt64 aLastModifiedTime, const PRUnichar *filePath);
+    nsresult SetModDate(int64_t aLastModifiedTime, const PRUnichar *filePath);
     nsresult HasFileAttribute(DWORD fileAttrib, bool *_retval);
     nsresult AppendInternal(const nsAFlatString &node,
                             bool multipleComponents);

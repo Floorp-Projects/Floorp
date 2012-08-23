@@ -549,6 +549,11 @@ JSContext::setCompileOptions(unsigned newcopts)
     maybeOverrideVersion(newVersion);
 }
 
+inline js::LifoAlloc &
+JSContext::analysisLifoAlloc()
+{
+    return compartment->analysisLifoAlloc;
+}
 
 inline js::LifoAlloc &
 JSContext::typeLifoAlloc()

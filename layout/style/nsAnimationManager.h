@@ -28,7 +28,7 @@ struct AnimationEventInfo {
 
   AnimationEventInfo(mozilla::dom::Element *aElement,
                      const nsString& aAnimationName,
-                     PRUint32 aMessage, mozilla::TimeDuration aElapsedTime)
+                     uint32_t aMessage, mozilla::TimeDuration aElapsedTime)
     : mElement(aElement),
       mEvent(true, aMessage, aAnimationName, aElapsedTime.ToSeconds())
   {
@@ -72,9 +72,9 @@ struct ElementAnimation
 
   nsString mName; // empty string for 'none'
   float mIterationCount; // NS_IEEEPositiveInfinity() means infinite
-  PRUint8 mDirection;
-  PRUint8 mFillMode;
-  PRUint8 mPlayState;
+  uint8_t mDirection;
+  uint8_t mFillMode;
+  uint8_t mPlayState;
 
   bool FillsForwards() const {
     return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
@@ -89,20 +89,20 @@ struct ElementAnimation
     return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
   }
 
-  bool CanPerformOnCompositor(mozilla::dom::Element* aElement,
-                              mozilla::TimeStamp aTime) const;
+  bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
+  bool IsRunningAt(mozilla::TimeStamp aTime) const;
 
   mozilla::TimeStamp mStartTime; // with delay taken into account
   mozilla::TimeStamp mPauseStart;
   mozilla::TimeDuration mIterationDuration;
 
   enum {
-    LAST_NOTIFICATION_NONE = PRUint32(-1),
-    LAST_NOTIFICATION_END = PRUint32(-2)
+    LAST_NOTIFICATION_NONE = uint32_t(-1),
+    LAST_NOTIFICATION_END = uint32_t(-2)
   };
   // One of the above constants, or an integer for the iteration
   // whose start we last notified on.
-  PRUint32 mLastNotification;
+  uint32_t mLastNotification;
 
   InfallibleTArray<AnimationProperty> mProperties;
 };
@@ -132,7 +132,7 @@ struct ElementAnimations : public mozilla::css::CommonElementAnimationData
                                        TimeStamp aCurrentTime,
                                        TimeDuration aDuration,
                                        double aIterationCount,
-                                       PRUint32 aDirection,
+                                       uint32_t aDirection,
                                        bool IsForElement = true,
                                        ElementAnimation* aAnimation = nullptr,
                                        ElementAnimations* aEa = nullptr,
@@ -153,16 +153,6 @@ struct ElementAnimations : public mozilla::css::CommonElementAnimationData
   // True if this animation can be performed on the compositor thread.
   bool CanPerformOnCompositorThread() const;
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
-  // This style rule contains the style data for currently animating
-  // values.  It only matches when styling with animation.  When we
-  // style without animation, we need to not use it so that we can
-  // detect any new changes; if necessary we restyle immediately
-  // afterwards with animation.
-  // NOTE: If we don't need to apply any styles, mStyleRule will be
-  // null, but mStyleRuleRefreshTime will still be valid.
-  nsRefPtr<mozilla::css::AnimValuesStyleRule> mStyleRule;
-  // The refresh time associated with mStyleRule.
-  TimeStamp mStyleRuleRefreshTime;
 
   // False when we know that our current style rule is valid
   // indefinitely into the future (because all of our animations are

@@ -7,7 +7,6 @@
 
 #include "nsHTMLIFrameElement.h"
 #include "nsIDOMSVGDocument.h"
-#include "nsGkAtoms.h"
 #include "nsMappedAttributes.h"
 #include "nsError.h"
 #include "nsRuleData.h"
@@ -56,6 +55,7 @@ NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Scrolling, scrolling)
 NS_IMPL_URI_ATTR(nsHTMLIFrameElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Width, width)
 NS_IMPL_BOOL_ATTR(nsHTMLIFrameElement, MozAllowFullScreen, mozallowfullscreen)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Sandbox, sandbox)
 
 void
 nsHTMLIFrameElement::GetItemValueText(nsAString& aValue)
@@ -88,7 +88,7 @@ nsHTMLIFrameElement::GetSVGDocument(nsIDOMDocument **aResult)
 }
 
 bool
-nsHTMLIFrameElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLIFrameElement::ParseAttribute(int32_t aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
@@ -131,7 +131,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // else leave it as the value set in html.css
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::frameborder);
     if (value && value->Type() == nsAttrValue::eEnum) {
-      PRInt32 frameborder = value->GetEnumValue();
+      int32_t frameborder = value->GetEnumValue();
       if (NS_STYLE_FRAME_0 == frameborder ||
           NS_STYLE_FRAME_NO == frameborder ||
           NS_STYLE_FRAME_OFF == frameborder) {
@@ -205,3 +205,32 @@ nsHTMLIFrameElement::GetAttributeMappingFunction() const
   return &MapAttributesIntoRule;
 }
 
+nsresult
+nsHTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                  const nsAttrValue* aValue,
+                                  bool aNotify)
+{
+  if (aName == nsGkAtoms::sandbox && aNameSpaceID == kNameSpaceID_None) {
+    // Parse the new value of the sandbox attribute, and if we have a docshell
+    // set its sandbox flags appropriately.
+    if (mFrameLoader) {
+      nsCOMPtr<nsIDocShell> docshell = mFrameLoader->GetExistingDocShell();
+
+      if (docshell) {
+        uint32_t newFlags = 0;
+        // If a NULL aValue is passed in, we want to clear the sandbox flags
+        // which we will do by setting them to 0.
+        if (aValue) {
+          nsAutoString strValue;
+          aValue->ToString(strValue);
+          newFlags = nsContentUtils::ParseSandboxAttributeToFlags(
+            strValue);
+        }   
+        docshell->SetSandboxFlags(newFlags);
+      }
+    }
+  }
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                            aNotify);
+
+}

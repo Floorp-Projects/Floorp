@@ -157,7 +157,7 @@ addURI(nsIURI* aURI)
 
   nsCOMPtr<nsINavHistoryService> hist =
     do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID);
-  PRInt64 id;
+  int64_t id;
   nsresult rv = hist->AddVisit(aURI, PR_Now(), nullptr,
                                nsINavHistoryService::TRANSITION_LINK, false,
                                0, &id);
@@ -169,18 +169,18 @@ addURI(nsIURI* aURI)
 
 struct PlaceRecord
 {
-  PRInt64 id;
-  PRInt32 hidden;
-  PRInt32 typed;
-  PRInt32 visitCount;
+  int64_t id;
+  int32_t hidden;
+  int32_t typed;
+  int32_t visitCount;
   nsCString guid;
 };
 
 struct VisitRecord
 {
-  PRInt64 id;
-  PRInt64 lastVisitId;
-  PRInt32 transitionType;
+  int64_t id;
+  int64_t lastVisitId;
+  int32_t transitionType;
 };
 
 already_AddRefed<IHistory>
@@ -265,7 +265,7 @@ do_get_place(nsIURI* aURI, PlaceRecord& result)
  * @param result Out parameter where visit is stored
  */
 void
-do_get_lastVisit(PRInt64 placeId, VisitRecord& result)
+do_get_lastVisit(int64_t placeId, VisitRecord& result)
 {
   nsCOMPtr<mozIStorageConnection> dbConn = do_get_db();
   nsCOMPtr<mozIStorageStatement> stmt;

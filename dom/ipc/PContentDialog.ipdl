@@ -15,7 +15,7 @@ protocol PContentDialog
   manager PBrowser;
 
 child:
-    __delete__(PRInt32[] aIntParams, nsString[] aStringParams);
+    __delete__(int32_t[] aIntParams, nsString[] aStringParams);
 };
 
 } // namespace dom

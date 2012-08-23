@@ -17,9 +17,9 @@
 
 #import <Cocoa/Cocoa.h>
 
-PRInt32 nsCocoaFeatures::mOSXVersion = 0;
+int32_t nsCocoaFeatures::mOSXVersion = 0;
 
-/* static */ PRInt32
+/* static */ int32_t
 nsCocoaFeatures::OSXVersion()
 {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;

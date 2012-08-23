@@ -15,6 +15,8 @@
 #include "nsDOMClassInfoID.h"
 #include "nsError.h"
 #include "nsPluginHost.h"
+#include "nsIContentViewer.h"
+#include "nsIDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -32,7 +34,7 @@ nsPluginArray::nsPluginArray(Navigator* navigator,
 nsPluginArray::~nsPluginArray()
 {
   if (mPluginArray != nullptr) {
-    for (PRUint32 i = 0; i < mPluginCount; i++) {
+    for (uint32_t i = 0; i < mPluginCount; i++) {
       NS_IF_RELEASE(mPluginArray[i]);
     }
     delete[] mPluginArray;
@@ -52,7 +54,7 @@ NS_IMPL_ADDREF(nsPluginArray)
 NS_IMPL_RELEASE(nsPluginArray)
 
 NS_IMETHODIMP
-nsPluginArray::GetLength(PRUint32* aLength)
+nsPluginArray::GetLength(uint32_t* aLength)
 {
   nsPluginHost *pluginHost = static_cast<nsPluginHost*>(mPluginHost.get());
   if (AllowPlugins() && pluginHost)
@@ -65,18 +67,17 @@ nsPluginArray::GetLength(PRUint32* aLength)
 bool
 nsPluginArray::AllowPlugins()
 {
-  bool allowPlugins = false;
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
 
-  if (docShell)
-    if (NS_FAILED(docShell->GetAllowPlugins(&allowPlugins)))
-      allowPlugins = false;
+  if (!docShell) {
+    return false;
+  }
 
-  return allowPlugins;
+  return docShell->PluginsAllowedInCurrentDoc();
 }
 
 nsIDOMPlugin*
-nsPluginArray::GetItemAt(PRUint32 aIndex, nsresult* aResult)
+nsPluginArray::GetItemAt(uint32_t aIndex, nsresult* aResult)
 {
   *aResult = NS_OK;
 
@@ -93,7 +94,7 @@ nsPluginArray::GetItemAt(PRUint32 aIndex, nsresult* aResult)
 }
 
 NS_IMETHODIMP
-nsPluginArray::Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)
+nsPluginArray::Item(uint32_t aIndex, nsIDOMPlugin** aReturn)
 {
   nsresult rv;
 
@@ -116,7 +117,7 @@ nsPluginArray::GetNamedItem(const nsAString& aName, nsresult* aResult)
       return nullptr;
   }
 
-  for (PRUint32 i = 0; i < mPluginCount; i++) {
+  for (uint32_t i = 0; i < mPluginCount; i++) {
     nsAutoString pluginName;
     nsIDOMPlugin* plugin = mPluginArray[i];
     if (plugin->GetName(pluginName) == NS_OK && pluginName.Equals(aName)) {
@@ -196,7 +197,7 @@ nsPluginArray::Refresh(bool aReloadDocuments)
   nsCOMPtr<nsIWebNavigation> webNav = do_QueryReferent(mDocShell);
 
   if (mPluginArray != nullptr) {
-    for (PRUint32 i = 0; i < mPluginCount; i++) 
+    for (uint32_t i = 0; i < mPluginCount; i++) 
       NS_IF_RELEASE(mPluginArray[i]);
 
     delete[] mPluginArray;
@@ -231,7 +232,7 @@ nsPluginArray::GetPlugins()
     if (NS_SUCCEEDED(rv)) {
       // need to wrap each of these with a nsPluginElement, which
       // is scriptable.
-      for (PRUint32 i = 0; i < mPluginCount; i++) {
+      for (uint32_t i = 0; i < mPluginCount; i++) {
         nsIDOMPlugin* wrapper = new nsPluginElement(mPluginArray[i]);
         NS_IF_ADDREF(wrapper);
         mPluginArray[i] = wrapper;
@@ -261,7 +262,7 @@ nsPluginElement::~nsPluginElement()
   NS_IF_RELEASE(mPlugin);
 
   if (mMimeTypeArray != nullptr) {
-    for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
+    for (uint32_t i = 0; i < mMimeTypeCount; i++) {
       nsMimeType* mt = static_cast<nsMimeType*>(mMimeTypeArray[i]);
       if (mt) {
         mt->DetachPlugin();
@@ -312,13 +313,13 @@ nsPluginElement::GetName(nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsPluginElement::GetLength(PRUint32* aLength)
+nsPluginElement::GetLength(uint32_t* aLength)
 {
   return mPlugin->GetLength(aLength);
 }
 
 nsIDOMMimeType*
-nsPluginElement::GetItemAt(PRUint32 aIndex, nsresult *aResult)
+nsPluginElement::GetItemAt(uint32_t aIndex, nsresult *aResult)
 {
   if (mMimeTypeArray == nullptr) {
     *aResult = GetMimeTypes();
@@ -338,7 +339,7 @@ nsPluginElement::GetItemAt(PRUint32 aIndex, nsresult *aResult)
 }
 
 NS_IMETHODIMP
-nsPluginElement::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
+nsPluginElement::Item(uint32_t aIndex, nsIDOMMimeType** aReturn)
 {
   nsresult rv;
 
@@ -357,7 +358,7 @@ nsPluginElement::GetNamedItem(const nsAString& aName, nsresult *aResult)
   }
 
   *aResult = NS_OK;
-  for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
+  for (uint32_t i = 0; i < mMimeTypeCount; i++) {
     nsAutoString type;
     nsIDOMMimeType* mimeType = mMimeTypeArray[i];
     if (mimeType->GetType(type) == NS_OK && type.Equals(aName)) {
@@ -386,7 +387,7 @@ nsPluginElement::GetMimeTypes()
     mMimeTypeArray = new nsIDOMMimeType*[mMimeTypeCount];
     if (mMimeTypeArray == nullptr)
       return NS_ERROR_OUT_OF_MEMORY;
-    for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
+    for (uint32_t i = 0; i < mMimeTypeCount; i++) {
       nsCOMPtr<nsIDOMMimeType> mimeType;
       rv = mPlugin->Item(i, getter_AddRefs(mimeType));
       if (rv != NS_OK)

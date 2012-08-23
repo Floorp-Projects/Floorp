@@ -50,6 +50,7 @@ enum State {
     MARK_ROOTS,
     MARK,
     SWEEP,
+    SWEEP_END,
     INVALID
 };
 
@@ -116,6 +117,37 @@ MapAllocToTraceKind(AllocKind thingKind)
 
 static inline bool
 IsNurseryAllocable(AllocKind kind)
+{
+    JS_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
+    static const bool map[FINALIZE_LIMIT] = {
+        false,     /* FINALIZE_OBJECT0 */
+        true,      /* FINALIZE_OBJECT0_BACKGROUND */
+        false,     /* FINALIZE_OBJECT2 */
+        true,      /* FINALIZE_OBJECT2_BACKGROUND */
+        false,     /* FINALIZE_OBJECT4 */
+        true,      /* FINALIZE_OBJECT4_BACKGROUND */
+        false,     /* FINALIZE_OBJECT8 */
+        true,      /* FINALIZE_OBJECT8_BACKGROUND */
+        false,     /* FINALIZE_OBJECT12 */
+        true,      /* FINALIZE_OBJECT12_BACKGROUND */
+        false,     /* FINALIZE_OBJECT16 */
+        true,      /* FINALIZE_OBJECT16_BACKGROUND */
+        false,     /* FINALIZE_SCRIPT */
+        false,     /* FINALIZE_SHAPE */
+        false,     /* FINALIZE_BASE_SHAPE */
+        false,     /* FINALIZE_TYPE_OBJECT */
+#if JS_HAS_XML_SUPPORT
+        false,     /* FINALIZE_XML */
+#endif
+        true,      /* FINALIZE_SHORT_STRING */
+        true,      /* FINALIZE_STRING */
+        false      /* FINALIZE_EXTERNAL_STRING */
+    };
+    return map[kind];
+}
+
+static inline bool
+IsBackgroundFinalized(AllocKind kind)
 {
     JS_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
     static const bool map[FINALIZE_LIMIT] = {
@@ -287,7 +319,8 @@ struct ArenaLists {
     }
 
     bool doneBackgroundFinalize(AllocKind kind) const {
-        return backgroundFinalizeState[kind] == BFS_DONE;
+        return backgroundFinalizeState[kind] == BFS_DONE ||
+               backgroundFinalizeState[kind] == BFS_JUST_FINISHED;
     }
 
     /*
@@ -388,7 +421,7 @@ struct ArenaLists {
     void queueScriptsForSweep(FreeOp *fop);
 
     bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget);
-    static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead);
+    static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgroundThread);
 
   private:
     inline void finalizeNow(FreeOp *fop, AllocKind thingKind);
@@ -590,8 +623,6 @@ class GCHelperThread {
     void            **freeCursor;
     void            **freeCursorEnd;
 
-    Vector<js::gc::ArenaHeader *, 64, js::SystemAllocPolicy> finalizeVector;
-
     bool    backgroundAllocation;
 
     friend struct js::gc::ArenaLists;
@@ -676,9 +707,6 @@ class GCHelperThread {
         else
             replenishAndFreeLater(ptr);
     }
-
-    /* Must be called with the GC lock taken. */
-    bool prepareForBackgroundSweep();
 };
 
 
@@ -1137,6 +1165,7 @@ const int ZealIncrementalMarkAllThenFinish = 9;
 const int ZealIncrementalMultipleSlices = 10;
 const int ZealVerifierPostValue = 11;
 const int ZealFrameVerifierPostValue = 12;
+const int ZealPurgeAnalysisValue = 13;
 
 enum VerifierType {
     PreBarrierVerifier,

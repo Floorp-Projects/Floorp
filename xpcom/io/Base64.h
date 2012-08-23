@@ -15,13 +15,13 @@ namespace mozilla {
 nsresult
 Base64EncodeInputStream(nsIInputStream *aInputStream, 
                         nsACString &aDest,
-                        PRUint32 aCount,
-                        PRUint32 aOffset = 0);
+                        uint32_t aCount,
+                        uint32_t aOffset = 0);
 nsresult
 Base64EncodeInputStream(nsIInputStream *aInputStream, 
                         nsAString &aDest,
-                        PRUint32 aCount,
-                        PRUint32 aOffset = 0);
+                        uint32_t aCount,
+                        uint32_t aOffset = 0);
 
 nsresult
 Base64Encode(const nsACString &aString, nsACString &aBinary);

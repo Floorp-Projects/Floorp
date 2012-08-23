@@ -94,9 +94,9 @@ public:
 
   void NotifyDimensionsChanged(int width, int height);
 
-  void NotifyDOMTouchListenerAdded();
-
   void ZoomToRect(const gfxRect& aRect);
+
+  void ContentReceivedTouch(bool aPreventDefault);
 
 protected:
   void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
@@ -215,7 +215,7 @@ public:
     return mRect;
   }
 
-  virtual PRUint32 GetPerFrameKey()
+  virtual uint32_t GetPerFrameKey()
   {
     NS_ABORT();
     return 0;

@@ -267,7 +267,7 @@ nsresult nsNPAPIPluginInstance::Stop()
   }
 
   // clean up all outstanding timers
-  for (PRUint32 i = mTimers.Length(); i > 0; i--)
+  for (uint32_t i = mTimers.Length(); i > 0; i--)
     UnscheduleTimer(mTimers[i - 1]->id);
 
   // If there's code from this plugin instance on the stack, delay the
@@ -310,7 +310,7 @@ nsresult nsNPAPIPluginInstance::Stop()
   mRunning = DESTROYED;
 
 #if MOZ_WIDGET_ANDROID
-  for (PRUint32 i = 0; i < mPostedEvents.Length(); i++) {
+  for (uint32_t i = 0; i < mPostedEvents.Length(); i++) {
     mPostedEvents[i]->Cancel();
   }
 
@@ -357,7 +357,7 @@ nsNPAPIPluginInstance::GetTagType(nsPluginTagType *result)
 }
 
 nsresult
-nsNPAPIPluginInstance::GetAttributes(PRUint16& n, const char*const*& names,
+nsNPAPIPluginInstance::GetAttributes(uint16_t& n, const char*const*& names,
                                      const char*const*& values)
 {
   if (mOwner) {
@@ -370,7 +370,7 @@ nsNPAPIPluginInstance::GetAttributes(PRUint16& n, const char*const*& names,
 }
 
 nsresult
-nsNPAPIPluginInstance::GetParameters(PRUint16& n, const char*const*& names,
+nsNPAPIPluginInstance::GetParameters(uint16_t& n, const char*const*& names,
                                      const char*const*& values)
 {
   if (mOwner) {
@@ -383,7 +383,7 @@ nsNPAPIPluginInstance::GetParameters(PRUint16& n, const char*const*& names,
 }
 
 nsresult
-nsNPAPIPluginInstance::GetMode(PRInt32 *result)
+nsNPAPIPluginInstance::GetMode(int32_t *result)
 {
   if (mOwner)
     return mOwner->GetMode(result);
@@ -412,7 +412,7 @@ nsNPAPIPluginInstance::Start()
 
   PluginDestructionGuard guard(this);
 
-  PRUint16 count = 0;
+  uint16_t count = 0;
   const char* const* names = nullptr;
   const char* const* values = nullptr;
   nsPluginTagType tagtype;
@@ -428,7 +428,7 @@ nsNPAPIPluginInstance::Start()
     // with a null entry as a separator. This is for 4.x backwards compatibility!
     // see bug 111008 for details
     if (tagtype != nsPluginTagType_Embed) {
-      PRUint16 pcount = 0;
+      uint16_t pcount = 0;
       const char* const* pnames = nullptr;
       const char* const* pvalues = nullptr;    
       if (NS_SUCCEEDED(GetParameters(pcount, pnames, pvalues))) {
@@ -445,7 +445,7 @@ nsNPAPIPluginInstance::Start()
     }
   }
 
-  PRInt32       mode;
+  int32_t       mode;
   const char*   mimetype;
   NPError       error = NPERR_GENERIC_ERROR;
 
@@ -483,7 +483,7 @@ nsNPAPIPluginInstance::Start()
          cachedDisableHack = 1;
     }
     if (cachedDisableHack > 0) {
-      for (PRUint16 i=0; i<count; i++) {
+      for (uint16_t i=0; i<count; i++) {
         if (!PL_strcasecmp(names[i], blockedParam)) {
           // BIG FAT WARNIG:
           // I'm ugly casting |const char*| to |char*| and altering it
@@ -534,7 +534,7 @@ nsNPAPIPluginInstance::Start()
   mozilla::AutoLocalJNIFrame frame(env);
 #endif
 
-  nsresult newResult = library->NPP_New((char*)mimetype, &mNPP, (PRUint16)mode, count, (char**)names, (char**)values, NULL, &error);
+  nsresult newResult = library->NPP_New((char*)mimetype, &mNPP, (uint16_t)mode, count, (char**)names, (char**)values, NULL, &error);
   mInPluginInitCall = oldVal;
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -636,8 +636,8 @@ nsresult nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
   // to be compatible with the older SDK versions and to match what
   // NPAPI and other browsers do, overwrite |window.type| field with one
   // more copy of |platformPrint|. See bug 113264
-  PRUint16 sdkmajorversion = (pluginFunctions->version & 0xff00)>>8;
-  PRUint16 sdkminorversion = pluginFunctions->version & 0x00ff;
+  uint16_t sdkmajorversion = (pluginFunctions->version & 0xff00)>>8;
+  uint16_t sdkminorversion = pluginFunctions->version & 0x00ff;
   if ((sdkmajorversion == 0) && (sdkminorversion < 11)) {
     // Let's copy platformPrint bytes over to where it was supposed to be
     // in older versions -- four bytes towards the beginning of the struct
@@ -670,7 +670,7 @@ nsresult nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
   return NS_OK;
 }
 
-nsresult nsNPAPIPluginInstance::HandleEvent(void* event, PRInt16* result)
+nsresult nsNPAPIPluginInstance::HandleEvent(void* event, int16_t* result)
 {
   if (RUNNING != mRunning)
     return NS_OK;
@@ -685,7 +685,7 @@ nsresult nsNPAPIPluginInstance::HandleEvent(void* event, PRInt16* result)
 
   NPPluginFuncs* pluginFunctions = mPlugin->PluginFuncs();
 
-  PRInt16 tmpResult = kNPEventNotHandled;
+  int16_t tmpResult = kNPEventNotHandled;
 
   if (pluginFunctions->event) {
     mCurrentPluginEvent = event;
@@ -812,7 +812,7 @@ void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
 
 #if defined(MOZ_WIDGET_ANDROID)
 
-static void SendLifecycleEvent(nsNPAPIPluginInstance* aInstance, PRUint32 aAction)
+static void SendLifecycleEvent(nsNPAPIPluginInstance* aInstance, uint32_t aAction)
 {
   ANPEvent event;
   event.inSize = sizeof(ANPEvent);
@@ -882,7 +882,7 @@ void nsNPAPIPluginInstance::NotifySize(nsIntSize size)
   HandleEvent(&event, nullptr);
 }
 
-void nsNPAPIPluginInstance::SetANPDrawingModel(PRUint32 aModel)
+void nsNPAPIPluginInstance::SetANPDrawingModel(uint32_t aModel)
 {
   mANPDrawingModel = aModel;
 }
@@ -905,12 +905,12 @@ void nsNPAPIPluginInstance::PostEvent(void* event)
   NS_DispatchToMainThread(r);
 }
 
-void nsNPAPIPluginInstance::SetFullScreenOrientation(PRUint32 orientation)
+void nsNPAPIPluginInstance::SetFullScreenOrientation(uint32_t orientation)
 {
   if (mFullScreenOrientation == orientation)
     return;
 
-  PRUint32 oldOrientation = mFullScreenOrientation;
+  uint32_t oldOrientation = mFullScreenOrientation;
   mFullScreenOrientation = orientation;
 
   if (mFullScreen) {
@@ -1066,10 +1066,10 @@ void nsNPAPIPluginInstance::SetInverted(bool aInverted)
 
 #endif
 
-nsresult nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
+nsresult nsNPAPIPluginInstance::GetDrawingModel(int32_t* aModel)
 {
 #if defined(XP_MACOSX)
-  *aModel = (PRInt32)mDrawingModel;
+  *aModel = (int32_t)mDrawingModel;
   return NS_OK;
 #else
   return NS_ERROR_FAILURE;
@@ -1317,7 +1317,7 @@ nsNPAPIPluginInstance::PushPopupsEnabledState(bool aEnabled)
 nsresult
 nsNPAPIPluginInstance::PopPopupsEnabledState()
 {
-  PRInt32 last = mPopupStates.Length() - 1;
+  int32_t last = mPopupStates.Length() - 1;
 
   if (last < 0) {
     // Nothing to pop.
@@ -1338,7 +1338,7 @@ nsNPAPIPluginInstance::PopPopupsEnabledState()
 }
 
 nsresult
-nsNPAPIPluginInstance::GetPluginAPIVersion(PRUint16* version)
+nsNPAPIPluginInstance::GetPluginAPIVersion(uint16_t* version)
 {
   NS_ENSURE_ARG_POINTER(version);
 
@@ -1421,17 +1421,17 @@ PluginTimerCallback(nsITimer *aTimer, void *aClosure)
     return;
 
   // use UnscheduleTimer to clean up if this is a one-shot timer
-  PRUint32 timerType;
+  uint32_t timerType;
   t->timer->GetType(&timerType);
   if (timerType == nsITimer::TYPE_ONE_SHOT)
       inst->UnscheduleTimer(id);
 }
 
 nsNPAPITimer*
-nsNPAPIPluginInstance::TimerWithID(uint32_t id, PRUint32* index)
+nsNPAPIPluginInstance::TimerWithID(uint32_t id, uint32_t* index)
 {
-  PRUint32 len = mTimers.Length();
-  for (PRUint32 i = 0; i < len; i++) {
+  uint32_t len = mTimers.Length();
+  for (uint32_t i = 0; i < len; i++) {
     if (mTimers[i]->id == id) {
       if (index)
         *index = i;
@@ -1479,7 +1479,7 @@ void
 nsNPAPIPluginInstance::UnscheduleTimer(uint32_t timerID)
 {
   // find the timer struct by ID
-  PRUint32 index;
+  uint32_t index;
   nsNPAPITimer* t = TimerWithID(timerID, &index);
   if (!t)
     return;
@@ -1649,8 +1649,8 @@ nsNPAPIPluginInstance::URLRedirectResponse(void* notifyData, NPBool allow)
     return;
   }
 
-  PRUint32 listenerCount = mStreamListeners.Length();
-  for (PRUint32 i = 0; i < listenerCount; i++) {
+  uint32_t listenerCount = mStreamListeners.Length();
+  for (uint32_t i = 0; i < listenerCount; i++) {
     nsNPAPIPluginStreamListener* currentListener = mStreamListeners[i];
     if (currentListener->GetNotifyData() == notifyData) {
       currentListener->URLRedirectResponse(allow);

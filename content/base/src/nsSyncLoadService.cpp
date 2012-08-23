@@ -280,7 +280,7 @@ nsSyncLoader::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 NS_IMETHODIMP
 nsSyncLoader::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
                                      nsIChannel *aNewChannel,
-                                     PRUint32 aFlags,
+                                     uint32_t aFlags,
                                      nsIAsyncVerifyRedirectCallback *callback)
 {
     NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
@@ -335,12 +335,12 @@ nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
     nsresult rv;
     nsCOMPtr<nsIInputStream> bufferedStream;
     if (!NS_InputStreamIsBuffered(aIn)) {
-        PRInt32 chunkSize;
+        int32_t chunkSize;
         rv = aChannel->GetContentLength(&chunkSize);
         if (NS_FAILED(rv)) {
             chunkSize = 4096;
         }
-        chunkSize = NS_MIN(PRInt32(PR_UINT16_MAX), chunkSize);
+        chunkSize = NS_MIN(int32_t(PR_UINT16_MAX), chunkSize);
 
         rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), aIn,
                                        chunkSize);
@@ -352,9 +352,9 @@ nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
     // Load
     rv = aListener->OnStartRequest(aChannel, nullptr);
     if (NS_SUCCEEDED(rv)) {
-        PRUint64 sourceOffset = 0;
+        uint64_t sourceOffset = 0;
         while (1) {
-            PRUint64 readCount = 0;
+            uint64_t readCount = 0;
             rv = aIn->Available(&readCount);
             if (NS_FAILED(rv) || !readCount) {
                 if (rv == NS_BASE_STREAM_CLOSED) {
@@ -368,8 +368,8 @@ nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
                 readCount = PR_UINT32_MAX;
 
             rv = aListener->OnDataAvailable(aChannel, nullptr, aIn,
-                                            (PRUint32)NS_MIN(sourceOffset, (PRUint64)PR_UINT32_MAX),
-                                            (PRUint32)readCount);
+                                            (uint32_t)NS_MIN(sourceOffset, (uint64_t)PR_UINT32_MAX),
+                                            (uint32_t)readCount);
             if (NS_FAILED(rv)) {
                 break;
             }

@@ -25,7 +25,7 @@ class nsTSubstringTuple_CharT
       typedef nsTSubstringTuple_CharT    self_type;
       typedef nsTSubstring_CharT         substring_type;
       typedef nsTSubstring_CharT         base_string_type;
-      typedef PRUint32                   size_type;
+      typedef uint32_t                   size_type;
 
     public:
 
@@ -49,7 +49,7 @@ class nsTSubstringTuple_CharT
          * to be equal to or greater than the value returned by the Length()
          * method.  the string written to |buf| is not null-terminated.
          */
-      void WriteTo(char_type *buf, PRUint32 bufLen) const;
+      void WriteTo(char_type *buf, uint32_t bufLen) const;
 
         /**
          * returns true if this tuple is dependent on (i.e., overlapping with)

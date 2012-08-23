@@ -155,7 +155,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   }
 
   {
-    PRUint32 flags = 0;
+    uint32_t flags = 0;
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
     gfxMatrix transform;
     if (!GetEffectiveTransform().CanDraw2D(&transform) ||
@@ -208,7 +208,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
     mBuffer.DrawTo(this, aContext, opacity, aMaskLayer);
   }
 
-  for (PRUint32 i = 0; i < readbackUpdates.Length(); ++i) {
+  for (uint32_t i = 0; i < readbackUpdates.Length(); ++i) {
     ReadbackProcessor::Update& update = readbackUpdates[i];
     nsIntPoint offset = update.mLayer->GetBackgroundLayerOffset();
     nsRefPtr<gfxContext> ctx =

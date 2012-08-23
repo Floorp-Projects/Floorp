@@ -51,6 +51,24 @@ ThreadActor.prototype = {
     return this._threadLifetimePool;
   },
 
+  clearDebuggees: function TA_clearDebuggees() {
+    if (this._dbg) {
+      let debuggees = this._dbg.getDebuggees();
+      for (let debuggee of debuggees) {
+        this._dbg.removeDebuggee(debuggee);
+      }
+    }
+    this.conn.removeActorPool(this._threadLifetimePool || undefined);
+    this._threadLifetimePool = null;
+    // Unless we carefully take apart the scripts table this way, we end up
+    // leaking documents. It would be nice to track this down carefully, once
+    // we have the appropriate tools.
+    for (let url in this._scripts) {
+      delete this._scripts[url];
+    }
+    this._scripts = {};
+  },
+
   /**
    * Add a debuggee global to the Debugger object.
    */
@@ -62,14 +80,17 @@ ThreadActor.prototype = {
 
     if (!this._dbg) {
       this._dbg = new Debugger();
+      this._dbg.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
+      this._dbg.onDebuggerStatement = this.onDebuggerStatement.bind(this);
+      this._dbg.onNewScript = this.onNewScript.bind(this);
+      // Keep the debugger disabled until a client attaches.
+      this.dbg.enabled = this._state != "detached";
     }
 
     this.dbg.addDebuggee(aGlobal);
-    this.dbg.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
-    this.dbg.onDebuggerStatement = this.onDebuggerStatement.bind(this);
-    this.dbg.onNewScript = this.onNewScript.bind(this);
-    // Keep the debugger disabled until a client attaches.
-    this.dbg.enabled = false;
+    for (let s of this.dbg.findScripts()) {
+      this._addScript(s);
+    }
   },
 
   /**
@@ -90,19 +111,14 @@ ThreadActor.prototype = {
     }
 
     this._state = "exited";
-    if (this.dbg) {
-      this.dbg.enabled = false;
-      this._dbg = null;
+
+    this.clearDebuggees();
+
+    if (!this._dbg) {
+      return;
     }
-    this.conn.removeActorPool(this._threadLifetimePool || undefined);
-    this._threadLifetimePool = null;
-    // Unless we carefully take apart the scripts table this way, we end up
-    // leaking documents. It would be nice to track this down carefully, once
-    // we have the appropriate tools.
-    for (let url in this._scripts) {
-      delete this._scripts[url];
-    }
-    this._scripts = {};
+    this._dbg.enabled = false;
+    this._dbg = null;
   },
 
   /**
@@ -918,15 +934,16 @@ ThreadActor.prototype = {
    *        A Debugger.Object instance whose referent is the global object.
    */
   onNewScript: function TA_onNewScript(aScript, aGlobal) {
-    this._addScript(aScript);
-    // Notify the client.
-    this.conn.send({
-      from: this.actorID,
-      type: "newScript",
-      url: aScript.url,
-      startLine: aScript.startLine,
-      lineCount: aScript.lineCount
-    });
+    if (this._addScript(aScript)) {
+      // Notify the client.
+      this.conn.send({
+        from: this.actorID,
+        type: "newScript",
+        url: aScript.url,
+        startLine: aScript.startLine,
+        lineCount: aScript.lineCount
+      });
+    }
   },
 
   /**
@@ -934,15 +951,16 @@ ThreadActor.prototype = {
    *
    * @param aScript Debugger.Script
    *        The source script that will be stored.
+   * @returns true, if the script was added, false otherwise.
    */
   _addScript: function TA__addScript(aScript) {
     // Ignore XBL bindings for content debugging.
     if (aScript.url.indexOf("chrome://") == 0) {
-      return;
+      return false;
     }
     // Ignore about:* pages for content debugging.
     if (aScript.url.indexOf("about:") == 0) {
-      return;
+      return false;
     }
     // Use a sparse array for storing the scripts for each URL in order to
     // optimize retrieval.
@@ -965,6 +983,7 @@ ThreadActor.prototype = {
         }
       }
     }
+    return true;
   }
 
 };

@@ -57,14 +57,14 @@ nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage)
 }
 
 GdkPixbuf*
-nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, PRInt32 aWidth, PRInt32 aHeight)
+nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, int32_t aWidth, int32_t aHeight)
 {
     GdkPixbuf* pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8,
                                        aWidth, aHeight);
     if (!pixbuf)
         return nullptr;
 
-    PRUint32 rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+    uint32_t rowstride = gdk_pixbuf_get_rowstride (pixbuf);
     guchar* pixels = gdk_pixbuf_get_pixels (pixbuf);
 
     long cairoStride = aImgSurface->Stride();
@@ -72,18 +72,18 @@ nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, PRInt32 aWidth
 
     gfxASurface::gfxImageFormat format = aImgSurface->Format();
 
-    for (PRInt32 row = 0; row < aHeight; ++row) {
-        for (PRInt32 col = 0; col < aWidth; ++col) {
+    for (int32_t row = 0; row < aHeight; ++row) {
+        for (int32_t col = 0; col < aWidth; ++col) {
             guchar* pixel = pixels + row * rowstride + 4 * col;
 
-            PRUint32* cairoPixel = reinterpret_cast<PRUint32*>
+            uint32_t* cairoPixel = reinterpret_cast<uint32_t*>
                                                    ((cairoData + row * cairoStride + 4 * col));
 
             if (format == gfxASurface::ImageFormatARGB32) {
-                const PRUint8 a = (*cairoPixel >> 24) & 0xFF;
-                const PRUint8 r = unpremultiply((*cairoPixel >> 16) & 0xFF, a);
-                const PRUint8 g = unpremultiply((*cairoPixel >>  8) & 0xFF, a);
-                const PRUint8 b = unpremultiply((*cairoPixel >>  0) & 0xFF, a);
+                const uint8_t a = (*cairoPixel >> 24) & 0xFF;
+                const uint8_t r = unpremultiply((*cairoPixel >> 16) & 0xFF, a);
+                const uint8_t g = unpremultiply((*cairoPixel >>  8) & 0xFF, a);
+                const uint8_t b = unpremultiply((*cairoPixel >>  0) & 0xFF, a);
 
                 *pixel++ = r;
                 *pixel++ = g;
@@ -92,9 +92,9 @@ nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, PRInt32 aWidth
             } else {
                 NS_ASSERTION(format == gfxASurface::ImageFormatRGB24,
                              "unexpected format");
-                const PRUint8 r = (*cairoPixel >> 16) & 0xFF;
-                const PRUint8 g = (*cairoPixel >>  8) & 0xFF;
-                const PRUint8 b = (*cairoPixel >>  0) & 0xFF;
+                const uint8_t r = (*cairoPixel >> 16) & 0xFF;
+                const uint8_t g = (*cairoPixel >>  8) & 0xFF;
+                const uint8_t b = (*cairoPixel >>  0) & 0xFF;
 
                 *pixel++ = r;
                 *pixel++ = g;
@@ -108,7 +108,7 @@ nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, PRInt32 aWidth
 }
 
 GdkPixbuf*
-nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, PRInt32 aWidth, PRInt32 aHeight)
+nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, int32_t aWidth, int32_t aHeight)
 {
     if (aSurface->CairoStatus()) {
         NS_ERROR("invalid surface");

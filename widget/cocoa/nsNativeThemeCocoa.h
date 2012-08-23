@@ -33,33 +33,33 @@ public:
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect);
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
-                             PRUint8 aWidgetType,
+                             uint8_t aWidgetType,
                              nsIntMargin* aResult);
 
   virtual bool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   nsIntMargin* aResult);
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                   PRUint8 aWidgetType, nsRect* aOverflowRect);
+                                   uint8_t aWidgetType, nsRect* aOverflowRect);
 
   NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   nsIntSize* aResult, bool* aIsOverridable);
-  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
+  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
                                 nsIAtom* aAttribute, bool* aShouldRepaint);
   NS_IMETHOD ThemeChanged();
-  bool ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
-  bool WidgetIsContainer(PRUint8 aWidgetType);
-  bool ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
+  bool ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType);
+  bool WidgetIsContainer(uint8_t aWidgetType);
+  bool ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType);
   bool ThemeNeedsComboboxDropmarker();
-  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType);
+  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType);
 
 protected:  
 
@@ -87,8 +87,8 @@ protected:
   void DrawTabPanel(CGContextRef context, const HIRect& inBoxRect, nsIFrame* aFrame);
   void DrawScale(CGContextRef context, const HIRect& inBoxRect,
                  nsEventStates inState, bool inDirection,
-                 bool inIsReverse, PRInt32 inCurrentValue, PRInt32 inMinValue,
-                 PRInt32 inMaxValue, nsIFrame* aFrame);
+                 bool inIsReverse, int32_t inCurrentValue, int32_t inMinValue,
+                 int32_t inMaxValue, nsIFrame* aFrame);
   void DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox,
                            const HIRect& inBoxRect, bool inSelected,
                            nsEventStates inState, nsIFrame* aFrame);
@@ -101,7 +101,7 @@ protected:
                   ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
                   nsEventStates inState, nsIFrame* aFrame);
   void DrawDropdown(CGContextRef context, const HIRect& inBoxRect,
-                    nsEventStates inState, PRUint8 aWidgetType,
+                    nsEventStates inState, uint8_t aWidgetType,
                     nsIFrame* aFrame);
   void DrawSpinButtons(CGContextRef context, ThemeButtonKind inKind,
                        const HIRect& inBoxRect, ThemeDrawState inDrawState,

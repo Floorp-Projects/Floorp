@@ -29,7 +29,7 @@ class nsIXPConnectWrappedJS;
 class nsScriptNameSpaceManager;
 
 #ifndef BAD_TLS_INDEX
-#define BAD_TLS_INDEX ((PRUint32) -1)
+#define BAD_TLS_INDEX ((uint32_t) -1)
 #endif
 
 namespace xpc {
@@ -212,7 +212,7 @@ public:
 // If aVariant is an XPCVariant, this marks the object to be in aGeneration.
 // This also unmarks the gray JSObject.
 extern void
-xpc_MarkInCCGeneration(nsISupports* aVariant, PRUint32 aGeneration);
+xpc_MarkInCCGeneration(nsISupports* aVariant, uint32_t aGeneration);
 
 // If aWrappedJS is a JS wrapper, unmark its JSObject.
 extern void
@@ -269,8 +269,8 @@ void SetLocationForGlobal(JSObject *global, nsIURI *locationURI);
  *     interfaceCount are like what nsIClassInfo.getInterfaces returns.
  */
 bool
-DOM_DefineQuickStubs(JSContext *cx, JSObject *proto, PRUint32 flags,
-                     PRUint32 interfaceCount, const nsIID **interfaceArray);
+DOM_DefineQuickStubs(JSContext *cx, JSObject *proto, uint32_t flags,
+                     uint32_t interfaceCount, const nsIID **interfaceArray);
 
 // This reports all the stats in |rtStats| that belong in the "explicit" tree,
 // (which isn't all of them).

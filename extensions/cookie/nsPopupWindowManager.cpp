@@ -50,7 +50,7 @@ nsPopupWindowManager::Init()
     if (NS_FAILED(rv)) {
       permission = true;
     }
-    mPolicy = permission ? (PRUint32) DENY_POPUP : (PRUint32) ALLOW_POPUP;
+    mPolicy = permission ? (uint32_t) DENY_POPUP : (uint32_t) ALLOW_POPUP;
 
     prefBranch->AddObserver(kPopupDisablePref, this, true);
   } 
@@ -64,12 +64,12 @@ nsPopupWindowManager::Init()
 
 NS_IMETHODIMP
 nsPopupWindowManager::TestPermission(nsIPrincipal* aPrincipal,
-                                     PRUint32 *aPermission)
+                                     uint32_t *aPermission)
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aPermission);
 
-  PRUint32 permit;
+  uint32_t permit;
   *aPermission = mPolicy;
 
   if (mPermissionManager) {
@@ -103,7 +103,7 @@ nsPopupWindowManager::Observe(nsISupports *aSubject,
     bool permission = true;
     prefBranch->GetBoolPref(kPopupDisablePref, &permission);
 
-    mPolicy = permission ? (PRUint32) DENY_POPUP : (PRUint32) ALLOW_POPUP;
+    mPolicy = permission ? (uint32_t) DENY_POPUP : (uint32_t) ALLOW_POPUP;
   }
 
   return NS_OK;

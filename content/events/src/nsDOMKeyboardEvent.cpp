@@ -83,7 +83,7 @@ nsDOMKeyboardEvent::GetModifierState(const nsAString& aKey,
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetCharCode(PRUint32* aCharCode)
+nsDOMKeyboardEvent::GetCharCode(uint32_t* aCharCode)
 {
   NS_ENSURE_ARG_POINTER(aCharCode);
 
@@ -103,7 +103,7 @@ nsDOMKeyboardEvent::GetCharCode(PRUint32* aCharCode)
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetKeyCode(PRUint32* aKeyCode)
+nsDOMKeyboardEvent::GetKeyCode(uint32_t* aKeyCode)
 {
   NS_ENSURE_ARG_POINTER(aKeyCode);
 
@@ -123,7 +123,7 @@ nsDOMKeyboardEvent::GetKeyCode(PRUint32* aKeyCode)
 
 /* virtual */
 nsresult
-nsDOMKeyboardEvent::Which(PRUint32* aWhich)
+nsDOMKeyboardEvent::Which(uint32_t* aWhich)
 {
   NS_ENSURE_ARG_POINTER(aWhich);
 
@@ -135,7 +135,7 @@ nsDOMKeyboardEvent::Which(PRUint32* aWhich)
       //Special case for 4xp bug 62878.  Try to make value of which
       //more closely mirror the values that 4.x gave for RETURN and BACKSPACE
       {
-        PRUint32 keyCode = ((nsKeyEvent*)mEvent)->keyCode;
+        uint32_t keyCode = ((nsKeyEvent*)mEvent)->keyCode;
         if (keyCode == NS_VK_RETURN || keyCode == NS_VK_BACK) {
           *aWhich = keyCode;
           return NS_OK;
@@ -152,7 +152,7 @@ nsDOMKeyboardEvent::Which(PRUint32* aWhich)
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetLocation(PRUint32* aLocation)
+nsDOMKeyboardEvent::GetLocation(uint32_t* aLocation)
 {
   NS_ENSURE_ARG_POINTER(aLocation);
 
@@ -164,7 +164,7 @@ NS_IMETHODIMP
 nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                                  nsIDOMWindow* aView, bool aCtrlKey, bool aAltKey,
                                  bool aShiftKey, bool aMetaKey,
-                                 PRUint32 aKeyCode, PRUint32 aCharCode)
+                                 uint32_t aKeyCode, uint32_t aCharCode)
 {
   nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
   NS_ENSURE_SUCCESS(rv, rv);

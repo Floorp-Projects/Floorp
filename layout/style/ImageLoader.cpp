@@ -20,7 +20,7 @@ ImageLoader::SetAnimationModeEnumerator(nsISupports* aKey, FrameSet* aValue,
 {
   imgIRequest* request = static_cast<imgIRequest*>(aKey);
 
-  PRUint16* mode = static_cast<PRUint16*>(aClosure);
+  uint16_t* mode = static_cast<uint16_t*>(aClosure);
 
 #ifdef DEBUG
   {
@@ -76,6 +76,13 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
 
     mRequestToFrameMap.Put(aRequest, newFrameSet);
     frameSet = newFrameSet.forget();
+
+    nsPresContext* presContext = GetPresContext();
+    if (presContext) {
+      nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,
+                                                    aRequest,
+                                                    nullptr);
+    }
   }
 
   RequestSet* requestSet = nullptr;
@@ -91,7 +98,7 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
   }
 
   // Add these to the sets, but only if they're not already there.
-  PRUint32 i;
+  uint32_t i;
   if (!frameSet->GreatestIndexLtEq(aFrame, i)) {
     frameSet->InsertElementAt(i, aFrame);
   }
@@ -201,7 +208,7 @@ ImageLoader::DropRequestsForFrame(nsIFrame* aFrame)
 }
 
 void
-ImageLoader::SetAnimationMode(PRUint16 aMode)
+ImageLoader::SetAnimationMode(uint16_t aMode)
 {
   NS_ASSERTION(aMode == imgIContainer::kNormalAnimMode ||
                aMode == imgIContainer::kDontAnimMode ||
@@ -312,7 +319,6 @@ ImageLoader::DoRedraw(FrameSet* aFrameSet)
 {
   NS_ASSERTION(aFrameSet, "Must have a frame set");
   NS_ASSERTION(mDocument, "Should have returned earlier!");
-  NS_ASSERTION(mHavePainted, "Should have returned earlier!");
 
   FrameSet::size_type length = aFrameSet->Length();
   for (FrameSet::size_type i = 0; i < length; i++) {
@@ -366,9 +372,12 @@ ImageLoader::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 NS_IMETHODIMP
 ImageLoader::OnImageIsAnimated(imgIRequest* aRequest)
 {
-  // NB: Don't ignore this when cloning, it's our only chance to register
-  // the request with the refresh driver.
   if (!mDocument) {
+    return NS_OK;
+  }
+
+  FrameSet* frameSet = nullptr;
+  if (!mRequestToFrameMap.Get(aRequest, &frameSet)) {
     return NS_OK;
   }
 
@@ -385,9 +394,9 @@ ImageLoader::OnImageIsAnimated(imgIRequest* aRequest)
 }
 
 NS_IMETHODIMP
-ImageLoader::OnStopFrame(imgIRequest *aRequest, PRUint32 aFrame)
+ImageLoader::OnStopFrame(imgIRequest *aRequest, uint32_t aFrame)
 {
-  if (!mDocument || !mHavePainted || mInClone) {
+  if (!mDocument || mInClone) {
     return NS_OK;
   }
 
@@ -408,7 +417,7 @@ ImageLoader::FrameChanged(imgIRequest *aRequest,
                           imgIContainer *aContainer,
                           const nsIntRect *aDirtyRect)
 {
-  if (!mDocument || !mHavePainted || mInClone) {
+  if (!mDocument || mInClone) {
     return NS_OK;
   }
 

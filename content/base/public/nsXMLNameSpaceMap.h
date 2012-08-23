@@ -17,7 +17,7 @@ struct nsNameSpaceEntry
     : prefix(aPrefix) {}
 
   nsCOMPtr<nsIAtom> prefix;
-  PRInt32 nameSpaceID;
+  int32_t nameSpaceID;
 };
 
 /**
@@ -38,7 +38,7 @@ public:
    * Passing a null |aPrefix| corresponds to the default namespace, which may
    * be set to something other than kNameSpaceID_None.
    */
-  NS_HIDDEN_(nsresult) AddPrefix(nsIAtom *aPrefix, PRInt32 aNameSpaceID);
+  NS_HIDDEN_(nsresult) AddPrefix(nsIAtom *aPrefix, int32_t aNameSpaceID);
 
   /**
    * Add a prefix and a namespace URI to the map.  The URI will be converted
@@ -52,13 +52,13 @@ public:
    * (kNameSpaceID_None) is returned.  If |aPrefix| is non-null and is not in
    * the map, then kNameSpaceID_Unknown is returned.
    */
-  NS_HIDDEN_(PRInt32) FindNameSpaceID(nsIAtom *aPrefix) const;
+  NS_HIDDEN_(int32_t) FindNameSpaceID(nsIAtom *aPrefix) const;
 
   /**
    * If the given namespace ID is in the map, then the first prefix which
    * maps to that namespace is returned.  Otherwise, null is returned.
    */
-  NS_HIDDEN_(nsIAtom*) FindPrefix(PRInt32 aNameSpaceID) const;
+  NS_HIDDEN_(nsIAtom*) FindPrefix(int32_t aNameSpaceID) const;
 
   /* Removes all prefix mappings. */
   NS_HIDDEN_(void) Clear();

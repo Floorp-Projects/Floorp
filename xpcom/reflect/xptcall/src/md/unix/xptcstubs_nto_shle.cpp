@@ -18,8 +18,8 @@ const int c_float_register_params = 8;
 
  */
 extern "C" nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, int methodIndex, PRUint32* data, 
-				   PRUint32 *intRegParams, float *floatRegParams)
+PrepareAndDispatch(nsXPTCStubBase* self, int methodIndex, uint32_t* data, 
+				   uint32_t *intRegParams, float *floatRegParams)
 {
 #define PARAM_BUFFER_COUNT     16
 
@@ -30,15 +30,15 @@ PrepareAndDispatch(nsXPTCStubBase* self, int methodIndex, PRUint32* data,
     nsXPTCMiniVariant* dispatchParams = NULL;
     nsIInterfaceInfo* iface_info = NULL;
     const nsXPTMethodInfo* info;
-    PRUint8 paramCount;
-	PRUint8 i;
+    uint8_t paramCount;
+	uint8_t i;
 
 	NS_ASSERTION(self,"no self");
 
 	self->GetInterfaceInfo(&iface_info);
 	NS_ASSERTION(iface_info,"no interface info");
 
-	iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
+	iface_info->GetMethodInfo(uint16_t(methodIndex), &info);
 	NS_ASSERTION(info,"no interface info");
 
 	paramCount = info->GetParamCount();
@@ -60,12 +60,12 @@ PrepareAndDispatch(nsXPTCStubBase* self, int methodIndex, PRUint32* data,
 		case nsXPTType::T_U64:
 			// Was this passed  in a register?
 			if ( (c_int_register_params - intCount) >= 2 ) {
-				dp->val.i64 = *((PRInt64 *) intRegParams);
+				dp->val.i64 = *((int64_t *) intRegParams);
 				intRegParams += 2;
 				intCount += 2;
 			}
 			else {
-				dp->val.i64 = *((PRInt64*) data);
+				dp->val.i64 = *((int64_t*) data);
 				data += 2;
 			}
 			break;
@@ -112,7 +112,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, int methodIndex, PRUint32* data,
         }
 	}
 
-	result = self->CallMethod((PRUint16)methodIndex, info, dispatchParams);
+	result = self->CallMethod((uint16_t)methodIndex, info, dispatchParams);
 
 	NS_RELEASE(iface_info);
 

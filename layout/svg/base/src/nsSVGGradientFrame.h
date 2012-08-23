@@ -52,9 +52,9 @@ public:
   // nsIFrame interface:
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -71,10 +71,10 @@ private:
   nsSVGGradientFrame* GetReferencedGradient();
 
   // Optionally get a stop frame (returns stop index/count)
-  PRInt32 GetStopFrame(PRInt32 aIndex, nsIFrame * *aStopFrame);
+  int32_t GetStopFrame(int32_t aIndex, nsIFrame * *aStopFrame);
 
-  PRUint32 GetStopCount();
-  void GetStopInformation(PRInt32 aIndex,
+  uint32_t GetStopCount();
+  void GetStopInformation(int32_t aIndex,
                           float *aOffset, nscolor *aColor, float *aStopOpacity);
 
   const mozilla::SVGAnimatedTransformList* GetGradientTransformList(
@@ -91,20 +91,20 @@ protected:
   nsSVGGradientFrame* GetReferencedGradientIfNotInUse();
 
   // Accessors to lookup gradient attributes
-  PRUint16 GetEnumValue(PRUint32 aIndex, nsIContent *aDefault);
-  PRUint16 GetEnumValue(PRUint32 aIndex)
+  uint16_t GetEnumValue(uint32_t aIndex, nsIContent *aDefault);
+  uint16_t GetEnumValue(uint32_t aIndex)
   {
     return GetEnumValue(aIndex, mContent);
   }
-  PRUint16 GetGradientUnits();
-  PRUint16 GetSpreadMethod();
+  uint16_t GetGradientUnits();
+  uint16_t GetSpreadMethod();
 
   // Gradient-type-specific lookups since the length values differ between
   // linear and radial gradients
   virtual nsSVGLinearGradientElement * GetLinearGradientWithLength(
-    PRUint32 aIndex, nsSVGLinearGradientElement* aDefault);
+    uint32_t aIndex, nsSVGLinearGradientElement* aDefault);
   virtual nsSVGRadialGradientElement * GetRadialGradientWithLength(
-    PRUint32 aIndex, nsSVGRadialGradientElement* aDefault);
+    uint32_t aIndex, nsSVGRadialGradientElement* aDefault);
 
   // The frame our gradient is (currently) being applied to
   nsIFrame*                              mSource;
@@ -146,9 +146,9 @@ public:
 
   virtual nsIAtom* GetType() const;  // frame type: nsGkAtoms::svgLinearGradientFrame
 
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -158,9 +158,9 @@ public:
 #endif // DEBUG
 
 protected:
-  float GetLengthValue(PRUint32 aIndex);
+  float GetLengthValue(uint32_t aIndex);
   virtual nsSVGLinearGradientElement * GetLinearGradientWithLength(
-    PRUint32 aIndex, nsSVGLinearGradientElement* aDefault);
+    uint32_t aIndex, nsSVGLinearGradientElement* aDefault);
   virtual already_AddRefed<gfxPattern> CreateGradient();
 };
 
@@ -190,9 +190,9 @@ public:
 
   virtual nsIAtom* GetType() const;  // frame type: nsGkAtoms::svgRadialGradientFrame
 
-  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType);
+                              int32_t         aModType);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -202,12 +202,12 @@ public:
 #endif // DEBUG
 
 protected:
-  float GetLengthValue(PRUint32 aIndex);
-  float GetLengthValue(PRUint32 aIndex, float aDefaultValue);
-  float GetLengthValueFromElement(PRUint32 aIndex,
+  float GetLengthValue(uint32_t aIndex);
+  float GetLengthValue(uint32_t aIndex, float aDefaultValue);
+  float GetLengthValueFromElement(uint32_t aIndex,
                                   nsSVGRadialGradientElement& aElement);
   virtual nsSVGRadialGradientElement * GetRadialGradientWithLength(
-    PRUint32 aIndex, nsSVGRadialGradientElement* aDefault);
+    uint32_t aIndex, nsSVGRadialGradientElement* aDefault);
   virtual already_AddRefed<gfxPattern> CreateGradient();
 };
 

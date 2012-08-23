@@ -24,8 +24,8 @@ private:
 
 protected:
     /* additional members */
-    NS_IMETHODIMP SetupDragSession(nsISupportsArray *aTransferables, PRUint32 aActionType);
-    NS_IMETHODIMP SetDropActionType(PRUint32 aActionType);
+    NS_IMETHODIMP SetupDragSession(nsISupportsArray *aTransferables, uint32_t aActionType);
+    NS_IMETHODIMP SetDropActionType(uint32_t aActionType);
     NS_IMETHODIMP ExecuteDrag();
 
     QDrag *mDrag;

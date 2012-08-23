@@ -49,8 +49,8 @@ public:
                                  nsAString & _retval);
   NS_IMETHOD SetProperty(const nsAString & propertyName,
                          const nsAString & value, const nsAString & priority);
-  NS_IMETHOD GetLength(PRUint32 *aLength);
-  NS_IMETHOD Item(PRUint32 index, nsAString & _retval);
+  NS_IMETHOD GetLength(uint32_t *aLength);
+  NS_IMETHOD Item(uint32_t index, nsAString & _retval);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
 
   // We implement this as a shim which forwards to GetPropertyValue

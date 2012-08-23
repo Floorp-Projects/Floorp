@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include LayersSurfaces;
-using mozilla::ScreenRotation;
 include protocol PCompositor;
 include protocol PGrallocBuffer;
 include protocol PLayer;
@@ -15,6 +14,7 @@ include protocol PRenderFrame;
 include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/WidgetUtils.h";
 include "mozilla/TimeStamp.h";
+include "nsCSSProperty.h";
 
 using gfxPoint3D;
 using nscoord;
@@ -22,6 +22,8 @@ using nsRect;
 using nsPoint;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
+using mozilla::ScreenRotation;
+using nsCSSProperty;
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -78,7 +80,6 @@ union TimingFunction {
 };
 
 struct Color { gfxRGBA value; };
-struct Opacity { float value; };
 struct Perspective { float value; };
 struct RotationX { float radians; };
 struct RotationY { float radians; };
@@ -119,8 +120,7 @@ union TransformFunction {
 };
 
 union Animatable {
-  Color;
-  Opacity;
+  float;
   TransformFunction[];
 };
 
@@ -158,6 +158,7 @@ struct Animation {
   float numIterations;
   // This uses the NS_STYLE_ANIMATION_DIRECTION_* constants.
   int32_t direction;
+  nsCSSProperty property;
   AnimationData data;
 };
 
@@ -167,8 +168,8 @@ struct CommonLayerAttributes {
   TransformMatrix transform;
   float postXScale;
   float postYScale;
-  PRUint32 contentFlags;
-  Opacity opacity;
+  uint32_t contentFlags;
+  float opacity;
   bool useClipRect;
   nsIntRect clipRect;
   bool isFixedPosition;

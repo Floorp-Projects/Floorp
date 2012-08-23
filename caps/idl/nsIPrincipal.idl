@@ -21,7 +21,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, uuid(6df7d16d-5b26-42a1-b1f7-069d46c37aa8)]
+[scriptable, uuid(825ffce8-962d-11e1-aef3-8f2b6188709b)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -173,7 +173,13 @@ interface nsIPrincipal : nsISerializable
      * located at the given URI under the same-origin policy. This means that
      * codebase principals are only allowed to load resources from the same
      * domain, the system principal is allowed to load anything, and null
-     * principals are not allowed to load anything.
+     * principals are not allowed to load anything. This is changed slightly
+     * by the optional flag allowIfInheritsPrincipal (which defaults to false)
+     * which allows the load of a data: URI (which inherits the principal of
+     * its loader) or a URI with the same principal as its loader (eg. a 
+     * Blob URI).
+     * In these cases, with allowIfInheritsPrincipal set to true, the URI can
+     * be loaded by a null principal.
      *
      * If the load is allowed this function does nothing. If the load is not
      * allowed the function throws NS_ERROR_DOM_BAD_URI.
@@ -187,9 +193,13 @@ interface nsIPrincipal : nsISerializable
      * @param uri    The URI about to be loaded.
      * @param report If true, will report a warning to the console service
      *               if the load is not allowed.
+     * @param allowIfInheritsPrincipal   If true, the load is allowed if the
+     *                                   loadee inherits the principal of the
+     *                                   loader.
      * @throws NS_ERROR_DOM_BAD_URI if the load is not allowed.
      */
-    void checkMayLoad(in nsIURI uri, in boolean report);
+    void checkMayLoad(in nsIURI uri, in boolean report,
+                      in boolean allowIfInheritsPrincipal);
 
     /**
      * The subject name for the certificate.  This actually identifies the
@@ -241,9 +251,9 @@ interface nsIPrincipal : nsISerializable
     readonly attribute unsigned short appStatus;
 
     %{C++
-    PRUint16 GetAppStatus()
+    uint16_t GetAppStatus()
     {
-      PRUint16 appStatus;
+      uint16_t appStatus;
       nsresult rv = GetAppStatus(&appStatus);
       if (NS_FAILED(rv)) {
         return APP_STATUS_NOT_INSTALLED;

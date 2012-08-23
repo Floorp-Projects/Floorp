@@ -12,7 +12,7 @@ USING_FILE_NAMESPACE
 using mozilla::dom::indexedDB::IndexedDatabaseManager;
 
 // Create slice
-File::File(const File* aOther, PRUint64 aStart, PRUint64 aLength,
+File::File(const File* aOther, uint64_t aStart, uint64_t aLength,
            const nsAString& aContentType)
 : nsDOMFileCC(aContentType, aOther->mStart + aStart, aLength),
   mFile(aOther->mFile), mLockedFile(aOther->mLockedFile),
@@ -66,7 +66,7 @@ File::GetInternalStream(nsIInputStream **aStream)
 }
 
 already_AddRefed<nsIDOMBlob>
-File::CreateSlice(PRUint64 aStart, PRUint64 aLength,
+File::CreateSlice(uint64_t aStart, uint64_t aLength,
                   const nsAString& aContentType)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");

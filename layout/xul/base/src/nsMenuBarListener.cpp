@@ -37,8 +37,8 @@ NS_IMPL_ISUPPORTS1(nsMenuBarListener, nsIDOMEventListener)
 
 ////////////////////////////////////////////////////////////////////////
 
-PRInt32 nsMenuBarListener::mAccessKey = -1;
-PRUint32 nsMenuBarListener::mAccessKeyMask = 0;
+int32_t nsMenuBarListener::mAccessKey = -1;
+uint32_t nsMenuBarListener::mAccessKeyMask = 0;
 bool nsMenuBarListener::mAccessKeyFocuses = false;
 
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
@@ -53,7 +53,7 @@ nsMenuBarListener::~nsMenuBarListener()
 }
 
 nsresult
-nsMenuBarListener::GetMenuAccessKey(PRInt32* aAccessKey)
+nsMenuBarListener::GetMenuAccessKey(int32_t* aAccessKey)
 {
   if (!aAccessKey)
     return NS_ERROR_INVALID_POINTER;
@@ -132,11 +132,11 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
     // On a press of the ALT key by itself, we toggle the menu's 
     // active/inactive state.
     // Get the ascii key code.
-    PRUint32 theChar;
+    uint32_t theChar;
     keyEvent->GetKeyCode(&theChar);
 
     if (!defaultPrevented && mAccessKeyDown && !mAccessKeyDownCanceled &&
-        (PRInt32)theChar == mAccessKey)
+        (int32_t)theChar == mAccessKey)
     {
       // The access key was down and is now up, and no other
       // keys were pressed in between.
@@ -191,7 +191,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
     aKeyEvent->GetPreventDefault(&preventDefault);
     if (!preventDefault) {
       nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-      PRUint32 keyCode, charCode;
+      uint32_t keyCode, charCode;
       keyEvent->GetKeyCode(&keyCode);
       keyEvent->GetCharCode(&charCode);
 
@@ -200,14 +200,14 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
         nsEvent* nativeEvent = nsContentUtils::GetNativeEvent(aKeyEvent);
         nsKeyEvent* nativeKeyEvent = static_cast<nsKeyEvent*>(nativeEvent);
         if (nativeKeyEvent) {
-          nsAutoTArray<PRUint32, 10> keys;
+          nsAutoTArray<uint32_t, 10> keys;
           nsContentUtils::GetAccessKeyCandidates(nativeKeyEvent, keys);
           hasAccessKeyCandidates = !keys.IsEmpty();
         }
       }
 
       // Cancel the access key flag unless we are pressing the access key.
-      if (keyCode != (PRUint32)mAccessKey) {
+      if (keyCode != (uint32_t)mAccessKey) {
         mAccessKeyDownCanceled = true;
       }
 
@@ -258,17 +258,17 @@ nsMenuBarListener::IsAccessKeyPressed(nsIDOMKeyEvent* aKeyEvent)
 {
   InitAccessKey();
   // No other modifiers are allowed to be down except for Shift.
-  PRUint32 modifiers = GetModifiers(aKeyEvent);
+  uint32_t modifiers = GetModifiers(aKeyEvent);
 
   return (mAccessKeyMask != MODIFIER_SHIFT &&
           (modifiers & mAccessKeyMask) &&
           (modifiers & ~(mAccessKeyMask | MODIFIER_SHIFT)) == 0);
 }
 
-PRUint32
+uint32_t
 nsMenuBarListener::GetModifiers(nsIDOMKeyEvent* aKeyEvent)
 {
-  PRUint32 modifiers = 0;
+  uint32_t modifiers = 0;
   nsInputEvent* inputEvent =
     static_cast<nsInputEvent*>(aKeyEvent->GetInternalNSEvent());
   MOZ_ASSERT(inputEvent);
@@ -317,14 +317,14 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
     aKeyEvent->GetDefaultPrevented(&defaultPrevented);
 
     nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-    PRUint32 theChar;
+    uint32_t theChar;
     keyEvent->GetKeyCode(&theChar);
 
     // No other modifiers can be down.
     // Especially CTRL.  CTRL+ALT == AltGR, and we'll fuck up on non-US
     // enhanced 102-key keyboards if we don't check this.
     bool isAccessKeyDownEvent =
-      ((theChar == (PRUint32)mAccessKey) &&
+      ((theChar == (uint32_t)mAccessKey) &&
        (GetModifiers(keyEvent) & ~mAccessKeyMask) == 0);
 
     if (!mAccessKeyDown) {
@@ -383,7 +383,7 @@ nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
     mAccessKeyDownCanceled = true;
   }
 
-  PRUint16 phase = 0;
+  uint16_t phase = 0;
   nsresult rv = aMouseEvent->GetEventPhase(&phase);
   NS_ENSURE_SUCCESS(rv, rv);
   // Don't do anything at capturing phase, any behavior should be cancelable.

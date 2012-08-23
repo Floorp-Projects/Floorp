@@ -75,7 +75,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMarkerElementBase)
 // Implementation
 
 nsresult
-nsSVGOrientType::SetBaseValue(PRUint16 aValue,
+nsSVGOrientType::SetBaseValue(uint16_t aValue,
                               nsSVGElement *aSVGElement)
 {
   if (aValue == nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_AUTO ||
@@ -223,7 +223,7 @@ nsSVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
 // nsSVGElement methods
 
 bool
-nsSVGMarkerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsSVGMarkerElement::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                             nsAString &aResult) const
 {
   if (aNameSpaceID == kNameSpaceID_None &&
@@ -236,7 +236,7 @@ nsSVGMarkerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 bool
-nsSVGMarkerElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsSVGMarkerElement::ParseAttribute(int32_t aNameSpaceID, nsIAtom* aName,
                                    const nsAString& aValue,
                                    nsAttrValue& aResult)
 {
@@ -253,7 +253,7 @@ nsSVGMarkerElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsSVGMarkerElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+nsSVGMarkerElement::UnsetAttr(int32_t aNamespaceID, nsIAtom* aName,
                               bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {

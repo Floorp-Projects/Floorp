@@ -30,7 +30,7 @@ interface nsIWindowCreator : nsISupports {
       @return the new window
   */
   nsIWebBrowserChrome createChromeWindow(in nsIWebBrowserChrome parent,
-                                         in PRUint32 chromeFlags);
+                                         in uint32_t chromeFlags);
 };
 
 %{C++

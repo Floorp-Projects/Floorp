@@ -218,8 +218,8 @@ SVGMotionSMILType::IsEqual(const nsSMILValue& aLeft,
   }
 
   // Array-lengths match -- check each array-entry for equality.
-  PRUint32 length = leftArr.Length(); // == rightArr->Length(), if we get here
-  for (PRUint32 i = 0; i < length; ++i) {
+  uint32_t length = leftArr.Length(); // == rightArr->Length(), if we get here
+  for (uint32_t i = 0; i < length; ++i) {
     if (leftArr[i] != rightArr[i]) {
       return false;
     }
@@ -255,7 +255,7 @@ GetAngleAndPointAtDistance(gfxFlattenedPath* aPath, float aDistance,
 
 nsresult
 SVGMotionSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                       PRUint32 aCount) const
+                       uint32_t aCount) const
 {
   NS_ABORT_IF_FALSE(aDest.mType == aValueToAdd.mType,
                     "Incompatible SMIL types");
@@ -450,8 +450,8 @@ SVGMotionSMILType::CreateMatrix(const nsSMILValue& aSMILVal)
   const MotionSegmentArray& arr = ExtractMotionSegmentArray(aSMILVal);
 
   gfxMatrix matrix;
-  PRUint32 length = arr.Length();
-  for (PRUint32 i = 0; i < length; i++) {
+  uint32_t length = arr.Length();
+  for (uint32_t i = 0; i < length; i++) {
     gfxPoint point;  // initialized below
     gfxFloat rotateAngle = arr[i].mRotateAngle; // might get updated below
     if (arr[i].mSegmentType == eSegmentType_Translation) {

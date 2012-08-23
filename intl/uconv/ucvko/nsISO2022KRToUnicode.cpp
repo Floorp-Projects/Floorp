@@ -9,7 +9,7 @@
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen, PRUnichar * aDest, PRInt32 * aDestLen)
+NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen, PRUnichar * aDest, int32_t * aDestLen)
 {
   const unsigned char* srcEnd = (unsigned char*)aSrc + *aSrcLen;
   const unsigned char* src =(unsigned char*) aSrc;
@@ -94,8 +94,8 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
         break;
 
       case mState_KSX1001_1992:
-        if (0x20 < (PRUint8) *src  && (PRUint8) *src < 0x7f) {
-          mData = (PRUint8) *src;
+        if (0x20 < (uint8_t) *src  && (uint8_t) *src < 0x7f) {
+          mData = (uint8_t) *src;
           mState = mState_KSX1001_1992_2ndbyte;
         } 
         else if (0x0f == *src) { // Shift-In (SI)
@@ -107,7 +107,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
           }
           mRunLength = 0;
         } 
-        else if ((PRUint8) *src == 0x20 || (PRUint8) *src == 0x09) {
+        else if ((uint8_t) *src == 0x20 || (uint8_t) *src == 0x09) {
           // Allow space and tab between SO and SI (i.e. in Hangul segment)
           if (CHECK_OVERRUN(dest, destEnd, 1))
             goto error1;
@@ -123,7 +123,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
         break;
 
       case mState_KSX1001_1992_2ndbyte:
-        if ( 0x20 < (PRUint8) *src && (PRUint8) *src < 0x7f  ) {
+        if ( 0x20 < (uint8_t) *src && (uint8_t) *src < 0x7f  ) {
           if (!mEUCKRDecoder) {
             // creating a delegate converter (EUC-KR)
             nsresult rv;
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
               goto error1;
             unsigned char ksx[2];
             PRUnichar uni;
-            PRInt32 ksxLen = 2, uniLen = 1;
+            int32_t ksxLen = 2, uniLen = 1;
             // mData is the original 1st byte.
             // *src is the present 2nd byte.
             // Put 2 bytes (one character) to ksx[] with EUC-KR encoding.

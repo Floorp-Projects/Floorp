@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+
+<script type="text/javascript">
+function doStuff() {
+  window.parent.ok_wrapper(true, "a document sandboxed with 'allow-same-origin' and contained within a sandboxed document with 'allow-same-origin' should be same domain with its parent");
+  window.parent.parent.ok_wrapper(true, "a document sandboxed with 'allow-same-origin' contained within a sandboxed document with 'allow-same-origin' should be same domain with the top level");
+}
+</script>
+
+<body onLoad="doStuff()">
+  I am sandboxed with 'allow-scripts allow-same-origin' and contained within a sandboxed document with 'allow-scripts allow-same-origin'
+</body>
+</html>
+

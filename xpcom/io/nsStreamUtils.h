@@ -77,7 +77,7 @@ NS_AsyncCopy(nsIInputStream         *aSource,
              nsIOutputStream        *aSink,
              nsIEventTarget         *aTarget,
              nsAsyncCopyMode         aMode = NS_ASYNCCOPY_VIA_READSEGMENTS,
-             PRUint32                aChunkSize = 4096,
+             uint32_t                aChunkSize = 4096,
              nsAsyncCopyCallbackFun  aCallbackFun = nullptr,
              void                   *aCallbackClosure = nullptr,
              bool                    aCloseSource = true,
@@ -120,7 +120,7 @@ NS_CancelAsyncCopy(nsISupports *aCopierCtx, nsresult aReason);
  *        contain non-ASCII values.
  */
 extern nsresult
-NS_ConsumeStream(nsIInputStream *aSource, PRUint32 aMaxCount,
+NS_ConsumeStream(nsIInputStream *aSource, uint32_t aMaxCount,
                  nsACString &aBuffer);
 
 /**
@@ -164,8 +164,8 @@ NS_OutputStreamIsBuffered(nsIOutputStream *aOutputStream);
  */
 extern NS_METHOD
 NS_CopySegmentToStream(nsIInputStream *aInputStream, void *aClosure,
-                       const char *aFromSegment, PRUint32 aToOffset,
-                       PRUint32 aCount, PRUint32 *aWriteCount);
+                       const char *aFromSegment, uint32_t aToOffset,
+                       uint32_t aCount, uint32_t *aWriteCount);
 
 /**
  * This function is intended to be passed to nsIInputStream::ReadSegments to
@@ -177,8 +177,8 @@ NS_CopySegmentToStream(nsIInputStream *aInputStream, void *aClosure,
  */
 extern NS_METHOD
 NS_CopySegmentToBuffer(nsIInputStream *aInputStream, void *aClosure,
-                       const char *aFromSegment, PRUint32 aToOffset,
-                       PRUint32 aCount, PRUint32 *aWriteCount);
+                       const char *aFromSegment, uint32_t aToOffset,
+                       uint32_t aCount, uint32_t *aWriteCount);
 
 /**
  * This function is intended to be passed to nsIOutputStream::WriteSegments to
@@ -189,8 +189,8 @@ NS_CopySegmentToBuffer(nsIInputStream *aInputStream, void *aClosure,
  */
 extern NS_METHOD
 NS_CopySegmentToBuffer(nsIOutputStream *aOutputStream, void *aClosure,
-                       char *aToSegment, PRUint32 aFromOffset,
-                       PRUint32 aCount, PRUint32 *aReadCount);
+                       char *aToSegment, uint32_t aFromOffset,
+                       uint32_t aCount, uint32_t *aReadCount);
 
 /**
  * This function is intended to be passed to nsIInputStream::ReadSegments to
@@ -201,8 +201,8 @@ NS_CopySegmentToBuffer(nsIOutputStream *aOutputStream, void *aClosure,
  */
 extern NS_METHOD
 NS_DiscardSegment(nsIInputStream *aInputStream, void *aClosure,
-                  const char *aFromSegment, PRUint32 aToOffset,
-                  PRUint32 aCount, PRUint32 *aWriteCount);
+                  const char *aFromSegment, uint32_t aToOffset,
+                  uint32_t aCount, uint32_t *aWriteCount);
 
 /**
  * This function is intended to be passed to nsIInputStream::ReadSegments to
@@ -217,8 +217,8 @@ NS_DiscardSegment(nsIInputStream *aInputStream, void *aClosure,
  */
 extern NS_METHOD
 NS_WriteSegmentThunk(nsIInputStream *aInputStream, void *aClosure,
-                     const char *aFromSegment, PRUint32 aToOffset,
-                     PRUint32 aCount, PRUint32 *aWriteCount);
+                     const char *aFromSegment, uint32_t aToOffset,
+                     uint32_t aCount, uint32_t *aWriteCount);
 
 struct nsWriteSegmentThunk {
   nsIInputStream    *mStream;

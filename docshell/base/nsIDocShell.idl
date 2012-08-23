@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(51f2b7f0-6435-40ec-b315-588f52be7eea)]
+[scriptable, builtinclass, uuid(9b283337-097d-4fa8-a2da-916318eaf828)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -127,7 +127,7 @@ interface nsIDocShell : nsISupports
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aReferrer,
                               in nsISupports aOwner,
-                              in PRUint32 aFlags,
+                              in uint32_t aFlags,
                               in wstring aWindowTarget,
                               in string aTypeHint,
                               in nsIInputStream aPostDataStream,
@@ -570,7 +570,7 @@ interface nsIDocShell : nsISupports
    * In a child docshell, this is the source of parentCharset
    * @see nsIParser
    */
-  attribute PRInt32 parentCharsetSource;
+  attribute int32_t parentCharsetSource;
 
   /**
    * Add an observer to the list of parties to be notified when this docshell's
@@ -589,23 +589,23 @@ interface nsIDocShell : nsISupports
   /**
    * Returns true iff the docshell is marked as a browser frame.
    */
-  readonly attribute boolean isBrowserElement;
+  [infallible] readonly attribute boolean isBrowserElement;
 
   /**
    * Returns true iif the docshell is marked as an app frame.
    */
-  readonly attribute boolean isApp;
+  [infallible] readonly attribute boolean isApp;
 
   /**
    * Returns true iif the docshell is marked as a type that behaves like a
    * content boundary.
    */
-  readonly attribute boolean isContentBoundary;
+  [infallible] readonly attribute boolean isContentBoundary;
 
   /**
    * Returns true iif the docshell is inside a browser element.
    */
-  readonly attribute boolean isInBrowserElement;
+  [infallible] readonly attribute boolean isInBrowserElement;
 
   /**
    * Returns true iif the docshell is inside an application.  However, it will
@@ -625,13 +625,13 @@ interface nsIDocShell : nsISupports
    * If you're doing a security check, use the content's principal instead of
    * this method.
    */
-  readonly attribute boolean isInApp;
+  [infallible] readonly attribute boolean isInApp;
 
   /**
    * Returns if the docshell has a docshell that behaves as a content boundary
    * in his parent hierarchy.
    */
-  readonly attribute boolean isBelowContentBoundary;
+  [infallible] readonly attribute boolean isBelowContentBoundary;
 
   /**
    * Set the app id this docshell is associated with. The id has to be a valid
@@ -650,7 +650,7 @@ interface nsIDocShell : nsISupports
    * Returns the app id of the app the docshell is in. Returns
    * nsIScriptSecurityManager::NO_APP_ID if the docshell is not in an app.
    */
-  readonly attribute unsigned long appId;
+  [infallible] readonly attribute unsigned long appId;
 
   /** 
    * True iff asynchronous panning and zooming is enabled for this
@@ -663,4 +663,26 @@ interface nsIDocShell : nsISupports
    * boundaries.
    */
   nsIDocShell getParentIgnoreBrowserFrame();
+
+  /**
+   * The sandbox flags on the docshell. These reflect the value of the sandbox
+   * attribute of the associated IFRAME or CSP-protectable content, if
+   * existent. See the HTML5 spec for more details.
+   * These flags on the docshell reflect the current state of the sandbox
+   * attribute, which is modifiable. They are only used when loading new
+   * content, sandbox flags are also immutably set on the document when it is
+   * loaded.
+   * The sandbox flags of a document depend on the sandbox flags on its
+   * docshell and of its parent document, if any.
+   * See nsSandboxFlags.h for the possible flags.
+   */
+  attribute unsigned long sandboxFlags;
+
+  /**
+   * Are plugins allowed in the current document loaded in this docshell ?
+   * (if there is one). This depends on whether plugins are allowed by this
+   * docshell itself or if the document is sandboxed and hence plugins should
+   * not be allowed.
+   */
+  [noscript, notxpcom] bool pluginsAllowedInCurrentDoc();
 };

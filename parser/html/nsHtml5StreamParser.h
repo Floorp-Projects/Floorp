@@ -148,7 +148,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
      *  @param   aCharset the charset of a document
      *  @param   aCharsetSource the source of the charset
      */
-    inline void SetDocumentCharset(const nsACString& aCharset, PRInt32 aSource) {
+    inline void SetDocumentCharset(const nsACString& aCharset, int32_t aSource) {
       NS_PRECONDITION(mStreamState == STREAM_NOT_STARTED,
                       "SetDocumentCharset called too late.");
       NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -239,7 +239,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
     
     void DoStopRequest();
     
-    void DoDataAvailable(PRUint8* aBuffer, PRUint32 aLength);
+    void DoDataAvailable(uint8_t* aBuffer, uint32_t aLength);
 
     bool IsTerminatedOrInterrupted() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
@@ -261,22 +261,22 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * Push bytes from network when there is no Unicode decoder yet
      */
-    nsresult SniffStreamBytes(const PRUint8* aFromSegment,
-                              PRUint32 aCount,
-                              PRUint32* aWriteCount);
+    nsresult SniffStreamBytes(const uint8_t* aFromSegment,
+                              uint32_t aCount,
+                              uint32_t* aWriteCount);
 
     /**
      * Push bytes from network when there is a Unicode decoder already
      */
-    nsresult WriteStreamBytes(const PRUint8* aFromSegment,
-                              PRUint32 aCount,
-                              PRUint32* aWriteCount);
+    nsresult WriteStreamBytes(const uint8_t* aFromSegment,
+                              uint32_t aCount,
+                              uint32_t* aWriteCount);
 
     /**
      * Check whether every other byte in the sniffing buffer is zero.
      */
-    void SniffBOMlessUTF16BasicLatin(const PRUint8* aFromSegment,
-                                     PRUint32 aCountToSniffingLimit);
+    void SniffBOMlessUTF16BasicLatin(const uint8_t* aFromSegment,
+                                     uint32_t aCountToSniffingLimit);
 
     /**
      * <meta charset> scan failed. Try chardet if applicable. After this, the
@@ -291,10 +291,10 @@ class nsHtml5StreamParser : public nsIStreamListener,
      * @param aCountToSniffingLimit The number of unfilled slots in
      *                              mSniffingBuffer
      */
-    nsresult FinalizeSniffing(const PRUint8* aFromSegment,
-                              PRUint32 aCount,
-                              PRUint32* aWriteCount,
-                              PRUint32 aCountToSniffingLimit);
+    nsresult FinalizeSniffing(const uint8_t* aFromSegment,
+                              uint32_t aCount,
+                              uint32_t* aWriteCount,
+                              uint32_t aCountToSniffingLimit);
 
     /**
      * Set up the Unicode decoder and write the sniffing buffer into it
@@ -307,9 +307,9 @@ class nsHtml5StreamParser : public nsIStreamListener,
      * @param aWriteCount  Return value for how many bytes got read from the
      *                     buffer.
      */
-    nsresult SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment,
-                                                                  PRUint32 aCount,
-                                                                  PRUint32* aWriteCount);
+    nsresult SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const uint8_t* aFromSegment,
+                                                                  uint32_t aCount,
+                                                                  uint32_t* aWriteCount);
 
     /**
      * Write the sniffing buffer into the Unicode decoder followed by the
@@ -322,9 +322,9 @@ class nsHtml5StreamParser : public nsIStreamListener,
      * @param aWriteCount  Return value for how many bytes got read from the
      *                     buffer.
      */
-    nsresult WriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment,
-                                                  PRUint32 aCount,
-                                                  PRUint32* aWriteCount);
+    nsresult WriteSniffingBufferAndCurrentSegment(const uint8_t* aFromSegment,
+                                                  uint32_t aCount,
+                                                  uint32_t* aWriteCount);
 
     /**
      * Initialize the Unicode decoder, mark the BOM as the source and
@@ -376,12 +376,12 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * The buffer for sniffing the character encoding
      */
-    nsAutoArrayPtr<PRUint8>       mSniffingBuffer;
+    nsAutoArrayPtr<uint8_t>       mSniffingBuffer;
 
     /**
      * The number of meaningful bytes in mSniffingBuffer
      */
-    PRUint32                      mSniffingLength;
+    uint32_t                      mSniffingLength;
 
     /**
      * BOM sniffing state
@@ -397,7 +397,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * The source (confidence) of the character encoding in use
      */
-    PRInt32                       mCharsetSource;
+    int32_t                       mCharsetSource;
 
     /**
      * The character encoding in use
@@ -538,14 +538,14 @@ class nsHtml5StreamParser : public nsIStreamListener,
      * the time a network buffer is seen and the timer firing when the
      * timer hasn't fired previously in this parse.
      */
-    static PRInt32                sTimerInitialDelay;
+    static int32_t                sTimerInitialDelay;
 
     /**
      * The pref html5.flushtimer.subsequentdelay: Time in milliseconds between
      * the time a network buffer is seen and the timer firing when the
      * timer has already fired previously in this parse.
      */
-    static PRInt32                sTimerSubsequentDelay;
+    static int32_t                sTimerSubsequentDelay;
 };
 
 #endif // nsHtml5StreamParser_h__

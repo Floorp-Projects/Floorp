@@ -17,7 +17,7 @@
  * Creates a VariableRefExpr with the given variable name
 **/
 VariableRefExpr::VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                                 PRInt32 aNSID)
+                                 int32_t aNSID)
     : mPrefix(aPrefix), mLocalName(aLocalName), mNamespace(aNSID)
 {
     NS_ASSERTION(mLocalName, "VariableRefExpr without local name?");

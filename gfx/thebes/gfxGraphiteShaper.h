@@ -24,7 +24,7 @@ public:
                            gfxShapedWord *aShapedWord,
                            const PRUnichar *aText);
 
-    const void* GetTable(PRUint32 aTag, size_t *aLength);
+    const void* GetTable(uint32_t aTag, size_t *aLength);
 
     static void Shutdown();
 
@@ -37,7 +37,7 @@ public:
     struct TableRec {
         hb_blob_t  *mBlob;
         const void *mData;
-        PRUint32    mLength;
+        uint32_t    mLength;
     };
 
 protected:
@@ -56,7 +56,7 @@ protected:
     bool mUseFontGlyphWidths;
 
     // Convert HTML 'lang' (BCP47) to Graphite language code
-    static PRUint32 GetGraphiteTagForLang(const nsCString& aLang);
+    static uint32_t GetGraphiteTagForLang(const nsCString& aLang);
     static nsTHashtable<nsUint32HashKey> sLanguageTags;
 };
 

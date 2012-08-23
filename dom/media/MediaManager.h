@@ -16,6 +16,40 @@
 
 namespace mozilla {
 
+class GetUserMediaNotificationEvent: public nsRunnable
+{
+  public:
+    enum GetUserMediaStatus {
+      STARTING,
+      STOPPING
+    };
+    GetUserMediaNotificationEvent(GetUserMediaStatus aStatus)
+    : mStatus(aStatus) {}
+
+    NS_IMETHOD
+    Run()
+    {
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      if (!obs) {
+        NS_WARNING("Could not get the Observer service for GetUserMedia recording notification.");
+        return NS_ERROR_FAILURE;
+      }
+      if (mStatus) {
+        obs->NotifyObservers(nullptr,
+            "recording-device-events",
+            NS_LITERAL_STRING("starting").get());
+      } else {
+        obs->NotifyObservers(nullptr,
+            "recording-device-events",
+            NS_LITERAL_STRING("shutdown").get());
+      }
+      return NS_OK;
+    }
+
+  protected:
+    GetUserMediaStatus mStatus;
+};
+
 /**
  * This class is an implementation of MediaStreamListener. This is used
  * to Start() and Stop() the underlying MediaEngineSource when MediaStreams
@@ -41,6 +75,11 @@ public:
     mValid = false;
     mSource->Stop();
     mSource->Deallocate();
+
+    nsCOMPtr<GetUserMediaNotificationEvent> event =
+      new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STOPPING);
+
+    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   }
 
   void
@@ -49,6 +88,10 @@ public:
     if (aConsuming == CONSUMED) {
       SourceMediaStream* stream = mStream->GetStream()->AsSourceStream();
       mSource->Start(stream, mID);
+      nsCOMPtr<GetUserMediaNotificationEvent> event =
+        new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STARTING);
+
+      NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
       return;
     }
 
@@ -62,7 +105,7 @@ public:
   void NotifyFinished(MediaStreamGraph* aGraph) {}
   void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
     TrackRate aTrackRate, TrackTicks aTrackOffset,
-    PRUint32 aTrackEvents, const MediaSegment& aQueuedMedia) {}
+    uint32_t aTrackEvents, const MediaSegment& aQueuedMedia) {}
 
 private:
   nsRefPtr<MediaEngineSource> mSource;
@@ -95,7 +138,7 @@ public:
   nsresult GetUserMedia(nsPIDOMWindow* aWindow, nsIMediaStreamOptions* aParams,
     nsIDOMGetUserMediaSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError);
-  void OnNavigation(PRUint64 aWindowID);
+  void OnNavigation(uint64_t aWindowID);
 
 private:
   // Make private because we want only one instance of this class
@@ -112,7 +155,6 @@ private:
 
   MediaEngine* mBackend;
   nsCOMPtr<nsIThread> mMediaThread;
-
   WindowTable mActiveWindows;
 
   static nsRefPtr<MediaManager> sSingleton;

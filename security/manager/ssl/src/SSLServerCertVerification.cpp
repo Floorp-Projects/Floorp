@@ -212,7 +212,7 @@ class CertErrorRunnable : public SyncRunnableBase
                     nsIX509Cert * cert,
                     TransportSecurityInfo * infoObject,
                     PRErrorCode defaultErrorCodeToReport,
-                    PRUint32 collectedErrors,
+                    uint32_t collectedErrors,
                     PRErrorCode errorCodeTrust,
                     PRErrorCode errorCodeMismatch,
                     PRErrorCode errorCodeExpired)
@@ -234,7 +234,7 @@ private:
   const nsCOMPtr<nsIX509Cert> mCert;
   const nsRefPtr<TransportSecurityInfo> mInfoObject;
   const PRErrorCode mDefaultErrorCodeToReport;
-  const PRUint32 mCollectedErrors;
+  const uint32_t mCollectedErrors;
   const PRErrorCode mErrorCodeTrust;
   const PRErrorCode mErrorCodeMismatch;
   const PRErrorCode mErrorCodeExpired;
@@ -252,7 +252,7 @@ CertErrorRunnable::CheckCertOverrides()
                                                mDefaultErrorCodeToReport);
   }
 
-  PRInt32 port;
+  int32_t port;
   mInfoObject->GetPort(&port);
 
   nsCString hostWithPortString;
@@ -260,7 +260,7 @@ CertErrorRunnable::CheckCertOverrides()
   hostWithPortString.AppendLiteral(":");
   hostWithPortString.AppendInt(port);
 
-  PRUint32 remaining_display_errors = mCollectedErrors;
+  uint32_t remaining_display_errors = mCollectedErrors;
 
   nsresult nsrv;
 
@@ -284,7 +284,7 @@ CertErrorRunnable::CheckCertOverrides()
       do_GetService(NS_CERTOVERRIDE_CONTRACTID);
     // it is fine to continue without the nsICertOverrideService
 
-    PRUint32 overrideBits = 0;
+    uint32_t overrideBits = 0;
 
     if (overrideService)
     {
@@ -461,7 +461,7 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   PRErrorCode errorCodeTrust = 0;
   PRErrorCode errorCodeExpired = 0;
 
-  PRUint32 collected_errors = 0;
+  uint32_t collected_errors = 0;
 
   if (infoObject->IsCertIssuerBlacklisted()) {
     collected_errors |= nsICertOverrideService::ERROR_UNTRUSTED;

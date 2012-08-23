@@ -17,12 +17,12 @@ NS_INTERFACE_MAP_BEGIN(nsMediaError)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MediaError)
 NS_INTERFACE_MAP_END
 
-nsMediaError::nsMediaError(PRUint16 aCode) :
+nsMediaError::nsMediaError(uint16_t aCode) :
   mCode(aCode)
 {
 }
 
-NS_IMETHODIMP nsMediaError::GetCode(PRUint16* aCode)
+NS_IMETHODIMP nsMediaError::GetCode(uint16_t* aCode)
 {
   if (aCode)
     *aCode = mCode;

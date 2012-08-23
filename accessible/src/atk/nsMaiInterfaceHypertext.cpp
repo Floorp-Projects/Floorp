@@ -58,7 +58,7 @@ getLinkIndexCB(AtkHypertext *aText, gint aCharIndex)
   HyperTextAccessible* hyperText = accWrap->AsHyperText();
   NS_ENSURE_TRUE(hyperText, -1);
 
-  PRInt32 index = -1;
+  int32_t index = -1;
   nsresult rv = hyperText->GetLinkIndexAtOffset(aCharIndex, &index);
   NS_ENSURE_SUCCESS(rv, -1);
 

@@ -6,12 +6,14 @@
 #ifndef GFX_READBACKPROCESSOR_H
 #define GFX_READBACKPROCESSOR_H
 
-#include "ReadbackLayer.h"
 #include "ThebesLayerBuffer.h"
 #include "nsTArray.h"
 
 namespace mozilla {
 namespace layers {
+
+class ContainerLayer;
+class ReadbackLayer;
 
 class ReadbackProcessor {
 public:
@@ -44,7 +46,7 @@ public:
     /**
      * The sequence counter value to use when calling DoUpdate
      */
-    PRUint64       mSequenceCounter;
+    uint64_t       mSequenceCounter;
   };
   /**
    * Appends any ReadbackLayers that need to be updated, and the rects that

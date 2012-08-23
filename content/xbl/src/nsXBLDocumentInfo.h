@@ -50,7 +50,7 @@ public:
   // nsIScriptGlobalObjectOwner methods
   virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 
-  void MarkInCCGeneration(PRUint32 aGeneration);
+  void MarkInCCGeneration(uint32_t aGeneration);
 
   static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo);
 

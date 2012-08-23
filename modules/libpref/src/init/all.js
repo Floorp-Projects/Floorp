@@ -725,6 +725,8 @@ pref("javascript.options.mem.gc_low_frequency_heap_growth", 150);
 pref("javascript.options.mem.gc_dynamic_heap_growth", true);
 pref("javascript.options.mem.gc_dynamic_mark_slice", true);
 
+pref("javascript.options.mem.analysis_purge_mb", 100);
+
 // advanced prefs
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
@@ -3519,6 +3521,7 @@ pref("webgl.msaa-level", 2);
 pref("webgl.msaa-force", false);
 pref("webgl.prefer-16bpp", false);
 pref("webgl.default-no-alpha", false);
+pref("webgl.force-layers-readback", false);
 
 #ifdef XP_WIN
 // The default TCP send window on Windows is too small, and autotuning only occurs on receive
@@ -3634,7 +3637,6 @@ pref("dom.battery.enabled", true);
 
 // WebSMS
 pref("dom.sms.enabled", false);
-pref("dom.sms.whitelist", "");
 
 // WebContacts
 pref("dom.mozContacts.enabled", false);

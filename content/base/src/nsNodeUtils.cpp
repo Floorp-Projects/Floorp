@@ -85,9 +85,9 @@ nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
 
 void
 nsNodeUtils::AttributeWillChange(Element* aElement,
-                                 PRInt32 aNameSpaceID,
+                                 int32_t aNameSpaceID,
                                  nsIAtom* aAttribute,
-                                 PRInt32 aModType)
+                                 int32_t aModType)
 {
   nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeWillChange, aElement,
@@ -97,9 +97,9 @@ nsNodeUtils::AttributeWillChange(Element* aElement,
 
 void
 nsNodeUtils::AttributeChanged(Element* aElement,
-                              PRInt32 aNameSpaceID,
+                              int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType)
+                              int32_t aModType)
 {
   nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeChanged, aElement,
@@ -109,7 +109,7 @@ nsNodeUtils::AttributeChanged(Element* aElement,
 
 void
 nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
-                                        PRInt32 aNameSpaceID,
+                                        int32_t aNameSpaceID,
                                         nsIAtom* aAttribute)
 {
   nsIDocument* doc = aElement->OwnerDoc();
@@ -120,7 +120,7 @@ nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
 void
 nsNodeUtils::ContentAppended(nsIContent* aContainer,
                              nsIContent* aFirstNewContent,
-                             PRInt32 aNewIndexInContainer)
+                             int32_t aNewIndexInContainer)
 {
   nsIDocument* doc = aContainer->OwnerDoc();
 
@@ -132,7 +132,7 @@ nsNodeUtils::ContentAppended(nsIContent* aContainer,
 void
 nsNodeUtils::ContentInserted(nsINode* aContainer,
                              nsIContent* aChild,
-                             PRInt32 aIndexInContainer)
+                             int32_t aIndexInContainer)
 {
   NS_PRECONDITION(aContainer->IsNodeOfType(nsINode::eCONTENT) ||
                   aContainer->IsNodeOfType(nsINode::eDOCUMENT),
@@ -156,7 +156,7 @@ nsNodeUtils::ContentInserted(nsINode* aContainer,
 void
 nsNodeUtils::ContentRemoved(nsINode* aContainer,
                             nsIContent* aChild,
-                            PRInt32 aIndexInContainer,
+                            int32_t aIndexInContainer,
                             nsIContent* aPreviousSibling)
 {
   NS_PRECONDITION(aContainer->IsNodeOfType(nsINode::eCONTENT) ||
@@ -262,7 +262,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
 
 struct NS_STACK_CLASS nsHandlerData
 {
-  PRUint16 mOperation;
+  uint16_t mOperation;
   nsCOMPtr<nsIDOMNode> mSource;
   nsCOMPtr<nsIDOMNode> mDest;
   nsCxPusher mPusher;
@@ -292,7 +292,7 @@ CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
 nsresult
 nsNodeUtils::CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
                                   nsIDocument *aOwnerDocument,
-                                  PRUint16 aOperation, bool aCloned)
+                                  uint16_t aOperation, bool aCloned)
 {
   NS_PRECONDITION(!aCloned || (aNodesWithProperties.Count() % 2 == 0),
                   "Expected aNodesWithProperties to contain original and "
@@ -317,7 +317,7 @@ nsNodeUtils::CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
   nsHandlerData handlerData;
   handlerData.mOperation = aOperation;
 
-  PRUint32 i, count = aNodesWithProperties.Count();
+  uint32_t i, count = aNodesWithProperties.Count();
   for (i = 0; i < count; ++i) {
     nsINode *nodeWithProperties = aNodesWithProperties[i];
 

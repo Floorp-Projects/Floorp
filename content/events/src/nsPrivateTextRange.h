@@ -19,16 +19,16 @@ public:
 	nsPrivateTextRange(const nsTextRange &aTextRange);
 	virtual ~nsPrivateTextRange(void);
 
-	NS_IMETHOD    GetRangeStart(PRUint16* aRangeStart);
-	NS_IMETHOD    GetRangeEnd(PRUint16* aRangeEnd);
-	NS_IMETHOD    GetRangeType(PRUint16* aRangeType);
+	NS_IMETHOD    GetRangeStart(uint16_t* aRangeStart);
+	NS_IMETHOD    GetRangeEnd(uint16_t* aRangeEnd);
+	NS_IMETHOD    GetRangeType(uint16_t* aRangeType);
 	NS_IMETHOD    GetRangeStyle(nsTextRangeStyle* aRangeStyle);
 
 protected:
 
-	PRUint16	mRangeStart;
-	PRUint16	mRangeEnd;
-	PRUint16	mRangeType;
+	uint16_t	mRangeStart;
+	uint16_t	mRangeEnd;
+	uint16_t	mRangeType;
 	nsTextRangeStyle mRangeStyle;
 };
 
@@ -36,13 +36,13 @@ class nsPrivateTextRangeList MOZ_FINAL : public nsIPrivateTextRangeList
 {
 	NS_DECL_ISUPPORTS
 public:
-	nsPrivateTextRangeList(PRUint16 aLength) : mList(aLength) {}
+	nsPrivateTextRangeList(uint16_t aLength) : mList(aLength) {}
 
 	void          AppendTextRange(nsRefPtr<nsPrivateTextRange>& aRange);
 
-	NS_IMETHOD_(PRUint16)    GetLength();
+	NS_IMETHOD_(uint16_t)    GetLength();
 
-	NS_IMETHOD_(already_AddRefed<nsIPrivateTextRange>)    Item(PRUint16 aIndex);
+	NS_IMETHOD_(already_AddRefed<nsIPrivateTextRange>)    Item(uint16_t aIndex);
 protected:
 	nsTArray<nsRefPtr<nsPrivateTextRange> > mList;
 };

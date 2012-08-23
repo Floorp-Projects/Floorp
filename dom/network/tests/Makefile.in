@@ -16,6 +16,13 @@ DIRS = \
 
 MOCHITEST_FILES = \
   test_network_basics.html \
+  test_tcpsocket_default_permissions.html \
+  test_tcpsocket_enabled_no_perm.html \
+  test_tcpsocket_enabled_with_perm.html \
   $(NULL)
+
+MODULE = test_dom_socket
+
+XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk

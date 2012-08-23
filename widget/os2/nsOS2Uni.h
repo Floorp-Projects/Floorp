@@ -28,10 +28,10 @@ typedef nsAutoTArray<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
 typedef nsAutoTArray<PRUnichar, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
 
 nsresult WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
-                             PRInt32 aSrcLength, nsAutoCharBuffer& aResult,
-                             PRInt32& aResultLength);
+                             int32_t aSrcLength, nsAutoCharBuffer& aResult,
+                             int32_t& aResultLength);
 nsresult MultiByteToWideChar(int aCodePage, const char* aSrc,
-                             PRInt32 aSrcLength, nsAutoChar16Buffer& aResult,
-                             PRInt32& aResultLength);
+                             int32_t aSrcLength, nsAutoChar16Buffer& aResult,
+                             int32_t& aResultLength);
 
 #endif

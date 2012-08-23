@@ -40,14 +40,14 @@ void CameraStreamImpl::transmitFrame(JNIEnv *env, jbyteArray *data) {
       return;
     jboolean isCopy;
     jbyte* jFrame = env->GetByteArrayElements(*data, &isCopy);
-    PRUint32 length = env->GetArrayLength(*data);
+    uint32_t length = env->GetArrayLength(*data);
     if (length > 0) {
         mCallback->ReceiveFrame((char*)jFrame, length);
     }
     env->ReleaseByteArrayElements(*data, jFrame, 0);
 }
 
-CameraStreamImpl* CameraStreamImpl::GetInstance(PRUint32 aCamera) {
+CameraStreamImpl* CameraStreamImpl::GetInstance(uint32_t aCamera) {
     CameraStreamImpl* res = NULL;
     switch(aCamera) {
         case 0:
@@ -67,7 +67,7 @@ CameraStreamImpl* CameraStreamImpl::GetInstance(PRUint32 aCamera) {
 }
 
 
-CameraStreamImpl::CameraStreamImpl(PRUint32 aCamera) :
+CameraStreamImpl::CameraStreamImpl(uint32_t aCamera) :
  mInit(false), mCamera(aCamera)
 {
     NS_WARNING("CameraStreamImpl::CameraStreamImpl()");
@@ -81,7 +81,7 @@ CameraStreamImpl::~CameraStreamImpl()
     NS_WARNING("CameraStreamImpl::~CameraStreamImpl()");
 }
 
-bool CameraStreamImpl::Init(const nsCString& contentType, const PRUint32& camera, const PRUint32& width, const PRUint32& height, FrameCallback* aCallback)
+bool CameraStreamImpl::Init(const nsCString& contentType, const uint32_t& camera, const uint32_t& width, const uint32_t& height, FrameCallback* aCallback)
 {
     mCallback = aCallback;
     mWidth = width;

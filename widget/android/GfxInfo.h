@@ -55,8 +55,8 @@ public:
 
 protected:
 
-  virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, 
-                                        PRInt32 *aStatus, 
+  virtual nsresult GetFeatureStatusImpl(int32_t aFeature, 
+                                        int32_t *aStatus, 
                                         nsAString & aSuggestedDriverVersion, 
                                         const nsTArray<GfxDriverInfo>& aDriverInfo,
                                         OperatingSystem* aOS = nullptr);

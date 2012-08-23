@@ -230,7 +230,7 @@ nsresult MakeDataObject(nsISupportsArray* transferableArray,
                         nsRefPtr<IDataObject>& itemToDrag)
 {
   nsresult rv;
-  PRUint32 itemCount = 0;
+  uint32_t itemCount = 0;
 
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), "http://www.mozilla.org");
@@ -246,7 +246,7 @@ nsresult MakeDataObject(nsISupportsArray* transferableArray,
     if (!dataObjCollection)
       return NS_ERROR_OUT_OF_MEMORY;
     itemToDrag = dataObjCollection;
-    for (PRUint32 i=0; i<itemCount; ++i) {
+    for (uint32_t i=0; i<itemCount; ++i) {
       nsCOMPtr<nsISupports> supports;
       transferableArray->GetElementAt(i, getter_AddRefs(supports));
       nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));

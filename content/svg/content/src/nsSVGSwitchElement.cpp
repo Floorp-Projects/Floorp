@@ -85,7 +85,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGSwitchElement)
 
 nsresult
 nsSVGSwitchElement::InsertChildAt(nsIContent* aKid,
-                                  PRUint32 aIndex,
+                                  uint32_t aIndex,
                                   bool aNotify)
 {
   nsresult rv = nsSVGSwitchElementBase::InsertChildAt(aKid, aIndex, aNotify);
@@ -96,7 +96,7 @@ nsSVGSwitchElement::InsertChildAt(nsIContent* aKid,
 }
 
 void
-nsSVGSwitchElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
+nsSVGSwitchElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
   nsSVGSwitchElementBase::RemoveChildAt(aIndex, aNotify);
   MaybeInvalidate();
@@ -137,7 +137,7 @@ nsSVGSwitchElement::FindActiveChild() const
     Preferences::GetLocalizedString("intl.accept_languages");
 
   if (allowReorder && !acceptLangs.IsEmpty()) {
-    PRInt32 bestLanguagePreferenceRank = -1;
+    int32_t bestLanguagePreferenceRank = -1;
     nsIContent *bestChild = nullptr;
     for (nsIContent* child = nsINode::GetFirstChild();
          child;
@@ -150,7 +150,7 @@ nsSVGSwitchElement::FindActiveChild() const
       if (tests) {
         if (tests->PassesConditionalProcessingTests(
                             DOMSVGTests::kIgnoreSystemLanguage)) {
-          PRInt32 languagePreferenceRank =
+          int32_t languagePreferenceRank =
               tests->GetBestLanguagePreferenceRank(acceptLangs);
           switch (languagePreferenceRank) {
           case 0:

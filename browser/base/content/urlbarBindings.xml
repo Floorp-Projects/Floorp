@@ -541,10 +541,10 @@
             if (aCommand == "cmd_cut" && this.isCommandEnabled(aCommand)) {
               let start = urlbar.selectionStart;
               let end = urlbar.selectionEnd;
-              // This should reset any "moz-action:" prefix.
-              urlbar.value = urlbar.inputField.value.substring(0, start) +
-                             urlbar.inputField.value.substring(end);
+              urlbar.inputField.value = urlbar.inputField.value.substring(0, start) +
+                                        urlbar.inputField.value.substring(end);
               urlbar.selectionStart = urlbar.selectionEnd = start;
+              urlbar.removeAttribute("actiontype");
               SetPageProxyState("invalid");
             }
 

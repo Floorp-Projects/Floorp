@@ -57,7 +57,7 @@ public:
     aNodeName = NodeName();
     return NS_OK;
   }
-  nsresult GetNodeType(PRUint16* aNodeType)
+  nsresult GetNodeType(uint16_t* aNodeType)
   {
     *aNodeType = NodeType();
     return NS_OK;
@@ -110,7 +110,7 @@ public:
   nsresult IsSupported(const nsAString& aFeature,
                        const nsAString& aVersion,
                        bool* aReturn);
-  nsresult CloneNode(bool aDeep, PRUint8 aOptionalArgc, nsIDOMNode** aReturn)
+  nsresult CloneNode(bool aDeep, uint8_t aOptionalArgc, nsIDOMNode** aReturn)
   {
     if (!aOptionalArgc) {
       aDeep = true;
@@ -122,23 +122,23 @@ public:
   // Implementation for nsIDOMCharacterData
   nsresult GetData(nsAString& aData) const;
   nsresult SetData(const nsAString& aData);
-  nsresult GetLength(PRUint32* aLength);
-  nsresult SubstringData(PRUint32 aOffset, PRUint32 aCount,
+  nsresult GetLength(uint32_t* aLength);
+  nsresult SubstringData(uint32_t aOffset, uint32_t aCount,
                          nsAString& aReturn);
   nsresult AppendData(const nsAString& aArg);
-  nsresult InsertData(PRUint32 aOffset, const nsAString& aArg);
-  nsresult DeleteData(PRUint32 aOffset, PRUint32 aCount);
-  nsresult ReplaceData(PRUint32 aOffset, PRUint32 aCount,
+  nsresult InsertData(uint32_t aOffset, const nsAString& aArg);
+  nsresult DeleteData(uint32_t aOffset, uint32_t aCount);
+  nsresult ReplaceData(uint32_t aOffset, uint32_t aCount,
                        const nsAString& aArg);
 
   // nsINode methods
-  virtual PRUint32 GetChildCount() const;
-  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-  virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
-  virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+  virtual uint32_t GetChildCount() const;
+  virtual nsIContent *GetChildAt(uint32_t aIndex) const;
+  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const;
+  virtual int32_t IndexOf(nsINode* aPossibleChild) const;
+  virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify);
-  virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
   NS_IMETHOD GetTextContent(nsAString &aTextContent)
   {
     nsresult rv = GetNodeValue(aTextContent);
@@ -159,35 +159,35 @@ public:
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
 
-  virtual already_AddRefed<nsINodeList> GetChildren(PRUint32 aFilter);
+  virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter);
 
   virtual nsIAtom *GetIDAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
-  virtual bool GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+  virtual bool GetAttr(int32_t aNameSpaceID, nsIAtom *aAttribute,
                          nsAString& aResult) const;
-  virtual bool HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const;
-  virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
-  virtual PRUint32 GetAttrCount() const;
+  virtual bool HasAttr(int32_t aNameSpaceID, nsIAtom *aAttribute) const;
+  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const;
+  virtual uint32_t GetAttrCount() const;
   virtual const nsTextFragment *GetText();
-  virtual PRUint32 TextLength() const;
-  virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
+  virtual uint32_t TextLength() const;
+  virtual nsresult SetText(const PRUnichar* aBuffer, uint32_t aLength,
                            bool aNotify);
   // Need to implement this here too to avoid hiding.
   nsresult SetText(const nsAString& aStr, bool aNotify)
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
-  virtual nsresult AppendText(const PRUnichar* aBuffer, PRUint32 aLength,
+  virtual nsresult AppendText(const PRUnichar* aBuffer, uint32_t aLength,
                               bool aNotify);
   virtual bool TextIsOnlyWhitespace();
   virtual void AppendTextTo(nsAString& aResult);
@@ -195,12 +195,12 @@ public:
   virtual void SaveSubtreeState();
 
 #ifdef DEBUG
-  virtual void List(FILE* out, PRInt32 aIndent) const;
-  virtual void DumpContent(FILE* out, PRInt32 aIndent, bool aDumpAll) const;
+  virtual void List(FILE* out, int32_t aIndent) const;
+  virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const;
 #endif
 
   virtual nsIContent *GetBindingParent() const;
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(uint32_t aFlags) const;
   virtual bool IsLink(nsIURI** aURI) const;
 
   virtual nsIAtom* DoGetID() const;
@@ -208,7 +208,7 @@ public:
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              PRInt32 aModType) const;
+                                              int32_t aModType) const;
   virtual nsIAtom *GetClassAttributeName() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
@@ -223,13 +223,13 @@ public:
     return NS_OK;
   }
 
-  nsresult SplitData(PRUint32 aOffset, nsIContent** aReturn,
+  nsresult SplitData(uint32_t aOffset, nsIContent** aReturn,
                      bool aCloneAfterOriginal = true);
 
   //----------------------------------------
 
 #ifdef DEBUG
-  void ToCString(nsAString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
+  void ToCString(nsAString& aBuf, int32_t aOffset, int32_t aLen) const;
 #endif
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsGenericDOMDataNode)
@@ -279,19 +279,19 @@ protected:
     return static_cast<nsDataSlots*>(GetExistingSlots());
   }
 
-  nsresult SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
+  nsresult SplitText(uint32_t aOffset, nsIDOMText** aReturn);
 
   nsresult GetWholeText(nsAString& aWholeText);
 
-  static PRInt32 FirstLogicallyAdjacentTextNode(nsIContent* aParent,
-                                                PRInt32 aIndex);
+  static int32_t FirstLogicallyAdjacentTextNode(nsIContent* aParent,
+                                                int32_t aIndex);
 
-  static PRInt32 LastLogicallyAdjacentTextNode(nsIContent* aParent,
-                                               PRInt32 aIndex,
-                                               PRUint32 aCount);
+  static int32_t LastLogicallyAdjacentTextNode(nsIContent* aParent,
+                                               int32_t aIndex,
+                                               uint32_t aCount);
 
-  nsresult SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
-                           const PRUnichar* aBuffer, PRUint32 aLength,
+  nsresult SetTextInternal(uint32_t aOffset, uint32_t aCount,
+                           const PRUnichar* aBuffer, uint32_t aLength,
                            bool aNotify,
                            CharacterDataChangeInfo::Details* aDetails = nullptr);
 

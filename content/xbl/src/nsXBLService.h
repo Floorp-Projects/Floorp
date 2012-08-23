@@ -118,8 +118,8 @@ public:
   static nsHashtable* gClassTable;           // A table of nsXBLJSClass objects.
 
   static JSCList  gClassLRUList;             // LRU list of cached classes.
-  static PRUint32 gClassLRUListLength;       // Number of classes on LRU list.
-  static PRUint32 gClassLRUListQuota;        // Quota on class LRU list.
+  static uint32_t gClassLRUListLength;       // Number of classes on LRU list.
+  static uint32_t gClassLRUListQuota;        // Quota on class LRU list.
   static bool     gAllowDataURIs;            // Whether we should allow data
                                              // urls in -moz-binding. Needed for
                                              // testing.

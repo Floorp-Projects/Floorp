@@ -114,7 +114,7 @@ NearestCommonAncestorFirstInFlow(nsIFrame *aFrame1, nsIFrame *aFrame2,
   }
 
   nsIFrame *result = aKnownCommonAncestor;
-  PRUint32 i1 = ancestors1.Length(),
+  uint32_t i1 = ancestors1.Length(),
            i2 = ancestors2.Length();
   while (i1-- != 0 && i2-- != 0) {
     if (ancestors1[i1] != ancestors2[i2]) {
@@ -146,11 +146,11 @@ ComputeDescendantWidth(const nsHTMLReflowState& aAncestorReflowState,
   // which we use font inflation, so it's not a problem.  But it may
   // occasionally cause problems when writing tests on desktop.
 
-  PRUint32 len = frames.Length();
+  uint32_t len = frames.Length();
   nsHTMLReflowState *reflowStates = static_cast<nsHTMLReflowState*>
                                 (moz_xmalloc(sizeof(nsHTMLReflowState) * len));
   nsPresContext *presContext = aDescendantFrame->PresContext();
-  for (PRUint32 i = 0; i < len; ++i) {
+  for (uint32_t i = 0; i < len; ++i) {
     const nsHTMLReflowState &parentReflowState =
       (i == 0) ? aAncestorReflowState : reflowStates[i - 1];
     nsSize availSize(parentReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
@@ -166,7 +166,7 @@ ComputeDescendantWidth(const nsHTMLReflowState& aAncestorReflowState,
                     "bad logic in this function");
   nscoord result = reflowStates[len - 1].ComputedWidth();
 
-  for (PRUint32 i = len; i-- != 0; ) {
+  for (uint32_t i = len; i-- != 0; ) {
     reflowStates[i].~nsHTMLReflowState();
   }
   moz_free(reflowStates);
@@ -210,7 +210,7 @@ nsFontInflationData::UpdateWidth(const nsHTMLReflowState &aReflowState)
   // See comment above "font.size.inflation.lineThreshold" in
   // modules/libpref/src/init/all.js .
   nsIPresShell* presShell = bfc->PresContext()->PresShell();
-  PRUint32 lineThreshold = presShell->FontSizeInflationLineThreshold();
+  uint32_t lineThreshold = presShell->FontSizeInflationLineThreshold();
   nscoord newTextThreshold = (newNCAWidth * lineThreshold) / 100;
 
   if (mTextThreshold <= mTextAmount && mTextAmount < newTextThreshold) {
@@ -241,7 +241,7 @@ nsFontInflationData::FindEdgeInflatableFrameIn(nsIFrame* aFrame,
   // FIXME: aDirection!
   nsAutoTArray<FrameChildList, 4> lists;
   aFrame->GetChildLists(&lists);
-  for (PRUint32 i = 0, len = lists.Length(); i < len; ++i) {
+  for (uint32_t i = 0, len = lists.Length(); i < len; ++i) {
     const nsFrameList& list =
       lists[(aDirection == eFromStart) ? i : len - i - 1].mList;
     for (nsIFrame *kid = (aDirection == eFromStart) ? list.FirstChild()
@@ -257,7 +257,7 @@ nsFontInflationData::FindEdgeInflatableFrameIn(nsIFrame* aFrame,
       if (kid->GetType() == nsGkAtoms::textFrame) {
         nsIContent *content = kid->GetContent();
         if (content && kid == content->GetPrimaryFrame()) {
-          PRUint32 len = nsTextFrameUtils::
+          uint32_t len = nsTextFrameUtils::
             ComputeApproximateLengthWithWhitespaceCompression(
               content, kid->GetStyleText());
           if (len != 0) {
@@ -286,13 +286,13 @@ nsFontInflationData::ScanText()
   mInflationEnabled = mTextAmount >= mTextThreshold;
 }
 
-static PRUint32
+static uint32_t
 DoCharCountOfLargestOption(nsIFrame *aContainer)
 {
-  PRUint32 result = 0;
+  uint32_t result = 0;
   for (nsIFrame* option = aContainer->GetFirstPrincipalChild();
        option; option = option->GetNextSibling()) {
-    PRUint32 optionResult;
+    uint32_t optionResult;
     if (option->GetContent()->IsHTML(nsGkAtoms::optgroup)) {
       optionResult = DoCharCountOfLargestOption(option);
     } else {
@@ -314,7 +314,7 @@ DoCharCountOfLargestOption(nsIFrame *aContainer)
   return result;
 }
 
-static PRUint32
+static uint32_t
 CharCountOfLargestOption(nsIFrame *aListControlFrame)
 {
   return DoCharCountOfLargestOption(
@@ -343,7 +343,7 @@ nsFontInflationData::ScanTextIn(nsIFrame *aFrame)
       if (fType == nsGkAtoms::textFrame) {
         nsIContent *content = kid->GetContent();
         if (content && kid == content->GetPrimaryFrame()) {
-          PRUint32 len = nsTextFrameUtils::
+          uint32_t len = nsTextFrameUtils::
             ComputeApproximateLengthWithWhitespaceCompression(
               content, kid->GetStyleText());
           if (len != 0) {
@@ -357,20 +357,20 @@ nsFontInflationData::ScanTextIn(nsIFrame *aFrame)
         // We don't want changes to the amount of text in a text input
         // to change what we count towards inflation.
         nscoord fontSize = kid->GetStyleFont()->mFont.size;
-        PRInt32 charCount = static_cast<nsTextControlFrame*>(kid)->GetCols();
+        int32_t charCount = static_cast<nsTextControlFrame*>(kid)->GetCols();
         mTextAmount += charCount * fontSize;
       } else if (fType == nsGkAtoms::comboboxControlFrame) {
         // See textInputFrame above (with s/amount of text/selected option/).
         // Don't just recurse down to the list control inside, since we
         // need to exclude the display frame.
         nscoord fontSize = kid->GetStyleFont()->mFont.size;
-        PRInt32 charCount = CharCountOfLargestOption(
+        int32_t charCount = CharCountOfLargestOption(
           static_cast<nsComboboxControlFrame*>(kid)->GetDropDown());
         mTextAmount += charCount * fontSize;
       } else if (fType == nsGkAtoms::listControlFrame) {
         // See textInputFrame above (with s/amount of text/selected option/).
         nscoord fontSize = kid->GetStyleFont()->mFont.size;
-        PRInt32 charCount = CharCountOfLargestOption(kid);
+        int32_t charCount = CharCountOfLargestOption(kid);
         mTextAmount += charCount * fontSize;
       } else {
         // recursive step

@@ -41,7 +41,7 @@ public:
         return mSize;
     }
 
-    virtual PRInt32 GetDefaultContextFlags() const
+    virtual int32_t GetDefaultContextFlags() const
     {
         return gfxContext::FLAG_SIMPLIFY_OPERATORS |
                gfxContext::FLAG_DISABLE_SNAPPING;

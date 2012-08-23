@@ -333,10 +333,10 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   // chrome document.
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   if (!nsContentUtils::IsSystemPrincipal(principal)) {
-    rv = principal->CheckMayLoad(uri, false);
+    rv = principal->CheckMayLoad(uri, false, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XMLHTTPREQUEST,
                                    uri,
                                    principal,
@@ -502,7 +502,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
 
-  PRInt32 charsetSource = kCharsetFromDocTypeDefault;
+  int32_t charsetSource = kCharsetFromDocTypeDefault;
   nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
   TryChannelCharset(aChannel, charsetSource, charset, nullptr);
 

@@ -36,7 +36,7 @@ public:
   }
 
 private:
-  static const PRUint32 kLocalBufferSize = 16;
+  static const uint32_t kLocalBufferSize = 16;
   char_type mLocalBuffer[kLocalBufferSize];
 };
 

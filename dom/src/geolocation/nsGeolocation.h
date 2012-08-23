@@ -73,7 +73,7 @@ class nsGeolocationRequest
 
  private:
 
-  void NotifyError(PRInt16 errorCode);
+  void NotifyError(int16_t errorCode);
   bool mAllowed;
   bool mCleared;
   bool mIsWatchPositionRequest;

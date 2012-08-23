@@ -16,7 +16,7 @@ public:
    /**
     * Give a Unichar, return a nsUGenCategory
     */
-   virtual nsUGenCategory Get(PRUint32 aChar);
+   virtual nsUGenCategory Get(uint32_t aChar);
 };
 
 #endif  /* nsCategoryImp_h__ */

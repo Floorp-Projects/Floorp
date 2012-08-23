@@ -92,6 +92,7 @@ _BROWSER_FILES = \
                  browser_bug427559.js \
                  browser_bug432599.js \
                  browser_bug435035.js \
+                 browser_bug435325.js \
                  browser_bug441778.js \
                  browser_popupNotification.js \
                  browser_bug455852.js \
@@ -159,6 +160,7 @@ _BROWSER_FILES = \
                  browser_bug749738.js \
                  browser_bug763468.js \
                  browser_bug767836.js \
+                 browser_bug783614.js \
                  browser_canonizeURL.js \
                  browser_customize.js \
                  browser_findbarClose.js \
@@ -263,8 +265,11 @@ _BROWSER_FILES = \
                  browser_social_toolbar.js \
                  browser_social_sidebar.js \
                  browser_social_mozSocial_API.js \
+                 browser_social_isVisible.js \
+                 browser_social_chatwindow.js \
                  social_panel.html \
                  social_sidebar.html \
+                 social_chat.html \
                  social_window.html \
                  social_worker.js \
                  $(NULL)

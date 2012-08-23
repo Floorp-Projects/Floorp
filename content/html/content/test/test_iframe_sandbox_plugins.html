@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=341604
+Implement HTML5 sandbox attribute for IFRAMEs
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604 - plugins</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="application/javascript">
+/** Test for Bug 341604 - Implement HTML5 sandbox attribute for IFRAMEs **/
+/** Plugin tests **/
+SimpleTest.waitForExplicitFinish();
+
+function doTest() {
+  // 1) test that a plugin can't be loaded with <embed> inside a sandboxed <iframe>
+  // (done by file_iframe_sandbox_f_if1.html loaded in if1 below)
+  // 2) test that a plugin can't be loaded with <object> inside a sandboxed <iframe>
+  // (done by file_iframe_sandbox_f_if1.html loaded in if1 below)
+  // 3) test that plugin can't be loaded by a sandboxed <iframe> with src pointing to
+  // a document that is handled by a plugin (done by if_2 below)
+  // 4) test that when a plugin is loaded in an unsandboxed iframe, a sandbox attribute
+  // is then added to the iframe and the document containing the plugin is reloaded,
+  // the plugin does not load in the sandboxed iframe (done with if_3 below)
+  // 5) test that when when a sandboxed iframe's sandbox attribute is removed,
+  // and a new document is loaded into the iframe, the plugin loads
+  // (done with if_4 below)
+
+  // these are all handled by checking how many instances of the test plugin are loaded
+  // when this script runs as the onload handler - there should be two instances,
+  // initially the one loaded directly by this page itself, and the one loaded during
+  // test #4 above.
+  var p = document.getElementById('plugin1');
+  var if_1 = document.getElementById('if_1');
+  p.startWatchingInstanceCount();
+
+  if_1.src = 'file_iframe_sandbox_f_if1.html';
+}
+
+function if_1_load() {
+  var if_1 = document.getElementById('if_1');
+
+  if (if_1.src == "about:blank")
+    return;
+
+  // need to wait for plugin to load, if the test fails...
+  SimpleTest.executeSoon(if_1_continue);
+}
+
+function if_1_continue() {
+  // instance count should be 0 (tests #1 and #2 above)
+  var p = document.getElementById('plugin1');
+  is(p.getInstanceCount(), 0, "plugins should not be loaded via <object> or <embed> by a sandboxed iframe");
+
+  var if_2 = document.getElementById('if_2');
+  if_2.src = 'file_iframe_sandbox_f_if2.html';
+
+  SimpleTest.executeSoon(if_2_continue);
+}
+
+function if_2_continue() {
+  // instance count should be 0 (test #3 above)
+  var p = document.getElementById('plugin1');
+
+  is(p.getInstanceCount(), 0, "plugins should not be loaded via a document of a type that requires a plugin embedded in a sandboxed iframe");
+
+  SimpleTest.executeSoon(if_3_test);
+}
+
+function if_3_test() {
+  var if_3 = document.getElementById('if_3');
+  // add sandbox attribute
+  if_3.sandbox = '';
+  if_3.src = 'file_iframe_sandbox_f_if1.html';
+}
+
+function if_3_load() {
+  if (if_3.src == "about:blank")
+    return;
+
+  SimpleTest.executeSoon(if_3_continue);
+}
+
+function if_3_continue() {
+  var p = document.getElementById('plugin1');
+  is(p.getInstanceCount(), 0, "plugins should not be loaded when a sandbox attribute is added" +
+     "to an iframe and a document containing a plugin is then loaded into the iframe");
+
+  SimpleTest.executeSoon(if_4_test);
+}
+
+function if_4_test() {
+  var if_4 = document.getElementById('if_4');
+  // remove sandbox attribute
+  if_4.removeAttribute('sandbox');
+  if_4.src = 'file_iframe_sandbox_f_if1.html';
+}
+
+function if_4_load() {
+  if (if_4.src == "about:blank")
+    return;
+
+  SimpleTest.executeSoon(if_4_continue);
+}
+
+function if_4_continue() {
+  var p = document.getElementById('plugin1');
+  // there are 2 plugin instances in file_iframe_sandbox_if1.html loaded by
+  // if_1, they should successfully load.
+  is(p.getInstanceCount(), 2, "plugins should be loaded when a sandbox attribute is removed " +
+     "from an iframe and a document containing a plugin is then loaded into the iframe");
+
+  p.stopWatchingInstanceCount();
+  SimpleTest.executeSoon(finish_test);
+}
+
+function finish_test() {
+  SimpleTest.finish();
+}
+
+addLoadEvent(doTest);
+</script>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=341604">Mozilla Bug 341604</a> - Implement HTML5 sandbox attribute for IFRAMEs
+<p id="display"></p>
+<div id="content">
+<embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+<iframe id="if_1" sandbox='allow-same-origin' onLoad='if_1_load()' src="about:blank" height="400" width="400"></iframe>
+<iframe id="if_2" sandbox='allow-same-origin' src="about:blank" height="400" width="400"></iframe>
+<iframe id="if_3" src="about:blank" onload='if_3_load()' height="400" width="400"></iframe>
+<iframe id="if_4" sandbox='allow-same-origin' onload='if_4_load()' src="about:blank" height="400" width="400"></iframe>
+</div>
+</body>
+</html>

@@ -7,6 +7,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/ProcessedStack.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
 #include "nsStackWalk.h"
@@ -41,7 +42,7 @@ const char kTelemetryPrefName[] = "toolkit.telemetry.enabled";
 Monitor* gMonitor;
 
 // The timeout preference, in seconds.
-PRInt32 gTimeout;
+int32_t gTimeout;
 
 PRThread* gThread;
 
@@ -57,17 +58,17 @@ volatile PRIntervalTime gTimestamp = PR_INTERVAL_NO_WAIT;
 static HANDLE winMainThreadHandle = NULL;
 
 // Default timeout for reporting chrome hangs to Telemetry (5 seconds)
-static const PRInt32 DEFAULT_CHROME_HANG_INTERVAL = 5;
+static const int32_t DEFAULT_CHROME_HANG_INTERVAL = 5;
 
 // Maximum number of PCs to gather from the stack
-static const PRInt32 MAX_CALL_STACK_PCS = 400;
+static const int32_t MAX_CALL_STACK_PCS = 400;
 #endif
 
 // PrefChangedFunc
 int
 PrefChanged(const char*, void*)
 {
-  PRInt32 newval = Preferences::GetInt(kHangMonitorPrefName);
+  int32_t newval = Preferences::GetInt(kHangMonitorPrefName);
 #ifdef REPORT_CHROME_HANGS
   // Monitor chrome hangs on the profiling branch if Telemetry enabled
   if (newval == 0) {
@@ -112,75 +113,32 @@ static void
 ChromeStackWalker(void *aPC, void *aSP, void *aClosure)
 {
   MOZ_ASSERT(aClosure);
-  Telemetry::HangStack *callStack =
-    reinterpret_cast< Telemetry::HangStack* >(aClosure);
-
-  if (callStack->Length() < MAX_CALL_STACK_PCS)
-    callStack->AppendElement(reinterpret_cast<uintptr_t>(aPC));
+  std::vector<uintptr_t> *stack =
+    static_cast<std::vector<uintptr_t>*>(aClosure);
+  if (stack->size() == MAX_CALL_STACK_PCS)
+    return;
+  MOZ_ASSERT(stack->size() < MAX_CALL_STACK_PCS);
+  stack->push_back(reinterpret_cast<uintptr_t>(aPC));
 }
 
 static void
-GetChromeHangReport(Telemetry::HangStack &callStack, SharedLibraryInfo &moduleMap)
+GetChromeHangReport(Telemetry::ProcessedStack &aStack)
 {
   MOZ_ASSERT(winMainThreadHandle);
 
   // The thread we're about to suspend might have the alloc lock
   // so allocate ahead of time
-  callStack.SetCapacity(MAX_CALL_STACK_PCS);
-
+  std::vector<uintptr_t> rawStack;
+  rawStack.reserve(MAX_CALL_STACK_PCS);
   DWORD ret = ::SuspendThread(winMainThreadHandle);
-  if (ret == -1) {
-    callStack.Clear();
-    moduleMap.Clear();
+  if (ret == -1)
     return;
-  }
-  NS_StackWalk(ChromeStackWalker, 0, &callStack,
+  NS_StackWalk(ChromeStackWalker, 0, reinterpret_cast<void*>(&rawStack),
                reinterpret_cast<uintptr_t>(winMainThreadHandle));
   ret = ::ResumeThread(winMainThreadHandle);
-  if (ret == -1) {
-    callStack.Clear();
-    moduleMap.Clear();
+  if (ret == -1)
     return;
-  }
-
-  moduleMap = SharedLibraryInfo::GetInfoForSelf();
-  moduleMap.SortByAddress();
-
-  // Remove all modules not referenced by a PC on the stack
-  Telemetry::HangStack sortedStack = callStack;
-  sortedStack.Sort();
-
-  size_t moduleIndex = 0;
-  size_t stackIndex = 0;
-  bool unreferencedModule = true;
-  while (stackIndex < sortedStack.Length() && moduleIndex < moduleMap.GetSize()) {
-    uintptr_t pc = sortedStack[stackIndex];
-    SharedLibrary& module = moduleMap.GetEntry(moduleIndex);
-    uintptr_t moduleStart = module.GetStart();
-    uintptr_t moduleEnd = module.GetEnd() - 1;
-    if (moduleStart <= pc && pc <= moduleEnd) {
-      // If the current PC is within the current module, mark module as used
-      unreferencedModule = false;
-      ++stackIndex;
-    } else if (pc > moduleEnd) {
-      if (unreferencedModule) {
-        // Remove module if no PCs within its address range
-        moduleMap.RemoveEntries(moduleIndex, moduleIndex + 1);
-      } else {
-        // Module was referenced on stack, but current PC belongs to later module
-        unreferencedModule = true;
-        ++moduleIndex;
-      }
-    } else {
-      // PC does not belong to any module
-      ++stackIndex;
-    }
-  }
-
-  // Clean up remaining unreferenced modules, i.e. module addresses > max(pc)
-  if (moduleIndex + 1 < moduleMap.GetSize()) {
-    moduleMap.RemoveEntries(moduleIndex + 1, moduleMap.GetSize());
-  }
+  aStack = Telemetry::GetStackAndModules(rawStack, false);
 }
 #endif
 
@@ -198,8 +156,7 @@ ThreadMain(void*)
   int waitCount = 0;
 
 #ifdef REPORT_CHROME_HANGS
-  Telemetry::HangStack hangStack;
-  SharedLibraryInfo hangModuleMap;
+  Telemetry::ProcessedStack stack;
 #endif
 
   while (true) {
@@ -224,10 +181,10 @@ ThreadMain(void*)
       ++waitCount;
       if (waitCount == 2) {
 #ifdef REPORT_CHROME_HANGS
-        GetChromeHangReport(hangStack, hangModuleMap);
+        GetChromeHangReport(stack);
 #else
-        PRInt32 delay =
-          PRInt32(PR_IntervalToSeconds(now - timestamp));
+        int32_t delay =
+          int32_t(PR_IntervalToSeconds(now - timestamp));
         if (delay > gTimeout) {
           MonitorAutoUnlock unlock(*gMonitor);
           Crash();
@@ -238,10 +195,9 @@ ThreadMain(void*)
     else {
 #ifdef REPORT_CHROME_HANGS
       if (waitCount >= 2) {
-        PRUint32 hangDuration = PR_IntervalToSeconds(now - lastTimestamp);
-        Telemetry::RecordChromeHang(hangDuration, hangStack, hangModuleMap);
-        hangStack.Clear();
-        hangModuleMap.Clear();
+        uint32_t hangDuration = PR_IntervalToSeconds(now - lastTimestamp);
+        Telemetry::RecordChromeHang(hangDuration, stack);
+        stack.Clear();
       }
 #endif
       lastTimestamp = timestamp;
@@ -351,7 +307,7 @@ NotifyActivity(ActivityType activityType)
   }
 
   // Calculate the cumulative amount of lag time since the last UI message
-  static PRUint32 cumulativeUILagMS = 0;
+  static uint32_t cumulativeUILagMS = 0;
   switch(activityType) {
   case kActivityNoUIAVail:
     cumulativeUILagMS = 0;
@@ -375,7 +331,7 @@ NotifyActivity(ActivityType activityType)
   if (activityType == kUIActivity) {
     // The minimum amount of lag time that we should report for telemetry data.
     // Mozilla's UI responsiveness goal is 50ms
-    static const PRUint32 kUIResponsivenessThresholdMS = 50;
+    static const uint32_t kUIResponsivenessThresholdMS = 50;
     if (cumulativeUILagMS > kUIResponsivenessThresholdMS) {
       mozilla::Telemetry::Accumulate(mozilla::Telemetry::EVENTLOOP_UI_LAG_EXP_MS,
                                      cumulativeUILagMS);

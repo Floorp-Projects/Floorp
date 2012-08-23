@@ -58,36 +58,36 @@ public:
         mLocalExtraField = NULL;
     }
 
-    PRUint32 mCRC;
-    PRUint32 mCSize;
-    PRUint32 mUSize;
-    PRUint32 mEAttr;
-    PRUint32 mOffset;
-    PRUint32 mFieldLength;
-    PRUint32 mLocalFieldLength;
-    PRUint16 mVersionMade;
-    PRUint16 mVersionNeeded;
-    PRUint16 mFlags;
-    PRUint16 mMethod;
-    PRUint16 mTime;
-    PRUint16 mDate;
-    PRUint16 mDisk;
-    PRUint16 mIAttr;
+    uint32_t mCRC;
+    uint32_t mCSize;
+    uint32_t mUSize;
+    uint32_t mEAttr;
+    uint32_t mOffset;
+    uint32_t mFieldLength;
+    uint32_t mLocalFieldLength;
+    uint16_t mVersionMade;
+    uint16_t mVersionNeeded;
+    uint16_t mFlags;
+    uint16_t mMethod;
+    uint16_t mTime;
+    uint16_t mDate;
+    uint16_t mDisk;
+    uint16_t mIAttr;
     bool mInited;
     bool mWriteOnClose;
     nsCString mName;
     nsCString mComment;
-    nsAutoArrayPtr<PRUint8> mExtraField;
-    nsAutoArrayPtr<PRUint8> mLocalExtraField;
+    nsAutoArrayPtr<uint8_t> mExtraField;
+    nsAutoArrayPtr<uint8_t> mLocalExtraField;
 
-    void Init(const nsACString & aPath, PRTime aDate, PRUint32 aAttr,
-              PRUint32 aOffset);
-    PRUint32 GetFileHeaderLength();
+    void Init(const nsACString & aPath, PRTime aDate, uint32_t aAttr,
+              uint32_t aOffset);
+    uint32_t GetFileHeaderLength();
     nsresult WriteFileHeader(nsIOutputStream *aStream);
-    PRUint32 GetCDSHeaderLength();
+    uint32_t GetCDSHeaderLength();
     nsresult WriteCDSHeader(nsIOutputStream *aStream);
     nsresult ReadCDSHeader(nsIInputStream *aStream);
-    const PRUint8 * GetExtraField(PRUint16 aTag, bool aLocal, PRUint16 *aBlockSize);
+    const uint8_t * GetExtraField(uint16_t aTag, bool aLocal, uint16_t *aBlockSize);
 };
 
 #endif

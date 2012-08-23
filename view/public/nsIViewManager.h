@@ -199,7 +199,7 @@ public:
    *        true if the view should be topmost when compared with 
    *        other z-index:auto views.
    */
-  NS_IMETHOD  SetViewZIndex(nsIView *aView, bool aAutoZIndex, PRInt32 aZindex, bool aTopMost = false) = 0;
+  NS_IMETHOD  SetViewZIndex(nsIView *aView, bool aAutoZIndex, int32_t aZindex, bool aTopMost = false) = 0;
 
   /**
    * Set whether the view "floats" above all other views,
@@ -286,7 +286,7 @@ public:
    *
    * @param aTime Last user event time in microseconds
    */
-  NS_IMETHOD GetLastUserEventTime(PRUint32& aTime)=0;
+  NS_IMETHOD GetLastUserEventTime(uint32_t& aTime)=0;
 
   /**
    * Find the nearest display root view for the view aView. This is the view for

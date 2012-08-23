@@ -8,5 +8,8 @@
             <intent-filter>
                 <action android:name="org.mozilla.gecko.WEBAPP@APPNUM@" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.ACTION_ALERT_CALLBACK" />
+            </intent-filter>
         </activity>
 

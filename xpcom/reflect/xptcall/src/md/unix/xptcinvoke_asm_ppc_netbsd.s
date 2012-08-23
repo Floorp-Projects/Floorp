@@ -24,8 +24,8 @@
 	.type  XPTC_InvokeByIndex,@function
 
 #
-# XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-#                    PRUint32 paramCount, nsXPTCVariant* params)
+# XPTC_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
+#                    uint32_t paramCount, nsXPTCVariant* params)
 #
 
 XPTC_InvokeByIndex:

@@ -25,14 +25,14 @@ struct nsSize : public mozilla::gfx::BaseSize<nscoord, nsSize> {
   inline nsIntSize ToNearestPixels(nscoord aAppUnitsPerPixel) const;
 
   // Converts this size from aFromAPP, an appunits per pixel ratio, to aToAPP.
-  inline nsSize ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const;
+  inline nsSize ConvertAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
 };
 
-struct nsIntSize : public mozilla::gfx::BaseSize<PRInt32, nsIntSize> {
-  typedef mozilla::gfx::BaseSize<PRInt32, nsIntSize> Super;
+struct nsIntSize : public mozilla::gfx::BaseSize<int32_t, nsIntSize> {
+  typedef mozilla::gfx::BaseSize<int32_t, nsIntSize> Super;
 
   nsIntSize() : Super() {}
-  nsIntSize(PRInt32 aWidth, PRInt32 aHeight) : Super(aWidth, aHeight) {}
+  nsIntSize(int32_t aWidth, int32_t aHeight) : Super(aWidth, aHeight) {}
 
   inline nsSize ToAppUnits(nscoord aAppUnitsPerPixel) const;
 };
@@ -53,7 +53,7 @@ nsSize::ToNearestPixels(nscoord aAppUnitsPerPixel) const
 }
 
 inline nsSize
-nsSize::ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const {
+nsSize::ConvertAppUnits(int32_t aFromAPP, int32_t aToAPP) const {
   if (aFromAPP != aToAPP) {
     nsSize size;
     size.width = NSToCoordRound(NSCoordScale(width, aFromAPP, aToAPP));

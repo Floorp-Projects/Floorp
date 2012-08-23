@@ -197,7 +197,7 @@ NS_IMETHODIMP nsCMSMessage::GetEncryptionCert(nsIX509Cert **ecert)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, PRUint32 aDigestDataLen)
+NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, uint32_t aDigestDataLen)
 {
   if (!aDigestData || !aDigestDataLen)
     return NS_ERROR_FAILURE;
@@ -205,7 +205,7 @@ NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, 
   return CommonVerifySignature(aDigestData, aDigestDataLen);
 }
 
-nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint32 aDigestDataLen)
+nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, uint32_t aDigestDataLen)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -215,7 +215,7 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint3
   NSSCMSContentInfo *cinfo = nullptr;
   NSSCMSSignedData *sigd = nullptr;
   NSSCMSSignerInfo *si;
-  PRInt32 nsigners;
+  int32_t nsigners;
   nsresult rv = NS_ERROR_FAILURE;
   nsRefPtr<nsCERTValInParamWrapper> survivingParams;
   nsCOMPtr<nsINSSComponent> inss;
@@ -355,7 +355,7 @@ NS_IMETHODIMP nsCMSMessage::AsyncVerifySignature(
 
 NS_IMETHODIMP nsCMSMessage::AsyncVerifyDetachedSignature(
                               nsISMimeVerificationListener *aListener,
-                              unsigned char* aDigestData, PRUint32 aDigestDataLen)
+                              unsigned char* aDigestData, uint32_t aDigestDataLen)
 {
   if (!aDigestData || !aDigestDataLen)
     return NS_ERROR_FAILURE;
@@ -364,7 +364,7 @@ NS_IMETHODIMP nsCMSMessage::AsyncVerifyDetachedSignature(
 }
 
 nsresult nsCMSMessage::CommonAsyncVerifySignature(nsISMimeVerificationListener *aListener,
-                                                  unsigned char* aDigestData, PRUint32 aDigestDataLen)
+                                                  unsigned char* aDigestData, uint32_t aDigestDataLen)
 {
   nsSMimeVerificationJob *job = new nsSMimeVerificationJob;
   if (!job)
@@ -427,7 +427,7 @@ public:
 
     if (mCerts)
     {
-      for (PRUint32 i=0; i < mSize; i++) {
+      for (uint32_t i=0; i < mSize; i++) {
         if (mCerts[i]) {
           CERT_DestroyCertificate(mCerts[i]);
         }
@@ -438,7 +438,7 @@ public:
       PORT_FreeArena(mPoolp, false);
   }
 
-  bool allocate(PRUint32 count)
+  bool allocate(uint32_t count)
   {
     // only allow allocation once
     if (mPoolp)
@@ -460,14 +460,14 @@ public:
       return false;
 
     // null array, including zero termination
-    for (PRUint32 i = 0; i < count+1; i++) {
+    for (uint32_t i = 0; i < count+1; i++) {
       mCerts[i] = nullptr;
     }
 
     return true;
   }
   
-  void set(PRUint32 i, CERTCertificate *c)
+  void set(uint32_t i, CERTCertificate *c)
   {
     nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown())
@@ -483,7 +483,7 @@ public:
     mCerts[i] = CERT_DupCertificate(c);
   }
   
-  CERTCertificate *get(PRUint32 i)
+  CERTCertificate *get(uint32_t i)
   {
     nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown())
@@ -507,7 +507,7 @@ public:
 private:
   CERTCertificate **mCerts;
   PLArenaPool *mPoolp;
-  PRUint32 mSize;
+  uint32_t mSize;
 };
 
 NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
@@ -523,12 +523,12 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
   nsZeroTerminatedCertArray recipientCerts;
   SECOidTag bulkAlgTag;
   int keySize;
-  PRUint32 i;
+  uint32_t i;
   nsCOMPtr<nsIX509Cert2> nssRecipientCert;
   nsresult rv = NS_ERROR_FAILURE;
 
   // Check the recipient certificates //
-  PRUint32 recipientCertCount;
+  uint32_t recipientCertCount;
   aRecipientCerts->GetLength(&recipientCertCount);
   PR_ASSERT(recipientCertCount > 0);
 
@@ -605,7 +605,7 @@ loser:
   return rv;
 }
 
-NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert* aEncryptCert, unsigned char* aDigestData, PRUint32 aDigestDataLen)
+NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert* aEncryptCert, unsigned char* aDigestData, uint32_t aDigestDataLen)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -803,7 +803,7 @@ NS_IMETHODIMP nsCMSDecoder::Start(NSSCMSContentCallback cb, void * arg)
 }
 
 /* void update (in string bug, in long len); */
-NS_IMETHODIMP nsCMSDecoder::Update(const char *buf, PRInt32 len)
+NS_IMETHODIMP nsCMSDecoder::Update(const char *buf, int32_t len)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -889,7 +889,7 @@ NS_IMETHODIMP nsCMSEncoder::Start(nsICMSMessage *aMsg, NSSCMSContentCallback cb,
 }
 
 /* void update (in string aBuf, in long aLen); */
-NS_IMETHODIMP nsCMSEncoder::Update(const char *aBuf, PRInt32 aLen)
+NS_IMETHODIMP nsCMSEncoder::Update(const char *aBuf, int32_t aLen)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())

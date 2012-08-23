@@ -61,7 +61,7 @@ public:
 #endif
   
   // we are always flexible
-  virtual bool GetDefaultFlex(PRInt32& aFlex) { aFlex = 1; return true; }
+  virtual bool GetDefaultFlex(int32_t& aFlex) { aFlex = 1; return true; }
 
 };
 */

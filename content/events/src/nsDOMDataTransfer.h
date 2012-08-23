@@ -59,20 +59,20 @@ protected:
   // that was started without using a data transfer, either an external drag,
   // that is, a drag where the source is another application, or a drag
   // started by calling the drag service directly.
-  nsDOMDataTransfer(PRUint32 aEventType);
+  nsDOMDataTransfer(uint32_t aEventType);
 
   // this constructor is used only by the Clone method to copy the fields as
   // needed to a new data transfer.
-  nsDOMDataTransfer(PRUint32 aEventType,
-                    const PRUint32 aEffectAllowed,
+  nsDOMDataTransfer(uint32_t aEventType,
+                    const uint32_t aEffectAllowed,
                     bool aCursorState,
                     bool aIsExternal,
                     bool aUserCancelled,
                     bool aIsCrossDomainSubFrameDrop,
                     nsTArray<nsTArray<TransferItem> >& aItems,
                     nsIDOMElement* aDragImage,
-                    PRUint32 aDragImageX,
-                    PRUint32 aDragImageY);
+                    uint32_t aDragImageX,
+                    uint32_t aDragImageY);
 
   ~nsDOMDataTransfer()
   {
@@ -104,7 +104,7 @@ public:
   // an nsISupports or null otherwise.
   bool ConvertFromVariant(nsIVariant* aVariant,
                             nsISupports** aSupports,
-                            PRUint32* aLength);
+                            uint32_t* aLength);
 
   // clears all of the data
   void ClearAll();
@@ -113,13 +113,13 @@ public:
   // aData may be null when called from CacheExternalFormats.
   nsresult SetDataWithPrincipal(const nsAString& aFormat,
                                 nsIVariant* aData,
-                                PRUint32 aIndex,
+                                uint32_t aIndex,
                                 nsIPrincipal* aPrincipal);
 
 protected:
 
   // returns a weak reference to the drag image
-  nsIDOMElement* GetDragImage(PRInt32* aX, PRInt32* aY)
+  nsIDOMElement* GetDragImage(int32_t* aX, int32_t* aY)
   {
     *aX = mDragImageX;
     *aY = mDragImageY;
@@ -139,15 +139,15 @@ protected:
 
   // fills in the data field of aItem with the data from the drag service for
   // a given index.
-  void FillInExternalDragData(TransferItem& aItem, PRUint32 aIndex);
+  void FillInExternalDragData(TransferItem& aItem, uint32_t aIndex);
 
   // the event type this data transfer is for. This will correspond to an
   // event->message value.
-  PRUint32 mEventType;
+  uint32_t mEventType;
 
   // the drop effect and effect allowed
-  PRUint32 mDropEffect;
-  PRUint32 mEffectAllowed;
+  uint32_t mDropEffect;
+  uint32_t mEffectAllowed;
 
   // Indicates the behavior of the cursor during drag operations
   bool mCursorState;
@@ -179,8 +179,8 @@ protected:
   // the custom drag image and coordinates within the image. If mDragImage is
   // null, the default image is created from the drag target.
   nsCOMPtr<nsIDOMElement> mDragImage;
-  PRUint32 mDragImageX;
-  PRUint32 mDragImageY;
+  uint32_t mDragImageX;
+  uint32_t mDragImageY;
 };
 
 #endif // nsDOMDataTransfer_h__

@@ -65,15 +65,15 @@ NS_IMETHODIMP
 InputTestConsumer::OnDataAvailable(nsIRequest *request, 
                                    nsISupports* context,
                                    nsIInputStream *aIStream, 
-                                   PRUint32 aSourceOffset,
-                                   PRUint32 aLength)
+                                   uint32_t aSourceOffset,
+                                   uint32_t aLength)
 {
   char buf[1025];
-  PRUint32 amt, size;
+  uint32_t amt, size;
   nsresult rv;
 
   while (aLength) {
-    size = NS_MIN<PRUint32>(aLength, sizeof(buf));
+    size = NS_MIN<uint32_t>(aLength, sizeof(buf));
     rv = aIStream->Read(buf, size, &amt);
     if (NS_FAILED(rv)) {
       NS_ASSERTION((NS_BASE_STREAM_WOULD_BLOCK != rv), 

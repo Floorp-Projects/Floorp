@@ -11,19 +11,19 @@ const txXPathNode& txForwardContext::getContextNode()
     return mContextNode;
 }
 
-PRUint32 txForwardContext::size()
+uint32_t txForwardContext::size()
 {
-    return (PRUint32)mContextSet->size();
+    return (uint32_t)mContextSet->size();
 }
 
-PRUint32 txForwardContext::position()
+uint32_t txForwardContext::position()
 {
-    PRInt32 pos = mContextSet->indexOf(mContextNode);
+    int32_t pos = mContextSet->indexOf(mContextNode);
     NS_ASSERTION(pos >= 0, "Context is not member of context node list.");
-    return (PRUint32)(pos + 1);
+    return (uint32_t)(pos + 1);
 }
 
-nsresult txForwardContext::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
+nsresult txForwardContext::getVariable(int32_t aNamespace, nsIAtom* aLName,
                                        txAExprResult*& aResult)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");

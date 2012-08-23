@@ -35,6 +35,17 @@ using namespace mozilla;
 
 nsIFile *nsFilePicker::mPrevDisplayDirectory = nullptr;
 
+// Some GObject functions expect functions for gpointer arguments.
+// gpointer is void* but C++ doesn't like casting functions to void*.
+template<class T> static inline gpointer
+FuncToGpointer(T aFunction)
+{
+    return reinterpret_cast<gpointer>
+        (reinterpret_cast<uintptr_t>
+         // This cast just provides a warning if T is not a function.
+         (reinterpret_cast<void (*)()>(aFunction)));
+}
+
 // XXXdholbert -- this function is duplicated in nsPrintDialogGTK.cpp
 // and needs to be unified in some generic utility class.
 static GtkWindow *
@@ -67,7 +78,7 @@ nsFilePicker::Shutdown()
 }
 
 static GtkFileChooserAction
-GetGtkFileChooserAction(PRInt16 aMode)
+GetGtkFileChooserAction(int16_t aMode)
 {
   GtkFileChooserAction action;
 
@@ -177,6 +188,7 @@ NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 nsFilePicker::nsFilePicker()
   : mMode(nsIFilePicker::modeOpen),
     mSelectedType(0),
+    mRunning(false),
     mAllowURLs(false)
 {
 }
@@ -220,7 +232,7 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
   GtkFileFilter *filter = gtk_file_chooser_get_filter(GTK_FILE_CHOOSER(file_chooser));
   GSList *filter_list = gtk_file_chooser_list_filters(GTK_FILE_CHOOSER(file_chooser));
 
-  mSelectedType = static_cast<PRInt16>(g_slist_index(filter_list, filter));
+  mSelectedType = static_cast<int16_t>(g_slist_index(filter_list, filter));
   g_slist_free(filter_list);
 
   // Remember last used directory.
@@ -238,7 +250,7 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
 void
 nsFilePicker::InitNative(nsIWidget *aParent,
                          const nsAString& aTitle,
-                         PRInt16 aMode)
+                         int16_t aMode)
 {
   mParentWidget = aParent;
   mTitle.Assign(aTitle);
@@ -246,7 +258,7 @@ nsFilePicker::InitNative(nsIWidget *aParent,
 }
 
 NS_IMETHODIMP
-nsFilePicker::AppendFilters(PRInt32 aFilterMask)
+nsFilePicker::AppendFilters(int32_t aFilterMask)
 {
   mAllowURLs = !!(aFilterMask & filterAllowURLs);
   return nsBaseFilePicker::AppendFilters(aFilterMask);
@@ -302,7 +314,7 @@ nsFilePicker::GetDefaultExtension(nsAString& aExtension)
 }
 
 NS_IMETHODIMP
-nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
+nsFilePicker::GetFilterIndex(int32_t *aFilterIndex)
 {
   *aFilterIndex = mSelectedType;
 
@@ -310,7 +322,7 @@ nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
 }
 
 NS_IMETHODIMP
-nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
+nsFilePicker::SetFilterIndex(int32_t aFilterIndex)
 {
   mSelectedType = aFilterIndex;
 
@@ -358,9 +370,28 @@ nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 }
 
 NS_IMETHODIMP
-nsFilePicker::Show(PRInt16 *aReturn)
+nsFilePicker::Show(int16_t *aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
+
+  nsresult rv = Open(nullptr);
+  if (NS_FAILED(rv))
+    return rv;
+
+  while (mRunning) {
+    g_main_context_iteration(nullptr, TRUE);
+  }
+
+  *aReturn = mResult;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
+{
+  // Can't show two dialogs concurrently with the same filepicker
+  if (mRunning)
+    return NS_ERROR_NOT_AVAILABLE;
 
   nsXPIDLCString title;
   title.Adopt(ToNewUTF8String(mTitle));
@@ -398,8 +429,13 @@ nsFilePicker::Show(PRInt16 *aReturn)
     g_signal_connect(file_chooser, "update-preview", G_CALLBACK(UpdateFilePreviewWidget), img_preview);
   }
 
-  if (parent_widget && parent_widget->group) {
-    gtk_window_group_add_window(parent_widget->group, GTK_WINDOW(file_chooser));
+  GtkWindow *window = GTK_WINDOW(file_chooser);
+  gtk_window_set_modal(window, TRUE);
+  if (parent_widget) {
+    gtk_window_set_destroy_with_parent(window, TRUE);
+    if (parent_widget->group) {
+      gtk_window_group_add_window(parent_widget->group, window);
+    }
   }
 
   NS_ConvertUTF16toUTF8 defaultName(mDefault);
@@ -438,8 +474,8 @@ nsFilePicker::Show(PRInt16 *aReturn)
 
   gtk_dialog_set_default_response(GTK_DIALOG(file_chooser), GTK_RESPONSE_ACCEPT);
 
-  PRInt32 count = mFilters.Length();
-  for (PRInt32 i = 0; i < count; ++i) {
+  int32_t count = mFilters.Length();
+  for (int32_t i = 0; i < count; ++i) {
     // This is fun... the GTK file picker does not accept a list of filters
     // so we need to split out each string, and add it manually.
 
@@ -475,13 +511,43 @@ nsFilePicker::Show(PRInt16 *aReturn)
   }
 
   gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(file_chooser), TRUE);
-  gint response = gtk_dialog_run(GTK_DIALOG(file_chooser));
 
+  mRunning = true;
+  mCallback = aCallback;
+  NS_ADDREF_THIS();
+  g_signal_connect(file_chooser, "response", G_CALLBACK(OnResponse), this);
+  g_signal_connect(file_chooser, "destroy", G_CALLBACK(OnDestroy), this);
+  gtk_widget_show(file_chooser);
+
+  return NS_OK;
+}
+
+/* static */ void
+nsFilePicker::OnResponse(GtkWidget* file_chooser, gint response_id,
+                         gpointer user_data)
+{
+  static_cast<nsFilePicker*>(user_data)->
+    Done(file_chooser, response_id);
+}
+
+/* static */ void
+nsFilePicker::OnDestroy(GtkWidget* file_chooser, gpointer user_data)
+{
+  static_cast<nsFilePicker*>(user_data)->
+    Done(file_chooser, GTK_RESPONSE_CANCEL);
+}
+
+void
+nsFilePicker::Done(GtkWidget* file_chooser, gint response)
+{
+  mRunning = false;
+
+  int16_t result;
   switch (response) {
     case GTK_RESPONSE_OK:
     case GTK_RESPONSE_ACCEPT:
     ReadValuesFromFileChooser(file_chooser);
-    *aReturn = nsIFilePicker::returnOK;
+    result = nsIFilePicker::returnOK;
     if (mMode == nsIFilePicker::modeSave) {
       nsCOMPtr<nsIFile> file;
       GetFile(getter_AddRefs(file));
@@ -489,7 +555,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
         bool exists = false;
         file->Exists(&exists);
         if (exists)
-          *aReturn = nsIFilePicker::returnReplace;
+          result = nsIFilePicker::returnReplace;
       }
     }
     break;
@@ -497,16 +563,32 @@ nsFilePicker::Show(PRInt16 *aReturn)
     case GTK_RESPONSE_CANCEL:
     case GTK_RESPONSE_CLOSE:
     case GTK_RESPONSE_DELETE_EVENT:
-    *aReturn = nsIFilePicker::returnCancel;
+    result = nsIFilePicker::returnCancel;
     break;
 
     default:
     NS_WARNING("Unexpected response");
-    *aReturn = nsIFilePicker::returnCancel;
+    result = nsIFilePicker::returnCancel;
     break;
   }
 
+  // A "response" signal won't be sent again but "destroy" will be.
+  g_signal_handlers_disconnect_by_func(file_chooser,
+                                       FuncToGpointer(OnDestroy), this);
+
+  // When response_id is GTK_RESPONSE_DELETE_EVENT or when called from
+  // OnDestroy, the widget would be destroyed anyway but it is fine if
+  // gtk_widget_destroy is called more than once.  gtk_widget_destroy has
+  // requests that any remaining references be released, but the reference
+  // count will not be decremented again if GtkWindow's reference has already
+  // been released.
   gtk_widget_destroy(file_chooser);
 
-  return NS_OK;
+  if (mCallback) {
+    mCallback->Done(result);
+    mCallback = nullptr;
+  } else {
+    mResult = result;
+  }
+  NS_RELEASE_THIS();
 }

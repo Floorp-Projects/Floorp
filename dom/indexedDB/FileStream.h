@@ -48,14 +48,14 @@ public:
   Close();
 
   NS_IMETHOD
-  Available(PRUint64* _retval);
+  Available(uint64_t* _retval);
 
   NS_IMETHOD
-  Read(char* aBuf, PRUint32 aCount, PRUint32* _retval);
+  Read(char* aBuf, uint32_t aCount, uint32_t* _retval);
 
   NS_IMETHOD
-  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, PRUint32 aCount,
-               PRUint32* _retval);
+  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, uint32_t aCount,
+               uint32_t* _retval);
 
   NS_IMETHOD
   IsNonBlocking(bool* _retval);
@@ -68,14 +68,14 @@ public:
   Flush();
 
   NS_IMETHOD
-  Write(const char* aBuf, PRUint32 aCount, PRUint32* _retval);
+  Write(const char* aBuf, uint32_t aCount, uint32_t* _retval);
 
   NS_IMETHOD
-  WriteFrom(nsIInputStream* aFromStream, PRUint32 aCount, PRUint32* _retval);
+  WriteFrom(nsIInputStream* aFromStream, uint32_t aCount, uint32_t* _retval);
 
   NS_IMETHOD
-  WriteSegments(nsReadSegmentFun aReader, void* aClosure, PRUint32 aCount,
-                PRUint32* _retval);
+  WriteSegments(nsReadSegmentFun aReader, void* aClosure, uint32_t aCount,
+                uint32_t* _retval);
 
   // IsNonBlocking() already declared
 
@@ -122,7 +122,7 @@ protected:
   /**
    * Flags describing our behavior.  See the IDL file for possible values.
    */
-  PRInt32 mFlags;
+  int32_t mFlags;
 
   /**
    * Whether we have a pending open (see FLAGS_DEFER_OPEN in the IDL file).

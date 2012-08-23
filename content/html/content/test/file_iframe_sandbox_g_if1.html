@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="text/javascript">
+  function ok(result, desc) {
+    window.parent.postMessage({ok: result, desc: desc}, "*");
+  }
+
+  function doStuff() {
+    // test data URI
+
+    // self.onmessage = function(event) {
+    //   self.postMessage('make it so');
+    // };
+    var data_url = "data:text/plain;charset=utf-8;base64,c2VsZi5vbm1lc3NhZ2UgPSBmdW5jdGlvbihldmVudCkgeyAgDQogICAgc2VsZi5wb3N0TWVzc2FnZSgnbWFrZSBpdCBzbycpOyAgDQp9Ow==";
+    var worker_data = new Worker(data_url);
+    worker_data.addEventListener('message', function(event) {
+      ok(true, "a worker in a sandboxed document should be able to be loaded from a data: URI");
+    }, false);
+
+    worker_data.postMessage("engage!");
+
+    // test a blob URI we created (will have the same null principal
+    // as us
+    var b = new Blob(["onmessage = function(event) { self.postMessage('make it so');};"]);
+
+    var blobURL = URL.createObjectURL(b);
+
+    var worker_blob = new Worker(blobURL);
+
+    worker_blob.addEventListener('message', function(event) {
+      ok(true, "a worker in a sandboxed document should be able to be loaded from a blob URI " +
+         "created by that sandboxed document");
+    }, false);
+
+    worker_blob.postMessage("engage!");
+
+    // test loading with relative url - this should fail since we are
+    // sandboxed and have a null principal
+    var worker_js = new Worker('file_iframe_sandbox_worker.js');
+
+    worker_js.onerror = function(error) {
+      ok(true, "a worker in a sandboxed document should not be able to load from a relative URI");
+    }
+
+    worker_js.addEventListener('message', function(event) {
+      ok(false, "a worker in a sandboxed document should not be able to load from a relative URI");
+    }, false);
+
+    worker_js.postMessage('engage');
+  }
+</script>
+<body onload='doStuff();'>
+  I am sandboxed but with "allow-scripts"
+</body>
+</html>

@@ -14,11 +14,11 @@ namespace mozilla {
  * We represent media times in 64-bit fixed point. So 1 MediaTime is
  * 1/(2^MEDIA_TIME_FRAC_BITS) seconds.
  */
-typedef PRInt64 MediaTime;
-const PRInt64 MEDIA_TIME_FRAC_BITS = 20;
-const PRInt64 MEDIA_TIME_MAX = PR_INT64_MAX;
+typedef int64_t MediaTime;
+const int64_t MEDIA_TIME_FRAC_BITS = 20;
+const int64_t MEDIA_TIME_MAX = PR_INT64_MAX;
 
-inline MediaTime MillisecondsToMediaTime(PRInt32 aMS)
+inline MediaTime MillisecondsToMediaTime(int32_t aMS)
 {
   return (MediaTime(aMS) << MEDIA_TIME_FRAC_BITS)/1000;
 }
@@ -40,8 +40,8 @@ inline double MediaTimeToSeconds(MediaTime aTime)
  * audio sample rate). We want to make sure that multiplying TrackTicks by
  * 2^MEDIA_TIME_FRAC_BITS doesn't overflow, so we set its max accordingly.
  */
-typedef PRInt64 TrackTicks;
-const PRInt64 TRACK_TICKS_MAX = PR_INT64_MAX >> MEDIA_TIME_FRAC_BITS;
+typedef int64_t TrackTicks;
+const int64_t TRACK_TICKS_MAX = PR_INT64_MAX >> MEDIA_TIME_FRAC_BITS;
 
 /**
  * A MediaSegment is a chunk of media data sequential in time. Different
@@ -71,17 +71,22 @@ public:
   /**
    * Gets the total duration of the segment.
    */
-  TrackTicks GetDuration() { return mDuration; }
-  Type GetType() { return mType; }
+  TrackTicks GetDuration() const { return mDuration; }
+  Type GetType() const { return mType; }
 
   /**
    * Create a MediaSegment of the same type.
    */
-  virtual MediaSegment* CreateEmptyClone() = 0;
+  virtual MediaSegment* CreateEmptyClone() const = 0;
   /**
    * Moves contents of aSource to the end of this segment.
    */
   virtual void AppendFrom(MediaSegment* aSource) = 0;
+  /**
+   * Append a slice of aSource to this segment.
+   */
+  virtual void AppendSlice(const MediaSegment& aSource,
+                           TrackTicks aStart, TrackTicks aEnd) = 0;
   /**
    * Replace all contents up to aDuration with null data.
    */
@@ -90,6 +95,10 @@ public:
    * Insert aDuration of null data at the start of the segment.
    */
   virtual void InsertNullDataAtStart(TrackTicks aDuration) = 0;
+  /**
+   * Insert aDuration of null data at the end of the segment.
+   */
+  virtual void AppendNullData(TrackTicks aDuration) = 0;
 
 protected:
   MediaSegment(Type aType) : mDuration(0), mType(aType)
@@ -107,35 +116,35 @@ protected:
  */
 template <class C, class Chunk> class MediaSegmentBase : public MediaSegment {
 public:
-  virtual MediaSegment* CreateEmptyClone()
+  virtual MediaSegment* CreateEmptyClone() const
   {
     C* s = new C();
-    s->InitFrom(*static_cast<C*>(this));
+    s->InitFrom(*static_cast<const C*>(this));
     return s;
-  }
-
-  /**
-   * Appends the contents of aSource to this segment, clearing aSource.
-   */
-  virtual void AppendFrom(MediaSegmentBase<C, Chunk>* aSource)
-  {
-    mDuration += aSource->mDuration;
-    aSource->mDuration = 0;
-    if (!mChunks.IsEmpty() && !aSource->mChunks.IsEmpty() &&
-        mChunks[mChunks.Length() - 1].CanCombineWithFollowing(aSource->mChunks[0])) {
-      mChunks[mChunks.Length() - 1].mDuration += aSource->mChunks[0].mDuration;
-      aSource->mChunks.RemoveElementAt(0);
-    }
-    mChunks.MoveElementsFrom(aSource->mChunks);
-  }
-  void RemoveLeading(TrackTicks aDuration)
-  {
-    RemoveLeadingInternal(aDuration, 0);
   }
   virtual void AppendFrom(MediaSegment* aSource)
   {
     NS_ASSERTION(aSource->GetType() == C::StaticType(), "Wrong type");
-    AppendFrom(static_cast<C*>(aSource));
+    AppendFromInternal(static_cast<C*>(aSource));
+  }
+  void AppendFrom(C* aSource)
+  {
+    AppendFromInternal(aSource);
+  }
+  virtual void AppendSlice(const MediaSegment& aSource,
+                           TrackTicks aStart, TrackTicks aEnd)
+  {
+    NS_ASSERTION(aSource.GetType() == C::StaticType(), "Wrong type");
+    AppendSliceInternal(static_cast<const C&>(aSource), aStart, aEnd);
+  }
+  void AppendSlice(const C& aOther, TrackTicks aStart, TrackTicks aEnd)
+  {
+    AppendSliceInternal(aOther, aStart, aEnd);
+  }
+  void InitToSlice(const C& aOther, TrackTicks aStart, TrackTicks aEnd)
+  {
+    static_cast<C*>(this)->InitFrom(aOther);
+    AppendSliceInternal(aOther, aStart, aEnd);
   }
   /**
    * Replace the first aDuration ticks with null media data, because the data
@@ -149,13 +158,13 @@ public:
     if (mChunks[0].IsNull()) {
       TrackTicks extraToForget = NS_MIN(aDuration, mDuration) - mChunks[0].GetDuration();
       if (extraToForget > 0) {
-        RemoveLeadingInternal(extraToForget, 1);
+        RemoveLeading(extraToForget, 1);
         mChunks[0].mDuration += extraToForget;
         mDuration += extraToForget;
       }
       return;
     }
-    RemoveLeading(aDuration);
+    RemoveLeading(aDuration, 0);
     mChunks.InsertElementAt(0)->SetNull(aDuration);
     mDuration += aDuration;
   }
@@ -171,18 +180,49 @@ public:
     }
     mDuration += aDuration;
   }
+  virtual void AppendNullData(TrackTicks aDuration)
+  {
+    if (aDuration <= 0) {
+      return;
+    }
+    if (!mChunks.IsEmpty() && mChunks[mChunks.Length() - 1].IsNull()) {
+      mChunks[mChunks.Length() - 1].mDuration += aDuration;
+    } else {
+      mChunks.AppendElement()->SetNull(aDuration);
+    }
+    mDuration += aDuration;
+  }
 
 protected:
   MediaSegmentBase(Type aType) : MediaSegment(aType) {}
 
-  void BaseSliceFrom(const MediaSegmentBase<C, Chunk>& aOther,
-                     TrackTicks aStart, TrackTicks aEnd)
+  /**
+   * Appends the contents of aSource to this segment, clearing aSource.
+   */
+  void AppendFromInternal(MediaSegmentBase<C, Chunk>* aSource)
   {
-    NS_ASSERTION(aStart >= 0 && aEnd <= aOther.mDuration,
+    static_cast<C*>(this)->CheckCompatible(*static_cast<C*>(aSource));
+    mDuration += aSource->mDuration;
+    aSource->mDuration = 0;
+    if (!mChunks.IsEmpty() && !aSource->mChunks.IsEmpty() &&
+        mChunks[mChunks.Length() - 1].CanCombineWithFollowing(aSource->mChunks[0])) {
+      mChunks[mChunks.Length() - 1].mDuration += aSource->mChunks[0].mDuration;
+      aSource->mChunks.RemoveElementAt(0);
+    }
+    mChunks.MoveElementsFrom(aSource->mChunks);
+  }
+
+  void AppendSliceInternal(const MediaSegmentBase<C, Chunk>& aSource,
+                           TrackTicks aStart, TrackTicks aEnd)
+  {
+    static_cast<C*>(this)->CheckCompatible(static_cast<const C&>(aSource));
+    NS_ASSERTION(aStart <= aEnd, "Endpoints inverted");
+    NS_ASSERTION(aStart >= 0 && aEnd <= aSource.mDuration,
                  "Slice out of range");
+    mDuration += aEnd - aStart;
     TrackTicks offset = 0;
-    for (PRUint32 i = 0; i < aOther.mChunks.Length() && offset < aEnd; ++i) {
-      const Chunk& c = aOther.mChunks[i];
+    for (uint32_t i = 0; i < aSource.mChunks.Length() && offset < aEnd; ++i) {
+      const Chunk& c = aSource.mChunks[i];
       TrackTicks start = NS_MAX(aStart, offset);
       TrackTicks nextOffset = offset + c.GetDuration();
       TrackTicks end = NS_MIN(aEnd, nextOffset);
@@ -207,7 +247,7 @@ protected:
       return nullptr;
     }
     TrackTicks offset = 0;
-    for (PRUint32 i = 0; i < mChunks.Length(); ++i) {
+    for (uint32_t i = 0; i < mChunks.Length(); ++i) {
       Chunk& c = mChunks[i];
       TrackTicks nextOffset = offset + c.GetDuration();
       if (aOffset < nextOffset) {
@@ -239,16 +279,15 @@ protected:
     Chunk* operator->() { return &mSegment.mChunks[mIndex]; }
   private:
     MediaSegmentBase<C, Chunk>& mSegment;
-    PRUint32 mIndex;
+    uint32_t mIndex;
   };
 
-protected:
-  void RemoveLeadingInternal(TrackTicks aDuration, PRUint32 aStartIndex)
+  void RemoveLeading(TrackTicks aDuration, uint32_t aStartIndex)
   {
     NS_ASSERTION(aDuration >= 0, "Can't remove negative duration");
     TrackTicks t = aDuration;
-    PRUint32 chunksToRemove = 0;
-    for (PRUint32 i = aStartIndex; i < mChunks.Length() && t > 0; ++i) {
+    uint32_t chunksToRemove = 0;
+    for (uint32_t i = aStartIndex; i < mChunks.Length() && t > 0; ++i) {
       Chunk* c = &mChunks[i];
       if (c->GetDuration() > t) {
         c->SliceTo(t, c->GetDuration());

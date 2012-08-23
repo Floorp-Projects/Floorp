@@ -103,7 +103,7 @@ interface nsIHttpChannelInternal : nsISupports
      * endpoints are not yet determined, or in any case when
      * nsIHttpActivityObserver.isActive is false. See bugs 534698 and 526207.
      */
-    readonly attribute PRInt32 localPort;
+    readonly attribute int32_t localPort;
 
     /**
      * The IP address of the remote host that this channel is
@@ -122,7 +122,7 @@ interface nsIHttpChannelInternal : nsISupports
      * endpoints are not yet determined, or in any case when
      * nsIHttpActivityObserver.isActive is false. See bugs 534698 and 526207.
      */
-    readonly attribute PRInt32 remotePort;
+    readonly attribute int32_t remotePort;
 
     /**
      * Transfer chain of redirected cache-keys.

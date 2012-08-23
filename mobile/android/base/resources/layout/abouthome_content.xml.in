@@ -12,49 +12,40 @@
                     android:paddingLeft="@dimen/abouthome_gutter_large"
                     android:paddingRight="@dimen/abouthome_gutter_large">
 
-        <ImageView android:src="@drawable/abouthome_icon"
+        <ImageView android:id="@+id/abouthome_logo"
+                   android:src="@drawable/abouthome_logo"
                    android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
+                   android:layout_height="24dip"
+                   android:layout_marginTop="16dip"
+                   android:layout_marginBottom="10dip"
+                   android:layout_marginLeft="12dip"
+                   android:layout_alignParentTop="true"
+                   android:layout_alignParentLeft="true"/>
+
+        <TextView android:id="@+id/top_sites_title"
+                  android:text="@string/abouthome_top_sites_title"
+                  android:layout_width="fill_parent"
+                  android:layout_height="26dip"
+                  android:background="#34FFFFFF"
+                  android:paddingLeft="12dip"
+                  android:textSize="12sp"
+                  android:textColor="#000000"
+                  android:textStyle="bold"
+                  android:gravity="left|center_vertical"
+                  android:layout_below="@id/abouthome_logo"/>
+
+        <ImageView android:src="@drawable/abouthome_icon"
+                   android:layout_width="180dp"
+                   android:layout_height="153dp"
                    android:layout_marginTop="4dp"
+                   android:layout_marginRight="@dimen/abouthome_icon_crop"
                    android:layout_alignParentTop="true"
                    android:layout_alignParentRight="true"/>
 
         <LinearLayout android:orientation="vertical"
                       android:layout_width="fill_parent"
                       android:layout_height="fill_parent"
-                      android:layout_alignParentTop="true"
-                      android:layout_alignParentLeft="true">
-
-            <ImageView android:src="@drawable/abouthome_logo"
-                       android:layout_width="wrap_content"
-                       android:layout_height="24dip"
-                       android:layout_marginTop="16dip"
-                       android:layout_marginBottom="10dip"
-                       android:layout_marginLeft="12dip"/>
-
-            <TextView android:id="@+id/top_sites_title"
-                      android:text="@string/abouthome_top_sites_title"
-                      android:layout_width="fill_parent"
-                      android:layout_height="26dip"
-                      android:background="#34FFFFFF"
-                      android:paddingLeft="12dip"
-                      android:textSize="12sp"
-                      android:textColor="#000000"
-                      android:textStyle="bold"
-                      android:gravity="left|center_vertical"/>
-
-            <TextView android:id="@+id/no_top_sites_text"
-                      android:text="@string/abouthome_no_top_sites"
-                      android:layout_width="fill_parent"
-                      android:layout_height="wrap_content"
-                      android:paddingTop="47dp"
-                      android:paddingBottom="47dp"
-                      android:paddingLeft="60dp"
-                      android:paddingRight="60dp"
-                      android:gravity="center"
-                      android:textSize="12sp"
-                      android:textColor="#666666"
-                      android:visibility="gone"/>
+                      android:layout_below="@id/top_sites_title">
 
             <view class="org.mozilla.gecko.AboutHomeContent$TopSitesGridView"
                   android:id="@+id/top_sites_grid"
@@ -76,37 +67,18 @@
                                             android:textSize="12sp"
                                             android:gravity="top|center_horizontal"/>
 
-            <LinearLayout android:id="@+id/sync_box"
-                          android:background="@drawable/abouthome_sync_box"
-                          android:orientation="horizontal"
-                          android:layout_width="fill_parent"
-                          android:layout_height="wrap_content"
-                          android:layout_marginLeft="12dp"
-                          android:layout_marginRight="12dp"
-                          android:layout_marginTop="17dp"
-                          android:layout_marginBottom="14dp"
-                          android:gravity="center"
-                          android:clickable="true"
-                          android:visibility="gone">
-
-                <ImageView android:id="@+id/sync_logo"
-                           android:src="@drawable/abouthome_sync_logo"
-                           android:layout_width="wrap_content"
-                           android:layout_height="wrap_content"
-                           android:layout_weight="0"
-                           android:gravity="left|center_vertical"/>
-
-                <TextView android:id="@+id/sync_text"
-                          android:text="@string/abouthome_about_sync"
-                          android:layout_width="0dp"
-                          android:layout_height="wrap_content"
-                          android:layout_weight="1"
-                          android:layout_marginLeft="7dp"
-                          android:gravity="center"
-                          android:textSize="15sp"
-                          android:textColor="#FFFFFF"/>
-
-            </LinearLayout>
+            <org.mozilla.gecko.AboutHomePromoBox android:id="@+id/promo_box"
+                                                 android:orientation="horizontal"
+                                                 android:background="@drawable/abouthome_promo_box"
+                                                 android:layout_width="fill_parent"
+                                                 android:layout_height="wrap_content"
+                                                 android:layout_marginLeft="12dp"
+                                                 android:layout_marginRight="12dp"
+                                                 android:layout_marginTop="17dp"
+                                                 android:layout_marginBottom="14dp"
+                                                 android:gravity="center"
+                                                 android:clickable="true"
+                                                 android:visibility="gone"/>
 
             <org.mozilla.gecko.AboutHomeSection android:id="@+id/last_tabs"
                                                 android:layout_width="fill_parent"

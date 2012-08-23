@@ -23,7 +23,7 @@ txUnknownHandler::~txUnknownHandler()
 
 nsresult
 txUnknownHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                            nsIAtom* aLowercaseLocalName, PRInt32 aNsID,
+                            nsIAtom* aLowercaseLocalName, int32_t aNsID,
                             const nsString& aValue)
 {
     return mFlushed ?
@@ -35,7 +35,7 @@ txUnknownHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
 
 nsresult
 txUnknownHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
-                            const PRInt32 aNsID, const nsString& aValue)
+                            const int32_t aNsID, const nsString& aValue)
 {
     return mFlushed ?
            mEs->mResultHandler->attribute(aPrefix, aLocalName, aNsID, aValue) :
@@ -110,7 +110,7 @@ txUnknownHandler::startDocument()
 
 nsresult
 txUnknownHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                               nsIAtom* aLowercaseLocalName, PRInt32 aNsID)
+                               nsIAtom* aLowercaseLocalName, int32_t aNsID)
 {
     if (!mFlushed) {
         // Make sure that mEs->mResultHandler == this is true, otherwise we'll
@@ -144,7 +144,7 @@ txUnknownHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 
 nsresult
 txUnknownHandler::startElement(nsIAtom* aPrefix, const nsSubstring& aLocalName,
-                               const PRInt32 aNsID)
+                               const int32_t aNsID)
 {
     if (!mFlushed) {
         // Make sure that mEs->mResultHandler == this is true, otherwise we'll
@@ -164,7 +164,7 @@ txUnknownHandler::startElement(nsIAtom* aPrefix, const nsSubstring& aLocalName,
 
 nsresult txUnknownHandler::createHandlerAndFlush(bool aHTMLRoot,
                                                  const nsSubstring& aName,
-                                                 const PRInt32 aNsID)
+                                                 const int32_t aNsID)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_NOT_INITIALIZED);
 

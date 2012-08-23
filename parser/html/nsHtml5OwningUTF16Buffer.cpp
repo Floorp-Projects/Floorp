@@ -37,7 +37,7 @@ nsHtml5OwningUTF16Buffer::~nsHtml5OwningUTF16Buffer()
 
 // static
 already_AddRefed<nsHtml5OwningUTF16Buffer>
-nsHtml5OwningUTF16Buffer::FalliblyCreate(PRInt32 aLength)
+nsHtml5OwningUTF16Buffer::FalliblyCreate(int32_t aLength)
 {
   const mozilla::fallible_t fallible = mozilla::fallible_t();
   PRUnichar* newBuf = new (fallible) PRUnichar[aLength];
@@ -66,7 +66,7 @@ nsHtml5OwningUTF16Buffer::Swap(nsHtml5OwningUTF16Buffer* aOther)
 nsrefcnt
 nsHtml5OwningUTF16Buffer::AddRef()
 {
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "Illegal refcount.");
+  NS_PRECONDITION(int32_t(mRefCnt) >= 0, "Illegal refcount.");
   ++mRefCnt;
   NS_LOG_ADDREF(this, mRefCnt, "nsHtml5OwningUTF16Buffer", sizeof(*this));
   return mRefCnt;

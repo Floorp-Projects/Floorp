@@ -94,7 +94,7 @@ interface nsICookiePermission : nsISupports
                        in nsIChannel aChannel,
                        in nsICookie2 aCookie,
                        inout boolean aIsSession,
-                       inout PRInt64 aExpiry);
+                       inout int64_t aExpiry);
 
   /**
    * getOriginatingURI

@@ -58,7 +58,7 @@ const int   kBufsize=64;
  *  @return  
  */
 nsScanner::nsScanner(const nsAString& anHTMLString, const nsACString& aCharset,
-                     PRInt32 aSource)
+                     int32_t aSource)
 {
   MOZ_COUNT_CTOR(nsScanner);
 
@@ -90,7 +90,7 @@ nsScanner::nsScanner(const nsAString& anHTMLString, const nsACString& aCharset,
  *  @return  
  */
 nsScanner::nsScanner(nsString& aFilename,bool aCreateStream,
-                     const nsACString& aCharset, PRInt32 aSource)
+                     const nsACString& aCharset, int32_t aSource)
   : mFilename(aFilename)
 {
   MOZ_COUNT_CTOR(nsScanner);
@@ -118,7 +118,7 @@ nsScanner::nsScanner(nsString& aFilename,bool aCreateStream,
   SetDocumentCharset(aCharset, aSource);
 }
 
-nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , PRInt32 aSource)
+nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , int32_t aSource)
 {
   if (aSource < mCharsetSource) // priority is lower the the current one , just
     return NS_OK;
@@ -207,8 +207,8 @@ void nsScanner::RewindToMark(void){
  *  @param   
  *  @return  
  */
-PRInt32 nsScanner::Mark() {
-  PRInt32 distance = 0;
+int32_t nsScanner::Mark() {
+  int32_t distance = 0;
   if (mSlidingBuffer) {
     nsScannerIterator oldStart;
     mSlidingBuffer->BeginReading(oldStart);
@@ -239,7 +239,7 @@ bool nsScanner::UngetReadable(const nsAString& aBuffer) {
   mSlidingBuffer->BeginReading(mCurrentPosition); // Insertion invalidated our iterators
   mSlidingBuffer->EndReading(mEndPosition);
  
-  PRUint32 length = aBuffer.Length();
+  uint32_t length = aBuffer.Length();
   mCountRemaining += length; // Ref. bug 117441
   return true;
 }
@@ -264,23 +264,23 @@ nsresult nsScanner::Append(const nsAString& aBuffer) {
  *  @param   
  *  @return  
  */
-nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen,
+nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen,
                            nsIRequest *aRequest)
 {
   nsresult res = NS_OK;
   if (mUnicodeDecoder) {
-    PRInt32 unicharBufLen = 0;
+    int32_t unicharBufLen = 0;
     mUnicodeDecoder->GetMaxLength(aBuffer, aLen, &unicharBufLen);
     nsScannerString::Buffer* buffer = nsScannerString::AllocBuffer(unicharBufLen + 1);
     NS_ENSURE_TRUE(buffer,NS_ERROR_OUT_OF_MEMORY);
     PRUnichar *unichars = buffer->DataStart();
 
-    PRInt32 totalChars = 0;
-    PRInt32 unicharLength = unicharBufLen;
-    PRInt32 errorPos = -1;
+    int32_t totalChars = 0;
+    int32_t unicharLength = unicharBufLen;
+    int32_t errorPos = -1;
 
     do {
-      PRInt32 srcLength = aLen;
+      int32_t srcLength = aLen;
       res = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
 
       totalChars += unicharLength;
@@ -309,7 +309,7 @@ nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen,
 
         mUnicodeDecoder->Reset();
 
-        if(((PRUint32) (srcLength + 1)) > aLen) {
+        if(((uint32_t) (srcLength + 1)) > aLen) {
           srcLength = aLen;
         }
         else {
@@ -365,7 +365,7 @@ nsresult nsScanner::GetChar(PRUnichar& aChar) {
  *  @param   
  *  @return  
  */
-nsresult nsScanner::Peek(PRUnichar& aChar, PRUint32 aOffset) {
+nsresult nsScanner::Peek(PRUnichar& aChar, uint32_t aOffset) {
   aChar = 0;
 
   if (!mSlidingBuffer || mCurrentPosition == mEndPosition) {
@@ -387,7 +387,7 @@ nsresult nsScanner::Peek(PRUnichar& aChar, PRUint32 aOffset) {
   return NS_OK;
 }
 
-nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars, PRInt32 aOffset)
+nsresult nsScanner::Peek(nsAString& aStr, int32_t aNumChars, int32_t aOffset)
 {
   if (!mSlidingBuffer || mCurrentPosition == mEndPosition) {
     return kEOF;
@@ -397,7 +397,7 @@ nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars, PRInt32 aOffset)
 
   start = mCurrentPosition;
 
-  if ((PRInt32)mCountRemaining <= aOffset) {
+  if ((int32_t)mCountRemaining <= aOffset) {
     return kEOF;
   }
 
@@ -405,7 +405,7 @@ nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars, PRInt32 aOffset)
     start.advance(aOffset);
   }
 
-  if (mCountRemaining < PRUint32(aNumChars + aOffset)) {
+  if (mCountRemaining < uint32_t(aNumChars + aOffset)) {
     end = mEndPosition;
   }
   else {
@@ -426,7 +426,7 @@ nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars, PRInt32 aOffset)
  *  @param   
  *  @return  error status
  */
-nsresult nsScanner::SkipWhitespace(PRInt32& aNewlinesSkipped) {
+nsresult nsScanner::SkipWhitespace(int32_t& aNewlinesSkipped) {
 
   if (!mSlidingBuffer) {
     return kEOF;
@@ -507,7 +507,7 @@ nsresult nsScanner::SkipOver(PRUnichar aSkipChar){
 
 #if 0
 void DoErrTest(nsString& aString) {
-  PRInt32 pos=aString.FindChar(0);
+  int32_t pos=aString.FindChar(0);
   if(kNotFound<pos) {
     if(aString.Length()-1!=pos) {
     }
@@ -515,7 +515,7 @@ void DoErrTest(nsString& aString) {
 }
 
 void DoErrTest(nsCString& aString) {
-  PRInt32 pos=aString.FindChar(0);
+  int32_t pos=aString.FindChar(0);
   if(kNotFound<pos) {
     if(aString.Length()-1!=pos) {
     }
@@ -655,7 +655,7 @@ nsresult nsScanner::ReadEntityIdentifier(nsString& aString) {
  *  @param   aString - should contain digits
  *  @return  error code
  */
-nsresult nsScanner::ReadNumber(nsString& aString,PRInt32 aBase) {
+nsresult nsScanner::ReadNumber(nsString& aString,int32_t aBase) {
 
   if (!mSlidingBuffer) {
     return kEOF;
@@ -707,7 +707,7 @@ nsresult nsScanner::ReadNumber(nsString& aString,PRInt32 aBase) {
  *  @return  error code
  */
 nsresult nsScanner::ReadWhitespace(nsScannerSharedSubstring& aString,
-                                   PRInt32& aNewlinesSkipped,
+                                   int32_t& aNewlinesSkipped,
                                    bool& aHaveCR) {
 
   aHaveCR = false;
@@ -778,7 +778,7 @@ nsresult nsScanner::ReadWhitespace(nsScannerSharedSubstring& aString,
 //it to work.  Good thing they're all in view-source and it deals.
 nsresult nsScanner::ReadWhitespace(nsScannerIterator& aStart, 
                                    nsScannerIterator& aEnd,
-                                   PRInt32& aNewlinesSkipped) {
+                                   int32_t& aNewlinesSkipped) {
 
   if (!mSlidingBuffer) {
     return kEOF;
@@ -1093,7 +1093,7 @@ void nsScanner::SetPosition(nsScannerIterator& aPosition, bool aTerminate, bool 
 {
   if (mSlidingBuffer) {
 #ifdef DEBUG
-    PRUint32 origRemaining = mCountRemaining;
+    uint32_t origRemaining = mCountRemaining;
 #endif
 
     if (aReverse) {
@@ -1126,9 +1126,9 @@ void nsScanner::ReplaceCharacter(nsScannerIterator& aPosition,
 
 bool nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf,
                                  nsIRequest *aRequest,
-                                 PRInt32 aErrorPos)
+                                 int32_t aErrorPos)
 {
-  PRUint32 countRemaining = mCountRemaining;
+  uint32_t countRemaining = mCountRemaining;
   if (!mSlidingBuffer) {
     mSlidingBuffer = new nsScannerString(aBuf);
     if (!mSlidingBuffer)

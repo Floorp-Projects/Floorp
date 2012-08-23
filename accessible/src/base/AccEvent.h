@@ -59,17 +59,17 @@ public:
   };
 
   // Initialize with an nsIAccessible
-  AccEvent(PRUint32 aEventType, Accessible* aAccessible,
+  AccEvent(uint32_t aEventType, Accessible* aAccessible,
            EIsFromUserInput aIsFromUserInput = eAutoDetect,
            EEventRule aEventRule = eRemoveDupes);
   // Initialize with an nsIDOMNode
-  AccEvent(PRUint32 aEventType, nsINode* aNode,
+  AccEvent(uint32_t aEventType, nsINode* aNode,
            EIsFromUserInput aIsFromUserInput = eAutoDetect,
            EEventRule aEventRule = eRemoveDupes);
   virtual ~AccEvent() {}
 
   // AccEvent
-  PRUint32 GetEventType() const { return mEventType; }
+  uint32_t GetEventType() const { return mEventType; }
   EEventRule GetEventRule() const { return mEventRule; }
   bool IsFromUserInput() const { return mIsFromUserInput; }
 
@@ -123,7 +123,7 @@ protected:
   void CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput);
 
   bool mIsFromUserInput;
-  PRUint32 mEventType;
+  uint32_t mEventType;
   EEventRule mEventRule;
   nsRefPtr<Accessible> mAccessible;
   nsCOMPtr<nsINode> mNode;
@@ -138,13 +138,13 @@ protected:
 class AccStateChangeEvent: public AccEvent
 {
 public:
-  AccStateChangeEvent(Accessible* aAccessible, PRUint64 aState,
+  AccStateChangeEvent(Accessible* aAccessible, uint64_t aState,
                       bool aIsEnabled,
                       EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
-  AccStateChangeEvent(nsINode* aNode, PRUint64 aState, bool aIsEnabled);
+  AccStateChangeEvent(nsINode* aNode, uint64_t aState, bool aIsEnabled);
 
-  AccStateChangeEvent(nsINode* aNode, PRUint64 aState);
+  AccStateChangeEvent(nsINode* aNode, uint64_t aState);
 
   // AccEvent
   virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
@@ -156,11 +156,11 @@ public:
   }
 
   // AccStateChangeEvent
-  PRUint64 GetState() const { return mState; }
+  uint64_t GetState() const { return mState; }
   bool IsStateEnabled() const { return mIsEnabled; }
 
 private:
-  PRUint64 mState;
+  uint64_t mState;
   bool mIsEnabled;
 };
 
@@ -171,7 +171,7 @@ private:
 class AccTextChangeEvent: public AccEvent
 {
 public:
-  AccTextChangeEvent(Accessible* aAccessible, PRInt32 aStart,
+  AccTextChangeEvent(Accessible* aAccessible, int32_t aStart,
                      const nsAString& aModifiedText, bool aIsInserted,
                      EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
@@ -185,14 +185,14 @@ public:
   }
 
   // AccTextChangeEvent
-  PRInt32 GetStartOffset() const { return mStart; }
-  PRUint32 GetLength() const { return mModifiedText.Length(); }
+  int32_t GetStartOffset() const { return mStart; }
+  uint32_t GetLength() const { return mModifiedText.Length(); }
   bool IsTextInserted() const { return mIsInserted; }
   void GetModifiedText(nsAString& aModifiedText)
     { aModifiedText = mModifiedText; }
 
 private:
-  PRInt32 mStart;
+  int32_t mStart;
   bool mIsInserted;
   nsString mModifiedText;
 
@@ -206,7 +206,7 @@ private:
 class AccMutationEvent: public AccEvent
 {
 public:
-  AccMutationEvent(PRUint32 aEventType, Accessible* aTarget,
+  AccMutationEvent(uint32_t aEventType, Accessible* aTarget,
                    nsINode* aTargetNode);
 
   // Event
@@ -281,7 +281,7 @@ public:
 class AccCaretMoveEvent: public AccEvent
 {
 public:
-  AccCaretMoveEvent(Accessible* aAccessible, PRInt32 aCaretOffset);
+  AccCaretMoveEvent(Accessible* aAccessible, int32_t aCaretOffset);
   AccCaretMoveEvent(nsINode* aNode);
 
   // AccEvent
@@ -294,10 +294,10 @@ public:
   }
 
   // AccCaretMoveEvent
-  PRInt32 GetCaretOffset() const { return mCaretOffset; }
+  int32_t GetCaretOffset() const { return mCaretOffset; }
 
 private:
-  PRInt32 mCaretOffset;
+  int32_t mCaretOffset;
 };
 
 
@@ -331,7 +331,7 @@ private:
   nsRefPtr<Accessible> mWidget;
   nsRefPtr<Accessible> mItem;
   SelChangeType mSelChangeType;
-  PRUint32 mPreceedingCount;
+  uint32_t mPreceedingCount;
   AccSelChangeEvent* mPackedEvent;
 
   friend class NotificationController;
@@ -344,8 +344,8 @@ private:
 class AccTableChangeEvent : public AccEvent
 {
 public:
-  AccTableChangeEvent(Accessible* aAccessible, PRUint32 aEventType,
-                      PRInt32 aRowOrColIndex, PRInt32 aNumRowsOrCols);
+  AccTableChangeEvent(Accessible* aAccessible, uint32_t aEventType,
+                      int32_t aRowOrColIndex, int32_t aNumRowsOrCols);
 
   // AccEvent
   virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
@@ -357,12 +357,12 @@ public:
   }
 
   // AccTableChangeEvent
-  PRUint32 GetIndex() const { return mRowOrColIndex; }
-  PRUint32 GetCount() const { return mNumRowsOrCols; }
+  uint32_t GetIndex() const { return mRowOrColIndex; }
+  uint32_t GetCount() const { return mNumRowsOrCols; }
 
 private:
-  PRUint32 mRowOrColIndex;   // the start row/column after which the rows are inserted/deleted.
-  PRUint32 mNumRowsOrCols;   // the number of inserted/deleted rows/columns
+  uint32_t mRowOrColIndex;   // the start row/column after which the rows are inserted/deleted.
+  uint32_t mNumRowsOrCols;   // the number of inserted/deleted rows/columns
 };
 
 /**
@@ -373,8 +373,8 @@ class AccVCChangeEvent : public AccEvent
 public:
   AccVCChangeEvent(Accessible* aAccessible,
                    nsIAccessible* aOldAccessible,
-                   PRInt32 aOldStart, PRInt32 aOldEnd,
-                   PRInt16 aReason);
+                   int32_t aOldStart, int32_t aOldEnd,
+                   int16_t aReason);
 
   virtual ~AccVCChangeEvent() { }
 
@@ -389,15 +389,15 @@ public:
 
   // AccTableChangeEvent
   nsIAccessible* OldAccessible() const { return mOldAccessible; }
-  PRInt32 OldStartOffset() const { return mOldStart; }
-  PRInt32 OldEndOffset() const { return mOldEnd; }
-  PRInt32 Reason() const { return mReason; }
+  int32_t OldStartOffset() const { return mOldStart; }
+  int32_t OldEndOffset() const { return mOldEnd; }
+  int32_t Reason() const { return mReason; }
 
 private:
   nsRefPtr<nsIAccessible> mOldAccessible;
-  PRInt32 mOldStart;
-  PRInt32 mOldEnd;
-  PRInt16 mReason;
+  int32_t mOldStart;
+  int32_t mOldEnd;
+  int16_t mReason;
 };
 
 /**

@@ -42,7 +42,7 @@ protected:
 
   ChannelHashtable mRealChannels;
   ParentChannelHashtable mParentChannels;
-  PRUint32 mId;
+  uint32_t mId;
 };
 
 }

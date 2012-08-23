@@ -265,26 +265,26 @@ public:
   /*
    * Converts image data from premultipled to unpremultiplied alpha
    */
-  static void UnPremultiplyImageDataAlpha(PRUint8 *data, 
-                                          PRInt32 stride, 
+  static void UnPremultiplyImageDataAlpha(uint8_t *data, 
+                                          int32_t stride, 
                                           const nsIntRect &rect);
   /*
    * Converts image data from unpremultipled to premultiplied alpha
    */
-  static void PremultiplyImageDataAlpha(PRUint8 *data, 
-                                        PRInt32 stride, 
+  static void PremultiplyImageDataAlpha(uint8_t *data, 
+                                        int32_t stride, 
                                         const nsIntRect &rect);
   /*
    * Converts image data from premultiplied sRGB to Linear RGB
    */
-  static void ConvertImageDataToLinearRGB(PRUint8 *data, 
-                                          PRInt32 stride, 
+  static void ConvertImageDataToLinearRGB(uint8_t *data, 
+                                          int32_t stride, 
                                           const nsIntRect &rect);
   /*
    * Converts image data from LinearRGB to premultiplied sRGB
    */
-  static void ConvertImageDataFromLinearRGB(PRUint8 *data, 
-                                            PRInt32 stride, 
+  static void ConvertImageDataFromLinearRGB(uint8_t *data, 
+                                            int32_t stride, 
                                             const nsIntRect &rect);
 
   /*
@@ -293,7 +293,7 @@ public:
   static nsresult ReportToConsole(nsIDocument* doc,
                                   const char* aWarning,
                                   const PRUnichar **aParams,
-                                  PRUint32 aParamsLength);
+                                  uint32_t aParamsLength);
 
   /*
    * Converts a nsStyleCoord into a userspace value.  Handles units
@@ -343,7 +343,7 @@ public:
    */
   static void InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate = false,
                                const nsRect *aBoundsSubArea = nullptr,
-                               PRUint32 aFlags = 0);
+                               uint32_t aFlags = 0);
 
   /**
    * Schedules an update of the frame's bounds (which will in turn invalidate
@@ -473,7 +473,7 @@ public:
    * child SVG frame, container SVG frame, or a regular frame.
    * For regular frames, we just return an identity matrix.
    */
-  static gfxMatrix GetCanvasTM(nsIFrame* aFrame, PRUint32 aFor);
+  static gfxMatrix GetCanvasTM(nsIFrame* aFrame, uint32_t aFor);
 
   /**
    * Returns the transform from aFrame's user space to canvas space. Only call
@@ -484,7 +484,7 @@ public:
    * space. Specifically, it does not include any other transforms introduced
    * by the frame such as x/y offsets and viewBox attributes.
    */
-  static gfxMatrix GetUserToCanvasTM(nsIFrame* aFrame, PRUint32 aFor);
+  static gfxMatrix GetUserToCanvasTM(nsIFrame* aFrame, uint32_t aFor);
 
   /**
    * Notify the descendants of aFrame of a change to one of their ancestors
@@ -497,7 +497,7 @@ public:
    * that walks up the parent chain marking dirty bits can stop earlier.
    */
   static void
-  NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags);
+  NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags);
 
   /*
    * Get frame's covered region by walking the children and doing union.
@@ -605,7 +605,7 @@ public:
    * aFrame's userspace.
    */
   static gfxRect GetBBox(nsIFrame *aFrame,
-                         PRUint32 aFlags = eBBoxIncludeFillGeometry);
+                         uint32_t aFlags = eBBoxIncludeFillGeometry);
 
   /**
    * Convert a userSpaceOnUse/objectBoundingBoxUnits rectangle that's specified
@@ -619,7 +619,7 @@ public:
    * may be null if aUnits is SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
    */
   static gfxRect
-  GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH,
+  GetRelativeRect(uint16_t aUnits, const nsSVGLength2 *aXYWH,
                   const gfxRect &aBBox, nsIFrame *aFrame);
 
   /**
@@ -668,7 +668,7 @@ public:
    * Convert a floating-point value to a 32-bit integer value, clamping to
    * the range of valid integers.
    */
-  static PRInt32 ClampToInt(double aVal)
+  static int32_t ClampToInt(double aVal)
   {
     return NS_lround(NS_MAX(double(PR_INT32_MIN),
                             NS_MIN(double(PR_INT32_MAX), aVal)));
@@ -719,7 +719,7 @@ public:
    * into account the type of element and the value of the 'pointer-events'
    * property on the element.
    */
-  static PRUint16 GetGeometryHitTestFlags(nsIFrame* aFrame);
+  static uint16_t GetGeometryHitTestFlags(nsIFrame* aFrame);
 };
 
 #endif

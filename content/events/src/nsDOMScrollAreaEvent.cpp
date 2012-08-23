@@ -70,7 +70,7 @@ nsDOMScrollAreaEvent::InitScrollAreaEvent(const nsAString &aEventType,
                                           bool aCanBubble,
                                           bool aCancelable,
                                           nsIDOMWindow *aView,
-                                          PRInt32 aDetail,
+                                          int32_t aDetail,
                                           float aX, float aY,
                                           float aWidth, float aHeight)
 {

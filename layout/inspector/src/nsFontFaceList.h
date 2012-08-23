@@ -25,7 +25,7 @@ public:
   virtual ~nsFontFaceList();
 
   nsresult AddFontsFromTextRun(gfxTextRun* aTextRun,
-                               PRUint32 aOffset, PRUint32 aLength,
+                               uint32_t aOffset, uint32_t aLength,
                                nsIFrame* aFrame);
 
 protected:

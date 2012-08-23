@@ -213,8 +213,8 @@ ToNSString(id aValue)
       return nil;
     }
     
-    PRInt32 start = range.location;
-    PRInt32 end = start + range.length;
+    int32_t start = range.location;
+    int32_t end = start + range.length;
     nsIntRect bounds = mGeckoTextAccessible->GetTextBounds(start, end);
 
     return [NSValue valueWithRect:nsCocoaUtils::GeckoRectToCocoaRect(bounds)];
@@ -262,8 +262,8 @@ ToNSString(id aValue)
     if (!stringValue)
       return;
 
-    PRInt32 start = 0;
-    PRInt32 end = 0;
+    int32_t start = 0;
+    int32_t end = 0;
 
     nsresult rv = mGeckoTextAccessible->GetSelectionBounds(0, &start, &end);
     NS_ENSURE_SUCCESS(rv,);
@@ -344,7 +344,7 @@ ToNSString(id aValue)
 
 - (NSNumber*)caretLineNumber
 {
-  PRInt32 lineNumber = mGeckoTextAccessible ?
+  int32_t lineNumber = mGeckoTextAccessible ?
     mGeckoTextAccessible->CaretLineNumber() - 1 : -1;
 
   return (lineNumber >= 0) ? [NSNumber numberWithInt:lineNumber] : nil;
@@ -397,7 +397,7 @@ ToNSString(id aValue)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   if (mGeckoTextAccessible) {
-    PRInt32 start, end;
+    int32_t start, end;
     start = end = 0;
     nsresult rv = mGeckoTextAccessible->GetSelectionBounds(0, &start, &end);
     NS_ENSURE_SUCCESS(rv, 0);
@@ -414,7 +414,7 @@ ToNSString(id aValue)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if (mGeckoTextAccessible) {
-    PRInt32 start, end;
+    int32_t start, end;
     start = end = 0;
     mGeckoTextAccessible->GetSelectionBounds(0, &start, &end);
     if (start != end) {
@@ -433,9 +433,9 @@ ToNSString(id aValue)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if (mGeckoTextAccessible) {
-    PRInt32 start = 0;
-    PRInt32 end = 0;
-    PRInt32 count = 0;
+    int32_t start = 0;
+    int32_t end = 0;
+    int32_t count = 0;
 
     nsresult rv = mGeckoTextAccessible->GetSelectionCount(&count);
     NS_ENSURE_SUCCESS(rv, nil);

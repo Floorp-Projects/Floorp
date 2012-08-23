@@ -14,7 +14,7 @@ bool
 txUnionNodeTest::matches(const txXPathNode& aNode,
                          txIMatchContext* aContext)
 {
-    PRUint32 i, len = mNodeTests.Length();
+    uint32_t i, len = mNodeTests.Length();
     for (i = 0; i < len; ++i) {
         if (mNodeTests[i]->matches(aNode, aContext)) {
             return true;
@@ -34,7 +34,7 @@ txUnionNodeTest::getDefaultPriority()
 bool
 txUnionNodeTest::isSensitiveTo(Expr::ContextSensitivity aContext)
 {
-    PRUint32 i, len = mNodeTests.Length();
+    uint32_t i, len = mNodeTests.Length();
     for (i = 0; i < len; ++i) {
         if (mNodeTests[i]->isSensitiveTo(aContext)) {
             return true;
@@ -49,7 +49,7 @@ void
 txUnionNodeTest::toString(nsAString& aDest)
 {
     aDest.AppendLiteral("(");
-    for (PRUint32 i = 0; i < mNodeTests.Length(); ++i) {
+    for (uint32_t i = 0; i < mNodeTests.Length(); ++i) {
         if (i != 0) {
             aDest.AppendLiteral(" | ");
         }

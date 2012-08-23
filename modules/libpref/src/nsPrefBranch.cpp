@@ -35,7 +35,7 @@ struct EnumerateData {
 // Prototypes
 static PLDHashOperator
   pref_enumChild(PLDHashTable *table, PLDHashEntryHdr *heh,
-                 PRUint32 i, void *arg);
+                 uint32_t i, void *arg);
 
 using mozilla::dom::ContentChild;
 
@@ -114,7 +114,7 @@ NS_IMETHODIMP nsPrefBranch::GetRoot(char **aRoot)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, PRInt32 *_retval)
+NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, int32_t *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
@@ -161,14 +161,14 @@ NS_IMETHODIMP nsPrefBranch::SetCharPref(const char *aPrefName, const char *aValu
   return PREF_SetCharPref(pref, aValue, mIsDefault);
 }
 
-NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, PRInt32 *_retval)
+NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, int32_t *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
   return PREF_GetIntPref(pref, _retval, mIsDefault);
 }
 
-NS_IMETHODIMP nsPrefBranch::SetIntPref(const char *aPrefName, PRInt32 aValue)
+NS_IMETHODIMP nsPrefBranch::SetIntPref(const char *aPrefName, int32_t aValue)
 {
   if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
@@ -474,11 +474,11 @@ NS_IMETHODIMP nsPrefBranch::DeleteBranch(const char *aStartingAt)
   return PREF_DeleteBranch(pref);
 }
 
-NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray)
+NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, uint32_t *aCount, char ***aChildArray)
 {
   char            **outArray;
-  PRInt32         numPrefs;
-  PRInt32         dwIndex;
+  int32_t         numPrefs;
+  int32_t         dwIndex;
   EnumerateData   ed;
   nsAutoTArray<nsCString, 32> prefArray;
 
@@ -623,7 +623,7 @@ nsresult nsPrefBranch::NotifyObserver(const char *newpref, void *data)
 
   // remove any root this string may contain so as to not confuse the observer
   // by passing them something other than what they passed us as a topic
-  PRUint32 len = pCallback->GetPrefBranch()->GetRootLength();
+  uint32_t len = pCallback->GetPrefBranch()->GetRootLength();
   nsCAutoString suffix(newpref + len);
 
   observer->Observe(static_cast<nsIPrefBranch *>(pCallback->GetPrefBranch()),
@@ -713,7 +713,7 @@ const char *nsPrefBranch::getPrefName(const char *aPrefName)
 
 static PLDHashOperator
 pref_enumChild(PLDHashTable *table, PLDHashEntryHdr *heh,
-               PRUint32 i, void *arg)
+               uint32_t i, void *arg)
 {
   PrefHashEntry *he = static_cast<PrefHashEntry*>(heh);
   EnumerateData *d = reinterpret_cast<EnumerateData *>(arg);
@@ -782,7 +782,7 @@ nsPrefLocalizedString::SetData(const PRUnichar *aData)
 }
 
 NS_IMETHODIMP
-nsPrefLocalizedString::SetDataWithLength(PRUint32 aLength,
+nsPrefLocalizedString::SetDataWithLength(uint32_t aLength,
                                          const PRUnichar *aData)
 {
   if (!aData)

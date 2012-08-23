@@ -30,18 +30,18 @@ public:
                                 JSContext* aCx, jsval* aVal);
 protected:
   // Specific implementation for a mouse event.
-  virtual nsresult Which(PRUint32* aWhich);
+  virtual nsresult Which(uint32_t* aWhich);
 
   nsresult InitMouseEvent(const nsAString& aType,
                           bool aCanBubble,
                           bool aCancelable,
                           nsIDOMWindow* aView,
-                          PRInt32 aDetail,
-                          PRInt32 aScreenX,
-                          PRInt32 aScreenY,
-                          PRInt32 aClientX,
-                          PRInt32 aClientY,
-                          PRUint16 aButton,
+                          int32_t aDetail,
+                          int32_t aScreenX,
+                          int32_t aScreenY,
+                          int32_t aClientX,
+                          int32_t aClientY,
+                          uint16_t aButton,
                           nsIDOMEventTarget *aRelatedTarget,
                           const nsAString& aModifiersList);
 };

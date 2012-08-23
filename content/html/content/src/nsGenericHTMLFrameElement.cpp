@@ -203,7 +203,7 @@ nsGenericHTMLFrameElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 nsresult
-nsGenericHTMLFrameElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsGenericHTMLFrameElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                    nsIAtom* aPrefix, const nsAString& aValue,
                                    bool aNotify)
 {
@@ -253,7 +253,7 @@ nsGenericHTMLFrameElement::CopyInnerTo(nsGenericElement* aDest)
 bool
 nsGenericHTMLFrameElement::IsHTMLFocusable(bool aWithMouse,
                                            bool *aIsFocusable,
-                                           PRInt32 *aTabIndex)
+                                           int32_t *aTabIndex)
 {
   if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return true;
@@ -296,7 +296,7 @@ nsGenericHTMLFrameElement::GetReallyIsBrowser(bool *aOut)
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_STATE(permMgr);
 
-  PRUint32 permission = nsIPermissionManager::DENY_ACTION;
+  uint32_t permission = nsIPermissionManager::DENY_ACTION;
   nsresult rv = permMgr->TestPermissionFromPrincipal(principal, "browser", &permission);
   NS_ENSURE_SUCCESS(rv, NS_OK);
   *aOut = permission == nsIPermissionManager::ALLOW_ACTION;

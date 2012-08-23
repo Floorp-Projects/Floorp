@@ -16,7 +16,7 @@ interface nsIFontEnumerator : nsISupports
    * @param  aResult    returns array of names
    * @return void
    */
-  void EnumerateAllFonts(out PRUint32 aCount,
+  void EnumerateAllFonts(out uint32_t aCount,
     [retval, array, size_is(aCount)] out wstring aResult);
 
   /**
@@ -30,7 +30,7 @@ interface nsIFontEnumerator : nsISupports
    * @return void
    */
   void EnumerateFonts(in string aLangGroup, in string aGeneric,
-    out PRUint32 aCount, [retval, array, size_is(aCount)] out wstring aResult);
+    out uint32_t aCount, [retval, array, size_is(aCount)] out wstring aResult);
 
   /**
     @param  aLangGroup language group

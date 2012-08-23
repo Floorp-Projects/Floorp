@@ -58,8 +58,7 @@ var FeedHandler = {
       return false;
 
     // Build the menu showing the available feed choices for viewing.
-    for (var i = 0; i < feeds.length; ++i) {
-      var feedInfo = feeds[i];
+    for (let feedInfo of feeds) {
       var menuItem = document.createElement("menuitem");
       var baseTitle = feedInfo.title || feedInfo.href;
       var labelStr = gNavigatorBundle.getFormattedString("feedShowFeedNew", [baseTitle]);

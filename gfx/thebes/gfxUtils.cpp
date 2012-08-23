@@ -20,15 +20,15 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
-static PRUint8 sUnpremultiplyTable[256*256];
-static PRUint8 sPremultiplyTable[256*256];
+static uint8_t sUnpremultiplyTable[256*256];
+static uint8_t sPremultiplyTable[256*256];
 static bool sTablesInitialized = false;
 
-static const PRUint8 PremultiplyValue(PRUint8 a, PRUint8 v) {
+static const uint8_t PremultiplyValue(uint8_t a, uint8_t v) {
     return sPremultiplyTable[a*256+v];
 }
 
-static const PRUint8 UnpremultiplyValue(PRUint8 a, PRUint8 v) {
+static const uint8_t UnpremultiplyValue(uint8_t a, uint8_t v) {
     return sUnpremultiplyTable[a*256+v];
 }
 
@@ -44,13 +44,13 @@ CalculateTables()
     // Unpremultiply table
 
     // a == 0 case
-    for (PRUint32 c = 0; c <= 255; c++) {
+    for (uint32_t c = 0; c <= 255; c++) {
         sUnpremultiplyTable[c] = c;
     }
 
     for (int a = 1; a <= 255; a++) {
         for (int c = 0; c <= 255; c++) {
-            sUnpremultiplyTable[a*256+c] = (PRUint8)((c * 255) / a);
+            sUnpremultiplyTable[a*256+c] = (uint8_t)((c * 255) / a);
         }
     }
 
@@ -93,26 +93,26 @@ gfxUtils::PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
     if (!sTablesInitialized)
         CalculateTables();
 
-    PRUint8 *src = aSourceSurface->Data();
-    PRUint8 *dst = aDestSurface->Data();
+    uint8_t *src = aSourceSurface->Data();
+    uint8_t *dst = aDestSurface->Data();
 
-    PRUint32 dim = aSourceSurface->Width() * aSourceSurface->Height();
-    for (PRUint32 i = 0; i < dim; ++i) {
+    uint32_t dim = aSourceSurface->Width() * aSourceSurface->Height();
+    for (uint32_t i = 0; i < dim; ++i) {
 #ifdef IS_LITTLE_ENDIAN
-        PRUint8 b = *src++;
-        PRUint8 g = *src++;
-        PRUint8 r = *src++;
-        PRUint8 a = *src++;
+        uint8_t b = *src++;
+        uint8_t g = *src++;
+        uint8_t r = *src++;
+        uint8_t a = *src++;
 
         *dst++ = PremultiplyValue(a, b);
         *dst++ = PremultiplyValue(a, g);
         *dst++ = PremultiplyValue(a, r);
         *dst++ = a;
 #else
-        PRUint8 a = *src++;
-        PRUint8 r = *src++;
-        PRUint8 g = *src++;
-        PRUint8 b = *src++;
+        uint8_t a = *src++;
+        uint8_t r = *src++;
+        uint8_t g = *src++;
+        uint8_t b = *src++;
 
         *dst++ = a;
         *dst++ = PremultiplyValue(a, r);
@@ -150,26 +150,26 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
     if (!sTablesInitialized)
         CalculateTables();
 
-    PRUint8 *src = aSourceSurface->Data();
-    PRUint8 *dst = aDestSurface->Data();
+    uint8_t *src = aSourceSurface->Data();
+    uint8_t *dst = aDestSurface->Data();
 
-    PRUint32 dim = aSourceSurface->Width() * aSourceSurface->Height();
-    for (PRUint32 i = 0; i < dim; ++i) {
+    uint32_t dim = aSourceSurface->Width() * aSourceSurface->Height();
+    for (uint32_t i = 0; i < dim; ++i) {
 #ifdef IS_LITTLE_ENDIAN
-        PRUint8 b = *src++;
-        PRUint8 g = *src++;
-        PRUint8 r = *src++;
-        PRUint8 a = *src++;
+        uint8_t b = *src++;
+        uint8_t g = *src++;
+        uint8_t r = *src++;
+        uint8_t a = *src++;
 
         *dst++ = UnpremultiplyValue(a, b);
         *dst++ = UnpremultiplyValue(a, g);
         *dst++ = UnpremultiplyValue(a, r);
         *dst++ = a;
 #else
-        PRUint8 a = *src++;
-        PRUint8 r = *src++;
-        PRUint8 g = *src++;
-        PRUint8 b = *src++;
+        uint8_t a = *src++;
+        uint8_t r = *src++;
+        uint8_t g = *src++;
+        uint8_t b = *src++;
 
         *dst++ = a;
         *dst++ = UnpremultiplyValue(a, r);
@@ -197,14 +197,14 @@ gfxUtils::ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
     NS_ABORT_IF_FALSE(aSourceSurface->Format() == gfxASurface::ImageFormatARGB32,
                       "Surfaces must be ARGB32");
 
-    PRUint8 *src = aSourceSurface->Data();
-    PRUint8 *dst = aDestSurface->Data();
+    uint8_t *src = aSourceSurface->Data();
+    uint8_t *dst = aDestSurface->Data();
 
-    PRUint32 dim = aSourceSurface->Width() * aSourceSurface->Height();
-    PRUint8 *srcEnd = src + 4*dim;
+    uint32_t dim = aSourceSurface->Width() * aSourceSurface->Height();
+    uint8_t *srcEnd = src + 4*dim;
 
     if (src == dst) {
-        PRUint8 buffer[4];
+        uint8_t buffer[4];
         for (; src != srcEnd; src += 4) {
             buffer[0] = src[2];
             buffer[1] = src[1];
@@ -285,7 +285,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     if (needed.IsEmpty())
         return nullptr;
 
-    gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
+    gfxIntSize size(int32_t(needed.Width()), int32_t(needed.Height()));
     nsRefPtr<gfxASurface> temp =
         gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::ContentFromFormat(aFormat));
     if (!temp || temp->CairoStatus())
@@ -459,7 +459,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            const gfxRect&   aFill,
                            const gfxImageSurface::gfxImageFormat aFormat,
                            gfxPattern::GraphicsFilter aFilter,
-                           PRUint32         aImageFlags)
+                           uint32_t         aImageFlags)
 {
     SAMPLE_LABEL("gfxUtils", "DrawPixelSnapped");
     bool doTile = !aImageRect.Contains(aSourceRect) &&
@@ -623,8 +623,8 @@ gfxUtils::PathFromRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion
 bool
 gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
 {
-  *aOut = nsIntRect(PRInt32(aIn.X()), PRInt32(aIn.Y()),
-  PRInt32(aIn.Width()), PRInt32(aIn.Height()));
+  *aOut = nsIntRect(int32_t(aIn.X()), int32_t(aIn.Y()),
+  int32_t(aIn.Width()), int32_t(aIn.Height()));
   return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height).IsEqualEdges(aIn);
 }
 
@@ -687,7 +687,7 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrImage::Data& aData,
                             const gfxASurface::gfxImageFormat& aDestFormat,
                             const gfxIntSize& aDestSize,
                             unsigned char* aDestBuffer,
-                            PRInt32 aStride)
+                            int32_t aStride)
 {
   gfx::YUVType yuvtype =
     gfx::TypeFromSize(aData.mYSize.width,

@@ -105,9 +105,9 @@ static NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
 
 /* Memory reporter stuff */
 static nsIMemoryReporter *gCanvasMemoryReporter = nullptr;
-static PRInt64 gCanvasMemoryUsed = 0;
+static int64_t gCanvasMemoryUsed = 0;
 
-static PRInt64 GetCanvasMemoryUsed() {
+static int64_t GetCanvasMemoryUsed() {
     return gCanvasMemoryUsed;
 }
 
@@ -319,13 +319,13 @@ public:
     nsresult Redraw();
 
     // nsICanvasRenderingContextInternal
-    NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
-    void Initialize(nsIDocShell *shell, PRInt32 width, PRInt32 height);
-    NS_IMETHOD InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, PRInt32 width, PRInt32 height);
+    NS_IMETHOD SetDimensions(int32_t width, int32_t height);
+    void Initialize(nsIDocShell *shell, int32_t width, int32_t height);
+    NS_IMETHOD InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, int32_t width, int32_t height);
     bool EnsureSurface();
     NS_IMETHOD Render(gfxContext *ctx,
                       gfxPattern::GraphicsFilter aFilter,
-                      PRUint32 aFlags = RenderFlagPremultAlpha);
+                      uint32_t aFlags = RenderFlagPremultAlpha);
     NS_IMETHOD GetInputStream(const char* aMimeType,
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
@@ -394,21 +394,21 @@ protected:
      * The number of living nsCanvasRenderingContexts.  When this goes down to
      * 0, we free the premultiply and unpremultiply tables, if they exist.
      */
-    static PRUint32 sNumLivingContexts;
+    static uint32_t sNumLivingContexts;
 
     /**
      * Lookup table used to speed up GetImageData().
      */
-    static PRUint8 (*sUnpremultiplyTable)[256];
+    static uint8_t (*sUnpremultiplyTable)[256];
 
     /**
      * Lookup table used to speed up PutImageData().
      */
-    static PRUint8 (*sPremultiplyTable)[256];
+    static uint8_t (*sPremultiplyTable)[256];
 
     // Some helpers.  Doesn't modify acolor on failure.
     nsresult SetStyleFromStringOrInterface(const nsAString& aStr, nsISupports *aInterface, Style aWhichStyle);
-    nsresult GetStyleAsStringOrInterface(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType, Style aWhichStyle);
+    nsresult GetStyleAsStringOrInterface(nsAString& aStr, nsISupports **aInterface, int32_t *aType, Style aWhichStyle);
 
     // Returns whether a color was successfully parsed.
     bool ParseColor(const nsAString& aString, nscolor* aColor);
@@ -440,7 +440,7 @@ protected:
     gfxASurface::gfxImageFormat GetImageFormat() const;
 
     // Member vars
-    PRInt32 mWidth, mHeight;
+    int32_t mWidth, mHeight;
     bool mValid;
     bool mZero;
     bool mOpaque;
@@ -459,7 +459,7 @@ protected:
     nsRefPtr<gfxASurface> mSurface;
     bool mSurfaceCreated;
 
-    PRUint32 mSaveCount;
+    uint32_t mSaveCount;
 
     /**
      * Flag to avoid duplicate calls to InvalidateFrame. Set to true whenever
@@ -480,8 +480,8 @@ protected:
     /**
      * Number of times we've invalidated before calling redraw
      */
-    PRUint32 mInvalidateCount;
-    static const PRUint32 kCanvasMaxInvalidateCount = 100;
+    uint32_t mInvalidateCount;
+    static const uint32_t kCanvasMaxInvalidateCount = 100;
 
     /**
      * Returns true iff the the given operator should affect areas of the
@@ -630,9 +630,9 @@ protected:
 
     gfxFontGroup* GetCurrentFontStyle();
     gfxTextRun* MakeTextRun(const PRUnichar* aText,
-                            PRUint32         aLength,
-                            PRUint32         aAppUnitsPerDevUnit,
-                            PRUint32         aFlags);
+                            uint32_t         aLength,
+                            uint32_t         aAppUnitsPerDevUnit,
+                            uint32_t         aFlags);
 
     enum TextDrawOperation {
         TEXT_DRAW_OPERATION_FILL,
@@ -735,10 +735,10 @@ protected:
     }
 
     // other helpers
-    void GetAppUnitsValues(PRUint32 *perDevPixel, PRUint32 *perCSSPixel) {
+    void GetAppUnitsValues(uint32_t *perDevPixel, uint32_t *perCSSPixel) {
         // If we don't have a canvas element, we just return something generic.
-        PRUint32 devPixel = 60;
-        PRUint32 cssPixel = 60;
+        uint32_t devPixel = 60;
+        uint32_t cssPixel = 60;
 
         nsIPresShell *ps = GetPresShell();
         nsPresContext *pc;
@@ -820,9 +820,9 @@ NS_INTERFACE_MAP_END
 
 
 // Initialize our static variables.
-PRUint32 nsCanvasRenderingContext2D::sNumLivingContexts = 0;
-PRUint8 (*nsCanvasRenderingContext2D::sUnpremultiplyTable)[256] = nullptr;
-PRUint8 (*nsCanvasRenderingContext2D::sPremultiplyTable)[256] = nullptr;
+uint32_t nsCanvasRenderingContext2D::sNumLivingContexts = 0;
+uint8_t (*nsCanvasRenderingContext2D::sUnpremultiplyTable)[256] = nullptr;
+uint8_t (*nsCanvasRenderingContext2D::sPremultiplyTable)[256] = nullptr;
 
 nsresult
 NS_NewCanvasRenderingContext2DThebes(nsIDOMCanvasRenderingContext2D** aResult)
@@ -849,7 +849,7 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 {
     Reset();
     // Drop references from all CanvasRenderingContext2DUserDatas to this context
-    for (PRUint32 i = 0; i < mUserDatas.Length(); ++i) {
+    for (uint32_t i = 0; i < mUserDatas.Length(); ++i) {
         mUserDatas[i]->Forget();
     }
     sNumLivingContexts--;
@@ -957,7 +957,7 @@ nsCanvasRenderingContext2D::SetStyleFromStringOrInterface(const nsAString& aStr,
 nsresult
 nsCanvasRenderingContext2D::GetStyleAsStringOrInterface(nsAString& aStr,
                                                         nsISupports **aInterface,
-                                                        PRInt32 *aType,
+                                                        int32_t *aType,
                                                         Style aWhichStyle)
 {
     if (CurrentState().patternStyles[aWhichStyle]) {
@@ -1116,14 +1116,14 @@ nsCanvasRenderingContext2D::RedrawUser(const gfxRect& r)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
+nsCanvasRenderingContext2D::SetDimensions(int32_t width, int32_t height)
 {
     Initialize(NULL, width, height);
     return NS_OK;
 }
 
 void
-nsCanvasRenderingContext2D::Initialize(nsIDocShell *docShell, PRInt32 width, PRInt32 height) 
+nsCanvasRenderingContext2D::Initialize(nsIDocShell *docShell, int32_t width, int32_t height) 
 {
     Reset();
 
@@ -1179,8 +1179,8 @@ nsCanvasRenderingContext2D::CreateThebes()
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, 
                                                   gfxASurface *surface, 
-                                                  PRInt32 width, 
-                                                  PRInt32 height)
+                                                  int32_t width, 
+                                                  int32_t height)
 {
     Initialize(docShell, width, height);
     
@@ -1307,7 +1307,7 @@ nsCanvasRenderingContext2D::SetIsIPC(bool isIPC)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter, PRUint32 aFlags)
+nsCanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter, uint32_t aFlags)
 {
     nsresult rv = NS_OK;
 
@@ -1365,7 +1365,7 @@ nsCanvasRenderingContext2D::GetInputStream(const char *aMimeType,
     if (!encoder)
         return NS_ERROR_FAILURE;
 
-    nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[mWidth * mHeight * 4]);
+    nsAutoArrayPtr<uint8_t> imageBuffer(new (std::nothrow) uint8_t[mWidth * mHeight * 4]);
     if (!imageBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1629,7 +1629,7 @@ nsCanvasRenderingContext2D::SetStrokeStyle(nsIVariant *aValue)
     nsString str;
 
     nsresult rv;
-    PRUint16 vtype;
+    uint16_t vtype;
     rv = aValue->GetDataType(&vtype);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1660,7 +1660,7 @@ nsCanvasRenderingContext2D::GetStrokeStyle(nsIVariant **aResult)
 
     nsCOMPtr<nsISupports> sup;
     nsString str;
-    PRInt32 t;
+    int32_t t;
     nsresult rv = GetStrokeStyle_multi(str, getter_AddRefs(sup), &t);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1690,7 +1690,7 @@ nsCanvasRenderingContext2D::SetFillStyle(nsIVariant *aValue)
 
     nsString str;
     nsresult rv;
-    PRUint16 vtype;
+    uint16_t vtype;
     rv = aValue->GetDataType(&vtype);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1719,7 +1719,7 @@ nsCanvasRenderingContext2D::GetFillStyle(nsIVariant **aResult)
 
     nsCOMPtr<nsISupports> sup;
     nsString str;
-    PRInt32 t;
+    int32_t t;
     nsresult rv = GetFillStyle_multi(str, getter_AddRefs(sup), &t);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1748,7 +1748,7 @@ nsCanvasRenderingContext2D::SetStrokeStyle_multi(const nsAString& aStr, nsISuppo
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetStrokeStyle_multi(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType)
+nsCanvasRenderingContext2D::GetStrokeStyle_multi(nsAString& aStr, nsISupports **aInterface, int32_t *aType)
 {
     return GetStyleAsStringOrInterface(aStr, aInterface, aType, STYLE_STROKE);
 }
@@ -1760,7 +1760,7 @@ nsCanvasRenderingContext2D::SetFillStyle_multi(const nsAString& aStr, nsISupport
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetFillStyle_multi(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType)
+nsCanvasRenderingContext2D::GetFillStyle_multi(nsAString& aStr, nsISupports **aInterface, int32_t *aType)
 {
     return GetStyleAsStringOrInterface(aStr, aInterface, aType, STYLE_FILL);
 }
@@ -2577,7 +2577,7 @@ nsCanvasRenderingContext2D::SetMozFont(const nsAString& font)
     }
 
     // use CSS pixels instead of dev pixels to avoid being affected by page zoom
-    const PRUint32 aupcp = nsPresContext::AppUnitsPerCSSPixel();
+    const uint32_t aupcp = nsPresContext::AppUnitsPerCSSPixel();
     // un-zoom the font size to avoid being affected by text-only zoom
     //
     // Purposely ignore the font size that respects the user's minimum
@@ -2765,7 +2765,7 @@ nsCanvasRenderingContext2D::MeasureText(const nsAString& rawText,
  */
 struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProcessor
 {
-    virtual void SetText(const PRUnichar* text, PRInt32 length, nsBidiDirection direction)
+    virtual void SetText(const PRUnichar* text, int32_t length, nsBidiDirection direction)
     {
         mFontgrp->UpdateFontList(); // ensure user font generation is current
         mTextRun = mFontgrp->MakeTextRun(text,
@@ -2847,7 +2847,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
     gfxFontGroup* mFontgrp;
 
     // dev pixel conversion factor
-    PRUint32 mAppUnitsPerDevPixel;
+    uint32_t mAppUnitsPerDevPixel;
 
     // operation (fill or stroke)
     nsCanvasRenderingContext2D::TextDrawOperation mOp;
@@ -3157,9 +3157,9 @@ nsCanvasRenderingContext2D::GetCurrentFontStyle()
 
 gfxTextRun*
 nsCanvasRenderingContext2D::MakeTextRun(const PRUnichar* aText,
-                                        PRUint32         aLength,
-                                        PRUint32         aAppUnitsPerDevUnit,
-                                        PRUint32         aFlags)
+                                        uint32_t         aLength,
+                                        uint32_t         aAppUnitsPerDevUnit,
+                                        uint32_t         aFlags)
 {
     gfxFontGroup* currentFontStyle = GetCurrentFontStyle();
     if (!currentFontStyle)
@@ -3401,7 +3401,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
                                       float a2, float a3, float a4, float a5,
                                       float a6, float a7, float a8,
-                                      PRUint8 optional_argc)
+                                      uint8_t optional_argc)
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -3428,7 +3428,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     if (!imgsurf) {
         // The canvas spec says that drawImage should draw the first frame
         // of animated images
-        PRUint32 sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME;
+        uint32_t sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME;
         nsLayoutUtils::SurfaceFromElementResult res =
             nsLayoutUtils::SurfaceFromElement(content->AsElement(), sfeFlags);
         if (!res.mSurface) {
@@ -3656,7 +3656,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY,
                                        float aW, float aH,
                                        const nsAString& aBGColor,
-                                       PRUint32 flags)
+                                       uint32_t flags)
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -3665,7 +3665,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
 
     // protect against too-large surfaces that will cause allocation
     // or overflow issues
-    if (!gfxASurface::CheckSurfaceSize(gfxIntSize(PRInt32(aW), PRInt32(aH)),
+    if (!gfxASurface::CheckSurfaceSize(gfxIntSize(int32_t(aW), int32_t(aH)),
                                        0xffff))
         return NS_ERROR_FAILURE;
 
@@ -3705,7 +3705,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
              nsPresContext::CSSPixelsToAppUnits(aY),
              nsPresContext::CSSPixelsToAppUnits(aW),
              nsPresContext::CSSPixelsToAppUnits(aH));
-    PRUint32 renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
+    uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
                                nsIPresShell::RENDER_DOCUMENT_RELATIVE);
     if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_CARET) {
         renderDocFlags |= nsIPresShell::RENDER_CARET;
@@ -3740,7 +3740,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float aX, float aY,
                                                 float aW, float aH,
                                                 const nsAString& aBGColor,
-                                                PRUint32 flags)
+                                                uint32_t flags)
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -3785,7 +3785,7 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
     bool flush =
         (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH) == 0;
 
-    PRUint32 renderDocFlags = nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
+    uint32_t renderDocFlags = nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
     if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_CARET) {
         renderDocFlags |= nsIPresShell::RENDER_CARET;
     }
@@ -3826,7 +3826,7 @@ nsCanvasRenderingContext2D::EnsureUnpremultiplyTable() {
     return;
 
   // Infallably alloc the unpremultiply table.
-  sUnpremultiplyTable = new PRUint8[256][256];
+  sUnpremultiplyTable = new uint8_t[256][256];
 
   // It's important that the array be indexed first by alpha and then by rgb
   // value.  When we unpremultiply a pixel, we're guaranteed to do three
@@ -3835,13 +3835,13 @@ nsCanvasRenderingContext2D::EnsureUnpremultiplyTable() {
   // increasing the chance of a cache hit.
 
   // a == 0 case
-  for (PRUint32 c = 0; c <= 255; c++) {
+  for (uint32_t c = 0; c <= 255; c++) {
     sUnpremultiplyTable[0][c] = c;
   }
 
   for (int a = 1; a <= 255; a++) {
     for (int c = 0; c <= 255; c++) {
-      sUnpremultiplyTable[a][c] = (PRUint8)((c * 255) / a);
+      sUnpremultiplyTable[a][c] = (uint8_t)((c * 255) / a);
     }
   }
 }
@@ -3997,15 +3997,15 @@ nsCanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
         for (uint32_t i = 0; i < aWidth; ++i) {
             // XXX Is there some useful swizzle MMX we can use here?
 #ifdef IS_LITTLE_ENDIAN
-            PRUint8 b = *src++;
-            PRUint8 g = *src++;
-            PRUint8 r = *src++;
-            PRUint8 a = *src++;
+            uint8_t b = *src++;
+            uint8_t g = *src++;
+            uint8_t r = *src++;
+            uint8_t a = *src++;
 #else
-            PRUint8 a = *src++;
-            PRUint8 r = *src++;
-            PRUint8 g = *src++;
-            PRUint8 b = *src++;
+            uint8_t a = *src++;
+            uint8_t r = *src++;
+            uint8_t g = *src++;
+            uint8_t b = *src++;
 #endif
             // Convert to non-premultiplied color
             *dst++ = sUnpremultiplyTable[a][r];
@@ -4025,7 +4025,7 @@ nsCanvasRenderingContext2D::EnsurePremultiplyTable() {
     return;
 
   // Infallably alloc the premultiply table.
-  sPremultiplyTable = new PRUint8[256][256];
+  sPremultiplyTable = new uint8_t[256][256];
 
   // Like the unpremultiply table, it's important that we index the premultiply
   // table with the alpha value as the first index to ensure good cache
@@ -4047,7 +4047,7 @@ nsCanvasRenderingContext2D::PutImageData(const JS::Value& dataArg,
                                          double dirtyWidthd,
                                          double dirtyHeightd,
                                          JSContext* cx,
-                                         PRUint8 optional_argc)
+                                         uint8_t optional_argc)
 {
     // GetImageData wants a non-const JS::Value
     JS::Value dataVal(dataArg);
@@ -4088,8 +4088,8 @@ nsCanvasRenderingContext2D::PutImageData(const JS::Value& dataArg,
         hasDirtyRect = true;
     }
 
-    PRUint8* data =
-        reinterpret_cast<PRUint8*>(JS_GetArrayBufferViewData(darray.get(), cx));
+    uint8_t* data =
+        reinterpret_cast<uint8_t*>(JS_GetArrayBufferViewData(darray.get(), cx));
     uint32_t byteLength = JS_GetTypedArrayByteLength(darray.get(), cx);
 
     return PutImageData_explicit(x, y, w, h, data, byteLength, hasDirtyRect,
@@ -4097,10 +4097,10 @@ nsCanvasRenderingContext2D::PutImageData(const JS::Value& dataArg,
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::PutImageData_explicit(PRInt32 x, PRInt32 y, PRUint32 w, PRUint32 h,
-                                                  unsigned char *aData, PRUint32 aDataLen,
-                                                  bool hasDirtyRect, PRInt32 dirtyX, PRInt32 dirtyY,
-                                                  PRInt32 dirtyWidth, PRInt32 dirtyHeight)
+nsCanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w, uint32_t h,
+                                                  unsigned char *aData, uint32_t aDataLen,
+                                                  bool hasDirtyRect, int32_t dirtyX, int32_t dirtyY,
+                                                  int32_t dirtyWidth, int32_t dirtyHeight)
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -4152,7 +4152,7 @@ nsCanvasRenderingContext2D::PutImageData_explicit(PRInt32 x, PRInt32 y, PRUint32
     if (dirtyRect.Width() <= 0 || dirtyRect.Height() <= 0)
         return NS_OK;
 
-    PRUint32 len = w * h * 4;
+    uint32_t len = w * h * 4;
     if (aDataLen != len)
         return NS_ERROR_DOM_SYNTAX_ERR;
 
@@ -4164,15 +4164,15 @@ nsCanvasRenderingContext2D::PutImageData_explicit(PRInt32 x, PRInt32 y, PRUint32
     // ensure premultiply table has been created
     EnsurePremultiplyTable();
 
-    PRUint8 *src = aData;
-    PRUint8 *dst = imgsurf->Data();
+    uint8_t *src = aData;
+    uint8_t *dst = imgsurf->Data();
 
-    for (PRUint32 j = 0; j < h; j++) {
-        for (PRUint32 i = 0; i < w; i++) {
-            PRUint8 r = *src++;
-            PRUint8 g = *src++;
-            PRUint8 b = *src++;
-            PRUint8 a = *src++;
+    for (uint32_t j = 0; j < h; j++) {
+        for (uint32_t i = 0; i < w; i++) {
+            uint8_t r = *src++;
+            uint8_t g = *src++;
+            uint8_t b = *src++;
+            uint8_t a = *src++;
 
             // Convert to premultiplied color (losslessly if the input came from getImageData)
 #ifdef IS_LITTLE_ENDIAN
@@ -4253,7 +4253,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::CreateImageData(const JS::Value &a1,
                                             const JS::Value &a2,
                                             JSContext* cx,
-                                            PRUint8 optional_argc,
+                                            uint8_t optional_argc,
                                             nsIDOMImageData** retval)
 {
     // GetImageData wants mutable jsvals, so make copies
@@ -4309,7 +4309,7 @@ nsCanvasRenderingContext2D::SetMozImageSmoothingEnabled(bool val)
     return NS_OK;
 }
 
-static PRUint8 g2DContextLayerUserData;
+static uint8_t g2DContextLayerUserData;
 
 already_AddRefed<CanvasLayer>
 nsCanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
@@ -4363,7 +4363,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     data.mSize = nsIntSize(mWidth, mHeight);
 
     canvasLayer->Initialize(data);
-    PRUint32 flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
+    uint32_t flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
     canvasLayer->SetContentFlags(flags);
     canvasLayer->Updated();
 

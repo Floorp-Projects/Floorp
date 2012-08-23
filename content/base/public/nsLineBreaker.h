@@ -29,13 +29,13 @@ public:
    *    FLAG_BREAK_TYPE_NORMAL   - a normal (whitespace) linebreak
    *    FLAG_BREAK_TYPE_HYPHEN   - a hyphenation point
    */
-  virtual void SetBreaks(PRUint32 aStart, PRUint32 aLength, PRUint8* aBreakBefore) = 0;
+  virtual void SetBreaks(uint32_t aStart, uint32_t aLength, uint8_t* aBreakBefore) = 0;
   
   /**
    * Indicates which characters should be capitalized. Only called if
    * BREAK_NEED_CAPITALIZATION was requested.
    */
-  virtual void SetCapitalization(PRUint32 aStart, PRUint32 aLength, bool* aCapitalize) = 0;
+  virtual void SetCapitalization(uint32_t aStart, uint32_t aLength, bool* aCapitalize) = 0;
 };
 
 /**
@@ -139,7 +139,7 @@ public:
    * no actual text associated with it. Only the BREAK_SUPPRESS_INSIDE flag
    * is relevant here.
    */
-  nsresult AppendInvisibleWhitespace(PRUint32 aFlags);
+  nsresult AppendInvisibleWhitespace(uint32_t aFlags);
 
   /**
    * Feed Unicode text into the linebreaker for analysis. aLength must be
@@ -147,15 +147,15 @@ public:
    * @param aSink can be null if the breaks are not actually needed (we may
    * still be setting up state for later breaks)
    */
-  nsresult AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 aLength,
-                      PRUint32 aFlags, nsILineBreakSink* aSink);
+  nsresult AppendText(nsIAtom* aHyphenationLanguage, const PRUnichar* aText, uint32_t aLength,
+                      uint32_t aFlags, nsILineBreakSink* aSink);
   /**
    * Feed 8-bit text into the linebreaker for analysis. aLength must be nonzero.
    * @param aSink can be null if the breaks are not actually needed (we may
    * still be setting up state for later breaks)
    */
-  nsresult AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aLength,
-                      PRUint32 aFlags, nsILineBreakSink* aSink);
+  nsresult AppendText(nsIAtom* aHyphenationLanguage, const uint8_t* aText, uint32_t aLength,
+                      uint32_t aFlags, nsILineBreakSink* aSink);
   /**
    * Reset all state. This means the current run has ended; any outstanding
    * calls through nsILineBreakSink are made, and all outstanding references to
@@ -173,21 +173,21 @@ public:
    * Set word-break mode for linebreaker.  This is set by word-break property.
    * @param aMode is nsILineBreaker::kWordBreak_* value.
    */
-  void SetWordBreak(PRUint8 aMode) { mWordBreak = aMode; }
+  void SetWordBreak(uint8_t aMode) { mWordBreak = aMode; }
 
 private:
   // This is a list of text sources that make up the "current word" (i.e.,
   // run of text which does not contain any whitespace). All the mLengths
   // are are nonzero, these cannot overlap.
   struct TextItem {
-    TextItem(nsILineBreakSink* aSink, PRUint32 aSinkOffset, PRUint32 aLength,
-             PRUint32 aFlags)
+    TextItem(nsILineBreakSink* aSink, uint32_t aSinkOffset, uint32_t aLength,
+             uint32_t aFlags)
       : mSink(aSink), mSinkOffset(aSinkOffset), mLength(aLength), mFlags(aFlags) {}
 
     nsILineBreakSink* mSink;
-    PRUint32          mSinkOffset;
-    PRUint32          mLength;
-    PRUint32          mFlags;
+    uint32_t          mSinkOffset;
+    uint32_t          mLength;
+    uint32_t          mFlags;
   };
 
   // State for the nonwhitespace "word" that started in previous text and hasn't
@@ -198,17 +198,17 @@ private:
   // appropriate sink(s). Then we clear the current word state.
   nsresult FlushCurrentWord();
 
-  void UpdateCurrentWordLangGroup(nsIAtom *aLangGroup);
+  void UpdateCurrentWordLanguage(nsIAtom *aHyphenationLanguage);
 
   void FindHyphenationPoints(nsHyphenator *aHyphenator,
                              const PRUnichar *aTextStart,
                              const PRUnichar *aTextLimit,
-                             PRUint8 *aBreakState);
+                             uint8_t *aBreakState);
 
   nsAutoTArray<PRUnichar,100> mCurrentWord;
   // All the items that contribute to mCurrentWord
   nsAutoTArray<TextItem,2>    mTextItems;
-  nsIAtom*                    mCurrentWordLangGroup;
+  nsIAtom*                    mCurrentWordLanguage;
   bool                        mCurrentWordContainsMixedLang;
   bool                        mCurrentWordContainsComplexChar;
 
@@ -218,7 +218,7 @@ private:
   // a run of breakable whitespace ends here
   bool                        mBreakHere;
   // line break mode by "word-break" style
-  PRUint8                     mWordBreak;
+  uint8_t                     mWordBreak;
 };
 
 #endif /*NSLINEBREAKER_H_*/

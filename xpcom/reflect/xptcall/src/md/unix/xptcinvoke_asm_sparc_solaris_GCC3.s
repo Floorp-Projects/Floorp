@@ -10,8 +10,8 @@
  */
         .global NS_InvokeByIndex_P
 /*
- *  NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
- *                   PRUint32 paramCount, nsXPTCVariant* params);
+ *  NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+ *                   uint32_t paramCount, nsXPTCVariant* params);
  */
 NS_InvokeByIndex_P:
         save    %sp,-(64 + 32),%sp  ! room for the register window and

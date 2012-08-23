@@ -55,8 +55,8 @@ following on each platform (from <a href="http://lxr.mozilla.org/mozilla/source/
 
 <pre>
 XPTC_PUBLIC_API(nsresult)
-NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params);
+NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
+                   uint32_t paramCount, nsXPTCVariant* params);
 </pre>
 
 Calling code is expected to supply an array of <code>nsXPTCVariant</code>
@@ -101,7 +101,7 @@ public:
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
 
     // call this method and return result
-    NS_IMETHOD CallMethod(PRUint16 methodIndex,
+    NS_IMETHOD CallMethod(uint16_t methodIndex,
                           const nsXPTMethodInfo* info,
                           nsXPTCMiniVariant* params) = 0;
 };

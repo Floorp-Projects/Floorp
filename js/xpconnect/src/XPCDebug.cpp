@@ -66,7 +66,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     JSString* funname = nullptr;
     JSAutoByteString funbytes;
     const char* filename = nullptr;
-    PRInt32 lineno = 0;
+    int32_t lineno = 0;
     JSFunction* fun = nullptr;
     uint32_t namedArgCount = 0;
     JSBool isString;
@@ -83,7 +83,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
 
     if (script && pc) {
         filename = JS_GetScriptFilename(cx, script);
-        lineno =  (PRInt32) JS_PCToLineNumber(cx, script, pc);
+        lineno =  (int32_t) JS_PCToLineNumber(cx, script, pc);
         fun = JS_GetFrameFunction(cx, fp);
         if (fun)
             funname = JS_GetFunctionId(fun);

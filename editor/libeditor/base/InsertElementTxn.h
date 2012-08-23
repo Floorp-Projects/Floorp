@@ -12,7 +12,7 @@
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED
 #include "nscore.h"                     // for NS_IMETHOD
-#include "prtypes.h"                    // for PRInt32
+#include "prtypes.h"                    // for int32_t
 
 class nsIEditor;
 
@@ -29,7 +29,7 @@ public:
     */
   NS_IMETHOD Init(nsIDOMNode *aNode,
                   nsIDOMNode *aParent,
-                  PRInt32     aOffset,
+                  int32_t     aOffset,
                   nsIEditor  *aEditor);
 
   InsertElementTxn();
@@ -51,7 +51,7 @@ protected:
   nsIEditor*           mEditor;
 
   /** the index in mParent for the new node */
-  PRInt32 mOffset;
+  int32_t mOffset;
 };
 
 #endif

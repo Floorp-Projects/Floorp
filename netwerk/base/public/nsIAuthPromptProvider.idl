@@ -11,12 +11,12 @@ interface nsIAuthPromptProvider : nsISupports
     /**
      * Normal (non-proxy) prompt request.
      */
-    const PRUint32 PROMPT_NORMAL        = 0;
+    const uint32_t PROMPT_NORMAL        = 0;
 
     /**
      * Proxy auth request.
      */
-    const PRUint32 PROMPT_PROXY         = 1;
+    const uint32_t PROMPT_PROXY         = 1;
 
     /**
      * Request a prompt interface for the given prompt reason;
@@ -29,6 +29,6 @@ interface nsIAuthPromptProvider : nsISupports
      *                        NS_GET_IID(nsIAuthPrompt2).
      * @returns an nsIAuthPrompt2 interface, or throws NS_ERROR_NOT_AVAILABLE
      */
-    void getAuthPrompt(in PRUint32 aPromptReason, in nsIIDRef iid,
+    void getAuthPrompt(in uint32_t aPromptReason, in nsIIDRef iid,
                        [iid_is(iid),retval] out nsQIResult result);
 };

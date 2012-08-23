@@ -2748,3 +2748,126 @@ stack[anonid=browserStack][responsivemode] {
   max-width: 400px;
 }
 
+
+.chat-status-icon {
+  max-height: 16px;
+  max-width: 16px;
+  padding: 0;
+}
+
+.chat-toolbarbutton {
+  -moz-appearance: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: none;
+}
+
+.chat-toolbarbutton > .toolbarbutton-text {
+  display: none;
+}
+
+.chat-close-button {
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.chat-close-button:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.chat-close-button:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
+
+.chat-toggle-button {
+  /* XXX get a real image for this */
+  list-style-image: url("chrome://global/skin/icons/checkbox.png");
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.chat-toggle-button:hover {
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.chat-toggle-button[minimized="true"] {
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.chat-toggle-button[minimized="true"]:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.chat-title {
+  font-weight: bold;
+  color: -moz-dialogtext;
+}
+
+.chat-titlebar {
+  background-image: linear-gradient(white, #ddd);
+  height: 20px;
+  min-height: 20px;
+  width: 100%;
+  margin: 0;
+  padding: 2px;
+  border: none;
+  border-bottom: 1px solid gray;
+}
+
+.chat-titlebar[minimized="true"] {
+  border-bottom: none;
+}
+
+.chat-frame {
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.chatbar-button {
+  /* XXX get a real image for this */
+  list-style-image: url("chrome://browser/skin/social/social.png");
+  border: none;
+  margin: 0;
+  padding: 2px;
+  height: 21px;
+  width: 21px;
+  border-top: 1px solid gray;
+  -moz-border-end: 1px solid gray;
+}
+
+.chatbar-button[open="true"],
+.chatbar-button:active:hover {
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
+}
+
+/* toolbarbutton-icon */
+.chatbar-button > .toolbarbutton-text,
+.chatbar-button > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+.chatbar-innerbox {
+  background: transparent;
+  margin: -200px -1px 0 -1px;
+  overflow: hidden;
+}
+
+chatbar > chatbox {
+  height: 200px;
+  width: 200px;
+  background-color: white;
+  border: 1px solid gray;
+  border-bottom: none;
+}
+
+chatbar > chatbox[minimized="true"] {
+  width: 100px;
+  height: 20px;
+  border-bottom: none;
+}
+
+chatbar > chatbox + chatbox {
+  -moz-margin-start: -1px;
+}

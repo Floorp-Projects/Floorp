@@ -15,7 +15,7 @@ namespace {
 
 struct NameMap
 {
-  PRUint16 code;
+  uint16_t code;
   const char* name;
 };
 

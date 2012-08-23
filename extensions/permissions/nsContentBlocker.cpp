@@ -39,7 +39,7 @@ static const char *kTypeString[] = {"other",
                                     "websocket"};
 
 #define NUMBER_OF_TYPES NS_ARRAY_LENGTH(kTypeString)
-PRUint8 nsContentBlocker::mBehaviorPref[NUMBER_OF_TYPES];
+uint8_t nsContentBlocker::mBehaviorPref[NUMBER_OF_TYPES];
 
 NS_IMPL_ISUPPORTS3(nsContentBlocker, 
                    nsIContentPolicy,
@@ -68,10 +68,10 @@ nsContentBlocker::Init()
   // Migrate old image blocker pref
   nsCOMPtr<nsIPrefBranch> oldPrefBranch;
   oldPrefBranch = do_QueryInterface(prefService);
-  PRInt32 oldPref;
+  int32_t oldPref;
   rv = oldPrefBranch->GetIntPref("network.image.imageBehavior", &oldPref);
   if (NS_SUCCEEDED(rv) && oldPref) {
-    PRInt32 newPref;
+    int32_t newPref;
     switch (oldPref) {
       default:
         newPref = BEHAVIOR_ACCEPT;
@@ -107,11 +107,11 @@ void
 nsContentBlocker::PrefChanged(nsIPrefBranch *aPrefBranch,
                               const char    *aPref)
 {
-  PRInt32 val;
+  int32_t val;
 
 #define PREF_CHANGED(_P) (!aPref || !strcmp(aPref, _P))
 
-  for(PRUint32 i = 0; i < NUMBER_OF_TYPES; ++i) {
+  for(uint32_t i = 0; i < NUMBER_OF_TYPES; ++i) {
     if (PREF_CHANGED(kTypeString[i]) &&
         NS_SUCCEEDED(aPrefBranch->GetIntPref(kTypeString[i], &val)))
       mBehaviorPref[i] = LIMIT(val, 1, 3, 1);
@@ -121,14 +121,14 @@ nsContentBlocker::PrefChanged(nsIPrefBranch *aPrefBranch,
 
 // nsIContentPolicy Implementation
 NS_IMETHODIMP 
-nsContentBlocker::ShouldLoad(PRUint32          aContentType,
+nsContentBlocker::ShouldLoad(uint32_t          aContentType,
                              nsIURI           *aContentLocation,
                              nsIURI           *aRequestingLocation,
                              nsISupports      *aRequestingContext,
                              const nsACString &aMimeGuess,
                              nsISupports      *aExtra,
                              nsIPrincipal     *aRequestPrincipal,
-                             PRInt16          *aDecision)
+                             int16_t          *aDecision)
 {
   *aDecision = nsIContentPolicy::ACCEPT;
   nsresult rv;
@@ -172,14 +172,14 @@ nsContentBlocker::ShouldLoad(PRUint32          aContentType,
 }
 
 NS_IMETHODIMP
-nsContentBlocker::ShouldProcess(PRUint32          aContentType,
+nsContentBlocker::ShouldProcess(uint32_t          aContentType,
                                 nsIURI           *aContentLocation,
                                 nsIURI           *aRequestingLocation,
                                 nsISupports      *aRequestingContext,
                                 const nsACString &aMimeGuess,
                                 nsISupports      *aExtra,
                                 nsIPrincipal     *aRequestPrincipal,
-                                PRInt16          *aDecision)
+                                int16_t          *aDecision)
 {
   // For loads where aRequestingContext is chrome, we should just
   // accept.  Those are most likely toplevel loads in windows, and
@@ -188,7 +188,7 @@ nsContentBlocker::ShouldProcess(PRUint32          aContentType,
     do_QueryInterface(NS_CP_GetDocShellFromContext(aRequestingContext));
 
   if (item) {
-    PRInt32 type;
+    int32_t type;
     item->GetItemType(&type);
     if (type == nsIDocShellTreeItem::typeChrome) {
       *aDecision = nsIContentPolicy::ACCEPT;
@@ -207,13 +207,13 @@ nsContentBlocker::ShouldProcess(PRUint32          aContentType,
 
     bool shouldLoad, fromPrefs;
     nsresult rv = TestPermission(aContentLocation, aRequestingLocation,
-				 aContentType, &shouldLoad, &fromPrefs);
+                                 aContentType, &shouldLoad, &fromPrefs);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!shouldLoad) {
       if (fromPrefs) {
-	*aDecision = nsIContentPolicy::REJECT_TYPE;
+        *aDecision = nsIContentPolicy::REJECT_TYPE;
       } else {
-	*aDecision = nsIContentPolicy::REJECT_SERVER;
+        *aDecision = nsIContentPolicy::REJECT_SERVER;
       }
     }
     return NS_OK;
@@ -229,7 +229,7 @@ nsContentBlocker::ShouldProcess(PRUint32          aContentType,
 nsresult
 nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
                                  nsIURI *aFirstURI,
-                                 PRInt32 aContentType,
+                                 int32_t aContentType,
                                  bool *aPermission,
                                  bool *aFromPrefs)
 {
@@ -242,7 +242,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
   // default prefs.
   // Don't forget the aContentType ranges from 1..8, while the
   // array is indexed 0..7
-  PRUint32 permission;
+  uint32_t permission;
   nsresult rv = mPermissionManager->TestPermission(aCurrentURI, 
                                                    kTypeString[aContentType - 1],
                                                    &permission);
@@ -294,7 +294,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
     // Search for two dots, starting at the end.
     // If there are no two dots found, ++dot will turn to zero,
     // that will return the entire string.
-    PRInt32 dot = currentHost.RFindChar('.');
+    int32_t dot = currentHost.RFindChar('.');
     dot = currentHost.RFindChar('.', dot-1);
     ++dot;
 

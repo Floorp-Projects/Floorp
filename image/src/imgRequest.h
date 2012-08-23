@@ -62,7 +62,7 @@ public:
                 imgCacheEntry *aCacheEntry,
                 void *aLoadId,
                 nsIPrincipal* aLoadingPrincipal,
-                PRInt32 aCORSMode);
+                int32_t aCORSMode);
 
   // Callers must call imgRequestProxy::Notify later.
   nsresult AddProxy(imgRequestProxy *proxy);
@@ -70,7 +70,7 @@ public:
   // aNotify==false still sends OnStopRequest.
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool aNotify);
 
-  void SniffMimeType(const char *buf, PRUint32 len);
+  void SniffMimeType(const char *buf, uint32_t len);
 
   // Cancel, but also ensure that all work done in Init() is undone. Call this
   // only when the channel has failed to open, and so calling Cancel() on it
@@ -83,11 +83,11 @@ public:
   nsresult UnlockImage();
   nsresult RequestDecode();
 
-  inline void SetInnerWindowID(PRUint64 aInnerWindowId) {
+  inline void SetInnerWindowID(uint64_t aInnerWindowId) {
     mInnerWindowId = aInnerWindowId;
   }
 
-  inline PRUint64 InnerWindowID() const {
+  inline uint64_t InnerWindowID() const {
     return mInnerWindowId;
   }
 
@@ -100,7 +100,7 @@ public:
   bool GetMultipart() const { return mIsMultiPartChannel; }
 
   // The CORS mode for which we loaded this image.
-  PRInt32 GetCORSMode() const { return mCORSMode; }
+  int32_t GetCORSMode() const { return mCORSMode; }
 
   // The principal for the document that loaded this image. Used when trying to
   // validate a CORS image load.
@@ -154,11 +154,11 @@ private:
 
   // Return the priority of the underlying network request, or return
   // PRIORITY_NORMAL if it doesn't support nsISupportsPriority.
-  PRInt32 Priority() const;
+  int32_t Priority() const;
 
   // Adjust the priority of the underlying network request by the given delta
   // on behalf of the given proxy.
-  void AdjustPriority(imgRequestProxy *aProxy, PRInt32 aDelta);
+  void AdjustPriority(imgRequestProxy *aProxy, int32_t aDelta);
 
   // Return whether we've seen some data at this point
   bool HasTransferredData() const { return mGotData; }
@@ -217,11 +217,11 @@ private:
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
 
   // The ID of the inner window origin, used for error reporting.
-  PRUint64 mInnerWindowId;
+  uint64_t mInnerWindowId;
 
   // The CORS mode (defined in imgIRequest) this image was loaded with. By
   // default, imgIRequest::CORS_NONE.
-  PRInt32 mCORSMode;
+  int32_t mCORSMode;
 
   // Sometimes consumers want to do things before the image is ready. Let them,
   // and apply the action when the image becomes available.

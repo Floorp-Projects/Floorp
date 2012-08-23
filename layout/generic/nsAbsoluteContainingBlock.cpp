@@ -504,7 +504,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     strcpy(aBuf, "UC");
   }
   else {
-    if((PRInt32)0xdeadbeef == aSize)
+    if((int32_t)0xdeadbeef == aSize)
     {
       strcpy(aBuf, "deadbeef");
     }

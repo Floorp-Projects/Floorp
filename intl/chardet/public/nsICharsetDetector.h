@@ -36,7 +36,7 @@ public:
                           false it need more bytes. 
                    This is used to enhance performance
    */
-  NS_IMETHOD DoIt(const char* aBytesArray, PRUint32 aLen, bool* oDontFeedMe) = 0;
+  NS_IMETHOD DoIt(const char* aBytesArray, uint32_t aLen, bool* oDontFeedMe) = 0;
 
   /*
      It also tell the detector the last chance the make a decision

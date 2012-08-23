@@ -287,7 +287,7 @@ Shape::dump(JSContext *cx, FILE *fp) const
         fputs(") ", fp);
     }
 
-    fprintf(fp, "shortid %d\n", shortid());
+    fprintf(fp, "shortid %d\n", maybeShortid());
 }
 
 void

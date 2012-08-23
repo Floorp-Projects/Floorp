@@ -142,8 +142,8 @@ public:
    *                     null.
    * @param aString      [out] Data as converted to unicode
    */
-  static nsresult ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
-                                 PRUint32 aLength,
+  static nsresult ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
+                                 uint32_t aLength,
                                  const nsAString& aHintCharset,
                                  nsIDocument* aDocument, nsString& aString);
 
@@ -194,7 +194,7 @@ public:
   /**
    * Returns the number of pending scripts, deferred or not.
    */
-  PRUint32 HasPendingOrCurrentScripts()
+  uint32_t HasPendingOrCurrentScripts()
   {
     return mCurrentScript || mParserBlockingRequest;
   }
@@ -277,8 +277,8 @@ private:
   nsresult PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
                                 nsIStreamLoader* aLoader,
                                 nsresult aStatus,
-                                PRUint32 aStringLen,
-                                const PRUint8* aString);
+                                uint32_t aStringLen,
+                                const uint8_t* aString);
 
   nsIDocument* mDocument;                   // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
@@ -310,7 +310,7 @@ private:
   nsCOMPtr<nsIScriptElement> mCurrentParserInsertedScript;
   // XXXbz do we want to cycle-collect these or something?  Not sure.
   nsTArray< nsRefPtr<nsScriptLoader> > mPendingChildLoaders;
-  PRUint32 mBlockerCount;
+  uint32_t mBlockerCount;
   bool mEnabled;
   bool mDeferEnabled;
   bool mDocumentParsingDone;

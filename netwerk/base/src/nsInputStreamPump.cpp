@@ -54,10 +54,10 @@ nsInputStreamPump::~nsInputStreamPump()
 nsresult
 nsInputStreamPump::Create(nsInputStreamPump  **result,
                           nsIInputStream      *stream,
-                          PRInt64              streamPos,
-                          PRInt64              streamLen,
-                          PRUint32             segsize,
-                          PRUint32             segcount,
+                          int64_t              streamPos,
+                          int64_t              streamLen,
+                          uint32_t             segsize,
+                          uint32_t             segcount,
                           bool                 closeWhenDone)
 {
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
@@ -83,15 +83,15 @@ struct PeekData {
 
 static NS_METHOD
 CallPeekFunc(nsIInputStream *aInStream, void *aClosure,
-             const char *aFromSegment, PRUint32 aToOffset, PRUint32 aCount,
-             PRUint32 *aWriteCount)
+             const char *aFromSegment, uint32_t aToOffset, uint32_t aCount,
+             uint32_t *aWriteCount)
 {
   NS_ASSERTION(aToOffset == 0, "Called more than once?");
   NS_ASSERTION(aCount > 0, "Called without data?");
 
   PeekData* data = static_cast<PeekData*>(aClosure);
   data->mFunc(data->mClosure,
-              reinterpret_cast<const PRUint8*>(aFromSegment), aCount);
+              reinterpret_cast<const uint8_t*>(aFromSegment), aCount);
   return NS_BINDING_ABORTED;
 }
 
@@ -101,11 +101,11 @@ nsInputStreamPump::PeekStream(PeekSegmentFun callback, void* closure)
   NS_ASSERTION(mAsyncStream, "PeekStream called without stream");
 
   // See if the pipe is closed by checking the return of Available.
-  PRUint64 dummy64;
+  uint64_t dummy64;
   nsresult rv = mAsyncStream->Available(&dummy64);
   if (NS_FAILED(rv))
     return rv;
-  PRUint32 dummy = (PRUint32)NS_MIN(dummy64, (PRUint64)PR_UINT32_MAX);
+  uint32_t dummy = (uint32_t)NS_MIN(dummy64, (uint64_t)PR_UINT32_MAX);
 
   PeekData data(callback, closure);
   return mAsyncStream->ReadSegments(CallPeekFunc,
@@ -250,15 +250,15 @@ nsInputStreamPump::SetLoadGroup(nsILoadGroup *aLoadGroup)
 
 NS_IMETHODIMP
 nsInputStreamPump::Init(nsIInputStream *stream,
-                        PRInt64 streamPos, PRInt64 streamLen,
-                        PRUint32 segsize, PRUint32 segcount,
+                        int64_t streamPos, int64_t streamLen,
+                        uint32_t segsize, uint32_t segcount,
                         bool closeWhenDone)
 {
     NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);
 
-    mStreamOffset = PRUint64(streamPos);
-    if (PRInt64(streamLen) >= PRInt64(0))
-        mStreamLength = PRUint64(streamLen);
+    mStreamOffset = uint64_t(streamPos);
+    if (int64_t(streamLen) >= int64_t(0))
+        mStreamLength = uint64_t(streamLen);
     mStream = stream;
     mSegSize = segsize;
     mSegCount = segcount;
@@ -362,7 +362,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
             break;
         }
 
-        PRUint32 nextState;
+        uint32_t nextState;
         switch (mState) {
         case STATE_START:
             nextState = OnStateStart();
@@ -396,7 +396,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
     return NS_OK;
 }
 
-PRUint32
+uint32_t
 nsInputStreamPump::OnStateStart()
 {
     SAMPLE_LABEL("nsInputStreamPump", "OnStateStart");
@@ -408,7 +408,7 @@ nsInputStreamPump::OnStateStart()
     // so our listener can check our status from OnStartRequest.
     // XXX async streams should have a GetStatus method!
     if (NS_SUCCEEDED(mStatus)) {
-        PRUint64 avail;
+        uint64_t avail;
         rv = mAsyncStream->Available(&avail);
         if (NS_FAILED(rv) && rv != NS_BASE_STREAM_CLOSED)
             mStatus = rv;
@@ -424,7 +424,7 @@ nsInputStreamPump::OnStateStart()
     return NS_SUCCEEDED(mStatus) ? STATE_TRANSFER : STATE_STOP;
 }
 
-PRUint32
+uint32_t
 nsInputStreamPump::OnStateTransfer()
 {
     SAMPLE_LABEL("Input", "nsInputStreamPump::OnStateTransfer");
@@ -436,7 +436,7 @@ nsInputStreamPump::OnStateTransfer()
 
     nsresult rv;
 
-    PRUint64 avail;
+    uint64_t avail;
     rv = mAsyncStream->Available(&avail);
     LOG(("  Available returned [stream=%x rv=%x avail=%llu]\n", mAsyncStream.get(), rv, avail));
 
@@ -465,7 +465,7 @@ nsInputStreamPump::OnStateTransfer()
 
             // in most cases this QI will succeed (mAsyncStream is almost always
             // a nsPipeInputStream, which implements nsISeekableStream::Tell).
-            PRInt64 offsetBefore;
+            int64_t offsetBefore;
             nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mAsyncStream);
             if (seekable && NS_FAILED(seekable->Tell(&offsetBefore))) {
                 NS_NOTREACHED("Tell failed on readable stream");
@@ -476,12 +476,12 @@ nsInputStreamPump::OnStateTransfer()
             // streamed more than PR_UINT32_MAX, then avoid overflowing the
             // stream offset.  it's the best we can do without a 64-bit stream
             // listener API.
-            PRUint32 odaOffset =
+            uint32_t odaOffset =
                 mStreamOffset > PR_UINT32_MAX ?
-                PR_UINT32_MAX : PRUint32(mStreamOffset);
-            PRUint32 odaAvail =
+                PR_UINT32_MAX : uint32_t(mStreamOffset);
+            uint32_t odaAvail =
                 avail > PR_UINT32_MAX ?
-                PR_UINT32_MAX : PRUint32(avail);
+                PR_UINT32_MAX : uint32_t(avail);
 
             LOG(("  calling OnDataAvailable [offset=%lld(%u) count=%llu(%u)]\n",
                 mStreamOffset, odaOffset, avail, odaAvail));
@@ -495,7 +495,7 @@ nsInputStreamPump::OnStateTransfer()
                 if (seekable) {
                     // NOTE: if Tell fails, which can happen if the stream is
                     // now closed, then we assume that everything was read.
-                    PRInt64 offsetAfter;
+                    int64_t offsetAfter;
                     if (NS_FAILED(seekable->Tell(&offsetAfter)))
                         offsetAfter = offsetBefore + odaAvail;
                     if (offsetAfter > offsetBefore)
@@ -537,7 +537,7 @@ nsInputStreamPump::OnStateTransfer()
     return STATE_STOP;
 }
 
-PRUint32
+uint32_t
 nsInputStreamPump::OnStateStop()
 {
     SAMPLE_LABEL("Input", "nsInputStreamPump::OnStateTransfer");

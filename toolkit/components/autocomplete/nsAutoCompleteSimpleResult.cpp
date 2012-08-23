@@ -31,13 +31,13 @@ nsAutoCompleteSimpleResult::SetSearchString(const nsAString &aSearchString)
 
 // searchResult
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::GetSearchResult(PRUint16 *aSearchResult)
+nsAutoCompleteSimpleResult::GetSearchResult(uint16_t *aSearchResult)
 {
   *aSearchResult = mSearchResult;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::SetSearchResult(PRUint16 aSearchResult)
+nsAutoCompleteSimpleResult::SetSearchResult(uint16_t aSearchResult)
 {
   mSearchResult = aSearchResult;
   return NS_OK;
@@ -45,13 +45,13 @@ nsAutoCompleteSimpleResult::SetSearchResult(PRUint16 aSearchResult)
 
 // defaultIndex
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::GetDefaultIndex(PRInt32 *aDefaultIndex)
+nsAutoCompleteSimpleResult::GetDefaultIndex(int32_t *aDefaultIndex)
 {
   *aDefaultIndex = mDefaultIndex;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::SetDefaultIndex(PRInt32 aDefaultIndex)
+nsAutoCompleteSimpleResult::SetDefaultIndex(int32_t aDefaultIndex)
 {
   mDefaultIndex = aDefaultIndex;
   return NS_OK;
@@ -115,7 +115,7 @@ nsAutoCompleteSimpleResult::AppendMatch(const nsAString& aValue,
 }
 
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::GetMatchCount(PRUint32 *aMatchCount)
+nsAutoCompleteSimpleResult::GetMatchCount(uint32_t *aMatchCount)
 {
   CheckInvariants();
 
@@ -124,9 +124,9 @@ nsAutoCompleteSimpleResult::GetMatchCount(PRUint32 *aMatchCount)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::GetValueAt(PRInt32 aIndex, nsAString& _retval)
+nsAutoCompleteSimpleResult::GetValueAt(int32_t aIndex, nsAString& _retval)
 {
-  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < PRInt32(mValues.Length()),
+  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < int32_t(mValues.Length()),
                  NS_ERROR_ILLEGAL_VALUE);
   CheckInvariants();
 
@@ -135,15 +135,15 @@ nsAutoCompleteSimpleResult::GetValueAt(PRInt32 aIndex, nsAString& _retval)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::GetLabelAt(PRInt32 aIndex, nsAString& _retval)
+nsAutoCompleteSimpleResult::GetLabelAt(int32_t aIndex, nsAString& _retval)
 {
   return GetValueAt(aIndex, _retval);
 }
 
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::GetCommentAt(PRInt32 aIndex, nsAString& _retval)
+nsAutoCompleteSimpleResult::GetCommentAt(int32_t aIndex, nsAString& _retval)
 {
-  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < PRInt32(mComments.Length()),
+  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < int32_t(mComments.Length()),
                  NS_ERROR_ILLEGAL_VALUE);
   CheckInvariants();
   _retval = mComments[aIndex];
@@ -151,9 +151,9 @@ nsAutoCompleteSimpleResult::GetCommentAt(PRInt32 aIndex, nsAString& _retval)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::GetImageAt(PRInt32 aIndex, nsAString& _retval)
+nsAutoCompleteSimpleResult::GetImageAt(int32_t aIndex, nsAString& _retval)
 {
-  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < PRInt32(mImages.Length()),
+  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < int32_t(mImages.Length()),
                  NS_ERROR_ILLEGAL_VALUE);
   CheckInvariants();
   _retval = mImages[aIndex];
@@ -161,9 +161,9 @@ nsAutoCompleteSimpleResult::GetImageAt(PRInt32 aIndex, nsAString& _retval)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::GetStyleAt(PRInt32 aIndex, nsAString& _retval)
+nsAutoCompleteSimpleResult::GetStyleAt(int32_t aIndex, nsAString& _retval)
 {
-  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < PRInt32(mStyles.Length()),
+  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < int32_t(mStyles.Length()),
                  NS_ERROR_ILLEGAL_VALUE);
   CheckInvariants();
   _retval = mStyles[aIndex];
@@ -178,10 +178,10 @@ nsAutoCompleteSimpleResult::SetListener(nsIAutoCompleteSimpleResultListener* aLi
 }
 
 NS_IMETHODIMP
-nsAutoCompleteSimpleResult::RemoveValueAt(PRInt32 aRowIndex,
+nsAutoCompleteSimpleResult::RemoveValueAt(int32_t aRowIndex,
                                           bool aRemoveFromDb)
 {
-  NS_ENSURE_TRUE(aRowIndex >= 0 && aRowIndex < PRInt32(mValues.Length()),
+  NS_ENSURE_TRUE(aRowIndex >= 0 && aRowIndex < int32_t(mValues.Length()),
                  NS_ERROR_ILLEGAL_VALUE);
 
   nsAutoString removedValue(mValues[aRowIndex]);

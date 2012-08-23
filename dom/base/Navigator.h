@@ -142,7 +142,6 @@ public:
   NS_DECL_NSIDOMNAVIGATORCAMERA
 
 private:
-  bool IsSmsAllowed() const;
   bool IsSmsSupported() const;
 
   nsRefPtr<nsMimeTypeArray> mMimeTypes;

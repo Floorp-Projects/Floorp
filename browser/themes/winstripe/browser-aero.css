@@ -110,6 +110,12 @@
   .menu-iconic-accel {
     color: graytext;
   }
+
+  .chatbar-button,
+  chatbar > chatbox {
+    border-color: #A9B7C9;
+  }
+  
 }
 
 @media (-moz-windows-compositor) {
