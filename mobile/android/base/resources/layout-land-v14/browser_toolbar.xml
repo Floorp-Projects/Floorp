@@ -85,7 +85,7 @@
 
                 <ImageButton android:id="@+id/site_security"
                              style="@style/AddressBar.ImageButton"
-                             android:layout_width="21.33dip"
+                             android:layout_width="@dimen/browser_toolbar_lock_width"
                              android:scaleType="fitCenter"
                              android:layout_marginLeft="-4dip"
                              android:paddingLeft="1dp"
