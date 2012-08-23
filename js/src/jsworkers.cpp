@@ -107,8 +107,7 @@ WorkerThreadState::init(JSRuntime *rt)
     if (!helperWakeup)
         return false;
 
-    //numThreads = GetCPUCount() - 1;
-    numThreads = 0;
+    numThreads = GetCPUCount() - 1;
 
     threads = (WorkerThread*) rt->calloc_(sizeof(WorkerThread) * numThreads);
     if (!threads) {
@@ -214,9 +213,9 @@ WorkerThread::destroy()
     if (!thread)
         return;
 
-    terminate = true;
     {
         AutoLockWorkerThreadState lock(runtime);
+        terminate = true;
         state.notify(WorkerThreadState::WORKER);
     }
     PR_JoinThread(thread);
@@ -240,11 +239,11 @@ WorkerThread::threadLoop()
         JS_ASSERT(!ionScript);
 
         while (state.ionWorklist.empty()) {
-            state.wait(WorkerThreadState::WORKER);
             if (terminate) {
                 state.unlock();
                 return;
             }
+            state.wait(WorkerThreadState::WORKER);
         }
 
         ion::IonBuilder *builder = state.ionWorklist.popCopy();
