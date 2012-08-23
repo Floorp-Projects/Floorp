@@ -150,9 +150,9 @@ template <class Key, class Value,
 class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, public WeakMapBase {
   private:
     typedef HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy> Base;
-    typedef typename Base::Enum Enum;
 
   public:
+    typedef typename Base::Enum Enum;
     typedef typename Base::Range Range;
 
     explicit WeakMap(JSRuntime *rt, JSObject *memOf=NULL) : Base(rt), WeakMapBase(memOf) { }
