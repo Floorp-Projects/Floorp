@@ -852,7 +852,9 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
   MOZ_ASSERT(secMan);
 
   nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = secMan->GetNoAppCodebasePrincipal(uri, getter_AddRefs(principal));
+  nsresult rv = secMan->GetAppCodebasePrincipal(uri, permission.appId,
+                                                permission.isInBrowserElement,
+                                                getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, true);
 
   permissionManager->AddInternal(principal,
