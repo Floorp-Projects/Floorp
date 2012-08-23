@@ -10,6 +10,7 @@
 #include "skia/SkCanvas.h"
 #include "skia/SkDashPathEffect.h"
 #include "mozilla/Assertions.h"
+#include <vector>
 
 namespace mozilla {
 namespace gfx {
