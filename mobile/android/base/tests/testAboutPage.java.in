@@ -5,7 +5,7 @@ import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
 import android.util.Log;
 
-public class testAboutPage extends BaseTest {
+public class testAboutPage extends PixelTest {
     @Override
     protected int getTestType() {
         return TEST_MOCHITEST;
@@ -16,7 +16,7 @@ public class testAboutPage extends BaseTest {
 
         // Load the about: page
         String url = "about:";
-        loadUrl(url);
+        loadAndPaint(url);
 
         Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar");
         mAsserter.isnot(awesomebar, null, "Got the awesomebar");
