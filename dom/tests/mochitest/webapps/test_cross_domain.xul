@@ -26,7 +26,7 @@
 
 <script> 
 
-steps = [setUp, verify_no_apps, get_installed_returns_nothing, install_super_crazy, check_event_listener_fired, get_self_returns_nothing, 
+steps = [get_installed_returns_nothing, install_super_crazy, check_event_listener_fired, get_self_returns_nothing, 
          get_self_on_domain, install_on_domain, check_event_listener_fired, get_all_installed, 
          get_installed_on_domain, uninstall_on_domain, get_all_on_domain, tearDown];
 var iframes_loaded = 0 ;
@@ -38,21 +38,6 @@ function go() {
   } 
 }
 
-
-function setUp(next) { 
-  debug("in " + arguments.callee.name);
-  
-  uninstallAll(next);
-}
-
-function verify_no_apps(next)  {
-  debug("in " + arguments.callee.name);
-  mozAppscb(navigator.mozApps.mgmt.getAll(),
-            [{}],
-            "success",
-            ok,
-            next);
-}
 
 function get_installed_returns_nothing(next) {
   debug("in " + arguments.callee.name);

@@ -34,41 +34,6 @@ function onIframeLoad(name, check, next) {
   document.getElementById(name).contentWindow.wrappedJSObject.readFile = readFile;
 }
 
-/**
- * Uninstall All uninstalls all Apps
- * @next  The next operation to jump to, this might need to be invoked by the iframe when the test has completed
- */
-
-function uninstallAll(next) {
-  var pendingGetAll = navigator.mozApps.mgmt.getAll();
-  pendingGetAll.onsuccess = function() {
-    var m = this.result;
-    var total = m.length;
-    var finished = (total === 0);
-    debug("total = " + total);
-    for (var i=0; i < m.length; i++) {
-      var app = m[i];
-      var pendingUninstall = app.uninstall();
-      pendingUninstall.onsuccess = function(r) {
-        finished = (--total === 0);
-        if(finished == true) {
-          next();
-        }
-      };
-      pendingUninstall.onerror = function () {
-        finished = true;
-        throw('Failed');
-        if(finished == true) {
-          next();
-        }
-      };
-    }
-    if(finished == true && total ==  0) {
-      next();
-    }
-  }
-}
-
 function subsetOf(resultObj, list) {
   var returnObj = {} ;
   for (var i=0; i < list.length; i++) {

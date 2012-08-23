@@ -22,31 +22,16 @@
 
 <script> 
 
-steps = [setUp, verify_no_apps, get_installed_returns_nothing, install_bom, tearDown];
+steps = [get_installed_returns_nothing, install_bom, uninstall_bom, tearDown];
 
 runAll(steps);
 
-function setUp(next) { 
-  debug("in " + arguments.callee.name);
-  uninstallAll(next);
-}
-
-function verify_no_apps(next)  {
-  debug("in " + arguments.callee.name);
-  mozAppscb(navigator.mozApps.mgmt.getAll(), 
-            [{}],
-            "success",
-            ok,
-            next);
-}
-
 function get_installed_returns_nothing(next) {
   debug("in " + arguments.callee.name);
-  mozAppscb(navigator.mozApps.getInstalled(), 
-            [{}],
-            "success",
-            ok, 
-            next);
+  navigator.mozApps.getInstalled().onsuccess = function() {
+    is(this.result.length, 0, "should get no installed app");
+    next();
+  };
 }
 
 function install_bom(next)  {
@@ -60,6 +45,12 @@ function install_bom(next)  {
      ok(description == "This App is THE BOM, yo. ヅヂチ", description);
      next();
   };
+}
+
+function uninstall_bom(next)  {
+  debug("in " + arguments.callee.name);
+  var appURL = SERVERS['manifest_with_bom'];
+  uninstall(appURL, ok, function() { next(); });
 }
 
 </script> 

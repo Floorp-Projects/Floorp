@@ -10,6 +10,8 @@
 NS_IMPL_ISUPPORTS1(nsPermission, nsIPermission)
 
 nsPermission::nsPermission(const nsACString &aHost,
+                           uint32_t aAppId,
+                           bool aIsInBrowserElement,
                            const nsACString &aType,
                            uint32_t         aCapability,
                            uint32_t         aExpireType,
@@ -19,10 +21,8 @@ nsPermission::nsPermission(const nsACString &aHost,
  , mCapability(aCapability)
  , mExpireType(aExpireType)
  , mExpireTime(aExpireTime)
-{
-}
-
-nsPermission::~nsPermission()
+ , mAppId(aAppId)
+ , mIsInBrowserElement(aIsInBrowserElement)
 {
 }
 
@@ -30,6 +30,20 @@ NS_IMETHODIMP
 nsPermission::GetHost(nsACString &aHost)
 {
   aHost = mHost;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPermission::GetAppId(uint32_t* aAppId)
+{
+  *aAppId = mAppId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPermission::GetIsInBrowserElement(bool* aIsInBrowserElement)
+{
+  *aIsInBrowserElement = mIsInBrowserElement;
   return NS_OK;
 }
 

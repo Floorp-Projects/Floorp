@@ -1018,7 +1018,7 @@ IndexedDatabaseManager::GetASCIIOriginFromWindow(nsPIDOMWindow* aWindow,
     aASCIIOrigin.AssignLiteral("chrome");
   }
   else {
-    nsresult rv = nsContentUtils::GetASCIIOrigin(principal, aASCIIOrigin);
+    nsresult rv = principal->GetExtendedOrigin(aASCIIOrigin);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     if (aASCIIOrigin.EqualsLiteral("null")) {
