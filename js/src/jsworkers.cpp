@@ -191,8 +191,10 @@ WorkerThreadState::wait(CondVar which, uint32_t millis)
 #ifdef DEBUG
     lockOwner = NULL;
 #endif
-    PR_WaitCondVar((which == MAIN) ? mainWakeup : helperWakeup,
-                   millis ? PR_MillisecondsToInterval(millis) : PR_INTERVAL_NO_TIMEOUT);
+    DebugOnly<PRStatus> status =
+        PR_WaitCondVar((which == MAIN) ? mainWakeup : helperWakeup,
+                       millis ? PR_MillisecondsToInterval(millis) : PR_INTERVAL_NO_TIMEOUT);
+    JS_ASSERT(status == PR_SUCCESS);
 #ifdef DEBUG
     lockOwner = PR_GetCurrentThread();
 #endif
