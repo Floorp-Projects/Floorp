@@ -387,24 +387,24 @@ Parser::newObjectBox(JSObject *obj)
     return objbox;
 }
 
-FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *pc,
+FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *outerpc,
                          StrictMode::StrictModeState sms)
   : ObjectBox(traceListHead, obj),
-    siblings(pc->functionList),
+    siblings(outerpc->functionList),
     kids(NULL),
-    parent(pc->sc->inFunction() ? pc->sc->funbox() : NULL),
+    parent(outerpc->sc->inFunction() ? outerpc->sc->funbox() : NULL),
     bindings(),
     bufStart(0),
     bufEnd(0),
     ndefaults(0),
     strictModeState(sms),
-    inWith(!!pc->innermostWith),
+    inWith(!!outerpc->innermostWith),
     inGenexpLambda(false),
-    cxFlags(pc->sc->context)     // the cxFlags are set in LeaveFunction
+    cxFlags(outerpc->sc->context)     // the cxFlags are set in LeaveFunction
 {
     isFunctionBox = true;
-    if (!pc->sc->inFunction()) {
-        JSObject *scope = pc->sc->scopeChain();
+    if (!outerpc->sc->inFunction()) {
+        JSObject *scope = outerpc->sc->scopeChain();
         while (scope) {
             if (scope->isWith())
                 inWith = true;
@@ -414,7 +414,7 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *
 }
 
 FunctionBox *
-Parser::newFunctionBox(JSObject *obj, ParseContext *pc, StrictMode::StrictModeState sms)
+Parser::newFunctionBox(JSObject *obj, ParseContext *outerpc, StrictMode::StrictModeState sms)
 {
     JS_ASSERT(obj && !IsPoisonedPtr(obj));
     JS_ASSERT(obj->isFunction());
@@ -427,13 +427,13 @@ Parser::newFunctionBox(JSObject *obj, ParseContext *pc, StrictMode::StrictModeSt
      * function.
      */
     FunctionBox *funbox =
-        context->tempLifoAlloc().new_<FunctionBox>(traceListHead, obj, pc, sms);
+        context->tempLifoAlloc().new_<FunctionBox>(traceListHead, obj, outerpc, sms);
     if (!funbox) {
         js_ReportOutOfMemory(context);
         return NULL;
     }
 
-    traceListHead = pc->functionList = funbox;
+    traceListHead = outerpc->functionList = funbox;
 
     return funbox;
 }
