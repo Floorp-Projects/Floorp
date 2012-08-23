@@ -466,6 +466,7 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   cairo_restore(mContext);
 
   cairo_pattern_destroy(pat);
+  cairo_surface_destroy(blursurf);
 }
 
 void
