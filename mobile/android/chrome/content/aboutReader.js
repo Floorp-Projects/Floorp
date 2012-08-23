@@ -50,6 +50,8 @@ let AboutReader = {
 
     this._scrollOffset = window.pageYOffset;
 
+    this._frame.contentDocument.addEventListener("DOMSubtreeModified", this, false);
+    this._frame.contentDocument.addEventListener("MozScrolledAreaChanged", this, false);
     this._frame.contentDocument.addEventListener("touchstart", this, false);
     this._frame.contentDocument.addEventListener("click", this, false);
     window.addEventListener("scroll", this, false);
@@ -131,6 +133,13 @@ let AboutReader = {
       case "resize":
         this._updateImageMargins();
         break;
+      case "DOMSubtreeModified":
+      case "MozScrolledAreaChanged":
+        let newHeight = this._frame.contentDocument.body.offsetHeight + "px";
+        if (this._frame.style.height != newHeight) {
+          this._frame.style.height = newHeight;
+        }
+        break;
     }
   },
 
@@ -141,6 +150,8 @@ let AboutReader = {
 
     this._frame.contentDocument.removeEventListener("touchstart", this, false);
     this._frame.contentDocument.removeEventListener("click", this, false);
+    this._frame.contentDocument.removeEventListener("DOMSubtreeModified", this, false);
+    this._frame.contentDocument.removeEventListener("MozScrolledAreaChanged", this, false);
     window.removeEventListener("scroll", this, false);
     window.removeEventListener("popstate", this, false);
     window.removeEventListener("resize", this, false);
