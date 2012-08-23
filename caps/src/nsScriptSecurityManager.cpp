@@ -467,12 +467,6 @@ NS_IMPL_ISUPPORTS4(nsScriptSecurityManager,
 
 ///////////////// Security Checks /////////////////
 
-/* static */ JSPrincipals *
-nsScriptSecurityManager::ObjectPrincipalFinder(JSObject *aObj)
-{
-    return nsJSPrincipals::get(doGetObjectPrincipal(aObj));
-}
-
 JSBool
 nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
 {
@@ -491,13 +485,8 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
     if (NS_FAILED(rv))
         return JS_FALSE; // Not just absence of principal, but failure.
 
-    if (!subjectPrincipal) {
-        // See bug 553448 for discussion of this case.
-        NS_ASSERTION(!JS_GetSecurityCallbacks(js::GetRuntime(cx))->findObjectPrincipals,
-                     "CSP: Should have been able to find subject principal. "
-                     "Reluctantly granting access.");
+    if (!subjectPrincipal)
         return JS_TRUE;
-    }
 
     nsCOMPtr<nsIContentSecurityPolicy> csp;
     rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
@@ -3048,7 +3037,6 @@ nsresult nsScriptSecurityManager::Init()
 
     static const JSSecurityCallbacks securityCallbacks = {
         CheckObjectAccess,
-        ObjectPrincipalFinder,
         ContentSecurityPolicyPermitsJSAction
     };
 

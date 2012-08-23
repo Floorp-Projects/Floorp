@@ -1998,17 +1998,6 @@ typedef void
 (* JSDestroyPrincipalsOp)(JSPrincipals *principals);
 
 /*
- * Return a weak reference to the principals associated with obj, possibly via
- * the immutable parent chain leading from obj to a top-level container (e.g.,
- * a window object in the DOM level 0).  If there are no principals associated
- * with obj, return null.  Therefore null does not mean an error was reported;
- * in no event should an error be reported or an exception be thrown by this
- * callback's implementation.
- */
-typedef JSPrincipals *
-(* JSObjectPrincipalsFinder)(JSObject *obj);
-
-/*
  * Used to check if a CSP instance wants to disable eval() and friends.
  * See js_CheckCSPPermitsJSAction() in jsobj.
  */
@@ -4908,7 +4897,6 @@ JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals);
 
 struct JSSecurityCallbacks {
     JSCheckAccessOp            checkObjectAccess;
-    JSObjectPrincipalsFinder   findObjectPrincipals;
     JSCSPEvalChecker           contentSecurityPolicyAllows;
 };
 
