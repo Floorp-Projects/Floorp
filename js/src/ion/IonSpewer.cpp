@@ -7,7 +7,6 @@
 
 #ifdef DEBUG
 
-#include "Ion.h"
 #include "IonSpewer.h"
 
 #ifndef ION_SPEW_DIR
@@ -43,29 +42,25 @@ ion::EnableIonDebugLogging()
 void
 ion::IonSpewNewFunction(MIRGraph *graph, JSScript *function)
 {
-    if (!js_IonOptions.parallelCompilation)
-        ionspewer.beginFunction(graph, function);
+    ionspewer.beginFunction(graph, function);
 }
 
 void
 ion::IonSpewPass(const char *pass)
 {
-    if (!js_IonOptions.parallelCompilation)
-        ionspewer.spewPass(pass);
+    ionspewer.spewPass(pass);
 }
 
 void
 ion::IonSpewPass(const char *pass, LinearScanAllocator *ra)
 {
-    if (!js_IonOptions.parallelCompilation)
-        ionspewer.spewPass(pass, ra);
+    ionspewer.spewPass(pass, ra);
 }
 
 void
 ion::IonSpewEndFunction()
 {
-    if (!js_IonOptions.parallelCompilation)
-        ionspewer.endFunction();
+    ionspewer.endFunction();
 }
 
 
