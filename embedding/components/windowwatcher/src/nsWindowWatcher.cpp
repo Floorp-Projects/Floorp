@@ -586,11 +586,21 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
 
   JSContext *cx = GetJSContextFromWindow(aParent);
 
-  if (isCallerChrome && !hasChromeParent && cx) {
-    // open() is called from chrome on a non-chrome window, push
-    // the context of the callee onto the context stack to
-    // prevent the caller's priveleges from leaking into code
-    // that runs while opening the new window.
+  bool windowTypeIsChrome = chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
+  if (isCallerChrome && !hasChromeParent && !windowTypeIsChrome && cx) {
+    // open() is called from chrome on a non-chrome window, push the context of the
+    // callee onto the context stack to prevent the caller's priveleges from leaking
+    // into code that runs while opening the new window.
+    //
+    // The reasoning for this is in bug 289204. Basically, chrome sometimes does
+    // someContentWindow.open(untrustedURL), and wants to be insulated from nasty
+    // javascript: URLs and such. But there are also cases where we create a
+    // window parented to a content window (such as a download dialog), usually
+    // directly with nsIWindowWatcher. In those cases, we want the principal of
+    // the initial about:blank document to be system, so that the subsequent XUL
+    // load can reuse the inner window and avoid blowing away expandos. As such,
+    // we decide whether to load with the principal of the caller or of the parent
+    // based on whether the docshell type is chrome or content.
 
     callerContextGuard.Push(cx);
   }
