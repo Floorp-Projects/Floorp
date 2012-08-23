@@ -36,6 +36,7 @@ let gBrowserThumbnails = {
         return;
     } catch (e) {}
 
+    PageThumbs.addExpirationFilter(this);
     gBrowser.addTabsProgressListener(this);
     Services.prefs.addObserver(this.PREF_DISK_CACHE_SSL, this, false);
 
@@ -50,6 +51,7 @@ let gBrowserThumbnails = {
   },
 
   uninit: function Thumbnails_uninit() {
+    PageThumbs.removeExpirationFilter(this);
     gBrowser.removeTabsProgressListener(this);
     Services.prefs.removeObserver(this.PREF_DISK_CACHE_SSL, this);
 
@@ -78,6 +80,11 @@ let gBrowserThumbnails = {
   observe: function Thumbnails_observe() {
     this._sslDiskCacheEnabled =
       Services.prefs.getBoolPref(this.PREF_DISK_CACHE_SSL);
+  },
+
+  filterForThumbnailExpiration:
+  function Thumbnails_filterForThumbnailExpiration(aCallback) {
+    aCallback([browser.currentURI.spec for (browser of gBrowser.browsers)]);
   },
 
   /**
