@@ -848,6 +848,8 @@ private:
 MOZ_STATIC_ASSERT(prototypes::MaxProtoChainLength == 3,
                   "The MaxProtoChainLength must match our manual DOMJSClasses");
 
+// When this DOMJSClass is removed and it's the last consumer of
+// sNativePropertyHooks then sNativePropertyHooks should be removed too.
 DOMJSClass DedicatedWorkerGlobalScope::sClass = {
   {
     "DedicatedWorkerGlobalScope",
@@ -859,7 +861,7 @@ DOMJSClass DedicatedWorkerGlobalScope::sClass = {
   },
   { prototypes::id::EventTarget_workers, prototypes::id::_ID_Count,
     prototypes::id::_ID_Count },
-  -1, false, NULL
+  -1, false, &sNativePropertyHooks
 };
 
 JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
