@@ -288,7 +288,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
 {
     nsISupports TranslateThis(in nsISupports        aInitialThis,
                               in nsIInterfaceInfo   aInterfaceInfo,
-                              in PRUint16           aMethodIndex,
+                              in uint16_t           aMethodIndex,
                               out boolean            aHideFirstParamFromJS,
                               out nsIIDPtr          aIIDOfResult);
 };
@@ -336,11 +336,11 @@ interface nsIXPConnect : nsISupports
                   in JSContextPtr aJSContext,
                   in nsISupports  aCOMObj,
                   in nsIPrincipal aPrincipal,
-                  in PRUint32     aFlags);
+                  in uint32_t     aFlags);
 
-    const PRUint32 INIT_JS_STANDARD_CLASSES  = 1 << 0;
-    const PRUint32 FLAG_SYSTEM_GLOBAL_OBJECT = 1 << 1;
-    const PRUint32 OMIT_COMPONENTS_OBJECT    = 1 << 2;
+    const uint32_t INIT_JS_STANDARD_CLASSES  = 1 << 0;
+    const uint32_t FLAG_SYSTEM_GLOBAL_OBJECT = 1 << 1;
+    const uint32_t OMIT_COMPONENTS_OBJECT    = 1 << 2;
 
     /**
     * wrapNative will create a new JSObject or return an existing one.
@@ -457,27 +457,27 @@ interface nsIXPConnect : nsISupports
 
     void setSecurityManagerForJSContext(in JSContextPtr aJSContext,
                                         in nsIXPCSecurityManager aManager,
-                                        in PRUint16 flags);
+                                        in uint16_t flags);
 
     void getSecurityManagerForJSContext(in JSContextPtr aJSContext,
                                         out nsIXPCSecurityManager aManager,
-                                        out PRUint16 flags);
+                                        out uint16_t flags);
 
     /**
     * The security manager to use when the current JSContext has no security
     * manager.
     */
     void setDefaultSecurityManager(in nsIXPCSecurityManager aManager,
-                                   in PRUint16 flags);
+                                   in uint16_t flags);
 
     void getDefaultSecurityManager(out nsIXPCSecurityManager aManager,
-                                   out PRUint16 flags);
+                                   out uint16_t flags);
 
     nsIStackFrame
-    createStackFrameLocation(in PRUint32       aLanguage,
+    createStackFrameLocation(in uint32_t       aLanguage,
                              in string         aFilename,
                              in string         aFunctionName,
-                             in PRInt32        aLineNumber,
+                             in int32_t        aLineNumber,
                              in nsIStackFrame  aCaller);
 
     /**
@@ -493,7 +493,7 @@ interface nsIXPConnect : nsISupports
     void debugDumpJSStack(in boolean showArgs,
                           in boolean showLocals,
                           in boolean showThisProps);
-    void debugDumpEvalInJSStackFrame(in PRUint32 aFrameNumber,
+    void debugDumpEvalInJSStackFrame(in uint32_t aFrameNumber,
                                      in string aSourceText);
 
     /**
@@ -632,7 +632,7 @@ interface nsIXPConnect : nsISupports
      * Trigger a JS garbage collection.
      * Use a js::gcreason::Reason from jsfriendapi.h for the kind.
      */
-    void GarbageCollect(in PRUint32 reason);
+    void GarbageCollect(in uint32_t reason);
 
     /**
      * Signals a good place to do an incremental GC slice, because the

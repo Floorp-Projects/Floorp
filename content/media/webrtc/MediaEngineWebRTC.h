@@ -66,19 +66,8 @@ public:
   virtual int DeliverFrame(unsigned char*, int, uint32_t, int64_t);
 
   MediaEngineWebRTCVideoSource(webrtc::VideoEngine* videoEnginePtr,
-    int index, int aFps = 30)
-    : mVideoEngine(videoEnginePtr)
-    , mCapIndex(index)
-    , mWidth(640)
-    , mHeight(480)
-    , mState(kReleased)
-    , mMonitor("WebRTCCamera.Monitor")
-    , mFps(aFps)
-    , mInitDone(false)
-    , mInSnapshotMode(false)
-    , mSnapshotPath(NULL) { Init(); }
-
-  ~MediaEngineWebRTCVideoSource() { Shutdown(); }
+    int index, int aFps = 30);
+  ~MediaEngineWebRTCVideoSource();
 
   virtual void GetName(nsAString&);
   virtual void GetUUID(nsAString&);
@@ -87,7 +76,7 @@ public:
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop();
-  virtual nsresult Snapshot(PRUint32 aDuration, nsIDOMFile** aFile);
+  virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
 
   NS_DECL_ISUPPORTS
 
@@ -174,7 +163,7 @@ public:
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop();
-  virtual nsresult Snapshot(PRUint32 aDuration, nsIDOMFile** aFile);
+  virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
 
   // VoEMediaProcess.
   void Process(const int channel, const webrtc::ProcessingTypes type,

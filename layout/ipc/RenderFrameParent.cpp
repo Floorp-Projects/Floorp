@@ -158,7 +158,9 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
   nsIntPoint scrollOffset =
     aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel);
   // metricsScrollOffset is in layer coordinates.
-  nsIntPoint metricsScrollOffset = aMetrics->mViewportScrollOffset;
+  gfx::Point metricsScrollOffset = aMetrics->mViewportScrollOffset;
+  nsIntPoint roundedMetricsScrollOffset =
+    nsIntPoint(NS_lround(metricsScrollOffset.x), NS_lround(metricsScrollOffset.y));
 
   if (aRootFrameLoader->AsyncScrollEnabled() && !aMetrics->mDisplayPort.IsEmpty()) {
     // Only use asynchronous scrolling if it is enabled and there is a
@@ -166,8 +168,8 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
     // synchronously scrolled for identifying a scroll area before it is
     // being actively scrolled.
     nsIntPoint scrollCompensation(
-      (scrollOffset.x / aTempScaleX - metricsScrollOffset.x) * aConfig.mXScale,
-      (scrollOffset.y / aTempScaleY - metricsScrollOffset.y) * aConfig.mYScale);
+      (scrollOffset.x / aTempScaleX - roundedMetricsScrollOffset.x) * aConfig.mXScale,
+      (scrollOffset.y / aTempScaleY - roundedMetricsScrollOffset.y) * aConfig.mYScale);
 
     return ViewTransform(-scrollCompensation, aConfig.mXScale, aConfig.mYScale);
   } else {
@@ -626,7 +628,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     MOZ_ASSERT(!GetRootLayer());
 
     nsRefPtr<Layer> layer =
-      (GetLayerBuilderForManager(aManager)->GetLeafLayerFor(aBuilder, aManager, aItem));
+      (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
     if (!layer) {
       layer = aManager->CreateRefLayer();
     }
@@ -699,7 +701,7 @@ RenderFrameParent::NotifyInputEvent(const nsInputEvent& aEvent,
                                     nsInputEvent* aOutEvent)
 {
   if (mPanZoomController) {
-    mPanZoomController->HandleInputEvent(aEvent, aOutEvent);
+    mPanZoomController->ReceiveInputEvent(aEvent, aOutEvent);
   }
 }
 
@@ -883,18 +885,18 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 void
-RenderFrameParent::NotifyDOMTouchListenerAdded()
-{
-  if (mPanZoomController) {
-    mPanZoomController->NotifyDOMTouchListenerAdded();
-  }
-}
-
-void
 RenderFrameParent::ZoomToRect(const gfxRect& aRect)
 {
   if (mPanZoomController) {
     mPanZoomController->ZoomToRect(aRect);
+  }
+}
+
+void
+RenderFrameParent::ContentReceivedTouch(bool aPreventDefault)
+{
+  if (mPanZoomController) {
+    mPanZoomController->ContentReceivedTouch(aPreventDefault);
   }
 }
 
@@ -906,7 +908,7 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
                             const ContainerParameters& aContainerParameters)
 {
-  PRInt32 appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsIntRect visibleRect = GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
   nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect, this);
   return layer.forget();

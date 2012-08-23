@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=341604
+Implement HTML5 sandbox attribute for IFRAMEs - tests for workers
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="application/javascript">
+/** Test for Bug 341604 - Implement HTML5 sandbox attribute for IFRAMEs - test for workers **/
+
+SimpleTest.waitForExplicitFinish();
+
+// a postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to communicate pass/fail back to this main page.
+// it expects to be called with an object like {ok: true/false, desc:
+// <description of the test> which it then forwards to ok()
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event)
+{
+  ok_wrapper(event.data.ok, event.data.desc);
+}
+
+var completedTests = 0;
+var passedTests = 0;
+
+function ok_wrapper(result, desc) {
+  ok(result, desc);
+
+  completedTests++;
+
+  if (result) {
+    passedTests++;
+  }
+
+  if (completedTests == 3) {
+    is(passedTests, 3, "There are 3 worker tests that should pass");
+    SimpleTest.finish();
+  }
+}
+
+function doTest() {
+  // passes if good
+  // 1) test that a worker in a sandboxed iframe with 'allow-scripts' can be loaded
+  // from a data: URI
+  // (done by file_iframe_sandbox_g_if1.html)
+
+  // passes if good
+  // 2) test that a worker in a sandboxed iframe with 'allow-scripts' can be loaded
+  // from a blob URI created by the sandboxed document itself
+  // (done by file_iframe_sandbox_g_if1.html)
+
+  // passes if good
+  // 3) test that a worker in a sandboxed iframe with 'allow-scripts' without
+  // 'allow-same-origin' cannot load a script via a relative URI
+  // (done by file_iframe_sandbox_g_if1.html)
+}
+
+addLoadEvent(doTest);
+</script>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=341604">Mozilla Bug 341604</a> - Implement HTML5 sandbox attribute for IFRAMEs
+<p id="display"></p>
+<div id="content">
+<iframe sandbox="allow-scripts" id="if_1" src="file_iframe_sandbox_g_if1.html" height="10" width="10"></iframe>
+</div>
+</body>
+</html>

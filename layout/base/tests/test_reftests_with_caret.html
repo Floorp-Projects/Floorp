@@ -102,12 +102,10 @@ var isWindows = /WINNT/.test(SpecialPowers.OS);
 var tests = [
     [ 'bug389321-2.html' , 'bug389321-2-ref.html' ] ,
     [ 'bug389321-3.html' , 'bug389321-3-ref.html' ] ,
-    [ 'bug482484.html'   , 'bug482484-ref.html'   ] ,
     [ 'bug585922.html'   , 'bug585922-ref.html'   ] ,
     [ 'bug632215-1.html' , 'bug632215-ref.html'   ] ,
     [ 'bug632215-2.html' , 'bug632215-ref.html'   ] ,
     [ 'bug633044-1.html' , 'bug633044-1-ref.html' ] ,
-    [ 'bug644428-1.html' , 'bug644428-1-ref.html' ] ,
 ];
 
 if (!isWindows) {
@@ -116,6 +114,7 @@ if (!isWindows) {
   tests.push([ 'bug240933-1.html' , 'bug240933-1-ref.html' ]); // bug 681144
   tests.push([ 'bug240933-2.html' , 'bug240933-1-ref.html' ]); // bug 681162
   tests.push([ 'bug389321-1.html' , 'bug389321-1-ref.html' ]); // bug 683163
+  tests.push([ 'bug482484.html'   , 'bug482484-ref.html'   ]); // bug 688575
   tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]); // bug 681152
   tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]); // bug 681331
   tests.push([ 'bug597519-1.html' , 'bug597519-1-ref.html' ]); // bug 680579
@@ -131,6 +130,7 @@ if (!isWindows) {
   tests.push([ 'bug613433-3.html' , 'bug613433-ref.html' ]);   // bug 681332
   tests.push([ 'bug613807-1.html' , 'bug613807-1-ref.html' ]); // bug 680574
   tests.push([ 'bug634406-1.html' , 'bug634406-1-ref.html' ]); // bug 681146
+  tests.push([ 'bug644428-1.html' , 'bug644428-1-ref.html' ]); // bug 689435
   tests.push([ 'bug746993-1.html' , 'bug746993-1-ref.html' ]); // bug 746993
 }
 

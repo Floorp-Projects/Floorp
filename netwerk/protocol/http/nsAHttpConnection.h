@@ -93,7 +93,7 @@ public:
 
     // called by a transaction when the transaction reads more from the socket
     // than it should have (eg. containing part of the next pipelined response).
-    virtual nsresult PushBack(const char *data, PRUint32 length) = 0;
+    virtual nsresult PushBack(const char *data, uint32_t length) = 0;
 
     // Used to determine if the connection wants read events even though
     // it has not written out a transaction. Used when a connection has issued
@@ -115,7 +115,7 @@ public:
 
     // Cancel and reschedule transactions deeper than the current response.
     // Returns the number of canceled transactions.
-    virtual PRUint32 CancelPipeline(nsresult originalReason) = 0;
+    virtual uint32_t CancelPipeline(nsresult originalReason) = 0;
 
     // Read and write class of transaction that is carried on this connection
     virtual nsAHttpTransaction::Classifier Classification() = 0;
@@ -123,7 +123,7 @@ public:
 
     // The number of transaction bytes written out on this HTTP Connection, does
     // not count CONNECT tunnel setup
-    virtual PRInt64 BytesWritten() = 0;
+    virtual int64_t BytesWritten() = 0;
 };
 
 #define NS_DECL_NSAHTTPCONNECTION(fwdObject)                    \
@@ -135,9 +135,9 @@ public:
     bool IsPersistent(); \
     bool IsReused(); \
     void DontReuse();  \
-    nsresult PushBack(const char *, PRUint32); \
+    nsresult PushBack(const char *, uint32_t); \
     nsHttpConnection *TakeHttpConnection(); \
-    PRUint32 CancelPipeline(nsresult originalReason);   \
+    uint32_t CancelPipeline(nsresult originalReason);   \
     nsAHttpTransaction::Classifier Classification();      \
     /*                                                    \
        Thes methods below have automatic definitions that just forward the \
@@ -194,7 +194,7 @@ public:
     if (fwdObject)                                          \
         return (fwdObject)->Classify(newclass);             \
     }                                                       \
-    PRInt64 BytesWritten()                                  \
+    int64_t BytesWritten()                                  \
     {     return fwdObject ? (fwdObject)->BytesWritten() : 0; }
 
 #endif // nsAHttpConnection_h__

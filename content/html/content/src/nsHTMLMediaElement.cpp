@@ -66,6 +66,8 @@
 #include "nsCSSParser.h"
 #include "nsIMediaList.h"
 
+#include "ImageContainer.h"
+
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
 #endif
@@ -168,7 +170,7 @@ protected:
   }
 
   nsRefPtr<nsHTMLMediaElement> mElement;
-  PRUint32 mLoadID;
+  uint32_t mLoadID;
 };
 
 class nsAsyncEventRunner : public nsMediaEvent
@@ -246,7 +248,7 @@ public:
 private:
   nsRefPtr<nsHTMLMediaElement> mElement;
   nsCOMPtr<nsIStreamListener> mNextListener;
-  PRUint32 mLoadID;
+  uint32_t mLoadID;
 };
 
 NS_IMPL_ISUPPORTS5(nsHTMLMediaElement::MediaLoadListener, nsIRequestObserver,
@@ -266,7 +268,7 @@ nsHTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,
 
 void nsHTMLMediaElement::ReportLoadError(const char* aMsg,
                                          const PRUnichar** aParams,
-                                         PRUint32 aParamCount)
+                                         uint32_t aParamCount)
 {
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   "Media",
@@ -313,7 +315,7 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* 
   bool succeeded;
   if (hc && NS_SUCCEEDED(hc->GetRequestSucceeded(&succeeded)) && !succeeded) {
     element->NotifyLoadError();
-    PRUint32 responseStatus = 0;
+    uint32_t responseStatus = 0;
     hc->GetResponseStatus(&responseStatus);
     nsAutoString code;
     code.AppendInt(responseStatus);
@@ -357,8 +359,8 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStopRequest(nsIRequest* a
 }
 
 NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
-                                                                     nsIInputStream* aStream, PRUint32 aOffset,
-                                                                     PRUint32 aCount)
+                                                                     nsIInputStream* aStream, uint32_t aOffset,
+                                                                     uint32_t aCount)
 {
   if (!mNextListener) {
     NS_ERROR("Must have a chained listener; OnStartRequest should have canceled this request");
@@ -369,7 +371,7 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnDataAvailable(nsIRequest*
 
 NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
                                                                             nsIChannel* aNewChannel,
-                                                                            PRUint32 aFlags,
+                                                                            uint32_t aFlags,
                                                                             nsIAsyncVerifyRedirectCallback* cb)
 {
   // TODO is this really correct?? See bug #579329.
@@ -394,27 +396,27 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLMediaElement, nsGenericHTMLElement)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLMediaElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLMediaElement, nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStream)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSrcStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSrcAttrStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSourcePointer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLoadBlockedDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSourceLoadCandidate)
-  for (PRUint32 i = 0; i < tmp->mOutputStreams.Length(); ++i) {
+  for (uint32_t i = 0; i < tmp->mOutputStreams.Length(); ++i) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOutputStreams[i].mStream);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLMediaElement, nsGenericHTMLElement)
-  if (tmp->mStream) {
+  if (tmp->mSrcStream) {
     // Need to EndMediaStreamPlayback to clear mStream and make sure everything
     // gets unhooked correctly.
-    tmp->EndMediaStreamPlayback();
+    tmp->EndSrcMediaStreamPlayback();
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSrcAttrStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSourcePointer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLoadBlockedDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSourceLoadCandidate)
-  for (PRUint32 i = 0; i < tmp->mOutputStreams.Length(); ++i) {
+  for (uint32_t i = 0; i < tmp->mOutputStreams.Length(); ++i) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOutputStreams[i].mStream);
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -493,8 +495,8 @@ NS_IMETHODIMP nsHTMLMediaElement::GetError(nsIDOMMediaError * *aError)
 /* readonly attribute boolean ended; */
 NS_IMETHODIMP nsHTMLMediaElement::GetEnded(bool *aEnded)
 {
-  if (mStream) {
-    *aEnded = GetMediaStream()->IsFinished();
+  if (mSrcStream) {
+    *aEnded = GetSrcMediaStream()->IsFinished();
   } else if (mDecoder) {
     *aEnded = mDecoder->IsEnded();
   }
@@ -511,7 +513,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetCurrentSrc(nsAString & aCurrentSrc)
 }
 
 /* readonly attribute unsigned short networkState; */
-NS_IMETHODIMP nsHTMLMediaElement::GetNetworkState(PRUint16 *aNetworkState)
+NS_IMETHODIMP nsHTMLMediaElement::GetNetworkState(uint16_t *aNetworkState)
 {
   *aNetworkState = mNetworkState;
 
@@ -521,7 +523,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetNetworkState(PRUint16 *aNetworkState)
 nsresult
 nsHTMLMediaElement::OnChannelRedirect(nsIChannel *aChannel,
                                       nsIChannel *aNewChannel,
-                                      PRUint32 aFlags)
+                                      uint32_t aFlags)
 {
   NS_ASSERTION(aChannel == mChannel, "Channels should match!");
   mChannel = aNewChannel;
@@ -576,9 +578,14 @@ void nsHTMLMediaElement::AbortExistingLoads()
     fireTimeUpdate = mDecoder->GetCurrentTime() != 0.0;
     ShutdownDecoder();
   }
-  if (mStream) {
-    EndMediaStreamPlayback();
+  if (mSrcStream) {
+    EndSrcMediaStreamPlayback();
   }
+  if (mAudioStream) {
+    mAudioStream->Shutdown();
+    mAudioStream = nullptr;
+  }
+
   mLoadingSrc = nullptr;
 
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING ||
@@ -604,7 +611,7 @@ void nsHTMLMediaElement::AbortExistingLoads()
 
   if (mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
-    NS_ASSERTION(!mDecoder && !mStream, "How did someone setup a new stream/decoder already?");
+    NS_ASSERTION(!mDecoder && !mSrcStream, "How did someone setup a new stream/decoder already?");
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
     mPaused = true;
 
@@ -753,7 +760,7 @@ void nsHTMLMediaElement::SelectResource()
   // If we have a 'src' attribute, use that exclusively.
   nsAutoString src;
   if (mSrcAttrStream) {
-    SetupMediaStreamPlayback();
+    SetupSrcMediaStreamPlayback();
   } else if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NewURIFromString(src, getter_AddRefs(uri));
@@ -799,7 +806,7 @@ void nsHTMLMediaElement::NotifyLoadError()
 }
 
 void nsHTMLMediaElement::NotifyAudioAvailable(float* aFrameBuffer,
-                                              PRUint32 aFrameBufferLength,
+                                              uint32_t aFrameBufferLength,
                                               float aTime)
 {
   // Auto manage the memory for the frame buffer, so that if we add an early
@@ -955,10 +962,10 @@ void nsHTMLMediaElement::UpdatePreloadAction()
     // Find the appropriate preload action by looking at the attribute.
     const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsGkAtoms::preload,
                                                        kNameSpaceID_None);
-    PRUint32 preloadDefault =
+    uint32_t preloadDefault =
       Preferences::GetInt("media.preload.default",
                           nsHTMLMediaElement::PRELOAD_ATTR_METADATA);
-    PRUint32 preloadAuto =
+    uint32_t preloadAuto =
       Preferences::GetInt("media.preload.auto",
                           nsHTMLMediaElement::PRELOAD_ENOUGH);
     if (!val) {
@@ -1021,13 +1028,6 @@ nsresult nsHTMLMediaElement::LoadResource()
   NS_ASSERTION(mDelayingLoadEvent,
                "Should delay load event (if in document) during load");
 
-  // If a previous call to mozSetup() was made, kill that media resource
-  // in order to use this new src instead.
-  if (mAudioStream) {
-    mAudioStream->Shutdown();
-    mAudioStream = nullptr;
-  }
-
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
     mChannel = nullptr;
@@ -1044,7 +1044,7 @@ nsresult nsHTMLMediaElement::LoadResource()
       return rv;
   }
 
-  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_MEDIA,
                                           mLoadingSrc,
                                           NodePrincipal(),
@@ -1196,7 +1196,7 @@ NS_IMETHODIMP nsHTMLMediaElement::MozLoadFrom(nsIDOMHTMLMediaElement* aOther)
 }
 
 /* readonly attribute unsigned short readyState; */
-NS_IMETHODIMP nsHTMLMediaElement::GetReadyState(PRUint16 *aReadyState)
+NS_IMETHODIMP nsHTMLMediaElement::GetReadyState(uint16_t *aReadyState)
 {
   *aReadyState = mReadyState;
 
@@ -1214,8 +1214,8 @@ NS_IMETHODIMP nsHTMLMediaElement::GetSeeking(bool *aSeeking)
 /* attribute double currentTime; */
 NS_IMETHODIMP nsHTMLMediaElement::GetCurrentTime(double *aCurrentTime)
 {
-  if (mStream) {
-    *aCurrentTime = MediaTimeToSeconds(GetMediaStream()->GetCurrentTime());
+  if (mSrcStream) {
+    *aCurrentTime = MediaTimeToSeconds(GetSrcMediaStream()->GetCurrentTime());
   } else if (mDecoder) {
     *aCurrentTime = mDecoder->GetCurrentTime();
   } else {
@@ -1228,7 +1228,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(double aCurrentTime)
 {
   StopSuspendingAfterFirstFrame();
 
-  if (mStream) {
+  if (mSrcStream) {
     // do nothing since streams aren't seekable; we effectively clamp to
     // the current time.
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1284,7 +1284,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(double aCurrentTime)
 /* readonly attribute double duration; */
 NS_IMETHODIMP nsHTMLMediaElement::GetDuration(double *aDuration)
 {
-  if (mStream) {
+  if (mSrcStream) {
     *aDuration = std::numeric_limits<double>::infinity();
   } else if (mDecoder) {
     *aDuration = mDecoder->GetDuration();
@@ -1320,9 +1320,9 @@ NS_IMETHODIMP nsHTMLMediaElement::GetPlayed(nsIDOMTimeRanges** aPlayed)
   nsTimeRanges* ranges = new nsTimeRanges();
   NS_ADDREF(*aPlayed = ranges);
 
-  PRUint32 timeRangeCount = 0;
+  uint32_t timeRangeCount = 0;
   mPlayed.GetLength(&timeRangeCount);
-  for (PRUint32 i = 0; i < timeRangeCount; i++) {
+  for (uint32_t i = 0; i < timeRangeCount; i++) {
     double begin;
     double end;
     mPlayed.Start(i, &begin);
@@ -1361,8 +1361,8 @@ NS_IMETHODIMP nsHTMLMediaElement::Pause()
   AddRemoveSelfReference();
 
   if (!oldPaused) {
-    if (mStream) {
-      GetMediaStream()->ChangeExplicitBlockerCount(1);
+    if (mSrcStream) {
+      GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
     }
     FireTimeUpdate(false);
     DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
@@ -1394,8 +1394,8 @@ NS_IMETHODIMP nsHTMLMediaElement::SetVolume(double aVolume)
       mDecoder->SetVolume(mVolume);
     } else if (mAudioStream) {
       mAudioStream->SetVolume(mVolume);
-    } else if (mStream) {
-      GetMediaStream()->SetAudioOutputVolume(this, float(mVolume));
+    } else if (mSrcStream) {
+      GetSrcMediaStream()->SetAudioOutputVolume(this, float(mVolume));
     }
   }
 
@@ -1405,7 +1405,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetVolume(double aVolume)
 }
 
 NS_IMETHODIMP
-nsHTMLMediaElement::GetMozChannels(PRUint32 *aMozChannels)
+nsHTMLMediaElement::GetMozChannels(uint32_t *aMozChannels)
 {
   if (!mDecoder && !mAudioStream) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1416,7 +1416,7 @@ nsHTMLMediaElement::GetMozChannels(PRUint32 *aMozChannels)
 }
 
 NS_IMETHODIMP
-nsHTMLMediaElement::GetMozSampleRate(PRUint32 *aMozSampleRate)
+nsHTMLMediaElement::GetMozSampleRate(uint32_t *aMozSampleRate)
 {
   if (!mDecoder && !mAudioStream) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1470,7 +1470,7 @@ nsHTMLMediaElement::MozGetMetadata(JSContext* cx, JS::Value* aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLMediaElement::GetMozFrameBufferLength(PRUint32 *aMozFrameBufferLength)
+nsHTMLMediaElement::GetMozFrameBufferLength(uint32_t *aMozFrameBufferLength)
 {
   // The framebuffer (via MozAudioAvailable events) is only available
   // when reading vs. writing audio directly.
@@ -1483,7 +1483,7 @@ nsHTMLMediaElement::GetMozFrameBufferLength(PRUint32 *aMozFrameBufferLength)
 }
 
 NS_IMETHODIMP
-nsHTMLMediaElement::SetMozFrameBufferLength(PRUint32 aMozFrameBufferLength)
+nsHTMLMediaElement::SetMozFrameBufferLength(uint32_t aMozFrameBufferLength)
 {
   if (!mDecoder)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1511,8 +1511,8 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(bool aMuted)
     mDecoder->SetVolume(effectiveVolume);
   } else if (mAudioStream) {
     mAudioStream->SetVolume(effectiveVolume);
-  } else if (mStream) {
-    GetMediaStream()->SetAudioOutputVolume(this, effectiveVolume);
+  } else if (mSrcStream) {
+    GetSrcMediaStream()->SetAudioOutputVolume(this, effectiveVolume);
   }
 
   DispatchAsyncEvent(NS_LITERAL_STRING("volumechange"));
@@ -1585,8 +1585,8 @@ MediaElementTableCount(nsHTMLMediaElement* aElement, nsIURI* aURI)
   if (!entry) {
     return 0;
   }
-  PRUint32 count = 0;
-  for (PRUint32 i = 0; i < entry->mElements.Length(); ++i) {
+  uint32_t count = 0;
+  for (uint32_t i = 0; i < entry->mElements.Length(); ++i) {
     nsHTMLMediaElement* elem = entry->mElements[i];
     if (elem == aElement) {
       count++;
@@ -1644,7 +1644,7 @@ nsHTMLMediaElement::LookupMediaElementURITable(nsIURI* aURI)
   MediaElementSetForURI* entry = gElementTable->GetEntry(aURI);
   if (!entry)
     return nullptr;
-  for (PRUint32 i = 0; i < entry->mElements.Length(); ++i) {
+  for (uint32_t i = 0; i < entry->mElements.Length(); ++i) {
     nsHTMLMediaElement* elem = entry->mElements[i];
     bool equal;
     // Look for elements that have the same principal and CORS mode.
@@ -1663,7 +1663,7 @@ nsHTMLMediaElement::LookupMediaElementURITable(nsIURI* aURI)
 
 nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
-    mStreamListener(nullptr),
+    mSrcStreamListener(nullptr),
     mCurrentLoadID(0),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),
     mReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING),
@@ -1729,8 +1729,8 @@ nsHTMLMediaElement::~nsHTMLMediaElement()
   if (mDecoder) {
     ShutdownDecoder();
   }
-  if (mStream) {
-    EndMediaStreamPlayback();
+  if (mSrcStream) {
+    EndSrcMediaStreamPlayback();
   }
 
   NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 0,
@@ -1805,8 +1805,8 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
   // seek to the effective start.
   // TODO: The playback rate must be set to the default playback rate.
   if (mPaused) {
-    if (mStream) {
-      GetMediaStream()->ChangeExplicitBlockerCount(-1);
+    if (mSrcStream) {
+      GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
     }
     DispatchAsyncEvent(NS_LITERAL_STRING("play"));
     switch (mReadyState) {
@@ -1837,7 +1837,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
 
 NS_IMPL_STRING_ATTR(nsHTMLMediaElement, Crossorigin, crossorigin)
 
-bool nsHTMLMediaElement::ParseAttribute(PRInt32 aNamespaceID,
+bool nsHTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
                                           nsIAtom* aAttribute,
                                           const nsAString& aValue,
                                           nsAttrValue& aResult)
@@ -1874,7 +1874,7 @@ void nsHTMLMediaElement::DoneCreatingElement()
      mMuted = true; 
 }
 
-nsresult nsHTMLMediaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsresult nsHTMLMediaElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                      nsIAtom* aPrefix, const nsAString& aValue,
                                      bool aNotify)
 {
@@ -1903,7 +1903,7 @@ nsresult nsHTMLMediaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
-nsresult nsHTMLMediaElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
+nsresult nsHTMLMediaElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
                                        bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttr, aNotify);
@@ -1979,7 +1979,7 @@ static bool IsRawType(const nsACString& aType)
     return false;
   }
 
-  for (PRUint32 i = 0; i < ArrayLength(gRawTypes); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(gRawTypes); ++i) {
     if (aType.EqualsASCII(gRawTypes[i])) {
       return true;
     }
@@ -2033,7 +2033,7 @@ nsHTMLMediaElement::IsOggType(const nsACString& aType)
     return false;
   }
 
-  for (PRUint32 i = 0; i < ArrayLength(gOggTypes); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(gOggTypes); ++i) {
     if (aType.EqualsASCII(gOggTypes[i])) {
       return true;
     }
@@ -2072,7 +2072,7 @@ nsHTMLMediaElement::IsWaveType(const nsACString& aType)
     return false;
   }
 
-  for (PRUint32 i = 0; i < ArrayLength(gWaveTypes); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(gWaveTypes); ++i) {
     if (aType.EqualsASCII(gWaveTypes[i])) {
       return true;
     }
@@ -2108,7 +2108,7 @@ nsHTMLMediaElement::IsWebMType(const nsACString& aType)
     return false;
   }
 
-  for (PRUint32 i = 0; i < ArrayLength(gWebMTypes); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(gWebMTypes); ++i) {
     if (aType.EqualsASCII(gWebMTypes[i])) {
       return true;
     }
@@ -2148,7 +2148,7 @@ nsHTMLMediaElement::IsH264Type(const nsACString& aType)
     return false;
   }
 
-  for (PRUint32 i = 0; i < ArrayLength(gH264Types); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(gH264Types); ++i) {
     if (aType.EqualsASCII(gH264Types[i])) {
       return true;
     }
@@ -2175,7 +2175,7 @@ nsHTMLMediaElement::IsMediaPluginsType(const nsACString& aType)
   static const char* supportedTypes[] = {
     "audio/mpeg", "audio/mp4", "video/mp4"
   };
-  for (PRUint32 i = 0; i < ArrayLength(supportedTypes); ++i) {
+  for (uint32_t i = 0; i < ArrayLength(supportedTypes); ++i) {
     if (aType.EqualsASCII(supportedTypes[i])) {
       return true;
     }
@@ -2261,7 +2261,7 @@ bool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
 static bool
 CodecListContains(char const *const * aCodecs, const nsAString& aCodec)
 {
-  for (PRInt32 i = 0; aCodecs[i]; ++i) {
+  for (int32_t i = 0; aCodecs[i]; ++i) {
     if (aCodec.EqualsASCII(aCodecs[i]))
       return true;
   }
@@ -2474,7 +2474,7 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder,
 
   aDecoder->SetAudioCaptured(mAudioCaptured);
   aDecoder->SetVolume(mMuted ? 0.0 : mVolume);
-  for (PRUint32 i = 0; i < mOutputStreams.Length(); ++i) {
+  for (uint32_t i = 0; i < mOutputStreams.Length(); ++i) {
     OutputMediaStream* ms = &mOutputStreams[i];
     aDecoder->AddOutputStream(ms->mStream->GetStream()->AsSourceStream(),
         ms->mFinishWhenEnded);
@@ -2595,28 +2595,28 @@ private:
   bool mPendingNotifyOutput;
 };
 
-void nsHTMLMediaElement::SetupMediaStreamPlayback()
+void nsHTMLMediaElement::SetupSrcMediaStreamPlayback()
 {
-  NS_ASSERTION(!mStream && !mStreamListener, "Should have been ended already");
+  NS_ASSERTION(!mSrcStream && !mSrcStreamListener, "Should have been ended already");
 
-  mStream = mSrcAttrStream;
+  mSrcStream = mSrcAttrStream;
   // XXX if we ever support capturing the output of a media element which is
   // playing a stream, we'll need to add a CombineWithPrincipal call here.
-  mStreamListener = new StreamListener(this);
-  NS_ADDREF(mStreamListener);
-  GetMediaStream()->AddListener(mStreamListener);
+  mSrcStreamListener = new StreamListener(this);
+  NS_ADDREF(mSrcStreamListener);
+  GetSrcMediaStream()->AddListener(mSrcStreamListener);
   if (mPaused) {
-    GetMediaStream()->ChangeExplicitBlockerCount(1);
+    GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
   }
   if (mPausedForInactiveDocument) {
-    GetMediaStream()->ChangeExplicitBlockerCount(1);
+    GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
   }
   ChangeDelayLoadStatus(false);
-  GetMediaStream()->AddAudioOutput(this);
-  GetMediaStream()->SetAudioOutputVolume(this, float(mMuted ? 0.0 : mVolume));
+  GetSrcMediaStream()->AddAudioOutput(this);
+  GetSrcMediaStream()->SetAudioOutputVolume(this, float(mMuted ? 0.0 : mVolume));
   VideoFrameContainer* container = GetVideoFrameContainer();
   if (container) {
-    GetMediaStream()->AddVideoOutput(container);
+    GetSrcMediaStream()->AddVideoOutput(container);
   }
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
@@ -2624,25 +2624,25 @@ void nsHTMLMediaElement::SetupMediaStreamPlayback()
   ResourceLoaded();
 }
 
-void nsHTMLMediaElement::EndMediaStreamPlayback()
+void nsHTMLMediaElement::EndSrcMediaStreamPlayback()
 {
-  GetMediaStream()->RemoveListener(mStreamListener);
+  GetSrcMediaStream()->RemoveListener(mSrcStreamListener);
   // Kill its reference to this element
-  mStreamListener->Forget();
-  NS_RELEASE(mStreamListener); // sets to null
-  GetMediaStream()->RemoveAudioOutput(this);
+  mSrcStreamListener->Forget();
+  NS_RELEASE(mSrcStreamListener); // sets to null
+  GetSrcMediaStream()->RemoveAudioOutput(this);
   VideoFrameContainer* container = GetVideoFrameContainer();
   if (container) {
-    GetMediaStream()->RemoveVideoOutput(container);
+    GetSrcMediaStream()->RemoveVideoOutput(container);
     container->GetImageContainer()->SetCurrentImage(nullptr);
   }
   if (mPaused) {
-    GetMediaStream()->ChangeExplicitBlockerCount(-1);
+    GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
   }
   if (mPausedForInactiveDocument) {
-    GetMediaStream()->ChangeExplicitBlockerCount(-1);
+    GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
   }
-  mStream = nullptr;
+  mSrcStream = nullptr;
 }
 
 nsresult nsHTMLMediaElement::NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI)
@@ -2700,8 +2700,8 @@ void nsHTMLMediaElement::ProcessMediaFragmentURI()
   }
 }
 
-void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels,
-                                        PRUint32 aRate,
+void nsHTMLMediaElement::MetadataLoaded(uint32_t aChannels,
+                                        uint32_t aRate,
                                         bool aHasAudio,
                                         const MetadataTags* aTags)
 {
@@ -2759,7 +2759,7 @@ void nsHTMLMediaElement::ResourceLoaded()
     // MediaStream sources are put into HAVE_CURRENT_DATA state here on setup. If the
     // stream is not blocked, we will receive a notification that will put it
     // into HAVE_ENOUGH_DATA state.
-    ChangeReadyState(mStream ? nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA
+    ChangeReadyState(mSrcStream ? nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA
                      : nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
   }
   // Ensure a progress event is dispatched at the end of download.
@@ -2802,7 +2802,7 @@ void nsHTMLMediaElement::LoadAborted()
   Error(nsIDOMMediaError::MEDIA_ERR_ABORTED);
 }
 
-void nsHTMLMediaElement::Error(PRUint16 aErrorCode)
+void nsHTMLMediaElement::Error(uint16_t aErrorCode)
 {
   NS_ASSERTION(aErrorCode == nsIDOMMediaError::MEDIA_ERR_DECODE ||
                aErrorCode == nsIDOMMediaError::MEDIA_ERR_NETWORK ||
@@ -2828,7 +2828,7 @@ void nsHTMLMediaElement::PlaybackEnded()
 
   NS_ASSERTION(!mDecoder || mDecoder->IsEnded(),
                "Decoder fired ended, but not in ended state");
-  if (mStream || (mDecoder && mDecoder->IsInfinite())) {
+  if (mSrcStream || (mDecoder && mDecoder->IsInfinite())) {
     LOG(PR_LOG_DEBUG, ("%p, got duration by reaching the end of the resource", this));
     DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   }
@@ -2930,7 +2930,7 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
     return;
   }
 
-  if (mStream) {
+  if (mSrcStream) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
   }
@@ -3037,9 +3037,9 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
         GetCurrentTime(&mCurrentPlayRangeStart);
       }
       mDecoder->Play();
-    } else if (mStream) {
+    } else if (mSrcStream) {
       SetPlayedOrSeeked(true);
-      GetMediaStream()->ChangeExplicitBlockerCount(-1);
+      GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
     }
     DispatchAsyncEvent(NS_LITERAL_STRING("play"));
   }
@@ -3067,7 +3067,7 @@ VideoFrameContainer* nsHTMLMediaElement::GetVideoFrameContainer()
 }
 
 nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
-                                                         PRUint32 aFrameBufferLength,
+                                                         uint32_t aFrameBufferLength,
                                                          float aTime)
 {
   // Auto manage the memory for the frame buffer. If we fail and return
@@ -3129,8 +3129,8 @@ nsresult nsHTMLMediaElement::DispatchPendingMediaEvents()
   NS_ASSERTION(!mPausedForInactiveDocument,
                "Must not be in bfcache when dispatching pending media events");
 
-  PRUint32 count = mPendingEvents.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
+  uint32_t count = mPendingEvents.Length();
+  for (uint32_t i = 0; i < count; ++i) {
     DispatchAsyncEvent(mPendingEvents[i]);
   }
   mPendingEvents.Clear();
@@ -3164,8 +3164,8 @@ already_AddRefed<nsIPrincipal> nsHTMLMediaElement::GetCurrentPrincipal()
   if (mDecoder) {
     return mDecoder->GetCurrentPrincipal();
   }
-  if (mStream) {
-    nsRefPtr<nsIPrincipal> principal = mStream->GetPrincipal();
+  if (mSrcStream) {
+    nsRefPtr<nsIPrincipal> principal = mSrcStream->GetPrincipal();
     return principal.forget();
   }
   return nullptr;
@@ -3173,7 +3173,7 @@ already_AddRefed<nsIPrincipal> nsHTMLMediaElement::GetCurrentPrincipal()
 
 void nsHTMLMediaElement::NotifyDecoderPrincipalChanged()
 {
-  for (PRUint32 i = 0; i < mOutputStreams.Length(); ++i) {
+  for (uint32_t i = 0; i < mOutputStreams.Length(); ++i) {
     OutputMediaStream* ms = &mOutputStreams[i];
     nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
     ms->mStream->CombineWithPrincipal(principal);
@@ -3197,8 +3197,8 @@ void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
       if (mDecoder) {
         mDecoder->Pause();
         mDecoder->Suspend();
-      } else if (mStream) {
-        GetMediaStream()->ChangeExplicitBlockerCount(1);
+      } else if (mSrcStream) {
+        GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
       }
     } else {
       if (mDecoder) {
@@ -3206,8 +3206,8 @@ void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
         if (!mPaused && !mDecoder->IsEnded()) {
           mDecoder->Play();
         }
-      } else if (mStream) {
-        GetMediaStream()->ChangeExplicitBlockerCount(-1);
+      } else if (mSrcStream) {
+        GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
       }
       DispatchPendingMediaEvents();
     }
@@ -3231,7 +3231,7 @@ void nsHTMLMediaElement::AddRemoveSelfReference()
     ownerDoc->IsActive() &&
     (mDelayingLoadEvent ||
      (!mPaused && mDecoder && !mDecoder->IsEnded()) ||
-     (!mPaused && mStream && !mStream->IsFinished()) ||
+     (!mPaused && mSrcStream && !mSrcStream->IsFinished()) ||
      (mDecoder && mDecoder->IsSeeking()) ||
      CanActivateAutoplay() ||
      mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING);
@@ -3273,7 +3273,7 @@ nsresult nsHTMLMediaElement::Observe(nsISupports* aSubject,
 }
 
 bool
-nsHTMLMediaElement::IsNodeOfType(PRUint32 aFlags) const
+nsHTMLMediaElement::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eMEDIA));
 }
@@ -3332,11 +3332,11 @@ nsIContent* nsHTMLMediaElement::GetNextSource()
                 "Should only iterate over direct children");
 #endif
 
-    PRInt32 startOffset = 0;
+    int32_t startOffset = 0;
     rv = mSourcePointer->GetStartOffset(&startOffset);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
-    if (PRUint32(startOffset) == GetChildCount())
+    if (uint32_t(startOffset) == GetChildCount())
       return nullptr; // No more children.
 
     // Advance the range to the next child.

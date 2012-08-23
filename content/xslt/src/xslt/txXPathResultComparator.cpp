@@ -115,7 +115,7 @@ int txResultStringComparator::compareValues(txObject* aVal1, txObject* aVal2)
         return ((mSorting & kAscending) ? 1 : -1);
 
     nsresult rv;
-    PRInt32 result = -1;
+    int32_t result = -1;
     rv = mCollation->CompareRawSortKey(strval1->mKey, strval1->mLength,
                                        strval2->mKey, strval2->mLength,
                                        &result);
@@ -131,7 +131,7 @@ int txResultStringComparator::compareValues(txObject* aVal1, txObject* aVal2)
         nsString* caseString = (nsString *)strval1->mCaseKey;
         rv = mCollation->AllocateRawSortKey(nsICollation::kCollationCaseSensitive,
                                             *caseString,
-                                            (PRUint8**)&strval1->mCaseKey, 
+                                            (uint8_t**)&strval1->mCaseKey, 
                                             &strval1->mCaseLength);
         if (NS_FAILED(rv)) {
             // XXX ErrorReport
@@ -145,7 +145,7 @@ int txResultStringComparator::compareValues(txObject* aVal1, txObject* aVal2)
         nsString* caseString = (nsString *)strval2->mCaseKey;
         rv = mCollation->AllocateRawSortKey(nsICollation::kCollationCaseSensitive,
                                             *caseString,
-                                            (PRUint8**)&strval2->mCaseKey, 
+                                            (uint8_t**)&strval2->mCaseKey, 
                                             &strval2->mCaseLength);
         if (NS_FAILED(rv)) {
             // XXX ErrorReport
@@ -155,8 +155,8 @@ int txResultStringComparator::compareValues(txObject* aVal1, txObject* aVal2)
         }
         delete caseString;
     }
-    rv = mCollation->CompareRawSortKey((PRUint8*)strval1->mCaseKey, strval1->mCaseLength,
-                                       (PRUint8*)strval2->mCaseKey, strval2->mCaseLength,
+    rv = mCollation->CompareRawSortKey((uint8_t*)strval1->mCaseKey, strval1->mCaseLength,
+                                       (uint8_t*)strval2->mCaseKey, strval2->mCaseLength,
                                        &result);
     if (NS_FAILED(rv)) {
         // XXX ErrorReport
@@ -178,7 +178,7 @@ txResultStringComparator::StringValue::~StringValue()
 {
     PR_Free(mKey);
     if (mCaseLength > 0)
-        PR_Free((PRUint8*)mCaseKey);
+        PR_Free((uint8_t*)mCaseKey);
     else
         delete (nsString*)mCaseKey;
 }

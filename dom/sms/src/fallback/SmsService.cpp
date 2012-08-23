@@ -21,7 +21,7 @@ SmsService::HasSupport(bool* aHasSupport)
 }
 
 NS_IMETHODIMP
-SmsService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult)
+SmsService::GetNumberOfMessagesForText(const nsAString& aText, uint16_t* aResult)
 {
   NS_ERROR("We should not be here!");
   *aResult = 0;
@@ -30,14 +30,14 @@ SmsService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult
 
 NS_IMETHODIMP
 SmsService::Send(const nsAString& aNumber, const nsAString& aMessage,
-                 PRInt32 aRequestId, PRUint64 aProcessId)
+                 int32_t aRequestId, uint64_t aProcessId)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsService::CreateSmsMessage(PRInt32 aId,
+SmsService::CreateSmsMessage(int32_t aId,
                              const nsAString& aDelivery,
                              const nsAString& aSender,
                              const nsAString& aReceiver,

@@ -33,13 +33,13 @@ public:
     /*
      * Return a namespaceID for a given prefix.
      */
-    virtual nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID) = 0;
+    virtual nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID) = 0;
 
     /*
      * Create a FunctionCall, needed for extension function calls and
      * XSLT. XPath function calls are resolved by the Parser.
      */
-    virtual nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
+    virtual nsresult resolveFunctionCall(nsIAtom* aName, int32_t aID,
                                          FunctionCall** aFunction) = 0;
 
     /**
@@ -50,7 +50,7 @@ public:
     /*
      * Callback to be used by the Parser if errors are detected.
      */
-    virtual void SetErrorOffset(PRUint32 aOffset) = 0;
+    virtual void SetErrorOffset(uint32_t aOffset) = 0;
 };
 
 /*
@@ -73,7 +73,7 @@ public:
      * Return the ExprResult associated with the variable with the 
      * given namespace and local name.
      */
-    virtual nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName,
+    virtual nsresult getVariable(int32_t aNamespace, nsIAtom* aLName,
                                  txAExprResult*& aResult) = 0;
 
     /*
@@ -96,7 +96,7 @@ public:
 };
 
 #define TX_DECL_MATCH_CONTEXT \
-    nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName, \
+    nsresult getVariable(int32_t aNamespace, nsIAtom* aLName, \
                          txAExprResult*& aResult); \
     bool isStripSpaceAllowed(const txXPathNode& aNode); \
     void* getPrivateContext(); \
@@ -114,19 +114,19 @@ public:
     /*
      * Get the size of the context node set.
      */
-    virtual PRUint32 size() = 0;
+    virtual uint32_t size() = 0;
 
     /*
      * Get the position of the context node in the context node set,
      * starting with 1.
      */
-    virtual PRUint32 position() = 0;
+    virtual uint32_t position() = 0;
 };
 
 #define TX_DECL_EVAL_CONTEXT \
     TX_DECL_MATCH_CONTEXT; \
     const txXPathNode& getContextNode(); \
-    PRUint32 size(); \
-    PRUint32 position()
+    uint32_t size(); \
+    uint32_t position()
 
 #endif // __TX_I_XPATH_CONTEXT

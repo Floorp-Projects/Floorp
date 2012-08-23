@@ -55,9 +55,9 @@ public:
 };
 
 static gfxTextRun *
-MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
+MakeTextRun(const PRUnichar *aText, uint32_t aLength,
            gfxFontGroup *aFontGroup, const gfxFontGroup::Parameters* aParams,
-           PRUint32 aFlags)
+           uint32_t aFlags)
 {
    nsAutoPtr<gfxTextRun> textRun;
    if (aLength == 0) {
@@ -134,7 +134,7 @@ main (int argc, char **argv) {
            ctx, nullptr, nullptr, nullptr, 0, 60
        };
 
-       PRUint32 flags = gfxTextRunFactory::TEXT_IS_PERSISTENT;
+       uint32_t flags = gfxTextRunFactory::TEXT_IS_PERSISTENT;
 
        // First load an Arabic word into the cache
        const char cString[] = "\xd8\xaa\xd9\x85";

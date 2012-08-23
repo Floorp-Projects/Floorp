@@ -47,7 +47,7 @@ private:
     {
     public:
         EvalContextImpl(const txXPathNode& aContextNode,
-                        PRUint32 aContextPosition, PRUint32 aContextSize,
+                        uint32_t aContextPosition, uint32_t aContextSize,
                         txResultRecycler* aRecycler)
             : mContextNode(aContextNode),
               mContextPosition(aContextPosition),
@@ -66,8 +66,8 @@ private:
 
     private:
         const txXPathNode& mContextNode;
-        PRUint32 mContextPosition;
-        PRUint32 mContextSize;
+        uint32_t mContextPosition;
+        uint32_t mContextSize;
         nsresult mLastError;
         nsRefPtr<txResultRecycler> mRecycler;
     };

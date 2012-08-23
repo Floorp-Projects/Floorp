@@ -37,7 +37,7 @@ NS_INTERFACE_MAP_END
 DOMSVGStringList::GetDOMWrapper(SVGStringList *aList,
                                 nsSVGElement *aElement,
                                 bool aIsConditionalProcessingAttribute,
-                                PRUint8 aAttrEnum)
+                                uint8_t aAttrEnum)
 {
   DOMSVGStringList *wrapper =
     sSVGStringListTearoffTable.GetTearoff(aList);
@@ -61,14 +61,14 @@ DOMSVGStringList::~DOMSVGStringList()
 // nsIDOMSVGStringList implementation:
 
 NS_IMETHODIMP
-DOMSVGStringList::GetNumberOfItems(PRUint32 *aNumberOfItems)
+DOMSVGStringList::GetNumberOfItems(uint32_t *aNumberOfItems)
 {
   *aNumberOfItems = InternalList().Length();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMSVGStringList::GetLength(PRUint32 *aLength)
+DOMSVGStringList::GetLength(uint32_t *aLength)
 {
   return GetNumberOfItems(aLength);
 }
@@ -97,7 +97,7 @@ DOMSVGStringList::Initialize(const nsAString & newItem, nsAString & _retval)
 }
 
 NS_IMETHODIMP
-DOMSVGStringList::GetItem(PRUint32 index,
+DOMSVGStringList::GetItem(uint32_t index,
                           nsAString & _retval)
 {
   if (index >= InternalList().Length()) {
@@ -109,7 +109,7 @@ DOMSVGStringList::GetItem(PRUint32 index,
 
 NS_IMETHODIMP
 DOMSVGStringList::InsertItemBefore(const nsAString & newItem,
-                                   PRUint32 index,
+                                   uint32_t index,
                                    nsAString & _retval)
 {
   if (newItem.IsEmpty()) { // takes care of DOMStringIsNull too
@@ -135,7 +135,7 @@ DOMSVGStringList::InsertItemBefore(const nsAString & newItem,
 
 NS_IMETHODIMP
 DOMSVGStringList::ReplaceItem(const nsAString & newItem,
-                              PRUint32 index,
+                              uint32_t index,
                               nsAString & _retval)
 {
   if (newItem.IsEmpty()) { // takes care of DOMStringIsNull too
@@ -157,7 +157,7 @@ DOMSVGStringList::ReplaceItem(const nsAString & newItem,
 }
 
 NS_IMETHODIMP
-DOMSVGStringList::RemoveItem(PRUint32 index,
+DOMSVGStringList::RemoveItem(uint32_t index,
                              nsAString & _retval)
 {
   if (index >= InternalList().Length()) {

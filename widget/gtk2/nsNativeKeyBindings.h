@@ -64,7 +64,7 @@ private:
   bool KeyPressInternal(const nsNativeKeyEvent& aEvent,
                           DoCommandCallback aCallback,
                           void *aCallbackData,
-                          PRUint32 aKeyCode);
+                          uint32_t aKeyCode);
 
   GtkWidget *mNativeTarget;
 };

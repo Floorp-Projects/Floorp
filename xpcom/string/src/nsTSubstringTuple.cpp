@@ -12,7 +12,7 @@
 nsTSubstringTuple_CharT::size_type
 nsTSubstringTuple_CharT::Length() const
   {
-    PRUint32 len;
+    uint32_t len;
     if (mHead)
       len = mHead->Length();
     else
@@ -29,12 +29,12 @@ nsTSubstringTuple_CharT::Length() const
    */
 
 void
-nsTSubstringTuple_CharT::WriteTo( char_type *buf, PRUint32 bufLen ) const
+nsTSubstringTuple_CharT::WriteTo( char_type *buf, uint32_t bufLen ) const
   {
     const substring_type& b = TO_SUBSTRING(mFragB);
 
     NS_ASSERTION(bufLen >= b.Length(), "buffer too small");
-    PRUint32 headLen = bufLen - b.Length();
+    uint32_t headLen = bufLen - b.Length();
     if (mHead)
       {
         mHead->WriteTo(buf, headLen);

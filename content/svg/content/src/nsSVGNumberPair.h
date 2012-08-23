@@ -27,7 +27,7 @@ public:
     eSecond
   };
 
-  void Init(PRUint8 aAttrEnum = 0xff, float aValue1 = 0, float aValue2 = 0) {
+  void Init(uint8_t aAttrEnum = 0xff, float aValue1 = 0, float aValue2 = 0) {
     mAnimVal[0] = mBaseVal[0] = aValue1;
     mAnimVal[1] = mBaseVal[1] = aValue2;
     mAttrEnum = aAttrEnum;
@@ -65,7 +65,7 @@ private:
 
   float mAnimVal[2];
   float mBaseVal[2];
-  PRUint8 mAttrEnum; // element specified tracking for attribute
+  uint8_t mAttrEnum; // element specified tracking for attribute
   bool mIsAnimated;
   bool mIsBaseSet;
 

@@ -82,24 +82,24 @@ public:
                                  nsIPresShell::ScrollAxis(),
                                nsIPresShell::ScrollAxis aHorizontal =
                                  nsIPresShell::ScrollAxis(),
-                               PRInt32 aFlags = 0);
+                               int32_t aFlags = 0);
   nsresult      SubtractRange(RangeData* aRange, nsRange* aSubtract,
                               nsTArray<RangeData>* aOutput);
-  nsresult      AddItem(nsRange *aRange, PRInt32* aOutIndex = nullptr);
+  nsresult      AddItem(nsRange *aRange, int32_t* aOutIndex = nullptr);
   nsresult      RemoveItem(nsRange *aRange);
   nsresult      RemoveCollapsedRanges();
   nsresult      Clear(nsPresContext* aPresContext);
-  nsresult      Collapse(nsINode* aParentNode, PRInt32 aOffset);
-  nsresult      Extend(nsINode* aParentNode, PRInt32 aOffset);
-  nsRange*      GetRangeAt(PRInt32 aIndex);
-  PRInt32 GetRangeCount() { return mRanges.Length(); }
+  nsresult      Collapse(nsINode* aParentNode, int32_t aOffset);
+  nsresult      Extend(nsINode* aParentNode, int32_t aOffset);
+  nsRange*      GetRangeAt(int32_t aIndex);
+  int32_t GetRangeCount() { return mRanges.Length(); }
 
   // methods for convenience. Note, these don't addref
   nsINode*     GetAnchorNode();
-  PRInt32      GetAnchorOffset();
+  int32_t      GetAnchorOffset();
 
   nsINode*     GetFocusNode();
-  PRInt32      GetFocusOffset();
+  int32_t      GetFocusOffset();
 
   bool IsCollapsed();
 
@@ -114,17 +114,17 @@ public:
   nsresult     SetAnchorFocusToRange(nsRange *aRange);
   void         ReplaceAnchorFocusRange(nsRange *aRange);
 
-  //  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, bool aIsEndNode, nsIFrame **aResultFrame);
+  //  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, int32_t aOffset, bool aIsEndNode, nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForAnchorNode(nsIFrame **aResultFrame);
-  NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame, PRInt32 *aOffset, bool aVisual);
-  NS_IMETHOD   LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
+  NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame, int32_t *aOffset, bool aVisual);
+  NS_IMETHOD   LookUpSelection(nsIContent *aContent, int32_t aContentOffset, int32_t aContentLength,
                              SelectionDetails **aReturnDetails, SelectionType aType, bool aSlowCheck);
   NS_IMETHOD   Repaint(nsPresContext* aPresContext);
 
   // Note: StartAutoScrollTimer might destroy arbitrary frames etc.
   nsresult     StartAutoScrollTimer(nsIFrame *aFrame,
                                     nsPoint& aPoint,
-                                    PRUint32 aDelay);
+                                    uint32_t aDelay);
 
   nsresult     StopAutoScrollTimer();
 
@@ -170,28 +170,28 @@ private:
     bool mFirstAncestorOnly;
   };
 
-  void setAnchorFocusRange(PRInt32 aIndex); // pass in index into mRanges;
+  void setAnchorFocusRange(int32_t aIndex); // pass in index into mRanges;
                                             // negative value clears
                                             // mAnchorFocusRange
   nsresult     SelectAllFramesForContent(nsIContentIterator *aInnerIter,
                                nsIContent *aContent,
                                bool aSelected);
   nsresult     selectFrames(nsPresContext* aPresContext, nsRange *aRange, bool aSelect);
-  nsresult     getTableCellLocationFromRange(nsRange *aRange, PRInt32 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol);
-  nsresult     addTableCellRange(nsRange *aRange, bool *aDidAddRange, PRInt32 *aOutIndex);
+  nsresult     getTableCellLocationFromRange(nsRange *aRange, int32_t *aSelectionType, int32_t *aRow, int32_t *aCol);
+  nsresult     addTableCellRange(nsRange *aRange, bool *aDidAddRange, int32_t *aOutIndex);
 
   nsresult FindInsertionPoint(
       nsTArray<RangeData>* aElementArray,
-      nsINode* aPointNode, PRInt32 aPointOffset,
-      nsresult (*aComparator)(nsINode*,PRInt32,nsRange*,PRInt32*),
-      PRInt32* aPoint);
-  bool EqualsRangeAtPoint(nsINode* aBeginNode, PRInt32 aBeginOffset,
-                            nsINode* aEndNode, PRInt32 aEndOffset,
-                            PRInt32 aRangeIndex);
-  nsresult GetIndicesForInterval(nsINode* aBeginNode, PRInt32 aBeginOffset,
-                                 nsINode* aEndNode, PRInt32 aEndOffset,
+      nsINode* aPointNode, int32_t aPointOffset,
+      nsresult (*aComparator)(nsINode*,int32_t,nsRange*,int32_t*),
+      int32_t* aPoint);
+  bool EqualsRangeAtPoint(nsINode* aBeginNode, int32_t aBeginOffset,
+                            nsINode* aEndNode, int32_t aEndOffset,
+                            int32_t aRangeIndex);
+  nsresult GetIndicesForInterval(nsINode* aBeginNode, int32_t aBeginOffset,
+                                 nsINode* aEndNode, int32_t aEndOffset,
                                  bool aAllowAdjacent,
-                                 PRInt32* aStartIndex, PRInt32* aEndIndex);
+                                 int32_t* aStartIndex, int32_t* aEndIndex);
   RangeData* FindRangeData(nsIDOMRange* aRange);
 
   // These are the ranges inside this selection. They are kept sorted in order
@@ -243,7 +243,7 @@ see the nsIEnumerator for more details*/
   virtual ~nsSelectionIterator();
 
 private:
-  PRInt32             mIndex;
+  int32_t             mIndex;
   mozilla::Selection* mDomSelection;
   SelectionType       mType;
 };

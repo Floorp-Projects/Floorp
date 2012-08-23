@@ -34,7 +34,7 @@ class NS_GFX nsRegion
   struct nsRectFast : public nsRect
   {
     nsRectFast () {}      // No need to call parent constructor to set default values
-    nsRectFast (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) : nsRect (aX, aY, aWidth, aHeight) {}
+    nsRectFast (int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight) : nsRect (aX, aY, aWidth, aHeight) {}
     nsRectFast (const nsRect& aRect) : nsRect (aRect) {}
 
     // Override nsRect methods to make them inline. Do not check for emptiness.
@@ -51,7 +51,7 @@ class NS_GFX nsRegion
     RgnRect* next;
 
     RgnRect () {}                           // No need to call parent constructor to set default values
-    RgnRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) : nsRectFast (aX, aY, aWidth, aHeight) {}
+    RgnRect (int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight) : nsRectFast (aX, aY, aWidth, aHeight) {}
     RgnRect (const nsRectFast& aRect) : nsRectFast (aRect) {}
 
     void* operator new (size_t) CPP_THROW_NEW;
@@ -131,7 +131,7 @@ public:
   bool Contains (const nsRegion& aRgn) const;
   bool Intersects (const nsRect& aRect) const;
 
-  void MoveBy (PRInt32 aXOffset, PRInt32 aYOffset)
+  void MoveBy (int32_t aXOffset, int32_t aYOffset)
   {
     MoveBy (nsPoint (aXOffset, aYOffset));
   }
@@ -145,13 +145,13 @@ public:
   bool IsEmpty () const { return mRectCount == 0; }
   bool IsComplex () const { return mRectCount > 1; }
   bool IsEqual (const nsRegion& aRegion) const;
-  PRUint32 GetNumRects () const { return mRectCount; }
+  uint32_t GetNumRects () const { return mRectCount; }
   const nsRect& GetBounds () const { return mBoundRect; }
   // Converts this region from aFromAPP, an appunits per pixel ratio, to
   // aToAPP. This applies nsRect::ConvertAppUnitsRoundOut/In to each rect of
   // the region.
-  nsRegion ConvertAppUnitsRoundOut (PRInt32 aFromAPP, PRInt32 aToAPP) const;
-  nsRegion ConvertAppUnitsRoundIn (PRInt32 aFromAPP, PRInt32 aToAPP) const;
+  nsRegion ConvertAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAPP) const;
+  nsRegion ConvertAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) const;
   nsRegion& ScaleRoundOut(float aXScale, float aYScale);
   nsRegion& ScaleInverseRoundOut(float aXScale, float aYScale);
   nsIntRegion ScaleToOutsidePixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
@@ -174,13 +174,13 @@ public:
    * original region. The simplified region's bounding box will be
    * the same as for the current region.
    */
-  void SimplifyOutward (PRUint32 aMaxRects);
+  void SimplifyOutward (uint32_t aMaxRects);
   /**
    * Make sure the region has at most aMaxRects by removing area from
    * it if necessary. The simplified region will be a subset of the
    * original region.
    */
-  void SimplifyInward (PRUint32 aMaxRects);
+  void SimplifyInward (uint32_t aMaxRects);
   /**
    * Efficiently try to remove a rectangle from this region. The actual
    * area removed could be some sub-area contained by the rectangle
@@ -210,7 +210,7 @@ public:
   static void ShutdownStatic();
 
 private:
-  PRUint32    mRectCount;
+  uint32_t    mRectCount;
   RgnRect*    mCurRect;
   RgnRect     mRectListHead;
   nsRectFast  mBoundRect;
@@ -220,7 +220,7 @@ private:
   nsRegion& Copy (const nsRect& aRect);
   void InsertBefore (RgnRect* aNewRect, RgnRect* aRelativeRect);
   void InsertAfter (RgnRect* aNewRect, RgnRect* aRelativeRect);
-  void SetToElements (PRUint32 aCount);
+  void SetToElements (uint32_t aCount);
   RgnRect* Remove (RgnRect* aRect);
   void InsertInPlace (RgnRect* aRect, bool aOptimizeOnFly = false);
   inline void SaveLinkChain ();
@@ -272,7 +272,7 @@ public:
 };
 
 /**
- * nsIntRegions use PRInt32 coordinates and nsIntRects.
+ * nsIntRegions use int32_t coordinates and nsIntRects.
  */
 class NS_GFX nsIntRegion
 {
@@ -386,7 +386,7 @@ public:
     return mImpl.Intersects (ToRect (aRect));
   }
 
-  void MoveBy (PRInt32 aXOffset, PRInt32 aYOffset)
+  void MoveBy (int32_t aXOffset, int32_t aYOffset)
   {
     MoveBy (nsIntPoint (aXOffset, aYOffset));
   }
@@ -405,7 +405,7 @@ public:
   {
     return mImpl.IsEqual (aRegion.mImpl);
   }
-  PRUint32 GetNumRects () const { return mImpl.GetNumRects (); }
+  uint32_t GetNumRects () const { return mImpl.GetNumRects (); }
   nsIntRect GetBounds () const { return FromRect (mImpl.GetBounds ()); }
   nsRegion ToAppUnits (nscoord aAppUnitsPerPixel) const;
   nsIntRect GetLargestRectangle (const nsIntRect& aContainingRect = nsIntRect()) const
@@ -425,7 +425,7 @@ public:
    * original region. The simplified region's bounding box will be
    * the same as for the current region.
    */
-  void SimplifyOutward (PRUint32 aMaxRects)
+  void SimplifyOutward (uint32_t aMaxRects)
   {
     mImpl.SimplifyOutward (aMaxRects);
   }
@@ -434,7 +434,7 @@ public:
    * it if necessary. The simplified region will be a subset of the
    * original region.
    */
-  void SimplifyInward (PRUint32 aMaxRects)
+  void SimplifyInward (uint32_t aMaxRects)
   {
     mImpl.SimplifyInward (aMaxRects);
   }

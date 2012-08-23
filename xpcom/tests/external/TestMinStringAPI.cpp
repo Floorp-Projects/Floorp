@@ -20,7 +20,7 @@ static bool test_basic_1()
     NS_CStringContainerInit(s);
 
     const char *ptr;
-    PRUint32 len;
+    uint32_t len;
     char *clone;
 
     NS_CStringGetData(s, &ptr);
@@ -79,7 +79,7 @@ static bool test_basic_2()
     NS_StringContainerInit(s);
 
     const PRUnichar *ptr;
-    PRUint32 len;
+    uint32_t len;
     PRUnichar *clone;
 
     NS_StringGetData(s, &ptr);
@@ -178,7 +178,7 @@ static void ReplaceSubstring( nsACString& str,
                               const nsACString& newVal )
   {
     const char* sp, *mp, *np;
-    PRUint32 sl, ml, nl;
+    uint32_t sl, ml, nl;
 
     sl = NS_CStringGetData(str, &sp);
     ml = NS_CStringGetData(matchVal, &mp);
@@ -188,7 +188,7 @@ static void ReplaceSubstring( nsACString& str,
       {
         if (memcmp(iter, mp, ml) == 0)
           {
-            PRUint32 offset = iter - sp;
+            uint32_t offset = iter - sp;
 
             NS_CStringSetDataRange(str, offset, ml, np, nl);
 
@@ -270,7 +270,7 @@ static void
 CompressWhitespace(nsACString &str)
   {
     const char *p;
-    PRInt32 i, len = (PRInt32) NS_CStringGetData(str, &p);
+    int32_t i, len = (int32_t) NS_CStringGetData(str, &p);
 
     // trim leading whitespace
 
@@ -283,7 +283,7 @@ CompressWhitespace(nsACString &str)
     if (i>0)
       {
         NS_CStringCutData(str, 0, i);
-        len = (PRInt32) NS_CStringGetData(str, &p);
+        len = (int32_t) NS_CStringGetData(str, &p);
       }
 
     // trim trailing whitespace
@@ -344,7 +344,7 @@ static bool test_depend_sub()
 
     bool terminated;
     const char *sd;
-    PRUint32 len = NS_CStringGetData(s, &sd, &terminated);
+    uint32_t len = NS_CStringGetData(s, &sd, &terminated);
 
     bool rv = (sd == kData && len == sizeof(kData)-1 && !terminated);
     NS_CStringContainerFinish(s);
@@ -390,7 +390,7 @@ static bool test_adopt_sub()
 
     bool terminated;
     const char *sd;
-    PRUint32 len = NS_CStringGetData(s, &sd, &terminated);
+    uint32_t len = NS_CStringGetData(s, &sd, &terminated);
 
     bool rv = (sd == data && len == sizeof(kData)-1 && !terminated);
     NS_CStringContainerFinish(s);
@@ -405,7 +405,7 @@ static bool test_mutation()
     const char kText[] = "Every good boy does fine.";
 
     char *buf;
-    PRUint32 len = NS_CStringGetMutableData(s, sizeof(kText) - 1, &buf);
+    uint32_t len = NS_CStringGetMutableData(s, sizeof(kText) - 1, &buf);
     if (!buf || len != sizeof(kText) - 1)
       return false;
     memcpy(buf, kText, sizeof(kText));
@@ -415,7 +415,7 @@ static bool test_mutation()
     if (strcmp(data, kText) != 0)
       return false;
 
-    PRUint32 newLen = len + 1;
+    uint32_t newLen = len + 1;
     len = NS_CStringGetMutableData(s, newLen, &buf);
     if (!buf || len != newLen)
       return false;
@@ -524,7 +524,7 @@ static bool test_find()
   static const char khello[] = "hello";
   static const char kBye[] = "Bye!";
 
-  PRInt32 found;
+  int32_t found;
 
   found = uni.Find(kHello);
   if (found != 0)

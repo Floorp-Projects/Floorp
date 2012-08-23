@@ -11,7 +11,7 @@ typedef gfxASurface::gfxImageFormat gfxImageFormat;
 
 namespace mozilla {
 
-AndroidDirectTexture::AndroidDirectTexture(PRUint32 width, PRUint32 height, PRUint32 usage,
+AndroidDirectTexture::AndroidDirectTexture(uint32_t width, uint32_t height, uint32_t usage,
                                            gfxImageFormat format) :
     mLock("AndroidDirectTexture.mLock")
   , mNeedFlip(false)
@@ -52,14 +52,14 @@ AndroidDirectTexture::ReallocPendingBuffer()
 }
 
 bool
-AndroidDirectTexture::Lock(PRUint32 aUsage, unsigned char **bits)
+AndroidDirectTexture::Lock(uint32_t aUsage, unsigned char **bits)
 {
   nsIntRect rect(0, 0, mWidth, mHeight);
   return Lock(aUsage, rect, bits);
 }
 
 bool
-AndroidDirectTexture::Lock(PRUint32 aUsage, const nsIntRect& aRect, unsigned char **bits)
+AndroidDirectTexture::Lock(uint32_t aUsage, const nsIntRect& aRect, unsigned char **bits)
 {
   mLock.Lock();
   ReallocPendingBuffer();
@@ -86,12 +86,12 @@ AndroidDirectTexture::Unlock(bool aFlip)
 }
 
 bool
-AndroidDirectTexture::Reallocate(PRUint32 aWidth, PRUint32 aHeight) {
+AndroidDirectTexture::Reallocate(uint32_t aWidth, uint32_t aHeight) {
   return Reallocate(aWidth, aHeight, mFormat);
 }
 
 bool
-AndroidDirectTexture::Reallocate(PRUint32 aWidth, PRUint32 aHeight, gfxASurface::gfxImageFormat aFormat)
+AndroidDirectTexture::Reallocate(uint32_t aWidth, uint32_t aHeight, gfxASurface::gfxImageFormat aFormat)
 {
   MutexAutoLock lock(mLock);
 

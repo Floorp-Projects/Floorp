@@ -26,7 +26,7 @@
 #include "nsReadableUtils.h"            // for EmptyString
 #include "nsString.h"                   // for nsAutoString, nsString, etc
 #include "nsStringFwd.h"                // for nsAFlatString
-#include "prtypes.h"                    // for PRInt32
+#include "prtypes.h"                    // for int32_t
 
 class nsISupports;
 
@@ -1057,7 +1057,7 @@ nsDecreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
   htmlEditor->GetPositionedElement(getter_AddRefs(positionedElement));
   *outCmdEnabled = false;
   if (positionedElement) {
-    PRInt32 z;
+    int32_t z;
     nsresult res = htmlEditor->GetElementZIndex(positionedElement, &z);
     NS_ENSURE_SUCCESS(res, res);
     *outCmdEnabled = (z > 0);

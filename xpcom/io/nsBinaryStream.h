@@ -46,7 +46,7 @@ protected:
     NS_DECL_NSIOBJECTOUTPUTSTREAM
 
     // Call Write(), ensuring that all proffered data is written
-    nsresult WriteFully(const char *aBuf, PRUint32 aCount);
+    nsresult WriteFully(const char *aBuf, uint32_t aCount);
 
     nsCOMPtr<nsIOutputStream>       mOutputStream;
     nsCOMPtr<nsIStreamBufferAccess> mBufferAccess;

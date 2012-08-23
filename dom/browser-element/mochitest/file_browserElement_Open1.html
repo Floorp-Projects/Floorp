@@ -20,7 +20,8 @@ function ok(bool, reason) {
   alert((bool ? "success: " : "failure: ") + reason);
 }
 
-var w = window.open("file_browserElement_Open2.html", "name", "features");
+// Send "dialog=1" as a test for bug 783644.  It shouldn't have any effect.
+var w = window.open("file_browserElement_Open2.html", "name", "dialog=1");
 w.addEventListener("load", function() {
   ok(true, "got load");
   is(w.opener, window, 'opener property');

@@ -40,7 +40,7 @@ MySocketListener::OnSocketAccepted(nsIServerSocket *serv,
     LOG(("MySocketListener::OnSocketAccepted [serv=%p trans=%p]\n", serv, trans));
 
     nsCAutoString host;
-    PRInt32 port;
+    int32_t port;
 
     trans->GetHost(host);
     trans->GetPort(&port);
@@ -60,7 +60,7 @@ MySocketListener::OnSocketAccepted(nsIServerSocket *serv,
         return rv;
 
     char buf[256];
-    PRUint32 n;
+    uint32_t n;
 
     rv = input->Read(buf, sizeof(buf), &n);
     if (NS_FAILED(rv))
@@ -85,7 +85,7 @@ MySocketListener::OnStopListening(nsIServerSocket *serv, nsresult status)
 }
 
 static nsresult
-MakeServer(PRInt32 port)
+MakeServer(int32_t port)
 {
     nsresult rv;
     nsCOMPtr<nsIServerSocket> serv = do_CreateInstance(NS_SERVERSOCKET_CONTRACTID, &rv);

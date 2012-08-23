@@ -188,7 +188,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
                                   getter_AddRefs(vrv));
 
   if (NS_SUCCEEDED(rv)) {
-    PRUint16 dataType = nsIDataType::VTYPE_VOID;
+    uint16_t dataType = nsIDataType::VTYPE_VOID;
     if (vrv)
       vrv->GetDataType(&dataType);
 

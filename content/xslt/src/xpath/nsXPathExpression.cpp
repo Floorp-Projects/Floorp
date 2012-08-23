@@ -40,7 +40,7 @@ nsXPathExpression::nsXPathExpression(nsAutoPtr<Expr>& aExpression,
 
 NS_IMETHODIMP
 nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
-                            PRUint16 aType,
+                            uint16_t aType,
                             nsISupports *aInResult,
                             nsISupports **aResult)
 {
@@ -49,9 +49,9 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
 
 NS_IMETHODIMP
 nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
-                                       PRUint32 aContextPosition,
-                                       PRUint32 aContextSize,
-                                       PRUint16 aType,
+                                       uint32_t aContextPosition,
+                                       uint32_t aContextSize,
+                                       uint16_t aType,
                                        nsISupports *aInResult,
                                        nsISupports **aResult)
 {
@@ -73,7 +73,7 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
         }
     }
 
-    PRUint16 nodeType = context->NodeType();
+    uint16_t nodeType = context->NodeType();
 
     if (nodeType == nsIDOMNode::TEXT_NODE ||
         nodeType == nsIDOMNode::CDATA_SECTION_NODE) {
@@ -81,7 +81,7 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
         NS_ENSURE_TRUE(textNode, NS_ERROR_FAILURE);
 
         if (textNode) {
-            PRUint32 textLength;
+            uint32_t textLength;
             textNode->GetLength(&textLength);
             if (textLength == 0)
                 return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -113,7 +113,7 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
     nsresult rv = mExpression->evaluate(&eContext, getter_AddRefs(exprResult));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint16 resultType = aType;
+    uint16_t resultType = aType;
     if (aType == nsIDOMXPathResult::ANY_TYPE) {
         short exprResultType = exprResult->getResultType();
         switch (exprResultType) {
@@ -154,7 +154,7 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
  */
 
 nsresult
-nsXPathExpression::EvalContextImpl::getVariable(PRInt32 aNamespace,
+nsXPathExpression::EvalContextImpl::getVariable(int32_t aNamespace,
                                                 nsIAtom* aLName,
                                                 txAExprResult*& aResult)
 {
@@ -190,12 +190,12 @@ const txXPathNode& nsXPathExpression::EvalContextImpl::getContextNode()
     return mContextNode;
 }
 
-PRUint32 nsXPathExpression::EvalContextImpl::size()
+uint32_t nsXPathExpression::EvalContextImpl::size()
 {
     return mContextSize;
 }
 
-PRUint32 nsXPathExpression::EvalContextImpl::position()
+uint32_t nsXPathExpression::EvalContextImpl::position()
 {
     return mContextPosition;
 }

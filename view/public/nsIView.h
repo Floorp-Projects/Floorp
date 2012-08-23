@@ -325,7 +325,7 @@ public:
    * @param aIndent indentation depth
    * NOTE: virtual so that debugging tools not linked into gklayout can access it
    */
-  virtual void List(FILE* out, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out, int32_t aIndent = 0) const;
 #endif // DEBUG
 
   /**
@@ -352,7 +352,7 @@ protected:
   nsView            *mNextSibling;
   nsView            *mFirstChild;
   nsIFrame          *mFrame;
-  PRInt32           mZIndex;
+  int32_t           mZIndex;
   nsViewVisibility  mVis;
   // position relative our parent view origin but in our appunits
   nscoord           mPosX, mPosY;
@@ -361,7 +361,7 @@ protected:
   // in our appunits
   nsPoint           mViewToWidgetOffset;
   float             mOpacity;
-  PRUint32          mVFlags;
+  uint32_t          mVFlags;
   bool              mWidgetIsTopLevel;
 
   virtual ~nsIView() {}

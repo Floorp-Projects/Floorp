@@ -30,8 +30,8 @@ void
 SVGLengthList::GetValueAsString(nsAString& aValue) const
 {
   aValue.Truncate();
-  PRUint32 last = mLengths.Length() - 1;
-  for (PRUint32 i = 0; i < mLengths.Length(); ++i) {
+  uint32_t last = mLengths.Length() - 1;
+  for (uint32_t i = 0; i < mLengths.Length(); ++i) {
     nsAutoString length;
     mLengths[i].GetValueAsString(length);
     // We ignore OOM, since it's not useful for us to return an error.
@@ -80,7 +80,7 @@ SVGLengthList::operator==(const SVGLengthList& rhs) const
   if (Length() != rhs.Length()) {
     return false;
   }
-  for (PRUint32 i = 0; i < Length(); ++i) {
+  for (uint32_t i = 0; i < Length(); ++i) {
     if (!(mLengths[i] == rhs.mLengths[i])) {
       return false;
     }

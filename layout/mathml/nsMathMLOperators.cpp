@@ -31,8 +31,8 @@ struct OperatorData {
   float           mTrailingSpace;  // unit is em
 };
 
-static PRInt32         gTableRefCount = 0;
-static PRUint32        gOperatorCount = 0;
+static int32_t         gTableRefCount = 0;
+static uint32_t        gOperatorCount = 0;
 static OperatorData*   gOperatorArray = nullptr;
 static nsHashtable*    gOperatorTable = nullptr;
 static bool            gInitialized   = false;
@@ -134,11 +134,11 @@ SetOperator(OperatorData*   aOperatorData,
 {
   // aOperator is in the expanded format \uNNNN\uNNNN ...
   // First compress these Unicode points to the internal nsString format
-  PRInt32 i = 0;
+  int32_t i = 0;
   nsAutoString name, value;
-  PRInt32 len = aOperator.Length();
+  int32_t len = aOperator.Length();
   PRUnichar c = aOperator[i++];
-  PRUint32 state  = 0;
+  uint32_t state  = 0;
   PRUnichar uchar = 0;
   while (i <= len) {
     if (0 == state) {
@@ -246,7 +246,7 @@ InitOperators(void)
   if (NS_FAILED(rv)) return rv;
 
   // Get the list of invariant chars
-  for (PRInt32 i = 0; i < eMATHVARIANT_COUNT; ++i) {
+  for (int32_t i = 0; i < eMATHVARIANT_COUNT; ++i) {
     nsCAutoString key(NS_LITERAL_CSTRING("mathvariant."));
     key.Append(kMathVariant_name[i]);
     nsAutoString value;
@@ -257,13 +257,13 @@ InitOperators(void)
   // Parse the Operator Dictionary in two passes.
   // The first pass is to count the number of operators; the second pass is to
   // allocate the necessary space for them and to add them in the hash table.
-  for (PRInt32 pass = 1; pass <= 2; pass++) {
+  for (int32_t pass = 1; pass <= 2; pass++) {
     OperatorData dummyData;
     OperatorData* operatorData = &dummyData;
     nsCOMPtr<nsISimpleEnumerator> iterator;
     if (NS_SUCCEEDED(mathfontProp->Enumerate(getter_AddRefs(iterator)))) {
       bool more;
-      PRUint32 index = 0;
+      uint32_t index = 0;
       nsCAutoString name;
       nsAutoString attributes;
       while ((NS_SUCCEEDED(iterator->HasMoreElements(&more))) && more) {
@@ -274,7 +274,7 @@ InitOperators(void)
             // expected key: operator.\uNNNN.{infix,postfix,prefix}
             if ((21 <= name.Length()) && (0 == name.Find("operator.\\u"))) {
               name.Cut(0, 9); // 9 is the length of "operator.";
-              PRInt32 len = name.Length();
+              int32_t len = name.Length();
               nsOperatorFlags form = 0;
               if (kNotFound != name.RFind(".infix")) {
                 form = NS_MATHML_OPERATOR_FORM_INFIX;
@@ -392,7 +392,7 @@ nsMathMLOperators::LookupOperator(const nsString&       aOperator,
     // order of preference: infix, postfix, prefix.
 
     OperatorData* found;
-    PRInt32 form = NS_MATHML_OPERATOR_GET_FORM(aForm);
+    int32_t form = NS_MATHML_OPERATOR_GET_FORM(aForm);
     if (!(found = GetOperatorData(aOperator, form))) {
       if (form == NS_MATHML_OPERATOR_FORM_INFIX ||
           !(found =
@@ -524,7 +524,7 @@ nsMathMLOperators::LookupInvariantChar(const nsAString& aChar)
     InitGlobals();
   }
   if (gInvariantCharArray) {
-    for (PRInt32 i = gInvariantCharArray->Length()-1; i >= 0; --i) {
+    for (int32_t i = gInvariantCharArray->Length()-1; i >= 0; --i) {
       const nsString& list = gInvariantCharArray->ElementAt(i);
       nsString::const_iterator start, end;
       list.BeginReading(start);
@@ -548,13 +548,13 @@ nsMathMLOperators::TransformVariantChar(const PRUnichar& aChar,
   }
   if (gInvariantCharArray) {
     nsString list = gInvariantCharArray->ElementAt(aVariant);
-    PRInt32 index = list.FindChar(aChar);
+    int32_t index = list.FindChar(aChar);
     // BMP characters are at offset 3*j
     if (index != kNotFound && index % 3 == 0 && list.Length() - index >= 2 ) {
       // The style-invariant character is the next character
       // (and list should contain padding if the next character is in the BMP).
       ++index;
-      PRUint32 len = NS_IS_HIGH_SURROGATE(list.CharAt(index)) ? 2 : 1;
+      uint32_t len = NS_IS_HIGH_SURROGATE(list.CharAt(index)) ? 2 : 1;
       return nsDependentSubstring(list, index, len);
     }
   }

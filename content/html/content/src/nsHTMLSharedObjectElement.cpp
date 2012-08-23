@@ -48,8 +48,8 @@ public:
   NS_IMETHOD Click() {
     return nsGenericHTMLElement::Click();
   }
-  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  NS_IMETHOD GetTabIndex(int32_t* aTabIndex);
+  NS_IMETHOD SetTabIndex(int32_t aTabIndex);
   NS_IMETHOD Focus() {
     return nsGenericHTMLElement::Focus();
   }
@@ -83,17 +83,17 @@ public:
                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom *aName,
                            nsIAtom *aPrefix, const nsAString &aValue,
                            bool aNotify);
 
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex);
   virtual IMEState GetDesiredIMEState();
 
   virtual void DoneAddingChildren(bool aHaveNotified);
   virtual bool IsDoneAddingChildren();
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom *aAttribute,
                                 const nsAString &aValue,
                                 nsAttrValue &aResult);
@@ -103,7 +103,7 @@ public:
   virtual void DestroyContent();
 
   // nsObjectLoadingContent
-  virtual PRUint32 GetCapabilities() const;
+  virtual uint32_t GetCapabilities() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -305,7 +305,7 @@ nsHTMLSharedObjectElement::UnbindFromTree(bool aDeep,
 
 
 nsresult
-nsHTMLSharedObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
+nsHTMLSharedObjectElement::SetAttr(int32_t aNameSpaceID, nsIAtom *aName,
                                    nsIAtom *aPrefix, const nsAString &aValue,
                                    bool aNotify)
 {
@@ -331,7 +331,7 @@ nsHTMLSharedObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
 bool
 nsHTMLSharedObjectElement::IsHTMLFocusable(bool aWithMouse,
                                            bool *aIsFocusable,
-                                           PRInt32 *aTabIndex)
+                                           int32_t *aTabIndex)
 {
   if (mNodeInfo->Equals(nsGkAtoms::embed) || Type() == eType_Plugin) {
     // Has plugin content: let the plugin decide what to do in terms of
@@ -395,7 +395,7 @@ nsHTMLSharedObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
 }
 
 bool
-nsHTMLSharedObjectElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLSharedObjectElement::ParseAttribute(int32_t aNamespaceID,
                                           nsIAtom *aAttribute,
                                           const nsAString &aValue,
                                           nsAttrValue &aResult)
@@ -482,10 +482,10 @@ nsHTMLSharedObjectElement::IntrinsicState() const
   return nsGenericHTMLElement::IntrinsicState() | ObjectState();
 }
 
-PRUint32
+uint32_t
 nsHTMLSharedObjectElement::GetCapabilities() const
 {
-  PRUint32 capabilities = eSupportPlugins | eAllowPluginSkipChannel;
+  uint32_t capabilities = eSupportPlugins | eAllowPluginSkipChannel;
   if (mNodeInfo->Equals(nsGkAtoms::embed)) {
     capabilities |= eSupportSVG | eSupportImages;
   }

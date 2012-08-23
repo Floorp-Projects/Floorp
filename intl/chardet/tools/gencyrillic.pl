@@ -28,7 +28,7 @@ print FILE <<EOF;
  */
 EOF
 $table = \%Lingua::DetectCharset::StatKoi::StatsTableKoi;
-print FILE "const PRUint16 gCyrillicProb[33][33] = {";
+print FILE "const uint16_t gCyrillicProb[33][33] = {";
   print FILE "{ \n";
   print FILE "0,\n";
   for($j = 0xc0; $j < 0xe0; $j++)

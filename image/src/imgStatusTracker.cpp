@@ -16,7 +16,7 @@
 using namespace mozilla::image;
 
 static nsresult
-GetResultFromImageStatus(PRUint32 aStatus)
+GetResultFromImageStatus(uint32_t aStatus)
 {
   if (aStatus & imgIRequest::STATUS_ERROR)
     return NS_IMAGELIB_ERROR_FAILURE;
@@ -59,7 +59,7 @@ imgStatusTracker::IsLoading() const
   return !(mState & stateRequestStopped);
 }
 
-PRUint32
+uint32_t
 imgStatusTracker::GetImageStatus() const
 {
   return mImageStatus;
@@ -79,7 +79,7 @@ class imgRequestNotifyRunnable : public nsRunnable
     {
       imgStatusTracker& statusTracker = mRequest->GetStatusTracker();
 
-      for (PRUint32 i = 0; i < mProxies.Length(); ++i) {
+      for (uint32_t i = 0; i < mProxies.Length(); ++i) {
         mProxies[i]->SetNotificationsDeferred(false);
         statusTracker.SyncNotify(mProxies[i]);
       }
@@ -205,12 +205,12 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
     proxy->BlockOnload();
 
   if (mImage) {
-    PRInt16 imageType = mImage->GetType();
+    int16_t imageType = mImage->GetType();
     // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
     if (imageType == imgIContainer::TYPE_VECTOR ||
         static_cast<RasterImage*>(mImage)->GetNumFrames() > 0) {
 
-      PRUint32 frame = (imageType == imgIContainer::TYPE_VECTOR) ?
+      uint32_t frame = (imageType == imgIContainer::TYPE_VECTOR) ?
         0 : static_cast<RasterImage*>(mImage)->GetCurrentFrameIndex();
 
       proxy->OnStartFrame(frame);
@@ -329,7 +329,7 @@ imgStatusTracker::SendStartContainer(imgRequestProxy* aProxy, imgIContainer* aCo
 }
 
 void
-imgStatusTracker::RecordStartFrame(PRUint32 aFrame)
+imgStatusTracker::RecordStartFrame(uint32_t aFrame)
 {
   NS_ABORT_IF_FALSE(mImage, "RecordStartFrame called before we have an Image");
   // no bookkeeping necessary here - this is implied by imgIContainer's number
@@ -337,7 +337,7 @@ imgStatusTracker::RecordStartFrame(PRUint32 aFrame)
 }
 
 void
-imgStatusTracker::SendStartFrame(imgRequestProxy* aProxy, PRUint32 aFrame)
+imgStatusTracker::SendStartFrame(imgRequestProxy* aProxy, uint32_t aFrame)
 {
   if (!aProxy->NotificationsDeferred())
     aProxy->OnStartFrame(aFrame);
@@ -362,7 +362,7 @@ imgStatusTracker::SendDataAvailable(imgRequestProxy* aProxy, bool aCurrentFrame,
 
 
 void
-imgStatusTracker::RecordStopFrame(PRUint32 aFrame)
+imgStatusTracker::RecordStopFrame(uint32_t aFrame)
 {
   NS_ABORT_IF_FALSE(mImage, "RecordStopFrame called before we have an Image");
   mState |= stateFrameStopped;
@@ -370,7 +370,7 @@ imgStatusTracker::RecordStopFrame(PRUint32 aFrame)
 }
 
 void
-imgStatusTracker::SendStopFrame(imgRequestProxy* aProxy, PRUint32 aFrame)
+imgStatusTracker::SendStopFrame(imgRequestProxy* aProxy, uint32_t aFrame)
 {
   if (!aProxy->NotificationsDeferred())
     aProxy->OnStopFrame(aFrame);
@@ -421,11 +421,11 @@ imgStatusTracker::RecordDiscard()
   NS_ABORT_IF_FALSE(mImage,
                     "RecordDiscard called before we have an Image");
   // Clear the state bits we no longer deserve.
-  PRUint32 stateBitsToClear = stateDecodeStarted | stateDecodeStopped;
+  uint32_t stateBitsToClear = stateDecodeStarted | stateDecodeStopped;
   mState &= ~stateBitsToClear;
 
   // Clear the status bits we no longer deserve.
-  PRUint32 statusBitsToClear = imgIRequest::STATUS_FRAME_COMPLETE
+  uint32_t statusBitsToClear = imgIRequest::STATUS_FRAME_COMPLETE
                                | imgIRequest::STATUS_DECODE_COMPLETE;
   mImageStatus &= ~statusBitsToClear;
 }

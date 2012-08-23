@@ -7,11 +7,16 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.ZoomConstraints;
+import org.mozilla.gecko.util.EventDispatcher;
+import org.mozilla.gecko.GeckoAccessibility;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.PointF;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -45,7 +50,9 @@ public class LayerView extends FrameLayout {
     private InputConnectionHandler mInputConnectionHandler;
     private LayerRenderer mRenderer;
     /* Must be a PAINT_xxx constant */
-    private int mPaintState = PAINT_NONE;
+    private int mPaintState;
+    private int mCheckerboardColor;
+    private boolean mCheckerboardShouldShowChecks;
 
     private SurfaceView mSurfaceView;
     private TextureView mTextureView;
@@ -93,16 +100,28 @@ public class LayerView extends FrameLayout {
         }
 
         mGLController = new GLController(this);
+        mPaintState = PAINT_NONE;
+        mCheckerboardColor = Color.WHITE;
+        mCheckerboardShouldShowChecks = true;
     }
 
-    void connect(GeckoLayerClient layerClient) {
-        mLayerClient = layerClient;
-        mTouchEventHandler = new TouchEventHandler(getContext(), this, layerClient);
+    public void createLayerClient(EventDispatcher eventDispatcher) {
+        mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
+
+        mTouchEventHandler = new TouchEventHandler(getContext(), this, mLayerClient);
         mRenderer = new LayerRenderer(this);
         mInputConnectionHandler = null;
 
         setFocusable(true);
         setFocusableInTouchMode(true);
+
+        GeckoAccessibility.setDelegate(this);
+    }
+
+    public void destroy() {
+        if (mLayerClient != null) {
+            mLayerClient.destroy();
+        }
     }
 
     @Override
@@ -125,6 +144,40 @@ public class LayerView extends FrameLayout {
     public GeckoLayerClient getLayerClient() { return mLayerClient; }
     public TouchEventHandler getTouchEventHandler() { return mTouchEventHandler; }
 
+    public ImmutableViewportMetrics getViewportMetrics() {
+        return mLayerClient.getViewportMetrics();
+    }
+
+    public void abortPanning() {
+        mLayerClient.getPanZoomController().abortPanning();
+    }
+
+    public PointF convertViewPointToLayerPoint(PointF viewPoint) {
+        return mLayerClient.convertViewPointToLayerPoint(viewPoint);
+    }
+
+    int getCheckerboardColor() {
+        return mCheckerboardColor;
+    }
+
+    public void setCheckerboardColor(int newColor) {
+        mCheckerboardColor = newColor;
+        requestRender();
+    }
+
+    boolean checkerboardShouldShowChecks() {
+        return mCheckerboardShouldShowChecks;
+    }
+
+    void setCheckerboardShouldShowChecks(boolean value) {
+        mCheckerboardShouldShowChecks = value;
+        requestRender();
+    }
+
+    public void setZoomConstraints(ZoomConstraints constraints) {
+        mLayerClient.setZoomConstraints(constraints);
+    }
+
     /** The LayerRenderer calls this to indicate that the window has changed size. */
     public void setViewportSize(IntSize size) {
         mLayerClient.setViewportSize(new FloatSize(size));
@@ -132,6 +185,7 @@ public class LayerView extends FrameLayout {
 
     public void setInputConnectionHandler(InputConnectionHandler inputConnectionHandler) {
         mInputConnectionHandler = inputConnectionHandler;
+        mLayerClient.setForceRedraw();
     }
 
     @Override
@@ -277,7 +331,7 @@ public class LayerView extends FrameLayout {
     /** This function is invoked by Gecko (compositor thread) via JNI; be careful when modifying signature. */
     public static GLController registerCxxCompositor() {
         try {
-            LayerView layerView = GeckoApp.mAppContext.getLayerClient().getView();
+            LayerView layerView = GeckoApp.mAppContext.getLayerView();
             layerView.mListener.compositorCreated();
             return layerView.getGLController();
         } catch (Exception e) {

@@ -38,7 +38,7 @@ public:
 
 #if (MOZ_WIDGET_GTK == 2)
     virtual nsresult DrawWithGDK(GdkDrawable * drawable, gint offsetX, 
-            gint offsetY, GdkRectangle * clipRects, PRUint32 numClipRects) = 0;
+            gint offsetY, GdkRectangle * clipRects, uint32_t numClipRects) = 0;
 #endif
 
     enum {
@@ -70,7 +70,7 @@ public:
      */
 #if (MOZ_WIDGET_GTK == 2)
     void Draw(gfxContext* ctx, nsIntSize size,
-              PRUint32 flags, GdkColormap* colormap);
+              uint32_t flags, GdkColormap* colormap);
 #endif
 
 private:
@@ -78,7 +78,7 @@ private:
     // for gfxXlibNativeRenderer:
     virtual nsresult DrawWithXlib(gfxXlibSurface* surface,
                                   nsIntPoint offset,
-                                  nsIntRect* clipRects, PRUint32 numClipRects);
+                                  nsIntRect* clipRects, uint32_t numClipRects);
 
 #if (MOZ_WIDGET_GTK == 2)
     GdkColormap *mColormap;

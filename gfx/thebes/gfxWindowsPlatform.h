@@ -78,10 +78,10 @@ struct ClearTypeParameterInfo {
     { }
 
     nsString    displayName;  // typically just 'DISPLAY1'
-    PRInt32     gamma;
-    PRInt32     pixelStructure;
-    PRInt32     clearTypeLevel;
-    PRInt32     enhancedContrast;
+    int32_t     gamma;
+    int32_t     pixelStructure;
+    int32_t     clearTypeLevel;
+    int32_t     enhancedContrast;
 };
 
 class THEBES_API gfxWindowsPlatform : public gfxPlatform {
@@ -155,8 +155,8 @@ public:
 
     nsresult UpdateFontList();
 
-    virtual void GetCommonFallbackFonts(const PRUint32 aCh,
-                                        PRInt32 aRunScript,
+    virtual void GetCommonFallbackFonts(const uint32_t aCh,
+                                        int32_t aRunScript,
                                         nsTArray<const char*>& aFontList);
 
     nsresult ResolveFontName(const nsAString& aFontName,
@@ -179,13 +179,13 @@ public:
      * Activate a platform font (needed to support @font-face src url() )
      */
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                           const PRUint8 *aFontData,
-                                           PRUint32 aLength);
+                                           const uint8_t *aFontData,
+                                           uint32_t aLength);
 
     /**
      * Check whether format is supported on a platform or not (if unclear, returns true)
      */
-    virtual bool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
+    virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags);
 
     /* Find a FontFamily/FontEntry object that represents a font on your system given a name */
     gfxFontFamily *FindFontFamily(const nsAString& aName);
@@ -211,7 +211,7 @@ public:
         kWindows7 = 0x60001
     };
 
-    static PRInt32 WindowsOSVersion(PRInt32 *aBuildNum = nullptr);
+    static int32_t WindowsOSVersion(int32_t *aBuildNum = nullptr);
 
     static void GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion);
 
@@ -251,8 +251,8 @@ protected:
 
     RenderMode mRenderMode;
 
-    PRInt8 mUseClearTypeForDownloadableFonts;
-    PRInt8 mUseClearTypeAlways;
+    int8_t mUseClearTypeForDownloadableFonts;
+    int8_t mUseClearTypeAlways;
     HDC mScreenDC;
 
 private:

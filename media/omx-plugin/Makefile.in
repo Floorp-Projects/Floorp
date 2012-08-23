@@ -35,7 +35,7 @@ NO_DIST_INSTALL = 1
 NO_INSTALL = 1
 
 ifneq ($(MOZ_WIDGET_TOOLKIT),gonk)
-DIRS += lib/ics/libutils lib/ics/libstagefright lib/ics/libstagefright_omx
+DIRS += lib/ics/libutils lib/ics/libstagefright
 endif
 
 CPPSRCS = \
@@ -77,8 +77,6 @@ EXTRA_DSO_LDOPTS += \
 		-lutils \
 		-L$(DEPTH)/media/omx-plugin/lib/ics/libstagefright \
 		-lstagefright \
-		-L$(DEPTH)/media/omx-plugin/lib/ics/libstagefright_omx \
-		-lstagefright_omx \
 		$(NULL)
 
 INCLUDES        += \

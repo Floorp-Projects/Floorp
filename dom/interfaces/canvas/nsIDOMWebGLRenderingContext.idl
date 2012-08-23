@@ -721,8 +721,8 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   [binaryname(MozGenerateMipmap)]
   void generateMipmap(in WebGLenum target);
 
-  nsIWebGLActiveInfo getActiveAttrib(in nsIWebGLProgram program, in PRUint32 index);
-  nsIWebGLActiveInfo getActiveUniform(in nsIWebGLProgram program, in PRUint32 index);
+  nsIWebGLActiveInfo getActiveAttrib(in nsIWebGLProgram program, in uint32_t index);
+  nsIWebGLActiveInfo getActiveUniform(in nsIWebGLProgram program, in uint32_t index);
 
   nsIVariant getAttachedShaders(in nsIWebGLProgram program);
 

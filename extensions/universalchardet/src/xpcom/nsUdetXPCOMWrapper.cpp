@@ -21,7 +21,7 @@ static NS_DEFINE_CID(kUniversalDetectorCID, NS_UNIVERSAL_DETECTOR_CID);
 static NS_DEFINE_CID(kUniversalStringDetectorCID, NS_UNIVERSAL_STRING_DETECTOR_CID);
 
 //---------------------------------------------------------------------
-nsXPCOMDetector:: nsXPCOMDetector(PRUint32 aLanguageFilter)
+nsXPCOMDetector:: nsXPCOMDetector(uint32_t aLanguageFilter)
  : nsUniversalDetector(aLanguageFilter)
 {
 }
@@ -46,7 +46,7 @@ NS_IMETHODIMP nsXPCOMDetector::Init(
 }
 //----------------------------------------------------------
 NS_IMETHODIMP nsXPCOMDetector::DoIt(const char* aBuf,
-              PRUint32 aLen, bool* oDontFeedMe)
+              uint32_t aLen, bool* oDontFeedMe)
 {
   NS_ASSERTION(mObserver != nullptr , "have not init yet");
 
@@ -73,7 +73,7 @@ NS_IMETHODIMP nsXPCOMDetector::Done()
 {
   NS_ASSERTION(mObserver != nullptr , "have not init yet");
 #ifdef DEBUG_chardet
-  for (PRInt32 i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
+  for (int32_t i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
   {
     // If no data was received the array might stay filled with nulls
     // the way it was initialized in the constructor.
@@ -97,7 +97,7 @@ void nsXPCOMDetector::Report(const char* aCharset)
 
 
 //---------------------------------------------------------------------
-nsXPCOMStringDetector:: nsXPCOMStringDetector(PRUint32 aLanguageFilter)
+nsXPCOMStringDetector:: nsXPCOMStringDetector(uint32_t aLanguageFilter)
   : nsUniversalDetector(aLanguageFilter)
 {
 }
@@ -117,7 +117,7 @@ void nsXPCOMStringDetector::Report(const char *aCharset)
 }
 //---------------------------------------------------------------------
 NS_IMETHODIMP nsXPCOMStringDetector::DoIt(const char* aBuf,
-                     PRUint32 aLen, const char** oCharset,
+                     uint32_t aLen, const char** oCharset,
                      nsDetectionConfident &oConf)
 {
   mResult = nullptr;

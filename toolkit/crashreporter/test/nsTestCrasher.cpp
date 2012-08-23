@@ -40,14 +40,14 @@ void PureVirtualCall()
 }
 
 // Keep these in sync with CrashTestUtils.jsm!
-const PRInt16 CRASH_INVALID_POINTER_DEREF = 0;
-const PRInt16 CRASH_PURE_VIRTUAL_CALL     = 1;
-const PRInt16 CRASH_RUNTIMEABORT          = 2;
-const PRInt16 CRASH_OOM                   = 3;
-const PRInt16 CRASH_MOZ_CRASH             = 4;
+const int16_t CRASH_INVALID_POINTER_DEREF = 0;
+const int16_t CRASH_PURE_VIRTUAL_CALL     = 1;
+const int16_t CRASH_RUNTIMEABORT          = 2;
+const int16_t CRASH_OOM                   = 3;
+const int16_t CRASH_MOZ_CRASH             = 4;
 
 extern "C" NS_EXPORT
-void Crash(PRInt16 how)
+void Crash(int16_t how)
 {
   switch (how) {
   case CRASH_INVALID_POINTER_DEREF: {
@@ -91,7 +91,7 @@ nsISupports* LockDir(nsIFile *directory)
 char testData[32];
 
 extern "C" NS_EXPORT
-PRUint64 SaveAppMemory()
+uint64_t SaveAppMemory()
 {
   for (size_t i=0; i<sizeof(testData); i++)
     testData[i] = i;
@@ -102,5 +102,5 @@ PRUint64 SaveAppMemory()
   fprintf(fp, "%p\n", (void *)testData);
   fclose(fp);
 
-  return (PRInt64)testData;
+  return (int64_t)testData;
 }

@@ -18,16 +18,16 @@
 #include "nsStyleStructInlines.h"
 
 #ifdef DEBUG
-static PRInt32 ctorCount;
-PRInt32 nsLineBox::GetCtorCount() { return ctorCount; }
+static int32_t ctorCount;
+int32_t nsLineBox::GetCtorCount() { return ctorCount; }
 #endif
 
 #ifndef _MSC_VER
 // static nsLineBox constant; initialized in the header file.
-const PRUint32 nsLineBox::kMinChildCountForHashtable;
+const uint32_t nsLineBox::kMinChildCountForHashtable;
 #endif
 
-nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock)
+nsLineBox::nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock)
   : mFirstChild(aFrame)
 // NOTE: memory is already zeroed since we allocate with AllocateByObjectID.
 {
@@ -36,7 +36,7 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock)
   ++ctorCount;
   NS_ASSERTION(!aIsBlock || aCount == 1, "Blocks must have exactly one child");
   nsIFrame* f = aFrame;
-  for (PRInt32 n = aCount; n > 0; f = f->GetNextSibling(), --n) {
+  for (int32_t n = aCount; n > 0; f = f->GetNextSibling(), --n) {
     NS_ASSERTION(aIsBlock == f->IsBlockOutside(),
                  "wrong kind of child frame");
   }
@@ -67,7 +67,7 @@ NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame, bool aIsBlock)
 
 nsLineBox*
 NS_NewLineBox(nsIPresShell* aPresShell, nsLineBox* aFromLine,
-              nsIFrame* aFrame, PRInt32 aCount)
+              nsIFrame* aFrame, int32_t aCount)
 {
   nsLineBox* newLine = new (aPresShell) nsLineBox(aFrame, aCount, false);
   if (newLine) {
@@ -77,17 +77,17 @@ NS_NewLineBox(nsIPresShell* aPresShell, nsLineBox* aFromLine,
 }
 
 void
-nsLineBox::StealHashTableFrom(nsLineBox* aFromLine, PRUint32 aFromLineNewCount)
+nsLineBox::StealHashTableFrom(nsLineBox* aFromLine, uint32_t aFromLineNewCount)
 {
   MOZ_ASSERT(!mFlags.mHasHashedFrames);
-  MOZ_ASSERT(GetChildCount() >= PRInt32(aFromLineNewCount));
+  MOZ_ASSERT(GetChildCount() >= int32_t(aFromLineNewCount));
   mFrames = aFromLine->mFrames;
   mFlags.mHasHashedFrames = 1;
   aFromLine->mFlags.mHasHashedFrames = 0;
   aFromLine->mChildCount = aFromLineNewCount;
   // remove aFromLine's frames that aren't on this line
   nsIFrame* f = aFromLine->mFirstChild;
-  for (PRUint32 i = 0; i < aFromLineNewCount; f = f->GetNextSibling(), ++i) {
+  for (uint32_t i = 0; i < aFromLineNewCount; f = f->GetNextSibling(), ++i) {
     mFrames->RemoveEntry(f);
   }
 }
@@ -95,10 +95,10 @@ nsLineBox::StealHashTableFrom(nsLineBox* aFromLine, PRUint32 aFromLineNewCount)
 void
 nsLineBox::NoteFramesMovedFrom(nsLineBox* aFromLine)
 {
-  PRUint32 fromCount = aFromLine->GetChildCount();
-  PRUint32 toCount = GetChildCount();
+  uint32_t fromCount = aFromLine->GetChildCount();
+  uint32_t toCount = GetChildCount();
   MOZ_ASSERT(toCount <= fromCount, "moved more frames than aFromLine has");
-  PRUint32 fromNewCount = fromCount - toCount;
+  uint32_t fromNewCount = fromCount - toCount;
   if (NS_LIKELY(!aFromLine->mFlags.mHasHashedFrames)) {
     aFromLine->mChildCount = fromNewCount;
     MOZ_ASSERT(toCount < kMinChildCountForHashtable);
@@ -117,14 +117,14 @@ nsLineBox::NoteFramesMovedFrom(nsLineBox* aFromLine)
     if (toCount < kMinChildCountForHashtable) {
       // remove the moved frames from it
       nsIFrame* f = mFirstChild;
-      for (PRUint32 i = 0; i < toCount; f = f->GetNextSibling(), ++i) {
+      for (uint32_t i = 0; i < toCount; f = f->GetNextSibling(), ++i) {
         aFromLine->mFrames->RemoveEntry(f);
       }
     } else if (toCount <= fromNewCount) {
       // This line needs a hash table, allocate a hash table for it since that
       // means fewer hash ops.
       nsIFrame* f = mFirstChild;
-      for (PRUint32 i = 0; i < toCount; f = f->GetNextSibling(), ++i) {
+      for (uint32_t i = 0; i < toCount; f = f->GetNextSibling(), ++i) {
         aFromLine->mFrames->RemoveEntry(f); // toCount RemoveEntry
       }
       SwitchToHashtable(); // toCount PutEntry
@@ -168,7 +168,7 @@ nsLineBox::Cleanup()
 
 #ifdef DEBUG
 static void
-ListFloats(FILE* out, PRInt32 aIndent, const nsFloatCacheList& aFloats)
+ListFloats(FILE* out, int32_t aIndent, const nsFloatCacheList& aFloats)
 {
   nsFloatCache* fc = aFloats.Head();
   while (fc) {
@@ -191,7 +191,7 @@ ListFloats(FILE* out, PRInt32 aIndent, const nsFloatCacheList& aFloats)
 
 #ifdef DEBUG
 const char *
-BreakTypeToString(PRUint8 aBreakType)
+BreakTypeToString(uint8_t aBreakType)
 {
   switch (aBreakType) {
   case NS_STYLE_CLEAR_NONE: return "nobr";
@@ -209,7 +209,7 @@ BreakTypeToString(PRUint8 aBreakType)
 }
 
 char*
-nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
+nsLineBox::StateToString(char* aBuf, int32_t aBufSize) const
 {
   PR_snprintf(aBuf, aBufSize, "%s,%s,%s,%s,%s,before:%s,after:%s[0x%x]",
               IsBlock() ? "block" : "inline",
@@ -224,9 +224,9 @@ nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 }
 
 void
-nsLineBox::List(FILE* out, PRInt32 aIndent) const
+nsLineBox::List(FILE* out, int32_t aIndent) const
 {
-  PRInt32 i;
+  int32_t i;
 
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   char cbuf[100];
@@ -252,7 +252,7 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, "<\n");
 
   nsIFrame* frame = mFirstChild;
-  PRInt32 n = GetChildCount();
+  int32_t n = GetChildCount();
   while (--n >= 0) {
     frame->List(out, aIndent + 1);
     frame = frame->GetNextSibling();
@@ -273,7 +273,7 @@ nsIFrame*
 nsLineBox::LastChild() const
 {
   nsIFrame* frame = mFirstChild;
-  PRInt32 n = GetChildCount() - 1;
+  int32_t n = GetChildCount() - 1;
   while (--n >= 0) {
     frame = frame->GetNextSibling();
   }
@@ -281,10 +281,10 @@ nsLineBox::LastChild() const
 }
 #endif
 
-PRInt32
+int32_t
 nsLineBox::IndexOf(nsIFrame* aFrame) const
 {
-  PRInt32 i, n = GetChildCount();
+  int32_t i, n = GetChildCount();
   nsIFrame* frame = mFirstChild;
   for (i = 0; i < n; i++) {
     if (frame == aFrame) {
@@ -301,7 +301,7 @@ nsLineBox::IsEmpty() const
   if (IsBlock())
     return mFirstChild->IsEmpty();
 
-  PRInt32 n;
+  int32_t n;
   nsIFrame *kid;
   for (n = GetChildCount(), kid = mFirstChild;
        n > 0;
@@ -331,7 +331,7 @@ nsLineBox::CachedIsEmpty()
   if (IsBlock()) {
     result = mFirstChild->CachedIsEmpty();
   } else {
-    PRInt32 n;
+    int32_t n;
     nsIFrame *kid;
     result = true;
     for (n = GetChildCount(), kid = mFirstChild;
@@ -362,7 +362,7 @@ nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
     // we do all of this before our base class releases it's hold on the
     // view.
 #ifdef DEBUG
-    PRInt32 numFrames = 0;
+    int32_t numFrames = 0;
 #endif
     for (nsIFrame* child = aLines.front()->mFirstChild; child; ) {
       nsIFrame* nextChild = child->GetNextSibling();
@@ -395,7 +395,7 @@ nsLineBox::RFindLineContaining(nsIFrame* aFrame,
                                const nsLineList::iterator& aBegin,
                                nsLineList::iterator& aEnd,
                                nsIFrame* aLastFrameBeforeEnd,
-                               PRInt32* aFrameIndexInLine)
+                               int32_t* aFrameIndexInLine)
 {
   NS_PRECONDITION(aFrame, "null ptr");
 
@@ -411,7 +411,7 @@ nsLineBox::RFindLineContaining(nsIFrame* aFrame,
       continue;
     }
     // i is the index of curFrame in aEnd
-    PRInt32 i = aEnd->GetChildCount() - 1;
+    int32_t i = aEnd->GetChildCount() - 1;
     while (i >= 0) {
       if (curFrame == aFrame) {
         *aFrameIndexInLine = i;
@@ -588,7 +588,7 @@ nsLineIterator::Init(nsLineList& aLines, bool aRightToLeft)
   mRightToLeft = aRightToLeft;
 
   // Count the lines
-  PRInt32 numLines = aLines.size();
+  int32_t numLines = aLines.size();
   if (0 == numLines) {
     // Use gDummyLines so that we don't need null pointer checks in
     // the accessor methods
@@ -615,7 +615,7 @@ nsLineIterator::Init(nsLineList& aLines, bool aRightToLeft)
   return NS_OK;
 }
 
-PRInt32
+int32_t
 nsLineIterator::GetNumLines()
 {
   return mNumLines;
@@ -628,11 +628,11 @@ nsLineIterator::GetDirection()
 }
 
 NS_IMETHODIMP
-nsLineIterator::GetLine(PRInt32 aLineNumber,
+nsLineIterator::GetLine(int32_t aLineNumber,
                         nsIFrame** aFirstFrameOnLine,
-                        PRInt32* aNumFramesOnLine,
+                        int32_t* aNumFramesOnLine,
                         nsRect& aLineBounds,
-                        PRUint32* aLineFlags)
+                        uint32_t* aLineFlags)
 {
   NS_ENSURE_ARG_POINTER(aFirstFrameOnLine);
   NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
@@ -649,7 +649,7 @@ nsLineIterator::GetLine(PRInt32 aLineNumber,
   *aNumFramesOnLine = line->GetChildCount();
   aLineBounds = line->mBounds;
 
-  PRUint32 flags = 0;
+  uint32_t flags = 0;
   if (line->IsBlock()) {
     flags |= NS_LINE_FLAG_IS_BLOCK;
   }
@@ -662,11 +662,11 @@ nsLineIterator::GetLine(PRInt32 aLineNumber,
   return NS_OK;
 }
 
-PRInt32
-nsLineIterator::FindLineContaining(nsIFrame* aFrame, PRInt32 aStartLine)
+int32_t
+nsLineIterator::FindLineContaining(nsIFrame* aFrame, int32_t aStartLine)
 {
   NS_PRECONDITION(aStartLine <= mNumLines, "Bogus line numbers");
-  PRInt32 lineNumber = aStartLine;
+  int32_t lineNumber = aStartLine;
   while (lineNumber != mNumLines) {
     nsLineBox* line = mLines[lineNumber];
     if (line->Contains(aFrame)) {
@@ -679,7 +679,7 @@ nsLineIterator::FindLineContaining(nsIFrame* aFrame, PRInt32 aStartLine)
 
 #ifdef IBMBIDI
 NS_IMETHODIMP
-nsLineIterator::CheckLineOrder(PRInt32                  aLine,
+nsLineIterator::CheckLineOrder(int32_t                  aLine,
                                bool                     *aIsReordered,
                                nsIFrame                 **aFirstVisual,
                                nsIFrame                 **aLastVisual)
@@ -707,7 +707,7 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
 #endif // IBMBIDI
 
 NS_IMETHODIMP
-nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
+nsLineIterator::FindFrameAt(int32_t aLineNumber,
                             nscoord aX,
                             nsIFrame** aFrameFound,
                             bool* aXIsBeforeFirstFrame,
@@ -736,7 +736,7 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
   nsIFrame* frame = line->mFirstChild;
   nsIFrame* closestFromLeft = nullptr;
   nsIFrame* closestFromRight = nullptr;
-  PRInt32 n = line->GetChildCount();
+  int32_t n = line->GetChildCount();
   while (n--) {
     nsRect rect = frame->GetRect();
     if (rect.width > 0) {
@@ -784,7 +784,7 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
 }
 
 NS_IMETHODIMP
-nsLineIterator::GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber)
+nsLineIterator::GetNextSiblingOnLine(nsIFrame*& aFrame, int32_t aLineNumber)
 {
   aFrame = aFrame->GetNextSibling();
   return NS_OK;

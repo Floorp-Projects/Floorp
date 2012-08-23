@@ -170,7 +170,7 @@ nsSVGAElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 bool
-nsSVGAElement::IsFocusable(PRInt32 *aTabIndex, bool aWithMouse)
+nsSVGAElement::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
 {
   nsCOMPtr<nsIURI> uri;
   if (IsLink(getter_AddRefs(uri))) {
@@ -267,7 +267,7 @@ nsSVGAElement::IntrinsicState() const
 }
 
 nsresult
-nsSVGAElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsSVGAElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                        nsIAtom* aPrefix, const nsAString& aValue,
                        bool aNotify)
 {
@@ -287,7 +287,7 @@ nsSVGAElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsSVGAElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
+nsSVGAElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
                          bool aNotify)
 {
   nsresult rv = nsSVGAElementBase::UnsetAttr(aNameSpaceID, aAttr, aNotify);

@@ -9,8 +9,8 @@
 .intel_syntax noprefix
 
 #
-#_XPTC__InvokebyIndex(nsISupports* that, PRUint32 methodIndex,
-#                    PRUint32 paramCount, nsXPTCVariant* params)
+#_XPTC__InvokebyIndex(nsISupports* that, uint32_t methodIndex,
+#                    uint32_t paramCount, nsXPTCVariant* params)
 #
 
 .globl XPTC__InvokebyIndex

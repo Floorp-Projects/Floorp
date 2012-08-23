@@ -113,17 +113,17 @@ public:
         return reinterpret_cast<const char*>(aChar8Ptr);
     }
 
-    static PRUint8 FcSlantToThebesStyle(int aFcSlant);
-    static PRUint8 GetThebesStyle(FcPattern *aPattern); // slant
-    static PRUint16 GetThebesWeight(FcPattern *aPattern);
-    static PRInt16 GetThebesStretch(FcPattern *aPattern);
+    static uint8_t FcSlantToThebesStyle(int aFcSlant);
+    static uint8_t GetThebesStyle(FcPattern *aPattern); // slant
+    static uint16_t GetThebesWeight(FcPattern *aPattern);
+    static int16_t GetThebesStretch(FcPattern *aPattern);
 
     static int GetFcSlant(const gfxFontStyle& aFontStyle);
     // Returns a precise FC_WEIGHT from |aBaseWeight|,
     // which is a CSS absolute weight / 100.
-    static int FcWeightForBaseWeight(PRInt8 aBaseWeight);
+    static int FcWeightForBaseWeight(int8_t aBaseWeight);
 
-    static int FcWidthForThebesStretch(PRInt16 aStretch);
+    static int FcWidthForThebesStretch(int16_t aStretch);
 
     static bool GetFullnameFromFamilyAndStyle(FcPattern *aFont,
                                                 nsACString *aFullname);
@@ -162,7 +162,7 @@ protected:
         // font-family property.  FcStrCmpIgnoreCase considers whitespace
         // important.
         static PLDHashNumber HashKey(const FcChar8 *aKey) {
-            PRUint32 hash = 0;
+            uint32_t hash = 0;
             for (const FcChar8 *c = aKey; *c != '\0'; ++c) {
                 hash = PR_ROTATE_LEFT32(hash, 3) ^ FcToLower(*c);
             }

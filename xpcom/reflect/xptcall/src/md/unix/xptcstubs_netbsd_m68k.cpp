@@ -21,8 +21,8 @@ extern "C" {
         nsXPTCMiniVariant* dispatchParams = NULL;
         nsIInterfaceInfo* iface_info = NULL;
         const nsXPTMethodInfo* info;
-        PRUint8 paramCount;
-        PRUint8 i;
+        uint8_t paramCount;
+        uint8_t i;
         nsresult result = NS_ERROR_FAILURE;
 
         NS_ASSERTION(self,"no self");
@@ -30,7 +30,7 @@ extern "C" {
         self->GetInterfaceInfo(&iface_info);
         NS_ASSERTION(iface_info,"no interface info");
 
-        iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
+        iface_info->GetMethodInfo(uint16_t(methodIndex), &info);
         NS_ASSERTION(info,"no interface info");
 
         paramCount = info->GetParamCount();
@@ -42,7 +42,7 @@ extern "C" {
             dispatchParams = paramBuffer;
         NS_ASSERTION(dispatchParams,"no place for params");
 
-        PRUint32* ap = args;
+        uint32_t* ap = args;
         for(i = 0; i < paramCount; i++, ap++)
         {
             const nsXPTParamInfo& param = info->GetParam(i);
@@ -60,14 +60,14 @@ extern "C" {
             // the 8 and 16 bit types will have been promoted to 32 bits before
             // being pushed onto the stack. Since the 68k is big endian, we
             // need to skip over the leading high order bytes.
-            case nsXPTType::T_I8     : dp->val.i8  = *(((PRInt8*) ap) + 3);  break;
-            case nsXPTType::T_I16    : dp->val.i16 = *(((PRInt16*) ap) + 1); break;
-            case nsXPTType::T_I32    : dp->val.i32 = *((PRInt32*) ap);       break;
-            case nsXPTType::T_I64    : dp->val.i64 = *((PRInt64*) ap); ap++; break;
-            case nsXPTType::T_U8     : dp->val.u8  = *(((PRUint8*) ap) + 3); break;
-            case nsXPTType::T_U16    : dp->val.u16 = *(((PRUint16*)ap) + 1); break;
-            case nsXPTType::T_U32    : dp->val.u32 = *((PRUint32*)ap);       break;
-            case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap); ap++; break;
+            case nsXPTType::T_I8     : dp->val.i8  = *(((int8_t*) ap) + 3);  break;
+            case nsXPTType::T_I16    : dp->val.i16 = *(((int16_t*) ap) + 1); break;
+            case nsXPTType::T_I32    : dp->val.i32 = *((int32_t*) ap);       break;
+            case nsXPTType::T_I64    : dp->val.i64 = *((int64_t*) ap); ap++; break;
+            case nsXPTType::T_U8     : dp->val.u8  = *(((uint8_t*) ap) + 3); break;
+            case nsXPTType::T_U16    : dp->val.u16 = *(((uint16_t*)ap) + 1); break;
+            case nsXPTType::T_U32    : dp->val.u32 = *((uint32_t*)ap);       break;
+            case nsXPTType::T_U64    : dp->val.u64 = *((uint64_t*)ap); ap++; break;
             case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)   ap);       break;
             case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
             case nsXPTType::T_BOOL   : dp->val.b   = *(((char*)   ap) + 3);  break;
@@ -80,7 +80,7 @@ extern "C" {
             }
         }
 
-        result = self->CallMethod((PRUint16)methodIndex, info, dispatchParams);
+        result = self->CallMethod((uint16_t)methodIndex, info, dispatchParams);
 
         NS_RELEASE(iface_info);
 

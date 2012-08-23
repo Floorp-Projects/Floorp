@@ -12,7 +12,7 @@
 
 // Based on IANA registry dated 2011-08-25
 
-static const PRUint32 sLanguageTagList[] = {
+static const uint32_t sLanguageTagList[] = {
   TRUETYPE_TAG('a','a', 0 , 0 ), // aa = Afar
   TRUETYPE_TAG('a','b', 0 , 0 ), // ab = Abkhazian
   TRUETYPE_TAG('a','e', 0 , 0 ), // ae = Avestan

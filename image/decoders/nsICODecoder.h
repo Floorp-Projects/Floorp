@@ -27,57 +27,57 @@ public:
   virtual ~nsICODecoder();
 
   // Obtains the width of the icon directory entry
-  PRUint32 GetRealWidth() const
+  uint32_t GetRealWidth() const
   {
     return mDirEntry.mWidth == 0 ? 256 : mDirEntry.mWidth; 
   }
 
   // Obtains the height of the icon directory entry
-  PRUint32 GetRealHeight() const
+  uint32_t GetRealHeight() const
   {
     return mDirEntry.mHeight == 0 ? 256 : mDirEntry.mHeight; 
   }
 
-  virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
   virtual void FinishInternal();
 
 private:
   // Writes to the contained decoder and sets the appropriate errors
   // Returns true if there are no errors.
-  bool WriteToContainedDecoder(const char* aBuffer, PRUint32 aCount);
+  bool WriteToContainedDecoder(const char* aBuffer, uint32_t aCount);
 
   // Processes a single dir entry of the icon resource
   void ProcessDirEntry(IconDirEntry& aTarget);
   // Sets the hotspot property of if we have a cursor
   void SetHotSpotIfCursor();
   // Creates a bitmap file header buffer, returns true if successful
-  bool FillBitmapFileHeaderBuffer(PRInt8 *bfh);
+  bool FillBitmapFileHeaderBuffer(int8_t *bfh);
   // Fixes the ICO height to match that of the BIH.
   // and also fixes the BIH height to be /2 of what it was.
   // See definition for explanation.
   // Returns false if invalid information is contained within.
-  bool FixBitmapHeight(PRInt8 *bih);
+  bool FixBitmapHeight(int8_t *bih);
   // Fixes the ICO width to match that of the BIH.
   // Returns false if invalid information is contained within.
-  bool FixBitmapWidth(PRInt8 *bih);
+  bool FixBitmapWidth(int8_t *bih);
   // Extract bitmap info header size count from BMP information header
-  PRInt32 ExtractBIHSizeFromBitmap(PRInt8 *bih);
+  int32_t ExtractBIHSizeFromBitmap(int8_t *bih);
   // Extract bit count from BMP information header
-  PRInt32 ExtractBPPFromBitmap(PRInt8 *bih);
+  int32_t ExtractBPPFromBitmap(int8_t *bih);
   // Calculates the row size in bytes for the AND mask table
-  PRUint32 CalcAlphaRowSize();
+  uint32_t CalcAlphaRowSize();
   // Obtains the number of colors from the BPP, mBPP must be filled in
-  PRUint16 GetNumColors();
+  uint16_t GetNumColors();
 
-  PRUint16 mBPP; // Stores the images BPP
-  PRUint32 mPos; // Keeps track of the position we have decoded up until
-  PRUint16 mNumIcons; // Stores the number of icons in the ICO file
-  PRUint16 mCurrIcon; // Stores the current dir entry index we are processing
-  PRUint32 mImageOffset; // Stores the offset of the image data we want
-  PRUint8 *mRow;      // Holds one raw line of the image
-  PRInt32 mCurLine;   // Line index of the image that's currently being decoded
-  PRUint32 mRowBytes; // How many bytes of the row were already received
-  PRInt32 mOldLine;   // Previous index of the line 
+  uint16_t mBPP; // Stores the images BPP
+  uint32_t mPos; // Keeps track of the position we have decoded up until
+  uint16_t mNumIcons; // Stores the number of icons in the ICO file
+  uint16_t mCurrIcon; // Stores the current dir entry index we are processing
+  uint32_t mImageOffset; // Stores the offset of the image data we want
+  uint8_t *mRow;      // Holds one raw line of the image
+  int32_t mCurLine;   // Line index of the image that's currently being decoded
+  uint32_t mRowBytes; // How many bytes of the row were already received
+  int32_t mOldLine;   // Previous index of the line 
   nsAutoPtr<Decoder> mContainedDecoder; // Contains either a BMP or PNG resource
 
   char mDirEntryArray[ICODIRENTRYSIZE]; // Holds the current dir entry buffer

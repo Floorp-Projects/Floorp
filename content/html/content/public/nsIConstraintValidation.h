@@ -32,7 +32,7 @@ public:
 
   friend class nsDOMValidityState;
 
-  static const PRUint16 sContentSpecifiedMaxLengthMessage;
+  static const uint16_t sContentSpecifiedMaxLengthMessage;
 
   virtual ~nsIConstraintValidation();
 
@@ -85,7 +85,7 @@ private:
    * A bitfield representing the current validity state of the element.
    * Each bit represent an error. All bits to zero means the element is valid.
    */
-  PRInt8                        mValidityBitField;
+  int8_t                        mValidityBitField;
 
   /**
    * A pointer to the ValidityState object.

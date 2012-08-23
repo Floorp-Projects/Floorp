@@ -68,7 +68,7 @@ SVGLengthListSMILType::IsEqual(const nsSMILValue& aLeft,
 nsresult
 SVGLengthListSMILType::Add(nsSMILValue& aDest,
                            const nsSMILValue& aValueToAdd,
-                           PRUint32 aCount) const
+                           uint32_t aCount) const
 {
   NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL type");
   NS_PRECONDITION(aValueToAdd.mType == this, "Incompatible SMIL type");
@@ -110,7 +110,7 @@ SVGLengthListSMILType::Add(nsSMILValue& aDest,
     if (!dest.SetLength(valueToAdd.Length())) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    for (PRUint32 i = 0; i < dest.Length(); ++i) {
+    for (uint32_t i = 0; i < dest.Length(); ++i) {
       dest[i].SetValueAndUnit(valueToAdd[i].GetValueInCurrentUnits() * aCount,
                               valueToAdd[i].GetUnit());
     }
@@ -131,7 +131,7 @@ SVGLengthListSMILType::Add(nsSMILValue& aDest,
     NS_ABORT_IF_FALSE(valueToAdd.CanZeroPadList(),
                       "values disagree about attribute's zero-paddibility");
 
-    PRUint32 i = dest.Length();
+    uint32_t i = dest.Length();
     if (!dest.SetLength(valueToAdd.Length())) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -140,7 +140,7 @@ SVGLengthListSMILType::Add(nsSMILValue& aDest,
     }
   }
 
-  for (PRUint32 i = 0; i < valueToAdd.Length(); ++i) {
+  for (uint32_t i = 0; i < valueToAdd.Length(); ++i) {
     float valToAdd;
     if (dest[i].GetUnit() == valueToAdd[i].GetUnit()) {
       valToAdd = valueToAdd[i].GetValueInCurrentUnits();
@@ -204,7 +204,7 @@ SVGLengthListSMILType::ComputeDistance(const nsSMILValue& aFrom,
 
   double total = 0.0;
 
-  PRUint32 i = 0;
+  uint32_t i = 0;
   for (; i < from.Length() && i < to.Length(); ++i) {
     double f = from[i].GetValueInUserUnits(from.Element(), from.Axis());
     double t = to[i].GetValueInUserUnits(to.Element(), to.Axis());
@@ -271,7 +271,7 @@ SVGLengthListSMILType::Interpolate(const nsSMILValue& aStartVal,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PRUint32 i = 0;
+  uint32_t i = 0;
   for (; i < start.Length() && i < end.Length(); ++i) {
     float s;
     if (start[i].GetUnit() == end[i].GetUnit()) {

@@ -34,7 +34,7 @@ public:
                       nsFrameList&    aChildList);
 
   virtual nsresult
-  ChildListChanged(PRInt32 aModType);
+  ChildListChanged(int32_t aModType);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
@@ -52,9 +52,9 @@ public:
          nsReflowStatus&          aStatus);
 
   NS_IMETHOD
-  AttributeChanged(PRInt32  aNameSpaceID,
+  AttributeChanged(int32_t  aNameSpaceID,
                    nsIAtom* aAttribute,
-                   PRInt32  aModType);
+                   int32_t  aModType);
 
 private:
   void MouseClick();
@@ -78,9 +78,9 @@ protected:
   virtual int GetSkipSides() const { return 0; }
 
 private:
-  PRInt32         mActionType;
-  PRInt32         mChildCount;
-  PRInt32         mSelection;
+  int32_t         mActionType;
+  int32_t         mChildCount;
+  int32_t         mSelection;
   nsIFrame*       mSelectedFrame;
   nsCOMPtr<MouseListener> mListener;
 

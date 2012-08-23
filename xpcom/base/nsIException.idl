@@ -19,12 +19,12 @@
 interface nsIStackFrame : nsISupports
 {
     // see nsIProgrammingLanguage for list of language consts
-    readonly attribute PRUint32                language;
+    readonly attribute uint32_t                language;
     readonly attribute string                  languageName;
     readonly attribute string                  filename;
     readonly attribute string                  name;
     // Valid line numbers begin at '1'. '0' indicates unknown.
-    readonly attribute PRInt32                 lineNumber;
+    readonly attribute int32_t                 lineNumber;
     readonly attribute string                  sourceLine;
     readonly attribute nsIStackFrame           caller;
 
@@ -51,10 +51,10 @@ interface nsIException : nsISupports
     // null indicates "no data"
     readonly attribute string                  filename;
     // Valid line numbers begin at '1'. '0' indicates unknown.
-    readonly attribute PRUint32                lineNumber;
+    readonly attribute uint32_t                lineNumber;
     // Valid column numbers begin at 0. 
     // We don't have an unambiguous indicator for unknown.
-    readonly attribute PRUint32                columnNumber;
+    readonly attribute uint32_t                columnNumber;
 
     // A stack trace, if available.
     readonly attribute nsIStackFrame           location;

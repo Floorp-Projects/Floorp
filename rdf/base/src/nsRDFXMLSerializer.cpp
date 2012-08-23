@@ -21,7 +21,7 @@
 
 #include "rdfIDataSource.h"
 
-PRInt32 nsRDFXMLSerializer::gRefCnt = 0;
+int32_t nsRDFXMLSerializer::gRefCnt = 0;
 nsIRDFContainerUtils* nsRDFXMLSerializer::gRDFC;
 nsIRDFResource* nsRDFXMLSerializer::kRDF_instanceOf;
 nsIRDFResource* nsRDFXMLSerializer::kRDF_type;
@@ -153,13 +153,13 @@ nsRDFXMLSerializer::AddNameSpace(nsIAtom* aPrefix, const nsAString& aURI)
 }
 
 static nsresult
-rdf_BlockingWrite(nsIOutputStream* stream, const char* buf, PRUint32 size)
+rdf_BlockingWrite(nsIOutputStream* stream, const char* buf, uint32_t size)
 {
-    PRUint32 written = 0;
-    PRUint32 remaining = size;
+    uint32_t written = 0;
+    uint32_t remaining = size;
     while (remaining > 0) {
         nsresult rv;
-        PRUint32 cb;
+        uint32_t cb;
 
         if (NS_FAILED(rv = stream->Write(buf + written, remaining, &cb)))
             return rv;
@@ -227,7 +227,7 @@ nsRDFXMLSerializer::RegisterQName(nsIRDFResource* aResource)
 
     // Okay, so we don't have it in our map. Try to make one up. This
     // is very bogus.
-    PRInt32 i = uri.RFindChar('#'); // first try a '#'
+    int32_t i = uri.RFindChar('#'); // first try a '#'
     if (i == -1) {
         i = uri.RFindChar('/');
         if (i == -1) {
@@ -285,7 +285,7 @@ static const char quot[] = "&quot;";
 static void
 rdf_EscapeAmpersandsAndAngleBrackets(nsCString& s)
 {
-    PRUint32 newLength, origLength;
+    uint32_t newLength, origLength;
     newLength = origLength = s.Length();
 
     // Compute the length of the result string.
@@ -344,7 +344,7 @@ rdf_EscapeAmpersandsAndAngleBrackets(nsCString& s)
 static void
 rdf_EscapeQuotes(nsCString& s)
 {
-    PRInt32 i = 0;
+    int32_t i = 0;
     while ((i = s.FindChar('"', i)) != -1) {
         s.Replace(i, 1, quot, sizeof(quot) - 1);
         i += sizeof(quot) - 2;
@@ -439,7 +439,7 @@ nsRDFXMLSerializer::SerializeChildAssertion(nsIOutputStream* aStream,
         if (NS_FAILED(rv)) return rv;
     }
     else if ((number = do_QueryInterface(aValue)) != nullptr) {
-        PRInt32 value;
+        int32_t value;
         number->GetValue(&value);
 
         nsCAutoString n;
@@ -488,11 +488,11 @@ nsRDFXMLSerializer::SerializeProperty(nsIOutputStream* aStream,
                                       nsIRDFResource* aResource,
                                       nsIRDFResource* aProperty,
                                       bool aInline,
-                                      PRInt32* aSkipped)
+                                      int32_t* aSkipped)
 {
     nsresult rv = NS_OK;
 
-    PRInt32 skipped = 0;
+    int32_t skipped = 0;
 
     nsCOMPtr<nsISimpleEnumerator> assertions;
     mDataSource->GetTargets(aResource, aProperty, true, getter_AddRefs(assertions));
@@ -611,7 +611,7 @@ nsRDFXMLSerializer::SerializeDescription(nsIOutputStream* aStream,
     // Any value that's a literal we can write out as an inline
     // attribute on the RDF:Description
     nsAutoTArray<nsIRDFResource*, 8> visited;
-    PRInt32 skipped = 0;
+    int32_t skipped = 0;
 
     nsCOMPtr<nsISimpleEnumerator> arcs;
     mDataSource->ArcLabelsOut(aResource, getter_AddRefs(arcs));
@@ -776,7 +776,7 @@ static const char kRDFLIOpenGT[] = ">";
         if (NS_FAILED(rv)) return rv;
     }
     else if ((number = do_QueryInterface(aMember)) != nullptr) {
-        PRInt32 value;
+        int32_t value;
         number->GetValue(&value);
 
         nsCAutoString n;

@@ -190,12 +190,12 @@ public:
 class txLREAttribute : public txInstruction
 {
 public:
-    txLREAttribute(PRInt32 aNamespaceID, nsIAtom* aLocalName,
+    txLREAttribute(int32_t aNamespaceID, nsIAtom* aLocalName,
                    nsIAtom* aPrefix, nsAutoPtr<Expr> aValue);
 
     TX_DECL_TXINSTRUCTION
 
-    PRInt32 mNamespaceID;
+    int32_t mNamespaceID;
     nsCOMPtr<nsIAtom> mLocalName;
     nsCOMPtr<nsIAtom> mLowercaseLocalName;
     nsCOMPtr<nsIAtom> mPrefix;
@@ -355,12 +355,12 @@ public:
 class txStartLREElement : public txInstruction
 {
 public:
-    txStartLREElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
+    txStartLREElement(int32_t aNamespaceID, nsIAtom* aLocalName,
                       nsIAtom* aPrefix);
 
     TX_DECL_TXINSTRUCTION
 
-    PRInt32 mNamespaceID;
+    int32_t mNamespaceID;
     nsCOMPtr<nsIAtom> mLocalName;
     nsCOMPtr<nsIAtom> mLowercaseLocalName;
     nsCOMPtr<nsIAtom> mPrefix;

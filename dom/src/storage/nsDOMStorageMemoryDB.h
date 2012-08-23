@@ -32,7 +32,7 @@ public:
   {
   public:
     nsStorageItemsTable mTable;
-    PRInt32 mUsageDelta;
+    int32_t mUsageDelta;
 
     nsInMemoryStorage() : mUsageDelta(0) {}
   };
@@ -79,9 +79,9 @@ public:
          const nsAString& aKey,
          const nsAString& aValue,
          bool aSecure,
-         PRInt32 aQuota,
+         int32_t aQuota,
          bool aExcludeOfflineFromUsage,
-         PRInt32* aNewUsage);
+         int32_t* aNewUsage);
 
   /**
    * Set the secure flag for a key in storage. Does nothing if the key was
@@ -99,7 +99,7 @@ public:
   RemoveKey(DOMStorageImpl* aStorage,
             const nsAString& aKey,
             bool aExcludeOfflineFromUsage,
-            PRInt32 aKeyUsage);
+            int32_t aKeyUsage);
 
   /**
     * Remove all keys belonging to this storage.
@@ -137,13 +137,13 @@ public:
     * Returns usage for a storage using its GetQuotaDomainDBKey() as a key.
     */
   nsresult
-  GetUsage(DOMStorageImpl* aStorage, bool aExcludeOfflineFromUsage, PRInt32 *aUsage);
+  GetUsage(DOMStorageImpl* aStorage, bool aExcludeOfflineFromUsage, int32_t *aUsage);
 
   /**
     * Returns usage of the domain and optionaly by any subdomain.
     */
   nsresult
-  GetUsage(const nsACString& aDomain, bool aIncludeSubDomains, PRInt32 *aUsage);
+  GetUsage(const nsACString& aDomain, bool aIncludeSubDomains, int32_t *aUsage);
 
 protected:
 
@@ -152,7 +152,7 @@ protected:
   bool mPreloading;
 
   nsresult
-  GetUsageInternal(const nsACString& aQuotaDomainDBKey, bool aExcludeOfflineFromUsage, PRInt32 *aUsage);
+  GetUsageInternal(const nsACString& aQuotaDomainDBKey, bool aExcludeOfflineFromUsage, int32_t *aUsage);
 };
 
 #endif

@@ -170,12 +170,14 @@ struct JSCompartment
         return &rt->gcMarker;
     }
 
-  private:
+  public:
     enum CompartmentGCState {
         NoGC,
-        Collecting
+        Mark,
+        Sweep
     };
 
+  private:
     bool                         gcScheduled;
     CompartmentGCState           gcState;
     bool                         gcPreserveCode;
@@ -201,9 +203,9 @@ struct JSCompartment
         return rt->isHeapCollecting() && gcState != NoGC;
     }
 
-    void setCollecting(bool collecting) {
+    void setGCState(CompartmentGCState state) {
         JS_ASSERT(rt->isHeapBusy());
-        gcState = collecting ? Collecting : NoGC;
+        gcState = state;
     }
 
     void scheduleGC() {
@@ -227,27 +229,30 @@ struct JSCompartment
         return gcState != NoGC;
     }
 
+    bool isGCMarking() {
+        return gcState == Mark;
+    }
+
     bool isGCSweeping() {
-        return gcState != NoGC && rt->gcIncrementalState == js::gc::SWEEP;
+        return gcState == Sweep;
     }
 
     size_t                       gcBytes;
     size_t                       gcTriggerBytes;
     size_t                       gcMaxMallocBytes;
     double                       gcHeapGrowthFactor;
+    JSCompartment                *gcNextCompartment;
 
     bool                         hold;
     bool                         isSystemCompartment;
 
     int64_t                      lastCodeRelease;
 
-    /*
-     * Pool for analysis and intermediate type information in this compartment.
-     * Cleared on every GC, unless the GC happens during analysis (indicated
-     * by activeAnalysis, which is implied by activeInference).
-     */
-    static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 128 * 1024;
+    /* Pools for analysis and type information in this compartment. */
+    static const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 128 * 1024;
+    js::LifoAlloc                analysisLifoAlloc;
     js::LifoAlloc                typeLifoAlloc;
+
     bool                         activeAnalysis;
     bool                         activeInference;
 
@@ -335,7 +340,7 @@ struct JSCompartment
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
     void markTypes(JSTracer *trc);
-    void discardJitCode(js::FreeOp *fop);
+    void discardJitCode(js::FreeOp *fop, bool discardConstraints);
     bool isDiscardingJitCode(JSTracer *trc);
     void sweep(js::FreeOp *fop, bool releaseTypes);
     void sweepCrossCompartmentWrappers();

@@ -252,7 +252,7 @@ function runAll(steps) {
 }
 
 /**
- * Uninstall uninstalls a specific App
+ * Install installs a specific App
  * @appURL The manifest app url
  * @check An abstraction over ok / todo to allow for that determination to be made by the invoking code
  * @next  The next operation to jump to, this might need to be invoked by the iframe when the test has completed

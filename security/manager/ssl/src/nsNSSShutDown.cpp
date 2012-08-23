@@ -159,7 +159,7 @@ nsresult nsNSSShutDownList::doPK11Logout()
 
 PLDHashOperator PR_CALLBACK
 nsNSSShutDownList::doPK11LogoutHelper(PLDHashTable *table, 
-  PLDHashEntryHdr *hdr, PRUint32 number, void *arg)
+  PLDHashEntryHdr *hdr, uint32_t number, void *arg)
 {
   ObjectHashEntry *entry = static_cast<ObjectHashEntry*>(hdr);
 
@@ -211,7 +211,7 @@ nsresult nsNSSShutDownList::evaporateAllNSSResources()
 
 PLDHashOperator PR_CALLBACK
 nsNSSShutDownList::evaporateAllNSSResourcesHelper(PLDHashTable *table, 
-  PLDHashEntryHdr *hdr, PRUint32 number, void *arg)
+  PLDHashEntryHdr *hdr, uint32_t number, void *arg)
 {
   ObjectHashEntry *entry = static_cast<ObjectHashEntry*>(hdr);
   {

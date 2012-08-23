@@ -142,7 +142,7 @@ void extractAttributeValue(const char * searchString, const char * attributeName
   if (searchString && attributeName)
   {
     // search the string for attributeName
-    PRUint32 attributeNameSize = strlen(attributeName);
+    uint32_t attributeNameSize = strlen(attributeName);
     const char * startOfAttribute = PL_strcasestr(searchString, attributeName);
     if (startOfAttribute &&
        ( *(startOfAttribute-1) == '?' || *(startOfAttribute-1) == '&') )
@@ -176,8 +176,8 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
   if (!Substring(iconSpec, 0, MOZICON_SCHEME_LEN).EqualsLiteral(MOZICON_SCHEME))
     return NS_ERROR_MALFORMED_URI;
 
-  PRInt32 questionMarkPos = iconSpec.Find("?");
-  if (questionMarkPos != -1 && static_cast<PRInt32>(iconSpec.Length()) > (questionMarkPos + 1))
+  int32_t questionMarkPos = iconSpec.Find("?");
+  if (questionMarkPos != -1 && static_cast<int32_t>(iconSpec.Length()) > (questionMarkPos + 1))
   {
     extractAttributeValue(iconSpec.get(), "contentType=", mContentType);
 
@@ -186,7 +186,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
     if (!sizeString.IsEmpty())
     {      
       const char *sizeStr = sizeString.get();
-      for (PRUint32 i = 0; i < ArrayLength(kSizeStrings); i++)
+      for (uint32_t i = 0; i < ArrayLength(kSizeStrings); i++)
       {
         if (PL_strcasecmp(sizeStr, kSizeStrings[i]) == 0)
         {
@@ -195,7 +195,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
         }
       }
 
-      PRInt32 sizeValue = atoi(sizeString.get());
+      int32_t sizeValue = atoi(sizeString.get());
       if (sizeValue)
         mSize = sizeValue;
     }
@@ -205,7 +205,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
     if (!stateString.IsEmpty())
     {
       const char *stateStr = stateString.get();
-      for (PRUint32 i = 0; i < ArrayLength(kStateStrings); i++)
+      for (uint32_t i = 0; i < ArrayLength(kStateStrings); i++)
       {
         if (PL_strcasecmp(stateStr, kStateStrings[i]) == 0)
         {
@@ -216,7 +216,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
     }
   }
 
-  PRInt32 pathLength = iconSpec.Length() - MOZICON_SCHEME_LEN;
+  int32_t pathLength = iconSpec.Length() - MOZICON_SCHEME_LEN;
   if (questionMarkPos != -1)
     pathLength = questionMarkPos - MOZICON_SCHEME_LEN;
   if (pathLength < 3)
@@ -344,13 +344,13 @@ nsMozIconURI::SetHost(const nsACString &aHost)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::GetPort(PRInt32 *aPort)
+nsMozIconURI::GetPort(int32_t *aPort)
 {
   return NS_ERROR_FAILURE;
 }
  
 NS_IMETHODIMP
-nsMozIconURI::SetPort(PRInt32 aPort)
+nsMozIconURI::SetPort(int32_t aPort)
 {
   return NS_ERROR_FAILURE;
 }
@@ -497,14 +497,14 @@ nsMozIconURI::SetIconURL(nsIURL* aFileUrl)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::GetImageSize(PRUint32 * aImageSize)  // measured by # of pixels in a row. defaults to 16.
+nsMozIconURI::GetImageSize(uint32_t * aImageSize)  // measured by # of pixels in a row. defaults to 16.
 {
   *aImageSize = mSize;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMozIconURI::SetImageSize(PRUint32 aImageSize)  // measured by # of pixels in a row. defaults to 16.
+nsMozIconURI::SetImageSize(uint32_t aImageSize)  // measured by # of pixels in a row. defaults to 16.
 {
   mSize = aImageSize;
   return NS_OK;

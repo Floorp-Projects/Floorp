@@ -84,21 +84,21 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsClientRectList)
 
 
 NS_IMETHODIMP    
-nsClientRectList::GetLength(PRUint32* aLength)
+nsClientRectList::GetLength(uint32_t* aLength)
 {
   *aLength = mArray.Count();
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsClientRectList::Item(PRUint32 aIndex, nsIDOMClientRect** aReturn)
+nsClientRectList::Item(uint32_t aIndex, nsIDOMClientRect** aReturn)
 {
   NS_IF_ADDREF(*aReturn = nsClientRectList::GetItemAt(aIndex));
   return NS_OK;
 }
 
 nsIDOMClientRect*
-nsClientRectList::GetItemAt(PRUint32 aIndex)
+nsClientRectList::GetItemAt(uint32_t aIndex)
 {
   return mArray.SafeObjectAt(aIndex);
 }

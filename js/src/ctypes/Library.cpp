@@ -140,13 +140,20 @@ Library::Create(JSContext* cx, jsval path, JSCTypesCallbacks* callbacks)
 #endif
 
   PRLibrary* library = PR_LoadLibraryWithFlags(libSpec, 0);
+
+  if (!library) {
+#ifdef XP_WIN
+    JS_ReportError(cx, "couldn't open library %hs", pathChars);
+#else
+    JS_ReportError(cx, "couldn't open library %s", pathBytes);
+    JS_free(cx, pathBytes);
+#endif
+    return NULL;
+  }
+
 #ifndef XP_WIN
   JS_free(cx, pathBytes);
 #endif
-  if (!library) {
-    JS_ReportError(cx, "couldn't open library");
-    return NULL;
-  }
 
   // stash the library
   JS_SetReservedSlot(libraryObj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(library));

@@ -90,8 +90,8 @@ NotificationController::Shutdown()
   }
 
   // Shutdown handling child documents.
-  PRInt32 childDocCount = mHangingChildDocuments.Length();
-  for (PRInt32 idx = childDocCount - 1; idx >= 0; idx--) {
+  int32_t childDocCount = mHangingChildDocuments.Length();
+  for (int32_t idx = childDocCount - 1; idx >= 0; idx--) {
     if (!mHangingChildDocuments[idx]->IsDefunct())
       mHangingChildDocuments[idx]->Shutdown();
   }
@@ -225,8 +225,8 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   nsTArray<nsRefPtr<ContentInsertion> > contentInsertions;
   contentInsertions.SwapElements(mContentInsertions);
 
-  PRUint32 insertionCount = contentInsertions.Length();
-  for (PRUint32 idx = 0; idx < insertionCount; idx++) {
+  uint32_t insertionCount = contentInsertions.Length();
+  for (uint32_t idx = 0; idx < insertionCount; idx++) {
     contentInsertions[idx]->Process();
     if (!mDocument)
       return;
@@ -237,8 +237,8 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   mTextHash.Clear();
 
   // Bind hanging child documents.
-  PRUint32 hangingDocCnt = mHangingChildDocuments.Length();
-  for (PRUint32 idx = 0; idx < hangingDocCnt; idx++) {
+  uint32_t hangingDocCnt = mHangingChildDocuments.Length();
+  for (uint32_t idx = 0; idx < hangingDocCnt; idx++) {
     DocAccessible* childDoc = mHangingChildDocuments[idx];
     if (childDoc->IsDefunct())
       continue;
@@ -265,7 +265,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   if (mDocument->HasLoadState(DocAccessible::eReady) &&
       !mDocument->HasLoadState(DocAccessible::eCompletelyLoaded) &&
       hangingDocCnt == 0) {
-    PRUint32 childDocCnt = mDocument->ChildDocumentCount(), childDocIdx = 0;
+    uint32_t childDocCnt = mDocument->ChildDocumentCount(), childDocIdx = 0;
     for (; childDocIdx < childDocCnt; childDocIdx++) {
       DocAccessible* childDoc = mDocument->GetChildDocumentAt(childDocIdx);
       if (!childDoc->HasLoadState(DocAccessible::eCompletelyLoaded))
@@ -283,8 +283,8 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   nsTArray < nsRefPtr<Notification> > notifications;
   notifications.SwapElements(mNotifications);
 
-  PRUint32 notificationCount = notifications.Length();
-  for (PRUint32 idx = 0; idx < notificationCount; idx++) {
+  uint32_t notificationCount = notifications.Length();
+  for (uint32_t idx = 0; idx < notificationCount; idx++) {
     notifications[idx]->Process();
     if (!mDocument)
       return;
@@ -302,7 +302,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   nsTArray<nsRefPtr<AccEvent> > events;
   events.SwapElements(mEvents);
 
-  PRUint32 eventCount = events.Length();
+  uint32_t eventCount = events.Length();
 #ifdef DEBUG
   if (eventCount > 0 && logging::IsEnabled(logging::eEvents)) {
     logging::MsgBegin("EVENTS", "events processing");
@@ -311,7 +311,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   }
 #endif
 
-  for (PRUint32 idx = 0; idx < eventCount; idx++) {
+  for (uint32_t idx = 0; idx < eventCount; idx++) {
     AccEvent* accEvent = events[idx];
     if (accEvent->mEventRule != AccEvent::eDoNotEmit) {
       Accessible* target = accEvent->GetAccessible();
@@ -354,8 +354,8 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 void
 NotificationController::CoalesceEvents()
 {
-  PRUint32 numQueuedEvents = mEvents.Length();
-  PRInt32 tail = numQueuedEvents - 1;
+  uint32_t numQueuedEvents = mEvents.Length();
+  int32_t tail = numQueuedEvents - 1;
   AccEvent* tailEvent = mEvents[tail];
 
   switch(tailEvent->mEventRule) {
@@ -366,7 +366,7 @@ NotificationController::CoalesceEvents()
       if (!tailEvent->mNode)
         return;
 
-      for (PRInt32 index = tail - 1; index >= 0; index--) {
+      for (int32_t index = tail - 1; index >= 0; index--) {
         AccEvent* thisEvent = mEvents[index];
 
         if (thisEvent->mEventType != tailEvent->mEventType)
@@ -462,7 +462,7 @@ NotificationController::CoalesceEvents()
     case AccEvent::eCoalesceOfSameType:
     {
       // Coalesce old events by newer event.
-      for (PRInt32 index = tail - 1; index >= 0; index--) {
+      for (int32_t index = tail - 1; index >= 0; index--) {
         AccEvent* accEvent = mEvents[index];
         if (accEvent->mEventType == tailEvent->mEventType &&
             accEvent->mEventRule == tailEvent->mEventRule) {
@@ -476,7 +476,7 @@ NotificationController::CoalesceEvents()
     {
       // Check for repeat events, coalesce newly appended event by more older
       // event.
-      for (PRInt32 index = tail - 1; index >= 0; index--) {
+      for (int32_t index = tail - 1; index >= 0; index--) {
         AccEvent* accEvent = mEvents[index];
         if (accEvent->mEventType == tailEvent->mEventType &&
             accEvent->mEventRule == tailEvent->mEventRule &&
@@ -490,7 +490,7 @@ NotificationController::CoalesceEvents()
     case AccEvent::eCoalesceSelectionChange:
     {
       AccSelChangeEvent* tailSelChangeEvent = downcast_accEvent(tailEvent);
-      PRInt32 index = tail - 1;
+      int32_t index = tail - 1;
       for (; index >= 0; index--) {
         AccEvent* thisEvent = mEvents[index];
         if (thisEvent->mEventRule == tailEvent->mEventRule) {
@@ -513,11 +513,11 @@ NotificationController::CoalesceEvents()
 }
 
 void
-NotificationController::ApplyToSiblings(PRUint32 aStart, PRUint32 aEnd,
-                                        PRUint32 aEventType, nsINode* aNode,
+NotificationController::ApplyToSiblings(uint32_t aStart, uint32_t aEnd,
+                                        uint32_t aEventType, nsINode* aNode,
                                         AccEvent::EEventRule aEventRule)
 {
-  for (PRUint32 index = aStart; index < aEnd; index ++) {
+  for (uint32_t index = aStart; index < aEnd; index ++) {
     AccEvent* accEvent = mEvents[index];
     if (accEvent->mEventType == aEventType &&
         accEvent->mEventRule != AccEvent::eDoNotEmit && accEvent->mNode &&
@@ -530,7 +530,7 @@ NotificationController::ApplyToSiblings(PRUint32 aStart, PRUint32 aEnd,
 void
 NotificationController::CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
                                                 AccSelChangeEvent* aThisEvent,
-                                                PRInt32 aThisIndex)
+                                                int32_t aThisIndex)
 {
   aTailEvent->mPreceedingCount = aThisEvent->mPreceedingCount + 1;
 
@@ -544,7 +544,7 @@ NotificationController::CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
     // Do not emit any preceding selection events for same widget if they
     // weren't coalesced yet.
     if (aThisEvent->mEventType != nsIAccessibleEvent::EVENT_SELECTION_WITHIN) {
-      for (PRInt32 jdx = aThisIndex - 1; jdx >= 0; jdx--) {
+      for (int32_t jdx = aThisIndex - 1; jdx >= 0; jdx--) {
         AccEvent* prevEvent = mEvents[jdx];
         if (prevEvent->mEventRule == aTailEvent->mEventRule) {
           AccSelChangeEvent* prevSelChangeEvent =
@@ -622,7 +622,7 @@ NotificationController::CoalesceTextChangeEventsFor(AccHideEvent* aTailEvent,
     aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText);
 
   } else if (aThisEvent->mPrevSibling == aTailEvent->mAccessible) {
-    PRUint32 oldLen = textEvent->GetLength();
+    uint32_t oldLen = textEvent->GetLength();
     aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText);
     textEvent->mStart -= textEvent->GetLength() - oldLen;
   }
@@ -680,7 +680,7 @@ NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
     }
   }
 
-  PRInt32 offset = textAccessible->GetChildOffset(aEvent->mAccessible);
+  int32_t offset = textAccessible->GetChildOffset(aEvent->mAccessible);
 
   nsAutoString text;
   aEvent->mAccessible->AppendTextTo(text);

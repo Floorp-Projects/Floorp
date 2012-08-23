@@ -58,5 +58,5 @@ interface amIWebInstaller : nsISupports
                                    [array, size_is(aInstallCount)] in wstring aNames,
                                    [array, size_is(aInstallCount)] in wstring aIcons,
                                    [optional] in amIInstallCallback aCallback,
-                                   [optional] in PRUint32 aInstallCount);
+                                   [optional] in uint32_t aInstallCount);
 };

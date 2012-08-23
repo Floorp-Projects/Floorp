@@ -65,7 +65,7 @@ nsBaseChannel::nsBaseChannel()
 }
 
 nsresult
-nsBaseChannel::Redirect(nsIChannel *newChannel, PRUint32 redirectFlags,
+nsBaseChannel::Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
                         bool openNewChannel)
 {
   SUSPEND_PUMP_FOR_SCOPE();
@@ -154,7 +154,7 @@ nsBaseChannel::HasContentTypeHint() const
 }
 
 void
-nsBaseChannel::SetContentLength64(PRInt64 len)
+nsBaseChannel::SetContentLength64(int64_t len)
 {
   // XXX: Storing the content-length as a property may not be what we want.
   //      It has the drawback of being copied if we redirect this channel.
@@ -162,10 +162,10 @@ nsBaseChannel::SetContentLength64(PRInt64 len)
   SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, len);
 }
 
-PRInt64
+int64_t
 nsBaseChannel::ContentLength64()
 {
-  PRInt64 len;
+  int64_t len;
   nsresult rv = GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, &len);
   return NS_SUCCEEDED(rv) ? len : -1;
 }
@@ -488,7 +488,7 @@ nsBaseChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsBaseChannel::GetContentDisposition(PRUint32 *aContentDisposition)
+nsBaseChannel::GetContentDisposition(uint32_t *aContentDisposition)
 {
   return NS_ERROR_NOT_AVAILABLE;
 }
@@ -506,18 +506,18 @@ nsBaseChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader
 }
 
 NS_IMETHODIMP
-nsBaseChannel::GetContentLength(PRInt32 *aContentLength)
+nsBaseChannel::GetContentLength(int32_t *aContentLength)
 {
-  PRInt64 len = ContentLength64();
+  int64_t len = ContentLength64();
   if (len > PR_INT32_MAX || len < 0)
     *aContentLength = -1;
   else
-    *aContentLength = (PRInt32) len;
+    *aContentLength = (int32_t) len;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseChannel::SetContentLength(PRInt32 aContentLength)
+nsBaseChannel::SetContentLength(int32_t aContentLength)
 {
   SetContentLength64(aContentLength);
   return NS_OK;
@@ -602,7 +602,7 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 
 NS_IMETHODIMP
 nsBaseChannel::OnTransportStatus(nsITransport *transport, nsresult status,
-                                 PRUint64 progress, PRUint64 progressMax)
+                                 uint64_t progress, uint64_t progressMax)
 {
   // In some cases, we may wish to suppress transport-layer status events.
 
@@ -645,14 +645,14 @@ nsBaseChannel::GetInterface(const nsIID &iid, void **result)
 // nsBaseChannel::nsIRequestObserver
 
 static void
-CallTypeSniffers(void *aClosure, const PRUint8 *aData, PRUint32 aCount)
+CallTypeSniffers(void *aClosure, const uint8_t *aData, uint32_t aCount)
 {
   nsIChannel *chan = static_cast<nsIChannel*>(aClosure);
 
   const nsCOMArray<nsIContentSniffer>& sniffers =
     gIOService->GetContentSniffers();
-  PRUint32 length = sniffers.Count();
-  for (PRUint32 i = 0; i < length; ++i) {
+  uint32_t length = sniffers.Count();
+  for (uint32_t i = 0; i < length; ++i) {
     nsCAutoString newType;
     nsresult rv =
       sniffers[i]->GetMIMETypeFromContent(chan, aData, aCount, newType);
@@ -664,7 +664,7 @@ CallTypeSniffers(void *aClosure, const PRUint8 *aData, PRUint32 aCount)
 }
 
 static void
-CallUnknownTypeSniffer(void *aClosure, const PRUint8 *aData, PRUint32 aCount)
+CallUnknownTypeSniffer(void *aClosure, const uint8_t *aData, uint32_t aCount)
 {
   nsIChannel *chan = static_cast<nsIChannel*>(aClosure);
 
@@ -738,16 +738,16 @@ nsBaseChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 
 NS_IMETHODIMP
 nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
-                               nsIInputStream *stream, PRUint32 offset,
-                               PRUint32 count)
+                               nsIInputStream *stream, uint32_t offset,
+                               uint32_t count)
 {
   SUSPEND_PUMP_FOR_SCOPE();
 
   nsresult rv = mListener->OnDataAvailable(this, mListenerContext, stream,
                                            offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
-    PRUint64 prog = PRUint64(offset) + count;
-    PRUint64 progMax = ContentLength64();
+    uint64_t prog = uint64_t(offset) + count;
+    uint64_t progMax = ContentLength64();
     OnTransportStatus(nullptr, NS_NET_STATUS_READING, prog, progMax);
   }
 

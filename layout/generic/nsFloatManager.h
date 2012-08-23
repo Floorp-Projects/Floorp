@@ -77,7 +77,7 @@ public:
   friend struct SavedState;
   struct SavedState {
   private:
-    PRUint32 mFloatInfoCount;
+    uint32_t mFloatInfoCount;
     nscoord mX, mY;
     bool mPushedLeftFloatPastBreak;
     bool mPushedRightFloatPastBreak;
@@ -246,13 +246,13 @@ public:
     // pushed to the next page/column.
     DONT_CLEAR_PUSHED_FLOATS = (1<<0)
   };
-  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType, PRUint32 aFlags = 0) const;
+  nscoord ClearFloats(nscoord aY, uint8_t aBreakType, uint32_t aFlags = 0) const;
 
   /**
    * Checks if clear would pass into the floats' BFC's next-in-flow,
    * i.e. whether floats affecting this clear have continuations.
    */
-  bool ClearContinues(PRUint8 aBreakType) const;
+  bool ClearContinues(uint8_t aBreakType) const;
 
   void AssertStateMatches(SavedState *aState) const
   {
@@ -310,7 +310,7 @@ private:
   bool mSplitLeftFloatAcrossBreak;
   bool mSplitRightFloatAcrossBreak;
 
-  static PRInt32 sCachedFloatManagerCount;
+  static int32_t sCachedFloatManagerCount;
   static void* sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];
 
   nsFloatManager(const nsFloatManager&) MOZ_DELETE;

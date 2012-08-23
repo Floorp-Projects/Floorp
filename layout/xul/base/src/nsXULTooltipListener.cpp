@@ -137,7 +137,7 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aEvent));
   if (!mouseEvent)
     return;
-  PRInt32 newMouseX, newMouseY;
+  int32_t newMouseX, newMouseY;
   mouseEvent->GetScreenX(&newMouseX);
   mouseEvent->GetScreenY(&newMouseY);
 
@@ -291,7 +291,7 @@ nsXULTooltipListener::ToolbarTipsPrefChanged(const char *aPref,
 //// nsXULTooltipListener
 
 bool nsXULTooltipListener::sShowTooltips = false;
-PRUint32 nsXULTooltipListener::sTooltipListenerCount = 0;
+uint32_t nsXULTooltipListener::sTooltipListenerCount = 0;
 
 nsresult
 nsXULTooltipListener::AddTooltipSupport(nsIContent* aNode)
@@ -343,16 +343,16 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
   nsCOMPtr<nsITreeBoxObject> obx;
   GetSourceTreeBoxObject(getter_AddRefs(obx));
   if (bx && obx) {
-    PRInt32 x, y;
+    int32_t x, y;
     aMouseEvent->GetScreenX(&x);
     aMouseEvent->GetScreenY(&y);
 
-    PRInt32 row;
+    int32_t row;
     nsCOMPtr<nsITreeColumn> col;
     nsCAutoString obj;
 
     // subtract off the documentElement's boxObject
-    PRInt32 boxX, boxY;
+    int32_t boxX, boxY;
     bx->GetScreenX(&boxX);
     bx->GetScreenY(&boxY);
     x -= boxX;
@@ -445,14 +445,14 @@ nsXULTooltipListener::ShowTooltip()
 #ifdef DEBUG_crap
 static void
 GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode, 
-                  PRInt32 aRow, nsITreeColumn* aCol, PRInt32* aX, PRInt32* aY)
+                  int32_t aRow, nsITreeColumn* aCol, int32_t* aX, int32_t* aY)
 {
-  PRInt32 junk;
+  int32_t junk;
   aTreeBox->GetCoordsForCellItem(aRow, aCol, EmptyCString(), aX, aY, &junk, &junk);
   nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(aSourceNode));
   nsCOMPtr<nsIBoxObject> bx;
   xulEl->GetBoxObject(getter_AddRefs(bx));
-  PRInt32 myX, myY;
+  int32_t myX, myY;
   bx->GetX(&myX);
   bx->GetY(&myY);
   *aX += myX;
@@ -462,7 +462,7 @@ GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
 
 static void
 SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
-                 PRInt32 aRow, nsITreeColumn* aCol)
+                 int32_t aRow, nsITreeColumn* aCol)
 {
   nsCOMPtr<nsITreeView> view;
   aTreeBox->GetView(getter_AddRefs(view));
@@ -537,8 +537,8 @@ static void
 GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult) 
 {
   *aResult = nullptr;
-  PRUint32 childCount = aContent->GetChildCount();
-  for (PRUint32 i = 0; i < childCount; i++) {
+  uint32_t childCount = aContent->GetChildCount();
+  for (uint32_t i = 0; i < childCount; i++) {
     nsIContent *child = aContent->GetChildAt(i);
 
     if (child->Tag() == aTag) {

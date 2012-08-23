@@ -72,13 +72,13 @@ public:
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
   NS_IMETHOD GetLocalAddress(nsACString& addr);
-  NS_IMETHOD GetLocalPort(PRInt32* port);
+  NS_IMETHOD GetLocalPort(int32_t* port);
   NS_IMETHOD GetRemoteAddress(nsACString& addr);
-  NS_IMETHOD GetRemotePort(PRInt32* port);
+  NS_IMETHOD GetRemotePort(int32_t* port);
   // nsISupportsPriority
-  NS_IMETHOD SetPriority(PRInt32 value);
+  NS_IMETHOD SetPriority(int32_t value);
   // nsIResumableChannel
-  NS_IMETHOD ResumeAt(PRUint64 startPos, const nsACString& entityID);
+  NS_IMETHOD ResumeAt(uint64_t startPos, const nsACString& entityID);
 
   // IPDL holds a reference while the PHttpChannel protocol is live (starting at
   // AsyncOpen, and ending at either OnStopRequest or any IPDL error, either of
@@ -94,24 +94,24 @@ protected:
                           const nsHttpHeaderArray& requestHeaders,
                           const bool& isFromCache,
                           const bool& cacheEntryAvailable,
-                          const PRUint32& cacheExpirationTime,
+                          const uint32_t& cacheExpirationTime,
                           const nsCString& cachedCharset,
                           const nsCString& securityInfoSerialization,
                           const PRNetAddr& selfAddr,
                           const PRNetAddr& peerAddr);
   bool RecvOnTransportAndData(const nsresult& status,
-                              const PRUint64& progress,
-                              const PRUint64& progressMax,
+                              const uint64_t& progress,
+                              const uint64_t& progressMax,
                               const nsCString& data,
-                              const PRUint32& offset,
-                              const PRUint32& count);
+                              const uint32_t& offset,
+                              const uint32_t& count);
   bool RecvOnStopRequest(const nsresult& statusCode);
-  bool RecvOnProgress(const PRUint64& progress, const PRUint64& progressMax);
+  bool RecvOnProgress(const uint64_t& progress, const uint64_t& progressMax);
   bool RecvOnStatus(const nsresult& status);
   bool RecvFailedAsyncOpen(const nsresult& status);
-  bool RecvRedirect1Begin(const PRUint32& newChannel,
+  bool RecvRedirect1Begin(const uint32_t& newChannel,
                           const URI& newURI,
-                          const PRUint32& redirectFlags,
+                          const uint32_t& redirectFlags,
                           const nsHttpResponseHead& responseHead);
   bool RecvRedirect3Complete();
   bool RecvAssociateApplicationCache(const nsCString& groupID,
@@ -128,7 +128,7 @@ private:
 
   bool mIsFromCache;
   bool mCacheEntryAvailable;
-  PRUint32     mCacheExpirationTime;
+  uint32_t     mCacheExpirationTime;
   nsCString    mCachedCharset;
 
   // If ResumeAt is called before AsyncOpen, we need to send extra data upstream
@@ -148,25 +148,25 @@ private:
                       const nsHttpHeaderArray& requestHeaders,
                       const bool& isFromCache,
                       const bool& cacheEntryAvailable,
-                      const PRUint32& cacheExpirationTime,
+                      const uint32_t& cacheExpirationTime,
                       const nsCString& cachedCharset,
                       const nsCString& securityInfoSerialization,
                       const PRNetAddr& selfAddr,
                       const PRNetAddr& peerAddr);
   void OnTransportAndData(const nsresult& status,
-                          const PRUint64 progress,
-                          const PRUint64& progressMax,
+                          const uint64_t progress,
+                          const uint64_t& progressMax,
                           const nsCString& data,
-                          const PRUint32& offset,
-                          const PRUint32& count);
+                          const uint32_t& offset,
+                          const uint32_t& count);
   void OnStopRequest(const nsresult& statusCode);
-  void OnProgress(const PRUint64& progress, const PRUint64& progressMax);
+  void OnProgress(const uint64_t& progress, const uint64_t& progressMax);
   void OnStatus(const nsresult& status);
   void FailedAsyncOpen(const nsresult& status);
   void HandleAsyncAbort();
-  void Redirect1Begin(const PRUint32& newChannelId,
+  void Redirect1Begin(const uint32_t& newChannelId,
                       const URI& newUri,
-                      const PRUint32& redirectFlags,
+                      const uint32_t& redirectFlags,
                       const nsHttpResponseHead& responseHead);
   void Redirect3Complete();
   void DeleteSelf();

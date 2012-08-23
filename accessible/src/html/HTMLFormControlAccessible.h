@@ -29,15 +29,15 @@ public:
   HTMLCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
-  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(uint8_t index);
 
   // Accessible
   virtual mozilla::a11y::role NativeRole();
-  virtual PRUint64 NativeState();
+  virtual uint64_t NativeState();
 
   // ActionAccessible
-  virtual PRUint8 ActionCount();
+  virtual uint8_t ActionCount();
 
   // Widgets
   virtual bool IsWidget() const;
@@ -54,9 +54,9 @@ public:
   HTMLRadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual PRUint64 NativeState();
-  virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
-                                          PRInt32 *aSetSize);
+  virtual uint64_t NativeState();
+  virtual void GetPositionAndSizeInternal(int32_t *aPosInSet,
+                                          int32_t *aSetSize);
 };
 
 
@@ -73,17 +73,17 @@ public:
   HTMLButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
-  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(uint8_t index);
 
   // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
-  virtual PRUint64 State();
-  virtual PRUint64 NativeState();
+  virtual uint64_t State();
+  virtual uint64_t NativeState();
 
   // ActionAccessible
-  virtual PRUint8 ActionCount();
+  virtual uint8_t ActionCount();
 
   // Widgets
   virtual bool IsWidget() const;
@@ -104,22 +104,22 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
-  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(uint8_t index);
 
   // HyperTextAccessible
   virtual already_AddRefed<nsIEditor> GetEditor() const;
 
   // Accessible
   virtual void Value(nsString& aValue);
-  virtual void ApplyARIAState(PRUint64* aState) const;
+  virtual void ApplyARIAState(uint64_t* aState) const;
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
-  virtual PRUint64 State();
-  virtual PRUint64 NativeState();
+  virtual uint64_t State();
+  virtual uint64_t NativeState();
 
   // ActionAccessible
-  virtual PRUint8 ActionCount();
+  virtual uint8_t ActionCount();
 
   // Widgets
   virtual bool IsWidget() const;
@@ -151,7 +151,7 @@ public:
   // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
-  virtual Relation RelationByType(PRUint32 aType);
+  virtual Relation RelationByType(uint32_t aType);
 
 protected:
   nsIContent* GetLegend();
@@ -168,7 +168,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole();
-  virtual Relation RelationByType(PRUint32 aType);
+  virtual Relation RelationByType(uint32_t aType);
 };
 
 /**
@@ -183,7 +183,7 @@ public:
   virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
-  virtual Relation RelationByType(PRUint32 aType);
+  virtual Relation RelationByType(uint32_t aType);
 
 protected:
   nsIContent* Caption() const;
@@ -200,7 +200,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole();
-  virtual Relation RelationByType(PRUint32 aType);
+  virtual Relation RelationByType(uint32_t aType);
 };
 
 } // namespace a11y

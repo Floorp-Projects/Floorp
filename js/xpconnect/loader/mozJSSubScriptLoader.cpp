@@ -93,7 +93,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
         return ReportError(cx, LOAD_ERROR_NOSTREAM);
     }
 
-    PRInt32 len = -1;
+    int32_t len = -1;
 
     rv = chan->GetContentLength(&len);
     if (NS_FAILED(rv) || len == -1) {
@@ -116,7 +116,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
     JS::RootedObject target_obj_root(cx, target_obj);
     if (!charset.IsVoid()) {
         nsString script;
-        rv = nsScriptLoader::ConvertToUTF16(nullptr, reinterpret_cast<const PRUint8*>(buf.get()), len,
+        rv = nsScriptLoader::ConvertToUTF16(nullptr, reinterpret_cast<const uint8_t*>(buf.get()), len,
                                             charset, nullptr, script);
 
         if (NS_FAILED(rv)) {

@@ -200,7 +200,7 @@ nsSVGTextElement::GetLengthAdjust(nsIDOMSVGAnimatedEnumeration * *aLengthAdjust)
 
 /* long getNumberOfChars (); */
 NS_IMETHODIMP
-nsSVGTextElement::GetNumberOfChars(PRInt32 *_retval)
+nsSVGTextElement::GetNumberOfChars(int32_t *_retval)
 {
   *_retval = 0;
 
@@ -226,14 +226,14 @@ nsSVGTextElement::GetComputedTextLength(float *_retval)
 
 /* float getSubStringLength (in unsigned long charnum, in unsigned long nchars); */
 NS_IMETHODIMP
-nsSVGTextElement::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
+nsSVGTextElement::GetSubStringLength(uint32_t charnum, uint32_t nchars, float *_retval)
 {
   *_retval = 0.0f;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
   if (!metrics)
     return NS_OK;
 
-  PRUint32 charcount = metrics->GetNumberOfChars();
+  uint32_t charcount = metrics->GetNumberOfChars();
   if (charcount <= charnum || nchars > charcount - charnum)
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
@@ -246,7 +246,7 @@ nsSVGTextElement::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_
 
 /* nsIDOMSVGPoint getStartPositionOfChar (in unsigned long charnum); */
 NS_IMETHODIMP
-nsSVGTextElement::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+nsSVGTextElement::GetStartPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval)
 {
   *_retval = nullptr;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
@@ -258,7 +258,7 @@ nsSVGTextElement::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_ret
 
 /* nsIDOMSVGPoint getEndPositionOfChar (in unsigned long charnum); */
 NS_IMETHODIMP
-nsSVGTextElement::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+nsSVGTextElement::GetEndPositionOfChar(uint32_t charnum, nsIDOMSVGPoint **_retval)
 {
   *_retval = nullptr;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
@@ -270,7 +270,7 @@ nsSVGTextElement::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retva
 
 /* nsIDOMSVGRect getExtentOfChar (in unsigned long charnum); */
 NS_IMETHODIMP
-nsSVGTextElement::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
+nsSVGTextElement::GetExtentOfChar(uint32_t charnum, nsIDOMSVGRect **_retval)
 {
   *_retval = nullptr;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
@@ -282,7 +282,7 @@ nsSVGTextElement::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 
 /* float getRotationOfChar (in unsigned long charnum); */
 NS_IMETHODIMP
-nsSVGTextElement::GetRotationOfChar(PRUint32 charnum, float *_retval)
+nsSVGTextElement::GetRotationOfChar(uint32_t charnum, float *_retval)
 {
   *_retval = 0.0;
 
@@ -295,7 +295,7 @@ nsSVGTextElement::GetRotationOfChar(PRUint32 charnum, float *_retval)
 
 /* long getCharNumAtPosition (in nsIDOMSVGPoint point); */
 NS_IMETHODIMP
-nsSVGTextElement::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
+nsSVGTextElement::GetCharNumAtPosition(nsIDOMSVGPoint *point, int32_t *_retval)
 {
   nsCOMPtr<DOMSVGPoint> p = do_QueryInterface(point);
   if (!p)
@@ -312,7 +312,7 @@ nsSVGTextElement::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
 
 /* void selectSubString (in unsigned long charnum, in unsigned long nchars); */
 NS_IMETHODIMP
-nsSVGTextElement::SelectSubString(PRUint32 charnum, PRUint32 nchars)
+nsSVGTextElement::SelectSubString(uint32_t charnum, uint32_t nchars)
 {
   NS_NOTYETIMPLEMENTED("nsSVGTextElement::SelectSubString");
   return NS_ERROR_NOT_IMPLEMENTED;

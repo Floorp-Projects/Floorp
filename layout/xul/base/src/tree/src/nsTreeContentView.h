@@ -51,39 +51,39 @@ class nsTreeContentView MOZ_FINAL : public nsINativeTreeView,
 
   protected:
     // Recursive methods which deal with serializing of nested content.
-    void Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex,
+    void Serialize(nsIContent* aContent, int32_t aParentIndex, int32_t* aIndex,
                    nsTArray<Row*>& aRows);
 
-    void SerializeItem(nsIContent* aContent, PRInt32 aParentIndex,
-                       PRInt32* aIndex, nsTArray<Row*>& aRows);
+    void SerializeItem(nsIContent* aContent, int32_t aParentIndex,
+                       int32_t* aIndex, nsTArray<Row*>& aRows);
 
-    void SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex,
-                            PRInt32* aIndex, nsTArray<Row*>& aRows);
+    void SerializeSeparator(nsIContent* aContent, int32_t aParentIndex,
+                            int32_t* aIndex, nsTArray<Row*>& aRows);
 
-    void GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, PRInt32* aResult);
+    void GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, int32_t* aResult);
     
     // Helper methods which we use to manage our plain array of rows.
-    PRInt32 EnsureSubtree(PRInt32 aIndex);
+    int32_t EnsureSubtree(int32_t aIndex);
 
-    PRInt32 RemoveSubtree(PRInt32 aIndex);
+    int32_t RemoveSubtree(int32_t aIndex);
 
-    PRInt32 InsertRow(PRInt32 aParentIndex, PRInt32 aIndex, nsIContent* aContent);
+    int32_t InsertRow(int32_t aParentIndex, int32_t aIndex, nsIContent* aContent);
 
     void InsertRowFor(nsIContent* aParent, nsIContent* aChild);
 
-    PRInt32 RemoveRow(PRInt32 aIndex);
+    int32_t RemoveRow(int32_t aIndex);
 
     void ClearRows();
     
-    void OpenContainer(PRInt32 aIndex);
+    void OpenContainer(int32_t aIndex);
 
-    void CloseContainer(PRInt32 aIndex);
+    void CloseContainer(int32_t aIndex);
 
-    PRInt32 FindContent(nsIContent* aContent);
+    int32_t FindContent(nsIContent* aContent);
 
-    void UpdateSubtreeSizes(PRInt32 aIndex, PRInt32 aCount);
+    void UpdateSubtreeSizes(int32_t aIndex, int32_t aCount);
 
-    void UpdateParentIndexes(PRInt32 aIndex, PRInt32 aSkip, PRInt32 aCount);
+    void UpdateParentIndexes(int32_t aIndex, int32_t aSkip, int32_t aCount);
 
     // Content helpers.
     nsIContent* GetCell(nsIContent* aContainer, nsITreeColumn* aCol);

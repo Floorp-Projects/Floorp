@@ -305,12 +305,16 @@ let AlarmService = {
         let alarmQueue = this._alarmQueue;
         alarmQueue.length = 0;
         this._currentAlarm = null;
-        
-        // only add the alarm that is valid
-        let nowTime = Date.now();
+
+        // Only restore the alarm that's not yet expired; otherwise,
+        // fire a system message for it and remove it from database.
         aAlarms.forEach(function addAlarm(aAlarm) {
-          if (this._getAlarmTime(aAlarm) > nowTime)
+          if (this._getAlarmTime(aAlarm) > Date.now()) {
             alarmQueue.push(aAlarm);
+          } else {
+            this._fireSystemMessage(aAlarm);
+            this._removeAlarmFromDb(aAlarm.id, null);
+          }
         }.bind(this));
 
         // set the next alarm from queue
@@ -329,7 +333,7 @@ let AlarmService = {
 
   _getAlarmTime: function _getAlarmTime(aAlarm) {
     let alarmTime = (new Date(aAlarm.date)).getTime();
-    
+
     // For an alarm specified with "ignoreTimezone",
     // it must be fired respect to the user's timezone.
     // Supposing an alarm was set at 7:00pm at Tokyo,

@@ -668,7 +668,7 @@ RPCChannel::DumpRPCStack(FILE* outfile, const char* const pfx) const
     fprintf(outfile, "%sRPCChannel 'backtrace':\n", pfx);
 
     // print a python-style backtrace, first frame to last
-    for (PRUint32 i = 0; i < mCxxStackFrames.size(); ++i) {
+    for (uint32_t i = 0; i < mCxxStackFrames.size(); ++i) {
         int32 id;
         const char* dir, *sems, *name;
         mCxxStackFrames[i].Describe(&id, &dir, &sems, &name);

@@ -50,9 +50,9 @@ NS_DECL_CI_INTERFACE_GETTER(nsThread)
 
 namespace mozilla {
 
-// Fun fact: Android's GCC won't convert bool* to PRInt32*, so we can't
+// Fun fact: Android's GCC won't convert bool* to int32_t*, so we can't
 // PR_ATOMIC_SET a bool.
-static PRInt32 sMemoryPressurePending = 0;
+static int32_t sMemoryPressurePending = 0;
 
 /*
  * It's important that this function not acquire any locks, nor do anything
@@ -84,13 +84,13 @@ NS_IMETHODIMP_(nsrefcnt) nsThreadClassInfo::Release() { return 1; }
 NS_IMPL_QUERY_INTERFACE1(nsThreadClassInfo, nsIClassInfo)
 
 NS_IMETHODIMP
-nsThreadClassInfo::GetInterfaces(PRUint32 *count, nsIID ***array)
+nsThreadClassInfo::GetInterfaces(uint32_t *count, nsIID ***array)
 {
   return NS_CI_INTERFACE_GETTER_NAME(nsThread)(count, array);
 }
 
 NS_IMETHODIMP
-nsThreadClassInfo::GetHelperForLanguage(PRUint32 lang, nsISupports **result)
+nsThreadClassInfo::GetHelperForLanguage(uint32_t lang, nsISupports **result)
 {
   *result = nullptr;
   return NS_OK;
@@ -118,14 +118,14 @@ nsThreadClassInfo::GetClassID(nsCID **result)
 }
 
 NS_IMETHODIMP
-nsThreadClassInfo::GetImplementationLanguage(PRUint32 *result)
+nsThreadClassInfo::GetImplementationLanguage(uint32_t *result)
 {
   *result = nsIProgrammingLanguage::CPLUSPLUS;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsThreadClassInfo::GetFlags(PRUint32 *result)
+nsThreadClassInfo::GetFlags(uint32_t *result)
 {
   *result = THREADSAFE;
   return NS_OK;
@@ -291,7 +291,7 @@ nsThread::ThreadFunc(void *arg)
 
 //-----------------------------------------------------------------------------
 
-nsThread::nsThread(MainThreadFlag aMainThread, PRUint32 aStackSize)
+nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
   : mLock("nsThread.mLock")
   , mPriority(PRIORITY_NORMAL)
   , mThread(nullptr)
@@ -375,7 +375,7 @@ nsThread::PutEvent(nsIRunnable *event)
 // nsIEventTarget
 
 NS_IMETHODIMP
-nsThread::Dispatch(nsIRunnable *event, PRUint32 flags)
+nsThread::Dispatch(nsIRunnable *event, uint32_t flags)
 {
   LOG(("THRD(%p) Dispatch [%p %x]\n", this, event, flags));
 
@@ -643,14 +643,14 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
 // nsISupportsPriority
 
 NS_IMETHODIMP
-nsThread::GetPriority(PRInt32 *priority)
+nsThread::GetPriority(int32_t *priority)
 {
   *priority = mPriority;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsThread::SetPriority(PRInt32 priority)
+nsThread::SetPriority(int32_t priority)
 {
   NS_ENSURE_STATE(mThread);
 
@@ -679,7 +679,7 @@ nsThread::SetPriority(PRInt32 priority)
 }
 
 NS_IMETHODIMP
-nsThread::AdjustPriority(PRInt32 delta)
+nsThread::AdjustPriority(int32_t delta)
 {
   return SetPriority(mPriority + delta);
 }
@@ -706,7 +706,7 @@ nsThread::SetObserver(nsIThreadObserver *obs)
 }
 
 NS_IMETHODIMP
-nsThread::GetRecursionDepth(PRUint32 *depth)
+nsThread::GetRecursionDepth(uint32_t *depth)
 {
   NS_ENSURE_ARG_POINTER(depth);
   NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);

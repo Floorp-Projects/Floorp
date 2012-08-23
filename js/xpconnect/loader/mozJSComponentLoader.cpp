@@ -131,7 +131,7 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
          */
         NS_ConvertASCIItoUTF16 fileUni(rep->filename);
 
-        PRUint32 column = rep->uctokenptr - rep->uclinebuf;
+        uint32_t column = rep->uctokenptr - rep->uclinebuf;
 
         rv = errorObject->Init(reinterpret_cast<const PRUnichar*>
                                                (rep->ucmessage),
@@ -750,14 +750,14 @@ mozJSComponentLoader::GlobalForLocation(nsIFile *aComponentFile,
 
         if (realFile) {
 #ifdef HAVE_PR_MEMMAP
-            PRInt64 fileSize;
+            int64_t fileSize;
             rv = aComponentFile->GetFileSize(&fileSize);
             if (NS_FAILED(rv)) {
                 JS_SetOptions(cx, oldopts);
                 return rv;
             }
 
-            PRInt64 maxSize;
+            int64_t maxSize;
             LL_UI2L(maxSize, PR_UINT32_MAX);
             if (LL_CMP(fileSize, >, maxSize)) {
                 NS_ERROR("file too large");
@@ -786,7 +786,7 @@ mozJSComponentLoader::GlobalForLocation(nsIFile *aComponentFile,
             // Make sure the file map is closed, no matter how we return.
             FileMapAutoCloser mapCloser(map);
 
-            PRUint32 fileSize32;
+            uint32_t fileSize32;
             LL_L2UI(fileSize32, fileSize);
 
             char *buf = static_cast<char*>(PR_MemMap(map, 0, fileSize32));
@@ -817,7 +817,7 @@ mozJSComponentLoader::GlobalForLocation(nsIFile *aComponentFile,
             // Ensure file fclose
             ANSIFileAutoCloser fileCloser(fileHandle);
 
-            PRInt64 len;
+            int64_t len;
             rv = aComponentFile->GetFileSize(&len);
             if (NS_FAILED(rv) || len < 0) {
                 NS_WARNING("Failed to get file size");
@@ -832,7 +832,7 @@ mozJSComponentLoader::GlobalForLocation(nsIFile *aComponentFile,
             }
 
             size_t rlen = fread(buf, 1, len, fileHandle);
-            if (rlen != (PRUint64)len) {
+            if (rlen != (uint64_t)len) {
                 free(buf);
                 JS_SetOptions(cx, oldopts);
                 NS_WARNING("Failed to read file");
@@ -855,15 +855,15 @@ mozJSComponentLoader::GlobalForLocation(nsIFile *aComponentFile,
             rv = scriptChannel->Open(getter_AddRefs(scriptStream));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRUint64 len64;
-            PRUint32 bytesRead;
+            uint64_t len64;
+            uint32_t bytesRead;
 
             rv = scriptStream->Available(&len64);
             NS_ENSURE_SUCCESS(rv, rv);
             NS_ENSURE_TRUE(len64 < PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
             if (!len64)
                 return NS_ERROR_FAILURE;
-            PRUint32 len = (PRUint32)len64;
+            uint32_t len = (uint32_t)len64;
 
             /* malloc an internal buf the size of the file */
             nsAutoArrayPtr<char> buf(new char[len + 1]);
@@ -979,7 +979,7 @@ NS_IMETHODIMP
 mozJSComponentLoader::Import(const nsACString& registryLocation,
                              const JS::Value& targetVal_,
                              JSContext* cx,
-                             PRUint8 optionalArgc,
+                             uint8_t optionalArgc,
                              JS::Value* retval)
 {
     NS_TIME_FUNCTION_FMT("%s (line %d) (file: %s)", MOZ_FUNCTION_NAME,

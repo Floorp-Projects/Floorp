@@ -65,13 +65,13 @@ public:
     static void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText);
     static void UpdateCurrentURI(nsIWebBrowserChrome *aChrome);
     static void UpdateBusyState(nsIWebBrowserChrome *aChrome, bool aBusy);
-    static void UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax);
-    static void GetResourceStringById(PRInt32 aID, char ** aReturn);
-    static void ShowContextMenu(nsIWebBrowserChrome *aChrome, PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
-    static void ShowTooltip(nsIWebBrowserChrome *aChrome, PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText);
+    static void UpdateProgress(nsIWebBrowserChrome *aChrome, int32_t aCurrent, int32_t aMax);
+    static void GetResourceStringById(int32_t aID, char ** aReturn);
+    static void ShowContextMenu(nsIWebBrowserChrome *aChrome, uint32_t aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
+    static void ShowTooltip(nsIWebBrowserChrome *aChrome, int32_t aXCoords, int32_t aYCoords, const PRUnichar *aTipText);
     static void HideTooltip(nsIWebBrowserChrome *aChrome);
     static void ShowWindow(nsIWebBrowserChrome *aChrome, bool aShow);
-    static void SizeTo(nsIWebBrowserChrome *aChrome, PRInt32 aWidth, PRInt32 aHeight);
+    static void SizeTo(nsIWebBrowserChrome *aChrome, int32_t aWidth, int32_t aHeight);
 };
 
 class WebBrowserChrome   : public nsIWebBrowserChrome,
@@ -101,19 +101,19 @@ public:
     NS_DECL_NSICONTEXTMENULISTENER
     NS_DECL_NSITOOLTIPLISTENER
 
-    nsresult CreateBrowser(PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY,
+    nsresult CreateBrowser(int32_t aX, int32_t aY, int32_t aCX, int32_t aCY,
                            nsIWebBrowser **aBrowser);
 
     void     SetParent(nsIWebBrowserChrome *aParent)
                { mDependentParent = aParent; }
    
 protected:
-    nsresult SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRInt32 info1=0, PRUint32 info2=0);
+    nsresult SendHistoryStatusMessage(nsIURI * aURI, char * operation, int32_t info1=0, uint32_t info2=0);
 
     void ContentFinishedLoading();
 
     HWND         mNativeWindow;
-    PRUint32     mChromeFlags;
+    uint32_t     mChromeFlags;
     bool         mContinueModalLoop;
     bool         mSizeSet;
 

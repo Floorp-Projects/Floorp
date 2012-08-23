@@ -87,7 +87,7 @@ NS_IMETHODIMP
 nsDOMXULCommandEvent::InitCommandEvent(const nsAString& aType,
                                        bool aCanBubble, bool aCancelable,
                                        nsIDOMWindow* aView,
-                                       PRInt32 aDetail,
+                                       int32_t aDetail,
                                        bool aCtrlKey, bool aAltKey,
                                        bool aShiftKey, bool aMetaKey,
                                        nsIDOMEvent* aSourceEvent)

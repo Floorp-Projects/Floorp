@@ -83,7 +83,7 @@ nsAlertsIconListener::OnStartContainer(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsAlertsIconListener::OnStartFrame(imgIRequest* aRequest,
-                                   PRUint32 aFrame)
+                                   uint32_t aFrame)
 {
   return NS_OK;
 }
@@ -125,7 +125,7 @@ NS_IMETHODIMP
 nsAlertsIconListener::OnStopRequest(imgIRequest* aRequest,
                                     bool aIsLastPart)
 {
-  PRUint32 imgStatus = imgIRequest::STATUS_ERROR;
+  uint32_t imgStatus = imgIRequest::STATUS_ERROR;
   nsresult rv = aRequest->GetImageStatus(&imgStatus);
   NS_ENSURE_SUCCESS(rv, rv);
   if (imgStatus == imgIRequest::STATUS_ERROR && !mLoadedFrame) {
@@ -154,7 +154,7 @@ nsAlertsIconListener::OnImageIsAnimated(imgIRequest *aRequest)
 
 NS_IMETHODIMP
 nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest,
-                                  PRUint32 aFrame)
+                                  uint32_t aFrame)
 {
   if (aRequest != mIconRequest)
     return NS_ERROR_FAILURE;

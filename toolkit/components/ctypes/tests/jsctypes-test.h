@@ -56,8 +56,8 @@ NS_EXTERN_C
 
 #endif /* defined(_WIN32) */
 
-  NS_EXPORT PRInt32 test_ansi_len(const char*);
-  NS_EXPORT PRInt32 test_wide_len(const PRUnichar*);
+  NS_EXPORT int32_t test_ansi_len(const char*);
+  NS_EXPORT int32_t test_wide_len(const PRUnichar*);
   NS_EXPORT const char* test_ansi_ret();
   NS_EXPORT const PRUnichar* test_wide_ret();
   NS_EXPORT char* test_ansi_echo(const char*);
@@ -112,35 +112,35 @@ NS_EXTERN_C
   };
 
   struct POINT {
-    PRInt32 x;
-    PRInt32 y;
+    int32_t x;
+    int32_t y;
   };
 
   struct RECT {
-    PRInt32 top;
-    PRInt32 left;
-    PRInt32 bottom;
-    PRInt32 right;
+    int32_t top;
+    int32_t left;
+    int32_t bottom;
+    int32_t right;
   };
 
   struct INNER {
-    PRUint8 i1;
-    PRInt64 i2;
-    PRUint8 i3;
+    uint8_t i1;
+    int64_t i2;
+    uint8_t i3;
   };
 
   struct NESTED {
-    PRInt32 n1;
-    PRInt16 n2;
+    int32_t n1;
+    int16_t n2;
     INNER   inner;
-    PRInt64 n3;
-    PRInt32 n4;
+    int64_t n3;
+    int32_t n4;
   };
 
-  NS_EXPORT PRInt32 test_pt_in_rect(RECT, POINT);
-  NS_EXPORT void test_init_pt(POINT* pt, PRInt32 x, PRInt32 y);
+  NS_EXPORT int32_t test_pt_in_rect(RECT, POINT);
+  NS_EXPORT void test_init_pt(POINT* pt, int32_t x, int32_t y);
 
-  NS_EXPORT PRInt32 test_nested_struct(NESTED);
+  NS_EXPORT int32_t test_nested_struct(NESTED);
   NS_EXPORT POINT test_struct_return(RECT);
   NS_EXPORT RECT test_large_struct_return(RECT, RECT);
   NS_EXPORT ONE_BYTE test_1_byte_struct_return(RECT);
@@ -153,22 +153,22 @@ NS_EXTERN_C
 
   NS_EXPORT void * test_fnptr();
 
-  typedef PRInt32 (* test_func_ptr)(PRInt8);
-  NS_EXPORT PRInt32 test_closure_cdecl(PRInt8, test_func_ptr);
+  typedef int32_t (* test_func_ptr)(int8_t);
+  NS_EXPORT int32_t test_closure_cdecl(int8_t, test_func_ptr);
 #if defined(_WIN32)
-  typedef PRInt32 (NS_STDCALL * test_func_ptr_stdcall)(PRInt8);
-  NS_EXPORT PRInt32 test_closure_stdcall(PRInt8, test_func_ptr_stdcall);
+  typedef int32_t (NS_STDCALL * test_func_ptr_stdcall)(int8_t);
+  NS_EXPORT int32_t test_closure_stdcall(int8_t, test_func_ptr_stdcall);
 #endif /* defined(_WIN32) */
 
-  NS_EXPORT PRInt32 test_callme(PRInt8);
+  NS_EXPORT int32_t test_callme(int8_t);
   NS_EXPORT void* test_getfn();
 
-  EXPORT_CDECL(PRInt32) test_sum_va_cdecl(PRUint8 n, ...);
-  EXPORT_CDECL(PRUint8) test_count_true_va_cdecl(PRUint8 n, ...);
-  EXPORT_CDECL(void) test_add_char_short_int_va_cdecl(PRUint32* result, ...);
-  EXPORT_CDECL(PRInt32*) test_vector_add_va_cdecl(PRUint8 num_vecs,
-                                                  PRUint8 vec_len,
-                                                  PRInt32* result, ...);
+  EXPORT_CDECL(int32_t) test_sum_va_cdecl(uint8_t n, ...);
+  EXPORT_CDECL(uint8_t) test_count_true_va_cdecl(uint8_t n, ...);
+  EXPORT_CDECL(void) test_add_char_short_int_va_cdecl(uint32_t* result, ...);
+  EXPORT_CDECL(int32_t*) test_vector_add_va_cdecl(uint8_t num_vecs,
+                                                  uint8_t vec_len,
+                                                  int32_t* result, ...);
 
   NS_EXPORT extern RECT data_rect;
 }

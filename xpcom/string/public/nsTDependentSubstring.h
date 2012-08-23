@@ -25,7 +25,7 @@ class nsTDependentSubstring_CharT : public nsTSubstring_CharT
 
     public:
 
-      void Rebind( const substring_type&, PRUint32 startPos, PRUint32 length = size_type(-1) );
+      void Rebind( const substring_type&, uint32_t startPos, uint32_t length = size_type(-1) );
 
       void Rebind( const char_type* data, size_type length );
 
@@ -34,7 +34,7 @@ class nsTDependentSubstring_CharT : public nsTSubstring_CharT
           Rebind(start, size_type(end - start));
         }
 
-      nsTDependentSubstring_CharT( const substring_type& str, PRUint32 startPos, PRUint32 length = size_type(-1) )
+      nsTDependentSubstring_CharT( const substring_type& str, uint32_t startPos, uint32_t length = size_type(-1) )
         : substring_type()
         {
           Rebind(str, startPos, length);
@@ -44,10 +44,10 @@ class nsTDependentSubstring_CharT : public nsTSubstring_CharT
         : substring_type(const_cast<char_type*>(data), length, F_NONE) {}
 
       nsTDependentSubstring_CharT( const char_type* start, const char_type* end )
-        : substring_type(const_cast<char_type*>(start), PRUint32(end - start), F_NONE) {}
+        : substring_type(const_cast<char_type*>(start), uint32_t(end - start), F_NONE) {}
 
       nsTDependentSubstring_CharT( const const_iterator& start, const const_iterator& end )
-        : substring_type(const_cast<char_type*>(start.get()), PRUint32(end.get() - start.get()), F_NONE) {}
+        : substring_type(const_cast<char_type*>(start.get()), uint32_t(end.get() - start.get()), F_NONE) {}
 
       // Create a nsTDependentSubstring to be bound later
       nsTDependentSubstring_CharT()
@@ -62,7 +62,7 @@ class nsTDependentSubstring_CharT : public nsTSubstring_CharT
 
 inline
 const nsTDependentSubstring_CharT
-Substring( const nsTSubstring_CharT& str, PRUint32 startPos, PRUint32 length = PRUint32(-1) )
+Substring( const nsTSubstring_CharT& str, uint32_t startPos, uint32_t length = uint32_t(-1) )
   {
     return nsTDependentSubstring_CharT(str, startPos, length);
   }
@@ -76,7 +76,7 @@ Substring( const nsReadingIterator<CharT>& start, const nsReadingIterator<CharT>
 
 inline
 const nsTDependentSubstring_CharT
-Substring( const CharT* data, PRUint32 length )
+Substring( const CharT* data, uint32_t length )
   {
     return nsTDependentSubstring_CharT(data, length);
   }
@@ -90,14 +90,14 @@ Substring( const CharT* start, const CharT* end )
 
 inline
 const nsTDependentSubstring_CharT
-StringHead( const nsTSubstring_CharT& str, PRUint32 count )
+StringHead( const nsTSubstring_CharT& str, uint32_t count )
   {
     return nsTDependentSubstring_CharT(str, 0, count);
   }
 
 inline
 const nsTDependentSubstring_CharT
-StringTail( const nsTSubstring_CharT& str, PRUint32 count )
+StringTail( const nsTSubstring_CharT& str, uint32_t count )
   {
     return nsTDependentSubstring_CharT(str, str.Length() - count, count);
   }

@@ -12,10 +12,10 @@ interface nsIPropertyBag2 : nsIPropertyBag
   // Accessing a property as a different type may attempt conversion to the
   // requested value
 
-  PRInt32     getPropertyAsInt32       (in AString prop);
-  PRUint32    getPropertyAsUint32      (in AString prop);
-  PRInt64     getPropertyAsInt64       (in AString prop);
-  PRUint64    getPropertyAsUint64      (in AString prop);
+  int32_t     getPropertyAsInt32       (in AString prop);
+  uint32_t    getPropertyAsUint32      (in AString prop);
+  int64_t     getPropertyAsInt64       (in AString prop);
+  uint64_t    getPropertyAsUint64      (in AString prop);
   double      getPropertyAsDouble      (in AString prop);
   AString     getPropertyAsAString     (in AString prop);
   ACString    getPropertyAsACString    (in AString prop);

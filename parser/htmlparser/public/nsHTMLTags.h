@@ -35,7 +35,7 @@ enum nsHTMLTag {
 #undef HTML_OTHER
 
 // All tags before eHTMLTag_text are HTML tags
-#define NS_HTML_TAG_MAX PRInt32(eHTMLTag_text - 1)
+#define NS_HTML_TAG_MAX int32_t(eHTMLTag_text - 1)
 
 class nsHTMLTags {
 public:
@@ -83,7 +83,7 @@ private:
   static nsIAtom* sTagAtomTable[eHTMLTag_userdefined - 1];
   static const PRUnichar* const sTagUnicodeTable[];
 
-  static PRInt32 gTableRefCount;
+  static int32_t gTableRefCount;
   static PLHashTable* gTagTable;
   static PLHashTable* gTagAtomTable;
 };

@@ -30,7 +30,7 @@ public:
   // nsISupports interface
   NS_DECL_ISUPPORTS
   
-  NS_IMETHOD CallMethod(PRUint16 methodIndex,
+  NS_IMETHOD CallMethod(uint16_t methodIndex,
                         const XPTMethodDescriptor* info,
                         nsXPTCMiniVariant* params);
 
@@ -102,7 +102,7 @@ nsXTFWeakTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsXTFWeakTearoff::CallMethod(PRUint16 methodIndex,
+nsXTFWeakTearoff::CallMethod(uint16_t methodIndex,
                              const XPTMethodDescriptor* info,
                              nsXPTCMiniVariant* params)
 {

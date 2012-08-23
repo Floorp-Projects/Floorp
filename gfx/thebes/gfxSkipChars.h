@@ -42,10 +42,10 @@ public:
         mCharCount(0), mRunCharCount(0), mRunSkipped(false), mInErrorState(false)
     {}
   
-    void SkipChars(PRUint32 aChars) {
+    void SkipChars(uint32_t aChars) {
         DoChars(aChars, true);
     }
-    void KeepChars(PRUint32 aChars) {
+    void KeepChars(uint32_t aChars) {
         DoChars(aChars, false);
     }
     void SkipChar() {
@@ -54,7 +54,7 @@ public:
     void KeepChar() {
         KeepChars(1);
     }
-    void DoChars(PRUint32 aChars, bool aSkipped) {
+    void DoChars(uint32_t aChars, bool aSkipped) {
         if (aSkipped != mRunSkipped && aChars > 0) {
             FlushRun();
         }
@@ -65,13 +65,13 @@ public:
 
     bool IsOK() { return !mInErrorState; }
 
-    PRUint32 GetCharCount() { return mCharCount + mRunCharCount; }
+    uint32_t GetCharCount() { return mCharCount + mRunCharCount; }
     bool GetAllCharsKept() { return mBuffer.Length() == 0; }
 
     friend class gfxSkipChars;
 
 private:
-    typedef AutoFallibleTArray<PRUint8,256> Buffer;
+    typedef AutoFallibleTArray<uint8_t,256> Buffer;
 
     /**
      * Moves mRunCharCount/mRunSkipped to the buffer (updating mCharCount),
@@ -80,8 +80,8 @@ private:
     void FlushRun();
   
     Buffer       mBuffer;
-    PRUint32     mCharCount;
-    PRUint32     mRunCharCount;
+    uint32_t     mCharCount;
+    uint32_t     mRunCharCount;
     bool mRunSkipped; // == mBuffer.Length()&1
     bool mInErrorState;
 };
@@ -117,7 +117,7 @@ public:
         } else {
             aSkipCharsBuilder->FlushRun();
             mCharCount = aSkipCharsBuilder->mCharCount;
-            mList = new PRUint8[aSkipCharsBuilder->mBuffer.Length()];
+            mList = new uint8_t[aSkipCharsBuilder->mBuffer.Length()];
             if (!mList) {
                 mListLength = 0;
             } else {
@@ -132,25 +132,25 @@ public:
         BuildShortcuts();
     }
   
-    void SetAllKeep(PRUint32 aLength) {
+    void SetAllKeep(uint32_t aLength) {
         mCharCount = aLength;
         mList = nullptr;
         mListLength = 0;
     }
   
-    PRInt32 GetOriginalCharCount() const { return mCharCount; }
+    int32_t GetOriginalCharCount() const { return mCharCount; }
 
     friend class gfxSkipCharsIterator;
 
 private:
     struct Shortcut {
-        PRUint32 mListPrefixLength;
-        PRUint32 mListPrefixCharCount;
-        PRUint32 mListPrefixKeepCharCount;
+        uint32_t mListPrefixLength;
+        uint32_t mListPrefixCharCount;
+        uint32_t mListPrefixKeepCharCount;
     
         Shortcut() {}
-        Shortcut(PRUint32 aListPrefixLength, PRUint32 aListPrefixCharCount,
-                 PRUint32 aListPrefixKeepCharCount) :
+        Shortcut(uint32_t aListPrefixLength, uint32_t aListPrefixCharCount,
+                 uint32_t aListPrefixKeepCharCount) :
             mListPrefixLength(aListPrefixLength),
             mListPrefixCharCount(aListPrefixCharCount),
             mListPrefixKeepCharCount(aListPrefixKeepCharCount) {}
@@ -158,10 +158,10 @@ private:
   
     void BuildShortcuts();
 
-    nsAutoArrayPtr<PRUint8>  mList;
+    nsAutoArrayPtr<uint8_t>  mList;
     nsAutoArrayPtr<Shortcut> mShortcuts;
-    PRUint32                 mListLength;
-    PRUint32                 mCharCount;
+    uint32_t                 mListLength;
+    uint32_t                 mCharCount;
 };
 
 /**
@@ -188,8 +188,8 @@ public:
      * outgoing original string offsets
      */
     gfxSkipCharsIterator(const gfxSkipChars& aSkipChars,
-                         PRInt32 aOriginalStringToSkipCharsOffset,
-                         PRInt32 aOriginalStringOffset)
+                         int32_t aOriginalStringToSkipCharsOffset,
+                         int32_t aOriginalStringOffset)
         : mSkipChars(&aSkipChars),
           mOriginalStringToSkipCharsOffset(aOriginalStringToSkipCharsOffset),
           mListPrefixLength(0), mListPrefixCharCount(0), mListPrefixKeepCharCount(0) {
@@ -197,7 +197,7 @@ public:
     }
 
     gfxSkipCharsIterator(const gfxSkipChars& aSkipChars,
-                         PRInt32 aOriginalStringToSkipCharsOffset = 0)
+                         int32_t aOriginalStringToSkipCharsOffset = 0)
         : mSkipChars(&aSkipChars),
           mOriginalStringOffset(0), mSkippedStringOffset(0),
           mOriginalStringToSkipCharsOffset(aOriginalStringToSkipCharsOffset),
@@ -229,7 +229,7 @@ public:
      * This can efficiently move forward or backward from the current position.
      * aOriginalStringOffset is clamped to [0,originalStringLength].
      */
-    void SetOriginalOffset(PRInt32 aOriginalStringOffset) {
+    void SetOriginalOffset(int32_t aOriginalStringOffset) {
         SetOffsets(aOriginalStringOffset + mOriginalStringToSkipCharsOffset, true);
     }
     
@@ -238,15 +238,15 @@ public:
      * This can efficiently move forward or backward from the current position.
      * aSkippedStringOffset is clamped to [0,skippedStringLength].
      */
-    void SetSkippedOffset(PRUint32 aSkippedStringOffset) {
+    void SetSkippedOffset(uint32_t aSkippedStringOffset) {
         SetOffsets(aSkippedStringOffset, false);
     }
     
-    PRUint32 ConvertOriginalToSkipped(PRInt32 aOriginalStringOffset) {
+    uint32_t ConvertOriginalToSkipped(int32_t aOriginalStringOffset) {
         SetOriginalOffset(aOriginalStringOffset);
         return GetSkippedOffset();
     }
-    PRUint32 ConvertSkippedToOriginal(PRInt32 aSkippedStringOffset) {
+    uint32_t ConvertSkippedToOriginal(int32_t aSkippedStringOffset) {
         SetSkippedOffset(aSkippedStringOffset);
         return GetOriginalOffset();
     }
@@ -258,19 +258,19 @@ public:
      * at this character. When the current position is at the end of the original
      * string, we return true and *aRunLength is set to zero.
      */
-    bool IsOriginalCharSkipped(PRInt32* aRunLength = nullptr) const;
+    bool IsOriginalCharSkipped(int32_t* aRunLength = nullptr) const;
     
-    void AdvanceOriginal(PRInt32 aDelta) {
+    void AdvanceOriginal(int32_t aDelta) {
         SetOffsets(mOriginalStringOffset + aDelta, true);
     }
-    void AdvanceSkipped(PRInt32 aDelta) {
+    void AdvanceSkipped(int32_t aDelta) {
         SetOffsets(mSkippedStringOffset + aDelta, false);
     }
   
     /**
      * @return the offset within the original string
      */
-    PRInt32 GetOriginalOffset() const {
+    int32_t GetOriginalOffset() const {
         return mOriginalStringOffset - mOriginalStringToSkipCharsOffset;
     }
     /**
@@ -281,24 +281,24 @@ public:
      * original string after the current position, or the length of the skipped
      * string if there is no such character.
      */
-    PRUint32 GetSkippedOffset() const { return mSkippedStringOffset; }
+    uint32_t GetSkippedOffset() const { return mSkippedStringOffset; }
 
-    PRInt32 GetOriginalEnd() const {
+    int32_t GetOriginalEnd() const {
         return mSkipChars->GetOriginalCharCount() -
             mOriginalStringToSkipCharsOffset;
     }
 
 private:
-    void SetOffsets(PRUint32 aOffset, bool aInOriginalString);
+    void SetOffsets(uint32_t aOffset, bool aInOriginalString);
   
     const gfxSkipChars* mSkipChars;
-    PRInt32 mOriginalStringOffset;
-    PRUint32 mSkippedStringOffset;
+    int32_t mOriginalStringOffset;
+    uint32_t mSkippedStringOffset;
 
     // This offset is added to map from "skipped+unskipped characters in
     // the original DOM string" character space to "skipped+unskipped
     // characters in the textrun's gfxSkipChars" character space
-    PRInt32 mOriginalStringToSkipCharsOffset;
+    int32_t mOriginalStringToSkipCharsOffset;
 
     /*
      * This is used to speed up cursor-style traversal. The invariant is that
@@ -310,9 +310,9 @@ private:
      * Also, mListPrefixCharCount <= mOriginalStringOffset (and therefore
      * mListPrefixKeepCharCount < mSkippedStringOffset).
      */
-    PRUint32 mListPrefixLength;
-    PRUint32 mListPrefixCharCount;
-    PRUint32 mListPrefixKeepCharCount;
+    uint32_t mListPrefixLength;
+    uint32_t mListPrefixCharCount;
+    uint32_t mListPrefixKeepCharCount;
 };
 
 #endif /*GFX_SKIP_CHARS_H*/

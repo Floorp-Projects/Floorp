@@ -24,14 +24,14 @@ nsVolumeStat::~nsVolumeStat()
 }
 
 /* readonly attribute long long totalBytes; */
-NS_IMETHODIMP nsVolumeStat::GetTotalBytes(PRInt64 *aTotalBytes)
+NS_IMETHODIMP nsVolumeStat::GetTotalBytes(int64_t *aTotalBytes)
 {
   *aTotalBytes = mStat.f_blocks * mStat.f_bsize;
   return NS_OK;
 }
 
 /* readonly attribute long long freeBytes; */
-NS_IMETHODIMP nsVolumeStat::GetFreeBytes(PRInt64 *aFreeBytes)
+NS_IMETHODIMP nsVolumeStat::GetFreeBytes(int64_t *aFreeBytes)
 {
   *aFreeBytes = mStat.f_bfree * mStat.f_bsize;
   return NS_OK;

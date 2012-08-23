@@ -63,11 +63,11 @@ nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
   return NS_OK;
 }
 
-PRInt32
+int32_t
 nsXMLBindingSet::LookupTargetIndex(nsIAtom* aTargetVariable,
                                    nsXMLBinding** aBinding)
 {
-  PRInt32 idx = 0;
+  int32_t idx = 0;
   nsXMLBinding* binding = mFirst;
 
   while (binding) {
@@ -86,8 +86,8 @@ nsXMLBindingSet::LookupTargetIndex(nsIAtom* aTargetVariable,
 void
 nsXMLBindingValues::GetAssignmentFor(nsXULTemplateResultXML* aResult,
                                      nsXMLBinding* aBinding,
-                                     PRInt32 aIndex,
-                                     PRUint16 aType,
+                                     int32_t aIndex,
+                                     uint16_t aType,
                                      nsIDOMXPathResult** aValue)
 {
   *aValue = mValues.SafeObjectAt(aIndex);
@@ -112,7 +112,7 @@ nsXMLBindingValues::GetAssignmentFor(nsXULTemplateResultXML* aResult,
 void
 nsXMLBindingValues::GetNodeAssignmentFor(nsXULTemplateResultXML* aResult,
                                          nsXMLBinding* aBinding,
-                                         PRInt32 aIndex,
+                                         int32_t aIndex,
                                          nsIDOMNode** aNode)
 {
   nsCOMPtr<nsIDOMXPathResult> result;
@@ -129,7 +129,7 @@ nsXMLBindingValues::GetNodeAssignmentFor(nsXULTemplateResultXML* aResult,
 void
 nsXMLBindingValues::GetStringAssignmentFor(nsXULTemplateResultXML* aResult,
                                            nsXMLBinding* aBinding,
-                                           PRInt32 aIndex,
+                                           int32_t aIndex,
                                            nsAString& aValue)
 {
   nsCOMPtr<nsIDOMXPathResult> result;

@@ -49,14 +49,14 @@ nsFilePicker::~nsFilePicker()
 }
 
 NS_IMETHODIMP
-nsFilePicker::Init(nsIDOMWindow* parent, const nsAString& title, PRInt16 mode)
+nsFilePicker::Init(nsIDOMWindow* parent, const nsAString& title, int16_t mode)
 {
     return nsBaseFilePicker::Init(parent, title, mode);
 }
 
 /* void appendFilters (in long filterMask); */
 NS_IMETHODIMP
-nsFilePicker::AppendFilters(PRInt32 filterMask)
+nsFilePicker::AppendFilters(int32_t filterMask)
 {
     return nsBaseFilePicker::AppendFilters(filterMask);
 }
@@ -114,7 +114,7 @@ nsFilePicker::SetDefaultExtension(const nsAString& aDefaultExtension)
 
 /* attribute long filterIndex; */
 NS_IMETHODIMP
-nsFilePicker::GetFilterIndex(PRInt32* aFilterIndex)
+nsFilePicker::GetFilterIndex(int32_t* aFilterIndex)
 {
     *aFilterIndex = mSelectedType;
 
@@ -122,7 +122,7 @@ nsFilePicker::GetFilterIndex(PRInt32* aFilterIndex)
 }
 
 NS_IMETHODIMP
-nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
+nsFilePicker::SetFilterIndex(int32_t aFilterIndex)
 {
     mSelectedType = aFilterIndex;
 
@@ -179,7 +179,7 @@ nsFilePicker::GetFiles(nsISimpleEnumerator* *aFiles)
 
 /* short show (); */
 NS_IMETHODIMP
-nsFilePicker::Show(PRInt16* aReturn)
+nsFilePicker::Show(int16_t* aReturn)
 {
     nsCAutoString directory;
     if (mDisplayDirectory) {
@@ -187,8 +187,8 @@ nsFilePicker::Show(PRInt16* aReturn)
     }
 
     QStringList filters;
-    PRUint32 count = mFilters.Length();
-    for (PRUint32 i = 0; i < count; ++i) {
+    uint32_t count = mFilters.Length();
+    for (uint32_t i = 0; i < count; ++i) {
         filters.append(mFilters[i].get());
     }
 
@@ -289,7 +289,7 @@ nsFilePicker::Show(PRInt16* aReturn)
     return NS_OK;
 }
 
-void nsFilePicker::InitNative(nsIWidget *aParent, const nsAString &aTitle, PRInt16 mode)
+void nsFilePicker::InitNative(nsIWidget *aParent, const nsAString &aTitle, int16_t mode)
 {
     PR_LOG(sFilePickerLog, PR_LOG_DEBUG, ("nsFilePicker::InitNative"));
     nsAutoString str(aTitle);

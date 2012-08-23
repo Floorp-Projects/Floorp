@@ -31,7 +31,7 @@ protected:
     //
     // functional decomposition of the funitions repeatively called 
     //
-    nsresult GetStringFromID(PRInt32 aID, nsAString& aResult);
+    nsresult GetStringFromID(int32_t aID, nsAString& aResult);
     nsresult GetStringFromName(const nsAString& aName, nsAString& aResult);
 
     nsresult GetCombinedEnumeration(nsIStringBundleOverride* aOverrideString,
@@ -45,7 +45,7 @@ private:
     
 public:
     static nsresult FormatString(const PRUnichar *formatStr,
-                                 const PRUnichar **aParams, PRUint32 aLength,
+                                 const PRUnichar **aParams, uint32_t aLength,
                                  PRUnichar **aResult);
 };
 

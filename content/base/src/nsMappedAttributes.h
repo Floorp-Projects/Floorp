@@ -27,7 +27,7 @@ public:
                      nsMapRuleToAttributesFunc aMapRuleFunc);
 
   // Do not return null.
-  void* operator new(size_t size, PRUint32 aAttrCount = 1) CPP_THROW_NEW;
+  void* operator new(size_t size, uint32_t aAttrCount = 1) CPP_THROW_NEW;
   nsMappedAttributes* Clone(bool aWillAddAttr);
 
   NS_DECL_ISUPPORTS
@@ -36,13 +36,13 @@ public:
   const nsAttrValue* GetAttr(nsIAtom* aAttrName) const;
   const nsAttrValue* GetAttr(const nsAString& aAttrName) const;
 
-  PRUint32 Count() const
+  uint32_t Count() const
   {
     return mAttrCount;
   }
 
   bool Equals(const nsMappedAttributes* aAttributes) const;
-  PRUint32 HashValue() const;
+  uint32_t HashValue() const;
 
   void DropStyleSheetReference()
   {
@@ -54,27 +54,27 @@ public:
     return mSheet;
   }
 
-  const nsAttrName* NameAt(PRUint32 aPos) const
+  const nsAttrName* NameAt(uint32_t aPos) const
   {
     NS_ASSERTION(aPos < mAttrCount, "out-of-bounds");
     return &Attrs()[aPos].mName;
   }
-  const nsAttrValue* AttrAt(PRUint32 aPos) const
+  const nsAttrValue* AttrAt(uint32_t aPos) const
   {
     NS_ASSERTION(aPos < mAttrCount, "out-of-bounds");
     return &Attrs()[aPos].mValue;
   }
   // Remove the attr at position aPos.  The value of the attr is placed in
   // aValue; any value that was already in aValue is destroyed.
-  void RemoveAttrAt(PRUint32 aPos, nsAttrValue& aValue);
+  void RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue);
   const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
-  PRInt32 IndexOfAttr(nsIAtom* aLocalName) const;
+  int32_t IndexOfAttr(nsIAtom* aLocalName) const;
   
 
   // nsIStyleRule 
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
@@ -105,9 +105,9 @@ private:
     return reinterpret_cast<InternalAttr*>(&(mAttrs[0]));
   }
 
-  PRUint16 mAttrCount;
+  uint16_t mAttrCount;
 #ifdef DEBUG
-  PRUint16 mBufferSize;
+  uint16_t mBufferSize;
 #endif
   nsHTMLStyleSheet* mSheet; //weak
   nsMapRuleToAttributesFunc mRuleMapper;

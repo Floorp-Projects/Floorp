@@ -8,13 +8,13 @@
 
 #include "prtypes.h"
 
-extern const PRUint16 g_ut0201Mapping[];
-extern const PRUint16 g_ut0208Mapping[];
-extern const PRUint16 g_ut0212Mapping[];
+extern const uint16_t g_ut0201Mapping[];
+extern const uint16_t g_ut0208Mapping[];
+extern const uint16_t g_ut0212Mapping[];
 
-extern const PRUint16 g_uf0201Mapping[];
-extern const PRUint16 g_uf0201GLMapping[];
-extern const PRUint16 g_uf0208Mapping[];
-extern const PRUint16 g_uf0208extMapping[];
+extern const uint16_t g_uf0201Mapping[];
+extern const uint16_t g_uf0201GLMapping[];
+extern const uint16_t g_uf0208Mapping[];
+extern const uint16_t g_uf0208extMapping[];
 
 #endif /* nsUCVJADll_h___ */

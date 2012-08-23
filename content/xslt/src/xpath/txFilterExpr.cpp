@@ -55,7 +55,7 @@ FilterExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 TX_IMPL_EXPR_STUBS_BASE(FilterExpr, NODESET_RESULT)
 
 Expr*
-FilterExpr::getSubExprAt(PRUint32 aPos)
+FilterExpr::getSubExprAt(uint32_t aPos)
 {
     if (aPos == 0) {
       return expr;
@@ -64,7 +64,7 @@ FilterExpr::getSubExprAt(PRUint32 aPos)
 }
 
 void
-FilterExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+FilterExpr::setSubExprAt(uint32_t aPos, Expr* aExpr)
 {
     if (aPos == 0) {
       expr.forget();

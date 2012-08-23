@@ -48,7 +48,7 @@ const int MIN_INT =((int) (1 << (sizeof(int) * 8 - 1)));
 
 static int g_lastX=MIN_INT;
 static int g_lastY=MIN_INT;
-static PRInt32 g_panning = 0;
+static int32_t g_panning = 0;
 static bool g_is_scrollable = false;
 
 #define EM_MULT 16.
@@ -79,7 +79,7 @@ private:
   void RemoveWindowListeners(nsIDOMWindow *aDOMWin);
   void GetChromeEventHandler(nsIDOMWindow *aDOMWin, nsIDOMEventTarget **aChromeTarget);
   void AttachWindowListeners(nsIDOMWindow *aDOMWin);
-  bool IsXULNode(nsIDOMNode *aNode, PRUint32 *aType = 0);
+  bool IsXULNode(nsIDOMNode *aNode, uint32_t *aType = 0);
   nsresult GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow);
   nsresult UpdateFromEvent(nsIDOMEvent *aDOMEvent);
   nsresult MouseDown(nsIDOMEvent* aDOMEvent);
@@ -127,7 +127,7 @@ nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent)
   nsCOMPtr<nsIDOMNode> mNode;
   nsCOMPtr<nsIDOMNode> mOrigNode;
 
-  PRUint32 type = 0;
+  uint32_t type = 0;
   bool isXul = false;
   {
     nsCOMPtr<nsIDOMEventTarget> eventOrigTarget;
@@ -259,13 +259,13 @@ nsWidgetUtils::MouseMove(nsIDOMEvent* aDOMEvent)
 
 // nsIContentPolicy Implementation
 NS_IMETHODIMP
-nsWidgetUtils::ShouldLoad(PRUint32          aContentType,
+nsWidgetUtils::ShouldLoad(uint32_t          aContentType,
                           nsIURI           *aContentLocation,
                           nsIURI           *aRequestingLocation,
                           nsISupports      *aRequestingContext,
                           const nsACString &aMimeGuess,
                           nsISupports      *aExtra,
-                          PRInt16          *aDecision)
+                          int16_t          *aDecision)
 {
     *aDecision = nsIContentPolicy::ACCEPT;
     nsresult rv;
@@ -310,20 +310,20 @@ nsWidgetUtils::HandleEvent(nsIDOMEvent* aDOMEvent)
 }
 
 NS_IMETHODIMP
-nsWidgetUtils::ShouldProcess(PRUint32          aContentType,
+nsWidgetUtils::ShouldProcess(uint32_t          aContentType,
                              nsIURI           *aContentLocation,
                              nsIURI           *aRequestingLocation,
                              nsISupports      *aRequestingContext,
                              const nsACString &aMimeGuess,
                              nsISupports      *aExtra,
-                             PRInt16          *aDecision)
+                             int16_t          *aDecision)
 {
     *aDecision = nsIContentPolicy::ACCEPT;
     return NS_OK;
 }
 
 bool
-nsWidgetUtils::IsXULNode(nsIDOMNode *aNode, PRUint32 *aType)
+nsWidgetUtils::IsXULNode(nsIDOMNode *aNode, uint32_t *aType)
 {
   bool retval = false;
   if (!aNode) return retval;

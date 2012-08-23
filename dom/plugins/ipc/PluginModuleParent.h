@@ -167,7 +167,7 @@ protected:
 
     virtual PCrashReporterParent*
     AllocPCrashReporter(mozilla::dom::NativeThreadId* id,
-                        PRUint32* processType) MOZ_OVERRIDE;
+                        uint32_t* processType) MOZ_OVERRIDE;
     virtual bool
     DeallocPCrashReporter(PCrashReporterParent* actor) MOZ_OVERRIDE;
 
@@ -302,7 +302,7 @@ private:
     nsString mBrowserDumpID;
     nsString mHangID;
 #ifdef XP_WIN
-    float mPluginCpuUsageOnHang;
+    InfallibleTArray<float> mPluginCpuUsageOnHang;
 #endif
 
 #ifdef MOZ_X11

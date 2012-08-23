@@ -35,7 +35,7 @@ HTMLBRAccessible::NativeRole()
   return roles::WHITESPACE;
 }
 
-PRUint64
+uint64_t
 HTMLBRAccessible::NativeState()
 {
   return states::READONLY;
@@ -73,7 +73,7 @@ HTMLLabelAccessible::NativeRole()
 NS_IMPL_ISUPPORTS_INHERITED0(HTMLOutputAccessible, HyperTextAccessible)
 
 Relation
-HTMLOutputAccessible::RelationByType(PRUint32 aType)
+HTMLOutputAccessible::RelationByType(uint32_t aType)
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_CONTROLLED_BY)

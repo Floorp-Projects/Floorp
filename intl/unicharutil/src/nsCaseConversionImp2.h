@@ -25,11 +25,11 @@ public:
 
   NS_IMETHOD ToTitle(PRUnichar aChar, PRUnichar* aReturn);
 
-  NS_IMETHOD ToUpper(const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen);
+  NS_IMETHOD ToUpper(const PRUnichar* anArray, PRUnichar* aReturn, uint32_t aLen);
 
-  NS_IMETHOD ToLower(const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen);
+  NS_IMETHOD ToLower(const PRUnichar* anArray, PRUnichar* aReturn, uint32_t aLen);
 
-  NS_IMETHOD CaseInsensitiveCompare(const PRUnichar* aLeft, const PRUnichar* aRight, PRUint32 aLength, PRInt32 *aResult);
+  NS_IMETHOD CaseInsensitiveCompare(const PRUnichar* aLeft, const PRUnichar* aRight, uint32_t aLength, int32_t *aResult);
 };
 
 #endif

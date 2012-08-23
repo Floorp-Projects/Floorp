@@ -266,10 +266,10 @@ DocAccessibleWrap::DoInitialUpdate()
           rootDocument->GetNativeWindow());
 
       bool isActive = true;
-      PRInt32 x = CW_USEDEFAULT, y = CW_USEDEFAULT, width = 0, height = 0;
+      int32_t x = CW_USEDEFAULT, y = CW_USEDEFAULT, width = 0, height = 0;
       if (Compatibility::IsDolphin()) {
         GetBounds(&x, &y, &width, &height);
-        PRInt32 rootX = 0, rootY = 0, rootWidth = 0, rootHeight = 0;
+        int32_t rootX = 0, rootY = 0, rootWidth = 0, rootHeight = 0;
         rootDocument->GetBounds(&rootX, &rootY, &rootWidth, &rootHeight);
         x = rootX - x;
         y -= rootY;

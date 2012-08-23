@@ -168,7 +168,7 @@ nsXULPopupManager::GetInstance()
 }
 
 nsIContent*
-nsXULPopupManager::Rollup(PRUint32 aCount, bool aGetLastRolledUp)
+nsXULPopupManager::Rollup(uint32_t aCount, bool aGetLastRolledUp)
 {
   nsIContent* lastRolledUpPopup = nullptr;
 
@@ -233,13 +233,13 @@ bool nsXULPopupManager::ShouldRollupOnMouseActivate()
   return false;
 }
 
-PRUint32
+uint32_t
 nsXULPopupManager::GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain)
 {
   // this method is used by the widget code to determine the list of popups
   // that are open. If a mouse click occurs outside one of these popups, the
   // panels will roll up. If the click is inside a popup, they will not roll up
-  PRUint32 count = 0, sameTypeCount = 0;
+  uint32_t count = 0, sameTypeCount = 0;
 
   NS_ASSERTION(aWidgetChain, "null parameter");
   nsMenuChainItem* item = GetTopVisibleMenu();
@@ -383,7 +383,7 @@ nsXULPopupManager::GetTopVisibleMenu()
 }
 
 void
-nsXULPopupManager::GetMouseLocation(nsIDOMNode** aNode, PRInt32* aOffset)
+nsXULPopupManager::GetMouseLocation(nsIDOMNode** aNode, int32_t* aOffset)
 {
   *aNode = mRangeParent;
   NS_IF_ADDREF(*aNode);
@@ -549,7 +549,7 @@ void
 nsXULPopupManager::ShowPopup(nsIContent* aPopup,
                              nsIContent* aAnchorContent,
                              const nsAString& aPosition,
-                             PRInt32 aXPos, PRInt32 aYPos,
+                             int32_t aXPos, int32_t aYPos,
                              bool aIsContextMenu,
                              bool aAttributesOverride,
                              bool aSelectFirstItem,
@@ -570,7 +570,7 @@ nsXULPopupManager::ShowPopup(nsIContent* aPopup,
 
 void
 nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup,
-                                     PRInt32 aXPos, PRInt32 aYPos,
+                                     int32_t aXPos, int32_t aYPos,
                                      bool aIsContextMenu,
                                      nsIDOMEvent* aTriggerEvent)
 {
@@ -588,7 +588,7 @@ nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup,
 void
 nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
                                        nsIContent* aTriggerContent,
-                                       PRInt32 aXPos, PRInt32 aYPos)
+                                       int32_t aXPos, int32_t aYPos)
 {
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
   if (!popupFrame || !MayShowPopup(popupFrame))
@@ -617,7 +617,7 @@ nsXULPopupManager::ShowPopupWithAnchorAlign(nsIContent* aPopup,
                                             nsIContent* aAnchorContent,
                                             nsAString& aAnchor,
                                             nsAString& aAlign,
-                                            PRInt32 aXPos, PRInt32 aYPos,
+                                            int32_t aXPos, int32_t aYPos,
                                             bool aIsContextMenu)
 {
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
@@ -940,7 +940,7 @@ nsXULPopupManager::HidePopupAfterDelay(nsMenuPopupFrame* aPopup)
   // Kick off a close timer.
   KillMenuTimer();
 
-  PRInt32 menuDelay =
+  int32_t menuDelay =
     LookAndFeel::GetInt(LookAndFeel::eIntID_SubmenuDelay, 300); // ms
 
   // Kick off the timer.
@@ -960,7 +960,7 @@ nsXULPopupManager::HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames,
   // right capacity predetermined, otherwise the array would get resized and
   // move the weak frame pointers around.
   nsTArray<nsWeakFrame> weakPopups(aFrames.Length());
-  PRUint32 f;
+  uint32_t f;
   for (f = 0; f < aFrames.Length(); f++) {
     nsWeakFrame* wframe = weakPopups.AppendElement();
     if (wframe)
@@ -1394,7 +1394,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
   if (!baseWin)
     return false;
 
-  PRInt32 type = -1;
+  int32_t type = -1;
   if (NS_FAILED(dsti->GetItemType(&type)))
     return false;
 
@@ -1427,7 +1427,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
   nsCOMPtr<nsIWidget> mainWidget;
   baseWin->GetMainWidget(getter_AddRefs(mainWidget));
   if (mainWidget) {
-    PRInt32 sizeMode;
+    int32_t sizeMode;
     mainWidget->GetSizeMode(&sizeMode);
     if (sizeMode == nsSizeMode_Minimized)
       return false;
@@ -1749,7 +1749,7 @@ nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
 
 
 bool
-nsXULPopupManager::HandleKeyboardNavigation(PRUint32 aKeyCode)
+nsXULPopupManager::HandleKeyboardNavigation(uint32_t aKeyCode)
 {
   // navigate up through the open menus, looking for the topmost one
   // in the same hierarchy
@@ -1986,7 +1986,7 @@ nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
                                    nsIContent* aContent,
                                    bool aOnPopup)
 {
-  PRInt32 ns = aContent->GetNameSpaceID();
+  int32_t ns = aContent->GetNameSpaceID();
   nsIAtom *tag = aContent->Tag();
   if (ns == kNameSpaceID_XUL) {
     if (tag != nsGkAtoms::menu && tag != nsGkAtoms::menuitem)
@@ -2058,17 +2058,17 @@ nsXULPopupManager::KeyDown(nsIDOMKeyEvent* aKeyEvent)
   if (!mActiveMenuBar && (!item || item->PopupType() != ePopupTypeMenu))
     return NS_OK;
 
-  PRInt32 menuAccessKey = -1;
+  int32_t menuAccessKey = -1;
 
   // If the key just pressed is the access key (usually Alt),
   // dismiss and unfocus the menu.
 
   nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
   if (menuAccessKey) {
-    PRUint32 theChar;
+    uint32_t theChar;
     aKeyEvent->GetKeyCode(&theChar);
 
-    if (theChar == (PRUint32)menuAccessKey) {
+    if (theChar == (uint32_t)menuAccessKey) {
       bool ctrl = false;
       if (menuAccessKey != nsIDOMKeyEvent::DOM_VK_CONTROL)
         aKeyEvent->GetCtrlKey(&ctrl);
@@ -2121,7 +2121,7 @@ nsXULPopupManager::KeyPress(nsIDOMKeyEvent* aKeyEvent)
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_UNEXPECTED);
-  PRUint32 theChar;
+  uint32_t theChar;
   keyEvent->GetKeyCode(&theChar);
 
   // Escape should close panels, but the other keys should have no effect.

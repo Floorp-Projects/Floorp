@@ -9,7 +9,7 @@
 #ifdef MOZ_WIDGET_GONK
 
 #include "mozilla/layers/LayersSurfaces.h"
-#include "ImageLayers.h"
+#include "ImageContainer.h"
 
 #include <ui/GraphicBuffer.h>
 

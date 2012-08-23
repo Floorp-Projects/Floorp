@@ -40,17 +40,17 @@ public:
                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep, bool aNullParent);
 
-  virtual nsresult UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
+  virtual nsresult UnsetAttr(int32_t aNamespaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(uint32_t aFlags) const;
 
   // nsGenericElement specializations
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 
   // nsISMILAnimationElement interface
@@ -61,7 +61,7 @@ public:
   virtual bool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const;
   virtual bool HasAnimAttr(nsIAtom* aAttName) const;
   virtual Element* GetTargetElementContent();
-  virtual bool GetTargetAttributeName(PRInt32* aNamespaceID,
+  virtual bool GetTargetAttributeName(int32_t* aNamespaceID,
                                         nsIAtom** aLocalName) const;
   virtual nsSMILTargetAttrType GetTargetAttributeType() const;
   virtual nsSMILTimedElement& TimedElement();

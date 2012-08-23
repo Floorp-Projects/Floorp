@@ -101,7 +101,7 @@ nsSVGInnerSVGFrame::ReflowSVG()
 }
 
 void
-nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
+nsSVGInnerSVGFrame::NotifySVGChanged(uint32_t aFlags)
 {
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
@@ -158,9 +158,9 @@ nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
 }
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
+nsSVGInnerSVGFrame::AttributeChanged(int32_t  aNameSpaceID,
                                      nsIAtom* aAttribute,
-                                     PRInt32  aModType)
+                                     int32_t  aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
@@ -177,7 +177,7 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
         content->ChildrenOnlyTransformChanged();
         nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
       } else {
-        PRUint32 flags = COORD_CONTEXT_CHANGED;
+        uint32_t flags = COORD_CONTEXT_CHANGED;
         if (mCanvasTM && mCanvasTM->IsSingular()) {
           mCanvasTM = nullptr;
           flags |= TRANSFORM_CHANGED;
@@ -240,7 +240,7 @@ nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
 // nsISVGSVGFrame methods:
 
 void
-nsSVGInnerSVGFrame::NotifyViewportOrTransformChanged(PRUint32 aFlags)
+nsSVGInnerSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 {
   // The dimensions of inner-<svg> frames are purely defined by their "width"
   // and "height" attributes, and transform changes can only occur as a result
@@ -254,7 +254,7 @@ nsSVGInnerSVGFrame::NotifyViewportOrTransformChanged(PRUint32 aFlags)
 // nsSVGContainerFrame methods:
 
 gfxMatrix
-nsSVGInnerSVGFrame::GetCanvasTM(PRUint32 aFor)
+nsSVGInnerSVGFrame::GetCanvasTM(uint32_t aFor)
 {
   if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||

@@ -89,7 +89,7 @@ public:
   }
 
   nsresult
-  OpenInputStream(bool aWholeFile, PRUint64 aStart, PRUint64 aLength,
+  OpenInputStream(bool aWholeFile, uint64_t aStart, uint64_t aLength,
                   nsIInputStream** aResult);
 
 private:
@@ -116,8 +116,8 @@ private:
   ReadyState mReadyState;
   Mode mMode;
   RequestMode mRequestMode;
-  PRUint64 mLocation;
-  PRUint32 mPendingRequests;
+  uint64_t mLocation;
+  uint32_t mPendingRequests;
 
   NS_DECL_EVENT_HANDLER(complete)
   NS_DECL_EVENT_HANDLER(abort)

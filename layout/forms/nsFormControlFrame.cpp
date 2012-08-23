@@ -14,7 +14,7 @@ using namespace mozilla;
 
 //#define FCF_NOISY
 
-const PRInt32 kSizeNotSet = -1;
+const int32_t kSizeNotSet = -1;
 
 nsFormControlFrame::nsFormControlFrame(nsStyleContext* aContext) :
   nsLeafFrame(aContext)
@@ -119,9 +119,9 @@ nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg)
   if (!accessKey.IsEmpty()) {
     nsEventStateManager *stateManager = presContext->EventStateManager();
     if (aDoReg) {
-      stateManager->RegisterAccessKey(content, (PRUint32)accessKey.First());
+      stateManager->RegisterAccessKey(content, (uint32_t)accessKey.First());
     } else {
-      stateManager->UnregisterAccessKey(content, (PRUint32)accessKey.First());
+      stateManager->UnregisterAccessKey(content, (uint32_t)accessKey.First());
     }
     return NS_OK;
   }
@@ -176,7 +176,7 @@ nsFormControlFrame::GetUsableScreenRect(nsPresContext* aPresContext)
   nsRect screen;
 
   nsDeviceContext *context = aPresContext->DeviceContext();
-  PRInt32 dropdownCanOverlapOSBar =
+  int32_t dropdownCanOverlapOSBar =
     LookAndFeel::GetInt(LookAndFeel::eIntID_MenusCanOverlapOSBar, 0);
   if ( dropdownCanOverlapOSBar )
     context->GetRect(screen);

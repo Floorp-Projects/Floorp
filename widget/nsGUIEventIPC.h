@@ -112,14 +112,14 @@ struct ParamTraits<mozilla::widget::WheelEvent>
     WriteParam(aMsg, aParam.isPixelOnlyDevice);
     WriteParam(aMsg, aParam.lineOrPageDeltaX);
     WriteParam(aMsg, aParam.lineOrPageDeltaY);
-    WriteParam(aMsg, static_cast<PRInt32>(aParam.scrollType));
+    WriteParam(aMsg, static_cast<int32_t>(aParam.scrollType));
     WriteParam(aMsg, aParam.overflowDeltaX);
     WriteParam(aMsg, aParam.overflowDeltaY);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    PRInt32 scrollType = 0;
+    int32_t scrollType = 0;
     bool rv =
       ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
       ReadParam(aMsg, aIter, &aResult->deltaX) &&
@@ -149,16 +149,16 @@ struct ParamTraits<nsMouseEvent>
   {
     WriteParam(aMsg, static_cast<nsMouseEvent_base>(aParam));
     WriteParam(aMsg, aParam.ignoreRootScrollFrame);
-    WriteParam(aMsg, (PRUint8) aParam.reason);
-    WriteParam(aMsg, (PRUint8) aParam.context);
-    WriteParam(aMsg, (PRUint8) aParam.exit);
+    WriteParam(aMsg, (uint8_t) aParam.reason);
+    WriteParam(aMsg, (uint8_t) aParam.context);
+    WriteParam(aMsg, (uint8_t) aParam.exit);
     WriteParam(aMsg, aParam.clickCount);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     bool rv;
-    PRUint8 reason = 0, context = 0, exit = 0;
+    uint8_t reason = 0, context = 0, exit = 0;
     rv = ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
          ReadParam(aMsg, aIter, &aResult->ignoreRootScrollFrame) &&
          ReadParam(aMsg, aIter, &reason) &&
@@ -202,7 +202,7 @@ struct ParamTraits<nsTouchEvent>
       return false;
     }
     for (uint32_t i = 0; i < numTouches; ++i) {
-        PRInt32 identifier;
+        int32_t identifier;
         nsIntPoint refPoint;
         nsIntPoint radius;
         float rotationAngle;
@@ -305,7 +305,7 @@ struct ParamTraits<nsTextEvent>
     WriteParam(aMsg, aParam.theText);
     WriteParam(aMsg, aParam.isChar);
     WriteParam(aMsg, aParam.rangeCount);
-    for (PRUint32 index = 0; index < aParam.rangeCount; index++)
+    for (uint32_t index = 0; index < aParam.rangeCount; index++)
       WriteParam(aMsg, aParam.rangeArray[index]);
   }
 
@@ -327,7 +327,7 @@ struct ParamTraits<nsTextEvent>
     if (!aResult->rangeArray)
       return false;
 
-    for (PRUint32 index = 0; index < aResult->rangeCount; index++)
+    for (uint32_t index = 0; index < aResult->rangeCount; index++)
       if (!ReadParam(aMsg, aIter, &aResult->rangeArray[index])) {
         Free(*aResult);
         return false;

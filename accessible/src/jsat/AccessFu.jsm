@@ -50,6 +50,9 @@ var AccessFu = {
     switch(Utils.MozBuildApp) {
       case 'mobile/android':
         Services.obs.addObserver(this, 'Accessibility:Settings', false);
+        Services.obs.addObserver(this, 'Accessibility:NextObject', false);
+        Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
+        Services.obs.addObserver(this, 'Accessibility:CurrentObject', false);
         this.touchAdapter = AndroidTouchAdapter;
         break;
       case 'b2g':
@@ -87,10 +90,12 @@ var AccessFu = {
     this.addPresenter(new VisualPresenter());
 
     // Implicitly add the Android presenter on Android.
-    if (Utils.MozBuildApp == 'mobile/android')
-      this.addPresenter(new AndroidPresenter());
-    else if (Utils.MozBuildApp == 'b2g')
+    if (Utils.MozBuildApp == 'mobile/android') {
+      this._androidPresenter = new AndroidPresenter();
+      this.addPresenter(this._androidPresenter);
+    } else if (Utils.MozBuildApp == 'b2g') {
       this.addPresenter(new SpeechPresenter());
+    }
 
     VirtualCursorController.attach(this.chromeWin);
 
@@ -236,6 +241,17 @@ var AccessFu = {
       case 'Accessibility:Settings':
         this._processPreferences(JSON.parse(aData).enabled + 0,
                                  JSON.parse(aData).exploreByTouch + 0);
+        break;
+      case 'Accessibility:NextObject':
+        VirtualCursorController.
+          moveForward(Utils.getCurrentContentDoc(this.chromeWin));
+        break;
+      case 'Accessibility:PreviousObject':
+        VirtualCursorController.
+          moveBackward(Utils.getCurrentContentDoc(this.chromeWin));
+        break;
+      case 'Accessibility:CurrentObject':
+        this._androidPresenter.accessibilityFocus();
         break;
       case 'nsPref:changed':
         this._processPreferences(this.prefsBranch.getIntPref('activate'),

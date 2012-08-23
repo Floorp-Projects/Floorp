@@ -42,10 +42,10 @@ public:
     void GetFontList(InfallibleTArray<FontListEntry>* retValue);
 
     // platform implementations of font functions
-    virtual bool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
+    virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags);
     virtual gfxPlatformFontList* CreatePlatformFontList();
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                           const PRUint8 *aFontData, PRUint32 aLength);
+                                           const uint8_t *aFontData, uint32_t aLength);
 
     virtual nsresult GetFontList(nsIAtom *aLangGroup,
                                  const nsACString& aGenericFamily,

@@ -63,12 +63,12 @@ class nsStringStats
             printf("\n");
         }
 
-      PRInt32 mAllocCount;
-      PRInt32 mReallocCount;
-      PRInt32 mFreeCount;
-      PRInt32 mShareCount;
-      PRInt32 mAdoptCount;
-      PRInt32 mAdoptFreeCount;
+      int32_t mAllocCount;
+      int32_t mReallocCount;
+      int32_t mFreeCount;
+      int32_t mShareCount;
+      int32_t mAdoptCount;
+      int32_t mAdoptFreeCount;
   };
 static nsStringStats gStringStats;
 #define STRING_STAT_INCREMENT(_s) PR_ATOMIC_INCREMENT(&gStringStats.m ## _s ## Count)
@@ -79,7 +79,7 @@ static nsStringStats gStringStats;
 // ---------------------------------------------------------------------------
 
 inline void
-ReleaseData( void* data, PRUint32 flags )
+ReleaseData( void* data, uint32_t flags )
   {
     if (flags & nsSubstring::F_SHARED)
       {
@@ -110,9 +110,9 @@ class nsAStringAccessor : public nsAString
     public:
       char_type  *data() const   { return mData; }
       size_type   length() const { return mLength; }
-      PRUint32    flags() const  { return mFlags; }
+      uint32_t    flags() const  { return mFlags; }
 
-      void set(char_type *data, size_type len, PRUint32 flags)
+      void set(char_type *data, size_type len, uint32_t flags)
         {
           ReleaseData(mData, mFlags);
           mData = data;
@@ -129,9 +129,9 @@ class nsACStringAccessor : public nsACString
     public:
       char_type  *data() const   { return mData; }
       size_type   length() const { return mLength; }
-      PRUint32    flags() const  { return mFlags; }
+      uint32_t    flags() const  { return mFlags; }
 
-      void set(char_type *data, size_type len, PRUint32 flags)
+      void set(char_type *data, size_type len, uint32_t flags)
         {
           ReleaseData(mData, mFlags);
           mData = data;
@@ -153,7 +153,7 @@ nsStringBuffer::AddRef()
 void
 nsStringBuffer::Release()
   {
-    PRInt32 count = PR_ATOMIC_DECREMENT(&mRefCount);
+    int32_t count = PR_ATOMIC_DECREMENT(&mRefCount);
     NS_LOG_RELEASE(this, count, "nsStringBuffer");
     if (count == 0)
       {
@@ -169,7 +169,7 @@ nsStringBuffer*
 nsStringBuffer::Alloc(size_t size)
   {
     NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
-    NS_ASSERTION(sizeof(nsStringBuffer) + size <= size_t(PRUint32(-1)) &&
+    NS_ASSERTION(sizeof(nsStringBuffer) + size <= size_t(uint32_t(-1)) &&
                  sizeof(nsStringBuffer) + size > size,
                  "mStorageSize will truncate");
 
@@ -192,7 +192,7 @@ nsStringBuffer::Realloc(nsStringBuffer* hdr, size_t size)
     STRING_STAT_INCREMENT(Realloc);
 
     NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
-    NS_ASSERTION(sizeof(nsStringBuffer) + size <= size_t(PRUint32(-1)) &&
+    NS_ASSERTION(sizeof(nsStringBuffer) + size <= size_t(uint32_t(-1)) &&
                  sizeof(nsStringBuffer) + size > size,
                  "mStorageSize will truncate");
 
@@ -238,7 +238,7 @@ nsStringBuffer::FromString(const nsACString& str)
   }
 
 void
-nsStringBuffer::ToString(PRUint32 len, nsAString &str,
+nsStringBuffer::ToString(uint32_t len, nsAString &str,
                          bool aMoveOwnership)
   {
     PRUnichar* data = static_cast<PRUnichar*>(Data());
@@ -247,7 +247,7 @@ nsStringBuffer::ToString(PRUint32 len, nsAString &str,
     NS_ASSERTION(data[len] == PRUnichar(0), "data should be null terminated");
 
     // preserve class flags
-    PRUint32 flags = accessor->flags();
+    uint32_t flags = accessor->flags();
     flags = (flags & 0xFFFF0000) | nsSubstring::F_SHARED | nsSubstring::F_TERMINATED;
 
     if (!aMoveOwnership) {
@@ -257,7 +257,7 @@ nsStringBuffer::ToString(PRUint32 len, nsAString &str,
   }
 
 void
-nsStringBuffer::ToString(PRUint32 len, nsACString &str,
+nsStringBuffer::ToString(uint32_t len, nsACString &str,
                          bool aMoveOwnership)
   {
     char* data = static_cast<char*>(Data());
@@ -266,7 +266,7 @@ nsStringBuffer::ToString(PRUint32 len, nsACString &str,
     NS_ASSERTION(data[len] == char(0), "data should be null terminated");
 
     // preserve class flags
-    PRUint32 flags = accessor->flags();
+    uint32_t flags = accessor->flags();
     flags = (flags & 0xFFFF0000) | nsCSubstring::F_SHARED | nsCSubstring::F_TERMINATED;
 
     if (!aMoveOwnership) {

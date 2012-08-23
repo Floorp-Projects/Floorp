@@ -518,7 +518,7 @@ public class LayerRenderer {
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
 
             /* Update background color. */
-            mBackgroundColor = mView.getLayerClient().getCheckerboardColor();
+            mBackgroundColor = mView.getCheckerboardColor();
 
             /* Clear to the page background colour. The bits set here need to
              * match up with those used in gfx/layers/opengl/LayerManagerOGL.cpp.
@@ -543,7 +543,7 @@ public class LayerRenderer {
             /* Draw the 'checkerboard'. We use gfx.show_checkerboard_pattern to
              * determine whether to draw the screenshot layer.
              */
-            if (mView.getLayerClient().checkerboardShouldShowChecks()) {
+            if (mView.checkerboardShouldShowChecks()) {
                 /* Find the area the root layer will render into, to mask the checkerboard layer */
                 Rect rootMask = getMaskForLayer(mView.getLayerClient().getRoot());
                 mCheckerboardLayer.setMask(rootMask);

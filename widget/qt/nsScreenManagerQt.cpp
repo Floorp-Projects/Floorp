@@ -44,8 +44,8 @@ void nsScreenManagerQt::init()
 // The coordinates are in pixels (not twips) and in screen coordinates.
 //
 NS_IMETHODIMP
-nsScreenManagerQt::ScreenForRect(PRInt32 inLeft, PRInt32 inTop,
-				 PRInt32 inWidth, PRInt32 inHeight,
+nsScreenManagerQt::ScreenForRect(int32_t inLeft, int32_t inTop,
+				 int32_t inWidth, int32_t inHeight,
 				 nsIScreen **outScreen)
 {
     if (!desktop)
@@ -90,7 +90,7 @@ nsScreenManagerQt::GetPrimaryScreen(nsIScreen **aPrimaryScreen)
 // Returns how many physical screens are available.
 //
 NS_IMETHODIMP
-nsScreenManagerQt::GetNumberOfScreens(PRUint32 *aNumberOfScreens)
+nsScreenManagerQt::GetNumberOfScreens(uint32_t *aNumberOfScreens)
 {
     if (!desktop)
         init();

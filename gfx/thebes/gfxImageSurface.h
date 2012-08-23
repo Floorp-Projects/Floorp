@@ -54,14 +54,14 @@ public:
     gfxImageFormat Format() const { return mFormat; }
 
     virtual const gfxIntSize GetSize() const { return mSize; }
-    PRInt32 Width() const { return mSize.width; }
-    PRInt32 Height() const { return mSize.height; }
+    int32_t Width() const { return mSize.width; }
+    int32_t Height() const { return mSize.height; }
 
     /**
      * Distance in bytes between the start of a line and the start of the
      * next line.
      */
-    PRInt32 Stride() const { return mStride; }
+    int32_t Stride() const { return mStride; }
     /**
      * Returns a pointer for the image data. Users of this function can
      * write to it, but must not attempt to free the buffer.
@@ -70,7 +70,7 @@ public:
     /**
      * Returns the total size of the image data.
      */
-    PRInt32 GetDataSize() const { return mStride*mSize.height; }
+    int32_t GetDataSize() const { return mStride*mSize.height; }
 
     /* Fast copy from another image surface; returns TRUE if successful, FALSE otherwise */
     bool CopyFrom (gfxImageSurface *other);

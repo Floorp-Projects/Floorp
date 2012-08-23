@@ -11,9 +11,9 @@ interface nsIURI;
 [scriptable, uuid(249fb5ad-ae29-4e2c-a728-ba5cf464d188)]
 interface nsIChromeRegistry : nsISupports
 {
-  const PRInt32 NONE = 0;
-  const PRInt32 PARTIAL = 1;
-  const PRInt32 FULL = 2;
+  const int32_t NONE = 0;
+  const int32_t PARTIAL = 1;
+  const int32_t FULL = 2;
 
   /**
    * Resolve a chrome URL to an loadable URI using the information in the

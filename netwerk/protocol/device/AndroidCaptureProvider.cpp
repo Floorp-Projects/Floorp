@@ -57,7 +57,7 @@ AndroidCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParam
   return NS_OK;
 }
 
-void AndroidCameraInputStream::ReceiveFrame(char* frame, PRUint32 length) {
+void AndroidCameraInputStream::ReceiveFrame(char* frame, uint32_t length) {
   {
     mozilla::ReentrantMonitorAutoEnter autoMonitor(mMonitor);
     if (mFrameQueue->GetSize() > MAX_FRAMES_QUEUED) {
@@ -79,15 +79,15 @@ void AndroidCameraInputStream::ReceiveFrame(char* frame, PRUint32 length) {
   
   // we copy the Y plane, and de-interlace the CrCb
   
-  PRUint32 yFrameSize = mWidth * mHeight;
-  PRUint32 uvFrameSize = yFrameSize / 4;
+  uint32_t yFrameSize = mWidth * mHeight;
+  uint32_t uvFrameSize = yFrameSize / 4;
 
   memcpy(fullFrame + sizeof(nsRawPacketHeader), frame, yFrameSize);
   
   char* uFrame = fullFrame + yFrameSize;
   char* vFrame = fullFrame + yFrameSize + uvFrameSize;
   char* yFrame = frame + yFrameSize;
-  for (PRUint32 i = 0; i < uvFrameSize; i++) {
+  for (uint32_t i = 0; i < uvFrameSize; i++) {
     uFrame[i] = yFrame[2 * i + 1];
     vFrame[i] = yFrame[2 * i];
   }
@@ -102,7 +102,7 @@ void AndroidCameraInputStream::ReceiveFrame(char* frame, PRUint32 length) {
 }
 
 NS_IMETHODIMP
-AndroidCameraInputStream::Available(PRUint64 *aAvailable)
+AndroidCameraInputStream::Available(uint64_t *aAvailable)
 {
   mozilla::ReentrantMonitorAutoEnter autoMonitor(mMonitor);
 
@@ -116,11 +116,11 @@ NS_IMETHODIMP AndroidCameraInputStream::IsNonBlocking(bool *aNonBlock) {
   return NS_OK;
 }
 
-NS_IMETHODIMP AndroidCameraInputStream::Read(char *aBuffer, PRUint32 aCount, PRUint32 *aRead) {
+NS_IMETHODIMP AndroidCameraInputStream::Read(char *aBuffer, uint32_t aCount, uint32_t *aRead) {
   return ReadSegments(NS_CopySegmentToBuffer, aBuffer, aCount, aRead);
 }
 
-NS_IMETHODIMP AndroidCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, PRUint32 aCount, PRUint32 *aRead) {
+NS_IMETHODIMP AndroidCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, uint32_t aCount, uint32_t *aRead) {
   *aRead = 0;
   
   nsresult rv;
@@ -166,7 +166,7 @@ NS_IMETHODIMP AndroidCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, 
   {
     mozilla::ReentrantMonitorAutoEnter autoMonitor(mMonitor);
     while ((mAvailable > 0) && (aCount >= mFrameSize)) {
-      PRUint32 readThisTime = 0;
+      uint32_t readThisTime = 0;
 
       char* frame = (char*)mFrameQueue->PopFront();
       rv = aWriter(this, aClosure, (const char*)frame, *aRead, mFrameSize, &readThisTime);
@@ -228,7 +228,7 @@ void AndroidCameraInputStream::NotifyListeners() {
   }
 }
 
-NS_IMETHODIMP AndroidCameraInputStream::AsyncWait(nsIInputStreamCallback *aCallback, PRUint32 aFlags, PRUint32 aRequestedCount, nsIEventTarget *aTarget)
+NS_IMETHODIMP AndroidCameraInputStream::AsyncWait(nsIInputStreamCallback *aCallback, uint32_t aFlags, uint32_t aRequestedCount, nsIEventTarget *aTarget)
 {
   if (aFlags != 0)
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -245,7 +245,7 @@ NS_IMETHODIMP AndroidCameraInputStream::AsyncWait(nsIInputStreamCallback *aCallb
 }
 
 
-NS_IMETHODIMP AndroidCameraInputStream::CloseWithStatus(PRUint32 status)
+NS_IMETHODIMP AndroidCameraInputStream::CloseWithStatus(uint32_t status)
 {
   AndroidCameraInputStream::doClose();
   return NS_OK;

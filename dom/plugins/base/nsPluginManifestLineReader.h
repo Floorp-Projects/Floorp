@@ -23,7 +23,7 @@ class nsPluginManifestLineReader
     nsPluginManifestLineReader() {mBase = mCur = mNext = mLimit = 0;} 
     ~nsPluginManifestLineReader() { if (mBase) delete[] mBase; mBase=0;}
     
-    char* Init(PRUint32 flen) 
+    char* Init(uint32_t flen) 
     {
       mBase = mCur = mNext = new char[flen + 1];
       if (mBase) {
@@ -87,14 +87,14 @@ class nsPluginManifestLineReader
     }
 
     char*       LinePtr() { return mCur; }
-    PRUint32    LineLength() { return mLength; }    
+    uint32_t    LineLength() { return mLength; }    
 
     bool        IsEOL(char c) {return c == '\n' || c == '\r';}
 
     char*       mBase;
   private:
     char*       mCur;
-    PRUint32    mLength;
+    uint32_t    mLength;
     char*       mNext;
     char*       mLimit;
 };

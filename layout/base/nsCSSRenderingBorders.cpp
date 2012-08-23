@@ -74,13 +74,13 @@ static gfxRGBA MakeBorderColor(const gfxRGBA& aColor,
 // Given a line index (an index starting from the outside of the
 // border going inwards) and an array of line styles, calculate the
 // color that that stripe of the border should be rendered in.
-static gfxRGBA ComputeColorForLine(PRUint32 aLineIndex,
+static gfxRGBA ComputeColorForLine(uint32_t aLineIndex,
                                    const BorderColorStyle* aBorderColorStyle,
-                                   PRUint32 aBorderColorStyleCount,
+                                   uint32_t aBorderColorStyleCount,
                                    nscolor aBorderColor,
                                    nscolor aBackgroundColor);
 
-static gfxRGBA ComputeCompositeColorForLine(PRUint32 aLineIndex,
+static gfxRGBA ComputeCompositeColorForLine(uint32_t aLineIndex,
                                             const nsBorderColors* aBorderColors);
 
 // little helper function to check if the array of 4 floats given are
@@ -122,10 +122,10 @@ typedef enum {
   CORNER_DOT
 } CornerStyle;
 
-nsCSSBorderRenderer::nsCSSBorderRenderer(PRInt32 aAppUnitsPerPixel,
+nsCSSBorderRenderer::nsCSSBorderRenderer(int32_t aAppUnitsPerPixel,
                                          gfxContext* aDestContext,
                                          gfxRect& aOuterRect,
-                                         const PRUint8* aBorderStyles,
+                                         const uint8_t* aBorderStyles,
                                          const gfxFloat* aBorderWidths,
                                          gfxCornerSizes& aBorderRadii,
                                          const nscolor* aBorderColors,
@@ -247,7 +247,7 @@ ComputeBorderCornerDimensions(const gfxRect& aOuterRect,
 }
 
 bool
-nsCSSBorderRenderer::AreBorderSideFinalStylesSame(PRUint8 aSides)
+nsCSSBorderRenderer::AreBorderSideFinalStylesSame(uint8_t aSides)
 {
   NS_ASSERTION(aSides != 0 && (aSides & ~SIDE_BITS_ALL) == 0,
                "AreBorderSidesSame: invalid whichSides!");
@@ -287,7 +287,7 @@ nsCSSBorderRenderer::AreBorderSideFinalStylesSame(PRUint8 aSides)
 }
 
 bool
-nsCSSBorderRenderer::IsSolidCornerStyle(PRUint8 aStyle, mozilla::css::Corner aCorner)
+nsCSSBorderRenderer::IsSolidCornerStyle(uint8_t aStyle, mozilla::css::Corner aCorner)
 {
   switch (aStyle) {
     case NS_STYLE_BORDER_STYLE_DOTTED:
@@ -312,7 +312,7 @@ nsCSSBorderRenderer::IsSolidCornerStyle(PRUint8 aStyle, mozilla::css::Corner aCo
 }
 
 BorderColorStyle
-nsCSSBorderRenderer::BorderColorStyleForSolidCorner(PRUint8 aStyle, mozilla::css::Corner aCorner)
+nsCSSBorderRenderer::BorderColorStyleForSolidCorner(uint8_t aStyle, mozilla::css::Corner aCorner)
 {
   // note that this function assumes that the corner is already solid,
   // as per the earlier function
@@ -628,7 +628,7 @@ nsCSSBorderRenderer::FillSolidBorder(const gfxRect& aOuterRect,
   }
 
   // Filling these one by one is faster than filling them all at once.
-  for (PRUint32 i = 0; i < 4; i++) {
+  for (uint32_t i = 0; i < 4; i++) {
     if (aSides & (1 << i)) {
       mContext->NewPath();
       mContext->Rectangle(r[i], true);
@@ -661,9 +661,9 @@ MakeBorderColor(const gfxRGBA& aColor, const gfxRGBA& aBackgroundColor, BorderCo
 }
 
 gfxRGBA
-ComputeColorForLine(PRUint32 aLineIndex,
+ComputeColorForLine(uint32_t aLineIndex,
                     const BorderColorStyle* aBorderColorStyle,
-                    PRUint32 aBorderColorStyleCount,
+                    uint32_t aBorderColorStyleCount,
                     nscolor aBorderColor,
                     nscolor aBackgroundColor)
 {
@@ -673,7 +673,7 @@ ComputeColorForLine(PRUint32 aLineIndex,
 }
 
 gfxRGBA
-ComputeCompositeColorForLine(PRUint32 aLineIndex,
+ComputeCompositeColorForLine(uint32_t aLineIndex,
                              const nsBorderColors* aBorderColors)
 {
   while (aLineIndex-- && aBorderColors->mNext)
@@ -699,7 +699,7 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(int aSides, const nsBorderCo
   gfxPoint itl = mInnerRect.TopLeft();
   gfxPoint ibr = mInnerRect.BottomRight();
 
-  for (PRUint32 i = 0; i < PRUint32(maxBorderWidth); i++) {
+  for (uint32_t i = 0; i < uint32_t(maxBorderWidth); i++) {
     gfxRGBA lineColor = ComputeCompositeColorForLine(i, aCompositeColors);
 
     gfxRect siRect = soRect;
@@ -738,11 +738,11 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
     return;
   }
 
-  PRUint8 borderRenderStyle;
+  uint8_t borderRenderStyle;
   nscolor borderRenderColor;
   const nsBorderColors *compositeColors = nullptr;
 
-  PRUint32 borderColorStyleCount = 0;
+  uint32_t borderColorStyleCount = 0;
   BorderColorStyle borderColorStyleTopLeft[3], borderColorStyleBottomRight[3];
   BorderColorStyle *borderColorStyle = nullptr;
 
@@ -867,8 +867,8 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
   } else if (borderColorStyleCount == 2) {
     // with 2 color styles, any extra pixel goes to the outside
     NS_FOR_CSS_SIDES (i) {
-      borderWidths[0][i] = PRInt32(mBorderWidths[i]) / 2 + PRInt32(mBorderWidths[i]) % 2;
-      borderWidths[1][i] = PRInt32(mBorderWidths[i]) / 2;
+      borderWidths[0][i] = int32_t(mBorderWidths[i]) / 2 + int32_t(mBorderWidths[i]) % 2;
+      borderWidths[1][i] = int32_t(mBorderWidths[i]) / 2;
     }
   } else if (borderColorStyleCount == 3) {
     // with 3 color styles, any extra pixel (or lack of extra pixel)
@@ -878,8 +878,8 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
         borderWidths[0][i] = 1.0;
         borderWidths[1][i] = borderWidths[2][i] = 0.0;
       } else {
-        PRInt32 rest = PRInt32(mBorderWidths[i]) % 3;
-        borderWidths[0][i] = borderWidths[2][i] = borderWidths[1][i] = (PRInt32(mBorderWidths[i]) - rest) / 3;
+        int32_t rest = int32_t(mBorderWidths[i]) % 3;
+        borderWidths[0][i] = borderWidths[2][i] = borderWidths[1][i] = (int32_t(mBorderWidths[i]) - rest) / 3;
 
         if (rest == 1) {
           borderWidths[1][i] += 1.0;
@@ -924,7 +924,7 @@ nsCSSBorderRenderer::DrawDashedSide(mozilla::css::Side aSide)
   gfxFloat dashWidth;
   gfxFloat dash[2];
 
-  PRUint8 style = mBorderStyles[aSide];
+  uint8_t style = mBorderStyles[aSide];
   gfxFloat borderWidth = mBorderWidths[aSide];
   nscolor borderColor = mBorderColors[aSide];
 
@@ -1546,7 +1546,7 @@ nsCSSBorderRenderer::DrawBorders()
   int dashedSides = 0;
 
   NS_FOR_CSS_SIDES(i) {
-    PRUint8 style = mBorderStyles[i];
+    uint8_t style = mBorderStyles[i];
     if (style == NS_STYLE_BORDER_STYLE_DASHED ||
         style == NS_STYLE_BORDER_STYLE_DOTTED)
     {
@@ -1644,7 +1644,7 @@ nsCSSBorderRenderer::DrawBorders()
 
         for (int cornerSide = 0; cornerSide < 2; cornerSide++) {
           mozilla::css::Side side = mozilla::css::Side(sides[cornerSide]);
-          PRUint8 style = mBorderStyles[side];
+          uint8_t style = mBorderStyles[side];
 
           SF("corner: %d cornerSide: %d side: %d style: %d\n", corner, cornerSide, side, style);
 

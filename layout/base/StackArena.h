@@ -44,10 +44,10 @@ private:
   StackMark* mMarks;
 
   // the current top of the mark list
-  PRUint32 mStackTop;
+  uint32_t mStackTop;
 
   // the size of the mark array
-  PRUint32 mMarkLength;
+  uint32_t mMarkLength;
 };
 
 

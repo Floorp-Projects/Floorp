@@ -65,7 +65,7 @@ public:
    */
   NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) = 0;
 
@@ -74,7 +74,7 @@ public:
    */
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
-                             PRUint8 aWidgetType,
+                             uint8_t aWidgetType,
                              nsIntMargin* aResult)=0;
 
   /**
@@ -88,7 +88,7 @@ public:
    */
   virtual bool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   nsIntMargin* aResult) = 0;
 
   /**
@@ -107,7 +107,7 @@ public:
    */
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
-                                   PRUint8 aWidgetType,
+                                   uint8_t aWidgetType,
                                    /*INOUT*/ nsRect* aOverflowRect)
   { return false; }
 
@@ -119,7 +119,7 @@ public:
    */
   NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
-                                  PRUint8 aWidgetType,
+                                  uint8_t aWidgetType,
                                   nsIntSize* aResult,
                                   bool* aIsOverridable)=0;
 
@@ -133,10 +133,10 @@ public:
   /**
    * Returns what we know about the transparency of the widget.
    */
-  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
+  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
   { return eUnknownTransparency; }
 
-  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
+  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
                                 nsIAtom* aAttribute, bool* aShouldRepaint)=0;
 
   NS_IMETHOD ThemeChanged()=0;
@@ -146,16 +146,16 @@ public:
    */
   virtual bool ThemeSupportsWidget(nsPresContext* aPresContext,
                                      nsIFrame* aFrame,
-                                     PRUint8 aWidgetType)=0;
+                                     uint8_t aWidgetType)=0;
 
-  virtual bool WidgetIsContainer(PRUint8 aWidgetType)=0;
+  virtual bool WidgetIsContainer(uint8_t aWidgetType)=0;
 
   /**
    * Does the nsITheme implementation draw its own focus ring for this widget?
    */
   virtual bool ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
                                           nsIFrame* aFrame,
-                                          PRUint8 aWidgetType)=0;
+                                          uint8_t aWidgetType)=0;
   
   /**
     * Should we insert a dropmarker inside of combobox button?

@@ -17,7 +17,7 @@ FileLocation::FileLocation(const FileLocation &file, const char *path)
       Init(file.mBaseZip, file.mPath.get());
     }
     if (path) {
-      PRInt32 i = mPath.RFindChar('/');
+      int32_t i = mPath.RFindChar('/');
       if (kNotFound == i) {
         mPath.Truncate(0);
       } else {
@@ -33,7 +33,7 @@ FileLocation::FileLocation(const FileLocation &file, const char *path)
 #if defined(XP_WIN) || defined(XP_OS2)
       nsCAutoString pathStr(path);
       char *p;
-      PRUint32 len = pathStr.GetMutableData(&p);
+      uint32_t len = pathStr.GetMutableData(&p);
       for (; len; ++p, --len) {
         if ('/' == *p) {
             *p = '\\';
@@ -121,14 +121,14 @@ FileLocation::GetData(Data &data)
 }
 
 nsresult
-FileLocation::Data::GetSize(PRUint32 *result)
+FileLocation::Data::GetSize(uint32_t *result)
 {
   if (mFd) {
     PRFileInfo64 fileInfo;
     if (PR_SUCCESS != PR_GetOpenFileInfo64(mFd, &fileInfo))
       return NS_ErrorAccordingToNSPR();
 
-    if (fileInfo.size > PRInt64(PR_UINT32_MAX))
+    if (fileInfo.size > int64_t(PR_UINT32_MAX))
       return NS_ERROR_FILE_TOO_BIG;
 
     *result = fileInfo.size;
@@ -141,19 +141,19 @@ FileLocation::Data::GetSize(PRUint32 *result)
 }
 
 nsresult
-FileLocation::Data::Copy(char *buf, PRUint32 len)
+FileLocation::Data::Copy(char *buf, uint32_t len)
 {
   if (mFd) {
-    for (PRUint32 totalRead = 0; totalRead < len; ) {
-      PRInt32 read = PR_Read(mFd, buf + totalRead, NS_MIN(len - totalRead, PRUint32(PR_INT32_MAX)));
+    for (uint32_t totalRead = 0; totalRead < len; ) {
+      int32_t read = PR_Read(mFd, buf + totalRead, NS_MIN(len - totalRead, uint32_t(PR_INT32_MAX)));
       if (read < 0)
         return NS_ErrorAccordingToNSPR();
       totalRead += read;
     }
     return NS_OK;
   } else if (mItem) {
-    nsZipCursor cursor(mItem, mZip, reinterpret_cast<PRUint8 *>(buf), len, true);
-    PRUint32 readLen;
+    nsZipCursor cursor(mItem, mZip, reinterpret_cast<uint8_t *>(buf), len, true);
+    uint32_t readLen;
     cursor.Copy(&readLen);
     return (readLen == len) ? NS_OK : NS_ERROR_FILE_CORRUPTED;
   }

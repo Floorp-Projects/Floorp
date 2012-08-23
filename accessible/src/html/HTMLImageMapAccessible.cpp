@@ -48,20 +48,20 @@ HTMLImageMapAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLImageMapAccessible: HyperLinkAccessible
 
-PRUint32
+uint32_t
 HTMLImageMapAccessible::AnchorCount()
 {
   return ChildCount();
 }
 
 Accessible*
-HTMLImageMapAccessible::AnchorAt(PRUint32 aAnchorIndex)
+HTMLImageMapAccessible::AnchorAt(uint32_t aAnchorIndex)
 {
   return GetChildAt(aAnchorIndex);
 }
 
 already_AddRefed<nsIURI>
-HTMLImageMapAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
+HTMLImageMapAccessible::AnchorURIAt(uint32_t aAnchorIndex)
 {
   Accessible* area = GetChildAt(aAnchorIndex);
   if (!area)
@@ -87,7 +87,7 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
   bool doReorderEvent = false;
 
   // Remove areas that are not a valid part of the image map anymore.
-  for (PRInt32 childIdx = mChildren.Length() - 1; childIdx >= 0; childIdx--) {
+  for (int32_t childIdx = mChildren.Length() - 1; childIdx >= 0; childIdx--) {
     Accessible* area = mChildren.ElementAt(childIdx);
     if (area->GetContent()->GetPrimaryFrame())
       continue;
@@ -102,8 +102,8 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
   }
 
   // Insert new areas into the tree.
-  PRUint32 areaElmCount = imageMapObj->AreaCount();
-  for (PRUint32 idx = 0; idx < areaElmCount; idx++) {
+  uint32_t areaElmCount = imageMapObj->AreaCount();
+  for (uint32_t idx = 0; idx < areaElmCount; idx++) {
     nsIContent* areaContent = imageMapObj->GetAreaAt(idx);
 
     Accessible* area = mChildren.SafeElementAt(idx);
@@ -198,7 +198,7 @@ HTMLAreaAccessible::IsPrimaryForNode() const
 // HTMLAreaAccessible: Accessible public
 
 Accessible*
-HTMLAreaAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
+HTMLAreaAccessible::ChildAtPoint(int32_t aX, int32_t aY,
                                  EWhichChildAtPoint aWhichChild)
 {
   // Don't walk into area accessibles.
@@ -208,7 +208,7 @@ HTMLAreaAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLImageMapAccessible: HyperLinkAccessible
 
-PRUint32
+uint32_t
 HTMLAreaAccessible::StartOffset()
 {
   // Image map accessible is not hypertext accessible therefore
@@ -219,7 +219,7 @@ HTMLAreaAccessible::StartOffset()
   return IndexInParent();
 }
 
-PRUint32
+uint32_t
 HTMLAreaAccessible::EndOffset()
 {
   return IndexInParent() + 1;

@@ -46,7 +46,7 @@ public:
 
   static void SetAudioRoute(int aRoutes);
 protected:
-  PRInt32 mPhoneState;
+  int32_t mPhoneState;
 
 private:
   nsAutoPtr<mozilla::hal::SwitchObserver> mObserver;

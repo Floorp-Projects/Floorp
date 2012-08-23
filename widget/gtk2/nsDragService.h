@@ -56,16 +56,16 @@ public:
     NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode,
                                   nsISupportsArray * anArrayTransferables,
                                   nsIScriptableRegion * aRegion,
-                                  PRUint32 aActionType);
+                                  uint32_t aActionType);
     NS_IMETHOD StartDragSession();
     NS_IMETHOD EndDragSession(bool aDoneDrag);
 
     // nsIDragSession
     NS_IMETHOD SetCanDrop            (bool             aCanDrop);
     NS_IMETHOD GetCanDrop            (bool            *aCanDrop);
-    NS_IMETHOD GetNumDropItems       (PRUint32 * aNumItems);
+    NS_IMETHOD GetNumDropItems       (uint32_t * aNumItems);
     NS_IMETHOD GetData               (nsITransferable * aTransferable,
-                                      PRUint32 aItemIndex);
+                                      uint32_t aItemIndex);
     NS_IMETHOD IsDataFlavorSupported (const char *aDataFlavor, bool *_retval);
 
     // Methods called from nsWindow to handle responding to GTK drag
@@ -161,7 +161,7 @@ private:
     bool            mTargetDragDataReceived;
     // last data received and its length
     void           *mTargetDragData;
-    PRUint32        mTargetDragDataLen;
+    uint32_t        mTargetDragDataLen;
     // is the current target drag context contain a list?
     bool           IsTargetContextList(void);
     // this will get the native data from the last target given a
@@ -186,8 +186,8 @@ private:
     // successful, FALSE if not
     bool SetAlphaPixmap(gfxASurface     *aPixbuf,
                           GdkDragContext  *aContext,
-                          PRInt32          aXOffset,
-                          PRInt32          aYOffset,
+                          int32_t          aXOffset,
+                          int32_t          aYOffset,
                           const nsIntRect &dragRect);
 
     gboolean Schedule(DragTask aTask, nsWindow *aWindow,

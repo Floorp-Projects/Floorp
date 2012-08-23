@@ -24,14 +24,14 @@ public:
   nsScreenQt (int aScreen);
   virtual ~nsScreenQt();
 
-  NS_IMETHOD GetRect(PRInt32* aLeft, PRInt32* aTop, PRInt32* aWidth, PRInt32* aHeight);
-  NS_IMETHOD GetAvailRect(PRInt32* aLeft, PRInt32* aTop, PRInt32* aWidth, PRInt32* aHeight);
-  NS_IMETHOD GetPixelDepth(PRInt32* aPixelDepth);
-  NS_IMETHOD GetColorDepth(PRInt32* aColorDepth);
+  NS_IMETHOD GetRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight);
+  NS_IMETHOD GetAvailRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight);
+  NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth);
+  NS_IMETHOD GetColorDepth(int32_t* aColorDepth);
 
 #ifdef MOZ_ENABLE_QMSYSTEM2
 protected:
-  virtual void ApplyMinimumBrightness(PRUint32 aType) MOZ_OVERRIDE;
+  virtual void ApplyMinimumBrightness(uint32_t aType) MOZ_OVERRIDE;
 private:
   MeeGo::QmDisplayState* mDisplayState;
 #endif

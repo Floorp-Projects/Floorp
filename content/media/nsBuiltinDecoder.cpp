@@ -16,6 +16,7 @@
 #include "nsBuiltinDecoderStateMachine.h"
 #include "nsTimeRanges.h"
 #include "nsContentUtils.h"
+#include "ImageContainer.h"
 
 using namespace mozilla;
 
@@ -65,7 +66,7 @@ void nsBuiltinDecoder::AddOutputStream(SourceMediaStream* aStream, bool aFinishW
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     OutputMediaStream* ms = mOutputStreams.AppendElement();
-    ms->Init(PRInt64(mCurrentTime*USECS_PER_S), aStream, aFinishWhenEnded);
+    ms->Init(int64_t(mCurrentTime*USECS_PER_S), aStream, aFinishWhenEnded);
   }
 
   // This can be called before Load(), in which case our mDecoderStateMachine
@@ -226,7 +227,7 @@ nsresult nsBuiltinDecoder::Load(MediaResource* aResource,
   return ScheduleStateMachineThread();
 }
 
-nsresult nsBuiltinDecoder::RequestFrameBufferLength(PRUint32 aLength)
+nsresult nsBuiltinDecoder::RequestFrameBufferLength(uint32_t aLength)
 {
   nsresult res = nsMediaDecoder::RequestFrameBufferLength(aLength);
   NS_ENSURE_SUCCESS(res,res);
@@ -278,10 +279,10 @@ nsresult nsBuiltinDecoder::Play()
  * not null, is set to the index of the range which ends immediately before aValue
  * (and can be -1 if aValue is before aRanges.Start(0)).
  */
-static bool IsInRanges(nsTimeRanges& aRanges, double aValue, PRInt32& aIntervalIndex) {
-  PRUint32 length;
+static bool IsInRanges(nsTimeRanges& aRanges, double aValue, int32_t& aIntervalIndex) {
+  uint32_t length;
   aRanges.GetLength(&length);
-  for (PRUint32 i = 0; i < length; i++) {
+  for (uint32_t i = 0; i < length; i++) {
     double start, end;
     aRanges.Start(i, &start);
     if (start > aValue) {
@@ -307,7 +308,7 @@ nsresult nsBuiltinDecoder::Seek(double aTime)
 
   nsTimeRanges seekable;
   nsresult res;
-  PRUint32 length = 0;
+  uint32_t length = 0;
   res = GetSeekable(&seekable);
   NS_ENSURE_SUCCESS(res, NS_OK);
 
@@ -321,12 +322,12 @@ nsresult nsBuiltinDecoder::Seek(double aTime)
   // are equally close, we seek to the closest position from the currentTime.
   // See seeking spec, point 7 :
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#seeking
-  PRInt32 range = 0;
+  int32_t range = 0;
   if (!IsInRanges(seekable, aTime, range)) {
     if (range != -1) {
       // |range + 1| can't be negative, because the only possible negative value
       // for |range| is -1.
-      if (PRUint32(range + 1) < length) {
+      if (uint32_t(range + 1) < length) {
         double leftBound, rightBound;
         res = seekable.End(range, &leftBound);
         NS_ENSURE_SUCCESS(res, NS_OK);
@@ -390,7 +391,7 @@ already_AddRefed<nsIPrincipal> nsBuiltinDecoder::GetCurrentPrincipal()
 }
 
 void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
-                                      PRUint32 aFrameBufferLength,
+                                      uint32_t aFrameBufferLength,
                                       float aTime)
 {
   // Auto manage the frame buffer's memory. If we return due to an error
@@ -404,8 +405,8 @@ void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
   mElement->NotifyAudioAvailable(frameBuffer.forget(), aFrameBufferLength, aTime);
 }
 
-void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
-                                      PRUint32 aRate,
+void nsBuiltinDecoder::MetadataLoaded(uint32_t aChannels,
+                                      uint32_t aRate,
                                       bool aHasAudio,
                                       const nsHTMLMediaElement::MetadataTags* aTags)
 {
@@ -611,7 +612,7 @@ double nsBuiltinDecoder::ComputePlaybackRate(bool* aReliable)
   NS_ASSERTION(NS_IsMainThread() || OnStateMachineThread(),
                "Should be on main or state machine thread.");
 
-  PRInt64 length = mResource ? mResource->GetLength() : -1;
+  int64_t length = mResource ? mResource->GetLength() : -1;
   if (mDuration >= 0 && length >= 0) {
     *aReliable = true;
     return length * static_cast<double>(USECS_PER_S) / mDuration;
@@ -627,7 +628,7 @@ void nsBuiltinDecoder::UpdatePlaybackRate()
   if (!mResource)
     return;
   bool reliable;
-  PRUint32 rate = PRUint32(ComputePlaybackRate(&reliable));
+  uint32_t rate = uint32_t(ComputePlaybackRate(&reliable));
   if (reliable) {
     // Avoid passing a zero rate
     rate = NS_MAX(rate, 1u);
@@ -699,7 +700,7 @@ void nsBuiltinDecoder::NotifyPrincipalChanged()
   }
 }
 
-void nsBuiltinDecoder::NotifyBytesConsumed(PRInt64 aBytes)
+void nsBuiltinDecoder::NotifyBytesConsumed(int64_t aBytes)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   NS_ASSERTION(OnStateMachineThread() || mDecoderStateMachine->OnDecodeThread(),
@@ -904,7 +905,7 @@ void nsBuiltinDecoder::DurationChanged()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  PRInt64 oldDuration = mDuration;
+  int64_t oldDuration = mDuration;
   mDuration = mDecoderStateMachine ? mDecoderStateMachine->GetDuration() : -1;
   // Duration has changed so we should recompute playback rate
   UpdatePlaybackRate();
@@ -918,7 +919,7 @@ void nsBuiltinDecoder::DurationChanged()
 void nsBuiltinDecoder::SetDuration(double aDuration)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  mDuration = static_cast<PRInt64>(NS_round(aDuration * static_cast<double>(USECS_PER_S)));
+  mDuration = static_cast<int64_t>(NS_round(aDuration * static_cast<double>(USECS_PER_S)));
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (mDecoderStateMachine) {
@@ -971,7 +972,7 @@ void nsBuiltinDecoder::SetEndTime(double aTime)
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mDecoderStateMachine) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mDecoderStateMachine->SetFragmentEndTime(static_cast<PRInt64>(aTime * USECS_PER_S));
+    mDecoderStateMachine->SetFragmentEndTime(static_cast<int64_t>(aTime * USECS_PER_S));
   }
 }
 
@@ -1028,7 +1029,7 @@ void nsBuiltinDecoder::MoveLoadsToBackground()
   }
 }
 
-void nsBuiltinDecoder::UpdatePlaybackOffset(PRInt64 aOffset)
+void nsBuiltinDecoder::UpdatePlaybackOffset(int64_t aOffset)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   mPlaybackPosition = NS_MAX(aOffset, mPlaybackPosition);
@@ -1046,4 +1047,47 @@ void nsBuiltinDecoder::NotifyAudioAvailableListener()
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mDecoderStateMachine->NotifyAudioAvailableListener();
   }
+}
+
+nsBuiltinDecoder::OutputMediaStream::OutputMediaStream()
+{
+
+}
+
+nsBuiltinDecoder::OutputMediaStream::~OutputMediaStream()
+{
+
+}
+    
+
+void nsBuiltinDecoder::OutputMediaStream::Init(int64_t aInitialTime, SourceMediaStream* aStream, bool aFinishWhenEnded)
+{
+  mLastAudioPacketTime = -1;
+  mLastAudioPacketEndTime = -1;
+  mAudioFramesWrittenBaseTime = aInitialTime;
+  mAudioFramesWritten = 0;
+  mNextVideoTime = aInitialTime;
+  mStream = aStream;
+  mStreamInitialized = false;
+  mFinishWhenEnded = aFinishWhenEnded;
+  mHaveSentFinish = false;
+  mHaveSentFinishAudio = false;
+  mHaveSentFinishVideo = false;
+}
+
+nsBuiltinDecoder::OutputMediaStream::OutputMediaStream(const OutputMediaStream& rhs)
+{
+  mLastAudioPacketTime = rhs.mLastAudioPacketTime;
+  mLastAudioPacketEndTime = rhs.mLastAudioPacketEndTime;
+  mAudioFramesWritten = rhs.mAudioFramesWritten;
+  mAudioFramesWrittenBaseTime = rhs.mAudioFramesWrittenBaseTime;
+  mNextVideoTime = rhs.mNextVideoTime;
+  mLastVideoImage = rhs.mLastVideoImage;
+  mStream = rhs.mStream;
+  mLastVideoImageDisplaySize = rhs.mLastVideoImageDisplaySize;
+  mStreamInitialized = rhs.mStreamInitialized;
+  mFinishWhenEnded = rhs.mFinishWhenEnded;
+  mHaveSentFinish = rhs.mHaveSentFinish;
+  mHaveSentFinishAudio = rhs.mHaveSentFinishAudio;
+  mHaveSentFinishVideo = rhs.mHaveSentFinishVideo;
 }

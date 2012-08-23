@@ -18,20 +18,20 @@ using mozilla::ReentrantMonitor;
 // scale before use.
 struct nsWebMTimeDataOffset
 {
-  nsWebMTimeDataOffset(PRInt64 aOffset, PRUint64 aTimecode)
+  nsWebMTimeDataOffset(int64_t aOffset, uint64_t aTimecode)
     : mOffset(aOffset), mTimecode(aTimecode)
   {}
 
-  bool operator==(PRInt64 aOffset) const {
+  bool operator==(int64_t aOffset) const {
     return mOffset == aOffset;
   }
 
-  bool operator<(PRInt64 aOffset) const {
+  bool operator<(int64_t aOffset) const {
     return mOffset < aOffset;
   }
 
-  PRInt64 mOffset;
-  PRUint64 mTimecode;
+  int64_t mOffset;
+  uint64_t mTimecode;
 };
 
 // A simple WebM parser that produces data offset to timecode pairs as it
@@ -42,33 +42,33 @@ struct nsWebMTimeDataOffset
 // within the stream.
 struct nsWebMBufferedParser
 {
-  nsWebMBufferedParser(PRInt64 aOffset)
+  nsWebMBufferedParser(int64_t aOffset)
     : mStartOffset(aOffset), mCurrentOffset(aOffset), mState(CLUSTER_SYNC), mClusterIDPos(0)
   {}
 
   // Steps the parser through aLength bytes of data.  Always consumes
   // aLength bytes.  Updates mCurrentOffset before returning.  Acquires
   // aReentrantMonitor before using aMapping.
-  void Append(const unsigned char* aBuffer, PRUint32 aLength,
+  void Append(const unsigned char* aBuffer, uint32_t aLength,
               nsTArray<nsWebMTimeDataOffset>& aMapping,
               ReentrantMonitor& aReentrantMonitor);
 
-  bool operator==(PRInt64 aOffset) const {
+  bool operator==(int64_t aOffset) const {
     return mCurrentOffset == aOffset;
   }
 
-  bool operator<(PRInt64 aOffset) const {
+  bool operator<(int64_t aOffset) const {
     return mCurrentOffset < aOffset;
   }
 
   // The offset at which this parser started parsing.  Used to merge
   // adjacent parsers, in which case the later parser adopts the earlier
   // parser's mStartOffset.
-  PRInt64 mStartOffset;
+  int64_t mStartOffset;
 
   // Current offset with the stream.  Updated in chunks as Append() consumes
   // data.
-  PRInt64 mCurrentOffset;
+  int64_t mCurrentOffset;
 
 private:
   enum State {
@@ -142,41 +142,41 @@ private:
 
   // Match position within CLUSTER_ID.  Used to find sync within arbitrary
   // data.
-  PRUint32 mClusterIDPos;
+  uint32_t mClusterIDPos;
 
   // Variable length integer read from data.
-  PRUint64 mVInt;
+  uint64_t mVInt;
 
   // Encoding length of mVInt.  This is the total number of bytes used to
   // encoding mVInt's value.
-  PRUint32 mVIntLength;
+  uint32_t mVIntLength;
 
   // Number of bytes of mVInt left to read.  mVInt is complete once this
   // reaches 0.
-  PRUint32 mVIntLeft;
+  uint32_t mVIntLeft;
 
   // Size of the block currently being parsed.  Any unused data within the
   // block is skipped once the block timecode has been parsed.
-  PRUint64 mBlockSize;
+  uint64_t mBlockSize;
 
   // Cluster-level timecode.
-  PRUint64 mClusterTimecode;
+  uint64_t mClusterTimecode;
 
   // Start offset of the block currently being parsed.  Used as the byte
   // offset for the offset-to-time mapping once the block timecode has been
   // parsed.
-  PRInt64 mBlockOffset;
+  int64_t mBlockOffset;
 
   // Block-level timecode.  This is summed with mClusterTimecode to produce
   // an absolute timecode for the offset-to-time mapping.
-  PRInt16 mBlockTimecode;
+  int16_t mBlockTimecode;
 
   // Number of bytes of mBlockTimecode left to read.
-  PRUint32 mBlockTimecodeLength;
+  uint32_t mBlockTimecodeLength;
 
   // Count of bytes left to skip before resuming parse at mNextState.
   // Mostly used to skip block payload data after reading a block timecode.
-  PRUint32 mSkipBytes;
+  uint32_t mSkipBytes;
 };
 
 class nsWebMBufferedState
@@ -192,9 +192,9 @@ public:
     MOZ_COUNT_DTOR(nsWebMBufferedState);
   }
 
-  void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset);
-  bool CalculateBufferedForRange(PRInt64 aStartOffset, PRInt64 aEndOffset,
-                                 PRUint64* aStartTime, PRUint64* aEndTime);
+  void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
+  bool CalculateBufferedForRange(int64_t aStartOffset, int64_t aEndOffset,
+                                 uint64_t* aStartTime, uint64_t* aEndTime);
 
 private:
   // Synchronizes access to the mTimeMapping array.

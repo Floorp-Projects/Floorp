@@ -188,7 +188,7 @@ public:
   #undef STYLE_STRUCT_INHERITED
 
   nsRuleNode* GetRuleNode() { return mRuleNode; }
-  void AddStyleBit(const PRUint32& aBit) { mBits |= aBit; }
+  void AddStyleBit(const uint32_t& aBit) { mBits |= aBit; }
 
   /*
    * Mark this style context's rule node (and its ancestors) to prevent
@@ -299,7 +299,7 @@ public:
   }
 
 #ifdef DEBUG
-  void List(FILE* out, PRInt32 aIndent);
+  void List(FILE* out, int32_t aIndent);
 #endif
 
 protected:
@@ -390,9 +390,9 @@ protected:
   // sometimes allocate the mCachedResetData.
   nsResetStyleData*       mCachedResetData; // Cached reset style data.
   nsInheritedStyleData    mCachedInheritedData; // Cached inherited style data
-  PRUint32                mBits; // Which structs are inherited from the
+  uint32_t                mBits; // Which structs are inherited from the
                                  // parent context or owned by mRuleNode.
-  PRUint32                mRefCnt;
+  uint32_t                mRefCnt;
 };
 
 already_AddRefed<nsStyleContext>

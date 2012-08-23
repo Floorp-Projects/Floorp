@@ -71,12 +71,12 @@ namespace scache {
 struct CacheEntry 
 {
   nsAutoArrayPtr<char> data;
-  PRUint32 size;
+  uint32_t size;
 
   CacheEntry() : data(nullptr), size(0) { }
 
   // Takes possession of buf
-  CacheEntry(char* buf, PRUint32 len) : data(buf), size(len) { }
+  CacheEntry(char* buf, uint32_t len) : data(buf), size(len) { }
 
   ~CacheEntry()
   {
@@ -106,10 +106,10 @@ public:
   // StartupCache methods. See above comments for a more detailed description.
 
   // Returns a buffer that was previously stored, caller takes ownership. 
-  nsresult GetBuffer(const char* id, char** outbuf, PRUint32* length);
+  nsresult GetBuffer(const char* id, char** outbuf, uint32_t* length);
 
   // Stores a buffer. Caller keeps ownership, we make a copy.
-  nsresult PutBuffer(const char* id, const char* inbuf, PRUint32 length);
+  nsresult PutBuffer(const char* id, const char* inbuf, uint32_t length);
 
   // Removes the cache file.
   void InvalidateCache();

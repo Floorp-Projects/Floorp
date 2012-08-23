@@ -36,7 +36,7 @@ public:
                     const PRUnichar* aTag, 
                     const nsTArray<nsString>* aKeys, 
                     const nsTArray<nsString>* aValues,
-                    const PRUint32 aFlags) = 0;
+                    const uint32_t aFlags) = 0;
 
 };
 

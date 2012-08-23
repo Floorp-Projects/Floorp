@@ -39,8 +39,8 @@ private:
   ~nsRwsService();
 
 protected:
-  static nsresult RwsConvert(PRUint32 type, PRUint32 value, PRUint32 *result);
-  static nsresult RwsConvert(PRUint32 type, PRUint32 value, nsAString& result);
+  static nsresult RwsConvert(uint32_t type, uint32_t value, uint32_t *result);
+  static nsresult RwsConvert(uint32_t type, uint32_t value, nsAString& result);
 
   ExtCache *mExtCache;
 };

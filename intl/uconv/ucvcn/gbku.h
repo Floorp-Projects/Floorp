@@ -11,7 +11,7 @@
 // 09/07/1999 - initial version.
 // 09/28/1999 - changed leftbyte and rightbyte from char to unsigned char 
 //              in struct DByte
-// 04/10/1999 - changed leftbyte. rightbyte to PRUint8 in struct DByte;
+// 04/10/1999 - changed leftbyte. rightbyte to uint8_t in struct DByte;
 //              added table UnicodeToGBKTable[0x5200]
 //            
 // 05/16/2000 - added gUnicodeToGBKTableInitialized flag for optimization
@@ -40,7 +40,7 @@
 
 #define  UCS2_NO_MAPPING ((PRUnichar) 0xfffd)
 #define UINT8_IN_RANGE(a, b, c) \
- (((PRUint8)(a) <= (PRUint8)(b))&&((PRUint8)(b) <= (PRUint8)(c)))
+ (((uint8_t)(a) <= (uint8_t)(b))&&((uint8_t)(b) <= (uint8_t)(c)))
 #define UNICHAR_IN_RANGE(a, b, c) \
  (((PRUnichar)(a) <= (PRUnichar)(b))&&((PRUnichar)(b) <= (PRUnichar)(c)))
 #define CAST_CHAR_TO_UNICHAR(a) ((PRUnichar)((unsigned char)(a)))

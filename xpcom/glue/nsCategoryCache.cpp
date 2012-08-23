@@ -61,7 +61,7 @@ nsCategoryObserver::nsCategoryObserver(const char* aCategory,
     serv->AddObserver(this, NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID, false);
   }
 
-  for (PRInt32 i = entries.Length() - 1; i >= 0; --i)
+  for (int32_t i = entries.Length() - 1; i >= 0; --i)
     mListener->EntryAdded(entries[i]);
 }
 

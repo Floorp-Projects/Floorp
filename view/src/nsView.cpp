@@ -195,7 +195,7 @@ bool nsIView::IsEffectivelyVisible()
 
 nsIntRect nsIView::CalcWidgetBounds(nsWindowType aType)
 {
-  PRInt32 p2a = mViewManager->AppUnitsPerDevPixel();
+  int32_t p2a = mViewManager->AppUnitsPerDevPixel();
 
   nsRect viewBounds(mDimBounds);
 
@@ -436,11 +436,11 @@ void nsView::RemoveChild(nsView *child)
 // because in many simple common cases the widgets do end up in the
 // right order. We set each widget's z-index to the z-index of the
 // nearest ancestor that has non-auto z-index.
-static void UpdateNativeWidgetZIndexes(nsView* aView, PRInt32 aZIndex)
+static void UpdateNativeWidgetZIndexes(nsView* aView, int32_t aZIndex)
 {
   if (aView->HasWidget()) {
     nsIWidget* widget = aView->GetWidget();
-    PRInt32 curZ;
+    int32_t curZ;
     widget->GetZIndex(&curZ);
     if (curZ != aZIndex) {
       widget->SetZIndex(aZIndex);
@@ -454,7 +454,7 @@ static void UpdateNativeWidgetZIndexes(nsView* aView, PRInt32 aZIndex)
   }
 }
 
-static PRInt32 FindNonAutoZIndex(nsView* aView)
+static int32_t FindNonAutoZIndex(nsView* aView)
 {
   while (aView) {
     if (!aView->GetZIndexIsAuto()) {
@@ -695,7 +695,7 @@ nsresult nsIView::DetachFromTopLevelWidget()
   return NS_OK;
 }
 
-void nsView::SetZIndex(bool aAuto, PRInt32 aZIndex, bool aTopMost)
+void nsView::SetZIndex(bool aAuto, int32_t aZIndex, bool aTopMost)
 {
   bool oldIsAuto = GetZIndexIsAuto();
   mVFlags = (mVFlags & ~NS_VIEW_FLAG_AUTO_ZINDEX) | (aAuto ? NS_VIEW_FLAG_AUTO_ZINDEX : 0);
@@ -738,9 +738,9 @@ void nsIView::DetachWidgetEventHandler(nsIWidget* aWidget)
 }
 
 #ifdef DEBUG
-void nsIView::List(FILE* out, PRInt32 aIndent) const
+void nsIView::List(FILE* out, int32_t aIndent) const
 {
-  PRInt32 i;
+  int32_t i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fprintf(out, "%p ", (void*)this);
   if (nullptr != mWindow) {
@@ -752,7 +752,7 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
     nsRect nonclientBounds = rect.ToAppUnits(p2a);
     nsrefcnt widgetRefCnt = mWindow->AddRef() - 1;
     mWindow->Release();
-    PRInt32 Z;
+    int32_t Z;
     mWindow->GetZIndex(&Z);
     fprintf(out, "(widget=%p[%d] z=%d pos={%d,%d,%d,%d}) ",
             (void*)mWindow, widgetRefCnt, Z,
@@ -784,7 +784,7 @@ nsPoint nsView::GetOffsetTo(const nsView* aOther) const
   return GetOffsetTo(aOther, GetViewManager()->AppUnitsPerDevPixel());
 }
 
-nsPoint nsView::GetOffsetTo(const nsView* aOther, const PRInt32 aAPD) const
+nsPoint nsView::GetOffsetTo(const nsView* aOther, const int32_t aAPD) const
 {
   NS_ABORT_IF_FALSE(GetParent() || !aOther || aOther->GetParent() ||
                     this == aOther, "caller of (outer) GetOffsetTo must not "
@@ -795,12 +795,12 @@ nsPoint nsView::GetOffsetTo(const nsView* aOther, const PRInt32 aAPD) const
   nsPoint docOffset(0, 0);
   const nsView* v = this;
   nsViewManager* currVM = v->GetViewManager();
-  PRInt32 currAPD = currVM->AppUnitsPerDevPixel();
+  int32_t currAPD = currVM->AppUnitsPerDevPixel();
   const nsView* root = nullptr;
   for ( ; v != aOther && v; root = v, v = v->GetParent()) {
     nsViewManager* newVM = v->GetViewManager();
     if (newVM != currVM) {
-      PRInt32 newAPD = newVM->AppUnitsPerDevPixel();
+      int32_t newAPD = newVM->AppUnitsPerDevPixel();
       if (newAPD != currAPD) {
         offset += docOffset.ConvertAppUnits(currAPD, aAPD);
         docOffset.x = docOffset.y = 0;
@@ -845,8 +845,8 @@ nsPoint nsIView::GetOffsetToWidget(nsIWidget* aWidget) const
   pt += widgetView->ViewToWidgetOffset();
 
   // Convert to our appunits.
-  PRInt32 widgetAPD = widgetView->GetViewManager()->AppUnitsPerDevPixel();
-  PRInt32 ourAPD = static_cast<const nsView*>(this)->
+  int32_t widgetAPD = widgetView->GetViewManager()->AppUnitsPerDevPixel();
+  int32_t ourAPD = static_cast<const nsView*>(this)->
                     GetViewManager()->AppUnitsPerDevPixel();
   pt = pt.ConvertAppUnits(widgetAPD, ourAPD);
   return pt;
@@ -863,7 +863,7 @@ nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset) const
   return GetNearestWidget(aOffset, GetViewManager()->AppUnitsPerDevPixel());
 }
 
-nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset, const PRInt32 aAPD) const
+nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset, const int32_t aAPD) const
 {
   // aOffset is based on the view's position, which ignores any chrome on
   // attached parent widgets.
@@ -874,11 +874,11 @@ nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset, const PRInt32 aAPD) const
   nsPoint docPt(0,0);
   const nsView* v = this;
   nsViewManager* currVM = v->GetViewManager();
-  PRInt32 currAPD = currVM->AppUnitsPerDevPixel();
+  int32_t currAPD = currVM->AppUnitsPerDevPixel();
   for ( ; v && !v->HasWidget(); v = v->GetParent()) {
     nsViewManager* newVM = v->GetViewManager();
     if (newVM != currVM) {
-      PRInt32 newAPD = newVM->AppUnitsPerDevPixel();
+      int32_t newAPD = newVM->AppUnitsPerDevPixel();
       if (newAPD != currAPD) {
         pt += docPt.ConvertAppUnits(currAPD, aAPD);
         docPt.x = docPt.y = 0;
@@ -937,8 +937,8 @@ nsView::GetBoundsInParentUnits() const
   if (this != VM->GetRootViewImpl() || !parent) {
     return mDimBounds;
   }
-  PRInt32 ourAPD = VM->AppUnitsPerDevPixel();
-  PRInt32 parentAPD = parent->GetViewManager()->AppUnitsPerDevPixel();
+  int32_t ourAPD = VM->AppUnitsPerDevPixel();
+  int32_t parentAPD = parent->GetViewManager()->AppUnitsPerDevPixel();
   return mDimBounds.ConvertAppUnitsRoundOut(ourAPD, parentAPD);
 }
 
@@ -970,7 +970,7 @@ nsView::GetPresShell()
 }
 
 bool
-nsView::WindowMoved(nsIWidget* aWidget, PRInt32 x, PRInt32 y)
+nsView::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && IsPopupWidget(aWidget)) {
@@ -982,14 +982,15 @@ nsView::WindowMoved(nsIWidget* aWidget, PRInt32 x, PRInt32 y)
 }
 
 bool
-nsView::WindowResized(nsIWidget* aWidget, PRInt32 aWidth, PRInt32 aHeight)
+nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight)
 {
   // The root view may not be set if this is the resize associated with
   // window creation
+  SetForcedRepaint(true);
   if (this == mViewManager->GetRootView()) {
     nsRefPtr<nsDeviceContext> devContext;
     mViewManager->GetDeviceContext(*getter_AddRefs(devContext));
-    PRInt32 p2a = devContext->AppUnitsPerDevPixel();
+    int32_t p2a = devContext->AppUnitsPerDevPixel();
     mViewManager->SetWindowDimensions(NSIntPixelsToAppUnits(aWidth, p2a),
                                       NSIntPixelsToAppUnits(aHeight, p2a));
     return true;

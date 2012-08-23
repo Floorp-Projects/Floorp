@@ -25,7 +25,7 @@
 nsresult
 nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
                                            nsIDOMNode           *aSelNode, 
-                                           PRInt32               aSelOffset, 
+                                           int32_t               aSelOffset, 
                                            nsIEditor::EDirection aAction,
                                            bool                 *aCancel)
 {
@@ -44,8 +44,8 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aSelNode);
   NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
 
-  PRUint8 levelBefore;
-  PRUint8 levelAfter;
+  uint8_t levelBefore;
+  uint8_t levelAfter;
 
   nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(aSelection));
   NS_ENSURE_TRUE(privateSelection, NS_ERROR_NULL_POINTER);
@@ -60,9 +60,9 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
   levelBefore = levels.mLevelBefore;
   levelAfter = levels.mLevelAfter;
 
-  PRUint8 currentCaretLevel = frameSelection->GetCaretBidiLevel();
+  uint8_t currentCaretLevel = frameSelection->GetCaretBidiLevel();
 
-  PRUint8 levelOfDeletion;
+  uint8_t levelOfDeletion;
   levelOfDeletion =
     (nsIEditor::eNext==aAction || nsIEditor::eNextWord==aAction) ?
     levelAfter : levelBefore;

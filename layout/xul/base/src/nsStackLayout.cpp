@@ -160,7 +160,7 @@ nsStackLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
   return vAscent;
 }
 
-PRUint8
+uint8_t
 nsStackLayout::GetOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsMargin& aOffset)
 {
   aOffset = nsMargin(0, 0, 0, 0);
@@ -173,7 +173,7 @@ nsStackLayout::GetOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsMargin& a
       (aChild->GetStateBits() & NS_STATE_STACK_NOT_POSITIONED))
     return 0;
 
-  PRUint8 offsetSpecified = 0;
+  uint8_t offsetSpecified = 0;
   nsIContent* content = aChild->GetContent();
   if (content) {
     bool ltr = aChild->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
@@ -287,7 +287,7 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
 
           // obtain our offset from the top left border of the stack's content box.
           nsMargin offset;
-          PRUint8 offsetSpecified = GetOffset(aState, child, offset);
+          uint8_t offsetSpecified = GetOffset(aState, child, offset);
 
           // Set the position and size based on which offsets have been specified:
           //   left only - offset from left edge, preferred width

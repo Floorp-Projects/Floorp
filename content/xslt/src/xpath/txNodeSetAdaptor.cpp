@@ -31,11 +31,11 @@ txNodeSetAdaptor::Init()
 }
 
 NS_IMETHODIMP
-txNodeSetAdaptor::Item(PRUint32 aIndex, nsIDOMNode **aResult)
+txNodeSetAdaptor::Item(uint32_t aIndex, nsIDOMNode **aResult)
 {
     *aResult = nullptr;
 
-    if (aIndex > (PRUint32)NodeSet()->size()) {
+    if (aIndex > (uint32_t)NodeSet()->size()) {
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -43,9 +43,9 @@ txNodeSetAdaptor::Item(PRUint32 aIndex, nsIDOMNode **aResult)
 }
 
 NS_IMETHODIMP
-txNodeSetAdaptor::ItemAsNumber(PRUint32 aIndex, double *aResult)
+txNodeSetAdaptor::ItemAsNumber(uint32_t aIndex, double *aResult)
 {
-    if (aIndex > (PRUint32)NodeSet()->size()) {
+    if (aIndex > (uint32_t)NodeSet()->size()) {
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -58,9 +58,9 @@ txNodeSetAdaptor::ItemAsNumber(PRUint32 aIndex, double *aResult)
 }
 
 NS_IMETHODIMP
-txNodeSetAdaptor::ItemAsString(PRUint32 aIndex, nsAString &aResult)
+txNodeSetAdaptor::ItemAsString(uint32_t aIndex, nsAString &aResult)
 {
-    if (aIndex > (PRUint32)NodeSet()->size()) {
+    if (aIndex > (uint32_t)NodeSet()->size()) {
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -70,9 +70,9 @@ txNodeSetAdaptor::ItemAsString(PRUint32 aIndex, nsAString &aResult)
 }
 
 NS_IMETHODIMP
-txNodeSetAdaptor::GetLength(PRUint32 *aLength)
+txNodeSetAdaptor::GetLength(uint32_t *aLength)
 {
-    *aLength = (PRUint32)NodeSet()->size();
+    *aLength = (uint32_t)NodeSet()->size();
 
     return NS_OK;
 }

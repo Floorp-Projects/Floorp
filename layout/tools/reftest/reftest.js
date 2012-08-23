@@ -51,6 +51,8 @@ const BLANK_URL_FOR_CLEARING = "data:text/html,%3C%21%2D%2DCLEAR%2D%2D%3E";
 var gBrowser;
 // Are we testing web content loaded in a separate process?
 var gBrowserIsRemote;           // bool
+// Are we using <iframe mozbrowser>?
+var gBrowserIsIframe;           // bool
 var gBrowserMessageManager;
 var gCanvas1, gCanvas2;
 // gCurrentCanvas is non-null between InitCurrentCanvasWithSnapshot and the next
@@ -219,6 +221,12 @@ function OnRefTestLoad(win)
         gBrowserIsRemote = false;
     }
 
+    try {
+      gBrowserIsIframe = prefs.getBoolPref("reftest.browser.iframe.enabled");
+    } catch (e) {
+      gBrowserIsIframe = false;
+    }
+
     if (win === undefined || win == null) {
       win = window;
     }
@@ -226,7 +234,12 @@ function OnRefTestLoad(win)
       gContainingWindow = win;
     }
 
-    gBrowser = gContainingWindow.document.createElementNS(XUL_NS, "xul:browser");
+    if (gBrowserIsIframe) {
+      gBrowser = gContainingWindow.document.createElementNS(XHTML_NS, "iframe");
+      gBrowser.setAttribute("mozbrowser", "");
+    } else {
+      gBrowser = gContainingWindow.document.createElementNS(XUL_NS, "xul:browser");
+    }
     gBrowser.setAttribute("id", "browser");
     gBrowser.setAttribute("type", "content-primary");
     gBrowser.setAttribute("remote", gBrowserIsRemote ? "true" : "false");
@@ -1541,6 +1554,7 @@ function FindUnexpectedCrashDumpFiles()
         let path = String(file.path);
         if (path.match(/\.(dmp|extra)$/) && !gUnexpectedCrashDumpFiles[path]) {
             if (!foundCrashDumpFile) {
+                ++gTestResults.UnexpectedFail;
                 foundCrashDumpFile = true;
                 gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " + gCurrentURL +
                          " | This test left crash dumps behind, but we weren't expecting it to!\n");

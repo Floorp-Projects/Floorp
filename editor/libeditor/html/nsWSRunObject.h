@@ -84,7 +84,7 @@ public:
     return *this;
   }
 private:
-  PRUint16 mEnum;
+  uint16_t mEnum;
   void bool_conversion_helper() {};
 public:
   // Allow boolean conversion with no numeric conversion
@@ -154,7 +154,7 @@ class NS_STACK_CLASS nsWSRunObject
     enum {eBoth   = eBefore | eAfter};
 
     // constructor / destructor -----------------------------------------------
-    nsWSRunObject(nsHTMLEditor *aEd, nsIDOMNode *aNode, PRInt32 aOffset);
+    nsWSRunObject(nsHTMLEditor *aEd, nsIDOMNode *aNode, int32_t aOffset);
     ~nsWSRunObject();
     
     // public methods ---------------------------------------------------------
@@ -164,7 +164,7 @@ class NS_STACK_CLASS nsWSRunObject
     static nsresult ScrubBlockBoundary(nsHTMLEditor *aHTMLEd, 
                                        nsCOMPtr<nsIDOMNode> *aBlock,
                                        BlockBoundary aBoundary,
-                                       PRInt32 *aOffset = 0);
+                                       int32_t *aOffset = 0);
     
     // PrepareToJoinBlocks fixes up ws at the end of aLeftParent and the
     // beginning of aRightParent in preperation for them to be joined.
@@ -182,9 +182,9 @@ class NS_STACK_CLASS nsWSRunObject
     //                   needs to be removed.
     static nsresult PrepareToDeleteRange(nsHTMLEditor *aHTMLEd, 
                                          nsCOMPtr<nsIDOMNode> *aStartNode,
-                                         PRInt32 *aStartOffset, 
+                                         int32_t *aStartOffset, 
                                          nsCOMPtr<nsIDOMNode> *aEndNode,
-                                         PRInt32 *aEndOffset);
+                                         int32_t *aEndOffset);
 
     // PrepareToDeleteNode fixes up ws before and after aNode in preperation 
     // for aNode to be deleted.
@@ -201,14 +201,14 @@ class NS_STACK_CLASS nsWSRunObject
     //                   needs to end with nbsp.
     static nsresult PrepareToSplitAcrossBlocks(nsHTMLEditor *aHTMLEd, 
                                                nsCOMPtr<nsIDOMNode> *aSplitNode, 
-                                               PRInt32 *aSplitOffset);
+                                               int32_t *aSplitOffset);
 
     // InsertBreak inserts a br node at {aInOutParent,aInOutOffset}
     // and makes any needed adjustments to ws around that point.
     // example of fixup: normalws after {aInOutParent,aInOutOffset}
     //                   needs to begin with nbsp.
     nsresult InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent, 
-                         PRInt32 *aInOutOffset, 
+                         int32_t *aInOutOffset, 
                          nsCOMPtr<nsIDOMNode> *outBRNode, 
                          nsIEditor::EDirection aSelect);
 
@@ -218,7 +218,7 @@ class NS_STACK_CLASS nsWSRunObject
     //                   needs to be removed.
     nsresult InsertText(const nsAString& aStringToInsert, 
                         nsCOMPtr<nsIDOMNode> *aInOutNode, 
-                        PRInt32 *aInOutOffset,
+                        int32_t *aInOutOffset,
                         nsIDOMDocument *aDoc);
 
     // DeleteWSBackward deletes a single visible piece of ws before
@@ -239,9 +239,9 @@ class NS_STACK_CLASS nsWSRunObject
     // {outVisNode,outVisOffset} is set to just AFTER the visible
     // object.
     void PriorVisibleNode(nsIDOMNode *aNode,
-                          PRInt32 aOffset,
+                          int32_t aOffset,
                           nsCOMPtr<nsIDOMNode> *outVisNode,
-                          PRInt32 *outVisOffset,
+                          int32_t *outVisOffset,
                           WSType *outType);
 
     // NextVisibleNode returns the first piece of visible thing
@@ -250,9 +250,9 @@ class NS_STACK_CLASS nsWSRunObject
     // {outVisNode,outVisOffset} is set to just BEFORE the visible
     // object.
     void NextVisibleNode(nsIDOMNode *aNode,
-                         PRInt32 aOffset,
+                         int32_t aOffset,
                          nsCOMPtr<nsIDOMNode> *outVisNode,
-                         PRInt32 *outVisOffset,
+                         int32_t *outVisOffset,
                          WSType *outType);
     
     // AdjustWhitespace examines the ws object for nbsp's that can
@@ -269,8 +269,8 @@ class NS_STACK_CLASS nsWSRunObject
     {
       nsCOMPtr<nsIDOMNode> mStartNode;  // node where ws run starts
       nsCOMPtr<nsIDOMNode> mEndNode;    // node where ws run ends
-      PRInt32 mStartOffset;             // offset where ws run starts
-      PRInt32 mEndOffset;               // offset where ws run ends
+      int32_t mStartOffset;             // offset where ws run starts
+      int32_t mEndOffset;               // offset where ws run ends
       // type of ws, and what is to left and right of it
       WSType mType, mLeftType, mRightType;
       // other ws runs to left or right.  may be null.
@@ -292,11 +292,11 @@ class NS_STACK_CLASS nsWSRunObject
     struct NS_STACK_CLASS WSPoint
     {
       nsCOMPtr<nsIContent> mTextNode;
-      PRUint32 mOffset;
+      uint32_t mOffset;
       PRUnichar mChar;
 
       WSPoint() : mTextNode(0),mOffset(0),mChar(0) {}
-      WSPoint(nsIDOMNode *aNode, PRInt32 aOffset, PRUnichar aChar) : 
+      WSPoint(nsIDOMNode *aNode, int32_t aOffset, PRUnichar aChar) : 
                      mTextNode(do_QueryInterface(aNode)),mOffset(aOffset),mChar(aChar)
       {
         if (!mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
@@ -305,7 +305,7 @@ class NS_STACK_CLASS nsWSRunObject
           mTextNode = nullptr;
         }
       }
-      WSPoint(nsIContent *aTextNode, PRInt32 aOffset, PRUnichar aChar) : 
+      WSPoint(nsIContent *aTextNode, int32_t aOffset, PRUnichar aChar) : 
                      mTextNode(aTextNode),mOffset(aOffset),mChar(aChar) {}
     };    
 
@@ -334,7 +334,7 @@ class NS_STACK_CLASS nsWSRunObject
                                nsIDOMNode *aBlockParent, 
                                nsCOMPtr<nsIDOMNode> *aPriorNode);
     nsresult GetPreviousWSNode(nsIDOMNode *aStartNode,
-                               PRInt32      aOffset,
+                               int32_t      aOffset,
                                nsIDOMNode  *aBlockParent, 
                                nsCOMPtr<nsIDOMNode> *aPriorNode);
     nsresult GetPreviousWSNode(DOMPoint aPoint,
@@ -344,7 +344,7 @@ class NS_STACK_CLASS nsWSRunObject
                            nsIDOMNode *aBlockParent, 
                            nsCOMPtr<nsIDOMNode> *aNextNode);
     nsresult GetNextWSNode(nsIDOMNode *aStartNode,
-                           PRInt32     aOffset,
+                           int32_t     aOffset,
                            nsIDOMNode *aBlockParent, 
                            nsCOMPtr<nsIDOMNode> *aNextNode);
     nsresult GetNextWSNode(DOMPoint aPoint,
@@ -352,25 +352,25 @@ class NS_STACK_CLASS nsWSRunObject
                            nsCOMPtr<nsIDOMNode> *aNextNode);
     nsresult PrepareToDeleteRangePriv(nsWSRunObject* aEndObject);
     nsresult PrepareToSplitAcrossBlocksPriv();
-    nsresult DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset, 
-                         nsIDOMNode *aEndNode, PRInt32 aEndOffset,
+    nsresult DeleteChars(nsIDOMNode *aStartNode, int32_t aStartOffset, 
+                         nsIDOMNode *aEndNode, int32_t aEndOffset,
                          AreaRestriction aAR = eAnywhere);
-    WSPoint  GetCharAfter(nsIDOMNode *aNode, PRInt32 aOffset);
-    WSPoint  GetCharBefore(nsIDOMNode *aNode, PRInt32 aOffset);
+    WSPoint  GetCharAfter(nsIDOMNode *aNode, int32_t aOffset);
+    WSPoint  GetCharBefore(nsIDOMNode *aNode, int32_t aOffset);
     WSPoint  GetCharAfter(const WSPoint &aPoint);
     WSPoint  GetCharBefore(const WSPoint &aPoint);
     nsresult ConvertToNBSP(WSPoint aPoint,
                            AreaRestriction aAR = eAnywhere);
-    void     GetAsciiWSBounds(PRInt16 aDir, nsIDOMNode *aNode, PRInt32 aOffset,
-                                nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset,
-                                nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
-    void     FindRun(nsIDOMNode *aNode, PRInt32 aOffset, WSFragment **outRun, bool after);
-    PRUnichar GetCharAt(nsIContent *aTextNode, PRInt32 aOffset);
-    WSPoint  GetWSPointAfter(nsIDOMNode *aNode, PRInt32 aOffset);
-    WSPoint  GetWSPointBefore(nsIDOMNode *aNode, PRInt32 aOffset);
+    void     GetAsciiWSBounds(int16_t aDir, nsIDOMNode *aNode, int32_t aOffset,
+                                nsCOMPtr<nsIDOMNode> *outStartNode, int32_t *outStartOffset,
+                                nsCOMPtr<nsIDOMNode> *outEndNode, int32_t *outEndOffset);
+    void     FindRun(nsIDOMNode *aNode, int32_t aOffset, WSFragment **outRun, bool after);
+    PRUnichar GetCharAt(nsIContent *aTextNode, int32_t aOffset);
+    WSPoint  GetWSPointAfter(nsIDOMNode *aNode, int32_t aOffset);
+    WSPoint  GetWSPointBefore(nsIDOMNode *aNode, int32_t aOffset);
     nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);
-    nsresult CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOffset);
-    nsresult CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOffset);
+    nsresult CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOffset);
+    nsresult CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOffset);
     
     static nsresult ScrubBlockBoundaryInner(nsHTMLEditor *aHTMLEd, 
                                        nsCOMPtr<nsIDOMNode> *aBlock,
@@ -380,25 +380,25 @@ class NS_STACK_CLASS nsWSRunObject
     // member variables ---------------------------------------------------------
     
     nsCOMPtr<nsIDOMNode> mNode;           // the node passed to our constructor
-    PRInt32 mOffset;                      // the offset passed to our contructor
+    int32_t mOffset;                      // the offset passed to our contructor
     // together, the above represent the point at which we are building up ws info.
     
     bool    mPRE;                         // true if we are in preformatted whitespace context
     nsCOMPtr<nsIDOMNode> mStartNode;      // node/offset where ws starts
-    PRInt32 mStartOffset;                 // ...
+    int32_t mStartOffset;                 // ...
     WSType mStartReason;                  // reason why ws starts (eText, eOtherBlock, etc)
     nsCOMPtr<nsIDOMNode> mStartReasonNode;// the node that implicated by start reason
     
     nsCOMPtr<nsIDOMNode> mEndNode;        // node/offset where ws ends
-    PRInt32 mEndOffset;                   // ...
+    int32_t mEndOffset;                   // ...
     WSType mEndReason;                    // reason why ws ends (eText, eOtherBlock, etc)
     nsCOMPtr<nsIDOMNode> mEndReasonNode;  // the node that implicated by end reason
     
     nsCOMPtr<nsIDOMNode> mFirstNBSPNode;  // location of first nbsp in ws run, if any
-    PRInt32 mFirstNBSPOffset;             // ...
+    int32_t mFirstNBSPOffset;             // ...
     
     nsCOMPtr<nsIDOMNode> mLastNBSPNode;   // location of last nbsp in ws run, if any
-    PRInt32 mLastNBSPOffset;              // ...
+    int32_t mLastNBSPOffset;              // ...
     
     nsCOMArray<nsIDOMNode> mNodeArray;//the list of nodes containing ws in this run
     

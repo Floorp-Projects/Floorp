@@ -297,7 +297,7 @@ typedef NSInteger NSEventGestureAxis;
 // Stop NSView hierarchy being changed during [ChildView drawRect:]
 - (void)delayedTearDown;
 
-- (void)sendFocusEvent:(PRUint32)eventType;
+- (void)sendFocusEvent:(uint32_t)eventType;
 
 - (void)handleMouseMoved:(NSEvent*)aEvent;
 
@@ -401,10 +401,10 @@ public:
   virtual float           GetDPI();
 
   NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
-                                            PRInt32 *aX, PRInt32 *aY);
-  NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, bool aRepaint);
-  NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight, bool aRepaint);
+                                            int32_t *aX, int32_t *aY);
+  NS_IMETHOD              Move(int32_t aX, int32_t aY);
+  NS_IMETHOD              Resize(int32_t aWidth,int32_t aHeight, bool aRepaint);
+  NS_IMETHOD              Resize(int32_t aX, int32_t aY,int32_t aWidth,int32_t aHeight, bool aRepaint);
 
   NS_IMETHOD              Enable(bool aState);
   virtual bool            IsEnabled() const;
@@ -413,7 +413,7 @@ public:
 
   NS_IMETHOD              Invalidate(const nsIntRect &aRect);
 
-  virtual void*           GetNativeData(PRUint32 aDataType);
+  virtual void*           GetNativeData(uint32_t aDataType);
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
   virtual nsIntPoint      WidgetToScreenOffset();
   virtual bool            ShowsResizeIndicator(nsIntRect* aResizerRect);
@@ -426,12 +426,12 @@ public:
   virtual bool            UseOffMainThreadCompositing();
 
   NS_IMETHOD        SetCursor(nsCursor aCursor);
-  NS_IMETHOD        SetCursor(imgIContainer* aCursor, PRUint32 aHotspotX, PRUint32 aHotspotY);
+  NS_IMETHOD        SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY);
 
   NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture, bool aConsumeRollupEvent);
   NS_IMETHOD        SetTitle(const nsAString& title);
 
-  NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
+  NS_IMETHOD        GetAttention(int32_t aCycleCount);
 
   virtual bool HasPendingInputEvent();
 
@@ -443,7 +443,7 @@ public:
                                     const InputContextAction& aAction);
   NS_IMETHOD_(InputContext) GetInputContext();
   NS_IMETHOD        CancelIMEComposition();
-  NS_IMETHOD        GetToggledKeyState(PRUint32 aKeyCode,
+  NS_IMETHOD        GetToggledKeyState(uint32_t aKeyCode,
                                        bool* aLEDState);
   NS_IMETHOD        OnIMEFocusChange(bool aFocus);
 
@@ -462,15 +462,15 @@ public:
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void                SetTransparencyMode(nsTransparencyMode aMode);
 
-  virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
-                                            PRInt32 aNativeKeyCode,
-                                            PRUint32 aModifierFlags,
+  virtual nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
+                                            int32_t aNativeKeyCode,
+                                            uint32_t aModifierFlags,
                                             const nsAString& aCharacters,
                                             const nsAString& aUnmodifiedCharacters);
 
   virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
-                                              PRUint32 aNativeMessage,
-                                              PRUint32 aModifierFlags);
+                                              uint32_t aNativeMessage,
+                                              uint32_t aModifierFlags);
 
   virtual nsresult SynthesizeNativeMouseMove(nsIntPoint aPoint)
   { return SynthesizeNativeMouseEvent(aPoint, NSMouseMoved, 0); }
@@ -500,7 +500,7 @@ public:
   void              ResetParent();
 
   static bool DoHasPendingInputEvent();
-  static PRUint32 GetCurrentInputEventCount();
+  static uint32_t GetCurrentInputEventCount();
   static void UpdateCurrentInputEventCount();
 
   NSView<mozView>* GetEditorView();
@@ -565,7 +565,7 @@ protected:
 #endif
   nsIPluginInstanceOwner* mPluginInstanceOwner; // [WEAK]
 
-  static PRUint32 sLastInputEventCount;
+  static uint32_t sLastInputEventCount;
 };
 
 void NS_InstallPluginKeyEventsHandler();

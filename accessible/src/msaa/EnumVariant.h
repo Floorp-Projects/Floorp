@@ -50,7 +50,7 @@ private:
 protected:
   nsRefPtr<AccessibleWrap> mAnchorAcc;
   Accessible* mCurAcc;
-  PRUint32 mCurIndex;
+  uint32_t mCurIndex;
 };
 
 } // a11y namespace

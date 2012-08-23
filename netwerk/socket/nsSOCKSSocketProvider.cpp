@@ -41,12 +41,12 @@ nsSOCKSSocketProvider::CreateV5(nsISupports *aOuter, REFNSIID aIID, void **aResu
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketProvider::NewSocket(PRInt32 family,
+nsSOCKSSocketProvider::NewSocket(int32_t family,
                                  const char *host, 
-                                 PRInt32 port,
+                                 int32_t port,
                                  const char *proxyHost,
-                                 PRInt32 proxyPort,
-                                 PRUint32 flags,
+                                 int32_t proxyPort,
+                                 uint32_t flags,
                                  PRFileDesc **result, 
                                  nsISupports **socksInfo)
 {
@@ -74,12 +74,12 @@ nsSOCKSSocketProvider::NewSocket(PRInt32 family,
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketProvider::AddToSocket(PRInt32 family,
+nsSOCKSSocketProvider::AddToSocket(int32_t family,
                                    const char *host,
-                                   PRInt32 port,
+                                   int32_t port,
                                    const char *proxyHost,
-                                   PRInt32 proxyPort,
-                                   PRUint32 flags,
+                                   int32_t proxyPort,
+                                   uint32_t flags,
                                    PRFileDesc *sock, 
                                    nsISupports **socksInfo)
 {

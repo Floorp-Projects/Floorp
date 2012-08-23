@@ -99,17 +99,17 @@ interface nsICacheEntryInfo : nsISupports
     /**
      * Get the last time the cache entry was opened (in seconds since the Epoch).
      */
-    readonly attribute PRUint32  lastFetched;
+    readonly attribute uint32_t  lastFetched;
 
     /**
      * Get the last time the cache entry was modified (in seconds since the Epoch).
      */
-    readonly attribute PRUint32  lastModified;
+    readonly attribute uint32_t  lastModified;
 
     /**
      * Get the expiration time of the cache entry (in seconds since the Epoch).
      */
-    readonly attribute PRUint32  expirationTime;
+    readonly attribute uint32_t  expirationTime;
 
     /**
      * Get the cache entry data size.

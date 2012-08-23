@@ -26,24 +26,24 @@
 // promoted to doubles when passed in registers
 #define FPR_COUNT     13
 
-extern "C" PRUint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
+extern "C" uint32_t
+invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 {
-    return PRUint32(((paramCount * 2) + 3) & ~3);
+    return uint32_t(((paramCount * 2) + 3) & ~3);
 }
 
 extern "C" void
-invoke_copy_to_stack(PRUint64* gpregs,
+invoke_copy_to_stack(uint64_t* gpregs,
                      double* fpregs,
-                     PRUint32 paramCount,
+                     uint32_t paramCount,
                      nsXPTCVariant* s, 
-                     PRUint64* d)
+                     uint64_t* d)
 {
-    PRUint64 tempu64;
+    uint64_t tempu64;
 
     for(uint32 i = 0; i < paramCount; i++, s++) {
         if(s->IsPtrData())
-            tempu64 = (PRUint64) s->ptr;
+            tempu64 = (uint64_t) s->ptr;
         else {
             switch(s->type) {
             case nsXPTType::T_FLOAT:                                  break;
@@ -59,7 +59,7 @@ invoke_copy_to_stack(PRUint64* gpregs,
             case nsXPTType::T_BOOL:   tempu64 = s->val.b;             break;
             case nsXPTType::T_CHAR:   tempu64 = s->val.c;             break;
             case nsXPTType::T_WCHAR:  tempu64 = s->val.wc;            break;
-            default:                  tempu64 = (PRUint64) s->val.p;  break;
+            default:                  tempu64 = (uint64_t) s->val.p;  break;
             }
         }
 
@@ -90,6 +90,6 @@ invoke_copy_to_stack(PRUint64* gpregs,
 }
 
 EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params);
+NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+                   uint32_t paramCount, nsXPTCVariant* params);
 

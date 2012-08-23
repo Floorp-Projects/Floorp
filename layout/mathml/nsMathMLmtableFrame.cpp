@@ -107,7 +107,7 @@ static PRUnichar*
 GetValueAt(nsIFrame*                      aTableOrRowFrame,
            const FramePropertyDescriptor* aProperty,
            nsIAtom*                       aAttribute,
-           PRInt32                        aRowOrColIndex)
+           int32_t                        aRowOrColIndex)
 {
   FrameProperties props = aTableOrRowFrame->Properties();
   nsValueList* valueList = static_cast<nsValueList*>(props.Get(aProperty));
@@ -123,7 +123,7 @@ GetValueAt(nsIFrame*                      aTableOrRowFrame,
     }
     props.Set(aProperty, valueList);
   }
-  PRInt32 count = valueList->mArray.Length();
+  int32_t count = valueList->mArray.Length();
   return (aRowOrColIndex < count)
          ? valueList->mArray[aRowOrColIndex]
          : valueList->mArray[count-1];
@@ -131,7 +131,7 @@ GetValueAt(nsIFrame*                      aTableOrRowFrame,
 
 #ifdef DEBUG
 static bool
-IsTable(PRUint8 aDisplay)
+IsTable(uint8_t aDisplay)
 {
   if ((aDisplay == NS_STYLE_DISPLAY_TABLE) ||
       (aDisplay == NS_STYLE_DISPLAY_INLINE_TABLE))
@@ -156,7 +156,7 @@ MapRowAttributesIntoCSS(nsIFrame* aTableFrame,
 {
   DEBUG_VERIFY_THAT_FRAME_IS_TABLE(aTableFrame);
   DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, TABLE_ROW);
-  PRInt32 rowIndex = ((nsTableRowFrame*)aRowFrame)->GetRowIndex();
+  int32_t rowIndex = ((nsTableRowFrame*)aRowFrame)->GetRowIndex();
   nsIContent* rowContent = aRowFrame->GetContent();
   PRUnichar* attr;
 
@@ -200,7 +200,7 @@ MapColAttributesIntoCSS(nsIFrame* aTableFrame,
   DEBUG_VERIFY_THAT_FRAME_IS_TABLE(aTableFrame);
   DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, TABLE_ROW);
   DEBUG_VERIFY_THAT_FRAME_IS(aCellFrame, TABLE_CELL);
-  PRInt32 rowIndex, colIndex;
+  int32_t rowIndex, colIndex;
   ((nsTableCellFrame*)aCellFrame)->GetCellIndexes(rowIndex, colIndex);
   nsIContent* cellContent = aCellFrame->GetContent();
   PRUnichar* attr;
@@ -288,12 +288,12 @@ enum eAlign {
 };
 
 static void
-ParseAlignAttribute(nsString& aValue, eAlign& aAlign, PRInt32& aRowIndex)
+ParseAlignAttribute(nsString& aValue, eAlign& aAlign, int32_t& aRowIndex)
 {
   // by default, the table is centered about the axis
   aRowIndex = 0;
   aAlign = eAlign_axis;
-  PRInt32 len = 0;
+  int32_t len = 0;
 
   // we only have to remove the leading spaces because 
   // ToInteger ignores the whitespaces around the number
@@ -383,8 +383,8 @@ nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
 // Since UpdatePresentation() and UpdatePresentationDataFromChildAt() can be called
 // by a parent, ensure that the displaystyle attribute of mtable takes precedence
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::UpdatePresentationData(PRUint32 aFlagsValues,
-                                                 PRUint32 aWhichFlags)
+nsMathMLmtableOuterFrame::UpdatePresentationData(uint32_t aFlagsValues,
+                                                 uint32_t aWhichFlags)
 {
   if (NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(mPresentationData.flags)) {
     // our current state takes precedence, disallow updating the displastyle
@@ -396,10 +396,10 @@ nsMathMLmtableOuterFrame::UpdatePresentationData(PRUint32 aFlagsValues,
 }
 
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
-                                                            PRInt32  aLastIndex,
-                                                            PRUint32 aFlagsValues,
-                                                            PRUint32 aWhichFlags)
+nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(int32_t  aFirstIndex,
+                                                            int32_t  aLastIndex,
+                                                            uint32_t aFlagsValues,
+                                                            uint32_t aWhichFlags)
 {
   if (NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(mPresentationData.flags)) {
     // our current state takes precedence, disallow updating the displastyle
@@ -414,9 +414,9 @@ nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex
 }
 
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
+nsMathMLmtableOuterFrame::AttributeChanged(int32_t  aNameSpaceID,
                                            nsIAtom* aAttribute,
-                                           PRInt32  aModType)
+                                           int32_t  aModType)
 {
   // Attributes specific to <mtable>:
   // frame         : in mathml.css
@@ -509,9 +509,9 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
 
 nsIFrame*
 nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
-                                        PRInt32         aRowIndex)
+                                        int32_t         aRowIndex)
 {
-  PRInt32 rowCount, colCount;
+  int32_t rowCount, colCount;
   GetTableSize(rowCount, colCount);
 
   // Negative indices mean to find upwards from the end.
@@ -563,7 +563,7 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
 
   // see if the user has set the align attribute on the <mtable>
   // XXX should we also check <mstyle> ?
-  PRInt32 rowIndex = 0;
+  int32_t rowIndex = 0;
   eAlign tableAlign = eAlign_axis;
   GetAttribute(mContent, nullptr, nsGkAtoms::align, value);
   if (!value.IsEmpty()) {
@@ -703,9 +703,9 @@ nsMathMLmtrFrame::~nsMathMLmtrFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtrFrame::AttributeChanged(PRInt32  aNameSpaceID,
+nsMathMLmtrFrame::AttributeChanged(int32_t  aNameSpaceID,
                                    nsIAtom* aAttribute,
-                                   PRInt32  aModType)
+                                   int32_t  aModType)
 {
   // Attributes specific to <mtr>:
   // groupalign  : Not yet supported.
@@ -765,10 +765,10 @@ nsMathMLmtdFrame::~nsMathMLmtdFrame()
 {
 }
 
-PRInt32
+int32_t
 nsMathMLmtdFrame::GetRowSpan()
 {
-  PRInt32 rowspan = 1;
+  int32_t rowspan = 1;
 
   // Don't look at the content's rowspan if we're not an mtd or a pseudo cell.
   if ((mContent->Tag() == nsGkAtoms::mtd_) && !GetStyleContext()->GetPseudo()) {
@@ -785,10 +785,10 @@ nsMathMLmtdFrame::GetRowSpan()
   return rowspan;
 }
 
-PRInt32
+int32_t
 nsMathMLmtdFrame::GetColSpan()
 {
-  PRInt32 colspan = 1;
+  int32_t colspan = 1;
 
   // Don't look at the content's colspan if we're not an mtd or a pseudo cell.
   if ((mContent->Tag() == nsGkAtoms::mtd_) && !GetStyleContext()->GetPseudo()) {
@@ -805,9 +805,9 @@ nsMathMLmtdFrame::GetColSpan()
 }
 
 NS_IMETHODIMP
-nsMathMLmtdFrame::AttributeChanged(PRInt32  aNameSpaceID,
+nsMathMLmtdFrame::AttributeChanged(int32_t  aNameSpaceID,
                                    nsIAtom* aAttribute,
-                                   PRInt32  aModType)
+                                   int32_t  aModType)
 {
   // Attributes specific to <mtd>:
   // groupalign  : Not yet supported

@@ -10,9 +10,9 @@
 
 extern "C" {
 static void ATTRIBUTE_USED __attribute__ ((regparm(3)))
-invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
+invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d)
 {
-    for(PRUint32 i = paramCount; i >0; i--, d++, s++)
+    for(uint32_t i = paramCount; i >0; i--, d++, s++)
     {
         if(s->IsPtrData())
         {
@@ -22,8 +22,8 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 
         switch(s->type)
         {
-        case nsXPTType::T_I64    : *((PRInt64*) d) = s->val.i64; d++;    break;
-        case nsXPTType::T_U64    : *((PRUint64*)d) = s->val.u64; d++;    break;
+        case nsXPTType::T_I64    : *((int64_t*) d) = s->val.i64; d++;    break;
+        case nsXPTType::T_U64    : *((uint64_t*)d) = s->val.u64; d++;    break;
         case nsXPTType::T_DOUBLE : *((double*)  d) = s->val.d;   d++;    break;
         default                  : *((void**)d)    = s->val.p;           break;
         }
@@ -33,8 +33,8 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 
 /*
   EXPORT_XPCOM_API(nsresult)
-  NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params);
+  NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+                   uint32_t paramCount, nsXPTCVariant* params);
 
   Each param takes at most two 4-byte words.
   It doesn't matter if we push too many words, and calculating the exact

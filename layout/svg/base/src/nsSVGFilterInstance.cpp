@@ -17,7 +17,7 @@
 #include "nsSVGUtils.h"
 
 float
-nsSVGFilterInstance::GetPrimitiveNumber(PRUint8 aCtxType, float aValue) const
+nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType, float aValue) const
 {
   nsSVGLength2 val;
   val.Init(aCtxType, 0xff, aValue,
@@ -114,7 +114,7 @@ nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(PrimitiveInfo* aPrimitive)
 
   gfxRect defaultFilterSubregion(0,0,0,0);
   if (fE->SubregionIsUnionOfRegions()) {
-    for (PRUint32 i = 0; i < aPrimitive->mInputs.Length(); ++i) {
+    for (uint32_t i = 0; i < aPrimitive->mInputs.Length(); ++i) {
       defaultFilterSubregion =
           defaultFilterSubregion.Union(
               aPrimitive->mInputs[i]->mImage.mFilterPrimitiveSubregion);
@@ -189,13 +189,13 @@ nsSVGFilterInstance::BuildPrimitives()
   nsTHashtable<ImageAnalysisEntry> imageTable;
   imageTable.Init(10);
 
-  for (PRUint32 i = 0; i < mPrimitives.Length(); ++i) {
+  for (uint32_t i = 0; i < mPrimitives.Length(); ++i) {
     PrimitiveInfo* info = &mPrimitives[i];
     nsSVGFE* filter = info->mFE;
     nsAutoTArray<nsSVGStringInfo,2> sources;
     filter->GetSourceImageNames(sources);
  
-    for (PRUint32 j=0; j<sources.Length(); ++j) {
+    for (uint32_t j=0; j<sources.Length(); ++j) {
       nsAutoString str;
       sources[j].mString->GetAnimValue(str, sources[j].mElement);
       PrimitiveInfo* sourceInfo;
@@ -246,10 +246,10 @@ nsSVGFilterInstance::BuildPrimitives()
 void
 nsSVGFilterInstance::ComputeResultBoundingBoxes()
 {
-  for (PRUint32 i = 0; i < mPrimitives.Length(); ++i) {
+  for (uint32_t i = 0; i < mPrimitives.Length(); ++i) {
     PrimitiveInfo* info = &mPrimitives[i];
     nsAutoTArray<nsIntRect,2> sourceBBoxes;
-    for (PRUint32 j = 0; j < info->mInputs.Length(); ++j) {
+    for (uint32_t j = 0; j < info->mInputs.Length(); ++j) {
       sourceBBoxes.AppendElement(info->mInputs[j]->mResultBoundingBox);
     }
     
@@ -263,10 +263,10 @@ nsSVGFilterInstance::ComputeResultBoundingBoxes()
 void
 nsSVGFilterInstance::ComputeResultChangeBoxes()
 {
-  for (PRUint32 i = 0; i < mPrimitives.Length(); ++i) {
+  for (uint32_t i = 0; i < mPrimitives.Length(); ++i) {
     PrimitiveInfo* info = &mPrimitives[i];
     nsAutoTArray<nsIntRect,2> sourceChangeBoxes;
-    for (PRUint32 j = 0; j < info->mInputs.Length(); ++j) {
+    for (uint32_t j = 0; j < info->mInputs.Length(); ++j) {
       sourceChangeBoxes.AppendElement(info->mInputs[j]->mResultChangeBox);
     }
 
@@ -286,17 +286,17 @@ nsSVGFilterInstance::ComputeNeededBoxes()
   mPrimitives[mPrimitives.Length() - 1].mResultNeededBox.IntersectRect(
     mPrimitives[mPrimitives.Length() - 1].mResultBoundingBox, mPostFilterDirtyRect);
 
-  for (PRInt32 i = mPrimitives.Length() - 1; i >= 0; --i) {
+  for (int32_t i = mPrimitives.Length() - 1; i >= 0; --i) {
     PrimitiveInfo* info = &mPrimitives[i];
     nsAutoTArray<nsIntRect,2> sourceBBoxes;
-    for (PRUint32 j = 0; j < info->mInputs.Length(); ++j) {
+    for (uint32_t j = 0; j < info->mInputs.Length(); ++j) {
       sourceBBoxes.AppendElement(info->mInputs[j]->mResultBoundingBox);
     }
     
     info->mFE->ComputeNeededSourceBBoxes(
       info->mResultNeededBox, sourceBBoxes, *this);
     // Update each source with the rectangle we need
-    for (PRUint32 j = 0; j < info->mInputs.Length(); ++j) {
+    for (uint32_t j = 0; j < info->mInputs.Length(); ++j) {
       nsIntRect* r = &info->mInputs[j]->mResultNeededBox;
       r->UnionRect(*r, sourceBBoxes[j]);
       // Keep everything within the filter effects region
@@ -314,7 +314,7 @@ nsSVGFilterInstance::ComputeUnionOfAllNeededBoxes()
               mSourceAlpha.mResultNeededBox);
   r.UnionRect(r, mFillPaint.mResultNeededBox);
   r.UnionRect(r, mStrokePaint.mResultNeededBox);
-  for (PRUint32 i = 0; i < mPrimitives.Length(); ++i) {
+  for (uint32_t i = 0; i < mPrimitives.Length(); ++i) {
     r.UnionRect(r, mPrimitives[i].mResultNeededBox);
   }
   return r;
@@ -464,11 +464,11 @@ nsSVGFilterInstance::BuildSourceImages()
     // color model is PREMULTIPLIED SRGB by default.
 
     // Clear the color channel
-    const PRUint32* src = reinterpret_cast<PRUint32*>(sourceColorAlpha->Data());
-    PRUint32* dest = reinterpret_cast<PRUint32*>(mSourceAlpha.mImage.mImage->Data());
-    for (PRInt32 y = 0; y < mSurfaceRect.height; y++) {
-      PRUint32 rowOffset = (mSourceAlpha.mImage.mImage->Stride()*y) >> 2;
-      for (PRInt32 x = 0; x < mSurfaceRect.width; x++) {
+    const uint32_t* src = reinterpret_cast<uint32_t*>(sourceColorAlpha->Data());
+    uint32_t* dest = reinterpret_cast<uint32_t*>(mSourceAlpha.mImage.mImage->Data());
+    for (int32_t y = 0; y < mSurfaceRect.height; y++) {
+      uint32_t rowOffset = (mSourceAlpha.mImage.mImage->Stride()*y) >> 2;
+      for (int32_t x = 0; x < mSurfaceRect.width; x++) {
         dest[rowOffset + x] = src[rowOffset + x] & 0xFF000000U;
       }
     }
@@ -486,8 +486,8 @@ nsSVGFilterInstance::EnsureColorModel(PrimitiveInfo* aPrimitive,
   if (aColorModel == currentModel)
     return;
 
-  PRUint8* data = aPrimitive->mImage.mImage->Data();
-  PRInt32 stride = aPrimitive->mImage.mImage->Stride();
+  uint8_t* data = aPrimitive->mImage.mImage->Data();
+  int32_t stride = aPrimitive->mImage.mImage->Stride();
 
   nsIntRect r = aPrimitive->mResultNeededBox - mSurfaceRect.TopLeft();
 
@@ -538,7 +538,7 @@ nsSVGFilterInstance::Render(gfxASurface** aOutput)
   if (NS_FAILED(rv))
     return rv;
 
-  for (PRUint32 i = 0; i < mPrimitives.Length(); ++i) {
+  for (uint32_t i = 0; i < mPrimitives.Length(); ++i) {
     PrimitiveInfo* primitive = &mPrimitives[i];
 
     nsIntRect dataRect;
@@ -553,7 +553,7 @@ nsSVGFilterInstance::Render(gfxASurface** aOutput)
       return NS_ERROR_OUT_OF_MEMORY;
 
     nsAutoTArray<const Image*,2> inputs;
-    for (PRUint32 j = 0; j < primitive->mInputs.Length(); ++j) {
+    for (uint32_t j = 0; j < primitive->mInputs.Length(); ++j) {
       PrimitiveInfo* input = primitive->mInputs[j];
       
       if (!input->mImage.mImage) {
@@ -584,7 +584,7 @@ nsSVGFilterInstance::Render(gfxASurface** aOutput)
     if (NS_FAILED(rv))
       return rv;
 
-    for (PRUint32 j = 0; j < primitive->mInputs.Length(); ++j) {
+    for (uint32_t j = 0; j < primitive->mInputs.Length(); ++j) {
       PrimitiveInfo* input = primitive->mInputs[j];
       --input->mImageUsers;
       NS_ASSERTION(input->mImageUsers >= 0, "Bad mImageUsers tracking");

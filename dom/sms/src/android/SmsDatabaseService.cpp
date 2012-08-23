@@ -16,7 +16,7 @@ NS_IMPL_ISUPPORTS1(SmsDatabaseService, nsISmsDatabaseService)
 NS_IMETHODIMP
 SmsDatabaseService::SaveReceivedMessage(const nsAString& aSender,
                                         const nsAString& aBody,
-                                        PRUint64 aDate, PRInt32* aId)
+                                        uint64_t aDate, int32_t* aId)
 {
   // The Android stock SMS app does this already.
   *aId = -1;
@@ -26,7 +26,7 @@ SmsDatabaseService::SaveReceivedMessage(const nsAString& aSender,
 NS_IMETHODIMP
 SmsDatabaseService::SaveSentMessage(const nsAString& aReceiver,
                                     const nsAString& aBody,
-                                    PRUint64 aDate, PRInt32* aId)
+                                    uint64_t aDate, int32_t* aId)
 {
   *aId = -1;
 
@@ -39,8 +39,8 @@ SmsDatabaseService::SaveSentMessage(const nsAString& aReceiver,
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::GetMessageMoz(PRInt32 aMessageId, PRInt32 aRequestId,
-                                  PRUint64 aProcessId)
+SmsDatabaseService::GetMessageMoz(int32_t aMessageId, int32_t aRequestId,
+                                  uint64_t aProcessId)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
@@ -51,8 +51,8 @@ SmsDatabaseService::GetMessageMoz(PRInt32 aMessageId, PRInt32 aRequestId,
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId,
-                                  PRUint64 aProcessId)
+SmsDatabaseService::DeleteMessage(int32_t aMessageId, int32_t aRequestId,
+                                  uint64_t aProcessId)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
@@ -64,8 +64,8 @@ SmsDatabaseService::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId,
 
 NS_IMETHODIMP
 SmsDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
-                                      bool aReverse, PRInt32 aRequestId,
-                                      PRUint64 aProcessId)
+                                      bool aReverse, int32_t aRequestId,
+                                      uint64_t aProcessId)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
@@ -78,8 +78,8 @@ SmsDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId,
-                                         PRUint64 aProcessId)
+SmsDatabaseService::GetNextMessageInList(int32_t aListId, int32_t aRequestId,
+                                         uint64_t aProcessId)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
@@ -90,7 +90,7 @@ SmsDatabaseService::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId,
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::ClearMessageList(PRInt32 aListId)
+SmsDatabaseService::ClearMessageList(int32_t aListId)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
@@ -101,8 +101,8 @@ SmsDatabaseService::ClearMessageList(PRInt32 aListId)
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::MarkMessageRead(PRInt32 aMessageId, bool aValue,
-                                    PRInt32 aRequestId, PRUint64 aProcessId)
+SmsDatabaseService::MarkMessageRead(int32_t aMessageId, bool aValue,
+                                    int32_t aRequestId, uint64_t aProcessId)
 {
   // TODO: This would need to be implemented as part of Bug 748391
   return NS_OK;

@@ -48,7 +48,7 @@ interface nsIAtom : nsISupports
     return mString;
   }
 
-  inline const PRUint32 GetLength() {
+  inline const uint32_t GetLength() {
     return mLength;
   }
 
@@ -66,7 +66,7 @@ interface nsIAtom : nsISupports
   }
 
 protected:
-  PRUint32 mLength;
+  uint32_t mLength;
   uint32_t mHash;
   PRUnichar* mString;
 %}

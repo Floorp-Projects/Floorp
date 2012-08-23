@@ -221,7 +221,7 @@
 
 #define MAX_CLASSES 12
 
-static const PRUint16 gPair[MAX_CLASSES] = {
+static const uint16_t gPair[MAX_CLASSES] = {
   0x0FFF,
   0x0C02,
   0x0806,
@@ -279,7 +279,7 @@ static const PRUint16 gPair[MAX_CLASSES] = {
       [e] 0000 1111 1111 1111  = 0x0FFF
 */
 
-static const PRUint16 gPairConservative[MAX_CLASSES] = {
+static const uint16_t gPairConservative[MAX_CLASSES] = {
   0x0FFF,
   0x0EC2,
   0x0EC6,
@@ -369,7 +369,7 @@ static const PRUint16 gPairConservative[MAX_CLASSES] = {
 #define IS_ASCII_DIGIT(u) (0x0030 <= (u) && (u) <= 0x0039)
 
 static inline int
-GETCLASSFROMTABLE(const PRUint32* t, PRUint16 l)
+GETCLASSFROMTABLE(const uint32_t* t, uint16_t l)
 {
   return ((((t)[(l>>3)]) >> ((l & 0x0007)<<2)) & 0x000f);
 }
@@ -405,12 +405,12 @@ IS_HYPHEN(PRUnichar u)
           u == 0x2013);  // EN DASH
 }
 
-static PRInt8
+static int8_t
 GetClass(PRUnichar u)
 {
-   PRUint16 h = u & 0xFF00;
-   PRUint16 l = u & 0x00ff;
-   PRInt8 c;
+   uint16_t h = u & 0xFF00;
+   uint16_t l = u & 0x00ff;
+   int8_t c;
 
    // Handle 3 range table first
    if (0x0000 == h) {
@@ -478,7 +478,7 @@ GetClass(PRUnichar u)
    } else if (0x0500 == h) {
      // ARMENIAN HYPHEN (for "Breaking Hyphens" of UAX#14)
      if (l == 0x8A)
-       c = GETCLASSFROMTABLE(gLBClass00, PRUint16(U_HYPHEN));
+       c = GETCLASSFROMTABLE(gLBClass00, uint16_t(U_HYPHEN));
      else
        c = CLASS_CHARACTER;
    } else if (0x0F00 == h) {
@@ -498,7 +498,7 @@ GetClass(PRUnichar u)
 }
 
 static bool
-GetPair(PRInt8 c1, PRInt8 c2)
+GetPair(int8_t c1, int8_t c2)
 {
   NS_ASSERTION(c1 < MAX_CLASSES ,"illegal classes 1");
   NS_ASSERTION(c2 < MAX_CLASSES ,"illegal classes 2");
@@ -507,7 +507,7 @@ GetPair(PRInt8 c1, PRInt8 c2)
 }
 
 static bool
-GetPairConservative(PRInt8 c1, PRInt8 c2)
+GetPairConservative(int8_t c1, int8_t c2)
 {
   NS_ASSERTION(c1 < MAX_CLASSES ,"illegal classes 1");
   NS_ASSERTION(c2 < MAX_CLASSES ,"illegal classes 2");
@@ -527,24 +527,24 @@ NS_IMPL_ISUPPORTS1(nsJISx4051LineBreaker, nsILineBreaker)
 
 class ContextState {
 public:
-  ContextState(const PRUnichar* aText, PRUint32 aLength) {
+  ContextState(const PRUnichar* aText, uint32_t aLength) {
     mUniText = aText;
     mText = nullptr;
     mLength = aLength;
     Init();
   }
 
-  ContextState(const PRUint8* aText, PRUint32 aLength) {
+  ContextState(const uint8_t* aText, uint32_t aLength) {
     mUniText = nullptr;
     mText = aText;
     mLength = aLength;
     Init();
   }
 
-  PRUint32 Length() { return mLength; }
-  PRUint32 Index() { return mIndex; }
+  uint32_t Length() { return mLength; }
+  uint32_t Index() { return mIndex; }
 
-  PRUnichar GetCharAt(PRUint32 aIndex) {
+  PRUnichar GetCharAt(uint32_t aIndex) {
     NS_ASSERTION(0 <= aIndex && aIndex < mLength, "Out of range!");
     return mUniText ? mUniText[aIndex] : PRUnichar(mText[aIndex]);
   }
@@ -565,10 +565,10 @@ public:
 // CONSERVATIVE_BREAK_RANGE define the 'near' in characters.
 #define CONSERVATIVE_BREAK_RANGE 6
 
-  bool UseConservativeBreaking(PRUint32 aOffset = 0) {
+  bool UseConservativeBreaking(uint32_t aOffset = 0) {
     if (mHasCJKChar)
       return false;
-    PRUint32 index = mIndex + aOffset;
+    uint32_t index = mIndex + aOffset;
     bool result = (index < CONSERVATIVE_BREAK_RANGE ||
                      mLength - index < CONSERVATIVE_BREAK_RANGE ||
                      index - mLastBreakIndex < CONSERVATIVE_BREAK_RANGE);
@@ -579,12 +579,12 @@ public:
     // is near it.
 
     // Note that index is always larger than CONSERVATIVE_BREAK_RANGE here.
-    for (PRUint32 i = index; index - CONSERVATIVE_BREAK_RANGE < i; --i) {
+    for (uint32_t i = index; index - CONSERVATIVE_BREAK_RANGE < i; --i) {
       if (IS_NONBREAKABLE_SPACE(GetCharAt(i - 1)))
         return true;
     }
     // Note that index is always less than mLength - CONSERVATIVE_BREAK_RANGE.
-    for (PRUint32 i = index + 1; i < index + CONSERVATIVE_BREAK_RANGE; ++i) {
+    for (uint32_t i = index + 1; i < index + CONSERVATIVE_BREAK_RANGE; ++i) {
       if (IS_NONBREAKABLE_SPACE(GetCharAt(i)))
         return true;
     }
@@ -630,7 +630,7 @@ private:
     mHasPreviousSlash = false;
     mHasPreviousBackslash = false;
 
-    for (PRUint32 i = 0; i < mLength; ++i) {
+    for (uint32_t i = 0; i < mLength; ++i) {
       PRUnichar u = GetCharAt(i);
       if (!mHasNonbreakableSpace && IS_NONBREAKABLE_SPACE(u))
         mHasNonbreakableSpace = 1;
@@ -640,11 +640,11 @@ private:
   }
 
   const PRUnichar* mUniText;
-  const PRUint8* mText;
+  const uint8_t* mText;
 
-  PRUint32 mIndex;
-  PRUint32 mLength;         // length of text
-  PRUint32 mLastBreakIndex;
+  uint32_t mIndex;
+  uint32_t mLength;         // length of text
+  uint32_t mLastBreakIndex;
   PRUnichar mPreviousNonHyphenCharacter; // The last character we have seen
                                          // which is not U_HYPHEN
   bool mHasCJKChar; // if the text has CJK character, this is true.
@@ -655,7 +655,7 @@ private:
   bool mHasPreviousBackslash;  // True if we have seen a U_BACKSLASH
 };
 
-static PRInt8
+static int8_t
 ContextualAnalysis(PRUnichar prev, PRUnichar cur, PRUnichar next,
                    ContextState &aState)
 {
@@ -735,32 +735,32 @@ ContextualAnalysis(PRUnichar prev, PRUnichar cur, PRUnichar next,
 }
 
 
-PRInt32
-nsJISx4051LineBreaker::WordMove(const PRUnichar* aText, PRUint32 aLen,
-                                PRUint32 aPos, PRInt8 aDirection)
+int32_t
+nsJISx4051LineBreaker::WordMove(const PRUnichar* aText, uint32_t aLen,
+                                uint32_t aPos, int8_t aDirection)
 {
   bool    textNeedsJISx4051 = false;
-  PRInt32 begin, end;
+  int32_t begin, end;
 
   for (begin = aPos; begin > 0 && !NS_IsSpace(aText[begin - 1]); --begin) {
     if (IS_CJK_CHAR(aText[begin]) || NS_NeedsPlatformNativeHandling(aText[begin])) {
       textNeedsJISx4051 = true;
     }
   }
-  for (end = aPos + 1; end < PRInt32(aLen) && !NS_IsSpace(aText[end]); ++end) {
+  for (end = aPos + 1; end < int32_t(aLen) && !NS_IsSpace(aText[end]); ++end) {
     if (IS_CJK_CHAR(aText[end]) || NS_NeedsPlatformNativeHandling(aText[end])) {
       textNeedsJISx4051 = true;
     }
   }
 
-  PRInt32 ret;
-  nsAutoTArray<PRUint8, 2000> breakState;
+  int32_t ret;
+  nsAutoTArray<uint8_t, 2000> breakState;
   if (!textNeedsJISx4051 || !breakState.AppendElements(end - begin)) {
     // No complex text character, do not try to do complex line break.
     // (This is required for serializers. See Bug #344816.)
     // Also fall back to this when out of memory.
     if (aDirection < 0) {
-      ret = (begin == PRInt32(aPos)) ? begin - 1 : begin;
+      ret = (begin == int32_t(aPos)) ? begin - 1 : begin;
     } else {
       ret = end;
     }
@@ -777,41 +777,41 @@ nsJISx4051LineBreaker::WordMove(const PRUnichar* aText, PRUint32 aLen,
   return ret;
 }
 
-PRInt32
-nsJISx4051LineBreaker::Next(const PRUnichar* aText, PRUint32 aLen,
-                            PRUint32 aPos) 
+int32_t
+nsJISx4051LineBreaker::Next(const PRUnichar* aText, uint32_t aLen,
+                            uint32_t aPos) 
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
   NS_ASSERTION(aLen > aPos, "Bad position passed to nsJISx4051LineBreaker::Next");
 
-  PRInt32 nextPos = WordMove(aText, aLen, aPos, 1);
-  return nextPos < PRInt32(aLen) ? nextPos : NS_LINEBREAKER_NEED_MORE_TEXT;
+  int32_t nextPos = WordMove(aText, aLen, aPos, 1);
+  return nextPos < int32_t(aLen) ? nextPos : NS_LINEBREAKER_NEED_MORE_TEXT;
 }
 
-PRInt32
-nsJISx4051LineBreaker::Prev(const PRUnichar* aText, PRUint32 aLen,
-                            PRUint32 aPos) 
+int32_t
+nsJISx4051LineBreaker::Prev(const PRUnichar* aText, uint32_t aLen,
+                            uint32_t aPos) 
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
   NS_ASSERTION(aLen >= aPos && aPos > 0,
                "Bad position passed to nsJISx4051LineBreaker::Prev");
 
-  PRInt32 prevPos = WordMove(aText, aLen, aPos, -1);
+  int32_t prevPos = WordMove(aText, aLen, aPos, -1);
   return prevPos > 0 ? prevPos : NS_LINEBREAKER_NEED_MORE_TEXT;
 }
 
 void
-nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUnichar* aChars, PRUint32 aLength,
-                                         PRUint8 aWordBreak,
-                                         PRUint8* aBreakBefore)
+nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUnichar* aChars, uint32_t aLength,
+                                         uint8_t aWordBreak,
+                                         uint8_t* aBreakBefore)
 {
-  PRUint32 cur;
-  PRInt8 lastClass = CLASS_NONE;
+  uint32_t cur;
+  int8_t lastClass = CLASS_NONE;
   ContextState state(aChars, aLength);
 
   for (cur = 0; cur < aLength; ++cur, state.AdvanceIndex()) {
     PRUnichar ch = aChars[cur];
-    PRInt8 cl;
+    int8_t cl;
 
     if (NEED_CONTEXTUAL_ANALYSIS(ch)) {
       cl = ContextualAnalysis(cur > 0 ? aChars[cur - 1] : U_NULL,
@@ -841,7 +841,7 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUnichar* aChars, PRUint32 aLeng
       state.NotifyBreakBefore();
     lastClass = cl;
     if (CLASS_COMPLEX == cl) {
-      PRUint32 end = cur + 1;
+      uint32_t end = cur + 1;
 
       while (end < aLength && CLASS_COMPLEX == GetClass(aChars[end])) {
         ++end;
@@ -852,7 +852,7 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUnichar* aChars, PRUint32 aLeng
       // We have to consider word-break value again for complex characters
       if (aWordBreak != nsILineBreaker::kWordBreak_Normal) {
         // Respect word-break property 
-        for (PRUint32 i = cur; i < end; i++)
+        for (uint32_t i = cur; i < end; i++)
           aBreakBefore[i] = (aWordBreak == nsILineBreaker::kWordBreak_BreakAll);
       }
 
@@ -866,17 +866,17 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUnichar* aChars, PRUint32 aLeng
 }
 
 void
-nsJISx4051LineBreaker::GetJISx4051Breaks(const PRUint8* aChars, PRUint32 aLength,
-                                         PRUint8 aWordBreak,
-                                         PRUint8* aBreakBefore)
+nsJISx4051LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
+                                         uint8_t aWordBreak,
+                                         uint8_t* aBreakBefore)
 {
-  PRUint32 cur;
-  PRInt8 lastClass = CLASS_NONE;
+  uint32_t cur;
+  int8_t lastClass = CLASS_NONE;
   ContextState state(aChars, aLength);
 
   for (cur = 0; cur < aLength; ++cur, state.AdvanceIndex()) {
     PRUnichar ch = aChars[cur];
-    PRInt8 cl;
+    int8_t cl;
 
     if (NEED_CONTEXTUAL_ANALYSIS(ch)) {
       cl = ContextualAnalysis(cur > 0 ? aChars[cur - 1] : U_NULL,

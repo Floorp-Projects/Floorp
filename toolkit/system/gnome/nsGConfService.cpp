@@ -82,7 +82,7 @@ nsGConfService::Init()
       return NS_ERROR_FAILURE;
   }
 
-  for (PRUint32 i = 0; i < ArrayLength(kGConfSymbols); i++) {
+  for (uint32_t i = 0; i < ArrayLength(kGConfSymbols); i++) {
     *kGConfSymbols[i].function =
       PR_FindFunctionSymbol(gconfLib, kGConfSymbols[i].functionName);
     if (!*kGConfSymbols[i].function) {
@@ -134,7 +134,7 @@ nsGConfService::GetString(const nsACString &aKey, nsACString &aResult)
 }
 
 NS_IMETHODIMP
-nsGConfService::GetInt(const nsACString &aKey, PRInt32* aResult)
+nsGConfService::GetInt(const nsACString &aKey, int32_t* aResult)
 {
   GError* error = nullptr;
   *aResult = gconf_client_get_int(mClient, PromiseFlatCString(aKey).get(),
@@ -214,7 +214,7 @@ nsGConfService::SetString(const nsACString &aKey, const nsACString &aValue)
 }
 
 NS_IMETHODIMP
-nsGConfService::SetInt(const nsACString &aKey, PRInt32 aValue)
+nsGConfService::SetInt(const nsACString &aKey, int32_t aValue)
 {
   bool res = gconf_client_set_int(mClient, PromiseFlatCString(aKey).get(),
                                     aValue, nullptr);

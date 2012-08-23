@@ -15,7 +15,7 @@
 #include "nsTArray.h"
 
 extern bool
-TX_XSLTFunctionAvailable(nsIAtom* aName, PRInt32 aNameSpaceID);
+TX_XSLTFunctionAvailable(nsIAtom* aName, int32_t aNameSpaceID);
 
 class txHandlerTable;
 class txElementContext;
@@ -37,8 +37,8 @@ public:
     bool mForwardsCompatibleParsing;
     nsString mBaseURI;
     nsRefPtr<txNamespaceMap> mMappings;
-    nsTArray<PRInt32> mInstructionNamespaces;
-    PRInt32 mDepth;
+    nsTArray<int32_t> mInstructionNamespaces;
+    int32_t mDepth;
 };
 
 class txACompileObserver
@@ -120,8 +120,8 @@ public:
     nsresult addVariable(const txExpandedName& aName);
 
     // txIParseContext
-    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
-    nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
+    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID);
+    nsresult resolveFunctionCall(nsIAtom* aName, int32_t aID,
                                  FunctionCall** aFunction);
     bool caseInsensitiveNameTests();
 
@@ -133,7 +133,7 @@ public:
         return mElementContext->mForwardsCompatibleParsing;
     }
 
-    void SetErrorOffset(PRUint32 aOffset);
+    void SetErrorOffset(uint32_t aOffset);
 
     static void shutdown();
 
@@ -174,7 +174,7 @@ private:
 
 struct txStylesheetAttr
 {
-    PRInt32 mNamespaceID;
+    int32_t mNamespaceID;
     nsCOMPtr<nsIAtom> mLocalName;
     nsCOMPtr<nsIAtom> mPrefix;
     nsString mValue;
@@ -186,7 +186,7 @@ class txStylesheetCompiler : private txStylesheetCompilerState,
 public:
     friend class txStylesheetCompilerState;
     friend bool TX_XSLTFunctionAvailable(nsIAtom* aName,
-                                           PRInt32 aNameSpaceID);
+                                           int32_t aNameSpaceID);
     txStylesheetCompiler(const nsAString& aStylesheetURI,
                          txACompileObserver* aObserver);
     txStylesheetCompiler(const nsAString& aStylesheetURI,
@@ -196,12 +196,12 @@ public:
 
     void setBaseURI(const nsString& aBaseURI);
 
-    nsresult startElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
+    nsresult startElement(int32_t aNamespaceID, nsIAtom* aLocalName,
                           nsIAtom* aPrefix, txStylesheetAttr* aAttributes,
-                          PRInt32 aAttrCount);
+                          int32_t aAttrCount);
     nsresult startElement(const PRUnichar *aName,
                           const PRUnichar **aAtts,
-                          PRInt32 aAttrCount, PRInt32 aIDOffset);
+                          int32_t aAttrCount, int32_t aIDOffset);
     nsresult endElement();
     nsresult characters(const nsAString& aStr);
     nsresult doneLoading();
@@ -215,11 +215,11 @@ public:
     NS_INLINE_DECL_REFCOUNTING(txStylesheetCompiler)
 
 private:
-    nsresult startElementInternal(PRInt32 aNamespaceID, nsIAtom* aLocalName,
+    nsresult startElementInternal(int32_t aNamespaceID, nsIAtom* aLocalName,
                                   nsIAtom* aPrefix,
                                   txStylesheetAttr* aAttributes,
-                                  PRInt32 aAttrCount,
-                                  PRInt32 aIDOffset = -1);
+                                  int32_t aAttrCount,
+                                  int32_t aIDOffset = -1);
 
     nsresult flushCharacters();
     nsresult ensureNewElementContext();
@@ -235,7 +235,7 @@ public:
     {
     }
     txExpandedName mName;
-    PRInt32 mLevel;
+    int32_t mLevel;
 };
 
 #endif

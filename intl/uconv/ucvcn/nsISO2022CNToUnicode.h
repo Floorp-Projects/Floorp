@@ -28,11 +28,11 @@ public:
 
   virtual ~nsISO2022CNToUnicode() {}
 
-  NS_IMETHOD Convert(const char *aSrc, PRInt32 * aSrcLength,
-     PRUnichar * aDest, PRInt32 * aDestLength) ;
+  NS_IMETHOD Convert(const char *aSrc, int32_t * aSrcLength,
+     PRUnichar * aDest, int32_t * aDestLength) ;
 
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength)
+  NS_IMETHOD GetMaxLength(const char * aSrc, int32_t aSrcLength,
+     int32_t * aDestLength)
   {
     *aDestLength = aSrcLength;
     return NS_OK;
@@ -88,16 +88,16 @@ private:
   int mPlaneID;
 
   // Length of non-ASCII run
-  PRUint32 mRunLength;
+  uint32_t mRunLength;
 
   // Decoder handler
   nsCOMPtr<nsIUnicodeDecoder> mGB2312_Decoder;
   nsCOMPtr<nsIUnicodeDecoder> mEUCTW_Decoder;
 
-  NS_IMETHOD GB2312_To_Unicode(unsigned char *aSrc, PRInt32 aSrcLength,
-     PRUnichar * aDest, PRInt32 * aDestLength) ;
+  NS_IMETHOD GB2312_To_Unicode(unsigned char *aSrc, int32_t aSrcLength,
+     PRUnichar * aDest, int32_t * aDestLength) ;
 
-  NS_IMETHOD EUCTW_To_Unicode(unsigned char *aSrc, PRInt32 aSrcLength,
-     PRUnichar * aDest, PRInt32 * aDestLength) ;
+  NS_IMETHOD EUCTW_To_Unicode(unsigned char *aSrc, int32_t aSrcLength,
+     PRUnichar * aDest, int32_t * aDestLength) ;
 };
 #endif // nsISO2022CNToUnicode_h__

@@ -37,7 +37,7 @@ protected:
         const PRUnichar* mReason;
     };
 
-    static PRInt32    sIsFlushing;
+    static int32_t    sIsFlushing;
     static FlushEvent sFlushEvent;
     static PRIntervalTime sLastFlushTime;
 };

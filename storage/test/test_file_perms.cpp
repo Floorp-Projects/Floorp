@@ -19,7 +19,7 @@ test_file_perms()
   nsCOMPtr<nsIFile> dbFile;
   do_check_success(db->GetDatabaseFile(getter_AddRefs(dbFile)));
 
-  PRUint32 perms = 0;
+  uint32_t perms = 0;
   do_check_success(dbFile->GetPermissions(&perms));
 
   // This reflexts the permissions defined by SQLITE_DEFAULT_FILE_PERMISSIONS in

@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static const PRUint16 g_ufMappingTable[] = {
+static const uint16_t g_ufMappingTable[] = {
 /* "adobeeuro.uf" was generated like this:
  * % echo '0xA4    0x20AC  #    EURO CURRENCY SIGN' | ./umaptable -uf >adobeeuro.uf
  */

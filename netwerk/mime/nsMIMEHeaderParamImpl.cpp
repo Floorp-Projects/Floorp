@@ -25,9 +25,9 @@
 
 // static functions declared below are moved from mailnews/mime/src/comi18n.cpp
   
-static char *DecodeQ(const char *, PRUint32);
-static bool Is7bitNonAsciiString(const char *, PRUint32);
-static void CopyRawHeader(const char *, PRUint32, const char *, nsACString &);
+static char *DecodeQ(const char *, uint32_t);
+static bool Is7bitNonAsciiString(const char *, uint32_t);
+static void CopyRawHeader(const char *, uint32_t, const char *, nsACString &);
 static nsresult DecodeRFC2047Str(const char *, const char *, bool, nsACString&);
 
 // XXX The chance of UTF-7 being used in the message header is really
@@ -143,7 +143,7 @@ void RemoveQuotedStringEscapes(char *src)
 
 class Continuation {
   public:
-    Continuation(const char *aValue, PRUint32 aLength,
+    Continuation(const char *aValue, uint32_t aLength,
                  bool aNeedsPercentDecoding, bool aWasQuotedString) {
       value = aValue;
       length = aLength;
@@ -160,7 +160,7 @@ class Continuation {
     ~Continuation() {}
 
     const char *value;
-    PRUint32 length;
+    uint32_t length;
     bool needsPercentDecoding;
     bool wasQuotedString;
 };
@@ -174,8 +174,8 @@ char *combineContinuations(nsTArray<Continuation>& aArray)
     return NULL;
 
   // Get an upper bound for the length
-  PRUint32 length = 0;
-  for (PRUint32 i = 0; i < aArray.Length(); i++) {
+  uint32_t length = 0;
+  for (uint32_t i = 0; i < aArray.Length(); i++) {
     length += aArray[i].length;
   }
 
@@ -186,7 +186,7 @@ char *combineContinuations(nsTArray<Continuation>& aArray)
   if (result) {
     *result = '\0';
 
-    for (PRUint32 i = 0; i < aArray.Length(); i++) {
+    for (uint32_t i = 0; i < aArray.Length(); i++) {
       Continuation cont = aArray[i];
       if (! cont.value) break;
 
@@ -214,8 +214,8 @@ char *combineContinuations(nsTArray<Continuation>& aArray)
 }
 
 // add a continuation, return false on error if segment already has been seen
-bool addContinuation(nsTArray<Continuation>& aArray, PRUint32 aIndex,
-                     const char *aValue, PRUint32 aLength,
+bool addContinuation(nsTArray<Continuation>& aArray, uint32_t aIndex,
+                     const char *aValue, uint32_t aLength,
                      bool aNeedsPercentDecoding, bool aWasQuotedString)
 {
   if (aIndex < aArray.Length() && aArray[aIndex].value) {
@@ -244,7 +244,7 @@ bool addContinuation(nsTArray<Continuation>& aArray, PRUint32 aIndex,
 }
 
 // parse a segment number; return -1 on error
-PRInt32 parseSegmentNumber(const char *aValue, PRInt32 aLen)
+int32_t parseSegmentNumber(const char *aValue, int32_t aLen)
 {
   if (aLen < 1) {
     NS_WARNING("segment number missing\n");
@@ -256,9 +256,9 @@ PRInt32 parseSegmentNumber(const char *aValue, PRInt32 aLen)
     return -1;
   }
 
-  PRInt32 segmentNumber = 0;
+  int32_t segmentNumber = 0;
 
-  for (PRInt32 i = 0; i < aLen; i++) {
+  for (int32_t i = 0; i < aLen; i++) {
     if (! (aValue[i] >= '0' && aValue[i] <= '9')) {
       NS_WARNING("invalid characters in segment number\n");
       return -1;
@@ -411,7 +411,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
 
   nsDependentCSubstring lang;
 
-  PRInt32 paramLen = strlen(aParamName);
+  int32_t paramLen = strlen(aParamName);
 
   while (*str) {
     // find name/value
@@ -429,7 +429,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
       ;
     nameEnd = str;
 
-    PRInt32 nameLen = nameEnd - nameStart;
+    int32_t nameLen = nameEnd - nameStart;
 
     // Skip over whitespace, '=', and whitespace
     while (nsCRT::IsAsciiSpace(*str)) ++str;
@@ -506,9 +506,9 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
       bool caseCStart = (*cp == '0') && needExtDecoding;
 
       // parse the segment number
-      PRInt32 segmentNumber = -1;
+      int32_t segmentNumber = -1;
       if (!caseB) {
-        PRInt32 segLen = (nameEnd - cp) - (needExtDecoding ? 1 : 0);
+        int32_t segLen = (nameEnd - cp) - (needExtDecoding ? 1 : 0);
         segmentNumber = parseSegmentNumber(cp, segLen);
 
         if (segmentNumber == -1) {
@@ -531,11 +531,11 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
         }
 
         const char *charsetStart = NULL;
-        PRInt32 charsetLength = 0;
+        int32_t charsetLength = 0;
         const char *langStart = NULL;
-        PRInt32 langLength = 0;
+        int32_t langLength = 0;
         const char *rawValStart = NULL;
-        PRInt32 rawValLength = 0;
+        int32_t rawValLength = 0;
 
         if (sQuote2 && sQuote1) {
           // both delimiters present: charSet'lang'rawVal
@@ -602,7 +602,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
       // caseD: a line of multiline param with no need for unescaping : title*[0-9]=
       // or 2nd or later lines of a caseC param : title*[1-9]*= 
       else if (acceptContinuations && segmentNumber != -1) {
-        PRUint32 valueLength = valueEnd - valueStart;
+        uint32_t valueLength = valueEnd - valueStart;
 
         bool added = addContinuation(segments, segmentNumber, valueStart,
                                      valueLength, needExtDecoding,
@@ -671,14 +671,14 @@ increment_str:
   if (*aResult) {
     // then return charset and lang as well
     if (aLang && !lang.IsEmpty()) {
-      PRUint32 len = lang.Length();
+      uint32_t len = lang.Length();
       *aLang = (char *) nsMemory::Clone(lang.BeginReading(), len + 1);
       if (*aLang) {
         *(*aLang + len) = 0;
       }
    }
     if (aCharset && !charset.IsEmpty()) {
-      PRUint32 len = charset.Length();
+      uint32_t len = charset.Length();
       *aCharset = (char *) nsMemory::Clone(charset.BeginReading(), len + 1);
       if (*aCharset) {
         *(*aCharset + len) = 0;
@@ -783,7 +783,7 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
   nsCAutoString language;
   nsCAutoString value;
 
-  PRUint32 delimiters = 0;
+  uint32_t delimiters = 0;
   const char *encoded = PromiseFlatCString(aParamVal).get();
   const char *c = encoded;
 
@@ -912,13 +912,13 @@ nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
 }
 
 #define ISHEXCHAR(c) \
-        ((0x30 <= PRUint8(c) && PRUint8(c) <= 0x39)  ||  \
-         (0x41 <= PRUint8(c) && PRUint8(c) <= 0x46)  ||  \
-         (0x61 <= PRUint8(c) && PRUint8(c) <= 0x66))
+        ((0x30 <= uint8_t(c) && uint8_t(c) <= 0x39)  ||  \
+         (0x41 <= uint8_t(c) && uint8_t(c) <= 0x46)  ||  \
+         (0x61 <= uint8_t(c) && uint8_t(c) <= 0x66))
 
 // Decode Q encoding (RFC 2047).
 // static
-char *DecodeQ(const char *in, PRUint32 length)
+char *DecodeQ(const char *in, uint32_t length)
 {
   char *out, *dest = 0;
 
@@ -926,7 +926,7 @@ char *DecodeQ(const char *in, PRUint32 length)
   if (dest == nullptr)
     return nullptr;
   while (length > 0) {
-    PRUintn c = 0;
+    unsigned c = 0;
     switch (*in) {
     case '=':
       // check if |in| in the form of '=hh'  where h is [0-9a-fA-F].
@@ -968,9 +968,9 @@ char *DecodeQ(const char *in, PRUint32 length)
 // or has  ESC which may be an  indication that  it's in one of many ISO 
 // 2022 7bit  encodings (e.g. ISO-2022-JP(-2)/CN : see RFC 1468, 1922, 1554).
 // static
-bool Is7bitNonAsciiString(const char *input, PRUint32 len)
+bool Is7bitNonAsciiString(const char *input, uint32_t len)
 {
-  PRInt32 c;
+  int32_t c;
 
   enum { hz_initial, // No HZ seen yet
          hz_escaped, // Inside an HZ ~{ escape sequence 
@@ -980,7 +980,7 @@ bool Is7bitNonAsciiString(const char *input, PRUint32 len)
 
   hz_state = hz_initial;
   while (len) {
-    c = PRUint8(*input++);
+    c = uint8_t(*input++);
     len--;
     if (c & 0x80) return false;
     if (c == 0x1B) return true;
@@ -1020,10 +1020,10 @@ bool Is7bitNonAsciiString(const char *input, PRUint32 len)
 // is not successful, each octet is replaced by Unicode replacement
 // chars. *aOutput is advanced by the number of output octets.
 // static
-void CopyRawHeader(const char *aInput, PRUint32 aLen, 
+void CopyRawHeader(const char *aInput, uint32_t aLen, 
                    const char *aDefaultCharset, nsACString &aOutput)
 {
-  PRInt32 c;
+  int32_t c;
 
   // If aDefaultCharset is not specified, make a blind copy.
   if (!aDefaultCharset || !*aDefaultCharset) {
@@ -1033,7 +1033,7 @@ void CopyRawHeader(const char *aInput, PRUint32 aLen,
 
   // Copy as long as it's US-ASCII.  An ESC may indicate ISO 2022
   // A ~ may indicate it is HZ
-  while (aLen && (c = PRUint8(*aInput++)) != 0x1B && c != '~' && !(c & 0x80)) {
+  while (aLen && (c = uint8_t(*aInput++)) != 0x1B && c != '~' && !(c & 0x80)) {
     aOutput.Append(char(c));
     aLen--;
   }
@@ -1058,8 +1058,8 @@ void CopyRawHeader(const char *aInput, PRUint32 aLen,
                                    utf8Text))) {
     aOutput.Append(utf8Text);
   } else { // replace each octet with Unicode replacement char in UTF-8.
-    for (PRUint32 i = 0; i < aLen; i++) {
-      c = PRUint8(*aInput++);
+    for (uint32_t i = 0; i < aLen; i++) {
+      c = uint8_t(*aInput++);
       if (c & 0x80)
         aOutput.Append(REPLACEMENT_CHAR);
       else
@@ -1082,7 +1082,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
   const char *p, *q = nullptr, *r;
   char *decodedText;
   const char *begin; // tracking pointer for where we are in the input buffer
-  PRInt32 isLastEncodedWord = 0;
+  int32_t isLastEncodedWord = 0;
   const char *charsetStart, *charsetEnd;
   char charset[80];
 
@@ -1133,7 +1133,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
     }
 
     // Check for too-long charset name
-    if (PRUint32(charsetEnd - charsetStart) >= sizeof(charset)) 
+    if (uint32_t(charsetEnd - charsetStart) >= sizeof(charset)) 
       goto badsyntax;
     
     memcpy(charset, charsetStart, charsetEnd - charsetStart);
@@ -1164,7 +1164,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
     else {
       // bug 227290. ignore an extraneous '=' at the end.
       // (# of characters in B-encoded part has to be a multiple of 4)
-      PRInt32 n = r - (q + 2);
+      int32_t n = r - (q + 2);
       n -= (n % 4 == 1 && !PL_strncmp(r - 3, "===", 3)) ? 1 : 0;
       decodedText = PL_Base64Decode(q + 2, n, nullptr);
     }

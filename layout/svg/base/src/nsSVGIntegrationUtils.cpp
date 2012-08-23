@@ -536,7 +536,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 gfxMatrix
 nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame)
 {
-  PRInt32 appUnitsPerDevPixel = aNonSVGFrame->PresContext()->AppUnitsPerDevPixel();
+  int32_t appUnitsPerDevPixel = aNonSVGFrame->PresContext()->AppUnitsPerDevPixel();
   float devPxPerCSSPx =
     1 / nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPixel);
 
@@ -589,7 +589,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   // nsLayoutUtils::PaintFrame will anchor its painting at mFrame. But we want
   // to have it anchored at the top left corner of the bounding box of all of
   // mFrame's continuations. So we add a translation transform.
-  PRInt32 appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsPoint offset = nsSVGIntegrationUtils::GetOffsetToUserSpace(mFrame);
   gfxPoint devPxOffset = gfxPoint(offset.x, offset.y) / appUnitsPerDevPixel;
   aContext->Multiply(gfxMatrix().Translate(devPxOffset));
@@ -686,7 +686,7 @@ nsSVGIntegrationUtils::DrawPaintServer(nsRenderingContext* aRenderingContext,
   if (aDest.IsEmpty() || aFill.IsEmpty())
     return;
 
-  PRInt32 appUnitsPerDevPixel = aTarget->PresContext()->AppUnitsPerDevPixel();
+  int32_t appUnitsPerDevPixel = aTarget->PresContext()->AppUnitsPerDevPixel();
   nsRect destSize = aDest - aDest.TopLeft();
   nsIntSize roundedOut = destSize.ToOutsidePixels(appUnitsPerDevPixel).Size();
   gfxIntSize imageSize(roundedOut.width, roundedOut.height);

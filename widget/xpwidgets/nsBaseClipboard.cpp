@@ -31,7 +31,7 @@ NS_IMPL_ISUPPORTS1(nsBaseClipboard, nsIClipboard)
   *
   */
 NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner,
-                                        PRInt32 aWhichClipboard)
+                                        int32_t aWhichClipboard)
 {
   NS_ASSERTION ( aTransferable, "clipboard given a null transferable" );
 
@@ -70,7 +70,7 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
   * Gets the transferable object
   *
   */
-NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable, PRInt32 aWhichClipboard)
+NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable, int32_t aWhichClipboard)
 {
   NS_ASSERTION ( aTransferable, "clipboard given a null transferable" );
   
@@ -85,7 +85,7 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable, PRInt32 
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
+NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard)
 {
   bool selectClipPresent;
   SupportsSelectionClipboard(&selectClipPresent);
@@ -107,8 +107,8 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 
 NS_IMETHODIMP
 nsBaseClipboard::HasDataMatchingFlavors(const char** aFlavorList,
-                                        PRUint32 aLength,
-                                        PRInt32 aWhichClipboard,
+                                        uint32_t aLength,
+                                        int32_t aWhichClipboard,
                                         bool* outResult) 
 {
   *outResult = true;  // say we always do.

@@ -43,7 +43,7 @@ public:
   virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, int32_t aIndent) const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
       return MakeFrameName(NS_LITERAL_STRING("PopupSet"), aResult);

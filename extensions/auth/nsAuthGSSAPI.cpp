@@ -335,7 +335,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAuthGSSAPI, nsIAuthModule)
 
 NS_IMETHODIMP
 nsAuthGSSAPI::Init(const char *serviceName,
-                   PRUint32    serviceFlags,
+                   uint32_t    serviceFlags,
                    const PRUnichar *domain,
                    const PRUnichar *username,
                    const PRUnichar *password)
@@ -358,9 +358,9 @@ nsAuthGSSAPI::Init(const char *serviceName,
 
 NS_IMETHODIMP
 nsAuthGSSAPI::GetNextToken(const void *inToken,
-                           PRUint32    inTokenLen,
+                           uint32_t    inTokenLen,
                            void      **outToken,
-                           PRUint32   *outTokenLen)
+                           uint32_t   *outTokenLen)
 {
     OM_uint32 major_status, minor_status;
     OM_uint32 req_flags = 0;
@@ -491,9 +491,9 @@ end:
 
 NS_IMETHODIMP
 nsAuthGSSAPI::Unwrap(const void *inToken,
-                     PRUint32    inTokenLen,
+                     uint32_t    inTokenLen,
                      void      **outToken,
-                     PRUint32   *outTokenLen)
+                     uint32_t   *outTokenLen)
 {
     OM_uint32 major_status, minor_status;
 
@@ -530,10 +530,10 @@ nsAuthGSSAPI::Unwrap(const void *inToken,
  
 NS_IMETHODIMP
 nsAuthGSSAPI::Wrap(const void *inToken,
-                   PRUint32    inTokenLen,
+                   uint32_t    inTokenLen,
                    bool        confidential,
                    void      **outToken,
-                   PRUint32   *outTokenLen)
+                   uint32_t   *outTokenLen)
 {
     OM_uint32 major_status, minor_status;
 
@@ -568,7 +568,7 @@ nsAuthGSSAPI::Wrap(const void *inToken,
 }
 
 NS_IMETHODIMP
-nsAuthGSSAPI::GetModuleProperties(PRUint32 *flags)
+nsAuthGSSAPI::GetModuleProperties(uint32_t *flags)
 {
     *flags = 0;
     return NS_OK;

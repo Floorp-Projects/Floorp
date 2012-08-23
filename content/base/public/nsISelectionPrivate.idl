@@ -52,7 +52,7 @@ interface nsISelectionPrivate : nsISelection
     void  endBatchChanges();
 		
     nsIEnumerator  getEnumerator();
-    DOMString  toStringWithFormat(in string formatType, in unsigned long flags, in PRInt32 wrapColumn);
+    DOMString  toStringWithFormat(in string formatType, in unsigned long flags, in int32_t wrapColumn);
     void  addSelectionListener(in nsISelectionListener newListener);
     void  removeSelectionListener(in nsISelectionListener listenerToRemove);
 
@@ -88,7 +88,7 @@ interface nsISelectionPrivate : nsISelection
     /* GetCachedOffsetForFrame
      * Returns cached value for nsTextFrame::GetPointFromOffset.
      */
-    [noscript] void getCachedFrameOffset(in nsIFrame aFrame, in PRInt32 inOffset, in nsPointRef aPoint);
+    [noscript] void getCachedFrameOffset(in nsIFrame aFrame, in int32_t inOffset, in nsPointRef aPoint);
 
     /* getFrameSelection
      * Returnes a reference to the frame selection associated with this selection 
@@ -121,15 +121,15 @@ interface nsISelectionPrivate : nsISelection
      * Return array of ranges intersecting with the given DOM interval.
      */
     void GetRangesForInterval(
-        in nsIDOMNode beginNode, in PRInt32 beginOffset,
-        in nsIDOMNode endNode, in PRInt32 endOffset,
+        in nsIDOMNode beginNode, in int32_t beginOffset,
+        in nsIDOMNode endNode, in int32_t endOffset,
         in boolean allowAdjacent,
-        out PRUint32 resultCount,
+        out uint32_t resultCount,
         [retval, array, size_is(resultCount)] out nsIDOMRange results);
 
     [noscript] void GetRangesForIntervalArray(
-        in nsINode beginNode, in PRInt32 beginOffset,
-        in nsINode endNode, in PRInt32 endOffset,
+        in nsINode beginNode, in int32_t beginOffset,
+        in nsINode endNode, in int32_t endOffset,
         in boolean allowAdjacent,
         in RangeArray results);
 
@@ -147,8 +147,8 @@ interface nsISelectionPrivate : nsISelection
      * @param aHPercent - how to align the frame horizontally.
      */
     void scrollIntoView(in short aRegion, in boolean aIsSynchronous,
-                        in PRInt16 aVPercent,
-                        in PRInt16 aHPercent);
+                        in int16_t aVPercent,
+                        in int16_t aHPercent);
 
     /**
      * Scrolls a region of the selection, so that it is visible in

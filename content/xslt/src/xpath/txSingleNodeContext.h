@@ -19,7 +19,7 @@ public:
         NS_ASSERTION(aContext, "txIMatchContext must be given");
     }
 
-    nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName,
+    nsresult getVariable(int32_t aNamespace, nsIAtom* aLName,
                          txAExprResult*& aResult)
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
@@ -61,12 +61,12 @@ public:
         return mNode;
     }
 
-    PRUint32 size()
+    uint32_t size()
     {
         return 1;
     }
 
-    PRUint32 position()
+    uint32_t position()
     {
         return 1;
     }

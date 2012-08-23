@@ -25,14 +25,14 @@ public:
 
   nsSAXLocator(nsString& aPublicId,
                nsString& aSystemId,
-               PRInt32 aLineNumber,
-               PRInt32 aColumnNumber);
+               int32_t aLineNumber,
+               int32_t aColumnNumber);
 
 private:
   nsString mPublicId;
   nsString mSystemId;
-  PRInt32 mLineNumber;
-  PRInt32 mColumnNumber;
+  int32_t mLineNumber;
+  int32_t mColumnNumber;
 };
 
 #endif //nsSAXLocator_h__

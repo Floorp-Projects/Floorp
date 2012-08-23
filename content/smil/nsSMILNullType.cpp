@@ -31,7 +31,7 @@ nsSMILNullType::IsEqual(const nsSMILValue& aLeft,
 
 nsresult
 nsSMILNullType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                    PRUint32 aCount) const
+                    uint32_t aCount) const
 {
   NS_NOTREACHED("Adding NULL type");
   return NS_ERROR_FAILURE;

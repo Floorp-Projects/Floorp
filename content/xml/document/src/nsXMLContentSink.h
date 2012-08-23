@@ -32,7 +32,7 @@ typedef enum {
 
 struct StackNode {
   nsCOMPtr<nsIContent> mContent;
-  PRUint32 mNumFlushed;
+  uint32_t mNumFlushed;
 };
 
 class nsXMLContentSink : public nsContentSink,
@@ -95,22 +95,22 @@ protected:
   virtual void MaybeStartLayout(bool aIgnorePendingSheets);
 
   virtual nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
-  nsresult AddText(const PRUnichar* aString, PRInt32 aLength);
+  nsresult AddText(const PRUnichar* aString, int32_t aLength);
 
   virtual bool OnOpenContainer(const PRUnichar **aAtts, 
-                                 PRUint32 aAttsCount, 
-                                 PRInt32 aNameSpaceID, 
+                                 uint32_t aAttsCount, 
+                                 int32_t aNameSpaceID, 
                                  nsIAtom* aTagName,
-                                 PRUint32 aLineNumber) { return true; }
+                                 uint32_t aLineNumber) { return true; }
   // Set the given content as the root element for the created document
   //  don't set if root element was already set.
   //  return TRUE if this call set the root element
-  virtual bool SetDocElement(PRInt32 aNameSpaceID, 
+  virtual bool SetDocElement(int32_t aNameSpaceID, 
                                nsIAtom *aTagName,
                                nsIContent *aContent);
   virtual bool NotifyForDocElement() { return true; }
-  virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
-                                 nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
+  virtual nsresult CreateElement(const PRUnichar** aAtts, uint32_t aAttsCount,
+                                 nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
                                  nsIContent** aResult, bool* aAppendContent,
                                  mozilla::dom::FromParser aFromParser);
 
@@ -156,11 +156,11 @@ protected:
   bool IsMonolithicContainer(nsINodeInfo* aNodeInfo);
 
   nsresult HandleStartElement(const PRUnichar *aName, const PRUnichar **aAtts, 
-                              PRUint32 aAttsCount, PRInt32 aIndex, 
-                              PRUint32 aLineNumber,
+                              uint32_t aAttsCount, int32_t aIndex, 
+                              uint32_t aLineNumber,
                               bool aInterruptable);
   nsresult HandleEndElement(const PRUnichar *aName, bool aInterruptable);
-  nsresult HandleCharacterData(const PRUnichar *aData, PRUint32 aLength,
+  nsresult HandleCharacterData(const PRUnichar *aData, uint32_t aLength,
                                bool aInterruptable);
 
   nsIContent*      mDocElement;
@@ -169,21 +169,21 @@ protected:
 
   XMLContentSinkState mState;
 
-  PRInt32 mTextLength;
-  PRInt32 mTextSize;
+  int32_t mTextLength;
+  int32_t mTextSize;
   
-  PRInt32 mNotifyLevel;
+  int32_t mNotifyLevel;
   nsCOMPtr<nsIContent> mLastTextNode;
-  PRInt32 mLastTextNodeSize;
+  int32_t mLastTextNodeSize;
 
-  PRUint8 mConstrainSize : 1;
-  PRUint8 mPrettyPrintXML : 1;
-  PRUint8 mPrettyPrintHasSpecialRoot : 1;
-  PRUint8 mPrettyPrintHasFactoredElements : 1;
-  PRUint8 mPrettyPrinting : 1;  // True if we called PrettyPrint() and it
+  uint8_t mConstrainSize : 1;
+  uint8_t mPrettyPrintXML : 1;
+  uint8_t mPrettyPrintHasSpecialRoot : 1;
+  uint8_t mPrettyPrintHasFactoredElements : 1;
+  uint8_t mPrettyPrinting : 1;  // True if we called PrettyPrint() and it
                                 // decided we should in fact prettyprint.
   // True to call prevent script execution in the fragment mode.
-  PRUint8 mPreventScriptExecution : 1;
+  uint8_t mPreventScriptExecution : 1;
   
   nsTArray<StackNode>              mContentStack;
 

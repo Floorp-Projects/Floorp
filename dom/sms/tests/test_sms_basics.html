@@ -17,11 +17,11 @@
 
 function checkSmsDisabled() {
   ok('mozSms' in frames[0].navigator, "navigator.mozSms should exist");
-  is(navigator.mozSms, null, "navigator.mozSms should return null");
+  is(frames[0].navigator.mozSms, null, "navigator.mozSms should return null");
 }
 
 function checkSmsEnabled() {
-  // WebSms is disabled on all platforms except Android for the moment.
+  // Bug 784617: WebSms is disabled on all platforms except Android for the moment.
   if (navigator.appVersion.indexOf("Android") == -1) {
     checkSmsDisabled();
     return;
@@ -39,7 +39,6 @@ function checkInterface(aInterface) {
 
 function test() {
   var gSmsEnabled = SpecialPowers.getBoolPref("dom.sms.enabled");
-  var gSmsWhiteList = SpecialPowers.getCharPref("dom.sms.whitelist");
 
   checkInterface("SmsManager");
   checkInterface("NavigatorSms");
@@ -49,32 +48,24 @@ function test() {
   checkInterface("SmsFilter");
   checkInterface("SmsCursor");
 
-  // If sms are disabled and whitelist is empty, sms is disabled.
+  // If sms is disabled and permission is removed, sms is disabled.
   SpecialPowers.setBoolPref("dom.sms.enabled", false);
-  SpecialPowers.setCharPref("dom.sms.whitelist", "");
+  SpecialPowers.removePermission("sms", document);
   checkSmsDisabled();
 
-  // If sms are enabled and whitelist is empty, sms are disabled.
+  // If sms is enabled and permission is removed, sms is disabled.
   SpecialPowers.setBoolPref("dom.sms.enabled", true);
-  SpecialPowers.setCharPref("dom.sms.whitelist", "");
+  SpecialPowers.removePermission("sms", document);
   checkSmsDisabled();
 
-  // If sms are disabled and whitelist contains the current URL prepath,
-  // sms are disabled.
+  // If sms is disabled and permission is granted, sms is disabled.
   SpecialPowers.setBoolPref("dom.sms.enabled", false);
-  SpecialPowers.setCharPref("dom.sms.whitelist", "http://mochi.test:8888");
+  SpecialPowers.addPermission("sms", true, document);
   checkSmsDisabled();
 
-  // If sms are enabled and whitelist contains something else than the current
-  // URL prepath, sms are disabled.
+  // If sms is enabled and permission is granted, sms is enabled.
   SpecialPowers.setBoolPref("dom.sms.enabled", true);
-  SpecialPowers.setCharPref("dom.sms.whitelist", "http://foo.mochi.test:8888");
-  checkSmsDisabled();
-
-  // If sms are enabled and whitelist contains the current URL prepath,
-  // sms are enabled.
-  SpecialPowers.setBoolPref("dom.sms.enabled", true);
-  SpecialPowers.setCharPref("dom.sms.whitelist", "http://mochi.test:8888");
+  SpecialPowers.addPermission("sms", true, document);
   checkSmsEnabled();
 
   // Now, if sms are disabled with the pref, they will still be enabled.
@@ -96,15 +87,13 @@ function test() {
 
       // Cleanup and quit.
       SpecialPowers.setBoolPref("dom.sms.enabled", gSmsEnabled);
-      SpecialPowers.setCharPref("dom.sms.whitelist", gSmsWhiteList);
+      SpecialPowers.removePermission("sms", document);
       SimpleTest.finish();
     });
     frames[0].location.reload();
   });
 
-  // Having more than one item in the whitelist should work.
   SpecialPowers.setBoolPref("dom.sms.enabled", true);
-  SpecialPowers.setCharPref("dom.sms.whitelist", "http://mochi.test:8888, http://foo.com");
   frames[0].location.reload();
 }
 

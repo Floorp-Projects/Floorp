@@ -92,10 +92,10 @@ public:
   NS_IMETHOD SetDir(const nsAString& aDir);
   nsresult GetClassName(nsAString& aClassName);
   nsresult SetClassName(const nsAString& aClassName);
-  nsresult GetOffsetTop(PRInt32* aOffsetTop);
-  nsresult GetOffsetLeft(PRInt32* aOffsetLeft);
-  nsresult GetOffsetWidth(PRInt32* aOffsetWidth);
-  nsresult GetOffsetHeight(PRInt32* aOffsetHeight);
+  nsresult GetOffsetTop(int32_t* aOffsetTop);
+  nsresult GetOffsetLeft(int32_t* aOffsetLeft);
+  nsresult GetOffsetWidth(int32_t* aOffsetWidth);
+  nsresult GetOffsetHeight(int32_t* aOffsetHeight);
   nsresult GetOffsetParent(nsIDOMElement** aOffsetParent);
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
@@ -103,15 +103,15 @@ public:
   NS_IMETHOD SetOuterHTML(const nsAString& aOuterHTML);
   NS_IMETHOD InsertAdjacentHTML(const nsAString& aPosition,
                                 const nsAString& aText);
-  nsresult ScrollIntoView(bool aTop, PRUint8 optional_argc);
+  nsresult ScrollIntoView(bool aTop, uint8_t optional_argc);
   // Declare Focus(), Blur(), GetTabIndex(), SetTabIndex(), GetHidden(),
   // SetHidden(), GetSpellcheck(), SetSpellcheck(), and GetDraggable() such that
   // classes that inherit interfaces with those methods properly override them.
   NS_IMETHOD Focus();
   NS_IMETHOD Blur();
   NS_IMETHOD Click();
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  NS_IMETHOD GetTabIndex(int32_t *aTabIndex);
+  NS_IMETHOD SetTabIndex(int32_t aTabIndex);
   NS_IMETHOD GetHidden(bool* aHidden);
   NS_IMETHOD SetHidden(bool aHidden);
   NS_IMETHOD GetSpellcheck(bool* aSpellcheck);
@@ -164,17 +164,17 @@ public:
                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                              bool aNotify);
-  virtual bool IsFocusable(PRInt32 *aTabIndex = nullptr, bool aWithMouse = false)
+  virtual bool IsFocusable(int32_t *aTabIndex = nullptr, bool aWithMouse = false)
   {
     bool isFocusable = false;
     IsHTMLFocusable(aWithMouse, &isFocusable, aTabIndex);
@@ -186,7 +186,7 @@ public:
    */
   virtual bool IsHTMLFocusable(bool aWithMouse,
                                  bool *aIsFocusable,
-                                 PRInt32 *aTabIndex);
+                                 int32_t *aTabIndex);
   virtual void PerformAccesskey(bool aKeyCausesActivation,
                                 bool aIsTrustedEvent);
 
@@ -212,7 +212,7 @@ public:
     UpdateState(aNotify);
   }
 
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -596,7 +596,7 @@ private:
    */
   void FireMutationEventsForDirectParsing(nsIDocument* aDoc,
                                           nsIContent* aDest,
-                                          PRInt32 aOldChildCount);
+                                          int32_t aOldChildCount);
 
   void RegUnRegAccessKey(bool aDoReg);
 
@@ -608,7 +608,7 @@ protected:
    */
   bool IsEventName(nsIAtom* aName);
 
-  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 
   virtual nsEventListenerManager*
@@ -657,7 +657,7 @@ protected:
    * @param aDefault default-value to return if attribute isn't set.
    * @param aResult  result value [out]
    */
-  NS_HIDDEN_(nsresult) GetIntAttr(nsIAtom* aAttr, PRInt32 aDefault, PRInt32* aValue);
+  NS_HIDDEN_(nsresult) GetIntAttr(nsIAtom* aAttr, int32_t aDefault, int32_t* aValue);
 
   /**
    * Helper method for NS_IMPL_INT_ATTR macro.
@@ -667,7 +667,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Integer value of attribute.
    */
-  NS_HIDDEN_(nsresult) SetIntAttr(nsIAtom* aAttr, PRInt32 aValue);
+  NS_HIDDEN_(nsresult) SetIntAttr(nsIAtom* aAttr, int32_t aValue);
 
   /**
    * Helper method for NS_IMPL_UINT_ATTR macro.
@@ -679,8 +679,8 @@ protected:
    * @param aDefault default-value to return if attribute isn't set.
    * @param aResult  result value [out]
    */
-  NS_HIDDEN_(nsresult) GetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aDefault,
-                                          PRUint32* aValue);
+  NS_HIDDEN_(nsresult) GetUnsignedIntAttr(nsIAtom* aAttr, uint32_t aDefault,
+                                          uint32_t* aValue);
 
   /**
    * Helper method for NS_IMPL_UINT_ATTR macro.
@@ -690,7 +690,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Integer value of attribute.
    */
-  NS_HIDDEN_(nsresult) SetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aValue);
+  NS_HIDDEN_(nsresult) SetUnsignedIntAttr(nsIAtom* aAttr, uint32_t aValue);
 
   /**
    * Sets value of attribute to specified double. Only works for attributes
@@ -778,7 +778,7 @@ protected:
     if (!MayHaveContentEditableAttr())
       return eInherit;
 
-    PRInt32 value = FindAttrValueIn(kNameSpaceID_None,
+    int32_t value = FindAttrValueIn(kNameSpaceID_None,
                                     nsGkAtoms::contenteditable, values,
                                     eIgnoreCase);
 
@@ -801,7 +801,7 @@ protected:
   bool IsEditableRoot() const;
 
 private:
-  void ChangeEditableState(PRInt32 aChange);
+  void ChangeEditableState(int32_t aChange);
 };
 
 class nsHTMLFieldSetElement;
@@ -818,7 +818,7 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
-  virtual bool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(uint32_t aFlags) const;
   virtual void SaveSubtreeState();
 
   // nsIFormControl
@@ -885,16 +885,16 @@ public:
   bool CanBeDisabled() const;
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
-                                 PRInt32* aTabIndex);
+                                 int32_t* aTabIndex);
 
   virtual bool IsLabelable() const;
 
 protected:
-  virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify);
 
-  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 
   /**
@@ -937,7 +937,7 @@ protected:
                               void* aData);
 
   // Returns true if the event should not be handled from PreHandleEvent
-  virtual bool IsElementDisabledForEvents(PRUint32 aMessage, nsIFrame* aFrame);
+  virtual bool IsElementDisabledForEvents(uint32_t aMessage, nsIFrame* aFrame);
 
   // The focusability state of this form control.  eUnfocusable means that it
   // shouldn't be focused at all, eInactiveWindow means it's in an inactive
@@ -1025,12 +1025,12 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
 
 #define NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
   NS_IMETHODIMP                                                           \
-  _class::Get##_method(PRInt32* aValue)                                   \
+  _class::Get##_method(int32_t* aValue)                                   \
   {                                                                       \
     return GetIntAttr(nsGkAtoms::_atom, _default, aValue);              \
   }                                                                       \
   NS_IMETHODIMP                                                           \
-  _class::Set##_method(PRInt32 aValue)                                    \
+  _class::Set##_method(int32_t aValue)                                    \
   {                                                                       \
     return SetIntAttr(nsGkAtoms::_atom, aValue);                        \
   }
@@ -1045,12 +1045,12 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
 
 #define NS_IMPL_UINT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
   NS_IMETHODIMP                                                           \
-  _class::Get##_method(PRUint32* aValue)                                  \
+  _class::Get##_method(uint32_t* aValue)                                  \
   {                                                                       \
     return GetUnsignedIntAttr(nsGkAtoms::_atom, _default, aValue);        \
   }                                                                       \
   NS_IMETHODIMP                                                           \
-  _class::Set##_method(PRUint32 aValue)                                   \
+  _class::Set##_method(uint32_t aValue)                                   \
   {                                                                       \
     return SetUnsignedIntAttr(nsGkAtoms::_atom, aValue);                  \
   }
@@ -1066,12 +1066,12 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
 
 #define NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(_class, _method, _atom, _default) \
   NS_IMETHODIMP                                                           \
-  _class::Get##_method(PRUint32* aValue)                                  \
+  _class::Get##_method(uint32_t* aValue)                                  \
   {                                                                       \
     return GetUnsignedIntAttr(nsGkAtoms::_atom, _default, aValue);        \
   }                                                                       \
   NS_IMETHODIMP                                                           \
-  _class::Set##_method(PRUint32 aValue)                                   \
+  _class::Set##_method(uint32_t aValue)                                   \
   {                                                                       \
     if (aValue == 0) {                                                    \
       return NS_ERROR_DOM_INDEX_SIZE_ERR;                                 \
@@ -1143,12 +1143,12 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
 
 #define NS_IMPL_NON_NEGATIVE_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
   NS_IMETHODIMP                                                           \
-  _class::Get##_method(PRInt32* aValue)                                   \
+  _class::Get##_method(int32_t* aValue)                                   \
   {                                                                       \
     return GetIntAttr(nsGkAtoms::_atom, _default, aValue);                \
   }                                                                       \
   NS_IMETHODIMP                                                           \
-  _class::Set##_method(PRInt32 aValue)                                    \
+  _class::Set##_method(int32_t aValue)                                    \
   {                                                                       \
     if (aValue < 0) {                                                     \
       return NS_ERROR_DOM_INDEX_SIZE_ERR;                                 \
@@ -1461,22 +1461,22 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
   NS_IMETHOD InsertAdjacentHTML(const nsAString& position, const nsAString& text) { \
     return _to InsertAdjacentHTML(position, text); \
   } \
-  NS_IMETHOD ScrollIntoView(bool top, PRUint8 _argc) { \
+  NS_IMETHOD ScrollIntoView(bool top, uint8_t _argc) { \
     return _to ScrollIntoView(top, _argc); \
   } \
   NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent) { \
     return _to GetOffsetParent(aOffsetParent); \
   } \
-  NS_IMETHOD GetOffsetTop(PRInt32* aOffsetTop) { \
+  NS_IMETHOD GetOffsetTop(int32_t* aOffsetTop) { \
     return _to GetOffsetTop(aOffsetTop); \
   } \
-  NS_IMETHOD GetOffsetLeft(PRInt32* aOffsetLeft) { \
+  NS_IMETHOD GetOffsetLeft(int32_t* aOffsetLeft) { \
     return _to GetOffsetLeft(aOffsetLeft); \
   } \
-  NS_IMETHOD GetOffsetWidth(PRInt32* aOffsetWidth) { \
+  NS_IMETHOD GetOffsetWidth(int32_t* aOffsetWidth) { \
     return _to GetOffsetWidth(aOffsetWidth); \
   } \
-  NS_IMETHOD GetOffsetHeight(PRInt32* aOffsetHeight) { \
+  NS_IMETHOD GetOffsetHeight(int32_t* aOffsetHeight) { \
     return _to GetOffsetHeight(aOffsetHeight); \
   }
 

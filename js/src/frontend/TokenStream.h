@@ -267,6 +267,10 @@ struct TokenPos {
     bool operator >=(const TokenPos& bpos) const {
         return !(*this < bpos);
     }
+
+    bool encloses(const TokenPos& pos) const {
+        return begin <= pos.begin && pos.end <= end;
+    }
 };
 
 struct Token {
@@ -451,7 +455,7 @@ StrictModeFromContext(JSContext *cx)
 // This class is a tiny back-channel from TokenStream to the strict mode flag
 // that avoids exposing the rest of SharedContext to TokenStream. get()
 // returns the current strict mode state. The other two methods get and set
-// the queuedStrictModeError member of TreeContext. StrictModeGetter's
+// the queuedStrictModeError member of ParseContext. StrictModeGetter's
 // non-inline methods are implemented in Parser.cpp.
 //
 class StrictModeGetter {

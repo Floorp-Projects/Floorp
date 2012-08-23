@@ -186,7 +186,7 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
 
     nsresult rv = NS_OK;
     if (aContentType) {
-        PRUint32 canHandle = nsIWebNavigationInfo::UNSUPPORTED;
+        uint32_t canHandle = nsIWebNavigationInfo::UNSUPPORTED;
         rv = mNavInfo->IsTypeSupported(nsDependentCString(aContentType),
                                        mDocShell,
                                        &canHandle);
@@ -311,9 +311,7 @@ bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIRequest *request,
                parentDocShellItem) {
 
             nsCOMPtr<nsIDocShell> curDocShell = do_QueryInterface(curDocShellItem);
-            bool isContentBoundary;
-            curDocShell->GetIsContentBoundary(&isContentBoundary);
-            if (isContentBoundary) {
+            if (curDocShell && curDocShell->GetIsContentBoundary()) {
               break;
             }
 

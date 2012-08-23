@@ -136,7 +136,7 @@ nsBlobURI::EqualsInternal(nsIURI* aOther,
 
 // nsIClassInfo methods:
 NS_IMETHODIMP 
-nsBlobURI::GetInterfaces(PRUint32 *count, nsIID * **array)
+nsBlobURI::GetInterfaces(uint32_t *count, nsIID * **array)
 {
   *count = 0;
   *array = nullptr;
@@ -144,7 +144,7 @@ nsBlobURI::GetInterfaces(PRUint32 *count, nsIID * **array)
 }
 
 NS_IMETHODIMP 
-nsBlobURI::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+nsBlobURI::GetHelperForLanguage(uint32_t language, nsISupports **_retval)
 {
   *_retval = nullptr;
   return NS_OK;
@@ -178,14 +178,14 @@ nsBlobURI::GetClassID(nsCID * *aClassID)
 }
 
 NS_IMETHODIMP 
-nsBlobURI::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+nsBlobURI::GetImplementationLanguage(uint32_t *aImplementationLanguage)
 {
   *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsBlobURI::GetFlags(PRUint32 *aFlags)
+nsBlobURI::GetFlags(uint32_t *aFlags)
 {
   *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
   return NS_OK;

@@ -44,7 +44,7 @@ public:
 
 private:
   nsCOMPtr<nsIParentChannel> mActiveChannel;
-  PRUint32 mRedirectChannelId;
+  uint32_t mRedirectChannelId;
 };
 
 } // namespace net

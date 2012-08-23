@@ -34,8 +34,8 @@ struct nsExpirationState {
   /**
    * The generation that this object belongs to, or NOT_TRACKED.
    */
-  PRUint32 mGeneration:4;
-  PRUint32 mIndexInGeneration:28;
+  uint32_t mGeneration:4;
+  uint32_t mIndexInGeneration:28;
 };
 
 /**
@@ -68,7 +68,7 @@ struct nsExpirationState {
  * Future work:
  * -- Add a method to change the timer period?
  */
-template <class T, PRUint32 K> class nsExpirationTracker {
+template <class T, uint32_t K> class nsExpirationTracker {
   public:
     /**
      * Initialize the tracker.
@@ -77,7 +77,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
      * period is zero, then we don't use a timer and rely on someone calling
      * AgeOneGeneration explicitly.
      */
-    nsExpirationTracker(PRUint32 aTimerPeriod)
+    nsExpirationTracker(uint32_t aTimerPeriod)
       : mTimerPeriod(aTimerPeriod), mNewestGeneration(0),
         mInAgeOneGeneration(false) {
       MOZ_STATIC_ASSERT(K >= 2 && K <= nsExpirationState::NOT_TRACKED,
@@ -101,7 +101,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
       nsExpirationState* state = aObj->GetExpirationState();
       NS_ASSERTION(!state->IsTracked(), "Tried to add an object that's already tracked");
       nsTArray<T*>& generation = mGenerations[mNewestGeneration];
-      PRUint32 index = generation.Length();
+      uint32_t index = generation.Length();
       if (index > nsExpirationState::MAX_INDEX_IN_GENERATION) {
         NS_WARNING("More than 256M elements tracked, this is probably a problem");
         return NS_ERROR_OUT_OF_MEMORY;
@@ -126,11 +126,11 @@ template <class T, PRUint32 K> class nsExpirationTracker {
       nsExpirationState* state = aObj->GetExpirationState();
       NS_ASSERTION(state->IsTracked(), "Tried to remove an object that's not tracked");
       nsTArray<T*>& generation = mGenerations[state->mGeneration];
-      PRUint32 index = state->mIndexInGeneration;
+      uint32_t index = state->mIndexInGeneration;
       NS_ASSERTION(generation.Length() > index &&
                    generation[index] == aObj, "Object is lying about its index");
       // Move the last object to fill the hole created by removing aObj
-      PRUint32 last = generation.Length() - 1;
+      uint32_t last = generation.Length() - 1;
       T* lastObj = generation[last];
       generation[index] = lastObj;
       lastObj->GetExpirationState()->mIndexInGeneration = index;
@@ -166,7 +166,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
       }
       
       mInAgeOneGeneration = true;
-      PRUint32 reapGeneration = 
+      uint32_t reapGeneration = 
         mNewestGeneration > 0 ? mNewestGeneration - 1 : K - 1;
       nsTArray<T*>& generation = mGenerations[reapGeneration];
       // The following is rather tricky. We have to cope with objects being
@@ -177,7 +177,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
       // the indexes of objects in this generation to *decrease*, not increase.
       // So if we start from the end and work our way backwards we are guaranteed
       // to see each object at least once.
-      PRUint32 index = generation.Length();
+      uint32_t index = generation.Length();
       for (;;) {
         // Objects could have been removed so index could be outside
         // the array
@@ -207,7 +207,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
      * a critically-low memory situation.
      */
     void AgeAllGenerations() {
-      PRUint32 i;
+      uint32_t i;
       for (i = 0; i < K; ++i) {
         AgeOneGeneration();
       }
@@ -216,8 +216,8 @@ template <class T, PRUint32 K> class nsExpirationTracker {
     class Iterator {
     private:
       nsExpirationTracker<T,K>* mTracker;
-      PRUint32                  mGeneration;
-      PRUint32                  mIndex;
+      uint32_t                  mGeneration;
+      uint32_t                  mIndex;
     public:
       Iterator(nsExpirationTracker<T,K>* aTracker)
         : mTracker(aTracker), mGeneration(0), mIndex(0) {}
@@ -238,7 +238,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
     friend class Iterator;
 
     bool IsEmpty() {
-      for (PRUint32 i = 0; i < K; ++i) {
+      for (uint32_t i = 0; i < K; ++i) {
         if (!mGenerations[i].IsEmpty())
           return false;
       }
@@ -278,8 +278,8 @@ template <class T, PRUint32 K> class nsExpirationTracker {
     nsRefPtr<ExpirationTrackerObserver> mObserver;
     nsTArray<T*>       mGenerations[K];
     nsCOMPtr<nsITimer> mTimer;
-    PRUint32           mTimerPeriod;
-    PRUint32           mNewestGeneration;
+    uint32_t           mTimerPeriod;
+    uint32_t           mNewestGeneration;
     bool               mInAgeOneGeneration;
 
     /**
@@ -328,7 +328,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
     }
 };
 
-template<class T, PRUint32 K>
+template<class T, uint32_t K>
 NS_IMETHODIMP
 nsExpirationTracker<T, K>::ExpirationTrackerObserver::Observe(nsISupports     *aSubject,
                                                               const char      *aTopic,
@@ -339,18 +339,18 @@ nsExpirationTracker<T, K>::ExpirationTrackerObserver::Observe(nsISupports     *a
   return NS_OK;
 }
 
-template <class T, PRUint32 K>
+template <class T, uint32_t K>
 NS_IMETHODIMP_(nsrefcnt)
 nsExpirationTracker<T,K>::ExpirationTrackerObserver::AddRef(void)
 {
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
   NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(ExpirationTrackerObserver);
   ++mRefCnt;
   NS_LOG_ADDREF(this, mRefCnt, "ExpirationTrackerObserver", sizeof(*this));
   return mRefCnt;
 }
 
-template <class T, PRUint32 K>
+template <class T, uint32_t K>
 NS_IMETHODIMP_(nsrefcnt)
 nsExpirationTracker<T,K>::ExpirationTrackerObserver::Release(void)
 {
@@ -367,7 +367,7 @@ nsExpirationTracker<T,K>::ExpirationTrackerObserver::Release(void)
   return mRefCnt;
 }
 
-template <class T, PRUint32 K>
+template <class T, uint32_t K>
 NS_IMETHODIMP
 nsExpirationTracker<T,K>::ExpirationTrackerObserver::QueryInterface(REFNSIID aIID, 
                                                                     void** aInstancePtr)

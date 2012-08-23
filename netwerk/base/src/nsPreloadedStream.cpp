@@ -18,7 +18,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsPreloadedStream,
                               nsIAsyncInputStream)
 
 nsPreloadedStream::nsPreloadedStream(nsIAsyncInputStream *aStream,
-                                     const char *data, PRUint32 datalen)
+                                     const char *data, uint32_t datalen)
     : mStream(aStream),
       mOffset(0),
       mLen(datalen)
@@ -41,9 +41,9 @@ nsPreloadedStream::Close()
 
 
 NS_IMETHODIMP
-nsPreloadedStream::Available(PRUint64 *_retval)
+nsPreloadedStream::Available(uint64_t *_retval)
 {
-    PRUint64 avail = 0;
+    uint64_t avail = 0;
     
     nsresult rv = mStream->Available(&avail);
     if (NS_FAILED(rv))
@@ -53,13 +53,13 @@ nsPreloadedStream::Available(PRUint64 *_retval)
 }
 
 NS_IMETHODIMP
-nsPreloadedStream::Read(char *aBuf, PRUint32 aCount,
-                        PRUint32 *_retval)
+nsPreloadedStream::Read(char *aBuf, uint32_t aCount,
+                        uint32_t *_retval)
 {
     if (!mLen)
         return mStream->Read(aBuf, aCount, _retval);
     
-    PRUint32 toRead = NS_MIN(mLen, aCount);
+    uint32_t toRead = NS_MIN(mLen, aCount);
     memcpy(aBuf, mBuf + mOffset, toRead);
     mOffset += toRead;
     mLen -= toRead;
@@ -69,16 +69,16 @@ nsPreloadedStream::Read(char *aBuf, PRUint32 aCount,
 
 NS_IMETHODIMP
 nsPreloadedStream::ReadSegments(nsWriteSegmentFun aWriter,
-                                void *aClosure, PRUint32 aCount,
-                                PRUint32 *result)
+                                void *aClosure, uint32_t aCount,
+                                uint32_t *result)
 {
     if (!mLen)
         return mStream->ReadSegments(aWriter, aClosure, aCount, result);
 
     *result = 0;
     while (mLen > 0 && aCount > 0) {
-        PRUint32 toRead = NS_MIN(mLen, aCount);
-        PRUint32 didRead = 0;
+        uint32_t toRead = NS_MIN(mLen, aCount);
+        uint32_t didRead = 0;
         nsresult rv;
 
         rv = aWriter(this, aClosure, mBuf + mOffset, *result, toRead, &didRead);
@@ -131,8 +131,8 @@ private:
 
 NS_IMETHODIMP
 nsPreloadedStream::AsyncWait(nsIInputStreamCallback *aCallback,
-                             PRUint32 aFlags,
-                             PRUint32 aRequestedCount,
+                             uint32_t aFlags,
+                             uint32_t aRequestedCount,
                              nsIEventTarget *aEventTarget)
 {
     if (!mLen)

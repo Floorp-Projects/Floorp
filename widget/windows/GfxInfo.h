@@ -52,8 +52,8 @@ public:
 
 protected:
 
-  virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, 
-                                        PRInt32 *aStatus, 
+  virtual nsresult GetFeatureStatusImpl(int32_t aFeature, 
+                                        int32_t *aStatus, 
                                         nsAString & aSuggestedDriverVersion, 
                                         const nsTArray<GfxDriverInfo>& aDriverInfo, 
                                         OperatingSystem* aOS = nullptr);
@@ -70,7 +70,7 @@ private:
   nsString mDeviceKeyDebug;
   nsString mAdapterVendorID;
   nsString mAdapterDeviceID;
-  PRUint32 mAdapterSubsysID;
+  uint32_t mAdapterSubsysID;
   nsString mDeviceString2;
   nsString mDriverVersion2;
   nsString mDeviceID2;
@@ -78,8 +78,8 @@ private:
   nsString mDeviceKey2;
   nsString mAdapterVendorID2;
   nsString mAdapterDeviceID2;
-  PRUint32 mAdapterSubsysID2;
-  PRUint32 mWindowsVersion;
+  uint32_t mAdapterSubsysID2;
+  uint32_t mWindowsVersion;
   bool mHasDualGPU;
   bool mIsGPU2Active;
   bool mHasDriverVersionMismatch;

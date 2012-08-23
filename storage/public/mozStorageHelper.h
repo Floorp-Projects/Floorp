@@ -33,7 +33,7 @@ class mozStorageTransaction
 public:
   mozStorageTransaction(mozIStorageConnection* aConnection,
                         bool aCommitOnComplete,
-                        PRInt32 aType = mozIStorageConnection::TRANSACTION_DEFERRED)
+                        int32_t aType = mozIStorageConnection::TRANSACTION_DEFERRED)
     : mConnection(aConnection),
       mHasTransaction(false),
       mCommitOnComplete(aCommitOnComplete),

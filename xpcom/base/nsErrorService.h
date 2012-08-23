@@ -16,9 +16,9 @@ class nsInt2StrHashtable
 public:
     nsInt2StrHashtable();
 
-    nsresult  Put(PRUint32 key, const char* aData);
-    char*     Get(PRUint32 key);
-    nsresult  Remove(PRUint32 key);
+    nsresult  Put(uint32_t key, const char* aData);
+    char*     Get(uint32_t key);
+    nsresult  Remove(uint32_t key);
 
 protected:
     nsObjectHashtable mHashtable;

@@ -105,8 +105,8 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *protoArg, JS
 {
     RootedObject proto(cx, protoArg);
     RootedObject parent(cx, parentArg);
-    JSObject *obj = JS_NewObject(cx, clasp, proto, parent);
-    if (!obj || !obj->setSingletonType(cx))
+    RootedObject obj(cx, JS_NewObject(cx, clasp, proto, parent));
+    if (!obj || !JSObject::setSingletonType(cx, obj))
         return NULL;
     return obj;
 }
@@ -440,13 +440,13 @@ js::SetReservedSlotWithBarrier(RawObject obj, size_t slot, const js::Value &valu
 }
 
 JS_FRIEND_API(bool)
-js::GetGeneric(JSContext *cx, JSObject *obj, JSObject *receiver_, jsid id_,
+js::GetGeneric(JSContext *cx, JSObject *objArg, JSObject *receiverArg, jsid idArg,
                Value *vp)
 {
-    RootedObject receiver(cx, receiver_);
-    RootedId id(cx, id_);
+    RootedObject obj(cx, objArg), receiver(cx, receiverArg);
+    RootedId id(cx, idArg);
     RootedValue value(cx);
-    if (!obj->getGeneric(cx, receiver, id, &value))
+    if (!JSObject::getGeneric(cx, obj, receiver, id, &value))
         return false;
     *vp = value;
     return true;
@@ -796,6 +796,14 @@ jschar *
 GCDescription::formatJSON(JSRuntime *rt, uint64_t timestamp) const
 {
     return rt->gcStats.formatJSON(timestamp);
+}
+
+JS_FRIEND_API(AnalysisPurgeCallback)
+SetAnalysisPurgeCallback(JSRuntime *rt, AnalysisPurgeCallback callback)
+{
+    AnalysisPurgeCallback old = rt->analysisPurgeCallback;
+    rt->analysisPurgeCallback = callback;
+    return old;
 }
 
 JS_FRIEND_API(void)

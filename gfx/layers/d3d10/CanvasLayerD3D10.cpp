@@ -33,7 +33,6 @@ CanvasLayerD3D10::Initialize(const Data& aData)
   } else if (aData.mGLContext) {
     NS_ASSERTION(aData.mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
     mGLContext = aData.mGLContext;
-    mCanvasFramebuffer = mGLContext->GetOffscreenFBO();
     mDataIsPremultiplied = aData.mGLBufferIsPremultiplied;
     mNeedsYFlip = true;
   } else if (aData.mDrawTarget) {
@@ -78,7 +77,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
   mUsingSharedTexture = false;
 
   HANDLE shareHandle = mGLContext ? mGLContext->GetD3DShareHandle() : nullptr;
-  if (shareHandle) {
+  if (shareHandle && !mForceReadback) {
     HRESULT hr = device()->OpenSharedResource(shareHandle, __uuidof(ID3D10Texture2D), getter_AddRefs(mTexture));
     if (SUCCEEDED(hr))
       mUsingSharedTexture = true;
@@ -134,42 +133,27 @@ CanvasLayerD3D10::UpdateSurface()
 
     const bool stridesMatch = map.RowPitch == mBounds.width * 4;
 
-    PRUint8 *destination;
+    uint8_t *destination;
     if (!stridesMatch) {
       destination = GetTempBlob(mBounds.width * mBounds.height * 4);
     } else {
       DiscardTempBlob();
-      destination = (PRUint8*)map.pData;
+      destination = (uint8_t*)map.pData;
     }
 
     mGLContext->MakeCurrent();
-
-    PRUint32 currentFramebuffer = 0;
-
-    mGLContext->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*)&currentFramebuffer);
-
-    // Make sure that we read pixels from the correct framebuffer, regardless
-    // of what's currently bound.
-    if (currentFramebuffer != mCanvasFramebuffer)
-      mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mCanvasFramebuffer);
 
     nsRefPtr<gfxImageSurface> tmpSurface =
       new gfxImageSurface(destination,
                           gfxIntSize(mBounds.width, mBounds.height),
                           mBounds.width * 4,
                           gfxASurface::ImageFormatARGB32);
-    mGLContext->ReadPixelsIntoImageSurface(0, 0,
-                                           mBounds.width, mBounds.height,
-                                           tmpSurface);
+    mGLContext->ReadScreenIntoImageSurface(tmpSurface);
     tmpSurface = nullptr;
-
-    // Put back the previous framebuffer binding.
-    if (currentFramebuffer != mCanvasFramebuffer)
-      mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, currentFramebuffer);
 
     if (!stridesMatch) {
       for (int y = 0; y < mBounds.height; y++) {
-        memcpy((PRUint8*)map.pData + map.RowPitch * y,
+        memcpy((uint8_t*)map.pData + map.RowPitch * y,
                destination + mBounds.width * 4 * y,
                mBounds.width * 4);
       }
@@ -224,7 +208,7 @@ CanvasLayerD3D10::RenderLayer()
 
   SetEffectTransformAndOpacity();
 
-  PRUint8 shaderFlags = 0;
+  uint8_t shaderFlags = 0;
   shaderFlags |= LoadMaskTexture();
   shaderFlags |= mDataIsPremultiplied
                 ? SHADER_PREMUL : SHADER_NON_PREMUL | SHADER_RGBA;

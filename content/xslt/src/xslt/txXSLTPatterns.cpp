@@ -34,7 +34,7 @@ double txUnionPattern::getDefaultPriority()
  */
 bool txUnionPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 {
-    PRUint32 i, len = mLocPathPatterns.Length();
+    uint32_t i, len = mLocPathPatterns.Length();
     for (i = 0; i < len; ++i) {
         if (mLocPathPatterns[i]->matches(aNode, aContext)) {
             return true;
@@ -51,13 +51,13 @@ txUnionPattern::getType()
 
 TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txUnionPattern)
 txPattern*
-txUnionPattern::getSubPatternAt(PRUint32 aPos)
+txUnionPattern::getSubPatternAt(uint32_t aPos)
 {
     return mLocPathPatterns.SafeElementAt(aPos);
 }
 
 void
-txUnionPattern::setSubPatternAt(PRUint32 aPos, txPattern* aPattern)
+txUnionPattern::setSubPatternAt(uint32_t aPos, txPattern* aPattern)
 {
     NS_ASSERTION(aPos < mLocPathPatterns.Length(),
                  "setting bad subexpression index");
@@ -72,7 +72,7 @@ txUnionPattern::toString(nsAString& aDest)
 #ifdef DEBUG
     aDest.AppendLiteral("txUnionPattern{");
 #endif
-    for (PRUint32 i = 0; i < mLocPathPatterns.Length(); ++i) {
+    for (uint32_t i = 0; i < mLocPathPatterns.Length(); ++i) {
         if (i != 0)
             aDest.AppendLiteral(" | ");
         mLocPathPatterns[i]->toString(aDest);
@@ -119,7 +119,7 @@ bool txLocPathPattern::matches(const txXPathNode& aNode, txIMatchContext* aConte
      * tree.
      */
 
-    PRUint32 pos = mSteps.Length();
+    uint32_t pos = mSteps.Length();
     Step* step = &mSteps[--pos];
     if (!step->pattern->matches(aNode, aContext))
         return false;
@@ -139,7 +139,7 @@ bool txLocPathPattern::matches(const txXPathNode& aNode, txIMatchContext* aConte
 
     // We have at least one // path separator
     txXPathTreeWalker blockWalker(walker);
-    PRUint32 blockPos = pos;
+    uint32_t blockPos = pos;
 
     while (pos) {
         if (!hasParent)
@@ -176,13 +176,13 @@ double txLocPathPattern::getDefaultPriority()
 
 TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txLocPathPattern)
 txPattern*
-txLocPathPattern::getSubPatternAt(PRUint32 aPos)
+txLocPathPattern::getSubPatternAt(uint32_t aPos)
 {
     return aPos < mSteps.Length() ? mSteps[aPos].pattern.get() : nullptr;
 }
 
 void
-txLocPathPattern::setSubPatternAt(PRUint32 aPos, txPattern* aPattern)
+txLocPathPattern::setSubPatternAt(uint32_t aPos, txPattern* aPattern)
 {
     NS_ASSERTION(aPos < mSteps.Length(), "setting bad subexpression index");
     Step* step = &mSteps[aPos];
@@ -197,7 +197,7 @@ txLocPathPattern::toString(nsAString& aDest)
 #ifdef DEBUG
     aDest.AppendLiteral("txLocPathPattern{");
 #endif
-    for (PRUint32 i = 0; i < mSteps.Length(); ++i) {
+    for (uint32_t i = 0; i < mSteps.Length(); ++i) {
         if (i != 0) {
             if (mSteps[i].isChild)
                 aDest.Append(PRUnichar('/'));
@@ -294,7 +294,7 @@ txIdPattern::toString(nsAString& aDest)
     aDest.AppendLiteral("txIdPattern{");
 #endif
     aDest.AppendLiteral("id('");
-    PRUint32 k, count = mIds.Count() - 1;
+    uint32_t k, count = mIds.Count() - 1;
     for (k = 0; k < count; ++k) {
         nsAutoString str;
         mIds[k]->ToString(str);
@@ -428,7 +428,7 @@ bool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
     rv = aContext->recycler()->getNodeSet(getter_AddRefs(newNodes));
     NS_ENSURE_SUCCESS(rv, false);
 
-    PRUint32 i, predLen = mPredicates.Length();
+    uint32_t i, predLen = mPredicates.Length();
     for (i = 1; i < predLen; ++i) {
         newNodes->clear();
         bool contextIsInPredicate = false;
@@ -495,13 +495,13 @@ txStepPattern::getType()
 
 TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txStepPattern)
 Expr*
-txStepPattern::getSubExprAt(PRUint32 aPos)
+txStepPattern::getSubExprAt(uint32_t aPos)
 {
     return PredicateList::getSubExprAt(aPos);
 }
 
 void
-txStepPattern::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+txStepPattern::setSubExprAt(uint32_t aPos, Expr* aExpr)
 {
     PredicateList::setSubExprAt(aPos, aExpr);
 }

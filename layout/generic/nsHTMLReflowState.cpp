@@ -54,7 +54,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
                                      nsIFrame*            aFrame,
                                      nsRenderingContext* aRenderingContext,
                                      const nsSize&        aAvailableSpace,
-                                     PRUint32             aFlags)
+                                     uint32_t             aFlags)
   : nsCSSOffsetState(aFrame, aRenderingContext)
   , mBlockDelta(0)
   , mReflowDepth(0)
@@ -201,7 +201,7 @@ nsCSSOffsetState::ComputeWidthValue(nscoord aContainingBlockWidth,
 
 nscoord
 nsCSSOffsetState::ComputeWidthValue(nscoord aContainingBlockWidth,
-                                    PRUint8 aBoxSizing,
+                                    uint8_t aBoxSizing,
                                     const nsStyleCoord& aCoord)
 {
   nscoord inside = 0, outside = mComputedBorderPadding.LeftRight() +
@@ -222,7 +222,7 @@ nsCSSOffsetState::ComputeWidthValue(nscoord aContainingBlockWidth,
 
 nscoord
 nsCSSOffsetState::ComputeHeightValue(nscoord aContainingBlockHeight,
-                                     PRUint8 aBoxSizing,
+                                     uint8_t aBoxSizing,
                                      const nsStyleCoord& aCoord)
 {
   nscoord inside = 0;
@@ -726,7 +726,7 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
 }
 
 /* static */ void
-nsHTMLReflowState::ComputeRelativeOffsets(PRUint8 aCBDirection,
+nsHTMLReflowState::ComputeRelativeOffsets(uint8_t aCBDirection,
                                           nsIFrame* aFrame,
                                           nscoord aContainingBlockWidth,
                                           nscoord aContainingBlockHeight,
@@ -1359,7 +1359,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   bool widthIsAuto = eStyleUnit_Auto == mStylePosition->mWidth.GetUnit();
   bool heightIsAuto = eStyleUnit_Auto == mStylePosition->mHeight.GetUnit();
 
-  PRUint32 computeSizeFlags = 0;
+  uint32_t computeSizeFlags = 0;
   if (leftIsAuto || rightIsAuto) {
     computeSizeFlags |= nsIFrame::eShrinkWrap;
   }
@@ -1780,7 +1780,7 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
   if (sNormalLineHeightControl == eUninitialized) {
     // browser.display.normal_lineheight_calc_control is not user
     // changeable, so no need to register callback for it.
-    PRInt32 val =
+    int32_t val =
       Preferences::GetInt("browser.display.normal_lineheight_calc_control",
                           eNoExternalLeading);
     sNormalLineHeightControl = static_cast<eNormalLineHeightControl>(val);
@@ -1793,7 +1793,7 @@ IsSideCaption(nsIFrame* aFrame, const nsStyleDisplay* aStyleDisplay)
 {
   if (aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CAPTION)
     return false;
-  PRUint8 captionSide = aFrame->GetStyleTableBorder()->mCaptionSide;
+  uint8_t captionSide = aFrame->GetStyleTableBorder()->mCaptionSide;
   return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
          captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
 }
@@ -1916,7 +1916,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
     // the correct containing block width and height here, which is why we need
     // to do it after all the quirks-n-such above.
     if (mStyleDisplay->IsRelativelyPositioned(frame)) {
-      PRUint8 direction = NS_STYLE_DIRECTION_LTR;
+      uint8_t direction = NS_STYLE_DIRECTION_LTR;
       if (cbrs && NS_STYLE_DIRECTION_RTL == cbrs->mStyleVisibility->mDirection) {
         direction = NS_STYLE_DIRECTION_RTL;
       }
@@ -1997,7 +1997,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       AutoMaybeDisableFontInflation an(frame);
 
       bool isBlock = NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType);
-      PRUint32 computeSizeFlags = isBlock ? 0 : nsIFrame::eShrinkWrap;
+      uint32_t computeSizeFlags = isBlock ? 0 : nsIFrame::eShrinkWrap;
 
       // Make sure legend frames with display:block and width:auto still
       // shrink-wrap.
@@ -2105,6 +2105,7 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
   }
   else if (frame->GetStateBits() & NS_FRAME_IS_SVG_TEXT) {
     mComputedPadding.SizeTo(0, 0, 0, 0);
+    needPaddingProp = false;
   }
   else if (aPadding) { // padding is an input arg
     mComputedPadding = *aPadding;

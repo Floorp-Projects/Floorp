@@ -104,8 +104,8 @@ WindowHook::Notify(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam,
   if (!data)
     return false;
 
-  PRUint32 length = data->monitors.Length();
-  for (PRUint32 midx = 0; midx < length; midx++) {
+  uint32_t length = data->monitors.Length();
+  for (uint32_t midx = 0; midx < length; midx++) {
     data->monitors[midx].Invoke(hWnd, nMsg, wParam, lParam, aResult);
   }
 

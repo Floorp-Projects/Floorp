@@ -21,9 +21,9 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
-  NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
+  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType);
+                              int32_t aModType);
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
@@ -138,9 +138,9 @@ nsAutoRepeatBoxFrame::HandleRelease(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsAutoRepeatBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
+nsAutoRepeatBoxFrame::AttributeChanged(int32_t aNameSpaceID,
                                        nsIAtom* aAttribute,
-                                       PRInt32 aModType)
+                                       int32_t aModType)
 {
   if (aAttribute == nsGkAtoms::type) {
     StopRepeat();

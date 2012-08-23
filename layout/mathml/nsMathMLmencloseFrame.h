@@ -57,15 +57,15 @@ public:
                   nsHTMLReflowMetrics& aDesiredSize);
   
   NS_IMETHOD
-  AttributeChanged(PRInt32         aNameSpaceID,
+  AttributeChanged(int32_t         aNameSpaceID,
                    nsIAtom*        aAttribute,
-                   PRInt32         aModType);
+                   int32_t         aModType);
   
   virtual void
-  SetAdditionalStyleContext(PRInt32          aIndex, 
+  SetAdditionalStyleContext(int32_t          aIndex, 
                             nsStyleContext*  aStyleContext);
   virtual nsStyleContext*
-  GetAdditionalStyleContext(PRInt32 aIndex) const;
+  GetAdditionalStyleContext(int32_t aIndex) const;
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
@@ -94,7 +94,7 @@ protected:
   void InitNotations();
 
   // Description of the notations to draw
-  PRUint32 mNotationsToDraw;
+  uint32_t mNotationsToDraw;
   bool IsToDraw(nsMencloseNotation mask)
   {
     return mask & mNotationsToDraw;
@@ -102,7 +102,7 @@ protected:
 
   nscoord mRuleThickness;
   nsTArray<nsMathMLChar> mMathMLChar;
-  PRInt8 mLongDivCharIndex, mRadicalCharIndex;
+  int8_t mLongDivCharIndex, mRadicalCharIndex;
   nscoord mContentWidth;
   nsresult AllocateMathMLChar(nsMencloseNotation mask);
 

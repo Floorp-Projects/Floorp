@@ -44,7 +44,7 @@ extern PRLogModuleInfo* gFTPLog;
 static void
 removeParamsFromPath(nsCString& path)
 {
-  PRInt32 index = path.FindChar(';');
+  int32_t index = path.FindChar(';');
   if (index >= 0) {
     path.SetLength(index);
   }
@@ -109,7 +109,7 @@ nsFtpState::OnInputStreamReady(nsIAsyncInputStream *aInStream)
 }
 
 void
-nsFtpState::OnControlDataAvailable(const char *aData, PRUint32 aDataLen)
+nsFtpState::OnControlDataAvailable(const char *aData, uint32_t aDataLen)
 {
     LOG(("FTP:(%p) control data available [%u]\n", this, aDataLen));
     mControlConnection->WaitData(this);  // queue up another call
@@ -133,8 +133,8 @@ nsFtpState::OnControlDataAvailable(const char *aData, PRUint32 aDataLen)
 
     const char* currLine = buffer.get();
     while (*currLine && mKeepRunning) {
-        PRInt32 eolLength = strcspn(currLine, CRLF);
-        PRInt32 currLineLength = strlen(currLine);
+        int32_t eolLength = strcspn(currLine, CRLF);
+        int32_t currLineLength = strlen(currLine);
 
         // if currLine is empty or only contains CR or LF, then bail.  we can
         // sometimes get an ODA event with the full response line + CR without
@@ -151,7 +151,7 @@ nsFtpState::OnControlDataAvailable(const char *aData, PRUint32 aDataLen)
 
         // Append the current segment, including the LF
         nsCAutoString line;
-        PRInt32 crlfLength = 0;
+        int32_t crlfLength = 0;
 
         if ((currLineLength > eolLength) &&
             (currLine[eolLength] == nsCRT::CR) &&
@@ -826,7 +826,7 @@ nsFtpState::R_pwd() {
         return FTP_S_TYPE;
 
     nsCAutoString respStr(mResponseMsg);
-    PRInt32 pos = respStr.FindChar('"');
+    int32_t pos = respStr.FindChar('"');
     if (pos > -1) {
         respStr.Cut(0, pos+1);
         pos = respStr.FindChar('"');
@@ -1054,7 +1054,7 @@ nsFtpState::R_mdtm() {
 
     nsCString entityID;
     entityID.Truncate();
-    entityID.AppendInt(PRInt64(mFileSize));
+    entityID.AppendInt(int64_t(mFileSize));
     entityID.Append('/');
     entityID.Append(mModTime);
     mChannel->SetEntityID(entityID);
@@ -1207,8 +1207,8 @@ nsresult
 nsFtpState::S_rest() {
     
     nsCAutoString restString("REST ");
-    // The PRInt64 cast is needed to avoid ambiguity
-    restString.AppendInt(PRInt64(mChannel->StartPos()), 10);
+    // The int64_t cast is needed to avoid ambiguity
+    restString.AppendInt(int64_t(mChannel->StartPos()), 10);
     restString.Append(CRLF);
 
     return SendFTPCommand(restString);
@@ -1336,7 +1336,7 @@ nsFtpState::R_pasv() {
         return FTP_ERROR;
 
     nsresult rv;
-    PRInt32 port;
+    int32_t port;
 
     nsCAutoString responseCopy(mResponseMsg);
     char *response = responseCopy.BeginWriting();
@@ -1369,9 +1369,9 @@ nsFtpState::R_pasv() {
         // The returned address string can be of the form
         // (xxx,xxx,xxx,xxx,ppp,ppp) or
         //  xxx,xxx,xxx,xxx,ppp,ppp (without parens)
-        PRInt32 h0, h1, h2, h3, p0, p1;
+        int32_t h0, h1, h2, h3, p0, p1;
 
-        PRUint32 fields = 0;
+        uint32_t fields = 0;
         // First try with parens
         while (*ptr && *ptr != '(')
             ++ptr;
@@ -1402,7 +1402,7 @@ nsFtpState::R_pasv() {
         if (fields < 6)
             return FTP_ERROR;
 
-        port = ((PRInt32) (p0<<8)) + p1;
+        port = ((int32_t) (p0<<8)) + p1;
     }
 
     bool newDataConn = true;
@@ -1411,7 +1411,7 @@ nsFtpState::R_pasv() {
         // is the same
         nsCOMPtr<nsISocketTransport> strans = do_QueryInterface(mDataTransport);
         if (strans) {
-            PRInt32 oldPort;
+            int32_t oldPort;
             nsresult rv = strans->GetPort(&oldPort);
             if (NS_SUCCEEDED(rv)) {
                 if (oldPort == port) {
@@ -1535,12 +1535,12 @@ nsFtpState::R_pasv() {
 // nsIRequest methods:
 
 static inline
-PRUint32 NowInSeconds()
+uint32_t NowInSeconds()
 {
-    return PRUint32(PR_Now() / PR_USEC_PER_SEC);
+    return uint32_t(PR_Now() / PR_USEC_PER_SEC);
 }
 
-PRUint32 nsFtpState::mSessionStartTime = NowInSeconds();
+uint32_t nsFtpState::mSessionStartTime = NowInSeconds();
 
 /* Is this cache entry valid to use for reading?
  * Since we make up an expiration time for ftp, use the following rules:
@@ -1583,7 +1583,7 @@ nsFtpState::CanReadCacheEntry()
     if (mChannel->HasLoadFlag(nsIRequest::VALIDATE_ALWAYS))
         return false;
     
-    PRUint32 time;
+    uint32_t time;
     if (mChannel->HasLoadFlag(nsIRequest::VALIDATE_ONCE_PER_SESSION)) {
         rv = mCacheEntry->GetLastModified(&time);
         if (NS_FAILED(rv))
@@ -1708,7 +1708,7 @@ nsFtpState::Init(nsFtpChannel *channel)
         fwdPtr++;
     if (*fwdPtr != '\0') {
         // now unescape it... %xx reduced inline to resulting character
-        PRInt32 len = NS_UnescapeURL(fwdPtr);
+        int32_t len = NS_UnescapeURL(fwdPtr);
         mPath.Assign(fwdPtr, len);
         if (IsUTF8(mPath)) {
     	    nsCAutoString originCharset;
@@ -1751,7 +1751,7 @@ nsFtpState::Init(nsFtpChannel *channel)
 
     // setup the connection cache key
 
-    PRInt32 port;
+    int32_t port;
     rv = mChannel->URI()->GetPort(&port);
     if (NS_FAILED(rv))
         return rv;
@@ -2013,7 +2013,7 @@ nsFtpState::ConvertDirspecFromVMS(nsCString& dirSpec)
 
 NS_IMETHODIMP
 nsFtpState::OnTransportStatus(nsITransport *transport, nsresult status,
-                              PRUint64 progress, PRUint64 progressMax)
+                              uint64_t progress, uint64_t progressMax)
 {
     // Mix signals from both the control and data connections.
 
@@ -2099,7 +2099,7 @@ nsFtpState::OnStopRequest(nsIRequest *request, nsISupports *context,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsFtpState::Available(PRUint64 *result)
+nsFtpState::Available(uint64_t *result)
 {
     if (mDataStream)
         return mDataStream->Available(result);
@@ -2109,7 +2109,7 @@ nsFtpState::Available(PRUint64 *result)
 
 NS_IMETHODIMP
 nsFtpState::ReadSegments(nsWriteSegmentFun writer, void *closure,
-                         PRUint32 count, PRUint32 *result)
+                         uint32_t count, uint32_t *result)
 {
     // Insert a thunk here so that the input stream passed to the writer is this
     // input stream instead of mDataStream.
@@ -2255,7 +2255,7 @@ nsFtpState::CheckCache()
     // Generate cache key (remove trailing #ref if any):
     nsCAutoString key;
     mChannel->URI()->GetAsciiSpec(key);
-    PRInt32 pos = key.RFindChar('#');
+    int32_t pos = key.RFindChar('#');
     if (pos != kNotFound)
         key.Truncate(pos);
     NS_ENSURE_FALSE(key.IsEmpty(), false);
@@ -2295,14 +2295,14 @@ nsFtpState::ConvertUTF8PathToCharset(const nsACString &aCharset)
                                        getter_AddRefs(encoder));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRInt32 len = ucsPath.Length();
-    PRInt32 maxlen;
+    int32_t len = ucsPath.Length();
+    int32_t maxlen;
 
     rv = encoder->GetMaxLength(ucsPath.get(), len, &maxlen);
     NS_ENSURE_SUCCESS(rv, rv);
 
     char buf[256], *p = buf;
-    if (PRUint32(maxlen) > sizeof(buf) - 1) {
+    if (uint32_t(maxlen) > sizeof(buf) - 1) {
         p = (char *) malloc(maxlen + 1);
         if (!p)
             return NS_ERROR_OUT_OF_MEMORY;

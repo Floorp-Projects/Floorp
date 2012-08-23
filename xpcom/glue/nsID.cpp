@@ -35,7 +35,7 @@ static const char gIDFormat2[] =
  */
 
 #define PARSE_CHARS_TO_NUM(char_pointer, dest_variable, number_of_chars) \
-  do { PRInt32 _i=number_of_chars; \
+  do { int32_t _i=number_of_chars; \
   dest_variable = 0; \
   while(_i) { \
     ADD_HEX_CHAR_TO_INT_OR_RETURN_FALSE(*char_pointer, dest_variable); \
@@ -99,10 +99,10 @@ char *nsID::ToString() const
 
   if (res != NULL) {
     PR_snprintf(res, NSID_LENGTH, gIDFormat,
-                m0, (PRUint32) m1, (PRUint32) m2,
-                (PRUint32) m3[0], (PRUint32) m3[1], (PRUint32) m3[2],
-                (PRUint32) m3[3], (PRUint32) m3[4], (PRUint32) m3[5],
-                (PRUint32) m3[6], (PRUint32) m3[7]);
+                m0, (uint32_t) m1, (uint32_t) m2,
+                (uint32_t) m3[0], (uint32_t) m3[1], (uint32_t) m3[2],
+                (uint32_t) m3[3], (uint32_t) m3[4], (uint32_t) m3[5],
+                (uint32_t) m3[6], (uint32_t) m3[7]);
   }
   return res;
 }
@@ -110,10 +110,10 @@ char *nsID::ToString() const
 void nsID::ToProvidedString(char (&dest)[NSID_LENGTH]) const 
 {
   PR_snprintf(dest, NSID_LENGTH, gIDFormat,
-              m0, (PRUint32) m1, (PRUint32) m2,
-              (PRUint32) m3[0], (PRUint32) m3[1], (PRUint32) m3[2],
-              (PRUint32) m3[3], (PRUint32) m3[4], (PRUint32) m3[5],
-              (PRUint32) m3[6], (PRUint32) m3[7]);
+              m0, (uint32_t) m1, (uint32_t) m2,
+              (uint32_t) m3[0], (uint32_t) m3[1], (uint32_t) m3[2],
+              (uint32_t) m3[3], (uint32_t) m3[4], (uint32_t) m3[5],
+              (uint32_t) m3[6], (uint32_t) m3[7]);
 }
 
 #endif // XPCOM_GLUE_AVOID_NSPR

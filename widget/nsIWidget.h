@@ -388,11 +388,11 @@ class nsIWidget : public nsISupports {
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
       // The -moz-appearance value for the themed widget
-      PRUint8 mWidgetType;
+      uint8_t mWidgetType;
       // The device-pixel rect within the window for the themed widget
       nsIntRect mRect;
 
-      ThemeGeometry(PRUint8 aWidgetType, const nsIntRect& aRect)
+      ThemeGeometry(uint8_t aWidgetType, const nsIntRect& aRect)
        : mWidgetType(aWidgetType)
        , mRect(aRect)
       { }
@@ -634,8 +634,8 @@ class nsIWidget : public nsISupports {
      *
      **/
     NS_IMETHOD ConstrainPosition(bool aAllowSlop,
-                                 PRInt32 *aX,
-                                 PRInt32 *aY) = 0;
+                                 int32_t *aX,
+                                 int32_t *aY) = 0;
 
     /**
      * Move this widget.
@@ -647,7 +647,7 @@ class nsIWidget : public nsISupports {
      * @param aY the new y position expressed in the parent's coordinate system
      *
      **/
-    NS_IMETHOD Move(PRInt32 aX, PRInt32 aY) = 0;
+    NS_IMETHOD Move(int32_t aX, int32_t aY) = 0;
 
     /**
      * Reposition this widget so that the client area has the given offset.
@@ -662,7 +662,7 @@ class nsIWidget : public nsISupports {
      *                 screen coordinates)
      *
      **/
-    NS_IMETHOD MoveClient(PRInt32 aX, PRInt32 aY) = 0;
+    NS_IMETHOD MoveClient(int32_t aX, int32_t aY) = 0;
 
     /**
      * Resize this widget. Any size constraints set for the window by a
@@ -673,8 +673,8 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted
      *
      */
-    NS_IMETHOD Resize(PRInt32 aWidth,
-                      PRInt32 aHeight,
+    NS_IMETHOD Resize(int32_t aWidth,
+                      int32_t aHeight,
                       bool     aRepaint) = 0;
 
     /**
@@ -688,10 +688,10 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted if the size changes
      *
      */
-    NS_IMETHOD Resize(PRInt32 aX,
-                      PRInt32 aY,
-                      PRInt32 aWidth,
-                      PRInt32 aHeight,
+    NS_IMETHOD Resize(int32_t aX,
+                      int32_t aY,
+                      int32_t aWidth,
+                      int32_t aHeight,
                       bool     aRepaint) = 0;
 
     /**
@@ -702,8 +702,8 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted
      *
      */
-    NS_IMETHOD ResizeClient(PRInt32 aWidth,
-                            PRInt32 aHeight,
+    NS_IMETHOD ResizeClient(int32_t aWidth,
+                            int32_t aHeight,
                             bool  aRepaint) = 0;
 
     /**
@@ -723,21 +723,21 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted
      *
      */
-    NS_IMETHOD ResizeClient(PRInt32 aX,
-                            PRInt32 aY,
-                            PRInt32 aWidth,
-                            PRInt32 aHeight,
+    NS_IMETHOD ResizeClient(int32_t aX,
+                            int32_t aY,
+                            int32_t aWidth,
+                            int32_t aHeight,
                             bool    aRepaint) = 0;
 
     /**
      * Sets the widget's z-index.
      */
-    NS_IMETHOD SetZIndex(PRInt32 aZIndex) = 0;
+    NS_IMETHOD SetZIndex(int32_t aZIndex) = 0;
 
     /**
      * Gets the widget's z-index. 
      */
-    NS_IMETHOD GetZIndex(PRInt32* aZIndex) = 0;
+    NS_IMETHOD GetZIndex(int32_t* aZIndex) = 0;
 
     /**
      * Position this widget just behind the given widget. (Used to
@@ -757,13 +757,13 @@ class nsIWidget : public nsISupports {
      * Minimize, maximize or normalize the window size.
      * Takes a value from nsSizeMode (see nsGUIEvent.h)
      */
-    NS_IMETHOD SetSizeMode(PRInt32 aMode) = 0;
+    NS_IMETHOD SetSizeMode(int32_t aMode) = 0;
 
     /**
      * Return size mode (minimized, maximized, normalized).
      * Returns a value from nsSizeMode (see nsGUIEvent.h)
      */
-    NS_IMETHOD GetSizeMode(PRInt32* aMode) = 0;
+    NS_IMETHOD GetSizeMode(int32_t* aMode) = 0;
 
     /**
      * Enable or disable this Widget
@@ -908,7 +908,7 @@ class nsIWidget : public nsISupports {
      *         supported
      */
     NS_IMETHOD SetCursor(imgIContainer* aCursor,
-                         PRUint32 aHotspotX, PRUint32 aHotspotY) = 0;
+                         uint32_t aHotspotX, uint32_t aHotspotY) = 0;
 
     /** 
      * Get the window type of this widget
@@ -982,7 +982,7 @@ class nsIWidget : public nsISupports {
      *
      * Ignored on child widgets and on non-Mac platforms.
      */
-    NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle) = 0;
+    NS_IMETHOD SetWindowShadowStyle(int32_t aStyle) = 0;
 
     /*
      * On Mac OS X, this method shows or hides the pill button in the titlebar
@@ -1112,8 +1112,8 @@ class nsIWidget : public nsISupports {
     //@{
     virtual void AddChild(nsIWidget* aChild) = 0;
     virtual void RemoveChild(nsIWidget* aChild) = 0;
-    virtual void* GetNativeData(PRUint32 aDataType) = 0;
-    virtual void FreeNativeData(void * data, PRUint32 aDataType) = 0;//~~~
+    virtual void* GetNativeData(uint32_t aDataType) = 0;
+    virtual void FreeNativeData(void * data, uint32_t aDataType) = 0;//~~~
 
     // GetDeviceContext returns a weak pointer to this widget's device context
     virtual nsDeviceContext* GetDeviceContext() = 0;
@@ -1201,7 +1201,7 @@ class nsIWidget : public nsISupports {
      *                    conventions. If set to -1, cycles indefinitely until 
      *                    window is brought into the foreground.
      */
-    NS_IMETHOD GetAttention(PRInt32 aCycleCount) = 0;
+    NS_IMETHOD GetAttention(int32_t aCycleCount) = 0;
 
     /**
      * Ask whether there user input events pending.  All input events are
@@ -1282,7 +1282,7 @@ class nsIWidget : public nsISupports {
     /**
      * Begin a window resizing drag, based on the event passed in.
      */
-    NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical) = 0;
+    NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical) = 0;
 
     /**
      * Begin a window moving drag, based on the event passed in.
@@ -1327,9 +1327,9 @@ class nsIWidget : public nsISupports {
      * @return NS_ERROR_NOT_AVAILABLE to indicate that the keyboard
      * layout is not supported and the event was not fired
      */
-    virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
-                                              PRInt32 aNativeKeyCode,
-                                              PRUint32 aModifierFlags,
+    virtual nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
+                                              int32_t aNativeKeyCode,
+                                              uint32_t aModifierFlags,
                                               const nsAString& aCharacters,
                                               const nsAString& aUnmodifiedCharacters) = 0;
 
@@ -1348,8 +1348,8 @@ class nsIWidget : public nsISupports {
      * on Windows)
      */
     virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
-                                                PRUint32 aNativeMessage,
-                                                PRUint32 aModifierFlags) = 0;
+                                                uint32_t aNativeMessage,
+                                                uint32_t aModifierFlags) = 0;
 
     /**
      * A shortcut to SynthesizeNativeMouseEvent, abstracting away the native message.
@@ -1378,12 +1378,12 @@ class nsIWidget : public nsISupports {
      *                          document.
      */
     virtual nsresult SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
-                                                      PRUint32 aNativeMessage,
+                                                      uint32_t aNativeMessage,
                                                       double aDeltaX,
                                                       double aDeltaY,
                                                       double aDeltaZ,
-                                                      PRUint32 aModifierFlags,
-                                                      PRUint32 aAdditionalFlags) = 0;
+                                                      uint32_t aModifierFlags,
+                                                      uint32_t aAdditionalFlags) = 0;
 
     /**
      * Activates a native menu item at the position specified by the index
@@ -1462,7 +1462,7 @@ class nsIWidget : public nsISupports {
      * If the platform doesn't support the LED state (or we cannot get the
      * state), this method returns NS_ERROR_NOT_IMPLEMENTED.
      */
-    NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, bool* aLEDState) = 0;
+    NS_IMETHOD GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState) = 0;
 
     /*
      * An editable node (i.e. input/textarea/design mode document)
@@ -1484,9 +1484,9 @@ class nsIWidget : public nsISupports {
      * aOldEnd is the ending offset of the change
      * aNewEnd is the caret offset after the change
      */
-    NS_IMETHOD OnIMETextChange(PRUint32 aStart,
-                               PRUint32 aOldEnd,
-                               PRUint32 aNewEnd) = 0;
+    NS_IMETHOD OnIMETextChange(uint32_t aStart,
+                               uint32_t aOldEnd,
+                               uint32_t aNewEnd) = 0;
 
     /*
      * Selection has changed in the focused node
@@ -1523,9 +1523,9 @@ class nsIWidget : public nsISupports {
      * @param aOverriddenDelta The overridden mouse scrolling speed.  This value
      *                         may be same as aOriginalDelta.
      */
-    NS_IMETHOD OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
+    NS_IMETHOD OverrideSystemMouseScrollSpeed(int32_t aOriginalDelta,
                                               bool aIsHorizontal,
-                                              PRInt32 &aOverriddenDelta) = 0;
+                                              int32_t &aOverriddenDelta) = 0;
 
     /**
      * Return true if this process shouldn't use platform widgets, and
@@ -1563,7 +1563,7 @@ class nsIWidget : public nsISupports {
      * Return the internal format of the default framebuffer for this
      * widget.
      */
-    virtual PRUint32 GetGLFrameBufferFormat() { return 0; /*GL_NONE*/ }
+    virtual uint32_t GetGLFrameBufferFormat() { return 0; /*GL_NONE*/ }
 
     /**
      * Return true if widget has it's own GL context
@@ -1577,14 +1577,8 @@ class nsIWidget : public nsISupports {
      */
     virtual bool WidgetPaintsBackground() { return false; }
 
-    virtual bool NeedsPaint() { 
-      if (!IsVisible()) {
-        return false;
-      }
-      nsIntRect bounds;
-      nsresult rv = GetBounds(bounds);
-      NS_ENSURE_SUCCESS(rv, false);
-      return !bounds.IsEmpty();
+    virtual bool NeedsPaint() {
+      return true;
     }
     /**
      * Get the natural bounds of this widget.  This method is only

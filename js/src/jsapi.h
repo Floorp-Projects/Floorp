@@ -1221,7 +1221,7 @@ class AutoEnumStateRooter : private AutoGCRooter
   public:
     AutoEnumStateRooter(JSContext *cx, JSObject *obj
                         JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, ENUMERATOR), obj(obj), stateValue(), context(cx)
+      : AutoGCRooter(cx, ENUMERATOR), obj(cx, obj), stateValue(), context(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(obj);
@@ -1237,7 +1237,7 @@ class AutoEnumStateRooter : private AutoGCRooter
   protected:
     void trace(JSTracer *trc);
 
-    JSObject *obj;
+    RootedObject obj;
 
   private:
     Value stateValue;
@@ -4096,7 +4096,10 @@ typedef enum JSGCParamKey {
     JSGC_DYNAMIC_HEAP_GROWTH = 17,
 
     /* If true, high-frequency GCs will use a longer mark slice. */
-    JSGC_DYNAMIC_MARK_SLICE = 18
+    JSGC_DYNAMIC_MARK_SLICE = 18,
+
+    /* Number of megabytes of analysis data to allocate before purging. */
+    JSGC_ANALYSIS_PURGE_TRIGGER = 19
 } JSGCParamKey;
 
 typedef enum JSGCMode {
@@ -4970,6 +4973,16 @@ JS_GetFunctionObject(JSFunction *fun);
  */
 extern JS_PUBLIC_API(JSString *)
 JS_GetFunctionId(JSFunction *fun);
+
+/*
+ * Return a function's display name. This is the defined name if one was given
+ * where the function was defined, or it could be an inferred name by the JS
+ * engine in the case that the function was defined to be anonymous. This can
+ * still return NULL if a useful display name could not be inferred. The same
+ * restrictions on rooting as those in JS_GetFunctionId apply.
+ */
+extern JS_PUBLIC_API(JSString *)
+JS_GetFunctionDisplayId(JSFunction *fun);
 
 /*
  * Return JSFUN_* flags for fun.
@@ -6036,6 +6049,7 @@ struct JSErrorReport {
     const jschar    *ucmessage;     /* the (default) error message */
     const jschar    **messageArgs;  /* arguments for the error message */
     int16_t         exnType;        /* One of the JSExnType constants */
+    unsigned           column;         /* zero-based column index in line */
 };
 
 /*

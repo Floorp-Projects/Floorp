@@ -29,9 +29,9 @@ public:
     TEXTRANGE_SELECTEDCONVERTEDTEXT = 5
   };
 
-  NS_IMETHOD    GetRangeStart(PRUint16* aRangeStart)=0;
-  NS_IMETHOD    GetRangeEnd(PRUint16* aRangeEnd)=0;
-  NS_IMETHOD    GetRangeType(PRUint16* aRangeType)=0;
+  NS_IMETHOD    GetRangeStart(uint16_t* aRangeStart)=0;
+  NS_IMETHOD    GetRangeEnd(uint16_t* aRangeEnd)=0;
+  NS_IMETHOD    GetRangeType(uint16_t* aRangeType)=0;
   NS_IMETHOD    GetRangeStyle(nsTextRangeStyle* aTextRangeStyle)=0;
 };
 
@@ -45,8 +45,8 @@ class nsIPrivateTextRangeList : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRIVATETEXTRANGELIST_IID)
 
-  NS_IMETHOD_(PRUint16) GetLength()=0;
-  NS_IMETHOD_(already_AddRefed<nsIPrivateTextRange>) Item(PRUint16 aIndex)=0;
+  NS_IMETHOD_(uint16_t) GetLength()=0;
+  NS_IMETHOD_(already_AddRefed<nsIPrivateTextRange>) Item(uint16_t aIndex)=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateTextRangeList,

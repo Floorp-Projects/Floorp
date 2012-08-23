@@ -62,7 +62,7 @@ interface nsIContentSecurityPolicy : nsISupports
   void logViolationDetails(in unsigned short violationType,
                            in AString sourceFile,
                            in AString scriptSample,
-                           in PRInt32 lineNum);
+                           in int32_t lineNum);
 
   const unsigned short VIOLATION_TYPE_INLINE_SCRIPT = 1;
   const unsigned short VIOLATION_TYPE_EVAL = 2;
@@ -84,7 +84,7 @@ interface nsIContentSecurityPolicy : nsISupports
   void sendReports(in AString blockedURI,
                    in AString violatedDirective,
                    in AString scriptSample,
-                   in PRInt32 lineNum);
+                   in int32_t lineNum);
 
   /**
    * Called after the CSP object is created to fill in the appropriate request

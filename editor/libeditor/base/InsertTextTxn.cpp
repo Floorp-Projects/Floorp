@@ -45,7 +45,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertTextTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
-                                  PRUint32             aOffset,
+                                  uint32_t             aOffset,
                                   const nsAString     &aStringToInsert,
                                   nsIEditor           *aEditor)
 {
@@ -116,7 +116,7 @@ NS_IMETHODIMP InsertTextTxn::UndoTransaction(void)
   NS_ASSERTION(mElement && mEditor, "bad state");
   if (!mElement || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
-  PRUint32 length = mStringToInsert.Length();
+  uint32_t length = mStringToInsert.Length();
   return mElement->DeleteData(mOffset, length);
 }
 
@@ -175,7 +175,7 @@ bool InsertTextTxn::IsSequentialInsert(InsertTextTxn *aOtherTxn)
   if (aOtherTxn && aOtherTxn->mElement == mElement)
   {
     // here, we need to compare offsets.
-    PRInt32 length = mStringToInsert.Length();
+    int32_t length = mStringToInsert.Length();
     if (aOtherTxn->mOffset == (mOffset + length))
       return true;
   }

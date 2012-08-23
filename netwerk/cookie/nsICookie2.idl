@@ -38,7 +38,7 @@ interface nsICookie2 : nsICookie
      * this is distinct from nsICookie::expires, which
      * has different and obsolete semantics.
      */
-    readonly attribute PRInt64 expiry;
+    readonly attribute int64_t expiry;
 
     /**
      * true if the cookie is an http only cookie
@@ -49,7 +49,7 @@ interface nsICookie2 : nsICookie
      * the creation time of the cookie, in microseconds
      * since midnight (00:00:00), January 1, 1970 UTC.
      */
-    readonly attribute PRInt64 creationTime;
+    readonly attribute int64_t creationTime;
 
     /**
      * the last time the cookie was accessed (i.e. created,
@@ -58,6 +58,6 @@ interface nsICookie2 : nsICookie
      *
      * note that this time may be approximate.
      */
-    readonly attribute PRInt64 lastAccessed;
+    readonly attribute int64_t lastAccessed;
 
 };

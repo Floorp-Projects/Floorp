@@ -674,8 +674,6 @@
                           oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();"/>
                 </vbox>
               </hbox>
-              <menuitem id="social-remove-menuitem"
-                        oncommand="Social.active = false;"/>
               <menuitem id="social-toggle-sidebar-menuitem"
                         type="checkbox"
                         autocheck="false"
@@ -1051,6 +1049,7 @@
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
                   onclick="contentAreaClick(event, false);"/>
+      <chatbar id="pinnedchats" layer="true" mousethrough="always"/>
       <statuspanel id="statusbar-display" inactive="true"/>
     </vbox>
     <splitter id="devtools-side-splitter" hidden="true"/>

@@ -152,7 +152,7 @@ nsXULContextMenuBuilder::UndoAddSeparator()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  PRUint32 count = mCurrentNode->GetChildCount();
+  uint32_t count = mCurrentNode->GetChildCount();
   if (!count ||
       mCurrentNode->GetChildAt(count - 1)->Tag() != nsGkAtoms::menuseparator) {
     return NS_OK;
@@ -197,7 +197,7 @@ NS_IMETHODIMP
 nsXULContextMenuBuilder::Click(const nsAString& aGeneratedItemId)
 {
   nsresult rv;
-  PRInt32 idx = nsString(aGeneratedItemId).ToInteger(&rv);
+  int32_t idx = nsString(aGeneratedItemId).ToInteger(&rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDOMHTMLElement> element = mElements.SafeObjectAt(idx);
     if (element) {

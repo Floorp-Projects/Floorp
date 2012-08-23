@@ -27,7 +27,7 @@ TestConverter::Convert(nsIInputStream *aFromStream,
                        nsISupports *ctxt, 
                        nsIInputStream **_retval) {
     char buf[1024+1];
-    PRUint32 read;
+    uint32_t read;
     nsresult rv = aFromStream->Read(buf, 1024, &read);
     if (NS_FAILED(rv) || read == 0) return rv;
 
@@ -44,7 +44,7 @@ TestConverter::Convert(nsIInputStream *aFromStream,
     // Get the first character 
     char toChar = *aToType;
 
-    for (PRUint32 i = 0; i < read; i++) 
+    for (uint32_t i = 0; i < read; i++) 
         buf[i] = toChar;
 
     buf[read] = '\0';
@@ -78,10 +78,10 @@ TestConverter::AsyncConvertData(const char *aFromType,
     return NS_OK; 
 }
 
-static inline PRUint32
-saturated(PRUint64 aValue)
+static inline uint32_t
+saturated(uint64_t aValue)
 {
-    return (PRUint32) NS_MIN(aValue, (PRUint64) PR_UINT32_MAX);
+    return (uint32_t) NS_MIN(aValue, (uint64_t) PR_UINT32_MAX);
 }
 
 // nsIStreamListener method
@@ -90,8 +90,8 @@ NS_IMETHODIMP
 TestConverter::OnDataAvailable(nsIRequest* request,
                                nsISupports *ctxt, 
                                nsIInputStream *inStr, 
-                               PRUint32 sourceOffset, 
-                               PRUint32 count) {
+                               uint32_t sourceOffset, 
+                               uint32_t count) {
     nsresult rv;
     nsCOMPtr<nsIInputStream> convertedStream;
     // just make a syncronous call to the Convert() method.
@@ -100,12 +100,12 @@ TestConverter::OnDataAvailable(nsIRequest* request,
     rv = Convert(inStr, fromType.get(), toType.get(), ctxt, getter_AddRefs(convertedStream));
     if (NS_FAILED(rv)) return rv;
 
-    PRUint64 len = 0;
+    uint64_t len = 0;
     convertedStream->Available(&len);
 
-    PRUint64 offset = sourceOffset;
+    uint64_t offset = sourceOffset;
     while (len > 0) {
-        PRUint32 count = saturated(len);
+        uint32_t count = saturated(len);
         rv = mListener->OnDataAvailable(request, ctxt, convertedStream, saturated(offset), count);
         if (NS_FAILED(rv)) return rv;
 

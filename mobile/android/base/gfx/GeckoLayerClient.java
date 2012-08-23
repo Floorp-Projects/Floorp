@@ -20,7 +20,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.SystemClock;
@@ -95,14 +94,10 @@ public class GeckoLayerClient
 
     private boolean mGeckoIsReady;
 
-    /* The new color for the checkerboard. */
-    private int mCheckerboardColor;
-    private boolean mCheckerboardShouldShowChecks;
-
     private final PanZoomController mPanZoomController;
     private LayerView mView;
 
-    public GeckoLayerClient(Context context, EventDispatcher eventDispatcher) {
+    public GeckoLayerClient(Context context, LayerView view, EventDispatcher eventDispatcher) {
         // we can fill these in with dummy values because they are always written
         // to before being read
         mEventDispatcher = eventDispatcher;
@@ -119,15 +114,9 @@ public class GeckoLayerClient
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         mViewportMetrics = new ImmutableViewportMetrics(new ViewportMetrics(displayMetrics));
         mZoomConstraints = new ZoomConstraints(false);
-        mCheckerboardColor = Color.WHITE;
-        mCheckerboardShouldShowChecks = true;
 
         mPanZoomController = new PanZoomController(this, mEventDispatcher);
-    }
-
-    public void setView(LayerView v) {
-        mView = v;
-        mView.connect(this);
+        mView = view;
     }
 
     /** Attaches to root layer so that Gecko appears. */
@@ -226,7 +215,7 @@ public class GeckoLayerClient
         }
     }
 
-    public PanZoomController getPanZoomController() {
+    PanZoomController getPanZoomController() {
         return mPanZoomController;
     }
 
@@ -372,9 +361,7 @@ public class GeckoLayerClient
                 ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(new ViewportMetrics(message));
                 mReturnDisplayPort = DisplayPortCalculator.calculate(newMetrics, null);
             } else if ("Checkerboard:Toggle".equals(event)) {
-                mCheckerboardShouldShowChecks = message.getBoolean("value");
-                mView.requestRender();
-                Log.i(LOGTAG, "Showing checks: " + mCheckerboardShouldShowChecks);
+                mView.setCheckerboardShouldShowChecks(message.getBoolean("value"));
             } else if ("Preferences:Data".equals(event)) {
                 JSONArray jsonPrefs = message.getJSONArray("preferences");
                 Map<String, Integer> prefValues = new HashMap<String, Integer>();
@@ -417,20 +404,7 @@ public class GeckoLayerClient
         }
     }
 
-    boolean checkerboardShouldShowChecks() {
-        return mCheckerboardShouldShowChecks;
-    }
-
-    int getCheckerboardColor() {
-        return mCheckerboardColor;
-    }
-
-    public void setCheckerboardColor(int newColor) {
-        mCheckerboardColor = newColor;
-        mView.requestRender();
-    }
-
-    public void setZoomConstraints(ZoomConstraints constraints) {
+    void setZoomConstraints(ZoomConstraints constraints) {
         mZoomConstraints = constraints;
     }
 
@@ -462,7 +436,7 @@ public class GeckoLayerClient
             setViewportMetrics(currentMetrics);
 
             Tab tab = Tabs.getInstance().getSelectedTab();
-            setCheckerboardColor(tab.getCheckerboardColor());
+            mView.setCheckerboardColor(tab.getCheckerboardColor());
             setZoomConstraints(tab.getZoomConstraints());
 
             // At this point, we have just switched to displaying a different document than we

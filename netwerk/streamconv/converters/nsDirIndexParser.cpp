@@ -121,7 +121,7 @@ NS_IMETHODIMP
 nsDirIndexParser::OnStopRequest(nsIRequest *aRequest, nsISupports *aCtxt,
                                 nsresult aStatusCode) {
   // Finish up
-  if (mBuf.Length() > (PRUint32) mLineStart) {
+  if (mBuf.Length() > (uint32_t) mLineStart) {
     ProcessData(aRequest, aCtxt);
   }
 
@@ -185,7 +185,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
       break;
 
     nsCAutoString name;
-    PRInt32     len = 0;
+    int32_t     len = 0;
     while (aFormatStr[len] && !nsCRT::IsAsciiSpace(PRUnichar(aFormatStr[len])))
       ++len;
     name.SetCapacity(len + 1);
@@ -226,7 +226,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
 
   nsCAutoString filename;
 
-  for (PRInt32 i = 0; mFormat[i] != -1; ++i) {
+  for (int32_t i = 0; mFormat[i] != -1; ++i) {
     // If we've exhausted the data before we run out of fields, just
     // bail.
     if (! *aDataStr)
@@ -300,8 +300,8 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
       break;
     case FIELD_CONTENTLENGTH:
       {
-        PRInt64 len;
-        PRInt32 status = PR_sscanf(value, "%lld", &len);
+        int64_t len;
+        int32_t status = PR_sscanf(value, "%lld", &len);
         if (status == 1)
           aIdx->SetSize(len);
         else
@@ -345,12 +345,12 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
 NS_IMETHODIMP
 nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
                                   nsIInputStream *aStream,
-                                  PRUint32 aSourceOffset,
-                                  PRUint32 aCount) {
+                                  uint32_t aSourceOffset,
+                                  uint32_t aCount) {
   if (aCount < 1)
     return NS_OK;
   
-  PRInt32 len = mBuf.Length();
+  int32_t len = mBuf.Length();
   
   // Ensure that our mBuf has capacity to hold the data we're about to
   // read.
@@ -359,7 +359,7 @@ nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
 
   // Now read the data into our buffer.
   nsresult rv;
-  PRUint32 count;
+  uint32_t count;
   rv = aStream->Read(mBuf.BeginWriting() + len, aCount, &count);
   if (NS_FAILED(rv)) return rv;
 
@@ -376,18 +376,18 @@ nsDirIndexParser::ProcessData(nsIRequest *aRequest, nsISupports *aCtxt) {
   if (!mListener)
     return NS_ERROR_FAILURE;
   
-  PRInt32     numItems = 0;
+  int32_t     numItems = 0;
   
   while(true) {
     ++numItems;
     
-    PRInt32             eol = mBuf.FindCharInSet("\n\r", mLineStart);
+    int32_t             eol = mBuf.FindCharInSet("\n\r", mLineStart);
     if (eol < 0)        break;
     mBuf.SetCharAt(PRUnichar('\0'), eol);
     
     const char  *line = mBuf.get() + mLineStart;
     
-    PRInt32 lineLen = eol - mLineStart;
+    int32_t lineLen = eol - mLineStart;
     mLineStart = eol + 1;
     
     if (lineLen >= 4) {

@@ -23,7 +23,7 @@ nsSSLStatus::GetServerCert(nsIX509Cert** _result)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetKeyLength(PRUint32* _result)
+nsSSLStatus::GetKeyLength(uint32_t* _result)
 {
   NS_ASSERTION(_result, "non-NULL destination required");
   if (!mHaveKeyLengthAndCipher)
@@ -35,7 +35,7 @@ nsSSLStatus::GetKeyLength(PRUint32* _result)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetSecretKeyLength(PRUint32* _result)
+nsSSLStatus::GetSecretKeyLength(uint32_t* _result)
 {
   NS_ASSERTION(_result, "non-NULL destination required");
   if (!mHaveKeyLengthAndCipher)
@@ -152,7 +152,7 @@ nsSSLStatus::Write(nsIObjectOutputStream* stream)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetInterfaces(PRUint32 *count, nsIID * **array)
+nsSSLStatus::GetInterfaces(uint32_t *count, nsIID * **array)
 {
   *count = 0;
   *array = nullptr;
@@ -160,7 +160,7 @@ nsSSLStatus::GetInterfaces(PRUint32 *count, nsIID * **array)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+nsSSLStatus::GetHelperForLanguage(uint32_t language, nsISupports **_retval)
 {
   *_retval = nullptr;
   return NS_OK;
@@ -190,14 +190,14 @@ nsSSLStatus::GetClassID(nsCID * *aClassID)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+nsSSLStatus::GetImplementationLanguage(uint32_t *aImplementationLanguage)
 {
   *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetFlags(PRUint32 *aFlags)
+nsSSLStatus::GetFlags(uint32_t *aFlags)
 {
   *aFlags = 0;
   return NS_OK;

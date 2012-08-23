@@ -147,7 +147,7 @@ private:
      * Data members
      */
     nsCString                  mKey;
-    PRUint32                   mInfo;
+    uint32_t                   mInfo;
     nsICacheListener *         mListener;  // strong ref
     nsCOMPtr<nsIThread>        mThread;
     Mutex                      mLock;

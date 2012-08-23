@@ -46,7 +46,7 @@ WinUtils::SHCreateItemFromParsingNamePtr WinUtils::sCreateItemFromParsingName = 
 WinUtils::WinVersion
 WinUtils::GetWindowsVersion()
 {
-  static PRInt32 version = 0;
+  static int32_t version = 0;
 
   if (version) {
     return static_cast<WinVersion>(version);
@@ -183,15 +183,15 @@ WinUtils::GetNSWindowPtr(HWND aWnd)
 static BOOL CALLBACK
 AddMonitor(HMONITOR, HDC, LPRECT, LPARAM aParam)
 {
-  (*(PRInt32*)aParam)++;
+  (*(int32_t*)aParam)++;
   return TRUE;
 }
 
 /* static */
-PRInt32
+int32_t
 WinUtils::GetMonitorCount()
 {
-  PRInt32 monitorCount = 0;
+  int32_t monitorCount = 0;
   EnumDisplayMonitors(NULL, NULL, AddMonitor, (LPARAM)&monitorCount);
   return monitorCount;
 }
@@ -337,16 +337,16 @@ WinUtils::GetNativeMessage(UINT aInternalMessage)
 }
 
 /* static */
-PRUint16
+uint16_t
 WinUtils::GetMouseInputSource()
 {
-  PRInt32 inputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
+  int32_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
   LPARAM lParamExtraInfo = ::GetMessageExtraInfo();
   if ((lParamExtraInfo & TABLET_INK_SIGNATURE) == TABLET_INK_CHECK) {
     inputSource = (lParamExtraInfo & TABLET_INK_TOUCH) ?
       nsIDOMMouseEvent::MOZ_SOURCE_TOUCH : nsIDOMMouseEvent::MOZ_SOURCE_PEN;
   }
-  return static_cast<PRUint16>(inputSource);
+  return static_cast<uint16_t>(inputSource);
 }
 
 /* static */
@@ -451,8 +451,8 @@ nsresult AsyncFaviconDataReady::OnFaviconDataNotAvailable(void)
 
 NS_IMETHODIMP
 AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
-                                  PRUint32 aDataLen,
-                                  const PRUint8 *aData, 
+                                  uint32_t aDataLen,
+                                  const uint8_t *aData, 
                                   const nsACString &aMimeType)
 {
   if (!aDataLen || !aData) {
@@ -474,7 +474,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
   // Allocate a new buffer that we own and can use out of line in 
   // another thread.  Copy the favicon raw data into it.
   const fallible_t fallible = fallible_t();
-  PRUint8 *data = new (fallible) PRUint8[aDataLen];
+  uint8_t *data = new (fallible) uint8_t[aDataLen];
   if (!data) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -493,8 +493,8 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
 // Warning: AsyncWriteIconToDisk assumes ownership of the aData buffer passed in
 AsyncWriteIconToDisk::AsyncWriteIconToDisk(const nsAString &aIconPath,
                                            const nsACString &aMimeTypeOfInputData,
-                                           PRUint8 *aBuffer, 
-                                           PRUint32 aBufferLength,
+                                           uint8_t *aBuffer, 
+                                           uint32_t aBufferLength,
                                            const bool aURLShortcut): 
   mIconPath(aIconPath),
   mMimeTypeOfInputData(aMimeTypeOfInputData),
@@ -532,8 +532,8 @@ NS_IMETHODIMP AsyncWriteIconToDisk::Run()
   // we let our ICO encoder do it.
   nsCOMPtr<nsIInputStream> iconStream;
   if (!mURLShortcut) {
-    PRInt32 systemIconWidth = GetSystemMetrics(SM_CXSMICON);
-    PRInt32 systemIconHeight = GetSystemMetrics(SM_CYSMICON);
+    int32_t systemIconWidth = GetSystemMetrics(SM_CXSMICON);
+    int32_t systemIconHeight = GetSystemMetrics(SM_CYSMICON);
     if ((systemIconWidth == 0 || systemIconHeight == 0)) {
       systemIconWidth = 16;
       systemIconHeight = 16;
@@ -590,12 +590,12 @@ NS_IMETHODIMP AsyncWriteIconToDisk::Run()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Obtain the ICO buffer size from the re-encoded ICO stream
-  PRUint64 bufSize64;
+  uint64_t bufSize64;
   rv = iconStream->Available(&bufSize64);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(bufSize64 <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
-  PRUint32 bufSize = (PRUint32)bufSize64;
+  uint32_t bufSize = (uint32_t)bufSize64;
 
   // Setup a buffered output stream from the stream object
   // so that we can simply use WriteFrom with the stream object
@@ -605,7 +605,7 @@ NS_IMETHODIMP AsyncWriteIconToDisk::Run()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Write out the icon stream to disk and make sure we wrote everything
-  PRUint32 wrote;
+  uint32_t wrote;
   rv = bufferedOutputStream->WriteFrom(iconStream, bufSize, &wrote);
   NS_ASSERTION(bufSize == wrote, 
               "Icon wrote size should be equal to requested write size");
@@ -692,7 +692,7 @@ NS_IMETHODIMP AsyncDeleteAllFaviconsFromDisk::Run()
     if (NS_FAILED(currFile->GetPath(path)))
       continue;
 
-    PRInt32 len = path.Length();
+    int32_t len = path.Length();
     if (StringTail(path, 4).LowerCaseEqualsASCII(".ico")) {
       // Check if the cached ICO file exists
       bool exists;
@@ -740,11 +740,11 @@ nsresult FaviconHelper::ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
   if (exists) {
 
     // Obtain the file's last modification date in seconds
-    PRInt64 fileModTime = LL_ZERO;
+    int64_t fileModTime = LL_ZERO;
     rv = icoFile->GetLastModifiedTime(&fileModTime);
     fileModTime /= PR_MSEC_PER_SEC;
-    PRInt32 icoReCacheSecondsTimeout = GetICOCacheSecondsTimeout();
-    PRInt64 nowTime = PR_Now() / PRInt64(PR_USEC_PER_SEC);
+    int32_t icoReCacheSecondsTimeout = GetICOCacheSecondsTimeout();
+    int64_t nowTime = PR_Now() / int64_t(PR_USEC_PER_SEC);
 
     // If the last mod call failed or the icon is old then re-cache it
     // This check is in case the favicon of a page changes
@@ -785,7 +785,7 @@ nsresult FaviconHelper::HashURI(nsCOMPtr<nsICryptoHash> &aCryptoHash,
 
   rv = aCryptoHash->Init(nsICryptoHash::MD5);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aCryptoHash->Update(reinterpret_cast<const PRUint8*>(spec.BeginReading()), 
+  rv = aCryptoHash->Update(reinterpret_cast<const uint8_t*>(spec.BeginReading()), 
                            spec.Length());
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aCryptoHash->Finish(true, aUriHash);
@@ -862,16 +862,16 @@ nsresult
 }
 
 // Obtains the jump list 'ICO cache timeout in seconds' pref
-PRInt32 FaviconHelper::GetICOCacheSecondsTimeout() {
+int32_t FaviconHelper::GetICOCacheSecondsTimeout() {
 
   // Only obtain the setting at most once from the pref service.
   // In the rare case that 2 threads call this at the same
   // time it is no harm and we will simply obtain the pref twice.
   // None of the taskbar list prefs are currently updated via a
   // pref observer so I think this should suffice.
-  const PRInt32 kSecondsPerDay = 86400;
+  const int32_t kSecondsPerDay = 86400;
   static bool alreadyObtained = false;
-  static PRInt32 icoReCacheSecondsTimeout = kSecondsPerDay;
+  static int32_t icoReCacheSecondsTimeout = kSecondsPerDay;
   if (alreadyObtained) {
     return icoReCacheSecondsTimeout;
   }

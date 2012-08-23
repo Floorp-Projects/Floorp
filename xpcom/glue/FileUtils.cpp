@@ -20,13 +20,13 @@
 #include "mozilla/FunctionTimer.h"
 
 bool 
-mozilla::fallocate(PRFileDesc *aFD, PRInt64 aLength) 
+mozilla::fallocate(PRFileDesc *aFD, int64_t aLength) 
 {
   NS_TIME_FUNCTION;
 #if defined(HAVE_POSIX_FALLOCATE)
   return posix_fallocate(PR_FileDesc2NativeHandle(aFD), 0, aLength) == 0;
 #elif defined(XP_WIN)
-  PROffset64 oldpos = PR_Seek64(aFD, 0, PR_SEEK_CUR);
+  int64_t oldpos = PR_Seek64(aFD, 0, PR_SEEK_CUR);
   if (oldpos == -1)
     return false;
 
@@ -39,7 +39,7 @@ mozilla::fallocate(PRFileDesc *aFD, PRInt64 aLength)
   return retval;
 #elif defined(XP_OS2)
   return aLength <= PR_UINT32_MAX
-    && 0 == DosSetFileSize(PR_FileDesc2NativeHandle(aFD), (PRUint32)aLength);
+    && 0 == DosSetFileSize(PR_FileDesc2NativeHandle(aFD), (uint32_t)aLength);
 #elif defined(XP_MACOSX)
   int fd = PR_FileDesc2NativeHandle(aFD);
   fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, aLength};
@@ -61,7 +61,7 @@ mozilla::fallocate(PRFileDesc *aFD, PRInt64 aLength)
   ** is the same technique used by glibc to implement posix_fallocate()
   ** on systems that do not have a real fallocate() system call.
   */
-  PROffset64 oldpos = PR_Seek64(aFD, 0, PR_SEEK_CUR);
+  int64_t oldpos = PR_Seek64(aFD, 0, PR_SEEK_CUR);
   if (oldpos == -1)
     return false;
 
@@ -82,7 +82,7 @@ mozilla::fallocate(PRFileDesc *aFD, PRInt64 aLength)
     return false;
 
   int nWrite; // Return value from write()
-  PRInt64 iWrite = ((buf.st_size + 2 * nBlk - 1) / nBlk) * nBlk - 1; // Next offset to write to
+  int64_t iWrite = ((buf.st_size + 2 * nBlk - 1) / nBlk) * nBlk - 1; // Next offset to write to
   do {
     nWrite = 0;
     if (PR_Seek64(aFD, iWrite, PR_SEEK_SET) == iWrite)

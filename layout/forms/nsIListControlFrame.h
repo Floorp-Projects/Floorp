@@ -29,13 +29,13 @@ public:
   /**
    * Get the display string for an item
    */
-  virtual void GetOptionText(PRInt32 aIndex, nsAString & aStr) = 0;
+  virtual void GetOptionText(int32_t aIndex, nsAString & aStr) = 0;
 
   /**
    * Get the Selected Item's index
    *
    */
-  virtual PRInt32 GetSelectedIndex() = 0;
+  virtual int32_t GetSelectedIndex() = 0;
 
   /**
    * Return current option. The current option is the option displaying
@@ -59,7 +59,7 @@ public:
    * Returns the number of options in the listbox
    */
 
-  virtual PRInt32 GetNumberOfOptions() = 0; 
+  virtual int32_t GetNumberOfOptions() = 0; 
 
   /**
    * Called by combobox when it's about to drop down
@@ -82,7 +82,7 @@ public:
    *
    * @param aIndex the index to actually select
    */
-  virtual void ComboboxFinish(PRInt32 aIndex) = 0;
+  virtual void ComboboxFinish(int32_t aIndex) = 0;
 
   /**
    * Notification that the content has been reset

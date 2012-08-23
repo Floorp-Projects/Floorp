@@ -106,7 +106,7 @@ NS_IMPL_UINT_ATTR_DEFAULT_VALUE(nsHTMLCanvasElement, Height, height, DEFAULT_CAN
 NS_IMPL_BOOL_ATTR(nsHTMLCanvasElement, MozOpaque, moz_opaque)
 
 nsresult
-nsHTMLCanvasElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+nsHTMLCanvasElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
                              bool aNotify)
 {
@@ -142,7 +142,7 @@ nsHTMLCanvasElement::CopyInnerTo(nsGenericElement* aDest)
 
 nsChangeHint
 nsHTMLCanvasElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                            PRInt32 aModType) const
+                                            int32_t aModType) const
 {
   nsChangeHint retval =
     nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
@@ -158,7 +158,7 @@ nsHTMLCanvasElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 bool
-nsHTMLCanvasElement::ParseAttribute(PRInt32 aNamespaceID,
+nsHTMLCanvasElement::ParseAttribute(int32_t aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
@@ -177,7 +177,7 @@ nsHTMLCanvasElement::ParseAttribute(PRInt32 aNamespaceID,
 
 NS_IMETHODIMP
 nsHTMLCanvasElement::ToDataURL(const nsAString& aType, nsIVariant* aParams,
-                               PRUint8 optional_argc, nsAString& aDataURL)
+                               uint8_t optional_argc, nsAString& aDataURL)
 {
   // do a trust check if this is a write-only canvas
   if (mWriteOnly && !nsContentUtils::IsCallerTrustedForRead()) {
@@ -305,7 +305,7 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
 
   // Quality parameter is only valid for the image/jpeg MIME type
   if (type.EqualsLiteral("image/jpeg")) {
-    PRUint16 vartype;
+    uint16_t vartype;
 
     if (aEncoderOptions &&
         NS_SUCCEEDED(aEncoderOptions->GetDataType(&vartype)) &&
@@ -358,18 +358,18 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
     aDataURL = NS_LITERAL_STRING("data:") + type +
       NS_LITERAL_STRING(";base64,");
 
-  PRUint64 count;
+  uint64_t count;
   rv = stream->Available(&count);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(count <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
-  return Base64EncodeInputStream(stream, aDataURL, (PRUint32)count, aDataURL.Length());
+  return Base64EncodeInputStream(stream, aDataURL, (uint32_t)count, aDataURL.Length());
 }
 
 NS_IMETHODIMP
 nsHTMLCanvasElement::MozGetAsFile(const nsAString& aName,
                                   const nsAString& aType,
-                                  PRUint8 optional_argc,
+                                  uint8_t optional_argc,
                                   nsIDOMFile** aResult)
 {
   // do a trust check if this is a write-only canvas
@@ -398,18 +398,18 @@ nsHTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
     type.AssignLiteral("image/png");
   }
 
-  PRUint64 imgSize;
+  uint64_t imgSize;
   rv = stream->Available(&imgSize);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(imgSize <= PR_UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   void* imgData = nullptr;
-  rv = NS_ReadInputStreamToBuffer(stream, &imgData, (PRUint32)imgSize);
+  rv = NS_ReadInputStreamToBuffer(stream, &imgData, (uint32_t)imgSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The DOMFile takes ownership of the buffer
   nsRefPtr<nsDOMMemoryFile> file =
-    new nsDOMMemoryFile(imgData, (PRUint32)imgSize, aName, type);
+    new nsDOMMemoryFile(imgData, (uint32_t)imgSize, aName, type);
 
   file.forget(aResult);
   return NS_OK;
@@ -425,7 +425,7 @@ nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
   NS_ConvertUTF16toUTF8 ctxId(aContextId);
 
   // check that ctxId is clamped to A-Za-z0-9_-
-  for (PRUint32 i = 0; i < ctxId.Length(); i++) {
+  for (uint32_t i = 0; i < ctxId.Length(); i++) {
     if ((ctxId[i] < 'A' || ctxId[i] > 'Z') &&
         (ctxId[i] < 'a' || ctxId[i] > 'z') &&
         (ctxId[i] < '0' || ctxId[i] > '9') &&
@@ -708,7 +708,7 @@ nsHTMLCanvasElement::InvalidateCanvas()
   frame->Invalidate(frame->GetContentRect() - frame->GetPosition());
 }
 
-PRInt32
+int32_t
 nsHTMLCanvasElement::CountContexts()
 {
   if (mCurrentContext)
@@ -718,7 +718,7 @@ nsHTMLCanvasElement::CountContexts()
 }
 
 nsICanvasRenderingContextInternal *
-nsHTMLCanvasElement::GetContextAtIndex(PRInt32 index)
+nsHTMLCanvasElement::GetContextAtIndex(int32_t index)
 {
   if (mCurrentContext && index == 0)
     return mCurrentContext;
@@ -765,7 +765,7 @@ nsHTMLCanvasElement::GetSizeExternal()
 }
 
 NS_IMETHODIMP
-nsHTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, PRUint32 aFlags)
+nsHTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, uint32_t aFlags)
 {
   if (!mCurrentContext)
     return NS_OK;

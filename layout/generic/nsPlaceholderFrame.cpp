@@ -228,7 +228,7 @@ nsPlaceholderFrame::GetFrameName(nsAString& aResult) const
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
+nsPlaceholderFrame::List(FILE* out, int32_t aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);

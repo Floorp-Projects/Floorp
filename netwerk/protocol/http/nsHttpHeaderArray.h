@@ -83,9 +83,9 @@ public:
 
     void Flatten(nsACString &, bool pruneProxyHeaders=false);
 
-    PRUint32 Count() const { return mHeaders.Length(); }
+    uint32_t Count() const { return mHeaders.Length(); }
 
-    const char *PeekHeaderAt(PRUint32 i, nsHttpAtom &header) const;
+    const char *PeekHeaderAt(uint32_t i, nsHttpAtom &header) const;
 
     void Clear();
 
@@ -103,8 +103,8 @@ public:
     };
 
 private:
-    PRInt32 LookupEntry(nsHttpAtom header, const nsEntry **) const;
-    PRInt32 LookupEntry(nsHttpAtom header, nsEntry **);
+    int32_t LookupEntry(nsHttpAtom header, const nsEntry **) const;
+    int32_t LookupEntry(nsHttpAtom header, nsEntry **);
     void MergeHeader(nsHttpAtom header, nsEntry *entry, const nsACString &value);
 
     // Header cannot be merged: only one value possible
@@ -129,19 +129,19 @@ private:
 // nsHttpHeaderArray <private>: inline functions
 //-----------------------------------------------------------------------------
 
-inline PRInt32
+inline int32_t
 nsHttpHeaderArray::LookupEntry(nsHttpAtom header, const nsEntry **entry) const
 {
-    PRUint32 index = mHeaders.IndexOf(header, 0, nsEntry::MatchHeader());
+    uint32_t index = mHeaders.IndexOf(header, 0, nsEntry::MatchHeader());
     if (index != PR_UINT32_MAX)
         *entry = &mHeaders[index];
     return index;
 }
 
-inline PRInt32
+inline int32_t
 nsHttpHeaderArray::LookupEntry(nsHttpAtom header, nsEntry **entry)
 {
-    PRUint32 index = mHeaders.IndexOf(header, 0, nsEntry::MatchHeader());
+    uint32_t index = mHeaders.IndexOf(header, 0, nsEntry::MatchHeader());
     if (index != PR_UINT32_MAX)
         *entry = &mHeaders[index];
     return index;

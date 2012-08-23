@@ -77,7 +77,7 @@ MaybeGetParallelArrayObjectAndLength(JSContext *cx, HandleObject obj,
         if (!pa->isOneDimensional() && !iv->initialize(cx, pa, 1))
             return false;
         *length = pa->outermostDimension();
-    } else if (!js_GetLengthProperty(cx, obj, length)) {
+    } else if (!GetLengthProperty(cx, obj, length)) {
         return false;
     }
 
@@ -120,7 +120,7 @@ GetElementFromArrayLikeObject(JSContext *cx, HandleObject obj, HandleParallelArr
     }
 
     bool present;
-    if (!obj->getElementIfPresent(cx, obj, i, vp, &present))
+    if (!JSObject::getElementIfPresent(cx, obj, obj, i, vp, &present))
         return false;
     if (!present)
         vp.setUndefined();
@@ -663,7 +663,7 @@ ParallelArrayObject::DebugOptions::init(JSContext *cx, const Value &v)
     JSBool match = false;
 
     id = AtomToId(Atomize(cx, "mode", strlen("mode")));
-    if (!obj->getGeneric(cx, id, &propv))
+    if (!JSObject::getGeneric(cx, obj, obj, id, &propv))
         return false;
 
     propStr = ToString(cx, propv);
@@ -681,7 +681,7 @@ ParallelArrayObject::DebugOptions::init(JSContext *cx, const Value &v)
     }
 
     id = AtomToId(Atomize(cx, "expect", strlen("expect")));
-    if (!obj->getGeneric(cx, id, &propv))
+    if (!JSObject::getGeneric(cx, obj, obj, id, &propv))
         return false;
 
     propStr = ToString(cx, propv);
@@ -932,7 +932,10 @@ ParallelArrayObject::create(JSContext *cx, MutableHandleValue vp)
     IndexVector dims(cx);
     if (!dims.append(0))
         return false;
-    return create(cx, NullPtr(), 0, dims, vp);
+    RootedObject buffer(cx, NewDenseArrayWithType(cx, 0));
+    if (!buffer)
+        return false;
+    return create(cx, buffer, 0, dims, vp);
 }
 
 bool
@@ -948,18 +951,22 @@ bool
 ParallelArrayObject::create(JSContext *cx, HandleObject buffer, uint32_t offset,
                             const IndexVector &dims, MutableHandleValue vp)
 {
-    JS_ASSERT_IF(buffer, buffer->isDenseArray());
+    JS_ASSERT(buffer->isDenseArray());
 
     RootedObject result(cx, NewBuiltinClassInstance(cx, &class_));
     if (!result)
         return false;
 
     // Propagate element types.
-    if (buffer && cx->typeInferenceEnabled()) {
+    if (cx->typeInferenceEnabled()) {
         AutoEnterTypeInference enter(cx);
-        TypeSet *bufferTypes = buffer->getType(cx)->getProperty(cx, JSID_VOID, false);
-        TypeSet *resultTypes = result->getType(cx)->getProperty(cx, JSID_VOID, true);
-        bufferTypes->addSubset(cx, resultTypes);
+        TypeObject *bufferType = buffer->getType(cx);
+        TypeObject *resultType = result->getType(cx);
+        if (!bufferType->unknownProperties() && !resultType->unknownProperties()) {
+            HeapTypeSet *bufferIndexTypes = bufferType->getProperty(cx, JSID_VOID, false);
+            HeapTypeSet *resultIndexTypes = resultType->getProperty(cx, JSID_VOID, true);
+            bufferIndexTypes->addSubset(cx, resultIndexTypes);
+        }
     }
 
     // Store the dimension vector into a dense array for better GC / layout.
@@ -973,13 +980,8 @@ ParallelArrayObject::create(JSContext *cx, HandleObject buffer, uint32_t offset,
     result->setSlot(SLOT_DIMENSIONS, ObjectValue(*dimArray));
 
     // Store the buffer and offset.
-    if (buffer) {
-        result->setSlot(SLOT_BUFFER, ObjectValue(*buffer));
-        result->setSlot(SLOT_BUFFER_OFFSET, Int32Value(static_cast<int32_t>(offset)));
-    } else {
-        result->setSlot(SLOT_BUFFER, UndefinedValue());
-        result->setSlot(SLOT_BUFFER_OFFSET, Int32Value(0));
-    }
+    result->setSlot(SLOT_BUFFER, ObjectValue(*buffer));
+    result->setSlot(SLOT_BUFFER_OFFSET, Int32Value(static_cast<int32_t>(offset)));
 
     // This is usually args.rval() from build or construct.
     vp.setObject(*result);
@@ -1008,7 +1010,7 @@ ParallelArrayObject::construct(JSContext *cx, unsigned argc, Value *vp)
         // When using an array value we can only make one dimensional arrays.
         IndexVector dims(cx);
         uint32_t length;
-        if (!dims.resize(1) || !js_GetLengthProperty(cx, source, &length))
+        if (!dims.resize(1) || !GetLengthProperty(cx, source, &length))
             return false;
         dims[0] = length;
 
@@ -1027,7 +1029,7 @@ ParallelArrayObject::construct(JSContext *cx, unsigned argc, Value *vp)
 
             RootedValue elem(cx);
             for (uint32_t i = 0; i < length; i++) {
-                if (!source->getElement(cx, i, &elem))
+                if (!JSObject::getElement(cx, source, source, i, &elem))
                     return false;
                 buffer->setDenseArrayElementWithType(cx, i, elem);
             }
@@ -1052,6 +1054,12 @@ ParallelArrayObject::construct(JSContext *cx, unsigned argc, Value *vp)
         if (!iv.dimensions.resize(1) || !ToUint32(cx, args[0], &iv.dimensions[0]))
             return false;
     }
+
+    // If the first argument wasn't a array-like or had no length, assume
+    // empty parallel array, i.e. with shape being [0].
+    if (iv.dimensions.length() == 0 && !iv.dimensions.append(0))
+        return false;
+
     if (!iv.initialize(0))
         return false;
 
@@ -1227,7 +1235,7 @@ ParallelArrayObject::scatter(JSContext *cx, CallArgs args)
     // Get the scatter vector.
     RootedObject targets(cx, &args[0].toObject());
     uint32_t targetsLength;
-    if (!js_GetLengthProperty(cx, targets, &targetsLength))
+    if (!GetLengthProperty(cx, targets, &targetsLength))
         return false;
 
     // Don't iterate more than the length of the source array.
@@ -1368,7 +1376,7 @@ ParallelArrayObject::partition(JSContext *cx, CallArgs args)
 
     // Throw if the outer dimension is not divisible by the new dimension.
     uint32_t outer = obj->outermostDimension();
-    if (outer % newDimension) {
+    if (newDimension == 0 || outer % newDimension) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_PARTITION);
         return false;
     }
@@ -1411,14 +1419,15 @@ ParallelArrayObject::get(JSContext *cx, CallArgs args)
         uint32_t length;
         if (is(indicesObj))
             length = as(indicesObj)->outermostDimension();
-        else if (!js_GetLengthProperty(cx, indicesObj, &length))
+        else if (!GetLengthProperty(cx, indicesObj, &length))
             return false;
 
-        // If we're one dimensional, indexing more than one dimension is
-        // definitely out of bounds.
-        if (length > 1) {
-            args.rval().setUndefined();
-            return true;
+        // If we're one dimensional, the index vector must also be one
+        // dimensional.
+        if (length != 1) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG,
+                                 ".prototype.get");
+            return false;
         }
 
         RootedValue elem(cx);
@@ -1427,7 +1436,7 @@ ParallelArrayObject::get(JSContext *cx, CallArgs args)
             if (!as(indicesObj)->getParallelArrayElement(cx, 0, &elem))
                 return false;
         } else {
-            if (!indicesObj->getElement(cx, 0, &elem))
+            if (!JSObject::getElement(cx, indicesObj, indicesObj, 0, &elem))
                 return false;
         }
 
@@ -1443,10 +1452,11 @@ ParallelArrayObject::get(JSContext *cx, CallArgs args)
     if (!ArrayLikeToIndexVector(cx, indicesObj, iv.indices))
         return false;
 
-    // Set undefined if definitely out of bounds.
-    if (iv.indices.length() > iv.dimensions.length()) {
-        args.rval().setUndefined();
-        return true;
+    // Throw if the shape of the index vector is wrong.
+    if (iv.indices.length() == 0 || iv.indices.length() > iv.dimensions.length()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG,
+                             ".prototype.get");
+        return false;
     }
 
     return obj->getParallelArrayElement(cx, iv, args.rval());
@@ -1607,8 +1617,6 @@ JSBool
 ParallelArrayObject::lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                    MutableHandleObject objp, MutableHandleShape propp)
 {
-    RootedObject buffer(cx, as(obj)->buffer());
-
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
         as(obj)->inOutermostDimensionRange(cx, id)) {
         MarkNonNativePropertyFound(obj, propp);
@@ -1616,9 +1624,9 @@ ParallelArrayObject::lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
         return true;
     }
 
-    if (JSObject *proto = obj->getProto()) {
-        return proto->lookupGeneric(cx, id, objp, propp);
-    }
+    RootedObject proto(cx, obj->getProto());
+    if (proto)
+        return JSObject::lookupGeneric(cx, proto, id, objp, propp);
 
     objp.set(NULL);
     propp.set(NULL);
@@ -1643,8 +1651,9 @@ ParallelArrayObject::lookupElement(JSContext *cx, HandleObject obj, uint32_t ind
         return true;
     }
 
-    if (JSObject *proto = obj->getProto())
-        return proto->lookupElement(cx, index, objp, propp);
+    RootedObject proto(cx, obj->getProto());
+    if (proto)
+        return JSObject::lookupElement(cx, proto, index, objp, propp);
 
     objp.set(NULL);
     propp.set(NULL);
@@ -1724,8 +1733,9 @@ ParallelArrayObject::getProperty(JSContext *cx, HandleObject obj, HandleObject r
         return true;
     }
 
-    if (JSObject *proto = obj->getProto())
-        return proto->getProperty(cx, receiver, name, vp);
+    RootedObject proto(cx, obj->getProto());
+    if (proto)
+        return JSObject::getProperty(cx, proto, receiver, name, vp);
 
     vp.setUndefined();
     return true;
@@ -1742,8 +1752,9 @@ ParallelArrayObject::getElement(JSContext *cx, HandleObject obj, HandleObject re
         return source->getParallelArrayElement(cx, index, vp);
     }
 
-    if (JSObject *proto = obj->getProto())
-        return proto->getElement(cx, receiver, index, vp);
+    RootedObject proto(cx, obj->getProto());
+    if (proto)
+        return JSObject::getElement(cx, proto, receiver, index, vp);
 
     vp.setUndefined();
     return true;

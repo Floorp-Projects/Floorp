@@ -166,14 +166,14 @@ public:
 
   /* ------------ nsITableEditor methods -------------- */
 
-  NS_IMETHOD InsertTableCell(PRInt32 aNumber, bool aAfter);
-  NS_IMETHOD InsertTableColumn(PRInt32 aNumber, bool aAfter);
-  NS_IMETHOD InsertTableRow(PRInt32 aNumber, bool aAfter);
+  NS_IMETHOD InsertTableCell(int32_t aNumber, bool aAfter);
+  NS_IMETHOD InsertTableColumn(int32_t aNumber, bool aAfter);
+  NS_IMETHOD InsertTableRow(int32_t aNumber, bool aAfter);
   NS_IMETHOD DeleteTable();
-  NS_IMETHOD DeleteTableCell(PRInt32 aNumber);
+  NS_IMETHOD DeleteTableCell(int32_t aNumber);
   NS_IMETHOD DeleteTableCellContents();
-  NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
-  NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
+  NS_IMETHOD DeleteTableColumn(int32_t aNumber);
+  NS_IMETHOD DeleteTableRow(int32_t aNumber);
   NS_IMETHOD SelectTableCell();
   NS_IMETHOD SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndCell);
   NS_IMETHOD SelectTableRow();
@@ -185,27 +185,27 @@ public:
   NS_IMETHOD SplitTableCell();
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
   NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell,
-                            PRInt32* aRowIndex, PRInt32* aColIndex);
+                            int32_t* aRowIndex, int32_t* aColIndex);
   NS_IMETHOD GetTableSize(nsIDOMElement *aTable,
-                          PRInt32* aRowCount, PRInt32* aColCount);
-  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement **aCell);
+                          int32_t* aRowCount, int32_t* aColCount);
+  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIndex, nsIDOMElement **aCell);
   NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable,
-                           PRInt32 aRowIndex, PRInt32 aColIndex,
+                           int32_t aRowIndex, int32_t aColIndex,
                            nsIDOMElement **aCell,
-                           PRInt32* aStartRowIndex, PRInt32* aStartColIndex,
-                           PRInt32* aRowSpan, PRInt32* aColSpan, 
-                           PRInt32* aActualRowSpan, PRInt32* aActualColSpan, 
+                           int32_t* aStartRowIndex, int32_t* aStartColIndex,
+                           int32_t* aRowSpan, int32_t* aColSpan, 
+                           int32_t* aActualRowSpan, int32_t* aActualColSpan, 
                            bool* aIsSelected);
   NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode);
   NS_IMETHOD GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode** aRowNode);
   NS_IMETHOD GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode);
 
-  NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, 
-                                        PRInt32 aDirection, bool aSelected);
+  NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, int32_t aRow, int32_t aCol, 
+                                        int32_t aDirection, bool aSelected);
   NS_IMETHOD GetSelectedOrParentTableElement(nsAString& aTagName,
-                                             PRInt32 *aSelectedCount,
+                                             int32_t *aSelectedCount,
                                              nsIDOMElement** aTableElement);
-  NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 *aSelectionType);
+  NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, uint32_t *aSelectionType);
 
   nsresult GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell);
 
@@ -220,7 +220,7 @@ public:
   NS_IMETHOD GetNextSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell);
 
   // Upper-left-most selected cell in table
-  NS_IMETHOD GetFirstSelectedCellInTable(PRInt32 *aRowIndex, PRInt32 *aColIndex, nsIDOMElement **aCell);
+  NS_IMETHOD GetFirstSelectedCellInTable(int32_t *aRowIndex, int32_t *aColIndex, nsIDOMElement **aCell);
     
   /* miscellaneous */
   // This sets background on the appropriate container element (table, cell,)
@@ -232,24 +232,24 @@ public:
   static already_AddRefed<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
 
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
-                                  PRInt32 aOffset,
+                                  int32_t aOffset,
                                   bool* outIsSpace,
                                   bool* outIsNBSP,
                                   nsIContent** outNode = nullptr,
-                                  PRInt32* outOffset = 0);
+                                  int32_t* outOffset = 0);
   void IsPrevCharInNodeWhitespace(nsIContent* aContent,
-                                  PRInt32 aOffset,
+                                  int32_t aOffset,
                                   bool* outIsSpace,
                                   bool* outIsNBSP,
                                   nsIContent** outNode = nullptr,
-                                  PRInt32* outOffset = 0);
+                                  int32_t* outOffset = 0);
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
 
   nsresult EndUpdateViewBatch();
 
   /** prepare the editor for use */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, uint32_t aFlags);
   NS_IMETHOD PreDestroy(bool aDestroyingFrames);
 
   /** Internal, static version */
@@ -261,15 +261,15 @@ protected:
   virtual bool IsBlockNode(nsINode *aNode);
 
 public:
-  NS_IMETHOD SetFlags(PRUint32 aFlags);
+  NS_IMETHOD SetFlags(uint32_t aFlags);
 
-  NS_IMETHOD Paste(PRInt32 aSelectionType);
-  NS_IMETHOD CanPaste(PRInt32 aSelectionType, bool *aCanPaste);
+  NS_IMETHOD Paste(int32_t aSelectionType);
+  NS_IMETHOD CanPaste(int32_t aSelectionType, bool *aCanPaste);
 
   NS_IMETHOD PasteTransferable(nsITransferable *aTransferable);
   NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste);
 
-  NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
+  NS_IMETHOD DebugUnitTests(int32_t *outNumTests, int32_t *outNumTestsFailed);
 
   /** All editor operations which alter the doc should be prefaced
    *  with a call to StartOperation, naming the action and direction */
@@ -308,11 +308,11 @@ public:
   nsresult DeleteNode(nsINode* aNode);
   NS_IMETHODIMP DeleteNode(nsIDOMNode * aNode);
   NS_IMETHODIMP DeleteText(nsIDOMCharacterData *aTextNode,
-                           PRUint32             aOffset,
-                           PRUint32             aLength);
+                           uint32_t             aOffset,
+                           uint32_t             aLength);
   NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
                             nsCOMPtr<nsIDOMNode> *aInOutNode, 
-                            PRInt32 *aInOutOffset,
+                            int32_t *aInOutOffset,
                             nsIDOMDocument *aDoc);
   NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode *aNode);
   virtual bool IsModifiableNode(nsINode *aNode);
@@ -331,7 +331,7 @@ public:
   NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction);
   nsresult InsertNodeAtPoint( nsIDOMNode *aNode, 
                               nsCOMPtr<nsIDOMNode> *ioParent, 
-                              PRInt32 *ioOffset, 
+                              int32_t *ioOffset, 
                               bool aNoEmptyNodes);
 
   // Use this to assure that selection is set after attribute nodes when 
@@ -392,7 +392,7 @@ public:
   static bool HasAttributes(mozilla::dom::Element* aElement)
   {
     MOZ_ASSERT(aElement);
-    PRUint32 attrCount = aElement->GetAttrCount();
+    uint32_t attrCount = aElement->GetAttrCount();
     return attrCount > 1 ||
            (1 == attrCount && !aElement->GetAttrNameAt(0)->Equals(nsGkAtoms::mozdirty));
   }
@@ -420,7 +420,7 @@ protected:
 
   // key event helpers
   NS_IMETHOD TabInTable(bool inIsShift, bool *outHandled);
-  NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
+  NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset, 
                       nsCOMPtr<nsIDOMNode> *outBRNode, nsIEditor::EDirection aSelect = nsIEditor::eNone);
 
 // Table Editing (implemented in nsTableEditor.cpp)
@@ -430,29 +430,29 @@ protected:
   // Insert a new cell after or before supplied aCell. 
   //  Optional: If aNewCell supplied, returns the newly-created cell (addref'd, of course)
   // This doesn't change or use the current selection
-  NS_IMETHOD InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpan,
+  NS_IMETHOD InsertCell(nsIDOMElement *aCell, int32_t aRowSpan, int32_t aColSpan,
                         bool aAfter, bool aIsHeader, nsIDOMElement **aNewCell);
 
   // Helpers that don't touch the selection or do batch transactions
-  NS_IMETHOD DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex);
-  NS_IMETHOD DeleteColumn(nsIDOMElement *aTable, PRInt32 aColIndex);
+  NS_IMETHOD DeleteRow(nsIDOMElement *aTable, int32_t aRowIndex);
+  NS_IMETHOD DeleteColumn(nsIDOMElement *aTable, int32_t aColIndex);
   NS_IMETHOD DeleteCellContents(nsIDOMElement *aCell);
 
   // Move all contents from aCellToMerge into aTargetCell (append at end)
   NS_IMETHOD MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell, nsCOMPtr<nsIDOMElement> aCellToMerge, bool aDeleteCellToMerge);
 
   NS_IMETHOD DeleteTable2(nsIDOMElement *aTable, nsISelection *aSelection);
-  NS_IMETHOD SetColSpan(nsIDOMElement *aCell, PRInt32 aColSpan);
-  NS_IMETHOD SetRowSpan(nsIDOMElement *aCell, PRInt32 aRowSpan);
+  NS_IMETHOD SetColSpan(nsIDOMElement *aCell, int32_t aColSpan);
+  NS_IMETHOD SetRowSpan(nsIDOMElement *aCell, int32_t aRowSpan);
 
   // Helper used to get nsITableLayout interface for methods implemented in nsTableFrame
   NS_IMETHOD GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **tableLayoutObject);
   // Needed to do appropriate deleting when last cell or row is about to be deleted
   // This doesn't count cells that don't start in the given row (are spanning from row above)
-  PRInt32  GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowIndex);
+  int32_t  GetNumberOfCellsInRow(nsIDOMElement* aTable, int32_t rowIndex);
   // Test if all cells in row or column at given index are selected
-  bool AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aNumberOfColumns);
-  bool AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32 aNumberOfRows);
+  bool AllCellsInRowSelected(nsIDOMElement *aTable, int32_t aRowIndex, int32_t aNumberOfColumns);
+  bool AllCellsInColumnSelected(nsIDOMElement *aTable, int32_t aColIndex, int32_t aNumberOfRows);
 
   bool IsEmptyCell(mozilla::dom::Element* aCell);
 
@@ -464,23 +464,23 @@ protected:
   NS_IMETHOD GetCellContext(nsISelection **aSelection,
                             nsIDOMElement   **aTable,
                             nsIDOMElement   **aCell,
-                            nsIDOMNode      **aCellParent, PRInt32 *aCellOffset,
-                            PRInt32 *aRowIndex, PRInt32 *aColIndex);
+                            nsIDOMNode      **aCellParent, int32_t *aCellOffset,
+                            int32_t *aRowIndex, int32_t *aColIndex);
 
-  NS_IMETHOD GetCellSpansAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, 
-                            PRInt32& aActualRowSpan, PRInt32& aActualColSpan);
+  NS_IMETHOD GetCellSpansAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIndex, 
+                            int32_t& aActualRowSpan, int32_t& aActualColSpan);
 
-  NS_IMETHOD SplitCellIntoColumns(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aColIndex,
-                                  PRInt32 aColSpanLeft, PRInt32 aColSpanRight, nsIDOMElement **aNewCell);
+  NS_IMETHOD SplitCellIntoColumns(nsIDOMElement *aTable, int32_t aRowIndex, int32_t aColIndex,
+                                  int32_t aColSpanLeft, int32_t aColSpanRight, nsIDOMElement **aNewCell);
 
-  NS_IMETHOD SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aColIndex,
-                               PRInt32 aRowSpanAbove, PRInt32 aRowSpanBelow, nsIDOMElement **aNewCell);
+  NS_IMETHOD SplitCellIntoRows(nsIDOMElement *aTable, int32_t aRowIndex, int32_t aColIndex,
+                               int32_t aRowSpanAbove, int32_t aRowSpanBelow, nsIDOMElement **aNewCell);
 
   nsresult CopyCellBackgroundColor(nsIDOMElement *destCell, nsIDOMElement *sourceCell);
 
   // Reduce rowspan/colspan when cells span into nonexistent rows/columns
-  NS_IMETHOD FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& aNewRowCount);
-  NS_IMETHOD FixBadColSpan(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32& aNewColCount);
+  NS_IMETHOD FixBadRowSpan(nsIDOMElement *aTable, int32_t aRowIndex, int32_t& aNewRowCount);
+  NS_IMETHOD FixBadColSpan(nsIDOMElement *aTable, int32_t aColIndex, int32_t& aNewColCount);
 
   // Fallback method: Call this after using ClearSelection() and you
   //  failed to set selection to some other content in the document
@@ -520,7 +520,7 @@ protected:
                                   nsAString*       outValue = nullptr);
 
   // Methods for handling plaintext quotations
-  NS_IMETHOD PasteAsPlaintextQuotation(PRInt32 aSelectionType);
+  NS_IMETHOD PasteAsPlaintextQuotation(int32_t aSelectionType);
 
   /** Insert a string as quoted text,
     * replacing the selected text (if any).
@@ -538,7 +538,7 @@ protected:
   nsresult InsertObject(const char* aType, nsISupports* aObject, bool aIsSafe,
                         nsIDOMDocument *aSourceDoc,
                         nsIDOMNode *aDestinationNode,
-                        PRInt32 aDestOffset,
+                        int32_t aDestOffset,
                         bool aDoDeleteSelection);
 
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
@@ -549,13 +549,13 @@ protected:
                                     const nsAString & aContextStr,
                                     const nsAString & aInfoStr,
                                     nsIDOMNode *aDestinationNode,
-                                    PRInt32 aDestinationOffset,
+                                    int32_t aDestinationOffset,
                                     bool aDoDeleteSelection);
   nsresult InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
-                                  PRInt32 aIndex,
+                                  int32_t aIndex,
                                   nsIDOMDocument *aSourceDoc,
                                   nsIDOMNode *aDestinationNode,
-                                  PRInt32 aDestOffset,
+                                  int32_t aDestOffset,
                                   bool aDoDeleteSelection);
   bool HavePrivateHTMLFlavor( nsIClipboard *clipboard );
   nsresult   ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnichar **aCfcontext);
@@ -564,11 +564,11 @@ protected:
                                      bool aWillDeleteSelection,
                                      nsIDOMNode **aFragmentAsNode,      
                                      nsIDOMNode **aFragStartNode,
-                                     PRInt32 *aFragStartOffset,
+                                     int32_t *aFragStartOffset,
                                      nsIDOMNode **aFragEndNode,
-                                     PRInt32 *aFragEndOffset,
+                                     int32_t *aFragEndOffset,
                                      nsIDOMNode **aTargetNode,       
-                                     PRInt32 *aTargetOffset,   
+                                     int32_t *aTargetOffset,   
                                      bool *aDoContinue);
   nsresult   GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttrib);
 
@@ -580,8 +580,8 @@ protected:
                                         nsCOMPtr<nsIDOMNode> *outFragNode,
                                         nsCOMPtr<nsIDOMNode> *outStartNode,
                                         nsCOMPtr<nsIDOMNode> *outEndNode,
-                                        PRInt32 *outStartOffset,
-                                        PRInt32 *outEndOffset,
+                                        int32_t *outStartOffset,
+                                        int32_t *outEndOffset,
                                         bool aTrustedInput);
   nsresult   ParseFragment(const nsAString & aStr, nsIAtom* aContextLocalName,
                            nsIDocument* aTargetDoc,
@@ -590,9 +590,9 @@ protected:
   nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
                                       nsCOMArray<nsIDOMNode>& outNodeList,
                                       nsIDOMNode *aStartNode,
-                                      PRInt32 aStartOffset,
+                                      int32_t aStartOffset,
                                       nsIDOMNode *aEndNode,
-                                      PRInt32 aEndOffset);
+                                      int32_t aEndOffset);
   nsresult CreateTagStack(nsTArray<nsString> &aTagStack,
                           nsIDOMNode *aNode);
   nsresult GetListAndTableParents( bool aEnd, 
@@ -600,7 +600,7 @@ protected:
                                    nsCOMArray<nsIDOMNode>& outArray);
   nsresult DiscoverPartialListsAndTables(nsCOMArray<nsIDOMNode>& aPasteNodes,
                                          nsCOMArray<nsIDOMNode>& aListsAndTables,
-                                         PRInt32 *outHighWaterMark);
+                                         int32_t *outHighWaterMark);
   nsresult ScanForListAndTableStructure(bool aEnd,
                                         nsCOMArray<nsIDOMNode>& aNodes,
                                         nsIDOMNode *aListOrTable,
@@ -608,7 +608,7 @@ protected:
   nsresult ReplaceOrphanedStructure( bool aEnd,
                                      nsCOMArray<nsIDOMNode>& aNodeArray,
                                      nsCOMArray<nsIDOMNode>& aListAndTableArray,
-                                     PRInt32 aHighWaterMark);
+                                     int32_t aHighWaterMark);
   nsIDOMNode* GetArrayEndpoint(bool aEnd, nsCOMArray<nsIDOMNode>& aNodeArray);
 
   /* small utility routine to test if a break node is visible to user */
@@ -618,7 +618,7 @@ protected:
      inserting a block level element */
   void NormalizeEOLInsertPosition(nsIDOMNode *firstNodeToInsert,
                                   nsCOMPtr<nsIDOMNode> *insertParentNode,
-                                  PRInt32 *insertOffset);
+                                  int32_t *insertOffset);
 
   /* small utility routine to test the eEditorReadonly bit */
   bool IsModifiable();
@@ -628,20 +628,20 @@ protected:
   nsresult InsertBasicBlock(const nsAString & aBlockType);
   
   /* increase/decrease the font size of selection */
-  nsresult RelativeFontChange( PRInt32 aSizeChange);
+  nsresult RelativeFontChange( int32_t aSizeChange);
   
   /* helper routines for font size changing */
-  nsresult RelativeFontChangeOnTextNode( PRInt32 aSizeChange, 
+  nsresult RelativeFontChangeOnTextNode( int32_t aSizeChange, 
                                          nsIDOMCharacterData *aTextNode, 
-                                         PRInt32 aStartOffset,
-                                         PRInt32 aEndOffset);
-  nsresult RelativeFontChangeOnNode(PRInt32 aSizeChange, nsINode* aNode);
-  nsresult RelativeFontChangeHelper(PRInt32 aSizeChange, nsINode* aNode);
+                                         int32_t aStartOffset,
+                                         int32_t aEndOffset);
+  nsresult RelativeFontChangeOnNode(int32_t aSizeChange, nsINode* aNode);
+  nsresult RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode);
 
   /* helper routines for inline style */
   nsresult SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode, 
-                                        PRInt32 aStartOffset,
-                                        PRInt32 aEndOffset,
+                                        int32_t aStartOffset,
+                                        int32_t aEndOffset,
                                         nsIAtom *aProperty, 
                                         const nsAString *aAttribute,
                                         const nsAString *aValue);
@@ -660,7 +660,7 @@ protected:
                                 nsIAtom *aProperty, 
                                 const nsAString *aAttribute);
   nsresult SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
-                                PRInt32 *aOffset,
+                                int32_t *aOffset,
                                 nsIAtom *aProperty, 
                                 const nsAString *aAttribute,
                                 nsCOMPtr<nsIDOMNode> *outLeftNode = nullptr,
@@ -674,28 +674,28 @@ protected:
 
   bool NodeIsProperty(nsIDOMNode *aNode);
   bool HasAttr(nsIDOMNode *aNode, const nsAString *aAttribute);
-  bool IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
-  bool IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
+  bool IsAtFrontOfNode(nsIDOMNode *aNode, int32_t aOffset);
+  bool IsAtEndOfNode(nsIDOMNode *aNode, int32_t aOffset);
   bool IsOnlyAttribute(nsIDOMNode *aElement, const nsAString *aAttribute);
   bool IsOnlyAttribute(const nsIContent* aElement, const nsAString& aAttribute);
 
   nsresult RemoveBlockContainer(nsIDOMNode *inNode);
   nsIContent* GetPriorHTMLSibling(nsINode* aNode);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsIContent* GetPriorHTMLSibling(nsINode* aParent, PRInt32 aOffset);
-  nsresult GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
+  nsIContent* GetPriorHTMLSibling(nsINode* aParent, int32_t aOffset);
+  nsresult GetPriorHTMLSibling(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<nsIDOMNode> *outNode);
   nsIContent* GetNextHTMLSibling(nsINode* aNode);
   nsresult GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsIContent* GetNextHTMLSibling(nsINode* aParent, PRInt32 aOffset);
-  nsresult GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
+  nsIContent* GetNextHTMLSibling(nsINode* aParent, int32_t aOffset);
+  nsresult GetNextHTMLSibling(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
-  nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
-  nsIContent* GetPriorHTMLNode(nsINode* aParent, PRInt32 aOffset,
+  nsresult GetPriorHTMLNode(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
+  nsIContent* GetPriorHTMLNode(nsINode* aParent, int32_t aOffset,
                                bool aNoBlockCrossing = false);
   nsresult GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
-  nsIContent* GetNextHTMLNode(nsINode* aParent, PRInt32 aOffset,
+  nsIContent* GetNextHTMLNode(nsINode* aParent, int32_t aOffset,
                               bool aNoBlockCrossing = false);
-  nsresult GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
+  nsresult GetNextHTMLNode(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
 
   nsresult IsFirstEditableChild( nsIDOMNode *aNode, bool *aOutIsFirst);
   nsresult IsLastEditableChild( nsIDOMNode *aNode, bool *aOutIsLast);
@@ -732,11 +732,11 @@ protected:
                                    const nsAString& aFlavor,
                                    nsIDOMDocument* aSourceDoc,
                                    nsIDOMNode* aDestNode,
-                                   PRInt32 aDestOffset,
+                                   int32_t aDestOffset,
                                    bool aDeleteSelection,
                                    bool aTrustedInput);
 
-  nsresult ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, PRInt32* aOffset,
+  nsresult ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
                       nsIAtom* aProperty, const nsAString* aAttribute);
 
 // Data members
@@ -752,7 +752,7 @@ protected:
   nsAutoPtr<nsHTMLCSSUtils> mHTMLCSSUtils;
 
   // Used by GetFirstSelectedCell and GetNextSelectedCell
-  PRInt32  mSelectedCellIndex;
+  int32_t  mSelectedCellIndex;
 
   nsString mLastStyleSheetURL;
   nsString mLastOverrideStyleSheetURL;
@@ -783,14 +783,14 @@ protected:
   nsresult ShowResizersInner(nsIDOMElement *aResizedElement);
 
   // Returns the offset of an element's frame to its absolute containing block.
-  nsresult GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 & aY);
+  nsresult GetElementOrigin(nsIDOMElement * aElement, int32_t & aX, int32_t & aY);
   nsresult GetPositionAndDimensions(nsIDOMElement * aElement,
-                                    PRInt32 & aX, PRInt32 & aY,
-                                    PRInt32 & aW, PRInt32 & aH,
-                                    PRInt32 & aBorderLeft,
-                                    PRInt32 & aBorderTop,
-                                    PRInt32 & aMarginLeft,
-                                    PRInt32 & aMarginTop);
+                                    int32_t & aX, int32_t & aY,
+                                    int32_t & aW, int32_t & aH,
+                                    int32_t & aBorderLeft,
+                                    int32_t & aBorderTop,
+                                    int32_t & aMarginLeft,
+                                    int32_t & aMarginTop);
 
   /* PACKED BOOLEANS FOR RESIZING, ABSOLUTE POSITIONING AND */
   /* INLINE TABLE EDITING */
@@ -837,78 +837,78 @@ protected:
 
   nsCOMArray<nsIHTMLObjectResizeListener> objectResizeEventListeners;
 
-  PRInt32 mOriginalX;
-  PRInt32 mOriginalY;
+  int32_t mOriginalX;
+  int32_t mOriginalY;
 
-  PRInt32 mResizedObjectX;
-  PRInt32 mResizedObjectY;
-  PRInt32 mResizedObjectWidth;
-  PRInt32 mResizedObjectHeight;
+  int32_t mResizedObjectX;
+  int32_t mResizedObjectY;
+  int32_t mResizedObjectWidth;
+  int32_t mResizedObjectHeight;
 
-  PRInt32 mResizedObjectMarginLeft;
-  PRInt32 mResizedObjectMarginTop;
-  PRInt32 mResizedObjectBorderLeft;
-  PRInt32 mResizedObjectBorderTop;
+  int32_t mResizedObjectMarginLeft;
+  int32_t mResizedObjectMarginTop;
+  int32_t mResizedObjectBorderLeft;
+  int32_t mResizedObjectBorderTop;
 
-  PRInt32 mXIncrementFactor;
-  PRInt32 mYIncrementFactor;
-  PRInt32 mWidthIncrementFactor;
-  PRInt32 mHeightIncrementFactor;
+  int32_t mXIncrementFactor;
+  int32_t mYIncrementFactor;
+  int32_t mWidthIncrementFactor;
+  int32_t mHeightIncrementFactor;
 
-  PRInt8  mInfoXIncrement;
-  PRInt8  mInfoYIncrement;
+  int8_t  mInfoXIncrement;
+  int8_t  mInfoYIncrement;
 
   nsresult SetAllResizersPosition();
 
-  nsresult CreateResizer(nsIDOMElement ** aReturn, PRInt16 aLocation, nsIDOMNode * aParentNode);
-  void     SetAnonymousElementPosition(PRInt32 aX, PRInt32 aY, nsIDOMElement *aResizer);
+  nsresult CreateResizer(nsIDOMElement ** aReturn, int16_t aLocation, nsIDOMNode * aParentNode);
+  void     SetAnonymousElementPosition(int32_t aX, int32_t aY, nsIDOMElement *aResizer);
 
   nsresult CreateShadow(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode,
                         nsIDOMElement * aOriginalObject);
   nsresult SetShadowPosition(nsIDOMElement * aShadow,
                              nsIDOMElement * aOriginalObject,
-                             PRInt32 aOriginalObjectX,
-                             PRInt32 aOriginalObjectY);
+                             int32_t aOriginalObjectX,
+                             int32_t aOriginalObjectY);
 
   nsresult CreateResizingInfo(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode);
-  nsresult SetResizingInfoPosition(PRInt32 aX, PRInt32 aY,
-                                   PRInt32 aW, PRInt32 aH);
+  nsresult SetResizingInfoPosition(int32_t aX, int32_t aY,
+                                   int32_t aW, int32_t aH);
 
-  PRInt32  GetNewResizingIncrement(PRInt32 aX, PRInt32 aY, PRInt32 aID);
+  int32_t  GetNewResizingIncrement(int32_t aX, int32_t aY, int32_t aID);
   nsresult StartResizing(nsIDOMElement * aHandle);
-  PRInt32  GetNewResizingX(PRInt32 aX, PRInt32 aY);
-  PRInt32  GetNewResizingY(PRInt32 aX, PRInt32 aY);
-  PRInt32  GetNewResizingWidth(PRInt32 aX, PRInt32 aY);
-  PRInt32  GetNewResizingHeight(PRInt32 aX, PRInt32 aY);
+  int32_t  GetNewResizingX(int32_t aX, int32_t aY);
+  int32_t  GetNewResizingY(int32_t aX, int32_t aY);
+  int32_t  GetNewResizingWidth(int32_t aX, int32_t aY);
+  int32_t  GetNewResizingHeight(int32_t aX, int32_t aY);
   void     HideShadowAndInfo();
-  void     SetFinalSize(PRInt32 aX, PRInt32 aY);
+  void     SetFinalSize(int32_t aX, int32_t aY);
   void     DeleteRefToAnonymousNode(nsIDOMNode * aNode);
-  void     SetResizeIncrements(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH, bool aPreserveRatio);
+  void     SetResizeIncrements(int32_t aX, int32_t aY, int32_t aW, int32_t aH, bool aPreserveRatio);
   void     HideAnonymousEditingUIs();
 
   /* ABSOLUTE POSITIONING */
 
-  PRInt32 mPositionedObjectX;
-  PRInt32 mPositionedObjectY;
-  PRInt32 mPositionedObjectWidth;
-  PRInt32 mPositionedObjectHeight;
+  int32_t mPositionedObjectX;
+  int32_t mPositionedObjectY;
+  int32_t mPositionedObjectWidth;
+  int32_t mPositionedObjectHeight;
 
-  PRInt32 mPositionedObjectMarginLeft;
-  PRInt32 mPositionedObjectMarginTop;
-  PRInt32 mPositionedObjectBorderLeft;
-  PRInt32 mPositionedObjectBorderTop;
+  int32_t mPositionedObjectMarginLeft;
+  int32_t mPositionedObjectMarginTop;
+  int32_t mPositionedObjectBorderLeft;
+  int32_t mPositionedObjectBorderTop;
 
   nsCOMPtr<nsIDOMElement> mAbsolutelyPositionedObject;
   nsCOMPtr<nsIDOMElement> mGrabber;
   nsCOMPtr<nsIDOMElement> mPositioningShadow;
 
-  PRInt32      mGridSize;
+  int32_t      mGridSize;
 
   nsresult CreateGrabber(nsIDOMNode * aParentNode, nsIDOMElement ** aReturn);
   nsresult StartMoving(nsIDOMElement * aHandle);
-  nsresult SetFinalPosition(PRInt32 aX, PRInt32 aY);
-  void     AddPositioningOffset(PRInt32 & aX, PRInt32 & aY);
-  void     SnapToGrid(PRInt32 & newX, PRInt32 & newY);
+  nsresult SetFinalPosition(int32_t aX, int32_t aY);
+  void     AddPositioningOffset(int32_t & aX, int32_t & aY);
+  void     SnapToGrid(int32_t & newX, int32_t & newY);
   nsresult GrabberClicked();
   nsresult EndMoving();
   nsresult CheckPositionedElementBGandFG(nsIDOMElement * aElement,

@@ -18,16 +18,16 @@ interface nsIPopupWindowManager : nsISupports {
   /**
    * These values are returned by the testPermission method
    */
-  const PRUint32 ALLOW_POPUP = 1;
-  const PRUint32 DENY_POPUP = 2;
-  const PRUint32 ALLOW_POPUP_WITH_PREJUDICE = 3;
+  const uint32_t ALLOW_POPUP = 1;
+  const uint32_t DENY_POPUP = 2;
+  const uint32_t ALLOW_POPUP_WITH_PREJUDICE = 3;
 
   /**
    * Test whether a website has permission to show a popup window.
    * @param   principal is the principal to be tested
    * @return  one of the enumerated permission actions defined above
    */
-  PRUint32 testPermission(in nsIPrincipal principal);
+  uint32_t testPermission(in nsIPrincipal principal);
 };
 
 %{ C++

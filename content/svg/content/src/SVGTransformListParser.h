@@ -37,8 +37,8 @@ private:
   virtual nsresult Match();
 
   nsresult MatchNumberArguments(float *aResult,
-                                PRUint32 aMaxNum,
-                                PRUint32 *aParsedNum);
+                                uint32_t aMaxNum,
+                                uint32_t *aParsedNum);
 
   nsresult MatchTransformList();
 

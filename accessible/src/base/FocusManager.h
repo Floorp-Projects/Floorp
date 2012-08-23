@@ -146,9 +146,9 @@ private:
 #define A11YDEBUG_FOCUS_LOG_TIME                                               \
   {                                                                            \
     PRIntervalTime time = PR_IntervalNow();                                    \
-    PRUint32 mins = (PR_IntervalToSeconds(time) / 60) % 60;                    \
-    PRUint32 secs = PR_IntervalToSeconds(time) % 60;                           \
-    PRUint32 msecs = PR_IntervalToMilliseconds(time) % 1000;                   \
+    uint32_t mins = (PR_IntervalToSeconds(time) / 60) % 60;                    \
+    uint32_t secs = PR_IntervalToSeconds(time) % 60;                           \
+    uint32_t msecs = PR_IntervalToMilliseconds(time) % 1000;                   \
     printf("Time: %2d:%2d.%3d\n", mins, secs, msecs);                          \
   }
 

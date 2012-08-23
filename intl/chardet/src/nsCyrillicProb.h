@@ -14,7 +14,7 @@
     the "Cyrillic Software Suite" written by John Neystdt.
     http://www.neystadt.org/cyrillic (You can also find it from CPAN)
  */
-const PRUint16 gCyrillicProb[33][33] = {{ 
+const uint16_t gCyrillicProb[33][33] = {{ 
 0,
 0, 	0, 	0, 	0, 	0, 	0, 	0, 	0, 	
 0, 	0, 	0, 	0, 	0, 	0, 	0, 	0, 	

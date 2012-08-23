@@ -49,7 +49,7 @@ private:
     bool IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
 
     // pseudo constants
-    static PRInt32 gRefCnt;
+    static int32_t gRefCnt;
     static nsIRDFService* gRDFService;
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_nextVal;
@@ -60,7 +60,7 @@ private:
 };
 
 
-PRInt32         RDFContainerUtilsImpl::gRefCnt = 0;
+int32_t         RDFContainerUtilsImpl::gRefCnt = 0;
 nsIRDFService*  RDFContainerUtilsImpl::gRDFService;
 nsIRDFResource* RDFContainerUtilsImpl::kRDF_instanceOf;
 nsIRDFResource* RDFContainerUtilsImpl::kRDF_nextVal;
@@ -118,7 +118,7 @@ RDFContainerUtilsImpl::IsOrdinalProperty(nsIRDFResource *aProperty, bool *_retva
 
 
 NS_IMETHODIMP
-RDFContainerUtilsImpl::IndexToOrdinalResource(PRInt32 aIndex, nsIRDFResource **aOrdinal)
+RDFContainerUtilsImpl::IndexToOrdinalResource(int32_t aIndex, nsIRDFResource **aOrdinal)
 {
     NS_PRECONDITION(aIndex > 0, "illegal value");
     if (aIndex <= 0)
@@ -137,7 +137,7 @@ RDFContainerUtilsImpl::IndexToOrdinalResource(PRInt32 aIndex, nsIRDFResource **a
 
 
 NS_IMETHODIMP
-RDFContainerUtilsImpl::OrdinalResourceToIndex(nsIRDFResource *aOrdinal, PRInt32 *aIndex)
+RDFContainerUtilsImpl::OrdinalResourceToIndex(nsIRDFResource *aOrdinal, int32_t *aIndex)
 {
     NS_PRECONDITION(aOrdinal != nullptr, "null ptr");
     if (! aOrdinal)
@@ -159,7 +159,7 @@ RDFContainerUtilsImpl::OrdinalResourceToIndex(nsIRDFResource *aOrdinal, PRInt32 
         return NS_ERROR_UNEXPECTED;
     }
 
-    PRInt32 idx = 0;
+    int32_t idx = 0;
 
     ++s;
     while (*s) {
@@ -445,7 +445,7 @@ RDFContainerUtilsImpl::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResou
 }
 
 NS_IMETHODIMP
-RDFContainerUtilsImpl::IndexOf(nsIRDFDataSource* aDataSource, nsIRDFResource* aContainer, nsIRDFNode* aElement, PRInt32* aIndex)
+RDFContainerUtilsImpl::IndexOf(nsIRDFDataSource* aDataSource, nsIRDFResource* aContainer, nsIRDFNode* aElement, int32_t* aIndex)
 {
     if (!aDataSource || !aContainer)
         return NS_ERROR_NULL_POINTER;

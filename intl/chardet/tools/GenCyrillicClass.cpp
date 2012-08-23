@@ -50,13 +50,13 @@ static nsIUnicodeEncoder* gKOI8REncoder = nullptr;
 static nsICharsetConverterManager* gCCM = nullptr;
 
 //---------------------------------------------------------------------------
-PRUint8 CyrillicClass(nsIUnicodeDecoder* decoder, PRUint8 byte)
+uint8_t CyrillicClass(nsIUnicodeDecoder* decoder, uint8_t byte)
 {
    PRUnichar ubuf[2];
-   PRUint8 bbuf[2];
+   uint8_t bbuf[2];
 
-   PRInt32 blen = 1;
-   PRInt32 ulen = 1;
+   int32_t blen = 1;
+   int32_t ulen = 1;
    nsresult res = decoder->Convert((char*)&byte, &blen, ubuf, &ulen);
    if(NS_SUCCEEDED(res) && (1 == ulen ))
    {
@@ -67,7 +67,7 @@ PRUint8 CyrillicClass(nsIUnicodeDecoder* decoder, PRUint8 byte)
      {
         if(0xe0 <= bbuf[0])
         {
-              return bbuf[0] - (PRUint8)0xdf;
+              return bbuf[0] - (uint8_t)0xdf;
         }
      }
    }
@@ -85,13 +85,13 @@ void genCyrillicClass(const char* name, const char* charset)
       printf("cannot locate %s Decoder\n", charset);
       return;
    }
-   printf("static const PRUint8 %sMap [128] = {\n",name);
-   PRUint8 i,j;
+   printf("static const uint8_t %sMap [128] = {\n",name);
+   uint8_t i,j;
    for(i=0x80;i!=0x00;i+=0x10)
    {
      for(j=0;j<=0x0f;j++)
      {
-        PRUint8 cls = CyrillicClass(decoder, i+j);
+        uint8_t cls = CyrillicClass(decoder, i+j);
         printf(" %2d, ",cls);
      }
      printf("\n");

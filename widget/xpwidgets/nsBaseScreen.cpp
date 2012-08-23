@@ -13,14 +13,14 @@ NS_IMPL_ISUPPORTS1(nsBaseScreen, nsIScreen)
 
 nsBaseScreen::nsBaseScreen()
 {
-  for (PRUint32 i = 0; i < nsIScreen::BRIGHTNESS_LEVELS; i++)
+  for (uint32_t i = 0; i < nsIScreen::BRIGHTNESS_LEVELS; i++)
     mBrightnessLocks[i] = 0;
 }
 
 nsBaseScreen::~nsBaseScreen() { }
 
 NS_IMETHODIMP
-nsBaseScreen::LockMinimumBrightness(PRUint32 aBrightness)
+nsBaseScreen::LockMinimumBrightness(uint32_t aBrightness)
 {
   NS_ABORT_IF_FALSE(
     aBrightness < nsIScreen::BRIGHTNESS_LEVELS,
@@ -35,7 +35,7 @@ nsBaseScreen::LockMinimumBrightness(PRUint32 aBrightness)
 }
 
 NS_IMETHODIMP
-nsBaseScreen::UnlockMinimumBrightness(PRUint32 aBrightness)
+nsBaseScreen::UnlockMinimumBrightness(uint32_t aBrightness)
 {
   NS_ABORT_IF_FALSE(
     aBrightness < nsIScreen::BRIGHTNESS_LEVELS,
@@ -52,8 +52,8 @@ nsBaseScreen::UnlockMinimumBrightness(PRUint32 aBrightness)
 void
 nsBaseScreen::CheckMinimumBrightness()
 {
-  PRUint32 brightness = nsIScreen::BRIGHTNESS_LEVELS;
-  for (PRUint32 i = 0; i < nsIScreen::BRIGHTNESS_LEVELS; i++)
+  uint32_t brightness = nsIScreen::BRIGHTNESS_LEVELS;
+  for (uint32_t i = 0; i < nsIScreen::BRIGHTNESS_LEVELS; i++)
     if (mBrightnessLocks[i] > 0)
       brightness = i;
 

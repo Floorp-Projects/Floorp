@@ -101,8 +101,8 @@ LayerManagerOGL::CleanupResources()
 
   ctx->MakeCurrent();
 
-  for (PRUint32 i = 0; i < mPrograms.Length(); ++i) {
-    for (PRUint32 type = MaskNone; type < NumMaskTypes; ++type) {
+  for (uint32_t i = 0; i < mPrograms.Length(); ++i) {
+    for (uint32_t type = MaskNone; type < NumMaskTypes; ++type) {
       delete mPrograms[i].mVariations[type];
     }
   }
@@ -152,7 +152,7 @@ LayerManagerOGL::CreateContext()
 void
 LayerManagerOGL::AddPrograms(ShaderProgramType aType)
 {
-  for (PRUint32 maskType = MaskNone; maskType < NumMaskTypes; ++maskType) {
+  for (uint32_t maskType = MaskNone; maskType < NumMaskTypes; ++maskType) {
     if (ProgramProfileOGL::ProgramExists(aType, static_cast<MaskType>(maskType))) {
       mPrograms[aType].mVariations[maskType] = new ShaderProgramOGL(this->gl(),
         ProgramProfileOGL::GetProfileFor(aType, static_cast<MaskType>(maskType)));
@@ -222,7 +222,7 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
 
     mFBOTextureTarget = LOCAL_GL_NONE;
 
-    for (PRUint32 i = 0; i < ArrayLength(textureTargets); i++) {
+    for (uint32_t i = 0; i < ArrayLength(textureTargets); i++) {
       GLenum target = textureTargets[i];
       if (!target)
           continue;
@@ -1047,7 +1047,7 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
   GLint width = rect.width;
   GLint height = rect.height;
 
-  if ((PRInt64(width) * PRInt64(height) * PRInt64(4)) > PR_INT32_MAX) {
+  if ((int64_t(width) * int64_t(height) * int64_t(4)) > PR_INT32_MAX) {
     NS_ERROR("Widget size too big - integer overflow!");
     return;
   }
@@ -1073,7 +1073,7 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
   NS_ASSERTION(imageSurface->Stride() == width * 4,
                "Image Surfaces being created with weird stride!");
 
-  mGLContext->ReadPixelsIntoImageSurface(0, 0, width, height, imageSurface);
+  mGLContext->ReadPixelsIntoImageSurface(imageSurface);
 
   aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   aTarget->Scale(1.0, -1.0);
@@ -1086,7 +1086,7 @@ void
 LayerManagerOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
 {
   for (unsigned int i = 0; i < mPrograms.Length(); ++i) {
-    for (PRUint32 mask = MaskNone; mask < NumMaskTypes; ++mask) {
+    for (uint32_t mask = MaskNone; mask < NumMaskTypes; ++mask) {
       if (mPrograms[i].mVariations[mask]) {
         mPrograms[i].mVariations[mask]->CheckAndSetProjectionMatrix(aMatrix);
       }

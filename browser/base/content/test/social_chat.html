@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script>
+      function pingWorker() {
+        var port = navigator.mozSocial.getWorker().port;
+        port.postMessage({topic: "chatbox-message", result: "ok"});
+      }
+      window.addEventListener("socialFrameShow", function(e) {
+        var port = navigator.mozSocial.getWorker().port;
+        port.postMessage({topic: "chatbox-visibility", result: "shown"});
+      }, false);
+      window.addEventListener("socialFrameHide", function(e) {
+        var port = navigator.mozSocial.getWorker().port;
+        port.postMessage({topic: "chatbox-visibility", result: "hidden"});
+      }, false);
+    </script>
+  </head>
+  <body onload="pingWorker();">
+    <p>This is a test social chat window.</p>
+  </body>
+</html>

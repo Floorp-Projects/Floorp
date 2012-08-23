@@ -90,7 +90,7 @@ protected:
    * These are the parameters that control the layout of columns.
    */
   struct ReflowConfig {
-    PRInt32 mBalanceColCount;
+    int32_t mBalanceColCount;
     nscoord mColWidth;
     nscoord mExpectedWidthLeftOver;
     nscoord mColGap;
@@ -158,7 +158,7 @@ protected:
  * XXX should we support CSS columns applied to table elements?
  */
 nsIFrame*
-NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aStateFlags)
+NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aStateFlags)
 {
   nsColumnSetFrame* it = new (aPresShell) nsColumnSetFrame(aContext);
   if (it) {
@@ -212,7 +212,7 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
   bool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   const nsStyleColumn* colStyle = GetStyleColumn();
 
-  PRUint8 ruleStyle;
+  uint8_t ruleStyle;
   // Per spec, inset => ridge and outset => groove
   if (colStyle->mColumnRuleStyle == NS_STYLE_BORDER_STYLE_INSET)
     ruleStyle = NS_STYLE_BORDER_STYLE_RIDGE;
@@ -335,10 +335,10 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
   }
 
   nscoord colGap = GetColumnGap(this, colStyle);
-  PRInt32 numColumns = colStyle->mColumnCount;
+  int32_t numColumns = colStyle->mColumnCount;
 
-  const PRUint32 MAX_NESTED_COLUMN_BALANCING = 2;
-  PRUint32 cnt = 1;
+  const uint32_t MAX_NESTED_COLUMN_BALANCING = 2;
+  uint32_t cnt = 1;
   for (const nsHTMLReflowState* rs = aReflowState.parentReflowState; rs && cnt
     < MAX_NESTED_COLUMN_BALANCING; rs = rs->parentReflowState) {
     if (rs->mFlags.mIsColumnBalancing) {
@@ -361,7 +361,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
         && numColumns > 0) {
       // This expression uses truncated rounding, which is what we
       // want
-      PRInt32 maxColumns = (availContentWidth + colGap)/(colGap + colWidth);
+      int32_t maxColumns = (availContentWidth + colGap)/(colGap + colWidth);
       numColumns = NS_MAX(1, NS_MIN(numColumns, maxColumns));
     }
   } else if (numColumns > 0 && availContentWidth != NS_INTRINSICSIZE) {
@@ -502,7 +502,7 @@ nsColumnSetFrame::GetPrefWidth(nsRenderingContext *aRenderingContext) {
     colWidth = 0;
   }
 
-  PRInt32 numColumns = colStyle->mColumnCount;
+  int32_t numColumns = colStyle->mColumnCount;
   if (numColumns <= 0) {
     // if column-count is auto, assume one column
     numColumns = 1;

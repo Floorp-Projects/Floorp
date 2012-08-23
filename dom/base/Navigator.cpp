@@ -56,6 +56,7 @@
 #include "nsIDOMGlobalPropertyInitializer.h"
 
 using namespace mozilla::dom::power;
+using namespace mozilla::dom::sms;
 
 // This should not be in the namespace.
 DOMCI_DATA(Navigator, mozilla::dom::Navigator)
@@ -67,8 +68,8 @@ static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 
 static bool sDoNotTrackEnabled = false;
 static bool sVibratorEnabled   = false;
-static PRUint32 sMaxVibrateMS  = 0;
-static PRUint32 sMaxVibrateListLen = 0;
+static uint32_t sMaxVibrateMS  = 0;
+static uint32_t sMaxVibrateListLen = 0;
 
 /* static */
 void
@@ -194,8 +195,8 @@ Navigator::Invalidate()
   }
 #endif
 
-  PRUint32 len = mDeviceStorageStores.Length();
-  for (PRUint32 i = 0; i < len; ++i) {
+  uint32_t len = mDeviceStorageStores.Length();
+  for (uint32_t i = 0; i < len; ++i) {
     mDeviceStorageStores[i]->Shutdown();
   }
   mDeviceStorageStores.Clear();
@@ -287,7 +288,7 @@ Navigator::GetLanguage(nsAString& aLanguage)
   }
 
   nsCharSeparatedTokenizer localeTokenizer(aLanguage, '-');
-  PRInt32 pos = 0;
+  int32_t pos = 0;
   bool first = true;
   while (localeTokenizer.hasMoreTokens()) {
     const nsSubstring& code = localeTokenizer.nextToken();
@@ -507,9 +508,9 @@ Navigator::JavaEnabled(bool* aReturn)
 
   RefreshMIMEArray();
 
-  PRUint32 count;
+  uint32_t count;
   mMimeTypes->GetLength(&count);
-  for (PRUint32 i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     nsresult rv;
     nsIDOMMimeType* type = mMimeTypes->GetItemAt(i, &rv);
 
@@ -661,7 +662,7 @@ Navigator::AddIdleObserver(nsIIdleObserver* aIdleObserver)
 
   nsIPrincipal* principal = doc->NodePrincipal();
   if (!nsContentUtils::IsSystemPrincipal(principal)) {
-    PRUint16 appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+    uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
     principal->GetAppStatus(&appStatus);
     if (appStatus != nsIPrincipal::APP_STATUS_CERTIFIED) {
       return NS_ERROR_DOM_SECURITY_ERR;
@@ -727,13 +728,13 @@ Navigator::Vibrate(const jsval& aPattern, JSContext* cx)
   }
   else {
     JSObject *obj = JSVAL_TO_OBJECT(aPattern);
-    PRUint32 length;
+    uint32_t length;
     if (!JS_GetArrayLength(cx, obj, &length) || length > sMaxVibrateListLen) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
     pattern.SetLength(length);
 
-    for (PRUint32 i = 0; i < length; ++i) {
+    for (uint32_t i = 0; i < length; ++i) {
       jsval v;
       int32_t pv;
       if (JS_GetElement(cx, obj, i, &v) &&
@@ -855,7 +856,7 @@ Navigator::MozIsLocallyAvailable(const nsAString &aURI,
   // valid cache entry, and skip the load if there is.
   // If the cache is busy, assume that it is not yet available rather
   // than waiting for it to become available.
-  PRUint32 loadFlags = nsIChannel::INHIBIT_CACHING |
+  uint32_t loadFlags = nsIChannel::INHIBIT_CACHING |
                        nsICachingChannel::LOAD_NO_NETWORK_IO |
                        nsICachingChannel::LOAD_ONLY_IF_MODIFIED |
                        nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
@@ -1065,61 +1066,6 @@ Navigator::RequestWakeLock(const nsAString &aTopic, nsIDOMMozWakeLock **aWakeLoc
 //*****************************************************************************
 
 bool
-Navigator::IsSmsAllowed() const
-{
-  static const bool defaultSmsPermission = false;
-
-  // First of all, the general pref has to be turned on.
-  if (!Preferences::GetBool("dom.sms.enabled", defaultSmsPermission)) {
-    return false;
-  }
-
-  // In addition of having 'dom.sms.enabled' set to true, we require the
-  // website to be whitelisted. This is a temporary 'security model'.
-  // 'dom.sms.whitelist' has to contain comma-separated values of URI prepath.
-  // For local files, "file://" must be listed.
-  // For data-urls: "moz-nullprincipal:".
-  // Chrome files also have to be whitelisted for the moment.
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
-
-  if (!win || !win->GetDocShell()) {
-    return defaultSmsPermission;
-  }
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(win->GetExtantDocument());
-  if (!doc) {
-    return defaultSmsPermission;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
-
-  if (!uri) {
-    return defaultSmsPermission;
-  }
-
-  nsCAutoString uriPrePath;
-  uri->GetPrePath(uriPrePath);
-
-  const nsAdoptingString& whitelist =
-    Preferences::GetString("dom.sms.whitelist");
-
-  nsCharSeparatedTokenizer tokenizer(whitelist, ',',
-                                     nsCharSeparatedTokenizerTemplate<>::SEPARATOR_OPTIONAL);
-
-  while (tokenizer.hasMoreTokens()) {
-    const nsSubstring& whitelistItem = tokenizer.nextToken();
-
-    if (NS_ConvertUTF16toUTF8(whitelistItem).Equals(uriPrePath)) {
-      return true;
-    }
-  }
-
-  // The current page hasn't been whitelisted.
-  return false;
-}
-
-bool
 Navigator::IsSmsSupported() const
 {
 #ifdef MOZ_WEBSMS_BACKEND
@@ -1141,15 +1087,15 @@ Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
   *aSmsManager = nullptr;
 
   if (!mSmsManager) {
-    if (!IsSmsSupported() || !IsSmsAllowed()) {
+    if (!IsSmsSupported()) {
       return NS_OK;
     }
 
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
 
-    mSmsManager = new sms::SmsManager();
-    mSmsManager->Init(window);
+    mSmsManager = SmsManager::CheckPermissionAndCreateInstance(window);
+    NS_ENSURE_TRUE(mSmsManager, NS_OK);
   }
 
   NS_ADDREF(*aSmsManager = mSmsManager);
@@ -1253,7 +1199,7 @@ Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(permMgr, NS_OK);
 
-    PRUint32 permission = nsIPermissionManager::DENY_ACTION;
+    uint32_t permission = nsIPermissionManager::DENY_ACTION;
     permMgr->TestPermissionFromPrincipal(principal, "mobileconnection", &permission);
 
     if (permission != nsIPermissionManager::ALLOW_ACTION) {

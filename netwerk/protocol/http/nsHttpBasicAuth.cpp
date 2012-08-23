@@ -56,7 +56,7 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
                                      const PRUnichar *password,
                                      nsISupports **sessionState,
                                      nsISupports **continuationState,
-                                     PRUint32 *aFlags,
+                                     uint32_t *aFlags,
                                      char **creds)
 
 {
@@ -89,7 +89,7 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
 }
 
 NS_IMETHODIMP
-nsHttpBasicAuth::GetAuthFlags(PRUint32 *flags)
+nsHttpBasicAuth::GetAuthFlags(uint32_t *flags)
 {
     *flags = REQUEST_BASED | REUSABLE_CREDENTIALS | REUSABLE_CHALLENGE;
     return NS_OK;

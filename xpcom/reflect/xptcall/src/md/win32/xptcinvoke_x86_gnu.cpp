@@ -9,9 +9,9 @@
 
 extern "C" {
 void __attribute__ ((__used__)) __attribute__ ((regparm(3)))
-invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
+invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d)
 {
-    for(PRUint32 i = paramCount; i >0; i--, d++, s++)
+    for(uint32_t i = paramCount; i >0; i--, d++, s++)
     {
         if(s->IsPtrData())
         {
@@ -21,14 +21,14 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 
         switch(s->type)
         {
-        case nsXPTType::T_I8     : *((PRInt8*)  d) = s->val.i8;          break;
-        case nsXPTType::T_I16    : *((PRInt16*) d) = s->val.i16;         break;
-        case nsXPTType::T_I32    : *((PRInt32*) d) = s->val.i32;         break;
-        case nsXPTType::T_I64    : *((PRInt64*) d) = s->val.i64; d++;    break;
-        case nsXPTType::T_U8     : *((PRUint8*) d) = s->val.u8;          break;
-        case nsXPTType::T_U16    : *((PRUint16*)d) = s->val.u16;         break;
-        case nsXPTType::T_U32    : *((PRUint32*)d) = s->val.u32;         break;
-        case nsXPTType::T_U64    : *((PRUint64*)d) = s->val.u64; d++;    break;
+        case nsXPTType::T_I8     : *((int8_t*)  d) = s->val.i8;          break;
+        case nsXPTType::T_I16    : *((int16_t*) d) = s->val.i16;         break;
+        case nsXPTType::T_I32    : *((int32_t*) d) = s->val.i32;         break;
+        case nsXPTType::T_I64    : *((int64_t*) d) = s->val.i64; d++;    break;
+        case nsXPTType::T_U8     : *((uint8_t*) d) = s->val.u8;          break;
+        case nsXPTType::T_U16    : *((uint16_t*)d) = s->val.u16;         break;
+        case nsXPTType::T_U32    : *((uint32_t*)d) = s->val.u32;         break;
+        case nsXPTType::T_U64    : *((uint64_t*)d) = s->val.u64; d++;    break;
         case nsXPTType::T_FLOAT  : *((float*)   d) = s->val.f;           break;
         case nsXPTType::T_DOUBLE : *((double*)  d) = s->val.d;   d++;    break;
         case nsXPTType::T_BOOL   : *((bool*)    d) = s->val.b;           break;
@@ -45,8 +45,8 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 
 /*
   EXPORT_XPCOM_API(nsresult)
-  NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params);
+  NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+                   uint32_t paramCount, nsXPTCVariant* params);
 
   Each param takes at most two 4-byte words.
   It doesn't matter if we push too many words, and calculating the exact

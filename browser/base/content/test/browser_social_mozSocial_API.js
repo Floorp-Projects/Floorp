@@ -7,9 +7,9 @@ function test() {
 
   let manifest = { // normal provider
     name: "provider 1",
-    origin: "http://example.com",
-    sidebarURL: "http://example.com/browser/browser/base/content/test/social_sidebar.html",
-    workerURL: "http://example.com/browser/browser/base/content/test/social_worker.js",
+    origin: "https://example.com",
+    sidebarURL: "https://example.com/browser/browser/base/content/test/social_sidebar.html",
+    workerURL: "https://example.com/browser/browser/base/content/test/social_worker.js",
     iconURL: "chrome://branding/content/icon48.png"
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
@@ -37,20 +37,21 @@ var tests = {
 
     let port = Social.provider.port;
     ok(port, "provider has a port");
-    port.postMessage({topic: "test-init"});
-    Social.provider.port.onmessage = function (e) {
+    port.onmessage = function (e) {
       let topic = e.data.topic;
       switch (topic) {
         case "got-panel-message":
           ok(true, "got panel message");
-          // Wait for the panel to close before ending the test
-          let panel = document.getElementById("social-notification-panel");
-          panel.addEventListener("popuphidden", function hiddenListener() {
-            panel.removeEventListener("popuphidden", hiddenListener);
-            next();
-          });
-          panel.hidePopup();
           break;
+        case "got-social-panel-visibility":
+          if (e.data.result == "shown") {
+            ok(true, "panel shown");
+            let panel = document.getElementById("social-notification-panel");
+            panel.hidePopup();
+          } else if (e.data.result == "hidden") {
+            ok(true, "panel hidden");
+            next();
+          }
         case "got-sidebar-message":
           // The sidebar message will always come first, since it loads by default
           ok(true, "got sidebar message");
@@ -59,6 +60,7 @@ var tests = {
           break;
       }
     }
+    port.postMessage({topic: "test-init"});
 
     // Our worker sets up ambient notification at the same time as it responds to
     // the workerAPI initialization. If it's already initialized, we can

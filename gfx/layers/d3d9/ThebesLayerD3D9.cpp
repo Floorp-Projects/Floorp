@@ -19,6 +19,7 @@
 #include "gfxTeeSurface.h"
 #include "gfxUtils.h"
 #include "ReadbackProcessor.h"
+#include "ReadbackLayer.h"
 
 namespace mozilla {
 namespace layers {
@@ -93,9 +94,9 @@ ThebesLayerD3D9::CopyRegion(IDirect3DTexture9* aSrc, const nsIntPoint &aSrcOffse
   aValidRegion->And(*aValidRegion, retainedRegion);
 }
 
-static PRUint64 RectArea(const nsIntRect& aRect)
+static uint64_t RectArea(const nsIntRect& aRect)
 {
-  return aRect.width*PRUint64(aRect.height);
+  return aRect.width*uint64_t(aRect.height);
 }
 
 void
@@ -473,7 +474,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
   LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
   cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
 
-  for (PRUint32 i = 0; i < aReadbackUpdates.Length(); ++i) {
+  for (uint32_t i = 0; i < aReadbackUpdates.Length(); ++i) {
     NS_ASSERTION(aMode == SURFACE_OPAQUE,
                  "Transparent surfaces should not be used for readback");
     const ReadbackProcessor::Update& update = aReadbackUpdates[i];
@@ -541,7 +542,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
   NS_ASSERTION(srcTextures.Length() == destTextures.Length(), "Mismatched lengths");
 
   // Copy to the texture.
-  for (PRUint32 i = 0; i < srcTextures.Length(); ++i) {
+  for (uint32_t i = 0; i < srcTextures.Length(); ++i) {
     nsRefPtr<IDirect3DSurface9> srcSurface;
     nsRefPtr<IDirect3DSurface9> dstSurface;
 

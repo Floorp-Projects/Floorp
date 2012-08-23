@@ -18,6 +18,9 @@
     <item gecko:id="@+id/copyurl"
           gecko:title="@string/contextmenu_copyurl"/>
 
+    <item gecko:id="@+id/site_settings"
+          gecko:title="@string/site_settings_title" />
+
     <item gecko:id="@+id/add_to_launcher"
           gecko:title="@string/contextmenu_add_to_launcher"/>
 

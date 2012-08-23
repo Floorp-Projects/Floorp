@@ -58,8 +58,8 @@ nsMathMLmstyleFrame::TransmitAutomaticData()
 // Since UpdatePresentation() and UpdatePresentationDataFromChildAt() can be called
 // by a parent, ensure that the explicit attributes of <mstyle> take precedence
 NS_IMETHODIMP
-nsMathMLmstyleFrame::UpdatePresentationData(PRUint32        aFlagsValues,
-                                            PRUint32        aWhichFlags)
+nsMathMLmstyleFrame::UpdatePresentationData(uint32_t        aFlagsValues,
+                                            uint32_t        aWhichFlags)
 {
   if (NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(mPresentationData.flags)) {
     // our current state takes precedence, disallow updating the displastyle
@@ -71,10 +71,10 @@ nsMathMLmstyleFrame::UpdatePresentationData(PRUint32        aFlagsValues,
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
-                                                       PRInt32         aLastIndex,
-                                                       PRUint32        aFlagsValues,
-                                                       PRUint32        aWhichFlags)
+nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(int32_t         aFirstIndex,
+                                                       int32_t         aLastIndex,
+                                                       uint32_t        aFlagsValues,
+                                                       uint32_t        aWhichFlags)
 {
   if (NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(mPresentationData.flags)) {
     // our current state takes precedence, disallow updating the displastyle
@@ -89,9 +89,9 @@ nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstInd
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::AttributeChanged(PRInt32         aNameSpaceID,
+nsMathMLmstyleFrame::AttributeChanged(int32_t         aNameSpaceID,
                                       nsIAtom*        aAttribute,
-                                      PRInt32         aModType)
+                                      int32_t         aModType)
 {
   // Other attributes can affect too many things, ask our parent to re-layout
   // its children so that we can pick up changes in our attributes & transmit

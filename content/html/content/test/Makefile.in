@@ -266,6 +266,66 @@ MOCHITEST_FILES = \
 		test_input_file_picker.html \
 		test_bug763626.html \
 		test_bug780993.html \
+		test_iframe_sandbox_inheritance.html \
+		file_iframe_sandbox_a_if1.html \
+		file_iframe_sandbox_a_if2.html \
+		file_iframe_sandbox_a_if3.html \
+		file_iframe_sandbox_a_if4.html \
+		file_iframe_sandbox_a_if5.html \
+		file_iframe_sandbox_a_if6.html \
+		file_iframe_sandbox_a_if7.html \
+		file_iframe_sandbox_a_if8.html \
+		file_iframe_sandbox_a_if9.html \
+		test_iframe_sandbox_same_origin.html \
+		file_iframe_sandbox_b_if1.html \
+		file_iframe_sandbox_b_if2.html \
+		file_iframe_sandbox_b_if3.html \
+		test_iframe_sandbox_general.html \
+		file_iframe_sandbox_c_if1.html \
+		file_iframe_sandbox_c_if2.html \
+		file_iframe_sandbox_c_if3.html \
+		file_iframe_sandbox_c_if4.html \
+		file_iframe_sandbox_c_if5.html \
+		file_iframe_sandbox_c_if6.html \
+		file_iframe_sandbox_c_if7.html \
+		file_iframe_sandbox_c_if8.html \
+		file_iframe_sandbox_form_fail.html \
+		file_iframe_sandbox_form_pass.html \
+		file_iframe_sandbox_open_window_fail.html \
+		file_iframe_sandbox_pass.js \
+		file_iframe_sandbox_fail.js \
+		test_iframe_sandbox_navigation.html \
+		file_iframe_sandbox_d_if1.html \
+		file_iframe_sandbox_d_if2.html \
+		file_iframe_sandbox_d_if3.html \
+		file_iframe_sandbox_d_if4.html \
+		file_iframe_sandbox_d_if5.html \
+		file_iframe_sandbox_d_if6.html \
+		file_iframe_sandbox_d_if7.html \
+		file_iframe_sandbox_d_if8.html \
+		file_iframe_sandbox_d_if9.html \
+		file_iframe_sandbox_d_if10.html \
+		file_iframe_sandbox_d_if11.html \
+		file_iframe_sandbox_d_if12.html \
+		file_iframe_sandbox_d_if13.html \
+		file_iframe_sandbox_navigation_start.html \
+		file_iframe_sandbox_navigation_pass.html \
+		file_iframe_sandbox_navigation_fail.html \
+		file_iframe_sandbox_e_if1.html \
+		file_iframe_sandbox_e_if2.html \
+		file_iframe_sandbox_e_if3.html \
+		file_iframe_sandbox_e_if4.html \
+		file_iframe_sandbox_e_if5.html \
+		file_iframe_sandbox_e_if6.html \
+		file_iframe_sandbox_top_navigation_pass.html \
+		file_iframe_sandbox_top_navigation_fail.html \
+		test_iframe_sandbox_plugins.html \
+		file_iframe_sandbox_f_if1.html \
+		file_iframe_sandbox_f_if2.html \
+		file_iframe_sandbox_f_if2.html^headers^ \
+		test_iframe_sandbox_workers.html \
+		file_iframe_sandbox_g_if1.html \
+		file_iframe_sandbox_worker.js \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES = \

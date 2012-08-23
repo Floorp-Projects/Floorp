@@ -202,7 +202,7 @@ ImageLayerD3D10::RenderLayer()
       return;
     }
 
-    PRUint8 shaderFlags = SHADER_PREMUL;
+    uint8_t shaderFlags = SHADER_PREMUL;
     shaderFlags |= LoadMaskTexture();
     shaderFlags |= hasAlpha
                   ? SHADER_RGBA : SHADER_RGB;
@@ -224,7 +224,7 @@ ImageLayerD3D10::RenderLayer()
     PlanarYCbCrImage *yuvImage =
       static_cast<PlanarYCbCrImage*>(image);
 
-    if (!yuvImage->mBufferSize) {
+    if (!yuvImage->IsValid()) {
       return;
     }
 
@@ -261,7 +261,7 @@ ImageLayerD3D10::RenderLayer()
      */
     if (GetNv3DVUtils()) {
       Nv_Stereo_Mode mode;
-      switch (yuvImage->mData.mStereoMode) {
+      switch (yuvImage->GetData()->mStereoMode) {
       case STEREO_MODE_LEFT_RIGHT:
         mode = NV_STEREO_MODE_LEFT_RIGHT;
         break;
@@ -282,10 +282,10 @@ ImageLayerD3D10::RenderLayer()
       // Send control data even in mono case so driver knows to leave stereo mode.
       GetNv3DVUtils()->SendNv3DVControl(mode, true, FIREFOX_3DV_APP_HANDLE);
 
-      if (yuvImage->mData.mStereoMode != STEREO_MODE_MONO) {
+      if (yuvImage->GetData()->mStereoMode != STEREO_MODE_MONO) {
         // Dst resource is optional
-        GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->mData.mYSize.width, 
-                                           (unsigned int)yuvImage->mData.mYSize.height, (HANDLE)(data->mYTexture), (HANDLE)(NULL));
+        GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->GetData()->mYSize.width,
+                                           (unsigned int)yuvImage->GetData()->mYSize.height, (HANDLE)(data->mYTexture), (HANDLE)(NULL));
       }
     }
 
@@ -299,10 +299,10 @@ ImageLayerD3D10::RenderLayer()
 
     effect()->GetVariableByName("vTextureCoords")->AsVector()->SetFloatVector(
       ShaderConstantRectD3D10(
-        (float)yuvImage->mData.mPicX / yuvImage->mData.mYSize.width,
-        (float)yuvImage->mData.mPicY / yuvImage->mData.mYSize.height,
-        (float)yuvImage->mData.mPicSize.width / yuvImage->mData.mYSize.width,
-        (float)yuvImage->mData.mPicSize.height / yuvImage->mData.mYSize.height)
+        (float)yuvImage->GetData()->mPicX / yuvImage->GetData()->mYSize.width,
+        (float)yuvImage->GetData()->mPicY / yuvImage->GetData()->mYSize.height,
+        (float)yuvImage->GetData()->mPicSize.width / yuvImage->GetData()->mYSize.width,
+        (float)yuvImage->GetData()->mPicSize.height / yuvImage->GetData()->mYSize.height)
        );
   }
   
@@ -330,26 +330,26 @@ void ImageLayerD3D10::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
   nsAutoPtr<PlanarYCbCrD3D10BackendData> backendData(
     new PlanarYCbCrD3D10BackendData);
 
-  PlanarYCbCrImage::Data &data = aImage->mData;
+  const PlanarYCbCrImage::Data *data = aImage->GetData();
 
   D3D10_SUBRESOURCE_DATA dataY;
   D3D10_SUBRESOURCE_DATA dataCb;
   D3D10_SUBRESOURCE_DATA dataCr;
   CD3D10_TEXTURE2D_DESC descY(DXGI_FORMAT_R8_UNORM,
-                              data.mYSize.width,
-                              data.mYSize.height, 1, 1);
+                              data->mYSize.width,
+                              data->mYSize.height, 1, 1);
   CD3D10_TEXTURE2D_DESC descCbCr(DXGI_FORMAT_R8_UNORM,
-                                 data.mCbCrSize.width,
-                                 data.mCbCrSize.height, 1, 1);
+                                 data->mCbCrSize.width,
+                                 data->mCbCrSize.height, 1, 1);
 
   descY.Usage = descCbCr.Usage = D3D10_USAGE_IMMUTABLE;
 
-  dataY.pSysMem = data.mYChannel;
-  dataY.SysMemPitch = data.mYStride;
-  dataCb.pSysMem = data.mCbChannel;
-  dataCb.SysMemPitch = data.mCbCrStride;
-  dataCr.pSysMem = data.mCrChannel;
-  dataCr.SysMemPitch = data.mCbCrStride;
+  dataY.pSysMem = data->mYChannel;
+  dataY.SysMemPitch = data->mYStride;
+  dataCb.pSysMem = data->mCbChannel;
+  dataCb.SysMemPitch = data->mCbCrStride;
+  dataCr.pSysMem = data->mCrChannel;
+  dataCr.SysMemPitch = data->mCbCrStride;
 
   HRESULT hr = device()->CreateTexture2D(&descY, &dataY, getter_AddRefs(backendData->mYTexture));
   if (!FAILED(hr)) {

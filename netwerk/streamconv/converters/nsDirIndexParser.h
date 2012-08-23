@@ -41,7 +41,7 @@ protected:
     nsCString    mEncoding;
     nsCString    mComment;
     nsCString    mBuf;
-    PRInt32      mLineStart;
+    int32_t      mLineStart;
     bool         mHasDescription;
     int*         mFormat;
 

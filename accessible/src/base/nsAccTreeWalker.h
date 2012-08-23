@@ -60,7 +60,7 @@ private:
   void PopState();
 
   DocAccessible* mDoc;
-  PRInt32 mChildFilter;
+  int32_t mChildFilter;
   bool mWalkCache;
   WalkState* mState;
 };

@@ -203,7 +203,7 @@ void ImageBridgeChild::DestroyBridge()
 }
 
 // Not needed, cf CreateImageContainerChildNow
-PImageContainerChild* ImageBridgeChild::AllocPImageContainer(PRUint64* id)
+PImageContainerChild* ImageBridgeChild::AllocPImageContainer(uint64_t* id)
 {
   NS_ABORT();
   return nullptr;
@@ -260,7 +260,7 @@ already_AddRefed<ImageContainerChild> ImageBridgeChild::CreateImageContainerChil
 already_AddRefed<ImageContainerChild> ImageBridgeChild::CreateImageContainerChildNow()
 {
   nsRefPtr<ImageContainerChild> ctnChild = new ImageContainerChild();
-  PRUint64 id = 0;
+  uint64_t id = 0;
   SendPImageContainerConstructor(ctnChild, &id);
   ctnChild->SetID(id);
   return ctnChild.forget();

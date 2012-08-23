@@ -53,7 +53,7 @@ __try {
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  PRUint32 length = ::SysStringLen(*aText);
+  uint32_t length = ::SysStringLen(*aText);
   nsAutoString text(*aText, length);
 
   nsresult rv = textAcc->InsertText(text, aOffset);
@@ -106,7 +106,7 @@ __try {
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  PRUint32 length = ::SysStringLen(*aText);
+  uint32_t length = ::SysStringLen(*aText);
   nsAutoString text(*aText, length);
 
   rv = textAcc->InsertText(text, aStartOffset);

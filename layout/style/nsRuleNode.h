@@ -56,7 +56,7 @@ struct nsInheritedStyleData
     return aContext->AllocateFromShell(sz);
   }
 
-  void DestroyStructs(PRUint32 aBits, nsPresContext* aContext) {
+  void DestroyStructs(uint32_t aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
     void *name##Data = mStyleStructs[eStyleStruct_##name]; \
     if (name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
@@ -69,7 +69,7 @@ struct nsInheritedStyleData
 #undef STYLE_STRUCT_RESET
   }
 
-  void Destroy(PRUint32 aBits, nsPresContext* aContext) {
+  void Destroy(uint32_t aBits, nsPresContext* aContext) {
     DestroyStructs(aBits, aContext);
     aContext->FreeToShell(sizeof(nsInheritedStyleData), this);
   }
@@ -101,7 +101,7 @@ struct nsResetStyleData
     return aContext->AllocateFromShell(sz);
   }
 
-  void Destroy(PRUint32 aBits, nsPresContext* aContext) {
+  void Destroy(uint32_t aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
     void *name##Data = mStyleStructs[eStyleStruct_##name]; \
     if (name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
@@ -128,7 +128,7 @@ struct nsCachedStyleData
     return nsStyleStructID_Reset_Start <= aSID;
   }
 
-  static PRUint32 GetBitForSID(const nsStyleStructID aSID) {
+  static uint32_t GetBitForSID(const nsStyleStructID aSID) {
     return 1 << aSID;
   }
 
@@ -160,7 +160,7 @@ struct nsCachedStyleData
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
 
-  void Destroy(PRUint32 aBits, nsPresContext* aContext) {
+  void Destroy(uint32_t aBits, nsPresContext* aContext) {
     if (mResetData)
       mResetData->Destroy(aBits, aContext);
     if (mInheritedData)
@@ -262,10 +262,10 @@ private:
 
   struct Key {
     nsIStyleRule* mRule;
-    PRUint8 mLevel;
+    uint8_t mLevel;
     bool mIsImportantRule;
 
-    Key(nsIStyleRule* aRule, PRUint8 aLevel, bool aIsImportantRule)
+    Key(nsIStyleRule* aRule, uint8_t aLevel, bool aIsImportantRule)
       : mRule(aRule), mLevel(aLevel), mIsImportantRule(aIsImportantRule)
     {}
 
@@ -294,7 +294,7 @@ private:
 
   static PLDHashOperator
   EnqueueRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                          PRUint32 number, void *arg);
+                          uint32_t number, void *arg);
 
   Key GetKey() const {
     return Key(mRule, GetLevel(), IsImportantRule());
@@ -351,10 +351,10 @@ private:
 
   nsCachedStyleData mStyleData;   // Any data we cached on the rule node.
 
-  PRUint32 mDependentBits; // Used to cache the fact that we can look up
+  uint32_t mDependentBits; // Used to cache the fact that we can look up
                            // cached data under a parent rule.
 
-  PRUint32 mNoneBits; // Used to cache the fact that the branch to this
+  uint32_t mNoneBits; // Used to cache the fact that the branch to this
                       // node specifies no non-inherited data for a
                       // given struct type.  (This usually implies that
                       // the entire branch specifies no non-inherited
@@ -382,7 +382,7 @@ private:
   // of deciding when to GC.  We could more accurately count unused rulenodes
   // by releasing/addrefing our parent when our refcount transitions to or from
   // 0, but it doesn't seem worth it to do that.
-  PRUint32 mRefCnt;
+  uint32_t mRefCnt;
 
 public:
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
@@ -398,8 +398,8 @@ public:
 
 protected:
   void DestroyInternal(nsRuleNode ***aDestroyQueueTail);
-  void PropagateDependentBit(PRUint32 aBit, nsRuleNode* aHighestNode);
-  void PropagateNoneBit(PRUint32 aBit, nsRuleNode* aHighestNode);
+  void PropagateDependentBit(uint32_t aBit, nsRuleNode* aHighestNode);
+  void PropagateNoneBit(uint32_t aBit, nsRuleNode* aHighestNode);
 
   const void* SetDefaultOnRoot(const nsStyleStructID aSID,
                                nsStyleContext* aContext);
@@ -584,7 +584,7 @@ protected:
 
   static void SetFont(nsPresContext* aPresContext,
                       nsStyleContext* aContext,
-                      PRUint8 aGenericFontID,
+                      uint8_t aGenericFontID,
                       const nsRuleData* aRuleData,
                       const nsStyleFont* aParentFont,
                       nsStyleFont* aFont,
@@ -593,7 +593,7 @@ protected:
 
   static void SetGenericFont(nsPresContext* aPresContext,
                              nsStyleContext* aContext,
-                             PRUint8 aGenericFontID,
+                             uint8_t aGenericFontID,
                              nsStyleFont* aFont);
 
   void AdjustLogicalBoxProp(nsStyleContext* aContext,
@@ -622,20 +622,20 @@ protected:
 
 private:
   nsRuleNode(nsPresContext* aPresContext, nsRuleNode* aParent,
-             nsIStyleRule* aRule, PRUint8 aLevel, bool aIsImportant);
+             nsIStyleRule* aRule, uint8_t aLevel, bool aIsImportant);
   ~nsRuleNode();
 
 public:
   static nsRuleNode* CreateRootNode(nsPresContext* aPresContext);
 
   // Transition never returns null; on out of memory it'll just return |this|.
-  nsRuleNode* Transition(nsIStyleRule* aRule, PRUint8 aLevel,
+  nsRuleNode* Transition(nsIStyleRule* aRule, uint8_t aLevel,
                          bool aIsImportantRule);
   nsRuleNode* GetParent() const { return mParent; }
   bool IsRoot() const { return mParent == nullptr; }
 
   // These PRUint8s are really nsStyleSet::sheetType values.
-  PRUint8 GetLevel() const {
+  uint8_t GetLevel() const {
     NS_ASSERTION(!IsRoot(), "can't call on root");
     return (mDependentBits & NS_RULE_NODE_LEVEL_MASK) >>
              NS_RULE_NODE_LEVEL_SHIFT;
@@ -671,7 +671,7 @@ public:
 
   static bool
     HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
-                            PRUint32 ruleTypeMask,
+                            uint32_t ruleTypeMask,
                             bool aAuthorColorsAllowed);
 
   // Expose this so media queries can use it
@@ -723,15 +723,15 @@ public:
   static void ComputeFontFeatures(const nsCSSValuePairList *aFeaturesList,
                                   nsTArray<gfxFontFeature>& aFeatureSettings);
 
-  static nscoord CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize, 
+  static nscoord CalcFontPointSize(int32_t aHTMLSize, int32_t aBasePointSize, 
                                    nsPresContext* aPresContext,
                                    nsFontSizeType aFontSizeType = eFontSize_HTML);
 
-  static nscoord FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
+  static nscoord FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize, 
                                          nsPresContext* aPresContext,
                                          nsFontSizeType aFontSizeType = eFontSize_HTML);
 
-  static nscoord FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
+  static nscoord FindNextLargerFontSize(nscoord aFontSize, int32_t aBasePointSize, 
                                         nsPresContext* aPresContext,
                                         nsFontSizeType aFontSizeType = eFontSize_HTML);
 

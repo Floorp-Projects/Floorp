@@ -38,7 +38,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     bool clear = false;
     bool leaks = false;
 
-    PRInt32 pos = path.Find("?");
+    int32_t pos = path.Find("?");
     if (pos > 0) {
         nsCAutoString param;
         (void)path.Right(param, path.Length() - (pos+1));
@@ -123,7 +123,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
 }
 
 NS_IMETHODIMP
-nsAboutBloat::GetURIFlags(nsIURI *aURI, PRUint32 *result)
+nsAboutBloat::GetURIFlags(nsIURI *aURI, uint32_t *result)
 {
     *result = 0;
     return NS_OK;

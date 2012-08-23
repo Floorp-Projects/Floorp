@@ -17,8 +17,8 @@ namespace a11y {
 /*
  * A class the represents the XUL Tree widget.
  */
-const PRUint32 kMaxTreeColumns = 100;
-const PRUint32 kDefaultTreeCacheSize = 256;
+const uint32_t kMaxTreeColumns = 100;
+const uint32_t kDefaultTreeCacheSize = 256;
 
 /**
  * Accessible class for XUL tree element.
@@ -41,21 +41,21 @@ public:
   // Accessible
   virtual void Value(nsString& aValue);
   virtual a11y::role NativeRole();
-  virtual PRUint64 NativeState();
-  virtual Accessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+  virtual uint64_t NativeState();
+  virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild);
 
-  virtual Accessible* GetChildAt(PRUint32 aIndex);
-  virtual PRUint32 ChildCount() const;
+  virtual Accessible* GetChildAt(uint32_t aIndex);
+  virtual uint32_t ChildCount() const;
 
   // SelectAccessible
   virtual bool IsSelect();
   virtual already_AddRefed<nsIArray> SelectedItems();
-  virtual PRUint32 SelectedItemCount();
-  virtual Accessible* GetSelectedItem(PRUint32 aIndex);
-  virtual bool IsItemSelected(PRUint32 aIndex);
-  virtual bool AddItemToSelection(PRUint32 aIndex);
-  virtual bool RemoveItemFromSelection(PRUint32 aIndex);
+  virtual uint32_t SelectedItemCount();
+  virtual Accessible* GetSelectedItem(uint32_t aIndex);
+  virtual bool IsItemSelected(uint32_t aIndex);
+  virtual bool AddItemToSelection(uint32_t aIndex);
+  virtual bool RemoveItemFromSelection(uint32_t aIndex);
   virtual bool SelectAll();
   virtual bool UnselectAll();
 
@@ -76,7 +76,7 @@ public:
    *
    * @param aRow         [in] the given row index
    */
-  Accessible* GetTreeItemAccessible(PRInt32 aRow);
+  Accessible* GetTreeItemAccessible(int32_t aRow);
 
   /**
    * Invalidates the number of cached treeitem accessibles.
@@ -86,7 +86,7 @@ public:
    *                 the number sign specifies whether rows have been
    *                 inserted (plus) or removed (minus)
    */
-  void InvalidateCache(PRInt32 aRow, PRInt32 aCount);
+  void InvalidateCache(int32_t aRow, int32_t aCount);
 
   /**
    * Fires name change events for invalidated area of tree.
@@ -97,8 +97,8 @@ public:
    * @param aEndCol    [in] column index invalidation ends, -1 mens last column
    *                    index
    */
-  void TreeViewInvalidated(PRInt32 aStartRow, PRInt32 aEndRow,
-                           PRInt32 aStartCol, PRInt32 aEndCol);
+  void TreeViewInvalidated(int32_t aStartRow, int32_t aEndRow,
+                           int32_t aStartCol, int32_t aEndCol);
 
   /**
    * Invalidates children created for previous tree view.
@@ -109,7 +109,7 @@ protected:
   /**
    * Creates tree item accessible for the given row index.
    */
-  virtual already_AddRefed<Accessible> CreateTreeItemAccessible(PRInt32 aRow);
+  virtual already_AddRefed<Accessible> CreateTreeItemAccessible(int32_t aRow);
 
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsITreeView* mTreeView;
@@ -135,7 +135,7 @@ public:
 
   XULTreeItemAccessibleBase(nsIContent* aContent, DocAccessible* aDoc,
                             Accessible* aParent, nsITreeBoxObject* aTree,
-                            nsITreeView* aTreeView, PRInt32 aRow);
+                            nsITreeView* aTreeView, int32_t aRow);
 
   // nsISupports and cycle collection
   NS_DECL_ISUPPORTS_INHERITED
@@ -143,14 +143,14 @@ public:
                                            AccessibleWrap)
 
   // nsIAccessible
-  NS_IMETHOD GetBounds(PRInt32 *aX, PRInt32 *aY,
-                       PRInt32 *aWidth, PRInt32 *aHeight);
+  NS_IMETHOD GetBounds(int32_t *aX, int32_t *aY,
+                       int32_t *aWidth, int32_t *aHeight);
 
   NS_IMETHOD SetSelected(bool aSelect);
   NS_IMETHOD TakeFocus();
 
-  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(PRUint8 aIndex);
+  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(uint8_t aIndex);
 
   // nsAccessNode
   virtual void Shutdown();
@@ -158,14 +158,14 @@ public:
 
   // Accessible
   virtual GroupPos GroupPosition();
-  virtual PRUint64 NativeState();
-  virtual PRUint64 NativeInteractiveState() const;
-  virtual PRInt32 IndexInParent() const;
-  virtual Relation RelationByType(PRUint32 aType);
+  virtual uint64_t NativeState();
+  virtual uint64_t NativeInteractiveState() const;
+  virtual int32_t IndexInParent() const;
+  virtual Relation RelationByType(uint32_t aType);
   virtual Accessible* FocusedChild();
 
   // ActionAccessible
-  virtual PRUint8 ActionCount();
+  virtual uint8_t ActionCount();
 
   // Widgets
   virtual Accessible* ContainerWidget() const;
@@ -176,7 +176,7 @@ public:
   /**
    * Return row index associated with the accessible.
    */
-  PRInt32 GetRowIndex() const { return mRow; }
+  int32_t GetRowIndex() const { return mRow; }
 
   /**
    * Return cell accessible for the given column. If XUL tree accessible is not
@@ -188,14 +188,14 @@ public:
   /**
    * Proccess row invalidation. Used to fires name change events.
    */
-  virtual void RowInvalidated(PRInt32 aStartColIdx, PRInt32 aEndColIdx) = 0;
+  virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx) = 0;
 
 protected:
   enum { eAction_Click = 0, eAction_Expand = 1 };
 
   // Accessible
-  virtual void DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex);
-  virtual Accessible* GetSiblingAtOffset(PRInt32 aOffset,
+  virtual void DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex);
+  virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
                                          nsresult *aError = nullptr) const;
 
   // XULTreeItemAccessibleBase
@@ -212,7 +212,7 @@ protected:
 
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsITreeView* mTreeView;
-  PRInt32 mRow;
+  int32_t mRow;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(XULTreeItemAccessibleBase,
@@ -227,7 +227,7 @@ class XULTreeItemAccessible : public XULTreeItemAccessibleBase
 public:
   XULTreeItemAccessible(nsIContent* aContent, DocAccessible* aDoc,
                         Accessible* aParent, nsITreeBoxObject* aTree,
-                        nsITreeView* aTreeView, PRInt32 aRow);
+                        nsITreeView* aTreeView, int32_t aRow);
 
   // nsISupports and cycle collection
   NS_DECL_ISUPPORTS_INHERITED
@@ -243,7 +243,7 @@ public:
   virtual a11y::role NativeRole();
 
   // XULTreeItemAccessibleBase
-  virtual void RowInvalidated(PRInt32 aStartColIdx, PRInt32 aEndColIdx);
+  virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx);
 
 protected:
 
@@ -267,7 +267,7 @@ public:
 protected:
 
   // Accessible
-  virtual Accessible* GetSiblingAtOffset(PRInt32 aOffset,
+  virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
                                          nsresult *aError = nullptr) const;
 };
 

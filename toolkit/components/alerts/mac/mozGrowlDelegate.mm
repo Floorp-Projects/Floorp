@@ -3,115 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import "mozGrowlDelegate.h"
+#import "ObserverPair.h"
 
 #include "nsIObserver.h"
-#include "nsIXPConnect.h"
 #include "nsIXULAppInfo.h"
 #include "nsIStringBundle.h"
-#include "nsIJSContextStack.h"
 #include "nsIDOMWindow.h"
 
-#include "jsapi.h"
-#include "nsCOMPtr.h"
 #include "nsObjCExceptions.h"
-#include "nsServiceManagerUtils.h"
-#include "nsWeakReference.h"
-
-/**
- * Returns the DOM window that owns the given observer in the case that the
- * observer is implemented in JS and was created in a DOM window's scope.
- *
- * We need this so that we can properly clean up in cases where the window gets
- * closed before the growl timeout/click notifications have fired. Otherwise we
- * leak those windows.
- */
-static already_AddRefed<nsIDOMWindow>
-GetWindowOfObserver(nsIObserver* aObserver)
-{
-  nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(aObserver));
-  if (!wrappedJS) {
-    // We can't do anything with objects that aren't implemented in JS...
-    return nullptr;
-  }
-
-  JSObject* obj;
-  nsresult rv = wrappedJS->GetJSObject(&obj);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsCOMPtr<nsIThreadJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  JSContext* cx = stack->GetSafeJSContext();
-  NS_ENSURE_TRUE(cx, nullptr);
-
-  JSAutoRequest ar(cx);
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, obj)) {
-    return nullptr;
-  }
-
-  JSObject* global = JS_GetGlobalForObject(cx, obj);
-  NS_ENSURE_TRUE(global, nullptr);
-
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-  NS_ENSURE_TRUE(xpc, nullptr);
-
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  rv = xpc->GetWrappedNativeOfJSObject(cx, global, getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsCOMPtr<nsIDOMWindow> window = do_QueryWrappedNative(wrapper);
-  NS_ENSURE_TRUE(window, nullptr);
-
-  return window.forget();
-}
-
-@interface ObserverPair : NSObject
-{
-@public
-  nsIObserver *observer;
-  nsIDOMWindow *window;
-}
-
-- (id) initWithObserver:(nsIObserver *)aObserver window:(nsIDOMWindow *)aWindow;
-- (void) dealloc;
-
-@end
-
-@implementation ObserverPair
-
-- (id) initWithObserver:(nsIObserver *)aObserver window:(nsIDOMWindow *)aWindow
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  if ((self = [super init])) {
-    NS_ADDREF(observer = aObserver);
-    NS_IF_ADDREF(window = aWindow);
-    return self;
-  }
-
-  // Safeguard against calling NS_RELEASE on uninitialized memory.
-  observer = nullptr;
-  window = nullptr;
-
-  return nil;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (void) dealloc
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  NS_IF_RELEASE(observer);
-  NS_IF_RELEASE(window);
-  [super dealloc];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-@end
 
 @implementation mozGrowlDelegate
 
@@ -197,7 +96,7 @@ GetWindowOfObserver(nsIObserver* aObserver)
                   title:(const nsAString&)aTitle
             description:(const nsAString&)aText
                iconData:(NSData*)aImage
-                    key:(PRUint32)aKey
+                    key:(uint32_t)aKey
                  cookie:(const nsAString&)aCookie
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -231,7 +130,7 @@ GetWindowOfObserver(nsIObserver* aObserver)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (PRUint32) addObserver:(nsIObserver *)aObserver
+- (uint32_t) addObserver:(nsIObserver *)aObserver
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 

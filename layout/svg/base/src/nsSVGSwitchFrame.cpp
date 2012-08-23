@@ -56,7 +56,7 @@ public:
   NS_IMETHODIMP_(nsRect) GetCoveredRegion();
   virtual void ReflowSVG();
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                      PRUint32 aFlags);
+                                      uint32_t aFlags);
 
 private:
   nsIFrame *GetActiveChildFrame();
@@ -234,7 +234,7 @@ nsSVGSwitchFrame::ReflowSVG()
 
 SVGBBox
 nsSVGSwitchFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
-                                      PRUint32 aFlags)
+                                      uint32_t aFlags)
 {
   nsIFrame* kid = GetActiveChildFrame();
   if (kid) {

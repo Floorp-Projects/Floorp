@@ -15,8 +15,8 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHODIMP Init(nsIDOMWindow *parent, const nsAString& title,
-                       PRInt16 mode);
-    NS_IMETHOD AppendFilters(PRInt32 aFilterMask);
+                       int16_t mode);
+    NS_IMETHOD AppendFilters(int32_t aFilterMask);
     NS_IMETHOD AppendFilter(const nsAString & aTitle,
                             const nsAString & aFilter);
     NS_IMETHOD GetDefaultString(nsAString & aDefaultString);
@@ -27,9 +27,9 @@ public:
     NS_IMETHOD GetFileURL(nsIURI * *aFileURL);
     NS_IMETHOD SetDisplayDirectory(nsIFile *aDisplayDirectory);
     NS_IMETHOD GetDisplayDirectory(nsIFile **aDisplayDirectory);
-    NS_IMETHOD Show(PRInt16 *aReturn);
+    NS_IMETHOD Show(int16_t *aReturn);
 private:
-    void InitNative(nsIWidget*, const nsAString&, PRInt16) {};
+    void InitNative(nsIWidget*, const nsAString&, int16_t) {};
     nsString mFilePath;
     nsString mExtensionsFilter;
     nsString mMimeTypeFilter;

@@ -138,7 +138,7 @@ nsDOMSubtreeIterator::Init(nsIDOMRange* aRange)
  *****************************************************************************/
 
 bool 
-nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset) 
+nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t *aOffset) 
 {
   NS_ENSURE_TRUE(aNode || aParent, false);
   if (aNode == aParent) return false;

@@ -31,7 +31,7 @@ HTMLListAccessible::NativeRole()
   return roles::LIST;
 }
 
-PRUint64
+uint64_t
 HTMLListAccessible::NativeState()
 {
   return HyperTextAccessibleWrap::NativeState() | states::READONLY;
@@ -75,21 +75,21 @@ HTMLLIAccessible::NativeRole()
   return roles::LISTITEM;
 }
 
-PRUint64
+uint64_t
 HTMLLIAccessible::NativeState()
 {
   return HyperTextAccessibleWrap::NativeState() | states::READONLY;
 }
 
 NS_IMETHODIMP
-HTMLLIAccessible::GetBounds(PRInt32* aX, PRInt32* aY,
-                            PRInt32* aWidth, PRInt32* aHeight)
+HTMLLIAccessible::GetBounds(int32_t* aX, int32_t* aY,
+                            int32_t* aWidth, int32_t* aHeight)
 {
   nsresult rv = AccessibleWrap::GetBounds(aX, aY, aWidth, aHeight);
   if (NS_FAILED(rv) || !mBullet || mBullet->IsInside())
     return rv;
 
-  PRInt32 bulletX = 0, bulletY = 0, bulletWidth = 0, bulletHeight = 0;
+  int32_t bulletX = 0, bulletY = 0, bulletWidth = 0, bulletHeight = 0;
   rv = mBullet->GetBounds(&bulletX, &bulletY, &bulletWidth, &bulletHeight);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -185,15 +185,15 @@ HTMLListBulletAccessible::NativeRole()
   return roles::STATICTEXT;
 }
 
-PRUint64
+uint64_t
 HTMLListBulletAccessible::NativeState()
 {
   return LeafAccessible::NativeState() | states::READONLY;
 }
 
 void
-HTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
-                                       PRUint32 aLength)
+HTMLListBulletAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
+                                       uint32_t aLength)
 {
   nsAutoString bulletText;
   nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());

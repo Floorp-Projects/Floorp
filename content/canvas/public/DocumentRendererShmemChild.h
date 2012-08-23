@@ -19,10 +19,10 @@ public:
     DocumentRendererShmemChild();
     virtual ~DocumentRendererShmemChild();
 
-    bool RenderDocument(nsIDOMWindow *window, const PRInt32& x,
-                        const PRInt32& y, const PRInt32& w,
-                        const PRInt32& h, const nsString& aBGColor,
-                        const PRUint32& flags, const bool& flush,
+    bool RenderDocument(nsIDOMWindow *window, const int32_t& x,
+                        const int32_t& y, const int32_t& w,
+                        const int32_t& h, const nsString& aBGColor,
+                        const uint32_t& flags, const bool& flush,
                         const gfxMatrix& aMatrix,
                         Shmem& data);
 

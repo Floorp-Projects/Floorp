@@ -160,7 +160,7 @@ XRemoteClient::SendCommand (const char *aProgram, const char *aUsername,
 nsresult
 XRemoteClient::SendCommandLine (const char *aProgram, const char *aUsername,
                                 const char *aProfile,
-                                PRInt32 argc, char **argv,
+                                int32_t argc, char **argv,
                                 const char* aDesktopStartupID,
                                 char **aResponse, bool *aWindowFound)
 {
@@ -187,7 +187,7 @@ HandleBadWindow(Display *display, XErrorEvent *event)
 nsresult
 XRemoteClient::SendCommandInternal(const char *aProgram, const char *aUsername,
                                    const char *aProfile, const char *aCommand,
-                                   PRInt32 argc, char **argv,
+                                   int32_t argc, char **argv,
                                    const char* aDesktopStartupID,
                                    char **aResponse, bool *aWindowFound)
 {
@@ -652,7 +652,7 @@ XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
   // the command string. Firefox ignores all lines but the first.
   static char desktopStartupPrefix[] = "\nDESKTOP_STARTUP_ID=";
 
-  PRInt32 len = strlen(aCommand);
+  int32_t len = strlen(aCommand);
   if (aDesktopStartupID) {
     len += sizeof(desktopStartupPrefix) - 1 + strlen(aDesktopStartupID);
   }
@@ -689,7 +689,7 @@ estrcpy(const char* s, char* d)
 }
 
 nsresult
-XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
+XRemoteClient::DoSendCommandLine(Window aWindow, int32_t argc, char **argv,
                                  const char* aDesktopStartupID,
                                  char **aResponse, bool *aDestroyed)
 {
@@ -699,7 +699,7 @@ XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
   if (!getcwd(cwdbuf, MAX_PATH))
     return NS_ERROR_UNEXPECTED;
 
-  // the commandline property is constructed as an array of PRInt32
+  // the commandline property is constructed as an array of int32_t
   // followed by a series of null-terminated strings:
   //
   // [argc][offsetargv0][offsetargv1...]<workingdir>\0<argv[0]>\0argv[1]...\0
@@ -707,17 +707,17 @@ XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
 
   static char desktopStartupPrefix[] = " DESKTOP_STARTUP_ID=";
 
-  PRInt32 argvlen = strlen(cwdbuf);
+  int32_t argvlen = strlen(cwdbuf);
   for (int i = 0; i < argc; ++i) {
-    PRInt32 len = strlen(argv[i]);
+    int32_t len = strlen(argv[i]);
     if (i == 0 && aDesktopStartupID) {
       len += sizeof(desktopStartupPrefix) - 1 + strlen(aDesktopStartupID);
     }
     argvlen += len;
   }
 
-  PRInt32* buffer = (PRInt32*) malloc(argvlen + argc + 1 +
-                                      sizeof(PRInt32) * (argc + 1));
+  int32_t* buffer = (int32_t*) malloc(argvlen + argc + 1 +
+                                      sizeof(int32_t) * (argc + 1));
   if (!buffer)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -737,7 +737,7 @@ XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
   }
 
 #ifdef DEBUG_bsmedberg
-  PRInt32   debug_argc   = TO_LITTLE_ENDIAN32(*buffer);
+  int32_t   debug_argc   = TO_LITTLE_ENDIAN32(*buffer);
   char *debug_workingdir = (char*) (buffer + argc + 1);
 
   printf("Sending command line:\n"
@@ -746,7 +746,7 @@ XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
          debug_workingdir,
          debug_argc);
 
-  PRInt32  *debug_offset = buffer + 1;
+  int32_t  *debug_offset = buffer + 1;
   for (int debug_i = 0; debug_i < debug_argc; ++debug_i)
     printf("  argv[%i]:\t%s\n", debug_i,
            ((char*) buffer) + TO_LITTLE_ENDIAN32(debug_offset[debug_i]));

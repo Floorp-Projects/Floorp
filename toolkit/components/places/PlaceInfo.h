@@ -25,16 +25,16 @@ public:
 
   typedef nsTArray< nsCOMPtr<mozIVisitInfo> > VisitsArray;
 
-  PlaceInfo(PRInt64 aId, const nsCString& aGUID, already_AddRefed<nsIURI> aURI,
-            const nsString& aTitle, PRInt64 aFrecency,
+  PlaceInfo(int64_t aId, const nsCString& aGUID, already_AddRefed<nsIURI> aURI,
+            const nsString& aTitle, int64_t aFrecency,
             const VisitsArray& aVisits);
 
 private:
-  const PRInt64 mId;
+  const int64_t mId;
   const nsCString mGUID;
   nsCOMPtr<nsIURI> mURI;
   const nsString mTitle;
-  const PRInt64 mFrecency;
+  const int64_t mFrecency;
   const VisitsArray mVisits;
 };
 

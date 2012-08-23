@@ -246,7 +246,7 @@ NS_IMETHODIMP nsChromeTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aS
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
-   PRInt32 aCX, PRInt32 aCY)
+   int32_t aCX, int32_t aCY)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SizeShellTo(aShellItem, aCX, aCY);
@@ -267,7 +267,7 @@ nsChromeTreeOwner::SetPersistence(bool aPersistPosition,
   docShellElement->GetAttribute(gLiterals->kPersist, persistString);
 
   bool saveString = false;
-  PRInt32 index;
+  int32_t index;
 
 #define FIND_PERSIST_STRING(aString, aCond)            \
   index = persistString.Find(aString);                 \
@@ -319,7 +319,7 @@ nsChromeTreeOwner::GetPersistence(bool* aPersistPosition,
 }
 
 NS_IMETHODIMP
-nsChromeTreeOwner::GetTargetableShellCount(PRUint32* aResult)
+nsChromeTreeOwner::GetTargetableShellCount(uint32_t* aResult)
 {
   *aResult = 0;
   return NS_OK;
@@ -330,7 +330,7 @@ nsChromeTreeOwner::GetTargetableShellCount(PRUint32* aResult)
 //*****************************************************************************   
 
 NS_IMETHODIMP nsChromeTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
-   nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
+   nsIWidget* parentWidget, int32_t x, int32_t y, int32_t cx, int32_t cy)   
 {
    // Ignore widget parents for now.  Don't think those are a vaild thing to call.
    NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, false), NS_ERROR_FAILURE);
@@ -350,39 +350,39 @@ NS_IMETHODIMP nsChromeTreeOwner::Destroy()
    return mXULWindow->Destroy();
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::SetPosition(PRInt32 x, PRInt32 y)
+NS_IMETHODIMP nsChromeTreeOwner::SetPosition(int32_t x, int32_t y)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetPosition(x, y);
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::GetPosition(PRInt32* x, PRInt32* y)
+NS_IMETHODIMP nsChromeTreeOwner::GetPosition(int32_t* x, int32_t* y)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetPosition(x, y);
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::SetSize(PRInt32 cx, PRInt32 cy, bool fRepaint)
+NS_IMETHODIMP nsChromeTreeOwner::SetSize(int32_t cx, int32_t cy, bool fRepaint)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetSize(cx, cy, fRepaint);
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::GetSize(PRInt32* cx, PRInt32* cy)
+NS_IMETHODIMP nsChromeTreeOwner::GetSize(int32_t* cx, int32_t* cy)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetSize(cx, cy);
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
-   PRInt32 cy, bool fRepaint)
+NS_IMETHODIMP nsChromeTreeOwner::SetPositionAndSize(int32_t x, int32_t y, int32_t cx,
+   int32_t cy, bool fRepaint)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetPositionAndSize(x, y, cx, cy, fRepaint);
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
-   PRInt32* cy)
+NS_IMETHODIMP nsChromeTreeOwner::GetPositionAndSize(int32_t* x, int32_t* y, int32_t* cx,
+   int32_t* cy)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetPositionAndSize(x, y, cx, cy);
@@ -484,10 +484,10 @@ NS_IMETHODIMP nsChromeTreeOwner::SetTitle(const PRUnichar* aTitle)
 NS_IMETHODIMP
 nsChromeTreeOwner::OnProgressChange(nsIWebProgress* aWebProgress,
                                     nsIRequest* aRequest,
-                                    PRInt32 aCurSelfProgress,
-                                    PRInt32 aMaxSelfProgress, 
-                                    PRInt32 aCurTotalProgress,
-                                    PRInt32 aMaxTotalProgress)
+                                    int32_t aCurSelfProgress,
+                                    int32_t aMaxSelfProgress, 
+                                    int32_t aCurTotalProgress,
+                                    int32_t aMaxTotalProgress)
 {
    return NS_OK;
 }
@@ -495,7 +495,7 @@ nsChromeTreeOwner::OnProgressChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsChromeTreeOwner::OnStateChange(nsIWebProgress* aWebProgress,
                                  nsIRequest* aRequest,
-                                 PRUint32 aProgressStateFlags,
+                                 uint32_t aProgressStateFlags,
                                  nsresult aStatus)
 {
    return NS_OK;
@@ -504,7 +504,7 @@ nsChromeTreeOwner::OnStateChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP nsChromeTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
                                                   nsIRequest* aRequest,
                                                   nsIURI* aLocation,
-                                                  PRUint32 aFlags)
+                                                  uint32_t aFlags)
 {
   bool itsForYou = true;
 
@@ -543,7 +543,7 @@ nsChromeTreeOwner::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP 
 nsChromeTreeOwner::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                     nsIRequest *aRequest, 
-                                    PRUint32 state)
+                                    uint32_t state)
 {
     return NS_OK;
 }

@@ -68,7 +68,7 @@ public:
     // Called by channels before a redirect happens. This notifies the global
     // redirect observers.
     nsresult AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
-                                    PRUint32 flags,
+                                    uint32_t flags,
                                     nsAsyncRedirectVerifyHelper *helper);
 
     // Gets the array of registered content sniffers
@@ -94,8 +94,8 @@ private:
 
     NS_HIDDEN_(nsresult) GetCachedProtocolHandler(const char *scheme,
                                                   nsIProtocolHandler* *hdlrResult,
-                                                  PRUint32 start=0,
-                                                  PRUint32 end=0);
+                                                  uint32_t start=0,
+                                                  uint32_t end=0);
     NS_HIDDEN_(nsresult) CacheProtocolHandler(const char *scheme,
                                               nsIProtocolHandler* hdlr);
 
@@ -108,7 +108,7 @@ private:
     nsresult InitializeNetworkLinkService();
 
     // consolidated helper function
-    void LookupProxyInfo(nsIURI *aURI, nsIURI *aProxyURI, PRUint32 aProxyFlags,
+    void LookupProxyInfo(nsIURI *aURI, nsIURI *aProxyURI, uint32_t aProxyFlags,
                          nsCString *aScheme, nsIProxyInfo **outPI);
 
 private:
@@ -136,13 +136,13 @@ private:
     nsCategoryCache<nsIChannelEventSink> mChannelEventSinks;
     nsCategoryCache<nsIContentSniffer>   mContentSniffers;
 
-    nsTArray<PRInt32>                    mRestrictedPortList;
+    nsTArray<int32_t>                    mRestrictedPortList;
 
     bool                                 mAutoDialEnabled;
 public:
     // Used for all default buffer sizes that necko allocates.
-    static PRUint32   gDefaultSegmentSize;
-    static PRUint32   gDefaultSegmentCount;
+    static uint32_t   gDefaultSegmentSize;
+    static uint32_t   gDefaultSegmentCount;
 };
 
 /**
