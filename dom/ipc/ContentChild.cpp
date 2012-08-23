@@ -94,6 +94,9 @@
 #include "nsDOMFile.h"
 #include "nsIRemoteBlob.h"
 #include "StructuredCloneUtils.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsContentUtils.h"
+#include "nsIPrincipal.h"
 
 using namespace mozilla::docshell;
 using namespace mozilla::dom::devicestorage;
@@ -841,7 +844,18 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
   NS_ABORT_IF_FALSE(permissionManager, 
                    "We have no permissionManager in the Content process !");
 
-  permissionManager->AddInternal(nsCString(permission.host),
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + nsCString(permission.host));
+  NS_ENSURE_TRUE(uri, true);
+
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  MOZ_ASSERT(secMan);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv = secMan->GetNoAppCodebasePrincipal(uri, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, true);
+
+  permissionManager->AddInternal(principal,
                                  nsCString(permission.type),
                                  permission.capability,
                                  0,
