@@ -345,7 +345,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     }
 
     YUVImage yuv(mBackBufferY, mBackBufferU, mBackBufferV,
-                 data->GetPictureRect(), 0);
+                 data->GetPictureRect());
 
     BasicManager()->PaintedImage(BasicManager()->Hold(this),
                                  yuv);
