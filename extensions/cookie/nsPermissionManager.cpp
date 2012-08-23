@@ -635,6 +635,8 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
 
       if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(host,
+                                      entry->GetKey()->mAppId,
+                                      entry->GetKey()->mIsInBrowserElement,
                                       mTypeArray[typeIndex],
                                       aPermission,
                                       aExpireType,
@@ -661,6 +663,8 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
 
       if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(host,
+                                      entry->GetKey()->mAppId,
+                                      entry->GetKey()->mIsInBrowserElement,
                                       mTypeArray[typeIndex],
                                       oldPermissionEntry.mPermission,
                                       oldPermissionEntry.mExpireType,
@@ -681,6 +685,8 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
 
       if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(host,
+                                      entry->GetKey()->mAppId,
+                                      entry->GetKey()->mIsInBrowserElement,
                                       mTypeArray[typeIndex],
                                       aPermission,
                                       aExpireType,
@@ -982,6 +988,8 @@ AddPermissionsToList(nsPermissionManager::PermissionHashKey* entry, void *arg)
     nsPermissionManager::PermissionEntry& permEntry = entry->GetPermissions()[i];
 
     nsPermission *perm = new nsPermission(entry->GetKey()->mHost,
+                                          entry->GetKey()->mAppId,
+                                          entry->GetKey()->mIsInBrowserElement,
                                           data->types->ElementAt(permEntry.mType),
                                           permEntry.mPermission,
                                           permEntry.mExpireType,
@@ -1070,6 +1078,8 @@ nsPermissionManager::GetTypeIndex(const char *aType,
 // set into an nsIPermission.
 void
 nsPermissionManager::NotifyObserversWithPermission(const nsACString &aHost,
+                                                   uint32_t          aAppId,
+                                                   bool              aIsInBrowserElement,
                                                    const nsCString  &aType,
                                                    uint32_t          aPermission,
                                                    uint32_t          aExpireType,
@@ -1077,7 +1087,8 @@ nsPermissionManager::NotifyObserversWithPermission(const nsACString &aHost,
                                                    const PRUnichar  *aData)
 {
   nsCOMPtr<nsIPermission> permission =
-    new nsPermission(aHost, aType, aPermission, aExpireType, aExpireTime);
+    new nsPermission(aHost, aAppId, aIsInBrowserElement, aType, aPermission,
+                     aExpireType, aExpireTime);
   if (permission)
     NotifyObservers(permission, aData);
 }
