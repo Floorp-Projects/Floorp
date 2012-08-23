@@ -26,13 +26,8 @@ function go() {
   runAll(steps);
 }
 
-steps = [setUp, no_args, parse_error, invalid_manifest, permission_denied, invalid_content,
-         mgmt_api_errors, mgmt_api_add_listener, tearDown];
-
-function setUp(next) {
-  debug("in " + arguments.callee.name);
-  uninstallAll(next);
-}
+steps = [no_args, parse_error, invalid_manifest, permission_denied, invalid_content,
+         mgmt_api_errors, mgmt_api_add_listener, uninstall_apps, tearDown];
 
 function no_args(next)  {
   debug("in " + arguments.callee.name);
@@ -78,6 +73,15 @@ function mgmt_api_add_listener(next) {
   debug("in " + arguments.callee.name);
   onIframeLoad("no_delegated_install", todo, next);
   document.getElementById("no_delegated_install").contentWindow.postMessage("mgmt.event_error", '*');
+}
+
+function uninstall_apps(next) {
+  debug("in " + arguments.callee.name);
+  var appURL = SERVERS['bad_content_type'];
+  uninstall(appURL, ok, function() {
+    appURL = SERVERS['no_delegated_install'];
+    uninstall(appURL, ok, function() { next(); });
+  });
 }
 
 </script> 
