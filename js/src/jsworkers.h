@@ -55,6 +55,7 @@ struct WorkerThreadState
 
     void wait(CondVar which, uint32_t timeoutMillis = 0);
     void notify(CondVar which);
+    void notifyAll(CondVar which);
 
   private:
 
