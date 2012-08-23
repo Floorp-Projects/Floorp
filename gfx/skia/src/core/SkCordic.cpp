@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2006 The Android Open Source Project
  *
@@ -6,9 +5,8 @@
  * found in the LICENSE file.
  */
 
-
 #include "SkCordic.h"
-#include "SkMath.h"
+#include "SkMathPriv.h"
 #include "Sk64.h"
 
 // 0x20000000 equals pi / 4
@@ -20,7 +18,7 @@ const int32_t kATanDegrees[] = { 0x20000000,
 
 const int32_t kFixedInvGain1 = 0x18bde0bb;  // 0.607252935
 
-static void SkCircularRotation(int32_t* x0, int32_t* y0, int32_t* z0) 
+static void SkCircularRotation(int32_t* x0, int32_t* y0, int32_t* z0)
 {
     int32_t t = 0;
     int32_t x = *x0;
@@ -30,7 +28,7 @@ static void SkCircularRotation(int32_t* x0, int32_t* y0, int32_t* z0)
    do {
         int32_t x1 = y >> t;
         int32_t y1 = x >> t;
-        int32_t tan = *tanPtr++;    
+        int32_t tan = *tanPtr++;
         if (z >= 0) {
             x -= x1;
             y += y1;
@@ -51,7 +49,7 @@ SkFixed SkCordicSinCos(SkFixed radians, SkFixed* cosp)
     int32_t scaledRadians = radians * 0x28be;   // scale radians to 65536 / PI()
     int quadrant = scaledRadians >> 30;
     quadrant += 1;
-    if (quadrant & 2) 
+    if (quadrant & 2)
         scaledRadians = -scaledRadians + 0x80000000;
     /* |a| <= 90 degrees as a 1.31 number */
     SkFixed sin = 0;
@@ -67,14 +65,14 @@ SkFixed SkCordicSinCos(SkFixed radians, SkFixed* cosp)
     return sin;
 }
 
-SkFixed SkCordicTan(SkFixed a) 
+SkFixed SkCordicTan(SkFixed a)
 {
     int32_t cos;
     int32_t sin = SkCordicSinCos(a, &cos);
     return SkFixedDiv(sin, cos);
 }
 
-static int32_t SkCircularVector(int32_t* y0, int32_t* x0, int32_t vecMode) 
+static int32_t SkCircularVector(int32_t* y0, int32_t* x0, int32_t vecMode)
 {
     int32_t x = *x0;
     int32_t y = *y0;
@@ -84,7 +82,7 @@ static int32_t SkCircularVector(int32_t* y0, int32_t* x0, int32_t vecMode)
    do {
         int32_t x1 = y >> t;
         int32_t y1 = x >> t;
-        int32_t tan = *tanPtr++;    
+        int32_t tan = *tanPtr++;
         if (y < vecMode) {
             x -= x1;
             y += y1;
@@ -135,7 +133,7 @@ SkFixed SkCordicATan2(SkFixed y, SkFixed x) {
     return result;
 }
 
-const int32_t kATanHDegrees[] = { 
+const int32_t kATanHDegrees[] = {
     0x1661788D, 0xA680D61, 0x51EA6FC, 0x28CBFDD, 0x1460E34,
     0xA2FCE8, 0x517D2E, 0x28BE6E, 0x145F32,
     0xA2F98, 0x517CC, 0x28BE6, 0x145F3, 0xA2F9, 0x517C,
@@ -144,7 +142,7 @@ const int32_t kATanHDegrees[] = {
 
 const int32_t kFixedInvGain2 = 0x31330AAA;  // 1.207534495
 
-static void SkHyperbolic(int32_t* x0, int32_t* y0, int32_t* z0, int mode) 
+static void SkHyperbolic(int32_t* x0, int32_t* y0, int32_t* z0, int mode)
 {
     int32_t t = 1;
     int32_t x = *x0;
@@ -155,7 +153,7 @@ static void SkHyperbolic(int32_t* x0, int32_t* y0, int32_t* z0, int mode)
     do {
         int32_t x1 = y >> t;
         int32_t y1 = x >> t;
-        int32_t tan = *tanPtr++;    
+        int32_t tan = *tanPtr++;
         int count = 2 + (k >> 31);
         if (++k == 1)
             k = -2;
@@ -197,13 +195,11 @@ SkFixed SkCordicExp(SkFixed a) {
 
 #ifdef SK_DEBUG
 
-#ifdef SK_CAN_USE_FLOAT
-    #include "SkFloatingPoint.h"
-#endif
+#include "SkFloatingPoint.h"
 
 void SkCordic_UnitTest()
 {
-#if defined(SK_SUPPORT_UNITTEST) && defined(SK_CAN_USE_FLOAT)
+#if defined(SK_SUPPORT_UNITTEST)
     float val;
     for (float angle = -720; angle < 720; angle += 30) {
         float radian = angle * 3.1415925358f / 180.0f;

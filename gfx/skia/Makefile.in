@@ -22,23 +22,31 @@ DEFINES += -DSK_A32_SHIFT=24 -DSK_R32_SHIFT=16 -DSK_G32_SHIFT=8 -DSK_B32_SHIFT=0
 LOCAL_INCLUDES += \
 	-I$(srcdir)/include/core \
 	-I$(srcdir)/include/config \
+	-I$(srcdir)/include/gpu \
+	-I$(srcdir)/include/pipe \
 	-I$(srcdir)/include/ports \
-	-I$(srcdir)/src/core \
 	-I$(srcdir)/include/images \
 	-I$(srcdir)/include/utils \
 	-I$(srcdir)/include/utils/mac \
 	-I$(srcdir)/include/utils/win \
 	-I$(srcdir)/include/views \
 	-I$(srcdir)/include/effects \
+	-I$(srcdir)/src/core \
+	-I$(srcdir)/src/image \
+	-I$(srcdir)/src/gpu \
 	-I$(srcdir)/src/utils \
 	-I$(srcdir)/src/sfnt \
 	$(NULL)
 
 VPATH += \
 	$(srcdir)/src/core \
+	$(srcdir)/src/image \
+	$(srcdir)/src/images \
+	$(srcdir)/src/pipe \
 	$(srcdir)/src/ports \
 	$(srcdir)/src/opts \
 	$(srcdir)/src/effects \
+	$(srcdir)/src/effects/gradients \
 	$(srcdir)/src/utils \
 	$(srcdir)/src/utils/mac \
 	$(srcdir)/src/sfnt \
@@ -47,12 +55,9 @@ VPATH += \
 EXPORTS_skia = \
 	include/core/Sk64.h \
 	include/core/SkAdvancedTypefaceMetrics.h \
-	include/core/SkAutoKern.h \
 	include/core/SkBitmap.h \
 	include/core/SkBlitRow.h \
-	include/core/SkBlitter.h \
 	include/core/SkBounder.h \
-	include/core/SkBuffer.h \
 	include/core/SkCanvas.h \
 	include/core/SkChunkAlloc.h \
 	include/core/SkClipStack.h \
@@ -60,28 +65,25 @@ EXPORTS_skia = \
 	include/core/SkColorFilter.h \
 	include/core/SkColorPriv.h \
 	include/core/SkColorShader.h \
+	include/core/SkColorTable.h \
 	include/core/SkComposeShader.h \
 	include/core/SkData.h \
 	include/core/SkDeque.h \
-	include/core/SkDescriptor.h \
 	include/core/SkDevice.h \
-	include/core/SkDeviceProfile.h \
 	include/core/SkDither.h \
 	include/core/SkDraw.h \
 	include/core/SkDrawFilter.h \
 	include/core/SkDrawLooper.h \
-	include/core/SkEdgeClipper.h \
 	include/core/SkEmptyShader.h \
 	include/core/SkEndian.h \
-	include/core/SkFDot6.h \
 	include/core/SkFixed.h \
 	include/core/SkFlattenable.h \
 	include/core/SkFloatBits.h \
 	include/core/SkFloatingPoint.h \
 	include/core/SkFontHost.h \
 	include/core/SkGeometry.h \
-	include/core/SkGlobals.h \
 	include/core/SkGraphics.h \
+	include/core/SkInstCnt.h \
 	include/core/SkLineClipper.h \
 	include/core/SkMMapStream.h \
 	include/core/SkMallocPixelRef.h \
@@ -91,38 +93,28 @@ EXPORTS_skia = \
 	include/core/SkMatrix.h \
 	include/core/SkMetaData.h \
 	include/core/SkOSFile.h \
-	include/core/SkOrderedReadBuffer.h \
-	include/core/SkOrderedWriteBuffer.h \
 	include/core/SkPackBits.h \
 	include/core/SkPaint.h \
 	include/core/SkPath.h \
 	include/core/SkPathEffect.h \
 	include/core/SkPathMeasure.h \
-	include/core/SkPerspIter.h \
 	include/core/SkPicture.h \
 	include/core/SkPixelRef.h \
 	include/core/SkPoint.h \
 	include/core/SkPostConfig.h \
 	include/core/SkPreConfig.h \
-	include/core/SkPtrRecorder.h \
 	include/core/SkRandom.h \
 	include/core/SkRasterizer.h \
 	include/core/SkReader32.h \
 	include/core/SkRect.h \
 	include/core/SkRefCnt.h \
-	include/core/SkRefDict.h \
 	include/core/SkRegion.h \
-	include/core/SkRelay.h \
 	include/core/SkScalar.h \
 	include/core/SkScalarCompare.h \
-	include/core/SkScalerContext.h \
-	include/core/SkScan.h \
 	include/core/SkShader.h \
-	include/core/SkShape.h \
 	include/core/SkSize.h \
 	include/core/SkStream.h \
 	include/core/SkString.h \
-	include/core/SkStroke.h \
 	include/core/SkTDArray.h \
 	include/core/SkTDStack.h \
 	include/core/SkTDict.h \
@@ -162,10 +154,13 @@ CPPSRCS = \
 	SkAAClip.cpp \
 	SkAdvancedTypefaceMetrics.cpp \
 	SkAlphaRuns.cpp \
+	SkBBoxRecord.cpp \
+	SkBBoxHierarchyRecord.cpp \
 	SkBase64.cpp \
 	SkBitSet.cpp \
 	SkBitmap.cpp \
 	SkBitmapCache.cpp \
+	SkBitmapHeap.cpp \
 	SkBitmapProcShader.cpp \
 	SkBitmapProcState.cpp \
 	SkBitmapProcState_matrixProcs.cpp \
@@ -188,13 +183,13 @@ CPPSRCS = \
 	SkBuffer.cpp \
 	SkCanvas.cpp \
 	SkChunkAlloc.cpp \
-	SkClampRange.cpp \
 	SkClipStack.cpp \
 	SkColor.cpp \
 	SkColorFilter.cpp \
 	SkColorFilters.cpp \
 	SkColorMatrix.cpp \
 	SkColorTable.cpp \
+	SkClampRange.cpp \
 	SkComposeShader.cpp \
 	SkConcaveToTriangles.cpp \
 	SkConfig8888.cpp \
@@ -202,6 +197,7 @@ CPPSRCS = \
 	SkCubicClipper.cpp \
 	SkDashPathEffect.cpp \
 	SkData.cpp \
+	SkDataPixelRef.cpp \
 	SkDebug.cpp \
 	SkDeferredCanvas.cpp \
 	SkDeque.cpp \
@@ -214,26 +210,37 @@ CPPSRCS = \
 	SkEdgeClipper.cpp \
 	SkFilterProc.cpp \
 	SkFlattenable.cpp \
+	SkFlattenableBuffers.cpp \
 	SkFloat.cpp \
 	SkFloatBits.cpp \
+	SkFontDescriptor.cpp \
 	SkFontHost.cpp \
 	SkGeometry.cpp \
-	SkGlobals.cpp \
-	SkGlobals_global.cpp \
 	SkGlyphCache.cpp \
 	SkGradientShader.cpp \
 	SkGraphics.cpp \
+	SkGPipeRead.cpp \
+	SkGPipeWrite.cpp \
+	SkImage.cpp \
+	SkImage_Codec.cpp \
+	SkImage_Picture.cpp \
+	SkImage_Raster.cpp \
+	SkImageDecoder.cpp \
+	SkImageDecoder_Factory.cpp \
+	SkImageFilter.cpp \
+	SkImagePriv.cpp \
 	SkLayerDrawLooper.cpp \
 	SkLayerRasterizer.cpp \
+	SkLinearGradient.cpp \
 	SkLineClipper.cpp \
 	SkMallocPixelRef.cpp \
 	SkMask.cpp \
 	SkMaskFilter.cpp \
+	SkMaskGamma.cpp \
 	SkMath.cpp \
 	SkMatrix.cpp \
-	SkMemory_mozalloc.cpp \
+	SkMemory_malloc.cpp \
 	SkMetaData.cpp \
-	SkMorphologyImageFilter.cpp \
 	SkOrderedReadBuffer.cpp \
 	SkOrderedWriteBuffer.cpp \
 	SkOSFile_stdio.cpp \
@@ -248,11 +255,14 @@ CPPSRCS = \
 	SkPictureFlat.cpp \
 	SkPicturePlayback.cpp \
 	SkPictureRecord.cpp \
+	SkPictureStateTree.cpp \
 	SkPixelRef.cpp \
 	SkPoint.cpp \
 	SkProcSpriteBlitter.cpp \
 	SkPtrRecorder.cpp \
 	SkQuadClipper.cpp \
+	SkRTree.cpp \
+	SkRadialGradient.cpp \
 	SkRasterClip.cpp \
 	SkRasterizer.cpp \
 	SkRect.cpp \
@@ -268,15 +278,20 @@ CPPSRCS = \
 	SkScan_Hairline.cpp \
 	SkScan_Path.cpp \
 	SkShader.cpp \
-	SkShape.cpp \
 	SkSpriteBlitter_ARGB32.cpp \
 	SkSpriteBlitter_RGB16.cpp \
 	SkStream.cpp \
 	SkString.cpp \
 	SkStroke.cpp \
 	SkStrokerPriv.cpp \
+	SkSurface.cpp \
+	SkSurface_Raster.cpp \
+	SkSurface_Picture.cpp \
+	SkSweepGradient.cpp \
 	SkTLS.cpp \
 	SkTSearch.cpp \
+	SkTwoPointConicalGradient.cpp \
+	SkTwoPointRadialGradient.cpp \
 	SkTypeface.cpp \
 	SkTypefaceCache.cpp \
 	SkUnPreMultiply.cpp \
@@ -300,8 +315,8 @@ ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
 	SkDebug_android.cpp \
 	SkFontHost_android_old.cpp \
-	SkFontHost_gamma.cpp \
 	SkFontHost_FreeType.cpp \
+	SkFontHost_FreeType_common.cpp \
 	SkFontHost_tables.cpp \
 	SkMMapStream.cpp \
 	SkTime_Unix.cpp \
@@ -320,7 +335,7 @@ endif
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
 	SkFontHost_FreeType.cpp \
-	SkFontHost_gamma_none.cpp \
+	SkFontHost_FreeType_common.cpp \
 	SkFontHost_linux.cpp \
 	SkFontHost_tables.cpp \
 	SkTime_Unix.cpp \
@@ -334,7 +349,7 @@ endif
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
 	SkFontHost_FreeType.cpp \
-	SkFontHost_gamma_none.cpp \
+	SkFontHost_FreeType_common.cpp \
 	SkFontHost_tables.cpp \
 	SkMMapStream.cpp \
 	SkOSFile.cpp \
@@ -360,6 +375,9 @@ CPPSRCS += \
 	SkFontHost_sandbox_none.cpp \
 	SkTime_win.cpp \
 	$(NULL)
+ifdef _MSC_VER
+HAVE_COMPILER_FLAG_MSSSE3=1
+endif
 endif
 
 ifneq (,$(INTEL_ARCHITECTURE))
@@ -406,4 +424,11 @@ endif
 ifdef GNU_CC
 CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
 CFLAGS := $(filter-out -pedantic,$(CFLAGS))
+endif
+
+ifeq ($(CPU_ARCH)_$(GNU_CC),arm_1)
+# The assembly uses the frame pointer register (r7 in Thumb/r11 in
+# ARM), the compiler doesn't like that.
+CXXFLAGS := $(filter-out -fno-omit-frame-pointer,$(CXXFLAGS)) -fomit-frame-pointer
+CFLAGS := $(filter-out -fno-omit-frame-pointer,$(CFLAGS)) -fomit-frame-pointer
 endif

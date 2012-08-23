@@ -11,17 +11,28 @@
 #include "GrRefCnt.h"
 #include "GrNoncopyable.h"
 #include "GrProgramStageFactory.h"
+#include "GrCustomStageUnitTest.h"
+#include "GrTextureAccess.h"
 
 class GrContext;
+class GrTexture;
+class SkString;
 
 /** Provides custom vertex shader, fragment shader, uniform data for a
-    particular stage of the Ganesh shading pipeline. 
+    particular stage of the Ganesh shading pipeline.
     Subclasses must have a function that produces a human-readable name:
         static const char* Name();
+    GrCustomStage objects *must* be immutable: after being constructed,
+    their fields may not change.  (Immutability isn't actually required
+    until they've been used in a draw call, but supporting that would require
+    setters and getters that could fail, copy-on-write, or deep copying of these
+    objects when they're stored by a GrGLProgramStage.)
   */
 class GrCustomStage : public GrRefCnt {
 
 public:
+    SK_DECLARE_INST_COUNT(GrCustomStage)
+
     typedef GrProgramStageFactory::StageKey StageKey;
 
     GrCustomStage();
@@ -41,7 +52,7 @@ public:
         Example:
         class MyCustomStage : public GrCustomStage {
         ...
-            virtual const GrProgramStageFactory& getFactory() const 
+            virtual const GrProgramStageFactory& getFactory() const
                                                             SK_OVERRIDE {
                 return GrTProgramStageFactory<MyCustomStage>::getInstance();
             }
@@ -50,21 +61,39 @@ public:
      */
     virtual const GrProgramStageFactory& getFactory() const = 0;
 
-    /** Returns true if the other custom stage will generate
-        equal output.
+    /** Returns true if the other custom stage will generate identical output.
         Must only be called if the two are already known to be of the
         same type (i.e.  they return the same value from getFactory()).
-        For equivalence (that they will generate the same
-        shader, but perhaps have different uniforms), check equality
-        of the stageKey produced by the GrProgramStageFactory. */
-    virtual bool isEqual(const GrCustomStage *) const = 0;
 
-     /** Human-meaningful string to identify this effect; may be embedded
-         in generated shader code. */
+        Equality is not the same thing as equivalence.
+        To test for equivalence (that they will generate the same
+        shader code, but may have different uniforms), check equality
+        of the stageKey produced by the GrProgramStageFactory:
+        a.getFactory().glStageKey(a) == b.getFactory().glStageKey(b).
+
+        The default implementation of this function returns true iff
+        the two stages have the same return value for numTextures() and
+        for texture() over all valid indicse.
+     */
+    virtual bool isEqual(const GrCustomStage&) const;
+
+    /** Human-meaningful string to identify this effect; may be embedded
+        in generated shader code. */
     const char* name() const { return this->getFactory().name(); }
 
-private:
+    virtual int numTextures() const;
 
+    /** Returns the access pattern for the texture at index. index must be valid according to
+        numTextures(). */
+    virtual const GrTextureAccess& textureAccess(int index) const;
+
+    /** Shortcut for textureAccess(index).texture(); */
+    GrTexture* texture(int index) const { return this->textureAccess(index).getTexture(); }
+
+    void* operator new(size_t size);
+    void operator delete(void* target);
+
+private:
     typedef GrRefCnt INHERITED;
 };
 

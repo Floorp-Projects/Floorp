@@ -8,6 +8,9 @@
 #include "SkPtrRecorder.h"
 #include "SkTSearch.h"
 
+SK_DEFINE_INST_COUNT(SkPtrSet)
+SK_DEFINE_INST_COUNT(SkNamedFactorySet)
+
 void SkPtrSet::reset() {
     Pair* p = fList.begin();
     Pair* stop = fList.end();
@@ -26,12 +29,12 @@ uint32_t SkPtrSet::find(void* ptr) const {
     if (NULL == ptr) {
         return 0;
     }
-    
+
     int count = fList.count();
     Pair pair;
     pair.fPtr = ptr;
-    
-    int index = SkTSearch<Pair>(fList.begin(), count, pair, sizeof(pair), &Cmp);
+
+    int index = SkTSearch<Pair, Cmp>(fList.begin(), count, pair, sizeof(pair));
     if (index < 0) {
         return 0;
     }
@@ -47,7 +50,7 @@ uint32_t SkPtrSet::add(void* ptr) {
     Pair pair;
     pair.fPtr = ptr;
 
-    int index = SkTSearch<Pair>(fList.begin(), count, pair, sizeof(pair), &Cmp);
+    int index = SkTSearch<Pair, Cmp>(fList.begin(), count, pair, sizeof(pair));
     if (index < 0) {
         index = ~index; // turn it back into an index for insertion
         this->incPtr(ptr);

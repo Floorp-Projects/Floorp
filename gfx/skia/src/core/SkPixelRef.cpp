@@ -6,8 +6,10 @@
  * found in the LICENSE file.
  */
 #include "SkPixelRef.h"
-#include "SkFlattenable.h"
+#include "SkFlattenableBuffers.h"
 #include "SkThread.h"
+
+SK_DEFINE_INST_COUNT(SkPixelRef)
 
 // must be a power-of-2. undef to just use 1 mutex
 #define PIXELREF_MUTEX_RING_COUNT       32
@@ -19,7 +21,7 @@
     SK_DECLARE_STATIC_MUTEX(gPixelRefMutex);
 #endif
 
-SkBaseMutex* get_default_mutex() {
+static SkBaseMutex* get_default_mutex() {
 #ifdef PIXELREF_MUTEX_RING_COUNT
     // atomic_inc might be overkill here. It may be fine if once in a while
     // we hit a race-condition and two subsequent calls get the same index...
@@ -32,7 +34,8 @@ SkBaseMutex* get_default_mutex() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern int32_t SkNextPixelRefGenerationID();
+int32_t SkNextPixelRefGenerationID();
+
 int32_t SkNextPixelRefGenerationID() {
     static int32_t  gPixelRefGenerationID;
     // do a loop in case our global wraps around, as we never want to
@@ -72,8 +75,8 @@ SkPixelRef::SkPixelRef(SkFlattenableReadBuffer& buffer, SkBaseMutex* mutex)
     fPixels = NULL;
     fColorTable = NULL; // we do not track ownership of this
     fLockCount = 0;
-    fGenerationID = 0;  // signal to rebuild
     fIsImmutable = buffer.readBool();
+    fGenerationID = buffer.readUInt();
     fPreLocked = false;
 }
 
@@ -89,6 +92,16 @@ void SkPixelRef::setPreLocked(void* pixels, SkColorTable* ctable) {
 void SkPixelRef::flatten(SkFlattenableWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
     buffer.writeBool(fIsImmutable);
+    // We write the gen ID into the picture for within-process recording. This
+    // is safe since the same genID will never refer to two different sets of
+    // pixels (barring overflow). However, each process has its own "namespace"
+    // of genIDs. So for cross-process recording we write a zero which will
+    // trigger assignment of a new genID in playback.
+    if (buffer.isCrossProcess()) {
+        buffer.writeUInt(0);
+    } else {
+        buffer.writeUInt(fGenerationID);
+    }
 }
 
 void SkPixelRef::lockPixels() {
@@ -105,7 +118,7 @@ void SkPixelRef::lockPixels() {
 
 void SkPixelRef::unlockPixels() {
     SkASSERT(!fPreLocked || SKPIXELREF_PRELOCKED_LOCKCOUNT == fLockCount);
-    
+
     if (!fPreLocked) {
         SkAutoMutexAcquire  ac(*fMutex);
 

@@ -27,6 +27,8 @@ class SkGpuRenderTarget;
 
 class SK_API SkDevice : public SkRefCnt {
 public:
+    SK_DECLARE_INST_COUNT(SkDevice)
+
     /**
      *  Construct a new device with the specified bitmap as its backend. It is
      *  valid for the bitmap to have no pixels associated with it. In that case,
@@ -136,6 +138,34 @@ public:
      */
     const SkIPoint& getOrigin() const { return fOrigin; }
 
+    /**
+     * onAttachToCanvas is invoked whenever a device is installed in a canvas
+     * (i.e., setDevice, saveLayer (for the new device created by the save),
+     * and SkCanvas' SkDevice & SkBitmap -taking ctors). It allows the
+     * devices to prepare for drawing (e.g., locking their pixels, etc.)
+     */
+    virtual void onAttachToCanvas(SkCanvas* canvas) {
+        SkASSERT(!fAttachedToCanvas);
+        this->lockPixels();
+#ifdef SK_DEBUG
+        fAttachedToCanvas = true;
+#endif
+    };
+
+    /**
+     * onDetachFromCanvas notifies a device that it will no longer be drawn to.
+     * It gives the device a chance to clean up (e.g., unlock its pixels). It
+     * is invoked from setDevice (for the displaced device), restore and
+     * possibly from SkCanvas' dtor.
+     */
+    virtual void onDetachFromCanvas() {
+        SkASSERT(fAttachedToCanvas);
+        this->unlockPixels();
+#ifdef SK_DEBUG
+        fAttachedToCanvas = false;
+#endif
+    };
+
 protected:
     enum Usage {
        kGeneral_Usage,
@@ -175,8 +205,9 @@ protected:
     /** Called when this device gains focus (i.e becomes the current device
         for drawing).
     */
-    virtual void gainFocus(SkCanvas*, const SkMatrix&, const SkRegion&,
-                           const SkClipStack&) {}
+    virtual void gainFocus(const SkMatrix&, const SkRegion&) {
+        SkASSERT(fAttachedToCanvas);
+    }
 
     /** Clears the entire device to the specified color (including alpha).
      *  Ignores the clip.
@@ -283,7 +314,7 @@ protected:
         access the pixels directly. Note: only the pixels field should be
         altered. The config/width/height/rowbytes must remain unchanged.
         @param bitmap The device's bitmap
-        @return Echo the bitmap parameter, or an alternate (shadow) bitmap 
+        @return Echo the bitmap parameter, or an alternate (shadow) bitmap
             maintained by the subclass.
     */
     virtual const SkBitmap& onAccessBitmap(SkBitmap*);
@@ -351,19 +382,11 @@ private:
     friend class SkDeviceFilteredPaint;
     friend class DeviceImageFilterProxy;
 
-    /**
-     * postSave is called by SkCanvas to inform the device that it has
-     * just completed a save operation. This allows derived
-     * classes to initialize their state-dependent caches.
-     */
-    virtual void postSave() {};
-
-    /**
-     * preRestore is called by SkCanvas right before it executes a restore
-     * operation. As the partner of postSave, it allows
-     * derived classes to clear their state-dependent caches.
-     */
-    virtual void preRestore() {};
+    friend class SkSurface_Raster;
+    // used to change the backend's pixels (and possibly config/rowbytes)
+    // but cannot change the width/height, so there should be no change to
+    // any clip information.
+    void replaceBitmapBackendForRasterSurface(const SkBitmap&);
 
     // just called by SkCanvas when built as a layer
     void setOrigin(int x, int y) { fOrigin.set(x, y); }
@@ -387,6 +410,12 @@ private:
     SkBitmap    fBitmap;
     SkIPoint    fOrigin;
     SkMetaData* fMetaData;
+
+#ifdef SK_DEBUG
+    bool        fAttachedToCanvas;
+#endif
+
+    typedef SkRefCnt INHERITED;
 };
 
 #endif

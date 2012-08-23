@@ -52,9 +52,9 @@ SkDisplayEvent::~SkDisplayEvent() {
     deleteMembers();
 }
 
-bool SkDisplayEvent::add(SkAnimateMaker& , SkDisplayable* child) { 
-    *fChildren.append() = child; 
-    return true; 
+bool SkDisplayEvent::add(SkAnimateMaker& , SkDisplayable* child) {
+    *fChildren.append() = child;
+    return true;
 }
 
 bool SkDisplayEvent::contains(SkDisplayable* match) {
@@ -104,11 +104,7 @@ void SkDisplayEvent::dumpEvent(SkAnimateMaker* maker) {
         SkDebugf("target=\"%s\" ", fTarget->id);
     }
     if (kind >= SkDisplayEvent::kMouseDown && kind <= SkDisplayEvent::kMouseUp) {
-#ifdef SK_CAN_USE_FLOAT
         SkDebugf("x=\"%g\" y=\"%g\" ", SkScalarToFloat(x), SkScalarToFloat(y));
-#else
-        SkDebugf("x=\"%x\" y=\"%x\" ", x, y);
-#endif
     }
     if (disable)
         SkDebugf("disable=\"true\" ");
@@ -116,7 +112,7 @@ void SkDisplayEvent::dumpEvent(SkAnimateMaker* maker) {
 }
 #endif
 
-bool SkDisplayEvent::enableEvent(SkAnimateMaker& maker) 
+bool SkDisplayEvent::enableEvent(SkAnimateMaker& maker)
 {
     maker.fActiveEvent = this;
     if (fChildren.count() == 0)
@@ -138,7 +134,7 @@ bool SkDisplayEvent::enableEvent(SkAnimateMaker& maker)
         }
         if (displayable->enable(maker))
             continue;
-        if (maker.hasError()) 
+        if (maker.hasError())
             return true;
         if (displayable->isDrawable() == false)
             return true;    // error

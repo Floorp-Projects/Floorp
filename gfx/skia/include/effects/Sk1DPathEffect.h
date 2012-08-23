@@ -18,8 +18,7 @@ class SkPathMeasure;
 //  This class is not exported to java.
 class Sk1DPathEffect : public SkPathEffect {
 public:
-    //  override from SkPathEffect
-    virtual bool filterPath(SkPath* dst, const SkPath& src, SkScalar* width);
+    virtual bool filterPath(SkPath* dst, const SkPath& src, SkStrokeRec*) SK_OVERRIDE;
 
 protected:
     /** Called at the start of each contour, returns the initial offset
@@ -43,10 +42,10 @@ public:
         kTranslate_Style,   // translate the shape to each position
         kRotate_Style,      // rotate the shape about its center
         kMorph_Style,       // transform each point, and turn lines into curves
-        
+
         kStyleCount
     };
-    
+
     /** Dash by replicating the specified path.
         @param path The path to replicate (dash)
         @param advance The space between instances of path
@@ -56,8 +55,7 @@ public:
     */
     SkPath1DPathEffect(const SkPath& path, SkScalar advance, SkScalar phase, Style);
 
-    // override from SkPathEffect
-    virtual bool filterPath(SkPath*, const SkPath&, SkScalar* width) SK_OVERRIDE;
+    virtual bool filterPath(SkPath*, const SkPath&, SkStrokeRec*) SK_OVERRIDE;
 
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkPath1DPathEffect)
 
@@ -68,7 +66,7 @@ protected:
     // overrides from Sk1DPathEffect
     virtual SkScalar begin(SkScalar contourLength) SK_OVERRIDE;
     virtual SkScalar next(SkPath*, SkScalar distance, SkPathMeasure&) SK_OVERRIDE;
-    
+
 private:
     SkPath      fPath;          // copied from constructor
     SkScalar    fAdvance;       // copied from constructor

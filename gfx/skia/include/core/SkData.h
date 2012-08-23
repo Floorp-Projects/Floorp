@@ -11,19 +11,23 @@
 #ifndef SkData_DEFINED
 #define SkData_DEFINED
 
-#include "SkRefCnt.h"
+#include "SkFlattenable.h"
 
 /**
  *  SkData holds an immutable data buffer. Not only is the data immutable,
  *  but the actual ptr that is returned (by data() or bytes()) is guaranteed
  *  to always be the same for the life of this instance.
  */
-class SkData : public SkRefCnt {
+class SK_API SkData : public SkFlattenable {
 public:
+    SK_DECLARE_INST_COUNT(SkData)
+
     /**
      *  Returns the number of bytes stored.
      */
     size_t size() const { return fSize; }
+
+    bool isEmpty() const { return 0 == fSize; }
 
     /**
      *  Returns the ptr to the data.
@@ -47,15 +51,29 @@ public:
     size_t copyRange(size_t offset, size_t length, void* buffer) const;
 
     /**
+     *  Returns true if these two objects have the same length and contents,
+     *  effectively returning 0 == memcmp(...)
+     */
+    bool equals(const SkData* other) const;
+
+    /**
      *  Function that, if provided, will be called when the SkData goes out
      *  of scope, allowing for custom allocation/freeing of the data.
      */
     typedef void (*ReleaseProc)(const void* ptr, size_t length, void* context);
-    
+
     /**
      *  Create a new dataref by copying the specified data
      */
     static SkData* NewWithCopy(const void* data, size_t length);
+
+    /**
+     *  Create a new dataref by copying the specified c-string
+     *  (a null-terminated array of bytes). The returned SkData will have size()
+     *  equal to strlen(cstr) + 1. If cstr is NULL, it will be treated the same
+     *  as "".
+     */
+    static SkData* NewWithCString(const char cstr[]);
 
     /**
      *  Create a new dataref, taking the data ptr as is, and using the
@@ -82,6 +100,12 @@ public:
      */
     static SkData* NewEmpty();
 
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkData)
+
+protected:
+    SkData(SkFlattenableReadBuffer&);
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
+
 private:
     ReleaseProc fReleaseProc;
     void*       fReleaseProcContext;
@@ -90,7 +114,16 @@ private:
     size_t      fSize;
 
     SkData(const void* ptr, size_t size, ReleaseProc, void* context);
-    ~SkData();
+    virtual ~SkData();
+
+    // This is here because SkAutoTUnref creates an internal helper class
+    // that derives from SkData (i.e., BlockRef) to prevent refs\unrefs.
+    // This helper class generates a compiler warning on Windows since the
+    // SkData's destructor is private. This friending gives the helper class
+    // access to the destructor.
+    friend class SkAutoTUnref<SkData>::BlockRef<SkData>;
+
+    typedef SkFlattenable INHERITED;
 };
 
 /**
@@ -99,39 +132,25 @@ private:
  */
 class SkAutoDataUnref : SkNoncopyable {
 public:
-    SkAutoDataUnref(SkData* data) : fRef(data) {
-        if (data) {
-            fData = data->data();
-            fSize = data->size();
-        } else {
-            fData = NULL;
-            fSize = 0;
-        }
-    }
+    SkAutoDataUnref(SkData* data) : fRef(data) {}
     ~SkAutoDataUnref() {
         SkSafeUnref(fRef);
     }
 
-    const void* data() const { return fData; }
-    const uint8_t* bytes() const {
-        return reinterpret_cast<const uint8_t*> (fData);
-    }
-    size_t size() const { return fSize; }
     SkData* get() const { return fRef; }
 
     void release() {
         if (fRef) {
             fRef->unref();
             fRef = NULL;
-            fData = NULL;
-            fSize = 0;
         }
     }
 
+    SkData *operator->() const { return fRef; }
+    operator SkData*() { return fRef; }
+
 private:
     SkData*     fRef;
-    const void* fData;
-    size_t      fSize;
 };
 
 #endif

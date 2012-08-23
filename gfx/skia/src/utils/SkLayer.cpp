@@ -15,6 +15,8 @@
     static int gLayerAllocCount;
 #endif
 
+SK_DEFINE_INST_COUNT(SkLayer)
+
 ///////////////////////////////////////////////////////////////////////////////
 
 SkLayer::SkLayer() {
@@ -34,7 +36,7 @@ SkLayer::SkLayer() {
 #endif
 }
 
-SkLayer::SkLayer(const SkLayer& src) : INHERITED() {
+SkLayer::SkLayer(const SkLayer& src) {
     fParent = NULL;
     m_opacity = src.m_opacity;
     m_size = src.m_size;

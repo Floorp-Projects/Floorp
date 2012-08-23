@@ -10,10 +10,11 @@
 #ifndef SkFontHost_DEFINED
 #define SkFontHost_DEFINED
 
-#include "SkScalerContext.h"
 #include "SkTypeface.h"
 
 class SkDescriptor;
+class SkScalerContext;
+struct SkScalerContextRec;
 class SkStream;
 class SkWStream;
 
@@ -118,12 +119,17 @@ public:
     ///////////////////////////////////////////////////////////////////////////
 
     /** Write a unique identifier to the stream, so that the same typeface can
-        be retrieved with Deserialize().
+        be retrieved with Deserialize(). The standard format is to serialize
+        a SkFontDescriptor followed by a uint32_t length value. If the length
+        is non-zero then the following bytes (of that length) represent a
+        serialized copy of the font which can be recreated from a stream.
     */
     static void Serialize(const SkTypeface*, SkWStream*);
 
     /** Given a stream created by Serialize(), return a new typeface (like
-        CreateTypeface) or return NULL if no match is found.
+        CreateTypeface) which is either an exact match to the one serialized
+        or the best available typeface based on the data in the deserialized
+        SkFontDescriptor.
      */
     static SkTypeface* Deserialize(SkStream*);
 
@@ -162,7 +168,7 @@ public:
 
         A lazy (but valid) fonthost can do nothing in its FilterRec routine.
      */
-    static void FilterRec(SkScalerContext::Rec* rec);
+    static void FilterRec(SkScalerContextRec* rec);
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -219,15 +225,6 @@ public:
      */
     static size_t GetTableData(SkFontID fontID, SkFontTableTag tag,
                                size_t offset, size_t length, void* data);
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    /** DEPRECATED -- only called by SkFontHost_FreeType internally
-
-        Return NULL or a pointer to 256 bytes for the black (table[0]) and
-        white (table[1]) gamma tables.
-    */
-    static void GetGammaTables(const uint8_t* tables[2]);
 
     ///////////////////////////////////////////////////////////////////////////
 
