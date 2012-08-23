@@ -1075,10 +1075,10 @@ public:
 
 class LIRGraph
 {
-    Vector<LBlock *, 16, SystemAllocPolicy> blocks_;
-    Vector<HeapValue, 0, SystemAllocPolicy> constantPool_;
-    Vector<LInstruction *, 0, SystemAllocPolicy> safepoints_;
-    Vector<LInstruction *, 0, SystemAllocPolicy> nonCallSafepoints_;
+    Vector<LBlock *, 16, IonAllocPolicy> blocks_;
+    Vector<HeapValue, 0, IonAllocPolicy> constantPool_;
+    Vector<LInstruction *, 0, IonAllocPolicy> safepoints_;
+    Vector<LInstruction *, 0, IonAllocPolicy> nonCallSafepoints_;
     uint32 numVirtualRegisters_;
     uint32 numInstructions_;
 
