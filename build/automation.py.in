@@ -434,28 +434,13 @@ user_pref("extensions.getAddons.get.url", "http://%(server)s/extensions-dummy/re
 user_pref("extensions.getAddons.getWithPerformance.url", "http://%(server)s/extensions-dummy/repositoryGetWithPerformanceURL");
 user_pref("extensions.getAddons.search.browseURL", "http://%(server)s/extensions-dummy/repositoryBrowseURL");
 user_pref("extensions.getAddons.search.url", "http://%(server)s/extensions-dummy/repositorySearchURL");
+
+// Make enablePrivilege continue to work for test code. :-(
+user_pref("security.enablePrivilege.enable_for_tests", true);
 """ % { "server" : self.webServer + ":" + str(self.httpPort) }
     prefs.append(part)
 
-    if useServerLocations == False:
-      part = """
-user_pref("capability.principal.codebase.p1.granted", "UniversalXPConnect");
-user_pref("capability.principal.codebase.p1.id", "%(origin)s");
-user_pref("capability.principal.codebase.p1.subjectName", "");
-"""  % { "origin": "http://" + self.webServer + ":" + str(self.httpPort) }
-      prefs.append(part)
-    else:
-      # Grant God-power to all the privileged servers on which tests run.
-      privileged = filter(lambda loc: "privileged" in loc.options, locations)
-      for (i, l) in itertools.izip(itertools.count(1), privileged):
-        part = """
-user_pref("capability.principal.codebase.p%(i)d.granted", "UniversalXPConnect");
-user_pref("capability.principal.codebase.p%(i)d.id", "%(origin)s");
-user_pref("capability.principal.codebase.p%(i)d.subjectName", "");
-"""  % { "i": i,
-         "origin": (l.scheme + "://" + l.host + ":" + str(l.port)) }
-        prefs.append(part)
-
+    if useServerLocations:
       # We need to proxy every server but the primary one.
       origins = ["'%s://%s:%s'" % (l.scheme, l.host, l.port)
                 for l in filter(lambda l: "primary" not in l.options, locations)]
