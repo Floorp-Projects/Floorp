@@ -309,15 +309,8 @@ struct FunctionBox : public ObjectBox
                 StrictMode::StrictModeState sms);
 
     bool funIsGenerator()        const { return cxFlags.funIsGenerator; }
-    bool funHasExtensibleScope() const { return cxFlags.funHasExtensibleScope; }
 
     JSFunction *function() const { return (JSFunction *) object; }
-
-    /*
-     * True if this function is inside the scope of a with-statement, an E4X
-     * filter-expression, or a function that uses direct eval.
-     */
-    bool inAnyDynamicScope() const;
 
     void recursivelySetStrictMode(StrictMode::StrictModeState strictness);
 };

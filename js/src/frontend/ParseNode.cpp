@@ -94,16 +94,6 @@ ParseNode::checkListConsistency()
 }
 #endif
 
-bool
-FunctionBox::inAnyDynamicScope() const
-{
-    for (const FunctionBox *funbox = this; funbox; funbox = funbox->parent) {
-        if (funbox->inWith || funbox->funHasExtensibleScope())
-            return true;
-    }
-    return false;
-}
-
 /* Add |node| to |parser|'s free node list. */
 void
 ParseNodeAllocator::freeNode(ParseNode *pn)
