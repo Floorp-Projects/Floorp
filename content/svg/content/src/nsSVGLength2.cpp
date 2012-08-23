@@ -68,11 +68,11 @@ static nsIAtom** const unitMap[] =
   &nsGkAtoms::pc
 };
 
-static nsSVGAttrTearoffTable<nsSVGLength2, nsIDOMSVGAnimatedLength>
+static nsSVGAttrTearoffTable<nsSVGLength2, nsSVGLength2::DOMAnimatedLength>
   sSVGAnimatedLengthTearoffTable;
-static nsSVGAttrTearoffTable<nsSVGLength2, nsIDOMSVGLength>
+static nsSVGAttrTearoffTable<nsSVGLength2, nsSVGLength2::DOMBaseVal>
   sBaseSVGLengthTearoffTable;
-static nsSVGAttrTearoffTable<nsSVGLength2, nsIDOMSVGLength>
+static nsSVGAttrTearoffTable<nsSVGLength2, nsSVGLength2::DOMAnimVal>
   sAnimSVGLengthTearoffTable;
 
 /* Helper functions */
@@ -359,15 +359,14 @@ nsSVGLength2::NewValueSpecifiedUnits(uint16_t unitType,
 nsresult
 nsSVGLength2::ToDOMBaseVal(nsIDOMSVGLength **aResult, nsSVGElement *aSVGElement)
 {
-  *aResult = sBaseSVGLengthTearoffTable.GetTearoff(this);
-  if (!*aResult) {
-    *aResult = new DOMBaseVal(this, aSVGElement);
-    if (!*aResult)
-      return NS_ERROR_OUT_OF_MEMORY;
-    sBaseSVGLengthTearoffTable.AddTearoff(this, *aResult);
+  nsRefPtr<DOMBaseVal> domBaseVal =
+    sBaseSVGLengthTearoffTable.GetTearoff(this);
+  if (!domBaseVal) {
+    domBaseVal = new DOMBaseVal(this, aSVGElement);
+    sBaseSVGLengthTearoffTable.AddTearoff(this, domBaseVal);
   }
 
-  NS_ADDREF(*aResult);
+  domBaseVal.forget(aResult);
   return NS_OK;
 }
 
@@ -379,15 +378,14 @@ nsSVGLength2::DOMBaseVal::~DOMBaseVal()
 nsresult
 nsSVGLength2::ToDOMAnimVal(nsIDOMSVGLength **aResult, nsSVGElement *aSVGElement)
 {
-  *aResult = sAnimSVGLengthTearoffTable.GetTearoff(this);
-  if (!*aResult) {
-    *aResult = new DOMAnimVal(this, aSVGElement);
-    if (!*aResult)
-      return NS_ERROR_OUT_OF_MEMORY;
-    sAnimSVGLengthTearoffTable.AddTearoff(this, *aResult);
+  nsRefPtr<DOMAnimVal> domAnimVal =
+    sAnimSVGLengthTearoffTable.GetTearoff(this);
+  if (!domAnimVal) {
+    domAnimVal = new DOMAnimVal(this, aSVGElement);
+    sAnimSVGLengthTearoffTable.AddTearoff(this, domAnimVal);
   }
 
-  NS_ADDREF(*aResult);
+  domAnimVal.forget(aResult);
   return NS_OK;
 }
 
@@ -481,15 +479,14 @@ nsresult
 nsSVGLength2::ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,
                                   nsSVGElement *aSVGElement)
 {
-  *aResult = sSVGAnimatedLengthTearoffTable.GetTearoff(this);
-  if (!*aResult) {
-    *aResult = new DOMAnimatedLength(this, aSVGElement);
-    if (!*aResult)
-      return NS_ERROR_OUT_OF_MEMORY;
-    sSVGAnimatedLengthTearoffTable.AddTearoff(this, *aResult);
+  nsRefPtr<DOMAnimatedLength> domAnimatedLength =
+    sSVGAnimatedLengthTearoffTable.GetTearoff(this);
+  if (!domAnimatedLength) {
+    domAnimatedLength = new DOMAnimatedLength(this, aSVGElement);
+    sSVGAnimatedLengthTearoffTable.AddTearoff(this, domAnimatedLength);
   }
 
-  NS_ADDREF(*aResult);
+  domAnimatedLength.forget(aResult);
   return NS_OK;
 }
 
