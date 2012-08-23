@@ -1340,7 +1340,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 #editBMPanel_rows > row > textbox,
 #editBMPanel_rows > row > hbox > textbox {
   -moz-appearance: none;
-  background: -moz-linear-gradient(#fafafa, #fff);
+  background: linear-gradient(#fafafa, #fff);
   background-clip: padding-box;
   border-radius: 3px;
   border: 1px solid rgba(0,0,0,.3) !important;
@@ -1394,7 +1394,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
    editBookmarkOverlay.css. */
 
 #editBMPanel_newFolderBox {
-  background: -moz-linear-gradient(#fff, #f2f2f2);
+  background: linear-gradient(#fff, #f2f2f2);
   background-origin: padding-box;
   background-clip: padding-box;
   border-radius: 0 0 3px 3px;
@@ -1422,7 +1422,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 }
 
 #editBMPanel_newFolderButton:hover:active {
-  background: -moz-linear-gradient(rgba(40,40,40,.9), rgba(70,70,70,.9));
+  background: linear-gradient(rgba(40,40,40,.9), rgba(70,70,70,.9));
   box-shadow: inset 0 0 3px rgba(0,0,0,.2), inset 0 1px 7px rgba(0,0,0,.4);
 }
 
@@ -1474,7 +1474,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 #editBMPanel_folderTree,
 #editBMPanel_tagsSelector {
   -moz-appearance: none;
-  background: -moz-linear-gradient(#fafafa, #fff);
+  background: linear-gradient(#fafafa, #fff);
   background-clip: padding-box;
   border-radius: 3px;
   border: 1px solid rgba(0,0,0,.3);
@@ -1506,8 +1506,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   @hudButton@
   margin: 0;
   -moz-margin-start: 4px;
-  -moz-padding-end: 2px;
-  min-width: 10px;
+  min-width: 27px;
   min-height: 22px;
 }
 
@@ -1527,6 +1526,16 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 
 #editBookmarkPanel .expander-down {
   list-style-image: url("chrome://browser/skin/panel-expander-closed.png");
+}
+
+#editBookmarkPanel .expander-up .button-icon,
+#editBookmarkPanel .expander-down .button-icon {
+  margin: 1px 0 0;
+}
+
+#editBookmarkPanel .expander-up .button-text,
+#editBookmarkPanel .expander-down .button-text {
+  display: none;
 }
 
 #editBMPanel_tagsField > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
