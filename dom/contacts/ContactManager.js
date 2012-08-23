@@ -548,7 +548,7 @@ ContactManager.prototype = {
         if (DEBUG) debug("got SIM contacts: " + aType + " " + JSON.stringify(aContacts));
         let result = aContacts.map(function(c) {
           var contact = new Contact();
-          contact.init( { name: [c.alphaId], tel: [ { number: c.number } ] } );
+          contact.init( { name: [c.alphaId], tel: [ { value: c.number } ] } );
           return contact;
         });
         if (DEBUG) debug("result: " + JSON.stringify(result));
