@@ -225,6 +225,8 @@ ContentChild::ContentChild()
 #ifdef ANDROID
    ,mScreenSize(0, 0)
 #endif
+   , mIsForApp(false)
+   , mIsForBrowser(false)
 {
     // This process is a content process, so it's clearly running in
     // multiprocess mode!
@@ -920,12 +922,16 @@ ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID)
 }
 
 bool
-ContentChild::RecvSetID(const uint64_t &id)
+ContentChild::RecvSetProcessAttributes(const uint64_t &id,
+                                       const bool& aIsForApp,
+                                       const bool& aIsForBrowser)
 {
     if (mID != uint64_t(-1)) {
         NS_WARNING("Setting content child's ID twice?");
     }
     mID = id;
+    mIsForApp = aIsForApp;
+    mIsForBrowser = aIsForBrowser;
     return true;
 }
 
