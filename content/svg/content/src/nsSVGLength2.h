@@ -127,6 +127,7 @@ private:
   nsresult ToDOMBaseVal(nsIDOMSVGLength **aResult, nsSVGElement* aSVGElement);
   nsresult ToDOMAnimVal(nsIDOMSVGLength **aResult, nsSVGElement* aSVGElement);
 
+public:
   struct DOMBaseVal : public nsIDOMSVGLength
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -235,7 +236,6 @@ private:
       { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
   };
 
-public:
   struct DOMAnimatedLength : public nsIDOMSVGAnimatedLength
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
