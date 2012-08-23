@@ -924,8 +924,7 @@ SpecialPowersAPI.prototype = {
     var serv = Cc["@mozilla.org/dom/dom-request-service;1"].
       getService(Ci.nsIDOMRequestService);
     var res = { __exposedProps__: {} };
-    var props = ["createRequest", "fireError", "fireSuccess", 
-								 "fireErrorAsync", "fireSuccessAsync"];
+    var props = ["createRequest", "fireError", "fireSuccess"];
     for (i in props) {
       let prop = props[i];
       res[prop] = function() { return serv[prop].apply(serv, arguments) };
