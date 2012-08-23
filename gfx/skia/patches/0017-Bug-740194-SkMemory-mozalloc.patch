@@ -1,0 +1,73 @@
+commit 5786f516119bcb677510f3c9256b870c3b5616c8
+Author: George Wright <gwright@mozilla.com>
+Date:   Wed Aug 15 23:51:34 2012 -0400
+
+    Bug 740194 - [Skia] Implement a version of SkMemory for Mozilla that uses the infallible mozalloc allocators r=cjones
+
+diff --git a/gfx/skia/include/config/SkUserConfig.h b/gfx/skia/include/config/SkUserConfig.h
+index f98ba85..17be191 100644
+--- a/gfx/skia/include/config/SkUserConfig.h
++++ b/gfx/skia/include/config/SkUserConfig.h
+@@ -35,6 +35,16 @@
+     commented out, so including it will have no effect.
+ */
+ 
++/*
++    Override new/delete with Mozilla's allocator, mozalloc
++
++    Ideally we shouldn't need to do this here, but until
++    http://code.google.com/p/skia/issues/detail?id=598 is fixed
++    we need to include this here to override operator new and delete
++*/
++
++#include "mozilla/mozalloc.h"
++
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+ /*  Scalars (the fractional value type in skia) can be implemented either as
+diff --git a/gfx/skia/src/ports/SkMemory_mozalloc.cpp b/gfx/skia/src/ports/SkMemory_mozalloc.cpp
+new file mode 100644
+index 0000000..1f16ee5
+--- /dev/null
++++ b/gfx/skia/src/ports/SkMemory_mozalloc.cpp
+@@ -0,0 +1,40 @@
++/*
++ * Copyright 2011 Google Inc.
++ * Copyright 2012 Mozilla Foundation
++ *
++ * Use of this source code is governed by a BSD-style license that can be
++ * found in the LICENSE file.
++ */
++
++#include "SkTypes.h"
++
++#include "mozilla/mozalloc.h"
++#include "mozilla/mozalloc_abort.h"
++#include "mozilla/mozalloc_oom.h"
++
++void sk_throw() {
++    SkDEBUGFAIL("sk_throw");
++    mozalloc_abort("Abort from sk_throw");
++}
++
++void sk_out_of_memory(void) {
++    SkDEBUGFAIL("sk_out_of_memory");
++    mozalloc_handle_oom(0);
++}
++
++void* sk_malloc_throw(size_t size) {
++    return sk_malloc_flags(size, SK_MALLOC_THROW);
++}
++
++void* sk_realloc_throw(void* addr, size_t size) {
++    return moz_xrealloc(addr, size);
++}
++
++void sk_free(void* p) {
++    moz_free(p);
++}
++
++void* sk_malloc_flags(size_t size, unsigned flags) {
++    return (flags & SK_MALLOC_THROW) ? moz_xmalloc(size) : moz_malloc(size);
++}
++
