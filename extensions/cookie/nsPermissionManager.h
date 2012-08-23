@@ -210,6 +210,8 @@ private:
   nsresult Import();
   nsresult Read();
   void     NotifyObserversWithPermission(const nsACString &aHost,
+                                         uint32_t          aAppId,
+                                         bool              aIsInBrowserElement,
                                          const nsCString  &aType,
                                          uint32_t          aPermission,
                                          uint32_t          aExpireType,
