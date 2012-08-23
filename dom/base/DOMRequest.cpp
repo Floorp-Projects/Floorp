@@ -12,7 +12,6 @@
 #include "nsEventDispatcher.h"
 #include "nsDOMEvent.h"
 #include "nsContentUtils.h"
-#include "nsThreadUtils.h"
 
 using mozilla::dom::DOMRequest;
 using mozilla::dom::DOMRequestService;
@@ -221,81 +220,5 @@ DOMRequestService::FireError(nsIDOMDOMRequest* aRequest,
   NS_ENSURE_STATE(aRequest);
   static_cast<DOMRequest*>(aRequest)->FireError(aError);
 
-  return NS_OK;
-}
-
-class FireSuccessAsyncTask : public nsRunnable
-{
-public:
-  FireSuccessAsyncTask(nsIDOMDOMRequest* aRequest,
-                       const jsval& aResult) :
-    mReq(aRequest),
-    mResult(aResult)
-  {
-    JSContext* cx = mReq->GetJSContextForEventHandlers();
-    JS_AddValueRoot(cx, &mResult);
-  }
-
-  nsresult
-  Run()
-  {
-    static_cast<DOMRequest*>(mReq)->FireSuccess(mResult);
-    return NS_OK;
-  }
-
-  ~FireSuccessAsyncTask()
-  {
-    JSContext* cx = mReq->GetJSContextForEventHandlers();
-    JS_RemoveValueRoot(cx, &mResult);
-  }
-private:
-  nsIDOMDOMRequest* mReq;
-  jsval mResult;
-};
-
-class FireErrorAsyncTask : public nsRunnable
-{
-public:
-  FireErrorAsyncTask(nsIDOMDOMRequest* aRequest,
-                     const nsAString& aError) :
-    mReq(aRequest),
-    mError(aError)
-  {
-  }
-
-  nsresult
-  Run()
-  {
-    static_cast<DOMRequest*>(mReq)->FireError(mError);
-    return NS_OK;
-  }
-private:
-  nsIDOMDOMRequest* mReq;
-  nsString mError;
-};
-
-NS_IMETHODIMP
-DOMRequestService::FireSuccessAsync(nsIDOMDOMRequest* aRequest,
-                                    const jsval& aResult)
-{
-  NS_ENSURE_STATE(aRequest);
-  nsCOMPtr<nsIRunnable> asyncTask = new FireSuccessAsyncTask(aRequest, aResult);
-  if (NS_FAILED(NS_DispatchToMainThread(asyncTask))) {
-    NS_WARNING("Failed to dispatch to main thread!");
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMRequestService::FireErrorAsync(nsIDOMDOMRequest* aRequest,
-                                  const nsAString& aError)
-{
-  NS_ENSURE_STATE(aRequest);
-  nsCOMPtr<nsIRunnable> asyncTask = new FireErrorAsyncTask(aRequest, aError);
-  if (NS_FAILED(NS_DispatchToMainThread(asyncTask))) {
-    NS_WARNING("Failed to dispatch to main thread!");
-    return NS_ERROR_FAILURE;
-  }
   return NS_OK;
 }
