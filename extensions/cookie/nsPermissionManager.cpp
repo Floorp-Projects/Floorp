@@ -23,6 +23,7 @@
 #include "nsXULAppAPI.h"
 #include "nsIPrincipal.h"
 #include "nsContentUtils.h"
+#include "nsIScriptSecurityManager.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;
 
@@ -483,28 +484,16 @@ nsPermissionManager::Add(nsIURI     *aURI,
                          uint32_t    aExpireType,
                          int64_t     aExpireTime)
 {
-  ENSURE_NOT_CHILD_PROCESS;
-
   NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_ARG_POINTER(aType);
-  NS_ENSURE_TRUE(aExpireType == nsIPermissionManager::EXPIRE_NEVER ||
-                 aExpireType == nsIPermissionManager::EXPIRE_TIME ||
-                 aExpireType == nsIPermissionManager::EXPIRE_SESSION,
-                 NS_ERROR_INVALID_ARG);
 
-  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  MOZ_ASSERT(secMan, "No security manager!?");
 
-  // Skip addition if the permission is already expired.
-  if (aExpireType == nsIPermissionManager::EXPIRE_TIME &&
-      aExpireTime <= PR_Now() / 1000)
-    return NS_OK;
-
-  nsCAutoString host;
-  rv = GetHost(aURI, host);
+  nsresult rv = secMan->GetNoAppCodebasePrincipal(aURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return AddInternal(host, nsDependentCString(aType), aPermission, 0, 
-                     aExpireType, aExpireTime, eNotify, eWriteToDB);
+  return AddFromPrincipal(principal, aType, aPermission, aExpireType, aExpireTime);
 }
 
 NS_IMETHODIMP
@@ -512,7 +501,19 @@ nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
                                       const char* aType, uint32_t aPermission,
                                       uint32_t aExpireType, int64_t aExpireTime)
 {
+  ENSURE_NOT_CHILD_PROCESS;
   NS_ENSURE_ARG_POINTER(aPrincipal);
+  NS_ENSURE_ARG_POINTER(aType);
+  NS_ENSURE_TRUE(aExpireType == nsIPermissionManager::EXPIRE_NEVER ||
+                 aExpireType == nsIPermissionManager::EXPIRE_TIME ||
+                 aExpireType == nsIPermissionManager::EXPIRE_SESSION,
+                 NS_ERROR_INVALID_ARG);
+
+  // Skip addition if the permission is already expired.
+  if (aExpireType == nsIPermissionManager::EXPIRE_TIME &&
+      aExpireTime <= (PR_Now() / 1000)) {
+    return NS_OK;
+  }
 
   // We don't add the system principal because it actually has no URI and we
   // always allow action for them.
@@ -521,9 +522,15 @@ nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return Add(uri, aType, aPermission, aExpireType, aExpireTime);
+  nsCAutoString host;
+  rv = GetHost(uri, host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return AddInternal(host, nsDependentCString(aType), aPermission, 0, 
+                     aExpireType, aExpireTime, eNotify, eWriteToDB);
 }
 
 nsresult
@@ -689,26 +696,28 @@ NS_IMETHODIMP
 nsPermissionManager::Remove(const nsACString &aHost,
                             const char       *aType)
 {
-  ENSURE_NOT_CHILD_PROCESS;
+  nsCOMPtr<nsIPrincipal> principal;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  MOZ_ASSERT(secMan, "No security manager!?");
 
-  NS_ENSURE_ARG_POINTER(aType);
+  nsCOMPtr<nsIURI> uri;
+  // NOTE: we use "http://" as a protocal but we will just use the host so it
+  // doesn't really matter.
+  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + aHost);
 
-  // AddInternal() handles removal, just let it do the work
-  return AddInternal(PromiseFlatCString(aHost),
-                     nsDependentCString(aType),
-                     nsIPermissionManager::UNKNOWN_ACTION,
-                     0,
-                     nsIPermissionManager::EXPIRE_NEVER,
-                     0,
-                     eNotify,
-                     eWriteToDB);
+  nsresult rv = secMan->GetNoAppCodebasePrincipal(uri, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return RemoveFromPrincipal(principal, aType);
 }
 
 NS_IMETHODIMP
 nsPermissionManager::RemoveFromPrincipal(nsIPrincipal* aPrincipal,
                                          const char* aType)
 {
+  ENSURE_NOT_CHILD_PROCESS;
   NS_ENSURE_ARG_POINTER(aPrincipal);
+  NS_ENSURE_ARG_POINTER(aType);
 
   // System principals are never added to the database, no need to remove them.
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
@@ -716,13 +725,22 @@ nsPermissionManager::RemoveFromPrincipal(nsIPrincipal* aPrincipal,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString host;
-  uri->GetHost(host);
+  rv = GetHost(uri, host);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return Remove(host, aType);
+  // AddInternal() handles removal, just let it do the work
+  return AddInternal(PromiseFlatCString(host),
+                     nsDependentCString(aType),
+                     nsIPermissionManager::UNKNOWN_ACTION,
+                     0,
+                     nsIPermissionManager::EXPIRE_NEVER,
+                     0,
+                     eNotify,
+                     eWriteToDB);
 }
 
 NS_IMETHODIMP
@@ -786,35 +804,14 @@ nsPermissionManager::TestExactPermission(nsIURI     *aURI,
                                          const char *aType,
                                          uint32_t   *aPermission)
 {
-  return CommonTestPermission(aURI, aType, aPermission, true);
-}
+  nsCOMPtr<nsIPrincipal> principal;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  MOZ_ASSERT(secMan, "No security manager!?");
 
-NS_IMETHODIMP
-nsPermissionManager::TestPermission(nsIURI     *aURI,
-                                    const char *aType,
-                                    uint32_t   *aPermission)
-{
-  return CommonTestPermission(aURI, aType, aPermission, false);
-}
+  nsresult rv = secMan->GetNoAppCodebasePrincipal(aURI, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-NS_IMETHODIMP
-nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
-                                                 const char* aType,
-                                                 uint32_t* aPermission)
-{
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  // System principals do not have URI so we can't try to get
-  // retro-compatibility here.
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    *aPermission = nsIPermissionManager::ALLOW_ACTION;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
-
-  return TestPermission(uri, aType, aPermission);
+  return TestExactPermissionFromPrincipal(principal, aType, aPermission);
 }
 
 NS_IMETHODIMP
@@ -834,7 +831,42 @@ nsPermissionManager::TestExactPermissionFromPrincipal(nsIPrincipal* aPrincipal,
   nsCOMPtr<nsIURI> uri;
   aPrincipal->GetURI(getter_AddRefs(uri));
 
-  return TestExactPermission(uri, aType, aPermission);
+  return CommonTestPermission(uri, aType, aPermission, true);
+}
+
+NS_IMETHODIMP
+nsPermissionManager::TestPermission(nsIURI     *aURI,
+                                    const char *aType,
+                                    uint32_t   *aPermission)
+{
+  nsCOMPtr<nsIPrincipal> principal;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  MOZ_ASSERT(secMan, "No security manager!?");
+
+  nsresult rv = secMan->GetNoAppCodebasePrincipal(aURI, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return TestPermissionFromPrincipal(principal, aType, aPermission);
+}
+
+NS_IMETHODIMP
+nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
+                                                 const char* aType,
+                                                 uint32_t* aPermission)
+{
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+
+  // System principals do not have URI so we can't try to get
+  // retro-compatibility here.
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    *aPermission = nsIPermissionManager::ALLOW_ACTION;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  aPrincipal->GetURI(getter_AddRefs(uri));
+
+  return CommonTestPermission(uri, aType, aPermission, false);
 }
 
 nsresult
