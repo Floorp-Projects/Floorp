@@ -20,12 +20,9 @@ function run_test() {
   do_check_false(global1 === global3);
   do_check_false(scope1.NetUtil === scope3.NetUtil);
 
-  // Both instances should work
-  uri1 = scope1.NetUtil.newURI("http://www.example.com");
-  do_check_true(uri1 instanceof Components.interfaces.nsIURL);
-
-  var uri3 = scope3.NetUtil.newURI("http://www.example.com");
-  do_check_true(uri3 instanceof Components.interfaces.nsIURL);
-
-  do_check_true(uri1.equals(uri3));
+  // When the jsm was unloaded, the value of all its global's properties were
+  // set to undefined. While it must be safe (not crash) to call into the
+  // module, we expect it to throw an error (e.g., when trying to use Ci).
+  try { scope1.NetUtil.newURI("http://www.example.com"); } catch (e) {}
+  try { scope3.NetUtil.newURI("http://www.example.com"); } catch (e) {}
 }

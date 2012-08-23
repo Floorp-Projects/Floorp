@@ -2831,7 +2831,6 @@ Class js::ArrayBufferClass = {
         ArrayBufferObject::obj_enumerate,
         ArrayBufferObject::obj_typeOf,
         NULL,       /* thisObject      */
-        NULL,       /* clear           */
     }
 };
 
@@ -3003,7 +3002,6 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
         _typedArray::obj_enumerate,                                            \
         _typedArray::obj_typeOf,                                               \
         NULL,                /* thisObject  */                                 \
-        NULL,                /* clear       */                                 \
     }                                                                          \
 }
 
