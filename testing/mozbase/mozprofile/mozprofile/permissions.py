@@ -231,6 +231,9 @@ class Permissions(object):
         # Open database and create table
         permDB = sqlite3.connect(os.path.join(self._profileDir, "permissions.sqlite"))
         cursor = permDB.cursor();
+
+        cursor.execute("PRAGMA user_version=3");
+
         # SQL copied from
         # http://mxr.mozilla.org/mozilla-central/source/extensions/cookie/nsPermissionManager.cpp
         cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
