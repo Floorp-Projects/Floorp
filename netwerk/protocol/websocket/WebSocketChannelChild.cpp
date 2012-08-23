@@ -11,6 +11,9 @@
 #include "nsITabChild.h"
 #include "nsILoadContext.h"
 #include "nsNetUtil.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
@@ -381,7 +384,10 @@ WebSocketChannelChild::SendBinaryStream(nsIInputStream *aStream,
 {
   LOG(("WebSocketChannelChild::SendBinaryStream() %p\n", this));
 
-  if (!mIPCOpen || !SendSendBinaryStream(IPC::InputStream(aStream), aLength))
+  OptionalInputStreamParams stream;
+  SerializeInputStream(aStream, stream);
+
+  if (!mIPCOpen || !SendSendBinaryStream(stream, aLength))
     return NS_ERROR_UNEXPECTED;
   return NS_OK;
 }

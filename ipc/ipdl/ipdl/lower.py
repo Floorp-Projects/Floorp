@@ -1294,10 +1294,11 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
         self.protocolName = None
 
     def visitTranslationUnit(self, tu):
-        if not isinstance(tu, TranslationUnit) and tu not in self.visitedTus:
+        if tu not in self.visitedTus:
             self.visitedTus.add(tu)
             ipdl.ast.Visitor.visitTranslationUnit(self, tu)
-            TranslationUnit.upgrade(tu)
+            if not isinstance(tu, TranslationUnit):
+                TranslationUnit.upgrade(tu)
             self.typedefs[:] = sorted(list(self.typedefSet))
 
     def visitInclude(self, inc):
@@ -1317,20 +1318,23 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
                                         using.decl.shortname))
 
     def visitStructDecl(self, sd):
-        sd.decl.special = 0
-        newfields = [ ]
-        for f in sd.fields:
-            ftype = f.decl.type
-            if _hasVisibleActor(ftype):
-                sd.decl.special = 1
-                # if ftype has a visible actor, we need both
-                # |ActorParent| and |ActorChild| fields
-                newfields.append(_StructField(ftype, f.name, sd, side='parent'))
-                newfields.append(_StructField(ftype, f.name, sd, side='child'))
-            else:
-                newfields.append(_StructField(ftype, f.name, sd))
-        sd.fields = newfields
-        StructDecl.upgrade(sd)
+        if not isinstance(sd, StructDecl):
+            sd.decl.special = 0
+            newfields = [ ]
+            for f in sd.fields:
+                ftype = f.decl.type
+                if _hasVisibleActor(ftype):
+                    sd.decl.special = 1
+                    # if ftype has a visible actor, we need both
+                    # |ActorParent| and |ActorChild| fields
+                    newfields.append(_StructField(ftype, f.name, sd,
+                                                  side='parent'))
+                    newfields.append(_StructField(ftype, f.name, sd,
+                                                  side='child'))
+                else:
+                    newfields.append(_StructField(ftype, f.name, sd))
+            sd.fields = newfields
+            StructDecl.upgrade(sd)
 
         if sd.decl.fullname is not None:
             self.typedefSet.add(Typedef(Type(sd.fqClassName()), sd.name))
