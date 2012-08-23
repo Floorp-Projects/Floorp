@@ -478,6 +478,8 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
     uint32 numActualArgs() const {
         return mir()->numActualArgs();
     }
+
+    typedef LJSCallInstructionHelper<Defs, Operands, Temps> JSCallHelper;
 };
 
 // Generates a polymorphic callsite, wherein the function being called is
@@ -489,7 +491,7 @@ class LCallGeneric : public LJSCallInstructionHelper<BOX_PIECES, 1, 2>
 
     LCallGeneric(const LAllocation &func, uint32 argslot,
                  const LDefinition &nargsreg, const LDefinition &tmpobjreg)
-      : LJSCallInstructionHelper(argslot)
+      : JSCallHelper(argslot)
     {
         setOperand(0, func);
         setTemp(0, nargsreg);
@@ -514,7 +516,7 @@ class LCallKnown : public LJSCallInstructionHelper<BOX_PIECES, 1, 1>
     LIR_HEADER(CallKnown);
 
     LCallKnown(const LAllocation &func, uint32 argslot, const LDefinition &tmpobjreg)
-      : LJSCallInstructionHelper(argslot)
+      : JSCallHelper(argslot)
     {
         setOperand(0, func);
         setTemp(0, tmpobjreg);
@@ -537,7 +539,7 @@ class LCallNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
     LCallNative(uint32 argslot,
                 const LDefinition &argJSContext, const LDefinition &argUintN,
                 const LDefinition &argVp, const LDefinition &tmpreg)
-      : LJSCallInstructionHelper(argslot)
+      : JSCallHelper(argslot)
     {
         // Registers used for callWithABI().
         setTemp(0, argJSContext);
@@ -572,7 +574,7 @@ class LCallDOMNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 5>
                    const LDefinition &argJSContext, const LDefinition &argObj,
                    const LDefinition &argPrivate, const LDefinition &argArgc,
                    const LDefinition &argVp)
-      : LJSCallInstructionHelper(argslot)
+      : JSCallHelper(argslot)
     {
         setTemp(0, argJSContext);
         setTemp(1, argObj);
@@ -606,7 +608,7 @@ class LCallConstructor : public LJSCallInstructionHelper<BOX_PIECES, 1, 0>
     LIR_HEADER(CallConstructor);
 
     LCallConstructor(const LAllocation &func, uint32 argslot)
-      : LJSCallInstructionHelper(argslot)
+      : JSCallHelper(argslot)
     {
         setOperand(0, func);
     }
