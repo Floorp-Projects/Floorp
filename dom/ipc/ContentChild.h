@@ -157,7 +157,9 @@ public:
     virtual bool RecvCycleCollect();
 
     virtual bool RecvAppInfo(const nsCString& version, const nsCString& buildID);
-    virtual bool RecvSetID(const uint64_t &id);
+    virtual bool RecvSetProcessAttributes(const uint64_t& id,
+                                          const bool& aIsForApp,
+                                          const bool& aIsForBrowser);
 
     virtual bool RecvLastPrivateDocShellDestroyed();
 
@@ -173,6 +175,9 @@ public:
     nsString &GetIndexedDBPath();
 
     uint64_t GetID() { return mID; }
+
+    bool IsForApp() { return mIsForApp; }
+    bool IsForBrowser() { return mIsForBrowser; }
 
     BlobChild* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
 
@@ -204,6 +209,9 @@ private:
 #ifdef ANDROID
     gfxIntSize mScreenSize;
 #endif
+
+    bool mIsForApp;
+    bool mIsForBrowser;
 
     static ContentChild* sSingleton;
 
