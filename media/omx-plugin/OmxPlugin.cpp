@@ -119,6 +119,8 @@ class OmxDecoder {
   int32_t mVideoColorFormat;
   int32_t mVideoStride;
   int32_t mVideoSliceHeight;
+  int32_t mVideoCropLeft;
+  int32_t mVideoCropTop;
   int32_t mVideoRotation;
   int32_t mAudioChannels;
   int32_t mAudioSampleRate;
@@ -184,6 +186,8 @@ OmxDecoder::OmxDecoder(PluginHost *aPluginHost, Decoder *aDecoder) :
   mVideoColorFormat(0),
   mVideoStride(0),
   mVideoSliceHeight(0),
+  mVideoCropLeft(0),
+  mVideoCropTop(0),
   mVideoRotation(0),
   mAudioChannels(-1),
   mAudioSampleRate(-1),
@@ -410,33 +414,50 @@ bool OmxDecoder::Init() {
 
 bool OmxDecoder::SetVideoFormat() {
   sp<MetaData> format = mVideoSource->getFormat();
+
+  // Stagefright's kKeyWidth and kKeyHeight are what MPAPI calls stride and
+  // slice height. Stagefright only seems to use its kKeyStride and
+  // kKeySliceHeight to initialize camera video formats.
+
+#ifdef DEBUG
+  int32_t unexpected;
+  if (format->findInt32(kKeyStride, &unexpected))
+    LOG("Expected kKeyWidth, but found kKeyStride %d", unexpected);
+  if (format->findInt32(kKeySliceHeight, &unexpected))
+    LOG("Expected kKeyHeight, but found kKeySliceHeight %d", unexpected);
+#endif // DEBUG
+
   const char *componentName;
 
-  if (!format->findInt32(kKeyWidth, &mVideoWidth) ||
-      !format->findInt32(kKeyHeight, &mVideoHeight) ||
+  if (!format->findInt32(kKeyWidth, &mVideoStride) ||
+      !format->findInt32(kKeyHeight, &mVideoSliceHeight) ||
       !format->findCString(kKeyDecoderComponent, &componentName) ||
       !format->findInt32(kKeyColorFormat, &mVideoColorFormat) ) {
     return false;
   }
 
-  if (!format->findInt32(kKeyStride, &mVideoStride)) {
-    mVideoStride = mVideoWidth;
-    LOG("stride not available, assuming width");
+  int32_t cropRight, cropBottom;
+  if (!format->findRect(kKeyCropRect, &mVideoCropLeft, &mVideoCropTop,
+                                      &cropRight, &cropBottom)) {
+    mVideoCropLeft = 0;
+    mVideoCropTop = 0;
+    cropRight = mVideoStride - 1;
+    cropBottom = mVideoSliceHeight - 1;
+    LOG("crop rect not available, assuming no cropping");
   }
 
-  if (!format->findInt32(kKeySliceHeight, &mVideoSliceHeight)) {
-    mVideoSliceHeight = mVideoHeight;
-    LOG("slice height not available, assuming height");
-  }
+  mVideoWidth = cropRight - mVideoCropLeft + 1;
+  mVideoHeight = cropBottom - mVideoCropTop + 1;
 
   if (!format->findInt32(kKeyRotation, &mVideoRotation)) {
     mVideoRotation = 0;
     LOG("rotation not available, assuming 0");
   }
 
-  LOG("width: %d height: %d component: %s format: %#x stride: %d sliceHeight: %d rotation: %d",
+  LOG("width: %d height: %d component: %s format: %#x stride: %d sliceHeight: %d rotation: %d crop: %d,%d-%d,%d",
       mVideoWidth, mVideoHeight, componentName, mVideoColorFormat,
-      mVideoStride, mVideoSliceHeight, mVideoRotation);
+      mVideoStride, mVideoSliceHeight, mVideoRotation,
+      mVideoCropLeft, mVideoCropTop, cropRight, cropBottom);
 
   return true;
 }
