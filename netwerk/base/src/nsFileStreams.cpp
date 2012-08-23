@@ -410,14 +410,6 @@ nsFileInputStream::Init(nsIFile* aFile, PRInt32 aIOFlags, PRInt32 aPerm,
 NS_IMETHODIMP
 nsFileInputStream::Close()
 {
-    // Get the cache position at the time the file was close. This allows
-    // NS_SEEK_CUR on a closed file that has been opened with
-    // REOPEN_ON_REWIND.
-    if (mBehaviorFlags & REOPEN_ON_REWIND) {
-        // Get actual position. Not one modified by subclasses
-        nsFileStreamBase::Tell(&mCachedPosition);
-    }
-
     // null out mLineBuffer in case Close() is called again after failing
     PR_FREEIF(mLineBuffer);
     nsresult rv = nsFileStreamBase::Close();
@@ -469,15 +461,9 @@ nsFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
     PR_FREEIF(mLineBuffer); // this invalidates the line buffer
     if (!mFD) {
         if (mBehaviorFlags & REOPEN_ON_REWIND) {
-            rv = Open(mFile, mIOFlags, mPerm);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            // If the file was closed, and we do a relative seek, use the
-            // position we cached when we closed the file to seek to the right
-            // location.
-            if (aWhence == NS_SEEK_CUR) {
-                aWhence = NS_SEEK_SET;
-                aOffset += mCachedPosition;
+            nsresult rv = Reopen();
+            if (NS_FAILED(rv)) {
+                return rv;
             }
         } else {
             return NS_BASE_STREAM_CLOSED;
@@ -485,23 +471,6 @@ nsFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
     }
 
     return nsFileStreamBase::Seek(aWhence, aOffset);
-}
-
-NS_IMETHODIMP
-nsFileInputStream::Tell(PRInt64 *aResult)
-{
-    return nsFileStreamBase::Tell(aResult);
-}
-
-NS_IMETHODIMP
-nsFileInputStream::Available(PRUint64 *aResult)
-{
-    //if (mFD == nullptr && mBehaviorFlags & REOPEN_ON_REWIND) {
-        //*aResult = 0;
-        //return NS_OK;
-    //}
-
-    return nsFileStreamBase::Available(aResult);
 }
 
 bool
