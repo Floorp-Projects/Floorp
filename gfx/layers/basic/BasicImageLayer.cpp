@@ -247,7 +247,7 @@ private:
   SurfaceDescriptor mBackBufferU;
   SurfaceDescriptor mBackBufferV;
   gfxIntSize mCbCrSize;
-  PRInt32 mLastPaintedImageSerial;
+  int32_t mLastPaintedImageSerial;
 };
  
 void
