@@ -180,14 +180,15 @@ struct ParseContext                 /* tree context for semantic checks */
                                        that will alias any top-level bindings with
                                        the same name. */
 
-    /*
-     * Flags that are set for a short time during parsing to indicate context
-     * or the presence of a code feature.
-     */
-    bool            hasReturnExpr:1; /* function has 'return <expr>;' */
-    bool            hasReturnVoid:1; /* function has 'return;' */
+    // The following flags are set when a particular code feature is detected
+    // in a function.
+    bool            funHasReturnExpr:1; /* function has 'return <expr>;' */
+    bool            funHasReturnVoid:1; /* function has 'return;' */
 
-    bool            inForInit:1;    /* parsing init expr of for; exclude 'in' */
+    // The following flags are set when parsing enters a particular region of
+    // source code, and cleared when that region is exited.
+    bool            parsingForInit:1;   /* true while parsing init expr of for;
+                                           exclude 'in' */
 
     // Set when parsing a declaration-like destructuring pattern.  This flag
     // causes PrimaryExpr to create PN_NAME parse nodes for variable references

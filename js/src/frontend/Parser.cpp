@@ -700,7 +700,7 @@ Parser::functionBody(FunctionBodyType type)
     PushStatementPC(pc, &stmtInfo, STMT_BLOCK);
     stmtInfo.isFunctionBodyBlock = true;
 
-    JS_ASSERT(!pc->hasReturnExpr && !pc->hasReturnVoid);
+    JS_ASSERT(!pc->funHasReturnExpr && !pc->funHasReturnVoid);
 
     ParseNode *pn;
     if (type == StatementListBody) {
@@ -739,7 +739,7 @@ Parser::functionBody(FunctionBodyType type)
     FinishPopStatement(pc);
 
     /* Check for falling off the end of a function that returns a value. */
-    if (context->hasStrictOption() && pc->hasReturnExpr &&
+    if (context->hasStrictOption() && pc->funHasReturnExpr &&
         !CheckFinalReturn(context, this, pn))
     {
         pn = NULL;
@@ -2559,24 +2559,24 @@ Parser::returnOrYield(bool useAssignExpr)
 #if JS_HAS_GENERATORS
         if (tt == TOK_RETURN)
 #endif
-            pc->hasReturnExpr = true;
+            pc->funHasReturnExpr = true;
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->pn_kid = pn2;
     } else {
 #if JS_HAS_GENERATORS
         if (tt == TOK_RETURN)
 #endif
-            pc->hasReturnVoid = true;
+            pc->funHasReturnVoid = true;
     }
 
-    if (pc->hasReturnExpr && pc->sc->funIsGenerator()) {
+    if (pc->funHasReturnExpr && pc->sc->funIsGenerator()) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
         ReportBadReturn(context, this, pn, &Parser::reportError, JSMSG_BAD_GENERATOR_RETURN,
                         JSMSG_BAD_ANON_GENERATOR_RETURN);
         return NULL;
     }
 
-    if (context->hasStrictOption() && pc->hasReturnExpr && pc->hasReturnVoid &&
+    if (context->hasStrictOption() && pc->funHasReturnExpr && pc->funHasReturnVoid &&
         !ReportBadReturn(context, this, pn, &Parser::reportStrictWarning,
                          JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE))
     {
@@ -2964,7 +2964,7 @@ Parser::forStatement()
             /*
              * Set pn1 to a var list or an initializing expression.
              *
-             * Set the inForInit flag during parsing of the first clause
+             * Set the parsingForInit flag during parsing of the first clause
              * of the for statement.  This flag will be used by the RelExpr
              * production; if it is set, then the 'in' keyword will not be
              * recognized as an operator, leaving it available to be parsed as
@@ -2974,7 +2974,7 @@ Parser::forStatement()
              * expressions involving an 'in' operator are illegal in the init
              * clause of an ordinary for loop.
              */
-            pc->inForInit = true;
+            pc->parsingForInit = true;
             if (tt == TOK_VAR || tt == TOK_CONST) {
                 forDecl = true;
                 tokenStream.consumeKnownToken(tt);
@@ -2997,7 +2997,7 @@ Parser::forStatement()
             else {
                 pn1 = expr();
             }
-            pc->inForInit = false;
+            pc->parsingForInit = false;
             if (!pn1)
                 return NULL;
         }
@@ -3015,7 +3015,7 @@ Parser::forStatement()
      * We can be sure that it's a for/in loop if there's still an 'in'
      * keyword here, even if JavaScript recognizes 'in' as an operator,
      * as we've excluded 'in' from being parsed in RelExpr by setting
-     * pc->inForInit.
+     * pc->parsingForInit.
      */
     ParseNode *forHead;        /* initialized by both branches. */
     StmtInfoPC letStmt(context); /* used if blockObj != NULL. */
@@ -4075,7 +4075,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
             if (!CheckDestructuring(context, &data, pn2, this))
                 return NULL;
             bool ignored;
-            if (pc->inForInit && matchInOrOf(&ignored)) {
+            if (pc->parsingForInit && matchInOrOf(&ignored)) {
                 tokenStream.ungetToken();
                 pn->append(pn2);
                 continue;
@@ -4281,8 +4281,8 @@ BEGIN_EXPR_PARSER(relExpr1)
      * Uses of the in operator in shiftExprs are always unambiguous,
      * so unset the flag that prohibits recognizing it.
      */
-    bool oldInForInit = pc->inForInit;
-    pc->inForInit = false;
+    bool oldParsingForInit = pc->parsingForInit;
+    pc->parsingForInit = false;
 
     ParseNode *pn = shiftExpr1i();
     while (pn &&
@@ -4291,14 +4291,14 @@ BEGIN_EXPR_PARSER(relExpr1)
              * Recognize the 'in' token as an operator only if we're not
              * currently in the init expr of a for loop.
              */
-            (oldInForInit == 0 && tokenStream.isCurrentTokenType(TOK_IN)) ||
+            (oldParsingForInit == 0 && tokenStream.isCurrentTokenType(TOK_IN)) ||
             tokenStream.isCurrentTokenType(TOK_INSTANCEOF))) {
         ParseNodeKind kind = RelationalTokenToParseNodeKind(tokenStream.currentToken());
         JSOp op = tokenStream.currentToken().t_op;
         pn = ParseNode::newBinaryOrAppend(kind, op, pn, shiftExpr1n(), this);
     }
-    /* Restore previous state of inForInit flag. */
-    pc->inForInit |= oldInForInit;
+    /* Restore previous state of parsingForInit flag. */
+    pc->parsingForInit |= oldParsingForInit;
 
     return pn;
 }
@@ -4392,10 +4392,10 @@ Parser::condExpr1()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    bool oldInForInit = pc->inForInit;
-    pc->inForInit = false;
+    bool oldParsingForInit = pc->parsingForInit;
+    pc->parsingForInit = false;
     ParseNode *thenExpr = assignExpr();
-    pc->inForInit = oldInForInit;
+    pc->parsingForInit = oldParsingForInit;
     if (!thenExpr)
         return NULL;
 
@@ -4810,7 +4810,7 @@ GenexpGuard::maybeNoteGenerator(ParseNode *pn)
             parser->reportError(NULL, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
             return false;
         }
-        if (pc->hasReturnExpr) {
+        if (pc->funHasReturnExpr) {
             /* At the time we saw the yield, we might not have set funIsGenerator yet. */
             ReportBadReturn(pc->sc->context, parser, pn, &Parser::reportError,
                             JSMSG_BAD_GENERATOR_RETURN, JSMSG_BAD_ANON_GENERATOR_RETURN);
@@ -5696,10 +5696,10 @@ Parser::bracketedExpr()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    bool oldInForInit = pc->inForInit;
-    pc->inForInit = false;
+    bool oldParsingForInit = pc->parsingForInit;
+    pc->parsingForInit = false;
     ParseNode *pn = expr();
-    pc->inForInit = oldInForInit;
+    pc->parsingForInit = oldParsingForInit;
     return pn;
 }
 
