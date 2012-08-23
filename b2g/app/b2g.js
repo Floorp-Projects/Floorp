@@ -515,11 +515,13 @@ pref("hal.processPriorityManager.gonk.masterNice", -1);
 pref("hal.processPriorityManager.gonk.foregroundNice", 0);
 pref("hal.processPriorityManager.gonk.backgroundNice", 10);
 
+#ifndef DEBUG
 // Enable pre-launching content processes for improved startup time
 // (hiding latency).
 pref("dom.ipc.processPrelauch.enabled", true);
 // Wait this long before pre-launching a new subprocess.
 pref("dom.ipc.processPrelauch.delayMs", 1000);
+#endif
 
 // Ignore the "dialog=1" feature in window.open.
 pref("dom.disable_window_open_dialog_feature", true);
