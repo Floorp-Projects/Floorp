@@ -7,6 +7,7 @@
 #include "nsDiskCacheMap.h"
 #include "nsDiskCacheBinding.h"
 #include "nsDiskCacheEntry.h"
+#include "nsDiskCacheDevice.h"
 #include "nsCacheService.h"
 
 #include "nsCache.h"
@@ -1217,7 +1218,7 @@ nsDiskCacheMap::InitCacheClean(nsIFile *  cacheDirectory,
     // if the cache is clean or not. 
     bool cacheCleanFileExists = false;
     nsCOMPtr<nsIFile> cacheCleanFile;
-    nsresult rv = cacheDirectory->Clone(getter_AddRefs(cacheCleanFile));
+    nsresult rv = cacheDirectory->GetParent(getter_AddRefs(cacheCleanFile));
     if (NS_SUCCEEDED(rv)) {
         rv = cacheCleanFile->AppendNative(
                  NS_LITERAL_CSTRING("_CACHE_CLEAN_"));
@@ -1327,7 +1328,7 @@ nsDiskCacheMap::ResetCacheTimer(int32_t timeout)
     mCleanCacheTimer->Cancel();
     nsresult rv =
       mCleanCacheTimer->InitWithFuncCallback(RevalidateTimerCallback,
-                                             this, timeout,
+                                             nullptr, timeout,
                                              nsITimer::TYPE_ONE_SHOT);
     NS_ENSURE_SUCCESS(rv, rv);
     mLastInvalidateTime = PR_IntervalNow();
@@ -1338,29 +1339,31 @@ nsDiskCacheMap::ResetCacheTimer(int32_t timeout)
 void
 nsDiskCacheMap::RevalidateTimerCallback(nsITimer *aTimer, void *arg)
 {
-    nsDiskCacheMap *diskCacheMap = reinterpret_cast<nsDiskCacheMap *>(arg);
-    nsresult rv;
-
-    // Intentional braces to scope mutex to only what is needed
-    {
-        nsCacheServiceAutoLock lock(LOCK_TELEM(NSDISKCACHEMAP_REVALIDATION));
-        // If we have less than kLastInvalidateTime since the last timer was
-        // issued then another thread called InvalidateCache.  This won't catch
-        // all cases where we wanted to cancel the timer, but under the lock it
-        // is always OK to revalidate as long as IsCacheInSafeState() returns
-        // true.  We just want to avoid revalidating when we can to reduce IO
-        // and this check will do that.
-        uint32_t delta =
-            PR_IntervalToMilliseconds(PR_IntervalNow() -
-                                      diskCacheMap->mLastInvalidateTime) +
-            kRevalidateCacheTimeoutTolerance;
-        if (delta < kRevalidateCacheTimeout) {
-            diskCacheMap->ResetCacheTimer();
-            return;
-        }
-        rv = diskCacheMap->RevalidateCache();
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSDISKCACHEMAP_REVALIDATION));
+    if (!nsCacheService::gService->mDiskDevice ||
+        !nsCacheService::gService->mDiskDevice->Initialized()) {
+        return;
     }
 
+    nsDiskCacheMap *diskCacheMap =
+        &nsCacheService::gService->mDiskDevice->mCacheMap;
+
+    // If we have less than kRevalidateCacheTimeout since the last timer was
+    // issued then another thread called InvalidateCache.  This won't catch
+    // all cases where we wanted to cancel the timer, but under the lock it
+    // is always OK to revalidate as long as IsCacheInSafeState() returns
+    // true.  We just want to avoid revalidating when we can to reduce IO
+    // and this check will do that.
+    uint32_t delta =
+        PR_IntervalToMilliseconds(PR_IntervalNow() -
+                                  diskCacheMap->mLastInvalidateTime) +
+        kRevalidateCacheTimeoutTolerance;
+    if (delta < kRevalidateCacheTimeout) {
+        diskCacheMap->ResetCacheTimer();
+        return;
+    }
+
+    nsresult rv = diskCacheMap->RevalidateCache();
     if (NS_FAILED(rv)) {
         diskCacheMap->ResetCacheTimer(kRevalidateCacheErrorTimeout);
     }
