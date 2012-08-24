@@ -157,6 +157,12 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserNewTabPreloader", function () {
   return new tmp.BrowserNewTabPreloader();
 });
 
+XPCOMUtils.defineLazyGetter(this, "TabTitleAbridger", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/TabTitleAbridger.jsm", tmp);
+  return new tmp.TabTitleAbridger(window);
+});
+
 let gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -1413,6 +1419,7 @@ var gBrowserInit = {
 
     gBrowserThumbnails.init();
     TabView.init();
+    TabTitleAbridger.init();
 
     setUrlAndSearchBarWidthForConditionalForwardButton();
     window.addEventListener("resize", function resizeHandler(event) {
@@ -1608,6 +1615,7 @@ var gBrowserInit = {
       TabView.uninit();
       gBrowserThumbnails.uninit();
       FullZoom.destroy();
+      TabTitleAbridger.destroy();
 
       Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-disabled");
