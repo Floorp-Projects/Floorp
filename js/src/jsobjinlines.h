@@ -912,14 +912,6 @@ JSObject::isCallable()
     return isFunction() || getClass()->call;
 }
 
-inline JSPrincipals *
-JSObject::principals(JSContext *cx)
-{
-    if (JSObjectPrincipalsFinder find = cx->runtime->securityCallbacks->findObjectPrincipals)
-        return find(this);
-    return cx->compartment ? cx->compartment->principals : NULL;
-}
-
 inline void
 JSObject::nativeSetSlot(unsigned slot, const js::Value &value)
 {

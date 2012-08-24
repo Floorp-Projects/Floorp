@@ -76,6 +76,7 @@
 #include "SandboxHal.h"
 #include "StructuredCloneUtils.h"
 #include "TabParent.h"
+#include "URIUtils.h"
 
 #ifdef ANDROID
 # include "gfxAndroidPlatform.h"
@@ -186,7 +187,8 @@ ContentParent::PreallocateAppProcess()
     }
 
     sPreallocatedAppProcess =
-        new ContentParent(MAGIC_PREALLOCATED_APP_MANIFEST_URL);
+        new ContentParent(MAGIC_PREALLOCATED_APP_MANIFEST_URL,
+                          /*isBrowserElement=*/false);
     sPreallocatedAppProcess->Init();
 }
 
@@ -248,7 +250,7 @@ ContentParent::ShutDown()
 }
 
 /*static*/ ContentParent*
-ContentParent::GetNewOrUsed()
+ContentParent::GetNewOrUsed(bool aForBrowserElement)
 {
     if (!gNonAppContentParents)
         gNonAppContentParents = new nsTArray<ContentParent*>();
@@ -265,7 +267,8 @@ ContentParent::GetNewOrUsed()
     }
 
     nsRefPtr<ContentParent> p =
-        new ContentParent(/* appManifestURL = */ EmptyString());
+        new ContentParent(/* appManifestURL = */ EmptyString(),
+                          aForBrowserElement);
     p->Init();
     gNonAppContentParents->AppendElement(p);
     return p;
@@ -274,8 +277,14 @@ ContentParent::GetNewOrUsed()
 /*static*/ TabParent*
 ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
 {
+    // We currently don't set the <app> ancestor for <browser> content
+    // correctly.  This assertion is to notify the person who fixes
+    // this code that they need to reevaluate places here where we may
+    // make bad assumptions based on that bug.
+    MOZ_ASSERT(!aApp || !aIsBrowserElement);
+
     if (!aApp) {
-        if (ContentParent* cp = GetNewOrUsed()) {
+        if (ContentParent* cp = GetNewOrUsed(aIsBrowserElement)) {
             nsRefPtr<TabParent> tp(new TabParent(aApp, aIsBrowserElement));
             return static_cast<TabParent*>(
                 cp->SendPBrowserConstructor(
@@ -321,7 +330,7 @@ ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
             p->SetManifestFromPreallocated(manifestURL);
         } else {
             NS_WARNING("Unable to use pre-allocated app process");
-            p = new ContentParent(manifestURL);
+            p = new ContentParent(manifestURL, aIsBrowserElement);
             p->Init();
         }
         gAppContentParents->Put(manifestURL, p);
@@ -647,7 +656,8 @@ ContentParent::GetTestShellSingleton()
     return static_cast<TestShellParent*>(ManagedPTestShellParent()[0]);
 }
 
-ContentParent::ContentParent(const nsAString& aAppManifestURL)
+ContentParent::ContentParent(const nsAString& aAppManifestURL,
+                             bool aIsForBrowser)
     : mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
@@ -671,7 +681,8 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL)
         mSubprocess->AsyncLaunch();
     }
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
-    unused << SendSetID(gContentChildID++);
+    unused << SendSetProcessAttributes(gContentChildID++,
+                                       IsForApp(), aIsForBrowser);
 
     // NB: internally, this will send an IPC message to the child
     // process to get it to create the CompositorChild.  This
@@ -1343,12 +1354,12 @@ ContentParent::DeallocPNecko(PNeckoParent* necko)
 }
 
 PExternalHelperAppParent*
-ContentParent::AllocPExternalHelperApp(const IPC::URI& uri,
+ContentParent::AllocPExternalHelperApp(const OptionalURIParams& uri,
                                        const nsCString& aMimeContentType,
                                        const nsCString& aContentDisposition,
                                        const bool& aForceSave,
                                        const int64_t& aContentLength,
-                                       const IPC::URI& aReferrer)
+                                       const OptionalURIParams& aReferrer)
 {
     ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
     parent->AddRef();
@@ -1420,43 +1431,52 @@ ContentParent::RequestRunToCompletion()
 }
 
 bool
-ContentParent::RecvStartVisitedQuery(const IPC::URI& aURI)
+ContentParent::RecvStartVisitedQuery(const URIParams& aURI)
 {
-    nsCOMPtr<nsIURI> newURI(aURI);
+    nsCOMPtr<nsIURI> newURI = DeserializeURI(aURI);
+    if (!newURI) {
+        return false;
+    }
     nsCOMPtr<IHistory> history = services::GetHistoryService();
     NS_ABORT_IF_FALSE(history, "History must exist at this point.");
     if (history) {
-      history->RegisterVisitedCallback(newURI, nullptr);
+        history->RegisterVisitedCallback(newURI, nullptr);
     }
     return true;
 }
 
 
 bool
-ContentParent::RecvVisitURI(const IPC::URI& uri,
-                                   const IPC::URI& referrer,
-                                   const uint32_t& flags)
+ContentParent::RecvVisitURI(const URIParams& uri,
+                            const OptionalURIParams& referrer,
+                            const uint32_t& flags)
 {
-    nsCOMPtr<nsIURI> ourURI(uri);
-    nsCOMPtr<nsIURI> ourReferrer(referrer);
+    nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
+    if (!ourURI) {
+        return false;
+    }
+    nsCOMPtr<nsIURI> ourReferrer = DeserializeURI(referrer);
     nsCOMPtr<IHistory> history = services::GetHistoryService();
     NS_ABORT_IF_FALSE(history, "History must exist at this point");
     if (history) {
-      history->VisitURI(ourURI, ourReferrer, flags);
+        history->VisitURI(ourURI, ourReferrer, flags);
     }
     return true;
 }
 
 
 bool
-ContentParent::RecvSetURITitle(const IPC::URI& uri,
-                                      const nsString& title)
+ContentParent::RecvSetURITitle(const URIParams& uri,
+                               const nsString& title)
 {
-    nsCOMPtr<nsIURI> ourURI(uri);
+    nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
+    if (!ourURI) {
+        return false;
+    }
     nsCOMPtr<IHistory> history = services::GetHistoryService();
     NS_ABORT_IF_FALSE(history, "History must exist at this point");
     if (history) {
-      history->SetURITitle(ourURI, title);
+        history->SetURITitle(ourURI, title);
     }
     return true;
 }
@@ -1537,12 +1557,16 @@ ContentParent::RecvShowFilePicker(const int16_t& mode,
 }
 
 bool
-ContentParent::RecvLoadURIExternal(const IPC::URI& uri)
+ContentParent::RecvLoadURIExternal(const URIParams& uri)
 {
     nsCOMPtr<nsIExternalProtocolService> extProtService(do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
-    if (!extProtService)
+    if (!extProtService) {
         return true;
-    nsCOMPtr<nsIURI> ourURI(uri);
+    }
+    nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
+    if (!ourURI) {
+        return false;
+    }
     extProtService->LoadURI(ourURI, nullptr);
     return true;
 }

@@ -110,7 +110,7 @@ nsMemoryCacheDevice::GetDeviceID()
 nsCacheEntry *
 nsMemoryCacheDevice::FindEntry(nsCString * key, bool *collision)
 {
-    mozilla::Telemetry::AutoTimer<mozilla::Telemetry::CACHE_MEMORY_SEARCH> timer;
+    mozilla::Telemetry::AutoTimer<mozilla::Telemetry::CACHE_MEMORY_SEARCH_2> timer;
     nsCacheEntry * entry = mMemCacheEntries.GetEntry(key);
     if (!entry)  return nullptr;
 

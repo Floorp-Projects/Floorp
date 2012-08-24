@@ -7,10 +7,6 @@
 
 include protocol PBrowser;
 
-include "mozilla/net/NeckoMessageUtils.h";
-
-using IPC::URI;
-
 namespace mozilla {
 namespace docshell {
 

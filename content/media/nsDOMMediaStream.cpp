@@ -51,6 +51,15 @@ nsDOMMediaStream::CreateInputStream()
   return stream.forget();
 }
 
+already_AddRefed<nsDOMMediaStream>
+nsDOMMediaStream::CreateTrackUnionStream()
+{
+  nsRefPtr<nsDOMMediaStream> stream = new nsDOMMediaStream();
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+  stream->mStream = gm->CreateTrackUnionStream(stream);
+  return stream.forget();
+}
+
 bool
 nsDOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
 {

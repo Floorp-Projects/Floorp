@@ -19,9 +19,8 @@
 #include "prerror.h"
 #include "plstr.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIIPCSerializableObsolete.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ipc/IPCSerializableParams.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "nsIIPCSerializableInputStream.h"
 
 using namespace mozilla::ipc;
@@ -33,7 +32,6 @@ using namespace mozilla::ipc;
 class nsStringInputStream MOZ_FINAL : public nsIStringInputStream
                                     , public nsISeekableStream
                                     , public nsISupportsCString
-                                    , public nsIIPCSerializableObsolete
                                     , public nsIIPCSerializableInputStream
 {
 public:
@@ -43,7 +41,6 @@ public:
     NS_DECL_NSISEEKABLESTREAM
     NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSCSTRING
-    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
     nsStringInputStream()
@@ -86,12 +83,11 @@ NS_IMPL_THREADSAFE_RELEASE(nsStringInputStream)
 
 NS_IMPL_CLASSINFO(nsStringInputStream, NULL, nsIClassInfo::THREADSAFE,
                   NS_STRINGINPUTSTREAM_CID)
-NS_IMPL_QUERY_INTERFACE6_CI(nsStringInputStream,
+NS_IMPL_QUERY_INTERFACE5_CI(nsStringInputStream,
                             nsIStringInputStream,
                             nsIInputStream,
                             nsISupportsCString,
                             nsISeekableStream,
-                            nsIIPCSerializableObsolete,
                             nsIIPCSerializableInputStream)
 NS_IMPL_CI_INTERFACE_GETTER4(nsStringInputStream,
                              nsIStringInputStream,
@@ -291,35 +287,6 @@ nsStringInputStream::SetEOF()
 
     mOffset = Length();
     return NS_OK;
-}
-
-/////////
-// nsIIPCSerializableObsolete implementation
-/////////
-
-bool
-nsStringInputStream::Read(const IPC::Message *aMsg, void **aIter)
-{
-    using IPC::ReadParam;
-
-    nsCString value;
-
-    if (!ReadParam(aMsg, aIter, &value))
-        return false;
-
-    nsresult rv = SetData(value);
-    if (NS_FAILED(rv))
-        return false;
-
-    return true;
-}
-
-void
-nsStringInputStream::Write(IPC::Message *aMsg)
-{
-    using IPC::WriteParam;
-
-    WriteParam(aMsg, static_cast<const nsCString&>(PromiseFlatCString(mData)));
 }
 
 void

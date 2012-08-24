@@ -796,6 +796,7 @@ FrameLayerBuilder::SetAndClearInvalidRegion(DisplayItemDataEntry* aEntry)
     aEntry->mInvalidRegion.forget(&invalidRegion);
 
     invalidRegion->mRegion.SetEmpty();
+    invalidRegion->mIsInfinite = false;
     props.Set(ThebesLayerInvalidRegionProperty(), invalidRegion);
   }
 }
@@ -809,7 +810,8 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
   FrameProperties props = f->Properties();
   DisplayItemDataEntry* newDisplayItems =
     builder ? builder->mNewDisplayItemData.GetEntry(f) : nullptr;
-  if (!newDisplayItems || newDisplayItems->mData.IsEmpty()) {
+  if (!newDisplayItems || (newDisplayItems->mData.IsEmpty() &&
+                           !newDisplayItems->mIsMergedFrame)) {
     // This frame was visible, but isn't anymore.
     if (newDisplayItems) {
       builder->mNewDisplayItemData.RawRemoveEntry(newDisplayItems);
@@ -828,6 +830,7 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
   // Steal the list of display item layers and invalid region
   aEntry->mData.SwapElements(newDisplayItems->mData);
   aEntry->mInvalidRegion.swap(newDisplayItems->mInvalidRegion);
+  aEntry->mIsMergedFrame = newDisplayItems->mIsMergedFrame;
   // Clear and reset the invalid region now so we can start collecting new
   // dirty areas.
   SetAndClearInvalidRegion(aEntry);
@@ -856,6 +859,7 @@ FrameLayerBuilder::StoreNewDisplayItemData(DisplayItemDataEntry* aEntry,
                "mFramesWithLayers out of sync");
 
   newEntry->mData.SwapElements(aEntry->mData);
+  newEntry->mIsMergedFrame = aEntry->mIsMergedFrame;
   props.Set(LayerManagerDataProperty(), data);
   return PL_DHASH_REMOVE;
 }
@@ -2159,32 +2163,42 @@ ApplyThebesLayerInvalidation(nsDisplayListBuilder* aBuilder,
   FrameProperties props = aContainerFrame->Properties();
   RefCountedRegion* invalidThebesContent = static_cast<RefCountedRegion*>
     (props.Get(ThebesLayerInvalidRegionProperty()));
+  const FrameLayerBuilder::ContainerParameters& scaleParameters = aState.ScaleParameters();
+
+  nsRegion invalidRegion;
   if (invalidThebesContent) {
-    const FrameLayerBuilder::ContainerParameters& scaleParameters = aState.ScaleParameters();
-    if (aTransform) {
-      // XXX We're simplifying the transform by only using the bounds of the
-      //     region. This may have performance implications.
-      nsRect transformedBounds = aTransform->
-        TransformRectOut(invalidThebesContent->mRegion.GetBounds(),
-                         aTransform->GetUnderlyingFrame(), -(*aCurrentOffset));
-      aState.AddInvalidThebesContent(transformedBounds.
-        ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
-                             aState.GetAppUnitsPerDevPixel()));
-    } else {
-      aState.AddInvalidThebesContent(invalidThebesContent->mRegion.
-        ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
-                             aState.GetAppUnitsPerDevPixel()));
+    if (invalidThebesContent->mIsInfinite) {
+      // The region was marked as infinite to indicate that everything should be
+      // invalidated.
+      aState.SetInvalidateAllThebesContent();
+      return;
     }
-    // We have to preserve the current contents of invalidThebesContent
-    // because there might be multiple container layers for the same
-    // frame and we need to invalidate the ThebesLayer children of all
-    // of them. Also, multiple calls to ApplyThebesLayerInvalidation for the
-    // same layer can share the same region.
+
+    invalidRegion = invalidThebesContent->mRegion;
   } else {
-    // The region was deleted to indicate that everything should be
-    // invalidated.
-    aState.SetInvalidateAllThebesContent();
+    // The region doesn't exist, so this is a newly visible frame. Invalidate
+    // the frame area.
+    invalidRegion =
+      aContainerFrame->GetVisualOverflowRectRelativeToSelf() + *aCurrentOffset;
   }
+
+  if (aTransform) {
+    // XXX We're simplifying the transform by only using the bounds of the
+    //     region. This may have performance implications.
+    invalidRegion = aTransform->
+      TransformRectOut(invalidRegion.GetBounds(),
+                       aTransform->GetUnderlyingFrame(), -(*aCurrentOffset));
+  }
+
+  aState.AddInvalidThebesContent(invalidRegion.
+    ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
+                         aState.GetAppUnitsPerDevPixel()));
+
+  // We have to preserve the current contents of invalidThebesContent
+  // because there might be multiple container layers for the same
+  // frame and we need to invalidate the ThebesLayer children of all
+  // of them. Also, multiple calls to ApplyThebesLayerInvalidation for the
+  // same layer can share the same region.
 }
 
 /* static */ PLDHashOperator
@@ -2375,6 +2389,10 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
           // by multiple container layers. This is cleared and set when iterating
           // over the DisplayItemDataEntry's in WillEndTransaction.
           entry->mInvalidRegion = thebesLayerInvalidRegion;
+
+          // Mark that this is a merged frame so that we retain the display
+          // item data when updating.
+          entry->mIsMergedFrame = true;
         }
         ApplyThebesLayerInvalidation(aBuilder, mergedFrame, nullptr, state,
                                      &currentOffset, transformItem);
@@ -2491,9 +2509,17 @@ InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame, bool aTrustFrameGeomet
       FrameLayerBuilder::InvalidateThebesLayerContents(aFrame,
         aFrame->GetVisualOverflowRectRelativeToSelf());
     } else {
-      // Delete the invalid region to indicate that all Thebes contents
-      // need to be invalidated
-      aFrame->Properties().Delete(ThebesLayerInvalidRegionProperty());
+      // Mark the invalid region as infinite to indicate that all Thebes
+      // contents need to be invalidated
+      FrameProperties props = aFrame->Properties();
+      RefCountedRegion* invalidRegion = static_cast<RefCountedRegion*>
+        (props.Get(ThebesLayerInvalidRegionProperty()));
+      if (!invalidRegion) {
+        invalidRegion = new RefCountedRegion();
+        invalidRegion->AddRef();
+        props.Set(ThebesLayerInvalidRegionProperty(), invalidRegion);
+      }
+      invalidRegion->mIsInfinite = true;
     }
     foundContainerLayer = true;
   }

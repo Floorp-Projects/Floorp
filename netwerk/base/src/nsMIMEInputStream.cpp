@@ -9,7 +9,6 @@
  */
 
 #include "IPC/IPCMessageUtils.h"
-#include "mozilla/net/NeckoMessageUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -19,12 +18,15 @@
 #include "nsIStringStream.h"
 #include "nsString.h"
 #include "nsMIMEInputStream.h"
-#include "nsIIPCSerializableObsolete.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIIPCSerializableInputStream.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+
+using namespace mozilla::ipc;
 
 class nsMIMEInputStream : public nsIMIMEInputStream,
                           public nsISeekableStream,
-                          public nsIIPCSerializableObsolete
+                          public nsIIPCSerializableInputStream
 {
 public:
     nsMIMEInputStream();
@@ -34,8 +36,8 @@ public:
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIMIMEINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
-    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
-    
+    NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
+
     NS_METHOD Init();
 
 private:
@@ -73,12 +75,11 @@ NS_IMPL_QUERY_INTERFACE4_CI(nsMIMEInputStream,
                             nsIMIMEInputStream,
                             nsIInputStream,
                             nsISeekableStream,
-                            nsIIPCSerializableObsolete)
-NS_IMPL_CI_INTERFACE_GETTER4(nsMIMEInputStream,
+                            nsIIPCSerializableInputStream)
+NS_IMPL_CI_INTERFACE_GETTER3(nsMIMEInputStream,
                              nsIMIMEInputStream,
                              nsIInputStream,
-                             nsISeekableStream,
-                             nsIIPCSerializableObsolete)
+                             nsISeekableStream)
 
 nsMIMEInputStream::nsMIMEInputStream() : mAddContentLength(false),
                                          mStartedReading(false)
@@ -293,51 +294,79 @@ nsMIMEInputStreamConstructor(nsISupports *outer, REFNSIID iid, void **result)
     return rv;
 }
 
-bool
-nsMIMEInputStream::Read(const IPC::Message *aMsg, void **aIter)
+void
+nsMIMEInputStream::Serialize(InputStreamParams& aParams)
 {
-    using IPC::ReadParam;
+    MIMEInputStreamParams params;
 
-    if (!ReadParam(aMsg, aIter, &mHeaders) ||
-        !ReadParam(aMsg, aIter, &mContentLength) ||
-        !ReadParam(aMsg, aIter, &mStartedReading))
+    if (mData) {
+        nsCOMPtr<nsIIPCSerializableInputStream> stream =
+            do_QueryInterface(mData);
+        NS_ASSERTION(stream, "Wrapped stream is not serializable!");
+
+        InputStreamParams wrappedParams;
+        stream->Serialize(wrappedParams);
+
+        NS_ASSERTION(wrappedParams.type() != InputStreamParams::T__None,
+                     "Wrapped stream failed to serialize!");
+
+        params.optionalStream() = wrappedParams;
+    }
+    else {
+        params.optionalStream() = mozilla::void_t();
+    }
+
+    params.headers() = mHeaders;
+    params.contentLength() = mContentLength;
+    params.startedReading() = mStartedReading;
+    params.addContentLength() = mAddContentLength;
+
+    aParams = params;
+}
+
+bool
+nsMIMEInputStream::Deserialize(const InputStreamParams& aParams)
+{
+    if (aParams.type() != InputStreamParams::TMIMEInputStreamParams) {
+        NS_ERROR("Received unknown parameters from the other process!");
         return false;
+    }
+
+    const MIMEInputStreamParams& params =
+        aParams.get_MIMEInputStreamParams();
+    const OptionalInputStreamParams& wrappedParams = params.optionalStream();
+
+    mHeaders = params.headers();
+    mContentLength = params.contentLength();
+    mStartedReading = params.startedReading();
 
     // nsMIMEInputStream::Init() already appended mHeaderStream & mCLStream
     mHeaderStream->ShareData(mHeaders.get(),
-                             mStartedReading? mHeaders.Length() : 0);
+                             mStartedReading ? mHeaders.Length() : 0);
     mCLStream->ShareData(mContentLength.get(),
-                         mStartedReading? mContentLength.Length() : 0);
+                         mStartedReading ? mContentLength.Length() : 0);
 
-    IPC::InputStream inputStream;
-    if (!ReadParam(aMsg, aIter, &inputStream))
-        return false;
-
-    nsCOMPtr<nsIInputStream> stream(inputStream);
-    mData = stream;
-    if (stream) {
-        nsresult rv = mStream->AppendStream(mData);
-        if (NS_FAILED(rv))
+    nsCOMPtr<nsIInputStream> stream;
+    if (wrappedParams.type() == OptionalInputStreamParams::TInputStreamParams) {
+        stream = DeserializeInputStream(wrappedParams.get_InputStreamParams());
+        if (!stream) {
+            NS_WARNING("Failed to deserialize wrapped stream!");
             return false;
+        }
+
+        mData = stream;
+
+        if (NS_FAILED(mStream->AppendStream(mData))) {
+            NS_WARNING("Failed to append stream!");
+            return false;
+        }
+    }
+    else {
+        NS_ASSERTION(wrappedParams.type() == OptionalInputStreamParams::Tvoid_t,
+                     "Unknown type for OptionalInputStreamParams!");
     }
 
-    if (!ReadParam(aMsg, aIter, &mAddContentLength))
-        return false;
+    mAddContentLength = params.addContentLength();
 
     return true;
-}
-
-void
-nsMIMEInputStream::Write(IPC::Message *aMsg)
-{
-    using IPC::WriteParam;
-
-    WriteParam(aMsg, mHeaders);
-    WriteParam(aMsg, mContentLength);
-    WriteParam(aMsg, mStartedReading);
-
-    IPC::InputStream inputStream(mData);
-    WriteParam(aMsg, inputStream);
-
-    WriteParam(aMsg, mAddContentLength);
 }

@@ -28,11 +28,13 @@
 #include "nsContentUtils.h"
 #include "nsIMemoryReporter.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ipc/URIUtils.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_SIZE 128
 
 using namespace mozilla::dom;
+using namespace mozilla::ipc;
 using mozilla::unused;
 
 namespace mozilla {
@@ -308,10 +310,13 @@ public:
   // If we are a content process, always remote the request to the
   // parent process.
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    URIParams uri;
+    SerializeURI(aURI, uri);
+
     mozilla::dom::ContentChild* cpc =
       mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
-    (void)cpc->SendStartVisitedQuery(aURI);
+    (void)cpc->SendStartVisitedQuery(uri);
     return NS_OK;
   }
 
@@ -1457,10 +1462,12 @@ History::NotifyVisited(nsIURI* aURI)
   nsAutoScriptBlocker scriptBlocker;
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    URIParams uri;
+    SerializeURI(aURI, uri);
     nsTArray<ContentParent*> cplist;
     ContentParent::GetAll(cplist);
     for (uint32_t i = 0; i < cplist.Length(); ++i) {
-      unused << cplist[i]->SendNotifyVisited(aURI);
+      unused << cplist[i]->SendNotifyVisited(uri);
     }
   }
 
@@ -1792,10 +1799,16 @@ History::VisitURI(nsIURI* aURI,
   }
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    URIParams uri;
+    SerializeURI(aURI, uri);
+
+    OptionalURIParams lastVisitedURI;
+    SerializeURI(aLastVisitedURI, lastVisitedURI);
+
     mozilla::dom::ContentChild* cpc =
       mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
-    (void)cpc->SendVisitURI(aURI, aLastVisitedURI, aFlags);
+    (void)cpc->SendVisitURI(uri, lastVisitedURI, aFlags);
     return NS_OK;
   } 
 
@@ -1995,10 +2008,13 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
   }
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    URIParams uri;
+    SerializeURI(aURI, uri);
+
     mozilla::dom::ContentChild * cpc = 
       mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
-    (void)cpc->SendSetURITitle(aURI, nsString(aTitle));
+    (void)cpc->SendSetURITitle(uri, nsString(aTitle));
     return NS_OK;
   } 
 
