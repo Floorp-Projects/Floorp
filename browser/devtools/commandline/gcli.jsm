@@ -2339,6 +2339,7 @@ function Command(commandSpec) {
     throw new Error('command.params must be an array in ' + this.name);
   }
 
+  this.hasNamedParameters = false;
   this.description = 'description' in this ? this.description : undefined;
   this.description = lookup(this.description, 'canonDescNone');
   this.manual = 'manual' in this ? this.manual : undefined;
@@ -2373,12 +2374,20 @@ function Command(commandSpec) {
       else {
         var param = new Parameter(spec, this, null);
         this.params.push(param);
+
+        if (!param.isPositionalAllowed) {
+          this.hasNamedParameters = true;
+        }
       }
     }
     else {
       spec.params.forEach(function(ispec) {
         var param = new Parameter(ispec, this, spec.group);
         this.params.push(param);
+
+        if (!param.isPositionalAllowed) {
+          this.hasNamedParameters = true;
+        }
       }, this);
 
       usingGroups = true;
@@ -9820,6 +9829,9 @@ Completer.prototype._getCompleterTemplateData = function() {
   // then we don't want any text for that parameter at all.
   // The algorithm to add spaces needs to take this into account.
 
+  var command = this.requisition.commandAssignment.value;
+  var jsCommand = command && command.name === '{';
+
   var firstBlankParam = true;
   var emptyParameters = [];
   this.requisition.getAssignments().forEach(function(assignment) {
@@ -9856,8 +9868,23 @@ Completer.prototype._getCompleterTemplateData = function() {
     emptyParameters.push(text);
   }.bind(this));
 
-  var command = this.requisition.commandAssignment.value;
-  var jsCommand = command && command.name === '{';
+  var optionsRemaining = false;
+  if (command && command.hasNamedParameters) {
+    command.params.forEach(function(param) {
+      var arg = this.requisition.getAssignment(param.name).arg;
+      if (!param.isPositionalAllowed && !param.hidden
+              && arg.type === "BlankArgument") {
+        optionsRemaining = true;
+      }
+    }, this);
+  }
+
+  if (optionsRemaining) {
+    // Add an nbsp if we don't have one at the end of the input or if
+    // this isn't the first param we've mentioned
+    var prefix = (!trailingSeparator || !firstBlankParam) ?  '\u00a0' : '';
+    emptyParameters.push(prefix + '[options]');
+  }
 
   // Is the entered command a JS command with no closing '}'?
   // TWEAK: This code should be considered for promotion to Requisition
