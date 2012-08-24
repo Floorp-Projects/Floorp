@@ -852,16 +852,25 @@ struct Skippable
 
 // Cycle collector participant implementations.
 
+// A native class is non-nsISupports and uses nsCycleCollectingAutoRefCnt.
 #define NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(_class)                          \
   const CCParticipantVTable<NS_CYCLE_COLLECTION_CLASSNAME(_class)>             \
     ::Type _class::NS_CYCLE_COLLECTION_INNERNAME =                             \
   { NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(NS_CYCLE_COLLECTION_CLASSNAME(_class)) };
 
+// For native classes containing JS pointers.
 #define NS_IMPL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(_class)            \
   const CCParticipantVTable<NS_CYCLE_COLLECTION_CLASSNAME(_class)>             \
     ::Type _class::NS_CYCLE_COLLECTION_INNERNAME =                             \
   { NS_IMPL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_VTABLE(NS_CYCLE_COLLECTION_CLASSNAME(_class)) };
 
+// A legacy native class is non-nsISupports, but does not use
+// nsCycleCollectingAutoRefCnt. This should be avoided because it can
+// cause leaks.
+#define NS_IMPL_CYCLE_COLLECTION_LEGACY_NATIVE_CLASS(_class)                   \
+  NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(_class)
+
+// For nsISupports classes.
 #define NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                 \
   const CCParticipantVTable<NS_CYCLE_COLLECTION_CLASSNAME(_class)>             \
     ::Type _class::NS_CYCLE_COLLECTION_INNERNAME =                             \
@@ -875,15 +884,26 @@ struct Skippable
     static NS_METHOD RootImpl(void *n);                                        \
     static NS_METHOD UnlinkImpl(void *n);                                      \
     static NS_METHOD UnrootImpl(void *n);                                      \
-    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n) {};                    \
     static NS_METHOD TraverseImpl(NS_CYCLE_COLLECTION_CLASSNAME(_class) *that, \
                            void *n, nsCycleCollectionTraversalCallback &cb);
+
+#define NS_DECL_CYCLE_COLLECTION_NATIVE_UNMARK_IF_PURPLE(_class)               \
+    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *p)                        \
+    {                                                                          \
+        _class *tmp = static_cast<_class *>(p);                                \
+        if (NS_LIKELY(tmp->mRefCnt.IsPurple()))                                \
+            tmp->mRefCnt.unmarkPurple();                                       \
+    }
+
+#define NS_DECL_CYCLE_COLLECTION_STUB_UNMARK_IF_PURPLE(_class)                 \
+    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *p) {}
 
 #define NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(_class)                          \
   class NS_CYCLE_COLLECTION_INNERCLASS                                         \
    : public nsCycleCollectionParticipant                                       \
   {                                                                            \
      NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                        \
+     NS_DECL_CYCLE_COLLECTION_NATIVE_UNMARK_IF_PURPLE(_class)                  \
   };                                                                           \
   NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 
@@ -892,8 +912,18 @@ struct Skippable
    : public nsScriptObjectTracer                                               \
   {                                                                            \
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
+    NS_DECL_CYCLE_COLLECTION_NATIVE_UNMARK_IF_PURPLE(_class)                   \
     static NS_METHOD_(void) TraceImpl(void *p, TraceCallback cb,               \
                                       void *closure);                          \
+  };                                                                           \
+  NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
+
+#define NS_DECL_CYCLE_COLLECTION_LEGACY_NATIVE_CLASS(_class)                   \
+  class NS_CYCLE_COLLECTION_INNERCLASS                                         \
+   : public nsCycleCollectionParticipant                                       \
+  {                                                                            \
+     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                        \
+     NS_DECL_CYCLE_COLLECTION_STUB_UNMARK_IF_PURPLE(_class)                    \
   };                                                                           \
   NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 

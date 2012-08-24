@@ -107,7 +107,7 @@ public:
   /**
    * Reference counting and cycle collection.
    */
-  NS_INLINE_DECL_REFCOUNTING(AccEvent)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AccEvent)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(AccEvent)
 
 protected:

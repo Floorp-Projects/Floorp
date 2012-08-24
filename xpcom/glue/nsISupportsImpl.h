@@ -290,6 +290,61 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/*
+ * Implementation of AddRef and Release for non-nsISupports (ie "native")
+ * cycle-collected classes that use the purple buffer to avoid leaks.
+ */
+
+#define NS_IMPL_CC_NATIVE_ADDREF_BODY(_class)                                 \
+    NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");                 \
+    NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                          \
+    nsrefcnt count = mRefCnt.incr(this);                                      \
+    NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                       \
+    return count;
+
+#define NS_IMPL_CC_NATIVE_RELEASE_BODY(_class)                                \
+    NS_PRECONDITION(0 != mRefCnt, "dup release");                             \
+    NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                          \
+    nsrefcnt count =                                                          \
+      mRefCnt.decr(static_cast<void*>(this),                                  \
+                   _class::NS_CYCLE_COLLECTION_INNERNAME.GetParticipant());   \
+    NS_LOG_RELEASE(this, count, #_class);                                     \
+    if (count == 0) {                                                         \
+      NS_ASSERT_OWNINGTHREAD(_class);                                         \
+      mRefCnt.stabilizeForDeletion();                                         \
+      delete this;                                                            \
+      return 0;                                                               \
+    }                                                                         \
+    return count;
+
+#define NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(_class)                        \
+NS_METHOD_(nsrefcnt) _class::AddRef(void)                                     \
+{                                                                             \
+  NS_IMPL_CC_NATIVE_ADDREF_BODY(_class)                                       \
+}
+
+#define NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(_class)                       \
+NS_METHOD_(nsrefcnt) _class::Release(void)                                    \
+{                                                                             \
+  NS_IMPL_CC_NATIVE_RELEASE_BODY(_class)                                      \
+}
+
+#define NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(_class)            \
+public:                                                                       \
+  NS_METHOD_(nsrefcnt) AddRef(void) {                                         \
+    NS_IMPL_CC_NATIVE_ADDREF_BODY(_class)                                     \
+  }                                                                           \
+  NS_METHOD_(nsrefcnt) Release(void) {                                        \
+    NS_IMPL_CC_NATIVE_RELEASE_BODY(_class)                                    \
+  }                                                                           \
+protected:                                                                    \
+  nsCycleCollectingAutoRefCnt mRefCnt;                                        \
+  NS_DECL_OWNINGTHREAD                                                        \
+public:
+
+
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * Previously used to initialize the reference count, but no longer needed.
  *
