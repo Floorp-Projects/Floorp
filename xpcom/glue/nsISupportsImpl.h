@@ -79,21 +79,16 @@ private:
 
 // Support for ISupports classes which interact with cycle collector.
 
-/**
- * This struct (once shipped) will be FROZEN with respect to the
- * NS_CycleCollectorSuspect2 and NS_CycleCollectorForget2 functions.  If
- * we need to change the struct, we'll need Suspect3 and Forget3 for the
- * new versions.
- */
 struct nsPurpleBufferEntry {
   union {
-    nsISupports *mObject;                 // when low bit unset
+    void *mObject;                        // when low bit unset
     nsPurpleBufferEntry *mNextInFreeList; // when low bit set
   };
   // When an object is in the purple buffer, it replaces its reference
   // count with a (tagged) pointer to this entry, so we store the
   // reference count for it.
   nsrefcnt mRefCnt;
+  nsCycleCollectionParticipant *mParticipant; // NULL for nsISupports
 };
 
 class nsCycleCollectingAutoRefCnt {
@@ -108,7 +103,7 @@ public:
   {
   }
 
-  nsrefcnt incr(nsISupports *owner)
+  nsrefcnt incr(void *owner)
   {
     if (NS_UNLIKELY(mTagged == NS_CCAR_TAGGED_STABILIZED_REFCNT)) {
       // The sentinel value "purple bit alone, refcount 0" means
@@ -151,6 +146,11 @@ public:
 
   nsrefcnt decr(nsISupports *owner)
   {
+    return decr(owner, nullptr);
+  }
+
+  nsrefcnt decr(void *owner, nsCycleCollectionParticipant *p)
+  {
     if (NS_UNLIKELY(mTagged == NS_CCAR_TAGGED_STABILIZED_REFCNT))
       return 1;
 
@@ -177,7 +177,7 @@ public:
 
       nsPurpleBufferEntry *e;
       if (NS_LIKELY(refcount > 0) &&
-          ((e = NS_CycleCollectorSuspect2(owner)))) {
+          ((e = NS_CycleCollectorSuspect2(owner, p)))) {
         e->mRefCnt = refcount;
         mTagged = NS_CCAR_PURPLE_ENTRY_TO_TAGGED(e);
       } else {
