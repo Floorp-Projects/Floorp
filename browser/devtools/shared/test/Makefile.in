@@ -21,7 +21,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_toolbar_webconsole_errors_count.js \
   browser_layoutHelpers.js \
   head.js \
-  helper.js \
+  helpers.js \
   leakhunt.js \
   $(NULL)
 

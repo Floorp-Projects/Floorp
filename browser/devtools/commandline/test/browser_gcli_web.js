@@ -153,18 +153,21 @@ define('gclitest/index', ['require', 'exports', 'module' , 'gclitest/suite', 'gc
     window.display = new Display(options);
     var requisition = window.display.requisition;
 
-    exports.run({
-      window: window,
-      display: window.display,
-      hideExec: true
-    });
-
-    window.testCommands = function() {
-      require([ 'gclitest/mockCommands' ], function(mockCommands) {
-        mockCommands.setup();
+    // setTimeout keeps stack traces clear of RequireJS frames
+    window.setTimeout(function() {
+      exports.run({
+        window: window,
+        display: window.display,
+        hideExec: true
       });
-    };
-    window.testCommands();
+
+      window.testCommands = function() {
+        require([ 'gclitest/mockCommands' ], function(mockCommands) {
+          mockCommands.setup();
+        });
+      };
+      window.testCommands();
+    }, 10);
 
     return {
       /**
@@ -871,9 +874,10 @@ exports.shutdown = function(opts) {
  *
  *   // Thing to check
  *   status: "INCOMPLETE",   // One of "VALID", "ERROR", "INCOMPLETE"
- *   emptyParameters: [ "<message>" ], // Still to type
- *   directTabText: "o",     // Simple completion text
- *   arrowTabText: "",       // When the completion is not an extension
+ *   hints: The hint text, i.e. a concatenation of the directTabText, the
+ *     emptyParameters and the arrowTabText. The text as inserted into the UI
+ *     will include NBSP and Unicode RARR characters, these should be
+ *     represented using normal space and '->' for the arrow
  *   markup: "VVVIIIEEE",    // What state should the error markup be in
  * });
  */
@@ -882,7 +886,7 @@ exports.status = function(options, checks) {
   var inputter = options.display.inputter;
   var completer = options.display.completer;
 
-  if (checks.typed) {
+  if (checks.typed != null) {
     inputter.setInput(checks.typed);
   }
   else {
@@ -890,33 +894,31 @@ exports.status = function(options, checks) {
     return;
   }
 
-  if (checks.cursor) {
+  if (checks.cursor != null) {
     inputter.setCursor(checks.cursor);
   }
 
-  if (checks.status) {
+  if (checks.status != null) {
     test.is(requisition.getStatus().toString(),
             checks.status,
             "status for " + checks.typed);
   }
 
-  var data = completer._getCompleterTemplateData();
-  if (checks.emptyParameters != null) {
-    var realParams = data.emptyParameters;
-    test.is(realParams.length,
-            checks.emptyParameters.length,
-            'emptyParameters.length for \'' + checks.typed + '\'');
+  var actual = completer._getCompleterTemplateData();
 
-    if (realParams.length === checks.emptyParameters.length) {
-      for (var i = 0; i < realParams.length; i++) {
-        test.is(realParams[i].replace(/\u00a0/g, ' '),
-                checks.emptyParameters[i],
-                'emptyParameters[' + i + '] for \'' + checks.typed + '\'');
-      }
-    }
+  if (checks.hints != null) {
+    var actualHints = actual.directTabText +
+                      actual.emptyParameters.join('') +
+                      actual.arrowTabText;
+    actualHints = actualHints.replace(/\u00a0/g, ' ')
+                             .replace(/\u21E5/, '->')
+                             .replace(/ $/, '');
+    test.is(actualHints,
+            checks.hints,
+            'hints');
   }
 
-  if (checks.markup) {
+  if (checks.markup != null) {
     var cursor = checks.cursor ? checks.cursor.start : checks.typed.length;
     var statusMarkup = requisition.getInputStatusMarkup(cursor);
     var actualMarkup = statusMarkup.map(function(s) {
@@ -926,18 +928,6 @@ exports.status = function(options, checks) {
     test.is(checks.markup,
             actualMarkup,
             'markup for ' + checks.typed);
-  }
-
-  if (checks.directTabText) {
-    test.is(data.directTabText,
-            checks.directTabText,
-            'directTabText for \'' + checks.typed + '\'');
-  }
-
-  if (checks.arrowTabText) {
-    test.is(' \u00a0\u21E5 ' + checks.arrowTabText,
-            data.arrowTabText,
-            'arrowTabText for \'' + checks.typed + '\'');
   }
 };
 
@@ -975,9 +965,10 @@ exports.pressTab = function() {
  *   input: The text displayed in the input field
  *   cursor: The position of the start of the cursor
  *   status: One of "VALID", "ERROR", "INCOMPLETE"
- *   emptyParameters: Array of parameters still to type. e.g. [ "<message>" ]
- *   directTabText: Simple completion text
- *   arrowTabText: When the completion is not an extension (without arrow)
+ *   hints: The hint text, i.e. a concatenation of the directTabText, the
+ *     emptyParameters and the arrowTabText. The text as inserted into the UI
+ *     will include NBSP and Unicode RARR characters, these should be
+ *     represented using normal space and '->' for the arrow
  *   markup: What state should the error markup be in. e.g. "VVVIIIEEE"
  *   args: Maps of checks to make against the arguments:
  *     value: i.e. assignment.value (which ignores defaultValue)
@@ -994,25 +985,25 @@ exports.check = function(checks) {
   var completer = cachedOptions.display.completer;
   var actual = completer._getCompleterTemplateData();
 
-  if (checks.input) {
+  if (checks.input != null) {
     test.is(cachedOptions.display.inputter.element.value,
             checks.input,
             'input');
   }
 
-  if (checks.cursor) {
+  if (checks.cursor != null) {
     test.is(cachedOptions.display.inputter.element.selectionStart,
             checks.cursor,
             'cursor');
   }
 
-  if (checks.status) {
+  if (checks.status != null) {
     test.is(requisition.getStatus().toString(),
             checks.status,
             'status');
   }
 
-  if (checks.markup) {
+  if (checks.markup != null) {
     var cursor = cachedOptions.display.inputter.element.selectionStart;
     var statusMarkup = requisition.getInputStatusMarkup(cursor);
     var actualMarkup = statusMarkup.map(function(s) {
@@ -1024,34 +1015,19 @@ exports.check = function(checks) {
             'markup');
   }
 
-  if (checks.emptyParameters) {
-    var actualParams = actual.emptyParameters;
-    test.is(actualParams.length,
-            checks.emptyParameters.length,
-            'emptyParameters.length');
-
-    if (actualParams.length === checks.emptyParameters.length) {
-      for (var i = 0; i < actualParams.length; i++) {
-        test.is(actualParams[i].replace(/\u00a0/g, ' '),
-                checks.emptyParameters[i],
-                'emptyParameters[' + i + ']');
-      }
-    }
+  if (checks.hints != null) {
+    var actualHints = actual.directTabText +
+                      actual.emptyParameters.join('') +
+                      actual.arrowTabText;
+    actualHints = actualHints.replace(/\u00a0/g, ' ')
+                             .replace(/\u21E5/, '->')
+                             .replace(/ $/, '');
+    test.is(actualHints,
+            checks.hints,
+            'hints');
   }
 
-  if (checks.directTabText) {
-    test.is(actual.directTabText,
-            checks.directTabText,
-            'directTabText');
-  }
-
-  if (checks.arrowTabText) {
-    test.is(actual.arrowTabText,
-            ' \u00a0\u21E5 ' + checks.arrowTabText,
-            'arrowTabText');
-  }
-
-  if (checks.args) {
+  if (checks.args != null) {
     Object.keys(checks.args).forEach(function(paramName) {
       var check = checks.args[paramName];
 
@@ -1068,37 +1044,37 @@ exports.check = function(checks) {
         return;
       }
 
-      if (check.value) {
+      if (check.value != null) {
         test.is(assignment.value,
                 check.value,
                 'arg[\'' + paramName + '\'].value');
       }
 
-      if (check.name) {
+      if (check.name != null) {
         test.is(assignment.value.name,
                 check.name,
                 'arg[\'' + paramName + '\'].name');
       }
 
-      if (check.type) {
+      if (check.type != null) {
         test.is(assignment.arg.type,
                 check.type,
                 'arg[\'' + paramName + '\'].type');
       }
 
-      if (check.arg) {
+      if (check.arg != null) {
         test.is(assignment.arg.toString(),
                 check.arg,
                 'arg[\'' + paramName + '\'].arg');
       }
 
-      if (check.status) {
+      if (check.status != null) {
         test.is(assignment.getStatus().toString(),
                 check.status,
                 'arg[\'' + paramName + '\'].status');
       }
 
-      if (check.message) {
+      if (check.message != null) {
         test.is(assignment.getMessage(),
                 check.message,
                 'arg[\'' + paramName + '\'].message');
@@ -2060,21 +2036,21 @@ exports.tslong = {
   returnValue:'string',
   params: [
     {
-      name: 'url',
+      name: 'msg',
       type: 'string',
-      description: 'tslongUrlDesc'
+      description: 'msg Desc'
     },
     {
-      group: "tslongOptionsDesc",
+      group: "Options Desc",
       params: [
         {
-          name: 'indentSize',
+          name: 'num',
           type: 'number',
-          description: 'tslongIndentSizeDesc',
+          description: 'num Desc',
           defaultValue: 2
         },
         {
-          name: 'indentChar',
+          name: 'sel',
           type: {
             name: 'selection',
             lookup: [
@@ -2082,43 +2058,33 @@ exports.tslong = {
               { name: "tab", value: "\t" }
             ]
           },
-          description: 'tslongIndentCharDesc',
+          description: 'sel Desc',
           defaultValue: ' ',
         },
         {
-          name: 'preserveNewlines',
+          name: 'bool',
           type: 'boolean',
-          description: 'tslongPreserveNewlinesDesc'
+          description: 'bool Desc'
         },
         {
-          name: 'preserveMaxNewlines',
+          name: 'num2',
           type: 'number',
-          description: 'tslongPreserveMaxNewlinesDesc',
+          description: 'num2 Desc',
           defaultValue: -1
         },
         {
-          name: 'jslintHappy',
+          name: 'bool2',
           type: 'boolean',
-          description: 'tslongJslintHappyDesc'
+          description: 'bool2 Desc'
         },
         {
-          name: 'braceStyle',
+          name: 'sel2',
           type: {
             name: 'selection',
             data: ['collapse', 'expand', 'end-expand', 'expand-strict']
           },
-          description: 'tslongBraceStyleDesc',
+          description: 'sel2 Desc',
           defaultValue: "collapse"
-        },
-        {
-          name: 'noSpaceBeforeConditional',
-          type: 'boolean',
-          description: 'tslongNoSpaceBeforeConditionalDesc'
-        },
-        {
-          name: 'unescapeStrings',
-          type: 'boolean',
-          description: 'tslongUnescapeStringsDesc'
         }
       ]
     }
@@ -2170,278 +2136,328 @@ exports.testActivate = function(options) {
 
   helpers.setInput('');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: []
+    hints: ''
   });
 
   helpers.setInput(' ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: []
+    hints: ''
   });
 
   helpers.setInput('tsr');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' <text>' ]
+    hints: ' <text>'
   });
 
   helpers.setInput('tsr ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ '<text>' ]
+    hints: '<text>'
   });
 
   helpers.setInput('tsr b');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: []
+    hints: ''
   });
 
   helpers.setInput('tsb');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' [toggle]' ]
+    hints: ' [toggle]'
   });
 
   helpers.setInput('tsm');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' <abc>', ' <txt>', ' <num>' ]
+    hints: ' <abc> <txt> <num>'
   });
 
   helpers.setInput('tsm ');
   helpers.check({
-    emptyParameters: [ ' <txt>', ' <num>' ],
-    arrowTabText: '',
-    directTabText: 'a'
+    hints: 'a <txt> <num>'
   });
 
   helpers.setInput('tsm a');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' <txt>', ' <num>' ]
+    hints: ' <txt> <num>'
   });
 
   helpers.setInput('tsm a ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ '<txt>', ' <num>' ]
+    hints: '<txt> <num>'
   });
 
   helpers.setInput('tsm a  ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ '<txt>', ' <num>' ]
+    hints: '<txt> <num>'
   });
 
   helpers.setInput('tsm a  d');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' <num>' ]
+    hints: ' <num>'
   });
 
   helpers.setInput('tsm a "d d"');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' <num>' ]
+    hints: ' <num>'
   });
 
   helpers.setInput('tsm a "d ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' <num>' ]
+    hints: ' <num>'
   });
 
   helpers.setInput('tsm a "d d" ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ '<num>' ]
+    hints: '<num>'
   });
 
   helpers.setInput('tsm a "d d ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' <num>' ]
+    hints: ' <num>'
   });
 
   helpers.setInput('tsm d r');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' <num>' ]
+    hints: ' <num>'
   });
 
   helpers.setInput('tsm a d ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ '<num>' ]
+    hints: '<num>'
   });
 
   helpers.setInput('tsm a d 4');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: []
+    hints: ''
   });
 
   helpers.setInput('tsg');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' <solo>', ' [options]' ]
+    hints: ' <solo> [options]'
   });
 
   helpers.setInput('tsg ');
   helpers.check({
-    emptyParameters: [ ' [options]' ],
-    arrowTabText: '',
-    directTabText: 'aaa'
+    hints: 'aaa [options]'
   });
 
   helpers.setInput('tsg a');
   helpers.check({
-    emptyParameters: [ ' [options]' ],
-    arrowTabText: '',
-    directTabText: 'aa'
+    hints: 'aa [options]'
   });
 
   helpers.setInput('tsg b');
   helpers.check({
-    emptyParameters: [ ' [options]' ],
-    arrowTabText: '',
-    directTabText: 'bb'
+    hints: 'bb [options]'
   });
 
   helpers.setInput('tsg d');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' [options]' ]
+    hints: ' [options]'
   });
 
   helpers.setInput('tsg aa');
   helpers.check({
-    emptyParameters: [ ' [options]' ],
-    arrowTabText: '',
-    directTabText: 'a'
+    hints: 'a [options]'
   });
 
   helpers.setInput('tsg aaa');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' [options]' ]
+    hints: ' [options]'
   });
 
   helpers.setInput('tsg aaa ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ '[options]' ]
+    hints: '[options]'
   });
 
   helpers.setInput('tsg aaa d');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' [options]' ]
+    hints: ' [options]'
   });
 
   helpers.setInput('tsg aaa dddddd');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' [options]' ]
+    hints: ' [options]'
   });
 
   helpers.setInput('tsg aaa dddddd ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ '[options]' ]
+    hints: '[options]'
   });
 
   helpers.setInput('tsg aaa "d');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' [options]' ]
+    hints: ' [options]'
   });
 
   helpers.setInput('tsg aaa "d d');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' [options]' ]
+    hints: ' [options]'
   });
 
   helpers.setInput('tsg aaa "d d"');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: [ ' [options]' ]
+    hints: ' [options]'
   });
 
   helpers.setInput('tsn ex ');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: []
+    hints: ''
   });
 
   helpers.setInput('selarr');
   helpers.check({
-    directTabText: '',
-    emptyParameters: [],
-    arrowTabText: 'tselarr'
+    hints: ' -> tselarr'
   });
 
   helpers.setInput('tselar 1');
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: []
+    hints: ''
   });
 
   helpers.setInput('tselar 1', 7);
   helpers.check({
-    directTabText: '',
-    arrowTabText: '',
-    emptyParameters: []
+    hints: ''
   });
 
   helpers.setInput('tselar 1', 6);
   helpers.check({
-    directTabText: '',
-    emptyParameters: [],
-    arrowTabText: 'tselarr'
+    hints: ' -> tselarr'
   });
 
   helpers.setInput('tselar 1', 5);
   helpers.check({
-    directTabText: '',
-    emptyParameters: [],
-    arrowTabText: 'tselarr'
+    hints: ' -> tselarr'
   });
 };
 
+exports.testLong = function(options) {
+  helpers.setInput('tslong --sel');
+  helpers.check({
+    input:  'tslong --sel',
+    hints:              ' <selection> <msg> [options]',
+    markup: 'VVVVVVVIIIII'
+  });
+
+  helpers.pressTab();
+  helpers.check({
+    input:  'tslong --sel ',
+    hints:               'space <msg> [options]',
+    markup: 'VVVVVVVIIIIIV'
+  });
+
+  helpers.setInput('tslong --sel ');
+  helpers.check({
+    input:  'tslong --sel ',
+    hints:               'space <msg> [options]',
+    markup: 'VVVVVVVIIIIIV'
+  });
+
+  helpers.setInput('tslong --sel s');
+  helpers.check({
+    input:  'tslong --sel s',
+    hints:                'pace <msg> [options]',
+    markup: 'VVVVVVVIIIIIVI'
+  });
+
+  helpers.setInput('tslong --num ');
+  helpers.check({
+    input:  'tslong --num ',
+    hints:               '<number> <msg> [options]',
+    markup: 'VVVVVVVIIIIIV'
+  });
+
+  helpers.setInput('tslong --num 42');
+  helpers.check({
+    input:  'tslong --num 42',
+    hints:                 ' <msg> [options]',
+    markup: 'VVVVVVVVVVVVVVV'
+  });
+
+  helpers.setInput('tslong --num 42 ');
+  helpers.check({
+    input:  'tslong --num 42 ',
+    hints:                  '<msg> [options]',
+    markup: 'VVVVVVVVVVVVVVVV'
+  });
+
+  helpers.setInput('tslong --num 42 --se');
+  helpers.check({
+    input:  'tslong --num 42 --se',
+    hints:                      'l <msg> [options]',
+    markup: 'VVVVVVVVVVVVVVVVIIII'
+  });
+
+  helpers.pressTab();
+  helpers.check({
+    input:  'tslong --num 42 --sel ',
+    hints:                        'space <msg> [options]',
+    markup: 'VVVVVVVVVVVVVVVVIIIIIV'
+  });
+
+  helpers.pressTab();
+  helpers.check({
+    input:  'tslong --num 42 --sel space ',
+    hints:                              '<msg> [options]',
+    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVV'
+  });
+
+  helpers.setInput('tslong --num 42 --sel ');
+  helpers.check({
+    input:  'tslong --num 42 --sel ',
+    hints:                        'space <msg> [options]',
+    markup: 'VVVVVVVVVVVVVVVVIIIIIV'
+  });
+
+  helpers.setInput('tslong --num 42 --sel space ');
+  helpers.check({
+    input:  'tslong --num 42 --sel space ',
+    hints:                              '<msg> [options]',
+    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVV'
+  });
+};
+
+exports.testNoTab = function(options) {
+  helpers.setInput('tss');
+  helpers.pressTab();
+  helpers.check({
+    input:  'tss ',
+    markup: 'VVVV',
+    hints: ''
+  });
+
+  helpers.pressTab();
+  helpers.check({
+    input:  'tss ',
+    markup: 'VVVV',
+    hints: ''
+  });
+
+  helpers.setInput('xxxx');
+  helpers.check({
+    input:  'xxxx',
+    markup: 'EEEE',
+    hints: ''
+  });
+
+  helpers.pressTab();
+  helpers.check({
+    input:  'xxxx',
+    markup: 'EEEE',
+    hints: ''
+  });
+};
+
+exports.testOutstanding = function(options) {
+  // See bug 779800
+  /*
+  helpers.setInput('tsg --txt1 ddd ');
+  helpers.check({
+    input:  'tsg --txt1 ddd ',
+    hints:                 'aaa [options]',
+    markup: 'VVVVVVVVVVVVVVV'
+  });
+  */
+};
 
 });
 /*
@@ -2635,23 +2651,23 @@ define('gclitest/testHelp', ['require', 'exports', 'module' , 'gclitest/helpers'
   exports.testHelpStatus = function(options) {
     helpers.status(options, {
       typed:  'help',
+      hints:      ' [search]',
       markup: 'VVVV',
-      status: 'VALID',
-      emptyParameters: [ " [search]" ]
+      status: 'VALID'
     });
 
     helpers.status(options, {
       typed:  'help foo',
       markup: 'VVVVVVVV',
       status: 'VALID',
-      emptyParameters: [ ]
+      hints:  ''
     });
 
     helpers.status(options, {
       typed:  'help foo bar',
       markup: 'VVVVVVVVVVVV',
       status: 'VALID',
-      emptyParameters: [ ]
+      hints:  ''
     });
   };
 
@@ -2952,12 +2968,10 @@ exports.testCompleted = function(options) {
   helpers.setInput('tsn dif ');
   helpers.check({
     input:  'tsn dif ',
+    hints:          '<text>',
     markup: 'VVVVVVVV',
     cursor: 8,
-    directTabText: '',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ '<text>' ],
     args: {
       command: { name: 'tsn dif', type: 'MergedArgument' },
       text: { type: 'BlankArgument', status: 'INCOMPLETE' }
@@ -2968,12 +2982,10 @@ exports.testCompleted = function(options) {
   helpers.pressTab();
   helpers.check({
     input:  'tsn dif ',
+    hints:          '<text>',
     markup: 'VVVVVVVV',
     cursor: 8,
-    directTabText: '',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ '<text>' ],
     args: {
       command: { name: 'tsn dif', type: 'Argument' },
       text: { type: 'Argument', status: 'INCOMPLETE' }
@@ -2986,12 +2998,10 @@ exports.testCompleted = function(options) {
   helpers.setInput('tsg -');
   helpers.check({
     input:  'tsg -',
+    hints:       '-txt1 <solo> [options]',
     markup: 'VVVVI',
     cursor: 5,
-    directTabText: '-txt1',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ' [options]' ],
     args: {
       solo: { value: undefined, status: 'INCOMPLETE' },
       txt1: { value: undefined, status: 'VALID' },
@@ -3004,12 +3014,10 @@ exports.testCompleted = function(options) {
   helpers.pressTab();
   helpers.check({
     input:  'tsg --txt1 ',
+    hints:             '<string> <solo> [options]',
     markup: 'VVVVIIIIIIV',
     cursor: 11,
-    directTabText: '',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ '[options]' ], // Bug 770830: '<txt1>', ' <solo>'
     args: {
       solo: { value: undefined, status: 'INCOMPLETE' },
       txt1: { value: undefined, status: 'INCOMPLETE' },
@@ -3022,11 +3030,9 @@ exports.testCompleted = function(options) {
   helpers.setInput('tsg --txt1 fred');
   helpers.check({
     input:  'tsg --txt1 fred',
+    hints:                 ' <solo> [options]',
     markup: 'VVVVVVVVVVVVVVV',
-    directTabText: '',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ' [options]' ], // Bug 770830: ' <solo>'
     args: {
       solo: { value: undefined, status: 'INCOMPLETE' },
       txt1: { value: 'fred', status: 'VALID' },
@@ -3039,11 +3045,9 @@ exports.testCompleted = function(options) {
   helpers.setInput('tscook key value --path path --');
   helpers.check({
     input:  'tscook key value --path path --',
+    hints:                                 'domain [options]',
     markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVII',
-    directTabText: 'domain',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ' [options]' ],
     args: {
       key: { value: 'key', status: 'VALID' },
       value: { value: 'value', status: 'VALID' },
@@ -3056,11 +3060,9 @@ exports.testCompleted = function(options) {
   helpers.setInput('tscook key value --path path --domain domain --');
   helpers.check({
     input:  'tscook key value --path path --domain domain --',
+    hints:                                                 'secure [options]',
     markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVII',
-    directTabText: 'secure',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ' [options]' ],
     args: {
       key: { value: 'key', status: 'VALID' },
       value: { value: 'value', status: 'VALID' },
@@ -3075,11 +3077,9 @@ exports.testCase = function(options) {
   helpers.setInput('tsg AA');
   helpers.check({
     input:  'tsg AA',
+    hints:        ' [options] -> aaa',
     markup: 'VVVVII',
-    directTabText: '',
-    arrowTabText: 'aaa',
     status: 'ERROR',
-    emptyParameters: [ ' [options]' ],
     args: {
       solo: { value: undefined, text: 'AA', status: 'INCOMPLETE' },
       txt1: { value: undefined, status: 'VALID' },
@@ -3124,20 +3124,16 @@ exports.testHidden = function(options) {
   helpers.check({
     input:  'tshidde',
     markup: 'EEEEEEE',
-    directTabText: '',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ],
+    hints:  '',
   });
 
   helpers.setInput('tshidden');
   helpers.check({
     input:  'tshidden',
+    hints:          ' [options]',
     markup: 'VVVVVVVV',
-    directTabText: '',
-    arrowTabText: '',
     status: 'VALID',
-    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
@@ -3148,11 +3144,9 @@ exports.testHidden = function(options) {
   helpers.setInput('tshidden --vis');
   helpers.check({
     input:  'tshidden --vis',
+    hints:                'ible [options]',
     markup: 'VVVVVVVVVIIIII',
-    directTabText: 'ible',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
@@ -3163,11 +3157,9 @@ exports.testHidden = function(options) {
   helpers.setInput('tshidden --invisiblestrin');
   helpers.check({
     input:  'tshidden --invisiblestrin',
+    hints:                           ' [options]',
     markup: 'VVVVVVVVVEEEEEEEEEEEEEEEE',
-    directTabText: '',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
@@ -3178,11 +3170,9 @@ exports.testHidden = function(options) {
   helpers.setInput('tshidden --invisiblestring');
   helpers.check({
     input:  'tshidden --invisiblestring',
+    hints:                            ' <string> [options]',
     markup: 'VVVVVVVVVIIIIIIIIIIIIIIIII',
-    directTabText: '',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'INCOMPLETE' },
@@ -3193,11 +3183,9 @@ exports.testHidden = function(options) {
   helpers.setInput('tshidden --invisiblestring x');
   helpers.check({
     input:  'tshidden --invisiblestring x',
+    hints:                              ' [options]',
     markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-    directTabText: '',
-    arrowTabText: '',
     status: 'VALID',
-    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: 'x', status: 'VALID' },
@@ -3208,11 +3196,9 @@ exports.testHidden = function(options) {
   helpers.setInput('tshidden --invisibleboolea');
   helpers.check({
     input:  'tshidden --invisibleboolea',
+    hints:                            ' [options]',
     markup: 'VVVVVVVVVEEEEEEEEEEEEEEEEE',
-    directTabText: '',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
@@ -3223,11 +3209,9 @@ exports.testHidden = function(options) {
   helpers.setInput('tshidden --invisibleboolean');
   helpers.check({
     input:  'tshidden --invisibleboolean',
+    hints:                             ' [options]',
     markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVV',
-    directTabText: '',
-    arrowTabText: '',
     status: 'VALID',
-    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
@@ -3239,10 +3223,8 @@ exports.testHidden = function(options) {
   helpers.check({
     input:  'tshidden --visible xxx',
     markup: 'VVVVVVVVVVVVVVVVVVVVVV',
-    directTabText: '',
-    arrowTabText: '',
     status: 'VALID',
-    emptyParameters: [ ],
+    hints:  '',
     args: {
       visible: { value: 'xxx', status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
@@ -3283,14 +3265,14 @@ define('gclitest/testIntro', ['require', 'exports', 'module' , 'gclitest/helpers
       typed:  'intro',
       markup: 'VVVVV',
       status: 'VALID',
-      emptyParameters: [ ]
+      hints: ''
     });
 
     helpers.status(options, {
       typed:  'intro foo',
       markup: 'VVVVVVEEE',
       status: 'ERROR',
-      emptyParameters: [ ]
+      hints: ''
     });
   };
 
@@ -3570,11 +3552,11 @@ function check(initial, action, after, choice, cursor, expectedCursor) {
       break;
 
     case KEY_UPS_TO:
-      assignment.increment();
+      requisition.increment(assignment);
       break;
 
     case KEY_DOWNS_TO:
-      assignment.decrement();
+      requisition.decrement(assignment);
       break;
   }
 
@@ -3717,20 +3699,16 @@ exports.testOptions = function(options) {
   helpers.check({
     input:  'tslong',
     markup: 'VVVVVV',
-    directTabText: '',
-    arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ' <url>', ' [options]' ],
+    hints: ' <msg> [options]',
     args: {
-      url: { value: undefined, status: 'INCOMPLETE' },
-      indentSize: { value: undefined, status: 'VALID' },
-      indentChar: { value: undefined, status: 'VALID' },
-      preserveNewlines: { value: undefined, status: 'VALID' },
-      preserveMaxNewlines: { value: undefined, status: 'VALID' },
-      jslintHappy: { value: undefined, status: 'VALID' },
-      braceStyle: { value: undefined, status: 'VALID' },
-      noSpaceBeforeConditional: { value: undefined, status: 'VALID' },
-      unescapeStrings: { value: undefined, status: 'VALID' }
+      msg: { value: undefined, status: 'INCOMPLETE' },
+      num: { value: undefined, status: 'VALID' },
+      sel: { value: undefined, status: 'VALID' },
+      bool: { value: undefined, status: 'VALID' },
+      bool2: { value: undefined, status: 'VALID' },
+      sel2: { value: undefined, status: 'VALID' },
+      num2: { value: undefined, status: 'VALID' }
     }
   });
 };
@@ -3786,55 +3764,51 @@ exports.testPrefShowStatus = function(options) {
 
   helpers.status(options, {
     typed:  'pref s',
+    hints:        'et',
     markup: 'IIIIVI',
-    status: 'ERROR',
-    directTabText: 'et'
+    status: 'ERROR'
   });
 
   helpers.status(options, {
     typed:  'pref show',
+    hints:           ' <setting>',
     markup: 'VVVVVVVVV',
-    status: 'ERROR',
-    emptyParameters: [ ' <setting>' ]
+    status: 'ERROR'
   });
 
   helpers.status(options, {
     typed:  'pref show ',
+    hints:            'allowSet',
     markup: 'VVVVVVVVVV',
-    status: 'ERROR',
-    emptyParameters: [ ]
+    status: 'ERROR'
   });
 
   helpers.status(options, {
     typed:  'pref show tempTBo',
+    hints:                   'ol',
     markup: 'VVVVVVVVVVIIIIIII',
-    directTabText: 'ol',
-    status: 'ERROR',
-    emptyParameters: [ ]
+    status: 'ERROR'
   });
 
   helpers.status(options, {
     typed:  'pref show tempTBool',
     markup: 'VVVVVVVVVVVVVVVVVVV',
-    directTabText: '',
     status: 'VALID',
-    emptyParameters: [ ]
+    hints:  ''
   });
 
   helpers.status(options, {
     typed:  'pref show tempTBool 4',
     markup: 'VVVVVVVVVVVVVVVVVVVVE',
-    directTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ]
+    hints:  ''
   });
 
   helpers.status(options, {
     typed:  'pref show tempNumber 4',
     markup: 'VVVVVVVVVVVVVVVVVVVVVE',
-    directTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ]
+    hints:  ''
   });
 };
 
@@ -3846,16 +3820,16 @@ exports.testPrefSetStatus = function(options) {
 
   helpers.status(options, {
     typed:  'pref s',
+    hints:        'et',
     markup: 'IIIIVI',
     status: 'ERROR',
-    directTabText: 'et'
   });
 
   helpers.status(options, {
     typed:  'pref set',
+    hints:          ' <setting> <value>',
     markup: 'VVVVVVVV',
-    status: 'ERROR',
-    emptyParameters: [ ' <setting>', ' <value>' ]
+    status: 'ERROR'
   });
 
   helpers.status(options, {
@@ -3866,33 +3840,30 @@ exports.testPrefSetStatus = function(options) {
 
   helpers.status(options, {
     typed:  'pref set ',
+    hints:           'allowSet <value>',
     markup: 'VVVVVVVVV',
-    status: 'ERROR',
-    emptyParameters: [ ' <value>' ]
+    status: 'ERROR'
   });
 
   helpers.status(options, {
     typed:  'pref set tempTBo',
+    hints:                  'ol <value>',
     markup: 'VVVVVVVVVIIIIIII',
-    directTabText: 'ol',
-    status: 'ERROR',
-    emptyParameters: [ ' <value>' ]
+    status: 'ERROR'
   });
 
   helpers.status(options, {
     typed:  'pref set tempTBool 4',
     markup: 'VVVVVVVVVVVVVVVVVVVE',
-    directTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ]
+    hints: ''
   });
 
   helpers.status(options, {
     typed:  'pref set tempNumber 4',
     markup: 'VVVVVVVVVVVVVVVVVVVVV',
-    directTabText: '',
     status: 'VALID',
-    emptyParameters: [ ]
+    hints: ''
   });
 };
 

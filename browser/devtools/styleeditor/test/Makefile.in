@@ -28,7 +28,7 @@ _BROWSER_TEST_FILES = \
                  browser_styleeditor_sv_resize.js \
                  four.html \
                  head.js \
-                 helper.js \
+                 helpers.js \
                  media.html \
                  media-small.css \
                  minified.html \
