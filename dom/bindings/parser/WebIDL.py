@@ -6,6 +6,8 @@
 
 from ply import lex, yacc
 import re
+import os
+import traceback
 
 # Machinery
 
@@ -3678,3 +3680,40 @@ class Parser(Tokenizer):
     _builtins = """
         typedef unsigned long long DOMTimeStamp;
     """
+
+def main():
+    # Parse arguments.
+    from optparse import OptionParser
+    usageString = "usage: %prog [options] files"
+    o = OptionParser(usage=usageString)
+    o.add_option("--cachedir", dest='cachedir', default=None,
+                 help="Directory in which to cache lex/parse tables.")
+    o.add_option("--verbose-errors", action='store_true', default=False,
+                 help="When an error happens, display the Python traceback.")
+    (options, args) = o.parse_args()
+
+    if len(args) < 1:
+        o.error(usageString)
+
+    fileList = args
+    baseDir = os.getcwd()
+
+    # Parse the WebIDL.
+    parser = Parser(options.cachedir)
+    try:
+        for filename in fileList:
+            fullPath = os.path.normpath(os.path.join(baseDir, filename))
+            f = open(fullPath, 'rb')
+            lines = f.readlines()
+            f.close()
+            print fullPath
+            parser.parse(''.join(lines), fullPath)
+        parser.finish()
+    except WebIDLError as e:
+        if options.verbose_errors:
+            traceback.print_exc()
+        else:
+            print e
+
+if __name__ == '__main__':
+    main()
