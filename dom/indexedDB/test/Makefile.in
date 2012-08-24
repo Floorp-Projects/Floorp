@@ -101,10 +101,6 @@ MOCHITEST_FILES = \
   test_unique_index_update.html \
   third_party_iframe1.html \
   third_party_iframe2.html \
-  test_app_isolation_inproc.html \
-  test_app_isolation_oop.html \
-  file_app_isolation.html \
-  file_app_isolation.js \
   $(NULL)
 
 #   test_writer_starvation.html  disabled for infinite loops, bug 595368
