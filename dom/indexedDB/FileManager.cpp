@@ -16,6 +16,9 @@
 
 #include "FileInfo.h"
 #include "IndexedDatabaseManager.h"
+#include "OpenDatabaseHelper.h"
+
+#define JOURNAL_DIRECTORY_NAME "journals"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -37,14 +40,28 @@ EnumerateToTArray(const uint64_t& aKey,
   return PL_DHASH_NEXT;
 }
 
+already_AddRefed<nsIFile>
+GetDirectoryFor(const nsAString& aDirectoryPath)
+{
+  nsCOMPtr<nsIFile> directory =
+    do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+  NS_ENSURE_TRUE(directory, nullptr);
+
+  nsresult rv = directory->InitWithPath(aDirectoryPath);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return directory.forget();
+}
+
 } // anonymous namespace
 
 nsresult
 FileManager::Init(nsIFile* aDirectory,
-                  mozIStorageConnection* aConnection,
-                  FactoryPrivilege aPrivilege)
+                  mozIStorageConnection* aConnection)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aDirectory, "Null directory!");
+  NS_ASSERTION(aConnection, "Null connection!");
 
   mFileInfos.Init();
 
@@ -63,79 +80,31 @@ FileManager::Init(nsIFile* aDirectory,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mozStorageTransaction transaction(aConnection, false);
+  rv = aDirectory->GetPath(mDirectoryPath);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE VIRTUAL TABLE fs USING filesystem;"
-  ));
+  nsCOMPtr<nsIFile> journalDirectory;
+  rv = aDirectory->Clone(getter_AddRefs(journalDirectory));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = journalDirectory->Append(NS_LITERAL_STRING(JOURNAL_DIRECTORY_NAME));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = journalDirectory->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (exists) {
+    bool isDirectory;
+    rv = journalDirectory->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(isDirectory, NS_ERROR_FAILURE);
+  }
+
+  rv = journalDirectory->GetPath(mJournalDirectoryPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT name, (name IN (SELECT id FROM file)) FROM fs "
-    "WHERE path = :path"
-  ), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString path;
-  rv = aDirectory->GetPath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("path"), path);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageServiceQuotaManagement> ss =
-    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(ss, NS_ERROR_FAILURE);
-
-  bool hasResult;
-  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    nsString name;
-    rv = stmt->GetString(0, name);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    int32_t flag = stmt->AsInt32(1);
-
-    nsCOMPtr<nsIFile> file;
-    rv = aDirectory->Clone(getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = file->Append(name);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (flag) {
-      if (aPrivilege != Chrome) {
-        rv = ss->UpdateQuotaInformationForFile(file);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
-    else {
-      rv = file->Remove(false);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to remove orphaned file!");
-      }
-    }
-  }
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DROP TABLE fs;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aDirectory->GetPath(mDirectoryPath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  transaction.Commit();
-  return NS_OK;
-}
-
-nsresult
-FileManager::Load(mozIStorageConnection* aConnection)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id, refcount "
     "FROM file"
   ), getter_AddRefs(stmt));
@@ -160,8 +129,6 @@ FileManager::Load(mozIStorageConnection* aConnection)
 
     mLastFileId = NS_MAX(id, mLastFileId);
   }
-
-  mLoaded = true;
 
   return NS_OK;
 }
@@ -196,14 +163,39 @@ FileManager::Invalidate()
 already_AddRefed<nsIFile>
 FileManager::GetDirectory()
 {
-  nsCOMPtr<nsIFile> directory =
-    do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  NS_ENSURE_TRUE(directory, nullptr);
+  return GetDirectoryFor(mDirectoryPath);
+}
 
-  nsresult rv = directory->InitWithPath(mDirectoryPath);
+already_AddRefed<nsIFile>
+FileManager::GetJournalDirectory()
+{
+  return GetDirectoryFor(mJournalDirectoryPath);
+}
+
+already_AddRefed<nsIFile>
+FileManager::EnsureJournalDirectory()
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<nsIFile> journalDirectory = GetDirectoryFor(mJournalDirectoryPath);
+  NS_ENSURE_TRUE(journalDirectory, nullptr);
+
+  bool exists;
+  nsresult rv = journalDirectory->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  return directory.forget();
+  if (exists) {
+    bool isDirectory;
+    rv = journalDirectory->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+    NS_ENSURE_TRUE(isDirectory, nullptr);
+  }
+  else {
+    rv = journalDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+  }
+
+  return journalDirectory.forget();
 }
 
 already_AddRefed<FileInfo>
@@ -249,6 +241,7 @@ FileManager::GetNewFileInfo()
   return result.forget();
 }
 
+// static
 already_AddRefed<nsIFile>
 FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId)
 {
@@ -265,4 +258,153 @@ FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId)
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return file.forget();
+}
+
+// static
+nsresult
+FileManager::InitDirectory(mozIStorageServiceQuotaManagement* aService,
+                           nsIFile* aDirectory,
+                           nsIFile* aDatabaseFile,
+                           FactoryPrivilege aPrivilege)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aService, "Null service!");
+  NS_ASSERTION(aDirectory, "Null directory!");
+  NS_ASSERTION(aDatabaseFile, "Null database file!");
+
+  bool exists;
+  nsresult rv = aDirectory->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!exists) {
+    return NS_OK;
+  }
+
+  bool isDirectory;
+  rv = aDirectory->IsDirectory(&isDirectory);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(isDirectory, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIFile> journalDirectory;
+  rv = aDirectory->Clone(getter_AddRefs(journalDirectory));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = journalDirectory->Append(NS_LITERAL_STRING(JOURNAL_DIRECTORY_NAME));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = journalDirectory->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (exists) {
+    rv = journalDirectory->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(isDirectory, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsISimpleEnumerator> entries;
+    rv = journalDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool hasElements;
+    rv = entries->HasMoreElements(&hasElements);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (hasElements) {
+      nsCOMPtr<mozIStorageConnection> connection;
+      rv = OpenDatabaseHelper::CreateDatabaseConnection(
+        NullString(), aDatabaseFile, aDirectory, getter_AddRefs(connection));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mozStorageTransaction transaction(connection, false);
+
+      rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE VIRTUAL TABLE fs USING filesystem;"
+      ));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<mozIStorageStatement> stmt;
+      rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT name, (name IN (SELECT id FROM file)) FROM fs "
+        "WHERE path = :path"
+      ), getter_AddRefs(stmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsString path;
+      rv = journalDirectory->GetPath(path);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("path"), path);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      bool hasResult;
+      while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+        nsString name;
+        rv = stmt->GetString(0, name);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        int32_t flag = stmt->AsInt32(1);
+
+        if (!flag) {
+          nsCOMPtr<nsIFile> file;
+          rv = aDirectory->Clone(getter_AddRefs(file));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          rv = file->Append(name);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          if (NS_FAILED(file->Remove(false))) {
+            NS_WARNING("Failed to remove orphaned file!");
+          }
+        }
+
+        nsCOMPtr<nsIFile> journalFile;
+        rv = journalDirectory->Clone(getter_AddRefs(journalFile));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = journalFile->Append(name);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (NS_FAILED(journalFile->Remove(false))) {
+          NS_WARNING("Failed to remove journal file!");
+        }
+      }
+
+      rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP TABLE fs;"
+      ));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      transaction.Commit();
+    }
+  }
+
+  if (aPrivilege == Chrome) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasMore;
+  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
+    nsCOMPtr<nsISupports> entry;
+    rv = entries->GetNext(getter_AddRefs(entry));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
+    NS_ENSURE_TRUE(file, NS_NOINTERFACE);
+
+    nsString leafName;
+    rv = file->GetLeafName(leafName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (leafName.EqualsLiteral(JOURNAL_DIRECTORY_NAME)) {
+      continue;
+    }
+
+    rv = aService->UpdateQuotaInformationForFile(file);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
