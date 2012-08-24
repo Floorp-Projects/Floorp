@@ -464,15 +464,16 @@ PRECOMPILE_RESOURCE=gre
 PRECOMPILE_GRE=$$PWD
 endif
 
-ifndef LIBXUL_SDK
-
 ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
 # FIXME: not tested on OS/2. Is it using the correct libxul?
 RUN_FROM_PWD = $(_ABS_RUN_TEST_PROGRAM)
 else
-RUN_FROM_PWD = "$$PWD/run-mozilla.sh"
+# For non-Windows, just set the library path so we load the libs from the right place.
+ifdef ($(OS_ARCH),Darwin)
+RUN_FROM_PWD = DYLD_LIBRARY_PATH=$(PRECOMPILE_GRE)
+else
+RUN_FROM_PWD = LD_LIBRARY_PATH=$(PRECOMPILE_GRE)
 endif
-
 endif
 
 # Silence the unzip step so we don't print any binary data from the comment field.
