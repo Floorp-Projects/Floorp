@@ -197,6 +197,7 @@ error_exit:
 nsresult
 nsDiskCacheMap::Close(bool flush)
 {
+    nsCacheService::AssertOwnsLock();
     nsresult  rv = NS_OK;
 
     // Cancel any pending cache validation event, the FlushRecords call below
@@ -1274,23 +1275,28 @@ nsresult
 nsDiskCacheMap::WriteCacheClean(bool clean)
 {
     nsCacheService::AssertOwnsLock();
+    if (!mCleanFD) {
+        NS_WARNING("Cache clean file is not open!");
+        return NS_ERROR_FAILURE;
+    }
+
     CACHE_LOG_DEBUG(("CACHE: WriteCacheClean: %d\n", clean? 1 : 0));
     // I'm using a simple '1' or '0' to denote cache clean
     // since it can be edited easily by any text editor for testing.
     char data = clean? '1' : '0';
     int32_t filePos = PR_Seek(mCleanFD, 0, PR_SEEK_SET);
     if (filePos != 0) {
-        NS_WARNING("Could not seek in cache map file!");
+        NS_WARNING("Could not seek in cache clean file!");
         return NS_ERROR_FAILURE;
     }
     int32_t bytesWritten = PR_Write(mCleanFD, &data, 1);
     if (bytesWritten != 1) {
-        NS_WARNING("Could not write cache map file!");
+        NS_WARNING("Could not write cache clean file!");
         return NS_ERROR_FAILURE;
     }
     PRStatus err = PR_Sync(mCleanFD);
     if (err != PR_SUCCESS) {
-        NS_WARNING("Could not flush mCleanFD!");
+        NS_WARNING("Could not flush cache clean file!");
     }
 
     return NS_OK;
