@@ -35,6 +35,7 @@
 #include "nsCSSParser.h"
 #include "nsPrintfCString.h"
 #include "nsDOMClassInfoID.h"
+#include "mozilla/dom/CSSStyleDeclarationBinding.h"
 
 namespace css = mozilla::css;
 
@@ -1617,6 +1618,14 @@ nsINode*
 nsCSSFontFaceStyleDecl::GetParentObject()
 {
   return ContainingRule()->GetDocument();
+}
+
+JSObject*
+nsCSSFontFaceStyleDecl::WrapObject(JSContext *cx, JSObject *scope,
+                                   bool *triedToWrap)
+{
+  return mozilla::dom::CSSStyleDeclarationBinding::Wrap(cx, scope, this,
+                                                        triedToWrap);
 }
 
 // -------------------------------------------
