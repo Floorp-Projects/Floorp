@@ -19,3 +19,7 @@ XPIDLSRCS = nsIDOMNavigatorDesktopNotification.idl    \
             $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+XPIDL_FLAGS += \
+  -I$(topsrcdir)/dom/interfaces/base \
+  $(NULL)
