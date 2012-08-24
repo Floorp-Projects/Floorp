@@ -73,6 +73,11 @@ permissions.forEach(function (perm) {
         emulator.set_context("content")
 
     def setUp(self):
+        # Convert the marionette weakref to an object, just for the
+        # duration of the test; this is deleted in tearDown() to prevent
+        # a persistent circular reference which in turn would prevent
+        # proper garbage collection.
+        self.marionette = self._marionette_weakref()
         if self.marionette.session is None:
             self.marionette.start_session()
 
@@ -81,11 +86,13 @@ permissions.forEach(function (perm) {
             self.loglines = self.marionette.get_logs()
             self.perfdata = self.marionette.get_perf_data()
             self.marionette.delete_session()
+        self.marionette = None
 
 class MarionetteTestCase(CommonTestCase):
 
-    def __init__(self, marionette, methodName='runTest', **kwargs):
-        self.marionette = marionette
+    def __init__(self, marionette_weakref, methodName='runTest', **kwargs):
+        self._marionette_weakref = marionette_weakref
+        self.marionette = None
         self.extra_emulator_index = -1
         CommonTestCase.__init__(self, methodName, **kwargs)
 
