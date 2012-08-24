@@ -210,6 +210,16 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       NS_ADDREF(cont->mCSSStyleRule = otherCont->mCSSStyleRule);
       break;
     }
+    case eURL:
+    {
+      NS_ADDREF(cont->mURL = otherCont->mURL);
+      break;
+    }
+    case eImage:
+    {
+      NS_ADDREF(cont->mImage = otherCont->mImage);
+      break;
+    }
     case eAtomArray:
     {
       if (!EnsureEmptyAtomArray() ||
@@ -310,6 +320,17 @@ nsAttrValue::SetTo(css::StyleRule* aValue, const nsAString* aSerialized)
     MiscContainer* cont = GetMiscContainer();
     NS_ADDREF(cont->mCSSStyleRule = aValue);
     cont->mType = eCSSStyleRule;
+    SetMiscAtomOrString(aSerialized);
+  }
+}
+
+void
+nsAttrValue::SetTo(css::URLValue* aValue, const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    NS_ADDREF(cont->mURL = aValue);
+    cont->mType = eURL;
     SetMiscAtomOrString(aSerialized);
   }
 }
@@ -774,6 +795,15 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mCSSStyleRule);
     }
+    // Intentionally identical, so that loading the image does not change the
+    // hash code.
+    case eURL:
+    case eImage:
+    {
+      nsString str;
+      ToString(str);
+      return HashString(str);
+    }
     case eAtomArray:
     {
       uint32_t hash = 0;
@@ -869,6 +899,14 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     case eCSSStyleRule:
     {
       return thisCont->mCSSStyleRule == otherCont->mCSSStyleRule;
+    }
+    case eURL:
+    {
+      return thisCont->mURL == otherCont->mURL;
+    }
+    case eImage:
+    {
+      return thisCont->mImage == otherCont->mImage;
     }
     case eAtomArray:
     {
@@ -1500,6 +1538,31 @@ nsAttrValue::ParseIntMarginValue(const nsAString& aString)
   return false;
 }
 
+bool
+nsAttrValue::LoadImage(nsIDocument* aDocument)
+{
+  NS_ASSERTION(Type() == eURL, "wrong type");
+
+  nsString val;
+  ToString(val);
+  if (val.IsEmpty()) {
+    return false;
+  }
+
+  MiscContainer* cont = GetMiscContainer();
+  mozilla::css::URLValue* url = cont->mURL;
+  mozilla::css::ImageValue* image = 
+    new css::ImageValue(url->GetURI(), url->mString, url->mReferrer,
+                        url->mOriginPrincipal, aDocument);
+
+  NS_ADDREF(image);
+  cont->mImage = image;
+  NS_RELEASE(url);
+  cont->mType = eImage;
+
+  return true;
+}
+
 void
 nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
 {
@@ -1574,6 +1637,16 @@ nsAttrValue::EnsureEmptyMiscContainer()
       case eCSSStyleRule:
       {
         NS_RELEASE(cont->mCSSStyleRule);
+        break;
+      }
+      case eURL:
+      {
+        NS_RELEASE(cont->mURL);
+        break;
+      }
+      case eImage:
+      {
+        NS_RELEASE(cont->mImage);
         break;
       }
       case eAtomArray:
