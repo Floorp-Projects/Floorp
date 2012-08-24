@@ -269,6 +269,49 @@
      };
 
      /**
+      * Remove an empty directory.
+      *
+      * @param {string} path The name of the directory to remove.
+      * @param {*=} options Additional options.
+      *   - {bool} ignoreAbsent If |true|, do not fail if the
+      *     directory does not exist yet.
+      */
+     File.removeEmptyDir = function removeEmptyDir(path, options) {
+       options = options || noOptions;
+       let result = UnixFile.rmdir(path);
+       if (result == -1) {
+         if (options.ignoreAbsent && ctypes.errno == Const.ENOENT) {
+           return;
+         }
+         throw new File.Error("removeEmptyDir");
+       }
+     };
+
+     /**
+      * Default mode for opening directories.
+      */
+     const DEFAULT_UNIX_MODE_DIR = Const.S_IRWXU;
+
+     /**
+      * Create a directory.
+      *
+      * @param {string} path The name of the directory.
+      * @param {*=} options Additional options. This
+      * implementation interprets the following fields:
+      *
+      * - {number} unixMode If specified, a file creation mode,
+      * as per libc function |mkdir|. If unspecified, dirs are
+      * created with a default mode of 0700 (dir is private to
+      * the user, the user can read, write and execute).
+      */
+     File.makeDir = function makeDir(path, options) {
+       options = options || noOptions;
+       let omode = options.unixMode || DEFAULT_UNIX_MODE_DIR;
+       throw_on_negative("makeDir",
+         UnixFile.mkdir(path, omode));
+     };
+
+     /**
       * Copy a file to a destination.
       *
       * @param {string} sourcePath The platform-specific path at which
