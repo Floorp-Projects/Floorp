@@ -731,7 +731,8 @@ struct nsPurpleBuffer
 private:
     struct Block {
         Block *mNext;
-        nsPurpleBufferEntry mEntries[255];
+         // Try to match the size of a jemalloc bucket.
+        nsPurpleBufferEntry mEntries[1360];
 
         Block() : mNext(nullptr) {}
     };
