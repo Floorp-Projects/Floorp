@@ -366,5 +366,5 @@ js::PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx)
     // compiled code will be run with the callee's scope chain, this would make
     // fp->script()->compartment() != fp->compartment().
 
-    return call.callee().principals(cx);
+    return call.callee().compartment()->principals;
 }

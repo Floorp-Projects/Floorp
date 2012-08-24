@@ -72,7 +72,7 @@ protected:
                           const nsCString& aContentType,
                           const PRTime& aLastModified,
                           const nsCString& aEntityID,
-                          const IPC::URI& aURI) MOZ_OVERRIDE;
+                          const URIParams& aURI) MOZ_OVERRIDE;
   bool RecvOnDataAvailable(const nsCString& data,
                            const uint32_t& offset,
                            const uint32_t& count) MOZ_OVERRIDE;
@@ -84,7 +84,7 @@ protected:
                         const nsCString& aContentType,
                         const PRTime& aLastModified,
                         const nsCString& aEntityID,
-                        const IPC::URI& aURI);
+                        const URIParams& aURI);
   void DoOnDataAvailable(const nsCString& data,
                          const uint32_t& offset,
                          const uint32_t& count);

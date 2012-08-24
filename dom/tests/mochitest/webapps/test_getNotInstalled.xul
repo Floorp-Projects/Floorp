@@ -15,23 +15,14 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Webapps.jsm");
 
+let notInstalled = 0;
+
 let _isLaunchable;
 let steps = [
-  cleanUp, installApp, monkeyPatchDOMApplicationRegistry, getNotInstalled,
-  unmonkeyPatchDOMApplicationRegistry, cleanUp, tearDown
+  monkeyPatchDOMApplicationRegistry, getNotInstalled, installApp,
+  compareNotInstalled, unmonkeyPatchDOMApplicationRegistry, cleanUp, tearDown
 ];
 runAll(steps);
-
-// Remove all installed apps and apps from the appregistry
-function cleanUp (next) { 
-  uninstallAll(next);
-}
-
-// Add an app to the appregistry
-function installApp (next) {
-  let appURL = SERVERS["super_crazy"];
-  install(appURL, ok, next);
-}
 
 // Monkey patch DOMApplicationRegistry._isLaunchable for testing.
 // This way, we don't have to create a platform specific application with a
@@ -44,8 +35,22 @@ function monkeyPatchDOMApplicationRegistry (next) {
   next();
 }
 
-// Call navigator.mozApps.mgmt.getNotInstalled
+// Call navigator.mozApps.mgmt.getNotInstalled and save the result.
 function getNotInstalled (next) {
+  window.navigator.mozApps.mgmt.getNotInstalled().onsuccess = function() {
+    notInstalled = this.result.length;
+    next();
+  };
+}
+
+// Add an app to the appregistry
+function installApp (next) {
+  let appURL = SERVERS["super_crazy"];
+  install(appURL, ok, next);
+}
+
+// Call navigator.mozApps.mgmt.getNotInstalled and make sure there is one more.
+function compareNotInstalled (next) {
   let results;
   function getNotInstalledError () {
     ok(false, "window.mozApps.mgmt.getNotInstalled onerror called");
@@ -53,12 +58,11 @@ function getNotInstalled (next) {
   }
   function getNotInstalledSuccess () {
     ok(true, "window.mozApps.mgmt.getNotInstalled onsuccess called");
-    if (this.result.length === 1) {
-      ok(true, "got the single notInstalled app back")
-      is(this.result[0].origin, "http://www.example.com",
+    is(this.result.length, notInstalled + 1, "should get one more notInstalled app");
+
+    if (this.result.length > 0) {
+      is(this.result[this.result.length-1].origin, "http://www.example.com",
         "getNotInstalled returned the expected app");
-    } else {
-      ok(false, "got an unexpected result from the call to getNotInstalled");
     }
     next();
   }
@@ -86,5 +90,12 @@ function unmonkeyPatchDOMApplicationRegistry (next) {
   }
   next();
 }
+
+// Remove installed app.
+function cleanUp (next) {
+  let appURL = SERVERS["super_crazy"];
+  uninstall(appURL, ok, next);
+}
+
 </script>
 </window>

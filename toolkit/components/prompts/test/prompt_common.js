@@ -65,11 +65,11 @@ function getTabModalPromptBox(domWin) {
 
     // Given a content DOM window, returns the chrome window it's in.
     function getChromeWindow(aWindow) {
-        var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+        var chromeWin = SpecialPowers.wrap(aWindow).QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIWebNavigation)
                                .QueryInterface(Ci.nsIDocShell)
                                .chromeEventHandler.ownerDocument.defaultView;
-        return XPCNativeWrapper.unwrap(chromeWin);
+        return chromeWin;
     }
 
     try {
@@ -77,7 +77,6 @@ function getTabModalPromptBox(domWin) {
         var promptWin = domWin.top;
 
         // Get the chrome window for the content window we're using.
-        // (Unwrap because we need a non-IDL property below.)
         var chromeWin = getChromeWindow(promptWin);
 
         if (chromeWin.getTabModalPromptBox)
@@ -86,7 +85,8 @@ function getTabModalPromptBox(domWin) {
         // If any errors happen, just assume no tabmodal prompter.
     }
 
-    return promptBox;
+    // Callers get confused by a wrapped promptBox here.
+    return SpecialPowers.unwrap(promptBox);
 }
 
 function getDialogDoc() {

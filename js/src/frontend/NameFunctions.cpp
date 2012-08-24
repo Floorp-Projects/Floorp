@@ -101,41 +101,51 @@ class NameResolver
             switch (cur->getKind()) {
                 case PNK_NAME:     return cur;  /* found the initialized declaration */
                 case PNK_FUNCTION: return NULL; /* won't find an assignment or declaration */
-                default:           break;       /* move on, nothing relevant */
 
-                /* These nodes are relevant to the naming process, so append */
+                case PNK_RETURN:
+                    /*
+                     * Normally the relevant parent of a node is its direct parent, but
+                     * sometimes with code like:
+                     *
+                     *    var foo = (function() { return function() {}; })();
+                     *
+                     * the outer function is just a helper to create a scope for the
+                     * returned function. Hence the name of the returned function should
+                     * actually be 'foo'.  This loop sees if the current node is a
+                     * PNK_RETURN, and if there is a direct function call we skip to
+                     * that.
+                     */
+                    for (int tmp = pos - 1; tmp > 0; tmp--) {
+                        if (isDirectCall(tmp, cur)) {
+                            pos = tmp;
+                            break;
+                        } else if (call(cur)) {
+                            /* Don't skip too high in the tree */
+                            break;
+                        }
+                        cur = parents[tmp];
+                    }
+                    break;
+
                 case PNK_COLON:
-                case PNK_LP:
-                case PNK_NEW:
+                    /*
+                     * If this is a PNK_COLON, but our parent is not a PNK_RC,
+                     * then this is a label and we're done naming. Otherwise we
+                     * record the PNK_COLON but skip the PNK_RC so we're not
+                     * flagged as a contributor.
+                     */
+                    if (pos == 0 || !parents[pos - 1]->isKind(PNK_RC))
+                        return NULL;
+                    pos--;
+                    /* fallthrough */
+
+                /* Save any other nodes we encounter on the way up. */
+                default:
                     JS_ASSERT(*size < MaxParents);
                     nameable[(*size)++] = cur;
                     break;
             }
 
-            /*
-             * Normally the relevant parent of a node is its direct parent, but
-             * sometimes with code like:
-             *
-             *    var foo = (function() { return function() {}; })();
-             *
-             * the outer function is just a helper to create a scope for the
-             * returned function. Hence the name of the returned function should
-             * actually be 'foo'.  This loop sees if the current node is a
-             * PNK_RETURN, and if there is a direct function call we skip to
-             * that.
-             */
-            if (cur->isKind(PNK_RETURN)) {
-                for (int tmp = pos - 1; tmp > 0; tmp--) {
-                    if (isDirectCall(tmp, cur)) {
-                        pos = tmp;
-                        break;
-                    } else if (call(cur)) {
-                        /* Don't skip too high in the tree */
-                        break;
-                    }
-                    cur = parents[tmp];
-                }
-            }
         }
 
         return NULL;

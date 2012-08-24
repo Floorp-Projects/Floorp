@@ -685,6 +685,12 @@ public:
   // mDest is not blocked and mSource's blocking status does not change.
   InputInterval GetNextInputInterval(GraphTime aTime);
 
+  /**
+   * Returns the graph that owns this port.
+   */
+  MediaStreamGraphImpl* GraphImpl();
+  MediaStreamGraph* Graph();
+
 protected:
   friend class MediaStreamGraphImpl;
   friend class MediaStream;

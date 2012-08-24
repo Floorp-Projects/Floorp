@@ -9,6 +9,8 @@
 #include "nsXULAppAPI.h"
 #include "AndroidBridge.h"
 #include "nsIconChannel.h"
+#include "nsIStringStream.h"
+#include "nsNetUtil.h"
 
 NS_IMPL_ISUPPORTS2(nsIconChannel,
                    nsIRequest,

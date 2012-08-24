@@ -1088,8 +1088,9 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
         }
     }
 
-    /* Capture the effects of a standard property access. */
-    HeapTypeSet *types = object->getProperty(cx, id, access == PROPERTY_WRITE);
+    /* Capture the effects of a standard property access. Never mark the
+     * property as own, as it may have inherited accessors. */
+    HeapTypeSet *types = object->getProperty(cx, id, false);
     if (!types)
         return;
     if (access == PROPERTY_WRITE) {

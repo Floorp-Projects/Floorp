@@ -147,12 +147,62 @@ class Descriptor(DescriptorProvider):
 
         # If we're concrete, we need to crawl our ancestor interfaces and mark
         # them as having a concrete descendant.
-        self.concrete = desc.get('concrete', True)
+        self.concrete = desc.get('concrete', not self.interface.isExternal())
         if self.concrete:
+            self.proxy = False
+            operations = {
+                'IndexedGetter': None,
+                'IndexedSetter': None,
+                'IndexedCreator': None,
+                'IndexedDeleter': None,
+                'NamedGetter': None,
+                'NamedSetter': None,
+                'NamedCreator': None,
+                'NamedDeleter': None,
+                'Stringifier': None
+            }
             iface = self.interface
             while iface:
+                for m in iface.members:
+                    if not m.isMethod():
+                        continue
+
+                    def addOperation(operation, m):
+                        if not operations[operation]:
+                            operations[operation] = m
+                    def addIndexedOrNamedOperation(operation, m):
+                        self.proxy = True
+                        if m.isIndexed():
+                            operation = 'Indexed' + operation
+                        else:
+                            assert m.isNamed()
+                            operation = 'Named' + operation
+                        addOperation(operation, m)
+                        
+                    if m.isStringifier():
+                        addOperation('Stringifier', m)
+                    else:
+                        if m.isGetter():
+                            addIndexedOrNamedOperation('Getter', m)
+                        if m.isSetter():
+                            addIndexedOrNamedOperation('Setter', m)
+                        if m.isCreator():
+                            addIndexedOrNamedOperation('Creator', m)
+                        if m.isDeleter():
+                            addIndexedOrNamedOperation('Deleter', m)
+                            raise TypeError("deleter specified on %s but we "
+                                            "don't support deleters yet" %
+                                            self.interface.identifier.name)
+
                 iface.setUserData('hasConcreteDescendant', True)
                 iface = iface.parent
+
+            if self.proxy:
+                self.operations = operations
+                iface = self.interface
+                while iface:
+                    iface.setUserData('hasProxyDescendant', True)
+                    iface = iface.parent
 
         if self.interface.isExternal() and 'prefable' in desc:
             raise TypeError("%s is external but has a prefable setting" %
@@ -188,8 +238,14 @@ class Descriptor(DescriptorProvider):
             elif isinstance(config, list):
                 add('all', config, attribute)
             else:
-                assert isinstance(config, string)
-                add('all', [config], attribute)
+                assert isinstance(config, str)
+                if config == '*':
+                    iface = self.interface
+                    while iface:
+                        add('all', map(lambda m: m.name, iface.members), attribute)
+                        iface = iface.parent
+                else:
+                    add('all', [config], attribute)
 
         for attribute in ['infallible', 'implicitJSContext', 'resultNotAddRefed']:
             addExtendedAttribute(attribute, desc.get(attribute, {}))
