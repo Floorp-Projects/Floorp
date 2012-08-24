@@ -283,10 +283,8 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
     if (val.isNull())
         return NS_SUCCEEDED(nsVariant::SetToEmpty(&mData));
     if (val.isString()) {
-        // Make our string immutable.  This will also ensure null-termination,
-        // which nsVariant assumes for its PRUnichar* stuff.
         JSString* str = val.toString();
-        if (!JS_MakeStringImmutable(ccx, str))
+        if (!str)
             return false;
 
         // Don't use nsVariant::SetFromWStringWithSize, because that will copy
