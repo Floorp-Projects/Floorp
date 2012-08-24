@@ -912,12 +912,6 @@ TestCompiler(IonBuilder *builder, MIRGraph *graph, AutoDestroyAllocator &autoDes
     if (!codegen.generate())
         return false;
 
-    if (builder->script->hasIonScript()) {
-        // After Ion has finished compiling a script, remove any JITScripts it
-        // has to force continued execution in Ion code.
-        mjit::ReleaseScriptCodeFromVM(cx, builder->script);
-    }
-
     IonSpewEndFunction();
 
     return true;
