@@ -61,6 +61,79 @@ class nsPtrHashKey;
     }                                                                          \
   }
 
+namespace mozilla {
+namespace css {
+
+struct URLValue {
+  // Methods are not inline because using an nsIPrincipal means requiring
+  // caps, which leads to REQUIRES hell, since this header is included all
+  // over.
+
+  // For both constructors aString must not be null.
+  // For both constructors aOriginPrincipal must not be null.
+  // Construct with a base URI; this will create the actual URI lazily from
+  // aString and aBaseURI.
+  URLValue(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
+           nsIPrincipal* aOriginPrincipal);
+  // Construct with the actual URI.
+  URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
+           nsIPrincipal* aOriginPrincipal);
+
+  ~URLValue();
+
+  bool operator==(const URLValue& aOther) const;
+
+  // URIEquals only compares URIs and principals (unlike operator==, which
+  // also compares the original strings).  URIEquals also assumes that the
+  // mURI member of both URL objects is non-null.  Do NOT call this method
+  // unless you're sure this is the case.
+  bool URIEquals(const URLValue& aOther) const;
+
+  nsIURI* GetURI() const;
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
+private:
+  // If mURIResolved is false, mURI stores the base URI.
+  // If mURIResolved is true, mURI stores the URI we resolve to; this may be
+  // null if the URI is invalid.
+  mutable nsCOMPtr<nsIURI> mURI;
+public:
+  nsStringBuffer* mString; // Could use nsRefPtr, but it'd add useless
+                           // null-checks; this is never null.
+  nsCOMPtr<nsIURI> mReferrer;
+  nsCOMPtr<nsIPrincipal> mOriginPrincipal;
+
+  NS_INLINE_DECL_REFCOUNTING(URLValue)
+
+private:
+  mutable bool mURIResolved;
+
+  URLValue(const URLValue& aOther) MOZ_DELETE;
+  URLValue& operator=(const URLValue& aOther) MOZ_DELETE;
+};
+
+struct ImageValue : public URLValue {
+  // Not making the constructor and destructor inline because that would
+  // force us to include imgIRequest.h, which leads to REQUIRES hell, since
+  // this header is included all over.
+  // aString must not be null.
+  ImageValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
+             nsIPrincipal* aOriginPrincipal, nsIDocument* aDocument);
+  ~ImageValue();
+
+  // Inherit operator== from URLValue
+
+  nsInterfaceHashtable<nsISupportsHashKey, imgIRequest> mRequests; 
+
+  // Override AddRef and Release to not only log ourselves correctly, but
+  // also so that we delete correctly without a virtual destructor
+  NS_INLINE_DECL_REFCOUNTING(ImageValue)
+};
+
+}
+}
+
 enum nsCSSUnit {
   eCSSUnit_Null         = 0,      // (n/a) null unit, value is not specified
   eCSSUnit_Auto         = 1,      // (n/a) value is algorithmic
@@ -182,11 +255,9 @@ public:
   struct Array;
   friend struct Array;
 
-  struct URL;
-  friend struct URL;
+  friend struct mozilla::css::URLValue;
 
-  struct Image;
-  friend struct Image;
+  friend struct mozilla::css::ImageValue;
 
   // for valueless units only (null, auto, inherit, none, all, normal)
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
@@ -199,8 +270,8 @@ public:
   nsCSSValue(float aValue, nsCSSUnit aUnit);
   nsCSSValue(const nsString& aValue, nsCSSUnit aUnit);
   nsCSSValue(Array* aArray, nsCSSUnit aUnit);
-  explicit nsCSSValue(URL* aValue);
-  explicit nsCSSValue(Image* aValue);
+  explicit nsCSSValue(mozilla::css::URLValue* aValue);
+  explicit nsCSSValue(mozilla::css::ImageValue* aValue);
   explicit nsCSSValue(nsCSSValueGradient* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   ~nsCSSValue() { Reset(); }
@@ -349,7 +420,7 @@ public:
   inline nsCSSValueTriplet& GetTripletValue();
   inline const nsCSSValueTriplet& GetTripletValue() const;
 
-  URL* GetURLStructValue() const
+  mozilla::css::URLValue* GetURLStructValue() const
   {
     // Not allowing this for Image values, because if the caller takes
     // a ref to them they won't be able to delete them properly.
@@ -357,7 +428,7 @@ public:
     return mValue.mURL;
   }
 
-  Image* GetImageStructValue() const
+  mozilla::css::ImageValue* GetImageStructValue() const
   {
     NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Image, "not an Image value");
     return mValue.mImage;
@@ -395,8 +466,8 @@ public:
   void SetStringValue(const nsString& aValue, nsCSSUnit aUnit);
   void SetColorValue(nscolor aValue);
   void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
-  void SetURLValue(nsCSSValue::URL* aURI);
-  void SetImageValue(nsCSSValue::Image* aImage);
+  void SetURLValue(mozilla::css::URLValue* aURI);
+  void SetImageValue(mozilla::css::ImageValue* aImage);
   void SetGradientValue(nsCSSValueGradient* aGradient);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
@@ -434,73 +505,6 @@ public:
 
   size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
-  struct URL {
-    // Methods are not inline because using an nsIPrincipal means requiring
-    // caps, which leads to REQUIRES hell, since this header is included all
-    // over.
-
-    // For both constructors aString must not be null.
-    // For both constructors aOriginPrincipal must not be null.
-    // Construct with a base URI; this will create the actual URI lazily from
-    // aString and aBaseURI.
-    URL(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
-        nsIPrincipal* aOriginPrincipal);
-    // Construct with the actual URI.
-    URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
-        nsIPrincipal* aOriginPrincipal);
-
-    ~URL();
-
-    bool operator==(const URL& aOther) const;
-
-    // URIEquals only compares URIs and principals (unlike operator==, which
-    // also compares the original strings).  URIEquals also assumes that the
-    // mURI member of both URL objects is non-null.  Do NOT call this method
-    // unless you're sure this is the case.
-    bool URIEquals(const URL& aOther) const;
-
-    nsIURI* GetURI() const;
-
-    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
-
-  private:
-    // If mURIResolved is false, mURI stores the base URI.
-    // If mURIResolved is true, mURI stores the URI we resolve to; this may be
-    // null if the URI is invalid.
-    mutable nsCOMPtr<nsIURI> mURI;
-  public:
-    nsStringBuffer* mString; // Could use nsRefPtr, but it'd add useless
-                             // null-checks; this is never null.
-    nsCOMPtr<nsIURI> mReferrer;
-    nsCOMPtr<nsIPrincipal> mOriginPrincipal;
-
-    NS_INLINE_DECL_REFCOUNTING(nsCSSValue::URL)
-
-  private:
-    mutable bool mURIResolved;
-
-    URL(const URL& aOther) MOZ_DELETE;
-    URL& operator=(const URL& aOther) MOZ_DELETE;
-  };
-
-  struct Image : public URL {
-    // Not making the constructor and destructor inline because that would
-    // force us to include imgIRequest.h, which leads to REQUIRES hell, since
-    // this header is included all over.
-    // aString must not be null.
-    Image(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
-          nsIPrincipal* aOriginPrincipal, nsIDocument* aDocument);
-    ~Image();
-
-    // Inherit operator== from nsCSSValue::URL
-
-    nsInterfaceHashtable<nsISupportsHashKey, imgIRequest> mRequests; 
-
-    // Override AddRef and Release to not only log ourselves correctly, but
-    // also so that we delete correctly without a virtual destructor
-    NS_INLINE_DECL_REFCOUNTING(nsCSSValue::Image)
-  };
-
 private:
   static const PRUnichar* GetBufferValue(nsStringBuffer* aBuffer) {
     return static_cast<PRUnichar*>(aBuffer->Data());
@@ -516,8 +520,8 @@ protected:
     nsStringBuffer* mString;
     nscolor    mColor;
     Array*     mArray;
-    URL*       mURL;
-    Image*     mImage;
+    mozilla::css::URLValue* mURL;
+    mozilla::css::ImageValue* mImage;
     nsCSSValueGradient* mGradient;
     nsCSSValuePair_heap* mPair;
     nsCSSRect_heap* mRect;
