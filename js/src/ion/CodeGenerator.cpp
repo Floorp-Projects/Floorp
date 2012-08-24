@@ -1258,11 +1258,6 @@ CodeGenerator::generateBody()
                     return false;
             }
 
-#if defined(DEBUG) && (defined(JS_CPU_X64) || defined(JS_CPU_X86))
-            // No-op used to index the LIR instructions in IonGraph output.
-            masm.store16(Imm32(iter->id()), Address(StackPointer, -8));
-#endif
-
             if (!iter->accept(this))
                 return false;
         }
