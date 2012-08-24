@@ -38,9 +38,7 @@ function runNextTest() {
   win.onunload = function() {
     didClose = true;
   }
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                  getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(win);
   utils.sendNativeKeyEvent(0, MAC_VK_ANSI_W, 0x4000 /* cmd */, "w", "w");
 
   setTimeout(function () {

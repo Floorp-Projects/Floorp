@@ -4,8 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OfflineCacheUpdateParent.h"
+
+#include "mozilla/ipc/URIUtils.h"
 #include "nsOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"
+
+using namespace mozilla::ipc;
 
 #if defined(PR_LOGGING)
 //
@@ -60,16 +64,21 @@ OfflineCacheUpdateParent::ActorDestroy(ActorDestroyReason why)
 }
 
 nsresult
-OfflineCacheUpdateParent::Schedule(const URI& aManifestURI,
-                                   const URI& aDocumentURI,
+OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
+                                   const URIParams& aDocumentURI,
                                    const nsCString& aClientID,
                                    const bool& stickDocument)
 {
     LOG(("OfflineCacheUpdateParent::RecvSchedule [%p]", this));
 
     nsRefPtr<nsOfflineCacheUpdate> update;
-    nsCOMPtr<nsIURI> manifestURI(aManifestURI);
-    nsCOMPtr<nsIURI> documentURI(aDocumentURI);
+    nsCOMPtr<nsIURI> manifestURI = DeserializeURI(aManifestURI);
+    if (!manifestURI)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIURI> documentURI = DeserializeURI(aDocumentURI);
+    if (!documentURI)
+        return NS_ERROR_FAILURE;
 
     nsOfflineCacheUpdateService* service =
         nsOfflineCacheUpdateService::EnsureService();

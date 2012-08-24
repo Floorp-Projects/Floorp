@@ -42,7 +42,9 @@ enum LayerState {
 
 class RefCountedRegion : public RefCounted<RefCountedRegion> {
 public:
+  RefCountedRegion() : mIsInfinite(false) {}
   nsRegion mRegion;
+  bool mIsInfinite;
 };
 
 /**
@@ -466,15 +468,21 @@ protected:
    */
   class DisplayItemDataEntry : public nsPtrHashKey<nsIFrame> {
   public:
-    DisplayItemDataEntry(const nsIFrame *key) : nsPtrHashKey<nsIFrame>(key), mIsSharingContainerLayer(false) {}
-    DisplayItemDataEntry(DisplayItemDataEntry &toCopy) :
-      nsPtrHashKey<nsIFrame>(toCopy.mKey), mIsSharingContainerLayer(toCopy.mIsSharingContainerLayer)
+    DisplayItemDataEntry(const nsIFrame *key)
+      : nsPtrHashKey<nsIFrame>(key)
+      , mIsSharingContainerLayer(false)
+      , mIsMergedFrame(false)
+      {}
+    DisplayItemDataEntry(DisplayItemDataEntry &toCopy)
+      : nsPtrHashKey<nsIFrame>(toCopy.mKey)
+      , mIsSharingContainerLayer(toCopy.mIsSharingContainerLayer)
     {
       // This isn't actually a copy-constructor; notice that it steals toCopy's
       // array and invalid region.  Be careful.
       mData.SwapElements(toCopy.mData);
       mInvalidRegion.swap(toCopy.mInvalidRegion);
       mContainerLayerGeneration = toCopy.mContainerLayerGeneration;
+      mIsMergedFrame = toCopy.mIsMergedFrame;
     }
 
     bool HasNonEmptyContainerLayer();
@@ -483,6 +491,7 @@ protected:
     nsRefPtr<RefCountedRegion> mInvalidRegion;
     uint32_t mContainerLayerGeneration;
     bool mIsSharingContainerLayer;
+    bool mIsMergedFrame;
 
     enum { ALLOW_MEMMOVE = false };
   };

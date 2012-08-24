@@ -17,7 +17,7 @@ class nsIDOMWindow;
 @interface mozNotificationCenterDelegate : NSObject <NSUserNotificationCenterDelegate>
 {
 @private
-  PRUint32 mKey;
+  uint32_t mKey;
   NSMutableDictionary *mObserverDict;
   id<FakeNSUserNotificationCenter> mCenter;
 }
@@ -32,7 +32,7 @@ class nsIDOMWindow;
  */
 - (void)notifyWithTitle:(const nsAString&)aTitle
             description:(const nsAString&)aText
-                    key:(PRUint32)aKey
+                    key:(uint32_t)aKey
                  cookie:(const nsAString&)aCookie;
 
 /**
@@ -41,7 +41,7 @@ class nsIDOMWindow;
  * @param aObserver The observer we are adding.
  * @return The key it was stored in.
  */
-- (PRUint32)addObserver:(nsIObserver*)aObserver;
+- (uint32_t)addObserver:(nsIObserver*)aObserver;
 
 /**
  * Called when a window was closed and the observers are no longer valid.
