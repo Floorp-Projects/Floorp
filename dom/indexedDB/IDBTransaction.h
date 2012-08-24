@@ -328,19 +328,9 @@ public:
     mFileInfoEntries.Clear();
   }
 
-  nsresult UpdateDatabase(mozIStorageConnection* aConnection)
-  {
-    DatabaseUpdateFunction function(aConnection);
-
-    mFileInfoEntries.EnumerateRead(DatabaseUpdateCallback, &function);
-
-    return function.ErrorCode();
-  }
-
-  void UpdateFileInfos()
-  {
-    mFileInfoEntries.EnumerateRead(FileInfoUpdateCallback, nullptr);
-  }
+  nsresult WillCommit(mozIStorageConnection* aConnection);
+  void DidCommit();
+  void DidAbort();
 
 private:
   class FileInfoEntry
@@ -365,8 +355,9 @@ private:
   class DatabaseUpdateFunction
   {
   public:
-    DatabaseUpdateFunction(mozIStorageConnection* aConnection)
-    : mConnection(aConnection), mErrorCode(NS_OK)
+    DatabaseUpdateFunction(mozIStorageConnection* aConnection,
+                           UpdateRefcountFunction* aFunction)
+    : mConnection(aConnection), mFunction(aFunction), mErrorCode(NS_OK)
     { }
 
     bool Update(int64_t aId, int32_t aDelta);
@@ -380,7 +371,10 @@ private:
 
     nsCOMPtr<mozIStorageConnection> mConnection;
     nsCOMPtr<mozIStorageStatement> mUpdateStatement;
+    nsCOMPtr<mozIStorageStatement> mSelectStatement;
     nsCOMPtr<mozIStorageStatement> mInsertStatement;
+
+    UpdateRefcountFunction* mFunction;
 
     nsresult mErrorCode;
   };
@@ -388,6 +382,10 @@ private:
   nsresult ProcessValue(mozIStorageValueArray* aValues,
                         int32_t aIndex,
                         UpdateType aUpdateType);
+
+  nsresult CreateJournals();
+
+  nsresult RemoveJournals(const nsTArray<int64_t>& aJournals);
 
   static PLDHashOperator
   DatabaseUpdateCallback(const uint64_t& aKey,
@@ -401,6 +399,10 @@ private:
 
   FileManager* mFileManager;
   nsClassHashtable<nsUint64HashKey, FileInfoEntry> mFileInfoEntries;
+
+  nsTArray<int64_t> mJournalsToCreateBeforeCommit;
+  nsTArray<int64_t> mJournalsToRemoveAfterCommit;
+  nsTArray<int64_t> mJournalsToRemoveAfterAbort;
 };
 
 END_INDEXEDDB_NAMESPACE
