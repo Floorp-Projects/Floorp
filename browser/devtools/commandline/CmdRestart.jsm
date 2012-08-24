@@ -28,7 +28,6 @@ gcli.addCommand({
     {
       name: "nocache",
       type: "boolean",
-      defaultValue: false,
       description: gcli.lookup("restartFirefoxNocacheDesc")
     }
   ],

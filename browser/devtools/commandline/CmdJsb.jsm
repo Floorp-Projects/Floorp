@@ -21,7 +21,6 @@ gcli.addCommand({
   name: 'jsb',
   description: gcli.lookup('jsbDesc'),
   returnValue:'string',
-  hidden: true,
   params: [
     {
       name: 'url',
@@ -40,7 +39,10 @@ gcli.addCommand({
       name: 'indentChar',
       type: {
         name: 'selection',
-        lookup: [{name: "space", value: " "}, {name: "tab", value: "\t"}]
+        lookup: [
+          { name: "space", value: " " },
+          { name: "tab", value: "\t" }
+        ]
       },
       description: gcli.lookup('jsbIndentCharDesc'),
       manual: gcli.lookup('jsbIndentCharManual'),
@@ -50,8 +52,7 @@ gcli.addCommand({
       name: 'preserveNewlines',
       type: 'boolean',
       description: gcli.lookup('jsbPreserveNewlinesDesc'),
-      manual: gcli.lookup('jsbPreserveNewlinesManual'),
-      defaultValue: true
+      manual: gcli.lookup('jsbPreserveNewlinesManual')
     },
     {
       name: 'preserveMaxNewlines',
@@ -64,8 +65,7 @@ gcli.addCommand({
       name: 'jslintHappy',
       type: 'boolean',
       description: gcli.lookup('jsbJslintHappyDesc'),
-      manual: gcli.lookup('jsbJslintHappyManual'),
-      defaultValue: false
+      manual: gcli.lookup('jsbJslintHappyManual')
     },
     {
       name: 'braceStyle',
@@ -81,58 +81,56 @@ gcli.addCommand({
       name: 'spaceBeforeConditional',
       type: 'boolean',
       description: gcli.lookup('jsbSpaceBeforeConditionalDesc'),
-      manual: gcli.lookup('jsbSpaceBeforeConditionalManual'),
-      defaultValue: true
+      manual: gcli.lookup('jsbSpaceBeforeConditionalManual')
     },
     {
       name: 'unescapeStrings',
       type: 'boolean',
       description: gcli.lookup('jsbUnescapeStringsDesc'),
-      manual: gcli.lookup('jsbUnescapeStringsManual'),
-      defaultValue: false
+      manual: gcli.lookup('jsbUnescapeStringsManual')
     }
   ],
   exec: function(args, context) {
-  let opts = {
-    indent_size: args.indentSize,
-    indent_char: args.indentChar,
-    preserve_newlines: args.preserveNewlines,
-    max_preserve_newlines: args.preserveMaxNewlines == -1 ?
-                           undefined : args.preserveMaxNewlines,
-    jslint_happy: args.jslintHappy,
-    brace_style: args.braceStyle,
-    space_before_conditional: args.spaceBeforeConditional,
-    unescape_strings: args.unescapeStrings
-  }
+    let opts = {
+      indent_size: args.indentSize,
+      indent_char: args.indentChar,
+      preserve_newlines: args.preserveNewlines,
+      max_preserve_newlines: args.preserveMaxNewlines == -1 ?
+                             undefined : args.preserveMaxNewlines,
+      jslint_happy: args.jslintHappy,
+      brace_style: args.braceStyle,
+      space_before_conditional: args.spaceBeforeConditional,
+      unescape_strings: args.unescapeStrings
+    }
 
-  let xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest();
 
-  try {
-    xhr.open("GET", args.url, true);
-  } catch(e) {
-    return gcli.lookup('jsbInvalidURL');
-  }
+    try {
+      xhr.open("GET", args.url, true);
+    } catch(e) {
+      return gcli.lookup('jsbInvalidURL');
+    }
 
-  let promise = context.createPromise();
+    let promise = context.createPromise();
 
-  xhr.onreadystatechange = function(aEvt) {
-    if (xhr.readyState == 4) {
-      if (xhr.status == 200 || xhr.status == 0) {
-        let browserDoc = context.environment.chromeDocument;
-        let browserWindow = browserDoc.defaultView;
-        let browser = browserWindow.gBrowser;
-
-        browser.selectedTab = browser.addTab("data:text/plain;base64," +
-          browserWindow.btoa(js_beautify(xhr.responseText, opts)));
-        promise.resolve();
-      }
-      else {
-        promise.resolve("Unable to load page to beautify: " + args.url + " " +
-                        xhr.status + " " + xhr.statusText);
-      }
-    };
-  }
-  xhr.send(null);
-  return promise;
+    xhr.onreadystatechange = function(aEvt) {
+      if (xhr.readyState == 4) {
+        if (xhr.status == 200 || xhr.status == 0) {
+          let browserDoc = context.environment.chromeDocument;
+          let browserWindow = browserDoc.defaultView;
+          let browser = browserWindow.gBrowser;
+  
+          browser.selectedTab = browser.addTab("data:text/plain;base64," +
+            browserWindow.btoa(js_beautify(xhr.responseText, opts)));
+          promise.resolve();
+        }
+        else {
+          promise.resolve("Unable to load page to beautify: " + args.url + " " +
+                          xhr.status + " " + xhr.statusText);
+        }
+      };
+    }
+    xhr.send(null);
+    return promise;
   }
 });

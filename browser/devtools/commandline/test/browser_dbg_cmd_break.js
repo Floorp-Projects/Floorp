@@ -11,35 +11,28 @@ function test() {
 }
 
 function testBreakCommands() {
-
-  info('###################################################');
-  info('###################################################');
-  info('###################################################');
-  info('###################################################');
-  info('###################################################');
-  info('###################################################');
-  info(content.document.documentElement.innerHTML + '\n');
-
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "brea",
-    directTabText: "k",
-    status: "ERROR"
+  helpers.setInput('break');
+  helpers.check({
+    input:  'break',
+    hints:       '',
+    markup: 'IIIII',
+    status: 'ERROR'
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "break",
-    status: "ERROR"
+  helpers.setInput('break add');
+  helpers.check({
+    input:  'break add',
+    hints:           '',
+    markup: 'IIIIIVIII',
+    status: 'ERROR'
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "break add",
-    status: "ERROR"
-  });
-
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "break add line",
-    emptyParameters: [ " <file>", " <line>" ],
-    status: "ERROR"
+  helpers.setInput('break add line');
+  helpers.check({
+    input:  'break add line',
+    hints:                ' <file> <line>',
+    markup: 'VVVVVVVVVVVVVV',
+    status: 'ERROR'
   });
 
   let pane = DebuggerUI.toggleDebugger();
@@ -53,10 +46,16 @@ function testBreakCommands() {
     var resumed = DeveloperToolbarTest.checkCalled(function() {
 
       var framesAdded = DeveloperToolbarTest.checkCalled(function() {
-        DeveloperToolbarTest.checkInputStatus({
-          typed: "break add line " + TEST_URI + " " + content.wrappedJSObject.line0,
-          status: "VALID"
+        helpers.setInput('break add line ' + TEST_URI + ' ' + content.wrappedJSObject.line0);
+        helpers.check({
+          hints: '',
+          status: 'VALID',
+          args: {
+            file: { value: TEST_URI },
+            line: { value: content.wrappedJSObject.line0 },
+          }
         });
+
         DeveloperToolbarTest.exec({
           args: {
             type: 'line',
@@ -66,17 +65,39 @@ function testBreakCommands() {
           completed: false
         });
 
-        DeveloperToolbarTest.checkInputStatus({
-          typed: "break list",
-          status: "VALID"
+        helpers.setInput('break list');
+        helpers.check({
+          input:  'break list',
+          hints:            '',
+          markup: 'VVVVVVVVVV',
+          status: 'VALID'
         });
+
         DeveloperToolbarTest.exec();
 
         var cleanup = DeveloperToolbarTest.checkCalled(function() {
-          DeveloperToolbarTest.checkInputStatus({
-            typed: "break del 0",
-            status: "VALID"
+          helpers.setInput('break del 9');
+          helpers.check({
+            input:  'break del 9',
+            hints:             '',
+            markup: 'VVVVVVVVVVE',
+            status: 'ERROR',
+            args: {
+              breakid: { status: 'ERROR', message: '9 is greater than maximum allowed: 0.' },
+            }
           });
+
+          helpers.setInput('break del 0');
+          helpers.check({
+            input:  'break del 0',
+            hints:             '',
+            markup: 'VVVVVVVVVVV',
+            status: 'VALID',
+            args: {
+              breakid: { value: 0 },
+            }
+          });
+
           DeveloperToolbarTest.exec({
             args: { breakid: 0 },
             completed: false
