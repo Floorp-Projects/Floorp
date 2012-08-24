@@ -196,20 +196,10 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
     if (principals == compartment->principals)
         return;
 
-    // Any compartment with the trusted principals -- and there can be
-    // multiple -- is a system compartment.
-    JSPrincipals *trusted = compartment->rt->trustedPrincipals();
-    bool isSystem = principals && principals == trusted;
-
     // Clear out the old principals, if any.
     if (compartment->principals) {
         JS_DropPrincipals(compartment->rt, compartment->principals);
         compartment->principals = NULL;
-        // We'd like to assert that our new principals is always same-origin
-        // with the old one, but JSPrincipals doesn't give us a way to do that.
-        // But we can at least assert that we're not switching between system
-        // and non-system.
-        JS_ASSERT(compartment->isSystemCompartment == isSystem);
     }
 
     // Set up the new principals.
@@ -218,8 +208,10 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
         compartment->principals = principals;
     }
 
-    // Update the system flag.
-    compartment->isSystemCompartment = isSystem;
+    // Any compartment with the trusted principals -- and there can be
+    // multiple -- is a system compartment.
+    JSPrincipals *trusted = compartment->rt->trustedPrincipals();
+    compartment->isSystemCompartment = principals && principals == trusted;
 }
 
 JS_FRIEND_API(JSBool)
