@@ -1088,7 +1088,9 @@ XPCShellEnvironment::Init()
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
-                                              principal, 0,
+                                              principal,
+                                              nsIXPConnect::
+                                                  FLAG_SYSTEM_GLOBAL_OBJECT,
                                               getter_AddRefs(holder));
     if (NS_FAILED(rv)) {
         NS_ERROR("InitClassesWithNewWrappedGlobal failed!");
