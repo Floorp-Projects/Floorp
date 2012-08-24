@@ -987,7 +987,7 @@ Declaration::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-void
+bool
 Declaration::GetNthProperty(uint32_t aIndex, nsAString& aReturn) const
 {
   aReturn.Truncate();
@@ -995,8 +995,10 @@ Declaration::GetNthProperty(uint32_t aIndex, nsAString& aReturn) const
     nsCSSProperty property = OrderValueAt(aIndex);
     if (0 <= property) {
       AppendASCIItoUTF16(nsCSSProps::GetStringValue(property), aReturn);
+      return true;
     }
   }
+  return false;
 }
 
 void

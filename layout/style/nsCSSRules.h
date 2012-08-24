@@ -165,6 +165,7 @@ public:
   NS_DECL_NSICSSDECLARATION
 
   virtual nsINode *GetParentObject();
+  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName);
 
   nsresult GetPropertyValue(nsCSSFontDesc aFontDescID,
                             nsAString & aResult) const;
