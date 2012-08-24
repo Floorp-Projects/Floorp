@@ -52,11 +52,9 @@ function testLocationChange()
   gDebugger.DebuggerController.activeThread.resume(function() {
     gDebugger.DebuggerController.client.addOneTimeListener("tabNavigated", function(aEvent, aPacket) {
       ok(true, "tabNavigated event was fired.");
-      gDebugger.DebuggerController.client.addOneTimeListener("tabAttached", function(aEvent, aPacket) {
-        ok(true, "Successfully reattached to the tab again.");
+      info("Still attached to the tab.");
 
-        closeDebuggerAndFinish();
-      });
+      closeDebuggerAndFinish();
     });
     content.location = TAB1_URL;
   });
