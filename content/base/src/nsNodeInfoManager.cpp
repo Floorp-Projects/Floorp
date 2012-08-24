@@ -130,9 +130,9 @@ nsNodeInfoManager::~nsNodeInfoManager()
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsNodeInfoManager)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsNodeInfoManager)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNodeInfoManager)
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsNodeInfoManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsNodeInfoManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsNodeInfoManager)
   if (tmp->mDocument &&
       nsCCUncollectableMarker::InGeneration(cb,
                                             tmp->mDocument->GetMarkedCCGeneration())) {
@@ -144,12 +144,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNodeInfoManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mBindingManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNodeInfoManager)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNodeInfoManager)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNodeInfoManager)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsNodeInfoManager, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsNodeInfoManager, Release)
 
 nsresult
 nsNodeInfoManager::Init(nsIDocument *aDocument)
