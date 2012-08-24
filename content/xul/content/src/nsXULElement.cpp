@@ -2231,6 +2231,22 @@ nsXULPrototypeElement::Unlink()
     mAttributes = nullptr;
 }
 
+void
+nsXULPrototypeElement::TraceAllScripts(JSTracer* aTrc)
+{
+    for (uint32_t i = 0; i < mChildren.Length(); ++i) {
+        nsXULPrototypeNode* child = mChildren[i];
+        if (child->mType == nsXULPrototypeNode::eType_Element) {
+            static_cast<nsXULPrototypeElement*>(child)->TraceAllScripts(aTrc);
+        } else if (child->mType == nsXULPrototypeNode::eType_Script) {
+            JSScript* script = static_cast<nsXULPrototypeScript*>(child)->GetScriptObject();
+            if (script) {
+                JS_CALL_SCRIPT_TRACER(aTrc, script, "active window XUL prototype script");
+            }
+        }
+    }
+}
+
 //----------------------------------------------------------------------
 //
 // nsXULPrototypeScript

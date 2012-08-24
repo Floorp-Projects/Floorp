@@ -186,6 +186,9 @@ public:
 
     void Unlink();
 
+    // Trace all scripts held by this element and its children.
+    void TraceAllScripts(JSTracer* aTrc);
+
     nsPrototypeArray         mChildren;
 
     nsCOMPtr<nsINodeInfo>    mNodeInfo;           // [OWNER]
