@@ -21,7 +21,7 @@ interface nsIURI;
  * This interface represents a content node that loads objects.
  */
 
-[scriptable, uuid(a812424b-4820-4e28-96c8-dd2b69e36496)]
+[scriptable, uuid(8ed953b4-5022-4a49-bed4-6818f85dc113)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
@@ -55,8 +55,6 @@ interface nsIObjectLoadingContent : nsISupports
   const unsigned long PLUGIN_VULNERABLE_UPDATABLE = 9;
   // The plugin is vulnerable (no update available)
   const unsigned long PLUGIN_VULNERABLE_NO_UPDATE = 10;
-  // The plugin is in play preview mode
-  const unsigned long PLUGIN_PLAY_PREVIEW         = 11;
 
   /**
    * The actual mime type (the one we got back from the network
@@ -115,8 +113,8 @@ interface nsIObjectLoadingContent : nsISupports
   void playPlugin();
 
   /**
-   * This attribute will return true if the plugin has been activated and
-   * false if the plugin is still in the click-to-play or play preview state.
+   * This attribute will return true if the plugin has been activated
+   * and false if the plugin is still in the click-to-play state.
    */
   readonly attribute boolean activated;
 
@@ -132,9 +130,4 @@ interface nsIObjectLoadingContent : nsISupports
   readonly attribute nsIURI srcURI;
 
   readonly attribute unsigned long pluginFallbackType;
-
-  /**
-   * This method will disable the play-preview plugin state.
-   */
-  void cancelPlayPreview();
 };
