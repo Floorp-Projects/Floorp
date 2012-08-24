@@ -391,7 +391,7 @@ JSObject*
 nsChildContentList::WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
 {
-  return mozilla::dom::binding::NodeList::create(cx, scope, this, triedToWrap);
+  return mozilla::dom::oldproxybindings::NodeList::create(cx, scope, this, triedToWrap);
 }
 
 NS_IMETHODIMP

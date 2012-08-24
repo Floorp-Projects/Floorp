@@ -12,6 +12,9 @@
 #include "nsISerializable.h"
 #include "nsSerializationHelper.h"
 #include "mozilla/LoadContext.h"
+#include "mozilla/ipc/URIUtils.h"
+
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
@@ -51,11 +54,13 @@ NS_IMPL_ISUPPORTS3(WyciwygChannelParent,
 //-----------------------------------------------------------------------------
 
 bool
-WyciwygChannelParent::RecvInit(const IPC::URI& aURI)
+WyciwygChannelParent::RecvInit(const URIParams& aURI)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIURI> uri(aURI);
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (!uri)
+    return false;
 
   nsCString uriSpec;
   uri->GetSpec(uriSpec);
@@ -79,11 +84,13 @@ WyciwygChannelParent::RecvInit(const IPC::URI& aURI)
 }
 
 bool
-WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
+WyciwygChannelParent::RecvAsyncOpen(const URIParams& aOriginal,
                                     const uint32_t& aLoadFlags,
                                     const IPC::SerializedLoadContext& loadContext)
 {
-  nsCOMPtr<nsIURI> original(aOriginal);
+  nsCOMPtr<nsIURI> original = DeserializeURI(aOriginal);
+  if (!original)
+    return false;
 
   LOG(("WyciwygChannelParent RecvAsyncOpen [this=%x]\n", this));
 

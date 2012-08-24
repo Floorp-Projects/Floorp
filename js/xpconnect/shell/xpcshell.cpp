@@ -1655,12 +1655,6 @@ GetCurrentWorkingDirectory(nsAString& workingDirectory)
     return true;
 }
 
-static JSPrincipals *
-FindObjectPrincipals(JSObject *obj)
-{
-    return gJSPrincipals;
-}
-
 static JSSecurityCallbacks shellSecurityCallbacks;
 
 int
@@ -1839,7 +1833,6 @@ main(int argc, char **argv, char **envp)
         const JSSecurityCallbacks *scb = JS_GetSecurityCallbacks(rt);
         NS_ASSERTION(scb, "We are assuming that nsScriptSecurityManager::Init() has been run");
         shellSecurityCallbacks = *scb;
-        shellSecurityCallbacks.findObjectPrincipals = FindObjectPrincipals;
         JS_SetSecurityCallbacks(rt, &shellSecurityCallbacks);
 
 #ifdef TEST_TranslateThis

@@ -80,7 +80,7 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
-    return mozilla::dom::binding::NodeList::create(cx, scope, this,
+    return mozilla::dom::oldproxybindings::NodeList::create(cx, scope, this,
                                                    triedToWrap);
   }
 
