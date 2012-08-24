@@ -201,7 +201,7 @@ HISTOGRAM(SPDY_SETTINGS_IW, 1, 1000, 50, EXPONENTIAL,  "SPDY: Settings IW (round
 #undef HTTP_HISTOGRAMS
 
 HISTOGRAM_ENUMERATED_VALUES(DISK_CACHE_CORRUPT_DETAILS, 50, "Why the HTTP disk cache was corrupted at startup")
-HISTOGRAM_BOOLEAN(DISK_CACHE_REDUCTION_TRIAL, "Stores 1 if the cache would be corrupted with the disk cache corruption plan of Bug 105843")
+HISTOGRAM_BOOLEAN(DISK_CACHE_REDUCTION_TRIAL, "Stores 1 if the cache would be clean with the disk cache corruption plan of Bug 105843")
 HISTOGRAM_ENUMERATED_VALUES(HTTP_CACHE_DISPOSITION_2,         5, "HTTP Cache Hit, Reval, Failed-Reval, Miss")
 HISTOGRAM_ENUMERATED_VALUES(HTTP_DISK_CACHE_DISPOSITION_2,    5, "HTTP Disk Cache Hit, Reval, Failed-Reval, Miss")
 HISTOGRAM_ENUMERATED_VALUES(HTTP_MEMORY_CACHE_DISPOSITION_2,  5, "HTTP Memory Cache Hit, Reval, Failed-Reval, Miss")
