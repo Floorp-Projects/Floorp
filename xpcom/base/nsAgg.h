@@ -76,9 +76,9 @@ public:                                                                     \
   static NS_METHOD TraverseImpl(NS_CYCLE_COLLECTION_INNERCLASS *that,       \
                                 void *p,                                    \
                                 nsCycleCollectionTraversalCallback &cb);    \
-  static NS_METHOD_(void) UnmarkIfPurpleImpl(nsISupports *p)                \
+  static NS_METHOD_(void) UnmarkIfPurpleImpl(void *p)                       \
   {                                                                         \
-    Downcast(p)->UnmarkIfPurple();                                          \
+    Downcast(static_cast<nsISupports *>(p))->UnmarkIfPurple();              \
   }                                                                         \
   static _class* Downcast(nsISupports* s)                                   \
   {                                                                         \
