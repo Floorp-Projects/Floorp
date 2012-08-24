@@ -553,6 +553,9 @@ public:
     {
         return NS_OK;
     }
+    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
+    {
+    }
     static NS_METHOD TraverseImpl(nsXPConnectParticipant *that, void *n,
                                   nsCycleCollectionTraversalCallback &cb);
 };
@@ -922,6 +925,9 @@ public:
     static NS_METHOD UnrootImpl(void *n)
     {
         return NS_OK;
+    }
+    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
+    {
     }
     static NS_METHOD TraverseImpl(JSContextParticipant *that, void *n,
                                   nsCycleCollectionTraversalCallback &cb)
@@ -2692,6 +2698,10 @@ public:
     static NS_METHOD UnrootImpl(void *p)
     {
         return NS_OK;
+    }
+
+    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
+    {
     }
 };
 
