@@ -152,6 +152,10 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   }
   EnsureInnerView();
 
+  // Set the primary frame now so that DocumentViewerImpl::FindContainerView
+  // called from within EndSwapDocShellsForViews below can find it if needed.
+  aContent->SetPrimaryFrame(this);
+
   // If we have a detached subdoc's root view on our frame loader, re-insert
   // it into the view tree. This happens when we've been reframed, and
   // ensures the presentation persists across reframes. If the frame element
@@ -173,11 +177,6 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
     }
     frameloader->SetDetachedSubdocView(nullptr, nullptr);
   }
-
-  // Set the primary frame now so that
-  // DocumentViewerImpl::FindContainerView called by ShowViewer below
-  // can find it if necessary.
-  aContent->SetPrimaryFrame(this);
 
   nsContentUtils::AddScriptRunner(new AsyncFrameInit(this));
   return NS_OK;
