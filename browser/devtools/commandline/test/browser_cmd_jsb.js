@@ -7,7 +7,7 @@ const TEST_URI = "http://example.com/browser/browser/devtools/commandline/" +
                  "test/browser_cmd_jsb_script.jsi";
 
 function test() {
-  DeveloperToolbarTest.test("about:blank", [ /*GJT_test*/ ]);
+  DeveloperToolbarTest.test("about:blank", [ GJT_test ]);
 }
 
 function GJT_test() {
