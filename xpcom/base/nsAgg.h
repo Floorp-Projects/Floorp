@@ -156,7 +156,7 @@ _class::Internal::Release(void)                                             \
     nsrefcnt count = agg->mRefCnt.decr(this);                               \
     NS_LOG_RELEASE(this, count, #_class);                                   \
     if (count == 0) {                                                       \
-        agg->mRefCnt.stabilizeForDeletion(this);                            \
+        agg->mRefCnt.stabilizeForDeletion();                                \
         delete agg;                                                         \
         return 0;                                                           \
     }                                                                       \
