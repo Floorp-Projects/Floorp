@@ -422,6 +422,12 @@ class IDLInterface(IDLObjectWithScope):
 
         assert not self.parent or isinstance(self.parent, IDLIdentifierPlaceholder)
         parent = self.parent.finish(scope) if self.parent else None
+        if parent and not isinstance(parent, IDLExternalInterface):
+            raise WebIDLError("%s inherits from %s which does not have "
+                              "a definition" %
+                              (self.identifier.name,
+                               self.parent.identifier.name),
+                              [self.location])
         assert not parent or isinstance(parent, IDLInterface)
 
         self.parent = parent
