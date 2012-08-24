@@ -262,12 +262,14 @@ _BROWSER_FILES = \
                  browser_social_toolbar.js \
                  browser_social_shareButton.js \
                  browser_social_sidebar.js \
+                 browser_social_flyout.js \
                  browser_social_mozSocial_API.js \
                  browser_social_isVisible.js \
                  browser_social_chatwindow.js \
                  social_panel.html \
                  social_sidebar.html \
                  social_chat.html \
+                 social_flyout.html \
                  social_window.html \
                  social_worker.js \
                  $(NULL)

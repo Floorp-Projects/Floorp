@@ -8,6 +8,9 @@
         port.onmessage = function(e) {
           var topic = e.data.topic;
           switch (topic) {
+            case "test-flyout-open":
+              navigator.mozSocial.openPanel("social_flyout.html");
+              break;
             case "test-chatbox-open":
               navigator.mozSocial.openChatWindow("social_chat.html", function(chatwin) {
                 port.postMessage({topic: "chatbox-opened", result: chatwin ? "ok" : "failed"});
