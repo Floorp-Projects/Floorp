@@ -202,16 +202,18 @@ SnapshotReader::readSlot()
 
     switch (type) {
       case JSVAL_TYPE_DOUBLE:
-        if (code != FloatRegisters::Invalid)
+        if (code < MIN_REG_FIELD_ESC)
             return Slot(FloatRegister::FromCode(code));
+        JS_ASSERT(code == ESC_REG_FIELD_INDEX);
         return Slot(TYPED_STACK, type, Location::From(reader_.readSigned()));
 
       case JSVAL_TYPE_INT32:
       case JSVAL_TYPE_STRING:
       case JSVAL_TYPE_OBJECT:
       case JSVAL_TYPE_BOOLEAN:
-        if (code != Registers::Invalid)
+        if (code < MIN_REG_FIELD_ESC)
             return Slot(TYPED_REG, type, Location::From(Register::FromCode(code)));
+        JS_ASSERT(code == ESC_REG_FIELD_INDEX);
         return Slot(TYPED_STACK, type, Location::From(reader_.readSigned()));
 
       case JSVAL_TYPE_NULL:
@@ -264,10 +266,12 @@ SnapshotReader::readSlot()
             return slot;
         }
 #elif JS_PUNBOX64
-        if (code != Registers::Invalid)
+        if (code < MIN_REG_FIELD_ESC) {
             slot.unknown_type_.value = Location::From(Register::FromCode(code));
-        else
+        } else {
+            JS_ASSERT(code == ESC_REG_FIELD_INDEX);
             slot.unknown_type_.value = Location::From(reader_.readSigned());
+        }
         return slot;
 #endif
       }
@@ -414,10 +418,7 @@ SnapshotWriter::addSlot(JSValueType type, int32 stackIndex)
     IonSpew(IonSpew_Snapshots, "    slot %u: %s (stack %d)",
             slotsWritten_, ValTypeToString(type), stackIndex);
 
-    if (type == JSVAL_TYPE_DOUBLE)
-        writeSlotHeader(type, FloatRegisters::Invalid);
-    else
-        writeSlotHeader(type, Registers::Invalid);
+    writeSlotHeader(type, ESC_REG_FIELD_INDEX);
     writer_.writeSigned(stackIndex);
 }
 
@@ -480,7 +481,7 @@ SnapshotWriter::addSlot(int32 valueStackSlot)
 {
     IonSpew(IonSpew_Snapshots, "    slot %u: value (stack %d)", slotsWritten_, valueStackSlot);
 
-    writeSlotHeader(JSVAL_TYPE_MAGIC, Registers::Invalid);
+    writeSlotHeader(JSVAL_TYPE_MAGIC, ESC_REG_FIELD_INDEX);
     writer_.writeSigned(valueStackSlot);
 }
 #endif
