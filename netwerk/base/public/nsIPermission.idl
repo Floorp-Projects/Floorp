@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(cfb08e46-193c-4be7-a467-d7775fb2a31e)]
+[scriptable, uuid(5036f0f6-f77b-4168-9d57-a1c0dd66cf02)]
 /**
  * This interface defines a "permission" object,
  * used to specify allowed/blocked objects from
@@ -19,16 +19,6 @@ interface nsIPermission : nsISupports
      * The name of the host for which the permission is set
      */
     readonly attribute AUTF8String host;
-
-    /**
-     * The id of the app for which the permission is set.
-     */
-    readonly attribute unsigned long appId;
-
-    /**
-     * Whether the permission has been set to a page inside a browser element.
-     */
-    readonly attribute boolean isInBrowserElement;
 
     /**
      * a case-sensitive ASCII string, indicating the type of permission
