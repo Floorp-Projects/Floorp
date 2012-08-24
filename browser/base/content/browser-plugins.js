@@ -150,6 +150,10 @@ var gPluginHandler = {
         self._handleClickToPlayEvent(plugin);
         break;
 
+      case "PluginPlayPreview":
+        self._handlePlayPreviewEvent(plugin);
+        break;
+
       case "PluginDisabled":
         let manageLink = doc.getAnonymousElementByAttribute(plugin, "class", "managePluginsLink");
         self.addLinkClickCallback(manageLink, "managePlugins");
@@ -165,6 +169,11 @@ var gPluginHandler = {
     }
   },
 
+  canActivatePlugin: function PH_canActivatePlugin(objLoadingContent) {
+    return !objLoadingContent.activated &&
+           objLoadingContent.pluginFallbackType !== Ci.nsIObjectLoadingContent.PLUGIN_PLAY_PREVIEW;
+  },
+
   activatePlugins: function PH_activatePlugins(aContentWindow) {
     let browser = gBrowser.getBrowserForDocument(aContentWindow.document);
     browser._clickToPlayPluginsActivated = true;
@@ -173,7 +182,7 @@ var gPluginHandler = {
     let plugins = cwu.plugins;
     for (let plugin of plugins) {
       let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      if (!objLoadingContent.activated)
+      if (gPluginHandler.canActivatePlugin(objLoadingContent))
         objLoadingContent.playPlugin();
     }
     let notification = PopupNotifications.getNotification("click-to-play-plugins", browser);
@@ -183,14 +192,14 @@ var gPluginHandler = {
 
   activateSinglePlugin: function PH_activateSinglePlugin(aContentWindow, aPlugin) {
     let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    if (!objLoadingContent.activated)
+    if (gPluginHandler.canActivatePlugin(objLoadingContent))
       objLoadingContent.playPlugin();
 
     let cwu = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIDOMWindowUtils);
     let haveUnplayedPlugins = cwu.plugins.some(function(plugin) {
       let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      return (plugin != aPlugin && !objLoadingContent.activated);
+      return (plugin != aPlugin && gPluginHandler.canActivatePlugin(objLoadingContent));
     });
     let browser = gBrowser.getBrowserForDocument(aContentWindow.document);
     let notification = PopupNotifications.getNotification("click-to-play-plugins", browser);
@@ -198,6 +207,17 @@ var gPluginHandler = {
       browser._clickToPlayDoorhangerShown = false;
       notification.remove();
     }
+  },
+
+  stopPlayPreview: function PH_stopPlayPreview(aPlugin, aPlayPlugin) {
+    let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    if (objLoadingContent.activated)
+      return;
+
+    if (aPlayPlugin)
+      objLoadingContent.playPlugin();
+    else
+      objLoadingContent.cancelPlayPreview();
   },
 
   newPluginInstalled : function(event) {
@@ -288,6 +308,46 @@ var gPluginHandler = {
 
     if (!browser._clickToPlayDoorhangerShown)
       gPluginHandler._showClickToPlayNotification(browser);
+  },
+
+  _handlePlayPreviewEvent: function PH_handlePlayPreviewEvent(aPlugin) {
+    let doc = aPlugin.ownerDocument;
+    let previewContent = doc.getAnonymousElementByAttribute(aPlugin, "class", "previewPluginContent");
+    if (!previewContent) {
+      // the XBL binding is not attached (element is display:none), fallback to click-to-play logic
+      gPluginHandler.stopPlayPreview(aPlugin, false);
+      return;
+    }
+    let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
+    if (!iframe) {
+      // lazy initialization of the iframe
+      iframe = doc.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+      iframe.className = "previewPluginContentFrame";
+      previewContent.appendChild(iframe);
+
+      // Force a style flush, so that we ensure our binding is attached.
+      aPlugin.clientTop;
+    }
+    let pluginInfo = getPluginInfo(aPlugin);
+    let playPreviewUri = "data:application/x-moz-playpreview;," + pluginInfo.mimetype;
+    iframe.src = playPreviewUri;
+
+    // MozPlayPlugin event can be dispatched from the extension chrome
+    // code to replace the preview content with the native plugin
+    previewContent.addEventListener("MozPlayPlugin", function playPluginHandler(aEvent) {
+      if (!aEvent.isTrusted)
+        return;
+
+      previewContent.removeEventListener("MozPlayPlugin", playPluginHandler, true);
+
+      let playPlugin = !aEvent.detail;
+      gPluginHandler.stopPlayPreview(aPlugin, playPlugin);
+
+      // cleaning up: removes overlay iframe from the DOM
+      let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
+      if (iframe)
+        previewContent.removeChild(iframe);
+    }, true);
   },
 
   reshowClickToPlayNotification: function PH_reshowClickToPlayNotification() {
