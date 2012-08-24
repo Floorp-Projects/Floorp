@@ -471,7 +471,6 @@ protected:
     DisplayItemDataEntry(const nsIFrame *key)
       : nsPtrHashKey<nsIFrame>(key)
       , mIsSharingContainerLayer(false)
-      , mIsMergedFrame(false)
       {}
     DisplayItemDataEntry(DisplayItemDataEntry &toCopy)
       : nsPtrHashKey<nsIFrame>(toCopy.mKey)
@@ -482,7 +481,6 @@ protected:
       mData.SwapElements(toCopy.mData);
       mInvalidRegion.swap(toCopy.mInvalidRegion);
       mContainerLayerGeneration = toCopy.mContainerLayerGeneration;
-      mIsMergedFrame = toCopy.mIsMergedFrame;
     }
 
     bool HasNonEmptyContainerLayer();
@@ -491,7 +489,6 @@ protected:
     nsRefPtr<RefCountedRegion> mInvalidRegion;
     uint32_t mContainerLayerGeneration;
     bool mIsSharingContainerLayer;
-    bool mIsMergedFrame;
 
     enum { ALLOW_MEMMOVE = false };
   };
