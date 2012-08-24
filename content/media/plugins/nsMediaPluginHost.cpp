@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "nsTimeRanges.h"
 #include "MediaResource.h"
@@ -54,11 +55,34 @@ static void SetPlaybackReadMode(Decoder *aDecoder)
   GetResource(aDecoder)->SetReadMode(nsMediaCacheStream::MODE_PLAYBACK);
 }
 
+class GetIntPrefEvent : public nsRunnable {
+public:
+  GetIntPrefEvent(const char* aPref, int32_t* aResult)
+    : mPref(aPref), mResult(aResult) {}
+  NS_IMETHOD Run() {
+    return Preferences::GetInt(mPref, mResult);
+  }
+private:
+  const char* mPref;
+  int32_t*    mResult;
+};
+
+static bool GetIntPref(const char* aPref, int32_t* aResult)
+{
+  // GetIntPref() is called on the decoder thread, but the Preferences API
+  // can only be called on the main thread. Post a runnable and wait.
+  NS_ENSURE_ARG_POINTER(aPref);
+  NS_ENSURE_ARG_POINTER(aResult);
+  nsCOMPtr<GetIntPrefEvent> event = new GetIntPrefEvent(aPref, aResult);
+  return NS_SUCCEEDED(NS_DispatchToMainThread(event, NS_DISPATCH_SYNC));
+}
+
 static PluginHost sPluginHost = {
   Read,
   GetLength,
   SetMetaDataReadMode,
-  SetPlaybackReadMode
+  SetPlaybackReadMode,
+  GetIntPref
 };
 
 void nsMediaPluginHost::TryLoad(const char *name)
