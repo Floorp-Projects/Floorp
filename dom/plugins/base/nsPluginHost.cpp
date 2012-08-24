@@ -1309,17 +1309,6 @@ nsPluginHost::IsPluginClickToPlayForType(const char* aMimeType)
   }
 }
 
-bool
-nsPluginHost::IsPluginPlayPreviewForType(const char* aMimeType)
-{
-  for (uint32_t i = 0; i < mPlayPreviewMimeTypes.Length(); i++) {
-    nsCString mt = mPlayPreviewMimeTypes[i];
-    if (PL_strcasecmp(mt.get(), aMimeType) == 0)
-      return true;
-  }
-  return false;
-}
-
 nsresult
 nsPluginHost::GetBlocklistStateForType(const char *aMimeType, uint32_t *aState) 
 {
@@ -1823,27 +1812,6 @@ nsPluginHost::EnumerateSiteData(const nsACString& domain,
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginHost::RegisterPlayPreviewMimeType(const nsACString& mimeType)
-{
-  mPlayPreviewMimeTypes.AppendElement(mimeType);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginHost::UnregisterPlayPreviewMimeType(const nsACString& mimeType)
-{
-  nsCAutoString mimeTypeToRemove(mimeType);
-  for (uint32_t i = mPlayPreviewMimeTypes.Length(); i > 0;) {
-    nsCString mt = mPlayPreviewMimeTypes[--i];
-    if (PL_strcasecmp(mt.get(), mimeTypeToRemove.get()) == 0) {
-      mPlayPreviewMimeTypes.RemoveElementAt(i);
-      break;
-    }
-  }
   return NS_OK;
 }
 
