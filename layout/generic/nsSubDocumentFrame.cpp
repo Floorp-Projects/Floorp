@@ -838,6 +838,18 @@ nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
     mPostedReflowCallback = false;
   }
 
+  // Forget about plugin geometry updates in the subdoc's PresContext,
+  // otherwise we can be left with dangling pointers to the "plugin for
+  // geometry update frame" in the root PresContext.
+  nsIFrame* subdocRootFrame = GetSubdocumentRootFrame();
+  if (subdocRootFrame) {
+    nsPresContext* pc = subdocRootFrame->PresContext();
+    nsRootPresContext* rpc = pc ? pc->GetRootPresContext() : nullptr;
+    if (rpc) {
+      rpc->RootForgetUpdatePluginGeometryFrameForPresContext(pc);
+    }
+  }
+
   // Detach the subdocument's views and stash them in the frame loader.
   // We can then reattach them if we're being reframed (for example if
   // the frame has been made position:fixed).
