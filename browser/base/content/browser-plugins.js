@@ -365,7 +365,7 @@ var gPluginHandler = {
                            .getInterface(Ci.nsIDOMWindowUtils);
     let pluginNeedsActivation = cwu.plugins.some(function(plugin) {
       let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      return !objLoadingContent.activated;
+      return gPluginHandler.canActivatePlugin(objLoadingContent);
     });
     if (pluginNeedsActivation)
       gPluginHandler._showClickToPlayNotification(browser);
