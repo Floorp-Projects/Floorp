@@ -40,13 +40,9 @@ function testInitialLoad() {
 function testLocationChange()
 {
   gDebugger.DebuggerController.activeThread.resume(function() {
-    gDebugger.DebuggerController.client.addOneTimeListener("tabNavigated", function(aEvent, aPacket) {
-      ok(true, "tabNavigated event was fired.");
-      info("Still attached to the tab.");
-
-      gDebugger.addEventListener("Debugger:AfterScriptsAdded", function _onEvent(aEvent) {
-        gDebugger.removeEventListener(aEvent.type, _onEvent);
-
+    gDebugger.DebuggerController.client.addOneTimeListener("tabAttached", function(aEvent, aPacket) {
+      ok(true, "Successfully reattached to the tab again.");
+      gDebugger.DebuggerController.client.addOneTimeListener("resumed", function(aEvent, aPacket) {
         executeSoon(function() {
           validateSecondPage();
           testBack();
@@ -59,13 +55,9 @@ function testLocationChange()
 
 function testBack()
 {
-  gDebugger.DebuggerController.client.addOneTimeListener("tabNavigated", function(aEvent, aPacket) {
-    ok(true, "tabNavigated event was fired after going back.");
-    info("Still attached to the tab.");
-
-    gDebugger.addEventListener("Debugger:AfterScriptsAdded", function _onEvent(aEvent) {
-      gDebugger.removeEventListener(aEvent.type, _onEvent);
-
+  gDebugger.DebuggerController.client.addOneTimeListener("tabAttached", function(aEvent, aPacket) {
+    ok(true, "Successfully reattached to the tab after going back.");
+    gDebugger.DebuggerController.client.addOneTimeListener("resumed", function(aEvent, aPacket) {
       executeSoon(function() {
         validateFirstPage();
         testForward();
@@ -79,13 +71,9 @@ function testBack()
 
 function testForward()
 {
-  gDebugger.DebuggerController.client.addOneTimeListener("tabNavigated", function(aEvent, aPacket) {
-    ok(true, "tabNavigated event was fired after going forward.");
-    info("Still attached to the tab.");
-
-    gDebugger.addEventListener("Debugger:AfterScriptsAdded", function _onEvent(aEvent) {
-      gDebugger.removeEventListener(aEvent.type, _onEvent);
-
+  gDebugger.DebuggerController.client.addOneTimeListener("tabAttached", function(aEvent, aPacket) {
+    ok(true, "Successfully reattached to the tab after going forward.");
+    gDebugger.DebuggerController.client.addOneTimeListener("resumed", function(aEvent, aPacket) {
       executeSoon(function() {
         validateSecondPage();
         closeDebuggerAndFinish();

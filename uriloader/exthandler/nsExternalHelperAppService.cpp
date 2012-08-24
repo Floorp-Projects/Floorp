@@ -112,8 +112,10 @@
 #endif
 
 #include "mozilla/Preferences.h"
+#include "mozilla/ipc/URIUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::ipc;
 
 // Buffer file writes in 32kb chunks
 #define BUFFERED_OUTPUT_SIZE (1024 * 32)
@@ -586,16 +588,19 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     nsCOMPtr<nsIURI> referrer;
     rv = NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));
 
+    OptionalURIParams uriParams, referrerParams;
+    SerializeURI(uri, uriParams);
+    SerializeURI(referrer, referrerParams);
+
     // Now we build a protocol for forwarding our data to the parent.  The
     // protocol will act as a listener on the child-side and create a "real"
     // helperAppService listener on the parent-side, via another call to
     // DoContent.
-    mozilla::dom::PExternalHelperAppChild *pc;
-    pc = child->SendPExternalHelperAppConstructor(IPC::URI(uri),
-                                                  nsCString(aMimeContentType),
-                                                  disp,
-                                                  aForceSave, contentLength,
-                                                  IPC::URI(referrer));
+    mozilla::dom::PExternalHelperAppChild *pc =
+      child->SendPExternalHelperAppConstructor(uriParams,
+                                               nsCString(aMimeContentType),
+                                               disp, aForceSave, contentLength,
+                                               referrerParams);
     ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
 
     NS_ADDREF(*aStreamListener = childListener);
@@ -840,7 +845,10 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
   NS_ENSURE_ARG_POINTER(aURI);
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(aURI);
+    URIParams uri;
+    SerializeURI(aURI, uri);
+
+    mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(uri);
     return NS_OK;
   }
 

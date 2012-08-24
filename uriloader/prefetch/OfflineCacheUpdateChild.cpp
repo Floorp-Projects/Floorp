@@ -7,6 +7,7 @@
 #include "nsOfflineCacheUpdate.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/ipc/URIUtils.h"
 
 #include "nsIApplicationCacheContainer.h"
 #include "nsIApplicationCacheChannel.h"
@@ -28,6 +29,8 @@
 #include "nsProxyRelease.h"
 #include "prlog.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+
+using namespace mozilla::ipc;
 
 #if defined(PR_LOGGING)
 //
@@ -377,12 +380,16 @@ OfflineCacheUpdateChild::Schedule()
 
     nsCOMPtr<nsIDocShellTreeOwner> owner;
     item->GetTreeOwner(getter_AddRefs(owner));
-    
+
     nsCOMPtr<nsITabChild> tabchild = do_GetInterface(owner);
     if (!tabchild) {
       NS_WARNING("tab is null");
       return NS_ERROR_FAILURE;
     }
+
+    URIParams manifestURI, documentURI;
+    SerializeURI(mManifestURI, manifestURI);
+    SerializeURI(mDocumentURI, documentURI);
 
     // because owner implements nsITabChild, we can assume that it is
     // the one and only TabChild.
@@ -409,11 +416,8 @@ OfflineCacheUpdateChild::Schedule()
     // Need to addref ourself here, because the IPC stack doesn't hold
     // a reference to us. Will be released in RecvFinish() that identifies 
     // the work has been done.
-    child->SendPOfflineCacheUpdateConstructor(this,
-                                              IPC::URI(mManifestURI),
-                                              IPC::URI(mDocumentURI),
-                                              mClientID,
-                                              stickDocument);
+    child->SendPOfflineCacheUpdateConstructor(this, manifestURI, documentURI,
+                                              mClientID, stickDocument);
 
     mIPCActivated = true;
     this->AddRef();

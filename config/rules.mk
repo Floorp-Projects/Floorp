@@ -1587,7 +1587,6 @@ $(CURDIR)/$(MDDEPDIR):
 	$(MKDIR) -p $@
 
 ifneq (,$(filter-out all chrome default export realchrome tools clean clobber clobber_all distclean realclean,$(MAKECMDGOALS)))
-ifneq (,$(OBJS)$(XPIDLSRCS)$(SIMPLE_PROGRAMS))
 MDDEPEND_FILES		:= $(strip $(wildcard $(MDDEPDIR)/*.pp))
 
 ifneq (,$(MDDEPEND_FILES))
@@ -1601,7 +1600,6 @@ ALL_PP_RESULTS = $(shell $(PERL) $(BUILD_TOOLS)/mddepend.pl - $(MDDEPEND_FILES))
 $(eval $(ALL_PP_RESULTS))
 endif
 
-endif
 endif
 #############################################################################
 

@@ -17,15 +17,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=461710
 
 /** Test for Bug 461710 **/
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 SimpleTest.waitForExplicitFinish();
 
 const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cr = Components.results;
+const Cc = SpecialPowers.wrap(Components).classes;
+const Cr = SpecialPowers.wrap(Components).results;
 
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+SpecialPowers.wrap(Components).utils.import("resource://gre/modules/NetUtil.jsm", window);
+var Services = SpecialPowers.Services;
 
 var gIframe = document.getElementById("iframe");
 
@@ -73,8 +72,6 @@ var subtests = [
 
 var testNum = 0;
 function loadNextTest() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   // run the initialization code for each test
   switch (++testNum) {
     case 1:
@@ -115,9 +112,7 @@ function loadNextTest() {
 
 function getColor(doc, win, id) {
   var elem = doc.getElementById(id);
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(win);
   return utils.getVisitedDependentComputedStyle(elem, "", "color");
 }
 
@@ -159,7 +154,6 @@ function get_PBSvc() {
   if (_PBSvc)
     return _PBSvc;
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   try {
     _PBSvc = Cc["@mozilla.org/privatebrowsing;1"].
              getService(Ci.nsIPrivateBrowsingService);
@@ -170,8 +164,6 @@ function get_PBSvc() {
 
 
 function handleLoad() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   checkTest();
 
   if (testNum < subtests.length) {
@@ -189,9 +181,8 @@ var observer = {
   uri: null,
   resolved: true,
   observe: function (aSubject, aTopic, aData) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-    if (this.uri.equals(aSubject.QueryInterface(Ci.nsIURI))) {
+    if (this.uri.equals(SpecialPowers.wrap(aSubject).QueryInterface(Ci.nsIURI))) {
       this.resolved = true;
 
       Services.obs.removeObserver(this, aTopic);
@@ -201,9 +192,7 @@ var observer = {
     ok(this.resolved, "Can't set the expected URL when another is yet to be resolved");
     this.resolved = false;
 
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-    this.uri = NetUtil.newURI(url);
+    this.uri = SpecialPowers.wrap(NetUtil).newURI(url);
     var topic = aOverrideTopic || URI_VISITED_RESOLUTION_TOPIC;
     Services.obs.addObserver(this, topic, false);
   }
