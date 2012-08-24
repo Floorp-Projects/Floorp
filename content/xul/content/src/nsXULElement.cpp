@@ -1858,8 +1858,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Script) {
         nsXULPrototypeScript *script =
             static_cast<nsXULPrototypeScript*>(tmp);
-        NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(script->mScriptObject.mObject,
-                                                   "mScriptObject.mObject")
+        NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(script->GetScriptObject(),
+                                                   "mScriptObject")
+
     }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -1975,7 +1976,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
                   rv = tmp;
                 }
 
-                if (script->mScriptObject.mObject) {
+                if (script->GetScriptObject()) {
                     // This may return NS_OK without muxing script->mSrcURI's
                     // data into the cache file, in the case where that
                     // muxed document is already there (written by a prior
@@ -2236,7 +2237,7 @@ nsXULPrototypeScript::nsXULPrototypeScript(uint32_t aLineNo, uint32_t aVersion)
       mOutOfLine(true),
       mSrcLoadWaiters(nullptr),
       mLangVersion(aVersion),
-      mScriptObject()
+      mScriptObject(nullptr)
 {
 }
 
@@ -2253,9 +2254,9 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
 {
     nsIScriptContext *context = aGlobal->GetScriptContext();
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nullptr ||
-                 !mScriptObject.mObject,
+                 !mScriptObject,
                  "script source still loading when serializing?!");
-    if (!mScriptObject.mObject)
+    if (!mScriptObject)
         return NS_ERROR_FAILURE;
 
     // Write basic prototype data
@@ -2265,7 +2266,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
     rv = aStream->Write32(mLangVersion);
     if (NS_FAILED(rv)) return rv;
     // And delegate the writing to the nsIScriptContext
-    rv = context->Serialize(aStream, mScriptObject.mObject);
+    rv = context->Serialize(aStream, mScriptObject);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -2328,7 +2329,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     nsresult rv;
 
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nullptr ||
-                 !mScriptObject.mObject,
+                 !mScriptObject,
                  "prototype script not well-initialized when deserializing?!");
 
     // Read basic prototype data
@@ -2381,7 +2382,7 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
             }
         }
 
-        if (! mScriptObject.mObject) {
+        if (!mScriptObject) {
             if (mSrcURI) {
                 rv = cache->GetInputStream(mSrcURI, getter_AddRefs(objectInput));
             } 
@@ -2402,7 +2403,7 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
                     bool isChrome = false;
                     mSrcURI->SchemeIs("chrome", &isChrome);
                     if (isChrome)
-                        cache->PutScript(mSrcURI, mScriptObject.mObject);
+                        cache->PutScript(mSrcURI, mScriptObject);
                 }
                 cache->FinishInputStream(mSrcURI);
             } else {
@@ -2489,8 +2490,8 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 void
 nsXULPrototypeScript::UnlinkJSObjects()
 {
-    if (mScriptObject.mObject) {
-        mScriptObject.mObject = nullptr;
+    if (mScriptObject) {
+        mScriptObject = nullptr;
         nsContentUtils::DropJSObjects(this);
     }
 }
@@ -2498,15 +2499,15 @@ nsXULPrototypeScript::UnlinkJSObjects()
 void
 nsXULPrototypeScript::Set(JSScript* aObject)
 {
-    NS_ASSERTION(!mScriptObject.mObject, "Leaking script object.");
+    MOZ_ASSERT(!mScriptObject, "Leaking script object.");
     if (!aObject) {
-        mScriptObject.mObject = nullptr;
+        mScriptObject = nullptr;
         return;
     }
 
     nsContentUtils::HoldJSObjects(
         this, NS_CYCLE_COLLECTION_PARTICIPANT(nsXULPrototypeNode));
-    mScriptObject.mObject = aObject;
+    mScriptObject = aObject;
 }
 
 //----------------------------------------------------------------------
