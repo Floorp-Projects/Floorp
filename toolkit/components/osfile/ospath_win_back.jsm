@@ -197,7 +197,11 @@ if (typeof Components != "undefined") {
               stack.push("..");
              }
            } else {
-             stack.pop();
+             if (stack[stack.length - 1] == "..") {
+               stack.push("..");
+             } else {
+               stack.pop();
+             }
            }
            break;
          default:
