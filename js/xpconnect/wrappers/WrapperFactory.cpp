@@ -331,9 +331,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         } else {
             bool isSystem;
             {
-                JSAutoEnterCompartment ac;
-                if (!ac.enter(cx, obj))
-                    return nullptr;
+                JSAutoCompartment ac(cx, obj);
                 JSObject *globalObj = JS_GetGlobalForObject(cx, obj);
                 JS_ASSERT(globalObj);
                 isSystem = JS_IsSystemObject(cx, globalObj);
