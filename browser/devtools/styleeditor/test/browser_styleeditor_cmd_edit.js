@@ -13,95 +13,136 @@ function test() {
 }
 
 function testEditStatus(browser, tab) {
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit",
-    markup: "VVVV",
-    status: "ERROR",
-    emptyParameters: [ " <resource>", " [line]" ],
+  helpers.setInput('edit');
+  helpers.check({
+    input:  'edit',
+    hints:      ' <resource> [line]',
+    markup: 'VVVV',
+    status: 'ERROR',
+    args: {
+      resource: { status: 'INCOMPLETE' },
+      line: { status: 'VALID' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit i",
-    markup: "VVVVVI",
-    status: "ERROR",
-    directTabText: "nline-css",
-    emptyParameters: [ " [line]" ],
+  helpers.setInput('edit i');
+  helpers.check({
+    input:  'edit i',
+    hints:        'nline-css [line]',
+    markup: 'VVVVVI',
+    status: 'ERROR',
+    args: {
+      resource: { arg: ' i', status: 'INCOMPLETE' },
+      line: { status: 'VALID' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit c",
-    markup: "VVVVVI",
-    status: "ERROR",
-    directTabText: "ss#style2",
-    emptyParameters: [ " [line]" ],
+  helpers.setInput('edit c');
+  helpers.check({
+    input:  'edit c',
+    hints:        'ss#style2 [line]',
+    markup: 'VVVVVI',
+    status: 'ERROR',
+    args: {
+      resource: { arg: ' c', status: 'INCOMPLETE' },
+      line: { status: 'VALID' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit http",
-    markup: "VVVVVIIII",
-    status: "ERROR",
-    directTabText: "://example.com/browser/browser/devtools/styleeditor/test/resources_inpage1.css",
-    arrowTabText: "",
-    emptyParameters: [ " [line]" ],
+  helpers.setInput('edit http');
+  helpers.check({
+    input:  'edit http',
+    hints:           '://example.com/browser/browser/devtools/styleeditor/test/resources_inpage1.css [line]',
+    markup: 'VVVVVIIII',
+    status: 'ERROR',
+    args: {
+      resource: { arg: ' http', status: 'INCOMPLETE', message: '' },
+      line: { status: 'VALID' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit page1",
-    markup: "VVVVVIIIII",
-    status: "ERROR",
-    directTabText: "",
-    arrowTabText: "http://example.com/browser/browser/devtools/styleeditor/test/resources_inpage1.css",
-    emptyParameters: [ " [line]" ],
+  helpers.setInput('edit page1');
+  helpers.check({
+    input:  'edit page1',
+    hints:            ' [line] -> http://example.com/browser/browser/devtools/styleeditor/test/resources_inpage1.css',
+    markup: 'VVVVVIIIII',
+    status: 'ERROR',
+    args: {
+      resource: { arg: ' page1', status: 'INCOMPLETE', message: '' },
+      line: { status: 'VALID' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit page2",
-    markup: "VVVVVIIIII",
-    status: "ERROR",
-    directTabText: "",
-    arrowTabText: "http://example.com/browser/browser/devtools/styleeditor/test/resources_inpage2.css",
-    emptyParameters: [ " [line]" ],
+  helpers.setInput('edit page2');
+  helpers.check({
+    input:  'edit page2',
+    hints:            ' [line] -> http://example.com/browser/browser/devtools/styleeditor/test/resources_inpage2.css',
+    markup: 'VVVVVIIIII',
+    status: 'ERROR',
+    args: {
+      resource: { arg: ' page2', status: 'INCOMPLETE', message: '' },
+      line: { status: 'VALID' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit stylez",
-    markup: "VVVVVEEEEEE",
-    status: "ERROR",
-    directTabText: "",
-    arrowTabText: "",
-    emptyParameters: [ " [line]" ],
+  helpers.setInput('edit stylez');
+  helpers.check({
+    input:  'edit stylez',
+    hints:             ' [line]',
+    markup: 'VVVVVEEEEEE',
+    status: 'ERROR',
+    args: {
+      resource: { arg: ' stylez', status: 'ERROR', message: 'Can\'t use \'stylez\'.' },
+      line: { status: 'VALID' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit css#style2",
-    markup: "VVVVVVVVVVVVVVV",
-    status: "VALID",
-    directTabText: "",
-    emptyParameters: [ " [line]" ],
+  helpers.setInput('edit css#style2');
+  helpers.check({
+    input:  'edit css#style2',
+    hints:                 ' [line]',
+    markup: 'VVVVVVVVVVVVVVV',
+    status: 'VALID',
+    args: {
+      resource: { arg: ' css#style2', status: 'VALID', message: '' },
+      line: { status: 'VALID' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit css#style2 5",
-    markup: "VVVVVVVVVVVVVVVVV",
-    status: "VALID",
-    directTabText: "",
-    emptyParameters: [ ],
+  helpers.setInput('edit css#style2 5');
+  helpers.check({
+    input:  'edit css#style2 5',
+    hints:                   '',
+    markup: 'VVVVVVVVVVVVVVVVV',
+    status: 'VALID',
+    args: {
+      resource: { arg: ' css#style2', status: 'VALID', message: '' },
+      line: { value: 5, arg: ' 5', status: 'VALID' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit css#style2 0",
-    markup: "VVVVVVVVVVVVVVVVE",
-    status: "ERROR",
-    directTabText: "",
-    emptyParameters: [ ],
+  helpers.setInput('edit css#style2 0');
+  helpers.check({
+    input:  'edit css#style2 0',
+    hints:                   '',
+    markup: 'VVVVVVVVVVVVVVVVE',
+    status: 'ERROR',
+    args: {
+      resource: { arg: ' css#style2', status: 'VALID', message: '' },
+      line: { arg: ' 0', status: 'ERROR', message: '0 is smaller than minimum allowed: 1.' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "edit css#style2 -1",
-    markup: "VVVVVVVVVVVVVVVVEE",
-    status: "ERROR",
-    directTabText: "",
-    emptyParameters: [ ],
+  helpers.setInput('edit css#style2 -1');
+  helpers.check({
+    input:  'edit css#style2 -1',
+    hints:                    '',
+    markup: 'VVVVVVVVVVVVVVVVEE',
+    status: 'ERROR',
+    args: {
+      resource: { arg: ' css#style2', status: 'VALID', message: '' },
+      line: { arg: ' -1', status: 'ERROR', message: '-1 is smaller than minimum allowed: 1.' },
+    }
   });
 }
 

@@ -6,40 +6,73 @@
 const TEST_URI = "data:text/html;charset=utf-8,gcli-cookie";
 
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, [ testCookieCommands ]);
+  DeveloperToolbarTest.test(TEST_URI, [ testCookieCheck, testCookieExec ]);
 }
 
-function testCookieCommands() {
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "cook",
-    directTabText: "ie",
-    status: "ERROR"
+function testCookieCheck() {
+  helpers.setInput('cookie');
+  helpers.check({
+    input:  'cookie',
+    hints:        '',
+    markup: 'IIIIII',
+    status: 'ERROR'
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "cookie l",
-    directTabText: "ist",
-    status: "ERROR"
+  helpers.setInput('cookie lis');
+  helpers.check({
+    input:  'cookie lis',
+    hints:            't',
+    markup: 'IIIIIIVIII',
+    status: 'ERROR'
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "cookie list",
-    status: "VALID",
-    emptyParameters: [ ]
+  helpers.setInput('cookie list');
+  helpers.check({
+    input:  'cookie list',
+    hints:             '',
+    markup: 'VVVVVVVVVVV',
+    status: 'VALID'
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "cookie remove",
-    status: "ERROR",
-    emptyParameters: [ " <key>" ]
+  helpers.setInput('cookie remove');
+  helpers.check({
+    input:  'cookie remove',
+    hints:               ' <key>',
+    markup: 'VVVVVVVVVVVVV',
+    status: 'ERROR'
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "cookie set",
-    status: "ERROR",
-    emptyParameters: [ " <key>", " <value>", " [options]" ],
+  helpers.setInput('cookie set');
+  helpers.check({
+    input:  'cookie set',
+    hints:            ' <key> <value> [options]',
+    markup: 'VVVVVVVVVV',
+    status: 'ERROR'
   });
 
+  helpers.setInput('cookie set fruit');
+  helpers.check({
+    input:  'cookie set fruit',
+    hints:                  ' <value> [options]',
+    markup: 'VVVVVVVVVVVVVVVV',
+    status: 'ERROR'
+  });
+
+  helpers.setInput('cookie set fruit ban');
+  helpers.check({
+    input:  'cookie set fruit ban',
+    hints:                      ' [options]',
+    markup: 'VVVVVVVVVVVVVVVVVVVV',
+    status: 'VALID',
+    args: {
+      key: { value: 'fruit' },
+      value: { value: 'ban' },
+      secure: { value: false },
+    }
+  });
+}
+
+function testCookieExec() {
   DeveloperToolbarTest.exec({
     typed: "cookie set fruit banana",
     args: {

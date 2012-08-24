@@ -10,36 +10,23 @@ function test() {
 }
 
 function testRestart() {
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "restart",
-    markup: "VVVVVVV",
-    status: "VALID",
-    emptyParameters: [ " [nocache]" ],
+  helpers.setInput('restart');
+  helpers.check({
+    input:  'restart',
+    markup: 'VVVVVVV',
+    status: 'VALID',
+    args: {
+      nocache: { value: false },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "restart ",
-    markup: "VVVVVVVV",
-    status: "VALID",
-    directTabText: "false"
-  });
-
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "restart t",
-    markup: "VVVVVVVVI",
-    status: "ERROR",
-    directTabText: "rue"
-  });
-
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "restart --nocache",
-    markup: "VVVVVVVVVVVVVVVVV",
-    status: "VALID"
-  });
-
-  DeveloperToolbarTest.checkInputStatus({
-    typed:  "restart --noca",
-    markup: "VVVVVVVVEEEEEE",
-    status: "ERROR",
+  helpers.setInput('restart --nocache');
+  helpers.check({
+    input:  'restart --nocache',
+    markup: 'VVVVVVVVVVVVVVVVV',
+    status: 'VALID',
+    args: {
+      nocache: { value: true },
+    }
   });
 }

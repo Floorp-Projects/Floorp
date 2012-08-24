@@ -13,21 +13,28 @@ function test() {
 }
 
 function testCallLogStatus() {
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "calllog",
-    status: "ERROR"
+  helpers.setInput('calllog');
+  helpers.check({
+    input:  'calllog',
+    hints:         '',
+    markup: 'IIIIIII',
+    status: 'ERROR'
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "calllog start",
-    status: "VALID",
-    emptyParameters: [ ]
+  helpers.setInput('calllog start');
+  helpers.check({
+    input:  'calllog start',
+    hints:               '',
+    markup: 'VVVVVVVVVVVVV',
+    status: 'VALID'
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "calllog start",
-    status: "VALID",
-    emptyParameters: [ ]
+  helpers.setInput('calllog stop');
+  helpers.check({
+    input:  'calllog stop',
+    hints:              '',
+    markup: 'VVVVVVVVVVVV',
+    status: 'VALID'
   });
 }
 
@@ -39,7 +46,7 @@ function testCallLogExec() {
   });
 
   let hud = null;
-  function onWebConsoleOpen(aSubject) {
+  var onWebConsoleOpen = DeveloperToolbarTest.checkCalled(function(aSubject) {
     Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
 
     aSubject.QueryInterface(Ci.nsISupportsString);
@@ -66,7 +73,7 @@ function testCallLogExec() {
       args: {},
       blankOutput: true,
     });
-  }
+  });
 
   Services.obs.addObserver(onWebConsoleOpen, "web-console-created", false);
 
