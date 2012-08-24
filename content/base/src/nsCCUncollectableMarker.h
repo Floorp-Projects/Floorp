@@ -45,7 +45,7 @@ private:
 
 namespace mozilla {
 namespace dom {
-void TraceBlackJS(JSTracer* aTrc);
+void TraceBlackJS(JSTracer* aTrc, uint32_t aGCNumber);
 }
 }
 
