@@ -101,13 +101,18 @@ if (typeof Components != "undefined") {
                stack.push("..");
              }
            } else {
-             stack.pop();
+             if (stack[stack.length - 1] == "..") {
+               stack.push("..");
+             } else {
+               stack.pop();
+             }
            }
            break;
          default:
            stack.push(v);
          }
        });
+       exports.OS.Shared.LOG("normalize", "stack", stack.toSource());
        let string = stack.join("/");
        return absolute ? "/" + string : string;
      },
