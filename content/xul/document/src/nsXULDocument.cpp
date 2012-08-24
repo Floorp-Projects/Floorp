@@ -2932,7 +2932,7 @@ nsXULDocument::ResumeWalk()
                     if (NS_SUCCEEDED(rv) && blocked)
                         return NS_OK;
                 }
-                else if (scriptproto->mScriptObject.mObject) {
+                else if (scriptproto->GetScriptObject()) {
                     // An inline script
                     rv = ExecuteScript(scriptproto);
                     if (NS_FAILED(rv)) return rv;
@@ -3285,7 +3285,7 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, bool* aBlock)
 
     bool isChromeDoc = IsChromeURI(mDocumentURI);
 
-    if (isChromeDoc && aScriptProto->mScriptObject.mObject) {
+    if (isChromeDoc && aScriptProto->GetScriptObject()) {
         rv = ExecuteScript(aScriptProto);
 
         // Ignore return value from execution, and don't block
@@ -3308,7 +3308,7 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, bool* aBlock)
             aScriptProto->Set(newScriptObject);
         }
 
-        if (aScriptProto->mScriptObject.mObject) {
+        if (aScriptProto->GetScriptObject()) {
             rv = ExecuteScript(aScriptProto);
 
             // Ignore return value from execution, and don't block
@@ -3466,7 +3466,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             if (useXULCache && IsChromeURI(mDocumentURI)) {
                 nsXULPrototypeCache::GetInstance()->PutScript(
                                    scriptProto->mSrcURI,
-                                   scriptProto->mScriptObject.mObject);
+                                   scriptProto->GetScriptObject());
             }
 
             if (mIsWritingFastLoad && mCurrentPrototype != mMasterPrototype) {
@@ -3517,7 +3517,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         doc->mNextSrcLoadWaiter = nullptr;
 
         // Execute only if we loaded and compiled successfully, then resume
-        if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject.mObject) {
+        if (NS_SUCCEEDED(aStatus) && scriptProto->GetScriptObject()) {
             doc->ExecuteScript(scriptProto);
         }
         doc->ResumeWalk();
@@ -3558,8 +3558,8 @@ nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     // failure getting a script context is fatal.
     NS_ENSURE_TRUE(context != nullptr, NS_ERROR_UNEXPECTED);
 
-    if (aScript->mScriptObject.mObject)
-        rv = ExecuteScript(context, aScript->mScriptObject.mObject);
+    if (aScript->GetScriptObject())
+        rv = ExecuteScript(context, aScript->GetScriptObject());
     else
         rv = NS_ERROR_UNEXPECTED;
     return rv;
