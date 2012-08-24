@@ -194,7 +194,7 @@ define('gclitest/index', ['require', 'exports', 'module' , 'gclitest/suite', 'gc
  * limitations under the License.
  */
 
-define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testCanon', 'gclitest/testCli', 'gclitest/testCompletion', 'gclitest/testExec', 'gclitest/testHelp', 'gclitest/testHistory', 'gclitest/testInputter', 'gclitest/testIncomplete', 'gclitest/testIntro', 'gclitest/testJs', 'gclitest/testKeyboard', 'gclitest/testPref', 'gclitest/testRequire', 'gclitest/testResource', 'gclitest/testScratchpad', 'gclitest/testSettings', 'gclitest/testSpell', 'gclitest/testSplit', 'gclitest/testTokenize', 'gclitest/testTooltip', 'gclitest/testTypes', 'gclitest/testUtil'], function(require, exports, module) {
+define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testCanon', 'gclitest/testCli', 'gclitest/testCompletion', 'gclitest/testExec', 'gclitest/testHelp', 'gclitest/testHistory', 'gclitest/testInputter', 'gclitest/testIncomplete', 'gclitest/testIntro', 'gclitest/testJs', 'gclitest/testKeyboard', 'gclitest/testMenu', 'gclitest/testPref', 'gclitest/testRequire', 'gclitest/testResource', 'gclitest/testScratchpad', 'gclitest/testSettings', 'gclitest/testSpell', 'gclitest/testSplit', 'gclitest/testTokenize', 'gclitest/testTooltip', 'gclitest/testTypes', 'gclitest/testUtil'], function(require, exports, module) {
 
   // We need to make sure GCLI is initialized before we begin testing it
   require('gcli/index');
@@ -215,6 +215,7 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
   examiner.addSuite('gclitest/testIntro', require('gclitest/testIntro'));
   examiner.addSuite('gclitest/testJs', require('gclitest/testJs'));
   examiner.addSuite('gclitest/testKeyboard', require('gclitest/testKeyboard'));
+  examiner.addSuite('gclitest/testMenu', require('gclitest/testMenu'));
   examiner.addSuite('gclitest/testPref', require('gclitest/testPref'));
   examiner.addSuite('gclitest/testRequire', require('gclitest/testRequire'));
   examiner.addSuite('gclitest/testResource', require('gclitest/testResource'));
@@ -1735,6 +1736,7 @@ exports.setup = function() {
   canon.addCommand(exports.tsg);
   canon.addCommand(exports.tshidden);
   canon.addCommand(exports.tscook);
+  canon.addCommand(exports.tslong);
 };
 
 exports.shutdown = function() {
@@ -1760,6 +1762,7 @@ exports.shutdown = function() {
   canon.removeCommand(exports.tsg);
   canon.removeCommand(exports.tshidden);
   canon.removeCommand(exports.tscook);
+  canon.removeCommand(exports.tslong);
 
   types.deregisterType(exports.optionType);
   types.deregisterType(exports.optionValue);
@@ -2051,6 +2054,78 @@ exports.tscook = {
   exec: createExec('tscook')
 };
 
+exports.tslong = {
+  name: 'tslong',
+  description: 'long param tests to catch problems with the jsb command',
+  returnValue:'string',
+  params: [
+    {
+      name: 'url',
+      type: 'string',
+      description: 'tslongUrlDesc'
+    },
+    {
+      group: "tslongOptionsDesc",
+      params: [
+        {
+          name: 'indentSize',
+          type: 'number',
+          description: 'tslongIndentSizeDesc',
+          defaultValue: 2
+        },
+        {
+          name: 'indentChar',
+          type: {
+            name: 'selection',
+            lookup: [
+              { name: "space", value: " " },
+              { name: "tab", value: "\t" }
+            ]
+          },
+          description: 'tslongIndentCharDesc',
+          defaultValue: ' ',
+        },
+        {
+          name: 'preserveNewlines',
+          type: 'boolean',
+          description: 'tslongPreserveNewlinesDesc'
+        },
+        {
+          name: 'preserveMaxNewlines',
+          type: 'number',
+          description: 'tslongPreserveMaxNewlinesDesc',
+          defaultValue: -1
+        },
+        {
+          name: 'jslintHappy',
+          type: 'boolean',
+          description: 'tslongJslintHappyDesc'
+        },
+        {
+          name: 'braceStyle',
+          type: {
+            name: 'selection',
+            data: ['collapse', 'expand', 'end-expand', 'expand-strict']
+          },
+          description: 'tslongBraceStyleDesc',
+          defaultValue: "collapse"
+        },
+        {
+          name: 'noSpaceBeforeConditional',
+          type: 'boolean',
+          description: 'tslongNoSpaceBeforeConditionalDesc'
+        },
+        {
+          name: 'unescapeStrings',
+          type: 'boolean',
+          description: 'tslongUnescapeStringsDesc'
+        }
+      ]
+    }
+  ],
+  exec: createExec('tslong')
+};
+
 
 });
 /*
@@ -2230,26 +2305,26 @@ exports.testActivate = function(options) {
   helpers.check({
     directTabText: '',
     arrowTabText: '',
-    emptyParameters: [ ' <solo>' ]
+    emptyParameters: [ ' <solo>', ' [options]' ]
   });
 
   helpers.setInput('tsg ');
   helpers.check({
-    emptyParameters: [],
+    emptyParameters: [ ' [options]' ],
     arrowTabText: '',
     directTabText: 'aaa'
   });
 
   helpers.setInput('tsg a');
   helpers.check({
-    emptyParameters: [],
+    emptyParameters: [ ' [options]' ],
     arrowTabText: '',
     directTabText: 'aa'
   });
 
   helpers.setInput('tsg b');
   helpers.check({
-    emptyParameters: [],
+    emptyParameters: [ ' [options]' ],
     arrowTabText: '',
     directTabText: 'bb'
   });
@@ -2258,12 +2333,12 @@ exports.testActivate = function(options) {
   helpers.check({
     directTabText: '',
     arrowTabText: '',
-    emptyParameters: []
+    emptyParameters: [ ' [options]' ]
   });
 
   helpers.setInput('tsg aa');
   helpers.check({
-    emptyParameters: [],
+    emptyParameters: [ ' [options]' ],
     arrowTabText: '',
     directTabText: 'a'
   });
@@ -2272,56 +2347,56 @@ exports.testActivate = function(options) {
   helpers.check({
     directTabText: '',
     arrowTabText: '',
-    emptyParameters: []
+    emptyParameters: [ ' [options]' ]
   });
 
   helpers.setInput('tsg aaa ');
   helpers.check({
     directTabText: '',
     arrowTabText: '',
-    emptyParameters: []
+    emptyParameters: [ '[options]' ]
   });
 
   helpers.setInput('tsg aaa d');
   helpers.check({
     directTabText: '',
     arrowTabText: '',
-    emptyParameters: []
+    emptyParameters: [ ' [options]' ]
   });
 
   helpers.setInput('tsg aaa dddddd');
   helpers.check({
     directTabText: '',
     arrowTabText: '',
-    emptyParameters: []
+    emptyParameters: [ ' [options]' ]
   });
 
   helpers.setInput('tsg aaa dddddd ');
   helpers.check({
     directTabText: '',
     arrowTabText: '',
-    emptyParameters: []
+    emptyParameters: [ '[options]' ]
   });
 
   helpers.setInput('tsg aaa "d');
   helpers.check({
     directTabText: '',
     arrowTabText: '',
-    emptyParameters: []
+    emptyParameters: [ ' [options]' ]
   });
 
   helpers.setInput('tsg aaa "d d');
   helpers.check({
     directTabText: '',
     arrowTabText: '',
-    emptyParameters: []
+    emptyParameters: [ ' [options]' ]
   });
 
   helpers.setInput('tsg aaa "d d"');
   helpers.check({
     directTabText: '',
     arrowTabText: '',
-    emptyParameters: []
+    emptyParameters: [ ' [options]' ]
   });
 
   helpers.setInput('tsn ex ');
@@ -2916,7 +2991,7 @@ exports.testCompleted = function(options) {
     directTabText: '-txt1',
     arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       solo: { value: undefined, status: 'INCOMPLETE' },
       txt1: { value: undefined, status: 'VALID' },
@@ -2934,7 +3009,7 @@ exports.testCompleted = function(options) {
     directTabText: '',
     arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ], // Bug 770830: '<txt1>', ' <solo>'
+    emptyParameters: [ '[options]' ], // Bug 770830: '<txt1>', ' <solo>'
     args: {
       solo: { value: undefined, status: 'INCOMPLETE' },
       txt1: { value: undefined, status: 'INCOMPLETE' },
@@ -2951,7 +3026,7 @@ exports.testCompleted = function(options) {
     directTabText: '',
     arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ], // Bug 770830: ' <solo>'
+    emptyParameters: [ ' [options]' ], // Bug 770830: ' <solo>'
     args: {
       solo: { value: undefined, status: 'INCOMPLETE' },
       txt1: { value: 'fred', status: 'VALID' },
@@ -2968,7 +3043,7 @@ exports.testCompleted = function(options) {
     directTabText: 'domain',
     arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       key: { value: 'key', status: 'VALID' },
       value: { value: 'value', status: 'VALID' },
@@ -2985,7 +3060,7 @@ exports.testCompleted = function(options) {
     directTabText: 'secure',
     arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       key: { value: 'key', status: 'VALID' },
       value: { value: 'value', status: 'VALID' },
@@ -3004,7 +3079,7 @@ exports.testCase = function(options) {
     directTabText: '',
     arrowTabText: 'aaa',
     status: 'ERROR',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       solo: { value: undefined, text: 'AA', status: 'INCOMPLETE' },
       txt1: { value: undefined, status: 'VALID' },
@@ -3062,7 +3137,7 @@ exports.testHidden = function(options) {
     directTabText: '',
     arrowTabText: '',
     status: 'VALID',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
@@ -3077,7 +3152,7 @@ exports.testHidden = function(options) {
     directTabText: 'ible',
     arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
@@ -3092,7 +3167,7 @@ exports.testHidden = function(options) {
     directTabText: '',
     arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
@@ -3107,7 +3182,7 @@ exports.testHidden = function(options) {
     directTabText: '',
     arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'INCOMPLETE' },
@@ -3122,7 +3197,7 @@ exports.testHidden = function(options) {
     directTabText: '',
     arrowTabText: '',
     status: 'VALID',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: 'x', status: 'VALID' },
@@ -3137,7 +3212,7 @@ exports.testHidden = function(options) {
     directTabText: '',
     arrowTabText: '',
     status: 'ERROR',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
@@ -3152,11 +3227,26 @@ exports.testHidden = function(options) {
     directTabText: '',
     arrowTabText: '',
     status: 'VALID',
-    emptyParameters: [ ],
+    emptyParameters: [ ' [options]' ],
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
       invisibleboolean: { value: true, status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tshidden --visible xxx');
+  helpers.check({
+    input:  'tshidden --visible xxx',
+    markup: 'VVVVVVVVVVVVVVVVVVVVVV',
+    directTabText: '',
+    arrowTabText: '',
+    status: 'VALID',
+    emptyParameters: [ ],
+    args: {
+      visible: { value: 'xxx', status: 'VALID' },
+      invisiblestring: { value: undefined, status: 'VALID' },
+      invisibleboolean: { value: undefined, status: 'VALID' }
     }
   });
 };
@@ -3598,6 +3688,56 @@ exports.testIncrDecr = function() {
 };
 
 });
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testMenu', ['require', 'exports', 'module' , 'test/assert', 'gclitest/helpers', 'gclitest/mockCommands'], function(require, exports, module) {
+
+
+var test = require('test/assert');
+var helpers = require('gclitest/helpers');
+var mockCommands = require('gclitest/mockCommands');
+
+
+exports.setup = function(options) {
+  mockCommands.setup();
+  helpers.setup(options);
+};
+
+exports.shutdown = function(options) {
+  mockCommands.shutdown();
+  helpers.shutdown(options);
+};
+
+exports.testOptions = function(options) {
+  helpers.setInput('tslong');
+  helpers.check({
+    input:  'tslong',
+    markup: 'VVVVVV',
+    directTabText: '',
+    arrowTabText: '',
+    status: 'ERROR',
+    emptyParameters: [ ' <url>', ' [options]' ],
+    args: {
+      url: { value: undefined, status: 'INCOMPLETE' },
+      indentSize: { value: undefined, status: 'VALID' },
+      indentChar: { value: undefined, status: 'VALID' },
+      preserveNewlines: { value: undefined, status: 'VALID' },
+      preserveMaxNewlines: { value: undefined, status: 'VALID' },
+      jslintHappy: { value: undefined, status: 'VALID' },
+      braceStyle: { value: undefined, status: 'VALID' },
+      noSpaceBeforeConditional: { value: undefined, status: 'VALID' },
+      unescapeStrings: { value: undefined, status: 'VALID' }
+    }
+  });
+};
+
+
+});
+
 /*
  * Copyright 2012, Mozilla Foundation and contributors
  *
@@ -5716,6 +5856,7 @@ let testModuleNames = [
   'gclitest/testIntro',
   'gclitest/testJs',
   'gclitest/testKeyboard',
+  'gclitest/testMenu',
   'gclitest/testPref',
   'gclitest/mockSettings',
   'gclitest/testRequire',

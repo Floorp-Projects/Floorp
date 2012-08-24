@@ -37,7 +37,7 @@ function testCookieCommands() {
   DeveloperToolbarTest.checkInputStatus({
     typed: "cookie set",
     status: "ERROR",
-    emptyParameters: [ " <key>", " <value>" ],
+    emptyParameters: [ " <key>", " <value>", " [options]" ],
   });
 
   DeveloperToolbarTest.exec({
