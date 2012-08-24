@@ -416,6 +416,14 @@ JSObject::ensureElements(JSContext *cx, uint32_t capacity)
 }
 
 inline void
+JSObject::setDynamicElements(js::ObjectElements *header)
+{
+    JS_ASSERT(!hasDynamicElements());
+    elements = header->elements();
+    JS_ASSERT(hasDynamicElements());
+}
+
+inline void
 JSObject::setDenseArrayElement(unsigned idx, const js::Value &val)
 {
     JS_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());

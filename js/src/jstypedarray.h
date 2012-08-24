@@ -142,6 +142,18 @@ class ArrayBufferObject : public JSObject
     static JSType
     obj_typeOf(JSContext *cx, HandleObject obj);
 
+    static bool
+    stealContents(JSContext *cx, JSObject *obj, void **contents);
+
+    static inline void
+    setElementsHeader(js::ObjectElements *header, uint32_t bytes);
+
+    void
+    addView(JSContext *cx, RawObject view);
+
+    void
+    removeFinalizedView(FreeOp *fop, RawObject view);
+
     bool
     allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
 
@@ -192,6 +204,7 @@ struct TypedArray {
         FIELD_BYTELENGTH,
         FIELD_TYPE,
         FIELD_BUFFER,
+        FIELD_NEXT_VIEW,
         FIELD_MAX,
         NUM_FIXED_SLOTS = 7
     };
@@ -239,6 +252,9 @@ struct TypedArray {
     static bool
     isArrayIndex(JSContext *cx, JSObject *obj, jsid id, uint32_t *ip = NULL);
 
+    static void
+    neuter(JSContext *cx, RawObject tarray);
+
     static inline uint32_t slotWidth(int atype);
     static inline int slotWidth(JSObject *obj);
 
@@ -280,11 +296,14 @@ IsTypedArrayProto(JSObject *obj)
 
 class DataViewObject : public JSObject
 {
-    static Class protoClass;
-
+public:
     static const size_t BYTEOFFSET_SLOT = 0;
     static const size_t BYTELENGTH_SLOT = 1;
     static const size_t BUFFER_SLOT     = 2;
+    static const size_t NEXT_VIEW_SLOT  = 3;
+
+private:
+    static Class protoClass;
 
     static inline bool is(const Value &v);
 
@@ -301,7 +320,9 @@ class DataViewObject : public JSObject
     defineGetter(JSContext *cx, PropertyName *name, HandleObject proto);
 
   public:
-    static const size_t RESERVED_SLOTS  = 3;
+    // 4 slots + 1 private = 5, which gets rounded up to FINALIZE_OBJECT8,
+    // which is 7 non-private
+    static const size_t RESERVED_SLOTS  = 7;
 
     static inline Value bufferValue(DataViewObject &view);
     static inline Value byteOffsetValue(DataViewObject &view);
@@ -363,9 +384,12 @@ class DataViewObject : public JSObject
     static bool setFloat64Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setFloat64(JSContext *cx, unsigned argc, Value *vp);
 
+    static void
+    obj_finalize(FreeOp *fop, JSObject *obj);
+
     inline uint32_t byteLength();
     inline uint32_t byteOffset();
-    inline JSObject & arrayBuffer();
+    inline ArrayBufferObject & arrayBuffer();
     inline void *dataPointer();
     inline bool hasBuffer() const;
     static JSObject *initClass(JSContext *cx);
