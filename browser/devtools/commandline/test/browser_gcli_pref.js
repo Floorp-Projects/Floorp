@@ -22,16 +22,19 @@ imports.XPCOMUtils.defineLazyGetter(imports, "supportsString", function() {
 const TEST_URI = "data:text/html;charset=utf-8,gcli-pref";
 
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, [
-    setup,
-    testPrefSetEnable,
-    testPrefStatus,
-    testPrefBoolExec,
-    testPrefNumberExec,
-    testPrefStringExec,
-    testPrefSetDisable,
-    shutdown
-  ]);
+  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
+    setup();
+
+    testPrefSetEnable();
+    testPrefStatus();
+    testPrefBoolExec();
+    testPrefNumberExec();
+    testPrefStringExec();
+    testPrefSetDisable();
+
+    shutdown();
+    finish();
+  });
 }
 
 let tiltEnabledOrig = undefined;
@@ -69,103 +72,92 @@ function shutdown() {
 }
 
 function testPrefStatus() {
-  helpers.setInput('pref');
-  helpers.check({
-    input:  'pref',
-    hints:      '',
-    markup: 'IIII',
-    status: 'ERROR'
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref s",
+    markup: "IIIIVI",
+    status: "ERROR",
+    directTabText: "et"
   });
 
-  helpers.setInput('pref s');
-  helpers.check({
-    input:  'pref s',
-    hints:        'et',
-    markup: 'IIIIVI',
-    status: 'ERROR'
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref show",
+    markup: "VVVVVVVVV",
+    status: "ERROR",
+    emptyParameters: [ " <setting>" ]
   });
 
-  helpers.setInput('pref sh');
-  helpers.check({
-    input:  'pref sh',
-    hints:         'ow',
-    markup: 'IIIIVII',
-    status: 'ERROR'
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref show tempTBo",
+    markup: "VVVVVVVVVVEEEEEEE",
+    status: "ERROR",
+    emptyParameters: [ ]
   });
 
-  helpers.setInput('pref show ');
-  helpers.check({
-    input:  'pref show ',
-    markup: 'VVVVVVVVVV',
-    status: 'ERROR'
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref show devtools.toolbar.ena",
+    markup: "VVVVVVVVVVIIIIIIIIIIIIIIIIIIII",
+    directTabText: "bled",
+    status: "ERROR",
+    emptyParameters: [ ]
   });
 
-  helpers.setInput('pref show usetexttospeech');
-  helpers.check({
-    input:  'pref show usetexttospeech',
-    hints:                           ' -> accessibility.usetexttospeech',
-    markup: 'VVVVVVVVVVIIIIIIIIIIIIIII',
-    status: 'ERROR'
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref show hideIntro",
+    markup: "VVVVVVVVVVIIIIIIIII",
+    directTabText: "",
+    arrowTabText: "devtools.gcli.hideIntro",
+    status: "ERROR",
+    emptyParameters: [ ]
   });
 
-  helpers.setInput('pref show devtools.til');
-  helpers.check({
-    input:  'pref show devtools.til',
-    hints:                        't.enabled',
-    markup: 'VVVVVVVVVVIIIIIIIIIIII',
-    status: 'ERROR',
-    tooltipState: 'true:importantFieldFlag',
-    args: {
-      setting: { value: undefined, status: 'INCOMPLETE' },
-    }
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref show devtools.toolbar.enabled",
+    markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+    status: "VALID",
+    emptyParameters: [ ]
   });
 
-  helpers.setInput('pref reset devtools.tilt.enabled');
-  helpers.check({
-    input:  'pref reset devtools.tilt.enabled',
-    hints:                                  '',
-    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-    status: 'VALID'
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref show devtools.tilt.enabled 4",
+    markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE",
+    directTabText: "",
+    status: "ERROR",
+    emptyParameters: [ ]
   });
 
-  helpers.setInput('pref show devtools.tilt.enabled 4');
-  helpers.check({
-    input:  'pref show devtools.tilt.enabled 4',
-    hints:                                   '',
-    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE',
-    status: 'ERROR'
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref show devtools.tilt.enabled",
+    markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+    status: "VALID",
+    emptyParameters: [ ]
   });
 
-  helpers.setInput('pref set devtools.tilt.enabled 4');
-  helpers.check({
-    input:  'pref set devtools.tilt.enabled 4',
-    hints:                                  '',
-    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE',
-    status: 'ERROR',
-    args: {
-      setting: { arg: ' devtools.tilt.enabled' },
-      value: { status: 'ERROR', message: 'Can\'t use \'4\'.' },
-    }
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref reset devtools.tilt.enabled",
+    markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+    status: "VALID",
+    emptyParameters: [ ]
   });
 
-  helpers.setInput('pref set devtools.editor.tabsize 4');
-  helpers.check({
-    input:  'pref set devtools.editor.tabsize 4',
-    hints:                                    '',
-    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-    status: 'VALID',
-    args: {
-      setting: { arg: ' devtools.editor.tabsize' },
-      value: { value: 4 },
-    }
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref set devtools.tilt.enabled 4",
+    markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE",
+    status: "ERROR",
+    emptyParameters: [ ]
   });
 
-  helpers.setInput('pref list');
-  helpers.check({
-    input:  'pref list',
-    hints:           '',
-    markup: 'EEEEVEEEE',
-    status: 'ERROR'
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref set devtools.editor.tabsize 4",
+    markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+    status: "VALID",
+    emptyParameters: [ ]
+  });
+
+  DeveloperToolbarTest.checkInputStatus({
+    typed:  "pref list",
+    markup: "EEEEVEEEE",
+    status: "ERROR",
+    emptyParameters: [ ]
   });
 }
 

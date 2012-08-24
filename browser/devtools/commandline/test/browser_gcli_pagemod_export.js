@@ -3,31 +3,25 @@
 
 // Tests that the inspect command works as it should
 
-const TEST_URI = "http://example.com/browser/browser/devtools/commandline/"+
-                 "test/browser_cmd_pagemod_export.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/commandline/test/browser_gcli_inspect.html";
 
 function test() {
   let initialHtml = "";
 
-  DeveloperToolbarTest.test(TEST_URI, [
-    init,
-    testExportHtml,
-    testPageModReplace,
-    testPageModRemoveElement,
-    testPageModRemoveAttribute
-  ]);
-
-  function init() {
+  DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
     initialHtml = content.document.documentElement.innerHTML;
-  }
+
+    testExportHtml();
+    testPageModReplace();
+    testPageModRemoveElement();
+    testPageModRemoveAttribute();
+    finish();
+  });
 
   function testExportHtml() {
-    helpers.setInput('export html');
-    helpers.check({
-      input:  'export html',
-      hints:             '',
-      markup: 'VVVVVVVVVVV',
-      status: 'VALID'
+    DeveloperToolbarTest.checkInputStatus({
+      typed: "export html",
+      status: "VALID"
     });
 
     let oldOpen = content.open;
@@ -56,36 +50,33 @@ function test() {
   }
 
   function testPageModReplace() {
-    helpers.setInput('pagemod replace');
-    helpers.check({
-      input:  'pagemod replace',
-      hints:                 ' <search> <replace> [ignoreCase] [selector] [root] [attrOnly] [contentOnly] [attributes]',
-      markup: 'VVVVVVVVVVVVVVV',
-      status: 'ERROR'
+    DeveloperToolbarTest.checkInputStatus({
+      typed: "pagemod replace",
+      emptyParameters: [" <search>", " <replace>", " [ignoreCase]",
+                        " [selector]", " [root]", " [attrOnly]",
+                        " [contentOnly]", " [attributes]"],
+      status: "ERROR"
     });
 
-    helpers.setInput('pagemod replace some foo');
-    helpers.check({
-      input:  'pagemod replace some foo',
-      hints:                          ' [ignoreCase] [selector] [root] [attrOnly] [contentOnly] [attributes]',
-      markup: 'VVVVVVVVVVVVVVVVVVVVVVVV',
-      status: 'VALID'
+    DeveloperToolbarTest.checkInputStatus({
+      typed: "pagemod replace some foo",
+      emptyParameters: [" [ignoreCase]", " [selector]", " [root]",
+                        " [attrOnly]", " [contentOnly]", " [attributes]"],
+      status: "VALID"
     });
 
-    helpers.setInput('pagemod replace some foo true');
-    helpers.check({
-      input:  'pagemod replace some foo true',
-      hints:                               ' [selector] [root] [attrOnly] [contentOnly] [attributes]',
-      markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-      status: 'VALID'
+    DeveloperToolbarTest.checkInputStatus({
+      typed: "pagemod replace some foo true",
+      emptyParameters: [" [selector]", " [root]", " [attrOnly]",
+                        " [contentOnly]", " [attributes]"],
+      status: "VALID"
     });
 
-    helpers.setInput('pagemod replace some foo true --attrOnly');
-    helpers.check({
-      input:  'pagemod replace some foo true --attrOnly',
-      hints:                                          ' [selector] [root] [contentOnly] [attributes]',
-      markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-      status: 'VALID'
+    DeveloperToolbarTest.checkInputStatus({
+      typed: "pagemod replace some foo true --attrOnly",
+      emptyParameters: [" [selector]", " [root]", " [contentOnly]",
+                        " [attributes]"],
+      status: "VALID"
     });
 
     DeveloperToolbarTest.exec({
@@ -152,28 +143,21 @@ function test() {
   }
 
   function testPageModRemoveElement() {
-    helpers.setInput('pagemod remove');
-    helpers.check({
-      input:  'pagemod remove',
-      hints:                '',
-      markup: 'IIIIIIIVIIIIII',
-      status: 'ERROR'
+    DeveloperToolbarTest.checkInputStatus({
+      typed: "pagemod remove",
+      status: "ERROR"
     });
 
-    helpers.setInput('pagemod remove element');
-    helpers.check({
-      input:  'pagemod remove element',
-      hints:                        ' <search> [root] [stripOnly] [ifEmptyOnly]',
-      markup: 'VVVVVVVVVVVVVVVVVVVVVV',
-      status: 'ERROR'
+    DeveloperToolbarTest.checkInputStatus({
+      typed: "pagemod remove element",
+      emptyParameters: [" <search>", " [root]", " [stripOnly]", " [ifEmptyOnly]"],
+      status: "ERROR"
     });
 
-    helpers.setInput('pagemod remove element foo');
-    helpers.check({
-      input:  'pagemod remove element foo',
-      hints:                            ' [root] [stripOnly] [ifEmptyOnly]',
-      markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVV',
-      status: 'VALID'
+    DeveloperToolbarTest.checkInputStatus({
+      typed: "pagemod remove element foo",
+      emptyParameters: [" [root]", " [stripOnly]", " [ifEmptyOnly]"],
+      status: "VALID"
     });
 
     DeveloperToolbarTest.exec({
@@ -228,32 +212,16 @@ function test() {
   }
 
   function testPageModRemoveAttribute() {
-    helpers.setInput('pagemod remove attribute ');
-    helpers.check({
-      input:  'pagemod remove attribute ',
-      hints:                           '<searchAttributes> <searchElements> [root] [ignoreCase]',
-      markup: 'VVVVVVVVVVVVVVVVVVVVVVVVV',
-      status: 'ERROR',
-      args: {
-        searchAttributes: { value: undefined, status: 'INCOMPLETE' },
-        searchElements: { value: undefined, status: 'INCOMPLETE' },
-        root: { value: undefined },
-        ignoreCase: { value: false },
-      }
+    DeveloperToolbarTest.checkInputStatus({
+      typed: "pagemod remove attribute",
+      emptyParameters: [" <searchAttributes>", " <searchElements>", " [root]", " [ignoreCase]"],
+      status: "ERROR"
     });
 
-    helpers.setInput('pagemod remove attribute foo bar');
-    helpers.check({
-      input:  'pagemod remove attribute foo bar',
-      hints:                                  ' [root] [ignoreCase]',
-      markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-      status: 'VALID',
-      args: {
-        searchAttributes: { value: 'foo' },
-        searchElements: { value: 'bar' },
-        root: { value: undefined },
-        ignoreCase: { value: false },
-      }
+    DeveloperToolbarTest.checkInputStatus({
+      typed: "pagemod remove attribute foo bar",
+      emptyParameters: [" [root]", " [ignoreCase]"],
+      status: "VALID"
     });
 
     DeveloperToolbarTest.exec({
