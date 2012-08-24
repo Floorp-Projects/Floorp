@@ -45,7 +45,7 @@ public:
    *    which are queued to fire their constructors.
    */
 
-  NS_INLINE_DECL_REFCOUNTING(nsXBLBinding)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsXBLBinding)
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLBinding)
 
