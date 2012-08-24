@@ -90,7 +90,7 @@
 
 .jsterm-input-node,
 .jsterm-complete-node {
-  font: Menlo, Monaco, monospace;
+  font: 1em Menlo, Monaco, monospace;
 }
 
 .hud-output-node {
