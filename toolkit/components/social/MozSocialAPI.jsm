@@ -119,6 +119,21 @@ function attachToWindow(provider, targetWindow) {
         openChatWindow(getChromeWindow(targetWindow), provider, url, callback);
       }
     },
+    openPanel: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(toURL, offset, callback) {
+        let chromeWindow = getChromeWindow(targetWindow);
+        if (!chromeWindow.SocialFlyout)
+          return;
+        let url = targetWindow.document.documentURIObject.resolve(toURL);
+        let fullURL = ensureProviderOrigin(provider, url);
+        if (!fullURL)
+          return;
+        chromeWindow.SocialFlyout.open(fullURL, offset, callback);
+      }
+    },
     getAttention: {
       enumerable: true,
       configurable: true,
