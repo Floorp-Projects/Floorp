@@ -2221,6 +2221,15 @@ nsXULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
     return NS_OK;
 }
 
+void
+nsXULDocument::TraceProtos(JSTracer* aTrc, uint32_t aGCNumber)
+{
+    uint32_t i, count = mPrototypes.Length();
+    for (i = 0; i < count; ++i) {
+        mPrototypes[i]->TraceProtos(aTrc, aGCNumber);
+    }
+}
+
 //----------------------------------------------------------------------
 //
 // nsXULDocument::ContextStack

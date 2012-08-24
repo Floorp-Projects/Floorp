@@ -127,7 +127,8 @@ JSClass nsXULPDGlobalObject::gSharedGlobalClass = {
 nsXULPrototypeDocument::nsXULPrototypeDocument()
     : mRoot(nullptr),
       mLoaded(false),
-      mCCGeneration(0)
+      mCCGeneration(0),
+      mGCNumber(0)
 {
     ++gRefCnt;
 }
@@ -676,6 +677,18 @@ nsXULPrototypeDocument::NotifyLoadDone()
     mPrototypeWaiters.Clear();
 
     return rv;
+}
+
+void
+nsXULPrototypeDocument::TraceProtos(JSTracer* aTrc, uint32_t aGCNumber)
+{
+  // Only trace the protos once per GC.
+  if (mGCNumber == aGCNumber) {
+    return;
+  }
+
+  mGCNumber = aGCNumber;
+  mRoot->TraceAllScripts(aTrc);
 }
 
 //----------------------------------------------------------------------
