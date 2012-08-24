@@ -129,4 +129,6 @@ if (typeof Components != "undefined") {
        };
      }
    };
+
+   exports.OS.Path = exports.OS.Unix.Path;
 }(this));
