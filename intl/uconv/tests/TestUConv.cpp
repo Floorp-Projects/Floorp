@@ -336,7 +336,7 @@ nsresult nsTestUConv::DisplayCharsets()
     PrintSpaces(24 - charset.Length());  // align to hard coded column number
 
 
-    nsCOMPtr<nsIUnicodeDecoder> dec = NULL;
+    nsCOMPtr<nsIUnicodeDecoder> dec;
     res = ccMan->GetUnicodeDecoder(charset.get(), getter_AddRefs(dec));
     if (NS_FAILED(res)) printf (" "); 
     else {
@@ -356,7 +356,7 @@ nsresult nsTestUConv::DisplayCharsets()
     else printf(" ");
 #endif
 
-    nsCOMPtr<nsIUnicodeEncoder> enc = NULL;
+    nsCOMPtr<nsIUnicodeEncoder> enc;
     res = ccMan->GetUnicodeEncoder(charset.get(), getter_AddRefs(enc));
     if (NS_FAILED(res)) printf (" "); 
     else {
@@ -380,22 +380,22 @@ nsresult nsTestUConv::DisplayCharsets()
 
     prop.AssignLiteral(".notForBrowser");
     res = ccMan->GetCharsetData(charset.get(), prop.get(), str);
-    if ((dec != NULL) && (NS_FAILED(res))) printf ("B"); 
+    if (dec && (NS_FAILED(res))) printf ("B"); 
     else printf("X");
 
     prop.AssignLiteral(".notForComposer");
     res = ccMan->GetCharsetData(charset.get(), prop.get(), str);
-    if ((enc != NULL) && (NS_FAILED(res))) printf ("C"); 
+    if (enc && (NS_FAILED(res))) printf ("C"); 
     else printf("X");
 
     prop.AssignLiteral(".notForMailView");
     res = ccMan->GetCharsetData(charset.get(), prop.get(), str);
-    if ((dec != NULL) && (NS_FAILED(res))) printf ("V"); 
+    if (dec && (NS_FAILED(res))) printf ("V"); 
     else printf("X");
 
     prop.AssignLiteral(".notForMailEdit");
     res = ccMan->GetCharsetData(charset.get(), prop.get(), str);
-    if ((enc != NULL) && (NS_FAILED(res))) printf ("E"); 
+    if (enc && (NS_FAILED(res))) printf ("E"); 
     else printf("X");
 
     printf("(%3d, %3d) ", encCount, decCount);

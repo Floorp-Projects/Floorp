@@ -27,7 +27,8 @@ nsLocale::nsLocale(void)
 {
   fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
                                &nsLocale::Hash_CompareNSString,
-                               &nsLocale::Hash_CompareNSString, NULL, NULL);
+                               &nsLocale::Hash_CompareNSString,
+                               nullptr, nullptr);
   NS_ASSERTION(fHashtable, "nsLocale: failed to allocate PR_Hashtable");
 }
 
@@ -36,7 +37,7 @@ nsLocale::~nsLocale(void)
   // enumerate all the entries with a delete function to
   // safely delete all the keys and values
   PL_HashTableEnumerateEntries(fHashtable, &nsLocale::Hash_EnumerateDelete,
-                               NULL);
+                               nullptr);
 
   PL_HashTableDestroy(fHashtable);
 }

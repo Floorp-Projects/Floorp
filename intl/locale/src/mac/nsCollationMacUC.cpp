@@ -16,7 +16,7 @@ nsCollationMacUC::nsCollationMacUC()
   , mLocale(NULL)
   , mLastStrength(-1)
   , mCollator(NULL)
-  , mBuffer(NULL)
+  , mBuffer(nullptr)
   , mBufferLen(1)
 {
 }

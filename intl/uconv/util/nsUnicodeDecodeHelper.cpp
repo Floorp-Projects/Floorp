@@ -7,6 +7,7 @@
 #include "unicpriv.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsUnicodeDecodeHelper.h"
+#include "nsAutoPtr.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeDecodeHelper [implementation]
@@ -33,11 +34,11 @@ nsresult nsUnicodeDecodeHelper::ConvertByTable(
     bool charFound;
     if (aScanClass == uMultibytesCharset) {
       NS_ASSERTION(aShiftInTable, "shift table missing");
-      charFound = uScanShift(aShiftInTable, NULL, (uint8_t *)src,
+      charFound = uScanShift(aShiftInTable, nullptr, (uint8_t *)src,
                              reinterpret_cast<uint16_t*>(&med), srcLen, 
                              (uint32_t *)&bcr);
     } else {
-      charFound = uScan(aScanClass, NULL, (uint8_t *)src,
+      charFound = uScan(aScanClass, nullptr, (uint8_t *)src,
                         reinterpret_cast<uint16_t*>(&med),
                         srcLen, (uint32_t *)&bcr);
     }
@@ -103,7 +104,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
       if ((aRangeArray[i].min <= *src) && (*src <= aRangeArray[i].max)) 
       {
         passRangeCheck = true;
-        if (uScan(aScanClassArray[i], NULL, src, 
+        if (uScan(aScanClassArray[i], nullptr, src, 
                    reinterpret_cast<uint16_t*>(&med), srcLen, 
                    (uint32_t *)&bcr)) 
         {
@@ -136,7 +137,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
         {
           if ((aRangeArray[i].min <= *src) && (*src <= aRangeArray[i].max)) 
           {
-            if (uScan(aScanClassArray[i], NULL, src, 
+            if (uScan(aScanClassArray[i], nullptr, src, 
                    reinterpret_cast<uint16_t*>(&med), srcLen, 
                    (uint32_t*)&bcr)) 
             { 
@@ -225,15 +226,11 @@ nsresult nsUnicodeDecodeHelper::CreateFastTable(
 {
   int32_t tableSize = aTableSize;
   int32_t buffSize = aTableSize;
-  char * buff = new char [buffSize];
-  if (buff == NULL) return NS_ERROR_OUT_OF_MEMORY;
+  nsAutoArrayPtr<char> buff(new char [buffSize]);
 
   char * p = buff;
   for (int32_t i=0; i<aTableSize; i++) *(p++) = i;
-  nsresult res = ConvertByTable(buff, &buffSize, aFastTable, &tableSize, 
-      u1ByteCharset, nullptr, aMappingTable);
-
-  delete [] buff;
-  return res;
+  return ConvertByTable(buff, &buffSize, aFastTable, &tableSize, 
+                        u1ByteCharset, nullptr, aMappingTable);
 }
 
