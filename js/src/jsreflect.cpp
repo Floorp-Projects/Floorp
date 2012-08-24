@@ -2672,8 +2672,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
             JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
-            if (next->isKind(PNK_COMMA)) {
-                elts.infallibleAppend(MagicValue(JS_SERIALIZE_NO_NODE));
+            if (next->isKind(PNK_COMMA) && next->pn_count == 0) {
+                elts.infallibleAppend(NullValue());
             } else {
                 Value expr;
                 if (!expression(next, &expr))
@@ -3020,8 +3020,11 @@ ASTSerializer::arrayPattern(ParseNode *pn, VarDeclKind *pkind, Value *dst)
         return false;
 
     for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
+        /* Comma expressions can't occur inside patterns, so no need to test pn_count. */
+        JS_ASSERT_IF(next->isKind(PNK_COMMA), next->pn_count == 0);
+
         if (next->isKind(PNK_COMMA)) {
-            elts.infallibleAppend(MagicValue(JS_SERIALIZE_NO_NODE));
+            elts.infallibleAppend(NullValue());
         } else {
             Value patt;
             if (!pattern(next, pkind, &patt))
