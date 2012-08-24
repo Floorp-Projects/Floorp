@@ -143,7 +143,7 @@ browser.jar:
   skin/classic/browser/devtools/alerticon-warning.png       (devtools/alerticon-warning.png)
   skin/classic/browser/devtools/goto-mdn.png                (devtools/goto-mdn.png)
   skin/classic/browser/devtools/csshtmltree.css             (devtools/csshtmltree.css)
-  skin/classic/browser/devtools/commandline.css                    (devtools/commandline.css)
+  skin/classic/browser/devtools/gcli.css                    (devtools/gcli.css)
   skin/classic/browser/devtools/htmlpanel.css               (devtools/htmlpanel.css)
   skin/classic/browser/devtools/markup-view.css             (devtools/markup-view.css)
   skin/classic/browser/devtools/orion.css                   (devtools/orion.css)
