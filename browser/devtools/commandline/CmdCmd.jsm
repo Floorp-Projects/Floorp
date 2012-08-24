@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource:///modules/devtools/Console.jsm");
 
+const PREF_DIR = "devtools.commands.dir";
+
 /**
  * A place to store the names of the commands that we have added as a result of
  * calling refreshAutoCommands(). Used by refreshAutoCommands to remove the
@@ -43,8 +45,8 @@ let CmdCommands = {
       gcli.removeCommand(name);
     });
 
-    let dirName = prefBranch.getComplexValue("devtools.commands.dir",
-                                             Ci.nsISupportsString).data;
+    let dirName = prefBranch.getComplexValue(PREF_DIR,
+                                             Ci.nsISupportsString).data.trim();
     if (dirName == "") {
       return;
     }
@@ -109,8 +111,8 @@ function loadCommandFile(aFile, aSandboxPrincipal) {
  */
 gcli.addCommand({
   name: "cmd",
-  description: gcli.lookup("cmdDesc"),
-  hidden: true
+  get hidden() { return !prefBranch.prefHasUserValue(PREF_DIR); },
+  description: gcli.lookup("cmdDesc")
 });
 
 /**
@@ -119,8 +121,9 @@ gcli.addCommand({
 gcli.addCommand({
   name: "cmd refresh",
   description: gcli.lookup("cmdRefreshDesc"),
-  hidden: true,
+  get hidden() { return !prefBranch.prefHasUserValue(PREF_DIR); },
   exec: function Command_cmdRefresh(args, context) {
-    GcliCmdCommands.refreshAutoCommands(context.environment.chromeDocument.defaultView);
+    let chromeWindow = context.environment.chromeDocument.defaultView;
+    GcliCommands.refreshAutoCommands(chromeWindow);
   }
 });
