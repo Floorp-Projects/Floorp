@@ -332,6 +332,45 @@
      };
 
      /**
+      * Remove an empty directory.
+      *
+      * @param {string} path The name of the directory to remove.
+      * @param {*=} options Additional options.
+      *   - {bool} ignoreAbsent If |true|, do not fail if the
+      *     directory does not exist yet.
+      */
+     File.removeEmptyDir = function removeEmptyDir(path, options) {
+       options = options || noOptions;
+       let result = WinFile.RemoveDirectory(path);
+       if (!result) {
+         if (options.ignoreAbsent &&
+             ctypes.winLastError == Const.ERROR_FILE_NOT_FOUND) {
+           return;
+         }
+         throw new File.Error("removeEmptyDir");
+       }
+     };
+
+     /**
+      * Create a directory.
+      *
+      * @param {string} path The name of the directory.
+      * @param {*=} options Additional options. This
+      * implementation interprets the following fields:
+      *
+      * - {C pointer} winSecurity If specified, security attributes
+      * as per winapi function |CreateDirectory|. If unspecified,
+      * use the default security descriptor, inherited from the
+      * parent directory.
+      */
+     File.makeDir = function makeDir(path, options) {
+       options = options || noOptions;
+       let security = options.winSecurity || null;
+       throw_on_zero("makeDir",
+         WinFile.CreateDirectory(path, security));
+     };
+
+     /**
       * Copy a file to a destination.
       *
       * @param {string} sourcePath The platform-specific path at which
