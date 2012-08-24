@@ -7960,7 +7960,7 @@ IDBEventTargetSH::PreCreate(nsISupports *aNativeObj, JSContext *aCx,
 
 static bool
 GetBindingURL(Element *aElement, nsIDocument *aDocument,
-              nsCSSValue::URL **aResult)
+              mozilla::css::URLValue **aResult)
 {
   // If we have a frame the frame has already loaded the binding.  And
   // otherwise, don't do anything else here unless we're dealing with
@@ -8024,7 +8024,7 @@ nsElementSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
     return rv == NS_SUCCESS_ALLOW_SLIM_WRAPPERS ? NS_OK : rv;
   }
 
-  nsCSSValue::URL *bindingURL;
+  mozilla::css::URLValue *bindingURL;
   bool ok = GetBindingURL(element, doc, &bindingURL);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
@@ -8089,7 +8089,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   // Make sure the style context goes away _before_ we load the binding
   // since that can destroy the relevant presshell.
-  nsCSSValue::URL *bindingURL;
+  mozilla::css::URLValue *bindingURL;
   bool ok = GetBindingURL(element, doc, &bindingURL);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
