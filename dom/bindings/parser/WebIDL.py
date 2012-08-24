@@ -3715,7 +3715,7 @@ def main():
             print fullPath
             parser.parse(''.join(lines), fullPath)
         parser.finish()
-    except WebIDLError as e:
+    except WebIDLError, e:
         if options.verbose_errors:
             traceback.print_exc()
         else:
