@@ -389,8 +389,6 @@ function runTest() {
       checkIFrame(this, data);
     };
     iframe.addChild = function() {
-      SpecialPowers.addPermission("browser", true, iframe.contentDocument);
-
       var childFrame = document.createElement('iframe');
 
       if (data.child.app) {
@@ -431,6 +429,7 @@ function runTest() {
 
 var gTestRunner = runTest();
 
+SpecialPowers.addPermission("browser", true, "http://example.org");
 SpecialPowers.pushPrefEnv({'set':[["dom.mozBrowserFramesEnabled", true]]},
                            function() { gTestRunner.next(); });
 
