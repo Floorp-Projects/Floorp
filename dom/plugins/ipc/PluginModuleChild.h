@@ -40,11 +40,7 @@
  * itself), to ensure that the function has the
  * right calling conventions on OS/2.
  */
-#ifdef XP_OS2
-#define NP_CALLBACK _System
-#else
-#define NP_CALLBACK
-#endif
+#define NP_CALLBACK NP_LOADDS
 
 #if defined(XP_WIN)
 #define NS_NPAPIPLUGIN_CALLBACK(_type, _name) _type (__stdcall * _name)

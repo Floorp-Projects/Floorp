@@ -159,8 +159,8 @@ public:
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestParent* actor);
 
     virtual POfflineCacheUpdateParent* AllocPOfflineCacheUpdate(
-            const URI& aManifestURI,
-            const URI& aDocumentURI,
+            const URIParams& aManifestURI,
+            const URIParams& aDocumentURI,
             const nsCString& aClientID,
             const bool& stickDocument);
     virtual bool DeallocPOfflineCacheUpdate(POfflineCacheUpdateParent* actor);

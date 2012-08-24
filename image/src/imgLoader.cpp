@@ -64,44 +64,6 @@
 using namespace mozilla;
 using namespace mozilla::image;
 
-#if defined(DEBUG_pavlov) || defined(DEBUG_timeless)
-#include "nsISimpleEnumerator.h"
-#include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
-#include "nsXPIDLString.h"
-#include "nsComponentManagerUtils.h"
-
-
-static void PrintImageDecoders()
-{
-  nsCOMPtr<nsIComponentRegistrar> compMgr;
-  if (NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr)
-    return;
-  nsCOMPtr<nsISimpleEnumerator> enumer;
-  if (NS_FAILED(compMgr->EnumerateContractIDs(getter_AddRefs(enumer))) || !enumer)
-    return;
-  
-  nsCString str;
-  nsCOMPtr<nsISupports> s;
-  bool more = false;
-  while (NS_SUCCEEDED(enumer->HasMoreElements(&more)) && more) {
-    enumer->GetNext(getter_AddRefs(s));
-    if (s) {
-      nsCOMPtr<nsISupportsCString> ss(do_QueryInterface(s));
-
-      nsCAutoString xcs;
-      ss->GetData(xcs);
-
-      NS_NAMED_LITERAL_CSTRING(decoderContract, "@mozilla.org/image/decoder;3?type=");
-
-      if (StringBeginsWith(xcs, decoderContract)) {
-        printf("Have decoder for mime type: %s\n", xcs.get()+decoderContract.Length());
-      }
-    }
-  }
-}
-#endif
-
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ImagesMallocSizeOf, "images")
 
 class imgMemoryReporter MOZ_FINAL :

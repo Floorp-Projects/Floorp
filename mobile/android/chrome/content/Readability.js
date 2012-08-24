@@ -58,6 +58,10 @@ Readability.prototype = {
   FLAG_WEIGHT_CLASSES: 0x2,
   FLAG_CLEAN_CONDITIONALLY: 0x4,
 
+  // The number of top candidates to consider when analysing how
+  // tight the competition is among candidates.
+  N_TOP_CANDIDATES: 5,
+
   // The maximum number of pages to loop through before we call
   // it quits and just show a link.
   MAX_PAGES: 5,
@@ -68,10 +72,9 @@ Readability.prototype = {
     unlikelyCandidates: /combx|comment|community|disqus|extra|foot|header|menu|remark|rss|shoutbox|sidebar|sponsor|ad-break|agegate|pagination|pager|popup|tweet|twitter/i,
     okMaybeItsACandidate: /and|article|body|column|main|shadow/i,
     positive: /article|body|content|entry|hentry|main|page|pagination|post|text|blog|story/i,
-    negative: /combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|widget/i,
-    extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single/i,
+    negative: /hidden|combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|widget/i,
+    extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single|utility/i,
     byline: /byline|author|dateline|writtenby/i,
-    stripTags: /(<([^>]+)>)/ig,
     divToPElements: /<(a|blockquote|dl|div|img|ol|p|pre|table|ul)/i,
     replaceFonts: /<(\/?)font[^>]*>/gi,
     trim: /^\s+|\s+$/g,
@@ -430,16 +433,20 @@ Readability.prototype = {
         if (!(node = allElements[nodeIndex]))
           continue;
 
-        if (node.className.search(this.REGEXPS.byline) !== -1 && !this._articleByline)
-          this._articleByline = node.innerHTML.replace(this.REGEXPS.stripTags, "");
+        let matchString = node.className + node.id;
+        if (matchString.search(this.REGEXPS.byline) !== -1 && !this._articleByline) {
+          this._articleByline = node.textContent;
+          node.parentNode.removeChild(node);
+          purgeNode(node);
+          continue;
+        }
 
         // Remove unlikely candidates
         if (stripUnlikelyCandidates) {
-          let unlikelyMatchString = node.className + node.id;
-          if (unlikelyMatchString.search(this.REGEXPS.unlikelyCandidates) !== -1 &&
-            unlikelyMatchString.search(this.REGEXPS.okMaybeItsACandidate) === -1 &&
+          if (matchString.search(this.REGEXPS.unlikelyCandidates) !== -1 &&
+            matchString.search(this.REGEXPS.okMaybeItsACandidate) === -1 &&
             node.tagName !== "BODY") {
-            this.log("Removing unlikely candidate - " + unlikelyMatchString);
+            this.log("Removing unlikely candidate - " + matchString);
             node.parentNode.removeChild(node);
             purgeNode(node);
             continue;
@@ -535,23 +542,33 @@ Readability.prototype = {
 
       // After we've calculated scores, loop through all of the possible
       // candidate nodes we found and find the one with the highest score.
-      let topCandidate = null;
+      let topCandidates = [];
       for (let c = 0, cl = candidates.length; c < cl; c += 1) {
+        let candidate = candidates[c];
+
         // Scale the final candidates score based on link density. Good content
         // should have a relatively small link density (5% or less) and be mostly
         // unaffected by this operation.
-        candidates[c].readability.contentScore =
-            candidates[c].readability.contentScore * (1 - this._getLinkDensity(candidates[c]));
+        let candidateScore = candidate.readability.contentScore * (1 - this._getLinkDensity(candidate));
+        candidate.readability.contentScore = candidateScore;
 
-        this.log('Candidate: ' + candidates[c] + " (" + candidates[c].className + ":" +
-          candidates[c].id + ") with score " +
-          candidates[c].readability.contentScore);
+        this.log('Candidate: ' + candidate + " (" + candidate.className + ":" +
+          candidate.id + ") with score " + candidateScore);
 
-        if (!topCandidate ||
-          candidates[c].readability.contentScore > topCandidate.readability.contentScore) {
-          topCandidate = candidates[c];
+        for (let t = 0; t < this.N_TOP_CANDIDATES; t++) {
+          let aTopCandidate = topCandidates[t];
+
+          if (!aTopCandidate || candidateScore > aTopCandidate.readability.contentScore) {
+            topCandidates.splice(t, 0, candidate);
+            if (topCandidates.length > this.N_TOP_CANDIDATES)
+              topCandidates.pop();
+            break;
+          }
         }
       }
+
+      let topCandidate = topCandidates[0] || null;
+      let lastTopCandidate = (topCandidates.length > 3 ? topCandidates[topCandidates.length - 1] : null);
 
       // If we still have no top candidate, just use the body as a last resort.
       // We also have to copy the body node so it is something we can modify.
@@ -647,7 +664,7 @@ Readability.prototype = {
       // grabArticle with different flags set. This gives us a higher likelihood of
       // finding the content, and the sieve approach gives us a higher likelihood of
       // finding the -right- content.
-      if (this._getInnerText(articleContent, false).length < 250) {
+      if (this._getInnerText(articleContent, true).length < 500) {
         page.innerHTML = pageCacheHtml;
 
         if (this._flagIsActive(this.FLAG_STRIP_UNLIKELYS)) {
@@ -660,6 +677,17 @@ Readability.prototype = {
           return null;
         }
       } else {
+        if (lastTopCandidate !== null) {
+          // EXPERIMENTAL: Contrast ratio is how we measure the level of competition between candidates in the
+          // readability algorithm. This is to avoid offering reader mode on pages that are more like
+          // a list or directory of links with summaries. It takes the score of the last top candidate
+          // (see N_TOP_CANDIDATES) and checks how it compares to the top candidate's. On pages that are not
+          // actual articles, there will likely be many candidates with similar score (i.e. higher contrast ratio).
+          let contrastRatio = lastTopCandidate.readability.contentScore / topCandidate.readability.contentScore;
+          if (contrastRatio > 0.45)
+            return null;
+        }
+
         return articleContent;
       }
     }
