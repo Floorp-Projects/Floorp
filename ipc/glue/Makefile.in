@@ -40,9 +40,13 @@ EXPORTS_mozilla/ipc = \
   SyncChannel.h \
   ScopedXREEmbed.h \
   Transport.h \
+  URIUtils.h \
   $(NULL)
 
-EXPORTS = nsIIPCSerializableInputStream.h
+EXPORTS = \
+  nsIIPCSerializableInputStream.h \
+  nsIIPCSerializableURI.h \
+  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT) #{
 EXPORTS_mozilla/ipc += \
@@ -79,6 +83,7 @@ CPPSRCS += \
   Shmem.cpp \
   StringUtil.cpp \
   SyncChannel.cpp \
+  URIUtils.cpp \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT) #{

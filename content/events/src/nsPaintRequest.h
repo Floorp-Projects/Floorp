@@ -46,7 +46,7 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
-    return mozilla::dom::binding::PaintRequestList::create(cx, scope, this,
+    return mozilla::dom::oldproxybindings::PaintRequestList::create(cx, scope, this,
                                                            triedToWrap);
   }
 

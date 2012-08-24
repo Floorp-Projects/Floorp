@@ -299,7 +299,7 @@ GetXrayType(JSObject *obj)
     if (mozilla::dom::IsDOMClass(Jsvalify(clasp))) {
         return XrayForDOMObject;
     }
-    if (mozilla::dom::binding::instanceIsProxy(obj)) {
+    if (mozilla::dom::oldproxybindings::instanceIsProxy(obj)) {
         return XrayForDOMProxyObject;
     }
     if (IS_WRAPPER_CLASS(clasp) || clasp->ext.innerObject) {
@@ -385,7 +385,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                 wrapper = &FilteringWrapper<Xray, LocationPolicy>::singleton;
             else
                 wrapper = &FilteringWrapper<Xray, CrossOriginAccessiblePropertiesOnly>::singleton;
-        } else if (mozilla::dom::binding::instanceIsProxy(obj)) {
+        } else if (mozilla::dom::oldproxybindings::instanceIsProxy(obj)) {
             wrapper = &FilteringWrapper<XrayProxy, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (mozilla::dom::IsDOMClass(JS_GetClass(obj))) {
             wrapper = &FilteringWrapper<XrayDOM, CrossOriginAccessiblePropertiesOnly>::singleton;

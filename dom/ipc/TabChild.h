@@ -245,8 +245,8 @@ public:
     virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType, const IPC::Principal& aPrincipal);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor);
 
-    virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdate(const URI& manifestURI,
-            const URI& documentURI,
+    virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdate(const URIParams& manifestURI,
+            const URIParams& documentURI,
             const nsCString& clientID,
             const bool& stickDocument);
     virtual bool DeallocPOfflineCacheUpdate(POfflineCacheUpdateChild* offlineCacheUpdate);

@@ -393,9 +393,6 @@ private:
     CheckObjectAccess(JSContext *cx, JSHandleObject obj,
                       JSHandleId id, JSAccessMode mode,
                       jsval *vp);
-
-    static JSPrincipals *
-    ObjectPrincipalFinder(JSObject *obj);
     
     // Decides, based on CSP, whether or not eval() and stuff can be executed.
     static JSBool
