@@ -119,7 +119,8 @@ if (typeof Components != "undefined") {
    */
   Object.defineProperty(OSError.prototype, "becauseExists", {
     get: function becauseExists() {
-      return this.winLastError == exports.OS.Constants.Win.ERROR_FILE_EXISTS;
+      return this.winLastError == exports.OS.Constants.Win.ERROR_FILE_EXISTS ||
+        this.winLastError == exports.OS.Constants.Win.ERROR_ALREADY_EXISTS;
     }
   });
   /**
@@ -129,6 +130,15 @@ if (typeof Components != "undefined") {
   Object.defineProperty(OSError.prototype, "becauseNoSuchFile", {
     get: function becauseNoSuchFile() {
       return this.winLastError == exports.OS.Constants.Win.ERROR_FILE_NOT_FOUND;
+    }
+  });
+  /**
+   * |true| if the error was raised because a directory is not empty
+   * does not exist, |false| otherwise.
+   */
+  Object.defineProperty(OSError.prototype, "becauseNotEmpty", {
+    get: function becauseNotEmpty() {
+      return this.winLastError == OS.Constants.Win.ERROR_DIR_NOT_EMPTY;
     }
   });
 
