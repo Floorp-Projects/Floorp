@@ -1797,11 +1797,22 @@ SelectionType.prototype._findPredictions = function(arg) {
     }
   }
 
+  // Exact hidden matches. If 'hidden: true' then we only allow exact matches
+  // All the tests after here check that !option.value.hidden
+  for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
+    option = lookup[i];
+    if (option.name === arg.text) {
+      this._addToPredictions(predictions, option, arg);
+    }
+  }
+
   // Start with prefix matching
   for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
     option = lookup[i];
-    if (option._gcliLowerName.indexOf(match) === 0) {
-      this._addToPredictions(predictions, option, arg);
+    if (option._gcliLowerName.indexOf(match) === 0 && !option.value.hidden) {
+      if (predictions.indexOf(option) === -1) {
+        this._addToPredictions(predictions, option, arg);
+      }
     }
   }
 
@@ -1809,7 +1820,7 @@ SelectionType.prototype._findPredictions = function(arg) {
   if (predictions.length < (maxPredictions / 2)) {
     for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
       option = lookup[i];
-      if (option._gcliLowerName.indexOf(match) !== -1) {
+      if (option._gcliLowerName.indexOf(match) !== -1 && !option.value.hidden) {
         if (predictions.indexOf(option) === -1) {
           this._addToPredictions(predictions, option, arg);
         }
@@ -2191,9 +2202,6 @@ CommandType.prototype.lookup = function() {
  * Add an option to our list of predicted options
  */
 CommandType.prototype._addToPredictions = function(predictions, option, arg) {
-  if (option.value.hidden) {
-    return;
-  }
   // The command type needs to exclude sub-commands when the CLI
   // is blank, but include them when we're filtering. This hack
   // excludes matches when the filter text is '' and when the
@@ -2505,6 +2513,16 @@ Object.defineProperty(Parameter.prototype, 'description', {
 Object.defineProperty(Parameter.prototype, 'isDataRequired', {
   get: function() {
     return this.defaultValue === undefined;
+  },
+  enumerable: true
+});
+
+/**
+ * Reflect the paramSpec 'hidden' property (dynamically so it can change)
+ */
+Object.defineProperty(Parameter.prototype, 'hidden', {
+  get: function() {
+    return this.paramSpec.hidden;
   },
   enumerable: true
 });
