@@ -1039,6 +1039,19 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     unsigned chunkIndex = jit->chunkIndex(pc);
     ChunkDescriptor &desc = jit->chunkDescriptor(chunkIndex);
 
+    if (jit->mustDestroyEntryChunk) {
+        // We kept this chunk around so that Ion can get info from its caches.
+        // If we end up here, we decided not to use Ion so we can destroy the
+        // chunk now.
+        JS_ASSERT(jit->nchunks == 1);
+        jit->mustDestroyEntryChunk = false;
+
+        if (desc.chunk) {
+            jit->destroyChunk(cx->runtime->defaultFreeOp(), chunkIndex, /* resetUses = */ false);
+            return Compile_Skipped;
+        }
+    }
+
     if (desc.chunk)
         return Compile_Okay;
 

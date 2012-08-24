@@ -776,14 +776,35 @@ stubs::TriggerIonCompile(VMFrame &f)
     JSScript *script = f.script();
     JS_ASSERT(!script->ion);
 
-    jsbytecode *osrPC = f.regs.pc;
-    if (*osrPC != JSOP_LOOPENTRY)
-        osrPC = NULL;
+    if (ion::js_IonOptions.parallelCompilation) {
+        jsbytecode *osrPC = f.regs.pc;
+        if (*osrPC != JSOP_LOOPENTRY)
+            osrPC = NULL;
 
-    if (!ion::TestIonCompile(f.cx, script, script->function(), osrPC, f.fp()->isConstructing())) {
-        if (f.cx->isExceptionPending())
-            THROW();
+        if (!ion::TestIonCompile(f.cx, script, script->function(), osrPC, f.fp()->isConstructing())) {
+            if (f.cx->isExceptionPending())
+                THROW();
+        }
+
+        return;
     }
+
+    ExpandInlineFrames(f.cx->compartment);
+    Recompiler::clearStackReferences(f.cx->runtime->defaultFreeOp(), script);
+
+    if (ion::IsEnabled(f.cx) && f.jit()->nchunks == 1 &&
+        script->canIonCompile() && !script->hasIonScript())
+    {
+        // After returning to the interpreter, IonMonkey will try to compile
+        // this script. Don't destroy the JITChunk immediately so that Ion
+        // still has access to its ICs.
+        JS_ASSERT(!f.jit()->mustDestroyEntryChunk);
+        f.jit()->mustDestroyEntryChunk = true;
+        f.jit()->disableScriptEntry();
+        return;
+    }
+
+    f.jit()->destroyChunk(f.cx->runtime->defaultFreeOp(), f.chunkIndex(), /* resetUses = */ false);
 }
 
 void JS_FASTCALL
