@@ -1036,6 +1036,18 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     return nbytes;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_IsSystemObject(JSContext *cx, JSObject *obj)
+{
+    return obj->isSystem();
+}
+
+JS_PUBLIC_API(JSBool)
+JS_MakeSystemObject(JSContext *cx, JSObject *obj)
+{
+    return obj->setSystem(cx);
+}
+
 /************************************************************************/
 
 JS_FRIEND_API(void)

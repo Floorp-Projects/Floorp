@@ -890,7 +890,8 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope)
 
   JSAutoRequest ar(cx);
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  const uint32_t flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES;
+  const uint32_t flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES |
+                         nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
 
   
   JS_SetContextPrivate(cx, aScope);
