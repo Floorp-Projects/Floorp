@@ -811,7 +811,7 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
   DisplayItemDataEntry* newDisplayItems =
     builder ? builder->mNewDisplayItemData.GetEntry(f) : nullptr;
   if (!newDisplayItems || (newDisplayItems->mData.IsEmpty() &&
-                           !newDisplayItems->mIsMergedFrame)) {
+                           !newDisplayItems->mIsSharingContainerLayer)) {
     // This frame was visible, but isn't anymore.
     if (newDisplayItems) {
       builder->mNewDisplayItemData.RawRemoveEntry(newDisplayItems);
@@ -830,7 +830,6 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
   // Steal the list of display item layers and invalid region
   aEntry->mData.SwapElements(newDisplayItems->mData);
   aEntry->mInvalidRegion.swap(newDisplayItems->mInvalidRegion);
-  aEntry->mIsMergedFrame = newDisplayItems->mIsMergedFrame;
   // Clear and reset the invalid region now so we can start collecting new
   // dirty areas.
   SetAndClearInvalidRegion(aEntry);
@@ -859,7 +858,6 @@ FrameLayerBuilder::StoreNewDisplayItemData(DisplayItemDataEntry* aEntry,
                "mFramesWithLayers out of sync");
 
   newEntry->mData.SwapElements(aEntry->mData);
-  newEntry->mIsMergedFrame = aEntry->mIsMergedFrame;
   props.Set(LayerManagerDataProperty(), data);
   return PL_DHASH_REMOVE;
 }
@@ -2389,10 +2387,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
           // by multiple container layers. This is cleared and set when iterating
           // over the DisplayItemDataEntry's in WillEndTransaction.
           entry->mInvalidRegion = thebesLayerInvalidRegion;
-
-          // Mark that this is a merged frame so that we retain the display
-          // item data when updating.
-          entry->mIsMergedFrame = true;
         }
         ApplyThebesLayerInvalidation(aBuilder, mergedFrame, nullptr, state,
                                      &currentOffset, transformItem);
