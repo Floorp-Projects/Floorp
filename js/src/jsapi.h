@@ -5558,27 +5558,6 @@ extern JS_PUBLIC_API(JSString *)
 JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length);
 
 /*
- * Mutable string support.  A string's characters are never mutable in this JS
- * implementation, but a dependent string is a substring of another dependent
- * or immutable string, and a rope is a lazily concatenated string that creates
- * its underlying buffer the first time it is accessed.  Even after a rope
- * creates its underlying buffer, it still considered mutable.  The direct data
- * members of the (opaque to API clients) JSString struct may be changed in a
- * single-threaded way for dependent strings and ropes.
- *
- * Therefore mutable strings (ropes and dependent strings) cannot be used by
- * more than one thread at a time.  You may call JS_MakeStringImmutable to
- * convert the string from a mutable string to an immutable (and therefore
- * thread-safe) string.  The engine takes care of converting ropes and dependent
- * strings to immutable for you if you store strings in multi-threaded objects
- * using JS_SetProperty or kindred API entry points.
- *
- * If you store a JSString pointer in a native data structure that is (safely)
- * accessible to multiple threads, you must call JS_MakeStringImmutable before
- * retiring the store.
- */
-
-/*
  * Create a dependent string, i.e., a string that owns no character storage,
  * but that refers to a slice of another string's chars.  Dependent strings
  * are mutable by definition, so the thread safety comments above apply.
@@ -5600,13 +5579,6 @@ JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
  */
 extern JS_PUBLIC_API(const jschar *)
 JS_UndependString(JSContext *cx, JSString *str);
-
-/*
- * Convert a mutable string (either rope or dependent) into an immutable,
- * thread-safe one.
- */
-extern JS_PUBLIC_API(JSBool)
-JS_MakeStringImmutable(JSContext *cx, JSString *str);
 
 /*
  * Return JS_TRUE if C (char []) strings passed via the API and internally
