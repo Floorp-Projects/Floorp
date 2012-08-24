@@ -478,6 +478,7 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     Access access = NO_ACCESS;
 
     JSPropertyDescriptor desc;
+    memset(&desc, 0, sizeof(desc));
     if (!JS_GetPropertyDescriptorById(cx, hallpass, id, JSRESOLVE_QUALIFIED, &desc)) {
         return false; // Error
     }
