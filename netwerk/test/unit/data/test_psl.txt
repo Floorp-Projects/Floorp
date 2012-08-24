@@ -14,9 +14,9 @@ checkPublicSuffix('.example.com', NULL);
 checkPublicSuffix('.example.example', NULL);
 # Unlisted TLD.
 checkPublicSuffix('example', NULL);
-checkPublicSuffix('example.example', NULL);
-checkPublicSuffix('b.example.example', NULL);
-checkPublicSuffix('a.b.example.example', NULL);
+checkPublicSuffix('example.example', 'example.example');
+checkPublicSuffix('b.example.example', 'example.example');
+checkPublicSuffix('a.b.example.example', 'example.example');
 # Listed, but non-Internet, TLD.
 #checkPublicSuffix('local', NULL);
 #checkPublicSuffix('example.local', NULL);
@@ -50,13 +50,15 @@ checkPublicSuffix('ac.jp', NULL);
 checkPublicSuffix('test.ac.jp', 'test.ac.jp');
 checkPublicSuffix('www.test.ac.jp', 'test.ac.jp');
 checkPublicSuffix('kyoto.jp', NULL);
-checkPublicSuffix('c.kyoto.jp', NULL);
-checkPublicSuffix('b.c.kyoto.jp', 'b.c.kyoto.jp');
-checkPublicSuffix('a.b.c.kyoto.jp', 'b.c.kyoto.jp');
-checkPublicSuffix('pref.kyoto.jp', 'pref.kyoto.jp');	# Exception rule.
-checkPublicSuffix('www.pref.kyoto.jp', 'pref.kyoto.jp');	# Exception rule.
-checkPublicSuffix('city.kyoto.jp', 'city.kyoto.jp');	# Exception rule.
-checkPublicSuffix('www.city.kyoto.jp', 'city.kyoto.jp');	# Exception rule.
+checkPublicSuffix('test.kyoto.jp', 'test.kyoto.jp');
+checkPublicSuffix('ide.kyoto.jp', NULL);
+checkPublicSuffix('b.ide.kyoto.jp', 'b.ide.kyoto.jp');
+checkPublicSuffix('a.b.ide.kyoto.jp', 'b.ide.kyoto.jp');
+checkPublicSuffix('c.kobe.jp', NULL);
+checkPublicSuffix('b.c.kobe.jp', 'b.c.kobe.jp');
+checkPublicSuffix('a.b.c.kobe.jp', 'b.c.kobe.jp');
+checkPublicSuffix('city.kobe.jp', 'city.kobe.jp');
+checkPublicSuffix('www.city.kobe.jp', 'city.kobe.jp');
 # TLD with a wildcard rule and exceptions.
 checkPublicSuffix('om', NULL);
 checkPublicSuffix('test.om', NULL);
