@@ -260,4 +260,6 @@ if (typeof Components != "undefined") {
     let trimBackslashes = function trimBackslashes(string) {
       return string.replace(/^\\+|\\+$/g,'');
     };
+
+   exports.OS.Path = exports.OS.Win.Path;
 }(this));
