@@ -4834,6 +4834,37 @@ JS_ClearNonGlobalObject(JSContext *cx, JSObject *objArg);
 JS_PUBLIC_API(void)
 JS_SetAllNonReservedSlotsToUndefined(JSContext *cx, JSObject *objArg);
 
+/*
+ * Create a new array buffer with the given contents, which must have been
+ * returned by JS_AllocateArrayBufferContents or JS_StealArrayBufferContents.
+ * The new array buffer takes ownership. After calling this function, do not
+ * free |contents| or use |contents| from another thread.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_NewArrayBufferWithContents(JSContext *cx, void *contents);
+
+/*
+ * Steal the contents of the given array buffer. The array buffer has its
+ * length set to 0 and its contents array cleared. The caller takes ownership
+ * of |contents| and must free it or transfer ownership via
+ * JS_NewArrayBufferWithContents when done using it.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents);
+
+/*
+ * Allocate memory that may be eventually passed to
+ * JS_NewArrayBufferWithContents. |nbytes| is the number of payload bytes
+ * required. The pointer to pass to JS_NewArrayBufferWithContents is returned
+ * in |contents|. The pointer to the |nbytes| of usable memory is returned in
+ * |data|. (*|contents| will contain a header before |data|.) The only legal
+ * operations on *|contents| is to free it or pass it to
+ * JS_NewArrayBufferWithContents.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data);
+
+
 extern JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj);
 
