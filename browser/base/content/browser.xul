@@ -271,6 +271,13 @@
     <panel id="social-notification-panel" type="arrow" hidden="true" noautofocus="true">
       <box id="social-notification-box" flex="1"></box>
     </panel>
+    <panel id="social-flyout-panel"
+           onpopupshown="SocialFlyout.onShown()"
+           onpopuphidden="SocialFlyout.onHidden()"
+           type="arrow"
+           hidden="true"
+           noautofocus="true"
+           position="topcenter topright"/>
 
     <menupopup id="inspector-node-popup">
       <menuitem id="inspectorHTMLCopyInner"
