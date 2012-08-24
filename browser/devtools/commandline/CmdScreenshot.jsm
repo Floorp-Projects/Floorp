@@ -37,7 +37,6 @@ gcli.addCommand({
     {
       name: "fullpage",
       type: "boolean",
-      defaultValue: false,
       description: gcli.lookup("screenshotFullPageDesc"),
       manual: gcli.lookup("screenshotFullPageManual")
     },

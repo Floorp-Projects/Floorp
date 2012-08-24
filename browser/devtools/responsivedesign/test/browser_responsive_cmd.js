@@ -14,47 +14,73 @@ function isClosed() {
 }
 
 function GAT_test() {
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "resize toggle",
-    status: "VALID"
+  helpers.setInput('resize toggle');
+  helpers.check({
+    input:  'resize toggle',
+    hints:               '',
+    markup: 'VVVVVVVVVVVVV',
+    status: 'VALID'
   });
+
   DeveloperToolbarTest.exec();
   ok(isOpen(), "responsive mode is open");
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "resize toggle",
-    status: "VALID"
+  helpers.setInput('resize toggle');
+  helpers.check({
+    input:  'resize toggle',
+    hints:               '',
+    markup: 'VVVVVVVVVVVVV',
+    status: 'VALID'
   });
+
   DeveloperToolbarTest.exec();
   ok(isClosed(), "responsive mode is closed");
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "resize on",
-    status: "VALID"
+  helpers.setInput('resize on');
+  helpers.check({
+    input:  'resize on',
+    hints:           '',
+    markup: 'VVVVVVVVV',
+    status: 'VALID'
   });
+
   DeveloperToolbarTest.exec();
   ok(isOpen(), "responsive mode is open");
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "resize off",
-    status: "VALID"
+  helpers.setInput('resize off');
+  helpers.check({
+    input:  'resize off',
+    hints:            '',
+    markup: 'VVVVVVVVVV',
+    status: 'VALID'
   });
+
   DeveloperToolbarTest.exec();
   ok(isClosed(), "responsive mode is closed");
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "resize to 400 400",
-    status: "VALID"
+  helpers.setInput('resize to 400 400');
+  helpers.check({
+    input:  'resize to 400 400',
+    hints:                   '',
+    markup: 'VVVVVVVVVVVVVVVVV',
+    status: 'VALID',
+    args: {
+      width: { value: 400 },
+      height: { value: 400 },
+    }
   });
+
   DeveloperToolbarTest.exec();
   ok(isOpen(), "responsive mode is open");
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "resize off",
-    status: "VALID"
+  helpers.setInput('resize off');
+  helpers.check({
+    input:  'resize off',
+    hints:            '',
+    markup: 'VVVVVVVVVV',
+    status: 'VALID'
   });
+
   DeveloperToolbarTest.exec();
   ok(isClosed(), "responsive mode is closed");
-
-  // executeSoon(finish);
 }
