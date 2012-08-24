@@ -24,6 +24,7 @@ self.onmessage = function onmessage_start(msg) {
     test_position();
     test_move_file();
     test_iter_dir();
+    test_mkdir();
     test_info();
   } catch (x) {
     log("Catching error: " + x);
@@ -468,4 +469,55 @@ function test_info() {
   ok(info.isDir, "test_info: directory is a directory");
 
   ok(true, "test_info: Complete");
+}
+
+function test_mkdir()
+{
+  ok(true, "test_mkdir: Starting");
+
+  let dirName = "test_dir.tmp";
+  OS.File.removeEmptyDir(dirName, {ignoreAbsent: true});
+
+  // Check that removing absent directories is handled correctly
+  let exn;
+  try {
+    OS.File.removeEmptyDir(dirName, {ignoreAbsent: true});
+  } catch (x) {
+    exn = x;
+  }
+  ok(!exn, "test_mkdir: ignoreAbsent works");
+
+  exn = null;
+  try {
+    OS.File.removeEmptyDir(dirName);
+  } catch (x) {
+    exn = x;
+  }
+  ok(!!exn, "test_mkdir: removeDir throws if there is no such directory");
+  ok(exn instanceof OS.File.Error && exn.becauseNoSuchFile, "test_mkdir: removeDir throws the correct exception if there is no such directory");
+
+  ok(true, "test_mkdir: Creating directory");
+  OS.File.makeDir(dirName);
+  ok(OS.File.stat(dirName).isDir, "test_mkdir: Created directory is a directory");
+
+  ok(true, "test_mkdir: Creating directory that already exists");
+  exn = null;
+  try {
+    OS.File.makeDir(dirName);
+  } catch (x) {
+    exn = x;
+  }
+  ok(exn && exn instanceof OS.File.Error && exn.becauseExists, "test_mkdir: makeDir over an existing directory failed for all the right reasons");
+
+  // Cleanup - and check that we have cleaned up
+  OS.File.removeEmptyDir(dirName);
+
+  try {
+    OS.File.stat(dirName);
+    ok(false, "test_mkdir: Directory was not removed");
+  } catch (x) {
+    ok(x instanceof OS.File.Error && x.becauseNoSuchFile, "test_mkdir: Directory was removed");
+  }
+
+  ok(true, "test_mkdir: Complete");
 }
