@@ -18,11 +18,6 @@ function runTest() {
   browserElementTestHelpers.setEnabledPref(true);
   browserElementTestHelpers.addPermission();
 
-  var principal = SpecialPowers.wrap(SpecialPowers.getNodePrincipal(document));
-  SpecialPowers.addPermission("browser", true, { url: SpecialPowers.wrap(principal.URI).spec,
-                                                 appId: principal.appId,
-                                                 isInBrowserElement: true });
-
   iframe = document.createElement('iframe');
   iframe.mozbrowser = true;
 
@@ -60,12 +55,6 @@ function finish() {
   // expected, but if we don't remove our listener, then we'll end up causing
   // the /next/ test to fail!
   iframe.removeEventListener('mozbrowsershowmodalprompt', checkMessage);
-
-  var principal = SpecialPowers.wrap(SpecialPowers.getNodePrincipal(document));
-  SpecialPowers.removePermission("browser", { url: SpecialPowers.wrap(principal.URI).spec,
-                                              appId: principal.appId,
-                                              isInBrowserElement: true });
-
   SimpleTest.finish();
 }
 
