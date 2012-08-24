@@ -431,8 +431,12 @@ UpdateSourceCoordNotes(JSContext *cx, BytecodeEmitter *bce, TokenPtr pos)
         if (colspan < 0) {
             colspan += SN_COLSPAN_DOMAIN;
         } else if (colspan >= SN_COLSPAN_DOMAIN / 2) {
-            ReportStatementTooLarge(cx, bce->topStmt);
-            return false;
+            // If the column span is so large that we can't store it, then just
+            // discard this information because column information would most
+            // likely be useless anyway once the column numbers are ~4000000.
+            // This has been known to happen with scripts that have been
+            // minimized and put into all one line.
+            return true;
         }
         if (NewSrcNote2(cx, bce, SRC_COLSPAN, colspan) < 0)
             return false;
