@@ -48,9 +48,7 @@ function setOrRestoreTabFocus(newValue) {
 
 var doc = document;
 function tab_to(id) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var wu =  doc.defaultView.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var wu = SpecialPowers.DOMWindowUtils;
   wu.sendKeyEvent('keypress',  9, 0, 0);
   is(doc.activeElement.id, id, "element with id=" + id + " should have focus");
 }

@@ -476,7 +476,7 @@ nsDiskCacheDevice::GetDeviceID()
 nsCacheEntry *
 nsDiskCacheDevice::FindEntry(nsCString * key, bool *collision)
 {
-    Telemetry::AutoTimer<Telemetry::CACHE_DISK_SEARCH> timer;
+    Telemetry::AutoTimer<Telemetry::CACHE_DISK_SEARCH_2> timer;
     if (!Initialized())  return nullptr;  // NS_ERROR_NOT_INITIALIZED
     if (mClearingDiskCache)  return nullptr;
     nsDiskCacheRecord       record;

@@ -34,10 +34,10 @@ public:
   virtual ~FTPChannelParent();
 
 protected:
-  virtual bool RecvAsyncOpen(const IPC::URI& uri,
+  virtual bool RecvAsyncOpen(const URIParams& uri,
                              const uint64_t& startPos,
                              const nsCString& entityID,
-                             const IPC::InputStream& uploadStream,
+                             const OptionalInputStreamParams& uploadStream,
                              const IPC::SerializedLoadContext& loadContext) MOZ_OVERRIDE;
   virtual bool RecvConnectChannel(const uint32_t& channelId) MOZ_OVERRIDE;
   virtual bool RecvCancel(const nsresult& status) MOZ_OVERRIDE;

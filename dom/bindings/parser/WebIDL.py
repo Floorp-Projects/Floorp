@@ -2133,6 +2133,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
     def hasOverloads(self):
         return self._hasOverloads
 
+    def isIdentifierLess(self):
+        return self.identifier.name[:2] == "__"
+
     def resolve(self, parentScope):
         assert isinstance(parentScope, IDLScope)
         IDLObjectWithIdentifier.resolve(self, parentScope)

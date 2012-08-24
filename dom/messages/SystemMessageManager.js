@@ -28,8 +28,8 @@ try {
   kMaxPendingMessages = 5;
 }
 
-function debug(aMsg) { 
-  //dump("-- SystemMessageManager " + Date.now() + " : " + aMsg + "\n"); 
+function debug(aMsg) {
+  //dump("-- SystemMessageManager " + Date.now() + " : " + aMsg + "\n");
 }
 
 // Implementation of the DOM API for system messages
@@ -54,17 +54,19 @@ SystemMessageManager.prototype = {
     // nsISystemMessageWrapper.
     debug("Dispatching " + JSON.stringify(aMessage) + "\n");
     let contractID = "@mozilla.org/dom/system-messages/wrapper/" + aType + ";1";
+    let wrapped = false;
 
     if (contractID in Cc) {
       debug(contractID + " is registered, creating an instance");
       let wrapper = Cc[contractID].createInstance(Ci.nsISystemMessagesWrapper);
       if (wrapper) {
         aMessage = wrapper.wrapMessage(aMessage);
+        wrapped = true;
         debug("wrapped = " + aMessage);
       }
     }
 
-    aHandler.handleMessage(ObjectWrapper.wrap(aMessage, this._window));
+    aHandler.handleMessage(wrapped ? aMessage : ObjectWrapper.wrap(aMessage, this._window));
   },
 
   mozSetMessageHandler: function sysMessMgr_setMessageHandler(aType, aHandler) {
@@ -112,9 +114,9 @@ SystemMessageManager.prototype = {
       return false;
     }
 
-    // Send a sync message to the parent to check if we have a pending message 
+    // Send a sync message to the parent to check if we have a pending message
     // for this type.
-    let messages = cpmm.sendSyncMessage("SystemMessageManager:GetPending", 
+    let messages = cpmm.sendSyncMessage("SystemMessageManager:GetPending",
                                         { type: aType,
                                           uri: this._uri,
                                           manifest: this._manifest })[0];
@@ -148,7 +150,7 @@ SystemMessageManager.prototype = {
   },
 
   receiveMessage: function sysMessMgr_receiveMessage(aMessage) {
-    debug("receiveMessage " + aMessage.name + " - " + 
+    debug("receiveMessage " + aMessage.name + " - " +
           aMessage.json.type + " for " + aMessage.json.manifest +
           " (" + this._manifest + ")");
 
