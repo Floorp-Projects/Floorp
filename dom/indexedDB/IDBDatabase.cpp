@@ -905,13 +905,24 @@ CreateFileHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   mFileInfo = fileManager->GetNewFileInfo();
   NS_ENSURE_TRUE(mFileInfo, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
-  NS_ENSURE_TRUE(directory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  const int64_t& fileId = mFileInfo->Id();
 
-  nsCOMPtr<nsIFile> file = fileManager->GetFileForId(directory, mFileInfo->Id());
-  NS_ENSURE_TRUE(file, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  nsCOMPtr<nsIFile> directory = fileManager->EnsureJournalDirectory();
+  NS_ENSURE_TRUE(directory, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIFile> file = fileManager->GetFileForId(directory, fileId);
+  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
   nsresult rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  directory = fileManager->GetDirectory();
+  NS_ENSURE_TRUE(directory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  file = fileManager->GetFileForId(directory, fileId);
+  NS_ENSURE_TRUE(file, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;
