@@ -1217,7 +1217,8 @@ JS_GetArrayBufferByteLength(JSObject *obj, JSContext *cx);
 
 /*
  * Return a pointer to an array buffer's data. The buffer is still owned by the
- * array buffer object, and should not be modified on another thread.
+ * array buffer object, and should not be modified on another thread. The
+ * returned pointer is stable across GCs.
  *
  * |obj| must have passed a JS_IsArrayBufferObject test, or somehow be known
  * that it would pass such a test: it is an ArrayBuffer or a wrapper of an
