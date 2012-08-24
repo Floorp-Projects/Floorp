@@ -11,55 +11,110 @@ function test() {
 }
 
 function testInspect() {
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "inspec",
-    directTabText: "t",
-    status: "ERROR"
+  helpers.setInput('inspect');
+  helpers.check({
+    input:  'inspect',
+    hints:         ' <node>',
+    markup: 'VVVVVVV',
+    status: 'ERROR',
+    args: {
+      node: { message: '' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "inspect",
-    emptyParameters: [ " <node>" ],
-    status: "ERROR"
+  helpers.setInput('inspect h1');
+  helpers.check({
+    input:  'inspect h1',
+    hints:            '',
+    markup: 'VVVVVVVVII',
+    status: 'ERROR',
+    args: {
+      node: { message: 'No matches' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "inspect h1",
-    status: "ERROR"
+  helpers.setInput('inspect span');
+  helpers.check({
+    input:  'inspect span',
+    hints:              '',
+    markup: 'VVVVVVVVEEEE',
+    status: 'ERROR',
+    args: {
+      node: { message: 'Too many matches (2)' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "inspect span",
-    status: "ERROR"
+  helpers.setInput('inspect div');
+  helpers.check({
+    input:  'inspect div',
+    hints:             '',
+    markup: 'VVVVVVVVVVV',
+    status: 'VALID',
+    args: {
+      node: { message: '' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "inspect div",
-    status: "VALID"
+  helpers.setInput('inspect .someclas');
+  helpers.check({
+    input:  'inspect .someclas',
+    hints:                   '',
+    markup: 'VVVVVVVVIIIIIIIII',
+    status: 'ERROR',
+    args: {
+      node: { message: 'No matches' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "inspect .someclass",
-    status: "VALID"
+  helpers.setInput('inspect .someclass');
+  helpers.check({
+    input:  'inspect .someclass',
+    hints:                    '',
+    markup: 'VVVVVVVVVVVVVVVVVV',
+    status: 'VALID',
+    args: {
+      node: { message: '' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "inspect #someid",
-    status: "VALID"
+  helpers.setInput('inspect #someid');
+  helpers.check({
+    input:  'inspect #someid',
+    hints:                 '',
+    markup: 'VVVVVVVVVVVVVVV',
+    status: 'VALID',
+    args: {
+      node: { message: '' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "inspect button[disabled]",
-    status: "VALID"
+  helpers.setInput('inspect button[disabled]');
+  helpers.check({
+    input:  'inspect button[disabled]',
+    hints:                          '',
+    markup: 'VVVVVVVVVVVVVVVVVVVVVVVV',
+    status: 'VALID',
+    args: {
+      node: { message: '' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "inspect p>strong",
-    status: "VALID"
+  helpers.setInput('inspect p>strong');
+  helpers.check({
+    input:  'inspect p>strong',
+    hints:                  '',
+    markup: 'VVVVVVVVVVVVVVVV',
+    status: 'VALID',
+    args: {
+      node: { message: '' },
+    }
   });
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "inspect :root",
-    status: "VALID"
+  helpers.setInput('inspect :root');
+  helpers.check({
+    input:  'inspect :root',
+    hints:               '',
+    markup: 'VVVVVVVVVVVVV',
+    status: 'VALID'
   });
 }

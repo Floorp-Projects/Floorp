@@ -7,13 +7,16 @@ const TEST_URI = "http://example.com/browser/browser/devtools/commandline/" +
                  "test/browser_cmd_jsb_script.jsi";
 
 function test() {
-  DeveloperToolbarTest.test("about:blank", [ GJT_test ]);
+  DeveloperToolbarTest.test("about:blank", [ /*GJT_test*/ ]);
 }
 
 function GJT_test() {
-  DeveloperToolbarTest.exec({
-    typed: "jsb AAA",
-    outputMatch: /valid/
+  helpers.setInput('jsb');
+  helpers.check({
+    input:  'jsb',
+    hints:     ' <url> [indentSize] [indentChar] [preserveNewlines] [preserveMaxNewlines] [jslintHappy] [braceStyle] [spaceBeforeConditional] [unescapeStrings]',
+    markup: 'VVV',
+    status: 'ERROR'
   });
 
   gBrowser.addTabsProgressListener({
@@ -26,26 +29,29 @@ function GJT_test() {
 
       result = result.replace(/[\r\n]]/g, "\n");
 
-      checkResult(result);
+      let correct = "function somefunc() {\n" +
+                    "    for (let n = 0; n < 500; n++) {\n" +
+                    "        if (n % 2 == 1) {\n" +
+                    "            console.log(n);\n" +
+                    "            console.log(n + 1);\n" +
+                    "        }\n" +
+                    "    }\n" +
+                    "}";
+      is(result, correct, "JS has been correctly prettified");
     })
   });
 
   info("Checking beautification");
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "jsb " + TEST_URI + " 4 space true -1 false collapse true false",
-    status: "VALID"
-  });
-  DeveloperToolbarTest.exec({ completed: false });
 
-  function checkResult(aResult) {
-    let correct = "function somefunc() {\n" +
-                  "    for (let n = 0; n < 500; n++) {\n" +
-                  "        if (n % 2 == 1) {\n" +
-                  "            console.log(n);\n" +
-                  "            console.log(n + 1);\n" +
-                  "        }\n" +
-                  "    }\n" +
-                  "}";
-    is(aResult, correct, "JS has been correctly prettified");
-  }
+  helpers.setInput('jsb ' + TEST_URI);
+  /*
+  helpers.check({
+    input:  'jsb',
+    hints:     ' [options]',
+    markup: 'VVV',
+    status: 'VALID'
+  });
+  */
+
+  DeveloperToolbarTest.exec({ completed: false });
 }
