@@ -22,11 +22,16 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsCSSProperty.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "nsString.h"
+#include "nsIDOMCSSRule.h"
+#include "nsIDOMCSSValue.h"
+#include "mozilla/ErrorResult.h"
 
-// 57eb81d1-a607-4429-926b-802519d43aad
+// dbeabbfa-6cb3-4f5c-aec2-dd558d9d681f
 #define NS_ICSSDECLARATION_IID \
- { 0x57eb81d1, 0xa607, 0x4429, \
-    {0x92, 0x6b, 0x80, 0x25, 0x19, 0xd4, 0x3a, 0xad } }
+{ 0xdbeabbfa, 0x6cb3, 0x4f5c, \
+ { 0xae, 0xc2, 0xdd, 0x55, 0x8d, 0x9d, 0x68, 0x1f } }
 
 class nsINode;
 
@@ -43,11 +48,6 @@ public:
   NS_IMETHOD GetPropertyValue(const nsCSSProperty aPropID,
                               nsAString& aValue) = 0;
 
-  // Also have to declare the nsIDOMCSSStyleDeclaration method, so we
-  // don't hide it... very sad, but it stole the good method name
-  NS_IMETHOD GetPropertyValue(const nsAString& aPropName,
-                              nsAString& aValue) = 0;
-  
   /**
    * Method analogous to nsIDOMCSSStyleDeclaration::SetProperty.  This
    * method does NOT allow setting a priority (the priority will
@@ -57,6 +57,87 @@ public:
                               const nsAString& aValue) = 0;
 
   virtual nsINode *GetParentObject() = 0;
+
+  // Also have to declare all the nsIDOMCSSStyleDeclaration methods,
+  // since we want to be able to call them from the WebIDL versions.
+  NS_IMETHOD GetCssText(nsAString& aCssText) = 0;
+  NS_IMETHOD SetCssText(const nsAString& aCssText) = 0;
+  NS_IMETHOD GetPropertyValue(const nsAString& aPropName,
+                              nsAString& aValue) = 0;
+  NS_IMETHOD GetPropertyCSSValue(const nsAString& aPropertyName,
+                                 nsIDOMCSSValue** aReturn) = 0;
+  NS_IMETHOD RemoveProperty(const nsAString& aPropertyName,
+                            nsAString& aReturn) = 0;
+  NS_IMETHOD GetPropertyPriority(const nsAString& aPropertyName,
+                                 nsAString& aReturn) = 0;
+  NS_IMETHOD SetProperty(const nsAString& aPropertyName,
+                         const nsAString& aValue,
+                         const nsAString& aPriority) = 0;
+  NS_IMETHOD GetLength(uint32_t* aLength) = 0;
+  NS_IMETHOD Item(uint32_t aIndex, nsAString& aReturn)
+  {
+    bool found;
+    IndexedGetter(aIndex, found, aReturn);
+    if (!found) {
+      aReturn.Truncate();
+    }
+    return NS_OK;
+  }
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
+
+  // WebIDL interface for CSSStyleDeclaration
+  void SetCssText(const nsAString& aString, mozilla::ErrorResult& rv) {
+    rv = SetCssText(aString);
+  }
+  void GetCssText(nsString& aString) {
+    // Cast to nsAString& so we end up calling our virtual
+    // |GetCssText(nsAString& aCssText)| overload, which does the real work.
+    GetCssText(static_cast<nsAString&>(aString));
+  }
+  uint32_t GetLength() {
+    uint32_t length;
+    GetLength(&length);
+    return length;
+  }
+  void Item(uint32_t aIndex, nsString& aPropName) {
+    Item(aIndex, static_cast<nsAString&>(aPropName));
+  }
+
+  // The actual implementation of the Item method and the WebIDL indexed getter
+  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) = 0;
+
+  void GetPropertyValue(const nsAString& aPropName, nsString& aValue,
+                        mozilla::ErrorResult& rv) {
+    rv = GetPropertyValue(aPropName, aValue);
+  }
+  already_AddRefed<nsIDOMCSSValue>
+    GetPropertyCSSValue(const nsAString& aPropName, mozilla::ErrorResult& rv) {
+    nsCOMPtr<nsIDOMCSSValue> val;
+    rv = GetPropertyCSSValue(aPropName, getter_AddRefs(val));
+    return val.forget();
+  }
+  void GetPropertyPriority(const nsAString& aPropName, nsString& aPriority) {
+    GetPropertyPriority(aPropName, static_cast<nsAString&>(aPriority));
+  }
+  // XXXbz we should nix the Optional thing once bug 759622 is fixed.
+  void SetProperty(const nsAString& aPropName, const nsAString& aValue,
+                   const mozilla::dom::Optional<nsAString>& aPriority,
+                   mozilla::ErrorResult& rv) {
+    if (aPriority.WasPassed()) {
+      rv = SetProperty(aPropName, aValue, aPriority.Value());
+    } else {
+      rv = SetProperty(aPropName, aValue, EmptyString());
+    }
+  }
+  void RemoveProperty(const nsAString& aPropName, nsString& aRetval,
+                      mozilla::ErrorResult& rv) {
+    rv = RemoveProperty(aPropName, aRetval);
+  }
+  already_AddRefed<nsIDOMCSSRule> GetParentRule() {
+    nsCOMPtr<nsIDOMCSSRule> rule;
+    GetParentRule(getter_AddRefs(rule));
+    return rule.forget();
+  }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
