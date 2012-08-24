@@ -293,7 +293,6 @@ struct FunctionBox : public ObjectBox
 {
     FunctionBox     *siblings;
     FunctionBox     *kids;
-    FunctionBox     *parent;
     Bindings        bindings;               /* bindings for this function */
     size_t          bufStart;
     size_t          bufEnd;
