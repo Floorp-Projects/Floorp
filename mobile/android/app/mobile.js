@@ -658,6 +658,12 @@ pref("reader.has_used_toolbar", false);
 // Media plugins for libstagefright playback on android
 pref("media.plugins.enabled", true);
 
+// Stagefright's OMXCodec::CreationFlags. The interesting flag values are:
+//  0 = Let Stagefright choose hardware or software decoding (default)
+//  8 = Force software decoding
+// 16 = Force hardware decoding
+pref("media.stagefright.omxcodec.flags", 0);
+
 // Coalesce touch events to prevent them from flooding the event queue
 pref("dom.event.touch.coalescing.enabled", true);
 
