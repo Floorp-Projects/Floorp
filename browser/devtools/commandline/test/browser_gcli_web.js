@@ -1733,6 +1733,7 @@ exports.setup = function() {
   canon.addCommand(exports.tselarr);
   canon.addCommand(exports.tsm);
   canon.addCommand(exports.tsg);
+  canon.addCommand(exports.tshidden);
   canon.addCommand(exports.tscook);
 };
 
@@ -1757,6 +1758,7 @@ exports.shutdown = function() {
   canon.removeCommand(exports.tselarr);
   canon.removeCommand(exports.tsm);
   canon.removeCommand(exports.tsg);
+  canon.removeCommand(exports.tshidden);
   canon.removeCommand(exports.tscook);
 
   types.deregisterType(exports.optionType);
@@ -1909,6 +1911,38 @@ exports.tsnDeepDownNested = {
 exports.tsnDeepDownNestedCmd = {
   name: 'tsn deep down nested cmd',
   exec: createExec('tsnDeepDownNestedCmd')
+};
+
+exports.tshidden = {
+  name: 'tshidden',
+  hidden: true,
+  params: [
+    {
+      group: 'Options',
+      params: [
+        {
+          name: 'visible',
+          type: 'string',
+          defaultValue: null,
+          description: 'visible'
+        },
+        {
+          name: 'invisiblestring',
+          type: 'string',
+          description: 'invisiblestring',
+          defaultValue: null,
+          hidden: true
+        },
+        {
+          name: 'invisibleboolean',
+          type: 'boolean',
+          description: 'invisibleboolean',
+          hidden: true
+        }
+      ]
+    }
+  ],
+  exec: createExec('tshidden')
 };
 
 exports.tselarr = {
@@ -3010,6 +3044,122 @@ exports.testIncomplete = function(options) {
           'unassigned.isIncompleteName: tsg -');
 };
 
+exports.testHidden = function(options) {
+  helpers.setInput('tshidde');
+  helpers.check({
+    input:  'tshidde',
+    markup: 'EEEEEEE',
+    directTabText: '',
+    arrowTabText: '',
+    status: 'ERROR',
+    emptyParameters: [ ],
+  });
+
+  helpers.setInput('tshidden');
+  helpers.check({
+    input:  'tshidden',
+    markup: 'VVVVVVVV',
+    directTabText: '',
+    arrowTabText: '',
+    status: 'VALID',
+    emptyParameters: [ ],
+    args: {
+      visible: { value: undefined, status: 'VALID' },
+      invisiblestring: { value: undefined, status: 'VALID' },
+      invisibleboolean: { value: undefined, status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tshidden --vis');
+  helpers.check({
+    input:  'tshidden --vis',
+    markup: 'VVVVVVVVVIIIII',
+    directTabText: 'ible',
+    arrowTabText: '',
+    status: 'ERROR',
+    emptyParameters: [ ],
+    args: {
+      visible: { value: undefined, status: 'VALID' },
+      invisiblestring: { value: undefined, status: 'VALID' },
+      invisibleboolean: { value: undefined, status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tshidden --invisiblestrin');
+  helpers.check({
+    input:  'tshidden --invisiblestrin',
+    markup: 'VVVVVVVVVEEEEEEEEEEEEEEEE',
+    directTabText: '',
+    arrowTabText: '',
+    status: 'ERROR',
+    emptyParameters: [ ],
+    args: {
+      visible: { value: undefined, status: 'VALID' },
+      invisiblestring: { value: undefined, status: 'VALID' },
+      invisibleboolean: { value: undefined, status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tshidden --invisiblestring');
+  helpers.check({
+    input:  'tshidden --invisiblestring',
+    markup: 'VVVVVVVVVIIIIIIIIIIIIIIIII',
+    directTabText: '',
+    arrowTabText: '',
+    status: 'ERROR',
+    emptyParameters: [ ],
+    args: {
+      visible: { value: undefined, status: 'VALID' },
+      invisiblestring: { value: undefined, status: 'INCOMPLETE' },
+      invisibleboolean: { value: undefined, status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tshidden --invisiblestring x');
+  helpers.check({
+    input:  'tshidden --invisiblestring x',
+    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+    directTabText: '',
+    arrowTabText: '',
+    status: 'VALID',
+    emptyParameters: [ ],
+    args: {
+      visible: { value: undefined, status: 'VALID' },
+      invisiblestring: { value: 'x', status: 'VALID' },
+      invisibleboolean: { value: undefined, status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tshidden --invisibleboolea');
+  helpers.check({
+    input:  'tshidden --invisibleboolea',
+    markup: 'VVVVVVVVVEEEEEEEEEEEEEEEEE',
+    directTabText: '',
+    arrowTabText: '',
+    status: 'ERROR',
+    emptyParameters: [ ],
+    args: {
+      visible: { value: undefined, status: 'VALID' },
+      invisiblestring: { value: undefined, status: 'VALID' },
+      invisibleboolean: { value: undefined, status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tshidden --invisibleboolean');
+  helpers.check({
+    input:  'tshidden --invisibleboolean',
+    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVV',
+    directTabText: '',
+    arrowTabText: '',
+    status: 'VALID',
+    emptyParameters: [ ],
+    args: {
+      visible: { value: undefined, status: 'VALID' },
+      invisiblestring: { value: undefined, status: 'VALID' },
+      invisibleboolean: { value: true, status: 'VALID' }
+    }
+  });
+};
 
 });
 /*
