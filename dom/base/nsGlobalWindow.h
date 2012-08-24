@@ -138,7 +138,7 @@ struct nsTimeout : PRCList
   nsTimeout();
   ~nsTimeout();
 
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTimeout)
+  NS_DECL_CYCLE_COLLECTION_LEGACY_NATIVE_CLASS(nsTimeout)
 
   nsrefcnt Release();
   nsrefcnt AddRef();
