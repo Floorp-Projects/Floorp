@@ -26,6 +26,7 @@ self.onmessage = function onmessage_start(msg) {
     test_iter_dir();
     test_mkdir();
     test_info();
+    test_path();
   } catch (x) {
     log("Catching error: " + x);
     log("Stack: " + x.stack);
@@ -520,4 +521,24 @@ function test_mkdir()
   }
 
   ok(true, "test_mkdir: Complete");
+}
+
+// Note that most of the features of path are tested in
+// worker_test_osfile_{unix, win}.js
+function test_path()
+{
+  ok(true, "test_path: starting");
+  let abcd = OS.Path.join("a", "b", "c", "d");
+  is(OS.Path.basename(abcd), "d", "basename of a/b/c/d");
+
+  let abc = OS.Path.join("a", "b", "c");
+  is(OS.Path.dirname(abcd), abc, "dirname of a/b/c/d");
+
+  let abdotsc = OS.Path.join("a", "b", "..", "c");
+  is(OS.Path.normalize(abdotsc), OS.Path.join("a", "c"), "normalize a/b/../c");
+
+  let adotsdotsdots = OS.Path.join("a", "..", "..", "..");
+  is(OS.Path.normalize(adotsdotsdots), OS.Path.join("..", ".."), "normalize a/../../..");
+
+  ok(true, "test_path: Complete");
 }
