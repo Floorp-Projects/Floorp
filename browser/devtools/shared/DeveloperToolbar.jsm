@@ -13,7 +13,6 @@ const WEBCONSOLE_CONTENT_SCRIPT_URL =
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource:///modules/devtools/Commands.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
@@ -21,8 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 XPCOMUtils.defineLazyModuleGetter(this, "gcli",
                                   "resource:///modules/devtools/gcli.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
-                                  "resource:///modules/devtools/CmdCmd.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "GcliCommands",
+                                  "resource:///modules/devtools/GcliCommands.jsm");
 
 /**
  * A component to manage the global developer toolbar, which contains a GCLI
@@ -46,7 +45,7 @@ function DeveloperToolbar(aChromeWindow, aToolbarElement)
                            .getElementById("developer-toolbar-webconsole");
 
   try {
-    CmdCommands.refreshAutoCommands(aChromeWindow);
+    GcliCommands.refreshAutoCommands(aChromeWindow);
   }
   catch (ex) {
     console.error(ex);
@@ -557,7 +556,7 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
          class="gcli-panel">
     <html:iframe xmlns:html="http://www.w3.org/1999/xhtml"
                  id="gcli-output-frame"
-                 src="chrome://browser/content/devtools/commandlineoutput.xhtml"
+                 src="chrome://browser/content/devtools/gclioutput.xhtml"
                  flex="1"/>
   </tooltip>
   */
@@ -572,7 +571,7 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
 
   this._frame = aChromeDoc.createElementNS(NS_XHTML, "iframe");
   this._frame.id = "gcli-output-frame";
-  this._frame.setAttribute("src", "chrome://browser/content/devtools/commandlineoutput.xhtml");
+  this._frame.setAttribute("src", "chrome://browser/content/devtools/gclioutput.xhtml");
   this._frame.setAttribute("flex", "1");
   this._panel.appendChild(this._frame);
 
@@ -768,7 +767,7 @@ function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
          class="gcli-panel">
     <html:iframe xmlns:html="http://www.w3.org/1999/xhtml"
                  id="gcli-tooltip-frame"
-                 src="chrome://browser/content/devtools/commandlinetooltip.xhtml"
+                 src="chrome://browser/content/devtools/gclitooltip.xhtml"
                  flex="1"/>
   </tooltip>
   */
@@ -783,7 +782,7 @@ function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
 
   this._frame = aChromeDoc.createElementNS(NS_XHTML, "iframe");
   this._frame.id = "gcli-tooltip-frame";
-  this._frame.setAttribute("src", "chrome://browser/content/devtools/commandlinetooltip.xhtml");
+  this._frame.setAttribute("src", "chrome://browser/content/devtools/gclitooltip.xhtml");
   this._frame.setAttribute("flex", "1");
   this._panel.appendChild(this._frame);
 
