@@ -139,7 +139,7 @@ public:
     return refcount;
   }
 
-  void stabilizeForDeletion(nsISupports*)
+  void stabilizeForDeletion()
   {
     mTagged = NS_CCAR_TAGGED_STABILIZED_REFCNT;
   }
@@ -475,7 +475,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
   NS_LOG_RELEASE(this, count, #_class);                                       \
   if (count == 0) {                                                           \
     NS_ASSERT_OWNINGTHREAD(_class);                                           \
-    mRefCnt.stabilizeForDeletion(base);                                       \
+    mRefCnt.stabilizeForDeletion();                                           \
     _destroy;                                                                 \
     return 0;                                                                 \
   }                                                                           \
