@@ -15,6 +15,7 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsISupportsArray.h"
 #include "nsITimer.h"
+#include "nsIDOMMimeType.h"
 
 class nsPluginHost;
 struct PRLibrary;
@@ -85,6 +86,52 @@ private:
                 const char* const* aExtensions,
                 uint32_t aVariantCount);
   nsresult EnsureMembersAreUTF8();
+};
+
+class DOMMimeTypeImpl : public nsIDOMMimeType {
+public:
+  NS_DECL_ISUPPORTS
+
+  DOMMimeTypeImpl(nsPluginTag* aTag, PRUint32 aMimeTypeIndex)
+  {
+    if (!aTag)
+      return;
+    CopyUTF8toUTF16(aTag->mMimeDescriptions[aMimeTypeIndex], mDescription);
+    CopyUTF8toUTF16(aTag->mExtensions[aMimeTypeIndex], mSuffixes);
+    CopyUTF8toUTF16(aTag->mMimeTypes[aMimeTypeIndex], mType);
+  }
+
+  virtual ~DOMMimeTypeImpl() {
+  }
+
+  NS_METHOD GetDescription(nsAString& aDescription)
+  {
+    aDescription.Assign(mDescription);
+    return NS_OK;
+  }
+
+  NS_METHOD GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)
+  {
+    // this has to be implemented by the DOM version.
+    *aEnabledPlugin = nullptr;
+    return NS_OK;
+  }
+
+  NS_METHOD GetSuffixes(nsAString& aSuffixes)
+  {
+    aSuffixes.Assign(mSuffixes);
+    return NS_OK;
+  }
+
+  NS_METHOD GetType(nsAString& aType)
+  {
+    aType.Assign(mType);
+    return NS_OK;
+  }
+private:
+  nsString mDescription;
+  nsString mSuffixes;
+  nsString mType;
 };
 
 #endif // nsPluginTags_h_

@@ -1373,55 +1373,6 @@ nsPluginHost::IsPluginEnabledForExtension(const char* aExtension,
   return NS_ERROR_FAILURE;
 }
 
-class DOMMimeTypeImpl : public nsIDOMMimeType {
-public:
-  NS_DECL_ISUPPORTS
-
-  DOMMimeTypeImpl(nsPluginTag* aTag, uint32_t aMimeTypeIndex)
-  {
-    if (!aTag)
-      return;
-    CopyUTF8toUTF16(aTag->mMimeDescriptions[aMimeTypeIndex], mDescription);
-    CopyUTF8toUTF16(aTag->mExtensions[aMimeTypeIndex], mSuffixes);
-    CopyUTF8toUTF16(aTag->mMimeTypes[aMimeTypeIndex], mType);
-  }
-
-  virtual ~DOMMimeTypeImpl() {
-  }
-
-  NS_METHOD GetDescription(nsAString& aDescription)
-  {
-    aDescription.Assign(mDescription);
-    return NS_OK;
-  }
-
-  NS_METHOD GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)
-  {
-    // this has to be implemented by the DOM version.
-    *aEnabledPlugin = nullptr;
-    return NS_OK;
-  }
-
-  NS_METHOD GetSuffixes(nsAString& aSuffixes)
-  {
-    aSuffixes.Assign(mSuffixes);
-    return NS_OK;
-  }
-
-  NS_METHOD GetType(nsAString& aType)
-  {
-    aType.Assign(mType);
-    return NS_OK;
-  }
-
-private:
-  nsString mDescription;
-  nsString mSuffixes;
-  nsString mType;
-};
-
-NS_IMPL_ISUPPORTS1(DOMMimeTypeImpl, nsIDOMMimeType)
-
 class DOMPluginImpl : public nsIDOMPlugin {
 public:
   NS_DECL_ISUPPORTS
