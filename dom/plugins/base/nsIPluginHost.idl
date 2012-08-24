@@ -12,7 +12,7 @@
   "@mozilla.org/plugin/host;1"
 %}
 
-[scriptable, uuid(fdb56ce3-89ac-4293-be64-9f4be88004cc)]
+[scriptable, uuid(28F1F9E1-CD23-4FE2-BCC8-BBB0B2D49A4A)]
 interface nsIPluginHost : nsISupports
 {
   /**
@@ -72,14 +72,5 @@ interface nsIPluginHost : nsISupports
    *                subdomains is found, return true.
    */
   boolean siteHasData(in nsIPluginTag plugin, in AUTF8String domain);
-
-  /**
-   * Registers the play preview plugin mode for specific mime type
-   *
-   * @param mimeType - specified mime type
-   */
-  void registerPlayPreviewMimeType(in AUTF8String mimeType);
-
-  void unregisterPlayPreviewMimeType(in AUTF8String mimeType);
 };
 
