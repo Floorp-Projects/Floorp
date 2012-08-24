@@ -171,7 +171,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPrototypeDocument)
                                                     nsXULPrototypeElement)
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mGlobalObject");
     cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObject*>(tmp->mGlobalObject));
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfoManager)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNodeInfoManager,
+                                                    nsNodeInfoManager)
     for (uint32_t i = 0; i < tmp->mPrototypeWaiters.Length(); ++i) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mPrototypeWaiters[i]");
         cb.NoteXPCOMChild(static_cast<nsINode*>(tmp->mPrototypeWaiters[i].get()));
