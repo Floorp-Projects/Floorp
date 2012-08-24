@@ -152,7 +152,7 @@ var UtteranceGenerator = {
     'outlineitem': INCLUDE_DESC,
     'pagetab': INCLUDE_DESC,
     'graphic': INCLUDE_DESC,
-    'pushbutton': INCLUDE_DESC | INCLUDE_NAME,
+    'pushbutton': INCLUDE_DESC,
     'checkbutton': INCLUDE_DESC,
     'radiobutton': INCLUDE_DESC,
     'combobox': INCLUDE_DESC,
