@@ -99,11 +99,10 @@ static
 nsresult GetCharsetDataImpl(const char * aCharset, const PRUnichar * aProp,
                             nsAString& aResult)
 {
-  if (aCharset == NULL)
-    return NS_ERROR_NULL_POINTER;
-  // aProp can be NULL
+  NS_ENSURE_ARG_POINTER(aCharset);
+  // aProp can be nullptr
 
-  if (sDataBundle == NULL) {
+  if (!sDataBundle) {
     nsresult rv = LoadExtensibleBundle(NS_DATA_BUNDLE_CATEGORY, &sDataBundle);
     if (NS_FAILED(rv))
       return rv;
@@ -224,9 +223,8 @@ nsresult GetList(const nsACString& aCategory,
                  const nsACString& aPrefix,
                  nsIUTF8StringEnumerator** aResult)
 {
-  if (aResult == NULL) 
-    return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nullptr;
 
   nsresult rv;
 
@@ -313,7 +311,7 @@ nsCharsetConverterManager::GetCharsetTitle(const char * aCharset,
 {
   NS_ENSURE_ARG_POINTER(aCharset);
 
-  if (sTitleBundle == NULL) {
+  if (!sTitleBundle) {
     nsresult rv = LoadExtensibleBundle(NS_TITLE_BUNDLE_CATEGORY, &sTitleBundle);
     NS_ENSURE_SUCCESS(rv, rv);
   }
