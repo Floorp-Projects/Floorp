@@ -220,14 +220,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
 
     let dummy_test_map = new WeakMap;
 
-    let div_fail = false;
-    try {
-      dummy_test_map.set(document.createElement("div").style, 1);
-    } catch (e) {
-      div_fail = true;
-    }
-    ok(div_fail, "Using elem.style as a weak map key should produce an exception because it can't be wrapper preserved.");
-
     let navi_fail = false;
     try {
       dummy_test_map.set(window.navigator, 1);
