@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include "IPC/IPCMessageUtils.h";
+
+using mozilla::void_t;
+
 namespace mozilla {
 namespace ipc {
 
@@ -37,7 +41,30 @@ union InputStreamParams
   StringInputStreamParams;
   FileInputStreamParams;
   PartialFileInputStreamParams;
+  BufferedInputStreamParams;
+  MIMEInputStreamParams;
   MultiplexInputStreamParams;
+};
+
+union OptionalInputStreamParams
+{
+  void_t;
+  InputStreamParams;
+};
+
+struct BufferedInputStreamParams
+{
+  OptionalInputStreamParams optionalStream;
+  uint32_t bufferSize;
+};
+
+struct MIMEInputStreamParams
+{
+  OptionalInputStreamParams optionalStream;
+  nsCString headers;
+  nsCString contentLength;
+  bool startedReading;
+  bool addContentLength;
 };
 
 } // namespace ipc

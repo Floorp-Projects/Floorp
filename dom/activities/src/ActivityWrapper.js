@@ -3,11 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
- 
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
- 
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function debug(aMsg) {
@@ -15,7 +15,7 @@ function debug(aMsg) {
 }
 
 /**
-  * nsISystemMessagesWrapper implementation. Will return a 
+  * nsISystemMessagesWrapper implementation. Will return a
   * nsIDOMMozActivityRequestHandler
   */
 function ActivityWrapper() {

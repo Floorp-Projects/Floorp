@@ -87,7 +87,7 @@ SmsManager::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(permMgr, nullptr);
 
-  PRUint32 permission = nsIPermissionManager::DENY_ACTION;
+  uint32_t permission = nsIPermissionManager::DENY_ACTION;
   permMgr->TestPermissionFromPrincipal(principal, "sms", &permission);
 
   if (permission != nsIPermissionManager::ALLOW_ACTION) {

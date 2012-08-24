@@ -23,6 +23,9 @@
 #include "nsAutoPtr.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsVoidArray.h"
+#include "mozilla/ipc/URIUtils.h"
+
+using namespace mozilla::ipc;
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
@@ -873,20 +876,6 @@ nsStandardURL::WriteSegment(nsIBinaryOutputStream *stream, const URLSegment &seg
     return NS_OK;
 }
 
-bool
-nsStandardURL::ReadSegment(const IPC::Message *aMsg, void **aIter, URLSegment &seg)
-{
-    return (IPC::ReadParam(aMsg, aIter, &seg.mPos) &&
-            IPC::ReadParam(aMsg, aIter, &seg.mLen));
-}
-
-void
-nsStandardURL::WriteSegment(IPC::Message *aMsg, const URLSegment &seg)
-{
-    IPC::WriteParam(aMsg, seg.mPos);
-    IPC::WriteParam(aMsg, seg.mLen);
-}
-
 /* static */ void
 nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 {
@@ -937,9 +926,9 @@ NS_INTERFACE_MAP_BEGIN(nsStandardURL)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileURL, mSupportsFileURL)
     NS_INTERFACE_MAP_ENTRY(nsIStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsISerializable)
-    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableObsolete)
     NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
     NS_INTERFACE_MAP_ENTRY(nsIMutable)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableURI)
     // see nsStandardURL::Equals
     if (aIID.Equals(kThisImplCID))
         foundInterface = static_cast<nsIURI *>(this);
@@ -2876,24 +2865,69 @@ nsStandardURL::Write(nsIObjectOutputStream *stream)
 }
 
 //---------------------------------------------------------------------------
-// nsStandardURL::nsIIPCSerializableObsolete
+// nsStandardURL::nsIIPCSerializableURI
 //---------------------------------------------------------------------------
 
-bool
-nsStandardURL::Read(const IPC::Message *aMsg, void **aIter)
+inline
+mozilla::ipc::StandardURLSegment
+ToIPCSegment(const nsStandardURL::URLSegment& aSegment)
 {
-    using IPC::ReadParam;
-    
+    return mozilla::ipc::StandardURLSegment(aSegment.mPos, aSegment.mLen);
+}
+
+inline
+nsStandardURL::URLSegment
+FromIPCSegment(const mozilla::ipc::StandardURLSegment& aSegment)
+{
+    return nsStandardURL::URLSegment(aSegment.position(), aSegment.length());
+}
+
+void
+nsStandardURL::Serialize(URIParams& aParams)
+{
+    StandardURLParams params;
+
+    params.urlType() = mURLType;
+    params.port() = mPort;
+    params.defaultPort() = mDefaultPort;
+    params.spec() = mSpec;
+    params.scheme() = ToIPCSegment(mScheme);
+    params.authority() = ToIPCSegment(mAuthority);
+    params.username() = ToIPCSegment(mUsername);
+    params.password() = ToIPCSegment(mPassword);
+    params.host() = ToIPCSegment(mHost);
+    params.path() = ToIPCSegment(mPath);
+    params.filePath() = ToIPCSegment(mFilepath);
+    params.directory() = ToIPCSegment(mDirectory);
+    params.baseName() = ToIPCSegment(mBasename);
+    params.extension() = ToIPCSegment(mExtension);
+    params.query() = ToIPCSegment(mQuery);
+    params.ref() = ToIPCSegment(mRef);
+    params.originCharset() = mOriginCharset;
+    params.isMutable() = !!mMutable;
+    params.supportsFileURL() = !!mSupportsFileURL;
+    params.hostEncoding() = mHostEncoding;
+    // mSpecEncoding and mHostA are just caches that can be recovered as needed.
+
+    aParams = params;
+}
+
+bool
+nsStandardURL::Deserialize(const URIParams& aParams)
+{
     NS_PRECONDITION(!mHostA, "Shouldn't have cached ASCII host");
     NS_PRECONDITION(mSpecEncoding == eEncoding_Unknown,
                     "Shouldn't have spec encoding here");
     NS_PRECONDITION(!mFile, "Shouldn't have cached file");
-    
-    uint32_t urlType;
-    if (!ReadParam(aMsg, aIter, &urlType))
+
+    if (aParams.type() != URIParams::TStandardURLParams) {
+        NS_ERROR("Received unknown parameters from the other process!");
         return false;
-    
-    mURLType = urlType;
+    }
+
+    const StandardURLParams& params = aParams.get_StandardURLParams();
+
+    mURLType = params.urlType();
     switch (mURLType) {
         case URLTYPE_STANDARD:
             mParser = net_GetStdURLParser();
@@ -2909,68 +2943,34 @@ nsStandardURL::Read(const IPC::Message *aMsg, void **aIter)
             return false;
     }
 
-    uint32_t hostEncoding;
-    bool isMutable, supportsFileURL;
-    if (!ReadParam(aMsg, aIter, &mPort) ||
-        !ReadParam(aMsg, aIter, &mDefaultPort) ||
-        !ReadParam(aMsg, aIter, &mSpec) ||
-        !ReadSegment(aMsg, aIter, mScheme) ||
-        !ReadSegment(aMsg, aIter, mAuthority) ||
-        !ReadSegment(aMsg, aIter, mUsername) ||
-        !ReadSegment(aMsg, aIter, mPassword) ||
-        !ReadSegment(aMsg, aIter, mHost) ||
-        !ReadSegment(aMsg, aIter, mPath) ||
-        !ReadSegment(aMsg, aIter, mFilepath) ||
-        !ReadSegment(aMsg, aIter, mDirectory) ||
-        !ReadSegment(aMsg, aIter, mBasename) ||
-        !ReadSegment(aMsg, aIter, mExtension) ||
-        !ReadSegment(aMsg, aIter, mQuery) ||
-        !ReadSegment(aMsg, aIter, mRef) ||
-        !ReadParam(aMsg, aIter, &mOriginCharset) ||
-        !ReadParam(aMsg, aIter, &isMutable) ||
-        !ReadParam(aMsg, aIter, &supportsFileURL) ||
-        !ReadParam(aMsg, aIter, &hostEncoding))
-        return false;
-
-    if (hostEncoding != eEncoding_ASCII && hostEncoding != eEncoding_UTF8) {
+    if (params.hostEncoding() != eEncoding_ASCII &&
+        params.hostEncoding() != eEncoding_UTF8) {
         NS_WARNING("Unexpected host encoding");
         return false;
     }
-    mHostEncoding = hostEncoding;
-    mMutable = isMutable;
-    mSupportsFileURL = supportsFileURL;
+
+    mPort = params.port();
+    mDefaultPort = params.defaultPort();
+    mSpec = params.spec();
+    mScheme = FromIPCSegment(params.scheme());
+    mAuthority = FromIPCSegment(params.authority());
+    mUsername = FromIPCSegment(params.username());
+    mPassword = FromIPCSegment(params.password());
+    mHost = FromIPCSegment(params.host());
+    mPath = FromIPCSegment(params.path());
+    mFilepath = FromIPCSegment(params.filePath());
+    mDirectory = FromIPCSegment(params.directory());
+    mBasename = FromIPCSegment(params.baseName());
+    mExtension = FromIPCSegment(params.extension());
+    mQuery = FromIPCSegment(params.query());
+    mRef = FromIPCSegment(params.ref());
+    mOriginCharset = params.originCharset();
+    mMutable = params.isMutable();
+    mSupportsFileURL = params.supportsFileURL();
+    mHostEncoding = params.hostEncoding();
 
     // mSpecEncoding and mHostA are just caches that can be recovered as needed.
-
     return true;
-}
-
-void
-nsStandardURL::Write(IPC::Message *aMsg)
-{
-    using IPC::WriteParam;
-    
-    WriteParam(aMsg, mURLType);
-    WriteParam(aMsg, mPort);
-    WriteParam(aMsg, mDefaultPort);
-    WriteParam(aMsg, mSpec);
-    WriteSegment(aMsg, mScheme);
-    WriteSegment(aMsg, mAuthority);
-    WriteSegment(aMsg, mUsername);
-    WriteSegment(aMsg, mPassword);
-    WriteSegment(aMsg, mHost);
-    WriteSegment(aMsg, mPath);
-    WriteSegment(aMsg, mFilepath);
-    WriteSegment(aMsg, mDirectory);
-    WriteSegment(aMsg, mBasename);
-    WriteSegment(aMsg, mExtension);
-    WriteSegment(aMsg, mQuery);
-    WriteSegment(aMsg, mRef);
-    WriteParam(aMsg, mOriginCharset);
-    WriteParam(aMsg, bool(mMutable));
-    WriteParam(aMsg, bool(mSupportsFileURL));
-    WriteParam(aMsg, mHostEncoding);
-    // mSpecEncoding and mHostA are just caches that can be recovered as needed.
 }
 
 //----------------------------------------------------------------------------
@@ -3057,4 +3057,3 @@ size_t
 nsStandardURL::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
-

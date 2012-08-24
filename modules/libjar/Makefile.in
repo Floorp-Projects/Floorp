@@ -37,4 +37,6 @@ XPIDLSRCS	= $(MODULES_LIBJAR_LXPIDLSRCS)
 
 EXPORTS		= $(MODULES_LIBJAR_LEXPORTS)
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

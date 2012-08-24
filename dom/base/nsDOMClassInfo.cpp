@@ -543,6 +543,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #undef None // something included above defines this preprocessor symbol, maybe Xlib headers
 #include "WebGLContext.h"
 #include "nsICanvasRenderingContextInternal.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -4575,11 +4576,12 @@ nsDOMClassInfo::Init()
   sDisableGlobalScopePollutionSupport =
     Preferences::GetBool("browser.dom.global_scope_pollution.disabled");
 
-  // Proxy bindings
-  mozilla::dom::binding::Register(nameSpaceManager);
-
   // Non-proxy bindings
   mozilla::dom::Register(nameSpaceManager);
+
+  // This needs to happen after the call to mozilla::dom::Register, because we
+  // overwrite some values.
+  mozilla::dom::oldproxybindings::Register(nameSpaceManager);
 
   if (!AzureCanvasEnabled()) {
     nameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING("CanvasRenderingContext2D"), NULL);
@@ -6746,7 +6748,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       name_struct->mType == nsGlobalNameStruct::eTypeClassProto ||
       name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
     // Lookup new DOM bindings.
-    mozilla::dom::binding::DefineInterface define =
+    mozilla::dom::DefineInterface define =
       name_struct->mDefineDOMInterface;
     if (define) {
       if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
@@ -6754,7 +6756,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
         return NS_OK;
       }
 
-      if (mozilla::dom::binding::DefineConstructor(cx, obj, define, &rv)) {
+      if (mozilla::dom::DefineConstructor(cx, obj, define, &rv)) {
         *did_resolve = NS_SUCCEEDED(rv);
 
         return rv;
@@ -8791,9 +8793,9 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
   if (!JSVAL_IS_PRIMITIVE(collection)) {
     // We already have a node list in our reserved slot, use it.
     JSObject *obj = JSVAL_TO_OBJECT(collection);
-    if (mozilla::dom::binding::HTMLCollection::objIsWrapper(obj)) {
+    if (mozilla::dom::oldproxybindings::HTMLCollection::objIsWrapper(obj)) {
       nsIHTMLCollection *native =
-        mozilla::dom::binding::HTMLCollection::getNative(obj);
+        mozilla::dom::oldproxybindings::HTMLCollection::getNative(obj);
       NS_ADDREF(*nodeList = static_cast<nsContentList*>(native));
     }
     else {

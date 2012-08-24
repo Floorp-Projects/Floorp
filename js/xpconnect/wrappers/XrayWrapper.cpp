@@ -1057,7 +1057,7 @@ DOMXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject 
 {
     JSObject *obj = getInnerObject(wrapper);
     const NativePropertyHooks *nativeHooks =
-        DOMJSClass::FromJSClass(JS_GetClass(obj))->mNativeHooks;
+        DOMJSClass::FromJSClass(JS_GetClass(obj))->mClass.mNativeHooks;
 
     do {
         if (nativeHooks->mResolveProperty(cx, wrapper, id, set, desc) &&
@@ -1108,7 +1108,7 @@ DOMXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
 
     JSObject *obj = getInnerObject(wrapper);
     const NativePropertyHooks *nativeHooks =
-        DOMJSClass::FromJSClass(JS_GetClass(obj))->mNativeHooks;
+        DOMJSClass::FromJSClass(JS_GetClass(obj))->mClass.mNativeHooks;
 
     do {
         if (!nativeHooks->mEnumerateProperties(props)) {
@@ -1184,7 +1184,7 @@ XrayToString(JSContext *cx, unsigned argc, jsval *vp)
 
     nsAutoString result(NS_LITERAL_STRING("[object XrayWrapper "));
     JSObject *obj = &js::GetProxyPrivate(wrapper).toObject();
-    if (mozilla::dom::binding::instanceIsProxy(obj)) {
+    if (IsDOMProxy(obj) || oldproxybindings::instanceIsProxy(obj)) {
         JSString *wrapperStr = js::GetProxyHandler(wrapper)->obj_toString(cx, wrapper);
         size_t length;
         const jschar* chars = JS_GetStringCharsAndLength(cx, wrapperStr, &length);

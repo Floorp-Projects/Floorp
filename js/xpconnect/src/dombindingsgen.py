@@ -375,7 +375,7 @@ def writeHeaderFile(filename, config):
 
         f.write("namespace mozilla {\n"
                 "namespace dom {\n"
-                "namespace binding {\n\n")
+                "namespace oldproxybindings {\n\n")
         f.write("bool\n"
                 "DefinePropertyStaticJSVals(JSContext *cx);\n\n")
 
@@ -638,7 +638,7 @@ def writeStubFile(filename, config, interfaces):
 
         f.write("namespace mozilla {\n"
                 "namespace dom {\n"
-                "namespace binding {\n\n")
+                "namespace oldproxybindings {\n\n")
 
         f.write("// Property name ids\n\n")
 
@@ -712,7 +712,7 @@ def writeStubFile(filename, config, interfaces):
                     else:
                         setterName = "NULL"
 
-                    propertiesList.append("    { s_length_id, length_getter, %s }" % setterName)
+                    propertiesList.append("    { mozilla::dom::s_length_id, length_getter, %s }" % setterName)
                     continue
 
                 isAttr = (member.kind == 'attribute')
