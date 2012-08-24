@@ -102,14 +102,12 @@ public:
 
  */
 
-class nsXULPrototypeNode : public nsISupports
+class nsXULPrototypeNode
 {
 public:
     enum Type { eType_Element, eType_Script, eType_Text, eType_PI };
 
     Type                     mType;
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
@@ -135,7 +133,8 @@ public:
      */
     virtual void ReleaseSubtree() { }
 
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXULPrototypeNode)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsXULPrototypeNode)
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsXULPrototypeNode)
 
 protected:
     nsXULPrototypeNode(Type aType)
