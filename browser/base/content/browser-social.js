@@ -432,15 +432,17 @@ var SocialToolbar = {
       notificationFrame.contentDocument.documentElement.dispatchEvent(evt);
     }
 
-    panel.addEventListener("popuphiding", function onpopuphiding() {
-      panel.removeEventListener("popuphiding", onpopuphiding);
+    panel.addEventListener("popuphidden", function onpopuphiding() {
+      panel.removeEventListener("popuphidden", onpopuphiding);
       SocialToolbar.button.removeAttribute("open");
+      notificationFrame.docShell.isActive = false;
       dispatchPanelEvent("socialFrameHide");
     });
 
     panel.addEventListener("popupshown", function onpopupshown() {
       panel.removeEventListener("popupshown", onpopupshown);
       SocialToolbar.button.setAttribute("open", "true");
+      notificationFrame.docShell.isActive = true;
       notificationFrame.docShell.isAppTab = true;
       if (notificationFrame.contentDocument.readyState == "complete") {
         dispatchPanelEvent("socialFrameShow");
