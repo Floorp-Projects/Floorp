@@ -173,3 +173,16 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Should not allow indirectly inheriting from an interface that indirectly implements us")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A;
+            interface B : A {};
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow inheriting from an interface that is only forward declared")
