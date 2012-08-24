@@ -472,7 +472,7 @@ else
 ifdef ($(OS_ARCH),Darwin)
 RUN_FROM_PWD = DYLD_LIBRARY_PATH=$(PRECOMPILE_GRE)
 else
-RUN_FROM_PWD = LD_LIBRARY_PATH=$(PRECOMPILE_GRE)
+RUN_FROM_PWD = "$$PWD/run-mozilla.sh"
 endif
 endif
 
