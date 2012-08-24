@@ -24,11 +24,11 @@ enum {
 
 template<typename T> struct Prefable;
 
-class DOMProxyHandler : public js::BaseProxyHandler
+class DOMProxyHandler : public DOMBaseProxyHandler
 {
 public:
   DOMProxyHandler(const DOMClass& aClass)
-    : js::BaseProxyHandler(ProxyFamily()),
+    : DOMBaseProxyHandler(true),
       mClass(aClass)
   {
   }
