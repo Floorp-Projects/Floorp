@@ -920,15 +920,12 @@ NodeBuilder::tryStatement(Value body, NodeVector &guarded, Value unguarded, Valu
                           TokenPos *pos, Value *dst)
 {
     Value guardedHandlers;
-
-    Value cb = callbacks[AST_TRY_STMT];
-    if (!cb.isNull()) {
-        return newArray(guarded, &guardedHandlers) &&
-               callback(cb, body, guardedHandlers, unguarded, opt(finally), pos, dst);
-    }
-
     if (!newArray(guarded, &guardedHandlers))
         return false;
+
+    Value cb = callbacks[AST_TRY_STMT];
+    if (!cb.isNull())
+        return callback(cb, body, guardedHandlers, unguarded, opt(finally), pos, dst);
 
     return newNode(AST_TRY_STMT, pos,
                    "block", body,
