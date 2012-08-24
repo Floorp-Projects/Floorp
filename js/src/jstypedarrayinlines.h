@@ -13,11 +13,25 @@
 
 #include "jsobjinlines.h"
 
+inline void
+js::ArrayBufferObject::setElementsHeader(js::ObjectElements *header, uint32_t bytes)
+{
+    /*
+     * Note that |bytes| may not be a multiple of |sizeof(Value)|, so
+     * |capacity * sizeof(Value)| may underestimate the size by up to
+     * |sizeof(Value) - 1| bytes.
+     */
+    header->capacity = bytes / sizeof(js::Value);
+    header->initializedLength = bytes;
+    header->length = 0;
+    header->unused = 0;
+}
+
 inline uint32_t
 js::ArrayBufferObject::byteLength() const
 {
     JS_ASSERT(isArrayBuffer());
-    return getElementsHeader()->length;
+    return getElementsHeader()->initializedLength;
 }
 
 inline uint8_t *
@@ -231,6 +245,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     dvobj.setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
     dvobj.setFixedSlot(BYTELENGTH_SLOT, Int32Value(byteLength));
     dvobj.setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
+    dvobj.setFixedSlot(NEXT_VIEW_SLOT, NullValue());
     InitTypedArrayDataPointer(obj, arrayBuffer, byteOffset);
     JS_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
 
@@ -264,11 +279,11 @@ DataViewObject::dataPointer()
     return getPrivate();
 }
 
-inline JSObject &
+inline ArrayBufferObject &
 DataViewObject::arrayBuffer()
 {
     JS_ASSERT(isDataView());
-    return getReservedSlot(BUFFER_SLOT).toObject();
+    return getReservedSlot(BUFFER_SLOT).toObject().asArrayBuffer();
 }
 
 inline bool
