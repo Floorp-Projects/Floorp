@@ -40,7 +40,7 @@ _BROWSER_FILES = \
 		browser_inspector_cmd_inspect.js \
 		browser_inspector_cmd_inspect.html \
 		head.js \
-		helper.js \
+		helpers.js \
 		$(NULL)
 
 libs::	$(_BROWSER_FILES)

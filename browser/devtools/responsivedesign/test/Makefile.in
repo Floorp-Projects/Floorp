@@ -50,7 +50,7 @@ _BROWSER_FILES = \
 		browser_responsive_cmd.js \
 		browser_responsivecomputedview.js \
 		head.js \
-		helper.js \
+		helpers.js \
 		$(NULL)
 
 
