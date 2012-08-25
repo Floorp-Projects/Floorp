@@ -177,7 +177,7 @@
 
        // Special case: these functions are used by the
        // finalizer
-       let _CloseHandle =
+       let _CloseHandle = WinFile._CloseHandle =
          libc.declare("CloseHandle", ctypes.winapi_abi,
                         /*return */ctypes.bool,
                         /*handle*/ ctypes.voidptr_t);
