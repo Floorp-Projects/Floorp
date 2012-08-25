@@ -522,7 +522,7 @@
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="large"
-             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,home-button,bookmarks-menu-button-container,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,downloads-button,home-button,bookmarks-menu-button-container,window-controls"
              context="toolbar-context-menu">
 
       <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
@@ -937,8 +937,8 @@
                      tooltiptext="&printButton.tooltip;"/>
 
       <!-- This is a placeholder for the Downloads Indicator.  It is visible
-           only during the customization of the toolbar or in the palette, and
-           is replaced when customization is done. -->
+           during the customization of the toolbar, in the palette, and before
+           the Downloads Indicator overlay is loaded. -->
       <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      observes="Tools:Downloads"
                      ondrop="DownloadsButtonDNDObserver.onDrop(event)"
