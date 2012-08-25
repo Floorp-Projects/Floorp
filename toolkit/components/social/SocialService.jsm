@@ -97,6 +97,7 @@ const SocialService = {
     SocialServiceInternal.enabled = enable;
     MozSocialAPI.enabled = enable;
     Services.obs.notifyObservers(null, "social:pref-changed", enable ? "enabled" : "disabled");
+    Services.telemetry.getHistogramById("SOCIAL_TOGGLED").add(enable);
   },
 
   // Adds a provider given a manifest, and returns the added provider.
