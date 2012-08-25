@@ -88,8 +88,26 @@ function waitForCondition(condition, nextTest, errorMsg) {
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
+// Check that a specified (string) URL hasn't been "remembered" (ie, is not
+// in history, will not appear in about:newtab or auto-complete, etc.)
+function ensureSocialUrlNotRemembered(url) {
+  let gh = Cc["@mozilla.org/browser/global-history;2"]
+           .getService(Ci.nsIGlobalHistory2);
+  let uri = Services.io.newURI(url, null, null);
+  ok(!gh.isVisited(uri), "social URL " + url + " should not be in global history");
+}
+
 function runSocialTestWithProvider(manifest, callback) {
   let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+
+  // Check that none of the provider's content ends up in history.
+  registerCleanupFunction(function () {
+    for (let what of ['sidebarURL', 'workerURL', 'iconURL']) {
+      if (manifest[what]) {
+        ensureSocialUrlNotRemembered(manifest[what]);
+      }
+    }
+  });
 
   info("runSocialTestWithProvider: " + manifest.toSource());
 

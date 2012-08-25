@@ -3444,14 +3444,6 @@ stack[anonid=browserStack][responsivemode] {
   text-decoration: underline;
 }
 
-#social-notification-panel {
-  min-height: 100px;
-  min-width: 100px;
-  max-height: 600px;
-  max-width: 400px;
-}
-
-
 .chat-status-icon {
   max-height: 16px;
   max-width: 16px;

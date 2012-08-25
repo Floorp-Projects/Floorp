@@ -65,15 +65,6 @@ DefineStaticJSVals(JSContext *cx)
 }
 
 
-int HandlerFamily;
-
-struct SetListBaseInformation
-{
-    SetListBaseInformation() {
-        js::SetListBaseInformation((void*) &HandlerFamily, js::JSSLOT_PROXY_EXTRA + JSPROXYSLOT_EXPANDO);
-    }
-} gSetListBaseInformation;
-
 JSBool
 Throw(JSContext *cx, nsresult rv)
 {

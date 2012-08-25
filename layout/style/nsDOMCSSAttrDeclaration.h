@@ -23,7 +23,7 @@ class Element;
 }
 }
 
-class nsDOMCSSAttributeDeclaration : public nsDOMCSSDeclaration
+class nsDOMCSSAttributeDeclaration MOZ_FINAL : public nsDOMCSSDeclaration
 {
 public:
   typedef mozilla::dom::Element Element;

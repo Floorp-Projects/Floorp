@@ -164,10 +164,19 @@ public:
   NS_DECL_NSIDOMCSSSTYLEDECLARATION
   NS_DECL_NSICSSDECLARATION
 
+  nsCSSFontFaceStyleDecl()
+  {
+    SetIsDOMBinding();
+  }
+
   virtual nsINode *GetParentObject();
+  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName);
 
   nsresult GetPropertyValue(nsCSSFontDesc aFontDescID,
                             nsAString & aResult) const;
+
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
+                               bool *triedToWrap);
 
 protected:
   friend class nsCSSFontFaceRule;

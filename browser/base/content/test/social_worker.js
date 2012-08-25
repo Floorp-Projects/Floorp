@@ -18,7 +18,8 @@ onconnect = function(e) {
           testPort.postMessage({topic:"got-sidebar-message"});
         break;
       case "service-window-message":
-        testPort.postMessage({topic:"got-service-window-message"});
+        testPort.postMessage({topic:"got-service-window-message",
+                              location: event.data.location});
         break;
       case "service-window-closed-message":
         testPort.postMessage({topic:"got-service-window-closed-message"});
@@ -37,7 +38,9 @@ onconnect = function(e) {
         break;
       case "panel-message":
         if (testPort && event.data.result == "ok")
-          testPort.postMessage({topic:"got-panel-message"});
+          testPort.postMessage({topic:"got-panel-message",
+                                location: event.data.location
+                               });
         break;
       case "status-panel-visibility":
         testPort.postMessage({topic:"got-social-panel-visibility", result: event.data.result });
@@ -51,11 +54,23 @@ onconnect = function(e) {
       case "chatbox-visibility":
         testPort.postMessage({topic:"got-chatbox-visibility", result: event.data.result});
         break;
+      case "test-flyout-open":
+        sidebarPort.postMessage({topic:"test-flyout-open"});
+        break;
+      case "flyout-message":
+        testPort.postMessage({topic:"got-flyout-message", result: event.data.result});
+        break;
+      case "flyout-visibility":
+        testPort.postMessage({topic:"got-flyout-visibility", result: event.data.result});
+        break;
       case "social.initialize":
         // This is the workerAPI port, respond and set up a notification icon.
         port.postMessage({topic: "social.initialize-response"});
         let profile = {
-          userName: "foo"
+          portrait: "https://example.com/portrait.jpg",
+          userName: "trickster",
+          displayName: "Kuma Lisa",
+          profileURL: "http://en.wikipedia.org/wiki/Kuma_Lisa"
         };
         port.postMessage({topic: "social.user-profile", data: profile});
         let icon = {

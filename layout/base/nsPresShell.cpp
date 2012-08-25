@@ -2368,12 +2368,6 @@ PresShell::GetPageSequenceFrame() const
   return do_QueryFrame(frame);
 }
 
-nsIFrame*
-PresShell::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt)
-{
-  return nsLayoutUtils::GetFrameForPoint(aFrame, aPt);
-}
-
 void
 PresShell::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
