@@ -1007,6 +1007,8 @@ pref("devtools.inspector.htmlHeight", 112);
 pref("devtools.inspector.htmlPanelOpen", false);
 pref("devtools.inspector.sidebarOpen", false);
 pref("devtools.inspector.activeSidebar", "ruleview");
+pref("devtools.inspector.highlighterShowVeil", true);
+pref("devtools.inspector.highlighterShowInfobar", true);
 
 // Enable the Layout View
 pref("devtools.layoutview.enabled", true);

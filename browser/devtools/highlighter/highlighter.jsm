@@ -66,11 +66,11 @@ const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
  *   // Is a node highlightable.
  *   boolean isNodeHighlightable(aNode);
  *
- *   // Show/hide the outline and the infobar
+ *   // Show/hide the veil and the infobar
  *   void showInfobar();
  *   void hideInfobar();
- *   void showOutline();
- *   void hideOutline();
+ *   void showVeil();
+ *   void hideVeil();
  *
  *   // Add/Remove listeners
  *   // @param aEvent - event name
@@ -86,24 +86,14 @@ const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
  *   "locked" - The selected node has been locked
  *   "unlocked" - The selected ndoe has been unlocked
  *   "pseudoclasstoggled" - A pseudo-class lock has changed on the selected node
+
  *
  * Structure:
- *  <stack id="highlighter-container">
- *    <box id="highlighter-outline-container">
- *      <box id="highlighter-outline" locked="true/false"/>
- *    </box>
- *    <box id="highlighter-controls">
- *      <box id="highlighter-nodeinfobar-container" position="top/bottom" locked="true/false">
- *        <box class="highlighter-nodeinfobar-arrow" id="highlighter-nodeinfobar-arrow-top"/>
- *        <hbox id="highlighter-nodeinfobar">
- *          <toolbarbutton id="highlighter-nodeinfobar-inspectbutton" class="highlighter-nodeinfobar-button"/>
- *          <hbox id="highlighter-nodeinfobar-text">tagname#id.class1.class2</hbox>
- *          <toolbarbutton id="highlighter-nodeinfobar-menu" class="highlighter-nodeinfobar-button">…</toolbarbutton>
- *        </hbox>
- *        <box class="highlighter-nodeinfobar-arrow" id="highlighter-nodeinfobar-arrow-bottom"/>
- *      </box>
- *    </box>
- *  </stack>
+ *
+ *   <stack id="highlighter-container">
+ *     <vbox id="highlighter-veil-container">...</vbox>
+ *     <box id="highlighter-controls>...</vbox>
+ *   </stack>
  *
  */
 
@@ -134,28 +124,26 @@ Highlighter.prototype = {
     this.highlighterContainer = this.chromeDoc.createElement("stack");
     this.highlighterContainer.id = "highlighter-container";
 
-    this.outline = this.chromeDoc.createElement("box");
-    this.outline.id = "highlighter-outline";
-
-    let outlineContainer = this.chromeDoc.createElement("box");
-    outlineContainer.appendChild(this.outline);
-    outlineContainer.id = "highlighter-outline-container";
+    this.veilContainer = this.chromeDoc.createElement("vbox");
+    this.veilContainer.id = "highlighter-veil-container";
 
     // The controlsBox will host the different interactive
     // elements of the highlighter (buttons, toolbars, ...).
     let controlsBox = this.chromeDoc.createElement("box");
     controlsBox.id = "highlighter-controls";
-    this.highlighterContainer.appendChild(outlineContainer);
+    this.highlighterContainer.appendChild(this.veilContainer);
     this.highlighterContainer.appendChild(controlsBox);
 
     stack.appendChild(this.highlighterContainer);
 
-    this.showOutline();
+    // The veil will make the whole page darker except
+    // for the region of the selected box.
+    this.buildVeil(this.veilContainer);
+    this.showVeil();
 
     this.buildInfobar(controlsBox);
 
     this.transitionDisabler = null;
-    this.pageEventsMuter = null;
 
     this.computeZoomFactor();
     this.unlock();
@@ -171,12 +159,15 @@ Highlighter.prototype = {
     this.detachPageListeners();
 
     this.chromeWin.clearTimeout(this.transitionDisabler);
-    this.chromeWin.clearTimeout(this.pageEventsMuter);
     this.boundCloseEventHandler = null;
     this._contentRect = null;
     this._highlightRect = null;
     this._highlighting = false;
-    this.outline = null;
+    this.veilTopBox = null;
+    this.veilLeftBox = null;
+    this.veilMiddleBox = null;
+    this.veilTransparentBox = null;
+    this.veilContainer = null;
     this.node = null;
     this.nodeInfo = null;
     this.highlighterContainer.parentNode.removeChild(this.highlighterContainer);
@@ -192,7 +183,7 @@ Highlighter.prototype = {
   },
 
   /**
-   * Show the outline, and select a node.
+   * Show the veil, and select a node.
    * If no node is specified, the previous selected node is highlighted if any.
    * If no node was selected, the root element is selected.
    *
@@ -277,21 +268,20 @@ Highlighter.prototype = {
    */
   show: function() {
     if (!this.hidden) return;
-    this.showOutline();
-    this.showInfobar();
-    this.computeZoomFactor();
+    this.veilContainer.removeAttribute("hidden");
+    this.nodeInfo.container.removeAttribute("hidden");
     this.attachPageListeners();
     this.invalidateSize();
     this.hidden = false;
   },
 
   /**
-   * Hide the highlighter, the outline and the infobar.
+   * Hide the highlighter, the veil and the infobar.
    */
   hide: function() {
     if (this.hidden) return;
-    this.hideOutline();
-    this.hideInfobar();
+    this.veilContainer.setAttribute("hidden", "true");
+    this.nodeInfo.container.setAttribute("hidden", "true");
     this.detachPageListeners();
     this.hidden = true;
   },
@@ -310,7 +300,7 @@ Highlighter.prototype = {
    */
   lock: function() {
     if (this.locked === true) return;
-    this.outline.setAttribute("locked", "true");
+    this.veilContainer.setAttribute("locked", "true");
     this.nodeInfo.container.setAttribute("locked", "true");
     this.detachMouseListeners();
     this.locked = true;
@@ -323,11 +313,10 @@ Highlighter.prototype = {
    */
   unlock: function() {
     if (this.locked === false) return;
-    this.outline.removeAttribute("locked");
+    this.veilContainer.removeAttribute("locked");
     this.nodeInfo.container.removeAttribute("locked");
     this.attachMouseListeners();
     this.locked = false;
-    this.showOutline();
     this.emitEvent("unlocked");
   },
 
@@ -352,36 +341,88 @@ Highlighter.prototype = {
   },
 
   /**
-   * Hide the infobar
+   * Hide the veil
    */
-   hideInfobar: function Highlighter_hideInfobar() {
-     this.nodeInfo.container.setAttribute("force-transitions", "true");
-     this.nodeInfo.container.setAttribute("hidden", "true");
+   hideVeil: function Highlighter_hideVeil() {
+     this.veilContainer.removeAttribute("dim");
    },
 
   /**
-   * Show the infobar
+   * Show the veil
    */
-   showInfobar: function Highlighter_showInfobar() {
-     this.nodeInfo.container.removeAttribute("hidden");
-     this.moveInfobar();
-     this.nodeInfo.container.removeAttribute("force-transitions");
+   showVeil: function Highlighter_showVeil() {
+     this.veilContainer.setAttribute("dim", "true");
    },
 
-  /**
-   * Hide the outline
-   */
-   hideOutline: function Highlighter_hideOutline() {
-     this.outline.setAttribute("hidden", "true");
-   },
+   /**
+    * Hide the infobar
+    */
+    hideInfobar: function Highlighter_hideInfobar() {
+      this.nodeInfo.container.setAttribute("hidden", "true");
+    },
+
+   /**
+    * Show the infobar
+    */
+    showInfobar: function Highlighter_showInfobar() {
+      this.nodeInfo.container.removeAttribute("hidden");
+      this.moveInfobar();
+    },
 
   /**
-   * Show the outline
+   * Build the veil:
+   *
+   * <vbox id="highlighter-veil-container">
+   *   <box id="highlighter-veil-topbox" class="highlighter-veil"/>
+   *   <hbox id="highlighter-veil-middlebox">
+   *     <box id="highlighter-veil-leftbox" class="highlighter-veil"/>
+   *     <box id="highlighter-veil-transparentbox"/>
+   *     <box id="highlighter-veil-rightbox" class="highlighter-veil"/>
+   *   </hbox>
+   *   <box id="highlighter-veil-bottombox" class="highlighter-veil"/>
+   * </vbox>
+   *
+   * @param nsIDOMElement aParent
+   *        The container of the veil boxes.
    */
-   showOutline: function Highlighter_showOutline() {
-     if (this._highlighting)
-       this.outline.removeAttribute("hidden");
-   },
+  buildVeil: function Highlighter_buildVeil(aParent)
+  {
+    // We will need to resize these boxes to surround a node.
+    // See highlightRectangle().
+
+    this.veilTopBox = this.chromeDoc.createElement("box");
+    this.veilTopBox.id = "highlighter-veil-topbox";
+    this.veilTopBox.className = "highlighter-veil";
+
+    this.veilMiddleBox = this.chromeDoc.createElement("hbox");
+    this.veilMiddleBox.id = "highlighter-veil-middlebox";
+
+    this.veilLeftBox = this.chromeDoc.createElement("box");
+    this.veilLeftBox.id = "highlighter-veil-leftbox";
+    this.veilLeftBox.className = "highlighter-veil";
+
+    this.veilTransparentBox = this.chromeDoc.createElement("box");
+    this.veilTransparentBox.id = "highlighter-veil-transparentbox";
+
+    // We don't need any references to veilRightBox and veilBottomBox.
+    // These boxes are automatically resized (flex=1)
+
+    let veilRightBox = this.chromeDoc.createElement("box");
+    veilRightBox.id = "highlighter-veil-rightbox";
+    veilRightBox.className = "highlighter-veil";
+
+    let veilBottomBox = this.chromeDoc.createElement("box");
+    veilBottomBox.id = "highlighter-veil-bottombox";
+    veilBottomBox.className = "highlighter-veil";
+
+    this.veilMiddleBox.appendChild(this.veilLeftBox);
+    this.veilMiddleBox.appendChild(this.veilTransparentBox);
+    this.veilMiddleBox.appendChild(veilRightBox);
+
+    aParent.appendChild(this.veilTopBox);
+    aParent.appendChild(this.veilMiddleBox);
+    aParent.appendChild(veilBottomBox);
+  },
 
   /**
    * Build the node Infobar.
@@ -563,15 +604,14 @@ Highlighter.prototype = {
     if (aRectScaled.left >= 0 && aRectScaled.top >= 0 &&
         aRectScaled.width > 0 && aRectScaled.height > 0) {
 
-      this.showOutline();
+      this.veilTransparentBox.style.visibility = "visible";
 
       // The bottom div and the right div are flexibles (flex=1).
       // We don't need to resize them.
-      let top = "top:" + aRectScaled.top + "px;";
-      let left = "left:" + aRectScaled.left + "px;";
-      let width = "width:" + aRectScaled.width + "px;";
-      let height = "height:" + aRectScaled.height + "px;";
-      this.outline.setAttribute("style", top + left + width + height);
+      this.veilTopBox.style.height = aRectScaled.top + "px";
+      this.veilLeftBox.style.width = aRectScaled.left + "px";
+      this.veilMiddleBox.style.height = aRectScaled.height + "px";
+      this.veilTransparentBox.style.width = aRectScaled.width + "px";
 
       this._highlighting = true;
     } else {
@@ -590,7 +630,9 @@ Highlighter.prototype = {
   unhighlight: function Highlighter_unhighlight()
   {
     this._highlighting = false;
-    this.hideOutline();
+    this.veilMiddleBox.style.height = 0;
+    this.veilTransparentBox.style.width = 0;
+    this.veilTransparentBox.style.visibility = "hidden";
   },
 
   /**
@@ -784,7 +826,6 @@ Highlighter.prototype = {
         this.handleClick(aEvent);
         break;
       case "mousemove":
-        this.brieflyIgnorePageEvents();
         this.handleMouseMove(aEvent);
         break;
       case "resize":
@@ -810,46 +851,18 @@ Highlighter.prototype = {
    */
   brieflyDisableTransitions: function Highlighter_brieflyDisableTransitions()
   {
-    if (this.transitionDisabler) {
-      this.chromeWin.clearTimeout(this.transitionDisabler);
-    } else {
-      this.outline.setAttribute("disable-transitions", "true");
-      this.nodeInfo.container.setAttribute("disable-transitions", "true");
-    }
-    this.transitionDisabler =
-      this.chromeWin.setTimeout(function() {
-        this.outline.removeAttribute("disable-transitions");
-        this.nodeInfo.container.removeAttribute("disable-transitions");
-        this.transitionDisabler = null;
-      }.bind(this), 500);
-  },
-
-  /**
-   * Don't listen to page events while inspecting with the mouse.
-   */
-  brieflyIgnorePageEvents: function Highlighter_brieflyIgnorePageEvents()
-  {
-    // The goal is to keep smooth animations while inspecting.
-    // CSS Transitions might be interrupted because of a MozAfterPaint
-    // event that would triger an invalidateSize() call.
-    // So we don't listen to events that would trigger an invalidateSize()
-    // call.
-    //
-    // Side effect, zoom levels are not updated during this short period.
-    // It's very unlikely this would happen, but just in case, we call
-    // computeZoomFactor() when reattaching the events.
-    if (this.pageEventsMuter) {
-      this.chromeWin.clearTimeout(this.pageEventsMuter);
-    } else {
-      this.detachPageListeners();
-    }
-    this.pageEventsMuter =
-      this.chromeWin.setTimeout(function() {
-        this.attachPageListeners();
-        // Just in case the zoom level changed while ignoring the paint events
-        this.computeZoomFactor();
-        this.pageEventsMuter = null;
-      }.bind(this), 500);
+   if (this.transitionDisabler) {
+     this.chromeWin.clearTimeout(this.transitionDisabler);
+   } else {
+     this.veilContainer.setAttribute("disable-transitions", "true");
+     this.nodeInfo.container.setAttribute("disable-transitions", "true");
+   }
+   this.transitionDisabler =
+     this.chromeWin.setTimeout(function() {
+       this.veilContainer.removeAttribute("disable-transitions");
+       this.nodeInfo.container.removeAttribute("disable-transitions");
+       this.transitionDisabler = null;
+     }.bind(this), 500);
   },
 
   /**
@@ -898,7 +911,8 @@ XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils)
 });
 
-XPCOMUtils.defineLazyGetter(Highlighter.prototype, "strings", function () {
+XPCOMUtils.defineLazyGetter(Highlighter.prototype, "strings",
+  function () {
     return Services.strings.createBundle(
             "chrome://browser/locale/devtools/inspector.properties");
-});
+  });

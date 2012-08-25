@@ -2652,15 +2652,19 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 /* Highlighter */
 
-#highlighter-outline {
-  box-shadow: 0 0 0 1px black;
-  outline: 1px dashed white;
+.highlighter-veil {
+  background-color: rgba(25, 25, 25, 0.5);
+}
+
+#highlighter-veil-transparentbox {
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+  outline: 1px dashed rgba(255,255,255,0.5);
   outline-offset: -1px;
 }
 
-#highlighter-outline[locked]  {
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
-  outline-color: rgba(255,255,255,0.7);
+#highlighter-veil-container[locked] > #highlighter-veil-middlebox > #highlighter-veil-transparentbox {
+  box-shadow: 0 0 0 1px black;
+  outline-color: white;
 }
 
 /* Highlighter toolbar */
@@ -2671,6 +2675,18 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 #inspector-inspect-toolbutton[checked=true] {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+#inspector-option-toolbarbutton {
+  -moz-appearance: none;
+  -moz-margin-end: 6px;
+  list-style-image: url("chrome://browser/skin/devtools/inspector-option-icon.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  border: none;
+}
+
+#inspector-option-toolbarbutton[open] {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
