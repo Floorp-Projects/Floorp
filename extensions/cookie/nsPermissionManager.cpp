@@ -93,6 +93,24 @@ ArenaStrDup(const char* str, PLArenaPool* aArena)
   return static_cast<char*>(mem);
 }
 
+namespace {
+
+nsresult
+GetPrincipalForHost(const nsACString& aHost, nsIPrincipal** aPrincipal)
+{
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> uri;
+  // NOTE: we use "http://" as a protocal but we will just use the host so it
+  // doesn't really matter.
+  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + aHost);
+
+  return secMan->GetNoAppCodebasePrincipal(uri, aPrincipal);
+}
+
+} // anonymous namespace
+
 nsHostEntry::nsHostEntry(const char* aHost)
 {
   mHost = ArenaStrDup(aHost, gHostArena);
@@ -284,7 +302,12 @@ nsPermissionManager::Init()
 
     for (uint32_t i = 0; i < perms.Length(); i++) {
       const IPC::Permission &perm = perms[i];
-      AddInternal(perm.host, perm.type, perm.capability, 0, perm.expireType,
+
+      nsCOMPtr<nsIPrincipal> principal;
+      nsresult rv = GetPrincipalForHost(perm.host, getter_AddRefs(principal));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      AddInternal(principal, perm.type, perm.capability, 0, perm.expireType,
                   perm.expireTime, eNotify, eNoDBOperation);
     }
 
@@ -521,20 +544,12 @@ nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString host;
-  rv = GetHost(uri, host);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return AddInternal(host, nsDependentCString(aType), aPermission, 0, 
+  return AddInternal(aPrincipal, nsDependentCString(aType), aPermission, 0,
                      aExpireType, aExpireTime, eNotify, eWriteToDB);
 }
 
 nsresult
-nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
+nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                  const nsAFlatCString &aType,
                                  uint32_t              aPermission,
                                  int64_t               aID,
@@ -543,8 +558,16 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
                                  NotifyOperationType   aNotifyOperation,
                                  DBOperationType       aDBOperation)
 {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString host;
+  rv = GetHost(uri, host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (!IsChildProcess()) {
-    IPC::Permission permission((aHost),
+    IPC::Permission permission((host),
                                (aType),
                                aPermission, aExpireType, aExpireTime);
 
@@ -570,7 +593,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
 
   // When an entry already exists, PutEntry will return that, instead
   // of adding a new one
-  nsHostEntry *entry = mHostTable.PutEntry(aHost.get());
+  nsHostEntry *entry = mHostTable.PutEntry(host.get());
   if (!entry) return NS_ERROR_FAILURE;
   if (!entry->GetKey()) {
     mHostTable.RawRemoveEntry(entry);
@@ -628,10 +651,10 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
       entry->GetPermissions().AppendElement(nsPermissionEntry(typeIndex, aPermission, id, aExpireType, aExpireTime));
 
       if (aDBOperation == eWriteToDB && aExpireType != nsIPermissionManager::EXPIRE_SESSION)
-        UpdateDB(op, mStmtInsert, id, aHost, aType, aPermission, aExpireType, aExpireTime);
+        UpdateDB(op, mStmtInsert, id, host, aType, aPermission, aExpireType, aExpireTime);
 
       if (aNotifyOperation == eNotify) {
-        NotifyObserversWithPermission(aHost,
+        NotifyObserversWithPermission(host,
                                       mTypeArray[typeIndex],
                                       aPermission,
                                       aExpireType,
@@ -657,7 +680,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
                  nsIPermissionManager::EXPIRE_NEVER, 0);
 
       if (aNotifyOperation == eNotify) {
-        NotifyObserversWithPermission(aHost,
+        NotifyObserversWithPermission(host,
                                       mTypeArray[typeIndex],
                                       oldPermissionEntry.mPermission,
                                       oldPermissionEntry.mExpireType,
@@ -677,7 +700,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
         UpdateDB(op, mStmtUpdate, id, EmptyCString(), EmptyCString(), aPermission, aExpireType, aExpireTime);
 
       if (aNotifyOperation == eNotify) {
-        NotifyObserversWithPermission(aHost,
+        NotifyObserversWithPermission(host,
                                       mTypeArray[typeIndex],
                                       aPermission,
                                       aExpireType,
@@ -697,15 +720,8 @@ nsPermissionManager::Remove(const nsACString &aHost,
                             const char       *aType)
 {
   nsCOMPtr<nsIPrincipal> principal;
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  MOZ_ASSERT(secMan, "No security manager!?");
 
-  nsCOMPtr<nsIURI> uri;
-  // NOTE: we use "http://" as a protocal but we will just use the host so it
-  // doesn't really matter.
-  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + aHost);
-
-  nsresult rv = secMan->GetNoAppCodebasePrincipal(uri, getter_AddRefs(principal));
+  nsresult rv = GetPrincipalForHost(aHost, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return RemoveFromPrincipal(principal, aType);
@@ -724,16 +740,8 @@ nsPermissionManager::RemoveFromPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString host;
-  rv = GetHost(uri, host);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // AddInternal() handles removal, just let it do the work
-  return AddInternal(PromiseFlatCString(host),
+  return AddInternal(aPrincipal,
                      nsDependentCString(aType),
                      nsIPermissionManager::UNKNOWN_ACTION,
                      0,
@@ -828,10 +836,7 @@ nsPermissionManager::TestExactPermissionFromPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
-
-  return CommonTestPermission(uri, aType, aPermission, true);
+  return CommonTestPermission(aPrincipal, aType, aPermission, true);
 }
 
 NS_IMETHODIMP
@@ -863,31 +868,33 @@ nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
-
-  return CommonTestPermission(uri, aType, aPermission, false);
+  return CommonTestPermission(aPrincipal, aType, aPermission, false);
 }
 
 nsresult
-nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
+nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
                                           const char *aType,
                                           uint32_t   *aPermission,
                                           bool        aExactHostMatch)
 {
-  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aType);
 
   // set the default
   *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
 
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCAutoString host;
-  nsresult rv = GetHost(aURI, host);
+  rv = GetHost(uri, host);
+
   // No host doesn't mean an error. Just return the default. Unless this is
   // a file uri. In that case use a magic host.
   if (NS_FAILED(rv)) {
     bool isFile;
-    rv = aURI->SchemeIs("file", &isFile);
+    rv = uri->SchemeIs("file", &isFile);
     NS_ENSURE_SUCCESS(rv, rv);
     if (isFile) {
       host.AssignLiteral("<file>");
@@ -896,7 +903,7 @@ nsPermissionManager::CommonTestPermission(nsIURI     *aURI,
       return NS_OK;
     }
   }
-  
+
   int32_t typeIndex = GetTypeIndex(aType, false);
   // If type == -1, the type isn't known,
   // so just return NS_OK
@@ -1147,7 +1154,11 @@ nsPermissionManager::Read()
     // convert into int64_t value (milliseconds)
     expireTime = stmt->AsInt64(5);
 
-    rv = AddInternal(host, type, permission, id, expireType, expireTime,
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = GetPrincipalForHost(host, getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = AddInternal(principal, type, permission, id, expireType, expireTime,
                      eDontNotify, eNoDBOperation);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1217,7 +1228,11 @@ nsPermissionManager::Import()
           continue;
       }
 
-      rv = AddInternal(lineArray[3], lineArray[1], permission, 0, 
+      nsCOMPtr<nsIPrincipal> principal;
+      nsresult rv = GetPrincipalForHost(lineArray[3], getter_AddRefs(principal));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = AddInternal(principal, lineArray[1], permission, 0,
                        nsIPermissionManager::EXPIRE_NEVER, 0, eDontNotify, eWriteToDB);
       NS_ENSURE_SUCCESS(rv, rv);
     }
