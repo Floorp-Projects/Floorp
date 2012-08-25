@@ -16,7 +16,7 @@ gcli.addCommand({
   manual: gcli.lookup("inspectManual"),
   params: [
     {
-      name: "node",
+      name: "selector",
       type: "node",
       description: gcli.lookup("inspectNodeDesc"),
       manual: gcli.lookup("inspectNodeManual")
@@ -24,6 +24,6 @@ gcli.addCommand({
   ],
   exec: function Command_inspect(args, context) {
     let document = context.environment.chromeDocument;
-    document.defaultView.InspectorUI.openInspectorUI(args.node);
+    document.defaultView.InspectorUI.openInspectorUI(args.selector);
   }
 });
