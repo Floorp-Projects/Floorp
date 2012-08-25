@@ -934,6 +934,12 @@ SourceScripts.prototype = {
     // ..or the first entry if there's not one selected yet.
     else if (!DebuggerView.Scripts.selected) {
       DebuggerView.Scripts.selectIndex(0);
+      // Selecting a script would make it "preferred", which is a lie here,
+      // because we're only displaying a script to make sure there's always
+      // something available in the SourceEditor and the scripts menulist.
+      // Hence the need revert back to the initial preferred script, just
+      // in case it will be available soon.
+      DebuggerView.Scripts.preferredScriptUrl = preferredScriptUrl;
     }
 
     // If there are any stored breakpoints for this script, display them again,
