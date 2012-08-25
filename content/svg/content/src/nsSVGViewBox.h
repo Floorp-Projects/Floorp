@@ -64,7 +64,8 @@ public:
                     nsSVGElement *aSVGElement);
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement);
+                              nsSVGElement *aSVGElement,
+                              bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue) const;
 
   nsresult ToDOMAnimatedRect(nsIDOMSVGAnimatedRect **aResult,
