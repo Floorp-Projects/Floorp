@@ -19,14 +19,15 @@ var EXPORTED_SYMBOLS=["UndoStack"];
  * @param integer aMaxUndo Maximum number of undo steps.
  *   defaults to 50.
  */
-function UndoStack(aChange, aMaxUndo)
+function UndoStack(aMaxUndo)
 {
   this.maxUndo = aMaxUndo || 50;
   this._stack = [];
 }
 
 UndoStack.prototype = {
-  // Current index into the undo .
+  // Current index into the undo stack.  Is positioned after the last
+  // currently-applied change.
   _index: 0,
 
   // The current batch depth (see startBatch() for details)
@@ -64,8 +65,9 @@ UndoStack.prototype = {
       return;
     }
 
-    // Cut off the undo stack wherever we currently are.
-    let start = Math.max(++this._index - this.maxUndo, 0);
+    // Cut off the end of the undo stack at the current index,
+    // and the beginning to prevent a stack larger than maxUndo.
+    let start = Math.max((this._index + 1) - this.maxUndo, 0);
     this._stack = this._stack.slice(start, this._index);
 
     let batch = this._batch;
@@ -83,6 +85,7 @@ UndoStack.prototype = {
       }
     };
     this._stack.push(entry);
+    this._index = this._stack.length;
     entry.do();
     this._change();
   },
@@ -127,7 +130,7 @@ UndoStack.prototype = {
    */
   canRedo: function Undo_canRedo()
   {
-    return this._stack.length >= this._index;
+    return this._stack.length > this._index;
   },
 
   /**
