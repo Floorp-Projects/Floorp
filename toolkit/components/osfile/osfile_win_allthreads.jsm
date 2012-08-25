@@ -141,6 +141,15 @@ if (typeof Components != "undefined") {
       return this.winLastError == OS.Constants.Win.ERROR_DIR_NOT_EMPTY;
     }
   });
+  /**
+   * |true| if the error was raised because a file or directory
+   * is closed, |false| otherwise.
+   */
+  Object.defineProperty(OSError.prototype, "becauseClosed", {
+    get: function becauseClosed() {
+      return this.winLastError == exports.OS.Constants.Win.INVALID_HANDLE_VALUE;
+    }
+  });
 
   /**
    * Serialize an instance of OSError to something that can be
@@ -179,4 +188,10 @@ if (typeof Components != "undefined") {
    */
   Types.path = Types.wstring.withName("[in] path");
   Types.out_path = Types.out_wstring.withName("[out] path");
+
+  // Special constructors that need to be defined on all threads
+  OSError.closed = function closed(operation) {
+    return new OSError(operation, exports.OS.Constants.Win.INVALID_HANDLE_VALUE);
+  };
+
 })(this);
