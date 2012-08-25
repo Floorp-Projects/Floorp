@@ -311,6 +311,7 @@ Inspector.prototype = {
 
     if (this._markupSplitter) {
       this._markupSplitter.parentNode.removeChild(this._markupSplitter);
+      delete this._markupSplitter;
     }
   },
 
