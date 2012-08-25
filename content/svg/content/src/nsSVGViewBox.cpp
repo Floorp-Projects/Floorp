@@ -148,25 +148,20 @@ ToSVGViewBoxRect(const nsAString& aStr, nsSVGViewBoxRect *aViewBox)
 
 nsresult
 nsSVGViewBox::SetBaseValueString(const nsAString& aValue,
-                                 nsSVGElement *aSVGElement,
-                                 bool aDoSetAttr)
+                                 nsSVGElement *aSVGElement)
 {
   nsSVGViewBoxRect viewBox;
   nsresult res = ToSVGViewBoxRect(aValue, &viewBox);
   if (NS_SUCCEEDED(res)) {
-    nsAttrValue emptyOrOldValue;
-    if (aDoSetAttr) {
-      emptyOrOldValue = aSVGElement->WillChangeViewBox();
-    }
     mBaseVal = nsSVGViewBoxRect(viewBox.x, viewBox.y, viewBox.width, viewBox.height);
     mHasBaseVal = true;
 
-    if (aDoSetAttr) {
-      aSVGElement->DidChangeViewBox(emptyOrOldValue);
-    }
     if (mAnimVal) {
       aSVGElement->AnimationNeedsResample();
     }
+    // We don't need to call Will/DidChange* here - we're only called by
+    // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
+    // which takes care of notifying.
   }
   return res;
 }
