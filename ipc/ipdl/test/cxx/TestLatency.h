@@ -9,7 +9,7 @@
 #include "mozilla/TimeStamp.h"
 
 #define NR_TRIALS 10000
-#define NR_SPAMS  25000
+#define NR_SPAMS  50000
 
 namespace mozilla {
 namespace _ipdltest {
@@ -43,14 +43,11 @@ protected:
                "  average #ping-pong/sec:        %g\n"
                "  average #ping5-pong5/sec:      %g\n"
                "  average #RPC call-answer/sec:  %g\n"
-               "  average #spams/sec:            %g\n"
-               "  pct. spams compressed away:    %g\n",
+               "  average #spams/sec:            %g\n",
                double(NR_TRIALS) / mPPTimeTotal.ToSecondsSigDigits(),
                double(NR_TRIALS) / mPP5TimeTotal.ToSecondsSigDigits(),
                double(NR_TRIALS) / mRpcTimeTotal.ToSecondsSigDigits(),
-               double(NR_SPAMS) / mSpamTimeTotal.ToSecondsSigDigits(),
-               100.0 * (double(NR_SPAMS - mNumChildProcessedCompressedSpams) /
-                        double(NR_SPAMS)));
+               double(NR_SPAMS) / mSpamTimeTotal.ToSecondsSigDigits());
 
         QuitParent();
     }
@@ -60,7 +57,6 @@ private:
     void Ping5Pong5Trial();
     void RpcTrials();
     void SpamTrial();
-    void CompressedSpamTrial();
     void Exit();
 
     TimeStamp mStart;
@@ -71,7 +67,7 @@ private:
 
     int mPPTrialsToGo;
     int mPP5TrialsToGo;
-    uint32_t mNumChildProcessedCompressedSpams;
+    int mSpamsToGo;
 };
 
 
@@ -88,9 +84,6 @@ protected:
     virtual bool AnswerRpc() MOZ_OVERRIDE;
     virtual bool RecvSpam() MOZ_OVERRIDE;
     virtual bool AnswerSynchro() MOZ_OVERRIDE;
-    virtual bool RecvCompressedSpam(const uint32_t& seqno) MOZ_OVERRIDE;
-    virtual bool AnswerSynchro2(uint32_t* lastSeqno,
-                                uint32_t* numMessagesDispatched) MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
@@ -98,9 +91,6 @@ protected:
             fail("unexpected destruction!");
         QuitChild();
     }
-
-    uint32_t mLastSeqno;
-    uint32_t mNumProcessedCompressedSpams;
 };
 
 

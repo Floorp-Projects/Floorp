@@ -121,7 +121,6 @@ reserved = set((
         'bridges',
         'call',
         'child',
-        'compress',
         '__delete__',
         'delete',                       # reserve 'delete' to prevent its use
         'goto',
@@ -485,15 +484,13 @@ def p_MessageDecl(p):
     p[0] = msg
 
 def p_MessageBody(p):
-    """MessageBody : MessageId MessageInParams MessageOutParams OptionalMessageCompress"""
+    """MessageBody : MessageId MessageInParams MessageOutParams"""
     # FIXME/cjones: need better loc info: use one of the quals
     loc, name = p[1]
     msg = MessageDecl(loc)
     msg.name = name
     msg.addInParams(p[2])
     msg.addOutParams(p[3])
-    msg.compress = p[4]
-
     p[0] = msg
 
 def p_MessageId(p):
@@ -519,14 +516,6 @@ def p_MessageOutParams(p):
         p[0] = [ ]
     else:
         p[0] = p[3]
-
-def p_OptionalMessageCompress(p):
-    """OptionalMessageCompress : COMPRESS
-                               | """
-    if 1 == len(p):
-        p[0] = ''
-    else:
-        p[0] = 'compress'
 
 ##--------------------
 ## State machine

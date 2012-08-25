@@ -228,7 +228,7 @@ class StateType(IPDLType):
 
 class MessageType(IPDLType):
     def __init__(self, sendSemantics, direction,
-                 ctor=False, dtor=False, cdtype=None, compress=False):
+                 ctor=False, dtor=False, cdtype=None):
         assert not (ctor and dtor)
         assert not (ctor or dtor) or type is not None
 
@@ -239,7 +239,6 @@ class MessageType(IPDLType):
         self.ctor = ctor
         self.dtor = dtor
         self.cdtype = cdtype
-        self.compress = compress
     def isMessage(self): return True
 
     def isCtor(self): return self.ctor
@@ -1069,8 +1068,7 @@ class GatherDecls(TcheckVisitor):
         self.symtab.enterScope(md)
 
         msgtype = MessageType(md.sendSemantics, md.direction,
-                              ctor=isctor, dtor=isdtor, cdtype=cdtype,
-                              compress=(md.compress == 'compress'))
+                              ctor=isctor, dtor=isdtor, cdtype=cdtype)
 
         # replace inparam Param nodes with proper Decls
         def paramToDecl(param):
@@ -1459,13 +1457,6 @@ class CheckTypes(TcheckVisitor):
             self.error(loc,
                        "asynchronous message `%s' declares return values",
                        mname)
-
-        if (mtype.compress and
-            (not mtype.isAsync() or mtype.isCtor() or mtype.isDtor())):
-            self.error(
-                loc,
-                "message `%s' in protocol `%s' requests compression but is not async or is special (ctor or dtor)",
-                mname[:-len('constructor')], pname)
 
         if mtype.isCtor() and not ptype.isManagerOf(mtype.constructedType()):
             self.error(

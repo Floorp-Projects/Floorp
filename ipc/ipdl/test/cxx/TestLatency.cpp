@@ -19,7 +19,7 @@ TestLatencyParent::TestLatencyParent() :
     mRpcTimeTotal(),
     mPPTrialsToGo(NR_TRIALS),
     mPP5TrialsToGo(NR_TRIALS),
-    mNumChildProcessedCompressedSpams(0)
+    mSpamsToGo(NR_TRIALS)
 {
     MOZ_COUNT_CTOR(TestLatencyParent);
 }
@@ -142,32 +142,6 @@ TestLatencyParent::SpamTrial()
 
     mSpamTimeTotal = (TimeStamp::Now() - start);
 
-    CompressedSpamTrial();
-}
-
-void
-TestLatencyParent::CompressedSpamTrial()
-{
-    for (int i = 0; i < NR_SPAMS; ++i) {
-        if (!SendCompressedSpam(i + 1))
-            fail("sending CompressedSpam()");
-        if (0 == (i % 10000))
-            printf("  CompressedSpam trial %d\n", i);
-    }
-
-    uint32_t lastSeqno;
-    if (!CallSynchro2(&lastSeqno, &mNumChildProcessedCompressedSpams))
-        fail("calling Synchro2()");
-
-    if (lastSeqno != NR_SPAMS)
-        fail("last seqno was %u, expected %u", lastSeqno, NR_SPAMS);
-
-    // NB: since this is testing an optimization, it's somewhat bogus.
-    // Need to make a warning if it actually intermittently fails in
-    // practice, which is doubtful.
-    if (!(mNumChildProcessedCompressedSpams < NR_SPAMS))
-        fail("Didn't compress any messages?");
-
     Exit();
 }
 
@@ -181,8 +155,6 @@ TestLatencyParent::Exit()
 // child
 
 TestLatencyChild::TestLatencyChild()
-    : mLastSeqno(0)
-    , mNumProcessedCompressedSpams(0)
 {
     MOZ_COUNT_CTOR(TestLatencyChild);
 }
@@ -231,26 +203,6 @@ TestLatencyChild::RecvSpam()
 bool
 TestLatencyChild::AnswerSynchro()
 {
-    return true;
-}
-
-bool
-TestLatencyChild::RecvCompressedSpam(const uint32_t& seqno)
-{
-    if (seqno <= mLastSeqno)
-        fail("compressed seqnos must monotonically increase");
-
-    mLastSeqno = seqno;
-    ++mNumProcessedCompressedSpams;
-    return true;
-}
-
-bool
-TestLatencyChild::AnswerSynchro2(uint32_t* lastSeqno,
-                                 uint32_t* numMessagesDispatched)
-{
-    *lastSeqno = mLastSeqno;
-    *numMessagesDispatched = mNumProcessedCompressedSpams;
     return true;
 }
 
