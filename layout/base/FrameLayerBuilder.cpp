@@ -2183,6 +2183,10 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   if (aTransform) {
     // aTransform is applied first, then the scale is applied to the result
     transform = (*aTransform)*transform;
+    // Set any matrix entries close to integers to be those exact integers.
+    // This protects against floating-point inaccuracies causing problems
+    // in the checks below.
+    transform.NudgeToIntegers();
   } 
   if (aContainerFrame && aState == LAYER_INACTIVE) {
     // When we have an inactive ContainerLayer, translate the container by the offset to the

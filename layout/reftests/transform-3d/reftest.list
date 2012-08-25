@@ -10,7 +10,19 @@
 == rotatex-perspective-1c.html rotatex-1-ref.html
 fails-if(Android) == rotatex-perspective-3a.html rotatex-perspective-3-ref.html # bug 755543
 == scalez-1a.html scalez-1-ref.html
-fails-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),255,178) == preserve3d-1a.html preserve3d-1-ref.html
+== rotatey-1a.html rotatey-1-ref.html 
+== rotatex-1a.html rotatex-1-ref.html 
+# Check that scaleZ(-1) rotateX(180deg) is the same as rotateY(180deg)
+== scalezrotatex-1.html scalezrotatex-1-ref.html
+# Check that the perspectve() transform function results in some visual changes
+!= rotatex-perspective-1a.html rotatex-1-ref.html
+# Check that -moz-perspective results in visual changes to child transformed elements
+!= rotatex-perspective-1b.html rotatex-1-ref.html
+# -moz-perspective should only apply to child elements
+== rotatex-perspective-1c.html rotatex-1-ref.html
+fails-if(Android) == rotatex-perspective-3a.html rotatex-perspective-3-ref.html # bug 755543
+== scalez-1a.html scalez-1-ref.html
+== preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
 == preserve3d-clipped.html about:blank 
 == preserve3d-2a.html preserve3d-2-ref.html
