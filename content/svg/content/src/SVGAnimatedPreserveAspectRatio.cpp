@@ -201,7 +201,7 @@ ToPreserveAspectRatio(const nsAString &aString,
 
 nsresult
 SVGAnimatedPreserveAspectRatio::SetBaseValueString(
-  const nsAString &aValueAsString, nsSVGElement *aSVGElement, bool aDoSetAttr)
+  const nsAString &aValueAsString, nsSVGElement *aSVGElement)
 {
   SVGPreserveAspectRatio val;
   nsresult res = ToPreserveAspectRatio(aValueAsString, &val);
@@ -209,23 +209,18 @@ SVGAnimatedPreserveAspectRatio::SetBaseValueString(
     return res;
   }
 
-  nsAttrValue emptyOrOldValue;
-  if (aDoSetAttr) {
-    emptyOrOldValue = aSVGElement->WillChangePreserveAspectRatio();
-  }
-
   mBaseVal = val;
   mIsBaseSet = true;
-
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
-  if (aDoSetAttr) {
-    aSVGElement->DidChangePreserveAspectRatio(emptyOrOldValue);
-  }
-  if (mIsAnimated) {
+  else {
     aSVGElement->AnimationNeedsResample();
   }
+
+  // We don't need to call DidChange* here - we're only called by
+  // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
+  // which takes care of notifying.
   return NS_OK;
 }
 
