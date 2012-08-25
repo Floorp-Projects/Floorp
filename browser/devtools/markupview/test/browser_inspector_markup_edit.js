@@ -116,10 +116,14 @@ function test() {
 
     // Add attributes by adding to an existing attribute's entry
     {
+      setup: function() {
+        InspectorUI.select(doc.querySelector("#node18"), true, true, true);
+      },
       before: function() {
         assertAttributes(doc.querySelector("#node18"), {
           id: "node18",
         });
+        is(InspectorUI.highlighter.nodeInfo.classesBox.textContent, "", "No classes in the infobar before edit.");
       },
       execute: function() {
         let editor = markup.getContainer(doc.querySelector("#node18")).editor;
@@ -132,6 +136,7 @@ function test() {
           class: "newclass",
           style: "color:green"
         });
+        is(InspectorUI.highlighter.nodeInfo.classesBox.textContent, ".newclass", "Correct classes in the infobar after edit.");
       }
     },
 
