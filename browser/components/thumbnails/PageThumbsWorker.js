@@ -19,6 +19,9 @@ let PageThumbsWorker = {
     let data = {result: null, data: null};
 
     switch (msg.type) {
+      case "removeFile":
+        data.result = this.removeFile(msg);
+        break;
       case "removeFiles":
         data.result = this.removeFiles(msg);
         break;
@@ -46,6 +49,15 @@ let PageThumbsWorker = {
 
     iter.close();
     return entries;
+  },
+
+  removeFile: function Worker_removeFile(msg) {
+    try {
+      OS.File.remove(msg.path);
+      return true;
+    } catch (e) {
+      return false;
+    }
   },
 
   removeFiles: function Worker_removeFiles(msg) {
