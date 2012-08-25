@@ -67,7 +67,7 @@ Activity::Initialize(nsISupports* aOwner,
   mProxy = do_CreateInstance("@mozilla.org/dom/activities/proxy;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mProxy->StartActivity(this, options);
+  mProxy->StartActivity(this, options, window);
   return NS_OK;
 }
 
