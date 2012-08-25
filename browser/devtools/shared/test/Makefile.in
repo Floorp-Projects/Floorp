@@ -11,6 +11,8 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+XPCSHELL_TESTS = unit
+
 MOCHITEST_BROWSER_FILES = \
   browser_browser_basic.js \
   browser_promise_basic.js \
