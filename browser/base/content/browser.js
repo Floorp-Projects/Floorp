@@ -1239,7 +1239,6 @@ var gBrowserInit = {
     BookmarksMenuButton.init();
     TabsInTitlebar.init();
     gPrivateBrowsingUI.init();
-    DownloadsButton.initializePlaceholder();
     retrieveToolbarIconsizesFromTheme();
 
     gDelayedStartupTimeoutId = setTimeout(this._delayedStartup.bind(this), 0, isLoadingBlank, mustLoadSidebar);
