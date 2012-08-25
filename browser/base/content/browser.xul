@@ -940,11 +940,11 @@
            during the customization of the toolbar, in the palette, and before
            the Downloads Indicator overlay is loaded. -->
       <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     observes="Tools:Downloads"
-                     ondrop="DownloadsButtonDNDObserver.onDrop(event)"
-                     ondragover="DownloadsButtonDNDObserver.onDragOver(event)"
-                     ondragenter="DownloadsButtonDNDObserver.onDragOver(event)"
-                     ondragexit="DownloadsButtonDNDObserver.onDragExit(event)"
+                     oncommand="DownloadsIndicatorView.onCommand(event);"
+                     ondrop="DownloadsIndicatorView.onDrop(event);"
+                     ondragover="DownloadsIndicatorView.onDragOver(event);"
+                     ondragenter="DownloadsIndicatorView.onDragOver(event);"
+                     ondragleave="DownloadsIndicatorView.onDragLeave(event);"
                      label="&downloads.label;"
                      tooltiptext="&downloads.tooltip;"/>
 
