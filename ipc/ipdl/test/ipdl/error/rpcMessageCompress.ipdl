@@ -1,6 +1,0 @@
-rpc protocol rpcMessageCompress {
-parent:
-    rpc foo() compress;
-child:
-    rpc bar() compress;
-};
