@@ -18,7 +18,8 @@ onconnect = function(e) {
           testPort.postMessage({topic:"got-sidebar-message"});
         break;
       case "service-window-message":
-        testPort.postMessage({topic:"got-service-window-message"});
+        testPort.postMessage({topic:"got-service-window-message",
+                              location: event.data.location});
         break;
       case "service-window-closed-message":
         testPort.postMessage({topic:"got-service-window-closed-message"});
@@ -37,7 +38,9 @@ onconnect = function(e) {
         break;
       case "panel-message":
         if (testPort && event.data.result == "ok")
-          testPort.postMessage({topic:"got-panel-message"});
+          testPort.postMessage({topic:"got-panel-message",
+                                location: event.data.location
+                               });
         break;
       case "status-panel-visibility":
         testPort.postMessage({topic:"got-social-panel-visibility", result: event.data.result });

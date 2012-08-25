@@ -226,6 +226,9 @@ function openServiceWindow(provider, contentWindow, url, name, options) {
   chromeWindow.name = windowName;
   chromeWindow.gBrowser.selectedBrowser.setAttribute("origin", provider.origin);
 
+  // disable global history for the new window.
+  chromeWindow.gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = false;
+
   // we dont want the default title the browser produces, we'll fixup whenever
   // it changes.
   serviceWindow.addEventListener("DOMTitleChanged", function() {
