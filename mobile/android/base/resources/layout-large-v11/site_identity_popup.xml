@@ -9,7 +9,7 @@
 
     <RelativeLayout android:layout_width="@dimen/site_identity_popup_width"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dip"
+                    android:layout_marginTop="15dip"
                     android:layout_alignParentTop="true"
                     android:background="@drawable/doorhanger_popup_bg">
 
@@ -77,7 +77,6 @@
     <ImageView android:id="@+id/arrow"
                android:layout_width="@dimen/doorhanger_arrow_width"
                android:layout_height="16dip"
-               android:layout_marginTop="9dip"
                android:layout_alignParentTop="true"
                android:src="@drawable/doorhanger_arrow"
                android:scaleType="fitXY"/>
