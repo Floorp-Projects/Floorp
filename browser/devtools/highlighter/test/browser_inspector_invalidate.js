@@ -23,12 +23,13 @@ function runTest(subject)
   InspectorUI.highlighter.highlight(div);
 
   executeSoon(function() {
-    let outline = InspectorUI.highlighter.outline;
-    is(outline.style.width, "100px", "selection has the right width");
+    let veilBoxDims = InspectorUI.highlighter.veilTransparentBox;
+    is(veilBoxDims.style.width, "100px", "selection has the right width");
 
     div.style.width = "200px";
     setTimeout(function () {
-      is(outline.style.width, "200px", "selection updated");
+      let veilBoxDims = InspectorUI.highlighter.veilTransparentBox;
+      is(veilBoxDims.style.width, "200px", "selection updated");
       InspectorUI.closeInspectorUI();
       gBrowser.removeCurrentTab();
       finish();
