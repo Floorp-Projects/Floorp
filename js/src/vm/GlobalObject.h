@@ -55,7 +55,7 @@ class Debugger;
  *   global's Content Security Policy).
  *
  * The first two ranges are necessary to implement js::FindClassObject,
- * js::FindClassPrototype, and spec language speaking in terms of "the original
+ * FindClassPrototype, and spec language speaking in terms of "the original
  * Array prototype object", or "as if by the expression new Array()" referring
  * to the original Array constructor.  The third range stores the (writable and
  * even deletable) Object, Array, &c. properties (although a slot won't be used

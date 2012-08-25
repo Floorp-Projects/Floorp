@@ -176,13 +176,13 @@ bool TestLineBreaker()
    printf("===========================\n");
    printf("Finish nsILineBreaker Test \n");
    printf("===========================\n");
-   nsILineBreaker *t = NULL;
+   nsILineBreaker *t = nullptr;
    nsresult res;
    bool ok = true;
    res = CallGetService(kLBrkCID, &t);
            
    printf("Test 1 - GetService():\n");
-   if(NS_FAILED(res) || ( t == NULL ) ) {
+   if (NS_FAILED(res) || !t) {
      printf("\t1st GetService failed\n");
      ok = false;
    }
@@ -191,7 +191,7 @@ bool TestLineBreaker()
 
    res = CallGetService(kLBrkCID, &t);
  
-   if(NS_FAILED(res) || ( t == NULL ) ) {
+   if (NS_FAILED(res) || !t) {
      printf("\t2nd GetService failed\n");
      ok = false;
    } else {
@@ -242,13 +242,13 @@ bool TestWordBreaker()
    printf("===========================\n");
    printf("Finish nsIWordBreaker Test \n");
    printf("===========================\n");
-   nsIWordBreaker *t = NULL;
+   nsIWordBreaker *t = nullptr;
    nsresult res;
    bool ok = true;
    res = CallGetService(kWBrkCID, &t);
            
    printf("Test 1 - GetService():\n");
-   if(NS_FAILED(res) || ( t == NULL ) ) {
+   if (NS_FAILED(res) || !t) {
      printf("\t1st GetService failed\n");
      ok = false;
    } else {
@@ -257,7 +257,7 @@ bool TestWordBreaker()
 
    res = CallGetService(kWBrkCID, &t);
            
-   if(NS_FAILED(res) || ( t == NULL ) ) {
+   if (NS_FAILED(res) || !t) {
      printf("\t2nd GetService failed\n");
      ok = false;
    } else {
@@ -334,7 +334,7 @@ void SampleWordBreakUsage()
 void SamplePrintWordWithBreak()
 {
    uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
-   nsIWordBreaker *wbk = NULL;
+   nsIWordBreaker *wbk = nullptr;
 
    CallGetService(kWBrkCID, &wbk);
 
@@ -381,7 +381,7 @@ void SamplePrintWordWithBreak()
 void SampleFindWordBreakFromPosition(uint32_t fragN, uint32_t offset)
 {
    uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
-   nsIWordBreaker *wbk = NULL;
+   nsIWordBreaker *wbk = nullptr;
 
    CallGetService(kWBrkCID, &wbk);
 

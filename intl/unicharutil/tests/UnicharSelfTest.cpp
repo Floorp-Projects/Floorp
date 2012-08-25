@@ -509,9 +509,9 @@ static void TestEntityConversion(uint32_t version)
 
   // convert char by char
   for (i = 0; i < length; i++) {
-    char *entity = NULL;
+    char *entity = nullptr;
     res = entityConv->ConvertToEntity(data[i], version, &entity);
-    if (NS_SUCCEEDED(res) && NULL != entity) {
+    if (NS_SUCCEEDED(res) && entity) {
       printf("%c %s\n", data[i], entity);
       nsMemory::Free(entity);
     }
@@ -520,7 +520,7 @@ static void TestEntityConversion(uint32_t version)
   // convert at once as a string
   PRUnichar *entities;
   res = entityConv->ConvertToEntities(inString.get(), version, &entities);
-  if (NS_SUCCEEDED(res) && NULL != entities) {
+  if (NS_SUCCEEDED(res) && entities) {
     for (PRUnichar *centity = entities; *centity; ++centity) {
       printf("%c", (char) *centity);
       if (';' == (char) *centity)
@@ -565,7 +565,7 @@ static void TestSaveAsCharset()
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
-  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  if (!outString) {printf("\tFailed!! output null\n");}
   else {printf("%s\n", outString); nsMemory::Free(outString);}
 
   printf("ISO-2022-JP attr_plainTextDefault entityNone\n");
@@ -575,11 +575,11 @@ static void TestSaveAsCharset()
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
-  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  if (!outString) {printf("\tFailed!! output null\n");}
   else {printf("%s\n", outString); nsMemory::Free(outString);}
   if (NS_ERROR_UENC_NOMAPPING == res) {
     outString = ToNewUTF8String(inString);
-    if (NULL == outString) {printf("\tFailed!! output null\n");}
+    if (!outString) {printf("\tFailed!! output null\n");}
     else {printf("Fall back to UTF-8: %s\n", outString); nsMemory::Free(outString);}
   }
 
@@ -590,7 +590,7 @@ static void TestSaveAsCharset()
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
-  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  if (!outString) {printf("\tFailed!! output null\n");}
   else {printf("%s\n", outString); nsMemory::Free(outString);}
 
   printf("ISO-2022-JP attr_FallbackEscapeU entityNone\n");
@@ -600,7 +600,7 @@ static void TestSaveAsCharset()
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
-  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  if (!outString) {printf("\tFailed!! output null\n");}
   else {printf("%s\n", outString); nsMemory::Free(outString);}
 
   printf("ISO-8859-1 attr_htmlTextDefault html40Latin1\n");
@@ -610,7 +610,7 @@ static void TestSaveAsCharset()
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
-  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  if (!outString) {printf("\tFailed!! output null\n");}
   else {printf("%s\n", outString); nsMemory::Free(outString);}
 
   printf("ISO-8859-1 attr_FallbackHexNCR+attr_EntityAfterCharsetConv html40Latin1 \n");
@@ -621,7 +621,7 @@ static void TestSaveAsCharset()
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
-  if (NULL == outString) {printf("\tFailed!! output null\n");}
+  if (!outString) {printf("\tFailed!! output null\n");}
   else {printf("%s\n", outString); nsMemory::Free(outString);}
 
 
@@ -659,12 +659,12 @@ void TestNormalization()
    printf("==============================\n");
    printf("Start nsIUnicodeNormalizer Test \n");
    printf("==============================\n");
-   nsIUnicodeNormalizer *t = NULL;
+   nsIUnicodeNormalizer *t = nullptr;
    nsresult res;
    res = CallGetService(kUnicodeNormalizerCID, &t);
            
    printf("Test 1 - GetService():\n");
-   if(NS_FAILED(res) || ( t == NULL ) ) {
+   if(NS_FAILED(res) || !t) {
      printf("\t1st Norm GetService failed\n");
    } else {
      NS_RELEASE(t);
@@ -672,7 +672,7 @@ void TestNormalization()
 
    res = CallGetService(kUnicodeNormalizerCID, &t);
            
-   if(NS_FAILED(res) || ( t == NULL ) ) {
+   if(NS_FAILED(res) || !t) {
      printf("\t2nd GetService failed\n");
    } else {
     printf("Test 2 - NormalizeUnicode(uint32_t, const nsAString&, nsAString&):\n");

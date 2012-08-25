@@ -43,9 +43,9 @@ public:
   NS_DECL_NSIDOMHTMLTABLESECTIONELEMENT
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
+                              nsIAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
@@ -238,7 +238,10 @@ nsHTMLTableSectionElement::ParseAttribute(int32_t aNamespaceID,
     }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+  return nsGenericHTMLElement::ParseBackgroundAttribute(aNamespaceID,
+                                                        aAttribute, aValue,
+                                                        aResult) ||
+         nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                               aResult);
 }
 

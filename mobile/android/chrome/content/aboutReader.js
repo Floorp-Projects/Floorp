@@ -39,20 +39,19 @@ let AboutReader = {
     this._article = null;
 
     dump("Feching toolbar, header and content notes from about:reader");
-    this._headerElement = document.getElementById("reader-header");
-    this._domainElement = document.getElementById("reader-domain");
-    this._titleElement = document.getElementById("reader-title");
-    this._creditsElement = document.getElementById("reader-credits");
-    this._contentElement = document.getElementById("reader-content");
+    this._frame = document.getElementById("frame");
+    this._headerElement = this._frame.contentDocument.getElementById("reader-header");
+    this._domainElement = this._frame.contentDocument.getElementById("reader-domain");
+    this._creditsElement = this._frame.contentDocument.getElementById("reader-credits");
+    this._contentElement = this._frame.contentDocument.getElementById("reader-content");
     this._toolbarElement = document.getElementById("reader-toolbar");
 
     this._toolbarEnabled = false;
 
-    this._scrollOffset = window.pageYOffset;
-
-    let body = document.body;
-    body.addEventListener("touchstart", this, false);
-    body.addEventListener("click", this, false);
+    this._frame.contentDocument.addEventListener("DOMSubtreeModified", this, false);
+    this._frame.contentDocument.addEventListener("MozScrolledAreaChanged", this, false);
+    this._frame.contentDocument.addEventListener("touchstart", this, false);
+    this._frame.contentDocument.addEventListener("click", this, false);
     window.addEventListener("scroll", this, false);
     window.addEventListener("popstate", this, false);
     window.addEventListener("resize", this, false);
@@ -132,17 +131,25 @@ let AboutReader = {
       case "resize":
         this._updateImageMargins();
         break;
+      case "DOMSubtreeModified":
+      case "MozScrolledAreaChanged":
+        let newHeight = this._frame.contentDocument.body.offsetHeight + "px";
+        if (this._frame.style.height != newHeight) {
+          this._frame.style.height = newHeight;
+        }
+        break;
     }
   },
 
   uninit: function Reader_uninit() {
     dump("Uninit()");
 
-    Services.obs.removeObserver(this, "Reader:FaviconReturn", false);
+    Services.obs.removeObserver(this, "Reader:FaviconReturn");
 
-    let body = document.body;
-    body.removeEventListener("touchstart", this, false);
-    body.removeEventListener("click", this, false);
+    this._frame.contentDocument.removeEventListener("touchstart", this, false);
+    this._frame.contentDocument.removeEventListener("click", this, false);
+    this._frame.contentDocument.removeEventListener("DOMSubtreeModified", this, false);
+    this._frame.contentDocument.removeEventListener("MozScrolledAreaChanged", this, false);
     window.removeEventListener("scroll", this, false);
     window.removeEventListener("popstate", this, false);
     window.removeEventListener("resize", this, false);
@@ -230,8 +237,9 @@ let AboutReader = {
       return;
 
     this._marginSize = Math.max(5, Math.min(25, newMarginSize));
-    document.body.style.marginLeft = this._marginSize + "%";
-    document.body.style.marginRight = this._marginSize + "%";
+    let bodyStyle = this._frame.contentDocument.body.style;
+    bodyStyle.marginLeft = this._marginSize + "%";
+    bodyStyle.marginRight = this._marginSize + "%";
 
     this._updateImageMargins();
 
@@ -249,7 +257,7 @@ let AboutReader = {
     if (this._fontSize === newFontSize)
       return;
 
-    let bodyClasses = document.body.classList;
+    let bodyClasses = this._frame.contentDocument.body.classList;
 
     if (this._fontSize > 0)
       bodyClasses.remove("font-size" + this._fontSize);
@@ -265,12 +273,16 @@ let AboutReader = {
       return;
 
     let bodyClasses = document.body.classList;
+    let frameClasses = this._frame.contentDocument.body.classList;
 
-    if (this._colorScheme)
+    if (this._colorScheme) {
       bodyClasses.remove(this._colorScheme);
+      frameClasses.remove(this._colorScheme);
+    }
 
     this._colorScheme = newColorScheme;
     bodyClasses.add(this._colorScheme);
+    frameClasses.add(this._colorScheme);
 
     Services.prefs.setCharPref("reader.color_scheme", this._colorScheme);
   },
@@ -408,7 +420,7 @@ let AboutReader = {
 
     this._creditsElement.innerHTML = article.byline;
 
-    this._titleElement.innerHTML = article.title;
+    this._frame.contentDocument.getElementById("reader-title").innerHTML = article.title;
     document.title = article.title;
 
     this._headerElement.style.display = "block";

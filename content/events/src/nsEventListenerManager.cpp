@@ -1039,10 +1039,7 @@ nsEventListenerManager::SetJSEventListenerToJsval(nsIAtom *aEventName,
   }
 
   // Now ensure that we're working in the compartment of aScope from now on.
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, aScope)) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  JSAutoCompartment ac(cx, aScope);
 
   // Rewrap the handler into the new compartment, if needed.
   jsval tempVal = v;

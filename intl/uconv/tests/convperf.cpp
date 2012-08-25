@@ -115,7 +115,7 @@ int main(int argc, const char** argv)
      if(argc == 6)
      {
         infile = fopen(argv[5], "rb");
-        if(NULL == infile) 
+        if (!infile) 
         {  
            usage();
            fprintf(stderr,"cannot open file %s\n", argv[5]);

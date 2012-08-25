@@ -25,12 +25,6 @@ nsXPCOMCycleCollectionParticipant::RootImpl(void *p)
 }
 
 nsresult
-nsXPCOMCycleCollectionParticipant::UnlinkImpl(void *p)
-{
-  return NS_OK;
-}
-
-nsresult
 nsXPCOMCycleCollectionParticipant::UnrootImpl(void *p)
 {
     nsISupports *s = static_cast<nsISupports*>(p);
@@ -38,19 +32,8 @@ nsXPCOMCycleCollectionParticipant::UnrootImpl(void *p)
     return NS_OK;
 }
 
-nsresult
-nsXPCOMCycleCollectionParticipant::TraverseImpl
-    (nsXPCOMCycleCollectionParticipant* that, void *p,
-     nsCycleCollectionTraversalCallback &cb)
-{
-  return NS_OK;
-}
-
-void
-nsXPCOMCycleCollectionParticipant::UnmarkIfPurpleImpl(nsISupports *n)
-{
-}
-
+// We define a default trace function because some participants don't need
+// to trace anything, so it is okay for them not to define one.
 NS_IMETHODIMP_(void)
 nsXPCOMCycleCollectionParticipant::TraceImpl(void *p, TraceCallback cb,
                                              void *closure)

@@ -3872,6 +3872,7 @@ public:
      */
 
     bool StartEvaluating(JSObject *scope, JSErrorReporter errorReporter = nullptr);
+
     /**
      * Does the post script evaluation and resets the error reporter
      */
@@ -3882,7 +3883,7 @@ private:
     bool mErrorReporterSet;
     bool mEvaluated;
     intptr_t mContextHasThread;
-    JSAutoEnterCompartment mEnterCompartment;
+    mozilla::Maybe<JSAutoCompartment> mAutoCompartment;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     // No copying or assignment allowed
@@ -4308,6 +4309,7 @@ public:
 
     CompartmentPrivate(bool wantXrays)
         : wantXrays(wantXrays)
+        , universalXPConnectEnabled(false)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
@@ -4315,6 +4317,13 @@ public:
     ~CompartmentPrivate();
 
     bool wantXrays;
+
+    // This is only ever set during mochitest runs when enablePrivilege is called.
+    // It's intended as a temporary stopgap measure until we can finish ripping out
+    // enablePrivilege. Once set, this value is never unset (i.e., it doesn't follow
+    // the old scoping rules of enablePrivilege). Using it is inherently unsafe.
+    bool universalXPConnectEnabled;
+
     nsAutoPtr<JSObject2JSObjectMap> waiverWrapperMap;
     nsAutoPtr<DOMExpandoMap> domExpandoMap;
 
@@ -4374,6 +4383,30 @@ GetCompartmentPrivate(JSObject *object)
 
     MOZ_ASSERT(compartment);
     return GetCompartmentPrivate(compartment);
+}
+
+inline bool IsUniversalXPConnectEnabled(JSContext *cx)
+{
+    JSCompartment *compartment = js::GetContextCompartment(cx);
+    if (!compartment)
+        return false;
+    CompartmentPrivate *priv =
+      static_cast<CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment));
+    if (!priv)
+        return false;
+    return priv->universalXPConnectEnabled;
+}
+
+inline void EnableUniversalXPConnect(JSContext *cx)
+{
+    JSCompartment *compartment = js::GetContextCompartment(cx);
+    if (!compartment)
+        return;
+    CompartmentPrivate *priv =
+      static_cast<CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment));
+    if (!priv)
+        return;
+    priv->universalXPConnectEnabled = true;
 }
 
 }

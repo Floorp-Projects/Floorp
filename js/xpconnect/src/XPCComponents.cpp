@@ -2719,9 +2719,7 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
 
     {
         // Enter the target compartment.
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, obj))
-            return NS_ERROR_FAILURE;
+        JSAutoCompartment ac(cx, obj);
 
         // Morph slim wrappers.
         if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
@@ -2916,10 +2914,7 @@ SandboxImport(JSContext *cx, unsigned argc, jsval *vp)
             funobj = XPCWrapper::UnsafeUnwrapSecurityWrapper(funobj);
         }
 
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, funobj)) {
-            return false;
-        }
+        JSAutoCompartment ac(cx, funobj);
 
         JSFunction *fun = JS_ValueToFunction(cx, OBJECT_TO_JSVAL(funobj));
         if (!fun) {
@@ -3273,9 +3268,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
     JS::AutoObjectRooter tvr(cx, sandbox);
 
     {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, sandbox))
-            return NS_ERROR_XPC_UNEXPECTED;
+        JSAutoCompartment ac(cx, sandbox);
 
         if (options.proto) {
             bool ok = JS_WrapObject(cx, &options.proto);
@@ -3316,9 +3309,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
             return NS_ERROR_XPC_UNEXPECTED;
 
         {
-          JSAutoEnterCompartment ac;
-          if (!ac.enter(ccx, sandbox))
-              return NS_ERROR_XPC_UNEXPECTED;
+          JSAutoCompartment ac(ccx, sandbox);
           XPCWrappedNativeScope* scope =
               XPCWrappedNativeScope::GetNewOrUsed(ccx, sandbox);
 
@@ -3920,13 +3911,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
     {
         JSAutoRequest req(sandcx->GetJSContext());
-        JSAutoEnterCompartment ac;
-
-        if (!ac.enter(sandcx->GetJSContext(), sandbox)) {
-            if (stack)
-                unused << stack->Pop();
-            return NS_ERROR_FAILURE;
-        }
+        JSAutoCompartment ac(sandcx->GetJSContext(), sandbox);
 
         jsval v;
         JSString *str = nullptr;
@@ -3983,14 +3968,14 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
         } else {
             // Convert the result into something safe for our caller.
             JSAutoRequest req(cx);
-            JSAutoEnterCompartment ac;
+            JSAutoCompartment ac(cx, callingScope);
+
             if (str) {
                 v = STRING_TO_JSVAL(str);
             }
 
             CompartmentPrivate *sandboxdata = GetCompartmentPrivate(sandbox);
-            if (!ac.enter(cx, callingScope) ||
-                !WrapForSandbox(cx, sandboxdata->wantXrays, &v)) {
+            if (!WrapForSandbox(cx, sandboxdata->wantXrays, &v)) {
                 rv = NS_ERROR_FAILURE;
             }
 
@@ -4171,9 +4156,7 @@ nsXPCComponents_Utils::GetGlobalForObject(const JS::Value& object,
   JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(object));
   obj = js::UnwrapObject(obj);
   {
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, obj))
-      return NS_ERROR_FAILURE;
+    JSAutoCompartment ac(cx, obj);
     obj = JS_GetGlobalForObject(cx, obj);
   }
   JS_WrapObject(cx, obj.address());
@@ -4200,10 +4183,7 @@ nsXPCComponents_Utils::CreateObjectIn(const jsval &vobj, JSContext *cx, jsval *r
     JSObject *scope = js::UnwrapObject(JSVAL_TO_OBJECT(vobj));
     JSObject *obj;
     {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, scope))
-            return NS_ERROR_FAILURE;
-
+        JSAutoCompartment ac(cx, scope);
         obj = JS_NewObject(cx, nullptr, nullptr, scope);
         if (!obj)
             return NS_ERROR_FAILURE;
@@ -4229,10 +4209,7 @@ nsXPCComponents_Utils::CreateArrayIn(const jsval &vobj, JSContext *cx, jsval *rv
     JSObject *scope = js::UnwrapObject(JSVAL_TO_OBJECT(vobj));
     JSObject *obj;
     {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, scope))
-            return NS_ERROR_FAILURE;
-
+        JSAutoCompartment ac(cx, scope);
         obj =  JS_NewArrayObject(cx, 0, NULL);
         if (!obj)
             return NS_ERROR_FAILURE;
@@ -4285,10 +4262,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const jsval &vobj, JSContext *cx)
 
     JSObject *obj = js::UnwrapObject(JSVAL_TO_OBJECT(vobj));
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, obj))
-        return NS_ERROR_FAILURE;
-
+    JSAutoCompartment ac(cx, obj);
     JS::AutoIdArray ida(cx, JS_Enumerate(cx, obj));
     if (!ida)
         return NS_ERROR_FAILURE;
@@ -4352,11 +4326,14 @@ nsXPCComponents_Utils::Dispatch(const jsval &runnable_, const jsval &scope,
                                 JSContext *cx)
 {
     // Enter the given compartment, if any, and rewrap runnable.
-    JSAutoEnterCompartment ac;
+    Maybe<JSAutoCompartment> ac;
     js::Value runnable = runnable_;
     if (scope.isObject()) {
         JSObject *scopeObj = js::UnwrapObject(&scope.toObject());
-        if (!scopeObj || !ac.enter(cx, scopeObj) || !JS_WrapValue(cx, &runnable))
+        if (!scopeObj)
+            return NS_ERROR_FAILURE;
+        ac.construct(cx, scopeObj);
+        if (!JS_WrapValue(cx, &runnable))
             return NS_ERROR_FAILURE;
     }
 

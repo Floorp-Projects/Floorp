@@ -1088,8 +1088,9 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
         }
     }
 
-    /* Capture the effects of a standard property access. */
-    HeapTypeSet *types = object->getProperty(cx, id, access == PROPERTY_WRITE);
+    /* Capture the effects of a standard property access. Never mark the
+     * property as own, as it may have inherited accessors. */
+    HeapTypeSet *types = object->getProperty(cx, id, false);
     if (!types)
         return;
     if (access == PROPERTY_WRITE) {
@@ -2036,8 +2037,7 @@ TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
     JS_ASSERT(!p);
 
     RootedObject proto(cx);
-    RootedObject global(cx, &key.script->global());
-    if (!js_GetClassPrototype(cx, global, key.kind, &proto, NULL))
+    if (!js_GetClassPrototype(cx, key.kind, &proto, NULL))
         return NULL;
 
     RootedScript keyScript(cx, key.script);
@@ -5956,7 +5956,7 @@ TypeCompartment::sweep(FreeOp *fop)
             bool valMarked = IsTypeObjectMarked(e.front().value.unsafeGet());
             if (!keyMarked || !valMarked)
                 e.removeFront();
-            else
+            else if (key.script != e.front().key.script)
                 e.rekeyFront(key);
         }
     }

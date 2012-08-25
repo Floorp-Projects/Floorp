@@ -16,7 +16,7 @@
 class nsEntityVersionList
 {
 public:
-    nsEntityVersionList() : mEntities(NULL) {}
+    nsEntityVersionList() {}
     
     uint32_t mVersion;
     PRUnichar mEntityListName[kVERSION_STRING_LEN+1];

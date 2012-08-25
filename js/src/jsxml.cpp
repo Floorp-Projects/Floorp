@@ -460,8 +460,7 @@ NewXMLAttributeName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
      * AttributeName is an internal anonymous class which instances are not
      * exposed to scripts.
      */
-    JSObject *parent = GetGlobalForScopeChain(cx);
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &AttributeNameClass, NULL, parent));
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &AttributeNameClass, NULL, cx->global()));
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isQName());
@@ -483,7 +482,7 @@ ConstructObjectWithArguments(JSContext *cx, Class *clasp,
     /* Protect constructor in case a crazy getter for .prototype uproots it. */
     RootedValue value(cx);
     RootedObject null(cx);
-    if (!js_FindClassObject(cx, null, protoKey, &value, clasp))
+    if (!js_FindClassObject(cx, protoKey, &value, clasp))
         return NULL;
 
     Value rval;
@@ -1636,7 +1635,7 @@ static JSBool
 GetXMLSetting(JSContext *cx, const char *name, jsval *vp)
 {
     RootedValue v(cx);
-    if (!js_FindClassObject(cx, NullPtr(), JSProto_XML, &v))
+    if (!js_FindClassObject(cx, JSProto_XML, &v))
         return JS_FALSE;
     if (v.get().isPrimitive() || !v.get().toObject().isFunction()) {
         *vp = JSVAL_VOID;
@@ -1684,10 +1683,9 @@ GetXMLSettingFlags(JSContext *cx, unsigned *flagsp)
 static JSObject *
 GetCurrentScopeChain(JSContext *cx)
 {
-    if (cx->hasfp())
+    if (cx->hasfp() && cx->fp()->scopeChain()->compartment() == cx->compartment)
         return cx->fp()->scopeChain();
-    RootedObject global(cx, cx->globalObject);
-    return JS_ObjectToInnerObject(cx, global);
+    return cx->global();
 }
 
 static JSXML *
@@ -3038,7 +3036,7 @@ DeepCopy(JSContext *cx, JSXML *xml, JSObject *obj, unsigned flags)
     if (copy) {
         if (obj) {
             /* Caller provided the object for this copy, hook 'em up. */
-            obj->setPrivate(copy);
+            obj->setPrivateGCThing(copy);
             copy->object = obj;
         } else if (!js_GetXMLObject(cx, copy)) {
             copy = NULL;
@@ -7307,11 +7305,10 @@ NewXMLObject(JSContext *cx, JSXML *xml)
 {
     JSObject *obj;
 
-    JSObject *parent = GetGlobalForScopeChain(cx);
-    obj = NewObjectWithClassProto(cx, &XMLClass, NULL, parent);
+    obj = NewObjectWithClassProto(cx, &XMLClass, NULL, cx->global());
     if (!obj)
         return NULL;
-    obj->setPrivate(xml);
+    obj->setPrivateGCThing(xml);
     return obj;
 }
 
@@ -7413,7 +7410,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     Rooted<JSXML*> xml(cx, js_NewXML(cx, JSXML_CLASS_TEXT));
     if (!xml)
         return NULL;
-    xmlProto->setPrivate(xml);
+    xmlProto->setPrivateGCThing(xml);
     xml->object = xmlProto;
 
     /* Don't count this as a real content-created XML object. */
@@ -7647,7 +7644,7 @@ js_ValueToXMLString(JSContext *cx, const Value &v)
 JSBool
 js_GetAnyName(JSContext *cx, jsid *idp)
 {
-    JSObject *global = cx->hasfp() ? &cx->fp()->global() : cx->globalObject;
+    JSObject *global = cx->global();
     Value v = global->getReservedSlot(JSProto_AnyName);
     if (v.isUndefined()) {
         RootedObject obj(cx, NewObjectWithGivenProto(cx, &AnyNameClass, NULL, global));
@@ -7917,8 +7914,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
                 return JS_FALSE;
         }
 
-        JSObject *parent = GetGlobalForScopeChain(cx);
-        filterobj = NewObjectWithGivenProto(cx, &js_XMLFilterClass, NULL, parent);
+        filterobj = NewObjectWithGivenProto(cx, &js_XMLFilterClass, NULL, cx->global());
         if (!filterobj)
             return JS_FALSE;
 

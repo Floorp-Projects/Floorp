@@ -82,8 +82,8 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, JSObject *obj)
         return nullptr;
 
     // Create the waiver.
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, obj) || !JS_WrapObject(cx, &proto))
+    JSAutoCompartment ac(cx, obj);
+    if (!JS_WrapObject(cx, &proto))
         return nullptr;
     JSObject *waiver = Wrapper::New(cx, obj, proto,
                                     JS_GetGlobalForObject(cx, obj),
@@ -126,10 +126,7 @@ JSObject *
 WrapperFactory::DoubleWrap(JSContext *cx, JSObject *obj, unsigned flags)
 {
     if (flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, obj))
-            return nullptr;
-
+        JSAutoCompartment ac(cx, obj);
         return WaiveXray(cx, obj);
     }
     return obj;
@@ -169,9 +166,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
 
     XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, obj))
-        return nullptr;
+    JSAutoCompartment ac(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
 
     {
@@ -295,13 +290,13 @@ enum XrayType {
 static XrayType
 GetXrayType(JSObject *obj)
 {
-    js::Class* clasp = js::GetObjectClass(obj);
-    if (mozilla::dom::IsDOMClass(Jsvalify(clasp))) {
+    if (mozilla::dom::IsDOMObject(obj))
         return XrayForDOMObject;
-    }
-    if (mozilla::dom::binding::instanceIsProxy(obj)) {
+
+    if (mozilla::dom::oldproxybindings::instanceIsProxy(obj))
         return XrayForDOMProxyObject;
-    }
+
+    js::Class* clasp = js::GetObjectClass(obj);
     if (IS_WRAPPER_CLASS(clasp) || clasp->ext.innerObject) {
         NS_ASSERTION(clasp->ext.innerObject || IS_WN_WRAPPER_OBJECT(obj),
                      "We forgot to Morph a slim wrapper!");
@@ -336,9 +331,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         } else {
             bool isSystem;
             {
-                JSAutoEnterCompartment ac;
-                if (!ac.enter(cx, obj))
-                    return nullptr;
+                JSAutoCompartment ac(cx, obj);
                 JSObject *globalObj = JS_GetGlobalForObject(cx, obj);
                 JS_ASSERT(globalObj);
                 isSystem = JS_IsSystemObject(cx, globalObj);
@@ -385,10 +378,10 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                 wrapper = &FilteringWrapper<Xray, LocationPolicy>::singleton;
             else
                 wrapper = &FilteringWrapper<Xray, CrossOriginAccessiblePropertiesOnly>::singleton;
-        } else if (mozilla::dom::binding::instanceIsProxy(obj)) {
-            wrapper = &FilteringWrapper<XrayProxy, CrossOriginAccessiblePropertiesOnly>::singleton;
-        } else if (mozilla::dom::IsDOMClass(JS_GetClass(obj))) {
+        } else if (mozilla::dom::IsDOMObject(obj)) {
             wrapper = &FilteringWrapper<XrayDOM, CrossOriginAccessiblePropertiesOnly>::singleton;
+        } else if (mozilla::dom::oldproxybindings::instanceIsProxy(obj)) {
+            wrapper = &FilteringWrapper<XrayProxy, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (IsComponentsObject(obj)) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         ComponentsObjectPolicy>::singleton;
@@ -410,9 +403,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             JSObject *unwrappedProto = NULL;
             if (wrappedProto && IsCrossCompartmentWrapper(wrappedProto) &&
                 (unwrappedProto = Wrapper::wrappedObject(wrappedProto))) {
-                JSAutoEnterCompartment ac;
-                if (!ac.enter(cx, unwrappedProto))
-                    return NULL;
+                JSAutoCompartment ac(cx, unwrappedProto);
                 key = JS_IdentifyClassPrototype(cx, unwrappedProto);
             }
             if (key != JSProto_Null) {

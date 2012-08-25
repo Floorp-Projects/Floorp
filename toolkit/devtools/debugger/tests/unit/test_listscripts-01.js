@@ -28,13 +28,18 @@ function test_simple_listscripts()
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     var path = getFilePath('test_listscripts-01.js');
     gThreadClient.getScripts(function (aResponse) {
-        // Check the return value.
-        do_check_eq(aResponse.scripts[0].url, path);
-        do_check_eq(aResponse.scripts[0].startLine, 41);
-        do_check_eq(aResponse.scripts[0].lineCount, 4);
-        gThreadClient.resume(function () {
-          finishClient(gClient);
-        });
+      let script = aResponse.scripts
+        .filter(function (s) {
+          return s.url.match(/test_listscripts-01.js$/);
+        })[0];
+      // Check the return value.
+      do_check_true(!!script);
+      do_check_eq(script.url, path);
+      do_check_eq(script.startLine, 46);
+      do_check_eq(script.lineCount, 4);
+      gThreadClient.resume(function () {
+        finishClient(gClient);
+      });
     });
   });
 

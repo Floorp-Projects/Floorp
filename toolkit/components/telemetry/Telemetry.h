@@ -22,14 +22,7 @@ namespace base {
 namespace mozilla {
 namespace Telemetry {
 
-enum ID {
-#define HISTOGRAM(name, a, b, c, d, e) name,
-
-#include "TelemetryHistograms.h"
-
-#undef HISTOGRAM
-HistogramCount
-};
+#include "TelemetryHistogramEnums.h"
 
 /**
  * Initialize the Telemetry service on the main thread at startup.

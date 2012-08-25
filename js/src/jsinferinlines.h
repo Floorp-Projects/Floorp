@@ -359,8 +359,7 @@ inline TypeObject *
 GetTypeNewObject(JSContext *cx, JSProtoKey key)
 {
     RootedObject proto(cx);
-    RootedObject null(cx);
-    if (!js_GetClassPrototype(cx, null, key, &proto))
+    if (!js_GetClassPrototype(cx, key, &proto))
         return NULL;
     return proto->getNewType(cx);
 }
@@ -535,8 +534,7 @@ inline bool
 UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 {
     return fp->isConstructing() && cx->typeInferenceEnabled() &&
-           fp->prev() && fp->prev()->isScriptFrame() &&
-           UseNewType(cx, fp->prev()->script(), fp->prevpc());
+           fp->prev() && UseNewType(cx, fp->prev()->script(), fp->prevpc());
 }
 
 inline bool
@@ -651,8 +649,7 @@ TypeScript::SlotTypes(JSScript *script, unsigned slot)
 TypeScript::StandardType(JSContext *cx, JSScript *script, JSProtoKey key)
 {
     RootedObject proto(cx);
-    RootedObject global(cx, &script->global());
-    if (!js_GetClassPrototype(cx, global, key, &proto, NULL))
+    if (!js_GetClassPrototype(cx, key, &proto, NULL))
         return NULL;
     return proto->getNewType(cx);
 }
@@ -1375,7 +1372,7 @@ TypeObject::setBasePropertyCount(uint32_t count)
 }
 
 inline HeapTypeSet *
-TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
+TypeObject::getProperty(JSContext *cx, jsid id, bool own)
 {
     JS_ASSERT(cx->compartment->activeInference);
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
@@ -1416,37 +1413,8 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
     }
 
     HeapTypeSet *types = &(*pprop)->types;
-
-    if (assign && !types->ownProperty(false)) {
-        /*
-         * Normally, we just want to set the property as being an own property
-         * when we got a set to it. The exception is when the set is actually
-         * calling a setter higher on the prototype chain. Check to see if there
-         * is a setter higher on the prototype chain, setter the property as an
-         * own property if that is not the case.
-         */
-        bool foundSetter = false;
-
-        JSObject *protoWalk = proto;
-        while (protoWalk) {
-            if (!protoWalk->isNative()) {
-                protoWalk = protoWalk->getProto();
-                continue;
-            }
-
-            Shape *shape = protoWalk->nativeLookup(cx, id);
-
-            foundSetter = shape &&
-                          !shape->hasDefaultSetter();
-            if (foundSetter)
-                break;
-
-            protoWalk = protoWalk->getProto();
-        }
-
-        if (!foundSetter)
-            types->setOwnProperty(cx, false);
-    }
+    if (own)
+        types->setOwnProperty(cx, false);
 
     return types;
 }

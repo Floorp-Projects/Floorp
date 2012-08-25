@@ -464,9 +464,21 @@ PRECOMPILE_RESOURCE=gre
 PRECOMPILE_GRE=$$PWD
 endif
 
+ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
+# FIXME: not tested on OS/2. Is it using the correct libxul?
+RUN_FROM_PWD = $(_ABS_RUN_TEST_PROGRAM)
+else
+# For non-Windows, just set the library path so we load the libs from the right place.
+ifdef ($(OS_ARCH),Darwin)
+RUN_FROM_PWD = DYLD_LIBRARY_PATH=$(PRECOMPILE_GRE)
+else
+RUN_FROM_PWD = "$$PWD/run-mozilla.sh"
+endif
+endif
+
 # Silence the unzip step so we don't print any binary data from the comment field.
 GENERATE_CACHE = \
-  $(_ABS_RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(call core_abspath,$(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js) -e "populate_startupcache('$(PRECOMPILE_DIR)', '$(OMNIJAR_NAME)', 'startupCache.zip');" && \
+  $(RUN_FROM_PWD) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) -g "$(PRECOMPILE_GRE)" -a "$$PWD" -f $(call core_abspath,$(MOZILLA_DIR)/toolkit/mozapps/installer/precompile_cache.js) -e "populate_startupcache('$(PRECOMPILE_DIR)', '$(OMNIJAR_NAME)', 'startupCache.zip');" && \
   rm -rf jsloader jssubloader && \
   $(UNZIP) -q startupCache.zip && \
   rm startupCache.zip && \

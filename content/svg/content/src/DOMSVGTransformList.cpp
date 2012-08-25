@@ -77,7 +77,7 @@ JSObject*
 DOMSVGTransformList::WrapObject(JSContext *cx, JSObject *scope,
                                 bool *triedToWrap)
 {
-  return mozilla::dom::binding::SVGTransformList::create(cx, scope, this,
+  return mozilla::dom::oldproxybindings::SVGTransformList::create(cx, scope, this,
                                                          triedToWrap);
 }
 

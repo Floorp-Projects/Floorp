@@ -12,7 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 
-DIRS = \
+PARALLEL_DIRS = \
   interfaces/base \
   interfaces/canvas \
   interfaces/core \
@@ -37,13 +37,10 @@ DIRS = \
   interfaces/notification \
   interfaces/svg \
   interfaces/smil \
-  $(NULL)
-
-DIRS += \
   interfaces/apps \
   $(NULL)
 
-DIRS += \
+PARALLEL_DIRS += \
   apps \
   base \
   activities \
@@ -75,14 +72,14 @@ DIRS += \
   $(NULL)
 
 ifdef MOZ_B2G_RIL
-DIRS += \
+PARALLEL_DIRS += \
   telephony \
   wifi \
   $(NULL)
 endif
 
 ifdef MOZ_B2G_BT
-DIRS += \
+PARALLEL_DIRS += \
   bluetooth \
   $(NULL)
 endif

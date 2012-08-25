@@ -673,5 +673,5 @@ toolbar button -->
 <!ENTITY social.toggleSidebar.label "Show sidebar">
 <!ENTITY social.toggleSidebar.accesskey "s">
 
-<!ENTITY social.activated.button.label "Oops, undo">
-<!ENTITY social.activated.button.accesskey "u">
+<!ENTITY social.activated.undobutton.label "Undo">
+<!ENTITY social.activated.undobutton.accesskey "U">

@@ -152,6 +152,10 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   }
   EnsureInnerView();
 
+  // Set the primary frame now so that DocumentViewerImpl::FindContainerView
+  // called from within EndSwapDocShellsForViews below can find it if needed.
+  aContent->SetPrimaryFrame(this);
+
   // If we have a detached subdoc's root view on our frame loader, re-insert
   // it into the view tree. This happens when we've been reframed, and
   // ensures the presentation persists across reframes. If the frame element
@@ -173,11 +177,6 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
     }
     frameloader->SetDetachedSubdocView(nullptr, nullptr);
   }
-
-  // Set the primary frame now so that
-  // DocumentViewerImpl::FindContainerView called by ShowViewer below
-  // can find it if necessary.
-  aContent->SetPrimaryFrame(this);
 
   nsContentUtils::AddScriptRunner(new AsyncFrameInit(this));
   return NS_OK;
@@ -837,6 +836,18 @@ nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (mPostedReflowCallback) {
     PresContext()->PresShell()->CancelReflowCallback(this);
     mPostedReflowCallback = false;
+  }
+
+  // Forget about plugin geometry updates in the subdoc's PresContext,
+  // otherwise we can be left with dangling pointers to the "plugin for
+  // geometry update frame" in the root PresContext.
+  nsIFrame* subdocRootFrame = GetSubdocumentRootFrame();
+  if (subdocRootFrame) {
+    nsPresContext* pc = subdocRootFrame->PresContext();
+    nsRootPresContext* rpc = pc ? pc->GetRootPresContext() : nullptr;
+    if (rpc) {
+      rpc->RootForgetUpdatePluginGeometryFrameForPresContext(pc);
+    }
   }
 
   // Detach the subdocument's views and stash them in the frame loader.

@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsINestedURI.h"
+#include "nsIIPCSerializableURI.h"
 
 #define NS_THIS_JARURI_IMPL_CID                      \
 { /* 9a55f629-730b-4d08-b75b-fa7d9570a691 */         \
@@ -36,9 +37,10 @@
 class nsJARURI : public nsIJARURI,
                  public nsISerializable,
                  public nsIClassInfo,
-                 public nsINestedURI
+                 public nsINestedURI,
+                 public nsIIPCSerializableURI
 {
-public:    
+public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURI
     NS_DECL_NSIURL
@@ -46,6 +48,7 @@ public:
     NS_DECL_NSISERIALIZABLE
     NS_DECL_NSICLASSINFO
     NS_DECL_NSINESTEDURI
+    NS_DECL_NSIIPCSERIALIZABLEURI
 
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_THIS_JARURI_IMPL_CID)
 

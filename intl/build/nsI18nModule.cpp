@@ -80,39 +80,39 @@ NS_DEFINE_NAMED_CID(NS_DATETIMEFORMAT_CID);
 #endif
 
 static const mozilla::Module::CIDEntry kIntlCIDs[] = {
-    { &kNS_LBRK_CID, false, NULL, nsJISx4051LineBreakerConstructor },
-    { &kNS_WBRK_CID, false, NULL, nsSampleWordBreakerConstructor },
-    { &kNS_SEMANTICUNITSCANNER_CID, false, NULL, nsSemanticUnitScannerConstructor },
-    { &kNS_UNICHARUTIL_CID, false, NULL, nsCaseConversionImp2Constructor },
-    { &kNS_UNICHARCATEGORY_CID, false, NULL, nsCategoryImpConstructor },
-    { &kNS_ENTITYCONVERTER_CID, false, NULL, nsEntityConverterConstructor },
-    { &kNS_SAVEASCHARSET_CID, false, NULL, nsSaveAsCharsetConstructor },
-    { &kNS_UNICODE_NORMALIZER_CID, false, NULL, nsUnicodeNormalizerConstructor },
-    { &kNS_STRINGBUNDLESERVICE_CID, false, NULL, nsStringBundleServiceConstructor },
-    { &kNS_STRINGBUNDLETEXTOVERRIDE_CID, false, NULL, nsStringBundleTextOverrideConstructor },
-    { &kNS_LOCALESERVICE_CID, false, NULL, CreateLocaleService },
-    { &kNS_COLLATIONFACTORY_CID, false, NULL, nsCollationFactoryConstructor },
-    { &kNS_SCRIPTABLEDATEFORMAT_CID, false, NULL, NS_NewScriptableDateFormat },
-    { &kNS_LANGUAGEATOMSERVICE_CID, false, NULL, nsLanguageAtomServiceConstructor },
-    { &kNS_PLATFORMCHARSET_CID, false, NULL, nsPlatformCharsetConstructor },
+    { &kNS_LBRK_CID, false, nullptr, nsJISx4051LineBreakerConstructor },
+    { &kNS_WBRK_CID, false, nullptr, nsSampleWordBreakerConstructor },
+    { &kNS_SEMANTICUNITSCANNER_CID, false, nullptr, nsSemanticUnitScannerConstructor },
+    { &kNS_UNICHARUTIL_CID, false, nullptr, nsCaseConversionImp2Constructor },
+    { &kNS_UNICHARCATEGORY_CID, false, nullptr, nsCategoryImpConstructor },
+    { &kNS_ENTITYCONVERTER_CID, false, nullptr, nsEntityConverterConstructor },
+    { &kNS_SAVEASCHARSET_CID, false, nullptr, nsSaveAsCharsetConstructor },
+    { &kNS_UNICODE_NORMALIZER_CID, false, nullptr, nsUnicodeNormalizerConstructor },
+    { &kNS_STRINGBUNDLESERVICE_CID, false, nullptr, nsStringBundleServiceConstructor },
+    { &kNS_STRINGBUNDLETEXTOVERRIDE_CID, false, nullptr, nsStringBundleTextOverrideConstructor },
+    { &kNS_LOCALESERVICE_CID, false, nullptr, CreateLocaleService },
+    { &kNS_COLLATIONFACTORY_CID, false, nullptr, nsCollationFactoryConstructor },
+    { &kNS_SCRIPTABLEDATEFORMAT_CID, false, nullptr, NS_NewScriptableDateFormat },
+    { &kNS_LANGUAGEATOMSERVICE_CID, false, nullptr, nsLanguageAtomServiceConstructor },
+    { &kNS_PLATFORMCHARSET_CID, false, nullptr, nsPlatformCharsetConstructor },
 #ifdef XP_WIN
-    { &kNS_COLLATION_CID, false, NULL, nsCollationWinConstructor },
-    { &kNS_DATETIMEFORMAT_CID, false, NULL, nsDateTimeFormatWinConstructor },
+    { &kNS_COLLATION_CID, false, nullptr, nsCollationWinConstructor },
+    { &kNS_DATETIMEFORMAT_CID, false, nullptr, nsDateTimeFormatWinConstructor },
 #endif
 #ifdef USE_UNIX_LOCALE
-    { &kNS_COLLATION_CID, false, NULL, nsCollationUnixConstructor },
-    { &kNS_DATETIMEFORMAT_CID, false, NULL, nsDateTimeFormatUnixConstructor },
+    { &kNS_COLLATION_CID, false, nullptr, nsCollationUnixConstructor },
+    { &kNS_DATETIMEFORMAT_CID, false, nullptr, nsDateTimeFormatUnixConstructor },
 #endif
 #ifdef USE_MAC_LOCALE
-    { &kNS_COLLATION_CID, false, NULL, nsCollationMacUCConstructor },
-    { &kNS_DATETIMEFORMAT_CID, false, NULL, nsDateTimeFormatMacConstructor },
+    { &kNS_COLLATION_CID, false, nullptr, nsCollationMacUCConstructor },
+    { &kNS_DATETIMEFORMAT_CID, false, nullptr, nsDateTimeFormatMacConstructor },
 #endif
 #ifdef XP_OS2
-    { &kNS_OS2LOCALE_CID, false, NULL, nsOS2LocaleConstructor },
-    { &kNS_COLLATION_CID, false, NULL, nsCollationOS2Constructor },
-    { &kNS_DATETIMEFORMAT_CID, false, NULL, nsDateTimeFormatOS2Constructor },
+    { &kNS_OS2LOCALE_CID, false, nullptr, nsOS2LocaleConstructor },
+    { &kNS_COLLATION_CID, false, nullptr, nsCollationOS2Constructor },
+    { &kNS_DATETIMEFORMAT_CID, false, nullptr, nsDateTimeFormatOS2Constructor },
 #endif
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
@@ -148,7 +148,7 @@ static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
     { NS_COLLATION_CONTRACTID, &kNS_COLLATION_CID },
     { NS_DATETIMEFORMAT_CONTRACTID, &kNS_DATETIMEFORMAT_CID },
 #endif
-    { NULL }
+    { nullptr }
 };
 
 static void
@@ -161,9 +161,9 @@ static const mozilla::Module kIntlModule = {
     mozilla::Module::kVersion,
     kIntlCIDs,
     kIntlContracts,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
     I18nModuleDtor
 };
 

@@ -220,10 +220,6 @@ JSRuntime::initSelfHosting(JSContext *cx)
         return false;
     JS_SetGlobalObject(cx, selfHostedGlobal_);
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, cx->global()))
-        return false;
-
     const char *src = selfhosted::raw_sources;
     uint32_t srcLen = selfhosted::GetRawScriptsSize();
 
@@ -266,8 +262,8 @@ JSRuntime::cloneSelfHostedValueById(JSContext *cx, jsid id, HandleObject holder,
     Value funVal;
     {
         RootedObject shg(cx, selfHostedGlobal_);
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, shg) || !JS_GetPropertyById(cx, shg, id, &funVal) || !funVal.isObject())
+        AutoCompartment ac(cx, shg);
+        if (!JS_GetPropertyById(cx, shg, id, &funVal) || !funVal.isObject())
             return false;
     }
 
@@ -279,12 +275,6 @@ JSRuntime::cloneSelfHostedValueById(JSContext *cx, jsid id, HandleObject holder,
     DebugOnly<bool> ok = JS_DefinePropertyById(cx, holder, id, *vp, NULL, NULL, 0);
     JS_ASSERT(ok);
     return true;
-}
-
-JSScript *
-js_GetCurrentScript(JSContext *cx)
-{
-    return cx->hasfp() ? cx->fp()->maybeScript() : NULL;
 }
 
 JSContext *
@@ -1066,9 +1056,11 @@ JSContext::JSContext(JSRuntime *rt)
     rootingUnnecessary(false),
 #endif
     compartment(NULL),
-    stack(thisDuringConstruction()),  /* depends on cx->thread_ */
+    enterCompartmentDepth_(0),
+    savedFrameChains_(),
+    defaultCompartmentObject_(NULL),
+    stack(thisDuringConstruction()),
     parseMapPool_(NULL),
-    globalObject(NULL),
     sharpObjectMap(thisDuringConstruction()),
     argumentFormatMap(NULL),
     lastMessage(NULL),
@@ -1085,7 +1077,6 @@ JSContext::JSContext(JSRuntime *rt)
 #ifdef JS_METHODJIT
     methodJitEnabled(false),
 #endif
-    inferenceEnabled(false),
 #ifdef MOZ_TRACE_JSCALLS
     functionCallback(NULL),
 #endif
@@ -1149,43 +1140,6 @@ RelaxRootChecksForContext(JSContext *cx)
 } /* namespace JS */
 #endif
 
-void
-JSContext::resetCompartment()
-{
-    RootedObject scopeobj(this);
-    if (stack.hasfp()) {
-        scopeobj = fp()->scopeChain();
-    } else {
-        scopeobj = globalObject;
-        if (!scopeobj)
-            goto error;
-
-        /*
-         * Innerize. Assert, but check anyway, that this succeeds. (It
-         * can only fail due to bugs in the engine or embedding.)
-         */
-        scopeobj = GetInnerObject(this, scopeobj);
-        if (!scopeobj)
-            goto error;
-    }
-
-    compartment = scopeobj->compartment();
-    inferenceEnabled = compartment->types.inferenceEnabled;
-
-    if (isExceptionPending())
-        wrapPendingException();
-    updateJITEnabled();
-    return;
-
-error:
-
-    /*
-     * If we try to use the context without a selected compartment,
-     * we will crash.
-     */
-    compartment = NULL;
-}
-
 /*
  * Since this function is only called in the context of a pending exception,
  * the caller must subsequently take an error path. If wrapping fails, it will
@@ -1222,6 +1176,38 @@ bool
 JSContext::runningWithTrustedPrincipals() const
 {
     return !compartment || compartment->principals == runtime->trustedPrincipals();
+}
+
+bool
+JSContext::saveFrameChain()
+{
+    if (!stack.saveFrameChain())
+        return false;
+
+    if (!savedFrameChains_.append(SavedFrameChain(compartment, enterCompartmentDepth_))) {
+        stack.restoreFrameChain();
+        return false;
+    }
+
+    compartment = defaultCompartmentObject_->compartment();
+    enterCompartmentDepth_ = 0;
+
+    if (isExceptionPending())
+        wrapPendingException();
+    return true;
+}
+
+void
+JSContext::restoreFrameChain()
+{
+    SavedFrameChain sfc = savedFrameChains_.popCopy();
+    compartment = sfc.compartment;
+    enterCompartmentDepth_ = sfc.enterCompartmentCount;
+
+    stack.restoreFrameChain();
+
+    if (isExceptionPending())
+        wrapPendingException();
 }
 
 void
@@ -1388,8 +1374,8 @@ JSContext::mark(JSTracer *trc)
     /* Stack frames and slots are traced by StackSpace::mark. */
 
     /* Mark other roots-by-definition in the JSContext. */
-    if (globalObject && !hasRunOption(JSOPTION_UNROOTED_GLOBAL))
-        MarkObjectRoot(trc, &globalObject, "global object");
+    if (defaultCompartmentObject_ && !hasRunOption(JSOPTION_UNROOTED_GLOBAL))
+        MarkObjectRoot(trc, &defaultCompartmentObject_, "default compartment object");
     if (isExceptionPending())
         MarkValueRoot(trc, &exception, "exception");
 

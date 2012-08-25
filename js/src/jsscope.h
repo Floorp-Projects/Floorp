@@ -458,7 +458,7 @@ struct Shape : public js::gc::Cell
 
   protected:
     HeapPtrBaseShape    base_;
-    HeapId              propid_;
+    EncapsulatedId      propid_;
 
     JS_ENUM_HEADER(SlotInfo, uint32_t)
     {
@@ -744,12 +744,12 @@ struct Shape : public js::gc::Cell
         slotInfo = slotInfo | ((count + 1) << LINEAR_SEARCHES_SHIFT);
     }
 
-    const HeapId &propid() const {
+    const EncapsulatedId &propid() const {
         JS_ASSERT(!isEmptyShape());
         JS_ASSERT(!JSID_IS_VOID(propid_));
         return propid_;
     }
-    HeapId &propidRef() { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
+    EncapsulatedId &propidRef() { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
 
     int16_t shortid() const { JS_ASSERT(hasShortID()); return maybeShortid(); }
     int16_t maybeShortid() const { return shortid_; }

@@ -4,6 +4,8 @@
 
 browser.jar:
     content/browser/inspector.html                (highlighter/inspector.html)
+    content/browser/devtools/markup-view.xhtml    (markupview/markup-view.xhtml)
+    content/browser/devtools/markup-view.css      (markupview/markup-view.css)
     content/browser/NetworkPanel.xhtml            (webconsole/NetworkPanel.xhtml)
     content/browser/devtools/HUDService-content.js (webconsole/HUDService-content.js)
     content/browser/devtools/webconsole.js        (webconsole/webconsole.js)

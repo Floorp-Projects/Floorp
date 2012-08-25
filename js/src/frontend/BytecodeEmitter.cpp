@@ -125,7 +125,6 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, Shared
     hasGlobalScope(hasGlobalScope),
     selfHostingMode(selfHostingMode)
 {
-    JS_ASSERT_IF(callerFrame, callerFrame->isScriptFrame());
     memset(&prolog, 0, sizeof prolog);
     memset(&main, 0, sizeof main);
     current = &main;
@@ -431,8 +430,12 @@ UpdateSourceCoordNotes(JSContext *cx, BytecodeEmitter *bce, TokenPtr pos)
         if (colspan < 0) {
             colspan += SN_COLSPAN_DOMAIN;
         } else if (colspan >= SN_COLSPAN_DOMAIN / 2) {
-            ReportStatementTooLarge(cx, bce->topStmt);
-            return false;
+            // If the column span is so large that we can't store it, then just
+            // discard this information because column information would most
+            // likely be useless anyway once the column numbers are ~4000000.
+            // This has been known to happen with scripts that have been
+            // minimized and put into all one line.
+            return true;
         }
         if (NewSrcNote2(cx, bce, SRC_COLSPAN, colspan) < 0)
             return false;
@@ -1301,8 +1304,6 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              */
             if (bce->inForInit)
                 return true;
-
-            JS_ASSERT(caller->isScriptFrame());
 
             /*
              * If this is an eval in the global scope, then unbound variables
@@ -4804,6 +4805,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
             if (NewSrcNote2(cx, bce, SRC_SETLINE, lineno) < 0)
                 return false;
             bce->current->currentLine = (unsigned) lineno;
+            bce->current->lastColumn = 0;
         }
     }
 
@@ -5262,6 +5264,7 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     } else if (!pn->isDirectivePrologueMember()) {
         /* Don't complain about directive prologue members; just don't emit their code. */
         bce->current->currentLine = pn2->pn_pos.begin.lineno;
+        bce->current->lastColumn = 0;
         if (!bce->reportStrictWarning(pn2, JSMSG_USELESS_EXPR))
             return false;
     }
