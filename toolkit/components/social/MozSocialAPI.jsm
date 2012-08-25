@@ -13,6 +13,7 @@ const EXPORTED_SYMBOLS = ["MozSocialAPI"];
 
 var MozSocialAPI = {
   _enabled: false,
+  _everEnabled: false,
   set enabled(val) {
     let enable = !!val;
     if (enable == this._enabled) {
@@ -22,6 +23,12 @@ var MozSocialAPI = {
 
     if (enable) {
       Services.obs.addObserver(injectController, "document-element-inserted", false);
+
+      if (!this._everEnabled) {
+        this._everEnabled = true;
+        Services.telemetry.getHistogramById("SOCIAL_ENABLED_ON_SESSION").add(true);
+      }
+
     } else {
       Services.obs.removeObserver(injectController, "document-element-inserted", false);
     }

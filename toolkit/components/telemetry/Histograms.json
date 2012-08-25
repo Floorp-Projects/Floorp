@@ -2194,5 +2194,13 @@
     "kind": "enumerated",
     "n_values": 100,
     "description": "Security UI Telemetry"
+  },
+  "SOCIAL_ENABLED_ON_SESSION": {
+    "kind": "flag",
+    "description": "Social has been enabled at least once on the current session"
+  },
+  "SOCIAL_TOGGLED": {
+    "kind": "boolean",
+    "description": "Social has been toggled to on or off"
   }
 }
