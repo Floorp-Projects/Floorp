@@ -579,8 +579,9 @@ const DownloadsView = {
 
   onDownloadClick: function DV_onDownloadClick(aEvent)
   {
-    // Handle primary clicks only.
-    if (aEvent.button == 0) {
+    // Handle primary clicks only, and exclude the action button.
+    if (aEvent.button == 0 &&
+        !aEvent.originalTarget.hasAttribute("oncommand")) {
       goDoCommand("downloadsCmd_open");
     }
   },
