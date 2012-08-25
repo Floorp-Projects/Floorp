@@ -14,11 +14,11 @@ function testInspect() {
   helpers.setInput('inspect');
   helpers.check({
     input:  'inspect',
-    hints:         ' <node>',
+    hints:         ' <selector>',
     markup: 'VVVVVVV',
     status: 'ERROR',
     args: {
-      node: { message: '' },
+      selector: { message: '' },
     }
   });
 
@@ -29,7 +29,7 @@ function testInspect() {
     markup: 'VVVVVVVVII',
     status: 'ERROR',
     args: {
-      node: { message: 'No matches' },
+      selector: { message: 'No matches' },
     }
   });
 
@@ -40,7 +40,7 @@ function testInspect() {
     markup: 'VVVVVVVVEEEE',
     status: 'ERROR',
     args: {
-      node: { message: 'Too many matches (2)' },
+      selector: { message: 'Too many matches (2)' },
     }
   });
 
@@ -51,7 +51,7 @@ function testInspect() {
     markup: 'VVVVVVVVVVV',
     status: 'VALID',
     args: {
-      node: { message: '' },
+      selector: { message: '' },
     }
   });
 
@@ -62,7 +62,7 @@ function testInspect() {
     markup: 'VVVVVVVVIIIIIIIII',
     status: 'ERROR',
     args: {
-      node: { message: 'No matches' },
+      selector: { message: 'No matches' },
     }
   });
 
@@ -73,7 +73,7 @@ function testInspect() {
     markup: 'VVVVVVVVVVVVVVVVVV',
     status: 'VALID',
     args: {
-      node: { message: '' },
+      selector: { message: '' },
     }
   });
 
@@ -84,7 +84,7 @@ function testInspect() {
     markup: 'VVVVVVVVVVVVVVV',
     status: 'VALID',
     args: {
-      node: { message: '' },
+      selector: { message: '' },
     }
   });
 
@@ -95,7 +95,7 @@ function testInspect() {
     markup: 'VVVVVVVVVVVVVVVVVVVVVVVV',
     status: 'VALID',
     args: {
-      node: { message: '' },
+      selector: { message: '' },
     }
   });
 
@@ -106,7 +106,7 @@ function testInspect() {
     markup: 'VVVVVVVVVVVVVVVV',
     status: 'VALID',
     args: {
-      node: { message: '' },
+      selector: { message: '' },
     }
   });
 
