@@ -60,7 +60,7 @@ SystemMessageManager.prototype = {
       debug(contractID + " is registered, creating an instance");
       let wrapper = Cc[contractID].createInstance(Ci.nsISystemMessagesWrapper);
       if (wrapper) {
-        aMessage = wrapper.wrapMessage(aMessage);
+        aMessage = wrapper.wrapMessage(aMessage, this._window);
         wrapped = true;
         debug("wrapped = " + aMessage);
       }
