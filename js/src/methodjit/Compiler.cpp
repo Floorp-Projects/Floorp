@@ -4000,24 +4000,41 @@ mjit::Compiler::ionCompileHelper()
 
     // Trigger ion compilation if (a) the script has been used enough times for
     // this opcode, and (b) the script does not already have ion information
-    // (whether successful, failed, or in progress off thread compilation).
+    // (whether successful, failed, or in progress off thread compilation)
+    // *OR* off thread compilation is not being used.
+    //
+    // (b) prevents repetitive stub calls while off thread compilation is in
+    // progress, but is otherwise unnecessary and negatively affects tuning
+    // on some benchmarks (see bug 774253).
+    Jump last;
+
 #if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
-    Jump first = masm.branch32(Assembler::LessThan, AbsoluteAddress(useCountAddress),
-                               Imm32(minUses));
-    Jump second = masm.branch32(Assembler::Equal, AbsoluteAddress(ionScriptAddress),
-                                Imm32(0));
+    if (ion::js_IonOptions.parallelCompilation) {
+        Jump first = masm.branch32(Assembler::LessThan, AbsoluteAddress(useCountAddress),
+                                   Imm32(minUses));
+        last = masm.branch32(Assembler::Equal, AbsoluteAddress(ionScriptAddress),
+                             Imm32(0));
+        first.linkTo(masm.label(), &masm);
+    } else {
+        last = masm.branch32(Assembler::GreaterThanOrEqual, AbsoluteAddress(useCountAddress),
+                             Imm32(minUses));
+    }
 #else
     /* Handle processors that can't load from absolute addresses. */
     RegisterID reg = frame.allocReg();
     masm.move(ImmPtr(useCountAddress), reg);
-    Jump first = masm.branch32(Assembler::LessThan, Address(reg), Imm32(minUses));
-    masm.move(ImmPtr(ionScriptAddress), reg);
-    Jump second = masm.branchPtr(Assembler::Equal, Address(reg), ImmPtr(NULL));
+    if (ion::js_IonOptions.parallelCompilation) {
+        Jump first = masm.branch32(Assembler::LessThan, Address(reg), Imm32(minUses));
+        masm.move(ImmPtr(ionScriptAddress), reg);
+        last = masm.branchPtr(Assembler::Equal, Address(reg), ImmPtr(NULL));
+        first.linkTo(masm.label(), &masm);
+    } else {
+        last = masm.branch32(Assembler::GreaterThanOrEqual, Address(reg), Imm32(minUses));
+    }
     frame.freeReg(reg);
 #endif
-    first.linkTo(masm.label(), &masm);
 
-    stubcc.linkExit(second, Uses(0));
+    stubcc.linkExit(last, Uses(0));
     stubcc.leave();
 
     OOL_STUBCALL(stubs::TriggerIonCompile, REJOIN_RESUME);
