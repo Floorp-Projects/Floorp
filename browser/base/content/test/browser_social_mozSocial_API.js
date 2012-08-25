@@ -42,6 +42,8 @@ var tests = {
       switch (topic) {
         case "got-panel-message":
           ok(true, "got panel message");
+          // Check the panel isn't in our history.
+          ensureSocialUrlNotRemembered(e.data.location);
           break;
         case "got-social-panel-visibility":
           if (e.data.result == "shown") {
@@ -94,6 +96,8 @@ var tests = {
         case "got-service-window-message":
           // The sidebar message will always come first, since it loads by default
           ok(true, "got service window message");
+          // the service window URL should not be stored in history.
+          ensureSocialUrlNotRemembered(e.data.location);
           port.postMessage({topic: "test-close-service-window"});
           break;
         case "got-service-window-closed-message":
