@@ -1,0 +1,8 @@
+include protocol compressCtor;
+
+rpc protocol compressCtorManagee {
+    manager compressCtor;
+
+child:
+    async __delete__() compress;
+};
