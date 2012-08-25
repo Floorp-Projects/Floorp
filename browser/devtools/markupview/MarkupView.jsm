@@ -136,11 +136,7 @@ MarkupView.prototype = {
     switch(aEvent.keyCode) {
       case Ci.nsIDOMKeyEvent.DOM_VK_DELETE:
       case Ci.nsIDOMKeyEvent.DOM_VK_BACK_SPACE:
-        let node = this._selectedContainer.node;
-        let doc = nodeDocument(node);
-        if (node != doc && node != doc.documentElement) {
-          this.deleteNode(this._selectedContainer.node);
-        }
+        this.deleteNode(this._selectedContainer.node);
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_HOME:
         this.navigate(this._containers.get(this._rootNode.firstChild));
@@ -204,6 +200,13 @@ MarkupView.prototype = {
    */
   deleteNode: function MC__deleteNode(aNode)
   {
+    let doc = nodeDocument(node);
+    if (node === doc ||
+        node === doc.documentElement ||
+        node.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE) {
+      return;
+    }
+
     let parentNode = aNode.parentNode;
     let sibling = aNode.nextSibling;
 
