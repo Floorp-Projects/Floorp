@@ -33,7 +33,7 @@ typedef  int (*iw_stats_t)(int skfd,
 static int scan_wifi(int skfd, char* ifname, char* args[], int count)
 {
   nsCOMArray<nsWifiAccessPoint>* accessPoints = (nsCOMArray<nsWifiAccessPoint>*) args[0];
-  iw_stats_t iw_stats = (iw_stats_t) args[1];
+  iw_stats_t iw_stats = (iw_stats_t) (uintptr_t) args[1];
 
   struct iwreq wrq;
 
@@ -109,15 +109,15 @@ nsWifiMonitor::DoScan()
 
   static iw_open_t iw_open = NULL;
   if (!iw_open)
-    iw_open = (iw_open_t) dlsym(iwlib_handle, "iw_sockets_open");
+    iw_open = (iw_open_t) (uintptr_t) dlsym(iwlib_handle, "iw_sockets_open");
 
   static iw_enum_t iw_enum = NULL;
   if (!iw_enum)
-    iw_enum = (iw_enum_t) dlsym(iwlib_handle, "iw_enum_devices");
+    iw_enum = (iw_enum_t) (uintptr_t) dlsym(iwlib_handle, "iw_enum_devices");
 
   static iw_stats_t iw_stats = NULL;
   if (!iw_stats)
-    iw_stats = (iw_stats_t)dlsym(iwlib_handle, "iw_get_stats");
+    iw_stats = (iw_stats_t) (uintptr_t) dlsym(iwlib_handle, "iw_get_stats");
 
   if (!iw_open || !iw_enum || !iw_stats) {
     LOG(("Could not load a symbol from iwlib.so\n"));
@@ -140,7 +140,7 @@ nsWifiMonitor::DoScan()
   nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
   nsCOMArray<nsWifiAccessPoint> accessPoints;
 
-  char* args[] = {(char*) &accessPoints, (char*) iw_stats, nullptr };
+  char* args[] = {(char*) &accessPoints, (char*) (uintptr_t) iw_stats, nullptr };
 
   while (mKeepGoing) {
     accessPoints.Clear();

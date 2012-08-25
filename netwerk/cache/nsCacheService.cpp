@@ -2522,10 +2522,9 @@ nsCacheService::CloseDescriptor(nsCacheEntryDescriptor * descriptor)
     // ask entry to remove descriptor
     nsCacheEntry * entry       = descriptor->CacheEntry();
     bool           stillActive = entry->RemoveDescriptor(descriptor);
-    nsresult       rv          = NS_OK;
 
     if (!entry->IsValid()) {
-        rv = gService->ProcessPendingRequests(entry);
+        gService->ProcessPendingRequests(entry);
     }
 
     if (!stillActive) {

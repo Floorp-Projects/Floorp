@@ -73,7 +73,6 @@ private:
 
     // used when calling ReadSegments/WriteSegments on a transaction.
     nsAHttpSegmentReader *mReader;
-    nsAHttpSegmentWriter *mWriter;
 
     // send buffer
     nsCOMPtr<nsIInputStream>  mSendBufIn;
