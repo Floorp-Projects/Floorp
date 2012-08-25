@@ -4,21 +4,19 @@
     <script>
       function pingWorker() {
         var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "panel-message",
-                          result: "ok",
-                          location: window.location.href});
+        port.postMessage({topic: "flyout-message", result: "ok"});
       }
       window.addEventListener("socialFrameShow", function(e) {
         var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "status-panel-visibility", result: "shown"});
+        port.postMessage({topic: "flyout-visibility", result: "shown"});
       }, false);
       window.addEventListener("socialFrameHide", function(e) {
         var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "status-panel-visibility", result: "hidden"});
+        port.postMessage({topic: "flyout-visibility", result: "hidden"});
       }, false);
     </script>
   </head>
   <body onload="pingWorker();">
-    <p>This is a test social panel.</p>
+    <p>This is a test social flyout panel.</p>
   </body>
 </html>

@@ -271,6 +271,13 @@
     <panel id="social-notification-panel" type="arrow" hidden="true" noautofocus="true">
       <box id="social-notification-box" flex="1"></box>
     </panel>
+    <panel id="social-flyout-panel"
+           onpopupshown="SocialFlyout.onShown()"
+           onpopuphidden="SocialFlyout.onHidden()"
+           type="arrow"
+           hidden="true"
+           noautofocus="true"
+           position="topcenter topright"/>
 
     <menupopup id="inspector-node-popup">
       <menuitem id="inspectorHTMLCopyInner"
@@ -1068,6 +1075,7 @@
           observes="socialSidebarBroadcaster">
       <browser id="social-sidebar-browser"
                type="content"
+               disableglobalhistory="true"
                flex="1"
                style="min-width: 14em; width: 18em; max-width: 36em;"/>
     </vbox>

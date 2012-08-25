@@ -3430,48 +3430,6 @@ stack[anonid=browserStack][responsivemode] {
 
 /* === end of social toolbar provider menu === */
 
-/* === start of social toolbar panels === */
-
-#social-notification-panel {
-  min-height: 100px;
-  min-width: 240px;
-  max-height: 600px;
-  max-width: 400px;
-}
-
-#social-notification-panel .panel-arrowcontent {
-  margin: -4px 0 0 0;
-  padding: 0;
-  border-radius: 0px;
-  background: white;
-}
-
-#social-notification-panel .panel-arrow[side="top"] {
-  list-style-image: url("chrome://browser/skin/social/panelarrow-up.png");
-  margin-top: -4px;
-  margin-bottom: 3px;
-  height: 21px;
-}
-
-#social-notification-panel .panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://browser/skin/social/panelarrow-down.png");
-  margin-top: -5px;
-}
-
-#social-notification-panel .panel-arrow[side="left"] {
-  list-style-image: url("chrome://browser/skin/social/panelarrow-horiz.png");
-  margin-right: -1px;
-  -moz-transform: scaleX(-1);
-}
-
-#social-notification-panel .panel-arrow[side="right"] {
-  list-style-image: url("chrome://browser/skin/social/panelarrow-horiz.png");
-  margin-left: -1px;
-}
-
-/* === end of social toolbar panels === */
-
-
 .chat-status-icon {
   max-height: 16px;
   max-width: 16px;

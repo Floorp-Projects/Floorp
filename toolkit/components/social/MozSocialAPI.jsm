@@ -13,6 +13,7 @@ const EXPORTED_SYMBOLS = ["MozSocialAPI"];
 
 var MozSocialAPI = {
   _enabled: false,
+  _everEnabled: false,
   set enabled(val) {
     let enable = !!val;
     if (enable == this._enabled) {
@@ -22,6 +23,12 @@ var MozSocialAPI = {
 
     if (enable) {
       Services.obs.addObserver(injectController, "document-element-inserted", false);
+
+      if (!this._everEnabled) {
+        this._everEnabled = true;
+        Services.telemetry.getHistogramById("SOCIAL_ENABLED_ON_SESSION").add(true);
+      }
+
     } else {
       Services.obs.removeObserver(injectController, "document-element-inserted", false);
     }
@@ -110,6 +117,21 @@ function attachToWindow(provider, targetWindow) {
       value: function(toURL, callback) {
         let url = targetWindow.document.documentURIObject.resolve(toURL);
         openChatWindow(getChromeWindow(targetWindow), provider, url, callback);
+      }
+    },
+    openPanel: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(toURL, offset, callback) {
+        let chromeWindow = getChromeWindow(targetWindow);
+        if (!chromeWindow.SocialFlyout)
+          return;
+        let url = targetWindow.document.documentURIObject.resolve(toURL);
+        let fullURL = ensureProviderOrigin(provider, url);
+        if (!fullURL)
+          return;
+        chromeWindow.SocialFlyout.open(fullURL, offset, callback);
       }
     },
     getAttention: {
@@ -218,6 +240,9 @@ function openServiceWindow(provider, contentWindow, url, name, options) {
   // be found via getWindowByName
   chromeWindow.name = windowName;
   chromeWindow.gBrowser.selectedBrowser.setAttribute("origin", provider.origin);
+
+  // disable global history for the new window.
+  chromeWindow.gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = false;
 
   // we dont want the default title the browser produces, we'll fixup whenever
   // it changes.
