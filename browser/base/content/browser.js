@@ -3126,29 +3126,6 @@ var newWindowButtonObserver = {
   }
 }
 
-var DownloadsButtonDNDObserver = {
-  onDragOver: function (aEvent)
-  {
-    var types = aEvent.dataTransfer.types;
-    if (types.contains("text/x-moz-url") ||
-        types.contains("text/uri-list") ||
-        types.contains("text/plain"))
-      aEvent.preventDefault();
-  },
-
-  onDragExit: function (aEvent)
-  {
-  },
-
-  onDrop: function (aEvent)
-  {
-    let name = { };
-    let url = browserDragAndDrop.drop(aEvent, name);
-    if (url)
-      saveURL(url, name, null, true, true);
-  }
-}
-
 const DOMLinkHandler = {
   handleEvent: function (event) {
     switch (event.type) {

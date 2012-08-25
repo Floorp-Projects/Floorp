@@ -177,6 +177,18 @@ const DownloadsButton = {
   },
 
   /**
+   * Indicates whether the indicator is visible in the browser window.
+   */
+  get isVisible()
+  {
+    if (!this._placeholder) {
+      return false;
+    }
+    let element = DownloadsIndicatorView.indicator || this._placeholder;
+    return isElementVisible(element.parentNode);
+  },
+
+  /**
    * Indicates whether we should try and show the indicator temporarily as an
    * anchor for the panel, even if the indicator would be hidden by default.
    */
@@ -486,7 +498,7 @@ const DownloadsIndicatorView = {
       DownloadsCommon.indicatorData.attention = false;
     }
 
-    BrowserDownloadsUI();
+    DownloadsPanel.showPanel();
 
     aEvent.stopPropagation();
   },

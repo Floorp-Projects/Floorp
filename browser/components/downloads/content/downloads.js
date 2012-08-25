@@ -260,12 +260,11 @@ const DownloadsPanel = {
    */
   showDownloadsHistory: function DP_showDownloadsHistory()
   {
-    // Hide the panel before invoking the Library window, otherwise focus will
-    // return to the browser window when the panel closes automatically.
+    // Hide the panel before showing another window, otherwise focus will return
+    // to the browser window when the panel closes automatically.
     this.hidePanel();
 
-    // Open the Library window and select the Downloads query.
-    PlacesCommandHook.showPlacesOrganizer("Downloads");
+    BrowserDownloadsUI();
   },
 
   //////////////////////////////////////////////////////////////////////////////
