@@ -298,7 +298,7 @@ Readability.prototype = {
    * @return void
    **/
   _prepArticle: function(articleContent) {
-    this._cleanStyles(this._doc, articleContent);
+    this._cleanStyles(articleContent);
     this._killBreaks(articleContent);
 
     // Clean out junk from the article content
