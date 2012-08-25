@@ -23,8 +23,8 @@ registerCleanupFunction(clearUserPrefs);
 
 function isHighlighting()
 {
-  let outline = InspectorUI.highlighter.outline;
-  return !(outline.getAttribute("hidden") == "true");
+  let veil = InspectorUI.highlighter.veilTransparentBox;
+  return !(veil.style.visibility == "hidden");
 }
 
 function getHighlitNode()

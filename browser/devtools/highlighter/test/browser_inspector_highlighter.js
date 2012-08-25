@@ -68,7 +68,7 @@ function runSelectionTests(subject)
   is(subject.wrappedJSObject, InspectorUI,
      "InspectorUI accessible in the observer");
 
-  InspectorUI.highlighter.outline.setAttribute("disable-transitions", "true");
+  InspectorUI.highlighter.veilContainer.setAttribute("disable-transitions", "true");
 
   executeSoon(function() {
     InspectorUI.highlighter.addListener("nodeselected", performTestComparisons);
@@ -104,25 +104,22 @@ function finishTestComparisons()
   let divWidth = divDims.width;
   let divHeight = divDims.height;
 
-  // get dimensions of the outline
-  let outlineDims = 
-    InspectorUI.highlighter.outline.getBoundingClientRect();
-  let outlineWidth = outlineDims.width;
-  let outlineHeight = outlineDims.height;
+  // get dimensions of transparent veil box over element
+  let veilBoxDims = 
+    InspectorUI.highlighter.veilTransparentBox.getBoundingClientRect();
+  let veilBoxWidth = veilBoxDims.width;
+  let veilBoxHeight = veilBoxDims.height;
 
   // Disabled due to bug 716245
-  //is(outlineWidth, divWidth, "outline width matches dimensions of element (no zoom)");
-  //is(outlineHeight, divHeight, "outline height matches dimensions of element (no zoom)");
+  //is(veilBoxWidth, divWidth, "transparent veil box width matches dimensions of element (no zoom)");
+  //is(veilBoxHeight, divHeight, "transparent veil box height matches dimensions of element (no zoom)");
 
   // zoom the page by a factor of 2
   let contentViewer = InspectorUI.browser.docShell.contentViewer
                              .QueryInterface(Ci.nsIMarkupDocumentViewer);
   contentViewer.fullZoom = 2;
 
-  // We wait at least 500ms to make sure the highlighter is not "mutting" the
-  // resize event
-
-  window.setTimeout(function() {
+  executeSoon(function() {
     // check what zoom factor we're at, should be 2
     let zoom = InspectorUI.highlighter.zoom;
     is(zoom, 2, "zoom is 2?");
@@ -132,19 +129,18 @@ function finishTestComparisons()
     let divWidth = divDims.width * zoom;
     let divHeight = divDims.height * zoom;
 
-    // now zoomed, get new dimensions the outline
-    let outlineDims = 
-      InspectorUI.highlighter.outline.getBoundingClientRect();
-    let outlineWidth = outlineDims.width;
-    let outlineHeight = outlineDims.height;
+    // now zoomed, get new dimensions of transparent veil box over element
+    let veilBoxDims = InspectorUI.highlighter.veilTransparentBox.getBoundingClientRect();
+    let veilBoxWidth = veilBoxDims.width;
+    let veilBoxHeight = veilBoxDims.height;
 
     // Disabled due to bug 716245
-    //is(outlineWidth, divWidth, "outline width matches dimensions of element (no zoom)");
-    //is(outlineHeight, divHeight, "outline height matches dimensions of element (no zoom)");
+    //is(veilBoxWidth, divWidth, "transparent veil box width matches width of element (2x zoom)");
+    //is(veilBoxHeight, divHeight, "transparent veil box height matches width of element (2x zoom)");
 
     doc = h1 = div = null;
     executeSoon(finishUp);
-  }, 500);
+  });
 }
 
 function finishUp() {
