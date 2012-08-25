@@ -471,7 +471,9 @@ nsAuthURLParser::ParseAuthority(const char *auth, int32_t authLen,
 
     // search backwards for @
     const char *p = auth + authLen - 1;
-    for (; (*p != '@') && (p > auth); --p);
+    for (; (*p != '@') && (p > auth); --p) {
+      continue;
+    }
     if ( *p == '@' ) {
         // auth = <user-info@server-info>
         rv = ParseUserInfo(auth, p - auth,

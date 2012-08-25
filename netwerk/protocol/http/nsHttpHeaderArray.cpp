@@ -48,9 +48,8 @@ nsresult
 nsHttpHeaderArray::SetHeaderFromNet(nsHttpAtom header, const nsACString &value)
 {
     nsEntry *entry = nullptr;
-    int32_t index;
 
-    index = LookupEntry(header, &entry);
+    LookupEntry(header, &entry);
 
     if (!entry) {
         if (value.IsEmpty()) {
