@@ -313,9 +313,6 @@ child:
     RealKeyEvent(nsKeyEvent event);
     MouseWheelEvent(WheelEvent event);
     RealTouchEvent(nsTouchEvent event);
-   // We use a separate message for touchmove events only to apply
-    // compression to them.
-    RealTouchMoveEvent(nsTouchEvent event) compress;
 
     /**
      * @see nsIDOMWindowUtils sendKeyEvent.

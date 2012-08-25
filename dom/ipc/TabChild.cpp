@@ -867,12 +867,6 @@ TabChild::RecvRealTouchEvent(const nsTouchEvent& aEvent)
 }
 
 bool
-TabChild::RecvRealTouchMoveEvent(const nsTouchEvent& aEvent)
-{
-    return RecvRealTouchEvent(aEvent);
-}
-
-bool
 TabChild::RecvRealKeyEvent(const nsKeyEvent& event)
 {
   nsKeyEvent localEvent(event);
