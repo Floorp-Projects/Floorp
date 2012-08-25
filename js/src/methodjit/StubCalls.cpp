@@ -774,9 +774,10 @@ void JS_FASTCALL
 stubs::TriggerIonCompile(VMFrame &f)
 {
     JSScript *script = f.script();
-    JS_ASSERT(!script->ion);
 
     if (ion::js_IonOptions.parallelCompilation) {
+        JS_ASSERT(!script->ion);
+
         jsbytecode *osrPC = f.regs.pc;
         if (*osrPC != JSOP_LOOPENTRY)
             osrPC = NULL;
