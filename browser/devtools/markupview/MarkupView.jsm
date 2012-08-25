@@ -347,7 +347,7 @@ MarkupView.prototype = {
     while (parent = walker.parentNode()) {
       this.expandNode(parent);
     }
-//    LayoutHelpers.scrollIntoViewIfNeeded(this._containers.get(aNode).elt, false);
+    LayoutHelpers.scrollIntoViewIfNeeded(this._containers.get(aNode).editor.elt, false);
   },
 
   /**
