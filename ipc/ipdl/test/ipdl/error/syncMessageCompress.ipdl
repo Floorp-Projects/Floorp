@@ -1,0 +1,4 @@
+sync protocol syncMessageCompress {
+parent:
+    sync foo() compress;
+};
