@@ -4,16 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * Followup bugs to be filed:
- * - Drag and drop should be implemented.
- * - Node menu should be implemented.
- * - editableField could be moved to a shared location.
- * - I'm willing to consider that judicious use of DOMTemplater could make this
- *   code easier to maintain.
- * - ScrollIntoViewIfNeeded seems jumpy, that should be fixed.
- */
-
 const Cc = Components.classes;
 const Cu = Components.utils;
 const Ci = Components.interfaces;
@@ -69,8 +59,6 @@ function MarkupView(aInspector, aFrame)
 
   this._boundFocus = this._onFocus.bind(this);
   this._frame.addEventListener("focus", this._boundFocus, false);
-
-  this._onSelect();
 }
 
 MarkupView.prototype = {
