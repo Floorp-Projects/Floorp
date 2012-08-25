@@ -839,14 +839,6 @@ public:
                                    nsEventStates aStateMask) = 0;
 
   /**
-   * Given aFrame, the root frame of a stacking context, find its descendant
-   * frame under the point aPt that receives a mouse event at that location,
-   * or nullptr if there is no such frame.
-   * @param aPt the point, relative to the frame origin
-   */
-  virtual nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt) = 0;
-
-  /**
    * See if reflow verification is enabled. To enable reflow verification add
    * "verifyreflow:1" to your NSPR_LOG_MODULES environment variable
    * (any non-zero debug level will work). Or, call SetVerifyReflowEnable
