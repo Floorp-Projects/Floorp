@@ -5,6 +5,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
  * Tests that various editors work as expected.  Also checks
  * that the various changes are properly undoable and redoable.
  * For each step in the test, we:
+ * - Run the setup for that test (if any)
  * - Check that the node we're editing is as we expect
  * - Make the change, check that the change was made as we expect
  * - Undo the change, check that the node is back in its original state
@@ -164,7 +165,36 @@ function test() {
         let node = doc.querySelector('.node6').firstChild;
         is(node.nodeValue, "New text", "Text should be changed.");
       },
-    }
+    },
+
+    // Edit the tag name
+    {
+      setup: function() {
+        markup.selectNode(doc.querySelector("#retag-me"));
+      },
+      before: function() {
+        let node = doc.querySelector("#retag-me");
+        let container = markup.getContainer(node);
+        is(node.tagName, "DIV", "retag-me should be a div.");
+        ok(container.selected, "retag-me should be selected.");
+        ok(container.expanded, "retag-me should be expanded.");
+        is(doc.querySelector("#retag-me-2").parentNode, node, "retag-me-2 should be a child of the old element.");
+      },
+      execute: function() {
+        let node = doc.querySelector("#retag-me");
+        let editor = markup.getContainer(node).editor;
+        let field = editor.tag;
+        editField(field, "p");
+      },
+      after: function() {
+        let node = doc.querySelector("#retag-me");
+        let container = markup.getContainer(node);
+        is(node.tagName, "P", "retag-me should be a p.");
+        ok(container.selected, "retag-me should be selected.");
+        ok(container.expanded, "retag-me should be expanded.");
+        is(doc.querySelector("#retag-me-2").parentNode, node, "retag-me-2 should be a child of the new element.");
+      }
+    },
   ];
 
   // Create the helper tab for parsing...
@@ -194,6 +224,9 @@ function test() {
     markup = InspectorUI.currentInspector.markup;
     markup.expandAll();
     for (let step of edits) {
+      if (step.setup) {
+        step.setup();
+      }
       step.before();
       step.execute();
       step.after();
@@ -204,6 +237,7 @@ function test() {
       markup.undo.redo();
       step.after();
     }
+
     while (markup.undo.canUndo()) {
       markup.undo.undo();
     }
