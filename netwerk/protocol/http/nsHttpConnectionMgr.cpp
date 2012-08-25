@@ -391,7 +391,8 @@ nsresult
 nsHttpConnectionMgr::UpdateParam(nsParamName name, uint16_t value)
 {
     uint32_t param = (uint32_t(name) << 16) | uint32_t(value);
-    return PostEvent(&nsHttpConnectionMgr::OnMsgUpdateParam, 0, (void *) param);
+    return PostEvent(&nsHttpConnectionMgr::OnMsgUpdateParam, 0,
+                     (void *)(uintptr_t) param);
 }
 
 nsresult
@@ -953,7 +954,7 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
         if (dispatchedSuccessfully)
             return true;
 
-        NS_ABORT_IF_FALSE(count == ((int32_t) ent->mPendingQ.Length()),
+        NS_ABORT_IF_FALSE(count == ent->mPendingQ.Length(),
                           "something mutated pending queue from "
                           "GetConnection()");
     }

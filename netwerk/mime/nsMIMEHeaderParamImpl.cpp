@@ -793,7 +793,7 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
     if (tc == '\'') {
       // single quote
       delimiters++;
-    } else if (tc >= 128) {
+    } else if (((unsigned char)tc) >= 128) {
       // fail early, not ASCII
       NS_WARNING("non-US-ASCII character in RFC5987-encoded param");
       return NS_ERROR_INVALID_ARG;
