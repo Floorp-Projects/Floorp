@@ -156,7 +156,7 @@ mdn__unicode_decompose(int32_t compat, uint32_t *v, size_t vlen,
 	int32_t seqidx;
 	const uint32_t *seq;
 
-	//assert(v != NULL && vlen >= 0 && decomp_lenp != NULL);
+	//assert(v != nullptr && vlen >= 0 && decomp_lenp != nullptr);
 
 	/*
 	 * First, check for Hangul.
@@ -247,7 +247,7 @@ mdn__unicode_compose(uint32_t c1, uint32_t c2, uint32_t *compp)
 	int32_t lo, hi;
 	const struct composition *cseq;
 
-	//assert(compp != NULL);
+	//assert(compp != nullptr);
 
 	/*
 	 * Check for Hangul.
@@ -480,7 +480,7 @@ reorder(workbuf_t *wb) {
 	int32_t i;
 	int32_t cclass;
 
-	//assert(wb != NULL);
+	//assert(wb != nullptr);
 
 	i = wb->cur;
 	c = wb->ucs[i];
@@ -504,7 +504,7 @@ compose(workbuf_t *wb) {
 	int32_t nvoids;
 	int32_t i;
 
-	//assert(wb != NULL && wb->cclass[0] == 0);
+	//assert(wb != nullptr && wb->cclass[0] == 0);
 
 	cur = wb->cur;
 	ucs = wb->ucs;
@@ -591,7 +591,7 @@ workbuf_extend(workbuf_t *wb) {
 		wb->cclass = (int32_t*)nsMemory::Alloc(sizeof(wb->cclass[0]) * newsize);
 		if (!wb->cclass) {
 			nsMemory::Free(wb->ucs);
-			wb->ucs = NULL;
+			wb->ucs = nullptr;
 			return NS_ERROR_OUT_OF_MEMORY;
 		}
 	} else {
@@ -621,7 +621,7 @@ static void
 workbuf_shift(workbuf_t *wb, int32_t shift) {
 	int32_t nmove;
 
-	//assert(wb != NULL && wb->cur >= shift);
+	//assert(wb != nullptr && wb->cur >= shift);
 
 	nmove = wb->last - shift;
 	memmove(&wb->ucs[0], &wb->ucs[shift],

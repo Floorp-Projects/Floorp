@@ -9,7 +9,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.Browser;
 
-public class testBookmarklets extends BaseTest {
+public class testBookmarklets extends PixelTest {
     @Override
     protected int getTestType() {
         return TEST_MOCHITEST;
@@ -24,7 +24,7 @@ public class testBookmarklets extends BaseTest {
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
         // load a standard page so bookmarklets work
-        loadUrl(url);
+        loadAndPaint(url);
 
         // verify that user-entered bookmarklets do *not* work
         enterUrl(js);

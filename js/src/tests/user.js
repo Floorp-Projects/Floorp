@@ -33,3 +33,4 @@ user_pref("javascript.options.methodjit_always", false);
 user_pref("javascript.options.strict", false);
 user_pref("javascript.options.werror", false);
 user_pref("toolkit.startup.max_resumed_crashes", -1);
+user_pref("security.enablePrivilege.enable_for_tests", true);

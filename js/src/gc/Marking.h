@@ -63,13 +63,13 @@ namespace gc {
  * defined for marking arrays of object pointers.
  */
 #define DeclMarker(base, type)                                                                    \
-void Mark##base(JSTracer *trc, HeapPtr<type> *thing, const char *name);                           \
+void Mark##base(JSTracer *trc, EncapsulatedPtr<type> *thing, const char *name);                   \
 void Mark##base##Root(JSTracer *trc, type **thingp, const char *name);                            \
 void Mark##base##Unbarriered(JSTracer *trc, type **thingp, const char *name);                     \
 void Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type> *thing, const char *name);        \
 void Mark##base##RootRange(JSTracer *trc, size_t len, type **thing, const char *name);            \
 bool Is##base##Marked(type **thingp);                                                             \
-bool Is##base##Marked(HeapPtr<type> *thingp);
+bool Is##base##Marked(EncapsulatedPtr<type> *thingp);
 
 DeclMarker(BaseShape, BaseShape)
 DeclMarker(BaseShape, UnownedBaseShape)
@@ -219,19 +219,19 @@ PushArena(GCMarker *gcmarker, ArenaHeader *aheader);
  */
 
 inline void
-Mark(JSTracer *trc, HeapValue *v, const char *name)
+Mark(JSTracer *trc, EncapsulatedValue *v, const char *name)
 {
     MarkValue(trc, v, name);
 }
 
 inline void
-Mark(JSTracer *trc, HeapPtr<JSObject> *o, const char *name)
+Mark(JSTracer *trc, EncapsulatedPtrObject *o, const char *name)
 {
     MarkObject(trc, o, name);
 }
 
 inline void
-Mark(JSTracer *trc, HeapPtr<JSScript> *o, const char *name)
+Mark(JSTracer *trc, EncapsulatedPtrScript *o, const char *name)
 {
     MarkScript(trc, o, name);
 }
@@ -256,13 +256,13 @@ IsMarked(EncapsulatedValue *v)
 }
 
 inline bool
-IsMarked(HeapPtrObject *objp)
+IsMarked(EncapsulatedPtrObject *objp)
 {
     return IsObjectMarked(objp);
 }
 
 inline bool
-IsMarked(HeapPtrScript *scriptp)
+IsMarked(EncapsulatedPtrScript *scriptp)
 {
     return IsScriptMarked(scriptp);
 }

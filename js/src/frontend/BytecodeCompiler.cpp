@@ -128,7 +128,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         return NULL;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
-    if (callerFrame && callerFrame->isScriptFrame() && callerFrame->script()->strictModeCode)
+    if (callerFrame && callerFrame->script()->strictModeCode)
         sc.strictModeState = StrictMode::STRICT;
 
     if (options.compileAndGo) {

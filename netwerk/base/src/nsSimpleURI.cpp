@@ -20,6 +20,10 @@
 #include "nsError.h"
 #include "nsIProgrammingLanguage.h"
 #include "mozilla/Util.h" // for DebugOnly
+#include "nsIIPCSerializableURI.h"
+#include "mozilla/ipc/URIUtils.h"
+
+using namespace mozilla::ipc;
 
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
@@ -41,8 +45,8 @@ nsSimpleURI::~nsSimpleURI()
 NS_IMPL_ADDREF(nsSimpleURI)
 NS_IMPL_RELEASE(nsSimpleURI)
 NS_INTERFACE_TABLE_HEAD(nsSimpleURI)
-NS_INTERFACE_TABLE5(nsSimpleURI, nsIURI, nsISerializable,
-                    nsIIPCSerializableObsolete, nsIClassInfo, nsIMutable)
+NS_INTERFACE_TABLE5(nsSimpleURI, nsIURI, nsISerializable, nsIClassInfo,
+                    nsIMutable, nsIIPCSerializableURI)
 NS_INTERFACE_TABLE_TO_MAP_SEGUE
   if (aIID.Equals(kThisSimpleURIImplementationCID))
     foundInterface = static_cast<nsIURI*>(this);
@@ -118,39 +122,49 @@ nsSimpleURI::Write(nsIObjectOutputStream* aStream)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIIPCSerializableObsolete methods:
-
-bool
-nsSimpleURI::Read(const IPC::Message *aMsg, void **aIter)
-{
-    bool isMutable, isRefValid;
-    if (!ReadParam(aMsg, aIter, &isMutable) ||
-        !ReadParam(aMsg, aIter, &mScheme) ||
-        !ReadParam(aMsg, aIter, &mPath) ||
-        !ReadParam(aMsg, aIter, &isRefValid))
-        return false;
-
-    mMutable = isMutable;
-    mIsRefValid = isRefValid;
-
-    if (mIsRefValid) {
-        return ReadParam(aMsg, aIter, &mRef);
-    }
-    mRef.Truncate(); // invariant: mRef should be empty when it's not valid
-
-    return true;
-}
+// nsIIPCSerializableURI methods:
 
 void
-nsSimpleURI::Write(IPC::Message *aMsg)
+nsSimpleURI::Serialize(URIParams& aParams)
 {
-    WriteParam(aMsg, bool(mMutable));
-    WriteParam(aMsg, mScheme);
-    WriteParam(aMsg, mPath);
-    WriteParam(aMsg, mIsRefValid);
+    SimpleURIParams params;
+
+    params.scheme() = mScheme;
+    params.path() = mPath;
     if (mIsRefValid) {
-        WriteParam(aMsg, mRef);
+      params.ref() = mRef;
     }
+    else {
+      params.ref().SetIsVoid(true);
+    }
+    params.isMutable() = mMutable;
+
+    aParams = params;
+}
+
+bool
+nsSimpleURI::Deserialize(const URIParams& aParams)
+{
+    if (aParams.type() != URIParams::TSimpleURIParams) {
+        NS_ERROR("Received unknown parameters from the other process!");
+        return false;
+    }
+
+    const SimpleURIParams& params = aParams.get_SimpleURIParams();
+
+    mScheme = params.scheme();
+    mPath = params.path();
+    if (params.ref().IsVoid()) {
+        mRef.Truncate();
+        mIsRefValid = false;
+    }
+    else {
+        mRef = params.ref();
+        mIsRefValid = true;
+    }
+    mMutable = params.isMutable();
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

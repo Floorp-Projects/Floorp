@@ -509,7 +509,7 @@ class NodeBuilder
 
     bool switchStatement(Value disc, NodeVector &elts, bool lexical, TokenPos *pos, Value *dst);
 
-    bool tryStatement(Value body, NodeVector &catches, Value finally, TokenPos *pos, Value *dst);
+    bool tryStatement(Value body, NodeVector &guarded, Value unguarded, Value finally, TokenPos *pos, Value *dst);
 
     bool debuggerStatement(TokenPos *pos, Value *dst);
 
@@ -916,23 +916,21 @@ NodeBuilder::switchStatement(Value disc, NodeVector &elts, bool lexical, TokenPo
 }
 
 bool
-NodeBuilder::tryStatement(Value body, NodeVector &catches, Value finally,
+NodeBuilder::tryStatement(Value body, NodeVector &guarded, Value unguarded, Value finally,
                           TokenPos *pos, Value *dst)
 {
-    Value handlers;
+    Value guardedHandlers;
+    if (!newArray(guarded, &guardedHandlers))
+        return false;
 
     Value cb = callbacks[AST_TRY_STMT];
-    if (!cb.isNull()) {
-        return newArray(catches, &handlers) &&
-               callback(cb, body, handlers, opt(finally), pos, dst);
-    }
-
-    if (!newArray(catches, &handlers))
-        return false;
+    if (!cb.isNull())
+        return callback(cb, body, guardedHandlers, unguarded, opt(finally), pos, dst);
 
     return newNode(AST_TRY_STMT, pos,
                    "block", body,
-                   "handlers", handlers,
+                   "guardedHandlers", guardedHandlers,
+                   "handler", unguarded,
                    "finalizer", finally,
                    dst);
 }
@@ -1637,7 +1635,7 @@ class ASTSerializer
     bool switchStatement(ParseNode *pn, Value *dst);
     bool switchCase(ParseNode *pn, Value *dst);
     bool tryStatement(ParseNode *pn, Value *dst);
-    bool catchClause(ParseNode *pn, Value *dst);
+    bool catchClause(ParseNode *pn, bool *isGuarded, Value *dst);
 
     bool optExpression(ParseNode *pn, Value *dst) {
         if (!pn) {
@@ -2066,7 +2064,7 @@ ASTSerializer::switchStatement(ParseNode *pn, Value *dst)
 }
 
 bool
-ASTSerializer::catchClause(ParseNode *pn, Value *dst)
+ASTSerializer::catchClause(ParseNode *pn, bool *isGuarded, Value *dst)
 {
     JS_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
     JS_ASSERT_IF(pn->pn_kid2, pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
@@ -2074,9 +2072,14 @@ ASTSerializer::catchClause(ParseNode *pn, Value *dst)
 
     Value var, guard, body;
 
-    return pattern(pn->pn_kid1, NULL, &var) &&
-           optExpression(pn->pn_kid2, &guard) &&
-           statement(pn->pn_kid3, &body) &&
+    if (!pattern(pn->pn_kid1, NULL, &var) ||
+        !optExpression(pn->pn_kid2, &guard)) {
+        return false;
+    }
+
+    *isGuarded = !guard.isMagic(JS_SERIALIZE_NO_NODE);
+
+    return statement(pn->pn_kid3, &body) &&
            builder.catchClause(var, guard, body, &pn->pn_pos, dst);
 }
 
@@ -2091,22 +2094,28 @@ ASTSerializer::tryStatement(ParseNode *pn, Value *dst)
     if (!statement(pn->pn_kid1, &body))
         return false;
 
-    NodeVector clauses(cx);
+    NodeVector guarded(cx);
+    Value unguarded = NullValue();
+
     if (pn->pn_kid2) {
-        if (!clauses.reserve(pn->pn_kid2->pn_count))
+        if (!guarded.reserve(pn->pn_kid2->pn_count))
             return false;
 
         for (ParseNode *next = pn->pn_kid2->pn_head; next; next = next->pn_next) {
             Value clause;
-            if (!catchClause(next->pn_expr, &clause))
+            bool isGuarded;
+            if (!catchClause(next->pn_expr, &isGuarded, &clause))
                 return false;
-            clauses.infallibleAppend(clause);
+            if (isGuarded)
+                guarded.infallibleAppend(clause);
+            else
+                unguarded = clause;
         }
     }
 
     Value finally;
     return optStatement(pn->pn_kid3, &finally) &&
-           builder.tryStatement(body, clauses, finally, &pn->pn_pos, dst);
+           builder.tryStatement(body, guarded, unguarded, finally, &pn->pn_pos, dst);
 }
 
 bool
@@ -2967,7 +2976,7 @@ ASTSerializer::literal(ParseNode *pn, Value *dst)
         LOCAL_ASSERT(re1 && re1->isRegExp());
 
         RootedObject proto(cx);
-        if (!js_GetClassPrototype(cx, cx->fp()->scopeChain(), JSProto_RegExp, &proto))
+        if (!js_GetClassPrototype(cx, JSProto_RegExp, &proto))
             return false;
 
         JSObject *re2 = CloneRegExpObject(cx, re1, proto);

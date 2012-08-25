@@ -7347,7 +7347,12 @@ bool
 PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 {
   NS_TIME_FUNCTION_WITH_DOCURL;
-  SAMPLE_LABEL("layout", "DoReflow");
+
+  nsCAutoString docURL("N/A");
+  nsIURI *uri = mDocument->GetDocumentURI();
+  if (uri)
+    uri->GetSpec(docURL);
+  SAMPLE_LABEL_PRINTF("layout", "DoReflow", "(%s)", docURL.get());
 
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();

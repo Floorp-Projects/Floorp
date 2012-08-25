@@ -16,6 +16,11 @@
 #include "nsNetUtil.h"
 #include "nsSerializationHelper.h"
 #include "base/compiler_specific.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/URIUtils.h"
+
+using namespace mozilla::dom;
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
@@ -652,7 +657,7 @@ class Redirect1Event : public ChannelEvent
  public:
   Redirect1Event(HttpChannelChild* child,
                  const uint32_t& newChannelId,
-                 const IPC::URI& newURI,
+                 const URIParams& newURI,
                  const uint32_t& redirectFlags,
                  const nsHttpResponseHead& responseHead)
   : mChild(child)
@@ -669,14 +674,14 @@ class Redirect1Event : public ChannelEvent
  private:
   HttpChannelChild*   mChild;
   uint32_t            mNewChannelId;
-  IPC::URI            mNewURI;
+  URIParams           mNewURI;
   uint32_t            mRedirectFlags;
   nsHttpResponseHead  mResponseHead;
 };
 
 bool
 HttpChannelChild::RecvRedirect1Begin(const uint32_t& newChannelId,
-                                     const URI& newUri,
+                                     const URIParams& newUri,
                                      const uint32_t& redirectFlags,
                                      const nsHttpResponseHead& responseHead)
 {
@@ -691,7 +696,7 @@ HttpChannelChild::RecvRedirect1Begin(const uint32_t& newChannelId,
 
 void
 HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
-                                 const IPC::URI& newURI,
+                                 const URIParams& newUri,
                                  const uint32_t& redirectFlags,
                                  const nsHttpResponseHead& responseHead)
 {
@@ -705,7 +710,7 @@ HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
     return;
   }
 
-  nsCOMPtr<nsIURI> uri(newURI);
+  nsCOMPtr<nsIURI> uri = DeserializeURI(newUri);
 
   nsCOMPtr<nsIChannel> newChannel;
   rv = ioService->NewChannelFromURI(uri, getter_AddRefs(newChannel));
@@ -1034,12 +1039,21 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
   gNeckoChild->SendPHttpChannelConstructor(this, tabChild);
 
-  SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI),
-                IPC::URI(mDocumentURI), IPC::URI(mReferrer), mLoadFlags,
-                mClientSetRequestHeaders, mRequestHead.Method(),
-                IPC::InputStream(mUploadStream), mUploadStreamHasHeaders,
-                mPriority, mRedirectionLimit, mAllowPipelining,
-                mForceAllowThirdPartyCookie, mSendResumeAt,
+  URIParams uri;
+  SerializeURI(mURI, uri);
+
+  OptionalURIParams originalURI, documentURI, referrer;
+  SerializeURI(mOriginalURI, originalURI);
+  SerializeURI(mDocumentURI, documentURI);
+  SerializeURI(mReferrer, referrer);
+
+  OptionalInputStreamParams uploadStream;
+  SerializeInputStream(mUploadStream, uploadStream);
+
+  SendAsyncOpen(uri, originalURI, documentURI, referrer, mLoadFlags,
+                mClientSetRequestHeaders, mRequestHead.Method(), uploadStream,
+                mUploadStreamHasHeaders, mPriority, mRedirectionLimit,
+                mAllowPipelining, mForceAllowThirdPartyCookie, mSendResumeAt,
                 mStartPos, mEntityID, mChooseApplicationCache,
                 appCacheClientId, mAllowSpdy, IPC::SerializedLoadContext(this));
 

@@ -3124,11 +3124,11 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           GetURIAsUtf16StringBuffer(paint.mPaint.mPaintServer);
         NS_ENSURE_TRUE(!!uriAsStringBuffer, false);
         nsIDocument* doc = aStyleContext->PresContext()->Document();
-        nsRefPtr<nsCSSValue::URL> url =
-          new nsCSSValue::URL(paint.mPaint.mPaintServer,
-                              uriAsStringBuffer,
-                              doc->GetDocumentURI(),
-                              doc->NodePrincipal());
+        nsRefPtr<mozilla::css::URLValue> url =
+          new mozilla::css::URLValue(paint.mPaint.mPaintServer,
+                                     uriAsStringBuffer,
+                                     doc->GetDocumentURI(),
+                                     doc->NodePrincipal());
         pair->mXValue.SetURLValue(url);
         pair->mYValue.SetColorValue(paint.mFallbackColor);
         aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),

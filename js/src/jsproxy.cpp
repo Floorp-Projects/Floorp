@@ -1682,7 +1682,7 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
              */
             Value key = ObjectValue(*referent);
             WrapperMap::Ptr p = obj->compartment()->crossCompartmentWrappers.lookup(key);
-            JS_ASSERT(p->value.get() == ObjectValue(*obj));
+            JS_ASSERT(*p->value.unsafeGet() == ObjectValue(*obj));
         }
     }
 #endif
@@ -1946,12 +1946,12 @@ js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_,
     RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent));
     if (!obj)
         return NULL;
-    obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
-    obj->setSlot(JSSLOT_PROXY_PRIVATE, priv);
+    obj->initSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
+    obj->initCrossCompartmentSlot(JSSLOT_PROXY_PRIVATE, priv);
     if (fun) {
-        obj->setSlot(JSSLOT_PROXY_CALL, call ? ObjectValue(*call) : UndefinedValue());
+        obj->initCrossCompartmentSlot(JSSLOT_PROXY_CALL, call ? ObjectValue(*call) : UndefinedValue());
         if (construct) {
-            obj->setSlot(JSSLOT_PROXY_CONSTRUCT, ObjectValue(*construct));
+            obj->initSlot(JSSLOT_PROXY_CONSTRUCT, ObjectValue(*construct));
         }
     }
 

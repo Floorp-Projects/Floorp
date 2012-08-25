@@ -173,7 +173,7 @@ public:
 #endif
 
 protected:
-  nsAutoRefCnt mRefCnt;
+  nsCycleCollectingAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 
   /**
@@ -272,7 +272,7 @@ private:
     ContentInsertion(DocAccessible* aDocument, Accessible* aContainer);
     virtual ~ContentInsertion() { mDocument = nullptr; }
 
-    NS_INLINE_DECL_REFCOUNTING(ContentInsertion)
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ContentInsertion)
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ContentInsertion)
 
     bool InitChildList(nsIContent* aStartChildNode, nsIContent* aEndChildNode);

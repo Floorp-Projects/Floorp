@@ -29,7 +29,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsEventListenerInfo)
   NS_DECL_NSIEVENTLISTENERINFO
 protected:
-  bool GetJSVal(JSContext* aCx, JSAutoEnterCompartment& aAc, jsval* aJSVal);
+  bool GetJSVal(JSContext* aCx, mozilla::Maybe<JSAutoCompartment>& aAc, jsval* aJSVal);
 
   nsString                      mType;
   // nsReftPtr because that is what nsListenerStruct uses too.

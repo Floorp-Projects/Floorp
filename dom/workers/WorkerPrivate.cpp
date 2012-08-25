@@ -695,12 +695,7 @@ public:
       return false;
     }
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(aCx, global)) {
-      NS_WARNING("Failed to enter compartment!");
-      return false;
-    }
-
+    JSAutoCompartment ac(aCx, global);
     JS_SetGlobalObject(aCx, global);
 
     return scriptloader::LoadWorkerScript(aCx);
@@ -1686,9 +1681,9 @@ WorkerRunnable::Dispatch(JSContext* aCx)
 
   JSObject* global = JS_GetGlobalObject(aCx);
 
-  JSAutoEnterCompartment ac;
-  if (global && !ac.enter(aCx, global)) {
-    return false;
+  Maybe<JSAutoCompartment> ac;
+  if (global) {
+    ac.construct(aCx, global);
   }
 
   ok = PreDispatch(aCx, mWorkerPrivate);
@@ -1793,9 +1788,9 @@ WorkerRunnable::Run()
 
   JSAutoRequest ar(cx);
 
-  JSAutoEnterCompartment ac;
-  if (targetCompartmentObject && !ac.enter(cx, targetCompartmentObject)) {
-    return NS_OK;
+  Maybe<JSAutoCompartment> ac;
+  if (targetCompartmentObject) {
+    ac.construct(cx, targetCompartmentObject);
   }
 
   bool result = WorkerRun(cx, mWorkerPrivate);

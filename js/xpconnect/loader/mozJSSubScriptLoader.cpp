@@ -217,9 +217,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, targetObj))
-        return NS_ERROR_UNEXPECTED;
+    JSAutoCompartment ac(cx, targetObj);
 
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
@@ -300,8 +298,8 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     bool ok = JS_ExecuteScriptVersion(cx, targetObj, script, retval, version);
 
     if (ok) {
-        JSAutoEnterCompartment rac;
-        if (!rac.enter(cx, result_obj) || !JS_WrapValue(cx, retval))
+        JSAutoCompartment rac(cx, result_obj);
+        if (!JS_WrapValue(cx, retval))
             return NS_ERROR_UNEXPECTED;
     }
 

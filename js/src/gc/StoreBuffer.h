@@ -41,6 +41,7 @@ class Nursery
     }
 
     bool isInside(void *cell) const {
+        JS_ASSERT((uintptr_t(cell) & 0x3) == 0);
         return nursery.initialized() && nursery.has(cell);
     }
 
@@ -143,7 +144,7 @@ class StoreBuffer
          * Attempts to reduce the usage of the buffer by removing unnecessary
          * entries.
          */
-        void compact();
+        virtual void compact();
 
         /* Add one item to the buffer. */
         void put(const T &v);
@@ -167,7 +168,7 @@ class StoreBuffer
 
         /* Override compaction to filter out removed items. */
         void compactMoved();
-        void compact();
+        virtual void compact();
 
         /* Record a removal from the buffer. */
         void unput(const T &v);

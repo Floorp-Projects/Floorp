@@ -176,12 +176,9 @@ nsJSON::EncodeFromJSVal(JS::Value *value, JSContext *cx, nsAString &result)
   // Begin a new request
   JSAutoRequest ar(cx);
 
-  JSAutoEnterCompartment ac;
+  mozilla::Maybe<JSAutoCompartment> ac;
   if (value->isObject()) {
-    JSObject *obj = &value->toObject();
-    if (!ac.enter(cx, obj)) {
-      return NS_ERROR_FAILURE;
-    }
+    ac.construct(cx, &value->toObject());
   }
 
   nsJSONWriter writer;

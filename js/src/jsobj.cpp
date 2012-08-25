@@ -661,25 +661,12 @@ obj_watch_handler(JSContext *cx, JSObject *obj_, jsid id_, jsval old,
     RootedObject obj(cx, obj_);
     RootedId id(cx, id_);
 
-    JSObject *callable = (JSObject *) closure;
-    if (JSSubsumePrincipalsOp subsume = cx->runtime->securityCallbacks->subsumePrincipals) {
-        if (JSPrincipals *watcher = callable->principals(cx)) {
-            if (JSObject *scopeChain = cx->stack.currentScriptedScopeChain()) {
-                if (JSPrincipals *subject = scopeChain->principals(cx)) {
-                    if (!subsume(watcher, subject)) {
-                        /* Silently don't call the watch handler. */
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-
     /* Avoid recursion on (obj, id) already being watched on cx. */
     AutoResolving resolving(cx, obj, id, AutoResolving::WATCH);
     if (resolving.alreadyStarted())
         return true;
 
+    JSObject *callable = (JSObject *)closure;
     Value argv[] = { IdToValue(id), old, *nvp };
     return Invoke(cx, ObjectValue(*obj), ObjectOrNullValue(callable), ArrayLength(argv), argv, nvp);
 }
@@ -2434,7 +2421,7 @@ js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto_, J
         kind = GetBackgroundAllocKind(kind);
 
     if (!parent)
-        parent = GetCurrentGlobal(cx);
+        parent = cx->global();
 
     /*
      * Use the object cache, except for classes without a cached proto key.
@@ -2458,7 +2445,7 @@ js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto_, J
         }
     }
 
-    if (!FindProto(cx, clasp, parent, &proto))
+    if (!FindProto(cx, clasp, &proto))
         return NULL;
 
     types::TypeObject *type = proto->getNewType(cx);
@@ -3159,16 +3146,12 @@ JSObject::swap(JSContext *cx, JSObject *other)
     JSObject *otherClone;
     {
         AutoCompartment ac(cx, other);
-        if (!ac.enter())
-            return false;
         thisClone = JS_CloneObject(cx, this, other->getProto(), other->getParent());
         if (!thisClone || !JS_CopyPropertiesFrom(cx, thisClone, this))
             return false;
     }
     {
         AutoCompartment ac(cx, this);
-        if (!ac.enter())
-            return false;
         otherClone = JS_CloneObject(cx, other, other->getProto(), other->getParent());
         if (!otherClone || !JS_CopyPropertiesFrom(cx, otherClone, other))
             return false;
@@ -3390,7 +3373,7 @@ bad:
  * Lazy standard classes need a way to indicate if they have been initialized.
  * Otherwise, when we delete them, we might accidentally recreate them via a
  * lazy initialization. We use the presence of a ctor or proto in the
- * globalObject's slot to indicate that they've been constructed, but this only
+ * global object's slot to indicate that they've been constructed, but this only
  * works for classes which have a proto and ctor. Classes which don't have one
  * can call MarkStandardClassInitializedNoProto(), and we can always check
  * whether a class is initialized by calling IsStandardClassResolved().
@@ -3447,7 +3430,7 @@ js_InitClass(JSContext *cx, HandleObject obj, JSObject *protoProto_,
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
     if (key != JSProto_Null &&
         !protoProto &&
-        !js_GetClassPrototype(cx, obj, JSProto_Object, &protoProto)) {
+        !js_GetClassPrototype(cx, JSProto_Object, &protoProto)) {
         return NULL;
     }
 
@@ -3906,26 +3889,15 @@ js_IdentifyClassPrototype(JSObject *obj)
 }
 
 bool
-js_FindClassObject(JSContext *cx, HandleObject start, JSProtoKey protoKey,
-                   MutableHandleValue vp, Class *clasp)
+js_FindClassObject(JSContext *cx, JSProtoKey protoKey, MutableHandleValue vp, Class *clasp)
 {
     RootedId id(cx);
-    RootedObject obj(cx);
-
-    if (start) {
-        obj = &start->global();
-        obj = GetInnerObject(cx, obj);
-    } else {
-        obj = GetGlobalForScopeChain(cx);
-    }
-    if (!obj)
-        return false;
 
     if (protoKey != JSProto_Null) {
         JS_ASSERT(JSProto_Null < protoKey);
         JS_ASSERT(protoKey < JSProto_LIMIT);
         RootedObject cobj(cx);
-        if (!js_GetClassObject(cx, obj, protoKey, &cobj))
+        if (!js_GetClassObject(cx, cx->global(), protoKey, &cobj))
             return false;
         if (cobj) {
             vp.set(ObjectValue(*cobj));
@@ -3939,10 +3911,9 @@ js_FindClassObject(JSContext *cx, HandleObject start, JSProtoKey protoKey,
         id = AtomToId(atom);
     }
 
-    JS_ASSERT(obj->isNative());
     RootedObject pobj(cx);
     RootedShape shape(cx);
-    if (!LookupPropertyWithFlags(cx, obj, id, 0, &pobj, &shape))
+    if (!LookupPropertyWithFlags(cx, cx->global(), id, 0, &pobj, &shape))
         return false;
     RootedValue v(cx, UndefinedValue());
     if (shape && pobj->isNative()) {
@@ -4509,8 +4480,6 @@ JSBool
 js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
              Shape *shape, bool added, bool strict, Value *vp)
 {
-    AddTypePropertyId(cx, obj, shape->propid(), *vp);
-
     JS_ASSERT(obj->isNative());
 
     if (shape->hasSlot()) {
@@ -4518,6 +4487,7 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
 
         /* If shape has a stub setter, just store *vp. */
         if (shape->hasDefaultSetter()) {
+            AddTypePropertyId(cx, obj, shape->propid(), *vp);
             obj->nativeSetSlot(slot, *vp);
             return true;
         }
@@ -4546,6 +4516,7 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
     if (shapeRoot->hasSlot() &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
          obj->nativeContains(cx, shapeRoot))) {
+        AddTypePropertyId(cx, obj, shape->propid(), *vp);
         obj->setSlot(shapeRoot->slot(), nvp);
     }
 
@@ -4591,11 +4562,14 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
                 return false;
             }
 
-            if (!cx->hasStrictOption() ||
-                cx->stack.currentScript()->warnedAboutUndefinedProp ||
-                (op != JSOP_GETPROP && op != JSOP_GETELEM)) {
-                return JS_TRUE;
-            }
+            /* Don't warn if not strict or for random getprop operations. */
+            if (!cx->hasStrictOption() || (op != JSOP_GETPROP && op != JSOP_GETELEM))
+                return true;
+
+            /* Don't warn repeatedly for the same script. */
+            JSScript *script = cx->stack.currentScript();
+            if (!script || script->warnedAboutUndefinedProp)
+                return true;
 
             /*
              * XXX do not warn about missing __iterator__ as the function
@@ -4713,10 +4687,8 @@ js::CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
         return true;
 
     /* If neither cx nor the code is strict, then no check is needed. */
-    if (!(fp->isScriptFrame() && fp->script()->strictModeCode) &&
-        !cx->hasStrictOption()) {
+    if (!fp->script()->strictModeCode && !cx->hasStrictOption())
         return true;
-    }
 
     JSAutoByteString bytes(cx, propname);
     return !!bytes &&
@@ -5317,12 +5289,26 @@ js_IsDelegate(JSContext *cx, JSObject *obj, const Value &v)
     return false;
 }
 
+/*
+ * The first part of this function has been hand-expanded and optimized into
+ * NewBuiltinClassInstance in jsobjinlines.h.
+ */
 bool
-js::FindClassPrototype(JSContext *cx, HandleObject scopeobj, JSProtoKey protoKey,
-                       MutableHandleObject protop, Class *clasp)
+js_GetClassPrototype(JSContext *cx, JSProtoKey protoKey, MutableHandleObject protop, Class *clasp)
 {
+    JS_ASSERT(JSProto_Null <= protoKey);
+    JS_ASSERT(protoKey < JSProto_LIMIT);
+
+    if (protoKey != JSProto_Null) {
+        const Value &v = cx->global()->getReservedSlot(JSProto_LIMIT + protoKey);
+        if (v.isObject()) {
+            protop.set(&v.toObject());
+            return true;
+        }
+    }
+
     RootedValue v(cx);
-    if (!js_FindClassObject(cx, scopeobj, protoKey, &v, clasp))
+    if (!js_FindClassObject(cx, protoKey, &v, clasp))
         return false;
 
     if (IsFunctionObject(v)) {
@@ -5333,38 +5319,6 @@ js::FindClassPrototype(JSContext *cx, HandleObject scopeobj, JSProtoKey protoKey
 
     protop.set(v.get().isObject() ? &v.get().toObject() : NULL);
     return true;
-}
-
-/*
- * The first part of this function has been hand-expanded and optimized into
- * NewBuiltinClassInstance in jsobjinlines.h.
- */
-bool
-js_GetClassPrototype(JSContext *cx, HandleObject scopeobj, JSProtoKey protoKey,
-                     MutableHandleObject protop, Class *clasp)
-{
-    JS_ASSERT(JSProto_Null <= protoKey);
-    JS_ASSERT(protoKey < JSProto_LIMIT);
-
-    if (protoKey != JSProto_Null) {
-        GlobalObject *global;
-        if (scopeobj) {
-            global = &scopeobj->global();
-        } else {
-            global = GetCurrentGlobal(cx);
-            if (!global) {
-                protop.set(NULL);
-                return true;
-            }
-        }
-        const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
-        if (v.isObject()) {
-            protop.set(&v.toObject());
-            return true;
-        }
-    }
-
-    return FindClassPrototype(cx, scopeobj, protoKey, protop, clasp);
 }
 
 JSObject *
@@ -5785,27 +5739,17 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
         }
         fputc('\n', stderr);
 
-        if (fp->isScriptFrame()) {
-            fprintf(stderr, "file %s line %u\n",
-                    fp->script()->filename, (unsigned) fp->script()->lineno);
-        }
+        fprintf(stderr, "file %s line %u\n",
+                fp->script()->filename, (unsigned) fp->script()->lineno);
 
         if (jsbytecode *pc = i.pc()) {
-            if (!fp->isScriptFrame()) {
-                fprintf(stderr, "*** pc && !script, skipping frame\n\n");
-                continue;
-            }
             fprintf(stderr, "  pc = %p\n", pc);
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
         }
         MaybeDumpObject("blockChain", fp->maybeBlockChain());
-        if (!fp->isDummyFrame()) {
-            MaybeDumpValue("this", fp->thisValue());
-            fprintf(stderr, "  rval: ");
-            dumpValue(fp->returnValue());
-        } else {
-            fprintf(stderr, "dummy frame");
-        }
+        MaybeDumpValue("this", fp->thisValue());
+        fprintf(stderr, "  rval: ");
+        dumpValue(fp->returnValue());
         fputc('\n', stderr);
 
         fprintf(stderr, "  flags:");

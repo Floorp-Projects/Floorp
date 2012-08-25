@@ -1289,12 +1289,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
 
     XPCAutoRequest ar(mContext);
-
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, aScopeObject)) {
-      stack->Pop(nullptr);
-      return NS_ERROR_FAILURE;
-    }
+    JSAutoCompartment ac(mContext, aScopeObject);
 
     ++mExecuteDepth;
 
@@ -1493,11 +1488,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // check it isn't JSVERSION_UNKNOWN.
   if (ok && JSVersion(aVersion) != JSVERSION_UNKNOWN) {
     XPCAutoRequest ar(mContext);
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, aScopeObject)) {
-      stack->Pop(nullptr);
-      return NS_ERROR_FAILURE;
-    }
+    JSAutoCompartment ac(mContext, aScopeObject);
 
     ok = JS_EvaluateUCScriptForPrincipalsVersionOrigin(
       mContext, aScopeObject,
@@ -1517,10 +1508,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // If all went well, convert val to a string if one is wanted.
   if (ok) {
     XPCAutoRequest ar(mContext);
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, aScopeObject)) {
-      stack->Pop(nullptr);
-    }
+    JSAutoCompartment ac(mContext, aScopeObject);
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
   }
   else {
@@ -1905,10 +1893,8 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
 
     JSObject *funobj = aHandler;
     jsval funval = OBJECT_TO_JSVAL(funobj);
-    JSAutoEnterCompartment ac;
-    js::ForceFrame ff(mContext, funobj);
-    if (!ac.enter(mContext, funobj) || !ff.enter() ||
-        !JS_WrapObject(mContext, &target)) {
+    JSAutoCompartment ac(mContext, funobj);
+    if (!JS_WrapObject(mContext, &target)) {
       ReportPendingException();
       return NS_ERROR_FAILURE;
     }
@@ -1983,21 +1969,14 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
 
 #ifdef DEBUG
   {
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, aHandler)) {
-      return NS_ERROR_FAILURE;
-    }
-
+    JSAutoCompartment ac(mContext, aHandler);
     NS_ASSERTION(JS_TypeOfValue(mContext,
                                 OBJECT_TO_JSVAL(aHandler)) == JSTYPE_FUNCTION,
                  "Event handler object not a function");
   }
 #endif
 
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(mContext, target)) {
-    return NS_ERROR_FAILURE;
-  }
+  JSAutoCompartment ac(mContext, target);
 
   JSObject* funobj;
   // Make sure the handler function is parented by its event target object

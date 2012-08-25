@@ -19,7 +19,7 @@ namespace mozilla {
 
 // Declare some helpers defined below:
 static void GetUnitString(nsAString& unit, uint16_t unitType);
-static uint16_t GetUnitTypeForString(const char* unitStr);
+static uint16_t GetUnitTypeForString(const nsAString& unitStr);
 
 void
 SVGLength::GetValueAsString(nsAString &aValue) const
@@ -51,18 +51,14 @@ SVGLength::SetValueFromString(const nsAString &aValue)
   tmpValue = float(PR_strtod(str, &unit));
   if (unit != str && NS_finite(tmpValue)) {
     char *theRest = unit;
-    if (*unit != '\0' && !IsSVGWhitespace(*unit)) {
-      while (*theRest != '\0' && !IsSVGWhitespace(*theRest)) {
-        ++theRest;
-      }
-      nsCAutoString unitStr(unit, theRest - unit);
-      tmpUnit = GetUnitTypeForString(unitStr.get());
-      if (tmpUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN) {
-        // nsSVGUtils::ReportToConsole
-        return false;
-      }
-    } else {
-      tmpUnit = nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER;
+    while (*theRest != '\0' && !IsSVGWhitespace(*theRest)) {
+      ++theRest;
+    }
+    tmpUnit = GetUnitTypeForString(
+                Substring(aValue, unit - str, theRest - unit));
+    if (tmpUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN) {
+      // nsSVGUtils::ReportToConsole
+      return false;
     }
     while (*theRest && IsSVGWhitespace(*theRest)) {
       ++theRest;
@@ -235,16 +231,18 @@ GetUnitString(nsAString& unit, uint16_t unitType)
 }
 
 static uint16_t
-GetUnitTypeForString(const char* unitStr)
+GetUnitTypeForString(const nsAString& unitStr)
 {
-  if (!unitStr || *unitStr == '\0')
+  if (unitStr.IsEmpty())
     return nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER;
 
-  nsCOMPtr<nsIAtom> unitAtom = do_GetAtom(unitStr);
+  nsIAtom* unitAtom = NS_GetStaticAtom(unitStr);
 
-  for (uint32_t i = 1 ; i < ArrayLength(unitMap) ; i++) {
-    if (unitMap[i] && *unitMap[i] == unitAtom) {
-      return i;
+  if (unitAtom) {
+    for (uint32_t i = 1 ; i < ArrayLength(unitMap) ; i++) {
+      if (unitMap[i] && *unitMap[i] == unitAtom) {
+        return i;
+      }
     }
   }
   return nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN;

@@ -30,8 +30,8 @@ struct iso_map
 	iso_pair    sublang_list[20];
 };
 
-nsWin32Locale::LocaleNameToLCIDPtr nsWin32Locale::localeNameToLCID = NULL;
-nsWin32Locale::LCIDToLocaleNamePtr nsWin32Locale::lcidToLocaleName = NULL;
+nsWin32Locale::LocaleNameToLCIDPtr nsWin32Locale::localeNameToLCID = nullptr;
+nsWin32Locale::LCIDToLocaleNamePtr nsWin32Locale::lcidToLocaleName = nullptr;
 
 // Older versions of VC++ and Win32 SDK  and mingw don't have 
 // macros for languages and sublanguages recently added to Win32. 

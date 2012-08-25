@@ -128,5 +128,8 @@ random-if(bug685516) HTTP == root-background-1.html root-background-ref.html
 random-if(bug685516) HTTP != root-background-1.html about:blank
 
 random-if(bug685516) == really-big-background.html really-big-background-ref.html
+random-if(bug685516) == body-background.html body-background-ref.html
+random-if(bug685516) == table-background.html table-background-ref.html
+random-if(bug685516) != div-background.html div-background-ref.html
 
 random-if(bug685516) == background-repeat-1-ref.html background-repeat-1.html

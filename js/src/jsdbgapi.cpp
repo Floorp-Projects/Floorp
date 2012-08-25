@@ -493,20 +493,12 @@ JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp)
 JS_PUBLIC_API(JSScript *)
 JS_GetFrameScript(JSContext *cx, JSStackFrame *fpArg)
 {
-    StackFrame *fp = Valueify(fpArg);
-    if (fp->isDummyFrame())
-        return NULL;
-
-    return fp->maybeScript();
+    return Valueify(fpArg)->script();
 }
 
 JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fpArg)
 {
-    StackFrame *fp = Valueify(fpArg);
-    if (fp->isDummyFrame())
-        return NULL;
-
     /*
      * This API is used to compute the line number for jsd and XPConnect
      * exception handling backtraces. Once the stack gets really deep, the
@@ -514,23 +506,19 @@ JS_GetFramePC(JSContext *cx, JSStackFrame *fpArg)
      * terminated by a slow-script dialog) when content causes infinite
      * recursion and a backtrace.
      */
-    return fp->pcQuadratic(cx->stack, 100);
+    return Valueify(fpArg)->pcQuadratic(cx->stack, 100);
 }
 
 JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
-    if (fp->annotation() && fp->isScriptFrame()) {
-        JSPrincipals *principals = fp->scopeChain()->principals(cx);
-
-        if (principals) {
-            /*
-             * Give out an annotation only if privileges have not been revoked
-             * or disabled globally.
-             */
-            return fp->annotation();
-        }
+    if (fp->annotation() && fp->scopeChain()->compartment()->principals) {
+        /*
+         * Give out an annotation only if privileges have not been revoked
+         * or disabled globally.
+         */
+        return fp->annotation();
     }
 
     return NULL;
@@ -542,22 +530,12 @@ JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation)
     Valueify(fp)->setAnnotation(annotation);
 }
 
-JS_PUBLIC_API(JSBool)
-JS_IsScriptFrame(JSContext *cx, JSStackFrame *fp)
-{
-    return !Valueify(fp)->isDummyFrame();
-}
-
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
     JS_ASSERT(cx->stack.space().containsSlow(fp));
-
-    js::AutoCompartment ac(cx, fp->scopeChain());
-    if (!ac.enter())
-        return NULL;
-
+    AutoCompartment ac(cx, fp->scopeChain());
     return GetDebugScopeForFrame(cx, fp);
 }
 
@@ -593,15 +571,11 @@ JS_PUBLIC_API(JSBool)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fpArg, jsval *thisv)
 {
     StackFrame *fp = Valueify(fpArg);
-    if (fp->isDummyFrame())
-        return false;
 
     js::AutoCompartment ac(cx, fp->scopeChain());
-    if (!ac.enter())
-        return false;
-
     if (!ComputeThis(cx, fp))
         return false;
+
     *thisv = fp->thisValue();
     return true;
 }
@@ -678,7 +652,7 @@ JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fpArg, jsval rval)
 {
     StackFrame *fp = Valueify(fpArg);
 #ifdef JS_METHODJIT
-    JS_ASSERT_IF(fp->isScriptFrame(), fp->script()->debugMode);
+    JS_ASSERT(fp->script()->debugMode);
 #endif
     assertSameCompartment(cx, fp, rval);
     fp->setReturnValue(rval);
@@ -752,11 +726,9 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
     if (!env)
         return false;
 
-    js::AutoCompartment ac(cx, env);
-    if (!ac.enter())
-        return false;
-
     StackFrame *fp = Valueify(fpArg);
+
+    js::AutoCompartment ac(cx, env);
     return EvaluateInEnv(cx, env, fp, chars, length, filename, lineno, rval);
 }
 

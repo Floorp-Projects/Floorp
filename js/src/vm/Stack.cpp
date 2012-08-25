@@ -83,16 +83,6 @@ StackFrame::initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs
         setAnnotation(prev->annotation());
 }
 
-void
-StackFrame::initDummyFrame(JSContext *cx, JSObject &chain)
-{
-    PodZero(this);
-    flags_ = DUMMY | HAS_PREVPC | HAS_SCOPECHAIN;
-    initPrev(cx);
-    JS_ASSERT(chain.isGlobal());
-    scopeChain_ = &chain;
-}
-
 template <StackFrame::TriggerPostBarriers doPostBarrier>
 void
 StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
@@ -143,8 +133,6 @@ StackFrame::writeBarrierPost()
     /* This needs to follow the same rules as in StackFrame::mark. */
     if (scopeChain_)
         JSObject::writeBarrierPost(scopeChain_, (void *)&scopeChain_);
-    if (isDummyFrame())
-        return;
     if (flags_ & HAS_ARGS_OBJ)
         JSObject::writeBarrierPost(argsObj_, (void *)&argsObj_);
     if (isFunctionFrame()) {
@@ -271,7 +259,6 @@ AssertDynamicScopeMatchesStaticScope(JSScript *script, JSObject *scope)
 bool
 StackFrame::prologue(JSContext *cx, bool newType)
 {
-    JS_ASSERT(!isDummyFrame());
     JS_ASSERT(!isGeneratorFrame());
     JS_ASSERT(cx->regs().pc == script()->code);
 
@@ -318,7 +305,6 @@ StackFrame::prologue(JSContext *cx, bool newType)
 void
 StackFrame::epilogue(JSContext *cx)
 {
-    JS_ASSERT(!isDummyFrame());
     JS_ASSERT(!isYielding());
     JS_ASSERT(!hasBlockChain());
 
@@ -431,8 +417,6 @@ StackFrame::mark(JSTracer *trc)
      */
     if (flags_ & HAS_SCOPECHAIN)
         gc::MarkObjectUnbarriered(trc, &scopeChain_, "scope chain");
-    if (isDummyFrame())
-        return;
     if (flags_ & HAS_ARGS_OBJ)
         gc::MarkObjectUnbarriered(trc, &argsObj_, "arguments");
     if (isFunctionFrame()) {
@@ -628,13 +612,6 @@ StackSpace::markAndClobberFrame(JSTracer *trc, StackFrame *fp, Value *slotsEnd, 
 {
     Value *slotsBegin = fp->slots();
 
-    if (!fp->isScriptFrame()) {
-        JS_ASSERT(fp->isDummyFrame());
-        if (trc)
-            gc::MarkValueRootRange(trc, slotsBegin, slotsEnd, "vm_stack");
-        return;
-    }
-
     /* If it's a scripted frame, we should have a pc. */
     JS_ASSERT(pc);
 
@@ -749,16 +726,12 @@ StackSpace::markActiveCompartments()
 }
 
 JS_FRIEND_API(bool)
-StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals,
-                            JSCompartment *dest) const
+StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals) const
 {
     assertInvariants();
 
-    /* See CX_COMPARTMENT comment. */
-    if (dest == (JSCompartment *)CX_COMPARTMENT)
-        dest = cx->compartment;
-
-    bool trusted = !dest || dest->principals == cx->runtime->trustedPrincipals();
+    JSCompartment *dest = cx->compartment;
+    bool trusted = dest->principals == cx->runtime->trustedPrincipals();
     Value *end = trusted ? trustedEnd_ : defaultEnd_;
 
     /*
@@ -852,7 +825,7 @@ ContextStack::~ContextStack()
 ptrdiff_t
 ContextStack::spIndexOf(const Value *vp)
 {
-    if (!hasfp() || !fp()->isScriptFrame())
+    if (!hasfp())
         return JSDVG_SEARCH_STACK;
 
     Value *base = fp()->base();
@@ -890,7 +863,7 @@ ContextStack::containsSlow(const StackFrame *target) const
  */
 Value *
 ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars,
-                          MaybeExtend extend, bool *pushedSeg, JSCompartment *dest)
+                          MaybeExtend extend, bool *pushedSeg)
 {
     Value *firstUnused = space().firstUnused();
 
@@ -919,6 +892,7 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars
         }
 
         if (fun) {
+            AutoCompartment ac(cx, fun);
             fun->script()->uninlineable = true;
             types::MarkTypeObjectFlags(cx, fun, types::OBJECT_FLAG_UNINLINEABLE);
         }
@@ -927,12 +901,12 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars
 #endif
 
     if (onTop() && extend) {
-        if (!space().ensureSpace(cx, report, firstUnused, nvars, dest))
+        if (!space().ensureSpace(cx, report, firstUnused, nvars))
             return NULL;
         return firstUnused;
     }
 
-    if (!space().ensureSpace(cx, report, firstUnused, VALUES_PER_STACK_SEGMENT + nvars, dest))
+    if (!space().ensureSpace(cx, report, firstUnused, VALUES_PER_STACK_SEGMENT + nvars))
         return NULL;
 
     FrameRegs *regs;
@@ -1074,27 +1048,6 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
     return true;
 }
 
-bool
-ContextStack::pushDummyFrame(JSContext *cx, JSCompartment *dest, JSObject &scopeChain, DummyFrameGuard *dfg)
-{
-    JS_ASSERT(dest == scopeChain.compartment());
-
-    unsigned nvars = VALUES_PER_STACK_FRAME;
-    Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &dfg->pushedSeg_, dest);
-    if (!firstUnused)
-        return false;
-
-    StackFrame *fp = reinterpret_cast<StackFrame *>(firstUnused);
-    fp->initDummyFrame(cx, scopeChain);
-    dfg->regs_.initDummyFrame(*fp);
-
-    cx->setCompartment(dest);
-    dfg->prevRegs_ = seg_->pushRegs(dfg->regs_);
-    JS_ASSERT(space().firstUnused() == dfg->regs_.sp);
-    dfg->setPushed(*this);
-    return true;
-}
-
 void
 ContextStack::popFrame(const FrameGuard &fg)
 {
@@ -1110,13 +1063,6 @@ ContextStack::popFrame(const FrameGuard &fg)
         popSegment();
 
     Debug_SetValueRangeToCrashOnTouch(space().firstUnused(), oldend);
-
-    /*
-     * NB: this code can call out and observe the stack (e.g., through GC), so
-     * it should only be called from a consistent stack state.
-     */
-    if (!hasfp())
-        cx_->resetCompartment();
 }
 
 bool
@@ -1191,27 +1137,25 @@ ContextStack::popGeneratorFrame(const GeneratorFrameGuard &gfg)
 bool
 ContextStack::saveFrameChain()
 {
-    JSCompartment *dest = NULL;
-
     bool pushedSeg;
-    if (!ensureOnTop(cx_, REPORT_ERROR, 0, CANT_EXTEND, &pushedSeg, dest))
-        return false;
+    if (!ensureOnTop(cx_, REPORT_ERROR, 0, CANT_EXTEND, &pushedSeg))
+        return NULL;
 
     JS_ASSERT(pushedSeg);
     JS_ASSERT(!hasfp());
-    JS_ASSERT(onTop() && seg_->isEmpty());
-
-    cx_->resetCompartment();
+    JS_ASSERT(onTop());
+    JS_ASSERT(seg_->isEmpty());
     return true;
 }
 
 void
 ContextStack::restoreFrameChain()
 {
-    JS_ASSERT(onTop() && seg_->isEmpty());
+    JS_ASSERT(!hasfp());
+    JS_ASSERT(onTop());
+    JS_ASSERT(seg_->isEmpty());
 
     popSegment();
-    cx_->resetCompartment();
 }
 
 /*****************************************************************************/
@@ -1233,7 +1177,7 @@ StackIter::popFrame()
         InlinedSite *inline_;
         pc_ = oldfp->prevpc(&inline_);
         JS_ASSERT(!inline_);
-        script_ = fp_->maybeScript();
+        script_ = fp_->script();
     } else {
         poisonRegs();
     }
@@ -1255,7 +1199,7 @@ StackIter::settleOnNewSegment()
     if (FrameRegs *regs = seg_->maybeRegs()) {
         pc_ = regs->pc;
         if (fp_)
-            script_ = fp_->maybeScript();
+            script_ = fp_->script();
     } else {
         poisonRegs();
     }
@@ -1338,12 +1282,6 @@ StackIter::settleOnNewState()
          * ordering to decide which was the most recent.
          */
         if (containsFrame && (!containsCall || (Value *)fp_ >= calls_->array())) {
-            /* Nobody wants to see dummy frames. */
-            if (fp_->isDummyFrame()) {
-                popFrame();
-                continue;
-            }
-
             state_ = SCRIPTED;
             script_ = fp_->script();
             return;
