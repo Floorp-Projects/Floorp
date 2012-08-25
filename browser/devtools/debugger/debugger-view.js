@@ -967,6 +967,12 @@ ScriptsView.prototype = {
     this._preferredScriptUrl ? this._preferredScriptUrl : null,
 
   /**
+   * Sets the most recently selected script url.
+   * @param string
+   */
+  set preferredScriptUrl(value) this._preferredScriptUrl = value,
+
+  /**
    * Gets the script in the container having the specified label.
    *
    * @param string aLabel
