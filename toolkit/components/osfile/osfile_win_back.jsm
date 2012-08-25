@@ -281,7 +281,7 @@
          declareFFI("ReadFile", ctypes.winapi_abi,
                     /*return*/ Types.zero_or_nothing,
                     /*file*/   Types.HANDLE,
-                    /*buffer*/ Types.char.out_ptr,
+                    /*buffer*/ Types.voidptr_t,
                     /*nbytes*/ Types.DWORD,
                     /*nbytes_read*/Types.DWORD.out_ptr,
                     /*overlapped*/Types.void_t.inout_ptr // FIXME: Implement?
@@ -315,7 +315,7 @@
          declareFFI("WriteFile", ctypes.winapi_abi,
                     /*return*/ Types.zero_or_nothing,
                     /*file*/   Types.HANDLE,
-                    /*buffer*/ Types.char.in_ptr,
+                    /*buffer*/ Types.voidptr_t,
                     /*nbytes*/ Types.DWORD,
                     /*nbytes_wr*/Types.DWORD.out_ptr,
                     /*overlapped*/Types.void_t.inout_ptr // FIXME: Implement?
