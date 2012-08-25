@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let prefName = "social.enabled",
-    shareButton,
-    sharePopup,
-    okButton,
-    undoButton,
     gFinishCB;
 
 function test() {
@@ -46,26 +42,37 @@ function testInitial(finishcb) {
   ok(Social.provider.enabled, "Social provider is enabled");
   ok(Social.provider.port, "Social provider has a port to its FrameWorker");
 
-  shareButton = SocialShareButton.shareButton;
-  sharePopup = SocialShareButton.sharePopup;
+  let {shareButton, sharePopup} = SocialShareButton;
   ok(shareButton, "share button exists");
   ok(sharePopup, "share popup exists");
 
-  okButton = document.getElementById("editSharePopupOkButton");
-  undoButton = document.getElementById("editSharePopupUndoButton");
+  let okButton = document.getElementById("editSharePopupOkButton");
+  let undoButton = document.getElementById("editSharePopupUndoButton");
 
-  is(shareButton.hidden, false, "share button should be visible");
-
-  // Test clicking the share button
-  shareButton.addEventListener("click", function listener() {
-    shareButton.removeEventListener("click", listener);
-    is(shareButton.hasAttribute("shared"), true, "Share button should have 'shared' attribute after share button is clicked");
-    executeSoon(testSecondClick.bind(window, testPopupOKButton));
-  });
-  EventUtils.synthesizeMouseAtCenter(shareButton, {});
+  // ensure the worker initialization and handshakes are all done and we
+  // have a profile.
+  waitForCondition(function() Social.provider.profile, function() {
+    is(shareButton.hidden, false, "share button should be visible");
+    // check dom values
+    let profile = Social.provider.profile;
+    let portrait = document.getElementById("socialUserPortrait").getAttribute("src");
+    is(profile.portrait, portrait, "portrait is set");
+    let displayName = document.getElementById("socialUserDisplayName");
+    is(displayName.label, profile.displayName, "display name is set");
+    ok(!document.getElementById("editSharePopupHeader").hidden, "user profile is visible");
+  
+    // Test clicking the share button
+    shareButton.addEventListener("click", function listener() {
+      shareButton.removeEventListener("click", listener);
+      is(shareButton.hasAttribute("shared"), true, "Share button should have 'shared' attribute after share button is clicked");
+      executeSoon(testSecondClick.bind(window, testPopupOKButton));
+    });
+    EventUtils.synthesizeMouseAtCenter(shareButton, {});
+  }, "provider didn't provide a profile");
 }
 
 function testSecondClick(nextTest) {
+  let {shareButton, sharePopup} = SocialShareButton;
   sharePopup.addEventListener("popupshown", function listener() {
     sharePopup.removeEventListener("popupshown", listener);
     ok(true, "popup was shown after second click");
@@ -75,6 +82,8 @@ function testSecondClick(nextTest) {
 }
 
 function testPopupOKButton() {
+  let {shareButton, sharePopup} = SocialShareButton;
+  let okButton = document.getElementById("editSharePopupOkButton");
   sharePopup.addEventListener("popuphidden", function listener() {
     sharePopup.removeEventListener("popuphidden", listener);
     is(shareButton.hasAttribute("shared"), true, "Share button should still have 'shared' attribute after OK button is clicked");
@@ -84,6 +93,8 @@ function testPopupOKButton() {
 }
 
 function testPopupUndoButton() {
+  let {shareButton, sharePopup} = SocialShareButton;
+  let undoButton = document.getElementById("editSharePopupUndoButton");
   sharePopup.addEventListener("popuphidden", function listener() {
     sharePopup.removeEventListener("popuphidden", listener);
     is(shareButton.hasAttribute("shared"), false, "Share button should not have 'shared' attribute after Undo button is clicked");
@@ -102,6 +113,7 @@ function testShortcut() {
 }
 
 function checkShortcutWorked(keyTarget) {
+  let {sharePopup, shareButton} = SocialShareButton;
   is(shareButton.hasAttribute("shared"), true, "Share button should be in the 'shared' state after keyboard shortcut is used");
 
   // Test a second invocation of the shortcut
@@ -114,6 +126,8 @@ function checkShortcutWorked(keyTarget) {
 }
 
 function checkOKButton() {
+  let okButton = document.getElementById("editSharePopupOkButton");
+  let undoButton = document.getElementById("editSharePopupUndoButton");
   is(document.activeElement, okButton, "ok button should be focused by default");
 
   // This rest of particular test doesn't really apply on Mac, since buttons
@@ -156,7 +170,8 @@ function checkNextInTabOrder(element, next) {
 }
 
 function testCloseBySpace() {
-  is(document.activeElement.id, okButton.id, "testCloseBySpace, the ok button should be focused");
+  let sharePopup = SocialShareButton.sharePopup;
+  is(document.activeElement.id, "editSharePopupOkButton", "testCloseBySpace, the ok button should be focused");
   sharePopup.addEventListener("popuphidden", function listener() {
     sharePopup.removeEventListener("popuphidden", listener);
     ok(true, "space closed the share popup");
@@ -166,6 +181,7 @@ function testCloseBySpace() {
 }
 
 function testDisable() {
+  let shareButton = SocialShareButton.shareButton;
   Services.prefs.setBoolPref(prefName, false);
   is(shareButton.hidden, true, "Share button should be hidden when pref is disabled");
   gFinishCB();
