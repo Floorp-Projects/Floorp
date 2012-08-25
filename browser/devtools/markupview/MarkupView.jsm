@@ -200,10 +200,10 @@ MarkupView.prototype = {
    */
   deleteNode: function MC__deleteNode(aNode)
   {
-    let doc = nodeDocument(node);
-    if (node === doc ||
-        node === doc.documentElement ||
-        node.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE) {
+    let doc = nodeDocument(aNode);
+    if (aNode === doc ||
+        aNode === doc.documentElement ||
+        aNode.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE) {
       return;
     }
 
