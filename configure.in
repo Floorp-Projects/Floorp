@@ -74,7 +74,6 @@ GIO_VERSION=2.18
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 SQLITE_VERSION=3.7.13
-LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
 
@@ -4929,51 +4928,12 @@ AC_SUBST(MOZ_LIBPROXY_CFLAGS)
 AC_SUBST(MOZ_LIBPROXY_LIBS)
 
 dnl ========================================================
-dnl = libnotify support
+dnl = GNOME component (mozgnome)
 dnl ========================================================
 
 if test "$MOZ_ENABLE_GTK2"
 then
-    MOZ_ENABLE_LIBNOTIFY=1
-
-    MOZ_ARG_DISABLE_BOOL(libnotify,
-    [  --disable-libnotify     Disable libnotify support ],
-    MOZ_ENABLE_LIBNOTIFY=,
-    MOZ_ENABLE_LIBNOTIFY=1)
-
-    if test "$MOZ_ENABLE_LIBNOTIFY"
-    then
-        AC_DEFINE(MOZ_ENABLE_LIBNOTIFY)
-    fi
-fi
-
-if test -z "$SKIP_LIBRARY_CHECKS"
-then
-    if test "$MOZ_ENABLE_GTK2"
-    then
-        if test "$MOZ_ENABLE_LIBNOTIFY"
-        then
-            PKG_CHECK_MODULES(MOZ_LIBNOTIFY, libnotify >= $LIBNOTIFY_VERSION)
-        fi
-    fi
-fi
-AC_SUBST(MOZ_ENABLE_LIBNOTIFY)
-AC_SUBST(MOZ_LIBNOTIFY_CFLAGS)
-AC_SUBST(MOZ_LIBNOTIFY_LIBS)
-
-dnl ========================================================
-dnl = GNOME component (mozgnome)
-dnl ========================================================
-
-# The GNOME component is built if one of
-# gnome-vfs, gio, gconf or libnotify is available.
-if test "$MOZ_ENABLE_GCONF" -o \
-   "$MOZ_ENABLE_GNOMEVFS" -o \
-   "$MOZ_ENABLE_GIO" -o \
-   "$MOZ_ENABLE_LIBNOTIFY"; then
     MOZ_ENABLE_GNOME_COMPONENT=1
-else
-    MOZ_ENABLE_GNOME_COMPONENT=
 fi
 AC_SUBST(MOZ_ENABLE_GNOME_COMPONENT)
 

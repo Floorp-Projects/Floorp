@@ -485,7 +485,7 @@ let PageThumbsWorker = {
    */
   get _worker() {
     delete this._worker;
-    this._worker = new ChromeWorker("resource://gre/modules/PageThumbsWorker.js");
+    this._worker = new ChromeWorker("resource:///modules/PageThumbsWorker.js");
     this._worker.addEventListener("message", this);
     return this._worker;
   },

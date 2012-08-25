@@ -4,7 +4,10 @@
     <script>
       function pingWorker() {
         var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "service-window-message", result: "ok"});
+        port.postMessage({topic: "service-window-message",
+                          location: window.location.href,
+                          result: "ok"
+                         });
       }
     </script>
   </head>
