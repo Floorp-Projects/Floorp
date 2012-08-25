@@ -15,47 +15,36 @@
 
   <binding id="download"
            extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
-    <resources>
-      <stylesheet src="chrome://browser/skin/downloads/downloads.css"/>
-    </resources>
-    <content orient="horizontal">
-      <xul:hbox class="downloadInfo"
-                align="center"
-                flex="1"
-                onclick="DownloadsView.onDownloadClick(event);">
-        <xul:vbox pack="center">
-          <xul:image class="downloadTypeIcon"
-                     validate="always"
-                     xbl:inherits="src=image"/>
-          <xul:image class="downloadTypeIcon blockedIcon"/>
-        </xul:vbox>
-        <xul:vbox pack="center"
-                  flex="1">
-          <xul:description class="downloadTarget"
-                           crop="center"
-                           xbl:inherits="value=target,tooltiptext=target"/>
-          <xul:progressmeter anonid="progressmeter"
-                             class="downloadProgress"
-                             min="0"
-                             max="100"
-                             xbl:inherits="mode=progressmode,value=progress"/>
-          <xul:description class="downloadDetails"
-                           crop="end"
-                           xbl:inherits="value=status,tooltiptext=statusTip"/>
-        </xul:vbox>
-      </xul:hbox>
-      <xul:hbox class="downloadButtonContainer"
-                align="center">
-        <xul:button class="downloadButton downloadCancel"
-                    tooltiptext="&cmd.cancel.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_cancel');"/>
-        <xul:button class="downloadButton downloadRetry"
-                    tooltiptext="&cmd.retry.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_retry');"/>
-        <xul:button class="downloadButton downloadShow"
-                    tooltiptext="&cmd.show.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_show');"/>
-      </xul:hbox>
+    <content orient="horizontal"
+             align="center"
+             onclick="DownloadsView.onDownloadClick(event);">
+      <xul:image class="downloadTypeIcon"
+                 validate="always"
+                 xbl:inherits="src=image"/>
+      <xul:image class="downloadTypeIcon blockedIcon"/>
+      <xul:vbox pack="center"
+                flex="1">
+        <xul:description class="downloadTarget"
+                         crop="center"
+                         xbl:inherits="value=target,tooltiptext=target"/>
+        <xul:progressmeter anonid="progressmeter"
+                           class="downloadProgress"
+                           min="0"
+                           max="100"
+                           xbl:inherits="mode=progressmode,value=progress"/>
+        <xul:description class="downloadDetails"
+                         crop="end"
+                         xbl:inherits="value=status,tooltiptext=statusTip"/>
+      </xul:vbox>
+      <xul:button class="downloadButton downloadCancel"
+                  tooltiptext="&cmd.cancel.label;"
+                  oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_cancel');"/>
+      <xul:button class="downloadButton downloadRetry"
+                  tooltiptext="&cmd.retry.label;"
+                  oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_retry');"/>
+      <xul:button class="downloadButton downloadShow"
+                  tooltiptext="&cmd.show.label;"
+                  oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_show');"/>
     </content>
   </binding>
 </bindings>

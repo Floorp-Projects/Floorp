@@ -41,7 +41,8 @@ richlistitem[type="download"] {
   border-top: 1px solid hsla(0,0%,100%,.2);
   border-bottom: 1px solid hsla(0,0%,0%,.15);
   background: transparent;
-  padding: 0;
+  padding: 8px;
+  -moz-padding-end: 0;
   color: inherit;
 }
 
@@ -57,11 +58,6 @@ richlistitem[type="download"]:last-child {
   outline: 1px #999 dotted;
   outline-offset: -1px;
   -moz-outline-radius: 3px;
-}
-
-.downloadInfo {
-  padding: 8px;
-  -moz-padding-end: 0;
 }
 
 .downloadTypeIcon {
@@ -91,7 +87,7 @@ richlistitem[type="download"]:last-child {
   -moz-appearance: none;
   min-width: 0;
   min-height: 0;
-  margin: 6px;
+  margin: 3px;
   border: none;
   background: transparent;
   padding: 5px;
@@ -104,13 +100,7 @@ richlistitem[type="download"]:last-child {
 
 /*** Highlighted list items ***/
 
-richlistitem[type="download"][state="1"] > .downloadInfo {
-  border-top: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-  -moz-padding-end: 8px;
-}
-
-richlistitem[type="download"][state="1"] > .downloadInfo:hover {
+richlistitem[type="download"][state="1"]:hover {
   border-radius: 3px;
   border-top: 1px solid hsla(0,0%,100%,.3);
   border-bottom: 1px solid hsla(0,0%,0%,.2);
@@ -123,33 +113,43 @@ richlistitem[type="download"][state="1"] > .downloadInfo:hover {
 /*** Button icons ***/
 
 .downloadButton.downloadCancel {
-  -moz-image-region: rect(0px, 14px, 14px, 0px);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 .downloadButton.downloadCancel:hover {
-  -moz-image-region: rect(0px, 28px, 14px, 14px);
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 .downloadButton.downloadCancel:active {
-  -moz-image-region: rect(0px, 42px, 14px, 28px);
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
 .downloadButton.downloadShow {
-  -moz-image-region: rect(14px, 14px, 28px, 0px);
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 .downloadButton.downloadShow:hover {
-  -moz-image-region: rect(14px, 28px, 28px, 14px);
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 .downloadButton.downloadShow:active {
-  -moz-image-region: rect(14px, 42px, 28px, 28px);
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
 }
 
 .downloadButton.downloadRetry {
-  -moz-image-region: rect(28px, 14px, 42px, 0px);
+  -moz-image-region: rect(32px, 16px, 48px, 0px);
 }
 .downloadButton.downloadRetry:hover {
-  -moz-image-region: rect(28px, 28px, 42px, 14px);
+  -moz-image-region: rect(32px, 32px, 48px, 16px);
 }
 .downloadButton.downloadRetry:active {
-  -moz-image-region: rect(28px, 42px, 42px, 28px);
+  -moz-image-region: rect(32px, 48px, 48px, 32px);
+}
+
+richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow {
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+}
+richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:hover {
+  -moz-image-region: rect(48px, 32px, 64px, 16px);
+}
+richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:active {
+  -moz-image-region: rect(48px, 48px, 64px, 32px);
 }
 
 /*** Status and progress indicator ***/
@@ -228,7 +228,7 @@ richlistitem[type="download"][state="1"] > .downloadInfo:hover {
 /*** Progress bar and text ***/
 
 #downloads-indicator-counter {
-  height: 12px;
+  height: 10px;
   margin: 0;
   color: hsl(0,0%,30%);
   text-shadow: 0 1px 0 hsla(0,0%,100%,.5);
@@ -238,8 +238,8 @@ richlistitem[type="download"][state="1"] > .downloadInfo:hover {
 }
 
 #downloads-indicator-progress {
-  width: 24px;
-  height: 4px;
+  width: 16px;
+  height: 6px;
   min-width: 0;
   min-height: 0;
   margin-top: 1px;
@@ -252,9 +252,9 @@ richlistitem[type="download"][state="1"] > .downloadInfo:hover {
   -moz-appearance: none;
   min-width: 0;
   min-height: 0;
-  background-image: -moz-linear-gradient(#41a0ff, #2090ff);
+  background-image: -moz-linear-gradient(#5ab9ff, #37a4ff);
   border: 1px solid;
-  border-color: hsla(0,0%,0%,.6) hsla(0,0%,0%,.2) hsla(0,0%,0%,.2);
+  border-color: rgba(0,43,86,.6) rgba(0,43,86,.4) rgba(0,43,86,.4);
   border-radius: 2px 0 0 2px;
 }
 
@@ -262,17 +262,17 @@ richlistitem[type="download"][state="1"] > .downloadInfo:hover {
   -moz-appearance: none;
   min-width: 0;
   min-height: 0;
-  background-image: -moz-linear-gradient(#9a9a9a, #a1a1a1);
+  background-image: -moz-linear-gradient(#505050, #575757);
   border: 1px solid;
-  border-color: hsla(0,0%,0%,.4) hsla(0,0%,0%,.3) hsla(0,0%,0%,.2);
+  border-color: hsla(0,0%,0%,.6) hsla(0,0%,0%,.4) hsla(0,0%,0%,.4);
   -moz-border-start: none;
   border-radius: 0 2px 2px 0;
 }
 
 #downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-bar {
-  background-image: -moz-linear-gradient(#a0a000, #909000);
+  background-image: -moz-linear-gradient(#dce651, #dae631);
 }
 
 #downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-remainder {
-  background-image: -moz-linear-gradient(#9a9a00, #a1a100);
+  background-image: -moz-linear-gradient(#4b5000, #515700);
 }
