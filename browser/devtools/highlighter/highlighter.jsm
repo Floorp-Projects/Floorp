@@ -455,6 +455,10 @@ Highlighter.prototype = {
     let nodeInfobar = this.chromeDoc.createElement("hbox");
     nodeInfobar.id = "highlighter-nodeinfobar";
 
+    nodeInfobar.addEventListener("mousedown", function(aEvent) {
+      this.emitEvent("nodeselected");
+    }.bind(this), true);
+
     let arrowBoxTop = this.chromeDoc.createElement("box");
     arrowBoxTop.className = "highlighter-nodeinfobar-arrow";
     arrowBoxTop.id = "highlighter-nodeinfobar-arrow-top";

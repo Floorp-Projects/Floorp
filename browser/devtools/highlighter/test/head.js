@@ -7,6 +7,10 @@ let tempScope = {};
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm", tempScope);
 let LayoutHelpers = tempScope.LayoutHelpers;
 
+// Import the GCLI test helper
+let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
+Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
+
 // Clear preferences that may be set during the course of tests.
 function clearUserPrefs()
 {
