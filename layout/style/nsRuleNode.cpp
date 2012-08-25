@@ -4658,7 +4658,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   // binding: url, none, inherit
   const nsCSSValue* bindingValue = aRuleData->ValueForBinding();
   if (eCSSUnit_URL == bindingValue->GetUnit()) {
-    nsCSSValue::URL* url = bindingValue->GetURLStructValue();
+    mozilla::css::URLValue* url = bindingValue->GetURLStructValue();
     NS_ASSERTION(url, "What's going on here?");
 
     if (NS_LIKELY(url->GetURI())) {

@@ -244,14 +244,14 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
     }
 
     JSScript *script = nullptr;
-    if (!fp) {
+    if (fp) {
+      script = JS_GetFrameScript(cx, fp);
+    } else {
         if (!JS_DescribeScriptedCaller(cx, &script, nullptr)) {
             // No code at all is running. So we must be arriving here as the result
             // of C++ code asking us to do something. Allow access.
             return true;
         }
-    } else if (JS_IsScriptFrame(cx, fp)) {
-        script = JS_GetFrameScript(cx, fp);
     }
 
     bool privileged;
@@ -386,9 +386,7 @@ PermitIfUniversalXPConnect(JSContext *cx, jsid id, Wrapper::Action act,
 static bool
 IsInSandbox(JSContext *cx, JSObject *obj)
 {
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, obj))
-        return false;
+    JSAutoCompartment ac(cx, obj);
     JSObject *global = JS_GetGlobalForObject(cx, obj);
     return !strcmp(js::GetObjectJSClass(global)->name, "Sandbox");
 }
@@ -414,10 +412,7 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     // but we need to be in the wrapper's compartment to check UniversalXPConnect.
     //
     // Unfortunately, |cx| can be in either compartment when we call ::check. :-(
-    JSAutoEnterCompartment ac;
-    JSAutoEnterCompartment wrapperAC;
-    if (!ac.enter(cx, wrappedObject))
-        return false;
+    JSAutoCompartment ac(cx, wrappedObject);
 
     JSBool found = false;
     if (!JS_HasPropertyById(cx, wrappedObject, exposedPropsId, &found))
@@ -434,9 +429,7 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     // If no __exposedProps__ existed, deny access.
     if (!found) {
         // Everything below here needs to be done in the wrapper's compartment.
-        if (!wrapperAC.enter(cx, wrapper))
-            return false;
-
+        JSAutoCompartment wrapperAC(cx, wrapper);
         // Make a temporary exception for objects in a chrome sandbox to help
         // out jetpack. See bug 784233.
         if (!JS_ObjectIsFunction(cx, wrappedObject) &&
@@ -471,8 +464,8 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
         return false;
 
     if (exposedProps.isNullOrUndefined()) {
-        return wrapperAC.enter(cx, wrapper) &&
-               PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
+        JSAutoCompartment wrapperAC(cx, wrapper);
+        return PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
     }
 
     if (!exposedProps.isObject()) {
@@ -485,12 +478,13 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     Access access = NO_ACCESS;
 
     JSPropertyDescriptor desc;
+    memset(&desc, 0, sizeof(desc));
     if (!JS_GetPropertyDescriptorById(cx, hallpass, id, JSRESOLVE_QUALIFIED, &desc)) {
         return false; // Error
     }
     if (desc.obj == NULL || !(desc.attrs & JSPROP_ENUMERATE)) {
-        return wrapperAC.enter(cx, wrapper) &&
-               PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
+        JSAutoCompartment wrapperAC(cx, wrapper);
+        return PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
     }
 
     if (!JSVAL_IS_STRING(desc.value)) {
@@ -535,8 +529,8 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
 
     if ((act == Wrapper::SET && !(access & WRITE)) ||
         (act != Wrapper::SET && !(access & READ))) {
-        return wrapperAC.enter(cx, wrapper) &&
-               PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
+        JSAutoCompartment wrapperAC(cx, wrapper);
+        return PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
     }
 
     perm = PermitPropertyAccess;
@@ -548,9 +542,7 @@ ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper
                               Permission &perm) 
 {
     perm = DenyAccess;
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, wrapper))
-        return false;
+    JSAutoCompartment ac(cx, wrapper);
 
     if (JSID_IS_STRING(id) && act == Wrapper::GET) {
         JSFlatString *flatId = JSID_TO_FLAT_STRING(id);

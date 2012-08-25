@@ -144,9 +144,7 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
             jsid id = ccx.GetRuntime()->
                     GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT);
 
-            JSAutoEnterCompartment ac;
-            if (!ac.enter(ccx, mainObj))
-                return NULL;
+            JSAutoCompartment ac(ccx, mainObj);
 
             jsval val;
             if (JS_GetPropertyById(ccx, mainObj, id, &val) &&

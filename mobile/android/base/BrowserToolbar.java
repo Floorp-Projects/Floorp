@@ -24,6 +24,7 @@ import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -151,6 +152,17 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mTabsCount.setFactory(this);
         mTabsCount.setText("");
         mCount = 0;
+        if (Build.VERSION.SDK_INT >= 16) {
+            // This adds the TextSwitcher to the a11y node tree, where we in turn
+            // could make it return an empty info node. If we don't do this the
+            // TextSwitcher's child TextViews get picked up, and we don't want
+            // that since the tabs ImageButton is already properly labeled for
+            // accessibility.
+            mTabsCount.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+            mTabsCount.setAccessibilityDelegate(new View.AccessibilityDelegate() {
+                    public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {}
+                });
+        }
 
         mBack = (ImageButton) mLayout.findViewById(R.id.back);
         mBack.setOnClickListener(new Button.OnClickListener() {

@@ -724,7 +724,7 @@ js_ThrowStopIteration(JSContext *cx)
 {
     JS_ASSERT(!JS_IsExceptionPending(cx));
     RootedValue v(cx);
-    if (js_FindClassObject(cx, NullPtr(), JSProto_StopIteration, &v))
+    if (js_FindClassObject(cx, JSProto_StopIteration, &v))
         cx->setPendingException(v);
     return JS_FALSE;
 }
@@ -850,11 +850,10 @@ const uint32_t CLOSED_INDEX = UINT32_MAX;
 JSObject *
 ElementIteratorObject::create(JSContext *cx, Handle<Value> target)
 {
-    Rooted<GlobalObject*> global(cx, GetCurrentGlobal(cx));
-    Rooted<JSObject*> proto(cx, global->getOrCreateElementIteratorPrototype(cx));
+    Rooted<JSObject*> proto(cx, cx->global()->getOrCreateElementIteratorPrototype(cx));
     if (!proto)
         return NULL;
-    JSObject *iterobj = NewObjectWithGivenProto(cx, &ElementIteratorClass, proto, global);
+    JSObject *iterobj = NewObjectWithGivenProto(cx, &ElementIteratorClass, proto, cx->global());
     if (iterobj) {
         iterobj->setReservedSlot(TargetSlot, target);
         iterobj->setReservedSlot(IndexSlot, Int32Value(0));

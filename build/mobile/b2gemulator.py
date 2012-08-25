@@ -29,10 +29,17 @@ class B2GEmulator(Emulator):
                              'B2G_HOME correctly?') % filePath)
 
     def _check_for_adb(self, host_dir):
-        self.adb = os.path.join(self.homedir, 'out', 'host', host_dir, 'bin', 'adb')
-        if not os.path.exists(self.adb):
-            self.adb = os.path.join(self.homedir, 'bin/adb')
-        super(B2GEmulator, self)._check_for_adb()
+        if self._default_adb() == 0:
+            return
+        adb_paths = [os.path.join(self.homedir,'glue','gonk','out','host',
+                      host_dir ,'bin','adb'),os.path.join(self.homedir, 'out',
+                      'host', host_dir,'bin','adb'),os.path.join(self.homedir,
+                      'bin','adb')]
+        for option in adb_paths:
+            if os.path.exists(option):
+                self.adb = option
+                return
+        raise Exception('adb not found!')
 
     def _locate_files(self):
         if self.homedir is None:

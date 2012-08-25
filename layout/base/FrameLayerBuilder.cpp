@@ -796,6 +796,7 @@ FrameLayerBuilder::SetAndClearInvalidRegion(DisplayItemDataEntry* aEntry)
     aEntry->mInvalidRegion.forget(&invalidRegion);
 
     invalidRegion->mRegion.SetEmpty();
+    invalidRegion->mIsInfinite = false;
     props.Set(ThebesLayerInvalidRegionProperty(), invalidRegion);
   }
 }
@@ -809,7 +810,8 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
   FrameProperties props = f->Properties();
   DisplayItemDataEntry* newDisplayItems =
     builder ? builder->mNewDisplayItemData.GetEntry(f) : nullptr;
-  if (!newDisplayItems || newDisplayItems->mData.IsEmpty()) {
+  if (!newDisplayItems || (newDisplayItems->mData.IsEmpty() &&
+                           !newDisplayItems->mIsSharingContainerLayer)) {
     // This frame was visible, but isn't anymore.
     if (newDisplayItems) {
       builder->mNewDisplayItemData.RawRemoveEntry(newDisplayItems);
@@ -880,7 +882,7 @@ FrameLayerBuilder::HasRetainedLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKe
 }
 
 Layer*
-FrameLayerBuilder::GetOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey)
+FrameLayerBuilder::GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey)
 {
   // If we need to build a new layer tree, then just refuse to recycle
   // anything.
@@ -898,6 +900,31 @@ FrameLayerBuilder::GetOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey)
         return layer;
     }
   }
+  return nullptr;
+}
+
+Layer*
+FrameLayerBuilder::GetOldLayerFor(nsDisplayItem* aItem)
+{
+  uint32_t key = aItem->GetPerFrameKey();
+  nsIFrame* frame = aItem->GetUnderlyingFrame();
+
+  if (frame) {
+    Layer* oldLayer = GetOldLayerForFrame(frame, key);
+    if (oldLayer) {
+      return oldLayer;
+    }
+  }
+
+  nsAutoTArray<nsIFrame*,4> mergedFrames;
+  aItem->GetMergedFrames(&mergedFrames);
+  for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
+    Layer* oldLayer = GetOldLayerForFrame(mergedFrames[i], key);
+    if (oldLayer) {
+      return oldLayer;
+    }
+  }
+
   return nullptr;
 }
 
@@ -1860,11 +1887,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 void
 ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
 {
-  nsIFrame* f = aItem->GetUnderlyingFrame();
-  NS_ASSERTION(f, "Display items that render using Thebes must have a frame");
-  uint32_t key = aItem->GetPerFrameKey();
-  NS_ASSERTION(key, "Display items that render using Thebes must have a key");
-  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(f, key);
+  NS_ASSERTION(aItem->GetUnderlyingFrame(), "Display items that render using Thebes must have a frame");
+  NS_ASSERTION(aItem->GetPerFrameKey(), "Display items that render using Thebes must have a key");
+  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(aItem);
   if (!oldLayer) {
     // Nothing to do here, this item didn't have a layer before
     return;
@@ -1937,6 +1962,19 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
 }
 
 void
+FrameLayerBuilder::AddLayerDisplayItemForFrame(Layer* aLayer,
+                                               nsIFrame* aFrame,
+                                               PRUint32 aDisplayItemKey,
+                                               LayerState aLayerState)
+{
+  DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(aFrame);
+  if (entry) {
+    entry->mContainerLayerGeneration = mContainerLayerGeneration;
+    entry->mData.AppendElement(DisplayItemData(aLayer, aDisplayItemKey, aLayerState, mContainerLayerGeneration));
+  }
+}
+
+void
 FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
                                        nsDisplayItem* aItem,
                                        LayerState aLayerState)
@@ -1945,10 +1983,13 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
     return;
 
   nsIFrame* f = aItem->GetUnderlyingFrame();
-  DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(f);
-  entry->mContainerLayerGeneration = mContainerLayerGeneration;
-  if (entry) {
-    entry->mData.AppendElement(DisplayItemData(aLayer, aItem->GetPerFrameKey(), aLayerState, mContainerLayerGeneration));
+  PRUint32 key = aItem->GetPerFrameKey();
+  AddLayerDisplayItemForFrame(aLayer, f, key, aLayerState);
+
+  nsAutoTArray<nsIFrame*,4> mergedFrames;
+  aItem->GetMergedFrames(&mergedFrames);
+  for (PRUint32 i = 0; i < mergedFrames.Length(); ++i) {
+    AddLayerDisplayItemForFrame(aLayer, mergedFrames[i], key, aLayerState);
   }
 }
 
@@ -2159,32 +2200,42 @@ ApplyThebesLayerInvalidation(nsDisplayListBuilder* aBuilder,
   FrameProperties props = aContainerFrame->Properties();
   RefCountedRegion* invalidThebesContent = static_cast<RefCountedRegion*>
     (props.Get(ThebesLayerInvalidRegionProperty()));
+  const FrameLayerBuilder::ContainerParameters& scaleParameters = aState.ScaleParameters();
+
+  nsRegion invalidRegion;
   if (invalidThebesContent) {
-    const FrameLayerBuilder::ContainerParameters& scaleParameters = aState.ScaleParameters();
-    if (aTransform) {
-      // XXX We're simplifying the transform by only using the bounds of the
-      //     region. This may have performance implications.
-      nsRect transformedBounds = aTransform->
-        TransformRectOut(invalidThebesContent->mRegion.GetBounds(),
-                         aTransform->GetUnderlyingFrame(), -(*aCurrentOffset));
-      aState.AddInvalidThebesContent(transformedBounds.
-        ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
-                             aState.GetAppUnitsPerDevPixel()));
-    } else {
-      aState.AddInvalidThebesContent(invalidThebesContent->mRegion.
-        ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
-                             aState.GetAppUnitsPerDevPixel()));
+    if (invalidThebesContent->mIsInfinite) {
+      // The region was marked as infinite to indicate that everything should be
+      // invalidated.
+      aState.SetInvalidateAllThebesContent();
+      return;
     }
-    // We have to preserve the current contents of invalidThebesContent
-    // because there might be multiple container layers for the same
-    // frame and we need to invalidate the ThebesLayer children of all
-    // of them. Also, multiple calls to ApplyThebesLayerInvalidation for the
-    // same layer can share the same region.
+
+    invalidRegion = invalidThebesContent->mRegion;
   } else {
-    // The region was deleted to indicate that everything should be
-    // invalidated.
-    aState.SetInvalidateAllThebesContent();
+    // The region doesn't exist, so this is a newly visible frame. Invalidate
+    // the frame area.
+    invalidRegion =
+      aContainerFrame->GetVisualOverflowRectRelativeToSelf() + *aCurrentOffset;
   }
+
+  if (aTransform) {
+    // XXX We're simplifying the transform by only using the bounds of the
+    //     region. This may have performance implications.
+    invalidRegion = aTransform->
+      TransformRectOut(invalidRegion.GetBounds(),
+                       aTransform->GetUnderlyingFrame(), -(*aCurrentOffset));
+  }
+
+  aState.AddInvalidThebesContent(invalidRegion.
+    ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
+                         aState.GetAppUnitsPerDevPixel()));
+
+  // We have to preserve the current contents of invalidThebesContent
+  // because there might be multiple container layers for the same
+  // frame and we need to invalidate the ThebesLayer children of all
+  // of them. Also, multiple calls to ApplyThebesLayerInvalidation for the
+  // same layer can share the same region.
 }
 
 /* static */ PLDHashOperator
@@ -2273,7 +2324,14 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
   nsRefPtr<ContainerLayer> containerLayer;
   if (aManager == mRetainingManager) {
-    Layer* oldLayer = GetOldLayerFor(aContainerFrame, containerDisplayItemKey);
+    // Using GetOldLayerFor will search merged frames, as well as the underlying
+    // frame. The underlying frame can change when a page scrolls, so this
+    // avoids layer recreation in the situation that a new underlying frame is
+    // picked for a layer.
+    Layer* oldLayer = aContainerItem ?
+      GetOldLayerFor(aContainerItem) :
+      GetOldLayerForFrame(aContainerFrame, containerDisplayItemKey);
+
     if (oldLayer) {
       NS_ASSERTION(oldLayer->Manager() == aManager, "Wrong manager");
       if (oldLayer->HasUserData(&gThebesDisplayItemLayerUserData)) {
@@ -2367,6 +2425,13 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
         nsIFrame* mergedFrame = mergedFrames[i];
         DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(mergedFrame);
         if (entry) {
+          // Append the container layer so we don't regenerate layers when
+          // the underlying frame of an item changes to one of the existing
+          // merged frames.
+          entry->mData.AppendElement(
+              DisplayItemData(containerLayer, containerDisplayItemKey,
+                              LAYER_ACTIVE, mContainerLayerGeneration));
+
           // Ensure that UpdateDisplayItemDataForFrame recognizes that we
           // still have a container layer associated with this frame.
           entry->mIsSharingContainerLayer = true;
@@ -2440,7 +2505,7 @@ FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
 
   nsIFrame* f = aItem->GetUnderlyingFrame();
   NS_ASSERTION(f, "Can only call GetLeafLayerFor on items that have a frame");
-  Layer* layer = GetOldLayerFor(f, aItem->GetPerFrameKey());
+  Layer* layer = GetOldLayerForFrame(f, aItem->GetPerFrameKey());
   if (!layer)
     return nullptr;
   if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
@@ -2491,9 +2556,17 @@ InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame, bool aTrustFrameGeomet
       FrameLayerBuilder::InvalidateThebesLayerContents(aFrame,
         aFrame->GetVisualOverflowRectRelativeToSelf());
     } else {
-      // Delete the invalid region to indicate that all Thebes contents
-      // need to be invalidated
-      aFrame->Properties().Delete(ThebesLayerInvalidRegionProperty());
+      // Mark the invalid region as infinite to indicate that all Thebes
+      // contents need to be invalidated
+      FrameProperties props = aFrame->Properties();
+      RefCountedRegion* invalidRegion = static_cast<RefCountedRegion*>
+        (props.Get(ThebesLayerInvalidRegionProperty()));
+      if (!invalidRegion) {
+        invalidRegion = new RefCountedRegion();
+        invalidRegion->AddRef();
+        props.Set(ThebesLayerInvalidRegionProperty(), invalidRegion);
+      }
+      invalidRegion->mIsInfinite = true;
     }
     foundContainerLayer = true;
   }

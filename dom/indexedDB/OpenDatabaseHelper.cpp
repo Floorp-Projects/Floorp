@@ -1619,7 +1619,7 @@ OpenDatabaseHelper::DoDatabaseWork()
   nsAutoString filename;
   rv = GetDatabaseFilename(mName, filename);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  
+
   nsCOMPtr<nsIFile> dbFile;
   rv = dbDirectory->Clone(getter_AddRefs(dbFile));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1687,18 +1687,17 @@ OpenDatabaseHelper::DoDatabaseWork()
     mState = eSetVersionPending;
   }
 
-  mFileManager = mgr->GetOrCreateFileManager(mASCIIOrigin, mName);
-  NS_ENSURE_TRUE(mFileManager, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  nsRefPtr<FileManager> fileManager = mgr->GetFileManager(mASCIIOrigin, mName);
+  if (!fileManager) {
+    fileManager = new FileManager(mASCIIOrigin, mName);
 
-  if (!mFileManager->Inited()) {
-    rv = mFileManager->Init(fileManagerDirectory, connection, mPrivilege);
+    rv = fileManager->Init(fileManagerDirectory, connection);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    mgr->AddFileManager(mASCIIOrigin, mName, fileManager);
   }
 
-  if (!mFileManager->Loaded()) {
-    rv = mFileManager->Load(connection);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+  mFileManager = fileManager.forget();
 
   return NS_OK;
 }

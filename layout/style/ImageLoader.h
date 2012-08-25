@@ -26,6 +26,8 @@ namespace css {
 class ImageLoader : public nsStubImageDecoderObserver,
                     public imgIOnloadBlocker {
 public:
+  typedef mozilla::css::ImageValue Image;
+
   ImageLoader(nsIDocument* aDocument)
   : mDocument(aDocument),
     mInClone(false)
@@ -55,8 +57,8 @@ public:
 
   void DropDocumentReference();
 
-  void MaybeRegisterCSSImage(nsCSSValue::Image* aImage);
-  void DeregisterCSSImage(nsCSSValue::Image* aImage);
+  void MaybeRegisterCSSImage(Image* aImage);
+  void DeregisterCSSImage(Image* aImage);
 
   void AssociateRequestToFrame(imgIRequest* aRequest,
                                nsIFrame* aFrame);
@@ -71,7 +73,7 @@ public:
   void ClearAll();
 
   void LoadImage(nsIURI* aURI, nsIPrincipal* aPrincipal, nsIURI* aReferrer,
-                 nsCSSValue::Image* aCSSValue);
+                 Image* aCSSValue);
 
   void DestroyRequest(imgIRequest* aRequest);
 
@@ -83,14 +85,14 @@ private:
 
   typedef nsTArray<nsIFrame*> FrameSet;
   typedef nsTArray<nsCOMPtr<imgIRequest> > RequestSet;
-  typedef nsTHashtable<nsPtrHashKey<nsCSSValue::Image> > ImageHashSet;
+  typedef nsTHashtable<nsPtrHashKey<Image> > ImageHashSet;
   typedef nsClassHashtable<nsISupportsHashKey,
                            FrameSet> RequestToFrameMap;
   typedef nsClassHashtable<nsPtrHashKey<nsIFrame>,
                            RequestSet> FrameToRequestMap;
 
-  void AddImage(nsCSSValue::Image* aCSSImage);
-  void RemoveImage(nsCSSValue::Image* aCSSImage);
+  void AddImage(Image* aCSSImage);
+  void RemoveImage(Image* aCSSImage);
 
   nsPresContext* GetPresContext();
 

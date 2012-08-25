@@ -1997,20 +1997,6 @@ typedef JSBool
 typedef void
 (* JSDestroyPrincipalsOp)(JSPrincipals *principals);
 
-typedef JSBool
-(* JSSubsumePrincipalsOp)(JSPrincipals *principals1, JSPrincipals *principals2);
-
-/*
- * Return a weak reference to the principals associated with obj, possibly via
- * the immutable parent chain leading from obj to a top-level container (e.g.,
- * a window object in the DOM level 0).  If there are no principals associated
- * with obj, return null.  Therefore null does not mean an error was reported;
- * in no event should an error be reported or an exception be thrown by this
- * callback's implementation.
- */
-typedef JSPrincipals *
-(* JSObjectPrincipalsFinder)(JSObject *obj);
-
 /*
  * Used to check if a CSP instance wants to disable eval() and friends.
  * See js_CheckCSPPermitsJSAction() in jsobj.
@@ -3332,55 +3318,13 @@ namespace js {
 class AutoCompartment;
 }
 
-class JS_PUBLIC_API(JSAutoEnterCompartment)
+class JS_PUBLIC_API(JSAutoCompartment)
 {
-    /*
-     * This is a poor man's Maybe<AutoCompartment>, because we don't have
-     * access to the AutoCompartment definition here.  We statically assert in
-     * jsapi.cpp that we have the right size here.
-     *
-     * In practice, 32-bit Windows and Android get 16-word |bytes|, while other
-     * platforms get 12-word |bytes|.
-     */
-    void* bytes[sizeof(void*) == 4 && MOZ_ALIGNOF(uint64_t) == 8 ? 16 : 12];
-
-  protected:
-    js::AutoCompartment *getAutoCompartment() {
-        JS_ASSERT(state == STATE_OTHER_COMPARTMENT);
-        return reinterpret_cast<js::AutoCompartment*>(bytes);
-    }
-
-    /*
-     * This object may be in one of three states.  If enter() or
-     * enterAndIgnoreErrors() hasn't been called, it's in STATE_UNENTERED.
-     * Otherwise, if we were asked to enter into the current compartment, our
-     * state is STATE_SAME_COMPARTMENT.  If we actually created an
-     * AutoCompartment and entered another compartment, our state is
-     * STATE_OTHER_COMPARTMENT.
-     */
-    enum State {
-        STATE_UNENTERED,
-        STATE_SAME_COMPARTMENT,
-        STATE_OTHER_COMPARTMENT
-    } state;
-
+    JSContext *cx_;
+    JSCompartment *oldCompartment_;
   public:
-    JSAutoEnterCompartment() : state(STATE_UNENTERED) {}
-
-    bool enter(JSContext *cx, JSRawObject target);
-
-    void enterAndIgnoreErrors(JSContext *cx, JSRawObject target);
-
-    bool entered() const { return state != STATE_UNENTERED; }
-
-    /*
-     * In general, consumers should try to avoid calling leave() explicitly,
-     * and defer to the destructor by scoping the JSAutoEnterCompartment
-     * appropriately. Sometimes, though, it's unavoidable.
-     */
-    void leave();
-
-    ~JSAutoEnterCompartment();
+    JSAutoCompartment(JSContext *cx, JSRawObject target);
+    ~JSAutoCompartment();
 };
 
 JS_BEGIN_EXTERN_C
@@ -4911,8 +4855,6 @@ JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals);
 
 struct JSSecurityCallbacks {
     JSCheckAccessOp            checkObjectAccess;
-    JSSubsumePrincipalsOp      subsumePrincipals;
-    JSObjectPrincipalsFinder   findObjectPrincipals;
     JSCSPEvalChecker           contentSecurityPolicyAllows;
 };
 

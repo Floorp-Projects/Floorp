@@ -1,0 +1,78 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "IPC/IPCMessageUtils.h";
+
+using mozilla::void_t;
+
+namespace mozilla {
+namespace ipc {
+
+struct SimpleURIParams
+{
+  nsCString scheme;
+  nsCString path;
+  nsCString ref;
+  bool isMutable;
+};
+
+struct StandardURLSegment
+{
+  uint32_t position;
+  int32_t length;
+};
+
+struct StandardURLParams
+{
+  uint32_t urlType;
+  int32_t port;
+  int32_t defaultPort;
+  nsCString spec;
+  StandardURLSegment scheme;
+  StandardURLSegment authority;
+  StandardURLSegment username;
+  StandardURLSegment password;
+  StandardURLSegment host;
+  StandardURLSegment path;
+  StandardURLSegment filePath;
+  StandardURLSegment directory;
+  StandardURLSegment baseName;
+  StandardURLSegment extension;
+  StandardURLSegment query;
+  StandardURLSegment ref;
+  nsCString originCharset;
+  bool isMutable;
+  bool supportsFileURL;
+  uint32_t hostEncoding;
+};
+
+struct JARURIParams
+{
+  URIParams jarFile;
+  URIParams jarEntry;
+  nsCString charset;
+};
+
+struct GenericURIParams
+{
+  nsCString spec;
+  nsCString charset;
+};
+
+union URIParams
+{
+  SimpleURIParams;
+  StandardURLParams;
+  JARURIParams;
+  GenericURIParams;
+};
+
+union OptionalURIParams
+{
+  void_t;
+  URIParams;
+};
+
+} // namespace ipc
+} // namespace mozilla

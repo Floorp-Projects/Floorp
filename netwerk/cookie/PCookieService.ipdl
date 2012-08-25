@@ -6,10 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
-
-include "mozilla/net/NeckoMessageUtils.h";
-
-using IPC::URI;
+include URIParams;
 
 namespace mozilla {
 namespace net {
@@ -57,7 +54,7 @@ parent:
    *
    * @return the resulting cookie string.
    */
-  sync GetCookieString(URI host,
+  sync GetCookieString(URIParams host,
                        bool isForeign,
                        bool fromHttp)
        returns (nsCString result);
@@ -88,7 +85,7 @@ parent:
    * @see nsICookieService.setCookieStringFromHttp
    * @see mozIThirdPartyUtil.isThirdPartyChannel
    */
-  SetCookieString(URI host,
+  SetCookieString(URIParams host,
                   bool isForeign,
                   nsCString cookieString,
                   nsCString serverTime,

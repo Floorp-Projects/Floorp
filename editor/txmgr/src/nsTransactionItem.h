@@ -21,14 +21,13 @@ class nsTransactionItem
   nsCOMPtr<nsITransaction> mTransaction;
   nsTransactionStack      *mUndoStack;
   nsTransactionStack      *mRedoStack;
-  nsAutoRefCnt             mRefCnt;
 
 public:
 
   nsTransactionItem(nsITransaction *aTransaction);
   virtual ~nsTransactionItem();
-  nsrefcnt AddRef();
-  nsrefcnt Release();
+  NS_METHOD_(nsrefcnt) AddRef();
+  NS_METHOD_(nsrefcnt) Release();
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTransactionItem)
 
@@ -52,6 +51,10 @@ private:
 
   virtual nsresult GetNumberOfUndoItems(int32_t *aNumItems);
   virtual nsresult GetNumberOfRedoItems(int32_t *aNumItems);
+
+protected:
+  nsCycleCollectingAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 };
 
 #endif // nsTransactionItem_h__

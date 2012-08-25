@@ -1161,10 +1161,58 @@ struct JSContext : js::ContextFriendFields
     bool                rootingUnnecessary;
 #endif
 
-    /* GC heap compartment. */
+    /* The current compartment. */
     JSCompartment       *compartment;
 
-    inline void setCompartment(JSCompartment *compartment);
+    inline void setCompartment(JSCompartment *c) { compartment = c; }
+
+    /*
+     * "Entering" a compartment changes cx->compartment (which changes
+     * cx->global). Note that this does not push any StackFrame which means
+     * that it is possible for cx->fp()->compartment() != cx->compartment.
+     * This is not a problem since, in general, most places in the VM cannot
+     * know that they were called from script (e.g., they may have been called
+     * through the JSAPI via JS_CallFunction) and thus cannot expect fp.
+     *
+     * Compartments should be entered/left in a LIFO fasion. The depth of this
+     * enter/leave stack is maintained by enterCompartmentDepth_ and queried by
+     * hasEnteredCompartment.
+     *
+     * To enter a compartment, code should prefer using AutoCompartment over
+     * manually calling cx->enterCompartment/leaveCompartment.
+     */
+  private:
+    unsigned            enterCompartmentDepth_;
+  public:
+    inline bool hasEnteredCompartment() const;
+    inline void enterCompartment(JSCompartment *c);
+    inline void leaveCompartment(JSCompartment *c);
+
+    /* See JS_SaveFrameChain/JS_RestoreFrameChain. */
+  private:
+    struct SavedFrameChain {
+        SavedFrameChain(JSCompartment *comp, unsigned count)
+          : compartment(comp), enterCompartmentCount(count) {}
+        JSCompartment *compartment;
+        unsigned enterCompartmentCount;
+    };
+    typedef js::Vector<SavedFrameChain, 1, js::SystemAllocPolicy> SaveStack;
+    SaveStack           savedFrameChains_;
+  public:
+    bool saveFrameChain();
+    void restoreFrameChain();
+
+    /*
+     * When no compartments have been explicitly entered, the context's
+     * compartment will be set to the compartment of the "default compartment
+     * object".
+     */
+  private:
+    JSObject *defaultCompartmentObject_;
+  public:
+    inline void setDefaultCompartmentObject(JSObject *obj);
+    inline void setDefaultCompartmentObjectIfUnset(JSObject *obj);
+    JSObject *maybeDefaultCompartmentObject() const { return defaultCompartmentObject_; }
 
     /* Current execution stack. */
     js::ContextStack    stack;
@@ -1179,9 +1227,6 @@ struct JSContext : js::ContextFriendFields
     inline js::FrameRegs& regs() const      { return stack.regs(); }
     inline js::FrameRegs* maybeRegs() const { return stack.maybeRegs(); }
 
-    /* Set cx->compartment based on the current scope chain. */
-    void resetCompartment();
-
     /* Wrap cx->exception for the current compartment. */
     void wrapPendingException();
 
@@ -1190,9 +1235,6 @@ struct JSContext : js::ContextFriendFields
     js::frontend::ParseMapPool *parseMapPool_;
 
   public:
-    /* Top-level object and pointer to top stack frame's scope chain. */
-    JSObject            *globalObject;
-
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
     js::BusyArraysSet   busyArrays;
@@ -1322,9 +1364,7 @@ struct JSContext : js::ContextFriendFields
     js::mjit::JaegerRuntime &jaegerRuntime() { return runtime->jaegerRuntime(); }
 #endif
 
-    bool                 inferenceEnabled;
-
-    bool typeInferenceEnabled() { return inferenceEnabled; }
+    inline bool typeInferenceEnabled() const;
 
     /* Caller must be holding runtime->gcLock. */
     void updateJITEnabled();
@@ -1397,8 +1437,8 @@ struct JSContext : js::ContextFriendFields
     void setPendingException(js::Value v);
 
     void clearPendingException() {
-        this->throwing = false;
-        this->exception.setUndefined();
+        throwing = false;
+        exception.setUndefined();
     }
 
 #ifdef DEBUG
@@ -1789,9 +1829,6 @@ js_HandleExecutionInterrupt(JSContext *cx);
 
 extern jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx);
-
-extern JSScript *
-js_GetCurrentScript(JSContext* cx);
 
 /*
  * If the operation callback flag was set, call the operation callback.

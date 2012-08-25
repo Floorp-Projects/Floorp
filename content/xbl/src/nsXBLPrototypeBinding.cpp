@@ -204,7 +204,7 @@ public:
     nsXBLInsertionPointEntry::ReleasePool();
   }
 
-  NS_INLINE_DECL_REFCOUNTING(nsXBLInsertionPointEntry)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsXBLInsertionPointEntry)
 
 protected:
   nsCOMPtr<nsIContent> mInsertionParent;

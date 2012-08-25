@@ -50,7 +50,7 @@ id<FakeNSUserNotificationCenter> GetNotificationCenter() {
 
 -(void) notifyWithTitle:(const nsAString&)aTitle
             description:(const nsAString&)aText
-                    key:(PRUint32)aKey
+                    key:(uint32_t)aKey
                  cookie:(const nsAString&)aCookie;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -81,7 +81,7 @@ id<FakeNSUserNotificationCenter> GetNotificationCenter() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (PRUint32) addObserver:(nsIObserver *)aObserver
+- (uint32_t) addObserver:(nsIObserver *)aObserver
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 

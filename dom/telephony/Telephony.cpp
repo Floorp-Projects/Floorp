@@ -43,11 +43,7 @@ nsTArrayToJSArray(JSContext* aCx, JSObject* aGlobal,
   NS_ASSERTION(aGlobal, "Null global!");
 
   JSAutoRequest ar(aCx);
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(aCx, aGlobal)) {
-    NS_WARNING("Failed to enter compartment!");
-    return NS_ERROR_FAILURE;
-  }
+  JSAutoCompartment ac(aCx, aGlobal);
 
   JSObject* arrayObj;
 

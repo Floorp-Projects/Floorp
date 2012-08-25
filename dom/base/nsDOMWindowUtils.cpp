@@ -2364,11 +2364,8 @@ nsDOMWindowUtils::GetBlob(const jsval& aBlobParts, const jsval& aParameters,
                           JSContext* aCx, uint8_t aOptionalArgCount,
                           nsIDOMBlob** aResult)
 {
-  nsAutoString name;
-  name.SetIsVoid(true);
-
   nsCOMPtr<nsISupports> blob;
-  nsresult rv = GetFileOrBlob(name, aBlobParts, aParameters, aCx,
+  nsresult rv = GetFileOrBlob(NullString(), aBlobParts, aParameters, aCx,
                               aOptionalArgCount, getter_AddRefs(blob));
   NS_ENSURE_SUCCESS(rv, rv);
 

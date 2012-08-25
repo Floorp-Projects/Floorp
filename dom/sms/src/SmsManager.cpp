@@ -87,7 +87,7 @@ SmsManager::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(permMgr, nullptr);
 
-  PRUint32 permission = nsIPermissionManager::DENY_ACTION;
+  uint32_t permission = nsIPermissionManager::DENY_ACTION;
   permMgr->TestPermissionFromPrincipal(principal, "sms", &permission);
 
   if (permission != nsIPermissionManager::ALLOW_ACTION) {
@@ -195,11 +195,7 @@ SmsManager::Send(const jsval& aNumber, const nsAString& aMessage, jsval* aReturn
   NS_ASSERTION(global, "Failed to get global object!");
 
   JSAutoRequest ar(cx);
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, global)) {
-    NS_ERROR("Failed to enter the js compartment!");
-    return NS_ERROR_FAILURE;
-  }
+  JSAutoCompartment ac(cx, global);
 
   if (aNumber.isString()) {
     return Send(cx, global, aNumber.toString(), aMessage, aReturn);

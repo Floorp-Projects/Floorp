@@ -5,13 +5,12 @@
 // handlerApp.xhtml grabs this for verification purposes via window.opener
 var testURI = "webcal://127.0.0.1/rheeeeet.html";
 
+const Cc = SpecialPowers.wrap(Components).classes;
+
 function test() {
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect'); 
-
   // set up the web handler object
-  var webHandler = 
-    Components.classes["@mozilla.org/uriloader/web-handler-app;1"].
+  var webHandler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
     createInstance(Components.interfaces.nsIWebHandlerApp);
   webHandler.name = "Test Web Handler App";
   webHandler.uriTemplate =
@@ -19,14 +18,14 @@ function test() {
       "handlerApp.xhtml?uri=%s";
   
   // set up the uri to test with
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+  var ioService = Cc["@mozilla.org/network/io-service;1"].
     getService(Components.interfaces.nsIIOService);
   var uri = ioService.newURI(testURI, null, null);
 
   // create a window, and launch the handler in it
   var newWindow = window.open("", "handlerWindow", "height=300,width=300");
   var windowContext = 
-    newWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor). 
+    SpecialPowers.wrap(newWindow).QueryInterface(Components.interfaces.nsIInterfaceRequestor).
     getInterface(Components.interfaces.nsIWebNavigation).
     QueryInterface(Components.interfaces.nsIDocShell);
  
@@ -43,16 +42,15 @@ function test() {
   ok(true, "webHandler launchWithURI (new window/tab) test started");
 
   // set up the local handler object
-  var localHandler = 
-    Components.classes["@mozilla.org/uriloader/local-handler-app;1"].
+  var localHandler = Cc["@mozilla.org/uriloader/local-handler-app;1"].
     createInstance(Components.interfaces.nsILocalHandlerApp);
   localHandler.name = "Test Local Handler App";
   
   // get a local app that we know will be there and do something sane
-  var osString = Components.classes["@mozilla.org/xre/app-info;1"].
+  var osString = Cc["@mozilla.org/xre/app-info;1"].
                  getService(Components.interfaces.nsIXULRuntime).OS;
 
-  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].
+  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Components.interfaces.nsIDirectoryServiceProvider);
   if (osString == "WINNT") {
     var windowsDir = dirSvc.getFile("WinD", {});
@@ -73,13 +71,13 @@ function test() {
       todo(false, "On SeaMonkey, testing OS X as generic Unix. (Bug 749872)");
 
       // assume a generic UNIX variant
-      exe = Components.classes["@mozilla.org/file/local;1"].
+      exe = Cc["@mozilla.org/file/local;1"].
             createInstance(Components.interfaces.nsILocalFile);
       exe.initWithPath("/bin/echo");
     }
   } else {
     // assume a generic UNIX variant
-    exe = Components.classes["@mozilla.org/file/local;1"].
+    exe = Cc["@mozilla.org/file/local;1"].
           createInstance(Components.interfaces.nsILocalFile);
     exe.initWithPath("/bin/echo");
   }
@@ -94,11 +92,11 @@ function test() {
   // the if statement below from "NOTDarwin" to "Darwin"
   if (osString == "NOTDarwin") {
 
-    var killall = Components.classes["@mozilla.org/file/local;1"].
+    var killall = Cc["@mozilla.org/file/local;1"].
                   createInstance(Components.interfaces.nsILocalFile);
     killall.initWithPath("/usr/bin/killall");
   
-    var process = Components.classes["@mozilla.org/process/util;1"].
+    var process = Cc["@mozilla.org/process/util;1"].
                   createInstance(Components.interfaces.nsIProcess);
     process.init(killall);
     

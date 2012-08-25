@@ -2641,47 +2641,58 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   // Handle blobs
-  nsRefPtr<FileManager> fileManager = mDatabase->Manager();
-  nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
-  NS_ENSURE_TRUE(directory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  nsAutoString fileIds;
-
   uint32_t length = mCloneWriteInfo.mFiles.Length();
-  for (uint32_t index = 0; index < length; index++) {
-    StructuredCloneFile& cloneFile = mCloneWriteInfo.mFiles[index];
+  if (length) {
+    nsRefPtr<FileManager> fileManager = mDatabase->Manager();
 
-    FileInfo* fileInfo = cloneFile.mFileInfo;
-    nsIInputStream* inputStream = cloneFile.mInputStream;
+    nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
+    NS_ENSURE_TRUE(directory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    int64_t id = fileInfo->Id();
-    if (inputStream) {
-      // Copy it
-      nsCOMPtr<nsIFile> nativeFile =
-        fileManager->GetFileForId(directory, id);
-      NS_ENSURE_TRUE(nativeFile, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    nsCOMPtr<nsIFile> journalDirectory = fileManager->EnsureJournalDirectory();
+    NS_ENSURE_TRUE(journalDirectory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-      nsRefPtr<FileStream> outputStream = new FileStream();
-      rv = outputStream->Init(nativeFile, NS_LITERAL_STRING("wb"), 0);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    nsAutoString fileIds;
 
-      rv = CopyData(inputStream, outputStream);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    for (uint32_t index = 0; index < length; index++) {
+      StructuredCloneFile& cloneFile = mCloneWriteInfo.mFiles[index];
 
-      cloneFile.mFile->AddFileInfo(fileInfo);
+      FileInfo* fileInfo = cloneFile.mFileInfo;
+      nsIInputStream* inputStream = cloneFile.mInputStream;
+
+      int64_t id = fileInfo->Id();
+      if (inputStream) {
+        // Create a journal file first
+        nsCOMPtr<nsIFile> nativeFile =
+          fileManager->GetFileForId(journalDirectory, id);
+        NS_ENSURE_TRUE(nativeFile, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+        rv = nativeFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+        NS_ENSURE_TRUE(nativeFile, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+        // Now we can copy the blob
+        nativeFile = fileManager->GetFileForId(directory, id);
+        NS_ENSURE_TRUE(nativeFile, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+        nsRefPtr<FileStream> outputStream = new FileStream();
+        rv = outputStream->Init(nativeFile, NS_LITERAL_STRING("wb"), 0);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+        rv = CopyData(inputStream, outputStream);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+        cloneFile.mFile->AddFileInfo(fileInfo);
+      }
+
+      if (index) {
+        fileIds.Append(NS_LITERAL_STRING(" "));
+      }
+      fileIds.AppendInt(id);
     }
 
-    if (index) {
-      fileIds.Append(NS_LITERAL_STRING(" "));
-    }
-    fileIds.AppendInt(id);
-  }
-
-  if (fileIds.IsEmpty()) {
-    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("file_ids"));
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("file_ids"), fileIds);
   }
   else {
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("file_ids"), fileIds);
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("file_ids"));
   }
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 

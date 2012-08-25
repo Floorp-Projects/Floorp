@@ -8,6 +8,7 @@
 
 #include "BindingUtils.h"
 
+#include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "XPCQuickStubs.h"
 
@@ -242,7 +243,7 @@ JSObject*
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
                        JSObject* protoProto, JSClass* protoClass,
                        JSClass* constructorClass, JSNative constructor,
-                       unsigned ctorNargs, JSClass* instanceClass,
+                       unsigned ctorNargs, const DOMClass* domClass,
                        Prefable<JSFunctionSpec>* methods,
                        Prefable<JSPropertySpec>* properties,
                        Prefable<ConstantSpec>* constants,
@@ -267,7 +268,7 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
     }
 
     js::SetReservedSlot(proto, DOM_PROTO_INSTANCE_CLASS_SLOT,
-                        JS::PrivateValue(instanceClass));
+                        JS::PrivateValue(const_cast<DOMClass*>(domClass)));
   }
   else {
     proto = NULL;
@@ -333,10 +334,8 @@ JSBool
 InstanceClassHasProtoAtDepth(JSHandleObject protoObject, uint32_t protoID,
                              uint32_t depth)
 {
-  JSClass* instanceClass = static_cast<JSClass*>(
+  const DOMClass* domClass = static_cast<DOMClass*>(
     js::GetReservedSlot(protoObject, DOM_PROTO_INSTANCE_CLASS_SLOT).toPrivate());
-  MOZ_ASSERT(IsDOMClass(instanceClass));
-  DOMJSClass* domClass = DOMJSClass::FromJSClass(instanceClass);
   return (uint32_t)domClass->mInterfaceChain[depth] == protoID;
 }
 
@@ -377,13 +376,10 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   if (!obj)
       return false;
 
-  JSClass* clasp = js::GetObjectJSClass(obj);
-  if (!IsDOMClass(clasp) ||
-      !DOMJSClass::FromJSClass(clasp)->mDOMObjectIsISupports) {
+  nsISupports* native;
+  if (!UnwrapDOMObjectToISupports(obj, native)) {
     return Throw<true>(cx, NS_ERROR_FAILURE);
   }
-
-  nsISupports* native = UnwrapDOMObject<nsISupports>(obj);
 
   if (argc < 1) {
     return Throw<true>(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
@@ -451,8 +447,9 @@ XrayResolveProperty(JSContext* cx, JSObject* wrapper, jsid id,
           JSFunction *fun = JS_NewFunctionById(cx, methodSpecs[i].call.op,
                                                methodSpecs[i].nargs, 0,
                                                wrapper, id);
-          if (!fun)
-              return false;
+          if (!fun) {
+            return false;
+          }
           SET_JITINFO(fun, methodSpecs[i].call.info);
           JSObject *funobj = JS_GetFunctionObject(fun);
           desc->value.setObject(*funobj);
@@ -588,6 +585,45 @@ XrayEnumerateProperties(JS::AutoIdVector& props,
   }
 
   return true;
+}
+
+bool
+GetPropertyOnPrototype(JSContext* cx, JSObject* proxy, jsid id, bool* found,
+                       JS::Value* vp)
+{
+  JSObject* proto = js::GetObjectProto(proxy);
+  if (!proto) {
+    *found = false;
+    return true;
+  }
+
+  JSBool hasProp;
+  if (!JS_HasPropertyById(cx, proto, id, &hasProp)) {
+    return false;
+  }
+
+  *found = hasProp;
+  if (!hasProp || !vp) {
+    return true;
+  }
+
+  return JS_ForwardGetPropertyTo(cx, proto, id, proxy, vp);
+}
+
+bool
+HasPropertyOnPrototype(JSContext* cx, JSObject* proxy, DOMProxyHandler* handler,
+                       jsid id)
+{
+  Maybe<JSAutoCompartment> ac;
+  if (xpc::WrapperFactory::IsXrayWrapper(proxy)) {
+    proxy = js::UnwrapObject(proxy);
+    ac.construct(cx, proxy);
+  }
+  MOZ_ASSERT(js::IsProxy(proxy) && js::GetProxyHandler(proxy) == handler);
+
+  bool found;
+  // We ignore an error from GetPropertyOnPrototype.
+  return !GetPropertyOnPrototype(cx, proxy, id, &found, NULL) || found;
 }
 
 } // namespace dom

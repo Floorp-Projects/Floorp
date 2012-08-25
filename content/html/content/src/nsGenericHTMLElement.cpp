@@ -2135,6 +2135,39 @@ nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 bool
+nsGenericHTMLElement::ParseBackgroundAttribute(int32_t aNamespaceID,
+                                               nsIAtom* aAttribute,
+                                               const nsAString& aValue,
+                                               nsAttrValue& aResult)
+{
+  if (aNamespaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::background) {
+    // Resolve url to an absolute url
+    nsIDocument* doc = OwnerDoc();
+    nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = nsContentUtils::NewURIWithDocumentCharset(
+        getter_AddRefs(uri), aValue, doc, baseURI);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsString value(aValue);
+    nsRefPtr<nsStringBuffer> buffer = nsCSSValue::BufferFromString(value);
+    if (NS_UNLIKELY(!buffer)) {
+      return false;
+    }
+
+    mozilla::css::URLValue *url =
+      new mozilla::css::URLValue(buffer, baseURI, uri, NodePrincipal());
+    aResult.SetTo(url, &aValue);
+    return true;
+  }
+
+  return false;
+}
+
+bool
 nsGenericHTMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -2739,45 +2772,16 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
   if (backImage->GetUnit() == eCSSUnit_Null &&
       presContext->UseDocumentColors()) {
     // background
-    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::background);
-    if (value && value->Type() == nsAttrValue::eString) {
-      const nsString& spec = value->GetStringValue();
-      if (!spec.IsEmpty()) {
-        // Resolve url to an absolute url
-        // XXX this breaks if the HTML element has an xml:base
-        // attribute (the xml:base will not be taken into account)
-        // as well as elements with _baseHref set. We need to be able
-        // to get to the element somehow, or store the base URI in the
-        // attributes.
-        nsIDocument* doc = presContext->Document();
-        nsCOMPtr<nsIURI> uri;
-        nsresult rv = nsContentUtils::NewURIWithDocumentCharset(
-            getter_AddRefs(uri), spec, doc, doc->GetDocBaseURI());
-        if (NS_SUCCEEDED(rv)) {
-          // Note that this should generally succeed here, due to the way
-          // |spec| is created.  Maybe we should just add an nsStringBuffer
-          // accessor on nsAttrValue?
-          nsRefPtr<nsStringBuffer> buffer = nsCSSValue::BufferFromString(spec);
-          if (NS_LIKELY(buffer)) {
-            // XXXbz it would be nice to assert that doc->NodePrincipal() is
-            // the same as the principal of the node (which we'd need to store
-            // in the mapped attrs or something?)
-            nsCSSValue::Image *img =
-              new nsCSSValue::Image(uri, buffer, doc->GetDocumentURI(),
-                                    doc->NodePrincipal(), doc);
-            if (NS_LIKELY(img)) {
-              nsCSSValueList* list = backImage->SetListValue();
-              list->mValue.SetImageValue(img);
-            }
-          }
-        }
-      }
-      else if (presContext->CompatibilityMode() == eCompatibility_NavQuirks) {
-        // in NavQuirks mode, allow the empty string to set the
-        // background to empty
-        nsCSSValueList* list = backImage->SetListValue();
-        list->mValue.SetNoneValue();
-      }
+    nsAttrValue* value =
+      const_cast<nsAttrValue*>(aAttributes->GetAttr(nsGkAtoms::background));
+    // If the value is an image, or it is a URL and we attempted a load,
+    // put it in the style tree.
+    if (value &&
+        (value->Type() == nsAttrValue::eImage ||
+         (value->Type() == nsAttrValue::eURL &&
+          value->LoadImage(presContext->Document())))) {
+      nsCSSValueList* list = backImage->SetListValue();
+      list->mValue.SetImageValue(value->GetImageValue());
     }
   }
 }

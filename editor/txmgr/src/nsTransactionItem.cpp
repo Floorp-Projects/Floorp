@@ -26,26 +26,8 @@ nsTransactionItem::~nsTransactionItem()
   delete mUndoStack;
 }
 
-nsrefcnt
-nsTransactionItem::AddRef()
-{
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsTransactionItem",
-                sizeof(nsTransactionItem));
-  return mRefCnt;
-}
-
-nsrefcnt
-nsTransactionItem::Release() {
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsTransactionItem");
-  if (mRefCnt == 0) {
-    mRefCnt = 1;
-    delete this;
-    return 0;
-  }
-  return mRefCnt;
-}
+NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(nsTransactionItem)
+NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(nsTransactionItem)
 
 NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsTransactionItem)
 

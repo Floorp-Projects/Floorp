@@ -2208,11 +2208,7 @@ nsCryptoRunnable::Run()
   JSContext *cx = m_args->m_cx;
 
   JSAutoRequest ar(cx);
-  JSAutoEnterCompartment ac;
-
-  if (!ac.enter(cx, m_args->m_scope)) {
-    return NS_ERROR_FAILURE;
-  }
+  JSAutoCompartment ac(cx, m_args->m_scope);
 
   // make sure the right context is on the stack. must not return w/out popping
   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));

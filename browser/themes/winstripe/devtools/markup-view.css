@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font: message-box;
+  background-color: #131c26;
+  color: #8fa1b2;
+}
+
+.tagname {
+  color: #a673bf;
+}
+
+.attrname {
+  color: #b26b47;
+}
+
+.attrvalue {
+  color: #3689b2;
+}
+
+.newattr {
+  cursor: pointer;
+}
+
+.comment {
+  color: #5c6773;
+}
+
+.selected {
+  background-color: #253847;
+}
+
+/* Give some padding to focusable elements to match the editor input
+ * that will replace them. */
+span[tabindex] {
+  display: inline-block;
+  padding: 1px 0;
+}
+
+li.container {
+  position: relative;
+  padding: 2px 0 0 2px;
+}
+
+.codebox {
+  padding-left: 14px;
+}
+
+.expander {
+  position: absolute;
+  -moz-appearance: treetwisty;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.expander[expanded] {
+  -moz-appearance: treetwistyopen;
+}
+
+.styleinspector-propertyeditor {
+  border: 1px solid #CCC;
+}

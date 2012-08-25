@@ -134,3 +134,7 @@ ifdef MOZ_X11
 CXXFLAGS += $(TK_CFLAGS)
 LDFLAGS += $(TK_LIBS)
 endif
+
+XPIDL_FLAGS += \
+  -I$(topsrcdir)/dom/interfaces/events \
+  $(NULL)

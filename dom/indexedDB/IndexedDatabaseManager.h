@@ -161,12 +161,13 @@ public:
 #endif
 
   already_AddRefed<FileManager>
-  GetOrCreateFileManager(const nsACString& aOrigin,
-                         const nsAString& aDatabaseName);
-
-  already_AddRefed<FileManager>
   GetFileManager(const nsACString& aOrigin,
                  const nsAString& aDatabaseName);
+
+  void
+  AddFileManager(const nsACString& aOrigin,
+                 const nsAString& aDatabaseName,
+                 FileManager* aFileManager);
 
   void InvalidateFileManagersForOrigin(const nsACString& aOrigin);
 
@@ -431,12 +432,11 @@ private:
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
-    AsyncDeleteFileRunnable(const nsAString& aFilePath)
-    : mFilePath(aFilePath)
-    { }
+    AsyncDeleteFileRunnable(FileManager* aFileManager, int64_t aFileId);
 
   private:
-    nsString mFilePath;
+    nsRefPtr<FileManager> mFileManager;
+    int64_t mFileId;
   };
 
   static nsresult RunSynchronizedOp(IDBDatabase* aDatabase,
@@ -472,9 +472,8 @@ private:
   // A map of Windows to the corresponding quota helper.
   nsRefPtrHashtable<nsPtrHashKey<nsPIDOMWindow>, CheckQuotaHelper> mQuotaHelperHash;
 
-  // Maintains a list of all file managers per origin. The list is actually also
-  // a list of all origins that were successfully initialized. This list
-  // isn't protected by any mutex but it is only ever touched on the IO thread.
+  // Maintains a list of all file managers per origin. This list isn't
+  // protected by any mutex but it is only ever touched on the IO thread.
   nsClassHashtable<nsCStringHashKey,
                    nsTArray<nsRefPtr<FileManager> > > mFileManagers;
 
@@ -494,6 +493,10 @@ private:
   // A single threadsafe instance of our quota callback. Created on the main
   // thread during GetOrCreate().
   nsCOMPtr<mozIStorageQuotaCallback> mQuotaCallbackSingleton;
+
+  // A list of all successfully initialized origins. This list isn't protected
+  // by any mutex but it is only ever touched on the IO thread.
+  nsTArray<nsCString> mInitializedOrigins;
 
   // Lock protecting FileManager.mFileInfos and nsDOMFileBase.mFileInfos
   // It's s also used to atomically update FileInfo.mRefCnt, FileInfo.mDBRefCnt

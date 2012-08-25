@@ -73,6 +73,7 @@ public:
 private:    
     friend class nsDiskCacheDeviceDeactivateEntryEvent;
     friend class nsEvictDiskCacheEntriesEvent;
+    friend class nsDiskCacheMap;
     /**
      *  Private methods
      */

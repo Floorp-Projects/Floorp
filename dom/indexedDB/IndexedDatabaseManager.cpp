@@ -79,8 +79,8 @@ IndexedDatabaseManager* gInstance = nullptr;
 int32_t gIndexedDBQuotaMB = DEFAULT_QUOTA_MB;
 
 bool
-GetBaseFilename(const nsAString& aFilename,
-                nsAString& aBaseFilename)
+GetDatabaseBaseFilename(const nsAString& aFilename,
+                        nsAString& aDatabaseBaseFilename)
 {
   NS_ASSERTION(!aFilename.IsEmpty(), "Bad argument!");
 
@@ -93,7 +93,7 @@ GetBaseFilename(const nsAString& aFilename,
     return false;
   }
 
-  aBaseFilename = Substring(aFilename, 0, filenameLen - sqliteLen);
+  aDatabaseBaseFilename = Substring(aFilename, 0, filenameLen - sqliteLen);
 
   return true;
 }
@@ -764,7 +764,7 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (mFileManagers.Get(aOrigin)) {
+  if (mInitializedOrigins.Contains(aOrigin)) {
     NS_ADDREF(*aDirectory = directory);
     return NS_OK;
   }
@@ -794,14 +794,11 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   }
 
   // We need to see if there are any files in the directory already. If they
-  // are database files then we need to create file managers for them and also
-  // tell SQLite about all of them.
+  // are database files then we need to cleanup stored files (if it's needed)
+  // and also tell SQLite about all of them.
 
   nsAutoTArray<nsString, 20> subdirsToProcess;
   nsAutoTArray<nsCOMPtr<nsIFile> , 20> unknownFiles;
-
-  nsAutoPtr<nsTArray<nsRefPtr<FileManager> > > fileManagers(
-    new nsTArray<nsRefPtr<FileManager> >());
 
   nsTHashtable<nsStringHashKey> validSubdirs;
   validSubdirs.Init(20);
@@ -839,7 +836,7 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     }
 
     nsString dbBaseFilename;
-    if (!GetBaseFilename(leafName, dbBaseFilename)) {
+    if (!GetDatabaseBaseFilename(leafName, dbBaseFilename)) {
       unknownFiles.AppendElement(file);
       continue;
     }
@@ -851,37 +848,9 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     rv = fileManagerDirectory->Append(dbBaseFilename);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<mozIStorageConnection> connection;
-    rv = OpenDatabaseHelper::CreateDatabaseConnection(
-      NullString(), file, fileManagerDirectory, getter_AddRefs(connection));
+    rv = FileManager::InitDirectory(ss, fileManagerDirectory, file,
+                                    aPrivilege);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT name "
-      "FROM database"
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!hasResult) {
-      NS_ERROR("Database has no name!");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    nsString databaseName;
-    rv = stmt->GetString(0, databaseName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsRefPtr<FileManager> fileManager = new FileManager(aOrigin, databaseName);
-
-    rv = fileManager->Init(fileManagerDirectory, connection, aPrivilege);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    fileManagers->AppendElement(fileManager);
 
     if (aPrivilege != Chrome) {
       rv = ss->UpdateQuotaInformationForFile(file);
@@ -921,8 +890,7 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     }
   }
 
-  mFileManagers.Put(aOrigin, fileManagers);
-  fileManagers.forget();
+  mInitializedOrigins.AppendElement(aOrigin);
 
   NS_ADDREF(*aDirectory = directory);
   return NS_OK;
@@ -1044,37 +1012,6 @@ IndexedDatabaseManager::IsMainProcess()
 #endif
 
 already_AddRefed<FileManager>
-IndexedDatabaseManager::GetOrCreateFileManager(const nsACString& aOrigin,
-                                               const nsAString& aDatabaseName)
-{
-  nsTArray<nsRefPtr<FileManager> >* array;
-  if (!mFileManagers.Get(aOrigin, &array)) {
-    nsAutoPtr<nsTArray<nsRefPtr<FileManager> > > newArray(
-      new nsTArray<nsRefPtr<FileManager> >());
-    mFileManagers.Put(aOrigin, newArray);
-    array = newArray.forget();
-  }
-
-  nsRefPtr<FileManager> fileManager;
-  for (uint32_t i = 0; i < array->Length(); i++) {
-    nsRefPtr<FileManager> fm = array->ElementAt(i);
-
-    if (fm->DatabaseName().Equals(aDatabaseName)) {
-      fileManager = fm.forget();
-      break;
-    }
-  }
-  
-  if (!fileManager) {
-    fileManager = new FileManager(aOrigin, aDatabaseName);
-
-    array->AppendElement(fileManager);
-  }
-
-  return fileManager.forget();
-}
-
-already_AddRefed<FileManager>
 IndexedDatabaseManager::GetFileManager(const nsACString& aOrigin,
                                        const nsAString& aDatabaseName)
 {
@@ -1093,6 +1030,22 @@ IndexedDatabaseManager::GetFileManager(const nsACString& aOrigin,
   }
   
   return nullptr;
+}
+
+void
+IndexedDatabaseManager::AddFileManager(const nsACString& aOrigin,
+                                       const nsAString& aDatabaseName,
+                                       FileManager* aFileManager)
+{
+  NS_ASSERTION(aFileManager, "Null file manager!");
+
+  nsTArray<nsRefPtr<FileManager> >* array;
+  if (!mFileManagers.Get(aOrigin, &array)) {
+    array = new nsTArray<nsRefPtr<FileManager> >();
+    mFileManagers.Put(aOrigin, array);
+  }
+
+  array->AppendElement(aFileManager);
 }
 
 void
@@ -1147,20 +1100,10 @@ IndexedDatabaseManager::AsyncDeleteFile(FileManager* aFileManager,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIFile> directory = aFileManager->GetDirectory();
-  NS_ENSURE_TRUE(directory, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIFile> file = aFileManager->GetFileForId(directory, aFileId);
-  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-
-  nsString filePath;
-  nsresult rv = file->GetPath(filePath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsRefPtr<AsyncDeleteFileRunnable> runnable =
-    new AsyncDeleteFileRunnable(filePath);
+    new AsyncDeleteFileRunnable(aFileManager, aFileId);
 
-  rv = mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  nsresult rv = mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1943,6 +1886,13 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
   return NS_OK;
 }
 
+IndexedDatabaseManager::
+AsyncDeleteFileRunnable::AsyncDeleteFileRunnable(FileManager* aFileManager,
+                                                 int64_t aFileId)
+: mFileManager(aFileManager), mFileId(aFileId)
+{
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(IndexedDatabaseManager::AsyncDeleteFileRunnable,
                               nsIRunnable)
 
@@ -1951,7 +1901,17 @@ IndexedDatabaseManager::AsyncDeleteFileRunnable::Run()
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  int rc = sqlite3_quota_remove(NS_ConvertUTF16toUTF8(mFilePath).get());
+  nsCOMPtr<nsIFile> directory = mFileManager->GetDirectory();
+  NS_ENSURE_TRUE(directory, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIFile> file = mFileManager->GetFileForId(directory, mFileId);
+  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+  nsString filePath;
+  nsresult rv = file->GetPath(filePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int rc = sqlite3_quota_remove(NS_ConvertUTF16toUTF8(filePath).get());
   if (rc != SQLITE_OK) {
     NS_WARNING("Failed to delete stored file!");
     return NS_ERROR_FAILURE;
@@ -1959,14 +1919,6 @@ IndexedDatabaseManager::AsyncDeleteFileRunnable::Run()
 
   // sqlite3_quota_remove won't actually remove anything if we're not tracking
   // the quota here. Manually remove the file if it exists.
-  nsresult rv;
-  nsCOMPtr<nsIFile> file =
-    do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = file->InitWithPath(mFilePath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   bool exists;
   rv = file->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1975,6 +1927,15 @@ IndexedDatabaseManager::AsyncDeleteFileRunnable::Run()
     rv = file->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  directory = mFileManager->GetJournalDirectory();
+  NS_ENSURE_TRUE(directory, NS_ERROR_FAILURE);
+
+  file = mFileManager->GetFileForId(directory, mFileId);
+  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+  rv = file->Remove(false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

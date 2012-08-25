@@ -18,13 +18,8 @@ _BROWSER_FILES = \
 		browser_inspector_iframeTest.js \
 		browser_inspector_scrolling.js \
 		browser_inspector_tab_switch.js \
-		browser_inspector_treePanel_output.js \
-		browser_inspector_treePanel_input.html \
-		browser_inspector_treePanel_result.html \
 		browser_inspector_bug_665880.js \
 		browser_inspector_bug_674871.js \
-		browser_inspector_editor.js \
-		browser_inspector_editor_name.js \
 		browser_inspector_bug_566084_location_changed.js \
 		browser_inspector_infobar.js \
 		browser_inspector_bug_690361.js \
@@ -37,18 +32,13 @@ _BROWSER_FILES = \
 		browser_inspector_ruleviewstore.js \
 		browser_inspector_invalidate.js \
 		browser_inspector_sidebarstate.js \
-		browser_inspector_treePanel_menu.js \
+		browser_inspector_menu.js \
 		browser_inspector_pseudoclass_lock.js \
 		browser_inspector_pseudoClass_menu.js \
 		browser_inspector_destroyselection.html \
 		browser_inspector_destroyselection.js \
-		browser_inspector_treePanel_navigation.html \
-		browser_inspector_treePanel_navigation.js \
 		head.js \
 		$(NULL)
-
-# Disabled due to constant failures
-# 		browser_inspector_treePanel_click.js \
 
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

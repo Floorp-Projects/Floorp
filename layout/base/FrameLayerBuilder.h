@@ -42,7 +42,9 @@ enum LayerState {
 
 class RefCountedRegion : public RefCounted<RefCountedRegion> {
 public:
+  RefCountedRegion() : mIsInfinite(false) {}
   nsRegion mRegion;
+  bool mIsInfinite;
 };
 
 /**
@@ -266,13 +268,21 @@ public:
   /* These are only in the public section because they need
    * to be called by file-scope helper functions in FrameLayerBuilder.cpp.
    */
-  
+
   /**
    * Record aItem as a display item that is rendered by aLayer.
    */
   void AddLayerDisplayItem(Layer* aLayer,
                            nsDisplayItem* aItem,
                            LayerState aLayerState);
+
+  /**
+   * Record aFrame as a frame that is rendered by an item on aLayer.
+   */
+  void AddLayerDisplayItemForFrame(Layer* aLayer,
+                                   nsIFrame* aFrame,
+                                   PRUint32 aDisplayItemKey,
+                                   LayerState aLayerState);
 
   /**
    * Record aItem as a display item that is rendered by the ThebesLayer
@@ -294,7 +304,14 @@ public:
    * This could be a dedicated layer for the display item, or a ThebesLayer
    * that renders many display items.
    */
-  Layer* GetOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
+  Layer* GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey);
+
+  /**
+   * Calls GetOldLayerForFrame on the underlying frame of the display item,
+   * and each subsequent merged frame if no layer is found for the underlying
+   * frame.
+   */
+  Layer* GetOldLayerFor(nsDisplayItem* aItem);
 
   static Layer* GetDebugOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
   /**
@@ -466,9 +483,13 @@ protected:
    */
   class DisplayItemDataEntry : public nsPtrHashKey<nsIFrame> {
   public:
-    DisplayItemDataEntry(const nsIFrame *key) : nsPtrHashKey<nsIFrame>(key), mIsSharingContainerLayer(false) {}
-    DisplayItemDataEntry(DisplayItemDataEntry &toCopy) :
-      nsPtrHashKey<nsIFrame>(toCopy.mKey), mIsSharingContainerLayer(toCopy.mIsSharingContainerLayer)
+    DisplayItemDataEntry(const nsIFrame *key)
+      : nsPtrHashKey<nsIFrame>(key)
+      , mIsSharingContainerLayer(false)
+      {}
+    DisplayItemDataEntry(DisplayItemDataEntry &toCopy)
+      : nsPtrHashKey<nsIFrame>(toCopy.mKey)
+      , mIsSharingContainerLayer(toCopy.mIsSharingContainerLayer)
     {
       // This isn't actually a copy-constructor; notice that it steals toCopy's
       // array and invalid region.  Be careful.

@@ -282,15 +282,14 @@ AtomizeInline(JSContext *cx, const jschar **pchars, size_t length,
         return atom;
     }
 
-    SwitchToCompartment sc(cx, cx->runtime->atomsCompartment);
-
-    JSFixedString *key;
+    AutoEnterAtomsCompartment ac(cx);
 
     SkipRoot skip(cx, &chars);
 
     /* Workaround for hash values in AddPtr being inadvertently poisoned. */
     SkipRoot skip2(cx, &p);
 
+    JSFixedString *key;
     if (ocb == TakeCharOwnership) {
         key = js_NewString(cx, const_cast<jschar *>(chars), length);
         if (!key)
