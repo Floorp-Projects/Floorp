@@ -155,11 +155,43 @@ define('gclitest/index', ['require', 'exports', 'module' , 'gclitest/suite', 'gc
 
     // setTimeout keeps stack traces clear of RequireJS frames
     window.setTimeout(function() {
-      exports.run({
+      var options = {
         window: window,
         display: window.display,
         hideExec: true
-      });
+      };
+      exports.run(options);
+
+      window.createDebugCheck = function() {
+        require([ 'gclitest/helpers' ], function(helpers) {
+          helpers.setup(options);
+          console.log(helpers._createDebugCheck());
+          helpers.shutdown(options);
+        });
+      };
+
+      window.summaryJson = function() {
+        var args = [ 'Requisition: ' ];
+        var summary = display.requisition._summaryJson;
+        Object.keys(summary).forEach(function(name) {
+          args.push(' ' + name + '=');
+          args.push(summary[name]);
+        });
+        console.log.apply(console, args);
+
+        console.log('Focus: ' +
+                    'tooltip=', display.focusManager._shouldShowTooltip(),
+                    'output=', display.focusManager._shouldShowOutput());
+      };
+
+      document.addEventListener('keyup', function(ev) {
+        if (ev.keyCode === 113 /*F2*/) {
+          window.createDebugCheck();
+        }
+        if (ev.keyCode === 115 /*F4*/) {
+          window.summaryJson();
+        }
+      }, true);
 
       window.testCommands = function() {
         require([ 'gclitest/mockCommands' ], function(mockCommands) {
@@ -197,7 +229,7 @@ define('gclitest/index', ['require', 'exports', 'module' , 'gclitest/suite', 'gc
  * limitations under the License.
  */
 
-define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testCanon', 'gclitest/testCli', 'gclitest/testCompletion', 'gclitest/testExec', 'gclitest/testHelp', 'gclitest/testHistory', 'gclitest/testInputter', 'gclitest/testIncomplete', 'gclitest/testIntro', 'gclitest/testJs', 'gclitest/testKeyboard', 'gclitest/testMenu', 'gclitest/testPref', 'gclitest/testRequire', 'gclitest/testResource', 'gclitest/testScratchpad', 'gclitest/testSettings', 'gclitest/testSpell', 'gclitest/testSplit', 'gclitest/testTokenize', 'gclitest/testTooltip', 'gclitest/testTypes', 'gclitest/testUtil'], function(require, exports, module) {
+define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testCanon', 'gclitest/testCli', 'gclitest/testCompletion', 'gclitest/testExec', 'gclitest/testFocus', 'gclitest/testHelp', 'gclitest/testHistory', 'gclitest/testInputter', 'gclitest/testIncomplete', 'gclitest/testIntro', 'gclitest/testJs', 'gclitest/testKeyboard', 'gclitest/testMenu', 'gclitest/testNode', 'gclitest/testPref', 'gclitest/testRequire', 'gclitest/testResource', 'gclitest/testScratchpad', 'gclitest/testSettings', 'gclitest/testSpell', 'gclitest/testSplit', 'gclitest/testTokenize', 'gclitest/testTooltip', 'gclitest/testTypes', 'gclitest/testUtil'], function(require, exports, module) {
 
   // We need to make sure GCLI is initialized before we begin testing it
   require('gcli/index');
@@ -211,6 +243,7 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
   examiner.addSuite('gclitest/testCli', require('gclitest/testCli'));
   examiner.addSuite('gclitest/testCompletion', require('gclitest/testCompletion'));
   examiner.addSuite('gclitest/testExec', require('gclitest/testExec'));
+  examiner.addSuite('gclitest/testFocus', require('gclitest/testFocus'));
   examiner.addSuite('gclitest/testHelp', require('gclitest/testHelp'));
   examiner.addSuite('gclitest/testHistory', require('gclitest/testHistory'));
   examiner.addSuite('gclitest/testInputter', require('gclitest/testInputter'));
@@ -219,6 +252,7 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
   examiner.addSuite('gclitest/testJs', require('gclitest/testJs'));
   examiner.addSuite('gclitest/testKeyboard', require('gclitest/testKeyboard'));
   examiner.addSuite('gclitest/testMenu', require('gclitest/testMenu'));
+  examiner.addSuite('gclitest/testNode', require('gclitest/testNode'));
   examiner.addSuite('gclitest/testPref', require('gclitest/testPref'));
   examiner.addSuite('gclitest/testRequire', require('gclitest/testRequire'));
   examiner.addSuite('gclitest/testResource', require('gclitest/testResource'));
@@ -747,6 +781,14 @@ define('gclitest/testCanon', ['require', 'exports', 'module' , 'gclitest/helpers
   var canon = require('gcli/canon');
   var test = require('test/assert');
 
+  exports.setup = function(options) {
+    helpers.setup(options);
+  };
+
+  exports.shutdown = function(options) {
+    helpers.shutdown(options);
+  };
+
   exports.testAddRemove = function(options) {
     var startCount = canon.getCommands().length;
     var events = 0;
@@ -788,7 +830,9 @@ define('gclitest/testCanon', ['require', 'exports', 'module' , 'gclitest/helpers
 
     test.is(canon.getCommands().length, startCount, 'remove command success');
     test.is(events, 3, 'remove event');
-    helpers.status(options, {
+
+    helpers.setInput('testadd');
+    helpers.check({
       typed: 'testadd',
       status: 'ERROR'
     });
@@ -813,7 +857,9 @@ define('gclitest/testCanon', ['require', 'exports', 'module' , 'gclitest/helpers
 
     test.is(canon.getCommands().length, startCount, 'reremove command success');
     test.is(events, 5, 'reremove event');
-    helpers.status(options, {
+
+    helpers.setInput('testadd');
+    helpers.check({
       typed: 'testadd',
       status: 'ERROR'
     });
@@ -852,110 +898,169 @@ define('gclitest/helpers', ['require', 'exports', 'module' , 'test/assert', 'gcl
 var test = require('test/assert');
 var util = require('gcli/util');
 
+var helpers = exports;
 
-var cachedOptions = undefined;
+helpers._display = undefined;
 
-exports.setup = function(opts) {
-  cachedOptions = opts;
+helpers.setup = function(options) {
+  helpers._display = options.display;
 };
 
-exports.shutdown = function(opts) {
-  cachedOptions = undefined;
+helpers.shutdown = function(options) {
+  helpers._display = undefined;
 };
 
 /**
- * Check that we can parse command input.
- * Doesn't execute the command, just checks that we grok the input properly:
- *
- * helpers.status({
- *   // Test inputs
- *   typed: "ech",           // Required
- *   cursor: 3,              // Optional cursor position
- *
- *   // Thing to check
- *   status: "INCOMPLETE",   // One of "VALID", "ERROR", "INCOMPLETE"
- *   hints: The hint text, i.e. a concatenation of the directTabText, the
- *     emptyParameters and the arrowTabText. The text as inserted into the UI
- *     will include NBSP and Unicode RARR characters, these should be
- *     represented using normal space and '->' for the arrow
- *   markup: "VVVIIIEEE",    // What state should the error markup be in
- * });
+ * Various functions to return the actual state of the command line
  */
-exports.status = function(options, checks) {
-  var requisition = options.display.requisition;
-  var inputter = options.display.inputter;
-  var completer = options.display.completer;
+helpers._actual = {
+  input: function() {
+    return helpers._display.inputter.element.value;
+  },
 
-  if (checks.typed != null) {
-    inputter.setInput(checks.typed);
-  }
-  else {
-    test.ok(false, "Missing typed for " + JSON.stringify(checks));
-    return;
-  }
+  hints: function() {
+    var templateData = helpers._display.completer._getCompleterTemplateData();
+    var actualHints = templateData.directTabText +
+                      templateData.emptyParameters.join('') +
+                      templateData.arrowTabText;
+    return actualHints.replace(/\u00a0/g, ' ')
+                      .replace(/\u21E5/, '->')
+                      .replace(/ $/, '');
+  },
 
-  if (checks.cursor != null) {
-    inputter.setCursor(checks.cursor);
-  }
-
-  if (checks.status != null) {
-    test.is(requisition.getStatus().toString(),
-            checks.status,
-            "status for " + checks.typed);
-  }
-
-  var actual = completer._getCompleterTemplateData();
-
-  if (checks.hints != null) {
-    var actualHints = actual.directTabText +
-                      actual.emptyParameters.join('') +
-                      actual.arrowTabText;
-    actualHints = actualHints.replace(/\u00a0/g, ' ')
-                             .replace(/\u21E5/, '->')
-                             .replace(/ $/, '');
-    test.is(actualHints,
-            checks.hints,
-            'hints');
-  }
-
-  if (checks.markup != null) {
-    var cursor = checks.cursor ? checks.cursor.start : checks.typed.length;
-    var statusMarkup = requisition.getInputStatusMarkup(cursor);
-    var actualMarkup = statusMarkup.map(function(s) {
+  markup: function() {
+    var cursor = helpers._display.inputter.element.selectionStart;
+    var statusMarkup = helpers._display.requisition.getInputStatusMarkup(cursor);
+    return statusMarkup.map(function(s) {
       return Array(s.string.length + 1).join(s.status.toString()[0]);
     }).join('');
+  },
 
-    test.is(checks.markup,
-            actualMarkup,
-            'markup for ' + checks.typed);
+  cursor: function() {
+    return helpers._display.inputter.element.selectionStart;
+  },
+
+  current: function() {
+    return helpers._display.requisition.getAssignmentAt(helpers._actual.cursor()).param.name;
+  },
+
+  status: function() {
+    return helpers._display.requisition.getStatus().toString();
+  },
+
+  outputState: function() {
+    var outputData = helpers._display.focusManager._shouldShowOutput();
+    return outputData.visible + ':' + outputData.reason;
+  },
+
+  tooltipState: function() {
+    var tooltipData = helpers._display.focusManager._shouldShowTooltip();
+    return tooltipData.visible + ':' + tooltipData.reason;
   }
+};
+
+helpers._directToString = [ 'boolean', 'undefined', 'number' ];
+
+helpers._createDebugCheck = function() {
+  var requisition = helpers._display.requisition;
+  var command = requisition.commandAssignment.value;
+  var input = helpers._actual.input();
+  var padding = Array(input.length + 1).join(' ');
+
+  var output = '';
+  output += 'helpers.setInput(\'' + input + '\');\n';
+  output += 'helpers.check({\n';
+  output += '  input:  \'' + input + '\',\n';
+  output += '  hints:  ' + padding + '\'' + helpers._actual.hints() + '\',\n';
+  output += '  markup: \'' + helpers._actual.markup() + '\',\n';
+  output += '  cursor: ' + helpers._actual.cursor() + ',\n';
+  output += '  current: \'' + helpers._actual.current() + '\',\n';
+  output += '  status: \'' + helpers._actual.status() + '\',\n';
+  output += '  outputState: \'' + helpers._actual.outputState() + '\',\n';
+
+  if (command) {
+    output += '  tooltipState: \'' + helpers._actual.tooltipState() + '\',\n';
+    output += '  args: {\n';
+    output += '    command: { name: \'' + command.name + '\' },\n';
+
+    requisition.getAssignments().forEach(function(assignment) {
+      output += '    ' + assignment.param.name + ': { ';
+
+      if (typeof assignment.value === 'string') {
+        output += 'value: \'' + assignment.value + '\', ';
+      }
+      else if (helpers._directToString.indexOf(typeof assignment.value) !== -1) {
+        output += 'value: ' + assignment.value + ', ';
+      }
+      else if (assignment.value === null) {
+        output += 'value: ' + assignment.value + ', ';
+      }
+      else {
+        output += '/*value:' + assignment.value + ',*/ ';
+      }
+
+      output += 'arg: \'' + assignment.arg + '\', ';
+      output += 'status: \'' + assignment.getStatus().toString() + '\', ';
+      output += 'message: \'' + assignment.getMessage() + '\'';
+      output += ' },\n';
+    });
+
+    output += '  }\n';
+  }
+  else {
+    output += '  tooltipState: \'' + helpers._actual.tooltipState() + '\'\n';
+  }
+  output += '});';
+
+  return output;
 };
 
 /**
  * We're splitting status into setup() which alters the state of the system
  * and check() which ensures that things are in the right place afterwards.
  */
-exports.setInput = function(typed, cursor) {
-  cachedOptions.display.inputter.setInput(typed);
+helpers.setInput = function(typed, cursor) {
+  helpers._display.inputter.setInput(typed);
 
   if (cursor) {
-    cachedOptions.display.inputter.setCursor({ start: cursor, end: cursor });
+    helpers._display.inputter.setCursor({ start: cursor, end: cursor });
   }
+
+  helpers._display.focusManager.onInputChange();
+};
+
+/**
+ * Simulate focusing the input field
+ */
+helpers.focusInput = function() {
+  helpers._display.inputter.focus();
 };
 
 /**
  * Simulate pressing TAB in the input field
  */
-exports.pressTab = function() {
-  // requisition.complete({ start: 5, end: 5 }, 0);
+helpers.pressTab = function() {
+  helpers.pressKey(9 /*KeyEvent.DOM_VK_TAB*/);
+};
 
+/**
+ * Simulate pressing RETURN in the input field
+ */
+helpers.pressReturn = function() {
+  helpers.pressKey(13 /*KeyEvent.DOM_VK_RETURN*/);
+};
+
+/**
+ * Simulate pressing a key by keyCode in the input field
+ */
+helpers.pressKey = function(keyCode) {
   var fakeEvent = {
-    keyCode: util.KeyEvent.DOM_VK_TAB,
+    keyCode: keyCode,
     preventDefault: function() { },
     timeStamp: new Date().getTime()
   };
-  cachedOptions.display.inputter.onKeyDown(fakeEvent);
-  cachedOptions.display.inputter.onKeyUp(fakeEvent);
+  helpers._display.inputter.onKeyDown(fakeEvent);
+  helpers._display.inputter.onKeyUp(fakeEvent);
 };
 
 /**
@@ -980,54 +1085,41 @@ exports.pressTab = function() {
  *     message: i.e. assignment.getMessage
  *     name: For commands - checks assignment.value.name
  */
-exports.check = function(checks) {
-  var requisition = cachedOptions.display.requisition;
-  var completer = cachedOptions.display.completer;
-  var actual = completer._getCompleterTemplateData();
-
-  if (checks.input != null) {
-    test.is(cachedOptions.display.inputter.element.value,
-            checks.input,
-            'input');
+helpers.check = function(checks) {
+  if ('input' in checks) {
+    test.is(helpers._actual.input(), checks.input, 'input');
   }
 
-  if (checks.cursor != null) {
-    test.is(cachedOptions.display.inputter.element.selectionStart,
-            checks.cursor,
-            'cursor');
+  if ('cursor' in checks) {
+    test.is(helpers._actual.cursor(), checks.cursor, 'cursor');
   }
 
-  if (checks.status != null) {
-    test.is(requisition.getStatus().toString(),
-            checks.status,
-            'status');
+  if ('current' in checks) {
+    test.is(helpers._actual.current(), checks.current, 'current');
   }
 
-  if (checks.markup != null) {
-    var cursor = cachedOptions.display.inputter.element.selectionStart;
-    var statusMarkup = requisition.getInputStatusMarkup(cursor);
-    var actualMarkup = statusMarkup.map(function(s) {
-      return Array(s.string.length + 1).join(s.status.toString()[0]);
-    }).join('');
-
-    test.is(checks.markup,
-            actualMarkup,
-            'markup');
+  if ('status' in checks) {
+    test.is(helpers._actual.status(), checks.status, 'status');
   }
 
-  if (checks.hints != null) {
-    var actualHints = actual.directTabText +
-                      actual.emptyParameters.join('') +
-                      actual.arrowTabText;
-    actualHints = actualHints.replace(/\u00a0/g, ' ')
-                             .replace(/\u21E5/, '->')
-                             .replace(/ $/, '');
-    test.is(actualHints,
-            checks.hints,
-            'hints');
+  if ('markup' in checks) {
+    test.is(helpers._actual.markup(), checks.markup, 'markup');
+  }
+
+  if ('hints' in checks) {
+    test.is(helpers._actual.hints(), checks.hints, 'hints');
+  }
+
+  if ('tooltipState' in checks) {
+    test.is(helpers._actual.tooltipState(), checks.tooltipState, 'tooltipState');
+  }
+
+  if ('outputState' in checks) {
+    test.is(helpers._actual.outputState(), checks.outputState, 'outputState');
   }
 
   if (checks.args != null) {
+    var requisition = helpers._display.requisition;
     Object.keys(checks.args).forEach(function(paramName) {
       var check = checks.args[paramName];
 
@@ -1044,40 +1136,40 @@ exports.check = function(checks) {
         return;
       }
 
-      if (check.value != null) {
+      if ('value' in check) {
         test.is(assignment.value,
                 check.value,
-                'arg[\'' + paramName + '\'].value');
+                'arg.' + paramName + '.value');
       }
 
-      if (check.name != null) {
+      if ('name' in check) {
         test.is(assignment.value.name,
                 check.name,
-                'arg[\'' + paramName + '\'].name');
+                'arg.' + paramName + '.name');
       }
 
-      if (check.type != null) {
+      if ('type' in check) {
         test.is(assignment.arg.type,
                 check.type,
-                'arg[\'' + paramName + '\'].type');
+                'arg.' + paramName + '.type');
       }
 
-      if (check.arg != null) {
+      if ('arg' in check) {
         test.is(assignment.arg.toString(),
                 check.arg,
-                'arg[\'' + paramName + '\'].arg');
+                'arg.' + paramName + '.arg');
       }
 
-      if (check.status != null) {
+      if ('status' in check) {
         test.is(assignment.getStatus().toString(),
                 check.status,
-                'arg[\'' + paramName + '\'].status');
+                'arg.' + paramName + '.status');
       }
 
-      if (check.message != null) {
+      if ('message' in check) {
         test.is(assignment.getMessage(),
                 check.message,
-                'arg[\'' + paramName + '\'].message');
+                'arg.' + paramName + '.message');
       }
     });
   }
@@ -1096,7 +1188,7 @@ exports.check = function(checks) {
  *   blankOutput: true,       // Special checks when there is no output
  * });
  */
-exports.exec = function(options, tests) {
+helpers.exec = function(options, tests) {
   var requisition = options.display.requisition;
   var inputter = options.display.inputter;
 
@@ -1157,7 +1249,7 @@ exports.exec = function(options, tests) {
   var displayed = div.textContent.trim();
 
   if (tests.outputMatch) {
-    function doTest(match, against) {
+    var doTest = function(match, against) {
       if (!match.test(against)) {
         test.ok(false, "html output for " + typed + " against " + match.source);
         console.log("Actual textContent");
@@ -1692,6 +1784,7 @@ exports.setup = function() {
 
   canon.addCommand(exports.tsv);
   canon.addCommand(exports.tsr);
+  canon.addCommand(exports.tso);
   canon.addCommand(exports.tse);
   canon.addCommand(exports.tsj);
   canon.addCommand(exports.tsb);
@@ -1718,6 +1811,7 @@ exports.setup = function() {
 exports.shutdown = function() {
   canon.removeCommand(exports.tsv);
   canon.removeCommand(exports.tsr);
+  canon.removeCommand(exports.tso);
   canon.removeCommand(exports.tse);
   canon.removeCommand(exports.tsj);
   canon.removeCommand(exports.tsb);
@@ -1811,9 +1905,24 @@ exports.tsr = {
   exec: createExec('tsr')
 };
 
+exports.tso = {
+  name: 'tso',
+  params: [ { name: 'text', type: 'string', defaultValue: null } ],
+  exec: createExec('tso')
+};
+
 exports.tse = {
   name: 'tse',
-  params: [ { name: 'node', type: 'node' } ],
+  params: [
+    { name: 'node', type: 'node' },
+    {
+      group: 'options',
+      params: [
+        { name: 'nodes', type: { name: 'nodelist' } },
+        { name: 'nodes2', type: { name: 'nodelist', allowEmpty: true } }
+      ]
+    }
+  ],
   exec: createExec('tse')
 };
 
@@ -2459,6 +2568,27 @@ exports.testOutstanding = function(options) {
   */
 };
 
+exports.testCompleteIntoOptional = function(options) {
+  // From bug 779816
+  helpers.setInput('tso ');
+  helpers.check({
+    typed:  'tso ',
+    hints:      '[text]',
+    markup: 'VVVV',
+    status: 'VALID'
+  });
+
+  helpers.setInput('tso');
+  helpers.pressTab();
+  helpers.check({
+    typed:  'tso ',
+    hints:      '[text]',
+    markup: 'VVVV',
+    status: 'VALID'
+  });
+};
+
+
 });
 /*
  * Copyright 2012, Mozilla Foundation and contributors
@@ -2489,6 +2619,7 @@ var test = require('test/assert');
 var actualExec;
 var actualOutput;
 var hideExec = false;
+var skip = 'skip';
 
 exports.setup = function() {
   mockCommands.setup();
@@ -2535,6 +2666,10 @@ function exec(command, expectedArgs) {
   Object.keys(expectedArgs).forEach(function(arg) {
     var expectedArg = expectedArgs[arg];
     var actualArg = actualExec.args[arg];
+
+    if (expectedArg === skip) {
+      return;
+    }
 
     if (Array.isArray(expectedArg)) {
       if (!Array.isArray(actualArg)) {
@@ -2591,7 +2726,7 @@ exports.testExec = function(options) {
 
   var origDoc = nodetype.getDocument();
   nodetype.setDocument(mockDoc);
-  exec('tse :root', { node: mockBody });
+  exec('tse :root', { node: mockBody, nodes: skip, nodes2: skip });
   nodetype.setDocument(origDoc);
 
   exec('tsn dif fred', { text: 'fred' });
@@ -2622,8 +2757,64 @@ var mockDoc = {
         }
       };
     }
-    throw new Error('mockDoc.querySelectorAll(\'' + css + '\') error');
+    else {
+      return {
+        length: 0,
+        item: function() { return null; }
+      };
+    }
   }
+};
+
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testFocus', ['require', 'exports', 'module' , 'gclitest/helpers', 'gclitest/mockCommands'], function(require, exports, module) {
+
+
+var helpers = require('gclitest/helpers');
+var mockCommands = require('gclitest/mockCommands');
+
+exports.setup = function(options) {
+  mockCommands.setup();
+  helpers.setup(options);
+};
+
+exports.shutdown = function(options) {
+  mockCommands.shutdown();
+  helpers.shutdown(options);
+};
+
+exports.testBasic = function(options) {
+  helpers.focusInput();
+  helpers.exec(options, 'help');
+
+  helpers.setInput('tsn deep');
+  helpers.check({
+    input:  'tsn deep',
+    hints:          '',
+    markup: 'IIIVIIII',
+    cursor: 8,
+    status: 'ERROR',
+    outputState: 'false:default',
+    tooltipState: 'false:default'
+  });
+
+  helpers.pressReturn();
+  helpers.check({
+    input:  'tsn deep',
+    hints:          '',
+    markup: 'IIIVIIII',
+    cursor: 8,
+    status: 'ERROR',
+    outputState: 'false:default',
+    tooltipState: 'true:isError'
+  });
 };
 
 
@@ -2648,22 +2839,51 @@ define('gclitest/testHelp', ['require', 'exports', 'module' , 'gclitest/helpers'
 
   var helpers = require('gclitest/helpers');
 
+  exports.setup = function(options) {
+    helpers.setup(options);
+  };
+
+  exports.shutdown = function(options) {
+    helpers.shutdown(options);
+  };
+
   exports.testHelpStatus = function(options) {
-    helpers.status(options, {
+    helpers.setInput('help');
+    helpers.check({
       typed:  'help',
       hints:      ' [search]',
       markup: 'VVVV',
       status: 'VALID'
     });
 
-    helpers.status(options, {
+    helpers.setInput('help ');
+    helpers.check({
+      typed:  'help ',
+      hints:       '[search]',
+      markup: 'VVVVV',
+      status: 'VALID'
+    });
+
+    // From bug 779816
+    helpers.setInput('help');
+    helpers.pressTab();
+    helpers.check({
+      typed:  'help ',
+      hints:       '[search]',
+      markup: 'VVVVV',
+      status: 'VALID'
+    });
+
+    helpers.setInput('help foo');
+    helpers.check({
       typed:  'help foo',
       markup: 'VVVVVVVV',
       status: 'VALID',
       hints:  ''
     });
 
-    helpers.status(options, {
+    helpers.setInput('help foo bar');
+    helpers.check({
       typed:  'help foo bar',
       markup: 'VVVVVVVVVVVV',
       status: 'VALID',
@@ -2960,7 +3180,7 @@ exports.testCompleted = function(options) {
   helpers.check({
     args: {
       command: { name: 'tselarr', type: 'Argument' },
-      num: { type: 'Argument' },
+      num: { type: 'BlankArgument' },
       arr: { type: 'ArrayArgument' },
     }
   });
@@ -2988,7 +3208,7 @@ exports.testCompleted = function(options) {
     status: 'ERROR',
     args: {
       command: { name: 'tsn dif', type: 'Argument' },
-      text: { type: 'Argument', status: 'INCOMPLETE' }
+      text: { type: 'BlankArgument', status: 'INCOMPLETE' }
     }
   });
 
@@ -3005,7 +3225,7 @@ exports.testCompleted = function(options) {
     args: {
       solo: { value: undefined, status: 'INCOMPLETE' },
       txt1: { value: undefined, status: 'VALID' },
-      bool: { value: undefined, status: 'VALID' },
+      bool: { value: false, status: 'VALID' },
       txt2: { value: undefined, status: 'VALID' },
       num: { value: undefined, status: 'VALID' }
     }
@@ -3021,7 +3241,7 @@ exports.testCompleted = function(options) {
     args: {
       solo: { value: undefined, status: 'INCOMPLETE' },
       txt1: { value: undefined, status: 'INCOMPLETE' },
-      bool: { value: undefined, status: 'VALID' },
+      bool: { value: false, status: 'VALID' },
       txt2: { value: undefined, status: 'VALID' },
       num: { value: undefined, status: 'VALID' }
     }
@@ -3036,7 +3256,7 @@ exports.testCompleted = function(options) {
     args: {
       solo: { value: undefined, status: 'INCOMPLETE' },
       txt1: { value: 'fred', status: 'VALID' },
-      bool: { value: undefined, status: 'VALID' },
+      bool: { value: false, status: 'VALID' },
       txt2: { value: undefined, status: 'VALID' },
       num: { value: undefined, status: 'VALID' }
     }
@@ -3083,7 +3303,7 @@ exports.testCase = function(options) {
     args: {
       solo: { value: undefined, text: 'AA', status: 'INCOMPLETE' },
       txt1: { value: undefined, status: 'VALID' },
-      bool: { value: undefined, status: 'VALID' },
+      bool: { value: false, status: 'VALID' },
       txt2: { value: undefined, status: 'VALID' },
       num: { value: undefined, status: 'VALID' }
     }
@@ -3137,7 +3357,7 @@ exports.testHidden = function(options) {
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
-      invisibleboolean: { value: undefined, status: 'VALID' }
+      invisibleboolean: { value: false, status: 'VALID' }
     }
   });
 
@@ -3150,7 +3370,7 @@ exports.testHidden = function(options) {
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
-      invisibleboolean: { value: undefined, status: 'VALID' }
+      invisibleboolean: { value: false, status: 'VALID' }
     }
   });
 
@@ -3163,7 +3383,7 @@ exports.testHidden = function(options) {
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
-      invisibleboolean: { value: undefined, status: 'VALID' }
+      invisibleboolean: { value: false, status: 'VALID' }
     }
   });
 
@@ -3176,7 +3396,7 @@ exports.testHidden = function(options) {
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'INCOMPLETE' },
-      invisibleboolean: { value: undefined, status: 'VALID' }
+      invisibleboolean: { value: false, status: 'VALID' }
     }
   });
 
@@ -3189,7 +3409,7 @@ exports.testHidden = function(options) {
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: 'x', status: 'VALID' },
-      invisibleboolean: { value: undefined, status: 'VALID' }
+      invisibleboolean: { value: false, status: 'VALID' }
     }
   });
 
@@ -3202,7 +3422,7 @@ exports.testHidden = function(options) {
     args: {
       visible: { value: undefined, status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
-      invisibleboolean: { value: undefined, status: 'VALID' }
+      invisibleboolean: { value: false, status: 'VALID' }
     }
   });
 
@@ -3228,7 +3448,7 @@ exports.testHidden = function(options) {
     args: {
       visible: { value: 'xxx', status: 'VALID' },
       invisiblestring: { value: undefined, status: 'VALID' },
-      invisibleboolean: { value: undefined, status: 'VALID' }
+      invisibleboolean: { value: false, status: 'VALID' }
     }
   });
 };
@@ -3255,20 +3475,30 @@ define('gclitest/testIntro', ['require', 'exports', 'module' , 'gclitest/helpers
   var helpers = require('gclitest/helpers');
   var test = require('test/assert');
 
+  exports.setup = function(options) {
+    helpers.setup(options);
+  };
+
+  exports.shutdown = function(options) {
+    helpers.shutdown(options);
+  };
+
   exports.testIntroStatus = function(options) {
     if (options.isFirefox) {
       test.log('Skipping testIntroStatus in Firefox.');
       return;
     }
 
-    helpers.status(options, {
+    helpers.setInput('intro');
+    helpers.check({
       typed:  'intro',
       markup: 'VVVVV',
       status: 'VALID',
       hints: ''
     });
 
-    helpers.status(options, {
+    helpers.setInput('intro foo');
+    helpers.check({
       typed:  'intro foo',
       markup: 'VVVVVVEEE',
       status: 'ERROR',
@@ -3676,10 +3906,9 @@ exports.testIncrDecr = function() {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/testMenu', ['require', 'exports', 'module' , 'test/assert', 'gclitest/helpers', 'gclitest/mockCommands'], function(require, exports, module) {
+define('gclitest/testMenu', ['require', 'exports', 'module' , 'gclitest/helpers', 'gclitest/mockCommands'], function(require, exports, module) {
 
 
-var test = require('test/assert');
 var helpers = require('gclitest/helpers');
 var mockCommands = require('gclitest/mockCommands');
 
@@ -3705,8 +3934,8 @@ exports.testOptions = function(options) {
       msg: { value: undefined, status: 'INCOMPLETE' },
       num: { value: undefined, status: 'VALID' },
       sel: { value: undefined, status: 'VALID' },
-      bool: { value: undefined, status: 'VALID' },
-      bool2: { value: undefined, status: 'VALID' },
+      bool: { value: false, status: 'VALID' },
+      bool2: { value: false, status: 'VALID' },
       sel2: { value: undefined, status: 'VALID' },
       num2: { value: undefined, status: 'VALID' }
     }
@@ -3716,6 +3945,281 @@ exports.testOptions = function(options) {
 
 });
 
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testNode', ['require', 'exports', 'module' , 'test/assert', 'gclitest/helpers', 'gclitest/mockCommands'], function(require, exports, module) {
+
+
+var test = require('test/assert');
+var helpers = require('gclitest/helpers');
+var mockCommands = require('gclitest/mockCommands');
+
+
+exports.setup = function(options) {
+  mockCommands.setup();
+  helpers.setup(options);
+};
+
+exports.shutdown = function(options) {
+  mockCommands.shutdown();
+  helpers.shutdown(options);
+};
+
+exports.testNode = function(options) {
+  var requisition = options.display.requisition;
+
+  helpers.setInput('tse ');
+  helpers.check({
+    input:  'tse ',
+    hints:      '<node> [options]',
+    markup: 'VVVV',
+    cursor: 4,
+    current: 'node',
+    status: 'ERROR',
+    args: {
+      command: { name: 'tse' },
+      node: { status: 'INCOMPLETE', message: '' },
+      nodes: { status: 'VALID' },
+      nodes2: { status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tse :');
+  helpers.check({
+    input:  'tse :',
+    hints:       ' [options]',
+    markup: 'VVVVE',
+    cursor: 5,
+    current: 'node',
+    status: 'ERROR',
+    args: {
+      command: { name: 'tse' },
+      node: {
+        arg: ' :',
+        status: 'ERROR',
+        message: 'Syntax error in CSS query'
+      },
+      nodes: { status: 'VALID' },
+      nodes2: { status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tse :root');
+  helpers.check({
+    input:  'tse :root',
+    hints:           ' [options]',
+    markup: 'VVVVVVVVV',
+    cursor: 9,
+    current: 'node',
+    status: 'VALID',
+    args: {
+      command: { name: 'tse' },
+      node: { arg: ' :root', status: 'VALID' },
+      nodes: { status: 'VALID' },
+      nodes2: { status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tse :root ');
+  helpers.check({
+    input:  'tse :root ',
+    hints:            '[options]',
+    markup: 'VVVVVVVVVV',
+    cursor: 10,
+    current: 'node',
+    status: 'VALID',
+    args: {
+      command: { name: 'tse' },
+      node: { arg: ' :root ', status: 'VALID' },
+      nodes: { status: 'VALID' },
+      nodes2: { status: 'VALID' }
+    }
+  });
+  test.is(requisition.getAssignment('node').value.tagName,
+          'HTML',
+          'root id');
+
+  helpers.setInput('tse #gcli-nomatch');
+  helpers.check({
+    input:  'tse #gcli-nomatch',
+    hints:                   ' [options]',
+    markup: 'VVVVIIIIIIIIIIIII',
+    cursor: 17,
+    current: 'node',
+    status: 'ERROR',
+    args: {
+      command: { name: 'tse' },
+      node: {
+        value: undefined,
+        arg: ' #gcli-nomatch',
+        status: 'INCOMPLETE',
+        message: 'No matches'
+      },
+      nodes: { status: 'VALID' },
+      nodes2: { status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tse #');
+  helpers.check({
+    input:  'tse #',
+    hints:       ' [options]',
+    markup: 'VVVVE',
+    cursor: 5,
+    current: 'node',
+    status: 'ERROR',
+    args: {
+      command: { name: 'tse' },
+      node: {
+        value: undefined,
+        arg: ' #',
+        status: 'ERROR',
+        message: 'Syntax error in CSS query'
+      },
+      nodes: { status: 'VALID' },
+      nodes2: { status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tse .');
+  helpers.check({
+    input:  'tse .',
+    hints:       ' [options]',
+    markup: 'VVVVE',
+    cursor: 5,
+    current: 'node',
+    status: 'ERROR',
+    args: {
+      command: { name: 'tse' },
+      node: {
+        value: undefined,
+        arg: ' .',
+        status: 'ERROR',
+        message: 'Syntax error in CSS query'
+      },
+      nodes: { status: 'VALID' },
+      nodes2: { status: 'VALID' }
+    }
+  });
+
+  helpers.setInput('tse *');
+  helpers.check({
+    input:  'tse *',
+    hints:       ' [options]',
+    markup: 'VVVVE',
+    cursor: 5,
+    current: 'node',
+    status: 'ERROR',
+    args: {
+      command: { name: 'tse' },
+      node: {
+        value: undefined,
+        arg: ' *',
+        status: 'ERROR',
+        // message: 'Too many matches (128)'
+      },
+      nodes: { status: 'VALID' },
+      nodes2: { status: 'VALID' }
+    }
+  });
+};
+
+exports.testNodes = function(options) {
+  var requisition = options.display.requisition;
+
+  helpers.setInput('tse :root --nodes *');
+  helpers.check({
+    input:  'tse :root --nodes *',
+    hints:                       ' [options]',
+    markup: 'VVVVVVVVVVVVVVVVVVV',
+    current: 'nodes',
+    status: 'VALID',
+    args: {
+      command: { name: 'tse' },
+      node: { arg: ' :root', status: 'VALID' },
+      nodes: { arg: ' --nodes *', status: 'VALID' },
+      nodes2: { status: 'VALID' }
+    }
+  });
+  test.is(requisition.getAssignment('node').value.tagName,
+          'HTML',
+          '#gcli-input id');
+
+  helpers.setInput('tse :root --nodes2 div');
+  helpers.check({
+    input:  'tse :root --nodes2 div',
+    hints:                       ' [options]',
+    markup: 'VVVVVVVVVVVVVVVVVVVVVV',
+    cursor: 22,
+    current: 'nodes2',
+    status: 'VALID',
+    args: {
+      command: { name: 'tse' },
+      node: { arg: ' :root', status: 'VALID' },
+      nodes: { status: 'VALID' },
+      nodes2: { arg: ' --nodes2 div', status: 'VALID' }
+    }
+  });
+  test.is(requisition.getAssignment('node').value.tagName,
+          'HTML',
+          'root id');
+
+  helpers.setInput('tse --nodes ffff');
+  helpers.check({
+    input:  'tse --nodes ffff',
+    hints:                  ' <node> [options]',
+    markup: 'VVVVIIIIIIIVIIII',
+    cursor: 16,
+    current: 'nodes',
+    status: 'ERROR',
+    outputState: 'false:default',
+    tooltipState: 'true:isError',
+    args: {
+      command: { name: 'tse' },
+      node: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+      nodes: { value: undefined, arg: ' --nodes ffff', status: 'INCOMPLETE', message: 'No matches' },
+      nodes2: { arg: '', status: 'VALID', message: '' },
+    }
+  });
+  /*
+  test.is(requisition.getAssignment('nodes2').value.constructor.name,
+          'NodeList',
+          '#gcli-input id');
+  */
+
+  helpers.setInput('tse --nodes2 ffff');
+  helpers.check({
+    input:  'tse --nodes2 ffff',
+    hints:                   ' <node> [options]',
+    markup: 'VVVVVVVVVVVVVVVVV',
+    cursor: 17,
+    current: 'nodes2',
+    status: 'ERROR',
+    outputState: 'false:default',
+    tooltipState: 'false:default',
+    args: {
+      command: { name: 'tse' },
+      node: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+      nodes: { arg: '', status: 'VALID', message: '' },
+      nodes2: { arg: ' --nodes2 ffff', status: 'VALID', message: '' },
+    }
+  });
+  /*
+  test.is(requisition.getAssignment('nodes').value.constructor.name,
+          'NodeList',
+          '#gcli-input id');
+  test.is(requisition.getAssignment('nodes2').value.constructor.name,
+          'NodeList',
+          '#gcli-input id');
+  */
+};
+
+
+});
 /*
  * Copyright 2012, Mozilla Foundation and contributors
  *
@@ -3742,6 +4246,8 @@ var test = require('test/assert');
 
 
 exports.setup = function(options) {
+  helpers.setup(options);
+
   if (!options.isFirefox) {
     mockSettings.setup();
   }
@@ -3751,6 +4257,8 @@ exports.setup = function(options) {
 };
 
 exports.shutdown = function(options) {
+  helpers.shutdown(options);
+
   if (!options.isFirefox) {
     mockSettings.shutdown();
   }
@@ -3762,49 +4270,56 @@ exports.testPrefShowStatus = function(options) {
     return;
   }
 
-  helpers.status(options, {
+  helpers.setInput('pref s');
+  helpers.check({
     typed:  'pref s',
     hints:        'et',
     markup: 'IIIIVI',
     status: 'ERROR'
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref show');
+  helpers.check({
     typed:  'pref show',
     hints:           ' <setting>',
     markup: 'VVVVVVVVV',
     status: 'ERROR'
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref show ');
+  helpers.check({
     typed:  'pref show ',
     hints:            'allowSet',
     markup: 'VVVVVVVVVV',
     status: 'ERROR'
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref show tempTBo');
+  helpers.check({
     typed:  'pref show tempTBo',
     hints:                   'ol',
     markup: 'VVVVVVVVVVIIIIIII',
     status: 'ERROR'
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref show tempTBool');
+  helpers.check({
     typed:  'pref show tempTBool',
     markup: 'VVVVVVVVVVVVVVVVVVV',
     status: 'VALID',
     hints:  ''
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref show tempTBool 4');
+  helpers.check({
     typed:  'pref show tempTBool 4',
     markup: 'VVVVVVVVVVVVVVVVVVVVE',
     status: 'ERROR',
     hints:  ''
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref show tempNumber 4');
+  helpers.check({
     typed:  'pref show tempNumber 4',
     markup: 'VVVVVVVVVVVVVVVVVVVVVE',
     status: 'ERROR',
@@ -3818,48 +4333,55 @@ exports.testPrefSetStatus = function(options) {
     return;
   }
 
-  helpers.status(options, {
+  helpers.setInput('pref s');
+  helpers.check({
     typed:  'pref s',
     hints:        'et',
     markup: 'IIIIVI',
     status: 'ERROR',
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref set');
+  helpers.check({
     typed:  'pref set',
     hints:          ' <setting> <value>',
     markup: 'VVVVVVVV',
     status: 'ERROR'
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref xxx');
+  helpers.check({
     typed:  'pref xxx',
     markup: 'EEEEVEEE',
     status: 'ERROR'
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref set ');
+  helpers.check({
     typed:  'pref set ',
     hints:           'allowSet <value>',
     markup: 'VVVVVVVVV',
     status: 'ERROR'
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref set tempTBo');
+  helpers.check({
     typed:  'pref set tempTBo',
     hints:                  'ol <value>',
     markup: 'VVVVVVVVVIIIIIII',
     status: 'ERROR'
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref set tempTBool 4');
+  helpers.check({
     typed:  'pref set tempTBool 4',
     markup: 'VVVVVVVVVVVVVVVVVVVE',
     status: 'ERROR',
     hints: ''
   });
 
-  helpers.status(options, {
+  helpers.setInput('pref set tempNumber 4');
+  helpers.check({
     typed:  'pref set tempNumber 4',
     markup: 'VVVVVVVVVVVVVVVVVVVVV',
     status: 'VALID',
@@ -5067,6 +5589,10 @@ exports.testDefault = function(options) {
       test.ok(Array.isArray(blank), 'blank array is array');
       test.is(blank.length, 0, 'blank array is empty');
     }
+    else if (type.name === 'nodelist') {
+      test.ok(typeof blank.item, 'function', 'blank.item is function');
+      test.is(blank.length, 0, 'blank nodelist is empty');
+    }
     else {
       test.is(blank, undefined, 'default defined for ' + type.name);
     }
@@ -5820,6 +6346,7 @@ let testModuleNames = [
   'gclitest/mockCommands',
   'gclitest/testCompletion',
   'gclitest/testExec',
+  'gclitest/testFocus',
   'gclitest/testHelp',
   'gclitest/testHistory',
   'gclitest/testInputter',
@@ -5828,6 +6355,7 @@ let testModuleNames = [
   'gclitest/testJs',
   'gclitest/testKeyboard',
   'gclitest/testMenu',
+  'gclitest/testNode',
   'gclitest/testPref',
   'gclitest/mockSettings',
   'gclitest/testRequire',

@@ -106,10 +106,8 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli
   require('gcli/commands/help').startup();
   require('gcli/commands/pref').startup();
 
-
   var Cc = Components.classes;
   var Ci = Components.interfaces;
-  var Cu = Components.utils;
   var prefSvc = "@mozilla.org/preferences-service;1";
   var prefService = Cc[prefSvc].getService(Ci.nsIPrefService);
   var prefBranch = prefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2);
@@ -142,6 +140,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli
   exports.hiddenByChromePref = function() {
     return !prefBranch.prefHasUserValue("devtools.chrome.enabled");
   };
+
 });
 /*
  * Copyright 2012, Mozilla Foundation and contributors
@@ -4022,7 +4021,7 @@ exports.JavascriptType = JavascriptType;
  * limitations under the License.
  */
 
-define('gcli/types/node', ['require', 'exports', 'module' , 'gcli/host', 'gcli/l10n', 'gcli/types'], function(require, exports, module) {
+define('gcli/types/node', ['require', 'exports', 'module' , 'gcli/host', 'gcli/l10n', 'gcli/types', 'gcli/argument'], function(require, exports, module) {
 
 
 var host = require('gcli/host');
@@ -4031,6 +4030,7 @@ var types = require('gcli/types');
 var Type = require('gcli/types').Type;
 var Status = require('gcli/types').Status;
 var Conversion = require('gcli/types').Conversion;
+var BlankArgument = require('gcli/argument').BlankArgument;
 
 
 /**
@@ -4038,10 +4038,12 @@ var Conversion = require('gcli/types').Conversion;
  */
 exports.startup = function() {
   types.registerType(NodeType);
+  types.registerType(NodeListType);
 };
 
 exports.shutdown = function() {
   types.unregisterType(NodeType);
+  types.unregisterType(NodeListType);
 };
 
 /**
@@ -4054,10 +4056,19 @@ if (typeof document !== 'undefined') {
 }
 
 /**
+ * For testing only.
+ * The fake empty NodeList used when there are no matches, we replace this with
+ * something that looks better as soon as we have a document, so not only
+ * should you not use this, but you shouldn't cache it either.
+ */
+exports._empty = [];
+
+/**
  * Setter for the document that contains the nodes we're matching
  */
 exports.setDocument = function(document) {
   doc = document;
+  exports._empty = doc.querySelectorAll('x>:root');
 };
 
 /**
@@ -4126,6 +4137,66 @@ NodeType.prototype.parse = function(arg) {
 };
 
 NodeType.prototype.name = 'node';
+
+
+
+/**
+ * A CSS expression that refers to a node list.
+ *
+ * The 'allowEmpty' option ensures that we do not complain if the entered CSS
+ * selector is valid, but does not match any nodes. There is some overlap
+ * between this option and 'defaultValue'. What the user wants, in most cases,
+ * would be to use 'defaultText' (i.e. what is typed rather than the value that
+ * it represents). However this isn't a concept that exists yet and should
+ * probably be a part of GCLI if/when it does.
+ * All NodeListTypes have an automatic defaultValue of an empty NodeList so
+ * they can easily be used in named parameters.
+ */
+function NodeListType(typeSpec) {
+  if ('allowEmpty' in typeSpec && typeof typeSpec.allowEmpty !== 'boolean') {
+    throw new Error('Legal values for allowEmpty are [true|false]');
+  }
+
+  this.allowEmpty = typeSpec.allowEmpty;
+}
+
+NodeListType.prototype = Object.create(Type.prototype);
+
+NodeListType.prototype.getBlank = function() {
+  return new Conversion(exports._empty, new BlankArgument(), Status.VALID);
+};
+
+NodeListType.prototype.stringify = function(value) {
+  if (value == null) {
+    return '';
+  }
+  return value.__gcliQuery || 'Error';
+};
+
+NodeListType.prototype.parse = function(arg) {
+  if (arg.text === '') {
+    return new Conversion(undefined, arg, Status.INCOMPLETE);
+  }
+
+  var nodes;
+  try {
+    nodes = doc.querySelectorAll(arg.text);
+  }
+  catch (ex) {
+    return new Conversion(undefined, arg, Status.ERROR,
+            l10n.lookup('nodeParseSyntax'));
+  }
+
+  if (nodes.length === 0 && !this.allowEmpty) {
+    return new Conversion(undefined, arg, Status.INCOMPLETE,
+        l10n.lookup('nodeParseNone'));
+  }
+
+  host.flashNodes(nodes, false);
+  return new Conversion(nodes, arg, Status.VALID, '');
+};
+
+NodeListType.prototype.name = 'nodelist';
 
 
 });
@@ -5784,44 +5855,12 @@ Requisition.prototype.complete = function(cursor, predictionChoice) {
 /**
  * Pressing TAB sometimes requires that we add a space to denote that we're on
  * to the 'next thing'.
- * The question is, where does the space go? The obvious thing to do is to add
- * it to the suffix of the completed argument, but that's wrong because spaces
- * are attached to the start of the next argument rather than the end of the
- * previous one (and this matters to getCurrentAssignment).
- * However there might not be a 'next' argument (if we've at the end of the
- * input), in which case we really do use this one.
- * Also if there is already a space in those positions, don't add another
- * In addition to all of this, we need to know what the 'next' argument is.
- * We can't use the argument defined just after the thing that is being
- * completed, because we could be completing a named argument, so we need to
- * look for the first blank positional parameter, but if there isn't one of
- * those then we just add to the suffix of the current.
- * @param assignment The 'last' assignment to which to append the space if
- * there is no 'next' assignment to which we can prepend a space
+ * @param assignment The assignment to which to append the space
  */
 Requisition.prototype._addSpace = function(assignment) {
-  var nextAssignment = this._getFirstBlankPositionalAssignment();
-  if (nextAssignment) {
-    // Add a space onto the next argument (if there isn't one there already)
-    var nextArg = nextAssignment.conversion.arg;
-    if (nextArg.prefix.charAt(0) !== ' ') {
-      nextArg = new Argument(nextArg.text, ' ' + nextArg.prefix, nextArg.suffix);
-      this.setAssignment(nextAssignment, nextArg);
-    }
-  }
-  else {
-    // There is no next argument, this must be the last assignment, so just
-    // add the space to the prefix of this argument
-    var newArg = assignment.conversion.arg.beget({ suffixSpace: true });
-    if (newArg !== assignment.conversion.arg) {
-      // It's tempting to think - "we're calling setAssignment twice in one
-      // call to complete, the first time to complete the text, the second
-      // to add a space, why not save the event cascade and do it once"
-      // However if we're setting up the command, the number of parameters
-      // changes as a result, so our call to getFirstBlankPositionalAssignment
-      // will produce the wrong answer
-      this.setAssignment(assignment, newArg);
-    }
+  var arg = assignment.conversion.arg.beget({ suffixSpace: true });
+  if (arg !== assignment.conversion.arg) {
+    this.setAssignment(assignment, arg);
   }
 };
 
@@ -6165,7 +6204,7 @@ Requisition.prototype.exec = function(input) {
     var context = exports.createExecutionContext(this);
     var reply = command.exec(args, context);
 
-    if (reply != null && reply.isPromise) {
+    if (reply != null && typeof reply.then === 'function') {
       reply.then(
           function(data) { output.complete(data); },
           function(error) { output.error = true; output.complete(error); });
@@ -6992,6 +7031,11 @@ FocusManager.prototype.addMonitoredElement = function(element, where) {
 
   element.addEventListener('focus', monitor.onFocus, true);
   element.addEventListener('blur', monitor.onBlur, true);
+
+  if (this._document.activeElement === element) {
+    this._reportFocus(where);
+  }
+
   this._monitoredElements.push(monitor);
 };
 
@@ -7109,9 +7153,9 @@ FocusManager.prototype._eagerHelperChanged = function() {
 
 /**
  * The inputter tells us about keyboard events so we can decide to delay
- * showing the tooltip element, (or if the keypress is F1, show it now)
+ * showing the tooltip element
  */
-FocusManager.prototype.onInputChange = function(ev) {
+FocusManager.prototype.onInputChange = function() {
   this._recentOutput = false;
   this._checkShow();
 };
@@ -7205,15 +7249,15 @@ FocusManager.prototype._checkShow = function() {
  */
 FocusManager.prototype._shouldShowTooltip = function() {
   if (!this._hasFocus) {
-    return { visible: false, reason: '!hasFocus' };
+    return { visible: false, reason: 'notHasFocus' };
   }
 
   if (eagerHelper.value === Eagerness.NEVER) {
-    return { visible: false, reason: 'eagerHelper !== NEVER' };
+    return { visible: false, reason: 'eagerHelperNever' };
   }
 
   if (eagerHelper.value === Eagerness.ALWAYS) {
-    return { visible: true, reason: 'eagerHelper !== ALWAYS' };
+    return { visible: true, reason: 'eagerHelperAlways' };
   }
 
   if (this._isError) {
@@ -7237,7 +7281,7 @@ FocusManager.prototype._shouldShowTooltip = function() {
  */
 FocusManager.prototype._shouldShowOutput = function() {
   if (!this._hasFocus) {
-    return { visible: false, reason: '!hasFocus' };
+    return { visible: false, reason: 'notHasFocus' };
   }
 
   if (this._recentOutput) {
@@ -8217,17 +8261,21 @@ Menu.prototype.setChoiceIndex = function(choice) {
 /**
  * Allow the inputter to use RETURN to chose the current menu item when
  * it can't execute the command line
+ * @return true if an item was 'clicked', false otherwise
  */
 Menu.prototype.selectChoice = function() {
   var selected = this.element.querySelector('.gcli-menu-highlight .gcli-menu-name');
-  if (selected) {
-    var name = selected.innerHTML;
-    var arg = new Argument(name);
-    arg.suffix = ' ';
-
-    var conversion = this.type.parse(arg);
-    this.onItemClick({ conversion: conversion });
+  if (!selected) {
+    return false;
   }
+
+  var name = selected.innerHTML;
+  var arg = new Argument(name);
+  arg.suffix = ' ';
+
+  var conversion = this.type.parse(arg);
+  this.onItemClick({ conversion: conversion });
+  return true;
 };
 
 /**
@@ -8457,9 +8505,10 @@ SelectionTooltipField.prototype.setChoiceIndex = function(choice) {
 /**
  * Allow the inputter to use RETURN to chose the current menu item when
  * it can't execute the command line
+ * @return true if an item was 'clicked', false otherwise
  */
 SelectionTooltipField.prototype.selectChoice = function() {
-  this.menu.selectChoice();
+  return this.menu.selectChoice();
 };
 
 Object.defineProperty(SelectionTooltipField.prototype, 'isImportant', {
@@ -9492,7 +9541,7 @@ Inputter.prototype.onKeyDown = function(ev) {
   }
 
   if (this.focusManager) {
-    this.focusManager.onInputChange(ev);
+    this.focusManager.onInputChange();
   }
 
   if (ev.keyCode === KeyEvent.DOM_VK_TAB) {
@@ -9543,7 +9592,7 @@ Inputter.prototype.onKeyUp = function(ev) {
         this.requisition.increment(assignment);
         // See notes on focusManager.onInputChange in onKeyDown
         if (this.focusManager) {
-          this.focusManager.onInputChange(ev);
+          this.focusManager.onInputChange();
         }
       }
       else {
@@ -9567,7 +9616,7 @@ Inputter.prototype.onKeyUp = function(ev) {
         this.requisition.decrement(assignment);
         // See notes on focusManager.onInputChange in onKeyDown
         if (this.focusManager) {
-          this.focusManager.onInputChange(ev);
+          this.focusManager.onInputChange();
         }
       }
       else {
@@ -9589,10 +9638,9 @@ Inputter.prototype.onKeyUp = function(ev) {
     else {
       // If we can't execute the command, but there is a menu choice to use
       // then use it.
-      this.tooltip.selectChoice();
-
-      // See bug 664135 - On pressing return with an invalid input, GCLI
-      // should select the incorrect part of the input for an easy fix
+      if (!this.tooltip.selectChoice()) {
+        this.focusManager.setError(true);
+      }
     }
 
     this._choice = null;
@@ -10237,11 +10285,13 @@ Tooltip.prototype.choiceChanged = function(ev) {
 /**
  * Allow the inputter to use RETURN to chose the current menu item when
  * it can't execute the command line
+ * @return true if there was a selection to use, false otherwise
  */
 Tooltip.prototype.selectChoice = function(ev) {
   if (this.field && this.field.selectChoice) {
-    this.field.selectChoice();
+    return this.field.selectChoice();
   }
+  return false;
 };
 
 /**
