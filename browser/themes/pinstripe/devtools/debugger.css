@@ -45,7 +45,84 @@
 }
 
 /**
- * Stack frames
+ * Scripts searching
+ */
+
+#globalsearch {
+  background-color: white;
+  min-height: 50px;
+  max-height: 150px;
+}
+
+.dbg-script-results:not(:last-child) {
+  border-bottom: 1px dotted #aaa;
+}
+
+.dbg-results-header {
+  -moz-padding-start: 6px;
+}
+
+.dbg-results-header .script-url {
+  font-weight: 600;
+}
+
+.dbg-results-header .match-count {
+  -moz-padding-start: 6px;
+  color: GrayText;
+}
+
+.dbg-results-container .line-number {
+  background: #eee;
+  min-width: 35px;
+  -moz-padding-end: 4px;
+  -moz-border-end: 1px dotted #aaa;
+  text-align: end;
+  font: 8pt monospace;
+}
+
+.dbg-results-container .line-contents {
+  -moz-padding-start: 4px;
+  font: 8pt monospace;
+}
+
+.dbg-results-container .line-contents:hover {
+  background: #cddae5;
+}
+
+.dbg-results-container .line-contents > .string {
+  padding: 1px;
+}
+
+.dbg-results-container .line-contents > .string[match=true] {
+  background: rgba(255, 255, 0, 0.65);
+  padding: 0;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+  transform: scale(1, 1);
+}
+
+.dbg-results-container .line-contents > .string[match=true][focused] {
+  transition-duration: 0.1s;
+  transform: scale(1.75, 1.75);
+}
+
+/**
+ * Stack frames and breakpoints panel
+ */
+
+#stackframes\+breakpoints {
+  background-color: white;
+  min-width: 50px;
+}
+
+#stackframes\+breakpoints[animated] {
+  -moz-transition: margin 0.25s ease-in-out;
+}
+
+/**
+ * Stack frames view
  */
 
 #stackframes {
@@ -84,6 +161,11 @@
 
 #variables {
   background-color: white;
+  min-width: 50px;
+}
+
+#variables[animated] {
+  -moz-transition: margin 0.25s ease-in-out;
 }
 
 /**
@@ -124,10 +206,17 @@
   -moz-margin-start: 1px;
   -moz-margin-end: 1px;
   margin-top: 2px;
-  border-bottom: 1px dotted #ddd;
-  border-radius: 8px;
   transition: background 1s ease-in-out;
   background: #fff;
+}
+
+.variable:not(:last-child) {
+  border-bottom: 1px dotted #ddd;
+  border-radius: 8px;
+}
+
+.variable:last-child {
+  margin-bottom: 2px;
 }
 
 .variable[changed] {
@@ -251,7 +340,8 @@
  * Animations
  */
 
-.details[open][animated] {
+.details[open][animated],
+.dbg-results-container[open][animated] {
   animation-duration: 0.25s;
   animation-name: showblock;
 }
@@ -273,6 +363,22 @@
 /**
  * Toolbar Controls
  */
+
+#toggle-panes {
+  background: none;
+  border: none;
+  box-shadow: none;
+  list-style-image: url("chrome://browser/skin/devtools/debugger-expand.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+#toggle-panes:not([stackframesAndBreakpointsHidden]):not([variablesHidden]) {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-collapse.png");
+}
+
+#toggle-panes:active {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
 
 #resume {
   list-style-image: url("chrome://browser/skin/devtools/debugger-play.png");
