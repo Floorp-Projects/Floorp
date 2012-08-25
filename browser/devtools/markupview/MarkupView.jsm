@@ -211,8 +211,11 @@ MarkupView.prototype = {
     let sibling = aNode.nextSibling;
 
     this.undo.do(function() {
+      if (aNode.selected) {
+        this.navigate(this._containers.get(parentNode));
+      }
       parentNode.removeChild(aNode);
-    }, function() {
+    }.bind(this), function() {
       parentNode.insertBefore(aNode, sibling);
     });
   },
@@ -422,6 +425,16 @@ MarkupView.prototype = {
     this._selectedContainer.focus();
 
     return true;
+  },
+
+  /**
+   * Called when the markup panel initiates a change on a node.
+   */
+  nodeChanged: function MT_nodeChanged(aNode)
+  {
+    if (aNode === this._inspector.selection) {
+      this._inspector.change("markupview");
+    }
   },
 
   /**
@@ -695,8 +708,10 @@ function TextEditor(aContainer, aNode, aTemplate)
       let oldValue = this.node.nodeValue;
       aContainer.undo.do(function() {
         this.node.nodeValue = aVal;
+        aContainer.markup.nodeChanged(this.node);
       }.bind(this), function() {
         this.node.nodeValue = oldValue;
+        aContainer.markup.nodeChanged(this.node);
       }.bind(this));
     }.bind(this)
   });
@@ -723,6 +738,7 @@ function ElementEditor(aContainer, aNode)
   this.undo = aContainer.undo;
   this.template = aContainer.markup.template.bind(aContainer.markup);
   this.container = aContainer;
+  this.markup = this.container.markup;
   this.node = aNode;
 
   this.attrs = [];
@@ -915,9 +931,15 @@ ElementEditor.prototype = {
   {
     if (aNode.hasAttribute(aName)) {
       let oldValue = aNode.getAttribute(aName);
-      return function() { aNode.setAttribute(aName, oldValue); };
+      return function() {
+        aNode.setAttribute(aName, oldValue);
+        this.markup.nodeChanged(aNode);
+      }.bind(this);
     } else {
-      return function() { aNode.removeAttribute(aName) };
+      return function() {
+        aNode.removeAttribute(aName);
+        this.markup.nodeChanged(aNode);
+      }.bind(this);
     }
   },
 
@@ -928,7 +950,8 @@ ElementEditor.prototype = {
   {
     this.undo.do(function() {
       aNode.setAttribute(aName, aValue);
-    }, this._restoreAttribute(aNode, aName));
+      this.markup.nodeChanged(aNode);
+    }.bind(this), this._restoreAttribute(aNode, aName));
   },
 
   /**
@@ -938,7 +961,8 @@ ElementEditor.prototype = {
   {
     this.undo.do(function() {
       aNode.removeAttribute(aName);
-    }, this._restoreAttribute(aNode, aName));
+      this.markup.nodeChanged(aNode);
+    }.bind(this), this._restoreAttribute(aNode, aName));
   },
 
   /**

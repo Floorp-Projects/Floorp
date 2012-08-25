@@ -1017,6 +1017,7 @@ InspectorUI.prototype = {
    */
   nodeChanged: function IUI_nodeChanged(aUpdater)
   {
+    this.highlighter.updateInfobar();
     this.highlighter.invalidateSize();
     this.breadcrumbs.updateSelectors();
     this._currentInspector._emit("change", aUpdater);
