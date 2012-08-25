@@ -103,29 +103,27 @@
   display: none;
 }
 
-.webconsole-clear-console-button > .toolbarbutton-icon {
-  display: none;
+/* WebConsole colored drops */
+
+.webconsole-filter-button[checked=true] {
+  color: white !important;
 }
 
-.webconsole-filter-button > .toolbarbutton-menubutton-button {
-  -moz-box-orient: horizontal;
-  list-style-image: url("chrome://browser/skin/devtools/webconsole.png");
-}
-
-.webconsole-filter-button > .toolbarbutton-menubutton-button,
-.webconsole-filter-button > .toolbarbutton-menubutton-button:hover:active {
-  -moz-padding-start: 6px;
-  -moz-padding-end: 3px;
-}
-
-.webconsole-filter-button {
-  -moz-margin-start: 3px;
-  -moz-margin-end: 3px;
+.webconsole-filter-button > .toolbarbutton-menubutton-button:before {
+  content: "";
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
+  margin-left: 5px;
+  border-width: 1px;
+  border-style: solid;
 }
 
 /* Network styles */
-.webconsole-filter-button[category="net"] {
-  -moz-image-region: rect(0, 8px, 8px, 0);
+.webconsole-filter-button[category="net"] > .toolbarbutton-menubutton-button:before {
+  background-image: linear-gradient(#444444, #000000);
+  border-color: #777;
 }
 
 .webconsole-msg-network > .webconsole-msg-icon-container {
@@ -137,8 +135,9 @@
 }
 
 /* CSS styles */
-.webconsole-filter-button[category="css"] {
-  -moz-image-region: rect(8px, 8px, 16px, 0);
+.webconsole-filter-button[category="css"] > .toolbarbutton-menubutton-button:before {
+  background-image: linear-gradient(#2DC3F3, #00B6F0);
+  border-color: #1BA2CC;
 }
 
 .webconsole-msg-cssparser > .webconsole-msg-icon-container {
@@ -154,8 +153,9 @@
 }
 
 /* JS styles */
-.webconsole-filter-button[category="js"] {
-  -moz-image-region: rect(16px, 8px, 24px, 0);
+.webconsole-filter-button[category="js"] > .toolbarbutton-menubutton-button:before {
+  background-image: linear-gradient(#FCB142, #FB9500);
+  border-color: #E98A00;
 }
 
 .webconsole-msg-exception > .webconsole-msg-icon-container {
@@ -171,8 +171,9 @@
 }
 
 /* Web Developer styles */
-.webconsole-filter-button[category="logging"] {
-  -moz-image-region: rect(24px, 8px, 32px, 0);
+.webconsole-filter-button[category="logging"] > .toolbarbutton-menubutton-button:before {
+  background-image: linear-gradient(#B9B9B9, #AAAAAA);
+  border-color: #929292;
 }
 
 .webconsole-msg-console > .webconsole-msg-icon-container {
@@ -215,22 +216,6 @@
   -moz-image-region: rect(24px, 48px, 32px, 40px);
 }
 
-.webconsole-close-button {
-  border: none;
-  padding: 3px;
-  list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-  -moz-appearance: none;
-}
-
-.webconsole-close-button:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.webconsole-close-button:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
 /* JSTerm Styles */
 .jsterm-input-node,
 .jsterm-complete-node {
@@ -252,10 +237,13 @@
   color: GrayText;
 }
 
-.hud-console-filter-toolbar {
-  padding: 1px 2px;
-  -moz-box-align: center;
-  -moz-appearance: none;
-  background-color: -moz-dialog;
-  border-top: none;
+/* Filter */
+
+/*
+ * This hardcoded width likely due to a toolkit Windows specific bug.
+ * See http://hg.mozilla.org/mozilla-central/annotate/f38d6df93cad/toolkit/themes/winstripe/global/textbox-aero.css#l7
+ */
+
+.hud-filter-box {
+  width: 200px;
 }

@@ -37,7 +37,10 @@ _BROWSER_FILES = \
 		browser_inspector_pseudoClass_menu.js \
 		browser_inspector_destroyselection.html \
 		browser_inspector_destroyselection.js \
+		browser_inspector_cmd_inspect.js \
+		browser_inspector_cmd_inspect.html \
 		head.js \
+		helpers.js \
 		$(NULL)
 
 libs::	$(_BROWSER_FILES)
