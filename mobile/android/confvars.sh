@@ -13,7 +13,6 @@ MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/android/branding/official
 # MOZ_APP_DISPLAYNAME is set by branding/configure.sh
 
 MOZ_SAFE_BROWSING=
-MOZ_SERVICES_SYNC=
 
 MOZ_DISABLE_DOMCRYPTO=1
 
