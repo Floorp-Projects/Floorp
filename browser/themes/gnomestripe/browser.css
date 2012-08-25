@@ -2564,11 +2564,6 @@ stack[anonid=browserStack][responsivemode] {
   transition: height 100ms;
 }
 
-.web-console-splitter {
-  box-shadow: 0 -1px 0 0 ThreeDShadow inset, 0 0 0 10px -moz-Dialog inset;
-}
-
-
 /* Developer Toolbar */
 
 .developer-toolbar-button {
