@@ -6,7 +6,11 @@ ENABLE_MARIONETTE=1
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
-mk_add_options MOZ_MAKE_FLAGS=-j1
+if test -n "${_PYMAKE}"; then
+  mk_add_options MOZ_MAKE_FLAGS=-j4
+else
+  mk_add_options MOZ_MAKE_FLAGS=-j1
+fi
 
 if test "$PROCESSOR_ARCHITECTURE" = "AMD64" -o "$PROCESSOR_ARCHITEW6432" = "AMD64"; then
   . $topsrcdir/build/win32/mozconfig.vs2010-win64
