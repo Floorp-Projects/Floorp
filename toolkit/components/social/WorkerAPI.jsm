@@ -70,34 +70,52 @@ WorkerAPI.prototype = {
       this._port.postMessage({topic: "social.cookies-get-response",
                               data: results});
     },
-    
-    // XXX backwards compat for existing providers, remove these eventually
-    "social.ambient-notification-area": function (data) {
-      // replaced with social.user-profile
-      // handle the provider icon and user profile for the primary provider menu
-      if (data.background) {
-        // backwards compat
-        try {
-          data.iconURL = /url\((['"]?)(.*)(\1)\)/.exec(data.background)[2];
-        } catch(e) {
-          data.iconURL = data.background;
+    'social.notification-create': function(data) {
+      let port = this._port;
+      let provider = this._provider;
+      let {id, type, icon, body, action, actionArgs} = data;
+      let alertsService = Cc["@mozilla.org/alerts-service;1"]
+                              .getService(Ci.nsIAlertsService);
+      function listener(subject, topic, data) {
+        if (topic === "alertclickcallback") {
+          // we always post back the click
+          port.postMessage({topic: "social.notification-action",
+                            data: {id: id,
+                                   action: action,
+                                   actionArgs: actionArgs}});
+          switch (action) {
+            case "link":
+              // if there is a url, make it open a tab
+              if (actionArgs.toURL) {
+                try {
+                  let pUri = Services.io.newURI(provider.origin, null, null);
+                  let nUri = Services.io.newURI(pUri.resolve(actionArgs.toURL),
+                                                null, null);
+                  // fixup
+                  if (nUri.scheme != pUri.scheme)
+                    nUri.scheme = pUri.scheme;
+                  if (nUri.prePath == provider.origin) {
+                    let xulWindow = Services.wm.getMostRecentWindow("navigator:browser");
+                    xulWindow.openUILink(nUri.spec);
+                  }
+                } catch(e) {
+                  Cu.reportError("social.notification-create error: "+e);
+                }
+              }
+              break;
+            default:
+              break;
+          }
         }
       }
-
-      this._provider.updateUserProfile(data);
+      alertsService.showAlertNotification(icon,
+                                          this._provider.name, // title
+                                          body,
+                                          !!action, // text clickable if an
+                                                    // action was provided.
+                                          null,
+                                          listener,
+                                          type); 
     },
-    "social.ambient-notification-update": function (data) {
-      // replaced with social.ambient-notification
-      // handle the provider icon and user profile for the primary provider menu
-      if (data.background) {
-        // backwards compat
-        try {
-          data.iconURL = /url\((['"]?)(.*)(\1)\)/.exec(data.background)[2];
-        } catch(e) {
-          data.iconURL = data.background;
-        }
-      }
-      this._provider.setAmbientNotification(data);
-    }
   }
 }

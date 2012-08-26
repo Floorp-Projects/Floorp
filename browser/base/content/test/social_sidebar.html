@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8">
     <script>
-      var win;
+      var testwindow;
       function pingWorker() {
         var port = navigator.mozSocial.getWorker().port;
         port.onmessage = function(e) {
@@ -12,32 +12,15 @@
               navigator.mozSocial.openPanel("social_flyout.html");
               break;
             case "test-chatbox-open":
-              navigator.mozSocial.openChatWindow("social_chat.html", function(chatwin) {
-                port.postMessage({topic: "chatbox-opened", result: chatwin ? "ok" : "failed"});
-              });
-              break;
-            case "test-service-window":
-              win = navigator.mozSocial.openServiceWindow("social_window.html", "test-service-window", "width=300,height=300");
-              break;
-            case "test-service-window-twice":
-              win = navigator.mozSocial.openServiceWindow("social_window.html", "test-service-window", "width=300,height=300");
-              var win2 = navigator.mozSocial.openServiceWindow("social_window.html", "test-service-window", "");
-              var result;
-              if (win == win2)
-                result = "ok";
-              else
-                result = "not ok: " + win2 + " != " + win;
-              port.postMessage({topic: "test-service-window-twice-result", result: result});
-              break;
-            case "test-close-service-window":
-              win.addEventListener("unload", function watchClose() {
-                win.removeEventListener("unload", watchClose);
-                port.postMessage({topic: "service-window-closed-message", result: "ok"});
-              }, false)
-              win.close();
+              navigator.mozSocial.openChatWindow("social_chat.html",
+                function(chatwin) {
+                  port.postMessage({topic: "chatbox-opened",
+                                    result: chatwin ? "ok" : "failed"});
+                });
               break;
             case "test-isVisible":
-              port.postMessage({topic: "test-isVisible-response", result: navigator.mozSocial.isVisible});
+              port.postMessage({topic: "test-isVisible-response",
+                                result: navigator.mozSocial.isVisible});
               break;
           }
         }
