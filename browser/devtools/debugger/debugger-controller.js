@@ -50,8 +50,10 @@ let DebuggerController = {
     this._isInitialized = true;
     window.removeEventListener("DOMContentLoaded", this._startupDebugger, true);
 
+    DebuggerView.cacheView();
     DebuggerView.initializePanes();
     DebuggerView.initializeEditor(function() {
+      DebuggerView.GlobalSearch.initialize();
       DebuggerView.Scripts.initialize();
       DebuggerView.StackFrames.initialize();
       DebuggerView.Breakpoints.initialize();
@@ -74,6 +76,7 @@ let DebuggerController = {
     this._isDestroyed = true;
     window.removeEventListener("unload", this._shutdownDebugger, true);
 
+    DebuggerView.GlobalSearch.destroy();
     DebuggerView.Scripts.destroy();
     DebuggerView.StackFrames.destroy();
     DebuggerView.Breakpoints.destroy();
@@ -931,6 +934,12 @@ SourceScripts.prototype = {
     // ..or the first entry if there's not one selected yet.
     else if (!DebuggerView.Scripts.selected) {
       DebuggerView.Scripts.selectIndex(0);
+      // Selecting a script would make it "preferred", which is a lie here,
+      // because we're only displaying a script to make sure there's always
+      // something available in the SourceEditor and the scripts menulist.
+      // Hence the need revert back to the initial preferred script, just
+      // in case it will be available soon.
+      DebuggerView.Scripts.preferredScriptUrl = preferredScriptUrl;
     }
 
     // If there are any stored breakpoints for this script, display them again,
@@ -972,6 +981,9 @@ SourceScripts.prototype = {
    * Called during navigation to clear the currently-loaded scripts.
    */
   _onScriptsCleared: function SS__onScriptsCleared() {
+    DebuggerView.GlobalSearch.hideAndEmpty();
+    DebuggerView.GlobalSearch.clearCache();
+    DebuggerView.Scripts.clearSearch();
     DebuggerView.Scripts.empty();
     DebuggerView.Breakpoints.emptyText();
     DebuggerView.editor.setText("");
@@ -1025,7 +1037,26 @@ SourceScripts.prototype = {
   },
 
   /**
-   * Trims as much as possible from a URL, while keeping the result unique
+   * Trims the url by shortening it if it exceeds a certain length, adding an
+   * ellipsis at the end.
+   *
+   * @param string aUrl
+   *        The script URL.
+   * @param number aMaxLength [optional]
+   *        The max string length.
+   * @return string
+   *         The shortened url.
+   */
+  trimUrlLength: function SS_trimUrlLength(aUrl, aMaxLength = SCRIPTS_URL_MAX_LENGTH) {
+    if (aUrl.length > aMaxLength) {
+      let ellipsis = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString);
+      return aUrl.substring(0, aMaxLength) + ellipsis.data;
+    }
+    return aUrl;
+  },
+
+  /**
+   * Trims as much as possible from a url, while keeping the result unique
    * in the Debugger View scripts container.
    *
    * @param string | nsIURL aUrl
@@ -1130,12 +1161,10 @@ SourceScripts.prototype = {
    *         The simplified label.
    */
   getScriptLabel: function SS_getScriptLabel(aUrl, aHref) {
-    let label = this._trimUrl(aUrl);
-    if (label.length > SCRIPTS_URL_MAX_LENGTH) {
-      let ellipsis = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString);
-      label = label.substring(0, SCRIPTS_URL_MAX_LENGTH) + ellipsis.data;
+    if (!this._labelsCache[aUrl]) {
+      this._labelsCache[aUrl] = this.trimUrlLength(this._trimUrl(aUrl));
     }
-    return this._labelsCache[aUrl] || (this._labelsCache[aUrl] = label);
+    return this._labelsCache[aUrl];
   },
 
   /**
@@ -1165,11 +1194,11 @@ SourceScripts.prototype = {
    *
    * @param object aScript
    *        The script object coming from the active thread.
-   * @param object [aOptions]
+   * @param object aOptions [optional]
    *        Additional options for showing the script. Supported options:
    *        - targetLine: place the editor at the given line number.
    */
-  showScript: function SS_showScript(aScript, aOptions) {
+  showScript: function SS_showScript(aScript, aOptions = {}) {
     if (aScript.loaded) {
       this._onShowScript(aScript, aOptions);
       return;
@@ -1197,9 +1226,7 @@ SourceScripts.prototype = {
    *        Additional options for showing the script. Supported options:
    *        - targetLine: place the editor at the given line number.
    */
-  _onShowScript: function SS__onShowScript(aScript, aOptions) {
-    aOptions = aOptions || {};
-
+  _onShowScript: function SS__onShowScript(aScript, aOptions = {}) {
     if (aScript.text.length < SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
       this._setEditorMode(aScript.url, aScript.contentType);
     }
@@ -1281,10 +1308,10 @@ SourceScripts.prototype = {
   },
 
   /**
-   * Called when source has been loaded.
+   * Called when a script's source has been loaded.
    *
    * @private
-   * @param string aSourceUrl
+   * @param string aScriptUrl
    *        The URL of the source script.
    * @param string aSourceText
    *        The text of the source script.
@@ -1295,15 +1322,19 @@ SourceScripts.prototype = {
    *        - targetLine: place the editor at the given line number.
    */
   _onLoadSourceFinished:
-  function SS__onLoadSourceFinished(aSourceUrl, aSourceText, aContentType, aOptions) {
-    let scripts = document.getElementById("scripts");
-    let element = scripts.getElementsByAttribute("value", aSourceUrl)[0];
+  function SS__onLoadSourceFinished(aScriptUrl, aSourceText, aContentType, aOptions) {
+    let element = DebuggerView.Scripts.getScriptByLocation(aScriptUrl);
     let script = element.getUserData("sourceScript");
 
     script.loaded = true;
     script.text = aSourceText;
     script.contentType = aContentType;
     element.setUserData("sourceScript", script, null);
+
+    if (aOptions.silent) {
+      aOptions.callback && aOptions.callback(aScriptUrl, aSourceText);
+      return;
+    }
 
     this.showScript(script, aOptions);
   },
@@ -1669,6 +1700,16 @@ XPCOMUtils.defineLazyGetter(L10N, "stringBundle", function() {
   return Services.strings.createBundle(DBG_STRINGS_URI);
 });
 
+const STACKFRAMES_WIDTH = "devtools.debugger.ui.stackframes-width";
+const STACKFRAMES_VISIBLE = "devtools.debugger.ui.stackframes-pane-visible";
+const VARIABLES_WIDTH = "devtools.debugger.ui.variables-width";
+const VARIABLES_PANE_VISIBLE = "devtools.debugger.ui.variables-pane-visible";
+const REMOTE_AUTO_CONNECT = "devtools.debugger.remote-autoconnect";
+const REMOTE_HOST = "devtools.debugger.remote-host";
+const REMOTE_PORT = "devtools.debugger.remote-port";
+const REMOTE_CONNECTION_RETRIES = "devtools.debugger.remote-connection-retries";
+const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
+
 /**
  * Shortcuts for accessing various debugger preferences.
  */
@@ -1679,19 +1720,39 @@ let Prefs = {
    * @return number
    */
   get stackframesWidth() {
-    if (this._sfrmWidth === undefined) {
-      this._sfrmWidth = Services.prefs.getIntPref("devtools.debugger.ui.stackframes-width");
+    if (this._stackframesWidth === undefined) {
+      this._stackframesWidth = Services.prefs.getIntPref(STACKFRAMES_WIDTH);
     }
-    return this._sfrmWidth;
+    return this._stackframesWidth;
   },
 
   /**
    * Sets the preferred stackframes pane width.
-   * @return number
+   * @param number value
    */
   set stackframesWidth(value) {
-    Services.prefs.setIntPref("devtools.debugger.ui.stackframes-width", value);
-    this._sfrmWidth = value;
+    Services.prefs.setIntPref(STACKFRAMES_WIDTH, value);
+    this._stackframesWidth = value;
+  },
+
+  /**
+   * Gets the preferred stackframes pane visibility state.
+   * @return boolean
+   */
+  get stackframesPaneVisible() {
+    if (this._stackframesVisible === undefined) {
+      this._stackframesVisible = Services.prefs.getBoolPref(STACKFRAMES_VISIBLE);
+    }
+    return this._stackframesVisible;
+  },
+
+  /**
+   * Sets the preferred stackframes pane visibility state.
+   * @param boolean value
+   */
+  set stackframesPaneVisible(value) {
+    Services.prefs.setBoolPref(STACKFRAMES_VISIBLE, value);
+    this._stackframesVisible = value;
   },
 
   /**
@@ -1699,19 +1760,39 @@ let Prefs = {
    * @return number
    */
   get variablesWidth() {
-    if (this._varsWidth === undefined) {
-      this._varsWidth = Services.prefs.getIntPref("devtools.debugger.ui.variables-width");
+    if (this._variablesWidth === undefined) {
+      this._variablesWidth = Services.prefs.getIntPref(VARIABLES_WIDTH);
     }
-    return this._varsWidth;
+    return this._variablesWidth;
   },
 
   /**
    * Sets the preferred variables pane width.
-   * @return number
+   * @param number value
    */
   set variablesWidth(value) {
-    Services.prefs.setIntPref("devtools.debugger.ui.variables-width", value);
-    this._varsWidth = value;
+    Services.prefs.setIntPref(VARIABLES_WIDTH, value);
+    this._variablesWidth = value;
+  },
+
+  /**
+   * Gets the preferred variables pane visibility state.
+   * @return boolean
+   */
+  get variablesPaneVisible() {
+    if (this._variablesVisible === undefined) {
+      this._variablesVisible = Services.prefs.getBoolPref(VARIABLES_PANE_VISIBLE);
+    }
+    return this._variablesVisible;
+  },
+
+  /**
+   * Sets the preferred variables pane visibility state.
+   * @param boolean value
+   */
+  set variablesPaneVisible(value) {
+    Services.prefs.setBoolPref(VARIABLES_PANE_VISIBLE, value);
+    this._variablesVisible = value;
   },
 
   /**
@@ -1720,19 +1801,20 @@ let Prefs = {
    * @return boolean
    */
   get remoteAutoConnect() {
-    if (this._autoConn === undefined) {
-      this._autoConn = Services.prefs.getBoolPref("devtools.debugger.remote-autoconnect");
+    if (this._autoConnect === undefined) {
+      this._autoConnect = Services.prefs.getBoolPref(REMOTE_AUTO_CONNECT);
     }
-    return this._autoConn;
+    return this._autoConnect;
   },
 
   /**
-   * Sets a flag specifying if the the debugger should automatically connect.
+   * Sets a flag specifying if the the debugger should automatically connect to
+   * the default host and port number.
    * @param boolean value
    */
   set remoteAutoConnect(value) {
-    Services.prefs.setBoolPref("devtools.debugger.remote-autoconnect", value);
-    this._autoConn = value;
+    Services.prefs.setBoolPref(REMOTE_AUTO_CONNECT, value);
+    this._autoConnect = value;
   }
 };
 
@@ -1741,7 +1823,7 @@ let Prefs = {
  * @return string
  */
 XPCOMUtils.defineLazyGetter(Prefs, "remoteHost", function() {
-  return Services.prefs.getCharPref("devtools.debugger.remote-host");
+  return Services.prefs.getCharPref(REMOTE_HOST);
 });
 
 /**
@@ -1749,7 +1831,7 @@ XPCOMUtils.defineLazyGetter(Prefs, "remoteHost", function() {
  * @return number
  */
 XPCOMUtils.defineLazyGetter(Prefs, "remotePort", function() {
-  return Services.prefs.getIntPref("devtools.debugger.remote-port");
+  return Services.prefs.getIntPref(REMOTE_PORT);
 });
 
 /**
@@ -1757,7 +1839,7 @@ XPCOMUtils.defineLazyGetter(Prefs, "remotePort", function() {
  * @return number
  */
 XPCOMUtils.defineLazyGetter(Prefs, "remoteConnectionRetries", function() {
-  return Services.prefs.getIntPref("devtools.debugger.remote-connection-retries");
+  return Services.prefs.getIntPref(REMOTE_CONNECTION_RETRIES);
 });
 
 /**
@@ -1765,7 +1847,7 @@ XPCOMUtils.defineLazyGetter(Prefs, "remoteConnectionRetries", function() {
  * @return number
  */
 XPCOMUtils.defineLazyGetter(Prefs, "remoteTimeout", function() {
-  return Services.prefs.getIntPref("devtools.debugger.remote-timeout");
+  return Services.prefs.getIntPref(REMOTE_TIMEOUT);
 });
 
 /**

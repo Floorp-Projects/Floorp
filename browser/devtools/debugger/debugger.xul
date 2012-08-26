@@ -39,8 +39,12 @@
   <keyset id="scriptSearchKeys">
     <key key="P" modifiers="access shift"
          oncommand="DebuggerView.Scripts._onSearch()"/>
+    <key key="G" modifiers="access shift"
+         oncommand="DebuggerView.Scripts._onLineSearch()"/>
     <key key="T" modifiers="access shift"
          oncommand="DebuggerView.Scripts._onTokenSearch()"/>
+    <key key="F" modifiers="access shift"
+         oncommand="DebuggerView.Scripts._onGlobalSearch()"/>
   </keyset>
   <keyset id="threadStateKeys">
     <key keycode="VK_F6"
@@ -60,6 +64,9 @@
                      tooltiptext="&debuggerUI.closeButton.tooltip;"
                      class="devtools-closebutton"/>
 #endif
+      <toolbarbutton id="toggle-panes"
+                     class="devtools-toolbarbutton"
+                     tabindex="0"/>
       <hbox id="debugger-controls">
         <toolbarbutton id="resume"
                        class="devtools-toolbarbutton"
@@ -95,16 +102,21 @@
                      class="devtools-closebutton"/>
 #endif
     </toolbar>
-    <hbox id="dbg-content" flex="1">
-      <vbox id="stackframes+breakpoints">
-        <vbox id="stackframes" flex="1"/>
-        <splitter class="devtools-horizontal-splitter"/>
-        <vbox id="breakpoints"/>
-      </vbox>
-      <splitter class="devtools-side-splitter"/>
-      <vbox id="editor" flex="1"/>
-      <splitter class="devtools-side-splitter"/>
-      <vbox id="variables"/>
-    </hbox>
+    <vbox id="dbg-content" flex="1">
+      <vbox id="globalsearch" hidden="true" flex="1"/>
+      <splitter id="globalsearch-splitter"
+                class="devtools-horizontal-splitter" hidden="true"/>
+      <hbox flex="1">
+        <vbox id="stackframes+breakpoints">
+          <vbox id="stackframes" flex="1"/>
+          <splitter class="devtools-horizontal-splitter"/>
+          <vbox id="breakpoints"/>
+        </vbox>
+        <splitter class="devtools-side-splitter"/>
+        <vbox id="editor" flex="1"/>
+        <splitter class="devtools-side-splitter"/>
+        <vbox id="variables"/>
+      </hbox>
+    </vbox>
   </vbox>
 </window>

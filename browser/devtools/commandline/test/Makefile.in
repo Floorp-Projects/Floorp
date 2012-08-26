@@ -12,35 +12,29 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \
-  browser_gcli_addon.js \
-  browser_gcli_break.js \
-  browser_gcli_calllog.js \
-  browser_gcli_commands.js \
-  browser_gcli_cookie.js \
-  browser_gcli_dbg.js \
-  browser_gcli_edit.js \
-  browser_gcli_inspect.js \
-  browser_gcli_integrate.js \
-  browser_gcli_jsb.js \
-  browser_gcli_pagemod_export.js \
-  browser_gcli_pref.js \
-  browser_gcli_responsivemode.js \
-  browser_gcli_restart.js \
-  browser_gcli_settings.js \
+  browser_dbg_cmd_break.js \
+  browser_dbg_cmd.js \
+  browser_cmd_addon.js \
+  browser_cmd_calllog.js \
+  browser_cmd_calllog_chrome.js \
+  browser_cmd_commands.js \
+  browser_cmd_cookie.js \
+  browser_cmd_integrate.js \
+  browser_cmd_jsb.js \
+  browser_cmd_pagemod_export.js \
+  browser_cmd_pref.js \
+  browser_cmd_restart.js \
+  browser_cmd_settings.js \
   browser_gcli_web.js \
   head.js \
+  helpers.js \
   $(NULL)
 
 MOCHITEST_BROWSER_FILES += \
-  browser_gcli_break.html \
-  browser_gcli_inspect.html \
-  resources_dbg.html \
-  resources_inpage.js \
-  resources_inpage1.css \
-  resources_inpage2.css \
-  resources_jsb_script.js \
-  resources.html \
+  browser_dbg_cmd_break.html \
+  browser_dbg_cmd.html \
+  browser_cmd_pagemod_export.html \
+  browser_cmd_jsb_script.jsi \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
