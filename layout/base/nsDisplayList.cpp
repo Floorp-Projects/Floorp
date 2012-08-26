@@ -3340,7 +3340,8 @@ nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
   if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
     nsCString message;
     message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for opacity animation");
-    CommonElementAnimationData::LogAsyncAnimationFailure(message);
+    CommonElementAnimationData::LogAsyncAnimationFailure(message,
+                                                         GetUnderlyingFrame()->GetContent());
   }
   return false;
 }
@@ -3362,7 +3363,8 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     if (aLogAnimations) {
       nsCString message;
       message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for transform animation");
-      CommonElementAnimationData::LogAsyncAnimationFailure(message);
+      CommonElementAnimationData::LogAsyncAnimationFailure(message,
+                                                           aFrame->GetContent());
     }
     return false;
   }
