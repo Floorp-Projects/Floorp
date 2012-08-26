@@ -178,7 +178,7 @@
        // Declare libc functions as functions of |OS.Unix.File|
 
        // Finalizer-related functions
-       let _close =
+       let _close = UnixFile._close =
          libc.declare("close", ctypes.default_abi,
                         /*return */ctypes.int,
                         /*fd*/     ctypes.int);

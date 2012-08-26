@@ -19,9 +19,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=759124
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function Test(svgFragmentIdentifier, valid) {
+function Test(svgFragmentIdentifier, valid, viewBoxString,
+              preserveAspectRatioString, zoomAndPanString)
+{
     this.svgFragmentIdentifier = svgFragmentIdentifier;
     this.valid = valid;
+    this.viewBoxString = viewBoxString;
+    this.preserveAspectRatioString = preserveAspectRatioString;
+    this.zoomAndPanString = zoomAndPanString;
 }
 
 function runTests()
@@ -30,25 +35,43 @@ function runTests()
   var doc = svg.contentWindow.document;
   
   var tests = [
-      new Test("view", true),
-      new Test("unknown", false),
-      new Test("svgView(viewBox(0,0,200,200)))", true),
-      new Test("svgView(preserveAspectRatio(xMaxYMin slice))", true),
-      new Test("svgView(viewBox(1,2,3,4);preserveAspectRatio(xMaxYMin))", true),
-      new Test("svgView(zoomAndPan(disable))", true),
-      new Test("svgView", false),
-      new Test("svgView(", false),
-      new Test("svgView()", false)
+      new Test("view", true, "0 200 100 100", "none", null),
+      new Test("unknown", false, null, null, null),
+      new Test("svgView(viewBox(0,0,200,200))", true, "0 0 200 200", null, null),
+      new Test("svgView(preserveAspectRatio(xMaxYMin slice))", true, null, "xMaxYMin slice", null),
+      new Test("svgView(viewBox(1,2,3,4);preserveAspectRatio(xMinYMax))", true, "1 2 3 4", "xMinYMax meet", null),
+      new Test("svgView(zoomAndPan(disable))", true, null, null, "disable"),
+      new Test("svgView(viewBox(bad)", false, null, null, null),
+      new Test("svgView(preserveAspectRatio(bad))", false, null, null, null),
+      new Test("svgView(zoomAndPan(bad))", false, null, null, null),
+      new Test("svgView", false, null, null, null),
+      new Test("svgView(", false, null, null, null),
+      new Test("svgView()", false, null, null, null),
+      // Be sure we verify that there's a closing paren for svgView()
+      // (and not too many closing parens)
+      new Test("svgView(zoomAndPan(disable)", false, null, null, null),
+      new Test("svgView(zoomAndPan(disable) ", false, null, null, null),
+      new Test("svgView(zoomAndPan(disable)]", false, null, null, null),
+      new Test("svgView(zoomAndPan(disable)))", false, null, null, null)
   ];
 
- var src = svg.getAttribute("src");
- for (var i = 0; i < tests.length; i++) {
-   var test = tests[i];
-   svg.setAttribute("src", src + "#" + test.svgFragmentIdentifier);
-   is(doc.rootElement.useCurrentView, test.valid,
-      "Expected " + test.svgFragmentIdentifier + " to be " +
-      (test.valid ? "valid" : "invalid"));
- }
+  var src = svg.getAttribute("src");
+  for (var i = 0; i < tests.length; i++) {
+    var test = tests[i];
+    svg.setAttribute("src", src + "#" + test.svgFragmentIdentifier);
+    is(doc.rootElement.useCurrentView, test.valid,
+       "Expected " + test.svgFragmentIdentifier + " to be " +
+       (test.valid ? "valid" : "invalid"));
+
+    is(doc.rootElement.getAttribute("viewBox"),
+       test.viewBoxString, "unexpected viewBox");
+
+    is(doc.rootElement.getAttribute("preserveAspectRatio"),
+       test.preserveAspectRatioString, "unexpected preserveAspectRatio");
+
+    is(doc.rootElement.getAttribute("zoomAndPan"),
+       test.zoomAndPanString, "unexpected zoomAndPan");
+  }
 
   SimpleTest.finish();
 }

@@ -18,7 +18,7 @@ public class testAboutPage extends PixelTest {
         String url = "about:";
         loadAndPaint(url);
 
-        Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar");
+        Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar_title");
         mAsserter.isnot(awesomebar, null, "Got the awesomebar");
         assertMatches(awesomebar.getText(), "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)", "page title match");
 
@@ -50,7 +50,7 @@ public class testAboutPage extends PixelTest {
         contentEventExpecter.blockForEvent();
 
         // Grab the title to make sure the about: page was loaded
-        awesomebar = mDriver.findElement(getActivity(), "awesome_bar");
+        awesomebar = mDriver.findElement(getActivity(), "awesome_bar_title");
         mAsserter.isnot(awesomebar, null, "Got the awesomebar");
         assertMatches(awesomebar.getText(), "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)", "page title match");
     }

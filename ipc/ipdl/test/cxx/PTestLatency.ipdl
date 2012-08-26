@@ -12,6 +12,9 @@ child:
     rpc Rpc();
     Spam();
     rpc Synchro();
+    CompressedSpam(uint32_t seqno) compress;
+    rpc Synchro2() returns (uint32_t lastSeqno,
+                            uint32_t numMessagesDispatched);
 
 parent:
     Pong();
@@ -52,9 +55,16 @@ state RPC:
     call Rpc goto RPC;
     send Spam goto SPAM;
 
+    // Trial 4: lots of sequential asyn messages, which tests pipelining
 state SPAM:
     send Spam goto SPAM;
-    call Synchro goto DONE;
+    call Synchro goto COMPRESSED_SPAM;
+
+    // Trial 5: lots of async spam, but compressed to cut down on
+    // dispatch overhead
+state COMPRESSED_SPAM:          // compressed spam, mmm
+    send CompressedSpam goto COMPRESSED_SPAM;
+    call Synchro2 goto DONE;
 
 state DONE:
     send __delete__;
