@@ -170,6 +170,10 @@ pref("media.h264.enabled", true);
 #endif
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", false);
+#else
+#ifdef ANDROID
+pref("media.navigator.enabled", true);
+#endif
 #endif
 
 // Whether to autostart a media element with an |autoplay| attribute
