@@ -652,6 +652,13 @@ public:
                        mPicSize.width,
                        mPicSize.height);
     }
+
+    Data()
+      : mYChannel(nullptr), mYStride(0), mYSize(0, 0), mYSkip(0)
+      , mCbChannel(nullptr), mCrChannel(nullptr)
+      , mCbCrStride(0), mCbCrSize(0, 0) , mCbSkip(0), mCrSkip(0)
+      , mPicX(0), mPicY(0), mPicSize(0, 0), mStereoMode(STEREO_MODE_MONO)
+    {}
   };
 
   enum {
