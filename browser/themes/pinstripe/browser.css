@@ -3283,12 +3283,6 @@ stack[anonid=browserStack][responsivemode] {
   transition: height 100ms;
 }
 
-.web-console-splitter {
-  border-bottom: solid #a5a5a5 1px;
-  background: url("chrome://global/skin/splitter/dimple.png") no-repeat center,
-    -moz-linear-gradient(top, #fcfcfc, #dfdfdf);
-}
-
 /* Developer Toolbar */
 
 .developer-toolbar-button {

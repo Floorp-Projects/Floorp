@@ -72,9 +72,11 @@ let SocialUI = {
     this.updateToggleCommand();
 
     let toggleCommand = this.toggleCommand;
-    let label = gNavigatorBundle.getFormattedString("social.enable.label",
-                                                    [Social.provider.name]);
-    let accesskey = gNavigatorBundle.getString("social.enable.accesskey");
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+    let label = gNavigatorBundle.getFormattedString("social.toggle.label",
+                                                    [Social.provider.name,
+                                                     brandShortName]);
+    let accesskey = gNavigatorBundle.getString("social.toggle.accesskey");
     toggleCommand.setAttribute("label", label);
     toggleCommand.setAttribute("accesskey", accesskey);
 
@@ -138,7 +140,7 @@ let SocialUI = {
     // Show a warning, allow undoing the activation
     let description = document.getElementById("social-activation-message");
     let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
-    let message = gNavigatorBundle.getFormattedString("social.activated.message",
+    let message = gNavigatorBundle.getFormattedString("social.activated.description",
                                                       [Social.provider.name, brandShortName]);
     description.value = message;
 
