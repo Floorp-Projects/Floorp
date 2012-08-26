@@ -195,7 +195,7 @@ RPCChannel::Call(Message* _msg, Message* reply)
         }
         else if (!mPending.empty()) {
             recvd = mPending.front();
-            mPending.pop();
+            mPending.pop_front();
         }
         else {
             // because of subtleties with nested event loops, it's
@@ -310,7 +310,7 @@ RPCChannel::MaybeUndeferIncall()
     RPC_ASSERT(0 < mRemoteStackDepthGuess, "fatal logic error");
     --mRemoteStackDepthGuess;
 
-    mPending.push(call);
+    mPending.push_back(call);
 }
 
 void
@@ -382,7 +382,7 @@ RPCChannel::OnMaybeDequeueOne()
             return false;
 
         recvd = mPending.front();
-        mPending.pop();
+        mPending.pop_front();
     }
 
     if (IsOnCxxStack() && recvd.is_rpc() && recvd.is_reply()) {
@@ -577,7 +577,7 @@ RPCChannel::BlockOnParent()
 
         if (!mPending.empty()) {
             Message recvd = mPending.front();
-            mPending.pop();
+            mPending.pop_front();
 
             MonitorAutoUnlock unlock(*mMonitor);
 
@@ -650,7 +650,7 @@ RPCChannel::DebugAbort(const char* file, int line, const char* cond,
                 pending.front().is_rpc() ? "rpc" :
                 (pending.front().is_sync() ? "sync" : "async"),
                 pending.front().is_reply() ? "reply" : "");
-        pending.pop();
+        pending.pop_front();
     }
 
     NS_RUNTIMEABORT(why);
@@ -701,12 +701,26 @@ RPCChannel::OnMessageReceivedFromLink(const Message& msg)
         return;
     }
 
-    mPending.push(msg);
+    bool compressMessage = (msg.compress() && !mPending.empty() &&
+                            mPending.back().type() == msg.type() &&
+                            mPending.back().routing_id() == msg.routing_id());
+    if (compressMessage) {
+        // This message type has compression enabled, and the back of
+        // the queue was the same message type and routed to the same
+        // destination.  Replace it with the newer message.
+        MOZ_ASSERT(mPending.back().compress());
+        mPending.pop_back();
+    }
+
+    mPending.push_back(msg);
 
     if (0 == StackDepth() && !mBlockedOnParent) {
         // the worker thread might be idle, make sure it wakes up
-        mWorkerLoop->PostTask(FROM_HERE,
-                                     new DequeueTask(mDequeueOneTask));
+        if (!compressMessage) {
+            // If we compressed away the previous message, we'll reuse
+            // its pending task.
+            mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+        }
     }
     else if (!AwaitingSyncReply())
         NotifyWorkerThread();

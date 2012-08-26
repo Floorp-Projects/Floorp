@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGFragmentIdentifier.h"
-#include "mozilla/CharTokenizer.h"
 #include "nsIDOMSVGDocument.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGViewElement.h"
@@ -19,6 +18,12 @@ IsMatchingParameter(const nsAString &aString, const nsAString &aParameterName)
   return StringBeginsWith(aString, aParameterName) &&
          aString.Last() == ')' &&
          aString.CharAt(aParameterName.Length()) == '(';
+}
+
+inline bool
+IgnoreWhitespace(PRUnichar aChar)
+{
+  return false;
 }
 
 static nsSVGViewElement*
@@ -94,19 +99,20 @@ SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString &aViewSpec,
     return false;
   }
 
-  // SVGViewAttribute may occur in any order, but each type may only occur at most one time
-  // in a correctly formed SVGViewSpec.
-  // If we encounter any element more than once or get any syntax errors we're going to
-  // return without updating the root element
-
-  const nsAString *viewBoxParams = nullptr;
-  const nsAString *preserveAspectRatioParams = nullptr;
-  const nsAString *zoomAndPanParams = nullptr;
+  // SVGViewAttributes may occur in any order, but each type may only occur
+  // at most one time in a correctly formed SVGViewSpec.
+  // If we encounter any attribute more than once or get any syntax errors
+  // we're going to return false and cancel any changes.
+  
+  bool viewBoxFound = false;
+  bool preserveAspectRatioFound = false;
+  bool zoomAndPanFound = false;
 
   // Each token is a SVGViewAttribute
   int32_t bracketPos = aViewSpec.FindChar('(');
-  CharTokenizer<';'>tokenizer(
-    Substring(aViewSpec, bracketPos + 1, aViewSpec.Length() - bracketPos - 2));
+  uint32_t lengthOfViewSpec = aViewSpec.Length() - bracketPos - 2;
+  nsCharSeparatedTokenizerTemplate<IgnoreWhitespace> tokenizer(
+    Substring(aViewSpec, bracketPos + 1, lengthOfViewSpec), ';');
 
   if (!tokenizer.hasMoreTokens()) {
     return false;
@@ -125,50 +131,62 @@ SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString &aViewSpec,
       Substring(token, bracketPos + 1, token.Length() - bracketPos - 2);
 
     if (IsMatchingParameter(token, NS_LITERAL_STRING("viewBox"))) {
-      if (viewBoxParams) {
+      if (viewBoxFound ||
+          NS_FAILED(root->mViewBox.SetBaseValueString(
+                      params, root, true))) {
         return false;
       }
-      viewBoxParams = &params;
+      viewBoxFound = true;
     } else if (IsMatchingParameter(token, NS_LITERAL_STRING("preserveAspectRatio"))) {
-      if (preserveAspectRatioParams) {
+      if (preserveAspectRatioFound ||
+          NS_FAILED(root->mPreserveAspectRatio.SetBaseValueString(
+                      params, root, true))) {
         return false;
       }
-      preserveAspectRatioParams = &params;
+      preserveAspectRatioFound = true;
     } else if (IsMatchingParameter(token, NS_LITERAL_STRING("zoomAndPan"))) {
-      if (zoomAndPanParams) {
+      if (zoomAndPanFound) {
         return false;
       }
-      zoomAndPanParams = &params;
+      nsIAtom *valAtom = NS_GetStaticAtom(params);
+      if (!valAtom) {
+        return false;
+      }
+      const nsSVGEnumMapping *mapping = nsSVGSVGElement::sZoomAndPanMap;
+      while (mapping->mKey) {
+        if (valAtom == *(mapping->mKey)) {
+          // If we've got a valid zoomAndPan value, then set it on our root element.
+          if (NS_FAILED(root->mEnumAttributes[nsSVGSVGElement::ZOOMANDPAN].SetBaseValue(
+                          mapping->mVal, root))) {
+            return false;
+          }
+          break;
+        }
+        mapping++;
+      }
+      if (!mapping->mKey) {
+          // Unrecognised zoomAndPan value
+          return false;
+      }
+      zoomAndPanFound = true;
     } else {
       // We don't support transform or viewTarget currently
       return false;
     }
   } while (tokenizer.hasMoreTokens());
 
-  if (viewBoxParams) {
-    root->mViewBox.SetBaseValueString(*viewBoxParams, root);
-  } else {
-    RestoreOldViewBox(root);
-  }
-
-  if (preserveAspectRatioParams) {
-    root->mPreserveAspectRatio.SetBaseValueString(*preserveAspectRatioParams, root);
-  } else {
-    RestoreOldPreserveAspectRatio(root);
-  }
-
-  if (zoomAndPanParams) {
-    nsCOMPtr<nsIAtom> valAtom = do_GetAtom(*zoomAndPanParams);
-    const nsSVGEnumMapping *mapping = root->sZoomAndPanMap;
-    while (mapping->mKey) {
-      if (valAtom == *(mapping->mKey)) {
-        root->mEnumAttributes[nsSVGSVGElement::ZOOMANDPAN].SetBaseValue(mapping->mVal, root);
-        break;
-      }
-      mapping++;
+  if (root->mUseCurrentView) {
+    // A previous SVGViewSpec may have overridden some attributes.
+    // If they are no longer overridden we need to restore the old values.
+    if (!viewBoxFound) {
+      RestoreOldViewBox(root);
     }
-  } else {
-    RestoreOldZoomAndPan(root);
+    if (!preserveAspectRatioFound) {
+      RestoreOldPreserveAspectRatio(root);
+    }
+    if (!zoomAndPanFound) {
+      RestoreOldZoomAndPan(root);
+    }
   }
 
   return true;

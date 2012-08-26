@@ -469,7 +469,7 @@ ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
 RUN_FROM_PWD = $(_ABS_RUN_TEST_PROGRAM)
 else
 # For non-Windows, just set the library path so we load the libs from the right place.
-ifdef ($(OS_ARCH),Darwin)
+ifeq ($(OS_ARCH),Darwin)
 RUN_FROM_PWD = DYLD_LIBRARY_PATH=$(PRECOMPILE_GRE)
 else
 RUN_FROM_PWD = "$$PWD/run-mozilla.sh"
