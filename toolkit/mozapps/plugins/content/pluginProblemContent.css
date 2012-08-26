@@ -47,6 +47,27 @@ html|applet:not([height]), html|applet[height=""] {
   direction: rtl;
 }
 
+:-moz-handler-playpreview .mainBox {
+  display: none;
+}
+
+.previewPluginContent {
+  display: none;
+}
+
+.previewPluginContent > iframe {
+  width: inherit;
+  height: inherit;
+  border: none;
+}
+
+:-moz-handler-playpreview .previewPluginContent {
+  display: block;
+  width: inherit;
+  height: inherit;
+  overflow: hidden;
+}
+
 .msg {
   display: none;
 }
