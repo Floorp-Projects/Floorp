@@ -1622,7 +1622,6 @@ nsDocument::~nsDocument()
   }
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nullptr);
-    NS_RELEASE(mAttrStyleSheet);
   }
   if (mStyleAttrStyleSheet)
     mStyleAttrStyleSheet->SetOwningDocument(nullptr);
@@ -2276,7 +2275,6 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     mAttrStyleSheet->Reset(aURI);
   } else {
     mAttrStyleSheet = new nsHTMLStyleSheet(aURI, this);
-    NS_ADDREF(mAttrStyleSheet);
   }
 
   // Don't use AddStyleSheet, since it'll put the sheet into style
