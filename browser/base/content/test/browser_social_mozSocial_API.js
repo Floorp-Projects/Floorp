@@ -54,6 +54,7 @@ var tests = {
             ok(true, "panel hidden");
             next();
           }
+          break;
         case "got-sidebar-message":
           // The sidebar message will always come first, since it loads by default
           ok(true, "got sidebar message");

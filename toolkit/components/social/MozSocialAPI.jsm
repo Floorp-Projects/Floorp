@@ -198,11 +198,11 @@ function ensureProviderOrigin(provider, url) {
   return fullURL;
 }
 
-function openChatWindow(chromeWindow, provider, url, callback) {
+function openChatWindow(chromeWindow, provider, url, callback, mode) {
   if (!chromeWindow.SocialChatBar)
     return;
   let fullURL = ensureProviderOrigin(provider, url);
   if (!fullURL)
     return;
-  chromeWindow.SocialChatBar.newChat(provider, fullURL, callback);
+  chromeWindow.SocialChatBar.openChat(provider, fullURL, callback, mode);
 }

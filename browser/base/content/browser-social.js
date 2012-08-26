@@ -172,9 +172,9 @@ let SocialChatBar = {
                      docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
     return Social.uiVisible && !chromeless;
   },
-  newChat: function(aProvider, aURL, aCallback) {
+  openChat: function(aProvider, aURL, aCallback, aMode) {
     if (this.canShow)
-      this.chatbar.newChat(aProvider, aURL, aCallback);
+      this.chatbar.openChat(aProvider, aURL, aCallback, aMode);
   },
   update: function() {
     if (!this.canShow)
