@@ -702,7 +702,7 @@ pref("javascript.options.methodjit.chrome",  true);
 pref("javascript.options.pccounts.content", false);
 pref("javascript.options.pccounts.chrome",  false);
 pref("javascript.options.methodjit_always", false);
-pref("javascript.options.xml.content", true);
+pref("javascript.options.xml.content", false);
 pref("javascript.options.xml.chrome", true);
 pref("javascript.options.jit_hardening", true);
 pref("javascript.options.typeinference", true);
