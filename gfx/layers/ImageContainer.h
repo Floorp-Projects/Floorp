@@ -609,10 +609,22 @@ private:
  * mPicX, mPicY and mPicSize. The size of the rendered image is
  * mPicSize, not mYSize or mCbCrSize.
  *
- * mYOffset, mYSkip, mCbOffset, mCbSkip, mCrOffset, mCrSkip are added
- * to support various output formats from hardware decoder. m*Offset
- * are the extra left stride and m*Skip are per-pixel skips in the
+ * mYSkip, mCbSkip, mCrSkip are added to support various output
+ * formats from hardware decoder. They are per-pixel skips in the
  * source image.
+ *
+ * For example when image width is 640, mYStride is 670, mYSkip is 3,
+ * the mYChannel buffer looks like:
+ *
+ * |<----------------------- mYStride ----------------------------->|
+ * |<----------------- mYSize.width --------------->|
+ *  0   3   6   9   12  15  18  21                659             669
+ * |----------------------------------------------------------------|
+ * |Y___Y___Y___Y___Y___Y___Y___Y...                      |%%%%%%%%%|
+ * |Y___Y___Y___Y___Y___Y___Y___Y...                      |%%%%%%%%%|
+ * |Y___Y___Y___Y___Y___Y___Y___Y...                      |%%%%%%%%%|
+ * |            |<->|
+ *                mYSkip
  */
 class THEBES_API PlanarYCbCrImage : public Image {
 public:
@@ -621,16 +633,13 @@ public:
     uint8_t* mYChannel;
     int32_t mYStride;
     gfxIntSize mYSize;
-    int32_t mYOffset;
     int32_t mYSkip;
     // Chroma buffers
     uint8_t* mCbChannel;
     uint8_t* mCrChannel;
     int32_t mCbCrStride;
     gfxIntSize mCbCrSize;
-    int32_t mCbOffset;
     int32_t mCbSkip;
-    int32_t mCrOffset;
     int32_t mCrSkip;
     // Picture region
     uint32_t mPicX;

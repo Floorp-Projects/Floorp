@@ -358,7 +358,9 @@ bool TabParent::SendRealTouchEvent(nsTouchEvent& event)
 {
   nsTouchEvent e(event);
   MaybeForwardEventToRenderFrame(event, &e);
-  return PBrowserParent::SendRealTouchEvent(e);
+  return (e.message == NS_TOUCH_MOVE) ?
+    PBrowserParent::SendRealTouchMoveEvent(e) :
+    PBrowserParent::SendRealTouchEvent(e);
 }
 
 bool
