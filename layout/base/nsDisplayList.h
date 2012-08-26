@@ -1907,9 +1907,7 @@ public:
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
 
-  bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) {
-    return GetUnderlyingFrame()->AreLayersMarkedActive(nsChangeHint_UpdateOpacityLayer);
-  }
+  bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder);
 };
 
 /**
@@ -2420,11 +2418,9 @@ public:
    * transformed frame even when it's not completely visible (yet).
    */
   static bool ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
-                                                nsIFrame* aFrame);
-  bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) {
-    return nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder,
-                                                                 GetUnderlyingFrame());
-  }
+                                                nsIFrame* aFrame,
+                                                bool aLogAnimations = false);
+  bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder);
 
 private:
   nsDisplayWrapList mStoredList;
