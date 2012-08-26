@@ -963,6 +963,16 @@ nsPermissionManager::GetPermissionHashKey(const nsACString& aHost,
   do {
     nsRefPtr<PermissionKey> key = new PermissionKey(Substring(aHost, offset), aAppId, aIsInBrowserElement);
     entry = mPermissionTable.GetEntry(key);
+
+    if (!entry) {
+      // This is a temporary fix to have Gaia working and allow a time frame to
+      // update profiles. With this hack, if a permission isn't found for an app
+      // the check will be done for the same host outside of any app.
+      // TODO: remove this with bug 785632.
+      key = new PermissionKey(Substring(aHost, offset), nsIScriptSecurityManager::NO_APP_ID, false);
+      entry = mPermissionTable.GetEntry(key);
+    }
+
     if (entry) {
       PermissionEntry permEntry = entry->GetPermission(aType);
 
