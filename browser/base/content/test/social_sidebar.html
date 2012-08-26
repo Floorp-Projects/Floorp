@@ -12,11 +12,15 @@
               navigator.mozSocial.openPanel("social_flyout.html");
               break;
             case "test-chatbox-open":
-              navigator.mozSocial.openChatWindow("social_chat.html",
-                function(chatwin) {
-                  port.postMessage({topic: "chatbox-opened",
-                                    result: chatwin ? "ok" : "failed"});
-                });
+              var url = "social_chat.html";
+              var data = e.data.data;
+              if (data && data.id) {
+                url = url + "?id="+data.id;
+              }
+              navigator.mozSocial.openChatWindow(url, function(chatwin) {
+                port.postMessage({topic: "chatbox-opened",
+                                  result: chatwin ? "ok" : "failed"});
+              });
               break;
             case "test-isVisible":
               port.postMessage({topic: "test-isVisible-response",

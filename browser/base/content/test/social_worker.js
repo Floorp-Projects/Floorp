@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let testPort, sidebarPort;
+let testPort, sidebarPort, apiPort;
 
 onconnect = function(e) {
   let port = e.ports[0];
@@ -46,7 +46,7 @@ onconnect = function(e) {
         testPort.postMessage({topic:"got-social-panel-visibility", result: event.data.result });
         break;
       case "test-chatbox-open":
-        sidebarPort.postMessage({topic:"test-chatbox-open"});
+        sidebarPort.postMessage( event.data );
         break;
       case "chatbox-message":
         testPort.postMessage({topic:"got-chatbox-message", result: event.data.result});
@@ -63,8 +63,12 @@ onconnect = function(e) {
       case "flyout-visibility":
         testPort.postMessage({topic:"got-flyout-visibility", result: event.data.result});
         break;
+      case "test-worker-chat":
+        apiPort.postMessage({topic: "social.request-chat", data: "https://example.com/browser/browser/base/content/test/social_chat.html" });
+        break;
       case "social.initialize":
         // This is the workerAPI port, respond and set up a notification icon.
+        apiPort = port;
         port.postMessage({topic: "social.initialize-response"});
         let profile = {
           portrait: "https://example.com/portrait.jpg",

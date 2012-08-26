@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "getFrameWorkerHandle", "resource://gre/modules/FrameWorker.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "openChatWindow", "resource://gre/modules/MozSocialAPI.jsm");
 
 const EXPORTED_SYMBOLS = ["WorkerAPI"];
 
@@ -69,6 +70,10 @@ WorkerAPI.prototype = {
       });
       this._port.postMessage({topic: "social.cookies-get-response",
                               data: results});
+    },
+    'social.request-chat': function(data) {
+      let xulWindow = Services.wm.getMostRecentWindow("navigator:browser").getTopWin();
+      openChatWindow(xulWindow, this._provider, data, null, "minimized");
     },
     'social.notification-create': function(data) {
       let port = this._port;
