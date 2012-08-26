@@ -299,16 +299,20 @@ ElementAnimations::HasAnimationOfProperty(nsCSSProperty aProperty) const
 bool
 ElementAnimations::CanPerformOnCompositorThread() const
 {
-  if (mElementProperty != nsGkAtoms::animationsProperty) {
-    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      printf_stderr("Gecko bug: Async animation of pseudoelements not supported.  See bug 771367\n");
-    }
-    return false;
-  }
   nsIFrame* frame = mElement->GetPrimaryFrame();
   if (!frame) {
     return false;
   }
+
+  if (mElementProperty != nsGkAtoms::animationsProperty) {
+    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
+      nsCString message;
+      message.AppendLiteral("Gecko bug: Async animation of pseudoelements not supported.  See bug 771367");
+      LogAsyncAnimationFailure(message, mElement);
+    }
+    return false;
+  }
+
   TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
 
   bool hasGeometricProperty = false;
