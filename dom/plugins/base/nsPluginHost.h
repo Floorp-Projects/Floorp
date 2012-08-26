@@ -86,6 +86,7 @@ public:
   nsresult IsPluginEnabledForType(const char* aMimeType);
   nsresult IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
   bool     IsPluginClickToPlayForType(const char *aMimeType);
+  bool     IsPluginPlayPreviewForType(const char *aMimeType);
   nsresult GetBlocklistStateForType(const char *aMimeType, uint32_t *state);
 
   nsresult GetPluginCount(uint32_t* aPluginCount);
@@ -281,6 +282,7 @@ private:
   nsRefPtr<nsPluginTag> mPlugins;
   nsRefPtr<nsPluginTag> mCachedPlugins;
   nsRefPtr<nsInvalidPluginTag> mInvalidPlugins;
+  nsTArray<nsCString> mPlayPreviewMimeTypes;
   bool mPluginsLoaded;
   bool mDontShowBadPluginMessage;
 

@@ -177,7 +177,7 @@
 
        // Special case: these functions are used by the
        // finalizer
-       let _CloseHandle =
+       let _CloseHandle = WinFile._CloseHandle =
          libc.declare("CloseHandle", ctypes.winapi_abi,
                         /*return */ctypes.bool,
                         /*handle*/ ctypes.voidptr_t);
@@ -281,7 +281,7 @@
          declareFFI("ReadFile", ctypes.winapi_abi,
                     /*return*/ Types.zero_or_nothing,
                     /*file*/   Types.HANDLE,
-                    /*buffer*/ Types.char.out_ptr,
+                    /*buffer*/ Types.voidptr_t,
                     /*nbytes*/ Types.DWORD,
                     /*nbytes_read*/Types.DWORD.out_ptr,
                     /*overlapped*/Types.void_t.inout_ptr // FIXME: Implement?
@@ -315,7 +315,7 @@
          declareFFI("WriteFile", ctypes.winapi_abi,
                     /*return*/ Types.zero_or_nothing,
                     /*file*/   Types.HANDLE,
-                    /*buffer*/ Types.char.in_ptr,
+                    /*buffer*/ Types.voidptr_t,
                     /*nbytes*/ Types.DWORD,
                     /*nbytes_wr*/Types.DWORD.out_ptr,
                     /*overlapped*/Types.void_t.inout_ptr // FIXME: Implement?

@@ -108,8 +108,6 @@
 
       <button id="downloadsHistory"
               class="plain"
-              label="&downloadshistory.label;"
-              accesskey="&downloadshistory.accesskey;"
               oncommand="DownloadsPanel.showDownloadsHistory();"/>
     </panel>
   </popupset>
