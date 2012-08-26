@@ -7,6 +7,7 @@
 #define FORCE_PR_LOG /* Allow logging in the release build */
 #endif
 
+#include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 
@@ -1230,6 +1231,14 @@ gfxPlatform::UseAzureContentDrawing()
   }
 
   return sAzureContentDrawingEnabled;
+}
+
+bool
+gfxPlatform::OffMainThreadCompositingEnabled()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Default ?
+    CompositorParent::CompositorLoop() != nullptr :
+    CompositorChild::ChildProcessHasCompositor();
 }
 
 eCMSMode
