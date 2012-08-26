@@ -33,6 +33,7 @@ EXPORTS = \
         BasicImplData.h \
         GonkIOSurfaceImage.h \
         FrameMetrics.h \
+        CompositorChild.h \
         CompositorParent.h \
         ImageContainer.h \
         ImageLayers.h \

@@ -3393,7 +3393,8 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     message.AppendLiteral(", ");
     message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
     message.AppendLiteral(")");
-    CommonElementAnimationData::LogAsyncAnimationFailure(message);
+    CommonElementAnimationData::LogAsyncAnimationFailure(message,
+                                                         aFrame->GetContent());
   }
   return false;
 }
