@@ -127,16 +127,20 @@ ElementTransitions::HasTransitionOfProperty(nsCSSProperty aProperty) const
 bool
 ElementTransitions::CanPerformOnCompositorThread() const
 {
-  if (mElementProperty != nsGkAtoms::transitionsProperty) {
-    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      printf_stderr("Gecko bug: Async transition of pseudoelements not supported.  See bug 771367\n");
-    }
-    return false;
-  }
   nsIFrame* frame = mElement->GetPrimaryFrame();
   if (!frame) {
     return false;
   }
+
+  if (mElementProperty != nsGkAtoms::transitionsProperty) {
+    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
+      nsCString message;
+      message.AppendLiteral("Gecko bug: Async transition of pseudoelements not supported.  See bug 771367");
+      LogAsyncAnimationFailure(message, mElement);
+    }
+    return false;
+  }
+
   TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
 
   bool hasGeometricProperty = false;

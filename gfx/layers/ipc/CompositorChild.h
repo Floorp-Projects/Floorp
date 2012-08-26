@@ -35,6 +35,7 @@ public:
 
   static PCompositorChild* Get();
 
+  static bool ChildProcessHasCompositor() { return sCompositor != nullptr; }
 protected:
   virtual PLayersChild* AllocPLayers(const LayersBackend& aBackendHint,
                                      const uint64_t& aId,
