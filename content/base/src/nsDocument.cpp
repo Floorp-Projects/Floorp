@@ -1643,7 +1643,6 @@ nsDocument::~nsDocument()
 
   if (mStyleImageLoader) {
     mStyleImageLoader->DropDocumentReference();
-    NS_RELEASE(mStyleImageLoader);
   }
 
   delete mHeaderData;
@@ -2001,7 +2000,6 @@ nsDocument::Init()
   mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
   mStyleImageLoader = new mozilla::css::ImageLoader(this);
-  NS_ADDREF(mStyleImageLoader);
 
   mNodeInfoManager = new nsNodeInfoManager();
   nsresult rv = mNodeInfoManager->Init(this);
