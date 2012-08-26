@@ -35,7 +35,8 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_propertyview-09.js \
 	browser_dbg_propertyview-10.js \
 	browser_dbg_propertyview-edit.js \
-	$(warning browser_dbg_reload-same-script.js temporarily disabled due to oranges, see bug 780198 & bug 782179) \
+	browser_dbg_reload-same-script.js \
+	browser_dbg_pane-collapse.js \
 	browser_dbg_panesize.js \
 	browser_dbg_panesize-inner.js \
 	browser_dbg_stack-01.js \
@@ -50,6 +51,11 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_scripts-sorting.js \
 	browser_dbg_scripts-searching-01.js \
 	browser_dbg_scripts-searching-02.js \
+	browser_dbg_scripts-searching-03.js \
+	browser_dbg_scripts-searching-04.js \
+	browser_dbg_scripts-searching-05.js \
+	browser_dbg_scripts-searching-06.js \
+	browser_dbg_scripts-searching-07.js \
 	browser_dbg_pause-resume.js \
 	browser_dbg_update-editor-mode.js \
 	$(warning browser_dbg_select-line.js temporarily disabled due to oranges, see bug 726609) \

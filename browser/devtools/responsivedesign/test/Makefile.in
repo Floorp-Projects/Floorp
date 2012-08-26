@@ -47,7 +47,10 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES = \
 		browser_responsiveui.js \
 		browser_responsiveruleview.js \
+		browser_responsive_cmd.js \
 		browser_responsivecomputedview.js \
+		head.js \
+		helpers.js \
 		$(NULL)
 
 
