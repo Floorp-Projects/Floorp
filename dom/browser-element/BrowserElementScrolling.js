@@ -30,7 +30,7 @@ const ContentPanning = {
         let target = evt.target;
         let view = target.ownerDocument ? target.ownerDocument.defaultView
                                         : target;
-        view.removeEventListener('click', this, true, true);
+        view.removeEventListener('click', this, false, true);
         break;
     }
   },
@@ -83,7 +83,7 @@ const ContentPanning = {
       let target = this.target;
       let view = target.ownerDocument ? target.ownerDocument.defaultView
                                       : target;
-      view.addEventListener('click', this, true, true);
+      view.addEventListener('click', this, false, true);
     }
 
     if (this.panning)
