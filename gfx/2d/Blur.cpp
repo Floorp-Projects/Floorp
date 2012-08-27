@@ -330,8 +330,7 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
                            const Rect* aSkipRect)
  : mSpreadRadius(aSpreadRadius),
    mBlurRadius(aBlurRadius),
-   mData(nullptr),
-   mFreeData(true)
+   mData(nullptr)
 {
   Rect rect(aRect);
   rect.Inflate(Size(aBlurRadius + aSpreadRadius));
@@ -385,25 +384,9 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
   }
 }
 
-AlphaBoxBlur::AlphaBoxBlur(uint8_t* aData,
-                           const Rect& aRect,
-                           int32_t aStride,
-                           float aSigma)
-  : mSpreadRadius(),
-    mBlurRadius(CalculateBlurRadius(Point(aSigma, aSigma))),
-    mData(aData),
-    mFreeData(false),
-    mStride(aStride),
-    mRect(aRect.x, aRect.y, aRect.width, aRect.height)
-{
-}
-
-
 AlphaBoxBlur::~AlphaBoxBlur()
 {
-  if (mFreeData) {
-    delete mData;
-  }
+  free(mData);
 }
 
 unsigned char*
