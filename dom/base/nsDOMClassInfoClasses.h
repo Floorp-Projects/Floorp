@@ -407,7 +407,9 @@ DOMCI_CLASS(MozSmsFilter)
 DOMCI_CLASS(MozSmsCursor)
 
 DOMCI_CLASS(MozConnection)
+#ifdef MOZ_B2G_RIL
 DOMCI_CLASS(MozMobileConnection)
+#endif
 
 DOMCI_CLASS(USSDReceivedEvent)
 
