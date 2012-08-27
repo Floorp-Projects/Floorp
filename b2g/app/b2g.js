@@ -525,3 +525,6 @@ pref("dom.ipc.processPrelauch.delayMs", 1000);
 
 // Ignore the "dialog=1" feature in window.open.
 pref("dom.disable_window_open_dialog_feature", true);
+
+// Screen reader support
+pref("accessibility.accessfu.activate", 2);
