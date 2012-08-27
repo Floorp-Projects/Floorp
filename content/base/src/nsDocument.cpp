@@ -1622,7 +1622,6 @@ nsDocument::~nsDocument()
   }
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nullptr);
-    NS_RELEASE(mAttrStyleSheet);
   }
   if (mStyleAttrStyleSheet)
     mStyleAttrStyleSheet->SetOwningDocument(nullptr);
@@ -1643,7 +1642,6 @@ nsDocument::~nsDocument()
 
   if (mStyleImageLoader) {
     mStyleImageLoader->DropDocumentReference();
-    NS_RELEASE(mStyleImageLoader);
   }
 
   delete mHeaderData;
@@ -2001,7 +1999,6 @@ nsDocument::Init()
   mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
   mStyleImageLoader = new mozilla::css::ImageLoader(this);
-  NS_ADDREF(mStyleImageLoader);
 
   mNodeInfoManager = new nsNodeInfoManager();
   nsresult rv = mNodeInfoManager->Init(this);
@@ -2278,7 +2275,6 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     mAttrStyleSheet->Reset(aURI);
   } else {
     mAttrStyleSheet = new nsHTMLStyleSheet(aURI, this);
-    NS_ADDREF(mAttrStyleSheet);
   }
 
   // Don't use AddStyleSheet, since it'll put the sheet into style
