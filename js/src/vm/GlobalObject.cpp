@@ -246,13 +246,6 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     JS_ASSERT(isNative());
 
-    /*
-     * Calling a function from a cleared global triggers this (yeah, I know).
-     * Uncomment this once bug 470510 is fixed (if that bug doesn't remove
-     * isCleared entirely).
-     */
-    // JS_ASSERT(!isCleared());
-
     cx->setDefaultCompartmentObjectIfUnset(self);
 
     RootedObject objectProto(cx);

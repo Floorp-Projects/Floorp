@@ -3280,12 +3280,6 @@ JS_SetWrapObjectCallbacks(JSRuntime *rt,
                           JSSameCompartmentWrapObjectCallback sccallback,
                           JSPreWrapCallback precallback);
 
-extern JS_PUBLIC_API(JSCrossCompartmentCall *)
-JS_EnterCrossCompartmentCall(JSContext *cx, JSRawObject target);
-
-extern JS_PUBLIC_API(void)
-JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call);
-
 extern JS_PUBLIC_API(void)
 JS_SetCompartmentPrivate(JSCompartment *compartment, void *data);
 
@@ -3311,12 +3305,43 @@ js_TransplantObjectWithWrapper(JSContext *cx,
 extern JS_PUBLIC_API(JSBool)
 JS_RefreshCrossCompartmentWrappers(JSContext *cx, JSObject *ob);
 
+/*
+ * At any time, a JSContext has a current (possibly-NULL) compartment.
+ * Compartments are described in:
+ *
+ *   developer.mozilla.org/en-US/docs/SpiderMonkey/SpiderMonkey_compartments
+ *
+ * The current compartment of a context may be changed. The preferred way to do
+ * this is with JSAutoCompartment:
+ *
+ *   void foo(JSContext *cx, JSObject *obj) {
+ *     // in some compartment 'c'
+ *     {
+ *       JSAutoCompartment ac(cx, obj);  // constructor enters
+ *       // in the compartment of 'obj'
+ *     }                                 // destructor leaves
+ *     // back in compartment 'c'
+ *   }
+ *
+ * For more complicated uses that don't neatly fit in a C++ stack frame, the
+ * compartment can entered and left using separate function calls:
+ *
+ *   void foo(JSContext *cx, JSObject *obj) {
+ *     // in 'oldCompartment'
+ *     JSCompartment *oldCompartment = JS_EnterCompartment(cx, obj);
+ *     // in the compartment of 'obj'
+ *     JS_LeaveCompartment(cx, oldCompartment);
+ *     // back in 'oldCompartment'
+ *   }
+ *
+ * Note: these calls must still execute in a LIFO manner w.r.t all other
+ * enter/leave calls on the context. Furthermore, only the return value of a
+ * JS_EnterCompartment call may be passed as the 'oldCompartment' argument of
+ * the corresponding JS_LeaveCompartment call.
+ */
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
-
-namespace js {
-class AutoCompartment;
-}
 
 class JS_PUBLIC_API(JSAutoCompartment)
 {
@@ -3324,11 +3349,20 @@ class JS_PUBLIC_API(JSAutoCompartment)
     JSCompartment *oldCompartment_;
   public:
     JSAutoCompartment(JSContext *cx, JSRawObject target);
+    JSAutoCompartment(JSContext *cx, JSScript *target);
+    JSAutoCompartment(JSContext *cx, JSStackFrame *target);
     ~JSAutoCompartment();
 };
 
 JS_BEGIN_EXTERN_C
 #endif
+
+/* NB: This API is infallible; a NULL return value does not indicate error. */
+extern JS_PUBLIC_API(JSCompartment *)
+JS_EnterCompartment(JSContext *cx, JSRawObject target);
+
+extern JS_PUBLIC_API(void)
+JS_LeaveCompartment(JSContext *cx, JSCompartment *oldCompartment);
 
 typedef void (*JSIterateCompartmentCallback)(JSRuntime *rt, void *data, JSCompartment *compartment);
 
