@@ -91,17 +91,26 @@ NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize)
 }
 
 bool
-ReportOverRecursed(JSContext *cx)
+CheckOverRecursed(JSContext *cx)
 {
+    // IonMonkey's stackLimit is equal to nativeStackLimit by default. When we
+    // want to trigger an operation callback, we set the ionStackLimit to NULL,
+    // which causes the stack limit check to fail.
+    //
+    // There are two states we're concerned about here:
+    //   (1) The interrupt bit is set, and we need to fire the interrupt callback.
+    //   (2) The stack limit has been exceeded, and we need to throw an error.
+    //
+    // Note that we can reach here if ionStackLimit is NULL, but interrupt has
+    // not yet been set to 1. That's okay; it will be set to 1 very shortly,
+    // and in the interim we might just fire a few useless calls to
+    // CheckOverRecursed.
     JS_CHECK_RECURSION(cx, return false);
 
     if (cx->runtime->interrupt)
         return InterruptCheck(cx);
 
-    js_ReportOverRecursed(cx);
-
-    // Cause an InternalError.
-    return false;
+    return true;
 }
 
 bool
