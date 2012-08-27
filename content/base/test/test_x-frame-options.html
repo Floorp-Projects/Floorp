@@ -108,6 +108,16 @@ var testFramesLoaded = function() {
   var test10 = frame.contentDocument.getElementById("test");
   is(test10, null, "test mixedpolicy");
 
+  // iframe from different origin, allow-from: this origin - should load
+  frame = harness.contentDocument.getElementById("allow-from-allow");
+  var test11 = frame.contentDocument.getElementById("test").textContent;
+  is(test11, "allow-from-allow", "test allow-from-allow");
+
+  // iframe from different origin, with allow-from: other - should not load
+  frame = harness.contentDocument.getElementById("allow-from-deny");
+  var test12 = frame.contentDocument.getElementById("test");
+  is(test12, null, "test allow-from-deny");
+
   // call tests to check principal comparison, e.g. a document can open a window
   // to a data: or javascript: document which frames an
   // X-Frame-Options: SAMEORIGIN document and the frame should load
