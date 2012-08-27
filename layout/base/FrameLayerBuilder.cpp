@@ -1964,7 +1964,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
 void
 FrameLayerBuilder::AddLayerDisplayItemForFrame(Layer* aLayer,
                                                nsIFrame* aFrame,
-                                               PRUint32 aDisplayItemKey,
+                                               uint32_t aDisplayItemKey,
                                                LayerState aLayerState)
 {
   DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(aFrame);
@@ -1983,12 +1983,12 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
     return;
 
   nsIFrame* f = aItem->GetUnderlyingFrame();
-  PRUint32 key = aItem->GetPerFrameKey();
+  uint32_t key = aItem->GetPerFrameKey();
   AddLayerDisplayItemForFrame(aLayer, f, key, aLayerState);
 
   nsAutoTArray<nsIFrame*,4> mergedFrames;
   aItem->GetMergedFrames(&mergedFrames);
-  for (PRUint32 i = 0; i < mergedFrames.Length(); ++i) {
+  for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
     AddLayerDisplayItemForFrame(aLayer, mergedFrames[i], key, aLayerState);
   }
 }

@@ -382,7 +382,7 @@ nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, bool* aResult)
   rv = GetPrincipalForURI(aURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 permMgrPermission;
+  uint32_t permMgrPermission;
   rv = mPermMgr->TestExactPermissionFromPrincipal(principal, STS_PERMISSION,
                                                   &permMgrPermission);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -424,7 +424,7 @@ nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, bool* aResult)
   const char *subdomain;
 
   STSLOG(("no HSTS data for %s found, walking up domain", host.get()));
-  PRUint32 offset = 0;
+  uint32_t offset = 0;
   for (offset = host.FindChar('.', offset) + 1;
        offset > 0;
        offset = host.FindChar('.', offset) + 1) {
@@ -469,7 +469,7 @@ nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, bool* aResult)
     else if (permMgrPermission != STS_UNSET) {
       STSLOG(("Found permission manager entry for %s", subdomain));
       if (permMgrPermission == STS_SET) {
-        PRUint32 subdomainPermission;
+        uint32_t subdomainPermission;
         rv = mPermMgr->TestExactPermissionFromPrincipal(domainWalkPrincipal,
                                                         STS_SUBDOMAIN_PERMISSION,
                                                         &subdomainPermission);
