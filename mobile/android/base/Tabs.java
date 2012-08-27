@@ -49,6 +49,7 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Tab:Added");
         registerEventListener("Tab:Close");
         registerEventListener("Tab:Select");
+        registerEventListener("Content:LocationChange");
         registerEventListener("Session:RestoreBegin");
         registerEventListener("Session:RestoreEnd");
         registerEventListener("Reader:Added");
@@ -253,6 +254,11 @@ public class Tabs implements GeckoEventListener {
                 closeTab(tab);
             } else if (event.equals("Tab:Select")) {
                 selectTab(message.getInt("tabID"));
+            } else if (event.equals("Content:LocationChange")) {
+                Tab tab = getTab(message.getInt("tabID"));
+                if (tab != null) {
+                    tab.handleLocationChange(message);
+                }
             } else if (event.equals("Session:RestoreBegin")) {
                 mRestoringSession = true;
             } else if (event.equals("Session:RestoreEnd")) {

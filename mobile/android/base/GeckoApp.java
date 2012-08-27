@@ -669,36 +669,6 @@ abstract public class GeckoApp
             mFormAssistPopup.hide();
     }
 
-    void handleLocationChange(final int tabId, final String uri,
-                              final String documentURI, final String contentType,
-                              final boolean sameDocument) {
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        tab.updateURL(uri);
-        tab.setDocumentURI(documentURI);
-
-        // We can get a location change event for the same document with an anchor tag
-        if (sameDocument)
-            return;
-
-        tab.setContentType(contentType);
-        tab.clearFavicon();
-        tab.updateTitle(null);
-        tab.updateIdentityData(null);
-        tab.setReaderEnabled(false);
-        tab.setZoomConstraints(new ZoomConstraints(true));
-        tab.setHasTouchListeners(false);
-        tab.setCheckerboardColor(Color.WHITE);
-
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOCATION_CHANGE, uri);
-            }
-        });
-    }
-
     void handleSecurityChange(final int tabId, final JSONObject identityData) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
@@ -884,14 +854,6 @@ abstract public class GeckoApp
                 // generic log listener
                 final String msg = message.getString("msg");
                 Log.i(LOGTAG, "Log: " + msg);
-            } else if (event.equals("Content:LocationChange")) {
-                final int tabId = message.getInt("tabID");
-                final String uri = message.getString("uri");
-                final String documentURI = message.getString("documentURI");
-                final String contentType = message.getString("contentType");
-                final boolean sameDocument = message.getBoolean("sameDocument");
-                Log.i(LOGTAG, "URI - " + uri);
-                handleLocationChange(tabId, uri, documentURI, contentType, sameDocument);
             } else if (event.equals("Content:SecurityChange")) {
                 final int tabId = message.getInt("tabID");
                 final JSONObject identity = message.getJSONObject("identity");
@@ -1656,7 +1618,6 @@ abstract public class GeckoApp
         registerEventListener("DOMLinkAdded");
         registerEventListener("DOMWindowClose");
         registerEventListener("log");
-        registerEventListener("Content:LocationChange");
         registerEventListener("Content:SecurityChange");
         registerEventListener("Content:ReaderEnabled");
         registerEventListener("Content:StateChange");
@@ -2099,7 +2060,6 @@ abstract public class GeckoApp
         unregisterEventListener("DOMLinkAdded");
         unregisterEventListener("DOMWindowClose");
         unregisterEventListener("log");
-        unregisterEventListener("Content:LocationChange");
         unregisterEventListener("Content:SecurityChange");
         unregisterEventListener("Content:ReaderEnabled");
         unregisterEventListener("Content:StateChange");
