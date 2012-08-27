@@ -7,10 +7,9 @@
 // Helper function to clear the image cache of content images
 function clearImageCache()
 {
-  var tools = SpecialPowers.wrap(Components)
-                             .classes["@mozilla.org/image/tools;1"]
-                             .getService(Components.interfaces.imgITools);
-  var imageCache = tools.getImgCacheForDocument(window.document);
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var imageCache = Components.classes["@mozilla.org/image/cache;1"]
+                             .getService(Components.interfaces.imgICache);
   imageCache.clearCache(false); // true=chrome, false=content
 }
 

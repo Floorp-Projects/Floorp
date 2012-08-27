@@ -88,7 +88,7 @@ nsImageLoadingContent::nsImageLoadingContent()
     mCurrentRequestRegistered(false),
     mPendingRequestRegistered(false)
 {
-  if (!nsContentUtils::GetImgLoaderForChannel(nullptr)) {
+  if (!nsContentUtils::GetImgLoader()) {
     mLoadingEnabled = false;
   }
 }
@@ -334,7 +334,7 @@ nsImageLoadingContent::SetLoadingEnabled(bool aLoadingEnabled)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
-  if (nsContentUtils::GetImgLoaderForChannel(nullptr)) {
+  if (nsContentUtils::GetImgLoader()) {
     mLoadingEnabled = aLoadingEnabled;
   }
   return NS_OK;
@@ -518,7 +518,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
-  if (!nsContentUtils::GetImgLoaderForChannel(aChannel)) {
+  if (!nsContentUtils::GetImgLoader()) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -537,7 +537,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
 
   // Do the load.
   nsCOMPtr<imgIRequest>& req = PrepareNextRequest();
-  nsresult rv = nsContentUtils::GetImgLoaderForChannel(aChannel)->
+  nsresult rv = nsContentUtils::GetImgLoader()->
     LoadImageWithChannel(aChannel, this, doc, aListener,
                          getter_AddRefs(req));
   if (NS_SUCCEEDED(rv)) {

@@ -96,7 +96,7 @@ static nsresult
 imglib_Initialize()
 {
   mozilla::image::DiscardTracker::Initialize();
-  imgLoader::GlobalInit();
+  imgLoader::InitCache();
   return NS_OK;
 }
 
