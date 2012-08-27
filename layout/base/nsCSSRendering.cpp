@@ -48,6 +48,8 @@
 #include "mozilla/css/ImageLoader.h"
 #include "ImageContainer.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Telemetry.h"
+#include <ctime>
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -350,12 +352,13 @@ struct GradientCacheData {
 class GradientCache MOZ_FINAL : public nsExpirationTracker<GradientCacheData,4>
 {
   public:
-    enum { MAX_GENERATION_MS = 10000};
-
     GradientCache()
       : nsExpirationTracker<GradientCacheData, 4>(MAX_GENERATION_MS)
     {
       mHashEntries.Init();
+      srand(time(nullptr));
+      mTimerPeriod = rand() % MAX_GENERATION_MS + 1;
+      Telemetry::Accumulate(Telemetry::GRADIENT_RETENTION_TIME, mTimerPeriod);
     }
 
     virtual void NotifyExpired(GradientCacheData* aObject)
@@ -407,6 +410,8 @@ class GradientCache MOZ_FINAL : public nsExpirationTracker<GradientCacheData,4>
     }
 
   protected:
+    uint32_t mTimerPeriod;
+    static const uint32_t MAX_GENERATION_MS = 10000;
     /**
      * FIXME use nsTHashtable to avoid duplicating the GradientCacheKey.
      * https://bugzilla.mozilla.org/show_bug.cgi?id=761393#c47
@@ -1997,6 +2002,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               const nsRect& aFillArea)
 {
   SAMPLE_LABEL("nsCSSRendering", "PaintGradient");
+  Telemetry::AutoTimer<Telemetry::GRADIENT_DURATION, Telemetry::Microsecond> gradientTimer;
   if (aOneCellArea.IsEmpty())
     return;
 
