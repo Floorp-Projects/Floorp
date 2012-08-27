@@ -1586,7 +1586,7 @@ function WifiWorker() {
 
       self._fireEvent("onconnect", { network: netToDOM(self.currentNetwork) });
     } else {
-      WifiManager.disconnect(function(){});
+      WifiManager.reassociate(function(){});
     }
   };
 
