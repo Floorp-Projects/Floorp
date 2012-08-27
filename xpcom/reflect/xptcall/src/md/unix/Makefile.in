@@ -165,7 +165,7 @@ endif
 #
 # OpenBSD/ARM
 #
-ifneq (,$(filter OpenBSDarmish OpenBSDzaurus,$(OS_ARCH)$(OS_TEST)))
+ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDarm)
 CPPSRCS		:= xptcinvoke_arm_openbsd.cpp xptcstubs_arm_openbsd.cpp
 endif
 

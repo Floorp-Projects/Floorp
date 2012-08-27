@@ -350,7 +350,7 @@ WebConsoleFrame.prototype = {
       saveBodies.setAttribute("checked", this.saveRequestAndResponseBodies);
     }.bind(this));
 
-    this.closeButton = doc.getElementsByClassName("webconsole-close-button")[0];
+    this.closeButton = doc.getElementById("webconsole-close-button");
     this.closeButton.addEventListener("command",
                                       this.owner.onCloseButton.bind(this.owner));
 

@@ -29,12 +29,15 @@
 // permissions.
 //
 // Each nsSTSHostEntry contains:
-//  - Expiry time
-//  - Deleted flag (boolean, default false)
-//  - Subdomains flag (boolean, default false)
+//  - Expiry time (PRTime, milliseconds)
+//  - Expired flag (bool, default false)
+//  - STS permission (uint32_t, default STS_UNSET)
+//  - Include subdomains flag (bool, default false)
+//
+// Note: the subdomains flag has no meaning if the STS permission is STS_UNSET.
 //
 // The existence of the nsSTSHostEntry implies STS state is set for the given
-// host -- unless the deleted flag is set, in which case not only is the STS
+// host -- unless the expired flag is set, in which case not only is the STS
 // state not set for the host, but any permission actually present in the
 // permission manager should be ignored.
 //
@@ -58,9 +61,10 @@ class nsSTSHostEntry : public PLDHashEntryHdr
     explicit nsSTSHostEntry(const nsSTSHostEntry& toCopy);
 
     nsCString    mHost;
-    int64_t      mExpireTime;
-    bool mDeleted;
-    bool mIncludeSubdomains;
+    PRTime       mExpireTime;
+    uint32_t     mStsPermission;
+    bool         mExpired;
+    bool         mIncludeSubdomains;
 
     // Hash methods
     typedef const char* KeyType;
@@ -86,10 +90,35 @@ class nsSTSHostEntry : public PLDHashEntryHdr
       return PL_DHashStringKey(nullptr, aKey);
     }
 
+    void SetExpireTime(PRTime aExpireTime)
+    {
+      mExpireTime = aExpireTime;
+      mExpired = false;
+    }
+
+    bool IsExpired()
+    {
+      // If mExpireTime is 0, this entry never expires (this is the case for
+      // knockout entries).
+      // If we've already expired or we never expire, return early.
+      if (mExpired || mExpireTime == 0) {
+        return mExpired;
+      }
+
+      PRTime now = PR_Now() / PR_USEC_PER_MSEC;
+      if (now > mExpireTime) {
+        mExpired = true;
+      }
+
+      return mExpired;
+    }
+
     // force the hashtable to use the copy constructor.
     enum { ALLOW_MEMMOVE = false };
 };
 ////////////////////////////////////////////////////////////////////////////////
+
+class nsSTSPreload;
 
 class nsStrictTransportSecurityService : public nsIStrictTransportSecurityService
                                        , public nsIObserver
@@ -105,8 +134,10 @@ public:
 
 private:
   nsresult GetHost(nsIURI *aURI, nsACString &aResult);
+  nsresult GetPrincipalForURI(nsIURI *aURI, nsIPrincipal **aPrincipal);
   nsresult SetStsState(nsIURI* aSourceURI, int64_t maxage, bool includeSubdomains);
   nsresult ProcessStsHeaderMutating(nsIURI* aSourceURI, char* aHeader);
+  const nsSTSPreload *GetPreloadListEntry(const char *aHost);
 
   // private-mode-preserving permission manager overlay functions
   nsresult AddPermission(nsIURI     *aURI,
@@ -116,10 +147,6 @@ private:
                          int64_t    aExpireTime);
   nsresult RemovePermission(const nsCString  &aHost,
                             const char       *aType);
-  nsresult TestPermission(nsIURI     *aURI,
-                          const char *aType,
-                          uint32_t   *aPermission,
-                          bool       testExact);
 
   // cached services
   nsCOMPtr<nsIPermissionManager> mPermMgr;

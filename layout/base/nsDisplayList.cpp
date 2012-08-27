@@ -47,6 +47,7 @@
 #include "mozilla/StandardInteger.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 using namespace mozilla::layers;
 typedef FrameMetrics::ViewID ViewID;
 
@@ -346,16 +347,6 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
   // If the frame is not prerendered, bail out.  Layout will still perform the
   // animation.
   if (!aItem->CanUseAsyncAnimations(aBuilder)) {
-    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      printf_stderr("Performance warning: Async animation disabled because the frame for element '%s'",
-                    nsAtomCString(aContent->Tag()).get());
-      nsIAtom* id = aContent->GetID();
-      if (id) {
-        printf_stderr(" with id '%s'",
-                      nsAtomCString(aContent->GetID()).get());
-      }
-      printf_stderr(" is not prerendered\n");
-    }
     return;
   }
 
@@ -3340,23 +3331,72 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
 }
 
 bool
-nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
-                                                      nsIFrame* aFrame)
+nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 {
-  if (aFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer)) {
-    nsSize refSize = aBuilder->ReferenceFrame()->GetSize();
-    // Only prerender if the transformed frame's size is <= the
-    // reference frame size (~viewport), allowing a 1/8th fuzz factor
-    // for shadows, borders, etc.
-    refSize += nsSize(refSize.width / 8, refSize.height / 8);
-    if (aFrame->GetVisualOverflowRectRelativeToSelf().Size() <= refSize) {
-      // Bug 717521 - pre-render max 4096 x 4096 device pixels.
-      nscoord max = aFrame->PresContext()->DevPixelsToAppUnits(4096);
-      nsRect visual = aFrame->GetVisualOverflowRect();
-      if (visual.width <= max && visual.height <= max) {
-        return true;
-      }
+  if (GetUnderlyingFrame()->AreLayersMarkedActive(nsChangeHint_UpdateOpacityLayer)) {
+    return true;
+  }
+
+  if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
+    nsCString message;
+    message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for opacity animation");
+    CommonElementAnimationData::LogAsyncAnimationFailure(message,
+                                                         GetUnderlyingFrame()->GetContent());
+  }
+  return false;
+}
+
+bool
+nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
+{
+  return ShouldPrerenderTransformedContent(aBuilder,
+                                           GetUnderlyingFrame(),
+                                           nsLayoutUtils::IsAnimationLoggingEnabled());
+}
+
+/* static */ bool
+nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
+                                                      nsIFrame* aFrame,
+                                                      bool aLogAnimations)
+{
+  if (!aFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer)) {
+    if (aLogAnimations) {
+      nsCString message;
+      message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for transform animation");
+      CommonElementAnimationData::LogAsyncAnimationFailure(message,
+                                                           aFrame->GetContent());
     }
+    return false;
+  }
+
+  nsSize refSize = aBuilder->ReferenceFrame()->GetSize();
+  // Only prerender if the transformed frame's size is <= the
+  // reference frame size (~viewport), allowing a 1/8th fuzz factor
+  // for shadows, borders, etc.
+  refSize += nsSize(refSize.width / 8, refSize.height / 8);
+  nsSize frameSize = aFrame->GetVisualOverflowRectRelativeToSelf().Size();
+  if (frameSize <= refSize) {
+    // Bug 717521 - pre-render max 4096 x 4096 device pixels.
+    nscoord max = aFrame->PresContext()->DevPixelsToAppUnits(4096);
+    nsRect visual = aFrame->GetVisualOverflowRect();
+    if (visual.width <= max && visual.height <= max) {
+      return true;
+    }
+  }
+
+  if (aLogAnimations) {
+    nsCString message;
+    message.AppendLiteral("Performance warning: Async animation disabled because frame size (");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.width));
+    message.AppendLiteral(", ");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.height));
+    message.AppendLiteral(") is bigger than the viewport (");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.width));
+    message.AppendLiteral(", ");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
+    message.AppendLiteral(")");
+    CommonElementAnimationData::LogAsyncAnimationFailure(message,
+                                                         aFrame->GetContent());
   }
   return false;
 }

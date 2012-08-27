@@ -469,7 +469,7 @@ ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
 RUN_FROM_PWD = $(_ABS_RUN_TEST_PROGRAM)
 else
 # For non-Windows, just set the library path so we load the libs from the right place.
-ifdef ($(OS_ARCH),Darwin)
+ifeq ($(OS_ARCH),Darwin)
 RUN_FROM_PWD = DYLD_LIBRARY_PATH=$(PRECOMPILE_GRE)
 else
 RUN_FROM_PWD = "$$PWD/run-mozilla.sh"
@@ -718,7 +718,6 @@ endif
 # the MOZ_PKG_MANIFEST file and the following vars:
 # MOZ_NONLOCALIZED_PKG_LIST
 # MOZ_LOCALIZED_PKG_LIST
-# MOZ_OPTIONAL_PKG_LIST
 
 PKG_ARG = , "$(pkg)"
 
@@ -749,19 +748,6 @@ endif
 endif
 	@cp -av $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/. $(DEPTH)/installer-stage/core
 	@(cd $(DEPTH)/installer-stage/core && $(CREATE_PRECOMPLETE_CMD))
-ifdef MOZ_OPTIONAL_PKG_LIST
-	@$(NSINSTALL) -D $(DEPTH)/installer-stage/optional
-	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
-	  "$(call core_abspath,$(DEPTH)/installer-stage/optional)", \
-	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
-	  $(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) )
-	if test -d $(DEPTH)/installer-stage/optional/extensions ; then \
-		cd $(DEPTH)/installer-stage/optional/extensions; find -maxdepth 1 -mindepth 1 -exec rm -r ../../core/extensions/{} \; ; \
-	fi
-	if test -d $(DEPTH)/installer-stage/optional/distribution/extensions/ ; then \
-		cd $(DEPTH)/installer-stage/optional/distribution/extensions/; find -maxdepth 1 -mindepth 1 -exec rm -r ../../../core/distribution/extensions/{} \; ; \
-	fi
-endif
 ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
 	$(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(DEPTH)/installer-stage
 endif

@@ -131,6 +131,15 @@ if (typeof Components != "undefined") {
        return this.unixErrno == OS.Constants.libc.ENOTEMPTY;
      }
    });
+  /**
+   * |true| if the error was raised because a file or directory
+   * is closed, |false| otherwise.
+   */
+  Object.defineProperty(OSError.prototype, "becauseClosed", {
+    get: function becauseClosed() {
+      return this.unixErrno == OS.Constants.libc.EBADF;
+    }
+  });
 
   /**
    * Serialize an instance of OSError to something that can be
@@ -169,4 +178,9 @@ if (typeof Components != "undefined") {
     */
   Types.path = Types.cstring.withName("[in] path");
   Types.out_path = Types.out_cstring.withName("[out] path");
+
+  // Special constructors that need to be defined on all threads
+  OSError.closed = function closed(operation) {
+    return new OSError(operation, OS.Constants.libc.EBADF);
+  };
 })(this);

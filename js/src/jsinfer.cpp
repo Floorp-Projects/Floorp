@@ -1064,8 +1064,7 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
             int arrayKind = object->proto->getClass() - TypedArray::protoClasses;
             JS_ASSERT(arrayKind >= 0 && arrayKind < TypedArray::TYPE_MAX);
 
-            bool maybeDouble = (arrayKind == TypedArray::TYPE_UINT32 ||
-                                arrayKind == TypedArray::TYPE_FLOAT32 ||
+            bool maybeDouble = (arrayKind == TypedArray::TYPE_FLOAT32 ||
                                 arrayKind == TypedArray::TYPE_FLOAT64);
             target->addType(cx, maybeDouble ? Type::DoubleType() : Type::Int32Type());
         }

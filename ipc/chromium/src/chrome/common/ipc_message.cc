@@ -28,11 +28,13 @@ Message::Message()
 }
 
 Message::Message(int32 routing_id, msgid_t type, PriorityValue priority,
-                 const char* const name)
+                 MessageCompression compression, const char* const name)
     : Pickle(sizeof(Header)) {
   header()->routing = routing_id;
   header()->type = type;
   header()->flags = priority;
+  if (compression == COMPRESSION_ENABLED)
+    header()->flags |= COMPRESS_BIT;
 #if defined(OS_POSIX)
   header()->num_fds = 0;
 #endif

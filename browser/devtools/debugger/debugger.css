@@ -5,6 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
+ * Scripts searching
+ */
+
+#globalsearch {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.dbg-results-container {
+  display: none;
+}
+
+.dbg-results-container[open] {
+  display: -moz-box;
+}
+
+/**
  * Stack frames
  */
 
