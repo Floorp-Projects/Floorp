@@ -7,7 +7,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content">
 
-    <RelativeLayout android:layout_width="@dimen/site_identity_popup_width"
+    <RelativeLayout android:layout_width="@dimen/popup_width"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="15dip"
                     android:layout_alignParentTop="true"
