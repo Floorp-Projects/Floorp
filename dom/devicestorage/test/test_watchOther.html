@@ -54,14 +54,6 @@ function onChangeFail(e) {
   ok(false, "We should never see any changes");
 }
 
-function makeFile() {
-  request = storage.addNamed(createRandomBlob(), gFileName);
-  ok(request, "Should have a non-null request");
-
-  request.onsuccess = addSuccess;
-  request.onerror = addError;
-}
-
 var storage = navigator.getDeviceStorage("testing");
 ok(storage, "Should have storage");
 storage.addEventListener("change", onChange);
@@ -70,7 +62,11 @@ var storageOther = navigator.getDeviceStorage("testing-other");
 ok(storageOther, "Should have storage");
 storageOther.addEventListener("change", onChangeFail);
 
-setTimeout(makeFile,100);
+request = storage.addNamed(createRandomBlob(), gFileName);
+ok(request, "Should have a non-null request");
+
+request.onsuccess = addSuccess;
+request.onerror = addError;
 
 </script>
 </pre>
