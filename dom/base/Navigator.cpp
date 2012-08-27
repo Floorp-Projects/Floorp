@@ -1147,7 +1147,7 @@ Navigator::GetMozVoicemail(nsIDOMMozVoicemail** aVoicemail)
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(permMgr, NS_OK);
 
-    PRUint32 permission = nsIPermissionManager::DENY_ACTION;
+    uint32_t permission = nsIPermissionManager::DENY_ACTION;
     permMgr->TestPermissionFromPrincipal(principal, "voicemail", &permission);
 
     if (permission != nsIPermissionManager::ALLOW_ACTION) {
