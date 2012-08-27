@@ -1405,14 +1405,8 @@ class TypedArrayTemplate
     Getter(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
-        // FIXME: Hack to keep us building with gcc 4.2. Remove this once we
-        // drop support for gcc 4.2. See bug 783505 for the details.
-#if defined(__GNUC__) && __GNUC_MINOR__ <= 2
-        return CallNonGenericMethod(cx, IsThisClass, GetterImpl<ValueGetter>, args);
-#else
         return CallNonGenericMethod<ThisTypeArray::IsThisClass,
                                     ThisTypeArray::GetterImpl<ValueGetter> >(cx, args);
-#endif
     }
 
     // Define an accessor for a read-only property that invokes a native getter
