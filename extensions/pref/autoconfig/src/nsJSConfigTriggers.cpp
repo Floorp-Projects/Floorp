@@ -195,9 +195,11 @@ nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
     JS_BeginRequest(autoconfig_cx);
     nsCOMPtr<nsIPrincipal> principal;
     nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(principal));
-    ok = JS_EvaluateScriptForPrincipals(autoconfig_cx, autoconfig_glob, 
-                                        nsJSPrincipals::get(principal),
-                                        js_buffer, length, filename, 0, nullptr);
+    JS::CompileOptions options(autoconfig_cx);
+    options.setPrincipals(nsJSPrincipals::get(principal))
+           .setFileAndLine(filename, 1);
+    JS::RootedObject glob(autoconfig_cx, autoconfig_glob);
+    ok = JS::Evaluate(autoconfig_cx, glob, options, js_buffer, length, nullptr);
     JS_EndRequest(autoconfig_cx);
 
     JS_MaybeGC(autoconfig_cx);

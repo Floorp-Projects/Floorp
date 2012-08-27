@@ -70,6 +70,8 @@ def build_one_stage(env, stage_dir, is_stage_one):
         build_one_stage_aux(stage_dir, is_stage_one)
     with_env(env, f)
 
+isDarwin = platform.system() == "Darwin"
+
 def build_one_stage_aux(stage_dir, is_stage_one):
     os.mkdir(stage_dir)
 
@@ -80,12 +82,11 @@ def build_one_stage_aux(stage_dir, is_stage_one):
                       "--disable-assertions",
                       "--prefix=%s" % inst_dir,
                       "--with-gcc-toolchain=/tools/gcc-4.5-0moz3"]
-    if is_stage_one:
+    if is_stage_one and not isDarwin:
         configure_opts.append("--with-optimize-option=-O0")
 
     build_package(llvm_source_dir, build_dir, configure_opts)
 
-isDarwin = platform.system() == "Darwin"
 if isDarwin:
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
 

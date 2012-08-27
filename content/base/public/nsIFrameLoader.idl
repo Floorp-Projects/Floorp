@@ -8,7 +8,7 @@
 interface nsIDocShell;
 interface nsIURI;
 interface nsIFrame;
-interface nsIChromeFrameMessageManager;
+interface nsIMessageSender;
 interface nsIVariant;
 interface nsIDOMElement;
 
@@ -108,7 +108,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, uuid(fc338eea-47dc-475e-add7-a3933fcfa07c)]
+[scriptable, uuid(f234c232-bb17-4450-b324-bf1ef5ccfd34)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -177,7 +177,7 @@ interface nsIFrameLoader : nsISupports
   void activateFrameEvent(in AString aType, in boolean capture);
 
   // Note, when frameloaders are swapped, also messageManagers are swapped.
-  readonly attribute nsIChromeFrameMessageManager messageManager;
+  readonly attribute nsIMessageSender messageManager;
 
   /**
    * @see nsIDOMWindowUtils sendKeyEvent.

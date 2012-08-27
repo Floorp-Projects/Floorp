@@ -1025,8 +1025,8 @@ function buildJarURI(aJarfile, aPath) {
  */
 function flushJarCache(aJarFile) {
   Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
-  Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIChromeFrameMessageManager)
-    .sendAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
+  Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageBroadcaster)
+    .broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
 }
 
 function flushStartupCache() {

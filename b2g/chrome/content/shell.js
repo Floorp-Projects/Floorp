@@ -49,7 +49,7 @@ XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
 
 XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"]
-         .getService(Ci.nsIFrameMessageManager);
+         .getService(Ci.nsIMessageListenerManager);
 });
 
 function getContentWindow() {

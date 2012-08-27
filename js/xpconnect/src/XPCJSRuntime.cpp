@@ -65,7 +65,8 @@ const char* XPCJSRuntime::mStrings[] = {
     "__scriptOnly__",       // IDX_SCRIPTONLY
     "baseURIObject",        // IDX_BASEURIOBJECT
     "nodePrincipal",        // IDX_NODEPRINCIPAL
-    "documentURIObject"     // IDX_DOCUMENTURIOBJECT
+    "documentURIObject",    // IDX_DOCUMENTURIOBJECT
+    "mozMatchesSelector"    // IDX_MOZMATCHESSELECTOR
 };
 
 /***************************************************************************/
