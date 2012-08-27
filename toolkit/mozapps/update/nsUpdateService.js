@@ -77,6 +77,14 @@ const KEY_GRED            = "GreD";
 const KEY_UPDROOT         = "UpdRootD";
 #endif
 
+#ifdef XP_WIN
+#define SKIP_STAGE_UPDATES_TEST
+#elifdef MOZ_WIDGET_GONK
+// In Gonk, the updater will remount the /system partition to move staged files
+// into place, so we skip the test here to keep things isolated.
+#define SKIP_STAGE_UPDATES_TEST
+#endif
+
 const DIR_UPDATES         = "updates";
 #ifdef XP_MACOSX
 const UPDATED_DIR         = "Updated.app";
@@ -443,7 +451,7 @@ XPCOMUtils.defineLazyGetter(this, "gCanStageUpdates", function aus_gCanStageUpda
     return false;
   }
 
-#ifdef XP_WIN
+#ifdef SKIP_STAGE_UPDATES_TEST
   if (getPref("getBoolPref", PREF_APP_UPDATE_SERVICE_ENABLED, false)) {
     // No need to perform directory write checks, the maintenance service will
     // be able to write to all directories.
