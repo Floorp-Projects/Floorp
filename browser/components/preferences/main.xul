@@ -158,22 +158,6 @@
       </radiogroup>
     </groupbox>
 
-    <hbox class="bottomBox">
-      <groupbox id="addonsMgrGroup" orient="horizontal" flex="1">
-        <caption label="&addonsMgr.label;"/>
-
-        <description control="manageAddons"
-#ifdef XP_WIN
-                     flex="1">&manageAddonsDescWin.label;</description>
-#else
-                     flex="1">&manageAddonsDescUnix2.label;</description>
-#endif
-        <button id="manageAddons" label="&manageAddons.label;"
-                accesskey="&manageAddons.accesskey;"
-                oncommand="gMainPane.showAddonsMgr();"/>
-      </groupbox>
-    </hbox>
-
   </prefpane>
 
 </overlay>
