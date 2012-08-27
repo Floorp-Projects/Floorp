@@ -10,7 +10,7 @@ VPATH     := @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 # Definitions used by constants.js.
-weave_version := 1.19.0
+weave_version := 1.20.0
 weave_channel := rel
 weave_id      := {340c2bbc-ce74-4362-90b5-7c26312808ef}
 

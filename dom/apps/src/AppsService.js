@@ -26,8 +26,7 @@ function AppsService()
     Cu.import("resource://gre/modules/Webapps.jsm");
   } else {
     this.cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-                .getService(Ci.nsIFrameMessageManager)
-                .QueryInterface(Ci.nsISyncMessageSender);
+                .getService(Ci.nsISyncMessageSender);
   }
 }
 

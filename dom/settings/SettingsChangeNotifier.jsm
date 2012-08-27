@@ -17,9 +17,9 @@ let EXPORTED_SYMBOLS = ["SettingsChangeNotifier"];
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
-  return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
-});
+XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
+                                   "@mozilla.org/parentprocessmessagemanager;1",
+                                   "nsIMessageBroadcaster");
 
 
 let SettingsChangeNotifier = {
@@ -41,7 +41,7 @@ let SettingsChangeNotifier = {
     let msg = aMessage.json;
     switch (aMessage.name) {
       case "Settings:Changed":
-        ppmm.sendAsyncMessage("Settings:Change:Return:OK", { key: msg.key, value: msg.value });
+        ppmm.broadcastAsyncMessage("Settings:Change:Return:OK", { key: msg.key, value: msg.value });
         Services.obs.notifyObservers(this, "mozsettings-changed", JSON.stringify({
           key: msg.key,
           value: msg.value

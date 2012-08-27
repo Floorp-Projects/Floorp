@@ -420,7 +420,7 @@ function nsDOMIdentityInternal() {
 }
 nsDOMIdentityInternal.prototype = {
 
-  // nsIFrameMessageListener
+  // nsIMessageListener
   receiveMessage: function nsDOMIdentityInternal_receiveMessage(aMessage) {
     let msg = aMessage.json;
     // Is this message intended for this window?
@@ -515,7 +515,7 @@ nsDOMIdentityInternal.prototype = {
   classID: Components.ID("{8bcac6a3-56a4-43a4-a44c-cdf42763002f}"),
 
   QueryInterface: XPCOMUtils.generateQI(
-    [Ci.nsIDOMGlobalPropertyInitializer, Ci.nsIFrameMessageListener]
+    [Ci.nsIDOMGlobalPropertyInitializer, Ci.nsIMessageListener]
   ),
 
   classInfo: XPCOMUtils.generateCI({

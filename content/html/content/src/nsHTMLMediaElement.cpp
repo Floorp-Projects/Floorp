@@ -3429,7 +3429,7 @@ nsHTMLMediaElement::CopyInnerTo(nsGenericElement* aDest)
 nsresult nsHTMLMediaElement::GetBuffered(nsIDOMTimeRanges** aBuffered)
 {
   nsRefPtr<nsTimeRanges> ranges = new nsTimeRanges();
-  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA && mDecoder) {
+  if (mReadyState > nsIDOMHTMLMediaElement::HAVE_NOTHING && mDecoder) {
     // If GetBuffered fails we ignore the error result and just return the
     // time ranges we found up till the error.
     mDecoder->GetBuffered(ranges);
