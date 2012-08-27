@@ -11,18 +11,6 @@
 namespace js {
 
 inline void
-GlobalObject::setFlags(int32_t flags)
-{
-    setSlot(FLAGS, Int32Value(flags));
-}
-
-inline void
-GlobalObject::initFlags(int32_t flags)
-{
-    initSlot(FLAGS, Int32Value(flags));
-}
-
-inline void
 GlobalObject::setDetailsForKey(JSProtoKey key, JSObject *ctor, JSObject *proto)
 {
     JS_ASSERT(getSlotRef(key).isUndefined());

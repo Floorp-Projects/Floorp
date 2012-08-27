@@ -580,9 +580,6 @@ struct JSScript : public js::gc::Cell
 
     inline void clearPropertyReadTypes();
 
-    inline bool hasGlobal() const;
-    inline bool hasClearedGlobal() const;
-
     inline js::GlobalObject &global() const;
 
     /* See StaticScopeIter comment. */
