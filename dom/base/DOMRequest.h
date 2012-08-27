@@ -54,8 +54,8 @@ public:
 protected:
   void FireEvent(const nsAString& aType, bool aBubble, bool aCancelable);
 
-  virtual void RootResultVal();
-  virtual void UnrootResultVal();
+  void RootResultVal();
+  void UnrootResultVal();
 
   void Init(nsIDOMWindow* aWindow);
 };
