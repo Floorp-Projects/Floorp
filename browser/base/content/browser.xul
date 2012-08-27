@@ -1114,24 +1114,6 @@
                      oncommand="InspectorUI.closeInspectorUI(false);"
                      tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
-      <toolbarbutton id="inspector-option-toolbarbutton"
-                     type="menu"
-                     tabindex="0"
-                     tooltiptext="&inspectOptionButton.tooltiptext;">
-        <menupopup id="inspector-option-popup"
-                   position="before_start">
-          <menuitem id="inspectorToggleVeil"
-                    type="checkbox"
-                    label="&inspectorToggleVeil.label;"
-                    accesskey="&inspectorToggleVeil.accesskey;"
-                    command="Inspector:ToggleVeil"/>
-          <menuitem id="inspectorToggleInfobar"
-                    type="checkbox"
-                    label="&inspectorToggleInfobar.label;"
-                    accesskey="&inspectorToggleInfobar.accesskey;"
-                    command="Inspector:ToggleInfobar"/>
-        </menupopup>
-      </toolbarbutton>
       <toolbarbutton id="inspector-inspect-toolbutton"
                      class="devtools-toolbarbutton"
                      command="Inspector:Inspect"/>

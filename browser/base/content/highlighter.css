@@ -12,31 +12,25 @@
   left: 0;
 }
 
-#highlighter-veil-container {
+#highlighter-outline-container {
   overflow: hidden;
+  position: relative;
 }
 
-#highlighter-veil-container:not([dim]) > .highlighter-veil,
-#highlighter-veil-container:not([dim]) > hbox > .highlighter-veil {
-  visibility: hidden;
+#highlighter-outline {
+  position: absolute;
 }
 
-#highlighter-veil-container:not([disable-transitions]) > .highlighter-veil,
-#highlighter-veil-container:not([disable-transitions]) > #highlighter-veil-middlebox,
-#highlighter-veil-container:not([disable-transitions]) > #highlighter-veil-middlebox > .highlighter-veil,
-#highlighter-veil-container:not([disable-transitions]) > #highlighter-veil-middlebox > #highlighter-veil-transparentbox {
-  transition-property: width, height;
+#highlighter-outline[hidden] {
+  opacity: 0;
+  pointer-events: none;
+  display: -moz-box;
+}
+
+#highlighter-outline:not([disable-transitions]) {
+  transition-property: opacity, top, left, width, height;
   transition-duration: 0.1s;
   transition-timing-function: linear;
-}
-
-#highlighter-veil-bottombox,
-#highlighter-veil-rightbox {
-  -moz-box-flex: 1;
-}
-
-#highlighter-veil-middlebox:-moz-locale-dir(rtl) {
-  -moz-box-direction: reverse;
 }
 
 .inspector-breadcrumbs-button {
@@ -52,8 +46,15 @@
   max-width: 95%;
 }
 
-#highlighter-nodeinfobar-container:not([disable-transitions]) {
-  transition-property: top, left;
+#highlighter-nodeinfobar-container[hidden] {
+  opacity: 0;
+  pointer-events: none;
+  display: -moz-box;
+}
+
+#highlighter-nodeinfobar-container:not([disable-transitions]),
+#highlighter-nodeinfobar-container[disable-transitions][force-transitions] {
+  transition-property: transform, opacity, top, left;
   transition-duration: 0.1s;
   transition-timing-function: linear;
 }
