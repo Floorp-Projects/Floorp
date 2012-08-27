@@ -53,24 +53,6 @@
 
     is(event.target.result, BLOB_DATA.join(""), "Correct text");
 
-    info("Trying blob url");
-
-    objectStore = db.transaction("foo").objectStore("foo");
-    objectStore.get(key).onsuccess = grabEventAndContinueHandler;
-    event = yield;
-
-    let blobURL = URL.createObjectURL(event.target.result.blob);
-
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", blobURL);
-    xhr.onload = grabEventAndContinueHandler;
-    xhr.send();
-    yield;
-
-    URL.revokeObjectURL(blobURL);
-
-    is(xhr.responseText, BLOB_DATA.join(""), "Correct responseText");
-
     objectStore = db.transaction("foo").objectStore("foo");
     objectStore.mozGetAll().onsuccess = grabEventAndContinueHandler;
     event = yield;
