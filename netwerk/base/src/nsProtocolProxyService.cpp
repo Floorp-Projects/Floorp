@@ -145,12 +145,11 @@ private:
     void DoCallback()
     {
         // Generate proxy info from the PAC string if appropriate
-        if (NS_SUCCEEDED(mStatus) && !mProxyInfo && !mPACString.IsEmpty())
+        if (NS_SUCCEEDED(mStatus) && !mProxyInfo && !mPACString.IsEmpty()) {
             mPPS->ProcessPACString(mPACString, mResolveFlags,
                                    getter_AddRefs(mProxyInfo));
 
-        // Now apply proxy filters
-        if (NS_SUCCEEDED(mStatus)) {
+            // Now apply proxy filters
             nsProtocolInfo info;
             mStatus = mPPS->GetProtocolInfo(mURI, &info);
             if (NS_SUCCEEDED(mStatus))
