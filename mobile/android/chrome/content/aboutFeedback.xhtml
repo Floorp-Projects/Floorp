@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+<!ENTITY % aboutFeedbackDTD SYSTEM "chrome://browser/locale/aboutFeedback.dtd" >
+%aboutFeedbackDTD;
+]>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>&pageTitle;</title>
+  <meta name="viewport" content="width=device-width; user-scalable=0" />
+  <link rel="stylesheet" href="chrome://browser/skin/aboutFeedback.css" type="text/css"/>
+  <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
+</head>
+
+<body dir="&locale.dir;" onload="init();" onunload="uninit();">
+
+  <section id="intro" active="true">
+    <h1 class="header">&intro.header;</h1>
+    <div class="message">&intro.message;</div>
+    <div class="link-box" onclick="switchSection('happy');">
+      <a>&intro.happyLink;</a>
+    </div>
+    <div class="link-box" onclick="switchSection('sad');">
+      <a>&intro.sadLink;</a>
+    </div>
+    <div class="link-box-bottom" onclick="switchSection('idea');">
+      <a>&intro.ideaLink;</a>
+    </div>
+    <div id="sumo-message" class="fine-print">&support.pre;<a id="sumo-link">&support.link;</a>&support.post;</div>
+  </section>
+
+  <section id="happy">
+    <h1 class="header">&happy.header;</h1>
+    <div class="message-box">
+      <div class="message">&happy.message;</div>
+      <div class="fine-print">&happy.finePrint;</div>
+    </div>
+    <div class="link-box-bottom" onclick="openPlayStore();">
+      <div class="stars"/>
+      <a>&happy.ratingLink;</a>
+    </div>
+    <div class="bottom-links">
+      <a onclick="maybeLater();">&happy.maybeLater;</a>
+      <a onclick="window.close();">&happy.noThanks;</a>
+    </div>
+  </section>
+
+  <section id="sad">
+    <form onsubmit="sendFeedback(event);">
+      <div class="message">&sad.message;</div>
+      <textarea class="description" placeholder="&sad.placeholder;" rows="8" required="true"/>
+      <div class="message">&sad.lastSite;</div>
+      <input id="last-url" type="url" placeholder="&sad.urlPlaceholder;"/>
+      <div class="fine-print">&feedback.privacy;</div>
+      <input class="send-feedback" type="submit" value="&feedback.send;"/>
+    </form>
+  </section>
+
+  <section id="idea">
+    <form onsubmit="sendFeedback(event);">
+      <div class="message">&idea.message;</div>
+      <textarea class="description" placeholder="&idea.placeholder;" rows="8" required="true"/>
+      <div class="fine-print">&feedback.privacy;</div>
+      <input class="send-feedback" type="submit" value="&feedback.send;"/>
+    </form>
+  </section>
+
+  <section id="thanks-sad">
+    <h1 class="header">&sad.thanksHeader;</h1>
+    <div class="message-box-bottom">
+      <div class="message">&sad.thanksMessageTop;</div>
+      <div class="message">&sad.thanksMessageBottom;</div>
+    </div>
+  </section>
+
+  <section id="thanks-idea">
+    <h1 class="header">&idea.thanksHeader;</h1>
+    <div class="message-box-bottom">
+      <div class="message">&idea.thanksMessageTop;</div>
+      <div class="message">&idea.thanksMessageBottom;</div>
+    </div>
+  </section>
+
+  <script type="application/javascript;version=1.8"><![CDATA[
+    let Cc = Components.classes;
+    let Ci = Components.interfaces;
+    let Cu = Components.utils;
+
+    Cu.import("resource://gre/modules/Services.jsm");
+
+    function dump(a) {
+      Services.console.logStringMessage(a);
+    }
+
+    function sendMessageToJava(aMessage) {
+      Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge).
+                                          handleGeckoMessage(JSON.stringify(aMessage));
+    }
+
+    function init() {
+      let sumoLink = Services.urlFormatter.formatURLPref("app.support.baseURL");
+      document.getElementById("sumo-link").href = sumoLink;
+
+      window.addEventListener("popstate", function (aEvent) {
+        updateActiveSection(aEvent.state ? aEvent.state.section : "intro")
+      }, false);
+
+      // Fill "Last visited site" input with most recent history entry URL.
+      Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+        document.getElementById("last-url").value = aData;
+      }, "Feedback:LastUrl", false);
+
+      sendMessageToJava({
+        gecko: {
+          type: "Feedback:LastUrl"
+        }
+      });
+    }
+
+    function uninit() {
+      Services.obs.removeObserver(this, "Feedback:LastUrl");
+    }
+
+    function switchSection(aSection) {
+      history.pushState({ section: aSection }, aSection);
+      updateActiveSection(aSection);
+    }
+
+    function updateActiveSection(aSection) {
+      document.querySelector("section[active]").removeAttribute("active");
+      document.getElementById(aSection).setAttribute("active", true);
+    }
+
+    function openPlayStore() {
+      sendMessageToJava({
+        gecko: {
+          type: "Feedback:OpenPlayStore"
+        }
+      });
+
+      window.close();
+    }
+
+    function maybeLater() {
+      window.close();
+
+      sendMessageToJava({
+        gecko: {
+          type: "Feedback:MaybeLater"
+        }
+      });
+    }
+
+    function sendFeedback(aEvent) {
+      // Prevent the page from reloading.
+      aEvent.preventDefault();
+
+      let section = history.state.section;
+
+      // Sanity check.
+      if (section != "sad" && section != "idea") {
+        Cu.reportError("Trying to send feedback from an invalid section: " + section);
+        return;
+      }
+
+      let sectionElement = document.getElementById(section);
+      let descriptionElement = sectionElement.querySelector(".description");
+
+      // Bail if the description value isn't valid. HTML5 form validation will take care
+      // of showing an error message for us.
+      if (!descriptionElement.validity.valid)
+        return;
+
+      let data = new FormData();
+      data.append("description", descriptionElement.value);
+
+      if (section == "sad") {
+        data.append("_type", 2);
+
+        let urlElement = document.getElementById("last-url");
+        // Bail if the URL value isn't valid. HTML5 form validation will take care
+        // of showing an error message for us.
+        if (!urlElement.validity.valid)
+          return;
+
+        // Only send a URL string if the user provided one.
+        if (urlElement.value) {
+          data.append("add_url", true);
+          data.append("url", urlElement.value);
+        }
+      } else {
+        // Otherwise we're in the "idea" section.
+        data.append("_type", 3);        
+      }
+
+      let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+      data.append("device", sysInfo.get("device"));
+      data.append("manufacturer", sysInfo.get("manufacturer"));
+
+      let req = new XMLHttpRequest();
+      req.addEventListener("error", function() {
+        Cu.reportError("Error sending feedback to input.mozilla.org: " + req.statusText);
+      }, false);
+      req.addEventListener("abort", function() {
+        Cu.reportError("Aborted sending feedback to input.mozilla.org: " + req.statusText);
+      }, false);
+
+      let postURL = Services.urlFormatter.formatURLPref("app.feedback.postURL");
+      req.open("POST", postURL, true);
+      req.send(data);
+
+      switchSection("thanks-" + section);
+    }
+  ]]></script>
+
+</body>
+</html>

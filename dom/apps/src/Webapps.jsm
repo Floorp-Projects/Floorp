@@ -23,14 +23,13 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   return NetUtil;
 });
 
-XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
-  return Cc["@mozilla.org/parentprocessmessagemanager;1"]
-         .getService(Ci.nsIFrameMessageManager);
-});
+XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
+                                   "@mozilla.org/parentprocessmessagemanager;1",
+                                   "nsIMessageBroadcaster");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
-                                   "nsIFrameMessageManager");
+                                   "nsIMessageSender");
 
 XPCOMUtils.defineLazyGetter(this, "msgmgr", function() {
   return Cc["@mozilla.org/system-message-internal;1"]
@@ -243,7 +242,7 @@ let DOMApplicationRegistry = {
         if (msg.hasPrivileges)
           this.getAll(msg);
         else
-          ppmm.sendAsyncMessage("Webapps:GetAll:Return:KO", msg);
+          ppmm.broadcastAsyncMessage("Webapps:GetAll:Return:KO", msg);
         break;
       case "Webapps:InstallPackage":
         this.installPackage(msg);
@@ -307,7 +306,7 @@ let DOMApplicationRegistry = {
       } catch(e) {
       }
     }
-    ppmm.sendAsyncMessage("Webapps:Install:Return:KO", aData);
+    ppmm.broadcastAsyncMessage("Webapps:Install:Return:KO", aData);
   },
 
   confirmInstall: function(aData, aFromSync, aProfileDir, aOfflineCacheObserver) {
@@ -365,7 +364,7 @@ let DOMApplicationRegistry = {
 
     if (!aFromSync)
       this._saveApps((function() {
-        ppmm.sendAsyncMessage("Webapps:Install:Return:OK", aData);
+        ppmm.broadcastAsyncMessage("Webapps:Install:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
       }).bind(this));
 
@@ -492,7 +491,7 @@ let DOMApplicationRegistry = {
       try {
         dir.remove(true);
       } catch (e) { }
-      ppmm.sendAsyncMessage("Webapps:Install:Return:KO",
+      ppmm.broadcastAsyncMessage("Webapps:Install:Return:KO",
                             { oid: aData.oid,
                               requestID: aData.requestID,
                               error: aError });
@@ -584,13 +583,13 @@ let DOMApplicationRegistry = {
       delete this.webapps[id];
 
       this._saveApps((function() {
-        ppmm.sendAsyncMessage("Webapps:Uninstall:Return:OK", aData);
+        ppmm.broadcastAsyncMessage("Webapps:Uninstall:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-uninstall", appNote);
       }).bind(this));
     }
 
     if (!found) {
-      ppmm.sendAsyncMessage("Webapps:Uninstall:Return:KO", aData);
+      ppmm.broadcastAsyncMessage("Webapps:Uninstall:Return:KO", aData);
     }
   },
 
@@ -608,7 +607,7 @@ let DOMApplicationRegistry = {
     this._readManifests(tmp, (function(aResult) {
       for (let i = 0; i < aResult.length; i++)
         aData.apps[i].manifest = aResult[i].manifest;
-      ppmm.sendAsyncMessage("Webapps:GetSelf:Return:OK", aData);
+      ppmm.broadcastAsyncMessage("Webapps:GetSelf:Return:OK", aData);
     }).bind(this));
   },
 
@@ -627,7 +626,7 @@ let DOMApplicationRegistry = {
     this._readManifests(tmp, (function(aResult) {
       for (let i = 0; i < aResult.length; i++)
         aData.apps[i].manifest = aResult[i].manifest;
-      ppmm.sendAsyncMessage("Webapps:GetInstalled:Return:OK", aData);
+      ppmm.broadcastAsyncMessage("Webapps:GetInstalled:Return:OK", aData);
     }).bind(this));
   },
 
@@ -645,7 +644,7 @@ let DOMApplicationRegistry = {
     this._readManifests(tmp, (function(aResult) {
       for (let i = 0; i < aResult.length; i++)
         aData.apps[i].manifest = aResult[i].manifest;
-      ppmm.sendAsyncMessage("Webapps:GetNotInstalled:Return:OK", aData);
+      ppmm.broadcastAsyncMessage("Webapps:GetNotInstalled:Return:OK", aData);
     }).bind(this));
   },
 
@@ -665,7 +664,7 @@ let DOMApplicationRegistry = {
     this._readManifests(tmp, (function(aResult) {
       for (let i = 0; i < aResult.length; i++)
         aData.apps[i].manifest = aResult[i].manifest;
-      ppmm.sendAsyncMessage("Webapps:GetAll:Return:OK", aData);
+      ppmm.broadcastAsyncMessage("Webapps:GetAll:Return:OK", aData);
     }).bind(this));
   },
 
@@ -783,7 +782,7 @@ let DOMApplicationRegistry = {
           dir.remove(true);
         } catch (e) {
         }
-        ppmm.sendAsyncMessage("Webapps:Uninstall:Return:OK", { origin: origin });
+        ppmm.broadcastAsyncMessage("Webapps:Uninstall:Return:OK", { origin: origin });
       } else {
         if (this.webapps[record.id]) {
           this.webapps[record.id] = record.value;
@@ -791,7 +790,7 @@ let DOMApplicationRegistry = {
         } else {
           let data = { app: record.value };
           this.confirmInstall(data, true);
-          ppmm.sendAsyncMessage("Webapps:Install:Return:OK", data);
+          ppmm.broadcastAsyncMessage("Webapps:Install:Return:OK", data);
         }
       }
     }
@@ -893,7 +892,7 @@ AppcacheObserver.prototype = {
     let setStatus = function appObs_setStatus(aStatus) {
       mustSave = (app.status != aStatus);
       app.status = aStatus;
-      ppmm.sendAsyncMessage("Webapps:OfflineCache", { manifest: app.manifestURL, status: aStatus });
+      ppmm.broadcastAsyncMessage("Webapps:OfflineCache", { manifest: app.manifestURL, status: aStatus });
     }
 
     switch (aState) {

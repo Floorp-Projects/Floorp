@@ -2145,11 +2145,11 @@ abstract public class GeckoApp
         ((GeckoApplication) getApplication()).removeApplicationLifecycleCallbacks(this);
     }
 
-    private void registerEventListener(String event) {
+    protected void registerEventListener(String event) {
         GeckoAppShell.getEventDispatcher().registerEventListener(event, this);
     }
 
-    private void unregisterEventListener(String event) {
+    protected void unregisterEventListener(String event) {
         GeckoAppShell.getEventDispatcher().unregisterEventListener(event, this);
     }
 

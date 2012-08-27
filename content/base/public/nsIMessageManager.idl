@@ -1,0 +1,330 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+interface nsIDocShell;
+interface nsIContent;
+
+/**
+ * Message managers provide a way for chrome-privileged JS code to
+ * communicate with each other, even across process boundaries.
+ *
+ * Message managers are separated into "parent side" and "child side".
+ * These don't always correspond to process boundaries, but can.  For
+ * each child-side message manager, there is always exactly one
+ * corresponding parent-side message manager that it sends messages
+ * to.  However, for each parent-side message manager, there may be
+ * either one or many child-side managers it can message.
+ *
+ * Message managers that always have exactly one "other side" are of
+ * type nsIMessageSender.  Parent-side message managers that have many
+ * "other sides" are of type nsIMessageBroadcaster.
+ *
+ * Child-side message managers can send synchronous messages to their
+ * parent side, but not the other way around.
+ *
+ * There are two realms of message manager hierarchies.  One realm
+ * approximately corresponds to DOM elements, the other corresponds to
+ * process boundaries.
+ *
+ * Message managers corresponding to DOM elements
+ * ==============================================
+ *
+ * In this realm of message managers, there are
+ *  - "frame message managers" which correspond to frame elements
+ *  - "window message managers" which correspond to top-level chrome
+ *    windows
+ *  - the "global message manager", on the parent side.  See below.
+ *
+ * The DOM-realm message managers can communicate in the ways shown by
+ * the following diagram.  The parent side and child side can
+ * correspond to process boundaries, but don't always.
+ *
+ *  Parent side                         Child side
+ * -------------                       ------------
+ *  global MMg
+ *   |
+ *   +-->window MMw1
+ *   |    |
+ *   |    +-->frame MMp1_1<------------>frame MMc1_1
+ *   |    |
+ *   |    +-->frame MMp1_2<------------>frame MMc1_2
+ *   |    ...
+ *   |
+ *   +-->window MMw2
+ *   ...
+ *
+ * For example: a message sent from MMc1_1, from the child side, is
+ * sent only to MMp1_1 on the parent side.  However, note that all
+ * message managers in the hierarchy above MMp1_1, in this diagram
+ * MMw1 and MMg, will also notify their message listeners when the
+ * message arrives.
+
+ * For example: a message broadcast through the global MMg on the
+ * parent side would be broadcast to MMw1, which would transitively
+ * broadcast it to MMp1_1, MM1p_2".  The message would next be
+ * broadcast to MMw2, and so on down the hierarchy.
+ *
+ *   ***** PERFORMANCE AND SECURITY WARNING *****
+ * Messages broadcast through the global MM and window MMs can result
+ * in messages being dispatched across many OS processes, and to many
+ * processes with different permissions.  Great care should be taken
+ * when broadcasting.
+ *
+ * Interfaces
+ * ----------
+ *
+ * The global MMg and window MMw's are message broadcasters implementing
+ * nsIMessageBroadcaster while the frame MMp's are simple message senders
+ * (nsIMessageSender). Their counterparts in the content processes are
+ * message senders implementing nsIContentFrameMessageManager.
+ *
+ *                    nsIMessageListenerManager
+ *                  /                           \
+ * nsIMessageSender                               nsIMessageBroadcaster
+ *       |
+ * nsISyncMessageSender (content process/in-process only)
+ *       |
+ * nsIContentFrameMessageManager (content process/in-process only)
+ *       |
+ * nsIInProcessContentFrameMessageManager (in-process only)
+ *
+ *
+ * Message managers in the chrome process can also be QI'ed to nsIFrameScriptLoader.
+ *
+ *
+ * Message managers corresponding to process boundaries
+ * ====================================================
+ *
+ * The second realm of message managers is the "process message
+ * managers".  With one exception, these always correspond to process
+ * boundaries.  The picture looks like
+ *
+ *  Parent process                      Child processes
+ * ----------------                    -----------------
+ *  global PPMM
+ *   |
+ *   +<----> child PPMM
+ *   |
+ *   +-->parent PMM1<------------------>child process CMM1
+ *   |
+ *   +-->parent PMM2<------------------>child process PMM2
+ *   ...
+ *
+ * For example: the parent-process PMM1 sends messages directly to
+ * only the child-process CMM1.
+ *
+ * For example: CMM1 sends messages directly to PMM1.  The global PPMM
+ * will also notify their message listeners when the message arrives.
+ *
+ * For example: messages sent through the global PPMM will be
+ * dispatched to the listeners of the same-process, "child PPMM".
+ * They will also be broadcast to PPM1, PPM2, etc.
+ *
+ *   ***** PERFORMANCE AND SECURITY WARNING *****
+ * Messages broadcast through the global PPMM can result in messages
+ * being dispatched across many OS processes, and to many processes
+ * with different permissions.  Great care should be taken when
+ * broadcasting.
+ *
+ * Requests sent to parent-process message listeners should usually
+ * have replies scoped to the requesting CPMM.  The following pattern
+ * is common
+ *
+ *  const ParentProcessListener = {
+ *    receiveMessage: function(aMessage) {
+ *      let childMM = aMessage.target.QueryInterface(Ci.nsIMessageSender);
+ *      switch (aMessage.name) {
+ *      case "Foo:Request":
+ *        // service request
+ *        childMM.sendAsyncMessage("Foo:Response", { data });
+ *      }
+ *    }
+ *  };
+ */
+
+[scriptable, function, uuid(2b44eb57-a9c6-4773-9a1e-fe0818739a4c)]
+interface nsIMessageListener : nsISupports
+{
+  /**
+   * This is for JS only.
+   * receiveMessage is called with one parameter, which has the following
+   * properties:
+   *   {
+   *     target:  %the target of the message. Either an element owning
+   *               the message manager, or message manager itself if no
+   *               element owns it%
+   *     name:    %message name%,
+   *     sync:    %true or false%.
+   *     data:    %structured clone of the sent message data%,
+   *     json:    %same as .data, deprecated%,
+   *     objects: %array of handles or null, always null if sync is false%
+   *   }
+   * @note objects property isn't implemented yet.
+   *
+   * Each listener is invoked with its own copy of the message
+   * parameter.
+   *
+   * When the listener is called, 'this' value is the target of the message.
+   *
+   * If the message is synchronous, the possible return value is
+   * returned as JSON (will be changed to use structured clones).
+   * When there are multiple listeners to sync messages, each
+   * listener's return value is sent back as an array.  |undefined|
+   * return values show up as undefined values in the array.
+   */
+  void receiveMessage();
+};
+
+[scriptable, builtinclass, uuid(9c37a142-3de3-4902-a1a4-133f37d5980a)]
+interface nsIMessageListenerManager : nsISupports
+{
+  /**
+   * Register |listener| to receive |messageName|.  All listener
+   * callbacks for a particular message are invoked when that message
+   * is received.
+   *
+   * The message manager holds a strong ref to |listener|.
+   *
+   * If the same listener registers twice for the same message, the
+   * second registration is ignored.
+   */
+  void addMessageListener(in AString messageName,
+                          in nsIMessageListener listener);
+
+  /**
+   * No longer invoke |listener| when |messageName| is received, after
+   * the first time removeMessageListener() is called.
+   */
+  void removeMessageListener(in AString messageName,
+                             in nsIMessageListener listener);
+
+  [notxpcom] boolean markForCC();
+};
+
+/**
+ * Message "senders" have a single "other side" to which messages are
+ * sent.  For example, a child-process message manager will send
+ * messages that are only delivered to its one parent-process message
+ * manager.
+ */
+[scriptable, builtinclass, uuid(7f23767d-0f39-40c1-a22d-d3ab8a481f9d)]
+interface nsIMessageSender : nsIMessageListenerManager
+{
+  /**
+   * Send |messageName| and |obj| to the "other side" of this message
+   * manager.  This invokes listeners who registered for
+   * |messageName|.
+   *
+   * See nsIMessageListener::receiveMessage() for the format of the
+   * data delivered to listeners.
+   */
+  [implicit_jscontext, optional_argc]
+  void sendAsyncMessage([optional] in AString messageName,
+                        [optional] in jsval obj);
+};
+
+/**
+ * Message "broadcasters" don't have a single "other side" that they
+ * send messages to, but rather a set of subordinate message managers.
+ * For example, broadcasting a message through a window message
+ * manager will broadcast the message to all frame message managers
+ * within its window.
+ */
+[scriptable, builtinclass, uuid(d36346b9-5d3b-497d-9c28-ffbc3e4f6d0d)]
+interface nsIMessageBroadcaster : nsIMessageListenerManager
+{
+  /**
+   * Like |sendAsyncMessage()|, but also broadcasts this message to
+   * all "child" message managers of this message manager.  See long
+   * comment above for details.
+   *
+   * WARNING: broadcasting messages can be very expensive and leak
+   * sensitive data.  Use with extreme caution.
+   */
+  [implicit_jscontext, optional_argc]
+  void broadcastAsyncMessage([optional] in AString messageName,
+                             [optional] in jsval obj);
+
+  /**
+   * Number of subordinate message managers.
+   */
+  readonly attribute unsigned long childCount;
+
+  /**
+   * Return a single subordinate message manager.
+   */
+  nsIMessageListenerManager getChildAt(in unsigned long aIndex);
+};
+
+[scriptable, builtinclass, uuid(83be5862-2996-4685-ae7d-ae25bd795d50)]
+interface nsISyncMessageSender : nsIMessageSender
+{
+  /**
+   * Like |sendAsyncMessage()|, except blocks the sender until all
+   * listeners of the message have been invoked.  Returns an array
+   * containing return values from each listener invoked.
+   */
+  [implicit_jscontext, optional_argc]
+  jsval sendSyncMessage([optional] in AString messageName,
+                        [optional] in jsval obj);
+};
+
+[scriptable, builtinclass, uuid(894ff2d4-39a3-4df8-9d76-8ee329975488)]
+interface nsIContentFrameMessageManager : nsISyncMessageSender
+{
+  /**
+   * The current top level window in the frame or null.
+   */
+  readonly attribute nsIDOMWindow content;
+
+  /**
+   * The top level docshell or null.
+   */
+  readonly attribute nsIDocShell docShell;
+
+  /**
+   * Print a string to stdout.
+   */
+  void dump(in DOMString aStr);
+
+  /**
+   * If leak detection is enabled, print a note to the leak log that this
+   * process will intentionally crash.
+   */
+  void privateNoteIntentionalCrash();
+
+   /**
+    * Ascii base64 data to binary data and vice versa
+    */
+   DOMString atob(in DOMString aAsciiString);
+   DOMString btoa(in DOMString aBase64Data);
+};
+
+[uuid(a2325927-9c0c-437d-9215-749c79235031)]
+interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
+{
+  [notxpcom] nsIContent getOwnerContent();
+};
+
+[scriptable, builtinclass, uuid(a54acd34-4141-46f5-b71b-e2ca32879b08)]
+interface nsIFrameScriptLoader : nsISupports
+{
+  /**
+   * Load a script in the (remote) frame. aURL must be the absolute URL.
+   * data: URLs are also supported. For example data:,dump("foo\n");
+   * If aAllowDelayedLoad is true, script will be loaded when the
+   * remote frame becomes available. Otherwise the script will be loaded
+   * only if the frame is already available.
+   */
+  void loadFrameScript(in AString aURL, in boolean aAllowDelayedLoad);
+
+  /**
+   * Removes aURL from the list of scripts which support delayed load.
+   */
+  void removeDelayedFrameScript(in AString aURL);
+};

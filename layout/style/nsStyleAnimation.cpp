@@ -6,6 +6,7 @@
 /* Utilities for animation of computed style values */
 
 #include "mozilla/Util.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "nsStyleAnimation.h"
 #include "nsCOMArray.h"
@@ -240,33 +241,6 @@ ToPrimitive(nsCSSValue::Array* aArray)
       arr = aArray;
   }
   return arr.forget();
-}
-
-// Greatest Common Divisor
-static uint32_t
-gcd(uint32_t a, uint32_t b)
-{
-  // Euclid's algorithm; O(N) in the worst case.  (There are better
-  // ways, but we don't need them for stroke-dasharray animation.)
-  NS_ABORT_IF_FALSE(a > 0 && b > 0, "positive numbers expected");
-
-  while (a != b) {
-    if (a > b) {
-      a = a - b;
-    } else {
-      b = b - a;
-    }
-  }
-
-  return a;
-}
-
-// Least Common Multiple
-static uint32_t
-lcm(uint32_t a, uint32_t b)
-{
-  // Divide first to reduce overflow risk.
-  return (a / gcd(a, b)) * b;
 }
 
 inline void
@@ -1953,7 +1927,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
 
       nsAutoPtr<nsCSSValueList> result;
       nsCSSValueList **resultTail = getter_Transfers(result);
-      for (uint32_t i = 0, i_end = lcm(len1, len2); i != i_end; ++i) {
+      for (uint32_t i = 0, i_end = EuclidLCM<uint32_t>(len1, len2); i != i_end; ++i) {
         const nsCSSValue &v1 = list1->mValue;
         const nsCSSValue &v2 = list2->mValue;
         NS_ABORT_IF_FALSE(v1.GetUnit() == eCSSUnit_Number ||

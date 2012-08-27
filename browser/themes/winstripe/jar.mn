@@ -50,9 +50,6 @@ browser.jar:
         skin/classic/browser/searchbar.css                           (searchbar.css)
         skin/classic/browser/searchbar-dropdown-arrow.png
         skin/classic/browser/setDesktopBackground.css
-        skin/classic/browser/share-button.png
-        skin/classic/browser/share-button-active.png
-        skin/classic/browser/share-button-shared.png
         skin/classic/browser/menu-back.png                           (menu-back.png)
         skin/classic/browser/menu-forward.png                        (menu-forward.png)
         skin/classic/browser/monitor.png
@@ -254,9 +251,6 @@ browser.jar:
         skin/classic/aero/browser/searchbar.css                      (searchbar.css)
         skin/classic/aero/browser/searchbar-dropdown-arrow.png       (searchbar-dropdown-arrow-aero.png)
         skin/classic/aero/browser/setDesktopBackground.css
-        skin/classic/aero/browser/share-button.png
-        skin/classic/aero/browser/share-button-active.png
-        skin/classic/aero/browser/share-button-shared.png
         skin/classic/aero/browser/menu-back.png                      (menu-back-aero.png)
         skin/classic/aero/browser/menu-forward.png                   (menu-forward-aero.png)
         skin/classic/aero/browser/monitor.png
