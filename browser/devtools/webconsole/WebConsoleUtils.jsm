@@ -162,31 +162,6 @@ var WebConsoleUtils = {
   },
 
   /**
-   * Gets the window that has the given inner ID.
-   *
-   * @param integer aInnerId
-   * @param nsIDOMWindow [aHintWindow]
-   *        Optional, the window object used to QueryInterface to
-   *        nsIDOMWindowUtils. If this is not given,
-   *        Services.wm.getMostRecentWindow() is used.
-   * @return nsIDOMWindow|null
-   *         The window object with the given inner ID.
-   */
-  getWindowByInnerId: function WCU_getWindowByInnerId(aInnerId, aHintWindow)
-  {
-    let someWindow = aHintWindow || Services.wm.getMostRecentWindow(null);
-    let content = null;
-
-    if (someWindow) {
-      let windowUtils = someWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-                                   getInterface(Ci.nsIDOMWindowUtils);
-      content = windowUtils.getInnerWindowWithId(aInnerId);
-    }
-
-    return content;
-  },
-
-  /**
    * Abbreviates the given source URL so that it can be displayed flush-right
    * without being too distracting.
    *

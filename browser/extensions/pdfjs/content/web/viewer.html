@@ -4,11 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>PDF.js viewer</title>
+
 <!-- This snippet is used in firefox extension, see Makefile -->
 <base href="resource://pdf.js/web/" />
-<script type="application/l10n">
-<!-- PDFJSSCRIPT_LOCALE_DATA -->
-</script>
 <script type="text/javascript" src="l10n.js"></script>
 <script type="text/javascript" id="PDFJS_SCRIPT_TAG">
 <!--
@@ -23,9 +21,9 @@ var PDFJS = {};
   // Use strict in our context only - users might not want it
   'use strict';
 
-  PDFJS.build = 'c757eed';
+  PDFJS.build =
+'cb05144';
 
-  // Files are inserted below - see Makefile
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 
@@ -57,9 +55,7 @@ function getPdf(arg, callback) {
   var params = arg;
   if (typeof arg === 'string')
     params = { url: arg };
-
   var xhr = new XMLHttpRequest();
-
   xhr.open('GET', params.url);
 
   var headers = params.headers;
@@ -73,15 +69,23 @@ function getPdf(arg, callback) {
   }
 
   xhr.mozResponseType = xhr.responseType = 'arraybuffer';
-  var protocol = params.url.indexOf(':') < 0 ? window.location.protocol :
-    params.url.substring(0, params.url.indexOf(':') + 1);
+
+  var protocol = params.url.substring(0, params.url.indexOf(':') + 1);
   xhr.expected = (protocol === 'http:' || protocol === 'https:') ? 200 : 0;
 
   if ('progress' in params)
     xhr.onprogress = params.progress || undefined;
 
-  if ('error' in params)
-    xhr.onerror = params.error || undefined;
+  var calledErrorBack = false;
+
+  if ('error' in params) {
+    xhr.onerror = function errorBack() {
+      if (!calledErrorBack) {
+        calledErrorBack = true;
+        params.error();
+      }
+    }
+  }
 
   xhr.onreadystatechange = function getPdfOnreadystatechange(e) {
     if (xhr.readyState === 4) {
@@ -89,7 +93,8 @@ function getPdf(arg, callback) {
         var data = (xhr.mozResponseArrayBuffer || xhr.mozResponse ||
                     xhr.responseArrayBuffer || xhr.response);
         callback(data);
-      } else if (params.error) {
+      } else if (params.error && !calledErrorBack) {
+        calledErrorBack = true;
         params.error(e);
       }
     }
@@ -422,14 +427,37 @@ var PDFDocument = (function PDFDocumentClosure() {
     return true; /* found */
   }
 
+  var DocumentInfoValidators = {
+    get entries() {
+      // Lazily build this since all the validation functions below are not
+      // defined until after this file loads.
+      return shadow(this, 'entries', {
+        Title: isString,
+        Author: isString,
+        Subject: isString,
+        Keywords: isString,
+        Creator: isString,
+        Producer: isString,
+        CreationDate: isString,
+        ModDate: isString,
+        Trapped: isName
+      });
+    }
+  };
+
   PDFDocument.prototype = {
     get linearization() {
       var length = this.stream.length;
       var linearization = false;
       if (length) {
-        linearization = new Linearization(this.stream);
-        if (linearization.length != length)
-          linearization = false;
+        try {
+          linearization = new Linearization(this.stream);
+          if (linearization.length != length)
+            linearization = false;
+        } catch (err) {
+          warn('The linearization data is not available ' +
+               'or unreadable pdf data is found');
+        }
       }
       // shadow the prototype getter with a data property
       return shadow(this, 'linearization', linearization);
@@ -509,18 +537,27 @@ var PDFDocument = (function PDFDocumentClosure() {
       return shadow(this, 'numPages', num);
     },
     getDocumentInfo: function PDFDocument_getDocumentInfo() {
-      var info;
+      var docInfo;
       if (this.xref.trailer.has('Info')) {
         var infoDict = this.xref.trailer.get('Info');
 
-        info = {};
-        infoDict.forEach(function(key, value) {
-          info[key] = typeof value !== 'string' ? value :
-            stringToPDFString(value);
-        });
+        docInfo = {};
+        var validEntries = DocumentInfoValidators.entries;
+        // Only fill the document info with valid entries from the spec.
+        for (var key in validEntries) {
+          if (infoDict.has(key)) {
+            var value = infoDict.get(key);
+            // Make sure the value conforms to the spec.
+            if (validEntries[key](value)) {
+              docInfo[key] = typeof value !== 'string' ? value :
+                             stringToPDFString(value);
+            } else {
+              info('Bad value in document info for "' + key + '"');
+            }
+          }
+        }
       }
-
-      return shadow(this, 'getDocumentInfo', info);
+      return shadow(this, 'getDocumentInfo', docInfo);
     },
     getFingerprint: function PDFDocument_getFingerprint() {
       var xref = this.xref, fileID;
@@ -609,6 +646,28 @@ function backtrace() {
 function assert(cond, msg) {
   if (!cond)
     error(msg);
+}
+
+// Combines two URLs. The baseUrl shall be absolute URL. If the url is an
+// absolute URL, it will be returned as is.
+function combineUrl(baseUrl, url) {
+  if (url.indexOf(':') >= 0)
+    return url;
+  if (url.charAt(0) == '/') {
+    // absolute path
+    var i = baseUrl.indexOf('://');
+    i = baseUrl.indexOf('/', i + 3);
+    return baseUrl.substring(0, i) + url;
+  } else {
+    // relative path
+    var pathLength = baseUrl.length, i;
+    i = baseUrl.lastIndexOf('#');
+    pathLength = i >= 0 ? i : pathLength;
+    i = baseUrl.lastIndexOf('?', pathLength);
+    pathLength = i >= 0 ? i : pathLength;
+    var prefixLength = baseUrl.lastIndexOf('/', pathLength);
+    return baseUrl.substring(0, prefixLength + 1) + url;
+  }
 }
 
 // In a well-formed PDF, |cond| holds.  If it doesn't, subsequent
@@ -1188,63 +1247,36 @@ var StatTimer = (function StatTimerClosure() {
  * @return {Promise} A promise that is resolved with {PDFDocumentProxy} object.
  */
 PDFJS.getDocument = function getDocument(source) {
-  var url, data, headers, password, parameters = {}, workerInitializedPromise,
-    workerReadyPromise, transport;
+  var workerInitializedPromise, workerReadyPromise, transport;
 
   if (typeof source === 'string') {
-    url = source;
+    source = { url: source };
   } else if (isArrayBuffer(source)) {
-    data = source;
-  } else if (typeof source === 'object') {
-    url = source.url;
-    data = source.data;
-    headers = source.httpHeaders;
-    password = source.password;
-    parameters.password = password || null;
-
-    if (!url && !data)
-      error('Invalid parameter array, need either .data or .url');
-  } else {
+    source = { data: source };
+  } else if (typeof source !== 'object') {
     error('Invalid parameter in getDocument, need either Uint8Array, ' +
           'string or a parameter object');
+  }
+
+  if (!source.url && !source.data)
+    error('Invalid parameter array, need either .data or .url');
+
+  // copy/use all keys as is except 'url' -- full path is required
+  var params = {};
+  for (var key in source) {
+    if (key === 'url' && typeof window !== 'undefined') {
+      params[key] = combineUrl(window.location.href, source[key]);
+      continue;
+    }
+    params[key] = source[key];
   }
 
   workerInitializedPromise = new PDFJS.Promise();
   workerReadyPromise = new PDFJS.Promise();
   transport = new WorkerTransport(workerInitializedPromise, workerReadyPromise);
-  if (data) {
-    // assuming the data is array, instantiating directly from it
-    transport.sendData(data, parameters);
-  } else if (url) {
-    // fetch url
-    PDFJS.getPdf(
-      {
-        url: url,
-        progress: function getPDFProgress(evt) {
-          if (evt.lengthComputable) {
-            workerReadyPromise.progress({
-              loaded: evt.loaded,
-              total: evt.total
-            });
-          }
-        },
-        error: function getPDFError(e) {
-          workerReadyPromise.reject('Unexpected server response of ' +
-            e.target.status + '.');
-        },
-        headers: headers
-      },
-      function getPDFLoad(data) {
-        // sometimes the pdf has finished downloading before the web worker-test
-        // has finished. In that case the rendering of the final pdf would cause
-        // errors. We have to wait for the WorkerTransport to finalize worker-
-        // support detection
-        workerInitializedPromise.then(function workerInitialized() {
-          transport.sendData(data, parameters);
-        });
-      });
-  }
-
+  workerInitializedPromise.then(function transportInitialized() {
+    transport.fetchDocument(params);
+  });
   return workerReadyPromise;
 };
 
@@ -1627,19 +1659,12 @@ var WorkerTransport = (function WorkerTransportClosure() {
 
       try {
         var worker;
-        if (PDFJS.isFirefoxExtension) {
-          // The firefox extension can't load the worker from the resource://
-          // url so we have to inline the script and then use the blob loader.
-          var bb = new MozBlobBuilder();
-          bb.append(document.querySelector('#PDFJS_SCRIPT_TAG').textContent);
-          var blobUrl = window.URL.createObjectURL(bb.getBlob());
-          worker = new Worker(blobUrl);
-        } else {
-          // Some versions of FF can't create a worker on localhost, see:
-          // https://bugzilla.mozilla.org/show_bug.cgi?id=683280
-          worker = new Worker(workerSrc);
-        }
-
+        // The firefox extension can't load the worker from the resource://
+        // url so we have to inline the script and then use the blob loader.
+        var bb = new MozBlobBuilder();
+        bb.append(document.querySelector('#PDFJS_SCRIPT_TAG').textContent);
+        var blobUrl = window.URL.createObjectURL(bb.getBlob());
+        worker = new Worker(blobUrl);
         var messageHandler = new MessageHandler('main', worker);
         this.messageHandler = messageHandler;
 
@@ -1771,6 +1796,17 @@ var WorkerTransport = (function WorkerTransportClosure() {
         }
       }, this);
 
+      messageHandler.on('DocProgress', function transportDocProgress(data) {
+        this.workerReadyPromise.progress({
+          loaded: data.loaded,
+          total: data.total
+        });
+      }, this);
+
+      messageHandler.on('DocError', function transportDocError(data) {
+        this.workerReadyPromise.reject(data);
+      }, this);
+
       messageHandler.on('PageError', function transportError(data) {
         var page = this.pageCache[data.pageNum - 1];
         if (page.displayReadyPromise)
@@ -1815,11 +1851,11 @@ var WorkerTransport = (function WorkerTransportClosure() {
       });
     },
 
-    sendData: function WorkerTransport_sendData(data, params) {
-      this.messageHandler.send('GetDocRequest', {data: data, params: params});
+    fetchDocument: function WorkerTransport_fetchDocument(source) {
+      this.messageHandler.send('GetDocRequest', {source: source});
     },
 
-    getData: function WorkerTransport_sendData(promise) {
+    getData: function WorkerTransport_getData(promise) {
       this.messageHandler.send('GetData', null, function(data) {
         promise.resolve(data);
       });
@@ -2003,6 +2039,7 @@ var CanvasExtraState = (function CanvasExtraStateClosure() {
     this.wordSpacing = 0;
     this.textHScale = 1;
     this.textRenderingMode = TextRenderingMode.FILL;
+    this.textRise = 0;
     // Color spaces
     this.fillColorSpace = new DeviceGrayCS();
     this.fillColorSpaceObj = null;
@@ -2447,7 +2484,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.current.textRenderingMode = mode;
     },
     setTextRise: function CanvasGraphics_setTextRise(rise) {
-      TODO('text rise: ' + rise);
+      this.current.textRise = rise;
     },
     moveText: function CanvasGraphics_moveText(x, y) {
       this.current.x = this.current.lineX += x;
@@ -2474,7 +2511,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       ctx.transform.apply(ctx, current.textMatrix);
       ctx.scale(1, -1);
-      ctx.translate(current.x, -1 * current.y);
+      ctx.translate(current.x, -current.y - current.textRise);
       ctx.transform.apply(ctx, fontMatrix);
       ctx.scale(textHScale, 1);
     },
@@ -3042,20 +3079,20 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     // Marked content
 
     markPoint: function CanvasGraphics_markPoint(tag) {
-      TODO('Marked content');
+      // TODO Marked content.
     },
     markPointProps: function CanvasGraphics_markPointProps(tag, properties) {
-      TODO('Marked content');
+      // TODO Marked content.
     },
     beginMarkedContent: function CanvasGraphics_beginMarkedContent(tag) {
-      TODO('Marked content');
+      // TODO Marked content.
     },
     beginMarkedContentProps: function CanvasGraphics_beginMarkedContentProps(
                                         tag, properties) {
-      TODO('Marked content');
+      // TODO Marked content.
     },
     endMarkedContent: function CanvasGraphics_endMarkedContent() {
-      TODO('Marked content');
+      // TODO Marked content.
     },
 
     // Compatibility
@@ -3103,7 +3140,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
   return CanvasGraphics;
 })();
 
-if (!isWorker) {
+function checkPutBinaryImageDataCompatibility() {
   // Feature detection if the browser can use an Uint8Array directly as imgData.
   var canvas = document.createElement('canvas');
   canvas.width = 1;
@@ -3124,19 +3161,25 @@ if (!isWorker) {
   } catch (e) {
     CanvasGraphics.prototype.putBinaryImageData =
       function CanvasGraphicsPutBinaryImageDataShim(ctx, imgData, w, h) {
-        var tmpImgData = ctx.getImageData(0, 0, w, h);
+        var tmpImgData = 'createImageData' in ctx ? ctx.createImageData(w, h) :
+          ctx.getImageData(0, 0, w, h);
 
-        // Copy over the imageData pixel by pixel.
         var tmpImgDataPixels = tmpImgData.data;
-        var len = tmpImgDataPixels.length;
-
-        while (len--) {
-          tmpImgDataPixels[len] = imgData.data[len];
+        var data = imgData.data;
+        if ('set' in tmpImgDataPixels)
+          tmpImgDataPixels.set(data);
+        else {
+          // Copy over the imageData pixel by pixel.
+          for (var i = 0, ii = tmpImgDataPixels.length; i < ii; i++)
+            tmpImgDataPixels[i] = data[i];
         }
 
         ctx.putImageData(tmpImgData, 0, 0);
       };
   }
+}
+if (!isWorker) {
+  checkPutBinaryImageDataCompatibility();
 }
 
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
@@ -3765,7 +3808,7 @@ var XRef = (function XRefClosure() {
       var e = this.entries[i];
       if (e === null)
         return null;
-      return e.free ? null : e; // returns null is the entry is free
+      return e.free || !e.offset ? null : e; // returns null if entry is free
     },
     fetchIfRef: function XRef_fetchIfRef(obj) {
       if (!isRef(obj))
@@ -4076,11 +4119,12 @@ var PDFFunction = (function PDFFunctionClosure() {
 
       var size = dict.get('Size');
       var bps = dict.get('BitsPerSample');
-      var order = dict.get('Order');
-      if (!order)
-        order = 1;
-      if (order !== 1)
-        error('No support for cubic spline interpolation: ' + order);
+      var order = dict.get('Order') || 1;
+      if (order !== 1) {
+        // No description how cubic spline interpolation works in PDF32000:2008
+        // As in poppler, ignoring order, linear interpolation may work as good
+        TODO('No support for cubic spline interpolation: ' + order);
+      }
 
       var encode = dict.get('Encode');
       if (!encode) {
@@ -12030,6 +12074,9 @@ var ColorSpace = (function ColorSpaceClosure() {
           var baseIndexedCS = ColorSpace.parseToIR(cs[1], xref, res);
           var hiVal = cs[2] + 1;
           var lookup = xref.fetchIfRef(cs[3]);
+          if (isStream(lookup)) {
+            lookup = lookup.getBytes();
+          }
           return ['IndexedCS', baseIndexedCS, hiVal, lookup];
         case 'Separation':
         case 'DeviceN':
@@ -12151,14 +12198,18 @@ var IndexedCS = (function IndexedCSClosure() {
 
     var baseNumComps = base.numComps;
     var length = baseNumComps * highVal;
-    var lookupArray = new Uint8Array(length);
+    var lookupArray;
 
     if (isStream(lookup)) {
+      lookupArray = new Uint8Array(length);
       var bytes = lookup.getBytes(length);
       lookupArray.set(bytes);
     } else if (isString(lookup)) {
+      lookupArray = new Uint8Array(length);
       for (var i = 0; i < length; ++i)
         lookupArray[i] = lookup.charCodeAt(i);
+    } else if (lookup instanceof Uint8Array) {
+      lookupArray = lookup;
     } else {
       error('Unrecognized lookup table: ' + lookup);
     }
@@ -13840,7 +13891,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         if (widths) {
           var start = 0, end = 0;
           for (var i = 0, ii = widths.length; i < ii; i++) {
-            var code = widths[i];
+            var code = xref.fetchIfRef(widths[i]);
             if (isArray(code)) {
               for (var j = 0, jj = code.length; j < jj; j++)
                 glyphsWidths[start++] = code[j];
@@ -14482,7 +14533,8 @@ var FontLoader = {
       document.documentElement.removeEventListener(
         'pdfjsFontLoad', checkFontsLoaded, false);
 
-      callback();
+      // Use timeout to fix chrome intermittent failures on font loading.
+      setTimeout(callback, 0);
       return true;
     }
 
@@ -17356,6 +17408,14 @@ var Font = (function FontClosure() {
   return Font;
 })();
 
+var CallothersubrCmd = (function CallothersubrCmdClosure() {
+  function CallothersubrCmd(index) {
+    this.index = index;
+  }
+
+  return CallothersubrCmd;
+})();
+
 /*
  * Type1Parser encapsulate the needed code for parsing a Type1 font
  * program. Some of its logic depends on the Type2 charstrings
@@ -17455,8 +17515,8 @@ var Type1Parser = function type1Parser() {
       '1': 'vstem',
       '2': 'hstem',
 
+      '6': 'endchar', // seac
       // Type1 only command with command not (yet) built-in ,throw an error
-      '6': -1, // seac
       '7': -1, // sbw
 
       '11': 'sub',
@@ -17485,6 +17545,43 @@ var Type1Parser = function type1Parser() {
   };
 
   var kEscapeCommand = 12;
+
+  // Breaks up the stack by arguments and also calculates the value.
+  function breakUpArgs(stack, numArgs) {
+    var args = [];
+    var index = stack.length - 1;
+    for (var i = 0; i < numArgs; i++) {
+      if (index < 0) {
+        args.unshift({ arg: [0],
+                       value: 0,
+                       offset: 0 });
+        warn('Malformed charstring stack: not enough values on stack.');
+        continue;
+      }
+      var token = stack[index];
+      if (token === 'div') {
+        var a = stack[index - 2];
+        var b = stack[index - 1];
+        if (!isInt(a) || !isInt(b)) {
+          warn('Malformed charsting stack: expected ints on stack for div.');
+          a = 0;
+          b = 1;
+        }
+        args.unshift({ arg: [a, b, 'div'],
+                       value: a / b,
+                       offset: index - 2 });
+        index -= 3;
+      } else if (isInt(token)) {
+        args.unshift({ arg: stack.slice(index, index + 1),
+                       value: token,
+                       offset: index });
+        index--;
+      } else {
+        warn('Malformed charsting stack: found bad token ' + token + '.');
+      }
+    }
+    return args;
+  }
 
   function decodeCharString(array) {
     var charstring = [];
@@ -17524,10 +17621,20 @@ var Type1Parser = function type1Parser() {
               i++;
               continue;
             }
+
+            assert(argc == 0, 'callothersubr with arguments is not supported');
+            charstring.push(new CallothersubrCmd(index));
+            continue;
           } else if (escape == 17 || escape == 33) {
             // pop or setcurrentpoint commands can be ignored
             // since we are not doing callothersubr
             continue;
+          } else if (escape == 6) {
+            // seac is like type 2's special endchar but it doesn't use the
+            // first argument asb, so remove it.
+            var args = breakUpArgs(charstring, 5);
+            var arg0 = args[0];
+            charstring.splice(arg0.offset, arg0.arg.length);
           } else if (!kHintingEnabled && (escape == 1 || escape == 2)) {
             charstring.push('drop', 'drop', 'drop', 'drop', 'drop', 'drop');
             continue;
@@ -17535,25 +17642,17 @@ var Type1Parser = function type1Parser() {
 
           command = charStringDictionary['12'][escape];
         } else {
-          // TODO Clean this code
           if (value == 13) { // hsbw
-            if (charstring.length == 2) {
-              lsb = charstring[0];
-              width = charstring[1];
-              charstring.splice(0, 1);
-            } else if (charstring.length == 4 && charstring[3] == 'div') {
-              lsb = charstring[0];
-              width = charstring[1] / charstring[2];
-              charstring.splice(0, 1);
-            } else if (charstring.length == 4 && charstring[2] == 'div') {
-              lsb = charstring[0] / charstring[1];
-              width = charstring[3];
-              charstring.splice(0, 3);
-            } else {
-              error('Unsupported hsbw format: ' + charstring);
-            }
-
-            charstring.push(lsb, 'hmoveto');
+            var args = breakUpArgs(charstring, 2);
+            var arg0 = args[0];
+            var arg1 = args[1];
+            lsb = arg0.value;
+            width = arg1.value;
+            // To convert to type2 we have to move the width value to the first
+            // part of the charstring and then use hmoveto with lsb.
+            charstring = arg1.arg;
+            charstring = charstring.concat(arg0.arg);
+            charstring.push('hmoveto');
             continue;
           } else if (value == 10) { // callsubr
             if (charstring[charstring.length - 1] < 3) { // subr #0..2
@@ -17763,6 +17862,10 @@ var Type1Parser = function type1Parser() {
             case '/OtherBlues':
             case '/FamilyBlues':
             case '/FamilyOtherBlues':
+              var blueArray = readNumberArray(eexecStr, i + 1);
+              if (blueArray.length > 0 && (blueArray.length % 2) == 0)
+                program.properties.privateData[token.substring(1)] = blueArray;
+              break;
             case '/StemSnapH':
             case '/StemSnapV':
               program.properties.privateData[token.substring(1)] =
@@ -18045,23 +18148,23 @@ Type1Font.prototype = {
   },
 
   getType2Charstrings: function Type1Font_getType2Charstrings(
-                                  type1Charstrings) {
+                                  type1Subrs) {
     var type2Charstrings = [];
-    var count = type1Charstrings.length;
-    for (var i = 0; i < count; i++) {
-      var charstring = type1Charstrings[i].charstring;
-      type2Charstrings.push(this.flattenCharstring(charstring.slice(),
-                                                   this.commandsMap));
-    }
+    var count = type1Subrs.length;
+    var type1Charstrings = [];
+    for (var i = 0; i < count; i++)
+      type1Charstrings.push(type1Subrs[i].charstring.slice());
+    for (var i = 0; i < count; i++)
+      type2Charstrings.push(this.flattenCharstring(type1Charstrings, i));
     return type2Charstrings;
   },
 
   getType2Subrs: function Type1Font_getType2Subrs(type1Subrs) {
     var bias = 0;
     var count = type1Subrs.length;
-    if (count < 1240)
+    if (count < 1133)
       bias = 107;
-    else if (count < 33900)
+    else if (count < 33769)
       bias = 1131;
     else
       bias = 32768;
@@ -18072,11 +18175,7 @@ Type1Font.prototype = {
       type2Subrs.push([0x0B]);
 
     for (var i = 0; i < count; i++) {
-      var subr = type1Subrs[i];
-      if (!subr)
-        subr = [0x0B];
-
-      type2Subrs.push(this.flattenCharstring(subr, this.commandsMap));
+      type2Subrs.push(this.flattenCharstring(type1Subrs, i));
     }
 
     return type2Subrs;
@@ -18108,11 +18207,15 @@ Type1Font.prototype = {
     'hvcurveto': 31
   },
 
-  flattenCharstring: function Type1Font_flattenCharstring(charstring, map) {
+  flattenCharstring: function Type1Font_flattenCharstring(charstrings, index) {
+    var charstring = charstrings[index];
+    if (!charstring)
+      return [0x0B];
+    var map = this.commandsMap;
     // charstring changes size - can't cache .length in loop
     for (var i = 0; i < charstring.length; i++) {
       var command = charstring[i];
-      if (command.charAt) {
+      if (typeof command === 'string') {
         var cmd = map[command];
         assert(cmd, 'Unknow command: ' + command);
 
@@ -18120,6 +18223,17 @@ Type1Font.prototype = {
           charstring.splice(i++, 1, cmd[0], cmd[1]);
         else
           charstring[i] = cmd;
+      } else if (command instanceof CallothersubrCmd) {
+        var otherSubrCharstring = charstrings[command.index];
+        if (otherSubrCharstring) {
+          var lastCommand = otherSubrCharstring.indexOf('return');
+          if (lastCommand >= 0)
+            otherSubrCharstring = otherSubrCharstring.slice(0, lastCommand);
+          charstring.splice.apply(charstring,
+                                  [i, 1].concat(otherSubrCharstring));
+        } else
+          charstring.splice(i, 1); // ignoring empty subr call
+        i--;
       } else {
         // Type1 charstring use a division for number above 32000
         if (command > 32000) {
@@ -24062,6 +24176,10 @@ var PDFImage = (function PDFImageClosure() {
       var rowBytes = (originalWidth * numComps * bpc + 7) >> 3;
       var imgArray = this.getImageBytes(originalHeight * rowBytes);
 
+      // imgArray can be incomplete (e.g. after CCITT fax encoding)
+      var actualHeight = 0 | (imgArray.length / rowBytes *
+                         height / originalHeight);
+
       var comps = this.colorSpace.getRgbBuffer(
         this.getComponents(imgArray), bpc);
       if (originalWidth != width || originalHeight != height)
@@ -24070,7 +24188,7 @@ var PDFImage = (function PDFImageClosure() {
       var compsPos = 0;
       var opacity = this.getOpacity(width, height);
       var opacityPos = 0;
-      var length = width * height * 4;
+      var length = width * actualHeight * 4;
 
       for (var i = 0; i < length; i += 4) {
         buffer[i] = comps[compsPos++];
@@ -27762,6 +27880,7 @@ var Pattern = (function PatternClosure() {
         // Both radial and axial shadings are handled by RadialAxial shading.
         return new Shadings.RadialAxial(dict, matrix, xref, res);
       default:
+        TODO('Unsupported shading type: ' + type);
         return new Shadings.Dummy();
     }
   };
@@ -27898,7 +28017,12 @@ Shadings.Dummy = (function DummyClosure() {
   }
 
   Dummy.fromIR = function Dummy_fromIR() {
-    return 'hotpink';
+    return {
+      type: 'Pattern',
+      getPattern: function Dummy_fromIR_getPattern() {
+        return 'hotpink';
+      }
+    };
   };
 
   Dummy.prototype = {
@@ -28880,7 +29004,7 @@ var JpegStream = (function JpegStreamClosure() {
    */
   JpegStream.prototype.isNativelySupported =
     function JpegStream_isNativelySupported(xref, res) {
-    var cs = ColorSpace.parse(this.dict.get('ColorSpace'), xref, res);
+    var cs = ColorSpace.parse(this.dict.get('ColorSpace', 'CS'), xref, res);
     // when bug 674619 lands, let's check if browser can do
     // normal cmyk and then we won't need to decode in JS
     if (cs.name === 'DeviceGray' || cs.name === 'DeviceRGB')
@@ -28895,7 +29019,7 @@ var JpegStream = (function JpegStreamClosure() {
    */
   JpegStream.prototype.isNativelyDecodable =
     function JpegStream_isNativelyDecodable(xref, res) {
-    var cs = ColorSpace.parse(this.dict.get('ColorSpace'), xref, res);
+    var cs = ColorSpace.parse(this.dict.get('ColorSpace', 'CS'), xref, res);
     var numComps = cs.numComps;
     if (numComps == 1 || numComps == 3)
       return true;
@@ -30451,15 +30575,10 @@ var WorkerMessageHandler = {
   setup: function wphSetup(handler) {
     var pdfModel = null;
 
-    handler.on('test', function wphSetupTest(data) {
-      handler.send('test', data instanceof Uint8Array);
-    });
-
-    handler.on('GetDocRequest', function wphSetupDoc(data) {
+    function loadDocument(pdfData, pdfModelSource) {
       // Create only the model of the PDFDoc, which is enough for
       // processing the content of the pdf.
-      var pdfData = data.data;
-      var pdfPassword = data.params.password;
+      var pdfPassword = pdfModelSource.password;
       try {
         pdfModel = new PDFDocument(new Stream(pdfData), pdfPassword);
       } catch (e) {
@@ -30489,6 +30608,38 @@ var WorkerMessageHandler = {
         encrypted: !!pdfModel.xref.encrypt
       };
       handler.send('GetDoc', {pdfInfo: doc});
+    }
+
+    handler.on('test', function wphSetupTest(data) {
+      handler.send('test', data instanceof Uint8Array);
+    });
+
+    handler.on('GetDocRequest', function wphSetupDoc(data) {
+      var source = data.source;
+      if (source.data) {
+        // the data is array, instantiating directly from it
+        loadDocument(source.data, source);
+        return;
+      }
+
+      PDFJS.getPdf(
+        {
+          url: source.url,
+          progress: function getPDFProgress(evt) {
+            handler.send('DocProgress', {
+              loaded: evt.loaded,
+              total: evt.lengthComputable ? evt.total : void(0)
+            });
+          },
+          error: function getPDFError(e) {
+            handler.send('DocError', 'Unexpected server response of ' +
+                         e.target.status + '.');
+          },
+          headers: source.httpHeaders
+        },
+        function getPDFLoad(data) {
+          loadDocument(data, source);
+        });
     });
 
     handler.on('GetPageRequest', function wphSetupGetPage(data) {
@@ -35023,7 +35174,10 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
   return Metadata;
 })();
 
+
 }).call((typeof window === 'undefined') ? this : window);
+
+
 -->
 </script>
 <script type="text/javascript">
@@ -35032,10 +35186,14 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
   PDFJS.workerSrc = 'none';
 </script>
 
+
     <link rel="stylesheet" href="viewer.css"/>
 
 
-    <!-- PDFJSSCRIPT_INCLUDE_BUILD -->
+
+
+
+
     <script type="text/javascript" src="debugger.js"></script>
     <script type="text/javascript" src="viewer.js"></script>
   </head>
@@ -35096,19 +35254,25 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
               </div>
               <div id="toolbarViewerRight">
                 <input id="fileInput" class="fileInput" type="file" oncontextmenu="return false;" style="visibility: hidden; position: fixed; right: 0; top: 0" />
-                <button id="openFile" class="toolbarButton openFile" title="Open File" tabindex="11" data-l10n-id="open_file" onclick="document.getElementById('fileInput').click()">
+
+
+                <button id="fullscreen" class="toolbarButton fullscreen" title="Fullscreen" tabindex="11" data-l10n-id="fullscreen" onclick="PDFView.fullscreen();">
+                  <span data-l10n-id="fullscreen_label">Fullscreen</span>
+                </button>
+
+                <button id="openFile" class="toolbarButton openFile" title="Open File" tabindex="12" data-l10n-id="open_file" onclick="document.getElementById('fileInput').click()">
                    <span data-l10n-id="open_file_label">Open</span>
                 </button>
 
-                <button id="print" class="toolbarButton print" title="Print" tabindex="11" data-l10n-id="print" onclick="window.print()">
+                <button id="print" class="toolbarButton print" title="Print" tabindex="13" data-l10n-id="print" onclick="window.print()">
                   <span data-l10n-id="print_label">Print</span>
                 </button>
 
-                <button id="download" class="toolbarButton download" title="Download" onclick="PDFView.download();" tabindex="12" data-l10n-id="download">
+                <button id="download" class="toolbarButton download" title="Download" onclick="PDFView.download();" tabindex="14" data-l10n-id="download">
                   <span data-l10n-id="download_label">Download</span>
                 </button>
                 <!-- <div class="toolbarButtonSpacer"></div> -->
-                <a href="#" id="viewBookmark" class="toolbarButton bookmark" title="Current view (copy or open in new window)" tabindex="13" data-l10n-id="bookmark"><span data-l10n-id="bookmark_label">Current View</span></a>
+                <a href="#" id="viewBookmark" class="toolbarButton bookmark" title="Current view (copy or open in new window)" tabindex="15" data-l10n-id="bookmark"><span data-l10n-id="bookmark_label">Current View</span></a>
               </div>
               <div class="outerCenter">
                 <div class="innerCenter" id="toolbarViewerMiddle">
@@ -35175,3 +35339,4 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
     <div id="printContainer"></div>
   </body>
 </html>
+

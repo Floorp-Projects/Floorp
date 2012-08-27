@@ -12,6 +12,11 @@ function runTest() {
   browserElementTestHelpers.setEnabledPref(true);
   browserElementTestHelpers.addPermission();
 
+  var principal = SpecialPowers.wrap(SpecialPowers.getNodePrincipal(document));
+  SpecialPowers.addPermission("browser", true, { url: SpecialPowers.wrap(principal.URI).spec,
+                                                 appId: principal.appId,
+                                                 isInBrowserElement: true });
+
   var iframe = document.createElement('iframe');
   iframe.mozbrowser = true;
 
@@ -35,7 +40,7 @@ function runTest() {
           SimpleTest.executeSoon(function() {
             SimpleTest.executeSoon(function() {
               SimpleTest.executeSoon(function() {
-                SimpleTest.finish();
+                finish();
               });
             });
           });
@@ -48,6 +53,15 @@ function runTest() {
   });
 
   document.body.appendChild(iframe);
+}
+
+function finish() {
+  var principal = SpecialPowers.wrap(SpecialPowers.getNodePrincipal(document));
+  SpecialPowers.removePermission("browser", { url: SpecialPowers.wrap(principal.URI).spec,
+                                              appId: principal.appId,
+                                              isInBrowserElement: true });
+
+  SimpleTest.finish();
 }
 
 runTest();
