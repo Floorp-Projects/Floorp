@@ -54,7 +54,7 @@
 #include "mozilla/Attributes.h"
 
 #include "nsIEventListenerService.h"
-#include "nsIFrameMessageManager.h"
+#include "nsIMessageManager.h"
 
 // Transformiix stuff
 #include "nsXPathEvaluator.h"
@@ -422,8 +422,8 @@ nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 
 nsresult NS_NewEventListenerService(nsIEventListenerService** aResult);
-nsresult NS_NewGlobalMessageManager(nsIChromeFrameMessageManager** aResult);
-nsresult NS_NewParentProcessMessageManager(nsIFrameMessageManager** aResult);
+nsresult NS_NewGlobalMessageManager(nsIMessageBroadcaster** aResult);
+nsresult NS_NewParentProcessMessageManager(nsIMessageBroadcaster** aResult);
 nsresult NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult);
 
 nsresult NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -519,9 +519,9 @@ MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXML
 #endif
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
 MAKE_CTOR(CreateEventListenerService,     nsIEventListenerService,     NS_NewEventListenerService)
-MAKE_CTOR(CreateGlobalMessageManager,     nsIChromeFrameMessageManager,NS_NewGlobalMessageManager)
-MAKE_CTOR(CreateParentMessageManager,     nsIFrameMessageManager,NS_NewParentProcessMessageManager)
-MAKE_CTOR(CreateChildMessageManager,     nsISyncMessageSender,NS_NewChildProcessMessageManager)
+MAKE_CTOR(CreateGlobalMessageManager,     nsIMessageBroadcaster,       NS_NewGlobalMessageManager)
+MAKE_CTOR(CreateParentMessageManager,     nsIMessageBroadcaster,       NS_NewParentProcessMessageManager)
+MAKE_CTOR(CreateChildMessageManager,      nsISyncMessageSender,        NS_NewChildProcessMessageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
 MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)

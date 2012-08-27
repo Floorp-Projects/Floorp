@@ -115,7 +115,7 @@ function MarionetteDriverActor(aConnection)
 
   this.conn = aConnection;
   this.messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
-                          .getService(Ci.nsIChromeFrameMessageManager);
+                          .getService(Ci.nsIMessageBroadcaster);
   this.browsers = {}; //holds list of BrowserObjs
   this.curBrowser = null; // points to current browser
   this.context = "content";
@@ -153,7 +153,7 @@ MarionetteDriverActor.prototype = {
    *        Object to send to the listener
    */
   sendAsync: function MDA_sendAsync(name, values) {
-    this.messageManager.sendAsyncMessage("Marionette:" + name + this.curBrowser.curFrameId, values);
+    this.messageManager.broadcastAsyncMessage("Marionette:" + name + this.curBrowser.curFrameId, values);
   },
 
   /**
@@ -367,7 +367,7 @@ MarionetteDriverActor.prototype = {
       //if there is a content listener, then we just wake it up
       this.addBrowser(this.getCurrentWindow());
       this.curBrowser.startSession(false);
-      this.messageManager.sendAsyncMessage("Marionette:restart", {});
+      this.messageManager.broadcastAsyncMessage("Marionette:restart", {});
     }
     else {
       this.sendError("Session already running", 500, null);
@@ -1299,7 +1299,7 @@ MarionetteDriverActor.prototype = {
   deleteSession: function MDA_deleteSession() {
     if (this.curBrowser != null) {
       if (appName == "B2G") {
-        this.messageManager.sendAsyncMessage("Marionette:sleepSession" + this.curBrowser.mainContentId, {});
+        this.messageManager.broadcastAsyncMessage("Marionette:sleepSession" + this.curBrowser.mainContentId, {});
         this.curBrowser.knownFrames.splice(this.curBrowser.knownFrames.indexOf(this.curBrowser.mainContentId), 1);
       }
       else {
@@ -1310,7 +1310,7 @@ MarionetteDriverActor.prototype = {
       //delete session in each frame in each browser
       for (let win in this.browsers) {
         for (let i in this.browsers[win].knownFrames) {
-          this.messageManager.sendAsyncMessage("Marionette:deleteSession" + this.browsers[win].knownFrames[i], {});
+          this.messageManager.broadcastAsyncMessage("Marionette:deleteSession" + this.browsers[win].knownFrames[i], {});
         }
       }
       let winEnum = this.getWinEnumerator();
@@ -1519,8 +1519,8 @@ function BrowserObj(win) {
   this.curFrameId = null;
   this.startPage = "about:blank";
   this.mainContentId = null; // used in B2G to identify the homescreen content page
-  this.messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-                             getService(Ci.nsIChromeFrameMessageManager);
+  this.messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
+                          .getService(Ci.nsIMessageBroadcaster);
   this.newSession = true; //used to set curFrameId upon new session
   this.elementManager = new ElementManager([SELECTOR, NAME, LINK_TEXT, PARTIAL_LINK_TEXT]);
   this.setBrowser(win);

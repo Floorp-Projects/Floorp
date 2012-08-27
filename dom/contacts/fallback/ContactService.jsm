@@ -17,9 +17,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ContactDB.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
-  return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
-});
+XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
+                                   "@mozilla.org/parentprocessmessagemanager;1",
+                                   "nsIMessageListenerManager");
 
 let myGlobal = this;
 
@@ -54,7 +54,7 @@ let DOMContactManager = {
 
   receiveMessage: function(aMessage) {
     if (DEBUG) debug("Fallback DOMContactManager::receiveMessage " + aMessage.name);
-    let mm = aMessage.target.QueryInterface(Ci.nsIFrameMessageManager);
+    let mm = aMessage.target;
     let msg = aMessage.data;
 
     /*

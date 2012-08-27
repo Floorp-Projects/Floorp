@@ -27,7 +27,7 @@ function run_test() {
     pm.addFromPrincipal(getPrincipalForURI("http://mozilla.net"), "cookie3", pm.ALLOW_ACTION, pm.EXPIRE_TIME, Date.now() + 1000*60*60*24);
 
     var mM = Cc["@mozilla.org/parentprocessmessagemanager;1"].
-             getService(Ci.nsIFrameMessageManager);
+             getService(Ci.nsIMessageBroadcaster);
 
     var messageListener = {
       receiveMessage: function(aMessage) {
@@ -37,7 +37,7 @@ function run_test() {
             pm.addFromPrincipal(getPrincipalForURI("http://firefox.org"), "cookie1", pm.ALLOW_ACTION, pm.EXPIRE_NEVER, 0);
             pm.addFromPrincipal(getPrincipalForURI("http://firefox.com"), "cookie2", pm.DENY_ACTION, pm.EXPIRE_SESSION, 0);
             pm.addFromPrincipal(getPrincipalForURI("http://firefox.net"), "cookie3", pm.ALLOW_ACTION, pm.EXPIRE_TIME, Date.now() + 1000*60*60*24);
-            mM.sendAsyncMessage("TESTING:Stage2A");
+            mM.broadcastAsyncMessage("TESTING:Stage2A");
             break;
 
           case "TESTING:Stage3":

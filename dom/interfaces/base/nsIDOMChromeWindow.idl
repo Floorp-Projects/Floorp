@@ -8,9 +8,9 @@
 interface nsIBrowserDOMWindow;
 interface nsIDOMElement;
 interface nsIDOMEvent;
-interface nsIChromeFrameMessageManager;
+interface nsIMessageBroadcaster;
 
-[scriptable, uuid(7cfbc355-cbf9-4408-8e4c-a3c603ff1428)]
+[scriptable, uuid(6ff5df67-22da-4379-bf57-da775dad19f8)]
 interface nsIDOMChromeWindow : nsISupports
 {
   const unsigned short STATE_MAXIMIZED = 1;
@@ -43,7 +43,7 @@ interface nsIDOMChromeWindow : nsISupports
    */
   void notifyDefaultButtonLoaded(in nsIDOMElement defaultButton);
 
-  readonly attribute nsIChromeFrameMessageManager messageManager;
+  readonly attribute nsIMessageBroadcaster messageManager;
 
   /**
    * On some operating systems, we must allow the window manager to

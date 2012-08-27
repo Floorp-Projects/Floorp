@@ -1135,7 +1135,7 @@ public:
                                            nsGlobalWindow)
 
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
-  nsCOMPtr<nsIChromeFrameMessageManager> mMessageManager;
+  nsCOMPtr<nsIMessageBroadcaster> mMessageManager;
 };
 
 /*
