@@ -77,6 +77,7 @@
 #include "DictionaryHelpers.h"
 #include "mozilla/Attributes.h"
 #include "nsIPermissionManager.h"
+#include "nsMimeTypes.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsStreamListenerWrapper.h"
@@ -3087,9 +3088,15 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   }
 
   // Since we expect XML data, set the type hint accordingly
+  // if the channel doesn't know any content type.
   // This means that we always try to parse local files as XML
   // ignoring return value, as this is not critical
-  mChannel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
+  nsCAutoString contentType;
+  if (NS_FAILED(mChannel->GetContentType(contentType)) ||
+      contentType.IsEmpty() ||
+      contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
+    mChannel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
+  }
 
   // We're about to send the request.  Start our timeout.
   mRequestSentTime = PR_Now();
