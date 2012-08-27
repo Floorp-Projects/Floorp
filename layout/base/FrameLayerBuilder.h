@@ -281,7 +281,7 @@ public:
    */
   void AddLayerDisplayItemForFrame(Layer* aLayer,
                                    nsIFrame* aFrame,
-                                   PRUint32 aDisplayItemKey,
+                                   uint32_t aDisplayItemKey,
                                    LayerState aLayerState);
 
   /**
