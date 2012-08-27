@@ -11,7 +11,8 @@ var WebappsUI = {
 
   init: function() {
     Cu.import("resource://gre/modules/OpenWebapps.jsm");
-    this.messageManager = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
+    this.messageManager = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                            .getService(Ci.nsIMessageBroadcaster);
     this.messageManager.addMessageListener("OpenWebapps:Install", this);
     this.messageManager.addMessageListener("OpenWebapps:GetInstalledBy", this);
     this.messageManager.addMessageListener("OpenWebapps:AmInstalled", this);
@@ -96,51 +97,51 @@ var WebappsUI = {
   },
 
   receiveMessage: function(aMessage) {
-    this._browser = aMessage.target.QueryInterface(Ci.nsIFrameMessageManager);
+    this._browser = aMessage.target.QueryInterface(Ci.nsIMessageSender);
     switch(aMessage.name) {
       case "OpenWebapps:Install":
         WebappsUI.show(WebappsUI.convertManifest(aMessage.json));
         break;
       case "OpenWebapps:GetInstalledBy":
         let apps = OpenWebapps.getInstalledBy(aMessage.json.storeURI);
-        this._browser.sendAsyncMessage("OpenWebapps:GetInstalledBy:Return",
+        this._browser.broadcastAsyncMessage("OpenWebapps:GetInstalledBy:Return",
             { apps: apps, callbackID: aMessage.json.callbackID });
         break;
       case "OpenWebapps:AmInstalled":
         let app = OpenWebapps.amInstalled(aMessage.json.appURI);
-        this._browser.sendAsyncMessage("OpenWebapps:AmInstalled:Return",
+        this._browser.broadcastAsyncMessage("OpenWebapps:AmInstalled:Return",
             { installed: app != null, app: app, callbackID: aMessage.json.callbackID });
         break;
       case "OpenWebapps:MgmtList":
         this.askPermission(aMessage, "openWebappsManage", {
           cancel: function() {
-            WebappsUI.messageManager.sendAsyncMessage("OpenWebapps:MgmtList:Return",
+            WebappsUI.messageManager.broadcastAsyncMessage("OpenWebapps:MgmtList:Return",
               { ok: false, callbackID: aMessage.json.callbackID });
           },
 
           allow: function() {
             let list = OpenWebapps.mgmtList();
-            WebappsUI.messageManager.sendAsyncMessage("OpenWebapps:MgmtList:Return",
+            WebappsUI.messageManager.broadcastAsyncMessage("OpenWebapps:MgmtList:Return",
               { ok: true, apps: list, callbackID: aMessage.json.callbackID });
           }
         });
         break;
       case "OpenWebapps:MgmtLaunch":
         let res = OpenWebapps.mgmtLaunch(aMessage.json.origin);
-        this._browser.sendAsyncMessage("OpenWebapps:MgmtLaunch:Return",
+        this._browser.broadcastAsyncMessage("OpenWebapps:MgmtLaunch:Return",
             { ok: res, callbackID: aMessage.json.callbackID });
         break;
       case "OpenWebapps:MgmtUninstall":
         this.askPermission(aMessage, "openWebappsManage", {
           cancel: function() {
-            WebappsUI.messageManager.sendAsyncMessage("OpenWebapps:MgmtUninstall:Return",
+            WebappsUI.messageManager.broadcastAsyncMessage("OpenWebapps:MgmtUninstall:Return",
               { ok: false, callbackID: aMessage.json.callbackID });
           },
 
           allow: function() {
             let app = OpenWebapps.amInstalled(aMessage.json.origin);
             let uninstalled = OpenWebapps.mgmtUninstall(aMessage.json.origin);
-            WebappsUI.messageManager.sendAsyncMessage("OpenWebapps:MgmtUninstall:Return",
+            WebappsUI.messageManager.broadcastAsyncMessage("OpenWebapps:MgmtUninstall:Return",
               { ok: uninstalled, app: app, callbackID: aMessage.json.callbackID });
           }
         });
@@ -196,7 +197,7 @@ var WebappsUI = {
   hide: function hide() {
     this.close();
 
-    this._browser.sendAsyncMessage("OpenWebapps:InstallAborted", { callbackID: this._application.callbackID });
+    this._browser.broadcastAsyncMessage("OpenWebapps:InstallAborted", { callbackID: this._application.callbackID });
   },
   
   close: function close() {
@@ -239,7 +240,7 @@ var WebappsUI = {
     try {
       OpenWebapps.install(this._application);
       let app = OpenWebapps.amInstalled(this._application.appURI);
-      this.messageManager.sendAsyncMessage("OpenWebapps:InstallDone", { app: app, callbackID: this._application.callbackID });
+      this.messageManager.broadcastAsyncMessage("OpenWebapps:InstallDone", { app: app, callbackID: this._application.callbackID });
     } catch(e) {
       Cu.reportError(e);
     }

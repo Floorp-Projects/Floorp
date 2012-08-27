@@ -10957,7 +10957,7 @@ nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
 }
 
 NS_IMETHODIMP
-nsGlobalChromeWindow::GetMessageManager(nsIChromeFrameMessageManager** aManager)
+nsGlobalChromeWindow::GetMessageManager(nsIMessageBroadcaster** aManager)
 {
   FORWARD_TO_INNER_CHROME(GetMessageManager, (aManager), NS_ERROR_FAILURE);
   if (!mMessageManager) {
@@ -10965,16 +10965,19 @@ nsGlobalChromeWindow::GetMessageManager(nsIChromeFrameMessageManager** aManager)
     NS_ENSURE_STATE(scx);
     JSContext* cx = scx->GetNativeContext();
     NS_ENSURE_STATE(cx);
-    nsCOMPtr<nsIChromeFrameMessageManager> globalMM =
+    nsCOMPtr<nsIMessageBroadcaster> globalMM =
       do_GetService("@mozilla.org/globalmessagemanager;1");
     mMessageManager =
-      new nsFrameMessageManager(true,
+      new nsFrameMessageManager(true, /* aChrome */
                                 nullptr,
                                 nullptr,
                                 nullptr,
                                 nullptr,
                                 static_cast<nsFrameMessageManager*>(globalMM.get()),
-                                cx);
+                                cx,
+                                false, /* aGlobal */
+                                false, /* aProcessManager */
+                                true /* aBroadcaster */);
     NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
   }
   CallQueryInterface(mMessageManager, aManager);

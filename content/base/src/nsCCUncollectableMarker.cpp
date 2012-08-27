@@ -92,7 +92,7 @@ MarkUserDataHandler(void* aNode, nsIAtom* aKey, void* aValue, void* aData)
 static void
 MarkMessageManagers()
 {
-  nsCOMPtr<nsIChromeFrameMessageManager> globalMM =
+  nsCOMPtr<nsIMessageBroadcaster> globalMM =
     do_GetService("@mozilla.org/globalmessagemanager;1");
   if (!globalMM) {
     return;
@@ -102,20 +102,22 @@ MarkMessageManagers()
   uint32_t childCount = 0;
   globalMM->GetChildCount(&childCount);
   for (uint32_t i = 0; i < childCount; ++i) {
-    nsCOMPtr<nsITreeItemFrameMessageManager> windowMM;
-    globalMM->GetChildAt(i, getter_AddRefs(windowMM));
-    if (!windowMM) {
+    nsCOMPtr<nsIMessageListenerManager> childMM;
+    globalMM->GetChildAt(i, getter_AddRefs(childMM));
+    if (!childMM) {
       continue;
     }
+    nsCOMPtr<nsIMessageBroadcaster> windowMM = do_QueryInterface(childMM);
     windowMM->MarkForCC();
     uint32_t tabChildCount = 0;
     windowMM->GetChildCount(&tabChildCount);
     for (uint32_t j = 0; j < tabChildCount; ++j) {
-      nsCOMPtr<nsITreeItemFrameMessageManager> tabMM;
-      windowMM->GetChildAt(j, getter_AddRefs(tabMM));
-      if (!tabMM) {
+      nsCOMPtr<nsIMessageListenerManager> childMM;
+      windowMM->GetChildAt(j, getter_AddRefs(childMM));
+      if (!childMM) {
         continue;
       }
+      nsCOMPtr<nsIMessageSender> tabMM = do_QueryInterface(childMM);
       tabMM->MarkForCC();
       //XXX hack warning, but works, since we know that
       //    callback data is frameloader.

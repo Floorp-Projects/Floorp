@@ -97,17 +97,16 @@
       // 1. Test that loading a script works, and that accessing process level mm and
       //     global mm works.
       var ppm = Components.classes["@mozilla.org/parentprocessmessagemanager;1"]
-                          .getService(Components.interfaces.nsIFrameMessageManager);
+                          .getService(Components.interfaces.nsIMessageBroadcaster);
       var gm = Components.classes["@mozilla.org/globalmessagemanager;1"]
-                         .getService(Components.interfaces.nsIChromeFrameMessageManager);
+                         .getService(Components.interfaces.nsIMessageBroadcaster);
       var cpm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
-                            .getService(Components.interfaces.nsISyncMessageSender);  
+                            .getService(Components.interfaces.nsISyncMessageSender);
 
-      var tppm = ppm.QueryInterface(Components.interfaces.nsITreeItemFrameMessageManager);
-      if (tppm.childCount != 2) {
+      if (ppm.childCount != 2) {
         alert("Should have two child processes!");
       }
-      var childprocessmm = tppm.getChildAt(1); // 0 is the in-process child process mm
+      var childprocessmm = ppm.getChildAt(1); // 0 is the in-process child process mm
       
       childprocessmm.addMessageListener("ppm-sync",
         function(m) {
@@ -161,7 +160,7 @@
           receiveMessage: function(m) {
             var s = (m.json.message == "linkclick-received") &amp;&amp;
                     (this.foobarObjectVar) ? "PASS" : "FAIL";
-            messageManager.sendAsyncMessage("chrome-message", { ok : s } );
+            messageManager.broadcastAsyncMessage("chrome-message", { ok : s } );
           }
         }
         );
@@ -197,7 +196,7 @@
     function messageSpeed() {
       speedTestCount = 0;
       messageManager.addMessageListener("speed-test", speedHandler);
-      messageManager.sendAsyncMessage("speed-test-start");
+      messageManager.broadcastAsyncMessage("speed-test-start");
     }
 
     function speedHandler() {
@@ -217,7 +216,7 @@
       if (++addRemoveTestCount == 1) {
         alert("Expected echo message");
         messageManager.removeMessageListener("async-echo", echoListener);
-        messageManager.sendAsyncMessage("async-echo");
+        messageManager.broadcastAsyncMessage("async-echo");
         return;
       }
       alert("Unexpected echo message");
@@ -226,7 +225,7 @@
     function listenerAddRemove() {
       addRemoveTestCount = 0;
       messageManager.addMessageListener("async-echo", echoListener);
-      messageManager.sendAsyncMessage("async-echo");
+      messageManager.broadcastAsyncMessage("async-echo");
     }
 
     var MozAfterPaintCount = 0;
@@ -286,8 +285,10 @@
   </toolbar>
   <toolbar><label value="Load a script (URL) to content process:"/>
     <textbox flex="1" id="script"/><button
-      label="send" oncommand="document.getElementById('page').QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.
-                              messageManager.loadFrameScript(this.previousSibling.value, false);"/>
+      label="send" oncommand="document.getElementById('page')
+                                      .QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
+                                      .frameLoader.messageManager
+                                      .loadFrameScript(this.previousSibling.value, false);"/>
   </toolbar>
   <toolbar>
     <label value="Eval script in chrome context"/>

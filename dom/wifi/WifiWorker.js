@@ -1326,7 +1326,8 @@ let netFromDOM;
 function WifiWorker() {
   var self = this;
 
-  this._mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
+  this._mm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+               .getService(Ci.nsIMessageListenerManager);
   const messages = ["WifiManager:setEnabled", "WifiManager:getNetworks",
                     "WifiManager:associate", "WifiManager:forget",
                     "WifiManager:wps", "WifiManager:getState",
@@ -1889,7 +1890,7 @@ WifiWorker.prototype = {
 
   receiveMessage: function MessageManager_receiveMessage(aMessage) {
     let msg = aMessage.json || {};
-    msg.manager = aMessage.target.QueryInterface(Ci.nsIFrameMessageManager);
+    msg.manager = aMessage.target;
 
     switch (aMessage.name) {
       case "WifiManager:setEnabled":

@@ -190,7 +190,6 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsITimedChannel.h"
 #include "mozilla/StartupTimeline.h"
-#include "nsIFrameMessageManager.h"
 
 #include "mozilla/Telemetry.h"
 #include "nsISecurityUITelemetry.h"
