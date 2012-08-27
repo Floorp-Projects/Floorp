@@ -1135,7 +1135,7 @@ UnknownPropertyAccess(JSScript *script, Type type)
 {
     return type.isUnknown()
         || type.isAnyObject()
-        || (!type.isObject() && !script->hasGlobal());
+        || (!type.isObject() && !script->compileAndGo);
 }
 
 template <PropertyAccessKind access>
@@ -1448,7 +1448,7 @@ TypeConstraintTransformThis::newType(JSContext *cx, TypeSet *source, Type type)
      * Note: if |this| is null or undefined, the pushed value is the outer window. We
      * can't use script->getGlobalType() here because it refers to the inner window.
      */
-    if (!script->hasGlobal() ||
+    if (!script->compileAndGo ||
         type.isPrimitive(JSVAL_TYPE_NULL) ||
         type.isPrimitive(JSVAL_TYPE_UNDEFINED)) {
         target->addType(cx, Type::UnknownType());
@@ -2141,7 +2141,7 @@ types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc,
 bool
 types::ArrayPrototypeHasIndexedProperty(JSContext *cx, JSScript *script)
 {
-    if (!cx->typeInferenceEnabled() || !script->hasGlobal())
+    if (!cx->typeInferenceEnabled() || !script->compileAndGo)
         return true;
 
     JSObject *proto = script->global().getOrCreateArrayPrototype(cx);
@@ -3320,7 +3320,7 @@ CheckNextTest(jsbytecode *pc)
 static inline TypeObject *
 GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    if (!script->hasGlobal())
+    if (!script->compileAndGo)
         return NULL;
 
     JSOp op = JSOp(*pc);
@@ -3503,7 +3503,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_REGEXP:
-        if (script->hasGlobal()) {
+        if (script->compileAndGo) {
             TypeObject *object = TypeScript::StandardType(cx, script, JSProto_RegExp);
             if (!object)
                 return false;
@@ -3715,7 +3715,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_REST: {
         StackTypeSet *types = script->analysis()->bytecodeTypes(pc);
-        if (script->hasGlobal()) {
+        if (script->compileAndGo) {
             TypeObject *rest = TypeScript::InitObject(cx, script, pc, JSProto_Array);
             if (!rest)
                 return false;
@@ -3850,7 +3850,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             res = &pushed[0];
 
         if (res) {
-            if (script->hasGlobal() && !UseNewTypeForClone(obj->toFunction()))
+            if (script->compileAndGo && !UseNewTypeForClone(obj->toFunction()))
                 res->addType(cx, Type::ObjectType(obj));
             else
                 res->addType(cx, Type::UnknownType());
@@ -3916,7 +3916,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         }
 
         TypeObject *initializer = GetInitializerType(cx, script, pc);
-        if (script->hasGlobal()) {
+        if (script->compileAndGo) {
             if (!initializer)
                 return false;
             types->addType(cx, Type::ObjectType(initializer));
@@ -4100,7 +4100,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_GENERATOR:
           if (script->function()) {
-            if (script->hasGlobal()) {
+            if (script->compileAndGo) {
                 JSObject *proto = script->global().getOrCreateGeneratorPrototype(cx);
                 if (!proto)
                     return false;
@@ -4153,7 +4153,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_CALLEE: {
         JSFunction *fun = script->function();
-        if (script->hasGlobal() && !UseNewTypeForClone(fun))
+        if (script->compileAndGo && !UseNewTypeForClone(fun))
             pushed[0].addType(cx, Type::ObjectType(fun));
         else
             pushed[0].addType(cx, Type::UnknownType());
@@ -4178,17 +4178,6 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
-
-    /*
-     * Refuse to analyze the types in a script which is compileAndGo but is
-     * running against a global with a cleared scope. Per GlobalObject::clear,
-     * we won't be running anymore compileAndGo code against the global
-     * (moreover, after clearing our analysis results will be wrong for the
-     * script and trying to reanalyze here can cause reentrance problems if we
-     * try to reinitialize standard classes that were cleared).
-     */
-    if (script->hasClearedGlobal())
-        return;
 
     if (!ranSSA()) {
         analyzeSSA(cx);
@@ -4413,9 +4402,6 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
         cx->compartment->types.setPendingNukeTypes(cx);
         return false;
     }
-
-    if (script->hasClearedGlobal())
-        return false;
 
     ScriptAnalysis *analysis = script->analysis();
 
