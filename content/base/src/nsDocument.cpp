@@ -1819,7 +1819,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
       PR_snprintf(name, sizeof(name), "nsDocument %s %s",
                   loadedAsData.get(), uri.get());
     }
-    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(nsDocument), name);
+    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   }
   else {
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsDocument, tmp->mRefCnt.get())
