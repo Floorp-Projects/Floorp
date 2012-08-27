@@ -134,15 +134,6 @@ function runSocialTestWithProvider(manifest, callback) {
     Services.prefs.setBoolPref("social.enabled", true);
 
     registerCleanupFunction(function () {
-      // if one test happens to fail, it is likely finishSocialTest will not
-      // be called, causing most future social tests to also fail as they
-      // attempt to add a provider which already exists - so work
-      // around that by also attempting to remove the test provider.
-      try {
-        SocialService.removeProvider(provider.origin, finish);
-      } catch (ex) {
-        ;
-      }
       Social.provider = oldProvider;
       Services.prefs.clearUserPref("social.enabled");
     });
