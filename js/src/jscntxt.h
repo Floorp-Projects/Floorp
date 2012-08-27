@@ -894,10 +894,6 @@ struct JSRuntime : js::RuntimeFriendFields
     JSContext           *ionJSContext;
     uintptr_t            ionStackLimit;
 
-    void resetIonStackLimit() {
-        ionStackLimit = nativeStackLimit;
-    }
-
     // This points to the most recent Ion activation running on the thread.
     js::ion::IonActivation  *ionActivation;
 

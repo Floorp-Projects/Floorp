@@ -98,15 +98,6 @@ ReportOverRecursed(JSContext *cx)
     if (cx->runtime->interrupt)
         return InterruptCheck(cx);
 
-    // It is possible that JS_TriggerOperationCallback and js_InvokeOperationCallback
-    // race; if invoke wins in setting the interrupt flag to 0, but TriggerOperation
-    // wins in setting Ion's stack limit, then we can find up here. We simply check
-    // for this case and restore the stack limit if so.
-    if (!cx->runtime->ionStackLimit) {
-        cx->runtime->resetIonStackLimit();
-        return true;
-    }
-
     js_ReportOverRecursed(cx);
 
     // Cause an InternalError.
