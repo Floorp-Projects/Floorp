@@ -81,7 +81,7 @@ XPIDLSRCS	= \
 		nsIFrameLoader.idl \
 		nsIXMLHttpRequest.idl \
 		nsIContentSecurityPolicy.idl \
-		nsIFrameMessageManager.idl \
+		nsIMessageManager.idl \
 		nsIWebSocket.idl \
 		nsIEventSource.idl \
 		$(NULL)

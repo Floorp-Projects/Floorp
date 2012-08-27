@@ -58,7 +58,7 @@
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
 #include "mozilla/dom/Element.h"
-#include "nsIFrameMessageManager.h"
+#include "nsIMessageManager.h"
 #include "FrameLayerBuilder.h"
 #include "nsDOMMediaQueryList.h"
 #include "nsSMILAnimationController.h"
