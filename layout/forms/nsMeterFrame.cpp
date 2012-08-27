@@ -121,9 +121,6 @@ NS_IMETHODIMP nsMeterFrame::Reflow(nsPresContext*           aPresContext,
                        aReflowState.mComputedBorderPadding.LeftRight();
   aDesiredSize.height = aReflowState.ComputedHeight() +
                         aReflowState.mComputedBorderPadding.TopBottom();
-  aDesiredSize.height = NS_CSS_MINMAX(aDesiredSize.height,
-                                      aReflowState.mComputedMinHeight,
-                                      aReflowState.mComputedMaxHeight);
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   ConsiderChildOverflow(aDesiredSize.mOverflowAreas, barFrame);
