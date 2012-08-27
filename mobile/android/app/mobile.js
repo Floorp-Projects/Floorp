@@ -426,7 +426,8 @@ pref("plugins.use_placeholder", 0);
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 pref("app.support.baseURL", "http://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/");
-pref("app.feedbackURL", "http://input.mozilla.com/feedback/");
+// Used to submit data to input from about:feedback
+pref("app.feedback.postURL", "http://m.input.mozilla.org/%LOCALE%/feedback");
 pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/m/privacy.html");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
 pref("app.channelURL", "http://www.mozilla.org/%LOCALE%/firefox/channel/");

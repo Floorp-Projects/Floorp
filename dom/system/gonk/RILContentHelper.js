@@ -66,7 +66,7 @@ const kUssdReceivedTopic     = "mobile-connection-ussd-received";
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
-                                   "nsIFrameMessageManager");
+                                   "nsISyncMessageSender");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
@@ -161,8 +161,7 @@ function RILContentHelper() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
 
   // Request initial context.
-  let rilContext = cpmm.QueryInterface(Ci.nsISyncMessageSender)
-                       .sendSyncMessage("RIL:GetRilContext")[0];
+  let rilContext = cpmm.sendSyncMessage("RIL:GetRilContext")[0];
 
   if (!rilContext) {
     debug("Received null rilContext from chrome process.");
@@ -508,7 +507,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  // nsIFrameMessageListener
+  // nsIMessageListener
 
   fireRequestSuccess: function fireRequestSuccess(requestId, result) {
     let request = this.takeRequest(requestId);

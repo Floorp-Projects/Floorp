@@ -77,14 +77,14 @@
   -moz-appearance: none;
   background: url(chrome://global/skin/media/volumeThumb.png) no-repeat center;
   border: none;
-  min-width: 16px;
-  min-height: 11px;
+  min-width: 21px;
+  min-height: 10px;
 }
 
 .volumeBackgroundBar {
   /* margin left/right: make bar 8px wide (control width = 28, minus 2 * 10 margin) */
   margin: 0 10px;
-  background-color: rgba(255,255,255,.5);
+  background-color: rgba(255,255,255,.75);
   border-radius: 2.5px;
 }
 

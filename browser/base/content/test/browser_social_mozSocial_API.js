@@ -54,6 +54,7 @@ var tests = {
             ok(true, "panel hidden");
             next();
           }
+          break;
         case "got-sidebar-message":
           // The sidebar message will always come first, since it loads by default
           ok(true, "got sidebar message");
@@ -81,51 +82,6 @@ var tests = {
           checkNext();
         });
       }, "social:ambient-notification-changed", false);
-    }
-  },
-
-  testServiceWindow: function(next) {
-    // our test provider was initialized in the test above, we just
-    // initiate our specific test now.
-    let port = Social.provider.port;
-    ok(port, "provider has a port");
-    port.postMessage({topic: "test-service-window"});
-    port.onmessage = function (e) {
-      let topic = e.data.topic;
-      switch (topic) {
-        case "got-service-window-message":
-          // The sidebar message will always come first, since it loads by default
-          ok(true, "got service window message");
-          // the service window URL should not be stored in history.
-          ensureSocialUrlNotRemembered(e.data.location);
-          port.postMessage({topic: "test-close-service-window"});
-          break;
-        case "got-service-window-closed-message":
-          ok(true, "got service window closed message");
-          next();
-          break;
-      }
-    }
-  },
-
-  testServiceWindowTwice: function(next) {
-    let port = Social.provider.port;
-    port.postMessage({topic: "test-service-window-twice"});
-    Social.provider.port.onmessage = function (e) {
-      let topic = e.data.topic;
-      switch (topic) {
-        case "test-service-window-twice-result":
-          is(e.data.result, "ok", "only one window should open when name is reused");
-          break;
-        case "got-service-window-message":
-          ok(true, "got service window message");
-          port.postMessage({topic: "test-close-service-window"});
-          break;
-        case "got-service-window-closed-message":
-          ok(true, "got service window closed message");
-          next();
-          break;
-      }
     }
   }
 }

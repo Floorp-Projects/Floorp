@@ -21,7 +21,7 @@ MessageWakeupService.prototype =
   get messageManager() {
     if (!this._messageManager)
       this._messageManager = Cc["@mozilla.org/parentprocessmessagemanager;1"].
-                             getService(Ci.nsIFrameMessageManager);
+                             getService(Ci.nsIMessageListenerManager);
     return this._messageManager;
   },
 
@@ -39,7 +39,7 @@ MessageWakeupService.prototype =
     let data = this.messagesData[aMessage.name];
     // TODO: When bug 593407 is ready, stop doing the wrappedJSObject hack
     //       and use this line instead:
-    //                  QueryInterface(Ci.nsIFrameMessageListener);
+    //                  QueryInterface(Ci.nsIMessageListener);
     let service = Cc[data.cid][data.method](Ci[data.iid]).
                   wrappedJSObject;
 

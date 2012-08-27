@@ -114,7 +114,7 @@
 
         let spObserver =
           comp.classes["@mozilla.org/special-powers-observer;1"]
-              .getService(comp.interfaces.nsIFrameMessageListener);
+              .getService(comp.interfaces.nsIMessageListener);
 
         mm.addMessageListener("SPPrefService", spObserver);
         mm.addMessageListener("SPProcessCrashService", spObserver);

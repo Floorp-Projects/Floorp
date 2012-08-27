@@ -154,7 +154,7 @@ public class SiteIdentityPopup extends PopupWindow {
 
         int offset = 0;
         if (GeckoApp.mAppContext.isTablet()) {
-            int popupWidth = mResources.getDimensionPixelSize(R.dimen.site_identity_popup_width);
+            int popupWidth = mResources.getDimensionPixelSize(R.dimen.popup_width);
             offset = 0 - popupWidth + arrowWidth*3/2 + v.getWidth()/2;
         }
 
