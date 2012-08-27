@@ -1436,54 +1436,32 @@ JS_SetWrapObjectCallbacks(JSRuntime *rt,
     return old;
 }
 
-struct JSCrossCompartmentCall
-{
-    JSContext *context;
-    JSCompartment *oldCompartment;
-};
-
-JS_PUBLIC_API(JSCrossCompartmentCall *)
-JS_EnterCrossCompartmentCall(JSContext *cx, JSRawObject target)
+JS_PUBLIC_API(JSCompartment *)
+JS_EnterCompartment(JSContext *cx, JSRawObject target)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    JSCrossCompartmentCall *call = OffTheBooks::new_<JSCrossCompartmentCall>();
-    if (!call)
-        return NULL;
-
-    call->context = cx;
-    call->oldCompartment = cx->compartment;
-
+    JSCompartment *oldCompartment = cx->compartment;
     cx->enterCompartment(target->compartment());
-    return call;
+    return oldCompartment;
 }
 
-JS_PUBLIC_API(JSCrossCompartmentCall *)
-JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
+JS_PUBLIC_API(JSCompartment *)
+JS_EnterCompartmentOfScript(JSContext *cx, JSScript *target)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     GlobalObject &global = target->global();
-    return JS_EnterCrossCompartmentCall(cx, &global);
-}
-
-JS_PUBLIC_API(JSCrossCompartmentCall *)
-JS_EnterCrossCompartmentCallStackFrame(JSContext *cx, JSStackFrame *target)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    HandleObject global(HandleObject::fromMarkedLocation((JSObject**) &Valueify(target)->global()));
-    return JS_EnterCrossCompartmentCall(cx, global);
+    return JS_EnterCompartment(cx, &global);
 }
 
 JS_PUBLIC_API(void)
-JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
+JS_LeaveCompartment(JSContext *cx, JSCompartment *oldCompartment)
 {
-    AssertHeapIsIdle(call->context);
-    CHECK_REQUEST(call->context);
-    call->context->leaveCompartment(call->oldCompartment);
-    Foreground::delete_(call);
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    cx->leaveCompartment(oldCompartment);
 }
 
 JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSRawObject target)
@@ -1494,33 +1472,25 @@ JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSRawObject target)
     cx_->enterCompartment(target->compartment());
 }
 
+JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSScript *target)
+  : cx_(cx),
+    oldCompartment_(cx->compartment)
+{
+    AssertHeapIsIdleOrIterating(cx_);
+    cx_->enterCompartment(target->compartment());
+}
+
+JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSStackFrame *target)
+  : cx_(cx),
+    oldCompartment_(cx->compartment)
+{
+    AssertHeapIsIdleOrIterating(cx_);
+    cx_->enterCompartment(Valueify(target)->global().compartment());
+}
+
 JSAutoCompartment::~JSAutoCompartment()
 {
     cx_->leaveCompartment(oldCompartment_);
-}
-
-bool
-AutoEnterScriptCompartment::enter(JSContext *cx, JSScript *target)
-{
-    JS_ASSERT(!call);
-    if (cx->compartment == target->compartment()) {
-        call = reinterpret_cast<JSCrossCompartmentCall*>(1);
-        return true;
-    }
-    call = JS_EnterCrossCompartmentCallScript(cx, target);
-    return call != NULL;
-}
-
-bool
-AutoEnterFrameCompartment::enter(JSContext *cx, JSStackFrame *target)
-{
-    JS_ASSERT(!call);
-    if (cx->compartment == Valueify(target)->scopeChain()->compartment()) {
-        call = reinterpret_cast<JSCrossCompartmentCall*>(1);
-        return true;
-    }
-    call = JS_EnterCrossCompartmentCallStackFrame(cx, target);
-    return call != NULL;
 }
 
 JS_PUBLIC_API(void)
