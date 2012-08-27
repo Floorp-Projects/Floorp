@@ -412,19 +412,13 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   // Draw the source surface into the surface we're going to blur.
   SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
   cairo_surface_t* surf = source->GetSurface();
-  cairo_pattern_t* pat = cairo_pattern_create_for_surface(surf);
-  cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
 
   cairo_t* ctx = cairo_create(blursurf);
-
-  cairo_set_source(ctx, pat);
-
+  cairo_set_source_surface(ctx, surf, 0, 0);
   IntRect blurrect = blur.GetRect();
   cairo_new_path(ctx);
   cairo_rectangle(ctx, blurrect.x, blurrect.y, blurrect.width, blurrect.height);
-  cairo_clip(ctx);
-  cairo_paint(ctx);
-
+  cairo_fill(ctx);
   cairo_destroy(ctx);
 
   // Blur the result, then use that blurred result as a mask to draw the shadow
@@ -440,32 +434,26 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
     cairo_push_group(mContext);
       cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
       cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
-    cairo_pop_group_to_source(mContext);
-    cairo_paint(mContext);
 
-    // Now that the shadow has been drawn, we can draw the surface on top.
-    cairo_push_group(mContext);
+      // Now that the shadow has been drawn, we can draw the surface on top.
+      cairo_set_source_surface(mContext, surf, 0, 0);
       cairo_new_path(mContext);
       cairo_rectangle(mContext, 0, 0, width, height);
-      cairo_set_source(mContext, pat);
       cairo_fill(mContext);
     cairo_pop_group_to_source(mContext);
+    cairo_paint(mContext);
   } else {
     cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
     cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
 
     // Now that the shadow has been drawn, we can draw the surface on top.
-    cairo_set_source(mContext, pat);
+    cairo_set_source_surface(mContext, surf, 0, 0);
     cairo_new_path(mContext);
     cairo_rectangle(mContext, 0, 0, width, height);
-    cairo_clip(mContext);
+    cairo_fill(mContext);
   }
 
-  cairo_paint(mContext);
-
   cairo_restore(mContext);
-
-  cairo_pattern_destroy(pat);
   cairo_surface_destroy(blursurf);
 }
 
