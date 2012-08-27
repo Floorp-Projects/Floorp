@@ -4,10 +4,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMMozConnection;
+interface nsIDOMMozMobileConnection;
 
-[scriptable, uuid(c1685d27-f2e2-4ed9-998f-ff5b1442058f)]
-interface nsIDOMMozNavigatorNetwork : nsISupports
+[scriptable, uuid(d8672694-3334-4d0d-a4c3-38fa70c265d0)]
+interface nsIMozNavigatorMobileConnection : nsISupports
 {
-  readonly attribute nsIDOMMozConnection mozConnection;
+  readonly attribute nsIDOMMozMobileConnection mozMobileConnection;
 };
