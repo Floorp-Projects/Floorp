@@ -3548,7 +3548,7 @@ stack[anonid=browserStack][responsivemode] {
 
 .chatbar-innerbox {
   background: transparent;
-  margin: -200px -1px 0 -1px;
+  margin: -285px -1px 0 -1px;
   overflow: hidden;
 }
 
@@ -3556,21 +3556,16 @@ chatbar {
   -moz-margin-end: 20px;
 }
 
-chatbar > chatbox {
-  height: 200px;
-  width: 200px;
+chatbox {
+  height: 285px;
+  width: 260px;
+  -moz-margin-start: 4px;
   background-color: white;
   border: 1px solid gray;
   border-bottom: none;
 }
 
-chatbar > chatbox[minimized="true"] {
-  width: 100px;
+chatbox[minimized="true"] {
+  width: 160px;
   height: 20px;
-  border-bottom: none;
 }
-
-chatbar > chatbox + chatbox {
-  -moz-margin-start: -1px;
-}
-
