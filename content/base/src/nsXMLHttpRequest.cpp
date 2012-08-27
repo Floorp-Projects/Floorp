@@ -1468,6 +1468,13 @@ nsXMLHttpRequest::GetAllResponseHeaders(nsString& aResponseHeaders)
     }
     aResponseHeaders.AppendLiteral("\r\n");
   }
+
+  PRInt32 length;
+  if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
+    aResponseHeaders.AppendLiteral("Content-Length: ");
+    aResponseHeaders.AppendInt(length);
+    aResponseHeaders.AppendLiteral("\r\n");
+  }
 }
 
 NS_IMETHODIMP
@@ -1495,28 +1502,38 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
       return;
     }
 
-    // Even non-http channels supply content type.
+    // Even non-http channels supply content type and content length.
     // Remember we don't leak header information from denied cross-site
     // requests.
     nsresult status;
     if (!mChannel ||
         NS_FAILED(mChannel->GetStatus(&status)) ||
-        NS_FAILED(status) ||
-        !header.LowerCaseEqualsASCII("content-type")) {
+        NS_FAILED(status)) {
       return;
     }
 
-    if (NS_FAILED(mChannel->GetContentType(_retval))) {
-      // Means no content type
-      _retval.SetIsVoid(true);
-      return;
+    // Content Type:
+    if (header.LowerCaseEqualsASCII("content-type")) {
+      if (NS_FAILED(mChannel->GetContentType(_retval))) {
+        // Means no content type
+        _retval.SetIsVoid(true);
+        return;
+      }
+
+      nsCString value;
+      if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) &&
+          !value.IsEmpty()) {
+        _retval.Append(";charset=");
+        _retval.Append(value);
+      }
     }
 
-    nsCString value;
-    if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) &&
-        !value.IsEmpty()) {
-      _retval.Append(";charset=");
-      _retval.Append(value);
+    // Content Length:
+    else if (header.LowerCaseEqualsASCII("content-length")) {
+      PRInt32 length;
+      if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
+        _retval.AppendInt(length);
+      }
     }
 
     return;
