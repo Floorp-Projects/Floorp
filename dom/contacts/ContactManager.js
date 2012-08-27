@@ -19,9 +19,9 @@ XPCOMUtils.defineLazyGetter(Services, "DOMRequest", function() {
   return Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
 });
 
-XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
-  return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
-});
+XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
+                                   "@mozilla.org/childprocessmessagemanager;1",
+                                   "nsIMessageSender");
 
 XPCOMUtils.defineLazyGetter(this, "mRIL", function () {
   return Cc["@mozilla.org/telephony/system-worker-manager;1"].getService(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIRadioInterfaceLayer);

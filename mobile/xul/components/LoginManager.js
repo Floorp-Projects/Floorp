@@ -71,7 +71,7 @@ LoginManager.prototype = {
     init : function () {
         // Add content listener.
         var messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-                             getService(Ci.nsIChromeFrameMessageManager);
+                             getService(Ci.nsIMessageListenerManager);
         messageManager.loadFrameScript("chrome://browser/content/LoginManagerChild.js", true);
         messageManager.addMessageListener("PasswordMgr:FormSubmitted", this);
         messageManager.addMessageListener("PasswordMgr:GetPasswords", this);

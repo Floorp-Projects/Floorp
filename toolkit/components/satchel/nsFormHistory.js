@@ -21,7 +21,7 @@ FormHistory.prototype = {
     classID          : Components.ID("{0c1bb408-71a2-403f-854a-3a0659829ded}"),
     QueryInterface   : XPCOMUtils.generateQI([Ci.nsIFormHistory2,
                                               Ci.nsIObserver,
-                                              Ci.nsIFrameMessageListener,
+                                              Ci.nsIMessageListener,
                                               Ci.nsISupportsWeakReference,
                                               ]),
 
@@ -104,7 +104,7 @@ FormHistory.prototype = {
         this.dbStmts = {};
 
         this.messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-                              getService(Ci.nsIChromeFrameMessageManager);
+                              getService(Ci.nsIMessageListenerManager);
         this.messageManager.loadFrameScript("chrome://satchel/content/formSubmitListener.js", true);
         this.messageManager.addMessageListener("FormHistory:FormSubmitEntries", this);
 

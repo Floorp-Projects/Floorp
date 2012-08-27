@@ -461,7 +461,7 @@
 #include "nsIDOMMozTouchEvent.h"
 
 #include "nsIEventListenerService.h"
-#include "nsIFrameMessageManager.h"
+#include "nsIMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "nsHTMLSelectElement.h"
 #include "nsHTMLLegendElement.h"
@@ -640,6 +640,8 @@ DOMCI_DATA_NO_CLASS(Crypto)
 DOMCI_DATA_NO_CLASS(CRMFObject)
 DOMCI_DATA_NO_CLASS(SmartCardEvent)
 DOMCI_DATA_NO_CLASS(ContentFrameMessageManager)
+DOMCI_DATA_NO_CLASS(ChromeMessageBroadcaster)
+DOMCI_DATA_NO_CLASS(ChromeMessageSender)
 
 DOMCI_DATA_NO_CLASS(DOMPrototype)
 DOMCI_DATA_NO_CLASS(DOMConstructor)
@@ -1595,8 +1597,13 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(AnimationEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(ContentFrameMessageManager, nsEventTargetSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS | nsIXPCScriptable::IS_GLOBAL_OBJECT)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ContentFrameMessageManager, nsEventTargetSH,
+                                       DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                                       nsIXPCScriptable::IS_GLOBAL_OBJECT)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageBroadcaster, nsDOMGenericSH,
+                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageSender, nsDOMGenericSH,
+                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(FormData, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -4305,11 +4312,24 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ContentFrameMessageManager, nsIContentFrameMessageManager)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ContentFrameMessageManager, nsISupports)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIFrameMessageManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
     DOM_CLASSINFO_MAP_ENTRY(nsISyncMessageSender)
     DOM_CLASSINFO_MAP_ENTRY(nsIContentFrameMessageManager)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeMessageBroadcaster, nsISupports)
+    DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
+    DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsIMessageBroadcaster)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeMessageSender, nsISupports)
+    DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
+    DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(FormData, nsIDOMFormData)
