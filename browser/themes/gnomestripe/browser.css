@@ -2841,6 +2841,10 @@ stack[anonid=browserStack][responsivemode] {
   overflow: hidden;
 }
 
+chatbar {
+  -moz-margin-end: 20px;
+}
+
 chatbar > chatbox {
   height: 200px;
   width: 200px;
