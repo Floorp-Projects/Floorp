@@ -11,6 +11,7 @@
 #include "nsDocShellCID.h"
 #include "nsIWebNavigationInfo.h"
 #include "nsIDOMWindow.h"
+#include "nsNetUtil.h"
 #include "nsAutoPtr.h"
 #include "nsIHttpChannel.h"
 #include "nsIScriptSecurityManager.h"
@@ -258,9 +259,15 @@ nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
 
 bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIRequest *request,
                                                         const nsAString& policy) {
-    // return early if header does not have one of the two values with meaning
+    static const char allowFrom[] = "allow-from ";
+    const PRUint32 allowFromLen = ArrayLength(allowFrom) - 1;
+    bool isAllowFrom =
+        StringHead(policy, allowFromLen).LowerCaseEqualsLiteral(allowFrom);
+
+    // return early if header does not have one of the values with meaning
     if (!policy.LowerCaseEqualsLiteral("deny") &&
-        !policy.LowerCaseEqualsLiteral("sameorigin"))
+        !policy.LowerCaseEqualsLiteral("sameorigin") &&
+        !isAllowFrom)
         return true;
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
@@ -342,17 +349,31 @@ bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIRequest *request,
             return false;
         }
 
+        topDoc = do_GetInterface(curDocShellItem);
+        nsCOMPtr<nsIURI> topUri;
+        topDoc->NodePrincipal()->GetURI(getter_AddRefs(topUri));
+        nsCOMPtr<nsIURI> uri;
+
         // If the X-Frame-Options value is SAMEORIGIN, then the top frame in the
         // parent chain must be from the same origin as this document.
         if (policy.LowerCaseEqualsLiteral("sameorigin")) {
-            nsCOMPtr<nsIURI> uri;
             httpChannel->GetURI(getter_AddRefs(uri));
-            topDoc = do_GetInterface(curDocShellItem);
-            nsCOMPtr<nsIURI> topUri;
-            topDoc->NodePrincipal()->GetURI(getter_AddRefs(topUri));
             rv = ssm->CheckSameOriginURI(uri, topUri, true);
             if (NS_FAILED(rv))
                 return false; /* wasn't same-origin */
+        }
+
+        // If the X-Frame-Options value is "allow-from [uri]", then the top
+        // frame in the parent chain must be from that origin
+        if (isAllowFrom) {
+            rv = NS_NewURI(getter_AddRefs(uri),
+                           Substring(policy, allowFromLen));
+            if (NS_FAILED(rv))
+              return false;
+
+            rv = ssm->CheckSameOriginURI(uri, topUri, true);
+            if (NS_FAILED(rv))
+                return false;
         }
     }
 
