@@ -766,12 +766,6 @@ GetRuntimeCompartments(JSRuntime *rt)
     return rt->compartments;
 }
 
-JS_FRIEND_API(size_t)
-SizeOfJSContext()
-{
-    return sizeof(JSContext);
-}
-
 JS_FRIEND_API(GCSliceCallback)
 SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback)
 {
