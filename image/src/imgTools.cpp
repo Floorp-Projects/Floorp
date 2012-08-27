@@ -8,8 +8,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsError.h"
-#include "imgILoader.h"
-#include "imgICache.h"
 #include "imgIContainer.h"
 #include "imgIEncoder.h"
 #include "imgIDecoderObserver.h"
@@ -21,13 +19,9 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsStreamUtils.h"
 #include "nsNetUtil.h"
-#include "nsContentUtils.h"
 #include "RasterImage.h"
 
 using namespace mozilla::image;
-
-class nsIDOMDocument;
-class nsIDocument;
 
 /* ========== imgITools implementation ========== */
 
@@ -274,21 +268,4 @@ NS_IMETHODIMP imgTools::GetFirstImageFrame(imgIContainer *aContainer,
 
   frame.forget(aSurface);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-imgTools::GetImgLoaderForDocument(nsIDOMDocument* aDoc, imgILoader** aLoader)
-{
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  NS_IF_ADDREF(*aLoader = nsContentUtils::GetImgLoaderForDocument(doc));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-imgTools::GetImgCacheForDocument(nsIDOMDocument* aDoc, imgICache** aCache)
-{
-  nsCOMPtr<imgILoader> loader;
-  nsresult rv = GetImgLoaderForDocument(aDoc, getter_AddRefs(loader));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return CallQueryInterface(loader, aCache);
 }

@@ -85,8 +85,9 @@ function checkSecondLoad()
 {
   do_test_pending();
 
+  var loader = Cc["@mozilla.org/image/loader;1"].getService(Ci.imgILoader);
   var listener = new ImageListener(checkClone, secondLoadDone);
-  requests.push(gCurrentLoader.loadImage(uri, null, null, null, null, listener, null, 0, null, null, null));
+  requests.push(loader.loadImage(uri, null, null, null, null, listener, null, 0, null, null, null));
   listener.synchronous = false;
 }
 
@@ -138,11 +139,12 @@ function checkSecondChannelLoad()
   var channellistener = new ChannelListener();
   channel.asyncOpen(channellistener, null);
 
+  var loader = Cc["@mozilla.org/image/loader;1"].getService(Ci.imgILoader);
   var listener = new ImageListener(getChannelLoadImageStartCallback(channellistener),
                                    getChannelLoadImageStopCallback(channellistener,
                                                                    all_done_callback));
   var outlistener = {};
-  requests.push(gCurrentLoader.loadImageWithChannel(channel, listener, null, outlistener));
+  requests.push(loader.loadImageWithChannel(channel, listener, null, outlistener));
   channellistener.outputListener = outlistener.value;
 
   listener.synchronous = false;
@@ -150,8 +152,11 @@ function checkSecondChannelLoad()
 
 function run_loadImageWithChannel_tests()
 {
-  // To ensure we're testing what we expect to, create a new loader and cache.
-  gCurrentLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
+  // To ensure we're testing what we expect to, clear the content image cache
+  // between test runs.
+  var loader = Cc["@mozilla.org/image/loader;1"].getService(Ci.imgILoader);
+  loader.QueryInterface(Ci.imgICache);
+  loader.clearCache(false);
 
   do_test_pending();
 
@@ -160,11 +165,12 @@ function run_loadImageWithChannel_tests()
   var channellistener = new ChannelListener();
   channel.asyncOpen(channellistener, null);
 
+  var loader = Cc["@mozilla.org/image/loader;1"].getService(Ci.imgILoader);
   var listener = new ImageListener(getChannelLoadImageStartCallback(channellistener),
                                    getChannelLoadImageStopCallback(channellistener,
                                                                    checkSecondChannelLoad));
   var outlistener = {};
-  requests.push(gCurrentLoader.loadImageWithChannel(channel, listener, null, outlistener));
+  requests.push(loader.loadImageWithChannel(channel, listener, null, outlistener));
   channellistener.outputListener = outlistener.value;
 
   listener.synchronous = false;
@@ -179,10 +185,12 @@ function startImageCallback(otherCb)
 {
   return function(listener, request)
   {
+    var loader = Cc["@mozilla.org/image/loader;1"].getService(Ci.imgILoader);
+
     // Make sure we can load the same image immediately out of the cache.
     do_test_pending();
     var listener2 = new ImageListener(null, function(foo, bar) { do_test_finished(); });
-    requests.push(gCurrentLoader.loadImage(uri, null, null, null, null, listener2, null, 0, null, null, null));
+    requests.push(loader.loadImage(uri, null, null, null, null, listener2, null, 0, null, null, null));
     listener2.synchronous = false;
 
     // Now that we've started another load, chain to the callback.
@@ -190,15 +198,13 @@ function startImageCallback(otherCb)
   }
 }
 
-var gCurrentLoader;
-
 function run_test()
 {
-  gCurrentLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
+  var loader = Cc["@mozilla.org/image/loader;1"].getService(Ci.imgILoader);
 
   do_test_pending();
   var listener = new ImageListener(startImageCallback(checkClone), firstLoadDone);
-  var req = gCurrentLoader.loadImage(uri, null, null, null, null, listener, null, 0, null, null, null);
+  var req = loader.loadImage(uri, null, null, null, null, listener, null, 0, null, null, null);
   requests.push(req);
 
   // Ensure that we don't cause any mayhem when we lock an image.

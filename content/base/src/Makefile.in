@@ -50,7 +50,6 @@ EXPORTS_mozilla/dom = \
   $(NULL)
 
 LOCAL_INCLUDES = \
-		-I$(topsrcdir)/image/src \
 		$(NULL)
 
 CPPSRCS		= \

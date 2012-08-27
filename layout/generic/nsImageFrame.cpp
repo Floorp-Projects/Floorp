@@ -1786,8 +1786,8 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
   nsCOMPtr<nsIURI> realURI;
   SpecToURI(aSpec, sIOService, getter_AddRefs(realURI));
  
-  nsCOMPtr<imgILoader> il =
-    nsContentUtils::GetImgLoaderForDocument(aPresContext->Document());
+  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));

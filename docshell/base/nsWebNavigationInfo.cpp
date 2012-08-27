@@ -24,9 +24,9 @@ nsWebNavigationInfo::Init()
   mCategoryManager = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mImgLoader = nsContentUtils::GetImgLoaderForChannel(nullptr);
+  mImgLoader = do_GetService("@mozilla.org/image/loader;1", &rv);
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

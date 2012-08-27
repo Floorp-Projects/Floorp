@@ -79,8 +79,8 @@ NS_IMPL_ISUPPORTS8(imgRequest,
                    nsIInterfaceRequestor,
                    nsIAsyncVerifyRedirectCallback)
 
-imgRequest::imgRequest(imgLoader* aLoader) :
-  mLoader(aLoader), mValidator(nullptr), mImageSniffers("image-sniffing-services"),
+imgRequest::imgRequest() : 
+  mValidator(nullptr), mImageSniffers("image-sniffing-services"),
   mInnerWindowId(0), mCORSMode(imgIRequest::CORS_NONE),
   mDecodeRequested(false), mIsMultiPartChannel(false), mGotData(false),
   mIsInCache(false), mBlockingOnload(false)
@@ -178,7 +178,7 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
   // proxies.
   if (mObservers.IsEmpty()) {
     NS_ABORT_IF_FALSE(mURI, "Trying to SetHasProxies without key uri.");
-    mLoader->SetHasProxies(mURI);
+    imgLoader::SetHasProxies(mURI);
   }
 
   // If we don't have any current observers, we should restart any animation.
@@ -223,7 +223,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool 
     if (mCacheEntry) {
       NS_ABORT_IF_FALSE(mURI, "Removing last observer without key uri.");
 
-      mLoader->SetHasNoProxies(mURI, mCacheEntry);
+      imgLoader::SetHasNoProxies(mURI, mCacheEntry);
     } 
 #if defined(PR_LOGGING)
     else {
@@ -328,9 +328,9 @@ void imgRequest::RemoveFromCache()
   if (mIsInCache) {
     // mCacheEntry is nulled out when we have no more observers.
     if (mCacheEntry)
-      mLoader->RemoveFromCache(mCacheEntry);
+      imgLoader::RemoveFromCache(mCacheEntry);
     else
-      mLoader->RemoveFromCache(mURI);
+      imgLoader::RemoveFromCache(mURI);
   }
 
   mCacheEntry = nullptr;

@@ -119,7 +119,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMHTMLInputElement.h"
 #include "nsParserConstants.h"
 #include "nsIWebNavigation.h"
-#include "nsILoadContext.h"
 #include "nsTextFragment.h"
 #include "mozilla/Selection.h"
 
@@ -135,7 +134,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 
 #include "mozAutoDocUpdate.h"
 #include "imgICache.h"
-#include "imgLoader.h"
 #include "xpcprivate.h" // nsXPConnect
 #include "nsScriptSecurityManager.h"
 #include "nsIChannelPolicy.h"
@@ -189,9 +187,7 @@ nsIIOService *nsContentUtils::sIOService;
 nsIXTFService *nsContentUtils::sXTFService = nullptr;
 #endif
 imgILoader *nsContentUtils::sImgLoader;
-imgILoader *nsContentUtils::sPrivateImgLoader;
 imgICache *nsContentUtils::sImgCache;
-imgICache *nsContentUtils::sPrivateImgCache;
 nsIConsoleService *nsContentUtils::sConsoleService;
 nsDataHashtable<nsISupportsHashKey, EventNameMapping>* nsContentUtils::sAtomEventTable = nullptr;
 nsDataHashtable<nsStringHashKey, EventNameMapping>* nsContentUtils::sStringEventTable = nullptr;
@@ -512,17 +508,15 @@ nsContentUtils::InitImgLoader()
   sImgLoaderInitialized = true;
 
   // Ignore failure and just don't load images
-  nsresult rv = CallCreateInstance("@mozilla.org/image/loader;1", &sImgLoader);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Creation should have succeeded");
-  rv = CallCreateInstance("@mozilla.org/image/loader;1", &sPrivateImgLoader);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Creation should have succeeded");
-
-  rv = CallQueryInterface(sImgLoader, &sImgCache);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "imgICache and imgILoader should be paired");
-  rv = CallQueryInterface(sPrivateImgLoader, &sPrivateImgCache);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "imgICache and imgILoader should be paired");
-
-  sPrivateImgCache->RespectPrivacyNotifications();
+  nsresult rv = CallGetService("@mozilla.org/image/loader;1", &sImgLoader);
+  if (NS_FAILED(rv)) {
+    // no image loading for us.  Oh, well.
+    sImgLoader = nullptr;
+    sImgCache = nullptr;
+  } else {
+    if (NS_FAILED(CallGetService("@mozilla.org/image/cache;1", &sImgCache )))
+      sImgCache = nullptr;
+  }
 }
 
 bool
@@ -1499,9 +1493,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sXTFService);
 #endif
   NS_IF_RELEASE(sImgLoader);
-  NS_IF_RELEASE(sPrivateImgLoader);
   NS_IF_RELEASE(sImgCache);
-  NS_IF_RELEASE(sPrivateImgCache);
 #ifdef IBMBIDI
   NS_IF_RELEASE(sBidiKeyboard);
 #endif
@@ -2700,60 +2692,19 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
   return NS_FAILED(rv) ? false : NS_CP_ACCEPTED(decision);
 }
 
-imgILoader*
-nsContentUtils::GetImgLoaderForDocument(nsIDocument* aDoc)
-{
-  if (!sImgLoaderInitialized)
-    InitImgLoader();
-  if (!aDoc)
-    return sImgLoader;
-  bool isPrivate = false;
-  nsCOMPtr<nsILoadGroup> loadGroup = aDoc->GetDocumentLoadGroup();
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  if (loadGroup) {
-    loadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
-    if (callbacks) {
-      nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
-      isPrivate = loadContext && loadContext->UsePrivateBrowsing();
-    }
-  } else {
-    nsCOMPtr<nsIChannel> channel = aDoc->GetChannel();
-    if (channel) {
-      nsCOMPtr<nsILoadContext> context;
-      NS_QueryNotificationCallbacks(channel, context);
-      isPrivate = context && context->UsePrivateBrowsing();
-    }
-  }
-  return isPrivate ? sPrivateImgLoader : sImgLoader;
-}
-
-// static
-imgILoader*
-nsContentUtils::GetImgLoaderForChannel(nsIChannel* aChannel)
-{
-  if (!sImgLoaderInitialized)
-    InitImgLoader();
-  if (!aChannel)
-    return sImgLoader;
-  nsCOMPtr<nsILoadContext> context;
-  NS_QueryNotificationCallbacks(aChannel, context);
-  return context && context->UsePrivateBrowsing() ? sPrivateImgLoader : sImgLoader;
-}
-
 // static
 bool
-nsContentUtils::IsImageInCache(nsIURI* aURI, nsIDocument* aDocument)
+nsContentUtils::IsImageInCache(nsIURI* aURI)
 {
     if (!sImgLoaderInitialized)
         InitImgLoader();
 
-    imgILoader* loader = GetImgLoaderForDocument(aDocument);
-    nsCOMPtr<imgICache> cache = do_QueryInterface(loader);
+    if (!sImgCache) return false;
 
     // If something unexpected happened we return false, otherwise if props
     // is set, the image is cached and we return true
     nsCOMPtr<nsIProperties> props;
-    nsresult rv = cache->FindEntryProperties(aURI, getter_AddRefs(props));
+    nsresult rv = sImgCache->FindEntryProperties(aURI, getter_AddRefs(props));
     return (NS_SUCCEEDED(rv) && props);
 }
 
@@ -2769,7 +2720,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
   NS_PRECONDITION(aLoadingPrincipal, "Must have a principal");
   NS_PRECONDITION(aRequest, "Null out param");
 
-  imgILoader* imgLoader = GetImgLoaderForDocument(aLoadingDocument);
+  imgILoader* imgLoader = GetImgLoader();
   if (!imgLoader) {
     // nothing we can do here
     return NS_OK;
