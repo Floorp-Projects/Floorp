@@ -4,14 +4,57 @@
 
 from __future__ import with_statement
 
+import math
 import simplejson as json
 
 def table_dispatch(kind, table, body):
     """Call body with table[kind] if it exists.  Raise an error otherwise."""
     if kind in table:
-        body(table[kind])
+        return body(table[kind])
     else:
         raise BaseException, "don't know how to handle a histogram of kind %s" % kind
+
+class DefinitionException(BaseException):
+    pass
+
+def check_numeric_limits(dmin, dmax, n_buckets):
+    if type(dmin) != int:
+        raise DefinitionException, "minimum is not a number"
+    if type(dmax) != int:
+        raise DefinitionException, "maximum is not a number"
+    if type(n_buckets) != int:
+        raise DefinitionException, "number of buckets is not a number"
+
+def linear_buckets(dmin, dmax, n_buckets):
+    check_numeric_limits(dmin, dmax, n_buckets)
+    if n_buckets == 2:
+        return [0, 1, 2]
+    ret_array = [0] * n_buckets
+    dmin = float(dmin)
+    dmax = float(dmax)
+    for i in range(1, n_buckets):
+        linear_range = (dmin * (n_buckets - 1 - i) + dmax * (i - 1)) / (n_buckets - 2)
+        ret_array[i] = int(linear_range + 0.5)
+    return ret_array
+
+def exponential_buckets(dmin, dmax, n_buckets):
+    check_numeric_limits(dmin, dmax, n_buckets)
+    log_max = math.log(dmax);
+    bucket_index = 2;
+    ret_array = [0] * n_buckets
+    current = dmin
+    ret_array[1] = current
+    for bucket_index in range(2, n_buckets):
+        log_current = math.log(current)
+        log_ratio = (log_max - log_current) / (n_buckets - bucket_index)
+        log_next = log_current + log_ratio
+        next_value = int(math.floor(math.exp(log_next) + 0.5))
+        if next_value > current:
+            current = next_value
+        else:
+            current = current + 1
+        ret_array[bucket_index] = current
+    return ret_array
 
 always_allowed_keys = ['kind', 'description', 'cpp_guard']
 
@@ -80,6 +123,16 @@ the histogram."""
 associated with the histogram.  Returns None if no guarding is necessary."""
         return self._cpp_guard
 
+    def ranges(self):
+        """Return an array of lower bounds for each bucket in the histogram."""
+        table = { 'boolean': linear_buckets,
+                  'flag': linear_buckets,
+                  'enumerated': linear_buckets,
+                  'linear': linear_buckets,
+                  'exponential': exponential_buckets }
+        return table_dispatch(self.kind(), table,
+                              lambda p: p(self.low(), self.high(), self.n_buckets()))
+
     def compute_bucket_parameters(self, definition):
         table = {
             'boolean': Histogram.boolean_flag_bucket_parameters,
@@ -112,7 +165,14 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                 raise KeyError, '%s not permitted for %s' % (key, name)
 
     def set_bucket_parameters(self, low, high, n_buckets):
-        (self._low, self._high, self._n_buckets) = (low, high, n_buckets)
+        def try_to_coerce_to_number(v):
+            try:
+                return eval(v, {})
+            except:
+                return v
+        self._low = try_to_coerce_to_number(low)
+        self._high = try_to_coerce_to_number(high)
+        self._n_buckets = try_to_coerce_to_number(n_buckets)
 
     @staticmethod
     def boolean_flag_bucket_parameters(definition):
