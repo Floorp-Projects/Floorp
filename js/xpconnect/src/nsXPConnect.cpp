@@ -794,9 +794,9 @@ DescribeGCThing(bool isMarked, void *p, JSGCTraceKind traceKind,
         }
 
         // Disable printing global for objects while we figure out ObjShrink fallout.
-        cb.DescribeGCedNode(isMarked, sizeof(js::shadow::Object), name);
+        cb.DescribeGCedNode(isMarked, name);
     } else {
-        cb.DescribeGCedNode(isMarked, sizeof(js::shadow::Object), "JS Object");
+        cb.DescribeGCedNode(isMarked, "JS Object");
     }
 }
 
@@ -939,7 +939,7 @@ public:
         // edges will ensure that any cycles this context is in won't be
         // collected.
         unsigned refCount = nsXPConnect::GetXPConnect()->GetOutstandingRequests(cx) + 1;
-        cb.DescribeRefCountedNode(refCount, js::SizeOfJSContext(), "JSContext");
+        cb.DescribeRefCountedNode(refCount, "JSContext");
         if (JSObject *global = JS_GetGlobalObject(cx)) {
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
             cb.NoteJSChild(global);
@@ -2661,7 +2661,7 @@ public:
          * We don't allow compartment merging in a WantAllTraces CC, because then these
          * assumptions don't hold.
          */
-        cb.DescribeGCedNode(false, sizeof(js::shadow::Object), "JS Compartment");
+        cb.DescribeGCedNode(false, "JS Compartment");
 
         /*
          * Every JS child of everything in the compartment is either in the compartment
