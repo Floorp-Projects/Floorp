@@ -39,6 +39,9 @@ browser.jar:
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
   skin/classic/browser/setDesktopBackground.css
+  skin/classic/browser/share-button.png
+  skin/classic/browser/share-button-active.png
+  skin/classic/browser/share-button-shared.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/Toolbar-small.png
   skin/classic/browser/urlbar-arrow.png
