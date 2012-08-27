@@ -733,7 +733,7 @@ nsSVGUtils::ScheduleReflowSVG(nsIFrame *aFrame)
                "Do not call under nsISVGChildFrame::ReflowSVG!");
 
   // We don't call nsSVGEffects::InvalidateRenderingObservers here because
-  // we should only be called under InvalidateAndScheduleBoundsUpdate (which
+  // we should only be called under InvalidateAndScheduleReflowSVG (which
   // calls InvalidateBounds) or nsSVGDisplayContainerFrame::InsertFrames
   // (at which point the frame has no observers).
 
