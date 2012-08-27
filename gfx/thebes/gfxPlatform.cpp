@@ -535,21 +535,8 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
       dt->Flush();
     }
     srcBuffer = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
-  } else
-#endif
-  if (aSurface->CairoSurface()) {
-    // If this is an xlib cairo surface we don't want to fetch it into memory
-    // because this is a major slow down.
-    NativeSurface surf;
-    surf.mFormat = format;
-    surf.mType = NATIVE_SURFACE_CAIRO_SURFACE;
-    surf.mSurface = aSurface->CairoSurface();
-    srcBuffer = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
-
-    // It's cheap enough to make a new one so we won't keep it around and
-    // keeping it creates a cycle.
-    return srcBuffer;
   }
+#endif
 
   if (!srcBuffer) {
     nsRefPtr<gfxImageSurface> imgSurface = aSurface->GetAsImageSurface();

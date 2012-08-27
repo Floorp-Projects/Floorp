@@ -57,11 +57,6 @@ public:
                const Rect* aDirtyRect,
                const Rect* aSkipRect);
 
-  AlphaBoxBlur(uint8_t* aData,
-               const Rect& aRect,
-               int32_t aStride,
-               float aSigma);
-
   ~AlphaBoxBlur();
 
   /**
@@ -140,12 +135,7 @@ private:
   /**
    * A pointer to the backing 8-bit alpha surface.
    */
-  uint8_t* mData;
-
-  /**
-   * True if we need to dispose the data.
-   */
-  bool mFreeData;
+  unsigned char* mData;
 
   /**
    * The stride of the data contained in mData.
