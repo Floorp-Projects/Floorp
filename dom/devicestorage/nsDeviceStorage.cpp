@@ -491,6 +491,15 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType)
         f->Normalize();
       }
     }
+
+    if (aType.Equals(NS_LITERAL_STRING("testing-other"))) {
+      dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
+      if (f) {
+        f->AppendRelativeNativePath(NS_LITERAL_CSTRING("device-storage-testing-other"));
+        f->Create(nsIFile::DIRECTORY_TYPE, 0777);
+        f->Normalize();
+      }
+    }
   } 
 
 #ifdef MOZ_WIDGET_GONK
