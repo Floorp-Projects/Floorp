@@ -108,7 +108,6 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIConsoleService.h"
 #include "PSMRunnable.h"
 
 #include "ssl.h"
@@ -182,27 +181,6 @@ void StopSSLServerCertVerificationThreads()
 
 namespace {
 
-void
-LogInvalidCertError(TransportSecurityInfo *socketInfo, 
-                    const nsACString &host, 
-                    const nsACString &hostWithPort,
-                    int32_t port,
-                    PRErrorCode errorCode,
-                    ::mozilla::psm::SSLErrorMessageType errorMessageType,
-                    nsIX509Cert* ix509)
-{
-  nsString message;
-  socketInfo->GetErrorLogMessage(errorCode, errorMessageType, message);
-  
-  if (!message.IsEmpty()) {
-    nsCOMPtr<nsIConsoleService> console;
-    console = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (console) {
-      console->LogStringMessage(message.get());
-    }
-  }
-}
-
 // Dispatched to the STS thread to notify the infoObject of the verification
 // result.
 //
@@ -250,7 +228,7 @@ class CertErrorRunnable : public SyncRunnableBase
   virtual void RunOnTargetThread();
   nsRefPtr<SSLServerCertVerificationResult> mResult; // out
 private:
-  already_AddRefed<SSLServerCertVerificationResult> CheckCertOverrides();
+  SSLServerCertVerificationResult* CheckCertOverrides();
   
   const void * const mFdForLogging; // may become an invalid pointer; do not dereference
   const nsCOMPtr<nsIX509Cert> mCert;
@@ -262,7 +240,7 @@ private:
   const PRErrorCode mErrorCodeExpired;
 };
 
-already_AddRefed<SSLServerCertVerificationResult>
+SSLServerCertVerificationResult *
 CertErrorRunnable::CheckCertOverrides()
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p][%p] top of CheckCertOverrides\n",
@@ -377,21 +355,9 @@ CertErrorRunnable::CheckCertOverrides()
                                 : mErrorCodeMismatch ? mErrorCodeMismatch
                                 : mErrorCodeExpired  ? mErrorCodeExpired
                                 : mDefaultErrorCodeToReport;
-                                
-  nsRefPtr<SSLServerCertVerificationResult> result = 
-    new SSLServerCertVerificationResult(mInfoObject, 
-                                        errorCodeToReport,
-                                        OverridableCertErrorMessage);
 
-  LogInvalidCertError(mInfoObject,
-                      nsDependentCString(mInfoObject->GetHostName()),
-                      hostWithPortString,
-                      port,
-                      result->mErrorCode,
-                      result->mErrorMessageType,
-                      mCert);
-
-  return result.forget();
+  return new SSLServerCertVerificationResult(mInfoObject, errorCodeToReport,
+                                             OverridableCertErrorMessage);
 }
 
 void 
