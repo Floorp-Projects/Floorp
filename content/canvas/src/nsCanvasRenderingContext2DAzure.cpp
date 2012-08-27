@@ -287,7 +287,8 @@ public:
 
     mTempRect = mgfx::Rect(0, 0, ctx->mWidth, ctx->mHeight);
 
-    Float blurRadius = mSigma * 3;
+    static const gfxFloat GAUSSIAN_SCALE_FACTOR = (3 * sqrt(2 * M_PI) / 4) * 1.5;
+    int32_t blurRadius = (int32_t) floor(mSigma * GAUSSIAN_SCALE_FACTOR + 0.5);
 
     // We need to enlarge and possibly offset our temporary surface
     // so that things outside of the canvas may cast shadows.
