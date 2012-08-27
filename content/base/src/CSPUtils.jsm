@@ -4,7 +4,7 @@
 
 /**
  * Content Security Policy Utilities
- * 
+ *
  * Overview
  * This contains a set of classes and utilities for CSP.  It is in this
  * separate file for testing purposes.
@@ -45,7 +45,7 @@ const R_HOSTCHAR   = new RegExp ("[a-zA-Z0-9\\-]", 'i');
 
 // host            = "*" / [ "*." ] 1*host-char *( "." 1*host-char )
 const R_HOST       = new RegExp ("\\*|(((\\*\\.)?" + R_HOSTCHAR.source +
-                                      "+)(\\." + R_HOSTCHAR.source +"+)+)",'i');
+                                      "+)(\\." + R_HOSTCHAR.source +"+)*)",'i');
 // port            = ":" ( 1*DIGIT / "*" )
 const R_PORT       = new RegExp ("(\\:([0-9]+|\\*))", 'i');
 
@@ -183,7 +183,7 @@ CSPPolicyURIListener.prototype = {
   }
 };
 
-//:::::::::::::::::::::::: CLASSES ::::::::::::::::::::::::::// 
+//:::::::::::::::::::::::: CLASSES :::::::::::::::::::::::::://
 
 /**
  * Class that represents a parsed policy structure.
@@ -479,7 +479,7 @@ CSPRep.prototype = {
    * Determines if this policy accepts a URI.
    * @param aContext
    *        one of the SRC_DIRECTIVES defined above
-   * @returns 
+   * @returns
    *        true if the policy permits the URI in given context.
    */
   permits:
@@ -502,7 +502,7 @@ CSPRep.prototype = {
   },
 
   /**
-   * Intersects with another CSPRep, deciding the subset policy 
+   * Intersects with another CSPRep, deciding the subset policy
    * that should be enforced, and returning a new instance.
    * @param aCSPRep
    *        a CSPRep instance to use as "other" CSP
@@ -539,7 +539,7 @@ CSPRep.prototype = {
     newRep._allowEval =          this.allowsEvalInScripts
                            && aCSPRep.allowsEvalInScripts;
 
-    newRep._allowInlineScripts = this.allowsInlineScripts 
+    newRep._allowInlineScripts = this.allowsInlineScripts
                            && aCSPRep.allowsInlineScripts;
 
     return newRep;
@@ -595,7 +595,7 @@ CSPRep.prototype = {
 
 //////////////////////////////////////////////////////////////////////
 /**
- * Class to represent a list of sources 
+ * Class to represent a list of sources
  */
 function CSPSourceList() {
   this._sources = [];
@@ -617,7 +617,7 @@ function CSPSourceList() {
  *        if present, and "true", will check to be sure "self" has the
  *        appropriate values to inherit when they are omitted from the source.
  * @returns
- *        an instance of CSPSourceList 
+ *        an instance of CSPSourceList
  */
 CSPSourceList.fromString = function(aStr, self, enforceSelfChecks) {
   // source-list = *WSP [ source-expression *( 1*WSP source-expression ) *WSP ]
@@ -668,7 +668,7 @@ CSPSourceList.prototype = {
    *
    * @param that
    *        another CSPSourceList
-   * @returns 
+   * @returns
    *        true if they have the same data
    */
   equals:
@@ -765,7 +765,7 @@ CSPSourceList.prototype = {
   /**
    * Intersects with another CSPSourceList, deciding the subset directive
    * that should be enforced, and returning a new instance.
-   * @param that 
+   * @param that
    *        the other CSPSourceList to intersect "this" with
    * @returns
    *        a new instance of a CSPSourceList representing the intersection
@@ -841,10 +841,10 @@ function CSPSource() {
  *  - nsURI
  *  - string
  *  - CSPSource (clone)
- * @param aData 
+ * @param aData
  *        string, nsURI, or CSPSource
  * @param self (optional)
- *	  if present, string, URI, or CSPSource representing the "self" resource 
+ *	  if present, string, URI, or CSPSource representing the "self" resource
  * @param enforceSelfChecks (optional)
  *	  if present, and "true", will check to be sure "self" has the
  *        appropriate values to inherit when they are omitted from the source.
@@ -880,7 +880,7 @@ CSPSource.create = function(aData, self, enforceSelfChecks) {
  *        if present, and "true", will check to be sure "self" has the
  *        appropriate values to inherit when they are omitted from aURI.
  * @returns
- *        an instance of CSPSource 
+ *        an instance of CSPSource
  */
 CSPSource.fromURI = function(aURI, self, enforceSelfChecks) {
   if (!(aURI instanceof Components.interfaces.nsIURI)){
@@ -923,8 +923,8 @@ CSPSource.fromURI = function(aURI, self, enforceSelfChecks) {
 
   // grab port (if there is one)
   // creating a source from an nsURI is limited in that one cannot specify "*"
-  // for port.  In fact, there's no way to represent "*" differently than 
-  // a blank port in an nsURI, since "*" turns into -1, and so does an 
+  // for port.  In fact, there's no way to represent "*" differently than
+  // a blank port in an nsURI, since "*" turns into -1, and so does an
   // absence of port declaration.
 
   // port is never inherited from self -- this gets too confusing.
@@ -957,7 +957,7 @@ CSPSource.fromURI = function(aURI, self, enforceSelfChecks) {
  *        if present, and "true", will check to be sure "self" has the
  *        appropriate values to inherit when they are omitted from aURI.
  * @returns
- *        an instance of CSPSource 
+ *        an instance of CSPSource
  */
 CSPSource.fromString = function(aStr, self, enforceSelfChecks) {
   if (!aStr)
@@ -996,19 +996,26 @@ CSPSource.fromString = function(aStr, self, enforceSelfChecks) {
   }
 
   // check for host-source or ext-host-source match
-  if (R_HOSTSRC.test(aStr) || R_EXTHOSTSRC.test(aStr)){
+  if (R_HOSTSRC.test(aStr) || R_EXTHOSTSRC.test(aStr)) {
     var schemeMatch = R_GETSCHEME.exec(aStr);
-    if (!schemeMatch)
+    // check that the scheme isn't accidentally matching the host. There should
+    // be '://' if there is a valid scheme in an (EXT)HOSTSRC
+    if (!schemeMatch || aStr.indexOf("://") == -1) {
       sObj._scheme = self.scheme;
-    else {
+      schemeMatch = null;
+    } else {
       sObj._scheme = schemeMatch[0];
     }
 
+    // get array of matches to the R_HOST regular expression
     var hostMatch = R_HOST.exec(aStr);
-    if (!hostMatch) {
+    if (!hostMatch){
       CSPError(CSPLocalizer.getFormatStr("couldntParseInvalidSource", [aStr]));
       return null;
     }
+    // host regex gets scheme, so remove scheme from aStr. Add 3 for '://'
+    if (schemeMatch)
+      hostMatch = R_HOST.exec(aStr.substring(schemeMatch[0].length + 3));
     sObj._host = CSPHost.fromString(hostMatch[0]);
     var portMatch = R_PORT.exec(aStr);
     if (!portMatch) {
@@ -1046,7 +1053,7 @@ CSPSource.validSchemeName = function(aStr) {
   // <scheme-suffix>     ::= <scheme-chr>
   //                      | <scheme-suffix><scheme-chr>
   // <scheme-chr>        ::= <letter> | <digit> | "+" | "." | "-"
-  
+
   return aStr.match(/^[a-zA-Z][a-zA-Z0-9+.-]*$/);
 };
 
@@ -1101,7 +1108,7 @@ CSPSource.prototype = {
    */
   toString:
   function() {
-    if (this._isSelf) 
+    if (this._isSelf)
       return this._self.toString();
 
     var s = "";
@@ -1149,13 +1156,13 @@ CSPSource.prototype = {
       return false;
 
     // port is defined in 'this' (undefined means it may not be relevant
-    // to the scheme) AND this port (implicit or explicit) matches 
+    // to the scheme) AND this port (implicit or explicit) matches
     // aSource's port
     if (this.port && this.port !== "*" && this.port != aSource.port)
       return false;
 
     // host is defined in 'this' (undefined means it may not be relevant
-    // to the scheme) AND this host (implicit or explicit) permits 
+    // to the scheme) AND this host (implicit or explicit) permits
     // aSource's host.
     if (this.host && !this.host.permits(aSource.host))
       return false;
@@ -1168,7 +1175,7 @@ CSPSource.prototype = {
    * Determines the intersection of two sources.
    * Returns a null object if intersection generates no
    * hosts that satisfy it.
-   * @param that 
+   * @param that
    *        the other CSPSource to intersect "this" with
    * @returns
    *        a new instance of a CSPSource representing the intersection
@@ -1181,7 +1188,7 @@ CSPSource.prototype = {
     // the source, self must be set by someone creating this source.
     // When intersecting, we take the more specific of the two: if one scheme,
     // host or port is undefined, the other is taken.  (This is contrary to
-    // when "permits" is called -- there, the value of 'self' is looked at 
+    // when "permits" is called -- there, the value of 'self' is looked at
     // when a scheme, host or port is undefined.)
 
     // port
@@ -1246,10 +1253,10 @@ CSPSource.prototype = {
    *
    * @param that
    *        another CSPSource
-   * @param resolveSelf (optional) 
+   * @param resolveSelf (optional)
    *        if present, and 'true', implied values are obtained from 'self'
    *        instead of assumed to be "anything"
-   * @returns 
+   * @returns
    *        true if they have the same data
    */
   equals:
@@ -1284,7 +1291,7 @@ function CSPHost() {
  * Factory to create a new CSPHost, parsed from a string.
  *
  * @param aStr
- *        string rep of a CSP Host 
+ *        string rep of a CSP Host
  * @returns
  *        an instance of CSPHost
  */
@@ -1312,7 +1319,7 @@ CSPHost.fromString = function(aStr) {
         CSPdebug("Wildcard char located at invalid position in '" + aStr + "'");
         return null;
       }
-    } 
+    }
     else if (seg.match(/[^a-zA-Z0-9\-]/)) {
       // Non-wildcard segment must be LDH string
       CSPdebug("Invalid segment '" + seg + "' in host value");
@@ -1363,7 +1370,7 @@ CSPHost.prototype = {
     var thislen = this._segments.length;
     var thatlen = aHost._segments.length;
 
-    // don't accept a less specific host: 
+    // don't accept a less specific host:
     //   \--> *.b.a doesn't accept b.a.
     if (thatlen < thislen) { return false; }
 
@@ -1374,12 +1381,12 @@ CSPHost.prototype = {
       return false;
     }
 
-    // Given the wildcard condition (from above), 
+    // Given the wildcard condition (from above),
     // only necessary to compare elements that are present
-    // in this host.  Extra tokens in aHost are ok. 
+    // in this host.  Extra tokens in aHost are ok.
     // * Compare from right to left.
     for (var i=1; i <= thislen; i++) {
-      if (this._segments[thislen-i] != "*" && 
+      if (this._segments[thislen-i] != "*" &&
           (this._segments[thislen-i] != aHost._segments[thatlen-i])) {
         return false;
       }
@@ -1392,7 +1399,7 @@ CSPHost.prototype = {
   /**
    * Determines the intersection of two Hosts.
    * Basically, they must be the same, or one must have a wildcard.
-   * @param that 
+   * @param that
    *        the other CSPHost to intersect "this" with
    * @returns
    *        a new instance of a CSPHost representing the intersection
@@ -1404,7 +1411,7 @@ CSPHost.prototype = {
       // host definitions cannot co-exist without a more general host
       // ... one must be a subset of the other, or intersection makes no sense.
       return null;
-    } 
+    }
 
     // pick the more specific one, if both are same length.
     if (this._segments.length == that._segments.length) {
@@ -1424,7 +1431,7 @@ CSPHost.prototype = {
    *
    * @param that
    *        another CSPHost
-   * @returns 
+   * @returns
    *        true if they have the same data
    */
   equals:

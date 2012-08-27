@@ -51,7 +51,7 @@ function do_check_in_array(arr, val, stack) {
 
 // helper to assert that an object or array must have a given key
 function do_check_has_key(foo, key, stack) {
-  if (!stack) 
+  if (!stack)
     stack = Components.stack.caller;
 
   var keys = [];
@@ -72,7 +72,7 @@ function do_check_has_key(foo, key, stack) {
 
 // helper to use .equals on stuff
 function do_check_equivalent(foo, bar, stack) {
-  if (!stack) 
+  if (!stack)
     stack = Components.stack.caller;
 
   var text = foo + ".equals(" + bar + ")";
@@ -200,7 +200,7 @@ test(
       do_check_false(src.permits("http://a.com"));
       //"src should inherit scheme 'https'"
       do_check_true(src.permits("https://a.com"));
-      
+
       src = CSPSource.create("http://a.com", "https://foobar.com:443");
       //"src should inherit and require http scheme"
       do_check_false(src.permits("https://a.com"));
@@ -209,7 +209,7 @@ test(
       //"src should inherit port and scheme from parent"
       //"src should inherit default port for 'http'"
       do_check_true(src.permits("http://a.com:80"));
-      
+
       src = CSPSource.create("'self'", "https://foobar.com:443");
       //"src should inherit port *
       do_check_true(src.permits("https://foobar.com:443"));
@@ -408,7 +408,7 @@ test(
       var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.IMG_SRC, SD.FRAME_SRC];
 
       // check one-directive policies
-      cspr = CSPRep.fromString("allow bar.com; script-src https://foo.com", 
+      cspr = CSPRep.fromString("allow bar.com; script-src https://foo.com",
                                URI("http://self.com"));
 
       for(var x in DEFAULTS) {
@@ -508,6 +508,28 @@ test(function test_FrameAncestor_defaults() {
       do_check_false(cspr.permits("http://subd.self.com:34", SD.FRAME_ANCESTORS));
      });
 
+test(function test_FrameAncestor_TLD_defaultPorts() {
+      var cspr;
+      var SD = CSPRep.SRC_DIRECTIVES;
+      var self = "http://self"; //TLD only, no .com or anything.
+
+      cspr = CSPRep.fromString("allow 'self'; frame-ancestors 'self' http://foo:80 bar:80 http://three", URI(self));
+
+      //"frame-ancestors should default to * not 'allow' value"
+      do_check_true(cspr.permits("http://self", SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits("http://self:80", SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits("http://foo", SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits("http://foo:80", SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits("http://bar", SD.FRAME_ANCESTORS));
+      do_check_true(cspr.permits("http://three:80", SD.FRAME_ANCESTORS));
+
+      do_check_false(cspr.permits("https://foo:400", SD.FRAME_ANCESTORS));
+      do_check_false(cspr.permits("https://self:34", SD.FRAME_ANCESTORS));
+      do_check_false(cspr.permits("https://bar", SD.FRAME_ANCESTORS));
+      do_check_false(cspr.permits("http://three:81", SD.FRAME_ANCESTORS));
+      do_check_false(cspr.permits("https://three:81", SD.FRAME_ANCESTORS));
+     });
+
 test(function test_CSP_ReportURI_parsing() {
       var cspr;
       var SD = CSPRep.SRC_DIRECTIVES;
@@ -590,9 +612,9 @@ test(
       do_check_false(src.permits("http://a.com"));
       //"src should inherit scheme 'https'"
       do_check_true(src.permits("https://a.com"));
-      //"src should get default port 
+      //"src should get default port
       do_check_true(src.permits("https://a.com:443"));
-      
+
       src = CSPSource.create("http://a.com", "https://foobar.com:4443");
       //"src should require http scheme"
       do_check_false(src.permits("https://a.com"));
@@ -600,7 +622,7 @@ test(
       do_check_true(src.permits("http://a.com"));
       //"src should inherit default port for 'http'"
       do_check_true(src.permits("http://a.com:80"));
-      
+
       src = CSPSource.create("'self'", "https://foobar.com:4443");
       //"src should inherit nonstandard port from self
       do_check_true(src.permits("https://foobar.com:4443"));
