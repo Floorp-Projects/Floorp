@@ -100,8 +100,6 @@ ReportOverRecursed(JSContext *cx)
 
     js_ReportOverRecursed(cx);
 
-    MOZ_CRASH();
-
     // Cause an InternalError.
     return false;
 }
