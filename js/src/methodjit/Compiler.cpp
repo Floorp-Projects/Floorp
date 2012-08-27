@@ -51,12 +51,6 @@ using namespace js::analyze;
             return retval;                                      \
     JS_END_MACRO
 
-/*
- * Some heuristic constants used in the code.
- */
-static const size_t HEURISTIC_SMALL_FUNCTION_LENGTH     = 100;
-static const size_t HEURISTIC_BIG_LOOP_COUNT            = 40;
-
 mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
                          unsigned chunkIndex, bool isConstructing)
   : BaseCompiler(cx),
@@ -482,70 +476,6 @@ mjit::Compiler::popActiveFrame()
     sps.leaveInlineFrame();
 }
 
-/**
- * This is a quick on-spot analysis for a script to check to see if it's "simple", which
- * in this case is defined as:
- *
- *      1. It contains no large loops (as determined by getMaxLoopCount())
- *      2. All function calls made from within it are well-characterized (TI-ed to a single target)
- *      3. The callees of these function calls themselves are either native functions, OR:
- *          * Contain no function calls themselves.
- *          * Contain no large loops.
- *          * Are small (as determined by bytecode size)
- */
-static bool
-IsSimpleScript(JSContext *cx, JSScript *script)
-{
-    JS_ASSERT(script->hasAnalysis());
-    ScriptAnalysis *analysis = script->analysis();
-
-    if (!analysis->hasFunctionCalls())
-        return true;
-
-    jsbytecode *cur = script->code;
-    jsbytecode *end = script->code + script->length;
-    while (cur < end) {
-        JSOp op = JSOp(*cur);
-
-        // Don't handle FUNCALL or FUNAPPLY for now.
-        if (op == JSOP_FUNCALL || op == JSOP_FUNAPPLY)
-            return false;
-
-        if (op != JSOP_CALL && op != JSOP_NEW) {
-            cur += GetBytecodeLength(cur);
-            continue;
-        }
-
-        uint32_t argc = GET_ARGC(cur);
-        types::TypeSet *typeSet = analysis->poppedTypes(cur, argc + 1);
-        JSObject *obj = typeSet->getSingleton(cx, false);
-        if (!obj || !obj->isFunction())
-            return false;
-
-        // Native function calls are simple.
-        if (obj->toFunction()->isNative()) {
-            cur += GetBytecodeLength(cur);
-            continue;
-        }
-
-        JSScript *callee = obj->toFunction()->script();
-        if (!callee->hasAnalysis())
-            return false;
-
-        // If the callee is large, has big loops, or has its own function calls,
-        // then the caller is not simple.
-        if (callee->length > HEURISTIC_SMALL_FUNCTION_LENGTH ||
-            callee->getMaxLoopCount() >= HEURISTIC_BIG_LOOP_COUNT ||
-            callee->analysis()->hasFunctionCalls())
-        {
-            return false;
-        }
-
-        cur += GetBytecodeLength(cur);
-    }
-    return true;
-}
-
 #define CHECK_STATUS(expr)                                           \
     JS_BEGIN_MACRO                                                   \
         CompileStatus status_ = (expr);                              \
@@ -588,15 +518,6 @@ mjit::Compiler::performCompilation()
         }
 
         CHECK_STATUS(checkAnalysis(outerScript));
-
-        if (outerScript->length < HEURISTIC_SMALL_FUNCTION_LENGTH &&
-            IsSimpleScript(cx, outerScript))
-        {
-            JaegerSpew(JSpew_Inlining, "Early-inline small and simple script %s:%d\n",
-                        outerScript->filename, outerScript->lineno);
-            inlining_ = true;
-        }
-
         if (inlining())
             CHECK_STATUS(scanInlineCalls(CrossScriptSSA::OUTER_FRAME, 0));
         CHECK_STATUS(pushActiveFrame(outerScript, 0));
@@ -4032,7 +3953,7 @@ mjit::Compiler::interruptCheckHelper()
 }
 
 static bool
-MaybeIonCompileable(JSContext *cx, JSScript *script, bool inlining, bool *recompileCheckForIon)
+MaybeIonCompileable(JSContext *cx, JSScript *script, bool *recompileCheckForIon)
 {
 #ifdef JS_ION
     *recompileCheckForIon = true;
@@ -4045,11 +3966,8 @@ MaybeIonCompileable(JSContext *cx, JSScript *script, bool inlining, bool *recomp
     // If this script is small, doesn't have any function calls, and doesn't have
     // any big loops, then throwing in a recompile check and causing an invalidation
     // when we otherwise wouldn't have would be wasteful.
-    if (script->isShortRunning() ||
-        (inlining && script->getMaxLoopCount() < HEURISTIC_BIG_LOOP_COUNT))
-    {
+    if (script->isShortRunning())
         *recompileCheckForIon = false;
-    }
 
     return true;
 #endif
@@ -4064,7 +3982,7 @@ mjit::Compiler::ionCompileHelper()
         return;
 
     bool recompileCheckForIon = false;
-    if (!MaybeIonCompileable(cx, outerScript, inlining(), &recompileCheckForIon))
+    if (!MaybeIonCompileable(cx, outerScript, &recompileCheckForIon))
         return;
 
     uint32_t minUses = ion::UsesBeforeIonRecompile(outerScript, PC);
