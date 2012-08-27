@@ -467,7 +467,6 @@ private:
 
 public:
 #ifdef DEBUG_CC
-    size_t mBytes;
     char *mName;
 #endif
 
@@ -479,8 +478,7 @@ public:
           mRefCount(0),
           mFirstChild()
 #ifdef DEBUG_CC
-        , mBytes(0),
-          mName(nullptr)
+        , mName(nullptr)
 #endif
     {
         MOZ_ASSERT(aParticipant);
@@ -1621,13 +1619,10 @@ public:
     void SetLastChild();
 
 private:
-    void DescribeNode(uint32_t refCount,
-                      size_t objSz,
-                      const char *objName)
+    void DescribeNode(uint32_t refCount, const char *objName)
     {
         mCurrPi->mRefCount = refCount;
 #ifdef DEBUG_CC
-        mCurrPi->mBytes = objSz;
         mCurrPi->mName = PL_strdup(objName);
         sCollector->mStats.mVisitedNode++;
 #endif
@@ -1635,10 +1630,9 @@ private:
 
 public:
     // nsCycleCollectionTraversalCallback methods.
-    NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
+    NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount,
                                              const char *objName);
-    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, size_t objSz,
-                                       const char *objName);
+    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, const char *objName);
 
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root);
     NS_IMETHOD_(void) NoteJSRoot(void *root);
@@ -1825,8 +1819,7 @@ GCGraphBuilder::NoteNativeRoot(void *root, nsCycleCollectionParticipant *partici
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
-                                       const char *objName)
+GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, const char *objName)
 {
     if (refCount == 0)
         Fault("zero refcount", mCurrPi);
@@ -1839,12 +1832,11 @@ GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
                                         objName);
     }
 
-    DescribeNode(refCount, objSz, objName);
+    DescribeNode(refCount, objName);
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::DescribeGCedNode(bool isMarked, size_t objSz,
-                                 const char *objName)
+GCGraphBuilder::DescribeGCedNode(bool isMarked, const char *objName)
 {
     uint32_t refCount = isMarked ? PR_UINT32_MAX : 0;
     sCollector->mVisitedGCed++;
@@ -1854,7 +1846,7 @@ GCGraphBuilder::DescribeGCedNode(bool isMarked, size_t objSz,
                                   objName);
     }
 
-    DescribeNode(refCount, objSz, objName);
+    DescribeNode(refCount, objName);
 }
 
 NS_IMETHODIMP_(void)
@@ -1987,10 +1979,8 @@ public:
     NS_IMETHOD_(void) NoteJSChild(void *child);
 
     NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
-                                             size_t objsz,
                                              const char *objname) {}
     NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
-                                       size_t objsz,
                                        const char *objname) {}
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) {}
     NS_IMETHOD_(void) NoteJSRoot(void *root) {}
@@ -2427,14 +2417,13 @@ public:
         return mSuppressThisNode;
     }
 
-    NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
+    NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount,
                                              const char *objName)
     {
         mSuppressThisNode = (PL_strstr(sSuppressionList, objName) != nullptr);
     }
 
-    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, size_t objSz,
-                                       const char *objName)
+    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, const char *objName)
     {
         mSuppressThisNode = (PL_strstr(sSuppressionList, objName) != nullptr);
     }

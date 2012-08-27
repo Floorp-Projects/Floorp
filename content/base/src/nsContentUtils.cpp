@@ -6244,12 +6244,10 @@ public:
   }
 
   NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount,
-                                           size_t objSz,
                                            const char *objName)
   {
   }
   NS_IMETHOD_(void) DescribeGCedNode(bool isMarked,
-                                     size_t objSz,
                                      const char *objName)
   {
   }
