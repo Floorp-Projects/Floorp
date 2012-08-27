@@ -521,7 +521,7 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
       if (aAttribute == nsGkAtoms::viewBox) {
         nsSVGViewBox* viewBox = GetViewBox();
         if (viewBox) {
-          rv = viewBox->SetBaseValueString(aValue, this);
+          rv = viewBox->SetBaseValueString(aValue, this, false);
           if (NS_FAILED(rv)) {
             viewBox->Init();
           } else {
@@ -535,7 +535,7 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
         SVGAnimatedPreserveAspectRatio *preserveAspectRatio =
           GetPreserveAspectRatio();
         if (preserveAspectRatio) {
-          rv = preserveAspectRatio->SetBaseValueString(aValue, this);
+          rv = preserveAspectRatio->SetBaseValueString(aValue, this, false);
           if (NS_FAILED(rv)) {
             preserveAspectRatio->Init();
           } else {

@@ -75,7 +75,7 @@ Readability.prototype = {
     negative: /hidden|combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|widget/i,
     extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single|utility/i,
     byline: /byline|author|dateline|writtenby/i,
-    divToPElements: /<(a|blockquote|dl|div|img|ol|p|pre|table|ul)/i,
+    divToPElements: /<(a|blockquote|dl|div|img|ol|p|pre|table|ul|select)/i,
     replaceFonts: /<(\/?)font[^>]*>/gi,
     trim: /^\s+|\s+$/g,
     normalize: /\s{2,}/g,
@@ -298,7 +298,7 @@ Readability.prototype = {
    * @return void
    **/
   _prepArticle: function(articleContent) {
-    this._cleanStyles(this._doc, articleContent);
+    this._cleanStyles(articleContent);
     this._killBreaks(articleContent);
 
     // Clean out junk from the article content
@@ -458,18 +458,29 @@ Readability.prototype = {
 
         // Turn all divs that don't have children block level elements into p's
         if (node.tagName === "DIV") {
-          if (node.innerHTML.search(this.REGEXPS.divToPElements) === -1) {
-            let newNode = doc.createElement('p');
-            newNode.innerHTML = node.innerHTML;
+          // Sites like http://mobile.slate.com encloses each paragraph with a DIV
+          // element. DIVs with only a P element inside and no text content can be
+          // safely converted into plain P elements to avoid confusing the scoring
+          // algorithm with DIVs with are, in practice, paragraphs.
+          let pIndex = this._getSinglePIndexInsideDiv(node);
+
+          if (node.innerHTML.search(this.REGEXPS.divToPElements) === -1 || pIndex >= 0) {
+            let newNode;
+            if (pIndex >= 0) {
+              newNode = node.childNodes[pIndex];
+            } else {
+              newNode = doc.createElement('p');
+              newNode.innerHTML = node.innerHTML;
+
+              // Manually update allElements since it is not a live NodeList
+              newNode._index = nodeIndex;
+              allElements[nodeIndex] = newNode;
+
+              nodesToScore[nodesToScore.length] = newNode;
+            }
+
             node.parentNode.replaceChild(newNode, node);
-
-            // Manually update allElements since it is not a live NodeList
-            newNode._index = nodeIndex;
-            allElements[nodeIndex] = newNode;
             purgeNode(node);
-
-            nodeIndex -= 1;
-            nodesToScore[nodesToScore.length] = node;
           } else {
             // EXPERIMENTAL
             for (let i = 0, il = node.childNodes.length; i < il; i += 1) {
@@ -707,6 +718,36 @@ Readability.prototype = {
       if (scripts[i].parentNode)
           scripts[i].parentNode.removeChild(scripts[i]);
     }
+  },
+
+  /**
+   * Get child index of the only P element inside a DIV with no
+   * text content. Returns -1 if the DIV node contains non-empty
+   * text nodes or if it contains other element nodes.
+   *
+   * @param Element
+  **/
+  _getSinglePIndexInsideDiv: function(e) {
+    let childNodes = e.childNodes;
+    let pIndex = -1;
+
+    for (let i = childNodes.length; --i >= 0;) {
+      let node = childNodes[i];
+
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        if (node.tagName !== "P")
+          return -1;
+
+        if (pIndex >= 0)
+          return -1;
+
+        pIndex = i;
+      } else if (node.nodeType == Node.TEXT_NODE && this._getInnerText(node, false)) {
+        return -1;
+      }
+    }
+
+    return pIndex;
   },
 
   /**

@@ -9,8 +9,7 @@
 
 #include <stdio.h>
 
-// FIXME/cjones probably shouldn't depend on STL
-#include <queue>
+#include <deque>
 #include <stack>
 #include <vector>
 
@@ -338,7 +337,7 @@ private:
     // sent us another blocking message, because it's blocked on a
     // reply from us.
     //
-    typedef std::queue<Message> MessageQueue;
+    typedef std::deque<Message> MessageQueue;
     MessageQueue mPending;
 
     // 

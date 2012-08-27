@@ -127,16 +127,23 @@ ElementTransitions::HasTransitionOfProperty(nsCSSProperty aProperty) const
 bool
 ElementTransitions::CanPerformOnCompositorThread() const
 {
+  nsIFrame* frame = mElement->GetPrimaryFrame();
+  if (!frame) {
+    return false;
+  }
+
   if (mElementProperty != nsGkAtoms::transitionsProperty) {
     if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      printf_stderr("Gecko bug: Async animation of pseudoelements not supported.  See bug 771367\n");
+      nsCString message;
+      message.AppendLiteral("Gecko bug: Async transition of pseudoelements not supported.  See bug 771367");
+      LogAsyncAnimationFailure(message, mElement);
     }
     return false;
   }
-  bool hasGeometricProperty = false;
-  nsIFrame* frame = mElement->GetPrimaryFrame();
+
   TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
 
+  bool hasGeometricProperty = false;
   for (uint32_t i = 0, i_end = mPropertyTransitions.Length(); i < i_end; ++i) {
     const ElementPropertyTransition& pt = mPropertyTransitions[i];
     if (css::IsGeometricProperty(pt.mProperty) && pt.IsRunningAt(now)) {
@@ -145,6 +152,8 @@ ElementTransitions::CanPerformOnCompositorThread() const
     }
   }
 
+  bool hasOpacity = false;
+  bool hasTransform = false;
   for (uint32_t i = 0, i_end = mPropertyTransitions.Length(); i < i_end; ++i) {
     const ElementPropertyTransition& pt = mPropertyTransitions[i];
     if (pt.IsRemovedSentinel()) {
@@ -155,6 +164,19 @@ ElementTransitions::CanPerformOnCompositorThread() const
                                                                          hasGeometricProperty)) {
       return false;
     }
+    if (pt.mProperty == eCSSProperty_opacity) {
+      hasOpacity = true;
+    } else if (pt.mProperty == eCSSProperty_transform) {
+      hasTransform = true;
+    }
+  }
+  // This transition can be done on the compositor.  Mark the frame as active, in
+  // case we are able to throttle this transition.
+  if (hasOpacity) {
+    frame->MarkLayersActive(nsChangeHint_UpdateOpacityLayer);
+  }
+  if (hasTransform) {
+    frame->MarkLayersActive(nsChangeHint_UpdateTransformLayer);
   }
   return true;
 }

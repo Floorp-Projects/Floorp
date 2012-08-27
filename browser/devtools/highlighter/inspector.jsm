@@ -258,6 +258,7 @@ Inspector.prototype = {
     this._markupFrame = doc.createElement("iframe");
     this._markupFrame.setAttribute("flex", "1");
     this._markupFrame.setAttribute("tooltip", "aHTMLTooltip");
+    this._markupFrame.setAttribute("context", "inspector-node-popup");
 
     // This is needed to enable tooltips inside the iframe document.
     this._boundMarkupFrameLoad = function Inspector_initMarkupPanel_onload() {
@@ -310,6 +311,7 @@ Inspector.prototype = {
 
     if (this._markupSplitter) {
       this._markupSplitter.parentNode.removeChild(this._markupSplitter);
+      delete this._markupSplitter;
     }
   },
 
@@ -599,38 +601,6 @@ InspectorUI.prototype = {
   },
 
   /**
-   * Toggle highlighter veil.
-   */
-  toggleVeil: function IUI_toggleVeil()
-  {
-    if (this.currentInspector._highlighterShowVeil) {
-      this.highlighter.hideVeil();
-      this.currentInspector._highlighterShowVeil = false;
-      Services.prefs.setBoolPref("devtools.inspector.highlighterShowVeil", false);
-    } else {
-      this.highlighter.showVeil();
-      this.currentInspector._highlighterShowVeil = true;
-      Services.prefs.setBoolPref("devtools.inspector.highlighterShowVeil", true);
-    }
-  },
-
-  /**
-   * Toggle highlighter infobar.
-   */
-  toggleInfobar: function IUI_toggleInfobar()
-  {
-    if (this.currentInspector._highlighterShowInfobar) {
-      this.highlighter.hideInfobar();
-      this.currentInspector._highlighterShowInfobar = false;
-      Services.prefs.setBoolPref("devtools.inspector.highlighterShowInfobar", false);
-    } else {
-      this.highlighter.showInfobar();
-      this.currentInspector._highlighterShowInfobar = true;
-      Services.prefs.setBoolPref("devtools.inspector.highlighterShowInfobar", true);
-    }
-  },
-
-  /**
    * Return the default selection element for the inspected document.
    */
   get defaultSelection()
@@ -710,6 +680,11 @@ InspectorUI.prototype = {
       inspector: this._currentInspector,
     });
 
+    // Fade out the highlighter when needed
+    let deck = this.chromeDoc.getElementById("devtools-sidebar-deck");
+    deck.addEventListener("mouseenter", this, true);
+    deck.addEventListener("mouseleave", this, true);
+
     // Create UI for any sidebars registered with
     // InspectorUI.registerSidebar()
     for each (let tool in InspectorUI._registeredSidebars) {
@@ -767,12 +742,6 @@ InspectorUI.prototype = {
 
       inspector._activeSidebar =
         Services.prefs.getCharPref("devtools.inspector.activeSidebar");
-
-      inspector._highlighterShowVeil =
-        Services.prefs.getBoolPref("devtools.inspector.highlighterShowVeil");
-
-      inspector._highlighterShowInfobar =
-        Services.prefs.getBoolPref("devtools.inspector.highlighterShowInfobar");
 
       this.win.addEventListener("pagehide", this, true);
 
@@ -854,10 +823,12 @@ InspectorUI.prototype = {
       this._sidebar = null;
     }
 
-    if (this.highlighter) {
-      this.highlighter.destroy();
-      this.highlighter = null;
-    }
+    let deck = this.chromeDoc.getElementById("devtools-sidebar-deck");
+    deck.removeEventListener("mouseenter", this, true);
+    deck.removeEventListener("mouseleave", this, true);
+
+    this.highlighter.destroy();
+    this.highlighter = null;
 
     if (this.breadcrumbs) {
       this.breadcrumbs.destroy();
@@ -1015,6 +986,7 @@ InspectorUI.prototype = {
    */
   nodeChanged: function IUI_nodeChanged(aUpdater)
   {
+    this.highlighter.updateInfobar();
     this.highlighter.invalidateSize();
     this.breadcrumbs.updateSelectors();
     this._currentInspector._emit("change", aUpdater);
@@ -1056,23 +1028,6 @@ InspectorUI.prototype = {
 
     if (this.currentInspector._sidebarOpen) {
       this._sidebar.show();
-    }
-
-    let menu = this.chromeDoc.getElementById("inspectorToggleVeil");
-    if (this.currentInspector._highlighterShowVeil) {
-      menu.setAttribute("checked", "true");
-    } else {
-      menu.removeAttribute("checked");
-      this.highlighter.hideVeil();
-    }
-
-    menu = this.chromeDoc.getElementById("inspectorToggleInfobar");
-    if (this.currentInspector._highlighterShowInfobar) {
-      menu.setAttribute("checked", "true");
-      this.highlighter.showInfobar();
-    } else {
-      menu.removeAttribute("checked");
-      this.highlighter.hideInfobar();
     }
 
     Services.obs.notifyObservers({wrappedJSObject: this},
@@ -1144,6 +1099,12 @@ InspectorUI.prototype = {
                                                          false);
         }
         break;
+      case "mouseleave":
+        this.highlighter.show();
+        break;
+      case "mouseenter":
+        this.highlighter.hide();
+        break;
     }
   },
 
@@ -1204,12 +1165,30 @@ InspectorUI.prototype = {
   },
 
   /**
+   * Return the currently-selected node for the purposes of the
+   * context menu.  This is usually the highlighter selection, unless
+   * the markup panel has a selected node that can't be highlighted
+   * (such as a text node).  This will be fixed once the highlighter/inspector
+   * is confortable with non-element nodes being the current selection.
+   * See bug 785180.
+   */
+  _contextSelection: function IUI__contextSelection()
+  {
+    let inspector = this.currentInspector;
+    if (inspector.markup) {
+      return inspector.markup.selected;
+    }
+    return this.selection;
+  },
+
+  /**
    * Copy the innerHTML of the selected Node to the clipboard. Called via the
    * Inspector:CopyInner command.
    */
   copyInnerHTML: function IUI_copyInnerHTML()
   {
-    clipboardHelper.copyString(this.selection.innerHTML, this.selection.ownerDocument);
+    let selection = this._contextSelection();
+    clipboardHelper.copyString(selection.innerHTML, selection.ownerDocument);
   },
 
   /**
@@ -1218,7 +1197,8 @@ InspectorUI.prototype = {
    */
   copyOuterHTML: function IUI_copyOuterHTML()
   {
-    clipboardHelper.copyString(this.selection.outerHTML, this.selection.ownerDocument);
+    let selection = this._contextSelection();
+    clipboardHelper.copyString(selection.outerHTML, selection.ownerDocument);
   },
 
   /**
@@ -1226,7 +1206,7 @@ InspectorUI.prototype = {
    */
   deleteNode: function IUI_deleteNode()
   {
-    let selection = this.selection;
+    let selection = this._contextSelection();
 
     let root = selection.ownerDocument.documentElement;
     if (selection === root) {
@@ -1236,8 +1216,17 @@ InspectorUI.prototype = {
 
     let parent = selection.parentNode;
 
-    // remove the node from content
-    parent.removeChild(selection);
+    // If the markup panel is active, use the markup panel to delete
+    // the node, making this an undoable action.
+    let markup = this.currentInspector.markup;
+    if (markup) {
+      markup.deleteNode(selection);
+    } else {
+      // remove the node from content
+      parent.removeChild(selection);
+    }
+
+    // Otherwise, just delete the node.
     this.breadcrumbs.invalidateHierarchy();
 
     // select the parent node in the highlighter and breadcrumbs

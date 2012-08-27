@@ -112,7 +112,7 @@ struct BytecodeEmitter
 
     bool            hasSingletons:1;    /* script contains singleton initializer JSOP_OBJECT */
 
-    bool            inForInit:1;        /* emitting init expr of for; exclude 'in' */
+    bool            emittingForInit:1;  /* true while emitting init expr of for; exclude 'in' */
 
     const bool      hasGlobalScope:1;   /* frontend::CompileScript's scope chain is the
                                            global object */

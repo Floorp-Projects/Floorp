@@ -387,33 +387,23 @@ Parser::newObjectBox(JSObject *obj)
     return objbox;
 }
 
-FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, ParseContext *pc,
+FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *outerpc,
                          StrictMode::StrictModeState sms)
   : ObjectBox(traceListHead, obj),
-    node(fn),
-    siblings(pc->functionList),
+    siblings(outerpc->functionList),
     kids(NULL),
-    parent(pc->sc->inFunction() ? pc->sc->funbox() : NULL),
     bindings(),
     bufStart(0),
     bufEnd(0),
-    level(pc->staticLevel),
     ndefaults(0),
     strictModeState(sms),
-    inLoop(false),
-    inWith(!!pc->innermostWith),
+    inWith(outerpc->parsingWith),
     inGenexpLambda(false),
-    cxFlags(pc->sc->context)     // the cxFlags are set in LeaveFunction
+    cxFlags(outerpc->sc->context)     // the cxFlags are set in LeaveFunction
 {
     isFunctionBox = true;
-    for (StmtInfoPC *stmt = pc->topStmt; stmt; stmt = stmt->down) {
-        if (stmt->isLoop()) {
-            inLoop = true;
-            break;
-        }
-    }
-    if (!pc->sc->inFunction()) {
-        JSObject *scope = pc->sc->scopeChain();
+    if (!outerpc->sc->inFunction()) {
+        JSObject *scope = outerpc->sc->scopeChain();
         while (scope) {
             if (scope->isWith())
                 inWith = true;
@@ -423,8 +413,7 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn,
 }
 
 FunctionBox *
-Parser::newFunctionBox(JSObject *obj, ParseNode *fn, ParseContext *pc,
-                       StrictMode::StrictModeState sms)
+Parser::newFunctionBox(JSObject *obj, ParseContext *outerpc, StrictMode::StrictModeState sms)
 {
     JS_ASSERT(obj && !IsPoisonedPtr(obj));
     JS_ASSERT(obj->isFunction());
@@ -437,13 +426,13 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, ParseContext *pc,
      * function.
      */
     FunctionBox *funbox =
-        context->tempLifoAlloc().new_<FunctionBox>(traceListHead, obj, fn, pc, sms);
+        context->tempLifoAlloc().new_<FunctionBox>(traceListHead, obj, outerpc, sms);
     if (!funbox) {
         js_ReportOutOfMemory(context);
         return NULL;
     }
 
-    traceListHead = pc->functionList = funbox;
+    traceListHead = outerpc->functionList = funbox;
 
     return funbox;
 }
@@ -710,7 +699,7 @@ Parser::functionBody(FunctionBodyType type)
     PushStatementPC(pc, &stmtInfo, STMT_BLOCK);
     stmtInfo.isFunctionBodyBlock = true;
 
-    JS_ASSERT(!pc->hasReturnExpr && !pc->hasReturnVoid);
+    JS_ASSERT(!pc->funHasReturnExpr && !pc->funHasReturnVoid);
 
     ParseNode *pn;
     if (type == StatementListBody) {
@@ -749,7 +738,7 @@ Parser::functionBody(FunctionBodyType type)
     FinishPopStatement(pc);
 
     /* Check for falling off the end of a function that returns a value. */
-    if (context->hasStrictOption() && pc->hasReturnExpr &&
+    if (context->hasStrictOption() && pc->funHasReturnExpr &&
         !CheckFinalReturn(context, this, pn))
     {
         pn = NULL;
@@ -1161,7 +1150,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
              * by eval and function statements (which both flag the function as
              * having an extensible scope) or any enclosing 'with'.
              */
-            if (funpc->sc->funHasExtensibleScope() || pc->innermostWith)
+            if (funpc->sc->funHasExtensibleScope() || pc->parsingWith)
                 DeoptimizeUsesWithin(dn, fn->pn_pos);
 
             if (!outer_dn) {
@@ -1318,7 +1307,7 @@ BindDestructuringArg(JSContext *cx, BindData *data, HandlePropertyName name, Par
 #endif /* JS_HAS_DESTRUCTURING */
 
 bool
-Parser::functionArguments(ParseNode **listp, bool &hasRest)
+Parser::functionArguments(ParseNode **listp, ParseNode* funcpn, bool &hasRest)
 {
     if (tokenStream.getToken() != TOK_LP) {
         reportError(NULL, JSMSG_PAREN_BEFORE_FORMAL);
@@ -1336,7 +1325,6 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
     argsbody->setOp(JSOP_NOP);
     argsbody->makeEmpty();
 
-    ParseNode *funcpn = funbox->node;
     funcpn->pn_body = argsbody;
 
     if (!tokenStream.matchToken(TOK_RP)) {
@@ -1597,7 +1585,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         StrictMode::STRICT : StrictMode::UNKNOWN;
 
     // Create box for fun->object early to protect against last-ditch GC.
-    FunctionBox *funbox = newFunctionBox(fun, pn, outerpc, sms);
+    FunctionBox *funbox = newFunctionBox(fun, outerpc, sms);
     if (!funbox)
         return NULL;
 
@@ -1610,7 +1598,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     /* Now parse formal argument list and compute fun->nargs. */
     ParseNode *prelude = NULL;
     bool hasRest;
-    if (!functionArguments(&prelude, hasRest))
+    if (!functionArguments(&prelude, pn, hasRest))
         return NULL;
 
     fun->setArgCount(funpc.numArgs());
@@ -2570,24 +2558,24 @@ Parser::returnOrYield(bool useAssignExpr)
 #if JS_HAS_GENERATORS
         if (tt == TOK_RETURN)
 #endif
-            pc->hasReturnExpr = true;
+            pc->funHasReturnExpr = true;
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->pn_kid = pn2;
     } else {
 #if JS_HAS_GENERATORS
         if (tt == TOK_RETURN)
 #endif
-            pc->hasReturnVoid = true;
+            pc->funHasReturnVoid = true;
     }
 
-    if (pc->hasReturnExpr && pc->sc->funIsGenerator()) {
+    if (pc->funHasReturnExpr && pc->sc->funIsGenerator()) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
         ReportBadReturn(context, this, pn, &Parser::reportError, JSMSG_BAD_GENERATOR_RETURN,
                         JSMSG_BAD_ANON_GENERATOR_RETURN);
         return NULL;
     }
 
-    if (context->hasStrictOption() && pc->hasReturnExpr && pc->hasReturnVoid &&
+    if (context->hasStrictOption() && pc->funHasReturnExpr && pc->funHasReturnVoid &&
         !ReportBadReturn(context, this, pn, &Parser::reportStrictWarning,
                          JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE))
     {
@@ -2975,7 +2963,7 @@ Parser::forStatement()
             /*
              * Set pn1 to a var list or an initializing expression.
              *
-             * Set the inForInit flag during parsing of the first clause
+             * Set the parsingForInit flag during parsing of the first clause
              * of the for statement.  This flag will be used by the RelExpr
              * production; if it is set, then the 'in' keyword will not be
              * recognized as an operator, leaving it available to be parsed as
@@ -2985,7 +2973,7 @@ Parser::forStatement()
              * expressions involving an 'in' operator are illegal in the init
              * clause of an ordinary for loop.
              */
-            pc->inForInit = true;
+            pc->parsingForInit = true;
             if (tt == TOK_VAR || tt == TOK_CONST) {
                 forDecl = true;
                 tokenStream.consumeKnownToken(tt);
@@ -3008,7 +2996,7 @@ Parser::forStatement()
             else {
                 pn1 = expr();
             }
-            pc->inForInit = false;
+            pc->parsingForInit = false;
             if (!pn1)
                 return NULL;
         }
@@ -3026,7 +3014,7 @@ Parser::forStatement()
      * We can be sure that it's a for/in loop if there's still an 'in'
      * keyword here, even if JavaScript recognizes 'in' as an operator,
      * as we've excluded 'in' from being parsed in RelExpr by setting
-     * pc->inForInit.
+     * pc->parsingForInit.
      */
     ParseNode *forHead;        /* initialized by both branches. */
     StmtInfoPC letStmt(context); /* used if blockObj != NULL. */
@@ -3493,8 +3481,8 @@ Parser::withStatement()
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_WITH);
     pn->pn_left = pn2;
 
-    ParseNode *oldWith = pc->innermostWith;
-    pc->innermostWith = pn;
+    bool oldParsingWith = pc->parsingWith;
+    pc->parsingWith = true;
 
     StmtInfoPC stmtInfo(context);
     PushStatementPC(pc, &stmtInfo, STMT_WITH);
@@ -3507,7 +3495,7 @@ Parser::withStatement()
     pn->pn_right = pn2;
 
     pc->sc->setBindingsAccessedDynamically();
-    pc->innermostWith = oldWith;
+    pc->parsingWith = oldParsingWith;
 
     /*
      * Make sure to deoptimize lexical dependencies inside the |with|
@@ -4086,7 +4074,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
             if (!CheckDestructuring(context, &data, pn2, this))
                 return NULL;
             bool ignored;
-            if (pc->inForInit && matchInOrOf(&ignored)) {
+            if (pc->parsingForInit && matchInOrOf(&ignored)) {
                 tokenStream.ungetToken();
                 pn->append(pn2);
                 continue;
@@ -4292,8 +4280,8 @@ BEGIN_EXPR_PARSER(relExpr1)
      * Uses of the in operator in shiftExprs are always unambiguous,
      * so unset the flag that prohibits recognizing it.
      */
-    bool oldInForInit = pc->inForInit;
-    pc->inForInit = false;
+    bool oldParsingForInit = pc->parsingForInit;
+    pc->parsingForInit = false;
 
     ParseNode *pn = shiftExpr1i();
     while (pn &&
@@ -4302,14 +4290,14 @@ BEGIN_EXPR_PARSER(relExpr1)
              * Recognize the 'in' token as an operator only if we're not
              * currently in the init expr of a for loop.
              */
-            (oldInForInit == 0 && tokenStream.isCurrentTokenType(TOK_IN)) ||
+            (oldParsingForInit == 0 && tokenStream.isCurrentTokenType(TOK_IN)) ||
             tokenStream.isCurrentTokenType(TOK_INSTANCEOF))) {
         ParseNodeKind kind = RelationalTokenToParseNodeKind(tokenStream.currentToken());
         JSOp op = tokenStream.currentToken().t_op;
         pn = ParseNode::newBinaryOrAppend(kind, op, pn, shiftExpr1n(), this);
     }
-    /* Restore previous state of inForInit flag. */
-    pc->inForInit |= oldInForInit;
+    /* Restore previous state of parsingForInit flag. */
+    pc->parsingForInit |= oldParsingForInit;
 
     return pn;
 }
@@ -4403,10 +4391,10 @@ Parser::condExpr1()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    bool oldInForInit = pc->inForInit;
-    pc->inForInit = false;
+    bool oldParsingForInit = pc->parsingForInit;
+    pc->parsingForInit = false;
     ParseNode *thenExpr = assignExpr();
-    pc->inForInit = oldInForInit;
+    pc->parsingForInit = oldParsingForInit;
     if (!thenExpr)
         return NULL;
 
@@ -4821,7 +4809,7 @@ GenexpGuard::maybeNoteGenerator(ParseNode *pn)
             parser->reportError(NULL, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
             return false;
         }
-        if (pc->hasReturnExpr) {
+        if (pc->funHasReturnExpr) {
             /* At the time we saw the yield, we might not have set funIsGenerator yet. */
             ReportBadReturn(pc->sc->context, parser, pn, &Parser::reportError,
                             JSMSG_BAD_GENERATOR_RETURN, JSMSG_BAD_ANON_GENERATOR_RETURN);
@@ -4909,16 +4897,10 @@ CompExprTransplanter::transplant(ParseNode *pn)
         /*
          * Only the first level of transplant recursion through functions needs
          * to reparent the funbox, since all descendant functions are correctly
-         * linked under the top-most funbox. But every visit to this case needs
-         * to update funbox->level.
-         *
-         * Recall that funbox->level is the static level of the code containing
-         * the definition or expression of the function and not the static level
-         * of the function's body.
+         * linked under the top-most funbox.
          */
         FunctionBox *funbox = pn->pn_funbox;
 
-        funbox->level = pc->staticLevel + funcLevel;
         if (++funcLevel == 1 && genexp) {
             FunctionBox *parent = pc->sc->funbox();
 
@@ -4927,10 +4909,8 @@ CompExprTransplanter::transplant(ParseNode *pn)
                 funboxp = &(*funboxp)->siblings;
             *funboxp = funbox->siblings;
 
-            funbox->parent = parent;
             funbox->siblings = parent->kids;
             parent->kids = funbox;
-            funbox->level = pc->staticLevel;
         }
         /* FALL THROUGH */
       }
@@ -5332,7 +5312,7 @@ Parser::generatorExpr(ParseNode *kid)
             return NULL;
 
         /* Create box for fun->object early to protect against last-ditch GC. */
-        FunctionBox *funbox = newFunctionBox(fun, genfn, outerpc, outerpc->sc->strictModeState);
+        FunctionBox *funbox = newFunctionBox(fun, outerpc, outerpc->sc->strictModeState);
         if (!funbox)
             return NULL;
 
@@ -5541,8 +5521,8 @@ Parser::memberExpr(bool allowCallSyntax)
                     pc->sc->setBindingsAccessedDynamically();
 
                     StmtInfoPC stmtInfo(context);
-                    ParseNode *oldWith = pc->innermostWith;
-                    pc->innermostWith = lhs;
+                    bool oldParsingWith = pc->parsingWith;
+                    pc->parsingWith = true;
                     PushStatementPC(pc, &stmtInfo, STMT_WITH);
 
                     ParseNode *filter = bracketedExpr();
@@ -5551,7 +5531,7 @@ Parser::memberExpr(bool allowCallSyntax)
                     filter->setInParens(true);
                     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
 
-                    pc->innermostWith = oldWith;
+                    pc->parsingWith = oldParsingWith;
                     PopStatementPC(context, pc);
 
                     nextMember =
@@ -5714,10 +5694,10 @@ Parser::bracketedExpr()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    bool oldInForInit = pc->inForInit;
-    pc->inForInit = false;
+    bool oldParsingForInit = pc->parsingForInit;
+    pc->parsingForInit = false;
     ParseNode *pn = expr();
-    pc->inForInit = oldInForInit;
+    pc->parsingForInit = oldParsingForInit;
     return pn;
 }
 

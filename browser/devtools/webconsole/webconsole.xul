@@ -7,6 +7,8 @@
 %webConsoleDTD;
 ]>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css"
+                 type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/webconsole.css"
                  type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
@@ -46,14 +48,15 @@
 
   <vbox class="hud-outer-wrapper" flex="1">
     <vbox class="hud-console-wrapper" flex="1">
-      <toolbar class="hud-console-filter-toolbar" mode="full">
+      <toolbar class="hud-console-filter-toolbar devtools-toolbar" mode="full">
 #ifdef XP_MACOSX
-        <toolbarbutton class="webconsole-close-button"
+        <toolbarbutton id="webconsole-close-button"
+                       class="devtools-closebutton"
                        tooltiptext="&btnClose.tooltip;"/>
 #endif
 
         <toolbarbutton label="&btnPageNet.label;" type="menu-button"
-                       category="net" class="webconsole-filter-button"
+                       category="net" class="devtools-toolbarbutton webconsole-filter-button"
                        tooltiptext="&btnPageNet.tooltip;">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
@@ -63,7 +66,7 @@
           </menupopup>
         </toolbarbutton>
         <toolbarbutton label="&btnPageCSS.label;" type="menu-button"
-                       category="css" class="webconsole-filter-button"
+                       category="css" class="devtools-toolbarbutton webconsole-filter-button"
                        tooltiptext="&btnPageCSS.tooltip;">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
@@ -73,7 +76,7 @@
           </menupopup>
         </toolbarbutton>
         <toolbarbutton label="&btnPageJS.label;" type="menu-button"
-                       category="js" class="webconsole-filter-button"
+                       category="js" class="devtools-toolbarbutton webconsole-filter-button"
                        tooltiptext="&btnPageJS.tooltip;">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox"
@@ -83,7 +86,7 @@
           </menupopup>
         </toolbarbutton>
         <toolbarbutton label="&btnPageLogging.label;" type="menu-button"
-                       category="logging" class="webconsole-filter-button"
+                       category="logging" class="devtools-toolbarbutton webconsole-filter-button"
                        tooltiptext="&btnPageLogging.tooltip;">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox"
@@ -100,6 +103,7 @@
         <spacer flex="1"/>
 
         <toolbarbutton label="&btnPosition.label;" type="menu"
+                       class="devtools-toolbarbutton"
                        tooltiptext="&btnPosition.tooltip;">
           <menupopup>
             <menuitem label="&positionMenu.above;" type="checkbox"
@@ -111,13 +115,14 @@
           </menupopup>
         </toolbarbutton>
 
-        <textbox class="compact hud-filter-box" type="search"
+        <textbox class="compact hud-filter-box devtools-searchinput" type="search"
                  placeholder="&filterBox.placeholder;"/>
-        <toolbarbutton class="webconsole-clear-console-button"
+        <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
                        label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"/>
 
 #ifndef XP_MACOSX
-        <toolbarbutton class="webconsole-close-button"
+        <toolbarbutton id="webconsole-close-button"
+                       class="devtools-closebutton"
                        tooltiptext="&btnClose.tooltip;"/>
 #endif
       </toolbar>

@@ -25,7 +25,7 @@
 class nsIFrame;
 class nsIPresShell;
 
-class nsComputedDOMStyle : public nsDOMCSSDeclaration
+class nsComputedDOMStyle MOZ_FINAL : public nsDOMCSSDeclaration
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -35,6 +35,7 @@ public:
   NS_DECL_NSICSSDECLARATION
 
   NS_DECL_NSIDOMCSSSTYLEDECLARATION
+  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName);
 
   nsComputedDOMStyle(mozilla::dom::Element* aElement,
                      const nsAString& aPseudoElt,
