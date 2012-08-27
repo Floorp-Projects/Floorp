@@ -161,6 +161,7 @@ parent:
     SetInputContext(int32_t IMEEnabled,
                     int32_t IMEOpen,
                     nsString type,
+                    nsString inputmode,
                     nsString actionHint,
                     int32_t cause,
                     int32_t focusChange);
