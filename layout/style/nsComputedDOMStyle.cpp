@@ -545,18 +545,21 @@ nsComputedDOMStyle::SetProperty(const nsAString& aPropertyName,
 NS_IMETHODIMP
 nsComputedDOMStyle::Item(uint32_t aIndex, nsAString& aReturn)
 {
-  aReturn.Truncate();
-
-  uint32_t length = 0;
-  const ComputedStyleMapEntry* propMap = GetQueryablePropertyMap(&length);
-  if (aIndex < length) {
-    CopyASCIItoUTF16(nsCSSProps::GetStringValue(propMap[aIndex].mProperty),
-                    aReturn);
-  }
-
-  return NS_OK;
+  return nsDOMCSSDeclaration::Item(aIndex, aReturn);
 }
 
+void
+nsComputedDOMStyle::IndexedGetter(uint32_t aIndex, bool& aFound,
+                                  nsAString& aPropName)
+{
+  uint32_t length = 0;
+  const ComputedStyleMapEntry* propMap = GetQueryablePropertyMap(&length);
+  aFound = aIndex < length;
+  if (aFound) {
+    CopyASCIItoUTF16(nsCSSProps::GetStringValue(propMap[aIndex].mProperty),
+                     aPropName);
+  }
+}
 
 // Property getters...
 

@@ -1,0 +1,8 @@
+include protocol compressCtorManagee;
+
+rpc protocol compressCtor {
+    manages compressCtorManagee;
+
+parent:
+    async compressCtorManagee() compress;
+};

@@ -1771,8 +1771,8 @@ protected:
   // We hold a strong reference to mNodeInfoManager through mNodeInfo
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
   nsRefPtr<mozilla::css::Loader> mCSSLoader;
-  mozilla::css::ImageLoader* mStyleImageLoader; // [STRONG]
-  nsHTMLStyleSheet* mAttrStyleSheet;
+  nsRefPtr<mozilla::css::ImageLoader> mStyleImageLoader;
+  nsRefPtr<nsHTMLStyleSheet> mAttrStyleSheet;
 
   // The set of all object, embed, applet, video and audio elements for
   // which this is the owner document. (They might not be in the document.)

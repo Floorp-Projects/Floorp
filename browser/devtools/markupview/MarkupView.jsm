@@ -4,16 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * Followup bugs to be filed:
- * - Drag and drop should be implemented.
- * - Node menu should be implemented.
- * - editableField could be moved to a shared location.
- * - I'm willing to consider that judicious use of DOMTemplater could make this
- *   code easier to maintain.
- * - ScrollIntoViewIfNeeded seems jumpy, that should be fixed.
- */
-
 const Cc = Components.classes;
 const Cu = Components.utils;
 const Ci = Components.interfaces;
@@ -69,8 +59,6 @@ function MarkupView(aInspector, aFrame)
 
   this._boundFocus = this._onFocus.bind(this);
   this._frame.addEventListener("focus", this._boundFocus, false);
-
-  this._onSelect();
 }
 
 MarkupView.prototype = {
@@ -148,11 +136,7 @@ MarkupView.prototype = {
     switch(aEvent.keyCode) {
       case Ci.nsIDOMKeyEvent.DOM_VK_DELETE:
       case Ci.nsIDOMKeyEvent.DOM_VK_BACK_SPACE:
-        let node = this._selectedContainer.node;
-        let doc = nodeDocument(node);
-        if (node != doc && node != doc.documentElement) {
-          this.deleteNode(this._selectedContainer.node);
-        }
+        this.deleteNode(this._selectedContainer.node);
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_HOME:
         this.navigate(this._containers.get(this._rootNode.firstChild));
@@ -216,12 +200,22 @@ MarkupView.prototype = {
    */
   deleteNode: function MC__deleteNode(aNode)
   {
+    let doc = nodeDocument(aNode);
+    if (aNode === doc ||
+        aNode === doc.documentElement ||
+        aNode.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE) {
+      return;
+    }
+
     let parentNode = aNode.parentNode;
     let sibling = aNode.nextSibling;
 
     this.undo.do(function() {
+      if (aNode.selected) {
+        this.navigate(this._containers.get(parentNode));
+      }
       parentNode.removeChild(aNode);
-    }, function() {
+    }.bind(this), function() {
       parentNode.insertBefore(aNode, sibling);
     });
   },
@@ -326,6 +320,11 @@ MarkupView.prototype = {
   {
     for (let mutation of aMutations) {
       let container = this._containers.get(mutation.target);
+      if (!container) {
+        // Container might not exist if this came from a load event for an iframe
+        // we're not viewing.
+        continue;
+      }
       if (mutation.type === "attributes" || mutation.type === "characterData") {
         container.update();
       } else if (mutation.type === "childList") {
@@ -347,7 +346,7 @@ MarkupView.prototype = {
     while (parent = walker.parentNode()) {
       this.expandNode(parent);
     }
-//    LayoutHelpers.scrollIntoViewIfNeeded(this._containers.get(aNode).elt, false);
+    LayoutHelpers.scrollIntoViewIfNeeded(this._containers.get(aNode).editor.elt, false);
   },
 
   /**
@@ -426,6 +425,16 @@ MarkupView.prototype = {
     this._selectedContainer.focus();
 
     return true;
+  },
+
+  /**
+   * Called when the markup panel initiates a change on a node.
+   */
+  nodeChanged: function MT_nodeChanged(aNode)
+  {
+    if (aNode === this._inspector.selection) {
+      this._inspector.change("markupview");
+    }
   },
 
   /**
@@ -699,8 +708,10 @@ function TextEditor(aContainer, aNode, aTemplate)
       let oldValue = this.node.nodeValue;
       aContainer.undo.do(function() {
         this.node.nodeValue = aVal;
+        aContainer.markup.nodeChanged(this.node);
       }.bind(this), function() {
         this.node.nodeValue = oldValue;
+        aContainer.markup.nodeChanged(this.node);
       }.bind(this));
     }.bind(this)
   });
@@ -726,6 +737,8 @@ function ElementEditor(aContainer, aNode)
   this.doc = aContainer.doc;
   this.undo = aContainer.undo;
   this.template = aContainer.markup.template.bind(aContainer.markup);
+  this.container = aContainer;
+  this.markup = this.container.markup;
   this.node = aNode;
 
   this.attrs = [];
@@ -918,9 +931,15 @@ ElementEditor.prototype = {
   {
     if (aNode.hasAttribute(aName)) {
       let oldValue = aNode.getAttribute(aName);
-      return function() { aNode.setAttribute(aName, oldValue); };
+      return function() {
+        aNode.setAttribute(aName, oldValue);
+        this.markup.nodeChanged(aNode);
+      }.bind(this);
     } else {
-      return function() { aNode.removeAttribute(aName) };
+      return function() {
+        aNode.removeAttribute(aName);
+        this.markup.nodeChanged(aNode);
+      }.bind(this);
     }
   },
 
@@ -931,7 +950,8 @@ ElementEditor.prototype = {
   {
     this.undo.do(function() {
       aNode.setAttribute(aName, aValue);
-    }, this._restoreAttribute(aNode, aName));
+      this.markup.nodeChanged(aNode);
+    }.bind(this), this._restoreAttribute(aNode, aName));
   },
 
   /**
@@ -941,7 +961,8 @@ ElementEditor.prototype = {
   {
     this.undo.do(function() {
       aNode.removeAttribute(aName);
-    }, this._restoreAttribute(aNode, aName));
+      this.markup.nodeChanged(aNode);
+    }.bind(this), this._restoreAttribute(aNode, aName));
   },
 
   /**
@@ -971,7 +992,14 @@ ElementEditor.prototype = {
     // Create a new element with the same attributes as the
     // current element and prepare to replace the current node
     // with it.
-    let newElt = nodeDocument(this.node).createElement(aVal);
+    try {
+      var newElt = nodeDocument(this.node).createElement(aVal);
+    } catch(x) {
+      // Failed to create a new element with that tag name, ignore
+      // the change.
+      return;
+    }
+
     let attrs = this.node.attributes;
 
     for (let i = 0 ; i < attrs.length; i++) {
@@ -986,11 +1014,27 @@ ElementEditor.prototype = {
       aOld.parentNode.removeChild(aOld);
     }
 
+    let markup = this.container.markup;
+
     // Queue an action to swap out the element.
     this.undo.do(function() {
       swapNodes(this.node, newElt);
+
+      // Make sure the new node is imported and is expanded/selected
+      // the same as the current node.
+      let newContainer = markup.importNode(newElt, this.container.expanded);
+      newContainer.expanded = this.container.expanded;
+      if (this.container.selected) {
+        markup.navigate(newContainer);
+      }
     }.bind(this), function() {
       swapNodes(newElt, this.node);
+
+      let newContainer = markup._containers.get(newElt);
+      this.container.expanded = newContainer.expanded;
+      if (newContainer.selected) {
+        markup.navigate(this.container);
+      }
     }.bind(this));
   },
 }

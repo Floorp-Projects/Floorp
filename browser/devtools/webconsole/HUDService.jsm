@@ -441,7 +441,9 @@ HUD_SERVICE.prototype =
       let splitterStyle = chromeWindow.getComputedStyle(HUD.splitter, null);
       innerHeight += parseInt(splitterStyle.height) +
                      parseInt(splitterStyle.borderTopWidth) +
-                     parseInt(splitterStyle.borderBottomWidth);
+                     parseInt(splitterStyle.borderBottomWidth) +
+                     parseInt(splitterStyle.marginTop) +
+                     parseInt(splitterStyle.marginBottom);
     }
 
     let boxStyle = chromeWindow.getComputedStyle(HUD.iframe, null);
@@ -598,11 +600,11 @@ WebConsole.prototype = {
   _initUI: function WC__initUI()
   {
     this.splitter = this.chromeDocument.createElement("splitter");
-    this.splitter.setAttribute("class", "web-console-splitter");
+    this.splitter.className = "devtools-horizontal-splitter";
 
     this.iframe = this.chromeDocument.createElement("iframe");
     this.iframe.setAttribute("id", this.hudId);
-    this.iframe.setAttribute("class", "web-console-frame");
+    this.iframe.className = "web-console-frame";
     this.iframe.setAttribute("animated", "true");
     this.iframe.setAttribute("tooltip", "aHTMLTooltip");
     this.iframe.style.height = 0;

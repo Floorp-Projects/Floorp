@@ -291,36 +291,25 @@ struct StmtInfoBase {
 
 struct FunctionBox : public ObjectBox
 {
-    ParseNode       *node;
     FunctionBox     *siblings;
     FunctionBox     *kids;
-    FunctionBox     *parent;
     Bindings        bindings;               /* bindings for this function */
     size_t          bufStart;
     size_t          bufEnd;
-    uint16_t        level;
     uint16_t        ndefaults;
     StrictMode::StrictModeState strictModeState;
-    bool            inLoop:1;               /* in a loop in parent function */
     bool            inWith:1;               /* some enclosing scope is a with-statement
                                                or E4X filter-expression */
     bool            inGenexpLambda:1;       /* lambda from generator expression */
 
     ContextFlags    cxFlags;
 
-    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, ParseContext *pc,
+    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *pc,
                 StrictMode::StrictModeState sms);
 
     bool funIsGenerator()        const { return cxFlags.funIsGenerator; }
-    bool funHasExtensibleScope() const { return cxFlags.funHasExtensibleScope; }
 
     JSFunction *function() const { return (JSFunction *) object; }
-
-    /*
-     * True if this function is inside the scope of a with-statement, an E4X
-     * filter-expression, or a function that uses direct eval.
-     */
-    bool inAnyDynamicScope() const;
 
     void recursivelySetStrictMode(StrictMode::StrictModeState strictness);
 };

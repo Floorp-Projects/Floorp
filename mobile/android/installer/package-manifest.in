@@ -195,9 +195,6 @@
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
 @BINPATH@/components/sessionstore.xpt
-#ifdef MOZ_SERVICES_SYNC
-@BINPATH@/components/services-crypto.xpt
-#endif
 @BINPATH@/components/services-crypto-component.xpt
 @BINPATH@/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
@@ -339,12 +336,6 @@
 @BINPATH@/components/nsINIProcessor.js
 @BINPATH@/components/nsPrompter.manifest
 @BINPATH@/components/nsPrompter.js
-#ifdef MOZ_SERVICES_SYNC
-@BINPATH@/components/SyncComponents.manifest
-@BINPATH@/components/Weave.js
-@BINPATH@/components/WeaveCrypto.manifest
-@BINPATH@/components/WeaveCrypto.js
-#endif
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
 @BINPATH@/components/Webapps.js
@@ -399,9 +390,6 @@
 @BINPATH@/@PREF_DIR@/mobile.js
 @BINPATH@/@PREF_DIR@/mobile-branding.js
 @BINPATH@/@PREF_DIR@/channel-prefs.js
-#ifdef MOZ_SERVICES_SYNC
-@BINPATH@/@PREF_DIR@/services-sync.js
-#endif
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js

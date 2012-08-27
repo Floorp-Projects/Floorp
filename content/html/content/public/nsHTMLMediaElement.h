@@ -647,8 +647,8 @@ protected:
   };
   nsTArray<OutputMediaStream> mOutputStreams;
 
-  // Holds a reference to the MediaStreamListener attached to mSrcStream. STRONG!
-  StreamListener* mSrcStreamListener;
+  // Holds a reference to the MediaStreamListener attached to mSrcStream.
+  nsRefPtr<StreamListener> mSrcStreamListener;
 
   // Holds a reference to the first channel we open to the media resource.
   // Once the decoder is created, control over the channel passes to the

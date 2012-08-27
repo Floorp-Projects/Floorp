@@ -18,6 +18,7 @@
   }
   importScripts("resource://gre/modules/osfile/osfile_unix_back.jsm");
   importScripts("resource://gre/modules/osfile/ospath_unix_back.jsm");
+  importScripts("resource://gre/modules/osfile/osfile_shared_front.jsm");
   (function(exports) {
      "use strict";
 
@@ -40,133 +41,122 @@
       * @constructor
       */
      let File = function File(fd) {
-       this._fd = fd;
+       exports.OS.Shared.AbstractFile.call(this, fd);
+       this._closeResult = null;
      };
-     File.prototype = {
-       /**
-        * If the file is open, this returns the file descriptor.
-        * Otherwise, throw a |File.Error|.
-        */
-       get fd() {
-         return this._fd;
-       },
+     File.prototype = Object.create(exports.OS.Shared.AbstractFile.prototype);
 
-       // Placeholder getter, used to replace |get fd| once
-       // the file is closed.
-       _nofd: function nofd(operation) {
-         operation = operation || "unknown operation";
-         throw new File.Error(operation, Const.EBADF);
-       },
-
-       /**
-        * Close the file.
-        *
-        * This method has no effect if the file is already closed. However,
-        * if the first call to |close| has thrown an error, further calls
-        * will throw the same error.
-        *
-        * @throws File.Error If closing the file revealed an error that could
-        * not be reported earlier.
-        */
-       close: function close() {
-         if (this._fd) {
-           let fd = this._fd;
-           this._fd = null;
-           delete this.fd;
-           Object.defineProperty(this, "fd", {get: File.prototype._nofd});
-           // Call |close(fd)|, detach finalizer
-           if (UnixFile.close(fd) == -1) {
-             this._closeResult = new File.Error("close", ctypes.errno);
-           }
+     /**
+      * Close the file.
+      *
+      * This method has no effect if the file is already closed. However,
+      * if the first call to |close| has thrown an error, further calls
+      * will throw the same error.
+      *
+      * @throws File.Error If closing the file revealed an error that could
+      * not be reported earlier.
+      */
+     File.prototype.close = function close() {
+       if (this._fd) {
+         let fd = this._fd;
+         this._fd = null;
+        // Call |close(fd)|, detach finalizer if any
+         // (|fd| may not be a CDataFinalizer if it has been
+         // instantiated from a controller thread).
+         let result = UnixFile._close(fd);
+         if (typeof fd == "object" && "forget" in fd) {
+           fd.forget();
          }
-         if (this._closeResult) {
-           throw this._closeResult;
+         if (result == -1) {
+           this._closeResult = new File.Error("close");
          }
-         return;
-       },
-       _closeResult: null,
-
-       /**
-        * Read some bytes from a file.
-        *
-        * @param {ArrayBuffer} buffer A buffer for holding the data
-        * once it is read.
-        * @param {number} nbytes The number of bytes to read. It must not
-        * exceed the size of |buffer| in bytes but it may exceed the number
-        * of bytes unread in the file.
-        * @param {*=} options Additional options for reading. Ignored in
-        * this implementation.
-        *
-        * @return {number} The number of bytes effectively read. If zero,
-        * the end of the file has been reached.
-        * @throws {OS.File.Error} In case of I/O error.
-        */
-       read: function read(buffer, nbytes, options) {
-         return throw_on_negative("read",
-           UnixFile.read(this.fd, buffer, nbytes)
-         );
-       },
-
-       /**
-        * Write some bytes to a file.
-        *
-        * @param {ArrayBuffer} buffer A buffer holding the data that must be
-        * written.
-        * @param {number} nbytes The number of bytes to write. It must not
-        * exceed the size of |buffer| in bytes.
-        * @param {*=} options Additional options for writing. Ignored in
-        * this implementation.
-        *
-        * @return {number} The number of bytes effectively written.
-        * @throws {OS.File.Error} In case of I/O error.
-        */
-       write: function write(buffer, nbytes, options) {
-         return throw_on_negative("write",
-           UnixFile.write(this.fd, buffer, nbytes)
-         );
-       },
-
-       /**
-        * Return the current position in the file.
-        */
-       getPosition: function getPosition(pos) {
-         return this.setPosition(0, File.POS_CURRENT);
-       },
-
-       /**
-        * Change the current position in the file.
-        *
-        * @param {number} pos The new position. Whether this position
-        * is considered from the current position, from the start of
-        * the file or from the end of the file is determined by
-        * argument |whence|.  Note that |pos| may exceed the length of
-        * the file.
-        * @param {number=} whence The reference position. If omitted
-        * or |OS.File.POS_START|, |pos| is relative to the start of the
-        * file.  If |OS.File.POS_CURRENT|, |pos| is relative to the
-        * current position in the file. If |OS.File.POS_END|, |pos| is
-        * relative to the end of the file.
-        *
-        * @return The new position in the file.
-        */
-       setPosition: function setPosition(pos, whence) {
-         if (whence === undefined) {
-           whence = Const.SEEK_START;
-         }
-         return throw_on_negative("setPosition",
-           UnixFile.lseek(this.fd, pos, whence)
-         );
-       },
-
-       /**
-        * Fetch the information on the file.
-        *
-        * @return File.Info The information on |this| file.
-        */
-       stat: function stat() {
-         throw_on_negative("stat", UnixFile.fstat(this.fd, gStatDataPtr));
-         return new File.Info(gStatData);
        }
+       if (this._closeResult) {
+         throw this._closeResult;
+       }
+       return;
+     };
+
+     /**
+      * Read some bytes from a file.
+      *
+      * @param {ArrayBuffer} buffer A buffer for holding the data
+      * once it is read.
+      * @param {number} nbytes The number of bytes to read. It must not
+      * exceed the size of |buffer| in bytes but it may exceed the number
+      * of bytes unread in the file.
+      * @param {*=} options Additional options for reading. Ignored in
+      * this implementation.
+      *
+      * @return {number} The number of bytes effectively read. If zero,
+      * the end of the file has been reached.
+      * @throws {OS.File.Error} In case of I/O error.
+      */
+     File.prototype.read = function read(buffer, nbytes, options) {
+       return throw_on_negative("read",
+         UnixFile.read(this.fd, buffer, nbytes)
+       );
+     };
+
+     /**
+      * Write some bytes to a file.
+      *
+      * @param {ArrayBuffer} buffer A buffer holding the data that must be
+      * written.
+      * @param {number} nbytes The number of bytes to write. It must not
+      * exceed the size of |buffer| in bytes.
+      * @param {*=} options Additional options for writing. Ignored in
+      * this implementation.
+      *
+      * @return {number} The number of bytes effectively written.
+      * @throws {OS.File.Error} In case of I/O error.
+      */
+     File.prototype.write = function write(buffer, nbytes, options) {
+       return throw_on_negative("write",
+         UnixFile.write(this.fd, buffer, nbytes)
+       );
+     };
+
+     /**
+      * Return the current position in the file.
+      */
+     File.prototype.getPosition = function getPosition(pos) {
+         return this.setPosition(0, File.POS_CURRENT);
+     };
+
+     /**
+      * Change the current position in the file.
+      *
+      * @param {number} pos The new position. Whether this position
+      * is considered from the current position, from the start of
+      * the file or from the end of the file is determined by
+      * argument |whence|.  Note that |pos| may exceed the length of
+      * the file.
+      * @param {number=} whence The reference position. If omitted
+      * or |OS.File.POS_START|, |pos| is relative to the start of the
+      * file.  If |OS.File.POS_CURRENT|, |pos| is relative to the
+      * current position in the file. If |OS.File.POS_END|, |pos| is
+      * relative to the end of the file.
+      *
+      * @return The new position in the file.
+      */
+     File.prototype.setPosition = function setPosition(pos, whence) {
+       if (whence === undefined) {
+         whence = Const.SEEK_START;
+       }
+       return throw_on_negative("setPosition",
+         UnixFile.lseek(this.fd, pos, whence)
+       );
+     };
+
+     /**
+      * Fetch the information on the file.
+      *
+      * @return File.Info The information on |this| file.
+      */
+     File.prototype.stat = function stat() {
+       throw_on_negative("stat", UnixFile.fstat(this.fd, gStatDataPtr));
+         return new File.Info(gStatData);
      };
 
 
@@ -226,7 +216,7 @@
        if (options.unixFlags) {
          flags = options.unixFlags;
        } else {
-         mode = OS.Shared._aux.normalizeOpenMode(mode);
+         mode = OS.Shared.AbstractFile.normalizeOpenMode(mode);
          // Handle read/write
          if (!mode.write) {
            flags = Const.O_RDONLY;

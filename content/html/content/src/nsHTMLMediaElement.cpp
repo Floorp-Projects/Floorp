@@ -2601,7 +2601,6 @@ void nsHTMLMediaElement::SetupSrcMediaStreamPlayback()
   // XXX if we ever support capturing the output of a media element which is
   // playing a stream, we'll need to add a CombineWithPrincipal call here.
   mSrcStreamListener = new StreamListener(this);
-  NS_ADDREF(mSrcStreamListener);
   GetSrcMediaStream()->AddListener(mSrcStreamListener);
   if (mPaused) {
     GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
@@ -2627,7 +2626,7 @@ void nsHTMLMediaElement::EndSrcMediaStreamPlayback()
   GetSrcMediaStream()->RemoveListener(mSrcStreamListener);
   // Kill its reference to this element
   mSrcStreamListener->Forget();
-  NS_RELEASE(mSrcStreamListener); // sets to null
+  mSrcStreamListener = nullptr;
   GetSrcMediaStream()->RemoveAudioOutput(this);
   VideoFrameContainer* container = GetVideoFrameContainer();
   if (container) {
