@@ -29,7 +29,6 @@ MOCHITEST_FILES = \
   test_autoIncrement_indexes.html \
   test_autoIncrement.html \
   test_bfcache.html \
-  test_blob_archive.html \
   test_blob_simple.html \
   test_clear.html \
   test_complex_keyPaths.html \
