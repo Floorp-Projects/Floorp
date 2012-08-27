@@ -1087,9 +1087,14 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
         }
     }
 
-    /* Capture the effects of a standard property access. Never mark the
-     * property as own, as it may have inherited accessors. */
-    HeapTypeSet *types = object->getProperty(cx, id, false);
+    /*
+     * Capture the effects of a standard property access.  For assignments, we do not
+     * automatically update the 'own' bit on accessed properties, except for indexed
+     * elements in dense arrays.  The latter exception allows for JIT fast paths to avoid
+     * testing the array's type when assigning to dense array elements.
+     */
+    bool markOwn = access == PROPERTY_WRITE && JSID_IS_VOID(id);
+    HeapTypeSet *types = object->getProperty(cx, id, markOwn);
     if (!types)
         return;
     if (access == PROPERTY_WRITE) {
