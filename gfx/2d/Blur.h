@@ -59,7 +59,7 @@ public:
 
   AlphaBoxBlur(uint8_t* aData,
                const Rect& aRect,
-               int8_t aStride,
+               int32_t aStride,
                float aSigma);
 
   ~AlphaBoxBlur();
