@@ -1,0 +1,129 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  -moz-text-size-adjust: none;
+  font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
+  font-size: 14px;
+  color: #222;
+  background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
+  padding: 40px 10px 10px 10px;
+}
+
+a {
+  color: #004b98;
+}
+
+section {
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+section:not([active]) {
+  display: none;
+}
+
+.header {
+  font-size: 24px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.message-box,
+.message-box-bottom,
+.link-box,
+.link-box-bottom {
+  background-color: #e4e9ee;
+  padding: 15px;
+}
+
+.message-box,
+.link-box {
+  border-bottom: 1px solid #c8cdd4;
+}
+
+.message-box-bottom,
+.link-box-bottom {
+  border-bottom: 2px solid #c8cdd4;
+  margin-bottom: 10px;   
+}
+
+.link-box,
+.link-box-bottom {
+  text-align: center;
+}
+
+.link-box:active,
+.link-box-bottom:active {
+  background-color: #a7b0b8;
+}
+
+.message {
+  margin-bottom: 10px;
+}
+
+.fine-print {
+  font-size: 12px;
+  color: #666;
+}
+
+.stars {
+  width: 80px;
+  height: 10px;
+  margin: -20px auto 10px auto;
+  background-image: url("chrome://browser/skin/images/5stars.png");
+  background-size: 64px 10px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #e4e9ee;
+}
+
+.link-box-bottom:active > .stars {
+  background-color: transparent;
+}
+
+.bottom-links {
+  text-align: center;
+  position: absolute;
+  left: 0;
+  bottom: 40px;
+  width: 100%;
+}
+
+.bottom-links > a {
+  margin: 0 25px;
+  text-decoration: underline;
+}
+
+#sumo-message {
+  position: absolute;
+  bottom: 20px;
+  color: #444;
+  -moz-padding-end: 30px;
+}
+
+.description,
+#last-url {
+  font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
+  font-size: 14px;
+  margin-bottom: 10px;
+  padding: 5px;
+  width: -moz-calc(100% - 10px);
+}
+
+.send-feedback {
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 16px;
+  width: 100%;
+  background-image: -moz-linear-gradient(rgb(87,94,102), rgb(71,77,83) 90%, rgb(45,49,53));
+  border-radius: 4px;
+  border-width: 0;
+  color: #fff;
+}
+
+.send-feedback:active {
+  background-image: -moz-linear-gradient(rgb(138,143,148), rgb(127,130,135) 90%, rgb(108,111,114));
+}
