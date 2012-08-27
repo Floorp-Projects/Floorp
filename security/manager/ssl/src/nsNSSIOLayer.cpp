@@ -23,6 +23,7 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsIConsoleService.h"
 #include "PSMRunnable.h"
 
 #include "ssl.h"
@@ -485,7 +486,9 @@ void nsSSLIOLayerHelpers::Cleanup()
 }
 
 static void
-nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRErrorCode err)
+nsHandleSSLError(nsNSSSocketInfo *socketInfo, 
+                 ::mozilla::psm::SSLErrorMessageType errtype, 
+                 PRErrorCode err)
 {
   if (!NS_IsMainThread()) {
     NS_ERROR("nsHandleSSLError called off the main thread");
@@ -529,8 +532,19 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRErrorCode err)
       rv = sel->NotifySSLError(csi, err, hostWithPortString, &suppressMessage);
     }
   }
-
+  
+  // We must cancel first, which sets the error code.
   socketInfo->SetCanceled(err, PlainErrorMessage);
+  nsXPIDLString errorString;
+  socketInfo->GetErrorLogMessage(err, errtype, errorString);
+  
+  if (!errorString.IsEmpty()) {
+    nsCOMPtr<nsIConsoleService> console;
+    console = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    if (console) {
+      console->LogStringMessage(errorString.get());
+    }
+  }
 }
 
 namespace {
@@ -806,17 +820,22 @@ isTLSIntoleranceError(int32_t err, bool withInitialCleartext)
 class SSLErrorRunnable : public SyncRunnableBase
 {
  public:
-  SSLErrorRunnable(nsNSSSocketInfo * infoObject, PRErrorCode errorCode)
-    : mInfoObject(infoObject), mErrorCode(errorCode)
+  SSLErrorRunnable(nsNSSSocketInfo * infoObject, 
+                   ::mozilla::psm::SSLErrorMessageType errtype, 
+                   PRErrorCode errorCode)
+    : mInfoObject(infoObject)
+    , mErrType(errtype)
+    , mErrorCode(errorCode)
   {
   }
 
   virtual void RunOnTargetThread()
   {
-    nsHandleSSLError(mInfoObject, mErrorCode);
+    nsHandleSSLError(mInfoObject, mErrType, mErrorCode);
   }
   
   nsRefPtr<nsNSSSocketInfo> mInfoObject;
+  ::mozilla::psm::SSLErrorMessageType mErrType;
   const PRErrorCode mErrorCode;
 };
 
@@ -890,6 +909,7 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
     if (!wantRetry && (IS_SSL_ERROR(err) || IS_SEC_ERROR(err)) &&
         !socketInfo->GetErrorCode()) {
       nsRefPtr<SyncRunnableBase> runnable = new SSLErrorRunnable(socketInfo,
+                                                                 PlainErrorMessage,
                                                                  err);
       (void) runnable->DispatchToMainThreadAndWait();
     }

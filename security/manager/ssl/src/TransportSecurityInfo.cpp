@@ -245,52 +245,82 @@ TransportSecurityInfo::GetErrorMessage(PRUnichar** aText)
 
   MutexAutoLock lock(mMutex);
 
-  nsresult rv = formatErrorMessage(lock);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (mErrorMessageCached.IsEmpty()) {
+    nsresult rv = formatErrorMessage(lock, 
+                                     mErrorCode, mErrorMessageType,
+                                     true, true, mErrorMessageCached);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   *aText = ToNewUnicode(mErrorMessageCached);
   return *aText != nullptr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
+void
+TransportSecurityInfo::GetErrorLogMessage(PRErrorCode errorCode,
+                                          SSLErrorMessageType errorMessageType,
+                                          nsString &result)
+{
+  if (!NS_IsMainThread()) {
+    NS_ERROR("nsNSSSocketInfo::GetErrorLogMessage called off the main thread");
+    return;
+  }
+
+  MutexAutoLock lock(mMutex);
+  (void) formatErrorMessage(lock, errorCode, errorMessageType,
+                            false, false, result);
+}
+
 static nsresult
 formatPlainErrorMessage(nsXPIDLCString const & host, int32_t port,
-                        PRErrorCode err, nsString &returnedMessage);
+                        PRErrorCode err, 
+                        bool suppressPort443,
+                        nsString &returnedMessage);
 
 static nsresult
 formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
                                   PRErrorCode errorCodeToReport, 
                                   const nsXPIDLCString & host, int32_t port,
+                                  bool suppressPort443,
+                                  bool wantsHtml,
                                   nsString & returnedMessage);
 
 // XXX: uses nsNSSComponent string bundles off the main thread when called by
-//      nsNSSSocketInfo::Write(). When we remove the error message from the
-//      serialization of nsNSSSocketInfo (bug 697781) we can inline
-//      formatErrorMessage into GetErrorMessage().
+//      nsNSSSocketInfo::Write().
 nsresult
-TransportSecurityInfo::formatErrorMessage(MutexAutoLock const & proofOfLock)
+TransportSecurityInfo::formatErrorMessage(MutexAutoLock const & proofOfLock, 
+                                          PRErrorCode errorCode,
+                                          SSLErrorMessageType errorMessageType,
+                                          bool wantsHtml, bool suppressPort443, 
+                                          nsString &result)
 {
-  if (mErrorCode == 0 || !mErrorMessageCached.IsEmpty()) {
+  if (errorCode == 0) {
+    result.Truncate();
     return NS_OK;
   }
 
   nsresult rv;
   NS_ConvertASCIItoUTF16 hostNameU(mHostName);
-  NS_ASSERTION(mErrorMessageType != OverridableCertErrorMessage || 
+  NS_ASSERTION(errorMessageType != OverridableCertErrorMessage || 
                 (mSSLStatus && mSSLStatus->mServerCert &&
                  mSSLStatus->mHaveCertErrorBits),
-                "GetErrorMessage called for cert error without cert");
-  if (mErrorMessageType == OverridableCertErrorMessage && 
+                "GetErrorLogMessage called for cert error without cert");
+  if (errorMessageType == OverridableCertErrorMessage && 
       mSSLStatus && mSSLStatus->mServerCert) {
-    rv = formatOverridableCertErrorMessage(*mSSLStatus, mErrorCode,
+    rv = formatOverridableCertErrorMessage(*mSSLStatus, errorCode,
                                            mHostName, mPort,
-                                           mErrorMessageCached);
+                                           suppressPort443,
+                                           wantsHtml,
+                                           result);
   } else {
-    rv = formatPlainErrorMessage(mHostName, mPort, mErrorCode,
-                                 mErrorMessageCached);
+    rv = formatPlainErrorMessage(mHostName, mPort, 
+                                 errorCode,
+                                 suppressPort443,
+                                 result);
   }
 
   if (NS_FAILED(rv)) {
-    mErrorMessageCached.Truncate();
+    result.Truncate();
   }
 
   return rv;
@@ -372,7 +402,9 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
   stream->WriteWStringZ(mShortDesc.get());
 
   // XXX: uses nsNSSComponent string bundles off the main thread
-  nsresult rv = formatErrorMessage(lock); 
+  nsresult rv = formatErrorMessage(lock, 
+                                   mErrorCode, mErrorMessageType,
+                                   true, true, mErrorMessageCached);
   NS_ENSURE_SUCCESS(rv, rv);
   stream->WriteWStringZ(mErrorMessageCached.get());
 
@@ -585,7 +617,9 @@ TransportSecurityInfo::SetSSLStatus(nsSSLStatus *aSSLStatus)
  */
 static nsresult
 formatPlainErrorMessage(const nsXPIDLCString &host, int32_t port,
-                        PRErrorCode err, nsString &returnedMessage)
+                        PRErrorCode err, 
+                        bool suppressPort443,
+                        nsString &returnedMessage)
 {
   const PRUnichar *params[1];
   nsresult rv;
@@ -605,7 +639,7 @@ formatPlainErrorMessage(const nsXPIDLCString &host, int32_t port,
     // in error pages in the common case.
 
     hostWithPort.AssignASCII(host);
-    if (port != 443) {
+    if (!suppressPort443 || port != 443) {
       hostWithPort.AppendLiteral(":");
       hostWithPort.AppendInt(port);
     }
@@ -780,6 +814,7 @@ static void
 AppendErrorTextMismatch(const nsString &host,
                         nsIX509Cert* ix509,
                         nsINSSComponent *component,
+                        bool wantsHtml,
                         nsString &returnedMessage)
 {
   const PRUnichar *params[1];
@@ -842,9 +877,15 @@ AppendErrorTextMismatch(const nsString &host,
   else if (nameCount == 1) {
     const PRUnichar *params[1];
     params[0] = allNames.get();
+    
+    const char *stringID;
+    if (wantsHtml)
+      stringID = "certErrorMismatchSingle2";
+    else
+      stringID = "certErrorMismatchSinglePlain";
 
     nsString formattedString;
-    rv = component->PIPBundleFormatStringFromName("certErrorMismatchSingle2", 
+    rv = component->PIPBundleFormatStringFromName(stringID, 
                                                   params, 1, 
                                                   formattedString);
     if (NS_SUCCEEDED(rv)) {
@@ -978,6 +1019,8 @@ static nsresult
 formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
                                   PRErrorCode errorCodeToReport, 
                                   const nsXPIDLCString & host, int32_t port,
+                                  bool suppressPort443,
+                                  bool wantsHtml,
                                   nsString & returnedMessage)
 {
   const PRUnichar *params[1];
@@ -993,7 +1036,7 @@ formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
   // in error pages in the common case.
   
   hostWithoutPort.AppendASCII(host);
-  if (port == 443) {
+  if (suppressPort443 && port == 443) {
     params[0] = hostWithoutPort.get();
   } else {
     hostWithPort.AppendASCII(host);
@@ -1028,7 +1071,7 @@ formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
   rv = sslStatus.GetIsDomainMismatch(&isDomainMismatch);
   NS_ENSURE_SUCCESS(rv, rv);
   if (isDomainMismatch) {
-    AppendErrorTextMismatch(hostWithoutPort, ix509, component, returnedMessage);
+    AppendErrorTextMismatch(hostWithoutPort, ix509, component, wantsHtml, returnedMessage);
   }
 
   bool isNotValidAtThisTime;
