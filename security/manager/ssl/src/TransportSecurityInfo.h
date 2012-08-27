@@ -59,11 +59,6 @@ public:
   nsresult SetPort(int32_t aPort);
 
   PRErrorCode GetErrorCode() const;
-  
-  void GetErrorLogMessage(PRErrorCode errorCode,
-                          ::mozilla::psm::SSLErrorMessageType errorMessageType,
-                          nsString &result);
-  
   void SetCanceled(PRErrorCode errorCode,
                    ::mozilla::psm::SSLErrorMessageType errorMessageType);
   
@@ -96,11 +91,7 @@ private:
   PRErrorCode mErrorCode;
   ::mozilla::psm::SSLErrorMessageType mErrorMessageType;
   nsString mErrorMessageCached;
-  nsresult formatErrorMessage(::mozilla::MutexAutoLock const & proofOfLock, 
-                              PRErrorCode errorCode,
-                              ::mozilla::psm::SSLErrorMessageType errorMessageType,
-                              bool wantsHtml, bool suppressPort443, 
-                              nsString &result);
+  nsresult formatErrorMessage(::mozilla::MutexAutoLock const & proofOfLock);
 
   int32_t mPort;
   nsXPIDLCString mHostName;
