@@ -21,6 +21,7 @@ MOCHITEST_FILES	= \
 		test_lastModificationFilter.html \
 		test_stat.html \
 		test_watch.html \
+		test_watchOther.html \
 		devicestorage_common.js \
 		$(NULL)
 
