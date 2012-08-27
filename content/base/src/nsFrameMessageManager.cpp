@@ -827,17 +827,13 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
       mGlobal->GetJSObject(&global);
       if (global) {
         JSAutoCompartment ac(mCx, global);
-        uint32_t oldopts = JS_GetOptions(mCx);
-        JS_SetOptions(mCx, oldopts | JSOPTION_NO_SCRIPT_RVAL);
-
-        JSScript* script =
-          JS_CompileUCScriptForPrincipals(mCx, nullptr,
-                                          nsJSPrincipals::get(mPrincipal),
-                                          static_cast<const jschar*>(dataString.get()),
-                                          dataString.Length(),
-                                          url.get(), 1);
-
-        JS_SetOptions(mCx, oldopts);
+        JS::CompileOptions options(mCx);
+        options.setNoScriptRval(true)
+               .setFileAndLine(url.get(), 1)
+               .setPrincipals(nsJSPrincipals::get(mPrincipal));
+        JS::RootedObject empty(mCx, NULL);
+        JSScript* script = JS::Compile(mCx, empty, options,
+                                       dataString.get(), dataString.Length());
 
         if (script) {
           nsCAutoString scheme;
