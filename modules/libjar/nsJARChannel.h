@@ -53,6 +53,8 @@ private:
     nsCString                       mSpec;
 #endif
 
+    bool                            mOpened;
+
     nsCOMPtr<nsIJARURI>             mJarURI;
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsIURI>                mAppURI;
