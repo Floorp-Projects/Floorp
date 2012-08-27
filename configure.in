@@ -5348,30 +5348,6 @@ if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
     dnl See if we have assembly on this platform.
     case "$OS_ARCH:$CPU_ARCH" in
-    Linux:x86)
-      VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
-      VPX_X86_ASM=1
-    ;;
-    Linux:x86_64)
-      VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
-      VPX_X86_ASM=1
-    ;;
-    SunOS:x86)
-      VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
-      VPX_X86_ASM=1
-    ;;
-    SunOS:x86_64)
-      VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
-      VPX_X86_ASM=1
-    ;;
-    OpenBSD:x86)
-      VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
-      VPX_X86_ASM=1
-    ;;
-    OpenBSD:x86_64)
-      VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
-      VPX_X86_ASM=1
-    ;;
     Darwin:x86)
       VPX_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC"
       VPX_X86_ASM=1
@@ -5407,6 +5383,19 @@ if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
         VPX_ASM_SUFFIX="$ASM_SUFFIX"
         VPX_ARM_ASM=1
       fi
+    ;;
+    *:x86)
+      if $CC -E -dM -</dev/null | grep -q __ELF__; then
+        VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+        VPX_X86_ASM=1
+      fi
+    ;;
+    *:x86_64)
+      if $CC -E -dM -</dev/null | grep -q __ELF__; then
+        VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
+        VPX_X86_ASM=1
+      fi
+    ;;
     esac
 
     if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
