@@ -12,15 +12,21 @@ Cu.import('resource://gre/modules/Services.jsm');
 
 var EXPORTED_SYMBOLS = ['Utils', 'Logger'];
 
-var gAccRetrieval = Cc['@mozilla.org/accessibleRetrieval;1'].
-  getService(Ci.nsIAccessibleRetrieval);
-
 var Utils = {
   _buildAppMap: {
     '{3c2e2abc-06d4-11e1-ac3b-374f68613e61}': 'b2g',
     '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}': 'browser',
     '{aa3c5121-dab2-40e2-81ca-7ea25febc110}': 'mobile/android',
     '{a23983c0-fd0e-11dc-95ff-0800200c9a66}': 'mobile/xul'
+  },
+
+  get AccRetrieval() {
+    if (!this._AccRetrieval) {
+      this._AccRetrieval = Cc['@mozilla.org/accessibleRetrieval;1'].
+        getService(Ci.nsIAccessibleRetrieval);
+    }
+
+    return this._AccRetrieval;
   },
 
   get MozBuildApp() {
@@ -72,7 +78,7 @@ var Utils = {
   },
 
   getAllDocuments: function getAllDocuments(aWindow) {
-    let doc = gAccRetrieval.
+    let doc = this.AccRetrieval.
       getAccessibleFor(this.getCurrentContentDoc(aWindow)).
       QueryInterface(Ci.nsIAccessibleDocument);
     let docs = [];
@@ -106,7 +112,7 @@ var Utils = {
 
   getVirtualCursor: function getVirtualCursor(aDocument) {
     let doc = (aDocument instanceof Ci.nsIAccessible) ? aDocument :
-      gAccRetrieval.getAccessibleFor(aDocument);
+      this.AccRetrieval.getAccessibleFor(aDocument);
 
     while (doc) {
       try {
@@ -170,7 +176,7 @@ var Utils = {
       if (!main)
         continue;
 
-      let mainAcc = gAccRetrieval.getAccessibleFor(main);
+      let mainAcc = this.AccRetrieval.getAccessibleFor(main);
       if (!mainAcc)
         continue;
 
@@ -237,7 +243,7 @@ var Logger = {
   accessibleToString: function accessibleToString(aAccessible) {
     let str = '[ defunct ]';
     try {
-      str = '[ ' + gAccRetrieval.getStringRole(aAccessible.role) +
+      str = '[ ' + Utils.AccRetrieval.getStringRole(aAccessible.role) +
         ' | ' + aAccessible.name + ' ]';
     } catch (x) {
     }
@@ -246,12 +252,12 @@ var Logger = {
   },
 
   eventToString: function eventToString(aEvent) {
-    let str = gAccRetrieval.getStringEventType(aEvent.eventType);
+    let str = Utils.AccRetrieval.getStringEventType(aEvent.eventType);
     if (aEvent.eventType == Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE) {
       let event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
       let stateStrings = (event.isExtraState()) ?
-        gAccRetrieval.getStringStates(0, event.state) :
-        gAccRetrieval.getStringStates(event.state, 0);
+        Utils.AccRetrieval.getStringStates(0, event.state) :
+        Utils.AccRetrieval.getStringStates(event.state, 0);
       str += ' (' + stateStrings.item(0) + ')';
     }
 
@@ -261,7 +267,7 @@ var Logger = {
   statesToString: function statesToString(aAccessible) {
     let [state, extState] = Utils.getStates(aAccessible);
     let stringArray = [];
-    let stateStrings = gAccRetrieval.getStringStates(state, extState);
+    let stateStrings = Utils.AccRetrieval.getStringStates(state, extState);
     for (var i=0; i < stateStrings.length; i++)
       stringArray.push(stateStrings.item(i));
     return stringArray.join(' ');
