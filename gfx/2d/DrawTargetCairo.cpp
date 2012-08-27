@@ -11,7 +11,6 @@
 #include "ScaledFontBase.h"
 
 #include "cairo.h"
-#include "cairo-tee.h"
 #include <string.h>
 
 #include "Blur.h"
@@ -388,35 +387,49 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
     return;
   }
 
+  WillChange();
+
   Float width = aSurface->GetSize().width;
   Float height = aSurface->GetSize().height;
- 
-  SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
-  cairo_surface_t* sourcesurf = source->GetSurface();
-  cairo_surface_t* blursurf;
-  cairo_surface_t* surf;
+  Rect extents(0, 0, width, height);
 
-  // We only use the A8 surface for blurred shadows. Unblurred shadows can just
-  // use the RGBA surface directly.
-  if (cairo_surface_get_type(sourcesurf) == CAIRO_SURFACE_TYPE_TEE) {
-    blursurf = cairo_tee_surface_index(sourcesurf, 0);
-    surf = cairo_tee_surface_index(sourcesurf, 1);
-
-    MOZ_ASSERT(cairo_surface_get_type(blursurf) == CAIRO_SURFACE_TYPE_IMAGE);
-    Rect extents(0, 0, width, height);
-    AlphaBoxBlur blur(cairo_image_surface_get_data(blursurf),
-                      extents,
-                      cairo_image_surface_get_stride(blursurf),
-                      aSigma);
-    blur.Blur();
-  } else {
-    blursurf = sourcesurf;
-    surf = sourcesurf;
+  AlphaBoxBlur blur(extents, IntSize(0, 0),
+                    AlphaBoxBlur::CalculateBlurRadius(Point(aSigma, aSigma)),
+                    nullptr, nullptr);
+  if (!blur.GetData()) {
+    return;
   }
 
-  WillChange();
+  IntSize blursize = blur.GetSize();
+  cairo_surface_t* blursurf = cairo_image_surface_create_for_data(blur.GetData(),
+                                                                  CAIRO_FORMAT_A8,
+                                                                  blursize.width,
+                                                                  blursize.height,
+                                                                  blur.GetStride());
+
   ClearSurfaceForUnboundedSource(aOperator);
   
+  // Draw the source surface into the surface we're going to blur.
+  SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
+  cairo_surface_t* surf = source->GetSurface();
+  cairo_pattern_t* pat = cairo_pattern_create_for_surface(surf);
+  cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
+
+  cairo_t* ctx = cairo_create(blursurf);
+
+  cairo_set_source(ctx, pat);
+
+  IntRect blurrect = blur.GetRect();
+  cairo_new_path(ctx);
+  cairo_rectangle(ctx, blurrect.x, blurrect.y, blurrect.width, blurrect.height);
+  cairo_clip(ctx);
+  cairo_paint(ctx);
+
+  cairo_destroy(ctx);
+
+  // Blur the result, then use that blurred result as a mask to draw the shadow
+  // colour to the surface.
+  blur.Blur();
   cairo_save(mContext);
   cairo_set_operator(mContext, GfxOpToCairoOp(aOperator));
   cairo_identity_matrix(mContext);
@@ -427,26 +440,33 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
     cairo_push_group(mContext);
       cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
       cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
-
-      // Now that the shadow has been drawn, we can draw the surface on top.
-      cairo_set_source_surface(mContext, surf, 0, 0);
-      cairo_new_path(mContext);
-      cairo_rectangle(mContext, 0, 0, width, height);
-      cairo_fill(mContext);
     cairo_pop_group_to_source(mContext);
     cairo_paint(mContext);
+
+    // Now that the shadow has been drawn, we can draw the surface on top.
+    cairo_push_group(mContext);
+      cairo_new_path(mContext);
+      cairo_rectangle(mContext, 0, 0, width, height);
+      cairo_set_source(mContext, pat);
+      cairo_fill(mContext);
+    cairo_pop_group_to_source(mContext);
   } else {
     cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
     cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
 
     // Now that the shadow has been drawn, we can draw the surface on top.
-    cairo_set_source_surface(mContext, surf, 0, 0);
+    cairo_set_source(mContext, pat);
     cairo_new_path(mContext);
     cairo_rectangle(mContext, 0, 0, width, height);
-    cairo_fill(mContext);
+    cairo_clip(mContext);
   }
 
+  cairo_paint(mContext);
+
   cairo_restore(mContext);
+
+  cairo_pattern_destroy(pat);
+  cairo_surface_destroy(blursurf);
 }
 
 void
@@ -799,49 +819,6 @@ DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize&
   mFormat = CairoContentToGfxFormat(cairo_surface_get_content(aSurface));
 
   return true;
-}
-
-TemporaryRef<DrawTarget>
-DrawTargetCairo::CreateShadowDrawTarget(const IntSize &aSize, SurfaceFormat aFormat,
-                                        float aSigma) const
-{
-  cairo_surface_t* similar = cairo_surface_create_similar(cairo_get_target(mContext),
-                                                          GfxFormatToCairoContent(aFormat),
-                                                          aSize.width, aSize.height);
-
-  if (cairo_surface_status(similar)) {
-    return nullptr;
-  }
-
-  // If we don't have a blur then we can use the RGBA mask and keep all the
-  // operations in graphics memory.
-  if (aSigma == 0.0F) {
-    RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
-    target->InitAlreadyReferenced(similar, aSize);
-    return target;
-  }
-
-  cairo_surface_t* blursurf = cairo_image_surface_create(CAIRO_FORMAT_A8,
-                                                         aSize.width,
-                                                         aSize.height);
-
-  if (cairo_surface_status(blursurf)) {
-    return nullptr;
-  }
-
-  cairo_surface_t* tee = cairo_tee_surface_create(blursurf);
-  cairo_surface_destroy(blursurf);
-  if (cairo_surface_status(tee)) {
-    cairo_surface_destroy(similar);
-    return nullptr;
-  }
-
-  cairo_tee_surface_add(tee, similar);
-  cairo_surface_destroy(similar);
-
-  RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
-  target->InitAlreadyReferenced(tee, aSize);
-  return target;
 }
 
 bool
