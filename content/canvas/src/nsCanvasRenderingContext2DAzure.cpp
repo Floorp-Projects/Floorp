@@ -313,7 +313,7 @@ public:
       
     mTarget =
       mCtx->mTarget->CreateShadowDrawTarget(IntSize(int32_t(mTempRect.width), int32_t(mTempRect.height)),
-                                             FORMAT_B8G8R8A8);
+                                             FORMAT_B8G8R8A8, mSigma);
 
     if (!mTarget) {
       // XXX - Deal with the situation where our temp size is too big to
