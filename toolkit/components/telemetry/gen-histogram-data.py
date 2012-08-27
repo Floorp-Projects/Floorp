@@ -9,6 +9,7 @@ from __future__ import with_statement
 
 import sys
 import histogram_tools
+import itertools
 
 banner = """/* This file is auto-generated, see gen-histogram-data.py.  */
 """
@@ -49,7 +50,7 @@ def static_asserts_for_flag(histogram):
 def static_asserts_for_enumerated(histogram):
     n_values = histogram.high()
     static_assert("%s > 2" % n_values,
-                  "Not enough values for %s" % histogram.name)
+                  "Not enough values for %s" % histogram.name())
 
 def shared_static_asserts(histogram):
     name = histogram.name()
@@ -84,6 +85,50 @@ def write_histogram_static_asserts(histograms):
         histogram_tools.table_dispatch(histogram.kind(), table,
                                        lambda f: f(histogram))
 
+def write_debug_histogram_ranges(histograms):
+    ranges_lengths = []
+
+    # Collect all the range information from individual histograms.
+    # Write that information out as well.
+    print "#ifdef DEBUG"
+    print "const int gBucketLowerBounds[] = {"
+    for histogram in histograms:
+        ranges = []
+        try:
+            ranges = histogram.ranges()
+        except histogram_tools.DefinitionException:
+            pass
+        ranges_lengths.append(len(ranges))
+        # Note that we do not test cpp_guard here.  We do this so we
+        # will have complete information about all the histograms in
+        # this array.  Just having information about the ranges of
+        # histograms is not platform-specific; if there are histograms
+        # that have platform-specific constants in their definitions,
+        # those histograms will fail in the .ranges() call above and
+        # we'll have a zero-length array to deal with here.
+        if len(ranges) > 0:
+            print ','.join(map(str, ranges)), ','
+        else:
+            print '/* Skipping %s */' % histogram.name()
+    print "};"
+
+    # Write the offsets into gBucketLowerBounds.
+    print "struct bounds { int offset; int length; };"
+    print "const struct bounds gBucketLowerBoundIndex[] = {"
+    offset = 0
+    for (histogram, range_length) in itertools.izip(histograms, ranges_lengths):
+        cpp_guard = histogram.cpp_guard()
+        # We do test cpp_guard here, so that histogram IDs are valid
+        # indexes into this array.
+        if cpp_guard:
+            print "#if defined(%s)" % cpp_guard
+        print "{ %d, %d }," % (offset, range_length)
+        if cpp_guard:
+            print "#endif"
+        offset += range_length
+    print "};"
+    print "#endif"
+
 def main(argv):
     filename = argv[0]
 
@@ -92,5 +137,6 @@ def main(argv):
     print banner
     write_histogram_table(histograms)
     write_histogram_static_asserts(histograms)
+    write_debug_histogram_ranges(histograms)
 
 main(sys.argv[1:])
