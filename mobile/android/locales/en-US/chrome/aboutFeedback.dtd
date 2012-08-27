@@ -1,0 +1,49 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY pageTitle                 "&brandShortName; Feedback">
+
+<!ENTITY intro.header              "Have a minute?">
+<!ENTITY intro.message             "Tell us what you think about &brandShortName; for Android so far.">
+<!ENTITY intro.happyLink           "I love it">
+<!ENTITY intro.sadLink             "I ran into some problems">
+<!ENTITY intro.ideaLink            "I have an idea">
+
+<!-- LOCALIZATION NOTE (support.pre): Include a trailing space as needed. -->
+<!-- LOCALIZATION NOTE (support.link): Avoid leading/trailing spaces, this text is a link. -->
+<!-- LOCALIZATION NOTE (support.post): Include a starting space as needed. -->
+<!ENTITY support.pre               "If you need help or have a problem with &brandShortName;, please visit ">
+<!ENTITY support.link              "&brandShortName; Support">
+<!ENTITY support.post              ".">
+
+<!ENTITY happy.header              "That's great to hear!">
+<!ENTITY happy.message             "Want to share the love by giving us a 5 star rating on Google Play?">
+<!ENTITY happy.finePrint           "It takes less than a minute and feels great.">
+<!ENTITY happy.ratingLink          "Yes, go to Google Play">
+<!ENTITY happy.maybeLater          "Maybe Later">
+<!ENTITY happy.noThanks            "No thanks">
+
+<!ENTITY sad.message               "We’re sorry that you had some problems with &brandShortName;. Please tell us what happened so that we can fix it.">
+<!ENTITY sad.placeholder           "Enter your feedback here">
+<!ENTITY sad.lastSite              "Last visited site (optional)">
+<!-- LOCALIZATION NOTE (sad.urlPlaceholder): Placeholder text that appears in "Last visited site" input box when there is no text. -->
+<!ENTITY sad.urlPlaceholder        "http://">
+<!ENTITY sad.thanksHeader          "Thanks for letting us know.">
+
+<!-- LOCALIZATION NOTE (sad.thanksMessageTop, sad.thanksMessageBottom): These two
+     strings will appear as separate paragraphs but make up one message. -->
+<!ENTITY sad.thanksMessageTop      "We’re always working to make &brandShortName; better. Rest assured that real people will look at your feedback and do their very best to resolve your issue.">
+<!ENTITY sad.thanksMessageBottom   "Or else.">
+
+<!ENTITY idea.message              "We love hearing your ideas! Please share your thoughts below. (Just the ones about &brandShortName;, please.)">
+<!ENTITY idea.placeholder          "Enter your idea here">
+<!ENTITY idea.thanksHeader         "Thanks!">
+
+<!-- LOCALIZATION NOTE (idea.thanksMessageTop, idea.thanksMessageBottom): These two
+     strings will appear as separate paragraphs but make up one message. -->
+<!ENTITY idea.thanksMessageTop     "We appreciate you taking the time to share your thoughts. We’re always working to make &brandShortName; better and contributions like yours can lead to great things.">
+<!ENTITY idea.thanksMessageBottom  "You can't see it, but we're giving you a high five right now.">
+
+<!ENTITY feedback.privacy          "For your privacy, please don't include any personally indentifiable information in your feedback.">
+<!ENTITY feedback.send             "Send Feedback">

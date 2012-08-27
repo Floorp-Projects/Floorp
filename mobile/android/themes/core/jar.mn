@@ -11,6 +11,7 @@ chrome.jar:
   skin/aboutAddons.css                      (aboutAddons.css)
   skin/aboutApps.css                        (aboutApps.css)
 * skin/aboutDownloads.css                   (aboutDownloads.css)
+  skin/aboutFeedback.css                    (aboutFeedback.css)
   skin/aboutReader.css                      (aboutReader.css)
   skin/aboutReaderContent.css               (aboutReaderContent.css)
 * skin/browser.css                          (browser.css)
@@ -24,6 +25,7 @@ chrome.jar:
 
   skin/fonts/opensans-regular.ttf           (fonts/opensans-regular.ttf)
   skin/fonts/opensans-light.ttf             (fonts/opensans-light.ttf)
+  skin/images/5stars.png                    (images/5stars.png)
   skin/images/addons-32.png                 (images/addons-32.png)
   skin/images/arrowleft-16.png              (images/arrowleft-16.png)
   skin/images/arrowright-16.png             (images/arrowright-16.png)
