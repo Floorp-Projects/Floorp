@@ -475,6 +475,8 @@ DOMCI_CLASS(TransitionEvent)
 DOMCI_CLASS(AnimationEvent)
 
 DOMCI_CLASS(ContentFrameMessageManager)
+DOMCI_CLASS(ChromeMessageBroadcaster)
+DOMCI_CLASS(ChromeMessageSender)
 
 DOMCI_CLASS(FormData)
 

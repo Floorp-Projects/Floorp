@@ -72,7 +72,8 @@ public:
   void Init();
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, nsDOMEventTargetHelper)
-  NS_FORWARD_SAFE_NSIFRAMEMESSAGEMANAGER(mMessageManager)
+  NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
+  NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_IMETHOD SendSyncMessage(const nsAString& aMessageName,
                              const jsval& aObject,
                              JSContext* aCx,

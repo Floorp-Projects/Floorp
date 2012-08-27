@@ -262,7 +262,7 @@ function OnRefTestLoad(win)
 #endif
 
     gBrowserMessageManager = gBrowser.QueryInterface(CI.nsIFrameLoaderOwner)
-                             .frameLoader.messageManager;
+                                     .frameLoader.messageManager;
     // The content script waits for the initial onload, then notifies
     // us.
     RegisterMessageListenersAndLoadContentScript();

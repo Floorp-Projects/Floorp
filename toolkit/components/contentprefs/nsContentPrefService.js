@@ -167,7 +167,7 @@ ContentPrefService.prototype = {
 
   classID:          Components.ID("{e6a3f533-4ffa-4615-8eb4-d4e72d883fa7}"),
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentPrefService,
-                                           Ci.nsIFrameMessageListener]),
+                                           Ci.nsIMessageListener]),
 
 
   //**************************************************************************//
