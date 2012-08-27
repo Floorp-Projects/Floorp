@@ -2111,7 +2111,6 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
     // If this widget uses OMTC...
     if (GetLayerManager()->AsShadowForwarder() && GetLayerManager()->AsShadowForwarder()->HasShadowManager()) {
-        nsEventStatus status;
 #if defined(MOZ_WIDGET_GTK2)
         nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface());
 #else
