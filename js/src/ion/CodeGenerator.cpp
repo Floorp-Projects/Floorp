@@ -1230,15 +1230,15 @@ CodeGenerator::visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool)
     // Throw an InternalError for over-recursion.
 
     typedef bool (*pf)(JSContext *);
-    static const VMFunction ReportOverRecursedInfo =
-        FunctionInfo<pf>(ReportOverRecursed);
+    static const VMFunction CheckOverRecursedInfo =
+        FunctionInfo<pf>(CheckOverRecursed);
 
     // LFunctionEnvironment can appear before LCheckOverRecursed, so we have
-    // to save all live registers to avoid crashes if ReportOverRecursed triggers
+    // to save all live registers to avoid crashes if CheckOverRecursed triggers
     // a GC.
     saveLive(ool->lir());
 
-    if (!callVM(ReportOverRecursedInfo, ool->lir()))
+    if (!callVM(CheckOverRecursedInfo, ool->lir()))
         return false;
 
     restoreLive(ool->lir());

@@ -131,16 +131,18 @@ void
 JSRuntime::triggerOperationCallback()
 {
     /*
+     * Invalidate ionTop to trigger its over-recursion check. Note this must be
+     * set before interrupt, to avoid racing with js_InvokeOperationCallback,
+     * into a weird state where interrupt is stuck at 0 but ionStackLimit is
+     * NULL.
+     */
+    ionStackLimit = NULL;
+
+    /*
      * Use JS_ATOMIC_SET in the hope that it ensures the write will become
      * immediately visible to other processors polling the flag.
      */
     JS_ATOMIC_SET(&interrupt, 1);
-
-    /*
-     * Reset ionTop to trigger the over-recursion check. ionActivation is above
-     * the most recent entry Ion frame.
-     */
-    ionStackLimit = reinterpret_cast<uintptr_t>(ionActivation);
 }
 
 void
@@ -1010,8 +1012,8 @@ js_InvokeOperationCallback(JSContext *cx)
      */
     JS_ATOMIC_SET(&rt->interrupt, 0);
 
-    /* Reset Ion's stack limit. */
-    cx->runtime->ionStackLimit = cx->runtime->nativeStackLimit;
+    /* IonMonkey sets its stack limit to NULL to trigger operaton callbacks. */
+    rt->resetIonStackLimit();
 
     if (rt->gcIsNeeded)
         GCSlice(rt, GC_NORMAL, rt->gcTriggerReason);

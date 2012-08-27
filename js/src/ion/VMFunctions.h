@@ -399,7 +399,7 @@ bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Va
 bool InvokeConstructor(JSContext *cx, JSObject *obj, uint32 argc, Value *argv, Value *rval);
 JSObject *NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
 
-bool ReportOverRecursed(JSContext *cx);
+bool CheckOverRecursed(JSContext *cx);
 
 bool DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
 bool InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &value);
