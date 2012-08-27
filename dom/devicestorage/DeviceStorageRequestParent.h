@@ -49,9 +49,15 @@ private:
       nsresult rv = NS_OK;
       if (!mCanceled) {
         rv = CancelableRun();
-        mParent->RemoveRunnable(this);
+
+        nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &CancelableRunnable::RemoveRunnable);
+        NS_DispatchToMainThread(event);
       }
       return rv;
+    }
+
+    void RemoveRunnable() {
+      mParent->RemoveRunnable(this);
     }
 
     void Cancel() {
@@ -184,9 +190,11 @@ private:
 
 protected:
   void AddRunnable(CancelableRunnable* aRunnable) {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mRunnables.AppendElement(aRunnable);
   }
   void RemoveRunnable(CancelableRunnable* aRunnable) {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mRunnables.RemoveElement(aRunnable);
   }
   nsTArray<nsRefPtr<CancelableRunnable> > mRunnables;
