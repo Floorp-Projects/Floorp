@@ -1,0 +1,69 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = soundtouch
+LIBRARY_NAME = soundtouch
+SHORT_LIBNAME = soundt
+FORCE_SHARED_LIB = 1
+VISIBILITY_FLAGS =
+EXPORTS_NAMESPACES = soundtouch
+
+ifeq ($(OS_ARCH),WINNT)
+ifndef GNU_CC
+RCFILE  = $(srcdir)/soundtouch.rc
+RESFILE  = $(srcdir)/soundtouch.res
+endif
+endif
+
+
+EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)
+
+# Use abort() instead of exception in SoundTouch.
+DEFINES += -DST_NO_EXCEPTION_HANDLING=1
+
+EXPORTS_soundtouch = SoundTouch.h \
+                     STTypes.h \
+                     FIFOSamplePipe.h \
+                     soundtouch_config.h \
+                     $(NULL)
+
+CPPSRCS = AAFilter.cpp \
+          cpu_detect_x86.cpp \
+          FIFOSampleBuffer.cpp \
+          FIRFilter.cpp \
+          RateTransposer.cpp \
+          SoundTouch.cpp \
+          TDStretch.cpp \
+          $(NULL)
+
+ifneq (,$(INTEL_ARCHITECTURE))
+ifdef MOZ_SAMPLE_TYPE_FLOAT32
+CPPSRCS += sse_optimized.cpp
+else
+CPPSRCS += mmx_optimized.cpp
+endif
+endif
+
+SOUNDTOUCH_LIBS = $(DLL_PREFIX)soundtouch$(DLL_SUFFIX)
+
+include $(topsrcdir)/config/rules.mk
+
+ifneq (,$(INTEL_ARCHITECTURE))
+ifdef GNU_CC
+mmx_optimized.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+sse_optimized.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+endif
+ifdef SOLARIS_SUNPRO_CXX
+mmx_optimized.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
+sse_optimized.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
+endif
+endif
+
