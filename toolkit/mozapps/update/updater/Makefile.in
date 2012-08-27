@@ -76,6 +76,8 @@ ifeq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
 HAVE_PROGRESSUI = 1
 STL_FLAGS =
 CPPSRCS += progressui_gonk.cpp
+# clear out all the --wrap flags and remove dependency on mozglue for Gonk
+WRAP_LDFLAGS :=
 endif #}
 
 ifndef HAVE_PROGRESSUI
