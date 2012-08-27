@@ -91,25 +91,6 @@ onconnect = function(e) {
       case "test-isVisible-response":
         testPort.postMessage({topic: "got-isVisible-response", result: event.data.result});
         break;
-      case "social.user-recommend-prompt":
-        port.postMessage({
-          topic: "social.user-recommend-prompt-response",
-          data: {
-            images: {
-              // this one is relative to test we handle relative ones.
-              share: "browser/browser/base/content/test/social_share_image.png",
-              // absolute to check we handle them too.
-              unshare: "https://example.com/browser/browser/base/content/test/social_share_image.png"
-            },
-            messages: {
-              shareTooltip: "Share this page",
-              unshareTooltip: "Unshare this page",
-              sharedLabel: "This page has been shared",
-              unsharedLabel: "This page is no longer shared",
-            }
-          }
-        });
-        break;
     }
   }
 }
