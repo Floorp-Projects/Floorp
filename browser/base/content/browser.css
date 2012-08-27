@@ -64,6 +64,16 @@ tabbrowser {
   display: block; /* position:fixed already does this (bug 579776), but let's be explicit */
 }
 
+.tabbrowser-tabs[movingtab] > .tabbrowser-tab[selected] {
+  position: relative;
+  z-index: 2;
+  pointer-events: none; /* avoid blocking dragover events on scroll buttons */
+}
+
+.tabbrowser-tabs[movingtab] > .tabbrowser-tab[fadein]:not([selected]) {
+  transition: transform 200ms ease-out;
+}
+
 #alltabs-popup {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
 }
