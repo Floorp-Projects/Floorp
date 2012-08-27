@@ -660,7 +660,6 @@ NO_PKG_FILES += \
 	mangle* \
 	maptsv* \
 	mfc* \
-	mkdepend* \
 	msdump* \
 	msmap* \
 	nm2tsv* \
