@@ -2140,9 +2140,8 @@
     "description": "New tab page is enabled."
   },
   "NEWTAB_PAGE_PINNED_SITES_COUNT": {
-    "kind": "exponential",
-    "high": "9",
-    "n_buckets": 10,
+    "kind": "enumerated",
+    "n_values": 9,
     "description": "Number of pinned sites on the new tab page."
   },
   "NEWTAB_PAGE_BLOCKED_SITES_COUNT": {
