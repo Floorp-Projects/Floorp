@@ -22,7 +22,8 @@ DirectoryProvider.prototype = {
 
   getFile: function dp_getFile(prop, persistent) {
 #ifdef MOZ_WIDGET_GONK
-    let localProps = ["cachePDir", "webappsDir", "PrefD", "indexedDBPDir", "permissionDBPDir"];
+    let localProps = ["cachePDir", "webappsDir", "PrefD", "indexedDBPDir",
+      "permissionDBPDir", "UpdRootD"];
     if (localProps.indexOf(prop) != -1) {
       prop.persistent = true;
       let file = Cc["@mozilla.org/file/local;1"]
