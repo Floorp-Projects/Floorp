@@ -1276,11 +1276,11 @@ AssertJit(JSContext *cx, unsigned argc, jsval *vp)
 #ifdef JS_METHODJIT
     if (JS_GetOptions(cx) & JSOPTION_METHODJIT) {
         /*
-         * :XXX: Ignore calls to this native when inference is enabled,
-         * with METHODJIT_ALWAYS recompilation can happen and discard the
-         * script's jitcode.
+         * Ignore calls to this native when inference is enabled, with
+         * METHODJIT_ALWAYS recompilation can happen and discard the script's
+         * jitcode.
          */
-        if (!cx->typeInferenceEnabled() && !cx->fp()->jit()) {
+        if (!cx->typeInferenceEnabled() && cx->hasfp() && !cx->fp()->jit()) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
             return false;
         }
