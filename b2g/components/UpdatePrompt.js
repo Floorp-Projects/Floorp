@@ -79,7 +79,7 @@ UpdatePrompt.prototype = {
 
   showUpdateError: function UP_showUpdateError(aUpdate) {
     if (aUpdate.state == "failed") {
-      log("Failed to download update");
+      log("Failed to download update, errorCode: " + aUpdate.errorCode);
     }
   },
 

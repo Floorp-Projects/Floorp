@@ -61,6 +61,7 @@
 #define UNEXPECTED_MAR_ERROR 40
 #define UNEXPECTED_BSPATCH_ERROR 41
 #define UNEXPECTED_FILE_OPERATION_ERROR 42
+#define FILESYSTEM_MOUNT_READWRITE_ERROR 43
 
 // The following error codes are only used by updater.exe
 // when a fallback key exists and XPCShell tests are being run.

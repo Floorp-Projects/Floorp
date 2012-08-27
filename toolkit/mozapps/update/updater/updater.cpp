@@ -80,6 +80,10 @@ void LaunchMacPostProcess(const char* aAppExe);
 #define USE_EXECV
 #endif
 
+#if defined(MOZ_WIDGET_GONK)
+# include "automounter_gonk.h"
+#endif
+
 #ifdef XP_WIN
 #include "updatehelper.h"
 
@@ -2620,6 +2624,20 @@ int NS_main(int argc, NS_tchar **argv)
   }
 #endif
 
+#if defined(MOZ_WIDGET_GONK)
+  // Remount the /system partition as read-write for gonk. The destructor will
+  // remount /system as read-only. We add an extra level of scope here to avoid
+  // calling LogFinish() before the GonkAutoMounter destructor has a chance
+  // to be called
+
+  {
+    GonkAutoMounter mounter;
+    if (mounter.GetAccess() != MountAccess::ReadWrite) {
+      WriteStatusFile(FILESYSTEM_MOUNT_READWRITE_ERROR);
+      return 1;
+    }
+#endif
+
   if (sBackgroundUpdate) {
     // For background updates, we want to blow away the old installation
     // directory and create it from scratch.
@@ -2861,6 +2879,10 @@ int NS_main(int argc, NS_tchar **argv)
   }
 #endif /* XP_WIN */
 
+#if defined(MOZ_WIDGET_GONK)
+  } // end the extra level of scope for the GonkAutoMounter
+#endif
+
   LogFinish();
 
   if (argc > callbackIndex) {
@@ -2891,6 +2913,7 @@ int NS_main(int argc, NS_tchar **argv)
       LaunchMacPostProcess(argv[callbackIndex]);
     }
 #endif /* XP_MACOSX */
+
     LaunchCallbackApp(argv[4], 
                       argc - callbackIndex, 
                       argv + callbackIndex, 

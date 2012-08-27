@@ -1415,7 +1415,7 @@ if [ "$MOZ_UPDATER" ]; then
       modules/libbz2/src/Makefile
     "
   fi
-  if [ "$OS_TARGET" != "Android" ]; then
+  if [ "$MOZ_WIDGET_TOOLKIT" != "android" ]; then
     add_makefiles "
       toolkit/mozapps/update/updater/Makefile
     "
