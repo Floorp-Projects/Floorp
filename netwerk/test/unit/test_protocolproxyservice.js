@@ -122,6 +122,23 @@ BasicFilter.prototype = {
   }
 };
 
+function resolveCallback() { }
+resolveCallback.prototype = {
+  nextFunction: null,
+
+  QueryInterface : function (iid) {
+    const interfaces = [Components.interfaces.nsIProtocolProxyCallback,
+                        Components.interfaces..nsISupports];
+    if (!interfaces.some( function(v) { return iid.equals(v) } ))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  },
+
+  onProxyAvailable : function (req, uri, pi, status) {
+    this.nextFunction(pi);
+  }
+};
+
 function run_filter_test() {
   var uri = ios.newURI("http://www.mozilla.org/", null, null);
 
@@ -181,6 +198,29 @@ function run_filter_test2() {
   pps.unregisterFilter(filter1);
   pi = pps.resolve(uri, 0);
   do_check_eq(pi, null);
+}
+
+var filter_3_1;
+
+function run_filter_test3() {
+  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+
+  // Push a filter and verify the results asynchronously
+
+  filter_3_1 = new TestFilter("http", "foo", 8080, 0, 10);
+  pps.registerFilter(filter_3_1, 20);
+
+  var cb = new resolveCallback();
+  cb.nextFunction = filter_test3_1;
+  var req = pps.asyncResolve(uri, 0, cb);
+  do_test_pending();
+}
+
+function filter_test3_1(pi) {
+  check_proxy(pi, "http", "foo", 8080, 0, 10, false);
+  pps.unregisterFilter(filter_3_1);
+  run_test_continued_3();
+  do_test_finished();
 }
 
 function run_pref_test() {
@@ -436,9 +476,13 @@ function run_test() {
 
 function run_test_continued() {
   run_pac_cancel_test();
-  // additional tests may be added to run_test_continued_2
+  // additional tests may be added to run_test_continued_3
 }
 
 function run_test_continued_2() {
+  run_filter_test3();
+}
+
+function run_test_continued_3() {
   run_proxy_host_filters_test();
 }
