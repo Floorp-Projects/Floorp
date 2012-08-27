@@ -896,11 +896,11 @@ var WifiManager = (function() {
 
   function didConnectSupplicant(reconnected, callback) {
     waitForEvent();
-    notify("supplicantconnection");
 
     // Load up the supplicant state.
     statusCommand(function(status) {
       parseStatus(status, reconnected);
+      notify("supplicantconnection");
       callback();
     });
   }
@@ -1945,7 +1945,7 @@ WifiWorker.prototype = {
 
   getNetworks: function(msg) {
     const message = "WifiManager:getNetworks:Return";
-    if (WifiManager.state === "UNINITIALIZED") {
+    if (!WifiManager.enabled) {
       this._sendMessage(message, false, "Wifi is disabled", msg);
       return;
     }
@@ -2023,7 +2023,7 @@ WifiWorker.prototype = {
     const MAX_PRIORITY = 9999;
     const message = "WifiManager:associate:Return";
     let network = msg.data;
-    if (WifiManager.state === "UNINITIALIZED") {
+    if (!WifiManager.enabled) {
       this._sendMessage(message, false, "Wifi is disabled", msg);
       return;
     }
@@ -2093,7 +2093,7 @@ WifiWorker.prototype = {
   forget: function(msg) {
     const message = "WifiManager:forget:Return";
     let network = msg.data;
-    if (WifiManager.state === "UNINITIALIZED") {
+    if (!WifiManager.enabled) {
       this._sendMessage(message, false, "Wifi is disabled", msg);
       return;
     }
