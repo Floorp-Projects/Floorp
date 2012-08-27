@@ -19,6 +19,7 @@ EXPORTS_mozilla += \
   HashFunctions.h \
   Likely.h \
   LinkedList.h \
+  MathAlgorithms.h \
   MSStdInt.h \
   RangedPtr.h \
   RefPtr.h \
