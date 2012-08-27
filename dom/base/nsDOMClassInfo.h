@@ -132,6 +132,11 @@ public:
    * dealing with document.domain, it's possible to end up in a scriptable
    * helper with a wrapper, even though we should be treating the lookup as a
    * transparent one.
+   *
+   * Note: So ObjectIsNativeWrapper(cx, obj) check usually means "through xray
+   * wrapper this part is not visible" while combined with
+   * || xpc::WrapperFactory::XrayWrapperNotShadowing(obj) it means "through
+   * xray wrapper it is visible only if it does not hide any native property."
    */
   static bool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj);
 

@@ -93,6 +93,9 @@ class WrapperFactory {
 
     // Wrap a same-compartment object for Xray inspection.
     static JSObject *WrapForSameCompartmentXray(JSContext *cx, JSObject *obj);
+
+    // Returns true if the wrapper is in not shadowing mode for the id.
+    static bool XrayWrapperNotShadowing(JSObject *wrapper, jsid id);
 };
 
 extern js::DirectWrapper XrayWaiver;
