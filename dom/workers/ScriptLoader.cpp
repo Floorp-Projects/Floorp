@@ -576,7 +576,7 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
   }
 
-  JSObject* global = JS_GetGlobalObject(aCx);
+  JS::RootedObject global(aCx, JS_GetGlobalObject(aCx));
   NS_ASSERTION(global, "Must have a global by now!");
 
   JSPrincipals* principal = GetWorkerPrincipal();
@@ -615,10 +615,11 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
     NS_ConvertUTF16toUTF8 filename(loadInfo.mURL);
 
-    if (!JS_EvaluateUCScriptForPrincipals(aCx, global, principal,
-                                          loadInfo.mScriptText.get(),
-                                          loadInfo.mScriptText.Length(),
-                                          filename.get(), 1, nullptr)) {
+    JS::CompileOptions options(aCx);
+    options.setPrincipals(principal)
+           .setFileAndLine(filename.get(), 1);
+    if (!JS::Evaluate(aCx, global, options, loadInfo.mScriptText.get(),
+                      loadInfo.mScriptText.Length(), nullptr)) {
       return true;
     }
 

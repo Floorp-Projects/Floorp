@@ -1293,15 +1293,13 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 
     ++mExecuteDepth;
 
-    ok = ::JS_EvaluateUCScriptForPrincipalsVersion(mContext,
-                                                   aScopeObject,
-                                                   nsJSPrincipals::get(principal),
-                                                   static_cast<const jschar*>(PromiseFlatString(aScript).get()),
-                                                   aScript.Length(),
-                                                   aURL,
-                                                   aLineNo,
-                                                   &val,
-                                                   JSVersion(aVersion));
+    JS::CompileOptions options(mContext);
+    options.setFileAndLine(aURL, aLineNo)
+           .setVersion(JSVersion(aVersion))
+           .setPrincipals(nsJSPrincipals::get(principal));
+    JS::RootedObject rootedScope(mContext, aScopeObject);
+    ok = JS::Evaluate(mContext, rootedScope, options, PromiseFlatString(aScript).get(),
+                      aScript.Length(), &val);
 
     --mExecuteDepth;
 
@@ -1490,11 +1488,15 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     XPCAutoRequest ar(mContext);
     JSAutoCompartment ac(mContext, aScopeObject);
 
-    ok = JS_EvaluateUCScriptForPrincipalsVersionOrigin(
-      mContext, aScopeObject,
-      nsJSPrincipals::get(principal), nsJSPrincipals::get(aOriginPrincipal),
-      static_cast<const jschar*>(PromiseFlatString(aScript).get()),
-      aScript.Length(), aURL, aLineNo, vp, JSVersion(aVersion));
+    JS::RootedObject rootedScope(mContext, aScopeObject);
+    JS::CompileOptions options(mContext);
+    options.setFileAndLine(aURL, aLineNo)
+           .setPrincipals(nsJSPrincipals::get(principal))
+           .setOriginPrincipals(nsJSPrincipals::get(aOriginPrincipal))
+           .setVersion(JSVersion(aVersion));
+    ok = JS::Evaluate(mContext, rootedScope, options,
+                      PromiseFlatString(aScript).get(),
+                      aScript.Length(), vp);
 
     if (!ok) {
       // Tell XPConnect about any pending exceptions. This is needed
@@ -1751,17 +1753,16 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
 #endif
 
   // Event handlers are always shared, and must be bound before use.
-  // Therefore we never bother compiling with principals.
-  // (that probably means we should avoid JS_CompileUCFunctionForPrincipals!)
+  // Therefore we don't bother compiling with principals.
   XPCAutoRequest ar(mContext);
 
-  JSFunction* fun =
-      ::JS_CompileUCFunctionForPrincipalsVersion(mContext,
-                                                 nullptr, nullptr,
-                                                 nsAtomCString(aName).get(), aArgCount, aArgNames,
-                                                 (jschar*)PromiseFlatString(aBody).get(),
-                                                 aBody.Length(),
-                                                 aURL, aLineNo, JSVersion(aVersion));
+  JS::CompileOptions options(mContext);
+  options.setVersion(JSVersion(aVersion))
+         .setFileAndLine(aURL, aLineNo);
+  JS::RootedObject empty(mContext, NULL);
+  JSFunction* fun = JS::CompileFunction(mContext, empty, options, nsAtomCString(aName).get(),
+                                        aArgCount, aArgNames,
+                                        PromiseFlatString(aBody).get(), aBody.Length());
 
   if (!fun) {
     ReportPendingException();
@@ -1814,20 +1815,18 @@ nsJSContext::CompileFunction(JSObject* aTarget,
     }
   }
 
-  JSObject *target = aTarget;
+  JS::RootedObject target(mContext, aShared ? NULL : aTarget);
 
   XPCAutoRequest ar(mContext);
 
-  JSFunction* fun =
-      ::JS_CompileUCFunctionForPrincipalsVersion(mContext,
-                                                 aShared ? nullptr : target,
-                                                 nsJSPrincipals::get(principal),
-                                                 PromiseFlatCString(aName).get(),
-                                                 aArgCount, aArgArray,
-                                                 static_cast<const jschar*>(PromiseFlatString(aBody).get()),
-                                                 aBody.Length(),
-                                                 aURL, aLineNo,
-                                                 JSVersion(aVersion));
+  JS::CompileOptions options(mContext);
+  options.setPrincipals(nsJSPrincipals::get(principal))
+         .setVersion(JSVersion(aVersion))
+         .setFileAndLine(aURL, aLineNo);
+  JSFunction* fun = JS::CompileFunction(mContext, target,
+                                        options, PromiseFlatCString(aName).get(),
+                                        aArgCount, aArgArray,
+                                        PromiseFlatString(aBody).get(), aBody.Length());
 
   if (!fun)
     return NS_ERROR_FAILURE;
