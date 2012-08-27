@@ -64,9 +64,6 @@ browser.jar:
   skin/classic/browser/newtab/controls.png                  (newtab/controls.png)
   skin/classic/browser/newtab/noise.png                     (newtab/noise.png)
   skin/classic/browser/setDesktopBackground.css
-  skin/classic/browser/share-button.png
-  skin/classic/browser/share-button-active.png
-  skin/classic/browser/share-button-shared.png
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)

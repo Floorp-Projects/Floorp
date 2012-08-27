@@ -48,11 +48,12 @@ function testInitial(finishcb) {
 
   let okButton = document.getElementById("editSharePopupOkButton");
   let undoButton = document.getElementById("editSharePopupUndoButton");
+  let shareStatusLabel = document.getElementById("share-button-status");
 
   // ensure the worker initialization and handshakes are all done and we
-  // have a profile.
-  waitForCondition(function() Social.provider.profile, function() {
-    is(shareButton.hidden, false, "share button should be visible");
+  // have a profile and the worker has responsed to the recommend-prompt msg.
+  waitForCondition(function() Social.provider.profile && SocialShareButton.promptImages != null, function() {
+    is(shareButton.hasAttribute("shared"), false, "Share button should not have 'shared' attribute before share button is clicked");
     // check dom values
     let profile = Social.provider.profile;
     let portrait = document.getElementById("socialUserPortrait").getAttribute("src");
@@ -61,14 +62,24 @@ function testInitial(finishcb) {
     is(displayName.label, profile.displayName, "display name is set");
     ok(!document.getElementById("editSharePopupHeader").hidden, "user profile is visible");
   
+    // Check the strings from our worker actually ended up on the button.
+    is(shareButton.getAttribute("tooltiptext"), "Share this page", "check tooltip text is correct");
+    is(shareStatusLabel.getAttribute("value"), "", "check status label text is blank");
+    // Check the relative URL was resolved correctly (note this image has offsets of zero...)
+    is(shareButton.style.backgroundImage, 'url("https://example.com/browser/browser/base/content/test/social_share_image.png")', "check image url is correct");
+
     // Test clicking the share button
     shareButton.addEventListener("click", function listener() {
       shareButton.removeEventListener("click", listener);
       is(shareButton.hasAttribute("shared"), true, "Share button should have 'shared' attribute after share button is clicked");
+      is(shareButton.getAttribute("tooltiptext"), "Unshare this page", "check tooltip text is correct");
+      is(shareStatusLabel.getAttribute("value"), "This page has been shared", "check status label text is correct");
+      // Check the URL and offsets were applied correctly
+      is(shareButton.style.backgroundImage, 'url("https://example.com/browser/browser/base/content/test/social_share_image.png")', "check image url is correct");
       executeSoon(testSecondClick.bind(window, testPopupOKButton));
     });
     EventUtils.synthesizeMouseAtCenter(shareButton, {});
-  }, "provider didn't provide a profile");
+  }, "provider didn't provide user-recommend-prompt response");
 }
 
 function testSecondClick(nextTest) {
