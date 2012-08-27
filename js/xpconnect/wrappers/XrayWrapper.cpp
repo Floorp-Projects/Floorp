@@ -18,6 +18,7 @@
 #include "xpcprivate.h"
 
 #include "jsapi.h"
+#include "nsJSUtils.h"
 
 #include "mozilla/dom/BindingUtils.h"
 
@@ -634,14 +635,96 @@ XPCWrappedNativeXrayTraits::resolveDOMCollectionProperty(JSContext *cx, JSObject
     return true;
 }
 
+template <typename T>
+static bool
+Is(JSObject *wrapper)
+{
+    JSObject *holder = GetHolder(wrapper);
+    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
+    nsCOMPtr<T> native = do_QueryWrappedNative(wn);
+    return !!native;
+}
+
+// Helper function to work around some limitations of the current XPC 
+// calling mechanism. See: bug 763897.
+// The idea is that we unwrap the 'this' object, and find the wrapped
+// native that belongs to it. Then we simply make the call directly
+// on it after a Query Interface.
+static JSBool
+mozMatchesSelectorStub(JSContext *cx, unsigned argc, jsval *vp)
+{
+    if (argc < 1)
+        JS_ReportError(cx, "Not enough arguments");
+    
+    JSObject *wrapper = JS_THIS_OBJECT(cx, vp);
+    JSString *selector = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
+    nsDependentJSString selectorStr;
+    NS_ENSURE_TRUE(selectorStr.init(cx, selector), false);
+
+    nsCOMPtr<nsIDOMElement> element;
+    if (IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper)) {       
+        // If it's xray wrapped we can get the wn directly.
+        JSObject *holder = GetHolder(wrapper);
+        XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
+        element = do_QueryWrappedNative(wn);
+    } else {
+        // Else we can use the XPC utility function for unwrapping it.
+        nsCOMPtr<nsIXPConnectWrappedNative> iwn;  
+        nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
+        nsresult rv = xpc->GetWrappedNativeOfJSObject(cx, wrapper, 
+                                                      getter_AddRefs(iwn));
+        if (NS_FAILED(rv) || !iwn) {
+            JS_ReportError(cx, "Unexpected object");
+            return false;
+        }
+        element = do_QueryWrappedNative(iwn);
+    }
+
+    if (!element) {
+        JS_ReportError(cx, "Unexpected object");
+        return false;
+    }
+
+    bool ret;
+    nsresult rv = element->MozMatchesSelector(selectorStr, &ret);
+    if (NS_FAILED(rv)) {
+        XPCThrower::Throw(rv, cx);
+        return false;
+    }
+
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(ret));
+    return true;
+}
+
 bool
 XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper,
                                                   JSObject *holder, jsid id, bool set,
                                                   JSPropertyDescriptor *desc)
 {
+    MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
+    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
+    if (!set &&
+        id == rt->GetStringID(XPCJSRuntime::IDX_MOZMATCHESSELECTOR) &&
+        Is<nsIDOMElement>(wrapper))
+    {
+        // XPC calling mechanism cannot handle call/bind properly in some cases
+        // especially through xray wrappers. This is a temoorary work around for
+        // this problem for mozMatchesSelector. See: bug 763897.
+        desc->obj = wrapper;
+        desc->attrs = JSPROP_ENUMERATE;
+        JSFunction *fun = JS_NewFunction(cx, mozMatchesSelectorStub, 
+                                         1, 0, JS_GetPrototype(wrapper), 
+                                         "mozMatchesSelector");
+        NS_ENSURE_TRUE(fun, false);
+        desc->value = OBJECT_TO_JSVAL(JS_GetFunctionObject(fun));
+        desc->getter = NULL;
+        desc->setter = NULL;
+        desc->shortid = 0;
+        return true;
+    }
+
     desc->obj = NULL;
 
-    MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
     JSObject *wnObject = GetWrappedNativeObjectFromHolder(holder);
     XPCWrappedNative *wn = GetWrappedNative(wnObject);
 
@@ -733,16 +816,6 @@ wrappedJSObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, JSM
     vp.set(OBJECT_TO_JSVAL(wrapper));
 
     return WrapperFactory::WaiveXrayAndWrap(cx, vp.address());
-}
-
-template <typename T>
-static bool
-Is(JSObject *wrapper)
-{
-    JSObject *holder = GetHolder(wrapper);
-    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
-    nsCOMPtr<T> native = do_QueryWrappedNative(wn);
-    return !!native;
 }
 
 static JSBool
@@ -933,13 +1006,9 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
             return false;
         }
 
-        if (!pobj) {
-            return true;
-        }
-
 #ifdef DEBUG
-        NS_ASSERTION(JS_HasPropertyById(cx, holder, id, &hasProp) &&
-                     hasProp, "id got defined somewhere else?");
+        NS_ASSERTION(!pobj || (JS_HasPropertyById(cx, holder, id, &hasProp) &&
+                     hasProp), "id got defined somewhere else?");
 #endif
     }
 
