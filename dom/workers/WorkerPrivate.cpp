@@ -3803,8 +3803,8 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
                                                         &stringLength);
       if ((!string || !JS::Evaluate(aCx, global, options, string, stringLength, nullptr)) &&
           !JS_ReportPendingException(aCx)) {
-          retval = false;
-          break;
+        retval = false;
+        break;
       }
     }
     else {
