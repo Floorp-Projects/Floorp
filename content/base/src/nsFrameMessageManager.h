@@ -143,7 +143,7 @@ public:
   nsresult DispatchAsyncMessage(const nsAString& aMessageName,
                                 const jsval& aObject,
                                 JSContext* aCx,
-                                PRUint8 aArgc,
+                                uint8_t aArgc,
                                 ShouldBroadcast aBroadcast);
   nsresult DispatchAsyncMessageInternal(const nsAString& aMessage,
                                         const StructuredCloneData& aData,

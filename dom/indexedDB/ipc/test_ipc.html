@@ -30,6 +30,11 @@
     }
 
     function iframeScriptSecond() {
+      let isMainProcess = content.wrappedJSObject.SpecialPowers.isMainProcess();
+
+      sendAsyncMessage("test:indexedDB:ipcProcessType",
+                       { isMainProcess: isMainProcess });
+
       let TestRunner = content.wrappedJSObject.TestRunner;
 
       let oldComplete = TestRunner.onComplete;
@@ -37,29 +42,32 @@
       TestRunner.onComplete = function() {
         TestRunner.onComplete = oldComplete;
 
-        sendAsyncMessage("test:indexedDB:ipcTestComplete", {
-          result: JSON.stringify(TestRunner._failedTests)
-        });
+        sendAsyncMessage("test:indexedDB:ipcTestComplete");
 
         if (oldComplete) {
           oldComplete();
         }
       };
 
-      let oldLog = TestRunner.log;
-      TestRunner.log = function(msg) {
+      function sendTestMessage(msg) {
         sendAsyncMessage("test:indexedDB:ipcTestMessage", { msg: msg });
       }
+
+      TestRunner.log = sendTestMessage;
+      TestRunner.error = sendTestMessage;
     }
 
     let regexString =
       "^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL" +
-      "|TEST-DEBUG-INFO) \\| ([^\\|]+) \\|(.*)";
+      "|TEST-DEBUG-INFO|TEST-INFO) \\| ([^\\|]+) \\|(.*)";
 
     let regex = new RegExp(regexString);
 
+    let seenTestMessage = false;
+
     function onTestMessage(data) {
-      let message = SpecialPowers.wrap(data).json.msg;
+      seenTestMessage = true;
+      let message = SpecialPowers.wrap(data).data.msg;
       let match = regex.exec(message);
       if (match) {
         let state = match[1];
@@ -76,6 +84,7 @@
             ok(false, details);
             break;
 
+          case "TEST-INFO":
           case "TEST-DEBUG-INFO":
           default:
             info(details);
@@ -83,8 +92,17 @@
       }
     }
 
+    let usingChildProcess = false;
+
+    function onProcessType(data) {
+      let isMainProcess = SpecialPowers.wrap(data).data.isMainProcess;
+      usingChildProcess = !isMainProcess;
+    }
+
     function onTestComplete() {
-      ok(true, "Got test complete message");
+      is(usingChildProcess, true, "Expecting to run in child process");
+      is(seenTestMessage, true, "Expecting to receive messages from child");
+      SpecialPowers.removePermission("browser", window.location.href);
       SimpleTest.executeSoon(function () { SimpleTest.finish(); });
     }
 
@@ -123,6 +141,7 @@
         mm.addMessageListener("SPPermissionManager", spObserver);
 
         mm.addMessageListener("test:indexedDB:ipcTestMessage", onTestMessage);
+        mm.addMessageListener("test:indexedDB:ipcProcessType", onProcessType);
         mm.addMessageListener("test:indexedDB:ipcTestComplete", onTestComplete);
 
         let specialPowersBase = "chrome://specialpowers/content/";
@@ -146,22 +165,11 @@
     }
 
     addEventListener("load", function() {
-      let whitelist;
-      try {
-        whitelist =
-          SpecialPowers.getCharPref("dom.mozBrowserFramesWhitelist") + ", ";
-      } catch (e) {
-        whitelist = "";
-      }
-
-      whitelist += window.location.protocol + "//" + window.location.host;
-
+      SpecialPowers.addPermission("browser", true, document);
       SpecialPowers.pushPrefEnv({
         "set": [
           ["dom.ipc.browser_frames.oop_by_default", true],
-          ["dom.mozBrowserFramesEnabled", true],
-          ["dom.mozBrowserFramesWhitelist", whitelist],
-          ["browser.pageThumbs.enabled", false]
+          ["dom.mozBrowserFramesEnabled", true]
         ]
       }, runTests);
     });

@@ -13,54 +13,19 @@
 #include "jsapi.h"
 #include "jsprvtd.h"
 
-JS_BEGIN_EXTERN_C
-
-extern JS_PUBLIC_API(JSCrossCompartmentCall *)
-JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target);
-
-extern JS_PUBLIC_API(JSCrossCompartmentCall *)
-JS_EnterCrossCompartmentCallStackFrame(JSContext *cx, JSStackFrame *target);
-
-#ifdef __cplusplus
-JS_END_EXTERN_C
-
-namespace JS {
-
-class JS_PUBLIC_API(AutoEnterScriptCompartment)
-{
-  protected:
-    JSCrossCompartmentCall *call;
-
-  public:
-    AutoEnterScriptCompartment() : call(NULL) {}
-
-    bool enter(JSContext *cx, JSScript *target);
-
-    bool entered() const { return call != NULL; }
-
-    ~AutoEnterScriptCompartment() {
-        if (call && call != reinterpret_cast<JSCrossCompartmentCall*>(1))
-            JS_LeaveCrossCompartmentCall(call);
-    }
-};
-
-class JS_PUBLIC_API(AutoEnterFrameCompartment) : public AutoEnterScriptCompartment
-{
-  public:
-    bool enter(JSContext *cx, JSStackFrame *target);
-};
-
-} /* namespace JS */
-
-#ifdef DEBUG
+#if defined(__cplusplus) && defined(DEBUG)
 JS_FRIEND_API(void) js_DumpValue(const js::Value &val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, js::StackFrame *start = NULL);
 #endif
-JS_FRIEND_API(void) js_DumpBacktrace(JSContext *cx);
 
 JS_BEGIN_EXTERN_C
-#endif
+
+JS_FRIEND_API(void)
+js_DumpBacktrace(JSContext *cx);
+
+extern JS_PUBLIC_API(JSCompartment *)
+JS_EnterCompartmentOfScript(JSContext *cx, JSScript *target);
 
 extern JS_PUBLIC_API(JSString *)
 JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, unsigned indent);

@@ -436,6 +436,13 @@ var BrowserApp = {
         aTarget.mozRequestFullScreen();
       });
 
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyImageLocation"),
+      NativeWindow.contextmenus.imageLocationCopyableContext,
+      function(aTarget) {
+        let url = aTarget.src;
+        NativeWindow.contextmenus._copyStringToDefaultClipboard(url);
+      });
+
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareImage"),
       NativeWindow.contextmenus.imageSaveableContext,
       function(aTarget) {
@@ -959,7 +966,9 @@ var BrowserApp = {
       return;
 
     let focused = doc.activeElement;
-    if ((focused instanceof HTMLInputElement && focused.mozIsTextField(false)) || (focused instanceof HTMLTextAreaElement)) {
+    if ((focused instanceof HTMLInputElement && focused.mozIsTextField(false))
+        || (focused instanceof HTMLTextAreaElement)
+        || (focused.isContentEditable)) {
       let tab = BrowserApp.getTabForBrowser(aBrowser);
       let win = aBrowser.contentWindow;
 
@@ -1356,6 +1365,12 @@ var NativeWindow = {
       matches: function textContext(aElement) {
         return ((aElement instanceof Ci.nsIDOMHTMLInputElement && aElement.mozIsTextField(false))
                 || aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
+      }
+    },
+
+    imageLocationCopyableContext: {
+      matches: function imageLinkCopyableContextMatches(aElement) {
+        return (aElement instanceof Ci.nsIImageLoadingContent && aElement.currentURI);
       }
     },
 
@@ -5359,7 +5374,7 @@ var PluginHelper = {
 var PermissionsHelper = {
 
   _permissonTypes: ["password", "geolocation", "popup", "indexedDB",
-                    "offline-app", "desktop-notification", "plugins"],
+                    "offline-app", "desktop-notification", "plugins", "native-intent"],
   _permissionStrings: {
     "password": {
       label: "password.rememberPassword",
@@ -5395,6 +5410,11 @@ var PermissionsHelper = {
       label: "clickToPlayPlugins.playPlugins",
       allowed: "clickToPlayPlugins.yes",
       denied: "clickToPlayPlugins.no"
+    },
+    "native-intent": {
+      label: "helperapps.openWithList2",
+      allowed: "helperapps.always",
+      denied: "helperapps.never"
     }
   },
 

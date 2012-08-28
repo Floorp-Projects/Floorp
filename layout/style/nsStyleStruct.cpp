@@ -1448,6 +1448,33 @@ nsStyleGradient::IsOpaque()
   return true;
 }
 
+bool
+nsStyleGradient::HasCalc()
+{
+  // The stops cannot have a Calc.
+  return mBgPosX.IsCalcUnit() || mBgPosY.IsCalcUnit() || mAngle.IsCalcUnit() ||
+         mRadiusX.IsCalcUnit() || mRadiusX.IsCalcUnit();
+}
+
+uint32_t
+nsStyleGradient::Hash(PLDHashNumber aHash)
+{
+  aHash = mozilla::AddToHash(aHash, mShape);
+  aHash = mozilla::AddToHash(aHash, mSize);
+  aHash = mozilla::AddToHash(aHash, mRepeating);
+  aHash = mozilla::AddToHash(aHash, mLegacySyntax);
+  aHash = mBgPosX.HashValue(aHash);
+  aHash = mBgPosY.HashValue(aHash);
+  aHash = mAngle.HashValue(aHash);
+  aHash = mRadiusX.HashValue(aHash);
+  aHash = mRadiusY.HashValue(aHash);
+  for (uint32_t i = 0; i < mStops.Length(); i++) {
+    aHash = mStops[i].mLocation.HashValue(aHash);
+    aHash = mozilla::AddToHash(aHash, mStops[i].mColor);
+  }
+  return aHash;
+}
+
 // --------------------
 // nsStyleImage
 //

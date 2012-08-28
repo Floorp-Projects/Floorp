@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set ts=4 sw=4 et cindent: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -378,8 +378,9 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
   if (info)
     info->mConnectTime = PR_Now() - info->mConnectTime;
 
-  if (gVerbose)
+  if (gVerbose) {
     LOG(("\nStarted loading: %s\n", info ? info->Name() : "UNKNOWN URL"));
+  }
 
   nsCAutoString value;
 
@@ -401,10 +402,11 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
       LOG(("\tContent-Charset: %s\n", value.get()));
 
       int32_t length = -1;
-      if (NS_SUCCEEDED(channel->GetContentLength(&length)))
+      if (NS_SUCCEEDED(channel->GetContentLength(&length))) {
         LOG(("\tContent-Length: %d\n", length));
-      else
+      } else {
         LOG(("\tContent-Length: Unknown\n"));
+      }
     }
 
     nsCOMPtr<nsISupports> owner;
@@ -430,16 +432,18 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
       int64_t len;
       nsresult rv = propbag->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
                                                 &len);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
           LOG(("\t64-bit length: %lli\n", len));
+      }
   }
 
   nsCOMPtr<nsIHttpChannelInternal> httpChannelInt(do_QueryInterface(request));
   if (httpChannelInt) {
       uint32_t majorVer, minorVer;
       nsresult rv = httpChannelInt->GetResponseVersion(&majorVer, &minorVer);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
           LOG(("HTTP Response version: %u.%u\n", majorVer, minorVer));
+      }
   }
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   if (httpChannel) {
@@ -533,12 +537,13 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
     }
 
     LOG(("\nFinished loading: %s  Status Code: %x\n", info->Name(), aStatus));
-    if (bHTTPURL)
-        LOG(("\tHTTP Status: %u\n", httpStatus));
-     if (NS_ERROR_UNKNOWN_HOST == aStatus ||
-         NS_ERROR_UNKNOWN_PROXY_HOST == aStatus) {
-         LOG(("\tDNS lookup failed.\n"));
-     }
+    if (bHTTPURL) {
+      LOG(("\tHTTP Status: %u\n", httpStatus));
+    }
+    if (NS_ERROR_UNKNOWN_HOST == aStatus ||
+        NS_ERROR_UNKNOWN_PROXY_HOST == aStatus) {
+      LOG(("\tDNS lookup failed.\n"));
+    }
     LOG(("\tTime to connect: %.3f seconds\n", connectTime));
     LOG(("\tTime to read: %.3f seconds.\n", readTime));
     LOG(("\tRead: %lld bytes.\n", info->mBytesRead));
@@ -646,8 +651,9 @@ nsresult StartLoadingURL(const char* aUrlString)
         if (props) {
             rv = props->SetPropertyAsInterface(NS_LITERAL_STRING("test.foo"),
                                                pURL);
-            if (NS_SUCCEEDED(rv))
+            if (NS_SUCCEEDED(rv)) {
                 LOG(("set prop 'test.foo'\n"));
+            }
         }
 
         /* 

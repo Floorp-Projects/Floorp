@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set expandtab ts=4 sw=4 sts=4 cin: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -934,7 +934,7 @@ nsSOCKSSocketInfo::ReadUint32()
 void
 nsSOCKSSocketInfo::ReadNetAddr(PRNetAddr *addr, uint16_t fam)
 {
-    uint32_t amt;
+    uint32_t amt = 0;
     const uint8_t *ip = mData + mReadOffset;
 
     addr->raw.family = fam;

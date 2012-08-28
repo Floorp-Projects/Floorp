@@ -8,7 +8,7 @@ body {
   font-size: 14px;
   color: #222;
   background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
-  padding: 40px 10px 10px 10px;
+  padding: 10px;
 }
 
 a {
@@ -28,7 +28,7 @@ section:not([active]) {
 .header {
   font-size: 24px;
   text-align: center;
-  margin-top: 20px;
+  margin-top: 0;
 }
 
 .message-box,
@@ -84,11 +84,32 @@ section:not([active]) {
   background-color: transparent;
 }
 
+@media screen and (max-height: 400px) {
+  .bottom-links,
+  #sumo-message {
+    margin-top: 20px;
+  }
+}
+
+@media not screen and (max-height: 400px) {
+  body {
+    padding-top: 40px;
+  }
+
+  .bottom-links {
+    position: absolute;
+    left: 0;
+    bottom: 40px;
+  }
+
+  #sumo-message {
+    position: absolute;
+    bottom: 20px;
+  }
+}
+
 .bottom-links {
   text-align: center;
-  position: absolute;
-  left: 0;
-  bottom: 40px;
   width: 100%;
 }
 
@@ -98,8 +119,6 @@ section:not([active]) {
 }
 
 #sumo-message {
-  position: absolute;
-  bottom: 20px;
   color: #444;
   -moz-padding-end: 30px;
 }

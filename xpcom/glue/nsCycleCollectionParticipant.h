@@ -62,13 +62,11 @@ class NS_NO_VTABLE nsCycleCollectionTraversalCallback
 public:
     // You must call DescribeRefCountedNode() with an accurate
     // refcount, otherwise cycle collection will fail, and probably crash.
-    // If the callback cares about objsz or objname, it should
-    // put WANT_DEBUG_INFO in mFlags.
+    // If the callback cares about objname, it should put
+    // WANT_DEBUG_INFO in mFlags.
     NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
-                                             size_t objsz,
                                              const char *objname) = 0;
     NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
-                                       size_t objsz,
                                        const char *objname) = 0;
 
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) = 0;
@@ -91,9 +89,8 @@ public:
     enum {
         // Values for flags:
 
-        // Caller should pass useful objsz and objname to
-        // DescribeRefCountedNode and DescribeGCedNode and should call
-        // NoteNextEdgeName.
+        // Caller should call NoteNextEdgeName and pass useful objName
+        // to DescribeRefCountedNode and DescribeGCedNode.
         WANT_DEBUG_INFO = (1<<0),
 
         // Caller should not skip objects that we know will be
@@ -481,7 +478,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 #define NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, _refcnt)                     \
-    cb.DescribeRefCountedNode(_refcnt, sizeof(_class), #_class);
+    cb.DescribeRefCountedNode(_refcnt, #_class);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(_class)               \
   NS_METHOD                                                                    \
