@@ -2026,19 +2026,23 @@ WifiWorker.prototype = {
       return;
     }
 
-    this.waitForScan((function (networks) {
+    let callback = (function (networks) {
       this._sendMessage(message, networks !== null, networks, msg);
-    }).bind(this));
+    }).bind(this);
+    this.waitForScan(callback);
 
-    WifiManager.scan(true, function(ok) {
+    WifiManager.scan(true, (function(ok) {
       // If the scan command succeeded, we're done.
       if (ok)
         return;
 
+      // Avoid sending multiple responses.
+      this.wantScanResults.splice(this.wantScanResults.indexOf(callback), 1);
+
       // Otherwise, let the client know that it failed, it's responsible for
       // trying again in a few seconds.
       this._sendMessage(message, false, "ScanFailed", msg);
-    });
+    }).bind(this));
   },
 
   _notifyAfterStateChange: function(success, newState) {
