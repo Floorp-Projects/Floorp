@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=785324
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 785324</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=785324">Mozilla Bug 785324</a>
+<div id="test785324" style="width:100px;height:100px;border:1px solid black;" onclick="this.innerHTML = 'TEST';"></div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 785324 **/
+
+function test()
+{
+  var div1 = document.getElementById('test785324');
+  synthesizeMouse(div1, 25, 25, {});
+  var sel = window.getSelection();
+  is(sel.rangeCount,1,"have Selection");
+  var r = sel.getRangeAt(0);
+  ok(r.startContainer == div1,"startContainer");
+  ok(r.endContainer == div1,"endContainer");
+  ok(r.startOffset == 0,"startOffset");
+  ok(r.endOffset == 0,"endOffset");
+  SimpleTest.finish();
+}
+
+window.onload = function() { setTimeout(test, 0); };
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
