@@ -405,15 +405,15 @@ Other Measurements\n\
   //
   let idsToClick = [
     { id: "",                  expected: startExpected },
-    { id: "Main:explicit/a/c", expected: acCollapsedExpected },
-    { id: "Main:explicit/a/l", expected: alExpandedExpected },
-    { id: "Main:explicit/a",   expected: aCollapsedExpected },
-    { id: "Main:explicit/h",   expected: hCollapsedExpected },
-    { id: "Main:explicit/j",   expected: jExpandedExpected },
+    { id: "Main Process:explicit/a/c", expected: acCollapsedExpected },
+    { id: "Main Process:explicit/a/l", expected: alExpandedExpected },
+    { id: "Main Process:explicit/a",   expected: aCollapsedExpected },
+    { id: "Main Process:explicit/h",   expected: hCollapsedExpected },
+    { id: "Main Process:explicit/j",   expected: jExpandedExpected },
     { id: "updateButton",      expected: updatedExpected },
-    { id: "Main:explicit/a",   expected: aExpandedExpected },
-    { id: "Main:explicit/a/c", expected: acExpandedExpected },
-    { id: "Main:explicit/a/l", expected: alCollapsedExpected }
+    { id: "Main Process:explicit/a",   expected: aExpandedExpected },
+    { id: "Main Process:explicit/a/c", expected: acExpandedExpected },
+    { id: "Main Process:explicit/a/l", expected: alCollapsedExpected }
   ];
 
   SimpleTest.waitForFocus(chain(idsToClick));

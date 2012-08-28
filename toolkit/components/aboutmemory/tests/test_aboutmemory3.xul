@@ -1,0 +1,196 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- This file tests the loading of memory reports from file in
+       about:memory. -->
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  "use strict";
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+            getService(Ci.nsIMemoryReporterManager);
+
+  // Remove all the real reporters and multi-reporters;  save them to
+  // restore at the end.
+  let e = mgr.enumerateReporters();
+  let realReporters = [];
+  while (e.hasMoreElements()) {
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    mgr.unregisterReporter(r);
+    realReporters.push(r);
+  }
+  e = mgr.enumerateMultiReporters();
+  let realMultiReporters = [];
+  while (e.hasMoreElements()) {
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    mgr.unregisterMultiReporter(r);
+    realMultiReporters.push(r);
+  }
+
+  // Setup a minimal number of fake reporters.
+  const KB = 1024;
+  const MB = KB * KB;
+  const HEAP  = Ci.nsIMemoryReporter.KIND_HEAP;
+  const OTHER = Ci.nsIMemoryReporter.KIND_OTHER;
+  const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
+
+  function f(aPath, aKind, aAmount) {
+    return {
+      process:     "",
+      path:        aPath,
+      kind:        aKind,
+      units:       BYTES,
+      description: "Desc.",
+      amount:      aAmount
+    };
+  }
+
+  let fakeReporters = [
+    f("heap-allocated",     OTHER,   250 * MB),
+    f("explicit/a/b",       HEAP,     50 * MB),
+    f("other",              OTHER,   0.1 * MB),
+  ];
+
+  for (let i = 0; i < fakeReporters.length; i++) {
+    mgr.registerReporter(fakeReporters[i]);
+  }
+
+  ]]>
+  </script>
+
+  <iframe id="amGoodFrame" height="400" src="about:memory"></iframe>
+  <iframe id="amBadFrame"  height="400" src="about:memory"></iframe>
+
+  <script type="application/javascript">
+  <![CDATA[
+  function finish()
+  {
+    // Unregister fake reporters and multi-reporters, re-register the real
+    // reporters and multi-reporters, just in case subsequent tests rely on
+    // them.
+    for (let i = 0; i < fakeReporters.length; i++) {
+      mgr.unregisterReporter(fakeReporters[i]);
+    }
+    for (let i = 0; i < realReporters.length; i++) {
+      mgr.registerReporter(realReporters[i]);
+    }
+    for (let i = 0; i < realMultiReporters.length; i++) {
+      mgr.registerMultiReporter(realMultiReporters[i]);
+    }
+    SimpleTest.finish();
+  }
+
+  // Load the given file into the frame, then copy+paste the entire frame and
+  // check that the cut text matches what we expect.
+  function test(aFrameId, aFilename, aExpected, aNext) {
+    let frame = document.getElementById(aFrameId);
+    frame.focus();
+
+    let file = Components.classes["@mozilla.org/file/directory_service;1"]
+               .getService(Components.interfaces.nsIProperties)
+               .get("CurWorkD", Components.interfaces.nsIFile);
+    file.append("chrome");
+    file.append("toolkit");
+    file.append("components");
+    file.append("aboutmemory");
+    file.append("tests");
+    file.append(aFilename);
+
+    let input = frame.contentWindow.document.getElementById("fileInput");
+    input.value = file.path;    // this works because it's a chrome test
+
+    var e = document.createEvent('Event');
+    e.initEvent('change', true, true);
+    input.dispatchEvent(e);
+
+    // Initialize the clipboard contents.
+    SpecialPowers.clipboardCopyString("initial clipboard value");
+
+    let numFailures = 0, maxFailures = 30;
+
+    // Because the file load is async, we don't know when it will finish and
+    // the output will show up.  So we poll.
+    function copyPasteAndCheck() {
+      // Copy and paste frame contents.
+      synthesizeKey("A", {accelKey: true});
+      synthesizeKey("C", {accelKey: true});
+      let actual = SpecialPowers.getClipboardData("text/unicode");
+
+      if (actual === aExpected) {
+        SimpleTest.ok(true, "Clipboard has the expected contents");
+        aNext();
+      } else {
+        numFailures++;
+        if (numFailures === maxFailures) {
+          dump("******EXPECTED******\n");
+          dump(aExpected);
+          dump("*******ACTUAL*******\n");
+          dump(actual);
+          dump("********************\n");
+          finish();
+        } else {
+          setTimeout(copyPasteAndCheck, 100);
+        }
+      }
+    }
+    copyPasteAndCheck();
+  }
+
+  // Returns a function that chains together multiple test() calls.
+  function chain(aFrameIds) {
+    let x = aFrameIds.shift();
+    if (x) {
+      return function() { test(x.frameId, x.filename, x.expected, chain(aFrameIds)); }
+    } else {
+      return function() { finish(); };
+    }
+  }
+
+  // This is pretty simple output, but that's ok;  this file is about testing
+  // the loading of data from file.  If we got this far, we're doing fine.
+  let expectedGood =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+2.86 MB (100.0%) -- explicit\n\
+├──1.91 MB (66.67%) ── foo/bar\n\
+└──0.95 MB (33.33%) ── heap-unclassified\n\
+\n\
+Other Measurements\n\
+0.00 MB (100.0%) -- a\n\
+├──0.00 MB (50.00%) ── b\n\
+└──0.00 MB (50.00%) ── c\n\
+\n\
+2.86 MB ── heap-allocated\n\
+\n\
+";
+
+  // This is the output for a malformed data file.
+  let expectedBad =
+"\
+Invalid memory report(s): missing 'hasMozMallocUsableSize' property";
+
+  let frames = [
+    { frameId: "amGoodFrame", filename: "memory-reports-good.json", expected: expectedGood },
+    { frameId: "amBadFrame",  filename: "memory-reports-bad.json",  expected: expectedBad }
+  ];
+
+  SimpleTest.waitForFocus(chain(frames));
+
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hasMozMallocUsableSize": true,
+  "reports": [
+    {"process":"", "path":"explicit/foo/bar", "kind":1, "units":0,
+     "amount":2000000, "description":"Foo bar."},
+    {"process":"", "path":"heap-allocated", "kind":1, "units":0,
+     "amount":3000000, "description":"Heap allocated."},
+    {"process":"", "path":"a/b", "kind":1, "units":0,
+     "amount":10, "description":"A b."},
+    {"process":"", "path":"a/c", "kind":1, "units":0,
+     "amount":10, "description":"A c."}
+  ]
+}
