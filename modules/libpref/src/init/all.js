@@ -3689,7 +3689,3 @@ pref("social.enabled", false);
 // Disable idle observer fuzz, because only privileged content can access idle
 // observers (bug 780507).
 pref("dom.idle-observers-api.fuzz_time.disabled", true);
-
-// Setting that to true grant elevated privileges to apps that ask
-// for them in their manifest.
-pref("dom.mozApps.dev_mode", false);
