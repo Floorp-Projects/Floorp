@@ -981,17 +981,6 @@ if test -n "$MAKE"; then
   fi
 fi
 
-MOZ_TOPSRCDIR=$_topsrcdir
-if test -z "$NOT_PYMAKE"; then
-  case "$host" in
-  *mingw*)
-     MOZ_TOPSRCDIR=`cd $_topsrcdir && pwd -W`
-     ;;
-  esac
-fi
-# MOZ_TOPSRCDIR is an absolute path, in the correct form
-# for "topsrcdir=" and "srcdir=" in Makefiles
-
 case "$host_os" in
 mingw*)
     MOZ_PATH_PROGS(GMAKE, $GMAKE $NOT_PYMAKE make gmake, :)
@@ -8692,14 +8681,8 @@ fi
 
 if test -n "$MOZ_WEBRTC"; then
    AC_MSG_RESULT("generating WebRTC Makefiles...")
-   # msys (on windows) does EVIL things to parameters to python it thinks are msys paths.
-   # Since we already have the path in the format we want (c:/foo for pymake, 
-   # /c/foo for make), we just want to stop msys from mucking with the string.
-   # The underscores will be removed in mozmake.py.  We need the correct form of
-   # absolute path for building topsrcdir= in Makefiles.
-   MOZ_TOPSRCDIR="_${MOZ_TOPSRCDIR:0:2}_${MOZ_TOPSRCDIR:2}"
 
-   GYP_WEBRTC_OPTIONS="--format=mozmake -D build_with_mozilla=1 -D enable_protobuf=0 -D include_internal_video_render=0 ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir} -G TOPSRCDIR=${MOZ_TOPSRCDIR}"
+   GYP_WEBRTC_OPTIONS="--format=mozmake -D build_with_mozilla=1 -D enable_protobuf=0 -D include_internal_video_render=0 ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
 
    $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
      $GYP_WEBRTC_OPTIONS \
