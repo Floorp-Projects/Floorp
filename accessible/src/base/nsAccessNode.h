@@ -103,7 +103,7 @@ public:
    * these accessibles share the same DOM node. The primary accessible "owns"
    * that DOM node in terms it gets stored in the accessible to node map.
    */
-  virtual bool IsPrimaryForNode() const;//hello
+  virtual bool IsPrimaryForNode() const;
 
   /**
    * Interface methods on nsIAccessible shared with ISimpleDOM.
