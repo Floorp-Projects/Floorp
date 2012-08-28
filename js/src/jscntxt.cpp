@@ -242,6 +242,7 @@ selfHosting_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep
 {
     PrintError(cx, stderr, message, report, true);
 }
+
 static JSClass self_hosting_global_class = {
     "self-hosting-global", JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_PropertyStub,
@@ -249,6 +250,7 @@ static JSClass self_hosting_global_class = {
     JS_EnumerateStub, JS_ResolveStub,
     JS_ConvertStub,   NULL
 };
+
 bool
 JSRuntime::initSelfHosting(JSContext *cx)
 {
@@ -257,7 +259,6 @@ JSRuntime::initSelfHosting(JSContext *cx)
     if (!(selfHostedGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class, NULL)))
         return false;
     JS_SetGlobalObject(cx, selfHostedGlobal_);
-    RootedObject shg(cx, selfHostedGlobal_);
 
     CompileOptions options(cx);
     options.setFileAndLine("self-hosted", 1);
@@ -269,6 +270,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
      * and we don't want errors in self-hosted code to be silently swallowed.
      */
     JSErrorReporter oldReporter = JS_SetErrorReporter(cx, selfHosting_ErrorReporter);
+    RootedObject shg(cx, selfHostedGlobal_);
     Value rv;
     bool ok;
 
