@@ -277,9 +277,6 @@ TraceWeakMaps(WeakMapTracer *trc);
 extern JS_FRIEND_API(bool)
 GCThingIsMarkedGray(void *thing);
 
-extern JS_FRIEND_API(JSCompartment*)
-GetGCThingCompartment(void *thing);
-
 typedef void
 (GCThingCallback)(void *closure, void *gcthing);
 
