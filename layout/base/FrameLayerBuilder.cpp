@@ -882,7 +882,7 @@ FrameLayerBuilder::HasRetainedLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKe
 }
 
 Layer*
-FrameLayerBuilder::GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey)
+FrameLayerBuilder::GetOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey)
 {
   // If we need to build a new layer tree, then just refuse to recycle
   // anything.
@@ -900,31 +900,6 @@ FrameLayerBuilder::GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKe
         return layer;
     }
   }
-  return nullptr;
-}
-
-Layer*
-FrameLayerBuilder::GetOldLayerFor(nsDisplayItem* aItem)
-{
-  uint32_t key = aItem->GetPerFrameKey();
-  nsIFrame* frame = aItem->GetUnderlyingFrame();
-
-  if (frame) {
-    Layer* oldLayer = GetOldLayerForFrame(frame, key);
-    if (oldLayer) {
-      return oldLayer;
-    }
-  }
-
-  nsAutoTArray<nsIFrame*,4> mergedFrames;
-  aItem->GetMergedFrames(&mergedFrames);
-  for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
-    Layer* oldLayer = GetOldLayerForFrame(mergedFrames[i], key);
-    if (oldLayer) {
-      return oldLayer;
-    }
-  }
-
   return nullptr;
 }
 
@@ -1887,9 +1862,11 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 void
 ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
 {
-  NS_ASSERTION(aItem->GetUnderlyingFrame(), "Display items that render using Thebes must have a frame");
-  NS_ASSERTION(aItem->GetPerFrameKey(), "Display items that render using Thebes must have a key");
-  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(aItem);
+  nsIFrame* f = aItem->GetUnderlyingFrame();
+  NS_ASSERTION(f, "Display items that render using Thebes must have a frame");
+  uint32_t key = aItem->GetPerFrameKey();
+  NS_ASSERTION(key, "Display items that render using Thebes must have a key");
+  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(f, key);
   if (!oldLayer) {
     // Nothing to do here, this item didn't have a layer before
     return;
@@ -1962,19 +1939,6 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
 }
 
 void
-FrameLayerBuilder::AddLayerDisplayItemForFrame(Layer* aLayer,
-                                               nsIFrame* aFrame,
-                                               uint32_t aDisplayItemKey,
-                                               LayerState aLayerState)
-{
-  DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(aFrame);
-  if (entry) {
-    entry->mContainerLayerGeneration = mContainerLayerGeneration;
-    entry->mData.AppendElement(DisplayItemData(aLayer, aDisplayItemKey, aLayerState, mContainerLayerGeneration));
-  }
-}
-
-void
 FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
                                        nsDisplayItem* aItem,
                                        LayerState aLayerState)
@@ -1983,13 +1947,10 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
     return;
 
   nsIFrame* f = aItem->GetUnderlyingFrame();
-  uint32_t key = aItem->GetPerFrameKey();
-  AddLayerDisplayItemForFrame(aLayer, f, key, aLayerState);
-
-  nsAutoTArray<nsIFrame*,4> mergedFrames;
-  aItem->GetMergedFrames(&mergedFrames);
-  for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
-    AddLayerDisplayItemForFrame(aLayer, mergedFrames[i], key, aLayerState);
+  DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(f);
+  entry->mContainerLayerGeneration = mContainerLayerGeneration;
+  if (entry) {
+    entry->mData.AppendElement(DisplayItemData(aLayer, aItem->GetPerFrameKey(), aLayerState, mContainerLayerGeneration));
   }
 }
 
@@ -2324,14 +2285,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
   nsRefPtr<ContainerLayer> containerLayer;
   if (aManager == mRetainingManager) {
-    // Using GetOldLayerFor will search merged frames, as well as the underlying
-    // frame. The underlying frame can change when a page scrolls, so this
-    // avoids layer recreation in the situation that a new underlying frame is
-    // picked for a layer.
-    Layer* oldLayer = aContainerItem ?
-      GetOldLayerFor(aContainerItem) :
-      GetOldLayerForFrame(aContainerFrame, containerDisplayItemKey);
-
+    Layer* oldLayer = GetOldLayerFor(aContainerFrame, containerDisplayItemKey);
     if (oldLayer) {
       NS_ASSERTION(oldLayer->Manager() == aManager, "Wrong manager");
       if (oldLayer->HasUserData(&gThebesDisplayItemLayerUserData)) {
@@ -2425,13 +2379,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
         nsIFrame* mergedFrame = mergedFrames[i];
         DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(mergedFrame);
         if (entry) {
-          // Append the container layer so we don't regenerate layers when
-          // the underlying frame of an item changes to one of the existing
-          // merged frames.
-          entry->mData.AppendElement(
-              DisplayItemData(containerLayer, containerDisplayItemKey,
-                              LAYER_ACTIVE, mContainerLayerGeneration));
-
           // Ensure that UpdateDisplayItemDataForFrame recognizes that we
           // still have a container layer associated with this frame.
           entry->mIsSharingContainerLayer = true;
@@ -2505,7 +2452,7 @@ FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
 
   nsIFrame* f = aItem->GetUnderlyingFrame();
   NS_ASSERTION(f, "Can only call GetLeafLayerFor on items that have a frame");
-  Layer* layer = GetOldLayerForFrame(f, aItem->GetPerFrameKey());
+  Layer* layer = GetOldLayerFor(f, aItem->GetPerFrameKey());
   if (!layer)
     return nullptr;
   if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
