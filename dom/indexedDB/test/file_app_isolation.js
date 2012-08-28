@@ -6,7 +6,6 @@ var fileTestOnCurrentOrigin = (location.protocol + '//' + location.host + locati
 
 var previousPrefs = {
   mozBrowserFramesEnabled: undefined,
-  mozBrowserFramesWhitelist: undefined,
   oop_by_default: undefined,
 };
 
@@ -17,18 +16,14 @@ try {
 }
 
 try {
-  previousPrefs.mozBrowserFramesWhitelist = SpecialPowers.getCharPref('dom.mozBrowserFramesWhitelist');
-} catch(e) {
-}
-
-try {
   previousPrefs.oop_by_default = SpecialPowers.getBoolPref('dom.ipc.browser_frames.oop_by_default');
 } catch(e) {
 }
 
 SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
-SpecialPowers.setCharPref('dom.mozBrowserFramesWhitelist', location.protocol + "//" + location.host);
 SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", location.pathname.indexOf('_inproc') == -1);
+
+SpecialPowers.addPermission("browser", true, window.document);
 
 var gData = [
   // APP 1
@@ -104,12 +99,11 @@ function runTest() {
           if (previousPrefs.mozBrowserFramesEnabled !== undefined) {
             SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', previousPrefs.mozBrowserFramesEnabled);
           }
-          if (previousPrefs.mozBrowserFramesWhitelist !== undefined) {
-            SpecialPowers.setCharPref('dom.mozBrowserFramesWhitelist', previousPrefs.mozBrowserFramesWhitelist);
-          }
           if (previousPrefs.oop_by_default !== undefined) {
             SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", previousPrefs.oop_by_default);
           }
+
+          SpecialPowers.removePermission("browser", window.document);
 
           indexedDB.deleteDatabase('AppIsolationTest').onsuccess = function() {
             SimpleTest.finish();
