@@ -4,15 +4,11 @@ Date:   Mon Nov 22 15:19:57 2010 -0500
 
     win64-underscore patch
 
-diff --git a/js/src/ctypes/libffi/aclocal.m4 b/js/src/ctypes/libffi/aclocal.m4
---- a/js/src/ctypes/libffi/aclocal.m4
-+++ b/js/src/ctypes/libffi/aclocal.m4
-@@ -7359,16 +7359,821 @@ func_append ()
-   eval "$[1]=\$$[1]\$[2]"
- }
- 
- _LT_EOF
-     ;;
+diff --git a/aclocal.m4 b/aclocal.m4
+index 0ef4b09..4079f82 100644
+--- a/aclocal.m4
++++ b/aclocal.m4
+@@ -7364,6 +7364,811 @@ _LT_EOF
    esac
  ])
  
@@ -824,20 +820,11 @@ diff --git a/js/src/ctypes/libffi/aclocal.m4 b/js/src/ctypes/libffi/aclocal.m4
  # Helper functions for option handling.                    -*- Autoconf -*-
  #
  #   Copyright (C) 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
- #   Written by Gary V. Vaughan, 2004
- #
- # This file is free software; the Free Software Foundation gives
- # unlimited permission to copy and/or distribute it, with or without
- # modifications, as long as this notice is preserved.
-diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
---- a/js/src/ctypes/libffi/configure
-+++ b/js/src/ctypes/libffi/configure
-@@ -747,16 +747,17 @@ am__EXEEXT_TRUE
- LTLIBOBJS
- LIBOBJS
- toolexeclibdir
- toolexecdir
- FFI_DEBUG_FALSE
+diff --git a/configure b/configure
+index da1cb4d..e086c65 100755
+--- a/configure
++++ b/configure
+@@ -795,6 +795,7 @@ FFI_DEBUG_FALSE
  FFI_DEBUG_TRUE
  TARGETDIR
  TARGET
@@ -845,204 +832,114 @@ diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
  HAVE_LONG_DOUBLE
  ALLOCA
  PA64_HPUX_FALSE
- PA64_HPUX_TRUE
- PA_HPUX_FALSE
- PA_HPUX_TRUE
- PA_LINUX_FALSE
- PA_LINUX_TRUE
-@@ -5045,23 +5046,23 @@ test -z "$NM" && NM=nm
- 
- { $as_echo "$as_me:${as_lineno-$LINENO}: checking the name lister ($NM) interface" >&5
- $as_echo_n "checking the name lister ($NM) interface... " >&6; }
- if test "${lt_cv_nm_interface+set}" = set; then :
-   $as_echo_n "(cached) " >&6
+@@ -4782,13 +4783,13 @@ if test "${lt_cv_nm_interface+set}" = set; then
  else
    lt_cv_nm_interface="BSD nm"
    echo "int some_variable = 0;" > conftest.$ac_ext
--  (eval echo "\"\$as_me:5053: $ac_compile\"" >&5)
-+  (eval echo "\"\$as_me:5054: $ac_compile\"" >&5)
+-  (eval echo "\"\$as_me:4785: $ac_compile\"" >&5)
++  (eval echo "\"\$as_me:4786: $ac_compile\"" >&5)
    (eval "$ac_compile" 2>conftest.err)
    cat conftest.err >&5
--  (eval echo "\"\$as_me:5056: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
-+  (eval echo "\"\$as_me:5057: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+-  (eval echo "\"\$as_me:4788: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
++  (eval echo "\"\$as_me:4789: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
    (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
    cat conftest.err >&5
--  (eval echo "\"\$as_me:5059: output\"" >&5)
-+  (eval echo "\"\$as_me:5060: output\"" >&5)
+-  (eval echo "\"\$as_me:4791: output\"" >&5)
++  (eval echo "\"\$as_me:4792: output\"" >&5)
    cat conftest.out >&5
    if $GREP 'External.*some_variable' conftest.out > /dev/null; then
      lt_cv_nm_interface="MS dumpbin"
-   fi
-   rm -f conftest*
- fi
- { $as_echo "$as_me:${as_lineno-$LINENO}: result: $lt_cv_nm_interface" >&5
- $as_echo "$lt_cv_nm_interface" >&6; }
-@@ -6257,17 +6258,17 @@ ia64-*-hpux*)
- 	HPUX_IA64_MODE="64"
- 	;;
-     esac
-   fi
-   rm -rf conftest*
+@@ -5994,7 +5995,7 @@ ia64-*-hpux*)
    ;;
  *-*-irix6*)
    # Find out which ABI we are using.
--  echo '#line 6265 "configure"' > conftest.$ac_ext
-+  echo '#line 6266 "configure"' > conftest.$ac_ext
-   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
+-  echo '#line 5997 "configure"' > conftest.$ac_ext
++  echo '#line 5998 "configure"' > conftest.$ac_ext
+   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
    (eval $ac_compile) 2>&5
    ac_status=$?
-   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-   test $ac_status = 0; }; then
-     if test "$lt_cv_prog_gnu_ld" = yes; then
-       case `/usr/bin/file conftest.$ac_objext` in
- 	*32-bit*)
-@@ -7783,21 +7784,21 @@ else
-    # (2) before a word containing "conftest.", or (3) at the end.
-    # Note that $ac_compile itself does not contain backslashes and begins
-    # with a dollar sign (not a hyphen), so the echo should work correctly.
-    # The option is referenced via a variable to avoid confusing sed.
-    lt_compile=`echo "$ac_compile" | $SED \
+@@ -7847,11 +7848,11 @@ else
     -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
     -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
     -e 's:$: $lt_compiler_flag:'`
--   (eval echo "\"\$as_me:7791: $lt_compile\"" >&5)
-+   (eval echo "\"\$as_me:7792: $lt_compile\"" >&5)
+-   (eval echo "\"\$as_me:7850: $lt_compile\"" >&5)
++   (eval echo "\"\$as_me:7851: $lt_compile\"" >&5)
     (eval "$lt_compile" 2>conftest.err)
     ac_status=$?
     cat conftest.err >&5
--   echo "$as_me:7795: \$? = $ac_status" >&5
-+   echo "$as_me:7796: \$? = $ac_status" >&5
+-   echo "$as_me:7854: \$? = $ac_status" >&5
++   echo "$as_me:7855: \$? = $ac_status" >&5
     if (exit $ac_status) && test -s "$ac_outfile"; then
       # The compiler can only warn and ignore the option if not recognized
       # So say no if there are warnings other than the usual output.
-      $ECHO "X$_lt_compiler_boilerplate" | $Xsed -e '/^$/d' >conftest.exp
-      $SED '/^$/d; /^ *+/d' conftest.err >conftest.er2
-      if test ! -s conftest.er2 || diff conftest.exp conftest.er2 >/dev/null; then
-        lt_cv_prog_compiler_rtti_exceptions=yes
-      fi
-@@ -8122,21 +8123,21 @@ else
-    # (2) before a word containing "conftest.", or (3) at the end.
-    # Note that $ac_compile itself does not contain backslashes and begins
-    # with a dollar sign (not a hyphen), so the echo should work correctly.
-    # The option is referenced via a variable to avoid confusing sed.
-    lt_compile=`echo "$ac_compile" | $SED \
+@@ -8186,11 +8187,11 @@ else
     -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
     -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
     -e 's:$: $lt_compiler_flag:'`
--   (eval echo "\"\$as_me:8130: $lt_compile\"" >&5)
-+   (eval echo "\"\$as_me:8131: $lt_compile\"" >&5)
+-   (eval echo "\"\$as_me:8189: $lt_compile\"" >&5)
++   (eval echo "\"\$as_me:8190: $lt_compile\"" >&5)
     (eval "$lt_compile" 2>conftest.err)
     ac_status=$?
     cat conftest.err >&5
--   echo "$as_me:8134: \$? = $ac_status" >&5
-+   echo "$as_me:8135: \$? = $ac_status" >&5
+-   echo "$as_me:8193: \$? = $ac_status" >&5
++   echo "$as_me:8194: \$? = $ac_status" >&5
     if (exit $ac_status) && test -s "$ac_outfile"; then
       # The compiler can only warn and ignore the option if not recognized
       # So say no if there are warnings other than the usual output.
-      $ECHO "X$_lt_compiler_boilerplate" | $Xsed -e '/^$/d' >conftest.exp
-      $SED '/^$/d; /^ *+/d' conftest.err >conftest.er2
-      if test ! -s conftest.er2 || diff conftest.exp conftest.er2 >/dev/null; then
-        lt_cv_prog_compiler_pic_works=yes
-      fi
-@@ -8227,21 +8228,21 @@ else
-    # Insert the option either (1) after the last *FLAGS variable, or
-    # (2) before a word containing "conftest.", or (3) at the end.
-    # Note that $ac_compile itself does not contain backslashes and begins
-    # with a dollar sign (not a hyphen), so the echo should work correctly.
-    lt_compile=`echo "$ac_compile" | $SED \
+@@ -8291,11 +8292,11 @@ else
     -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
     -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
     -e 's:$: $lt_compiler_flag:'`
--   (eval echo "\"\$as_me:8235: $lt_compile\"" >&5)
-+   (eval echo "\"\$as_me:8236: $lt_compile\"" >&5)
+-   (eval echo "\"\$as_me:8294: $lt_compile\"" >&5)
++   (eval echo "\"\$as_me:8295: $lt_compile\"" >&5)
     (eval "$lt_compile" 2>out/conftest.err)
     ac_status=$?
     cat out/conftest.err >&5
--   echo "$as_me:8239: \$? = $ac_status" >&5
-+   echo "$as_me:8240: \$? = $ac_status" >&5
+-   echo "$as_me:8298: \$? = $ac_status" >&5
++   echo "$as_me:8299: \$? = $ac_status" >&5
     if (exit $ac_status) && test -s out/conftest2.$ac_objext
     then
       # The compiler can only warn and ignore the option if not recognized
-      # So say no if there are warnings
-      $ECHO "X$_lt_compiler_boilerplate" | $Xsed -e '/^$/d' > out/conftest.exp
-      $SED '/^$/d; /^ *+/d' out/conftest.err >out/conftest.er2
-      if test ! -s out/conftest.er2 || diff out/conftest.exp out/conftest.er2 >/dev/null; then
-        lt_cv_prog_compiler_c_o=yes
-@@ -8282,21 +8283,21 @@ else
-    # Insert the option either (1) after the last *FLAGS variable, or
-    # (2) before a word containing "conftest.", or (3) at the end.
-    # Note that $ac_compile itself does not contain backslashes and begins
-    # with a dollar sign (not a hyphen), so the echo should work correctly.
-    lt_compile=`echo "$ac_compile" | $SED \
+@@ -8346,11 +8347,11 @@ else
     -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
     -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
     -e 's:$: $lt_compiler_flag:'`
--   (eval echo "\"\$as_me:8290: $lt_compile\"" >&5)
-+   (eval echo "\"\$as_me:8291: $lt_compile\"" >&5)
+-   (eval echo "\"\$as_me:8349: $lt_compile\"" >&5)
++   (eval echo "\"\$as_me:8350: $lt_compile\"" >&5)
     (eval "$lt_compile" 2>out/conftest.err)
     ac_status=$?
     cat out/conftest.err >&5
--   echo "$as_me:8294: \$? = $ac_status" >&5
-+   echo "$as_me:8295: \$? = $ac_status" >&5
+-   echo "$as_me:8353: \$? = $ac_status" >&5
++   echo "$as_me:8354: \$? = $ac_status" >&5
     if (exit $ac_status) && test -s out/conftest2.$ac_objext
     then
       # The compiler can only warn and ignore the option if not recognized
-      # So say no if there are warnings
-      $ECHO "X$_lt_compiler_boilerplate" | $Xsed -e '/^$/d' > out/conftest.exp
-      $SED '/^$/d; /^ *+/d' out/conftest.err >out/conftest.er2
-      if test ! -s out/conftest.er2 || diff out/conftest.exp out/conftest.er2 >/dev/null; then
-        lt_cv_prog_compiler_c_o=yes
-@@ -10652,17 +10653,17 @@ if test "${lt_cv_dlopen_self+set}" = set
-   $as_echo_n "(cached) " >&6
- else
-   	  if test "$cross_compiling" = yes; then :
-   lt_cv_dlopen_self=cross
- else
+@@ -11149,7 +11150,7 @@ else
    lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
    lt_status=$lt_dlunknown
    cat > conftest.$ac_ext <<_LT_EOF
--#line 10660 "configure"
-+#line 10661 "configure"
+-#line 11152 "configure"
++#line 11153 "configure"
  #include "confdefs.h"
  
  #if HAVE_DLFCN_H
- #include <dlfcn.h>
- #endif
- 
- #include <stdio.h>
- 
-@@ -10748,17 +10749,17 @@ if test "${lt_cv_dlopen_self_static+set}
-   $as_echo_n "(cached) " >&6
- else
-   	  if test "$cross_compiling" = yes; then :
-   lt_cv_dlopen_self_static=cross
- else
+@@ -11245,7 +11246,7 @@ else
    lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
    lt_status=$lt_dlunknown
    cat > conftest.$ac_ext <<_LT_EOF
--#line 10756 "configure"
-+#line 10757 "configure"
+-#line 11248 "configure"
++#line 11249 "configure"
  #include "confdefs.h"
  
  #if HAVE_DLFCN_H
- #include <dlfcn.h>
- #endif
- 
- #include <stdio.h>
- 
-@@ -12356,16 +12357,71 @@ fi
- $as_echo "$libffi_cv_as_string_pseudo_op" >&6; }
-     if test "x$libffi_cv_as_string_pseudo_op" = xyes; then
- 
- $as_echo "#define HAVE_AS_STRING_PSEUDO_OP 1" >>confdefs.h
- 
+@@ -14647,6 +14648,63 @@ _ACEOF
      fi
  fi
  
 +if test x$TARGET = xX86_WIN64; then
-+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for _ prefix in compiled symbols" >&5
++    { $as_echo "$as_me:$LINENO: checking for _ prefix in compiled symbols" >&5
 +$as_echo_n "checking for _ prefix in compiled symbols... " >&6; }
-+if test "${lt_cv_sys_symbol_underscore+set}" = set; then :
++if test "${lt_cv_sys_symbol_underscore+set}" = set; then
 +  $as_echo_n "(cached) " >&6
 +else
 +  lt_cv_sys_symbol_underscore=no
@@ -1050,18 +947,18 @@ diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
 +void nm_test_func(){}
 +int main(){nm_test_func;return 0;}
 +_LT_EOF
-+  if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
++  if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
 +  (eval $ac_compile) 2>&5
 +  ac_status=$?
-+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-+  test $ac_status = 0; }; then
++  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); }; then
 +    # Now try to grab the symbols.
 +    ac_nlist=conftest.nm
-+    if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$NM conftest.$ac_objext \| $lt_cv_sys_global_symbol_pipe \> $ac_nlist\""; } >&5
++    if { (eval echo "$as_me:$LINENO: \"$NM conftest.$ac_objext \| $lt_cv_sys_global_symbol_pipe \> $ac_nlist\"") >&5
 +  (eval $NM conftest.$ac_objext \| $lt_cv_sys_global_symbol_pipe \> $ac_nlist) 2>&5
 +  ac_status=$?
-+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-+  test $ac_status = 0; } && test -s "$ac_nlist"; then
++  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); } && test -s "$ac_nlist"; then
 +      # See whether the symbols have a leading underscore.
 +      if grep '^. _nm_test_func' "$ac_nlist" >/dev/null; then
 +        lt_cv_sys_symbol_underscore=yes
@@ -1082,35 +979,28 @@ diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
 +  rm -rf conftest*
 +
 +fi
-+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $lt_cv_sys_symbol_underscore" >&5
++{ $as_echo "$as_me:$LINENO: result: $lt_cv_sys_symbol_underscore" >&5
 +$as_echo "$lt_cv_sys_symbol_underscore" >&6; }
 +  sys_symbol_underscore=$lt_cv_sys_symbol_underscore
 +
 +
 +    if test "x$sys_symbol_underscore" = xyes; then
 +
-+$as_echo "#define SYMBOL_UNDERSCORE 1" >>confdefs.h
++cat >>confdefs.h <<\_ACEOF
++#define SYMBOL_UNDERSCORE 1
++_ACEOF
 +
 +    fi
 +fi
 +
  case "$target" in
-      # Darwin 10 (OSX 10.6) and beyond allocate non-executable pages
-      *-apple-darwin1* | *-*-freebsd* | *-*-openbsd* | *-pc-solaris*)
+      *-apple-darwin10* | *-*-freebsd* | *-*-openbsd* | *-pc-solaris*)
  
- $as_echo "#define FFI_MMAP_EXEC_WRIT 1" >>confdefs.h
- 
-      ;;
- esac
-diff --git a/js/src/ctypes/libffi/configure.ac b/js/src/ctypes/libffi/configure.ac
---- a/js/src/ctypes/libffi/configure.ac
-+++ b/js/src/ctypes/libffi/configure.ac
-@@ -310,16 +310,23 @@ if test x$TARGET = xX86 || test x$TARGET
- 		       [libffi_cv_as_string_pseudo_op=no])
-     ])
-     if test "x$libffi_cv_as_string_pseudo_op" = xyes; then
-        AC_DEFINE(HAVE_AS_STRING_PSEUDO_OP, 1,
- 	       [Define if your assembler supports .string.])
+diff --git a/configure.ac b/configure.ac
+index a94bd26..c7cead8 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -314,6 +314,13 @@ if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64
      fi
  fi
  
@@ -1122,22 +1012,13 @@ diff --git a/js/src/ctypes/libffi/configure.ac b/js/src/ctypes/libffi/configure.
 +fi
 +
  case "$target" in
-      # Darwin 10 (OSX 10.6) and beyond allocate non-executable pages
-      *-apple-darwin1* | *-*-freebsd* | *-*-openbsd* | *-pc-solaris*)
+      *-apple-darwin10* | *-*-freebsd* | *-*-openbsd* | *-pc-solaris*)
         AC_DEFINE(FFI_MMAP_EXEC_WRIT, 1,
-                  [Cannot use malloc on this target, so, we revert to
-                    alternative means])
-      ;;
- esac
-diff --git a/js/src/ctypes/libffi/src/x86/win64.S b/js/src/ctypes/libffi/src/x86/win64.S
---- a/js/src/ctypes/libffi/src/x86/win64.S
-+++ b/js/src/ctypes/libffi/src/x86/win64.S
-@@ -227,32 +227,40 @@ ret_void$:
- 	xor	rax, rax
- 
- 	lea	rsp, QWORD PTR [rbp+16]
- 	pop	rbp
- 	ret	0
+diff --git a/src/x86/win64.S b/src/x86/win64.S
+index 6e91818..fcdb270 100644
+--- a/src/x86/win64.S
++++ b/src/x86/win64.S
+@@ -232,10 +232,18 @@ ret_void$:
  ffi_call_win64 ENDP
  _TEXT	ENDS
  END
@@ -1158,10 +1039,7 @@ diff --git a/js/src/ctypes/libffi/src/x86/win64.S b/js/src/ctypes/libffi/src/x86
  
  # ffi_closure_win64 will be called with these registers set:
  #    rax points to 'closure'
- #    r11 contains a bit mask that specifies which of the
- #    first four parameters are float or double
- #
- # It must move the parameters passed in registers to their stack location,
+@@ -246,8 +254,8 @@ END
  # call ffi_closure_win64_inner for the actual work, then return the result.
  # 
  	.balign 16
@@ -1172,17 +1050,7 @@ diff --git a/js/src/ctypes/libffi/src/x86/win64.S b/js/src/ctypes/libffi/src/x86
  	# copy register arguments onto stack
  	test	$1,%r11
  	jne	.Lfirst_is_float	
- 	mov	%rcx, 8(%rsp)
- 	jmp	.Lsecond
- .Lfirst_is_float:
- 	movlpd	%xmm0, 8(%rsp)
- 
-@@ -282,27 +290,27 @@ END
- 
- .Ldone:
- #.ALLOCSTACK 40
- 	sub	$40, %rsp
- #.ENDPROLOG
+@@ -287,7 +295,7 @@ _ffi_closure_win64:
  	mov	%rax, %rcx	# context is first parameter
  	mov	%rsp, %rdx	# stack is second parameter
  	add	$48, %rdx	# point to start of arguments
@@ -1191,8 +1059,7 @@ diff --git a/js/src/ctypes/libffi/src/x86/win64.S b/js/src/ctypes/libffi/src/x86
  	callq	*%rax		# call the real closure function
  	add	$40, %rsp
  	movq	%rax, %xmm0	# If the closure returned a float,
-                                 # ffi_closure_win64_inner wrote it to rax
- 	retq
+@@ -296,8 +304,8 @@ _ffi_closure_win64:
  .ffi_closure_win64_end:
  
  	.balign 16
@@ -1203,8 +1070,3 @@ diff --git a/js/src/ctypes/libffi/src/x86/win64.S b/js/src/ctypes/libffi/src/x86
          # copy registers onto stack
  	mov	%r9,32(%rsp)
  	mov	%r8,24(%rsp)
- 	mov	%rdx,16(%rsp)
- 	mov	%rcx,8(%rsp)
-         #.PUSHREG rbp
- 	push	%rbp
-         #.ALLOCSTACK 48
