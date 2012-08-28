@@ -436,10 +436,12 @@ nsWaveReader::LoadFormatChunk()
   // Make sure metadata is fairly sane.  The rate check is fairly arbitrary,
   // but the channels check is intentionally limited to mono or stereo
   // because that's what the audio backend currently supports.
+  unsigned int actualFrameSize = sampleFormat == 8 ? 1 : 2 * channels;
   if (rate < 100 || rate > 96000 ||
       channels < 1 || channels > MAX_CHANNELS ||
       (frameSize != 1 && frameSize != 2 && frameSize != 4) ||
-      (sampleFormat != 8 && sampleFormat != 16)) {
+      (sampleFormat != 8 && sampleFormat != 16) ||
+      frameSize != actualFrameSize) {
     NS_WARNING("Invalid WAVE metadata");
     return false;
   }
