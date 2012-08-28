@@ -5,20 +5,6 @@
 %filter substitution
 %include defines.inc
 
-@font-face {
-  font-family: 'OpenSansRegular';
-  src: url('chrome://browser/skin/fonts/opensans-regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'OpenSansLight';
-  src: url('chrome://browser/skin/fonts/opensans-light.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
 html {
   -moz-text-size-adjust: none;
 }
