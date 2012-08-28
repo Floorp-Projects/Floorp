@@ -707,8 +707,12 @@ IonScript::toggleBarriers(bool enabled)
 }
 
 void
-IonScript::purgeCaches()
+IonScript::purgeCaches(JSCompartment *c)
 {
+    // This is necessary because AutoFlushCache::updateTop()
+    // looks up the current flusher in the IonContext.  Without one
+    // it cannot work.
+    js::ion::IonContext ictx(NULL, c, NULL);
     AutoFlushCache afc("purgeCaches");
     for (size_t i = 0; i < numCaches(); i++)
         getCache(i).reset();
