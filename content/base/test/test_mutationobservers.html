@@ -523,6 +523,11 @@ function testTakeRecords() {
 }
 
 function testTakeRecords() {
+  function mutationListener(e) {
+    ++mutationEventCount;
+    is(e.attrChange, MutationEvent.ADDITION, "unexpected change");
+  }
+
   m = new M(function(records, observer) {
       is(records.length, 2, "Should have got 2 records");
       is(records[0].type, "attributes", "Should have got attributes");
@@ -532,19 +537,35 @@ function testTakeRecords() {
       is(records[1].attributeName, "foo", "");
       is(records[1].oldValue, "bar", "");
       observer.disconnect();
-      then();
+      div.removeEventListener("DOMAttrModified", mutationListener);
+      then(testExpandos);
       m = null;
     });
   m.observe(div, { attributes: true, attributeOldValue: true });
   var mutationEventCount = 0;
-  div.addEventListener("DOMAttrModified",
-                       function(e) {
-                         ++mutationEventCount;
-                         is(e.attrChange, MutationEvent.ADDITION, "unexpected change");
-                       });
+  div.addEventListener("DOMAttrModified", mutationListener);
   div.setAttribute("foo", "bar");
   div.setAttribute("foo", "bar");
   is(mutationEventCount, 1, "Should have got only one mutation event!");
+}
+
+function testExpandos() {
+  var m2 = new M(function(records, observer) {
+    is(observer.expandoProperty, true);
+    observer.disconnect();
+    then();
+  });
+  m2.expandoProperty = true;
+  m2.observe(div, { attributes: true });
+  m2 = null;
+  if (SpecialPowers) {
+    // Run GC several times to see if the expando property disappears.
+    SpecialPowers.gc();
+    SpecialPowers.gc();
+    SpecialPowers.gc();
+    SpecialPowers.gc();
+  }
+  div.setAttribute("foo", "bar2");
 }
 
 SimpleTest.waitForExplicitFinish();
