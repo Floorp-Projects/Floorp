@@ -20,7 +20,7 @@ CPPSRCS = \
   AccGroupInfo.cpp \
   AccIterator.cpp \
   ARIAStateMap.cpp \
-  Filters.cpp \
+  filters.cpp \
   FocusManager.cpp \
   NotificationController.cpp \
   nsAccDocManager.cpp \

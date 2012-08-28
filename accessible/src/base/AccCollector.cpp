@@ -6,8 +6,6 @@
 
 #include "Accessible.h"
 
-using namespace mozilla::a11y;
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccCollector
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +56,7 @@ AccCollector::EnsureNGetObject(uint32_t aIndex)
   uint32_t childCount = mRoot->ChildCount();
   while (mRootChildIdx < childCount) {
     Accessible* child = mRoot->GetChildAt(mRootChildIdx++);
-    if (!(mFilterFunc(child) & filters::eMatch))
+    if (!mFilterFunc(child))
       continue;
 
     AppendObject(child);
@@ -75,7 +73,7 @@ AccCollector::EnsureNGetIndex(Accessible* aAccessible)
   uint32_t childCount = mRoot->ChildCount();
   while (mRootChildIdx < childCount) {
     Accessible* child = mRoot->GetChildAt(mRootChildIdx++);
-    if (!(mFilterFunc(child) & filters::eMatch))
+    if (!mFilterFunc(child))
       continue;
 
     AppendObject(child);
@@ -105,8 +103,7 @@ EmbeddedObjCollector::GetIndexAt(Accessible* aAccessible)
   if (aAccessible->mIndexOfEmbeddedChild != -1)
     return aAccessible->mIndexOfEmbeddedChild;
 
-  return mFilterFunc(aAccessible) & filters::eMatch ?
-    EnsureNGetIndex(aAccessible) : -1;
+  return mFilterFunc(aAccessible) ? EnsureNGetIndex(aAccessible) : -1;
 }
 
 void

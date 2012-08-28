@@ -28,14 +28,6 @@
       ];
       testTableIndexes("grid", idxes);
 
-      idxes = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [9, 10, 11]
-      ];
-      testTableIndexes("grid-rowgroups", idxes);
-
       //////////////////////////////////////////////////////////////////////////
       // a bit crazy ARIA grid
       idxes = [
@@ -59,9 +51,6 @@
   <a target="_blank"
      title="nsHTMLTableCellAccessible is used in dojo's crazy ARIA grid"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=513848">Mozilla Bug 513848</a>
-  <a target="_blank"
-     title="ARIA grid with rowgroup breaks table row/col counting and indices"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=761853">Mozilla Bug 761853</a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -88,31 +77,6 @@
       <span role="rowheader">row3</span>
       <span role="gridcell">cell5</span>
       <span role="gridcell">cell6</span>
-    </div>
-  </div>
-
-  <div role="grid" id="grid-rowgroups">
-    <div role="row">
-      <span role="columnheader">grid-rowgroups-col1</span>
-      <span role="columnheader">grid-rowgroups-col2</span>
-      <span role="columnheader">grid-rowgroups-col3</span>
-    </div>
-    <div role="rowgroup">
-      <div role="row">
-        <span role="rowheader">grid-rowgroups-row1</span>
-        <span role="gridcell">grid-rowgroups-cell1</span>
-        <span role="gridcell">grid-rowgroups-cell2</span>
-      </div>
-      <div role="row">
-        <span role="rowheader">grid-rowgroups-row2</span>
-        <span role="gridcell">grid-rowgroups-cell3</span>
-        <span role="gridcell">grid-rowgroups-cell4</span>
-      </div>
-    </div>
-    <div role="row">
-      <span role="rowheader">grid-rowgroups-row3</span>
-      <span role="gridcell">grid-rowgroups-cell5</span>
-      <span role="gridcell">grid-rowgroups-cell6</span>
     </div>
   </div>
 

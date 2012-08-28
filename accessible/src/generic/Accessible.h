@@ -23,6 +23,7 @@
 
 class AccEvent;
 class AccGroupInfo;
+class EmbeddedObjCollector;
 class KeyBinding;
 class Accessible;
 class HyperTextAccessible;
@@ -31,7 +32,6 @@ struct nsRoleMapEntry;
 namespace mozilla {
 namespace a11y {
 
-class EmbeddedObjCollector;
 class HTMLImageMapAccessible;
 class HTMLLIAccessible;
 class ImageAccessible;
@@ -875,9 +875,9 @@ protected:
   uint32_t mFlags;
   friend class DocAccessible;
 
-  nsAutoPtr<mozilla::a11y::EmbeddedObjCollector> mEmbeddedObjCollector;
+  nsAutoPtr<EmbeddedObjCollector> mEmbeddedObjCollector;
   int32_t mIndexOfEmbeddedChild;
-  friend class mozilla::a11y::EmbeddedObjCollector;
+  friend class EmbeddedObjCollector;
 
   nsAutoPtr<AccGroupInfo> mGroupInfo;
   friend class AccGroupInfo;
