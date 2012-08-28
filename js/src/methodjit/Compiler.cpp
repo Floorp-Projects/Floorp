@@ -3978,7 +3978,7 @@ MaybeIonCompileable(JSContext *cx, JSScript *script, bool *recompileCheckForIon)
 void
 mjit::Compiler::ionCompileHelper()
 {
-    if (debugMode() || !globalObj || !cx->typeInferenceEnabled())
+    if (debugMode() || !globalObj || !cx->typeInferenceEnabled() || outerScript->hasIonScript())
         return;
 
     bool recompileCheckForIon = false;
