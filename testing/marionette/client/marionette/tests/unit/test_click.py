@@ -17,6 +17,8 @@ class TestClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element("link text", "333333").click()
+        self.marionette.set_search_timeout(5000)
+        self.marionette.find_element("id", "username")
         self.assertEqual(self.marionette.title, "XHTML Test Page")
 
 class TestClickChrome(MarionetteTestCase):
@@ -24,9 +26,12 @@ class TestClickChrome(MarionetteTestCase):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
         self.win = self.marionette.current_window_handle
-        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', '_blank', 'chrome,centerscreen');")
+        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
+        self.marionette.switch_to_window('foo')
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
 
     def tearDown(self):
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
         self.marionette.execute_script("window.close();")
         self.marionette.switch_to_window(self.win)
         MarionetteTestCase.tearDown(self)
