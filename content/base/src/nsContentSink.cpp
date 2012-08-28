@@ -737,9 +737,15 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
     return NS_OK;
   }
 
+  NS_ASSERTION(!aElement ||
+               aElement->NodeType() == nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
+               "We only expect processing instructions here");
+
   // If this is a fragment parser, we don't want to observe.
+  // We don't support CORS for processing instructions
   bool isAlternate;
   rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, aAlternate,
+                                 CORS_NONE,
                                  mRunsToCompletion ? nullptr : this, &isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
   
