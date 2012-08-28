@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=732209
         crossorigin="use-credentials">
   <link rel="stylesheet"
         href="http://example.com/tests/layout/style/test/bug732209-css.sjs?seven&cors-anonymous">
-  <link rel="stylesheet"
+  <link rel="stylesheet" id="cross-origin-sheet"
         href="http://example.com/tests/layout/style/test/bug732209-css.sjs?eight&cors-anonymous"
         crossorigin>
   <link rel="stylesheet"
@@ -71,6 +71,19 @@ addLoadEvent(function() {
     is(getComputedStyle(spans[i], "").color, "rgb(0, 128, 0)",
        "Span " + spans[i].id + " should be green");
   }
+
+  try {
+    var sheet = $("cross-origin-sheet").sheet;
+    dump('aaa');
+    is(sheet.cssRules.length, 2,
+       "Should be able to get length of list of rules");
+    is(sheet.cssRules[0].style.color, "green",
+       "Should be able to read individual rules");
+  } catch (e) {
+    ok(false,
+       "Should be allowed to access cross-origin sheet that opted in with CORS: " + e);
+  }
+
   SimpleTest.finish();
 });
 

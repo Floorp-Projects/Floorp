@@ -1589,7 +1589,7 @@ nsCSSStyleSheet::DidDirty()
 }
 
 nsresult
-nsCSSStyleSheet::SubjectSubsumesInnerPrincipal() const
+nsCSSStyleSheet::SubjectSubsumesInnerPrincipal()
 {
   // Get the security manager and do the subsumes check
   nsIScriptSecurityManager *securityManager =
@@ -1612,7 +1612,26 @@ nsCSSStyleSheet::SubjectSubsumesInnerPrincipal() const
   }
   
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    // Allow access only if CORS mode is not NONE
+    if (GetCORSMode() == CORS_NONE) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    // Now make sure we set the principal of our inner to the
+    // subjectPrincipal.  That means we need a unique inner, of
+    // course.  But we don't want to do that if we're not complete
+    // yet.  Luckily, all the callers of this method throw anyway if
+    // not complete, so we can just do that here too.
+    if (!mInner->mComplete) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    }
+
+    rv = WillDirty();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mInner->mPrincipal = subjectPrincipal;
+
+    DidDirty();
   }
 
   return NS_OK;
