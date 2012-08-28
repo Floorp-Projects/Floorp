@@ -1074,27 +1074,16 @@ let RIL = {
    * Read the MSISDN from the ICC.
    */
   getMSISDN: function getMSISDN() {
-    function callback() {
-      let length = Buf.readUint32();
-      // Each octet is encoded into two chars.
-      let recordLength = length / 2;
-      // Skip prefixed alpha identifier
-      Buf.seekIncoming((recordLength - MSISDN_FOOTER_SIZE_BYTES) *
-                        PDU_HEX_OCTET_SIZE);
-
-      // Dialling Number/SSC String
-      let len = GsmPDUHelper.readHexOctet();
-      if (len > MSISDN_MAX_NUMBER_SIZE_BYTES) {
-        debug("ICC_EF_MSISDN: invalid length of BCD number/SSC contents - " + len);
-        return;
-      }
-      this.iccInfo.msisdn = GsmPDUHelper.readDiallingNumber(len);
-      Buf.readStringDelimiter(length);
-
-      if (DEBUG) debug("MSISDN: " + this.iccInfo.msisdn);
-      if (this.iccInfo.msisdn) {
+    function callback(options) {
+      let parseCallback = function parseCallback(msisdn) {
+        if (this.iccInfo.msisdn === msisdn.number) {
+          return;
+        }
+        this.iccInfo.msisdn = msisdn.number;
+        if (DEBUG) debug("MSISDN: " + this.iccInfo.msisdn);
         this._handleICCInfoChange();
       }
+      this.parseDiallingNumber(options, parseCallback);
     }
 
     this.iccIO({
