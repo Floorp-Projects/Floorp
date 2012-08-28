@@ -25,7 +25,6 @@ import org.mozilla.gecko.WebAppAllocator;
 * and then launch it
 */
 public class MarketplaceApp extends WebApp {
-    protected int mWebAppIndex;
     private static final String LOGTAG = "GeckoMarketplaceApp";
     public static final String MARKETPLACE_HOST = "marketplace.mozilla.org";
     public static final String MARKETPLACE_URI = "https://marketplace.mozilla.org";
