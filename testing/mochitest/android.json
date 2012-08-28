@@ -147,6 +147,8 @@
  "dom/indexedDB/ipc/test_ipc.html": "bug 783513",
  "dom/indexedDB/test/test_third_party.html": "TIMED_OUT",
  "dom/indexedDB/test/test_event_propagation.html": "TIMED_OUT, bug 780855",
+ "dom/indexedDB/test/test_app_isolation_inproc.html": "TIMED_OUT",
+ "dom/indexedDB/test/test_app_isolation_oop.html": "TIMED_OUT",
  "dom/network/tests/test_network_basics.html": "",
  "dom/settings/tests/test_settings_events.html": "",
  "dom/settings/tests/test_settings_basics.html": "",
