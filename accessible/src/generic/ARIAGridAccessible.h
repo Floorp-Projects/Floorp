@@ -60,7 +60,6 @@ public:
   virtual void UnselectRow(uint32_t aRowIdx);
 
 protected:
-
   /**
    * Return true if the given row index is valid.
    */
@@ -115,27 +114,6 @@ public:
   virtual void Shutdown();
   virtual void ApplyARIAState(uint64_t* aState) const;
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
-
-protected:
-
-  /**
-   * Return a containing row.
-   */
-  Accessible* Row() const
-  {
-    Accessible* row = Parent();
-    return row && row->Role() == roles::ROW ? row : nullptr;
-  }
-
-  /**
-   * Return a table for the given row.
-   */
-  Accessible* TableFor(Accessible* aRow) const;
-
-  /**
-   * Return index of the given row.
-   */
-  int32_t RowIndexFor(Accessible* aRow) const;
 };
 
 } // namespace a11y

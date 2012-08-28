@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ARIAGridAccessible-inl.h"
+#include "ARIAGridAccessible.h"
 
 #include "Accessible-inl.h"
 #include "AccIterator.h"
@@ -551,10 +551,19 @@ ARIAGridCellAccessible::GetTable(nsIAccessibleTable** aTable)
   NS_ENSURE_ARG_POINTER(aTable);
   *aTable = nullptr;
 
-  Accessible* table = TableFor(Row());
-  if (table)
-    CallQueryInterface(table, aTable);
+  Accessible* thisRow = Parent();
+  if (!thisRow || thisRow->Role() != roles::ROW)
+    return NS_OK;
 
+  Accessible* table = thisRow->Parent();
+  if (!table)
+    return NS_OK;
+
+  roles::Role tableRole = table->Role();
+  if (tableRole != roles::TABLE && tableRole != roles::TREE_TABLE)
+    return NS_OK;
+
+  CallQueryInterface(table, aTable);
   return NS_OK;
 }
 
@@ -594,7 +603,23 @@ ARIAGridCellAccessible::GetRowIndex(int32_t* aRowIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  *aRowIndex = RowIndexFor(Row());
+  Accessible* row = Parent();
+  if (!row)
+    return NS_OK;
+
+  Accessible* table = row->Parent();
+  if (!table)
+    return NS_OK;
+
+  *aRowIndex = 0;
+
+  int32_t indexInTable = row->IndexInParent();
+  for (int32_t idx = 0; idx < indexInTable; idx++) {
+    row = table->GetChildAt(idx);
+    if (row->Role() == roles::ROW)
+      (*aRowIndex)++;
+  }
+
   return NS_OK;
 }
 
@@ -713,13 +738,14 @@ ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
-
+  
   nsresult rv = HyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Expose "table-cell-index" attribute.
-  Accessible* thisRow = Row();
-  if (!thisRow)
+
+  Accessible* thisRow = Parent();
+  if (!thisRow || thisRow->Role() != roles::ROW)
     return NS_OK;
 
   int32_t colIdx = 0, colCount = 0;
@@ -735,10 +761,29 @@ ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
       colCount++;
   }
 
-  int32_t rowIdx = RowIndexFor(thisRow);
+  Accessible* table = thisRow->Parent();
+  if (!table)
+    return NS_OK;
+
+  roles::Role tableRole = table->Role();
+  if (tableRole != roles::TABLE && tableRole != roles::TREE_TABLE)
+    return NS_OK;
+
+  int32_t rowIdx = 0;
+  childCount = table->ChildCount();
+  for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
+    Accessible* child = table->GetChildAt(childIdx);
+    if (child == thisRow)
+      break;
+
+    if (child->Role() == roles::ROW)
+      rowIdx++;
+  }
+
+  int32_t idx = rowIdx * colCount + colIdx;
 
   nsAutoString stringIdx;
-  stringIdx.AppendInt(rowIdx * colCount + colIdx);
+  stringIdx.AppendInt(idx);
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::tableCellIndex,
                          stringIdx);
 
