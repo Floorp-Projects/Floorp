@@ -21,10 +21,23 @@
 #include "xpcprivate.h"
 #include "nsStringBuffer.h"
 
+// One-slot cache, because it turns out it's common for web pages to
+// get the same string a few times in a row.  We get about a 40% cache
+// hit rate on this cache last it was measured.  We'd get about 70%
+// hit rate with a hashtable with removal on finalization, but that
+// would take a lot more machinery.
+static nsStringBuffer* sCachedBuffer = nullptr;
+static JSString* sCachedString = nullptr;
+
 static void
 FinalizeDOMString(const JSStringFinalizer *fin, jschar *chars)
 {
-    nsStringBuffer::FromData(chars)->Release();
+    nsStringBuffer* buf = nsStringBuffer::FromData(chars);
+    if (buf == sCachedBuffer) {
+        sCachedBuffer = nullptr;
+        // No need to clear sCachedString
+    }
+    buf->Release();
 }
 
 static const JSStringFinalizer sDOMStringFinalizer = { FinalizeDOMString };
@@ -47,6 +60,12 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
 
     nsStringBuffer *buf = nsStringBuffer::FromString(readable);
     if (buf) {
+        if (buf == sCachedBuffer &&
+            js::GetGCThingCompartment(sCachedString) == js::GetContextCompartment(cx)) {
+            // We're done.  Just return our existing string.
+            return JS::StringValue(sCachedString);
+        }
+
         // yay, we can share the string's buffer!
 
         str = JS_NewExternalString(cx,
@@ -55,6 +74,8 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
 
         if (str) {
             *sharedBuffer = buf;
+            sCachedString = str;
+            sCachedBuffer = buf;
         }
     } else {
         // blech, have to copy.
