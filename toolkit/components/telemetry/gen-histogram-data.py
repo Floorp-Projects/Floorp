@@ -60,6 +60,8 @@ def shared_static_asserts(histogram):
     static_assert("%s < %s" % (low, high), "low >= high for %s" % name)
     static_assert("%s > 2" % n_buckets, "Not enough values for %s" % name)
     static_assert("%s >= 1" % low, "Incorrect low value for %s" % name)
+    static_assert("%s > %s" % (high, n_buckets),
+                  "high must be > number of buckets for %s; you may want an enumerated histogram" % name)
 
 def static_asserts_for_linear(histogram):
     shared_static_asserts(histogram)
