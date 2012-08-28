@@ -550,7 +550,6 @@ Class js::WithClass = {
         with_Enumerate,
         with_TypeOf,
         with_ThisObject,
-        NULL,             /* clear */
     }
 };
 

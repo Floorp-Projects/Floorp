@@ -344,8 +344,6 @@
 @BINPATH@/components/nsPrivateBrowsingService.manifest
 @BINPATH@/components/nsPrivateBrowsingService.js
 @BINPATH@/components/toolkitsearch.manifest
-@BINPATH@/components/nsSearchService.js
-@BINPATH@/components/nsSearchSuggestions.js
 @BINPATH@/components/nsTryToClose.manifest
 @BINPATH@/components/nsTryToClose.js
 @BINPATH@/components/passwordmgr.manifest

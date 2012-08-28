@@ -83,7 +83,8 @@ DOMWifiManager.prototype = {
                       "WifiManager:onconnecting", "WifiManager:onassociate",
                       "WifiManager:onconnect", "WifiManager:ondisconnect",
                       "WifiManager:onwpstimeout", "WifiManager:onwpsfail",
-                      "WifiManager:onwpsoverlap", "WifiManager:connectionInfoUpdate"];
+                      "WifiManager:onwpsoverlap", "WifiManager:connectionInfoUpdate",
+                      "WifiManager:onconnectingfailed"];
     this.initHelper(aWindow, messages);
     this._mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
 
@@ -240,6 +241,12 @@ DOMWifiManager.prototype = {
       case "WifiManager:connectionInfoUpdate":
         this._lastConnectionInfo = msg;
         this._fireConnectionInfoUpdate(msg);
+        break;
+      case "WifiManager:onconnectingfailed":
+        this._currentNetwork = null;
+        this._connectionStatus = "connectingfailed";
+        this._lastConnectionInfo = null;
+        this._fireStatusChangeEvent();
         break;
     }
   },

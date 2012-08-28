@@ -2092,7 +2092,7 @@ class Debugger::ScriptQuery {
         for (CompartmentSet::Range r = compartments.all(); !r.empty(); r.popFront()) {
             for (gc::CellIter i(r.front(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
-                if (script->hasGlobal() && !script->isForEval()) {
+                if (script->compileAndGo && !script->isForEval()) {
                     if (!consider(script, &script->global(), vector))
                         return false;
                 }

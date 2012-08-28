@@ -405,6 +405,18 @@
     "n_buckets": 111,
     "description": "System font fallback script"
   },
+  "GRADIENT_DURATION": {
+    "kind": "exponential",
+    "high":"50000000",
+    "n_buckets":20,
+    "description": "Gradient generation time (us)"
+  },
+  "GRADIENT_RETENTION_TIME": {
+    "kind": "linear",
+    "high": "10000",
+    "n_buckets":20,
+    "description": "Maximum retention time for the gradient cache. (ms)"
+  },
   "STARTUP_CACHE_AGE_HOURS": {
     "kind": "exponential",
     "high": "3000",

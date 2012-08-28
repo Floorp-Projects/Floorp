@@ -15,6 +15,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.Intent;
 import android.database.Cursor;
@@ -199,6 +201,8 @@ abstract public class BrowserApp extends GeckoApp
             mBrowserToolbar.setTitle(savedInstanceState.getString(SAVED_STATE_TITLE));
         }
 
+        registerEventListener("CharEncoding:Data");
+        registerEventListener("CharEncoding:State");
         registerEventListener("Feedback:LastUrl");
         registerEventListener("Feedback:OpenPlayStore");
         registerEventListener("Feedback:MaybeLater");
@@ -210,6 +214,8 @@ abstract public class BrowserApp extends GeckoApp
         if (mAboutHomeContent != null)
             mAboutHomeContent.onDestroy();
 
+        unregisterEventListener("CharEncoding:Data");
+        unregisterEventListener("CharEncoding:State");
         unregisterEventListener("Feedback:LastUrl");
         unregisterEventListener("Feedback:OpenPlayStore");
         unregisterEventListener("Feedback:MaybeLater");
@@ -354,6 +360,49 @@ abstract public class BrowserApp extends GeckoApp
                 mMainHandler.post(new Runnable() {
                     public void run() {
                         removeAddonMenuItem(id);
+                    }
+                });
+            } else if (event.equals("CharEncoding:Data")) {
+                final JSONArray charsets = message.getJSONArray("charsets");
+                int selected = message.getInt("selected");
+
+                final int len = charsets.length();
+                final String[] titleArray = new String[len];
+                for (int i = 0; i < len; i++) {
+                    JSONObject charset = charsets.getJSONObject(i);
+                    titleArray[i] = charset.getString("title");
+                }
+
+                final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+                dialogBuilder.setSingleChoiceItems(titleArray, selected, new AlertDialog.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        try {
+                            JSONObject charset = charsets.getJSONObject(which);
+                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Set", charset.getString("code")));
+                            dialog.dismiss();
+                        } catch (JSONException e) {
+                            Log.e(LOGTAG, "error parsing json", e);
+                        }
+                    }
+                });
+                dialogBuilder.setNegativeButton(R.string.button_cancel, new AlertDialog.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        dialogBuilder.show();
+                    }
+                });
+            } else if (event.equals("CharEncoding:State")) {
+                final boolean visible = message.getString("visible").equals("true");
+                GeckoPreferences.setCharEncodingState(visible);
+                final Menu menu = mMenu;
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        if (menu != null)
+                            menu.findItem(R.id.char_encoding).setVisible(visible);
                     }
                 });
             } else if (event.equals("Feedback:OpenPlayStore")) {

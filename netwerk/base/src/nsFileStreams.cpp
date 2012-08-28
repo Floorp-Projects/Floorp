@@ -600,7 +600,7 @@ nsPartialFileInputStream::Init(nsIFile* aFile, uint64_t aStart,
 NS_IMETHODIMP
 nsPartialFileInputStream::Tell(int64_t *aResult)
 {
-    int64_t tell;
+    int64_t tell = 0;
     nsresult rv = nsFileInputStream::Tell(&tell);
     if (NS_SUCCEEDED(rv)) {
         *aResult = tell - mStart;
@@ -611,7 +611,7 @@ nsPartialFileInputStream::Tell(int64_t *aResult)
 NS_IMETHODIMP
 nsPartialFileInputStream::Available(uint64_t* aResult)
 {
-    uint64_t available;
+    uint64_t available = 0;
     nsresult rv = nsFileInputStream::Available(&available);
     if (NS_SUCCEEDED(rv)) {
         *aResult = TruncateSize(available);

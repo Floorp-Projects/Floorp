@@ -669,36 +669,6 @@ abstract public class GeckoApp
             mFormAssistPopup.hide();
     }
 
-    void handleLocationChange(final int tabId, final String uri,
-                              final String documentURI, final String contentType,
-                              final boolean sameDocument) {
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        tab.updateURL(uri);
-        tab.setDocumentURI(documentURI);
-
-        // We can get a location change event for the same document with an anchor tag
-        if (sameDocument)
-            return;
-
-        tab.setContentType(contentType);
-        tab.clearFavicon();
-        tab.updateTitle(null);
-        tab.updateIdentityData(null);
-        tab.setReaderEnabled(false);
-        tab.setZoomConstraints(new ZoomConstraints(true));
-        tab.setHasTouchListeners(false);
-        tab.setCheckerboardColor(Color.WHITE);
-
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOCATION_CHANGE, uri);
-            }
-        });
-    }
-
     void handleSecurityChange(final int tabId, final JSONObject identityData) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
@@ -884,14 +854,6 @@ abstract public class GeckoApp
                 // generic log listener
                 final String msg = message.getString("msg");
                 Log.i(LOGTAG, "Log: " + msg);
-            } else if (event.equals("Content:LocationChange")) {
-                final int tabId = message.getInt("tabID");
-                final String uri = message.getString("uri");
-                final String documentURI = message.getString("documentURI");
-                final String contentType = message.getString("contentType");
-                final boolean sameDocument = message.getBoolean("sameDocument");
-                Log.i(LOGTAG, "URI - " + uri);
-                handleLocationChange(tabId, uri, documentURI, contentType, sameDocument);
             } else if (event.equals("Content:SecurityChange")) {
                 final int tabId = message.getInt("tabID");
                 final JSONObject identity = message.getJSONObject("identity");
@@ -955,49 +917,6 @@ abstract public class GeckoApp
                 String host = message.getString("host");
                 JSONArray permissions = message.getJSONArray("permissions");
                 showSiteSettingsDialog(host, permissions);
-            } else if (event.equals("CharEncoding:Data")) {
-                final JSONArray charsets = message.getJSONArray("charsets");
-                int selected = message.getInt("selected");
-
-                final int len = charsets.length();
-                final String[] titleArray = new String[len];
-                for (int i = 0; i < len; i++) {
-                    JSONObject charset = charsets.getJSONObject(i);
-                    titleArray[i] = charset.getString("title");
-                }
-
-                final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-                dialogBuilder.setSingleChoiceItems(titleArray, selected, new AlertDialog.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        try {
-                            JSONObject charset = charsets.getJSONObject(which);
-                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Set", charset.getString("code")));
-                            dialog.dismiss();
-                        } catch (JSONException e) {
-                            Log.e(LOGTAG, "error parsing json", e);
-                        }
-                    }
-                });
-                dialogBuilder.setNegativeButton(R.string.button_cancel, new AlertDialog.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        dialogBuilder.show();
-                    }
-                });
-            } else if (event.equals("CharEncoding:State")) {
-                final boolean visible = message.getString("visible").equals("true");
-                GeckoPreferences.setCharEncodingState(visible);
-                final Menu menu = mMenu;
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        if (menu != null)
-                            menu.findItem(R.id.char_encoding).setVisible(visible);
-                    }
-                });
             } else if (event.equals("Update:Restart")) {
                 doRestart("org.mozilla.gecko.restart_update");
             } else if (event.equals("Tab:ViewportMetadata")) {
@@ -1599,17 +1518,20 @@ abstract public class GeckoApp
         checkMigrateProfile();
 
         Uri data = intent.getData();
-        if (data != null && "http".equals(data.getScheme()) &&
-            isHostOnPrefetchWhitelist(data.getHost())) {
+        if (data != null && "http".equals(data.getScheme())) {
             Intent copy = new Intent(intent);
             copy.setAction(ACTION_LOAD);
-            GeckoAppShell.getHandler().post(new RedirectorRunnable(copy));
-            // We're going to handle this uri with the redirector, so setting
-            // the action to MAIN and clearing the uri data prevents us from
-            // loading it twice
-            intent.setAction(Intent.ACTION_MAIN);
-            intent.setData(null);
-            passedUri = "about:empty";
+            if (isHostOnRedirectWhitelist(data.getHost())) {
+                GeckoAppShell.getHandler().post(new RedirectorRunnable(copy));
+                // We're going to handle this uri with the redirector, so setting
+                // the action to MAIN and clearing the uri data prevents us from
+                // loading it twice
+                intent.setAction(Intent.ACTION_MAIN);
+                intent.setData(null);
+                passedUri = "about:empty";
+            } else {
+                GeckoAppShell.getHandler().post(new PrefetchRunnable(copy));
+            }
         }
 
         if (!mIsRestoringActivity) {
@@ -1653,7 +1575,6 @@ abstract public class GeckoApp
         registerEventListener("DOMLinkAdded");
         registerEventListener("DOMWindowClose");
         registerEventListener("log");
-        registerEventListener("Content:LocationChange");
         registerEventListener("Content:SecurityChange");
         registerEventListener("Content:ReaderEnabled");
         registerEventListener("Content:StateChange");
@@ -1672,8 +1593,6 @@ abstract public class GeckoApp
         registerEventListener("ToggleChrome:Show");
         registerEventListener("ToggleChrome:Focus");
         registerEventListener("Permissions:Data");
-        registerEventListener("CharEncoding:Data");
-        registerEventListener("CharEncoding:State");
         registerEventListener("Update:Restart");
         registerEventListener("Tab:HasTouchListener");
         registerEventListener("Tab:ViewportMetadata");
@@ -1787,25 +1706,46 @@ abstract public class GeckoApp
     abstract public String getDefaultUAString();
     abstract public String getUAStringForHost(String host);
 
-    class RedirectorRunnable implements Runnable {
+    class PrefetchRunnable implements Runnable {
         Intent mIntent;
-        RedirectorRunnable(Intent intent) {
+        protected HttpURLConnection mConnection = null;
+        PrefetchRunnable(Intent intent) {
             mIntent = intent;
         }
+
+        private void afterLoad() { }
+
         public void run() {
-            HttpURLConnection connection = null;
             try {
                 // this class should only be initialized with an intent with non-null data
                 URL url = new URL(mIntent.getData().toString());
+                Log.i(LOGTAG, "xxx - Loading: " + url);
                 // data url should have an http scheme
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestProperty("User-Agent", getUAStringForHost(url.getHost()));
-                connection.setInstanceFollowRedirects(false);
-                connection.setRequestMethod("GET");
-                connection.connect();
-                int code = connection.getResponseCode();
+                mConnection = (HttpURLConnection) url.openConnection();
+                mConnection.setRequestProperty("User-Agent", getUAStringForHost(url.getHost()));
+                mConnection.setInstanceFollowRedirects(false);
+                mConnection.setRequestMethod("GET");
+                mConnection.connect();
+                afterLoad();
+            } catch (Exception e) {
+                Log.w(LOGTAG, "unexpected exception, passing url directly to Gecko but we should explicitly catch this", e);
+                mIntent.putExtra("prefetched", 1);
+            } finally {
+                if (mConnection != null)
+                    mConnection.disconnect();
+            }
+        }
+    }
+
+    class RedirectorRunnable extends PrefetchRunnable {
+        RedirectorRunnable(Intent intent) {
+            super(intent);
+        }
+        private void afterLoad() {
+            try {
+                int code = mConnection.getResponseCode();
                 if (code >= 300 && code < 400) {
-                    String location = connection.getHeaderField("Location");
+                    String location = mConnection.getHeaderField("Location");
                     Uri data;
                     if (location != null &&
                         (data = Uri.parse(location)) != null &&
@@ -1821,13 +1761,11 @@ abstract public class GeckoApp
             } catch (IOException ioe) {
                 Log.i(LOGTAG, "exception trying to pre-fetch redirected url", ioe);
                 mIntent.putExtra("prefetched", 1);
-            } catch (Exception e) {
-                Log.w(LOGTAG, "unexpected exception, passing url directly to Gecko but we should explicitly catch this", e);
-                mIntent.putExtra("prefetched", 1);
-            } finally {
-                if (connection != null)
-                    connection.disconnect();
             }
+        }
+        public void run() {
+            super.run();
+
             mMainHandler.postAtFrontOfQueue(new Runnable() {
                 public void run() {
                     onNewIntent(mIntent);
@@ -1836,7 +1774,7 @@ abstract public class GeckoApp
         }
     }
 
-    private final String kPrefetchWhiteListArray[] = new String[] { 
+    private final String kRedirectWhiteListArray[] = new String[] { 
         "t.co",
         "bit.ly",
         "moz.la",
@@ -1846,11 +1784,11 @@ abstract public class GeckoApp
         "tinyurl.com"
     };
     
-    private final CopyOnWriteArrayList<String> kPrefetchWhiteList =
-        new CopyOnWriteArrayList<String>(kPrefetchWhiteListArray);
+    private final CopyOnWriteArrayList<String> kRedirectWhiteList =
+        new CopyOnWriteArrayList<String>(kRedirectWhiteListArray);
 
-    private boolean isHostOnPrefetchWhitelist(String host) {
-        return kPrefetchWhiteList.contains(host);
+    private boolean isHostOnRedirectWhitelist(String host) {
+        return kRedirectWhiteList.contains(host);
     }
 
     @Override
@@ -1884,10 +1822,13 @@ abstract public class GeckoApp
             // if the return code is between 300 and 400
             if (data != null && 
                 "http".equals(data.getScheme()) &&
-                (bundle == null || bundle.getInt("prefetched", 0) != 1) &&
-                isHostOnPrefetchWhitelist(data.getHost())) {
-                GeckoAppShell.getHandler().post(new RedirectorRunnable(intent));
-                return;
+                (bundle == null || bundle.getInt("prefetched", 0) != 1)) {
+                if (isHostOnRedirectWhitelist(data.getHost())) {
+                    GeckoAppShell.getHandler().post(new RedirectorRunnable(intent));
+                    return;
+                } else {
+                    GeckoAppShell.getHandler().post(new PrefetchRunnable(intent));
+                }
             }
         }
         final String action = intent.getAction();
@@ -2074,7 +2015,6 @@ abstract public class GeckoApp
         unregisterEventListener("DOMLinkAdded");
         unregisterEventListener("DOMWindowClose");
         unregisterEventListener("log");
-        unregisterEventListener("Content:LocationChange");
         unregisterEventListener("Content:SecurityChange");
         unregisterEventListener("Content:ReaderEnabled");
         unregisterEventListener("Content:StateChange");
@@ -2093,8 +2033,6 @@ abstract public class GeckoApp
         unregisterEventListener("ToggleChrome:Show");
         unregisterEventListener("ToggleChrome:Focus");
         unregisterEventListener("Permissions:Data");
-        unregisterEventListener("CharEncoding:Data");
-        unregisterEventListener("CharEncoding:State");
         unregisterEventListener("Update:Restart");
         unregisterEventListener("Tab:HasTouchListener");
         unregisterEventListener("Tab:ViewportMetadata");
@@ -2141,6 +2079,8 @@ abstract public class GeckoApp
 
         if (mBatteryReceiver != null)
             mBatteryReceiver.unregisterFor(mAppContext);
+
+        Tabs.unregisterOnTabsChangedListener(this);
 
         ((GeckoApplication) getApplication()).removeApplicationLifecycleCallbacks(this);
     }

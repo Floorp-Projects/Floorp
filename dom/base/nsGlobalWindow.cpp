@@ -1246,7 +1246,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   if (NS_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
     PR_snprintf(name, sizeof(name), "nsGlobalWindow #%ld", tmp->mWindowID);
-    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(nsGlobalWindow), name);
+    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   } else {
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsGlobalWindow, tmp->mRefCnt.get())
   }

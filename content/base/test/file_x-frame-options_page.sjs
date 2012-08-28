@@ -26,6 +26,12 @@ function handleRequest(request, response)
   else if (query['xfo'] == "mixedpolicy") {
     response.setHeader("X-Frame-Options", "DENY,SAMEORIGIN", false);
   }
+  else if (query['xfo'] == "afa") {
+    response.setHeader("X-Frame-Options", "ALLOW-FROM http://mochi.test:8888/", false);
+  }
+  else if (query['xfo'] == "afd") {
+    response.setHeader("X-Frame-Options", "ALLOW-FROM http://example.com/", false);
+  }
 
   // from the test harness we'll be checking for the presence of this element
   // to test if the page loaded
