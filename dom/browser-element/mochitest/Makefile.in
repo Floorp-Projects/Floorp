@@ -63,6 +63,10 @@ MOCHITEST_FILES = \
 		browserElement_XFrameOptionsSameOrigin.js \
 		test_browserElement_inproc_XFrameOptionsSameOrigin.html \
 		file_browserElement_XFrameOptionsSameOrigin.html \
+		browserElement_XFrameOptionsAllowFrom.js \
+		test_browserElement_inproc_XFrameOptionsAllowFrom.html \
+		file_browserElement_XFrameOptionsAllowFrom.html \
+		file_browserElement_XFrameOptionsAllowFrom.sjs \
 		browserElement_Alert.js \
 		test_browserElement_inproc_Alert.html \
 		browserElement_AlertInFrame.js \
@@ -154,6 +158,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_XFrameOptions.html \
 		test_browserElement_oop_XFrameOptionsDeny.html \
 		test_browserElement_oop_XFrameOptionsSameOrigin.html \
+		test_browserElement_oop_XFrameOptionsAllowFrom.html \
 		test_browserElement_oop_Alert.html \
 		test_browserElement_oop_AlertInFrame.html \
 		test_browserElement_oop_TargetTop.html \

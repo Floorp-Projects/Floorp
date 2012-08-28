@@ -154,4 +154,15 @@
         <item name="android:background">@android:color/transparent</item>
     </style>
 
+    <style name="WebView">
+    </style>
+
+    <style name="WebView.Titlebar">
+        <item name="android:background">@drawable/webapp_titlebar_bg</item>
+        <item name="android:padding">2dp</item>
+    </style>
+
+    <style name="WebView.Titlebar.Title">
+        <item name="android:textColor">#ff222222</item>
+    </style>
 </resources>

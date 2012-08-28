@@ -106,13 +106,13 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     rv = storageStream->NewInputStream(0, getter_AddRefs(inStr));
     if (NS_FAILED(rv)) return rv;
 
-    nsIChannel* channel;
-    rv = NS_NewInputStreamChannel(&channel, aURI, inStr,
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, inStr,
                                   NS_LITERAL_CSTRING("text/html"),
                                   NS_LITERAL_CSTRING("utf-8"));
     if (NS_FAILED(rv)) return rv;
 
-    *result = channel;
+    channel.forget(result);
     return rv;
 }
 

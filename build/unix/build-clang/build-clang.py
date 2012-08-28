@@ -14,6 +14,8 @@ import shutil
 import tarfile
 import subprocess
 import platform
+import sys
+import simplejson
 
 def check_run(args):
     r = subprocess.call(args)
@@ -69,6 +71,29 @@ def build_one_stage(env, stage_dir, is_stage_one):
     def f():
         build_one_stage_aux(stage_dir, is_stage_one)
     with_env(env, f)
+
+def build_tooltool_manifest():
+    def key_sort(item):
+        item = item[0]
+        if item == 'size':
+            return 0
+        if item == 'digest':
+            return 1
+        if item == 'algorithm':
+            return 3
+        return 4
+
+    basedir = os.path.split(os.path.realpath(sys.argv[0]))[0]
+    tooltool = basedir + '/tooltool.py'
+    setup = basedir + '/setup.sh'
+    manifest = 'clang.manifest'
+    check_run(['python', tooltool, '-m', 'clang.manifest', 'add',
+               setup, 'clang.tar.bz2'])
+    data = simplejson.load(file('clang.manifest'))
+    data = [{'clang_version' : 'r%s' % llvm_revision }] + data
+    out = file('clang.manifest','w')
+    simplejson.dump(data, out, indent=0, item_sort_key=key_sort)
+    out.write('\n')
 
 isDarwin = platform.system() == "Darwin"
 
@@ -136,3 +161,4 @@ build_one_stage({"CC"  : stage1_inst_dir + "/bin/clang %s" % extra_cflags,
                 stage2_dir, False)
 
 build_tar_package("tar", "clang.tar.bz2", stage2_dir, "clang")
+build_tooltool_manifest()

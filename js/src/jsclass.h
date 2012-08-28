@@ -210,8 +210,6 @@ typedef JSType
 typedef JSObject *
 (* ObjectOp)(JSContext *cx, HandleObject obj);
 typedef void
-(* ClearOp)(JSContext *cx, HandleObject obj);
-typedef void
 (* FinalizeOp)(FreeOp *fop, JSObject *obj);
 
 #define JS_CLASS_MEMBERS                                                      \
@@ -295,13 +293,12 @@ struct ObjectOps
     JSNewEnumerateOp    enumerate;
     TypeOfOp            typeOf;
     ObjectOp            thisObject;
-    ClearOp             clear;
 };
 
 #define JS_NULL_OBJECT_OPS                                                    \
     {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,   \
      NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,        \
-     NULL,NULL,NULL,NULL,NULL}
+     NULL,NULL,NULL,NULL}
 
 struct Class
 {

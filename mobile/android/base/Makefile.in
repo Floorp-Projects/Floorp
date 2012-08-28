@@ -1006,6 +1006,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tabs_shadow.xml                        \
   mobile/android/base/resources/drawable/shadow.png                             \
   mobile/android/base/resources/drawable/marketplace.png                        \
+  mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
   $(NULL)
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)

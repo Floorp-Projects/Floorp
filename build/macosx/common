@@ -6,11 +6,6 @@ elif [ -d "$topsrcdir/../clang" ]; then
     # comm-central based build
     export CC=$topsrcdir/../clang/bin/clang
     export CXX=$topsrcdir/../clang/bin/clang++
-else
-    # SeaMonkey does not have clang installed so need
-    # to set CC and CXX here.
-    export CC=/usr/bin/gcc-4.2
-    export CXX=/usr/bin/g++-4.2
 fi
 
 ac_add_options --enable-stdcxx-compat

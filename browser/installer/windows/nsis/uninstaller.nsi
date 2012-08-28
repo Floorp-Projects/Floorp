@@ -378,6 +378,11 @@ Section "Uninstall"
   ; Remove the uninstall directory that we control
   RmDir /r /REBOOTOK "$INSTDIR\uninstall"
 
+  ; Explictly remove empty webapprt dir in case it exists
+  ; See bug 757978
+  RmDir "$INSTDIR\webapprt\components"
+  RmDir "$INSTDIR\webapprt"
+
   ; Remove the installation directory if it is empty
   ${RemoveDir} "$INSTDIR"
 
