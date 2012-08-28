@@ -491,6 +491,12 @@ function test_position() {
   file.setPosition(ARBITRARY_POSITION, OS.File.POS_START);
   is(file.getPosition(), ARBITRARY_POSITION, "test_position: Setting position from start");
 
+  file.setPosition(0, OS.File.POS_START);
+  is(file.getPosition(), 0, "test_position: Setting position from start back to 0");
+
+  file.setPosition(ARBITRARY_POSITION);
+  is(file.getPosition(), ARBITRARY_POSITION, "test_position: Setting position without argument");
+
   file.setPosition(-ARBITRARY_POSITION, OS.File.POS_END);
   is(file.getPosition(), size - ARBITRARY_POSITION, "test_position: Setting position from end");
 
