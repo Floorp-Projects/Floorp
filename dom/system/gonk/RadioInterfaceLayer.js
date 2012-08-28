@@ -1740,20 +1740,9 @@ RadioInterfaceLayer.prototype = {
     } 
     let requestId = Math.floor(Math.random() * 1000);
     this._contactsCallbacks[requestId] = callback;
-    
-    let msgType;
-    switch (type) {
-      case "ADN": 
-        msgType = "getPBR";
-        break;
-      case "FDN":
-        msgType = "getFDN";
-        break;
-      default:
-        debug("Unknown contact type. " + type);
-        return;
-    }
-    this.worker.postMessage({rilMessageType: msgType, requestId: requestId});
+    this.worker.postMessage({rilMessageType: "getICCContacts",
+                             type: type,
+                             requestId: requestId});
   }
 };
 
