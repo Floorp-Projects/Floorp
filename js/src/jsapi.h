@@ -4193,7 +4193,7 @@ struct JSClass {
  * with the following flags. Failure to use JSCLASS_GLOBAL_FLAGS was
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
-#define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 24)
+#define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 23)
 #define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n)                                    \
     (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))
 #define JSCLASS_GLOBAL_FLAGS                                                  \
@@ -4777,8 +4777,19 @@ JS_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index);
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteElement2(JSContext *cx, JSObject *obj, uint32_t index, jsval *rval);
 
-extern JS_PUBLIC_API(void)
-JS_ClearScope(JSContext *cx, JSObject *obj);
+/*
+ * Remove all configurable properties from the given (non-global) object and
+ * assign undefined to all writable data properties.
+ */
+JS_PUBLIC_API(void)
+JS_ClearNonGlobalObject(JSContext *cx, JSObject *objArg);
+
+/*
+ * Assign 'undefined' to all of the object's non-reserved slots. Note: this is
+ * done for all slots, regardless of the associated property descriptor.
+ */
+JS_PUBLIC_API(void)
+JS_SetAllNonReservedSlotsToUndefined(JSContext *cx, JSObject *objArg);
 
 extern JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj);
@@ -5558,27 +5569,6 @@ extern JS_PUBLIC_API(JSString *)
 JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length);
 
 /*
- * Mutable string support.  A string's characters are never mutable in this JS
- * implementation, but a dependent string is a substring of another dependent
- * or immutable string, and a rope is a lazily concatenated string that creates
- * its underlying buffer the first time it is accessed.  Even after a rope
- * creates its underlying buffer, it still considered mutable.  The direct data
- * members of the (opaque to API clients) JSString struct may be changed in a
- * single-threaded way for dependent strings and ropes.
- *
- * Therefore mutable strings (ropes and dependent strings) cannot be used by
- * more than one thread at a time.  You may call JS_MakeStringImmutable to
- * convert the string from a mutable string to an immutable (and therefore
- * thread-safe) string.  The engine takes care of converting ropes and dependent
- * strings to immutable for you if you store strings in multi-threaded objects
- * using JS_SetProperty or kindred API entry points.
- *
- * If you store a JSString pointer in a native data structure that is (safely)
- * accessible to multiple threads, you must call JS_MakeStringImmutable before
- * retiring the store.
- */
-
-/*
  * Create a dependent string, i.e., a string that owns no character storage,
  * but that refers to a slice of another string's chars.  Dependent strings
  * are mutable by definition, so the thread safety comments above apply.
@@ -5600,13 +5590,6 @@ JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
  */
 extern JS_PUBLIC_API(const jschar *)
 JS_UndependString(JSContext *cx, JSString *str);
-
-/*
- * Convert a mutable string (either rope or dependent) into an immutable,
- * thread-safe one.
- */
-extern JS_PUBLIC_API(JSBool)
-JS_MakeStringImmutable(JSContext *cx, JSString *str);
 
 /*
  * Return JS_TRUE if C (char []) strings passed via the API and internally

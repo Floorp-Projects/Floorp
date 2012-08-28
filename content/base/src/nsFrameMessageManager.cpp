@@ -65,7 +65,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameMessageManager)
   tmp->mListeners.Clear();
-  for (PRInt32 i = tmp->mChildManagers.Count(); i > 0; --i) {
+  for (int32_t i = tmp->mChildManagers.Count(); i > 0; --i) {
     static_cast<nsFrameMessageManager*>(tmp->mChildManagers[i - 1])->
       Disconnect(false);
   }
@@ -173,7 +173,7 @@ nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
     NS_ENSURE_TRUE(mLoadScriptCallback(mCallbackData, aURL), NS_ERROR_FAILURE);
   }
 
-  for (PRInt32 i = 0; i < mChildManagers.Count(); ++i) {
+  for (int32_t i = 0; i < mChildManagers.Count(); ++i) {
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mChildManagers[i]);
     if (mm) {
@@ -290,8 +290,8 @@ nsFrameMessageManager::DispatchAsyncMessageInternal(const nsAString& aMessage,
     mAsyncCallback(mCallbackData, aMessage, aData);
   }
   if (aBroadcast == BROADCAST) {
-    PRInt32 len = mChildManagers.Count();
-    for (PRInt32 i = 0; i < len; ++i) {
+    int32_t len = mChildManagers.Count();
+    for (int32_t i = 0; i < len; ++i) {
       static_cast<nsFrameMessageManager*>(mChildManagers[i])->
          DispatchAsyncMessageInternal(aMessage, aData, aBroadcast);
     }

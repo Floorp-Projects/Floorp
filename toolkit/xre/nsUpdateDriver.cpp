@@ -86,6 +86,11 @@ static const char kUpdaterApp[] = "updater.app";
 static const char kUpdaterPNG[] = "updater.png";
 #endif
 
+#if defined(MOZ_WIDGET_GONK)
+static const int kB2GServiceArgc = 2;
+static const char *kB2GServiceArgv[] = { "/system/bin/start", "b2g" };
+#endif
+
 static nsresult
 GetCurrentWorkingDir(char *buf, size_t size)
 {
@@ -403,18 +408,23 @@ SwitchToUpdatedApp(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
     return;
 
   NS_ConvertUTF16toUTF8 updaterPath(updaterPathW);
-
 #else
+
   nsCAutoString appFilePath;
+#if defined(MOZ_WIDGET_GONK)
+  appFilePath.Assign(kB2GServiceArgv[0]);
+  appArgc = kB2GServiceArgc;
+  appArgv = const_cast<char**>(kB2GServiceArgv);
+#else
   rv = appFile->GetNativePath(appFilePath);
   if (NS_FAILED(rv))
     return;
+#endif
 
   nsCAutoString updaterPath;
   rv = updater->GetNativePath(updaterPath);
   if (NS_FAILED(rv))
     return;
-
 #endif
 
   // Get the directory to which the update will be applied. On Mac OSX we need
@@ -518,6 +528,12 @@ SwitchToUpdatedApp(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
   LOG(("spawning updater process for replacing [%s]\n", updaterPath.get()));
 
 #if defined(USE_EXECV)
+# if defined(MOZ_WIDGET_GONK)
+  // In Gonk, we preload libmozglue, which the updater process doesn't need.
+  // Since the updater will move and delete libmozglue.so, this can actually
+  // stop the /system mount from correctly being remounted as read-only.
+  unsetenv("LD_PRELOAD");
+# endif
   execv(updaterPath.get(), argv);
 #elif defined(XP_WIN)
   // Switch the application using updater.exe
@@ -773,6 +789,9 @@ WaitForProcess(ProcessType pt)
 #else
   int32_t exitCode;
   PR_WaitProcess(pt, &exitCode);
+  if (exitCode != 0) {
+    LOG(("Error while running the updater process, check update.log"));
+  }
 #endif
 }
 

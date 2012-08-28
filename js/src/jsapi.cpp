@@ -2473,7 +2473,7 @@ JS_RemoveObjectRootRT(JSRuntime *rt, JSObject **rp)
 }
 
 JS_PUBLIC_API(void)
-JS_RemoveScriptRoot(JSRuntime *rt, JSScript **rp)
+JS_RemoveScriptRootRT(JSRuntime *rt, JSScript **rp)
 {
     js_RemoveRoot(rt, (void *)rp);
 }
@@ -4483,26 +4483,64 @@ JS_DeleteProperty(JSContext *cx, JSObject *objArg, const char *name)
     return JS_DeleteProperty2(cx, objArg, name, &junk);
 }
 
+static Shape *
+LastConfigurableShape(JSObject *obj)
+{
+    for (Shape::Range r(obj->lastProperty()->all()); !r.empty(); r.popFront()) {
+        Shape *shape = &r.front();
+        if (shape->configurable())
+            return shape;
+    }
+    return NULL;
+}
+
 JS_PUBLIC_API(void)
-JS_ClearScope(JSContext *cx, JSObject *objArg)
+JS_ClearNonGlobalObject(JSContext *cx, JSObject *objArg)
 {
     RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    ClearOp clearOp = obj->getOps()->clear;
-    if (clearOp)
-        clearOp(cx, obj);
+    JS_ASSERT(!obj->isGlobal());
 
-    if (obj->isNative())
-        js_ClearNative(cx, obj);
+    if (!obj->isNative())
+        return;
 
-    /* Clear cached class objects on the global object. */
-    if (obj->isGlobal())
-        obj->asGlobal().clear(cx);
+    /* Remove all configurable properties from obj. */
+    while (Shape *shape = LastConfigurableShape(obj)) {
+        if (!obj->removeProperty(cx, shape->propid()))
+            return;
+    }
 
-    js_InitRandom(cx);
+    /* Set all remaining writable plain data properties to undefined. */
+    for (Shape::Range r(obj->lastProperty()->all()); !r.empty(); r.popFront()) {
+        Shape *shape = &r.front();
+        if (shape->isDataDescriptor() &&
+            shape->writable() &&
+            shape->hasDefaultSetter() &&
+            shape->hasSlot()) {
+            obj->nativeSetSlot(shape->slot(), UndefinedValue());
+        }
+    }
+}
+
+JS_PUBLIC_API(void)
+JS_SetAllNonReservedSlotsToUndefined(JSContext *cx, JSObject *objArg)
+{
+    RootedObject obj(cx, objArg);
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+
+    if (!obj->isNative())
+        return;
+
+    Class *clasp = obj->getClass();
+    unsigned numReserved = JSCLASS_RESERVED_SLOTS(clasp);
+    unsigned numSlots = obj->slotSpan();
+    for (unsigned i = numReserved; i < numSlots; i++)
+        obj->setSlot(i, UndefinedValue());
 }
 
 JS_PUBLIC_API(JSIdArray *)
@@ -6223,14 +6261,6 @@ JS_UndependString(JSContext *cx, JSString *str)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     return str->getCharsZ(cx);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_MakeStringImmutable(JSContext *cx, JSString *str)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return !!str->ensureFixed(cx);
 }
 
 JS_PUBLIC_API(JSBool)

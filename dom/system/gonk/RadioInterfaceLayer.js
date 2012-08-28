@@ -465,7 +465,7 @@ RadioInterfaceLayer.prototype = {
       return;
     }
 
-    target.syncAsyncMessage(requestType, options);
+    target.sendAsyncMessage(requestType, options);
   },
 
   updateNetworkInfo: function updateNetworkInfo(message) {

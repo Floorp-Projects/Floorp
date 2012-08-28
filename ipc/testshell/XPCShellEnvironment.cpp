@@ -971,7 +971,7 @@ XPCShellEnvironment::~XPCShellEnvironment()
 
         JSObject* global = GetGlobalObject();
         if (global) {
-            JS_ClearScope(mCx, global);
+            JS_SetAllNonReservedSlotsToUndefined(mCx, global);
         }
         mGlobalHolder.Release();
 

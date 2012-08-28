@@ -674,9 +674,6 @@ typedef Vector<JSCompartment*, 0, SystemAllocPolicy> CompartmentVector;
 extern JS_FRIEND_API(const CompartmentVector&)
 GetRuntimeCompartments(JSRuntime *rt);
 
-extern JS_FRIEND_API(size_t)
-SizeOfJSContext();
-
 #define GCREASONS(D)                            \
     /* Reasons internal to the JS engine */     \
     D(API)                                      \

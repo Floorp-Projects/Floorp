@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#if defined(MOZ_UPDATER)
+# if !defined(MOZ_WIDGET_ANDROID)
+#  define USE_MOZ_UPDATER
+# endif
+#endif
+
 #define NS_ALERTSERVICE_CONTRACTID \
   "@mozilla.org/alerts-service;1"
 
@@ -87,7 +93,7 @@
 #define NS_APPSTARTUP_CONTRACTID \
   "@mozilla.org/toolkit/app-startup;1"
 
-#if defined(MOZ_UPDATER) && !defined(ANDROID)
+#if defined(USE_MOZ_UPDATER)
 #define NS_UPDATEPROCESSOR_CONTRACTID \
   "@mozilla.org/updates/update-processor;1"
 #endif
@@ -168,7 +174,7 @@
 #define NS_PLACESIMPORTEXPORTSERVICE_CID \
 { 0x6fb0c970, 0xe1b1, 0x11db, { 0x83, 0x14, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
 
-#if defined(MOZ_UPDATER) && !defined(ANDROID)
+#if defined(USE_MOZ_UPDATER)
 #define NS_UPDATEPROCESSOR_CID \
 { 0xf3dcf644, 0x79e8, 0x4f59, { 0xa1, 0xbb, 0x87, 0x84, 0x54, 0x48, 0x8e, 0xf9 } }
 #endif

@@ -91,8 +91,8 @@ XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal, nsIS
         // We need to call SetGlobal in order to refresh our cached
         // mPrototypeJSObject and to clear mPrototypeNoHelper (so we get a new
         // new one if requested in the new scope) in the case where the global
-        // object is being reused (JS_ClearScope has been called).  NOTE: We are
-        // only called by nsXPConnect::InitClasses.
+        // object is being reused (JS_SetAllNonReservedSlotsToUndefined has
+        // been called).  NOTE: We are only called by nsXPConnect::InitClasses.
         scope->SetGlobal(ccx, aGlobal, aNative);
     }
     if (js::GetObjectClass(aGlobal)->flags & JSCLASS_XPCONNECT_GLOBAL)

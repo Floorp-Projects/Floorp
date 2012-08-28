@@ -1757,8 +1757,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
                 NS_ConvertUTF16toUTF8(id).get(),
                 NS_ConvertUTF16toUTF8(classes).get(),
                 uri.get());
-    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(FragmentOrElement),
-                              name);
+    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   }
   else {
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(FragmentOrElement, tmp->mRefCnt.get())

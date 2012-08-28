@@ -269,18 +269,24 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   }
 
   // handle reflow state min and max sizes
-
+  // XXXbz the width handling here seems to be wrong, since
+  // mComputedMin/MaxWidth is a content-box size, whole
+  // computedSize.width is a border-box size...
   if (computedSize.width > aReflowState.mComputedMaxWidth)
     computedSize.width = aReflowState.mComputedMaxWidth;
-
-  if (computedSize.height > aReflowState.mComputedMaxHeight)
-    computedSize.height = aReflowState.mComputedMaxHeight;
 
   if (computedSize.width < aReflowState.mComputedMinWidth)
     computedSize.width = aReflowState.mComputedMinWidth;
 
-  if (computedSize.height < aReflowState.mComputedMinHeight)
-    computedSize.height = aReflowState.mComputedMinHeight;
+  // Now adjust computedSize.height for our min and max computed
+  // height.  The only problem is that those are content-box sizes,
+  // while computedSize.height is a border-box size.  So subtract off
+  // m.TopBottom() before adjusting, then readd it.
+  computedSize.height = NS_MAX(0, computedSize.height - m.TopBottom());
+  computedSize.height = NS_CSS_MINMAX(computedSize.height,
+                                      aReflowState.mComputedMinHeight,
+                                      aReflowState.mComputedMaxHeight);
+  computedSize.height += m.TopBottom();
 
   nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);
 
