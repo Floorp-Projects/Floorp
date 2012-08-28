@@ -19,6 +19,7 @@
 #include "nsTObserverArray.h"
 #include "nsURIHashKey.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CORSMode.h"
 
 class nsIAtom;
 class nsICSSLoaderObserver;
@@ -168,6 +169,7 @@ public:
    * @param aMedia the media string for the sheet.
    * @param aHasAlternateRel whether the rel for this link included
    *        "alternate".
+   * @param aCORSMode the CORS mode for this load.
    * @param aObserver the observer to notify when the load completes.
    *                  May be null.
    * @param [out] aIsAlternate whether the stylesheet actually ended up beinga
@@ -179,6 +181,7 @@ public:
                          const nsAString& aTitle,
                          const nsAString& aMedia,
                          bool aHasAlternateRel,
+                         mozilla::CORSMode aCORSMode,
                          nsICSSLoaderObserver* aObserver,
                          bool* aIsAlternate);
 
