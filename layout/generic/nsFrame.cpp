@@ -3353,9 +3353,8 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
   nsBlockFrame::line_iterator end = bf->end_lines();
   if (firstLine == end) {
     nsIContent *blockContent = aFrame->GetContent();
-    if (blockContent && blockContent->IsEditable()) {
-      // If the frame is ediable empty block, we should return it with empty
-      // flag.
+    if (blockContent) {
+      // Return with empty flag true.
       return FrameTarget(aFrame, false, false, true);
     }
     return FrameTarget::Null();
