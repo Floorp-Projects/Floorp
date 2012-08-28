@@ -94,7 +94,7 @@ CSS2Properties.webidl: $(topsrcdir)/layout/style/nsCSSPropList.h \
                        $(webidl_base)/CSS2PropertiesProps.h \
                        $(srcdir)/GenerateCSS2PropertiesWebIDL.py \
                        $(GLOBAL_DEPS)
-	$(CPP) -I$(topsrcdir)/layout/style $(webidl_base)/CSS2PropertiesProps.h | \
+	$(CPP) $(DEFINES) $(ACDEFINES) -I$(topsrcdir)/layout/style $(webidl_base)/CSS2PropertiesProps.h | \
 	  PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
 	  $(srcdir)/GenerateCSS2PropertiesWebIDL.py $(webidl_base)/CSS2Properties.webidl.in > CSS2Properties.webidl
 
