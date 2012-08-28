@@ -1655,8 +1655,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(MediaQueryList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MutationObserver, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MutationObserver, nsDOMMutationObserverSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
   NS_DEFINE_CLASSINFO_DATA(MutationRecord, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -7989,6 +7990,37 @@ nsEventTargetSH::PreserveWrapper(nsISupports *aNative)
   nsDOMEventTargetHelper *target =
     nsDOMEventTargetHelper::FromSupports(aNative);
   nsContentUtils::PreserveWrapper(aNative, target);
+}
+
+// MutationObserver helper
+
+NS_IMETHODIMP
+nsDOMMutationObserverSH::PreCreate(nsISupports* aNativeObj, JSContext* aCx,
+                                   JSObject* aGlobalObj, JSObject** aParentObj)
+{
+  nsDOMMutationObserver* mutationObserver =
+    nsDOMMutationObserver::FromSupports(aNativeObj);
+  nsCOMPtr<nsIScriptGlobalObject> native_parent;
+  mutationObserver->GetParentObject(getter_AddRefs(native_parent));
+  *aParentObj = native_parent ? native_parent->GetGlobalJSObject() : aGlobalObj;
+  return *aParentObj ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDOMMutationObserverSH::AddProperty(nsIXPConnectWrappedNative* aWrapper,
+                                     JSContext* aCx, JSObject* aObj, jsid aId,
+                                     jsval* aVp, bool* aRetVal)
+{
+  nsDOMMutationObserverSH::PreserveWrapper(GetNative(aWrapper, aObj));
+  return NS_OK;
+}
+
+void
+nsDOMMutationObserverSH::PreserveWrapper(nsISupports* aNative)
+{
+  nsDOMMutationObserver* mutationObserver =
+    nsDOMMutationObserver::FromSupports(aNative);
+  nsContentUtils::PreserveWrapper(aNative, mutationObserver);
 }
 
 // IDBEventTarget helper
