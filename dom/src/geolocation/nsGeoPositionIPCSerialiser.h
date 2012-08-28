@@ -5,7 +5,7 @@
 #ifndef dom_src_geolocation_IPC_serialiser
 #define dom_src_geolocation_IPC_serialiser
 
-#include "IPC/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 #include "nsGeoPosition.h"
 #include "nsIDOMGeoPosition.h"
 

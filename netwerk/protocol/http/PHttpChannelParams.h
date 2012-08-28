@@ -10,7 +10,7 @@
 #define ALLOW_LATE_NSHTTP_H_INCLUDE 1
 #include "base/basictypes.h"
 
-#include "IPC/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 #include "nsHttp.h"
 #include "nsHttpHeaderArray.h"
 #include "nsHttpResponseHead.h"
