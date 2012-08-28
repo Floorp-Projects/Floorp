@@ -7,15 +7,14 @@
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
-[scriptable, uuid(49cc227c-3fe7-40a2-bdb5-55e9af797fde)]
+[scriptable, uuid(463ed2f3-1739-41bc-a967-1e816764f915)]
 interface nsINetworkInterface : nsISupports
 {
   const long NETWORK_STATE_UNKNOWN = -1;
   const long NETWORK_STATE_CONNECTING = 0;
   const long NETWORK_STATE_CONNECTED = 1;
-  const long NETWORK_STATE_SUSPENDED = 2;
-  const long NETWORK_STATE_DISCONNECTING = 3;
-  const long NETWORK_STATE_DISCONNECTED = 4;
+  const long NETWORK_STATE_DISCONNECTING = 2;
+  const long NETWORK_STATE_DISCONNECTED = 3;
 
   /**
    * Current network state, one of the NETWORK_STATE_* constants.
