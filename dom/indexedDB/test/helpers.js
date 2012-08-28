@@ -41,8 +41,9 @@ function clearAllDatabases(callback) {
   idbManager.clearDatabasesForURI(uri);
   idbManager.getUsageForURI(uri, function(uri, usage, fileUsage) {
     if (usage) {
-      throw new Error("getUsageForURI returned non-zero usage after " +
-                      "clearing all databases!");
+      ok(false,
+         "getUsageForURI returned non-zero usage after clearing all " +
+         "databases!");
     }
     runCallback();
   });
