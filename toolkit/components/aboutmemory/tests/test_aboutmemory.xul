@@ -299,7 +299,7 @@ Other Measurements\n\
    45.67% ── perc1\n\
   100.00% ── perc2\n\
 \n\
-2nd Process\n\
+2nd\n\
 \n\
 Explicit Allocations\n\
 1,000.00 MB (100.0%) -- explicit\n\
@@ -314,7 +314,7 @@ Other Measurements\n\
   666.00 MB ── other0\n\
   111.00 MB ── other1\n\
 \n\
-3rd Process\n\
+3rd\n\
 \n\
 WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
 \n\
@@ -327,7 +327,7 @@ Explicit Allocations\n\
 Other Measurements\n\
 1.00 MB ── other1\n\
 \n\
-4th Process\n\
+4th\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
  explicit/js/compartment(http://too-big.com/)/stuff\n\
@@ -358,7 +358,7 @@ Other Measurements\n\
     -5.55% ── other5 [?!]\n\
    666.66% ── other6\n\
 \n\
-5th Process\n\
+5th\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
  explicit/(3 tiny)/a/neg2\n\
@@ -458,7 +458,7 @@ Other Measurements\n\
        45.67% ── perc1\n\
       100.00% ── perc2\n\
 \n\
-2nd Process\n\
+2nd\n\
 \n\
 Explicit Allocations\n\
 1,048,576,000 B (100.0%) -- explicit\n\
@@ -476,7 +476,7 @@ Other Measurements\n\
   698,351,616 B ── other0\n\
   116,391,936 B ── other1\n\
 \n\
-3rd Process\n\
+3rd\n\
 \n\
 WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
 \n\
@@ -489,7 +489,7 @@ Explicit Allocations\n\
 Other Measurements\n\
 1,048,576 B ── other1\n\
 \n\
-4th Process\n\
+4th\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
  explicit/js/compartment(http://too-big.com/)/stuff\n\
@@ -518,7 +518,7 @@ Other Measurements\n\
         -5.55% ── other5 [?!]\n\
        666.66% ── other6\n\
 \n\
-5th Process\n\
+5th\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
  explicit/a/neg2\n\

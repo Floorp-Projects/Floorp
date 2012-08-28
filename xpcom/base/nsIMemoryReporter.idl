@@ -225,7 +225,7 @@ interface nsIMemoryMultiReporter : nsISupports
   readonly attribute int64_t explicitNonHeap;
 };
 
-[scriptable, uuid(4527b1d8-a81f-4af3-9623-80e4120392c7)]
+[scriptable, uuid(46a09443-ec1d-4aa8-ae40-28642f138a04)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -291,6 +291,81 @@ interface nsIMemoryReporterManager : nsISupports
    * This attribute indicates if moz_malloc_usable_size() works.
    */
   readonly attribute boolean hasMozMallocUsableSize;
+
+  /*
+   * This dumps the memory reports for this process to a file in the tmp
+   * directory called memory-reports-<pid>.json (or something similar, such as
+   * memory-reports-<pid>-1.json;  no existing file will be overwritten).
+   *
+   * Sample output:
+   *
+   * {
+   *   "hasMozMallocUsableSize":true,
+   *   "reports": [
+   *     {"process":"", "path":"explicit/foo/bar", "kind":1, "units":0,
+   *      "amount":2000000, "description":"Foo bar."},
+   *     {"process":"", "path":"heap-allocated", "kind":1, "units":0,
+   *      "amount":3000000, "description":"Heap allocated."},
+   *     {"process":"", "path":"vsize", "kind":1, "units":0,
+   *      "amount":10000000, "description":"Vsize."}
+   *   ]
+   * }
+   *
+   * JSON schema for the output.
+   *
+   * {
+   *   "properties": {
+   *     "hasMozMallocUsableSize": {
+   *       "type": "boolean",
+   *       "description": "nsIMemoryReporterManager::hasMozMallocUsableSize",
+   *       "required": true
+   *     },
+   *     "reports": {
+   *       "type": "array",
+   *       "description": "The memory reports.",
+   *       "required": true
+   *       "minItems": 1,
+   *       "items": {
+   *         "type": "object",
+   *         "properties": {
+   *           "process": {
+   *             "type": "string",
+   *             "description": "nsIMemoryReporter::process",
+   *             "required": true
+   *           },
+   *           "path": {
+   *             "type": "string",
+   *             "description": "nsIMemoryReporter::path",
+   *             "required": true,
+   *             "minLength": 1
+   *           },
+   *           "kind": {
+   *             "type": "integer",
+   *             "description": "nsIMemoryReporter::kind",
+   *             "required": true
+   *           },
+   *           "units": {
+   *             "type": "integer",
+   *             "description": "nsIMemoryReporter::units",
+   *             "required": true
+   *           },
+   *           "amount": {
+   *             "type": "integer",
+   *             "description": "nsIMemoryReporter::amount",
+   *             "required": true
+   *           },
+   *           "description": {
+   *             "type": "string",
+   *             "description": "nsIMemoryReporter::description",
+   *             "required": true
+   *           }
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   */
+  void dumpReports ();
 };
 
 %{C++
