@@ -5,7 +5,7 @@
 "use strict"
 
 function debug(s) {
-  //dump("-*- AppsService: " + s + "\n");
+  //dump("-*- AppsService.js: " + s + "\n");
 }
 
 const Cc = Components.classes;
@@ -19,57 +19,32 @@ const APPS_SERVICE_CID = Components.ID("{05072afa-92fe-45bf-ae22-39b69c117058}")
 function AppsService()
 {
   debug("AppsService Constructor");
-  this.inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-                  .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-  debug("inParent: " + this.inParent);
-  if (this.inParent) {
-    Cu.import("resource://gre/modules/Webapps.jsm");
-  } else {
-    this.cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-                .getService(Ci.nsISyncMessageSender);
-  }
+  let inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+                   .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  debug("inParent: " + inParent);
+  Cu.import(inParent ? "resource://gre/modules/Webapps.jsm" :
+                       "resource://gre/modules/AppsServiceChild.jsm");
 }
 
 AppsService.prototype = {
   getAppByManifestURL: function getAppByManifestURL(aManifestURL) {
     debug("GetAppByManifestURL( " + aManifestURL + " )");
-    if (this.inParent) {
-      return DOMApplicationRegistry.getAppByManifestURL(aManifestURL);
-    } else {
-      return this.cpmm.sendSyncMessage("WebApps:GetAppByManifestURL",
-                                       { url: aManifestURL })[0];
-    }
+    return DOMApplicationRegistry.getAppByManifestURL(aManifestURL);
   },
 
   getAppLocalIdByManifestURL: function getAppLocalIdByManifestURL(aManifestURL) {
     debug("getAppLocalIdByManifestURL( " + aManifestURL + " )");
-    if (this.inParent) {
-      return DOMApplicationRegistry.getAppLocalIdByManifestURL(aManifestURL);
-    } else {
-      let res = this.cpmm.sendSyncMessage("WebApps:GetAppLocalIdByManifestURL",
-                                          { url: aManifestURL })[0];
-      return res.id;
-    }
+    return DOMApplicationRegistry.getAppLocalIdByManifestURL(aManifestURL);
   },
 
   getAppByLocalId: function getAppByLocalId(aLocalId) {
     debug("getAppByLocalId( " + aLocalId + " )");
-    if (this.inParent) {
-      return DOMApplicationRegistry.getAppByLocalId(aLocalId);
-    } else {
-      return this.cpmm.sendSyncMessage("WebApps:GetAppByLocalId",
-                                       { id: aLocalId })[0];
-    }
+    return DOMApplicationRegistry.getAppByLocalId(aLocalId);
   },
 
   getManifestURLByLocalId: function getManifestURLByLocalId(aLocalId) {
     debug("getManifestURLByLocalId( " + aLocalId + " )");
-    if (this.inParent) {
-      return DOMApplicationRegistry.getManifestURLByLocalId(aLocalId);
-    } else {
-      return this.cpmm.sendSyncMessage("WebApps:GetManifestURLByLocalId",
-                                       { id: aLocalId })[0];
-    }
+    return DOMApplicationRegistry.getManifestURLByLocalId(aLocalId);
   },
 
   classID : APPS_SERVICE_CID,
