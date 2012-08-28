@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+               <gradient android:angle="270"
+                         android:startColor="#E0E6EB"
+                         android:centerColor="#CAD3DD"
+                         android:endColor="#BDC5CE"
+                         android:type="linear"/>
+        </shape>
+    </item>
+</layer-list>
