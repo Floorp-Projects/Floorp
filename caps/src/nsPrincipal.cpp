@@ -30,6 +30,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/HashFunctions.h"
 
+#include "nsIAppsService.h"
+#include "mozIApplication.h"
+
 using namespace mozilla;
 
 static bool gCodeBasePrincipalSupport = false;
@@ -1299,10 +1302,45 @@ nsPrincipal::GetAppStatus()
 
   // Installed apps have a valid app id (not NO_APP_ID or UNKNOWN_APP_ID)
   // and they are not inside a mozbrowser.
-  return mAppId != nsIScriptSecurityManager::NO_APP_ID &&
-         mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID && !mInMozBrowser
-          ? nsIPrincipal::APP_STATUS_INSTALLED
-          : nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  if (mAppId == nsIScriptSecurityManager::NO_APP_ID ||
+      mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID || mInMozBrowser) {
+    return nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  }
+
+  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(appsService, nsIPrincipal::APP_STATUS_NOT_INSTALLED);
+
+  nsCOMPtr<mozIDOMApplication> domApp;
+  appsService->GetAppByLocalId(mAppId, getter_AddRefs(domApp));
+  nsCOMPtr<mozIApplication> app = do_QueryInterface(domApp);
+  NS_ENSURE_TRUE(app, nsIPrincipal::APP_STATUS_NOT_INSTALLED);
+
+  uint16_t status = nsIPrincipal::APP_STATUS_INSTALLED;
+  NS_ENSURE_SUCCESS(app->GetAppStatus(&status),
+                    nsIPrincipal::APP_STATUS_NOT_INSTALLED);
+
+  nsCAutoString origin;
+  NS_ENSURE_SUCCESS(GetOrigin(getter_Copies(origin)),
+                    nsIPrincipal::APP_STATUS_NOT_INSTALLED);
+  nsString appOrigin;
+  NS_ENSURE_SUCCESS(app->GetOrigin(appOrigin),
+                    nsIPrincipal::APP_STATUS_NOT_INSTALLED);
+
+  // We go from string -> nsIURI -> origin to be sure we
+  // compare two punny-encoded origins.
+  nsCOMPtr<nsIURI> appURI;
+  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(appURI), appOrigin),
+                    nsIPrincipal::APP_STATUS_NOT_INSTALLED);
+
+  nsCAutoString appOriginPunned;
+  NS_ENSURE_SUCCESS(GetOriginForURI(appURI, getter_Copies(appOriginPunned)),
+                    nsIPrincipal::APP_STATUS_NOT_INSTALLED);
+
+  if (!appOriginPunned.Equals(origin)) {
+    return nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  }
+
+  return status;
 }
 
 /************************************************************************************************************************/
