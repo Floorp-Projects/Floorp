@@ -265,8 +265,9 @@ protected:
 
   // Return success if the subject principal subsumes the principal of our
   // inner, error otherwise.  This will also succeed if the subject has
-  // UniversalXPConnect.
-  nsresult SubjectSubsumesInnerPrincipal() const;
+  // UniversalXPConnect or if access is allowed by CORS.  In the latter case,
+  // it will set the principal of the inner to the subject principal.
+  nsresult SubjectSubsumesInnerPrincipal();
 
   // Add the namespace mapping from this @namespace rule to our namespace map
   nsresult RegisterNamespaceRule(mozilla::css::Rule* aRule);
