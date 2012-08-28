@@ -1329,6 +1329,7 @@ let RIL = {
       function add(contact) {
         this.iccInfo.adn.push(contact);
       };
+
       function finish() {
         if (DEBUG) {
           for (let i = 0; i < this.iccInfo.adn.length; i++) {
@@ -1336,12 +1337,19 @@ let RIL = {
                                 " number = " + this.iccInfo.adn[i].number);
           }
         }
-        this.sendDOMMessage({rilMessageType: "icccontacts",
-                             contactType: "ADN",
-                             contacts: this.iccInfo.adn,
-                             requestId: options.requestId});
+        options.rilMessageType = "icccontacts";
+        options.contactType = "ADN";
+        options.contacts = this.iccInfo.adn,
+        this.sendDOMMessage(options);
       };
       this.parseDiallingNumber(options, add, finish);
+    }
+
+    function error(options) {
+      options.rilMessageType = "icccontacts";
+      options.contactType = "ADN";
+      options.contacts = [];
+      this.sendDOMMessage(options);
     }
 
     this.iccInfo.adn = [];
@@ -1356,8 +1364,9 @@ let RIL = {
       pin2:      null,
       type:      EF_TYPE_LINEAR_FIXED,
       callback:  callback,
+      onerror:   error
       loadAll:   true,
-      requestId: options.requestId
+      requestId: options.requestId,
     });
   },
 
@@ -1468,6 +1477,13 @@ let RIL = {
       Buf.readStringDelimiter(bufLen);
     }
 
+    function error(options) {
+      options.rilMessageType = "icccontacts";
+      options.contactType = "ADN";
+      options.contacts = [];
+      this.sendDOMMessage(options);
+    }
+
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_PBR,
@@ -1479,6 +1495,7 @@ let RIL = {
       pin2:      null,
       type:      EF_TYPE_LINEAR_FIXED,
       callback:  callback,
+      onerror:   error,
       requestId: options.requestId,
     });
   },
@@ -3553,6 +3570,13 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
   this[REQUEST_DATA_CALL_LIST](length, options);
 };
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
+  if (!length) {
+    if (options.onerror) {
+      options.onerror.call(this, options);
+    }
+    return;
+  }
+
   // Don't need to read rilRequestError since we can know error status from
   // sw1 and sw2.
   let sw1 = Buf.readUint32();
@@ -3564,6 +3588,9 @@ RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
       debug("ICC I/O Error EF id = " + options.fileId.toString(16) +
             " command = " + options.command.toString(16) +
             "(" + sw1.toString(16) + "/" + sw2.toString(16) + ")");
+    }
+    if (options.onerror) {
+      options.onerror.call(this, options);
     }
     return;
   }
