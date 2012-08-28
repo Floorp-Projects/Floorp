@@ -1,0 +1,127 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+
+  function testSteps()
+  {
+    const BLOB_DATA =
+      "504B03040A00000000002E6BF14000000000000000000000000005001C00746573742F" +
+      "555409000337CA055039CA055075780B000104E803000004E8030000504B0304140000" +
+      "0008002D6BF1401780E15015000000580200000A001C00746573742F612E7478745554" +
+      "09000336CA05503ACA055075780B000104E803000004E8030000CB48CDC9C95728CF2F" +
+      "CA49E1CA18658FB2A9C40600504B03040A00000000002F88EC40662E84701000000010" +
+      "0000000A001C00746573742F622E74787455540900035A65FF4F42C5055075780B0001" +
+      "04E803000004E803000068656C6C6F20776F726C642C2032210A504B01021E030A0000" +
+      "0000002E6BF140000000000000000000000000050018000000000000001000FD410000" +
+      "0000746573742F555405000337CA055075780B000104E803000004E8030000504B0102" +
+      "1E031400000008002D6BF1401780E15015000000580200000A00180000000000010000" +
+      "00B4813F000000746573742F612E747874555405000336CA055075780B000104E80300" +
+      "0004E8030000504B01021E030A00000000002F88EC40662E847010000000100000000A" +
+      "0018000000000001000000B48198000000746573742F622E74787455540500035A65FF" +
+      "4F75780B000104E803000004E8030000504B05060000000003000300EB000000EC0000" +
+      "000000";
+
+    const TEST_FILE_1 = "test/a.txt";
+    const TEST_FILE_2 = "test/b.txt";
+
+    let TEST_FILE_1_CONTENTS = "";
+    for (let i = 0; i < 50; i++) {
+      TEST_FILE_1_CONTENTS += "hello world\n";
+    }
+    const TEST_FILE_2_CONTENTS = "hello world, 2!\n";
+
+    let binaryData = new Uint8Array(BLOB_DATA.length / 2);
+    for (let i = 0, len = BLOB_DATA.length / 2; i < len; i++) {
+      let hex = BLOB_DATA[i * 2] + BLOB_DATA[i * 2 + 1];
+      binaryData[i] = parseInt(hex, 16);
+    }
+
+    let request = indexedDB.open(window.location.pathname, 1);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = unexpectedSuccessHandler;
+    let event = yield;
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    let objectStore = db.createObjectStore("foo", { autoIncrement: true });
+    let index = objectStore.createIndex("foo", "index");
+
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let data = new Blob([binaryData]);
+
+    objectStore = db.transaction("foo", "readwrite").objectStore("foo");
+    objectStore.add(data).onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let key = event.target.result;
+
+    objectStore = db.transaction("foo").objectStore("foo");
+    objectStore.get(key).onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let archiveReader = new ArchiveReader(event.target.result);
+    ok(archiveReader, "Got an ArchiveReader");
+
+    request = archiveReader.getFilenames();
+    request.onsuccess = grabEventAndContinueHandler;
+    request.onerror = errorHandler;
+    event = yield;
+
+    is(event.target.result.length, 2, "Got 2 archive items");
+    is(event.target.result[0], TEST_FILE_1,
+       "First file is '" + TEST_FILE_1 + "'");
+    is(event.target.result[1], TEST_FILE_2,
+       "Second file is '" + TEST_FILE_2 + "'");
+
+    request = archiveReader.getFile(TEST_FILE_1);
+    request.onsuccess = grabEventAndContinueHandler;
+    request.onerror = errorHandler;
+    event = yield;
+
+    let fileReader = new FileReader();
+    fileReader.readAsText(event.target.result);
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.onerror = errorHandler;
+    event = yield;
+
+    // Don't use is() because it prints out 100 lines of text...
+    ok(event.target.result == TEST_FILE_1_CONTENTS, "Correct text");
+
+    request = archiveReader.getFile(TEST_FILE_2);
+    request.onsuccess = grabEventAndContinueHandler;
+    request.onerror = errorHandler;
+    event = yield;
+
+    fileReader = new FileReader();
+    fileReader.readAsText(event.target.result);
+    fileReader.onload = grabEventAndContinueHandler;
+    fileReader.onerror = errorHandler;
+    event = yield;
+
+    // Don't use is() because it prints out a newline...
+    ok(event.target.result == TEST_FILE_2_CONTENTS, "Correct text");
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
