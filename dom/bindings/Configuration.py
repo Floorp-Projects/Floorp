@@ -161,6 +161,8 @@ class Descriptor(DescriptorProvider):
         self.notflattened = desc.get('notflattened', False)
         self.register = desc.get('register', True)
 
+        self.hasXPConnectImpls = desc.get('hasXPConnectImpls', False)
+
         # If we're concrete, we need to crawl our ancestor interfaces and mark
         # them as having a concrete descendant.
         self.concrete = desc.get('concrete', not self.interface.isExternal())
