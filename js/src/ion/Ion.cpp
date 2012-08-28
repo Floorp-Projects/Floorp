@@ -721,6 +721,7 @@ IonScript::purgeCaches(JSCompartment *c)
 void
 ion::ToggleBarriers(JSCompartment *comp, bool needs)
 {
+    IonContext ictx(NULL, comp, NULL);
     AutoFlushCache afc("ToggleBarriers");
     for (gc::CellIterUnderGC i(comp, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
@@ -1680,7 +1681,10 @@ ion::UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc)
 void
 AutoFlushCache::updateTop(uintptr_t p, size_t len)
 {
-    GetIonContext()->compartment->ionCompartment()->flusher()->update(p, len);
+    IonContext *ictx = GetIonContext();
+    IonCompartment *icmp = ictx->compartment->ionCompartment();
+    AutoFlushCache *afc = icmp->flusher();
+    afc->update(p, len);
 }
 
 AutoFlushCache::AutoFlushCache(const char *nonce, IonCompartment *comp)
