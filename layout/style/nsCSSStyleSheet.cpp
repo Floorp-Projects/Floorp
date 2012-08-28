@@ -39,7 +39,8 @@
 #include "nsMediaFeatures.h"
 #include "nsDOMClassInfoID.h"
 
-namespace css = mozilla::css;
+using namespace mozilla;
+
 
 // -------------------------------
 // Style Rule List for the DOM
@@ -763,8 +764,10 @@ nsMediaList::Append(const nsAString& aNewMedium)
 //
 
 
-nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet)
+nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet,
+                                           CORSMode aCORSMode)
   : mSheets(),
+    mCORSMode(aCORSMode),
     mComplete(false)
 #ifdef DEBUG
     , mPrincipalSet(false)
@@ -884,6 +887,7 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
     mOriginalSheetURI(aCopy.mOriginalSheetURI),
     mBaseURI(aCopy.mBaseURI),
     mPrincipal(aCopy.mPrincipal),
+    mCORSMode(aCopy.mCORSMode),
     mComplete(aCopy.mComplete)
 #ifdef DEBUG
     , mPrincipalSet(aCopy.mPrincipalSet)
@@ -1012,7 +1016,7 @@ nsCSSStyleSheetInner::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 // CSS Style Sheet
 //
 
-nsCSSStyleSheet::nsCSSStyleSheet()
+nsCSSStyleSheet::nsCSSStyleSheet(CORSMode aCORSMode)
   : mTitle(), 
     mParent(nullptr),
     mOwnerRule(nullptr),
@@ -1024,7 +1028,7 @@ nsCSSStyleSheet::nsCSSStyleSheet()
     mRuleProcessors(nullptr)
 {
 
-  mInner = new nsCSSStyleSheetInner(this);
+  mInner = new nsCSSStyleSheetInner(this, aCORSMode);
 }
 
 nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
