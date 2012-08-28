@@ -638,6 +638,11 @@ let RIL = {
      * Application identification for apps in ICC.
      */
     this.aid = null;
+  
+    /**
+     * Application type for apps in ICC.
+     */
+    this.appType = null,
 
     this.networkSelectionMode = null;
 
@@ -1416,7 +1421,33 @@ let RIL = {
   },
 
   /**
-   * Get ICC Phonebook.
+   * Get UICC Phonebook.
+   *
+   * @params type
+   *         "ADN" or "FDN".
+   */
+  getICCContacts: function getICCContacts(options) {
+    let type = options.type;
+    switch (type) {
+      case "ADN":
+        switch (this.appType) {
+          case CARD_APPTYPE_SIM:
+            options.fileId = ICC_EF_ADN;
+            this.getADN(options);
+            break;
+          case CARD_APPTYPE_USIM:
+            this.getPBR(options);
+            break;
+        }
+        break;
+      case "FDN":
+        this.getFDN(options);
+        break;
+    }
+  },
+
+  /**
+   * Get USIM Phonebook.
    *
    * @params requestId
    *         Request id from RadioInterfaceLayer.
@@ -2194,6 +2225,7 @@ let RIL = {
     }
     // fetchICCRecords will need to read aid, so read aid here.
     this.aid = app.aid;
+    this.appType = app.app_type;
 
     let newCardState;
     switch (app.app_state) {
