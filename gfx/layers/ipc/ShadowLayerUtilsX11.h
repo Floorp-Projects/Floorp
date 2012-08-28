@@ -11,7 +11,7 @@
 #include <X11/extensions/Xrender.h>
 #include <X11/Xlib.h>
 
-#include "IPC/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 
 #define MOZ_HAVE_SURFACEDESCRIPTORX11
 #define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
