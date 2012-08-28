@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef AccCollector_h_
-#define AccCollector_h_
+#ifndef mozilla_a11y_AccCollector_h__
+#define mozilla_a11y_AccCollector_h__
 
-#include "filters.h"
+#include "Filters.h"
 
-#include "nscore.h"
 #include "nsTArray.h"
+
+class Accessible;
+
+namespace mozilla {
+namespace a11y {
 
 /**
  * Collect accessible children complying with filter function. Provides quick
@@ -82,7 +86,10 @@ protected:
 
   virtual void AppendObject(Accessible* aAccessible);
 
-  friend class Accessible;
+  friend class ::Accessible;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif
