@@ -357,7 +357,7 @@ struct IonScript
         return prebarrierEntries_;
     }
     void toggleBarriers(bool enabled);
-    void purgeCaches();
+    void purgeCaches(JSCompartment *c);
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const HeapValue *vp);
