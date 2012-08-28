@@ -55,12 +55,14 @@ class nsHtml5SpeculativeLoad {
       mCrossOrigin.Assign(aCrossOrigin);
     }
     
-    inline void InitStyle(const nsAString& aUrl, const nsAString& aCharset) {
+    inline void InitStyle(const nsAString& aUrl, const nsAString& aCharset,
+			  const nsAString& aCrossOrigin) {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadStyle;
       mUrl.Assign(aUrl);
       mCharset.Assign(aCharset);
+      mCrossOrigin.Assign(aCrossOrigin);
     }
 
     /**
