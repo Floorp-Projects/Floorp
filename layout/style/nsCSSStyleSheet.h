@@ -20,6 +20,7 @@
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsString.h"
+#include "mozilla/CORSMode.h"
 
 class nsXMLNameSpaceMap;
 class nsCSSRuleProcessor;
@@ -49,7 +50,8 @@ public:
   friend class nsCSSStyleSheet;
   friend class nsCSSRuleProcessor;
 private:
-  nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet);
+  nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet,
+                       mozilla::CORSMode aCORSMode);
   nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
                        nsCSSStyleSheet* aPrimarySheet);
   ~nsCSSStyleSheetInner();
@@ -78,6 +80,7 @@ private:
   // child sheet that means we've already ensured unique inners throughout its
   // parent chain and things are good.
   nsRefPtr<nsCSSStyleSheet> mFirstChild;
+  mozilla::CORSMode      mCORSMode;
   bool                   mComplete;
 
 #ifdef DEBUG
@@ -105,7 +108,7 @@ class nsCSSStyleSheet MOZ_FINAL : public nsIStyleSheet,
                                   public nsICSSLoaderObserver
 {
 public:
-  nsCSSStyleSheet();
+  nsCSSStyleSheet(mozilla::CORSMode aCORSMode);
 
   NS_DECL_ISUPPORTS
 
@@ -238,6 +241,9 @@ public:
   static bool RebuildChildList(mozilla::css::Rule* aRule, void* aBuilder);
 
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
+  // Get this style sheet's CORS mode
+  mozilla::CORSMode GetCORSMode() const { return mInner->mCORSMode; }
 
 private:
   nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
