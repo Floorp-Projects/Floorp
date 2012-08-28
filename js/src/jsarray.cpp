@@ -2924,227 +2924,6 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
     return JS_TRUE;
 }
 
-enum IndexOfKind {
-    IndexOf,
-    LastIndexOf
-};
-
-static JSBool
-array_indexOfHelper(JSContext *cx, IndexOfKind mode, CallArgs &args)
-{
-    uint32_t length, i, stop;
-    int direction;
-    JSBool hole;
-
-    RootedValue tosearch(cx), elt(cx);
-
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-    if (!GetLengthProperty(cx, obj, &length))
-        return JS_FALSE;
-    if (length == 0)
-        goto not_found;
-
-    if (args.length() <= 1) {
-        i = (mode == LastIndexOf) ? length - 1 : 0;
-        tosearch = (args.length() != 0) ? args[0] : UndefinedValue();
-    } else {
-        double start;
-
-        tosearch = args[0];
-        if (!ToInteger(cx, args[1], &start))
-            return false;
-        if (start < 0) {
-            start += length;
-            if (start < 0) {
-                if (mode == LastIndexOf)
-                    goto not_found;
-                i = 0;
-            } else {
-                i = (uint32_t)start;
-            }
-        } else if (start >= length) {
-            if (mode == IndexOf)
-                goto not_found;
-            i = length - 1;
-        } else {
-            i = (uint32_t)start;
-        }
-    }
-
-    if (mode == LastIndexOf) {
-        stop = 0;
-        direction = -1;
-    } else {
-        stop = length - 1;
-        direction = 1;
-    }
-
-    for (;;) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
-            !GetElement(cx, obj, (uint32_t)i, &hole, &elt)) {
-            return JS_FALSE;
-        }
-        if (!hole) {
-            bool equal;
-            if (!StrictlyEqual(cx, elt, tosearch, &equal))
-                return false;
-            if (equal) {
-                args.rval().setNumber(i);
-                return true;
-            }
-        }
-        if (i == stop)
-            goto not_found;
-        i += direction;
-    }
-
-  not_found:
-    args.rval().setInt32(-1);
-    return JS_TRUE;
-}
-
-static JSBool
-array_indexOf(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_indexOfHelper(cx, IndexOf, args);
-}
-
-static JSBool
-array_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_indexOfHelper(cx, LastIndexOf, args);
-}
-
-/* ECMA 15.4.4.16-15.4.4.18. */
-class ArrayForEachBehavior
-{
-  public:
-    static bool shouldExit(MutableHandleValue callbackRval, MutableHandleValue rval) { return false; }
-    static Value lateExitValue() { return UndefinedValue(); }
-};
-
-class ArrayEveryBehavior
-{
-  public:
-    static bool shouldExit(MutableHandleValue callbackRval, MutableHandleValue rval)
-    {
-        if (!ToBoolean(callbackRval)) {
-            rval.setBoolean(false);
-            return true;
-        }
-        return false;
-    }
-    static Value lateExitValue() { return BooleanValue(true); }
-};
-
-class ArraySomeBehavior
-{
-  public:
-    static bool shouldExit(MutableHandleValue callbackRval, MutableHandleValue rval)
-    {
-        if (ToBoolean(callbackRval)) {
-            rval.setBoolean(true);
-            return true;
-        }
-        return false;
-    }
-    static Value lateExitValue() { return BooleanValue(false); }
-};
-
-template <class Behavior>
-static inline bool
-array_readonlyCommon(JSContext *cx, CallArgs &args)
-{
-    /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    /* Step 2-3. */
-    uint32_t len;
-    if (!GetLengthProperty(cx, obj, &len))
-        return false;
-
-    /* Step 4. */
-    if (args.length() == 0) {
-        js_ReportMissingArg(cx, args.calleev(), 0);
-        return false;
-    }
-    RootedObject callable(cx, ValueToCallable(cx, &args[0]));
-    if (!callable)
-        return false;
-
-    /* Step 5. */
-    Value thisv = args.length() >= 2 ? args[1] : UndefinedValue();
-
-    /* Step 6. */
-    uint32_t k = 0;
-
-    /* Step 7. */
-    RootedValue kValue(cx);
-    InvokeArgsGuard ag;
-    while (k < len) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx))
-            return false;
-
-        /* Step a, b, and c.i. */
-        JSBool kNotPresent;
-        if (!GetElement(cx, obj, k, &kNotPresent, &kValue))
-            return false;
-
-        /* Step c.ii-iii. */
-        if (!kNotPresent) {
-            if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 3, &ag))
-                return false;
-            ag.setCallee(ObjectValue(*callable));
-            ag.setThis(thisv);
-            ag[0] = kValue;
-            ag[1] = NumberValue(k);
-            ag[2] = ObjectValue(*obj);
-            if (!Invoke(cx, ag))
-                return false;
-
-            if (Behavior::shouldExit(ag.rval(), args.rval()))
-                return true;
-        }
-
-        /* Step d. */
-        k++;
-    }
-
-    /* Step 8. */
-    args.rval().set(Behavior::lateExitValue());
-    return true;
- }
-
-/* ES5 15.4.4.16. */
-static JSBool
-array_every(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_readonlyCommon<ArrayEveryBehavior>(cx, args);
-}
-
-/* ES5 15.4.4.17. */
-static JSBool
-array_some(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_readonlyCommon<ArraySomeBehavior>(cx, args);
-}
-
-/* ES5 15.4.4.18. */
-static JSBool
-array_forEach(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_readonlyCommon<ArrayForEachBehavior>(cx, args);
-}
-
 /* ES5 15.4.4.19. */
 static JSBool
 array_map(JSContext *cx, unsigned argc, Value *vp)
@@ -3332,109 +3111,6 @@ class ArrayReduceRightBehavior
     }
 };
 
-template<class Behavior>
-static inline bool
-array_reduceCommon(JSContext *cx, CallArgs &args)
-{
-    /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    /* Step 2-3. */
-    uint32_t len;
-    if (!GetLengthProperty(cx, obj, &len))
-        return false;
-
-    /* Step 4. */
-    if (args.length() == 0) {
-        js_ReportMissingArg(cx, args.calleev(), 0);
-        return false;
-    }
-    RootedObject callable(cx, ValueToCallable(cx, &args[0]));
-    if (!callable)
-        return false;
-
-    /* Step 5. */
-    if (len == 0 && args.length() < 2) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_EMPTY_ARRAY_REDUCE);
-        return false;
-    }
-
-    /* Step 6. */
-    uint32_t k, end;
-    int32_t step;
-    Behavior::initialize(len, &k, &end, &step);
-
-    /* Step 7-8. */
-    RootedValue accumulator(cx);
-    if (args.length() >= 2) {
-        accumulator = args[1];
-    } else {
-        JSBool kNotPresent = true;
-        while (kNotPresent && k != end) {
-            if (!GetElement(cx, obj, k, &kNotPresent, &accumulator))
-                return false;
-            k += step;
-        }
-        if (kNotPresent) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_EMPTY_ARRAY_REDUCE);
-            return false;
-        }
-    }
-
-    /* Step 9. */
-    RootedValue kValue(cx);
-    InvokeArgsGuard ag;
-    while (k != end) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx))
-            return false;
-
-        /* Step a, b, and c.i. */
-        JSBool kNotPresent;
-        if (!GetElement(cx, obj, k, &kNotPresent, &kValue))
-            return false;
-
-        /* Step c.ii. */
-        if (!kNotPresent) {
-            if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 4, &ag))
-                return false;
-            ag.setCallee(ObjectValue(*callable));
-            ag.setThis(UndefinedValue());
-            ag[0] = accumulator;
-            ag[1] = kValue;
-            ag[2] = NumberValue(k);
-            ag[3] = ObjectValue(*obj);
-            if (!Invoke(cx, ag))
-                return false;
-            accumulator = ag.rval();
-        }
-
-        /* Step d. */
-        k += step;
-    }
-
-    /* Step 10. */
-    args.rval().set(accumulator);
-    return true;
-}
-
-/* ES5 15.4.4.21. */
-static JSBool
-array_reduce(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_reduceCommon<ArrayReduceBehavior>(cx, args);
-}
-
-/* ES5 15.4.4.22. */
-static JSBool
-array_reduceRight(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return array_reduceCommon<ArrayReduceRightBehavior>(cx, args);
-}
-
 static JSBool
 array_isArray(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -3467,15 +3143,15 @@ static JSFunctionSpec array_methods[] = {
     JS_FN("concat",             array_concat,       1,JSFUN_GENERIC_NATIVE),
     JS_FN("slice",              array_slice,        2,JSFUN_GENERIC_NATIVE),
 
-    JS_FN("indexOf",            array_indexOf,      1,JSFUN_GENERIC_NATIVE),
-    JS_FN("lastIndexOf",        array_lastIndexOf,  1,JSFUN_GENERIC_NATIVE),
-    JS_FN("forEach",            array_forEach,      1,JSFUN_GENERIC_NATIVE),
+         {"lastIndexOf",        {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayLastIndexOf"},
+         {"indexOf",            {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayIndexOf"},
+         {"forEach",            {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayForEach"},
     JS_FN("map",                array_map,          1,JSFUN_GENERIC_NATIVE),
-    JS_FN("reduce",             array_reduce,       1,JSFUN_GENERIC_NATIVE),
-    JS_FN("reduceRight",        array_reduceRight,  1,JSFUN_GENERIC_NATIVE),
+         {"reduce",             {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayReduce"},
+         {"reduceRight",        {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayReduceRight"},
     JS_FN("filter",             array_filter,       1,JSFUN_GENERIC_NATIVE),
-    JS_FN("some",               array_some,         1,JSFUN_GENERIC_NATIVE),
-    JS_FN("every",              array_every,        1,JSFUN_GENERIC_NATIVE),
+         {"some",               {NULL, NULL},       1,JSFUN_INTERPRETED, "ArraySome"},
+         {"every",              {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayEvery"},
 
     JS_FN("iterator",           JS_ArrayIterator,   0,0),
     JS_FS_END
@@ -3483,6 +3159,13 @@ static JSFunctionSpec array_methods[] = {
 
 static JSFunctionSpec array_static_methods[] = {
     JS_FN("isArray",            array_isArray,      1,0),
+         {"lastIndexOf",        {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayStaticLastIndexOf"},
+         {"indexOf",            {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayStaticIndexOf"},
+         {"forEach",            {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayStaticForEach"},
+         {"every",              {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayStaticEvery"},
+         {"some",               {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayStaticSome"},
+         {"reduce",             {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayStaticReduce"},
+         {"reduceRight",        {NULL, NULL},       1,JSFUN_INTERPRETED, "ArrayStaticReduceRight"},
     JS_FS_END
 };
 
