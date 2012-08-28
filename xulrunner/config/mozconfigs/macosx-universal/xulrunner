@@ -7,3 +7,5 @@ ac_add_options --disable-tests
 
 # Enable parallel compiling
 mk_add_options MOZ_MAKE_FLAGS="-j4"
+
+. "$topsrcdir/xulrunner/config/mozconfigs/common.override"

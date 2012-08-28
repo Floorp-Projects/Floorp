@@ -14,3 +14,5 @@ if test "$PROCESSOR_ARCHITECTURE" = "AMD64" -o "$PROCESSOR_ARCHITEW6432" = "AMD6
 else
   . $topsrcdir/build/win32/mozconfig.vs2010
 fi
+
+. "$topsrcdir/xulrunner/config/mozconfigs/common.override"
