@@ -187,16 +187,31 @@ StatisticsRecorder gStatisticsRecorder;
 
 // Hardcoded probes
 struct TelemetryHistogram {
-  const char *id;
   uint32_t min;
   uint32_t max;
   uint32_t bucketCount;
   uint32_t histogramType;
-  const char *comment;
+  uint16_t id_offset;
+  uint16_t comment_offset;
+
+  const char *id() const;
+  const char *comment() const;
 };
 
 #include "TelemetryHistogramData.inc"
 bool gCorruptHistograms[Telemetry::HistogramCount];
+
+const char *
+TelemetryHistogram::id() const
+{
+  return &gHistogramStringTable[this->id_offset];
+}
+
+const char *
+TelemetryHistogram::comment() const
+{
+  return &gHistogramStringTable[this->comment_offset];
+}
 
 bool
 TelemetryHistogramType(Histogram *h, uint32_t *result)
@@ -268,7 +283,7 @@ GetHistogramByEnumId(Telemetry::ID id, Histogram **ret)
   }
 
   const TelemetryHistogram &p = gHistograms[id];
-  nsresult rv = HistogramGet(p.id, p.min, p.max, p.bucketCount, p.histogramType, &h);
+  nsresult rv = HistogramGet(p.id(), p.min, p.max, p.bucketCount, p.histogramType, &h);
   if (NS_FAILED(rv))
     return rv;
 
@@ -585,7 +600,7 @@ TelemetryImpl::GetHistogramEnumId(const char *name, Telemetry::ID *id)
   TelemetryImpl::HistogramMapType *map = &sTelemetry->mHistogramMap;
   if (!map->Count()) {
     for (uint32_t i = 0; i < Telemetry::HistogramCount; i++) {
-      CharPtrEntryType *entry = map->PutEntry(gHistograms[i].id);
+      CharPtrEntryType *entry = map->PutEntry(gHistograms[i].id());
       if (NS_UNLIKELY(!entry)) {
         map->Clear();
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1153,10 +1168,10 @@ TelemetryImpl::GetRegisteredHistograms(JSContext *cx, jsval *ret)
   JS::AutoObjectRooter root(cx, info);
 
   for (size_t i = 0; i < count; ++i) {
-    JSString *comment = JS_InternString(cx, gHistograms[i].comment);
+    JSString *comment = JS_InternString(cx, gHistograms[i].comment());
     
     if (!(comment
-          && JS_DefineProperty(cx, info, gHistograms[i].id,
+          && JS_DefineProperty(cx, info, gHistograms[i].id(),
                                STRING_TO_JSVAL(comment), NULL, NULL,
                                JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
