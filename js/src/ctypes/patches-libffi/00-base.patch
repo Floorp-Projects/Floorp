@@ -4,7 +4,7 @@ and bug 631928.
 diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
 --- a/js/src/ctypes/libffi/Makefile.in
 +++ b/js/src/ctypes/libffi/Makefile.in
-@@ -199,17 +199,17 @@ LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIB
+@@ -199,17 +199,17 @@ LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
  CCLD = $(CC)
  LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
  	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -87,7 +87,7 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
  
  mostlyclean-libtool:
-@@ -1129,17 +1129,17 @@ doc/libffi.html: doc/libffi.texi $(srcdi
+@@ -1129,17 +1129,17 @@ $(srcdir)/doc/stamp-vti: doc/libffi.texi $(top_srcdir)/configure
  	-@rm -f vti.tmp
  	@cp $(srcdir)/doc/version.texi $@
  
@@ -106,189 +106,28 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  	@list='$(DVIS)'; test -n "$(dvidir)" || list=; \
  	for p in $$list; do \
  	  $(am__strip_dir) \
-diff --git a/js/src/ctypes/libffi/config.sub b/js/src/ctypes/libffi/config.sub
---- a/js/src/ctypes/libffi/config.sub
-+++ b/js/src/ctypes/libffi/config.sub
-@@ -1,15 +1,15 @@
- #! /bin/sh
- # Configuration validation subroutine script.
- #   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
- #   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
- #   Free Software Foundation, Inc.
- 
--timestamp='2009-11-07'
-+timestamp='2011-01-03'
- 
- # This file is (in principle) common to ALL GNU software.
- # The presence of a machine in this file suggests that SOME GNU software
- # can handle that machine.  It does not imply ALL GNU software can.
- #
- # This file is free software; you can redistribute it and/or modify
- # it under the terms of the GNU General Public License as published by
- # the Free Software Foundation; either version 2 of the License, or
-@@ -121,17 +121,17 @@ esac
- 
- # Separate what the user gave into CPU-COMPANY and OS or KERNEL-OS (if any).
- # Here we must recognize all the valid KERNEL-OS combinations.
- maybe_os=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\2/'`
- case $maybe_os in
-   nto-qnx* | linux-gnu* | linux-dietlibc | linux-newlib* | linux-uclibc* | \
-   uclinux-uclibc* | uclinux-gnu* | kfreebsd*-gnu* | knetbsd*-gnu* | netbsd*-gnu* | \
-   kopensolaris*-gnu* | \
--  storm-chaos* | os2-emx* | rtmk-nova*)
-+  storm-chaos* | os2-emx* | rtmk-nova* | wince-winmo*)
-     os=-$maybe_os
-     basic_machine=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`
-     ;;
-   *)
-     basic_machine=`echo $1 | sed 's/-[^-]*$//'`
-     if [ $basic_machine != $1 ]
-     then os=`echo $1 | sed 's/.*-/-/'`
-     else os=; fi
-@@ -282,32 +282,30 @@ case $basic_machine in
- 	| mt \
- 	| msp430 \
- 	| nios | nios2 \
- 	| ns16k | ns32k \
- 	| or32 \
- 	| pdp10 | pdp11 | pj | pjl \
- 	| powerpc | powerpc64 | powerpc64le | powerpcle | ppcbe \
- 	| pyramid \
--	| rx \
- 	| score \
- 	| sh | sh[1234] | sh[24]a | sh[24]aeb | sh[23]e | sh[34]eb | sheb | shbe | shle | sh[1234]le | sh3ele \
- 	| sh64 | sh64le \
- 	| sparc | sparc64 | sparc64b | sparc64v | sparc86x | sparclet | sparclite \
- 	| sparcv8 | sparcv9 | sparcv9b | sparcv9v \
- 	| spu | strongarm \
- 	| tahoe | thumb | tic4x | tic80 | tron \
--	| ubicom32 \
- 	| v850 | v850e \
- 	| we32k \
- 	| x86 | xc16x | xscale | xscalee[bl] | xstormy16 | xtensa \
- 	| z8k | z80)
- 		basic_machine=$basic_machine-unknown
- 		;;
--	m6811 | m68hc11 | m6812 | m68hc12 | picochip)
-+	m6811 | m68hc11 | m6812 | m68hc12)
- 		# Motorola 68HC11/12.
- 		basic_machine=$basic_machine-unknown
- 		os=-none
- 		;;
- 	m88110 | m680[12346]0 | m683?2 | m68360 | m5200 | v70 | w65 | z8k)
- 		;;
- 	ms1)
- 		basic_machine=mt-unknown
-@@ -368,26 +366,25 @@ case $basic_machine in
- 	| mt-* \
- 	| msp430-* \
- 	| nios-* | nios2-* \
- 	| none-* | np1-* | ns16k-* | ns32k-* \
- 	| orion-* \
- 	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
- 	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* | ppcbe-* \
- 	| pyramid-* \
--	| romp-* | rs6000-* | rx-* \
-+	| romp-* | rs6000-* \
- 	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
- 	| shle-* | sh[1234]le-* | sh3ele-* | sh64-* | sh64le-* \
- 	| sparc-* | sparc64-* | sparc64b-* | sparc64v-* | sparc86x-* | sparclet-* \
- 	| sparclite-* \
- 	| sparcv8-* | sparcv9-* | sparcv9b-* | sparcv9v-* | strongarm-* | sv1-* | sx?-* \
- 	| tahoe-* | thumb-* \
- 	| tic30-* | tic4x-* | tic54x-* | tic55x-* | tic6x-* | tic80-* | tile-* \
- 	| tron-* \
--	| ubicom32-* \
- 	| v850-* | v850e-* | vax-* \
- 	| we32k-* \
- 	| x86-* | x86_64-* | xc16x-* | xps100-* | xscale-* | xscalee[bl]-* \
- 	| xstormy16-* | xtensa*-* \
- 	| ymp-* \
- 	| z8k-* | z80-*)
- 		;;
- 	# Recognize the basic CPU types without company name, with glob match.
-@@ -1294,17 +1291,17 @@ case $os in
- 	      | -mingw32* | -linux-gnu* | -linux-newlib* | -linux-uclibc* \
- 	      | -uxpv* | -beos* | -mpeix* | -udk* \
- 	      | -interix* | -uwin* | -mks* | -rhapsody* | -darwin* | -opened* \
- 	      | -openstep* | -oskit* | -conix* | -pw32* | -nonstopux* \
- 	      | -storm-chaos* | -tops10* | -tenex* | -tops20* | -its* \
- 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
- 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
- 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
--	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es*)
-+	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -winmo*)
- 	# Remember, each alternative MUST END IN *, to match a version number.
- 		;;
- 	-qnx*)
- 		case $basic_machine in
- 		    x86-* | i*86-*)
- 			;;
- 		    *)
- 			os=-nto$os
-@@ -1336,16 +1333,19 @@ case $os in
- 		os=`echo $os | sed -e 's|sunos6|solaris3|'`
- 		;;
- 	-opened*)
- 		os=-openedition
- 		;;
-         -os400*)
- 		os=-os400
- 		;;
-+	-wince-winmo*)
-+		os=-wince-winmo
-+		;;
- 	-wince*)
- 		os=-wince
- 		;;
- 	-osfrose*)
- 		os=-osfrose
- 		;;
- 	-osf*)
- 		os=-osf
-@@ -1427,16 +1427,19 @@ case $os in
- 		os=-kaos
- 		;;
- 	-zvmoe)
- 		os=-zvmoe
- 		;;
- 	-dicos*)
- 		os=-dicos
- 		;;
-+        -android*)
-+	        os=-android
-+                ;;
- 	-none)
- 		;;
- 	*)
- 		# Get rid of the `-' at the beginning of $os.
- 		os=`echo $os | sed 's/[^-]*-//'`
- 		echo Invalid configuration \`$1\': system \`$os\' not recognized 1>&2
- 		exit 1
- 		;;
-@@ -1681,16 +1684,19 @@ case $basic_machine in
- 				vendor=apple
- 				;;
- 			-*mint | -mint[0-9]* | -*MiNT | -MiNT[0-9]*)
- 				vendor=atari
- 				;;
- 			-vos*)
- 				vendor=stratus
- 				;;
-+			*-android*|*-linuxandroid*)
-+				vendor=linux-
-+				;;
- 		esac
- 		basic_machine=`echo $basic_machine | sed "s/unknown/$vendor/"`
- 		;;
- esac
- 
- echo $basic_machine$os
- exit
- 
 diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
 --- a/js/src/ctypes/libffi/configure
 +++ b/js/src/ctypes/libffi/configure
+@@ -8903,17 +8903,17 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+       # Tell ltmain to make .dll files, not .so files.
+       shrext_cmds=".dll"
+       # FIXME: Setting linknames here is a bad hack.
+       archive_cmds='$CC -o $lib $libobjs $compiler_flags `$ECHO "X$deplibs" | $Xsed -e '\''s/ -lc$//'\''` -link -dll~linknames='
+       # The linker will automatically build a .lib file if we build a DLL.
+       old_archive_from_new_cmds='true'
+       # FIXME: Should let the user specify the lib program.
+       old_archive_cmds='lib -OUT:$oldlib$oldobjs$old_deplibs'
+-      fix_srcfile_path='`cygpath -w "$srcfile"`'
++      fix_srcfile_path=''
+       enable_shared_with_static_runtimes=yes
+       ;;
+ 
+     darwin* | rhapsody*)
+ 
+ 
+   archive_cmds_need_lc=no
+   hardcode_direct=no
 @@ -12270,20 +12270,20 @@ fi
  
  if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64; then
@@ -313,124 +152,41 @@ diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
      if test "x$libffi_cv_as_x86_pcrel" = xyes; then
  
  $as_echo "#define HAVE_AS_X86_PCREL 1" >>confdefs.h
-diff --git a/js/src/ctypes/libffi/configure.ac b/js/src/ctypes/libffi/configure.ac
---- a/js/src/ctypes/libffi/configure.ac
-+++ b/js/src/ctypes/libffi/configure.ac
-@@ -272,20 +272,20 @@ if test x$TARGET = xSPARC; then
-        AC_DEFINE(HAVE_AS_REGISTER_PSEUDO_OP, 1,
- 	       [Define if your assembler supports .register.])
-     fi
- fi
+diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86/ffi64.c
+--- a/js/src/ctypes/libffi/src/x86/ffi64.c
++++ b/js/src/ctypes/libffi/src/x86/ffi64.c
+@@ -373,29 +373,29 @@ ffi_prep_cif_machdep (ffi_cif *cif)
+ 	  || gprcount + ngpr > MAX_GPR_REGS
+ 	  || ssecount + nsse > MAX_SSE_REGS)
+ 	{
+ 	  long align = cif->arg_types[i]->alignment;
  
- if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64; then
-     AC_CACHE_CHECK([assembler supports pc related relocs],
- 	libffi_cv_as_x86_pcrel, [
--	libffi_cv_as_x86_pcrel=yes
-+	libffi_cv_as_x86_pcrel=no
- 	echo '.text; foo: nop; .data; .long foo-.; .text' > conftest.s
--	if $CC $CFLAGS -c conftest.s 2>&1 | $EGREP -i 'illegal|warning' > /dev/null; then
--	    libffi_cv_as_x86_pcrel=no
-+	if $CC $CFLAGS -c conftest.s > /dev/null; then
-+	    libffi_cv_as_x86_pcrel=yes
- 	fi
- 	])
-     if test "x$libffi_cv_as_x86_pcrel" = xyes; then
- 	AC_DEFINE(HAVE_AS_X86_PCREL, 1,
- 		  [Define if your assembler supports PC relative relocs.])
-     fi
+ 	  if (align < 8)
+ 	    align = 8;
  
-     AC_CACHE_CHECK([assembler .ascii pseudo-op support],
-diff --git a/js/src/ctypes/libffi/include/ffi.h.in b/js/src/ctypes/libffi/include/ffi.h.in
---- a/js/src/ctypes/libffi/include/ffi.h.in
-+++ b/js/src/ctypes/libffi/include/ffi.h.in
-@@ -72,25 +72,37 @@ extern "C" {
- #endif
+-	  bytes = ALIGN(bytes, align);
++	  bytes = ALIGN (bytes, align);
+ 	  bytes += cif->arg_types[i]->size;
+ 	}
+       else
+ 	{
+ 	  gprcount += ngpr;
+ 	  ssecount += nsse;
+ 	}
+     }
+   if (ssecount)
+     flags |= 1 << 11;
+   cif->flags = flags;
+-  cif->bytes = bytes;
++  cif->bytes = ALIGN (bytes, 8);
  
- #include <stddef.h>
- #include <limits.h>
+   return FFI_OK;
+ }
  
- /* LONG_LONG_MAX is not always defined (not if STRICT_ANSI, for example).
-    But we can find it either under the correct ANSI name, or under GNU
-    C's internal name.  */
-+
-+#define FFI_64_BIT_MAX 9223372036854775807
-+
- #ifdef LONG_LONG_MAX
- # define FFI_LONG_LONG_MAX LONG_LONG_MAX
- #else
- # ifdef LLONG_MAX
- #  define FFI_LONG_LONG_MAX LLONG_MAX
- # else
- #  ifdef __GNUC__
- #   define FFI_LONG_LONG_MAX __LONG_LONG_MAX__
- #  endif
-+#  ifdef _AIX
-+#   ifndef __PPC64__
-+#    if defined (__IBMC__) || defined (__IBMCPP__)
-+#     define FFI_LONG_LONG_MAX LONGLONG_MAX
-+#    endif
-+#   endif /* __PPC64__ */
-+#   undef  FFI_64_BIT_MAX
-+#   define FFI_64_BIT_MAX 9223372036854775807LL
-+#  endif
- # endif
- #endif
- 
- /* The closure code assumes that this works on pointers, i.e. a size_t	*/
- /* can hold a pointer.							*/
- 
- typedef struct _ffi_type
+ void
+ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
  {
-@@ -127,27 +139,27 @@ typedef struct _ffi_type
- #elif INT_MAX == 9223372036854775807
- # define ffi_type_uint         ffi_type_uint64
- # define ffi_type_sint         ffi_type_sint64
- #else
-  #error "int size not supported"
- #endif
- 
- #if LONG_MAX == 2147483647
--# if FFI_LONG_LONG_MAX != 9223372036854775807
-+# if FFI_LONG_LONG_MAX != FFI_64_BIT_MAX
-  #error "no 64-bit data type supported"
- # endif
--#elif LONG_MAX != 9223372036854775807
-+#elif LONG_MAX != FFI_64_BIT_MAX
-  #error "long size not supported"
- #endif
- 
- #if LONG_MAX == 2147483647
- # define ffi_type_ulong        ffi_type_uint32
- # define ffi_type_slong        ffi_type_sint32
--#elif LONG_MAX == 9223372036854775807
-+#elif LONG_MAX == FFI_64_BIT_MAX
- # define ffi_type_ulong        ffi_type_uint64
- # define ffi_type_slong        ffi_type_sint64
- #else
-  #error "long size not supported"
- #endif
- 
- /* These are defined in types.c */
- extern ffi_type ffi_type_void;
-@@ -190,17 +202,17 @@ typedef struct {
- #endif
- } ffi_cif;
- 
- /* ---- Definitions for the raw API -------------------------------------- */
- 
- #ifndef FFI_SIZEOF_ARG
- # if LONG_MAX == 2147483647
- #  define FFI_SIZEOF_ARG        4
--# elif LONG_MAX == 9223372036854775807
-+# elif LONG_MAX == FFI_64_BIT_MAX
- #  define FFI_SIZEOF_ARG        8
- # endif
- #endif
- 
- #ifndef FFI_SIZEOF_JAVA_RAW
- #  define FFI_SIZEOF_JAVA_RAW FFI_SIZEOF_ARG
- #endif
- 
+   enum x86_64_reg_class classes[MAX_CLASSES];
 diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/ffi.c
 --- a/js/src/ctypes/libffi/src/arm/ffi.c
 +++ b/js/src/ctypes/libffi/src/arm/ffi.c
@@ -443,14 +199,14 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
  
  #include <stdlib.h>
  
+-/* ffi_prep_args is called by the assembly routine once stack space
+-   has been allocated for the function's arguments */
 +/* Forward declares. */
 +static int vfp_type_p (ffi_type *);
 +static void layout_vfp_args (ffi_cif *);
-+
- /* ffi_prep_args is called by the assembly routine once stack space
--   has been allocated for the function's arguments */
--
+ 
 -void ffi_prep_args(char *stack, extended_cif *ecif)
++/* ffi_prep_args is called by the assembly routine once stack space
 +   has been allocated for the function's arguments
 +   
 +   The vfp_space parameter is the load area for VFP regs, the return
@@ -469,7 +225,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
  
    if ( ecif->cif->flags == FFI_TYPE_STRUCT ) {
      *(void **) argp = ecif->rvalue;
-@@ -49,16 +57,31 @@ void ffi_prep_args(char *stack, extended
+@@ -49,16 +57,31 @@ void ffi_prep_args(char *stack, extended_cif *ecif)
    p_argv = ecif->avalue;
  
    for (i = ecif->cif->nargs, p_arg = ecif->cif->arg_types;
@@ -501,7 +257,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
        if ((*p_arg)->type == FFI_TYPE_STRUCT)
  	argp = (char *) ALIGN(argp, 4);
  
-@@ -98,23 +121,25 @@ void ffi_prep_args(char *stack, extended
+@@ -98,23 +121,25 @@ void ffi_prep_args(char *stack, extended_cif *ecif)
  	    }
  	  else
  	    {
@@ -529,7 +285,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
    /* Set the return type flag */
    switch (cif->rtype->type)
      {
-@@ -125,137 +150,176 @@ ffi_status ffi_prep_cif_machdep(ffi_cif 
+@@ -125,137 +150,176 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
        break;
  
      case FFI_TYPE_SINT64:
@@ -698,6 +454,8 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
    for (i = cif->nargs, p_arg = cif->arg_types; (i != 0); i--, p_arg++)
      {
        size_t z;
+-
+-      size_t alignment = (*p_arg)->alignment;
 +      size_t alignment;
 +  
 +      if (cif->abi == FFI_VFP
@@ -706,8 +464,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
 +	  *p_argv++ = (void*)(vfp_stack + cif->vfp_args[vi++]);
 +	  continue;
 +	}
- 
--      size_t alignment = (*p_arg)->alignment;
++
 +      alignment = (*p_arg)->alignment;
        if (alignment < 4)
  	alignment = 4;
@@ -717,7 +474,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
        }
  
        z = (*p_arg)->size;
-@@ -290,20 +354,147 @@ ffi_prep_incoming_args_SYSV(char *stack,
+@@ -290,20 +354,147 @@ ffi_prep_incoming_args_SYSV(char *stack, void **rvalue,
  
  ffi_status
  ffi_prep_closure_loc (ffi_closure* closure,
@@ -909,7 +666,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffitarget.h b/js/src/ctypes/libffi/src
 diff --git a/js/src/ctypes/libffi/src/arm/sysv.S b/js/src/ctypes/libffi/src/arm/sysv.S
 --- a/js/src/ctypes/libffi/src/arm/sysv.S
 +++ b/js/src/ctypes/libffi/src/arm/sysv.S
-@@ -137,54 +137,52 @@
+@@ -137,54 +137,52 @@ _L__\name:
  	ldr\cond	pc, [sp], #4
  	.else
  	ldm\cond\dirn	sp!, {\regs, pc}
@@ -1157,41 +914,6 @@ diff --git a/js/src/ctypes/libffi/src/arm/sysv.S b/js/src/ctypes/libffi/src/arm/
  #if defined __ELF__ && defined __linux__
  	.section	.note.GNU-stack,"",%progbits
  #endif
-diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86/ffi64.c
---- a/js/src/ctypes/libffi/src/x86/ffi64.c
-+++ b/js/src/ctypes/libffi/src/x86/ffi64.c
-@@ -373,29 +373,29 @@ ffi_prep_cif_machdep (ffi_cif *cif)
- 	  || gprcount + ngpr > MAX_GPR_REGS
- 	  || ssecount + nsse > MAX_SSE_REGS)
- 	{
- 	  long align = cif->arg_types[i]->alignment;
- 
- 	  if (align < 8)
- 	    align = 8;
- 
--	  bytes = ALIGN(bytes, align);
-+	  bytes = ALIGN (bytes, align);
- 	  bytes += cif->arg_types[i]->size;
- 	}
-       else
- 	{
- 	  gprcount += ngpr;
- 	  ssecount += nsse;
- 	}
-     }
-   if (ssecount)
-     flags |= 1 << 11;
-   cif->flags = flags;
--  cif->bytes = bytes;
-+  cif->bytes = ALIGN (bytes, 8);
- 
-   return FFI_OK;
- }
- 
- void
- ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
- {
-   enum x86_64_reg_class classes[MAX_CLASSES];
 diff --git a/js/src/ctypes/libffi/testsuite/lib/libffi-dg.exp b/js/src/ctypes/libffi/testsuite/lib/libffi-dg.exp
 --- a/js/src/ctypes/libffi/testsuite/lib/libffi-dg.exp
 +++ b/js/src/ctypes/libffi/testsuite/lib/libffi-dg.exp
@@ -1306,3 +1028,301 @@ diff --git a/js/src/ctypes/libffi/testsuite/libffi.call/cls_longdouble_va.c b/js
  {
  	char*		format	= *(char**)args[0];
  	long double	ldValue	= *(long double*)args[1];
+diff --git a/js/src/ctypes/libffi/include/ffi.h.in b/js/src/ctypes/libffi/include/ffi.h.in
+--- a/js/src/ctypes/libffi/include/ffi.h.in
++++ b/js/src/ctypes/libffi/include/ffi.h.in
+@@ -72,25 +72,37 @@ extern "C" {
+ #endif
+ 
+ #include <stddef.h>
+ #include <limits.h>
+ 
+ /* LONG_LONG_MAX is not always defined (not if STRICT_ANSI, for example).
+    But we can find it either under the correct ANSI name, or under GNU
+    C's internal name.  */
++
++#define FFI_64_BIT_MAX 9223372036854775807
++
+ #ifdef LONG_LONG_MAX
+ # define FFI_LONG_LONG_MAX LONG_LONG_MAX
+ #else
+ # ifdef LLONG_MAX
+ #  define FFI_LONG_LONG_MAX LLONG_MAX
+ # else
+ #  ifdef __GNUC__
+ #   define FFI_LONG_LONG_MAX __LONG_LONG_MAX__
+ #  endif
++#  ifdef _AIX
++#   ifndef __PPC64__
++#    if defined (__IBMC__) || defined (__IBMCPP__)
++#     define FFI_LONG_LONG_MAX LONGLONG_MAX
++#    endif
++#   endif /* __PPC64__ */
++#   undef  FFI_64_BIT_MAX
++#   define FFI_64_BIT_MAX 9223372036854775807LL
++#  endif
+ # endif
+ #endif
+ 
+ /* The closure code assumes that this works on pointers, i.e. a size_t	*/
+ /* can hold a pointer.							*/
+ 
+ typedef struct _ffi_type
+ {
+@@ -127,27 +139,27 @@ typedef struct _ffi_type
+ #elif INT_MAX == 9223372036854775807
+ # define ffi_type_uint         ffi_type_uint64
+ # define ffi_type_sint         ffi_type_sint64
+ #else
+  #error "int size not supported"
+ #endif
+ 
+ #if LONG_MAX == 2147483647
+-# if FFI_LONG_LONG_MAX != 9223372036854775807
++# if FFI_LONG_LONG_MAX != FFI_64_BIT_MAX
+  #error "no 64-bit data type supported"
+ # endif
+-#elif LONG_MAX != 9223372036854775807
++#elif LONG_MAX != FFI_64_BIT_MAX
+  #error "long size not supported"
+ #endif
+ 
+ #if LONG_MAX == 2147483647
+ # define ffi_type_ulong        ffi_type_uint32
+ # define ffi_type_slong        ffi_type_sint32
+-#elif LONG_MAX == 9223372036854775807
++#elif LONG_MAX == FFI_64_BIT_MAX
+ # define ffi_type_ulong        ffi_type_uint64
+ # define ffi_type_slong        ffi_type_sint64
+ #else
+  #error "long size not supported"
+ #endif
+ 
+ /* These are defined in types.c */
+ extern ffi_type ffi_type_void;
+@@ -190,17 +202,17 @@ typedef struct {
+ #endif
+ } ffi_cif;
+ 
+ /* ---- Definitions for the raw API -------------------------------------- */
+ 
+ #ifndef FFI_SIZEOF_ARG
+ # if LONG_MAX == 2147483647
+ #  define FFI_SIZEOF_ARG        4
+-# elif LONG_MAX == 9223372036854775807
++# elif LONG_MAX == FFI_64_BIT_MAX
+ #  define FFI_SIZEOF_ARG        8
+ # endif
+ #endif
+ 
+ #ifndef FFI_SIZEOF_JAVA_RAW
+ #  define FFI_SIZEOF_JAVA_RAW FFI_SIZEOF_ARG
+ #endif
+ 
+diff --git a/js/src/ctypes/libffi/configure.ac b/js/src/ctypes/libffi/configure.ac
+--- a/js/src/ctypes/libffi/configure.ac
++++ b/js/src/ctypes/libffi/configure.ac
+@@ -272,20 +272,20 @@ if test x$TARGET = xSPARC; then
+        AC_DEFINE(HAVE_AS_REGISTER_PSEUDO_OP, 1,
+ 	       [Define if your assembler supports .register.])
+     fi
+ fi
+ 
+ if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64; then
+     AC_CACHE_CHECK([assembler supports pc related relocs],
+ 	libffi_cv_as_x86_pcrel, [
+-	libffi_cv_as_x86_pcrel=yes
++	libffi_cv_as_x86_pcrel=no
+ 	echo '.text; foo: nop; .data; .long foo-.; .text' > conftest.s
+-	if $CC $CFLAGS -c conftest.s 2>&1 | $EGREP -i 'illegal|warning' > /dev/null; then
+-	    libffi_cv_as_x86_pcrel=no
++	if $CC $CFLAGS -c conftest.s > /dev/null; then
++	    libffi_cv_as_x86_pcrel=yes
+ 	fi
+ 	])
+     if test "x$libffi_cv_as_x86_pcrel" = xyes; then
+ 	AC_DEFINE(HAVE_AS_X86_PCREL, 1,
+ 		  [Define if your assembler supports PC relative relocs.])
+     fi
+ 
+     AC_CACHE_CHECK([assembler .ascii pseudo-op support],
+diff --git a/js/src/ctypes/libffi/config.sub b/js/src/ctypes/libffi/config.sub
+--- a/js/src/ctypes/libffi/config.sub
++++ b/js/src/ctypes/libffi/config.sub
+@@ -1,15 +1,15 @@
+ #! /bin/sh
+ # Configuration validation subroutine script.
+ #   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+ #   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+ #   Free Software Foundation, Inc.
+ 
+-timestamp='2009-11-07'
++timestamp='2011-01-03'
+ 
+ # This file is (in principle) common to ALL GNU software.
+ # The presence of a machine in this file suggests that SOME GNU software
+ # can handle that machine.  It does not imply ALL GNU software can.
+ #
+ # This file is free software; you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+ # the Free Software Foundation; either version 2 of the License, or
+@@ -121,17 +121,17 @@ esac
+ 
+ # Separate what the user gave into CPU-COMPANY and OS or KERNEL-OS (if any).
+ # Here we must recognize all the valid KERNEL-OS combinations.
+ maybe_os=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\2/'`
+ case $maybe_os in
+   nto-qnx* | linux-gnu* | linux-dietlibc | linux-newlib* | linux-uclibc* | \
+   uclinux-uclibc* | uclinux-gnu* | kfreebsd*-gnu* | knetbsd*-gnu* | netbsd*-gnu* | \
+   kopensolaris*-gnu* | \
+-  storm-chaos* | os2-emx* | rtmk-nova*)
++  storm-chaos* | os2-emx* | rtmk-nova* | wince-winmo*)
+     os=-$maybe_os
+     basic_machine=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`
+     ;;
+   *)
+     basic_machine=`echo $1 | sed 's/-[^-]*$//'`
+     if [ $basic_machine != $1 ]
+     then os=`echo $1 | sed 's/.*-/-/'`
+     else os=; fi
+@@ -282,32 +282,30 @@ case $basic_machine in
+ 	| mt \
+ 	| msp430 \
+ 	| nios | nios2 \
+ 	| ns16k | ns32k \
+ 	| or32 \
+ 	| pdp10 | pdp11 | pj | pjl \
+ 	| powerpc | powerpc64 | powerpc64le | powerpcle | ppcbe \
+ 	| pyramid \
+-	| rx \
+ 	| score \
+ 	| sh | sh[1234] | sh[24]a | sh[24]aeb | sh[23]e | sh[34]eb | sheb | shbe | shle | sh[1234]le | sh3ele \
+ 	| sh64 | sh64le \
+ 	| sparc | sparc64 | sparc64b | sparc64v | sparc86x | sparclet | sparclite \
+ 	| sparcv8 | sparcv9 | sparcv9b | sparcv9v \
+ 	| spu | strongarm \
+ 	| tahoe | thumb | tic4x | tic80 | tron \
+-	| ubicom32 \
+ 	| v850 | v850e \
+ 	| we32k \
+ 	| x86 | xc16x | xscale | xscalee[bl] | xstormy16 | xtensa \
+ 	| z8k | z80)
+ 		basic_machine=$basic_machine-unknown
+ 		;;
+-	m6811 | m68hc11 | m6812 | m68hc12 | picochip)
++	m6811 | m68hc11 | m6812 | m68hc12)
+ 		# Motorola 68HC11/12.
+ 		basic_machine=$basic_machine-unknown
+ 		os=-none
+ 		;;
+ 	m88110 | m680[12346]0 | m683?2 | m68360 | m5200 | v70 | w65 | z8k)
+ 		;;
+ 	ms1)
+ 		basic_machine=mt-unknown
+@@ -368,26 +366,25 @@ case $basic_machine in
+ 	| mt-* \
+ 	| msp430-* \
+ 	| nios-* | nios2-* \
+ 	| none-* | np1-* | ns16k-* | ns32k-* \
+ 	| orion-* \
+ 	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
+ 	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* | ppcbe-* \
+ 	| pyramid-* \
+-	| romp-* | rs6000-* | rx-* \
++	| romp-* | rs6000-* \
+ 	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
+ 	| shle-* | sh[1234]le-* | sh3ele-* | sh64-* | sh64le-* \
+ 	| sparc-* | sparc64-* | sparc64b-* | sparc64v-* | sparc86x-* | sparclet-* \
+ 	| sparclite-* \
+ 	| sparcv8-* | sparcv9-* | sparcv9b-* | sparcv9v-* | strongarm-* | sv1-* | sx?-* \
+ 	| tahoe-* | thumb-* \
+ 	| tic30-* | tic4x-* | tic54x-* | tic55x-* | tic6x-* | tic80-* | tile-* \
+ 	| tron-* \
+-	| ubicom32-* \
+ 	| v850-* | v850e-* | vax-* \
+ 	| we32k-* \
+ 	| x86-* | x86_64-* | xc16x-* | xps100-* | xscale-* | xscalee[bl]-* \
+ 	| xstormy16-* | xtensa*-* \
+ 	| ymp-* \
+ 	| z8k-* | z80-*)
+ 		;;
+ 	# Recognize the basic CPU types without company name, with glob match.
+@@ -1294,17 +1291,17 @@ case $os in
+ 	      | -mingw32* | -linux-gnu* | -linux-newlib* | -linux-uclibc* \
+ 	      | -uxpv* | -beos* | -mpeix* | -udk* \
+ 	      | -interix* | -uwin* | -mks* | -rhapsody* | -darwin* | -opened* \
+ 	      | -openstep* | -oskit* | -conix* | -pw32* | -nonstopux* \
+ 	      | -storm-chaos* | -tops10* | -tenex* | -tops20* | -its* \
+ 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
+ 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+-	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es*)
++	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -winmo*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)
+ 		case $basic_machine in
+ 		    x86-* | i*86-*)
+ 			;;
+ 		    *)
+ 			os=-nto$os
+@@ -1336,16 +1333,19 @@ case $os in
+ 		os=`echo $os | sed -e 's|sunos6|solaris3|'`
+ 		;;
+ 	-opened*)
+ 		os=-openedition
+ 		;;
+         -os400*)
+ 		os=-os400
+ 		;;
++	-wince-winmo*)
++		os=-wince-winmo
++		;;
+ 	-wince*)
+ 		os=-wince
+ 		;;
+ 	-osfrose*)
+ 		os=-osfrose
+ 		;;
+ 	-osf*)
+ 		os=-osf
+@@ -1427,16 +1427,19 @@ case $os in
+ 		os=-kaos
+ 		;;
+ 	-zvmoe)
+ 		os=-zvmoe
+ 		;;
+ 	-dicos*)
+ 		os=-dicos
+ 		;;
++        -android*)
++	        os=-android
++                ;;
+ 	-none)
+ 		;;
+ 	*)
+ 		# Get rid of the `-' at the beginning of $os.
+ 		os=`echo $os | sed 's/[^-]*-//'`
+ 		echo Invalid configuration \`$1\': system \`$os\' not recognized 1>&2
+ 		exit 1
+ 		;;
+@@ -1681,16 +1684,19 @@ case $basic_machine in
+ 				vendor=apple
+ 				;;
+ 			-*mint | -mint[0-9]* | -*MiNT | -MiNT[0-9]*)
+ 				vendor=atari
+ 				;;
+ 			-vos*)
+ 				vendor=stratus
+ 				;;
++			*-android*|*-linuxandroid*)
++				vendor=linux-
++				;;
+ 		esac
+ 		basic_machine=`echo $basic_machine | sed "s/unknown/$vendor/"`
+ 		;;
+ esac
+ 
+ echo $basic_machine$os
+ exit
+ 
