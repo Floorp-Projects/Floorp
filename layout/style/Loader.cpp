@@ -51,6 +51,7 @@
 #include "nsGkAtoms.h"
 #include "nsDocShellCID.h"
 #include "nsIThreadInternal.h"
+#include "nsCrossSiteListenerProxy.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -1558,9 +1559,36 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   // which owns us
   nsCOMPtr<nsIUnicharStreamLoader> streamLoader;
   rv = NS_NewUnicharStreamLoader(getter_AddRefs(streamLoader), aLoadData);
+  if (NS_FAILED(rv)) {
+#ifdef DEBUG
+    mSyncCallback = false;
+#endif
+    LOG_ERROR(("  Failed to create stream loader"));
+    SheetComplete(aLoadData, rv);
+    return rv;
+  }
 
-  if (NS_SUCCEEDED(rv))
-    rv = channel->AsyncOpen(streamLoader, nullptr);
+  nsCOMPtr<nsIStreamListener> channelListener;
+  CORSMode ourCORSMode = aLoadData->mSheet->GetCORSMode();
+  if (ourCORSMode != CORS_NONE) {
+    bool withCredentials = (ourCORSMode == CORS_USE_CREDENTIALS);
+    LOG(("  Doing CORS-enabled load; credentials %d", withCredentials));
+    channelListener =
+      new nsCORSListenerProxy(streamLoader, aLoadData->mLoaderPrincipal,
+			      channel, withCredentials, &rv);
+    if (NS_FAILED(rv)) {
+#ifdef DEBUG
+      mSyncCallback = false;
+#endif
+      LOG_ERROR(("  Initial CORS check failed"));
+      SheetComplete(aLoadData, rv);
+      return rv;
+    }
+  } else {
+    channelListener = streamLoader;
+  }
+
+  rv = channel->AsyncOpen(channelListener, nullptr);
 
 #ifdef DEBUG
   mSyncCallback = false;
