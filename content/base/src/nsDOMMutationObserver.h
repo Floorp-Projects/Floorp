@@ -22,6 +22,7 @@
 #include "nsClassHashtable.h"
 #include "nsNodeUtils.h"
 #include "nsIDOMMutationEvent.h"
+#include "nsWrapperCache.h"
 
 class nsDOMMutationObserver;
 
@@ -289,7 +290,8 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsMutationReceiver, NS_MUTATION_OBSERVER_IID)
 
 class nsDOMMutationObserver : public nsIDOMMutationObserver,
-                              public nsIJSNativeInitializer
+                              public nsIJSNativeInitializer,
+                              public nsWrapperCache
 {
 public:
   nsDOMMutationObserver() : mWaitingForRun(false), mId(++sCount)
@@ -298,12 +300,40 @@ public:
   }
   virtual ~nsDOMMutationObserver();
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMMutationObserver,
-                                           nsIDOMMutationObserver)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDOMMutationObserver,
+                                                         nsIDOMMutationObserver)
   NS_DECL_NSIDOMMUTATIONOBSERVER
 
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
                         uint32_t argc, jsval* argv);
+
+  void GetParentObject(nsIScriptGlobalObject** aParentObject)
+  {
+    if (mOwner) {
+      CallQueryInterface(mOwner, aParentObject);
+    } else {
+      *aParentObject = nullptr;
+    }
+  }
+
+  static nsDOMMutationObserver* FromSupports(nsISupports* aSupports)
+  {
+    nsIDOMMutationObserver* mutationObserver =
+      static_cast<nsIDOMMutationObserver*>(aSupports);
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMMutationObserver> mutationObserver_qi =
+        do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMMutationObserver pointer as the
+      // nsISupports pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(mutationObserver_qi == mutationObserver, "Uh, fix QI!");
+    }
+#endif
+
+    return static_cast<nsDOMMutationObserver*>(mutationObserver);
+  }
 
   void HandleMutation();
 
