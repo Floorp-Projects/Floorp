@@ -2527,9 +2527,13 @@ class AutoIdRooter : private AutoGCRooter
 /* Function flags, internal use only, returned by JS_GetFunctionFlags. */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
 
-#define JSFUN_SELF_HOSTED       0x40    /* function is self-hosted native and
+#define JSFUN_SELF_HOSTED       0x20    /* function is self-hosted builtin and
                                            must not be decompilable nor
                                            constructible. */
+
+#define JSFUN_SELF_HOSTED_CTOR  0x40    /* function is self-hosted builtin
+                                           constructor and must be constructible
+                                           but not decompilable. */
 
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 
@@ -2541,11 +2545,11 @@ class AutoIdRooter : private AutoGCRooter
 #define JSFUN_HAS_DEFAULTS      0x0400  /* function has at least one default
                                            parameter */
 
-#define JSFUN_FLAGS_MASK      0x07f8    /* overlay JSFUN_* attributes --
+#define JSFUN_FLAGS_MASK        0x07f8  /* overlay JSFUN_* attributes --
                                            bits 12-15 are used internally to
                                            flag interpreted functions */
 
-#define JSFUN_STUB_GSOPS      0x1000    /* use JS_PropertyStub getter/setter
+#define JSFUN_STUB_GSOPS        0x1000  /* use JS_PropertyStub getter/setter
                                            instead of defaulting to class gsops
                                            for property holding function */
 
