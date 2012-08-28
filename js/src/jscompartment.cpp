@@ -284,11 +284,10 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     if (vp->isString()) {
         RootedValue orig(cx, *vp);
-        JSString *str = vp->toString();
-        const jschar *chars = str->getChars(cx);
-        if (!chars)
+        JSStableString *str = vp->toString()->ensureStable(cx);
+        if (!str)
             return false;
-        JSString *wrapped = js_NewStringCopyN(cx, chars, str->length());
+        JSString *wrapped = js_NewStringCopyN(cx, str->chars(), str->length());
         if (!wrapped)
             return false;
         vp->setString(wrapped);

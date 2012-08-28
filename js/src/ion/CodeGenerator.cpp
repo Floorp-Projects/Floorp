@@ -197,7 +197,7 @@ CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)
 {
-    typedef JSFixedString *(*pf)(JSContext *, int);
+    typedef JSFlatString *(*pf)(JSContext *, int);
     static const VMFunction IntToStringInfo = FunctionInfo<pf>(Int32ToString);
 
     pushArg(ToRegister(lir->input()));
@@ -2047,7 +2047,7 @@ CodeGenerator::visitFromCharCode(LFromCharCode *lir)
     Register code = ToRegister(lir->code());
     Register output = ToRegister(lir->output());
 
-    typedef JSFixedString *(*pf)(JSContext *, int32_t);
+    typedef JSFlatString *(*pf)(JSContext *, int32_t);
     static const VMFunction Info = FunctionInfo<pf>(ion::StringFromCharCode);
     OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), code), StoreRegisterTo(output));
     if (!ool)

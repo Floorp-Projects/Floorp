@@ -803,11 +803,12 @@ JSStructuredCloneReader::startRead(Value *vp)
         JSString *str = readString(nchars);
         if (!str)
             return false;
-        size_t length = str->length();
-        const jschar *chars = str->getChars(context());
-        if (!chars)
+        JSStableString *stable = str->ensureStable(context());
+        if (!stable)
             return false;
 
+        size_t length = stable->length();
+        const jschar *chars = stable->chars();
         RegExpObject *reobj = RegExpObject::createNoStatics(context(), chars, length, flags, NULL);
         if (!reobj)
             return false;

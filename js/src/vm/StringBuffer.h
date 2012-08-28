@@ -82,7 +82,7 @@ class StringBuffer
      * Creates a string from the characters in this buffer, then (regardless
      * whether string creation succeeded or failed) empties the buffer.
      */
-    JSFixedString *finishString();
+    JSFlatString *finishString();
 
     /* Identical to finishString() except that an atom is created. */
     JSAtom *finishAtom();

@@ -635,14 +635,15 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
     }
     if (haveSource) {
         RootedScript script(cx, fun->script());
-        RootedString src(cx, fun->script()->sourceData(cx));
+        RootedString srcStr(cx, fun->script()->sourceData(cx));
+        if (!srcStr)
+            return NULL;
+        Rooted<JSStableString *> src(cx, srcStr->ensureStable(cx));
         if (!src)
             return NULL;
-        const jschar *chars = src->getChars(cx);
-        if (!chars)
-            return NULL;
-        bool exprBody = fun->flags & JSFUN_EXPR_CLOSURE;
 
+        const jschar *chars = src->chars();
+        bool exprBody = fun->flags & JSFUN_EXPR_CLOSURE;
         // The source data for functions created by calling the Function
         // constructor is only the function's body.
         bool funCon = script->sourceStart == 0 && script->scriptSource()->argumentsNotIncluded();
@@ -1367,19 +1368,19 @@ Function(JSContext *cx, unsigned argc, Value *vp)
     const jschar *chars;
     size_t length;
 
-    SkipRoot skip(cx, &chars);
-
-    if (args.length()) {
-        JSString *str = ToString(cx, args[args.length() - 1]);
-        if (!str)
-            return false;
-        strAnchor.set(str);
-        chars = str->getChars(cx);
-        length = str->length();
-    } else {
-        chars = cx->runtime->emptyString->chars();
-        length = 0;
-    }
+    JSString *str;
+    if (!args.length())
+        str = cx->runtime->emptyString;
+    else
+        str = ToString(cx, args[args.length() - 1]);
+    if (!str)
+        return false;
+    JSStableString *stable = str->ensureStable(cx);
+    if (!stable)
+        return false;
+    strAnchor.set(str);
+    chars = stable->chars();
+    length = stable->length();
 
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an
