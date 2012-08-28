@@ -3444,8 +3444,8 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
                              fullMethodName, "string", InformalValueTypeName(code));
         return false;
     }
-    Rooted<JSLinearString*> linearStr(cx, code.toString()->ensureLinear(cx));
-    if (!linearStr)
+    Rooted<JSStableString *> stable(cx, code.toString()->ensureStable(cx));
+    if (!stable)
         return false;
 
     /*
@@ -3473,7 +3473,6 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
             }
         }
     }
-
 
     Maybe<AutoCompartment> ac;
     if (fp)
@@ -3505,8 +3504,8 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
 
     /* Run the code and produce the completion value. */
     Value rval;
-    JS::Anchor<JSString *> anchor(linearStr);
-    bool ok = EvaluateInEnv(cx, env, fp, linearStr->chars(), linearStr->length(),
+    JS::Anchor<JSString *> anchor(stable);
+    bool ok = EvaluateInEnv(cx, env, fp, stable->chars(), stable->length(),
                             "debugger eval code", 1, &rval);
     return dbg->receiveCompletionValue(ac, ok, rval, vp);
 }

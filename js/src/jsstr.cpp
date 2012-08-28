@@ -2438,11 +2438,11 @@ js::str_replace(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         /* We're about to store pointers into the middle of our string. */
-        JSFixedString *fixed = rdata.repstr->ensureFixed(cx);
-        if (!fixed)
+        JSStableString *stable = rdata.repstr->ensureStable(cx);
+        if (!stable)
             return false;
-        rdata.dollarEnd = fixed->chars() + fixed->length();
-        rdata.dollar = js_strchr_limit(fixed->chars(), '$', rdata.dollarEnd);
+        rdata.dollarEnd = stable->chars() + stable->length();
+        rdata.dollar = js_strchr_limit(stable->chars(), '$', rdata.dollarEnd);
     }
 
     /*
@@ -2991,7 +2991,7 @@ tagify(JSContext *cx, const char *begin, JSLinearString *param, const char *end,
 
     sb.infallibleAppend('>');
 
-    JSFixedString *retstr = sb.finishString();
+    JSFlatString *retstr = sb.finishString();
     if (!retstr)
         return false;
 
@@ -3270,10 +3270,10 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
     return proto;
 }
 
-JSFixedString *
+JSStableString *
 js_NewString(JSContext *cx, jschar *chars, size_t length)
 {
-    JSFixedString *s = JSFixedString::new_(cx, chars, length);
+    JSStableString *s = JSStableString::new_(cx, chars, length);
     if (s)
         Probes::createString(cx, s, length);
     return s;
@@ -3333,7 +3333,7 @@ js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t len
     return s;
 }
 
-JSFixedString *
+JSFlatString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
 {
     if (JSShortString::lengthFits(n))
@@ -3344,13 +3344,13 @@ js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
         return NULL;
     js_strncpy(news, s, n);
     news[n] = 0;
-    JSFixedString *str = js_NewString(cx, news, n);
+    JSFlatString *str = js_NewString(cx, news, n);
     if (!str)
         js_free(news);
     return str;
 }
 
-JSFixedString *
+JSFlatString *
 js_NewStringCopyN(JSContext *cx, const char *s, size_t n)
 {
     if (JSShortString::lengthFits(n))
@@ -3359,13 +3359,13 @@ js_NewStringCopyN(JSContext *cx, const char *s, size_t n)
     jschar *chars = InflateString(cx, s, &n);
     if (!chars)
         return NULL;
-    JSFixedString *str = js_NewString(cx, chars, n);
+    JSFlatString *str = js_NewString(cx, chars, n);
     if (!str)
         js_free(chars);
     return str;
 }
 
-JSFixedString *
+JSFlatString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s)
 {
     size_t n = js_strlen(s);
@@ -3377,13 +3377,13 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s)
     if (!news)
         return NULL;
     js_memcpy(news, s, m);
-    JSFixedString *str = js_NewString(cx, news, n);
+    JSFlatString *str = js_NewString(cx, news, n);
     if (!str)
         js_free(news);
     return str;
 }
 
-JSFixedString *
+JSFlatString *
 js_NewStringCopyZ(JSContext *cx, const char *s)
 {
     return js_NewStringCopyN(cx, s, strlen(s));

@@ -1047,14 +1047,14 @@ JSScript::loadSource(JSContext *cx, bool *worked)
     return true;
 }
 
-JSFixedString *
+JSFlatString *
 JSScript::sourceData(JSContext *cx)
 {
     JS_ASSERT(scriptSource_->hasSourceData());
     return scriptSource_->substring(cx, sourceStart, sourceEnd);
 }
 
-JSFixedString *
+JSStableString *
 SourceDataCache::lookup(ScriptSource *ss)
 {
     if (!map_)
@@ -1065,7 +1065,7 @@ SourceDataCache::lookup(ScriptSource *ss)
 }
 
 void
-SourceDataCache::put(ScriptSource *ss, JSFixedString *str)
+SourceDataCache::put(ScriptSource *ss, JSStableString *str)
 {
     if (!map_) {
         map_ = js_new<Map>();
@@ -1087,13 +1087,13 @@ SourceDataCache::purge()
     map_ = NULL;
 }
 
-JSFixedString *
+JSFlatString *
 ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 {
     JS_ASSERT(ready());
     const jschar *chars;
 #if USE_ZLIB
-    Rooted<JSFixedString *> cached(cx, NULL);
+    Rooted<JSStableString *> cached(cx, NULL);
     if (compressed()) {
         cached = cx->runtime->sourceDataCache.lookup(this);
         if (!cached) {
@@ -1115,7 +1115,7 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
             }
             cx->runtime->sourceDataCache.put(this, cached);
         }
-        chars = cached->getChars(cx);
+        chars = cached->chars();
         JS_ASSERT(chars);
     } else {
         chars = data.source;
@@ -1141,7 +1141,7 @@ ScriptSource::setSourceCopy(JSContext *cx, const jschar *src, uint32_t length,
 #ifdef JS_THREADSAFE
     if (tok) {
 #ifdef DEBUG
-        ready_ = false;  
+        ready_ = false;
 #endif
         tok->ss = this;
         tok->chars = src;
