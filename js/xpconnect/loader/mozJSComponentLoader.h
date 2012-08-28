@@ -100,7 +100,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
                 JSAutoCompartment ac(sSelf->mContext, global);
 
-                JS_ClearScope(sSelf->mContext, global);
+                JS_SetAllNonReservedSlotsToUndefined(sSelf->mContext, global);
                 JS_RemoveObjectRoot(sSelf->mContext, &global);
             }
 

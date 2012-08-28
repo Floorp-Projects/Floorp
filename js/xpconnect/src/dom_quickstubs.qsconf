@@ -563,7 +563,7 @@ nsIDOMHTMLDocument_Write_customMethodCallCode = """
 nsIDOMStorage_Clear_customMethodCallCode = """
     rv = self->Clear();
     if (NS_SUCCEEDED(rv))
-        JS_ClearScope(cx, obj);
+        JS_ClearNonGlobalObject(cx, obj);
 """
 
 CUSTOM_QS = {

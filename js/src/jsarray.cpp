@@ -1194,7 +1194,6 @@ Class js::ArrayClass = {
         NULL,       /* enumerate      */
         array_typeOf,
         NULL,       /* thisObject     */
-        NULL,       /* clear          */
     }
 };
 
