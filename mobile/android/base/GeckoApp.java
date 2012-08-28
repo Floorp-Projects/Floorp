@@ -917,49 +917,6 @@ abstract public class GeckoApp
                 String host = message.getString("host");
                 JSONArray permissions = message.getJSONArray("permissions");
                 showSiteSettingsDialog(host, permissions);
-            } else if (event.equals("CharEncoding:Data")) {
-                final JSONArray charsets = message.getJSONArray("charsets");
-                int selected = message.getInt("selected");
-
-                final int len = charsets.length();
-                final String[] titleArray = new String[len];
-                for (int i = 0; i < len; i++) {
-                    JSONObject charset = charsets.getJSONObject(i);
-                    titleArray[i] = charset.getString("title");
-                }
-
-                final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-                dialogBuilder.setSingleChoiceItems(titleArray, selected, new AlertDialog.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        try {
-                            JSONObject charset = charsets.getJSONObject(which);
-                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Set", charset.getString("code")));
-                            dialog.dismiss();
-                        } catch (JSONException e) {
-                            Log.e(LOGTAG, "error parsing json", e);
-                        }
-                    }
-                });
-                dialogBuilder.setNegativeButton(R.string.button_cancel, new AlertDialog.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        dialogBuilder.show();
-                    }
-                });
-            } else if (event.equals("CharEncoding:State")) {
-                final boolean visible = message.getString("visible").equals("true");
-                GeckoPreferences.setCharEncodingState(visible);
-                final Menu menu = mMenu;
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        if (menu != null)
-                            menu.findItem(R.id.char_encoding).setVisible(visible);
-                    }
-                });
             } else if (event.equals("Update:Restart")) {
                 doRestart("org.mozilla.gecko.restart_update");
             } else if (event.equals("Tab:ViewportMetadata")) {
@@ -1636,8 +1593,6 @@ abstract public class GeckoApp
         registerEventListener("ToggleChrome:Show");
         registerEventListener("ToggleChrome:Focus");
         registerEventListener("Permissions:Data");
-        registerEventListener("CharEncoding:Data");
-        registerEventListener("CharEncoding:State");
         registerEventListener("Update:Restart");
         registerEventListener("Tab:HasTouchListener");
         registerEventListener("Tab:ViewportMetadata");
@@ -2078,8 +2033,6 @@ abstract public class GeckoApp
         unregisterEventListener("ToggleChrome:Show");
         unregisterEventListener("ToggleChrome:Focus");
         unregisterEventListener("Permissions:Data");
-        unregisterEventListener("CharEncoding:Data");
-        unregisterEventListener("CharEncoding:State");
         unregisterEventListener("Update:Restart");
         unregisterEventListener("Tab:HasTouchListener");
         unregisterEventListener("Tab:ViewportMetadata");
