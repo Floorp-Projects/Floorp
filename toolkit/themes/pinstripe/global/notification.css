@@ -121,6 +121,7 @@ notification[type="critical"] {
   -moz-appearance: none;
 }
 
+.popup-notification-menubutton:not([type="menu-button"]):-moz-focusring,
 .popup-notification-menubutton:-moz-focusring > .button-menubutton-dropmarker,
 .popup-notification-menubutton > .button-menubutton-button:-moz-focusring {
   box-shadow: @focusRingShadow@;
@@ -141,10 +142,6 @@ notification[type="critical"] {
   background-clip: padding-box;
   background-origin: padding-box;
   padding: 2px 6px;
-}
-
-.popup-notification-menubutton:not([type="menu-button"]) {
-  padding: 2px 9px;
 }
 
 .popup-notification-menubutton > .button-menubutton-button {

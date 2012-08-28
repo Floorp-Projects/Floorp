@@ -206,7 +206,7 @@ notification {
 
 /*********** popup notification ************/
 popupnotification {
-  -moz-binding: url("chrome://global/content/bindings/notification.xml#popup-notification")
+  -moz-binding: url("chrome://global/content/bindings/notification.xml#popup-notification");
 }
 
 .popup-notification-menubutton:not([label]) {
