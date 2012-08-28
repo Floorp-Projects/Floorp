@@ -8,7 +8,7 @@
 #ifndef IPC_ShadowLayerUtils_h
 #define IPC_ShadowLayerUtils_h
 
-#include "IPC/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 #include "GLContext.h"
 #include "mozilla/WidgetUtils.h"
 
