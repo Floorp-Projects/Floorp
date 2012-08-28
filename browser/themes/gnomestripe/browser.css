@@ -2609,6 +2609,7 @@ stack[anonid=browserStack][responsivemode] {
   text-shadow: none;
   background-image: -moz-linear-gradient(top, #B4211B, #8A1915);
   border-radius: 1px;
+  -moz-margin-end: 2px;
 }
 
 #social-toolbar-button {
