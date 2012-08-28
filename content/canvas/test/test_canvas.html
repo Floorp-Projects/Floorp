@@ -16125,12 +16125,9 @@ function test_2d_pattern_repeat_undefined() {
 var canvas = document.getElementById('c496');
 var ctx = canvas.getContext('2d');
 
-var undefinedHandler = IsAzureEnabled() ? todo : ok;
-
 var _thrown = undefined; try {
   ctx.createPattern(canvas, undefined);
-  // XXXbz TODO fix bug 784869
-} catch (e) { _thrown = e }; undefinedHandler(_thrown && _thrown.name == "SyntaxError" && _thrown.code == DOMException.SYNTAX_ERR, "should throw SyntaxError");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "SyntaxError" && _thrown.code == DOMException.SYNTAX_ERR, "should throw SyntaxError");
 
 
 }
