@@ -8,6 +8,10 @@ srcdir    = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef GNU_CC
+OS_CFLAGS := $(filter-out -pedantic,$(OS_CFLAGS))
+endif
+
 MODULE           = theora
 LIBRARY_NAME     = theora
 FORCE_STATIC_LIB = 1
