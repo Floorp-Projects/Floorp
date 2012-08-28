@@ -80,6 +80,11 @@ let DOMApplicationRegistry = {
           if (!this.webapps[id].localId) {
             this.webapps[id].localId = this._nextLocalId();
           }
+
+          // Default to a non privileged status.
+          if (this.webapps[id].appStatus === undefined) {
+            this.webapps[id].appStatus = Ci.nsIPrincipal.APP_STATUS_INSTALLED;
+          }
         };
       }).bind(this));
     }
@@ -290,6 +295,8 @@ let DOMApplicationRegistry = {
       receipts: aApp.receipts ? JSON.parse(JSON.stringify(aApp.receipts)) : null,
       installTime: aApp.installTime,
       manifestURL: aApp.manifestURL,
+      appStatus: aApp.appStatus,
+      localId: aApp.localId,
       progress: aApp.progress || 0.0,
       status: aApp.status || "installed"
     };
@@ -332,6 +339,7 @@ let DOMApplicationRegistry = {
     }
 
     let appObject = this._cloneAppObject(app);
+    appObject.appStatus = app.appStatus || Ci.nsIPrincipal.APP_STATUS_INSTALLED;
     appObject.installTime = app.installTime = Date.now();
     let appNote = JSON.stringify(appObject);
     appNote.id = id;
@@ -696,6 +704,28 @@ let DOMApplicationRegistry = {
     return app;
   },
 
+  _cloneAsMozIApplication: function(aApp) {
+    let res = this._cloneAppObject(aApp);
+    res.hasPermission = function(permission) {
+      let localId = DOMApplicationRegistry.getAppLocalIdByManifestURL(
+        this.manifestURL);
+      let uri = Services.io.newURI(this.origin, null, null);
+      let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                   .getService(Ci.nsIScriptSecurityManager);
+      // XXX for the purposes of permissions checking, this helper
+      // should never been called with isBrowser=true, so we
+      // assume false here.
+      let principal = secMan.getAppCodebasePrincipal(uri, localId,
+                                                     /*mozbrowser*/false);
+      let perm = Services.perms.testExactPermissionFromPrincipal(principal,
+                                                                 permission);
+      return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
+    };
+    res.QueryInterface = XPCOMUtils.generateQI([Ci.mozIDOMApplication,
+                                                Ci.mozIApplication]);
+    return res;
+  },
+
   getAppByManifestURL: function(aManifestURL) {
     // This could be O(1) if |webapps| was a dictionary indexed on manifestURL
     // which should be the unique app identifier.
@@ -703,25 +733,7 @@ let DOMApplicationRegistry = {
     for (let id in this.webapps) {
       let app = this.webapps[id];
       if (app.manifestURL == aManifestURL) {
-        let res = this._cloneAppObject(app);
-        res.hasPermission = function(permission) {
-          let localId = DOMApplicationRegistry.getAppLocalIdByManifestURL(
-            this.manifestURL);
-          let uri = Services.io.newURI(this.manifestURL, null, null);
-          let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                       .getService(Ci.nsIScriptSecurityManager);
-          // XXX for the purposes of permissions checking, this helper
-          // should always be called on !isBrowser frames, so we
-          // assume false here.
-          let principal = secMan.getAppCodebasePrincipal(uri, localId,
-                                                         /*mozbrowser*/false);
-          let perm = Services.perms.testExactPermissionFromPrincipal(principal,
-                                                                     permission);
-          return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
-        };
-        res.QueryInterface = XPCOMUtils.generateQI([Ci.mozIDOMApplication,
-                                                    Ci.mozIApplication]);
-        return res;
+        return this._cloneAsMozIApplication(app);
       }
     }
 
@@ -732,7 +744,7 @@ let DOMApplicationRegistry = {
     for (let id in this.webapps) {
       let app = this.webapps[id];
       if (app.localId == aLocalId) {
-        return this._cloneAppObject(app);
+        return this._cloneAsMozIApplication(app);
       }
     }
 
