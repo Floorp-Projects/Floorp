@@ -181,7 +181,7 @@ public:
                          const nsAString& aTitle,
                          const nsAString& aMedia,
                          bool aHasAlternateRel,
-                         mozilla::CORSMode aCORSMode,
+                         CORSMode aCORSMode,
                          nsICSSLoaderObserver* aObserver,
                          bool* aIsAlternate);
 
@@ -277,7 +277,8 @@ public:
   nsresult LoadSheet(nsIURI* aURL,
                      nsIPrincipal* aOriginPrincipal,
                      const nsCString& aCharset,
-                     nsICSSLoaderObserver* aObserver);
+                     nsICSSLoaderObserver* aObserver,
+                     CORSMode aCORSMode = CORS_NONE);
 
   /**
    * Stop loading all sheets.  All nsICSSLoaderObservers involved will be
@@ -390,7 +391,8 @@ private:
                                         nsIPrincipal* aOriginPrincipal,
                                         const nsCString& aCharset,
                                         nsCSSStyleSheet** aSheet,
-                                        nsICSSLoaderObserver* aObserver);
+                                        nsICSSLoaderObserver* aObserver,
+                                        CORSMode aCORSMode = CORS_NONE);
 
   // Post a load event for aObserver to be notified about aSheet.  The
   // notification will be sent with status NS_OK unless the load event is
