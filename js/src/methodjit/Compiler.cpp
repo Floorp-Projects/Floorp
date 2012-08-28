@@ -59,7 +59,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
     isConstructing(isConstructing),
     outerChunk(outerJIT()->chunkDescriptor(chunkIndex)),
     ssa(cx, outerScript),
-    globalObj(cx, outerScript->hasGlobal() ? &outerScript->global() : NULL),
+    globalObj(cx, outerScript->compileAndGo ? &outerScript->global() : NULL),
     globalSlots(globalObj ? globalObj->getRawSlots() : NULL),
     sps(&cx->runtime->spsProfiler, &script, &PC),
     masm(&sps),
@@ -134,11 +134,6 @@ mjit::Compiler::compile()
 CompileStatus
 mjit::Compiler::checkAnalysis(HandleScript script)
 {
-    if (script->hasClearedGlobal()) {
-        JaegerSpew(JSpew_Abort, "script has a cleared global\n");
-        return Compile_Abort;
-    }
-
     if (!script->ensureRanAnalysis(cx))
         return Compile_Error;
 
@@ -193,7 +188,7 @@ mjit::Compiler::scanInlineCalls(uint32_t index, uint32_t depth)
     ScriptAnalysis *analysis = script->analysis();
 
     /* Don't inline from functions which could have a non-global scope object. */
-    if (!script->hasGlobal() ||
+    if (!script->compileAndGo ||
         &script->global() != globalObj ||
         (script->function() && script->function()->getParent() != globalObj) ||
         (script->function() && script->function()->isHeavyweight()) ||

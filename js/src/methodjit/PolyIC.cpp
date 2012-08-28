@@ -881,7 +881,7 @@ class GetPropCompiler : public PICStubCompiler
 
     LookupStatus generateStringPropertyStub()
     {
-        if (!f.fp()->script()->hasGlobal())
+        if (!f.fp()->script()->compileAndGo)
             return disable("String.prototype without compile-and-go global");
 
         RecompilationMonitor monitor(f.cx);

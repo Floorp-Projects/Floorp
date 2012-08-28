@@ -270,14 +270,6 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 
     JS_CHECK_RECURSION(cx, return false);
 
-    /* FIXME: Once bug 470510 is fixed, make this an assert. */
-    if (script->compileAndGo) {
-        if (fp->global().isCleared()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
-            return false;
-        }
-    }
-
 #ifdef DEBUG
     struct CheckStackBalance {
         JSContext *cx;
@@ -2424,15 +2416,8 @@ BEGIN_CASE(JSOP_FUNCALL)
         goto error;
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
-
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-
     JSScript *newScript = fun->script();
-
-    if (newScript->compileAndGo && newScript->hasClearedGlobal()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
-        goto error;
-    }
 
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, newScript, initial))
         goto error;
