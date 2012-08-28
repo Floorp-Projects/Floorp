@@ -4553,7 +4553,10 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
         return JS_FALSE;
 
       RootedObject fieldType(cx, NULL);
-      JSFlatString* name = ExtractStructField(cx, item.jsval_value(), fieldType.address());
+      JSFlatString* flat = ExtractStructField(cx, item.jsval_value(), fieldType.address());
+      if (!flat)
+        return JS_FALSE;
+      Rooted<JSStableString*> name(cx, flat->ensureStable(cx));
       if (!name)
         return JS_FALSE;
       fieldRootsArray[i] = OBJECT_TO_JSVAL(fieldType);
