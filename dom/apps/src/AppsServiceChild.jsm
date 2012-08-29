@@ -14,6 +14,7 @@ const Ci = Components.interfaces;
 let EXPORTED_SYMBOLS = ["DOMApplicationRegistry"];
 
 Cu.import("resource://gre/modules/AppsUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function debug(s) {
   //dump("-*- AppsServiceChild.jsm: " + s + "\n");
@@ -32,6 +33,16 @@ let DOMApplicationRegistry = {
     // We need to prime the cache with the list of apps.
     // XXX shoud we do this async and block callers if it's not yet there?
     this.webapps = this.cpmm.sendSyncMessage("Webapps:GetList", { })[0];
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    // cpmm.addMessageListener causes the DOMApplicationRegistry object to live
+    // forever if we don't clean up properly.
+    this.webapps = null;
+    ["Webapps:AddApp", "Webapps:RemoveApp"].forEach((function(aMsgName) {
+      this.cpmm.removeMessageListener(aMsgName, this);
+    }).bind(this));
   },
 
   receiveMessage: function receiveMessage(aMessage) {
