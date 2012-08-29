@@ -466,7 +466,10 @@ let SyncScheduler = {
 const LOG_PREFIX_SUCCESS = "success-";
 const LOG_PREFIX_ERROR   = "error-";
 
-let ErrorHandler = {
+function ErrorHandler() {
+  this.init();
+}
+ErrorHandler.prototype = {
 
   /**
    * Flag that turns on error reporting for all errors, incl. network errors.
@@ -626,23 +629,23 @@ let ErrorHandler = {
     // Deletes a file from oldLogs each tick until there are none left.
     function deleteFile() {
       if (index >= oldLogs.length) {
-        ErrorHandler._cleaningUpFileLogs = false;
+        this._cleaningUpFileLogs = false;
         Svc.Obs.notify("weave:service:cleanup-logs");
         return;
       }
       try {
         oldLogs[index].remove(false);
       } catch (ex) {
-        ErrorHandler._log._debug("Encountered error trying to clean up old log file '"
-                                 + oldLogs[index].leafName + "':"
-                                 + Utils.exceptionStr(ex));
+        this._log._debug("Encountered error trying to clean up old log file '"
+                         + oldLogs[index].leafName + "':"
+                         + Utils.exceptionStr(ex));
       }
       index++;
       Utils.nextTick(deleteFile);
     }
 
     if (oldLogs.length > 0) {
-      ErrorHandler._cleaningUpFileLogs = true;
+      this._cleaningUpFileLogs = true;
       Utils.nextTick(deleteFile);
     }
   },
@@ -666,13 +669,14 @@ let ErrorHandler = {
         let filename = filenamePrefix + Date.now() + ".txt";
         let file = FileUtils.getFile("ProfD", ["weave", "logs", filename]);
         let outStream = FileUtils.openFileOutputStream(file);
-        NetUtil.asyncCopy(inStream, outStream, function () {
+
+        NetUtil.asyncCopy(inStream, outStream, function onCopyComplete() {
           Svc.Obs.notify("weave:service:reset-file-log");
-          if (filenamePrefix == LOG_PREFIX_ERROR
-              && !ErrorHandler._cleaningUpFileLogs) {
-            Utils.nextTick(ErrorHandler.cleanupLogs, ErrorHandler);
+          if (filenamePrefix == LOG_PREFIX_ERROR &&
+              !this._cleaningUpFileLogs) {
+            Utils.nextTick(this.cleanupLogs, this);
           }
-        });
+        }.bind(this));
       } catch (ex) {
         Svc.Obs.notify("weave:service:reset-file-log");
       }
