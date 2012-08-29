@@ -319,6 +319,10 @@ typedef uint64_t nsFrameState;
 // have no display items.
 #define NS_FRAME_ALL_DESCENDANTS_NEED_PAINT         NS_FRAME_STATE_BIT(51)
 
+// Frame is marked as NS_FRAME_NEEDS_PAINT and also has an explicit
+// rect stored to invalidate.
+#define NS_FRAME_HAS_INVALID_RECT                   NS_FRAME_STATE_BIT(52)
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)
@@ -954,6 +958,8 @@ public:
   NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, DestroySurface)
+
+  NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DestroyRect)
 
   /**
    * Return the distance between the border edge of the frame and the
@@ -2179,6 +2185,15 @@ public:
    * container types.
    */
   virtual void InvalidateFrame();
+
+  /**
+   * Same as InvalidateFrame(), but only mark a fixed rect as needing
+   * repainting.
+   *
+   * @param aRect The rect to invalidate, relative to the TopLeft of the
+   * frame's border box.
+   */
+  virtual void InvalidateFrameWithRect(const nsRect& aRect);
   
   /**
    * Calls InvalidateFrame() on all frames descendant frames (including
@@ -2192,8 +2207,13 @@ public:
   /**
    * Checks if a frame has had InvalidateFrame() called on it since the
    * last paint.
+   *
+   * If true, then the invalid rect is returned in aRect, with an
+   * empty rect meaning all pixels drawn by this frame should be
+   * invalidated.
+   * If false, aRect is left unchanged.
    */
-  bool IsInvalid();
+  bool IsInvalid(nsRect& aRect);
  
   /**
    * Check if any frame within the frame subtree (including this frame) 
