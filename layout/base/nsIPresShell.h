@@ -1271,6 +1271,10 @@ public:
     return mFontSizeInflationLineThreshold;
   }
 
+  virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver) = 0;
+
+  void InvalidatePresShellIfHidden();
+
   /**
    * Refresh observer management.
    */
@@ -1351,6 +1355,7 @@ protected:
   // GetRootFrame() can be inlined:
   nsFrameManagerBase*       mFrameManager;
   nsWeakPtr                 mForwardingContainer;
+  nsRefreshDriver*          mHiddenInvalidationObserverRefreshDriver;
 #ifdef ACCESSIBILITY
   DocAccessible* mAccDocument;
 #endif
