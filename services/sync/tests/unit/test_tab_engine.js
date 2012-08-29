@@ -40,7 +40,7 @@ function run_test() {
   fakeSessionSvc("http://bar.com", "http://foo.com", "http://foobar.com");
 
   let matches;
- 
+
   _("  test matching works (true)");
   matches = engine.locallyOpenTabMatchesURL("http://foo.com");
   do_check_true(matches);

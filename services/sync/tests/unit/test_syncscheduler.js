@@ -158,7 +158,7 @@ add_test(function test_updateClientMode() {
   do_check_true(scheduler.numClients > 1);
   do_check_false(scheduler.idle);
 
-  // Resets the number of clients to 0. 
+  // Resets the number of clients to 0.
   clientsEngine.resetClient();
   scheduler.updateClientMode();
 
@@ -176,7 +176,7 @@ add_test(function test_masterpassword_locked_retry_interval() {
   _("Test Status.login = MASTER_PASSWORD_LOCKED results in reschedule at MASTER_PASSWORD interval");
   let loginFailed = false;
   Svc.Obs.add("weave:service:login:error", function onLoginError() {
-    Svc.Obs.remove("weave:service:login:error", onLoginError); 
+    Svc.Obs.remove("weave:service:login:error", onLoginError);
     loginFailed = true;
   });
 
@@ -220,12 +220,12 @@ add_test(function test_calculateBackoff() {
 
   do_check_eq(backoffInterval, MAXIMUM_BACKOFF_INTERVAL);
 
-  // Test Status.backoffInterval is used if it is 
+  // Test Status.backoffInterval is used if it is
   // larger than MAXIMUM_BACKOFF_INTERVAL.
   Status.backoffInterval = MAXIMUM_BACKOFF_INTERVAL + 10;
   backoffInterval = Utils.calculateBackoff(50, MAXIMUM_BACKOFF_INTERVAL,
                                            Status.backoffInterval);
-  
+
   do_check_eq(backoffInterval, MAXIMUM_BACKOFF_INTERVAL + 10);
 
   cleanUpAndGo();
@@ -346,7 +346,7 @@ add_test(function test_scheduleNextSync_future_backoff() {
 add_test(function test_handleSyncError() {
   let server = sync_httpd_setup();
   setUp();
- 
+
   // Force sync to fail.
   Svc.Prefs.set("firstSync", "notReady");
 
@@ -421,7 +421,7 @@ add_test(function test_client_sync_finish_updateClientMode() {
   do_check_true(scheduler.numClients > 1);
   do_check_false(scheduler.idle);
 
-  // Resets the number of clients to 0. 
+  // Resets the number of clients to 0.
   clientsEngine.resetClient();
   Service.sync();
 

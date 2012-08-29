@@ -28,15 +28,15 @@ function run_test() {
   let u = "http://localhost:8080/storage/bookmarks/foo";
   let placesItem = new PlacesItem("bookmarks", "foo", "bookmark");
   let bookmarkItem = prepareBookmarkItem("bookmarks", "foo");
-  
+
   log.info("Checking getTypeObject");
   do_check_eq(placesItem.getTypeObject(placesItem.type), Bookmark);
   do_check_eq(bookmarkItem.getTypeObject(bookmarkItem.type), Bookmark);
-  
+
   bookmarkItem.encrypt(keyBundle);
   log.info("Ciphertext is " + bookmarkItem.ciphertext);
   do_check_true(bookmarkItem.ciphertext != null);
-  
+
   log.info("Decrypting the record");
 
   let payload = bookmarkItem.decrypt(keyBundle);

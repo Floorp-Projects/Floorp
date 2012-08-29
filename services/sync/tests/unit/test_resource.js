@@ -107,21 +107,21 @@ function server_backoff(metadata, response) {
   let body = "Hey, back off!";
   response.setHeader("X-Weave-Backoff", '600', false);
   response.setStatusLine(metadata.httpVersion, 200, "OK");
-  response.bodyOutputStream.write(body, body.length);  
+  response.bodyOutputStream.write(body, body.length);
 }
 
 function server_quota_notice(request, response) {
   let body = "You're approaching quota.";
   response.setHeader("X-Weave-Quota-Remaining", '1048576', false);
   response.setStatusLine(request.httpVersion, 200, "OK");
-  response.bodyOutputStream.write(body, body.length);  
+  response.bodyOutputStream.write(body, body.length);
 }
 
 function server_quota_error(request, response) {
   let body = "14";
   response.setHeader("X-Weave-Quota-Remaining", '-1024', false);
   response.setStatusLine(request.httpVersion, 400, "OK");
-  response.bodyOutputStream.write(body, body.length);  
+  response.bodyOutputStream.write(body, body.length);
 }
 
 function server_headers(metadata, response) {
@@ -444,7 +444,7 @@ function run_test() {
   do_check_eq(warnings.pop(),
               "Got exception calling onProgress handler during fetch of " +
               "http://localhost:8080/json");
-  
+
   // And this is what happens if JS throws an exception.
   res18 = new Resource("http://localhost:8080/json");
   onProgress = function(rec) {

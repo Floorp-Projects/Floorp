@@ -33,7 +33,7 @@ add_test(function test_processIncoming_abort() {
     _("Throwing: " + JSON.stringify(ex));
     throw ex;
   };
-  
+
   _("Trying _processIncoming. It will throw after aborting.");
   let err;
   try {

@@ -53,7 +53,7 @@ function run_test() {
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
   let collections = collectionsHelper.collections;
-  
+
   do_test_pending();
   let server = httpd_setup({
     "/1.1/johndoe/info/collections":    login_handling(collectionsHelper.handler),

@@ -444,7 +444,7 @@ add_test(function test_bookmark_tag_but_no_uri() {
 
   // We're simply checking that no exception is thrown, so
   // no actual checks in this test.
- 
+
   store._tagURI(null, ["foo"]);
   store._tagURI(null, null);
   store._tagURI(Utils.makeURI("about:fake"), null);

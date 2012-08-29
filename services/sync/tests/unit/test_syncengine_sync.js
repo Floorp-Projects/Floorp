@@ -59,14 +59,14 @@ function run_test() {
 
 /*
  * Tests
- * 
+ *
  * SyncEngine._sync() is divided into four rather independent steps:
  *
  * - _syncStartup()
  * - _processIncoming()
  * - _uploadOutgoing()
  * - _syncFinish()
- * 
+ *
  * In the spirit of unit testing, these are tested individually for
  * different scenarios below.
  */
@@ -105,7 +105,7 @@ add_test(function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
 
     engine.lastSync = Date.now() / 1000;
     engine.lastSyncLocal = Date.now();
-    
+
     // Trying to prompt a wipe -- we no longer track CryptoMeta per engine,
     // so it has nothing to check.
     engine._syncStartup();
@@ -182,7 +182,7 @@ add_test(function test_syncStartup_syncIDMismatchResetsClient() {
     engine.lastSyncLocal = Date.now();
     engine._syncStartup();
 
-    // The engine has assumed the server's syncID 
+    // The engine has assumed the server's syncID
     do_check_eq(engine.syncID, 'foobar');
 
     // Sync was reset
@@ -227,7 +227,7 @@ add_test(function test_processIncoming_createFromServer() {
   Svc.Prefs.set("serverURL", TEST_SERVER_URL);
   Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
   Svc.Prefs.set("username", "foo");
-  
+
   generateNewKeys();
 
   // Some server records that will be downloaded
@@ -923,7 +923,7 @@ add_test(function test_processIncoming_notify_count() {
   Svc.Prefs.set("serverURL", TEST_SERVER_URL);
   Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
   Svc.Prefs.set("username", "foo");
-  
+
   const APPLY_BATCH_SIZE = 5;
   const NUMBER_OF_RECORDS = 15;
 
@@ -970,7 +970,7 @@ add_test(function test_processIncoming_notify_count() {
     // Do sync.
     engine._syncStartup();
     engine._processIncoming();
-    
+
     // Confirm failures.
     do_check_attribute_count(engine._store.items, 12);
     do_check_eq(engine.previousFailed.length, 3);
@@ -987,7 +987,7 @@ add_test(function test_processIncoming_notify_count() {
 
     // Sync again, 1 of the failed items are the same, the rest didn't fail.
     engine._processIncoming();
-    
+
     // Confirming removed failures.
     do_check_attribute_count(engine._store.items, 14);
     do_check_eq(engine.previousFailed.length, 1);
@@ -1013,13 +1013,13 @@ add_test(function test_processIncoming_previousFailed() {
   Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
   Svc.Prefs.set("username", "foo");
   Svc.Prefs.set("client.type", "mobile");
-  
+
   const APPLY_BATCH_SIZE = 4;
   const NUMBER_OF_RECORDS = 14;
 
   // Engine that fails the first 2 records.
   let engine = makeRotaryEngine();
-  engine.mobileGUIDFetchBatchSize = engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;  
+  engine.mobileGUIDFetchBatchSize = engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
   engine._store.applyIncomingBatch = function (records) {
     engine._store._applyIncomingBatch(records.slice(2));
@@ -1205,7 +1205,7 @@ add_test(function test_processIncoming_failed_records() {
       _("Tried again. Requests: " + count + "; URIs: " + JSON.stringify(uris));
       return count;
     }
-    
+
     // There are 8 bad records, so this needs 3 fetches.
     _("Test batching with ID batch size 3, normal mobile batch size.");
     do_check_eq(batchDownload(3), 3);
@@ -1326,7 +1326,7 @@ add_test(function test_uploadOutgoing_toEmptyServer() {
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman"};
-  // Mark one of these records as changed 
+  // Mark one of these records as changed
   engine._tracker.addChangedID('scotsman', 0);
 
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -1384,7 +1384,7 @@ add_test(function test_uploadOutgoing_failed() {
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman",
                          peppercorn: "Peppercorn Class"};
-  // Mark these records as changed 
+  // Mark these records as changed
   const FLYING_CHANGED = 12345;
   const SCOTSMAN_CHANGED = 23456;
   const PEPPERCORN_CHANGED = 34567;
@@ -1725,7 +1725,7 @@ add_test(function test_canDecrypt_true() {
 
   // Set up CollectionKeys, as service.js does.
   generateNewKeys();
-  
+
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO(
       'flying', encryptPayload({id: 'flying',
