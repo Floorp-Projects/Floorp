@@ -266,8 +266,10 @@ public:
    * @param aManager If the layer is in the LAYER_INACTIVE state,
    * then this is the temporary layer manager to draw with.
    */
+  struct Clip;
   void AddLayerDisplayItem(Layer* aLayer,
                            nsDisplayItem* aItem,
+                           const Clip& aClip,
                            LayerState aLayerState,
                            const nsPoint& aTopLeft,
                            LayerManager* aManager = nullptr);
@@ -278,7 +280,6 @@ public:
    * for the container layer this ThebesItem belongs to.
    * aItem must have an underlying frame.
    */
-  struct Clip;
   void AddThebesDisplayItem(ThebesLayer* aLayer,
                             nsDisplayItem* aItem,
                             const Clip& aClip,
@@ -332,7 +333,7 @@ public:
    * and each subsequent merged frame if no layer is found for the underlying
    * frame.
    */
-  Layer* GetOldLayerFor(nsDisplayItem* aItem, nsDisplayItemGeometry** aOldGeometry = nullptr);
+  Layer* GetOldLayerFor(nsDisplayItem* aItem, nsDisplayItemGeometry** aOldGeometry = nullptr, Clip** aOldClip = nullptr);
 
   static Layer* GetDebugOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
@@ -518,6 +519,7 @@ protected:
     nsRefPtr<LayerManager> mInactiveManager;
     nsAutoTArray<nsIFrame*, 2> mFrameList;
     nsAutoPtr<nsDisplayItemGeometry> mGeometry;
+    Clip            mClip;
     uint32_t        mDisplayItemKey;
     uint32_t        mContainerLayerGeneration;
     LayerState      mLayerState;
