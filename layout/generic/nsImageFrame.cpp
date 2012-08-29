@@ -1037,6 +1037,33 @@ struct nsRecessedBorder : public nsStyleBorder {
   }
 };
 
+class nsDisplayAltFeedback : public nsDisplayItem {
+public:
+  nsDisplayAltFeedback(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame) {}
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
+  {
+    *aSnap = false;
+    return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+  }
+
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx)
+  {
+    nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
+    nsEventStates state = f->GetContent()->AsElement()->State();
+    f->DisplayAltFeedback(*aCtx,
+                          mVisibleRect,
+                          IMAGE_OK(state, true)
+                             ? nsImageFrame::gIconLoad->mLoadingImage
+                             : nsImageFrame::gIconLoad->mBrokenImage,
+                          ToReferenceFrame());
+
+  }
+
+  NS_DISPLAY_DECL_NAME("AltFeedback", TYPE_ALT_FEEDBACK)
+};
+
 void
 nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
                                  const nsRect&        aDirtyRect,
@@ -1149,19 +1176,6 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
   }
 
   aRenderingContext.PopState();
-}
-
-static void PaintAltFeedback(nsIFrame* aFrame, nsRenderingContext* aCtx,
-     const nsRect& aDirtyRect, nsPoint aPt)
-{
-  nsImageFrame* f = static_cast<nsImageFrame*>(aFrame);
-  nsEventStates state = f->GetContent()->AsElement()->State();
-  f->DisplayAltFeedback(*aCtx,
-                        aDirtyRect,
-                        IMAGE_OK(state, true)
-                           ? nsImageFrame::gIconLoad->mLoadingImage
-                           : nsImageFrame::gIconLoad->mBrokenImage,
-                        aPt);
 }
 
 #ifdef DEBUG
@@ -1365,8 +1379,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
       rv = replacedContent.AppendNewToTop(new (aBuilder)
-          nsDisplayGeneric(aBuilder, this, PaintAltFeedback, "AltFeedback",
-                           nsDisplayItem::TYPE_ALT_FEEDBACK));
+          nsDisplayAltFeedback(aBuilder, this));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
