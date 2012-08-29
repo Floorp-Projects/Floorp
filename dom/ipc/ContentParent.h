@@ -56,7 +56,6 @@ class ContentParent : public PContentParent
     typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
     typedef mozilla::ipc::TestShellParent TestShellParent;
     typedef mozilla::ipc::URIParams URIParams;
-    typedef mozilla::layers::PCompositorParent PCompositorParent;
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
@@ -155,8 +154,12 @@ private:
      */
     void ShutDownProcess();
 
-    PCompositorParent* AllocPCompositor(mozilla::ipc::Transport* aTransport,
-                                        base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+    PCompositorParent*
+    AllocPCompositor(mozilla::ipc::Transport* aTransport,
+                     base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+    PImageBridgeParent*
+    AllocPImageBridge(mozilla::ipc::Transport* aTransport,
+                      base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
     virtual PBrowserParent* AllocPBrowser(const uint32_t& aChromeFlags,
                                           const bool& aIsBrowserElement,
