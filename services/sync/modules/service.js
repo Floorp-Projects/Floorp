@@ -340,7 +340,8 @@ WeaveSvc.prototype = {
     Svc.Obs.add("weave:service:setup-complete", this);
     Svc.Prefs.observe("engine.", this);
 
-    SyncScheduler.init();
+    this.scheduler = SyncScheduler;
+    this.scheduler.init();
 
     if (!this.enabled) {
       this._log.info("Firefox Sync disabled.");
