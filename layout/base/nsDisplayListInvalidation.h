@@ -41,17 +41,6 @@ public:
   virtual void MoveBy(const nsPoint& aOffset) = 0;
 
   /**
-   * The appunits per dev pixel for the item's frame.
-   */
-  nscoord mAppUnitsPerDevPixel;
-
-  /**
-   * The offset (in pixels) of the TopLeft() of the ThebesLayer
-   * this display item was drawn into.
-   */
-  nsIntPoint mPaintOffset;
-  
-  /**
    * Bounds of the display item
    */
   nsRect mBounds;

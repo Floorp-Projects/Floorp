@@ -7978,14 +7978,6 @@ nsFrame::SetParent(nsIFrame* aParent)
   } else {
     RemoveInPopupStateBitFromDescendants(this);
   }
-
-  if (GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT) {
-    for (nsIFrame* f = aParent;
-         f && !(f->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT);
-         f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-      f->AddStateBits(NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT);
-    }
-  }
 }
 
 void

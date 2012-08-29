@@ -138,10 +138,6 @@ typedef uint64_t nsFrameState;
 // continuation, e.g. a bidi continuation.
 #define NS_FRAME_IS_FLUID_CONTINUATION              NS_FRAME_STATE_BIT(2)
 
-// This bit is set whenever the frame has one or more associated
-// container layers.
-#define NS_FRAME_HAS_CONTAINER_LAYER                NS_FRAME_STATE_BIT(3)
-
 // If this bit is set, then a reference to the frame is being held
 // elsewhere.  The frame may want to send a notification when it is
 // destroyed to allow these references to be cleared.
@@ -252,10 +248,6 @@ typedef uint64_t nsFrameState;
 
 // This bit acts as a loop flag for recursive paint server drawing.
 #define NS_FRAME_DRAWING_AS_PAINTSERVER             NS_FRAME_STATE_BIT(33)
-
-// Frame or one of its (cross-doc) descendants may have the
-// NS_FRAME_HAS_CONTAINER_LAYER bit.
-#define NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT     NS_FRAME_STATE_BIT(34)
 
 // Frame's overflow area was clipped by the 'clip' property.
 #define NS_FRAME_HAS_CLIP                           NS_FRAME_STATE_BIT(35)
