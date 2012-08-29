@@ -31,6 +31,7 @@
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -695,6 +696,11 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
     if (useOffMainThreadCompositing) {
         DebugOnly<bool> opened = PCompositor::Open(this);
         MOZ_ASSERT(opened);
+
+        if (Preferences::GetBool("layers.async-video.enabled",false)) {
+            opened = PImageBridge::Open(this);
+            MOZ_ASSERT(opened);
+        }
     }
 
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
@@ -1049,6 +1055,13 @@ ContentParent::AllocPCompositor(mozilla::ipc::Transport* aTransport,
                                 base::ProcessId aOtherProcess)
 {
     return CompositorParent::Create(aTransport, aOtherProcess);
+}
+
+PImageBridgeParent*
+ContentParent::AllocPImageBridge(mozilla::ipc::Transport* aTransport,
+                                 base::ProcessId aOtherProcess)
+{
+    return ImageBridgeParent::Create(aTransport, aOtherProcess);
 }
 
 PBrowserParent*
