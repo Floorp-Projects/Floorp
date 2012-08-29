@@ -424,8 +424,8 @@ public:
                                                   EGL_NO_CONTEXT,
                                                   EGL_NATIVE_BUFFER_ANDROID,
                                                   buffer, attrs);
-        fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_EXTERNAL, image);
         fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, texture);
+        fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_EXTERNAL, image);
         sEGLLibrary.fDestroyImage(EGL_DISPLAY(), image);
         return true;
 #else
