@@ -11,7 +11,7 @@ function run_test() {
   _("Set up test fixtures.");
 
   Identity.username = "john@example.com";
-  Svc.Prefs.set("clusterURL", "http://fakebase/");
+  Service.clusterURL = "http://fakebase/";
   let baseUri = "http://fakebase/1.1/foo/storage/";
   let pubUri = baseUri + "keys/pubkey";
   let privUri = baseUri + "keys/privkey";
