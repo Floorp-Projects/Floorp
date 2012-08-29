@@ -1456,7 +1456,8 @@ mjit::Compiler::finishThisUp()
         }
 
         JSScript *script =
-            (from.inlineIndex == UINT32_MAX) ? outerScript : inlineFrames[from.inlineIndex]->script;
+            (from.inlineIndex == UINT32_MAX) ? outerScript.get()
+                                             : inlineFrames[from.inlineIndex]->script;
         uint32_t codeOffset = from.ool
                             ? masm.size() + from.returnOffset
                             : from.returnOffset;

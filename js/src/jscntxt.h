@@ -374,13 +374,15 @@ struct JSRuntime : js::RuntimeFriendFields
     void *ownerThread() const { return ownerThread_; }
     void clearOwnerThread();
     void setOwnerThread();
-    JS_FRIEND_API(bool) onOwnerThread() const;
+    JS_FRIEND_API(void) abortIfWrongThread() const;
+    JS_FRIEND_API(void) assertValidThread() const;
   private:
     void                *ownerThread_;
   public:
 #else
   public:
-    bool onOwnerThread() const { return true; }
+    void abortIfWrongThread() const {}
+    void assertValidThread() const {}
 #endif
 
     /* Keeper of the contiguous stack used by all contexts in this thread. */
