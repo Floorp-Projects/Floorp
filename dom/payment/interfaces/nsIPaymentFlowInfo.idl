@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(560cc17c-9df5-49ea-a953-b175553ef5c4)]
+interface nsIPaymentFlowInfo : nsISupports
+{
+  // Payment provider uri.
+  attribute DOMString uri;
+
+  // Base64 encoded and digitally signed payment request information.
+  attribute DOMString jwt;
+
+  // Payment providers expect the payment information as GET or POST
+  // parameters.
+  attribute DOMString requestMethod;
+};
