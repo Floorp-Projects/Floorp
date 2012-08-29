@@ -224,7 +224,7 @@ public:
   void SetContinuousBCBorderWidth(uint8_t     aForSide,
                                   BCPixelSize aPixelValue);
 
-  virtual void InvalidateFrame(uint32_t aFlags = 0);
+  virtual void InvalidateFrame();
 
 #ifdef ACCESSIBILITY
   virtual already_AddRefed<Accessible> CreateAccessible() MOZ_OVERRIDE;
