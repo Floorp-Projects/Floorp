@@ -82,6 +82,52 @@ ContainerRemoveChild(Container* aContainer, Layer* aChild)
 
 template<class Container>
 static void
+ContainerRepositionChild(Container* aContainer, Layer* aChild, Layer* aAfter)
+{
+  NS_ASSERTION(aChild->Manager() == aContainer->Manager(),
+               "Child has wrong manager");
+  NS_ASSERTION(aChild->GetParent() == aContainer,
+               "aChild not our child");
+  NS_ASSERTION(!aAfter ||
+               (aAfter->Manager() == aContainer->Manager() &&
+                aAfter->GetParent() == aContainer),
+               "aAfter is not our child");
+
+  Layer* prev = aChild->GetPrevSibling();
+  Layer* next = aChild->GetNextSibling();
+  if (prev == aAfter) {
+    // aChild is already in the correct position, nothing to do.
+    return;
+  }
+  if (prev) {
+    prev->SetNextSibling(next);
+  }
+  if (next) {
+    next->SetPrevSibling(prev);
+  }
+  if (!aAfter) {
+    aChild->SetPrevSibling(nullptr);
+    aChild->SetNextSibling(aContainer->mFirstChild);
+    if (aContainer->mFirstChild) {
+      aContainer->mFirstChild->SetPrevSibling(aChild);
+    }
+    aContainer->mFirstChild = aChild;
+    return;
+  }
+
+  Layer* afterNext = aAfter->GetNextSibling();
+  if (afterNext) {
+    afterNext->SetPrevSibling(aChild);
+  } else {
+    aContainer->mLastChild = aChild;
+  }
+  aAfter->SetNextSibling(aChild);
+  aChild->SetPrevSibling(aAfter);
+  aChild->SetNextSibling(afterNext);
+}
+
+template<class Container>
+static void
 ContainerDestroy(Container* aContainer)
  {
   if (!aContainer->mDestroyed) {
@@ -304,6 +350,12 @@ ContainerLayerOGL::RemoveChild(Layer *aChild)
 }
 
 void
+ContainerLayerOGL::RepositionChild(Layer* aChild, Layer* aAfter)
+{
+  ContainerRepositionChild(this, aChild, aAfter);
+}
+
+void
 ContainerLayerOGL::Destroy()
 {
   ContainerDestroy(this);
@@ -364,6 +416,12 @@ void
 ShadowContainerLayerOGL::RemoveChild(Layer *aChild)
 {
   ContainerRemoveChild(this, aChild);
+}
+
+void
+ShadowContainerLayerOGL::RepositionChild(Layer* aChild, Layer* aAfter)
+{
+  ContainerRepositionChild(this, aChild, aAfter);
 }
 
 void

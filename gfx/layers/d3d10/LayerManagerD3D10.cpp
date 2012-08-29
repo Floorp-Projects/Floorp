@@ -993,6 +993,11 @@ DummyRoot::RemoveChild(Layer* aNull)
   NS_IF_RELEASE(mFirstChild);
 }
 
+void
+DummyRoot::RepositionChild(Layer* aUnused1, Layer* aUnused2)
+{
+}
+
 
 }
 }
