@@ -43,6 +43,11 @@ enum LayerState {
   LAYER_SVG_EFFECTS
 };
 
+extern uint8_t gLayerManagerSecondary;
+
+class LayerManagerSecondary : public layers::LayerUserData {
+};
+
 class RefCountedRegion : public RefCounted<RefCountedRegion> {
 public:
   RefCountedRegion() : mIsInfinite(false) {}
@@ -282,6 +287,47 @@ public:
                             const nsPoint& aTopLeft);
 
   /**
+   * Set the current top-level LayerManager for the widget being
+   * painted.
+   */
+  static void SetWidgetLayerManager(LayerManager* aManager)
+  {
+    LayerManagerSecondary* secondary = 
+      static_cast<LayerManagerSecondary*>(aManager->GetUserData(&gLayerManagerSecondary));
+    sWidgetManagerSecondary = !!secondary;
+  }
+
+  /**
+   * Gets the frame property descriptor for the given manager, or for the current
+   * widget layer manager if nullptr is passed.
+   */
+  static const FramePropertyDescriptor* GetDescriptorForManager(LayerManager* aManager);
+
+  /**
+   * Get the LayerManagerData for a given frame and layer manager. If no layer manager
+   * is passed, then the current widget layer manager is used.
+   */
+  static LayerManagerData* GetManagerData(nsIFrame* aFrame, LayerManager* aManager = nullptr);
+
+  /**
+   * Set the LayerManagerData for a given frame and current widget layer manager.
+   * This replaces any existing data for the same frame/layer manager pair.
+   */
+  static void SetManagerData(nsIFrame* aFrame, LayerManagerData* aData);
+
+  /**
+   * Clears the current LayerManagerData for the given frame and current widget
+   * layer manager.
+   */
+  static void ClearManagerData(nsIFrame* aFrame);
+
+  /**
+   * Clears any references to the given LayerManagerData for the given frame
+   * and belonging to any layer manager.
+   */
+  static void ClearManagerData(nsIFrame* aFrame, LayerManagerData* aData);
+
+  /**
    * Calls GetOldLayerForFrame on the underlying frame of the display item,
    * and each subsequent merged frame if no layer is found for the underlying
    * frame.
@@ -309,10 +355,7 @@ public:
    * Destroy any stored LayerManagerDataProperty and the associated data for
    * aFrame.
    */
-  static void DestroyDisplayItemDataFor(nsIFrame* aFrame)
-  {
-    aFrame->Properties().Delete(LayerManagerDataProperty());
-  }
+  static void DestroyDisplayItemDataFor(nsIFrame* aFrame);
 
   LayerManager* GetRetainingLayerManager() { return mRetainingManager; }
 
@@ -440,6 +483,12 @@ public:
       return !(*this == aOther);
     }
   };
+  
+  NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(LayerManagerDataProperty,
+                                               RemoveFrameFromLayerManager)
+
+  NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(LayerManagerSecondaryDataProperty,
+                                               RemoveFrameFromLayerManager)
 
 protected:
   /**
@@ -491,9 +540,6 @@ protected:
    * that renders many display items.
    */
   DisplayItemData* GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey);
-
-  NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(LayerManagerDataProperty,
-                                               RemoveFrameFromLayerManager)
 
   /**
    * We accumulate DisplayItemData elements in a hashtable during
@@ -704,6 +750,12 @@ protected:
 
   uint32_t                            mContainerLayerGeneration;
   uint32_t                            mMaxContainerLayerGeneration;
+
+  /**
+   * True if the current top-level LayerManager for the widget being
+   * painted is marked as being a 'secondary' LayerManager.
+   */
+  static bool                         sWidgetManagerSecondary;
 };
 
 }
