@@ -94,10 +94,6 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  UserAgentOverrides.jsm \
-  $(NULL)
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

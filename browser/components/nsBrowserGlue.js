@@ -20,9 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
-                                  "resource://gre/modules/UserAgentOverrides.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
@@ -314,7 +311,6 @@ BrowserGlue.prototype = {
       os.removeObserver(this, "places-database-locked");
     if (this._isPlacesShutdownObserver)
       os.removeObserver(this, "places-shutdown");
-    UserAgentOverrides.uninit();
     webappsUI.uninit();
     SignInToWebsiteUX.uninit();
   },
@@ -341,11 +337,14 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
-    UserAgentOverrides.init();
+    // Initialize webapps UI
     webappsUI.init();
+
     PageThumbs.init();
     NewTabUtils.init();
+
     SignInToWebsiteUX.init();
+
     PdfJs.init();
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
