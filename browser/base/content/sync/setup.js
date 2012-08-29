@@ -400,7 +400,7 @@ var gSyncSetup = {
         this.wizard.getButton("back").hidden = true;
         this.wizard.getButton("cancel").hidden = !this._resettingSync;
         this.wizard.getButton("extra1").hidden = true;
-        document.getElementById("syncComputerName").value = Weave.Clients.localName;
+        document.getElementById("syncComputerName").value = Weave.Service.clientsEngine.localName;
         document.getElementById("syncOptions").collapsed = this._resettingSync;
         document.getElementById("mergeOptions").collapsed = this._settingUpNew;
         break;
@@ -943,9 +943,9 @@ var gSyncSetup = {
           box.appendChild(node);
         }
 
-        for each (let name in Weave.Clients.stats.names) {
+        for each (let name in Weave.Service.clientsEngine.stats.names) {
           // Don't list the current client
-          if (name == Weave.Clients.localName)
+          if (name == Weave.Service.clientsEngine.localName)
             continue;
 
           // Only show the first several client names

@@ -417,6 +417,9 @@ WeaveSvc.prototype = {
       engines = pref.split(",");
     }
 
+    // TODO Singleton (bug 785225).
+    this.clientsEngine = Clients;
+
     for (let name of engines) {
       if (!name in ENGINE_MODULES) {
         this._log.info("Do not know about engine: " + name);
@@ -818,7 +821,7 @@ WeaveSvc.prototype = {
     // Deletion doesn't make sense if we aren't set up yet!
     if (this.clusterURL != "") {
       // Clear client-specific data from the server, including disabled engines.
-      for each (let engine in [Clients].concat(this.engineManager.getAll())) {
+      for each (let engine in [this.clientsEngine].concat(this.engineManager.getAll())) {
         try {
           engine.removeClientData();
         } catch(ex) {
@@ -1237,7 +1240,7 @@ WeaveSvc.prototype = {
     Records.set(this.metaURL, meta);
 
     // Wipe everything we know about except meta because we just uploaded it
-    let engines = [Clients].concat(this.engineManager.getAll());
+    let engines = [this.clientsEngine].concat(this.engineManager.getAll());
     let collections = [engine.name for each (engine in engines)];
 
     // Generate, upload, and download new keys. Do this last so we don't wipe
@@ -1311,7 +1314,7 @@ WeaveSvc.prototype = {
       // Clear out any service data
       this.resetService();
 
-      engines = [Clients].concat(this.engineManager.getAll());
+      engines = [this.clientsEngine].concat(this.engineManager.getAll());
     }
     // Convert the array of names into engines
     else {
@@ -1346,15 +1349,15 @@ WeaveSvc.prototype = {
 
       // Only wipe the engines provided.
       if (engines) {
-        engines.forEach(function(e) Clients.sendCommand("wipeEngine", [e]), this);
+        engines.forEach(function(e) this.clientsEngine.sendCommand("wipeEngine", [e]), this);
       }
       // Tell the remote machines to wipe themselves.
       else {
-        Clients.sendCommand("wipeAll", []);
+        this.clientsEngine.sendCommand("wipeAll", []);
       }
 
       // Make sure the changed clients get updated.
-      Clients.sync();
+      this.clientsEngine.sync();
     } catch (ex) {
       this.errorHandler.checkServerError(ex);
       throw ex;
@@ -1387,7 +1390,7 @@ WeaveSvc.prototype = {
         // Clear out any service data
         this.resetService();
 
-        engines = [Clients].concat(this.engineManager.getAll());
+        engines = [this.clientsEngine].concat(this.engineManager.getAll());
       }
       // Convert the array of names into engines
       else {
