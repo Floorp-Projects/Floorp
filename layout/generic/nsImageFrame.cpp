@@ -865,6 +865,21 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   aMetrics.SetOverflowAreasToDesiredBounds();
+  nsEventStates contentState = mContent->AsElement()->State();
+  bool imageOK = IMAGE_OK(contentState, true);
+
+  // Determine if the size is available
+  bool haveSize = false;
+  if (loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) {
+    haveSize = true;
+  }
+
+  if (!imageOK || !haveSize) {
+    nsRect altFeedbackSize(0, 0,
+                           2*(nsPresContext::CSSPixelsToAppUnits(ICON_SIZE+ICON_PADDING+ALT_BORDER_WIDTH)),
+                           2*(nsPresContext::CSSPixelsToAppUnits(ICON_SIZE+ICON_PADDING+ALT_BORDER_WIDTH)));
+    aMetrics.mOverflowAreas.UnionAllWith(altFeedbackSize);
+  }
   FinishAndStoreOverflow(&aMetrics);
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
