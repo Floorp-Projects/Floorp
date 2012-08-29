@@ -2114,7 +2114,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         continue;
       }
 
-      if (item->IsInvalid()) {
+      nsRect invalid;
+      if (item->IsInvalid(invalid)) {
         ownLayer->SetInvalidRectToVisibleRegion();
       }
 
@@ -2252,8 +2253,10 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 
   ThebesDisplayItemLayerUserData* data =
     static_cast<ThebesDisplayItemLayerUserData*>(newThebesLayer->GetUserData(&gThebesDisplayItemLayerUserData));
-  // If the frame is marked as invalidated then we want to invalidate both the old and new bounds,
-  // otherwise we only want to invalidate the changed areas.
+  // If the frame is marked as invalidated, and didn't specify a rect to invalidate  then we want to 
+  // invalidate both the old and new bounds, otherwise we only want to invalidate the changed areas.
+  // If we do get an invalid rect, then we want to add this on top of the change areas.
+  nsRect invalid;
   nsRegion combined;
   if (!oldLayer) {
     // This item is being added for the first time, invalidate its entire area.
@@ -2262,7 +2265,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 #ifdef DEBUG_INVALIDATIONS
     printf("Display item type %s(%p) added to layer %p!\n", aItem->Name(), f, aNewLayer);
 #endif
-  } else if (aItem->IsInvalid()) {
+  } else if (aItem->IsInvalid(invalid) && invalid.IsEmpty()) {
     // Either layout marked item as needing repainting, invalidate the entire old and new areas.
     combined.Or(geometry->ComputeInvalidationRegion(), oldGeometry->ComputeInvalidationRegion());
 #ifdef DEBUG_INVALIDATIONS
@@ -2277,6 +2280,9 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
     oldClip->AddOffsetAndComputeDifference(shift, oldGeometry->ComputeInvalidationRegion(),
                                            aClip, geometry->ComputeInvalidationRegion(),
                                            &combined);
+
+    // Add in any rect that the frame specified
+    combined = combined.Or(combined, invalid);
 #ifdef DEBUG_INVALIDATIONS
     if (!combined.IsEmpty()) {
       printf("Display item type %s(%p) (in layer %p) changed geometry!\n", aItem->Name(), f, aNewLayer);

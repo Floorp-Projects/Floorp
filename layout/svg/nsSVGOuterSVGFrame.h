@@ -155,7 +155,8 @@ public:
   void ClearInvalidRegion() { mInvalidRegion.SetEmpty(); }
 
   const nsRegion& GetInvalidRegion() {
-    if (!IsInvalid()) {
+    nsRect rect;
+    if (!IsInvalid(rect)) {
       mInvalidRegion.SetEmpty();
     }
     return mInvalidRegion;
