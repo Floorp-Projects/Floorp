@@ -38,6 +38,15 @@
     #include <sys/statfs.h>
 #endif
 
+#ifdef HAVE_SYS_VFS_H
+    #include <sys/vfs.h>
+#endif
+
+#ifdef HAVE_SYS_MOUNT_H
+    #include <sys/param.h>
+    #include <sys/mount.h>
+#endif
+
 #if defined(XP_MACOSX) && (defined(HAVE_STATVFS64) || !defined(HAVE_STATVFS))
 #error "Double-check which members of the 'STATFS' struct we're using!"
 #endif
