@@ -71,41 +71,24 @@ let DOMApplicationRegistry = {
     this.appsFile = FileUtils.getFile(DIRECTORY_NAME,
                                       ["webapps", "webapps.json"], true);
 
-    let dirList = [DIRECTORY_NAME];
-
-#ifdef MOZ_WIDGET_GONK
-    dirList.push("coreAppsDir");
-#endif
-    let currentId = 1;
-    dirList.forEach((function(dir) {
-      let curFile = FileUtils.getFile(dir, ["webapps", "webapps.json"], true);
-      if (curFile.exists()) {
-        let appDir = FileUtils.getDir(dir, ["webapps"]);
-        this._loadJSONAsync(curFile, (function(aData) {
-          if (!aData) {
-            return;
-          }
-          // Add new apps to the merged list.
-          for (let id in aData) {
-            this.webapps[id] = aData[id];
-            this.webapps[id].basePath = appDir.path;
-            this.webapps[id].removable = (dir == DIRECTORY_NAME);
+    if (this.appsFile.exists()) {
+      this._loadJSONAsync(this.appsFile, (function(aData) {
+        this.webapps = aData;
+        for (let id in this.webapps) {
 #ifdef MOZ_SYS_MSG
-            this._processManifestForId(id);
+          this._processManifestForId(id);
 #endif
-            // local ids must be stable between restarts.
-            // We partition the ids in two buckets:
-            // - 1 to 1000 for the core apps.
-            // - 1001 to Inf for installed apps.
-            // This way, a gecko update with new core apps will not lead to
-            // changes for installed apps ids.
-            if (!this.webapps[id].removable) {
-              this.webapps[id].localId = currentId++;
-            }
-          };
-        }).bind(this));
-      }
-    }).bind(this));
+          if (!this.webapps[id].localId) {
+            this.webapps[id].localId = this._nextLocalId();
+          }
+
+          // Default to a non privileged status.
+          if (this.webapps[id].appStatus === undefined) {
+            this.webapps[id].appStatus = Ci.nsIPrincipal.APP_STATUS_INSTALLED;
+          }
+        };
+      }).bind(this));
+    }
 
     try {
       let hosts = Services.prefs.getCharPref("dom.mozApps.whitelist");
@@ -271,17 +254,12 @@ let DOMApplicationRegistry = {
         this.installPackage(msg);
         break;
       case "Webapps:GetBasePath":
-        return this.webapps[msg.id].basePath;
+        return FileUtils.getFile(DIRECTORY_NAME, ["webapps"], true).path;
         break;
       case "Webapps:GetList":
         this.children.push(aMessage.target);
         return this.webapps;
     }
-  },
-
-  _getAppDir: function(aId) {
-    FileUtils.getDir(this.webapps[aId].removable ? DIRECTORY_NAME : "coreAppsDir",
-                     ["webapps", aId], true, true);
   },
 
   _writeFile: function ss_writeFile(aFile, aData, aCallbak) {
@@ -316,13 +294,12 @@ let DOMApplicationRegistry = {
 
   confirmInstall: function(aData, aFromSync, aProfileDir, aOfflineCacheObserver) {
     let app = aData.app;
-    app.removable = true;
     let id = app.syncId || this._appId(app.origin);
     let localId = this.getAppLocalIdByManifestURL(app.manifestURL);
 
     // Installing an application again is considered as an update.
     if (id) {
-      let dir = this._getAppDir(id);
+      let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
       try {
         dir.remove(true);
       } catch(e) {
@@ -398,8 +375,7 @@ let DOMApplicationRegistry = {
   },
 
   _nextLocalId: function() {
-    // All installed apps have a localId > 1000.
-    let maxLocalId = 1000;
+    let maxLocalId = Ci.nsIScriptSecurityManager.NO_APP_ID;
 
     for (let id in this.webapps) {
       if (this.webapps[id].localId > maxLocalId) {
@@ -443,10 +419,9 @@ let DOMApplicationRegistry = {
     let id = aData[index].id;
 
     // the manifest file used to be named manifest.json, so fallback on this.
-    let baseDir = (this.webapps[id].removable ? DIRECTORY_NAME : "coreAppsDir");
-    let file = FileUtils.getFile(baseDir, ["webapps", id, "manifest.webapp"], true);
+    let file = FileUtils.getFile(DIRECTORY_NAME, ["webapps", id, "manifest.webapp"], true);
     if (!file.exists()) {
-      file = FileUtils.getFile(baseDir, ["webapps", id, "manifest.json"], true);
+      file = FileUtils.getFile(DIRECTORY_NAME, ["webapps", id, "manifest.json"], true);
     }
 
     this._loadJSONAsync(file, (function(aJSON) {
@@ -623,9 +598,6 @@ let DOMApplicationRegistry = {
         continue;
       }
 
-      if (!this.webapps[id].removable)
-        return;
-
       found = true;
       let appNote = JSON.stringify(AppsUtils.cloneAppObject(app));
       appNote.id = id;
@@ -636,7 +608,7 @@ let DOMApplicationRegistry = {
 #endif
       }).bind(this));
 
-      let dir = this._getAppDir(id);
+      let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
       try {
         dir.remove(true);
       } catch (e) {}
@@ -789,11 +761,11 @@ let DOMApplicationRegistry = {
     for (let i = 0; i < aRecords.length; i++) {
       let record = aRecords[i];
       if (record.hidden) {
-        if (!this.webapps[record.id] || !this.webapps[record.id].removable)
+        if (!this.webapps[record.id])
           continue;
         let origin = this.webapps[record.id].origin;
         delete this.webapps[record.id];
-        let dir = this._getAppDir(record.id);
+        let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", record.id], true, true);
         try {
           dir.remove(true);
         } catch (e) {
@@ -826,12 +798,8 @@ let DOMApplicationRegistry = {
   wipe: function(aCallback) {
     let ids = this.getAllIDs();
     for (let id in ids) {
-      if (!this.webapps[id].removable) {
-        continue;
-      }
-
       delete this.webapps[id];
-      let dir = this._getAppDir(id);
+      let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
       try {
         dir.remove(true);
       } catch (e) {

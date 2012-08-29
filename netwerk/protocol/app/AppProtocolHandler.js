@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "nsISyncMessageSender");
 
 function AppProtocolHandler() {
-  this._basePath = [];
+  this._basePath = null;
 }
 
 AppProtocolHandler.prototype = {
@@ -30,14 +30,12 @@ AppProtocolHandler.prototype = {
                   Ci.nsIProtocolHandler.URI_NOAUTH |
                   Ci.nsIProtocolHandler.URI_LOADABLE_BY_ANYONE,
 
-  getBasePath: function app_phGetBasePath(aId) {
-
-    if (!this._basePath[aId]) {
-      this._basePath[aId] = cpmm.sendSyncMessage("Webapps:GetBasePath",
-                                                 { id: aId })[0] + "/";
+  get basePath() {
+    if (!this._basePath) {
+      this._basePath = cpmm.sendSyncMessage("Webapps:GetBasePath", { })[0] + "/";
     }
 
-    return this._basePath[aId];
+    return this._basePath;
   },
 
   newURI: function app_phNewURI(aSpec, aOriginCharset, aBaseURI) {
@@ -62,7 +60,7 @@ AppProtocolHandler.prototype = {
     }
 
     // Build a jar channel and masquerade as an app:// URI.
-    let uri = "jar:file://" + this.getBasePath(appId) + appId + "/application.zip!" + fileSpec;
+    let uri = "jar:file://" + this.basePath + appId + "/application.zip!" + fileSpec;
     let channel = Services.io.newChannel(uri, null, null);
     channel.QueryInterface(Ci.nsIJARChannel).setAppURI(aURI);
     channel.QueryInterface(Ci.nsIChannel).originalURI = aURI;
