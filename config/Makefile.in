@@ -20,7 +20,7 @@ VISIBILITY_FLAGS =
 STDCXX_COMPAT =
 
 ifneq (WINNT,$(HOST_OS_ARCH))
-HOST_PROGRAM	= nsinstall$(HOST_BIN_SUFFIX)
+HOST_PROGRAM	= nsinstall_real$(HOST_BIN_SUFFIX)
 HOST_CSRCS	= nsinstall.c pathsub.c
 endif
 
@@ -49,6 +49,14 @@ include $(topsrcdir)/config/config.mk
 # Do not install util programs
 NO_INSTALL=1
 
+ifneq (WINNT,$(HOST_OS_ARCH))
+export:: nsinstall$(HOST_BIN_SUFFIX)
+# Ensure nsinstall is atomically created
+nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)
+	cp $^ $@.tmp
+	mv $@.tmp $@
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 HOST_CFLAGS += -DUNICODE -D_UNICODE
@@ -65,9 +73,6 @@ HEADERS = \
 export:: $(TARGETS) $(HEADERS)
 	$(INSTALL) $(IFLAGS1) $(HEADERS) $(DIST)/include
 	-$(RM) $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
-ifdef HOST_PROGRAM
-	$(INSTALL) $(HOST_PROGRAM) $(DIST)/bin
-endif
 
 # Generate a new buildid every time we "export" in config... that's only
 # supposed to be once per-build!
