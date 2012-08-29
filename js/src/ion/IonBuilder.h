@@ -456,10 +456,6 @@ class IonBuilder : public MIRGenerator
     // an outer script.
     bool failedBoundsCheck_;
 
-    // True if script->failedCachedShapeGuard is set for the current script or
-    // an outer script.
-    bool failedCachedShapeGuard_;
-
     // If this script can use a lazy arguments object, it wil be pre-created
     // here.
     MInstruction *lazyArguments_;
