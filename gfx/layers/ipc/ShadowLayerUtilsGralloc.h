@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <ui/GraphicBuffer.h>
 
-#include "IPC/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 #include "mozilla/layers/PGrallocBufferChild.h"
 #include "mozilla/layers/PGrallocBufferParent.h"
 

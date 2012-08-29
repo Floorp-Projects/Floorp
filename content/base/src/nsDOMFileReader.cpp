@@ -62,7 +62,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMFileReader,
                                                   FileIOObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFile)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannel)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(load)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(loadstart)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(loadend)
@@ -338,6 +337,13 @@ nsDOMFileReader::DoOnStopRequest(nsIRequest *aRequest,
                                  nsAString& aSuccessEvent,
                                  nsAString& aTerminationEvent)
 {
+  // Make sure we drop all the objects that could hold files open now.
+  nsCOMPtr<nsIChannel> channel;
+  mChannel.swap(channel);
+
+  nsCOMPtr<nsIDOMBlob> file;
+  mFile.swap(file);
+
   aSuccessEvent = NS_LITERAL_STRING(LOAD_STR);
   aTerminationEvent = NS_LITERAL_STRING(LOADEND_STR);
 
@@ -357,7 +363,7 @@ nsDOMFileReader::DoOnStopRequest(nsIRequest *aRequest,
       rv = GetAsText(mCharset, mFileData, mDataLen, mResult);
       break;
     case FILE_AS_DATAURL:
-      rv = GetAsDataURL(mFile, mFileData, mDataLen, mResult);
+      rv = GetAsDataURL(file, mFileData, mDataLen, mResult);
       break;
   }
   

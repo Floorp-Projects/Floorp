@@ -9,68 +9,28 @@ from __future__ import with_statement
 
 import sys
 import histogram_tools
+import itertools
 
 banner = """/* This file is auto-generated, see gen-histogram-data.py.  */
 """
 
-# Write out the gHistograms array.  Try and ensure the user didn't
-# provide bogus keys in the histogram definition.
+# Write out the gHistograms array.
 
-def check_keys(name, definition, allowed_keys):
-    for key in definition.iterkeys():
-        if key not in allowed_keys:
-            raise KeyError, '%s not permitted for %s' % (key, name)
-
-def print_array_entry(name, low, high, n_buckets, kind, definition):
-    cpp_guard = definition.get('cpp_guard')
+def print_array_entry(histogram):
+    cpp_guard = histogram.cpp_guard()
     if cpp_guard:
         print "#if defined(%s)" % cpp_guard
-    print "  { \"%s\", %s, %s, %s, nsITelemetry::HISTOGRAM_%s, \"%s\" }," \
-        % (name, low, high, n_buckets, kind, definition['description'])
+    print "  { \"%s\", %s, %s, %s, %s, \"%s\" }," \
+        % (histogram.name(), histogram.low(), histogram.high(),
+           histogram.n_buckets(), histogram.nsITelemetry_kind(),
+           histogram.description())
     if cpp_guard:
         print "#endif"
 
-def process_boolean(name, definition):
-    print_array_entry(name, 0, 1, 2, 'BOOLEAN', definition)
-
-def process_flag(name, definition):
-    print_array_entry(name, 0, 1, 2, 'FLAG', definition)
-
-def process_enumerated_values(name, definition):
-    n_values = definition['n_values']
-    print_array_entry(name, 1, n_values, "%s+1" % n_values, 'LINEAR',
-                      definition)
-
-def process_general_histogram(name, definition):
-    low = definition.get('low', 1)
-    high = definition['high']
-    n_buckets = definition['n_buckets']
-    print_array_entry(name, low, high, n_buckets,
-                      definition['kind'].upper(), definition)
-
-always_allowed_keys = ['kind', 'description', 'cpp_guard']
-
 def write_histogram_table(histograms):
-    general_keys = ['low', 'high', 'n_buckets'] + always_allowed_keys
-
-    table = {
-        'boolean' : (process_boolean, always_allowed_keys),
-        'flag' : (process_flag, always_allowed_keys),
-        'enumerated' : (process_enumerated_values, ['n_values'] + always_allowed_keys),
-        'linear' : (process_general_histogram, general_keys),
-        'exponential' : (process_general_histogram, general_keys),
-        }
-
     print "const TelemetryHistogram gHistograms[] = {"
-    for (name, definition) in histograms:
-        kind = definition['kind']
-        if kind in table:
-            (processor, allowed_keys) = table[kind]
-            check_keys(name, definition, allowed_keys)
-            processor(name, definition)
-        else:
-            print "Don't know how to handle a histogram of kind ", kind
-            sys.exit(1)
+    for histogram in histograms:
+        print_array_entry(histogram)
     print "};"
 
 # Write out static asserts for histogram data.  We'd prefer to perform
@@ -81,29 +41,31 @@ def write_histogram_table(histograms):
 def static_assert(expression, message):
     print "MOZ_STATIC_ASSERT(%s, \"%s\");" % (expression, message)
 
-def static_asserts_for_boolean(name, definition):
+def static_asserts_for_boolean(histogram):
     pass
 
-def static_asserts_for_flag(name, definition):
+def static_asserts_for_flag(histogram):
     pass
 
-def static_asserts_for_enumerated(name, definition):
-    n_values = definition['n_values']
-    static_assert("%s > 2" % n_values, "Not enough values for %s" % name)
+def static_asserts_for_enumerated(histogram):
+    n_values = histogram.high()
+    static_assert("%s > 2" % n_values,
+                  "Not enough values for %s" % histogram.name())
 
-def shared_static_asserts(name, definition):
-    low = definition.get('low', 1)
-    high = definition['high']
-    n_buckets = definition['n_buckets']
+def shared_static_asserts(histogram):
+    name = histogram.name()
+    low = histogram.low()
+    high = histogram.high()
+    n_buckets = histogram.n_buckets()
     static_assert("%s < %s" % (low, high), "low >= high for %s" % name)
     static_assert("%s > 2" % n_buckets, "Not enough values for %s" % name)
     static_assert("%s >= 1" % low, "Incorrect low value for %s" % name)
 
-def static_asserts_for_linear(name, definition):
-    shared_static_asserts(name, definition)
+def static_asserts_for_linear(histogram):
+    shared_static_asserts(histogram)
 
-def static_asserts_for_exponential(name, definition):
-    shared_static_asserts(name, definition)
+def static_asserts_for_exponential(histogram):
+    shared_static_asserts(histogram)
 
 def write_histogram_static_asserts(histograms):
     print """
@@ -119,18 +81,53 @@ def write_histogram_static_asserts(histograms):
         'exponential' : static_asserts_for_exponential,
         }
 
-    for (name, definition) in histograms:
-        kind = definition['kind']
-        if kind in table:
-            cpp_guard = definition.get('cpp_guard')
-            if cpp_guard:
-                print "#if defined(%s)" % cpp_guard
-            table[kind](name, definition)
-            if cpp_guard:
-                print "#endif"
+    for histogram in histograms:
+        histogram_tools.table_dispatch(histogram.kind(), table,
+                                       lambda f: f(histogram))
+
+def write_debug_histogram_ranges(histograms):
+    ranges_lengths = []
+
+    # Collect all the range information from individual histograms.
+    # Write that information out as well.
+    print "#ifdef DEBUG"
+    print "const int gBucketLowerBounds[] = {"
+    for histogram in histograms:
+        ranges = []
+        try:
+            ranges = histogram.ranges()
+        except histogram_tools.DefinitionException:
+            pass
+        ranges_lengths.append(len(ranges))
+        # Note that we do not test cpp_guard here.  We do this so we
+        # will have complete information about all the histograms in
+        # this array.  Just having information about the ranges of
+        # histograms is not platform-specific; if there are histograms
+        # that have platform-specific constants in their definitions,
+        # those histograms will fail in the .ranges() call above and
+        # we'll have a zero-length array to deal with here.
+        if len(ranges) > 0:
+            print ','.join(map(str, ranges)), ','
         else:
-            print "Don't know how to handle a histogram of kind", kind
-            sys.exit(1)
+            print '/* Skipping %s */' % histogram.name()
+    print "};"
+
+    # Write the offsets into gBucketLowerBounds.
+    print "struct bounds { int offset; int length; };"
+    print "const struct bounds gBucketLowerBoundIndex[] = {"
+    offset = 0
+    for (histogram, range_length) in itertools.izip(histograms, ranges_lengths):
+        cpp_guard = histogram.cpp_guard()
+        # We do test cpp_guard here, so that histogram IDs are valid
+        # indexes into this array.
+        if cpp_guard:
+            print "#if defined(%s)" % cpp_guard
+        print "{ %d, %d }," % (offset, range_length)
+        if cpp_guard:
+            print "#endif"
+        offset += range_length
+    print "};"
+    print "#endif"
 
 def main(argv):
     filename = argv[0]
@@ -140,5 +137,6 @@ def main(argv):
     print banner
     write_histogram_table(histograms)
     write_histogram_static_asserts(histograms)
+    write_debug_histogram_ranges(histograms)
 
 main(sys.argv[1:])
