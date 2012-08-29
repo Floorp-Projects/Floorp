@@ -48,7 +48,7 @@ function make_sendCredentials_test(topic) {
         Utils.nextTick(run_next_test);
       }
     };
-    jpakeclient.controller = new SendCredentialsController(jpakeclient);
+    jpakeclient.controller = new SendCredentialsController(jpakeclient, Service);
     Svc.Obs.notify(topic);
   };
 }
@@ -65,7 +65,7 @@ add_test(function test_abort() {
       do_throw("Shouldn't get here!");
     }
   };
-  jpakeclient.controller = new SendCredentialsController(jpakeclient);
+  jpakeclient.controller = new SendCredentialsController(jpakeclient, Service);
 
   // Verify that the controller unregisters itself when the exchange
   // was aborted.
@@ -88,7 +88,7 @@ add_test(function test_startOver() {
       do_throw("Shouldn't get here!");
     }
   };
-  jpakeclient.controller = new SendCredentialsController(jpakeclient);
+  jpakeclient.controller = new SendCredentialsController(jpakeclient, Service);
 
   Svc.Obs.notify("weave:service:start-over");
   do_check_true(abortCalled);
