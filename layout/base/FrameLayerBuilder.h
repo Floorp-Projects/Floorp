@@ -493,11 +493,9 @@ protected:
   public:
     DisplayItemDataEntry(const nsIFrame *key)
       : nsPtrHashKey<nsIFrame>(key)
-      , mIsSharingContainerLayer(false)
       {}
     DisplayItemDataEntry(DisplayItemDataEntry &toCopy)
       : nsPtrHashKey<nsIFrame>(toCopy.mKey)
-      , mIsSharingContainerLayer(toCopy.mIsSharingContainerLayer)
     {
       // This isn't actually a copy-constructor; notice that it steals toCopy's
       // array and invalid region.  Be careful.
@@ -511,7 +509,6 @@ protected:
     nsAutoTArray<DisplayItemData, 1> mData;
     nsRefPtr<RefCountedRegion> mInvalidRegion;
     uint32_t mContainerLayerGeneration;
-    bool mIsSharingContainerLayer;
 
     enum { ALLOW_MEMMOVE = false };
   };
