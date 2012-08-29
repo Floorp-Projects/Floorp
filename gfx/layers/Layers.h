@@ -961,23 +961,23 @@ public:
    * Returns the current area of the layer (in layer-space coordinates)
    * marked as needed to be recomposited.
    */
-  const nsIntRect& GetInvalidRect() { return mInvalidRect; }
+  const nsIntRegion& GetInvalidRegion() { return mInvalidRegion; }
 
   /**
    * Mark the entirety of the layer's visible region as being invalid.
    */
-  void SetInvalidRectToVisibleRegion() { mInvalidRect = GetVisibleRegion().GetBounds(); }
+  void SetInvalidRectToVisibleRegion() { mInvalidRegion = GetVisibleRegion(); }
 
   /**
    * Adds to the current invalid rect.
    */
-  void AddInvalidRect(const nsIntRect& aRect) { mInvalidRect = mInvalidRect.Union(aRect); }
+  void AddInvalidRect(const nsIntRect& aRect) { mInvalidRegion.Or(mInvalidRegion, aRect); }
 
   /**
    * Clear the invalid rect, marking the layer as being identical to what is currently
    * composited.
    */
-  void ClearInvalidRect() { mInvalidRect.SetEmpty(); }
+  void ClearInvalidRect() { mInvalidRegion.SetEmpty(); }
 
 
 #ifdef DEBUG
@@ -1041,7 +1041,7 @@ protected:
   float mOpacity;
   nsIntRect mClipRect;
   nsIntRect mTileSourceRect;
-  nsIntRect mInvalidRect;
+  nsIntRegion mInvalidRegion;
   uint32_t mContentFlags;
   bool mUseClipRect;
   bool mUseTileSourceRect;
