@@ -311,7 +311,7 @@ public:
     transform._32 -= mTempRect.y;
       
     mTarget =
-      mCtx->mTarget->CreateSimilarDrawTarget(IntSize(int32_t(mTempRect.width), int32_t(mTempRect.height)),
+      mCtx->mTarget->CreateShadowDrawTarget(IntSize(int32_t(mTempRect.width), int32_t(mTempRect.height)),
                                              FORMAT_B8G8R8A8);
 
     if (!mTarget) {
