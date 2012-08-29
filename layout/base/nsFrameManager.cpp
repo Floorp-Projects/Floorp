@@ -472,6 +472,14 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
   bool wasDestroyingFrames = mIsDestroyingFrames;
   mIsDestroyingFrames = true;
 
+  // In case the reflow doesn't invalidate anything since it just leaves
+  // a gap where the old frame was, we invalidate it here.  (This is
+  // reasonably likely to happen when removing a last child in a way
+  // that doesn't change the size of the parent.)
+  // This has to sure to invalidate the entire overflow rect; this
+  // is important in the presence of absolute positioning
+  aOldFrame->InvalidateFrameForRemoval();
+
   NS_ASSERTION(!aOldFrame->GetPrevContinuation() ||
                // exception for nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames
                aOldFrame->GetType() == nsGkAtoms::textFrame,
