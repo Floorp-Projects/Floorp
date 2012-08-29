@@ -1438,7 +1438,7 @@ AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
     : cx(cx)
 {
     JS_ASSERT(cx->runtime->requestDepth || cx->runtime->isHeapBusy());
-    JS_ASSERT(cx->runtime->onOwnerThread());
+    cx->runtime->assertValidThread();
     cx->runtime->checkRequestDepth++;
 }
 

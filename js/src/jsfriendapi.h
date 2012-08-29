@@ -183,25 +183,6 @@ JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook);
 
 namespace js {
 
-struct RuntimeFriendFields {
-    /*
-     * If non-zero, we were been asked to call the operation callback as soon
-     * as possible.
-     */
-    volatile int32_t    interrupt;
-
-    /* Limit pointer for checking native stack consumption. */
-    uintptr_t           nativeStackLimit;
-
-    RuntimeFriendFields()
-      : interrupt(0),
-        nativeStackLimit(0) { }
-
-    static const RuntimeFriendFields *get(const JSRuntime *rt) {
-        return reinterpret_cast<const RuntimeFriendFields *>(rt);
-    }
-};
-
 inline JSRuntime *
 GetRuntime(const JSContext *cx)
 {
