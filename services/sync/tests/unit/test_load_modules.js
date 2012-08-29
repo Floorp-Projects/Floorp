@@ -24,8 +24,10 @@ const modules = [
   "resource.js",
   "rest.js",
   "service.js",
+  "stages/cluster.js",
   "stages/enginesync.js",
   "status.js",
+  "userapi.js",
   "util.js",
 ];
 

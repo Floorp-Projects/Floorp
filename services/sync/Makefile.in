@@ -39,6 +39,7 @@ sync_modules := \
   rest.js \
   service.js \
   status.js \
+  userapi.js \
   util.js \
   $(NULL)
 
