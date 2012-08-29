@@ -57,6 +57,8 @@ MOCHITEST_FILES = \
 	test_bug753758.html \
 	test_bug764125.html \
 	test_drawImage_edge_cases.html \
+	test_drawImage_document_domain.html \
+	file_drawImage_document_domain.html \
 	$(NULL)
 
 ifneq (1_Linux,$(MOZ_SUITE)_$(OS_ARCH))
