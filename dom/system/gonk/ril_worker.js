@@ -1938,9 +1938,7 @@ let RIL = {
   /**
    * Send STK terminal response.
    *
-   * @param commandNumber
-   * @param typeOfCommand
-   * @param commandQualifier
+   * @param command
    * @param resultCode
    * @param [optional] itemIdentifier
    * @param [optional] input
@@ -1984,9 +1982,15 @@ let RIL = {
     GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
                                COMPREHENSIONTLV_FLAG_CR);
     GsmPDUHelper.writeHexOctet(3);
-    GsmPDUHelper.writeHexOctet(response.commandNumber);
-    GsmPDUHelper.writeHexOctet(response.typeOfCommand);
-    GsmPDUHelper.writeHexOctet(response.commandQualifier);
+    if (response.command) {
+      GsmPDUHelper.writeHexOctet(response.command.commandNumber);
+      GsmPDUHelper.writeHexOctet(response.command.typeOfCommand);
+      GsmPDUHelper.writeHexOctet(response.command.commandQualifier);
+    } else {
+      GsmPDUHelper.writeHexOctet(0x00);
+      GsmPDUHelper.writeHexOctet(0x00);
+      GsmPDUHelper.writeHexOctet(0x00);
+    }
 
     // Device Identifier
     // According to TS102.223/TS31.111 section 6.8 Structure of
@@ -3070,9 +3074,6 @@ let RIL = {
         COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: 0,
-        typeOfCommand: 0,
-        commandQualifier: 0,
         resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
       throw new Error("Can't find COMMAND_DETAILS ComprehensionTlv");
     }
@@ -3086,11 +3087,9 @@ let RIL = {
 
     let param = StkCommandParamsFactory.createParam(cmdDetails, ctlvs);
     if (param) {
-      RIL.sendDOMMessage({rilMessageType: "stkcommand",
-                          commandNumber: cmdDetails.commandNumber,
-                          typeOfCommand: cmdDetails.typeOfCommand,
-                          commandQualifier: cmdDetails.commandQualifier,
-                          options: param});
+      cmdDetails.rilMessageType = "stkcommand";
+      cmdDetails.options = param;
+      RIL.sendDOMMessage(cmdDetails);
     }
   },
 
@@ -5426,10 +5425,8 @@ let StkCommandParamsFactory = {
 
     if (menu.items.length == 0) {
       RIL.sendStkTerminalResponse({
-          commandNumber: cmdDetails.commandNumber,
-          typeOfCommand: cmdDetails.typeOfCommand,
-          commandQualifier: cmdDetails.commandQualifier,
-          resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+        command: cmdDetails,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Menu: Required value missing : items");
     }
 
@@ -5455,9 +5452,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Display Text: Required value missing : Text String");
     }
@@ -5487,9 +5482,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Set Up Idle Text: Required value missing : Text String");
     }
@@ -5504,9 +5497,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Get InKey: Required value missing : Text String");
     }
@@ -5545,9 +5536,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Get Input: Required value missing : Text String");
     }
@@ -5598,9 +5587,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Event Notfiy: Required value missing : Alpha ID");
     }
@@ -5627,9 +5614,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ADDRESS, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Set Up Call: Required value missing : Adress");
     }
@@ -5644,9 +5629,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_URL, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Launch Browser: Required value missing : URL");
     }
@@ -5914,9 +5897,6 @@ let ComprehensionTlvHelper = {
       case 0xff: // Not used.
       case 0x80: // Reserved for future use.
         RIL.sendStkTerminalResponse({
-          commandNumber: 0,
-          typeOfCommand: 0,
-          commandQualifier: 0,
           resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
         throw new Error("Invalid octet when parsing Comprehension TLV :" + temp);
         break;
@@ -5959,9 +5939,6 @@ let ComprehensionTlvHelper = {
       hlen++;
       if (length < 0x80) {
         RIL.sendStkTerminalResponse({
-          commandNumber: 0,
-          typeOfCommand: 0,
-          commandQualifier: 0,
           resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
         throw new Error("Invalid length in Comprehension TLV :" + length);
       }
@@ -5970,9 +5947,6 @@ let ComprehensionTlvHelper = {
       hlen += 2;
       if (lenth < 0x0100) {
          RIL.sendStkTerminalResponse({
-          commandNumber: 0,
-          typeOfCommand: 0,
-          commandQualifier: 0,
           resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
         throw new Error("Invalid length in 3-byte Comprehension TLV :" + length);
       }
@@ -5983,17 +5957,11 @@ let ComprehensionTlvHelper = {
       hlen += 3;
       if (length < 0x010000) {
         RIL.sendStkTerminalResponse({
-          commandNumber: 0,
-          typeOfCommand: 0,
-          commandQualifier: 0,
           resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
         throw new Error("Invalid length in 4-byte Comprehension TLV :" + length);
       }
     } else {
       RIL.sendStkTerminalResponse({
-        commandNumber: 0,
-        typeOfCommand: 0,
-        commandQualifier: 0,
         resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
       throw new Error("Invalid octet in Comprehension TLV :" + length);
     }
@@ -6047,25 +6015,16 @@ let BerTlvHelper = {
         length = GsmPDUHelper.readHexOctet();
         if (length < 0x80) {
           RIL.sendStkTerminalResponse({
-            commandNumber: 0,
-            typeOfCommand: 0,
-            commandQualifier: 0,
             resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
           throw new Error("Invalid length " + length);
         }
       } else {
         RIL.sendStkTerminalResponse({
-          commandNumber: 0,
-          typeOfCommand: 0,
-          commandQualifier: 0,
           resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
         throw new Error("Invalid length octet " + temp);
       }
     } else {
       RIL.sendStkTerminalResponse({
-        commandNumber: 0,
-        typeOfCommand: 0,
-        commandQualifier: 0,
         resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
       throw new Error("Unknown BER tag");
     }
@@ -6073,9 +6032,6 @@ let BerTlvHelper = {
     // If the value length of the BerTlv is larger than remaining value on Parcel.
     if (dataLen - hlen < length) {
       RIL.sendStkTerminalResponse({
-        commandNumber: 0,
-        typeOfCommand: 0,
-        commandQualifier: 0,
         resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
       throw new Error("BerTlvHelper value length too long!!");
       return;
