@@ -2028,42 +2028,39 @@ ContainerState::Finish(uint32_t* aTextContentFlags)
 
   uint32_t textContentFlags = 0;
 
-  for (uint32_t i = 0; i <= mNewChildLayers.Length(); ++i) {
-    // An invariant of this loop is that the layers in mNewChildLayers
-    // with index < i are the first i child layers of mContainerLayer.
-    Layer* layer;
-    if (i < mNewChildLayers.Length()) {
-      layer = mNewChildLayers[i];
-      if (!layer->GetVisibleRegion().IsEmpty()) {
-        textContentFlags |= layer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA;
-      }
-      if (!layer->GetParent()) {
-        // This is not currently a child of the container, so just add it
-        // now.
-        Layer* prevChild = i == 0 ? nullptr : mNewChildLayers[i - 1].get();
-        mContainerLayer->InsertAfter(layer, prevChild);
-        continue;
-      }
-      NS_ASSERTION(layer->GetParent() == mContainerLayer,
-                   "Layer shouldn't be the child of some other container");
-    } else {
-      layer = nullptr;
+  // Make sure that current/existing layers are added to the parent and are
+  // in the correct order.
+  Layer* layer = nullptr;
+  for (uint32_t i = 0; i < mNewChildLayers.Length(); ++i) {
+    Layer* prevChild = i == 0 ? nullptr : mNewChildLayers[i - 1].get();
+    layer = mNewChildLayers[i];
+
+    if (!layer->GetVisibleRegion().IsEmpty()) {
+      textContentFlags |= layer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA;
     }
 
-    // If layer is non-null, then it's already a child of the container,
-    // so scan forward until we find it, removing the other layers we
-    // don't want here.
-    // If it's null, scan forward until we've removed all the leftover
-    // children.
-    Layer* nextOldChild = i == 0 ? mContainerLayer->GetFirstChild() :
-      mNewChildLayers[i - 1]->GetNextSibling();
-    while (nextOldChild != layer) {
-      Layer* tmp = nextOldChild;
-      nextOldChild = nextOldChild->GetNextSibling();
-      mContainerLayer->RemoveChild(tmp);
+    if (!layer->GetParent()) {
+      // This is not currently a child of the container, so just add it
+      // now.
+      mContainerLayer->InsertAfter(layer, prevChild);
+      continue;
     }
-    // If non-null, 'layer' is now in the right place in the list, so we
-    // can just move on to the next one.
+
+    NS_ASSERTION(layer->GetParent() == mContainerLayer,
+                 "Layer shouldn't be the child of some other container");
+    mContainerLayer->RepositionChild(layer, prevChild);
+  }
+
+  // Remove old layers that have become unused.
+  if (!layer) {
+    layer = mContainerLayer->GetFirstChild();
+  } else {
+    layer = layer->GetNextSibling();
+  }
+  while (layer) {
+    Layer *layerToRemove = layer;
+    layer = layer->GetNextSibling();
+    mContainerLayer->RemoveChild(layerToRemove);
   }
 
   *aTextContentFlags = textContentFlags;
