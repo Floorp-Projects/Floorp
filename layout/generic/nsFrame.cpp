@@ -4808,18 +4808,21 @@ nsIFrame::IsInvalid()
 }
 
 void
-nsIFrame::SchedulePaint()
+nsIFrame::SchedulePaint(uint32_t aFlags)
 {
-  nsPresContext *pres = PresContext()->GetRootPresContext();
-  if (HasAnyStateBits(NS_FRAME_IN_POPUP) || !pres) {
-    nsIFrame *displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
-    NS_ASSERTION(displayRoot, "Need a display root to schedule a paint!");
-    if (!displayRoot) {
-      return;
-    }
-    pres = displayRoot->PresContext();
+  nsIFrame *displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
+  nsPresContext *pres = displayRoot->PresContext()->GetRootPresContext();
+
+  // No need to schedule a paint for an external document since they aren't
+  // painted directly.
+  if (!pres || (pres->Document() && pres->Document()->GetDisplayDocument())) {
+    return;
   }
+  
   pres->PresShell()->ScheduleViewManagerFlush();
+  if (!(aFlags & PAINT_COMPOSITE_ONLY)) {
+    displayRoot->AddStateBits(NS_FRAME_UPDATE_LAYER_TREE);
+  }
 }
 
 Layer*
@@ -4843,7 +4846,7 @@ nsIFrame::InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect
     layer->SetInvalidRectToVisibleRegion();
   }
 
-  SchedulePaint();
+  SchedulePaint(PAINT_COMPOSITE_ONLY);
   return layer;
 }
 
