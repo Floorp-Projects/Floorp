@@ -64,6 +64,10 @@ WeaveSvc.prototype = {
   metaURL: null,
   cryptoKeyURL: null,
 
+  get enabledEngineNames() {
+    return [e.name for each (e in this.engineManager.getEnabled())];
+  },
+
   get serverURL() Svc.Prefs.get("serverURL"),
   set serverURL(value) {
     // Only do work if it's actually changing
@@ -390,6 +394,9 @@ WeaveSvc.prototype = {
    * Register the built-in engines for certain applications
    */
   _registerEngines: function _registerEngines() {
+    // TODO Singleton (bug 785225).
+    this.engineManager = Engines;
+
     let engines = [];
     // Applications can provide this preference (comma-separated list)
     // to specify which engines should be registered on startup.
@@ -399,7 +406,7 @@ WeaveSvc.prototype = {
     }
 
     // Grab the actual engines and register them
-    Engines.register(engines.map(function onItem(name) {
+    this.engineManager.register(engines.map(function onItem(name) {
       return Weave[name + "Engine"];
     }));
   },
@@ -781,7 +788,7 @@ WeaveSvc.prototype = {
     // Deletion doesn't make sense if we aren't set up yet!
     if (this.clusterURL != "") {
       // Clear client-specific data from the server, including disabled engines.
-      for each (let engine in [Clients].concat(Engines.getAll())) {
+      for each (let engine in [Clients].concat(this.engineManager.getAll())) {
         try {
           engine.removeClientData();
         } catch(ex) {
@@ -1200,9 +1207,8 @@ WeaveSvc.prototype = {
     Records.set(this.metaURL, meta);
 
     // Wipe everything we know about except meta because we just uploaded it
-    let collections = [Clients].concat(Engines.getAll()).map(function(engine) {
-      return engine.name;
-    });
+    let engines = [Clients].concat(this.engineManager.getAll());
+    let collections = [engine.name for each (engine in engines)];
 
     // Generate, upload, and download new keys. Do this last so we don't wipe
     // them...
@@ -1275,11 +1281,11 @@ WeaveSvc.prototype = {
       // Clear out any service data
       this.resetService();
 
-      engines = [Clients].concat(Engines.getAll());
+      engines = [Clients].concat(this.engineManager.getAll());
     }
     // Convert the array of names into engines
     else {
-      engines = Engines.get(engines);
+      engines = this.engineManager.get(engines);
     }
 
     // Fully wipe each engine if it's able to decrypt data
@@ -1351,11 +1357,11 @@ WeaveSvc.prototype = {
         // Clear out any service data
         this.resetService();
 
-        engines = [Clients].concat(Engines.getAll());
+        engines = [Clients].concat(this.engineManager.getAll());
       }
       // Convert the array of names into engines
       else {
-        engines = Engines.get(engines);
+        engines = this.engineManager.get(engines);
       }
 
       // Have each engine drop any temporary meta data
