@@ -119,6 +119,8 @@
 #endif
 #include "nsSMILAnimationController.h"
 #include "SVGContentUtils.h"
+#include "nsSVGUtils.h"
+#include "nsSVGEffects.h"
 #include "SVGFragmentIdentifier.h"
 
 #include "nsRefreshDriver.h"
@@ -7334,6 +7336,11 @@ bool
 PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 {
   target->SchedulePaint();
+  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(target);
+  while (parent) {
+    nsSVGEffects::InvalidateDirectRenderingObservers(parent);
+    parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
+  }
 
   nsAutoCString docURL("N/A");
   nsIURI *uri = mDocument->GetDocumentURI();

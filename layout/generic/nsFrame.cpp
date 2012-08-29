@@ -4153,6 +4153,8 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("nsFrame::DidReflow: aStatus=%d", aStatus));
 
+  nsSVGEffects::InvalidateDirectRenderingObservers(this, nsSVGEffects::INVALIDATE_REFLOW);
+
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
                 NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -4797,9 +4799,11 @@ nsIFrame::ClearInvalidationStateBits()
 static void InvalidateFrameInternal(nsIFrame *aFrame)
 {
   aFrame->AddStateBits(NS_FRAME_NEEDS_PAINT);
+  nsSVGEffects::InvalidateDirectRenderingObservers(aFrame);
   nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
   while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
     parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
+    nsSVGEffects::InvalidateDirectRenderingObservers(parent);
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
   }
   if (!parent) {
@@ -6904,6 +6908,9 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     }
   }
 
+  if (anyOverflowChanged) {
+    nsSVGEffects::InvalidateDirectRenderingObservers(this);
+  }
   return anyOverflowChanged;
 }
 
