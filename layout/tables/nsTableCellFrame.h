@@ -211,11 +211,11 @@ public:
 
   virtual bool UpdateOverflow();
   
-  virtual void InvalidateFrame(uint32_t aFlags = 0)
+  virtual void InvalidateFrame()
   {
-    nsIFrame::InvalidateFrame(aFlags);
+    nsIFrame::InvalidateFrame();
     nsTableFrame *tableFrame = nsTableFrame::GetTableFrame(this);
-    tableFrame->InvalidateFrame(aFlags | INVALIDATE_DONT_SCHEDULE_PAINT);
+    tableFrame->InvalidateFrame();
   }
 
 protected:
