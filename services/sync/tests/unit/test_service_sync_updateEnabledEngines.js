@@ -227,7 +227,7 @@ add_test(function test_disabledLocally_wipe503() {
   });
 
   _("Sync.");
-  ErrorHandler.syncAndReportErrors();
+  Service.errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_enabledRemotely() {

@@ -45,7 +45,7 @@ ClusterManager.prototype = {
       switch (node.status) {
         case 400:
           Status.login = LOGIN_FAILED_LOGIN_REJECTED;
-          fail = "Find cluster denied: " + ErrorHandler.errorStr(node);
+          fail = "Find cluster denied: " + this.service.errorHandler.errorStr(node);
           break;
         case 404:
           this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
@@ -58,14 +58,14 @@ ClusterManager.prototype = {
           this._log.trace("_findCluster successfully returning " + node);
           return node;
         default:
-          ErrorHandler.checkServerError(node);
+          this.service.errorHandler.checkServerError(node);
           fail = "Unexpected response code: " + node.status;
           break;
       }
     } catch (e) {
       this._log.debug("Network error on findCluster");
       Status.login = LOGIN_FAILED_NETWORK_ERROR;
-      ErrorHandler.checkServerError(e);
+      this.service.errorHandler.checkServerError(e);
       fail = e;
     }
     throw fail;
