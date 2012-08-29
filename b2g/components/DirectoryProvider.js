@@ -23,12 +23,17 @@ DirectoryProvider.prototype = {
   getFile: function dp_getFile(prop, persistent) {
 #ifdef MOZ_WIDGET_GONK
     let localProps = ["cachePDir", "webappsDir", "PrefD", "indexedDBPDir",
-      "permissionDBPDir", "UpdRootD"];
+                      "permissionDBPDir", "UpdRootD"];
     if (localProps.indexOf(prop) != -1) {
-      prop.persistent = true;
       let file = Cc["@mozilla.org/file/local;1"]
                    .createInstance(Ci.nsILocalFile)
       file.initWithPath(LOCAL_DIR);
+      persistent.value = true;
+      return file;
+    } else if (prop == "coreAppsDir") {
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile)
+      file.initWithPath("/system/b2g");
+      persistent.value = true;
       return file;
     }
 #endif
