@@ -3976,7 +3976,6 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
       }
     }
   }
-  ScheduleViewManagerFlush();
 }
 
 void
