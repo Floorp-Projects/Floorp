@@ -52,7 +52,7 @@ function onEngineSync(subject, topic, data) {
 
   if (!gCounter &&
       Services.prefs.getPrefType("services.sync.firstSync") != Ci.nsIPrefBranch.PREF_INVALID) {
-    gProgressBar.max = Weave.Engines.getEnabled().length;
+    gProgressBar.max = Weave.Service.engineManager.getEnabled().length;
   }
 
   gCounter += 1;

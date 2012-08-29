@@ -79,7 +79,7 @@ EngineSynchronizer.prototype = {
     let info = this.service._fetchInfo(infoURL);
 
     // Convert the response to an object and read out the modified times
-    for (let engine of [Clients].concat(Engines.getAll())) {
+    for (let engine of [Clients].concat(this.service.engineManager.getAll())) {
       engine.lastModified = info.obj[engine.name] || 0;
     }
 
@@ -101,13 +101,13 @@ EngineSynchronizer.prototype = {
     // Wipe data in the desired direction if necessary
     switch (Svc.Prefs.get("firstSync")) {
       case "resetClient":
-        this.service.resetClient(Engines.getEnabled().map(function(e) e.name));
+        this.service.resetClient(this.service.enabledEngineNames);
         break;
       case "wipeClient":
-        this.service.wipeClient(Engines.getEnabled().map(function(e) e.name));
+        this.service.wipeClient(this.service.enabledEngineNames);
         break;
       case "wipeRemote":
-        this.service.wipeRemote(Engines.getEnabled().map(function(e) e.name));
+        this.service.wipeRemote(this.service.enabledEngineNames);
         break;
     }
 
@@ -146,7 +146,7 @@ EngineSynchronizer.prototype = {
     }
 
     try {
-      for each (let engine in Engines.getEnabled()) {
+      for each (let engine in this.service.engineManager.getEnabled()) {
         // If there's any problems with syncing the engine, report the failure
         if (!(this._syncEngine(engine)) || Status.enforceBackoff) {
           this._log.info("Aborting sync for failure in " + engine.name);
@@ -226,7 +226,7 @@ EngineSynchronizer.prototype = {
 
     this.service._ignorePrefObserver = true;
 
-    let enabled = [eng.name for each (eng in Engines.getEnabled())];
+    let enabled = this.service.enabledEngineNames;
     for (let engineName in meta.payload.engines) {
       if (engineName == "clients") {
         // Clients is special.
@@ -238,7 +238,7 @@ EngineSynchronizer.prototype = {
         enabled.splice(index, 1);
         continue;
       }
-      let engine = Engines.get(engineName);
+      let engine = this.service.engineManager.get(engineName);
       if (!engine) {
         // The engine doesn't exist locally. Nothing to do.
         continue;
@@ -260,7 +260,7 @@ EngineSynchronizer.prototype = {
 
     // Any remaining engines were either enabled locally or disabled remotely.
     for each (let engineName in enabled) {
-      let engine = Engines.get(engineName);
+      let engine = this.service.engineManager.get(engineName);
       if (Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
         this._log.trace("The " + engineName + " engine was enabled locally.");
       } else {
