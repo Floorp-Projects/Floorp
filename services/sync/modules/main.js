@@ -7,7 +7,6 @@ const EXPORTED_SYMBOLS = ['Weave'];
 let Weave = {};
 Components.utils.import("resource://services-sync/constants.js", Weave);
 let lazies = {
-  "engines/clients.js":   ["Clients"],
   "identity.js":          ["Identity"],
   "jpakeclient.js":       ["JPAKEClient"],
   "notifications.js":     ["Notifications", "Notification", "NotificationButton"],

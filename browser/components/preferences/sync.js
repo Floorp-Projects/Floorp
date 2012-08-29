@@ -67,7 +67,7 @@ let gSyncPane = {
     } else {
       this.page = PAGE_HAS_ACCOUNT;
       document.getElementById("accountName").value = Weave.Identity.account;
-      document.getElementById("syncComputerName").value = Weave.Clients.localName;
+      document.getElementById("syncComputerName").value = Weave.Service.clientsEngine.localName;
       document.getElementById("tosPP").hidden = this._usingCustomServer;
     }
   },
