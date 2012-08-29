@@ -4806,12 +4806,50 @@ nsIFrame::InvalidateFrame()
   if (!parent) {
     SchedulePaint();
   }
+  if (HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
+    Properties().Delete(InvalidationRect());
+    RemoveStateBits(NS_FRAME_HAS_INVALID_RECT);
+  }
+}
+
+void
+nsIFrame::InvalidateFrameWithRect(const nsRect& aRect)
+{
+  bool alreadyInvalid = false;
+  if (!HasAnyStateBits(NS_FRAME_NEEDS_PAINT)) {
+    InvalidateFrame();
+  } else {
+    alreadyInvalid = true;
+  } 
+
+  nsRect *rect = static_cast<nsRect*>(Properties().Get(InvalidationRect()));
+  if (!rect) {
+    if (alreadyInvalid) {
+      return;
+    }
+    rect = new nsRect();
+    Properties().Set(InvalidationRect(), rect);
+    AddStateBits(NS_FRAME_HAS_INVALID_RECT);
+  }
+
+  *rect = rect->Union(aRect);
 }
   
 bool 
-nsIFrame::IsInvalid() 
+nsIFrame::IsInvalid(nsRect& aRect)
 {
-  return HasAnyStateBits(NS_FRAME_NEEDS_PAINT);
+  if (!HasAnyStateBits(NS_FRAME_NEEDS_PAINT)) {
+    return false;
+  }
+  
+  if (HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
+    nsRect *rect = static_cast<nsRect*>(Properties().Get(InvalidationRect()));
+    NS_ASSERTION(rect, "Must have an invalid rect if NS_FRAME_HAS_INVALID_RECT is set!");
+    aRect = *rect;
+  } else {
+    aRect.SetEmpty();
+  }
+  return true;
 }
 
 void
