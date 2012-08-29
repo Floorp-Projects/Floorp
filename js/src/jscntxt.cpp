@@ -267,11 +267,19 @@ JSRuntime::cloneSelfHostedValueById(JSContext *cx, jsid id, HandleObject holder,
             return false;
     }
 
-    RootedObject clone(cx, JS_CloneFunctionObject(cx, &funVal.toObject(), cx->global()));
-    if (!clone)
-        return false;
-
-    vp->setObjectOrNull(clone);
+    /*
+     * We don't clone if we're operating in the self-hosting global, as that
+     * means we're currently executing the self-hosting script while
+     * initializing the runtime (see JSRuntime::initSelfHosting).
+     */
+    if (cx->global() == selfHostedGlobal_) {
+        *vp = ObjectValue(funVal.toObject());
+    } else {
+        RootedObject clone(cx, JS_CloneFunctionObject(cx, &funVal.toObject(), cx->global()));
+        if (!clone)
+            return false;
+        *vp = ObjectValue(*clone);
+    }
     DebugOnly<bool> ok = JS_DefinePropertyById(cx, holder, id, *vp, NULL, NULL, 0);
     JS_ASSERT(ok);
     return true;

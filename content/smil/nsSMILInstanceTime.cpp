@@ -167,9 +167,8 @@ nsSMILInstanceTime::IsDependentOn(const nsSMILInstanceTime& aOther) const
   if (myBaseTime == &aOther)
     return true;
 
-  // mVisited is mutable
-  mozilla::AutoRestore<bool> setVisited(const_cast<nsSMILInstanceTime*>(this)->mVisited);
-  const_cast<nsSMILInstanceTime*>(this)->mVisited = true;
+  mozilla::AutoRestore<bool> setVisited(mVisited);
+  mVisited = true;
   return myBaseTime->IsDependentOn(aOther);
 }
 

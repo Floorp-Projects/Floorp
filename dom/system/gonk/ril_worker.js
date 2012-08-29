@@ -1100,7 +1100,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_MSISDN,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_ADF_USIM,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_MSISDN),
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1143,7 +1143,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_AD,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_ADF_USIM,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_AD),
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1195,7 +1195,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_UST,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_ADF_USIM,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_UST),
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1293,7 +1293,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_FDN,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_FDN),
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1338,7 +1338,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    options.fileId,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK,
+      pathId:    this._getPathIdForICCRecord(options.fileId),
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1375,7 +1375,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_MBDN,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_ADF_USIM,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_MBDN),
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1435,7 +1435,7 @@ let RIL = {
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_PBR,
-      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_PBR),
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -2028,6 +2028,61 @@ let RIL = {
     this.cardState = newCardState;
     this.sendDOMMessage({rilMessageType: "cardstatechange",
                          cardState: this.cardState});
+  },
+
+  /** 
+   * Helper function for getting the pathId for the specific ICC record
+   * depeding on which type of ICC card we are using.
+   * 
+   * @param fileId
+   *        File id.
+   * @return The pathId or null in case of an error or invalid input.
+   */
+  _getPathIdForICCRecord: function _getPathIdForICCRecord(fileId) {
+    let index = this.iccStatus.gsmUmtsSubscriptionAppIndex;
+    if (index == -1) {
+      return null;
+    }
+    let app = this.iccStatus.apps[index];
+    if (!app) {
+      return null;
+    }
+
+    switch (app.app_type) {
+      case CARD_APPTYPE_SIM:
+        switch (fileId) {
+          case ICC_EF_ADN:
+          case ICC_EF_FDN:
+          case ICC_EF_MSISDN:
+            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
+
+          case ICC_EF_AD:
+          case ICC_EF_MBDN:
+          case ICC_EF_UST:
+            return EF_PATH_MF_SIM + EF_PATH_DF_GSM;
+          case ICC_EF_PBR:
+            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
+        }
+      case CARD_APPTYPE_USIM:
+        switch (fileId) {
+          case ICC_EF_AD:
+          case ICC_EF_MBDN:
+          case ICC_EF_UST:
+          case ICC_EF_MSISDN:
+            return EF_PATH_MF_SIM + EF_PATH_ADF_USIM;
+          case ICC_EF_ADN:
+          case ICC_EF_FDN:
+            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
+          case ICC_EF_PBR:
+            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
+          default:
+            // The file ids in USIM phone book entries are decided by the
+	    // card manufacturer. So if we don't match any of the cases
+	    // above and if its a USIM return the phone book path.
+            return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
+        }
+    }
+    return null;
   },
 
    /**
