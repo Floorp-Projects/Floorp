@@ -197,7 +197,7 @@ public:
   void SetContinuousBCBorderWidth(uint8_t     aForSide,
                                   BCPixelSize aPixelValue);
   
-  virtual void InvalidateFrame(uint32_t aFlags = 0);
+  virtual void InvalidateFrame();
 
 protected:
   nsTableColGroupFrame(nsStyleContext* aContext);
