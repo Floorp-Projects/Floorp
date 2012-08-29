@@ -19,6 +19,7 @@ self.onmessage = function onmessage_start(msg) {
     test_offsetby();
     test_open_existing_file();
     test_open_non_existing_file();
+    test_flush_open_file();
     test_copy_existing_file();
     test_readall_writeall_file();
     test_position();
@@ -157,6 +158,20 @@ function test_open_non_existing_file()
   ok(!!exn, "test_open_non_existing_file: Exception was raised ");
   ok(exn instanceof OS.File.Error, "test_open_non_existing_file: Exception was a OS.File.Error");
   ok(exn.becauseNoSuchFile, "test_open_non_existing_file: Exception confirms that the file does not exist");
+}
+
+/**
+ * Test that to ensure that |foo.flush()| does not
+ * cause an error, where |foo| is an open file.
+ */
+function test_flush_open_file()
+{
+  ok(true, "Starting test_flush_open_file");
+  let tmp = "test_flush.tmp";
+  let file = OS.File.open(tmp, {create: true, write: true});
+  file.flush();
+  file.close();
+  OS.File.remove(tmp);
 }
 
 /**
