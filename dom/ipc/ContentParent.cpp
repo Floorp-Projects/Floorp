@@ -189,7 +189,8 @@ ContentParent::PreallocateAppProcess()
 
     sPreallocatedAppProcess =
         new ContentParent(MAGIC_PREALLOCATED_APP_MANIFEST_URL,
-                          /*isBrowserElement=*/false);
+                          /*isBrowserElement=*/false,
+                          base::PRIVILEGES_DEFAULT);
     sPreallocatedAppProcess->Init();
 }
 
@@ -275,6 +276,19 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
     return p;
 }
 
+static bool
+AppNeedsInheritedOSPrivileges(mozIApplication* aApp)
+{
+    bool needsInherit = false;
+    // FIXME/bug 785592: implement a CameraBridge so we don't have to
+    // hack around with OS permissions
+    if (NS_FAILED(aApp->HasPermission("camera", &needsInherit))) {
+        NS_WARNING("Unable to check permissions.  Breakage may follow.");
+        return false;
+    }
+    return needsInherit;
+}
+
 /*static*/ TabParent*
 ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
 {
@@ -326,13 +340,20 @@ ContentParent::CreateBrowser(mozIApplication* aApp, bool aIsBrowserElement)
 
     nsRefPtr<ContentParent> p = gAppContentParents->Get(manifestURL);
     if (!p) {
-        p = MaybeTakePreallocatedAppProcess();
-        if (p) {
-            p->SetManifestFromPreallocated(manifestURL);
-        } else {
-            NS_WARNING("Unable to use pre-allocated app process");
-            p = new ContentParent(manifestURL, aIsBrowserElement);
+        if (AppNeedsInheritedOSPrivileges(aApp)) {
+            p = new ContentParent(manifestURL, aIsBrowserElement,
+                                  base::PRIVILEGES_INHERIT);
             p->Init();
+        } else {
+            p = MaybeTakePreallocatedAppProcess();
+            if (p) {
+                p->SetManifestFromPreallocated(manifestURL);
+            } else {
+                NS_WARNING("Unable to use pre-allocated app process");
+                p = new ContentParent(manifestURL, aIsBrowserElement,
+                                      base::PRIVILEGES_DEFAULT);
+                p->Init();
+            }
         }
         gAppContentParents->Put(manifestURL, p);
     }
@@ -658,8 +679,11 @@ ContentParent::GetTestShellSingleton()
 }
 
 ContentParent::ContentParent(const nsAString& aAppManifestURL,
-                             bool aIsForBrowser)
-    : mGeolocationWatchID(-1)
+                             bool aIsForBrowser,
+                             ChildOSPrivileges aOSPrivileges)
+    : mSubprocess(nullptr)
+    , mOSPrivileges(aOSPrivileges)
+    , mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
     , mIsAlive(true)
@@ -671,7 +695,8 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
     nsDebugImpl::SetMultiprocessMode("Parent");
 
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
+    mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content,
+                                            aOSPrivileges);
 
     bool useOffMainThreadCompositing = !!CompositorParent::CompositorLoop();
     if (useOffMainThreadCompositing) {
