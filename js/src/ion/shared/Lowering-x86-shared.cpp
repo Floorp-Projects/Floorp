@@ -64,7 +64,7 @@ bool
 LIRGeneratorX86Shared::visitGuardShape(MGuardShape *ins)
 {
     LGuardShape *guard = new LGuardShape(useRegister(ins->obj()));
-    return assignSnapshot(guard, ins->bailoutKind()) && add(guard, ins);
+    return assignSnapshot(guard, Bailout_Invalidate) && add(guard, ins);
 }
 
 bool

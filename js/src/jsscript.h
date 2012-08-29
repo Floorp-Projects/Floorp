@@ -476,7 +476,6 @@ struct JSScript : public js::gc::Cell
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
 #endif
     bool            invalidatedIdempotentCache:1; /* idempotent cache has triggered invalidation */
-    bool            failedCachedShapeGuard:1; /* Ion shape guard based on JM IC triggered invalidation */
     bool            isGenerator:1;    /* is a generator */
     bool            isGeneratorExp:1; /* is a generator expression */
     bool            hasScriptCounts:1;/* script has an entry in
