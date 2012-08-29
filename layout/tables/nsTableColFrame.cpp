@@ -191,10 +191,10 @@ nsTableColFrame::GetSplittableType() const
 }
 
 void
-nsTableColFrame::InvalidateFrame(uint32_t aFlags)
+nsTableColFrame::InvalidateFrame()
 {
-  nsIFrame::InvalidateFrame(aFlags);
+  nsIFrame::InvalidateFrame();
   nsTableFrame *tableFrame = nsTableFrame::GetTableFrame(this);
-  tableFrame->InvalidateFrame(aFlags | INVALIDATE_DONT_SCHEDULE_PAINT);
+  tableFrame->InvalidateFrame();
 }
 
