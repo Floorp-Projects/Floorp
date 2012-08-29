@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=567511
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 567511</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=567511">Mozilla Bug 567511</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe src="file_drawImage_document_domain.html"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 567511 **/
+
+SimpleTest.waitForExplicitFinish();
+
+window.onmessage = function(ev) {
+  if (ev.data.msg == "done") {
+    SimpleTest.finish();
+  } else if (ev.data.msg == "exception") {
+    ok(false, ev.data.data);
+  } else if (ev.data.msg == "color") {
+    is(ev.data.data, "rgba(0, 255, 0, 1)", "Should get correct color");
+  } else if (ev.data.msg == "unknown_message") {
+    ok(false, "Unknown message to child: " + ev.data.data);
+  } else {
+    ok(false, "Unknown message from child: " + ev.data.msg);
+  }
+}
+
+function doTest() {
+  frames[0].postMessage("start", "*");
+}
+
+addLoadEvent(doTest);
+
+</script>
+</pre>
+</body>
+</html>

@@ -533,6 +533,12 @@ EXTRA_DSO_LDOPTS += -lelf -ldemangle
 endif
 endif
 
+ifneq (,$(filter DragonFly FreeBSD NetBSD OpenBSD,$(OS_ARCH)))
+OS_LIBS += $(call EXPAND_LIBNAME,kvm)
+# keep `environ' unresolved, see bug 14426 for binutils
+EXTRA_DSO_LDOPTS += -Wl,--warn-unresolved-symbols
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 version winspool comdlg32 imm32 msimg32 shlwapi psapi ws2_32 dbghelp rasapi32 rasdlg iphlpapi uxtheme setupapi secur32 sensorsapi portabledeviceguids windowscodecs wininet)
 ifdef ACCESSIBILITY

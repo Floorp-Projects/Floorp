@@ -744,8 +744,6 @@ public:
     Block mFirstBlock;
     nsPurpleBufferEntry *mFreeList;
 
-    // For objects compiled against Gecko 1.9 and 1.9.1.
-    PointerSet mCompatObjects;
 #ifdef DEBUG_CC
     PointerSet mNormalObjects; // duplicates our blocks
     nsCycleCollectorStats &mStats;
@@ -759,14 +757,12 @@ public:
     {
         InitBlocks();
         mNormalObjects.Init();
-        mCompatObjects.Init();
     }
 #else
     nsPurpleBuffer(nsCycleCollectorParams &params) 
         : mParams(params)
     {
         InitBlocks();
-        mCompatObjects.Init();
     }
 #endif
 
@@ -850,7 +846,7 @@ public:
 #ifdef DEBUG_CC
     bool Exists(void *p) const
     {
-        return mNormalObjects.GetEntry(p) || mCompatObjects.GetEntry(p);
+        return mNormalObjects.GetEntry(p);
     }
 #endif
 
@@ -910,18 +906,6 @@ public:
         --mCount;
     }
 
-    bool PutCompatObject(nsISupports *p)
-    {
-        ++mCount;
-        return !!mCompatObjects.PutEntry(p);
-    }
-
-    void RemoveCompatObject(nsISupports *p)
-    {
-        --mCount;
-        mCompatObjects.RemoveEntry(p);
-    }
-
     uint32_t Count() const
     {
         return mCount;
@@ -936,30 +920,6 @@ public:
 
 static bool
 AddPurpleRoot(GCGraphBuilder &builder, void *root, nsCycleCollectionParticipant *cp);
-
-struct CallbackClosure
-{
-    CallbackClosure(nsPurpleBuffer *aPurpleBuffer, GCGraphBuilder &aBuilder)
-        : mPurpleBuffer(aPurpleBuffer),
-          mBuilder(aBuilder)
-    {
-    }
-    nsPurpleBuffer *mPurpleBuffer;
-    GCGraphBuilder &mBuilder;
-};
-
-static PLDHashOperator
-selectionCallback(nsPtrHashKey<const void>* key, void* userArg)
-{
-    CallbackClosure *closure = static_cast<CallbackClosure*>(userArg);
-    if (AddPurpleRoot(closure->mBuilder,
-                      static_cast<nsISupports *>(
-                        const_cast<void*>(key->GetKey())),
-                      nullptr))
-        return PL_DHASH_REMOVE;
-
-    return PL_DHASH_NEXT;
-}
 
 void
 nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
@@ -979,17 +939,9 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
         }
     }
 
-    NS_ABORT_IF_FALSE(mCompatObjects.Count() + mNormalObjects.Count() ==
-                          realCount,
+    NS_ABORT_IF_FALSE(mNormalObjects.Count() == realCount,
                       "count out of sync");
 #endif
-
-    if (mCompatObjects.Count()) {
-        mCount -= mCompatObjects.Count();
-        CallbackClosure closure(this, aBuilder);
-        mCompatObjects.EnumerateEntries(selectionCallback, &closure);
-        mCount += mCompatObjects.Count(); // in case of allocation failure
-    }
 
     // Walk through all the blocks.
     for (Block *b = &mFirstBlock; b; b = b->mNext) {
@@ -1062,10 +1014,6 @@ struct nsCycleCollector
     nsCycleCollector();
     ~nsCycleCollector();
 
-    // The first pair of Suspect and Forget functions are only used by
-    // old XPCOM binary components.
-    bool Suspect(nsISupports *n);
-    bool Forget(nsISupports *n);
     nsPurpleBufferEntry* Suspect2(void *n, nsCycleCollectionParticipant *cp);
     bool Forget2(nsPurpleBufferEntry *e);
 
@@ -2468,70 +2416,6 @@ nsCycleCollector_isScanSafe(void *s, nsCycleCollectionParticipant *cp)
 }
 #endif
 
-bool
-nsCycleCollector::Suspect(nsISupports *n)
-{
-    AbortIfOffMainThreadIfCheckFast();
-
-    // Re-entering ::Suspect during collection used to be a fault, but
-    // we are canonicalizing nsISupports pointers using QI, so we will
-    // see some spurious refcount traffic here. 
-
-    if (mScanInProgress)
-        return false;
-
-    NS_ASSERTION(nsCycleCollector_isScanSafe(n, nullptr),
-                 "suspected a non-scansafe pointer");
-
-    if (mParams.mDoNothing)
-        return false;
-
-#ifdef DEBUG_CC
-    mStats.mSuspectNode++;
-
-    if (nsCycleCollector_shouldSuppress(n))
-        return false;
-
-    if (mParams.mLogPointers) {
-        if (!mPtrLog)
-            mPtrLog = fopen("pointer_log", "w");
-        fprintf(mPtrLog, "S %p\n", static_cast<void*>(n));
-    }
-#endif
-
-    return mPurpleBuf.PutCompatObject(n);
-}
-
-
-bool
-nsCycleCollector::Forget(nsISupports *n)
-{
-    AbortIfOffMainThreadIfCheckFast();
-
-    // Re-entering ::Forget during collection used to be a fault, but
-    // we are canonicalizing nsISupports pointers using QI, so we will
-    // see some spurious refcount traffic here. 
-
-    if (mScanInProgress)
-        return false;
-
-    if (mParams.mDoNothing)
-        return true; // it's as good as forgotten
-
-#ifdef DEBUG_CC
-    mStats.mForgetNode++;
-
-    if (mParams.mLogPointers) {
-        if (!mPtrLog)
-            mPtrLog = fopen("pointer_log", "w");
-        fprintf(mPtrLog, "F %p\n", static_cast<void*>(n));
-    }
-#endif
-
-    mPurpleBuf.RemoveCompatObject(n);
-    return true;
-}
-
 nsPurpleBufferEntry*
 nsCycleCollector::Suspect2(void *n, nsCycleCollectionParticipant *cp)
 {
@@ -2987,21 +2871,6 @@ nsCycleCollector_forgetJSRuntime()
 {
     if (sCollector)
         sCollector->ForgetJSRuntime();
-}
-
-
-bool
-NS_CycleCollectorSuspect(nsISupports *n)
-{
-    if (sCollector)
-        return sCollector->Suspect(n);
-    return false;
-}
-
-bool
-NS_CycleCollectorForget(nsISupports *n)
-{
-    return sCollector ? sCollector->Forget(n) : true;
 }
 
 nsPurpleBufferEntry*

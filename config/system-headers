@@ -1067,3 +1067,7 @@ gst/app/gstappsrc.h
 gst/video/video.h
 sys/msg.h
 sys/ipc.h
+sys/thr.h
+sys/user.h
+kvm.h
+spawn.h

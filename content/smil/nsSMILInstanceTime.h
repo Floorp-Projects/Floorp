@@ -132,7 +132,7 @@ protected:
     kWasDynamicEndpoint = 8
   };
   uint8_t       mFlags;   // Combination of kDynamic, kMayUpdate, etc.
-  bool          mVisited; // (mutable) Cycle tracking
+  mutable bool  mVisited; // Cycle tracking
 
   // Additional reference count to determine if this instance time is currently
   // used as a fixed endpoint in any intervals. Instance times that are used in
