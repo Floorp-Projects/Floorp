@@ -5,7 +5,7 @@
 
 
 chrome.jar:
-% content browser %content/
+% content browser %content/ contentaccessible=yes
 
 * content/about.xhtml                  (content/about.xhtml)
   content/config.xhtml                 (content/config.xhtml)
