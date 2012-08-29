@@ -413,6 +413,11 @@ public:
       // Indices into mRadii are the NS_CORNER_* constants in nsStyleConsts.h
       nscoord mRadii[8];
 
+      RoundedRect operator+(const nsPoint& aOffset) const {
+        RoundedRect r = *this;
+        r.mRect += aOffset;
+        return r;
+      }
       bool operator==(const RoundedRect& aOther) const {
         if (!mRect.IsEqualInterior(aOther.mRect)) {
           return false;
@@ -474,6 +479,12 @@ public:
 
     // Gets rid of any rounded corners in this clip.
     void RemoveRoundedCorners();
+
+    // Adds the difference between Intersect(*this + aPoint, aBounds) and
+    // Intersect(aOther, aOtherBounds) to aDifference.
+    void AddOffsetAndComputeDifference(const nsPoint& aPoint, const nsRect& aBounds,
+                                       const Clip& aOther, const nsRect& aOtherBounds,
+                                       nsRegion* aDifference);
 
     bool operator==(const Clip& aOther) const {
       return mHaveClipRect == aOther.mHaveClipRect &&
