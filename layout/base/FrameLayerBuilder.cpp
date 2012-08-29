@@ -546,6 +546,16 @@ struct MaskLayerUserData : public LayerUserData
   float mScaleX, mScaleY;
 };
 
+/*
+ * User data to track the owning frame of a layer during construction.
+ */
+struct LayerOwnerUserData : public LayerUserData
+{
+  LayerOwnerUserData(nsIFrame* aOwnerFrame) : mOwnerFrame(aOwnerFrame) {}
+
+  nsIFrame* mOwnerFrame;
+};
+
 /**
  * The address of gThebesDisplayItemLayerUserData is used as the user
  * data key for ThebesLayers created by FrameLayerBuilder.
@@ -580,6 +590,12 @@ uint8_t gLayerManagerUserData;
  * The user data is a MaskLayerUserData.
  */
 uint8_t gMaskLayerUserData;
+/**
+ * The address of gLayerOwnerUserData is used as the user
+ * data key for a Layer's owner frame during layer-building.
+ * The user data is a LayerOwnerUserData.
+ */
+uint8_t gLayerOwnerUserData;
 
 /**
   * Helper functions for getting user data and casting it to the correct type.
@@ -691,32 +707,41 @@ FrameLayerBuilder::DidBeginRetainedLayerTransaction(LayerManager* aManager)
 }
 
 /**
- * A helper function to remove the mThebesLayerItems entries for every
- * layer in aLayer's subtree.
+ * A helper function to remove the mThebesLayerItems entries and
+ * layer ownership user-data for every layer in aLayer's subtree.
  */
 void
-FrameLayerBuilder::RemoveThebesItemsForLayerSubtree(Layer* aLayer)
+FrameLayerBuilder::RemoveThebesItemsAndOwnerDataForLayerSubtree(Layer* aLayer,
+                                                                bool aRemoveThebesItems,
+                                                                bool aRemoveOwnerData)
 {
+  if (aRemoveOwnerData) {
+    // Remove the layer owner flag so that this layer can be recovered by other
+    // frames in future layer tree constructions.
+    aLayer->RemoveUserData(&gLayerOwnerUserData);
+  }
+
   ThebesLayer* thebes = aLayer->AsThebesLayer();
   if (thebes) {
-    mThebesLayerItems.RemoveEntry(thebes);
+    if (aRemoveThebesItems) {
+      mThebesLayerItems.RemoveEntry(thebes);
+    }
     return;
   }
 
   for (Layer* child = aLayer->GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    RemoveThebesItemsForLayerSubtree(child);
+    RemoveThebesItemsAndOwnerDataForLayerSubtree(child, aRemoveThebesItems,
+                                                 aRemoveOwnerData);
   }
 }
 
 void
 FrameLayerBuilder::DidEndTransaction(LayerManager* aManager)
 {
-  if (aManager != mRetainingManager) {
-    Layer* root = aManager->GetRoot();
-    if (root) {
-      RemoveThebesItemsForLayerSubtree(root);
-    }
+  Layer* root = aManager->GetRoot();
+  if (root) {
+    RemoveThebesItemsAndOwnerDataForLayerSubtree(root, aManager != mRetainingManager, true);
   }
 
   GetMaskLayerImageCache()->Sweep();
@@ -896,8 +921,13 @@ FrameLayerBuilder::GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKe
   for (uint32_t i = 0; i < array->Length(); ++i) {
     if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
       Layer* layer = array->ElementAt(i).mLayer;
-      if (layer->Manager() == mRetainingManager)
-        return layer;
+      if (layer->Manager() == mRetainingManager) {
+        LayerOwnerUserData* layerOwner = static_cast<LayerOwnerUserData*>
+          (layer->GetUserData(&gLayerOwnerUserData));
+        if (!layerOwner || layerOwner->mOwnerFrame == aFrame) {
+          return layer;
+        }
+      }
     }
   }
   return nullptr;
@@ -2351,6 +2381,12 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     if (!containerLayer)
       return nullptr;
   }
+
+  // This layer is owned by this frame for this building phase, don't let
+  // it be found by another frame due to its old underlying frame or merged
+  // frames. This flag will be cleared in FrameLayerBuilder::DidEndTransaction
+  containerLayer->SetUserData(&gLayerOwnerUserData,
+                              new LayerOwnerUserData(aContainerFrame));
 
   if (aContainerItem &&
       aContainerItem->GetLayerState(aBuilder, aManager, aParameters) == LAYER_ACTIVE_EMPTY) {

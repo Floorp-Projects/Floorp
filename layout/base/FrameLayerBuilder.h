@@ -599,7 +599,9 @@ public:
   }
 
 protected:
-  void RemoveThebesItemsForLayerSubtree(Layer* aLayer);
+  void RemoveThebesItemsAndOwnerDataForLayerSubtree(Layer* aLayer,
+                                                    bool aRemoveThebesItems,
+                                                    bool aRemoveOwnerData);
 
   static void SetAndClearInvalidRegion(DisplayItemDataEntry* aEntry);
   static PLDHashOperator UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
