@@ -53,7 +53,10 @@ enum BailoutKind
     Bailout_BoundsCheck,
 
     // Like Bailout_Normal, but invalidate the current IonScript.
-    Bailout_Invalidate
+    Bailout_Invalidate,
+
+    // A shape guard based on JM ICs failed.
+    Bailout_CachedShapeGuard
 };
 
 #ifdef DEBUG
