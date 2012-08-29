@@ -27,7 +27,7 @@ $(PARALLEL_DIRS_export): %_export: %/Makefile
 	+@$(call SUBMAKE,export,$*)
 endif
 
-export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(XPIDLSRCS),$(IDL_DIR))
+export:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
 
