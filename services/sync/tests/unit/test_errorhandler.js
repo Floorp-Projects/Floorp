@@ -40,6 +40,10 @@ CatapultEngine.prototype = {
 
 Engines.register(CatapultEngine);
 
+// This relies on Service/ErrorHandler being a singleton. Fixing this will take
+// a lot of work.
+let errorHandler = Service.errorHandler;
+
 function run_test() {
   initTestLogging("Trace");
 
@@ -201,22 +205,22 @@ add_test(function test_credentials_changed_logout() {
 add_test(function test_no_lastSync_pref() {
   // Test reported error.
   Status.resetSync();
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.sync = CREDENTIALS_CHANGED;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test unreported error.
   Status.resetSync();
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.login = LOGIN_FAILED_NETWORK_ERROR;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   run_next_test();
 });
 
 add_test(function test_shouldReportError() {
   Status.login = MASTER_PASSWORD_LOCKED;
-  do_check_false(ErrorHandler.shouldReportError());
+  do_check_false(errorHandler.shouldReportError());
 
   // Give ourselves a clusterURL so that the temporary 401 no-error situation
   // doesn't come into play.
@@ -226,172 +230,172 @@ add_test(function test_shouldReportError() {
   // Test dontIgnoreErrors, non-network, non-prolonged, login error reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.login = LOGIN_FAILED_NO_PASSWORD;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, non-network, non-prolonged, sync error reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.sync = CREDENTIALS_CHANGED;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, non-network, prolonged, login error reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.login = LOGIN_FAILED_NO_PASSWORD;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, non-network, prolonged, sync error reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.sync = CREDENTIALS_CHANGED;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, network, non-prolonged, login error reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.login = LOGIN_FAILED_NETWORK_ERROR;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, network, non-prolonged, sync error reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.sync = LOGIN_FAILED_NETWORK_ERROR;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, network, prolonged, login error reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.login = LOGIN_FAILED_NETWORK_ERROR;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, network, prolonged, sync error reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.sync = LOGIN_FAILED_NETWORK_ERROR;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test non-network, prolonged, login error reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.login = LOGIN_FAILED_NO_PASSWORD;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test non-network, prolonged, sync error reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.sync = CREDENTIALS_CHANGED;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test network, prolonged, login error reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.login = LOGIN_FAILED_NETWORK_ERROR;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test network, prolonged, sync error reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.sync = LOGIN_FAILED_NETWORK_ERROR;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test non-network, non-prolonged, login error reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.login = LOGIN_FAILED_NO_PASSWORD;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test non-network, non-prolonged, sync error reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.sync = CREDENTIALS_CHANGED;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test network, non-prolonged, login error reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.login = LOGIN_FAILED_NETWORK_ERROR;
-  do_check_false(ErrorHandler.shouldReportError());
+  do_check_false(errorHandler.shouldReportError());
 
   // Test network, non-prolonged, sync error reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.sync = LOGIN_FAILED_NETWORK_ERROR;
-  do_check_false(ErrorHandler.shouldReportError());
+  do_check_false(errorHandler.shouldReportError());
 
   // Test server maintenance, sync errors are not reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.sync = SERVER_MAINTENANCE;
-  do_check_false(ErrorHandler.shouldReportError());
+  do_check_false(errorHandler.shouldReportError());
 
   // Test server maintenance, login errors are not reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.login = SERVER_MAINTENANCE;
-  do_check_false(ErrorHandler.shouldReportError());
+  do_check_false(errorHandler.shouldReportError());
 
   // Test prolonged, server maintenance, sync errors are reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.sync = SERVER_MAINTENANCE;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test prolonged, server maintenance, login errors are reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = false;
+  errorHandler.dontIgnoreErrors = false;
   Status.login = SERVER_MAINTENANCE;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, server maintenance, sync errors are reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.sync = SERVER_MAINTENANCE;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, server maintenance, login errors are reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.login = SERVER_MAINTENANCE;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, prolonged, server maintenance,
   // sync errors are reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.sync = SERVER_MAINTENANCE;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, prolonged, server maintenance,
   // login errors are reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.dontIgnoreErrors = true;
+  errorHandler.dontIgnoreErrors = true;
   Status.login = SERVER_MAINTENANCE;
-  do_check_true(ErrorHandler.shouldReportError());
+  do_check_true(errorHandler.shouldReportError());
 
   run_next_test();
 });
@@ -411,7 +415,7 @@ add_test(function test_shouldReportError_master_password() {
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   Service.sync();
-  do_check_false(ErrorHandler.shouldReportError());
+  do_check_false(errorHandler.shouldReportError());
 
   // Clean up.
   Service.verifyLogin = Service._verifyLogin;
@@ -435,7 +439,7 @@ add_test(function test_login_syncAndReportErrors_non_network_error() {
   });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_sync_syncAndReportErrors_non_network_error() {
@@ -460,7 +464,7 @@ add_test(function test_sync_syncAndReportErrors_non_network_error() {
   });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_login_syncAndReportErrors_prolonged_non_network_error() {
@@ -479,7 +483,7 @@ add_test(function test_login_syncAndReportErrors_prolonged_non_network_error() {
   });
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_sync_syncAndReportErrors_prolonged_non_network_error() {
@@ -504,7 +508,7 @@ add_test(function test_sync_syncAndReportErrors_prolonged_non_network_error() {
   });
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_login_syncAndReportErrors_network_error() {
@@ -522,7 +526,7 @@ add_test(function test_login_syncAndReportErrors_network_error() {
   });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 
@@ -540,7 +544,7 @@ add_test(function test_sync_syncAndReportErrors_network_error() {
   });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_login_syncAndReportErrors_prolonged_network_error() {
@@ -559,7 +563,7 @@ add_test(function test_login_syncAndReportErrors_prolonged_network_error() {
   });
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_sync_syncAndReportErrors_prolonged_network_error() {
@@ -577,7 +581,7 @@ add_test(function test_sync_syncAndReportErrors_prolonged_network_error() {
   });
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_login_prolonged_non_network_error() {
@@ -1152,7 +1156,7 @@ add_test(function test_sync_syncAndReportErrors_server_maintenance_error() {
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_info_collections_login_syncAndReportErrors_server_maintenance_error() {
@@ -1186,7 +1190,7 @@ add_test(function test_info_collections_login_syncAndReportErrors_server_mainten
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_meta_global_login_syncAndReportErrors_server_maintenance_error() {
@@ -1220,7 +1224,7 @@ add_test(function test_meta_global_login_syncAndReportErrors_server_maintenance_
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_download_crypto_keys_login_syncAndReportErrors_server_maintenance_error() {
@@ -1256,7 +1260,7 @@ add_test(function test_download_crypto_keys_login_syncAndReportErrors_server_mai
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_upload_crypto_keys_login_syncAndReportErrors_server_maintenance_error() {
@@ -1290,7 +1294,7 @@ add_test(function test_upload_crypto_keys_login_syncAndReportErrors_server_maint
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_wipeServer_login_syncAndReportErrors_server_maintenance_error() {
@@ -1324,7 +1328,7 @@ add_test(function test_wipeServer_login_syncAndReportErrors_server_maintenance_e
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_wipeRemote_syncAndReportErrors_server_maintenance_error(){
@@ -1364,7 +1368,7 @@ add_test(function test_wipeRemote_syncAndReportErrors_server_maintenance_error()
 
   Svc.Prefs.set("firstSync", "wipeRemote");
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_sync_syncAndReportErrors_prolonged_server_maintenance_error() {
@@ -1391,7 +1395,7 @@ add_test(function test_sync_syncAndReportErrors_prolonged_server_maintenance_err
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_info_collections_login_syncAndReportErrors_prolonged_server_maintenance_error() {
@@ -1425,7 +1429,7 @@ add_test(function test_info_collections_login_syncAndReportErrors_prolonged_serv
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_meta_global_login_syncAndReportErrors_prolonged_server_maintenance_error() {
@@ -1459,7 +1463,7 @@ add_test(function test_meta_global_login_syncAndReportErrors_prolonged_server_ma
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_download_crypto_keys_login_syncAndReportErrors_prolonged_server_maintenance_error() {
@@ -1495,7 +1499,7 @@ add_test(function test_download_crypto_keys_login_syncAndReportErrors_prolonged_
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_upload_crypto_keys_login_syncAndReportErrors_prolonged_server_maintenance_error() {
@@ -1529,7 +1533,7 @@ add_test(function test_upload_crypto_keys_login_syncAndReportErrors_prolonged_se
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_wipeServer_login_syncAndReportErrors_prolonged_server_maintenance_error() {
@@ -1563,7 +1567,7 @@ add_test(function test_wipeServer_login_syncAndReportErrors_prolonged_server_mai
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  ErrorHandler.syncAndReportErrors();
+  errorHandler.syncAndReportErrors();
 });
 
 add_test(function test_sync_engine_generic_fail() {
@@ -1621,7 +1625,7 @@ add_test(function test_logs_on_sync_error_despite_shouldReportError() {
 
   // Ensure that we report no error.
   Status.login = MASTER_PASSWORD_LOCKED;
-  do_check_false(ErrorHandler.shouldReportError());
+  do_check_false(errorHandler.shouldReportError());
 
   Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
     Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
@@ -1649,7 +1653,7 @@ add_test(function test_logs_on_login_error_despite_shouldReportError() {
 
   // Ensure that we report no error.
   Status.login = MASTER_PASSWORD_LOCKED;
-  do_check_false(ErrorHandler.shouldReportError());
+  do_check_false(errorHandler.shouldReportError());
 
   Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
     Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);

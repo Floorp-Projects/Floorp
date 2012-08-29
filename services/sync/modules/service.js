@@ -301,7 +301,8 @@ WeaveSvc.prototype = {
    */
   onStartup: function onStartup() {
     this._migratePrefs();
-    ErrorHandler.init();
+
+    this.errorHandler = new ErrorHandler();
 
     this._log = Log4Moz.repository.getLogger("Sync.Service");
     this._log.level =
@@ -454,11 +455,11 @@ WeaveSvc.prototype = {
     try {
       info = new Resource(infoURL).get();
     } catch (ex) {
-      ErrorHandler.checkServerError(ex);
+      this.errorHandler.checkServerError(ex);
       throw ex;
     }
     if (!info.success) {
-      ErrorHandler.checkServerError(info);
+      this.errorHandler.checkServerError(info);
       throw "aborting sync, failed to get collections";
     }
     return info;
@@ -495,7 +496,7 @@ WeaveSvc.prototype = {
       if (infoResponse.status != 200) {
         this._log.warn("info/collections returned non-200 response. Failing key fetch.");
         Status.login = LOGIN_FAILED_SERVER_ERROR;
-        ErrorHandler.checkServerError(infoResponse);
+        this.errorHandler.checkServerError(infoResponse);
         return false;
       }
 
@@ -529,7 +530,7 @@ WeaveSvc.prototype = {
             else {
               // Some other problem.
               Status.login = LOGIN_FAILED_SERVER_ERROR;
-              ErrorHandler.checkServerError(cryptoResp);
+              this.errorHandler.checkServerError(cryptoResp);
               this._log.warn("Got status " + cryptoResp.status + " fetching crypto keys.");
               return false;
             }
@@ -578,7 +579,7 @@ WeaveSvc.prototype = {
       // This means no keys are present, or there's a network error.
       this._log.debug("Failed to fetch and verify keys: "
                       + Utils.exceptionStr(ex));
-      ErrorHandler.checkServerError(ex);
+      this.errorHandler.checkServerError(ex);
       return false;
     }
   },
@@ -659,14 +660,14 @@ WeaveSvc.prototype = {
         default:
           // Server didn't respond with something that we expected
           Status.login = LOGIN_FAILED_SERVER_ERROR;
-          ErrorHandler.checkServerError(test);
+          this.errorHandler.checkServerError(test);
           return false;
       }
     } catch (ex) {
       // Must have failed on some network issue
       this._log.debug("verifyLogin failed: " + Utils.exceptionStr(ex));
       Status.login = LOGIN_FAILED_NETWORK_ERROR;
-      ErrorHandler.checkServerError(ex);
+      this.errorHandler.checkServerError(ex);
       return false;
     }
   },
@@ -681,7 +682,7 @@ WeaveSvc.prototype = {
     let uploadRes = wbo.upload(this.cryptoKeysURL);
     if (uploadRes.status != 200) {
       this._log.warn("Got status " + uploadRes.status + " uploading new keys. What to do? Throw!");
-      ErrorHandler.checkServerError(uploadRes);
+      this.errorHandler.checkServerError(uploadRes);
       throw new Error("Unable to upload symmetric keys.");
     }
     this._log.info("Got status " + uploadRes.status + " uploading keys.");
@@ -893,7 +894,7 @@ WeaveSvc.prototype = {
       return exists ? "notAvailable" : "available";
     } catch (ex) {
       // TODO fix API convention.
-      return ErrorHandler.errorStr(ex);
+      return this.errorHandler.errorStr(ex);
     }
   },
 
@@ -916,7 +917,7 @@ WeaveSvc.prototype = {
       cb.wait();
       return null;
     } catch (ex) {
-      return ErrorHandler.errorStr(ex.body);
+      return this.errorHandler.errorStr(ex.body);
     }
   },
 
@@ -984,7 +985,7 @@ WeaveSvc.prototype = {
       let status = Records.response.status;
       if (status != 200 && status != 404) {
         Status.sync = METARECORD_DOWNLOAD_FAIL;
-        ErrorHandler.checkServerError(Records.response);
+        this.errorHandler.checkServerError(Records.response);
         this._log.warn("Unknown error while downloading metadata record. " +
                        "Aborting sync.");
         return false;
@@ -1326,7 +1327,7 @@ WeaveSvc.prototype = {
       // Make sure the changed clients get updated.
       Clients.sync();
     } catch (ex) {
-      ErrorHandler.checkServerError(ex);
+      this.errorHandler.checkServerError(ex);
       throw ex;
     }
   },
