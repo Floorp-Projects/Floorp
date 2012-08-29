@@ -2203,6 +2203,12 @@ public:
    * the out-of-flow frames.
    */
   void InvalidateFrameSubtree();
+
+  /**
+   * Called when a frame is about to be removed and needs to be invalidated.
+   * Normally does nothing since DLBI handles removed frames.
+   */
+  virtual void InvalidateFrameForRemoval() {}
   
   /**
    * Checks if a frame has had InvalidateFrame() called on it since the
