@@ -428,10 +428,10 @@ PBrowserChild*
 ContentChild::AllocPBrowser(const uint32_t& aChromeFlags,
                             const bool& aIsBrowserElement, const AppId& aApp)
 {
-    uint32_t appId = aApp.get_uint32_t();
-    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags, aIsBrowserElement,
-                                             appId);
-    return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
+    nsRefPtr<TabChild> child =
+        TabChild::Create(aChromeFlags, aIsBrowserElement, aApp.get_uint32_t());
+    // The ref here is released below.
+    return child.forget().get();
 }
 
 bool
@@ -937,6 +937,8 @@ PreloadSlowThings()
 {
     // This fetches and creates all the built-in stylesheets.
     nsLayoutStylesheetCache::UserContentSheet();
+
+    TabChild::PreloadSlowThings();
 }
 
 bool
