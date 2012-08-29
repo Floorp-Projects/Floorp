@@ -203,8 +203,8 @@ PRTimeToSeconds(PRTime t_usec)
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
 
-// round q-value to one decimal place; return most significant digit as uint.
-#define QVAL_TO_UINT(q) ((unsigned int) ((q + 0.05) * 10.0))
+// Round q-value to 2 decimal places; return 2 most significant digits as uint.
+#define QVAL_TO_UINT(q) ((unsigned int) ((q + 0.005) * 100.0))
 
 #define HTTP_LWS " \t"
 #define HTTP_HEADER_VALUE_SEPS HTTP_LWS ","
