@@ -308,6 +308,9 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         return BAILOUT_RETURN_BOUNDS_CHECK;
       case Bailout_Invalidate:
         return BAILOUT_RETURN_INVALIDATE;
+      case Bailout_CachedShapeGuard:
+        it.script()->failedCachedShapeGuard = true;
+        return BAILOUT_RETURN_INVALIDATE;
 
       // When bailing out from an argument check, none of the code of the
       // function has run yet. When profiling, this means that the function
