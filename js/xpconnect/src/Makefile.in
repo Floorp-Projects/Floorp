@@ -149,8 +149,6 @@ dombindings_gen.h: $(srcdir)/dombindings.conf \
 	  --header-output dombindings_gen.h \
 	  $(srcdir)/dombindings.conf
 
-exports:: dombindings_gen.h
-
 dombindings_gen.cpp: $(srcdir)/dombindings.conf \
                      $(srcdir)/dombindingsgen.py \
                      $(srcdir)/codegen.py \
