@@ -4831,6 +4831,10 @@ nsIFrame::SchedulePaint(uint32_t aFlags)
   if (!(aFlags & PAINT_COMPOSITE_ONLY)) {
     displayRoot->AddStateBits(NS_FRAME_UPDATE_LAYER_TREE);
   }
+  nsIPresShell* shell = PresContext()->PresShell();
+  if (shell) {
+    shell->AddInvalidateHiddenPresShellObserver(pres->RefreshDriver());
+  }
 }
 
 Layer*
