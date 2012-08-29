@@ -37,9 +37,8 @@ private:
   public:
     CancelableRunnable(DeviceStorageRequestParent* aParent)
       : mParent(aParent)
-      , mCanceled(false)
     {
-      mParent->AddRunnable(this);
+      mCanceled = !(mParent->AddRunnable(this));
     }
 
     virtual ~CancelableRunnable() {
@@ -49,15 +48,9 @@ private:
       nsresult rv = NS_OK;
       if (!mCanceled) {
         rv = CancelableRun();
-
-        nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &CancelableRunnable::RemoveRunnable);
-        NS_DispatchToMainThread(event);
+        mParent->RemoveRunnable(this);
       }
       return rv;
-    }
-
-    void RemoveRunnable() {
-      mParent->RemoveRunnable(this);
     }
 
     void Cancel() {
@@ -189,14 +182,22 @@ private:
    };
 
 protected:
-  void AddRunnable(CancelableRunnable* aRunnable) {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  bool AddRunnable(CancelableRunnable* aRunnable) {
+    MutexAutoLock lock(mMutex);
+    if (mActorDestoryed)
+      return false;
+
     mRunnables.AppendElement(aRunnable);
+    return true;
   }
+
   void RemoveRunnable(CancelableRunnable* aRunnable) {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    MutexAutoLock lock(mMutex);
     mRunnables.RemoveElement(aRunnable);
   }
+
+  Mutex mMutex;
+  bool mActorDestoryed;
   nsTArray<nsRefPtr<CancelableRunnable> > mRunnables;
 };
 

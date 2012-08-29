@@ -13,7 +13,6 @@ chrome.jar:
 * skin/aboutDownloads.css                   (aboutDownloads.css)
   skin/aboutFeedback.css                    (aboutFeedback.css)
   skin/aboutReader.css                      (aboutReader.css)
-  skin/aboutReaderContent.css               (aboutReaderContent.css)
 * skin/browser.css                          (browser.css)
 * skin/content.css                          (content.css)
   skin/config.css                           (config.css)

@@ -335,7 +335,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
         return false;
 
     if (!NameFunctions(cx, pn))
-        return NULL;
+        return false;
 
     if (fn->pn_body) {
         JS_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));

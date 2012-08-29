@@ -1724,7 +1724,6 @@ let RILNetworkInterface = {
   NETWORK_STATE_UNKNOWN:       Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN,
   NETWORK_STATE_CONNECTING:    Ci.nsINetworkInterface.CONNECTING,
   NETWORK_STATE_CONNECTED:     Ci.nsINetworkInterface.CONNECTED,
-  NETWORK_STATE_SUSPENDED:     Ci.nsINetworkInterface.SUSPENDED,
   NETWORK_STATE_DISCONNECTING: Ci.nsINetworkInterface.DISCONNECTING,
   NETWORK_STATE_DISCONNECTED:  Ci.nsINetworkInterface.DISCONNECTED,
 
@@ -1829,9 +1828,7 @@ let RILNetworkInterface = {
   },
 
   connect: function connect(options) {
-    if (this.connecting ||
-        this.state == RIL.GECKO_NETWORK_STATE_CONNECTED ||
-        this.state == RIL.GECKO_NETWORK_STATE_SUSPENDED) {
+    if (this.connecting || this.connected) {
       return;
     }
 

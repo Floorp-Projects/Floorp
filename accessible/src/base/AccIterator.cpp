@@ -18,9 +18,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 AccIterator::AccIterator(Accessible* aAccessible,
-                         filters::FilterFuncPtr aFilterFunc,
-                         IterationType aIterationType) :
-  mFilterFunc(aFilterFunc), mIsDeep(aIterationType != eFlatNav)
+                         filters::FilterFuncPtr aFilterFunc) :
+  mFilterFunc(aFilterFunc)
 {
   mState = new IteratorState(aAccessible);
 }
@@ -40,19 +39,19 @@ AccIterator::Next()
   while (mState) {
     Accessible* child = mState->mParent->GetChildAt(mState->mIndex++);
     if (!child) {
-      IteratorState *tmp = mState;
+      IteratorState* tmp = mState;
       mState = mState->mParentState;
       delete tmp;
 
       continue;
     }
 
-    bool isComplying = mFilterFunc(child);
-    if (isComplying)
+    uint32_t result = mFilterFunc(child);
+    if (result & filters::eMatch)
       return child;
 
-    if (mIsDeep) {
-      IteratorState *childState = new IteratorState(child, mState);
+    if (!(result & filters::eSkipSubtree)) {
+      IteratorState* childState = new IteratorState(child, mState);
       mState = childState;
     }
   }

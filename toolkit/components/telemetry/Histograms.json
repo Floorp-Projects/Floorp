@@ -400,9 +400,8 @@
     "description": "System font fallback, first call (ms)"
   },
   "SYSTEM_FONT_FALLBACK_SCRIPT": {
-    "kind": "linear",
-    "high": "110",
-    "n_buckets": 111,
+    "kind": "enumerated",
+    "n_values": 110,
     "description": "System font fallback script"
   },
   "GRADIENT_DURATION": {
@@ -535,9 +534,8 @@
     "description": "HTTP: Requests per page (count)"
   },
   "HTTP_REQUEST_PER_PAGE_FROM_CACHE": {
-    "kind": "linear",
-    "high": "101",
-    "n_buckets": 102,
+    "kind": "enumerated",
+    "n_values": 101,
     "description": "HTTP: Requests serviced from cache (%)"
   },
   "HTTP_REQUEST_PER_CONN": {
@@ -1825,9 +1823,8 @@
     "description": "PLACES: Time to calculate frecency of a page (ms)"
   },
   "UPDATER_STATUS_CODES": {
-    "kind": "linear",
-    "high": "50",
-    "n_buckets": 51,
+    "kind": "enumerated",
+    "n_values": 50,
     "description": "Updater: the status of the latest update performed"
   },
   "UPDATER_UPDATES_ENABLED": {
@@ -1843,9 +1840,8 @@
     "description": "Updater: Whether or not the MozillaMaintenance service is enabled"
   },
   "UPDATER_SERVICE_ERRORS": {
-    "kind": "linear",
-    "high": "30",
-    "n_buckets": 31,
+    "kind": "enumerated",
+    "n_values": 30,
     "description": "Updater: The number of MozillaMaintenance service errors that have occurred"
   },
   "UPDATER_SERVICE_INSTALLED": {
@@ -2140,9 +2136,8 @@
     "description": "New tab page is enabled."
   },
   "NEWTAB_PAGE_PINNED_SITES_COUNT": {
-    "kind": "exponential",
-    "high": "9",
-    "n_buckets": 10,
+    "kind": "enumerated",
+    "n_values": 9,
     "description": "Number of pinned sites on the new tab page."
   },
   "NEWTAB_PAGE_BLOCKED_SITES_COUNT": {

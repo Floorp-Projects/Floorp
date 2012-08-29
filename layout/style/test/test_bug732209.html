@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=732209
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 732209</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #content span { color: red; }
+    #content span.reverse { color: green; }
+    #content { display: block !important; }
+    #content span::before { content: attr(id); }
+  </style>
+  <link rel="stylesheet" href="bug732209-css.sjs?one">
+  <link rel="stylesheet" href="bug732209-css.sjs?two" crossorigin>
+  <link rel="stylesheet" href="bug732209-css.sjs?three" crossorigin="use-credentials">
+  <link rel="stylesheet"
+        href="http://example.com/tests/layout/style/test/bug732209-css.sjs?four">
+  <link rel="stylesheet"
+        href="http://example.com/tests/layout/style/test/bug732209-css.sjs?five"
+        crossorigin>
+  <link rel="stylesheet"
+        href="http://example.com/tests/layout/style/test/bug732209-css.sjs?six"
+        crossorigin="use-credentials">
+  <link rel="stylesheet"
+        href="http://example.com/tests/layout/style/test/bug732209-css.sjs?seven&cors-anonymous">
+  <link rel="stylesheet" id="cross-origin-sheet"
+        href="http://example.com/tests/layout/style/test/bug732209-css.sjs?eight&cors-anonymous"
+        crossorigin>
+  <link rel="stylesheet"
+        href="http://example.com/tests/layout/style/test/bug732209-css.sjs?nine&cors-anonymous"
+        crossorigin="use-credentials">
+  <link rel="stylesheet"
+        href="http://example.com/tests/layout/style/test/bug732209-css.sjs?ten&cors-credentials">
+  <link rel="stylesheet"
+        href="http://example.com/tests/layout/style/test/bug732209-css.sjs?eleven&cors-credentials"
+        crossorigin>
+  <link rel="stylesheet"
+        href="http://example.com/tests/layout/style/test/bug732209-css.sjs?twelve&cors-credentials"
+        crossorigin="use-credentials">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=732209">Mozilla Bug 732209</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <span id="one"></span>
+  <span id="two"></span>
+  <span id="three"></span>
+  <span id="four"></span>
+  <span id="five" class="reverse"></span>
+  <span id="six" class="reverse"></span>
+  <span id="seven"></span>
+  <span id="eight"></span>
+  <span id="nine" class="reverse"></span>
+  <span id="ten"></span>
+  <span id="eleven"></span>
+  <span id="twelve"></span>
+</div>
+<pre id="test" style="color: red">
+<script type="application/javascript">
+
+/** Test for Bug 732209 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var spans = $("content").querySelectorAll("span");
+  for (var i = 0; i < spans.length; ++i) {
+    is(getComputedStyle(spans[i], "").color, "rgb(0, 128, 0)",
+       "Span " + spans[i].id + " should be green");
+  }
+
+  try {
+    var sheet = $("cross-origin-sheet").sheet;
+    dump('aaa');
+    is(sheet.cssRules.length, 2,
+       "Should be able to get length of list of rules");
+    is(sheet.cssRules[0].style.color, "green",
+       "Should be able to read individual rules");
+  } catch (e) {
+    ok(false,
+       "Should be allowed to access cross-origin sheet that opted in with CORS: " + e);
+  }
+
+  SimpleTest.finish();
+});
+
+
+
+</script>
+</pre>
+</body>
+</html>
