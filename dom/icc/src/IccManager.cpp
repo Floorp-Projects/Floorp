@@ -130,7 +130,7 @@ IccManager::SendStkResponse(const JS::Value& aResponse)
 }
 
 NS_IMETHODIMP
-IccManager::SendStkMenuSelection(PRUint16 aItemIdentifier, bool aHelpRequested)
+IccManager::SendStkMenuSelection(uint16_t aItemIdentifier, bool aHelpRequested)
 {
   if (!mProvider) {
     return NS_ERROR_FAILURE;
