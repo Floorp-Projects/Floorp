@@ -60,7 +60,7 @@ function makeLivemark(p, mintGUID) {
   let b = new Livemark("bookmarks", p.id);
   // Copy here, because tests mutate the contents.
   b.cleartext = TestingUtils.deepCopy(p);
-  
+
   if (mintGUID)
     b.id = Utils.makeGUID();
 
@@ -85,13 +85,13 @@ add_test(function test_livemark_descriptions() {
     store._orderChildren();
     delete store._childrenToOrder;
   }
-  
+
   // Attempt to provoke an error by messing around with the description.
   record.description = null;
   doRecord(makeLivemark(record));
   record.description = "";
   doRecord(makeLivemark(record));
-  
+
   // Attempt to provoke an error by adding a bad description anno.
   let id = store.idForGUID(record.id);
   PlacesUtils.annotations.setItemAnnotation(id, DESCRIPTION_ANNO, "", 0,
@@ -102,7 +102,7 @@ add_test(function test_livemark_descriptions() {
 
 add_test(function test_livemark_invalid() {
   _("Livemarks considered invalid by nsLivemarkService are skipped.");
-  
+
   _("Parent is 0, which is invalid. Will be set to unfiled.");
   let noParentRec = makeLivemark(record631361.payload, true);
   noParentRec._parent = 0;
@@ -110,20 +110,20 @@ add_test(function test_livemark_invalid() {
   let recID = store.idForGUID(noParentRec.id, true);
   do_check_true(recID > 0);
   do_check_eq(PlacesUtils.bookmarks.getFolderIdForItem(recID), PlacesUtils.bookmarks.unfiledBookmarksFolder);
-  
+
   _("Parent is unknown. Will be set to unfiled.");
   let lateParentRec = makeLivemark(record631361.payload, true);
   let parentGUID = Utils.makeGUID();
   lateParentRec.parentid = parentGUID;
   lateParentRec._parent = store.idForGUID(parentGUID);   // Usually done by applyIncoming.
   do_check_eq(-1, lateParentRec._parent);
-  
+
   store.create(lateParentRec);
   recID = store.idForGUID(lateParentRec.id, true);
   do_check_true(recID > 0);
   do_check_eq(PlacesUtils.bookmarks.getFolderIdForItem(recID),
               PlacesUtils.bookmarks.unfiledBookmarksFolder);
-  
+
   _("No feed URI, which is invalid. Will be skipped.");
   let noFeedURIRec = makeLivemark(record631361.payload, true);
   delete noFeedURIRec.cleartext.feedUri;
@@ -137,7 +137,7 @@ add_test(function test_livemark_invalid() {
   store.create(lmParentRec);
   // No exception, but no creation occurs.
   do_check_eq(-1, store.idForGUID(lmParentRec.id, true));
-  
+
   // Clear event loop.
   Utils.nextTick(run_next_test);
 });

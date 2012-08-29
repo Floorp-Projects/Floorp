@@ -83,7 +83,7 @@ function test_onWipe() {
     _("A store wipe should increment the score");
     Svc.Obs.notify("weave:engine:start-tracking");
     store.wipe();
-    
+
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     tracker.resetScore();

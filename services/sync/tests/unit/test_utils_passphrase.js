@@ -31,7 +31,7 @@ function run_test() {
   do_check_eq(Utils.hyphenatePartialPassphrase("1234567"), "2-34567-");
   do_check_eq(Utils.hyphenatePartialPassphrase("1234567890"), "2-34567-89");
   do_check_eq(Utils.hyphenatePartialPassphrase("abcdeabcdeabcdeabcdeabcde"), "a-bcdea-bcdea-bcdea-bcdea-bcde");
-  
+
   do_check_eq(Utils.hyphenatePartialPassphrase("a"), "a-");
   do_check_eq(Utils.hyphenatePartialPassphrase("1234567"), "2-34567-");
   do_check_eq(Utils.hyphenatePartialPassphrase("a-bcdef-g"),
@@ -54,10 +54,10 @@ function run_test() {
   do_check_eq("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("    aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
   do_check_eq("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("    a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));
   do_check_true(Utils.isPassphrase("aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
-  do_check_true(Utils.isPassphrase("	 aaaaaaaaaaaaaaaaaaaaaaaaaa"));          
-  do_check_true(Utils.isPassphrase("    aaaaaaaaaaaaaaaaaaaaaaaaaa  "));       
-  do_check_true(Utils.isPassphrase("    a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));  
-  do_check_false(Utils.isPassphrase("    -aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));  
+  do_check_true(Utils.isPassphrase("	 aaaaaaaaaaaaaaaaaaaaaaaaaa"));
+  do_check_true(Utils.isPassphrase("    aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
+  do_check_true(Utils.isPassphrase("    a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));
+  do_check_false(Utils.isPassphrase("    -aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));
 
   _("Normalizing 20-char passphrases.");
   do_check_eq(Utils.normalizePassphrase("abcde-abcde-abcde-abcde"),

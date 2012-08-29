@@ -32,12 +32,12 @@ function run_test() {
   let johnHelper = track_collections_helper();
   let johnU      = johnHelper.with_updated_collection;
   let johnColls  = johnHelper.collections;
-  
+
   do_test_pending();
   let server = httpd_setup({
     "/api/1.1/johndoe/info/collections": login_handling(johnHelper.handler),
     "/api/1.1/janedoe/info/collections": service_unavailable,
-      
+
     "/api/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
     "/api/1.1/johndoe/storage/meta/global": johnU("meta",   new ServerWBO("global").handler()),
     "/user/1.0/johndoe/node/weave": httpd_handler(200, "OK", "http://localhost:8080/api/")
@@ -78,7 +78,7 @@ function run_test() {
     Identity.account = "janedoe";
     Service._updateCachedURLs();
     do_check_false(Status.enforceBackoff);
-    let backoffInterval;    
+    let backoffInterval;
     Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
       Svc.Obs.remove("weave:service:backoff:interval", observe);
       backoffInterval = subject;

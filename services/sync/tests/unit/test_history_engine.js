@@ -42,12 +42,12 @@ add_test(function test_processIncoming_mobile_history_batched() {
         sortindex: i,
         visits: [{date: (modified - 5) * 1000000, type: visitType}],
         deleted: false});
-    
+
     let wbo = new ServerWBO(id, payload);
     wbo.modified = modified;
     collection.insertWBO(wbo);
   }
-  
+
   let server = sync_httpd_setup({
       "/1.1/foo/storage/history": collection.handler()
   });
@@ -61,30 +61,30 @@ add_test(function test_processIncoming_mobile_history_batched() {
 
     _("On a mobile client, we get new records from the server in batches of 50.");
     engine._syncStartup();
-    
+
     // Fake a lower limit.
     engine.downloadLimit = FAKE_DOWNLOAD_LIMIT;
     _("Last modified: " + engine.lastModified);
     _("Processing...");
     engine._processIncoming();
-    
+
     _("Last modified: " + engine.lastModified);
     engine._syncFinish();
-    
+
     // Back to the normal limit.
     _("Running again. Should fetch none, because of lastModified");
     engine.downloadLimit = MAX_HISTORY_DOWNLOAD;
     _("Processing...");
     engine._processIncoming();
-    
+
     _("Last modified: " + engine.lastModified);
     _("Running again. Expecting to pull everything");
-    
+
     engine.lastModified = undefined;
     engine.lastSync     = 0;
     _("Processing...");
     engine._processIncoming();
-    
+
     _("Last modified: " + engine.lastModified);
 
     // Verify that the right number of GET requests with the right
@@ -101,7 +101,7 @@ add_test(function test_processIncoming_mobile_history_batched() {
         1 +    // 1 GUID fetch...
                // 4 fetch...
         Math.ceil((234 - 50) / MOBILE_BATCH_SIZE));
-    
+
     // Check the structure of each HTTP request.
     do_check_eq(collection.get_log[0].full, 1);
     do_check_eq(collection.get_log[0].limit, MOBILE_BATCH_SIZE);

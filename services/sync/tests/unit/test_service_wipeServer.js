@@ -118,7 +118,7 @@ add_test(function test_wipeServer_list_503() {
 
 add_test(function test_wipeServer_all_success() {
   _("Service.wipeServer() deletes all the things.");
-  
+
   /**
    * Handle the bulk DELETE request sent by wipeServer.
    */
@@ -148,7 +148,7 @@ add_test(function test_wipeServer_all_success() {
 
 add_test(function test_wipeServer_all_404() {
   _("Service.wipeServer() accepts a 404.");
-  
+
   /**
    * Handle the bulk DELETE request sent by wipeServer. Returns a 404.
    */
@@ -180,7 +180,7 @@ add_test(function test_wipeServer_all_404() {
 
 add_test(function test_wipeServer_all_503() {
   _("Service.wipeServer() throws if it encounters a non-200/404 response.");
-  
+
   /**
    * Handle the bulk DELETE request sent by wipeServer. Returns a 503.
    */

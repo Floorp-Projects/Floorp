@@ -31,11 +31,11 @@ add_test(function v4_upgrade() {
     "/1.1/johndoe/info/collections": collectionsHelper.handler,
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
     "/1.1/johndoe/storage/meta/global": upd("meta", meta_global.handler()),
-      
+
     // Track modified times.
     "/1.1/johndoe/storage/clients": upd("clients", clients.handler()),
     "/1.1/johndoe/storage/tabs": upd("tabs", new ServerCollection().handler()),
-    
+
     // Just so we don't get 404s in the logs.
     "/1.1/johndoe/storage/bookmarks": new ServerCollection().handler(),
     "/1.1/johndoe/storage/forms": new ServerCollection().handler(),
@@ -45,9 +45,9 @@ add_test(function v4_upgrade() {
   });
 
   try {
-    
+
     _("Set up some tabs.");
-    let myTabs = 
+    let myTabs =
       {windows: [{tabs: [{index: 1,
                           entries: [{
                             url: "http://foo.com/",
@@ -63,13 +63,13 @@ add_test(function v4_upgrade() {
     Svc.Session = {
       getBrowserState: function () JSON.stringify(myTabs)
     };
-    
+
     Status.resetSync();
-    
+
     _("Logging in.");
     Weave.Service.serverURL = TEST_SERVER_URL;
     Weave.Service.clusterURL = TEST_CLUSTER_URL;
-    
+
     Weave.Service.login("johndoe", "ilovejane", passphrase);
     do_check_true(Weave.Service.isLoggedIn);
     Weave.Service.verifyAndFetchSymmetricKeys();
@@ -89,16 +89,16 @@ add_test(function v4_upgrade() {
       }
       do_check_eq(Status.sync, VERSION_OUT_OF_DATE);
     }
-    
+
     // See what happens when we bump the storage version.
     _("Syncing after server has been upgraded.");
     test_out_of_date();
-    
+
     // Same should happen after a wipe.
     _("Syncing after server has been upgraded and wiped.");
     Weave.Service.wipeServer();
     test_out_of_date();
-    
+
     // Now's a great time to test what happens when keys get replaced.
     _("Syncing afresh...");
     Weave.Service.logout();
@@ -113,7 +113,7 @@ add_test(function v4_upgrade() {
     do_check_true(Weave.Service.isLoggedIn);
     Weave.Service.sync();
     do_check_true(Weave.Service.isLoggedIn);
-    
+
     let serverDecrypted;
     let serverKeys;
     let serverResp;
@@ -136,10 +136,10 @@ add_test(function v4_upgrade() {
     function retrieve_and_compare_default(should_succeed) {
       let serverDefault = retrieve_server_default();
       let localDefault = CollectionKeys.keyForCollection().keyPairB64;
-      
+
       _("Retrieved keyBundle: " + JSON.stringify(serverDefault));
       _("Local keyBundle:     " + JSON.stringify(localDefault));
-      
+
       if (should_succeed)
         do_check_eq(JSON.stringify(serverDefault), JSON.stringify(localDefault));
       else
@@ -156,22 +156,22 @@ add_test(function v4_upgrade() {
 
     _("Checking we have the latest keys.");
     retrieve_and_compare_default(true);
-    
+
     _("Update keys on server.");
     set_server_keys(["KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
                      "aaaaaaaaaaaapxMO6TEWtLIOv9dj6kBAJdzhWDkkkis="]);
-    
+
     _("Checking that we no longer have the latest keys.");
     retrieve_and_compare_default(false);
-    
+
     _("Indeed, they're what we set them to...");
     do_check_eq("KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
                 retrieve_server_default()[0]);
-    
+
     _("Sync. Should download changed keys automatically.");
     let oldClientsModified = collections.clients;
     let oldTabsModified = collections.tabs;
-    
+
     Weave.Service.login("johndoe", "ilovejane", passphrase);
     Weave.Service.sync();
     _("New key should have forced upload of data.");
@@ -179,13 +179,13 @@ add_test(function v4_upgrade() {
     _("Clients: " + oldClientsModified + " < " + collections.clients);
     do_check_true(collections.clients > oldClientsModified);
     do_check_true(collections.tabs    > oldTabsModified);
-    
+
     _("... and keys will now match.");
     retrieve_and_compare_default(true);
-    
+
     // Clean up.
     Weave.Service.startOver();
-    
+
   } finally {
     Weave.Svc.Prefs.resetBranch("");
     server.stop(run_next_test);
@@ -204,23 +204,23 @@ add_test(function v5_upgrade() {
   let bulkWBO = new ServerWBO("bulk");
   let clients = new ServerCollection();
   let meta_global = new ServerWBO('global');
-  
+
   let server = httpd_setup({
     // Special.
     "/1.1/johndoe/storage/meta/global": upd("meta", meta_global.handler()),
     "/1.1/johndoe/info/collections": collectionsHelper.handler,
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
     "/1.1/johndoe/storage/crypto/bulk": upd("crypto", bulkWBO.handler()),
-      
+
     // Track modified times.
     "/1.1/johndoe/storage/clients": upd("clients", clients.handler()),
     "/1.1/johndoe/storage/tabs": upd("tabs", new ServerCollection().handler()),
   });
 
   try {
-    
+
     _("Set up some tabs.");
-    let myTabs = 
+    let myTabs =
       {windows: [{tabs: [{index: 1,
                           entries: [{
                             url: "http://foo.com/",

@@ -224,7 +224,7 @@ add_test(function hmac_error_during_node_reassignment() {
 
           Svc.Obs.remove("weave:service:sync:finish", obs);
           Svc.Obs.remove("weave:service:sync:error", obs);
-                  
+
           Svc.Prefs.resetBranch("");
           Records.clearCache();
           server.stop(run_next_test);
