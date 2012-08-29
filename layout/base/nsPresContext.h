@@ -815,9 +815,7 @@ public:
   // Passed to LayerProperties::ComputeDifference
   static void NotifySubDocInvalidation(mozilla::layers::ContainerLayer* aContainer,
                                        const nsIntRegion& aRegion);
-  bool IsDOMPaintEventPending() {
-    return !mInvalidateRequests.mRequests.IsEmpty();
-  }
+  bool IsDOMPaintEventPending();
   void ClearMozAfterPaintEvents() {
     mInvalidateRequests.mRequests.Clear();
   }

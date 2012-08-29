@@ -625,9 +625,6 @@ NS_IMETHODIMP nsViewManager::InvalidateViewNoSuppression(nsIView *aView,
   // process it later.
   AddDirtyRegion(displayRoot, nsRegion(damagedRect));
 
-  // Schedule an invalidation flush with the refresh driver.
-  PostPendingUpdate();
-
   return NS_OK;
 }
 
