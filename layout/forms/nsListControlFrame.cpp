@@ -1000,6 +1000,8 @@ nsListControlFrame::Init(nsIContent*     aContent,
 
   mLastDropdownBackstopColor = PresContext()->DefaultBackgroundColor();
 
+  AddStateBits(NS_FRAME_IN_POPUP);
+
   return result;
 }
 

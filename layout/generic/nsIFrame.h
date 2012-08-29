@@ -311,6 +311,16 @@ typedef uint64_t nsFrameState;
 // text layout.
 #define NS_FRAME_IS_SVG_TEXT                        NS_FRAME_STATE_BIT(47)
 
+// Frame is marked as needing painting
+#define NS_FRAME_NEEDS_PAINT                        NS_FRAME_STATE_BIT(48)
+
+// Frame has a descendant frame that needs painting - This includes
+// cross-doc children.
+#define NS_FRAME_DESCENDANT_NEEDS_PAINT             NS_FRAME_STATE_BIT(49)
+
+// Frame is a descendant of a popup
+#define NS_FRAME_IN_POPUP                           NS_FRAME_STATE_BIT(50)
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)
@@ -1076,6 +1086,13 @@ public:
   virtual const nsFrameList& GetChildList(ChildListID aListID) const = 0;
   const nsFrameList& PrincipalChildList() { return GetChildList(kPrincipalList); }
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const = 0;
+
+  /**
+   * Gets the child lists for this frame, including
+   * ones belong to a child document.
+   */
+  void GetCrossDocChildLists(nsTArray<ChildList>* aLists);
+
   // XXXbz this method should go away
   nsIFrame* GetFirstChild(ChildListID aListID) const {
     return GetChildList(aListID).FirstChild();
@@ -1398,6 +1415,16 @@ public:
    */
   void AddStateBits(nsFrameState aBits) { mState |= aBits; }
   void RemoveStateBits(nsFrameState aBits) { mState &= ~aBits; }
+
+  /**
+   * Checks if the current frame-state includes all of the listed bits
+   */
+  bool HasAllStateBits(nsFrameState aBits) { return (mState & aBits) == aBits; }
+  
+  /**
+   * Checks if the current frame-state includes any of the listed bits
+   */
+  bool HasAnyStateBits(nsFrameState aBits) { return mState & aBits; }
 
   /**
    * This call is invoked on the primary frame for a character data content
@@ -2268,13 +2295,6 @@ public:
    */
   void InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2);
 
-  /**
-   * Invalidate the entire frame subtree for this frame. Invalidates this
-   * frame's overflow rect, and also ensures that all ThebesLayer children
-   * of ContainerLayers associated with frames in this subtree are
-   * completely invalidated.
-   */
-  void InvalidateFrameSubtree();
 
   /**
    * Invalidates this frame's visual overflow rect. Does not necessarily
@@ -2282,6 +2302,73 @@ public:
    * frame can be relied on to be repainted.
    */
   void InvalidateOverflowRect();
+
+  /**
+   * Marks all display items created by this frame as needing a repaint,
+   * and calls SchedulePaint() if requested.
+   *
+   * This includes all display items created by this frame, including
+   * container types.
+   * @param aFlags INVALIDATE_DONT_SCHEDULE_PAINT: Don't call SchedulePaint()
+   * when invalidating.
+   */
+  enum {
+    INVALIDATE_DONT_SCHEDULE_PAINT
+  };
+  virtual void InvalidateFrame(uint32_t aFlags = 0);
+  
+  /**
+   * Calls InvalidateFrame() on all frames descendant frames (including
+   * this one).
+   * 
+   * This function doesn't walk through placeholder frames to invalidate
+   * the out-of-flow frames.
+   */
+  void InvalidateFrameSubtree(uint32_t aFlags = 0);
+  
+  /**
+   * Checks if a frame has had InvalidateFrame() called on it since the
+   * last paint.
+   */
+  bool IsInvalid();
+ 
+  /**
+   * Check if any frame within the frame subtree (including this frame) 
+   * returns true for IsInvalid().
+   */
+  bool HasInvalidFrameInSubtree()
+  {
+    return HasAnyStateBits(NS_FRAME_NEEDS_PAINT | NS_FRAME_DESCENDANT_NEEDS_PAINT);
+  }
+
+  /**
+   * Removes the invalid state from the current frame and all
+   * descendant frames.
+   */
+  void ClearInvalidationStateBits();
+
+  /**
+   * Ensures that the refresh driver is running, and schedules a view 
+   * manager flush on the next tick.
+   *
+   * The view manager flush will update the layer tree, repaint any 
+   * invalid areas in the layer tree and schedule a layer tree
+   * composite operation to display the layer tree.
+   */
+  void SchedulePaint();
+
+  /**
+   * Checks if the layer tree includes a dedicated layer for this 
+   * frame/display item key pair, and invalidates at least aDamageRect
+   * area within that layer.
+   *
+   * If no layer is found, calls InvalidateFrame() instead.
+   *
+   * @param aDamageRect Area of the layer to invalidate.
+   * @param aDisplayItemKey Display item type.
+   * @return Layer, if found, nullptr otherwise.
+   */
+  Layer* InvalidateLayer(const nsRect& aDamageRect, uint32_t aDisplayItemKey);
 
   /**
    * Returns a rect that encompasses everything that might be painted by
