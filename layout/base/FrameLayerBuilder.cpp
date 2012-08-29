@@ -2183,7 +2183,8 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
       ThebesDisplayItemLayerUserData* data =
           static_cast<ThebesDisplayItemLayerUserData*>(t->GetUserData(&gThebesDisplayItemLayerUserData));
       InvalidatePostTransformRegion(t,
-          oldGeometry->ComputeInvalidationRegion().ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
+          oldGeometry->ComputeInvalidationRegion().
+            ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
           mLayerBuilder->GetLastPaintOffset(t));
     }
     if (aNewLayer) {
@@ -2192,7 +2193,8 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
         ThebesDisplayItemLayerUserData* data =
             static_cast<ThebesDisplayItemLayerUserData*>(newThebesLayer->GetUserData(&gThebesDisplayItemLayerUserData));
         InvalidatePostTransformRegion(newThebesLayer,
-            geometry->ComputeInvalidationRegion().ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
+            geometry->ComputeInvalidationRegion().
+              ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
             GetTranslationForThebesLayer(newThebesLayer));
       }
     }
@@ -2219,20 +2221,21 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 #ifdef DEBUG_INVALIDATIONS
     printf("Display item type %s(%p) added to layer %p!\n", aItem->Name(), f, aNewLayer);
 #endif
-  } else if (aItem->IsInvalid() || *oldClip != aClip) {
-    // Either layout marked item as needing repainting, or the clip on it changed, invalidate
-    // the entire old and new areas.
-    // TODO: We could be smarter about handling clip changes here instead of repainting everything.
+  } else if (aItem->IsInvalid()) {
+    // Either layout marked item as needing repainting, invalidate the entire old and new areas.
     combined.Or(geometry->ComputeInvalidationRegion(), oldGeometry->ComputeInvalidationRegion());
 #ifdef DEBUG_INVALIDATIONS
     printf("Display item type %s(%p) (in layer %p) belongs to an invalidated frame!\n", aItem->Name(), f, aNewLayer);
 #endif
   } else {
-    // No obvious differences, so let the display item check for geometry changes and decide what needs to be
+    // Let the display item check for geometry changes and decide what needs to be
     // repainted.
     nsPoint shift = aTopLeft - data->mLastActiveScrolledRootOrigin;
     oldGeometry->MoveBy(shift);
     aItem->ComputeInvalidationRegion(mBuilder, oldGeometry, &combined);
+    oldClip->AddOffsetAndComputeDifference(shift, oldGeometry->ComputeInvalidationRegion(),
+                                           aClip, geometry->ComputeInvalidationRegion(),
+                                           &combined);
 #ifdef DEBUG_INVALIDATIONS
     if (!combined.IsEmpty()) {
       printf("Display item type %s(%p) (in layer %p) changed geometry!\n", aItem->Name(), f, aNewLayer);
@@ -3446,6 +3449,43 @@ FrameLayerBuilder::Clip::RemoveRoundedCorners()
 
   mClipRect = NonRoundedIntersection();
   mRoundedClipRects.Clear();
+}
+
+static void
+AccumulateRectDifference(const nsRect& aR1, const nsRect& aR2, nsRegion* aOut)
+{
+  if (aR1.IsEqualInterior(aR2))
+    return;
+  nsRegion r;
+  r.Xor(aR1, aR2);
+  aOut->Or(*aOut, r);
+}
+
+void
+FrameLayerBuilder::Clip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
+                                                       const nsRect& aBounds,
+                                                       const Clip& aOther,
+                                                       const nsRect& aOtherBounds,
+                                                       nsRegion* aDifference)
+{
+  if (mHaveClipRect != aOther.mHaveClipRect ||
+      mRoundedClipRects.Length() != aOther.mRoundedClipRects.Length()) {
+    aDifference->Or(*aDifference, aBounds);
+    aDifference->Or(*aDifference, aOtherBounds);
+    return;
+  }
+  if (mHaveClipRect) {
+    AccumulateRectDifference((mClipRect + aOffset).Intersect(aBounds),
+                             aOther.mClipRect.Intersect(aOtherBounds),
+                             aDifference);
+  }
+  for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
+    if (mRoundedClipRects[i] + aOffset != aOther.mRoundedClipRects[i]) {
+      // The corners make it tricky so we'll just add both rects here.
+      aDifference->Or(*aDifference, mRoundedClipRects[i].mRect.Intersect(aBounds));
+      aDifference->Or(*aDifference, aOther.mRoundedClipRects[i].mRect.Intersect(aOtherBounds));
+    }
+  }
 }
 
 gfxRect
