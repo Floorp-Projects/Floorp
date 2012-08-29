@@ -20,11 +20,13 @@ check-arglist        = $(dir-ts)/arglist.ts
 check-autotargets    = $(dir-ts)/autotargets_mk.ts
 check-export-targets = $(dir-ts)/export-targets-mk.ts
 check-XinY           = $(dir-ts)/check_XinY_mk.ts
+check-xpidl          = $(dir-ts)/xpidl-mk.ts
 check-tests =\
   $(check-arglist) \
   $(check-autotargets) \
   $(check-export-targets) \
   $(check-XinY) \
+  $(check-xpidl) \
   $(NULL)
 
 
@@ -35,6 +37,7 @@ all::
 
 clean:
 	$(RM) $(check-tests)
+	@$(MAKE) --no-print-directory -f $(srcdir)/check-xpidl.mk clean-xpidl topsrcdir=$(topsrcdir)
 
 ###########################################################################
 ## Logic processed at compile time so be selective about when to test
@@ -120,5 +123,24 @@ checkup: $(eval include $(srcdir)/check-export-targets.mk)
 $(check-export-targets): $(check-export-targets-preqs)
 	@$(TOUCH) $@
 # </CHECK: export-targets.mk>
+
+###########################################################################
+##{ <CHECK: xpidl.mk>
+check-xpidl-preqs=\
+  $(call mkdir_deps,$(dir-ts)) \
+  $(topsrcdir)/config/config.mk \
+  $(topsrcdir)/config/makefiles/makeutils.mk \
+  $(topsrcdir)/config/makefiles/xpidl.mk \
+  $(srcdir)/check-xpidl.mk \
+  $(NULL)
+
+check-xpidl-args =\
+  "topsrcdir=$(topsrcdir)" \
+  "srcdir=$(srcdir)" \
+  $(NULL)
+$(check-xpidl): $(check-xpidl-preqs)
+	$(MAKE) -f $(srcdir)/check-xpidl.mk check-xpidl $(check-xpidl-args)
+	@$(TOUCH) $@
+#} </check-xpidl.mk>
 
 endif #} findstring MAKECMDGOAL
