@@ -1,11 +1,15 @@
-Cu.import("resource://services-sync/engines/prefs.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-common/utils.js");
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/engines/prefs.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
-  let engine = new PrefsEngine();
+  let engine = Service.engineManager.get("prefs");
   let tracker = engine._tracker;
   let prefs = new Preferences();
 

@@ -193,8 +193,8 @@ let kSpecialIds = {
   get mobile()  this.findMobileRoot(true),
 };
 
-function BookmarksEngine() {
-  SyncEngine.call(this, "Bookmarks");
+function BookmarksEngine(service) {
+  SyncEngine.call(this, "Bookmarks", service);
 }
 BookmarksEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -410,8 +410,8 @@ BookmarksEngine.prototype = {
   }
 };
 
-function BookmarksStore(name) {
-  Store.call(this, name);
+function BookmarksStore(name, engine) {
+  Store.call(this, name, engine);
 
   // Explicitly nullify our references to our cached services so we don't leak
   Svc.Obs.add("places-shutdown", function() {
@@ -1255,8 +1255,8 @@ BookmarksStore.prototype = {
   }
 };
 
-function BookmarksTracker(name) {
-  Tracker.call(this, name);
+function BookmarksTracker(name, engine) {
+  Tracker.call(this, name, engine);
 
   Svc.Obs.add("places-shutdown", this);
   Svc.Obs.add("weave:engine:start-tracking", this);
@@ -1298,7 +1298,7 @@ BookmarksTracker.prototype = {
         this._log.debug("Restore succeeded: wiping server and other clients.");
         Weave.Service.resetClient([this.name]);
         Weave.Service.wipeServer([this.name]);
-        Clients.sendCommand("wipeEngine", [this.name]);
+        this.engine.service.clientsEngine.sendCommand("wipeEngine", [this.name]);
         break;
       case "bookmarks-restore-failed":
         this._log.debug("Tracking all items on failed import.");

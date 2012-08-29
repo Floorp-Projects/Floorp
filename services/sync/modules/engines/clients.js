@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["Clients", "ClientsRec"];
+const EXPORTED_SYMBOLS = [
+  "ClientEngine",
+  "ClientsRec"
+];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://services-common/stringbundle.js");
 Cu.import("resource://services-sync/constants.js");
@@ -14,7 +15,6 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/main.js");
 
 const CLIENTS_TTL = 1814400; // 21 days
 const CLIENTS_TTL_REFRESH = 604800; // 7 days
@@ -31,12 +31,8 @@ ClientsRec.prototype = {
 Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands"]);
 
 
-XPCOMUtils.defineLazyGetter(this, "Clients", function () {
-  return new ClientEngine();
-});
-
-function ClientEngine() {
-  SyncEngine.call(this, "Clients");
+function ClientEngine(service) {
+  SyncEngine.call(this, "Clients", service);
 
   // Reset the client on every startup so that we fetch recent clients
   this._resetClient();
@@ -240,16 +236,16 @@ ClientEngine.prototype = {
             engines = null;
             // Fallthrough
           case "resetEngine":
-            Weave.Service.resetClient(engines);
+            this.service.resetClient(engines);
             break;
           case "wipeAll":
             engines = null;
             // Fallthrough
           case "wipeEngine":
-            Weave.Service.wipeClient(engines);
+            this.service.wipeClient(engines);
             break;
           case "logout":
-            Weave.Service.logout();
+            this.service.logout();
             return false;
           case "displayURI":
             this._handleDisplayURI.apply(this, args);
@@ -324,7 +320,7 @@ ClientEngine.prototype = {
                    clientId + " (" + title + ")");
     this.sendCommand("displayURI", [uri, this.localID, title], clientId);
 
-    Clients._tracker.score += SCORE_INCREMENT_XLARGE;
+    this._tracker.score += SCORE_INCREMENT_XLARGE;
   },
 
   /**
@@ -357,8 +353,8 @@ ClientEngine.prototype = {
   }
 };
 
-function ClientStore(name) {
-  Store.call(this, name);
+function ClientStore(name, engine) {
+  Store.call(this, name, engine);
 }
 ClientStore.prototype = {
   __proto__: Store.prototype,
@@ -367,8 +363,8 @@ ClientStore.prototype = {
 
   update: function update(record) {
     // Only grab commands from the server; local name/type always wins
-    if (record.id == Clients.localID)
-      Clients.localCommands = record.commands;
+    if (record.id == this.engine.localID)
+      this.engine.localCommands = record.commands;
     else
       this._remoteClients[record.id] = record.cleartext;
   },
@@ -377,10 +373,10 @@ ClientStore.prototype = {
     let record = new ClientsRec(collection, id);
 
     // Package the individual components into a record for the local client
-    if (id == Clients.localID) {
-      record.name = Clients.localName;
-      record.type = Clients.localType;
-      record.commands = Clients.localCommands;
+    if (id == this.engine.localID) {
+      record.name = this.engine.localName;
+      record.type = this.engine.localType;
+      record.commands = this.engine.localCommands;
     }
     else
       record.cleartext = this._remoteClients[id];
@@ -392,7 +388,7 @@ ClientStore.prototype = {
 
   getAllIDs: function getAllIDs() {
     let ids = {};
-    ids[Clients.localID] = true;
+    ids[this.engine.localID] = true;
     for (let id in this._remoteClients)
       ids[id] = true;
     return ids;
@@ -403,8 +399,8 @@ ClientStore.prototype = {
   },
 };
 
-function ClientsTracker(name) {
-  Tracker.call(this, name);
+function ClientsTracker(name, engine) {
+  Tracker.call(this, name, engine);
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
 }

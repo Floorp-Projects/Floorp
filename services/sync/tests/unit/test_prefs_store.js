@@ -1,9 +1,13 @@
-Cu.import("resource://services-sync/engines/prefs.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-common/utils.js");
-Cu.import("resource://services-common/preferences.js");
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-sync/engines/prefs.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 const PREFS_GUID = CommonUtils.encodeBase64URL(Services.appinfo.ID);
 
@@ -19,7 +23,7 @@ function makePersona(id) {
 }
 
 function run_test() {
-  let store = new PrefsEngine()._store;
+  let store = Service.engineManager.get("prefs")._store;
   let prefs = new Preferences();
   try {
 

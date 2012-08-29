@@ -1,11 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 add_test(function test_processIncoming_mobile_history_batched() {
@@ -17,7 +18,7 @@ add_test(function test_processIncoming_mobile_history_batched() {
 
   Svc.Prefs.set("client.type", "mobile");
   PlacesUtils.history.removeAllPages();
-  Engines.register(HistoryEngine);
+  Service.engineManager.register(HistoryEngine);
 
   // A collection that logs each GET
   let collection = new ServerCollection();

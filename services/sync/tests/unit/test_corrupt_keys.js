@@ -1,14 +1,16 @@
-Cu.import("resource://services-sync/main.js");
-Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/status.js");
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/engines/history.js");
-Cu.import("resource://services-common/log4moz.js");
-  
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/util.js");
+
 add_test(function test_locally_changed_keys() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";
 
@@ -20,7 +22,7 @@ add_test(function test_locally_changed_keys() {
     };
   }
   
-  Weave.Service.handleHMACEvent = counting(Weave.Service.handleHMACEvent);
+  Service.handleHMACEvent = counting(Service.handleHMACEvent);
   
   let server  = new SyncServer();
   let johndoe = server.registerUser("johndoe", "password");
@@ -55,9 +57,8 @@ add_test(function test_locally_changed_keys() {
     Service.serverURL = TEST_SERVER_URL;
     Service.clusterURL = TEST_CLUSTER_URL;
 
-    Engines.register(HistoryEngine);
-    Weave.Service._registerEngines();
-    
+    Service.engineManager.register(HistoryEngine);
+
     function corrupt_local_keys() {
       CollectionKeys._default.keyPair = [Svc.Crypto.generateRandomKey(),
                                          Svc.Crypto.generateRandomKey()];
@@ -69,22 +70,22 @@ add_test(function test_locally_changed_keys() {
     let m = new WBORecord("meta", "global");
     m.payload = {"syncID": "foooooooooooooooooooooooooo",
                  "storageVersion": STORAGE_VERSION};
-    m.upload(Weave.Service.metaURL);
+    m.upload(Service.metaURL);
     
     _("New meta/global: " + JSON.stringify(johndoe.collection("meta").wbo("global")));
     
     // Upload keys.
     generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
-    serverKeys.encrypt(Weave.Identity.syncKeyBundle);
-    do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
+    serverKeys.encrypt(Identity.syncKeyBundle);
+    do_check_true(serverKeys.upload(Service.cryptoKeysURL).success);
     
     // Check that login works.
-    do_check_true(Weave.Service.login("johndoe", "ilovejane", passphrase));
-    do_check_true(Weave.Service.isLoggedIn);
+    do_check_true(Service.login("johndoe", "ilovejane", passphrase));
+    do_check_true(Service.isLoggedIn);
     
     // Sync should upload records.
-    Weave.Service.sync();
+    Service.sync();
     
     // Tabs exist.
     _("Tabs modified: " + johndoe.modified("tabs"));
@@ -123,7 +124,7 @@ add_test(function test_locally_changed_keys() {
     
     // Check that we can decrypt one.
     let rec = new CryptoWrapper("history", "record-no--0");
-    rec.fetch(Weave.Service.storageURL + "history/record-no--0");
+    rec.fetch(Service.storageURL + "history/record-no--0");
     _(JSON.stringify(rec));
     do_check_true(!!rec.decrypt());
     
@@ -137,12 +138,12 @@ add_test(function test_locally_changed_keys() {
     
     _("HMAC error count: " + hmacErrorCount);
     // Now syncing should succeed, after one HMAC error.
-    Weave.Service.sync();
+    Service.sync();
     do_check_eq(hmacErrorCount, 1);
     _("Keys now: " + CollectionKeys.keyForCollection("history").keyPair);
     
     // And look! We downloaded history!
-    let store = Engines.get("history")._store;
+    let store = Service.engineManager.get("history")._store;
     do_check_true(store.urlExists("http://foo/bar?record-no--0"));
     do_check_true(store.urlExists("http://foo/bar?record-no--1"));
     do_check_true(store.urlExists("http://foo/bar?record-no--2"));
@@ -178,10 +179,10 @@ add_test(function test_locally_changed_keys() {
     do_check_eq(johndoe.modified("crypto"), old_key_time);
     
     _("Resetting HMAC error timer.");
-    Weave.Service.lastHMACEvent = 0;
+    Service.lastHMACEvent = 0;
     
     _("Syncing...");
-    Weave.Service.sync();
+    Service.sync();
     _("Keys now: " + CollectionKeys.keyForCollection("history").keyPair);
     _("Server keys have been updated, and we skipped over 5 more HMAC errors without adjusting history.");
     do_check_true(johndoe.modified("crypto") > old_key_time);
@@ -193,7 +194,7 @@ add_test(function test_locally_changed_keys() {
     do_check_false(store.urlExists("http://foo/bar?record-no--9"));
     
   } finally {
-    Weave.Svc.Prefs.resetBranch("");
+    Svc.Prefs.resetBranch("");
     server.stop(run_next_test);
   }
 });

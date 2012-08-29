@@ -2,16 +2,15 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-Svc.DefaultPrefs.set("registerEngines", "");
-Cu.import("resource://services-sync/service.js");
-
+Service.engineManager.clear();
 
 function CanDecryptEngine() {
-  SyncEngine.call(this, "CanDecrypt");
+  SyncEngine.call(this, "CanDecrypt", Service);
 }
 CanDecryptEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -26,11 +25,11 @@ CanDecryptEngine.prototype = {
     this.wasWiped = true;
   }
 };
-Engines.register(CanDecryptEngine);
+Service.engineManager.register(CanDecryptEngine);
 
 
 function CannotDecryptEngine() {
-  SyncEngine.call(this, "CannotDecrypt");
+  SyncEngine.call(this, "CannotDecrypt", Service);
 }
 CannotDecryptEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -45,24 +44,24 @@ CannotDecryptEngine.prototype = {
     this.wasWiped = true;
   }
 };
-Engines.register(CannotDecryptEngine);
+Service.engineManager.register(CannotDecryptEngine);
 
 
 add_test(function test_withEngineList() {
   try {
     _("Ensure initial scenario.");
-    do_check_false(Engines.get("candecrypt").wasWiped);
-    do_check_false(Engines.get("cannotdecrypt").wasWiped);
+    do_check_false(Service.engineManager.get("candecrypt").wasWiped);
+    do_check_false(Service.engineManager.get("cannotdecrypt").wasWiped);
 
     _("Wipe local engine data.");
     Service.wipeClient(["candecrypt", "cannotdecrypt"]);
 
     _("Ensure only the engine that can decrypt was wiped.");
-    do_check_true(Engines.get("candecrypt").wasWiped);
-    do_check_false(Engines.get("cannotdecrypt").wasWiped);
+    do_check_true(Service.engineManager.get("candecrypt").wasWiped);
+    do_check_false(Service.engineManager.get("cannotdecrypt").wasWiped);
   } finally {
-    Engines.get("candecrypt").wasWiped = false;
-    Engines.get("cannotdecrypt").wasWiped = false;
+    Service.engineManager.get("candecrypt").wasWiped = false;
+    Service.engineManager.get("cannotdecrypt").wasWiped = false;
     Service.startOver();
   }
 

@@ -4,13 +4,12 @@
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 
-Svc.DefaultPrefs.set("registerEngines", "");
-Cu.import("resource://services-sync/service.js");
-
-Engines.register(RotaryEngine);
-let engine = Engines.get("rotary");
+Service.engineManager.clear();
+Service.engineManager.register(RotaryEngine);
+let engine = Service.engineManager.get("rotary");
 let tracker = engine._tracker;
 engine.enabled = true;
 
@@ -113,7 +112,7 @@ add_test(function test_clients_engine_sync_triggered() {
 
   Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
   do_check_eq(Status.login, LOGIN_SUCCEEDED);
-  Clients._tracker.score += SCORE_INCREMENT_XLARGE;
+  Service.clientsEngine._tracker.score += SCORE_INCREMENT_XLARGE;
 });
 
 add_test(function test_incorrect_credentials_sync_not_triggered() {

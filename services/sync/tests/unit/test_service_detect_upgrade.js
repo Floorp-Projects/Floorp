@@ -11,8 +11,8 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-common/log4moz.js");
-  
-Engines.register(TabEngine);
+
+Service.engineManager.register(TabEngine);
 
 add_test(function v4_upgrade() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";

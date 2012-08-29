@@ -1,14 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
-Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/util.js");
 
 function BlaEngine() {
-  SyncEngine.call(this, "Bla");
+  SyncEngine.call(this, "Bla", Service);
 }
 BlaEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -19,7 +19,8 @@ BlaEngine.prototype = {
   }
 
 };
-Engines.register(BlaEngine);
+
+Service.engineManager.register(BlaEngine);
 
 
 function run_test() {
@@ -65,7 +66,7 @@ add_test(function test_resetLocalData() {
 });
 
 add_test(function test_removeClientData() {
-  let engine = Engines.get("bla");
+  let engine = Service.engineManager.get("bla");
 
   // No cluster URL = no removal.
   do_check_false(engine.removed);

@@ -1,11 +1,15 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 const PARENT_ANNO = "sync/parent";
 
-Engines.register(BookmarksEngine);
-let engine = Engines.get("bookmarks");
+Service.engineManager.register(BookmarksEngine);
+let engine = Service.engineManager.get("bookmarks");
 let store = engine._store;
 let fxuri = Utils.makeURI("http://getfirefox.com/");
 let tburi = Utils.makeURI("http://getthunderbird.com/");

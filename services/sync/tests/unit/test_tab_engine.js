@@ -1,4 +1,8 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/engines/tabs.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 function fakeSessionSvc() {
@@ -30,7 +34,7 @@ function fakeSessionSvc() {
 function run_test() {
 
   _("test locallyOpenTabMatchesURL");
-  let engine = new TabEngine();
+  let engine = new TabEngine(Service);
 
   // 3 tabs
   fakeSessionSvc("http://bar.com", "http://foo.com", "http://foobar.com");

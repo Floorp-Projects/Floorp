@@ -39,8 +39,8 @@ TabSetRecord.prototype = {
 Utils.deferGetSet(TabSetRecord, "cleartext", ["clientName", "tabs"]);
 
 
-function TabEngine() {
-  SyncEngine.call(this, "Tabs");
+function TabEngine(service) {
+  SyncEngine.call(this, "Tabs", service);
 
   // Reset the client on every startup so that we fetch recent tabs
   this._resetClient();
@@ -55,7 +55,7 @@ TabEngine.prototype = {
     // No need for a proper timestamp (no conflict resolution needed).
     let changedIDs = {};
     if (this._tracker.modified)
-      changedIDs[Clients.localID] = 0;
+      changedIDs[this.service.clientsEngine.localID] = 0;
     return changedIDs;
   },
 
@@ -75,7 +75,7 @@ TabEngine.prototype = {
   },
 
   removeClientData: function removeClientData() {
-    new Resource(this.engineURL + "/" + Clients.localID).delete();
+    new Resource(this.engineURL + "/" + this.service.clientsEngine.localID).delete();
   },
 
   /* The intent is not to show tabs in the menu if they're already
@@ -95,14 +95,14 @@ TabEngine.prototype = {
 };
 
 
-function TabStore(name) {
-  Store.call(this, name);
+function TabStore(name, engine) {
+  Store.call(this, name, engine);
 }
 TabStore.prototype = {
   __proto__: Store.prototype,
 
   itemExists: function TabStore_itemExists(id) {
-    return id == Clients.localID;
+    return id == this.engine.service.clientsEngine.localID;
   },
 
   /**
@@ -157,7 +157,7 @@ TabStore.prototype = {
 
   createRecord: function createRecord(id, collection) {
     let record = new TabSetRecord(collection, id);
-    record.clientName = Clients.localName;
+    record.clientName = this.engine.service.clientsEngine.localName;
 
     // Don't provide any tabs to compare against and ignore the update later.
     if (Svc.Private && Svc.Private.privateBrowsingEnabled && !PBPrefs.get("autostart")) {
@@ -200,7 +200,7 @@ TabStore.prototype = {
     if (Svc.Private && Svc.Private.privateBrowsingEnabled && !PBPrefs.get("autostart"))
       return ids;
 
-    ids[Clients.localID] = true;
+    ids[this.engine.service.clientsEngine.localID] = true;
     return ids;
   },
 
@@ -232,8 +232,8 @@ TabStore.prototype = {
 };
 
 
-function TabTracker(name) {
-  Tracker.call(this, name);
+function TabTracker(name, engine) {
+  Tracker.call(this, name, engine);
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
 
