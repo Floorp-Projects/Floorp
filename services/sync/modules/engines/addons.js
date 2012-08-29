@@ -107,8 +107,8 @@ Utils.deferGetSet(AddonRecord, "cleartext", ["addonID",
  * The engine instance overrides a handful of functions on the base class. The
  * rationale for each is documented by that function.
  */
-function AddonsEngine() {
-  SyncEngine.call(this, "Addons");
+function AddonsEngine(service) {
+  SyncEngine.call(this, "Addons", service);
 
   this._reconciler = new AddonsReconciler();
 }
@@ -238,8 +238,8 @@ AddonsEngine.prototype = {
  * In addition to the core store APIs, we provide convenience functions to wrap
  * Add-on Manager APIs with Sync-specific semantics.
  */
-function AddonsStore(name) {
-  Store.call(this, name);
+function AddonsStore(name, engine) {
+  Store.call(this, name, engine);
 }
 AddonsStore.prototype = {
   __proto__: Store.prototype,
@@ -251,13 +251,6 @@ AddonsStore.prototype = {
 
   get reconciler() {
     return this.engine._reconciler;
-  },
-
-  get engine() {
-    // Ideally we'd link to a specific object, but the API doesn't provide an
-    // easy way to faciliate this. When the async API lands, this hackiness can
-    // go away.
-    return Engines.get("addons");
   },
 
   /**
@@ -648,8 +641,8 @@ AddonsStore.prototype = {
  *
  * It hooks up to the reconciler and receives notifications directly from it.
  */
-function AddonsTracker(name) {
-  Tracker.call(this, name);
+function AddonsTracker(name, engine) {
+  Tracker.call(this, name, engine);
 
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
@@ -657,16 +650,12 @@ function AddonsTracker(name) {
 AddonsTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  get engine() {
-    return Engines.get("addons");
-  },
-
   get reconciler() {
-    return Engines.get("addons")._reconciler;
+    return this.engine._reconciler;
   },
 
   get store() {
-    return Engines.get("addons")._store;
+    return this.engine._store;
   },
 
   /**

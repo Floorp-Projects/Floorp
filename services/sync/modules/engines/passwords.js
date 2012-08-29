@@ -26,8 +26,8 @@ Utils.deferGetSet(LoginRec, "cleartext", ["hostname", "formSubmitURL",
   "httpRealm", "username", "password", "usernameField", "passwordField"]);
 
 
-function PasswordEngine() {
-  SyncEngine.call(this, "Passwords");
+function PasswordEngine(service) {
+  SyncEngine.call(this, "Passwords", service);
 }
 PasswordEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -75,8 +75,8 @@ PasswordEngine.prototype = {
   }
 };
 
-function PasswordStore(name) {
-  Store.call(this, name);
+function PasswordStore(name, engine) {
+  Store.call(this, name, engine);
   this._nsLoginInfo = new Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
 
@@ -255,8 +255,8 @@ PasswordStore.prototype = {
   }
 };
 
-function PasswordTracker(name) {
-  Tracker.call(this, name);
+function PasswordTracker(name, engine) {
+  Tracker.call(this, name, engine);
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
 }

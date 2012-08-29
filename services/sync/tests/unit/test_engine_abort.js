@@ -1,4 +1,8 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 add_test(function test_processIncoming_abort() {
@@ -6,7 +10,7 @@ add_test(function test_processIncoming_abort() {
   new SyncTestingInfrastructure();
   generateNewKeys();
 
-  let engine = new RotaryEngine();
+  let engine = new RotaryEngine(Service);
 
   _("Create some server data.");
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));

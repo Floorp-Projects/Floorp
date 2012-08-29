@@ -11,7 +11,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 function makeRotaryEngine() {
-  return new RotaryEngine();
+  return new RotaryEngine(Service);
 }
 
 function cleanAndGo(server) {
@@ -29,7 +29,7 @@ function configureService(username, password) {
 }
 
 function createServerAndConfigureClient() {
-  let engine = new RotaryEngine();
+  let engine = new RotaryEngine(Service);
 
   let contents = {
     meta: {global: {engines: {rotary: {version: engine.version,

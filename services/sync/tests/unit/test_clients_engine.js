@@ -2,21 +2,23 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 const MORE_THAN_CLIENTS_TTL_REFRESH = 691200; // 8 days
 const LESS_THAN_CLIENTS_TTL_REFRESH = 86400;  // 1 day
 
+let engine = Service.clientsEngine;
+
 add_test(function test_bad_hmac() {
   _("Ensure that Clients engine deletes corrupt records.");
   let contents = {
-    meta: {global: {engines: {clients: {version: Clients.version,
-                                        syncID: Clients.syncID}}}},
+    meta: {global: {engines: {clients: {version: engine.version,
+                                        syncID: engine.syncID}}}},
     clients: {},
     crypto: {}
   };
@@ -64,27 +66,27 @@ add_test(function test_bad_hmac() {
     generateNewKeys();
 
     _("First sync, client record is uploaded");
-    do_check_eq(Clients.lastRecordUpload, 0);
+    do_check_eq(engine.lastRecordUpload, 0);
     check_clients_count(0);
-    Clients._sync();
+    engine._sync();
     check_clients_count(1);
-    do_check_true(Clients.lastRecordUpload > 0);
+    do_check_true(engine.lastRecordUpload > 0);
 
     // Initial setup can wipe the server, so clean up.
     deletedCollections = [];
     deletedItems       = [];
 
     _("Change our keys and our client ID, reupload keys.");
-    let oldLocalID  = Clients.localID;     // Preserve to test for deletion!
-    Clients.localID = Utils.makeGUID();
-    Clients.resetClient();
+    let oldLocalID  = engine.localID;     // Preserve to test for deletion!
+    engine.localID = Utils.makeGUID();
+    engine.resetClient();
     generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Weave.Identity.syncKeyBundle);
     do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
 
     _("Sync.");
-    Clients._sync();
+    engine._sync();
 
     _("Old record " + oldLocalID + " was deleted, new one uploaded.");
     check_clients_count(1);
@@ -93,13 +95,13 @@ add_test(function test_bad_hmac() {
     _("Now change our keys but don't upload them. " +
       "That means we get an HMAC error but redownload keys.");
     Service.lastHMACEvent = 0;
-    Clients.localID = Utils.makeGUID();
-    Clients.resetClient();
+    engine.localID = Utils.makeGUID();
+    engine.resetClient();
     generateNewKeys();
     deletedCollections = [];
     deletedItems       = [];
     check_clients_count(1);
-    Clients._sync();
+    engine._sync();
 
     _("Old record was not deleted, new one uploaded.");
     do_check_eq(deletedCollections.length, 0);
@@ -110,8 +112,8 @@ add_test(function test_bad_hmac() {
     // Clean up and start fresh.
     user.collection("clients")._wbos = {};
     Service.lastHMACEvent = 0;
-    Clients.localID = Utils.makeGUID();
-    Clients.resetClient();
+    engine.localID = Utils.makeGUID();
+    engine.resetClient();
     deletedCollections = [];
     deletedItems       = [];
     check_clients_count(0);
@@ -119,7 +121,7 @@ add_test(function test_bad_hmac() {
     uploadNewKeys();
 
     // Sync once to upload a record.
-    Clients._sync();
+    engine._sync();
     check_clients_count(1);
 
     // Generate and upload new keys, so the old client record is wrong.
@@ -128,15 +130,15 @@ add_test(function test_bad_hmac() {
     // Create a new client record and new keys. Now our keys are wrong, as well
     // as the object on the server. We'll download the new keys and also delete
     // the bad client record.
-    oldLocalID  = Clients.localID;         // Preserve to test for deletion!
-    Clients.localID = Utils.makeGUID();
-    Clients.resetClient();
+    oldLocalID  = engine.localID;         // Preserve to test for deletion!
+    engine.localID = Utils.makeGUID();
+    engine.resetClient();
     generateNewKeys();
     let oldKey = CollectionKeys.keyForCollection();
 
     do_check_eq(deletedCollections.length, 0);
     do_check_eq(deletedItems.length, 0);
-    Clients._sync();
+    engine._sync();
     do_check_eq(deletedItems.length, 1);
     check_client_deleted(oldLocalID);
     check_clients_count(1);
@@ -154,11 +156,11 @@ add_test(function test_properties() {
   _("Test lastRecordUpload property");
   try {
     do_check_eq(Svc.Prefs.get("clients.lastRecordUpload"), undefined);
-    do_check_eq(Clients.lastRecordUpload, 0);
+    do_check_eq(engine.lastRecordUpload, 0);
 
     let now = Date.now();
-    Clients.lastRecordUpload = now / 1000;
-    do_check_eq(Clients.lastRecordUpload, Math.floor(now / 1000));
+    engine.lastRecordUpload = now / 1000;
+    do_check_eq(engine.lastRecordUpload, Math.floor(now / 1000));
   } finally {
     Svc.Prefs.resetBranch("");
     run_next_test();
@@ -172,8 +174,8 @@ add_test(function test_sync() {
   generateNewKeys();
 
   let contents = {
-    meta: {global: {engines: {clients: {version: Clients.version,
-                                        syncID: Clients.syncID}}}},
+    meta: {global: {engines: {clients: {version: engine.version,
+                                        syncID: engine.syncID}}}},
     clients: {},
     crypto: {}
   };
@@ -181,36 +183,36 @@ add_test(function test_sync() {
   let user   = server.user("foo");
 
   function clientWBO() {
-    return user.collection("clients").wbo(Clients.localID);
+    return user.collection("clients").wbo(engine.localID);
   }
 
   try {
 
     _("First sync. Client record is uploaded.");
     do_check_eq(clientWBO(), undefined);
-    do_check_eq(Clients.lastRecordUpload, 0);
-    Clients._sync();
+    do_check_eq(engine.lastRecordUpload, 0);
+    engine._sync();
     do_check_true(!!clientWBO().payload);
-    do_check_true(Clients.lastRecordUpload > 0);
+    do_check_true(engine.lastRecordUpload > 0);
 
     _("Let's time travel more than a week back, new record should've been uploaded.");
-    Clients.lastRecordUpload -= MORE_THAN_CLIENTS_TTL_REFRESH;
-    let lastweek = Clients.lastRecordUpload;
+    engine.lastRecordUpload -= MORE_THAN_CLIENTS_TTL_REFRESH;
+    let lastweek = engine.lastRecordUpload;
     clientWBO().payload = undefined;
-    Clients._sync();
+    engine._sync();
     do_check_true(!!clientWBO().payload);
-    do_check_true(Clients.lastRecordUpload > lastweek);
+    do_check_true(engine.lastRecordUpload > lastweek);
 
     _("Remove client record.");
-    Clients.removeClientData();
+    engine.removeClientData();
     do_check_eq(clientWBO().payload, undefined);
 
     _("Time travel one day back, no record uploaded.");
-    Clients.lastRecordUpload -= LESS_THAN_CLIENTS_TTL_REFRESH;
-    let yesterday = Clients.lastRecordUpload;
-    Clients._sync();
+    engine.lastRecordUpload -= LESS_THAN_CLIENTS_TTL_REFRESH;
+    let yesterday = engine.lastRecordUpload;
+    engine._sync();
     do_check_eq(clientWBO().payload, undefined);
-    do_check_eq(Clients.lastRecordUpload, yesterday);
+    do_check_eq(engine.lastRecordUpload, yesterday);
 
   } finally {
     Svc.Prefs.resetBranch("");
@@ -222,10 +224,10 @@ add_test(function test_sync() {
 add_test(function test_client_name_change() {
   _("Ensure client name change incurs a client record update.");
 
-  let tracker = Clients._tracker;
+  let tracker = engine._tracker;
 
-  let localID = Clients.localID;
-  let initialName = Clients.localName;
+  let localID = engine.localID;
+  let initialName = engine.localName;
 
   Svc.Obs.notify("weave:engine:start-tracking");
   _("initial name: " + initialName);
@@ -239,10 +241,10 @@ add_test(function test_client_name_change() {
 
   Svc.Prefs.set("client.name", "new name");
 
-  _("new name: " + Clients.localName);
-  do_check_neq(initialName, Clients.localName);
+  _("new name: " + engine.localName);
+  do_check_neq(initialName, engine.localName);
   do_check_eq(Object.keys(tracker.changedIDs).length, 1);
-  do_check_true(Clients.localID in tracker.changedIDs);
+  do_check_true(engine.localID in tracker.changedIDs);
   do_check_true(tracker.score > initialScore);
   do_check_true(tracker.score >= SCORE_INCREMENT_XLARGE);
 
@@ -254,8 +256,8 @@ add_test(function test_client_name_change() {
 add_test(function test_send_command() {
   _("Verifies _sendCommandToClient puts commands in the outbound queue.");
 
-  let store = Clients._store;
-  let tracker = Clients._tracker;
+  let store = engine._store;
+  let tracker = engine._tracker;
   let remoteId = Utils.makeGUID();
   let rec = new ClientsRec("clients", remoteId);
 
@@ -265,7 +267,7 @@ add_test(function test_send_command() {
   let action = "testCommand";
   let args = ["foo", "bar"];
 
-  Clients._sendCommandToClient(action, args, remoteId);
+  engine._sendCommandToClient(action, args, remoteId);
 
   let newRecord = store._remoteClients[remoteId];
   do_check_neq(newRecord, undefined);
@@ -284,7 +286,7 @@ add_test(function test_send_command() {
 add_test(function test_command_validation() {
   _("Verifies that command validation works properly.");
 
-  let store = Clients._store;
+  let store = engine._store;
 
   let testCommands = [
     ["resetAll",    [],       true ],
@@ -307,7 +309,7 @@ add_test(function test_command_validation() {
     store.create(rec);
     store.createRecord(remoteId, "clients");
 
-    Clients.sendCommand(action, args, remoteId);
+    engine.sendCommand(action, args, remoteId);
 
     let newRecord = store._remoteClients[remoteId];
     do_check_neq(newRecord, undefined);
@@ -320,14 +322,14 @@ add_test(function test_command_validation() {
       do_check_eq(command.command, action);
       do_check_eq(command.args, args);
 
-      do_check_neq(Clients._tracker, undefined);
-      do_check_neq(Clients._tracker.changedIDs[remoteId], undefined);
+      do_check_neq(engine._tracker, undefined);
+      do_check_neq(engine._tracker.changedIDs[remoteId], undefined);
     } else {
       _("Ensuring command is scrubbed: " + action);
       do_check_eq(newRecord.commands, undefined);
 
       if (store._tracker) {
-        do_check_eq(Clients._tracker[remoteId], undefined);
+        do_check_eq(engine._tracker[remoteId], undefined);
       }
     }
 
@@ -338,7 +340,7 @@ add_test(function test_command_validation() {
 add_test(function test_command_duplication() {
   _("Ensures duplicate commands are detected and not added");
 
-  let store = Clients._store;
+  let store = engine._store;
   let remoteId = Utils.makeGUID();
   let rec = new ClientsRec("clients", remoteId);
   store.create(rec);
@@ -347,8 +349,8 @@ add_test(function test_command_duplication() {
   let action = "resetAll";
   let args = [];
 
-  Clients.sendCommand(action, args, remoteId);
-  Clients.sendCommand(action, args, remoteId);
+  engine.sendCommand(action, args, remoteId);
+  engine.sendCommand(action, args, remoteId);
 
   let newRecord = store._remoteClients[remoteId];
   do_check_eq(newRecord.commands.length, 1);
@@ -357,11 +359,11 @@ add_test(function test_command_duplication() {
   newRecord.commands = [];
 
   action = "resetEngine";
-  Clients.sendCommand(action, [{ x: "foo" }], remoteId);
-  Clients.sendCommand(action, [{ x: "bar" }], remoteId);
+  engine.sendCommand(action, [{ x: "foo" }], remoteId);
+  engine.sendCommand(action, [{ x: "bar" }], remoteId);
 
   _("Make sure we spot a real dupe argument.");
-  Clients.sendCommand(action, [{ x: "bar" }], remoteId);
+  engine.sendCommand(action, [{ x: "bar" }], remoteId);
 
   do_check_eq(newRecord.commands.length, 2);
 
@@ -375,7 +377,7 @@ add_test(function test_command_invalid_client() {
   let error;
 
   try {
-    Clients.sendCommand("wipeAll", [], id);
+    engine.sendCommand("wipeAll", [], id);
   } catch (ex) {
     error = ex;
   }
@@ -388,7 +390,7 @@ add_test(function test_command_invalid_client() {
 add_test(function test_process_incoming_commands() {
   _("Ensures local commands are executed");
 
-  Clients.localCommands = [{ command: "logout", args: [] }];
+  engine.localCommands = [{ command: "logout", args: [] }];
 
   let ev = "weave:service:logout:finish";
 
@@ -400,7 +402,7 @@ add_test(function test_process_incoming_commands() {
   Svc.Obs.add(ev, handler);
 
   // logout command causes processIncomingCommands to return explicit false.
-  do_check_false(Clients.processIncomingCommands());
+  do_check_false(engine.processIncomingCommands());
 });
 
 add_test(function test_command_sync() {
@@ -408,12 +410,12 @@ add_test(function test_command_sync() {
 
   new SyncTestingInfrastructure();
 
-  Clients._store.wipe();
+  engine._store.wipe();
   generateNewKeys();
 
   let contents = {
-    meta: {global: {engines: {clients: {version: Clients.version,
-                                        syncID: Clients.syncID}}}},
+    meta: {global: {engines: {clients: {version: engine.version,
+                                        syncID: engine.syncID}}}},
     clients: {},
     crypto: {}
   };
@@ -427,32 +429,32 @@ add_test(function test_command_sync() {
 
   _("Create remote client record");
   let rec = new ClientsRec("clients", remoteId);
-  Clients._store.create(rec);
-  let remoteRecord = Clients._store.createRecord(remoteId, "clients");
-  Clients.sendCommand("wipeAll", []);
+  engine._store.create(rec);
+  let remoteRecord = engine._store.createRecord(remoteId, "clients");
+  engine.sendCommand("wipeAll", []);
 
-  let clientRecord = Clients._store._remoteClients[remoteId];
+  let clientRecord = engine._store._remoteClients[remoteId];
   do_check_neq(clientRecord, undefined);
   do_check_eq(clientRecord.commands.length, 1);
 
   try {
     _("Syncing.");
-    Clients._sync();
+    engine._sync();
     _("Checking record was uploaded.");
-    do_check_neq(clientWBO(Clients.localID).payload, undefined);
-    do_check_true(Clients.lastRecordUpload > 0);
+    do_check_neq(clientWBO(engine.localID).payload, undefined);
+    do_check_true(engine.lastRecordUpload > 0);
 
     do_check_neq(clientWBO(remoteId).payload, undefined);
 
     Svc.Prefs.set("client.GUID", remoteId);
-    Clients._resetClient();
-    do_check_eq(Clients.localID, remoteId);
+    engine._resetClient();
+    do_check_eq(engine.localID, remoteId);
     _("Performing sync on resetted client.");
-    Clients._sync();
-    do_check_neq(Clients.localCommands, undefined);
-    do_check_eq(Clients.localCommands.length, 1);
+    engine._sync();
+    do_check_neq(engine.localCommands, undefined);
+    do_check_eq(engine.localCommands.length, 1);
 
-    let command = Clients.localCommands[0];
+    let command = engine.localCommands[0];
     do_check_eq(command.command, "wipeAll");
     do_check_eq(command.args.length, 0);
 
@@ -466,8 +468,8 @@ add_test(function test_command_sync() {
 add_test(function test_send_uri_to_client_for_display() {
   _("Ensure sendURIToClientForDisplay() sends command properly.");
 
-  let tracker = Clients._tracker;
-  let store = Clients._store;
+  let tracker = engine._tracker;
+  let store = engine._store;
 
   let remoteId = Utils.makeGUID();
   let rec = new ClientsRec("clients", remoteId);
@@ -480,7 +482,7 @@ add_test(function test_send_uri_to_client_for_display() {
 
   let uri = "http://www.mozilla.org/";
   let title = "Title of the Page";
-  Clients.sendURIToClientForDisplay(uri, remoteId, title);
+  engine.sendURIToClientForDisplay(uri, remoteId, title);
 
   let newRecord = store._remoteClients[remoteId];
 
@@ -491,7 +493,7 @@ add_test(function test_send_uri_to_client_for_display() {
   do_check_eq(command.command, "displayURI");
   do_check_eq(command.args.length, 3);
   do_check_eq(command.args[0], uri);
-  do_check_eq(command.args[1], Clients.localID);
+  do_check_eq(command.args[1], engine.localID);
   do_check_eq(command.args[2], title);
 
   do_check_true(tracker.score > initialScore);
@@ -502,7 +504,7 @@ add_test(function test_send_uri_to_client_for_display() {
   let error;
 
   try {
-    Clients.sendURIToClientForDisplay(uri, unknownId);
+    engine.sendURIToClientForDisplay(uri, unknownId);
   } catch (ex) {
     error = ex;
   }
@@ -527,7 +529,7 @@ add_test(function test_receive_display_uri() {
     args: [uri, remoteId, title],
   };
 
-  Clients.localCommands = [command];
+  engine.localCommands = [command];
 
   // Received 'displayURI' command should result in the topic defined below
   // being called.
@@ -546,7 +548,7 @@ add_test(function test_receive_display_uri() {
 
   Svc.Obs.add(ev, handler);
 
-  do_check_true(Clients.processIncomingCommands());
+  do_check_true(engine.processIncomingCommands());
 });
 
 function run_test() {

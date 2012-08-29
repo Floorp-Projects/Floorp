@@ -12,7 +12,7 @@ Cu.import("resource://testing-common/services-common/utils.js");
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
-let engine = Engines.get("bookmarks");
+let engine = Service.engineManager.get("bookmarks");
 let store = engine._store;
 
 // Record borrowed from Bug 631361.

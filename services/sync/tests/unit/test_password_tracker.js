@@ -1,9 +1,13 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/passwords.js");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/service.js");
 
-Engines.register(PasswordEngine);
-let engine = Engines.get("passwords");
+Service.engineManager.register(PasswordEngine);
+let engine = Service.engineManager.get("passwords");
 let store  = engine._store;
 
 function test_tracking() {

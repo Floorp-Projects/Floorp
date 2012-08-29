@@ -290,8 +290,8 @@ RotaryRecord.prototype = {
 };
 Utils.deferGetSet(RotaryRecord, "cleartext", ["denomination"]);
 
-function RotaryStore() {
-  Store.call(this, "Rotary");
+function RotaryStore(engine) {
+  Store.call(this, "Rotary", engine);
   this.items = {};
 }
 RotaryStore.prototype = {
@@ -346,16 +346,16 @@ RotaryStore.prototype = {
   }
 };
 
-function RotaryTracker() {
-  Tracker.call(this, "Rotary");
+function RotaryTracker(engine) {
+  Tracker.call(this, "Rotary", engine);
 }
 RotaryTracker.prototype = {
   __proto__: Tracker.prototype
 };
 
 
-function RotaryEngine() {
-  SyncEngine.call(this, "Rotary");
+function RotaryEngine(service) {
+  SyncEngine.call(this, "Rotary", service);
   // Ensure that the engine starts with a clean slate.
   this.toFetch        = [];
   this.previousFailed = [];

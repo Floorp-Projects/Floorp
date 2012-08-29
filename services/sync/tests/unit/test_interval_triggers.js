@@ -9,13 +9,14 @@ Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
 
 let scheduler = Service.scheduler;
+let clientsEngine = Service.clientsEngine;
 
 function sync_httpd_setup() {
   let global = new ServerWBO("global", {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
-    engines: {clients: {version: Clients.version,
-                        syncID: Clients.syncID}}
+    engines: {clients: {version: clientsEngine.version,
+                        syncID: clientsEngine.syncID}}
   });
   let clientsColl = new ServerCollection({}, true);
 
@@ -109,7 +110,7 @@ add_test(function test_successful_sync_adjustSyncInterval() {
 
   _("Test as long as idle && numClients > 1 our sync interval is idleInterval.");
   // idle == true && numClients > 1 && hasIncomingItems == true
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  Service.clientsEngine._store.create({id: "foo", cleartext: "bar"});
   Service.sync();
   do_check_eq(syncSuccesses, 5);
   do_check_true(scheduler.idle);
@@ -213,7 +214,7 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
 
   _("Test as long as idle && numClients > 1 our sync interval is idleInterval.");
   // idle == true && numClients > 1 && hasIncomingItems == true
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  Service.clientsEngine._store.create({id: "foo", cleartext: "bar"});
 
   Service.sync();
   do_check_eq(syncFailures, 5);
@@ -266,7 +267,7 @@ add_test(function test_back_triggers_sync() {
   do_check_false(scheduler.idle);
 
   // Multiple devices: sync is triggered.
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
   scheduler.updateClientMode();
 
   Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
@@ -275,7 +276,7 @@ add_test(function test_back_triggers_sync() {
     Records.clearCache();
     Svc.Prefs.resetBranch("");
     scheduler.setDefaults();
-    Clients.resetClient();
+    clientsEngine.resetClient();
 
     Service.startOver();
     server.stop(run_next_test);
@@ -305,7 +306,7 @@ add_test(function test_adjust_interval_on_sync_error() {
   do_check_false(scheduler.numClients > 1);
   do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
 
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
   Service.sync();
 
   do_check_eq(syncFailures, 1);
@@ -376,13 +377,13 @@ add_test(function test_bug671378_scenario() {
     });
   });
 
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
   Service.sync();
 });
 
 add_test(function test_adjust_timer_larger_syncInterval() {
   _("Test syncInterval > current timout period && nextSync != 0, syncInterval is NOT used.");
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
   scheduler.updateClientMode();
   do_check_eq(scheduler.syncInterval, scheduler.activeInterval);
 
@@ -393,7 +394,7 @@ add_test(function test_adjust_timer_larger_syncInterval() {
   do_check_eq(scheduler.syncTimer.delay, scheduler.activeInterval);
 
   // Make interval large again
-  Clients._wipeClient();
+  clientsEngine._wipeClient();
   scheduler.updateClientMode();
   do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
 
@@ -417,7 +418,7 @@ add_test(function test_adjust_timer_smaller_syncInterval() {
   do_check_eq(scheduler.syncTimer.delay, scheduler.singleDeviceInterval);
 
   // Make interval smaller
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
   scheduler.updateClientMode();
   do_check_eq(scheduler.syncInterval, scheduler.activeInterval);
 
