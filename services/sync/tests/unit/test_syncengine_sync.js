@@ -41,7 +41,7 @@ function createServerAndConfigureClient() {
   const USER = "foo";
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", USER);
+  Identity.username = USER;
 
   let server = new SyncServer();
   server.registerUser(USER, "password");
@@ -77,7 +77,7 @@ add_test(function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   // Some server side data that's going to be wiped
   let collection = new ServerCollection();
@@ -131,7 +131,7 @@ add_test(function test_syncStartup_serverHasNewerVersion() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   let global = new ServerWBO('global', {engines: {rotary: {version: 23456}}});
   let server = httpd_setup({
       "/1.1/foo/storage/meta/global": global.handler()
@@ -162,7 +162,7 @@ add_test(function test_syncStartup_syncIDMismatchResetsClient() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   let server = sync_httpd_setup({});
 
   // global record with a different syncID than our engine has
@@ -200,7 +200,7 @@ add_test(function test_processIncoming_emptyServer() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   let collection = new ServerCollection();
 
   let server = sync_httpd_setup({
@@ -226,7 +226,7 @@ add_test(function test_processIncoming_createFromServer() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   generateNewKeys();
 
@@ -288,7 +288,7 @@ add_test(function test_processIncoming_reconcile() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   let collection = new ServerCollection();
 
   // This server record is newer than the corresponding client one,
@@ -608,7 +608,7 @@ add_test(function test_processIncoming_mobile_batchSize() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   Svc.Prefs.set("client.type", "mobile");
 
   // A collection that logs each GET
@@ -678,7 +678,7 @@ add_test(function test_processIncoming_store_toFetch() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   Svc.Prefs.set("client.type", "mobile");
 
   // A collection that throws at the fourth get.
@@ -746,7 +746,7 @@ add_test(function test_processIncoming_resume_toFetch() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   const LASTSYNC = Date.now() / 1000;
 
@@ -815,7 +815,7 @@ add_test(function test_processIncoming_applyIncomingBatchSize_smaller() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   // Engine that doesn't like the first and last record it's given.
   const APPLY_BATCH_SIZE = 10;
@@ -869,7 +869,7 @@ add_test(function test_processIncoming_applyIncomingBatchSize_multiple() {
   _("Ensure that incoming items are applied according to applyIncomingBatchSize.");
   let syncTesting = new SyncTestingInfrastructure();
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   const APPLY_BATCH_SIZE = 10;
 
@@ -922,7 +922,7 @@ add_test(function test_processIncoming_notify_count() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   const APPLY_BATCH_SIZE = 5;
   const NUMBER_OF_RECORDS = 15;
@@ -1011,7 +1011,7 @@ add_test(function test_processIncoming_previousFailed() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   Svc.Prefs.set("client.type", "mobile");
 
   const APPLY_BATCH_SIZE = 4;
@@ -1097,7 +1097,7 @@ add_test(function test_processIncoming_failed_records() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   // Let's create three and a bit batches worth of server side records.
   let collection = new ServerCollection();
@@ -1232,7 +1232,7 @@ add_test(function test_processIncoming_decrypt_failed() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   // Some good and some bogus records. One doesn't contain valid JSON,
   // the other will throw during decrypt.
@@ -1310,7 +1310,7 @@ add_test(function test_uploadOutgoing_toEmptyServer() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO('flying');
   collection._wbos.scotsman = new ServerWBO('scotsman');
@@ -1369,7 +1369,7 @@ add_test(function test_uploadOutgoing_failed() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   let collection = new ServerCollection();
   // We only define the "flying" WBO on the server, not the "scotsman"
   // and "peppercorn" ones.
@@ -1432,7 +1432,7 @@ add_test(function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   let collection = new ServerCollection();
 
   // Let's count how many times the client posts to the server
@@ -1504,7 +1504,7 @@ add_test(function test_syncFinish_deleteByIds() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO(
       'flying', encryptPayload({id: 'flying',
@@ -1546,7 +1546,7 @@ add_test(function test_syncFinish_deleteLotsInBatches() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
   let collection = new ServerCollection();
 
   // Let's count how many times the client does a DELETE request to the server
@@ -1618,7 +1618,7 @@ add_test(function test_sync_partialUpload() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
@@ -1692,7 +1692,7 @@ add_test(function test_canDecrypt_noCryptoKeys() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   // Wipe CollectionKeys so we can test the desired scenario.
   CollectionKeys.clear();
@@ -1721,7 +1721,7 @@ add_test(function test_canDecrypt_true() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   // Set up CollectionKeys, as service.js does.
   generateNewKeys();
@@ -1750,7 +1750,7 @@ add_test(function test_syncapplied_observer() {
   let syncTesting = new SyncTestingInfrastructure();
   Service.serverURL = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
-  Svc.Prefs.set("username", "foo");
+  Identity.username = "foo";
 
   const NUMBER_OF_RECORDS = 10;
 
