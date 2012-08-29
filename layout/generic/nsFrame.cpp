@@ -4794,22 +4794,27 @@ nsIFrame::ClearInvalidationStateBits()
                   NS_FRAME_ALL_DESCENDANTS_NEED_PAINT);
 }
 
-void
-nsIFrame::InvalidateFrame()
+static void InvalidateFrameInternal(nsIFrame *aFrame)
 {
-  AddStateBits(NS_FRAME_NEEDS_PAINT);
-  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(this);
+  aFrame->AddStateBits(NS_FRAME_NEEDS_PAINT);
+  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
   while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
     parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
   }
   if (!parent) {
-    SchedulePaint();
+    aFrame->SchedulePaint();
   }
-  if (HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
-    Properties().Delete(InvalidationRect());
-    RemoveStateBits(NS_FRAME_HAS_INVALID_RECT);
+  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
+    aFrame->Properties().Delete(nsIFrame::InvalidationRect());
+    aFrame->RemoveStateBits(NS_FRAME_HAS_INVALID_RECT);
   }
+}
+
+void
+nsIFrame::InvalidateFrame()
+{
+  InvalidateFrameInternal(this);
 }
 
 void
@@ -4817,7 +4822,7 @@ nsIFrame::InvalidateFrameWithRect(const nsRect& aRect)
 {
   bool alreadyInvalid = false;
   if (!HasAnyStateBits(NS_FRAME_NEEDS_PAINT)) {
-    InvalidateFrame();
+    InvalidateFrameInternal(this);
   } else {
     alreadyInvalid = true;
   } 

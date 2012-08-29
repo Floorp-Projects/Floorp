@@ -464,6 +464,23 @@ public:
   bool HasCellSpanningPctCol() const;
   void SetHasCellSpanningPctCol(bool aValue);
 
+  /**
+   * To be called on a frame by its parent after setting its size/position and
+   * calling DidReflow (possibly via FinishReflowChild()).  This can also be
+   * used for child frames which are not being reflowed but did have their size
+   * or position changed.
+   *
+   * @param aFrame The frame to invalidate
+   * @param aOrigRect The original rect of aFrame (before the change).
+   * @param aOrigVisualOverflow The original overflow rect of aFrame.
+   * @param aIsFirstReflow True if the size/position change is due to the
+   *                       first reflow of aFrame.
+   */
+  static void InvalidateTableFrame(nsIFrame* aFrame,
+                                   const nsRect& aOrigRect,
+                                   const nsRect& aOrigVisualOverflow,
+                                   bool aIsFirstReflow);
+
   virtual bool UpdateOverflow();
 
 protected:
