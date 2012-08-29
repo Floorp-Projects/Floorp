@@ -12,9 +12,8 @@ const CU = Components.utils;
 
 CU.import("resource://gre/modules/XPCOMUtils.jsm");
 CU.import("resource://gre/modules/Services.jsm");
-CU.import("resource://tps/logger.jsm");
-CU.import("resource://services-sync/service.js");
 CU.import("resource://services-sync/util.js");
+CU.import("resource://tps/logger.jsm");
 var utils = {}; CU.import('resource://mozmill/modules/utils.js', utils);
 
 const SYNC_RESET_CLIENT = "reset-client";
