@@ -131,6 +131,22 @@ nsPresContext::MakeColorPref(const nsString& aColor)
     : NS_RGB(0, 0, 0);
 }
 
+bool
+nsPresContext::IsDOMPaintEventPending() 
+{
+  if (!mInvalidateRequests.mRequests.IsEmpty()) {
+    return true;    
+  }
+  if (GetDisplayRootPresContext()->GetRootPresContext()->mRefreshDriver->ViewManagerFlushIsPending()) {
+    // Since we're promising that there will be a MozAfterPaint event
+    // fired, we record an empty invalidation in case display list
+    // invalidation doesn't invalidate anything further.
+    NotifyInvalidation(nsRect(0, 0, 0, 0), 0);
+    return true;
+  }
+  return false;
+}
+
 int
 nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
 {
@@ -1970,26 +1986,14 @@ nsPresContext::FireDOMPaintEvent()
 
   nsCOMPtr<nsIDOMEventTarget> dispatchTarget = do_QueryInterface(ourWindow);
   nsCOMPtr<nsIDOMEventTarget> eventTarget = dispatchTarget;
-  if (!IsChrome()) {
-    bool notifyContent = mSendAfterPaintToContent;
-
-    if (notifyContent) {
-      // If the pref is set, we still don't post events when they're
-      // entirely cross-doc.
-      notifyContent = true;
-      for (uint32_t i = 0; i < mInvalidateRequests.mRequests.Length(); ++i) {
-        notifyContent = true;
-      }
-    }
-    if (!notifyContent) {
-      // Don't tell the window about this event, it should not know that
-      // something happened in a subdocument. Tell only the chrome event handler.
-      // (Events sent to the window get propagated to the chrome event handler
-      // automatically.)
-      dispatchTarget = do_QueryInterface(ourWindow->GetParentTarget());
-      if (!dispatchTarget) {
-        return;
-      }
+  if (!IsChrome() && !mSendAfterPaintToContent) {
+    // Don't tell the window about this event, it should not know that
+    // something happened in a subdocument. Tell only the chrome event handler.
+    // (Events sent to the window get propagated to the chrome event handler
+    // automatically.)
+    dispatchTarget = do_QueryInterface(ourWindow->GetParentTarget());
+    if (!dispatchTarget) {
+      return;
     }
   }
   // Events sent to the window get propagated to the chrome event handler
@@ -2021,11 +2025,7 @@ MayHavePaintEventListenerSubdocumentCallback(nsIDocument* aDocument, void* aData
   if (shell) {
     nsPresContext* pc = shell->GetPresContext();
     if (pc) {
-      if (pc->IsChrome()) {
-        *result = pc->MayHavePaintEventListenerInSubDocument();
-      } else {
-        *result = pc->MayHavePaintEventListener();
-      }
+      *result = pc->MayHavePaintEventListenerInSubDocument();
 
       // If we found a paint event listener, then we can stop enumerating
       // sub documents.
@@ -2116,8 +2116,6 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
   // MayHavePaintEventListener is pretty cheap and we could make it
   // even cheaper by providing a more efficient
   // nsPIDOMWindow::GetListenerManager.
-  if (aRect.IsEmpty() || !MayHavePaintEventListener())
-    return;
 
   nsPresContext* pc;
   for (pc = this; pc; pc = pc->GetParentPresContext()) {
@@ -2181,19 +2179,18 @@ NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData)
 void
 nsPresContext::NotifyDidPaintForSubtree()
 {
-  if (!mFireAfterPaintEvents)
-    return;
-  mFireAfterPaintEvents = false;
-
   if (IsRoot()) {
+    if (!mFireAfterPaintEvents)
+      return;
+
     static_cast<nsRootPresContext*>(this)->CancelDidPaintTimer();
   }
 
-  if (!mInvalidateRequests.mRequests.IsEmpty()) {
-    nsCOMPtr<nsIRunnable> ev =
-      NS_NewRunnableMethod(this, &nsPresContext::FireDOMPaintEvent);
-    nsContentUtils::AddScriptRunner(ev);
-  }
+  mFireAfterPaintEvents = false;
+
+  nsCOMPtr<nsIRunnable> ev =
+    NS_NewRunnableMethod(this, &nsPresContext::FireDOMPaintEvent);
+  nsContentUtils::AddScriptRunner(ev);
 
   mDocument->EnumerateSubDocuments(NotifyDidPaintSubdocumentCallback, nullptr);
 }
