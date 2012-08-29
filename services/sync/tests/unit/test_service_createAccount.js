@@ -1,9 +1,14 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/service.js");
 
 function run_test() {
-  var requestBody;
-  var secretHeader;
+  initTestLogging("Trace");
+
+  let requestBody;
+  let secretHeader;
   function send(statusCode, status, body) {
     return function(request, response) {
       requestBody = readBytesFromInputStream(request.bodyInputStream);

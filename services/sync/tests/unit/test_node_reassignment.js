@@ -77,7 +77,7 @@ function prepareServer() {
   Service.serverURL  = TEST_SERVER_URL;
   Service.clusterURL = TEST_CLUSTER_URL;
 
-  do_check_eq(Service.userAPI, "http://localhost:8080/user/1.0/");
+  do_check_eq(Service.userAPIURI, "http://localhost:8080/user/1.0/");
   let server = new SyncServer();
   server.registerUser("johndoe");
   server.start();
