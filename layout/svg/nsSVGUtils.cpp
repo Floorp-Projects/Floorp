@@ -415,6 +415,14 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
     return;
   }
 
+  aFrame->InvalidateFrameSubtree();
+
+  if ((aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame ||
+      aFrame->GetType() == nsGkAtoms::svgGlyphFrame) &&
+      NS_SVGDisplayListPaintingEnabled()) {
+    return;
+  }
+
   // Okay, so now we pass the area that needs to be invalidated up our parent
   // chain, accounting for filter effects and transforms as we go, until we
   // reach our nsSVGOuterSVGFrame where we can invalidate:
@@ -479,8 +487,7 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
   NS_ASSERTION(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG,
                "SVG frames must always have an nsSVGOuterSVGFrame ancestor!");
 
-  static_cast<nsSVGOuterSVGFrame*>(aFrame)->InvalidateWithFlags(invalidArea,
-                                                                aFlags);
+  static_cast<nsSVGOuterSVGFrame*>(aFrame)->InvalidateSVG(invalidArea);
 }
 
 void

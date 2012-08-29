@@ -583,22 +583,14 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
 }
 
 nsresult
-nsIFrame::Redraw(nsBoxLayoutState& aState,
-                 const nsRect*   aDamageRect)
+nsIFrame::Redraw(nsBoxLayoutState& aState)
 {
   if (aState.PaintingDisabled())
     return NS_OK;
 
-  nsRect damageRect(0,0,0,0);
-  if (aDamageRect)
-    damageRect = *aDamageRect;
-  else
-    damageRect = GetVisualOverflowRect();
-
-  Invalidate(damageRect);
   // nsStackLayout, at least, expects us to repaint descendants even
   // if a damage rect is provided
-  FrameLayerBuilder::InvalidateThebesLayersInSubtree(this);
+  InvalidateFrameSubtree();
 
   return NS_OK;
 }

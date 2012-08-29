@@ -427,7 +427,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
     // plugins are painted through Thebes and we need to ensure
     // the Thebes layer containing the plugin is updated.
     if (parentWidget == GetNearestWidget()) {
-      Invalidate(GetContentRectRelativeToSelf());
+      InvalidateFrame();
     }
 #endif
 
@@ -1638,7 +1638,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   // to provide crisper and faster drawing.
   r.Round();
   nsRefPtr<Layer> layer =
-    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
 
   if (aItem->GetType() == nsDisplayItem::TYPE_PLUGIN) {
     if (!layer) {
