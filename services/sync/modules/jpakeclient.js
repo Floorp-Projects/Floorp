@@ -9,8 +9,7 @@ const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/main.js");
-Cu.import("resource://services-sync/policies.js");
+Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
 
 const REQUEST_TIMEOUT         = 60; // 1 minute
@@ -696,15 +695,17 @@ JPAKEClient.prototype = {
  *
  * Usage:
  *
- *   jpakeclient.controller = new SendCredentialsController(jpakeclient);
+ *   jpakeclient.controller = new SendCredentialsController(jpakeclient,
+ *                                                          service);
  *
  */
-function SendCredentialsController(jpakeclient) {
+function SendCredentialsController(jpakeclient, service) {
   this._log = Log4Moz.repository.getLogger("Sync.SendCredentialsController");
   this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
 
   this._log.trace("Loading.");
   this.jpakeclient = jpakeclient;
+  this.service = service;
 
   // Register ourselves as observers the first Sync finishing (either
   // successfully or unsuccessfully, we don't care) or for removing
@@ -742,10 +743,10 @@ SendCredentialsController.prototype = {
 
   sendCredentials: function sendCredentials() {
     this._log.trace("Sending credentials.");
-    let credentials = {account:   Weave.Identity.account,
-                       password:  Weave.Identity.basicPassword,
-                       synckey:   Weave.Identity.syncKey,
-                       serverURL: Weave.Service.serverURL};
+    let credentials = {account:   Identity.account,
+                       password:  Identity.basicPassword,
+                       synckey:   Identity.syncKey,
+                       serverURL: this.service.serverURL};
     this.jpakeclient.sendAndComplete(credentials);
   },
 
@@ -757,7 +758,7 @@ SendCredentialsController.prototype = {
 
     // Schedule a Sync for soonish to fetch the data uploaded by the
     // device with which we just paired.
-    SyncScheduler.scheduleNextSync(SyncScheduler.activeInterval);
+    this.service.scheduler.scheduleNextSync(this.service.scheduler.activeInterval);
   },
 
   onAbort: function onAbort(error) {
