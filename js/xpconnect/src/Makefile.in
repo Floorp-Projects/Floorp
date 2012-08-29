@@ -83,6 +83,8 @@ SHARED_LIBRARY_LIBS = \
   ../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
   $(NULL)
 
+EXTRA_MDDEPEND_FILES = dom_qsgen.pp dombindingsgen.pp dictionary_helper_gen.pp event_impl_gen.pp
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += \
