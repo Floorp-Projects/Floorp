@@ -53,6 +53,7 @@
 #include "nsObjectFrame.h"
 #include "nsIServiceManager.h"
 #include "nsContentUtils.h"
+#include "LayerTreeInvalidation.h"
 
 // For Accessibility
 #ifdef ACCESSIBILITY
@@ -383,14 +384,16 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     nsDisplayZoom* zoomItem =
       new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
-                                   subdocAPD, parentAPD);
+                                   subdocAPD, parentAPD, 
+                                   nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
     childItems.AppendToTop(zoomItem);
   }
 
   if (!addedLayer && presContext->IsRootContentDocument()) {
     // We always want top level content documents to be in their own layer.
     nsDisplayOwnLayer* layerItem = new (aBuilder) nsDisplayOwnLayer(
-      aBuilder, subdocRootFrame ? subdocRootFrame : this, &childItems);
+      aBuilder, subdocRootFrame ? subdocRootFrame : this, 
+      &childItems, nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
     childItems.AppendToTop(layerItem);
   }
 

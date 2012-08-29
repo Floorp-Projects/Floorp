@@ -88,6 +88,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+uint8_t gNotifySubDocInvalidationData;
+
 namespace {
 
 class CharSetChangingRunnable : public nsRunnable
@@ -2012,6 +2014,28 @@ nsPresContext::FireDOMPaintEvent()
 }
 
 static bool
+MayHavePaintEventListenerSubdocumentCallback(nsIDocument* aDocument, void* aData)
+{
+  bool *result = static_cast<bool*>(aData);
+  nsIPresShell* shell = aDocument->GetShell();
+  if (shell) {
+    nsPresContext* pc = shell->GetPresContext();
+    if (pc) {
+      if (pc->IsChrome()) {
+        *result = pc->MayHavePaintEventListenerInSubDocument();
+      } else {
+        *result = pc->MayHavePaintEventListener();
+      }
+
+      // If we found a paint event listener, then we can stop enumerating
+      // sub documents.
+      return !*result;
+    }
+  }
+  return true;
+}
+
+static bool
 MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
 {
   if (!aInnerWindow)
@@ -2062,6 +2086,28 @@ nsPresContext::MayHavePaintEventListener()
   return ::MayHavePaintEventListener(mDocument->GetInnerWindow());
 }
 
+bool
+nsPresContext::MayHavePaintEventListenerInSubDocument()
+{
+  if (MayHavePaintEventListener()) {
+    return true;
+  }
+
+  bool result = false;
+  mDocument->EnumerateSubDocuments(MayHavePaintEventListenerSubdocumentCallback, &result);
+  return result;
+}
+
+void
+nsPresContext::NotifyInvalidation(const nsIntRect& aRect, uint32_t aFlags)
+{
+  nsRect rect(DevPixelsToAppUnits(aRect.x),
+              DevPixelsToAppUnits(aRect.y),
+              DevPixelsToAppUnits(aRect.width),
+              DevPixelsToAppUnits(aRect.height));
+  NotifyInvalidation(rect, aFlags);
+}
+
 void
 nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
 {
@@ -2093,6 +2139,30 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
 
   request->mRect = aRect;
   request->mFlags = aFlags;
+}
+
+/* static */ void 
+nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
+                                        const nsIntRegion& aRegion)
+{
+  ContainerLayerPresContext *data = 
+    static_cast<ContainerLayerPresContext*>(
+      aContainer->GetUserData(&gNotifySubDocInvalidationData));
+  if (!data) {
+    return;
+  }
+
+  nsIntPoint topLeft = aContainer->GetVisibleRegion().GetBounds().TopLeft();
+
+  nsIntRegionRectIterator iter(aRegion);
+  while (const nsIntRect* r = iter.Next()) {
+    nsIntRect rect = *r;
+    //PresContext coordinate space is relative to the start of our visible
+    // region. Is this really true? This feels like the wrong way to get the right
+    // answer.
+    rect.MoveBy(-topLeft);
+    data->mPresContext->NotifyInvalidation(rect, 0);
+  }
 }
 
 static bool

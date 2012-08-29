@@ -2230,7 +2230,7 @@ public:
    * @param aDisplayItemKey Display item type.
    * @return Layer, if found, nullptr otherwise.
    */
-  Layer* InvalidateLayer(const nsRect& aDamageRect, uint32_t aDisplayItemKey);
+  Layer* InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect = nullptr);
 
   /**
    * Returns a rect that encompasses everything that might be painted by
