@@ -2,49 +2,54 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <string.h>
-#include "mozilla/SHA1.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/SHA1.h"
+
+#include <string.h>
 
 // FIXME: We should probably create a more complete mfbt/Endian.h. This assumes
 // that any compiler that doesn't define these macros is little endian.
 #if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__)
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define MOZ_IS_LITTLE_ENDIAN
-#endif
+#  if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#    define MOZ_IS_LITTLE_ENDIAN
+#  endif
 #else
-#define MOZ_IS_LITTLE_ENDIAN
+#  define MOZ_IS_LITTLE_ENDIAN
 #endif
 
-using namespace mozilla;
+using mozilla::SHA1Sum;
 
-static inline uint32_t SHA_ROTL(uint32_t t, uint32_t n)
+static inline uint32_t
+SHA_ROTL(uint32_t t, uint32_t n)
 {
-    return ((t << n) | (t >> (32 - n)));
+  MOZ_ASSERT(n < 32);
+  return (t << n) | (t >> (32 - n));
 }
 
+static inline unsigned
+SHA_HTONL(unsigned x)
+{
 #ifdef MOZ_IS_LITTLE_ENDIAN
-static inline unsigned SHA_HTONL(unsigned x) {
   const unsigned int mask = 0x00FF00FF;
   x = (x << 16) | (x >> 16);
   return ((x & mask) << 8) | ((x >> 8) & mask);
-}
 #else
-static inline unsigned SHA_HTONL(unsigned x) {
   return x;
-}
 #endif
+}
 
-static void shaCompress(volatile unsigned *X, const uint32_t * datain);
+static void
+shaCompress(volatile unsigned* X, const uint32_t* datain);
 
-#define SHA_F1(X,Y,Z) ((((Y)^(Z))&(X))^(Z))
-#define SHA_F2(X,Y,Z) ((X)^(Y)^(Z))
-#define SHA_F3(X,Y,Z) (((X)&(Y))|((Z)&((X)|(Y))))
-#define SHA_F4(X,Y,Z) ((X)^(Y)^(Z))
+#define SHA_F1(X, Y, Z) ((((Y) ^ (Z)) & (X)) ^ (Z))
+#define SHA_F2(X, Y, Z) ((X) ^ (Y) ^ (Z))
+#define SHA_F3(X, Y, Z) (((X) & (Y)) | ((Z) & ((X) | (Y))))
+#define SHA_F4(X, Y, Z) ((X) ^ (Y) ^ (Z))
 
-#define SHA_MIX(n,a,b,c)    XW(n) = SHA_ROTL(XW(a)^XW(b)^XW(c)^XW(n), 1)
+#define SHA_MIX(n, a, b, c)    XW(n) = SHA_ROTL(XW(a) ^ XW(b) ^ XW(c) ^XW(n), 1)
 
-SHA1Sum::SHA1Sum() : size(0), mDone(false)
+SHA1Sum::SHA1Sum()
+  : size(0), mDone(false)
 {
   // Initialize H with constants from FIPS180-1.
   H[0] = 0x67452301L;
@@ -54,7 +59,9 @@ SHA1Sum::SHA1Sum() : size(0), mDone(false)
   H[4] = 0xc3d2e1f0L;
 }
 
-/* Explanation of H array and index values:
+/*
+ * Explanation of H array and index values:
+ *
  * The context's H array is actually the concatenation of two arrays
  * defined by SHA1, the H array of state variables (5 elements),
  * and the W array of intermediate values, of which there are 16 elements.
@@ -91,80 +98,77 @@ SHA1Sum::SHA1Sum() : size(0), mDone(false)
 /*
  *  SHA: Add data to context.
  */
-void SHA1Sum::update(const uint8_t *dataIn, uint32_t len)
+void
+SHA1Sum::update(const uint8_t* dataIn, uint32_t len)
 {
-  MOZ_ASSERT(!mDone);
-  register unsigned int lenB;
-  register unsigned int togo;
+  MOZ_ASSERT(!mDone, "SHA1Sum can only be used to compute a single hash.");
 
-  if (!len)
+  if (len == 0)
     return;
 
-  /* accumulate the byte count. */
-  lenB = (unsigned int)(size) & 63U;
+  /* Accumulate the byte count. */
+  unsigned int lenB = static_cast<unsigned int>(size) & 63U;
 
   size += len;
 
-  /*
-   *  Read the data into W and process blocks as they get full
-   */
+  /* Read the data into W and process blocks as they get full. */
+  unsigned int togo;
   if (lenB > 0) {
     togo = 64U - lenB;
     if (len < togo)
       togo = len;
     memcpy(u.b + lenB, dataIn, togo);
-    len    -= togo;
+    len -= togo;
     dataIn += togo;
-    lenB    = (lenB + togo) & 63U;
-    if (!lenB) {
+    lenB = (lenB + togo) & 63U;
+    if (!lenB)
       shaCompress(&H[H2X], u.w);
-    }
   }
+
   while (len >= 64U) {
-    len    -= 64U;
-    shaCompress(&H[H2X], (uint32_t *)dataIn);
+    len -= 64U;
+    shaCompress(&H[H2X], reinterpret_cast<const uint32_t*>(dataIn));
     dataIn += 64U;
   }
-  if (len) {
+
+  if (len > 0)
     memcpy(u.b, dataIn, len);
-  }
 }
 
 
 /*
  *  SHA: Generate hash value
  */
-void SHA1Sum::finish(uint8_t hashout[20])
+void
+SHA1Sum::finish(SHA1Sum::Hash& hashOut)
 {
-  MOZ_ASSERT(!mDone);
-  register uint64_t size2 = size;
-  register uint32_t lenB = (uint32_t)size2 & 63;
+  MOZ_ASSERT(!mDone, "SHA1Sum can only be used to compute a single hash.");
 
-  static const uint8_t bulk_pad[64] = { 0x80,0,0,0,0,0,0,0,0,0,
-          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  };
+  uint64_t size2 = size;
+  uint32_t lenB = uint32_t(size2) & 63;
 
-  /*
-   *  Pad with a binary 1 (e.g. 0x80), then zeroes, then length in bits
-   */
+  static const uint8_t bulk_pad[64] =
+    { 0x80,0,0,0,0,0,0,0,0,0,
+      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
-  update(bulk_pad, (((55+64) - lenB) & 63) + 1);
-  MOZ_ASSERT(((uint32_t)size & 63) == 56);
+  /* Pad with a binary 1 (e.g. 0x80), then zeroes, then length in bits. */
+  update(bulk_pad, (((55 + 64) - lenB) & 63) + 1);
+  MOZ_ASSERT((uint32_t(size) & 63) == 56);
+
   /* Convert size from bytes to bits. */
   size2 <<= 3;
-  u.w[14] = SHA_HTONL((uint32_t)(size2 >> 32));
-  u.w[15] = SHA_HTONL((uint32_t)size2);
+  u.w[14] = SHA_HTONL(uint32_t(size2 >> 32));
+  u.w[15] = SHA_HTONL(uint32_t(size2));
   shaCompress(&H[H2X], u.w);
 
-  /*
-   *  Output hash
-   */
+  /* Output hash. */
   u.w[0] = SHA_HTONL(H[0]);
   u.w[1] = SHA_HTONL(H[1]);
   u.w[2] = SHA_HTONL(H[2]);
   u.w[3] = SHA_HTONL(H[3]);
   u.w[4] = SHA_HTONL(H[4]);
-  memcpy(hashout, u.w, 20);
+  memcpy(hashOut, u.w, 20);
   mDone = true;
 }
 
@@ -218,25 +222,24 @@ void SHA1Sum::finish(uint8_t hashout[20])
 static void
 shaCompress(volatile unsigned *X, const uint32_t *inbuf)
 {
-  register unsigned A, B, C, D, E;
+  unsigned A, B, C, D, E;
 
-
-#define XH(n) X[n-H2X]
-#define XW(n) X[n-W2X]
+#define XH(n) X[n - H2X]
+#define XW(n) X[n - W2X]
 
 #define K0 0x5a827999L
 #define K1 0x6ed9eba1L
 #define K2 0x8f1bbcdcL
 #define K3 0xca62c1d6L
 
-#define SHA_RND1(a,b,c,d,e,n) \
-  a = SHA_ROTL(b,5)+SHA_F1(c,d,e)+a+XW(n)+K0; c=SHA_ROTL(c,30) 
-#define SHA_RND2(a,b,c,d,e,n) \
-  a = SHA_ROTL(b,5)+SHA_F2(c,d,e)+a+XW(n)+K1; c=SHA_ROTL(c,30) 
-#define SHA_RND3(a,b,c,d,e,n) \
-  a = SHA_ROTL(b,5)+SHA_F3(c,d,e)+a+XW(n)+K2; c=SHA_ROTL(c,30) 
-#define SHA_RND4(a,b,c,d,e,n) \
-  a = SHA_ROTL(b,5)+SHA_F4(c,d,e)+a+XW(n)+K3; c=SHA_ROTL(c,30) 
+#define SHA_RND1(a, b, c, d, e, n) \
+  a = SHA_ROTL(b, 5) + SHA_F1(c, d, e) + a + XW(n) + K0; c = SHA_ROTL(c, 30)
+#define SHA_RND2(a, b, c, d, e, n) \
+  a = SHA_ROTL(b, 5) + SHA_F2(c, d, e) + a + XW(n) + K1; c = SHA_ROTL(c, 30)
+#define SHA_RND3(a, b, c, d, e, n) \
+  a = SHA_ROTL(b, 5) + SHA_F3(c, d, e) + a + XW(n) + K2; c = SHA_ROTL(c, 30)
+#define SHA_RND4(a, b, c, d, e, n) \
+  a = SHA_ROTL(b ,5) + SHA_F4(c, d, e) + a + XW(n) + K3; c = SHA_ROTL(c, 30)
 
 #define LOAD(n) XW(n) = SHA_HTONL(inbuf[n])
 
