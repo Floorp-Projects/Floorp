@@ -20,7 +20,8 @@ function convertAppsArray(aApps, aWindow) {
   let apps = Cu.createArrayIn(aWindow);
   for (let i = 0; i < aApps.length; i++) {
     let app = aApps[i];
-    apps.push(createApplicationObject(aWindow, app));
+    apps.push(createApplicationObject(aWindow, app.origin, app.manifest, app.manifestURL,
+                                      app.receipts, app.installOrigin, app.installTime));
   }
 
   return apps;
@@ -72,7 +73,8 @@ WebappsRegistry.prototype = {
     let app = msg.app;
     switch (aMessage.name) {
       case "Webapps:Install:Return:OK":
-        Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app));
+        Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
+                                                                     app.installOrigin, app.installTime));
         break;
       case "Webapps:Install:Return:KO":
         Services.DOMRequest.fireError(req, msg.error || "DENIED");
@@ -80,7 +82,8 @@ WebappsRegistry.prototype = {
       case "Webapps:GetSelf:Return:OK":
         if (msg.apps.length) {
           app = msg.apps[0];
-          Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app));
+          Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
+                                                                       app.installOrigin, app.installTime));
         } else {
           Services.DOMRequest.fireSuccess(req, null);
         }
@@ -220,9 +223,9 @@ WebappsRegistry.prototype = {
   * mozIDOMApplication object
   */
 
-function createApplicationObject(aWindow, aApp) {
+function createApplicationObject(aWindow, aOrigin, aManifest, aManifestURL, aReceipts, aInstallOrigin, aInstallTime) {
   let app = Cc["@mozilla.org/webapps/application;1"].createInstance(Ci.mozIDOMApplication);
-  app.wrappedJSObject.init(aWindow, aApp);
+  app.wrappedJSObject.init(aWindow, aOrigin, aManifest, aManifestURL, aReceipts, aInstallOrigin, aInstallTime);
   return app;
 }
 
@@ -243,24 +246,20 @@ WebappsApplication.prototype = {
                       onprogress: 'rw',
                       launch: 'r',
                       receipts: 'r',
-                      removable: 'r',
                       uninstall: 'r'
                      },
 
-  init: function(aWindow, aApp) {
-    this.origin = aApp.origin;
-    this.manifest = ObjectWrapper.wrap(aApp.manifest, aWindow);
-    this.manifestURL = aApp.manifestURL;
-    this.receipts = aApp.receipts;
-    this.installOrigin = aApp.installOrigin;
-    this.installTime = aApp.installTime;
+  init: function(aWindow, aOrigin, aManifest, aManifestURL, aReceipts, aInstallOrigin, aInstallTime) {
+    this.origin = aOrigin;
+    this.manifest = ObjectWrapper.wrap(aManifest, aWindow);
+    this.manifestURL = aManifestURL;
+    this.receipts = aReceipts;
+    this.installOrigin = aInstallOrigin;
+    this.installTime = aInstallTime;
     this.status = "installed";
-    this.removable = aApp.removable;
     this.progress = NaN;
     this._onprogress = null;
-    this.initHelper(aWindow, ["Webapps:Uninstall:Return:OK",
-                              "Webapps:Uninstall:Return:KO",
-                              "Webapps:OfflineCache"]);
+    this.initHelper(aWindow, ["Webapps:Uninstall:Return:OK", "Webapps:Uninstall:Return:KO", "Webapps:OfflineCache"]);
   },
 
   set onprogress(aCallback) {
@@ -423,14 +422,15 @@ WebappsApplicationMgmt.prototype = {
         if (this._oninstall) {
           let app = msg.app;
           let event = new this._window.MozApplicationEvent("applicationinstall",
-                           { application : createApplicationObject(this._window, app) });
+                           { application : createApplicationObject(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
+                                                                  app.installOrigin, app.installTime) });
           this._oninstall.handleEvent(event);
         }
         break;
       case "Webapps:Uninstall:Return:OK":
         if (this._onuninstall) {
           let event = new this._window.MozApplicationEvent("applicationuninstall",
-                           { application : createApplicationObject(this._window, { origin: msg.origin }) });
+                           { application : createApplicationObject(this._window, msg.origin, null, null, null, null, 0) });
           this._onuninstall.handleEvent(event);
         }
         break;
