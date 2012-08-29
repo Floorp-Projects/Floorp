@@ -47,10 +47,6 @@
     #include <sys/mount.h>
 #endif
 
-#if defined(XP_MACOSX) && (defined(HAVE_STATVFS64) || !defined(HAVE_STATVFS))
-#error "Double-check which members of the 'STATFS' struct we're using!"
-#endif
-
 #if defined(HAVE_STATVFS64) && (!defined(LINUX) && !defined(__osf__))
     #define STATFS statvfs64
     #define F_BSIZE f_frsize
