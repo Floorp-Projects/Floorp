@@ -53,6 +53,7 @@
 #include "nsObjectFrame.h"
 #include "nsIServiceManager.h"
 #include "nsContentUtils.h"
+#include "LayerTreeInvalidation.h"
 
 // For Accessibility
 #ifdef ACCESSIBILITY
@@ -383,14 +384,16 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     nsDisplayZoom* zoomItem =
       new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
-                                   subdocAPD, parentAPD);
+                                   subdocAPD, parentAPD, 
+                                   nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
     childItems.AppendToTop(zoomItem);
   }
 
   if (!addedLayer && presContext->IsRootContentDocument()) {
     // We always want top level content documents to be in their own layer.
     nsDisplayOwnLayer* layerItem = new (aBuilder) nsDisplayOwnLayer(
-      aBuilder, subdocRootFrame ? subdocRootFrame : this, &childItems);
+      aBuilder, subdocRootFrame ? subdocRootFrame : this, 
+      &childItems, nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
     childItems.AppendToTop(layerItem);
   }
 
@@ -655,9 +658,6 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
       aDesiredSize.mOverflowAreas.UnionWith(subdocRootFrame->GetOverflowAreas() + offset);
     }
   }
-
-  // Determine if we need to repaint our border, background or outline
-  CheckInvalidateSizeChange(aDesiredSize);
 
   FinishAndStoreOverflow(&aDesiredSize);
 
@@ -954,6 +954,9 @@ nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  NS_ASSERTION(HasAnyStateBits(NS_FRAME_IN_POPUP) == other->HasAnyStateBits(NS_FRAME_IN_POPUP),
+               "Can't swap doc shells when only one is within a popup!");
+
   if (mInnerView && other->mInnerView) {
     nsIView* ourSubdocViews = mInnerView->GetFirstChild();
     nsIView* ourRemovedViews = ::BeginSwapDocShellsForViews(ourSubdocViews);
@@ -1007,6 +1010,14 @@ EndSwapDocShellsForViews(nsIView* aSibling)
     nsIDocument* doc = ::GetDocumentFromView(aSibling);
     if (doc) {
       ::EndSwapDocShellsForDocument(doc, nullptr);
+    }
+    nsIFrame *frame = aSibling->GetFrame();
+    if (frame && frame->HasInvalidFrameInSubtree()) {
+      nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(frame);
+      while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
+        parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
+        parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
+      }
     }
   }
 }

@@ -190,3 +190,11 @@ nsTableColFrame::GetSplittableType() const
   return NS_FRAME_NOT_SPLITTABLE;
 }
 
+void
+nsTableColFrame::InvalidateFrame(uint32_t aFlags)
+{
+  nsIFrame::InvalidateFrame(aFlags);
+  nsTableFrame *tableFrame = nsTableFrame::GetTableFrame(this);
+  tableFrame->InvalidateFrame(aFlags | INVALIDATE_DONT_SCHEDULE_PAINT);
+}
+
