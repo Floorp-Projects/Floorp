@@ -12,6 +12,7 @@
 #include "nsRegion.h"
 #include "nsIFrame.h"
 #include "nsDisplayListInvalidation.h"
+#include "LayerTreeInvalidation.h"
 
 class nsDisplayListBuilder;
 class nsDisplayList;
