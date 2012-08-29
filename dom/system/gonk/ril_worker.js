@@ -5481,7 +5481,7 @@ let StkCommandParamsFactory = {
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Display Text: Required value missing : Text String");
     }
-    textMsg.text = ctlv.value.text;
+    textMsg.text = ctlv.value.textString;
 
     ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE, ctlvs);
     if (ctlv) {
@@ -5513,7 +5513,7 @@ let StkCommandParamsFactory = {
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Set Up Idle Text: Required value missing : Text String");
     }
-    textMsg.text = ctlv.value.text;
+    textMsg.text = ctlv.value.textString;
 
     return textMsg;
   },
@@ -5530,7 +5530,7 @@ let StkCommandParamsFactory = {
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Get InKey: Required value missing : Text String");
     }
-    input.text = ctlv.value.text;
+    input.text = ctlv.value.textString;
 
     input.minLength = 1;
     input.maxLength = 1;
@@ -5571,7 +5571,7 @@ let StkCommandParamsFactory = {
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Get Input: Required value missing : Text String");
     }
-    input.text = ctlv.value.text;
+    input.text = ctlv.value.textString;
 
     ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_RESPONSE_LENGTH, ctlvs);
     if (ctlv) {
@@ -5581,7 +5581,7 @@ let StkCommandParamsFactory = {
 
     ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_DEFAULT_TEXT, ctlvs);
     if (ctlv) {
-      input.defaultText = ctlv.value.text;
+      input.defaultText = ctlv.value.textString;
     }
 
     // Alphabet only
@@ -5875,7 +5875,7 @@ let StkProactiveCmdHelper = {
    * Same as Text String.
    */
   retrieveDefaultText: function retrieveDefaultText(length) {
-    return retrieveTextString(length);
+    return this.retrieveTextString(length);
   },
 
   /**
