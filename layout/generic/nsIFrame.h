@@ -170,7 +170,8 @@ typedef uint64_t nsFrameState;
 // This bit is available for re-use.
 //#define NS_FRAME_SELECTED_CONTENT                   NS_FRAME_STATE_BIT(9)
 
-// If this bit is set, then the frame is dirty and needs to be reflowed.
+// If this bit is set, then the frame and _all_ of its descendant frames need
+// to be reflowed.
 // This bit is set when the frame is first created.
 // This bit is cleared by DidReflow after the required call to Reflow has
 // finished.
@@ -183,12 +184,19 @@ typedef uint64_t nsFrameState;
 // and the like.
 #define NS_FRAME_TOO_DEEP_IN_FRAME_TREE             NS_FRAME_STATE_BIT(11)
 
-// If this bit is set, either:
-//  1. the frame has children that have either NS_FRAME_IS_DIRTY or
-//     NS_FRAME_HAS_DIRTY_CHILDREN, or
-//  2. the frame has had descendants removed.
-// It means that Reflow needs to be called, but that Reflow will not
-// do as much work as it would if NS_FRAME_IS_DIRTY were set.
+// If this bit is set, then either:
+//  1. the frame has at least one child that has the NS_FRAME_IS_DIRTY bit or
+//     NS_FRAME_HAS_DIRTY_CHILDREN bit set, or
+//  2. the frame has had at least one child removed since the last reflow, or
+//  3. the frame has had a style change that requires the frame to be reflowed
+//     but does not _necessarily_ require its descendants to be reflowed (e.g.,
+//     for a 'height', 'width', 'margin', etc. change, it's up to the
+//     applicable Reflow methods to decide whether the frame's children
+//     _actually_ need to be reflowed).
+// If this bit is set but the NS_FRAME_IS_DIRTY is not set, then Reflow still
+// needs to be called on the frame, but Reflow will likely not do as much work
+// as it would if NS_FRAME_IS_DIRTY were set. See the comment documenting
+// nsFrame::Reflow for more.
 // This bit is cleared by DidReflow after the required call to Reflow has
 // finished.
 // Do not set this bit yourself if you plan to pass the frame to
