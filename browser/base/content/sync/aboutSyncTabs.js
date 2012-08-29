@@ -155,7 +155,7 @@ let RemoteTabViewer = {
           let attrs = {
             type: "client",
             clientName: client.clientName,
-            class: Weave.Clients.isMobile(client.id) ? "mobile" : "desktop"
+            class: Weave.Service.clientsEngine.isMobile(client.id) ? "mobile" : "desktop"
           };
           let clientEnt = this.createItem(attrs);
           list.appendChild(clientEnt);
@@ -211,8 +211,8 @@ let RemoteTabViewer = {
     }
 
     // if Clients hasn't synced yet this session, need to sync it as well
-    if (Weave.Clients.lastSync == 0)
-      Weave.Clients.sync();
+    if (Weave.Service.clientsEngine.lastSync == 0)
+      Weave.Service.clientsEngine.sync();
 
     // Force a sync only for the tabs engine
     let engine = Weave.Service.engineManager.get("tabs");

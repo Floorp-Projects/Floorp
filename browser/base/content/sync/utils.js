@@ -27,8 +27,8 @@ let gSyncUtils = {
 
   changeName: function changeName(input) {
     // Make sure to update to a modified name, e.g., empty-string -> default
-    Weave.Clients.localName = input.value;
-    input.value = Weave.Clients.localName;
+    Weave.Service.clientsEngine.localName = input.value;
+    input.value = Weave.Service.clientsEngine.localName;
   },
 
   openChange: function openChange(type, duringSetup) {

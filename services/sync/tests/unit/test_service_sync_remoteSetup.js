@@ -1,12 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/main.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/keys.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   let logger = Log4Moz.repository.rootLogger;
@@ -64,52 +64,52 @@ function run_test() {
 
   try {
     _("Log in.");
-    Weave.Service.serverURL = TEST_SERVER_URL;
-    Weave.Service.clusterURL = TEST_CLUSTER_URL;
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
 
     _("Checking Status.sync with no credentials.");
-    Weave.Service.verifyAndFetchSymmetricKeys();
+    Service.verifyAndFetchSymmetricKeys();
     do_check_eq(Status.sync, CREDENTIALS_CHANGED);
     do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
 
     _("Log in with an old secret phrase, is upgraded to Sync Key.");
-    Weave.Service.login("johndoe", "ilovejane", "my old secret phrase!!1!");
+    Service.login("johndoe", "ilovejane", "my old secret phrase!!1!");
     _("End of login");
-    do_check_true(Weave.Service.isLoggedIn);
+    do_check_true(Service.isLoggedIn);
     do_check_true(Utils.isPassphrase(Identity.syncKey));
     let syncKey = Identity.syncKey;
-    Weave.Service.startOver();
+    Service.startOver();
 
-    Weave.Service.serverURL = TEST_SERVER_URL;
-    Weave.Service.clusterURL = TEST_CLUSTER_URL;
-    Weave.Service.login("johndoe", "ilovejane", syncKey);
-    do_check_true(Weave.Service.isLoggedIn);
+    Service.serverURL = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
+    Service.login("johndoe", "ilovejane", syncKey);
+    do_check_true(Service.isLoggedIn);
 
     _("Checking that remoteSetup returns true when credentials have changed.");
-    Records.get(Weave.Service.metaURL).payload.syncID = "foobar";
-    do_check_true(Weave.Service._remoteSetup());
+    Records.get(Service.metaURL).payload.syncID = "foobar";
+    do_check_true(Service._remoteSetup());
 
     _("Do an initial sync.");
     let beforeSync = Date.now()/1000;
-    Weave.Service.sync();
+    Service.sync();
 
     _("Checking that remoteSetup returns true.");
-    do_check_true(Weave.Service._remoteSetup());
+    do_check_true(Service._remoteSetup());
 
     _("Verify that the meta record was uploaded.");
-    do_check_eq(meta_global.data.syncID, Weave.Service.syncID);
-    do_check_eq(meta_global.data.storageVersion, Weave.STORAGE_VERSION);
-    do_check_eq(meta_global.data.engines.clients.version, Weave.Clients.version);
-    do_check_eq(meta_global.data.engines.clients.syncID, Weave.Clients.syncID);
+    do_check_eq(meta_global.data.syncID, Service.syncID);
+    do_check_eq(meta_global.data.storageVersion, STORAGE_VERSION);
+    do_check_eq(meta_global.data.engines.clients.version, Service.clientsEngine.version);
+    do_check_eq(meta_global.data.engines.clients.syncID, Service.clientsEngine.syncID);
 
     _("Set the collection info hash so that sync() will remember the modified times for future runs.");
-    collections.meta = Weave.Clients.lastSync;
-    collections.clients = Weave.Clients.lastSync;
-    Weave.Service.sync();
+    collections.meta = Service.clientsEngine.lastSync;
+    collections.clients = Service.clientsEngine.lastSync;
+    Service.sync();
 
     _("Sync again and verify that meta/global wasn't downloaded again");
     meta_global.wasCalled = false;
-    Weave.Service.sync();
+    Service.sync();
     do_check_false(meta_global.wasCalled);
 
     _("Fake modified records. This will cause a redownload, but not reupload since it hasn't changed.");
@@ -118,25 +118,25 @@ function run_test() {
 
     let metaModified = meta_global.modified;
 
-    Weave.Service.sync();
+    Service.sync();
     do_check_true(meta_global.wasCalled);
     do_check_eq(metaModified, meta_global.modified);
 
     _("Checking bad passphrases.");
     let pp = Identity.syncKey;
     Identity.syncKey = "notvalid";
-    do_check_false(Weave.Service.verifyAndFetchSymmetricKeys());
+    do_check_false(Service.verifyAndFetchSymmetricKeys());
     do_check_eq(Status.sync, CREDENTIALS_CHANGED);
     do_check_eq(Status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
     Identity.syncKey = pp;
-    do_check_true(Weave.Service.verifyAndFetchSymmetricKeys());
+    do_check_true(Service.verifyAndFetchSymmetricKeys());
 
     // changePassphrase wipes our keys, and they're regenerated on next sync.
     _("Checking changed passphrase.");
     let existingDefault = CollectionKeys.keyForCollection();
     let existingKeysPayload = keysWBO.payload;
     let newPassphrase = "bbbbbabcdeabcdeabcdeabcdea";
-    Weave.Service.changePassphrase(newPassphrase);
+    Service.changePassphrase(newPassphrase);
 
     _("Local key cache is full, but different.");
     do_check_true(!!CollectionKeys._default);
@@ -156,13 +156,13 @@ function run_test() {
     b.generateRandom();
     collections.crypto = keys.modified = 100 + (Date.now()/1000);  // Future modification time.
     keys.encrypt(b);
-    keys.upload(Weave.Service.cryptoKeysURL);
+    keys.upload(Service.cryptoKeysURL);
 
-    do_check_false(Weave.Service.verifyAndFetchSymmetricKeys());
+    do_check_false(Service.verifyAndFetchSymmetricKeys());
     do_check_eq(Status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
 
   } finally {
-    Weave.Svc.Prefs.resetBranch("");
+    Svc.Prefs.resetBranch("");
     server.stop(do_test_finished);
   }
 }

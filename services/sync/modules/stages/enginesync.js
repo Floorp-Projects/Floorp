@@ -13,7 +13,6 @@ const {utils: Cu} = Components;
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
@@ -79,7 +78,7 @@ EngineSynchronizer.prototype = {
     let info = this.service._fetchInfo(infoURL);
 
     // Convert the response to an object and read out the modified times
-    for (let engine of [Clients].concat(this.service.engineManager.getAll())) {
+    for (let engine of [this.service.clientsEngine].concat(this.service.engineManager.getAll())) {
       engine.lastModified = info.obj[engine.name] || 0;
     }
 
@@ -90,7 +89,7 @@ EngineSynchronizer.prototype = {
 
     // Make sure we have an up-to-date list of clients before sending commands
     this._log.debug("Refreshing client list.");
-    if (!this._syncEngine(Clients)) {
+    if (!this._syncEngine(this.service.clientsEngine)) {
       // Clients is an engine like any other; it can fail with a 401,
       // and we can elect to abort the sync.
       this._log.warn("Client engine sync failed. Aborting.");
@@ -111,9 +110,9 @@ EngineSynchronizer.prototype = {
         break;
     }
 
-    if (Clients.localCommands) {
+    if (this.service.clientsEngine.localCommands) {
       try {
-        if (!(Clients.processIncomingCommands())) {
+        if (!(this.service.clientsEngine.processIncomingCommands())) {
           Status.sync = ABORT_SYNC_COMMAND;
           this.onComplete(new Error("Processed command aborted sync."));
           return;
@@ -130,7 +129,7 @@ EngineSynchronizer.prototype = {
         // without commands).
         // Note that we don't abort here; if there's a 401 because we've
         // been reassigned, we'll handle it around another engine.
-        this._syncEngine(Clients);
+        this._syncEngine(this.service.clientsEngine);
       }
     }
 
