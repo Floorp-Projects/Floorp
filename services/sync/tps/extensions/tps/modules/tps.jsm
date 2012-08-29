@@ -11,13 +11,12 @@ let EXPORTED_SYMBOLS = ["TPS"];
 
 const {classes: CC, interfaces: CI, utils: CU} = Components;
 
-CU.import("resource://services-sync/service.js");
-CU.import("resource://services-sync/constants.js");
-CU.import("resource://services-sync/engines.js");
-CU.import("resource://services-common/async.js");
-CU.import("resource://services-sync/util.js");
 CU.import("resource://gre/modules/XPCOMUtils.jsm");
 CU.import("resource://gre/modules/Services.jsm");
+CU.import("resource://services-common/async.js");
+CU.import("resource://services-sync/constants.js");
+CU.import("resource://services-sync/service.js");
+CU.import("resource://services-sync/util.js");
 CU.import("resource://tps/addons.jsm");
 CU.import("resource://tps/bookmarks.jsm");
 CU.import("resource://tps/logger.jsm");
@@ -64,8 +63,7 @@ const OBSERVER_TOPICS = ["weave:engine:start-tracking",
                          "sessionstore-windows-restored",
                          "private-browsing"];
 
-let TPS =
-{
+let TPS = {
   _waitingForSync: false,
   _isTracking: false,
   _test: null,
@@ -569,10 +567,10 @@ let TPS =
           names[name] = true;
         }
 
-        for each (let engine in Engines.getEnabled()) {
+        for (let engine of Service.engineManager.getEnabled()) {
           if (!(engine.name in names)) {
             Logger.logInfo("Unregistering unused engine: " + engine.name);
-            Engines.unregister(engine);
+            Service.engineManager.unregister(engine);
           }
         }
       }
