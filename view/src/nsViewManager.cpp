@@ -407,8 +407,7 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
 
   // Push out updates after we've processed the children; ensures that
   // damage is applied based on the final widget geometry
-  if (aFlushDirtyRegion && aView->HasNonEmptyDirtyRegion()) {
-    FlushDirtyRegionToWidget(aView);
+  if (aFlushDirtyRegion) {
     if (IsRefreshDriverPaintingEnabled()) {
       nsIWidget *widget = aView->GetWidget();
       if (widget && widget->NeedsPaint()) {
@@ -442,6 +441,7 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
         SetPainting(false);
       }
     }
+    FlushDirtyRegionToWidget(aView);
   }
 }
 

@@ -28,6 +28,7 @@
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsThemeConstants.h"
+#include "LayerTreeInvalidation.h"
 
 #include "imgIContainer.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -971,8 +972,10 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   nsRefPtr<LayerManager> layerManager;
   bool allowRetaining = false;
   bool doBeginTransaction = true;
+  nsIView *view = nullptr;
   if (aFlags & PAINT_USE_WIDGET_LAYERS) {
     nsIFrame* rootReferenceFrame = aBuilder->RootReferenceFrame();
+    view = rootReferenceFrame->GetView();
     NS_ASSERTION(rootReferenceFrame == nsLayoutUtils::GetDisplayRootFrame(rootReferenceFrame),
                  "Reference frame must be a display root for us to use the layer manager");
     nsIWidget* window = rootReferenceFrame->GetNearestWidget();
@@ -1012,13 +1015,25 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   nsPresContext* presContext = aForFrame->PresContext();
   nsIPresShell* presShell = presContext->GetPresShell();
 
+  NotifySubDocInvalidationFunc computeInvalidFunc =
+    presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
+  bool computeInvalidRect = (computeInvalidFunc ||
+                             (layerManager->GetBackendType() == LAYERS_BASIC)) &&
+                            widgetTransaction;
+
+  nsAutoPtr<LayerProperties> props(computeInvalidRect ? 
+                                     LayerProperties::CloneFrom(layerManager->GetRoot()) : 
+                                     nullptr);
+
   nsDisplayItem::ContainerParameters containerParameters
     (presShell->GetXResolution(), presShell->GetYResolution());
   nsRefPtr<ContainerLayer> root = layerBuilder->
     BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nullptr, *this,
                            containerParameters, nullptr);
   
-  aForFrame->ClearInvalidationStateBits();
+  if (widgetTransaction) {
+    aForFrame->ClearInvalidationStateBits();
+  }
 
   if (!root) {
     layerManager->RemoveUserData(&gLayerManagerLayerBuilder);
@@ -1070,6 +1085,26 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                                aBuilder, (aFlags & PAINT_NO_COMPOSITE) ? LayerManager::END_NO_COMPOSITE : LayerManager::END_DEFAULT);
   aBuilder->SetIsCompositingCheap(temp);
   layerBuilder->DidEndTransaction();
+
+  nsIntRect invalid;
+  if (props) {
+    invalid = props->ComputeDifferences(root, computeInvalidFunc);
+  }
+
+  if (view) {
+    if (props) {
+      if (!invalid.IsEmpty()) {
+        nsRect rect(presContext->DevPixelsToAppUnits(invalid.x),
+                    presContext->DevPixelsToAppUnits(invalid.y),
+                    presContext->DevPixelsToAppUnits(invalid.width),
+                    presContext->DevPixelsToAppUnits(invalid.height));
+        view->GetViewManager()->InvalidateViewNoSuppression(view, rect);
+        presContext->NotifyInvalidation(invalid, 0);
+      }
+    } else {
+      view->GetViewManager()->InvalidateView(view);
+    }
+  }
 
   if (aFlags & PAINT_FLUSH_LAYERS) {
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
@@ -2598,8 +2633,10 @@ bool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* a
 }
 
 nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame, nsDisplayList* aList)
-    : nsDisplayWrapList(aBuilder, aFrame, aList) {
+                                     nsIFrame* aFrame, nsDisplayList* aList,
+                                     uint32_t aFlags)
+    : nsDisplayWrapList(aBuilder, aFrame, aList)
+    , mFlags(aFlags) {
   MOZ_COUNT_CTOR(nsDisplayOwnLayer);
 }
 
@@ -2617,6 +2654,12 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsRefPtr<Layer> layer = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nullptr);
+
+  if (mFlags & GENERATE_SUBDOC_INVALIDATIONS) {
+    ContainerLayerPresContext* pres = new ContainerLayerPresContext;
+    pres->mPresContext = mFrame->PresContext();
+    layer->SetUserData(&gNotifySubDocInvalidationData, pres);
+  }
   return layer.forget();
 }
 
@@ -3079,9 +3122,10 @@ bool nsDisplayClipRoundedRect::TryMerge(nsDisplayListBuilder* aBuilder, nsDispla
 
 nsDisplayZoom::nsDisplayZoom(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayList* aList,
-                             int32_t aAPD, int32_t aParentAPD)
-    : nsDisplayOwnLayer(aBuilder, aFrame, aList), mAPD(aAPD),
-      mParentAPD(aParentAPD) {
+                             int32_t aAPD, int32_t aParentAPD,
+                             uint32_t aFlags)
+    : nsDisplayOwnLayer(aBuilder, aFrame, aList, aFlags)
+    , mAPD(aAPD), mParentAPD(aParentAPD) {
   MOZ_COUNT_CTOR(nsDisplayZoom);
 }
 

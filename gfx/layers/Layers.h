@@ -972,6 +972,29 @@ public:
 
   static bool IsLogEnabled() { return LayerManager::IsLogEnabled(); }
 
+  /**
+   * Returns the current area of the layer (in layer-space coordinates)
+   * marked as needed to be recomposited.
+   */
+  const nsIntRect& GetInvalidRect() { return mInvalidRect; }
+
+  /**
+   * Mark the entirety of the layer's visible region as being invalid.
+   */
+  void SetInvalidRectToVisibleRegion() { mInvalidRect = GetVisibleRegion().GetBounds(); }
+
+  /**
+   * Adds to the current invalid rect.
+   */
+  void AddInvalidRect(const nsIntRect& aRect) { mInvalidRect = mInvalidRect.Union(aRect); }
+
+  /**
+   * Clear the invalid rect, marking the layer as being identical to what is currently
+   * composited.
+   */
+  void ClearInvalidRect() { mInvalidRect.SetEmpty(); }
+
+
 #ifdef DEBUG
   void SetDebugColorIndex(uint32_t aIndex) { mDebugColorIndex = aIndex; }
   uint32_t GetDebugColorIndex() { return mDebugColorIndex; }
@@ -1033,6 +1056,7 @@ protected:
   float mOpacity;
   nsIntRect mClipRect;
   nsIntRect mTileSourceRect;
+  nsIntRect mInvalidRect;
   uint32_t mContentFlags;
   bool mUseClipRect;
   bool mUseTileSourceRect;
@@ -1378,7 +1402,7 @@ public:
    * Notify this CanvasLayer that the canvas surface contents have
    * changed (or will change) before the next transaction.
    */
-  void Updated() { mDirty = true; }
+  void Updated() { mDirty = true; SetInvalidRectToVisibleRegion(); }
 
   /**
    * Register a callback to be called at the end of each transaction.

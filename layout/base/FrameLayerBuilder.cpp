@@ -19,6 +19,8 @@
 #include "MaskLayerImageCache.h"
 #include "nsIScrollableFrame.h"
 #include "nsPrintfCString.h"
+#include "LayerTreeInvalidation.h"
+#include "nsSVGIntegrationUtils.h"
 
 #include "mozilla/Preferences.h"
 #include "sampler.h"
@@ -1226,7 +1228,7 @@ static void
 InvalidateEntireThebesLayer(ThebesLayer* aLayer, const nsIFrame* aActiveScrolledRoot)
 {
 #ifdef DEBUG_INVALIDATIONS
-  printf("Invalidating entire layer %p\n", aLayer.get());
+  printf("Invalidating entire layer %p\n", aLayer);
 #endif
   nsIntRect invalidate = aLayer->GetValidRegion().GetBounds();
   aLayer->InvalidateRegion(invalidate);
@@ -1901,8 +1903,6 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   }
  
   basic->SetUserData(&gLayerManagerLayerBuilder, NULL);
-  NS_ASSERTION(CheckLayerInvalidRegion(basic->GetRoot(), false).IsEmpty(), 
-               "Temporary layer managers shouldn't be invalidating extra area!");
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPainting) {
     DumpPaintedImage(aItem, surf);
@@ -2005,6 +2005,10 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       if (!ownLayer) {
         InvalidateForLayerChange(item, ownLayer, topLeft);
         continue;
+      }
+
+      if (item->IsInvalid()) {
+        ownLayer->SetInvalidRectToVisibleRegion();
       }
 
       // If it's not a ContainerLayer, we need to apply the scale transform
@@ -2131,7 +2135,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
   }
 
   ThebesLayer* newThebesLayer = aNewLayer->AsThebesLayer();
-  if (!newThebesLayer || newThebesLayer->GetValidRegion().IsEmpty()) {
+  if (!newThebesLayer) {
     return;
   }
 
@@ -2228,6 +2232,8 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
       if (mRetainingManager) {
         layerBuilder->DidBeginRetainedLayerTransaction(tempManager);
       }
+  
+      nsAutoPtr<LayerProperties> props(LayerProperties::CloneFrom(tempManager->GetRoot()));
       nsRefPtr<Layer> layer =
         aItem->BuildLayer(mDisplayListBuilder, tempManager, FrameLayerBuilder::ContainerParameters());
       // We have no easy way of detecting if this transaction will ever actually get finished.
@@ -2248,6 +2254,20 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
       tempManager->SetRoot(layer);
       layerBuilder->WillEndTransaction();
 
+      nsIntRect invalid = props->ComputeDifferences(layer, nullptr);
+      if (aLayerState == LAYER_SVG_EFFECTS) {
+        invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(aItem->GetUnderlyingFrame(), invalid);
+      }
+      if (!invalid.IsEmpty()) {
+#ifdef DEBUG_INVALIDATIONS
+        printf("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->GetUnderlyingFrame(), aLayer);
+#endif
+        ThebesDisplayItemLayerUserData* data =
+          static_cast<ThebesDisplayItemLayerUserData*>(aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+        invalid.ScaleRoundOut(data->mXScale, data->mYScale);
+        InvalidatePostTransformRegion(aLayer, invalid,
+                                      GetTranslationForThebesLayer(aLayer));
+      }
     }
     ClippedDisplayItem* cdi =
       entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClip,
@@ -2780,6 +2800,8 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   containerLayer->SetContentFlags(flags);
 
   mContainerLayerGeneration = oldGeneration;
+  containerLayer->SetUserData(&gNotifySubDocInvalidationData, nullptr);
+
   return containerLayer.forget();
 }
 
@@ -3120,6 +3142,9 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   }
 
   FlashPaint(aContext);
+  if (!aRegionToInvalidate.IsEmpty()) {
+    aLayer->AddInvalidRect(aRegionToInvalidate.GetBounds());
+  }
 }
 
 bool

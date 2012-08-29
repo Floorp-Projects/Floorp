@@ -4823,14 +4823,24 @@ nsIFrame::SchedulePaint()
 }
 
 Layer*
-nsIFrame::InvalidateLayer(const nsRect& aDamageRect, uint32_t aDisplayItemKey)
+nsIFrame::InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect)
 {
   NS_ASSERTION(aDisplayItemKey > 0, "Need a key");
 
   Layer* layer = FrameLayerBuilder::GetDedicatedLayer(this, aDisplayItemKey);
+  if (aDamageRect && aDamageRect->IsEmpty()) {
+    return layer;
+  }
+
   if (!layer) {
     InvalidateFrame();
     return nullptr;
+  }
+
+  if (aDamageRect) {
+    layer->AddInvalidRect(*aDamageRect);
+  } else {
+    layer->SetInvalidRectToVisibleRegion();
   }
 
   SchedulePaint();

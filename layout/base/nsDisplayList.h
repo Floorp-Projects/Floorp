@@ -2129,8 +2129,21 @@ public:
  */
 class nsDisplayOwnLayer : public nsDisplayWrapList {
 public:
+
+  /**
+   * nsDisplayOwnLayer constructor flags
+   */
+  enum {
+    GENERATE_SUBDOC_INVALIDATIONS = 0x01
+  };
+
+  /**
+   * @param aFlags GENERATE_SUBDOC_INVALIDATIONS :
+   * Add UserData to the created ContainerLayer, so that invalidations
+   * for this layer are send to our nsPresContext.
+   */
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayList* aList);
+                    nsDisplayList* aList, uint32_t aFlags = 0);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
@@ -2150,6 +2163,8 @@ public:
     return false;
   }
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
+private:
+  uint32_t mFlags;
 };
 
 /**
@@ -2383,10 +2398,14 @@ public:
    * @param aAPD is the app units per dev pixel ratio of the subdocument.
    * @param aParentAPD is the app units per dev pixel ratio of the parent
    * document.
+   * @param aFlags GENERATE_SUBDOC_INVALIDATIONS :
+   * Add UserData to the created ContainerLayer, so that invalidations
+   * for this layer are send to our nsPresContext.
    */
   nsDisplayZoom(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 nsDisplayList* aList,
-                int32_t aAPD, int32_t aParentAPD);
+                int32_t aAPD, int32_t aParentAPD,
+                uint32_t aFlags = 0);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayZoom();
 #endif
