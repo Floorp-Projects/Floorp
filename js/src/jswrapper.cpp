@@ -96,8 +96,9 @@ js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
 }
 
 JS_FRIEND_API(JSObject *)
-js::UnwrapObjectChecked(JSContext *cx, JSObject *obj)
+js::UnwrapObjectChecked(JSContext *cx, RawObject objArg)
 {
+    RootedObject obj(cx, objArg);
     while (true) {
         JSObject *wrapper = obj;
         obj = UnwrapOneChecked(cx, obj);
@@ -107,7 +108,7 @@ js::UnwrapObjectChecked(JSContext *cx, JSObject *obj)
 }
 
 JS_FRIEND_API(JSObject *)
-js::UnwrapOneChecked(JSContext *cx, JSObject *obj)
+js::UnwrapOneChecked(JSContext *cx, HandleObject obj)
 {
     // Checked unwraps should never unwrap outer windows.
     if (!obj->isWrapper() ||
@@ -118,15 +119,12 @@ js::UnwrapOneChecked(JSContext *cx, JSObject *obj)
 
     Wrapper *handler = Wrapper::wrapperHandler(obj);
     bool rvOnFailure;
-    if (!handler->enter(cx, obj, JSID_VOID,
-                        Wrapper::PUNCTURE, &rvOnFailure))
-    {
-        return rvOnFailure ? obj : NULL;
-    }
-    obj = Wrapper::wrappedObject(obj);
-    JS_ASSERT(obj);
+    if (!handler->enter(cx, obj, JSID_VOID, Wrapper::PUNCTURE, &rvOnFailure))
+        return rvOnFailure ? (JSObject*) obj : NULL;
+    JSObject *ret = Wrapper::wrappedObject(obj);
+    JS_ASSERT(ret);
 
-    return obj;
+    return ret;
 }
 
 bool
