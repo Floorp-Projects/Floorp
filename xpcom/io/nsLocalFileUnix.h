@@ -53,12 +53,16 @@
 
 #if defined(HAVE_STATVFS64)
     #define STATFS statvfs64
+    #define F_BSIZE f_frsize
 #elif defined(HAVE_STATVFS)
     #define STATFS statvfs
+    #define F_BSIZE f_frsize
 #elif defined(HAVE_STATFS64)
     #define STATFS statfs64
+    #define F_BSIZE f_bsize
 #elif defined(HAVE_STATFS)
     #define STATFS statfs
+    #define F_BSIZE f_bsize
 #endif
 
 #if defined(HAVE_STAT64) && defined(HAVE_LSTAT64)
