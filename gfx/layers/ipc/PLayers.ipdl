@@ -217,10 +217,12 @@ struct OpSetLayerAttributes {
 
 
 // Monkey with the tree structure
-struct OpSetRoot      { PLayer root; };
-struct OpInsertAfter  { PLayer container; PLayer childLayer; PLayer after; };
-struct OpAppendChild  { PLayer container; PLayer childLayer; };
-struct OpRemoveChild  { PLayer container; PLayer childLayer; };
+struct OpSetRoot          { PLayer root; };
+struct OpInsertAfter      { PLayer container; PLayer childLayer; PLayer after; };
+struct OpAppendChild      { PLayer container; PLayer childLayer; };
+struct OpRemoveChild      { PLayer container; PLayer childLayer; };
+struct OpRepositionChild  { PLayer container; PLayer childLayer; PLayer after; };
+struct OpRaiseToTopChild  { PLayer container; PLayer childLayer; };
 
 
 // Paint (buffer update)
@@ -264,6 +266,8 @@ union Edit {
   OpInsertAfter;
   OpAppendChild;
   OpRemoveChild;
+  OpRepositionChild;
+  OpRaiseToTopChild;
 
   OpPaintThebesBuffer;
   OpPaintTiledLayerBuffer;

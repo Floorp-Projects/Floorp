@@ -81,6 +81,51 @@ ContainerRemoveChild(Layer* aChild, Container* aContainer)
   NS_RELEASE(aChild);
 }
 
+template<class Container> void
+ContainerRepositionChild(Layer* aChild, Layer* aAfter, Container* aContainer)
+{
+  NS_ASSERTION(aChild->Manager() == aContainer->Manager(),
+               "Child has wrong manager");
+  NS_ASSERTION(aChild->GetParent() == aContainer,
+               "aChild not our child");
+  NS_ASSERTION(!aAfter ||
+               (aAfter->Manager() == aContainer->Manager() &&
+                aAfter->GetParent() == aContainer),
+               "aAfter is not our child");
+
+  Layer* prev = aChild->GetPrevSibling();
+  Layer* next = aChild->GetNextSibling();
+  if (prev == aAfter) {
+    // aChild is already in the correct position, nothing to do.
+    return;
+  }
+  if (prev) {
+    prev->SetNextSibling(next);
+  }
+  if (next) {
+    next->SetPrevSibling(prev);
+  }
+  if (!aAfter) {
+    aChild->SetPrevSibling(nullptr);
+    aChild->SetNextSibling(aContainer->mFirstChild);
+    if (aContainer->mFirstChild) {
+      aContainer->mFirstChild->SetPrevSibling(aChild);
+    }
+    aContainer->mFirstChild = aChild;
+    return;
+  }
+
+  Layer* afterNext = aAfter->GetNextSibling();
+  if (afterNext) {
+    afterNext->SetPrevSibling(aChild);
+  } else {
+    aContainer->mLastChild = aChild;
+  }
+  aAfter->SetNextSibling(aChild);
+  aChild->SetPrevSibling(aAfter);
+  aChild->SetNextSibling(afterNext);
+}
+
 template<class Container>
 static void
 ContainerComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface,
@@ -126,6 +171,8 @@ class BasicContainerLayer : public ContainerLayer, public BasicImplData {
   template<class Container>
   friend void ContainerRemoveChild(Layer* aChild, Container* aContainer);
   template<class Container>
+  friend void ContainerRepositionChild(Layer* aChild, Layer* aAfter, Container* aContainer);
+  template<class Container>
   friend void ContainerComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface,
                                                   Container* aContainer);
 
@@ -156,6 +203,13 @@ public:
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ContainerRemoveChild(aChild, this);
+  }
+
+  virtual void RepositionChild(Layer* aChild, Layer* aAfter)
+  {
+    NS_ASSERTION(BasicManager()->InConstruction(),
+                 "Can only set properties in construction phase");
+    ContainerRepositionChild(aChild, aAfter, this);
   }
 
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)

@@ -1161,6 +1161,14 @@ public:
    * be a child of this container.
    */
   virtual void RemoveChild(Layer* aChild) = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Reposition aChild from the child list of this container. aChild must
+   * be a child of this container.
+   * If aAfter is non-null, it must be a child of this container and we
+   * reposition after that layer. If it's null, we reposition at the start.
+   */
+  virtual void RepositionChild(Layer* aChild, Layer* aAfter) = 0;
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1450,6 +1458,9 @@ private:
   { MOZ_NOT_REACHED("no"); }
 
   virtual void RemoveChild(Layer* aChild)
+  { MOZ_NOT_REACHED("no"); }
+
+  virtual void RepositionChild(Layer* aChild, Layer* aAfter)
   { MOZ_NOT_REACHED("no"); }
 
   using ContainerLayer::SetFrameMetrics;

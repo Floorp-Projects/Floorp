@@ -77,6 +77,7 @@ public:
 
   virtual void InsertAfter(Layer* aChild, Layer* aAfter);
   virtual void RemoveChild(Layer* aChild);
+  virtual void RepositionChild(Layer* aChild, Layer* aAfter);
 
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
@@ -117,11 +118,27 @@ BasicShadowableContainerLayer::RemoveChild(Layer* aChild)
   BasicContainerLayer::RemoveChild(aChild);
 }
 
+void
+BasicShadowableContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
+{
+  if (HasShadow() && ShouldShadow(aChild)) {
+    while (aAfter && !ShouldShadow(aAfter)) {
+      aAfter = aAfter->GetPrevSibling();
+    }
+    ShadowManager()->RepositionChild(ShadowManager()->Hold(this),
+                                     ShadowManager()->Hold(aChild),
+                                     aAfter ? ShadowManager()->Hold(aAfter) : nullptr);
+  }
+  BasicContainerLayer::RepositionChild(aChild, aAfter);
+}
+
 class BasicShadowContainerLayer : public ShadowContainerLayer, public BasicImplData {
   template<class Container>
   friend void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer);
   template<class Container>
   friend void ContainerRemoveChild(Layer* aChild, Container* aContainer);
+  template<class Container>
+  friend void ContainerRepositionChild(Layer* aChild, Layer* aAfter, Container* aContainer);
   template<class Container>
   friend void ContainerComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface,
                                                   Container* aContainer);
@@ -145,6 +162,8 @@ public:
   { ContainerInsertAfter(aChild, aAfter, this); }
   virtual void RemoveChild(Layer* aChild)
   { ContainerRemoveChild(aChild, this); }
+  virtual void RepositionChild(Layer* aChild, Layer* aAfter)
+  { ContainerRepositionChild(aChild, aAfter, this); }
 
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
   {
