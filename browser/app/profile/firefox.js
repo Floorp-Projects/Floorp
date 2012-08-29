@@ -222,6 +222,11 @@ pref("general.autoScroll", false);
 pref("general.autoScroll", true);
 #endif
 
+// Send aol.com the legacy build date instead of the version number in the UA's
+// Gecko token as a temporary measure against bug 778408 (mail.aol.com defaults
+// to basic web UI when accessed with a user agent without Gecko/20100101).
+pref("general.useragent.override.aol.com", "Gecko/[^ ]*#Gecko/20100101");
+
 // At startup, check if we're the default browser and prompt user if not.
 pref("browser.shell.checkDefaultBrowser", true);
 

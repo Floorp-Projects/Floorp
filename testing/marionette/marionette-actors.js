@@ -981,8 +981,9 @@ MarionetteDriverActor.prototype = {
     if (this.context == "chrome") {
       let id;
       try {
-        let notify = this.sendResponse.bind(this);
-        id = this.curBrowser.elementManager.find(this.getCurrentWindow(),aRequest, notify, false);
+        let on_success = this.sendResponse.bind(this);
+        let on_error = this.sendError.bind(this);
+        id = this.curBrowser.elementManager.find(this.getCurrentWindow(),aRequest, on_success, on_error, false);
       }
       catch (e) {
         this.sendError(e.message, e.code, e.stack);
@@ -1005,8 +1006,9 @@ MarionetteDriverActor.prototype = {
     if (this.context == "chrome") {
       let id;
       try {
-        let notify = this.sendResponse.bind(this);
-        id = this.curBrowser.elementManager.find(this.getCurrentWindow(), aRequest, notify, true);
+        let on_success = this.sendResponse.bind(this);
+        let on_error = this.sendError.bind(this);
+        id = this.curBrowser.elementManager.find(this.getCurrentWindow(), aRequest, on_success, on_error, true);
       }
       catch (e) {
         this.sendError(e.message, e.code, e.stack);

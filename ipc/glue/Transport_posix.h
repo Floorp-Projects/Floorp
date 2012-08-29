@@ -8,7 +8,7 @@
 #ifndef mozilla_ipc_Transport_posix_h
 #define mozilla_ipc_Transport_posix_h 1
 
-#include "IPC/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 
 
 namespace mozilla {

@@ -1060,13 +1060,14 @@ nsHtml5TreeOpExecutor::PreloadScript(const nsAString& aURL,
 
 void
 nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
-                                    const nsAString& aCharset)
+                                    const nsAString& aCharset,
+                                    const nsAString& aCrossOrigin)
 {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
   if (!uri) {
     return;
   }
-  mDocument->PreloadStyle(uri, aCharset);
+  mDocument->PreloadStyle(uri, aCharset, aCrossOrigin);
 }
 
 void

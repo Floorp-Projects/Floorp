@@ -105,8 +105,12 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
             nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
             if (url) {
               nsString* charset = aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
-              mSpeculativeLoadQueue.AppendElement()->InitStyle(*url,
-                                                    (charset) ? *charset : EmptyString());
+              nsString* crossOrigin =
+                aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+              mSpeculativeLoadQueue.AppendElement()->
+                InitStyle(*url,
+                          (charset) ? *charset : EmptyString(),
+                          (crossOrigin) ? *crossOrigin : NullString());
             }
           }
         } else if (nsHtml5Atoms::video == aName) {
@@ -162,7 +166,11 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
 
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
           if (url) {
-            mSpeculativeLoadQueue.AppendElement()->InitStyle(*url, EmptyString());
+            nsString* crossOrigin =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+            mSpeculativeLoadQueue.AppendElement()->
+              InitStyle(*url, EmptyString(),
+                        (crossOrigin) ? *crossOrigin : NullString());
           }
         }        
         break;

@@ -1470,11 +1470,29 @@ class CastableObjectUnwrapper():
     """
     def __init__(self, descriptor, source, target, codeOnFailure):
         assert descriptor.castable
+
         self.substitution = { "type" : descriptor.nativeType,
                               "protoID" : "prototypes::id::" + descriptor.name,
                               "source" : source,
                               "target" : target,
                               "codeOnFailure" : CGIndenter(CGGeneric(codeOnFailure), 4).define() }
+        if descriptor.hasXPConnectImpls:
+            # We don't use xpc_qsUnwrapThis because it will always throw on
+            # unwrap failure, whereas we want to control whether we throw or
+            # not.
+            self.substitution["codeOnFailure"] = CGIndenter(CGGeneric(string.Template(
+                "${type} *objPtr;\n"
+                "xpc_qsSelfRef objRef;\n"
+                "JS::Value val = JS::ObjectValue(*${source});\n"
+                "nsresult rv = xpc_qsUnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, &val);\n"
+                "if (NS_FAILED(rv)) {\n"
+                "${codeOnFailure}\n"
+                "}\n"
+                "// We should be castable!\n"
+                "MOZ_ASSERT(!objRef.ptr);\n"
+                "// We should have an object, too!\n"
+                "MOZ_ASSERT(objPtr);\n"
+                "${target} = objPtr;").substitute(self.substitution)), 4).define()
 
     def __str__(self):
         return string.Template(
@@ -2670,7 +2688,7 @@ if (!%(resultStr)s) {
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
         return (setValue(result, True), False)
 
-    if type.isObject():
+    if type.isObject() or type.isSpiderMonkeyInterface():
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
         if type.nullable():
@@ -2794,7 +2812,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         return CGGeneric("JSObject*"), False
     if returnType.tag() is IDLType.Tags.any:
         return CGGeneric("JS::Value"), False
-    if returnType.isObject():
+    if returnType.isObject() or returnType.isSpiderMonkeyInterface():
         return CGGeneric("JSObject*"), False
     if returnType.isSequence():
         nullable = returnType.nullable()
@@ -3301,6 +3319,7 @@ class FakeCastableDescriptor():
         self.workers = descriptor.workers
         self.nativeType = descriptor.nativeType
         self.name = descriptor.name
+        self.hasXPConnectImpls = descriptor.hasXPConnectImpls
 
 class CGAbstractBindingMethod(CGAbstractStaticMethod):
     """
