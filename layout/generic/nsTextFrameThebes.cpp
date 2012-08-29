@@ -4471,7 +4471,25 @@ nsTextFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsFrame::DidSetStyleContext(aOldStyleContext);
   ClearTextRuns();
-} 
+}
+
+class nsDisplayTextGeometry : public nsDisplayItemGenericGeometry
+{
+public:
+  nsDisplayTextGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
+    : nsDisplayItemGenericGeometry(aItem, aBuilder)
+  {
+    nsTextFrame* f = static_cast<nsTextFrame*>(aItem->GetUnderlyingFrame());
+    f->GetTextDecorations(f->PresContext(), nsTextFrame::eResolvedColors, mDecorations);
+  }
+ 
+  /**
+   * We store the computed text decorations here since they are
+   * computed using style data from parent frames. Any changes to these
+   * styles will only invalidate the parent frame and not this frame.
+   */
+  nsTextFrame::TextDecorations mDecorations;
+};
 
 class nsDisplayText : public nsCharClipDisplayItem {
 public:
@@ -4488,7 +4506,10 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
     *aSnap = false;
-    return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+    nsRect temp = mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
+    // Bug 748228
+    temp.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
+    return temp;
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
@@ -4506,6 +4527,31 @@ public:
     return GetBounds(aBuilder, &snap);
   }
 
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder)
+  {
+    return new nsDisplayTextGeometry(this, aBuilder);
+  }
+
+  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion *aInvalidRegion)
+  {
+    const nsDisplayTextGeometry* geometry = static_cast<const nsDisplayTextGeometry*>(aGeometry);
+    nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
+
+    nsTextFrame::TextDecorations decorations;
+    f->GetTextDecorations(f->PresContext(), nsTextFrame::eResolvedColors, decorations);
+
+    bool snap;
+    nsRect newRect = geometry->mBounds;
+    nsRect oldRect = GetBounds(aBuilder, &snap);
+    if (decorations != geometry->mDecorations ||
+        !oldRect.IsEqualInterior(newRect) ||
+        !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
+      aInvalidRegion->Or(oldRect, newRect);
+    }
+  }
+  
   virtual void DisableComponentAlpha() { mDisableSubpixelAA = true; }
 
   bool mDisableSubpixelAA;
