@@ -613,3 +613,18 @@ nsSVGForeignObjectFrame::DoReflow()
   mInReflow = false;
 }
 
+nsRect
+nsSVGForeignObjectFrame::GetInvalidRegion()
+{
+  nsIFrame* kid = GetFirstPrincipalChild();
+  if (kid->HasInvalidFrameInSubtree()) {
+    gfxRect r(mRect.x, mRect.y, mRect.width, mRect.height);
+    r.Scale(1.0 / nsPresContext::AppUnitsPerCSSPixel());
+    nsRect rect = ToCanvasBounds(r, GetCanvasTM(FOR_PAINTING), PresContext());
+    rect = nsSVGUtils::GetPostFilterVisualOverflowRect(this, rect);
+    return rect;
+  }
+  return nsRect();
+}
+
+
