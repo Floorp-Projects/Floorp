@@ -51,10 +51,10 @@
 #error "Double-check which members of the 'STATFS' struct we're using!"
 #endif
 
-#if defined(HAVE_STATVFS64)
+#if defined(HAVE_STATVFS64) && (!defined(LINUX) && !defined(__osf__))
     #define STATFS statvfs64
     #define F_BSIZE f_frsize
-#elif defined(HAVE_STATVFS)
+#elif defined(HAVE_STATVFS) && (!defined(LINUX) && !defined(__osf__))
     #define STATFS statvfs
     #define F_BSIZE f_frsize
 #elif defined(HAVE_STATFS64)
