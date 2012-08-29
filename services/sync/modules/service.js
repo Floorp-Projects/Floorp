@@ -20,22 +20,23 @@ const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
-Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/main.js");
+Cu.import("resource://services-sync/policies.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/rest.js");
-Cu.import("resource://services-sync/status.js");
-Cu.import("resource://services-sync/policies.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/stages/cluster.js");
 Cu.import("resource://services-sync/stages/enginesync.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/userapi.js");
+Cu.import("resource://services-sync/util.js");
 
 const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
                             INFO_COLLECTION_USAGE,
@@ -88,12 +89,21 @@ WeaveSvc.prototype = {
     return misc + MISC_API_VERSION + "/";
   },
 
-  get userAPI() {
-    // Append to the serverURL if it's a relative fragment
-    let user = Svc.Prefs.get("userURL");
-    if (user.indexOf(":") == -1)
-      user = this.serverURL + user;
-    return user + USER_API_VERSION + "/";
+  /**
+   * The URI of the User API service.
+   *
+   * This is the base URI of the service as applicable to all users up to
+   * and including the server version path component, complete with trailing
+   * forward slash.
+   */
+  get userAPIURI() {
+    // Append to the serverURL if it's a relative fragment.
+    let url = Svc.Prefs.get("userURL");
+    if (!url.contains(":")) {
+      url = this.serverURL + url;
+    }
+
+    return url + USER_API_VERSION + "/";
   },
 
   get pwResetURL() {
@@ -711,23 +721,22 @@ WeaveSvc.prototype = {
     }
   },
 
-  changePassword: function changePassword(newpass) {
-    let url = this.userAPI + this._identity.username + "/password";
+  changePassword: function changePassword(newPassword) {
+    let client = new UserAPI10Client(this.userAPIURI);
+    let cb = Async.makeSpinningCallback();
+    client.changePassword(this._identity.username,
+                          this._identity.basicPassword, newPassword, cb);
+
     try {
-      let resp = new Resource(url).post(Utils.encodeUTF8(newpass));
-      if (resp.status != 200) {
-        this._log.debug("Password change failed: " + resp);
-        return false;
-      }
-    }
-    catch(ex) {
-      // Must have failed on some network issue
-      this._log.debug("changePassword failed: " + Utils.exceptionStr(ex));
+      cb.wait();
+    } catch (ex) {
+      this._log.debug("Password change failed: " +
+                      CommonUtils.exceptionStr(ex));
       return false;
     }
 
     // Save the new password for requests and login manager.
-    this._identity.basicPassword = newpass;
+    this._identity.basicPassword = newPassword;
     this.persistLogin();
     return true;
   },
@@ -866,62 +875,42 @@ WeaveSvc.prototype = {
   },
 
   checkAccount: function checkAccount(account) {
+    let client = new UserAPI10Client(this.userAPIURI);
+    let cb = Async.makeSpinningCallback();
+
     let username = this._identity.usernameFromAccount(account);
-    let url = this.userAPI + username;
-    let res = new Resource(url);
+    client.usernameExists(username, cb);
 
-    let data = "";
     try {
-      data = res.get();
-      if (data.status == 200) {
-        if (data == "0")
-          return "available";
-        else if (data == "1")
-          return "notAvailable";
-      }
-
+      let exists = cb.wait();
+      return exists ? "notAvailable" : "available";
+    } catch (ex) {
+      // TODO fix API convention.
+      return ErrorHandler.errorStr(ex);
     }
-    catch(ex) {}
-
-    // Convert to the error string, or default to generic on exception.
-    return ErrorHandler.errorStr(data);
   },
 
   createAccount: function createAccount(email, password,
                                         captchaChallenge, captchaResponse) {
-    let username = this._identity.usernameFromAccount(email);
-    let payload = JSON.stringify({
-      "password": Utils.encodeUTF8(password),
-      "email": email,
-      "captcha-challenge": captchaChallenge,
-      "captcha-response": captchaResponse
-    });
-
-    let url = this.userAPI + username;
-    let res = new Resource(url);
+    let client = new UserAPI10Client(this.userAPIURI);
 
     // Hint to server to allow scripted user creation or otherwise
     // ignore captcha.
-    if (Svc.Prefs.isSet("admin-secret"))
-      res.setHeader("X-Weave-Secret", Svc.Prefs.get("admin-secret", ""));
+    if (Svc.Prefs.isSet("admin-secret")) {
+      client.adminSecret = Svc.Prefs.get("admin-secret", "");
+    }
 
-    let error = "generic-server-error";
+    let cb = Async.makeSpinningCallback();
+
+    client.createAccount(email, password, captchaChallenge, captchaResponse,
+                         cb);
+
     try {
-      let register = res.put(payload);
-      if (register.success) {
-        this._log.info("Account created: " + register);
-        return null;
-      }
-
-      // Must have failed, so figure out the reason
-      if (register.status == 400)
-        error = ErrorHandler.errorStr(register);
+      cb.wait();
+      return null;
+    } catch (ex) {
+      return ErrorHandler.errorStr(ex.body);
     }
-    catch(ex) {
-      this._log.warn("Failed to create account: " + ex);
-    }
-
-    return error;
   },
 
   // Stuff we need to do after login, before we can really do
