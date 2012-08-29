@@ -90,6 +90,8 @@ public:
 
   gfxMatrix GetCanvasTM(uint32_t aFor);
 
+  nsRect GetInvalidRegion();
+
 protected:
   // implementation helpers:
   void DoReflow();
