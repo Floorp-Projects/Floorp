@@ -34,7 +34,16 @@ ViewportFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow)
 {
-  return Super::Init(aContent, aParent, aPrevInFlow);
+  nsresult rv = Super::Init(aContent, aParent, aPrevInFlow);
+
+  nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(this);
+  if (parent) {
+    nsFrameState state = parent->GetStateBits();
+
+    mState |= state & (NS_FRAME_IN_POPUP);
+  }
+
+  return rv;
 }
 
 void

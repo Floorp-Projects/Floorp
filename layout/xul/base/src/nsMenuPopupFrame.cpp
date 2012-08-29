@@ -170,6 +170,8 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
     }
   }
 
+  AddStateBits(NS_FRAME_IN_POPUP);
+
   return rv;
 }
 

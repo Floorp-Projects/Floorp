@@ -85,6 +85,7 @@
 #include "nsChangeHint.h"
 #include "nsDeckFrame.h"
 #include "nsTableFrame.h"
+#include "nsSubDocumentFrame.h"
 
 #include "gfxContext.h"
 #include "nsRenderingContext.h"
@@ -504,7 +505,8 @@ nsFrame::Init(nsIContent*      aContent,
     // Make bits that are currently off (see constructor) the same:
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_GENERATED_CONTENT |
-                       NS_FRAME_IS_SVG_TEXT);
+                       NS_FRAME_IS_SVG_TEXT |
+                       NS_FRAME_IN_POPUP);
   }
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (disp->HasTransform()) {
@@ -1266,6 +1268,23 @@ nsFrame::GetChildLists(nsTArray<ChildList>* aLists) const
     nsFrameList absoluteList = GetAbsoluteContainingBlock()->GetChildList();
     absoluteList.AppendIfNonempty(aLists, GetAbsoluteListID());
   }
+}
+
+void
+nsIFrame::GetCrossDocChildLists(nsTArray<ChildList>* aLists)
+{
+  nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(this);
+  if (subdocumentFrame) {
+    // Descend into the subdocument
+    nsIFrame* root = subdocumentFrame->GetSubdocumentRootFrame();
+    if (root) {
+      aLists->AppendElement(nsIFrame::ChildList(
+        nsFrameList(root, nsLayoutUtils::GetLastSibling(root)),
+        nsIFrame::kPrincipalList));
+    }
+  }
+
+  GetChildLists(aLists);
 }
 
 static nsIFrame*
@@ -4906,16 +4925,96 @@ nsIFrame::InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2)
 }
 
 void
-nsIFrame::InvalidateFrameSubtree()
+nsIFrame::InvalidateFrameSubtree(uint32_t aFlags)
 {
-  Invalidate(GetVisualOverflowRectRelativeToSelf());
-  FrameLayerBuilder::InvalidateThebesLayersInSubtree(this);
+  InvalidateFrame(aFlags);
+  
+  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
+  GetCrossDocChildLists(&childListArray);
+
+  nsIFrame::ChildListArrayIterator lists(childListArray);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      childFrames.get()->
+        InvalidateFrameSubtree(aFlags | INVALIDATE_DONT_SCHEDULE_PAINT);
+    }
+  }
+}
+
+void
+nsIFrame::ClearInvalidationStateBits()
+{
+  if (HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
+    nsAutoTArray<nsIFrame::ChildList,4> childListArray;
+    GetCrossDocChildLists(&childListArray);
+
+    nsIFrame::ChildListArrayIterator lists(childListArray);
+    for (; !lists.IsDone(); lists.Next()) {
+      nsFrameList::Enumerator childFrames(lists.CurrentList());
+      for (; !childFrames.AtEnd(); childFrames.Next()) {
+        childFrames.get()->ClearInvalidationStateBits();
+      }
+    }
+  }
+
+  RemoveStateBits(NS_FRAME_NEEDS_PAINT | NS_FRAME_DESCENDANT_NEEDS_PAINT);
+}
+
+void
+nsIFrame::InvalidateFrame(uint32_t aFlags)
+{
+  AddStateBits(NS_FRAME_NEEDS_PAINT);
+  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(this);
+  while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
+    parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
+    parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
+  }
+  if (!(aFlags & INVALIDATE_DONT_SCHEDULE_PAINT)) {
+    SchedulePaint();
+  }
+}
+  
+bool 
+nsIFrame::IsInvalid() 
+{
+  return HasAnyStateBits(NS_FRAME_NEEDS_PAINT);
 }
 
 void
 nsIFrame::InvalidateOverflowRect()
 {
   Invalidate(GetVisualOverflowRectRelativeToSelf());
+}
+
+void
+nsIFrame::SchedulePaint()
+{
+  nsPresContext *pres = PresContext()->GetRootPresContext();
+  if (HasAnyStateBits(NS_FRAME_IN_POPUP) || !pres) {
+    nsIFrame *displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
+    NS_ASSERTION(displayRoot, "Need a display root to schedule a paint!");
+    if (!displayRoot) {
+      return;
+    }
+    pres = displayRoot->PresContext();
+  }
+  pres->PresShell()->ScheduleViewManagerFlush();
+}
+
+Layer*
+nsIFrame::InvalidateLayer(const nsRect& aDamageRect, uint32_t aDisplayItemKey)
+{
+  NS_ASSERTION(aDisplayItemKey > 0, "Need a key");
+
+  Layer* layer = FrameLayerBuilder::GetDedicatedLayer(this, aDisplayItemKey);
+  if (!layer) {
+    InvalidateFrame();
+    return nullptr;
+  }
+
+  SchedulePaint();
+  return layer;
 }
 
 NS_DECLARE_FRAME_PROPERTY(DeferInvalidatesProperty, nsIFrame::DestroyRegion)
@@ -8147,6 +8246,55 @@ nsFrame::BoxMetrics() const
   return metrics;
 }
 
+/**
+ * Adds the NS_FRAME_IN_POPUP state bit to the current frame,
+ * and all descendant frames (including cross-doc ones).
+ */
+static void
+AddInPopupStateBitToDescendants(nsIFrame* aFrame)
+{
+  aFrame->AddStateBits(NS_FRAME_IN_POPUP);
+
+  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
+  aFrame->GetCrossDocChildLists(&childListArray);
+
+  nsIFrame::ChildListArrayIterator lists(childListArray);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      AddInPopupStateBitToDescendants(childFrames.get());
+    }
+  }
+}
+
+/**
+ * Removes the NS_FRAME_IN_POPUP state bit from the current
+ * frames and all descendant frames (including cross-doc ones),
+ * unless the frame is a popup itself.
+ */
+static void
+RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame)
+{
+  if (!aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP) ||
+      aFrame->GetType() == nsGkAtoms::listControlFrame ||
+      aFrame->GetType() == nsGkAtoms::menuPopupFrame) {
+    return;
+  }
+
+  aFrame->RemoveStateBits(NS_FRAME_IN_POPUP);
+
+  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
+  aFrame->GetCrossDocChildLists(&childListArray);
+
+  nsIFrame::ChildListArrayIterator lists(childListArray);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      RemoveInPopupStateBitFromDescendants(childFrames.get());
+    }
+  }
+}
+
 void
 nsFrame::SetParent(nsIFrame* aParent)
 {
@@ -8164,6 +8312,20 @@ nsFrame::SetParent(nsIFrame* aParent)
          f = f->GetParent()) {
       f->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
     }
+  }
+  
+  if (HasInvalidFrameInSubtree()) {
+    for (nsIFrame* f = aParent;
+         f && !f->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
+         f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+      f->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
+    }
+  }
+
+  if (aParent->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
+    AddInPopupStateBitToDescendants(this);
+  } else {
+    RemoveInPopupStateBitFromDescendants(this);
   }
 
   if (GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT) {
