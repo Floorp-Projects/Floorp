@@ -97,7 +97,7 @@ nsDeckFrame::IndexChanged()
     return;
 
   // redraw
-  InvalidateOverflowRect();
+  InvalidateFrame();
 
   // hide the currently showing box
   nsIFrame* currentBox = GetSelectedBox();

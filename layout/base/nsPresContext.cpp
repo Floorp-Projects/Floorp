@@ -88,6 +88,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+uint8_t gNotifySubDocInvalidationData;
+
 namespace {
 
 class CharSetChangingRunnable : public nsRunnable
@@ -127,6 +129,22 @@ nsPresContext::MakeColorPref(const nsString& aColor)
   return nsRuleNode::ComputeColor(value, this, nullptr, color)
     ? color
     : NS_RGB(0, 0, 0);
+}
+
+bool
+nsPresContext::IsDOMPaintEventPending() 
+{
+  if (!mInvalidateRequests.mRequests.IsEmpty()) {
+    return true;    
+  }
+  if (GetDisplayRootPresContext()->GetRootPresContext()->mRefreshDriver->ViewManagerFlushIsPending()) {
+    // Since we're promising that there will be a MozAfterPaint event
+    // fired, we record an empty invalidation in case display list
+    // invalidation doesn't invalidate anything further.
+    NotifyInvalidation(nsRect(0, 0, 0, 0), 0);
+    return true;
+  }
+  return false;
 }
 
 int
@@ -776,7 +794,7 @@ nsPresContext::InvalidateThebesLayers()
     // FrameLayerBuilder caches invalidation-related values that depend on the
     // appunits-per-dev-pixel ratio, so ensure that all ThebesLayer drawing
     // is completely flushed.
-    FrameLayerBuilder::InvalidateThebesLayersInSubtreeWithUntrustedFrameGeometry(rootFrame);
+    rootFrame->InvalidateFrameSubtree();
   }
 }
 
@@ -1968,29 +1986,14 @@ nsPresContext::FireDOMPaintEvent()
 
   nsCOMPtr<nsIDOMEventTarget> dispatchTarget = do_QueryInterface(ourWindow);
   nsCOMPtr<nsIDOMEventTarget> eventTarget = dispatchTarget;
-  if (!IsChrome()) {
-    bool notifyContent = mSendAfterPaintToContent;
-
-    if (notifyContent) {
-      // If the pref is set, we still don't post events when they're
-      // entirely cross-doc.
-      notifyContent = false;
-      for (uint32_t i = 0; i < mInvalidateRequests.mRequests.Length(); ++i) {
-        if (!(mInvalidateRequests.mRequests[i].mFlags &
-              nsIFrame::INVALIDATE_CROSS_DOC)) {
-          notifyContent = true;
-        }
-      }
-    }
-    if (!notifyContent) {
-      // Don't tell the window about this event, it should not know that
-      // something happened in a subdocument. Tell only the chrome event handler.
-      // (Events sent to the window get propagated to the chrome event handler
-      // automatically.)
-      dispatchTarget = do_QueryInterface(ourWindow->GetParentTarget());
-      if (!dispatchTarget) {
-        return;
-      }
+  if (!IsChrome() && !mSendAfterPaintToContent) {
+    // Don't tell the window about this event, it should not know that
+    // something happened in a subdocument. Tell only the chrome event handler.
+    // (Events sent to the window get propagated to the chrome event handler
+    // automatically.)
+    dispatchTarget = do_QueryInterface(ourWindow->GetParentTarget());
+    if (!dispatchTarget) {
+      return;
     }
   }
   // Events sent to the window get propagated to the chrome event handler
@@ -2012,6 +2015,24 @@ nsPresContext::FireDOMPaintEvent()
   event->SetTarget(eventTarget);
   event->SetTrusted(true);
   nsEventDispatcher::DispatchDOMEvent(dispatchTarget, nullptr, event, this, nullptr);
+}
+
+static bool
+MayHavePaintEventListenerSubdocumentCallback(nsIDocument* aDocument, void* aData)
+{
+  bool *result = static_cast<bool*>(aData);
+  nsIPresShell* shell = aDocument->GetShell();
+  if (shell) {
+    nsPresContext* pc = shell->GetPresContext();
+    if (pc) {
+      *result = pc->MayHavePaintEventListenerInSubDocument();
+
+      // If we found a paint event listener, then we can stop enumerating
+      // sub documents.
+      return !*result;
+    }
+  }
+  return true;
 }
 
 static bool
@@ -2065,6 +2086,28 @@ nsPresContext::MayHavePaintEventListener()
   return ::MayHavePaintEventListener(mDocument->GetInnerWindow());
 }
 
+bool
+nsPresContext::MayHavePaintEventListenerInSubDocument()
+{
+  if (MayHavePaintEventListener()) {
+    return true;
+  }
+
+  bool result = false;
+  mDocument->EnumerateSubDocuments(MayHavePaintEventListenerSubdocumentCallback, &result);
+  return result;
+}
+
+void
+nsPresContext::NotifyInvalidation(const nsIntRect& aRect, uint32_t aFlags)
+{
+  nsRect rect(DevPixelsToAppUnits(aRect.x),
+              DevPixelsToAppUnits(aRect.y),
+              DevPixelsToAppUnits(aRect.width),
+              DevPixelsToAppUnits(aRect.height));
+  NotifyInvalidation(rect, aFlags);
+}
+
 void
 nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
 {
@@ -2073,8 +2116,6 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
   // MayHavePaintEventListener is pretty cheap and we could make it
   // even cheaper by providing a more efficient
   // nsPIDOMWindow::GetListenerManager.
-  if (aRect.IsEmpty() || !MayHavePaintEventListener())
-    return;
 
   nsPresContext* pc;
   for (pc = this; pc; pc = pc->GetParentPresContext()) {
@@ -2098,6 +2139,30 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
   request->mFlags = aFlags;
 }
 
+/* static */ void 
+nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
+                                        const nsIntRegion& aRegion)
+{
+  ContainerLayerPresContext *data = 
+    static_cast<ContainerLayerPresContext*>(
+      aContainer->GetUserData(&gNotifySubDocInvalidationData));
+  if (!data) {
+    return;
+  }
+
+  nsIntPoint topLeft = aContainer->GetVisibleRegion().GetBounds().TopLeft();
+
+  nsIntRegionRectIterator iter(aRegion);
+  while (const nsIntRect* r = iter.Next()) {
+    nsIntRect rect = *r;
+    //PresContext coordinate space is relative to the start of our visible
+    // region. Is this really true? This feels like the wrong way to get the right
+    // answer.
+    rect.MoveBy(-topLeft);
+    data->mPresContext->NotifyInvalidation(rect, 0);
+  }
+}
+
 static bool
 NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData)
 {
@@ -2114,19 +2179,18 @@ NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData)
 void
 nsPresContext::NotifyDidPaintForSubtree()
 {
-  if (!mFireAfterPaintEvents)
-    return;
-  mFireAfterPaintEvents = false;
-
   if (IsRoot()) {
+    if (!mFireAfterPaintEvents)
+      return;
+
     static_cast<nsRootPresContext*>(this)->CancelDidPaintTimer();
   }
 
-  if (!mInvalidateRequests.mRequests.IsEmpty()) {
-    nsCOMPtr<nsIRunnable> ev =
-      NS_NewRunnableMethod(this, &nsPresContext::FireDOMPaintEvent);
-    nsContentUtils::AddScriptRunner(ev);
-  }
+  mFireAfterPaintEvents = false;
+
+  nsCOMPtr<nsIRunnable> ev =
+    NS_NewRunnableMethod(this, &nsPresContext::FireDOMPaintEvent);
+  nsContentUtils::AddScriptRunner(ev);
 
   mDocument->EnumerateSubDocuments(NotifyDidPaintSubdocumentCallback, nullptr);
 }

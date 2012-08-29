@@ -280,9 +280,9 @@ nsRect
   return overflowRect - (aFrame->GetOffsetTo(firstFrame) + firstFrameToUserSpace);
 }
 
-nsRect
+nsIntRect
 nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
-                                                      const nsRect& aInvalidRect)
+                                                      const nsIntRect& aInvalidRect)
 {
   // Don't bother calling GetEffectProperties; the filter property should
   // already have been set up during reflow/ComputeFrameEffectsRect
@@ -298,22 +298,26 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
     return aInvalidRect;
   }
 
+  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+
   nsSVGFilterFrame* filterFrame = prop->GetFilterFrame();
   if (!filterFrame) {
     // The frame is either not there or not currently available,
     // perhaps because we're in the middle of tearing stuff down.
     // Be conservative.
-    return aFrame->GetVisualOverflowRect();
+    nsRect overflow = aFrame->GetVisualOverflowRect();
+    return overflow.ToOutsidePixels(appUnitsPerDevPixel);
   }
 
   // Convert aInvalidRect into "user space" in app units:
   nsPoint toUserSpace =
     aFrame->GetOffsetTo(firstFrame) + GetOffsetToUserSpace(firstFrame);
-  nsRect preEffectsRect = aInvalidRect + toUserSpace;
+  nsRect preEffectsRect = aInvalidRect.ToAppUnits(appUnitsPerDevPixel) + toUserSpace;
 
   // Return ther result, relative to aFrame, not in user space:
-  return filterFrame->GetPostFilterDirtyArea(firstFrame, preEffectsRect) -
+  nsRect result = filterFrame->GetPostFilterDirtyArea(firstFrame, preEffectsRect) -
            toUserSpace;
+  return result.ToOutsidePixels(appUnitsPerDevPixel);
 }
 
 nsRect

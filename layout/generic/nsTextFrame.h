@@ -29,12 +29,17 @@ class PropertyProvider;
 
 typedef nsFrame nsTextFrameBase;
 
+class nsDisplayTextGeometry;
+class nsDisplayText;
+
 class nsTextFrame : public nsTextFrameBase {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTextFrame)
   NS_DECL_FRAMEARENA_HELPERS
 
   friend class nsContinuingTextFrame;
+  friend class nsDisplayTextGeometry;
+  friend class nsDisplayText;
 
   nsTextFrame(nsStyleContext* aContext)
     : nsTextFrameBase(aContext)
@@ -582,6 +587,10 @@ protected:
              mColor == aOther.mColor &&
              mBaselineOffset == aOther.mBaselineOffset;
     }
+
+    bool operator!=(const LineDecoration& aOther) const {
+      return !(*this == aOther);
+    }
   };
   struct TextDecorations {
     nsAutoTArray<LineDecoration, 1> mOverlines, mUnderlines, mStrikes;
@@ -600,6 +609,16 @@ protected:
     bool HasStrikeout() const {
       return !mStrikes.IsEmpty();
     }
+    bool operator==(const TextDecorations& aOther) const {
+      return mOverlines == aOther.mOverlines &&
+             mUnderlines == aOther.mUnderlines &&
+             mStrikes == aOther.mStrikes;
+    }
+    
+    bool operator!=(const TextDecorations& aOther) const {
+      return !(*this == aOther);
+    }
+
   };
   enum TextDecorationColorResolution {
     eResolvedColors,
