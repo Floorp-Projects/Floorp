@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 784410</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="outer" style="overflow:auto; height:200px; border:2px dotted black;" onscroll="doneScroll()">
+  <div id="d" style="overflow:auto; height:102px;" onscroll="doneScroll()">
+    <div id="inner" style="height:100.1px; border:1px solid black; background:yellow;">Hello</div>
+  </div>
+  <div style="height:500px;"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+var sel = window.getSelection();
+var outer = document.getElementById("outer");
+var d = document.getElementById("d");
+var inner = document.getElementById("inner");
+var smoothScrollPref = "general.smoothScroll";
+
+function innerScrollOffset() {
+  return inner.getBoundingClientRect().top - d.getBoundingClientRect().top;
+}
+var innerStartScrollOffset = innerScrollOffset();
+
+var done = false;
+function doneScroll() {
+  if (done) {
+    return;
+  }
+  done = true;
+  is(innerScrollOffset(), innerStartScrollOffset, "Inner element should not have scrolled down");
+  ok(outer.scrollTop > 0, "Outer element should have scrolled down");
+  SpecialPowers.clearUserPref(smoothScrollPref);
+  SimpleTest.finish();
+}
+
+function test() {
+  SpecialPowers.setBoolPref(smoothScrollPref, false);
+  sel.collapse(inner.firstChild, 2);
+  synthesizeKey("VK_PAGE_DOWN", {});
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(test);
+
+</script>
+</pre>
+</body>
+</html>
