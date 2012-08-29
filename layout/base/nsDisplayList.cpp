@@ -1017,6 +1017,8 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   nsRefPtr<ContainerLayer> root = layerBuilder->
     BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nullptr, *this,
                            containerParameters, nullptr);
+  
+  aForFrame->ClearInvalidationStateBits();
 
   if (!root) {
     layerManager->RemoveUserData(&gLayerManagerLayerBuilder);
