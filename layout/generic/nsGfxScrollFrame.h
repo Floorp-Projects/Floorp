@@ -423,10 +423,6 @@ public:
     return mInner.GetScrolledFrame()->GetContentInsertionFrame();
   }
 
-  virtual void InvalidateInternal(const nsRect& aDamageRect,
-                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                  uint32_t aFlags);
-
   virtual bool DoesClipChildren() { return true; }
   virtual nsSplittableType GetSplittableType() const;
 
@@ -637,10 +633,6 @@ public:
   virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     return mInner.GetScrolledFrame()->GetContentInsertionFrame();
   }
-
-  virtual void InvalidateInternal(const nsRect& aDamageRect,
-                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                  uint32_t aFlags);
 
   virtual bool DoesClipChildren() { return true; }
   virtual nsSplittableType GetSplittableType() const;

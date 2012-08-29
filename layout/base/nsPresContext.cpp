@@ -776,7 +776,7 @@ nsPresContext::InvalidateThebesLayers()
     // FrameLayerBuilder caches invalidation-related values that depend on the
     // appunits-per-dev-pixel ratio, so ensure that all ThebesLayer drawing
     // is completely flushed.
-    FrameLayerBuilder::InvalidateThebesLayersInSubtreeWithUntrustedFrameGeometry(rootFrame);
+    rootFrame->InvalidateFrameSubtree();
   }
 }
 
@@ -1974,12 +1974,9 @@ nsPresContext::FireDOMPaintEvent()
     if (notifyContent) {
       // If the pref is set, we still don't post events when they're
       // entirely cross-doc.
-      notifyContent = false;
+      notifyContent = true;
       for (uint32_t i = 0; i < mInvalidateRequests.mRequests.Length(); ++i) {
-        if (!(mInvalidateRequests.mRequests[i].mFlags &
-              nsIFrame::INVALIDATE_CROSS_DOC)) {
-          notifyContent = true;
-        }
+        notifyContent = true;
       }
     }
     if (!notifyContent) {

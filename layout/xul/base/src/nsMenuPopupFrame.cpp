@@ -815,14 +815,6 @@ nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState)
 }
 
 void
-nsMenuPopupFrame::InvalidateInternal(const nsRect& aDamageRect,
-                                     nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                     uint32_t aFlags)
-{
-  InvalidateRoot(aDamageRect + nsPoint(aX, aY), aFlags);
-}
-
-void
 nsMenuPopupFrame::GetLayoutFlags(uint32_t& aFlags)
 {
   aFlags = NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_VISIBILITY;

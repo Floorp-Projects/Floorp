@@ -301,10 +301,6 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
 
   FinishAndStoreOverflow(&aMetrics);
 
-  if (mRect.width != aMetrics.width || mRect.height != aMetrics.height) {
-    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
-  }
-
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsVideoFrame::Reflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));

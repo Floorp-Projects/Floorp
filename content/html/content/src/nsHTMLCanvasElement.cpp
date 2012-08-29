@@ -889,7 +889,7 @@ nsHTMLCanvasElement::InvalidateCanvas()
   if (!frame)
     return;
 
-  frame->Invalidate(frame->GetContentRect() - frame->GetPosition());
+  frame->InvalidateFrame();
 }
 
 int32_t
