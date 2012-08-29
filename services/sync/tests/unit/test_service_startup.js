@@ -9,6 +9,7 @@ Cu.import("resource://services-sync/engines.js");
 
 function run_test() {
   _("When imported, Service.onStartup is called");
+  initTestLogging("Trace");
 
   Svc.Prefs.set("registerEngines", "Tab,Bookmarks,Form,History");
   new SyncTestingInfrastructure();

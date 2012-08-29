@@ -38,6 +38,17 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/userapi.js");
 Cu.import("resource://services-sync/util.js");
 
+const ENGINE_MODULES = {
+  Addons: "addons.js",
+  Apps: "apps.js",
+  Bookmarks: "bookmarks.js",
+  Form: "forms.js",
+  History: "history.js",
+  Password: "passwords.js",
+  Prefs: "prefs.js",
+  Tab: "tabs.js",
+};
+
 const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
                             INFO_COLLECTION_USAGE,
                             INFO_COLLECTION_COUNTS,
@@ -406,10 +417,28 @@ WeaveSvc.prototype = {
       engines = pref.split(",");
     }
 
-    // Grab the actual engines and register them
-    this.engineManager.register(engines.map(function onItem(name) {
-      return Weave[name + "Engine"];
-    }));
+    for (let name of engines) {
+      if (!name in ENGINE_MODULES) {
+        this._log.info("Do not know about engine: " + name);
+        continue;
+      }
+
+      let ns = {};
+      try {
+        Cu.import("resource://services-sync/engines/" + ENGINE_MODULES[name], ns);
+
+        let engineName = name + "Engine";
+        if (!(engineName in ns)) {
+          this._log.warn("Could not find exported engine instance: " + engineName);
+          continue;
+        }
+
+        this.engineManager.register(ns[engineName]);
+      } catch (ex) {
+        this._log.warn("Could not register engine " + name + ": " +
+                       CommonUtils.exceptionStr(ex));
+      }
+    }
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
