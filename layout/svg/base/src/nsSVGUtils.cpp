@@ -1894,6 +1894,12 @@ nsSVGUtils::SetupCairoFillPaint(nsIFrame *aFrame, gfxContext* aContext)
   const nsStyleSVG* style = aFrame->GetStyleSVG();
   if (style->mFill.mType == eStyleSVGPaintType_None)
     return false;
+
+  if (style->mFillRule == NS_STYLE_FILL_RULE_EVENODD)
+    aContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
+  else
+    aContext->SetFillRule(gfxContext::FILL_RULE_WINDING);
+
   float opacity = MaybeOptimizeOpacity(aFrame, style->mFillOpacity);
   nsSVGPaintServerFrame *ps =
     nsSVGEffects::GetPaintServer(aFrame, &style->mFill, nsSVGEffects::FillProperty());

@@ -241,8 +241,16 @@ bool Base64Decode(JSContext *cx, JS::Value val, JS::Value *out);
  * Note, the ownership of the string buffer may be moved from str to rval.
  * If that happens, str will point to an empty string after this call.
  */
-bool StringToJsval(JSContext *cx, nsAString &str, JS::Value *rval);
 bool NonVoidStringToJsval(JSContext *cx, nsAString &str, JS::Value *rval);
+inline bool StringToJsval(JSContext *cx, nsAString &str, JS::Value *rval)
+{
+    // From the T_DOMSTRING case in XPCConvert::NativeData2JS.
+    if (str.IsVoid()) {
+        *rval = JSVAL_NULL;
+        return true;
+    }
+    return NonVoidStringToJsval(cx, str, rval);
+}
 
 nsIPrincipal *GetCompartmentPrincipal(JSCompartment *compartment);
 

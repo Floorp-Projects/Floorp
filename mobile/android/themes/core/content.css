@@ -8,7 +8,7 @@
 @namespace url("http://www.w3.org/1999/xhtml");
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-@-moz-document url(about:readercontent) {
+@-moz-document url-prefix(about:reader) {
   @font-face {
     font-family: 'OpenSansRegular';
     src: url('chrome://browser/skin/fonts/opensans-regular.ttf') format('truetype');

@@ -81,3 +81,5 @@ include output/reftest.list
 
 # progress element
 include progress/reftest.list
+
+== input-percentage-padding.html input-percentage-padding-ref.html
