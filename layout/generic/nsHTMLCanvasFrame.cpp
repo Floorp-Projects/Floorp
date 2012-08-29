@@ -213,10 +213,6 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
   aMetrics.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aMetrics);
 
-  if (mRect.width != aMetrics.width || mRect.height != aMetrics.height) {
-    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
-  }
-
   // Reflow the single anon block child.
   nsReflowStatus childStatus;
   nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);

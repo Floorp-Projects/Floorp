@@ -593,6 +593,10 @@ NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIRequest *aRequest,
                                             imgIContainer *aContainer,
                                             const nsIntRect *aDirtyRect)
 {
+  if ((0 == mRect.width) || (0 == mRect.height)) {
+    return NS_OK;
+  }
+  
   nsBoxLayoutState state(PresContext());
   this->Redraw(state);
 

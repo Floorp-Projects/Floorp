@@ -92,10 +92,6 @@ public:
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
-  virtual void InvalidateInternal(const nsRect& aDamageRect,
-                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                  uint32_t aFlags) MOZ_OVERRIDE;
-
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif

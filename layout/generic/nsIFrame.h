@@ -2174,136 +2174,6 @@ public:
   bool AreLayersMarkedActive(nsChangeHint aChangeHint);
 
   /**
-   * @param aFlags see InvalidateInternal below
-   */
-  void InvalidateWithFlags(const nsRect& aDamageRect, uint32_t aFlags);
-
-  /**
-   * Invalidate part of the frame by asking the view manager to repaint.
-   * aDamageRect is allowed to extend outside the frame's bounds. We'll do the right
-   * thing.
-   * We deliberately don't have an Invalidate() method that defaults to the frame's bounds.
-   * We want all callers to *think* about what has changed in the frame and what area might
-   * need to be repainted.
-   *
-   * @param aDamageRect is in the frame's local coordinate space
-   */
-  void Invalidate(const nsRect& aDamageRect)
-  { return InvalidateWithFlags(aDamageRect, 0); }
-
-  /**
-   * As Invalidate above, except that this should be called when the
-   * rendering that has changed is performed using layers so we can avoid
-   * updating the contents of ThebesLayers.
-   * If the frame has a dedicated layer rendering this display item, we
-   * return that layer.
-   * @param aDisplayItemKey must not be zero; indicates the kind of display
-   * item that is being invalidated.
-   */
-  Layer* InvalidateLayer(const nsRect& aDamageRect, uint32_t aDisplayItemKey);
-
-  /**
-   * Invalidate the area of the parent that's covered by the transformed
-   * visual overflow rect of this frame. Don't depend on the transform style
-   * for this frame, in case that's changed since this frame was painted.
-   */
-  void InvalidateTransformLayer();
-
-  /**
-   * Helper function that can be overridden by frame classes. The rectangle
-   * (plus aOffsetX/aOffsetY) is relative to this frame.
-   * 
-   * The offset is given as two coords rather than as an nsPoint because
-   * gcc optimizes it better that way, in particular in the default
-   * implementation that passes the area to the parent frame becomes a tail
-   * call.
-   *
-   * The default implementation will crash if the frame has no parent so
-   * frames without parents MUST* override.
-   * 
-   * @param aForChild if the invalidation is coming from a child frame, this
-   * is the frame; otherwise, this is null.
-   * @param aFlags INVALIDATE_IMMEDIATE: repaint now if true, repaint later if false.
-   *   In case it's true, pending notifications will be flushed which
-   *   could cause frames to be deleted (including |this|).
-   * @param aFlags INVALIDATE_CROSS_DOC: true if the invalidation
-   *   originated in a subdocument
-   * @param aFlags INVALIDATE_REASON_SCROLL_BLIT: set if the invalidation
-   * was really just the scroll machinery copying pixels from one
-   * part of the window to another
-   * @param aFlags INVALIDATE_REASON_SCROLL_REPAINT: set if the invalidation
-   * was triggered by scrolling
-   * @param aFlags INVALIDATE_NO_THEBES_LAYERS: don't invalidate the
-   * ThebesLayers of any container layer owned by an ancestor. Set this
-   * only if ThebesLayers definitely don't need to be updated.
-   * @param aFlags INVALIDATE_ONLY_THEBES_LAYERS: invalidate only in the
-   * ThebesLayers of the nearest container layer.
-   * @param aFlags INVALIDATE_EXCLUDE_CURRENT_PAINT: if the invalidation
-   * occurs while we're painting (to be precise, while
-   * BeginDeferringInvalidatesForDisplayRoot is active on the display root),
-   * then invalidation in the current paint region is simply discarded.
-   * Use this flag if areas that are being painted do not need
-   * to be invalidated. By default, when this flag is not specified,
-   * areas that are invalidated while currently being painted will be repainted
-   * again.
-   * This flag is useful when, during painting, FrameLayerBuilder discovers that
-   * a region of the window needs to be drawn differently, and that region
-   * may or may not be contained in the currently painted region.
-   * @param aFlags INVALIDATE_NO_UPDATE_LAYER_TREE: display lists and the
-   * layer tree do not need to be updated. This can be used when the layer
-   * tree has already been updated outside a transaction, e.g. via
-   * ImageContainer::SetCurrentImage.
-   */
-  enum {
-    INVALIDATE_IMMEDIATE = 0x01,
-    INVALIDATE_CROSS_DOC = 0x02,
-    INVALIDATE_REASON_SCROLL_BLIT = 0x04,
-    INVALIDATE_REASON_SCROLL_REPAINT = 0x08,
-    INVALIDATE_REASON_MASK = INVALIDATE_REASON_SCROLL_BLIT |
-                             INVALIDATE_REASON_SCROLL_REPAINT,
-    INVALIDATE_NO_THEBES_LAYERS = 0x10,
-    INVALIDATE_ONLY_THEBES_LAYERS = 0x20,
-    INVALIDATE_EXCLUDE_CURRENT_PAINT = 0x40,
-    INVALIDATE_NO_UPDATE_LAYER_TREE = 0x80,
-    INVALIDATE_ALREADY_TRANSFORMED = 0x100
-  };
-  virtual void InvalidateInternal(const nsRect& aDamageRect,
-                                  nscoord aOffsetX, nscoord aOffsetY,
-                                  nsIFrame* aForChild, uint32_t aFlags);
-
-  /**
-   * Helper function that funnels an InvalidateInternal request up to the
-   * parent.  This function is used so that if MOZ_SVG is not defined, we still
-   * have unified control paths in the InvalidateInternal chain.
-   *
-   * @param aDamageRect The rect to invalidate.
-   * @param aX The x offset from the origin of this frame to the rectangle.
-   * @param aY The y offset from the origin of this frame to the rectangle.
-   * @param aImmediate Whether to redraw immediately.
-   * @return None, though this funnels the request up to the parent frame.
-   */
-  void InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
-                                     nscoord aY, uint32_t aFlags);
-
-  /**
-   * Take two rectangles in the coordinate system of this frame which
-   * have the same origin and invalidate the difference between them.
-   * This is a helper method to be used when a frame is being resized.
-   *
-   * @param aR1 the first rectangle
-   * @param aR2 the second rectangle
-   */
-  void InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2);
-
-
-  /**
-   * Invalidates this frame's visual overflow rect. Does not necessarily
-   * cause ThebesLayers for descendant frames to be repainted; only this
-   * frame can be relied on to be repainted.
-   */
-  void InvalidateOverflowRect();
-
-  /**
    * Marks all display items created by this frame as needing a repaint,
    * and calls SchedulePaint() if requested.
    *
@@ -2830,7 +2700,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   bool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
   bool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
 
-  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nullptr);
+  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild)=0;
   // XXX take this out after we've branched
   virtual bool GetMouseThrough() const { return false; }
@@ -2878,17 +2748,6 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    *         are encountered rummaging through the frame.
    */
   CaretPosition GetExtremeCaretPosition(bool aStart);
-
-  /**
-   * Same thing as nsFrame::CheckInvalidateSizeChange, but more flexible.  The
-   * implementation of this method must not depend on the mRect or
-   * GetVisualOverflowRect() of the frame!  Note that it's safe to
-   * assume in this method that the frame origin didn't change.  If it
-   * did, whoever moved the frame will invalidate as needed anyway.
-   */
-  void CheckInvalidateSizeChange(const nsRect& aOldRect,
-                                 const nsRect& aOldVisualOverflowRect,
-                                 const nsSize& aNewDesiredSize);
 
   /**
    * Get a line iterator for this frame, if supported.
@@ -3052,12 +2911,6 @@ protected:
   } mOverflow;
 
   // Helpers
-  /**
-   * For frames that have top-level windows (top-level viewports,
-   * comboboxes, menupoups) this function will invalidate the window.
-   */
-  void InvalidateRoot(const nsRect& aDamageRect, uint32_t aFlags);
-
   /**
    * Can we stop inside this frame when we're skipping non-rendered whitespace?
    * @param  aForward [in] Are we moving forward (or backward) in content order.

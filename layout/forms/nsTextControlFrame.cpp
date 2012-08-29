@@ -541,9 +541,6 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
     kid = kid->GetNextSibling();
   }
 
-  // If we're resizing, we might need to invalidate our border areas and such
-  CheckInvalidateSizeChange(aDesiredSize);
-
   // take into account css properties that affect overflow handling
   FinishAndStoreOverflow(&aDesiredSize);
 

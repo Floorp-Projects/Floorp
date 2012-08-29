@@ -656,9 +656,6 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
 
-  // Determine if we need to repaint our border, background or outline
-  CheckInvalidateSizeChange(aDesiredSize);
-
   FinishAndStoreOverflow(&aDesiredSize);
 
   if (!aPresContext->IsPaginated() && !mPostedReflowCallback) {
