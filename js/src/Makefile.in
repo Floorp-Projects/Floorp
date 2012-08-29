@@ -595,7 +595,7 @@ ifndef HAVE_DTRACE
 endif
 endif
 
-DIST_GARBAGE = config.cache config.log config.status \
+DIST_GARBAGE = config.cache config.log config.status* \
    config/autoconf.mk \
    unallmakefiles js-config js-config.h js-confdefs.h
 
