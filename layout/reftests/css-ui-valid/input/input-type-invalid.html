@@ -5,15 +5,16 @@
              it should not be affected by :-moz-ui-valid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <script>
-    function onLoadHandler()
+    function doTest()
     {
       var i = document.getElementById('i');
       i.setCustomValidity('foo');
       i.type = 'text';
       document.documentElement.className='';
     }
+    document.addEventListener("MozReftestInvalidate", doTest, false);
   </script>
-  <body onload="onLoadHandler();">
+  <body>
     <input class='notvalid' type='button' id='i'>
   </body>
 </html>
