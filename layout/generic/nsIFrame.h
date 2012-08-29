@@ -2216,8 +2216,15 @@ public:
    * The view manager flush will update the layer tree, repaint any 
    * invalid areas in the layer tree and schedule a layer tree
    * composite operation to display the layer tree.
+   *
+   * @param aFlags PAINT_COMPOSITE_ONLY : No changes have been made
+   * that require a layer tree update, so only schedule a layer
+   * tree composite.
    */
-  void SchedulePaint();
+  enum {
+    PAINT_COMPOSITE_ONLY
+  };
+  void SchedulePaint(uint32_t aFlags = 0);
 
   /**
    * Checks if the layer tree includes a dedicated layer for this 
