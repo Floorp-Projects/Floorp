@@ -4754,6 +4754,12 @@ void
 nsIFrame::InvalidateFrameSubtree(uint32_t aFlags)
 {
   InvalidateFrame(aFlags);
+
+  if (HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)) {
+    return;
+  }
+
+  AddStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT);
   
   nsAutoTArray<nsIFrame::ChildList,4> childListArray;
   GetCrossDocChildLists(&childListArray);
@@ -4784,7 +4790,9 @@ nsIFrame::ClearInvalidationStateBits()
     }
   }
 
-  RemoveStateBits(NS_FRAME_NEEDS_PAINT | NS_FRAME_DESCENDANT_NEEDS_PAINT);
+  RemoveStateBits(NS_FRAME_NEEDS_PAINT | 
+                  NS_FRAME_DESCENDANT_NEEDS_PAINT | 
+                  NS_FRAME_ALL_DESCENDANTS_NEED_PAINT);
 }
 
 void
@@ -7990,6 +7998,13 @@ nsFrame::SetParent(nsIFrame* aParent)
     AddInPopupStateBitToDescendants(this);
   } else {
     RemoveInPopupStateBitFromDescendants(this);
+  }
+  
+  // If our new parent only has invalid children, then we just invalidate
+  // ourselves too. This is probably faster than clearing the flag all
+  // the way up the frame tree.
+  if (aParent->HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)) {
+    InvalidateFrame(INVALIDATE_DONT_SCHEDULE_PAINT);
   }
 }
 
