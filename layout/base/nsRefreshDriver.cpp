@@ -100,6 +100,11 @@ nsRefreshDriver::~nsRefreshDriver()
   NS_ABORT_IF_FALSE(ObserverCount() == 0,
                     "observers should have unregistered");
   NS_ABORT_IF_FALSE(!mTimer, "timer should be gone");
+  
+  for (uint32_t i = 0; i < mPresShellsToInvalidateIfHidden.Length(); i++) {
+    mPresShellsToInvalidateIfHidden[i]->InvalidatePresShellIfHidden();
+  }
+  mPresShellsToInvalidateIfHidden.Clear();
 }
 
 // Method for testing.  See nsIDOMWindowUtils.advanceTimeAndRefresh
@@ -412,6 +417,11 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
     mRequests.EnumerateEntries(nsRefreshDriver::ImageRequestEnumerator, &parms);
     EnsureTimerStarted(false);
   }
+    
+  for (uint32_t i = 0; i < mPresShellsToInvalidateIfHidden.Length(); i++) {
+    mPresShellsToInvalidateIfHidden[i]->InvalidatePresShellIfHidden();
+  }
+  mPresShellsToInvalidateIfHidden.Clear();
 
   if (mViewManagerFlushIsPending) {
 #ifdef DEBUG_INVALIDATIONS
