@@ -51,14 +51,14 @@
 #error "Double-check which members of the 'STATFS' struct we're using!"
 #endif
 
-#ifdef HAVE_STATVFS64
+#if defined(HAVE_STATVFS64)
     #define STATFS statvfs64
-#else
-    #ifdef HAVE_STATVFS
-        #define STATFS statvfs
-    #else
-        #define STATFS statfs
-    #endif
+#elif defined(HAVE_STATVFS)
+    #define STATFS statvfs
+#elif defined(HAVE_STATFS64)
+    #define STATFS statfs64
+#elif defined(HAVE_STATFS)
+    #define STATFS statfs
 #endif
 
 #if defined(HAVE_STAT64) && defined(HAVE_LSTAT64)
