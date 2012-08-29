@@ -437,7 +437,7 @@ function sync_httpd_setup(handlers) {
  * Track collection modified times. Return closures.
  */
 function track_collections_helper() {
-  
+
   /*
    * Our tracking object.
    */
@@ -488,7 +488,7 @@ function track_collections_helper() {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.bodyOutputStream.write(body, body.length);
   }
-  
+
   return {"collections": collections,
           "handler": info_collections,
           "with_updated_collection": with_updated_collection,
@@ -780,7 +780,7 @@ SyncServer.prototype = {
    *
    * TODO: need to use the correct Sync API response codes and errors here.
    * TODO: Basic Auth.
-   * TODO: check username in path against username in BasicAuth. 
+   * TODO: check username in path against username in BasicAuth.
    */
   handleDefault: function handleDefault(handler, req, resp) {
     try {
@@ -914,7 +914,7 @@ SyncServer.prototype = {
           // whole collection!
           //
           // We already handled deleting the WBOs by invoking the deleted
-          // collection's handler. However, in the case of 
+          // collection's handler. However, in the case of
           //
           //   DELETE storage/foobar
           //

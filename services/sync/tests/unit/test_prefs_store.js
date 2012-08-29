@@ -74,7 +74,7 @@ function run_test() {
     do_check_eq(record.value["services.sync.prefs.sync.testing.nonexistent"], true);
 
     _("Update some prefs, including one that's to be reset/deleted.");
-    Svc.Prefs.set("testing.deleteme", "I'm going to be deleted!"); 
+    Svc.Prefs.set("testing.deleteme", "I'm going to be deleted!");
     record = new PrefRec("prefs", PREFS_GUID);
     record.value = {
       "testing.int": 42,

@@ -26,7 +26,7 @@ function run_test() {
       didCall = true;
       throw 10;
     })(),
-    
+
     callbacky: function() this.catch(function() {
       rightThis = this == obj;
       didCall = true;
@@ -34,7 +34,7 @@ function run_test() {
     }, function(ex) {
       wasTen = (ex == 10)
     })(),
-    
+
     lockedy: function() this.catch(function() {
       rightThis = this == obj;
       didCall = true;
@@ -61,7 +61,7 @@ function run_test() {
   do_check_true(didThrow);
   do_check_eq(wasTen, undefined);
   do_check_false(wasLocked);
-  
+
   _("Test callback for exception testing.");
   rightThis = didCall = didThrow = wasLocked = false;
   ret = obj.callbacky();
@@ -71,7 +71,7 @@ function run_test() {
   do_check_true(didThrow);
   do_check_true(wasTen);
   do_check_false(wasLocked);
-  
+
   _("Test the lock-aware catch that Service uses.");
   obj.catch = Service._catch;
   rightThis = didCall = didThrow = wasLocked = false;

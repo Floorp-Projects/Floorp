@@ -103,7 +103,7 @@ add_test(function test_weave_backoff() {
   }
   let server = httpd_setup({"/resource": handler});
 
-  let backoffInterval;  
+  let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function onBackoff(subject) {
     Svc.Obs.remove("weave:service:backoff:interval", onBackoff);
     backoffInterval = subject;

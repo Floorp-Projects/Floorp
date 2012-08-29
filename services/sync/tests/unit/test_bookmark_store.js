@@ -164,7 +164,7 @@ function test_folder_create() {
     let newrecord = store.createRecord(folder.id);
     do_check_true(newrecord instanceof BookmarkFolder);
     for each (let property in ["title", "parentName", "parentid"])
-      do_check_eq(newrecord[property], folder[property]);      
+      do_check_eq(newrecord[property], folder[property]);
 
     _("Folders have high sort index to ensure they're synced first.");
     do_check_eq(newrecord.sortindex, 1000000);

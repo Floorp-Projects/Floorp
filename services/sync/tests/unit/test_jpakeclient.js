@@ -300,7 +300,7 @@ add_test(function test_firstMsgMaxTries() {
   });
   rec.receiveNoPIN();
 });
-  
+
 
 add_test(function test_lastMsgMaxTries() {
   _("Test that receiver can wait longer for the last message.");

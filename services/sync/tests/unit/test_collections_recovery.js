@@ -5,7 +5,7 @@ add_test(function test_missing_crypto_collection() {
   let johnHelper = track_collections_helper();
   let johnU      = johnHelper.with_updated_collection;
   let johnColls  = johnHelper.collections;
-  
+
   let empty = false;
   function maybe_empty(handler) {
     return function (request, response) {
@@ -44,7 +44,7 @@ add_test(function test_missing_crypto_collection() {
       orig.call(Service);
       fresh++;
     };
-    
+
     _("Startup, no meta/global: freshStart called once.");
     Service.sync();
     do_check_eq(fresh, 1);

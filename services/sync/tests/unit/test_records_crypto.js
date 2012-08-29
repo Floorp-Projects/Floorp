@@ -54,7 +54,7 @@ function run_test() {
     cryptoWrap.encrypt(keyBundle);
     log.info("Ciphertext is " + cryptoWrap.ciphertext);
     do_check_true(cryptoWrap.ciphertext != null);
-    
+
     let firstIV = cryptoWrap.IV;
 
     log.info("Decrypting the record");

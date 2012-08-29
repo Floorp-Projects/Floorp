@@ -7,7 +7,7 @@ function test_migrate_logging() {
   do_check_true(Svc.Prefs.get("log.appender.debugLog.enabled"));
   do_check_eq(Svc.Prefs.get("log.appender.file.level"), "Trace");
   do_check_eq(Svc.Prefs.get("log.appender.file.logOnSuccess"), false);
-  
+
   Service._migratePrefs();
 
   do_check_eq("Warn", Svc.Prefs.get("log.appender.file.level"));
