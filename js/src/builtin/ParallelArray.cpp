@@ -39,29 +39,6 @@ ParallelArrayObject::IndexInfo::isInitialized()
             partialProducts.length() == dimensions.length());
 }
 
-static inline JSObject *
-NewDenseArrayWithType(JSContext *cx, uint32_t length, HandleObject source = NullPtr())
-{
-    RootedObject buffer(cx);
-    if (source)
-        buffer = NewDenseCopiedArray(cx, length, source->getDenseArrayElements());
-    else
-        buffer = NewDenseAllocatedArray(cx, length);
-
-    if (!buffer)
-        return NULL;
-
-    if (!source)
-        buffer->ensureDenseArrayInitializedLength(cx, length, 0);
-
-    RootedTypeObject newtype(cx, GetTypeCallerInitObject(cx, JSProto_Array));
-    if (!newtype)
-        return NULL;
-    buffer->setType(newtype);
-
-    return *buffer.address();
-}
-
 // Check if obj is a parallel array, and if so, cast to pa and initialize
 // the IndexInfo accordingly.
 //
@@ -95,23 +72,19 @@ static bool
 GetElementFromArrayLikeObject(JSContext *cx, HandleObject obj, HandleParallelArrayObject pa,
                               IndexInfo &iv, uint32_t i, MutableHandleValue vp)
 {
-    // Are we indexing a parallel array object?
-    if (pa) {
-        // If the array is one dimensional, we can skip using the IndexInfo.
-        if (pa->isOneDimensional() && pa->getElementFromOnlyDimension(cx, i, vp))
-            return true;
+    // Fast path getting an element from parallel and dense arrays. For dense
+    // arrays, we only do this if the prototype doesn't have indexed
+    // properties. In this case holes = undefined.
+    if (pa && pa->getParallelArrayElement(cx, i, &iv, vp))
+        return true;
 
-        JS_ASSERT(iv.isInitialized());
-        JS_ASSERT(iv.indices.length() == 1);
-        iv.indices[0] = i;
-        if (pa->getParallelArrayElement(cx, iv, vp))
-            return true;
-    }
-
-    if (obj->isDenseArray() && i < obj->getDenseArrayInitializedLength()) {
+    if (obj->isDenseArray() && i < obj->getDenseArrayInitializedLength() &&
+        !js_PrototypeHasIndexedProperties(cx, obj))
+    {
         vp.set(obj->getDenseArrayElement(i));
-        if (!vp.isMagic(JS_ARRAY_HOLE))
-            return true;
+        if (vp.isMagic(JS_ARRAY_HOLE))
+            vp.setUndefined();
+        return true;
     }
 
     if (obj->isArguments()) {
@@ -119,13 +92,90 @@ GetElementFromArrayLikeObject(JSContext *cx, HandleObject obj, HandleParallelArr
             return true;
     }
 
-    bool present;
-    if (!JSObject::getElementIfPresent(cx, obj, obj, i, vp, &present))
-        return false;
-    if (!present)
-        vp.setUndefined();
+    // Slow path everything else: objects with indexed properties on the
+    // prototype, non-parallel and dense arrays.
+    return JSObject::getElement(cx, obj, obj, i, vp);
+}
 
+static inline bool
+SetArrayNewType(JSContext *cx, HandleObject obj)
+{
+    RootedTypeObject newtype(cx, GetTypeCallerInitObject(cx, JSProto_Array));
+    if (!newtype)
+        return false;
+    obj->setType(newtype);
     return true;
+}
+
+static JSObject *
+NewDenseCopiedArrayWithType(JSContext *cx, uint32_t length, HandleObject source)
+{
+    JS_ASSERT(source);
+
+    RootedObject buffer(cx, NewDenseAllocatedArray(cx, length));
+    if (!buffer)
+        return NULL;
+    JS_ASSERT(buffer->getDenseArrayCapacity() >= length);
+    buffer->setDenseArrayInitializedLength(length);
+
+    uint32_t srclen;
+    uint32_t copyUpTo;
+
+    // Optimize for the common case: if we have a dense array source, copy
+    // whatever we can, truncating to length, and filling the rest with
+    // undefineds. Holes are converted to undefineds eagerly.
+    if (source->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, source)) {
+        const Value *srcvp = source->getDenseArrayElements();
+
+        srclen = source->getDenseArrayInitializedLength();
+        copyUpTo = Min(length, srclen);
+
+        // Convert any existing holes into undefined.
+        Value elem;
+        for (uint32_t i = 0; i < copyUpTo; i++) {
+            elem = srcvp[i].isMagic(JS_ARRAY_HOLE) ? UndefinedValue() : srcvp[i];
+            buffer->initDenseArrayElementWithType(cx, i, elem);
+        }
+    } else {
+        IndexInfo siv(cx);
+        RootedParallelArrayObject sourcePA(cx);
+
+        if (!MaybeGetParallelArrayObjectAndLength(cx, source, &sourcePA, &siv, &srclen))
+            return NULL;
+        copyUpTo = Min(length, srclen);
+
+        // Copy elements pointwise.
+        RootedValue elem(cx);
+        for (uint32_t i = 0; i < copyUpTo; i++) {
+            if (!GetElementFromArrayLikeObject(cx, source, sourcePA, siv, i, &elem))
+                return NULL;
+            buffer->initDenseArrayElementWithType(cx, i, elem);
+        }
+    }
+
+    // Fill the rest with undefineds.
+    for (uint32_t i = copyUpTo; i < length; i++)
+        buffer->initDenseArrayElementWithType(cx, i, UndefinedValue());
+
+    if (!SetArrayNewType(cx, buffer))
+        return NULL;
+
+    return *buffer.address();
+}
+
+static inline JSObject *
+NewDenseArrayWithType(JSContext *cx, uint32_t length)
+{
+    RootedObject buffer(cx, NewDenseAllocatedArray(cx, length));
+    if (!buffer)
+        return NULL;
+
+    buffer->ensureDenseArrayInitializedLength(cx, length, 0);
+
+    if (!SetArrayNewType(cx, buffer))
+        return NULL;
+
+    return *buffer.address();
 }
 
 // Copy an array like object obj into an IndexVector, indices, using
@@ -296,14 +346,8 @@ ParallelArrayObject::SequentialMode::map(JSContext *cx, HandleParallelArrayObjec
         args.setCallee(ObjectValue(*elementalFun));
         args.setThis(UndefinedValue());
 
-        if (source->isOneDimensional()) {
-            if (!source->getElementFromOnlyDimension(cx, i, &elem))
-                return ExecutionFailed;
-        } else {
-            iv.indices[0] = i;
-            if (!source->getParallelArrayElement(cx, iv, &elem))
-                return ExecutionFailed;
-        }
+        if (!source->getParallelArrayElement(cx, i, &iv, &elem))
+            return ExecutionFailed;
 
         // The arguments are in eic(h) order.
         args[0] = elem;
@@ -338,16 +382,11 @@ ParallelArrayObject::SequentialMode::reduce(JSContext *cx, HandleParallelArrayOb
     RootedValue acc(cx);
     IndexInfo iv(cx);
 
-    if (source->isOneDimensional()) {
-        if (!source->getElementFromOnlyDimension(cx, 0, &acc))
-            return ExecutionFailed;
-    } else {
-        if (!iv.initialize(cx, source, 1))
-            return ExecutionFailed;
-        iv.indices[0] = 0;
-        if (!source->getParallelArrayElement(cx, iv, &acc))
-            return ExecutionFailed;
-    }
+    if (!source->isOneDimensional() && !iv.initialize(cx, source, 1))
+        return ExecutionFailed;
+
+    if (!source->getParallelArrayElement(cx, 0, &iv, &acc))
+        return ExecutionFailed;
 
     if (buffer)
         buffer->setDenseArrayElementWithType(cx, 0, acc);
@@ -361,14 +400,8 @@ ParallelArrayObject::SequentialMode::reduce(JSContext *cx, HandleParallelArrayOb
         args.setCallee(ObjectValue(*elementalFun));
         args.setThis(UndefinedValue());
 
-        if (source->isOneDimensional()) {
-            if (!source->getElementFromOnlyDimension(cx, i, &elem))
-                return ExecutionFailed;
-        } else {
-            iv.indices[0] = i;
-            if (!source->getParallelArrayElement(cx, iv, &elem))
-                return ExecutionFailed;
-        }
+        if (!source->getParallelArrayElement(cx, i, &iv, &elem))
+            return ExecutionFailed;
 
         // Set the two arguments to the elemental function.
         args[0] = acc;
@@ -431,14 +464,8 @@ ParallelArrayObject::SequentialMode::scatter(JSContext *cx, HandleParallelArrayO
             return ExecutionFailed;
         }
 
-        if (source->isOneDimensional()) {
-            if (!source->getElementFromOnlyDimension(cx, i, &elem))
-                return ExecutionFailed;
-        } else {
-            iv.indices[0] = i;
-            if (!source->getParallelArrayElement(cx, iv, &elem))
-                return ExecutionFailed;
-        }
+        if (!source->getParallelArrayElement(cx, i, &iv, &elem))
+            return ExecutionFailed;
 
         targetElem = buffer->getDenseArrayElement(targetIndex);
 
@@ -470,7 +497,7 @@ ParallelArrayObject::SequentialMode::scatter(JSContext *cx, HandleParallelArrayO
         buffer->setDenseArrayElementWithType(cx, targetIndex, elem);
     }
 
-    // Fill holes.
+    // Fill holes with the default value.
     for (uint32_t i = 0; i < length; i++) {
         if (buffer->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE))
             buffer->setDenseArrayElementWithType(cx, i, defaultValue);
@@ -510,14 +537,8 @@ ParallelArrayObject::SequentialMode::filter(JSContext *cx, HandleParallelArrayOb
         if (!ToBoolean(felem))
             continue;
 
-        if (source->isOneDimensional()) {
-            if (!source->getElementFromOnlyDimension(cx, i, &elem))
-                return ExecutionFailed;
-        } else {
-            iv.indices[0] = i;
-            if (!source->getParallelArrayElement(cx, iv, &elem))
-                return ExecutionFailed;
-        }
+        if (!source->getParallelArrayElement(cx, i, &iv, &elem))
+            return ExecutionFailed;
 
         // Set the element on the buffer. If we couldn't stay dense, fail.
         JSObject::EnsureDenseResult result = JSObject::ED_SPARSE;
@@ -801,7 +822,7 @@ Class ParallelArrayObject::class_ = {
         deleteProperty,
         deleteElement,
         deleteSpecial,
-        enumerate,
+        NULL,                // enumerate
         NULL,                // typeof
         NULL,                // thisObject
     }
@@ -855,22 +876,6 @@ ParallelArrayObject::initClass(JSContext *cx, JSObject *obj)
 }
 
 bool
-ParallelArrayObject::getElementFromOnlyDimension(JSContext *cx, uint32_t index, MutableHandleValue vp)
-{
-    JS_ASSERT(isOneDimensional());
-
-    uint32_t base = bufferOffset();
-    uint32_t end = base + outermostDimension();
-
-    if (base + index >= end)
-        vp.setUndefined();
-    else
-        vp.set(buffer()->getDenseArrayElement(base + index));
-
-    return true;
-}
-
-bool
 ParallelArrayObject::getParallelArrayElement(JSContext *cx, IndexInfo &iv, MutableHandleValue vp)
 {
     JS_ASSERT(iv.isInitialized());
@@ -914,11 +919,41 @@ ParallelArrayObject::getParallelArrayElement(JSContext *cx, IndexInfo &iv, Mutab
 }
 
 bool
+ParallelArrayObject::getParallelArrayElement(JSContext *cx, uint32_t index, IndexInfo *maybeIV,
+                                             MutableHandleValue vp)
+{
+    // If we are one dimensional, we don't need to use IndexInfo.
+    if (isOneDimensional()) {
+        uint32_t base = bufferOffset();
+        uint32_t end = base + outermostDimension();
+
+        if (base + index >= end)
+            vp.setUndefined();
+        else
+            vp.set(buffer()->getDenseArrayElement(base + index));
+
+        return true;
+    }
+
+    // If we're higher dimensional, an initialized IndexInfo must be provided.
+    JS_ASSERT(maybeIV);
+    JS_ASSERT(maybeIV->isInitialized());
+    JS_ASSERT(maybeIV->indices.length() == 1);
+
+    maybeIV->indices[0] = index;
+    return getParallelArrayElement(cx, *maybeIV, vp);
+}
+
+bool
 ParallelArrayObject::getParallelArrayElement(JSContext *cx, uint32_t index, MutableHandleValue vp)
 {
-    IndexInfo iv(cx);
+    if (isOneDimensional())
+        return getParallelArrayElement(cx, index, NULL, vp);
+
     // Manually initialize to avoid re-rooting 'this', as this code could be
-    // called from inside a loop.
+    // called from inside a loop, though you really should hoist out the
+    // IndexInfo if that's the case.
+    IndexInfo iv(cx);
     if (!getDimensions(cx, iv.dimensions) || !iv.initialize(1))
         return false;
     iv.indices[0] = index;
@@ -1013,26 +1048,9 @@ ParallelArrayObject::construct(JSContext *cx, unsigned argc, Value *vp)
             return false;
         dims[0] = length;
 
-        RootedObject buffer(cx);
-
-        // If the source is already a dense array, just copy it over
-        // wholesale. Else copy it pointwise.
-        if (source->isDenseArray()) {
-            buffer = NewDenseArrayWithType(cx, length, source);
-            if (!buffer)
-                return false;
-        } else {
-            buffer = NewDenseArrayWithType(cx, length);
-            if (!buffer)
-                return false;
-
-            RootedValue elem(cx);
-            for (uint32_t i = 0; i < length; i++) {
-                if (!JSObject::getElement(cx, source, source, i, &elem))
-                    return false;
-                buffer->setDenseArrayElementWithType(cx, i, elem);
-            }
-        }
+        RootedObject buffer(cx, NewDenseCopiedArrayWithType(cx, length, source));
+        if (!buffer)
+            return false;
 
         return create(cx, buffer, 0, dims, args.rval());
     }
@@ -1414,37 +1432,6 @@ ParallelArrayObject::get(JSContext *cx, CallArgs args)
     RootedParallelArrayObject obj(cx, as(&args.thisv().toObject()));
     RootedObject indicesObj(cx, &(args[0].toObject()));
 
-    if (obj->isOneDimensional()) {
-        uint32_t length;
-        if (is(indicesObj))
-            length = as(indicesObj)->outermostDimension();
-        else if (!GetLengthProperty(cx, indicesObj, &length))
-            return false;
-
-        // If we're one dimensional, the index vector must also be one
-        // dimensional.
-        if (length != 1) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_BAD_ARG,
-                                 ".prototype.get");
-            return false;
-        }
-
-        RootedValue elem(cx);
-        uint32_t index;
-        if (is(indicesObj)) {
-            if (!as(indicesObj)->getParallelArrayElement(cx, 0, &elem))
-                return false;
-        } else {
-            if (!JSObject::getElement(cx, indicesObj, indicesObj, 0, &elem))
-                return false;
-        }
-
-        if (!ToUint32(cx, elem, &index))
-            return false;
-
-        return obj->getElementFromOnlyDimension(cx, index, args.rval());
-    }
-
     IndexInfo iv(cx);
     if (!iv.initialize(cx, obj, 0))
         return false;
@@ -1532,10 +1519,13 @@ ParallelArrayObject::toStringBufferImpl(JSContext *cx, IndexInfo &iv, bool useLo
     const Value *elem;
 
     for (elem = start; elem < end; elem++) {
+        // All holes in parallel arrays are eagerly filled with undefined.
+        JS_ASSERT(!elem->isMagic(JS_ARRAY_HOLE));
+
         if (!JS_CHECK_OPERATION_LIMIT(cx))
             return false;
 
-        if (!elem->isMagic(JS_ARRAY_HOLE) && !elem->isNullOrUndefined()) {
+        if (!elem->isNullOrUndefined()) {
             if (useLocale) {
                 tmp = *elem;
                 JSObject *robj = ToObject(cx, tmp);
@@ -1616,8 +1606,11 @@ JSBool
 ParallelArrayObject::lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                    MutableHandleObject objp, MutableHandleShape propp)
 {
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
-        as(obj)->inOutermostDimensionRange(cx, id)) {
+    uint32_t i;
+    if (js_IdIsIndex(id, &i))
+        return lookupElement(cx, obj, i, objp, propp);
+
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         MarkNonNativePropertyFound(obj, propp);
         objp.set(obj);
         return true;
@@ -1644,15 +1637,12 @@ JSBool
 ParallelArrayObject::lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                                    MutableHandleObject objp, MutableHandleShape propp)
 {
-    if (as(obj)->inOutermostDimensionRange(index)) {
+    // No prototype walking for elements.
+    if (index < as(obj)->outermostDimension()) {
         MarkNonNativePropertyFound(obj, propp);
         objp.set(obj);
         return true;
     }
-
-    RootedObject proto(cx, obj->getProto());
-    if (proto)
-        return JSObject::lookupElement(cx, proto, index, objp, propp);
 
     objp.set(NULL);
     propp.set(NULL);
@@ -1744,19 +1734,9 @@ JSBool
 ParallelArrayObject::getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
                                 uint32_t index, MutableHandleValue vp)
 {
-    RootedParallelArrayObject source(cx, as(obj));
-    if (source->inOutermostDimensionRange(index)) {
-        if (source->isOneDimensional())
-            return source->getElementFromOnlyDimension(cx, index, vp);
-        return source->getParallelArrayElement(cx, index, vp);
-    }
-
-    RootedObject proto(cx, obj->getProto());
-    if (proto)
-        return JSObject::getElement(cx, proto, receiver, index, vp);
-
-    vp.setUndefined();
-    return true;
+    // Unlike normal arrays, [] for ParallelArray does not walk the prototype
+    // chain and just returns undefined.
+    return as(obj)->getParallelArrayElement(cx, index, vp);
 }
 
 JSBool
@@ -1905,36 +1885,37 @@ ParallelArrayObject::deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecia
     return false;
 }
 
-JSBool
-ParallelArrayObject::enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
-                               Value *statep, jsid *idp)
+bool
+ParallelArrayObject::enumerate(JSContext *cx, HandleObject obj, unsigned flags,
+                               AutoIdVector *props)
 {
-    JS_ASSERT(is(obj));
     RootedParallelArrayObject source(cx, as(obj));
 
-    uint32_t index;
-    switch (enum_op) {
-      case JSENUMERATE_INIT_ALL:
-      case JSENUMERATE_INIT:
-        statep->setInt32(0);
-        if (idp)
-            *idp = ::INT_TO_JSID(source->outermostDimension());
-        break;
+    if (flags & JSITER_HIDDEN && !props->append(NameToId(cx->runtime->atomState.lengthAtom)))
+        return false;
 
-      case JSENUMERATE_NEXT:
-        index = static_cast<uint32_t>(statep->toInt32());
-        if (index < source->outermostDimension()) {
-            *idp = ::INT_TO_JSID(index);
-            statep->setInt32(index + 1);
-        } else {
-            JS_ASSERT(index == source->outermostDimension());
-            statep->setNull();
+    // ParallelArray objects have no holes.
+    if (source->outermostDimension() > 0) {
+        for (uint32_t i = 0; i < source->outermostDimension(); i++)
+            props->append(INT_TO_JSID(i));
+    }
+
+    if (flags & JSITER_OWNONLY)
+        return true;
+
+    RootedObject proto(cx, obj->getProto());
+    if (proto) {
+        AutoIdVector protoProps(cx);
+        if (!GetPropertyNames(cx, proto, flags, &protoProps))
+            return false;
+
+        // ParallelArray objects do not inherit any indexed properties on the
+        // prototype chain.
+        uint32_t dummy;
+        for (uint32_t i = 0; i < protoProps.length(); i++) {
+            if (!js_IdIsIndex(protoProps[i], &dummy) && !props->append(protoProps[i]))
+                return false;
         }
-        break;
-
-      case JSENUMERATE_DESTROY:
-        statep->setNull();
-        break;
     }
 
     return true;
