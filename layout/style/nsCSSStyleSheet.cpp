@@ -39,7 +39,8 @@
 #include "nsMediaFeatures.h"
 #include "nsDOMClassInfoID.h"
 
-namespace css = mozilla::css;
+using namespace mozilla;
+
 
 // -------------------------------
 // Style Rule List for the DOM
@@ -763,8 +764,10 @@ nsMediaList::Append(const nsAString& aNewMedium)
 //
 
 
-nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet)
+nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet,
+                                           CORSMode aCORSMode)
   : mSheets(),
+    mCORSMode(aCORSMode),
     mComplete(false)
 #ifdef DEBUG
     , mPrincipalSet(false)
@@ -884,6 +887,7 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
     mOriginalSheetURI(aCopy.mOriginalSheetURI),
     mBaseURI(aCopy.mBaseURI),
     mPrincipal(aCopy.mPrincipal),
+    mCORSMode(aCopy.mCORSMode),
     mComplete(aCopy.mComplete)
 #ifdef DEBUG
     , mPrincipalSet(aCopy.mPrincipalSet)
@@ -1012,7 +1016,7 @@ nsCSSStyleSheetInner::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 // CSS Style Sheet
 //
 
-nsCSSStyleSheet::nsCSSStyleSheet()
+nsCSSStyleSheet::nsCSSStyleSheet(CORSMode aCORSMode)
   : mTitle(), 
     mParent(nullptr),
     mOwnerRule(nullptr),
@@ -1024,7 +1028,7 @@ nsCSSStyleSheet::nsCSSStyleSheet()
     mRuleProcessors(nullptr)
 {
 
-  mInner = new nsCSSStyleSheetInner(this);
+  mInner = new nsCSSStyleSheetInner(this, aCORSMode);
 }
 
 nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
@@ -1585,7 +1589,7 @@ nsCSSStyleSheet::DidDirty()
 }
 
 nsresult
-nsCSSStyleSheet::SubjectSubsumesInnerPrincipal() const
+nsCSSStyleSheet::SubjectSubsumesInnerPrincipal()
 {
   // Get the security manager and do the subsumes check
   nsIScriptSecurityManager *securityManager =
@@ -1608,7 +1612,26 @@ nsCSSStyleSheet::SubjectSubsumesInnerPrincipal() const
   }
   
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    // Allow access only if CORS mode is not NONE
+    if (GetCORSMode() == CORS_NONE) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    // Now make sure we set the principal of our inner to the
+    // subjectPrincipal.  That means we need a unique inner, of
+    // course.  But we don't want to do that if we're not complete
+    // yet.  Luckily, all the callers of this method throw anyway if
+    // not complete, so we can just do that here too.
+    if (!mInner->mComplete) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    }
+
+    rv = WillDirty();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mInner->mPrincipal = subjectPrincipal;
+
+    DidDirty();
   }
 
   return NS_OK;

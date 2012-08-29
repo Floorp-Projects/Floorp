@@ -19,11 +19,11 @@ def main(argv):
 
     print banner
     print "enum ID {"
-    for (name, definition) in histogram_tools.from_file(filename):
-        cpp_guard = definition.get('cpp_guard')
+    for histogram in histogram_tools.from_file(filename):
+        cpp_guard = histogram.cpp_guard()
         if cpp_guard:
             print "#if defined(%s)" % cpp_guard
-        print "  %s," % (name,)
+        print "  %s," % histogram.name()
         if cpp_guard:
             print "#endif"
     print "  HistogramCount"

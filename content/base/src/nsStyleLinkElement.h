@@ -19,6 +19,7 @@
 #include "nsIStyleSheet.h"
 #include "nsIURI.h"
 #include "nsTArray.h"
+#include "mozilla/CORSMode.h"
 
 #define PREFETCH      0x00000001
 #define DNS_PREFETCH  0x00000002
@@ -75,6 +76,12 @@ protected:
                                  bool* aIsAlternate) = 0;
 
   nsIStyleSheet* GetStyleSheet() { return mStyleSheet; }
+
+  virtual mozilla::CORSMode GetCORSMode() const
+  {
+    // Default to no CORS
+    return mozilla::CORS_NONE;
+  }
 
 private:
   /**

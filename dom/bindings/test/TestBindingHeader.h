@@ -330,6 +330,7 @@ public:
   void PassUint8ClampedArray(Uint8ClampedArray&, ErrorResult&);
   void PassFloat32Array(Float32Array&, ErrorResult&);
   void PassFloat64Array(Float64Array&, ErrorResult&);
+  JSObject* ReceiveUint8Array(ErrorResult&);
 
   // String types
   void PassString(const nsAString&, ErrorResult&);

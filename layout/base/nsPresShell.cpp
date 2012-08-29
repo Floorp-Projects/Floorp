@@ -1206,7 +1206,7 @@ PresShell::CreatePreferenceStyleSheet()
   NS_TIME_FUNCTION_MIN(1.0);
 
   NS_ASSERTION(!mPrefStyleSheet, "prefStyleSheet already exists");
-  mPrefStyleSheet = new nsCSSStyleSheet();
+  mPrefStyleSheet = new nsCSSStyleSheet(CORS_NONE);
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nullptr);
   if (NS_FAILED(rv)) {

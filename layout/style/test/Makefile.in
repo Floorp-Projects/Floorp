@@ -186,6 +186,8 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_load_events_on_stylesheets.html \
 		test_bug721136.html \
 		test_bug732153.html \
+		test_bug732209.html \
+		bug732209-css.sjs \
 		$(NULL)
 
 ifdef MOZ_FLEXBOX

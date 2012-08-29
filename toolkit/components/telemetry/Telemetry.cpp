@@ -272,6 +272,20 @@ GetHistogramByEnumId(Telemetry::ID id, Histogram **ret)
   if (NS_FAILED(rv))
     return rv;
 
+#ifdef DEBUG
+  // Check that the C++ Histogram code computes the same ranges as the
+  // Python histogram code.
+  const struct bounds &b = gBucketLowerBoundIndex[id];
+  if (b.length != 0) {
+    MOZ_ASSERT(size_t(b.length) == h->bucket_count(),
+               "C++/Python bucket # mismatch");
+    for (int i = 0; i < b.length; ++i) {
+      MOZ_ASSERT(gBucketLowerBounds[b.offset + i] == h->ranges(i),
+                 "C++/Python bucket mismatch");
+    }
+  }
+#endif
+
   *ret = knownHistograms[id] = h;
   return NS_OK;
 }
