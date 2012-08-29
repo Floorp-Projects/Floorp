@@ -23,10 +23,7 @@
 
 #define JIS_TYPICAL_DISTRIBUTION_RATIO (float) 3.0
 
-
-//Char to FreqOrder table , 
-#define JIS_TABLE_SIZE  4368
-
+// Char to FreqOrder table
 static const int16_t JISCharToFreqOrder[] =
 {
   40,   1,   6, 182, 152, 180, 295,2127, 285, 381,3295,4304,3068,4606,3165,3510, //   16
