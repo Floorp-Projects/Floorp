@@ -26,10 +26,11 @@ protected:
   typedef std::vector<std::string> StringVector;
 
 public:
+  typedef base::ChildPrivileges ChildPrivileges;
   typedef base::ProcessHandle ProcessHandle;
 
-  GeckoChildProcessHost(GeckoProcessType aProcessType=GeckoProcessType_Default,
-                        base::WaitableEventWatcher::Delegate* aDelegate=nullptr);
+  GeckoChildProcessHost(GeckoProcessType aProcessType,
+                        ChildPrivileges aPrivileges=base::PRIVILEGES_DEFAULT);
 
   ~GeckoChildProcessHost();
 
@@ -98,6 +99,7 @@ public:
 
 protected:
   GeckoProcessType mProcessType;
+  ChildPrivileges mPrivileges;
   Monitor mMonitor;
   FilePath mProcessPath;
   // This value must be accessed while holding mMonitor.
