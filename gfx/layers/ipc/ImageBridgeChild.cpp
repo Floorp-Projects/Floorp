@@ -3,18 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ImageBridgeChild.h"
-#include "ImageContainerChild.h"
-#include "CompositorParent.h"
-#include "ImageBridgeParent.h"
-#include "gfxSharedImageSurface.h"
-#include "ImageLayers.h"
 #include "base/thread.h"
+
+#include "CompositorParent.h"
+#include "ImageBridgeChild.h"
+#include "ImageBridgeParent.h"
+#include "ImageContainerChild.h"
+#include "ImageLayers.h"
+#include "gfxSharedImageSurface.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "nsXULAppAPI.h"
 
 using namespace base;
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace layers {
@@ -142,6 +145,41 @@ void ImageBridgeChild::StartUp()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
   ImageBridgeChild::StartUpOnThread(new Thread("ImageBridgeChild"));
+}
+
+static void
+ConnectImageBridgeInChildProcess(Transport* aTransport,
+                                 ProcessHandle aOtherProcess)
+{
+  // Bind the IPC channel to the image bridge thread.
+  sImageBridgeChildSingleton->Open(aTransport, aOtherProcess,
+                                   XRE_GetIOMessageLoop(),
+                                   AsyncChannel::Child);
+}
+
+PImageBridgeChild*
+ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
+                                        ProcessId aOtherProcess)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
+
+  ProcessHandle processHandle;
+  if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
+    return nullptr;
+  }
+
+  sImageBridgeChildThread = new Thread("ImageBridgeChild");
+  if (!sImageBridgeChildThread->Start()) {
+    return nullptr;
+  }
+
+  sImageBridgeChildSingleton = new ImageBridgeChild();
+  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
+    FROM_HERE,
+    NewRunnableFunction(ConnectImageBridgeInChildProcess,
+                        aTransport, processHandle));
+  
+  return sImageBridgeChildSingleton;
 }
 
 void ImageBridgeChild::ShutDown()
