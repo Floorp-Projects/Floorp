@@ -13,15 +13,16 @@ const EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-common/observers.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-common/observers.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
-Cu.import("resource://services-sync/main.js");    // So we can get to Service for callbacks.
+Cu.import("resource://services-sync/main.js");
 
 /*
  * Trackers are associated with a single engine and deal with
@@ -415,6 +416,8 @@ EngineManager.prototype = {
         this._engines[name] = engine;
     }
     catch(ex) {
+      this._log.error(CommonUtils.exceptionStr(ex));
+
       let mesg = ex.message ? ex.message : ex;
       let name = engineObject || "";
       name = name.prototype || "";
