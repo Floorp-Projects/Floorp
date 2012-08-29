@@ -771,6 +771,12 @@ public:
   }
 
   /**
+   * Checks if the frame(s) owning this display item have been marked as invalid,
+   * and needing repainting.
+   */
+  virtual bool IsInvalid() { return mFrame ? mFrame->IsInvalid() : false; }
+
+  /**
    * Creates and initializes an nsDisplayItemGeometry object that retains the current
    * areas covered by this display item. These need to retain enough information
    * such that they can be compared against a future nsDisplayItem of the same type, 
@@ -1998,6 +2004,18 @@ public:
   virtual void GetMergedFrames(nsTArray<nsIFrame*>* aFrames) MOZ_OVERRIDE
   {
     aFrames->AppendElements(mMergedFrames);
+  }
+  virtual bool IsInvalid()
+  {
+    if (mFrame->IsInvalid()) {
+      return true;
+    }
+    for (uint32_t i = 0; i < mMergedFrames.Length(); i++) {
+      if (mMergedFrames[i]->IsInvalid()) {
+        return true;
+      }
+    }
+    return false;
   }
   NS_DISPLAY_DECL_NAME("WrapList", TYPE_WRAP_LIST)
 

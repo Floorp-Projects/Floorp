@@ -646,7 +646,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     MOZ_ASSERT(!GetRootLayer());
 
     nsRefPtr<Layer> layer =
-      (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
+      (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
     if (!layer) {
       layer = aManager->CreateRefLayer();
     }
