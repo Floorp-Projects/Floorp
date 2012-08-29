@@ -5254,6 +5254,8 @@ PresShell::Paint(nsIView*           aViewToPaint,
         nsIntRect invalid;
         if (props) {
           invalid = props->ComputeDifferences(layerManager->GetRoot(), computeInvalidFunc);
+        } else {
+          LayerProperties::ClearInvalidations(layerManager->GetRoot());
         }
         if (!invalid.IsEmpty()) {
           if (props) {

@@ -789,8 +789,9 @@ ThebesLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
 void
 ThebesLayerOGL::InvalidateRegion(const nsIntRegion &aRegion)
 {
-  mValidRegion.Sub(mValidRegion, aRegion);
-  AddInvalidRect(aRegion.GetBounds());
+  mInvalidRegion.Or(mInvalidRegion, aRegion);
+  mInvalidRegion.SimplifyOutward(10);
+  mValidRegion.Sub(mValidRegion, mInvalidRegion);
 }
 
 void

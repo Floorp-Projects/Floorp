@@ -117,7 +117,7 @@ struct LayerPropertiesBase : public LayerProperties
     }
 
     result = result.Union(ComputeChangeInternal(aCallback));
-    result = result.Union(TransformRect(mLayer->GetInvalidRect(), mTransform));
+    result = result.Union(TransformRect(mLayer->GetInvalidRegion().GetBounds(), mTransform));
 
     if (mMaskLayer && otherMask) {
       nsIntRect maskDiff = mMaskLayer->ComputeChange(aCallback);
