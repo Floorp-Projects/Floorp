@@ -159,6 +159,16 @@
          return new File.Info(gStatData);
      };
 
+     /**
+      * Flushes the file's buffers and causes all buffered data
+      * to be written.
+      *
+      * @throws {OS.File.Error} In case of I/O error.
+      */
+     File.prototype.flush = function flush() {
+       throw_on_negative("flush", UnixFile.fsync(this.fd));
+     };
+
 
      // Constant used to normalize options.
      const noOptions = {};
