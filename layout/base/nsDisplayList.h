@@ -774,7 +774,11 @@ public:
    * Checks if the frame(s) owning this display item have been marked as invalid,
    * and needing repainting.
    */
-  virtual bool IsInvalid() { return mFrame ? mFrame->IsInvalid() : false; }
+  virtual bool IsInvalid(nsRect& aRect) { 
+    bool result = mFrame ? mFrame->IsInvalid(aRect) : false;
+    aRect += ToReferenceFrame();
+    return result;
+  }
 
   /**
    * Creates and initializes an nsDisplayItemGeometry object that retains the current
@@ -2005,17 +2009,21 @@ public:
   {
     aFrames->AppendElements(mMergedFrames);
   }
-  virtual bool IsInvalid()
+  virtual bool IsInvalid(nsRect& aRect)
   {
-    if (mFrame->IsInvalid()) {
+    if (mFrame->IsInvalid(aRect) && aRect.IsEmpty()) {
       return true;
     }
+    nsRect temp;
     for (uint32_t i = 0; i < mMergedFrames.Length(); i++) {
-      if (mMergedFrames[i]->IsInvalid()) {
+      if (mMergedFrames[i]->IsInvalid(temp) && temp.IsEmpty()) {
+        aRect.SetEmpty();
         return true;
       }
+      aRect = aRect.Union(temp);
     }
-    return false;
+    aRect += ToReferenceFrame();
+    return !aRect.IsEmpty();
   }
   NS_DISPLAY_DECL_NAME("WrapList", TYPE_WRAP_LIST)
 
