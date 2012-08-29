@@ -178,7 +178,7 @@ XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, un
         }
 
         for (BindingIter bi(script->bindings); bi; bi++) {
-            uint8_t u8 = (uint8_t(bi->kind()) << 1) | bi->aliased();
+            uint8_t u8 = (uint8_t(bi->kind()) << 1) | uint8_t(bi->aliased());
             if (!xdr->codeUint8(&u8))
                 return false;
         }
