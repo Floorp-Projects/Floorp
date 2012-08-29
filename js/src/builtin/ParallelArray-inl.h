@@ -168,19 +168,6 @@ ParallelArrayObject::isOneDimensional()
 }
 
 inline bool
-ParallelArrayObject::inOutermostDimensionRange(uint32_t index)
-{
-    return index < outermostDimension();
-}
-
-inline bool
-ParallelArrayObject::inOutermostDimensionRange(JSContext *cx, HandleId id)
-{
-    uint32_t i;
-    return js_IdIsIndex(id, &i) && inOutermostDimensionRange(i);
-}
-
-inline bool
 ParallelArrayObject::getDimensions(JSContext *cx, IndexVector &dims)
 {
     RootedObject obj(cx, dimensionArray());
