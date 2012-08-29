@@ -186,8 +186,10 @@ class CallObject : public ScopeObject
   public:
     /* These functions are internal and are exposed only for JITs. */
     static CallObject *
-    create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots,
-           HandleObject enclosing);
+    create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots);
+
+    static CallObject *
+    createTemplateObject(JSContext *cx, JSScript *script);
 
     static const uint32_t RESERVED_SLOTS = 2;
 
