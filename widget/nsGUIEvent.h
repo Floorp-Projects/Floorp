@@ -249,7 +249,6 @@ class nsHashKey;
 #define NS_SCROLLPORT_START           1700
 #define NS_SCROLLPORT_UNDERFLOW       (NS_SCROLLPORT_START)
 #define NS_SCROLLPORT_OVERFLOW        (NS_SCROLLPORT_START+1)
-#define NS_SCROLLPORT_OVERFLOWCHANGED (NS_SCROLLPORT_START+2)
 
 // Mutation events defined elsewhere starting at 1800
 
