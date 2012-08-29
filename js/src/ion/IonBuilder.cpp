@@ -3406,30 +3406,16 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
 {
     // Create a template CallObject that we'll use to generate inline object
     // creation.
-    RootedObject templateObj(cx);
-    RootedShape shape(cx, script->bindings.callObjShape());
-    {
-        RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
-        if (!type)
-            return NULL;
-        gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
 
-        HeapSlot *slots;
-        if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
-            return NULL;
-
-        templateObj = JSObject::create(cx, kind, shape, type, slots);
-        if (!templateObj) {
-            cx->free_(slots);
-            return NULL;
-        }
-    }
+    RootedObject templateObj(cx, CallObject::createTemplateObject(cx, script));
+    if (!templateObj)
+        return NULL;
 
     // If the CallObject needs dynamic slots, allocate those now.
     MInstruction *slots;
     if (templateObj->hasDynamicSlots()) {
-        size_t nslots = JSObject::dynamicSlotsCount(templateObj->lastProperty()->numFixedSlots(),
-                                                    templateObj->lastProperty()->slotSpan());
+        size_t nslots = JSObject::dynamicSlotsCount(templateObj->numFixedSlots(),
+                                                    templateObj->slotSpan());
         slots = MNewSlots::New(nslots);
     } else {
         slots = MConstant::New(NullValue());
@@ -3452,7 +3438,7 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
         unsigned formal = i.frameIndex();
         MDefinition *param = current->getSlot(info().argSlot(formal));
         if (slots->type() == MIRType_Slots)
-            current->add(MStoreSlot::New(slots, slot - shape->numFixedSlots(), param));
+            current->add(MStoreSlot::New(slots, slot - templateObj->numFixedSlots(), param));
         else
             current->add(MStoreFixedSlot::New(callObj, slot, param));
     }
