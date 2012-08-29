@@ -1381,7 +1381,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
   return aObject->GetJSObject();"""
 
         if self.descriptor.proxy:
-            create = """  JSObject *obj = NewProxyObject(aCx, &DOMProxyHandler::instance,
+            create = """  JSObject *obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
                                  JS::PrivateValue(aObject), proto, parent);
   if (!obj) {
     return NULL;
@@ -4503,7 +4503,7 @@ class CGProxyIsProxy(CGAbstractMethod):
     def declare(self):
         return ""
     def definition_body(self):
-        return "  return js::IsProxy(obj) && js::GetProxyHandler(obj) == &DOMProxyHandler::instance;"
+        return "  return js::IsProxy(obj) && js::GetProxyHandler(obj) == DOMProxyHandler::getInstance();"
 
 class CGProxyUnwrap(CGAbstractMethod):
     def __init__(self, descriptor):
@@ -4532,7 +4532,7 @@ const DOMClass Class = """ + DOMClass(self.descriptor) + """;
 
 class CGDOMJSProxyHandler_CGDOMJSProxyHandler(ClassConstructor):
     def __init__(self):
-        ClassConstructor.__init__(self, [], inline=True, visibility="public",
+        ClassConstructor.__init__(self, [], inline=True, visibility="private",
                                   baseConstructors=["mozilla::dom::DOMProxyHandler(Class)"],
                                   body="")
 
@@ -4928,6 +4928,13 @@ if (proto) {
 // Can't Debug_SetValueRangeToCrashOnTouch because it's not public
 return true;"""
 
+class CGDOMJSProxyHandler_getInstance(ClassMethod):
+    def __init__(self):
+        ClassMethod.__init__(self, "getInstance", "DOMProxyHandler*", [], static=True)
+    def getBody(self):
+        return """static DOMProxyHandler instance;
+return &instance;"""
+
 class CGDOMJSProxyHandler(CGClass):
     def __init__(self, descriptor):
         constructors = [CGDOMJSProxyHandler_CGDOMJSProxyHandler()]
@@ -4939,10 +4946,10 @@ class CGDOMJSProxyHandler(CGClass):
                         CGDOMJSProxyHandler_get(descriptor),
                         CGDOMJSProxyHandler_obj_toString(descriptor),
                         CGDOMJSProxyHandler_finalize(descriptor),
-                        CGDOMJSProxyHandler_getElementIfPresent(descriptor)])
+                        CGDOMJSProxyHandler_getElementIfPresent(descriptor),
+                        CGDOMJSProxyHandler_getInstance()])
         CGClass.__init__(self, 'DOMProxyHandler',
                          bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
-                         members=[ClassMember('instance', 'DOMProxyHandler', visibility='public', static=True)],
                          constructors=constructors,
                          methods=methods)
 
