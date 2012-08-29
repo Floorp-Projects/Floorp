@@ -805,6 +805,7 @@ public:
   // Returns true on success and false on failure (not safe).
   bool EnsureSafeToHandOutCSSRules();
 
+  void NotifyInvalidation(uint32_t aFlags);
   void NotifyInvalidation(const nsRect& aRect, uint32_t aFlags);
   // aRect is in device pixels
   void NotifyInvalidation(const nsIntRect& aRect, uint32_t aFlags);
@@ -818,6 +819,7 @@ public:
   bool IsDOMPaintEventPending();
   void ClearMozAfterPaintEvents() {
     mInvalidateRequests.mRequests.Clear();
+    mAllInvalidated = false;
   }
 
   bool IsProcessingRestyles() const {
@@ -1166,6 +1168,7 @@ protected:
   unsigned              mPendingMediaFeatureValuesChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
   unsigned              mMayHaveFixedBackgroundFrames : 1;
+  unsigned              mAllInvalidated : 1;
 
   // Are we currently drawing an SVG glyph?
   unsigned              mIsGlyph : 1;
