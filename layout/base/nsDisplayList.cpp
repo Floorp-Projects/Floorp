@@ -1064,12 +1064,12 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
 
   layerManager->SetRoot(root);
-  layerBuilder->WillEndTransaction(layerManager);
+  layerBuilder->WillEndTransaction();
   bool temp = aBuilder->SetIsCompositingCheap(layerManager->IsCompositingCheap());
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
                                aBuilder, (aFlags & PAINT_NO_COMPOSITE) ? LayerManager::END_NO_COMPOSITE : LayerManager::END_DEFAULT);
   aBuilder->SetIsCompositingCheap(temp);
-  layerBuilder->DidEndTransaction(layerManager);
+  layerBuilder->DidEndTransaction();
 
   if (aFlags & PAINT_FLUSH_LAYERS) {
     FrameLayerBuilder::InvalidateAllLayers(layerManager);

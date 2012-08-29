@@ -196,7 +196,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   container->SetScaleHint(scaleHint);
 
   nsRefPtr<ImageLayer> layer = static_cast<ImageLayer*>
-    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
   if (!layer) {
     layer = aManager->CreateImageLayer();
     if (!layer)
