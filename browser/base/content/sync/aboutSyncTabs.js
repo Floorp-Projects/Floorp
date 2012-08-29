@@ -130,7 +130,7 @@ let RemoteTabViewer = {
   },
 
   _generateTabList: function() {
-    let engine = Weave.Engines.get("tabs");
+    let engine = Weave.Service.engineManager.get("tabs");
     let list = this._tabsList;
 
     // clear out existing richlistitems
@@ -215,7 +215,7 @@ let RemoteTabViewer = {
       Weave.Clients.sync();
 
     // Force a sync only for the tabs engine
-    let engine = Weave.Engines.get("tabs");
+    let engine = Weave.Service.engineManager.get("tabs");
     engine.lastModified = null;
     engine.sync();
     Services.prefs.setIntPref("services.sync.lastTabFetch",

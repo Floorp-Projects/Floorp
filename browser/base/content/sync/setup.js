@@ -870,7 +870,7 @@ var gSyncSetup = {
         let places_db = PlacesUtils.history
                                    .QueryInterface(Ci.nsPIPlacesDatabase)
                                    .DBConnection;
-        if (Weave.Engines.get("history").enabled) {
+        if (Weave.Service.engineManager.get("history").enabled) {
           let daysOfHistory = 0;
           let stm = places_db.createStatement(
             "SELECT ROUND(( " +
@@ -893,7 +893,7 @@ var gSyncSetup = {
           document.getElementById("historyCount").hidden = true;
         }
 
-        if (Weave.Engines.get("bookmarks").enabled) {
+        if (Weave.Service.engineManager.get("bookmarks").enabled) {
           let bookmarks = 0;
           let stm = places_db.createStatement(
             "SELECT count(*) AS bookmarks " +
@@ -913,7 +913,7 @@ var gSyncSetup = {
           document.getElementById("bookmarkCount").hidden = true;
         }
 
-        if (Weave.Engines.get("passwords").enabled) {
+        if (Weave.Service.engineManager.get("passwords").enabled) {
           let logins = Services.logins.getAllLogins({});
           // Support %S for historical reasons (see bug 600141)
           document.getElementById("passwordCount").value =
@@ -925,7 +925,7 @@ var gSyncSetup = {
           document.getElementById("passwordCount").hidden = true;
         }
 
-        if (!Weave.Engines.get("prefs").enabled) {
+        if (!Weave.Service.engineManager.get("prefs").enabled) {
           document.getElementById("prefsWipe").hidden = true;
         }
 
