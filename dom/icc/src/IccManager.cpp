@@ -119,13 +119,14 @@ IccManager::Observe(nsISupports* aSubject,
 // nsIDOMMozIccManager
 
 NS_IMETHODIMP
-IccManager::SendStkResponse(const JS::Value& aResponse)
+IccManager::SendStkResponse(const JS::Value& aCommand,
+                            const JS::Value& aResponse)
 {
   if (!mProvider) {
     return NS_ERROR_FAILURE;
   }
 
-  mProvider->SendStkResponse(GetOwner(), aResponse);
+  mProvider->SendStkResponse(GetOwner(), aCommand, aResponse);
   return NS_OK;
 }
 
