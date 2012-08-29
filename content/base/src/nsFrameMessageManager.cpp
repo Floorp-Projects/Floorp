@@ -822,6 +822,11 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
   }
 
   nsFrameJSScriptExecutorHolder* holder = sCachedScripts->Get(aURL);
+  if (!holder) {
+    TryCacheLoadAndCompileScript(aURL, EXECUTE_IF_CANT_CACHE);
+    holder = sCachedScripts->Get(aURL);
+  }
+
   if (holder) {
     nsContentUtils::ThreadJSContextStack()->Push(mCx);
     {
@@ -838,7 +843,12 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
     nsContentUtils::ThreadJSContextStack()->Pop(&unused);
     return;
   }
+}
 
+void
+nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
+                                                    CacheFailedBehavior aBehavior)
+{
   nsCString url = NS_ConvertUTF16toUTF8(aURL);
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
@@ -907,8 +917,9 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
             JS_AddNamedScriptRoot(mCx, &(holder->mScript),
                                   "Cached message manager script");
             sCachedScripts->Put(aURL, holder);
+          } else if (aBehavior == EXECUTE_IF_CANT_CACHE) {
+            (void) JS_ExecuteScript(mCx, global, script, nullptr);
           }
-          (void) JS_ExecuteScript(mCx, global, script, nullptr);
         }
       }
     } 

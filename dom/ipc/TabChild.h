@@ -149,16 +149,18 @@ class TabChild : public PBrowserChild,
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
-    /**
-     * Create a new TabChild object.
-     *
-     * |aIsBrowserElement| indicates whether the tab is inside an <iframe mozbrowser>.
-     * |aAppId| is the app id of the app containing this tab. If the tab isn't
-     * contained in an app, aAppId will be nsIScriptSecurityManager::NO_APP_ID.
+    /** 
+     * This is expected to be called off the critical path to content
+     * startup.  This is an opportunity to load things that are slow
+     * on the critical path.
      */
-    TabChild(uint32_t aChromeFlags, bool aIsBrowserElement, uint32_t aAppId);
+    static void PreloadSlowThings();
+
+    /** Return a TabChild with the given attributes. */
+    static already_AddRefed<TabChild> 
+    Create(uint32_t aChromeFlags, bool aIsBrowserElement, uint32_t aAppId);
+
     virtual ~TabChild();
-    nsresult Init();
 
     uint32_t GetAppId() { return mAppId; }
 
@@ -259,6 +261,9 @@ public:
 
     nsIPrincipal* GetPrincipal() { return mPrincipal; }
 
+    /** Return the DPI of the widget this TabChild draws to. */
+    void GetDPI(float* aDPI);
+
     void SetBackgroundColor(const nscolor& aColor);
 
     void NotifyPainted();
@@ -281,12 +286,26 @@ protected:
     virtual bool DeallocPIndexedDB(PIndexedDBChild* aActor);
 
 private:
+    /**
+     * Create a new TabChild object.
+     *
+     * |aIsBrowserElement| indicates whether the tab is inside an <iframe mozbrowser>.
+     * |aAppId| is the app id of the app containing this tab. If the tab isn't
+     * contained in an app, aAppId will be nsIScriptSecurityManager::NO_APP_ID.
+     */
+    TabChild(uint32_t aChromeFlags, bool aIsBrowserElement, uint32_t aAppId);
+
+    nsresult Init();
+
+    void SetAppBrowserConfig(bool aIsBrowserElement, uint32_t aAppId);
+
     bool UseDirectCompositor();
 
     void ActorDestroy(ActorDestroyReason why);
 
-    bool InitTabChildGlobal();
-    bool InitWidget(const nsIntSize& size);
+    enum FrameScriptLoading { DONT_LOAD_SCRIPTS, DEFAULT_LOAD_SCRIPTS };
+    bool InitTabChildGlobal(FrameScriptLoading aScriptLoading = DEFAULT_LOAD_SCRIPTS);
+    bool InitRenderingState();
     void DestroyWindow();
 
     // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
@@ -316,10 +335,11 @@ private:
     nsIntRect mOuterRect;
     nscolor mLastBackgroundColor;
     ScrollingBehavior mScrolling;
+    uint32_t mAppId;
     bool mDidFakeShow;
     bool mIsBrowserElement;
     bool mNotified;
-    uint32_t mAppId;
+    bool mTriedBrowserInit;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
