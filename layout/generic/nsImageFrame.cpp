@@ -587,12 +587,16 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
   // from
   if (!aCurrentFrame)
     return NS_OK;
-
+  
 #ifdef DEBUG_decode
   printf("Source rect (%d,%d,%d,%d)\n",
          aRect->x, aRect->y, aRect->width, aRect->height);
 #endif
-  InvalidateFrame();
+  if (aRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect())) {
+    InvalidateFrame();
+  } else {
+    InvalidateFrameWithRect(SourceRectToDest(*aRect));
+  }
   
   return NS_OK;
 }
@@ -671,8 +675,11 @@ nsImageFrame::FrameChanged(imgIRequest *aRequest,
     return NS_OK;
   }
 
-  // Update border+content to account for image change
-  InvalidateFrame();
+  if (aDirtyRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect())) {
+    InvalidateFrame();
+  } else {
+    InvalidateFrameWithRect(SourceRectToDest(*aDirtyRect));
+  }
   return NS_OK;
 }
 
