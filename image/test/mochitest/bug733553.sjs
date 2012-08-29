@@ -5,7 +5,6 @@
 var bodyPartIndex = 0;
 var bodyParts = [
   ["red.png", "image/png"],
-  ["red.png", "image/png"], // Tests actually begin here
   ["animated-gif2.gif", "image/gif"],
   ["red.png", "image/png"],
   ["lime100x100.svg", "image/svg+xml"],
@@ -46,8 +45,24 @@ function handleRequest(request, response)
 }
 
 function sendParts(response) {
+  let wait = false;
+  let nextPart = parseInt(getSharedState("next-part"), 10);
+  if (nextPart) {
+    if (nextPart == bodyPartIndex) {
+      // Haven't been signaled yet, remain in holding pattern
+      wait = true;
+    } else {
+      bodyPartIndex = nextPart;
+    }
+  }
   if (bodyParts.length > bodyPartIndex) {
-    partTimer.initWithCallback(getSendNextPart(response), 1000,
+    let callback;
+    if (!wait) {
+      callback = getSendNextPart(response);
+    } else {
+      callback = function () { sendParts(response); };
+    }
+    partTimer.initWithCallback(callback, 1000,
                                Components.interfaces.nsITimer.TYPE_ONE_SHOT);
   }
   else {
@@ -61,7 +76,7 @@ function sendClose(response) {
 }
 
 function getSendNextPart(response) {
-  var part = bodyParts[bodyPartIndex++];
+  var part = bodyParts[bodyPartIndex];
   var nextPartHead = "Content-Type: " + part[1] + "\r\n\r\n";
   var inputStream = getFileAsInputStream(part[0]);
   return function () {
