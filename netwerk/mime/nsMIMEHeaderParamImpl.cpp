@@ -456,7 +456,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
       ++str;
       valueStart = str;
       for (valueEnd = str; *valueEnd; ++valueEnd) {
-        if (*valueEnd == '\\')
+        if (*valueEnd == '\\' && *(valueEnd + 1))
           ++valueEnd;
         else if (*valueEnd == '"')
           break;
