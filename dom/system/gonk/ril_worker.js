@@ -3086,26 +3086,6 @@ let RIL = {
 
     let param = StkCommandParamsFactory.createParam(cmdDetails, ctlvs);
     if (param) {
-      switch (cmdDetails.typeOfCommand) {
-        case STK_CMD_SET_UP_MENU:
-        case STK_CMD_SET_UP_IDLE_MODE_TEXT:
-          this.sendStkTerminalResponse({commandNumber: cmdDetails.commandNumber,
-                                        typeOfCommand: cmdDetails.typeOfCommand,
-                                        commandQualifier: cmdDetails.commandQualifier,
-                                        resultCode: STK_RESULT_OK});
-          break;
-        case STK_CMD_DISPLAY_TEXT:
-          if (!param.responseNeeded) {
-            this.sendStkTerminalResponse({commandNumber: cmdDetails.commandNumber,
-                                          typeOfCommand: cmdDetails.typeOfCommand,
-                                          commandQualifier: cmdDetails.commandQualifier,
-                                          resultCode: STK_RESULT_OK});
-          }
-          break;
-        default:
-          break;
-      }
-
       RIL.sendDOMMessage({rilMessageType: "stkcommand",
                           commandNumber: cmdDetails.commandNumber,
                           typeOfCommand: cmdDetails.typeOfCommand,
