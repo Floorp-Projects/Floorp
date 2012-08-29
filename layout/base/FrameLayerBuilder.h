@@ -224,6 +224,7 @@ public:
    * the next paint.
    */
   static void InvalidateAllLayers(LayerManager* aManager);
+  static void InvalidateAllLayersForFrame(nsIFrame *aFrame);
 
   /**
    * Call this to determine if a frame has a dedicated (non-Thebes) layer
@@ -380,6 +381,12 @@ public:
    * specify which LayerManager to check.
    */
   static bool HasRetainedLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey, LayerManager* aManager);
+
+  /**
+   * Returns true if the given display item was rendered during the previous
+   * paint. Returns false otherwise.
+   */
+  static bool HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
   /**
    * Save transform that was in aLayer when we last painted, and the position
@@ -613,7 +620,12 @@ protected:
   static DisplayItemData* GetDisplayItemDataForManager(nsIFrame* aFrame, 
                                                        uint32_t aDisplayItemKey, 
                                                        LayerManager* aManager);
+  static DisplayItemData* GetDisplayItemDataForManager(nsIFrame* aFrame, 
+                                                       uint32_t aDisplayItemKey);
   static DisplayItemData* GetDisplayItemDataForManager(nsDisplayItem* aItem, LayerManager* aManager);
+  static DisplayItemData* GetDisplayItemDataForManager(nsIFrame* aFrame, 
+                                                       uint32_t aDisplayItemKey, 
+                                                       LayerManagerData* aData);
 
   /**
    * A useful hashtable iteration function that removes the
