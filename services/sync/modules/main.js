@@ -10,7 +10,6 @@ let lazies = {
   "identity.js":          ["Identity"],
   "jpakeclient.js":       ["JPAKEClient", "SendCredentialsController"],
   "notifications.js":     ["Notifications", "Notification", "NotificationButton"],
-  "policies.js":          ["SyncScheduler"],
   "service.js":           ["Service"],
   "status.js":            ["Status"],
   "util.js":              ['Utils', 'Svc']
