@@ -4,7 +4,6 @@
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
-Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -85,21 +84,21 @@ add_test(function test_removeClientData() {
 
 add_test(function test_reset_SyncScheduler() {
   // Some non-default values for SyncScheduler's attributes.
-  SyncScheduler.idle = true;
-  SyncScheduler.hasIncomingItems = true;
-  SyncScheduler.numClients = 42;
-  SyncScheduler.nextSync = Date.now();
-  SyncScheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
-  SyncScheduler.syncInterval = SyncScheduler.activeInterval;
+  Service.scheduler.idle = true;
+  Service.scheduler.hasIncomingItems = true;
+  Service.scheduler.numClients = 42;
+  Service.scheduler.nextSync = Date.now();
+  Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
+  Service.scheduler.syncInterval = Service.scheduler.activeInterval;
 
   Service.startOver();
 
-  do_check_false(SyncScheduler.idle);
-  do_check_false(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.numClients, 0);
-  do_check_eq(SyncScheduler.nextSync, 0);
-  do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
-  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
+  do_check_false(Service.scheduler.idle);
+  do_check_false(Service.scheduler.hasIncomingItems);
+  do_check_eq(Service.scheduler.numClients, 0);
+  do_check_eq(Service.scheduler.nextSync, 0);
+  do_check_eq(Service.scheduler.syncThreshold, SINGLE_USER_THRESHOLD);
+  do_check_eq(Service.scheduler.syncInterval, Service.scheduler.singleDeviceInterval);
 
   run_next_test();
 });

@@ -159,9 +159,9 @@ add_test(function test_login_on_sync() {
 
     // Stub scheduleNextSync. This gets called within checkSyncStatus if we're
     // ready to sync, so use it as an indicator.
-    let scheduleNextSyncF = SyncScheduler.scheduleNextSync;
+    let scheduleNextSyncF = Service.scheduler.scheduleNextSync;
     let scheduleCalled = false;
-    SyncScheduler.scheduleNextSync = function(wait) {
+    Service.scheduler.scheduleNextSync = function(wait) {
       scheduleCalled = true;
       scheduleNextSyncF.call(this, wait);
     };
@@ -181,15 +181,15 @@ add_test(function test_login_on_sync() {
     _("We're ready to sync if locked.");
     Service.enabled = true;
     Services.io.offline = false;
-    SyncScheduler.checkSyncStatus();
+    Service.scheduler.checkSyncStatus();
     do_check_true(scheduleCalled);
 
     _("... and also if we're not locked.");
     scheduleCalled = false;
     mpLocked = false;
-    SyncScheduler.checkSyncStatus();
+    Service.scheduler.checkSyncStatus();
     do_check_true(scheduleCalled);
-    SyncScheduler.scheduleNextSync = scheduleNextSyncF;
+    Service.scheduler.scheduleNextSync = scheduleNextSyncF;
 
     // TODO: need better tests around master password prompting. See Bug 620583.
 
@@ -205,13 +205,13 @@ add_test(function test_login_on_sync() {
                              throw "User canceled Master Password entry";
                            });
 
-    let oldClearSyncTriggers = SyncScheduler.clearSyncTriggers;
+    let oldClearSyncTriggers = Service.scheduler.clearSyncTriggers;
     let oldLockedSync = Service._lockedSync;
 
     let cSTCalled = false;
     let lockedSyncCalled = false;
 
-    SyncScheduler.clearSyncTriggers = function() { cSTCalled = true; };
+    Service.scheduler.clearSyncTriggers = function() { cSTCalled = true; };
     Service._lockedSync = function() { lockedSyncCalled = true; };
 
     _("If master password is canceled, login fails and we report lockage.");

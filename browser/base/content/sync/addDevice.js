@@ -31,7 +31,7 @@ let gSyncAddDevice = {
 
     // Kick off a sync. That way the server will have the most recent data from
     // this computer and it will show up immediately on the new device.
-    Weave.SyncScheduler.scheduleNextSync(0);
+    Weave.Service.scheduler.scheduleNextSync(0);
   },
 
   onPageShow: function onPageShow() {
@@ -92,7 +92,7 @@ let gSyncAddDevice = {
 
         // Schedule a Sync for soonish to fetch the data uploaded by the
         // device with which we just paired.
-        Weave.SyncScheduler.scheduleNextSync(Weave.SyncScheduler.activeInterval);
+        Weave.Service.scheduler.scheduleNextSync(Weave.Service.scheduler.activeInterval);
       },
       onAbort: function onAbort(error) {
         delete self._jpakeclient;

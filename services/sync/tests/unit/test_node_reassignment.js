@@ -9,7 +9,6 @@ Svc.DefaultPrefs.set("registerEngines", "")
 
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-common/log4moz.js");
@@ -129,7 +128,7 @@ function syncAndExpectNodeReassignment(server, firstNotification, between,
     function onSecondSync() {
       _("Second sync completed.");
       Svc.Obs.remove(secondNotification, onSecondSync);
-      SyncScheduler.clearSyncTriggers();
+      Service.scheduler.clearSyncTriggers();
 
       // Make absolutely sure that any event listeners are done with their work
       // before we proceed.
@@ -311,24 +310,24 @@ add_test(function test_loop_avoidance_storage() {
     // We store nextSync in prefs, which offers us only limited resolution.
     // Include that logic here.
     let expectedNextSync = 1000 * Math.floor((now + MINIMUM_BACKOFF_INTERVAL) / 1000);
-    _("Next sync scheduled for " + SyncScheduler.nextSync);
+    _("Next sync scheduled for " + Service.scheduler.nextSync);
     _("Expected to be slightly greater than " + expectedNextSync);
 
-    do_check_true(SyncScheduler.nextSync >= expectedNextSync);
-    do_check_true(!!SyncScheduler.syncTimer);
+    do_check_true(Service.scheduler.nextSync >= expectedNextSync);
+    do_check_true(!!Service.scheduler.syncTimer);
 
     // Undo our evil scheme.
     server.toplevelHandlers.storage = oldHandler;
 
     // Bring the timer forward to kick off a successful sync, so we can watch
     // the pref get cleared.
-    SyncScheduler.scheduleNextSync(0);
+    Service.scheduler.scheduleNextSync(0);
   }
   function onThirdSync() {
     Svc.Obs.remove(thirdNotification, onThirdSync);
 
     // That'll do for now; no more syncs.
-    SyncScheduler.clearSyncTriggers();
+    Service.scheduler.clearSyncTriggers();
 
     // Make absolutely sure that any event listeners are done with their work
     // before we proceed.
@@ -448,25 +447,25 @@ add_test(function test_loop_avoidance_engine() {
     // We store nextSync in prefs, which offers us only limited resolution.
     // Include that logic here.
     let expectedNextSync = 1000 * Math.floor((now + MINIMUM_BACKOFF_INTERVAL) / 1000);
-    _("Next sync scheduled for " + SyncScheduler.nextSync);
+    _("Next sync scheduled for " + Service.scheduler.nextSync);
     _("Expected to be slightly greater than " + expectedNextSync);
 
-    do_check_true(SyncScheduler.nextSync >= expectedNextSync);
-    do_check_true(!!SyncScheduler.syncTimer);
+    do_check_true(Service.scheduler.nextSync >= expectedNextSync);
+    do_check_true(!!Service.scheduler.syncTimer);
 
     // Undo our evil scheme.
     beforeSuccessfulSync();
 
     // Bring the timer forward to kick off a successful sync, so we can watch
     // the pref get cleared.
-    SyncScheduler.scheduleNextSync(0);
+    Service.scheduler.scheduleNextSync(0);
   }
 
   function onThirdSync() {
     Svc.Obs.remove(thirdNotification, onThirdSync);
 
     // That'll do for now; no more syncs.
-    SyncScheduler.clearSyncTriggers();
+    Service.scheduler.clearSyncTriggers();
 
     // Make absolutely sure that any event listeners are done with their work
     // before we proceed.

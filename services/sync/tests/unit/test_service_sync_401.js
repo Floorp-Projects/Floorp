@@ -1,5 +1,9 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/policies.js");
+Cu.import("resource://services-sync/service.js");
 
 function login_handling(handler) {
   return function (request, response) {
@@ -33,7 +37,7 @@ function run_test() {
   try {
     _("Set up test fixtures.");
     new SyncTestingInfrastructure("johndoe", "ilovejane", "foo");
-    SyncScheduler.globalScore = GLOBAL_SCORE;
+    Service.scheduler.globalScore = GLOBAL_SCORE;
     // Avoid daily ping
     Weave.Svc.Prefs.set("lastPing", Math.floor(Date.now() / 1000));
 
@@ -51,7 +55,7 @@ function run_test() {
     Identity.basicPassword = "ilovejosephine";
 
     _("Let's try to sync.");
-    Weave.Service.sync();
+    Service.sync();
 
     _("Verify that sync() threw an exception.");
     do_check_true(threw);
@@ -62,7 +66,7 @@ function run_test() {
     _("Sync status won't have changed yet, because we haven't tried again.");
 
     _("globalScore is reset upon starting a sync.");
-    do_check_eq(SyncScheduler.globalScore, 0);
+    do_check_eq(Service.scheduler.globalScore, 0);
 
     _("Our next sync will fail appropriately.");
     try {

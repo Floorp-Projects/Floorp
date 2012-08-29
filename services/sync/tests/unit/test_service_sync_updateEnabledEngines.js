@@ -1,13 +1,15 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/util.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/policies.js");
 
 initTestLogging();
 
@@ -27,7 +29,7 @@ SteamEngine.prototype = {
   __proto__: SyncEngine.prototype,
   // We're not interested in engine sync but what the service does.
   _storeObj: QuietStore,
-  
+
   _sync: function _sync() {
     this._syncStartup();
   }
@@ -49,19 +51,19 @@ let collectionsHelper = track_collections_helper();
 let upd = collectionsHelper.with_updated_collection;
 
 function sync_httpd_setup(handlers) {
-    
+
   handlers["/1.1/johndoe/info/collections"] = collectionsHelper.handler;
   delete collectionsHelper.collections.crypto;
   delete collectionsHelper.collections.meta;
-  
+
   let cr = new ServerWBO("keys");
   handlers["/1.1/johndoe/storage/crypto/keys"] =
     upd("crypto", cr.handler());
-  
+
   let cl = new ServerCollection();
   handlers["/1.1/johndoe/storage/clients"] =
     upd("clients", cl.handler());
-  
+
   return httpd_setup(handlers);
 }
 
@@ -103,7 +105,7 @@ add_test(function test_newAccount() {
     Service._ignorePrefObserver = false;
 
     _("Sync.");
-    Weave.Service.sync();
+    Service.sync();
 
     _("Engine continues to be enabled.");
     do_check_true(engine.enabled);
@@ -131,7 +133,7 @@ add_test(function test_enabledLocally() {
     engine.enabled = true;
 
     _("Sync.");
-    Weave.Service.sync();
+    Service.sync();
 
     _("Meta record now contains the new engine.");
     do_check_true(!!metaWBO.data.engines.steam);
@@ -170,7 +172,7 @@ add_test(function test_disabledLocally() {
     engine.enabled = false;
 
     _("Sync.");
-    Weave.Service.sync();
+    Service.sync();
 
     _("Meta record no longer contains engine.");
     do_check_false(!!metaWBO.data.engines.steam);
@@ -243,7 +245,7 @@ add_test(function test_enabledRemotely() {
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global":
     upd("meta", metaWBO.handler()),
-      
+
     "/1.1/johndoe/storage/steam":
     upd("steam", new ServerWBO("steam", {}).handler())
   });
@@ -261,7 +263,7 @@ add_test(function test_enabledRemotely() {
     do_check_false(engine.enabled);
 
     _("Sync.");
-    Weave.Service.sync();
+    Service.sync();
 
     _("Engine is enabled.");
     do_check_true(engine.enabled);
@@ -284,7 +286,7 @@ add_test(function test_disabledRemotelyTwoClients() {
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global":
     upd("meta", metaWBO.handler()),
-      
+
     "/1.1/johndoe/storage/steam":
     upd("steam", new ServerWBO("steam", {}).handler())
   });
@@ -297,21 +299,21 @@ add_test(function test_disabledRemotelyTwoClients() {
     Service._ignorePrefObserver = false;
 
     _("Sync.");
-    Weave.Service.sync();
+    Service.sync();
 
     _("Disable engine by deleting from meta/global.");
-    let d = metaWBO.data; 
+    let d = metaWBO.data;
     delete d.engines["steam"];
     metaWBO.payload = JSON.stringify(d);
     metaWBO.modified = Date.now() / 1000;
-    
+
     _("Add a second client and verify that the local pref is changed.");
     Clients._store._remoteClients["foobar"] = {name: "foobar", type: "desktop"};
-    Weave.Service.sync();
-    
+    Service.sync();
+
     _("Engine is disabled.");
     do_check_false(engine.enabled);
-    
+
   } finally {
     Service.startOver();
     server.stop(run_next_test);
@@ -338,11 +340,11 @@ add_test(function test_disabledRemotely() {
     Service._ignorePrefObserver = false;
 
     _("Sync.");
-    Weave.Service.sync();
+    Service.sync();
 
     _("Engine is not disabled: only one client.");
     do_check_true(engine.enabled);
-    
+
   } finally {
     Service.startOver();
     server.stop(run_next_test);
@@ -369,7 +371,7 @@ add_test(function test_dependentEnginesEnabledLocally() {
     steamEngine.enabled = true;
 
     _("Sync.");
-    Weave.Service.sync();
+    Service.sync();
 
     _("Meta record now contains the new engines.");
     do_check_true(!!metaWBO.data.engines.steam);
@@ -418,7 +420,7 @@ add_test(function test_dependentEnginesDisabledLocally() {
     do_check_false(stirlingEngine.enabled);
 
     _("Sync.");
-    Weave.Service.sync();
+    Service.sync();
 
     _("Meta record no longer contains engines.");
     do_check_false(!!metaWBO.data.engines.steam);

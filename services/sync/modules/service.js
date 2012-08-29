@@ -58,6 +58,12 @@ const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
  * Service singleton
  * Main entry point into Weave's sync framework
  */
+XPCOMUtils.defineLazyGetter(this, "Service", function onService() {
+  let service = new WeaveSvc();
+  service.onStartup();
+
+  return service;
+});
 
 function WeaveSvc() {
   this._notify = Utils.notify("weave:service:");
@@ -313,7 +319,7 @@ WeaveSvc.prototype = {
   onStartup: function onStartup() {
     this._migratePrefs();
 
-    this.errorHandler = new ErrorHandler();
+    this.errorHandler = new ErrorHandler(this);
 
     this._log = Log4Moz.repository.getLogger("Sync.Service");
     this._log.level =
@@ -340,8 +346,7 @@ WeaveSvc.prototype = {
     Svc.Obs.add("weave:service:setup-complete", this);
     Svc.Prefs.observe("engine.", this);
 
-    this.scheduler = SyncScheduler;
-    this.scheduler.init();
+    this.scheduler = new SyncScheduler(this);
 
     if (!this.enabled) {
       this._log.info("Firefox Sync disabled.");
@@ -1451,10 +1456,5 @@ WeaveSvc.prototype = {
       this._log.trace("Successfully retrieved '" + info_type + "'.");
       return callback(null, result);
     });
-  }
-
+  },
 };
-
-// Load Weave on the first time this file is loaded
-let Service = new WeaveSvc();
-Service.onStartup();

@@ -209,7 +209,8 @@ EngineSynchronizer.prototype = {
   },
 
   _updateEnabledEngines: function _updateEnabledEngines() {
-    this._log.info("Updating enabled engines: " + SyncScheduler.numClients + " clients.");
+    this._log.info("Updating enabled engines: " +
+                   this.service.scheduler.numClients + " clients.");
     let meta = Records.get(this.service.metaURL);
     if (meta.isNew || !meta.payload.engines)
       return;
@@ -217,7 +218,7 @@ EngineSynchronizer.prototype = {
     // If we're the only client, and no engines are marked as enabled,
     // thumb our noses at the server data: it can't be right.
     // Belt-and-suspenders approach to Bug 615926.
-    if ((SyncScheduler.numClients <= 1) &&
+    if ((this.service.scheduler.numClients <= 1) &&
         ([e for (e in meta.payload.engines) if (e != "clients")].length == 0)) {
       this._log.info("One client and no enabled engines: not touching local engine status.");
       return;
