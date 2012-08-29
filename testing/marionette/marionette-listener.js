@@ -562,10 +562,10 @@ function refresh(msg) {
  * Find an element in the document using requested search strategy 
  */
 function findElementContent(msg) {
-  let id;
   try {
-    let notify = function(id) { sendResponse({value:id});};
-    id = elementManager.find(curWindow, msg.json, notify, false);
+    let on_success = function(id) { sendResponse({value:id}); };
+    let on_error = sendError;
+    elementManager.find(curWindow, msg.json, on_success, on_error, false);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack);
@@ -576,10 +576,10 @@ function findElementContent(msg) {
  * Find elements in the document using requested search strategy 
  */
 function findElementsContent(msg) {
-  let id;
   try {
-    let notify = function(id) { sendResponse({value:id});};
-    id = elementManager.find(curWindow, msg.json, notify, true);
+    let on_success = function(id) { sendResponse({value:id}); };
+    let on_error = sendError;
+    elementManager.find(curWindow, msg.json, on_success, on_error, true);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack);

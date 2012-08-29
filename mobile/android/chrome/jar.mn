@@ -5,7 +5,7 @@
 
 
 chrome.jar:
-% content browser %content/ contentaccessible=yes
+% content browser %content/
 
 * content/about.xhtml                  (content/about.xhtml)
   content/config.xhtml                 (content/config.xhtml)
@@ -16,7 +16,6 @@ chrome.jar:
   content/aboutDownloads.js            (content/aboutDownloads.js)
   content/aboutFeedback.xhtml          (content/aboutFeedback.xhtml)
   content/aboutReader.html             (content/aboutReader.html)
-  content/aboutReaderContent.html      (content/aboutReaderContent.html)
   content/aboutReader.js               (content/aboutReader.js)
   content/Readability.js               (content/Readability.js)
   content/JSDOMParser.js               (content/JSDOMParser.js)

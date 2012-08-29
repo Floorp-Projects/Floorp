@@ -20,6 +20,7 @@
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsString.h"
+#include "mozilla/CORSMode.h"
 
 class nsXMLNameSpaceMap;
 class nsCSSRuleProcessor;
@@ -49,7 +50,8 @@ public:
   friend class nsCSSStyleSheet;
   friend class nsCSSRuleProcessor;
 private:
-  nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet);
+  nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet,
+                       mozilla::CORSMode aCORSMode);
   nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
                        nsCSSStyleSheet* aPrimarySheet);
   ~nsCSSStyleSheetInner();
@@ -78,6 +80,7 @@ private:
   // child sheet that means we've already ensured unique inners throughout its
   // parent chain and things are good.
   nsRefPtr<nsCSSStyleSheet> mFirstChild;
+  mozilla::CORSMode      mCORSMode;
   bool                   mComplete;
 
 #ifdef DEBUG
@@ -105,7 +108,7 @@ class nsCSSStyleSheet MOZ_FINAL : public nsIStyleSheet,
                                   public nsICSSLoaderObserver
 {
 public:
-  nsCSSStyleSheet();
+  nsCSSStyleSheet(mozilla::CORSMode aCORSMode);
 
   NS_DECL_ISUPPORTS
 
@@ -239,6 +242,9 @@ public:
 
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
+  // Get this style sheet's CORS mode
+  mozilla::CORSMode GetCORSMode() const { return mInner->mCORSMode; }
+
 private:
   nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
                   nsCSSStyleSheet* aParentToUse,
@@ -259,8 +265,9 @@ protected:
 
   // Return success if the subject principal subsumes the principal of our
   // inner, error otherwise.  This will also succeed if the subject has
-  // UniversalXPConnect.
-  nsresult SubjectSubsumesInnerPrincipal() const;
+  // UniversalXPConnect or if access is allowed by CORS.  In the latter case,
+  // it will set the principal of the inner to the subject principal.
+  nsresult SubjectSubsumesInnerPrincipal();
 
   // Add the namespace mapping from this @namespace rule to our namespace map
   nsresult RegisterNamespaceRule(mozilla::css::Rule* aRule);

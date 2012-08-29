@@ -309,6 +309,7 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspa
 == viewBox-valid-01.svg pass.svg
 == viewBox-valid-02.xhtml pass.svg
 == viewport-percent-graphic-user-01.svg pass.svg
+== winding-01.svg pass.svg
 
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml
 == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml

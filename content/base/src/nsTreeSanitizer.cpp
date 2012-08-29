@@ -1120,7 +1120,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   // -moz-binding is blacklisted.
   bool didSanitize = false;
   // Create a sheet to hold the parsed CSS
-  nsRefPtr<nsCSSStyleSheet> sheet = new nsCSSStyleSheet();
+  nsRefPtr<nsCSSStyleSheet> sheet = new nsCSSStyleSheet(CORS_NONE);
   sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
   // Create the CSS parser, and parse the CSS text.

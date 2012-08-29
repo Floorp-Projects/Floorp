@@ -841,8 +841,8 @@ const nsIFrame::ChildListID nsIFrame::kNoReflowPrincipalList;
 nsIFrame::GetUsedMargin() const
 {
   nsMargin margin(0, 0, 0, 0);
-  if ((mState & NS_FRAME_FIRST_REFLOW) &&
-      !(mState & NS_FRAME_IN_REFLOW) ||
+  if (((mState & NS_FRAME_FIRST_REFLOW) &&
+       !(mState & NS_FRAME_IN_REFLOW)) ||
       (mState & NS_FRAME_IS_SVG_TEXT))
     return margin;
 
@@ -864,8 +864,8 @@ nsIFrame::GetUsedMargin() const
 nsIFrame::GetUsedBorder() const
 {
   nsMargin border(0, 0, 0, 0);
-  if ((mState & NS_FRAME_FIRST_REFLOW) &&
-      !(mState & NS_FRAME_IN_REFLOW) ||
+  if (((mState & NS_FRAME_FIRST_REFLOW) &&
+       !(mState & NS_FRAME_IN_REFLOW)) ||
       (mState & NS_FRAME_IS_SVG_TEXT))
     return border;
 
@@ -900,8 +900,8 @@ nsIFrame::GetUsedBorder() const
 nsIFrame::GetUsedPadding() const
 {
   nsMargin padding(0, 0, 0, 0);
-  if ((mState & NS_FRAME_FIRST_REFLOW) &&
-      !(mState & NS_FRAME_IN_REFLOW) ||
+  if (((mState & NS_FRAME_FIRST_REFLOW) &&
+       !(mState & NS_FRAME_IN_REFLOW)) ||
       (mState & NS_FRAME_IS_SVG_TEXT))
     return padding;
 

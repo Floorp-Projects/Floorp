@@ -50,7 +50,7 @@ typedef Observer<SensorAccuracy> ISensorAccuracyObserver;
 }
 }
 
-#include "IPC/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 
 namespace IPC {
   /**

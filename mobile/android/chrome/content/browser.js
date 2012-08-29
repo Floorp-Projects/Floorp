@@ -36,6 +36,7 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 [
   ["HelperApps", "chrome://browser/content/HelperApps.js"],
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
+  ["AboutReader", "chrome://browser/content/aboutReader.js"],
   ["WebAppRT", "chrome://browser/content/WebAppRT.js"],
 ].forEach(function (aScript) {
   let [name, script] = aScript;
@@ -2680,6 +2681,14 @@ Tab.prototype = {
           this.browser.addEventListener("click", ErrorPageEventHandler, false);
           this.browser.addEventListener("pagehide", function listener() {
             this.browser.removeEventListener("click", ErrorPageEventHandler, false);
+            this.browser.removeEventListener("pagehide", listener, true);
+          }.bind(this), true);
+        }
+
+        if (/^about:reader/.test(target.documentURI)) {
+          let aboutReader = new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
+          this.browser.addEventListener("pagehide", function listener() {
+            aboutReader.uninit();
             this.browser.removeEventListener("pagehide", listener, true);
           }.bind(this), true);
         }

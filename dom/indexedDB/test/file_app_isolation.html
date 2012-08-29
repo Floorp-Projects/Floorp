@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    foobar!
+  </body>
+  <script>
+    var data = [
+      { id: "0", name: "foo" },
+    ];
+
+    var action = window.location.search.substring(1);
+    var finished = false;
+    var created = false; // We use that for 'read-no' action.
+
+    function finish(value) {
+      value ? alert('success') : alert('failure');
+      finished = true;
+    }
+
+    var request = window.indexedDB.open('AppIsolationTest');
+
+    request.onupgradeneeded = function(event) {
+      if (finished) {
+        finish(false);
+        return;
+      }
+
+      switch (action) {
+        case 'read-no':
+          created = true;
+          break;
+        case 'read-yes':
+          finish(false);
+          break;
+        case 'write':
+          created = true;
+
+          var db = event.target.result;
+
+          var objectStore = db.createObjectStore("test", { keyPath: "id" });
+          for (var i in data) {
+            objectStore.add(data[i]);
+          }
+          break;
+      }
+    }
+
+    request.onsuccess = function(event) {
+      if (finished) {
+        finish(false);
+        return;
+      }
+
+      var db = event.target.result;
+
+      // Think about close the db!
+      switch (action) {
+        case 'read-no':
+          db.close();
+
+          if (created) { // That means we have created it.
+            indexedDB.deleteDatabase('AppIsolationTest').onsuccess = function() {
+              finish(true);
+            };
+          } else {
+            finish(false);
+          }
+          break;
+        case 'read-yes':
+          db.transaction("test").objectStore("test").get("0").onsuccess = function(event) {
+            var name = event.target.result.name;
+            db.close();
+
+            indexedDB.deleteDatabase('AppIsolationTest').onsuccess = function() {
+              finish(name == 'foo');
+            };
+          };
+          break;
+        case 'write':
+          db.close();
+
+          // Success only if the db was actually created.
+          finish(created);
+          break;
+      }
+    };
+  </script>
+</html>
