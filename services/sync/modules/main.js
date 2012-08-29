@@ -8,9 +8,9 @@ let Weave = {};
 Components.utils.import("resource://services-sync/constants.js", Weave);
 let lazies = {
   "identity.js":          ["Identity"],
-  "jpakeclient.js":       ["JPAKEClient"],
+  "jpakeclient.js":       ["JPAKEClient", "SendCredentialsController"],
   "notifications.js":     ["Notifications", "Notification", "NotificationButton"],
-  "policies.js":          ["SyncScheduler", "SendCredentialsController"],
+  "policies.js":          ["SyncScheduler"],
   "service.js":           ["Service"],
   "status.js":            ["Status"],
   "util.js":              ['Utils', 'Svc']
