@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/jpakeclient.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
@@ -37,14 +36,14 @@ function make_sendCredentials_test(topic) {
 
         this.controller.onComplete();
         // Verify it schedules a sync for the expected interval.
-        let expectedInterval = SyncScheduler.activeInterval;
-        do_check_true(SyncScheduler.nextSync - Date.now() <= expectedInterval);
+        let expectedInterval = Service.scheduler.activeInterval;
+        do_check_true(Service.scheduler.nextSync - Date.now() <= expectedInterval);
 
         // Signal the end of another sync. We shouldn't be registered anymore,
         // so we shouldn't re-enter this method (cf sendAndCompleteCalled above)
         Svc.Obs.notify(topic);
 
-        SyncScheduler.setDefaults();
+        Service.scheduler.setDefaults();
         Utils.nextTick(run_next_test);
       }
     };

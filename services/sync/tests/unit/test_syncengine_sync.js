@@ -1,11 +1,14 @@
-Cu.import("resource://services-sync/record.js");
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/resource.js");
-Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/policies.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 function makeRotaryEngine() {
   return new RotaryEngine();
@@ -1780,7 +1783,7 @@ add_test(function test_syncapplied_observer() {
   Svc.Obs.add("weave:engine:sync:applied", onApplied);
 
   try {
-    SyncScheduler.hasIncomingItems = false;
+    Service.scheduler.hasIncomingItems = false;
 
     // Do sync.
     engine._syncStartup();
@@ -1792,10 +1795,10 @@ add_test(function test_syncapplied_observer() {
     do_check_eq(engine_name, "rotary");
     do_check_eq(count.applied, 10);
 
-    do_check_true(SyncScheduler.hasIncomingItems);
+    do_check_true(Service.scheduler.hasIncomingItems);
   } finally {
     cleanAndGo(server);
-    SyncScheduler.hasIncomingItems = false;
+    Service.scheduler.hasIncomingItems = false;
     Svc.Obs.remove("weave:engine:sync:applied", onApplied);
   }
 });

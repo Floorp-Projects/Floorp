@@ -162,7 +162,7 @@ let Change = {
       if (Weave.Service.login()) {
         this._updateStatus("change.recoverykey.success", "success");
         Weave.Service.persistLogin();
-        Weave.SyncScheduler.delayedAutoConnect(0);
+        Weave.Service.scheduler.delayedAutoConnect(0);
       }
       else {
         this._updateStatus("new.passphrase.status.incorrect", "error");
