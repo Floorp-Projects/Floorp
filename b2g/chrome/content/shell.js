@@ -18,7 +18,8 @@ Cu.import('resource://gre/modules/AlarmService.jsm');
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import('resource://gre/modules/PermissionPromptHelper.jsm');
 Cu.import('resource://gre/modules/ObjectWrapper.jsm');
-Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
+Cu.import('resource://gre/modules/accessibility/AccessFu.jsm');
+Cu.import('resource://gre/modules/Payment.jsm');
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
