@@ -660,13 +660,21 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
     return NS_OK;
   }
 #endif
+  
+  if (container) {
+    gfxIntSize newSize = container->GetCurrentSize();
+    if (newSize != oldSize) {
+      mObjectFrame->InvalidateFrame();
+      return NS_OK;
+    }
+  }
 
   nsPresContext* presContext = mObjectFrame->PresContext();
   nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
               presContext->DevPixelsToAppUnits(invalidRect->top),
               presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
               presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
-
+  
   rect.MoveBy(mObjectFrame->GetContentRectRelativeToSelf().TopLeft());
   mObjectFrame->InvalidateLayer(rect, nsDisplayItem::TYPE_PLUGIN);
   return NS_OK;
@@ -3747,7 +3755,7 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
       mObjectFrame->PrepForDrawing(mWidget);
     }
     mObjectFrame->FixupWindow(mObjectFrame->GetContentRectRelativeToSelf().Size());
-    mObjectFrame->Invalidate(mObjectFrame->GetContentRectRelativeToSelf());
+    mObjectFrame->InvalidateFrame();
 
     // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)

@@ -178,37 +178,6 @@ nsSVGForeignObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists);
 }
 
-void
-nsSVGForeignObjectFrame::InvalidateInternal(const nsRect& aDamageRect,
-                                            nscoord aX, nscoord aY,
-                                            nsIFrame* aForChild,
-                                            uint32_t aFlags)
-{
-  // This is called by our descendants when they change.
-
-  if (GetStateBits() & NS_FRAME_IS_DIRTY) {
-    // Our entire area has been (or will be) invalidated, so no point
-    // keeping track of sub-areas that our descendants dirty.
-    return;
-  }
-
-  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
-    nsSVGEffects::InvalidateRenderingObservers(this);
-    return;
-  }
-
-  if (!mInReflow) {
-    // We can't collect dirty areas, since we don't have a place to reliably
-    // call FlushDirtyRegion before we paint, so we have to invalidate now.
-    InvalidateDirtyRect(aDamageRect + nsPoint(aX, aY), aFlags, false);
-    return;
-  }
-
-  nsRegion* region = (aFlags & INVALIDATE_CROSS_DOC)
-    ? &mSubDocDirtyRegion : &mSameDocDirtyRegion;
-  region->Or(*region, aDamageRect + nsPoint(aX, aY));
-}
-
 bool
 nsSVGForeignObjectFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
                                          gfxMatrix *aFromParentTransform) const
@@ -421,12 +390,6 @@ nsSVGForeignObjectFrame::ReflowSVG()
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(
                            gfxRect(x, y, w, h),
                            PresContext()->AppUnitsPerCSSPixel());
-
-  // Since we'll invalidate our entire area at the end of this method, we
-  // empty our cached dirty regions to prevent FlushDirtyRegion under DoReflow
-  // from wasting time invalidating:
-  mSameDocDirtyRegion.SetEmpty();
-  mSubDocDirtyRegion.SetEmpty();
 
   // Fully mark our kid dirty so that it gets resized if necessary
   // (NS_FRAME_HAS_DIRTY_CHILDREN isn't enough in that case):
@@ -648,51 +611,5 @@ nsSVGForeignObjectFrame::DoReflow()
                     NS_FRAME_NO_MOVE_FRAME);
   
   mInReflow = false;
-
-  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
-    // Since we're a reflow root and can be reflowed independently of our
-    // outer-<svg>, we can't just blindly pass 'true' here.
-    FlushDirtyRegion(0, nsSVGUtils::OuterSVGIsCallingReflowSVG(this));
-  }
 }
 
-void
-nsSVGForeignObjectFrame::InvalidateDirtyRect(const nsRect& aRect,
-                                             uint32_t aFlags,
-                                             bool aDuringReflowSVG)
-{
-  if (aRect.IsEmpty())
-    return;
-
-  // Don't invalidate areas outside our bounds:
-  nsRect rect = aRect.Intersect(nsRect(nsPoint(0,0), mRect.Size()));
-  if (rect.IsEmpty())
-    return;
-
-  nsSVGUtils::InvalidateBounds(this, aDuringReflowSVG, &rect, aFlags);
-}
-
-void
-nsSVGForeignObjectFrame::FlushDirtyRegion(uint32_t aFlags,
-                                          bool aDuringReflowSVG)
-{
-  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
-                    "Should not have been called");
-
-  NS_ASSERTION(!mInReflow,
-               "We shouldn't be flushing while we have a pending flush");
-
-  if (mSameDocDirtyRegion.IsEmpty() && mSubDocDirtyRegion.IsEmpty()) {
-    return;
-  }
-
-  InvalidateDirtyRect(mSameDocDirtyRegion.GetBounds(),
-                      aFlags,
-                      aDuringReflowSVG);
-  InvalidateDirtyRect(mSubDocDirtyRegion.GetBounds(),
-                      aFlags | INVALIDATE_CROSS_DOC,
-                      aDuringReflowSVG);
-
-  mSameDocDirtyRegion.SetEmpty();
-  mSubDocDirtyRegion.SetEmpty();
-}

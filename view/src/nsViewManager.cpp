@@ -84,7 +84,6 @@ nsViewManager::nsViewManager()
 
   // NOTE:  we use a zeroing operator new, so all data members are
   // assumed to be cleared here.
-  mHasPendingUpdates = false;
   mHasPendingWidgetGeometryChanges = false;
   mRecursiveRefreshPending = false;
 }
@@ -485,7 +484,6 @@ void
 nsViewManager::PostPendingUpdate()
 {
   nsViewManager* rootVM = RootViewManager();
-  rootVM->mHasPendingUpdates = true;
   rootVM->mHasPendingWidgetGeometryChanges = true;
   if (rootVM->mPresShell) {
     rootVM->mPresShell->ScheduleViewManagerFlush();
@@ -1206,20 +1204,16 @@ nsViewManager::ProcessPendingUpdates()
 
   if (IsRefreshDriverPaintingEnabled()) {
     mPresShell->GetPresContext()->RefreshDriver()->RevokeViewManagerFlush();
-    if (mHasPendingUpdates) {
-      mHasPendingUpdates = false;
       
-      // Flush things like reflows and plugin widget geometry updates by
-      // calling WillPaint on observer presShells.
-      if (mPresShell) {
-        CallWillPaintOnObservers(true);
-      }
-      ProcessPendingUpdatesForView(mRootView, true);
-      CallDidPaintOnObserver();
+    // Flush things like reflows and plugin widget geometry updates by
+    // calling WillPaint on observer presShells.
+    if (mPresShell) {
+      CallWillPaintOnObservers(true);
     }
-  } else if (mHasPendingUpdates) {
     ProcessPendingUpdatesForView(mRootView, true);
-    mHasPendingUpdates = false;
+    CallDidPaintOnObserver();
+  } else {
+    ProcessPendingUpdatesForView(mRootView, true);
   }
 }
 

@@ -3383,8 +3383,7 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
 
     // Determine damaged area and tell view manager to redraw it
     // blink doesn't blink outline ... I hope
-    nsRect bounds(nsPoint(0, 0), frameData.mFrame->GetSize());
-    frameData.mFrame->Invalidate(bounds);
+    frameData.mFrame->InvalidateFrame();
   }
   return NS_OK;
 }
@@ -4431,6 +4430,7 @@ nsTextFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
       // will do that when it gets called during reflow.
       textFrame->AddStateBits(NS_FRAME_IS_DIRTY);
     }
+    textFrame->InvalidateFrame();
 
     // Below, frames that start after the deleted text will be adjusted so that
     // their offsets move with the trailing unchanged text. If this change
@@ -6328,7 +6328,7 @@ nsTextFrame::SetSelectedRange(uint32_t aStart, uint32_t aEnd, bool aSelected,
       }
     }
     // Selection might change anything. Invalidate the overflow area.
-    f->InvalidateOverflowRect();
+    f->InvalidateFrame();
 
     f = static_cast<nsTextFrame*>(f->GetNextContinuation());
   }
@@ -8101,7 +8101,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   SetLength(contentLength, &aLineLayout, ALLOW_FRAME_CREATION_AND_DESTRUCTION);
 
-  Invalidate(aMetrics.VisualOverflow());
+  InvalidateFrame();
 
 #ifdef NOISY_REFLOW
   ListTag(stdout);

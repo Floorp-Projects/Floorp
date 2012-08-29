@@ -3545,8 +3545,7 @@ PresShell::UnsuppressAndInvalidate()
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (rootFrame) {
     // let's assume that outline on a root frame is not supported
-    nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
-    rootFrame->Invalidate(rect);
+    rootFrame->InvalidateFrame();
 
     if (mCaretEnabled && mCaret) {
       mCaret->CheckCaretDrawingState();
@@ -3954,6 +3953,7 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
       }
     }
   }
+  ScheduleViewManagerFlush();
 }
 
 void
@@ -6101,13 +6101,11 @@ PresShell::ShowEventTargetDebug()
   if (nsFrame::GetShowEventTargetFrameBorder() &&
       GetCurrentEventFrame()) {
     if (mDrawEventTargetFrame) {
-      mDrawEventTargetFrame->Invalidate(
-          nsRect(nsPoint(0, 0), mDrawEventTargetFrame->GetSize()));
+      mDrawEventTargetFrame->InvalidateFrame();
     }
 
     mDrawEventTargetFrame = mCurrentEventFrame;
-    mDrawEventTargetFrame->Invalidate(
-        nsRect(nsPoint(0, 0), mDrawEventTargetFrame->GetSize()));
+    mDrawEventTargetFrame->InvalidateFrame();
   }
 }
 #endif
@@ -7285,6 +7283,8 @@ PresShell::ScheduleReflowOffTimer()
 bool
 PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 {
+  target->SchedulePaint();
+
   nsAutoCString docURL("N/A");
   nsIURI *uri = mDocument->GetDocumentURI();
   if (uri)
@@ -7316,11 +7316,6 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   nsSize size;
   if (target == rootFrame) {
      size = mPresContext->GetVisibleArea().Size();
-
-     // target->GetRect() has the old size of the frame,
-     // mPresContext->GetVisibleArea() has the new size.
-     target->InvalidateRectDifference(mPresContext->GetVisibleArea(),
-                                      target->GetRect());
   } else {
      size = target->GetSize();
   }
