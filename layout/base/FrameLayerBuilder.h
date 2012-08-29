@@ -90,7 +90,7 @@ public:
  * integer types (nsIntPoint/nsIntSize/nsIntRect/nsIntRegion) are all in layer
  * coordinates, post-scaling, whereas appunit types are all pre-scaling.
  */
-class FrameLayerBuilder {
+class FrameLayerBuilder : public layers::LayerUserData {
 public:
   typedef layers::ContainerLayer ContainerLayer;
   typedef layers::Layer Layer;

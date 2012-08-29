@@ -644,7 +644,7 @@ FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager)
   if (mRootPresContext) {
     mInitialDOMGeneration = mRootPresContext->GetDOMGeneration();
   }
-  aManager->SetUserData(&gLayerManagerLayerBuilder, new LayerManagerLayerBuilder(this));
+  aManager->SetUserData(&gLayerManagerLayerBuilder, this);
 }
 
 bool
@@ -928,14 +928,6 @@ FrameLayerBuilder::RemoveDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
     }
   }
   return PL_DHASH_REMOVE;
-}
-
-LayerManagerLayerBuilder::~LayerManagerLayerBuilder()
-{
-  MOZ_COUNT_DTOR(LayerManagerLayerBuilder);
-  if (mDelete) {
-    delete mLayerBuilder;
-  }
 }
 
 /* static */ PLDHashOperator
