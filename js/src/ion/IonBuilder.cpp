@@ -36,6 +36,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
     oracle(oracle),
     inliningDepth(inliningDepth),
     failedBoundsCheck_(script->failedBoundsCheck),
+    failedCachedShapeGuard_(script->failedCachedShapeGuard),
     lazyArguments_(NULL)
 {
     pc = info->startPC();
@@ -394,6 +395,9 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     if (callerBuilder->failedBoundsCheck_)
         failedBoundsCheck_ = true;
+
+    if (callerBuilder->failedCachedShapeGuard_)
+        failedCachedShapeGuard_ = true;
 
     // Generate single entrance block.
     current = newBlock(pc);
@@ -4603,7 +4607,7 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
     // If we have a property typeset, the isOwnProperty call will trigger recompilation if
     // the property is deleted or reconfigured.
     if (!propertyTypes && shape->configurable()) {
-        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty());
+        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty(), Bailout_Invalidate);
         current->add(guard);
     }
 
@@ -4656,7 +4660,7 @@ IonBuilder::jsop_setgname(HandlePropertyName name)
     // if the property is deleted or reconfigured. Without TI, we always need a shape guard
     // to guard against the property being reconfigured as non-writable.
     if (!propertyTypes) {
-        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty());
+        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty(), Bailout_Invalidate);
         current->add(guard);
     }
 
@@ -5410,7 +5414,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
     // are no lookup hooks for this property.
     MInstruction *wrapper = MConstant::New(ObjectValue(*foundProto));
     current->add(wrapper);
-    MGuardShape *guard = MGuardShape::New(wrapper, foundProto->lastProperty());
+    MGuardShape *guard = MGuardShape::New(wrapper, foundProto->lastProperty(), Bailout_Invalidate);
     current->add(guard);
 
     // Now we have to freeze all the property typesets to ensure there isn't a
@@ -5835,7 +5839,8 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
             rvalType = unary.rval;
 
         Shape *objShape;
-        if ((objShape = mjit::GetPICSingleShape(cx, script, pc, info().constructing())) &&
+        if (!failedCachedShapeGuard_ &&
+            (objShape = mjit::GetPICSingleShape(cx, script, pc, info().constructing())) &&
             !objShape->inDictionary())
         {
             // The JM IC was monomorphic, so we inline the property access as
@@ -5843,7 +5848,7 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
             // that the shape is still a lastProperty, and calling
             // Shape::search() on dictionary mode shapes that aren't
             // lastProperty is invalid.
-            MGuardShape *guard = MGuardShape::New(obj, objShape);
+            MGuardShape *guard = MGuardShape::New(obj, objShape, Bailout_CachedShapeGuard);
             current->add(guard);
 
             spew("Inlining monomorphic GETPROP");
@@ -5951,14 +5956,15 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         ins = MCallSetProperty::New(obj, value, name, script->strictModeCode);
     } else {
         Shape *objShape;
-        if ((objShape = mjit::GetPICSingleShape(cx, script, pc, info().constructing())) &&
+        if (!failedCachedShapeGuard_ &&
+            (objShape = mjit::GetPICSingleShape(cx, script, pc, info().constructing())) &&
             !objShape->inDictionary())
         {
             // The JM IC was monomorphic, so we inline the property access as
             // long as the shape is not in dictionary mode. We cannot be sure
             // that the shape is still a lastProperty, and calling Shape::search
             // on dictionary mode shapes that aren't lastProperty is invalid.
-            MGuardShape *guard = MGuardShape::New(obj, objShape);
+            MGuardShape *guard = MGuardShape::New(obj, objShape, Bailout_CachedShapeGuard);
             current->add(guard);
 
             Shape *shape = objShape->search(cx, NameToId(name));
