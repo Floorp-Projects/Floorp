@@ -12,7 +12,7 @@ function makeSteamEngine() {
 function test_url_attributes() {
   _("SyncEngine url attributes");
   let syncTesting = new SyncTestingInfrastructure();
-  Svc.Prefs.set("clusterURL", "https://cluster/");
+  Service.clusterURL = "https://cluster/";
   let engine = makeSteamEngine();
   try {
     do_check_eq(engine.storageURL, "https://cluster/1.1/foo/storage/");
@@ -161,8 +161,8 @@ function test_resetClient() {
 function test_wipeServer() {
   _("SyncEngine.wipeServer deletes server data and resets the client.");
   let syncTesting = new SyncTestingInfrastructure();
-  Svc.Prefs.set("serverURL", TEST_SERVER_URL);
-  Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
   let engine = makeSteamEngine();
 
   const PAYLOAD = 42;
