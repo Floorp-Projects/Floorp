@@ -4199,6 +4199,7 @@ MOZ_WEBSMS_BACKEND=
 MOZ_GRAPHITE=1
 ACCESSIBILITY=1
 MOZ_SYS_MSG=
+MOZ_PAY=
 
 case "$target_os" in
     mingw*)
@@ -7311,6 +7312,14 @@ if test -n "$MOZ_B2G_CAMERA"; then
    AC_DEFINE(MOZ_B2G_CAMERA)
 fi
 AC_SUBST(MOZ_B2G_CAMERA)
+
+dnl ========================================================
+dnl = Enable Support for Payment API
+dnl ========================================================
+if test -n "$MOZ_PAY"; then
+    AC_DEFINE(MOZ_PAY)
+fi
+AC_SUBST(MOZ_PAY)
 
 dnl ========================================================
 dnl = Support for demangling undefined symbols
