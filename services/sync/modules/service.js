@@ -54,16 +54,6 @@ const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
                             INFO_COLLECTION_COUNTS,
                             INFO_QUOTA];
 
-/*
- * Service singleton
- * Main entry point into Weave's sync framework
- */
-XPCOMUtils.defineLazyGetter(this, "Service", function onService() {
-  let service = new WeaveSvc();
-  service.onStartup();
-
-  return service;
-});
 
 function WeaveSvc() {
   this._notify = Utils.notify("weave:service:");
@@ -412,8 +402,7 @@ WeaveSvc.prototype = {
    * Register the built-in engines for certain applications
    */
   _registerEngines: function _registerEngines() {
-    // TODO Singleton (bug 785225).
-    this.engineManager = Engines;
+    this.engineManager = new EngineManager(this);
 
     let engines = [];
     // Applications can provide this preference (comma-separated list)
@@ -423,8 +412,7 @@ WeaveSvc.prototype = {
       engines = pref.split(",");
     }
 
-    // TODO Singleton (bug 785225).
-    this.clientsEngine = Clients;
+    this.clientsEngine = new ClientEngine(this);
 
     for (let name of engines) {
       if (!name in ENGINE_MODULES) {
@@ -442,7 +430,7 @@ WeaveSvc.prototype = {
           continue;
         }
 
-        this.engineManager.register(ns[engineName]);
+        this.engineManager.register(ns[engineName], this);
       } catch (ex) {
         this._log.warn("Could not register engine " + name + ": " +
                        CommonUtils.exceptionStr(ex));
@@ -1458,3 +1446,6 @@ WeaveSvc.prototype = {
     });
   },
 };
+
+let Service = new WeaveSvc();
+Service.onStartup();

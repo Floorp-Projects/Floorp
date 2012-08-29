@@ -3,9 +3,10 @@
 
 "use strict";
 
+Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://services-sync/addonsreconciler.js");
 Cu.import("resource://services-sync/engines/addons.js");
-Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://services-sync/service.js");
 
 loadAddonTestFunctions();
 startupManager();
@@ -17,7 +18,7 @@ function run_test() {
     Log4Moz.Level.Trace;
 
   Svc.Prefs.set("engine.addons", true);
-  Engines.register(AddonsEngine);
+  Service.engineManager.register(AddonsEngine);
 
   run_next_test();
 }

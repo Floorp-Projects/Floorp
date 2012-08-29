@@ -12,7 +12,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -261,7 +260,7 @@ SyncScheduler.prototype = {
   },
 
   calculateScore: function calculateScore() {
-    let engines = [Clients].concat(Engines.getEnabled());
+    let engines = [this.service.clientsEngine].concat(this.service.engineManager.getEnabled());
     for (let i = 0;i < engines.length;i++) {
       this._log.trace(engines[i].name + ": score: " + engines[i].score);
       this.globalScore += engines[i].score;
@@ -277,7 +276,7 @@ SyncScheduler.prototype = {
    */
   updateClientMode: function updateClientMode() {
     // Nothing to do if it's the same amount
-    let numClients = Clients.stats.numClients;
+    let numClients = this.service.clientsEngine.stats.numClients;
     if (this.numClients == numClients)
       return;
 

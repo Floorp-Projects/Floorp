@@ -5,10 +5,10 @@
 
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://services-sync/addonsreconciler.js");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://services-sync/addonsreconciler.js");
+Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-sync/service.js");
 
 let prefs = new Preferences();
@@ -18,8 +18,10 @@ prefs.set("extensions.getAddons.get.url",
 loadAddonTestFunctions();
 startupManager();
 
-Engines.register(AddonsEngine);
-let engine = Engines.get("addons");
+let engineManager = Service.engineManager;
+
+engineManager.register(AddonsEngine);
+let engine = engineManager.get("addons");
 let reconciler = engine._reconciler;
 let tracker = engine._tracker;
 

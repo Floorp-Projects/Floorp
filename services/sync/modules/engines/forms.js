@@ -151,8 +151,8 @@ let FormWrapper = {
 
 };
 
-function FormEngine() {
-  SyncEngine.call(this, "Forms");
+function FormEngine(service) {
+  SyncEngine.call(this, "Forms", service);
 }
 FormEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -170,8 +170,8 @@ FormEngine.prototype = {
   }
 };
 
-function FormStore(name) {
-  Store.call(this, name);
+function FormStore(name, engine) {
+  Store.call(this, name, engine);
 }
 FormStore.prototype = {
   __proto__: Store.prototype,
@@ -241,8 +241,8 @@ FormStore.prototype = {
   }
 };
 
-function FormTracker(name) {
-  Tracker.call(this, name);
+function FormTracker(name, engine) {
+  Tracker.call(this, name, engine);
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
   Svc.Obs.add("profile-change-teardown", this);

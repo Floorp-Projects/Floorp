@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const EXPORTED_SYMBOLS = [
-  "Engines",
+  "EngineManager",
   "Engine",
   "SyncEngine",
   "Tracker",
@@ -35,9 +35,14 @@ Cu.import("resource://services-sync/main.js");
  * want to sync.
  *
  */
-function Tracker(name) {
+function Tracker(name, engine) {
+  if (!engine) {
+    throw new Error("Tracker must be associated with an Engine instance.");
+  }
+
   name = name || "Unnamed";
   this.name = this.file = name.toLowerCase();
+  this.engine = engine;
 
   this._log = Log4Moz.repository.getLogger("Sync.Tracker." + name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
@@ -168,9 +173,14 @@ Tracker.prototype = {
  * and/or applyIncoming function on top of the basic APIs.
  */
 
-function Store(name) {
+function Store(name, engine) {
+  if (!engine) {
+    throw new Error("Store must be associated with an Engine instance.");
+  }
+
   name = name || "Unnamed";
   this.name = name.toLowerCase();
+  this.engine = engine;
 
   this._log = Log4Moz.repository.getLogger("Sync.Store." + name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
@@ -354,12 +364,9 @@ Store.prototype = {
   }
 };
 
-// TODO remove singleton (bug 785225).
-XPCOMUtils.defineLazyGetter(this, "Engines", function() {
-  return new EngineManager();
-});
+function EngineManager(service) {
+  this.service = service;
 
-function EngineManager() {
   this._engines = {};
   this._log = Log4Moz.repository.getLogger("Sync.EngineManager");
   this._log.level = Log4Moz.Level[Svc.Prefs.get(
@@ -388,7 +395,7 @@ EngineManager.prototype = {
   },
 
   getAll: function getAll() {
-    return [engine for ([name, engine] in Iterator(Engines._engines))];
+    return [engine for ([name, engine] in Iterator(this._engines))];
   },
 
   getEnabled: function getEnabled() {
@@ -408,7 +415,7 @@ EngineManager.prototype = {
       return engineObject.map(this.register, this);
 
     try {
-      let engine = new engineObject();
+      let engine = new engineObject(this.service);
       let name = engine.name;
       if (name in this._engines)
         this._log.error("Engine '" + name + "' is already registered!");
@@ -436,11 +443,22 @@ EngineManager.prototype = {
       name = val.name;
     delete this._engines[name];
   },
+
+  clear: function clear() {
+    for (let name in this._engines) {
+      delete this._engines[name];
+    }
+  },
 };
 
-function Engine(name) {
+function Engine(name, service) {
+  if (!service) {
+    throw new Error("Engine must be associated with a Service instance.");
+  }
+
   this.Name = name || "Unnamed";
   this.name = name.toLowerCase();
+  this.service = service;
 
   this._notify = Utils.notify("weave:engine:");
   this._log = Log4Moz.repository.getLogger("Sync.Engine." + this.Name);
@@ -466,13 +484,13 @@ Engine.prototype = {
   get score() this._tracker.score,
 
   get _store() {
-    let store = new this._storeObj(this.Name);
+    let store = new this._storeObj(this.Name, this);
     this.__defineGetter__("_store", function() store);
     return store;
   },
 
   get _tracker() {
-    let tracker = new this._trackerObj(this.Name);
+    let tracker = new this._trackerObj(this.Name, this);
     this.__defineGetter__("_tracker", function() tracker);
     return tracker;
   },
@@ -511,8 +529,9 @@ Engine.prototype = {
   }
 };
 
-function SyncEngine(name) {
-  Engine.call(this, name || "SyncEngine");
+function SyncEngine(name, service) {
+  Engine.call(this, name || "SyncEngine", service);
+
   this.loadToFetch();
   this.loadPreviousFailed();
 }
@@ -1359,7 +1378,7 @@ SyncEngine.prototype = {
    */
   handleHMACMismatch: function handleHMACMismatch(item, mayRetry) {
     // By default we either try again, or bail out noisily.
-    return (Weave.Service.handleHMACEvent() && mayRetry) ?
+    return (this.service.handleHMACEvent() && mayRetry) ?
            SyncEngine.kRecoveryStrategy.retry :
            SyncEngine.kRecoveryStrategy.error;
   }

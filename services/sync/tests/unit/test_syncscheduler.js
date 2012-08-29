@@ -10,10 +10,10 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 
-Svc.DefaultPrefs.set("registerEngines", "");
+Service.engineManager.clear();
 
 function CatapultEngine() {
-  SyncEngine.call(this, "Catapult");
+  SyncEngine.call(this, "Catapult", Service);
 }
 CatapultEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -23,16 +23,17 @@ CatapultEngine.prototype = {
   }
 };
 
-Engines.register(CatapultEngine);
+Service.engineManager.register(CatapultEngine);
 
 let scheduler = new SyncScheduler(Service);
+let clientsEngine = Service.clientsEngine;
 
 function sync_httpd_setup() {
   let global = new ServerWBO("global", {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
-    engines: {clients: {version: Clients.version,
-                        syncID: Clients.syncID}}
+    engines: {clients: {version: clientsEngine.version,
+                        syncID: clientsEngine.syncID}}
   });
   let clientsColl = new ServerCollection({}, true);
 
@@ -149,7 +150,7 @@ add_test(function test_updateClientMode() {
   do_check_false(scheduler.idle);
 
   // Trigger a change in interval & threshold by adding a client.
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
   scheduler.updateClientMode();
 
   do_check_eq(scheduler.syncThreshold, MULTI_DEVICE_THRESHOLD);
@@ -158,7 +159,7 @@ add_test(function test_updateClientMode() {
   do_check_false(scheduler.idle);
 
   // Resets the number of clients to 0. 
-  Clients.resetClient();
+  clientsEngine.resetClient();
   scheduler.updateClientMode();
 
   // Goes back to single user if # clients is 1.
@@ -410,7 +411,7 @@ add_test(function test_client_sync_finish_updateClientMode() {
   do_check_false(scheduler.idle);
 
   // Trigger a change in interval & threshold by adding a client.
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
   do_check_false(scheduler.numClients > 1);
   scheduler.updateClientMode();
   Service.sync();
@@ -421,7 +422,7 @@ add_test(function test_client_sync_finish_updateClientMode() {
   do_check_false(scheduler.idle);
 
   // Resets the number of clients to 0. 
-  Clients.resetClient();
+  clientsEngine.resetClient();
   Service.sync();
 
   // Goes back to single user if # clients is 1.
@@ -579,7 +580,7 @@ add_test(function test_idle_adjustSyncInterval() {
 
   // Multiple devices: switch to idle interval.
   scheduler.idle = false;
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
   scheduler.updateClientMode();
   scheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
   do_check_eq(scheduler.idle, true);
@@ -684,7 +685,7 @@ add_test(function test_sync_failed_partial_500s() {
   scheduler._syncErrors = MAX_ERROR_COUNT_BEFORE_BACKOFF;
   let server = sync_httpd_setup();
 
-  let engine = Engines.get("catapult");
+  let engine = Service.engineManager.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 500};
 
@@ -711,12 +712,12 @@ add_test(function test_sync_failed_partial_400s() {
   scheduler._syncErrors = MAX_ERROR_COUNT_BEFORE_BACKOFF;
   let server = sync_httpd_setup();
 
-  let engine = Engines.get("catapult");
+  let engine = Service.engineManager.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 400};
 
   // Have multiple devices for an active interval.
-  Clients._store.create({id: "foo", cleartext: "bar"});
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
 
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
@@ -758,10 +759,10 @@ add_test(function test_sync_X_Weave_Backoff() {
 
   // Pretend we have two clients so that the regular sync interval is
   // sufficiently low.
-  Clients._store.create({id: "foo", cleartext: "bar"});
-  let rec = Clients._store.createRecord("foo", "clients");
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
+  let rec = clientsEngine._store.createRecord("foo", "clients");
   rec.encrypt();
-  rec.upload(Clients.engineURL + rec.id);
+  rec.upload(clientsEngine.engineURL + rec.id);
 
   // Sync once to log in and get everything set up. Let's verify our initial
   // values.
@@ -815,10 +816,10 @@ add_test(function test_sync_503_Retry_After() {
 
   // Pretend we have two clients so that the regular sync interval is
   // sufficiently low.
-  Clients._store.create({id: "foo", cleartext: "bar"});
-  let rec = Clients._store.createRecord("foo", "clients");
+  clientsEngine._store.create({id: "foo", cleartext: "bar"});
+  let rec = clientsEngine._store.createRecord("foo", "clients");
   rec.encrypt();
-  rec.upload(Clients.engineURL + rec.id);
+  rec.upload(clientsEngine.engineURL + rec.id);
 
   // Sync once to log in and get everything set up. Let's verify our initial
   // values.

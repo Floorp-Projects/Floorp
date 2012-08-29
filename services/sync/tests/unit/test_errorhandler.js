@@ -5,10 +5,8 @@ Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/policies.js");
-Cu.import("resource://services-sync/status.js");
-
-Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/status.js");
 
 const TEST_MAINTENANCE_URL = "http://localhost:8080/maintenance/";
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
@@ -21,12 +19,14 @@ const PROLONGED_ERROR_DURATION =
 const NON_PROLONGED_ERROR_DURATION =
   (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') / 2) * 1000;
 
+Service.engineManager.clear();
+
 function setLastSync(lastSyncValue) {
   Svc.Prefs.set("lastSync", (new Date(Date.now() - lastSyncValue)).toString());
 }
 
 function CatapultEngine() {
-  SyncEngine.call(this, "Catapult");
+  SyncEngine.call(this, "Catapult", Service);
 }
 CatapultEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -38,7 +38,8 @@ CatapultEngine.prototype = {
   }
 };
 
-Engines.register(CatapultEngine);
+let engineManager = Service.engineManager;
+engineManager.register(CatapultEngine);
 
 // This relies on Service/ErrorHandler being a singleton. Fixing this will take
 // a lot of work.
@@ -74,10 +75,10 @@ function sync_httpd_setup() {
   let global = new ServerWBO("global", {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
-    engines: {clients: {version: Clients.version,
-                        syncID: Clients.syncID},
-              catapult: {version: Engines.get("catapult").version,
-                         syncID: Engines.get("catapult").syncID}}
+    engines: {clients: {version: Service.clientsEngine.version,
+                        syncID: Service.clientsEngine.syncID},
+              catapult: {version: engineManager.get("catapult").version,
+                         syncID: engineManager.get("catapult").syncID}}
   });
   let clientsColl = new ServerCollection({}, true);
 
@@ -746,7 +747,7 @@ add_test(function test_sync_server_maintenance_error() {
   setUp();
 
   const BACKOFF = 42;
-  let engine = Engines.get("catapult");
+  let engine = engineManager.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 503,
                       headers: {"retry-after": BACKOFF}};
@@ -903,7 +904,7 @@ add_test(function test_sync_prolonged_server_maintenance_error() {
   setUp();
 
   const BACKOFF = 42;
-  let engine = Engines.get("catapult");
+  let engine = engineManager.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 503,
                       headers: {"retry-after": BACKOFF}};
@@ -1102,7 +1103,7 @@ add_test(function test_wipeRemote_prolonged_server_maintenance_error(){
   Service.clusterURL = TEST_MAINTENANCE_URL;
   generateAndUploadKeys();
 
-  let engine = Engines.get("catapult");
+  let engine = engineManager.get("catapult");
   engine.exception = null;
   engine.enabled = true;
 
@@ -1139,7 +1140,7 @@ add_test(function test_sync_syncAndReportErrors_server_maintenance_error() {
   setUp();
 
   const BACKOFF = 42;
-  let engine = Engines.get("catapult");
+  let engine = engineManager.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 503,
                       headers: {"retry-after": BACKOFF}};
@@ -1341,7 +1342,7 @@ add_test(function test_wipeRemote_syncAndReportErrors_server_maintenance_error()
   Service.clusterURL = TEST_MAINTENANCE_URL;
   generateAndUploadKeys();
 
-  let engine = Engines.get("catapult");
+  let engine = engineManager.get("catapult");
   engine.exception = null;
   engine.enabled = true;
 
@@ -1378,7 +1379,7 @@ add_test(function test_sync_syncAndReportErrors_prolonged_server_maintenance_err
   setUp();
 
   const BACKOFF = 42;
-  let engine = Engines.get("catapult");
+  let engine = engineManager.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 503,
                       headers: {"retry-after": BACKOFF}};
@@ -1573,7 +1574,7 @@ add_test(function test_wipeServer_login_syncAndReportErrors_prolonged_server_mai
 add_test(function test_sync_engine_generic_fail() {
   let server = sync_httpd_setup();
 
-  let engine = Engines.get("catapult");
+  let engine = engineManager.get("catapult");
   engine.enabled = true;
   engine.sync = function sync() {
     Svc.Obs.notify("weave:engine:sync:error", "", "catapult");
@@ -1676,7 +1677,7 @@ add_test(function test_logs_on_login_error_despite_shouldReportError() {
 add_test(function test_engine_applyFailed() {
   let server = sync_httpd_setup();
 
-  let engine = Engines.get("catapult");
+  let engine = engineManager.get("catapult");
   engine.enabled = true;
   delete engine.exception;
   engine.sync = function sync() {

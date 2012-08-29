@@ -5,13 +5,12 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
-Svc.DefaultPrefs.set("registerEngines", "");
-Cu.import("resource://services-sync/service.js");
-
 initTestLogging();
+Service.engineManager.clear();
 
 function QuietStore() {
   Store.call("Quiet");
@@ -23,7 +22,7 @@ QuietStore.prototype = {
 }
 
 function SteamEngine() {
-  SyncEngine.call(this, "Steam");
+  SyncEngine.call(this, "Steam", Service);
 }
 SteamEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -34,17 +33,17 @@ SteamEngine.prototype = {
     this._syncStartup();
   }
 };
-Engines.register(SteamEngine);
+Service.engineManager.register(SteamEngine);
 
 function StirlingEngine() {
-  SyncEngine.call(this, "Stirling");
+  SyncEngine.call(this, "Stirling", Service);
 }
 StirlingEngine.prototype = {
   __proto__: SteamEngine.prototype,
   // This engine's enabled state is the same as the SteamEngine's.
   get prefName() "steam"
 };
-Engines.register(StirlingEngine);
+Service.engineManager.register(StirlingEngine);
 
 // Tracking info/collections.
 let collectionsHelper = track_collections_helper();
@@ -91,7 +90,7 @@ function run_test() {
 
 add_test(function test_newAccount() {
   _("Test: New account does not disable locally enabled engines.");
-  let engine = Engines.get("steam");
+  let engine = Service.engineManager.get("steam");
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global": new ServerWBO("global", {}).handler(),
     "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
@@ -118,7 +117,7 @@ add_test(function test_newAccount() {
 add_test(function test_enabledLocally() {
   _("Test: Engine is disabled on remote clients and enabled locally");
   Service.syncID = "abcdefghij";
-  let engine = Engines.get("steam");
+  let engine = Service.engineManager.get("steam");
   let metaWBO = new ServerWBO("global", {syncID: Service.syncID,
                                          storageVersion: STORAGE_VERSION,
                                          engines: {}});
@@ -149,7 +148,7 @@ add_test(function test_enabledLocally() {
 add_test(function test_disabledLocally() {
   _("Test: Engine is enabled on remote clients and disabled locally");
   Service.syncID = "abcdefghij";
-  let engine = Engines.get("steam");
+  let engine = Service.engineManager.get("steam");
   let metaWBO = new ServerWBO("global", {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
@@ -191,7 +190,7 @@ add_test(function test_disabledLocally() {
 add_test(function test_disabledLocally_wipe503() {
   _("Test: Engine is enabled on remote clients and disabled locally");
   Service.syncID = "abcdefghij";
-  let engine = Engines.get("steam");
+  let engine = Service.engineManager.get("steam");
   let metaWBO = new ServerWBO("global", {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
@@ -235,7 +234,7 @@ add_test(function test_disabledLocally_wipe503() {
 add_test(function test_enabledRemotely() {
   _("Test: Engine is disabled locally and enabled on a remote client");
   Service.syncID = "abcdefghij";
-  let engine = Engines.get("steam");
+  let engine = Service.engineManager.get("steam");
   let metaWBO = new ServerWBO("global", {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
@@ -279,7 +278,7 @@ add_test(function test_enabledRemotely() {
 add_test(function test_disabledRemotelyTwoClients() {
   _("Test: Engine is enabled locally and disabled on a remote client... with two clients.");
   Service.syncID = "abcdefghij";
-  let engine = Engines.get("steam");
+  let engine = Service.engineManager.get("steam");
   let metaWBO = new ServerWBO("global", {syncID: Service.syncID,
                                          storageVersion: STORAGE_VERSION,
                                          engines: {}});
@@ -308,7 +307,7 @@ add_test(function test_disabledRemotelyTwoClients() {
     metaWBO.modified = Date.now() / 1000;
 
     _("Add a second client and verify that the local pref is changed.");
-    Clients._store._remoteClients["foobar"] = {name: "foobar", type: "desktop"};
+    Service.clientsEngine._store._remoteClients["foobar"] = {name: "foobar", type: "desktop"};
     Service.sync();
 
     _("Engine is disabled.");
@@ -323,7 +322,7 @@ add_test(function test_disabledRemotelyTwoClients() {
 add_test(function test_disabledRemotely() {
   _("Test: Engine is enabled locally and disabled on a remote client");
   Service.syncID = "abcdefghij";
-  let engine = Engines.get("steam");
+  let engine = Service.engineManager.get("steam");
   let metaWBO = new ServerWBO("global", {syncID: Service.syncID,
                                          storageVersion: STORAGE_VERSION,
                                          engines: {}});
@@ -354,8 +353,8 @@ add_test(function test_disabledRemotely() {
 add_test(function test_dependentEnginesEnabledLocally() {
   _("Test: Engine is disabled on remote clients and enabled locally");
   Service.syncID = "abcdefghij";
-  let steamEngine = Engines.get("steam");
-  let stirlingEngine = Engines.get("stirling");
+  let steamEngine = Service.engineManager.get("steam");
+  let stirlingEngine = Service.engineManager.get("stirling");
   let metaWBO = new ServerWBO("global", {syncID: Service.syncID,
                                          storageVersion: STORAGE_VERSION,
                                          engines: {}});
@@ -389,8 +388,8 @@ add_test(function test_dependentEnginesEnabledLocally() {
 add_test(function test_dependentEnginesDisabledLocally() {
   _("Test: Two dependent engines are enabled on remote clients and disabled locally");
   Service.syncID = "abcdefghij";
-  let steamEngine = Engines.get("steam");
-  let stirlingEngine = Engines.get("stirling");
+  let steamEngine = Service.engineManager.get("steam");
+  let stirlingEngine = Service.engineManager.get("stirling");
   let metaWBO = new ServerWBO("global", {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,

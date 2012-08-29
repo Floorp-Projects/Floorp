@@ -1,8 +1,12 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 _("Rewrite place: URIs.");
 Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-let engine = new BookmarksEngine();
+let engine = new BookmarksEngine(Service);
 let store = engine._store;
 
 function run_test() {
@@ -21,10 +25,10 @@ function run_test() {
   _("Type: " + tagRecord.type);
   _("Folder name: " + tagRecord.folderName);
   store.preprocessTagQuery(tagRecord);
-  
+
   _("Verify that the URI has been rewritten.");
   do_check_neq(tagRecord.bmkUri, uri);
-  
+
   let tags = store._getNode(PlacesUtils.tagsFolderId);
   tags.containerOpen = true;
   let tagID;
@@ -37,7 +41,7 @@ function run_test() {
 
   _("Tag ID: " + tagID);
   do_check_eq(tagRecord.bmkUri, uri.replace("499", tagID));
-  
+
   _("... but not if the type is wrong.");
   let wrongTypeURI = "place:folder=499&type=2&queryType=1";
   tagRecord.bmkUri = wrongTypeURI;

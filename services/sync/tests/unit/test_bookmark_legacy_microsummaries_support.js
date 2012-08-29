@@ -2,16 +2,16 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests that Sync can correctly handle a legacy microsummary record
-
-Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/engines/bookmarks.js");
-Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-common/log4moz.js");
-Cu.import("resource://services-sync/util.js");
-
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+
+Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 const GENERATORURI_ANNO = "microsummary/generatorURI";
 const STATICTITLE_ANNO = "bookmarks/staticTitle";
@@ -37,8 +37,8 @@ function newMicrosummary(url, title) {
 
 function run_test() {
 
-  Engines.register(BookmarksEngine);
-  let engine = Engines.get("bookmarks");
+  Service.engineManager.register(BookmarksEngine);
+  let engine = Service.engineManager.get("bookmarks");
   let store = engine._store;
 
   // Clean up.
