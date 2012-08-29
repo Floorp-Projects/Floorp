@@ -2283,6 +2283,22 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   nsRefPtr<ContainerLayer> containerLayer;
   if (aManager == mRetainingManager) {
     Layer* oldLayer = GetOldLayerFor(aContainerFrame, containerDisplayItemKey);
+
+    // If a layer isn't found, see if we can find one for a merged frame. The
+    // underlying frame can change when a page scrolls, this avoids layer
+    // recreation in the situation that a new underlying frame is picked for
+    // a layer.
+    if (!oldLayer && aContainerItem) {
+      nsAutoTArray<nsIFrame*,4> mergedFrames;
+      aContainerItem->GetMergedFrames(&mergedFrames);
+      for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
+        oldLayer = GetOldLayerFor(mergedFrames[i], containerDisplayItemKey);
+        if (oldLayer) {
+          break;
+        }
+      }
+    }
+
     if (oldLayer) {
       NS_ASSERTION(oldLayer->Manager() == aManager, "Wrong manager");
       if (oldLayer->HasUserData(&gThebesDisplayItemLayerUserData)) {
@@ -2376,6 +2392,13 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
         nsIFrame* mergedFrame = mergedFrames[i];
         DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(mergedFrame);
         if (entry) {
+          // Append the container layer so we don't regenerate layers when
+          // the underlying frame of an item changes to one of the existing
+          // merged frames.
+          entry->mData.AppendElement(
+              DisplayItemData(containerLayer, containerDisplayItemKey,
+                              LAYER_ACTIVE, mContainerLayerGeneration));
+
           // Ensure that UpdateDisplayItemDataForFrame recognizes that we
           // still have a container layer associated with this frame.
           entry->mIsSharingContainerLayer = true;
