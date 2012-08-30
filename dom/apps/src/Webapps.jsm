@@ -989,9 +989,23 @@ DOMApplicationManifest.prototype = {
   },
 
   fullLaunchPath: function(aStartPoint) {
-    let startPoint = aStartPoint || "";
-    let launchPath = this._localeProp("launch_path") || "";
-    return this._origin.resolve(launchPath + startPoint);
+    // If no start point is specified, we use the root launch path.
+    // In all error cases, we just return null.
+    if ((aStartPoint || "") === "") {
+      return this._origin.resolve(this._localeProp("launch_path") || "");
+    }
+
+    // Search for the l10n entry_points property.
+    let entryPoints = this._localeProp("entry_points");
+    if (!entryPoints) {
+      return null;
+    }
+
+    if (entryPoints[aStartPoint]) {
+      return this._origin.resolve(entryPoints[aStartPoint].launch_path || "");
+    }
+
+    return null;
   },
 
   resolveFromOrigin: function(aURI) {
