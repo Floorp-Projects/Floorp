@@ -28,9 +28,9 @@ import shutil
 
 gSubtrees = [
     os.path.join("approved", "css3-namespace", "src"),
-    os.path.join("approved", "css3-multicol", "src"),
+    #os.path.join("approved", "css3-multicol", "src"),
     os.path.join("contributors", "opera", "submitted", "css3-conditional"),
-    os.path.join("contributors", "opera", "submitted", "multicol")
+    #os.path.join("contributors", "opera", "submitted", "multicol")
 ]
 
 gLog = None
