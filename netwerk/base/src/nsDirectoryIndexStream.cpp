@@ -278,7 +278,7 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
             int64_t fileSize = 0;
             current->GetFileSize( &fileSize );
 
-            int64_t fileInfoModifyTime = 0;
+            PRTime fileInfoModifyTime = 0;
             current->GetLastModifiedTime( &fileInfoModifyTime );
             fileInfoModifyTime *= PR_USEC_PER_MSEC;
 

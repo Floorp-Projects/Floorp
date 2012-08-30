@@ -2004,7 +2004,7 @@ namespace {
 
 int64_t GetPluginLastModifiedTime(const nsCOMPtr<nsIFile>& localfile)
 {
-  int64_t fileModTime = LL_ZERO;
+  PRTime fileModTime = LL_ZERO;
 
 #if defined(XP_MACOSX)
   // On OS X the date of a bundle's "contents" (i.e. of its Info.plist file)

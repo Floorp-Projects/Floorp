@@ -1702,7 +1702,7 @@ nsLocalFile::Remove(bool recursive)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTime(int64_t *aLastModifiedTime)
+nsLocalFile::GetLastModifiedTime(PRTime *aLastModifiedTime)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -1723,14 +1723,14 @@ nsLocalFile::GetLastModifiedTime(int64_t *aLastModifiedTime)
 
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTimeOfLink(int64_t *aLastModifiedTime)
+nsLocalFile::GetLastModifiedTimeOfLink(PRTime *aLastModifiedTime)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTime(int64_t aLastModifiedTime)
+nsLocalFile::SetLastModifiedTime(PRTime aLastModifiedTime)
 {
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
@@ -1740,13 +1740,13 @@ nsLocalFile::SetLastModifiedTime(int64_t aLastModifiedTime)
 
 
 NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTimeOfLink(int64_t aLastModifiedTime)
+nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModifiedTime)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-nsLocalFile::SetModDate(int64_t aLastModifiedTime)
+nsLocalFile::SetModDate(PRTime aLastModifiedTime)
 {
     nsresult rv = Stat();
 
