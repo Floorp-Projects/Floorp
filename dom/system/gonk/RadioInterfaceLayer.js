@@ -589,21 +589,7 @@ RadioInterfaceLayer.prototype = {
     if (!newInfo.batch) {
       ppmm.broadcastAsyncMessage("RIL:DataInfoChanged", dataInfo);
     }
-
-    if (!this.dataCallSettings["enabled"]) {
-      return;
-    }
-
-    let isRegistered =
-      newInfo.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED &&
-      (!newInfo.roaming || this._isDataRoamingEnabled());
-    let haveDataConnection =
-      newInfo.type != RIL.GECKO_MOBILE_CONNECTION_STATE_UNKNOWN;
-
-    if (isRegistered && haveDataConnection) {
-      debug("Radio is ready for data connection.");
-      this.updateRILNetworkInterface();
-    }
+    this.updateRILNetworkInterface();
   },
 
   handleSignalStrengthChange: function handleSignalStrengthChange(message) {
@@ -693,6 +679,7 @@ RadioInterfaceLayer.prototype = {
     // This check avoids data call connection if the radio is not ready 
     // yet after toggling off airplane mode. 
     if (this.rilContext.radioState != RIL.GECKO_RADIOSTATE_READY) {
+      debug("RIL is not ready for data connection: radio's not ready");
       return; 
     }
 
@@ -709,11 +696,29 @@ RadioInterfaceLayer.prototype = {
     if (!this.dataCallSettings["enabled"] && RILNetworkInterface.connected) {
       debug("Data call settings: disconnect data call.");
       RILNetworkInterface.disconnect();
+      return;
     }
-    if (this.dataCallSettings["enabled"] && !RILNetworkInterface.connected) {
-      debug("Data call settings connect data call.");
-      RILNetworkInterface.connect(this.dataCallSettings);
+    if (!this.dataCallSettings["enabled"] || RILNetworkInterface.connected) {
+      debug("Data call settings: nothing to do.");
+      return;
     }
+    let dataInfo = this.rilContext.data;
+    let isRegistered =
+      dataInfo.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED;
+    let haveDataConnection =
+      dataInfo.type != RIL.GECKO_MOBILE_CONNECTION_STATE_UNKNOWN;
+    if (!isRegistered || !haveDataConnection) {
+      debug("RIL is not ready for data connection: Phone's not registered " +
+            "or doesn't have data connection.");
+      return;
+    }
+    if (dataInfo.roaming && !this.dataCallSettings["roaming_enabled"]) {
+      debug("We're roaming, but data roaming is disabled.");
+      return;
+    }
+
+    debug("Data call settings: connect data call.");
+    RILNetworkInterface.connect(this.dataCallSettings);
   },
 
   /**
