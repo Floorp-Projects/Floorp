@@ -135,11 +135,10 @@ nsDiskCacheInputStream::Read(char * buffer, uint32_t count, uint32_t * bytesRead
         // just read from file
         int32_t  result = PR_Read(mFD, buffer, count);
         if (result < 0) {
-            PRErrorCode error = PR_GetError();
             nsresult rv = NS_ErrorAccordingToNSPR();
             CACHE_LOG_DEBUG(("CACHE: nsDiskCacheInputStream::Read PR_Read failed"
                              "[stream=%p, rv=%d, NSPR error %s",
-                             this, int(rv), PR_ErrorToName(error)));
+                             this, int(rv), PR_ErrorToName(PR_GetError())));
             return rv;
         }
         

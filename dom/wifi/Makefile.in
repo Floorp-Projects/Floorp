@@ -35,3 +35,8 @@ EXTRA_JS_MODULES = \
 
 include $(topsrcdir)/config/rules.mk
 
+
+XPIDL_FLAGS += \
+  -I$(topsrcdir)/dom/base \
+  -I$(topsrcdir)/dom/interfaces/events \
+  $(NULL)

@@ -19,15 +19,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391747
 <script class="testbody" type="text/javascript">
 
 function ctrlclick_391747(doc,x,y){
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var wu =  doc.defaultView.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-               .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var wu =  SpecialPowers.getDOMWindowUtils(doc.defaultView);
   wu.sendMouseEvent('mousedown',  x, y, 0, 1, 2);
   wu.sendMouseEvent('mouseup',  x, y, 0, 1, 2);
 }
 
 function select_391747(doc){
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var range = doc.createRange();
   range.setStart(doc, 0);
   range.setEnd(doc, 0);

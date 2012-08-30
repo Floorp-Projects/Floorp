@@ -203,10 +203,29 @@ js::ObjectImpl::nativeGetSlot(uint32_t slot) const
     return getSlot(slot);
 }
 
+static JS_ALWAYS_INLINE JSCompartment *
+ValueCompartment(const js::Value &value)
+{
+    JS_ASSERT(value.isMarkable());
+    return static_cast<js::gc::Cell *>(value.toGCThing())->compartment();
+}
+
+#ifdef DEBUG
+inline bool
+IsValueInCompartment(js::Value v, JSCompartment *comp)
+{
+    if (!v.isMarkable())
+        return true;
+    JSCompartment *vcomp = ValueCompartment(v);
+    return vcomp == comp->rt->atomsCompartment || vcomp == comp;
+}
+#endif
+
 inline void
 js::ObjectImpl::setSlot(uint32_t slot, const js::Value &value)
 {
     MOZ_ASSERT(slotInRange(slot));
+    MOZ_ASSERT(IsValueInCompartment(value, compartment()));
     getSlotRef(slot).set(this->asObjectPtr(), slot, value);
 }
 
@@ -215,7 +234,19 @@ js::ObjectImpl::initSlot(uint32_t slot, const js::Value &value)
 {
     MOZ_ASSERT(getSlot(slot).isUndefined() || getSlot(slot).isMagic(JS_ARRAY_HOLE));
     MOZ_ASSERT(slotInRange(slot));
+    MOZ_ASSERT(IsValueInCompartment(value, compartment()));
     initSlotUnchecked(slot, value);
+}
+
+inline void
+js::ObjectImpl::initCrossCompartmentSlot(uint32_t slot, const js::Value &value)
+{
+    MOZ_ASSERT(getSlot(slot).isUndefined() || getSlot(slot).isMagic(JS_ARRAY_HOLE));
+    MOZ_ASSERT(slotInRange(slot));
+    if (value.isMarkable())
+        getSlotRef(slot).init(ValueCompartment(value), this->asObjectPtr(), slot, value);
+    else
+        initSlot(slot, value);
 }
 
 inline void
@@ -335,8 +366,11 @@ js::ObjectImpl::privateWriteBarrierPre(void **old)
 }
 
 inline void
-js::ObjectImpl::privateWriteBarrierPost(void **old)
+js::ObjectImpl::privateWriteBarrierPost(void **pprivate)
 {
+#ifdef JSGC_GENERATIONAL
+    compartment()->gcStoreBuffer.putCell(reinterpret_cast<js::gc::Cell **>(pprivate));
+#endif
 }
 
 /* static */ inline void
@@ -363,6 +397,11 @@ js::ObjectImpl::writeBarrierPre(ObjectImpl *obj)
 /* static */ inline void
 js::ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *addr)
 {
+#ifdef JSGC_GENERATIONAL
+    if (uintptr_t(obj) < 32)
+        return;
+    obj->compartment()->gcStoreBuffer.putCell((Cell **)addr);
+#endif
 }
 
 inline bool
@@ -401,9 +440,16 @@ inline void
 js::ObjectImpl::setPrivate(void *data)
 {
     void **pprivate = &privateRef(numFixedSlots());
-
     privateWriteBarrierPre(pprivate);
     *pprivate = data;
+}
+
+inline void
+js::ObjectImpl::setPrivateGCThing(js::gc::Cell *cell)
+{
+    void **pprivate = &privateRef(numFixedSlots());
+    privateWriteBarrierPre(pprivate);
+    *pprivate = reinterpret_cast<void *>(cell);
     privateWriteBarrierPost(pprivate);
 }
 

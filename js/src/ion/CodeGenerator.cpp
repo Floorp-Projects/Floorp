@@ -265,7 +265,7 @@ CodeGenerator::visitLambda(LLambda *lir)
     masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
     masm.storePtr(ImmGCPtr(fun->script()), Address(output, JSFunction::offsetOfNativeOrScript()));
     masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
-    masm.storePtr(ImmGCPtr(fun->atom), Address(output, offsetof(JSFunction, atom)));
+    masm.storePtr(ImmGCPtr(fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
 
     masm.bind(ool->rejoin());
     return true;
@@ -3951,7 +3951,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
     masm.passABIArg(ObjectReg);
     masm.passABIArg(PrivateReg);
     masm.passABIArg(ValueReg);
-    masm.callWithABI((void *)ins->mir()->fun());
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ins->mir()->fun()));
 
     if (ins->mir()->isInfallible()) {
         masm.loadValue(Address(StackPointer, IonDOMExitFrameLayout::offsetOfResult()),
@@ -4017,7 +4017,7 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
     masm.passABIArg(ObjectReg);
     masm.passABIArg(PrivateReg);
     masm.passABIArg(ValueReg);
-    masm.callWithABI((void *)ins->mir()->fun());
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ins->mir()->fun()));
 
     Label success, exception;
     masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);

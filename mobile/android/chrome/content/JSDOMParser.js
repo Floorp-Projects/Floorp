@@ -323,6 +323,9 @@
       if (childIndex == -1) {
         throw "replaceChild: node not found";
       } else {
+        if (newNode.parentNode)
+          newNode.parentNode.removeChild(newNode);
+
         childNodes[childIndex] = newNode;
         newNode.parentNode = this;
         oldNode.parentNode = null;
@@ -496,7 +499,12 @@
       }
     },
 
-    set textContext(text) {
+    set textContent(text) {
+      // clear parentNodes for existing children
+      for (let i = this.childNodes.length; --i >= 0;) {
+        this.childNodes[i].parentNode = null;
+      }
+
       let node = new Text();
       this.childNodes = [ node ];
       node.textContent = text;

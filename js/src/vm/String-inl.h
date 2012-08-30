@@ -17,6 +17,7 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 #include "gc/Barrier-inl.h"
+#include "gc/StoreBuffer.h"
 
 namespace js {
 
@@ -43,6 +44,22 @@ NewShortString(JSContext *cx, const jschar *chars, size_t length)
     return str;
 }
 
+static inline void
+StringWriteBarrierPost(JSCompartment *comp, JSString **strp)
+{
+#ifdef JSGC_GENERATIONAL
+    comp->gcStoreBuffer.putRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
+#endif
+}
+
+static inline void
+StringWriteBarrierPostRemove(JSCompartment *comp, JSString **strp)
+{
+#ifdef JSGC_GENERATIONAL
+    comp->gcStoreBuffer.removeRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
+#endif
+}
+
 } /* namespace js */
 
 inline void
@@ -64,6 +81,11 @@ JSString::writeBarrierPre(JSString *str)
 inline void
 JSString::writeBarrierPost(JSString *str, void *addr)
 {
+#ifdef JSGC_GENERATIONAL
+    if (!str)
+        return;
+    str->compartment()->gcStoreBuffer.putCell((Cell **)addr);
+#endif
 }
 
 inline bool
@@ -106,8 +128,8 @@ JSRope::init(JSString *left, JSString *right, size_t length)
     d.lengthAndFlags = buildLengthAndFlags(length, ROPE_FLAGS);
     d.u1.left = left;
     d.s.u2.right = right;
-    JSString::writeBarrierPost(d.u1.left, &d.u1.left);
-    JSString::writeBarrierPost(d.s.u2.right, &d.s.u2.right);
+    js::StringWriteBarrierPost(compartment(), &d.u1.left);
+    js::StringWriteBarrierPost(compartment(), &d.s.u2.right);
 }
 
 JS_ALWAYS_INLINE JSRope *
@@ -136,7 +158,7 @@ JSDependentString::init(JSLinearString *base, const jschar *chars, size_t length
     d.lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_FLAGS);
     d.u1.chars = chars;
     d.s.u2.base = base;
-    JSString::writeBarrierPost(d.s.u2.base, &d.s.u2.base);
+    js::StringWriteBarrierPost(compartment(), reinterpret_cast<JSString **>(&d.s.u2.base));
 }
 
 JS_ALWAYS_INLINE JSLinearString *

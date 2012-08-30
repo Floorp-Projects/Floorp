@@ -16,7 +16,7 @@
   static const mozilla::Module::CategoryEntry kUConvCategories[] = {
 
 #define NS_CONVERTER_REGISTRY_END \
-  { NULL } \
+  { nullptr } \
   };
 
 #define NS_UCONV_REG_UNREG_DECODER(_Charset, _CID)          \

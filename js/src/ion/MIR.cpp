@@ -332,7 +332,7 @@ MConstantElements::printOpcode(FILE *fp)
 }
 
 MParameter *
-MParameter::New(int32 index, types::TypeSet *types)
+MParameter::New(int32 index, types::StackTypeSet *types)
 {
     return new MParameter(index, types);
 }
@@ -892,20 +892,20 @@ MBinaryArithInstruction::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
     // Retrieve type information of lhs and rhs
     // Rhs is defaulted to int32 first, 
     // because in some cases there is no rhs type information
-    MIRType lhs = MIRTypeFromValueType(b.lhsTypes->getKnownTypeTag(cx));
+    MIRType lhs = MIRTypeFromValueType(b.lhsTypes->getKnownTypeTag());
     MIRType rhs = MIRType_Int32;
 
     // Test if types coerces to doubles
-    bool lhsCoerces = b.lhsTypes->knownNonStringPrimitive(cx);
+    bool lhsCoerces = b.lhsTypes->knownNonStringPrimitive();
     bool rhsCoerces = true;
 
     // Use type information provided by oracle if available.
     if (b.rhsTypes) {
-        rhs = MIRTypeFromValueType(b.rhsTypes->getKnownTypeTag(cx));
-        rhsCoerces = b.rhsTypes->knownNonStringPrimitive(cx);
+        rhs = MIRTypeFromValueType(b.rhsTypes->getKnownTypeTag());
+        rhsCoerces = b.rhsTypes->knownNonStringPrimitive();
     }
 
-    MIRType rval = MIRTypeFromValueType(b.outTypes->getKnownTypeTag(cx));
+    MIRType rval = MIRTypeFromValueType(b.outTypes->getKnownTypeTag());
 
     // Don't specialize for neither-integer-nor-double results.
     if (rval != MIRType_Int32 && rval != MIRType_Double) {
@@ -945,7 +945,7 @@ MBinaryArithInstruction::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
 }
 
 static bool
-SafelyCoercesToDouble(JSContext *cx, types::TypeSet *types)
+SafelyCoercesToDouble(JSContext *cx, types::StackTypeSet *types)
 {
     types::TypeFlags flags = types->baseFlags();
 
@@ -954,10 +954,8 @@ SafelyCoercesToDouble(JSContext *cx, types::TypeSet *types)
     types::TypeFlags converts = types::TYPE_FLAG_UNDEFINED | types::TYPE_FLAG_DOUBLE |
                                 types::TYPE_FLAG_INT32 | types::TYPE_FLAG_BOOLEAN;
 
-    if ((flags & converts) == flags) {
-        types->addFreeze(cx); // Keeps callsite logic simple.
+    if ((flags & converts) == flags)
         return true;
-    }
 
     return false;
 }
@@ -968,8 +966,8 @@ MCompare::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
     if (!b.lhsTypes || !b.rhsTypes)
         return;
 
-    MIRType lhs = MIRTypeFromValueType(b.lhsTypes->getKnownTypeTag(cx));
-    MIRType rhs = MIRTypeFromValueType(b.rhsTypes->getKnownTypeTag(cx));
+    MIRType lhs = MIRTypeFromValueType(b.lhsTypes->getKnownTypeTag());
+    MIRType rhs = MIRTypeFromValueType(b.rhsTypes->getKnownTypeTag());
 
     // Strict integer or boolean comparisons may be treated as Int32.
     if ((lhs == MIRType_Int32 && rhs == MIRType_Int32) ||

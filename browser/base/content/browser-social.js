@@ -41,6 +41,7 @@ let SocialUI = {
           SocialToolbar.updateButtonHiddenState();
           SocialSidebar.updateSidebar();
           SocialChatBar.update();
+          SocialFlyout.unload();
         } catch (e) {
           Components.utils.reportError(e);
           throw e;
@@ -71,9 +72,11 @@ let SocialUI = {
     this.updateToggleCommand();
 
     let toggleCommand = this.toggleCommand;
-    let label = gNavigatorBundle.getFormattedString("social.enable.label",
-                                                    [Social.provider.name]);
-    let accesskey = gNavigatorBundle.getString("social.enable.accesskey");
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+    let label = gNavigatorBundle.getFormattedString("social.toggle.label",
+                                                    [Social.provider.name,
+                                                     brandShortName]);
+    let accesskey = gNavigatorBundle.getString("social.toggle.accesskey");
     toggleCommand.setAttribute("label", label);
     toggleCommand.setAttribute("accesskey", accesskey);
 
@@ -137,7 +140,7 @@ let SocialUI = {
     // Show a warning, allow undoing the activation
     let description = document.getElementById("social-activation-message");
     let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
-    let message = gNavigatorBundle.getFormattedString("social.activated.message",
+    let message = gNavigatorBundle.getFormattedString("social.activated.description",
                                                       [Social.provider.name, brandShortName]);
     description.value = message;
 
@@ -169,9 +172,9 @@ let SocialChatBar = {
                      docElem.getAttribute("chromehidden").indexOf("extrachrome") >= 0;
     return Social.uiVisible && !chromeless;
   },
-  newChat: function(aProvider, aURL, aCallback) {
+  openChat: function(aProvider, aURL, aCallback, aMode) {
     if (this.canShow)
-      this.chatbar.newChat(aProvider, aURL, aCallback);
+      this.chatbar.openChat(aProvider, aURL, aCallback, aMode);
   },
   update: function() {
     if (!this.canShow)
@@ -179,7 +182,123 @@ let SocialChatBar = {
   }
 }
 
+function sizeSocialPanelToContent(iframe) {
+  // FIXME: bug 764787: Maybe we can use nsIDOMWindowUtils.getRootBounds() here?
+  // Need to handle dynamic sizing
+  let doc = iframe.contentDocument;
+  if (!doc) {
+    return;
+  }
+  // "notif" is an implementation detail that we should get rid of
+  // eventually
+  let body = doc.getElementById("notif") || doc.body;
+  if (!body || !body.firstChild) {
+    return;
+  }
+
+  let [height, width] = [body.firstChild.offsetHeight || 300, 330];
+  iframe.style.width = width + "px";
+  iframe.style.height = height + "px";
+}
+
+let SocialFlyout = {
+  get panel() {
+    return document.getElementById("social-flyout-panel");
+  },
+
+  dispatchPanelEvent: function(name) {
+    let doc = this.panel.firstChild.contentDocument;
+    let evt = doc.createEvent("CustomEvent");
+    evt.initCustomEvent(name, true, true, {});
+    doc.documentElement.dispatchEvent(evt);
+  },
+
+  _createFrame: function() {
+    let panel = this.panel;
+    if (!Social.provider || panel.firstChild)
+      return;
+    // create and initialize the panel for this window
+    let iframe = document.createElement("iframe");
+    iframe.setAttribute("type", "content");
+    iframe.setAttribute("flex", "1");
+    iframe.setAttribute("origin", Social.provider.origin);
+    panel.appendChild(iframe);
+  },
+
+  unload: function() {
+    let panel = this.panel;
+    if (!panel.firstChild)
+      return
+    panel.removeChild(panel.firstChild);
+  },
+
+  onShown: function(aEvent) {
+    let iframe = this.panel.firstChild;
+    iframe.docShell.isActive = true;
+    iframe.docShell.isAppTab = true;
+    if (iframe.contentDocument.readyState == "complete") {
+      this.dispatchPanelEvent("socialFrameShow");
+    } else {
+      // first time load, wait for load and dispatch after load
+      iframe.addEventListener("load", function panelBrowserOnload(e) {
+        iframe.removeEventListener("load", panelBrowserOnload, true);
+        setTimeout(function() {
+          SocialFlyout.dispatchPanelEvent("socialFrameShow");
+        }, 0);
+      }, true);
+    }
+  },
+
+  onHidden: function(aEvent) {
+    this.panel.firstChild.docShell.isActive = false;
+    this.dispatchPanelEvent("socialFrameHide");
+  },
+
+  open: function(aURL, yOffset, aCallback) {
+    if (!Social.provider)
+      return;
+    let panel = this.panel;
+    if (!panel.firstChild)
+      this._createFrame();
+    panel.hidden = false;
+    let iframe = panel.firstChild;
+
+    let src = iframe.getAttribute("src");
+    if (src != aURL) {
+      iframe.addEventListener("load", function documentLoaded() {
+        iframe.removeEventListener("load", documentLoaded, true);
+        sizeSocialPanelToContent(iframe);
+        if (aCallback) {
+          try {
+            aCallback(iframe.contentWindow);
+          } catch(e) {
+            Cu.reportError(e);
+          }
+        }
+      }, true);
+      iframe.setAttribute("src", aURL);
+    }
+    else if (aCallback) {
+      try {
+        aCallback(iframe.contentWindow);
+      } catch(e) {
+        Cu.reportError(e);
+      }
+    }
+
+    sizeSocialPanelToContent(iframe);
+    let anchor = document.getElementById("social-sidebar-browser");
+    panel.openPopup(anchor, "start_before", 0, yOffset, false, false);
+  }
+}
+
 let SocialShareButton = {
+  // promptImages and promptMessages being null means we are yet to get the
+  // message back from the provider with the images and icons (or that we got
+  // the response but determined it was invalid.)
+  promptImages: null,
+  promptMessages: null,
+
   // Called once, after window load, when the Social.provider object is initialized
   init: function SSB_init() {
     this.updateButtonHiddenState();
@@ -198,6 +317,61 @@ let SocialShareButton = {
     } else {
       profileRow.hidden = true;
     }
+    // XXX - this shouldn't be done as part of updateProfileInfo, but instead
+    // whenever we notice the provider has changed - but the concept of
+    // "provider changed" will only exist once bug 774520 lands. 
+    this.promptImages = null;
+    this.promptMessages = null;
+    // get the recommend-prompt info.
+    let port = Social.provider._getWorkerPort();
+    if (port) {
+      port.onmessage = function(evt) {
+        if (evt.data.topic == "social.user-recommend-prompt-response") {
+          port.close();
+          this.acceptRecommendInfo(evt.data.data);
+          this.updateButtonHiddenState();
+          this.updateShareState();
+        }
+      }.bind(this);
+      port.postMessage({topic: "social.user-recommend-prompt"});
+    }
+  },
+
+  acceptRecommendInfo: function SSB_acceptRecommendInfo(data) {
+    // Accept *and validate* the user-recommend-prompt-response message.
+    let promptImages = {};
+    let promptMessages = {};
+    function reportError(reason) {
+      Cu.reportError("Invalid recommend data from provider: " + reason + ": sharing is disabled for this provider");
+      return false;
+    }
+    if (!data ||
+        !data.images || typeof data.images != "object" ||
+        !data.messages || typeof data.messages != "object") {
+      return reportError("data is missing valid 'images' or 'messages' elements");
+    }
+    for (let sub of ["share", "unshare"]) {
+      let url = data.images[sub];
+      if (!url || typeof url != "string" || url.length == 0) {
+        return reportError('images["' + sub + '"] is missing or not a non-empty string');
+      }
+      // resolve potentially relative URLs then check the scheme is acceptable.
+      url = Services.io.newURI(Social.provider.origin, null, null).resolve(url);
+      let uri = Services.io.newURI(url, null, null);
+      if (!uri.schemeIs("http") && !uri.schemeIs("https") && !uri.schemeIs("data")) {
+        return reportError('images["' + sub + '"] does not have a valid scheme');
+      }
+      promptImages[sub] = url;
+    }
+    for (let sub of ["shareTooltip", "unshareTooltip", "sharedLabel", "unsharedLabel"]) {
+      if (typeof data.messages[sub] != "string" || data.messages[sub].length == 0) {
+        return reportError('messages["' + sub + '"] is not a valid string');
+      }
+      promptMessages[sub] = data.messages[sub];
+    }
+    this.promptImages = promptImages;
+    this.promptMessages = promptMessages;
+    return true;
   },
 
   get shareButton() {
@@ -214,7 +388,7 @@ let SocialShareButton = {
   updateButtonHiddenState: function SSB_updateButtonHiddenState() {
     let shareButton = this.shareButton;
     if (shareButton)
-      shareButton.hidden = !Social.uiVisible;
+      shareButton.hidden = !Social.uiVisible || this.promptImages == null;
   },
 
   onClick: function SSB_onClick(aEvent) {
@@ -257,23 +431,33 @@ let SocialShareButton = {
     // Provide a11y-friendly notification of share.
     let status = document.getElementById("share-button-status");
     if (status) {
+      // XXX - this should also be capable of reflecting that the page was
+      // unshared (ie, it needs to manage three-states: (1) nothing done, (2)
+      // shared, (3) shared then unshared)
+      // Note that we *do* have an appropriate string from the provider for
+      // this (promptMessages['unsharedLabel'] but currently lack a way of
+      // tracking this state)
       let statusString = currentPageShared ?
-                           gNavigatorBundle.getString("social.pageShared.label") : "";
+                           this.promptMessages['sharedLabel'] : "";
       status.setAttribute("value", statusString);
     }
 
     // Update the share button, if present
     let shareButton = this.shareButton;
-    if (!shareButton)
+    if (!shareButton || shareButton.hidden)
       return;
 
+    let imageURL;
     if (currentPageShared) {
       shareButton.setAttribute("shared", "true");
-      shareButton.setAttribute("tooltiptext", gNavigatorBundle.getString("social.shareButton.sharedtooltip"));
+      shareButton.setAttribute("tooltiptext", this.promptMessages['unshareTooltip']);
+      imageURL = this.promptImages["unshare"]
     } else {
       shareButton.removeAttribute("shared");
-      shareButton.setAttribute("tooltiptext", gNavigatorBundle.getString("social.shareButton.tooltip"));
+      shareButton.setAttribute("tooltiptext", this.promptMessages['shareTooltip']);
+      imageURL = this.promptImages["share"]
     }
+    shareButton.style.backgroundImage = 'url("' + encodeURI(imageURL) + '")';
   }
 };
 
@@ -281,14 +465,6 @@ var SocialToolbar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialToolbar_init() {
     document.getElementById("social-provider-image").setAttribute("image", Social.provider.iconURL);
-
-    let removeItem = document.getElementById("social-remove-menuitem");
-    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
-    let label = gNavigatorBundle.getFormattedString("social.remove.label",
-                                                    [brandShortName]);
-    let accesskey = gNavigatorBundle.getString("social.remove.accesskey");
-    removeItem.setAttribute("label", label);
-    removeItem.setAttribute("accesskey", accesskey);
 
     let statusAreaPopup = document.getElementById("social-statusarea-popup");
     statusAreaPopup.addEventListener("popupshown", function(e) {
@@ -344,23 +520,26 @@ var SocialToolbar = {
     let iconNames = Object.keys(provider.ambientNotificationIcons);
     let iconBox = document.getElementById("social-status-iconbox");
     let notifBox = document.getElementById("social-notification-box");
-    let notifBrowsers = document.createDocumentFragment();
+    let panel = document.getElementById("social-notification-panel");
+    panel.hidden = false;
+    let notificationFrames = document.createDocumentFragment();
     let iconContainers = document.createDocumentFragment();
 
     for each(let name in iconNames) {
       let icon = provider.ambientNotificationIcons[name];
 
-      let notifBrowserId = "social-status-" + icon.name;
-      let notifBrowser = document.getElementById(notifBrowserId);
-      if (!notifBrowser) {
-        notifBrowser = document.createElement("iframe");
-        notifBrowser.setAttribute("type", "content");
-        notifBrowser.setAttribute("id", notifBrowserId);
-        notifBrowsers.appendChild(notifBrowser);
+      let notificationFrameId = "social-status-" + icon.name;
+      let notificationFrame = document.getElementById(notificationFrameId);
+      if (!notificationFrame) {
+        notificationFrame = document.createElement("iframe");
+        notificationFrame.setAttribute("type", "content");
+        notificationFrame.setAttribute("id", notificationFrameId);
+        notificationFrame.setAttribute("mozbrowser", "true");
+        notificationFrames.appendChild(notificationFrame);
       }
-      notifBrowser.setAttribute("origin", provider.origin);
-      if (notifBrowser.getAttribute("src") != icon.contentPanel)
-        notifBrowser.setAttribute("src", icon.contentPanel);
+      notificationFrame.setAttribute("origin", provider.origin);
+      if (notificationFrame.getAttribute("src") != icon.contentPanel)
+        notificationFrame.setAttribute("src", icon.contentPanel);
 
       let iconId = "social-notification-icon-" + icon.name;
       let iconContainer = document.getElementById(iconId);
@@ -387,79 +566,55 @@ var SocialToolbar = {
       }
       if (iconImage.getAttribute("src") != icon.iconURL)
         iconImage.setAttribute("src", icon.iconURL);
-      iconImage.setAttribute("notifBrowserId", notifBrowserId);
+      iconImage.setAttribute("notificationFrameId", notificationFrameId);
 
       iconCounter.collapsed = !icon.counter;
       iconCounter.firstChild.textContent = icon.counter || "";
     }
-    notifBox.appendChild(notifBrowsers);
+    notifBox.appendChild(notificationFrames);
     iconBox.appendChild(iconContainers);
-
-    let browserIter = notifBox.firstElementChild;
-    while (browserIter) {
-      browserIter.docShell.isAppTab = true;
-      browserIter = browserIter.nextElementSibling;
-    }
   },
 
   showAmbientPopup: function SocialToolbar_showAmbientPopup(iconContainer) {
     let iconImage = iconContainer.firstChild;
     let panel = document.getElementById("social-notification-panel");
     let notifBox = document.getElementById("social-notification-box");
-    let notifBrowser = document.getElementById(iconImage.getAttribute("notifBrowserId"));
+    let notificationFrame = document.getElementById(iconImage.getAttribute("notificationFrameId"));
 
-    panel.hidden = false;
-
-    function sizePanelToContent() {
-      // FIXME: bug 764787: Maybe we can use nsIDOMWindowUtils.getRootBounds() here?
-      // Need to handle dynamic sizing
-      let doc = notifBrowser.contentDocument;
-      if (!doc) {
-        return;
-      }
-      // "notif" is an implementation detail that we should get rid of
-      // eventually
-      let body = doc.getElementById("notif") || doc.body;
-      if (!body || !body.firstChild) {
-        return;
-      }
-
-      // Clear dimensions on all browsers so the panel size will
-      // only use the selected browser.
-      let browserIter = notifBox.firstElementChild;
-      while (browserIter) {
-        browserIter.hidden = (browserIter != notifBrowser);
-        browserIter = browserIter.nextElementSibling;
-      }
-
-      let [height, width] = [body.firstChild.offsetHeight || 300, 330];
-      notifBrowser.style.width = width + "px";
-      notifBrowser.style.height = height + "px";
+    // Clear dimensions on all browsers so the panel size will
+    // only use the selected browser.
+    let frameIter = notifBox.firstElementChild;
+    while (frameIter) {
+      frameIter.collapsed = (frameIter != notificationFrame);
+      frameIter = frameIter.nextElementSibling;
     }
-
-    sizePanelToContent();
 
     function dispatchPanelEvent(name) {
-      let evt = notifBrowser.contentDocument.createEvent("CustomEvent");
+      let evt = notificationFrame.contentDocument.createEvent("CustomEvent");
       evt.initCustomEvent(name, true, true, {});
-      notifBrowser.contentDocument.documentElement.dispatchEvent(evt);
+      notificationFrame.contentDocument.documentElement.dispatchEvent(evt);
     }
 
-    panel.addEventListener("popuphiding", function onpopuphiding() {
-      panel.removeEventListener("popuphiding", onpopuphiding);
+    panel.addEventListener("popuphidden", function onpopuphiding() {
+      panel.removeEventListener("popuphidden", onpopuphiding);
       SocialToolbar.button.removeAttribute("open");
+      notificationFrame.docShell.isActive = false;
       dispatchPanelEvent("socialFrameHide");
     });
 
     panel.addEventListener("popupshown", function onpopupshown() {
       panel.removeEventListener("popupshown", onpopupshown);
       SocialToolbar.button.setAttribute("open", "true");
-      if (notifBrowser.contentDocument.readyState == "complete") {
+      notificationFrame.docShell.isActive = true;
+      notificationFrame.docShell.isAppTab = true;
+      if (notificationFrame.contentDocument.readyState == "complete") {
+        sizeSocialPanelToContent(notificationFrame);
         dispatchPanelEvent("socialFrameShow");
       } else {
         // first time load, wait for load and dispatch after load
-        notifBrowser.addEventListener("load", function panelBrowserOnload(e) {
-          notifBrowser.removeEventListener("load", panelBrowserOnload, true);
+        notificationFrame.addEventListener("load", function panelBrowserOnload(e) {
+          notificationFrame.removeEventListener("load", panelBrowserOnload, true);
+          sizeSocialPanelToContent(notificationFrame);
           setTimeout(function() {
             dispatchPanelEvent("socialFrameShow");
           }, 0);

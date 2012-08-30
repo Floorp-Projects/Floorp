@@ -92,7 +92,7 @@ var properties2 = {
   honorificSuffix: "dummyHonorificSuffix",
   additionalName: "dummyadditionalName",
   nickname: "dummyNickname",
-  tel: [{type: ["test"], value: "123456789"},{type: ["home", "custom"], value: "234567890"}],
+  tel: [{type: ["test"], value: "123456789", carrier: "myCarrier"},{type: ["home", "custom"], value: "234567890"}],
   email: [{type: ["test"], value: "a@b.c"}, {value: "b@c.d"}],
   adr: [adr1, adr2],
   impp: [{type: ["aim"], value:"im1"}, {value: "im2"}],
@@ -154,8 +154,8 @@ function checkTel(tel1, tel2) {
 }
 
 function checkField(field1, field2) {
-  checkStr(field1.type, field1.type, "Same type");
-  checkStr(field1.value, field1.value, "Same value");
+  checkStr(field1.type, field2.type, "Same type");
+  checkStr(field1.value, field2.value, "Same value");
 }
 
 function checkContacts(contact1, contact2) {
@@ -312,6 +312,20 @@ var steps = [
       findResult1 = req.result[0];
       ok(findResult1.id == sample_id1, "Same ID");
       checkContacts(createResult1, properties1);
+      dump("findResult: " + JSON.stringify(findResult1) + "\n");
+      // Some manual testing. Testint the testfunctions
+      // tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+9-876-5432"}],
+      is(findResult1.tel[0].carrier, "testCarrier", "Same Carrier");
+      is(findResult1.tel[0].type, "work", "Same type");
+      is(findResult1.tel[0].value, "123456", "Same Value");
+      is(findResult1.tel[1].type[1], "fax", "Same type");
+      is(findResult1.tel[1].value, "+9-876-5432", "Same Value");
+
+      is(findResult1.adr[0].countryName, "country 1", "Same country");
+
+      // email: [{type: ["work"], value: "x@y.com"}]
+      is(findResult1.email[0].type, "work", "Same Type");
+      is(findResult1.email[0].value, "x@y.com", "Same Value");
       next();
     };
     req.onerror = onFailure;

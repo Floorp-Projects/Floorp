@@ -147,21 +147,15 @@ class WeakMapBase {
 
 template <class Key, class Value,
           class HashPolicy = DefaultHasher<Key> >
-class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, public WeakMapBase {
-  private:
+class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, public WeakMapBase
+{
+  public:
     typedef HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy> Base;
     typedef typename Base::Enum Enum;
-
-  public:
     typedef typename Base::Range Range;
 
     explicit WeakMap(JSRuntime *rt, JSObject *memOf=NULL) : Base(rt), WeakMapBase(memOf) { }
     explicit WeakMap(JSContext *cx, JSObject *memOf=NULL) : Base(cx), WeakMapBase(memOf) { }
-
-    /* Use with caution, as result can be affected by garbage collection. */
-    Range nondeterministicAll() {
-        return Base::all();
-    }
 
   private:
     bool markValue(JSTracer *trc, Value *x) {
@@ -180,12 +174,12 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
         bool markedAny = false;
         for (Enum e(*this); !e.empty(); e.popFront()) {
             /* If the entry is live, ensure its key and value are marked. */
-            Key k(e.front().key);
-            bool keyIsMarked = gc::IsMarked(&k);
-            if (keyIsMarked) {
+            Key prior(e.front().key);
+            if (gc::IsMarked(const_cast<Key *>(&e.front().key))) {
                 if (markValue(trc, &e.front().value))
                     markedAny = true;
-                e.rekeyFront(k);
+                if (prior != e.front().key)
+                    e.rekeyFront(e.front().key);
             }
         }
         return markedAny;

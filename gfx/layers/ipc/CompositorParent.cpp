@@ -323,6 +323,18 @@ CompositorParent::ScheduleTask(CancelableTask* task, int time)
 }
 
 void
+CompositorParent::NotifyShadowTreeTransaction()
+{
+  if (mLayerManager) {
+    ShadowLayerManager *shadow = mLayerManager->AsShadowManager();
+    if (shadow) {
+      shadow->NotifyShadowTreeTransaction();
+    }
+  }
+  ScheduleComposition();
+}
+
+void
 CompositorParent::ScheduleComposition()
 {
   if (mCurrentCompositeTask) {
@@ -761,7 +773,9 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 
     if (mIsFirstPaint) {
       mContentRect = metrics.mContentRect;
-      SetFirstPaintViewport(metrics.mViewportScrollOffset,
+      const gfx::Point& scrollOffset = metrics.mViewportScrollOffset;
+      SetFirstPaintViewport(nsIntPoint(NS_lround(scrollOffset.x),
+                                       NS_lround(scrollOffset.y)),
                             1/rootScaleX,
                             mContentRect,
                             metrics.mCSSContentRect);
@@ -775,9 +789,9 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     // notifications, so that Java can take these into account in its response.
     // Calculate the absolute display port to send to Java
     nsIntRect displayPort = metrics.mDisplayPort;
-    nsIntPoint scrollOffset = metrics.mViewportScrollOffset;
-    displayPort.x += scrollOffset.x;
-    displayPort.y += scrollOffset.y;
+    gfx::Point scrollOffset = metrics.mViewportScrollOffset;
+    displayPort.x += NS_lround(scrollOffset.x);
+    displayPort.y += NS_lround(scrollOffset.y);
 
     SyncViewportInfo(displayPort, 1/rootScaleX, mLayersUpdated,
                      mScrollOffset, mXScale, mYScale);
@@ -794,7 +808,8 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 
     nsIntPoint metricsScrollOffset(0, 0);
     if (metrics.IsScrollable()) {
-      metricsScrollOffset = metrics.mViewportScrollOffset;
+      metricsScrollOffset =
+        nsIntPoint(NS_lround(scrollOffset.x), NS_lround(scrollOffset.y));
     }
 
     nsIntPoint scrollCompensation(
@@ -884,6 +899,10 @@ CompositorParent::ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
     SetShadowProperties(root);
   }
   ScheduleComposition();
+  ShadowLayerManager *shadow = mLayerManager->AsShadowManager();
+  if (shadow) {
+    shadow->NotifyShadowTreeTransaction();
+  }
 }
 
 PLayersParent*
@@ -1191,7 +1210,7 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   }
   UpdateIndirectTree(id, shadowRoot, isFirstPaint);
 
-  sCurrentCompositor->ScheduleComposition();
+  sCurrentCompositor->NotifyShadowTreeTransaction();
 }
 
 void

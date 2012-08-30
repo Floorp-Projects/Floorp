@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=533596
+-->
+<window title="Mozilla Bug 533596"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+
+  <iframe src="http://example.org/tests/js/xpconnect/tests/mochitest/file_mozMatchesSelector.html"
+          onload="runTest(this)">
+  </iframe>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+      SimpleTest.waitForExplicitFinish();
+      function runTest(ifr)
+      {
+        var doc = ifr.contentDocument;
+        var docElem = doc.documentElement;
+        
+        var res = doc.createElement('div').mozMatchesSelector('div');
+        is(res, true, "mozMatchesSelector call through xray, regular case");
+        
+        res = docElem.mozMatchesSelector.call(
+          doc.createElement('div'), 'div');
+        is(res, true, "mozMatchesSelector call through xray, with .call");
+                        
+        var sb = new Components.utils.Sandbox(ifr.contentWindow);
+        sb.doc = doc;
+        var str = "doc.documentElement.mozMatchesSelector.call(doc.createElement( 'div' ),'div')";
+        res = Components.utils.evalInSandbox(str, sb);
+        is(res, true, "mozMatchesSelector call through xray (same origin), with .call");
+        
+        docElem.mozMatchesSelector = function(){return false};
+        res = docElem.mozMatchesSelector.call(doc.createElement( 'div' ),'div');
+        is(res, false, "shadowing mozMatchesSelector with an expando on the xray wrapper");
+        
+        SimpleTest.finish();
+      }
+
+  ]]></script>
+</window>

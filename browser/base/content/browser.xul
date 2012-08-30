@@ -192,8 +192,8 @@
           <hbox pack="end" align="center" class="popup-notification-button-container">
 #ifdef XP_UNIX
         <button id="social-undoactivation-button"
-                label="&social.activated.button.label;"
-                accesskey="&social.activated.button.accesskey;"
+                label="&social.activated.undobutton.label;"
+                accesskey="&social.activated.undobutton.accesskey;"
                 onclick="SocialUI.undoActivation();"/>
         <button default="true"
                 autofocus="autofocus"
@@ -207,8 +207,8 @@
                 accesskey="&social.ok.accesskey;"
                 oncommand="SocialUI.notificationPanel.hidePopup();"/>
         <button id="social-undoactivation-button"
-                label="&social.activated.button.label;"
-                accesskey="&social.activated.button.accesskey;"
+                label="&social.activated.undobutton.label;"
+                accesskey="&social.activated.undobutton.accesskey;"
                 onclick="SocialUI.undoActivation();"/>
 #endif
           </hbox>
@@ -271,6 +271,13 @@
     <panel id="social-notification-panel" type="arrow" hidden="true" noautofocus="true">
       <box id="social-notification-box" flex="1"></box>
     </panel>
+    <panel id="social-flyout-panel"
+           onpopupshown="SocialFlyout.onShown()"
+           onpopuphidden="SocialFlyout.onHidden()"
+           type="arrow"
+           hidden="true"
+           noautofocus="true"
+           position="topcenter topright"/>
 
     <menupopup id="inspector-node-popup">
       <menuitem id="inspectorHTMLCopyInner"
@@ -515,7 +522,7 @@
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="large"
-             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,home-button,bookmarks-menu-button-container,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,downloads-button,home-button,bookmarks-menu-button-container,window-controls"
              context="toolbar-context-menu">
 
       <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
@@ -674,8 +681,6 @@
                           oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();"/>
                 </vbox>
               </hbox>
-              <menuitem id="social-remove-menuitem"
-                        oncommand="Social.active = false;"/>
               <menuitem id="social-toggle-sidebar-menuitem"
                         type="checkbox"
                         autocheck="false"
@@ -932,14 +937,14 @@
                      tooltiptext="&printButton.tooltip;"/>
 
       <!-- This is a placeholder for the Downloads Indicator.  It is visible
-           only during the customization of the toolbar or in the palette, and
-           is replaced when customization is done. -->
+           during the customization of the toolbar, in the palette, and before
+           the Downloads Indicator overlay is loaded. -->
       <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     observes="Tools:Downloads"
-                     ondrop="DownloadsButtonDNDObserver.onDrop(event)"
-                     ondragover="DownloadsButtonDNDObserver.onDragOver(event)"
-                     ondragenter="DownloadsButtonDNDObserver.onDragOver(event)"
-                     ondragexit="DownloadsButtonDNDObserver.onDragExit(event)"
+                     oncommand="DownloadsIndicatorView.onCommand(event);"
+                     ondrop="DownloadsIndicatorView.onDrop(event);"
+                     ondragover="DownloadsIndicatorView.onDragOver(event);"
+                     ondragenter="DownloadsIndicatorView.onDragOver(event);"
+                     ondragleave="DownloadsIndicatorView.onDragLeave(event);"
                      label="&downloads.label;"
                      tooltiptext="&downloads.tooltip;"/>
 
@@ -1070,6 +1075,7 @@
           observes="socialSidebarBroadcaster">
       <browser id="social-sidebar-browser"
                type="content"
+               disableglobalhistory="true"
                flex="1"
                style="min-width: 14em; width: 18em; max-width: 36em;"/>
     </vbox>
@@ -1108,24 +1114,6 @@
                      oncommand="InspectorUI.closeInspectorUI(false);"
                      tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
-      <toolbarbutton id="inspector-option-toolbarbutton"
-                     type="menu"
-                     tabindex="0"
-                     tooltiptext="&inspectOptionButton.tooltiptext;">
-        <menupopup id="inspector-option-popup"
-                   position="before_start">
-          <menuitem id="inspectorToggleVeil"
-                    type="checkbox"
-                    label="&inspectorToggleVeil.label;"
-                    accesskey="&inspectorToggleVeil.accesskey;"
-                    command="Inspector:ToggleVeil"/>
-          <menuitem id="inspectorToggleInfobar"
-                    type="checkbox"
-                    label="&inspectorToggleInfobar.label;"
-                    accesskey="&inspectorToggleInfobar.accesskey;"
-                    command="Inspector:ToggleInfobar"/>
-        </menupopup>
-      </toolbarbutton>
       <toolbarbutton id="inspector-inspect-toolbutton"
                      class="devtools-toolbarbutton"
                      command="Inspector:Inspect"/>

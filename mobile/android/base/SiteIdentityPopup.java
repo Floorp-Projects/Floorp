@@ -78,7 +78,7 @@ public class SiteIdentityPopup extends PopupWindow {
         mInflated = true;
     }
 
-    public void show(View v, int leftMargin) {
+    public void show(View v) {
         Tab selectedTab = Tabs.getInstance().getSelectedTab();
         if (selectedTab == null) {
             Log.e(LOGTAG, "Selected tab is null");
@@ -146,13 +146,15 @@ public class SiteIdentityPopup extends PopupWindow {
             mSupplemental.setTextColor(mResources.getColor(R.color.identity_identified));
         }
 
+        int[] anchorLocation = new int[2];
+        v.getLocationOnScreen(anchorLocation);
+
+        int arrowWidth = mResources.getDimensionPixelSize(R.dimen.doorhanger_arrow_width);
+        int leftMargin = anchorLocation[0] + (v.getWidth() - arrowWidth) / 2;
+
         int offset = 0;
         if (GeckoApp.mAppContext.isTablet()) {
-            int popupWidth = mResources.getDimensionPixelSize(R.dimen.site_identity_popup_width);
-            int arrowWidth = mResources.getDimensionPixelSize(R.dimen.doorhanger_arrow_width);
-
-            // Double arrowWidth to leave extra space on the right side of the arrow
-            leftMargin = popupWidth - arrowWidth*2;
+            int popupWidth = mResources.getDimensionPixelSize(R.dimen.popup_width);
             offset = 0 - popupWidth + arrowWidth*3/2 + v.getWidth()/2;
         }
 

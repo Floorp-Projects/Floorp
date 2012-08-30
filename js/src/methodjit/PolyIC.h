@@ -413,9 +413,6 @@ struct PICInfo : public BasePolyIC {
     // Offset from start of fast path to initial shape guard.
     uint32_t shapeGuard;
 
-    // Possible types of the RHS, for monitored SETPROP PICs.
-    types::TypeSet *rhsTypes;
-
     inline bool isSet() const {
         return kind == SET;
     }

@@ -56,6 +56,7 @@
                 <html:span class="helpIcon" role="link"/>
             </html:div>
         </xul:vbox>
+        <html:div class="previewPluginContent"><!-- iframe and its src will be set at runtime --></html:div>
         <html:div style="display:none;"><children/></html:div>
     </content>
 </binding>

@@ -36,6 +36,7 @@ public:
     , mScrollId(NULL_SCROLL_ID)
     , mCSSContentRect(0, 0, 0, 0)
     , mResolution(1, 1)
+    , mMayHaveTouchListeners(false)
   {}
 
   // Default copy ctor and operator= are fine
@@ -70,7 +71,7 @@ public:
   // These are all in layer coordinate space.
   nsIntRect mViewport;
   nsIntRect mContentRect;
-  nsIntPoint mViewportScrollOffset;
+  gfx::Point mViewportScrollOffset;
   nsIntRect mDisplayPort;
   ViewID mScrollId;
 
@@ -81,6 +82,9 @@ public:
   // This represents the resolution at which the associated layer
   // will been rendered.
   gfxSize mResolution;
+
+  // Whether or not this frame may have touch listeners.
+  bool mMayHaveTouchListeners;
 };
 
 }

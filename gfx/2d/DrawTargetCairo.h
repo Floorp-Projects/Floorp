@@ -135,6 +135,9 @@ public:
   void PrepareForDrawing(cairo_t* aContext, const Path* aPath = nullptr);
 
 private: // methods
+  // Init cairo surface without doing a cairo_surface_reference() call.
+  bool InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize& aSize);
+
   enum DrawPatternType { DRAW_FILL, DRAW_STROKE };
   void DrawPattern(const Pattern& aPattern,
                    const StrokeOptions& aStrokeOptions,

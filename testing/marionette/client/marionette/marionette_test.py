@@ -53,42 +53,31 @@ window.addEventListener('message', function frameload(e) {
         self.assertTrue(isinstance(frame, HTMLElement))
         return frame
 
-    def set_up_test_page(self, emulator, url="test.html", whitelist_prefs=None):
+    def set_up_test_page(self, emulator, url="test.html", permissions=None):
         emulator.set_context("content")
         url = emulator.absolute_url(url)
         emulator.navigate(url)
 
-        if not whitelist_prefs:
+        if not permissions:
             return
 
         emulator.set_context("chrome")
         emulator.execute_script("""
 Components.utils.import("resource://gre/modules/Services.jsm");
-let [url, whitelist_prefs] = arguments;
-let host = Services.io.newURI(url, null, null).prePath;
-whitelist_prefs.forEach(function (pref) {
-  let value;
-  try {
-    value = Services.prefs.getCharPref(pref);
-    log(pref + " has initial value " + value);
-  } catch(ex) {
-    log(pref + " has no initial value.");
-    // Ignore.
-  }
-  let list = value ? value.split(",") : [];
-  if (list.indexOf(host) != -1) {
-    return;
-  }
-  // Some whitelists expect scheme://host, some expect the full URI...
-  list.push(host);
-  list.push(url);
-  Services.prefs.setCharPref(pref, list.join(","))
-  log("Added " + host + " to " + pref);
+let [url, permissions] = arguments;
+let uri = Services.io.newURI(url, null, null);
+permissions.forEach(function (perm) {
+    Services.perms.add(uri, "sms", Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
 });
-        """, [url, whitelist_prefs])
+        """, [url, permissions])
         emulator.set_context("content")
 
     def setUp(self):
+        # Convert the marionette weakref to an object, just for the
+        # duration of the test; this is deleted in tearDown() to prevent
+        # a persistent circular reference which in turn would prevent
+        # proper garbage collection.
+        self.marionette = self._marionette_weakref()
         if self.marionette.session is None:
             self.marionette.start_session()
 
@@ -97,11 +86,13 @@ whitelist_prefs.forEach(function (pref) {
             self.loglines = self.marionette.get_logs()
             self.perfdata = self.marionette.get_perf_data()
             self.marionette.delete_session()
+        self.marionette = None
 
 class MarionetteTestCase(CommonTestCase):
 
-    def __init__(self, marionette, methodName='runTest', **kwargs):
-        self.marionette = marionette
+    def __init__(self, marionette_weakref, methodName='runTest', **kwargs):
+        self._marionette_weakref = marionette_weakref
+        self.marionette = None
         self.extra_emulator_index = -1
         CommonTestCase.__init__(self, methodName, **kwargs)
 
@@ -126,10 +117,11 @@ class MarionetteJSTestCase(CommonTestCase):
     timeout_re = re.compile(r"MARIONETTE_TIMEOUT(\s*)=(\s*)(\d+);")
     launch_re = re.compile(r"MARIONETTE_LAUNCH_APP(\s*)=(\s*)['|\"](.*?)['|\"];")
 
-    def __init__(self, marionette, methodName='runTest', jsFile=None):
+    def __init__(self, marionette_weakref, methodName='runTest', jsFile=None):
         assert(jsFile)
         self.jsFile = jsFile
-        self.marionette = marionette
+        self._marionette_weakref = marionette_weakref
+        self.marionette = None
         CommonTestCase.__init__(self, methodName)
 
     def runTest(self):

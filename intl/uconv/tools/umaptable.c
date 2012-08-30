@@ -428,7 +428,7 @@ void getinput()
 {
   char buf[256];
   short c,u;
-  for(;gets(buf)!=NULL;)
+  for (; gets(buf);)
   {
      if(buf[0]=='0' && buf[1] == 'x')
         {

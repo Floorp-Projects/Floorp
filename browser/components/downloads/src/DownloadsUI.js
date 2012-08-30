@@ -68,52 +68,22 @@ DownloadsUI.prototype = {
     }
 
     if (aReason == Ci.nsIDownloadManagerUI.REASON_NEW_DOWNLOAD) {
-      // New download notifications are already handled by the panel service.
-      // We don't handle them here because we don't want them to depend on the
-      // "browser.download.manager.showWhenStarting" and
-      // "browser.download.manager.focusWhenStarting" preferences.
-      return;
-    }
-
-    // Show the panel in the most recent browser window, if present.
-    let browserWin = gBrowserGlue.getMostRecentBrowserWindow();
-    if (browserWin) {
-      // The most recent browser window could have been minimized, in that case
-      // it must be restored to allow the panel to open properly.
-      if (browserWin.windowState == Ci.nsIDOMChromeWindow.STATE_MINIMIZED) {
-        browserWin.restore();
+      // If the indicator is visible, then new download notifications are
+      // already handled by the panel service.
+      let browserWin = gBrowserGlue.getMostRecentBrowserWindow();
+      if (browserWin &&
+          browserWin.windowState != Ci.nsIDOMChromeWindow.STATE_MINIMIZED &&
+          browserWin.DownloadsButton.isVisible) {
+        return;
       }
-      browserWin.focus();
-      browserWin.DownloadsPanel.showPanel();
-      return;
     }
 
-    // If no browser window is visible and the user requested to show the
-    // current downloads, try and open a new window.  We'll open the panel when
-    // delayed loading is finished.
-    Services.obs.addObserver(function DUIO_observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(DUIO_observe, aTopic);
-      aSubject.DownloadsPanel.showPanel();
-    }, "browser-delayed-startup-finished", false);
-
-    // We must really build an empty arguments list for the new window.
-    let windowFirstArg = Cc["@mozilla.org/supports-string;1"]
-                         .createInstance(Ci.nsISupportsString);
-    let windowArgs = Cc["@mozilla.org/supports-array;1"]
-                     .createInstance(Ci.nsISupportsArray);
-    windowArgs.AppendElement(windowFirstArg);
-    Services.ww.openWindow(null, "chrome://browser/content/browser.xul",
-                           null, "chrome,dialog=no,all", windowArgs);
+    this._toolkitUI.show(aWindowContext, aID, aReason);
   },
 
   get visible()
   {
-    if (DownloadsCommon.useToolkitUI) {
-      return this._toolkitUI.visible;
-    }
-
-    let browserWin = gBrowserGlue.getMostRecentBrowserWindow();
-    return browserWin ? browserWin.DownloadsPanel.isPanelShowing : false;
+    return this._toolkitUI.visible;
   },
 
   getAttention: function DUI_getAttention()

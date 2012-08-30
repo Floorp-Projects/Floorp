@@ -77,6 +77,14 @@ const KEY_GRED            = "GreD";
 const KEY_UPDROOT         = "UpdRootD";
 #endif
 
+#ifdef XP_WIN
+#define SKIP_STAGE_UPDATES_TEST
+#elifdef MOZ_WIDGET_GONK
+// In Gonk, the updater will remount the /system partition to move staged files
+// into place, so we skip the test here to keep things isolated.
+#define SKIP_STAGE_UPDATES_TEST
+#endif
+
 const DIR_UPDATES         = "updates";
 #ifdef XP_MACOSX
 const UPDATED_DIR         = "Updated.app";
@@ -126,14 +134,15 @@ const SERVICE_UPDATER_NOT_FIXED_DRIVE      = 31;
 const SERVICE_COULD_NOT_LOCK_UPDATER       = 32;
 const SERVICE_INSTALLDIR_ERROR             = 33;
 
-const WRITE_ERROR_ACCESS_DENIED       = 35;
-const WRITE_ERROR_SHARING_VIOLATION   = 36;
-const WRITE_ERROR_CALLBACK_APP        = 37;
-const INVALID_UPDATER_STATUS_CODE     = 38;
-const UNEXPECTED_BZIP_ERROR           = 39;
-const UNEXPECTED_MAR_ERROR            = 40;
-const UNEXPECTED_BSPATCH_ERROR        = 41;
-const UNEXPECTED_FILE_OPERATION_ERROR = 42;
+const WRITE_ERROR_ACCESS_DENIED        = 35;
+const WRITE_ERROR_SHARING_VIOLATION    = 36;
+const WRITE_ERROR_CALLBACK_APP         = 37;
+const INVALID_UPDATER_STATUS_CODE      = 38;
+const UNEXPECTED_BZIP_ERROR            = 39;
+const UNEXPECTED_MAR_ERROR             = 40;
+const UNEXPECTED_BSPATCH_ERROR         = 41;
+const UNEXPECTED_FILE_OPERATION_ERROR  = 42;
+const FILESYSTEM_MOUNT_READWRITE_ERROR = 43;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -443,7 +452,7 @@ XPCOMUtils.defineLazyGetter(this, "gCanStageUpdates", function aus_gCanStageUpda
     return false;
   }
 
-#ifdef XP_WIN
+#ifdef SKIP_STAGE_UPDATES_TEST
   if (getPref("getBoolPref", PREF_APP_UPDATE_SERVICE_ENABLED, false)) {
     // No need to perform directory write checks, the maintenance service will
     // be able to write to all directories.
@@ -985,7 +994,8 @@ function handleUpdateFailure(update, errorCode) {
   if (update.errorCode == WRITE_ERROR || 
       update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
       update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
-      update.errorCode == WRITE_ERROR_CALLBACK_APP) {
+      update.errorCode == WRITE_ERROR_CALLBACK_APP ||
+      update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR) {
     Cc["@mozilla.org/updates/update-prompt;1"].
       createInstance(Ci.nsIUpdatePrompt).
       showUpdateError(update);
@@ -3503,7 +3513,8 @@ UpdatePrompt.prototype = {
         (update.errorCode == WRITE_ERROR ||
          update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
          update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
-         update.errorCode == WRITE_ERROR_CALLBACK_APP)) {
+         update.errorCode == WRITE_ERROR_CALLBACK_APP ||
+         update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR)) {
       var title = gUpdateBundle.GetStringFromName("updaterIOErrorTitle");
       var text = gUpdateBundle.formatStringFromName("updaterIOErrorMsg",
                                                     [Services.appinfo.name,

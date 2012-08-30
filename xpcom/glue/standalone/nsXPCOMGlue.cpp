@@ -543,12 +543,12 @@ NS_CycleCollectorForget(nsISupports* obj)
 }
 
 XPCOM_API(nsPurpleBufferEntry*)
-NS_CycleCollectorSuspect2(nsISupports* obj)
+NS_CycleCollectorSuspect2(void* obj, nsCycleCollectionParticipant *p)
 {
     if (!xpcomFunctions.cycleSuspect2Func)
         return nullptr;
 
-    return xpcomFunctions.cycleSuspect2Func(obj);
+    return xpcomFunctions.cycleSuspect2Func(obj, p);
 }
 
 XPCOM_API(bool)

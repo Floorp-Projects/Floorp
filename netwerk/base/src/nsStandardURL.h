@@ -10,7 +10,6 @@
 #include "nsDependentString.h"
 #include "nsDependentSubstring.h"
 #include "nsISerializable.h"
-#include "nsIIPCSerializableObsolete.h"
 #include "nsIFileURL.h"
 #include "nsIStandardURL.h"
 #include "nsIFile.h"
@@ -24,6 +23,7 @@
 #include "nsISizeOf.h"
 #include "prclist.h"
 #include "mozilla/Attributes.h"
+#include "nsIIPCSerializableURI.h"
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 #define DEBUG_DUMP_URLS_AT_SHUTDOWN
@@ -42,9 +42,9 @@ class nsIPrefBranch;
 class nsStandardURL : public nsIFileURL
                     , public nsIStandardURL
                     , public nsISerializable
-                    , public nsIIPCSerializableObsolete
                     , public nsIClassInfo
                     , public nsISizeOf
+                    , public nsIIPCSerializableURI
 {
 public:
     NS_DECL_ISUPPORTS
@@ -53,9 +53,9 @@ public:
     NS_DECL_NSIFILEURL
     NS_DECL_NSISTANDARDURL
     NS_DECL_NSISERIALIZABLE
-    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
     NS_DECL_NSICLASSINFO
     NS_DECL_NSIMUTABLE
+    NS_DECL_NSIIPCSERIALIZABLEURI
 
     // nsISizeOf
     virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
@@ -226,10 +226,6 @@ private:
     // fastload helper functions
     nsresult ReadSegment(nsIBinaryInputStream *, URLSegment &);
     nsresult WriteSegment(nsIBinaryOutputStream *, const URLSegment &);
-
-    // ipc helper functions
-    bool ReadSegment(const IPC::Message *, void **, URLSegment &);
-    void WriteSegment(IPC::Message *, const URLSegment &);
 
     static void PrefsChanged(nsIPrefBranch *prefs, const char *pref);
 

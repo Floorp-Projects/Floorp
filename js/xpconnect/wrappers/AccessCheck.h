@@ -61,9 +61,7 @@ struct OnlyIfSubjectIsSystem : public Policy {
             return true;
         }
         perm = DenyAccess;
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, wrapper))
-            return false;
+        JSAutoCompartment ac(cx, wrapper);
         AccessCheck::deny(cx, id);
         return false;
     }
@@ -82,9 +80,7 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
             return true;
         }
         perm = DenyAccess;
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, wrapper))
-            return false;
+        JSAutoCompartment ac(cx, wrapper);
         AccessCheck::deny(cx, id);
         return false;
     }
@@ -130,9 +126,7 @@ struct LocationPolicy : public Policy {
             return true;
         }
 
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, wrapper))
-            return false;
+        JSAutoCompartment ac(cx, wrapper);
         AccessCheck::deny(cx, id);
         return false;
     }

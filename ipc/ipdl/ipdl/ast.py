@@ -315,6 +315,7 @@ class MessageDecl(Node):
         self.direction = None
         self.inParams = [ ]
         self.outParams = [ ]
+        self.compress = ''
 
     def addInParams(self, inParamsList):
         self.inParams += inParamsList

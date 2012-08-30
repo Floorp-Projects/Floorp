@@ -1007,8 +1007,6 @@ pref("devtools.inspector.htmlHeight", 112);
 pref("devtools.inspector.htmlPanelOpen", false);
 pref("devtools.inspector.sidebarOpen", false);
 pref("devtools.inspector.activeSidebar", "ruleview");
-pref("devtools.inspector.highlighterShowVeil", true);
-pref("devtools.inspector.highlighterShowInfobar", true);
 
 // Enable the Layout View
 pref("devtools.layoutview.enabled", true);
@@ -1030,7 +1028,9 @@ pref("devtools.debugger.ui.height", 250);
 pref("devtools.debugger.ui.remote-win.width", 900);
 pref("devtools.debugger.ui.remote-win.height", 400);
 pref("devtools.debugger.ui.stackframes-width", 200);
+pref("devtools.debugger.ui.stackframes-pane-visible", true);
 pref("devtools.debugger.ui.variables-width", 300);
+pref("devtools.debugger.ui.variables-pane-visible", true);
 
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
@@ -1089,6 +1089,9 @@ pref("devtools.webconsole.filter.error", true);
 pref("devtools.webconsole.filter.warn", true);
 pref("devtools.webconsole.filter.info", true);
 pref("devtools.webconsole.filter.log", true);
+
+// Text size in the Web Console. Use 0 for the system default size.
+pref("devtools.webconsole.fontSize", 0);
 
 // The number of lines that are displayed in the web console for the Net,
 // CSS, JS and Web Developer categories.

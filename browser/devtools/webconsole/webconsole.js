@@ -152,6 +152,9 @@ const THROTTLE_UPDATES = 1000; // milliseconds
 // The preference prefix for all of the Web Console filters.
 const FILTER_PREFS_PREFIX = "devtools.webconsole.filter.";
 
+// The minimum font size.
+const MIN_FONT_SIZE = 10;
+
 /**
  * A WebConsoleFrame instance is an interactive console initialized *per tab*
  * that displays console log data as well as provides an interactive terminal to
@@ -318,10 +321,22 @@ WebConsoleFrame.prototype = {
 
     this.filterBox = doc.querySelector(".hud-filter-box");
     this.outputNode = doc.querySelector(".hud-output-node");
+    this.completeNode = doc.querySelector(".jsterm-complete-node");
+    this.inputNode = doc.querySelector(".jsterm-input-node");
 
     this._setFilterTextBoxEvents();
     this._initPositionUI();
     this._initFilterButtons();
+
+    let fontSize = Services.prefs.getIntPref("devtools.webconsole.fontSize");
+
+    if (fontSize != 0) {
+      fontSize = Math.max(MIN_FONT_SIZE, fontSize);
+
+      this.outputNode.style.fontSize = fontSize + "px";
+      this.completeNode.style.fontSize = fontSize + "px";
+      this.inputNode.style.fontSize = fontSize + "px";
+    }
 
     let saveBodies = doc.getElementById("saveBodies");
     saveBodies.addEventListener("command", function() {
@@ -335,7 +350,7 @@ WebConsoleFrame.prototype = {
       saveBodies.setAttribute("checked", this.saveRequestAndResponseBodies);
     }.bind(this));
 
-    this.closeButton = doc.getElementsByClassName("webconsole-close-button")[0];
+    this.closeButton = doc.getElementById("webconsole-close-button");
     this.closeButton.addEventListener("command",
                                       this.owner.onCloseButton.bind(this.owner));
 
@@ -509,6 +524,52 @@ WebConsoleFrame.prototype = {
     }
 
     this.jsterm && this.jsterm.inputNode.focus();
+  },
+
+  /**
+   * Increase, decrease or reset the font size.
+   *
+   * @param string size
+   *        The size of the font change. Accepted values are "+" and "-".
+   *        An unmatched size assumes a font reset.
+   */
+  changeFontSize: function WCF_changeFontSize(aSize)
+  {
+    let fontSize = this.window
+                   .getComputedStyle(this.outputNode, null)
+                   .getPropertyValue("font-size").replace("px", "");
+
+    if (this.outputNode.style.fontSize) {
+      fontSize = this.outputNode.style.fontSize.replace("px", "");
+    }
+
+    if (aSize == "+" || aSize == "-") {
+      fontSize = parseInt(fontSize, 10);
+
+      if (aSize == "+") {
+        fontSize += 1;
+      }
+      else {
+        fontSize -= 1;
+      }
+
+      if (fontSize < MIN_FONT_SIZE) {
+        fontSize = MIN_FONT_SIZE;
+      }
+
+      Services.prefs.setIntPref("devtools.webconsole.fontSize", fontSize);
+      fontSize = fontSize + "px";
+
+      this.completeNode.style.fontSize = fontSize;
+      this.inputNode.style.fontSize = fontSize;
+      this.outputNode.style.fontSize = fontSize;
+    }
+    else {
+      this.completeNode.style.fontSize = "";
+      this.inputNode.style.fontSize = "";
+      this.outputNode.style.fontSize = "";
+      Services.prefs.clearUserPref("devtools.webconsole.fontSize");
+    }
   },
 
   /**
@@ -3363,6 +3424,9 @@ CommandController.prototype = {
       case "cmd_copy":
         // Only enable "copy" if nodes are selected.
         return this.owner.outputNode.selectedCount > 0;
+      case "cmd_fontSizeEnlarge":
+      case "cmd_fontSizeReduce":
+      case "cmd_fontSizeReset":
       case "cmd_selectAll":
         return true;
     }
@@ -3376,6 +3440,15 @@ CommandController.prototype = {
         break;
       case "cmd_selectAll":
         this.selectAll();
+        break;
+      case "cmd_fontSizeEnlarge":
+        this.owner.changeFontSize("+");
+        break;
+      case "cmd_fontSizeReduce":
+        this.owner.changeFontSize("-");
+        break;
+      case "cmd_fontSizeReset":
+        this.owner.changeFontSize("");
         break;
     }
   }

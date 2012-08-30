@@ -11,6 +11,10 @@
 #include "nsITabChild.h"
 #include "nsILoadContext.h"
 #include "nsNetUtil.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/URIUtils.h"
+
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
@@ -328,11 +332,14 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
 
+  URIParams uri;
+  SerializeURI(aURI, uri);
+
   // Corresponding release in DeallocPWebSocket
   AddIPDLReference();
 
   gNeckoChild->SendPWebSocketConstructor(this, tabChild);
-  if (!SendAsyncOpen(aURI, nsCString(aOrigin), mProtocol, mEncrypted,
+  if (!SendAsyncOpen(uri, nsCString(aOrigin), mProtocol, mEncrypted,
                      IPC::SerializedLoadContext(this)))
     return NS_ERROR_UNEXPECTED;
 
@@ -381,7 +388,10 @@ WebSocketChannelChild::SendBinaryStream(nsIInputStream *aStream,
 {
   LOG(("WebSocketChannelChild::SendBinaryStream() %p\n", this));
 
-  if (!mIPCOpen || !SendSendBinaryStream(IPC::InputStream(aStream), aLength))
+  OptionalInputStreamParams stream;
+  SerializeInputStream(aStream, stream);
+
+  if (!mIPCOpen || !SendSendBinaryStream(stream, aLength))
     return NS_ERROR_UNEXPECTED;
   return NS_OK;
 }

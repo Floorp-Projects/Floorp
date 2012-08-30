@@ -50,7 +50,7 @@ class WeakCache : public HashMap<Key, Value, HashPolicy, AllocPolicy> {
                 // Potentially update the location of the Key.
                 // The Value had its heap addresses correctly passed to IsMarked(),
                 // and therefore has already been updated if necessary.
-                e.rekeyFront(k);
+                // e.rekeyFront(k);
             }
         }
 

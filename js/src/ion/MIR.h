@@ -626,12 +626,12 @@ class MConstant : public MNullaryInstruction
 class MParameter : public MNullaryInstruction
 {
     int32 index_;
-    types::TypeSet *typeSet_;
+    types::StackTypeSet *typeSet_;
 
   public:
     static const int32 THIS_SLOT = -1;
 
-    MParameter(int32 index, types::TypeSet *types)
+    MParameter(int32 index, types::StackTypeSet *types)
       : index_(index),
         typeSet_(types)
     {
@@ -640,12 +640,12 @@ class MParameter : public MNullaryInstruction
 
   public:
     INSTRUCTION_HEADER(Parameter);
-    static MParameter *New(int32 index, types::TypeSet *types);
+    static MParameter *New(int32 index, types::StackTypeSet *types);
 
     int32 index() const {
         return index_;
     }
-    types::TypeSet *typeSet() const {
+    types::StackTypeSet *typeSet() const {
         return typeSet_;
     }
     void printOpcode(FILE *fp);

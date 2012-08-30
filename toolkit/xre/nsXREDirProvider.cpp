@@ -281,7 +281,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     rv = GetUserAppDataDirectory(getter_AddRefs(file));
   }
   else if (!strcmp(aProperty, XRE_UPDATE_ROOT_DIR)) {
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GONK)
     rv = GetUpdateRootDir(getter_AddRefs(file));
 #else
     // Only supported on Windows, so just immediately fail.
@@ -1001,6 +1001,22 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aResult = updRoot);
+  return NS_OK;
+}
+#endif
+
+#if defined(MOZ_WIDGET_GONK)
+nsresult
+nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
+{
+  nsCOMPtr<nsIFile> updRoot;
+
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString("/data/local"),
+                                      true,
+                                      getter_AddRefs(updRoot));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_IF_ADDREF(*aResult = updRoot);
   return NS_OK;
 }
 #endif

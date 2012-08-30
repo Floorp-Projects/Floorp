@@ -65,7 +65,10 @@
 
 struct list_state
 {
-  void           *magic;        /* to determine if previously initialized */
+  list_state() {
+    memset(this, 0, sizeof(*this));
+  }
+
   PRTime         now_time;      /* needed for year determination */
   PRExplodedTime now_tm;        /* needed for year determination */
   int32_t        lstyle;        /* LISTing style */

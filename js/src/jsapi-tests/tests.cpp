@@ -27,8 +27,8 @@ bool JSAPITest::init()
     JS::RootedObject global(cx, createGlobal());
     if (!global)
         return false;
-    call = JS_EnterCrossCompartmentCall(cx, global);
-    return call != NULL;
+    oldCompartment = JS_EnterCompartment(cx, global);
+    return oldCompartment != NULL;
 }
 
 bool JSAPITest::exec(const char *bytes, const char *filename, int lineno)
@@ -61,9 +61,7 @@ JSObject * JSAPITest::createGlobal(JSPrincipals *principals)
     JS_AddNamedObjectRoot(cx, &global, "test-global");
     JS::HandleObject globalHandle = JS::HandleObject::fromMarkedLocation(&global);
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, globalHandle))
-        return NULL;
+    JSAutoCompartment ac(cx, globalHandle);
 
     /* Populate the global object with the standard globals, like Object and
        Array. */

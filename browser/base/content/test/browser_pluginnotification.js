@@ -7,18 +7,6 @@ var gNextTest = null;
 var gClickToPlayPluginActualEvents = 0;
 var gClickToPlayPluginExpectedEvents = 5;
 
-function get_test_plugin() {
-  var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-  var tags = ph.getPluginTags();
-
-  // Find the test plugin
-  for (var i = 0; i < tags.length; i++) {
-    if (tags[i].name == "Test Plug-in")
-      return tags[i];
-  }
-  ok(false, "Unable to find plugin");
-}
-
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 // This listens for the next opened tab and checks it is of the right url.
@@ -117,7 +105,7 @@ function test1() {
   var objLoadingContent = pluginNode.QueryInterface(Ci.nsIObjectLoadingContent);
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED, "Test 1, plugin fallback type should be PLUGIN_UNSUPPORTED");
 
-  var plugin = get_test_plugin();
+  var plugin = getTestPlugin();
   ok(plugin, "Should have a test plugin");
   plugin.disabled = false;
   plugin.blocklisted = false;
@@ -131,7 +119,7 @@ function test2() {
   ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 2, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 2, Should not be a missing plugin list");
 
-  var plugin = get_test_plugin();
+  var plugin = getTestPlugin();
   ok(plugin, "Should have a test plugin");
   plugin.disabled = true;
   prepareTest(test3, gTestRoot + "plugin_test.html");
@@ -162,7 +150,7 @@ function test4(tab, win) {
 }
 
 function prepareTest5() {
-  var plugin = get_test_plugin();
+  var plugin = getTestPlugin();
   plugin.disabled = false;
   plugin.blocklisted = true;
   prepareTest(test5, gTestRoot + "plugin_test.html");
@@ -205,7 +193,7 @@ function test7() {
   ok("application/x-unknown" in gTestBrowser.missingPlugins, "Test 7, Should know about application/x-unknown");
   ok("application/x-test" in gTestBrowser.missingPlugins, "Test 7, Should know about application/x-test");
 
-  var plugin = get_test_plugin();
+  var plugin = getTestPlugin();
   plugin.disabled = false;
   plugin.blocklisted = false;
   Services.prefs.setBoolPref("plugins.click_to_play", true);
@@ -461,7 +449,7 @@ function test14() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 14, Plugin should be activated");
 
-  var plugin = get_test_plugin();
+  var plugin = getTestPlugin();
   plugin.disabled = false;
   plugin.blocklisted = false;
   Services.perms.removeAll();
@@ -640,7 +628,7 @@ function test18c() {
   ok(updateLink.style.display != "block", "Test 18c, Plugin should not have an update link");
 
   unregisterFakeBlocklistService();
-  var plugin = get_test_plugin();
+  var plugin = getTestPlugin();
   plugin.clicktoplay = false;
 
   prepareTest(test19a, gTestRoot + "plugin_test.html");

@@ -5,7 +5,7 @@
 MOZ_APP_BASENAME=Fennec
 MOZ_APP_VENDOR=Mozilla
 
-MOZ_APP_VERSION=17.0a1
+MOZ_APP_VERSION=18.0a1
 MOZ_APP_UA_NAME=Firefox
 
 MOZ_BRANDING_DIRECTORY=mobile/android/branding/unofficial
@@ -13,7 +13,6 @@ MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/android/branding/official
 # MOZ_APP_DISPLAYNAME is set by branding/configure.sh
 
 MOZ_SAFE_BROWSING=
-MOZ_SERVICES_SYNC=
 
 MOZ_DISABLE_DOMCRYPTO=1
 

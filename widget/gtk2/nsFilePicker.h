@@ -25,6 +25,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIFilePicker (less what's in nsBaseFilePicker)
+  NS_IMETHOD Open(nsIFilePickerShownCallback *aCallback);
   NS_IMETHODIMP AppendFilters(int32_t aFilterMask);
   NS_IMETHODIMP AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
   NS_IMETHODIMP SetDefaultString(const nsAString& aString);
@@ -38,6 +39,7 @@ public:
   NS_IMETHODIMP GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHODIMP Show(int16_t *aReturn);
 
+  // nsBaseFilePicker
   virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle, int16_t aMode);
 
   static void Shutdown();
@@ -46,11 +48,19 @@ protected:
 
   void ReadValuesFromFileChooser(GtkWidget *file_chooser);
 
+  static void OnResponse(GtkWidget* dialog, gint response_id,
+                         gpointer user_data);
+  static void OnDestroy(GtkWidget* dialog, gpointer user_data);
+  void Done(GtkWidget* dialog, gint response_id);
+
   nsCOMPtr<nsIWidget>    mParentWidget;
+  nsCOMPtr<nsIFilePickerShownCallback> mCallback;
   nsCOMArray<nsIFile> mFiles;
 
   int16_t   mMode;
   int16_t   mSelectedType;
+  int16_t   mResult;
+  bool      mRunning;
   bool      mAllowURLs;
   nsCString mFileURL;
   nsString  mTitle;

@@ -121,12 +121,17 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * It's legal to set a displayport that extends beyond the overflow
    * area in any direction (left/right/top/bottom).
-   * 
+   *
    * It's also legal to set a displayport that extends beyond the
    * area's bounds.  No pixels are rendered outside the area bounds.
    *
    * The caller of this method must have UniversalXPConnect
    * privileges.
+   *
+   * Calling this will always force a recomposite, so it should be
+   * avoided if at all possible. Client code should do checks before
+   * calling this so that duplicate sets are not made with the same
+   * displayport.
    */
   void setDisplayPortForElement(in float aXPx, in float aYPx,
                                 in float aWidthPx, in float aHeightPx,

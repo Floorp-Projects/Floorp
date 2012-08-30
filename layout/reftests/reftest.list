@@ -260,6 +260,8 @@ include table-bordercollapse/reftest.list
 # table-dom/
 include table-dom/reftest.list
 
+include table-overflow/reftest.list
+
 # table-width/
 include table-width/reftest.list
 

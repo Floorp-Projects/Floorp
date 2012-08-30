@@ -147,6 +147,7 @@ static bool sCCLockedOut;
 static PRTime sCCLockedOutTime;
 
 static js::GCSliceCallback sPrevGCSliceCallback;
+static js::AnalysisPurgeCallback sPrevAnalysisPurgeCallback;
 
 // The number of currently pending document loads. This count isn't
 // guaranteed to always reflect reality and can't easily as we don't
@@ -198,6 +199,17 @@ static nsIScriptSecurityManager *sSecurityManager;
 // the appropriate pref is set.
 
 static bool sGCOnMemoryPressure;
+
+static PRTime
+GetCollectionTimeDelta()
+{
+  PRTime now = PR_Now();
+  if (sFirstCollectionTime) {
+    return now - sFirstCollectionTime;
+  }
+  sFirstCollectionTime = now;
+  return 0;
+}
 
 class nsMemoryPressureObserver MOZ_FINAL : public nsIObserver
 {
@@ -1285,24 +1297,17 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
 
     XPCAutoRequest ar(mContext);
-
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, aScopeObject)) {
-      stack->Pop(nullptr);
-      return NS_ERROR_FAILURE;
-    }
+    JSAutoCompartment ac(mContext, aScopeObject);
 
     ++mExecuteDepth;
 
-    ok = ::JS_EvaluateUCScriptForPrincipalsVersion(mContext,
-                                                   aScopeObject,
-                                                   nsJSPrincipals::get(principal),
-                                                   static_cast<const jschar*>(PromiseFlatString(aScript).get()),
-                                                   aScript.Length(),
-                                                   aURL,
-                                                   aLineNo,
-                                                   &val,
-                                                   JSVersion(aVersion));
+    JS::CompileOptions options(mContext);
+    options.setFileAndLine(aURL, aLineNo)
+           .setVersion(JSVersion(aVersion))
+           .setPrincipals(nsJSPrincipals::get(principal));
+    JS::RootedObject rootedScope(mContext, aScopeObject);
+    ok = JS::Evaluate(mContext, rootedScope, options, PromiseFlatString(aScript).get(),
+                      aScript.Length(), &val);
 
     --mExecuteDepth;
 
@@ -1489,17 +1494,17 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // check it isn't JSVERSION_UNKNOWN.
   if (ok && JSVersion(aVersion) != JSVERSION_UNKNOWN) {
     XPCAutoRequest ar(mContext);
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, aScopeObject)) {
-      stack->Pop(nullptr);
-      return NS_ERROR_FAILURE;
-    }
+    JSAutoCompartment ac(mContext, aScopeObject);
 
-    ok = JS_EvaluateUCScriptForPrincipalsVersionOrigin(
-      mContext, aScopeObject,
-      nsJSPrincipals::get(principal), nsJSPrincipals::get(aOriginPrincipal),
-      static_cast<const jschar*>(PromiseFlatString(aScript).get()),
-      aScript.Length(), aURL, aLineNo, vp, JSVersion(aVersion));
+    JS::RootedObject rootedScope(mContext, aScopeObject);
+    JS::CompileOptions options(mContext);
+    options.setFileAndLine(aURL, aLineNo)
+           .setPrincipals(nsJSPrincipals::get(principal))
+           .setOriginPrincipals(nsJSPrincipals::get(aOriginPrincipal))
+           .setVersion(JSVersion(aVersion));
+    ok = JS::Evaluate(mContext, rootedScope, options,
+                      PromiseFlatString(aScript).get(),
+                      aScript.Length(), vp);
 
     if (!ok) {
       // Tell XPConnect about any pending exceptions. This is needed
@@ -1513,10 +1518,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // If all went well, convert val to a string if one is wanted.
   if (ok) {
     XPCAutoRequest ar(mContext);
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, aScopeObject)) {
-      stack->Pop(nullptr);
-    }
+    JSAutoCompartment ac(mContext, aScopeObject);
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
   }
   else {
@@ -1759,17 +1761,16 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
 #endif
 
   // Event handlers are always shared, and must be bound before use.
-  // Therefore we never bother compiling with principals.
-  // (that probably means we should avoid JS_CompileUCFunctionForPrincipals!)
+  // Therefore we don't bother compiling with principals.
   XPCAutoRequest ar(mContext);
 
-  JSFunction* fun =
-      ::JS_CompileUCFunctionForPrincipalsVersion(mContext,
-                                                 nullptr, nullptr,
-                                                 nsAtomCString(aName).get(), aArgCount, aArgNames,
-                                                 (jschar*)PromiseFlatString(aBody).get(),
-                                                 aBody.Length(),
-                                                 aURL, aLineNo, JSVersion(aVersion));
+  JS::CompileOptions options(mContext);
+  options.setVersion(JSVersion(aVersion))
+         .setFileAndLine(aURL, aLineNo);
+  JS::RootedObject empty(mContext, NULL);
+  JSFunction* fun = JS::CompileFunction(mContext, empty, options, nsAtomCString(aName).get(),
+                                        aArgCount, aArgNames,
+                                        PromiseFlatString(aBody).get(), aBody.Length());
 
   if (!fun) {
     ReportPendingException();
@@ -1822,20 +1823,18 @@ nsJSContext::CompileFunction(JSObject* aTarget,
     }
   }
 
-  JSObject *target = aTarget;
+  JS::RootedObject target(mContext, aShared ? NULL : aTarget);
 
   XPCAutoRequest ar(mContext);
 
-  JSFunction* fun =
-      ::JS_CompileUCFunctionForPrincipalsVersion(mContext,
-                                                 aShared ? nullptr : target,
-                                                 nsJSPrincipals::get(principal),
-                                                 PromiseFlatCString(aName).get(),
-                                                 aArgCount, aArgArray,
-                                                 static_cast<const jschar*>(PromiseFlatString(aBody).get()),
-                                                 aBody.Length(),
-                                                 aURL, aLineNo,
-                                                 JSVersion(aVersion));
+  JS::CompileOptions options(mContext);
+  options.setPrincipals(nsJSPrincipals::get(principal))
+         .setVersion(JSVersion(aVersion))
+         .setFileAndLine(aURL, aLineNo);
+  JSFunction* fun = JS::CompileFunction(mContext, target,
+                                        options, PromiseFlatCString(aName).get(),
+                                        aArgCount, aArgArray,
+                                        PromiseFlatString(aBody).get(), aBody.Length());
 
   if (!fun)
     return NS_ERROR_FAILURE;
@@ -1901,10 +1900,8 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
 
     JSObject *funobj = aHandler;
     jsval funval = OBJECT_TO_JSVAL(funobj);
-    JSAutoEnterCompartment ac;
-    js::ForceFrame ff(mContext, funobj);
-    if (!ac.enter(mContext, funobj) || !ff.enter() ||
-        !JS_WrapObject(mContext, &target)) {
+    JSAutoCompartment ac(mContext, funobj);
+    if (!JS_WrapObject(mContext, &target)) {
       ReportPendingException();
       return NS_ERROR_FAILURE;
     }
@@ -1979,21 +1976,14 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
 
 #ifdef DEBUG
   {
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, aHandler)) {
-      return NS_ERROR_FAILURE;
-    }
-
+    JSAutoCompartment ac(mContext, aHandler);
     NS_ASSERTION(JS_TypeOfValue(mContext,
                                 OBJECT_TO_JSVAL(aHandler)) == JSTYPE_FUNCTION,
                  "Event handler object not a function");
   }
 #endif
 
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(mContext, target)) {
-    return NS_ERROR_FAILURE;
-  }
+  JSAutoCompartment ac(mContext, target);
 
   JSObject* funobj;
   // Make sure the handler function is parented by its event target object
@@ -3125,12 +3115,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_MAX,
                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC);
 
-  PRTime delta = 0;
-  if (sFirstCollectionTime) {
-    delta = now - sFirstCollectionTime;
-  } else {
-    sFirstCollectionTime = now;
-  }
+  PRTime delta = GetCollectionTimeDelta();
 
   uint32_t cleanups = sForgetSkippableBeforeCC ? sForgetSkippableBeforeCC : 1;
   uint32_t minForgetSkippableTime = (sMinForgetSkippableTime == PR_UINT32_MAX)
@@ -3516,13 +3501,7 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
   NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
 
   if (aProgress == js::GC_CYCLE_END) {
-    PRTime now = PR_Now();
-    PRTime delta = 0;
-    if (sFirstCollectionTime) {
-      delta = now - sFirstCollectionTime;
-    } else {
-      sFirstCollectionTime = now;
-    }
+    PRTime delta = GetCollectionTimeDelta();
 
     if (sPostGCEventsToConsole) {
       NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f) ");
@@ -3539,7 +3518,7 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
 
     if (sPostGCEventsToConsole || sPostGCEventsToObserver) {
       nsString json;
-      json.Adopt(aDesc.formatJSON(aRt, now));
+      json.Adopt(aDesc.formatJSON(aRt, PR_Now()));
       nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
       NS_DispatchToMainThread(notify);
     }
@@ -3594,6 +3573,32 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
 
   if (sPrevGCSliceCallback)
     (*sPrevGCSliceCallback)(aRt, aProgress, aDesc);
+}
+
+static void
+DOMAnalysisPurgeCallback(JSRuntime *aRt, JSFlatString *aDesc)
+{
+  NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
+
+  PRTime delta = GetCollectionTimeDelta();
+
+  if (sPostGCEventsToConsole) {
+    NS_NAMED_LITERAL_STRING(kFmt, "Analysis Purge (T+%.1f) ");
+    nsString prefix;
+    prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
+                                           double(delta) / PR_USEC_PER_SEC));
+
+    nsDependentJSString stats(aDesc);
+    nsString msg = prefix + stats;
+
+    nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    if (cs) {
+      cs->LogStringMessage(msg.get());
+    }
+  }
+
+  if (sPrevAnalysisPurgeCallback)
+    (*sPrevAnalysisPurgeCallback)(aRt, aDesc);
 }
 
 // Script object mananagement - note duplicate implementation
@@ -4012,6 +4017,7 @@ nsJSRuntime::Init()
   NS_ASSERTION(NS_IsMainThread(), "bad");
 
   sPrevGCSliceCallback = js::SetGCSliceCallback(sRuntime, DOMGCSliceCallback);
+  sPrevAnalysisPurgeCallback = js::SetAnalysisPurgeCallback(sRuntime, DOMAnalysisPurgeCallback);
 
   // Set up the structured clone callbacks.
   static JSStructuredCloneCallbacks cloneCallbacks = {
@@ -4105,6 +4111,12 @@ nsJSRuntime::Init()
                                 "javascript.options.mem.gc_high_frequency_high_limit_mb");
   SetMemoryGCPrefChangedCallback("javascript.options.mem.gc_high_frequency_high_limit_mb",
                                  (void *)JSGC_HIGH_FREQUENCY_HIGH_LIMIT);
+
+  Preferences::RegisterCallback(SetMemoryGCPrefChangedCallback,
+                                "javascript.options.mem.analysis_purge_mb",
+                                (void *)JSGC_ANALYSIS_PURGE_TRIGGER);
+  SetMemoryGCPrefChangedCallback("javascript.options.mem.analysis_purge_mb",
+                                 (void *)JSGC_ANALYSIS_PURGE_TRIGGER);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs)

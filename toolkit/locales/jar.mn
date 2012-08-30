@@ -63,6 +63,7 @@
   locale/@AB_CD@/global/videocontrols.dtd               (%chrome/global/videocontrols.dtd)
   locale/@AB_CD@/global/viewSource.dtd                  (%chrome/global/viewSource.dtd)
   locale/@AB_CD@/global/viewSource.properties           (%chrome/global/viewSource.properties)
+  locale/@AB_CD@/global/webapps.properties              (%chrome/global/webapps.properties)
   locale/@AB_CD@/global/wizard.dtd                      (%chrome/global/wizard.dtd)
   locale/@AB_CD@/global/wizard.properties               (%chrome/global/wizard.properties)
   locale/@AB_CD@/global/xpinstall/xpinstall.properties  (%chrome/global/xpinstall/xpinstall.properties)

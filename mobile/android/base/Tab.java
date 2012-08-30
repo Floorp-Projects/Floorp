@@ -529,6 +529,32 @@ public final class Tab {
         }
     }
 
+    void handleLocationChange(JSONObject message) throws JSONException {
+        final String uri = message.getString("uri");
+        updateURL(uri);
+
+        setDocumentURI(message.getString("documentURI"));
+        if (message.getBoolean("sameDocument")) {
+            // We can get a location change event for the same document with an anchor tag
+            return;
+        }
+
+        setContentType(message.getString("contentType"));
+        clearFavicon();
+        updateTitle(null);
+        updateIdentityData(null);
+        setReaderEnabled(false);
+        setZoomConstraints(new ZoomConstraints(true));
+        setHasTouchListeners(false);
+        setCheckerboardColor(Color.WHITE);
+
+        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            public void run() {
+                Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.LOCATION_CHANGE, uri);
+            }
+        });
+    }
+
     private void saveThumbnailToDB() {
         try {
             String url = getURL();

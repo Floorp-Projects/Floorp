@@ -105,7 +105,6 @@ function getOrigin(url) {
 
 function tearDown() {
   debug("in " + arguments.callee.name);
-  uninstallAll();
   popupNotifications.panel.removeEventListener("popupshown", mainCommand, false);
   SpecialPowers.clearUserPref('browser.mozApps.installer.dry_run');
   DOMApplicationRegistry.allAppsLaunchable = originalAAL;

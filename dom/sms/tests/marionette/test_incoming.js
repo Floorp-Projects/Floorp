@@ -3,9 +3,8 @@
 
 MARIONETTE_TIMEOUT = 10000;
 
-const WHITELIST_PREF = "dom.sms.whitelist";
-let uriPrePath = window.location.protocol + "//" + window.location.host;
-SpecialPowers.setCharPref(WHITELIST_PREF, uriPrePath);
+SpecialPowers.setBoolPref("dom.sms.enabled", true);
+SpecialPowers.addPermission("sms", true, document);
 
 let sms = window.navigator.mozSms;
 let sender = "5555552368";
@@ -42,6 +41,6 @@ function cleanUp() {
     return;
   }
 
-  SpecialPowers.clearUserPref(WHITELIST_PREF);
+  SpecialPowers.removePermission("sms", document);
   finish();
 }

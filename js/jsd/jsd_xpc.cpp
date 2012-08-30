@@ -1001,10 +1001,7 @@ jsdScript::CreatePPLineMap()
         unsigned nargs;
 
         {
-            JSAutoEnterCompartment ac;
-            if (!ac.enter(cx, JS_GetFunctionObject(fun)))
-                return nullptr;
-
+            JSAutoCompartment ac(cx, JS_GetFunctionObject(fun));
             nargs = JS_GetFunctionArgumentCount(cx, fun);
             if (nargs > 12)
                 return nullptr;
@@ -1030,9 +1027,7 @@ jsdScript::CreatePPLineMap()
         JSString *jsstr;
 
         {
-            JS::AutoEnterScriptCompartment ac;
-            if (!ac.enter(cx, script))
-                return nullptr;
+            JSAutoCompartment ac(cx, script);
 
             jsstr = JS_DecompileScript (cx, script, "ppscript", 4);
             if (!jsstr)
@@ -1133,9 +1128,7 @@ jsdScript::GetVersion (int32_t *_rval)
     ASSERT_VALID_EPHEMERAL;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
     JSScript *script = JSD_GetJSScript(mCx, mScript);
-    JS::AutoEnterScriptCompartment ac;
-    if (!ac.enter(cx, script))
-        return NS_ERROR_FAILURE;
+    JSAutoCompartment ac(cx, script);
     *_rval = static_cast<int32_t>(JS_GetScriptVersion(cx, script));
     return NS_OK;
 }
@@ -1239,9 +1232,7 @@ jsdScript::GetParameterNames(uint32_t* count, PRUnichar*** paramNames)
     }
 
     JSAutoRequest ar(cx);
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, JS_GetFunctionObject(fun)))
-        return NS_ERROR_FAILURE;
+    JSAutoCompartment ac(cx, JS_GetFunctionObject(fun));
 
     unsigned nargs;
     if (!JS_FunctionHasLocalNames(cx, fun) ||
@@ -1328,16 +1319,13 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
     JSAutoRequest ar(cx);
 
     JSString *jsstr;
-    JSAutoEnterCompartment ac;
-    JS::AutoEnterScriptCompartment asc;
+    mozilla::Maybe<JSAutoCompartment> ac;
     if (fun) {
-        if (!ac.enter(cx, JS_GetFunctionObject(fun)))
-            return NS_ERROR_FAILURE;
+        ac.construct(cx, JS_GetFunctionObject(fun));
         jsstr = JS_DecompileFunction (cx, fun, 4);
     } else {
         JSScript *script = JSD_GetJSScript (mCx, mScript);
-        if (!asc.enter(cx, script))
-            return NS_ERROR_FAILURE;
+        ac.construct(cx, script);
         jsstr = JS_DecompileScript (cx, script, "ppscript", 4);
     }
     if (!jsstr)

@@ -18,7 +18,6 @@
 #include "prlog.h"
 #include "prio.h"
 #include "nsIIPCSerializableInputStream.h"
-#include "nsIIPCSerializableObsolete.h"
 
 template<class CharType> class nsLineBuffer;
 
@@ -103,18 +102,19 @@ protected:
 class nsFileInputStream : public nsFileStreamBase,
                           public nsIFileInputStream,
                           public nsILineInputStream,
-                          public nsIIPCSerializableObsolete,
                           public nsIIPCSerializableInputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIFILEINPUTSTREAM
     NS_DECL_NSILINEINPUTSTREAM
-    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
     NS_IMETHOD Close();
-    NS_IMETHOD Available(uint64_t* _retval);
+    NS_IMETHOD Available(uint64_t* _retval)
+    {
+        return nsFileStreamBase::Available(_retval);
+    }
     NS_IMETHOD Read(char* aBuf, uint32_t aCount, uint32_t* _retval);
     NS_IMETHOD ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
                             uint32_t aCount, uint32_t* _retval)
@@ -129,13 +129,14 @@ public:
     
     // Overrided from nsFileStreamBase
     NS_IMETHOD Seek(int32_t aWhence, int64_t aOffset);
-    NS_IMETHOD Tell(int64_t *aResult);
 
     nsFileInputStream()
-      : mIOFlags(0), mPerm(0), mCachedPosition(0), mLineBuffer(nullptr)
-    {}
+      : mIOFlags(0), mPerm(0)
+    {
+        mLineBuffer = nullptr;
+    }
 
-    virtual ~nsFileInputStream()
+    virtual ~nsFileInputStream() 
     {
         Close();
     }
@@ -159,17 +160,16 @@ protected:
      */
     int32_t mPerm;
 
-    /**
-     * Cached position for Tell for automatically reopening streams.
-     */
-    int64_t mCachedPosition;
-
 protected:
     /**
      * Internal, called to open a file.  Parameters are the same as their
      * Init() analogues.
      */
     nsresult Open(nsIFile* file, int32_t ioFlags, int32_t perm);
+    /**
+     * Reopen the file (for OPEN_ON_READ only!)
+     */
+    nsresult Reopen() { return Open(mFile, mIOFlags, mPerm); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,9 +179,9 @@ class nsPartialFileInputStream : public nsFileInputStream,
 {
 public:
     using nsFileInputStream::Init;
+    using nsFileInputStream::Read;
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIPARTIALFILEINPUTSTREAM
-    NS_DECL_NSIIPCSERIALIZABLEOBSOLETE
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
     nsPartialFileInputStream()

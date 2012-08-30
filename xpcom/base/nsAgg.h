@@ -76,9 +76,9 @@ public:                                                                     \
   static NS_METHOD TraverseImpl(NS_CYCLE_COLLECTION_INNERCLASS *that,       \
                                 void *p,                                    \
                                 nsCycleCollectionTraversalCallback &cb);    \
-  static NS_METHOD_(void) UnmarkIfPurpleImpl(nsISupports *p)                \
+  static NS_METHOD_(void) UnmarkIfPurpleImpl(void *p)                       \
   {                                                                         \
-    Downcast(p)->UnmarkIfPurple();                                          \
+    Downcast(static_cast<nsISupports *>(p))->UnmarkIfPurple();              \
   }                                                                         \
   static _class* Downcast(nsISupports* s)                                   \
   {                                                                         \
@@ -156,7 +156,7 @@ _class::Internal::Release(void)                                             \
     nsrefcnt count = agg->mRefCnt.decr(this);                               \
     NS_LOG_RELEASE(this, count, #_class);                                   \
     if (count == 0) {                                                       \
-        agg->mRefCnt.stabilizeForDeletion(this);                            \
+        agg->mRefCnt.stabilizeForDeletion();                                \
         delete agg;                                                         \
         return 0;                                                           \
     }                                                                       \

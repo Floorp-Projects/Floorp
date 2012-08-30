@@ -34,9 +34,3 @@
 <!ENTITY chooseFolderMac.accesskey    "e">
 <!ENTITY alwaysAsk.label "Always ask me where to save files">
 <!ENTITY alwaysAsk.accesskey "A">
-
-<!ENTITY addonsMgr.label               "Add-ons">
-<!ENTITY manageAddonsDescWin.label     "Change options for your add-ons">
-<!ENTITY manageAddonsDescUnix2.label   "Change preferences for your add-ons">
-<!ENTITY manageAddons.label            "Manage Add-ons…">
-<!ENTITY manageAddons.accesskey        "M">

@@ -475,6 +475,8 @@ DOMCI_CLASS(TransitionEvent)
 DOMCI_CLASS(AnimationEvent)
 
 DOMCI_CLASS(ContentFrameMessageManager)
+DOMCI_CLASS(ChromeMessageBroadcaster)
+DOMCI_CLASS(ChromeMessageSender)
 
 DOMCI_CLASS(FormData)
 
@@ -524,7 +526,6 @@ DOMCI_CLASS(BluetoothManager)
 DOMCI_CLASS(BluetoothAdapter)
 DOMCI_CLASS(BluetoothDevice)
 DOMCI_CLASS(BluetoothPropertyEvent)
-DOMCI_CLASS(BluetoothPairingEvent)
 #endif
 
 DOMCI_CLASS(CameraManager)

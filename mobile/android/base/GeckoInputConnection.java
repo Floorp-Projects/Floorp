@@ -86,6 +86,7 @@ class GeckoInputConnection
     private static final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
     private static int mIMEState;
     private static String mIMETypeHint = "";
+    private static String mIMEModeHint = "";
     private static String mIMEActionHint = "";
 
     private String mCurrentInputMethod;
@@ -531,9 +532,9 @@ class GeckoInputConnection
             // Such string cannot be handled by Gecko, so we convert it to a key press instead
             if (changedChar == '\n') {
                 processKeyDown(KeyEvent.KEYCODE_ENTER, new KeyEvent(KeyEvent.ACTION_DOWN,
-                                                                    KeyEvent.KEYCODE_ENTER), false);
+                                                                    KeyEvent.KEYCODE_ENTER));
                 processKeyUp(KeyEvent.KEYCODE_ENTER, new KeyEvent(KeyEvent.ACTION_UP,
-                                                                  KeyEvent.KEYCODE_ENTER), false);
+                                                                  KeyEvent.KEYCODE_ENTER));
                 return;
             }
 
@@ -804,6 +805,20 @@ class GeckoInputConnection
         else if (mIMETypeHint.equalsIgnoreCase("time"))
             outAttrs.inputType = InputType.TYPE_CLASS_DATETIME
                                  | InputType.TYPE_DATETIME_VARIATION_TIME;
+        else if (mIMEModeHint.equalsIgnoreCase("numeric"))
+            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER |
+                                 InputType.TYPE_NUMBER_FLAG_SIGNED |
+                                 InputType.TYPE_NUMBER_FLAG_DECIMAL;
+        else if (mIMEModeHint.equalsIgnoreCase("digit"))
+            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER;
+        else if (mIMEModeHint.equalsIgnoreCase("uppercase"))
+            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
+        else if (mIMEModeHint.equalsIgnoreCase("lowercase"))
+            outAttrs.inputType = InputType.TYPE_CLASS_TEXT; 
+        else if (mIMEModeHint.equalsIgnoreCase("titlecase"))
+            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_WORDS;
+        else if (mIMEModeHint.equalsIgnoreCase("autocapitalized"))
+            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
 
         if (mIMEActionHint.equalsIgnoreCase("go"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
@@ -855,9 +870,9 @@ class GeckoInputConnection
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
         switch (event.getAction()) {
             case KeyEvent.ACTION_DOWN:
-                return processKeyDown(keyCode, event, true);
+                return processKeyDown(keyCode, event);
             case KeyEvent.ACTION_UP:
-                return processKeyUp(keyCode, event, true);
+                return processKeyUp(keyCode, event);
             case KeyEvent.ACTION_MULTIPLE:
                 return onKeyMultiple(keyCode, event.getRepeatCount(), event);
         }
@@ -865,13 +880,12 @@ class GeckoInputConnection
     }
 
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return processKeyDown(keyCode, event, false);
+        return processKeyDown(keyCode, event);
     }
 
-    private boolean processKeyDown(int keyCode, KeyEvent event, boolean isPreIme) {
+    private boolean processKeyDown(int keyCode, KeyEvent event) {
         if (DEBUG) {
-            Log.d(LOGTAG, "IME: processKeyDown(keyCode=" + keyCode + ", event=" + event + ", "
-                          + isPreIme + ")");
+            Log.d(LOGTAG, "IME: processKeyDown(keyCode=" + keyCode + ", event=" + event + ")");
             GeckoApp.assertOnUiThread();
         }
 
@@ -900,11 +914,6 @@ class GeckoInputConnection
                 break;
         }
 
-        if (isPreIme && mIMEState != IME_STATE_DISABLED &&
-            (event.getMetaState() & KeyEvent.META_ALT_ON) != 0)
-            // Let active IME process pre-IME key events
-            return false;
-
         View view = getView();
         KeyListener keyListener = TextKeyListener.getInstance();
 
@@ -926,13 +935,12 @@ class GeckoInputConnection
     }
 
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        return processKeyUp(keyCode, event, false);
+        return processKeyUp(keyCode, event);
     }
 
-    private boolean processKeyUp(int keyCode, KeyEvent event, boolean isPreIme) {
+    private boolean processKeyUp(int keyCode, KeyEvent event) {
         if (DEBUG) {
-            Log.d(LOGTAG, "IME: processKeyUp(keyCode=" + keyCode + ", event=" + event + ", "
-                          + isPreIme + ")");
+            Log.d(LOGTAG, "IME: processKeyUp(keyCode=" + keyCode + ", event=" + event + ")");
             GeckoApp.assertOnUiThread();
         }
 
@@ -947,11 +955,6 @@ class GeckoInputConnection
             default:
                 break;
         }
-
-        if (isPreIme && mIMEState != IME_STATE_DISABLED &&
-            (event.getMetaState() & KeyEvent.META_ALT_ON) != 0)
-            // Let active IME process pre-IME key events
-            return false;
 
         View view = getView();
         KeyListener keyListener = TextKeyListener.getInstance();
@@ -1042,7 +1045,7 @@ class GeckoInputConnection
         });
     }
 
-    public void notifyIMEEnabled(final int state, final String typeHint, final String actionHint) {
+    public void notifyIMEEnabled(final int state, final String typeHint, final String modeHint, final String actionHint) {
         postToUiThread(new Runnable() {
             public void run() {
                 View v = getView();
@@ -1053,6 +1056,7 @@ class GeckoInputConnection
                    In addition, the IME UI is hidden */
                 mIMEState = state;
                 mIMETypeHint = (typeHint == null) ? "" : typeHint;
+                mIMEModeHint = (modeHint == null) ? "" : modeHint;
                 mIMEActionHint = (actionHint == null) ? "" : actionHint;
                 IMEStateUpdater.enableIME();
             }
@@ -1453,13 +1457,14 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
     }
 
     @Override
-    public void notifyIMEEnabled(int state, String typeHint, String actionHint) {
+    public void notifyIMEEnabled(int state, String typeHint, String modeHint, String actionHint) {
         Log.d(LOGTAG, "IME: >notifyIMEEnabled(state=" + state + ", typeHint=\"" + typeHint
-                      + "\", actionHint=\"" + actionHint + "\"");
+                      + "\", modeHint=\"" + modeHint + "\", actionHint=\""
+                      + actionHint + "\"");
         GeckoApp.assertOnGeckoThread();
         if (state < IME_STATE_DISABLED || state > IME_STATE_PLUGIN)
             throw new IllegalArgumentException("Unexpected IMEState=" + state);
-        super.notifyIMEEnabled(state, typeHint, actionHint);
+        super.notifyIMEEnabled(state, typeHint, modeHint, actionHint);
     }
 }
 

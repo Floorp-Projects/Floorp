@@ -27,13 +27,14 @@ import java.io.File;
    and long tapping on an item
 */
 
-public class testHistoryTab extends BaseTest {
+public class testHistoryTab extends PixelTest {
     private static final String ABOUT_HOME_URL = "about:home";
     private static final String OPEN_NEW_TAB = "Open in New Tab";
     private static final int WAIT_FOR_CHILD_TIMEOUT = 2000;
     private String[] bookmarks = new String[] {
         "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
     };
+    private View mFirstChild;
 
     @Override
     protected int getTestType() {
@@ -46,11 +47,11 @@ public class testHistoryTab extends BaseTest {
         // load two pages so there is something in our history
         // bookmark one of them
         String url = getAbsoluteUrl("/robocop/robocop_big_link.html");
-        loadUrl(url);
+        loadAndPaint(url);
 
         url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
-        loadUrl(url);
-        getInstrumentation().waitForIdleSync();
+        loadAndPaint(url);
+
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
         mSolo.waitForText("Bookmark");
         mSolo.clickOnText("Bookmark");
@@ -130,14 +131,15 @@ public class testHistoryTab extends BaseTest {
         mAsserter.is(false, mSolo.waitForText("Open in New Tab"), "Header rows should not show a context menu");
 
         // wait for the history list to be populated
-        waitForTest(new BooleanTest() {
+        mFirstChild = null;
+        boolean success = waitForTest(new BooleanTest() {
             public boolean test() {
-                if (list.getChildAt(1) == null) {
+                mFirstChild = list.getChildAt(1);
+                if (mFirstChild == null) {
                     return false;
                 }
-                View firstChild = list.getChildAt(1);
-                if (firstChild instanceof android.view.ViewGroup) {
-                    ViewGroup group = (ViewGroup)firstChild;
+                if (mFirstChild instanceof android.view.ViewGroup) {
+                    ViewGroup group = (ViewGroup)mFirstChild;
                     if (group.getChildCount() < 1) {
                         return false;
                     }
@@ -147,21 +149,27 @@ public class testHistoryTab extends BaseTest {
                             mAsserter.ok(true, "found TextView:", ((android.widget.TextView)grandChild).getText().toString());
                         }
                     }
+                } else {
+                    mAsserter.dumpLog("first child not a ViewGroup: "+mFirstChild);
+                    return false;
                 }
                 return true;
             }
         }, WAIT_FOR_CHILD_TIMEOUT);
-        child = list.getChildAt(1);
+        if (success == true && mFirstChild != null) {
+            mAsserter.dumpLog("clickLongOnView: "+mFirstChild);
+            mSolo.clickLongOnView(mFirstChild);
 
-        mSolo.clickLongOnView(child);
+            // TODO: Test clicking these does the right thing
+            mAsserter.ok(mSolo.waitForText("Open in New Tab"), "Context menu has New Tab option", "Open in New Tab");
+            mAsserter.ok(mSolo.searchText("Share", true), "Context menu has Share option", "Share");
+            mAsserter.ok(mSolo.searchText("Remove", true), "Context menu has Remove option", "Remove");
+            mAsserter.ok(mSolo.searchText("Add to Home Screen", true), "Context menu has Add to Home Screen option", "Add to Home Screen");
 
-        // TODO: Test clicking these does the right thing
-        mAsserter.ok(mSolo.waitForText("Open in New Tab"), "Context menu has New Tab option", "Open in New Tab");
-        mAsserter.ok(mSolo.searchText("Share", true), "Context menu has Share option", "Share");
-        mAsserter.ok(mSolo.searchText("Remove", true), "Context menu has Remove option", "Remove");
-        mAsserter.ok(mSolo.searchText("Add to Home Screen", true), "Context menu has Add to Home Screen option", "Add to Home Screen");
-
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        } else {
+            mAsserter.ok(false, "waiting for history item", "history item available");
+        }
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
     }
 
@@ -176,19 +184,23 @@ public class testHistoryTab extends BaseTest {
         // nothing should happen
 
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
-        waitForTest(new BooleanTest() {
+        mFirstChild = null;
+        boolean success = waitForTest(new BooleanTest() {
             public boolean test() {
-                if (list.getChildAt(1) == null) {
+                mFirstChild = list.getChildAt(1);
+                if (mFirstChild == null) {
                     return false;
                 }
                 return true;
             }
         }, WAIT_FOR_CHILD_TIMEOUT);
-        child = list.getChildAt(1);
-
-        mSolo.clickOnView(child);
-        contentEventExpecter.blockForEvent();
-        verifyUrl(url);
+        if (success == true && mFirstChild != null) {
+            mSolo.clickOnView(mFirstChild);
+            contentEventExpecter.blockForEvent();
+            verifyUrl(url);
+        } else {
+            mAsserter.ok(false, "waiting for history item", "history item available");
+        }
     }
 
     private ListView getHistoryList() {

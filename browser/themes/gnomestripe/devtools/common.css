@@ -16,6 +16,7 @@
 .devtools-menulist,
 .devtools-toolbarbutton {
   -moz-appearance: none;
+  -moz-box-align: center;
   min-width: 78px;
   min-height: 22px;
   text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
@@ -25,6 +26,10 @@
   box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
   margin: 0 3px;
   color: inherit;
+}
+
+.devtools-toolbarbutton > .toolbarbutton-menubutton-button {
+  -moz-box-orient: horizontal;
 }
 
 .devtools-menulist:-moz-focusring,
@@ -44,11 +49,15 @@
 }
 
 .devtools-menulist[open=true],
+.devtools-toolbarbutton[open=true],
 .devtools-toolbarbutton[checked=true] {
-  color: hsl(208,100%,60%) !important;
   border-color: hsla(210,8%,5%,.6) !important;
   background: -moz-linear-gradient(hsla(220,6%,10%,.6), hsla(210,11%,18%,.45) 75%, hsla(210,11%,30%,.4));
   box-shadow: 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+.devtools-toolbarbutton[checked=true] {
+  color: hsl(208,100%,60%) !important;
 }
 
 .devtools-toolbarbutton[checked=true]:hover {
@@ -69,6 +78,31 @@
   list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
   -moz-box-align: center;
   min-width: 16px;
+}
+
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  color: inherit;
+  border-width: 0;
+  -moz-border-end: 1px solid hsla(210,8%,5%,.45);
+  box-shadow: -1px 0 0 hsla(210,16%,76%,.15) inset, 1px 0 0 hsla(210,16%,76%,.15);
+}
+
+.devtools-toolbarbutton[type=menu-button]:-moz-locale-dir(rtl) > .toolbarbutton-menubutton-button {
+  box-shadow: 1px 0 0 hsla(210,16%,76%,.15) inset, -1px 0 0 hsla(210,16%,76%,.15);
+}
+
+.devtools-toolbarbutton[type=menu-button] {
+  padding: 0 1px;
+  -moz-box-align: stretch;
+}
+
+.devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
+  -moz-appearance: none !important;
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
+  -moz-box-align: center;
+  margin: 0 3px;
 }
 
 /* Search input */
@@ -93,7 +127,7 @@
 }
 
 .devtools-searchinput:-moz-locale-dir(rtl) {
-  background-position: calc(100% - 4px) 3px, top left, top left;
+  background-position: calc(100% - 4px) center, top left, top left;
 }
 
 .devtools-searchinput > .textbox-input-box > .textbox-search-icons {

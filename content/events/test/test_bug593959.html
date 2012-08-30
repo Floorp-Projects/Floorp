@@ -26,9 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=593959
 /** Test for Bug 593959 **/
 
   function doTest() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var utils = SpecialPowers.getDOMWindowUtils(window);
     var e = document.createEvent("MouseEvent");
     e.initEvent("mousedown", false, false, window, 0, 1, 1, 1, 1,
                 false, false, false, false, 0, null);
@@ -38,8 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=593959
     
     var ifrwindow = document.getElementById("ifr").contentWindow;
     
-    var utils2 = ifrwindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                          .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var utils2 = SpecialPowers.getDOMWindowUtils(ifrwindow);
    
     var e2 = ifrwindow.document.createEvent("MouseEvent");
     e2.initEvent("mouseup", false, false, ifrwindow, 0, 1, 1, 1, 1,

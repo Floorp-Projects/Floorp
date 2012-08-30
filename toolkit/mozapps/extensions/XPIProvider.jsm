@@ -1025,8 +1025,8 @@ function buildJarURI(aJarfile, aPath) {
  */
 function flushJarCache(aJarFile) {
   Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
-  Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIChromeFrameMessageManager)
-    .sendAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
+  Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageBroadcaster)
+    .broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
 }
 
 function flushStartupCache() {
@@ -3143,8 +3143,8 @@ var XPIProvider = {
    *         A hash for the install
    * @param  aName
    *         A name for the install
-   * @param  aIconURL
-   *         An icon URL for the install
+   * @param  aIcons
+   *         Icon URLs for the install
    * @param  aVersion
    *         A version for the install
    * @param  aLoadGroup
@@ -3152,11 +3152,11 @@ var XPIProvider = {
    * @param  aCallback
    *         A callback to pass the AddonInstall to
    */
-  getInstallForURL: function XPI_getInstallForURL(aUrl, aHash, aName, aIconURL,
+  getInstallForURL: function XPI_getInstallForURL(aUrl, aHash, aName, aIcons,
                                                   aVersion, aLoadGroup, aCallback) {
     AddonInstall.createDownload(function getInstallForURL_createDownload(aInstall) {
       aCallback(aInstall.wrapper);
-    }, aUrl, aHash, aName, aIconURL, aVersion, aLoadGroup);
+    }, aUrl, aHash, aName, aIcons, aVersion, aLoadGroup);
   },
 
   /**
@@ -4050,6 +4050,7 @@ function AddonInstall(aInstallLocation, aUrl, aHash, aReleaseNotesURI,
   this.hash = this.originalHash;
   this.loadGroup = aLoadGroup;
   this.listeners = [];
+  this.icons = {};
   this.existingAddon = aExistingAddon;
   this.error = 0;
   if (aLoadGroup)
@@ -4074,7 +4075,7 @@ AddonInstall.prototype = {
   name: null,
   type: null,
   version: null,
-  iconURL: null,
+  icons: null,
   releaseNotesURI: null,
   sourceURI: null,
   file: null,
@@ -4101,7 +4102,7 @@ AddonInstall.prototype = {
     this.name = aManifest.name;
     this.type = aManifest.type;
     this.version = aManifest.version;
-    this.iconURL = aManifest.iconURL;
+    this.icons = aManifest.icons;
     this.releaseNotesURI = aManifest.releaseNotesURI ?
                            NetUtil.newURI(aManifest.releaseNotesURI) :
                            null
@@ -4220,17 +4221,17 @@ AddonInstall.prototype = {
    *         An optional name for the add-on
    * @param  aType
    *         An optional type for the add-on
-   * @param  aIconURL
-   *         An optional icon for the add-on
+   * @param  aIcons
+   *         Optional icons for the add-on
    * @param  aVersion
    *         An optional version for the add-on
    */
-  initAvailableDownload: function AI_initAvailableDownload(aName, aType, aIconURL, aVersion, aCallback) {
+  initAvailableDownload: function AI_initAvailableDownload(aName, aType, aIcons, aVersion, aCallback) {
     this.state = AddonManager.STATE_AVAILABLE;
     this.name = aName;
     this.type = aType;
     this.version = aVersion;
-    this.iconURL = aIconURL;
+    this.icons = aIcons;
     this.progress = 0;
     this.maxProgress = -1;
 
@@ -5157,14 +5158,14 @@ AddonInstall.createInstall = function AI_createInstall(aCallback, aFile) {
  *         A hash for the add-on
  * @param  aName
  *         A name for the add-on
- * @param  aIconURL
- *         An icon URL for the add-on
+ * @param  aIcons
+ *         An icon URLs for the add-on
  * @param  aVersion
  *         A version for the add-on
  * @param  aLoadGroup
  *         An nsILoadGroup to associate the download with
  */
-AddonInstall.createDownload = function AI_createDownload(aCallback, aUri, aHash, aName, aIconURL,
+AddonInstall.createDownload = function AI_createDownload(aCallback, aUri, aHash, aName, aIcons,
                                        aVersion, aLoadGroup) {
   let location = XPIProvider.installLocationsByName[KEY_APP_PROFILE];
   let url = NetUtil.newURI(aUri);
@@ -5173,7 +5174,7 @@ AddonInstall.createDownload = function AI_createDownload(aCallback, aUri, aHash,
   if (url instanceof Ci.nsIFileURL)
     install.initLocalInstall(aCallback);
   else
-    install.initAvailableDownload(aName, null, aIconURL, aVersion, aCallback);
+    install.initAvailableDownload(aName, null, aIcons, aVersion, aCallback);
 };
 
 /**
@@ -5204,7 +5205,7 @@ AddonInstall.createUpdate = function AI_createUpdate(aCallback, aAddon, aUpdate)
   }
   else {
     install.initAvailableDownload(aAddon.selectedLocale.name, aAddon.type,
-                                  aAddon.iconURL, aUpdate.version, aCallback);
+                                  aAddon.icons, aUpdate.version, aCallback);
   }
 };
 
@@ -5221,10 +5222,12 @@ function AddonInstallWrapper(aInstall) {
   });
 #endif
 
-  ["name", "type", "version", "iconURL", "releaseNotesURI", "file", "state", "error",
+  ["name", "type", "version", "icons", "releaseNotesURI", "file", "state", "error",
    "progress", "maxProgress", "certificate", "certName"].forEach(function(aProp) {
     this.__defineGetter__(aProp, function AIW_propertyGetter() aInstall[aProp]);
   }, this);
+
+  this.__defineGetter__("iconURL", function AIW_iconURL() aInstall.icons[32]);
 
   this.__defineGetter__("existingAddon", function AIW_existingAddonGetter() {
     return createWrapper(aInstall.existingAddon);
