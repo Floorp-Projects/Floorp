@@ -1726,8 +1726,11 @@ class TypedArrayTemplate
     fromArray(JSContext *cx, HandleObject other)
     {
         uint32_t len;
-        if (!GetLengthProperty(cx, other, &len))
+        if (other->isTypedArray()) {
+            len = length(other);
+        } else if (!GetLengthProperty(cx, other, &len)) {
             return NULL;
+        }
 
         RootedObject bufobj(cx, createBufferWithSizeAndCount(cx, len));
         if (!bufobj)
@@ -1821,6 +1824,9 @@ class TypedArrayTemplate
         JS_ASSERT(thisTypedArrayObj->isTypedArray());
         JS_ASSERT(offset <= length(thisTypedArrayObj));
         JS_ASSERT(len <= length(thisTypedArrayObj) - offset);
+        if (ar->isTypedArray())
+            return copyFromTypedArray(cx, thisTypedArrayObj, ar, offset);
+
         NativeType *dest = static_cast<NativeType*>(viewData(thisTypedArrayObj)) + offset;
         SkipRoot skip(cx, &dest);
 
