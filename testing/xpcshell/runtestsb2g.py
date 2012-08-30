@@ -41,6 +41,7 @@ class B2GXPCShellRemote(XPCShellRemote):
     def setLD_LIBRARY_PATH(self, env):
         if self.options.use_device_libs:
             env['LD_LIBRARY_PATH'] = '/system/b2g'
+            env['LD_PRELOAD'] = '/system/b2g/libmozglue.so'
         else:
             XPCShellRemote.setLD_LIBRARY_PATH(self, env)
 
