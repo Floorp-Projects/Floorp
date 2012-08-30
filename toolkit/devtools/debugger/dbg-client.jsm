@@ -49,23 +49,19 @@ function eventSource(aProto) {
    * Add a listener to the event source for a given event.
    *
    * @param aName string
-   *        The event to listen for, or null to listen to all events.
+   *        The event to listen for.
    * @param aListener function
    *        Called when the event is fired. If the same listener
-   *        is added more the once, it will be called once per
+   *        is added more than once, it will be called once per
    *        addListener call.
    */
   aProto.addListener = function EV_addListener(aName, aListener) {
     if (typeof aListener != "function") {
-      return;
+      throw TypeError("Listeners must be functions.");
     }
 
     if (!this._listeners) {
       this._listeners = {};
-    }
-
-    if (!aName) {
-      aName = '*';
     }
 
     this._getListeners(aName).push(aListener);
@@ -76,8 +72,7 @@ function eventSource(aProto) {
    * listener will be removed after it is called for the first time.
    *
    * @param aName string
-   *        The event to listen for, or null to respond to the first event
-   *        fired by the object.
+   *        The event to listen for.
    * @param aListener function
    *        Called when the event is fired.
    */
@@ -140,9 +135,6 @@ function eventSource(aProto) {
 
     let name = arguments[0];
     let listeners = this._getListeners(name).slice(0);
-    if (this._listeners['*']) {
-      listeners.concat(this._listeners['*']);
-    }
 
     for each (let listener in listeners) {
       try {
