@@ -36,6 +36,8 @@
 #include "nsIObserverService.h"
 #include "GeneratedEvents.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "nsIMIMEService.h"
+#include "nsCExternalHandlerService.h"
 
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
@@ -43,6 +45,12 @@
 #ifdef MOZ_WIDGET_GONK
 #include "nsIVolume.h"
 #include "nsIVolumeService.h"
+#endif
+
+#define DEBUG_ISTYPE 1
+
+#ifdef DEBUG_ISTYPE
+#include "nsIConsoleService.h"
 #endif
 
 using namespace mozilla::dom;
@@ -140,6 +148,75 @@ DeviceStorageFile::IsSafePath()
     }
   }
   return true;
+}
+
+bool
+DeviceStorageFile::IsType(nsAString& aType)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  // in testing, we ignore filtering for the testing types
+  if (mozilla::Preferences::GetBool("device.storage.testing", false) &&
+      (aType.Equals(NS_LITERAL_STRING("testing")) ||
+       aType.Equals(NS_LITERAL_STRING("testing-other")))) {
+    return true;
+  }
+
+#ifdef DEBUG_ISTYPE
+  nsCOMPtr<nsIConsoleService> svc = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  char buffer[1024];
+  nsCString path;
+  mFile->GetNativePath(path);
+
+  PRIntervalTime iStart = PR_IntervalNow();
+#endif
+
+  nsCAutoString mimeType;
+  nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID);
+  if (!mimeService) {
+    return false;
+  }
+
+  nsresult rv = mimeService->GetTypeFromFile(mFile, mimeType);
+  if (NS_FAILED(rv)) {
+#ifdef DEBUG_ISTYPE
+    sprintf(buffer, "GetTypeFromFile failed for %s (took: %dms)\n",
+	    path.get(),
+	    PR_IntervalToMilliseconds(PR_IntervalNow() - iStart));
+
+    nsString data;
+    CopyASCIItoUTF16(buffer, data);
+    svc->LogStringMessage(data.get());
+    printf("%s\n", buffer);
+#endif
+    return false;
+  }
+
+#ifdef DEBUG_ISTYPE
+  sprintf(buffer, "IsType of %s is %s (took: %dms)\n",
+	  path.get(),
+	  mimeType.get(),
+	  PR_IntervalToMilliseconds(PR_IntervalNow() - iStart));
+
+  nsString data;
+  CopyASCIItoUTF16(buffer, data);
+  svc->LogStringMessage(data.get());
+  printf("%s\n", buffer);
+#endif
+
+  if (aType.Equals(NS_LITERAL_STRING("pictures"))) {
+    return StringBeginsWith(mimeType, NS_LITERAL_CSTRING("image/"));
+  }
+
+  if (aType.Equals(NS_LITERAL_STRING("videos"))) {
+    return StringBeginsWith(mimeType, NS_LITERAL_CSTRING("video/"));
+  }
+  
+  if (aType.Equals(NS_LITERAL_STRING("music"))) {
+    return StringBeginsWith(mimeType, NS_LITERAL_CSTRING("audio/"));
+  }
+
+  return false;
 }
 
 void
@@ -724,18 +801,21 @@ NS_IMETHODIMP
 ContinueCursorEvent::Run() {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  jsval val;
+  jsval val = JSVAL_NULL;
+
   nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
-  if (cursor->mFiles.Length() == 0) {
-    val = JSVAL_NULL;
-  }
-  else {
+  nsString cursorStorageType;
+  cursor->GetStorageType(cursorStorageType);
+
+  while (cursor->mFiles.Length() > 0) {
     nsRefPtr<DeviceStorageFile> file = cursor->mFiles[0];
     cursor->mFiles.RemoveElementAt(0);
-
-    // todo, this blob needs to be opened in the parent.  This will be signifincally easier when bent lands
+    if (!file->IsType(cursorStorageType)) {
+      continue;
+    }
     val = nsIFileToJsval(cursor->GetOwner(), file);
     cursor->mOkToCallContinue = true;
+    break;
   }
 
   mRequest->FireSuccess(val);
@@ -809,6 +889,12 @@ nsDOMDeviceStorageCursor::nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
 
 nsDOMDeviceStorageCursor::~nsDOMDeviceStorageCursor()
 {
+}
+
+void
+nsDOMDeviceStorageCursor::GetStorageType(nsAString & aType)
+{
+  aType = mFile->mStorageType;
 }
 
 NS_IMETHODIMP

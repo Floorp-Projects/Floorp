@@ -57,6 +57,7 @@ public:
   // we want to make sure that the names of file can't reach
   // outside of the type of storage the user asked for.
   bool IsSafePath();
+  bool IsType(nsAString& aType);
 
   nsresult Remove();
   nsresult Write(nsIInputStream* aInputStream);
@@ -105,6 +106,8 @@ public:
 
   virtual bool Recv__delete__(const bool& allow);
   virtual void IPDLRelease();
+
+  void GetStorageType(nsAString & aType);
 
 private:
   ~nsDOMDeviceStorageCursor();
