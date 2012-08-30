@@ -3029,7 +3029,7 @@ IonBuilder::makePolyInlineDispatch(JSContext *cx, AutoObjectVector &targets, int
                                                          MResumePoint::ResumeAt);
     if (!preCallResumePoint)
         return NULL;
-    size_t preCallFuncDefnIdx = preCallResumePoint->numOperands() - (((size_t) argc) + 2);
+    DebugOnly<size_t> preCallFuncDefnIdx = preCallResumePoint->numOperands() - (((size_t) argc) + 2);
     JS_ASSERT(preCallResumePoint->getOperand(preCallFuncDefnIdx) == funcDefn);
 
     MDefinition *targetObject = getPropCache->object();
@@ -3594,6 +3594,10 @@ IonBuilder::jsop_funcall(uint32 argc)
 bool
 IonBuilder::jsop_funapply(uint32 argc)
 {
+    RootedFunction native(cx, getSingleCallTarget(argc, pc));
+    if (argc != 2)
+        return makeCall(native, argc, false);
+
     // Disable compilation if the second argument to |apply| cannot be guaranteed
     // to be either definitely |arguments| or definitely not |arguments|.
     types::StackTypeSet *argObjTypes = oracle->getCallArg(script, argc, 2, pc);
@@ -3601,18 +3605,15 @@ IonBuilder::jsop_funapply(uint32 argc)
     if (isArgObj == MaybeArguments)
         return abort("fun.apply with MaybeArguments");
 
-    RootedFunction native(cx, getSingleCallTarget(argc, pc));
-
     // Fallback to regular call if arg 2 is not definitely |arguments|.
     if (isArgObj != DefinitelyArguments)
         return makeCall(native, argc, false);
 
     if (!native ||
         !native->isNative() ||
-        native->native() != js_fun_apply ||
-        argc != 2)
+        native->native() != js_fun_apply)
     {
-        return abort("unrecognized fun.apply sequence");
+        return abort("fun.apply speculation failed");
     }
 
     // Stack for JSOP_FUNAPPLY:
