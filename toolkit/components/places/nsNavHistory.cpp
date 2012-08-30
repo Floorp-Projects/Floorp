@@ -616,7 +616,7 @@ nsNavHistory::FindLastVisit(nsIURI* aURI,
     NS_ENSURE_SUCCESS(rv, false);
     rv = stmt->GetInt64(1, aSessionID);
     NS_ENSURE_SUCCESS(rv, false);
-    rv = stmt->GetInt64(2, aTime);
+    rv = stmt->GetInt64(2, reinterpret_cast<int64_t*>(aTime));
     NS_ENSURE_SUCCESS(rv, false);
     return true;
   }
@@ -4357,7 +4357,7 @@ nsNavHistory::CheckIsRecentEvent(RecentEventHash* hashTable,
                                  const nsACString& url)
 {
   PRTime eventTime;
-  if (hashTable->Get(url, &eventTime)) {
+  if (hashTable->Get(url, reinterpret_cast<int64_t*>(&eventTime))) {
     hashTable->Remove(url);
     if (eventTime > GetNow() - RECENT_EVENT_THRESHOLD)
       return true;

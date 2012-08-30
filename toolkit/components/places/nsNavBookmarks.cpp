@@ -1468,9 +1468,9 @@ nsNavBookmarks::FetchItemInfo(int64_t aItemId,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->GetInt32(6, &_bookmark.type);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->GetInt64(7, &_bookmark.dateAdded);
+  rv = stmt->GetInt64(7, reinterpret_cast<int64_t*>(&_bookmark.dateAdded));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->GetInt64(8, &_bookmark.lastModified);
+  rv = stmt->GetInt64(8, reinterpret_cast<int64_t*>(&_bookmark.lastModified));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->GetUTF8String(9, _bookmark.guid);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1869,10 +1869,10 @@ nsNavBookmarks::ProcessFolderNodeRow(
     node = new nsNavHistoryFolderResultNode(title, aOptions, id);
 
     rv = aRow->GetInt64(nsNavHistory::kGetInfoIndex_ItemDateAdded,
-                        &node->mDateAdded);
+                        reinterpret_cast<int64_t*>(&node->mDateAdded));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aRow->GetInt64(nsNavHistory::kGetInfoIndex_ItemLastModified,
-                        &node->mLastModified);
+                        reinterpret_cast<int64_t*>(&node->mLastModified));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
@@ -1884,10 +1884,10 @@ nsNavBookmarks::ProcessFolderNodeRow(
 
     node->mItemId = id;
     rv = aRow->GetInt64(nsNavHistory::kGetInfoIndex_ItemDateAdded,
-                        &node->mDateAdded);
+                        reinterpret_cast<int64_t*>(&node->mDateAdded));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aRow->GetInt64(nsNavHistory::kGetInfoIndex_ItemLastModified,
-                        &node->mLastModified);
+                        reinterpret_cast<int64_t*>(&node->mLastModified));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2277,7 +2277,7 @@ nsNavBookmarks::GetBookmarksForURI(nsIURI* aURI,
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->GetInt64(2, &bookmark.parentId);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->GetInt64(3, &bookmark.lastModified);
+    rv = stmt->GetInt64(3, reinterpret_cast<int64_t*>(&bookmark.lastModified));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->GetUTF8String(4, bookmark.parentGuid);
     NS_ENSURE_SUCCESS(rv, rv);
