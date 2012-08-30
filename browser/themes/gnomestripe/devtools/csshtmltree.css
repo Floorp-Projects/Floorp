@@ -8,12 +8,6 @@
   color: -moz-FieldText;
 }
 
-.property-header {
-  padding: 5px 0;
-  white-space: nowrap;
-  vertical-align: text-top;
-}
-
 /* Take away these two :visited rules to get a core dumper     */
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
 .link,
@@ -53,7 +47,6 @@
   -moz-appearance: treetwisty;
   padding-top: 12px;
   -moz-margin-start: 5px;
-  -moz-margin-end: 5px;
   vertical-align: middle;
 }
 
@@ -70,15 +63,19 @@
   visibility: visible;
 }
 
+.expander-container {
+  vertical-align: text-top;
+}
+
 .property-name {
-  font-size: 12px;
+  padding: 2px 0;
   color: -moz-FieldText;
 }
+
 .property-value {
   padding: 0;
-  font-size: 10px;
+  -moz-padding-end: 6px;
   color: grey;
-  vertical-align: text-top;
   width: 100%;
 }
 

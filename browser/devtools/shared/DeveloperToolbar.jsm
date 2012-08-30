@@ -25,6 +25,19 @@ XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
                                   "resource:///modules/devtools/CmdCmd.jsm");
 
 /**
+ * Due to a number of panel bugs we need a way to check if we are running on
+ * Linux. See the comments for TooltipPanel and OutputPanel for further details.
+ *
+ * When bug 780102 is fixed all isLinux checks can be removed and we can revert
+ * to using panels.
+ */
+XPCOMUtils.defineLazyGetter(this, "isLinux", function () {
+  let os = Components.classes["@mozilla.org/xre/app-info;1"]
+           .getService(Components.interfaces.nsIXULRuntime).OS;
+  return os == "Linux";
+});
+
+/**
  * A component to manage the global developer toolbar, which contains a GCLI
  * and buttons for various developer tools.
  * @param aChromeWindow The browser window to which this toolbar is attached
@@ -539,6 +552,18 @@ function DT_resetErrorsCount(aTab)
 
 /**
  * Panel to handle command line output.
+ *
+ * There is a tooltip bug on Windows and OSX that prevents tooltips from being
+ * positioned properly (bug 786975). There is a Gnome panel bug on Linux that
+ * causes ugly focus issues (https://bugzilla.gnome.org/show_bug.cgi?id=621848).
+ * We now use a tooltip on Linux and a panel on OSX & Windows.
+ *
+ * If a panel has no content and no height it is not shown when openPopup is
+ * called on Windows and OSX (bug 692348) ... this prevents the panel from
+ * appearing the first time it is shown. Setting the panel's height to 1px
+ * before calling openPopup works around this issue as we resize it ourselves
+ * anyway.
+ *
  * @param aChromeDoc document from which we can pull the parts we need.
  * @param aInput the input element that should get focus.
  * @param aLoadCallback called when the panel is loaded properly.
@@ -551,7 +576,7 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
   this._loadCallback = aLoadCallback;
 
   /*
-  <tooltip id="gcli-output"
+  <tooltip|panel id="gcli-output"
          noautofocus="true"
          noautohide="true"
          class="gcli-panel">
@@ -559,15 +584,31 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
                  id="gcli-output-frame"
                  src="chrome://browser/content/devtools/commandlineoutput.xhtml"
                  flex="1"/>
-  </tooltip>
+  </tooltip|panel>
   */
 
   // TODO: Switch back from tooltip to panel when metacity focus issue is fixed:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=780102
-  this._panel = aChromeDoc.createElement("tooltip");
+  this._panel = aChromeDoc.createElement(isLinux ? "tooltip" : "panel");
 
   this._panel.id = "gcli-output";
   this._panel.classList.add("gcli-panel");
+
+  if (isLinux) {
+    this.canHide = false;
+    this._onpopuphiding = this._onpopuphiding.bind(this);
+    this._panel.addEventListener("popuphiding", this._onpopuphiding, true);
+  } else {
+    this._panel.setAttribute("noautofocus", "true");
+    this._panel.setAttribute("noautohide", "true");
+
+    // Bug 692348: On Windows and OSX if a panel has no content and no height
+    // openPopup fails to display it. Setting the height to 1px alows the panel
+    // to be displayed before has content or a real height i.e. the first time
+    // it is displayed.
+    this._panel.setAttribute("height", "1px");
+  }
+
   this._toolbar.parentElement.insertBefore(this._panel, this._toolbar);
 
   this._frame = aChromeDoc.createElementNS(NS_XHTML, "iframe");
@@ -582,10 +623,6 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
   this._frame.addEventListener("load", this._onload, true);
 
   this.loaded = false;
-  this.canHide = false;
-
-  this._onpopuphiding = this._onpopuphiding.bind(this);
-  this._panel.addEventListener("popuphiding", this._onpopuphiding, true);
 }
 
 /**
@@ -620,7 +657,7 @@ OutputPanel.prototype._onpopuphiding = function OP_onpopuphiding(aEvent)
 {
   // TODO: When we switch back from tooltip to panel we can remove this hack:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=780102
-  if (!this.canHide) {
+  if (isLinux && !this.canHide) {
     aEvent.preventDefault();
   }
 };
@@ -637,7 +674,9 @@ OutputPanel.prototype.show = function OP_show()
     this._resize();
   }.bind(this), 0);
 
-  this.canHide = false;
+  if (isLinux) {
+    this.canHide = false;
+  }
 
   this._panel.openPopup(this._input, "before_start", 0, 0, false, false, null);
   this._resize();
@@ -698,7 +737,9 @@ OutputPanel.prototype.update = function OP_update()
  */
 OutputPanel.prototype.remove = function OP_remove()
 {
-  this.canHide = true;
+  if (isLinux) {
+    this.canHide = true;
+  }
 
   if (this._panel) {
     this._panel.hidePopup();
@@ -743,7 +784,9 @@ OutputPanel.prototype._visibilityChanged = function OP_visibilityChanged(aEvent)
   if (aEvent.outputVisible === true) {
     // this.show is called by _outputChanged
   } else {
-    this.canHide = true;
+    if (isLinux) {
+      this.canHide = true;
+    }
     this._panel.hidePopup();
   }
 };
@@ -751,6 +794,18 @@ OutputPanel.prototype._visibilityChanged = function OP_visibilityChanged(aEvent)
 
 /**
  * Panel to handle tooltips.
+ *
+ * There is a tooltip bug on Windows and OSX that prevents tooltips from being
+ * positioned properly (bug 786975). There is a Gnome panel bug on Linux that
+ * causes ugly focus issues (https://bugzilla.gnome.org/show_bug.cgi?id=621848).
+ * We now use a tooltip on Linux and a panel on OSX & Windows.
+ *
+ * If a panel has no content and no height it is not shown when openPopup is
+ * called on Windows and OSX (bug 692348) ... this prevents the panel from
+ * appearing the first time it is shown. Setting the panel's height to 1px
+ * before calling openPopup works around this issue as we resize it ourselves
+ * anyway.
+ *
  * @param aChromeDoc document from which we can pull the parts we need.
  * @param aInput the input element that should get focus.
  * @param aLoadCallback called when the panel is loaded properly.
@@ -764,7 +819,7 @@ function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
   this._onload = this._onload.bind(this);
   this._loadCallback = aLoadCallback;
   /*
-  <tooltip id="gcli-tooltip"
+  <tooltip|panel id="gcli-tooltip"
          type="arrow"
          noautofocus="true"
          noautohide="true"
@@ -773,15 +828,31 @@ function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
                  id="gcli-tooltip-frame"
                  src="chrome://browser/content/devtools/commandlinetooltip.xhtml"
                  flex="1"/>
-  </tooltip>
+  </tooltip|panel>
   */
 
   // TODO: Switch back from tooltip to panel when metacity focus issue is fixed:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=780102
-  this._panel = aChromeDoc.createElement("tooltip");
+  this._panel = aChromeDoc.createElement(isLinux ? "tooltip" : "panel");
 
   this._panel.id = "gcli-tooltip";
   this._panel.classList.add("gcli-panel");
+
+  if (isLinux) {
+    this.canHide = false;
+    this._onpopuphiding = this._onpopuphiding.bind(this);
+    this._panel.addEventListener("popuphiding", this._onpopuphiding, true);
+  } else {
+    this._panel.setAttribute("noautofocus", "true");
+    this._panel.setAttribute("noautohide", "true");
+
+    // Bug 692348: On Windows and OSX if a panel has no content and no height
+    // openPopup fails to display it. Setting the height to 1px alows the panel
+    // to be displayed before has content or a real height i.e. the first time
+    // it is displayed.
+    this._panel.setAttribute("height", "1px");
+  }
+
   this._toolbar.parentElement.insertBefore(this._panel, this._toolbar);
 
   this._frame = aChromeDoc.createElementNS(NS_XHTML, "iframe");
@@ -793,10 +864,6 @@ function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
   this._frame.addEventListener("load", this._onload, true);
 
   this.loaded = false;
-  this.canHide = false;
-
-  this._onpopuphiding = this._onpopuphiding.bind(this);
-  this._panel.addEventListener("popuphiding", this._onpopuphiding, true);
 }
 
 /**
@@ -829,7 +896,7 @@ TooltipPanel.prototype._onpopuphiding = function TP_onpopuphiding(aEvent)
 {
   // TODO: When we switch back from tooltip to panel we can remove this hack:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=780102
-  if (!this.canHide) {
+  if (isLinux && !this.canHide) {
     aEvent.preventDefault();
   }
 };
@@ -851,7 +918,9 @@ TooltipPanel.prototype.show = function TP_show(aDimensions)
     this._resize();
   }.bind(this), 0);
 
-  this.canHide = false;
+  if (isLinux) {
+    this.canHide = false;
+  }
 
   this._resize();
   this._panel.openPopup(this._input, "before_start", aDimensions.start * 10, 0, false, false, null);
@@ -896,7 +965,9 @@ TooltipPanel.prototype._resize = function TP_resize()
  */
 TooltipPanel.prototype.remove = function TP_remove()
 {
-  this.canHide = true;
+  if (isLinux) {
+    this.canHide = true;
+  }
   this._panel.hidePopup();
 };
 
@@ -934,7 +1005,9 @@ TooltipPanel.prototype._visibilityChanged = function TP_visibilityChanged(aEvent
   if (aEvent.tooltipVisible === true) {
     this.show(aEvent.dimensions);
   } else {
-    this.canHide = true;
+    if (isLinux) {
+      this.canHide = true;
+    }
     this._panel.hidePopup();
   }
 };

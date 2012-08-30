@@ -101,15 +101,15 @@ public:
    */
   // XXXbz does that play correctly with nodes being adopted across
   // documents?  Need to double-check the spec here.
-  nsresult AddScriptEventListener(nsIAtom *aName,
-                                  const nsAString& aFunc,
-                                  uint32_t aLanguage,
-                                  bool aDeferCompilation,
-                                  bool aPermitUntrustedEvents);
+  nsresult SetEventHandler(nsIAtom *aName,
+                           const nsAString& aFunc,
+                           uint32_t aLanguage,
+                           bool aDeferCompilation,
+                           bool aPermitUntrustedEvents);
   /**
    * Remove the current "inline" event listener for aName.
    */
-  void RemoveScriptEventListener(nsIAtom *aName);
+  void RemoveEventHandler(nsIAtom *aName);
 
   void HandleEvent(nsPresContext* aPresContext,
                    nsEvent* aEvent, 
@@ -242,7 +242,7 @@ protected:
   /**
    * Find the nsListenerStruct for the "inline" event listener for aTypeAtom.
    */
-  nsListenerStruct* FindJSEventListener(uint32_t aEventType, nsIAtom* aTypeAtom);
+  nsListenerStruct* FindEventHandler(uint32_t aEventType, nsIAtom* aTypeAtom);
 
   /**
    * Set the "inline" event listener for aName to aHandler.  aHandler
@@ -250,12 +250,12 @@ protected:
    * string for this listener.  The nsListenerStruct that results, if
    * any, is returned in aListenerStruct.
    */
-  nsresult SetJSEventListener(nsIScriptContext *aContext,
-                              JSObject* aScopeGlobal,
-                              nsIAtom* aName,
-                              JSObject *aHandler,
-                              bool aPermitUntrustedEvents,
-                              nsListenerStruct **aListenerStruct);
+  nsresult SetEventHandlerInternal(nsIScriptContext *aContext,
+                                   JSObject* aScopeGlobal,
+                                   nsIAtom* aName,
+                                   JSObject *aHandler,
+                                   bool aPermitUntrustedEvents,
+                                   nsListenerStruct **aListenerStruct);
 
   bool IsDeviceType(uint32_t aType);
   void EnableDevice(uint32_t aType);
@@ -269,13 +269,13 @@ public:
    * not be in the same compartment, though cx and v are guaranteed to
    * be in the same compartment.
    */
-  nsresult SetJSEventListenerToJsval(nsIAtom *aEventName, JSContext *cx,
-                                     JSObject *aScope, const jsval &v);
+  nsresult SetEventHandlerToJsval(nsIAtom *aEventName, JSContext *cx,
+                                  JSObject *aScope, const jsval &v);
   /**
    * Get the value of the "inline" event listener for aEventName.
    * This may cause lazy compilation if the listener is uncompiled.
    */
-  void GetJSEventListener(nsIAtom *aEventName, jsval *vp);
+  void GetEventHandler(nsIAtom *aEventName, jsval *vp);
 
 protected:
   void AddEventListener(nsIDOMEventListener *aListener, 

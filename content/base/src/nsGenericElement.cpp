@@ -1809,9 +1809,9 @@ nsGenericElement::LeaveLink(nsPresContext* aPresContext)
 }
 
 nsresult
-nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
-                                         const nsAString& aValue,
-                                         bool aDefer)
+nsGenericElement::SetEventHandler(nsIAtom* aEventName,
+                                  const nsAString& aValue,
+                                  bool aDefer)
 {
   nsIDocument *ownerDoc = OwnerDoc();
   if (ownerDoc->IsLoadedAsData()) {
@@ -1829,8 +1829,9 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
   }
 
   defer = defer && aDefer; // only defer if everyone agrees...
-  manager->AddScriptEventListener(aEventName, aValue, nsIProgrammingLanguage::JAVASCRIPT,
-                                  defer, !nsContentUtils::IsChromeDoc(ownerDoc));
+  manager->SetEventHandler(aEventName, aValue,
+                           nsIProgrammingLanguage::JAVASCRIPT,
+                           defer, !nsContentUtils::IsChromeDoc(ownerDoc));
   return NS_OK;
 }
 

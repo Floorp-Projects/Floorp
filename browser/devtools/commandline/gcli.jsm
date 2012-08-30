@@ -9340,11 +9340,27 @@ Inputter.prototype.getDimensions = function() {
     return undefined;
   }
 
+  var fixedLoc = {};
+  var currentElement = this.element.parentNode;
+  while (currentElement && currentElement.nodeName !== '#document') {
+    var style = this.document.defaultView.getComputedStyle(currentElement, '');
+    if (style) {
+      var position = style.getPropertyValue('position');
+      if (position === 'absolute' || position === 'fixed') {
+        var bounds = currentElement.getBoundingClientRect();
+        fixedLoc.top = bounds.top;
+        fixedLoc.left = bounds.left;
+        break;
+      }
+    }
+    currentElement = currentElement.parentNode;
+  }
+
   var rect = this.element.getBoundingClientRect();
   return {
-    top: rect.top + 1,
+    top: rect.top - (fixedLoc.top || 0) + 1,
     height: rect.bottom - rect.top - 1,
-    left: rect.left + 2,
+    left: rect.left - (fixedLoc.left || 0) + 2,
     width: rect.right - rect.left
   };
 };
