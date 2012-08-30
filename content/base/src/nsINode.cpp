@@ -97,7 +97,8 @@
 #include "nsXBLPrototypeBinding.h"
 #include "prprf.h"
 #include "xpcpublic.h"
-
+#include "nsCSSRuleProcessor.h"
+#include "nsCSSParser.h"
 #include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;
@@ -2053,3 +2054,184 @@ nsINode::Length() const
     return GetChildCount();
   }
 }
+
+NS_IMPL_CYCLE_COLLECTION_1(nsNodeSelectorTearoff, mNode)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNodeSelectorTearoff)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeSelector)
+NS_INTERFACE_MAP_END_AGGREGATED(mNode)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNodeSelectorTearoff)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNodeSelectorTearoff)
+
+NS_IMETHODIMP
+nsNodeSelectorTearoff::QuerySelector(const nsAString& aSelector,
+                                     nsIDOMElement **aReturn)
+{
+  nsresult rv;
+  nsIContent* result = mNode->QuerySelector(aSelector, &rv);
+  return result ? CallQueryInterface(result, aReturn) : rv;
+}
+
+NS_IMETHODIMP
+nsNodeSelectorTearoff::QuerySelectorAll(const nsAString& aSelector,
+                                        nsIDOMNodeList **aReturn)
+{
+  return mNode->QuerySelectorAll(aSelector, aReturn);
+}
+
+// NOTE: The aPresContext pointer is NOT addrefed.
+// *aSelectorList might be null even if NS_OK is returned; this
+// happens when all the selectors were pseudo-element selectors.
+static nsresult
+ParseSelectorList(nsINode* aNode,
+                  const nsAString& aSelectorString,
+                  nsCSSSelectorList** aSelectorList)
+{
+  NS_ENSURE_ARG(aNode);
+
+  nsIDocument* doc = aNode->OwnerDoc();
+  nsCSSParser parser(doc->CSSLoader());
+
+  nsCSSSelectorList* selectorList;
+  nsresult rv = parser.ParseSelectorString(aSelectorString,
+                                           doc->GetDocumentURI(),
+                                           0, // XXXbz get the line number!
+                                           &selectorList);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Filter out pseudo-element selectors from selectorList
+  nsCSSSelectorList** slot = &selectorList;
+  do {
+    nsCSSSelectorList* cur = *slot;
+    if (cur->mSelectors->IsPseudoElement()) {
+      *slot = cur->mNext;
+      cur->mNext = nullptr;
+      delete cur;
+    } else {
+      slot = &cur->mNext;
+    }
+  } while (*slot);
+  *aSelectorList = selectorList;
+
+  return NS_OK;
+}
+
+// Actually find elements matching aSelectorList (which must not be
+// null) and which are descendants of aRoot and put them in aList.  If
+// onlyFirstMatch, then stop once the first one is found.
+template<bool onlyFirstMatch, class T>
+inline static nsresult FindMatchingElements(nsINode* aRoot,
+                                            const nsAString& aSelector,
+                                            T &aList)
+{
+  nsAutoPtr<nsCSSSelectorList> selectorList;
+  nsresult rv = ParseSelectorList(aRoot, aSelector,
+                                  getter_Transfers(selectorList));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(selectorList, NS_OK);
+
+  NS_ASSERTION(selectorList->mSelectors,
+               "How can we not have any selectors?");
+
+  nsIDocument* doc = aRoot->OwnerDoc();
+  TreeMatchContext matchingContext(false, nsRuleWalker::eRelevantLinkUnvisited,
+                                   doc, TreeMatchContext::eNeverMatchVisited);
+  doc->FlushPendingLinkUpdates();
+
+  // Fast-path selectors involving IDs.  We can only do this if aRoot
+  // is in the document and the document is not in quirks mode, since
+  // ID selectors are case-insensitive in quirks mode.  Also, only do
+  // this if selectorList only has one selector, because otherwise
+  // ordering the elements correctly is a pain.
+  NS_ASSERTION(aRoot->IsElement() || aRoot->IsNodeOfType(nsINode::eDOCUMENT) ||
+               !aRoot->IsInDoc(),
+               "The optimization below to check ContentIsDescendantOf only for "
+               "elements depends on aRoot being either an element or a "
+               "document if it's in the document.");
+  if (aRoot->IsInDoc() &&
+      doc->GetCompatibilityMode() != eCompatibility_NavQuirks &&
+      !selectorList->mNext &&
+      selectorList->mSelectors->mIDList) {
+    nsIAtom* id = selectorList->mSelectors->mIDList->mAtom;
+    const nsSmallVoidArray* elements =
+      doc->GetAllElementsForId(nsDependentAtomString(id));
+
+    // XXXbz: Should we fall back to the tree walk if aRoot is not the
+    // document and |elements| is long, for some value of "long"?
+    if (elements) {
+      for (int32_t i = 0; i < elements->Count(); ++i) {
+        Element *element = static_cast<Element*>(elements->ElementAt(i));
+        if (!aRoot->IsElement() ||
+            (element != aRoot &&
+             nsContentUtils::ContentIsDescendantOf(element, aRoot))) {
+          // We have an element with the right id and it's a strict descendant
+          // of aRoot.  Make sure it really matches the selector.
+          if (nsCSSRuleProcessor::SelectorListMatches(element, matchingContext,
+                                                      selectorList)) {
+            aList.AppendElement(element);
+            if (onlyFirstMatch) {
+              return NS_OK;
+            }
+          }
+        }
+      }
+    }
+
+    // No elements with this id, or none of them are our descendants,
+    // or none of them match.  We're done here.
+    return NS_OK;
+  }
+
+  for (nsIContent* cur = aRoot->GetFirstChild();
+       cur;
+       cur = cur->GetNextNode(aRoot)) {
+    if (cur->IsElement() &&
+        nsCSSRuleProcessor::SelectorListMatches(cur->AsElement(),
+                                                matchingContext,
+                                                selectorList)) {
+      aList.AppendElement(cur->AsElement());
+      if (onlyFirstMatch) {
+        return NS_OK;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+struct ElementHolder {
+  ElementHolder() : mElement(nullptr) {}
+  void AppendElement(Element* aElement) {
+    NS_ABORT_IF_FALSE(!mElement, "Should only get one element");
+    mElement = aElement;
+  }
+  Element* mElement;
+};
+
+nsIContent*
+nsINode::QuerySelector(const nsAString& aSelector,
+                       nsresult *aResult)
+{
+  NS_PRECONDITION(aResult, "Null out param?");
+
+  ElementHolder holder;
+  *aResult = FindMatchingElements<true>(this, aSelector, holder);
+
+  return holder.mElement;
+}
+
+/* static */
+nsresult
+nsINode::QuerySelectorAll(const nsAString& aSelector,
+                          nsIDOMNodeList **aReturn)
+{
+  NS_PRECONDITION(aReturn, "Null out param?");
+
+  nsSimpleContentList* contentList = new nsSimpleContentList(this);
+  NS_ENSURE_TRUE(contentList, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(*aReturn = contentList);
+
+  return FindMatchingElements<false>(this, aSelector, *contentList);
+}
+
