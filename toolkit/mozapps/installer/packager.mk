@@ -748,7 +748,8 @@ endif
 	@cp -av $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/. $(DEPTH)/installer-stage/core
 	@(cd $(DEPTH)/installer-stage/core && $(CREATE_PRECOMPLETE_CMD))
 ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
-	$(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(DEPTH)/installer-stage
+# The && true is necessary to make sure Pymake spins a shell
+	$(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(DEPTH)/installer-stage && true
 endif
 
 elfhack:
