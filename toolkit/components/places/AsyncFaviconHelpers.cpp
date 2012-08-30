@@ -230,7 +230,7 @@ FetchIconInfo(nsRefPtr<Database>& aDB,
   rv = stmt->GetIsNull(1, &isNull);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!isNull) {
-    rv = stmt->GetInt64(1, &_icon.expiration);
+    rv = stmt->GetInt64(1, reinterpret_cast<int64_t*>(&_icon.expiration));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
