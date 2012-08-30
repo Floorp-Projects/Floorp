@@ -3697,6 +3697,8 @@ pref("social.enabled", false);
 // observers (bug 780507).
 pref("dom.idle-observers-api.fuzz_time.disabled", true);
 
+pref("toolkit.identity.debug", false);
+
 // Setting that to true grant elevated privileges to apps that ask
 // for them in their manifest.
 pref("dom.mozApps.dev_mode", false);
