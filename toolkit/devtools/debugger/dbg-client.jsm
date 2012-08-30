@@ -188,30 +188,6 @@ const UnsolicitedPauses = {
   "watchpoint": "watchpoint"
 };
 
-/**
- * Set of debug protocol request types that specify the protocol request being
- * sent to the server.
- */
-const DebugProtocolTypes = {
-  "assign": "assign",
-  "attach": "attach",
-  "clientEvaluate": "clientEvaluate",
-  "delete": "delete",
-  "detach": "detach",
-  "frames": "frames",
-  "interrupt": "interrupt",
-  "listTabs": "listTabs",
-  "nameAndParameters": "nameAndParameters",
-  "ownPropertyNames": "ownPropertyNames",
-  "property": "property",
-  "prototype": "prototype",
-  "prototypeAndProperties": "prototypeAndProperties",
-  "resume": "resume",
-  "scripts": "scripts",
-  "setBreakpoint": "setBreakpoint",
-  "substring": "substring"
-};
-
 const ROOT_ACTOR_NAME = "root";
 
 /**
@@ -1061,7 +1037,7 @@ LongStringClient.prototype = {
    */
   substring: function LSC_substring(aStart, aEnd, aCallback) {
     let packet = { to: this.actor,
-                   type: DebugProtocolTypes.substring,
+                   type: "substring",
                    start: aStart,
                    end: aEnd };
     this._client.request(packet, aCallback);
