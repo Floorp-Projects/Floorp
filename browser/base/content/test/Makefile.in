@@ -274,6 +274,7 @@ _BROWSER_FILES = \
                  social_flyout.html \
                  social_window.html \
                  social_worker.js \
+                 browser_bug784142.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
