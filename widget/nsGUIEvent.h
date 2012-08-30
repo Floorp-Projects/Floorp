@@ -1181,6 +1181,10 @@ public:
   {
   }
 
+  // NOTE: deltaX, deltaY and deltaZ may be customized by
+  //       mousewheel.*.delta_multiplier_* prefs which are applied by
+  //       nsEventStateManager.  So, after widget dispatches this event,
+  //       these delta values may have different values than before.
   double deltaX;
   double deltaY;
   double deltaZ;
@@ -1241,8 +1245,15 @@ public:
   };
   ScrollType scrollType;
 
-  // overflowed delta values, these values are the result of dispatching this
-  // event.
+  // overflowed delta values for scroll, these values are set by
+  // nsEventStateManger.  If the default action of the wheel event isn't scroll,
+  // these values always zero.  Otherwise, remaning delta values which are
+  // not used by scroll are set.
+  // NOTE: deltaX, deltaY and deltaZ may be modified by nsEventStateManager.
+  //       However, overflowDeltaX and overflowDeltaY indicate unused original
+  //       delta values which are not applied the delta_multiplier prefs.
+  //       So, if widget wanted to know the actual direction to be scrolled,
+  //       it would need to check the deltaX and deltaY.
   double overflowDeltaX;
   double overflowDeltaY;
 };
