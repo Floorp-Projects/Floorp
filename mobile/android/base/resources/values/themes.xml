@@ -10,6 +10,11 @@
         <item name="android:windowContentOverlay">@null</item>
     </style>
     
+    <style name="Gecko.Dialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+    
     <style name="Gecko.TitleBar" parent="Gecko">
         <item name="android:windowNoTitle">false</item>
     </style>
