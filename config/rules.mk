@@ -105,12 +105,8 @@ SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
 INCLUDES += -I$(DIST)/include/testing
 LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS) $(MOZ_JS_LIBS) $(if $(JS_SHARED_LIBRARY),,$(MOZ_ZLIB_LIBS))
 
-# ...and run them the usual way
 check::
-	@$(EXIT_ON_ERROR) \
-	  for f in $(subst .cpp,$(BIN_SUFFIX),$(CPP_UNIT_TESTS)); do \
-	    XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
-	  done
+	@$(PYTHON) $(topsrcdir)/testing/runcppunittests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(subst .cpp,$(BIN_SUFFIX),$(CPP_UNIT_TESTS))
 
 endif # CPP_UNIT_TESTS
 
