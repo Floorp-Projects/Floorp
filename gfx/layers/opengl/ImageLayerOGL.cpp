@@ -959,7 +959,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
     ShaderProgramOGL *program = mOGLManager->GetProgram(RGBAExternalLayerProgramType, GetMaskLayer());
 
-    gl()->ApplyFilterToBoundTexture(mFilter);
+    gl()->ApplyFilterToBoundTexture(LOCAL_GL_TEXTURE_EXTERNAL, mFilter);
 
     program->Activate();
     program->SetLayerQuadRect(nsIntRect(0, 0,
