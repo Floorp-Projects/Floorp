@@ -183,6 +183,8 @@ RILReceiver::DispatchRILEvent::RunTask(JSContext *aCx)
                              argv, argv);
 }
 
+#ifdef MOZ_WIDGET_GONK
+
 JSBool
 DoNetdCommand(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -327,6 +329,9 @@ NetdReceiver::DispatchNetdEvent::RunTask(JSContext *aCx)
   return JS_CallFunctionName(aCx, obj, "onNetdMessage", NS_ARRAY_LENGTH(argv),
                              argv, argv);
 }
+
+#endif // MOZ_WIDGET_GONK
+
 } // anonymous namespace
 
 SystemWorkerManager::SystemWorkerManager()
@@ -473,10 +478,12 @@ SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
                               reinterpret_cast<nsIWifi**>(aResult));
   }
 
+#ifdef MOZ_WIDGET_GONK
   if (aIID.Equals(NS_GET_IID(nsINetworkManager))) {
     return CallQueryInterface(mNetdWorker,
                               reinterpret_cast<nsINetworkManager**>(aResult));
   }
+#endif
 
   NS_WARNING("Got nothing for the requested IID!");
   return NS_ERROR_NO_INTERFACE;
@@ -519,6 +526,7 @@ SystemWorkerManager::InitRIL(JSContext *cx)
   return NS_OK;
 }
 
+#ifdef MOZ_WIDGET_GONK
 nsresult
 SystemWorkerManager::InitNetd(JSContext *cx)
 {
@@ -552,6 +560,7 @@ SystemWorkerManager::InitNetd(JSContext *cx)
   mNetdWorker = worker;
   return NS_OK;
 }
+#endif
 
 nsresult
 SystemWorkerManager::InitWifi(JSContext *cx)
