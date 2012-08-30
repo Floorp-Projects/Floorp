@@ -3110,7 +3110,7 @@
               tab.style.MozMarginStart = - (width + scrollButtonWidth + paddingStart) + "px";
             }
 
-            this.style.MozMarginStart = width + paddingStart + "px";
+            this.style.MozPaddingStart = width + paddingStart + "px";
 
           } else {
             this.removeAttribute("positionpinnedtabs");
@@ -3120,7 +3120,7 @@
               tab.style.MozMarginStart = "";
             }
 
-            this.style.MozMarginStart = "";
+            this.style.MozPaddingStart = "";
           }
 
           this.mTabstrip.ensureElementIsVisible(this.selectedItem, false);
