@@ -208,7 +208,8 @@ const DebugProtocolTypes = {
   "prototypeAndProperties": "prototypeAndProperties",
   "resume": "resume",
   "scripts": "scripts",
-  "setBreakpoint": "setBreakpoint"
+  "setBreakpoint": "setBreakpoint",
+  "substring": "substring"
 };
 
 const ROOT_ACTOR_NAME = "root";
@@ -514,6 +515,7 @@ function ThreadClient(aClient, aActor) {
   this._actor = aActor;
   this._frameCache = [];
   this._scriptCache = {};
+  this._pauseGrips = {};
 }
 
 ThreadClient.prototype = {
@@ -878,15 +880,27 @@ ThreadClient.prototype = {
    *        A pause-lifetime object grip returned by the protocol.
    */
   pauseGrip: function TC_pauseGrip(aGrip) {
-    if (!this._pauseGrips) {
-      this._pauseGrips = {};
-    }
-
     if (aGrip.actor in this._pauseGrips) {
       return this._pauseGrips[aGrip.actor];
     }
 
     let client = new GripClient(this._client, aGrip);
+    this._pauseGrips[aGrip.actor] = client;
+    return client;
+  },
+
+  /**
+   * Return an instance of LongStringClient for the given long string grip.
+   *
+   * @param aGrip Object
+   *        The long string grip returned by the protocol.
+   */
+  longString: function TC_longString(aGrip) {
+    if (aGrip.actor in this._pauseGrips) {
+      return this._pauseGrips[aGrip.actor];
+    }
+
+    let client = new LongStringClient(this._client, aGrip);
     this._pauseGrips[aGrip.actor] = client;
     return client;
   },
@@ -899,7 +913,7 @@ ThreadClient.prototype = {
     for each (let grip in this._pauseGrips) {
       grip.valid = false;
     }
-    this._pauseGrips = null;
+    this._pauseGrips = {};
   },
 
   /**
@@ -933,9 +947,7 @@ function GripClient(aClient, aGrip)
 GripClient.prototype = {
   get actor() { return this._grip.actor },
 
-  _valid: true,
-  get valid() { return this._valid; },
-  set valid(aValid) { this._valid = !!aValid; },
+  valid: true,
 
   /**
    * Request the name of the function and its formal parameters.
@@ -1014,6 +1026,45 @@ GripClient.prototype = {
                                      aOnResponse(aResponse);
                                    }
                                  });
+  }
+};
+
+/**
+ * A LongStringClient provides a way to access "very long" strings from the
+ * debugger server.
+ *
+ * @param aClient DebuggerClient
+ *        The debugger client parent.
+ * @param aGrip Object
+ *        A pause-lifetime long string grip returned by the protocol.
+ */
+function LongStringClient(aClient, aGrip) {
+  this._grip = aGrip;
+  this._client = aClient;
+}
+
+LongStringClient.prototype = {
+  get actor() { return this._grip.actor; },
+  get length() { return this._grip.length; },
+
+  valid: true,
+
+  /**
+   * Get the substring of this LongString from aStart to aEnd.
+   *
+   * @param aStart Number
+   *        The starting index.
+   * @param aEnd Number
+   *        The ending index.
+   * @param aCallback Function
+   *        The function called when we receive the substring.
+   */
+  substring: function LSC_substring(aStart, aEnd, aCallback) {
+    let packet = { to: this.actor,
+                   type: DebugProtocolTypes.substring,
+                   start: aStart,
+                   end: aEnd };
+    this._client.request(packet, aCallback);
   }
 };
 
