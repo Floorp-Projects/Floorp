@@ -3,32 +3,37 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  style="@style/SyncLayout" >
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncContainer" >
 
-  <TextView
-    style="@style/SyncTop"
-    android:id="@+id/success_top"
-    android:text="@string/sync_title_success" />
+	<TextView
+		style="@style/SyncTop"
+		android:text="@string/sync_title_success" />
 
-  <TextView
-    android:id="@+id/setup_success_subtitle"
-    style="@style/SyncTextItem"
-    android:gravity="left"
-    android:padding="20dp"
-    android:layout_below="@id/success_top"
-    android:text="@string/sync_subtitle_success" />
+	<ScrollView
+		style="@style/SyncMiddle" >
 
-  <LinearLayout
-    style="@style/SyncBottom"
-    android:orientation="horizontal" >
-    <Button
-      style="@style/SyncButton"
-      android:onClick="settingsClickHandler"
-      android:text="@string/sync_settings" />
-    <Button
-      style="@style/SyncButton"
-      android:onClick="launchBrowser"
-      android:text="@string/brand_short_name" />
-  </LinearLayout>
-</RelativeLayout>
+		<TextView
+			android:id="@+id/setup_success_subtitle"
+			style="@style/SyncTextItem"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:gravity="left"
+			android:text="@string/sync_subtitle_success" />
+	</ScrollView>
+
+	<LinearLayout
+		style="@style/SyncBottom" >
+
+		<Button
+			style="@style/SyncButton"
+			android:onClick="settingsClickHandler"
+			android:text="@string/sync_settings" />
+
+		<Button
+			style="@style/SyncButton"
+			android:onClick="launchBrowser"
+			android:text="@string/brand_short_name" />
+	</LinearLayout>
+
+</LinearLayout>
