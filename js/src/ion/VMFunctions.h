@@ -436,8 +436,7 @@ bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Handl
 bool InterruptCheck(JSContext *cx);
 
 HeapSlot *NewSlots(JSRuntime *rt, unsigned nslots);
-JSObject *NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots,
-                        HandleObject global);
+JSObject *NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots);
 
 bool SPSEnter(JSContext *cx, HandleScript script);
 bool SPSExit(JSContext *cx, HandleScript script);
