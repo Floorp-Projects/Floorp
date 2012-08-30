@@ -4,6 +4,8 @@
 
 browser.jar:
     content/browser/inspector.html                (highlighter/inspector.html)
+    content/browser/devtools/markup-view.xhtml    (markupview/markup-view.xhtml)
+    content/browser/devtools/markup-view.css      (markupview/markup-view.css)
     content/browser/NetworkPanel.xhtml            (webconsole/NetworkPanel.xhtml)
     content/browser/devtools/HUDService-content.js (webconsole/HUDService-content.js)
     content/browser/devtools/webconsole.js        (webconsole/webconsole.js)
@@ -24,6 +26,6 @@ browser.jar:
     content/browser/debugger.css                  (debugger/debugger.css)
     content/browser/debugger-controller.js        (debugger/debugger-controller.js)
     content/browser/debugger-view.js              (debugger/debugger-view.js)
-    content/browser/devtools/gcli.css             (commandline/gcli.css)
-    content/browser/devtools/gclioutput.xhtml     (commandline/gclioutput.xhtml)
-    content/browser/devtools/gclitooltip.xhtml    (commandline/gclitooltip.xhtml)
+    content/browser/devtools/commandline.css      (commandline/commandline.css)
+    content/browser/devtools/commandlineoutput.xhtml  (commandline/commandlineoutput.xhtml)
+    content/browser/devtools/commandlinetooltip.xhtml  (commandline/commandlinetooltip.xhtml)

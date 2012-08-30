@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Write out a C++ enum definition whose members are the names of
+# histograms.  The histograms are defined in a file provided as a
+# command-line argument.
+
+from __future__ import with_statement
+
+import sys
+import histogram_tools
+
+banner = """/* This file is auto-generated, see gen-histogram-enum.py.  */
+"""
+
+def main(argv):
+    filename = argv[0]
+
+    print banner
+    print "enum ID {"
+    for (name, definition) in histogram_tools.from_file(filename):
+        cpp_guard = definition.get('cpp_guard')
+        if cpp_guard:
+            print "#if defined(%s)" % cpp_guard
+        print "  %s," % (name,)
+        if cpp_guard:
+            print "#endif"
+    print "  HistogramCount"
+    print "};"
+
+main(sys.argv[1:])

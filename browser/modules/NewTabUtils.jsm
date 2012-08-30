@@ -16,6 +16,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
+  "resource:///modules/PageThumbs.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "gPrincipal", function () {
   let uri = Services.io.newURI("about:newtab", null, null);
   return Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
@@ -611,8 +614,6 @@ let Telemetry = {
   }
 };
 
-Telemetry.init();
-
 /**
  * Singleton that checks if a given link should be displayed on about:newtab
  * or if we should rather not do it for security reasons. URIs that inherit
@@ -644,10 +645,46 @@ let LinkChecker = {
   }
 };
 
+let ExpirationFilter = {
+  init: function ExpirationFilter_init() {
+    PageThumbs.addExpirationFilter(this);
+  },
+
+  filterForThumbnailExpiration:
+  function ExpirationFilter_filterForThumbnailExpiration(aCallback) {
+    if (!AllPages.enabled) {
+      aCallback([]);
+      return;
+    }
+
+    Links.populateCache(function () {
+      let urls = [];
+
+      // Add all URLs to the list that we want to keep thumbnails for.
+      for (let link of Links.getLinks().slice(0, 25)) {
+        if (link && link.url)
+          urls.push(link.url);
+      }
+
+      aCallback(urls);
+    });
+  }
+};
+
 /**
  * Singleton that provides the public API of this JSM.
  */
 let NewTabUtils = {
+  _initialized: false,
+
+  init: function NewTabUtils_init() {
+    if (!this._initialized) {
+      this._initialized = true;
+      ExpirationFilter.init();
+      Telemetry.init();
+    }
+  },
+
   /**
    * Restores all sites that have been removed from the grid.
    */

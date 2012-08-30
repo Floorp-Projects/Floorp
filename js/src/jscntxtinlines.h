@@ -134,18 +134,6 @@ struct PreserveRegsGuard
     FrameRegs &regs_;
 };
 
-static inline GlobalObject *
-GetGlobalForScopeChain(JSContext *cx)
-{
-    if (cx->hasfp())
-        return &cx->fp()->global();
-
-    JSObject *scope = JS_ObjectToInnerObject(cx, HandleObject::fromMarkedLocation(&cx->globalObject));
-    if (!scope)
-        return NULL;
-    return &scope->asGlobal();
-}
-
 inline GSNCache *
 GetGSNCache(JSContext *cx)
 {
@@ -211,12 +199,7 @@ class CompartmentChecker
   public:
     explicit CompartmentChecker(JSContext *cx)
       : context(cx), compartment(cx->compartment)
-    {
-        if (cx->compartment) {
-            GlobalObject *global = GetGlobalForScopeChain(cx);
-            JS_ASSERT(cx->global() == global);
-        }
-    }
+    {}
 
     /*
      * Set a breakpoint here (break js::CompartmentChecker::fail) to debug
@@ -495,14 +478,8 @@ JSContext::findVersion() const
     if (hasVersionOverride)
         return versionOverride;
 
-    if (stack.hasfp()) {
-        /* There may be a scripted function somewhere on the stack! */
-        js::StackFrame *f = fp();
-        while (f && !f->isScriptFrame())
-            f = f->prev();
-        if (f)
-            return f->script()->getVersion();
-    }
+    if (stack.hasfp())
+        return fp()->script()->getVersion();
 
     return defaultVersion;
 }
@@ -549,6 +526,11 @@ JSContext::setCompileOptions(unsigned newcopts)
     maybeOverrideVersion(newVersion);
 }
 
+inline js::LifoAlloc &
+JSContext::analysisLifoAlloc()
+{
+    return compartment->analysisLifoAlloc;
+}
 
 inline js::LifoAlloc &
 JSContext::typeLifoAlloc()
@@ -577,6 +559,70 @@ inline js::PropertyTree&
 JSContext::propertyTree()
 {
     return compartment->propertyTree;
+}
+
+inline bool
+JSContext::hasEnteredCompartment() const
+{
+    return enterCompartmentDepth_ > 0;
+}
+
+inline void
+JSContext::enterCompartment(JSCompartment *c)
+{
+    enterCompartmentDepth_++;
+    compartment = c;
+    if (throwing)
+        wrapPendingException();
+}
+
+inline void
+JSContext::leaveCompartment(JSCompartment *oldCompartment)
+{
+    JS_ASSERT(hasEnteredCompartment());
+    enterCompartmentDepth_--;
+
+    /*
+     * Before we entered the current compartment, 'compartment' was
+     * 'oldCompartment', so we might want to simply set it back. However, we
+     * currently have this terrible scheme whereby defaultCompartmentObject_
+     * can be updated while enterCompartmentDepth_ > 0. In this case,
+     * oldCompartment != defaultCompartmentObject_->compartment and we must
+     * ignore oldCompartment.
+     */
+    if (hasEnteredCompartment() || !defaultCompartmentObject_)
+        compartment = oldCompartment;
+    else
+        compartment = defaultCompartmentObject_->compartment();
+
+    if (throwing)
+        wrapPendingException();
+}
+
+inline void
+JSContext::setDefaultCompartmentObject(JSObject *obj)
+{
+    defaultCompartmentObject_ = obj;
+
+    if (!hasEnteredCompartment()) {
+        /*
+         * If JSAPI callers want to JS_SetGlobalObject while code is running,
+         * they must have entered a compartment (otherwise there will be no
+         * final leaveCompartment call to set the context's compartment back to
+         * defaultCompartmentObject->compartment()).
+         */
+        JS_ASSERT(!hasfp());
+        compartment = obj ? obj->compartment() : NULL;
+        if (throwing)
+            wrapPendingException();
+    }
+}
+
+inline void
+JSContext::setDefaultCompartmentObjectIfUnset(JSObject *obj)
+{
+    if (!defaultCompartmentObject_)
+        setDefaultCompartmentObject(obj);
 }
 
 /* Get the current frame, first lazily instantiating stack frames if needed. */

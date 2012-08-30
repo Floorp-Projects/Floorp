@@ -130,7 +130,6 @@ XPCJSStackFrame::CreateStack(JSContext* cx, XPCJSStackFrame** stack)
                     }
                 }
             }
-        }
 
         XPCJSStackFrame* frame = new XPCJSStackFrame();
         self->mCaller = frame;

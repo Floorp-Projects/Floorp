@@ -214,9 +214,6 @@ class HashTable : private AllocPolicy
          * this operation until the next call to |popFront()|.
          */
         void rekeyFront(const Lookup &l, const Key &k) {
-            JS_ASSERT(&k != &HashPolicy::getKey(this->cur->t));
-            if (match(*this->cur, l))
-                return;
             typename HashTableEntry<T>::NonConstT t = this->cur->t;
             HashPolicy::setKey(t, const_cast<Key &>(k));
             table.remove(*this->cur);
@@ -996,6 +993,9 @@ template <class Key,
           class AllocPolicy = TempAllocPolicy>
 class HashMap
 {
+    typedef typename tl::StaticAssert<tl::IsRelocatableHeapType<Key>::result>::result keyAssert;
+    typedef typename tl::StaticAssert<tl::IsRelocatableHeapType<Value>::result>::result valAssert;
+
   public:
     typedef typename HashPolicy::Lookup Lookup;
 

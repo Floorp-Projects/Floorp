@@ -141,7 +141,7 @@ MarkUnbarriered(JSTracer *trc, T **thingp, const char *name)
 
 template <typename T>
 static void
-Mark(JSTracer *trc, HeapPtr<T> *thing, const char *name)
+Mark(JSTracer *trc, EncapsulatedPtr<T> *thing, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
     MarkInternal(trc, thing->unsafeGet());
@@ -194,7 +194,7 @@ IsMarked(T **thingp)
 
 #define DeclMarkerImpl(base, type)                                                                \
 void                                                                                              \
-Mark##base(JSTracer *trc, HeapPtr<type> *thing, const char *name)                                 \
+Mark##base(JSTracer *trc, EncapsulatedPtr<type> *thing, const char *name)                         \
 {                                                                                                 \
     Mark<type>(trc, thing, name);                                                                 \
 }                                                                                                 \
@@ -226,7 +226,7 @@ bool Is##base##Marked(type **thingp)                                            
     return IsMarked<type>(thingp);                                                                \
 }                                                                                                 \
                                                                                                   \
-bool Is##base##Marked(HeapPtr<type> *thingp)                                                      \
+bool Is##base##Marked(EncapsulatedPtr<type> *thingp)                                              \
 {                                                                                                 \
     return IsMarked<type>(thingp->unsafeGet());                                                   \
 }
@@ -318,15 +318,19 @@ MarkGCThingUnbarriered(JSTracer *trc, void **thingp, const char *name)
 static inline void
 MarkIdInternal(JSTracer *trc, jsid *id)
 {
-    JS_SET_TRACING_LOCATION(trc, (void *)id);
     if (JSID_IS_STRING(*id)) {
         JSString *str = JSID_TO_STRING(*id);
+        JS_SET_TRACING_LOCATION(trc, (void *)id);
         MarkInternal(trc, &str);
         *id = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom *>(str));
     } else if (JS_UNLIKELY(JSID_IS_OBJECT(*id))) {
         JSObject *obj = JSID_TO_OBJECT(*id);
+        JS_SET_TRACING_LOCATION(trc, (void *)id);
         MarkInternal(trc, &obj);
         *id = OBJECT_TO_JSID(obj);
+    } else {
+        /* Unset realLocation manually if we do not call MarkInternal. */
+        JS_SET_TRACING_LOCATION(trc, NULL);
     }
 }
 
@@ -386,6 +390,7 @@ MarkValueInternal(JSTracer *trc, Value *v)
         else
             v->setObjectOrNull((JSObject *)thing);
     } else {
+        /* Unset realLocation manually if we do not call MarkInternal. */
         JS_SET_TRACING_LOCATION(trc, NULL);
     }
 }
@@ -642,7 +647,7 @@ ScanShape(GCMarker *gcmarker, Shape *shape)
   restart:
     PushMarkStack(gcmarker, shape->base());
 
-    const HeapId &id = shape->propidRef();
+    const EncapsulatedId &id = shape->propidRef();
     if (JSID_IS_STRING(id))
         PushMarkStack(gcmarker, JSID_TO_STRING(id));
     else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
@@ -1201,11 +1206,14 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         if (v.isString()) {
             JSString *str = v.toString();
             JS_COMPARTMENT_ASSERT_STR(runtime, str);
+            JS_ASSERT(str->compartment() == runtime->atomsCompartment ||
+                      str->compartment() == obj->compartment());
             if (str->markIfUnmarked())
                 ScanString(this, str);
         } else if (v.isObject()) {
             JSObject *obj2 = &v.toObject();
             JS_COMPARTMENT_ASSERT(runtime, obj2);
+            JS_ASSERT(obj->compartment() == obj2->compartment());
             if (obj2->markIfUnmarked(getMarkColor())) {
                 pushValueArray(obj, vp, end);
                 obj = obj2;

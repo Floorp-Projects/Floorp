@@ -7,11 +7,10 @@
 
 include protocol PNecko;
 include protocol PBrowser;
+include InputStreamParams;
+include URIParams;
 
-include "mozilla/net/NeckoMessageUtils.h";
-
-using IPC::URI;
-using IPC::InputStream;
+include "SerializedLoadContext.h";
 using IPC::SerializedLoadContext;
 
 namespace mozilla {
@@ -23,7 +22,7 @@ async protocol PWebSocket
 
 parent:
   // Forwarded methods corresponding to methods on nsIWebSocketChannel
-  AsyncOpen(URI aURI,
+  AsyncOpen(URIParams aURI,
             nsCString aOrigin,
             nsCString aProtocol,
             bool aSecure,
@@ -31,7 +30,7 @@ parent:
   Close(uint16_t code, nsCString reason);
   SendMsg(nsCString aMsg);
   SendBinaryMsg(nsCString aMsg);
-  SendBinaryStream(InputStream aStream, uint32_t aLength);
+  SendBinaryStream(InputStreamParams aStream, uint32_t aLength);
 
   DeleteSelf();
 

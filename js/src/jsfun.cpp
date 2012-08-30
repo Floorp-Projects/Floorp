@@ -315,7 +315,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
             v.setInt32(fun->nargs - fun->hasRest());
         else
-            v.setString(fun->atom ? fun->atom : cx->runtime->emptyString);
+            v.setString(fun->atom() == NULL ?  cx->runtime->emptyString : fun->atom());
 
         if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0)) {
@@ -383,9 +383,9 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
             }
             return false;
         }
-        firstword = !!fun->atom;
+        firstword = !!fun->atom();
         flagsword = (fun->nargs << 16) | fun->flags;
-        atom = fun->atom;
+        atom = fun->atom();
         script = fun->script();
     } else {
         RootedObject parent(cx, NULL);
@@ -413,7 +413,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
     if (mode == XDR_DECODE) {
         fun->nargs = flagsword >> 16;
         fun->flags = uint16_t(flagsword);
-        fun->atom.init(atom);
+        fun->initAtom(atom);
         fun->initScript(script);
         script->setFunction(fun);
         if (!JSFunction::setTypeForScriptedFunction(cx, fun))
@@ -453,7 +453,7 @@ js::CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleF
 
     clone->nargs = srcFun->nargs;
     clone->flags = srcFun->flags;
-    clone->atom.init(srcFun->atom);
+    clone->initAtom(srcFun->displayAtom());
     clone->initScript(clonedScript);
     clonedScript->setFunction(clone);
     if (!JSFunction::setTypeForScriptedFunction(cx, clone))
@@ -505,8 +505,8 @@ JSFunction::trace(JSTracer *trc)
                        toExtended()->extendedSlots, "nativeReserved");
     }
 
-    if (atom)
-        MarkString(trc, &atom, "atom");
+    if (atom_)
+        MarkString(trc, &atom_, "atom");
 
     if (isInterpreted()) {
         if (u.i.script_)
@@ -620,8 +620,8 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
         }
         if (!out.append("function "))
             return NULL;
-        if (fun->atom) {
-            if (!out.append(fun->atom))
+        if (fun->atom()) {
+            if (!out.append(fun->atom()))
                 return NULL;
         }
     }
@@ -1154,7 +1154,7 @@ js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
     }
 
     /* Step 4-6, 10-11. */
-    JSAtom *name = target->isFunction() ? target->toFunction()->atom.get() : NULL;
+    JSAtom *name = target->isFunction() ? target->toFunction()->atom() : NULL;
 
     RootedObject funobj(cx, js_NewFunction(cx, NULL, CallOrConstructBoundFunction, length,
                                            JSFUN_CONSTRUCTOR, target, name));
@@ -1441,7 +1441,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
         fun->flags |= JSFUN_EXTENDED;
         fun->initializeExtended();
     }
-    fun->atom.init(atom);
+    fun->initAtom(atom);
 
     if (native && !JSObject::setSingletonType(cx, fun))
         return NULL;
@@ -1470,7 +1470,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
     } else {
         clone->initNative(fun->native(), fun->jitInfo());
     }
-    clone->atom.init(fun->atom);
+    clone->initAtom(fun->displayAtom());
 
     if (kind == JSFunction::ExtendedFinalizeKind) {
         clone->flags |= JSFUN_EXTENDED;
@@ -1564,7 +1564,7 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
     } else {
         JS_ASSERT(attrs & JSFUN_INTERPRETED);
         fun = cx->runtime->getSelfHostedFunction(cx, selfHostedName);
-        fun->atom = JSID_TO_ATOM(id);
+        fun->initAtom(JSID_TO_ATOM(id));
     }
     if (!fun)
         return NULL;

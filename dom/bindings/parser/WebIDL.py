@@ -6,6 +6,8 @@
 
 from ply import lex, yacc
 import re
+import os
+import traceback
 
 # Machinery
 
@@ -420,6 +422,12 @@ class IDLInterface(IDLObjectWithScope):
 
         assert not self.parent or isinstance(self.parent, IDLIdentifierPlaceholder)
         parent = self.parent.finish(scope) if self.parent else None
+        if parent and isinstance(parent, IDLExternalInterface):
+            raise WebIDLError("%s inherits from %s which does not have "
+                              "a definition" %
+                              (self.identifier.name,
+                               self.parent.identifier.name),
+                              [self.location])
         assert not parent or isinstance(parent, IDLInterface)
 
         self.parent = parent
@@ -1901,21 +1909,51 @@ class IDLArgument(IDLObjectWithIdentifier):
         self.variadic = variadic
         self.dictionaryMember = dictionaryMember
         self._isComplete = False
+        self.treatNullAs = "Default"
+        self.treatUndefinedAs = "Default"
 
         assert not variadic or optional
 
     def addExtendedAttributes(self, attrs):
-        if self.dictionaryMember:
-            for (attr, value) in attrs:
-                if attr == "TreatUndefinedAs":
-                    raise WebIDLError("[TreatUndefinedAs] is not allowed for "
-                                      "dictionary members", [self.location])
-                elif attr == "TreatNullAs":
+        for (attr, value) in attrs:
+            if attr == "TreatNullAs":
+                if not self.type.isString() or self.type.nullable():
+                    raise WebIDLError("[TreatNullAs] is only allowed on "
+                                      "arguments whose type is DOMString",
+                                      [self.location])
+                if self.dictionaryMember:
                     raise WebIDLError("[TreatNullAs] is not allowed for "
                                       "dictionary members", [self.location])
-
-        # But actually, we can't handle this at all, so far.
-        assert len(attrs) == 0
+                if value != 'EmptyString':
+                    raise WebIDLError("[TreatNullAs] must take the identifier "
+                                      "EmptyString", [self.location])
+                self.treatNullAs = value
+            elif attr == "TreatUndefinedAs":
+                if not self.type.isString():
+                    raise WebIDLError("[TreatUndefinedAs] is only allowed on "
+                                      "arguments whose type is DOMString or "
+                                      "DOMString?", [self.location])
+                if self.dictionaryMember:
+                    raise WebIDLError("[TreatUndefinedAs] is not allowed for "
+                                      "dictionary members", [self.location])
+                if value == 'Null':
+                    if not self.type.nullable():
+                        raise WebIDLError("[TreatUndefinedAs=Null] is only "
+                                          "allowed on arguments whose type is "
+                                          "DOMString?", [self.location])
+                elif value == 'Missing':
+                    if not self.optional:
+                        raise WebIDLError("[TreatUndefinedAs=Missing] is only "
+                                          "allowed on optional arguments",
+                                          [self.location])
+                elif value != 'EmptyString':
+                    raise WebIDLError("[TreatUndefinedAs] must take the "
+                                      "identifiers EmptyString or Null or "
+                                      "Missing", [self.location])
+                self.treatUndefinedAs = value
+            else:
+                raise WebIDLError("Unhandled extended attribute on an argument",
+                                  [self.location])
 
     def isComplete(self):
         return self._isComplete
@@ -2132,6 +2170,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
 
     def hasOverloads(self):
         return self._hasOverloads
+
+    def isIdentifierLess(self):
+        return self.identifier.name[:2] == "__"
 
     def resolve(self, parentScope):
         assert isinstance(parentScope, IDLScope)
@@ -3645,3 +3686,40 @@ class Parser(Tokenizer):
     _builtins = """
         typedef unsigned long long DOMTimeStamp;
     """
+
+def main():
+    # Parse arguments.
+    from optparse import OptionParser
+    usageString = "usage: %prog [options] files"
+    o = OptionParser(usage=usageString)
+    o.add_option("--cachedir", dest='cachedir', default=None,
+                 help="Directory in which to cache lex/parse tables.")
+    o.add_option("--verbose-errors", action='store_true', default=False,
+                 help="When an error happens, display the Python traceback.")
+    (options, args) = o.parse_args()
+
+    if len(args) < 1:
+        o.error(usageString)
+
+    fileList = args
+    baseDir = os.getcwd()
+
+    # Parse the WebIDL.
+    parser = Parser(options.cachedir)
+    try:
+        for filename in fileList:
+            fullPath = os.path.normpath(os.path.join(baseDir, filename))
+            f = open(fullPath, 'rb')
+            lines = f.readlines()
+            f.close()
+            print fullPath
+            parser.parse(''.join(lines), fullPath)
+        parser.finish()
+    except WebIDLError, e:
+        if options.verbose_errors:
+            traceback.print_exc()
+        else:
+            print e
+
+if __name__ == '__main__':
+    main()

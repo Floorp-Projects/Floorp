@@ -77,6 +77,7 @@
 #include "DictionaryHelpers.h"
 #include "mozilla/Attributes.h"
 #include "nsIPermissionManager.h"
+#include "nsMimeTypes.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsStreamListenerWrapper.h"
@@ -1468,6 +1469,13 @@ nsXMLHttpRequest::GetAllResponseHeaders(nsString& aResponseHeaders)
     }
     aResponseHeaders.AppendLiteral("\r\n");
   }
+
+  PRInt32 length;
+  if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
+    aResponseHeaders.AppendLiteral("Content-Length: ");
+    aResponseHeaders.AppendInt(length);
+    aResponseHeaders.AppendLiteral("\r\n");
+  }
 }
 
 NS_IMETHODIMP
@@ -1495,28 +1503,38 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
       return;
     }
 
-    // Even non-http channels supply content type.
+    // Even non-http channels supply content type and content length.
     // Remember we don't leak header information from denied cross-site
     // requests.
     nsresult status;
     if (!mChannel ||
         NS_FAILED(mChannel->GetStatus(&status)) ||
-        NS_FAILED(status) ||
-        !header.LowerCaseEqualsASCII("content-type")) {
+        NS_FAILED(status)) {
       return;
     }
 
-    if (NS_FAILED(mChannel->GetContentType(_retval))) {
-      // Means no content type
-      _retval.SetIsVoid(true);
-      return;
+    // Content Type:
+    if (header.LowerCaseEqualsASCII("content-type")) {
+      if (NS_FAILED(mChannel->GetContentType(_retval))) {
+        // Means no content type
+        _retval.SetIsVoid(true);
+        return;
+      }
+
+      nsCString value;
+      if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) &&
+          !value.IsEmpty()) {
+        _retval.Append(";charset=");
+        _retval.Append(value);
+      }
     }
 
-    nsCString value;
-    if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) &&
-        !value.IsEmpty()) {
-      _retval.Append(";charset=");
-      _retval.Append(value);
+    // Content Length:
+    else if (header.LowerCaseEqualsASCII("content-length")) {
+      PRInt32 length;
+      if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
+        _retval.AppendInt(length);
+      }
     }
 
     return;
@@ -2665,8 +2683,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
     // ArrayBuffer?
     jsval realVal;
     nsCxPusher pusher;
-    JSAutoEnterCompartment ac;
-    JSObject* obj;
+    Maybe<JSAutoCompartment> ac;
 
     // If there's a context on the stack, we can just use it. Otherwise, we need
     // to use the safe js context (and push it into the stack, so that it's
@@ -2680,12 +2697,13 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
     }
 
     nsresult rv = aBody->GetAsJSVal(&realVal);
-    if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal) &&
-        (obj = JSVAL_TO_OBJECT(realVal)) &&
-        ac.enter(cx, obj) &&
-        (JS_IsArrayBufferObject(obj, cx))) {
-      ArrayBuffer buf(cx, obj);
-      return GetRequestBody(&buf, aResult, aContentType, aCharset);
+    if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal)) {
+      JSObject *obj = JSVAL_TO_OBJECT(realVal);
+      ac.construct(cx, obj);
+      if (JS_IsArrayBufferObject(obj, cx)) {
+          ArrayBuffer buf(cx, obj);
+          return GetRequestBody(&buf, aResult, aContentType, aCharset);
+      }
     }
   }
   else if (dataType == nsIDataType::VTYPE_VOID ||
@@ -3070,9 +3088,15 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   }
 
   // Since we expect XML data, set the type hint accordingly
+  // if the channel doesn't know any content type.
   // This means that we always try to parse local files as XML
   // ignoring return value, as this is not critical
-  mChannel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
+  nsCAutoString contentType;
+  if (NS_FAILED(mChannel->GetContentType(contentType)) ||
+      contentType.IsEmpty() ||
+      contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
+    mChannel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
+  }
 
   // We're about to send the request.  Start our timeout.
   mRequestSentTime = PR_Now();

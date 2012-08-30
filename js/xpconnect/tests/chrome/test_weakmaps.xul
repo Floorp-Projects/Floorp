@@ -213,14 +213,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
 
   make_live_map();
 
+  let unpreservable_native_key = function () {
+    // We only allow natives that support wrapper preservation to be used as weak
+    // map keys.  We should be able to try to add unpreservable natives as keys without
+    // crashing (bug 711616), but we should throw an error (bug 761620).
 
-  let dummy_test_map = new WeakMap;
-  // bug 711616: should be able to do this without crashing. JS warning is expected.
-  dummy_test_map.set(document.createElement("div").style, 1);
+    let dummy_test_map = new WeakMap;
 
-  // JS warning is expected.
-  dummy_test_map.set(window.navigator, 1);
+    let navi_fail = false;
+    try {
+      dummy_test_map.set(window.navigator, 1);
+    } catch (e) {
+      navi_fail = true;
+    }
+    ok(navi_fail, "Using window.navigator as a weak map key should produce an exception because it can't be wrapper preserved.");
 
+  }
+
+  unpreservable_native_key();
 
   /* set up for running precise GC/CC then checking the results */
 

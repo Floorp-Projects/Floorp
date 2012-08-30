@@ -87,17 +87,19 @@ class Emulator(object):
         else:
             return self.port is not None
 
+    def _default_adb(self):
+        adb = subprocess.Popen(['which', 'adb'],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT)
+        retcode = adb.wait()
+        if retcode == 0:
+            self.adb = adb.stdout.read().strip() # remove trailing newline
+        return retcode
+
     def _check_for_adb(self):
         if not os.path.exists(self.adb):
-            adb = subprocess.Popen(['which', 'adb'],
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT)
-            retcode = adb.wait()
-            if retcode:
+            if self._default_adb() != 0:
                 raise Exception('adb not found!')
-            out = adb.stdout.read().strip()
-            if len(out) and out.find('/') > -1:
-                self.adb = out
 
     def _run_adb(self, args):
         args.insert(0, self.adb)

@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
 const messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
-                         .getService(Ci.nsIChromeFrameMessageManager);
+                         .getService(Ci.nsIMessageBroadcaster);
 
 
 // -----------------------------------------------------------------------
@@ -70,19 +70,19 @@ MozKeyboard.prototype = {
   },
 
   setSelectedOption: function mozKeyboardSetSelectedOption(index) {
-    messageManager.sendAsyncMessage("Forms:Select:Choice", {
+    messageManager.broadcastAsyncMessage("Forms:Select:Choice", {
       "index": index
     });
   },
 
   setValue: function mozKeyboardSetValue(value) {
-    messageManager.sendAsyncMessage("Forms:Input:Value", {
+    messageManager.broadcastAsyncMessage("Forms:Input:Value", {
       "value": value
     });
   },
 
   setSelectedOptions: function mozKeyboardSetSelectedOptions(indexes) {
-    messageManager.sendAsyncMessage("Forms:Select:Choice", {
+    messageManager.broadcastAsyncMessage("Forms:Select:Choice", {
       "indexes": indexes || []
     });
   },

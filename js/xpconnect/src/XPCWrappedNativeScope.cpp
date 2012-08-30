@@ -91,8 +91,8 @@ XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal, nsIS
         // We need to call SetGlobal in order to refresh our cached
         // mPrototypeJSObject and to clear mPrototypeNoHelper (so we get a new
         // new one if requested in the new scope) in the case where the global
-        // object is being reused (JS_ClearScope has been called).  NOTE: We are
-        // only called by nsXPConnect::InitClasses.
+        // object is being reused (JS_SetAllNonReservedSlotsToUndefined has
+        // been called).  NOTE: We are only called by nsXPConnect::InitClasses.
         scope->SetGlobal(ccx, aGlobal, aNative);
     }
     if (js::GetObjectClass(aGlobal)->flags & JSCLASS_XPCONNECT_GLOBAL)
@@ -217,23 +217,20 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal,
         native = aNative;
     } else {
         const JSClass *jsClass = js::GetObjectJSClass(aGlobal);
-        nsISupports *priv;
         if (!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
                                  JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
             // Our global has an nsISupports native pointer.  Let's
             // see whether it's what we want.
-            priv = static_cast<nsISupports*>(xpc_GetJSPrivate(aGlobal));
-        } else if (dom::IsDOMClass(jsClass) &&
-                   dom::DOMJSClass::FromJSClass(jsClass)->mDOMObjectIsISupports) {
-            priv = dom::UnwrapDOMObject<nsISupports>(aGlobal);
-        } else {
-            priv = nullptr;
+            nsISupports *priv =
+                static_cast<nsISupports*>(xpc_GetJSPrivate(aGlobal));
+            nsCOMPtr<nsIXPConnectWrappedNative> wn = do_QueryInterface(priv);
+            if (wn)
+                native = static_cast<XPCWrappedNative*>(wn.get())->GetIdentityObject();
+            else
+                native = nullptr;
+        } else if (!mozilla::dom::UnwrapDOMObjectToISupports(aGlobal, native)) {
+            native = nullptr;
         }
-        nsCOMPtr<nsIXPConnectWrappedNative> wn = do_QueryInterface(priv);
-        if (wn)
-            native = static_cast<XPCWrappedNative*>(wn.get())->GetIdentityObject();
-        else
-            native = priv;
     }
 
     // Now init our script object principal, if the new global has one.
@@ -676,9 +673,7 @@ XPCWrappedNativeScope::FindInJSObjectScope(JSContext* cx, JSObject* obj,
 
     // Else we'll have to look up the parent chain to get the scope
 
-    JSAutoEnterCompartment ac;
-    ac.enterAndIgnoreErrors(cx, obj);
-
+    JSAutoCompartment ac(cx, obj);
     obj = JS_GetGlobalForObject(cx, obj);
 
     if (js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL) {

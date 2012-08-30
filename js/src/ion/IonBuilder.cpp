@@ -146,11 +146,11 @@ IonBuilder::CFGState::LookupSwitch(jsbytecode *exitpc)
 JSFunction *
 IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
 {
-    types::TypeSet *calleeTypes = oracle->getCallTarget(script, argc, pc);
+    types::StackTypeSet *calleeTypes = oracle->getCallTarget(script, argc, pc);
     if (!calleeTypes)
         return NULL;
 
-    JSObject *obj = calleeTypes->getSingleton(cx, false);
+    JSObject *obj = calleeTypes->getSingleton();
     if (!obj || !obj->isFunction())
         return NULL;
 
@@ -482,11 +482,11 @@ IonBuilder::rewriteParameters()
 
     for (uint32 i = START_SLOT; i < CountArgSlots(info().fun()); i++) {
         MParameter *param = current->getSlot(i)->toParameter();
-        types::TypeSet *types = param->typeSet();
+        types::StackTypeSet *types = param->typeSet();
         if (!types)
             continue;
 
-        JSValueType definiteType = types->getKnownTypeTag(cx);
+        JSValueType definiteType = types->getKnownTypeTag();
         if (definiteType == JSVAL_TYPE_UNKNOWN)
             continue;
 
@@ -3010,7 +3010,7 @@ IonBuilder::checkInlineableGetPropertyCache(uint32_t argc)
 MPolyInlineDispatch *
 IonBuilder::makePolyInlineDispatch(JSContext *cx, AutoObjectVector &targets, int argc,
                                    MGetPropertyCache *getPropCache,
-                                   types::TypeSet *types, types::TypeSet *barrier,
+                                   types::StackTypeSet *types, types::StackTypeSet *barrier,
                                    MBasicBlock *bottom,
                                    Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
 {
@@ -3149,7 +3149,7 @@ IonBuilder::makePolyInlineDispatch(JSContext *cx, AutoObjectVector &targets, int
 
 bool
 IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool constructing,
-                               types::TypeSet *types, types::TypeSet *barrier)
+                               types::StackTypeSet *types, types::StackTypeSet *barrier)
 {
 #ifdef DEBUG
     uint32 origStackDepth = current->stackDepth();
@@ -3498,11 +3498,11 @@ IonBuilder::getSingletonPrototype(JSFunction *target)
         return NULL;
 
     jsid protoid = AtomToId(cx->runtime->atomState.classPrototypeAtom);
-    types::TypeSet *protoTypes = target->getType(cx)->getProperty(cx, protoid, false);
+    types::HeapTypeSet *protoTypes = target->getType(cx)->getProperty(cx, protoid, false);
     if (!protoTypes)
         return NULL;
 
-    return protoTypes->getSingleton(cx, true); // freeze the singleton if existent.
+    return protoTypes->getSingleton(cx);
 }
 
 MDefinition *
@@ -3522,7 +3522,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, HandleObject prot
 
     // Trigger recompilation if the templateObject changes.
     if (templateObject->type()->newScript)
-        types::TypeSet::WatchObjectStateChange(cx, templateObject->type());
+        types::HeapTypeSet::WatchObjectStateChange(cx, templateObject->type());
 
     MConstant *protoDef = MConstant::New(ObjectValue(*proto));
     current->add(protoDef);
@@ -3572,8 +3572,8 @@ IonBuilder::jsop_funcall(uint32 argc)
         return makeCall(native, argc, false);
 
     // Extract call target.
-    types::TypeSet *funTypes = oracle->getCallArg(script, argc, 0, pc);
-    RootedObject funobj(cx, (funTypes) ? funTypes->getSingleton(cx, false) : NULL);
+    types::StackTypeSet *funTypes = oracle->getCallArg(script, argc, 0, pc);
+    RootedObject funobj(cx, (funTypes) ? funTypes->getSingleton() : NULL);
     RootedFunction target(cx, (funobj && funobj->isFunction()) ? funobj->toFunction() : NULL);
 
     // Unwrap the (JSFunction *) parameter.
@@ -3608,35 +3608,36 @@ IonBuilder::jsop_funcall(uint32 argc)
 bool
 IonBuilder::jsop_funapply(uint32 argc)
 {
+    // Disable compilation if the second argument to |apply| cannot be guaranteed
+    // to be either definitely |arguments| or definitely not |arguments|.
+    types::StackTypeSet *argObjTypes = oracle->getCallArg(script, argc, 2, pc);
+    LazyArgumentsType isArgObj = oracle->isArgumentObject(argObjTypes);
+    if (isArgObj == MaybeArguments)
+        return abort("fun.apply with MaybeArguments");
+
+    RootedFunction native(cx, getSingleCallTarget(argc, pc));
+
+    // Fallback to regular call if arg 2 is not definitely |arguments|.
+    if (isArgObj != DefinitelyArguments)
+        return makeCall(native, argc, false);
+
+    if (!native ||
+        !native->isNative() ||
+        native->native() != js_fun_apply ||
+        argc != 2)
+    {
+        return abort("unrecognized fun.apply sequence");
+    }
+
     // Stack for JSOP_FUNAPPLY:
     // 1:      MPassArg(Vp)
     // 2:      MPassArg(This)
     // argc+1: MPassArg(JSFunction *), the 'f' in |f.call()|, in |this| position.
     // argc+2: The native 'apply' function.
 
-    // If |Function.prototype.call| may be overridden, don't optimize callsite.
-    RootedFunction native(cx, getSingleCallTarget(argc, pc));
-    if (!native || !native->isNative() || native->native() != &js_fun_apply)
-        return makeCall(native, argc, false);
-
-    // Do not handle case when there is no second argument.
-    if (argc != 2)
-        return makeCall(native, argc, false);
-
-    // Disable compilation if the second argument to |apply| cannot be guaranteed
-    // to be either definitely |arguments| or definitely not |arguments|.
-    types::TypeSet *argObjTypes = oracle->getCallArg(script, argc, 2, pc);
-    LazyArgumentsType isArgObj = oracle->isArgumentObject(argObjTypes);
-    if (isArgObj == MaybeArguments)
-        return abort("NYI: Handle fun.apply with MaybeArguments.");
-
-    // Fallback to regular call if arg 2 is not definitely |arguments|.
-    if (isArgObj != DefinitelyArguments)
-        return makeCall(native, argc, false);
-
     // Extract call target.
-    types::TypeSet *funTypes = oracle->getCallArg(script, argc, 0, pc);
-    RootedObject funobj(cx, (funTypes) ? funTypes->getSingleton(cx, false) : NULL);
+    types::StackTypeSet *funTypes = oracle->getCallArg(script, argc, 0, pc);
+    RootedObject funobj(cx, (funTypes) ? funTypes->getSingleton() : NULL);
     RootedFunction target(cx, (funobj && funobj->isFunction()) ? funobj->toFunction() : NULL);
 
     // Vp
@@ -3668,8 +3669,8 @@ IonBuilder::jsop_funapply(uint32 argc)
     if (!resumeAfter(apply))
         return false;
 
-    types::TypeSet *barrier;
-    types::TypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
+    types::StackTypeSet *barrier;
+    types::StackTypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
     return pushTypeBarrier(apply, types, barrier);
 }
 
@@ -3677,8 +3678,8 @@ bool
 IonBuilder::jsop_call_fun_barrier(AutoObjectVector &targets, uint32_t numTargets,
                                   uint32 argc, 
                                   bool constructing,
-                                  types::TypeSet *types,
-                                  types::TypeSet *barrier)
+                                  types::StackTypeSet *types,
+                                  types::StackTypeSet *barrier)
 {
     // Attempt to inline native and scripted functions.
     if (inliningEnabled()) {
@@ -3709,16 +3710,16 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
     // Acquire known call target if existent.
     AutoObjectVector targets(cx);
     uint32_t numTargets = getPolyCallTargets(argc, pc, targets, 4);
-    types::TypeSet *barrier;
-    types::TypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
+    types::StackTypeSet *barrier;
+    types::StackTypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
     return jsop_call_fun_barrier(targets, numTargets, argc, constructing, types, barrier);
 }
 
 bool
 IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
                             bool constructing,
-                            types::TypeSet *types,
-                            types::TypeSet *barrier)
+                            types::StackTypeSet *types,
+                            types::StackTypeSet *barrier)
 {
     // This function may be called with mutated stack.
     // Querying TI for popped types is invalid.
@@ -3792,8 +3793,8 @@ IonBuilder::makeCallBarrier(HandleFunction target, uint32 argc,
 bool
 IonBuilder::makeCall(HandleFunction target, uint32 argc, bool constructing)
 {
-    types::TypeSet *barrier;
-    types::TypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
+    types::StackTypeSet *barrier;
+    types::StackTypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
     return makeCallBarrier(target, argc, constructing, types, barrier);
 }
 
@@ -3812,7 +3813,7 @@ IonBuilder::jsop_incslot(JSOp op, uint32 slot)
     MDefinition *value = current->pop();
     MInstruction *lhs;
 
-    JSValueType knownType = types.lhsTypes->getKnownTypeTag(cx);
+    JSValueType knownType = types.lhsTypes->getKnownTypeTag();
     if (knownType == JSVAL_TYPE_INT32) {
         lhs = MToInt32::New(value);
     } else if (knownType == JSVAL_TYPE_DOUBLE) {
@@ -3893,7 +3894,7 @@ IonBuilder::getNewArrayTemplateObject(uint32 count)
 bool
 IonBuilder::jsop_newarray(uint32 count)
 {
-    JS_ASSERT(script->hasGlobal());
+    JS_ASSERT(script->compileAndGo);
 
     JSObject *templateObject = getNewArrayTemplateObject(count);
     if (!templateObject)
@@ -3911,7 +3912,7 @@ bool
 IonBuilder::jsop_newobject(HandleObject baseObj)
 {
     // Don't bake in the TypeObject for non-CNG scripts.
-    JS_ASSERT(script->hasGlobal());
+    JS_ASSERT(script->compileAndGo);
 
     RootedObject templateObject(cx);
 
@@ -4346,7 +4347,7 @@ TestSingletonProperty(JSContext *cx, HandleObject obj, HandleId id, bool *isKnow
 }
 
 static inline bool
-TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
+TestSingletonPropertyTypes(JSContext *cx, types::StackTypeSet *types,
                            HandleObject globalObj, HandleId id,
                            bool *isKnownConstant, bool *testObject)
 {
@@ -4360,7 +4361,7 @@ TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
     if (!types || types->unknownObject())
         return true;
 
-    RootedObject singleton(cx, types->getSingleton(cx));
+    RootedObject singleton(cx, types->getSingleton());
     if (singleton)
         return TestSingletonProperty(cx, singleton, id, isKnownConstant);
 
@@ -4368,7 +4369,7 @@ TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
         return true;
 
     JSProtoKey key;
-    JSValueType type = types->getKnownTypeTag(cx);
+    JSValueType type = types->getKnownTypeTag();
     switch (type) {
       case JSVAL_TYPE_STRING:
         key = JSProto_String;
@@ -4416,10 +4417,8 @@ TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
             }
         }
         if (thoughtConstant) {
-                types->addFreeze(cx);
-
-                // If this is not a known object, a test will be needed.
-                *testObject = (type != JSVAL_TYPE_OBJECT);
+            // If this is not a known object, a test will be needed.
+            *testObject = (type != JSVAL_TYPE_OBJECT);
         }
         *isKnownConstant = thoughtConstant;
         return true;
@@ -4429,7 +4428,7 @@ TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
     }
 
     RootedObject proto(cx);
-    if (!js_GetClassPrototype(cx, globalObj, key, &proto, NULL))
+    if (!js_GetClassPrototype(cx, key, &proto, NULL))
         return false;
 
     return TestSingletonProperty(cx, proto, id, isKnownConstant);
@@ -4447,7 +4446,8 @@ TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
 //     instruction replaces the top of the stack.
 // (5) Lastly, a type barrier instruction replaces the top of the stack.
 bool
-IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::TypeSet *observed)
+IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual,
+                            types::StackTypeSet *observed)
 {
     // If the instruction has no side effects, we'll resume the entire operation.
     // The actual type barrier will occur in the interpreter. If the
@@ -4461,7 +4461,7 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::Ty
     }
 
     if (!observed) {
-        JSValueType type = actual->getKnownTypeTag(cx);
+        JSValueType type = actual->getKnownTypeTag();
         MInstruction *replace = NULL;
         switch (type) {
           case JSVAL_TYPE_UNDEFINED:
@@ -4493,10 +4493,9 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::Ty
         return true;
 
     current->pop();
-    observed->addFreeze(cx);
 
     MInstruction *barrier;
-    JSValueType type = observed->getKnownTypeTag(cx);
+    JSValueType type = observed->getKnownTypeTag();
 
     // An unbox instruction isn't enough to capture JSVAL_TYPE_OBJECT. Use a type
     // barrier followed by an infallible unbox.
@@ -4565,7 +4564,7 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
     if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot())
         return jsop_getname(name);
 
-    types::TypeSet *propertyTypes = oracle->globalPropertyTypeSet(script, pc, id);
+    types::HeapTypeSet *propertyTypes = oracle->globalPropertyTypeSet(script, pc, id);
     if (propertyTypes && propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
         // The property has been reconfigured as non-configurable, non-enumerable
         // or non-writable.
@@ -4575,12 +4574,12 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
     // If the property is permanent, a shape guard isn't necessary.
     JSValueType knownType = JSVAL_TYPE_UNKNOWN;
 
-    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
-    types::TypeSet *types = oracle->propertyRead(script, pc);
+    types::StackTypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::StackTypeSet *types = oracle->propertyRead(script, pc);
     if (types) {
-        JSObject *singleton = types->getSingleton(cx);
+        JSObject *singleton = types->getSingleton();
 
-        knownType = types->getKnownTypeTag(cx);
+        knownType = types->getKnownTypeTag();
         if (!barrier) {
             if (singleton) {
                 // Try to inline a known constant value.
@@ -4631,7 +4630,7 @@ IonBuilder::jsop_setgname(HandlePropertyName name)
     JS_ASSERT(globalObj->isNative());
 
     bool canSpecialize;
-    types::TypeSet *propertyTypes = oracle->globalPropertyWrite(script, pc, id, &canSpecialize);
+    types::HeapTypeSet *propertyTypes = oracle->globalPropertyWrite(script, pc, id, &canSpecialize);
 
     // This should only happen for a few names like __proto__.
     if (!canSpecialize || globalObj->watched())
@@ -4718,8 +4717,8 @@ IonBuilder::jsop_getname(HandlePropertyName name)
     if (!resumeAfter(ins))
         return false;
 
-    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
-    types::TypeSet *types = oracle->propertyRead(script, pc);
+    types::StackTypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::StackTypeSet *types = oracle->propertyRead(script, pc);
 
     monitorResult(ins, types);
     return pushTypeBarrier(ins, types, barrier);
@@ -4783,8 +4782,8 @@ IonBuilder::jsop_getelem()
     if (!resumeAfter(ins))
         return false;
 
-    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
-    types::TypeSet *types = oracle->propertyRead(script, pc);
+    types::StackTypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::StackTypeSet *types = oracle->propertyRead(script, pc);
 
     if (mustMonitorResult)
         monitorResult(ins, types);
@@ -4797,8 +4796,8 @@ IonBuilder::jsop_getelem_dense()
     if (oracle->arrayPrototypeHasIndexedProperty())
         return abort("GETELEM Array proto has indexed properties");
 
-    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
-    types::TypeSet *types = oracle->propertyRead(script, pc);
+    types::StackTypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::StackTypeSet *types = oracle->propertyRead(script, pc);
     bool needsHoleCheck = !oracle->elementReadIsPacked(script, pc);
     bool maybeUndefined = types->hasType(types::Type::UndefinedType());
 
@@ -4807,7 +4806,7 @@ IonBuilder::jsop_getelem_dense()
 
     JSValueType knownType = JSVAL_TYPE_UNKNOWN;
     if (!needsHoleCheck && !barrier) {
-        knownType = types->getKnownTypeTag(cx);
+        knownType = types->getKnownTypeTag();
 
         // Null and undefined have no payload so they can't be specialized.
         // Since folding null/undefined while building SSA is not safe (see the
@@ -4886,8 +4885,8 @@ GetTypedArrayElements(MDefinition *obj)
 bool
 IonBuilder::jsop_getelem_typed(int arrayType)
 {
-    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
-    types::TypeSet *types = oracle->propertyRead(script, pc);
+    types::StackTypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::StackTypeSet *types = oracle->propertyRead(script, pc);
 
     MDefinition *id = current->pop();
     MDefinition *obj = current->pop();
@@ -5137,10 +5136,10 @@ IonBuilder::jsop_length_fastPath()
     if (!sig.inTypes || !sig.outTypes)
         return false;
 
-    if (sig.outTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
+    if (sig.outTypes->getKnownTypeTag() != JSVAL_TYPE_INT32)
         return false;
 
-    switch (sig.inTypes->getKnownTypeTag(cx)) {
+    switch (sig.inTypes->getKnownTypeTag()) {
       case JSVAL_TYPE_STRING: {
         MDefinition *obj = current->pop();
         MStringLength *ins = MStringLength::New(obj);
@@ -5203,8 +5202,8 @@ IonBuilder::jsop_arguments_length()
 bool
 IonBuilder::jsop_arguments_getelem()
 {
-    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
-    types::TypeSet *types = oracle->propertyRead(script, pc);
+    types::StackTypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::StackTypeSet *types = oracle->propertyRead(script, pc);
 
     MDefinition *idx = current->pop();
 
@@ -5236,8 +5235,8 @@ IonBuilder::jsop_arguments_setelem()
     return abort("NYI arguments[]=");
 }
 
-inline types::TypeSet *
-GetDefiniteSlot(JSContext *cx, types::TypeSet *types, JSAtom *atom)
+inline types::HeapTypeSet *
+GetDefiniteSlot(JSContext *cx, types::StackTypeSet *types, JSAtom *atom)
 {
     if (!types || types->unknownObject() || types->getObjectCount() != 1)
         return NULL;
@@ -5250,15 +5249,14 @@ GetDefiniteSlot(JSContext *cx, types::TypeSet *types, JSAtom *atom)
     if (id != types::MakeTypeId(cx, id))
         return NULL;
 
-    types::TypeSet *propertyTypes = type->getProperty(cx, id, false);
+    types::HeapTypeSet *propertyTypes = type->getProperty(cx, id, false);
     if (!propertyTypes ||
-        !propertyTypes->isDefiniteProperty() ||
+        !propertyTypes->definiteProperty() ||
         propertyTypes->isOwnProperty(cx, type, true))
     {
         return NULL;
     }
 
-    types->addFreeze(cx);
     return propertyTypes;
 }
 
@@ -5275,7 +5273,7 @@ IonBuilder::jsop_not()
 
 
 inline bool
-IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id,
+IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, HandleId id,
                                JSFunction **funcp, bool isGetter, bool *isDOM)
 {
     JSObject *found = NULL;
@@ -5308,10 +5306,10 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             // If the type has an own property, we can't be sure we don't shadow
             // the chain.
             jsid typeId = types::MakeTypeId(cx, id);
-            types::TypeSet *propSet = typeObj->getProperty(cx, typeId, false);
+            types::HeapTypeSet *propSet = typeObj->getProperty(cx, typeId, false);
             if (!propSet)
                 return false;
-            if (propSet->isOwnProperty(false))
+            if (propSet->isOwnProperty(cx, typeObj, false))
                 return true;
 
             // Check the DOM status of the instance type
@@ -5401,9 +5399,6 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
 
     JS_ASSERT(foundProto);
 
-    // Freeze the input types
-    types->addFreeze(cx);
-
     // Add a shape guard on the prototype we found the property on. The rest of
     // the prototype chain is guarded by TI freezes. Note that a shape guard is
     // good enough here, even in the proxy case, because we have ensured there
@@ -5430,8 +5425,8 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
         // Freeze the types as being DOM objects if they are
         if (thinkDOM) {
             // Asking the question adds the freeze
-            DebugOnly<bool> wasntDOM = types::TypeSet::HasObjectFlags(cx, curType,
-                                                           types::OBJECT_FLAG_NON_DOM);
+            DebugOnly<bool> wasntDOM =
+                types::HeapTypeSet::HasObjectFlags(cx, curType, types::OBJECT_FLAG_NON_DOM);
             JS_ASSERT(!wasntDOM);
         }
 
@@ -5442,7 +5437,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             // just checked, so propSet cannot be NULL.
             jsid typeId = types::MakeTypeId(cx, id);
             while (true) {
-                types::TypeSet *propSet = curType->getProperty(cx, typeId, false);
+                types::HeapTypeSet *propSet = curType->getProperty(cx, typeId, false);
                 JS_ASSERT(propSet);
                 // Asking, freeze by asking.
                 DebugOnly<bool> isOwn = propSet->isOwnProperty(cx, curType, false);
@@ -5535,7 +5530,7 @@ TestAreKnownDOMTypes(JSContext *cx, types::TypeSet *inTypes)
 }
 
 static void
-FreezeDOMTypes(JSContext *cx, types::TypeSet *inTypes)
+FreezeDOMTypes(JSContext *cx, types::StackTypeSet *inTypes)
 {
     for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
         types::TypeObject *curType = inTypes->getTypeObject(i);
@@ -5551,17 +5546,15 @@ FreezeDOMTypes(JSContext *cx, types::TypeSet *inTypes)
         }
 
         // Add freeze by asking the question.
-        DebugOnly<bool> wasntDOM = types::TypeSet::HasObjectFlags(cx, curType,
-                                                                  types::OBJECT_FLAG_NON_DOM);
+        DebugOnly<bool> wasntDOM =
+            types::HeapTypeSet::HasObjectFlags(cx, curType, types::OBJECT_FLAG_NON_DOM);
         JS_ASSERT(!wasntDOM);
     }
-
-    inTypes->addFreeze(cx);
 }
 
 bool
 IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetPropertyCache *getPropCache,
-                                    types::TypeSet *objTypes, types::TypeSet *pushedTypes)
+                                    types::StackTypeSet *objTypes, types::StackTypeSet *pushedTypes)
 {
     RootedId id(cx, NameToId(getPropCache->name()));
     if ((jsid)id != types::MakeTypeId(cx, id))
@@ -5595,7 +5588,7 @@ IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetProper
         if (!typeObj || typeObj->unknownProperties() || !typeObj->proto)
             continue;
 
-        types::TypeSet *ownTypes = typeObj->getProperty(cx, id, false);
+        types::HeapTypeSet *ownTypes = typeObj->getProperty(cx, id, false);
         if (!ownTypes)
             continue;
 
@@ -5610,11 +5603,11 @@ IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetProper
         if (!knownConstant || proto->type()->unknownProperties())
             continue;
 
-        types::TypeSet *protoTypes = proto->type()->getProperty(cx, id, false);
+        types::HeapTypeSet *protoTypes = proto->type()->getProperty(cx, id, false);
         if (!protoTypes)
             continue;
 
-        JSObject *obj = protoTypes->getSingleton(cx, false);
+        JSObject *obj = protoTypes->getSingleton(cx);
         if (!obj || !obj->isFunction())
             continue;
 
@@ -5630,9 +5623,6 @@ IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetProper
         getPropCache->clearInlinePropertyTable();
         return true;
     }
-
-    pushedTypes->addFreeze(cx);
-    objTypes->addFreeze(cx);
 
 #ifdef DEBUG
     if (inlinePropTable->numEntries() > 0)
@@ -5678,8 +5668,8 @@ IonBuilder::loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType)
     JS_ASSERT(shape->hasDefaultGetter());
     JS_ASSERT(shape->hasSlot());
 
-    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
-    types::TypeSet *types = oracle->propertyRead(script, pc);
+    types::StackTypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::StackTypeSet *types = oracle->propertyRead(script, pc);
 
     if (shape->slot() < shape->numFixedSlots()) {
         MLoadFixedSlot *load = MLoadFixedSlot::New(obj, shape->slot());
@@ -5743,15 +5733,15 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
     MDefinition *obj = current->pop();
     MInstruction *ins;
 
-    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
-    types::TypeSet *types = oracle->propertyRead(script, pc);
+    types::StackTypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::StackTypeSet *types = oracle->propertyRead(script, pc);
 
     TypeOracle::Unary unary = oracle->unaryOp(script, pc);
     TypeOracle::UnaryTypes unaryTypes = oracle->unaryTypes(script, pc);
 
     RootedId id(cx, NameToId(name));
 
-    JSObject *singleton = types ? types->getSingleton(cx) : NULL;
+    JSObject *singleton = types ? types->getSingleton() : NULL;
     if (singleton && !barrier) {
         bool isKnownConstant, testObject;
         RootedObject global(cx, &script->global());
@@ -5900,7 +5890,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     TypeOracle::BinaryTypes binaryTypes = oracle->binaryTypes(script, pc);
 
     if (!monitored) {
-        if (types::TypeSet *propTypes = GetDefiniteSlot(cx, binaryTypes.lhsTypes, name)) {
+        if (types::HeapTypeSet *propTypes = GetDefiniteSlot(cx, binaryTypes.lhsTypes, name)) {
             MStoreFixedSlot *fixed = MStoreFixedSlot::New(obj, propTypes->definiteSlot(), value);
             current->add(fixed);
             current->push(value);
@@ -5911,7 +5901,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     }
 
     RootedId id(cx, NameToId(name));
-    types::TypeSet *types = binaryTypes.lhsTypes;
+    types::StackTypeSet *types = binaryTypes.lhsTypes;
 
     JSFunction *commonSetter;
     bool isDOM;
@@ -6082,8 +6072,8 @@ IonBuilder::jsop_this()
         return true;
     }
 
-    types::TypeSet *types = oracle->thisTypeSet(script);
-    if (types && types->getKnownTypeTag(cx) == JSVAL_TYPE_OBJECT) {
+    types::StackTypeSet *types = oracle->thisTypeSet(script);
+    if (types && types->getKnownTypeTag() == JSVAL_TYPE_OBJECT) {
         // This is safe, because if the entry type of |this| is an object, it
         // will necessarily be an object throughout the entire function. OSR
         // can introduce a phi, but this phi will be specialized.
@@ -6194,8 +6184,8 @@ IonBuilder::walkScopeChain(unsigned hops)
 bool
 IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
 {
-    types::TypeSet *barrier;
-    types::TypeSet *actual = oracle->aliasedVarBarrier(script, pc, &barrier);
+    types::StackTypeSet *barrier;
+    types::StackTypeSet *actual = oracle->aliasedVarBarrier(script, pc, &barrier);
 
     MDefinition *obj = walkScopeChain(sc.hops);
 
@@ -6212,7 +6202,7 @@ IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
     }
 
     if (!barrier) {
-        JSValueType type = actual->getKnownTypeTag(cx);
+        JSValueType type = actual->getKnownTypeTag();
         if (type != JSVAL_TYPE_UNKNOWN &&
             type != JSVAL_TYPE_UNDEFINED &&
             type != JSVAL_TYPE_NULL)

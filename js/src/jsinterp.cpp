@@ -275,14 +275,6 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 
     JS_CHECK_RECURSION(cx, return false);
 
-    /* FIXME: Once bug 470510 is fixed, make this an assert. */
-    if (script->compileAndGo) {
-        if (fp->global().isCleared()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
-            return false;
-        }
-    }
-
 #ifdef DEBUG
     struct CheckStackBalance {
         JSContext *cx;
@@ -1516,7 +1508,6 @@ BEGIN_CASE(JSOP_LOOPENTRY)
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
-            JS_ASSERT(regs.fp()->isScriptFrame());
             ion::IonExecStatus maybeOsr = ion::SideCannon(cx, regs.fp(), regs.pc);
             if (maybeOsr == ion::IonExec_Bailout) {
                 // We hit a deoptimization path in the first Ion frame, so now
@@ -2353,7 +2344,7 @@ BEGIN_CASE(JSOP_SETNAME)
 
     HandleValue value = HandleValue::fromMarkedLocation(&regs.sp[-1]);
 
-    if (!SetNameOperation(cx, regs.pc, scope, value))
+    if (!SetNameOperation(cx, script, regs.pc, scope, value))
         goto error;
 
     regs.sp[-2] = regs.sp[-1];
@@ -2470,15 +2461,8 @@ BEGIN_CASE(JSOP_FUNCALL)
         goto error;
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
-
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-
     JSScript *newScript = fun->script();
-
-    if (newScript->compileAndGo && newScript->hasClearedGlobal()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
-        goto error;
-    }
 
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, newScript, initial))
         goto error;
@@ -2936,7 +2920,7 @@ BEGIN_CASE(JSOP_DEFFUN)
 
     /* ES5 10.5 (NB: with subsequent errata). */
     RootedPropertyName &name = rootName0;
-    name = fun->atom->asPropertyName();
+    name = fun->atom()->asPropertyName();
     RootedShape &shape = rootShape0;
     RootedObject &pobj = rootObject1;
     if (!JSObject::lookupProperty(cx, parent, name, &pobj, &shape))

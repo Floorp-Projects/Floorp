@@ -63,6 +63,7 @@ fails-if(Android) != textarea-rtl.html textarea-no-resize.html
 
 asserts(2) == button-first-letter-1.html button-first-letter-1-ref.html
 asserts(1) != button-first-letter-1.html button-first-letter-1-noref.html
+== button-max-height.html button-max-height-ref.html
 
 == legend.html legend-ref.html
 
@@ -71,6 +72,9 @@ include placeholder/reftest.list
 
 # input
 include input/reftest.list
+
+# meter element
+include meter/reftest.list
 
 # output element
 include output/reftest.list

@@ -17,7 +17,7 @@ public:
   nsXBLInsertionPoint(nsIContent* aParentElement, uint32_t aIndex, nsIContent* aDefContent);
   ~nsXBLInsertionPoint();
 
-  NS_INLINE_DECL_REFCOUNTING(nsXBLInsertionPoint)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsXBLInsertionPoint)
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLInsertionPoint)
 

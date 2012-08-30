@@ -363,6 +363,7 @@ PuppetWidget::SetInputContext(const InputContext& aContext,
     static_cast<int32_t>(aContext.mIMEState.mEnabled),
     static_cast<int32_t>(aContext.mIMEState.mOpen),
     aContext.mHTMLInputType,
+    aContext.mHTMLInputInputmode,
     aContext.mActionHint,
     static_cast<int32_t>(aAction.mCause),
     static_cast<int32_t>(aAction.mFocusChange));

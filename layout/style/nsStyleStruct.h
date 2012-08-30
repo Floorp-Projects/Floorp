@@ -149,6 +149,8 @@ public:
   }
 
   bool IsOpaque();
+  bool HasCalc();
+  uint32_t Hash(PLDHashNumber aHash);
 
   NS_INLINE_DECL_REFCOUNTING(nsStyleGradient)
 
@@ -1556,7 +1558,7 @@ struct nsStyleDisplay {
 
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
-  nsRefPtr<nsCSSValue::URL> mBinding;    // [reset]
+  nsRefPtr<mozilla::css::URLValue> mBinding;    // [reset]
   nsRect  mClip;                // [reset] offsets from upper-left border edge
   float   mOpacity;             // [reset]
   uint8_t mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*

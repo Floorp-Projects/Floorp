@@ -799,8 +799,7 @@ Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   nsPoint offset(presContext->DevPixelsToAppUnits(aX) - screenRect.x,
                  presContext->DevPixelsToAppUnits(aY) - screenRect.y);
 
-  nsIPresShell* presShell = presContext->PresShell();
-  nsIFrame *foundFrame = presShell->GetFrameForPoint(frame, offset);
+  nsIFrame *foundFrame = nsLayoutUtils::GetFrameForPoint(frame, offset);
 
   nsIContent* content = nullptr;
   if (!foundFrame || !(content = foundFrame->GetContent()))

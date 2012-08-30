@@ -432,12 +432,12 @@ NameOperation(JSContext *cx, jsbytecode *pc, MutableHandleValue vp)
 }
 
 inline bool
-SetNameOperation(JSContext *cx, jsbytecode *pc, HandleObject scope, HandleValue val)
+SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject scope,
+                 HandleValue val)
 {
     JS_ASSERT(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME);
     JS_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
 
-    JSScript *script = cx->fp()->script();
     bool strict = script->strictModeCode;
     RootedPropertyName name(cx, script->getName(pc));
     RootedValue valCopy(cx, val);

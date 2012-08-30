@@ -426,7 +426,8 @@ pref("plugins.use_placeholder", 0);
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 pref("app.support.baseURL", "http://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/");
-pref("app.feedbackURL", "http://input.mozilla.com/feedback/");
+// Used to submit data to input from about:feedback
+pref("app.feedback.postURL", "http://m.input.mozilla.org/%LOCALE%/feedback");
 pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/m/privacy.html");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
 pref("app.channelURL", "http://www.mozilla.org/%LOCALE%/firefox/channel/");
@@ -518,26 +519,6 @@ pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/");
 
 // replace newlines with spaces on paste into single-line text boxes
 pref("editor.singleLine.pasteNewlines", 2);
-
-#ifdef MOZ_SERVICES_SYNC
-// sync service
-pref("services.sync.client.type", "mobile");
-pref("services.sync.registerEngines", "Tab,Bookmarks,Form,History,Password,Prefs");
-pref("services.sync.autoconnectDelay", 5);
-
-// prefs to sync by default
-pref("services.sync.prefs.sync.browser.startup.homepage.title", true);
-pref("services.sync.prefs.sync.browser.startup.homepage", true);
-pref("services.sync.prefs.sync.browser.tabs.warnOnClose", true);
-pref("services.sync.prefs.sync.devtools.errorconsole.enabled", true);
-pref("services.sync.prefs.sync.javascript.enabled", true);
-pref("services.sync.prefs.sync.lightweightThemes.isThemeSelected", true);
-pref("services.sync.prefs.sync.lightweightThemes.usedThemes", true);
-pref("services.sync.prefs.sync.network.cookie.cookieBehavior", true);
-pref("services.sync.prefs.sync.permissions.default.image", true);
-pref("services.sync.prefs.sync.privacy.donottrackheader.enabled", true);
-pref("services.sync.prefs.sync.signon.rememberSignons", true);
-#endif
 
 // threshold where a tap becomes a drag, in 1/240" reference pixels
 // The names of the preferences are to be in sync with nsEventStateManager.cpp

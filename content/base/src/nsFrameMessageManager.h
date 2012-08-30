@@ -5,7 +5,7 @@
 #ifndef nsFrameMessageManager_h__
 #define nsFrameMessageManager_h__
 
-#include "nsIFrameMessageManager.h"
+#include "nsIMessageManager.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -35,7 +35,7 @@ struct JSObject;
 
 struct nsMessageListenerInfo
 {
-  nsCOMPtr<nsIFrameMessageListener> mListener;
+  nsCOMPtr<nsIMessageListener> mListener;
   nsCOMPtr<nsIAtom> mMessage;
 };
 
@@ -49,7 +49,8 @@ typedef bool (*nsAsyncMessageCallback)(void* aCallbackData,
                                              const mozilla::dom::StructuredCloneData& aData);
 
 class nsFrameMessageManager MOZ_FINAL : public nsIContentFrameMessageManager,
-                                        public nsIChromeFrameMessageManager
+                                        public nsIMessageBroadcaster,
+                                        public nsIFrameScriptLoader
 {
   typedef mozilla::dom::StructuredCloneData StructuredCloneData;
 public:
@@ -61,10 +62,17 @@ public:
                         nsFrameMessageManager* aParentManager,
                         JSContext* aContext,
                         bool aGlobal = false,
-                        bool aProcessManager = false)
-  : mChrome(aChrome), mGlobal(aGlobal), mIsProcessManager(aProcessManager),
-    mHandlingMessage(false), mDisconnected(false), mParentManager(aParentManager),
-    mSyncCallback(aSyncCallback), mAsyncCallback(aAsyncCallback),
+                        bool aProcessManager = false,
+                        bool aBroadcaster = false)
+  : mChrome(aChrome),
+    mGlobal(aGlobal),
+    mIsProcessManager(aProcessManager),
+    mIsBroadcaster(aBroadcaster),
+    mHandlingMessage(false),
+    mDisconnected(false),
+    mParentManager(aParentManager),
+    mSyncCallback(aSyncCallback),
+    mAsyncCallback(aAsyncCallback),
     mLoadScriptCallback(aLoadScriptCallback),
     mCallbackData(aCallbackData),
     mContext(aContext)
@@ -105,11 +113,12 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFrameMessageManager,
                                            nsIContentFrameMessageManager)
-  NS_DECL_NSIFRAMEMESSAGEMANAGER
+  NS_DECL_NSIMESSAGELISTENERMANAGER
+  NS_DECL_NSIMESSAGESENDER
+  NS_DECL_NSIMESSAGEBROADCASTER
   NS_DECL_NSISYNCMESSAGESENDER
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
-  NS_DECL_NSICHROMEFRAMEMESSAGEMANAGER
-  NS_DECL_NSITREEITEMFRAMEMESSAGEMANAGER
+  NS_DECL_NSIFRAMESCRIPTLOADER
 
   static nsFrameMessageManager*
   NewProcessMessageManager(mozilla::dom::ContentParent* aProcess);
@@ -130,8 +139,15 @@ public:
   void Disconnect(bool aRemoveFromParent = true);
   void SetCallbackData(void* aData, bool aLoadScripts = true);
   void* GetCallbackData() { return mCallbackData; }
-  nsresult SendAsyncMessageInternal(const nsAString& aMessage,
-                                          const StructuredCloneData& aData);
+  enum ShouldBroadcast { BROADCAST, DONT_BROADCAST };
+  nsresult DispatchAsyncMessage(const nsAString& aMessageName,
+                                const jsval& aObject,
+                                JSContext* aCx,
+                                uint8_t aArgc,
+                                ShouldBroadcast aBroadcast);
+  nsresult DispatchAsyncMessageInternal(const nsAString& aMessage,
+                                        const StructuredCloneData& aData,
+                                        ShouldBroadcast aBroadcast);
   JSContext* GetJSContext() { return mContext; }
   void SetJSContext(JSContext* aCx) { mContext = aCx; }
   void RemoveFromParent();
@@ -157,9 +173,10 @@ protected:
   friend class MMListenerRemover;
   nsTArray<nsMessageListenerInfo> mListeners;
   nsCOMArray<nsIContentFrameMessageManager> mChildManagers;
-  bool mChrome;
-  bool mGlobal;
-  bool mIsProcessManager;
+  bool mChrome;     // true if we're in the chrome process
+  bool mGlobal;     // true if 
+  bool mIsProcessManager; // true if the message manager belongs to the process realm
+  bool mIsBroadcaster; // true if the message manager is a broadcaster
   bool mHandlingMessage;
   bool mDisconnected;
   nsFrameMessageManager* mParentManager;

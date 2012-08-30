@@ -49,9 +49,10 @@
     }
     Services.obs.addObserver(crashObserver, 'ipc:content-shutdown', false);
 
-    document.getElementById('thebrowser').
-      QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.
-      messageManager.loadFrameScript('chrome://mochitests/content/chrome/dom/ipc/tests/process_error_contentscript.js', true);
+    document.getElementById('thebrowser')
+            .QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
+            .frameLoader.messageManager
+            .loadFrameScript('chrome://mochitests/content/chrome/dom/ipc/tests/process_error_contentscript.js', true);
   ]]></script>
 
 </window>

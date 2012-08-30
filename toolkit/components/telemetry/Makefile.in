@@ -26,7 +26,7 @@ EXPORTS_NAMESPACES = mozilla
 EXPORTS_mozilla = \
   Telemetry.h \
   ProcessedStack.h \
-  TelemetryHistograms.h \
+  TelemetryHistogramEnums.h \
   $(NULL)
 
 XPIDLSRCS = \
@@ -60,3 +60,16 @@ endif
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
+histograms_file := $(srcdir)/Histograms.json
+histogram_enum_file := TelemetryHistogramEnums.h
+histogram_data_file := TelemetryHistogramData.inc
+
+$(histogram_enum_file): $(histograms_file) $(srcdir)/gen-histogram-enum.py
+	$(PYTHON) $(srcdir)/gen-histogram-enum.py $< > $@
+$(histogram_data_file): $(histograms_file) $(srcdir)/gen-histogram-data.py
+	$(PYTHON) $(srcdir)/gen-histogram-data.py $< > $@
+
+Telemetry.$(OBJ_SUFFIX): $(histogram_data_file)
+
+GARBAGE += $(histogram_data_file) $(histogram_enum_file)

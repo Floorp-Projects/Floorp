@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-do_load_httpd_js();
+Components.utils.import("resource://testing-common/httpd.js");
 
 function run_test() {
-  var httpserver = new nsHttpServer();
+  var httpserver = new HttpServer();
   do_check_neq(httpserver, null);
   do_check_neq(httpserver.QueryInterface(Components.interfaces.nsIHttpServer), null);
 }

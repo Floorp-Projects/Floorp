@@ -174,20 +174,22 @@ struct ParseContext                 /* tree context for semantic checks */
 
     ParseContext     *parent;       /* Enclosing function or global context.  */
 
-    ParseNode       *innermostWith; /* innermost WITH parse node */
-
     FuncStmtSet     *funcStmts;     /* Set of (non-top-level) function statements
                                        that will alias any top-level bindings with
                                        the same name. */
 
-    /*
-     * Flags that are set for a short time during parsing to indicate context
-     * or the presence of a code feature.
-     */
-    bool            hasReturnExpr:1; /* function has 'return <expr>;' */
-    bool            hasReturnVoid:1; /* function has 'return;' */
+    // The following flags are set when a particular code feature is detected
+    // in a function.
+    bool            funHasReturnExpr:1; /* function has 'return <expr>;' */
+    bool            funHasReturnVoid:1; /* function has 'return;' */
 
-    bool            inForInit:1;    /* parsing init expr of for; exclude 'in' */
+    // The following flags are set when parsing enters a particular region of
+    // source code, and cleared when that region is exited.
+    bool            parsingForInit:1;   /* true while parsing init expr of for;
+                                           exclude 'in' */
+    bool            parsingWith:1;  /* true while we are within a
+                                       with-statement or E4X filter-expression
+                                       in the current ParseContext chain */
 
     // Set when parsing a declaration-like destructuring pattern.  This flag
     // causes PrimaryExpr to create PN_NAME parse nodes for variable references
@@ -300,8 +302,7 @@ struct Parser : private AutoGCRooter
      */
     ObjectBox *newObjectBox(JSObject *obj);
 
-    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, ParseContext *pc,
-                                StrictMode::StrictModeState sms);
+    FunctionBox *newFunctionBox(JSObject *obj, ParseContext *pc, StrictMode::StrictModeState sms);
 
     /*
      * Create a new function object given parse context (pc) and a name (which
@@ -424,7 +425,7 @@ struct Parser : private AutoGCRooter
      * Additional JS parsers.
      */
     enum FunctionType { Getter, Setter, Normal };
-    bool functionArguments(ParseNode **list, bool &hasRest);
+    bool functionArguments(ParseNode **list, ParseNode *funcpn, bool &hasRest);
 
     ParseNode *functionDef(HandlePropertyName name, FunctionType type, FunctionSyntaxKind kind);
 

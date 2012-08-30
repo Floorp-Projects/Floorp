@@ -20,6 +20,9 @@ const WIFIWORKER_WORKER     = "resource://gre/modules/wifi_worker.js";
 
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 
+const MAX_RETRIES_ON_AUTHENTICATION_FAILURE = 2;
+const MAX_SUPPLICANT_LOOP_ITERATIONS = 4;
+
 XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
@@ -53,7 +56,7 @@ var WifiManager = (function() {
                device: property_get("ro.product.device") };
     } catch(e) {
       // Eat it.  Hopefully we're on a non-Gonk system ...
-      // 
+      //
       // XXX we should check that
       return 0;
     }
@@ -276,6 +279,11 @@ var WifiManager = (function() {
 
   function wpsPbcCommand(callback) {
     doBooleanCommand("WPS_PBC", "OK", callback);
+  }
+
+  function wpsPinCommand(pin, callback) {
+    doStringCommand("WPS_PIN any" + (pin === undefined ? "" : (" " + pin)),
+                    callback);
   }
 
   function wpsCancelCommand(callback) {
@@ -584,6 +592,8 @@ var WifiManager = (function() {
     fields.prevState = manager.state;
     manager.state = fields.state;
 
+    // Detect wpa_supplicant's loop iterations.
+    manager.supplicantLoopDetection(fields.prevState, fields.state);
     notify("statechange", fields);
     return true;
   }
@@ -822,9 +832,15 @@ var WifiManager = (function() {
       return false;
     }
     if (eventData.indexOf("CTRL-EVENT-DISCONNECTED") === 0) {
+      var token = event.split(" ")[1];
+      var bssid = token.split("=")[1];
       manager.connectionInfo.bssid = null;
       manager.connectionInfo.ssid = null;
       manager.connectionInfo.id = -1;
+      if (manager.authenticationFailuresCount > MAX_RETRIES_ON_AUTHENTICATION_FAILURE) {
+        notify("disconnected", {BSSID: bssid});
+        manager.authenticationFailuresCount = 0;
+      }
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-CONNECTED") === 0) {
@@ -891,11 +907,11 @@ var WifiManager = (function() {
 
   function didConnectSupplicant(reconnected, callback) {
     waitForEvent();
-    notify("supplicantconnection");
 
     // Load up the supplicant state.
     statusCommand(function(status) {
       parseStatus(status, reconnected);
+      notify("supplicantconnection");
       callback();
     });
   }
@@ -942,6 +958,8 @@ var WifiManager = (function() {
   manager.enabled = false;
   manager.supplicantStarted = false;
   manager.connectionInfo = { ssid: null, bssid: null, id: -1 };
+  manager.authenticationFailuresCount = 0;
+  manager.loopDetectionCount = 0;
 
   // Public interface of the wifi service
   manager.setWifiEnabled = function(enable, callback) {
@@ -1176,6 +1194,7 @@ var WifiManager = (function() {
   }
   manager.scan = scanCommand;
   manager.wpsPbc = wpsPbcCommand;
+  manager.wpsPin = wpsPinCommand;
   manager.wpsCancel = wpsCancelCommand;
   manager.getRssiApprox = getRssiApproxCommand;
   manager.getLinkSpeed = getLinkSpeedCommand;
@@ -1183,6 +1202,54 @@ var WifiManager = (function() {
   manager.getConnectionInfo = (sdkVersion >= 15)
                               ? getConnectionInfoICS
                               : getConnectionInfoGB;
+
+  manager.isHandShakeState = function(state) {
+    switch (state) {
+      case "AUTHENTICATING":
+      case "ASSOCIATING":
+      case "ASSOCIATED":
+      case "FOUR_WAY_HANDSHAKE":
+      case "GROUP_HANDSHAKE":
+        return true;
+      case "DORMANT":
+      case "COMPLETED":
+      case "DISCONNECTED":
+      case "INTERFACE_DISABLED":
+      case "INACTIVE":
+      case "SCANNING":
+      case "UNINITIALIZED":
+      case "INVALID":
+      case "CONNECTED":
+      default:
+        return false;
+    }
+  }
+  manager.stateOrdinal = function(state) {
+    return supplicantStatesMap.indexOf(state);
+  }
+  manager.supplicantLoopDetection = function(prevState, state) {
+    var isPrevStateInHandShake = manager.isHandShakeState(prevState);
+    var isStateInHandShake = manager.isHandShakeState(state);
+
+    if (isPrevStateInHandShake) {
+      if (isStateInHandShake) {
+        // Increase the count only if we are in the loop.
+        if (manager.stateOrdinal(state) > manager.stateOrdinal(prevState)) {
+          manager.loopDetectionCount++;
+        }
+        if (manager.loopDetectionCount > MAX_SUPPLICANT_LOOP_ITERATIONS) {
+          notify("disconnected");
+          manager.loopDetectionCount = 0;
+        }
+      }
+    } else {
+      // From others state to HandShake state. Reset the count.
+      if (isStateInHandShake) {
+        manager.loopDetectionCount = 0;
+      }
+    }
+  }
+
   return manager;
 })();
 
@@ -1320,10 +1387,12 @@ let netFromDOM;
 function WifiWorker() {
   var self = this;
 
-  this._mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
+  this._mm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+               .getService(Ci.nsIMessageListenerManager);
   const messages = ["WifiManager:setEnabled", "WifiManager:getNetworks",
                     "WifiManager:associate", "WifiManager:forget",
-                    "WifiManager:wps", "WifiManager:getState"];
+                    "WifiManager:wps", "WifiManager:getState",
+                    "WifiManager:managerFinished"];
 
   messages.forEach((function(msgName) {
     this._mm.addMessageListener(msgName, this);
@@ -1461,6 +1530,17 @@ function WifiWorker() {
       self._notifyAfterStateChange(false, false);
   }
 
+  WifiManager.onpasswordmaybeincorrect = function() {
+    WifiManager.authenticationFailuresCount++;
+  }
+  WifiManager.ondisconnected = function() {
+    var currentNetwork = self.currentNetwork;
+    if (currentNetwork) {
+      WifiManager.disableNetwork(currentNetwork.netId, function() {});
+      self._fireEvent("onconnectingfailed", {network: currentNetwork});
+    }
+  }
+
   WifiManager.onstatechange = function() {
     debug("State change: " + this.prevState + " -> " + this.state);
 
@@ -1519,6 +1599,9 @@ function WifiWorker() {
           WifiManager.getNetworkConfiguration(self.currentNetwork, function(){});
         }
 
+        // The full authentication process is completed, reset the count.
+        WifiManager.authenticationFailuresCount = 0;
+        WifiManager.loopDetectionCount = 0;
         self._startConnectionInfoTimer();
         self._fireEvent("onassociate", { network: netToDOM(self.currentNetwork) });
         break;
@@ -1578,7 +1661,7 @@ function WifiWorker() {
 
       self._fireEvent("onconnect", { network: netToDOM(self.currentNetwork) });
     } else {
-      WifiManager.disconnect(function(){});
+      WifiManager.reassociate(function(){});
     }
   };
 
@@ -1868,54 +1951,94 @@ WifiWorker.prototype = {
 
   // nsIWifi
 
+  _domManagers: [],
   _fireEvent: function(message, data) {
-    this._mm.sendAsyncMessage("WifiManager:" + message, data);
+    this._domManagers.forEach(function(obj) {
+      obj.manager.sendAsyncMessage("WifiManager:" + message, data);
+    });
   },
 
-  _sendMessage: function(message, success, data, rid, mid) {
-    this._mm.sendAsyncMessage(message + (success ? ":OK" : ":NO"),
-                              { data: data, rid: rid, mid: mid });
+  _sendMessage: function(message, success, data, msg) {
+    msg.manager.sendAsyncMessage(message + (success ? ":OK" : ":NO"),
+                                 { data: data, rid: msg.rid, mid: msg.mid });
   },
 
   receiveMessage: function MessageManager_receiveMessage(aMessage) {
-    let msg = aMessage.json;
+    let msg = aMessage.json || {};
+    msg.manager = aMessage.target;
+
     switch (aMessage.name) {
       case "WifiManager:setEnabled":
-        this.setWifiEnabled(msg.data, msg.rid, msg.mid);
+        this.setWifiEnabled(msg);
         break;
       case "WifiManager:getNetworks":
-        this.getNetworks(msg.rid, msg.mid);
+        this.getNetworks(msg);
         break;
       case "WifiManager:associate":
-        this.associate(msg.data, msg.rid, msg.mid);
+        this.associate(msg);
         break;
       case "WifiManager:forget":
-        this.forget(msg.data, msg.rid, msg.mid);
+        this.forget(msg);
         break;
       case "WifiManager:wps":
-        this.wps(msg.data, msg.rid, msg.mid);
+        this.wps(msg);
         break;
       case "WifiManager:getState": {
         let net = this.currentNetwork ? netToDOM(this.currentNetwork) : null;
+        let i;
+        for (i = 0; i < this._domManagers.length; ++i) {
+          let obj = this._domManagers[i];
+          if (obj.manager === msg.manager) {
+            obj.count++;
+            break;
+          }
+        }
+
+        if (i === this._domManagers.length) {
+          this._domManagers.push({ manager: msg.manager, count: 1 });
+        }
+
         return { network: net,
                  connectionInfo: this._lastConnectionInfo,
                  enabled: WifiManager.enabled,
                  status: translateState(WifiManager.state) };
       }
+      case "WifiManager:managerFinished": {
+        for (let i = 0; i < this._domManagers.length; ++i) {
+          let obj = this._domManagers[i];
+          if (obj.manager === msg.manager) {
+            if (--obj.count === 0) {
+              this._domManagers.splice(i, 1);
+            }
+            break;
+          }
+        }
+
+        break;
+      }
     }
   },
 
-  getNetworks: function(rid, mid) {
+  getNetworks: function(msg) {
     const message = "WifiManager:getNetworks:Return";
-    if (WifiManager.state === "UNINITIALIZED") {
-      this._sendMessage(message, false, "Wifi is disabled", rid, mid);
+    if (!WifiManager.enabled) {
+      this._sendMessage(message, false, "Wifi is disabled", msg);
       return;
     }
 
     this.waitForScan((function (networks) {
-      this._sendMessage(message, networks !== null, networks, rid, mid);
+      this._sendMessage(message, networks !== null, networks, msg);
     }).bind(this));
-    WifiManager.scan(true, function() {});
+
+    WifiManager.scan(true, function(ok) {
+      // If the scan command succeeded, we're done.
+      if (ok)
+        return;
+
+      // Otherwise, let the client know that it failed, it's responsible for
+      // trying again in a few seconds.
+      this._sendMessage(message, false, "ScanFailed", msg);
+    });
   },
 
   _notifyAfterStateChange: function(success, newState) {
@@ -1928,7 +2051,7 @@ WifiWorker.prototype = {
       do {
         let req = this._stateRequests.shift();
         this._sendMessage("WifiManager:setEnabled:Return",
-                          success, state, req.rid, req.mid);
+                          success, state, req);
 
         // Don't remove more than one request if the previous one failed.
       } while (success &&
@@ -1968,23 +2091,25 @@ WifiWorker.prototype = {
       WifiManager.start();
   },
 
-  setWifiEnabled: function(enable, rid, mid) {
+  setWifiEnabled: function(msg) {
     // There are two problems that we're trying to solve here:
     //   - If we get multiple requests to turn on and off wifi before the
     //     current request has finished, then we need to queue up the requests
     //     and handle each on/off request in turn.
     //   - Because we can't pass a callback to WifiManager.start, we need to
     //     have a way to communicate with our onsupplicantconnection callback.
-    this._stateRequests.push({ enabled: enable, rid: rid, mid: mid });
+    msg.enabled = msg.data;
+    this._stateRequests.push(msg);
     if (this._stateRequests.length === 1)
-      WifiManager.setWifiEnabled(enable, this._setWifiEnabledCallback.bind(this));
+      WifiManager.setWifiEnabled(msg.enabled, this._setWifiEnabledCallback.bind(this));
   },
 
-  associate: function(network, rid, mid) {
+  associate: function(msg) {
     const MAX_PRIORITY = 9999;
     const message = "WifiManager:associate:Return";
-    if (WifiManager.state === "UNINITIALIZED") {
-      this._sendMessage(message, false, "Wifi is disabled", rid, mid);
+    let network = msg.data;
+    if (!WifiManager.enabled) {
+      this._sendMessage(message, false, "Wifi is disabled", msg);
       return;
     }
 
@@ -1999,10 +2124,10 @@ WifiWorker.prototype = {
           if (WifiManager.state === "DISCONNECTED" ||
               WifiManager.state === "SCANNING") {
             WifiManager.reconnect(function (ok) {
-              self._sendMessage(message, ok, ok, rid, mid);
+              self._sendMessage(message, ok, ok, msg);
             });
           } else {
-            self._sendMessage(message, ok, ok, rid, mid);
+            self._sendMessage(message, ok, ok, msg);
           }
         });
       }
@@ -2026,7 +2151,7 @@ WifiWorker.prototype = {
       privnet.netId = configured.netId;
       WifiManager.updateNetwork(privnet, (function(ok) {
         if (!ok) {
-          this._sendMessage(message, false, "Network is misconfigured", rid, mid);
+          this._sendMessage(message, false, "Network is misconfigured", msg);
           return;
         }
 
@@ -2040,7 +2165,7 @@ WifiWorker.prototype = {
       privnet.disabled = 0;
       WifiManager.addNetwork(privnet, (function(ok) {
         if (!ok) {
-          this._sendMessage(message, false, "Network is misconfigured", rid, mid);
+          this._sendMessage(message, false, "Network is misconfigured", msg);
           return;
         }
 
@@ -2050,16 +2175,17 @@ WifiWorker.prototype = {
     }
   },
 
-  forget: function(network, rid, mid) {
+  forget: function(msg) {
     const message = "WifiManager:forget:Return";
-    if (WifiManager.state === "UNINITIALIZED") {
-      this._sendMessage(message, false, "Wifi is disabled", rid, mid);
+    let network = msg.data;
+    if (!WifiManager.enabled) {
+      this._sendMessage(message, false, "Wifi is disabled", msg);
       return;
     }
 
     let ssid = network.ssid;
     if (!(ssid in this.configuredNetworks)) {
-      this._sendMessage(message, false, "Trying to forget an unknown network", rid, mid);
+      this._sendMessage(message, false, "Trying to forget an unknown network", msg);
       return;
     }
 
@@ -2069,39 +2195,47 @@ WifiWorker.prototype = {
                                    (this.currentNetwork.ssid === ssid));
     WifiManager.removeNetwork(configured.netId, function(ok) {
       if (!ok) {
-        self._sendMessage(message, false, "Unable to remove the network", rid, mid);
+        self._sendMessage(message, false, "Unable to remove the network", msg);
         self._reconnectOnDisconnect = false;
         return;
       }
 
       WifiManager.saveConfig(function() {
         self._reloadConfiguredNetworks(function() {
-          self._sendMessage(message, true, true, rid, mid);
+          self._sendMessage(message, true, true, msg);
         });
       });
     });
   },
 
-  wps: function(detail, rid, mid) {
+  wps: function(msg) {
     const message = "WifiManager:wps:Return";
     let self = this;
+    let detail = msg.data;
     if (detail.method === "pbc") {
       WifiManager.wpsPbc(function(ok) {
         if (ok)
-          self._sendMessage(message, true, true, rid, mid);
+          self._sendMessage(message, true, true, msg);
         else
-          self._sendMessage(message, false, "WPS PBC failed", rid, mid);
+          self._sendMessage(message, false, "WPS PBC failed", msg);
+      });
+    } else if (detail.method === "pin") {
+      WifiManager.wpsPin(detail.pin, function(pin) {
+        if (pin)
+          self._sendMessage(message, true, pin, msg);
+        else
+          self._sendMessage(message, false, "WPS PIN failed", msg);
       });
     } else if (detail.method === "cancel") {
       WifiManager.wpsCancel(function(ok) {
         if (ok)
-          self._sendMessage(message, true, true, rid, mid);
+          self._sendMessage(message, true, true, msg);
         else
-          self._sendMessage(message, false, "WPS Cancel failed", rid, mid);
+          self._sendMessage(message, false, "WPS Cancel failed", msg);
       });
     } else {
-      self._sendMessage(message, false, "Unknown wps method=" + detail.method +
-        " was received", rid, mid);
+      self._sendMessage(message, false, "Invalid WPS method=" + detail.method,
+                        msg);
     }
   },
 

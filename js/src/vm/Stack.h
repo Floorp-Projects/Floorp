@@ -28,7 +28,6 @@ class InvokeFrameGuard;
 class FrameGuard;
 class ExecuteFrameGuard;
 class BailoutFrameGuard;
-class DummyFrameGuard;
 class GeneratorFrameGuard;
 
 class CallIter;
@@ -212,15 +211,15 @@ enum MaybeCheckAliasing { CHECK_ALIASING = true, DONT_CHECK_ALIASING = false };
 /* Flags specified for a frame as it is constructed. */
 enum InitialFrameFlags {
     INITIAL_NONE           =          0,
-    INITIAL_CONSTRUCT      =       0x40, /* == StackFrame::CONSTRUCTING, asserted below */
-    INITIAL_LOWERED        =   0x100000  /* == StackFrame::LOWERED_CALL_APPLY, asserted below */
+    INITIAL_CONSTRUCT      =       0x20, /* == StackFrame::CONSTRUCTING, asserted below */
+    INITIAL_LOWERED        =    0x80000  /* == StackFrame::LOWERED_CALL_APPLY, asserted below */
 };
 
 enum ExecuteType {
     EXECUTE_GLOBAL         =        0x1, /* == StackFrame::GLOBAL */
-    EXECUTE_DIRECT_EVAL    =        0x8, /* == StackFrame::EVAL */
-    EXECUTE_INDIRECT_EVAL  =        0x9, /* == StackFrame::GLOBAL | EVAL */
-    EXECUTE_DEBUG          =       0x18  /* == StackFrame::EVAL | DEBUGGER */
+    EXECUTE_DIRECT_EVAL    =        0x4, /* == StackFrame::EVAL */
+    EXECUTE_INDIRECT_EVAL  =        0x5, /* == StackFrame::GLOBAL | EVAL */
+    EXECUTE_DEBUG          =        0xc  /* == StackFrame::EVAL | DEBUGGER */
 };
 
 /*****************************************************************************/
@@ -232,47 +231,46 @@ class StackFrame
         /* Primary frame type */
         GLOBAL             =        0x1,  /* frame pushed for a global script */
         FUNCTION           =        0x2,  /* frame pushed for a scripted call */
-        DUMMY              =        0x4,  /* frame pushed for bookkeeping */
 
         /* Frame subtypes */
-        EVAL               =        0x8,  /* frame pushed for eval() or debugger eval */
-        DEBUGGER           =       0x10,  /* frame pushed for debugger eval */
-        GENERATOR          =       0x20,  /* frame is associated with a generator */
-        CONSTRUCTING       =       0x40,  /* frame is for a constructor invocation */
+        EVAL               =        0x4,  /* frame pushed for eval() or debugger eval */
+        DEBUGGER           =        0x8,  /* frame pushed for debugger eval */
+        GENERATOR          =       0x10,  /* frame is associated with a generator */
+        CONSTRUCTING       =       0x20,  /* frame is for a constructor invocation */
 
         /* Temporary frame states */
-        YIELDING           =       0x80,  /* Interpret dispatched JSOP_YIELD */
-        FINISHED_IN_INTERP =      0x100,  /* set if frame finished in Interpret() */
+        YIELDING           =       0x40,  /* Interpret dispatched JSOP_YIELD */
+        FINISHED_IN_INTERP =       0x80,  /* set if frame finished in Interpret() */
 
         /* Function arguments */
-        OVERFLOW_ARGS      =      0x200,  /* numActualArgs > numFormalArgs */
-        UNDERFLOW_ARGS     =      0x400,  /* numActualArgs < numFormalArgs */
+        OVERFLOW_ARGS      =      0x100,  /* numActualArgs > numFormalArgs */
+        UNDERFLOW_ARGS     =      0x200,  /* numActualArgs < numFormalArgs */
 
         /* Function prologue state */
-        HAS_CALL_OBJ       =      0x800,  /* CallObject created for heavyweight fun */
-        HAS_ARGS_OBJ       =     0x1000,  /* ArgumentsObject created for needsArgsObj script */
+        HAS_CALL_OBJ       =      0x400,  /* CallObject created for heavyweight fun */
+        HAS_ARGS_OBJ       =      0x800,  /* ArgumentsObject created for needsArgsObj script */
 
         /* Lazy frame initialization */
-        HAS_HOOK_DATA      =     0x2000,  /* frame has hookData_ set */
-        HAS_ANNOTATION     =     0x4000,  /* frame has annotation_ set */
-        HAS_RVAL           =     0x8000,  /* frame has rval_ set */
-        HAS_SCOPECHAIN     =    0x10000,  /* frame has scopeChain_ set */
-        HAS_PREVPC         =    0x20000,  /* frame has prevpc_ and prevInline_ set */
-        HAS_BLOCKCHAIN     =    0x40000,  /* frame has blockChain_ set */
+        HAS_HOOK_DATA      =     0x1000,  /* frame has hookData_ set */
+        HAS_ANNOTATION     =     0x2000,  /* frame has annotation_ set */
+        HAS_RVAL           =     0x4000,  /* frame has rval_ set */
+        HAS_SCOPECHAIN     =     0x8000,  /* frame has scopeChain_ set */
+        HAS_PREVPC         =    0x10000,  /* frame has prevpc_ and prevInline_ set */
+        HAS_BLOCKCHAIN     =    0x20000,  /* frame has blockChain_ set */
 
         /* Method JIT state */
-        DOWN_FRAMES_EXPANDED =  0x80000,  /* inlining in down frames has been expanded */
-        LOWERED_CALL_APPLY   = 0x100000,  /* Pushed by a lowered call/apply */
+        DOWN_FRAMES_EXPANDED =  0x40000,  /* inlining in down frames has been expanded */
+        LOWERED_CALL_APPLY   =  0x80000,  /* Pushed by a lowered call/apply */
 
         /* Debugger state */
-        PREV_UP_TO_DATE    =   0x200000,  /* see DebugScopes::updateLiveScopes */
+        PREV_UP_TO_DATE    =   0x100000,  /* see DebugScopes::updateLiveScopes */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME = 0x400000,  /* SPS was notified of enty */
+        HAS_PUSHED_SPS_FRAME = 0x200000,  /* SPS was notified of enty */
 
         /* Ion frame state */
-        RUNNING_IN_ION       = 0x800000,  /* frame is running in Ion */
-        CALLING_INTO_ION    = 0x1000000   /* frame is calling into Ion */
+        RUNNING_IN_ION       = 0x400000,  /* frame is running in Ion */
+        CALLING_INTO_ION     = 0x800000   /* frame is calling into Ion */
     };
 
   private:
@@ -350,9 +348,6 @@ class StackFrame
     void initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs,
                           const Value &thisv, JSObject &scopeChain, ExecuteType type);
 
-    /* Perhaps one fine day we will remove dummy frames. */
-    void initDummyFrame(JSContext *cx, JSObject &chain);
-
   public:
     /*
      * Frame prologue/epilogue
@@ -398,7 +393,6 @@ class StackFrame
      *
      *  global frame:   execution of global code or an eval in global code
      *  function frame: execution of function code or an eval in a function
-     *  dummy frame:    bookkeeping frame (to be removed in bug 625199)
      */
 
     bool isFunctionFrame() const {
@@ -407,16 +401,6 @@ class StackFrame
 
     bool isGlobalFrame() const {
         return !!(flags_ & GLOBAL);
-    }
-
-    bool isDummyFrame() const {
-        return !!(flags_ & DUMMY);
-    }
-
-    bool isScriptFrame() const {
-        bool retval = !!(flags_ & (FUNCTION | GLOBAL));
-        JS_ASSERT(retval == !isDummyFrame());
-        return retval;
     }
 
     /*
@@ -432,7 +416,6 @@ class StackFrame
      */
 
     bool isEvalFrame() const {
-        JS_ASSERT_IF(flags_ & EVAL, isScriptFrame());
         return flags_ & EVAL;
     }
 
@@ -548,16 +531,16 @@ class StackFrame
      * scope. However, only objects that are required for dynamic lookup are
      * actually created.
      *
-     * Given that a (non-dummy) StackFrame corresponds roughly to a ES5
-     * Execution Context (ES5 10.3), StackFrame::varObj corresponds to the
-     * VariableEnvironment component of a Exection Context. Intuitively, the
-     * variables object is where new bindings (variables and functions) are
-     * stored. One might expect that this is either the Call object or
-     * scopeChain.globalObj for function or global code, respectively, however
-     * the JSAPI allows calls of Execute to specify a variables object on the
-     * scope chain other than the call/global object. This allows embeddings to
-     * run multiple scripts under the same global, each time using a new
-     * variables object to collect and discard the script's global variables.
+     * Given that a StackFrame corresponds roughly to a ES5 Execution Context
+     * (ES5 10.3), StackFrame::varObj corresponds to the VariableEnvironment
+     * component of a Exection Context. Intuitively, the variables object is
+     * where new bindings (variables and functions) are stored. One might
+     * expect that this is either the Call object or scopeChain.globalObj for
+     * function or global code, respectively, however the JSAPI allows calls of
+     * Execute to specify a variables object on the scope chain other than the
+     * call/global object. This allows embeddings to run multiple scripts under
+     * the same global, each time using a new variables object to collect and
+     * discard the script's global variables.
      */
 
     inline HandleObject scopeChain() const;
@@ -623,14 +606,9 @@ class StackFrame
      */
 
     JSScript *script() const {
-        JS_ASSERT(isScriptFrame());
         return isFunctionFrame()
                ? isEvalFrame() ? u.evalScript : fun()->script()
                : exec.script;
-    }
-
-    JSScript *maybeScript() const {
-        return isScriptFrame() ? script() : NULL;
     }
 
     /*
@@ -743,7 +721,6 @@ class StackFrame
     }
 
     const Value &maybeCalleev() const {
-        JS_ASSERT(isScriptFrame());
         Value &calleev = flags_ & (EVAL | GLOBAL)
                          ? ((Value *)this)[-2]
                          : formals()[-2];
@@ -1216,14 +1193,6 @@ class FrameRegs
         JS_ASSERT(*pc == JSOP_STOP);
     }
 
-    /* For pushDummyFrame: */
-    void initDummyFrame(StackFrame &fp) {
-        pc = NULL;
-        sp = fp.slots();
-        fp_ = &fp;
-        inlined_ = NULL;
-    }
-
     /* For expandInlineFrames: */
     void expandInline(StackFrame *innerfp, jsbytecode *innerpc) {
         pc = innerpc;
@@ -1393,22 +1362,10 @@ class StackSpace
     friend class ContextStack;
     friend class StackFrame;
 
-    /*
-     * Except when changing compartment (see pushDummyFrame), the 'dest'
-     * parameter of ensureSpace is cx->compartment. Ideally, we'd just pass
-     * this directly (and introduce a helper that supplies cx->compartment when
-     * no 'dest' is given). For some compilers, this really hurts performance,
-     * so, instead, a trivially sinkable magic constant is used to indicate
-     * that dest should be cx->compartment.
-     */
-    static const size_t CX_COMPARTMENT = 0xc;
-
     inline bool ensureSpace(JSContext *cx, MaybeReportError report,
-                            Value *from, ptrdiff_t nvals,
-                            JSCompartment *dest = (JSCompartment *)CX_COMPARTMENT) const;
+                            Value *from, ptrdiff_t nvals) const;
     JS_FRIEND_API(bool) ensureSpaceSlow(JSContext *cx, MaybeReportError report,
-                                        Value *from, ptrdiff_t nvals,
-                                        JSCompartment *dest) const;
+                                        Value *from, ptrdiff_t nvals) const;
 
     StackSegment &findContainingSegment(const StackFrame *target) const;
 
@@ -1510,8 +1467,7 @@ class ContextStack
     StackSegment *pushSegment(JSContext *cx);
     enum MaybeExtend { CAN_EXTEND = true, CANT_EXTEND = false };
     Value *ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars,
-                       MaybeExtend extend, bool *pushedSeg,
-                       JSCompartment *dest = (JSCompartment *)StackSpace::CX_COMPARTMENT);
+                       MaybeExtend extend, bool *pushedSeg);
 
     inline StackFrame *
     getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
@@ -1543,8 +1499,7 @@ class ContextStack
     /*
      * Return whether there has been at least one frame pushed since the most
      * recent call to JS_SaveFrameChain. Note that natives do not have frames
-     * and dummy frames are frames that do not represent script execution hence
-     * this query has little semantic meaning past "you can call fp()".
+     * hence this query has little semantic meaning past "you can call fp()".
      */
     inline bool hasfp() const { return seg_ && seg_->maybeRegs(); }
 
@@ -1613,17 +1568,6 @@ class ContextStack
      * will copy the frame back to the floating frame.
      */
     bool pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrameGuard *gfg);
-
-    /*
-     * When changing the compartment of a cx, it is necessary to immediately
-     * change the scope chain to a global in the right compartment since any
-     * amount of general VM code can run before the first scripted frame is
-     * pushed (if at all). This is currently and hackily accomplished by
-     * pushing a "dummy frame" with the correct scope chain. On success, this
-     * function will change the compartment to 'scopeChain.compartment()' and
-     * push a dummy frame for 'scopeChain'. On failure, nothing is changed.
-     */
-    bool pushDummyFrame(JSContext *cx, JSCompartment *dest, JSObject &scopeChain, DummyFrameGuard *dfg);
 
     /*
      * An "inline frame" may only be pushed from within the top, active

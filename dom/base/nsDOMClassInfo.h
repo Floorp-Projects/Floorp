@@ -132,6 +132,11 @@ public:
    * dealing with document.domain, it's possible to end up in a scriptable
    * helper with a wrapper, even though we should be treating the lookup as a
    * transparent one.
+   *
+   * Note: So ObjectIsNativeWrapper(cx, obj) check usually means "through xray
+   * wrapper this part is not visible" while combined with
+   * || xpc::WrapperFactory::XrayWrapperNotShadowing(obj) it means "through
+   * xray wrapper it is visible only if it does not hide any native property."
    */
   static bool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj);
 
@@ -243,6 +248,7 @@ public:
   static jsid sNamedItem_id;
   static jsid sEnumerate_id;
   static jsid sNavigator_id;
+  static jsid sTop_id;
   static jsid sDocument_id;
   static jsid sFrames_id;
   static jsid sSelf_id;
@@ -330,6 +336,30 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsEventTargetSH(aData);
+  }
+};
+
+class nsDOMMutationObserverSH : public nsDOMGenericSH
+{
+protected:
+  nsDOMMutationObserverSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsDOMMutationObserverSH()
+  {
+  }
+public:
+  NS_IMETHOD PreCreate(nsISupports* aNativeObj, JSContext* aCx,
+                       JSObject* aGlobalObj, JSObject** aParentObj);
+  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative* aWrapper, JSContext* aCx,
+                         JSObject* aObj, jsid aId, jsval* aVp, bool* aRetval);
+
+  virtual void PreserveWrapper(nsISupports* aNative);
+
+  static nsIClassInfo* doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsDOMMutationObserverSH(aData);
   }
 };
 

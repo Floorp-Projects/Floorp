@@ -195,28 +195,7 @@ struct TelemetryHistogram {
   const char *comment;
 };
 
-// Perform the checks at the beginning of HistogramGet at compile time, so
-// that if people add incorrect histogram definitions, they get compiler
-// errors.
-#define HISTOGRAM(id, min, max, bucket_count, histogram_type, b) \
-  MOZ_STATIC_ASSERT(nsITelemetry::HISTOGRAM_ ## histogram_type == nsITelemetry::HISTOGRAM_BOOLEAN || \
-                    nsITelemetry::HISTOGRAM_ ## histogram_type == nsITelemetry::HISTOGRAM_FLAG || \
-                    (min < max && bucket_count > 2 && min >= 1), \
-                    "Incorrect histogram definitions were found");
-
-#include "TelemetryHistograms.h"
-
-#undef HISTOGRAM
-
-const TelemetryHistogram gHistograms[] = {
-#define HISTOGRAM(id, min, max, bucket_count, histogram_type, comment) \
-  { NS_STRINGIFY(id), min, max, bucket_count, \
-    nsITelemetry::HISTOGRAM_ ## histogram_type, comment },
-
-#include "TelemetryHistograms.h"
-
-#undef HISTOGRAM
-};
+#include "TelemetryHistogramData.inc"
 bool gCorruptHistograms[Telemetry::HistogramCount];
 
 bool

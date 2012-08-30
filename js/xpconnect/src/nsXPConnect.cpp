@@ -553,6 +553,9 @@ public:
     {
         return NS_OK;
     }
+    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
+    {
+    }
     static NS_METHOD TraverseImpl(nsXPConnectParticipant *that, void *n,
                                   nsCycleCollectionTraversalCallback &cb);
 };
@@ -792,9 +795,9 @@ DescribeGCThing(bool isMarked, void *p, JSGCTraceKind traceKind,
         }
 
         // Disable printing global for objects while we figure out ObjShrink fallout.
-        cb.DescribeGCedNode(isMarked, sizeof(js::shadow::Object), name);
+        cb.DescribeGCedNode(isMarked, name);
     } else {
-        cb.DescribeGCedNode(isMarked, sizeof(js::shadow::Object), "JS Object");
+        cb.DescribeGCedNode(isMarked, "JS Object");
     }
 }
 
@@ -837,16 +840,17 @@ NoteGCThingXPCOMChildren(js::Class *clasp, JSObject *obj,
              clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)");
         cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
-    } else if (binding::instanceIsProxy(obj)) {
+    } else if (oldproxybindings::instanceIsProxy(obj)) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "js::GetProxyPrivate(obj)");
         nsISupports *identity =
             static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
         cb.NoteXPCOMChild(identity);
-    } else if (IsDOMClass(clasp) &&
-               DOMJSClass::FromJSClass(clasp)->mDOMObjectIsISupports) {
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "UnwrapDOMObject(obj)");
-        nsISupports *identity = UnwrapDOMObject<nsISupports>(obj);
-        cb.NoteXPCOMChild(identity);
+    } else {
+        nsISupports *identity;
+        if (UnwrapDOMObjectToISupports(obj, identity)) {
+            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "UnwrapDOMObject(obj)");
+            cb.NoteXPCOMChild(identity);
+        }
     }
 }
 
@@ -923,6 +927,9 @@ public:
     {
         return NS_OK;
     }
+    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
+    {
+    }
     static NS_METHOD TraverseImpl(JSContextParticipant *that, void *n,
                                   nsCycleCollectionTraversalCallback &cb)
     {
@@ -933,7 +940,7 @@ public:
         // edges will ensure that any cycles this context is in won't be
         // collected.
         unsigned refCount = nsXPConnect::GetXPConnect()->GetOutstandingRequests(cx) + 1;
-        cb.DescribeRefCountedNode(refCount, js::SizeOfJSContext(), "JSContext");
+        cb.DescribeRefCountedNode(refCount, "JSContext");
         if (JSObject *global = JS_GetGlobalObject(cx)) {
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
             cb.NoteJSChild(global);
@@ -986,9 +993,7 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     if (!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(ccx, aGlobalJSObj))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
+    JSAutoCompartment ac(ccx, aGlobalJSObj);
 
     XPCWrappedNativeScope* scope =
         XPCWrappedNativeScope::GetNewOrUsed(ccx, aGlobalJSObj);
@@ -1176,9 +1181,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     // Grab a copy of the global and enter its compartment.
     JSObject *global = wrappedGlobal->GetFlatJSObject();
     MOZ_ASSERT(!js::GetObjectParent(global));
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(ccx, global))
-        return NS_ERROR_UNEXPECTED;
+    JSAutoCompartment ac(ccx, global);
 
     // Apply the system flag, if requested.
     bool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
@@ -1228,10 +1231,7 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
                          jsval *aVal,
                          nsIXPConnectJSObjectHolder **aHolder)
 {
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(lccx.GetJSContext(), aScope))
-        return NS_ERROR_OUT_OF_MEMORY;
-
+    JSAutoCompartment ac(lccx.GetJSContext(), aScope);
     lccx.SetScopeForNewJSObjects(aScope);
 
     nsresult rv;
@@ -1313,11 +1313,10 @@ nsXPConnect::WrapJS(JSContext * aJSContext,
     if (!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    JSAutoEnterCompartment aec;
+    JSAutoCompartment ac(ccx, aJSObj);
 
     nsresult rv = NS_ERROR_UNEXPECTED;
-    if (!aec.enter(ccx, aJSObj) ||
-        !XPCConvert::JSObject2NativeInterface(ccx, result, aJSObj,
+    if (!XPCConvert::JSObject2NativeInterface(ccx, result, aJSObj,
                                               &aIID, nullptr, &rv))
         return rv;
     return NS_OK;
@@ -1420,7 +1419,8 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
     if (obj2)
         return (nsISupports*)xpc_GetJSPrivate(obj2);
 
-    if (mozilla::dom::binding::instanceIsProxy(aJSObj)) {
+    if (mozilla::dom::IsDOMProxy(aJSObj) ||
+        mozilla::dom::oldproxybindings::instanceIsProxy(aJSObj)) {
         // FIXME: Provide a fast non-refcounting way to get the canonical
         //        nsISupports from the proxy.
         nsISupports *supports =
@@ -1458,7 +1458,8 @@ nsXPConnect::GetJSObjectOfWrapper(JSContext * aJSContext,
         *_retval = obj2;
         return NS_OK;
     }
-    if (mozilla::dom::binding::instanceIsProxy(aJSObj)) {
+    if (mozilla::dom::IsDOMProxy(aJSObj) ||
+        mozilla::dom::oldproxybindings::instanceIsProxy(aJSObj)) {
         *_retval = aJSObj;
         return NS_OK;
     }
@@ -1951,9 +1952,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     if (!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(aJSContext, aScope))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
+    JSAutoCompartment ac(aJSContext, aScope);
 
     XPCWrappedNativeScope* scope =
         XPCWrappedNativeScope::FindInJSObjectScope(ccx, aScope);
@@ -2663,7 +2662,7 @@ public:
          * We don't allow compartment merging in a WantAllTraces CC, because then these
          * assumptions don't hold.
          */
-        cb.DescribeGCedNode(false, sizeof(js::shadow::Object), "JS Compartment");
+        cb.DescribeGCedNode(false, "JS Compartment");
 
         /*
          * Every JS child of everything in the compartment is either in the compartment
@@ -2700,6 +2699,10 @@ public:
     static NS_METHOD UnrootImpl(void *p)
     {
         return NS_OK;
+    }
+
+    static NS_METHOD_(void) UnmarkIfPurpleImpl(void *n)
+    {
     }
 };
 

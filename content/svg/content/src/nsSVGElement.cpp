@@ -455,8 +455,9 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
       BooleanAttributesInfo booleanInfo = GetBooleanInfo();
       for (i = 0; i < booleanInfo.mBooleanCount; i++) {
         if (aAttribute == *booleanInfo.mBooleanInfo[i].mName) {
-          nsCOMPtr<nsIAtom> valAtom = do_GetAtom(aValue);
-          rv = booleanInfo.mBooleans[i].SetBaseValueAtom(valAtom, this);
+          nsIAtom *valAtom = NS_GetStaticAtom(aValue);
+          rv = valAtom ? booleanInfo.mBooleans[i].SetBaseValueAtom(valAtom, this) :
+                 NS_ERROR_DOM_SYNTAX_ERR;
           if (NS_FAILED(rv)) {
             booleanInfo.Reset(i);
           } else {
@@ -520,7 +521,7 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
       if (aAttribute == nsGkAtoms::viewBox) {
         nsSVGViewBox* viewBox = GetViewBox();
         if (viewBox) {
-          rv = viewBox->SetBaseValueString(aValue, this);
+          rv = viewBox->SetBaseValueString(aValue, this, false);
           if (NS_FAILED(rv)) {
             viewBox->Init();
           } else {
@@ -534,7 +535,7 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
         SVGAnimatedPreserveAspectRatio *preserveAspectRatio =
           GetPreserveAspectRatio();
         if (preserveAspectRatio) {
-          rv = preserveAspectRatio->SetBaseValueString(aValue, this);
+          rv = preserveAspectRatio->SetBaseValueString(aValue, this, false);
           if (NS_FAILED(rv)) {
             preserveAspectRatio->Init();
           } else {

@@ -111,8 +111,6 @@ MOCHITEST_FILES = \
 		test_source_write.html \
 	        test_source_null.html \
 		test_standalone.html \
-		test_streams_element_capture.html \
-		test_streams_element_capture_reset.html \
 		test_timeupdate_small_files.html \
 		test_too_many_elements.html \
 		test_volume.html \
@@ -132,6 +130,16 @@ MOCHITEST_FILES = \
 		$(NULL)
 
 $(warning test_error_in_video_document.html is disabled for intermittent failures. Bug 608634)
+
+# Disabled on Windows for frequent intermittent failures
+ifneq ($(OS_ARCH), WINNT)
+MOCHITEST_FILES += \
+		test_streams_element_capture.html \
+		test_streams_element_capture_reset.html \
+		$(NULL)
+else
+$(warning test_streams_element_capture{,_reset}.html is disabled on Windows for timeouts. Bug 752796)
+endif
 
 # Don't run in suite
 ifndef MOZ_SUITE

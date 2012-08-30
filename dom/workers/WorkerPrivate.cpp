@@ -695,12 +695,7 @@ public:
       return false;
     }
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(aCx, global)) {
-      NS_WARNING("Failed to enter compartment!");
-      return false;
-    }
-
+    JSAutoCompartment ac(aCx, global);
     JS_SetGlobalObject(aCx, global);
 
     return scriptloader::LoadWorkerScript(aCx);
@@ -1686,9 +1681,9 @@ WorkerRunnable::Dispatch(JSContext* aCx)
 
   JSObject* global = JS_GetGlobalObject(aCx);
 
-  JSAutoEnterCompartment ac;
-  if (global && !ac.enter(aCx, global)) {
-    return false;
+  Maybe<JSAutoCompartment> ac;
+  if (global) {
+    ac.construct(aCx, global);
   }
 
   ok = PreDispatch(aCx, mWorkerPrivate);
@@ -1793,9 +1788,9 @@ WorkerRunnable::Run()
 
   JSAutoRequest ar(cx);
 
-  JSAutoEnterCompartment ac;
-  if (targetCompartmentObject && !ac.enter(cx, targetCompartmentObject)) {
-    return NS_OK;
+  Maybe<JSAutoCompartment> ac;
+  if (targetCompartmentObject) {
+    ac.construct(cx, targetCompartmentObject);
   }
 
   bool result = WorkerRun(cx, mWorkerPrivate);
@@ -3765,7 +3760,7 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
   bool retval = true;
 
   AutoPtrComparator<TimeoutInfo> comparator = GetAutoPtrComparator(mTimeouts);
-  JSObject* global = JS_GetGlobalObject(aCx);
+  JS::RootedObject global(aCx, JS_GetGlobalObject(aCx));
   JSPrincipals* principal = GetWorkerPrincipal();
 
   // We want to make sure to run *something*, even if the timer fired a little
@@ -3799,15 +3794,14 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
     if (info->mTimeoutVal.isString()) {
       JSString* expression = info->mTimeoutVal.toString();
 
+      JS::CompileOptions options(aCx);
+      options.setPrincipals(principal)
+        .setFileAndLine(info->mFilename.get(), info->mLineNumber);
+
       size_t stringLength;
       const jschar* string = JS_GetStringCharsAndLength(aCx, expression,
                                                         &stringLength);
-
-      if ((!string ||
-           !JS_EvaluateUCScriptForPrincipals(aCx, global, principal, string,
-                                             stringLength,
-                                             info->mFilename.get(),
-                                             info->mLineNumber, nullptr)) &&
+      if ((!string || !JS::Evaluate(aCx, global, options, string, stringLength, nullptr)) &&
           !JS_ReportPendingException(aCx)) {
         retval = false;
         break;

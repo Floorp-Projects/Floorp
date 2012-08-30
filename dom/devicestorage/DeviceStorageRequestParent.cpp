@@ -309,12 +309,10 @@ DeviceStorageRequestParent::StatFileEvent::CancelableRun()
 
   nsCOMPtr<nsIRunnable> r;
   uint64_t diskUsage = DeviceStorageFile::DirectoryDiskUsage(mFile->mFile);
-  int64_t freeSpace = 0;
+  int64_t freeSpace;
   nsresult rv = mFile->mFile->GetDiskSpaceAvailable(&freeSpace);
   if (NS_FAILED(rv)) {
-    r = new PostErrorEvent(mParent, POST_ERROR_EVENT_UNKNOWN);
-    NS_DispatchToMainThread(r);
-    return NS_OK;
+    freeSpace = 0;
   }
   
   r = new PostStatResultEvent(mParent, diskUsage, freeSpace);

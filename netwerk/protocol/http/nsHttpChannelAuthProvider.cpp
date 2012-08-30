@@ -112,7 +112,7 @@ nsHttpChannelAuthProvider::ProcessAuthentication(uint32_t httpStatus,
 
     if (mProxyAuth) {
         // only allow a proxy challenge if we have a proxy server configured.
-        // otherwise, we could inadvertantly expose the user's proxy
+        // otherwise, we could inadvertently expose the user's proxy
         // credentials to an origin server.  We could attempt to proceed as
         // if we had received a 401 from the server, but why risk flirting
         // with trouble?  IE similarly rejects 407s when a proxy server is

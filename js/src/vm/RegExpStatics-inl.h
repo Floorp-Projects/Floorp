@@ -266,10 +266,9 @@ RegExpStatics::markFlagsSet(JSContext *cx)
      * recompilation of all such code (when recompiling, a stub call will
      * always be performed).
      */
-    GlobalObject *global = GetGlobalForScopeChain(cx);
-    JS_ASSERT(this == global->getRegExpStatics());
+    JS_ASSERT(this == cx->global()->getRegExpStatics());
 
-    types::MarkTypeObjectFlags(cx, global, types::OBJECT_FLAG_REGEXP_FLAGS_SET);
+    types::MarkTypeObjectFlags(cx, cx->global(), types::OBJECT_FLAG_REGEXP_FLAGS_SET);
 }
 
 inline void
@@ -287,7 +286,7 @@ RegExpStatics::reset(JSContext *cx, JSString *newInput, bool newMultiline)
 inline js::RegExpStatics *
 JSContext::regExpStatics()
 {
-    return js::GetGlobalForScopeChain(this)->getRegExpStatics();
+    return global()->getRegExpStatics();
 }
 
 #endif

@@ -42,7 +42,6 @@ nsReferencedElement.h \
 nsTreeSanitizer.h \
 nsXMLNameSpaceMap.h \
 nsIXFormsUtilityService.h \
-nsBlobProtocolHandler.h \
 $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom mozilla
@@ -82,7 +81,7 @@ XPIDLSRCS	= \
 		nsIFrameLoader.idl \
 		nsIXMLHttpRequest.idl \
 		nsIContentSecurityPolicy.idl \
-		nsIFrameMessageManager.idl \
+		nsIMessageManager.idl \
 		nsIWebSocket.idl \
 		nsIEventSource.idl \
 		$(NULL)

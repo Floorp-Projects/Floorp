@@ -47,6 +47,7 @@
 #include "mozilla/StandardInteger.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 using namespace mozilla::layers;
 typedef FrameMetrics::ViewID ViewID;
 
@@ -345,17 +346,7 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
 
   // If the frame is not prerendered, bail out.  Layout will still perform the
   // animation.
-  if (!nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, frame)) {
-    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      printf_stderr("Performance warning: Async animation disabled because the frame for element '%s'",
-                    nsAtomCString(aContent->Tag()).get());
-      nsIAtom* id = aContent->GetID();
-      if (id) {
-        printf_stderr(" with id '%s'",
-                      nsAtomCString(aContent->GetID()).get());
-      }
-      printf_stderr(" is not prerendered\n");
-    }
+  if (!aItem->CanUseAsyncAnimations(aBuilder)) {
     return;
   }
 
@@ -557,7 +548,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                                const nsRect& aViewport,
                                nsRect* aDisplayPort,
                                ViewID aScrollId,
-                               const nsDisplayItem::ContainerParameters& aContainerParameters) {
+                               const nsDisplayItem::ContainerParameters& aContainerParameters,
+                               bool aMayHaveTouchListeners) {
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
 
@@ -590,8 +582,10 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                          nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.height));
     metrics.mContentRect = contentBounds.ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
-    metrics.mViewportScrollOffset = scrollableFrame->GetScrollPosition().ScaleToNearestPixels(
-      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+    nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
+    metrics.mViewportScrollOffset = mozilla::gfx::Point(
+      NSAppUnitsToDoublePixels(scrollPosition.x, auPerDevPixel) * aContainerParameters.mXScale,
+      NSAppUnitsToDoublePixels(scrollPosition.y, auPerDevPixel) * aContainerParameters.mYScale);
   }
   else {
     nsRect contentBounds = aForFrame->GetRect();
@@ -608,6 +602,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   nsIPresShell* presShell = presContext->GetPresShell();
   metrics.mResolution = gfxSize(presShell->GetXResolution(), presShell->GetYResolution());
+
+  metrics.mMayHaveTouchListeners = aMayHaveTouchListeners;
 
   aRoot->SetFrameMetrics(metrics);
 }
@@ -1020,10 +1016,22 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       usingDisplayport = nsLayoutUtils::GetDisplayPort(content, &displayport);
     }
   }
+
+  bool mayHaveTouchListeners = false;
+  if (presShell) {
+    nsIDocument* document = presShell->GetDocument();
+    if (document) {
+      nsCOMPtr<nsPIDOMWindow> innerWin(document->GetInnerWindow());
+      if (innerWin) {
+        mayHaveTouchListeners = innerWin->HasTouchEventListeners();
+      }
+    }
+  }
+
   RecordFrameMetrics(aForFrame, rootScrollFrame,
                      root, mVisibleRect, mVisibleRect,
                      (usingDisplayport ? &displayport : nullptr), id,
-                     containerParameters);
+                     containerParameters, mayHaveTouchListeners);
   if (usingDisplayport &&
       !(root->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
     // See bug 693938, attachment 567017
@@ -2624,7 +2632,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   }
   RecordFrameMetrics(mScrolledFrame, mScrollFrame, layer, mVisibleRect, viewport,
                      (usingDisplayport ? &displayport : nullptr), scrollId,
-                     aContainerParameters);
+                     aContainerParameters, false);
 
   return layer.forget();
 }
@@ -3331,23 +3339,72 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
 }
 
 bool
-nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
-                                                      nsIFrame* aFrame)
+nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 {
-  if (aFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer)) {
-    nsSize refSize = aBuilder->ReferenceFrame()->GetSize();
-    // Only prerender if the transformed frame's size is <= the
-    // reference frame size (~viewport), allowing a 1/8th fuzz factor
-    // for shadows, borders, etc.
-    refSize += nsSize(refSize.width / 8, refSize.height / 8);
-    if (aFrame->GetVisualOverflowRectRelativeToSelf().Size() <= refSize) {
-      // Bug 717521 - pre-render max 4096 x 4096 device pixels.
-      nscoord max = aFrame->PresContext()->DevPixelsToAppUnits(4096);
-      nsRect visual = aFrame->GetVisualOverflowRect();
-      if (visual.width <= max && visual.height <= max) {
-        return true;
-      }
+  if (GetUnderlyingFrame()->AreLayersMarkedActive(nsChangeHint_UpdateOpacityLayer)) {
+    return true;
+  }
+
+  if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
+    nsCString message;
+    message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for opacity animation");
+    CommonElementAnimationData::LogAsyncAnimationFailure(message,
+                                                         GetUnderlyingFrame()->GetContent());
+  }
+  return false;
+}
+
+bool
+nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
+{
+  return ShouldPrerenderTransformedContent(aBuilder,
+                                           GetUnderlyingFrame(),
+                                           nsLayoutUtils::IsAnimationLoggingEnabled());
+}
+
+/* static */ bool
+nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
+                                                      nsIFrame* aFrame,
+                                                      bool aLogAnimations)
+{
+  if (!aFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer)) {
+    if (aLogAnimations) {
+      nsCString message;
+      message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for transform animation");
+      CommonElementAnimationData::LogAsyncAnimationFailure(message,
+                                                           aFrame->GetContent());
     }
+    return false;
+  }
+
+  nsSize refSize = aBuilder->ReferenceFrame()->GetSize();
+  // Only prerender if the transformed frame's size is <= the
+  // reference frame size (~viewport), allowing a 1/8th fuzz factor
+  // for shadows, borders, etc.
+  refSize += nsSize(refSize.width / 8, refSize.height / 8);
+  nsSize frameSize = aFrame->GetVisualOverflowRectRelativeToSelf().Size();
+  if (frameSize <= refSize) {
+    // Bug 717521 - pre-render max 4096 x 4096 device pixels.
+    nscoord max = aFrame->PresContext()->DevPixelsToAppUnits(4096);
+    nsRect visual = aFrame->GetVisualOverflowRect();
+    if (visual.width <= max && visual.height <= max) {
+      return true;
+    }
+  }
+
+  if (aLogAnimations) {
+    nsCString message;
+    message.AppendLiteral("Performance warning: Async animation disabled because frame size (");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.width));
+    message.AppendLiteral(", ");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.height));
+    message.AppendLiteral(") is bigger than the viewport (");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.width));
+    message.AppendLiteral(", ");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
+    message.AppendLiteral(")");
+    CommonElementAnimationData::LogAsyncAnimationFailure(message,
+                                                         aFrame->GetContent());
   }
   return false;
 }

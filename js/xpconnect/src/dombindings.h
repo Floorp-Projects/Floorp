@@ -15,11 +15,11 @@
 
 namespace mozilla {
 namespace dom {
-namespace binding {
+namespace oldproxybindings {
 
-class ProxyHandler : public js::BaseProxyHandler {
+class ProxyHandler : public DOMBaseProxyHandler {
 protected:
-    ProxyHandler() : js::BaseProxyHandler(ProxyFamily())
+    ProxyHandler() : DOMBaseProxyHandler(false)
     {
     }
 

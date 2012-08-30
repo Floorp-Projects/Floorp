@@ -107,12 +107,6 @@ if [ "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" ]; then
   fi
 fi
 
-if [ "$COMPILER_DEPEND" = "" -a "$MOZ_NATIVE_MAKEDEPEND" = "" ]; then
-  add_makefiles "
-    config/mkdepend/Makefile
-  "
-fi
-
 if [ "$ENABLE_MARIONETTE" ]; then
   add_makefiles "
     testing/marionette/Makefile

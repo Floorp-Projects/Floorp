@@ -358,7 +358,9 @@ bool TabParent::SendRealTouchEvent(nsTouchEvent& event)
 {
   nsTouchEvent e(event);
   MaybeForwardEventToRenderFrame(event, &e);
-  return PBrowserParent::SendRealTouchEvent(e);
+  return (e.message == NS_TOUCH_MOVE) ?
+    PBrowserParent::SendRealTouchMoveEvent(e) :
+    PBrowserParent::SendRealTouchEvent(e);
 }
 
 bool
@@ -682,6 +684,7 @@ bool
 TabParent::RecvSetInputContext(const int32_t& aIMEEnabled,
                                const int32_t& aIMEOpen,
                                const nsString& aType,
+                               const nsString& aInputmode,
                                const nsString& aActionHint,
                                const int32_t& aCause,
                                const int32_t& aFocusChange)
@@ -699,6 +702,7 @@ TabParent::RecvSetInputContext(const int32_t& aIMEEnabled,
   context.mIMEState.mEnabled = static_cast<IMEState::Enabled>(aIMEEnabled);
   context.mIMEState.mOpen = static_cast<IMEState::Open>(aIMEOpen);
   context.mHTMLInputType.Assign(aType);
+  context.mHTMLInputInputmode.Assign(aInputmode);
   context.mActionHint.Assign(aActionHint);
   InputContextAction action(
     static_cast<InputContextAction::Cause>(aCause),
@@ -954,8 +958,8 @@ TabParent::DeallocPRenderFrame(PRenderFrameParent* aFrame)
 }
 
 mozilla::docshell::POfflineCacheUpdateParent*
-TabParent::AllocPOfflineCacheUpdate(const URI& aManifestURI,
-                                    const URI& aDocumentURI,
+TabParent::AllocPOfflineCacheUpdate(const URIParams& aManifestURI,
+                                    const URIParams& aDocumentURI,
                                     const nsCString& aClientID,
                                     const bool& stickDocument)
 {
@@ -1099,19 +1103,19 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
 }
 
 bool
-TabParent::RecvNotifyDOMTouchListenerAdded()
+TabParent::RecvZoomToRect(const gfxRect& aRect)
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->NotifyDOMTouchListenerAdded();
+    rfp->ZoomToRect(aRect);
   }
   return true;
 }
 
 bool
-TabParent::RecvZoomToRect(const gfxRect& aRect)
+TabParent::RecvContentReceivedTouch(const bool& aPreventDefault)
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->ZoomToRect(aRect);
+    rfp->ContentReceivedTouch(aPreventDefault);
   }
   return true;
 }

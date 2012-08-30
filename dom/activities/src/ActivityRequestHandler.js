@@ -7,14 +7,12 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
- 
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
-  return Cc["@mozilla.org/childprocessmessagemanager;1"]
-           .getService(Ci.nsIFrameMessageManager)
-           .QueryInterface(Ci.nsISyncMessageSender);
-});
+XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
+                                   "@mozilla.org/childprocessmessagemanager;1",
+                                   "nsISyncMessageSender");
 
 function debug(aMsg) {
   //dump("-- ActivityRequestHandler.js " + Date.now() + " : " + aMsg + "\n");
@@ -31,7 +29,7 @@ function ActivityRequestHandler() {
   // When a system message of type 'activity' is emitted, it forces the
   // creation of an ActivityWrapper which in turns replace the default
   // system message callback. The newly created wrapper then create a
-  // nsIDOMActivityRequestHandler object and fills up the properties of 
+  // nsIDOMActivityRequestHandler object and fills up the properties of
   // this object as well as the properties of the nsIDOMActivityOptions
   // object contains by the request handler.
   this._id = null;
@@ -40,6 +38,12 @@ function ActivityRequestHandler() {
 }
 
 ActivityRequestHandler.prototype = {
+  __exposedProps__: {
+                      source: "r",
+                      postResult: "r",
+                      postError: "r"
+                    },
+
   get source() {
     return this._options;
   },

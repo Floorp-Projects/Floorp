@@ -101,7 +101,8 @@ GetClosestInterestingAccessible(id anObject)
 
   // unknown (either unimplemented, or irrelevant) elements are marked as ignored
   // as well as expired elements.
-  return !mGeckoAccessible || [[self role] isEqualToString:NSAccessibilityUnknownRole];
+  return !mGeckoAccessible || ([[self role] isEqualToString:NSAccessibilityUnknownRole] &&
+                               !(mGeckoAccessible->InteractiveState() & states::FOCUSABLE));
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }

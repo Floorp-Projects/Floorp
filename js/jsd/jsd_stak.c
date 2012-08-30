@@ -34,21 +34,18 @@ _addNewFrame(JSDContext*        jsdc,
     JSDStackFrameInfo* jsdframe;
     JSDScript*         jsdscript = NULL;
 
-    if (JS_IsScriptFrame(jsdthreadstate->context, fp))
+    JSD_LOCK_SCRIPTS(jsdc);
+    jsdscript = jsd_FindJSDScript(jsdc, script);
+    JSD_UNLOCK_SCRIPTS(jsdc);
+    if (!jsdscript || (jsdc->flags & JSD_HIDE_DISABLED_FRAMES &&
+                       !JSD_IS_DEBUG_ENABLED(jsdc, jsdscript)))
     {
-        JSD_LOCK_SCRIPTS(jsdc);
-        jsdscript = jsd_FindJSDScript(jsdc, script);
-        JSD_UNLOCK_SCRIPTS(jsdc);
-        if (!jsdscript || (jsdc->flags & JSD_HIDE_DISABLED_FRAMES &&
-                           !JSD_IS_DEBUG_ENABLED(jsdc, jsdscript)))
-        {
-            return NULL;
-        }
-
-        if (!JSD_IS_DEBUG_ENABLED(jsdc, jsdscript))
-            jsdthreadstate->flags |= TS_HAS_DISABLED_FRAME;
+        return NULL;
     }
-    
+
+    if (!JSD_IS_DEBUG_ENABLED(jsdc, jsdscript))
+        jsdthreadstate->flags |= TS_HAS_DISABLED_FRAME;
+
     jsdframe = (JSDStackFrameInfo*) calloc(1, sizeof(JSDStackFrameInfo));
     if( ! jsdframe )
         return NULL;
@@ -101,9 +98,7 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
          * |this| object, or native frames, if JSD_INCLUDE_NATIVE_FRAMES
          * isn't set.
          */
-        if (JS_GetFrameThis(cx, fp, &dummyThis) &&
-            ((jsdc->flags & JSD_INCLUDE_NATIVE_FRAMES) ||
-             JS_IsScriptFrame(cx, fp)))
+        if (JS_GetFrameThis(cx, fp, &dummyThis))
         {
             JSDStackFrameInfo *frame;
 

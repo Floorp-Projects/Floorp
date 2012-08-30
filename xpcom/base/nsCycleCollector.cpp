@@ -467,7 +467,6 @@ private:
 
 public:
 #ifdef DEBUG_CC
-    size_t mBytes;
     char *mName;
 #endif
 
@@ -479,8 +478,7 @@ public:
           mRefCount(0),
           mFirstChild()
 #ifdef DEBUG_CC
-        , mBytes(0),
-          mName(nullptr)
+        , mName(nullptr)
 #endif
     {
         MOZ_ASSERT(aParticipant);
@@ -696,15 +694,43 @@ struct GCGraph
 // Add/Remove/Has rather than PutEntry/RemoveEntry/GetEntry.
 typedef nsTHashtable<nsPtrHashKey<const void> > PointerSet;
 
+static nsISupports *
+CanonicalizeXPCOMParticipant(nsISupports *in)
+{
+    nsISupports* out;
+    in->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                       reinterpret_cast<void**>(&out));
+    return out;
+}
+
 static inline void
 ToParticipant(nsISupports *s, nsXPCOMCycleCollectionParticipant **cp);
+
+static void
+CanonicalizeParticipant(void **parti, nsCycleCollectionParticipant **cp)
+{
+    // If the participant is null, this is an nsISupports participant,
+    // so we must QI to get the real participant.
+
+    if (!*cp) {
+        nsISupports *nsparti = static_cast<nsISupports*>(*parti);
+        nsparti = CanonicalizeXPCOMParticipant(nsparti);
+        NS_ASSERTION(nsparti,
+                     "Don't add objects that don't participate in collection!");
+        nsXPCOMCycleCollectionParticipant *xcp;
+        ToParticipant(nsparti, &xcp);
+        *parti = nsparti;
+        *cp = xcp;
+    }
+}
 
 struct nsPurpleBuffer
 {
 private:
     struct Block {
         Block *mNext;
-        nsPurpleBufferEntry mEntries[255];
+         // Try to match the size of a jemalloc bucket.
+        nsPurpleBufferEntry mEntries[1360];
 
         Block() : mNext(nullptr) {}
     };
@@ -799,10 +825,10 @@ public:
                 // This is a real entry (rather than something on the
                 // free list).
                 if (e->mObject) {
-                    nsXPCOMCycleCollectionParticipant *cp;
-                    ToParticipant(e->mObject, &cp);
-
-                    cp->UnmarkIfPurple(e->mObject);
+                    void *obj = e->mObject;
+                    nsCycleCollectionParticipant *cp = e->mParticipant;
+                    CanonicalizeParticipant(&obj, &cp);
+                    cp->UnmarkIfPurple(obj);
                 }
 
                 if (--mCount == 0)
@@ -849,7 +875,7 @@ public:
         return e;
     }
 
-    nsPurpleBufferEntry* Put(nsISupports *p)
+    nsPurpleBufferEntry* Put(void *p, nsCycleCollectionParticipant *cp)
     {
         nsPurpleBufferEntry *e = NewEntry();
         if (!e) {
@@ -859,6 +885,7 @@ public:
         ++mCount;
 
         e->mObject = p;
+        e->mParticipant = cp;
 
 #ifdef DEBUG_CC
         mNormalObjects.PutEntry(p);
@@ -907,6 +934,9 @@ public:
 
 };
 
+static bool
+AddPurpleRoot(GCGraphBuilder &builder, void *root, nsCycleCollectionParticipant *cp);
+
 struct CallbackClosure
 {
     CallbackClosure(nsPurpleBuffer *aPurpleBuffer, GCGraphBuilder &aBuilder)
@@ -918,16 +948,14 @@ struct CallbackClosure
     GCGraphBuilder &mBuilder;
 };
 
-static bool
-AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root);
-
 static PLDHashOperator
 selectionCallback(nsPtrHashKey<const void>* key, void* userArg)
 {
     CallbackClosure *closure = static_cast<CallbackClosure*>(userArg);
     if (AddPurpleRoot(closure->mBuilder,
                       static_cast<nsISupports *>(
-                        const_cast<void*>(key->GetKey()))))
+                        const_cast<void*>(key->GetKey())),
+                      nullptr))
         return PL_DHASH_REMOVE;
 
     return PL_DHASH_NEXT;
@@ -971,7 +999,8 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
             if (!(uintptr_t(e->mObject) & uintptr_t(1))) {
                 // This is a real entry (rather than something on the
                 // free list).
-                if (!e->mObject || AddPurpleRoot(aBuilder, e->mObject)) {
+                if (!e->mObject || AddPurpleRoot(aBuilder, e->mObject,
+                                                 e->mParticipant)) {
                     Remove(e);
                 }
             }
@@ -1037,7 +1066,7 @@ struct nsCycleCollector
     // old XPCOM binary components.
     bool Suspect(nsISupports *n);
     bool Forget(nsISupports *n);
-    nsPurpleBufferEntry* Suspect2(nsISupports *n);
+    nsPurpleBufferEntry* Suspect2(void *n, nsCycleCollectionParticipant *cp);
     bool Forget2(nsPurpleBufferEntry *e);
 
     void Collect(bool aMergeCompartments,
@@ -1166,15 +1195,6 @@ AbortIfOffMainThreadIfCheckFast()
         NS_RUNTIMEABORT("Main-thread-only object used off the main thread");
     }
 #endif
-}
-
-static nsISupports *
-canonicalize(nsISupports *in)
-{
-    nsISupports* child;
-    in->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                       reinterpret_cast<void**>(&child));
-    return child;
 }
 
 static inline void
@@ -1599,13 +1619,10 @@ public:
     void SetLastChild();
 
 private:
-    void DescribeNode(uint32_t refCount,
-                      size_t objSz,
-                      const char *objName)
+    void DescribeNode(uint32_t refCount, const char *objName)
     {
         mCurrPi->mRefCount = refCount;
 #ifdef DEBUG_CC
-        mCurrPi->mBytes = objSz;
         mCurrPi->mName = PL_strdup(objName);
         sCollector->mStats.mVisitedNode++;
 #endif
@@ -1613,10 +1630,9 @@ private:
 
 public:
     // nsCycleCollectionTraversalCallback methods.
-    NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
+    NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount,
                                              const char *objName);
-    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, size_t objSz,
-                                       const char *objName);
+    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, const char *objName);
 
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root);
     NS_IMETHOD_(void) NoteJSRoot(void *root);
@@ -1771,7 +1787,7 @@ GCGraphBuilder::SetLastChild()
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteXPCOMRoot(nsISupports *root)
 {
-    root = canonicalize(root);
+    root = CanonicalizeXPCOMParticipant(root);
     NS_ASSERTION(root,
                  "Don't add objects that don't participate in collection!");
 
@@ -1779,7 +1795,7 @@ GCGraphBuilder::NoteXPCOMRoot(nsISupports *root)
     if (nsCycleCollector_shouldSuppress(root))
         return;
 #endif
-    
+
     nsXPCOMCycleCollectionParticipant *cp;
     ToParticipant(root, &cp);
 
@@ -1803,8 +1819,7 @@ GCGraphBuilder::NoteNativeRoot(void *root, nsCycleCollectionParticipant *partici
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
-                                       const char *objName)
+GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, const char *objName)
 {
     if (refCount == 0)
         Fault("zero refcount", mCurrPi);
@@ -1817,12 +1832,11 @@ GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
                                         objName);
     }
 
-    DescribeNode(refCount, objSz, objName);
+    DescribeNode(refCount, objName);
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::DescribeGCedNode(bool isMarked, size_t objSz,
-                                 const char *objName)
+GCGraphBuilder::DescribeGCedNode(bool isMarked, const char *objName)
 {
     uint32_t refCount = isMarked ? PR_UINT32_MAX : 0;
     sCollector->mVisitedGCed++;
@@ -1832,7 +1846,7 @@ GCGraphBuilder::DescribeGCedNode(bool isMarked, size_t objSz,
                                   objName);
     }
 
-    DescribeNode(refCount, objSz, objName);
+    DescribeNode(refCount, objName);
 }
 
 NS_IMETHODIMP_(void)
@@ -1843,14 +1857,14 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
         edgeName.Assign(mNextEdgeName);
         mNextEdgeName.Truncate();
     }
-    if (!child || !(child = canonicalize(child)))
-        return; 
+    if (!child || !(child = CanonicalizeXPCOMParticipant(child)))
+        return;
 
 #ifdef DEBUG_CC
     if (nsCycleCollector_shouldSuppress(child))
         return;
 #endif
-    
+
     nsXPCOMCycleCollectionParticipant *cp;
     ToParticipant(child, &cp);
     if (cp && (!cp->CanSkipThis(child) || WantAllTraces())) {
@@ -1933,6 +1947,23 @@ GCGraphBuilder::NoteWeakMapping(void *map, void *key, void *val)
     mapping->mVal = valNode;
 }
 
+static bool
+AddPurpleRoot(GCGraphBuilder &builder, void *root, nsCycleCollectionParticipant *cp)
+{
+    CanonicalizeParticipant(&root, &cp);
+
+    if (builder.WantAllTraces() || !cp->CanSkipInCC(root)) {
+        PtrInfo *pinfo = builder.AddNode(root, cp);
+        if (!pinfo) {
+            return false;
+        }
+    }
+
+    cp->UnmarkIfPurple(root);
+
+    return true;
+}
+
 // MayHaveChild() will be false after a Traverse if the object does
 // not have any children the CC will visit.
 class ChildFinder : public nsCycleCollectionTraversalCallback
@@ -1948,10 +1979,8 @@ public:
     NS_IMETHOD_(void) NoteJSChild(void *child);
 
     NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
-                                             size_t objsz,
                                              const char *objname) {}
     NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
-                                       size_t objsz,
                                        const char *objname) {}
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) {}
     NS_IMETHOD_(void) NoteJSRoot(void *root) {}
@@ -1969,8 +1998,8 @@ private:
 NS_IMETHODIMP_(void)
 ChildFinder::NoteXPCOMChild(nsISupports *child)
 {
-    if (!child || !(child = canonicalize(child)))
-        return; 
+    if (!child || !(child = CanonicalizeXPCOMParticipant(child)))
+        return;
     nsXPCOMCycleCollectionParticipant *cp;
     ToParticipant(child, &cp);
     if (cp && !cp->CanSkip(child, true))
@@ -1994,29 +2023,7 @@ ChildFinder::NoteJSChild(void *child)
 }
 
 static bool
-AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root)
-{
-    root = canonicalize(root);
-    NS_ASSERTION(root,
-                 "Don't add objects that don't participate in collection!");
-
-    nsXPCOMCycleCollectionParticipant *cp;
-    ToParticipant(root, &cp);
-
-    if (builder.WantAllTraces() || !cp->CanSkipInCC(root)) {
-        PtrInfo *pinfo = builder.AddNode(root, cp);
-        if (!pinfo) {
-            return false;
-        }
-    }
-
-    cp->UnmarkIfPurple(root);
-
-    return true;
-}
-
-static bool
-MayHaveChild(nsISupports *o, nsXPCOMCycleCollectionParticipant* cp)
+MayHaveChild(void *o, nsCycleCollectionParticipant* cp)
 {
     ChildFinder cf;
     cp->Traverse(o, cf);
@@ -2035,9 +2042,9 @@ nsPurpleBuffer::RemoveSkippable(bool removeChildlessNodes)
                 // This is a real entry (rather than something on the
                 // free list).
                 if (e->mObject) {
-                    nsISupports* o = canonicalize(e->mObject);
-                    nsXPCOMCycleCollectionParticipant* cp;
-                    ToParticipant(o, &cp);
+                    void *o = e->mObject;
+                    nsCycleCollectionParticipant *cp = e->mParticipant;
+                    CanonicalizeParticipant(&o, &cp);
                     if (!cp->CanSkip(o, false) &&
                         (!removeChildlessNodes || MayHaveChild(o, cp))) {
                         continue;
@@ -2410,14 +2417,13 @@ public:
         return mSuppressThisNode;
     }
 
-    NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
+    NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount,
                                              const char *objName)
     {
         mSuppressThisNode = (PL_strstr(sSuppressionList, objName) != nullptr);
     }
 
-    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, size_t objSz,
-                                       const char *objName)
+    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, const char *objName)
     {
         mSuppressThisNode = (PL_strstr(sSuppressionList, objName) != nullptr);
     }
@@ -2447,15 +2453,18 @@ nsCycleCollector_shouldSuppress(nsISupports *s)
 
 #ifdef DEBUG
 static bool
-nsCycleCollector_isScanSafe(nsISupports *s)
+nsCycleCollector_isScanSafe(void *s, nsCycleCollectionParticipant *cp)
 {
     if (!s)
         return false;
 
-    nsXPCOMCycleCollectionParticipant *cp;
-    ToParticipant(s, &cp);
+    if (cp)
+        return true;
 
-    return cp != nullptr;
+    nsXPCOMCycleCollectionParticipant *xcp;
+    ToParticipant(static_cast<nsISupports*>(s), &xcp);
+
+    return xcp != nullptr;
 }
 #endif
 
@@ -2471,7 +2480,7 @@ nsCycleCollector::Suspect(nsISupports *n)
     if (mScanInProgress)
         return false;
 
-    NS_ASSERTION(nsCycleCollector_isScanSafe(n),
+    NS_ASSERTION(nsCycleCollector_isScanSafe(n, nullptr),
                  "suspected a non-scansafe pointer");
 
     if (mParams.mDoNothing)
@@ -2524,7 +2533,7 @@ nsCycleCollector::Forget(nsISupports *n)
 }
 
 nsPurpleBufferEntry*
-nsCycleCollector::Suspect2(nsISupports *n)
+nsCycleCollector::Suspect2(void *n, nsCycleCollectionParticipant *cp)
 {
     AbortIfOffMainThreadIfCheckFast();
 
@@ -2535,7 +2544,7 @@ nsCycleCollector::Suspect2(nsISupports *n)
     if (mScanInProgress)
         return nullptr;
 
-    NS_ASSERTION(nsCycleCollector_isScanSafe(n),
+    NS_ASSERTION(nsCycleCollector_isScanSafe(n, cp),
                  "suspected a non-scansafe pointer");
 
     if (mParams.mDoNothing)
@@ -2544,7 +2553,7 @@ nsCycleCollector::Suspect2(nsISupports *n)
 #ifdef DEBUG_CC
     mStats.mSuspectNode++;
 
-    if (nsCycleCollector_shouldSuppress(n))
+    if (!cp && nsCycleCollector_shouldSuppress(static_cast<nsISupports *>(n)))
         return nullptr;
 
     if (mParams.mLogPointers) {
@@ -2555,7 +2564,7 @@ nsCycleCollector::Suspect2(nsISupports *n)
 #endif
 
     // Caller is responsible for filling in result's mRefCnt.
-    return mPurpleBuf.Put(n);
+    return mPurpleBuf.Put(n, cp);
 }
 
 
@@ -2996,10 +3005,10 @@ NS_CycleCollectorForget(nsISupports *n)
 }
 
 nsPurpleBufferEntry*
-NS_CycleCollectorSuspect2(nsISupports *n)
+NS_CycleCollectorSuspect2(void *n, nsCycleCollectionParticipant *cp)
 {
     if (sCollector)
-        return sCollector->Suspect2(n);
+        return sCollector->Suspect2(n, cp);
     return nullptr;
 }
 

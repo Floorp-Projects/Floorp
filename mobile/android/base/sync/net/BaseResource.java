@@ -267,7 +267,10 @@ public class BaseResource implements Resource {
       // Bug 740731: Don't let an exception fall through. Wrapping isn't
       // optimal, but often the exception is treated as an Exception anyway.
       if (!retryOnFailedRequest) {
-        delegate.handleHttpIOException(new IOException(e));
+        // Bug 769671: IOException(Throwable cause) was added only in API level 9.
+        final IOException ex = new IOException();
+        ex.initCause(e);
+        delegate.handleHttpIOException(ex);
       } else {
         retryRequest();
       }

@@ -282,24 +282,6 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
 typedef SecurityWrapper<DirectWrapper> SameCompartmentSecurityWrapper;
 typedef SecurityWrapper<CrossCompartmentWrapper> CrossCompartmentSecurityWrapper;
 
-/*
- * A hacky class that lets a friend force a fake frame. We must already be
- * in the compartment of |target| when we enter the forced frame.
- */
-class JS_FRIEND_API(ForceFrame)
-{
-  public:
-    JSContext * const context;
-    JSObject * const target;
-  private:
-    DummyFrameGuard *frame;
-
-  public:
-    ForceFrame(JSContext *cx, JSObject *target);
-    ~ForceFrame();
-    bool enter();
-};
-
 class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
 {
   public:

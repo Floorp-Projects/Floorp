@@ -21,27 +21,23 @@
 NS_IMPL_ISUPPORTS1(nsCollationWin, nsICollation)
 
 
-nsCollationWin::nsCollationWin() 
+nsCollationWin::nsCollationWin() : mCollation(nullptr)
 {
-  mCollation = NULL;
 }
 
 nsCollationWin::~nsCollationWin() 
 {
-  if (mCollation != NULL)
+  if (mCollation)
     delete mCollation;
 }
 
 nsresult nsCollationWin::Initialize(nsILocale* locale) 
 {
-  NS_ASSERTION(mCollation == NULL, "Should only be initialized once.");
+  NS_ASSERTION(!mCollation, "Should only be initialized once.");
 
   nsresult res;
 
   mCollation = new nsCollation;
-  if (!mCollation) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   // default LCID (en-US)
   mLCID = 1033;

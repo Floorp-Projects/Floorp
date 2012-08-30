@@ -116,7 +116,7 @@ function onChildPageShow(e) {
   if(gCallbackOnIframePageShow) {
     statusMsg("Got pageshow for " + getURLFromEvent(e) + ".  About to call gGen.next().");
     gCallbackOnIframePageShow = false;
-    gGen.next();
+    SimpleTest.executeSoon(function() { gGen.next(); });
   }
   else {
     statusMsg("Got pageshow for " + getURLFromEvent(e) + ", but not calling gGen.next() because gCallbackOnIframePageShow was false.");

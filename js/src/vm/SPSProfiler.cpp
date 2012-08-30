@@ -171,9 +171,9 @@ SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *may
 {
     DebugOnly<uint64_t> gcBefore = cx->runtime->gcNumber;
     StringBuffer buf(cx);
-    bool hasAtom = maybeFun != NULL && maybeFun->atom != NULL;
+    bool hasAtom = maybeFun != NULL && maybeFun->displayAtom() != NULL;
     if (hasAtom) {
-        if (!buf.append(maybeFun->atom))
+        if (!buf.append(maybeFun->displayAtom()))
             return NULL;
         if (!buf.append(" ("))
             return NULL;

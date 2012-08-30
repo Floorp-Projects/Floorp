@@ -49,15 +49,15 @@ public:
 
   // results hold a reference to a binding set in their
   // nsXMLBindingValues fields
-  nsAutoRefCnt mRefCnt;
+  nsCycleCollectingAutoRefCnt mRefCnt;
 
   // pointer to the first binding in a linked list
   nsAutoPtr<nsXMLBinding> mFirst;
 
 public:
 
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
+  NS_METHOD_(nsrefcnt) AddRef();
+  NS_METHOD_(nsrefcnt) Release();
   NS_DECL_OWNINGTHREAD
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXMLBindingSet)
 

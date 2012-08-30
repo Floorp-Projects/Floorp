@@ -1,0 +1,2218 @@
+{
+  "A11Y_INSTANTIATED_FLAG": {
+    "kind": "flag",
+    "description": "has accessibility support been instantiated"
+  },
+  "A11Y_CONSUMERS": {
+    "kind": "enumerated",
+    "n_values": 11,
+    "description": "Accessibility client by enum id"
+  },
+  "A11Y_ISIMPLEDOM_USAGE_FLAG": {
+    "kind": "flag",
+    "description": "have the ISimpleDOM* accessibility interfaces been used"
+  },
+  "A11Y_IATABLE_USAGE_FLAG": {
+    "kind": "flag",
+    "description": "has the IAccessibleTable accessibility interface been used"
+  },
+  "A11Y_XFORMS_USAGE_FLAG": {
+    "kind": "flag",
+    "description": "has XForms accessibility been instantiated"
+  },
+  "A11Y_UPDATE_TIME": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "time spent updating accessibility (ms)"
+  },
+  "CYCLE_COLLECTOR": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent on one cycle collection (ms)"
+  },
+  "CYCLE_COLLECTOR_VISITED_REF_COUNTED": {
+    "kind": "exponential",
+    "high": "300000",
+    "n_buckets": 50,
+    "description": "Number of ref counted objects visited by the cycle collector"
+  },
+  "CYCLE_COLLECTOR_VISITED_GCED": {
+    "kind": "exponential",
+    "high": "300000",
+    "n_buckets": 50,
+    "description": "Number of JS objects visited by the cycle collector"
+  },
+  "CYCLE_COLLECTOR_COLLECTED": {
+    "kind": "exponential",
+    "high": "100000",
+    "n_buckets": 50,
+    "description": "Number of objects collected by the cycle collector"
+  },
+  "CYCLE_COLLECTOR_NEED_GC": {
+    "kind": "boolean",
+    "description": "Needed garbage collection before cycle collection."
+  },
+  "CYCLE_COLLECTOR_TIME_BETWEEN": {
+    "kind": "exponential",
+    "high": "120",
+    "n_buckets": 50,
+    "description": "Time spent in between cycle collections (seconds)"
+  },
+  "CYCLE_COLLECTOR_CONTENT_UNBIND": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent on one ContentUnbinder (ms)"
+  },
+  "FORGET_SKIPPABLE_MAX": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Max time spent on one forget skippable (ms)"
+  },
+  "GC_REASON_2": {
+    "kind": "enumerated",
+    "n_values": "js::gcreason::NUM_TELEMETRY_REASONS",
+    "description": "Reason (enum value) for initiating a GC"
+  },
+  "GC_IS_COMPARTMENTAL": {
+    "kind": "boolean",
+    "description": "Is it a compartmental GC?"
+  },
+  "GC_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent running JS GC (ms)"
+  },
+  "GC_MAX_PAUSE_MS": {
+    "kind": "linear",
+    "high": "1000",
+    "n_buckets": 50,
+    "description": "Longest GC slice in a GC (ms)"
+  },
+  "GC_MARK_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent running JS GC mark phase (ms)"
+  },
+  "GC_SWEEP_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent running JS GC sweep phase (ms)"
+  },
+  "GC_MARK_ROOTS_MS": {
+    "kind": "linear",
+    "high": "200",
+    "n_buckets": 50,
+    "description": "Time spent marking GC roots (ms)"
+  },
+  "GC_MARK_GRAY_MS": {
+    "kind": "linear",
+    "high": "200",
+    "n_buckets": 50,
+    "description": "Time spent marking gray GC objects (ms)"
+  },
+  "GC_SLICE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent running a JS GC slice (ms)"
+  },
+  "GC_MMU_50": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 20,
+    "description": "Minimum percentage of time spent outside GC over any 50ms window"
+  },
+  "GC_RESET": {
+    "kind": "boolean",
+    "description": "Was an incremental GC canceled?"
+  },
+  "GC_INCREMENTAL_DISABLED": {
+    "kind": "boolean",
+    "description": "Is incremental GC permanently disabled?"
+  },
+  "GC_NON_INCREMENTAL": {
+    "kind": "boolean",
+    "description": "Was the GC non-incremental?"
+  },
+  "GC_SCC_SWEEP_TOTAL_MS": {
+    "kind": "linear",
+    "high": "500",
+    "n_buckets": 50,
+    "description": "Time spent sweeping compartment SCCs (ms)"
+  },
+  "GC_SCC_SWEEP_MAX_PAUSE_MS": {
+    "kind": "linear",
+    "high": "500",
+    "n_buckets": 50,
+    "description": "Time spent sweeping slowest compartment SCC (ms)"
+  },
+  "TELEMETRY_PING": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time taken to submit telemetry info (ms)"
+  },
+  "TELEMETRY_SUCCESS": {
+    "kind": "boolean",
+    "description": "Successful telemetry submission"
+  },
+  "MEMORY_JS_COMPARTMENTS_SYSTEM": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50,
+    "description": "Total JavaScript compartments used for add-ons and internals."
+  },
+  "MEMORY_JS_COMPARTMENTS_USER": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50,
+    "description": "Total JavaScript compartments used for web pages"
+  },
+  "MEMORY_JS_GC_HEAP": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "512 * 1024",
+    "n_buckets": 50,
+    "description": "Memory used by the garbage-collected JavaScript heap (KB)"
+  },
+  "MEMORY_STORAGE_SQLITE": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "512 * 1024",
+    "n_buckets": 50,
+    "description": "Memory used by SQLite (KB)"
+  },
+  "MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "1024 * 1024",
+    "n_buckets": 50,
+    "description": "Memory used for uncompressed, in-use content images (KB)"
+  },
+  "MEMORY_HEAP_ALLOCATED": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "1024 * 1024",
+    "n_buckets": 50,
+    "description": "Heap memory allocated (KB)"
+  },
+  "MEMORY_HEAP_COMMITTED_UNUSED": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "512 * 1024",
+    "n_buckets": 50,
+    "description": "Committed, unused heap memory (KB)"
+  },
+  "MEMORY_HEAP_COMMITTED_UNUSED_RATIO": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 25,
+    "description": "Ratio of committed, unused memory to allocated memory in the heap (percentage)."
+  },
+  "MEMORY_EXPLICIT": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "1024 * 1024",
+    "n_buckets": 50,
+    "description": "Explicit memory allocations (KB)"
+  },
+  "GHOST_WINDOWS": {
+    "kind": "exponential",
+    "high": "128",
+    "n_buckets": 8,
+    "description": "Number of ghost windows"
+  },
+  "MEMORY_FREE_PURGED_PAGES_MS": {
+    "kind": "exponential",
+    "high": "1024",
+    "n_buckets": 10,
+    "description": "Time(ms) to purge MADV_FREE'd heap pages.",
+    "cpp_guard": "XP_MACOSX"
+  },
+  "LOW_MEMORY_EVENTS_VIRTUAL": {
+    "kind": "exponential",
+    "high": "1024",
+    "n_buckets": 21,
+    "description": "Number of low-virtual-memory events fired since last ping",
+    "cpp_guard": "XP_WIN"
+  },
+  "LOW_MEMORY_EVENTS_PHYSICAL": {
+    "kind": "exponential",
+    "high": "1024",
+    "n_buckets": 21,
+    "description": "Number of low-physical-memory events fired since last ping",
+    "cpp_guard": "XP_WIN"
+  },
+  "LOW_MEMORY_EVENTS_COMMIT_SPACE": {
+    "kind": "exponential",
+    "high": "1024",
+    "n_buckets": 21,
+    "description": "Number of low-commit-space events fired since last ping",
+    "cpp_guard": "XP_WIN"
+  },
+  "EARLY_GLUESTARTUP_READ_OPS": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 12,
+    "description": "ProcessIoCounters.ReadOperationCount before glue startup",
+    "cpp_guard": "XP_WIN"
+  },
+  "EARLY_GLUESTARTUP_READ_TRANSFER": {
+    "kind": "exponential",
+    "high": "50 * 1024",
+    "n_buckets": 12,
+    "description": "ProcessIoCounters.ReadTransferCount before glue startup (KB)",
+    "cpp_guard": "XP_WIN"
+  },
+  "GLUESTARTUP_READ_OPS": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 12,
+    "description": "ProcessIoCounters.ReadOperationCount after glue startup",
+    "cpp_guard": "XP_WIN"
+  },
+  "GLUESTARTUP_READ_TRANSFER": {
+    "kind": "exponential",
+    "high": "50 * 1024",
+    "n_buckets": 12,
+    "description": "ProcessIoCounters.ReadTransferCount after glue startup (KB)",
+    "cpp_guard": "XP_WIN"
+  },
+  "EARLY_GLUESTARTUP_HARD_FAULTS": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 12,
+    "description": "Hard faults count before glue startup",
+    "cpp_guard": "XP_UNIX"
+  },
+  "GLUESTARTUP_HARD_FAULTS": {
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": 12,
+    "description": "Hard faults count after glue startup",
+    "cpp_guard": "XP_UNIX"
+  },
+  "PAGE_FAULTS_HARD": {
+    "kind": "exponential",
+    "low": 8,
+    "high": "64 * 1024",
+    "n_buckets": 13,
+    "description": "Hard page faults (since last telemetry ping)",
+    "cpp_guard": "XP_UNIX"
+  },
+  "FONTLIST_INITOTHERFAMILYNAMES": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "Time(ms) spent on reading other family names from all fonts"
+  },
+  "FONTLIST_INITFACENAMELISTS": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "Time(ms) spent on reading family names from all fonts"
+  },
+  "DWRITEFONT_INITFONTLIST_TOTAL": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "description": "gfxDWriteFontList::InitFontList Total (ms)",
+    "cpp_guard": "XP_WIN"
+  },
+  "DWRITEFONT_INITFONTLIST_INIT": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "description": "gfxDWriteFontList::InitFontList init (ms)",
+    "cpp_guard": "XP_WIN"
+  },
+  "DWRITEFONT_INITFONTLIST_GDI": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "description": "gfxDWriteFontList::InitFontList GdiInterop object (ms)",
+    "cpp_guard": "XP_WIN"
+  },
+  "DWRITEFONT_DELAYEDINITFONTLIST_TOTAL": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "description": "gfxDWriteFontList::DelayedInitFontList Total (ms)",
+    "cpp_guard": "XP_WIN"
+  },
+  "DWRITEFONT_DELAYEDINITFONTLIST_COUNT": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "gfxDWriteFontList::DelayedInitFontList Font Family Count",
+    "cpp_guard": "XP_WIN"
+  },
+  "DWRITEFONT_DELAYEDINITFONTLIST_GDI_TABLE": {
+    "kind": "boolean",
+    "description": "gfxDWriteFontList::DelayedInitFontList GDI Table Access",
+    "cpp_guard": "XP_WIN"
+  },
+  "DWRITEFONT_DELAYEDINITFONTLIST_COLLECT": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "description": "gfxDWriteFontList::DelayedInitFontList GetSystemFontCollection (ms)",
+    "cpp_guard": "XP_WIN"
+  },
+  "DWRITEFONT_DELAYEDINITFONTLIST_ITERATE": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "description": "gfxDWriteFontList::DelayedInitFontList iterate over families (ms)",
+    "cpp_guard": "XP_WIN"
+  },
+  "GDI_INITFONTLIST_TOTAL": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "description": "gfxGDIFontList::InitFontList Total (ms)",
+    "cpp_guard": "XP_WIN"
+  },
+  "MAC_INITFONTLIST_TOTAL": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "description": "gfxMacPlatformFontList::InitFontList Total (ms)",
+    "cpp_guard": "XP_MACOSX"
+  },
+  "SYSTEM_FONT_FALLBACK": {
+    "kind": "exponential",
+    "high": "100000",
+    "n_buckets": 50,
+    "description": "System font fallback (us)"
+  },
+  "SYSTEM_FONT_FALLBACK_FIRST": {
+    "kind": "exponential",
+    "high": "40000",
+    "n_buckets": 20,
+    "description": "System font fallback, first call (ms)"
+  },
+  "SYSTEM_FONT_FALLBACK_SCRIPT": {
+    "kind": "linear",
+    "high": "110",
+    "n_buckets": 111,
+    "description": "System font fallback script"
+  },
+  "GRADIENT_DURATION": {
+    "kind": "exponential",
+    "high":"50000000",
+    "n_buckets":20,
+    "description": "Gradient generation time (us)"
+  },
+  "GRADIENT_RETENTION_TIME": {
+    "kind": "linear",
+    "high": "10000",
+    "n_buckets":20,
+    "description": "Maximum retention time for the gradient cache. (ms)"
+  },
+  "STARTUP_CACHE_AGE_HOURS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 20,
+    "description": "Startup cache age (hours)"
+  },
+  "WORD_CACHE_HITS": {
+    "kind": "exponential",
+    "high": "256",
+    "n_buckets": 30,
+    "description": "Word cache hits (chars)"
+  },
+  "WORD_CACHE_MISSES": {
+    "kind": "exponential",
+    "high": "256",
+    "n_buckets": 30,
+    "description": "Word cache misses (chars)"
+  },
+  "FONT_CACHE_HIT": {
+    "kind": "boolean",
+    "description": "font cache hit"
+  },
+  "BAD_FALLBACK_FONT": {
+    "kind": "boolean",
+    "description": "system fallback font can't be used"
+  },
+  "SHUTDOWN_OK": {
+    "kind": "boolean",
+    "description": "Did the browser start after a successful shutdown"
+  },
+  "IMAGE_DECODE_LATENCY": {
+    "kind": "exponential",
+    "low": 50,
+    "high": "5000000",
+    "n_buckets": 100,
+    "description": "Time spent decoding an image chunk (us)"
+  },
+  "IMAGE_DECODE_TIME": {
+    "kind": "exponential",
+    "low": 50,
+    "high": "50000000",
+    "n_buckets": 100,
+    "description": "Time spent decoding an image (us)"
+  },
+  "IMAGE_DECODE_ON_DRAW_LATENCY": {
+    "kind": "exponential",
+    "low": 50,
+    "high": "50000000",
+    "n_buckets": 100,
+    "description": "Time from starting a decode to it showing up on the screen (us)"
+  },
+  "IMAGE_DECODE_CHUNKS": {
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": 50,
+    "description": "Number of chunks per decode attempt"
+  },
+  "IMAGE_DECODE_COUNT": {
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": 50,
+    "description": "Decode count"
+  },
+  "IMAGE_DECODE_SPEED_JPEG": {
+    "kind": "exponential",
+    "low": 500,
+    "high": "50000000",
+    "n_buckets": 50,
+    "description": "JPEG image decode speed (Kbytes/sec)"
+  },
+  "IMAGE_DECODE_SPEED_GIF": {
+    "kind": "exponential",
+    "low": 500,
+    "high": "50000000",
+    "n_buckets": 50,
+    "description": "GIF image decode speed (Kbytes/sec)"
+  },
+  "IMAGE_DECODE_SPEED_PNG": {
+    "kind": "exponential",
+    "low": 500,
+    "high": "50000000",
+    "n_buckets": 50,
+    "description": "PNG image decode speed (Kbytes/sec)"
+  },
+  "CANVAS_2D_USED": {
+    "kind": "boolean",
+    "description": "2D canvas used"
+  },
+  "CANVAS_WEBGL_USED": {
+    "kind": "boolean",
+    "description": "WebGL canvas used"
+  },
+  "TOTAL_CONTENT_PAGE_LOAD_TIME": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "30000",
+    "n_buckets": 100,
+    "description": "HTTP: Total page load time (ms)"
+  },
+  "HTTP_SUBITEM_OPEN_LATENCY_TIME": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: Page start -> subitem open() (ms)"
+  },
+  "HTTP_SUBITEM_FIRST_BYTE_LATENCY_TIME": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: Page start -> first byte received for subitem reply (ms)"
+  },
+  "HTTP_REQUEST_PER_PAGE": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50,
+    "description": "HTTP: Requests per page (count)"
+  },
+  "HTTP_REQUEST_PER_PAGE_FROM_CACHE": {
+    "kind": "linear",
+    "high": "101",
+    "n_buckets": 102,
+    "description": "HTTP: Requests serviced from cache (%)"
+  },
+  "HTTP_REQUEST_PER_CONN": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50,
+    "description": "HTTP: requests per connection"
+  },
+  "HTTP_KBREAD_PER_CONN": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 50,
+    "description": "HTTP: KB read per connection"
+  },
+  "HTTP_PAGE_DNS_ISSUE_TIME": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: open() -> DNS request issued (ms)"
+  },
+  "HTTP_PAGE_DNS_LOOKUP_TIME": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: DNS lookup time (ms)"
+  },
+  "HTTP_PAGE_TCP_CONNECTION": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: TCP connection setup (ms)"
+  },
+  "HTTP_PAGE_OPEN_TO_FIRST_SENT": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: Open -> first byte of request sent (ms)"
+  },
+  "HTTP_PAGE_FIRST_SENT_TO_LAST_RECEIVED": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: First byte of request sent -> last byte of response received (ms)"
+  },
+  "HTTP_PAGE_OPEN_TO_FIRST_RECEIVED": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: Open -> first byte of reply received (ms)"
+  },
+  "HTTP_PAGE_OPEN_TO_FIRST_FROM_CACHE": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: Open -> cache read start (ms)"
+  },
+  "HTTP_PAGE_CACHE_READ_TIME": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: Cache read time (ms)"
+  },
+  "HTTP_PAGE_REVALIDATION": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: Positive cache validation time (ms)"
+  },
+  "HTTP_PAGE_COMPLETE_LOAD": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: Overall load time - all (ms)"
+  },
+  "HTTP_PAGE_COMPLETE_LOAD_CACHED": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: Overall load time - cache hits (ms)"
+  },
+  "HTTP_PAGE_COMPLETE_LOAD_NET": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP page: Overall load time - network (ms)"
+  },
+  "HTTP_SUB_DNS_ISSUE_TIME": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: open() -> DNS request issued (ms)"
+  },
+  "HTTP_SUB_DNS_LOOKUP_TIME": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: DNS lookup time (ms)"
+  },
+  "HTTP_SUB_TCP_CONNECTION": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: TCP connection setup (ms)"
+  },
+  "HTTP_SUB_OPEN_TO_FIRST_SENT": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: Open -> first byte of request sent (ms)"
+  },
+  "HTTP_SUB_FIRST_SENT_TO_LAST_RECEIVED": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: First byte of request sent -> last byte of response received (ms)"
+  },
+  "HTTP_SUB_OPEN_TO_FIRST_RECEIVED": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: Open -> first byte of reply received (ms)"
+  },
+  "HTTP_SUB_OPEN_TO_FIRST_FROM_CACHE": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: Open -> cache read start (ms)"
+  },
+  "HTTP_SUB_CACHE_READ_TIME": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: Cache read time (ms)"
+  },
+  "HTTP_SUB_REVALIDATION": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: Positive cache validation time (ms)"
+  },
+  "HTTP_SUB_COMPLETE_LOAD": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: Overall load time - all (ms)"
+  },
+  "HTTP_SUB_COMPLETE_LOAD_CACHED": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: Overall load time - cache hits (ms)"
+  },
+  "HTTP_SUB_COMPLETE_LOAD_NET": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "description": "HTTP subitem: Overall load time - network (ms)"
+  },
+  "SPDY_VERSION2": {
+    "kind": "enumerated",
+    "n_values": 48,
+    "description": "SPDY: Protocol Version Used"
+  },
+  "SPDY_PARALLEL_STREAMS": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50,
+    "description": "SPDY: Streams concurrent active per connection"
+  },
+  "SPDY_REQUEST_PER_CONN": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50,
+    "description": "SPDY: Streams created per connection"
+  },
+  "SPDY_SERVER_INITIATED_STREAMS": {
+    "kind": "exponential",
+    "high": "100000",
+    "n_buckets": 250,
+    "description": "SPDY: Streams recevied per connection"
+  },
+  "SPDY_CHUNK_RECVD": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 100,
+    "description": "SPDY: Recvd Chunk Size (rounded to KB)"
+  },
+  "SPDY_SYN_SIZE": {
+    "kind": "exponential",
+    "low": 20,
+    "high": "20000",
+    "n_buckets": 50,
+    "description": "SPDY: SYN Frame Header Size"
+  },
+  "SPDY_SYN_RATIO": {
+    "kind": "linear",
+    "high": "99",
+    "n_buckets": 20,
+    "description": "SPDY: SYN Frame Header Ratio (lower better)"
+  },
+  "SPDY_SYN_REPLY_SIZE": {
+    "kind": "exponential",
+    "low": 16,
+    "high": "20000",
+    "n_buckets": 50,
+    "description": "SPDY: SYN Reply Header Size"
+  },
+  "SPDY_SYN_REPLY_RATIO": {
+    "kind": "linear",
+    "high": "99",
+    "n_buckets": 20,
+    "description": "SPDY: SYN Reply Header Ratio (lower better)"
+  },
+  "SPDY_NPN_CONNECT": {
+    "kind": "boolean",
+    "description": "SPDY: NPN Negotiated"
+  },
+  "SPDY_NPN_JOIN": {
+    "kind": "boolean",
+    "description": "SPDY: Coalesce Succeeded"
+  },
+  "SPDY_KBREAD_PER_CONN": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 50,
+    "description": "SPDY: KB read per connection"
+  },
+  "SPDY_PING_EXPERIMENT_PASS": {
+    "kind": "linear",
+    "low": 10,
+    "high": "355",
+    "n_buckets": 64,
+    "description": "SPDY: Ping Interval Passed"
+  },
+  "SPDY_PING_EXPERIMENT_FAIL": {
+    "kind": "linear",
+    "low": 10,
+    "high": "355",
+    "n_buckets": 64,
+    "description": "SPDY: Ping Interval Failed"
+  },
+  "SPDY_SETTINGS_UL_BW": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 100,
+    "description": "SPDY: Settings Upload Bandwidth"
+  },
+  "SPDY_SETTINGS_DL_BW": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 100,
+    "description": "SPDY: Settings Download Bandwidth"
+  },
+  "SPDY_SETTINGS_RTT": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 100,
+    "description": "SPDY: Settings RTT"
+  },
+  "SPDY_SETTINGS_MAX_STREAMS": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 100,
+    "description": "SPDY: Settings Max Streams parameter"
+  },
+  "SPDY_SETTINGS_CWND": {
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": 50,
+    "description": "SPDY: Settings CWND (packets)"
+  },
+  "SPDY_SETTINGS_RETRANS": {
+    "kind": "exponential",
+    "high": "100",
+    "n_buckets": 50,
+    "description": "SPDY: Retransmission Rate"
+  },
+  "SPDY_SETTINGS_IW": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50,
+    "description": "SPDY: Settings IW (rounded to KB)"
+  },
+  "DISK_CACHE_CORRUPT_DETAILS": {
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Why the HTTP disk cache was corrupted at startup"
+  },
+  "DISK_CACHE_REDUCTION_TRIAL": {
+    "kind": "boolean",
+    "description": "Stores 1 if the cache would be clean with the disk cache corruption plan of Bug 105843"
+  },
+  "HTTP_CACHE_DISPOSITION_2": {
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "HTTP Cache Hit, Reval, Failed-Reval, Miss"
+  },
+  "HTTP_DISK_CACHE_DISPOSITION_2": {
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "HTTP Disk Cache Hit, Reval, Failed-Reval, Miss"
+  },
+  "HTTP_MEMORY_CACHE_DISPOSITION_2": {
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "HTTP Memory Cache Hit, Reval, Failed-Reval, Miss"
+  },
+  "HTTP_OFFLINE_CACHE_DISPOSITION_2": {
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "HTTP Offline Cache Hit, Reval, Failed-Reval, Miss"
+  },
+  "CACHE_DEVICE_SEARCH_2": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time to search cache (ms)"
+  },
+  "CACHE_MEMORY_SEARCH_2": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time to search memory cache (ms)"
+  },
+  "CACHE_DISK_SEARCH_2": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time to search disk cache (ms)"
+  },
+  "CACHE_OFFLINE_SEARCH_2": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time to search offline cache (ms)"
+  },
+  "HTTP_DISK_CACHE_OVERHEAD": {
+    "kind": "exponential",
+    "high": "32000000",
+    "n_buckets": 100,
+    "description": "HTTP Disk cache memory overhead (bytes)"
+  },
+  "CACHE_LM_INCONSISTENT": {
+    "kind": "boolean",
+    "description": "Cache discovered inconsistent last-modified entry"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_2": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms)"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_2": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock on the main thread (ms)"
+  },
+  "DISK_CACHE_SMART_SIZE_USING_OLD_MAX": {
+    "kind": "boolean",
+    "description": "Whether we are using the old default cache smart size"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSSETDISKSMARTSIZECALLBACK_NOTIFY": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSSETDISKSMARTSIZECALLBACK_NOTIFY"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSPROCESSREQUESTEVENT_RUN": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSPROCESSREQUESTEVENT_RUN"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSOUTPUTSTREAMWRAPPER_LAZYINIT": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_LAZYINIT"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSOUTPUTSTREAMWRAPPER_CLOSE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSOUTPUTSTREAMWRAPPER_CLOSE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSINPUTSTREAMWRAPPER_LAZYINIT": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSINPUTSTREAMWRAPPER_LAZYINIT"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSEVICTDISKCACHEENTRIESEVENT_RUN": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSEVICTDISKCACHEENTRIESEVENT_RUN"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDOOMEVENT_RUN": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDOOMEVENT_RUN"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDISKCACHESTREAMIO_WRITE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHESTREAMIO_WRITE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDISKCACHESTREAMIO_CLOSEOUTPUTSTREAM": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHESTREAMIO_CLOSEOUTPUTSTREAM"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDISKCACHEDEVICEDEACTIVATEENTRYEVENT_RUN": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHEDEVICEDEACTIVATEENTRYEVENT_RUN"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDISKCACHEBINDING_DESTRUCTOR": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHEBINDING_DESTRUCTOR"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_SHUTDOWN": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_SHUTDOWN"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_SETOFFLINECACHEENABLED": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_SETOFFLINECACHEENABLED"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_SETOFFLINECACHECAPACITY": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_SETOFFLINECACHECAPACITY"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_SETMEMORYCACHE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_SETMEMORYCACHE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_SETDISKSMARTSIZE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_SETDISKSMARTSIZE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_SETDISKCACHEMAXENTRYSIZE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_SETDISKCACHEMAXENTRYSIZE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_SETMEMORYCACHEMAXENTRYSIZE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_SETMEMORYCACHEMAXENTRYSIZE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_SETDISKCACHEENABLED": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_SETDISKCACHEENABLED"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_SETDISKCACHECAPACITY": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_SETDISKCACHECAPACITY"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_OPENCACHEENTRY": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_OPENCACHEENTRY"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_ONPROFILESHUTDOWN": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_ONPROFILESHUTDOWN"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_ONPROFILECHANGED": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_ONPROFILECHANGED"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_LEAVEPRIVATEBROWSING": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_LEAVEPRIVATEBROWSING"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_ISSTORAGEENABLEDFORPOLICY": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_ISSTORAGEENABLEDFORPOLICY"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_GETCACHEIOTARGET": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_GETCACHEIOTARGET"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_EVICTENTRIESFORCLIENT": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_EVICTENTRIESFORCLIENT"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_DOOM": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_DOOM"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_SETPREDICTEDDATASIZE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_SETPREDICTEDDATASIZE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETDATASIZE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETDATASIZE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETSTORAGEDATASIZE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETSTORAGEDATASIZE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_REQUESTDATASIZECHANGE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_REQUESTDATASIZECHANGE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_SETDATASIZE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_SETDATASIZE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_OPENINPUTSTREAM": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_OPENINPUTSTREAM"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_OPENOUTPUTSTREAM": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_OPENOUTPUTSTREAM"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETCACHEELEMENT": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETCACHEELEMENT"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_SETCACHEELEMENT": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_SETCACHEELEMENT"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETSTORAGEPOLICY": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETSTORAGEPOLICY"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_SETSTORAGEPOLICY": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_SETSTORAGEPOLICY"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETFILE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETFILE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETSECURITYINFO": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETSECURITYINFO"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_SETSECURITYINFO": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_SETSECURITYINFO"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_DOOMANDFAILPENDINGREQUESTS": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_DOOMANDFAILPENDINGREQUESTS"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_MARKVALID": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_MARKVALID"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_CLOSE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_CLOSE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETMETADATAELEMENT": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETMETADATAELEMENT"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_SETMETADATAELEMENT": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_SETMETADATAELEMENT"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_VISITMETADATA": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_VISITMETADATA"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_SETEXPIRATIONTIME": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_SETEXPIRATIONTIME"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_ISSTREAMBASED": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_ISSTREAMBASED"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETLASTMODIFIED": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETLASTMODIFIED"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETEXPIRATIONTIME": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETEXPIRATIONTIME"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETKEY": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETKEY"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETFETCHCOUNT": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETFETCHCOUNT"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETDEVICEID": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETDEVICEID"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_PROCESSREQUEST": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_PROCESSREQUEST"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_VISITENTRIES": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_VISITENTRIES"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETPREDICTEDDATASIZE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETPREDICTEDDATASIZE"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETLASTFETCHED": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETLASTFETCHED"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_GETCLIENTID": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHEENTRYDESCRIPTOR_GETCLIENTID"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSBLOCKONCACHETHREADEVENT_RUN": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSBLOCKONCACHETHREADEVENT_RUN"
+  },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDISKCACHEMAP_REVALIDATION": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHEMAP_REVALIDATION"
+  },
+  "DNS_LOOKUP_METHOD2": {
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "DNS Lookup Type (hit, renewal, negative-hit, literal, overflow, network-first, network-shared)"
+  },
+  "DNS_CLEANUP_AGE": {
+    "kind": "exponential",
+    "high": "1440",
+    "n_buckets": 50,
+    "description": "DNS Cache Entry Age at Removal Time (minutes)"
+  },
+  "DNS_LOOKUP_TIME": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "description": "Time for a successful DNS OS resolution (msec)"
+  },
+  "DNS_RENEWAL_TIME": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "description": "Time for a renewed DNS OS resolution (msec)"
+  },
+  "DNS_FAILED_LOOKUP_TIME": {
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "description": "Time for an unsuccessful DNS OS resolution (msec)"
+  },
+  "FIND_PLUGINS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent scanning filesystem for plugins (ms)"
+  },
+  "CHECK_JAVA_ENABLED": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent checking if Java is enabled (ms)"
+  },
+  "PLUGIN_SHUTDOWN_MS": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 20,
+    "description": "Time spent shutting down plugins (ms)"
+  },
+  "MOZ_SQLITE_OPEN_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite open() (ms)"
+  },
+  "MOZ_SQLITE_OPEN_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite open() (ms)"
+  },
+  "MOZ_SQLITE_TRUNCATE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite truncate() (ms)"
+  },
+  "MOZ_SQLITE_TRUNCATE_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite truncate() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_READ_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_READ_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_READ_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_READ_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_READ_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_READ_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_READ_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_READ_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_WRITE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_WRITE_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_WRITE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_WRITE_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_WRITE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_WRITE_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_WRITE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_WRITE_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite write() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_SYNC_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_SYNC_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_SYNC_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_PLACES_SYNC_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_SYNC_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_SYNC_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_SYNC_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_WEBAPPS_SYNC_MAIN_THREAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on SQLite fsync() (ms)"
+  },
+  "MOZ_SQLITE_OTHER_READ_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite read() (bytes)"
+  },
+  "MOZ_SQLITE_PLACES_READ_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite read() (bytes)"
+  },
+  "MOZ_SQLITE_COOKIES_READ_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite read() (bytes)"
+  },
+  "MOZ_SQLITE_WEBAPPS_READ_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite read() (bytes)"
+  },
+  "MOZ_SQLITE_PLACES_WRITE_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite write (bytes)"
+  },
+  "MOZ_SQLITE_COOKIES_WRITE_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite write (bytes)"
+  },
+  "MOZ_SQLITE_WEBAPPS_WRITE_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite write (bytes)"
+  },
+  "MOZ_SQLITE_OTHER_WRITE_B": {
+    "kind": "linear",
+    "high": "32768",
+    "n_buckets": 3,
+    "description": "SQLite write (bytes)"
+  },
+  "MOZ_STORAGE_ASYNC_REQUESTS_MS": {
+    "kind": "exponential",
+    "high": "32768",
+    "n_buckets": 20,
+    "description": "mozStorage async requests completion (ms)"
+  },
+  "MOZ_STORAGE_ASYNC_REQUESTS_SUCCESS": {
+    "kind": "boolean",
+    "description": "mozStorage async requests success"
+  },
+  "STARTUP_MEASUREMENT_ERRORS": {
+    "kind": "enumerated",
+    "n_values": "mozilla::StartupTimeline::MAX_EVENT_ID",
+    "description": "Flags errors in startup calculation()"
+  },
+  "NETWORK_DISK_CACHE_OPEN": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent opening disk cache (ms)"
+  },
+  "NETWORK_DISK_CACHE_TRASHRENAME": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent renaming bad Cache to Cache.Trash (ms)"
+  },
+  "NETWORK_DISK_CACHE_DELETEDIR": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent deleting disk cache (ms)"
+  },
+  "NETWORK_DISK_CACHE_DELETEDIR_SHUTDOWN": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent during showdown stopping thread deleting old disk cache (ms)"
+  },
+  "NETWORK_DISK_CACHE_SHUTDOWN": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Total Time spent (ms) during disk cache showdown"
+  },
+  "NETWORK_DISK_CACHE_SHUTDOWN_CLEAR_PRIVATE": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent (ms) during showdown deleting disk cache for 'clear private data' option"
+  },
+  "NETWORK_DISK_CACHE_REVALIDATION": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Total Time spent (ms) during disk cache revalidation"
+  },
+  "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent in nsDiskCacheOutputStream::Close() on non-main thread (ms)"
+  },
+  "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_MAIN_THREAD": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent in nsDiskCacheOutputStream::Close() on the main thread (ms)"
+  },
+  "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent in nsDiskCacheOutputStream::CloseInternal() on non-main thread (ms)"
+  },
+  "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL_MAIN_THREAD": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "Time spent in nsDiskCacheOutputStream::CloseInternal on the main thread (ms)"
+  },
+  "IDLE_NOTIFY_BACK_MS": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 10,
+    "description": "Time spent checking for and notifying listeners that the user is back (ms)"
+  },
+  "IDLE_NOTIFY_BACK_LISTENERS": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 20,
+    "description": "Number of listeners notified that the user is back"
+  },
+  "IDLE_NOTIFY_IDLE_MS": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 10,
+    "description": "Time spent checking for and notifying listeners that the user is idle (ms)"
+  },
+  "IDLE_NOTIFY_IDLE_LISTENERS": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 20,
+    "description": "Number of listeners notified that the user is idle"
+  },
+  "URLCLASSIFIER_LOOKUP_TIME": {
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": 10,
+    "description": "Time spent per dbservice lookup (ms)"
+  },
+  "URLCLASSIFIER_CL_CHECK_TIME": {
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": 10,
+    "description": "Time spent per classifier lookup (ms)"
+  },
+  "URLCLASSIFIER_CL_UPDATE_TIME": {
+    "kind": "exponential",
+    "low": 20,
+    "high": "15000",
+    "n_buckets": 15,
+    "description": "Time spent per classifier update (ms)"
+  },
+  "URLCLASSIFIER_PS_FILELOAD_TIME": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 10,
+    "description": "Time spent loading PrefixSet from file (ms)"
+  },
+  "URLCLASSIFIER_PS_FALLOCATE_TIME": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 10,
+    "description": "Time spent fallocating PrefixSet (ms)"
+  },
+  "URLCLASSIFIER_PS_CONSTRUCT_TIME": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 15,
+    "description": "Time spent constructing PrefixSet from DB (ms)"
+  },
+  "URLCLASSIFIER_LC_PREFIXES": {
+    "kind": "linear",
+    "high": "1500000",
+    "n_buckets": 15,
+    "description": "Size of the prefix cache in entries"
+  },
+  "URLCLASSIFIER_LC_COMPLETIONS": {
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": 10,
+    "description": "Size of the completion cache in entries"
+  },
+  "URLCLASSIFIER_PS_FAILURE": {
+    "kind": "boolean",
+    "description": "Did UrlClassifier fail to construct the PrefixSet?"
+  },
+  "PLACES_PAGES_COUNT": {
+    "kind": "exponential",
+    "low": 1000,
+    "high": "150000",
+    "n_buckets": 20,
+    "description": "PLACES: Number of unique pages"
+  },
+  "PLACES_BOOKMARKS_COUNT": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "8000",
+    "n_buckets": 15,
+    "description": "PLACES: Number of bookmarks"
+  },
+  "PLACES_TAGS_COUNT": {
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": 10,
+    "description": "PLACES: Number of tags"
+  },
+  "PLACES_FOLDERS_COUNT": {
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": 10,
+    "description": "PLACES: Number of folders"
+  },
+  "PLACES_KEYWORDS_COUNT": {
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": 10,
+    "description": "PLACES: Number of keywords"
+  },
+  "PLACES_SORTED_BOOKMARKS_PERC": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 10,
+    "description": "PLACES: Percentage of bookmarks organized in folders"
+  },
+  "PLACES_TAGGED_BOOKMARKS_PERC": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 10,
+    "description": "PLACES: Percentage of tagged bookmarks"
+  },
+  "PLACES_DATABASE_FILESIZE_MB": {
+    "kind": "exponential",
+    "low": 5,
+    "high": "200",
+    "n_buckets": 10,
+    "description": "PLACES: Database filesize (MB)"
+  },
+  "PLACES_DATABASE_JOURNALSIZE_MB": {
+    "kind": "exponential",
+    "high": "50",
+    "n_buckets": 10,
+    "description": "PLACES: Database journal size (MB)"
+  },
+  "PLACES_DATABASE_PAGESIZE_B": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "32768",
+    "n_buckets": 10,
+    "description": "PLACES: Database page size (bytes)"
+  },
+  "PLACES_DATABASE_SIZE_PER_PAGE_B": {
+    "kind": "exponential",
+    "low": 500,
+    "high": "10240",
+    "n_buckets": 20,
+    "description": "PLACES: Average size of a place in the database (bytes)"
+  },
+  "PLACES_EXPIRATION_STEPS_TO_CLEAN2": {
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "PLACES: Expiration steps to cleanup the database"
+  },
+  "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS": {
+    "kind": "exponential",
+    "low": 50,
+    "high": "500",
+    "n_buckets": 10,
+    "description": "PLACES: Time for first autocomplete result if > 50ms (ms)"
+  },
+  "PLACES_IDLE_FRECENCY_DECAY_TIME_MS": {
+    "kind": "exponential",
+    "low": 50,
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "PLACES: Time to decay all frecencies values on idle (ms)"
+  },
+  "PLACES_IDLE_MAINTENANCE_TIME_MS": {
+    "kind": "exponential",
+    "low": 1000,
+    "high": "30000",
+    "n_buckets": 10,
+    "description": "PLACES: Time to execute maintenance tasks on idle (ms)"
+  },
+  "PLACES_ANNOS_BOOKMARKS_COUNT": {
+    "kind": "exponential",
+    "low": 50,
+    "high": "5000",
+    "n_buckets": 10,
+    "description": "PLACES: Number of bookmarks annotations"
+  },
+  "PLACES_ANNOS_BOOKMARKS_SIZE_KB": {
+    "kind": "exponential",
+    "low": 10,
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "PLACES: Size of bookmarks annotations (KB)"
+  },
+  "PLACES_ANNOS_PAGES_COUNT": {
+    "kind": "exponential",
+    "low": 50,
+    "high": "5000",
+    "n_buckets": 10,
+    "description": "PLACES: Number of pages annotations"
+  },
+  "PLACES_ANNOS_PAGES_SIZE_KB": {
+    "kind": "exponential",
+    "low": 10,
+    "high": "10000",
+    "n_buckets": 10,
+    "description": "PLACES: Size of pages annotations (KB)"
+  },
+  "PLACES_FRECENCY_CALC_TIME_MS": {
+    "kind": "exponential",
+    "high": "100",
+    "n_buckets": 10,
+    "description": "PLACES: Time to calculate frecency of a page (ms)"
+  },
+  "UPDATER_STATUS_CODES": {
+    "kind": "linear",
+    "high": "50",
+    "n_buckets": 51,
+    "description": "Updater: the status of the latest update performed"
+  },
+  "UPDATER_UPDATES_ENABLED": {
+    "kind": "boolean",
+    "description": "Updater: Whether or not updates are enabled"
+  },
+  "UPDATER_UPDATES_AUTOMATIC": {
+    "kind": "boolean",
+    "description": "Updater: Whether or not updates are automatic"
+  },
+  "UPDATER_SERVICE_ENABLED": {
+    "kind": "boolean",
+    "description": "Updater: Whether or not the MozillaMaintenance service is enabled"
+  },
+  "UPDATER_SERVICE_ERRORS": {
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": 31,
+    "description": "Updater: The number of MozillaMaintenance service errors that have occurred"
+  },
+  "UPDATER_SERVICE_INSTALLED": {
+    "kind": "boolean",
+    "description": "Updater: Whether or not the MozillaMaintenance service is installed"
+  },
+  "UPDATER_SERVICE_MANUALLY_UNINSTALLED": {
+    "kind": "boolean",
+    "description": "Updater: Whether or not someone manually uninstalled the service."
+  },
+  "UPDATER_STAGE_ENABLED": {
+    "kind": "boolean",
+    "description": "Updater: Whether or not staging updates are enabled"
+  },
+  "UPDATER_HAS_PERMISSIONS": {
+    "kind": "boolean",
+    "description": "Updater: Whether or not the updater has permissions"
+  },
+  "THUNDERBIRD_GLODA_SIZE_MB": {
+    "kind": "linear",
+    "high": "1000",
+    "n_buckets": 40,
+    "description": "Gloda: size of global-messages-db.sqlite (MB)"
+  },
+  "THUNDERBIRD_CONVERSATIONS_TIME_TO_2ND_GLODA_QUERY_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 30,
+    "description": "Conversations: time between the moment we click and the second gloda query returns (ms)"
+  },
+  "THUNDERBIRD_INDEXING_RATE_MSG_PER_S": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 20,
+    "description": "Gloda: indexing rate (message/s)"
+  },
+  "FX_TAB_ANIM_OPEN_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Firefox: Time taken by the tab opening animation in milliseconds"
+  },
+  "FX_TAB_ANIM_CLOSE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Firefox: Time taken by the tab closing animation in milliseconds"
+  },
+  "FX_KEYWORD_URL_USERSET": {
+    "kind": "boolean",
+    "description": "Firefox: keyword.URL has a user-set value"
+  },
+  "FX_IDENTITY_POPUP_OPEN_MS": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 10,
+    "description": "Firefox: Time taken by the identity popup to open in milliseconds"
+  },
+  "FX_APP_MENU_OPEN_MS": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 10,
+    "description": "Firefox: Time taken by the app-menu opening in milliseconds"
+  },
+  "FX_BOOKMARKS_TOOLBAR_INIT_MS": {
+    "kind": "exponential",
+    "low": 50,
+    "high": "5000",
+    "n_buckets": 10,
+    "description": "Firefox: Time to initialize the bookmarks toolbar view (ms)"
+  },
+  "FX_NEW_WINDOW_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 20,
+    "description": "Firefox: Time taken to open a new browser window (ms)"
+  },
+  "FX_THUMBNAILS_CAPTURE_TIME_MS": {
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": 15,
+    "description": "THUMBNAILS: Time (ms) it takes to capture a thumbnail"
+  },
+  "FX_THUMBNAILS_STORE_TIME_MS": {
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": 15,
+    "description": "THUMBNAILS: Time (ms) it takes to store a thumbnail in the cache"
+  },
+  "FX_THUMBNAILS_HIT_OR_MISS": {
+    "kind": "boolean",
+    "description": "THUMBNAILS: Thumbnail found"
+  },
+  "EVENTLOOP_UI_LAG_EXP_MS": {
+    "kind": "exponential",
+    "low": 50,
+    "high": "60000",
+    "n_buckets": 20,
+    "description": "Widget: Time it takes for the message before a UI message (ms)"
+  },
+  "FX_SESSION_RESTORE_COLLECT_DATA_MS": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "description": "Session restore: Time to collect all window and tab data (ms)"
+  },
+  "FX_SESSION_RESTORE_SERIALIZE_DATA_MS": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 10,
+    "description": "Session restore: Time to JSON serialize session data (ms)"
+  },
+  "FX_SESSION_RESTORE_READ_FILE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Session restore: Time to read the session data from the file on disk (ms)"
+  },
+  "FX_SESSION_RESTORE_WRITE_FILE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Session restore: Time to write the session data to the file on disk (ms)"
+  },
+  "FX_SESSION_RESTORE_CORRUPT_FILE": {
+    "kind": "boolean",
+    "description": "Session restore: Whether the file read on startup contained parse-able JSON"
+  },
+  "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
+    "kind": "boolean",
+    "description": "Deleted or to-be-reused innerwindow which has had mutation event listeners."
+  },
+  "XUL_FOREGROUND_REFLOW_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "XUL reflows in foreground windows (ms)"
+  },
+  "XUL_BACKGROUND_REFLOW_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "XUL reflows in background windows (ms)"
+  },
+  "HTML_FOREGROUND_REFLOW_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "HTML reflows in foreground windows (ms)"
+  },
+  "HTML_BACKGROUND_REFLOW_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "HTML reflows in background windows (ms)"
+  },
+  "XUL_INITIAL_FRAME_CONSTRUCTION": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "initial xul frame construction"
+  },
+  "XMLHTTPREQUEST_ASYNC_OR_SYNC": {
+    "kind": "boolean",
+    "description": "Type of XMLHttpRequest, async or sync"
+  },
+  "MULTIPART_XHR_RESPONSE": {
+    "kind": "boolean",
+    "description": "XMLHttpRequest response was of type multipart/x-mixed-replace."
+  },
+  "PRIVATE_BROWSING_TRANSITION_ENTER_PREPARATION_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on private browsing enter transition, excluding session restore (ms)"
+  },
+  "PRIVATE_BROWSING_TRANSITION_ENTER_TOTAL_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent on private browsing enter transition, including session restore (ms)"
+  },
+  "PRIVATE_BROWSING_TRANSITION_EXIT_PREPARATION_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time spent on private browsing exit transition, excluding session restore (ms)"
+  },
+  "PRIVATE_BROWSING_TRANSITION_EXIT_TOTAL_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent on private browsing exit transition, including session restore (ms)"
+  },
+  "DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "DOM: Timer handlers called per native timer expiration"
+  },
+  "DOM_TIMERS_RECENTLY_SET": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "DOM: setTimeout/setInterval calls recently (last 30s or more)"
+  },
+  "DOM_RANGE_DETACHED": {
+    "kind": "boolean",
+    "description": "DOM: Ranges that are detached on destruction (bug 702948)"
+  },
+  "GLOBALDOMSTORAGE_KEY_SIZE_BYTES": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "32768",
+    "n_buckets": 10,
+    "description": "DOM storage: size of keys stored in globalStorage"
+  },
+  "GLOBALDOMSTORAGE_VALUE_SIZE_BYTES": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "32768",
+    "n_buckets": 10,
+    "description": "DOM storage: size of values stored in globalStorage"
+  },
+  "LOCALDOMSTORAGE_KEY_SIZE_BYTES": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "32768",
+    "n_buckets": 10,
+    "description": "DOM storage: size of keys stored in localStorage"
+  },
+  "LOCALDOMSTORAGE_VALUE_SIZE_BYTES": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "32768",
+    "n_buckets": 10,
+    "description": "DOM storage: size of values stored in localStorage"
+  },
+  "SESSIONDOMSTORAGE_KEY_SIZE_BYTES": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "32768",
+    "n_buckets": 10,
+    "description": "DOM storage: size of keys stored in sessionStorage"
+  },
+  "SESSIONDOMSTORAGE_VALUE_SIZE_BYTES": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "32768",
+    "n_buckets": 10,
+    "description": "DOM storage: size of values stored in sessionStorage"
+  },
+  "RANGE_CHECKSUM_ERRORS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Number of histograms with range checksum errors"
+  },
+  "BUCKET_ORDER_ERRORS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Number of histograms with bucket order errors"
+  },
+  "TOTAL_COUNT_HIGH_ERRORS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Number of histograms with total count high errors"
+  },
+  "TOTAL_COUNT_LOW_ERRORS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Number of histograms with total count low errors"
+  },
+  "TELEMETRY_TEST_FLAG": {
+    "kind": "flag",
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "STARTUP_CRASH_DETECTED": {
+    "kind": "flag",
+    "description": "Whether there was a crash during the last startup"
+  },
+  "SAFE_MODE_USAGE": {
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "Whether the user is in safe mode (No, Yes, Forced)"
+  },
+  "NEWTAB_PAGE_ENABLED": {
+    "kind": "boolean",
+    "description": "New tab page is enabled."
+  },
+  "NEWTAB_PAGE_PINNED_SITES_COUNT": {
+    "kind": "exponential",
+    "high": "9",
+    "n_buckets": 10,
+    "description": "Number of pinned sites on the new tab page."
+  },
+  "NEWTAB_PAGE_BLOCKED_SITES_COUNT": {
+    "kind": "exponential",
+    "high": "100",
+    "n_buckets": 10,
+    "description": "Number of sites blocked from the new tab page."
+  },
+  "PANORAMA_INITIALIZATION_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 15,
+    "description": "Time it takes to initialize Panorama (ms)"
+  },
+  "PANORAMA_GROUPS_COUNT": {
+    "kind": "exponential",
+    "high": "25",
+    "n_buckets": 15,
+    "description": "Number of groups in Panorama"
+  },
+  "PANORAMA_STACKED_GROUPS_COUNT": {
+    "kind": "exponential",
+    "high": "25",
+    "n_buckets": 15,
+    "description": "Number of stacked groups in Panorama"
+  },
+  "PANORAMA_MEDIAN_TABS_IN_GROUPS_COUNT": {
+    "kind": "exponential",
+    "high": "100",
+    "n_buckets": 15,
+    "description": "Median of tabs in groups in Panorama"
+  },
+  "BROWSERPROVIDER_XUL_IMPORT_TIME": {
+    "kind": "exponential",
+    "low": 20,
+    "high": "600000",
+    "n_buckets": 20,
+    "description": "Time for the initial conversion of a XUL places database (ms)",
+    "cpp_guard": "ANDROID"
+  },
+  "BROWSERPROVIDER_XUL_IMPORT_BOOKMARKS": {
+    "kind": "exponential",
+    "high": "50000",
+    "n_buckets": 20,
+    "description": "Number of bookmarks in the original XUL places database",
+    "cpp_guard": "ANDROID"
+  },
+  "BROWSERPROVIDER_XUL_IMPORT_HISTORY": {
+    "kind": "exponential",
+    "high": "1000000",
+    "n_buckets": 20,
+    "description": "Number of history entries in the original XUL places database",
+    "cpp_guard": "ANDROID"
+  },
+  "OUT_OF_MEMORY_KILLED": {
+    "kind": "flag",
+    "description": "Killed due to an OOM condition",
+    "cpp_guard": "ANDROID"
+  },
+  "SECURITY_UI": {
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "Security UI Telemetry"
+  },
+  "SOCIAL_ENABLED_ON_SESSION": {
+    "kind": "flag",
+    "description": "Social has been enabled at least once on the current session"
+  },
+  "SOCIAL_TOGGLED": {
+    "kind": "boolean",
+    "description": "Social has been toggled to on or off"
+  }
+}

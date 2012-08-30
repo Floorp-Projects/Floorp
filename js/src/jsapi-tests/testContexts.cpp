@@ -41,8 +41,7 @@ BEGIN_TEST(testContexts_bug563735)
     JSBool ok;
     {
         JSAutoRequest req(cx2);
-        JSAutoEnterCompartment ac;
-        CHECK(ac.enter(cx2, global));
+        JSAutoCompartment ac(cx2, global);
         jsval v = JSVAL_NULL;
         ok = JS_SetProperty(cx2, global, "x", &v);
     }

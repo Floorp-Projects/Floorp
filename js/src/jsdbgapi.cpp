@@ -491,20 +491,12 @@ JS_BrokenFrameIterator(JSContext *cx, JSStackFrame **iteratorp)
 JS_PUBLIC_API(JSScript *)
 JS_GetFrameScript(JSContext *cx, JSStackFrame *fpArg)
 {
-    StackFrame *fp = Valueify(fpArg);
-    if (fp->isDummyFrame())
-        return NULL;
-
-    return fp->maybeScript();
+    return Valueify(fpArg)->script();
 }
 
 JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fpArg)
 {
-    StackFrame *fp = Valueify(fpArg);
-    if (fp->isDummyFrame())
-        return NULL;
-
     /*
      * This API is used to compute the line number for jsd and XPConnect
      * exception handling backtraces. Once the stack gets really deep, the
@@ -512,23 +504,19 @@ JS_GetFramePC(JSContext *cx, JSStackFrame *fpArg)
      * terminated by a slow-script dialog) when content causes infinite
      * recursion and a backtrace.
      */
-    return fp->pcQuadratic(cx->stack, 100);
+    return Valueify(fpArg)->pcQuadratic(cx->stack, 100);
 }
 
 JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
-    if (fp->annotation() && fp->isScriptFrame()) {
-        JSPrincipals *principals = fp->scopeChain()->principals(cx);
-
-        if (principals) {
-            /*
-             * Give out an annotation only if privileges have not been revoked
-             * or disabled globally.
-             */
-            return fp->annotation();
-        }
+    if (fp->annotation() && fp->scopeChain()->compartment()->principals) {
+        /*
+         * Give out an annotation only if privileges have not been revoked
+         * or disabled globally.
+         */
+        return fp->annotation();
     }
 
     return NULL;
@@ -547,9 +535,7 @@ JS_SetTopFrameAnnotation(JSContext *cx, void *annotation)
     // because we will never EnterIon on a frame with an annotation.
     fp->setAnnotation(annotation);
 
-    JSScript *script = fp->maybeScript();
-    if (!script)
-        return;
+    JSScript *script = fp->script();
 
     ReleaseAllJITCode(cx->runtime->defaultFreeOp());
 
@@ -558,22 +544,12 @@ JS_SetTopFrameAnnotation(JSContext *cx, void *annotation)
     script->ion = ION_DISABLED_SCRIPT;
 }
 
-JS_PUBLIC_API(JSBool)
-JS_IsScriptFrame(JSContext *cx, JSStackFrame *fp)
-{
-    return !Valueify(fp)->isDummyFrame();
-}
-
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
     JS_ASSERT(cx->stack.space().containsSlow(fp));
-
-    js::AutoCompartment ac(cx, fp->scopeChain());
-    if (!ac.enter())
-        return NULL;
-
+    AutoCompartment ac(cx, fp->scopeChain());
     return GetDebugScopeForFrame(cx, fp);
 }
 
@@ -609,15 +585,11 @@ JS_PUBLIC_API(JSBool)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fpArg, jsval *thisv)
 {
     StackFrame *fp = Valueify(fpArg);
-    if (fp->isDummyFrame())
-        return false;
 
     js::AutoCompartment ac(cx, fp->scopeChain());
-    if (!ac.enter())
-        return false;
-
     if (!ComputeThis(cx, fp))
         return false;
+
     *thisv = fp->thisValue();
     return true;
 }
@@ -694,7 +666,7 @@ JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fpArg, jsval rval)
 {
     StackFrame *fp = Valueify(fpArg);
 #ifdef JS_METHODJIT
-    JS_ASSERT_IF(fp->isScriptFrame(), fp->script()->debugMode);
+    JS_ASSERT(fp->script()->debugMode);
 #endif
     assertSameCompartment(cx, fp, rval);
     fp->setReturnValue(rval);
@@ -768,11 +740,9 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
     if (!env)
         return false;
 
-    js::AutoCompartment ac(cx, env);
-    if (!ac.enter())
-        return false;
-
     StackFrame *fp = Valueify(fpArg);
+
+    js::AutoCompartment ac(cx, env);
     return EvaluateInEnv(cx, env, fp, chars, length, filename, lineno, rval);
 }
 
@@ -1020,8 +990,8 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
     nbytes += JS_GetObjectTotalSize(cx, fun);
     if (fun->isInterpreted())
         nbytes += JS_GetScriptTotalSize(cx, fun->script());
-    if (fun->atom)
-        nbytes += GetAtomTotalSize(cx, fun->atom);
+    if (fun->displayAtom())
+        nbytes += GetAtomTotalSize(cx, fun->displayAtom());
     return nbytes;
 }
 
@@ -1941,16 +1911,14 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
     JSScript* script = iter.script();
     jsbytecode* pc = iter.pc();
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, iter.fp()->scopeChain()))
-        return buf;
+    JSAutoCompartment ac(cx, iter.fp()->scopeChain());
 
     const char *filename = script->filename;
     unsigned lineno = PCToLineNumber(script, pc);
     JSFunction *fun = iter.fp()->maybeFun();
     JSString *funname = NULL;
     if (fun)
-        funname = fun->atom;
+        funname = fun->atom();
 
     JSObject *callObj = NULL;
     AutoPropertyDescArray callProps(cx);

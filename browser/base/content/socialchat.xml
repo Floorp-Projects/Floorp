@@ -25,6 +25,33 @@
         document.getAnonymousElementByAttribute(this, "anonid", "iframe");
       </field>
 
+      <property name="minimized">
+        <getter>
+          return this.getAttribute("minimized") == "true";
+        </getter>
+        <setter>
+          this.isActive = !val;
+          if (val)
+            this.setAttribute("minimized", "true");
+          else
+            this.removeAttribute("minimized");
+        </setter>
+      </property>
+
+      <property name="isActive">
+        <getter>
+          return this.iframe.docShell.isActive;
+        </getter>
+        <setter>
+          this.iframe.docShell.isActive = !!val;
+
+          // let the chat frame know if it is being shown or hidden
+          let evt = this.iframe.contentDocument.createEvent("CustomEvent");
+          evt.initCustomEvent(val ? "socialFrameHide" : "socialFrameShow", true, true, {});
+          this.iframe.contentDocument.documentElement.dispatchEvent(evt);
+        </setter>
+      </property>
+
       <method name="init">
         <parameter name="aProvider"/>
         <parameter name="aURL"/>
@@ -44,18 +71,7 @@
 
       <method name="toggle">
         <body><![CDATA[
-          let type;
-          if (this.getAttribute("minimized") == "true") {
-            this.removeAttribute("minimized");
-            type = "socialFrameShow";
-          } else {
-            this.setAttribute("minimized", "true");
-            type = "socialFrameHide";
-          }
-          // let the chat frame know if it is being shown or hidden
-          let evt = this.iframe.contentDocument.createEvent("CustomEvent");
-          evt.initCustomEvent(type, true, true, {});
-          this.iframe.contentDocument.documentElement.dispatchEvent(evt);
+          this.minimized = !this.minimized;
         ]]></body>
       </method>
     </implementation>
@@ -64,7 +80,10 @@
       <handler event="focus" phase="capturing">
         this.parentNode.selectedChat = this;
       </handler>
-      <handler event="DOMContentLoaded" action="if (this._callback) this._callback(this.iframe.contentWindow);"/>
+      <handler event="load"><![CDATA[
+        this.isActive = !this.minimized;
+        if (this._callback) this._callback(this.iframe.contentWindow);
+      ]]></handler>
       <handler event="DOMTitleChanged" action="this.setAttribute('label', this.iframe.contentDocument.title);"/>
       <handler event="DOMLinkAdded"><![CDATA[
         // much of this logic is from DOMLinkHandler in browser.js
@@ -116,6 +135,7 @@
       <field name="selectedChat"/>
 
       <field name="menuitemMap">new WeakMap()</field>
+      <field name="chatboxForURL">new Map();</field>
 
       <property name="firstCollapsedChild">
         <getter><![CDATA[
@@ -192,6 +212,7 @@
         <parameter name="aChatbox"/>
         <body><![CDATA[
           aChatbox.collapsed = true;
+          aChatbox.isActive = false;
           let menu = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
           menu.setAttribute("label", aChatbox.iframe.contentDocument.title);
           menu.chat = aChatbox;
@@ -208,6 +229,7 @@
           this.menuitemMap.delete(aChatbox);
           this.menupopup.removeChild(menuitem);
           aChatbox.collapsed = false;
+          aChatbox.isActive = !aChatbox.minimized;
         ]]></body>
       </method>
 
@@ -219,6 +241,7 @@
           }
           this.removeChild(aChatbox);
           this.resize();
+          this.chatboxForURL.delete(aChatbox.getAttribute('src'));
         ]]></body>
       </method>
 
@@ -227,18 +250,36 @@
           while (this.firstChild) {
             this.removeChild(this.firstChild);
           }
+          this.chatboxForURL = new Map();
         ]]></body>
       </method>
 
-      <method name="newChat">
+      <method name="openChat">
         <parameter name="aProvider"/>
         <parameter name="aURL"/>
         <parameter name="aCallback"/>
+        <parameter name="aMode"/>
         <body><![CDATA[
-          let cb = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "chatbox");
+          let cb = this.chatboxForURL.get(aURL);
+          if (cb) {
+            cb = cb.get();
+            if (cb.parentNode) {
+              // ensure this chatbox is visible
+              if (this.selectedChat != cb)
+                this.selectedChat = cb;
+              if (cb.collapsed)
+                this.showChat(cb);
+              return;
+            }
+            this.chatboxForURL.delete(aURL);
+          }
+          cb = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "chatbox");
+          if (aMode == "minimized")
+            cb.minimized = true;
           this.selectedChat = cb;
-          this.appendChild(cb);
+          this.insertBefore(cb, this.firstChild);
           cb.init(aProvider, aURL, aCallback);
+          this.chatboxForURL.set(aURL, Cu.getWeakReference(cb));
         ]]></body>
       </method>
 

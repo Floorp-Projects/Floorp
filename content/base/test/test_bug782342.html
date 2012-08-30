@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=782342
+-->
+<head>
+  <title>Test for bug 782342 - blob: protocol no Content-Length header</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=782342">Mozilla Bug 782342 - blob: protocol no Content-Length header</a>
+<p id="display">
+  <input id="fileList" type="file"></input>
+</p>
+
+<script type="text/javascript;version=1.7">
+SimpleTest.waitForExplicitFinish();
+
+var url = "file_bug782342.txt";
+var xhr = new XMLHttpRequest();
+xhr.open("GET", url, true);
+xhr.responseType = "blob";
+
+function checkHeaders(xhr) {
+  var headers = xhr.getAllResponseHeaders();
+  dump(headers + "\n");
+  var p = headers.split("\n");
+
+  var contentType = false;
+  var contentLength = false;
+
+  for (var i = 0; i < p.length; ++i) {
+    var header = p[i].split(':')[0];
+    if (header.toLowerCase() == 'content-type')
+      contentType = true;
+    else if (header.toLowerCase() == 'content-length')
+      contentLength = true;
+  }
+
+  ok(contentLength == true, "Content-length is part of the headers!");
+  ok(contentType == true, "Content-type is part of the headers!");
+
+  var ct = xhr.getResponseHeader('content-type');
+  ok(ct.length > 0, 'Get Response Header - content type: ' + ct);
+  var cl = xhr.getResponseHeader('content-length');
+  ok(cl.length > 0, 'Get Response Header - content length: ' + cl);
+}
+
+xhr.addEventListener("load", function () {
+  ok(xhr.status === 200, "Status 200!");
+  if (xhr.status === 200) {
+    var blob = xhr.response;
+    ok(blob, "Blob is: " + blob);
+    var blobUrl = window.URL.createObjectURL(blob);
+    ok(blobUrl, "Blob URL is: " + blobUrl);
+    checkHeaders(xhr);
+
+    var xhrBlob = new XMLHttpRequest();
+    xhrBlob.open("GET", blobUrl, true);
+    xhrBlob.responseType = "blob";
+
+    xhrBlob.addEventListener("load", function () {
+      var blob2 = xhr.response;
+      ok(blob2, "Blob is: " + blob2);
+      var blob2Url = window.URL.createObjectURL(blob);
+      ok(blob2Url, "Blob URL is: " + blob2Url);
+      checkHeaders(xhrBlob);
+
+      ok(blob2.size == blob.size, "Blob sizes are: " + blob2.size + " - " + blob.size);
+      ok(blob2.type == blob.type, "Blob types are: " + blob2.type + " - " + blob.type);
+
+      SimpleTest.finish();
+    }, false);
+    xhrBlob.send();
+  }
+}, false);
+xhr.send();
+</script>
+</body>
+
+</html>

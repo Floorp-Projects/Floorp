@@ -142,18 +142,20 @@ nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
                                      nsSMILValue& aValue,
                                      bool& aPreventCachingOfSandwich) const
 {
-  nsCOMPtr<nsIAtom> valAtom = do_GetAtom(aStr);
-  nsSVGEnumMapping *mapping = mVal->GetMapping(mSVGElement);
+  nsIAtom *valAtom = NS_GetStaticAtom(aStr);
+  if (valAtom) {
+    nsSVGEnumMapping *mapping = mVal->GetMapping(mSVGElement);
 
-  while (mapping && mapping->mKey) {
-    if (valAtom == *(mapping->mKey)) {
-      nsSMILValue val(&SMILEnumType::sSingleton);
-      val.mU.mUint = mapping->mVal;
-      aValue = val;
-      aPreventCachingOfSandwich = false;
-      return NS_OK;
+    while (mapping && mapping->mKey) {
+      if (valAtom == *(mapping->mKey)) {
+        nsSMILValue val(&SMILEnumType::sSingleton);
+        val.mU.mUint = mapping->mVal;
+        aValue = val;
+        aPreventCachingOfSandwich = false;
+        return NS_OK;
+      }
+      mapping++;
     }
-    mapping++;
   }
   
   // only a warning since authors may mistype attribute values

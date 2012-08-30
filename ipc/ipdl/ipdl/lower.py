@@ -1294,10 +1294,11 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
         self.protocolName = None
 
     def visitTranslationUnit(self, tu):
-        if not isinstance(tu, TranslationUnit) and tu not in self.visitedTus:
+        if tu not in self.visitedTus:
             self.visitedTus.add(tu)
             ipdl.ast.Visitor.visitTranslationUnit(self, tu)
-            TranslationUnit.upgrade(tu)
+            if not isinstance(tu, TranslationUnit):
+                TranslationUnit.upgrade(tu)
             self.typedefs[:] = sorted(list(self.typedefSet))
 
     def visitInclude(self, inc):
@@ -1317,20 +1318,23 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
                                         using.decl.shortname))
 
     def visitStructDecl(self, sd):
-        sd.decl.special = 0
-        newfields = [ ]
-        for f in sd.fields:
-            ftype = f.decl.type
-            if _hasVisibleActor(ftype):
-                sd.decl.special = 1
-                # if ftype has a visible actor, we need both
-                # |ActorParent| and |ActorChild| fields
-                newfields.append(_StructField(ftype, f.name, sd, side='parent'))
-                newfields.append(_StructField(ftype, f.name, sd, side='child'))
-            else:
-                newfields.append(_StructField(ftype, f.name, sd))
-        sd.fields = newfields
-        StructDecl.upgrade(sd)
+        if not isinstance(sd, StructDecl):
+            sd.decl.special = 0
+            newfields = [ ]
+            for f in sd.fields:
+                ftype = f.decl.type
+                if _hasVisibleActor(ftype):
+                    sd.decl.special = 1
+                    # if ftype has a visible actor, we need both
+                    # |ActorParent| and |ActorChild| fields
+                    newfields.append(_StructField(ftype, f.name, sd,
+                                                  side='parent'))
+                    newfields.append(_StructField(ftype, f.name, sd,
+                                                  side='child'))
+                else:
+                    newfields.append(_StructField(ftype, f.name, sd))
+            sd.fields = newfields
+            StructDecl.upgrade(sd)
 
         if sd.decl.fullname is not None:
             self.typedefSet.add(Typedef(Type(sd.fqClassName()), sd.name))
@@ -1546,13 +1550,15 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         for md in p.messageDecls:
             ns.addstmts([
                 _generateMessageClass(md.msgClass(), md.msgId(),
-                                      typedefs, md.prettyMsgName(p.name+'::')),
+                                      typedefs, md.prettyMsgName(p.name+'::'),
+                                      md.decl.type.compress),
                 Whitespace.NL ])
             if md.hasReply():
                 ns.addstmts([
                     _generateMessageClass(
                         md.replyClass(), md.replyId(),
-                        typedefs, md.prettyReplyName(p.name+'::')),
+                        typedefs, md.prettyReplyName(p.name+'::'),
+                        md.decl.type.compress),
                     Whitespace.NL ])
 
         ns.addstmts([ Whitespace.NL, Whitespace.NL ])
@@ -1740,7 +1746,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageClass(clsname, msgid, typedefs, prettyName):
+def _generateMessageClass(clsname, msgid, typedefs, prettyName, compress):
     cls = Class(name=clsname, inherits=[ Inherit(Type('IPC::Message')) ])
     cls.addstmt(Label.PRIVATE)
     cls.addstmts(typedefs)
@@ -1753,12 +1759,17 @@ def _generateMessageClass(clsname, msgid, typedefs, prettyName):
     cls.addstmt(StmtDecl(Decl(idenum, '')))
 
     # make the message constructor
+    if compress:
+        compression = ExprVar('COMPRESSION_ENABLED')
+    else:
+        compression = ExprVar('COMPRESSION_NONE')
     ctor = ConstructorDefn(
         ConstructorDecl(clsname),
         memberinits=[ ExprMemberInit(ExprVar('IPC::Message'),
                                      [ ExprVar('MSG_ROUTING_NONE'),
                                        ExprVar('ID'),
                                        ExprVar('PRIORITY_NORMAL'),
+                                       compression,
                                        ExprLiteral.String(prettyName) ]) ])
     cls.addstmts([ ctor, Whitespace.NL ])
 

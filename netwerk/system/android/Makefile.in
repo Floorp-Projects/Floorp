@@ -6,13 +6,13 @@ DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE	       = necko
 LIBRARY_NAME   = neckosystem_s
 LIBXUL_LIBRARY = 1
-FAIL_ON_WARNINGS = 1
 
 FORCE_STATIC_LIB = 1
 

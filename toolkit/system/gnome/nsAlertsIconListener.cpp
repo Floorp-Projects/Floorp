@@ -13,15 +13,21 @@
 #include "nsIObserverService.h"
 #include "nsCRT.h"
 
+#include <dlfcn.h>
 #include <gdk/gdk.h>
-
-// Compatibility macro for <libnotify-0.7
-#ifndef NOTIFY_CHECK_VERSION
-#define NOTIFY_CHECK_VERSION(x,y,z) 0
-#endif
 
 static bool gHasActions = false;
 static bool gHasCaps = false;
+
+void* nsAlertsIconListener::libNotifyHandle = nullptr;
+bool nsAlertsIconListener::libNotifyNotAvail = false;
+nsAlertsIconListener::notify_is_initted_t nsAlertsIconListener::notify_is_initted = nullptr;
+nsAlertsIconListener::notify_init_t nsAlertsIconListener::notify_init = nullptr;
+nsAlertsIconListener::notify_get_server_caps_t nsAlertsIconListener::notify_get_server_caps = nullptr;
+nsAlertsIconListener::notify_notification_new_t nsAlertsIconListener::notify_notification_new = nullptr;
+nsAlertsIconListener::notify_notification_show_t nsAlertsIconListener::notify_notification_show = nullptr;
+nsAlertsIconListener::notify_notification_set_icon_from_pixbuf_t nsAlertsIconListener::notify_notification_set_icon_from_pixbuf = nullptr;
+nsAlertsIconListener::notify_notification_add_action_t nsAlertsIconListener::notify_notification_add_action = nullptr;
 
 static void notify_action_cb(NotifyNotification *notification,
                              gchar *action, gpointer user_data)
@@ -52,12 +58,35 @@ nsAlertsIconListener::nsAlertsIconListener()
 : mLoadedFrame(false),
   mNotification(NULL)
 {
+  if (!libNotifyHandle && !libNotifyNotAvail) {
+    libNotifyHandle = dlopen("libnotify.so.4", RTLD_LAZY);
+    if (!libNotifyHandle) {
+      libNotifyHandle = dlopen("libnotify.so.1", RTLD_LAZY);
+      if (!libNotifyHandle) {
+        libNotifyNotAvail = true;
+        return;
+      }
+    }
+
+    notify_is_initted = (notify_is_initted_t)dlsym(libNotifyHandle, "notify_is_initted");
+    notify_init = (notify_init_t)dlsym(libNotifyHandle, "notify_init");
+    notify_get_server_caps = (notify_get_server_caps_t)dlsym(libNotifyHandle, "notify_get_server_caps");
+    notify_notification_new = (notify_notification_new_t)dlsym(libNotifyHandle, "notify_notification_new");
+    notify_notification_show = (notify_notification_show_t)dlsym(libNotifyHandle, "notify_notification_show");
+    notify_notification_set_icon_from_pixbuf = (notify_notification_set_icon_from_pixbuf_t)dlsym(libNotifyHandle, "notify_notification_set_icon_from_pixbuf");
+    notify_notification_add_action = (notify_notification_add_action_t)dlsym(libNotifyHandle, "notify_notification_add_action");
+    if (!notify_is_initted || !notify_init || !notify_get_server_caps || !notify_notification_new || !notify_notification_show || !notify_notification_set_icon_from_pixbuf || !notify_notification_add_action) {
+      dlclose(libNotifyHandle);
+      libNotifyHandle = nullptr;
+    }
+  }
 }
 
 nsAlertsIconListener::~nsAlertsIconListener()
 {
   if (mIconRequest)
     mIconRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
+  // Don't dlclose libnotify as it uses atexit().
 }
 
 NS_IMETHODIMP
@@ -185,14 +214,7 @@ nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest,
 nsresult
 nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
 {
-  mNotification = notify_notification_new(mAlertTitle.get(),
-                                          mAlertText.get(),
-                                          NULL
-// >=libnotify-0.7.0 has no support for attaching to widgets
-#if !NOTIFY_CHECK_VERSION(0,7,0)
-                                          , NULL
-#endif
-                                          );
+  mNotification = notify_notification_new(mAlertTitle.get(), mAlertText.get(), NULL, NULL);
 
   if (!mNotification)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -284,6 +306,9 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
                                      const nsAString & aAlertCookie,
                                      nsIObserver * aAlertListener)
 {
+  if (!libNotifyHandle)
+    return NS_ERROR_FAILURE;
+
   if (!notify_is_initted()) {
     // Give the name of this application to libnotify
     nsCOMPtr<nsIStringBundleService> bundleService = 

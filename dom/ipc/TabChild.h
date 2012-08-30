@@ -72,7 +72,8 @@ public:
   void Init();
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, nsDOMEventTargetHelper)
-  NS_FORWARD_SAFE_NSIFRAMEMESSAGEMANAGER(mMessageManager)
+  NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
+  NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_IMETHOD SendSyncMessage(const nsAString& aMessageName,
                              const jsval& aObject,
                              JSContext* aCx,
@@ -190,6 +191,7 @@ public:
     virtual bool RecvRealKeyEvent(const nsKeyEvent& event);
     virtual bool RecvMouseWheelEvent(const mozilla::widget::WheelEvent& event);
     virtual bool RecvRealTouchEvent(const nsTouchEvent& event);
+    virtual bool RecvRealTouchMoveEvent(const nsTouchEvent& event);
     virtual bool RecvKeyEvent(const nsString& aType,
                               const int32_t&  aKeyCode,
                               const int32_t&  aCharCode,
@@ -245,8 +247,8 @@ public:
     virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType, const IPC::Principal& aPrincipal);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor);
 
-    virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdate(const URI& manifestURI,
-            const URI& documentURI,
+    virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdate(const URIParams& manifestURI,
+            const URIParams& documentURI,
             const nsCString& clientID,
             const bool& stickDocument);
     virtual bool DeallocPOfflineCacheUpdate(POfflineCacheUpdateChild* offlineCacheUpdate);
