@@ -124,6 +124,7 @@ public class FennecNativeActions implements Actions {
                 }
                 endTime = SystemClock.uptimeMillis();
                 if (!mEventReceived && (endTime - startTime >= MAX_WAIT_MS)) {
+                    FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
                     mAsserter.ok(false, "GeckoEventExpecter", 
                         "blockForEvent timeout: "+mGeckoEvent);
                     return;
@@ -156,6 +157,7 @@ public class FennecNativeActions implements Actions {
                 }
                 endTime = SystemClock.uptimeMillis();
                 if (!mEventReceived && (endTime - startTime >= MAX_WAIT_MS)) {
+                    FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
                     mAsserter.ok(false, "GeckoEventExpecter", "blockUtilClear timeout");
                     return;
                 }
@@ -286,6 +288,7 @@ public class FennecNativeActions implements Actions {
                 }
                 endTime = SystemClock.uptimeMillis();
                 if (!mPaintDone && (endTime - startTime >= MAX_WAIT_MS)) {
+                    FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
                     mAsserter.ok(false, "PaintExpecter", "blockForEvent timeout");
                     return;
                 }
@@ -317,6 +320,7 @@ public class FennecNativeActions implements Actions {
                 }
                 endTime = SystemClock.uptimeMillis();
                 if (!mPaintDone && (endTime - startTime >= MAX_WAIT_MS)) {
+                    FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
                     mAsserter.ok(false, "PaintExpecter", "blockUtilClear timeout");
                     return;
                 }
