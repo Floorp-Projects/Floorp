@@ -316,7 +316,7 @@ DeviceStorageFile::collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &
 
   while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(f))) && f) {
 
-    int64_t msecs;
+    PRTime msecs;
     f->GetLastModifiedTime(&msecs);
 
     if (msecs < aSince) {
