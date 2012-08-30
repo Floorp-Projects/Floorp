@@ -3565,7 +3565,7 @@
         canvas.width = 160;
         canvas.height = 90;
         PageThumbs.captureToCanvas(browser.contentWindow, canvas);
-        dt.setDragImage(canvas, 0, 0);
+        dt.setDragImage(canvas, -16, -16);
 
         // _dragData.offsetX/Y give the coordinates that the mouse should be
         // positioned relative to the corner of the new window created upon
