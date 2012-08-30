@@ -1075,6 +1075,17 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
     }
 
     /*
+     * Get the possible types of the property. For assignments, we do not
+     * automatically update the 'own' bit on accessed properties, except for
+     * indexed elements. This exception allows for JIT fast paths to avoid
+     * testing the array's type when assigning to dense array elements.
+     */
+    bool markOwn = access == PROPERTY_WRITE && JSID_IS_VOID(id);
+    HeapTypeSet *types = object->getProperty(cx, id, markOwn);
+    if (!types)
+        return;
+
+    /*
      * Try to resolve reads from the VM state ahead of time, e.g. for reads
      * of defined global variables or from the prototype of the object. This
      * reduces the need to monitor cold code as it first executes.
@@ -1083,23 +1094,23 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
      * object or prototype will not change between analysis and execution.
      */
     if (access != PROPERTY_WRITE) {
-        if (JSObject *singleton = object->singleton ? object->singleton : object->proto) {
+        JSObject *singleton = object->singleton;
+
+        /*
+         * Don't eagerly resolve reads from the prototype if the instance type
+         * is known to shadow the prototype's property.
+         */
+        if (!singleton && !types->ownProperty(false))
+            singleton = object->proto;
+
+        if (singleton) {
             Type type = GetSingletonPropertyType(cx, singleton, id);
             if (!type.isUnknown())
                 target->addType(cx, type);
         }
     }
 
-    /*
-     * Capture the effects of a standard property access.  For assignments, we do not
-     * automatically update the 'own' bit on accessed properties, except for indexed
-     * elements in dense arrays.  The latter exception allows for JIT fast paths to avoid
-     * testing the array's type when assigning to dense array elements.
-     */
-    bool markOwn = access == PROPERTY_WRITE && JSID_IS_VOID(id);
-    HeapTypeSet *types = object->getProperty(cx, id, markOwn);
-    if (!types)
-        return;
+    /* Capture the effects of a standard property access. */
     if (access == PROPERTY_WRITE) {
         target->addSubset(cx, types);
     } else {
