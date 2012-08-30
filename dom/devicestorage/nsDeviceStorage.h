@@ -44,10 +44,11 @@ class DeviceStorageFile MOZ_FINAL
 public:
   nsCOMPtr<nsIFile> mFile;
   nsString mPath;
+  nsString mStorageType;
   bool mEditable;
 
-  DeviceStorageFile(nsIFile* aFile, const nsAString& aPath);
-  DeviceStorageFile(nsIFile* aFile);
+  DeviceStorageFile(const nsAString& aStorageType, nsIFile* aFile, const nsAString& aPath);
+  DeviceStorageFile(const nsAString& aStorageType, nsIFile* aFile);
   void SetPath(const nsAString& aPath);
   void SetEditable(bool aEditable);
 
