@@ -361,10 +361,9 @@ NewSlots(JSRuntime *rt, unsigned nslots)
 }
 
 JSObject *
-NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots,
-              HandleObject global)
+NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots)
 {
-    return CallObject::create(cx, shape, type, slots, global);
+    return CallObject::create(cx, shape, type, slots);
 }
 
 bool SPSEnter(JSContext *cx, HandleScript script)

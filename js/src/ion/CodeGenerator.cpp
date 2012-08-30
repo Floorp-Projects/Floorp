@@ -1455,7 +1455,7 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
 {
     Register obj = ToRegister(lir->output());
 
-    typedef JSObject *(*pf)(JSContext *, HandleShape, HandleTypeObject, HeapSlot *, HandleObject);
+    typedef JSObject *(*pf)(JSContext *, HandleShape, HandleTypeObject, HeapSlot *);
     static const VMFunction NewCallObjectInfo = FunctionInfo<pf>(NewCallObject);
 
     JSObject *templateObj = lir->mir()->templateObj();
@@ -1467,15 +1467,13 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
         ool = oolCallVM(NewCallObjectInfo, lir,
                         (ArgList(), ImmGCPtr(templateObj->lastProperty()),
                                     ImmGCPtr(templateObj->type()),
-                                    ToRegister(lir->slots()),
-                                    ImmGCPtr(global)),
+                                    ToRegister(lir->slots())),
                         StoreRegisterTo(obj));
     } else {
         ool = oolCallVM(NewCallObjectInfo, lir,
                         (ArgList(), ImmGCPtr(templateObj->lastProperty()),
                                     ImmGCPtr(templateObj->type()),
-                                    ImmWord((void *)NULL),
-                                    ImmGCPtr(global)),
+                                    ImmWord((void *)NULL)),
                         StoreRegisterTo(obj));
     }
     if (!ool)
