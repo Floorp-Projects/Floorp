@@ -5640,7 +5640,7 @@ AppendToTouchList(const uint32_t& aKey, nsCOMPtr<nsIDOMTouch>& aData, void *aTou
   return PL_DHASH_NEXT;
 }
 
-nsIFrame* GetRootFrameThroughViews(nsIPresShell* aPresShell)
+nsIFrame* GetNearestFrameContainingPresShell(nsIPresShell* aPresShell)
 {
   nsIView* view = aPresShell->GetViewManager()->GetRootView();
   while (view && !view->GetFrame()) {
@@ -5725,7 +5725,7 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
             return NS_OK;
           }
 
-          frame = GetRootFrameThroughViews(presShell);
+          frame = GetNearestFrameContainingPresShell(presShell);
         }
 
         if (!frame)
@@ -5755,7 +5755,7 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
 
   if (aEvent->eventStructType == NS_TOUCH_EVENT) {
     FlushPendingNotifications(Flush_Layout);
-    frame = GetRootFrameThroughViews(this);
+    frame = GetNearestFrameContainingPresShell(this);
   }
 
   bool dispatchUsingCoordinates = NS_IsEventUsingCoordinates(aEvent);
