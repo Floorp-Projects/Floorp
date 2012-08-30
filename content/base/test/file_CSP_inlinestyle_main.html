@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html>
+  <head>
+    <title>CSP inline script tests</title>
+    <!-- content= "div#linkstylediv { color: #0f0; }" -->
+    <link rel="stylesheet" type="text/css"
+          href='file_CSP.sjs?type=text/css&content=div%23linkstylediv%20%7B%20color%3A%20%230f0%3B%20%7D' />
+  </head>
+  <body>
+
+    <style type="text/css">
+      div#inlinestylediv {
+        color: #00ff00;
+      }
+    </style>
+
+    <div id='linkstylediv'>Link tag (external) stylesheet test (should be green)</div>
+    <div id='attrstylediv' style="color: #00ff00;">Attribute stylesheet test (should be green)</div>
+    <div id='inlinestylediv'>Inline stylesheet test (should be green)</div>
+
+	    <!-- tests for SMIL stuff - animations -->
+    <svg xmlns="http://www.w3.org/2000/svg"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         width="100%"
+         height="100px">
+
+      <!-- Animates XML attribute, which is mapped into style. -->
+      <text id="xmlTest" x="0" y="15">
+         This should be green since the animation should be allowed by CSP.
+
+        <animate attributeName="fill" attributeType="XML"
+                  values="lime;green;lime" dur="2s"
+                  repeatCount="indefinite" />
+      </text>
+
+      <!-- Animates override value for CSS property. -->
+      <text id="cssOverrideTest" x="0" y="35">
+         This should be green since the animation should be allowed by CSP.
+
+        <animate attributeName="fill" attributeType="CSS"
+                  values="lime;green;lime" dur="2s"
+                  repeatCount="indefinite" />
+      </text>
+
+      <!-- Animates override value for CSS property targeted via ID. -->
+      <text id="cssOverrideTestById" x="0" y="55">
+         This should be green since the animation should be allowed by CSP.
+      </text>
+      <animate xlink:href="#cssOverrideTestById"
+               attributeName="fill"
+               values="lime;green;lime"
+               dur="2s" repeatCount="indefinite" />
+
+      <!-- Sets value for CSS property targeted via ID. -->
+      <text id="cssSetTestById" x="0" y="75">
+         This should be green since the &lt;set&gt; should be allowed by CSP.
+      </text>
+      <set xlink:href="#cssSetTestById"
+               attributeName="fill"
+               to="lime" />
+    </svg>
+  </body>
+</html>
