@@ -21,6 +21,7 @@
 #include "CheckQuotaHelper.h"
 #include "DatabaseInfo.h"
 #include "IDBEvents.h"
+#include "IDBFactory.h"
 #include "IDBFileHandle.h"
 #include "IDBIndex.h"
 #include "IDBObjectStore.h"
@@ -170,12 +171,14 @@ private:
 // static
 already_AddRefed<IDBDatabase>
 IDBDatabase::Create(IDBWrapperCache* aOwnerCache,
+                    IDBFactory* aFactory,
                     already_AddRefed<DatabaseInfo> aDatabaseInfo,
                     const nsACString& aASCIIOrigin,
                     FileManager* aFileManager,
                     mozilla::dom::ContentParent* aContentParent)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aFactory, "Null pointer!");
   NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty origin!");
 
   nsRefPtr<DatabaseInfo> databaseInfo(aDatabaseInfo);
@@ -188,6 +191,7 @@ IDBDatabase::Create(IDBWrapperCache* aOwnerCache,
     return nullptr;
   }
 
+  db->mFactory = aFactory;
   db->mDatabaseId = databaseInfo->id;
   db->mName = databaseInfo->name;
   db->mFilePath = databaseInfo->filePath;
@@ -406,9 +410,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(abort)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(error)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(versionchange)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFactory)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
+  // Don't unlink mFactory!
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(abort)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(error)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(versionchange)

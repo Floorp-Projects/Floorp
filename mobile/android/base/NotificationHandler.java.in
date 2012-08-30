@@ -32,6 +32,11 @@ public class NotificationHandler extends BroadcastReceiver {
     }
 
     protected void handleIntent(Context context, Intent notificationIntent) {
+        // only fire the callback if the intent was clicked, not if it was cancelled
+        String action = notificationIntent.getAction();
+        if (App.ACTION_ALERT_CLEAR.equals(action))
+            return;
+
         String appName = "";
         Uri data = notificationIntent.getData();
         if (data != null) {

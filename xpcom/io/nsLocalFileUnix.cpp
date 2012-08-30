@@ -36,6 +36,7 @@
 #endif
 #endif
 
+#include "xpcom-private.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -1214,7 +1215,7 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 
     /* 
      * Members of the STATFS struct that you should know about:
-     * f_bsize = block size on disk.
+     * F_BSIZE = block size on disk.
      * f_bavail = number of free blocks available to a non-superuser.
      * f_bfree = number of total free blocks in file system.
      */
@@ -1226,22 +1227,17 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 #endif
         return NS_ERROR_FAILURE;
     }
-#ifdef DEBUG_DISK_SPACE
-    printf("DiskSpaceAvailable: %d bytes\n",
-         fs_buf.f_bsize * (fs_buf.f_bavail - 1));
-#endif
-
     /* 
      * The number of bytes free == The number of free blocks available to
      * a non-superuser, minus one as a fudge factor, multiplied by the size
      * of the aforementioned blocks.
      */
-#if defined(SOLARIS) || defined(XP_MACOSX)
-    /* On Solaris and Mac, unit is f_frsize. */
-    *aDiskSpaceAvailable = (int64_t)fs_buf.f_frsize * (fs_buf.f_bavail - 1);
-#else
-    *aDiskSpaceAvailable = (int64_t)fs_buf.f_bsize * (fs_buf.f_bavail - 1);
-#endif /* SOLARIS */
+    *aDiskSpaceAvailable = (int64_t)fs_buf.F_BSIZE * (fs_buf.f_bavail - 1);
+
+#ifdef DEBUG_DISK_SPACE
+    printf("DiskSpaceAvailable: %lu bytes\n",
+         *aDiskSpaceAvailable);
+#endif
 
 #if defined(USE_LINUX_QUOTACTL)
 
@@ -1264,7 +1260,7 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
     {
         int64_t QuotaSpaceAvailable = 0;
         if (dq.dqb_bhardlimit > dq.dqb_curspace)
-            QuotaSpaceAvailable = int64_t(fs_buf.f_bsize * (dq.dqb_bhardlimit - dq.dqb_curspace));
+            QuotaSpaceAvailable = int64_t(fs_buf.F_BSIZE * (dq.dqb_bhardlimit - dq.dqb_curspace));
         if(QuotaSpaceAvailable < *aDiskSpaceAvailable) {
             *aDiskSpaceAvailable = QuotaSpaceAvailable;
         }

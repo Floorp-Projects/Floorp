@@ -36,6 +36,7 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../base \
   -I$(srcdir)/../generic \
   -I$(srcdir)/../xpcom \
+  -I$(srcdir)/../../../content/base/src \
   -I$(srcdir)/../../../content/html/content/src \
   -I$(srcdir)/../../../layout/generic \
   -I$(srcdir)/../../../layout/xul/base/src \

@@ -38,6 +38,7 @@ DOM_SRCDIRS += \
   dom/system/gonk \
   dom/telephony \
   dom/wifi \
+  dom/icc/src \
   $(NULL)
 endif
 

@@ -10,9 +10,15 @@
 #include "nsIMobileConnectionProvider.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
+#include "IccManager.h"
 
 namespace mozilla {
 namespace dom {
+
+namespace icc {
+  class IccManager;
+} // namespace icc
+
 namespace network {
 
 class MobileConnection : public nsDOMEventTargetHelper
@@ -36,6 +42,7 @@ public:
 
 private:
   nsCOMPtr<nsIMobileConnectionProvider> mProvider;
+  nsRefPtr<icc::IccManager> mIccManager;
 
   nsIDOMEventTarget*
   ToIDOMEventTarget() const

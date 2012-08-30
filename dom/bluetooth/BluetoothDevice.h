@@ -68,6 +68,7 @@ private:
   nsString mAdapterPath;
   nsString mAddress;
   nsString mName;
+  nsString mIcon;
   uint32_t mClass;
   bool mConnected;
   bool mPaired;
