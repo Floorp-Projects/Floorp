@@ -12,5 +12,6 @@ SYNC_RES_DRAWABLE_MDPI :=
 SYNC_RES_DRAWABLE_HDPI := 
 SYNC_RES_LAYOUT := res/layout/sync_account.xml res/layout/sync_list_item.xml res/layout/sync_redirect_to_setup.xml res/layout/sync_send_tab.xml res/layout/sync_setup.xml res/layout/sync_setup_failure.xml res/layout/sync_setup_jpake_waiting.xml res/layout/sync_setup_nointernet.xml res/layout/sync_setup_pair.xml res/layout/sync_setup_success.xml res/layout/sync_setup_webview.xml
 SYNC_RES_VALUES := res/values/sync_styles.xml
+SYNC_RES_VALUES_LARGE_V11 := res/values-large-v11/sync_styles.xml
 SYNC_RES_XML :=
 SYNC_PP_RES_XML := res/xml/sync_syncadapter.xml res/xml/sync_options.xml res/xml/sync_authenticator.xml
