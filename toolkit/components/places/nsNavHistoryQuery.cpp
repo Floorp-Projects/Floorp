@@ -1604,14 +1604,14 @@ AppendInt64KeyValueIfNonzero(nsACString& aString,
                              nsINavHistoryQuery* aQuery,
                              Int64QueryGetter getter)
 {
-  int64_t value;
+  PRTime value;
   DebugOnly<nsresult> rv = (aQuery->*getter)(&value);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failure getting value");
   if (value) {
     AppendAmpersandIfNonempty(aString);
     aString += aName;
     nsCAutoString appendMe("=");
-    appendMe.AppendInt(value);
+    appendMe.AppendInt(static_cast<int64_t>(value));
     aString.Append(appendMe);
   }
 }
