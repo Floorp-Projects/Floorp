@@ -251,8 +251,8 @@ nsSVGElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
   if (IsEventName(aName) && aValue) {
     NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
       "Expected string value for script body");
-    nsresult rv = AddScriptEventListener(GetEventNameForAttr(aName),
-                                         aValue->GetStringValue());
+    nsresult rv = SetEventHandler(GetEventNameForAttr(aName),
+                                  aValue->GetStringValue());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -606,7 +606,7 @@ nsSVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsIAtom* aName,
       nsEventListenerManager* manager = GetListenerManager(false);
       if (manager) {
         nsIAtom* eventName = GetEventNameForAttr(aName);
-        manager->RemoveScriptEventListener(eventName);
+        manager->RemoveEventHandler(eventName);
       }
       return;
     }
@@ -2443,7 +2443,7 @@ nsSVGElement::RecompileScriptEventListeners()
 
     nsAutoString value;
     GetAttr(kNameSpaceID_None, attr, value);
-    AddScriptEventListener(GetEventNameForAttr(attr), value, true);
+    SetEventHandler(GetEventNameForAttr(attr), value, true);
   }
 }
 

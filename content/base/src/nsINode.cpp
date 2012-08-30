@@ -1964,16 +1964,16 @@ nsINode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 
 #define EVENT(name_, id_, type_, struct_)                                    \
   NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, jsval *vp) {            \
-    nsEventListenerManager *elm = GetListenerManager(false);              \
+    nsEventListenerManager *elm = GetListenerManager(false);                 \
     if (elm) {                                                               \
-      elm->GetJSEventListener(nsGkAtoms::on##name_, vp);                     \
+      elm->GetEventHandler(nsGkAtoms::on##name_, vp);                        \
     } else {                                                                 \
       *vp = JSVAL_NULL;                                                      \
     }                                                                        \
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const jsval &v) {       \
-    nsEventListenerManager *elm = GetListenerManager(true);               \
+    nsEventListenerManager *elm = GetListenerManager(true);                  \
     if (!elm) {                                                              \
       return NS_ERROR_OUT_OF_MEMORY;                                         \
     }                                                                        \
@@ -1983,7 +1983,7 @@ nsINode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
       /* Just silently do nothing */                                         \
       return NS_OK;                                                          \
     }                                                                        \
-    return elm->SetJSEventListenerToJsval(nsGkAtoms::on##name_, cx, obj, v); \
+    return elm->SetEventHandlerToJsval(nsGkAtoms::on##name_, cx, obj, v);    \
 }
 #define TOUCH_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT

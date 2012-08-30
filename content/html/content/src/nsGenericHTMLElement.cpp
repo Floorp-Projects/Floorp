@@ -1903,7 +1903,7 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
         aValue) {
       NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
         "Expected string value for script body");
-      nsresult rv = AddScriptEventListener(aName, aValue->GetStringValue());
+      nsresult rv = SetEventHandler(aName, aValue->GetStringValue());
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (aNotify && aName == nsGkAtoms::spellcheck) {
@@ -2043,7 +2043,7 @@ nsGenericHTMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                                                   EventNameType_HTML)) {
       nsEventListenerManager* manager = GetListenerManager(false);
       if (manager) {
-        manager->RemoveScriptEventListener(aAttribute);
+        manager->RemoveEventHandler(aAttribute);
       }
     }
 
@@ -4085,7 +4085,7 @@ nsGenericHTMLElement::RecompileScriptEventListeners()
 
         nsAutoString value;
         GetAttr(kNameSpaceID_None, attr, value);
-        AddScriptEventListener(attr, value, true);
+        SetEventHandler(attr, value, true);
     }
 }
 
