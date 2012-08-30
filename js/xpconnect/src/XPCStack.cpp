@@ -105,7 +105,7 @@ XPCJSStackFrame::CreateStack(JSContext* cx, XPCJSStackFrame** stack)
     for (size_t i = 0; i < desc->nframes && self; i++) {
         self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
 
-        JS::AutoCompartment ac(cx, desc->frames[i].script);
+	JSAutoCompartment ac(cx, desc->frames[i].script);
         const char* filename = JS_GetScriptFilename(cx, desc->frames[i].script);
         if (filename) {
             self->mFilename = (char*)
