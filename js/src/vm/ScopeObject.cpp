@@ -138,30 +138,25 @@ js::ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc)
  * The call object must be further initialized to be usable.
  */
 CallObject *
-CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots,
-                   HandleObject global)
+CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots)
 {
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    RootedObject obj(cx, JSObject::create(cx, kind, shape, type, slots));
+    JSObject *obj = JSObject::create(cx, kind, shape, type, slots);
     if (!obj)
         return NULL;
-
-    JS_ASSERT(obj->isDelegate());
-
     return &obj->asCall();
 }
 
 /*
- * Construct a call object for the given bindings.  If this is a call object
- * for a function invocation, callee should be the function being called.
- * Otherwise it must be a call object for eval of strict mode code, and callee
- * must be null.
+ * Create a CallObject for a JSScript that is not initialized to any particular
+ * callsite. This object can either be initialized (with an enclosing scope and
+ * callee) or used as a template for jit compilation.
  */
 CallObject *
-CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee)
+CallObject::createTemplateObject(JSContext *cx, JSScript *script)
 {
     RootedShape shape(cx, script->bindings.callObjShape());
 
@@ -173,16 +168,31 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
     if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
-    RootedObject global(cx, &enclosing->global());
-    RootedObject obj(cx, CallObject::create(cx, shape, type, slots, global));
-    if (!obj)
+    CallObject *callobj = CallObject::create(cx, shape, type, slots);
+    if (!callobj) {
+        cx->free_(slots);
+        return NULL;
+    }
+
+    return callobj;
+}
+
+/*
+ * Construct a call object for the given bindings.  If this is a call object
+ * for a function invocation, callee should be the function being called.
+ * Otherwise it must be a call object for eval of strict mode code, and callee
+ * must be null.
+ */
+CallObject *
+CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee)
+{
+    CallObject *callobj = CallObject::createTemplateObject(cx, script);
+    if (!callobj)
         return NULL;
 
-    JS_ASSERT(enclosing->global() == obj->global());
-
-    obj->asScope().setEnclosingScope(enclosing);
-    obj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
-    return &obj->asCall();
+    callobj->asScope().setEnclosingScope(enclosing);
+    callobj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
+    return callobj;
 }
 
 CallObject *
