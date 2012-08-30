@@ -13,7 +13,7 @@ interface nsIDocShell;
  * Describes an XPCOM component used to model an enforce CSPs.
  */
 
-[scriptable, uuid(91E1F257-914C-4D4F-902C-F67F772839AB)]
+[scriptable, uuid(230b126d-afc3-4588-9794-3e135594d626)]
 interface nsIContentSecurityPolicy : nsISupports
 {
 
@@ -63,6 +63,21 @@ interface nsIContentSecurityPolicy : nsISupports
   boolean getAllowsEval(out boolean shouldReportViolation);
 
   /**
+   * Whether this policy allows in-page styles.
+   * This includes <style> tags with text content and style="" attributes in
+   * HTML elements.
+   * @param shouldReportViolation
+   *     Whether or not the use of eval should be reported.
+   *     This function always returns "true" for report-only policies, but when
+   *     the report-only policy is violated, shouldReportViolation is true as
+   *     well.
+   * @return
+   *     Whether or not the effects of the eval call should be allowed
+   *     (block the call if false).
+   */
+  boolean getAllowsInlineStyle(out boolean shouldReportViolation);
+
+  /**
    * Log policy violation on the Error Console and send a report if a report-uri
    * is present in the policy
    *
@@ -82,6 +97,7 @@ interface nsIContentSecurityPolicy : nsISupports
 
   const unsigned short VIOLATION_TYPE_INLINE_SCRIPT = 1;
   const unsigned short VIOLATION_TYPE_EVAL = 2;
+  const unsigned short VIOLATION_TYPE_INLINE_STYLE = 3;
 
   /**
    * Manually triggers violation report sending given a URI and reason.
