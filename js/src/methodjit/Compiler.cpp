@@ -51,6 +51,21 @@ using namespace js::analyze;
             return retval;                                      \
     JS_END_MACRO
 
+static inline bool IsIonEnabled(JSContext *cx)
+{
+#ifdef JS_ION
+    return ion::IsEnabled(cx);
+#else
+    return false;
+#endif
+}
+
+/*
+ * Number of times a script must be called or had a backedge before we try to
+ * inline its calls. This is only used if IonMonkey is disabled.
+ */
+static const size_t USES_BEFORE_INLINING = 10240;
+
 mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
                          unsigned chunkIndex, bool isConstructing)
   : BaseCompiler(cx),
@@ -100,6 +115,14 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
     gcNumber(cx->runtime->gcNumber),
     pcLengths(NULL)
 {
+    if (!IsIonEnabled(cx)) {
+        /* Once a script starts getting really hot we will inline calls in it. */
+        if (!debugMode() && cx->typeInferenceEnabled() && globalObj &&
+            (outerScript->getUseCount() >= USES_BEFORE_INLINING ||
+             cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS))) {
+            inlining_ = true;
+        }
+    }
 }
 
 CompileStatus
@@ -1241,8 +1264,12 @@ mjit::Compiler::generatePrologue()
     }
 
     CompileStatus status = methodEntryHelper();
-    if (status == Compile_Okay)
-        ionCompileHelper();
+    if (status == Compile_Okay) {
+        if (IsIonEnabled(cx))
+            ionCompileHelper();
+        else
+            inliningCompileHelper();
+    }
 
     return status;
 }
@@ -3294,8 +3321,12 @@ mjit::Compiler::generateMethod()
             // Unlike JM, IonMonkey OSR enters loops at the LOOPENTRY op.
             // Insert the recompile check here so that we can immediately
             // enter Ion.
-            if (loop)
-                ionCompileHelper();
+            if (loop) {
+                if (IsIonEnabled(cx))
+                    ionCompileHelper();
+                else
+                    inliningCompileHelper();
+            }
           END_CASE(JSOP_LOOPENTRY)
 
           BEGIN_CASE(JSOP_DEBUGGER)
@@ -3997,10 +4028,13 @@ MaybeIonCompileable(JSContext *cx, JSScript *script, bool *recompileCheckForIon)
     return false;
 }
 
-#ifdef JS_ION
 void
 mjit::Compiler::ionCompileHelper()
 {
+    JS_ASSERT(IsIonEnabled(cx));
+    JS_ASSERT(!inlining());
+
+#ifdef JS_ION
     if (debugMode() || !globalObj || !cx->typeInferenceEnabled() || outerScript->hasIonScript())
         return;
 
@@ -4062,13 +4096,38 @@ mjit::Compiler::ionCompileHelper()
 
     OOL_STUBCALL(stubs::TriggerIonCompile, REJOIN_RESUME);
     stubcc.rejoin(Changes(0));
-}
-#else /* JS_ION */
-void
-mjit::Compiler::ionCompileHelper()
-{
-}
 #endif /* JS_ION */
+}
+
+void
+mjit::Compiler::inliningCompileHelper()
+{
+    JS_ASSERT(!IsIonEnabled(cx));
+
+    if (inlining() || debugMode() || !globalObj ||
+        !analysis->hasFunctionCalls() || !cx->typeInferenceEnabled()) {
+        return;
+    }
+
+    uint32_t *addr = script->addressOfUseCount();
+    masm.add32(Imm32(1), AbsoluteAddress(addr));
+#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
+    Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, AbsoluteAddress(addr),
+                              Imm32(USES_BEFORE_INLINING));
+#else
+    /* Handle processors that can't load from absolute addresses. */
+    RegisterID reg = frame.allocReg();
+    masm.move(ImmPtr(addr), reg);
+    Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, Address(reg, 0),
+                              Imm32(USES_BEFORE_INLINING));
+    frame.freeReg(reg);
+#endif
+    stubcc.linkExit(jump, Uses(0));
+    stubcc.leave();
+
+    OOL_STUBCALL(stubs::RecompileForInline, REJOIN_RESUME);
+    stubcc.rejoin(Changes(0));
+}
 
 CompileStatus
 mjit::Compiler::methodEntryHelper()

@@ -632,6 +632,7 @@ private:
     void dispatchCall(VoidPtrStubUInt32 stub, uint32_t argc);
     void interruptCheckHelper();
     void ionCompileHelper();
+    void inliningCompileHelper();
     CompileStatus methodEntryHelper();
     CompileStatus profilingPushHelper();
     void profilingPopHelper();
