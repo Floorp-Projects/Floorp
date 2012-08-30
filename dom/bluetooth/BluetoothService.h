@@ -10,6 +10,7 @@
 #include "nsThreadUtils.h"
 #include "nsClassHashtable.h"
 #include "nsIObserver.h"
+#include "nsIRunnable.h"
 #include "BluetoothCommon.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -72,7 +73,7 @@ public:
    * @return NS_OK on initialization starting correctly, NS_ERROR_FAILURE
    * otherwise
    */
-  nsresult Start(BluetoothReplyRunnable* aResultRunnable);
+  nsresult Start(nsIRunnable* aResultRunnable);
 
   /** 
    * Stop bluetooth services. Starts up any threads and connections that
@@ -87,7 +88,7 @@ public:
    * @return NS_OK on initialization starting correctly, NS_ERROR_FAILURE
    * otherwise
    */
-  nsresult Stop(BluetoothReplyRunnable* aResultRunnable);
+  nsresult Stop(nsIRunnable* aResultRunnable);
 
   /** 
    * Returns the BluetoothService singleton. Only to be called from main thread.
@@ -249,8 +250,7 @@ protected:
   {
   }
 
-  nsresult StartStopBluetooth(BluetoothReplyRunnable* aResultRunnable,
-                              bool aStart);
+  nsresult StartStopBluetooth(nsIRunnable* aResultRunnable, bool aStart);
   // This function is implemented in platform-specific BluetoothServiceFactory
   // files
   static BluetoothService* Create();
