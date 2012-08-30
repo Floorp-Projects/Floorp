@@ -71,10 +71,6 @@ function testEditorAdded(aChrome, aEditor)
 
 function testFirstStyleSheetEditor(aChrome, aEditor)
 {
-  // Note: the html <link> contains charset="UTF-8".
-  ok(aEditor._state.text.indexOf("\u263a") >= 0,
-     "stylesheet is unicode-aware.");
-
   //testing TESTCASE's simple.css stylesheet
   is(aEditor.styleSheetIndex, 0,
      "first stylesheet is at index 0");
