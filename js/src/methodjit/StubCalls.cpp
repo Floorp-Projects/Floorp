@@ -809,6 +809,14 @@ stubs::TriggerIonCompile(VMFrame &f)
 }
 
 void JS_FASTCALL
+stubs::RecompileForInline(VMFrame &f)
+{
+    ExpandInlineFrames(f.cx->compartment);
+    Recompiler::clearStackReferences(f.cx->runtime->defaultFreeOp(), f.script());
+    f.jit()->destroyChunk(f.cx->runtime->defaultFreeOp(), f.chunkIndex(), /* resetUses = */ false);
+}
+
+void JS_FASTCALL
 stubs::Trap(VMFrame &f, uint32_t trapTypes)
 {
     Value rval;
