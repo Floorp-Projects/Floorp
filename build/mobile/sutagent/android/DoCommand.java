@@ -899,12 +899,16 @@ private void CancelNotification()
             int    nStart = 0;
 
             // if we have a quote
-            if (workingString.startsWith("\""))
+            if (workingString.startsWith("\"") || workingString.startsWith("'"))
                 {
+                char quoteChar = '"';
+                if (workingString.startsWith("\'"))
+                    quoteChar = '\'';
+
                 // point to the first non quote char
                 nStart = 1;
                 // find the matching quote
-                nEnd = workingString.indexOf('"', nStart);
+                nEnd = workingString.indexOf(quoteChar, nStart);
 
                 char prevChar;
 
@@ -917,7 +921,7 @@ private void CancelNotification()
                         // if escaped, point past this quotation mark and find the next
                         nEnd++;
                         if (nEnd < nLength)
-                            nEnd = workingString.indexOf('"', nEnd);
+                            nEnd = workingString.indexOf(quoteChar, nEnd);
                         else
                             nEnd = -1;
                         }
@@ -948,16 +952,11 @@ private void CancelNotification()
             // get the substring
             workingString2 = workingString.substring(nStart, nEnd);
 
-            // if we have escaped quotes
-            if (workingString2.contains("\\\""))
+            // if we have escaped quotes, convert them into standard ones
+            while (workingString2.contains("\\\"") || workingString2.contains("\\'"))
                 {
-                do
-                    {
-                    // replace escaped quote with embedded quote
-                    workingString3 = workingString2.replace("\\\"", "\"");
-                    workingString2 = workingString3;
-                    }
-                while(workingString2.contains("\\\""));
+                    workingString2 = workingString2.replace("\\\"", "\"");
+                    workingString2 = workingString2.replace("\\'", "'");
                 }
 
             // add it to the list
