@@ -58,7 +58,7 @@
   </style>
 
   <!-- Theme Styles -->
-  <style name="SyncTheme" parent="@android:style/Theme.NoTitleBar"/>
+  <style name="SyncTheme" parent="@style/Gecko" />
 
   <!-- Outer container: a container with top, middle, and bottom
        content in it. -->

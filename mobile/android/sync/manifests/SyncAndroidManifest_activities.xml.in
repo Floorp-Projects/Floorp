@@ -15,8 +15,10 @@
             </intent-filter>
         </activity>
 
+        <!-- On tablets, SyncTheme is in a dialog, which is not what
+             we want for install instructions. -->
         <activity
-            android:theme="@android:style/Theme.NoTitleBar"
+            android:theme="@style/Gecko"
             android:name="org.mozilla.gecko.sync.setup.activities.WebViewActivity" />
 
         <activity
