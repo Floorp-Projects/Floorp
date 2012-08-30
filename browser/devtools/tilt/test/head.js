@@ -61,14 +61,11 @@ const UNHIGHLIGHTING = Tilt.NOTIFICATIONS.UNHIGHLIGHTING;
 const NODE_REMOVED = Tilt.NOTIFICATIONS.NODE_REMOVED;
 
 const TILT_ENABLED = Services.prefs.getBoolPref("devtools.tilt.enabled");
-const INSP_ENABLED = Services.prefs.getBoolPref("devtools.inspector.enabled");
 
 
 function isTiltEnabled() {
-  let enabled = TILT_ENABLED && INSP_ENABLED;
-
-  info("Apparently, Tilt is" + (enabled ? "" : " not") + " enabled.");
-  return enabled;
+  info("Apparently, Tilt is" + (TILT_ENABLED ? "" : " not") + " enabled.");
+  return TILT_ENABLED;
 }
 
 function isWebGLSupported() {
