@@ -38,26 +38,27 @@
     #include <sys/statfs.h>
 #endif
 
-#if defined(XP_MACOSX) && (defined(HAVE_STATVFS64) || !defined(HAVE_STATVFS))
-#error "Double-check which members of the 'STATFS' struct we're using!"
+#ifdef HAVE_SYS_VFS_H
+    #include <sys/vfs.h>
 #endif
 
-#ifdef HAVE_STATVFS64
-    #define STATFS statvfs64
-#else
-    #ifdef HAVE_STATVFS
-        #define STATFS statvfs
-    #else
-        #define STATFS statfs
-    #endif
-#endif
-
-// so we can statfs on freebsd
-#if defined(__FreeBSD__)
-    #define HAVE_SYS_STATFS_H
-    #define STATFS statfs
+#ifdef HAVE_SYS_MOUNT_H
     #include <sys/param.h>
     #include <sys/mount.h>
+#endif
+
+#if defined(HAVE_STATVFS64) && (!defined(LINUX) && !defined(__osf__))
+    #define STATFS statvfs64
+    #define F_BSIZE f_frsize
+#elif defined(HAVE_STATVFS) && (!defined(LINUX) && !defined(__osf__))
+    #define STATFS statvfs
+    #define F_BSIZE f_frsize
+#elif defined(HAVE_STATFS64)
+    #define STATFS statfs64
+    #define F_BSIZE f_bsize
+#elif defined(HAVE_STATFS)
+    #define STATFS statfs
+    #define F_BSIZE f_bsize
 #endif
 
 #if defined(HAVE_STAT64) && defined(HAVE_LSTAT64)

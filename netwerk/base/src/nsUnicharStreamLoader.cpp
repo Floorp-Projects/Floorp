@@ -220,9 +220,12 @@ nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *,
     // possible right now -- see bug 160784
     consumed += srcLen;
     if (NS_FAILED(rv)) {
-      NS_ASSERTION(0 < capacity - haveRead,
-                   "Decoder returned an error but filled the output buffer! "
-                   "Should not happen.");
+      if (haveRead >= capacity) {
+        // Make room for writing the 0xFFFD below (bug 785753).
+        if (!self->mBuffer.SetCapacity(haveRead + 1, fallible_t())) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
       self->mBuffer.BeginWriting()[haveRead++] = 0xFFFD;
       ++consumed;
       // XXX this is needed to make sure we don't underrun our buffer;

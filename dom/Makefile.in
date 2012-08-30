@@ -75,12 +75,19 @@ ifdef MOZ_B2G_RIL
 PARALLEL_DIRS += \
   telephony \
   wifi \
+  icc \
   $(NULL)
 endif
 
 ifdef MOZ_B2G_BT
 PARALLEL_DIRS += \
   bluetooth \
+  $(NULL)
+endif
+
+ifdef MOZ_PAY
+PARALLEL_DIRS += \
+  payment \
   $(NULL)
 endif
 

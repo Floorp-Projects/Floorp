@@ -126,6 +126,12 @@ void SetAllFDsToCloseOnExec();
 void CloseSuperfluousFds(const base::InjectiveMultimap& saved_map);
 #endif
 
+enum ChildPrivileges {
+  PRIVILEGES_DEFAULT,
+  PRIVILEGES_UNPRIVILEGED,
+  PRIVILEGES_INHERIT
+};
+
 #if defined(OS_WIN)
 // Runs the given application name with the given command line. Normally, the
 // first command line argument should be the path to the process, and don't
@@ -160,10 +166,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
                bool wait, ProcessHandle* process_handle);
 
 typedef std::map<std::string, std::string> environment_map;
-enum ChildPrivileges {
-  UNPRIVILEGED,
-  SAME_PRIVILEGES_AS_PARENT
-};
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                const environment_map& env_vars_to_set,

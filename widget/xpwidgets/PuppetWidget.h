@@ -52,6 +52,8 @@ public:
                     nsDeviceContext*  aContext,
                     nsWidgetInitData* aInitData = nullptr);
 
+  void InitIMEState();
+
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
               nsDeviceContext  *aContext,
@@ -206,6 +208,7 @@ private:
   // Note that if seqno overflows (~50 days at 1 ms increment rate),
   // events will be discarded until new focus/blur occurs
   uint32_t mIMELastBlurSeqno;
+  bool mNeedIMEStateInit;
 
   // The DPI of the screen corresponding to this widget
   float mDPI;

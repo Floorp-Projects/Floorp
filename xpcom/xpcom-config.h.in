@@ -32,9 +32,6 @@
  */
 #undef HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
 
-/* Define if statvfs() is available */
-#undef HAVE_STATVFS
-
 /* Define if the c++ compiler requires implementations of 
  * unused virtual methods
  */

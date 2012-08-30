@@ -26,6 +26,7 @@ EXTRA_PP_COMPONENTS = \
         DirectoryProvider.js \
         MozKeyboard.js \
         ProcessGlobal.js \
+        PaymentGlue.js \
         $(NULL)
 
 ifdef MOZ_UPDATER
