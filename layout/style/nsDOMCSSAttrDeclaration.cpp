@@ -154,11 +154,11 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aC
 {
   NS_ASSERTION(mElement, "Something is severely broken -- there should be an Element here!");
 
-  nsIDocument* doc = mElement->OwnerDoc();
-  aCSSParseEnv.mSheetURI = doc->GetDocumentURI();
+  aCSSParseEnv.mDocument = mElement->OwnerDoc();
+  aCSSParseEnv.mSheetURI = aCSSParseEnv.mDocument->GetDocumentURI();
   aCSSParseEnv.mBaseURI = mElement->GetBaseURI();
   aCSSParseEnv.mPrincipal = mElement->NodePrincipal();
-  aCSSParseEnv.mCSSLoader = doc->CSSLoader();
+  aCSSParseEnv.mCSSLoader = aCSSParseEnv.mDocument->CSSLoader();
 }
 
 NS_IMETHODIMP
