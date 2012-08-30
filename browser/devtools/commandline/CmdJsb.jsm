@@ -25,8 +25,7 @@ gcli.addCommand({
     {
       name: 'url',
       type: 'string',
-      description: gcli.lookup('jsbUrlDesc'),
-      manual: 'The URL of the JS to prettify'
+      description: gcli.lookup('jsbUrlDesc')
     },
     {
       name: 'indentSize',
