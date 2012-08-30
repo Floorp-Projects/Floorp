@@ -228,6 +228,7 @@ interface TestInterface {
   void passUint8ClampedArray(Uint8ClampedArray arg);
   void passFloat32Array(Float32Array arg);
   void passFloat64Array(Float64Array arg);
+  Uint8Array receiveUint8Array();
 
   // String types
   void passString(DOMString arg);

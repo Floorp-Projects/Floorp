@@ -6,7 +6,7 @@
 #ifndef mozilla_net_NeckoMessageUtils_h
 #define mozilla_net_NeckoMessageUtils_h
 
-#include "IPC/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 #include "nsStringGlue.h"
 #include "prio.h"
 #include "mozilla/Util.h" // for DebugOnly

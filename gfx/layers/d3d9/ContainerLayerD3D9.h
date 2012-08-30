@@ -17,6 +17,8 @@ static void ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aA
 template<class Container>
 static void ContainerRemoveChild(Container* aContainer, Layer* aChild);
 template<class Container>
+static void ContainerRepositionChild(Container* aContainer, Layer* aChild, Layer* aAfter);
+template<class Container>
 static void ContainerRender(Container* aContainer, LayerManagerD3D9* aManager);
 
 class ContainerLayerD3D9 : public ContainerLayer,
@@ -26,6 +28,8 @@ class ContainerLayerD3D9 : public ContainerLayer,
   friend void ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter);
   template<class Container>
   friend void ContainerRemoveChild(Container* aContainer, Layer* aChild);
+  template<class Container>
+  friend void ContainerRepositionChild(Container* aContainer, Layer* aChild, Layer* aAfter);
   template<class Container>
   friend void ContainerRender(Container* aContainer, LayerManagerD3D9* aManager);
 
@@ -39,6 +43,8 @@ public:
   virtual void InsertAfter(Layer* aChild, Layer* aAfter);
 
   virtual void RemoveChild(Layer* aChild);
+
+  virtual void RepositionChild(Layer* aChild, Layer* aAfter);
 
   /* LayerD3D9 implementation */
   Layer* GetLayer();
@@ -65,6 +71,8 @@ class ShadowContainerLayerD3D9 : public ShadowContainerLayer,
   template<class Container>
   friend void ContainerRemoveChild(Container* aContainer, Layer* aChild);
   template<class Container>
+  friend void ContainerRepositionChild(Container* aContainer, Layer* aChild, Layer* aAfter);
+  template<class Container>
   friend void ContainerRender(Container* aContainer, LayerManagerD3D9* aManager);
 
 public:
@@ -74,6 +82,8 @@ public:
   void InsertAfter(Layer* aChild, Layer* aAfter);
 
   void RemoveChild(Layer* aChild);
+
+  void RepositionChild(Layer* aChild, Layer* aAfter);
 
   // LayerD3D9 Implementation
   virtual Layer* GetLayer() { return this; }

@@ -51,6 +51,30 @@
  * update the tests for bug 689564 and bug 659350 as needed.
  */
 
+#ifdef ID_TO_EVENT
+#ifdef EVENT
+#error "Don't define EVENT"
+#endif /* EVENT */
+#ifdef WINDOW_ONLY_EVENT
+#error "Don't define WINDOW_ONLY_EVENT"
+#endif /* WINDOW_ONLY_EVENT */
+#ifdef TOUCH_EVENT
+#error "Don't define TOUCH_EVENT"
+#endif /* TOUCH_EVENT */
+#ifdef DOCUMENT_ONLY_EVENT
+#error "Don't define DOCUMENT_ONLY_EVENT"
+#endif /* DOCUMENT_ONLY_EVENT */
+#ifdef NON_IDL_EVENT
+#error "Don't define NON_IDL_EVENT"
+#endif /* NON_IDL_EVENT */
+
+#define EVENT ID_TO_EVENT
+#define WINDOW_ONLY_EVENT ID_TO_EVENT
+#define TOUCH_EVENT ID_TO_EVENT
+#define DOCUMENT_ONLY_EVENT ID_TO_EVENT
+#define NON_IDL_EVENT ID_TO_EVENT
+#endif
+
 #ifdef DEFINED_FORWARDED_EVENT
 #error "Don't define DEFINED_FORWARDED_EVENT"
 #endif /* DEFINED_FORWARDED_EVENT */
@@ -635,31 +659,44 @@ NON_IDL_EVENT(SVGZoom,
               NS_SVG_ZOOM,
               EventNameType_None,
               NS_SVGZOOM_EVENT)
+
+// Only map the ID to the real event name when ID_TO_EVENT is defined.
+#ifndef ID_TO_EVENT
 // This is a bit hackish, but SVG's event names are weird.
 NON_IDL_EVENT(zoom,
               NS_SVG_ZOOM,
               EventNameType_SVGSVG,
               NS_EVENT_NULL)
+#endif
+// Only map the ID to the real event name when ID_TO_EVENT is defined.
+#ifndef ID_TO_EVENT
 NON_IDL_EVENT(begin,
               NS_SMIL_BEGIN,
               EventNameType_SMIL,
               NS_EVENT_NULL)
+#endif
 NON_IDL_EVENT(beginEvent,
               NS_SMIL_BEGIN,
               EventNameType_None,
               NS_SMIL_TIME_EVENT)
+// Only map the ID to the real event name when ID_TO_EVENT is defined.
+#ifndef ID_TO_EVENT
 NON_IDL_EVENT(end,
               NS_SMIL_END,
               EventNameType_SMIL,
               NS_EVENT_NULL)
+#endif
 NON_IDL_EVENT(endEvent,
               NS_SMIL_END,
               EventNameType_None,
               NS_SMIL_TIME_EVENT)
+// Only map the ID to the real event name when ID_TO_EVENT is defined.
+#ifndef ID_TO_EVENT
 NON_IDL_EVENT(repeat,
               NS_SMIL_REPEAT,
               EventNameType_SMIL,
               NS_EVENT_NULL)
+#endif
 NON_IDL_EVENT(repeatEvent,
               NS_SMIL_REPEAT,
               EventNameType_None,
@@ -780,4 +817,12 @@ NON_IDL_EVENT(animationiteration,
 #undef DEFINED_NON_IDL_EVENT
 #undef NON_IDL_EVENT
 #endif /* DEFINED_NON_IDL_EVENT */
+
+#ifdef ID_TO_EVENT
+#undef EVENT
+#undef WINDOW_ONLY_EVENT
+#undef TOUCH_EVENT
+#undef DOCUMENT_ONLY_EVENT
+#undef NON_IDL_EVENT
+#endif /* ID_TO_EVENT */
 

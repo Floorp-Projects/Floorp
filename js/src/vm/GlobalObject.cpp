@@ -214,7 +214,7 @@ intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     uint32_t errorNumber = args[0].toInt32();
 
     char *errorArgs[3] = {NULL, NULL, NULL};
-    for (unsigned i = 1; i < 3 && i < args.length(); i++) {
+    for (unsigned i = 1; i < 4 && i < args.length(); i++) {
         RootedValue val(cx, args[i]);
         if (val.isInt32() || val.isString()) {
             errorArgs[i - 1] = JS_EncodeString(cx, ToString(cx, val));
@@ -231,11 +231,24 @@ intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     return false;
 }
 
+static JSBool
+intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() >= 1);
+    JS_ASSERT(args[0].isObject());
+    RootedObject obj(cx, &args[0].toObject());
+    JS_ASSERT(obj->isFunction());
+    obj->toFunction()->flags |= JSFUN_SELF_HOSTED_CTOR;
+    return true;
+}
+
 JSFunctionSpec intrinsic_functions[] = {
-    JS_FN("ToObject",       intrinsic_ToObject,     1,0),
-    JS_FN("ToInteger",      intrinsic_ToInteger,    1,0),
-    JS_FN("IsCallable",     intrinsic_IsCallable,   1,0),
-    JS_FN("ThrowError",     intrinsic_ThrowError,   4,0),
+    JS_FN("ToObject",           intrinsic_ToObject,             1,0),
+    JS_FN("ToInteger",          intrinsic_ToInteger,            1,0),
+    JS_FN("IsCallable",         intrinsic_IsCallable,           1,0),
+    JS_FN("ThrowError",         intrinsic_ThrowError,           4,0),
+    JS_FN("_MakeConstructible", intrinsic_MakeConstructible,    1,0),
     JS_FS_END
 };
 JSObject *

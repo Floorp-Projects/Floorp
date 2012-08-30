@@ -57,6 +57,7 @@ DIST_INSTALL = 1
 VPATH		= \
 		$(srcdir) \
 		$(srcdir)/builtin \
+		$(srcdir)/devtools \
 		$(srcdir)/ds \
 		$(srcdir)/frontend \
 		$(srcdir)/gc \
@@ -87,6 +88,7 @@ CPPSRCS		= \
 		jsiter.cpp \
 		jslog2.cpp \
 		jsmath.cpp \
+		jsmemorymetrics.cpp \
 		jsnativestack.cpp \
 		jsnum.cpp \
 		jsobj.cpp \
@@ -132,7 +134,6 @@ CPPSRCS		= \
 		LifoAlloc.cpp \
 		Eval.cpp \
 		MapObject.cpp \
-		MemoryMetrics.cpp \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
 		RegExp.cpp \
@@ -544,7 +545,7 @@ ifdef HAVE_DTRACE
 ifneq ($(OS_ARCH),Darwin)
 DTRACE_PROBE_OBJ = $(LIBRARY_NAME)-dtrace.$(OBJ_SUFFIX)
 endif
-MOZILLA_DTRACE_SRC = $(srcdir)/javascript-trace.d
+MOZILLA_DTRACE_SRC = $(srcdir)/devtools/javascript-trace.d
 endif
 
 default::
@@ -676,7 +677,7 @@ ifndef HAVE_DTRACE
 endif
 endif
 
-DIST_GARBAGE = config.cache config.log config.status \
+DIST_GARBAGE = config.cache config.log config.status* \
    config/autoconf.mk \
    unallmakefiles js-config js-config.h js-confdefs.h
 
@@ -892,8 +893,8 @@ install:: ETWProvider.mof ETWProvider.man
 endif
 
 ifdef HAVE_DTRACE
-$(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
-	dtrace -h -s $(srcdir)/javascript-trace.d -o javascript-trace.h.in
+$(CURDIR)/javascript-trace.h: $(srcdir)/devtools/javascript-trace.d
+	dtrace -h -s $(srcdir)/devtools/javascript-trace.d -o javascript-trace.h.in
 	sed -e 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
 	    -e '/const/!s/char \*/const char */g' \
 	    javascript-trace.h.in > javascript-trace.h

@@ -10,6 +10,10 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef GNU_CC
+OS_CFLAGS := $(filter-out -pedantic,$(OS_CFLAGS))
+endif
+
 DEFINES += -DHAVE_CONFIG_H=vpx_config.h
 
 MODULE = vpx
@@ -478,6 +482,8 @@ GARBAGE += asm_enc_offsets.s asm_enc_offsets.asm
 endif
 
 endif
+
+EXTRA_MDDEPEND_FILES = asm_enc_offsets.s.pp asm_enc_offsets.$(OBJ_SUFFIX).pp asm_com_offsets.s.pp asm_com_offsets.$(OBJ_SUFFIX).pp
 
 include $(topsrcdir)/config/rules.mk
 

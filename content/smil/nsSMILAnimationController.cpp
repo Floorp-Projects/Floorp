@@ -358,6 +358,10 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
     NS_ERROR("Shouldn't be sampling after document has disconnected");
     return;
   }
+  if (mRunningSample) {
+    NS_ERROR("Shouldn't be recursively sampling");
+    return;
+  }
 
   mResampleNeeded = false;
   // Set running sample flag -- do this before flushing styles so that when we

@@ -1344,7 +1344,6 @@ let WifiNetworkInterface = {
   NETWORK_STATE_UNKNOWN:       Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN,
   NETWORK_STATE_CONNECTING:    Ci.nsINetworkInterface.CONNECTING,
   NETWORK_STATE_CONNECTED:     Ci.nsINetworkInterface.CONNECTED,
-  NETWORK_STATE_SUSPENDED:     Ci.nsINetworkInterface.SUSPENDED,
   NETWORK_STATE_DISCONNECTING: Ci.nsINetworkInterface.DISCONNECTING,
   NETWORK_STATE_DISCONNECTED:  Ci.nsINetworkInterface.DISCONNECTED,
 
@@ -2029,16 +2028,7 @@ WifiWorker.prototype = {
     this.waitForScan((function (networks) {
       this._sendMessage(message, networks !== null, networks, msg);
     }).bind(this));
-
-    WifiManager.scan(true, function(ok) {
-      // If the scan command succeeded, we're done.
-      if (ok)
-        return;
-
-      // Otherwise, let the client know that it failed, it's responsible for
-      // trying again in a few seconds.
-      this._sendMessage(message, false, "ScanFailed", msg);
-    });
+    WifiManager.scan(true, function() {});
   },
 
   _notifyAfterStateChange: function(success, newState) {
