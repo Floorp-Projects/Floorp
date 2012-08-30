@@ -27,6 +27,7 @@
 #include "nsPrintfCString.h"
 #include <cstdlib> // for std::abs(int/long)
 #include <cmath> // for std::abs(float/double)
+#include "nsStyleUtil.h"
 
 using namespace mozilla;
 
@@ -2233,6 +2234,11 @@ BuildStyleRule(nsCSSProperty aProperty,
   nsIDocument* doc = aTargetElement->OwnerDoc();
   nsCOMPtr<nsIURI> baseURI = aTargetElement->GetBaseURI();
   nsCSSParser parser(doc->CSSLoader());
+
+  if (!nsStyleUtil::CSPAllowsInlineStyle(doc->NodePrincipal(),
+                                         doc->GetDocumentURI(),
+                                         0, aSpecifiedValue, nullptr))
+    return nullptr;
 
   nsCSSProperty propertyToCheck = nsCSSProps::IsShorthand(aProperty) ?
     nsCSSProps::SubpropertyEntryFor(aProperty)[0] : aProperty;

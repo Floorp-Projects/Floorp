@@ -20,6 +20,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsXULElement.h"
 #include "nsContentUtils.h"
+#include "nsStyleUtil.h"
 
 namespace css = mozilla::css;
 using namespace mozilla::dom;
@@ -234,6 +235,11 @@ nsStyledElementNotElementCSSInlineStyle::ParseStyleAttribute(const nsAString& aV
                                                              bool aForceInDataDoc)
 {
   nsIDocument* doc = OwnerDoc();
+
+  if (!nsStyleUtil::CSPAllowsInlineStyle(NodePrincipal(),
+                                         doc->GetDocumentURI(), 0, aValue,
+                                         nullptr))
+    return;
 
   if (aForceInDataDoc ||
       !doc->IsLoadedAsData() ||

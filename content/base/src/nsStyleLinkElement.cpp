@@ -26,6 +26,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsUnicharInputStream.h"
 #include "nsContentUtils.h"
+#include "nsStyleUtil.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -377,6 +378,11 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
   if (isInline) {
     nsAutoString text;
     nsContentUtils::GetNodeTextContent(thisContent, false, text);
+
+    if (!nsStyleUtil::CSPAllowsInlineStyle(thisContent->NodePrincipal(),
+                                           doc->GetDocumentURI(),
+                                           mLineNumber, text, &rv))
+      return rv;
 
     // Parse the style sheet.
     rv = doc->CSSLoader()->
