@@ -2015,7 +2015,7 @@ JSObject*
 nsHTMLOptionCollection::WrapObject(JSContext *cx, JSObject *scope,
                                    bool *triedToWrap)
 {
-  return mozilla::dom::binding::HTMLOptionsCollection::create(cx, scope, this,
+  return mozilla::dom::oldproxybindings::HTMLOptionsCollection::create(cx, scope, this,
                                                               triedToWrap);
 }
 

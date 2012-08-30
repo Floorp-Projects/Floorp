@@ -170,6 +170,10 @@ pref("media.h264.enabled", true);
 #endif
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", false);
+#else
+#ifdef ANDROID
+pref("media.navigator.enabled", true);
+#endif
 #endif
 
 // Whether to autostart a media element with an |autoplay| attribute
@@ -227,22 +231,19 @@ pref("gfx.font_rendering.directwrite.enabled", false);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 
-#ifdef XP_WIN
 pref("gfx.canvas.azure.enabled", true);
+#ifdef XP_WIN
 // comma separated list of backends to use in order of preference
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
 pref("gfx.canvas.azure.backends", "direct2d,cairo");
 pref("gfx.content.azure.enabled", true);
 #else
 #ifdef XP_MACOSX
-pref("gfx.canvas.azure.enabled", true);
 pref("gfx.canvas.azure.backends", "cg");
 #else
 #ifdef ANDROID
-pref("gfx.canvas.azure.enabled", true);
 pref("gfx.canvas.azure.backends", "cairo");
 #else
-pref("gfx.canvas.azure.enabled", false);
 pref("gfx.canvas.azure.backends", "cairo");
 #endif
 #endif
@@ -699,7 +700,7 @@ pref("javascript.options.ion.content",      true);
 pref("javascript.options.pccounts.content", false);
 pref("javascript.options.pccounts.chrome",  false);
 pref("javascript.options.methodjit_always", false);
-pref("javascript.options.xml.content", true);
+pref("javascript.options.xml.content", false);
 pref("javascript.options.xml.chrome", true);
 pref("javascript.options.jit_hardening", true);
 pref("javascript.options.typeinference", true);
@@ -725,6 +726,8 @@ pref("javascript.options.mem.gc_high_frequency_heap_growth_min", 150);
 pref("javascript.options.mem.gc_low_frequency_heap_growth", 150);
 pref("javascript.options.mem.gc_dynamic_heap_growth", true);
 pref("javascript.options.mem.gc_dynamic_mark_slice", true);
+
+pref("javascript.options.mem.analysis_purge_mb", 100);
 
 // advanced prefs
 pref("advanced.mailftp",                    false);
@@ -3636,7 +3639,6 @@ pref("dom.battery.enabled", true);
 
 // WebSMS
 pref("dom.sms.enabled", false);
-pref("dom.sms.whitelist", "");
 
 // WebContacts
 pref("dom.mozContacts.enabled", false);

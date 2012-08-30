@@ -26,7 +26,7 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 namespace dom {
-namespace binding {
+namespace oldproxybindings {
 
 enum {
     JSPROXYSLOT_EXPANDO = 0
@@ -64,15 +64,6 @@ DefineStaticJSVals(JSContext *cx)
            DefinePropertyStaticJSVals(cx);
 }
 
-
-int HandlerFamily;
-
-struct SetListBaseInformation
-{
-    SetListBaseInformation() {
-        js::SetListBaseInformation((void*) &HandlerFamily, js::JSSLOT_PROXY_EXTRA + JSPROXYSLOT_EXPANDO);
-    }
-} gSetListBaseInformation;
 
 JSBool
 Throw(JSContext *cx, nsresult rv)
@@ -420,12 +411,7 @@ ListBase<LC>::create(JSContext *cx, JSObject *scope, ListType *aList,
         return NULL;
 
     JSObject *global = js::GetGlobalForObjectCrossCompartment(parent);
-
-    JSAutoEnterCompartment ac;
-    if (global != scope) {
-        if (!ac.enter(cx, global))
-            return NULL;
-    }
+    JSAutoCompartment ac(cx, global);
 
     JSObject *proto = getPrototype(cx, global, triedToWrap);
     if (!proto && !*triedToWrap)
@@ -831,11 +817,10 @@ template<class LC>
 bool
 ListBase<LC>::hasPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id)
 {
-    JSAutoEnterCompartment ac;
+    Maybe<JSAutoCompartment> ac;
     if (xpc::WrapperFactory::IsXrayWrapper(proxy)) {
         proxy = js::UnwrapObject(proxy);
-        if (!ac.enter(cx, proxy))
-            return false;
+        ac.construct(cx, proxy);
     }
     JS_ASSERT(objIsList(proxy));
 

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <link rel="stylesheet" href="chrome://browser/content/devtools/markup-view.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://browser/skin/devtools/markup-view.css" type="text/css"/>
+</head>
+<body role="application">
+  <div id="root"></div>
+  <div id="templates" style="display:none">
+  	<ul>
+  	  <li id="template-container" save="${elt}" class="container"><span save="${expander}" class="expander"></span><span save="${codeBox}" class="codebox"><ul save="${children}" class="children"></ul></span></li>
+    </ul>
+
+    <span id="template-element" save="${elt}" class="editor"><span>&lt;</span><span save="${tag}" class="tagname"></span><span save="${attrList}"></span><span save="${newAttr}" class="newattr" tabindex="0"></span>&gt;</span>
+
+    <span id="template-attribute" save="${attr}" data-attr="${attrName}" class="attreditor" style="display:none"> <span class="editable" save="${inner}" tabindex="0"><span save="${name}" class="attrname"></span>=&quot;<span save="${val}" class="attrvalue"></span>&quot;</span></span>
+
+    <span id="template-text" save="${elt}" class="editor">
+      <pre save="${value}" style="display:inline-block;" tabindex="0"></pre>
+    </span>
+
+    <span id="template-comment" save="${elt}" class="editor comment">
+      <span>&lt;!--</span><pre save="${value}" style="display:inline-block;" tabindex="0"></pre><span>--&gt;</span>
+    </span>
+
+    <span id="template-elementClose" save="${closeElt}">&lt;/<span save="${closeTag}" class="tagname"></span>&gt;</span>
+   </div>
+</body>
+</html>

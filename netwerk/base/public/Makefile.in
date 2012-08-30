@@ -7,6 +7,7 @@ DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -52,7 +53,6 @@ XPIDLSRCS	= \
 		nsIInputStreamPump.idl \
 		nsIInputStreamChannel.idl \
                 nsIIOService2.idl \
-                nsIIPCSerializableObsolete.idl \
 		nsIMIMEInputStream.idl \
 		nsINetAddr.idl \
                 nsINetworkLinkService.idl \

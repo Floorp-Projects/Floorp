@@ -182,8 +182,9 @@ IsConstructing(CallReceiver call)
 inline const char *
 GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
 {
-    if (fun->atom)
-        return bytes->encode(cx, fun->atom);
+    JSAtom *atom = fun->atom();
+    if (atom)
+        return bytes->encode(cx, atom);
     return js_anonymous_str;
 }
 

@@ -70,7 +70,7 @@ public:
   nsEventListenerManager(nsISupports* aTarget);
   virtual ~nsEventListenerManager();
 
-  NS_INLINE_DECL_REFCOUNTING(nsEventListenerManager)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsEventListenerManager)
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsEventListenerManager)
 

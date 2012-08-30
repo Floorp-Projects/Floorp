@@ -262,7 +262,7 @@ function OnRefTestLoad(win)
 #endif
 
     gBrowserMessageManager = gBrowser.QueryInterface(CI.nsIFrameLoaderOwner)
-                             .frameLoader.messageManager;
+                                     .frameLoader.messageManager;
     // The content script waits for the initial onload, then notifies
     // us.
     RegisterMessageListenersAndLoadContentScript();
@@ -1554,6 +1554,7 @@ function FindUnexpectedCrashDumpFiles()
         let path = String(file.path);
         if (path.match(/\.(dmp|extra)$/) && !gUnexpectedCrashDumpFiles[path]) {
             if (!foundCrashDumpFile) {
+                ++gTestResults.UnexpectedFail;
                 foundCrashDumpFile = true;
                 gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " + gCurrentURL +
                          " | This test left crash dumps behind, but we weren't expecting it to!\n");

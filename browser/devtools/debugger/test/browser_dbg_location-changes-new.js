@@ -57,25 +57,24 @@ function testLocationChange()
   gDebugger.DebuggerController.activeThread.resume(function() {
     gDebugger.DebuggerController.client.addOneTimeListener("tabNavigated", function(aEvent, aPacket) {
       ok(true, "tabNavigated event was fired.");
-      gDebugger.DebuggerController.client.addOneTimeListener("tabAttached", function(aEvent, aPacket) {
-        ok(true, "Successfully reattached to the tab again.");
+      info("Still attached to the tab.");
 
-        // Wait for the initial resume...
-        gDebugger.gClient.addOneTimeListener("resumed", function() {
-          isnot(gDebugger.DebuggerView.Scripts.selected, null,
-            "There should be a selected script.");
-          isnot(gDebugger.editor.getText().length, 0,
-            "The source editor should have some text displayed.");
+      gDebugger.addEventListener("Debugger:AfterScriptsAdded", function _onEvent(aEvent) {
+        gDebugger.removeEventListener(aEvent.type, _onEvent);
 
-          let menulist = gDebugger.DebuggerView.Scripts._scripts;
-          let noScripts = gDebugger.L10N.getStr("noScriptsText");
-          isnot(menulist.getAttribute("label"), noScripts,
-            "The menulist should not display a notice that there are no scripts availalble.");
-          isnot(menulist.getAttribute("tooltiptext"), "",
-            "The menulist should have a tooltip text attributed.");
+        isnot(gDebugger.DebuggerView.Scripts.selected, null,
+          "There should be a selected script.");
+        isnot(gDebugger.editor.getText().length, 0,
+          "The source editor should have some text displayed.");
 
-          closeDebuggerAndFinish();
-        });
+        let menulist = gDebugger.DebuggerView.Scripts._scripts;
+        let noScripts = gDebugger.L10N.getStr("noScriptsText");
+        isnot(menulist.getAttribute("label"), noScripts,
+          "The menulist should not display a notice that there are no scripts availalble.");
+        isnot(menulist.getAttribute("tooltiptext"), "",
+          "The menulist should have a tooltip text attributed.");
+
+        closeDebuggerAndFinish();
       });
     });
     content.location = EXAMPLE_URL + "browser_dbg_iframes.html";

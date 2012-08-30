@@ -24,24 +24,10 @@
 
 <script> 
 
-steps = [setUp, verify_no_apps, get_installed_returns_nothing, install_super_crazy, get_self_returns_nothing, 
+steps = [get_installed_returns_nothing, install_super_crazy, get_self_returns_nothing, 
          install_wild_crazy, uninstall_wild_crazy, tearDown];
 
 runAll(steps);
-
-function setUp(next) { 
-  debug("in " + arguments.callee.name);
-  uninstallAll(next);
-}
-
-function verify_no_apps(next)  {
-  debug("in " + arguments.callee.name);
-  mozAppscb(navigator.mozApps.mgmt.getAll(), 
-            [{}],
-            "success",
-            ok,
-            next);
-}
 
 function get_installed_returns_nothing(next) {
   debug("in " + arguments.callee.name);

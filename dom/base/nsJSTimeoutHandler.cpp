@@ -77,31 +77,30 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSScriptTimeoutHandler)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
   if (NS_UNLIKELY(cb.WantDebugInfo())) {
-    nsCAutoString foo("nsJSScriptTimeoutHandler");
+    nsCAutoString name("nsJSScriptTimeoutHandler");
     if (tmp->mExpr) {
-      foo.AppendLiteral(" [");
-      foo.Append(tmp->mFileName);
-      foo.AppendLiteral(":");
-      foo.AppendInt(tmp->mLineNo);
-      foo.AppendLiteral("]");
+      name.AppendLiteral(" [");
+      name.Append(tmp->mFileName);
+      name.AppendLiteral(":");
+      name.AppendInt(tmp->mLineNo);
+      name.AppendLiteral("]");
     }
     else if (tmp->mFunObj) {
       JSFunction* fun = JS_GetObjectFunction(tmp->mFunObj);
       if (fun && JS_GetFunctionId(fun)) {
         JSFlatString *funId = JS_ASSERT_STRING_IS_FLAT(JS_GetFunctionId(fun));
         size_t size = 1 + JS_PutEscapedFlatString(NULL, 0, funId, 0);
-        char *name = new char[size];
-        if (name) {
-          JS_PutEscapedFlatString(name, size, funId, 0);
-          foo.AppendLiteral(" [");
-          foo.Append(name);
-          delete[] name;
-          foo.AppendLiteral("]");
+        char *funIdName = new char[size];
+        if (funIdName) {
+          JS_PutEscapedFlatString(funIdName, size, funId, 0);
+          name.AppendLiteral(" [");
+          name.Append(funIdName);
+          delete[] funIdName;
+          name.AppendLiteral("]");
         }
       }
     }
-    cb.DescribeRefCountedNode(tmp->mRefCnt.get(),
-                              sizeof(nsJSScriptTimeoutHandler), foo.get());
+    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name.get());
   }
   else {
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsJSScriptTimeoutHandler,

@@ -94,6 +94,10 @@
 #include "nsDOMFile.h"
 #include "nsIRemoteBlob.h"
 #include "StructuredCloneUtils.h"
+#include "URIUtils.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsContentUtils.h"
+#include "nsIPrincipal.h"
 
 using namespace mozilla::docshell;
 using namespace mozilla::dom::devicestorage;
@@ -225,6 +229,8 @@ ContentChild::ContentChild()
 #ifdef ANDROID
    ,mScreenSize(0, 0)
 #endif
+   , mIsForApp(false)
+   , mIsForBrowser(false)
 {
     // This process is a content process, so it's clearly running in
     // multiprocess mode!
@@ -622,12 +628,12 @@ ContentChild::DeallocPNecko(PNeckoChild* necko)
 }
 
 PExternalHelperAppChild*
-ContentChild::AllocPExternalHelperApp(const IPC::URI& uri,
+ContentChild::AllocPExternalHelperApp(const OptionalURIParams& uri,
                                       const nsCString& aMimeContentType,
                                       const nsCString& aContentDisposition,
                                       const bool& aForceSave,
                                       const int64_t& aContentLength,
-                                      const IPC::URI& aReferrer)
+                                      const OptionalURIParams& aReferrer)
 {
     ExternalHelperAppChild *child = new ExternalHelperAppChild();
     child->AddRef();
@@ -757,16 +763,9 @@ ContentChild::AddRemoteAlertObserver(const nsString& aData,
 }
 
 bool
-ContentChild::RecvPreferenceUpdate(const PrefTuple& aPref)
+ContentChild::RecvPreferenceUpdate(const PrefSetting& aPref)
 {
-    Preferences::SetPreference(&aPref);
-    return true;
-}
-
-bool
-ContentChild::RecvClearUserPreference(const nsCString& aPrefName)
-{
-    Preferences::ClearContentPref(aPrefName.get());
+    Preferences::SetPreference(aPref);
     return true;
 }
 
@@ -790,9 +789,12 @@ ContentChild::RecvNotifyAlertsObserver(const nsCString& aType, const nsString& a
 }
 
 bool
-ContentChild::RecvNotifyVisited(const IPC::URI& aURI)
+ContentChild::RecvNotifyVisited(const URIParams& aURI)
 {
-    nsCOMPtr<nsIURI> newURI(aURI);
+    nsCOMPtr<nsIURI> newURI = DeserializeURI(aURI);
+    if (!newURI) {
+        return false;
+    }
     History::GetService()->NotifyVisited(newURI);
     return true;
 }
@@ -848,7 +850,20 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
   NS_ABORT_IF_FALSE(permissionManager, 
                    "We have no permissionManager in the Content process !");
 
-  permissionManager->AddInternal(nsCString(permission.host),
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + nsCString(permission.host));
+  NS_ENSURE_TRUE(uri, true);
+
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  MOZ_ASSERT(secMan);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv = secMan->GetAppCodebasePrincipal(uri, permission.appId,
+                                                permission.isInBrowserElement,
+                                                getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, true);
+
+  permissionManager->AddInternal(principal,
                                  nsCString(permission.type),
                                  permission.capability,
                                  0,
@@ -927,12 +942,16 @@ ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID)
 }
 
 bool
-ContentChild::RecvSetID(const uint64_t &id)
+ContentChild::RecvSetProcessAttributes(const uint64_t &id,
+                                       const bool& aIsForApp,
+                                       const bool& aIsForBrowser)
 {
     if (mID != uint64_t(-1)) {
         NS_WARNING("Setting content child's ID twice?");
     }
     mID = id;
+    mIsForApp = aIsForApp;
+    mIsForBrowser = aIsForBrowser;
     return true;
 }
 

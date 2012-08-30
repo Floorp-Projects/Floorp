@@ -39,6 +39,8 @@ using mozilla::gfx::SourceSurface;
 namespace mozilla {
 namespace layers {
 
+int32_t Image::sSerialCounter = 0;
+
 already_AddRefed<Image>
 ImageFactory::CreateImage(const ImageFormat *aFormats,
                           uint32_t aNumFormats,
@@ -411,31 +413,25 @@ PlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 
 static void
 CopyPlane(uint8_t *aDst, uint8_t *aSrc,
-          const gfxIntSize &aSize, int32_t aStride,
-          int32_t aOffset, int32_t aSkip)
+          const gfxIntSize &aSize, int32_t aStride, int32_t aSkip)
 {
-  if (!aOffset && !aSkip) {
+  if (!aSkip) {
     // Fast path: planar input.
     memcpy(aDst, aSrc, aSize.height * aStride);
   } else {
     int32_t height = aSize.height;
     int32_t width = aSize.width;
     for (int y = 0; y < height; ++y) {
-      uint8_t *src = aSrc + aOffset;
+      uint8_t *src = aSrc;
       uint8_t *dst = aDst;
-      if (!aSkip) {
-        // Fast path: offset only, no per-pixel skip.
-        memcpy(dst, src, width);
-      } else {
-        // Slow path
-        for (int x = 0; x < width; ++x) {
-          *dst++ = *src++;
-          src += aSkip;
-        }
+      // Slow path
+      for (int x = 0; x < width; ++x) {
+        *dst++ = *src++;
+        src += aSkip;
       }
-      aSrc += aStride;
-      aDst += aStride;
     }
+    aSrc += aStride;
+    aDst += aStride;
   }
 }
 
@@ -458,14 +454,11 @@ PlanarYCbCrImage::CopyData(const Data& aData)
   mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
 
   CopyPlane(mData.mYChannel, aData.mYChannel,
-            mData.mYSize, mData.mYStride,
-            mData.mYOffset, mData.mYSkip);
+            mData.mYSize, mData.mYStride, mData.mYSkip);
   CopyPlane(mData.mCbChannel, aData.mCbChannel,
-            mData.mCbCrSize, mData.mCbCrStride,
-            mData.mCbOffset, mData.mCbSkip);
+            mData.mCbCrSize, mData.mCbCrStride, mData.mCbSkip);
   CopyPlane(mData.mCrChannel, aData.mCrChannel,
-            mData.mCbCrSize, mData.mCbCrStride,
-            mData.mCrOffset, mData.mCrSkip);
+            mData.mCbCrSize, mData.mCbCrStride, mData.mCrSkip);
 
   mSize = aData.mPicSize;
 }

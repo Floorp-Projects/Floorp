@@ -17,10 +17,10 @@ var gStringBundle = Cc['@mozilla.org/intl/stringbundle;1'].
   getService(Ci.nsIStringBundleService).
   createBundle('chrome://global/locale/AccessFu.properties');
 
-var gAccRetrieval = Cc['@mozilla.org/accessibleRetrieval;1'].
-  getService(Ci.nsIAccessibleRetrieval);
 
 var EXPORTED_SYMBOLS = ['UtteranceGenerator'];
+
+Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 
 /**
  * Generates speech utterances from objects, actions and state changes.
@@ -66,7 +66,7 @@ var UtteranceGenerator = {
    *    {@link verbosityRoleMap}.
    */
   genForObject: function genForObject(aAccessible) {
-    let roleString = gAccRetrieval.getStringRole(aAccessible.role);
+    let roleString = Utils.AccRetrieval.getStringRole(aAccessible.role);
 
     let func = this.objectUtteranceFunctions[roleString] ||
       this.objectUtteranceFunctions.defaultFunc;
@@ -152,7 +152,7 @@ var UtteranceGenerator = {
     'outlineitem': INCLUDE_DESC,
     'pagetab': INCLUDE_DESC,
     'graphic': INCLUDE_DESC,
-    'pushbutton': INCLUDE_DESC | INCLUDE_NAME,
+    'pushbutton': INCLUDE_DESC,
     'checkbutton': INCLUDE_DESC,
     'radiobutton': INCLUDE_DESC,
     'combobox': INCLUDE_DESC,

@@ -151,6 +151,10 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
   }
 
   RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+  if (!data) {
+    return nullptr;
+  }
+
   cairo_surface_t* surf =
     cairo_image_surface_create_for_data(data->GetData(),
                                         GfxFormatToCairoFormat(data->GetFormat()),
@@ -462,6 +466,7 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   cairo_restore(mContext);
 
   cairo_pattern_destroy(pat);
+  cairo_surface_destroy(blursurf);
 }
 
 void
@@ -806,15 +811,21 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
 }
 
 bool
-DrawTargetCairo::Init(cairo_surface_t* aSurface, const IntSize& aSize)
+DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize& aSize)
 {
   mContext = cairo_create(aSurface);
   mSurface = aSurface;
-  cairo_surface_reference(mSurface);
   mSize = aSize;
   mFormat = CairoContentToGfxFormat(cairo_surface_get_content(aSurface));
 
   return true;
+}
+
+bool
+DrawTargetCairo::Init(cairo_surface_t* aSurface, const IntSize& aSize)
+{
+  cairo_surface_reference(aSurface);
+  return InitAlreadyReferenced(aSurface, aSize);
 }
 
 void *

@@ -358,6 +358,8 @@ NS_LogCOMPtrRelease(void *aCOMPtr, nsISupports *aObject);
 
 #ifdef __cplusplus
 
+class nsCycleCollectionParticipant;
+
 XPCOM_API(bool)
 NS_CycleCollectorSuspect(nsISupports *n);
 
@@ -365,7 +367,7 @@ XPCOM_API(bool)
 NS_CycleCollectorForget(nsISupports *n);
 
 XPCOM_API(nsPurpleBufferEntry*)
-NS_CycleCollectorSuspect2(nsISupports *n);
+NS_CycleCollectorSuspect2(void *n, nsCycleCollectionParticipant *p);
 
 XPCOM_API(bool)
 NS_CycleCollectorForget2(nsPurpleBufferEntry *e);

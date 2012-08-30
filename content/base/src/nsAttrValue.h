@@ -23,12 +23,15 @@
 typedef PRUptrdiff PtrBits;
 class nsAString;
 class nsIAtom;
+class nsIDocument;
 template<class E, class A> class nsTArray;
 struct nsTArrayDefaultAllocator;
 
 namespace mozilla {
 namespace css {
 class StyleRule;
+struct URLValue;
+struct ImageValue;
 }
 }
 
@@ -91,22 +94,24 @@ public:
     // Values below here won't matter, they'll be always stored in the 'misc'
     // struct.
     eCSSStyleRule =    0x10
-    ,eAtomArray =      0x11
-    ,eDoubleValue  =   0x12
-    ,eIntMarginValue = 0x13
-    ,eSVGTypesBegin =  0x14
+    ,eURL =            0x11
+    ,eImage =          0x12
+    ,eAtomArray =      0x13
+    ,eDoubleValue  =   0x14
+    ,eIntMarginValue = 0x15
+    ,eSVGTypesBegin =  0x16
     ,eSVGAngle =       eSVGTypesBegin
-    ,eSVGIntegerPair = 0x15
-    ,eSVGLength =      0x16
-    ,eSVGLengthList =  0x17
-    ,eSVGNumberList =  0x18
-    ,eSVGNumberPair =  0x19
-    ,eSVGPathData   =  0x20
-    ,eSVGPointList  =  0x21
-    ,eSVGPreserveAspectRatio = 0x22
-    ,eSVGStringList =  0x23
-    ,eSVGTransformList = 0x24
-    ,eSVGViewBox =     0x25
+    ,eSVGIntegerPair = 0x17
+    ,eSVGLength =      0x18
+    ,eSVGLengthList =  0x19
+    ,eSVGNumberList =  0x20
+    ,eSVGNumberPair =  0x21
+    ,eSVGPathData   =  0x22
+    ,eSVGPointList  =  0x23
+    ,eSVGPreserveAspectRatio = 0x24
+    ,eSVGStringList =  0x25
+    ,eSVGTransformList = 0x26
+    ,eSVGViewBox =     0x27
     ,eSVGTypesEnd =    0x34
   };
 
@@ -121,6 +126,7 @@ public:
   void SetTo(int32_t aInt, const nsAString* aSerialized);
   void SetTo(double aValue, const nsAString* aSerialized);
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
+  void SetTo(mozilla::css::URLValue* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
   void SetTo(const nsSVGAngle& aValue, const nsAString* aSerialized);
   void SetTo(const nsSVGIntegerPair& aValue, const nsAString* aSerialized);
@@ -169,6 +175,8 @@ public:
   inline float GetPercentValue() const;
   inline AtomArray* GetAtomArrayValue() const;
   inline mozilla::css::StyleRule* GetCSSStyleRuleValue() const;
+  inline mozilla::css::URLValue* GetURLValue() const;
+  inline mozilla::css::ImageValue* GetImageValue() const;
   inline double GetDoubleValue() const;
   bool GetIntMarginValue(nsIntMargin& aMargin) const;
 
@@ -342,6 +350,14 @@ public:
    */
   bool ParseIntMarginValue(const nsAString& aString);
 
+  /**
+   * Convert a URL nsAttrValue to an Image nsAttrValue.
+   *
+   * @param aDocument the document this nsAttrValue belongs to.
+   * @return whether an image load was attempted
+   */
+  bool LoadImage(nsIDocument* aDocument);
+
   size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 private:
@@ -367,6 +383,8 @@ private:
       uint32_t mEnumValue;
       int32_t mPercent;
       mozilla::css::StyleRule* mCSSStyleRule;
+      mozilla::css::URLValue* mURL;
+      mozilla::css::ImageValue* mImage;
       AtomArray* mAtomArray;
       double mDoubleValue;
       nsIntMargin* mIntMargin;
@@ -493,6 +511,20 @@ nsAttrValue::GetCSSStyleRuleValue() const
 {
   NS_PRECONDITION(Type() == eCSSStyleRule, "wrong type");
   return GetMiscContainer()->mCSSStyleRule;
+}
+
+inline mozilla::css::URLValue*
+nsAttrValue::GetURLValue() const
+{
+  NS_PRECONDITION(Type() == eURL, "wrong type");
+  return GetMiscContainer()->mURL;
+}
+
+inline mozilla::css::ImageValue*
+nsAttrValue::GetImageValue() const
+{
+  NS_PRECONDITION(Type() == eImage, "wrong type");
+  return GetMiscContainer()->mImage;
 }
 
 inline double

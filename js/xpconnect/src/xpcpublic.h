@@ -131,7 +131,7 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
                      "Should never have a slim wrapper when IsDOMBinding()");
         if (wrapper &&
             js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(scope) &&
-            (IS_SLIM_WRAPPER(wrapper) ||
+            (IS_SLIM_WRAPPER(wrapper) || cache->IsDOMBinding() ||
              xpc_OkToHandOutWrapper(cache))) {
             *vp = OBJECT_TO_JSVAL(wrapper);
             return wrapper;
@@ -306,14 +306,32 @@ xpc_JSCompartmentParticipant();
 
 namespace mozilla {
 namespace dom {
-namespace binding {
 
 extern int HandlerFamily;
 inline void* ProxyFamily() { return &HandlerFamily; }
-inline bool instanceIsProxy(JSObject *obj)
+
+class DOMBaseProxyHandler : public js::BaseProxyHandler {
+protected:
+    DOMBaseProxyHandler(bool aNewDOMProxy) : js::BaseProxyHandler(ProxyFamily()),
+                                             mNewDOMProxy(aNewDOMProxy)
+    {
+    }
+
+public:
+    bool mNewDOMProxy;
+};
+
+inline bool IsNewProxyBinding(js::BaseProxyHandler* handler)
+{
+  MOZ_ASSERT(handler->family() == ProxyFamily());
+  return static_cast<DOMBaseProxyHandler*>(handler)->mNewDOMProxy;
+}
+
+inline bool IsDOMProxy(JSObject *obj)
 {
     return js::IsProxy(obj) &&
-           js::GetProxyHandler(obj)->family() == ProxyFamily();
+           js::GetProxyHandler(obj)->family() == ProxyFamily() &&
+           IsNewProxyBinding(js::GetProxyHandler(obj));
 }
 
 typedef bool
@@ -327,7 +345,21 @@ extern bool
 DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine,
                   nsresult *aResult);
 
-} // namespace binding
+namespace oldproxybindings {
+
+inline bool instanceIsProxy(JSObject *obj)
+{
+    return js::IsProxy(obj) &&
+           js::GetProxyHandler(obj)->family() == ProxyFamily() &&
+           !IsNewProxyBinding(js::GetProxyHandler(obj));
+}
+extern bool
+DefineStaticJSVals(JSContext *cx);
+void
+Register(nsScriptNameSpaceManager* aNameSpaceManager);
+
+} // namespace oldproxybindings
+
 } // namespace dom
 } // namespace mozilla
 

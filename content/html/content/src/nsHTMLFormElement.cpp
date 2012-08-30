@@ -121,7 +121,7 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
-    return mozilla::dom::binding::HTMLCollection::create(cx, scope, this,
+    return mozilla::dom::oldproxybindings::HTMLCollection::create(cx, scope, this,
                                                          triedToWrap);
   }
 

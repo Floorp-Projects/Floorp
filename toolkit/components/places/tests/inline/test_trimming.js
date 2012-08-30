@@ -132,3 +132,13 @@ add_autocomplete_test([
     addBookmark({ url: "http://mozilla.co/" });
   },
 ]);
+
+add_autocomplete_test([
+  "Searching for URL with characters that are normally escaped",
+  "https://www.mozilla.org/啊-test",
+  { autoFilled: "https://www.mozilla.org/啊-test", completed: "https://www.mozilla.org/啊-test" },
+  function () {
+    addVisits({ uri: NetUtil.newURI("https://www.mozilla.org/啊-test"),
+                transition: TRANSITION_TYPED });
+  },
+]);

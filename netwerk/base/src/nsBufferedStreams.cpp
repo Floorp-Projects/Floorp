@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPC/IPCMessageUtils.h"
-#include "mozilla/net/NeckoMessageUtils.h"
 
 #include "nsAlgorithm.h"
 #include "nsBufferedStreams.h"
@@ -12,6 +11,7 @@
 #include "nsCRT.h"
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 
 #ifdef DEBUG_brendan
 # define METERING
@@ -37,6 +37,8 @@ static struct {
 #else
 # define METER(x)       /* nothing */
 #endif
+
+using namespace mozilla::ipc;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedStream
@@ -252,16 +254,15 @@ NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
-    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableObsolete)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
     NS_IMPL_QUERY_CLASSINFO(nsBufferedInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 
-NS_IMPL_CI_INTERFACE_GETTER5(nsBufferedInputStream,
+NS_IMPL_CI_INTERFACE_GETTER4(nsBufferedInputStream,
                              nsIInputStream,
                              nsIBufferedInputStream,
                              nsISeekableStream,
-                             nsIStreamBufferAccess,
-                             nsIIPCSerializableObsolete)
+                             nsIStreamBufferAccess)
 
 nsresult
 nsBufferedInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -484,34 +485,62 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports* *aStream)
     return NS_OK;
 }
 
-bool
-nsBufferedInputStream::Read(const IPC::Message *aMsg, void **aIter)
+void
+nsBufferedInputStream::Serialize(InputStreamParams& aParams)
 {
-    using IPC::ReadParam;
+    BufferedInputStreamParams params;
 
-    uint32_t bufferSize;
-    IPC::InputStream inputStream;
-    if (!ReadParam(aMsg, aIter, &bufferSize) ||
-        !ReadParam(aMsg, aIter, &inputStream))
-        return false;
+    if (mStream) {
+        nsCOMPtr<nsIIPCSerializableInputStream> stream =
+            do_QueryInterface(mStream);
+        NS_ASSERTION(stream, "Wrapped stream is not serializable!");
 
-    nsCOMPtr<nsIInputStream> stream(inputStream);
-    nsresult rv = Init(stream, bufferSize);
-    if (NS_FAILED(rv))
-        return false;
+        InputStreamParams wrappedParams;
+        stream->Serialize(wrappedParams);
 
-    return true;
+        NS_ASSERTION(wrappedParams.type() != InputStreamParams::T__None,
+                     "Wrapped stream failed to serialize!");
+
+        params.optionalStream() = wrappedParams;
+    }
+    else {
+        params.optionalStream() = mozilla::void_t();
+    }
+
+    params.bufferSize() = mBufferSize;
+
+    aParams = params;
 }
 
-void
-nsBufferedInputStream::Write(IPC::Message *aMsg)
+bool
+nsBufferedInputStream::Deserialize(const InputStreamParams& aParams)
 {
-    using IPC::WriteParam;
+    if (aParams.type() != InputStreamParams::TBufferedInputStreamParams) {
+        NS_ERROR("Received unknown parameters from the other process!");
+        return false;
+    }
 
-    WriteParam(aMsg, mBufferSize);
+    const BufferedInputStreamParams& params =
+        aParams.get_BufferedInputStreamParams();
+    const OptionalInputStreamParams& wrappedParams = params.optionalStream();
 
-    IPC::InputStream inputStream(Source());
-    WriteParam(aMsg, inputStream);
+    nsCOMPtr<nsIInputStream> stream;
+    if (wrappedParams.type() == OptionalInputStreamParams::TInputStreamParams) {
+        stream = DeserializeInputStream(wrappedParams.get_InputStreamParams());
+        if (!stream) {
+            NS_WARNING("Failed to deserialize wrapped stream!");
+            return false;
+        }
+    }
+    else {
+        NS_ASSERTION(wrappedParams.type() == OptionalInputStreamParams::Tvoid_t,
+                     "Unknown type for OptionalInputStreamParams!");
+    }
+
+    nsresult rv = Init(stream, params.bufferSize());
+    NS_ENSURE_SUCCESS(rv, false);
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

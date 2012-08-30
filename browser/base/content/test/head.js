@@ -88,8 +88,39 @@ function waitForCondition(condition, nextTest, errorMsg) {
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
+// Check that a specified (string) URL hasn't been "remembered" (ie, is not
+// in history, will not appear in about:newtab or auto-complete, etc.)
+function ensureSocialUrlNotRemembered(url) {
+  let gh = Cc["@mozilla.org/browser/global-history;2"]
+           .getService(Ci.nsIGlobalHistory2);
+  let uri = Services.io.newURI(url, null, null);
+  ok(!gh.isVisited(uri), "social URL " + url + " should not be in global history");
+}
+
+function getTestPlugin() {
+  var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+  var tags = ph.getPluginTags();
+
+  // Find the test plugin
+  for (var i = 0; i < tags.length; i++) {
+    if (tags[i].name == "Test Plug-in")
+      return tags[i];
+  }
+  ok(false, "Unable to find plugin");
+  return null;
+}
+
 function runSocialTestWithProvider(manifest, callback) {
   let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+
+  // Check that none of the provider's content ends up in history.
+  registerCleanupFunction(function () {
+    for (let what of ['sidebarURL', 'workerURL', 'iconURL']) {
+      if (manifest[what]) {
+        ensureSocialUrlNotRemembered(manifest[what]);
+      }
+    }
+  });
 
   info("runSocialTestWithProvider: " + manifest.toSource());
 
@@ -103,6 +134,15 @@ function runSocialTestWithProvider(manifest, callback) {
     Services.prefs.setBoolPref("social.enabled", true);
 
     registerCleanupFunction(function () {
+      // if one test happens to fail, it is likely finishSocialTest will not
+      // be called, causing most future social tests to also fail as they
+      // attempt to add a provider which already exists - so work
+      // around that by also attempting to remove the test provider.
+      try {
+        SocialService.removeProvider(provider.origin, finish);
+      } catch (ex) {
+        ;
+      }
       Social.provider = oldProvider;
       Services.prefs.clearUserPref("social.enabled");
     });

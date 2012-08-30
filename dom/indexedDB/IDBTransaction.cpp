@@ -899,7 +899,7 @@ CommitHelper::Run()
     IndexedDatabaseManager::SetCurrentWindow(database->GetOwner());
 
     if (NS_SUCCEEDED(mAbortCode) && mUpdateFileRefcountFunction &&
-        NS_FAILED(mUpdateFileRefcountFunction->UpdateDatabase(mConnection))) {
+        NS_FAILED(mUpdateFileRefcountFunction->WillCommit(mConnection))) {
       mAbortCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
@@ -912,7 +912,7 @@ CommitHelper::Run()
       nsresult rv = mConnection->ExecuteSimpleSQL(release);
       if (NS_SUCCEEDED(rv)) {
         if (mUpdateFileRefcountFunction) {
-          mUpdateFileRefcountFunction->UpdateFileInfos();
+          mUpdateFileRefcountFunction->DidCommit();
         }
         CommitAutoIncrementCounts();
       }
@@ -927,6 +927,9 @@ CommitHelper::Run()
     }
 
     if (NS_FAILED(mAbortCode)) {
+      if (mUpdateFileRefcountFunction) {
+        mUpdateFileRefcountFunction->DidAbort();
+      }
       RevertAutoIncrementCounts();
       NS_NAMED_LITERAL_CSTRING(rollback, "ROLLBACK TRANSACTION");
       if (NS_FAILED(mConnection->ExecuteSimpleSQL(rollback))) {
@@ -1047,6 +1050,38 @@ UpdateRefcountFunction::OnFunctionCall(mozIStorageValueArray* aValues,
 }
 
 nsresult
+UpdateRefcountFunction::WillCommit(mozIStorageConnection* aConnection)
+{
+  DatabaseUpdateFunction function(aConnection, this);
+
+  mFileInfoEntries.EnumerateRead(DatabaseUpdateCallback, &function);
+
+  nsresult rv = function.ErrorCode();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CreateJournals();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+void
+UpdateRefcountFunction::DidCommit()
+{
+  mFileInfoEntries.EnumerateRead(FileInfoUpdateCallback, nullptr);
+
+  nsresult rv = RemoveJournals(mJournalsToRemoveAfterCommit);
+  NS_ENSURE_SUCCESS(rv,);
+}
+
+void
+UpdateRefcountFunction::DidAbort()
+{
+  nsresult rv = RemoveJournals(mJournalsToRemoveAfterAbort);
+  NS_ENSURE_SUCCESS(rv,);
+}
+
+nsresult
 UpdateRefcountFunction::ProcessValue(mozIStorageValueArray* aValues,
                                      int32_t aIndex,
                                      UpdateType aUpdateType)
@@ -1086,6 +1121,47 @@ UpdateRefcountFunction::ProcessValue(mozIStorageValueArray* aValues,
         break;
       default:
         NS_NOTREACHED("Unknown update type!");
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+UpdateRefcountFunction::CreateJournals()
+{
+  nsCOMPtr<nsIFile> journalDirectory = mFileManager->GetJournalDirectory();
+  NS_ENSURE_TRUE(journalDirectory, NS_ERROR_FAILURE);
+
+  for (uint32_t i = 0; i < mJournalsToCreateBeforeCommit.Length(); i++) {
+    int64_t id = mJournalsToCreateBeforeCommit[i];
+
+    nsCOMPtr<nsIFile> file =
+      mFileManager->GetFileForId(journalDirectory, id);
+    NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+    nsresult rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mJournalsToRemoveAfterAbort.AppendElement(id);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+UpdateRefcountFunction::RemoveJournals(const nsTArray<int64_t>& aJournals)
+{
+  nsCOMPtr<nsIFile> journalDirectory = mFileManager->GetJournalDirectory();
+  NS_ENSURE_TRUE(journalDirectory, NS_ERROR_FAILURE);
+
+  for (uint32_t index = 0; index < aJournals.Length(); index++) {
+    nsCOMPtr<nsIFile> file =
+      mFileManager->GetFileForId(journalDirectory, aJournals[index]);
+    NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+    if (NS_FAILED(file->Remove(false))) {
+      NS_WARNING("Failed to removed journal!");
     }
   }
 
@@ -1165,6 +1241,28 @@ UpdateRefcountFunction::DatabaseUpdateFunction::UpdateInternal(int64_t aId,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (rows > 0) {
+    if (!mSelectStatement) {
+      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT id FROM file where id = :id"
+      ), getter_AddRefs(mSelectStatement));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    mozStorageStatementScoper selectScoper(mSelectStatement);
+
+    rv = mSelectStatement->BindInt64ByName(NS_LITERAL_CSTRING("id"), aId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool hasResult;
+    rv = mSelectStatement->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!hasResult) {
+      // Don't have to create the journal here, we can create all at once,
+      // just before commit
+      mFunction->mJournalsToCreateBeforeCommit.AppendElement(aId);
+    }
+
     return NS_OK;
   }
 
@@ -1185,6 +1283,8 @@ UpdateRefcountFunction::DatabaseUpdateFunction::UpdateInternal(int64_t aId,
 
   rv = mInsertStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mFunction->mJournalsToRemoveAfterCommit.AppendElement(aId);
 
   return NS_OK;
 }

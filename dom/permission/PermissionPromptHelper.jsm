@@ -34,9 +34,9 @@ let EXPORTED_SYMBOLS = ["PermissionPromptHelper"];
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
-  return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
-});
+XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
+                                   "@mozilla.org/parentprocessmessagemanager;1",
+                                   "nsIMessageListenerManager");
 
 var permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
 var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
@@ -77,7 +77,7 @@ let PermissionPromptHelper = {
 
   receiveMessage: function(aMessage) {
     debug("PermissionPromptHelper::receiveMessage " + aMessage.name);
-    let mm = aMessage.target.QueryInterface(Ci.nsIFrameMessageManager);
+    let mm = aMessage.target;
     let msg = aMessage.data;
 
     let result;

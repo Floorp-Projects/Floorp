@@ -163,9 +163,9 @@ FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString* bytes)
 {
     if (!fun)
         return Probes::nullName;
-    if (!fun->atom)
+    if (!fun->displayAtom())
         return Probes::anonymousName;
-    return bytes->encode(cx, fun->atom) ? bytes->ptr() : Probes::nullName;
+    return bytes->encode(cx, fun->displayAtom()) ? bytes->ptr() : Probes::nullName;
 }
 
 /*
@@ -196,7 +196,7 @@ Probes::DTraceExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script)
 static void
 current_location(JSContext *cx, int* lineno, char const **filename)
 {
-    JSScript *script = js_GetCurrentScript(cx);
+    JSScript *script = cx->stack.currentScript()
     if (! script) {
         *lineno = -1;
         *filename = "(uninitialized)";

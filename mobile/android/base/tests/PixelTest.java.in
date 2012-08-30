@@ -6,7 +6,7 @@ import @ANDROID_PACKAGE_NAME@.*;
 abstract class PixelTest extends BaseTest {
     private static final long PAINT_CLEAR_DELAY = 1000; // milliseconds
 
-    protected final PaintedSurface loadAndPaint(String url) {
+    protected final PaintedSurface loadAndGetPainted(String url) {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         loadUrl(url);
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
@@ -18,7 +18,12 @@ abstract class PixelTest extends BaseTest {
         return p;
     }
 
-    protected final PaintedSurface reloadAndPaint() {
+    protected final void loadAndPaint(String url) {
+        PaintedSurface painted = loadAndGetPainted(url);
+        painted.close();
+    }
+
+    protected final PaintedSurface reloadAndGetPainted() {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
 
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
@@ -32,6 +37,11 @@ abstract class PixelTest extends BaseTest {
                  "painted surface loaded");
         }
         return p;
+    }
+
+    protected final void reloadAndPaint() {
+        PaintedSurface painted = reloadAndGetPainted();
+        painted.close();
     }
 
     protected final PaintedSurface waitForPaint(Actions.RepeatedEventExpecter expecter) {
@@ -89,9 +99,12 @@ abstract class PixelTest extends BaseTest {
      * @param url URL of the robocop_boxes.html file.
      * @return The painted surface after rendering the file.
      */
-    protected final PaintedSurface loadAndVerifyBoxes(String url) {
-        PaintedSurface painted = loadAndPaint(url);
-        checkScrollWithBoxes(painted, 0, 0);
-        return painted;
+    protected final void loadAndVerifyBoxes(String url) {
+        PaintedSurface painted = loadAndGetPainted(url);
+        try {
+            checkScrollWithBoxes(painted, 0, 0);
+        } finally {
+            painted.close();
+        }
     }
 }

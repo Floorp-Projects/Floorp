@@ -9,10 +9,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService", "resource://gre/modules/SocialService.jsm");
 
-const EXPORTED_SYMBOLS = ["MozSocialAPI"];
+const EXPORTED_SYMBOLS = ["MozSocialAPI", "openChatWindow"];
 
 var MozSocialAPI = {
   _enabled: false,
+  _everEnabled: false,
   set enabled(val) {
     let enable = !!val;
     if (enable == this._enabled) {
@@ -22,6 +23,12 @@ var MozSocialAPI = {
 
     if (enable) {
       Services.obs.addObserver(injectController, "document-element-inserted", false);
+
+      if (!this._everEnabled) {
+        this._everEnabled = true;
+        Services.telemetry.getHistogramById("SOCIAL_ENABLED_ON_SESSION").add(true);
+      }
+
     } else {
       Services.obs.removeObserver(injectController, "document-element-inserted", false);
     }
@@ -94,15 +101,6 @@ function attachToWindow(provider, targetWindow) {
         return false;
       }
     },
-    openServiceWindow: {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: function(toURL, name, options) {
-        let url = targetWindow.document.documentURIObject.resolve(toURL);
-        return openServiceWindow(provider, targetWindow, url, name, options);
-      }
-    },
     openChatWindow: {
       enumerable: true,
       configurable: true,
@@ -110,6 +108,21 @@ function attachToWindow(provider, targetWindow) {
       value: function(toURL, callback) {
         let url = targetWindow.document.documentURIObject.resolve(toURL);
         openChatWindow(getChromeWindow(targetWindow), provider, url, callback);
+      }
+    },
+    openPanel: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(toURL, offset, callback) {
+        let chromeWindow = getChromeWindow(targetWindow);
+        if (!chromeWindow.SocialFlyout)
+          return;
+        let url = targetWindow.document.documentURIObject.resolve(toURL);
+        let fullURL = ensureProviderOrigin(provider, url);
+        if (!fullURL)
+          return;
+        chromeWindow.SocialFlyout.open(fullURL, offset, callback);
       }
     },
     getAttention: {
@@ -173,58 +186,23 @@ function ensureProviderOrigin(provider, url) {
     fullURL = Services.io.newURI(provider.origin, null, null).resolve(url);
     uri = Services.io.newURI(fullURL, null, null);
   } catch (ex) {
-    Cu.reportError("openServiceWindow: failed to resolve window URL: " + url + "; " + ex);
+    Cu.reportError("mozSocial: failed to resolve window URL: " + url + "; " + ex);
     return null;
   }
 
   if (provider.origin != uri.prePath) {
-    Cu.reportError("openServiceWindow: unable to load new location, " +
+    Cu.reportError("mozSocial: unable to load new location, " +
                    provider.origin + " != " + uri.prePath);
     return null;
   }
   return fullURL;
 }
 
-function openChatWindow(chromeWindow, provider, url, callback) {
+function openChatWindow(chromeWindow, provider, url, callback, mode) {
   if (!chromeWindow.SocialChatBar)
     return;
   let fullURL = ensureProviderOrigin(provider, url);
   if (!fullURL)
     return;
-  chromeWindow.SocialChatBar.newChat(provider, fullURL, callback);
-}
-
-function openServiceWindow(provider, contentWindow, url, name, options) {
-  // resolve partial URLs and check prePath matches
-  let fullURL = ensureProviderOrigin(provider, url);
-  if (!fullURL)
-    return null;
-
-  let windowName = provider.origin + name;
-  let chromeWindow = Services.ww.getWindowByName(windowName, null);
-  let tabbrowser = chromeWindow && chromeWindow.gBrowser;
-  if (tabbrowser &&
-      tabbrowser.selectedBrowser.getAttribute("origin") == provider.origin) {
-    return tabbrowser.contentWindow;
-  }
-
-  let serviceWindow = contentWindow.openDialog(fullURL, windowName,
-                                               "chrome=no,dialog=no" + options);
-
-  // Get the newly opened window's containing XUL window
-  chromeWindow = getChromeWindow(serviceWindow);
-
-  // set the window's name and origin attribute on its browser, so that it can
-  // be found via getWindowByName
-  chromeWindow.name = windowName;
-  chromeWindow.gBrowser.selectedBrowser.setAttribute("origin", provider.origin);
-
-  // we dont want the default title the browser produces, we'll fixup whenever
-  // it changes.
-  serviceWindow.addEventListener("DOMTitleChanged", function() {
-    let sep = xulWindow.document.documentElement.getAttribute("titlemenuseparator");
-    xulWindow.document.title = provider.name + sep + serviceWindow.document.title;
-  });
-
-  return serviceWindow;
+  chromeWindow.SocialChatBar.openChat(provider, fullURL, callback, mode);
 }

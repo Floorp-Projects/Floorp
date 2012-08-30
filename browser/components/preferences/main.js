@@ -23,23 +23,10 @@ var gMainPane = {
 
     this.updateBrowserStartupLastSession();
 
-    this.setupDownloadsWindowOptions();
-
     // Notify observers that the UI is now ready
     Components.classes["@mozilla.org/observer-service;1"]
               .getService(Components.interfaces.nsIObserverService)
               .notifyObservers(window, "main-pane-loaded", null);
-  },
-
-  setupDownloadsWindowOptions: function ()
-  {
-    var showWhenDownloading = document.getElementById("showWhenDownloading");
-    var closeWhenDone = document.getElementById("closeWhenDone");
-
-    // These radio-buttons should not be visible if we have enabled the Downloads Panel.
-    let shouldHide = !DownloadsCommon.useToolkitUI;
-    showWhenDownloading.hidden = shouldHide;
-    closeWhenDone.hidden = shouldHide;
   },
 
   // HOME PAGE
@@ -447,14 +434,6 @@ var gMainPane = {
         return 0;
       break;
     }
-  },
-
-  /**
-   * Displays the Add-ons Manager.
-   */
-  showAddonsMgr: function ()
-  {
-    openUILinkIn("about:addons", "window");
   },
 
   /**

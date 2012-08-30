@@ -66,7 +66,7 @@ StackFrame::varObj()
 inline JSCompartment *
 StackFrame::compartment() const
 {
-    JS_ASSERT_IF(isScriptFrame(), scopeChain()->compartment() == script()->compartment());
+    JS_ASSERT(scopeChain()->compartment() == script()->compartment());
     return scopeChain()->compartment();
 }
 
@@ -87,8 +87,7 @@ StackFrame::initPrev(JSContext *cx)
         prev_ = regs->fp();
         prevpc_ = regs->pc;
         prevInline_ = regs->inlined();
-        JS_ASSERT_IF(!prev_->isDummyFrame(),
-                     uint32_t(prevpc_ - prev_->script()->code) < prev_->script()->length);
+        JS_ASSERT(uint32_t(prevpc_ - prev_->script()->code) < prev_->script()->length);
     } else {
         prev_ = NULL;
 #ifdef DEBUG
@@ -371,8 +370,7 @@ StackFrame::callObj() const
 
 STATIC_POSTCONDITION(!return || ubound(from) >= nvals)
 JS_ALWAYS_INLINE bool
-StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals,
-                        JSCompartment *dest) const
+StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals) const
 {
     assertInvariants();
     JS_ASSERT(from >= firstUnused());
@@ -380,7 +378,7 @@ StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptr
     JS_ASSERT(from <= commitEnd_);
 #endif
     if (JS_UNLIKELY(conservativeEnd_ - from < nvals))
-        return ensureSpaceSlow(cx, report, from, nvals, dest);
+        return ensureSpaceSlow(cx, report, from, nvals);
     return true;
 }
 
@@ -523,15 +521,14 @@ ContextStack::currentScript(jsbytecode **ppc) const
     if (ppc)
         *ppc = NULL;
 
-    FrameRegs *regs = maybeRegs();
-    StackFrame *fp = regs ? regs->fp() : NULL;
-    while (fp && fp->isDummyFrame())
-        fp = fp->prev();
-    if (!fp)
+    if (!hasfp())
         return NULL;
+		
+    FrameRegs &regs = this->regs();
+    StackFrame *fp = regs.fp();
 
 #ifdef JS_ION
-    if (regs && regs->fp()->beginsIonActivation()) {
+    if (fp->beginsIonActivation()) {
         JSScript *script = NULL;
         ion::GetPcScript(cx_, &script, ppc);
         return script;
@@ -539,9 +536,9 @@ ContextStack::currentScript(jsbytecode **ppc) const
 #endif
 
 #ifdef JS_METHODJIT
-    mjit::CallSite *inlined = regs->inlined();
+    mjit::CallSite *inlined = regs.inlined();
     if (inlined) {
-        mjit::JITChunk *chunk = fp->jit()->chunk(regs->pc);
+        mjit::JITChunk *chunk = fp->jit()->chunk(regs.pc);
         JS_ASSERT(inlined->inlineIndex < chunk->nInlineFrames);
         mjit::InlineFrame *frame = &chunk->inlineFrames()[inlined->inlineIndex];
         JSScript *script = frame->fun->script();

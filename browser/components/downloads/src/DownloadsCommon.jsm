@@ -52,6 +52,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gBrowserGlue",
                                    "nsIBrowserGlue");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+                                  "resource://gre/modules/PluralForm.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -67,6 +69,10 @@ const kDownloadsStringsRequiringFormatting = {
   statusSeparator: true,
   statusSeparatorBeforeNumber: true,
   fileExecutableSecurityWarning: true
+};
+
+const kDownloadsStringsRequiringPluralForm = {
+  showMoreDownloads: true
 };
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsLocalFileCtor", function () {
@@ -101,6 +107,14 @@ const DownloadsCommon = {
           return sb.formatStringFromName(stringName,
                                          Array.slice(arguments, 0),
                                          arguments.length);
+        };
+      } else if (stringName in kDownloadsStringsRequiringPluralForm) {
+        strings[stringName] = function (aCount) {
+          // Convert "arguments" to a real array before calling into XPCOM.
+          let formattedString = sb.formatStringFromName(stringName,
+                                         Array.slice(arguments, 0),
+                                         arguments.length);
+          return PluralForm.get(aCount, formattedString);
         };
       } else {
         strings[stringName] = string.value;
@@ -435,7 +449,8 @@ const DownloadsData = {
           function (view) view.onDataLoadStarting()
         );
 
-        // Reload the list using the Download Manager service.
+        // Reload the list using the Download Manager service.  The list is
+        // returned in no particular order.
         let downloads = Services.downloads.activeDownloads;
         while (downloads.hasMoreElements()) {
           let download = downloads.getNext().QueryInterface(Ci.nsIDownload);
@@ -451,7 +466,9 @@ const DownloadsData = {
     } else {
       if (this._loadState != this.kLoadAll) {
         // Load only the relevant columns from the downloads database.  The
-        // columns are read in the init_FromDataRow method of DownloadsDataItem.
+        // columns are read in the _initFromDataRow method of DownloadsDataItem.
+        // Order by descending download identifier so that the most recent
+        // downloads are notified first to the listening views.
         let statement = Services.downloads.DBConnection.createAsyncStatement(
           "SELECT id, target, name, source, referrer, state, "
         +        "startTime, endTime, currBytes, maxBytes "

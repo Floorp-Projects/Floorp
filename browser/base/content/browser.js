@@ -360,7 +360,7 @@ const gSessionHistoryObserver = {
     fwdCommand.setAttribute("disabled", "true");
 
     // Hide session restore button on about:home
-    window.messageManager.sendAsyncMessage("Browser:HideSessionRestoreButton");
+    window.messageManager.broadcastAsyncMessage("Browser:HideSessionRestoreButton");
 
     if (gURLBar) {
       // Clear undo history of the URL bar
@@ -1020,6 +1020,7 @@ var gBrowserInit = {
     gBrowser.addEventListener("PluginOutdated",     gPluginHandler, true);
     gBrowser.addEventListener("PluginDisabled",     gPluginHandler, true);
     gBrowser.addEventListener("PluginClickToPlay",  gPluginHandler, true);
+    gBrowser.addEventListener("PluginPlayPreview",  gPluginHandler, true);
     gBrowser.addEventListener("PluginVulnerableUpdatable", gPluginHandler, true);
     gBrowser.addEventListener("PluginVulnerableNoUpdate", gPluginHandler, true);
     gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
@@ -1239,7 +1240,6 @@ var gBrowserInit = {
     BookmarksMenuButton.init();
     TabsInTitlebar.init();
     gPrivateBrowsingUI.init();
-    DownloadsButton.initializePlaceholder();
     retrieveToolbarIconsizesFromTheme();
 
     gDelayedStartupTimeoutId = setTimeout(this._delayedStartup.bind(this), 0, isLoadingBlank, mustLoadSidebar);
@@ -1286,9 +1286,7 @@ var gBrowserInit = {
 
     UpdateUrlbarSearchSplitterState();
 
-    if (isLoadingBlank && gURLBar)
-      gURLBar.focus();
-    if (!isLoadingBlank || !gURLBar || !gURLBar.focused)
+    if (!isLoadingBlank || !focusAndSelectUrlBar())
       gBrowser.selectedBrowser.focus();
 
     gNavToolbox.customizeDone = BrowserToolboxCustomizeDone;
@@ -1990,7 +1988,7 @@ function focusAndSelectUrlBar() {
       FullScreen.mouseoverToggle(true);
 
     gURLBar.focus();
-    if (gURLBar.focused) {
+    if (document.activeElement == gURLBar.inputField) {
       gURLBar.select();
       return true;
     }
@@ -3129,29 +3127,6 @@ var newWindowButtonObserver = {
   }
 }
 
-var DownloadsButtonDNDObserver = {
-  onDragOver: function (aEvent)
-  {
-    var types = aEvent.dataTransfer.types;
-    if (types.contains("text/x-moz-url") ||
-        types.contains("text/uri-list") ||
-        types.contains("text/plain"))
-      aEvent.preventDefault();
-  },
-
-  onDragExit: function (aEvent)
-  {
-  },
-
-  onDrop: function (aEvent)
-  {
-    let name = { };
-    let url = browserDragAndDrop.drop(aEvent, name);
-    if (url)
-      saveURL(url, name, null, true, true);
-  }
-}
-
 const DOMLinkHandler = {
   handleEvent: function (event) {
     switch (event.type) {
@@ -3350,7 +3325,7 @@ const BrowserSearch = {
       FullScreen.mouseoverToggle(true);
     if (searchBar)
       searchBar.focus();
-    if (searchBar && searchBar.textbox.focused) {
+    if (searchBar && document.activeElement == searchBar.textbox.inputField) {
       searchBar.select();
     } else {
       openUILinkIn(Services.search.defaultEngine.searchForm, "current");

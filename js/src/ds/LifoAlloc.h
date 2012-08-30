@@ -297,12 +297,21 @@ class LifoAlloc
         latest->release(mark);
     }
 
+    void releaseAll() {
+        JS_ASSERT(!markCount);
+        latest = first;
+        if (latest)
+            latest->resetBump();
+    }
+
     /* Get the total "used" (occupied bytes) count for the arena chunks. */
     size_t used() const {
         size_t accum = 0;
         BumpChunk *it = first;
         while (it) {
             accum += it->used();
+            if (it == latest)
+                break;
             it = it->next();
         }
         return accum;

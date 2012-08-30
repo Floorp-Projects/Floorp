@@ -7,6 +7,7 @@
 #include "nsDOMClassInfo.h"
 #include "DictionaryHelpers.h"
 
+#undef DOM_CAMERA_LOG_LEVEL
 #define DOM_CAMERA_LOG_LEVEL  DOM_CAMERA_LOG_NOTHING
 #include "CameraCommon.h"
 

@@ -2829,7 +2829,8 @@ nsCookieService::GetTokenValue(nsASingleFragmentCString::const_char_iterator &aI
   // remove trailing <LWS>; first check we're not at the beginning
   lastSpace = aIter;
   if (lastSpace != start) {
-    while (--lastSpace != start && iswhitespace(*lastSpace));
+    while (--lastSpace != start && iswhitespace(*lastSpace))
+      continue;
     ++lastSpace;
   }
   aTokenString.Rebind(start, lastSpace);
@@ -2837,7 +2838,8 @@ nsCookieService::GetTokenValue(nsASingleFragmentCString::const_char_iterator &aI
   aEqualsFound = (*aIter == '=');
   if (aEqualsFound) {
     // find <value>
-    while (++aIter != aEndIter && iswhitespace(*aIter));
+    while (++aIter != aEndIter && iswhitespace(*aIter))
+      continue;
 
     start = aIter;
 
@@ -2849,7 +2851,8 @@ nsCookieService::GetTokenValue(nsASingleFragmentCString::const_char_iterator &aI
     // remove trailing <LWS>; first check we're not at the beginning
     if (aIter != start) {
       lastSpace = aIter;
-      while (--lastSpace != start && iswhitespace(*lastSpace));
+      while (--lastSpace != start && iswhitespace(*lastSpace))
+        continue;
       aTokenValue.Rebind(start, ++lastSpace);
     }
   }

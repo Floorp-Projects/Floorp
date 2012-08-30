@@ -246,16 +246,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     JS_ASSERT(isNative());
 
-    /*
-     * Calling a function from a cleared global triggers this (yeah, I know).
-     * Uncomment this once bug 470510 is fixed (if that bug doesn't remove
-     * isCleared entirely).
-     */
-    // JS_ASSERT(!isCleared());
-
-    /* If cx has no global object, make this the global object. */
-    if (!cx->globalObject)
-        JS_SetGlobalObject(cx, self);
+    cx->setDefaultCompartmentObjectIfUnset(self);
 
     RootedObject objectProto(cx);
 
@@ -492,9 +483,8 @@ GlobalObject::create(JSContext *cx, Class *clasp)
     JSObject *res = RegExpStatics::create(cx, global);
     if (!res)
         return NULL;
-    global->initSlot(REGEXP_STATICS, ObjectValue(*res));
-    global->initFlags(0);
 
+    global->initSlot(REGEXP_STATICS, ObjectValue(*res));
     return global;
 }
 
@@ -535,60 +525,6 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
            GlobalObject::initMapIteratorProto(cx, global) &&
            js_InitSetClass(cx, global) &&
            GlobalObject::initSetIteratorProto(cx, global);
-}
-
-void
-GlobalObject::clear(JSContext *cx)
-{
-    for (int key = JSProto_Null; key < JSProto_LIMIT * 3; key++)
-        setSlot(key, UndefinedValue());
-
-    /* Clear regexp statics. */
-    getRegExpStatics()->clear();
-
-    /* Clear the runtime-codegen-enabled cache. */
-    setSlot(RUNTIME_CODEGEN_ENABLED, UndefinedValue());
-
-    /*
-     * Clear all slots storing values in case throwing trying to execute a
-     * script for this global must reinitialize standard classes.  See
-     * bug 470150.
-     */
-    setSlot(BOOLEAN_VALUEOF, UndefinedValue());
-    setSlot(EVAL, UndefinedValue());
-    setSlot(CREATE_DATAVIEW_FOR_THIS, UndefinedValue());
-    setSlot(THROWTYPEERROR, UndefinedValue());
-    setSlot(INTRINSICS, UndefinedValue());
-    setSlot(PROTO_GETTER, UndefinedValue());
-
-    /*
-     * Mark global as cleared. If we try to execute any compile-and-go
-     * scripts from here on, we will throw.
-     */
-    int32_t flags = getSlot(FLAGS).toInt32();
-    flags |= FLAGS_CLEARED;
-    setSlot(FLAGS, Int32Value(flags));
-
-    /*
-     * Reset the new object cache in the compartment, which assumes that
-     * prototypes cached on the global object are immutable.
-     */
-    cx->runtime->newObjectCache.purge();
-
-#ifdef JS_METHODJIT
-    /*
-     * Destroy compiled code for any scripts parented to this global. Call ICs
-     * can directly call scripts which have associated JIT code, and do so
-     * without checking whether the script's global has been cleared.
-     */
-    for (gc::CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-        JSScript *script = i.get<JSScript>();
-        if (script->compileAndGo && script->hasMJITInfo() && script->hasClearedGlobal()) {
-            mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
-            mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
-        }
-    }
-#endif
 }
 
 bool

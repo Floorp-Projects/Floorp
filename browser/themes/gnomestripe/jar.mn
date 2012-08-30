@@ -39,9 +39,6 @@ browser.jar:
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
   skin/classic/browser/setDesktopBackground.css
-  skin/classic/browser/share-button.png
-  skin/classic/browser/share-button-active.png
-  skin/classic/browser/share-button-shared.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/Toolbar-small.png
   skin/classic/browser/urlbar-arrow.png
@@ -107,8 +104,9 @@ browser.jar:
   skin/classic/browser/devtools/webconsole.css                  (devtools/webconsole.css)
   skin/classic/browser/devtools/webconsole_networkpanel.css     (devtools/webconsole_networkpanel.css)
   skin/classic/browser/devtools/webconsole.png                  (devtools/webconsole.png)
-  skin/classic/browser/devtools/gcli.css              (devtools/gcli.css)
+  skin/classic/browser/devtools/commandline.css              (devtools/commandline.css)
   skin/classic/browser/devtools/htmlpanel.css         (devtools/htmlpanel.css)
+  skin/classic/browser/devtools/markup-view.css      (devtools/markup-view.css)
   skin/classic/browser/devtools/orion.css             (devtools/orion.css)
   skin/classic/browser/devtools/orion-container.css   (devtools/orion-container.css)
   skin/classic/browser/devtools/orion-task.png        (devtools/orion-task.png)
@@ -153,12 +151,13 @@ browser.jar:
   skin/classic/browser/devtools/layout-background-grid.png (devtools/layout-background-grid.png)
   skin/classic/browser/devtools/layoutview.css        (devtools/layoutview.css)
   skin/classic/browser/devtools/layout-buttons.png    (devtools/layout-buttons.png)
+  skin/classic/browser/devtools/debugger-collapse.png  (devtools/debugger-collapse.png)
+  skin/classic/browser/devtools/debugger-expand.png    (devtools/debugger-expand.png)
   skin/classic/browser/devtools/debugger-pause.png     (devtools/debugger-pause.png)
   skin/classic/browser/devtools/debugger-play.png      (devtools/debugger-play.png)
   skin/classic/browser/devtools/debugger-step-in.png   (devtools/debugger-step-in.png)
   skin/classic/browser/devtools/debugger-step-out.png  (devtools/debugger-step-out.png)
   skin/classic/browser/devtools/debugger-step-over.png (devtools/debugger-step-over.png)
-  skin/classic/browser/devtools/inspector-option-icon.png (devtools/inspector-option-icon.png)
   skin/classic/browser/devtools/responsive-se-resizer.png (devtools/responsive-se-resizer.png)
   skin/classic/browser/devtools/responsive-vertical-resizer.png (devtools/responsive-vertical-resizer.png)
   skin/classic/browser/devtools/responsive-background.png (devtools/responsive-background.png)

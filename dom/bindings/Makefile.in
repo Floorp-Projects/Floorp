@@ -22,7 +22,7 @@ include $(topsrcdir)/dom/dom-config.mk
 include $(topsrcdir)/dom/webidl/WebIDL.mk
 
 binding_include_path := mozilla/dom
-all_webidl_files = $(webidl_files)
+all_webidl_files = $(webidl_files) $(generated_webidl_files)
 # Set exported_binding_headers before adding the test IDL to the mix
 exported_binding_headers := $(subst .webidl,Binding.h,$(all_webidl_files))
 # Set linked_binding_cpp_files before adding the test IDL to the mix
@@ -45,6 +45,7 @@ CPPSRCS = \
   $(linked_binding_cpp_files) \
   $(filter %.cpp, $(globalgen_targets)) \
   BindingUtils.cpp \
+  DOMJSProxyHandler.cpp \
   $(NULL)
 
 EXPORTS_NAMESPACES = $(binding_include_path) mozilla
@@ -56,6 +57,7 @@ EXPORTS_mozilla = \
 EXPORTS_$(binding_include_path) = \
   BindingUtils.h \
   DOMJSClass.h \
+  DOMJSProxyHandler.h \
   Errors.msg \
   Nullable.h \
   PrimitiveConversions.h \
@@ -85,6 +87,16 @@ bindinggen_dependencies := \
   ParserResults.pkl \
   $(GLOBAL_DEPS) \
   $(NULL)
+
+CSS2Properties.webidl: $(topsrcdir)/layout/style/nsCSSPropList.h \
+                       $(topsrcdir)/layout/style/nsCSSPropAliasList.h \
+                       $(webidl_base)/CSS2Properties.webidl.in \
+                       $(webidl_base)/CSS2PropertiesProps.h \
+                       $(srcdir)/GenerateCSS2PropertiesWebIDL.py \
+                       $(GLOBAL_DEPS)
+	$(CPP) -I$(topsrcdir)/layout/style $(webidl_base)/CSS2PropertiesProps.h | \
+	  PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
+	  $(srcdir)/GenerateCSS2PropertiesWebIDL.py $(webidl_base)/CSS2Properties.webidl.in > CSS2Properties.webidl
 
 $(webidl_files): %: $(webidl_base)/%
 	$(INSTALL) $(IFLAGS1) $(webidl_base)/$* .

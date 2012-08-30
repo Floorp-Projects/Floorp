@@ -6,8 +6,11 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
+import org.json.JSONObject;
+
 import android.content.Context;
 import android.content.Intent;
+import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
 import android.util.AttributeSet;
@@ -27,7 +30,7 @@ import android.widget.TextView;
 public class AboutHomePromoBox extends LinearLayout implements View.OnClickListener {
     private static final String LOGTAG = "AboutHomePromoBox";
 
-    public enum Type { SYNC };
+    public enum Type { SYNC, APPS };
 
     private Type mType;
 
@@ -61,6 +64,20 @@ public class AboutHomePromoBox extends LinearLayout implements View.OnClickListe
                 context.startActivity(intent);
                 break;
 
+            case APPS:
+                final String url = "https://marketplace.mozilla.org";
+                final JSONObject args = new JSONObject();
+                try {
+                    args.put("url", url);
+                    args.put("engine", null);
+                    args.put("userEntered", false);
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "error building JSON arguments");
+                }
+                Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
+                break;
+
             default:
                 Log.e(LOGTAG, "Invalid type was set when promo box was clicked.");
                 break;
@@ -78,8 +95,12 @@ public class AboutHomePromoBox extends LinearLayout implements View.OnClickListe
                 setSyncResources();
                 break;
 
+            case APPS:
+                setAppsResources();
+                break;
+
             default:
-                Log.e(LOGTAG, "Invalid PromoBoxType specified.");
+                Log.e(LOGTAG, "show() - Invalid AboutHomePromoBox.Type specified.");
                 break;
         }
         updateViewResources();
@@ -103,8 +124,7 @@ public class AboutHomePromoBox extends LinearLayout implements View.OnClickListe
     }
 
     private void updateTextViewResources() {
-        final String promoText = mContext.getResources().getString(mTextResource) + " \u00BB";
-
+        final String promoText = mContext.getResources().getString(mTextResource);
         final String boldName = mContext.getResources().getString(mBoldTextResource);
         final int styleIndex = promoText.indexOf(boldName);
         if (styleIndex < 0)
@@ -120,6 +140,12 @@ public class AboutHomePromoBox extends LinearLayout implements View.OnClickListe
     // Type.SYNC: Setup Firefox sync.
     private void setSyncResources() {
         setResources(R.string.abouthome_about_sync, R.string.abouthome_sync_bold_name,
-                R.drawable.abouthome_sync_logo);
+                R.drawable.abouthome_promo_logo_sync);
+    }
+
+    // Types.APPS: Visit the Marketplace.
+    private void setAppsResources() {
+        setResources(R.string.abouthome_about_apps, R.string.abouthome_apps_bold_name,
+                R.drawable.abouthome_promo_logo_apps);
     }
 }

@@ -79,21 +79,16 @@ private:
 
 // Support for ISupports classes which interact with cycle collector.
 
-/**
- * This struct (once shipped) will be FROZEN with respect to the
- * NS_CycleCollectorSuspect2 and NS_CycleCollectorForget2 functions.  If
- * we need to change the struct, we'll need Suspect3 and Forget3 for the
- * new versions.
- */
 struct nsPurpleBufferEntry {
   union {
-    nsISupports *mObject;                 // when low bit unset
+    void *mObject;                        // when low bit unset
     nsPurpleBufferEntry *mNextInFreeList; // when low bit set
   };
   // When an object is in the purple buffer, it replaces its reference
   // count with a (tagged) pointer to this entry, so we store the
   // reference count for it.
   nsrefcnt mRefCnt;
+  nsCycleCollectionParticipant *mParticipant; // NULL for nsISupports
 };
 
 class nsCycleCollectingAutoRefCnt {
@@ -108,7 +103,7 @@ public:
   {
   }
 
-  nsrefcnt incr(nsISupports *owner)
+  nsrefcnt incr(void *owner)
   {
     if (NS_UNLIKELY(mTagged == NS_CCAR_TAGGED_STABILIZED_REFCNT)) {
       // The sentinel value "purple bit alone, refcount 0" means
@@ -144,12 +139,17 @@ public:
     return refcount;
   }
 
-  void stabilizeForDeletion(nsISupports*)
+  void stabilizeForDeletion()
   {
     mTagged = NS_CCAR_TAGGED_STABILIZED_REFCNT;
   }
 
   nsrefcnt decr(nsISupports *owner)
+  {
+    return decr(owner, nullptr);
+  }
+
+  nsrefcnt decr(void *owner, nsCycleCollectionParticipant *p)
   {
     if (NS_UNLIKELY(mTagged == NS_CCAR_TAGGED_STABILIZED_REFCNT))
       return 1;
@@ -177,7 +177,7 @@ public:
 
       nsPurpleBufferEntry *e;
       if (NS_LIKELY(refcount > 0) &&
-          ((e = NS_CycleCollectorSuspect2(owner)))) {
+          ((e = NS_CycleCollectorSuspect2(owner, p)))) {
         e->mRefCnt = refcount;
         mTagged = NS_CCAR_PURPLE_ENTRY_TO_TAGGED(e);
       } else {
@@ -281,6 +281,61 @@ public:                                                                       \
   {                                                                           \
     if (NS_LIKELY(mRefCnt.IsPurple()))                                        \
       mRefCnt.unmarkPurple();                                                 \
+  }                                                                           \
+protected:                                                                    \
+  nsCycleCollectingAutoRefCnt mRefCnt;                                        \
+  NS_DECL_OWNINGTHREAD                                                        \
+public:
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Implementation of AddRef and Release for non-nsISupports (ie "native")
+ * cycle-collected classes that use the purple buffer to avoid leaks.
+ */
+
+#define NS_IMPL_CC_NATIVE_ADDREF_BODY(_class)                                 \
+    NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");                 \
+    NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                          \
+    nsrefcnt count = mRefCnt.incr(this);                                      \
+    NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                       \
+    return count;
+
+#define NS_IMPL_CC_NATIVE_RELEASE_BODY(_class)                                \
+    NS_PRECONDITION(0 != mRefCnt, "dup release");                             \
+    NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class);                          \
+    nsrefcnt count =                                                          \
+      mRefCnt.decr(static_cast<void*>(this),                                  \
+                   _class::NS_CYCLE_COLLECTION_INNERNAME.GetParticipant());   \
+    NS_LOG_RELEASE(this, count, #_class);                                     \
+    if (count == 0) {                                                         \
+      NS_ASSERT_OWNINGTHREAD(_class);                                         \
+      mRefCnt.stabilizeForDeletion();                                         \
+      delete this;                                                            \
+      return 0;                                                               \
+    }                                                                         \
+    return count;
+
+#define NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(_class)                        \
+NS_METHOD_(nsrefcnt) _class::AddRef(void)                                     \
+{                                                                             \
+  NS_IMPL_CC_NATIVE_ADDREF_BODY(_class)                                       \
+}
+
+#define NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(_class)                       \
+NS_METHOD_(nsrefcnt) _class::Release(void)                                    \
+{                                                                             \
+  NS_IMPL_CC_NATIVE_RELEASE_BODY(_class)                                      \
+}
+
+#define NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(_class)            \
+public:                                                                       \
+  NS_METHOD_(nsrefcnt) AddRef(void) {                                         \
+    NS_IMPL_CC_NATIVE_ADDREF_BODY(_class)                                     \
+  }                                                                           \
+  NS_METHOD_(nsrefcnt) Release(void) {                                        \
+    NS_IMPL_CC_NATIVE_RELEASE_BODY(_class)                                    \
   }                                                                           \
 protected:                                                                    \
   nsCycleCollectingAutoRefCnt mRefCnt;                                        \
@@ -475,7 +530,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
   NS_LOG_RELEASE(this, count, #_class);                                       \
   if (count == 0) {                                                           \
     NS_ASSERT_OWNINGTHREAD(_class);                                           \
-    mRefCnt.stabilizeForDeletion(base);                                       \
+    mRefCnt.stabilizeForDeletion();                                           \
     _destroy;                                                                 \
     return 0;                                                                 \
   }                                                                           \

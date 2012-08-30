@@ -525,14 +525,10 @@ public:
       // being thread safe. Bug 750989.
       t->SetPaused(true);
       if (stream.is_open()) {
-        JSAutoEnterCompartment autoComp;
-        if (autoComp.enter(cx, obj)) {
-          JSObject* profileObj = mozilla_sampler_get_profile_data(cx);
-          jsval val = OBJECT_TO_JSVAL(profileObj);
-          JS_Stringify(cx, &val, nullptr, JSVAL_NULL, WriteCallback, &stream);
-        } else {
-          LOG("Failed to enter compartment");
-        }
+        JSAutoCompartment autoComp(cx, obj);
+        JSObject* profileObj = mozilla_sampler_get_profile_data(cx);
+        jsval val = OBJECT_TO_JSVAL(profileObj);
+        JS_Stringify(cx, &val, nullptr, JSVAL_NULL, WriteCallback, &stream);
         stream.close();
         LOGF("Saved to %s", tmpPath.get());
       } else {

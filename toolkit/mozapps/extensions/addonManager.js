@@ -40,7 +40,7 @@ function amManager() {
   Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
   var messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-                       getService(Ci.nsIChromeFrameMessageManager);
+                       getService(Ci.nsIMessageListenerManager);
 
   messageManager.addMessageListener(MSG_INSTALL_ENABLED, this);
   messageManager.addMessageListener(MSG_INSTALL_ADDONS, this);

@@ -44,14 +44,14 @@ class TypeOracle
 {
   public:
     struct UnaryTypes {
-        types::TypeSet *inTypes;
-        types::TypeSet *outTypes;
+        types::StackTypeSet *inTypes;
+        types::StackTypeSet *outTypes;
     };
 
     struct BinaryTypes {
-        types::TypeSet *lhsTypes;
-        types::TypeSet *rhsTypes;
-        types::TypeSet *outTypes;
+        types::StackTypeSet *lhsTypes;
+        types::StackTypeSet *rhsTypes;
+        types::StackTypeSet *outTypes;
     };
 
     struct Unary {
@@ -69,27 +69,27 @@ class TypeOracle
     virtual BinaryTypes binaryTypes(JSScript *script, jsbytecode *pc) = 0;
     virtual Unary unaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual Binary binaryOp(JSScript *script, jsbytecode *pc) = 0;
-    virtual types::TypeSet *thisTypeSet(JSScript *script) { return NULL; }
+    virtual types::StackTypeSet *thisTypeSet(JSScript *script) { return NULL; }
     virtual bool getOsrTypes(jsbytecode *osrPc, Vector<MIRType> &slotTypes) { return true; }
-    virtual types::TypeSet *parameterTypeSet(JSScript *script, size_t index) { return NULL; }
-    virtual types::TypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id) {
+    virtual types::StackTypeSet *parameterTypeSet(JSScript *script, size_t index) { return NULL; }
+    virtual types::HeapTypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id) {
         return NULL;
     }
-    virtual types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc) {
+    virtual types::StackTypeSet *propertyRead(JSScript *script, jsbytecode *pc) {
         return NULL;
     }
-    virtual types::TypeSet *propertyReadBarrier(JSScript *script, jsbytecode *pc) {
+    virtual types::StackTypeSet *propertyReadBarrier(JSScript *script, jsbytecode *pc) {
         return NULL;
     }
     virtual bool propertyReadIdempotent(JSScript *script, jsbytecode *pc, HandleId id) {
         return false;
     }
-    virtual types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc,
+    virtual types::HeapTypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc,
                                                 jsid id, bool *canSpecialize) {
         *canSpecialize = true;
         return NULL;
     }
-    virtual types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier) {
+    virtual types::StackTypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::StackTypeSet **barrier) {
         *barrier = NULL;
         return NULL;
     }
@@ -141,15 +141,15 @@ class TypeOracle
     }
 
     /* |pc| must be a |JSOP_CALL|. */
-    virtual types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc) {
+    virtual types::StackTypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc) {
         // Same assertion as TypeInferenceOracle::getCallTarget.
         JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE && JSOp(*pc) != JSOP_EVAL);
         return NULL;
     }
-    virtual types::TypeSet *getCallArg(JSScript *script, uint32 argc, uint32 arg, jsbytecode *pc) {
+    virtual types::StackTypeSet *getCallArg(JSScript *script, uint32 argc, uint32 arg, jsbytecode *pc) {
         return NULL;
     }
-    virtual types::TypeSet *getCallReturn(JSScript *script, jsbytecode *pc) {
+    virtual types::StackTypeSet *getCallReturn(JSScript *script, jsbytecode *pc) {
         return NULL;
     }
     virtual bool canInlineCall(JSScript *caller, jsbytecode *pc) {
@@ -159,7 +159,7 @@ class TypeOracle
         return false;
     }
 
-    virtual LazyArgumentsType isArgumentObject(types::TypeSet *obj) {
+    virtual LazyArgumentsType isArgumentObject(types::StackTypeSet *obj) {
         return MaybeArguments;
     }
     virtual LazyArgumentsType propertyReadMagicArguments(JSScript *script, jsbytecode *pc) {
@@ -174,7 +174,7 @@ class TypeOracle
     virtual BinaryTypes incslot(JSScript *script, jsbytecode *pc) {
         return binaryTypes(script, pc);
     }
-    virtual types::TypeSet *aliasedVarBarrier(JSScript *script, jsbytecode *pc, types::TypeSet **barrier) {
+    virtual types::StackTypeSet *aliasedVarBarrier(JSScript *script, jsbytecode *pc, types::StackTypeSet **barrier) {
         return NULL;
     }
 };
@@ -215,7 +215,8 @@ class TypeInferenceOracle : public TypeOracle
     JSContext *cx;
     JSScript *script;
 
-    MIRType getMIRType(types::TypeSet *types);
+    MIRType getMIRType(types::StackTypeSet *types);
+    MIRType getMIRType(types::HeapTypeSet *types);
 
   public:
     TypeInferenceOracle() : cx(NULL), script(NULL) {}
@@ -226,18 +227,18 @@ class TypeInferenceOracle : public TypeOracle
     BinaryTypes binaryTypes(JSScript *script, jsbytecode *pc);
     Unary unaryOp(JSScript *script, jsbytecode *pc);
     Binary binaryOp(JSScript *script, jsbytecode *pc);
-    types::TypeSet *thisTypeSet(JSScript *script);
+    types::StackTypeSet *thisTypeSet(JSScript *script);
     bool getOsrTypes(jsbytecode *osrPc, Vector<MIRType> &slotTypes);
-    types::TypeSet *parameterTypeSet(JSScript *script, size_t index);
-    types::TypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id);
-    types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc);
-    types::TypeSet *propertyReadBarrier(JSScript *script, jsbytecode *pc);
+    types::StackTypeSet *parameterTypeSet(JSScript *script, size_t index);
+    types::HeapTypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id);
+    types::StackTypeSet *propertyRead(JSScript *script, jsbytecode *pc);
+    types::StackTypeSet *propertyReadBarrier(JSScript *script, jsbytecode *pc);
     bool propertyReadIdempotent(JSScript *script, jsbytecode *pc, HandleId id);
-    types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id, bool *canSpecialize);
-    types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
-    types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc);
-    types::TypeSet *getCallArg(JSScript *caller, uint32 argc, uint32 arg, jsbytecode *pc);
-    types::TypeSet *getCallReturn(JSScript *caller, jsbytecode *pc);
+    types::HeapTypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id, bool *canSpecialize);
+    types::StackTypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::StackTypeSet **barrier);
+    types::StackTypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc);
+    types::StackTypeSet *getCallArg(JSScript *caller, uint32 argc, uint32 arg, jsbytecode *pc);
+    types::StackTypeSet *getCallReturn(JSScript *caller, jsbytecode *pc);
     bool elementReadIsDenseArray(JSScript *script, jsbytecode *pc);
     bool elementReadIsTypedArray(JSScript *script, jsbytecode *pc, int *atype);
     bool elementReadIsString(JSScript *script, jsbytecode *pc);
@@ -255,9 +256,9 @@ class TypeInferenceOracle : public TypeOracle
     bool canInlineCalls();
     bool canInlineCall(JSScript *caller, jsbytecode *pc);
     bool canEnterInlinedFunction(JSFunction *callee);
-    types::TypeSet *aliasedVarBarrier(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
+    types::StackTypeSet *aliasedVarBarrier(JSScript *script, jsbytecode *pc, types::StackTypeSet **barrier);
 
-    LazyArgumentsType isArgumentObject(types::TypeSet *obj);
+    LazyArgumentsType isArgumentObject(types::StackTypeSet *obj);
     LazyArgumentsType propertyReadMagicArguments(JSScript *script, jsbytecode *pc);
     LazyArgumentsType elementReadMagicArguments(JSScript *script, jsbytecode *pc);
     LazyArgumentsType elementWriteMagicArguments(JSScript *script, jsbytecode *pc);

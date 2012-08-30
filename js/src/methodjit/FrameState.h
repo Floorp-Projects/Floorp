@@ -698,7 +698,7 @@ class FrameState
     struct StackEntryExtra {
         bool initArray;
         JSObject *initObject;
-        types::TypeSet *types;
+        types::StackTypeSet *types;
         JSAtom *name;
         void reset() { PodZero(this); }
     };

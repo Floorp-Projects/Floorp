@@ -110,7 +110,7 @@ protected:
   bool RecvOnStatus(const nsresult& status);
   bool RecvFailedAsyncOpen(const nsresult& status);
   bool RecvRedirect1Begin(const uint32_t& newChannel,
-                          const URI& newURI,
+                          const URIParams& newURI,
                           const uint32_t& redirectFlags,
                           const nsHttpResponseHead& responseHead);
   bool RecvRedirect3Complete();
@@ -165,7 +165,7 @@ private:
   void FailedAsyncOpen(const nsresult& status);
   void HandleAsyncAbort();
   void Redirect1Begin(const uint32_t& newChannelId,
-                      const URI& newUri,
+                      const URIParams& newUri,
                       const uint32_t& redirectFlags,
                       const nsHttpResponseHead& responseHead);
   void Redirect3Complete();

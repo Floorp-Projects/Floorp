@@ -14,6 +14,7 @@ import socket
 import sys
 import time
 import platform
+import weakref
 import xml.dom.minidom as dom
 
 try:
@@ -309,13 +310,6 @@ class MarionetteTestRunner(object):
             except Exception, e:
                 print "Could not submit to datazilla"
                 print e
-        if self.marionette.emulator:
-            self.marionette.emulator.close()
-            self.marionette.emulator = None
-        if self.marionette.instance:
-            self.marionette.instance.close()
-            self.marionette.instance = None
-        self.marionette = None
 
         if self.xml_output:
             with open(self.xml_output, 'w') as f:
@@ -401,10 +395,10 @@ class MarionetteTestRunner(object):
                     issubclass(obj, unittest.TestCase)):
                     testnames = testloader.getTestCaseNames(obj)
                     for testname in testnames:
-                        suite.addTest(obj(self.marionette, methodName=testname))
+                        suite.addTest(obj(weakref.ref(self.marionette), methodName=testname))
 
         elif file_ext == '.js':
-            suite.addTest(MarionetteJSTestCase(self.marionette, jsFile=filepath))
+            suite.addTest(MarionetteJSTestCase(weakref.ref(self.marionette), jsFile=filepath))
 
         if suite.countTestCases():
             results = MarionetteTextTestRunner(verbosity=3).run(suite)

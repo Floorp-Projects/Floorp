@@ -482,16 +482,10 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         }
 
         nsISupports *identity;
-        if (mozilla::dom::binding::instanceIsProxy(obj)) {
+        if (mozilla::dom::oldproxybindings::instanceIsProxy(obj)) {
             identity =
                 static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
-        } else if (mozilla::dom::IsDOMClass(js::GetObjectJSClass(obj))) {
-            NS_ASSERTION(mozilla::dom::DOMJSClass::FromJSClass(
-                              js::GetObjectJSClass(obj))->mDOMObjectIsISupports,
-                         "This only works on nsISupports classes!");
-            identity =
-                mozilla::dom::UnwrapDOMObject<nsISupports>(obj);
-        } else {
+        } else if (!mozilla::dom::UnwrapDOMObjectToISupports(obj, identity)) {
             identity = nullptr;
         }
 

@@ -255,16 +255,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY inspectorHTMLDelete.label          "Delete Node">
 <!ENTITY inspectorHTMLDelete.accesskey      "D">
 
-<!-- LOCALIZATION NOTE (inspectOptionButton.*): The menu in the Inspector
-  -  toolbar.  -->
-<!ENTITY inspectOptionButton.tooltiptext    "Inspector Options">
-
-<!-- LOCALIZATION NOTE: These are for the menu in the Inspector Toolbar -->
-<!ENTITY inspectorToggleVeil.label          "Dim The Page">
-<!ENTITY inspectorToggleVeil.accesskey      "D">
-<!ENTITY inspectorToggleInfobar.label       "Show Node Info">
-<!ENTITY inspectorToggleInfobar.accesskey   "S">
-
 <!-- LOCALIZATION NOTE (inspect3DViewButton.label): This button shows an
   -  alternate view for the Inspector, creating a 3D visualization of the
   -  webpage. -->
@@ -673,5 +663,5 @@ toolbar button -->
 <!ENTITY social.toggleSidebar.label "Show sidebar">
 <!ENTITY social.toggleSidebar.accesskey "s">
 
-<!ENTITY social.activated.button.label "Oops, undo">
-<!ENTITY social.activated.button.accesskey "u">
+<!ENTITY social.activated.undobutton.label "Undo">
+<!ENTITY social.activated.undobutton.accesskey "U">

@@ -327,6 +327,7 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
      */
     JSObject *delegate = static_cast<JSObject*>(obj->getPrivate());
     if (delegate) {
+        JS_SET_TRACING_LOCATION(trc, &obj->privateRef(obj->numFixedSlots()));
         MarkObjectUnbarriered(trc, &delegate, "arraybuffer.delegate");
         obj->setPrivateUnbarriered(delegate);
     }
@@ -667,21 +668,6 @@ ArrayBufferObject::obj_enumerate(JSContext *cx, HandleObject obj,
 {
     statep->setNull();
     return true;
-}
-
-/*
- * ArrayBufferViews of various sorts
- */
-
-static JSObject *
-GetProtoForClass(JSContext *cx, Class *clasp)
-{
-    // Pass in the proto from this compartment
-    Rooted<GlobalObject*> parent(cx, GetCurrentGlobal(cx));
-    RootedObject proto(cx);
-    if (!FindProto(cx, clasp, parent, &proto))
-        return NULL;
-    return proto;
 }
 
 /*
@@ -1276,13 +1262,7 @@ class TypedArrayTemplate
         JS_ASSERT(bufobj->isArrayBuffer());
         Rooted<ArrayBufferObject *> buffer(cx, &bufobj->asArrayBuffer());
 
-        /*
-         * N.B. The base of the array's data is stored in the object's
-         * private data rather than a slot, to avoid alignment restrictions
-         * on private Values.
-         */
-        obj->setPrivate(buffer->dataPointer() + byteOffset);
-
+        InitTypedArrayDataPointer(obj, buffer, byteOffset);
         obj->setSlot(FIELD_LENGTH, Int32Value(len));
         obj->setSlot(FIELD_BYTEOFFSET, Int32Value(byteOffset));
         obj->setSlot(FIELD_BYTELENGTH, Int32Value(len * sizeof(NativeType)));
@@ -1413,14 +1393,8 @@ class TypedArrayTemplate
     Getter(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
-        // FIXME: Hack to keep us building with gcc 4.2. Remove this once we
-        // drop support for gcc 4.2. See bug 783505 for the details.
-#if defined(__GNUC__) && __GNUC_MINOR__ <= 2
-        return CallNonGenericMethod(cx, IsThisClass, GetterImpl<ValueGetter>, args);
-#else
         return CallNonGenericMethod<ThisTypeArray::IsThisClass,
                                     ThisTypeArray::GetterImpl<ValueGetter> >(cx, args);
-#endif
     }
 
     // Define an accessor for a read-only property that invokes a native getter
@@ -1666,8 +1640,9 @@ class TypedArrayTemplate
                  * reuses all the existing cross-compartment crazy so we don't
                  * have to do anything *uniquely* crazy here.
                  */
-                Rooted<JSObject*> proto(cx, GetProtoForClass(cx, fastClass()));
-                if (!proto)
+
+                Rooted<JSObject*> proto(cx);
+                if (!FindProto(cx, fastClass(), &proto))
                     return NULL;
 
                 InvokeArgsGuard ag;
@@ -2844,7 +2819,6 @@ Class js::ArrayBufferClass = {
         ArrayBufferObject::obj_enumerate,
         NULL,       /* typeOf          */
         NULL,       /* thisObject      */
-        NULL,       /* clear           */
     }
 };
 
@@ -3016,7 +2990,6 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
         _typedArray::obj_enumerate,                                            \
         NULL,                /* typeOf      */                                 \
         NULL,                /* thisObject  */                                 \
-        NULL,                /* clear       */                                 \
     }                                                                          \
 }
 

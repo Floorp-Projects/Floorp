@@ -37,3 +37,5 @@ LOCAL_INCLUDES = \
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET
+
+XPIDL_FLAGS += -I$(topsrcdir)/netwerk/base/public

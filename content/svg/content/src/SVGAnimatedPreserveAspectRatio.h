@@ -92,7 +92,8 @@ public:
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement);
+                              nsSVGElement *aSVGElement,
+                              bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue) const;
 
   void SetBaseValue(const SVGPreserveAspectRatio &aValue,

@@ -1276,8 +1276,8 @@ var AddonManagerInternal = {
    *         An optional hash of the add-on
    * @param  aName
    *         An optional placeholder name while the add-on is being downloaded
-   * @param  aIconURL
-   *         An optional placeholder icon URL while the add-on is being downloaded
+   * @param  aIcons
+   *         Optional placeholder icons while the add-on is being downloaded
    * @param  aVersion
    *         An optional placeholder version while the add-on is being downloaded
    * @param  aLoadGroup
@@ -1285,7 +1285,7 @@ var AddonManagerInternal = {
    * @throws if the aUrl, aCallback or aMimetype arguments are not specified
    */
   getInstallForURL: function AMI_getInstallForURL(aUrl, aCallback, aMimetype,
-                                                  aHash, aName, aIconURL,
+                                                  aHash, aName, aIcons,
                                                   aVersion, aLoadGroup) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
@@ -1311,9 +1311,15 @@ var AddonManagerInternal = {
       throw Components.Exception("aName must be a string or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aIconURL && typeof aIconURL != "string")
-      throw Components.Exception("aIconURL must be a string or null",
-                                 Cr.NS_ERROR_INVALID_ARG);
+    if (aIcons) {
+      if (typeof aIcons == "string")
+        aIcons = { "32": aIcons };
+      else if (typeof aIcons != "object")
+        throw Components.Exception("aIcons must be a string, an object or null",
+                                   Cr.NS_ERROR_INVALID_ARG);
+    } else {
+      aIcons = {};
+    }
 
     if (aVersion && typeof aVersion != "string")
       throw Components.Exception("aVersion must be a string or null",
@@ -1327,7 +1333,7 @@ var AddonManagerInternal = {
     for (let provider of providers) {
       if (callProvider(provider, "supportsMimetype", false, aMimetype)) {
         callProvider(provider, "getInstallForURL", null,
-                     aUrl, aHash, aName, aIconURL, aVersion, aLoadGroup,
+                     aUrl, aHash, aName, aIcons, aVersion, aLoadGroup,
                      function(aInstall) {
           safeCall(aCallback, aInstall);
         });
@@ -2221,10 +2227,10 @@ var AddonManager = {
 #endif
 
   getInstallForURL: function AM_getInstallForURL(aUrl, aCallback, aMimetype,
-                                                 aHash, aName, aIconURL,
+                                                 aHash, aName, aIcons,
                                                  aVersion, aLoadGroup) {
     AddonManagerInternal.getInstallForURL(aUrl, aCallback, aMimetype, aHash,
-                                          aName, aIconURL, aVersion, aLoadGroup);
+                                          aName, aIcons, aVersion, aLoadGroup);
   },
 
   getInstallForFile: function AM_getInstallForFile(aFile, aCallback, aMimetype) {

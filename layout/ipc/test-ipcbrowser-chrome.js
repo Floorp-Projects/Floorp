@@ -36,29 +36,29 @@ function loadURL(url) {
 }
 
 function scrollContentBy(dx, dy) {
-    messageManager.sendAsyncMessage("scrollBy",
-                                    { dx: dx, dy: dy });
+    messageManager.broadcastAsyncMessage("scrollBy",
+                                         { dx: dx, dy: dy });
 
 }
 
 function scrollContentTo(x, y) {
-    messageManager.sendAsyncMessage("scrollTo",
-                                    { x: x, y: y });
+    messageManager.broadcastAsyncMessage("scrollTo",
+                                         { x: x, y: y });
 }
 
 function setContentViewport(w, h) {
-    messageManager.sendAsyncMessage("setViewport",
-                                    { w: w, h: h });
+    messageManager.broadcastAsyncMessage("setViewport",
+                                         { w: w, h: h });
 }
 
 function setContentDisplayPort(x, y, w, h) {
-    messageManager.sendAsyncMessage("setDisplayPort",
-                                    { x: x, y: y, w: w, h: h });
+    messageManager.broadcastAsyncMessage("setDisplayPort",
+                                         { x: x, y: y, w: w, h: h });
 }
 
 function setContentResolution(xres, yres) {
-    messageManager.sendAsyncMessage("setResolution",
-                                    { xres: xres, yres: yres });
+    messageManager.broadcastAsyncMessage("setResolution",
+                                         { xres: xres, yres: yres });
 }
 
 // Functions affecting <browser>.
@@ -107,8 +107,8 @@ function startAnimatedScrollBy(dx, dy) {
         rootView().scrollBy(ddx, ddy);
 
         if (!sentScrollBy && 100 <= (now - start)) {
-            messageManager.sendAsyncMessage("scrollBy",
-                                            { dx: dx, dy: dy });
+            messageManager.broadcastAsyncMessage("scrollBy",
+                                                 { dx: dx, dy: dy });
             sentScrollBy = true;
         }
 

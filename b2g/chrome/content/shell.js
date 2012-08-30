@@ -18,6 +18,7 @@ Cu.import('resource://gre/modules/AlarmService.jsm');
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import('resource://gre/modules/PermissionPromptHelper.jsm');
 Cu.import('resource://gre/modules/ObjectWrapper.jsm');
+Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
@@ -48,7 +49,7 @@ XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
 
 XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"]
-         .getService(Ci.nsIFrameMessageManager);
+         .getService(Ci.nsIMessageListenerManager);
 });
 
 function getContentWindow() {
@@ -149,6 +150,7 @@ var shell = {
 
     CustomEventManager.init();
     WebappsHelper.init();
+    AccessFu.attach(window);
 
     // XXX could factor out into a settings->pref map.  Not worth it yet.
     SettingsListener.observe("debug.fps.enabled", false, function(value) {

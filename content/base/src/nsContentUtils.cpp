@@ -1775,10 +1775,7 @@ nsContentUtils::GetDocumentFromCaller()
   sXPConnect->GetCaller(&cx, &obj);
   NS_ASSERTION(cx && obj, "Caller ensures something is running");
 
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, obj)) {
-    return nullptr;
-  }
+  JSAutoCompartment ac(cx, obj);
 
   nsCOMPtr<nsPIDOMWindow> win =
     do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
@@ -5055,42 +5052,37 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   ret.defaultZoom = 1.0;
   ret.autoSize = true;
   ret.allowZoom = true;
-  ret.autoScale = true;
 
-  // If the docType specifies that we are on a site optimized for mobile,
-  // then we want to return specially crafted defaults for the viewport info.
-  nsCOMPtr<nsIDOMDocument>
-    domDoc(do_QueryInterface(aDocument));
-
-  nsCOMPtr<nsIDOMDocumentType> docType;
-  nsresult rv = domDoc->GetDoctype(getter_AddRefs(docType));
-  if (NS_SUCCEEDED(rv) && docType) {
-    nsAutoString docId;
-    rv = docType->GetPublicId(docId);
-    if (NS_SUCCEEDED(rv)) {
-      if ((docId.Find("WAP") != -1) ||
-          (docId.Find("Mobile") != -1) ||
-          (docId.Find("WML") != -1))
-      {
-        return ret;
+  nsAutoString viewport;
+  aDocument->GetHeaderData(nsGkAtoms::viewport, viewport);
+  if (viewport.IsEmpty()) {
+    // If the docType specifies that we are on a site optimized for mobile,
+    // then we want to return specially crafted defaults for the viewport info.
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aDocument));
+    nsCOMPtr<nsIDOMDocumentType> docType;
+    nsresult rv = domDoc->GetDoctype(getter_AddRefs(docType));
+    if (NS_SUCCEEDED(rv) && docType) {
+      nsAutoString docId;
+      rv = docType->GetPublicId(docId);
+      if (NS_SUCCEEDED(rv)) {
+        if ((docId.Find("WAP") != -1) ||
+            (docId.Find("Mobile") != -1) ||
+            (docId.Find("WML") != -1))
+        {
+          return ret;
+        }
       }
+    }
+
+    nsAutoString handheldFriendly;
+    aDocument->GetHeaderData(nsGkAtoms::handheldFriendly, handheldFriendly);
+    if (handheldFriendly.EqualsLiteral("true")) {
+      return ret;
     }
   }
 
-  if (aDocument->IsXUL()) {
-    ret.autoScale = false;
-    return ret;
-  }
-
-  nsAutoString handheldFriendly;
-  aDocument->GetHeaderData(nsGkAtoms::handheldFriendly, handheldFriendly);
-
-  if (handheldFriendly.EqualsLiteral("true")) {
-    return ret;
-  }
-
   nsAutoString minScaleStr;
-  aDocument->GetHeaderData(nsGkAtoms::minimum_scale, minScaleStr);
+  aDocument->GetHeaderData(nsGkAtoms::viewport_minimum_scale, minScaleStr);
 
   nsresult errorCode;
   float scaleMinFloat = minScaleStr.ToFloat(&errorCode);
@@ -5103,7 +5095,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   scaleMinFloat = NS_MAX(scaleMinFloat, kViewportMinScale);
 
   nsAutoString maxScaleStr;
-  aDocument->GetHeaderData(nsGkAtoms::maximum_scale, maxScaleStr);
+  aDocument->GetHeaderData(nsGkAtoms::viewport_maximum_scale, maxScaleStr);
 
   // We define a special error code variable for the scale and max scale,
   // because they are used later (see the width calculations).
@@ -5238,6 +5230,8 @@ nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
 
   /* We never fail. */
   nsresult rv = NS_OK;
+
+  aDocument->SetHeaderData(nsGkAtoms::viewport, viewportInfo);
 
   /* Iterators. */
   nsAString::const_iterator tip, tail, end;
@@ -5976,14 +5970,14 @@ nsContentUtils::CanAccessNativeAnon()
   NS_ENSURE_TRUE(principal, false);
 
   JSScript *script = nullptr;
-  if (!fp) {
+  if (fp) {
+    script = JS_GetFrameScript(cx, fp);
+  } else {
     if (!JS_DescribeScriptedCaller(cx, &script, nullptr)) {
       // No code at all is running. So we must be arriving here as the result
       // of C++ code asking us to do something. Allow access.
       return true;
     }
-  } else if (JS_IsScriptFrame(cx, fp)) {
-    script = JS_GetFrameScript(cx, fp);
   }
 
   bool privileged;
@@ -6250,12 +6244,10 @@ public:
   }
 
   NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount,
-                                           size_t objSz,
                                            const char *objName)
   {
   }
   NS_IMETHOD_(void) DescribeGCedNode(bool isMarked,
-                                     size_t objSz,
                                      const char *objName)
   {
   }
@@ -6890,10 +6882,7 @@ nsContentUtils::JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
   }
   
   JSObject* obj = &aJSArray.toObject();
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(aCx, obj)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
+  JSAutoCompartment ac(aCx, obj);
   
   uint32_t length;
   if (!JS_IsArrayObject(aCx, obj) || !JS_GetArrayLength(aCx, obj, &length)) {

@@ -1308,8 +1308,10 @@ JSCompartment::sweepInitialShapeTable()
                 JS_ASSERT(!parent || IsObjectMarked(&parent));
                 JS_ASSERT(parent == shape->getObjectParent());
 #endif
-                InitialShapeEntry newKey(shape, proto);
-                e.rekeyFront(newKey.getLookup(), newKey);
+                if (shape != entry.shape || proto != entry.proto) {
+                    InitialShapeEntry newKey(shape, proto);
+                    e.rekeyFront(newKey.getLookup(), newKey);
+                }
             }
         }
     }

@@ -51,7 +51,7 @@ static bool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
           eq);
 }
 
-static bool EqualURIs(nsCSSValue::URL *aURI1, nsCSSValue::URL *aURI2)
+static bool EqualURIs(mozilla::css::URLValue *aURI1, mozilla::css::URLValue *aURI2)
 {
   return aURI1 == aURI2 ||    // handle null==null, and optimize
          (aURI1 && aURI2 && aURI1->URIEquals(*aURI2));
@@ -1446,6 +1446,33 @@ nsStyleGradient::IsOpaque()
       return false;
   }
   return true;
+}
+
+bool
+nsStyleGradient::HasCalc()
+{
+  // The stops cannot have a Calc.
+  return mBgPosX.IsCalcUnit() || mBgPosY.IsCalcUnit() || mAngle.IsCalcUnit() ||
+         mRadiusX.IsCalcUnit() || mRadiusX.IsCalcUnit();
+}
+
+uint32_t
+nsStyleGradient::Hash(PLDHashNumber aHash)
+{
+  aHash = mozilla::AddToHash(aHash, mShape);
+  aHash = mozilla::AddToHash(aHash, mSize);
+  aHash = mozilla::AddToHash(aHash, mRepeating);
+  aHash = mozilla::AddToHash(aHash, mLegacySyntax);
+  aHash = mBgPosX.HashValue(aHash);
+  aHash = mBgPosY.HashValue(aHash);
+  aHash = mAngle.HashValue(aHash);
+  aHash = mRadiusX.HashValue(aHash);
+  aHash = mRadiusY.HashValue(aHash);
+  for (uint32_t i = 0; i < mStops.Length(); i++) {
+    aHash = mStops[i].mLocation.HashValue(aHash);
+    aHash = mozilla::AddToHash(aHash, mStops[i].mColor);
+  }
+  return aHash;
 }
 
 // --------------------

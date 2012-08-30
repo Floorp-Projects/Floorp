@@ -63,7 +63,7 @@ function switchStmt(disc, cases) Pattern({ type: "SwitchStatement", discriminant
 function caseClause(test, stmts) Pattern({ type: "SwitchCase", test: test, consequent: stmts })
 function defaultClause(stmts) Pattern({ type: "SwitchCase", test: null, consequent: stmts })
 function catchClause(id, guard, body) Pattern({ type: "CatchClause", param: id, guard: guard, body: body })
-function tryStmt(body, catches, fin) Pattern({ type: "TryStatement", block: body, handlers: catches, finalizer: fin })
+function tryStmt(body, guarded, unguarded, fin) Pattern({ type: "TryStatement", block: body, guardedHandlers: guarded, handler: unguarded, finalizer: fin })
 function letStmt(head, body) Pattern({ type: "LetStatement", head: head, body: body })
 function funExpr(id, args, body, gen) Pattern({ type: "FunctionExpression",
                                                 id: id,
@@ -238,6 +238,9 @@ assertDecl("function f(a,[x,y]) { function a() { } }",
                    [ident("a"), arrPatt([ident("x"), ident("y")])],
                    blockStmt([funDecl(ident("a"), [], blockStmt([]))])));
 
+// Bug 632027: array holes should reflect as null
+assertExpr("[,]=[,]", aExpr("=", arrPatt([null]), arrExpr([null])));
+
 // Bug 591450: this test currently crashes because of a bug in jsparse
 // assertDecl("function f(a,[x,y],b,[w,z],c) { function b() { } }",
 //            funDecl(ident("f"),
@@ -320,19 +323,21 @@ assertExpr("[]", arrExpr([]));
 assertExpr("[1]", arrExpr([lit(1)]));
 assertExpr("[1,2]", arrExpr([lit(1),lit(2)]));
 assertExpr("[1,2,3]", arrExpr([lit(1),lit(2),lit(3)]));
-assertExpr("[1,,2,3]", arrExpr([lit(1),,lit(2),lit(3)]));
-assertExpr("[1,,,2,3]", arrExpr([lit(1),,,lit(2),lit(3)]));
-assertExpr("[1,,,2,,3]", arrExpr([lit(1),,,lit(2),,lit(3)]));
-assertExpr("[1,,,2,,,3]", arrExpr([lit(1),,,lit(2),,,lit(3)]));
-assertExpr("[,1,2,3]", arrExpr([,lit(1),lit(2),lit(3)]));
-assertExpr("[,,1,2,3]", arrExpr([,,lit(1),lit(2),lit(3)]));
-assertExpr("[,,,1,2,3]", arrExpr([,,,lit(1),lit(2),lit(3)]));
-assertExpr("[,,,1,2,3,]", arrExpr([,,,lit(1),lit(2),lit(3),]));
-assertExpr("[,,,1,2,3,,]", arrExpr([,,,lit(1),lit(2),lit(3),,]));
-assertExpr("[,,,1,2,3,,,]", arrExpr([,,,lit(1),lit(2),lit(3),,,]));
-assertExpr("[,,,,,]", arrExpr([,,,,,]));
+assertExpr("[1,,2,3]", arrExpr([lit(1),null,lit(2),lit(3)]));
+assertExpr("[1,,,2,3]", arrExpr([lit(1),null,null,lit(2),lit(3)]));
+assertExpr("[1,,,2,,3]", arrExpr([lit(1),null,null,lit(2),null,lit(3)]));
+assertExpr("[1,,,2,,,3]", arrExpr([lit(1),null,null,lit(2),null,null,lit(3)]));
+assertExpr("[,1,2,3]", arrExpr([null,lit(1),lit(2),lit(3)]));
+assertExpr("[,,1,2,3]", arrExpr([null,null,lit(1),lit(2),lit(3)]));
+assertExpr("[,,,1,2,3]", arrExpr([null,null,null,lit(1),lit(2),lit(3)]));
+assertExpr("[,,,1,2,3,]", arrExpr([null,null,null,lit(1),lit(2),lit(3)]));
+assertExpr("[,,,1,2,3,,]", arrExpr([null,null,null,lit(1),lit(2),lit(3),null]));
+assertExpr("[,,,1,2,3,,,]", arrExpr([null,null,null,lit(1),lit(2),lit(3),null,null]));
+assertExpr("[,,,,,]", arrExpr([null,null,null,null,null]));
 assertExpr("[1, ...a, 2]", arrExpr([lit(1), spread(ident("a")), lit(2)]));
-assertExpr("[,, ...a,, ...b, 42]", arrExpr([,, spread(ident("a")),, spread(ident("b")), lit(42)]));
+assertExpr("[,, ...a,, ...b, 42]", arrExpr([null,null, spread(ident("a")),, spread(ident("b")), lit(42)]));
+assertExpr("[1,(2,3)]", arrExpr([lit(1),seqExpr([lit(2),lit(3)])]));
+assertExpr("[,(2,3)]", arrExpr([null,seqExpr([lit(2),lit(3)])]));
 assertExpr("({})", objExpr([]));
 assertExpr("({x:1})", objExpr([{ key: ident("x"), value: lit(1) }]));
 assertExpr("({x:1, y:2})", objExpr([{ key: ident("x"), value: lit(1) },
@@ -414,26 +419,30 @@ assertStmt("switch (foo) { case 1: 1; break; case 2: 2; break; default: 3; case 
                         caseClause(lit(42), [ exprStmt(lit(42)) ]) ]));
 assertStmt("try { } catch (e) { }",
            tryStmt(blockStmt([]),
-                   [ catchClause(ident("e"), null, blockStmt([])) ],
+                   [],
+		   catchClause(ident("e"), null, blockStmt([])),
                    null));
 assertStmt("try { } catch (e) { } finally { }",
            tryStmt(blockStmt([]),
-                   [ catchClause(ident("e"), null, blockStmt([])) ],
+                   [],
+		   catchClause(ident("e"), null, blockStmt([])),
                    blockStmt([])));
 assertStmt("try { } finally { }",
            tryStmt(blockStmt([]),
                    [],
+		   null,
                    blockStmt([])));
 assertStmt("try { } catch (e if foo) { } catch (e if bar) { } finally { }",
            tryStmt(blockStmt([]),
                    [ catchClause(ident("e"), ident("foo"), blockStmt([])),
                      catchClause(ident("e"), ident("bar"), blockStmt([])) ],
+		   null,
                    blockStmt([])));
 assertStmt("try { } catch (e if foo) { } catch (e if bar) { } catch (e) { } finally { }",
            tryStmt(blockStmt([]),
                    [ catchClause(ident("e"), ident("foo"), blockStmt([])),
-                     catchClause(ident("e"), ident("bar"), blockStmt([])),
-                     catchClause(ident("e"), null, blockStmt([])) ],
+                     catchClause(ident("e"), ident("bar"), blockStmt([])) ],
+                   catchClause(ident("e"), null, blockStmt([])),
                    blockStmt([])));
 
 // Bug 632028: yield outside of a function should throw
@@ -1037,9 +1046,11 @@ assertGlobalExpr("(function() { yield 42 })", genFunExpr(null, [], blockStmt([ex
 assertGlobalExpr("(let (x) x)", 20, { letExpression: function() 20 });
 
 assertGlobalStmt("switch (x) { case y: }", switchStmt(ident("x"), [1]), { switchCase: function() 1 });
-assertGlobalStmt("try { } catch (e) { }", tryStmt(blockStmt([]), [2], null), { catchClause: function() 2 });
+assertGlobalStmt("try { } catch (e) { }", 2, { tryStatement: (function(b, g, u, f) u), catchClause: function() 2 });
+assertGlobalStmt("try { } catch (e if e instanceof A) { } catch (e if e instanceof B) { }", [2, 2], { tryStatement: (function(b, g, u, f) g), catchClause: function() 2 });
+assertGlobalStmt("try { } catch (e) { }", tryStmt(blockStmt([]), [], 2, null), { catchClause: function() 2 });
 assertGlobalStmt("try { } catch (e if e instanceof A) { } catch (e if e instanceof B) { }",
-                 tryStmt(blockStmt([]), [2, 2], null),
+                 tryStmt(blockStmt([]), [2, 2], null, null),
                  { catchClause: function() 2 });
 assertGlobalExpr("[x for (y in z) for (x in y)]", compExpr(ident("x"), [3, 3], null), { comprehensionBlock: function() 3 });
 

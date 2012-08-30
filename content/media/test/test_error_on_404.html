@@ -13,15 +13,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=476731
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=476731">Mozilla Bug </a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
 </div>
 <pre id="test">
-
-
-
 <script type="application/javascript">
-
-/** Test for Bug  **/
+/** Test for Bug 476731 **/
 
 var videos = [];
 
@@ -72,20 +67,17 @@ for (var i=0; i<g404Tests.length; ++i) {
    v._loadError = false;
    v.addEventListener("error", loadError, false);
    v.addEventListener("loadstart", loadStart, false);
-   v.addEventListener("loadedddata", loadedData, false);
+   v.addEventListener("loadeddata", loadedData, false);
    document.body.appendChild(v); // Will start load.
    videos.push(v);
 }
-
 
 if (videos.length == 0) {
   todo(false, "No types supported");
 } else {
   SimpleTest.waitForExplicitFinish();
 }
-
 </script>
 </pre>
-
 </body>
 </html>

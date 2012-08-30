@@ -55,8 +55,8 @@ NotificationController::~NotificationController()
 ////////////////////////////////////////////////////////////////////////////////
 // NotificationCollector: AddRef/Release and cycle collection
 
-NS_IMPL_ADDREF(NotificationController)
-NS_IMPL_RELEASE(NotificationController)
+NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(NotificationController)
+NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(NotificationController)
 
 NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(NotificationController)
 

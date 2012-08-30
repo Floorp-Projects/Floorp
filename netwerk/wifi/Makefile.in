@@ -17,6 +17,11 @@ GRE_MODULE     = 1
 
 FORCE_STATIC_LIB = 1
 
+ifneq ($(OS_ARCH),Darwin)
+# osx_corewlan.mm has warnings I don't understand.
+FAIL_ON_WARNINGS := 1
+endif
+
 XPIDLSRCS = \
   nsIWifiAccessPoint.idl \
   nsIWifiListener.idl \

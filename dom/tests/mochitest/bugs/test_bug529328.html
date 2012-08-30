@@ -101,15 +101,10 @@ function testMediaList() {
 function testCSSStyleDeclaration() {
   var s = document.createElement("span");
 
-  try {
-    is(s.style[-1], "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
-    todo(true, "Didn't throw");
-  } catch (e) {
-    todo(false, "Shouldn't throw");
-  }
-  is(s.style[0], "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
-  is(s.style[1], "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
-  is(s.style[2], "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style[-1], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style[0], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style[1], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style[2], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
   is(s.style.item(-1), "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
   is(s.style.item(0), "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
   is(s.style.item(1), "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
@@ -117,15 +112,10 @@ function testCSSStyleDeclaration() {
 
   s.setAttribute("style", "color: blue; z-index: 42;");
 
-  try {
-    is(s.style[-1], "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
-    todo(true, "Didn't throw");
-  } catch (e) {
-    todo(false, "Shouldn't throw");
-  }
+  is(s.style[-1], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
   is(s.style[0], "color", "Wrong value for in bounds access (CSSStyleDeclaration)");
   is(s.style[1], "z-index", "Wrong value for in bounds access (CSSStyleDeclaration)");
-  is(s.style[2], "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
+  is(s.style[2], undefined, "Wrong value for out of bounds access (CSSStyleDeclaration)");
   is(s.style.item(-1), "", "Wrong value for out of bounds access (CSSStyleDeclaration)");
   is(s.style.item(0), "color", "Wrong value for in bounds access (CSSStyleDeclaration)");
   is(s.style.item(1), "z-index", "Wrong value for in bounds access (CSSStyleDeclaration)");

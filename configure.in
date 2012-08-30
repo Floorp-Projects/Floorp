@@ -74,7 +74,6 @@ GIO_VERSION=2.18
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 SQLITE_VERSION=3.7.13
-LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
 
@@ -829,7 +828,6 @@ MOZ_PATH_PROGS(ZIP, zip)
 if test -z "$ZIP" -o "$ZIP" = ":"; then
     AC_MSG_ERROR([zip not found in \$PATH])
 fi
-MOZ_PATH_PROG(MOZ_NATIVE_MAKEDEPEND, makedepend)
 MOZ_PATH_PROG(XARGS, xargs)
 if test -z "$XARGS" -o "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
@@ -2001,7 +1999,6 @@ ia64*-hpux*)
        MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
     fi
     MOZ_FIX_LINK_PATHS=
-    MOZ_NATIVE_MAKEDEPEND=
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     AC_DEFINE(_LARGEFILE64_SOURCE)
     ;;
@@ -2090,7 +2087,6 @@ ia64*-hpux*)
     MC=mc.exe
     # certain versions of cygwin's makedepend barf on the
     # #include <string> vs -I./dist/include/string issue so don't use it
-    MOZ_NATIVE_MAKEDEPEND=
     if test -n "$GNU_CC"; then
         CC="$CC -mwindows"
         CXX="$CXX -mwindows"
@@ -2371,7 +2367,6 @@ ia64*-hpux*)
 *-solaris*)
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
-    MOZ_NATIVE_MAKEDEPEND=
     MOZ_FIX_LINK_PATHS=
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
@@ -4929,51 +4924,12 @@ AC_SUBST(MOZ_LIBPROXY_CFLAGS)
 AC_SUBST(MOZ_LIBPROXY_LIBS)
 
 dnl ========================================================
-dnl = libnotify support
+dnl = GNOME component (mozgnome)
 dnl ========================================================
 
 if test "$MOZ_ENABLE_GTK2"
 then
-    MOZ_ENABLE_LIBNOTIFY=1
-
-    MOZ_ARG_DISABLE_BOOL(libnotify,
-    [  --disable-libnotify     Disable libnotify support ],
-    MOZ_ENABLE_LIBNOTIFY=,
-    MOZ_ENABLE_LIBNOTIFY=1)
-
-    if test "$MOZ_ENABLE_LIBNOTIFY"
-    then
-        AC_DEFINE(MOZ_ENABLE_LIBNOTIFY)
-    fi
-fi
-
-if test -z "$SKIP_LIBRARY_CHECKS"
-then
-    if test "$MOZ_ENABLE_GTK2"
-    then
-        if test "$MOZ_ENABLE_LIBNOTIFY"
-        then
-            PKG_CHECK_MODULES(MOZ_LIBNOTIFY, libnotify >= $LIBNOTIFY_VERSION)
-        fi
-    fi
-fi
-AC_SUBST(MOZ_ENABLE_LIBNOTIFY)
-AC_SUBST(MOZ_LIBNOTIFY_CFLAGS)
-AC_SUBST(MOZ_LIBNOTIFY_LIBS)
-
-dnl ========================================================
-dnl = GNOME component (mozgnome)
-dnl ========================================================
-
-# The GNOME component is built if one of
-# gnome-vfs, gio, gconf or libnotify is available.
-if test "$MOZ_ENABLE_GCONF" -o \
-   "$MOZ_ENABLE_GNOMEVFS" -o \
-   "$MOZ_ENABLE_GIO" -o \
-   "$MOZ_ENABLE_LIBNOTIFY"; then
     MOZ_ENABLE_GNOME_COMPONENT=1
-else
-    MOZ_ENABLE_GNOME_COMPONENT=
 fi
 AC_SUBST(MOZ_ENABLE_GNOME_COMPONENT)
 
@@ -5392,30 +5348,6 @@ if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
     dnl See if we have assembly on this platform.
     case "$OS_ARCH:$CPU_ARCH" in
-    Linux:x86)
-      VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
-      VPX_X86_ASM=1
-    ;;
-    Linux:x86_64)
-      VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
-      VPX_X86_ASM=1
-    ;;
-    SunOS:x86)
-      VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
-      VPX_X86_ASM=1
-    ;;
-    SunOS:x86_64)
-      VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
-      VPX_X86_ASM=1
-    ;;
-    OpenBSD:x86)
-      VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
-      VPX_X86_ASM=1
-    ;;
-    OpenBSD:x86_64)
-      VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
-      VPX_X86_ASM=1
-    ;;
     Darwin:x86)
       VPX_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC"
       VPX_X86_ASM=1
@@ -5451,6 +5383,19 @@ if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
         VPX_ASM_SUFFIX="$ASM_SUFFIX"
         VPX_ARM_ASM=1
       fi
+    ;;
+    *:x86)
+      if $CC -E -dM -</dev/null | grep -q __ELF__; then
+        VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+        VPX_X86_ASM=1
+      fi
+    ;;
+    *:x86_64)
+      if $CC -E -dM -</dev/null | grep -q __ELF__; then
+        VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
+        VPX_X86_ASM=1
+      fi
+    ;;
     esac
 
     if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
@@ -5774,6 +5719,10 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
   MOZ_D3DX9_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *d3dx9_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
   MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
 
+  if test -z "$MOZ_D3DX9_CAB" -o -z "$MOZ_D3DCOMPILER_CAB"; then
+    AC_MSG_ERROR([Couldn't find the DirectX redistributable files. Either reinstall the DirectX SDK (making sure the "DirectX Redistributable Files" option is selected), or reconfigure with --disable-webgl.])
+  fi
+
   MOZ_D3DX9_DLL=d3dx9_$MOZ_D3DX9_VERSION.dll
   MOZ_D3DCOMPILER_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
 fi
@@ -5864,22 +5813,6 @@ if test -n "$MOZ_LIBJPEG_TURBO"; then
 
   dnl Do we support libjpeg-turbo on this platform?
   case "$OS_ARCH:$OS_TEST" in
-  Linux:x86|Linux:i?86)
-    LIBJPEG_TURBO_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC -DELF"
-    LIBJPEG_TURBO_X86_ASM=1
-  ;;
-  Linux:x86_64)
-    LIBJPEG_TURBO_ASFLAGS="-f elf64 -rnasm -pnasm -D__x86_64__ -DPIC -DELF"
-    LIBJPEG_TURBO_X64_ASM=1
-  ;;
-  SunOS:i?86)
-    LIBJPEG_TURBO_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC -DELF"
-    LIBJPEG_TURBO_X86_ASM=1
-  ;;
-  SunOS:x86_64)
-    LIBJPEG_TURBO_ASFLAGS="-f elf64 -rnasm -pnasm -D__x86_64__ -DPIC -DELF"
-    LIBJPEG_TURBO_X64_ASM=1
-  ;;
   Darwin:i?86)
     LIBJPEG_TURBO_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC -DMACHO"
     LIBJPEG_TURBO_X86_ASM=1
@@ -5899,6 +5832,18 @@ if test -n "$MOZ_LIBJPEG_TURBO"; then
   *:arm*)
     LIBJPEG_TURBO_ASFLAGS="-march=armv7-a -mfpu=neon"
     LIBJPEG_TURBO_ARM_ASM=1
+  ;;
+  *:x86|*:i?86)
+    if $CC -E -dM -</dev/null | grep -q __ELF__; then
+      LIBJPEG_TURBO_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC -DELF"
+      LIBJPEG_TURBO_X86_ASM=1
+    fi
+  ;;
+  *:x86_64)
+    if $CC -E -dM -</dev/null | grep -q __ELF__; then
+      LIBJPEG_TURBO_ASFLAGS="-f elf64 -rnasm -pnasm -D__x86_64__ -DPIC -DELF"
+      LIBJPEG_TURBO_X64_ASM=1
+    fi
   ;;
   esac
 
@@ -7667,41 +7612,12 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Build dependencies)
 
-dnl ========================================================
-dnl = Do not auto generate dependency info
-dnl ========================================================
-MOZ_AUTO_DEPS=1
-MOZ_ARG_DISABLE_BOOL(auto-deps,
-[  --disable-auto-deps     Do not automatically generate dependency info],
-    MOZ_AUTO_DEPS=,
-    MOZ_AUTO_DEPS=1)
-
-if test -n "$MOZ_AUTO_DEPS"; then
-dnl ========================================================
-dnl = Use mkdepend instead of $CC -MD for dependency generation
-dnl ========================================================
-_cpp_md_flag=
-MOZ_ARG_DISABLE_BOOL(md,
-[  --disable-md            Do not use compiler-based dependencies ],
-  [_cpp_md_flag=],
-  [_cpp_md_flag=1],
-  [dnl Default is to turn on -MD if using GNU-compatible compilers
-   if test "$GNU_CC" -a "$GNU_CXX"; then
-     _cpp_md_flag=1
-   fi
-  dnl Default is to use -xM if using Sun Studio on Solaris
-   if test "$SOLARIS_SUNPRO_CC"; then
-     _cpp_md_flag=1
-   fi])
-if test "$_cpp_md_flag"; then
-  COMPILER_DEPEND=1
-  _DEPEND_CFLAGS='$(filter-out %/.pp,-MMD -MF $(MDDEPDIR)/$(@F).pp)'
-  dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
-  if test "$SOLARIS_SUNPRO_CC"; then
-    _DEPEND_CFLAGS=
-  fi
+if test "$GNU_CC" -a "$GNU_CXX"; then
+  _DEPEND_CFLAGS='$(filter-out %/.pp,-MD -MF $(MDDEPDIR)/$(@F).pp)'
+dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
+elif test "$SOLARIS_SUNPRO_CC"; then
+  _DEPEND_CFLAGS=
 else
-  COMPILER_DEPEND=
   dnl Don't override this for MSVC
   if test -z "$_WIN32_MSVC"; then
     _USE_CPP_INCLUDE_FLAG=
@@ -7717,14 +7633,8 @@ else
     fi
     AC_SUBST(CL_INCLUDES_PREFIX)
     rm -f dummy-hello.c
-    COMPILER_DEPEND=1
   fi
 fi
-fi # MOZ_AUTO_DEPS
-MDDEPDIR='.deps'
-AC_SUBST(MOZ_AUTO_DEPS)
-AC_SUBST(COMPILER_DEPEND)
-AC_SUBST(MDDEPDIR)
 
 dnl ========================================================
 dnl =
@@ -8463,7 +8373,6 @@ COMPILE_CXXFLAGS=`echo \
 	$_DEPEND_CFLAGS \
     $COMPILE_CXXFLAGS`
 
-AC_SUBST(MOZ_NATIVE_MAKEDEPEND)
 AC_SUBST(SYSTEM_LIBXUL)
 AC_SUBST(MOZ_NATIVE_JPEG)
 AC_SUBST(MOZ_NATIVE_PNG)

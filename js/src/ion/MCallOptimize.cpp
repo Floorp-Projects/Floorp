@@ -95,11 +95,11 @@ IonBuilder::discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb)
     return true;
 }
 
-types::TypeSet*
+types::StackTypeSet *
 IonBuilder::getInlineReturnTypeSet()
 {
-    types::TypeSet *barrier;
-    types::TypeSet *returnTypes = oracle->returnTypeSet(script, pc, &barrier);
+    types::StackTypeSet *barrier;
+    types::StackTypeSet *returnTypes = oracle->returnTypeSet(script, pc, &barrier);
 
     JS_ASSERT(returnTypes);
     return returnTypes;
@@ -108,14 +108,14 @@ IonBuilder::getInlineReturnTypeSet()
 MIRType
 IonBuilder::getInlineReturnType()
 {
-    types::TypeSet *returnTypes = getInlineReturnTypeSet();
-    return MIRTypeFromValueType(returnTypes->getKnownTypeTag(cx));
+    types::StackTypeSet *returnTypes = getInlineReturnTypeSet();
+    return MIRTypeFromValueType(returnTypes->getKnownTypeTag());
 }
 
-types::TypeSet*
+types::StackTypeSet *
 IonBuilder::getInlineArgTypeSet(uint32 argc, uint32 arg)
 {
-    types::TypeSet *argTypes = oracle->getCallArg(script, argc, arg, pc);
+    types::StackTypeSet *argTypes = oracle->getCallArg(script, argc, arg, pc);
     JS_ASSERT(argTypes);
     return argTypes;
 }
@@ -123,8 +123,8 @@ IonBuilder::getInlineArgTypeSet(uint32 argc, uint32 arg)
 MIRType
 IonBuilder::getInlineArgType(uint32 argc, uint32 arg)
 {
-    types::TypeSet *argTypes = getInlineArgTypeSet(argc, arg);
-    return MIRTypeFromValueType(argTypes->getKnownTypeTag(cx));
+    types::StackTypeSet *argTypes = getInlineArgTypeSet(argc, arg);
+    return MIRTypeFromValueType(argTypes->getKnownTypeTag());
 }
 
 IonBuilder::InliningStatus
@@ -242,7 +242,7 @@ IonBuilder::inlineArrayPopShift(MArrayPopShift::Mode mode, uint32 argc, bool con
     types::TypeObjectFlags unhandledFlags =
         types::OBJECT_FLAG_NON_DENSE_ARRAY | types::OBJECT_FLAG_ITERATED;
 
-    types::TypeSet *thisTypes = getInlineArgTypeSet(argc, 0);
+    types::StackTypeSet *thisTypes = getInlineArgTypeSet(argc, 0);
     if (thisTypes->hasObjectFlags(cx, unhandledFlags))
         return InliningStatus_NotInlined;
     if (types::ArrayPrototypeHasIndexedProperty(cx, script))
@@ -252,7 +252,7 @@ IonBuilder::inlineArrayPopShift(MArrayPopShift::Mode mode, uint32 argc, bool con
     if (!discardCall(argc, argv, current))
         return InliningStatus_Error;
 
-    types::TypeSet *returnTypes = getInlineReturnTypeSet();
+    types::StackTypeSet *returnTypes = getInlineReturnTypeSet();
     bool needsHoleCheck = thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
     bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
 
@@ -279,7 +279,7 @@ IonBuilder::inlineArrayPush(uint32 argc, bool constructing)
 
     // Inference's TypeConstraintCall generates the constraints that propagate
     // properties directly into the result type set.
-    types::TypeSet *thisTypes = getInlineArgTypeSet(argc, 0);
+    types::StackTypeSet *thisTypes = getInlineArgTypeSet(argc, 0);
     if (thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY))
         return InliningStatus_NotInlined;
     if (types::ArrayPrototypeHasIndexedProperty(cx, script))

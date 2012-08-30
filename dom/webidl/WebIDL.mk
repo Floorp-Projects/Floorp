@@ -4,8 +4,13 @@
 
 webidl_base = $(topsrcdir)/dom/webidl
 
+generated_webidl_files = \
+  CSS2Properties.webidl \
+  $(NULL)
+
 webidl_files = \
   CanvasRenderingContext2D.webidl \
+  CSSStyleDeclaration.webidl \
   Function.webidl \
   EventListener.webidl \
   EventTarget.webidl \

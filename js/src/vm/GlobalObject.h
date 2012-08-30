@@ -55,7 +55,7 @@ class Debugger;
  *   global's Content Security Policy).
  *
  * The first two ranges are necessary to implement js::FindClassObject,
- * js::FindClassPrototype, and spec language speaking in terms of "the original
+ * FindClassPrototype, and spec language speaking in terms of "the original
  * Array prototype object", or "as if by the expression new Array()" referring
  * to the original Array constructor.  The third range stores the (writable and
  * even deletable) Object, Array, &c. properties (although a slot won't be used
@@ -98,8 +98,7 @@ class GlobalObject : public JSObject
     static const unsigned REGEXP_STATICS          = SET_ITERATOR_PROTO + 1;
     static const unsigned FUNCTION_NS             = REGEXP_STATICS + 1;
     static const unsigned RUNTIME_CODEGEN_ENABLED = FUNCTION_NS + 1;
-    static const unsigned FLAGS                   = RUNTIME_CODEGEN_ENABLED + 1;
-    static const unsigned DEBUGGERS               = FLAGS + 1;
+    static const unsigned DEBUGGERS               = RUNTIME_CODEGEN_ENABLED + 1;
     static const unsigned INTRINSICS              = DEBUGGERS + 1;
 
     /* Total reserved-slot count for global objects. */
@@ -113,11 +112,6 @@ class GlobalObject : public JSObject
          */
         JS_STATIC_ASSERT(JSCLASS_GLOBAL_SLOT_COUNT == RESERVED_SLOTS);
     }
-
-    static const int32_t FLAGS_CLEARED = 0x1;
-
-    inline void setFlags(int32_t flags);
-    inline void initFlags(int32_t flags);
 
     friend JSObject *
     ::js_InitObjectClass(JSContext *cx, JSObject *obj);
@@ -411,12 +405,6 @@ class GlobalObject : public JSObject
     Value protoGetter() const {
         JS_ASSERT(functionObjectClassesInitialized());
         return getSlot(PROTO_GETTER);
-    }
-
-    void clear(JSContext *cx);
-
-    bool isCleared() const {
-        return getSlot(FLAGS).toInt32() & FLAGS_CLEARED;
     }
 
     bool isRuntimeCodeGenEnabled(JSContext *cx);
