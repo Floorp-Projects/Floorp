@@ -1807,6 +1807,12 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         nsLayoutUtils::GetActiveScrolledRootFor(mContainerFrame,
                                                 mBuilder->ReferenceFrame());
       forceInactive = true;
+    } else if (item->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER) {
+      nsDisplayScrollLayer* scrollLayerItem =
+        static_cast<nsDisplayScrollLayer*>(item);
+      activeScrolledRoot =
+        nsLayoutUtils::GetActiveScrolledRootFor(scrollLayerItem->GetScrolledFrame(),
+                                                mBuilder->ReferenceFrame());
     } else {
       activeScrolledRoot = nsLayoutUtils::GetActiveScrolledRootFor(item, mBuilder);
     }
