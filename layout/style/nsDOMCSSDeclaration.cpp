@@ -19,6 +19,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPrincipal.h"
 #include "mozAutoDocUpdate.h"
+#include "nsStyleUtil.h"
 
 using namespace mozilla;
 
@@ -92,6 +93,13 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsresult result;
+  if (env.mDocument && !nsStyleUtil::CSPAllowsInlineStyle(
+                                               env.mDocument->NodePrincipal(),
+                                               env.mDocument->GetDocumentURI(),
+                                                         0, aCssText, &result))
+    return result;
+
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
   // Attribute setting code, which leads in turn to BeginUpdate.  We
   // need to start the update now so that the old rule doesn't get used
@@ -103,7 +111,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
   decl->InitializeEmpty();
   nsCSSParser cssParser(env.mCSSLoader);
   bool changed;
-  nsresult result = cssParser.ParseDeclarations(aCssText, env.mSheetURI,
+  result = cssParser.ParseDeclarations(aCssText, env.mSheetURI,
                                                 env.mBaseURI,
                                                 env.mPrincipal, decl, &changed);
   if (NS_FAILED(result) || !changed) {
@@ -229,11 +237,12 @@ nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(css::Rule* aRule,
     return;
   }
 
-  nsIDocument* document = sheet->GetOwningDocument();
+  aCSSParseEnv.mDocument = sheet->GetOwningDocument();
   aCSSParseEnv.mSheetURI = sheet->GetSheetURI();
   aCSSParseEnv.mBaseURI = sheet->GetBaseURI();
   aCSSParseEnv.mPrincipal = cssSheet->Principal();
-  aCSSParseEnv.mCSSLoader = document ? document->CSSLoader() : nullptr;
+  aCSSParseEnv.mCSSLoader = aCSSParseEnv.mDocument ?
+    aCSSParseEnv.mDocument->CSSLoader() : nullptr;
 }
 
 nsresult
@@ -252,6 +261,13 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsresult result;
+  if (env.mDocument && !nsStyleUtil::CSPAllowsInlineStyle(
+                                                env.mDocument->NodePrincipal(),
+                                               env.mDocument->GetDocumentURI(),
+                                                       0, aPropValue, &result))
+    return result;
+
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
   // Attribute setting code, which leads in turn to BeginUpdate.  We
   // need to start the update now so that the old rule doesn't get used
@@ -262,7 +278,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
 
   nsCSSParser cssParser(env.mCSSLoader);
   bool changed;
-  nsresult result = cssParser.ParseProperty(aPropID, aPropValue, env.mSheetURI,
+  result = cssParser.ParseProperty(aPropID, aPropValue, env.mSheetURI,
                                             env.mBaseURI, env.mPrincipal, decl,
                                             &changed, aIsImportant);
   if (NS_FAILED(result) || !changed) {
@@ -282,6 +298,17 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
   if (!decl) {
     return NS_OK; // no decl, so nothing to remove
   }
+
+  CSSParsingEnvironment env;
+  GetCSSParsingEnvironment(env);
+
+  nsresult result;
+  if (env.mDocument && !nsStyleUtil::CSPAllowsInlineStyle(
+                                                env.mDocument->NodePrincipal(),
+                                               env.mDocument->GetDocumentURI(),
+                 0, NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aPropID)),
+                                                         &result))
+    return result;
 
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
   // Attribute setting code, which leads in turn to BeginUpdate.  We
