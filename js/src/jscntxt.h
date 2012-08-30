@@ -1759,6 +1759,15 @@ namespace js {
 extern void
 ReportUsageError(JSContext *cx, HandleObject callee, const char *msg);
 
+/*
+ * Prints a full report and returns true if the given report is non-NULL and
+ * the report doesn't have the JSREPORT_WARNING flag set or reportWarnings is
+ * true.
+ * Returns false otherwise, printing just the message if the report is NULL.
+ */
+extern bool
+PrintError(JSContext *cx, FILE *file, const char *message, JSErrorReport *report,
+           bool reportWarnings);
 } /* namespace js */
 
 extern void
