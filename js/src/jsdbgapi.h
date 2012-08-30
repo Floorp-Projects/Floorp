@@ -13,7 +13,7 @@
 #include "jsapi.h"
 #include "jsprvtd.h"
 
-#if defined(__cplusplus) && defined(DEBUG)
+#if defined(__cplusplus)
 namespace JS {
 
 struct FrameDescription
@@ -42,9 +42,11 @@ FormatStackDump(JSContext *cx, char *buf,
 
 }
 
+# ifdef DEBUG
 JS_FRIEND_API(void) js_DumpValue(const js::Value &val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, js::StackFrame *start = NULL);
+# endif
 #endif
 
 JS_BEGIN_EXTERN_C
