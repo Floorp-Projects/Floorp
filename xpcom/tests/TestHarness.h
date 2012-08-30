@@ -22,6 +22,7 @@
 
 #include "mozilla/Util.h"
 
+#include "prenv.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCOMPtr.h"
@@ -178,6 +179,24 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
       return profD.forget();
     }
 
+    already_AddRefed<nsIFile> GetGREDirectory()
+    {
+      if (mGRED) {
+        nsCOMPtr<nsIFile> copy = mGRED;
+        return copy.forget();
+      }
+
+      char* env = PR_GetEnv("MOZ_XRE_DIR");
+      nsCOMPtr<nsIFile> greD;
+      if (env) {
+        NS_NewLocalFile(NS_ConvertUTF8toUTF16(env), false,
+                        getter_AddRefs(greD));
+      }
+
+      mGRED = greD;
+      return greD.forget();
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     //// nsIDirectoryServiceProvider
 
@@ -207,6 +226,15 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
         return NS_OK;
       }
 
+      if (0 == strcmp(aProperty, NS_GRE_DIR)) {
+        nsCOMPtr<nsIFile> greD = GetGREDirectory();
+        NS_ENSURE_TRUE(greD, NS_ERROR_FAILURE);
+
+        *_persistent = true;
+        greD.forget(_result);
+        return NS_OK;
+      }
+
       return NS_ERROR_FAILURE;
     }
 
@@ -230,6 +258,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
     nsIServiceManager* mServMgr;
     nsCOMPtr<nsIDirectoryServiceProvider> mDirSvcProvider;
     nsCOMPtr<nsIFile> mProfD;
+    nsCOMPtr<nsIFile> mGRED;
 };
 
 NS_IMPL_QUERY_INTERFACE2(
