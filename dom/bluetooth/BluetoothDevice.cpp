@@ -115,6 +115,8 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
     bs->GetDevicePath(mAdapterPath, mAddress, mPath);
   } else if (name.EqualsLiteral("Class")) {
     mClass = value.get_uint32_t();
+  } else if (name.EqualsLiteral("Icon")) {
+    mIcon = value.get_nsString();
   } else if (name.EqualsLiteral("Connected")) {
     mConnected = value.get_bool();
   } else if (name.EqualsLiteral("Paired")) {
@@ -218,6 +220,13 @@ NS_IMETHODIMP
 BluetoothDevice::GetName(nsAString& aName)
 {
   aName = mName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothDevice::GetIcon(nsAString& aIcon)
+{
+  aIcon = mIcon;
   return NS_OK;
 }
 
