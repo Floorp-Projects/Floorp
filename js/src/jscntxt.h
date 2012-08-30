@@ -96,12 +96,6 @@ struct GSNCache {
 inline GSNCache *
 GetGSNCache(JSContext *cx);
 
-struct PendingProxyOperation {
-    PendingProxyOperation   *next;
-    RootedObject            object;
-    PendingProxyOperation(JSContext *cx, JSObject *object) : next(NULL), object(cx, object) {}
-};
-
 typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
 
 struct ConservativeGCData
@@ -846,9 +840,6 @@ struct JSRuntime : js::RuntimeFriendFields
 
     /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;
-
-    /* List of currently pending operations on proxies. */
-    js::PendingProxyOperation *pendingProxyOperation;
 
     js::ConservativeGCData conservativeGC;
 

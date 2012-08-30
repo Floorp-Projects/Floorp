@@ -168,7 +168,16 @@ struct PropDesc {
      * are expected to be Debugger.Object wrappers of functions, which are not
      * themselves callable.)
      */
-    bool initialize(JSContext* cx, const Value &v, bool checkAccessors = true);
+    bool initialize(JSContext *cx, const Value &v, bool checkAccessors = true);
+
+    /*
+     * If IsGenericDescriptor(desc) or IsDataDescriptor(desc) is true, then if
+     * the value of an attribute field of desc, considered as a data
+     * descriptor, is absent, set it to its default value. Else if the value of
+     * an attribute field of desc, considered as an attribute descriptor, is
+     * absent, set it to its default value.
+     */
+    void complete();
 
     /*
      * 8.10.4 FromPropertyDescriptor(Desc)
