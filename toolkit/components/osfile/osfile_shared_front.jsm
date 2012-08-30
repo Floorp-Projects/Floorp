@@ -50,7 +50,7 @@ AbstractFile.prototype = {
    * bytes read and the number of bytes read. Note that |buffer| may be
    * larger than the number of bytes actually read.
    */
-  readAll: function readAll(bytes) {
+  read: function read(bytes) {
     if (bytes == null) {
       bytes = this.stat().size;
     }
@@ -88,7 +88,7 @@ AbstractFile.prototype = {
       options.offset);
     let pos = 0;
     while (pos < bytes) {
-      let chunkSize = this.read(pointer, bytes - pos, options);
+      let chunkSize = this._read(pointer, bytes - pos, options);
       if (chunkSize == 0) {
         break;
       }
@@ -117,7 +117,7 @@ AbstractFile.prototype = {
    * @return {number} The number of bytes actually written, which may be
    * less than |bytes| if |options.once| was set.
    */
-  writeFrom: function writeFrom(buffer, bytes, options) {
+  write: function write(buffer, bytes, options) {
     options = options || noOptions;
 
     let pointer = AbstractFile.normalizeToPointer(buffer, bytes,
@@ -125,7 +125,7 @@ AbstractFile.prototype = {
 
     let pos = 0;
     while (pos < bytes) {
-      let chunkSize = this.write(pointer, bytes - pos, options);
+      let chunkSize = this._write(pointer, bytes - pos, options);
       pos += chunkSize;
       pointer = exports.OS.Shared.offsetBy(pointer, chunkSize);
     }
