@@ -105,31 +105,30 @@ XPCJSStackFrame::CreateStack(JSContext* cx, XPCJSStackFrame** stack)
     for (size_t i = 0; i < desc->nframes && self; i++) {
         self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
 
-        JS::AutoEnterScriptCompartment ac;
-        if (ac.enter(cx, desc->frames[i].script)) {
-            const char* filename = JS_GetScriptFilename(cx, desc->frames[i].script);
-            if (filename) {
-                self->mFilename = (char*)
-                    nsMemory::Clone(filename,
-                                    sizeof(char)*(strlen(filename)+1));
-            }
+        JS::AutoCompartment ac(cx, desc->frames[i].script);
+        const char* filename = JS_GetScriptFilename(cx, desc->frames[i].script);
+        if (filename) {
+            self->mFilename = (char*)
+                nsMemory::Clone(filename,
+                                sizeof(char)*(strlen(filename)+1));
+        }
 
-            self->mLineno = desc->frames[i].lineno;
+        self->mLineno = desc->frames[i].lineno;
 
-            JSFunction* fun = desc->frames[i].fun;
-            if (fun) {
-                JSString *funid = JS_GetFunctionId(fun);
-                if (funid) {
-                    size_t length = JS_GetStringEncodingLength(cx, funid);
-                    if (length != size_t(-1)) {
-                        self->mFunname = static_cast<char *>(nsMemory::Alloc(length + 1));
-                        if (self->mFunname) {
-                            JS_EncodeStringToBuffer(funid, self->mFunname, length);
-                            self->mFunname[length] = '\0';
-                        }
+        JSFunction* fun = desc->frames[i].fun;
+        if (fun) {
+            JSString *funid = JS_GetFunctionId(fun);
+            if (funid) {
+                size_t length = JS_GetStringEncodingLength(cx, funid);
+                if (length != size_t(-1)) {
+                    self->mFunname = static_cast<char *>(nsMemory::Alloc(length + 1));
+                    if (self->mFunname) {
+                        JS_EncodeStringToBuffer(funid, self->mFunname, length);
+                        self->mFunname[length] = '\0';
                     }
                 }
             }
+        }
 
         XPCJSStackFrame* frame = new XPCJSStackFrame();
         self->mCaller = frame;
