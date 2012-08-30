@@ -461,6 +461,7 @@
             <label class="data indent" id="bookmarkCount"/>
             <label class="data indent" id="historyCount"/>
             <label class="data indent" id="passwordCount"/>
+            <label class="data indent" id="addonCount"/>
             <label class="data indent" id="prefsWipe"
                    value="&engine.prefs.label;"/>
           </vbox>
