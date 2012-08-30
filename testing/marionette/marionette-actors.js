@@ -634,7 +634,10 @@ MarionetteDriverActor.prototype = {
       }
     }
     else {
-      this.sendAsync("executeJSScript", {value:aRequest.value, args:aRequest.args, timeout:aRequest.timeout});
+      this.sendAsync("executeJSScript", { value:aRequest.value,
+                                          args:aRequest.args,
+                                          newSandbox:aRequest.newSandbox,
+                                          timeout:aRequest.timeout });
    }
   },
 

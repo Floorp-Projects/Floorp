@@ -1197,7 +1197,10 @@ JSContext::saveFrameChain()
         return false;
     }
 
-    compartment = defaultCompartmentObject_->compartment();
+    if (defaultCompartmentObject_)
+        compartment = defaultCompartmentObject_->compartment();
+    else
+        compartment = NULL;
     enterCompartmentDepth_ = 0;
 
     if (isExceptionPending())

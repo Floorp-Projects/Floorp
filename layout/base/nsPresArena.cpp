@@ -16,12 +16,12 @@
 #include "prinit.h"
 #include "prlog.h"
 #include "nsArenaMemoryStats.h"
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsICrashReporter.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsPrintfCString.h"
+
+#ifdef MOZ_CRASHREPORTER
+#include "nsICrashReporter.h"
 #endif
 
 #include "mozilla/StandardInteger.h"
@@ -321,8 +321,16 @@ struct nsPresArena::State {
         char* p = reinterpret_cast<char*>(result);
         char* limit = p + list->mEntrySize;
         for (; p < limit; p += sizeof(uintptr_t)) {
-          NS_ABORT_IF_FALSE(*reinterpret_cast<uintptr_t*>(p) == ARENA_POISON,
-                            "PresArena: poison overwritten");
+          uintptr_t val = *reinterpret_cast<uintptr_t*>(p);
+          NS_ABORT_IF_FALSE(val == ARENA_POISON,
+                            nsPrintfCString("PresArena: poison overwritten; "
+                                            "wanted %.16llx "
+                                            "found %.16llx "
+                                            "errors in bits %.16llx",
+                                            uint64_t(ARENA_POISON),
+                                            uint64_t(val),
+                                            uint64_t(ARENA_POISON ^ val)
+                                            ).get());
         }
       }
 #endif

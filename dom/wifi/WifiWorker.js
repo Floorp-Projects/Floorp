@@ -1055,6 +1055,37 @@ var WifiManager = (function() {
     }
   }
 
+  // Get wifi interface and load wifi driver when enable Ap mode.
+  manager.setWifiApEnabled = function(enable, callback) {
+    if (enable) {
+      getProperty("wifi.interface", "tiwlan0", function (ifname) {
+        if (!ifname) {
+          callback(-1, null);
+          return;
+        }
+        manager.ifname = ifname;
+        loadDriver(function (status) {
+          if (status < 0) {
+            callback(status, null);
+            return;
+          }
+          WifiNetworkInterface.name = manager.ifname;
+          manager.state = "WIFITETHERING";
+          callback(0, WifiNetworkInterface);
+        });
+      });
+    } else {
+      manager.state = "UNINITIALIZED";
+      unloadDriver(function(status) {
+        if (status < 0) {
+          callback(status, null);
+          return;
+        }
+        callback(0, null);
+      });
+    }
+  }
+
   manager.disconnect = disconnectCommand;
   manager.reconnect = reconnectCommand;
   manager.reassociate = reassociateCommand;
@@ -2035,14 +2066,22 @@ WifiWorker.prototype = {
     // First, notify all of the requests that were trying to make this change.
     let state = this._stateRequests[0].enabled;
 
+    // It is callback function's responsibility to handle the pending request.
+    // So we just return here.
+    if (this._stateRequests.length > 0
+        && ("callback" in this._stateRequests[0])) {
+      return;
+    }
+
     // If the new state is not the same as state, then we weren't processing
     // the first request (we were racing somehow) so don't notify.
     if (!success || state === newState) {
       do {
-        let req = this._stateRequests.shift();
-        this._sendMessage("WifiManager:setEnabled:Return",
-                          success, state, req);
-
+        if (!("callback" in this._stateRequests[0])) {
+          let req = this._stateRequests.shift();
+          this._sendMessage("WifiManager:setEnabled:Return",
+                            success, state, req);
+        }
         // Don't remove more than one request if the previous one failed.
       } while (success &&
                this._stateRequests.length &&
@@ -2054,8 +2093,12 @@ WifiWorker.prototype = {
       let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       let self = this;
       timer.initWithCallback(function(timer) {
-        WifiManager.setWifiEnabled(self._stateRequests[0].enabled,
-                                   self._setWifiEnabledCallback.bind(this));
+        if ("callback" in self._stateRequests[0]) {
+          self._stateRequests[0].callback.call(self);
+        } else {
+          WifiManager.setWifiEnabled(self._stateRequests[0].enabled,
+                                     self._setWifiEnabledCallback.bind(this));
+        }
         timer = null;
       }, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
     }
@@ -2090,8 +2133,21 @@ WifiWorker.prototype = {
     //     have a way to communicate with our onsupplicantconnection callback.
     msg.enabled = msg.data;
     this._stateRequests.push(msg);
-    if (this._stateRequests.length === 1)
-      WifiManager.setWifiEnabled(msg.enabled, this._setWifiEnabledCallback.bind(this));
+    if (this._stateRequests.length === 1) {
+      if ("callback" in this._stateRequests[0]) {
+        this._stateRequests[0].callback.call(this);
+      } else {
+        WifiManager.setWifiEnabled(msg.enabled, this._setWifiEnabledCallback.bind(this));
+      }
+    }
+  },
+
+  setWifiEnabledInternal: function(enable, callback) {
+    this.setWifiEnabled({enabled: enable, callback: callback});
+  },
+
+  setWifiApEnabled: function(enable, callback) {
+    WifiManager.setWifiApEnabled(enable, callback);
   },
 
   associate: function(msg) {
@@ -2236,6 +2292,47 @@ WifiWorker.prototype = {
   shutdown: function() {
     debug("shutting down ...");
     this.setWifiEnabled(false);
+  },
+
+  setWifiTethering: function(enabled, callback) {
+    debug("Requesting Wifi Tethering from NetworkManager " + enabled);
+    // Wifi is disabled switch to Ap mode immediately.
+    if (!WifiManager.enabled) {
+      this.setWifiApEnabled(enabled, callback.wifiTetheringEnabledChange);
+      return;
+    }
+    // Wifi is enabled, disabled it before switch to Ap mode.
+    if (enabled) {
+      // Disabled the wifi before switch to AP mode.
+      this.setWifiEnabledInternal(false, (function () {
+        WifiManager.setWifiEnabled(false, (function (status) {
+          if (status === 0) {
+            this.setWifiApEnabled(true, (function (status, network) {
+              callback.wifiTetheringEnabledChange(status, network);
+              // We have finished everything we would like to do for tethering.
+              // Pop out this request.
+              if (this._stateRequests.length > 0 &&
+                  ("callback" in this._stateRequests[0])) {
+                // Pop out the request.
+                this._stateRequests.shift();
+                // Serve the pending requests.
+                if (this._stateRequests.length > 0) {
+                  WifiManager.setWifiEnabled(this._stateRequests[0].enabled,
+                                             this._setWifiEnabledCallback.bind(this));
+                }
+              }
+            }).bind(this));
+          } else {
+            if (callback) {
+              callback.wifiTetheringEnabledChange(status, null);
+            }
+          }
+        }).bind(this));
+      }).bind(this));
+    } else {
+      // This should not be happened. Return error to NetworkManager.
+      callback.wifiTetheringEnabledChange(1, null);
+    }
   }
 };
 

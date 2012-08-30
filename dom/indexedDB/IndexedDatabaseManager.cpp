@@ -1846,14 +1846,25 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG(!JSVAL_IS_PRIMITIVE(aObj));
 
+  JSObject* obj = JSVAL_TO_OBJECT(aObj);
+
+  JSBool hasIndexedDB;
+  if (!JS_HasProperty(aCx, obj, "indexedDB", &hasIndexedDB)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (hasIndexedDB) {
+    NS_WARNING("Passed object already has an 'indexedDB' property!");
+    return NS_ERROR_FAILURE;
+  }
+
   // Instantiating this class will register exception providers so even 
   // in xpcshell we will get typed (dom) exceptions, instead of general
   // exceptions.
   nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID));
 
-  JSObject* obj = JSVAL_TO_OBJECT(aObj);
-
   JSObject* global = JS_GetGlobalForObject(aCx, obj);
+  NS_ASSERTION(global, "What?! No global!");
 
   nsRefPtr<IDBFactory> factory;
   nsresult rv =
