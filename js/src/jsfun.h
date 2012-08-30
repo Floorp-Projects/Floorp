@@ -80,12 +80,14 @@ struct JSFunction : public JSObject
     bool hasGuessedAtom()    const { return flags & JSFUN_HAS_GUESSED_ATOM; }
     bool isInterpreted()     const { return flags & JSFUN_INTERPRETED; }
     bool isNative()          const { return !isInterpreted(); }
-    bool isSelfHostedBuiltin()  const { return flags & JSFUN_SELF_HOSTED; }
+    bool isSelfHostedBuiltin() const { return flags & JSFUN_SELF_HOSTED; }
+    bool isSelfHostedConstructor() const { return flags & JSFUN_SELF_HOSTED_CTOR; }
     bool isNativeConstructor() const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
     bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
     bool isInterpretedConstructor() const {
-        return isInterpreted() && !isFunctionPrototype() && !isSelfHostedBuiltin();
+        return isInterpreted() && !isFunctionPrototype() &&
+               (!isSelfHostedBuiltin() || isSelfHostedConstructor());
     }
     bool isNamedLambda()     const {
         return (flags & JSFUN_LAMBDA) && atom_ && !hasGuessedAtom();

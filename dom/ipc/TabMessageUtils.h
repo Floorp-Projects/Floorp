@@ -6,7 +6,7 @@
 #ifndef TABMESSAGE_UTILS_H
 #define TABMESSAGE_UTILS_H
 
-#include "IPC/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 #include "nsIDOMEvent.h"
 #include "nsCOMPtr.h"
 

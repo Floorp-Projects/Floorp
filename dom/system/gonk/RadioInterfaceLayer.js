@@ -62,7 +62,9 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:UnlockCardLock",
   "RIL:SetCardLock",
   "RIL:SendUSSD",
-  "RIL:CancelUSSD"
+  "RIL:CancelUSSD",
+  "RIL:SendStkResponse",
+  "RIL:SendStkMenuSelection"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
@@ -303,6 +305,12 @@ RadioInterfaceLayer.prototype = {
         this.saveRequestTarget(msg);
         this.cancelUSSD(msg.json);
         break;
+      case "RIL:SendStkResponse":
+        this.sendStkResponse(msg.json);
+        break;
+      case "RIL:SendStkMenuSelection":
+        this.sendStkMenuSelection(msg.json);
+        break;
     }
   },
 
@@ -439,6 +447,12 @@ RadioInterfaceLayer.prototype = {
         break;
       case "cancelussd":
         this.handleCancelUSSD(message);
+        break;
+      case "stkcommand":
+        this.handleStkProactiveCommand(message);
+        break;
+      case "stksessionend":
+        ppmm.broadcastAsyncMessage("RIL:StkSessionEnd", null);
         break;
       default:
         throw new Error("Don't know about this message type: " +
@@ -1012,6 +1026,11 @@ RadioInterfaceLayer.prototype = {
     this._sendRequestResults(messageType, message);
   },
 
+  handleStkProactiveCommand: function handleStkProactiveCommand(message) {
+    debug("handleStkProactiveCommand " + JSON.stringify(message));
+    ppmm.broadcastAsyncMessage("RIL:StkCommand", message);
+  },
+
   // nsIObserver
 
   observe: function observe(subject, topic, data) {
@@ -1182,6 +1201,15 @@ RadioInterfaceLayer.prototype = {
     this.worker.postMessage(message);
   },
 
+  sendStkResponse: function sendStkResponse(message) {
+    message.rilMessageType = "sendStkTerminalResponse";
+    this.worker.postMessage(message);
+  },
+
+  sendStkMenuSelection: function sendStkMenuSelection(message) {
+    message.rilMessageType = "sendStkMenuSelection";
+    this.worker.postMessage(message);
+  },
 
   get microphoneMuted() {
     return gAudioManager.microphoneMuted;
@@ -1724,7 +1752,6 @@ let RILNetworkInterface = {
   NETWORK_STATE_UNKNOWN:       Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN,
   NETWORK_STATE_CONNECTING:    Ci.nsINetworkInterface.CONNECTING,
   NETWORK_STATE_CONNECTED:     Ci.nsINetworkInterface.CONNECTED,
-  NETWORK_STATE_SUSPENDED:     Ci.nsINetworkInterface.SUSPENDED,
   NETWORK_STATE_DISCONNECTING: Ci.nsINetworkInterface.DISCONNECTING,
   NETWORK_STATE_DISCONNECTED:  Ci.nsINetworkInterface.DISCONNECTED,
 
@@ -1829,9 +1856,7 @@ let RILNetworkInterface = {
   },
 
   connect: function connect(options) {
-    if (this.connecting ||
-        this.state == RIL.GECKO_NETWORK_STATE_CONNECTED ||
-        this.state == RIL.GECKO_NETWORK_STATE_SUSPENDED) {
+    if (this.connecting || this.connected) {
       return;
     }
 

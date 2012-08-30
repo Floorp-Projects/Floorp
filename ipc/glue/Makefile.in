@@ -17,9 +17,9 @@ FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
-EXPORTS_NAMESPACES = IPC mozilla/ipc
+EXPORTS_NAMESPACES = ipc mozilla/ipc
 
-EXPORTS_IPC = IPCMessageUtils.h
+EXPORTS_ipc = IPCMessageUtils.h
 
 EXPORTS_mozilla/ipc = \
   AsyncChannel.h \

@@ -18,6 +18,8 @@ EXTRA_COMPONENTS = \
 
 EXTRA_PP_JS_MODULES += \
   Webapps.jsm \
+  AppsServiceChild.jsm \
+  AppsUtils.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

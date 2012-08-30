@@ -127,11 +127,27 @@ class Descriptor(DescriptorProvider):
         self.interface = interface
 
         # Read the desc, and fill in the relevant defaults.
-        self.nativeType = desc['nativeType']
+        ifaceName = self.interface.identifier.name
+        if self.interface.isExternal() or self.interface.isCallback():
+            if self.workers:
+                nativeTypeDefault = "JSObject"
+            else:
+                nativeTypeDefault = "nsIDOM" + ifaceName
+        else:
+            if self.workers:
+                nativeTypeDefault = "mozilla::dom::workers::" + ifaceName
+            else:
+                nativeTypeDefault = "mozilla::dom::" + ifaceName
+
+        self.nativeType = desc.get('nativeType', nativeTypeDefault)
         self.hasInstanceInterface = desc.get('hasInstanceInterface', None)
 
-        headerDefault = self.nativeType
-        headerDefault = headerDefault.replace("::", "/") + ".h"
+        # Do something sane for JSObject
+        if self.nativeType == "JSObject":
+            headerDefault = "jsapi.h"
+        else:
+            headerDefault = self.nativeType
+            headerDefault = headerDefault.replace("::", "/") + ".h"
         self.headerFile = desc.get('headerFile', headerDefault)
 
         if self.interface.isCallback() or self.interface.isExternal():
@@ -144,6 +160,8 @@ class Descriptor(DescriptorProvider):
 
         self.notflattened = desc.get('notflattened', False)
         self.register = desc.get('register', True)
+
+        self.hasXPConnectImpls = desc.get('hasXPConnectImpls', False)
 
         # If we're concrete, we need to crawl our ancestor interfaces and mark
         # them as having a concrete descendant.

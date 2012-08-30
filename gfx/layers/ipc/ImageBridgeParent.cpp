@@ -3,12 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "base/thread.h"
+
+#include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/ImageContainerParent.h"
-#include "mozilla/layers/CompositorParent.h"
-
-#include "base/thread.h"
 #include "nsTArray.h"
+#include "nsXULAppAPI.h"
+
+using namespace base;
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace layers {
@@ -23,6 +27,31 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop)
 ImageBridgeParent::~ImageBridgeParent()
 {
   ImageContainerParent::DestroySharedImageMap();
+}
+
+static void
+ConnectImageBridgeInParentProcess(ImageBridgeParent* aBridge,
+                                  Transport* aTransport,
+                                  ProcessHandle aOtherProcess)
+{
+  aBridge->Open(aTransport, aOtherProcess,
+                XRE_GetIOMessageLoop(), AsyncChannel::Parent);
+}
+
+/*static*/ PImageBridgeParent*
+ImageBridgeParent::Create(Transport* aTransport, ProcessId aOtherProcess)
+{
+  ProcessHandle processHandle;
+  if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
+    return nullptr;
+  }
+
+  MessageLoop* loop = CompositorParent::CompositorLoop();
+  ImageBridgeParent* bridge = new ImageBridgeParent(loop);
+  loop->PostTask(FROM_HERE,
+                 NewRunnableFunction(ConnectImageBridgeInParentProcess,
+                                     bridge, aTransport, processHandle));
+  return bridge;
 }
 
 bool ImageBridgeParent::RecvStop()

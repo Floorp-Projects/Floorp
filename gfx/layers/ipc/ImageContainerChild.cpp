@@ -66,6 +66,7 @@ void ImageContainerChild::SetIdleNow()
 
   SendFlush();
   ClearSharedImagePool();
+  mImageQueue.Clear();
 }
 
 void ImageContainerChild::DispatchSetIdle()
@@ -375,6 +376,7 @@ void ImageContainerChild::DestroyNow()
                     "Incorrect state in the destruction sequence.");
 
   ClearSharedImagePool();
+  mImageQueue.Clear();
 
   // will decrease the refcount and, in most cases, delete the ImageContainerChild
   Send__delete__(this);

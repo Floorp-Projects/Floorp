@@ -186,7 +186,7 @@ class JSString : public js::gc::Cell
      *   Undepended   0011       0011
      *   Extensible   0010       0010
      *   Fixed        0100       isFlat && !isExtensible
-     *   Inline       0100       isFixed && (u1.chars == inlineStorage || isShort || isInt32)
+     *   Inline       0100       isFixed && (u1.chars == inlineStorage) || isInt32)
      *   Short        0100       header in FINALIZE_SHORT_STRING arena
      *   External     0100       header in FINALIZE_EXTERNAL_STRING arena
      *   Int32        0110       x110 (NYI, Bug 654190)
@@ -334,10 +334,10 @@ class JSString : public js::gc::Cell
         return *(JSExtensibleString *)this;
     }
 
-    /* For hot code, prefer other type queries. */
-    bool isShort() const;
-    bool isFixed() const;
-    bool isInline() const;
+    JS_ALWAYS_INLINE
+    bool isFixed() const {
+        return isFlat() && !isExtensible();
+    }
 
     JS_ALWAYS_INLINE
     JSFixedString &asFixed() const {
@@ -345,6 +345,12 @@ class JSString : public js::gc::Cell
         return *(JSFixedString *)this;
     }
 
+    JS_ALWAYS_INLINE
+    bool isInline() const {
+        return isFixed() && (d.u1.chars == d.inlineStorage);
+    }
+
+    /* For hot code, prefer other type queries. */
     bool isExternal() const;
 
     JS_ALWAYS_INLINE
@@ -406,6 +412,7 @@ class JSString : public js::gc::Cell
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_STRING; }
 
 #ifdef DEBUG
+    bool isShort() const;
     void dump();
     bool equals(const char *s);
 #endif
@@ -597,12 +604,6 @@ class JSShortString : public JSInlineString
   public:
     static inline JSShortString *new_(JSContext *cx);
 
-    jschar *inlineStorageBeforeInit() {
-        return d.inlineStorage;
-    }
-
-    inline void initAtOffsetInBuffer(const jschar *chars, size_t length);
-
     static const size_t MAX_SHORT_LENGTH = JSString::NUM_INLINE_CHARS +
                                            INLINE_EXTENSION_CHARS
                                            -1 /* null terminator */;
@@ -611,7 +612,7 @@ class JSShortString : public JSInlineString
         return length <= MAX_SHORT_LENGTH;
     }
 
-    /* Only called by the GC for strings with the FINALIZE_EXTERNAL_STRING kind. */
+    /* Only called by the GC for strings with the FINALIZE_SHORT_STRING kind. */
 
     JS_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 };

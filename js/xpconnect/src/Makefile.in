@@ -83,6 +83,8 @@ SHARED_LIBRARY_LIBS = \
   ../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
   $(NULL)
 
+EXTRA_MDDEPEND_FILES = dom_qsgen.pp dombindingsgen.pp dictionary_helper_gen.pp event_impl_gen.pp
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += \
@@ -148,8 +150,6 @@ dombindings_gen.h: $(srcdir)/dombindings.conf \
 	  --idlpath=$(DEPTH)/dist/idl \
 	  --header-output dombindings_gen.h \
 	  $(srcdir)/dombindings.conf
-
-exports:: dombindings_gen.h
 
 dombindings_gen.cpp: $(srcdir)/dombindings.conf \
                      $(srcdir)/dombindingsgen.py \

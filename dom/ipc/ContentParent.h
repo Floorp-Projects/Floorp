@@ -56,7 +56,6 @@ class ContentParent : public PContentParent
     typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
     typedef mozilla::ipc::TestShellParent TestShellParent;
     typedef mozilla::ipc::URIParams URIParams;
-    typedef mozilla::layers::PCompositorParent PCompositorParent;
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
@@ -118,6 +117,8 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why);
 
 private:
+    typedef base::ChildPrivileges ChildOSPrivileges;
+
     static nsDataHashtable<nsStringHashKey, ContentParent*> *gAppContentParents;
     static nsTArray<ContentParent*>* gNonAppContentParents;
     static nsTArray<ContentParent*>* gPrivateContent;
@@ -132,7 +133,8 @@ private:
     using PContentParent::SendPBrowserConstructor;
     using PContentParent::SendPTestShellConstructor;
 
-    ContentParent(const nsAString& aAppManifestURL, bool aIsForBrowser);
+    ContentParent(const nsAString& aAppManifestURL, bool aIsForBrowser,
+                  ChildOSPrivileges aOSPrivileges = base::PRIVILEGES_DEFAULT);
     virtual ~ContentParent();
 
     void Init();
@@ -155,8 +157,12 @@ private:
      */
     void ShutDownProcess();
 
-    PCompositorParent* AllocPCompositor(mozilla::ipc::Transport* aTransport,
-                                        base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+    PCompositorParent*
+    AllocPCompositor(mozilla::ipc::Transport* aTransport,
+                     base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+    PImageBridgeParent*
+    AllocPImageBridge(mozilla::ipc::Transport* aTransport,
+                      base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
     virtual PBrowserParent* AllocPBrowser(const uint32_t& aChromeFlags,
                                           const bool& aIsBrowserElement,
@@ -279,6 +285,7 @@ private:
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
     GeckoChildProcessHost* mSubprocess;
+    ChildOSPrivileges mOSPrivileges;
 
     int32_t mGeolocationWatchID;
     int mRunToCompletionDepth;

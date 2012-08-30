@@ -1470,7 +1470,7 @@ nsXMLHttpRequest::GetAllResponseHeaders(nsString& aResponseHeaders)
     aResponseHeaders.AppendLiteral("\r\n");
   }
 
-  PRInt32 length;
+  int32_t length;
   if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
     aResponseHeaders.AppendLiteral("Content-Length: ");
     aResponseHeaders.AppendInt(length);
@@ -1531,7 +1531,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
 
     // Content Length:
     else if (header.LowerCaseEqualsASCII("content-length")) {
-      PRInt32 length;
+      int32_t length;
       if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
         _retval.AppendInt(length);
       }

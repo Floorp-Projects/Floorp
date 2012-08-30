@@ -4075,10 +4075,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         if (op == JSOP_FUNCALL || op == JSOP_FUNAPPLY)
             cx->compartment->types.monitorBytecode(cx, script, pc - script->code);
 
-        /* Speculate that calls whose result is ignored may return undefined. */
-        if (JSOP_POP == *(pc + GetBytecodeLength(pc)))
-            seen->addType(cx, Type::UndefinedType());
-
         poppedTypes(pc, argCount + 1)->addCall(cx, callsite);
         break;
       }
@@ -5294,7 +5290,9 @@ TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
      */
 
     jsbytecode *ignorePC = pc + GetBytecodeLength(pc);
-    if (*ignorePC == JSOP_INT8 && GET_INT8(ignorePC) == -1) {
+    if (*ignorePC == JSOP_POP) {
+        /* Value is ignored. */
+    } if (*ignorePC == JSOP_INT8 && GET_INT8(ignorePC) == -1) {
         ignorePC += JSOP_INT8_LENGTH;
         if (*ignorePC != JSOP_BITAND)
             ignorePC = NULL;
