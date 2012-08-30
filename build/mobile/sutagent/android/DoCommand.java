@@ -84,6 +84,7 @@ import android.os.Debug;
 import android.os.Environment;
 import android.os.StatFs;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Surface;
@@ -106,13 +107,15 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.11";
+    private final String prgVersion = "SUTAgentAndroid Version 1.13";
 
     public enum Command
         {
         RUN ("run"),
         EXEC ("exec"),
+        EXECSU ("execsu"),
         EXECCWD ("execcwd"),
+        EXECCWDSU ("execcwdsu"),
         ENVRUN ("envrun"),
         KILL ("kill"),
         PS ("ps"),
@@ -683,7 +686,25 @@ public class DoCommand {
                         theArgs[lcv - 1] = Argv[lcv];
                         }
 
-                    strReturn = StartPrg2(theArgs, cmdOut, null);
+                    strReturn = StartPrg2(theArgs, cmdOut, null, false);
+                    }
+                else
+                    {
+                    strReturn = sErrorPrefix + "Wrong number of arguments for " + Argv[0] + " command!";
+                    }
+                break;
+
+            case EXECSU:
+                if (Argc >= 2)
+                    {
+                    String [] theArgs = new String [Argc - 1];
+
+                    for (int lcv = 1; lcv < Argc; lcv++)
+                        {
+                        theArgs[lcv - 1] = Argv[lcv];
+                        }
+
+                    strReturn = StartPrg2(theArgs, cmdOut, null, true);
                     }
                 else
                     {
@@ -701,7 +722,25 @@ public class DoCommand {
                         theArgs[lcv - 2] = Argv[lcv];
                         }
 
-                    strReturn = StartPrg2(theArgs, cmdOut, Argv[1]);
+                    strReturn = StartPrg2(theArgs, cmdOut, Argv[1], false);
+                    }
+                else
+                    {
+                    strReturn = sErrorPrefix + "Wrong number of arguments for " + Argv[0] + " command!";
+                    }
+                break;
+
+            case EXECCWDSU:
+                if (Argc >= 3)
+                    {
+                    String [] theArgs = new String [Argc - 2];
+
+                    for (int lcv = 2; lcv < Argc; lcv++)
+                        {
+                        theArgs[lcv - 2] = Argv[lcv];
+                        }
+
+                    strReturn = StartPrg2(theArgs, cmdOut, Argv[1], true);
                     }
                 else
                     {
@@ -720,7 +759,7 @@ public class DoCommand {
                         }
 
                     if (Argv[1].contains("/") || Argv[1].contains("\\") || !Argv[1].contains("."))
-                        strReturn = StartPrg(theArgs, cmdOut);
+                        strReturn = StartPrg(theArgs, cmdOut, false);
                     else
                         strReturn = StartJavaPrg(theArgs, null);
                     }
@@ -3517,14 +3556,35 @@ private void CancelNotification()
         return (sRet);
         }
 
-    public String StartPrg(String [] progArray, OutputStream out)
+    public String StartPrg(String [] progArray, OutputStream out, boolean startAsRoot)
         {
         String sRet = "";
         int    lcv = 0;
 
-        try
-            {
-            pProc = Runtime.getRuntime().exec(progArray);
+        try {
+            if (startAsRoot)
+                {
+                    // we need to requote the program string here, in case
+                    // there's spaces or other characters which need quoting
+                    // before being passed to su
+                    List<String> quotedProgList = new ArrayList<String>();
+                    for (String arg : progArray)
+                        {
+                            String quotedArg = arg;
+                            quotedArg = quotedArg.replace("\"", "\\\"");
+                            quotedArg = quotedArg.replace("\'", "\\\'");
+                            if (quotedArg.contains(" "))
+                                {
+                                    quotedArg = "\"" + quotedArg + "\"";
+                                }
+                            quotedProgList.add(quotedArg);
+                        }
+                    pProc = Runtime.getRuntime().exec(this.getSuArgs(TextUtils.join(" ", quotedProgList)));
+                }
+            else
+                {
+                    pProc = Runtime.getRuntime().exec(progArray);
+                }
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
             while (lcv < 30) {
@@ -3552,7 +3612,7 @@ private void CancelNotification()
         return (sRet);
         }
 
-    public String StartPrg2(String [] progArray, OutputStream out, String cwd)
+    public String StartPrg2(String [] progArray, OutputStream out, String cwd, boolean startAsRoot)
         {
         String sRet = "";
 
@@ -3566,7 +3626,7 @@ private void CancelNotification()
         if (!sEnvString.contains("=") && (sEnvString.length() > 0))
             {
             if (sEnvString.contains("/") || sEnvString.contains("\\") || !sEnvString.contains("."))
-                sRet = StartPrg(progArray, out);
+                sRet = StartPrg(progArray, out, startAsRoot);
             else
                 sRet = StartJavaPrg(progArray, null);
             return(sRet);
@@ -3772,65 +3832,68 @@ private void CancelNotification()
     private String PrintUsage()
         {
         String sRet =
-            "run [cmdline]                - start program no wait\n" +
-            "exec [env pairs] [cmdline]   - start program no wait optionally pass env\n" +
-            "                               key=value pairs (comma separated)\n" +
-            "kill [program name]          - kill program no path\n" +
-            "killall                      - kill all processes started\n" +
-            "ps                           - list of running processes\n" +
-            "info                         - list of device info\n" +
-            "        [os]                 - os version for device\n" +
-            "        [id]                 - unique identifier for device\n" +
-            "        [uptime]             - uptime for device\n" +
-            "        [uptimemillis]       - uptime for device in milliseconds\n" +
-            "        [systime]            - current system time\n" +
-            "        [screen]             - width, height and bits per pixel for device\n" +
-            "        [memory]             - physical, free, available, storage memory\n" +
-            "                               for device\n" +
-            "        [processes]          - list of running processes see 'ps'\n" +
-            "deadman timeout              - set the duration for the deadman timer\n" +
-            "alrt [on/off]                - start or stop sysalert behavior\n" +
-            "disk [arg]                   - prints disk space info\n" +
-            "cp file1 file2               - copy file1 to file2\n" +
-            "time file                    - timestamp for file\n" +
-            "hash file                    - generate hash for file\n" +
-            "cd directory                 - change cwd\n" +
-            "cat file                     - cat file\n" +
-            "cwd                          - display cwd\n" +
-            "mv file1 file2               - move file1 to file2\n" +
-            "push filename                - push file to device\n" +
-            "rm file                      - delete file\n" +
-            "rmdr directory               - delete directory even if not empty\n" +
-            "mkdr directory               - create directory\n" +
-            "dirw directory               - tests whether the directory is writable\n" +
-            "isdir directory              - test whether the directory exists\n" +
-            "chmod directory|file         - change permissions of directory and contents (or file) to 777\n" +
-            "stat processid               - stat process\n" +
-            "dead processid               - print whether the process is alive or hung\n" +
-            "mems                         - dump memory stats\n" +
-            "ls                           - print directory\n" +
-            "tmpd                         - print temp directory\n" +
-            "ping [hostname/ipaddr]       - ping a network device\n" +
-            "unzp zipfile destdir         - unzip the zipfile into the destination dir\n" +
-            "zip zipfile src              - zip the source file/dir into zipfile\n" +
-            "rebt                         - reboot device\n" +
-            "inst /path/filename.apk      - install the referenced apk file\n" +
-            "uninst packagename           - uninstall the referenced package and reboot\n" +
-            "uninstall packagename        - uninstall the referenced package without a reboot\n" +
-            "updt pkgname pkgfile         - unpdate the referenced package\n" +
-            "clok                         - the current device time expressed as the" +
-            "                               number of millisecs since epoch\n" +
-            "settime date time            - sets the device date and time\n" +
-            "                               (YYYY/MM/DD HH:MM:SS)\n" +
-            "tzset timezone               - sets the device timezone format is\n" +
-            "                               GMTxhh:mm x = +/- or a recognized Olsen string\n" +
-            "tzget                        - returns the current timezone set on the device\n" +
-            "rebt                         - reboot device\n" +
-            "adb ip|usb                   - set adb to use tcp/ip on port 5555 or usb\n" +
-            "quit                         - disconnect SUTAgent\n" +
-            "exit                         - close SUTAgent\n" +
-            "ver                          - SUTAgent version\n" +
-            "help                         - you're reading it";
+            "run [cmdline]                   - start program no wait\n" +
+            "exec [env pairs] [cmdline]      - start program no wait optionally pass env\n" +
+            "                                  key=value pairs (comma separated)\n" +
+            "execcwd [env pairs] [cmdline]   - start program from specified directory\n" +
+            "execsu [env pairs] [cmdline]    - start program as privileged user\n" +
+            "execcwdsu [env pairs] [cmdline] - start program from specified directory as privileged user\n" +
+            "kill [program name]             - kill program no path\n" +
+            "killall                         - kill all processes started\n" +
+            "ps                              - list of running processes\n" +
+            "info                            - list of device info\n" +
+            "        [os]                    - os version for device\n" +
+            "        [id]                    - unique identifier for device\n" +
+            "        [uptime]                - uptime for device\n" +
+            "        [uptimemillis]          - uptime for device in milliseconds\n" +
+            "        [systime]               - current system time\n" +
+            "        [screen]                - width, height and bits per pixel for device\n" +
+            "        [memory]                - physical, free, available, storage memory\n" +
+            "                                  for device\n" +
+            "        [processes]             - list of running processes see 'ps'\n" +
+            "deadman timeout                 - set the duration for the deadman timer\n" +
+            "alrt [on/off]                   - start or stop sysalert behavior\n" +
+            "disk [arg]                      - prints disk space info\n" +
+            "cp file1 file2                  - copy file1 to file2\n" +
+            "time file                       - timestamp for file\n" +
+            "hash file                       - generate hash for file\n" +
+            "cd directory                    - change cwd\n" +
+            "cat file                        - cat file\n" +
+            "cwd                             - display cwd\n" +
+            "mv file1 file2                  - move file1 to file2\n" +
+            "push filename                   - push file to device\n" +
+            "rm file                         - delete file\n" +
+            "rmdr directory                  - delete directory even if not empty\n" +
+            "mkdr directory                  - create directory\n" +
+            "dirw directory                  - tests whether the directory is writable\n" +
+            "isdir directory                 - test whether the directory exists\n" +
+            "chmod directory|file            - change permissions of directory and contents (or file) to 777\n" +
+            "stat processid                  - stat process\n" +
+            "dead processid                  - print whether the process is alive or hung\n" +
+            "mems                            - dump memory stats\n" +
+            "ls                              - print directory\n" +
+            "tmpd                            - print temp directory\n" +
+            "ping [hostname/ipaddr]          - ping a network device\n" +
+            "unzp zipfile destdir            - unzip the zipfile into the destination dir\n" +
+            "zip zipfile src                 - zip the source file/dir into zipfile\n" +
+            "rebt                            - reboot device\n" +
+            "inst /path/filename.apk         - install the referenced apk file\n" +
+            "uninst packagename              - uninstall the referenced package and reboot\n" +
+            "uninstall packagename           - uninstall the referenced package without a reboot\n" +
+            "updt pkgname pkgfile            - unpdate the referenced package\n" +
+            "clok                            - the current device time expressed as the" +
+            "                                  number of millisecs since epoch\n" +
+            "settime date time               - sets the device date and time\n" +
+            "                                  (YYYY/MM/DD HH:MM:SS)\n" +
+            "tzset timezone                  - sets the device timezone format is\n" +
+            "                                  GMTxhh:mm x = +/- or a recognized Olsen string\n" +
+            "tzget                           - returns the current timezone set on the device\n" +
+            "rebt                            - reboot device\n" +
+            "adb ip|usb                      - set adb to use tcp/ip on port 5555 or usb\n" +
+            "quit                            - disconnect SUTAgent\n" +
+            "exit                            - close SUTAgent\n" +
+            "ver                             - SUTAgent version\n" +
+            "help                            - you're reading it";
         return (sRet);
         }
 }
