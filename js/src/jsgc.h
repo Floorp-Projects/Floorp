@@ -1207,6 +1207,7 @@ MaybeVerifyBarriers(JSContext *cx, bool always = false)
 
 #endif
 
+} /* namespace gc */
 
 static inline JSCompartment *
 GetGCThingCompartment(void *thing)
@@ -1220,8 +1221,6 @@ GetObjectCompartment(JSObject *obj)
 {
     return GetGCThingCompartment(obj);
 }
-
-} /* namespace gc */
 
 void
 PurgeJITCaches(JSCompartment *c);
