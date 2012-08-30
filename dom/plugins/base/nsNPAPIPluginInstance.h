@@ -41,7 +41,7 @@ const NPDrawingModel kDefaultDrawingModel = NPDrawingModelSyncWin;
 const NPDrawingModel kDefaultDrawingModel = NPDrawingModelSyncX;
 #elif defined(XP_MACOSX)
 #ifndef NP_NO_QUICKDRAW
-const NPDrawingModel kDefaultDrawingModel = NPDrawingModelQuickDraw;
+const NPDrawingModel kDefaultDrawingModel = NPDrawingModelQuickDraw; // Not supported
 #else
 const NPDrawingModel kDefaultDrawingModel = NPDrawingModelCoreGraphics;
 #endif
