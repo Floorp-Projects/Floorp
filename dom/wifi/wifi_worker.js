@@ -58,11 +58,15 @@ self.onmessage = function(e) {
     var event = cbuf.readString().substr(0, ret.value);
     postMessage({ id: id, event: event });
     break;
+  case "ifc_reset_connections":
+    var ret = libnetutils.ifc_reset_connections(data.ifname,
+                                                libnetutils.RESET_ALL_ADDRESSES);
+    postMessage({ id: id, status: ret });
+    break;
   case "ifc_enable":
   case "ifc_disable":
   case "ifc_remove_host_routes":
   case "ifc_remove_default_route":
-  case "ifc_reset_connections":
   case "dhcp_stop":
   case "dhcp_release_lease":
     var ret = libnetutils[cmd](data.ifname);
