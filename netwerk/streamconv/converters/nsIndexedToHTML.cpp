@@ -951,7 +951,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         pushBuffer.AppendLiteral("></td>\n <td>");
     } else {
         pushBuffer.AppendLiteral(" sortable-data=\"");
-        pushBuffer.AppendInt(t);
+        pushBuffer.AppendInt(static_cast<int64_t>(t));
         pushBuffer.AppendLiteral("\">");
         nsAutoString formatted;
         mDateTime->FormatPRTime(nullptr,
