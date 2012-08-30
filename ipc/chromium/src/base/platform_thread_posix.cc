@@ -9,14 +9,22 @@
 
 #if defined(OS_MACOSX)
 #include <mach/mach.h>
+#elif defined(OS_NETBSD)
+#include <lwp.h>
 #elif defined(OS_LINUX)
 #include <sys/syscall.h>
-#if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__OpenBSD__) && !defined(__DragonFly__)
 #include <sys/prctl.h>
-#elif !defined(__NetBSD__)
-#include <pthread_np.h>
+#elif defined(OS_FREEBSD)
+#include <sys/param.h>
+#include <sys/thr.h>
 #endif
+
+#if !defined(OS_MACOSX)
 #include <unistd.h>
+#endif
+
+#if defined(OS_BSD) && !defined(OS_NETBSD)
+#include <pthread_np.h>
 #endif
 
 #if defined(OS_MACOSX)
@@ -38,9 +46,20 @@ PlatformThreadId PlatformThread::CurrentId() {
   // into the kernel.
 #if defined(OS_MACOSX)
   return mach_thread_self();
-#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
-  // TODO(BSD): find a better thread ID
-  return (intptr_t)(pthread_self());
+#elif defined(OS_NETBSD)
+  return _lwp_self();
+#elif defined(OS_DRAGONFLY)
+  return lwp_gettid();
+#elif defined(OS_FREEBSD)
+#  if __FreeBSD_version > 900030
+    return pthread_getthreadid_np();
+#  else
+    long lwpid;
+    thr_self(&lwpid);
+    return lwpid;
+#  endif
+#elif defined(OS_OPENBSD)
+  return (intptr_t) (pthread_self());
 #elif defined(OS_LINUX)
   return syscall(__NR_gettid);
 #endif
@@ -83,9 +102,9 @@ void PlatformThread::SetName(const char* name) {
   // Note that glibc also has a 'pthread_setname_np' api, but it may not be
   // available everywhere and it's only benefit over using prctl directly is
   // that it can set the name of threads other than the current thread.
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+#if defined(OS_BSD) && !defined(OS_NETBSD)
   pthread_set_name_np(pthread_self(), name);
-#elif defined(__NetBSD__)
+#elif defined(OS_NETBSD)
   pthread_setname_np(pthread_self(), "%s", (void *)name);
 #else
   prctl(PR_SET_NAME, reinterpret_cast<uintptr_t>(name), 0, 0, 0); 

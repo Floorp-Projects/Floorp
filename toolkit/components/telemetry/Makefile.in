@@ -65,9 +65,19 @@ histograms_file := $(srcdir)/Histograms.json
 histogram_enum_file := TelemetryHistogramEnums.h
 histogram_data_file := TelemetryHistogramData.inc
 
-$(histogram_enum_file): $(histograms_file) $(srcdir)/gen-histogram-enum.py
+enum_python_deps := \
+  $(srcdir)/gen-histogram-enum.py \
+  $(srcdir)/histogram_tools.py \
+  $(NULL)
+
+data_python_deps := \
+  $(srcdir)/gen-histogram-data.py \
+  $(srcdir)/histogram_tools.py \
+  $(NULL)
+
+$(histogram_enum_file): $(histograms_file) $(enum_python_deps)
 	$(PYTHON) $(srcdir)/gen-histogram-enum.py $< > $@
-$(histogram_data_file): $(histograms_file) $(srcdir)/gen-histogram-data.py
+$(histogram_data_file): $(histograms_file) $(data_python_deps)
 	$(PYTHON) $(srcdir)/gen-histogram-data.py $< > $@
 
 Telemetry.$(OBJ_SUFFIX): $(histogram_data_file)

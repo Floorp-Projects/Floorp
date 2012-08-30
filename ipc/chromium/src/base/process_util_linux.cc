@@ -185,7 +185,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
                bool wait, ProcessHandle* process_handle,
                ProcessArchitecture arch) {
   return LaunchApp(argv, fds_to_remap, env_vars_to_set,
-                   SAME_PRIVILEGES_AS_PARENT,
+                   PRIVILEGES_INHERIT,
                    wait, process_handle);
 }
 
@@ -231,7 +231,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
       argv_cstr[i] = const_cast<char*>(argv[i].c_str());
     argv_cstr[argv.size()] = NULL;
 
-    if (privs == UNPRIVILEGED) {
+    if (privs == PRIVILEGES_UNPRIVILEGED) {
       if (setgid(CHILD_UNPRIVILEGED_GID) != 0) {
         DLOG(ERROR) << "FAILED TO setgid() CHILD PROCESS, path: " << argv_cstr[0];
         _exit(127);

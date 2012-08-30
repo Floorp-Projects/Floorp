@@ -7,7 +7,7 @@
 #ifndef DOM_PLUGINS_PLUGINMESSAGEUTILS_H
 #define DOM_PLUGINS_PLUGINMESSAGEUTILS_H
 
-#include "IPC/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 #include "base/message_loop.h"
 
 #include "mozilla/ipc/RPCChannel.h"

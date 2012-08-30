@@ -105,6 +105,20 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
     info.dlpi_name = it->l_name;
     info.dlpi_phdr = NULL;
     info.dlpi_phnum = 0;
+
+    // Assuming l_addr points to Elf headers (in most cases, this is true),
+    // get the Phdr location from there.
+    uint8_t mapped;
+    // If the page is not mapped, mincore returns an error.
+    if (!mincore(const_cast<void*>(it->l_addr), PAGE_SIZE, &mapped)) {
+      const Elf::Ehdr *ehdr = Elf::Ehdr::validate(it->l_addr);
+      if (ehdr) {
+        info.dlpi_phdr = reinterpret_cast<const Elf::Phdr *>(
+                         reinterpret_cast<const char *>(ehdr) + ehdr->e_phoff);
+        info.dlpi_phnum = ehdr->e_phnum;
+      }
+    }
+
     int ret = callback(&info, sizeof(dl_phdr_info), data);
     if (ret)
       return ret;

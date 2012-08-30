@@ -511,6 +511,194 @@ const ICC_USIM_EFEMAIL_TAG = 0xca;
 const ICC_USIM_EFCCP1_TAG  = 0xcb;
 
 /**
+ * STK constants.
+ */
+//  Tags for Ber Tlv.
+const BER_UNKNOWN_TAG = 0x00;
+const BER_PROACTIVE_COMMAND_TAG = 0xd0;
+const BER_MENU_SELECTION_TAG = 0xd3;
+const BER_EVENT_DOWNLOAD_TAG = 0xd6;
+
+// Flags in Comprehension TLV.
+const COMPREHENSIONTLV_FLAG_CR = 0x80;  // Comprehension required.
+
+// Tags for Comprehension TLV.
+const COMPREHENSIONTLV_TAG_COMMAND_DETAILS = 0x01;
+const COMPREHENSIONTLV_TAG_DEVICE_ID = 0x02;
+const COMPREHENSIONTLV_TAG_RESULT = 0x03;
+const COMPREHENSIONTLV_TAG_DURATION = 0x04;
+const COMPREHENSIONTLV_TAG_ALPHA_ID = 0x05;
+const COMPREHENSIONTLV_TAG_ADDRESS = 0x06;
+const COMPREHENSIONTLV_TAG_TEXT_STRING = 0x0d;
+const COMPREHENSIONTLV_TAG_ITEM = 0x0f;
+const COMPREHENSIONTLV_TAG_ITEM_ID = 0x10;
+const COMPREHENSIONTLV_TAG_RESPONSE_LENGTH = 0x11;
+const COMPREHENSIONTLV_TAG_HELP_REQUEST = 0x15;
+const COMPREHENSIONTLV_TAG_DEFAULT_TEXT = 0x17;
+const COMPREHENSIONTLV_TAG_ICON_ID = 0x1e;
+const COMPREHENSIONTLV_TAG_ICON_ID_LIST = 0x1f;
+const COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE = 0x2b;
+const COMPREHENSIONTLV_TAG_URL = 0x31;
+
+// Device identifiers, see TS 11.14, clause 12.7
+const STK_DEVICE_ID_KEYPAD = 0x01;
+const STK_DEVICE_ID_DISPLAY = 0x02;
+const STK_DEVICE_ID_EARPIECE = 0x03;
+const STK_DEVICE_ID_SIM = 0x81;
+const STK_DEVICE_ID_ME = 0x82;
+const STK_DEVICE_ID_NETWORK = 0x83;
+
+// STK Proactive commands.
+const STK_CMD_REFRESH = 0x01;
+const STK_CMD_SET_UP_CALL = 0x10;
+const STK_CMD_SEND_SS = 0x11;
+const STK_CMD_SEND_USSD = 0x12;
+const STK_CMD_SEND_SMS = 0x13;
+const STK_CMD_SEND_DTMF = 0x14;
+const STK_CMD_LAUNCH_BROWSER = 0x15;
+const STK_CMD_DISPLAY_TEXT = 0x21;
+const STK_CMD_GET_INKEY = 0x22;
+const STK_CMD_GET_INPUT = 0x23;
+const STK_CMD_SELECT_ITEM = 0x24;
+const STK_CMD_SET_UP_MENU = 0x25;
+const STK_CMD_SET_UP_IDLE_MODE_TEXT = 0x28;
+
+// STK Result code.
+// TS 11.14, clause 12.12
+
+// Results '0X' and '1X' indicate that the command has been performed.
+
+// Command performed successfully.
+const STK_RESULT_OK = 0x00;
+
+// Command performed with partial comprehension.
+const STK_RESULT_PRFRMD_WITH_PARTIAL_COMPREHENSION = 0x01;
+
+// Command performed, with missing information.
+const STK_RESULT_PRFRMD_WITH_MISSING_INFO = 0x02;
+
+// REFRESH performed with additional EFs read.
+const STK_RESULT_PRFRMD_WITH_ADDITIONAL_EFS_READ = 0x03;
+
+// Command performed successfully, but requested icon could not be
+// displayed.
+const STK_RESULT_PRFRMD_ICON_NOT_DISPLAYED = 0x04;
+
+// Command performed, but modified by call control by NAA.
+const STK_RESULT_PRFRMD_MODIFIED_BY_NAA = 0x05;
+
+// Command performed successfully, limited service.
+const STK_RESULT_PRFRMD_LIMITED_SERVICE = 0x06;
+
+// Command performed with modification.
+const STK_RESULT_PRFRMD_WITH_MODIFICATION = 0x07;
+
+// REFRESH performed but indicated NAA was not active.
+const STK_RESULT_PRFRMD_NAA_NOT_ACTIVE = 0x08;
+
+// Command performed successfully; tone not played.
+const STK_RESULT_PRFRMD_TONE_NOT_PLAYED = 0x09;
+
+// Proactive UICC session terminated by the user.
+const STK_RESULT_UICC_SESSION_TERM_BY_USER = 0x10;
+
+// Backward move in the proactive UICC session requested by the user.
+const STK_RESULT_BACKWARD_MOVE_BY_USER = 0x11;
+
+// No response from user.
+const STK_RESULT_NO_RESPONSE_FROM_USER = 0x12;
+
+// Help information required by the user.
+const STK_RESULT_HELP_INFO_REQUIRED = 0x13;
+
+// USSD or SS transaction terminated by the user.
+const STK_RESULT_USSD_SS_SESSION_TERM_BY_USER = 0x14;
+
+// Results '2X' indicate to the UICC that it may be worth re-trying the
+// command at a later opportunity.
+
+// Terminal currently unable to process command.
+const STK_RESULT_TERMINAL_CRNTLY_UNABLE_TO_PROCESS = 0x20;
+
+// Network currently unable to process command.
+const STK_RESULT_NETWORK_CRNTLY_UNABLE_TO_PROCESS = 0x21;
+
+// User did not accept the proactive command.
+const STK_RESULT_USER_NOT_ACCEPT = 0x22;
+
+// User cleared down call before connection or network release.
+const STK_RESULT_USER_CLEAR_DOWN_CALL = 0x23;
+
+// Action in contradiction with the current timer state.
+const STK_RESULT_CONTRADICTION_WITH_TIMER = 0x24;
+
+// Interaction with call control by NAA; temporary problem.
+const STK_RESULT_NAA_CALL_CONTROL_TEMPORARY = 0x25;
+
+// Launch browser generic error code.
+const STK_RESULT_LAUNCH_BROWSER_ERROR = 0x26;
+
+// MMS temporary problem.
+const STK_RESULT_MMS_TEMPORARY = 0x27;
+
+// Results '3X' indicate that it is not worth the UICC re-trying with an
+// identical command; as it will only get the same response. However, the
+// decision to retry lies with the application.
+
+// Command beyond terminal's capabilities.
+const STK_RESULT_BEYOND_TERMINAL_CAPABILITY = 0x30;
+
+// Command type not understood by terminal.
+const STK_RESULT_CMD_TYPE_NOT_UNDERSTOOD = 0x31;
+
+// Command data not understood by terminal.
+const STK_RESULT_CMD_DATA_NOT_UNDERSTOOD = 0x32;
+
+// Command number not known by terminal.
+const STK_RESULT_CMD_NUM_NOT_KNOWN = 0x33;
+
+// SS Return Error.
+const STK_RESULT_SS_RETURN_ERROR = 0x34;
+
+// SMS RP-ERROR.
+const STK_RESULT_SMS_RP_ERROR = 0x35;
+
+// Error, required values are missing.
+const STK_RESULT_REQUIRED_VALUES_MISSING = 0x36;
+
+// USSD Return Error.
+const STK_RESULT_USSD_RETURN_ERROR = 0x37;
+
+// MultipleCard commands error.
+const STK_RESULT_MULTI_CARDS_CMD_ERROR = 0x38;
+
+// Interaction with call control by USIM or MO short message control by
+// USIM; permanent problem.
+const STK_RESULT_USIM_CALL_CONTROL_PERMANENT = 0x39;
+
+// Bearer Independent Protocol error.
+const STK_RESULT_BIP_ERROR = 0x3a;
+
+// Access Technology unable to process command.
+const STK_RESULT_ACCESS_TECH_UNABLE_TO_PROCESS = 0x3b;
+
+// Frames error.
+const STK_RESULT_FRAMES_ERROR = 0x3c;
+
+// MMS Error.
+const STK_RESULT_MMS_ERROR = 0x3d;
+
+// STK presentation types, TS 11.14, clause 12.6, Command Qualifier: Select Item
+const STK_PRESENTATION_TYPE_NOT_SPECIFIED = 0x00; // Bit 1 is 0.
+const STK_PRESENTATION_TYPE_DATA_VALUES = 0x01; // Bit 1 is 1, bit 2 is 0.
+const STK_PRESENTATION_TYPE_NAVIGATION_OPTIONS = 0x03; // Bit 1 is 1, bit 2 is 1.
+
+// STK Coding Scheme.
+const STK_TEXT_CODING_GSM_7BIT_PACKED = 0x00;
+const STK_TEXT_CODING_GSM_8BIT = 0x04;
+const STK_TEXT_CODING_UCS2 = 0x08;
+
+/**
  * GSM PDU constants
  */
 
@@ -1416,9 +1604,8 @@ const DATACALL_FAIL_ERROR_UNSPECIFIED = 0xffff;
 const GECKO_NETWORK_STATE_UNKNOWN = -1;
 const GECKO_NETWORK_STATE_CONNECTING = 0;
 const GECKO_NETWORK_STATE_CONNECTED = 1;
-const GECKO_NETWORK_STATE_SUSPENDED = 2;
-const GECKO_NETWORK_STATE_DISCONNECTING = 3;
-const GECKO_NETWORK_STATE_DISCONNECTED = 4;
+const GECKO_NETWORK_STATE_DISCONNECTING = 2;
+const GECKO_NETWORK_STATE_DISCONNECTED = 3;
 
 // Used for QUERY_AVAILABLE_NETWORKS status of "unknown"
 const GECKO_QAN_STATE_UNKNOWN = null;

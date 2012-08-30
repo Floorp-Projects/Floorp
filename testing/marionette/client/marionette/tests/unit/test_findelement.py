@@ -116,6 +116,9 @@ class TestElements(MarionetteTestCase):
     def test_not_found(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
+        self.marionette.set_search_timeout(1000)
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, "id", "I'm not on the page")
+        self.marionette.set_search_timeout(0)
         self.assertRaises(NoSuchElementException, self.marionette.find_element, "id", "I'm not on the page")
 
     def test_timeout(self):
@@ -131,9 +134,12 @@ class TestElementsChrome(MarionetteTestCase):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
         self.win = self.marionette.current_window_handle
-        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', '_blank', 'chrome,centerscreen');")
+        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
+        self.marionette.switch_to_window('foo')
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
 
     def tearDown(self):
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
         self.marionette.execute_script("window.close();")
         self.marionette.switch_to_window(self.win)
         MarionetteTestCase.tearDown(self)
@@ -177,8 +183,10 @@ class TestElementsChrome(MarionetteTestCase):
         self.assertEqual(el, found_el)
 
     def test_not_found(self):
+        self.marionette.set_search_timeout(1000)
         self.assertRaises(NoSuchElementException, self.marionette.find_element, "id", "I'm not on the page")
-
+        self.marionette.set_search_timeout(0)
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, "id", "I'm not on the page")
 
     def test_timeout(self):
         self.assertRaises(NoSuchElementException, self.marionette.find_element, "id", "myid")

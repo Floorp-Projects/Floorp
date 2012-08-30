@@ -29,6 +29,7 @@ MOCHITEST_FILES = \
   test_autoIncrement_indexes.html \
   test_autoIncrement.html \
   test_bfcache.html \
+  test_blob_archive.html \
   test_blob_simple.html \
   test_clear.html \
   test_complex_keyPaths.html \
@@ -101,6 +102,10 @@ MOCHITEST_FILES = \
   test_unique_index_update.html \
   third_party_iframe1.html \
   third_party_iframe2.html \
+  test_app_isolation_inproc.html \
+  test_app_isolation_oop.html \
+  file_app_isolation.html \
+  file_app_isolation.js \
   $(NULL)
 
 #   test_writer_starvation.html  disabled for infinite loops, bug 595368

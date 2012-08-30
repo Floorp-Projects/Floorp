@@ -36,7 +36,9 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "Connection.h"
+#ifdef MOZ_B2G_RIL
 #include "MobileConnection.h"
+#endif
 #include "nsIIdleObserver.h"
 #include "nsIPermissionManager.h"
 #include "nsNetUtil.h"
@@ -116,6 +118,9 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorTelephony)
 #endif
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorNetwork)
+#ifdef MOZ_B2G_RIL
+  NS_INTERFACE_MAP_ENTRY(nsIMozNavigatorMobileConnection)
+#endif
 #ifdef MOZ_B2G_BT
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorBluetooth)
 #endif
@@ -178,10 +183,12 @@ Navigator::Invalidate()
     mConnection = nullptr;
   }
 
+#ifdef MOZ_B2G_RIL
   if (mMobileConnection) {
     mMobileConnection->Shutdown();
     mMobileConnection = nullptr;
   }
+#endif
 
 #ifdef MOZ_B2G_BT
   if (mBluetooth) {
@@ -1185,6 +1192,10 @@ Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
   return NS_OK;
 }
 
+#ifdef MOZ_B2G_RIL
+//*****************************************************************************
+//    Navigator::nsINavigatorMobileConnection
+//*****************************************************************************
 NS_IMETHODIMP
 Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
 {
@@ -1215,6 +1226,7 @@ Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
   NS_ADDREF(*aMobileConnection = mMobileConnection);
   return NS_OK;
 }
+#endif // MOZ_B2G_RIL
 
 #ifdef MOZ_B2G_BT
 //*****************************************************************************

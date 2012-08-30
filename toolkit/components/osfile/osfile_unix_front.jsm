@@ -142,7 +142,7 @@
       */
      File.prototype.setPosition = function setPosition(pos, whence) {
        if (whence === undefined) {
-         whence = Const.SEEK_START;
+         whence = Const.SEEK_SET;
        }
        return throw_on_negative("setPosition",
          UnixFile.lseek(this.fd, pos, whence)
