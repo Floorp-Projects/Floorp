@@ -770,6 +770,7 @@ stubs::Interrupt(VMFrame &f, jsbytecode *pc)
         THROW();
 }
 
+#ifdef JS_ION
 void JS_FASTCALL
 stubs::TriggerIonCompile(VMFrame &f)
 {
@@ -807,6 +808,7 @@ stubs::TriggerIonCompile(VMFrame &f)
 
     f.jit()->destroyChunk(f.cx->runtime->defaultFreeOp(), f.chunkIndex(), /* resetUses = */ false);
 }
+#endif
 
 void JS_FASTCALL
 stubs::RecompileForInline(VMFrame &f)

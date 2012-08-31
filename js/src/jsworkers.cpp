@@ -6,11 +6,17 @@
 
 #include "jsworkers.h"
 
-#include "ion/IonBuilder.h"
+#if JS_ION
+# include "ion/IonBuilder.h"
+#endif
+
+#if defined(JS_ION) && defined(JS_THREADSAFE)
+# define ENABLE_WORKERS
+#endif
 
 using namespace js;
 
-#ifdef JS_THREADSAFE
+#ifdef ENABLE_WORKERS
 
 bool
 js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
@@ -289,7 +295,7 @@ WorkerThread::threadLoop()
     }
 }
 
-#else /* JS_THREADSAFE */
+#else /* ENABLE_WORKERS */
 
 bool
 js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
@@ -303,4 +309,4 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 {
 }
 
-#endif /* JS_THREADSAFE */
+#endif /* ENABLE_WORKERS */
