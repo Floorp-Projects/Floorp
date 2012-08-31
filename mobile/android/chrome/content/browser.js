@@ -60,8 +60,6 @@ const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
-const kTapHighlightDelay = 50; // milliseconds
-
 // The element tag names that are considered to receive input. Mouse-down
 // events directed to one of these are allowed to go through.
 const kElementsReceivingInput = {
@@ -3634,29 +3632,18 @@ var BrowserEventHandler = {
 
   _highlightElement: null,
 
-  _highlightTimeout: null,
-
   _doTapHighlight: function _doTapHighlight(aElement) {
-    this._cancelTapHighlight();
+    DOMUtils.setContentState(aElement, kStateActive);
     this._highlightElement = aElement;
-    // delay actually highlighting the element in case we are panning
-    this._highlightTimeout = setTimeout(function() {
-      DOMUtils.setContentState(aElement, kStateActive);
-    }, kTapHighlightDelay);
   },
 
   _cancelTapHighlight: function _cancelTapHighlight() {
-    if (this._highlightTimeout) {
-      clearTimeout(this._highlightTimeout);
-      this._highlightTimeout = null;
-    }
-
     if (!this._highlightElement)
       return;
 
     // If the active element is in a sub-frame, we need to make that frame's document
     // active to remove the element's active state.
-    if (this._highlightElement.ownerDocument && this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
+    if (this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
       DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kStateActive);
 
     DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);
