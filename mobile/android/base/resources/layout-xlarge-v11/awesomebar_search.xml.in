@@ -1,18 +1,22 @@
+#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@"
                 style="@style/AwesomeBar"
                 android:background="@drawable/address_bar_bg">
 
-    <ImageView android:id="@+id/dummy_tab"
-               style="@style/AddressBar.ImageButton"
-               android:layout_width="84dip"
-               android:layout_alignParentLeft="true"
-               android:background="@drawable/tabs_crop_normal"
-               android:gravity="center_vertical"/>
+    <org.mozilla.gecko.TabsButton android:id="@+id/dummy_tab"
+                                  style="@style/AddressBar.ImageButton"
+                                  android:layout_width="84dip"
+                                  android:layout_alignParentLeft="true"
+                                  gecko:curveTowards="left"
+                                  gecko:cropped="true"
+                                  android:background="@drawable/tabs_button"
+                                  android:gravity="center_vertical"/>
 
     <view class="org.mozilla.gecko.CustomEditText"
           android:id="@+id/awesomebar_text"
