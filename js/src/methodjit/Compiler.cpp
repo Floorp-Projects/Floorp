@@ -435,7 +435,7 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32_t argc)
         return Compile_Error;
     }
 
-    newa->jumpMap = (Label *)js_malloc(sizeof(Label) * script->length);
+    newa->jumpMap = js_pod_malloc<Label>(script->length);
     if (!newa->jumpMap) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
@@ -525,7 +525,7 @@ mjit::Compiler::performCompilation()
 
         if (outerScript->hasScriptCounts || Probes::wantNativeAddressInfo(cx)) {
             size_t length = ssa.frameLength(ssa.numFrames() - 1);
-            pcLengths = (PCLengthEntry *) js_calloc(sizeof(pcLengths[0]) * length);
+            pcLengths = js_pod_calloc<PCLengthEntry>(length);
             if (!pcLengths)
                 return Compile_Error;
         }
@@ -611,7 +611,7 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
      * only if a variable has the same value on all incoming edges.
      */
 
-    a->varTypes = (VarType *)js_calloc(TotalSlots(script) * sizeof(VarType));
+    a->varTypes = js_pod_calloc<VarType>(TotalSlots(script));
     if (!a->varTypes) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;

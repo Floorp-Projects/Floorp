@@ -32,7 +32,7 @@ ImmutableSync::init(JSContext *cx, const FrameState &frame, uint32_t nentries)
     this->cx = cx;
     this->frame = &frame;
 
-    entries = (SyncEntry *)js_calloc(sizeof(SyncEntry) * nentries);
+    entries = js_pod_calloc<SyncEntry>(nentries);
     return !!entries;
 }
 

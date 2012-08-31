@@ -22,6 +22,7 @@
 #include "jstypes.h"
 
 #ifdef __cplusplus
+# include "js/TemplateLib.h"
 # include "mozilla/Scoped.h"
 
 /* The public JS engine namespace. */
@@ -506,6 +507,38 @@ js_delete(T *p)
         p->~T();
         js_free(p);
     }
+}
+
+template <class T>
+static JS_ALWAYS_INLINE T *
+js_pod_malloc()
+{
+    return (T *)js_malloc(sizeof(T));
+}
+
+template <class T>
+static JS_ALWAYS_INLINE T *
+js_pod_calloc()
+{
+    return (T *)js_calloc(sizeof(T));
+}
+
+template <class T>
+static JS_ALWAYS_INLINE T *
+js_pod_malloc(size_t numElems)
+{
+    if (numElems & js::tl::MulOverflowMask<sizeof(T)>::result)
+        return NULL;
+    return (T *)js_malloc(numElems * sizeof(T));
+}
+
+template <class T>
+static JS_ALWAYS_INLINE T *
+js_pod_calloc(size_t numElems)
+{
+    if (numElems & js::tl::MulOverflowMask<sizeof(T)>::result)
+        return NULL;
+    return (T *)js_calloc(numElems * sizeof(T));
 }
 
 namespace js {

@@ -498,7 +498,7 @@ js::XDRAtom(XDRState<mode> *xdr, JSAtom **atomp)
          * most allocations here will be bigger than tempLifoAlloc's default
          * chunk size.
          */
-        chars = static_cast<jschar *>(cx->runtime->malloc_(nchars * sizeof(jschar)));
+        chars = cx->runtime->pod_malloc<jschar>(nchars);
         if (!chars)
             return false;
     }

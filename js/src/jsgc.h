@@ -762,7 +762,7 @@ struct MarkStack {
         if (ballastcap == 0)
             return true;
 
-        ballast = (T *)js_malloc(sizeof(T) * ballastcap);
+        ballast = js_pod_malloc<T>(ballastcap);
         if (!ballast)
             return false;
         ballastLimit = ballast + ballastcap;
@@ -843,7 +843,7 @@ struct MarkStack {
 
         T *newStack;
         if (stack == ballast) {
-            newStack = (T *)js_malloc(sizeof(T) * newcap);
+            newStack = js_pod_malloc<T>(newcap);
             if (!newStack)
                 return false;
             for (T *src = stack, *dst = newStack; src < tos; )

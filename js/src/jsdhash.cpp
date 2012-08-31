@@ -177,9 +177,7 @@ JS_PUBLIC_API(JSDHashTable *)
 JS_NewDHashTable(const JSDHashTableOps *ops, void *data, uint32_t entrySize,
                  uint32_t capacity)
 {
-    JSDHashTable *table;
-
-    table = (JSDHashTable *) js_malloc(sizeof *table);
+    JSDHashTable *table = js_pod_malloc<JSDHashTable>();
     if (!table)
         return NULL;
     if (!JS_DHashTableInit(table, ops, data, entrySize, capacity)) {

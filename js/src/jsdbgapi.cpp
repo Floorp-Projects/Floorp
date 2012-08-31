@@ -353,14 +353,12 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
               unsigned startLine, unsigned maxLines,
               unsigned* count, unsigned** retLines, jsbytecode*** retPCs)
 {
-    unsigned* lines;
-    jsbytecode** pcs;
     size_t len = (script->length > maxLines ? maxLines : script->length);
-    lines = (unsigned*) cx->malloc_(len * sizeof(unsigned));
+    unsigned *lines = cx->pod_malloc<unsigned>(len);
     if (!lines)
         return JS_FALSE;
 
-    pcs = (jsbytecode**) cx->malloc_(len * sizeof(jsbytecode*));
+    jsbytecode **pcs = cx->pod_malloc<jsbytecode*>(len);
     if (!pcs) {
         js_free(lines);
         return JS_FALSE;
@@ -815,7 +813,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
         if (!Proxy::enumerate(cx, obj, props))
             return false;
 
-        pd = (JSPropertyDesc *)cx->calloc_(props.length() * sizeof(JSPropertyDesc));
+        pd = cx->pod_calloc<JSPropertyDesc>(props.length());
         if (!pd)
             return false;
 
@@ -853,7 +851,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
         return true;
     }
 
-    pd = (JSPropertyDesc *)cx->malloc_(obj->propertyCount() * sizeof(JSPropertyDesc));
+    pd = cx->pod_malloc<JSPropertyDesc>(obj->propertyCount());
     if (!pd)
         return false;
     for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {

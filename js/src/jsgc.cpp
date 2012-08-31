@@ -5132,7 +5132,7 @@ StartVerifyPreBarriers(JSRuntime *rt)
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         r.front()->bitmap.clear();
 
-    VerifyPreTracer *trc = new (js_malloc(sizeof(VerifyPreTracer))) VerifyPreTracer;
+    VerifyPreTracer *trc = js_new<VerifyPreTracer>();
 
     rt->gcNumber++;
     trc->number = rt->gcNumber;
@@ -5327,7 +5327,7 @@ StartVerifyPostBarriers(JSRuntime *rt)
     {
         return;
     }
-    VerifyPostTracer *trc = new (js_malloc(sizeof(VerifyPostTracer))) VerifyPostTracer;
+    VerifyPostTracer *trc = js_new<VerifyPostTracer>();
     rt->gcVerifyPostData = trc;
     rt->gcNumber++;
     trc->number = rt->gcNumber;

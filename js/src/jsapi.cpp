@@ -413,7 +413,7 @@ JS_AddArgumentFormatter(JSContext *cx, const char *format, JSArgumentFormatter f
             goto out;
         mpp = &map->next;
     }
-    map = (JSArgumentFormatMap *) cx->malloc_(sizeof *map);
+    map = cx->pod_malloc<JSArgumentFormatMap>();
     if (!map)
         return JS_FALSE;
     map->format = format;
@@ -6962,7 +6962,7 @@ JS_SaveExceptionState(JSContext *cx)
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    state = (JSExceptionState *) cx->malloc_(sizeof(JSExceptionState));
+    state = cx->pod_malloc<JSExceptionState>();
     if (state) {
         state->throwing = JS_GetPendingException(cx, &state->exception);
         if (state->throwing && JSVAL_IS_GCTHING(state->exception))

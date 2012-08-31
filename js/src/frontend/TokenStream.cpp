@@ -1251,7 +1251,7 @@ TokenStream::getAtSourceMappingURL()
 
         if (sourceMap)
             js_free(sourceMap);
-        sourceMap = static_cast<jschar *>(cx->malloc_(sizeof(jschar) * (sourceMapLength + 1)));
+        sourceMap = cx->pod_malloc<jschar>(sourceMapLength + 1);
         if (!sourceMap)
             return false;
 
