@@ -5,7 +5,13 @@
 
 <level-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:maxLevel="1" android:drawable="@drawable/tabs_crop_button_contracted"/>
+    <item android:maxLevel="1">
+        <selector>
+            <item android:state_pressed="true" android:drawable="@drawable/highlight"/>
+            <item android:drawable="@drawable/tabs_tray_bg_repeat"/>
+        </selector>
+    </item>
+
     <item android:maxLevel="2" android:drawable="@android:color/transparent"/>
 
 </level-list>

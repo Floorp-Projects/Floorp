@@ -6,8 +6,8 @@ package org.mozilla.gecko;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Path;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.PorterDuff.Mode;
 import android.os.Build;
