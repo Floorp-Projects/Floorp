@@ -2686,6 +2686,14 @@ Tab.prototype = {
             this.browser.removeEventListener("pagehide", listener, true);
           }.bind(this), true);
         }
+
+        if (/^about:reader/.test(target.documentURI)) {
+          let aboutReader = new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
+          this.browser.addEventListener("pagehide", function listener() {
+            aboutReader.uninit();
+            this.browser.removeEventListener("pagehide", listener, true);
+          }.bind(this), true);
+        }
         break;
       }
 
@@ -2934,14 +2942,6 @@ Tab.prototype = {
             tabID: this.id
           }
         });
-
-        if (/^about:reader/.test(aEvent.originalTarget.documentURI)) {
-          let aboutReader = new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
-          this.browser.addEventListener("pagehide", function listener() {
-            aboutReader.uninit();
-            this.browser.removeEventListener("pagehide", listener, true);
-          }.bind(this), true);
-        }
 
         // Once document is fully loaded, parse it
         Reader.parseDocumentFromTab(this.id, function (article) {
