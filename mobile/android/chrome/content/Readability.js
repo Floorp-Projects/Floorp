@@ -589,10 +589,13 @@ Readability.prototype = {
       // If we still have no top candidate, just use the body as a last resort.
       // We also have to copy the body node so it is something we can modify.
       if (topCandidate === null || topCandidate.tagName === "BODY") {
+        // Move all of the page's children into topCandidate
         topCandidate = doc.createElement("DIV");
-        topCandidate.innerHTML = page.innerHTML;
+        let children = page.childNodes;
+        for (let i = 0; i < children.length; ++i) {
+          topCandidate.appendChild(children[i]);
+        }
 
-        page.innerHTML = "";
         page.appendChild(topCandidate);
 
         this._initializeNode(topCandidate);
