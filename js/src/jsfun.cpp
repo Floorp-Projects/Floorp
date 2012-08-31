@@ -1514,7 +1514,6 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
                              kind);
     } else {
         JS_ASSERT(attrs & JSFUN_INTERPRETED);
-        JS_ASSERT(!cx->runtime->isSelfHostedGlobal(cx->global()));
         fun = cx->runtime->getSelfHostedFunction(cx, selfHostedName);
         fun->initAtom(JSID_TO_ATOM(id));
     }
