@@ -287,24 +287,10 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXHREventTarget)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXHREventTarget,
                                                   nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadStartListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnProgressListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadendListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnTimeoutListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
                                                 nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadStartListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnProgressListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadendListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnTimeoutListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXHREventTarget)
@@ -314,108 +300,18 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
 
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, loadstart)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, progress)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, abort)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, error)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, load)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, timeout)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, loadend)
+
 void
 nsXHREventTarget::DisconnectFromOwner()
 {
   nsDOMEventTargetHelper::DisconnectFromOwner();
-  NS_DISCONNECT_EVENT_HANDLER(Load)
-  NS_DISCONNECT_EVENT_HANDLER(Error)
-  NS_DISCONNECT_EVENT_HANDLER(Abort)
-  NS_DISCONNECT_EVENT_HANDLER(Load)
-  NS_DISCONNECT_EVENT_HANDLER(Progress)
-  NS_DISCONNECT_EVENT_HANDLER(Loadend)
-  NS_DISCONNECT_EVENT_HANDLER(Timeout)
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnload(nsIDOMEventListener** aOnLoad)
-{
-  return GetInnerEventListener(mOnLoadListener, aOnLoad);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnload(nsIDOMEventListener* aOnLoad)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(LOAD_STR),
-                                mOnLoadListener, aOnLoad);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnerror(nsIDOMEventListener** aOnerror)
-{
-  return GetInnerEventListener(mOnErrorListener, aOnerror);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnerror(nsIDOMEventListener* aOnerror)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(ERROR_STR),
-                                mOnErrorListener, aOnerror);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnabort(nsIDOMEventListener** aOnabort)
-{
-  return GetInnerEventListener(mOnAbortListener, aOnabort);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnabort(nsIDOMEventListener* aOnabort)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_STR),
-                                mOnAbortListener, aOnabort);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnloadstart(nsIDOMEventListener** aOnloadstart)
-{
-  return GetInnerEventListener(mOnLoadStartListener, aOnloadstart);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnloadstart(nsIDOMEventListener* aOnloadstart)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(LOADSTART_STR),
-                                mOnLoadStartListener, aOnloadstart);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnprogress(nsIDOMEventListener** aOnprogress)
-{
-  return GetInnerEventListener(mOnProgressListener, aOnprogress);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnprogress(nsIDOMEventListener* aOnprogress)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(PROGRESS_STR),
-                                mOnProgressListener, aOnprogress);
-}
-
-/* attribute nsIDOMEventListener ontimeout; */
-NS_IMETHODIMP
-nsXHREventTarget::GetOntimeout(nsIDOMEventListener * *aOntimeout)
-{
-  return GetInnerEventListener(mOnTimeoutListener, aOntimeout);
-}
-NS_IMETHODIMP
-nsXHREventTarget::SetOntimeout(nsIDOMEventListener *aOntimeout)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(TIMEOUT_STR),
-                                mOnTimeoutListener, aOntimeout);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnloadend(nsIDOMEventListener** aOnLoadend)
-{
-  return GetInnerEventListener(mOnLoadendListener, aOnLoadend);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnloadend(nsIDOMEventListener* aOnLoadend)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(LOADEND_STR),
-                                mOnLoadendListener, aOnLoadend);
 }
 
 /////////////////////////////////////////////
@@ -620,13 +516,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsXMLHttpRequest)
   if (isBlack || tmp->mWaitingForOnStopRequest) {
     if (tmp->mListenerManager) {
       tmp->mListenerManager->UnmarkGrayJSListeners();
-      NS_UNMARK_LISTENER_WRAPPER(Load)
-      NS_UNMARK_LISTENER_WRAPPER(Error)
-      NS_UNMARK_LISTENER_WRAPPER(Abort)
-      NS_UNMARK_LISTENER_WRAPPER(LoadStart)
-      NS_UNMARK_LISTENER_WRAPPER(Progress)
-      NS_UNMARK_LISTENER_WRAPPER(Loadend)
-      NS_UNMARK_LISTENER_WRAPPER(Readystatechange)
     }
     if (!isBlack && tmp->PreservingWrapper()) {
       xpc_UnmarkGrayObject(tmp->GetWrapperPreserveColor());
@@ -651,8 +540,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mResponseXML)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCORSPreflightChannel)
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnReadystatechangeListener)
-
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mXMLParserStreamListener)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannelEventSink)
@@ -671,8 +558,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mReadRequest)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mResponseXML)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCORSPreflightChannel)
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnReadystatechangeListener)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mXMLParserStreamListener)
 
@@ -708,29 +593,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
 NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
 
+NS_IMPL_EVENT_HANDLER(nsXMLHttpRequest, readystatechange)
+
 void
 nsXMLHttpRequest::DisconnectFromOwner()
 {
   nsXHREventTarget::DisconnectFromOwner();
-  NS_DISCONNECT_EVENT_HANDLER(Readystatechange)
   Abort();
-}
-
-NS_IMETHODIMP
-nsXMLHttpRequest::GetOnreadystatechange(nsIDOMEventListener * *aOnreadystatechange)
-{
-  return
-    nsXHREventTarget::GetInnerEventListener(mOnReadystatechangeListener,
-                                            aOnreadystatechange);
-}
-
-NS_IMETHODIMP
-nsXMLHttpRequest::SetOnreadystatechange(nsIDOMEventListener * aOnreadystatechange)
-{
-  return
-    nsXHREventTarget::RemoveAddEventListener(NS_LITERAL_STRING(READYSTATE_STR),
-                                             mOnReadystatechangeListener,
-                                             aOnreadystatechange);
 }
 
 /* readonly attribute nsIChannel channel; */

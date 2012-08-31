@@ -38,8 +38,6 @@ private:
   nsCOMPtr<nsIRILContentHelper> mRIL;
   nsCOMPtr<nsIRILVoicemailCallback> mRILVoicemailCallback;
 
-  NS_DECL_EVENT_HANDLER(statuschanged)
-
   class RILVoicemailCallback : public nsIRILVoicemailCallback
   {
     Voicemail* mVoicemail;

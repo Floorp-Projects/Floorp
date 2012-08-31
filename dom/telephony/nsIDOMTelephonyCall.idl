@@ -9,7 +9,7 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, builtinclass, uuid(d902afb1-2e1d-412e-bfa3-cb6a9453a4db)]
+[scriptable, builtinclass, uuid(0662d161-6df7-41fc-a044-0ab0c668680c)]
 interface nsIDOMTelephonyCall : nsIDOMEventTarget
 {
   readonly attribute DOMString number;
@@ -23,18 +23,18 @@ interface nsIDOMTelephonyCall : nsIDOMEventTarget
   void hold();
   void resume();
 
-  attribute nsIDOMEventListener onstatechange;
+  [implicit_jscontext] attribute jsval onstatechange;
 
-  attribute nsIDOMEventListener ondialing;
-  attribute nsIDOMEventListener onalerting;
-  attribute nsIDOMEventListener onbusy;
-  attribute nsIDOMEventListener onconnecting;
-  attribute nsIDOMEventListener onconnected;
-  attribute nsIDOMEventListener ondisconnecting;
-  attribute nsIDOMEventListener ondisconnected;
-  attribute nsIDOMEventListener onholding;
-  attribute nsIDOMEventListener onheld;
-  attribute nsIDOMEventListener onresuming;
+  [implicit_jscontext] attribute jsval ondialing;
+  [implicit_jscontext] attribute jsval onalerting;
+  [implicit_jscontext] attribute jsval onbusy;
+  [implicit_jscontext] attribute jsval onconnecting;
+  [implicit_jscontext] attribute jsval onconnected;
+  [implicit_jscontext] attribute jsval ondisconnecting;
+  [implicit_jscontext] attribute jsval ondisconnected;
+  [implicit_jscontext] attribute jsval onholding;
+  [implicit_jscontext] attribute jsval onheld;
+  [implicit_jscontext] attribute jsval onresuming;
 
-  attribute nsIDOMEventListener onerror;
+  [implicit_jscontext] attribute jsval onerror;
 };

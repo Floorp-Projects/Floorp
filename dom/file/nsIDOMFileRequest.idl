@@ -9,10 +9,10 @@
 interface nsIDOMEventListener;
 interface nsIDOMLockedFile;
 
-[scriptable, builtinclass, uuid(fe06b66e-fede-4d44-ab3a-403f60d6b593)]
+[scriptable, builtinclass, uuid(6733d649-0acb-487d-8a7d-f102ac4419e9)]
 interface nsIDOMFileRequest : nsIDOMDOMRequest
 {
   readonly attribute nsIDOMLockedFile lockedFile;
 
-  attribute nsIDOMEventListener onprogress;
+  [implicit_jscontext] attribute jsval onprogress;
 };
