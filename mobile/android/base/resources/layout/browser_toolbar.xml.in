@@ -1,9 +1,11 @@
+#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@"
               android:id="@+id/browser_toolbar"
               style="@style/BrowserToolbar">
 
@@ -25,7 +27,7 @@
 
         <org.mozilla.gecko.BrowserToolbarBackground android:layout_width="fill_parent"
                                                     android:layout_height="fill_parent"
-                                                    android:layout_marginRight="14dip"
+                                                    android:layout_marginRight="17dip"
                                                     android:layout_alignParentTop="true"
                                                     android:layout_alignParentRight="true"
                                                     android:background="@drawable/address_bar_bg"/>
@@ -33,29 +35,31 @@
         <ImageButton android:id="@+id/menu"
                      style="@style/AddressBar.ImageButton.Unused"/>
 
-        <ImageButton android:id="@+id/tabs"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="60dip"
-                     android:layout_alignParentRight="true"
-                     android:background="@drawable/tabs_crop_button"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/tabs_level"
-                     android:paddingLeft="30dip"
-                     android:paddingRight="10dip"/>
+        <org.mozilla.gecko.TabsButton android:id="@+id/tabs"
+                                      style="@style/AddressBar.ImageButton"
+                                      android:layout_width="72dip"
+                                      android:layout_alignParentRight="true"
+                                      gecko:curveTowards="right"
+                                      gecko:cropped="true"
+                                      android:background="@drawable/tabs_button"
+                                      android:gravity="center_vertical"
+                                      android:src="@drawable/tabs_level"
+                                      android:paddingLeft="38dip"
+                                      android:paddingRight="10dip"/>
 
         <TextSwitcher android:id="@+id/tabs_count"
                      style="@style/AddressBar.ImageButton"
-                     android:layout_width="39dip"
+                     android:layout_width="44.5dip"
                      android:layout_height="wrap_content"
-                     android:layout_marginTop="4.5dp"
+                     android:layout_marginTop="5dp"
                      android:layout_alignRight="@id/tabs"
                      android:gravity="center_horizontal"/>
 
         <FrameLayout style="@style/AddressBar.Button"
-                     android:layout_marginTop="3dp"
-                     android:layout_marginBottom="3dp"
+                     android:layout_marginTop="4dp"
+                     android:layout_marginBottom="4dp"
                      android:layout_marginLeft="4dp"
-                     android:layout_marginRight="45dp"
+                     android:layout_marginRight="52dp"
                      android:layout_alignParentLeft="true"
                      android:layout_alignParentBottom="true"
                      android:layout_centerVertical="true">
@@ -82,8 +86,6 @@
                              android:layout_width="@dimen/browser_toolbar_lock_width"
                              android:scaleType="fitCenter"
                              android:layout_marginLeft="-4dip"
-                             android:paddingLeft="1dp"
-                             android:paddingRight="1dp"
                              android:src="@drawable/site_security_level"
                              android:contentDescription="@string/site_security"
                              android:visibility="gone"/>
@@ -116,12 +118,12 @@
 
         </FrameLayout>
 
-         <ImageView android:id="@+id/shadow"
-                    android:layout_width="fill_parent"
-                    android:layout_height="2dp"
-                    android:layout_alignParentBottom="true"
-                    android:background="@drawable/address_bar_bg_shadow_repeat"
-                    android:visibility="gone"/>
+        <ImageView android:id="@+id/shadow"
+                   android:layout_width="fill_parent"
+                   android:layout_height="2dp"
+                   android:layout_alignParentBottom="true"
+                   android:background="@drawable/address_bar_bg_shadow_repeat"
+                   android:visibility="gone"/>
 
     </RelativeLayout>
 

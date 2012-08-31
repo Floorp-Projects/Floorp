@@ -8,5 +8,6 @@
     <dimen name="browser_toolbar_height">40dp</dimen>
     <dimen name="browser_toolbar_icon_width">46dp</dimen>
     <dimen name="tabs_counter_size">18sp</dimen>
+    <dimen name="tabs_button_full_width">80dp</dimen>
 
 </resources>

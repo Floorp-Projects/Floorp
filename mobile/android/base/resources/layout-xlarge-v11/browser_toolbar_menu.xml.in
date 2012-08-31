@@ -1,9 +1,11 @@
+#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@"
               android:id="@+id/browser_toolbar"
               style="@style/BrowserToolbar">
 
@@ -11,15 +13,17 @@
                     style="@style/AddressBar"
                     android:background="@drawable/address_bar_bg">
 
-        <ImageButton android:id="@+id/tabs"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="84dip"
-                     android:layout_alignParentLeft="true"
-                     android:background="@drawable/tabs_crop_button"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/tabs_level"
-                     android:paddingLeft="6dip"
-                     android:paddingRight="32dip"/>
+        <org.mozilla.gecko.TabsButton android:id="@+id/tabs"
+                                      style="@style/AddressBar.ImageButton"
+                                      android:layout_width="84dip"
+                                      android:layout_alignParentLeft="true"
+                                      gecko:curveTowards="left"
+                                      gecko:cropped="true"
+                                      android:background="@drawable/tabs_button"
+                                      android:gravity="center_vertical"
+                                      android:src="@drawable/tabs_level"
+                                      android:paddingLeft="6dip"
+                                      android:paddingRight="32dip"/>
 
         <TextSwitcher android:id="@+id/tabs_count"
                      style="@style/AddressBar.ImageButton"
