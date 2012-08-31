@@ -312,6 +312,12 @@ struct JSObject : public js::ObjectImpl
      */
     bool setSlotSpan(JSContext *cx, uint32_t span);
 
+    inline bool nativeContains(JSContext *cx, js::HandleId id);
+    inline bool nativeContains(JSContext *cx, js::HandleShape shape);
+
+    inline bool nativeContainsNoAllocation(jsid id);
+    inline bool nativeContainsNoAllocation(const js::Shape &shape);
+
     /* Upper bound on the number of elements in an object. */
     static const uint32_t NELEMENTS_LIMIT = JS_BIT(28);
 

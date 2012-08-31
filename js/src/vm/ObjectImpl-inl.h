@@ -65,42 +65,6 @@ js::ObjectImpl::nativeLookupNoAllocation(PropertyName *name)
 }
 
 inline bool
-js::ObjectImpl::nativeContains(JSContext *cx, Handle<jsid> id)
-{
-    return nativeLookup(cx, id) != NULL;
-}
-
-inline bool
-js::ObjectImpl::nativeContains(JSContext *cx, Handle<PropertyName*> name)
-{
-    return nativeLookup(cx, name) != NULL;
-}
-
-inline bool
-js::ObjectImpl::nativeContains(JSContext *cx, Handle<Shape*> shape)
-{
-    return nativeLookup(cx, shape->propid()) == shape;
-}
-
-inline bool
-js::ObjectImpl::nativeContainsNoAllocation(jsid id)
-{
-    return nativeLookupNoAllocation(id) != NULL;
-}
-
-inline bool
-js::ObjectImpl::nativeContainsNoAllocation(PropertyName *name)
-{
-    return nativeLookupNoAllocation(name) != NULL;
-}
-
-inline bool
-js::ObjectImpl::nativeContainsNoAllocation(Shape &shape)
-{
-    return nativeLookupNoAllocation(shape.propid()) == &shape;
-}
-
-inline bool
 js::ObjectImpl::isExtensible() const
 {
     return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
