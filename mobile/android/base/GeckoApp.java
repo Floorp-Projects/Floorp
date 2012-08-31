@@ -893,13 +893,6 @@ abstract public class GeckoApp
                 handlePageShow(tabId);
             } else if (event.equals("Gecko:Ready")) {
                 sIsGeckoReady = true;
-                final Menu menu = mMenu;
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        if (menu != null)
-                            menu.findItem(R.id.settings).setEnabled(true);
-                    }
-                });
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
                 connectGeckoLayerClient();

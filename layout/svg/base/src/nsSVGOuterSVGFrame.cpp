@@ -135,7 +135,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGOuterSVGFrame)
 
 nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
     : nsSVGOuterSVGFrameBase(aContext)
-    , mFullZoom(0)
+    , mFullZoom(aContext->PresContext()->GetFullZoom())
     , mViewportInitialized(false)
     , mIsRootContent(false)
 {

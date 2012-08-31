@@ -156,7 +156,19 @@ NetworkManager.prototype = {
         debug("Network " + network.name + " changed state to " + network.state);
         switch (network.state) {
           case Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED:
+            // Add host route on secondary APN
+            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+                network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+              this.addHostRoute(network);
+            }
+            this.setAndConfigureActive();
+            break;
           case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
+            // Remove host route on secondary APN
+            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+                network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+              this.removeHostRoute(network);
+            }
             this.setAndConfigureActive();
             break;
         }
@@ -185,6 +197,11 @@ NetworkManager.prototype = {
                                  Cr.NS_ERROR_INVALID_ARG);
     }
     this.networkInterfaces[network.name] = network;
+    // Add host route on secondary APN
+    if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+        network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+      this.addHostRoute(network);
+    }
     this.setAndConfigureActive();
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_REGISTERED, null);
     debug("Network '" + network.name + "' registered.");
@@ -200,6 +217,11 @@ NetworkManager.prototype = {
                                  Cr.NS_ERROR_INVALID_ARG);
     }
     delete this.networkInterfaces[network.name];
+    // Remove host route on secondary APN
+    if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+        network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+      this.removeHostRoute(network);
+    }
     this.setAndConfigureActive();
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_UNREGISTERED, null);
     debug("Network '" + network.name + "' unregistered.");
@@ -263,6 +285,12 @@ NetworkManager.prototype = {
       // The override was just set, so reconfigure the network.
       if (this.active != this._overriddenActive) {
         this.active = this._overriddenActive;
+        // Don't set default route and DNS on secondary APN
+        if (oldActive &&
+            (oldActive.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+            oldActive.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL)) {
+          return;
+        }
         this.setDefaultRouteAndDNS(oldActive);
       }
       return;
@@ -289,6 +317,12 @@ NetworkManager.prototype = {
       }
     }
     if (this.active) {
+      // Don't set default route and DNS on secondary APN
+      if (oldActive &&
+          (oldActive.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+          oldActive.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL)) {
+        return;
+      }
       this.setDefaultRouteAndDNS(oldActive);
     }
     Services.io.offline = !this.active;
@@ -303,6 +337,34 @@ NetworkManager.prototype = {
     };
     this.worker.postMessage(options);
     this.setNetworkProxy();
+  },
+
+  addHostRoute: function addHostRoute(network) {
+    debug("Going to add host route on " + network.name);
+    let options = {
+      cmd: "addHostRoute",
+      ifname: network.name,
+      dns1: network.dns1,
+      dns2: network.dns2,
+      gateway: network.gateway,
+      httpproxy: network.httpProxyHost,
+      mmsproxy: Services.prefs.getCharPref("ril.data.mmsproxy")
+    };
+    this.worker.postMessage(options);
+  },
+
+  removeHostRoute: function removeHostRoute(network) {
+    debug("Going to remove host route on " + network.name);
+    let options = {
+      cmd: "removeHostRoute",
+      ifname: network.name,
+      dns1: network.dns1,
+      dns2: network.dns2,
+      gateway: network.gateway,
+      httpproxy: network.httpProxyHost,
+      mmsproxy: Services.prefs.getCharPref("ril.data.mmsproxy")
+    };
+    this.worker.postMessage(options);
   },
 
   setNetworkProxy: function setNetworkProxy() {

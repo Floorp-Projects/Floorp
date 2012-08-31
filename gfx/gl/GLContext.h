@@ -770,6 +770,12 @@ public:
      */
     void ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter);
 
+    /**
+     * Applies aFilter to the texture currently bound to aTarget.
+     */
+    void ApplyFilterToBoundTexture(GLuint aTarget,
+                                   gfxPattern::GraphicsFilter aFilter);
+
     virtual bool BindExternalBuffer(GLuint texture, void* buffer) { return false; }
     virtual bool UnbindExternalBuffer(GLuint texture) { return false; }
 

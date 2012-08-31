@@ -231,11 +231,11 @@ TCPSocket.prototype = {
         self._multiplexStream.removeStream(0);
 
         if (status) {
-          this._readyState = kCLOSED;
+          self._readyState = kCLOSED;
           let err = new Error("Connection closed while writing: " + status);
           err.status = status;
-          this.callListener("onerror", err);
-          this.callListener("onclose");
+          self.callListener("onerror", err);
+          self.callListener("onclose");
           return;
         }
 

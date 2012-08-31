@@ -1284,7 +1284,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
     nsCOMPtr<nsIFile> theFile;
     rv = fileUrl->GetFile(getter_AddRefs(theFile));
     if (NS_SUCCEEDED(rv)) {
-      int64_t fileLastMod;
+      PRTime fileLastMod;
       rv = theFile->GetLastModifiedTime(&fileLastMod);
       if (NS_SUCCEEDED(rv)) {
         // nsIFile uses millisec, NSPR usec

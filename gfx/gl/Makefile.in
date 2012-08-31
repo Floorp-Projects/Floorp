@@ -86,6 +86,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 GL_PROVIDER = EGL
+LOCAL_INCLUDES = -I$(topsrcdir)/widget/gonk
 endif
 
 ifdef MOZ_GL_PROVIDER
