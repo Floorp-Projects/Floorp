@@ -647,28 +647,28 @@ Readability.prototype = {
         if (append) {
           this.log("Appending node: " + siblingNode);
 
-          let nodeToAppend = null;
+          // siblingNodes is a reference to the childNodes array, and
+          // siblingNode is removed from the array when we call appendChild()
+          // below. As a result, we must revisit this index since the nodes
+          // have been shifted.
+          s -= 1;
+          sl -= 1;
+
           if (siblingNode.nodeName !== "DIV" && siblingNode.nodeName !== "P") {
             // We have a node that isn't a common block level element, like a form or td tag.
             // Turn it into a div so it doesn't get filtered out later by accident. */
             this.log("Altering siblingNode of " + siblingNode.nodeName + ' to div.');
 
-            nodeToAppend = doc.createElement("DIV");
-            nodeToAppend.id = siblingNode.id;
-            nodeToAppend.innerHTML = siblingNode.innerHTML;
-          } else {
-            nodeToAppend = siblingNode;
-            s -= 1;
-            sl -= 1;
+            this._setNodeTag(siblingNode, "DIV");
           }
 
           // To ensure a node does not interfere with readability styles,
           // remove its classnames.
-          nodeToAppend.className = "";
+          siblingNode.className = "";
 
           // Append sibling and subtract from our list because it removes
           // the node when you append to another node.
-          articleContent.appendChild(nodeToAppend);
+          articleContent.appendChild(siblingNode);
         }
       }
 
