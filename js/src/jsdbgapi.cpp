@@ -362,7 +362,7 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
 
     pcs = (jsbytecode**) cx->malloc_(len * sizeof(jsbytecode*));
     if (!pcs) {
-        cx->free_(lines);
+        js_free(lines);
         return JS_FALSE;
     }
 
@@ -391,12 +391,12 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
     if (retLines)
         *retLines = lines;
     else
-        cx->free_(lines);
+        js_free(lines);
 
     if (retPCs)
         *retPCs = pcs;
     else
-        cx->free_(pcs);
+        js_free(pcs);
 
     return JS_TRUE;
 }
@@ -751,7 +751,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
     length = (unsigned) len;
     ok = JS_EvaluateUCInStackFrame(cx, fp, chars, length, filename, lineno,
                                    rval);
-    cx->free_(chars);
+    js_free(chars);
 
     return ok;
 }
@@ -896,7 +896,7 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
         if (pd[i].flags & JSPD_ALIAS)
             js_RemoveRoot(cx->runtime, &pd[i].alias);
     }
-    cx->free_(pd);
+    js_free(pd);
     pda->array = NULL;
     pda->length = 0;
 }
@@ -1227,7 +1227,7 @@ struct RequiredStringArg {
     }
     ~RequiredStringArg() {
         if (mBytes)
-            mCx->free_(mBytes);
+            js_free(mBytes);
     }
 };
 
@@ -1536,7 +1536,7 @@ js_StartVtune(const char *profileName)
     status = VTStartSampling(&params);
 
     if (params.tb5Filename != default_filename)
-        Foreground::free_(params.tb5Filename);
+        js_free(params.tb5Filename);
 
     if (status != 0) {
         if (status == VTAPI_MULTIPLE_RUNS)

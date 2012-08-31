@@ -139,12 +139,10 @@ BytecodeEmitter::init()
 
 BytecodeEmitter::~BytecodeEmitter()
 {
-    JSContext *cx = sc->context;
-
-    cx->free_(prolog.base);
-    cx->free_(prolog.notes);
-    cx->free_(main.base);
-    cx->free_(main.notes);
+    js_free(prolog.base);
+    js_free(prolog.notes);
+    js_free(main.base);
+    js_free(main.notes);
 }
 
 static ptrdiff_t
@@ -2391,7 +2389,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       release:
         if (intmap && intmap != intmap_space)
-            cx->free_(intmap);
+            js_free(intmap);
         if (!ok)
             return false;
 

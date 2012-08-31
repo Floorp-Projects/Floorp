@@ -185,7 +185,7 @@ JSRuntime::createExecutableAllocator(JSContext *cx)
 
     JSC::AllocationBehavior randomize =
         jitHardening ? JSC::AllocationCanRandomize : JSC::AllocationDeterministic;
-    execAlloc_ = new_<JSC::ExecutableAllocator>(randomize);
+    execAlloc_ = js_new<JSC::ExecutableAllocator>(randomize);
     if (!execAlloc_)
         js_ReportOutOfMemory(cx);
     return execAlloc_;
@@ -197,7 +197,7 @@ JSRuntime::createBumpPointerAllocator(JSContext *cx)
     JS_ASSERT(!bumpAlloc_);
     JS_ASSERT(cx->runtime == this);
 
-    bumpAlloc_ = new_<WTF::BumpPointerAllocator>();
+    bumpAlloc_ = js_new<WTF::BumpPointerAllocator>();
     if (!bumpAlloc_)
         js_ReportOutOfMemory(cx);
     return bumpAlloc_;
@@ -209,7 +209,7 @@ JSRuntime::createMathCache(JSContext *cx)
     JS_ASSERT(!mathCache_);
     JS_ASSERT(cx->runtime == this);
 
-    MathCache *newMathCache = new_<MathCache>();
+    MathCache *newMathCache = js_new<MathCache>();
     if (!newMathCache) {
         js_ReportOutOfMemory(cx);
         return NULL;
@@ -226,10 +226,10 @@ JSRuntime::createJaegerRuntime(JSContext *cx)
     JS_ASSERT(!jaegerRuntime_);
     JS_ASSERT(cx->runtime == this);
 
-    mjit::JaegerRuntime *jr = new_<mjit::JaegerRuntime>();
+    mjit::JaegerRuntime *jr = js_new<mjit::JaegerRuntime>();
     if (!jr || !jr->init(cx)) {
         js_ReportOutOfMemory(cx);
-        delete_(jr);
+        js_delete(jr);
         return NULL;
     }
 
@@ -334,14 +334,14 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
     JS_AbortIfWrongThread(rt);
 
-    JSContext *cx = OffTheBooks::new_<JSContext>(rt);
+    JSContext *cx = js_new<JSContext>(rt);
     if (!cx)
         return NULL;
 
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
 
     if (!cx->cycleDetectorSet.init()) {
-        Foreground::delete_(cx);
+        js_delete(cx);
         return NULL;
     }
 
@@ -439,7 +439,7 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         PrepareForFullGC(rt);
         GC(rt, GC_NORMAL, gcreason::DESTROY_CONTEXT);
     }
-    Foreground::delete_(cx);
+    js_delete(cx);
 }
 
 namespace js {
@@ -653,8 +653,8 @@ js_ReportErrorVA(JSContext *cx, unsigned flags, const char *format, va_list ap)
     warning = JSREPORT_IS_WARNING(report.flags);
 
     ReportError(cx, message, &report, NULL, NULL);
-    Foreground::free_(message);
-    Foreground::free_(ucmessage);
+    js_free(message);
+    js_free(ucmessage);
     return warning;
 }
 
@@ -849,7 +849,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 reportp->ucmessage = out = (jschar *)
                     cx->malloc_((expandedLength + 1) * sizeof(jschar));
                 if (!out) {
-                    cx->free_(buffer);
+                    js_free(buffer);
                     goto error;
                 }
                 while (*fmt) {
@@ -869,7 +869,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 }
                 JS_ASSERT(expandedArgs == argCount);
                 *out = 0;
-                cx->free_(buffer);
+                js_free(buffer);
                 *messagep = DeflateString(cx, reportp->ucmessage,
                                           size_t(out - reportp->ucmessage));
                 if (!*messagep)
@@ -910,17 +910,17 @@ error:
         if (charArgs) {
             i = 0;
             while (reportp->messageArgs[i])
-                cx->free_((void *)reportp->messageArgs[i++]);
+                js_free((void *)reportp->messageArgs[i++]);
         }
-        cx->free_((void *)reportp->messageArgs);
+        js_free((void *)reportp->messageArgs);
         reportp->messageArgs = NULL;
     }
     if (reportp->ucmessage) {
-        cx->free_((void *)reportp->ucmessage);
+        js_free((void *)reportp->ucmessage);
         reportp->ucmessage = NULL;
     }
     if (*messagep) {
-        cx->free_((void *)*messagep);
+        js_free((void *)*messagep);
         *messagep = NULL;
     }
     return JS_FALSE;
@@ -952,7 +952,7 @@ js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
     ReportError(cx, message, &report, callback, userRef);
 
     if (message)
-        cx->free_(message);
+        js_free(message);
     if (report.messageArgs) {
         /*
          * js_ExpandErrorArguments owns its messageArgs only if it had to
@@ -961,12 +961,12 @@ js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
         if (charArgs) {
             int i = 0;
             while (report.messageArgs[i])
-                cx->free_((void *)report.messageArgs[i++]);
+                js_free((void *)report.messageArgs[i++]);
         }
-        cx->free_((void *)report.messageArgs);
+        js_free((void *)report.messageArgs);
     }
     if (report.ucmessage)
-        cx->free_((void *)report.ucmessage);
+        js_free((void *)report.ucmessage);
 
     return warning;
 }
@@ -980,7 +980,7 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
         return;
 
     if (cx->lastMessage)
-        Foreground::free_(cx->lastMessage);
+        js_free(cx->lastMessage);
     cx->lastMessage = JS_strdup(cx, message);
     if (!cx->lastMessage)
         return;
@@ -1035,7 +1035,7 @@ js_ReportIsNullOrUndefined(JSContext *cx, int spindex, HandleValue v,
                                           js_null_str, NULL);
     }
 
-    cx->free_(bytes);
+    js_free(bytes);
     return ok;
 }
 
@@ -1058,7 +1058,7 @@ js_ReportMissingArg(JSContext *cx, HandleValue v, unsigned arg)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_MISSING_FUN_ARG, argbuf,
                          bytes ? bytes : "");
-    cx->free_(bytes);
+    js_free(bytes);
 }
 
 JSBool
@@ -1077,7 +1077,7 @@ js_ReportValueErrorFlags(JSContext *cx, unsigned flags, const unsigned errorNumb
 
     ok = JS_ReportErrorFlagsAndNumber(cx, flags, js_GetErrorMessage,
                                       NULL, errorNumber, bytes, arg1, arg2);
-    cx->free_(bytes);
+    js_free(bytes);
     return ok;
 }
 
@@ -1224,17 +1224,17 @@ JSContext::~JSContext()
 {
     /* Free the stuff hanging off of cx. */
     if (parseMapPool_)
-        Foreground::delete_(parseMapPool_);
+        js_delete(parseMapPool_);
 
     if (lastMessage)
-        Foreground::free_(lastMessage);
+        js_free(lastMessage);
 
     /* Remove any argument formatters. */
     JSArgumentFormatMap *map = argumentFormatMap;
     while (map) {
         JSArgumentFormatMap *temp = map;
         map = map->next;
-        Foreground::free_(temp);
+        js_free(temp);
     }
 
     JS_ASSERT(!resolvingList);
@@ -1382,11 +1382,11 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
     ShrinkGCBuffers(this);
     gcHelperThread.waitBackgroundSweepOrAllocEnd();
     if (!p)
-        p = OffTheBooks::malloc_(nbytes);
+        p = js_malloc(nbytes);
     else if (p == reinterpret_cast<void *>(1))
-        p = OffTheBooks::calloc_(nbytes);
+        p = js_calloc(nbytes);
     else
-      p = OffTheBooks::realloc_(p, nbytes);
+      p = js_realloc(p, nbytes);
     if (p)
         return p;
     if (cx)
@@ -1398,7 +1398,7 @@ void
 JSContext::purge()
 {
     if (!activeCompilations) {
-        Foreground::delete_(parseMapPool_);
+        js_delete(parseMapPool_);
         parseMapPool_ = NULL;
     }
 }

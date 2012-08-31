@@ -211,7 +211,7 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, uint8_t *conten
 {
     uint32_t size = nbytes + sizeof(ObjectElements);
     ObjectElements *newheader =
-        static_cast<ObjectElements *>(maybecx ? maybecx->calloc_(size) : OffTheBooks::calloc_(size));
+        static_cast<ObjectElements *>(maybecx ? maybecx->calloc_(size) : js_calloc(size));
     if (!newheader) {
         if (maybecx)
             js_ReportOutOfMemory(maybecx);
@@ -2181,7 +2181,7 @@ class TypedArrayTemplate
             break;
         }
 
-        UnwantedForeground::free_(srcbuf);
+        js_free(srcbuf);
         return true;
     }
 

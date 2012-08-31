@@ -713,7 +713,7 @@ Sprinter::~Sprinter()
     if (initialized)
         checkInvariants();
 #endif
-    context->free_(base);
+    js_free(base);
 }
 
 bool
@@ -915,7 +915,7 @@ js::Sprint(Sprinter *sp, const char *format, ...)
         return -1;
     }
     offset = sp->put(bp);
-    sp->context->free_(bp);
+    js_free(bp);
     return offset;
 }
 
@@ -1106,11 +1106,10 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
 void
 js_DestroyPrinter(JSPrinter *jp)
 {
-    JSContext *cx = jp->sprinter.context;
     jp->pool.freeAll();
-    Foreground::delete_(jp->localNames);
+    js_delete(jp->localNames);
     jp->sprinter.Sprinter::~Sprinter();
-    cx->free_(jp);
+    js_free(jp);
 }
 
 JSString *
@@ -1182,7 +1181,7 @@ js_printf(JSPrinter *jp, const char *format, ...)
     /* Allocate temp space, convert format, and put. */
     bp = JS_vsmprintf(format, ap);      /* XXX vsaprintf */
     if (fp) {
-        jp->sprinter.context->free_(fp);
+        js_free(fp);
         format = NULL;
     }
     if (!bp) {
@@ -1194,7 +1193,7 @@ js_printf(JSPrinter *jp, const char *format, ...)
     cc = strlen(bp);
     if (jp->sprinter.put(bp, (size_t)cc) < 0)
         cc = -1;
-    jp->sprinter.context->free_(bp);
+    js_free(bp);
 
     va_end(ap);
     return cc;
@@ -1379,7 +1378,7 @@ GetOff(SprintStack *ss, unsigned i)
             if (off < 0)
                 off = 0;
             ss->offsets[i] = off;
-            ss->sprinter.context->free_(bytes);
+            js_free(bytes);
             return off;
         }
 
@@ -4290,7 +4289,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 jsbytecode **argbytecodes = (jsbytecode **)
                     cx->malloc_((size_t)(argc + 1) * sizeof *argbytecodes);
                 if (!argbytecodes) {
-                    cx->free_(argv);
+                    js_free(argv);
                     return NULL;
                 }
 
@@ -4338,8 +4337,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 }
                 ss->sprinter.put(rval);
 
-                cx->free_(argv);
-                cx->free_(argbytecodes);
+                js_free(argv);
+                js_free(argbytecodes);
 
                 break;
               }
@@ -4806,7 +4805,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     if (!rval)
                         return NULL;
                     todo = ss->sprinter.put(rval);
-                    cx->free_((void *)rval);
+                    js_free((void *)rval);
                     break;
                 }
 #endif /* JS_HAS_GENERATOR_EXPRS */
@@ -4928,7 +4927,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                           cx->malloc_((size_t)j * sizeof *table);
                     if (tmp) {
                         MergeSort(table, size_t(j), tmp, CompareTableEntries);
-                        Foreground::free_(tmp);
+                        js_free(tmp);
                         ok = true;
                     } else {
                         ok = false;
@@ -4937,7 +4936,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 
                 if (ok)
                     ok = DecompileSwitch(ss, table, (unsigned)j, pc, len, off, false);
-                cx->free_(table);
+                js_free(table);
                 if (!ok)
                     return NULL;
                 todo = -2;
@@ -4980,7 +4979,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 
                 ok = DecompileSwitch(ss, table, (unsigned)npairs, pc, len, off,
                                      JS_FALSE);
-                cx->free_(table);
+                js_free(table);
                 if (!ok)
                     return NULL;
                 todo = -2;
@@ -5052,7 +5051,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 
                 ok = DecompileSwitch(ss, table, (unsigned)ncases, pc, len, off,
                                      JS_TRUE);
-                cx->free_(table);
+                js_free(table);
                 if (!ok)
                     return NULL;
                 todo = -2;
@@ -5371,7 +5370,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      (*rval == '\0' ||
                       (ss->sprinter.put(" ", 1) >= 0 &&
                        ss->sprinter.put(rval)));
-                cx->free_((char *)rval);
+                js_free((char *)rval);
                 if (!ok)
                     return NULL;
                 ss->sprinter.put("?>", 2);
@@ -5797,7 +5796,7 @@ class PCStack
 
 PCStack::~PCStack()
 {
-    cx->free_(stack);
+    js_free(stack);
 }
 
 bool
@@ -6034,7 +6033,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
 
 ExpressionDecompiler::~ExpressionDecompiler()
 {
-    cx->delete_<BindingVector>(localNames);
+    js_delete<BindingVector>(localNames);
 }
 
 bool
@@ -6213,7 +6212,7 @@ js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
         if (result) {
             if (strcmp(result, "(intermediate value)"))
                 return result;
-            cx->free_(result);
+            js_free(result);
         }
     }
     if (!fallback) {
@@ -6305,11 +6304,11 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
         ~Guard() {
             if (printer)
                 js_DestroyPrinter(printer);
-            Foreground::free_(pcstack);
+            js_free(pcstack);
         }
     } g;
 
-    g.pcstack = (jsbytecode **)OffTheBooks::malloc_(StackDepth(script) * sizeof *g.pcstack);
+    g.pcstack = (jsbytecode **)js_malloc(StackDepth(script) * sizeof *g.pcstack);
     if (!g.pcstack)
         return NULL;
 
