@@ -5762,7 +5762,7 @@ class JSAutoByteString {
     }
 
     ~JSAutoByteString() {
-        js::UnwantedForeground::free_(mBytes);
+        js_free(mBytes);
     }
 
     /* Take ownership of the given byte array. */
@@ -5779,7 +5779,7 @@ class JSAutoByteString {
     }
 
     void clear() {
-        js::UnwantedForeground::free_(mBytes);
+        js_free(mBytes);
         mBytes = NULL;
     }
 
@@ -6038,17 +6038,17 @@ JS_ReportAllocationOverflow(JSContext *cx);
 struct JSErrorReport {
     const char      *filename;      /* source file name, URL, etc., or null */
     JSPrincipals    *originPrincipals; /* see 'originPrincipals' comment above */
-    unsigned           lineno;         /* source line number */
+    unsigned        lineno;         /* source line number */
     const char      *linebuf;       /* offending source line without final \n */
     const char      *tokenptr;      /* pointer to error token in linebuf */
     const jschar    *uclinebuf;     /* unicode (original) line buffer */
     const jschar    *uctokenptr;    /* unicode (original) token pointer */
-    unsigned           flags;          /* error/warning, etc. */
-    unsigned           errorNumber;    /* the error number, e.g. see js.msg */
+    unsigned        flags;          /* error/warning, etc. */
+    unsigned        errorNumber;    /* the error number, e.g. see js.msg */
     const jschar    *ucmessage;     /* the (default) error message */
     const jschar    **messageArgs;  /* arguments for the error message */
     int16_t         exnType;        /* One of the JSExnType constants */
-    unsigned           column;         /* zero-based column index in line */
+    unsigned        column;         /* zero-based column index in line */
 };
 
 /*

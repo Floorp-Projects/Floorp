@@ -76,9 +76,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
-    Foreground::delete_(watchpointMap);
-    Foreground::delete_(scriptCountsMap);
-    Foreground::delete_(debugScriptMap);
+    js_delete(watchpointMap);
+    js_delete(scriptCountsMap);
+    js_delete(debugScriptMap);
 }
 
 bool

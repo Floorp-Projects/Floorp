@@ -83,12 +83,12 @@ ComputeAccurateDecimalInteger(JSContext *cx, const jschar *start, const jschar *
     *dp = js_strtod_harder(cx->runtime->dtoaState, cstr, &estr, &err);
     if (err == JS_DTOA_ENOMEM) {
         JS_ReportOutOfMemory(cx);
-        cx->free_(cstr);
+        js_free(cstr);
         return false;
     }
     if (err == JS_DTOA_ERANGE && *dp == HUGE_VAL)
         *dp = js_PositiveInfinity;
-    cx->free_(cstr);
+    js_free(cstr);
     return true;
 }
 
@@ -514,7 +514,7 @@ ToCStringBuf::ToCStringBuf() :dbuf(NULL)
 ToCStringBuf::~ToCStringBuf()
 {
     if (dbuf)
-        UnwantedForeground::free_(dbuf);
+        js_free(dbuf);
 }
 
 JSFixedString *
@@ -741,12 +741,12 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
         bool ok = !!cx->localeCallbacks->localeToUnicode(cx, buf, v.address());
         if (ok)
             args.rval().set(v);
-        cx->free_(buf);
+        js_free(buf);
         return ok;
     }
 
     str = js_NewStringCopyN(cx, buf, buflen);
-    cx->free_(buf);
+    js_free(buf);
     if (!str)
         return false;
 
@@ -1089,9 +1089,9 @@ InitRuntimeNumberState(JSRuntime *rt)
     size_t decimalPointSize = strlen(decimalPoint) + 1;
     size_t groupingSize = strlen(grouping) + 1;
 
-    char *storage = static_cast<char *>(OffTheBooks::malloc_(thousandsSeparatorSize +
-                                                             decimalPointSize +
-                                                             groupingSize));
+    char *storage = static_cast<char *>(js_malloc(thousandsSeparatorSize +
+                                                  decimalPointSize +
+                                                  groupingSize));
     if (!storage)
         return false;
 
@@ -1116,7 +1116,7 @@ FinishRuntimeNumberState(JSRuntime *rt)
      * strings.
      */
     char *storage = const_cast<char *>(rt->thousandsSeparator);
-    Foreground::free_(storage);
+    js_free(storage);
 }
 
 } /* namespace js */
@@ -1547,7 +1547,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar *send,
 
     i = estr - cstr;
     if (cstr != cbuf)
-        cx->free_(cstr);
+        js_free(cstr);
     *ep = i ? s1 + i : s;
     *dp = d;
     return JS_TRUE;

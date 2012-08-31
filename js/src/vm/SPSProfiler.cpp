@@ -31,12 +31,12 @@ SPSProfiler::~SPSProfiler()
 {
     if (strings.initialized()) {
         for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront())
-            rt->array_delete(e.front().value);
+            js_free(const_cast<char *>(e.front().value));
     }
 #ifdef JS_METHODJIT
     if (jminfo.initialized()) {
         for (JITInfoMap::Enum e(jminfo); !e.empty(); e.popFront())
-            rt->delete_(e.front().value);
+            js_delete(e.front().value);
     }
 #endif
 }
@@ -76,7 +76,7 @@ SPSProfiler::profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun
     if (str == NULL)
         return NULL;
     if (!strings.add(s, script, str)) {
-        rt->array_delete(str);
+        js_free(const_cast<char *>(str));
         return NULL;
     }
     return str;
@@ -97,7 +97,7 @@ SPSProfiler::onScriptFinalized(JSScript *script)
     if (ProfileStringMap::Ptr entry = strings.lookup(script)) {
         const char *tofree = entry->value;
         strings.remove(entry);
-        rt->array_delete(tofree);
+        js_free(const_cast<char *>(tofree));
     }
 }
 
@@ -191,7 +191,7 @@ SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *may
         return NULL;
 
     size_t len = buf.length();
-    char *cstr = rt->array_new<char>(len + 1);
+    char *cstr = (char *)js_malloc((len + 1) * sizeof(char));
     if (cstr == NULL)
         return NULL;
 
@@ -379,7 +379,7 @@ SPSProfiler::unregisterScript(JSScript *script, mjit::JITChunk *chunk)
     }
     if (info->chunks.length() == 0) {
         jminfo.remove(ptr);
-        rt->delete_(info);
+        js_delete(info);
     }
 }
 #endif
