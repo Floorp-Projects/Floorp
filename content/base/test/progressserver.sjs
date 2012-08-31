@@ -19,6 +19,7 @@ function handleRequest(request, response)
 {
   var pairs = request.queryString.split('&');
   var command = pairs.shift();
+  dump("received '" + command + "' command\n");
 
   var bodyStream = new BinaryInputStream(request.bodyInputStream);
   var body = "";
