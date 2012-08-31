@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-print">
+<head>
+  <style>
+    @page {
+      /*
+       * Test a margin that causes the page to have zero width.
+       */
+      margin: 0 2.5in;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    div {
+      width: 100%;
+      border: 0.25in solid green;
+    }
+  </style>
+</head>
+<body>
+  <div></div>
+</body>
+</html>

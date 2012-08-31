@@ -33,15 +33,6 @@ public:
 
   virtual void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
-  /**
-   *  Computes page size based on shared page data; SetSharedPageData must be
-   *  given valid data first.
-   */
-  virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
-                             nsSize aCBSize, nscoord aAvailableWidth,
-                             nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             uint32_t aFlags) MOZ_OVERRIDE;
-
   virtual bool HasTransformGetter() const MOZ_OVERRIDE { return true; }
 
   /**
