@@ -714,7 +714,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   bool isPrintableKey = !TextInputHandler::IsSpecialGeckoKey(nativeKeyCode);
   if (isPrintableKey &&
       [aNativeKeyEvent type] != NSKeyDown &&
-      [aNativeKeyEvent type] != NSKeyUp)) {
+      [aNativeKeyEvent type] != NSKeyUp) {
     NS_WARNING("Why the printable key doesn't cause NSKeyDown or NSKeyUp?");
     isPrintableKey = false;
   }
