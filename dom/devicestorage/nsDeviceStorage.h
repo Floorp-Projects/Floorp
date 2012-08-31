@@ -65,7 +65,7 @@ public:
   void CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, uint64_t aSince = 0);
   void collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, uint64_t aSince, nsAString& aRootPath);
 
-  static uint64_t DirectoryDiskUsage(nsIFile* aFile, uint64_t aSoFar = 0);
+  static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar);
 
 private:
   void NormalizeFilePath();

@@ -75,7 +75,7 @@ public:
     nsString data;
     CopyASCIItoUTF16(mType, data);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->NotifyObservers(mFile, "file-watcher-update", data.get());    
+    obs->NotifyObservers(mFile, "file-watcher-update", data.get());
     return NS_OK;
   }
 
@@ -211,7 +211,7 @@ DeviceStorageFile::IsType(nsAString& aType)
   if (aType.Equals(NS_LITERAL_STRING("videos"))) {
     return StringBeginsWith(mimeType, NS_LITERAL_CSTRING("video/"));
   }
-  
+
   if (aType.Equals(NS_LITERAL_STRING("music"))) {
     return StringBeginsWith(mimeType, NS_LITERAL_CSTRING("audio/"));
   }
@@ -265,7 +265,7 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
   }
 
   nsCOMPtr<IOEventComplete> iocomplete = new IOEventComplete(this, "created");
-  NS_DispatchToMainThread(iocomplete);    
+  NS_DispatchToMainThread(iocomplete);
 
   uint64_t bufSize = 0;
   aInputStream->Available(&bufSize);
@@ -434,11 +434,11 @@ DeviceStorageFile::collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &
   }
 }
 
-uint64_t
-DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, uint64_t aSoFar)
+void
+DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar)
 {
   if (!aFile) {
-    return aSoFar;
+    return;
   }
 
   nsresult rv;
@@ -446,7 +446,7 @@ DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, uint64_t aSoFar)
   rv = aFile->GetDirectoryEntries(getter_AddRefs(e));
 
   if (NS_FAILED(rv) || !e) {
-    return aSoFar;
+    return;
   }
 
   nsCOMPtr<nsIDirectoryEnumerator> files = do_QueryInterface(e);
@@ -471,21 +471,19 @@ DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, uint64_t aSoFar)
     if (NS_FAILED(rv)) {
       continue;
     }
-      
     if (isLink) {
       // for now, lets just totally ignore symlinks.
       NS_WARNING("DirectoryDiskUsage ignores symlinks");
     } else if (isDir) {
-      aSoFar += DirectoryDiskUsage(f, aSoFar);
+      DirectoryDiskUsage(f, aSoFar);
     } else if (isFile) {
       int64_t size;
       rv = f->GetFileSize(&size);
       if (NS_SUCCEEDED(rv)) {
-	aSoFar += size;
+	*aSoFar += size;
       }
     }
   }
-  return aSoFar;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(DeviceStorageFile)
@@ -1014,7 +1012,7 @@ nsDOMDeviceStorageCursor::IPDLRelease()
 class PostStatResultEvent : public nsRunnable
 {
 public:
-  PostStatResultEvent(nsRefPtr<DOMRequest>& aRequest, int64_t aFreeBytes, int64_t aTotalBytes)
+  PostStatResultEvent(nsRefPtr<DOMRequest>& aRequest, uint64_t aFreeBytes, uint64_t aTotalBytes)
     : mFreeBytes(aFreeBytes)
     , mTotalBytes(aTotalBytes)
     {
@@ -1032,9 +1030,7 @@ public:
 #ifdef MOZ_WIDGET_GONK
     nsresult rv = GetSDCardStatus(state);
     if (NS_FAILED(rv)) {
-      mRequest->FireError(NS_ERROR_FAILURE);
-      mRequest = nullptr;
-      return NS_OK;
+      state.Assign(NS_LITERAL_STRING("unavailable"));
     }
 #endif
 
@@ -1050,7 +1046,7 @@ public:
   }
 
 private:
-  int64_t mFreeBytes, mTotalBytes;
+  uint64_t mFreeBytes, mTotalBytes;
   nsString mState;
   nsRefPtr<DOMRequest> mRequest;
 };
@@ -1225,14 +1221,15 @@ public:
   {
     NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
     nsCOMPtr<nsIRunnable> r;
-    uint64_t diskUsage = DeviceStorageFile::DirectoryDiskUsage(mFile->mFile);
-    int64_t freeSpace;
+    uint64_t diskUsage = 0;
+    DeviceStorageFile::DirectoryDiskUsage(mFile->mFile, &diskUsage);
+    int64_t freeSpace = 0;
     nsresult rv = mFile->mFile->GetDiskSpaceAvailable(&freeSpace);
     if (NS_FAILED(rv)) {
       freeSpace = 0;
     }
 
-    r = new PostStatResultEvent(mRequest, diskUsage, freeSpace);
+    r = new PostStatResultEvent(mRequest, freeSpace, diskUsage);
     NS_DispatchToMainThread(r);
     return NS_OK;
   }
@@ -1864,7 +1861,7 @@ nsDOMDeviceStorage::DispatchMountChangeEvent(nsAString& aType)
   nsCOMPtr<nsIDOMDeviceStorageChangeEvent> ce = do_QueryInterface(event);
   nsresult rv = ce->InitDeviceStorageChangeEvent(NS_LITERAL_STRING("change"),
                                                  true, false,
-                                                 NS_LITERAL_STRING(""), 
+                                                 NS_LITERAL_STRING(""),
                                                  aType);
   if (NS_FAILED(rv)) {
     return;
@@ -1985,7 +1982,7 @@ nsDOMDeviceStorage::Notify(const char* aReason, DeviceStorageFile* aFile)
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
-  
+
   nsString fullpath;
   rv = aFile->mFile->GetPath(fullpath);
   if (NS_FAILED(rv)) {
@@ -1993,7 +1990,7 @@ nsDOMDeviceStorage::Notify(const char* aReason, DeviceStorageFile* aFile)
   }
 
   NS_ASSERTION(fullpath.Length() >= rootpath.Length(), "Root path longer than full path!");
-  
+
   nsAString::size_type len = rootpath.Length() + 1; // +1 for the trailing /
   nsDependentSubstring newPath (fullpath, len, fullpath.Length() - len);
 
