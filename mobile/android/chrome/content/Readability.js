@@ -82,7 +82,8 @@ Readability.prototype = {
     killBreaks: /(<br\s*\/?>(\s|&nbsp;?)*){1,}/g,
     videos: /http:\/\/(www\.)?(youtube|vimeo)\.com/i,
     nextLink: /(next|weiter|continue|>([^\|]|$)|»([^\|]|$))/i,
-    prevLink: /(prev|earl|old|new|<|«)/i
+    prevLink: /(prev|earl|old|new|<|«)/i,
+    whitespace: /^\s*$/
   },
 
   /**
@@ -223,6 +224,21 @@ Readability.prototype = {
   },
 
   /**
+   * Finds the next element, starting from the given node, and ignoring
+   * whitespace in between. If the given node is an element, the same node is
+   * returned.
+   */
+  _nextElement: function (node) {
+    let next = node;
+    while (next
+        && (next.nodeType != Node.ELEMENT_NODE)
+        && this.REGEXPS.whitespace.test(next.textContent)) {
+      next = next.nextSibling;
+    }
+    return next;
+  },
+
+  /**
    * Replaces 2 or more successive <br> elements with a single <p>.
    * Whitespace between <br> elements are ignored. For example:
    *   <div>foo<br>bar<br> <br><br>abc</div>
@@ -230,24 +246,6 @@ Readability.prototype = {
    *   <div>foo<br>bar<p>abc</p></div>
    */
   _replaceBrs: function (elem) {
-    // ignore whitespace between elements
-    let whitespace = /^\s*$/;
-
-    /**
-     * Finds the next element, starting from the given node, and ignoring
-     * whitespace in between. If the given node is an element, the same node is
-     * returned.
-     */
-    function nextElement(node) {
-      let next = node;
-      while (next
-          && (next.nodeType != Node.ELEMENT_NODE)
-          && whitespace.test(next.textContent)) {
-        next = next.nextSibling;
-      }
-      return next;
-    }
-
     let brs = elem.getElementsByTagName("br");
     for (let i = 0; i < brs.length; i++) {
       let br = brs[i];
@@ -260,7 +258,7 @@ Readability.prototype = {
       // If we find a <br> chain, remove the <br>s until we hit another element
       // or non-whitespace. This leaves behind the first <br> in the chain
       // (which will be replaced with a <p> later).
-      while ((next = nextElement(next)) && (next.tagName == "BR")) {
+      while ((next = this._nextElement(next)) && (next.tagName == "BR")) {
         replaced = true;
         let sibling = next.nextSibling;
         next.parentNode.removeChild(next);
@@ -278,7 +276,7 @@ Readability.prototype = {
         while (next) {
           // If we've hit another <br><br>, we're done adding children to this <p>.
           if (next.tagName == "BR") {
-            let nextElem = nextElement(next);
+            let nextElem = this._nextElement(next);
             if (nextElem && nextElem.tagName == "BR") {
               break;
             }
@@ -343,7 +341,14 @@ Readability.prototype = {
       }
     }
 
-    articleContent.innerHTML = articleContent.innerHTML.replace(/<br[^>]*>\s*<p/gi, '<p');
+    let brs = articleContent.getElementsByTagName("BR");
+    for (let i = brs.length; --i >= 0;) {
+      let br = brs[i];
+      let next = this._nextElement(br.nextSibling);
+      if (next && next.tagName == "P") {
+        br.parentNode.removeChild(br);
+      }
+    }
   },
 
   /**
