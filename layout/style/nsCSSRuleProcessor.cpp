@@ -979,6 +979,7 @@ struct RuleCascadeData {
 
   nsTArray<nsFontFaceRuleContainer> mFontFaceRules;
   nsTArray<nsCSSKeyframesRule*> mKeyframesRules;
+  nsTArray<nsCSSPageRule*> mPageRules;
 
   // Looks up or creates the appropriate list in |mAttributeSelectors|.
   // Returns null only on allocation failure.
@@ -1029,6 +1030,7 @@ RuleCascadeData::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 
   n += mFontFaceRules.SizeOfExcludingThis(aMallocSizeOf);
   n += mKeyframesRules.SizeOfExcludingThis(aMallocSizeOf);
+  n += mPageRules.SizeOfExcludingThis(aMallocSizeOf);
 
   return n;
 }
@@ -2681,6 +2683,24 @@ nsCSSRuleProcessor::AppendKeyframesRules(
   return true;
 }
 
+// Append all the currently-active page rules to aArray.  Return
+// true for success and false for failure.
+bool
+nsCSSRuleProcessor::AppendPageRules(
+                              nsPresContext* aPresContext,
+                              nsTArray<nsCSSPageRule*>& aArray)
+{
+  RuleCascadeData* cascade = GetRuleCascade(aPresContext);
+
+  if (cascade) {
+    if (!aArray.AppendElements(cascade->mPageRules)) {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
 nsresult
 nsCSSRuleProcessor::ClearRuleCascades()
 {
@@ -2979,11 +2999,13 @@ struct CascadeEnumData {
   CascadeEnumData(nsPresContext* aPresContext,
                   nsTArray<nsFontFaceRuleContainer>& aFontFaceRules,
                   nsTArray<nsCSSKeyframesRule*>& aKeyframesRules,
+                  nsTArray<nsCSSPageRule*>& aPageRules,
                   nsMediaQueryResultCacheKey& aKey,
                   uint8_t aSheetType)
     : mPresContext(aPresContext),
       mFontFaceRules(aFontFaceRules),
       mKeyframesRules(aKeyframesRules),
+      mPageRules(aPageRules),
       mCacheKey(aKey),
       mSheetType(aSheetType)
   {
@@ -3006,6 +3028,7 @@ struct CascadeEnumData {
   nsPresContext* mPresContext;
   nsTArray<nsFontFaceRuleContainer>& mFontFaceRules;
   nsTArray<nsCSSKeyframesRule*>& mKeyframesRules;
+  nsTArray<nsCSSPageRule*>& mPageRules;
   nsMediaQueryResultCacheKey& mCacheKey;
   PLArenaPool mArena;
   // Hooray, a manual PLDHashTable since nsClassHashtable doesn't
@@ -3022,6 +3045,7 @@ struct CascadeEnumData {
  *      but kept in order per-weight, and
  *  (2) add any @font-face rules, in order, into data->mFontFaceRules.
  *  (3) add any @keyframes rules, in order, into data->mKeyframesRules.
+ *  (4) add any @page rules, in order, into data->mPageRules.
  */
 static bool
 CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
@@ -3074,7 +3098,12 @@ CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
       return false;
     }
   }
-
+  else if (css::Rule::PAGE_RULE == type) {
+    nsCSSPageRule* pageRule = static_cast<nsCSSPageRule*>(aRule);
+    if (!data->mPageRules.AppendElement(pageRule)) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -3175,6 +3204,7 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
     if (newCascade) {
       CascadeEnumData data(aPresContext, newCascade->mFontFaceRules,
                            newCascade->mKeyframesRules,
+                           newCascade->mPageRules,
                            newCascade->mCacheKey,
                            mSheetType);
       if (!data.mRulesByWeight.ops)
