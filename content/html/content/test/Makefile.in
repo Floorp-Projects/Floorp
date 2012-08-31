@@ -326,6 +326,7 @@ MOCHITEST_FILES = \
 		test_iframe_sandbox_workers.html \
 		file_iframe_sandbox_g_if1.html \
 		file_iframe_sandbox_worker.js \
+		test_bug786564.html \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES = \

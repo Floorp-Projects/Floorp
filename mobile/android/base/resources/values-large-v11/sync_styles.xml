@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Theme Styles -->
+  <style name="SyncTheme" parent="@style/Gecko.Dialog" />
+
+  <!-- Outer container: a container with top, middle, and bottom
+       content in it. -->
+  <style name="SyncContainer" parent="@style/SyncLayout.Vertical">
+    <item name="android:layout_width">600dp</item>
+    <item name="android:minWidth">600dp</item>
+    <item name="android:minHeight">600dp</item>
+  </style>
+</resources>

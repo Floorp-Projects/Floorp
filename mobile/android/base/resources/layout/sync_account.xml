@@ -3,36 +3,34 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  style="@style/SyncLayout" >
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncContainer" >
+
   <TextView
       style="@style/SyncTop"
-      android:id="@+id/account_top"
       android:text="@string/sync_title_connect" />
+
   <ScrollView
-    android:id="@+id/account_content"
-    style="@style/SyncLayout"
-    android:layout_below="@id/account_top"
-    android:layout_above="@+id/account_bottom">
+    style="@style/SyncMiddle" >
 
 	<LinearLayout
-      style="@style/SyncLayout.Vertical"
-      android:padding="20dp" >
+      style="@style/SyncLayout.Vertical" >
 
 	  <TextView
 	    style="@style/SyncTextItem"
 	    android:text="@string/sync_subtitle_account"
-	    android:layout_marginBottom="10dp" />
-	
+	    android:paddingBottom="@dimen/SyncSpace" />
+
 	  <EditText android:id="@+id/usernameInput"
 	    style="@style/SyncEditItem"
+      android:state_focused="true"
 	    android:hint="@string/sync_input_username" />
-	
+
 	  <EditText android:id="@+id/passwordInput"
 	    style="@style/SyncEditItem"
-	    android:password="true"
+	    android:inputType="textPassword"
 	    android:hint="@string/sync_input_password" />
-	
+
 	  <EditText android:id="@+id/keyInput"
 	    style="@style/SyncEditItem"
 	    android:hint="@string/sync_input_key" />
@@ -40,14 +38,13 @@
 	  <TextView android:id="@+id/cred_error"
 	    style="@style/SyncTextError"
 	    android:text="@string/sync_invalidcreds_label" />
-	
+
 	  <CheckBox android:id="@+id/checkbox_server"
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
 	    android:layout_gravity="left"
-	    android:imeOptions="actionDone"
 	    android:text="@string/sync_checkbox_server" />
-	
+
 	  <EditText android:id="@+id/serverInput"
 	    style="@style/SyncEditItem"
 	    android:visibility="gone"
@@ -61,9 +58,7 @@
   </ScrollView>
 
   <LinearLayout
-    android:id="@id/account_bottom"
-    style="@style/SyncBottom"
-    android:orientation="horizontal" >
+    style="@style/SyncBottom" >
 
     <Button
       android:id="@+id/accountCancelButton"
@@ -79,4 +74,4 @@
       android:enabled="false"
       android:text="@string/sync_button_connect" />
   </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

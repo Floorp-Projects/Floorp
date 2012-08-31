@@ -307,27 +307,6 @@ interface nsIDOMMozStkCommandEvent : nsIDOMEvent
 dictionary MozStkResponse
 {
   /**
-   * commandNumber from MozStkCommand.
-   *
-   * @see MozStkCommand.commandNumber
-   */
-  unsigned short commandNumber;
-
-  /**
-   * One of MozStkCommand.typeOfCommand
-   *
-   * @see MozStkCommand.typeOfCommand
-   */
-  unsigned short typeOfCommand;
-
-  /**
-   * Qualifiers specific to the command.
-   *
-   * @see MozStkCommand.commandQualifier
-   */
-  unsigned short commandQualifier;
-
-  /**
    * One of RESULT_*
    */
   unsigned short resultCode;

@@ -244,7 +244,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAString& aResult)
 
     nsCOMPtr<nsIRDFDate> dateLiteral = do_QueryInterface(aNode);
     if (dateLiteral) {
-        int64_t	value;
+        PRTime value;
         rv = dateLiteral->GetValue(&value);
         if (NS_FAILED(rv)) return rv;
 
@@ -252,7 +252,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAString& aResult)
         rv = gFormat->FormatPRTime(nullptr /* nsILocale* locale */,
                                   kDateFormatShort,
                                   kTimeFormatSeconds,
-                                  PRTime(value),
+                                  value,
                                   str);
         aResult.Assign(str);
 

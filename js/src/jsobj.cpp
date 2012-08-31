@@ -1143,7 +1143,8 @@ PropDesc::makeObject(JSContext *cx)
 bool
 GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, PropertyDescriptor *desc)
 {
-    if (obj->isProxy())
+    // FIXME: Call TrapGetOwnProperty directly once ScriptedIndirectProxies is removed
+    if (obj->isProxy()) 
         return Proxy::getOwnPropertyDescriptor(cx, obj, id, false, desc);
 
     RootedObject pobj(cx);
@@ -1382,6 +1383,38 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
     return true;
+}
+
+void
+PropDesc::complete()
+{
+    if (isGenericDescriptor() || isDataDescriptor()) {
+        if (!hasValue_) {
+            hasValue_ = true;
+            value_.setUndefined();
+        }
+        if (!hasWritable_) {
+            hasWritable_ = true;
+            attrs |= JSPROP_READONLY;
+        }
+    } else {
+        if (!hasGet_) {
+            hasGet_ = true;
+            get_.setUndefined();
+        }
+        if (!hasSet_) {
+            hasSet_ = true;
+            set_.setUndefined();
+        }
+    }
+    if (!hasEnumerable_) {
+        hasEnumerable_ = true;
+        attrs &= ~JSPROP_ENUMERATE;
+    }
+    if (!hasConfigurable_) {
+        hasConfigurable_ = true;
+        attrs |= JSPROP_PERMANENT;
+    }
 }
 
 namespace js {
@@ -1837,6 +1870,10 @@ DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &des
         return DefinePropertyOnArray(cx, obj, id, desc, throwError, rval);
 
     if (obj->getOps()->lookupGeneric) {
+        /*
+         * FIXME: Once ScriptedIndirectProxies are removed, this code should call
+         * TrapDefineOwnProperty directly
+         */
         if (obj->isProxy())
             return Proxy::defineProperty(cx, obj, id, desc.pd());
         return Reject(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);

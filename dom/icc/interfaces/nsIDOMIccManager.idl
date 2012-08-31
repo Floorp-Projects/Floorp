@@ -144,11 +144,13 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    * Send the response back to ICC after an attempt to execute STK Proactive
    * Command.
    *
+   * @param command
+   *        Command received from ICC. See MozStkCommand.
    * @param response
    *        The response that will be sent to ICC.
    * @see MozStkResponse for the detail of response.
    */
-  void sendStkResponse(in jsval response);
+  void sendStkResponse(in jsval command, in jsval response);
 
   /**
    * Send the "Menu Selection" Envelope command to ICC for menu selection.

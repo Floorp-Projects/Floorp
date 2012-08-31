@@ -96,14 +96,18 @@ class DeviceManagerADB(DeviceManager):
   # returns:
   # success: <return code>
   # failure: None
-  def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None):
+  def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None, root=False):
     # FIXME: this function buffers all output of the command into memory,
     # always. :(
 
     # Getting the return code is more complex than you'd think because adb
     # doesn't actually return the return code from a process, so we have to
     # capture the output to get it
-    cmdline = "%s; echo $?" % self._escapedCommandLine(cmd)
+    if root:
+      cmdline = "su -c \"%s\"" % self._escapedCommandLine(cmd)
+    else:
+      cmdline = self._escapedCommandLine(cmd)
+    cmdline += "; echo $?"
 
     # prepend cwd and env to command if necessary
     if cwd:
