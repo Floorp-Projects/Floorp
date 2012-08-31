@@ -930,8 +930,9 @@ var gSyncSetup = {
           document.getElementById("prefsWipe").hidden = true;
         }
 
-        if (Weave.Engines.get("addons").enabled) {
-          let ids = Weave.Engines.get("addons")._store.getAllIDs();
+        let addonsEngine = Weave.Service.engineManager.get("addons");
+        if (addonsEngine.enabled) {
+          let ids = addonsEngine._store.getAllIDs();
           let blessedcount = 0;
           for each (let i in ids) {
             if (i) {
