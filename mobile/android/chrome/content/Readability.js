@@ -675,8 +675,16 @@ Readability.prototype = {
       // So we have all of the content that we need. Now we clean it up for presentation.
       this._prepArticle(articleContent);
 
-      if (this._curPageNum === 1)
-        articleContent.innerHTML = '<div id="readability-page-1" class="page">' + articleContent.innerHTML + '</div>';
+      if (this._curPageNum === 1) {
+        let div = doc.createElement("DIV");
+        div.id = "readability-page-1";
+        div.className = "page";
+        let children = articleContent.childNodes;
+        for (let i = 0; i < children.length; ++i) {
+          div.appendChild(children[i]);
+        }
+        articleContent.appendChild(div);
+      }
 
       // Now that we've gone through the full algorithm, check to see if
       // we got any meaningful content. If we didn't, we may need to re-run
