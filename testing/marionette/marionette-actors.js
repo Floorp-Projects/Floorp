@@ -234,10 +234,15 @@ MarionetteDriverActor.prototype = {
   getCurrentWindow: function MDA_getCurrentWindow() {
     let type = null;
     if (this.curFrame == null) {
-      if (appName != "B2G" && this.context == "content") {
-        type = 'navigator:browser';
+      if (this.curBrowser == null) {
+        if (appName != "B2G" && this.context == "content") {
+          type = 'navigator:browser';
+        }
+        return Services.wm.getMostRecentWindow(type);
       }
-      return Services.wm.getMostRecentWindow(type);
+      else {
+        return this.curBrowser.window;
+      }
     }
     else {
       return this.curFrame;
@@ -629,7 +634,10 @@ MarionetteDriverActor.prototype = {
       }
     }
     else {
-      this.sendAsync("executeJSScript", {value:aRequest.value, args:aRequest.args, timeout:aRequest.timeout});
+      this.sendAsync("executeJSScript", { value:aRequest.value,
+                                          args:aRequest.args,
+                                          newSandbox:aRequest.newSandbox,
+                                          timeout:aRequest.timeout });
    }
   },
 
@@ -857,7 +865,9 @@ MarionetteDriverActor.prototype = {
     let winEn = this.getWinEnumerator(); 
     while(winEn.hasMoreElements()) {
       let foundWin = winEn.getNext();
-      let winId = foundWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+      let winId = foundWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils)
+                          .outerWindowID;
       winId = winId + ((appName == "B2G") ? '-b2g' : '');
       if (aRequest.value == foundWin.name || aRequest.value == winId) {
         if (this.browsers[winId] == undefined) {
@@ -868,7 +878,6 @@ MarionetteDriverActor.prototype = {
           utils.window = foundWin;
           this.curBrowser = this.browsers[winId];
         }
-        foundWin.focus();
         this.sendOk();
         return;
       }
@@ -1517,6 +1526,7 @@ function BrowserObj(win) {
   this.B2G = "B2G";
   this.browser;
   this.tab = null;
+  this.window = win;
   this.knownFrames = [];
   this.curFrameId = null;
   this.startPage = "about:blank";
@@ -1560,8 +1570,6 @@ BrowserObj.prototype = {
       //if we have a new tab, make it the selected tab and give it focus
       this.browser.selectedTab = this.tab;
       let newTabBrowser = this.browser.getBrowserForTab(this.tab);
-      //focus the tab
-      newTabBrowser.ownerDocument.defaultView.focus();
     }
     else {
       //set this.tab to the currently focused tab

@@ -136,7 +136,7 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
                                             const nsIntPoint& aTileOrigin,
                                             const nsIntRect& aDirtyRect)
 {
-  if (aTile == GetPlaceholderTile()) {
+  if (aTile == GetPlaceholderTile() || aTile.mSurface->Format() != GetFormat()) {
     gfxImageSurface* tmpTile = new gfxImageSurface(gfxIntSize(GetTileLength(), GetTileLength()),
                                                    GetFormat(), !mThebesLayer->CanUseOpaqueSurface());
     aTile = BasicTiledLayerTile(tmpTile);

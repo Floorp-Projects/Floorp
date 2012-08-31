@@ -83,9 +83,7 @@ MOCHITEST_CHROME_FILES	= \
 
 ifneq ($(OS_TARGET),Android)
 ifndef MOZ_PLATFORM_MAEMO
-MOCHITEST_FILES +=	test_bug657267.html \
-		bug657267.jar \
-		test_bug564330.html \
+MOCHITEST_FILES +=	test_bug564330.html \
 		test_bug618017.html
 endif
 endif

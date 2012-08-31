@@ -120,6 +120,10 @@ BasicCanvasLayer::Initialize(const Data& aData)
 void
 BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
 {
+  if (!mDirty)
+    return;
+  mDirty = false;
+
   if (mDrawTarget) {
     mDrawTarget->Flush();
     // TODO Fix me before turning accelerated quartz canvas by default
@@ -132,10 +136,6 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
     BasicCanvasLayer::PaintWithOpacity(tmpCtx, 1.0f, aMaskLayer);
     return;
   }
-
-  if (!mDirty)
-    return;
-  mDirty = false;
 
   if (mGLContext) {
     if (aDestSurface && aDestSurface->GetType() != gfxASurface::SurfaceTypeImage) {
@@ -392,6 +392,9 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     BasicCanvasLayer::Paint(aContext, aMaskLayer);
     return;
   }
+
+  if (!mDirty)
+    return;
 
   if (mGLContext &&
       !mForceReadback &&

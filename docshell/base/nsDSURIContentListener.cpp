@@ -260,7 +260,7 @@ nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
 bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIRequest *request,
                                                         const nsAString& policy) {
     static const char allowFrom[] = "allow-from ";
-    const PRUint32 allowFromLen = ArrayLength(allowFrom) - 1;
+    const uint32_t allowFromLen = ArrayLength(allowFrom) - 1;
     bool isAllowFrom =
         StringHead(policy, allowFromLen).LowerCaseEqualsLiteral(allowFrom);
 

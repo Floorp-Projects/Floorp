@@ -352,7 +352,7 @@ nsToolkitProfileLock::Unlock()
 }
 
 NS_IMETHODIMP
-nsToolkitProfileLock::GetReplacedLockTime(int64_t *aResult)
+nsToolkitProfileLock::GetReplacedLockTime(PRTime *aResult)
 {
     mLock.GetReplacedLockTime(aResult);
     return NS_OK;

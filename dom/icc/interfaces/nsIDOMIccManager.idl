@@ -1,0 +1,177 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEventTarget.idl"
+#include "SimToolKit.idl"
+
+interface nsIDOMEventListener;
+
+[scriptable, builtinclass, uuid(6ca8ac2b-0c7b-40bf-8eb3-dbd16f89d82f)]
+interface nsIDOMMozIccManager : nsIDOMEventTarget
+{
+  /**
+   * STK Menu Presentation types.
+   */
+  const unsigned short STK_MENU_TYPE_NOT_SPECIFIED      = 0x00;
+  const unsigned short STK_MENU_TYPE_DATA_VALUES        = 0x01;
+  const unsigned short STK_MENU_TYPE_NAVIGATION_OPTIONS = 0x03;
+
+  /**
+   * Browser launch mode.
+   */
+  const unsigned short STK_BROWSER_MODE_LAUNCH_IF_NOT_ALREADY_LAUNCHED = 0x00;
+  const unsigned short STK_BROWSER_MODE_USING_EXISTING_BROWSER         = 0x02;
+  const unsigned short STK_BROWSER_MODE_USING_NEW_BROWSER              = 0x03;
+
+  /**
+   * STK Proactive commands.
+   *
+   * @see TS 11.14, clause 13.4
+   */
+  const unsigned short STK_CMD_REFRESH               = 0x01;
+  const unsigned short STK_CMD_SET_UP_CALL           = 0x10;
+  const unsigned short STK_CMD_SEND_SS               = 0x11;
+  const unsigned short STK_CMD_SEND_USSD             = 0x12;
+  const unsigned short STK_CMD_SEND_SMS              = 0x13;
+  const unsigned short STK_CMD_SEND_DTMF             = 0x14;
+  const unsigned short STK_CMD_LAUNCH_BROWSER        = 0x15;
+  const unsigned short STK_CMD_DISPLAY_TEXT          = 0x21;
+  const unsigned short STK_CMD_GET_INKEY             = 0x22;
+  const unsigned short STK_CMD_GET_INPUT             = 0x23;
+  const unsigned short STK_CMD_SELECT_ITEM           = 0x24;
+  const unsigned short STK_CMD_SET_UP_MENU           = 0x25;
+  const unsigned short STK_CMD_SET_UP_IDLE_MODE_TEXT = 0x28;
+
+  /**
+   * STK Result code.
+   *
+   * @see TS 11.14, clause 12.12
+   *
+   * Results '0X' and '1X' indicate that the command has been performed.
+   */
+  /** Command performed successfully */
+  const unsigned short STK_RESULT_OK                                = 0x00;
+
+  /** Command performed with partial comprehension */
+  const unsigned short STK_RESULT_PRFRMD_WITH_PARTIAL_COMPREHENSION = 0x01;
+
+  /** Command performed, with missing information */
+  const unsigned short STK_RESULT_PRFRMD_WITH_MISSING_INFO          = 0x02;
+
+  /** REFRESH performed with additional EFs read */
+  const unsigned short STK_RESULT_PRFRMD_WITH_ADDITIONAL_EFS_READ   = 0x03;
+
+  /** Command performed successfully, limited service */
+  const unsigned short STK_RESULT_PRFRMD_LIMITED_SERVICE            = 0x06;
+
+  /** Proactive UICC session terminated by the user */
+  const unsigned short STK_RESULT_UICC_SESSION_TERM_BY_USER         = 0x10;
+
+  /** Backward move in the proactive UICC session requested by the user */
+  const unsigned short STK_RESULT_BACKWARD_MOVE_BY_USER             = 0x11;
+
+  /** No response from user */
+  const unsigned short STK_RESULT_NO_RESPONSE_FROM_USER             = 0x12;
+
+  /** Help information required by the user */
+  const unsigned short STK_RESULT_HELP_INFO_REQUIRED                = 0x13;
+
+  /** USSD or SS transaction terminated by the user */
+  const unsigned short STK_RESULT_USSD_SS_SESSION_TERM_BY_USER      = 0x14;
+
+  /**
+   * Results '2X' indicate to the UICC that it may be worth re-trying the
+   * command at a later opportunity.
+   */
+  /** Terminal currently unable to process command */
+  const unsigned short STK_RESULT_TERMINAL_CRNTLY_UNABLE_TO_PROCESS = 0x20;
+
+  /** Network currently unable to process command */
+  const unsigned short STK_RESULT_NETWORK_CRNTLY_UNABLE_TO_PROCESS  = 0x21;
+
+  /** User did not accept the proactive command */
+  const unsigned short STK_RESULT_USER_NOT_ACCEPT                   = 0x22;
+
+  /** User cleared down call before connection or network release */
+  const unsigned short STK_RESULT_USER_CLEAR_DOWN_CALL              = 0x23;
+
+  /** Launch browser generic error code */
+  const unsigned short STK_RESULT_LAUNCH_BROWSER_ERROR              = 0x26;
+
+  /**
+   * Results '3X' indicate that it is not worth the UICC re-trying with an
+   * identical command, as it will only get the same response. However, the
+   * decision to retry lies with the application.
+   */
+  /** Command beyond terminal's capabilities */
+  const unsigned short STK_RESULT_BEYOND_TERMINAL_CAPABILITY        = 0x30;
+
+  /** Command type not understood by terminal */
+  const unsigned short STK_RESULT_CMD_TYPE_NOT_UNDERSTOOD           = 0x31;
+
+  /** Command data not understood by terminal */
+  const unsigned short STK_RESULT_CMD_DATA_NOT_UNDERSTOOD           = 0x32;
+
+  /** Command number not known by terminal */
+  const unsigned short STK_RESULT_CMD_NUM_NOT_KNOWN                 = 0x33;
+
+  /** SS Return Error */
+  const unsigned short STK_RESULT_SS_RETURN_ERROR                   = 0x34;
+
+  /** SMS RP-ERROR */
+  const unsigned short STK_RESULT_SMS_RP_ERROR                      = 0x35;
+
+  /** Error, required values are missing */
+  const unsigned short STK_RESULT_REQUIRED_VALUES_MISSING           = 0x36;
+
+  /** USSD Return Error */
+  const unsigned short STK_RESULT_USSD_RETURN_ERROR                 = 0x37;
+
+  /** MultipleCard commands error */
+  const unsigned short STK_RESULT_MULTI_CARDS_CMD_ERROR             = 0x38;
+
+  /**
+   * Interaction with call control by USIM or MO short message control by
+   * USIM, permanent problem
+   */
+  const unsigned short STK_RESULT_USIM_CALL_CONTROL_PERMANENT       = 0x39;
+
+  /** Bearer Independent Protocol error */
+  const unsigned short STK_RESULT_BIP_ERROR                         = 0x3a;
+
+  /**
+   * Send the response back to ICC after an attempt to execute STK Proactive
+   * Command.
+   *
+   * @param command
+   *        Command received from ICC. See MozStkCommand.
+   * @param response
+   *        The response that will be sent to ICC.
+   * @see MozStkResponse for the detail of response.
+   */
+  void sendStkResponse(in jsval command, in jsval response);
+
+  /**
+   * Send the "Menu Selection" Envelope command to ICC for menu selection.
+   *
+   * @param itemIdentifier
+   *        The identifier of the item selected by user.
+   * @param helpRequested
+   *        true if user requests to provide help information, false otherwise.
+   */
+  void sendStkMenuSelection(in unsigned short itemIdentifier,
+                            in boolean        helpRequested);
+
+  /**
+   * The 'stkcommand' event is notified whenever STK Proactive Command is
+   * issued from ICC.
+   */
+  attribute nsIDOMEventListener onstkcommand;
+
+  /**
+   * 'stksessionend' event is notified whenever STK Session is terminated by
+   * ICC.
+   */
+  attribute nsIDOMEventListener onstksessionend;
+};

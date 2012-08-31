@@ -140,7 +140,7 @@ case "$host" in
   powerpc-*-aix* | rs6000-*-aix*)
 	TARGET=POWERPC_AIX; TARGETDIR=powerpc
 	;;
-  powerpc-*-freebsd*)
+  powerpc-*-freebsd* | powerpc-*-openbsd*)
 	TARGET=POWERPC_FREEBSD; TARGETDIR=powerpc
 	;;
   powerpc*-*-rtems*)
@@ -332,12 +332,28 @@ case "$target" in
 esac
 
 if test x$TARGET = xX86_64; then
-    AC_CACHE_CHECK([assembler supports unwind section type],
+    AC_CACHE_CHECK([toolchain supports unwind section type],
 	libffi_cv_as_x86_64_unwind_section_type, [
-	libffi_cv_as_x86_64_unwind_section_type=yes
-	echo '.section .eh_frame,"a",@unwind' > conftest.s
-	if $CC $CFLAGS -c conftest.s 2>&1 | grep -i warning > /dev/null; then
-	    libffi_cv_as_x86_64_unwind_section_type=no
+        cat  > conftest1.s << EOF
+.text
+.globl foo
+foo:
+jmp bar
+.section .eh_frame,"a",@unwind
+bar:
+EOF
+
+        cat > conftest2.c  << EOF
+extern void foo();
+int main(){foo();}
+EOF
+
+	libffi_cv_as_x86_64_unwind_section_type=no
+	# we ensure that we can compile _and_ link an assembly file containing an @unwind section
+	# since the compiler can support it and not the linker (ie old binutils)
+	if $CC -Wa,--fatal-warnings $CFLAGS -c conftest1.s > /dev/null 2>&1 && \
+           $CC conftest2.c conftest1.o > /dev/null 2>&1 ; then
+	    libffi_cv_as_x86_64_unwind_section_type=yes
 	fi
 	])
     if test "x$libffi_cv_as_x86_64_unwind_section_type" = xyes; then

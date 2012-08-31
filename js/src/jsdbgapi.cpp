@@ -48,7 +48,7 @@
 #include "mozilla/Util.h"
 
 #ifdef __APPLE__
-#include "sharkctl.h"
+#include "devtools/sharkctl.h"
 #endif
 
 using namespace js;

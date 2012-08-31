@@ -114,6 +114,10 @@ ifdef MOZ_B2G_BT #{
 STATIC_LIBS += mozdbus_s
 endif #}
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+STATIC_LIBS += moznetd_s
+endif
+
 ifdef MOZ_IPDL_TESTS
 STATIC_LIBS += ipdlunittest_s
 endif
@@ -369,7 +373,7 @@ ifndef MOZ_TREE_PIXMAN
 EXTRA_DSO_LDOPTS += $(MOZ_PIXMAN_LIBS)
 endif
 
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib) 
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib)
 
 ifdef MOZ_SYDNEYAUDIO
 ifeq ($(OS_ARCH),Linux)
@@ -531,6 +535,12 @@ EXTRA_DSO_LDOPTS += -lelf
 else
 EXTRA_DSO_LDOPTS += -lelf -ldemangle
 endif
+endif
+
+ifneq (,$(filter DragonFly FreeBSD NetBSD OpenBSD,$(OS_ARCH)))
+OS_LIBS += $(call EXPAND_LIBNAME,kvm)
+# keep `environ' unresolved, see bug 14426 for binutils
+EXTRA_DSO_LDOPTS += -Wl,--warn-unresolved-symbols
 endif
 
 ifeq ($(OS_ARCH),WINNT)

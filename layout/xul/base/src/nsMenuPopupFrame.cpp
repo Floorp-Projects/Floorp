@@ -792,7 +792,6 @@ nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState)
   nsIView* view = GetView();
   nsIViewManager* viewManager = view->GetViewManager();
   viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-  viewManager->ResizeView(view, nsRect(0, 0, 0, 0));
 
   FireDOMEvent(NS_LITERAL_STRING("DOMMenuInactive"), mContent);
 

@@ -507,8 +507,6 @@ public:
 
   bool IsPluginView() { return (mWindowType == eWindowType_plugin); }
 
-  void PaintQD();
-
   nsCocoaWindow*    GetXULWindowWidget();
 
   NS_IMETHOD        ReparentNativeWidget(nsIWidget* aNewParent);
@@ -560,9 +558,6 @@ protected:
   bool                  mIsDispatchPaint; // Is a paint event being dispatched
 
   NP_CGContext          mPluginCGContext;
-#ifndef NP_NO_QUICKDRAW
-  NP_Port               mPluginQDPort;
-#endif
   nsIPluginInstanceOwner* mPluginInstanceOwner; // [WEAK]
 
   static uint32_t sLastInputEventCount;

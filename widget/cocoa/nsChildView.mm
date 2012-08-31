@@ -224,9 +224,6 @@ nsChildView::nsChildView() : nsBaseWidget()
   EnsureLogInitialized();
 
   memset(&mPluginCGContext, 0, sizeof(mPluginCGContext));
-#ifndef NP_NO_QUICKDRAW
-  memset(&mPluginQDPort, 0, sizeof(mPluginQDPort));
-#endif
 
   SetBackgroundColor(NS_RGB(255, 255, 255));
   SetForegroundColor(NS_RGB(0, 0, 0));
@@ -483,7 +480,6 @@ void* nsChildView::GetNativeData(uint32_t aDataType)
       break;
 
     case NS_NATIVE_PLUGIN_PORT:
-    case NS_NATIVE_PLUGIN_PORT_QD:
     case NS_NATIVE_PLUGIN_PORT_CG:
     {
       // The NP_CGContext pointer should always be NULL in the Cocoa event model.
@@ -491,12 +487,6 @@ void* nsChildView::GetNativeData(uint32_t aDataType)
         return nullptr;
 
       UpdatePluginPort();
-#ifndef NP_NO_QUICKDRAW
-      if (aDataType != NS_NATIVE_PLUGIN_PORT_CG) {
-        retVal = (void*)&mPluginQDPort;
-        break;
-      }
-#endif
       retVal = (void*)&mPluginCGContext;
       break;
     }
@@ -553,23 +543,6 @@ void nsChildView::HidePlugin()
 {
   NS_ASSERTION(mWindowType == eWindowType_plugin,
                "HidePlugin called on non-plugin view");
-
-#ifndef NP_NO_QUICKDRAW
-  if (mPluginInstanceOwner && mView &&
-      [(ChildView*)mView pluginDrawingModel] == NPDrawingModelQuickDraw) {
-    NPWindow* window;
-    mPluginInstanceOwner->GetWindow(window);
-    nsRefPtr<nsNPAPIPluginInstance> instance;
-    mPluginInstanceOwner->GetInstance(getter_AddRefs(instance));
-    if (window && instance) {
-       window->clipRect.top = 0;
-       window->clipRect.left = 0;
-       window->clipRect.bottom = 0;
-       window->clipRect.right = 0;
-       instance->SetWindow(window);
-    }
-  }
-#endif
 }
 
 void nsChildView::UpdatePluginPort()
@@ -577,48 +550,21 @@ void nsChildView::UpdatePluginPort()
   NS_ASSERTION(mWindowType == eWindowType_plugin,
                "UpdatePluginPort called on non-plugin view");
 
-#if !defined(NP_NO_CARBON) || !defined(NP_NO_QUICKDRAW)
+  // [NSGraphicsContext currentContext] is supposed to "return the
+  // current graphics context of the current thread."  But sometimes
+  // (when called while mView isn't focused for drawing) it returns a
+  // graphics context for the wrong window.  [window graphicsContext]
+  // (which "provides the graphics context associated with the window
+  // for the current thread") seems always to return the "right"
+  // graphics context.  See bug 500130.
+  mPluginCGContext.context = NULL;
+  mPluginCGContext.window = NULL;
+#ifndef NP_NO_CARBON
   NSWindow* cocoaWindow = [mView window];
   WindowRef carbonWindow = cocoaWindow ? (WindowRef)[cocoaWindow windowRef] : NULL;
-#endif
-
-  if (!mView
-#ifndef NP_NO_QUICKDRAW
-    || [(ChildView*)mView pluginDrawingModel] != NPDrawingModelQuickDraw
-#endif
-    ) {
-    // [NSGraphicsContext currentContext] is supposed to "return the
-    // current graphics context of the current thread."  But sometimes
-    // (when called while mView isn't focused for drawing) it returns a
-    // graphics context for the wrong window.  [window graphicsContext]
-    // (which "provides the graphics context associated with the window
-    // for the current thread") seems always to return the "right"
-    // graphics context.  See bug 500130.
-    mPluginCGContext.context = NULL;
-    mPluginCGContext.window = NULL;
-#ifndef NP_NO_CARBON
-    if (carbonWindow) {
-      mPluginCGContext.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
-      mPluginCGContext.window = carbonWindow;
-    }
-#endif
-  }
-#ifndef NP_NO_QUICKDRAW
-  else {
-    if (carbonWindow) {
-      mPluginQDPort.port = ::GetWindowPort(carbonWindow);
-
-      NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
-      NSRect frame = [[cocoaWindow contentView] frame];
-      viewOrigin.y = frame.size.height - viewOrigin.y;
-
-      // need to convert view's origin to window coordinates.
-      // then, encode as "SetOrigin" ready values.
-      mPluginQDPort.portx = (int32_t)-viewOrigin.x;
-      mPluginQDPort.porty = (int32_t)-viewOrigin.y;
-    } else {
-      mPluginQDPort.port = NULL;
-    }
+  if (carbonWindow) {
+    mPluginCGContext.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
+    mPluginCGContext.window = carbonWindow;
   }
 #endif
 }
@@ -1014,26 +960,6 @@ static void InitializeEventRecord(EventRecord* event, Point* aMousePosition)
 }
 #endif
 
-void nsChildView::PaintQD()
-{
-#ifndef NP_NO_CARBON
-  void *pluginPort = this->GetNativeData(NS_NATIVE_PLUGIN_PORT_QD);
-  void *window = ::GetWindowFromPort(static_cast<NP_Port*>(pluginPort)->port);
-
-  NS_SUCCEEDED(StartDrawPlugin());
-  EventRecord updateEvent;
-  InitializeEventRecord(&updateEvent, nullptr);
-  updateEvent.what = updateEvt;
-  updateEvent.message = UInt32(window);
-
-  nsRefPtr<nsNPAPIPluginInstance> instance;
-  mPluginInstanceOwner->GetInstance(getter_AddRefs(instance));
-
-  instance->HandleEvent(&updateEvent, nullptr);
-  EndDrawPlugin();
-#endif
-}
-
 NS_IMETHODIMP nsChildView::StartDrawPlugin()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1042,7 +968,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
                "StartDrawPlugin must only be called on a plugin widget");
   if (mWindowType != eWindowType_plugin) return NS_ERROR_FAILURE;
 
-  // This code is necessary for both Quickdraw and CoreGraphics in 32-bit builds.
+  // This code is necessary for CoreGraphics in 32-bit builds.
   // See comments below about why. In 64-bit CoreGraphics mode we will not keep
   // this region up to date, plugins should not depend on it.
 #ifndef __LP64__
@@ -1050,18 +976,15 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   if (!window)
     return NS_ERROR_FAILURE;
 
-  // In QuickDraw drawing mode, prevent reentrant handling of any plugin event
-  // (this emulates behavior on the 1.8 branch, where only QuickDraw mode is
-  // supported).  But in CoreGraphics drawing mode only do this if the current
+  // In QuickDraw drawing mode we used to prevent reentrant handling of any
+  // plugin event. But in CoreGraphics drawing mode only do this if the current
   // plugin event isn't an update/paint event.  This allows popupcontextmenu()
   // to work properly from a plugin that supports the Cocoa event model,
   // without regressing bug 409615.  See bug 435041.  (StartDrawPlugin() and
   // EndDrawPlugin() wrap every call to nsIPluginInstance::HandleEvent() --
   // not just calls that "draw" or paint.)
-  bool isQDPlugin = [(ChildView*)mView pluginDrawingModel] == NPDrawingModelQuickDraw;
-  if (isQDPlugin || mIsDispatchPaint) {
-    if (mPluginDrawing)
-      return NS_ERROR_FAILURE;
+  if (mIsDispatchPaint && mPluginDrawing) {
+    return NS_ERROR_FAILURE;
   }
 
   // It appears that the WindowRef from which we get the plugin port undergoes the
@@ -1079,13 +1002,9 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   if (::NewRgn && ::GetQDGlobalsThePort && ::GetGWorld && ::SetGWorld &&
       ::IsPortOffscreen && ::GetMainDevice && ::SetOrigin && ::RectRgn &&
       ::SetPortVisibleRegion && ::SetPortClipRegion && ::DisposeRgn) {
-    CGrafPtr port = ::GetWindowPort(WindowRef([window windowRef]));
-    if (isQDPlugin) {
-      port = mPluginQDPort.port;
-    }
-
     RgnHandle pluginRegion = ::NewRgn();
     if (pluginRegion) {
+      CGrafPtr port = ::GetWindowPort(WindowRef([window windowRef]));
       bool portChanged = (port != CGrafPtr(::GetQDGlobalsThePort()));
       CGrafPtr oldPort;
       GDHandle oldDevice;
@@ -1119,8 +1038,6 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
         ::SetGWorld(oldPort, oldDevice);
       }
     }
-  } else {
-    NS_WARNING("Cannot set plugin's visible region -- required QuickDraw APIs are missing!");
   }
 #endif
 
@@ -1432,15 +1349,10 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
     // it from here.  See bug 592563.
     child->Show(!config.mClipRegion.IsEmpty());
 
-    bool repaint = false;
-#ifndef NP_NO_QUICKDRAW
-    repaint = child->mView &&
-      [(ChildView*)child->mView pluginDrawingModel] == NPDrawingModelQuickDraw;
-#endif
     child->Resize(
         config.mBounds.x, config.mBounds.y,
         config.mBounds.width, config.mBounds.height,
-        repaint);
+        false);
 
     // Store the clip region here in case GetPluginClipRect needs it.
     child->StoreWindowClipRegion(config.mClipRegion);
@@ -1997,6 +1909,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mPluginEventModel = NPEventModelCocoa;
 #endif
 #ifndef NP_NO_QUICKDRAW
+    // We don't support the Quickdraw drawing model any more but it's still
+    // the default model for i386 per NPAPI.
     mPluginDrawingModel = NPDrawingModelQuickDraw;
 #else
     mPluginDrawingModel = NPDrawingModelCoreGraphics;
@@ -2118,17 +2032,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
 
-  [super dealloc];    
-
-#ifndef NP_NO_QUICKDRAW
-  // This sets the current port to _savePort.
-  // todo: Only do if a Quickdraw plugin is present in the hierarchy!
-  // Check if ::SetPort() is available -- it probably won't be on
-  // OS X 10.8 and up.
-  if (::SetPort) {
-    ::SetPort(NULL);
-  }
-#endif
+  [super dealloc];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2423,16 +2327,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-#ifndef NP_NO_QUICKDRAW
-  // Set the current GrafPort to a "safe" port before calling [NSQuickDrawView lockFocus],
-  // so that the NSQuickDrawView stashes a pointer to this known-good port internally.
-  // It will set the port back to this port on destruction.
-  // Check if ::SetPort() is available -- it probably won't be on OS X 10.8 and up.
-  if (::SetPort) {
-    ::SetPort(NULL);  // todo: only do if a Quickdraw plugin is present in the hierarchy!
-  }
-#endif
-
   [super lockFocus];
 
   if (mGLContext) {
@@ -2489,15 +2383,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild || !mGeckoChild->IsVisible())
     return;
 
-#ifndef NP_NO_QUICKDRAW
-  if (mIsPluginView && mPluginDrawingModel == NPDrawingModelQuickDraw) {
-    mGeckoChild->PaintQD();
-    return;
-  }
-#endif
-
-  // Don't ever draw non-QuickDraw plugin views explicitly; they'll be drawn as
-  // part of their parent widget.
+  // Don't ever draw plugin views explicitly; they'll be drawn as part of their parent widget.
   if (mIsPluginView)
     return;
 
@@ -2530,21 +2416,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   } else {
     region = boundingRect;
   }
-
-#ifndef NP_NO_QUICKDRAW
-  // Subtract quickdraw plugin rectangles from the region
-  NSArray* subviews = [self subviews];
-  for (int i = 0; i < int([subviews count]); ++i) {
-    NSView* view = [subviews objectAtIndex:i];
-    if (![view isKindOfClass:[ChildView class]] || [view isHidden])
-      continue;
-    ChildView* cview = (ChildView*) view;
-    if ([cview isPluginView] && [cview pluginDrawingModel] == NPDrawingModelQuickDraw) {
-      NSRect frame = [view frame];
-      region.Sub(region, nsIntRect(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height));
-    }
-  }
-#endif
 
   LayerManager *layerManager = mGeckoChild->GetLayerManager(nullptr);
   if (layerManager->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {

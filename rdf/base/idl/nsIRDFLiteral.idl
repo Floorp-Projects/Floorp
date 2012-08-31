@@ -36,7 +36,7 @@ interface nsIRDFDate : nsIRDFNode {
     /**
      * The date value of the literal
      */
-    readonly attribute long long Value;
+    readonly attribute PRTime Value;
 };
 
 /**

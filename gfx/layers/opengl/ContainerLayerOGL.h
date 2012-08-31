@@ -20,6 +20,8 @@ static void ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aA
 template<class Container>
 static void ContainerRemoveChild(Container* aContainer, Layer* aChild);
 template<class Container>
+static void ContainerRepositionChild(Container* aContainer, Layer* aChild, Layer* aAfter);
+template<class Container>
 static void ContainerDestroy(Container* aContainer);
 template<class Container>
 static void ContainerRender(Container* aContainer,
@@ -35,6 +37,8 @@ class ContainerLayerOGL : public ContainerLayer,
   template<class Container>
   friend void ContainerRemoveChild(Container* aContainer, Layer* aChild);
   template<class Container>
+  friend void ContainerRepositionChild(Container* aContainer, Layer* aChild, Layer* aAfter);
+  template<class Container>
   friend void ContainerDestroy(Container* aContainer);
   template<class Container>
   friend void ContainerRender(Container* aContainer,
@@ -49,6 +53,8 @@ public:
   void InsertAfter(Layer* aChild, Layer* aAfter);
 
   void RemoveChild(Layer* aChild);
+
+  void RepositionChild(Layer* aChild, Layer* aAfter);
 
   /** LayerOGL implementation */
   Layer* GetLayer() { return this; }
@@ -76,6 +82,8 @@ class ShadowContainerLayerOGL : public ShadowContainerLayer,
   template<class Container>
   friend void ContainerRemoveChild(Container* aContainer, Layer* aChild);
   template<class Container>
+  friend void ContainerRepositionChild(Container* aContainer, Layer* aChild, Layer* aAfter);
+  template<class Container>
   friend void ContainerDestroy(Container* aContainer);
   template<class Container>
   friend void ContainerRender(Container* aContainer,
@@ -90,6 +98,8 @@ public:
   void InsertAfter(Layer* aChild, Layer* aAfter);
 
   void RemoveChild(Layer* aChild);
+
+  void RepositionChild(Layer* aChild, Layer* aAfter);
 
   // LayerOGL Implementation
   virtual Layer* GetLayer() { return this; }

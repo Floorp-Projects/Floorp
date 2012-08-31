@@ -288,7 +288,7 @@
 #ifdef MOZ_SERVICES_SYNC
             <menuitem id="appmenu_sync-tabs"
                       class="syncTabsMenuItem"
-                      label="&syncTabsMenu.label;"
+                      label="&syncTabsMenu2.label;"
                       oncommand="BrowserOpenSyncTabs();"
                       disabled="true"/>
 #endif

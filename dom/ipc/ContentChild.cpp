@@ -27,6 +27,7 @@
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
 #include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
@@ -416,14 +417,21 @@ ContentChild::AllocPCompositor(mozilla::ipc::Transport* aTransport,
     return CompositorChild::Create(aTransport, aOtherProcess);
 }
 
+PImageBridgeChild*
+ContentChild::AllocPImageBridge(mozilla::ipc::Transport* aTransport,
+                                base::ProcessId aOtherProcess)
+{
+    return ImageBridgeChild::StartUpInChildProcess(aTransport, aOtherProcess);
+}
+
 PBrowserChild*
 ContentChild::AllocPBrowser(const uint32_t& aChromeFlags,
                             const bool& aIsBrowserElement, const AppId& aApp)
 {
-    uint32_t appId = aApp.get_uint32_t();
-    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags, aIsBrowserElement,
-                                             appId);
-    return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
+    nsRefPtr<TabChild> child =
+        TabChild::Create(aChromeFlags, aIsBrowserElement, aApp.get_uint32_t());
+    // The ref here is released below.
+    return child.forget().get();
 }
 
 bool
@@ -929,6 +937,8 @@ PreloadSlowThings()
 {
     // This fetches and creates all the built-in stylesheets.
     nsLayoutStylesheetCache::UserContentSheet();
+
+    TabChild::PreloadSlowThings();
 }
 
 bool
