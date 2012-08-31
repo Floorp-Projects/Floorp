@@ -207,14 +207,14 @@ ArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
  * the cx if available and fall back to the runtime.
  */
 static ObjectElements *
-AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, uint8_t *contents)
+AllocateArrayBufferContents(JSRuntime *rt, JSContext *cx, uint32_t nbytes, uint8_t *contents)
 {
     uint32_t size = nbytes + sizeof(ObjectElements);
     ObjectElements *newheader =
-        static_cast<ObjectElements *>(maybecx ? maybecx->calloc_(size) : OffTheBooks::calloc_(size));
+        static_cast<ObjectElements *>(cx ? cx->calloc_(size) : rt->calloc_(size));
     if (!newheader) {
-        if (maybecx)
-            js_ReportOutOfMemory(maybecx);
+        if (cx)
+            js_ReportOutOfMemory(cx);
         return NULL;
     }
     if (contents)
@@ -223,7 +223,7 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, uint8_t *conten
 }
 
 bool
-ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, uint8_t *contents)
+ArrayBufferObject::allocateSlots(JSContext *cx, uint32_t bytes, uint8_t *contents)
 {
     /*
      * ArrayBufferObjects delegate added properties to another JSObject, so
@@ -235,7 +235,7 @@ ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, uint8_t *co
     size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
 
     if (bytes > sizeof(Value) * usableSlots) {
-        ObjectElements *header = AllocateArrayBufferContents(maybecx, bytes, contents);
+        ObjectElements *header = AllocateArrayBufferContents(NULL, cx, bytes, contents);
         if (!header)
             return false;
         elements = header->elements();
@@ -293,7 +293,7 @@ GetViewList(ArrayBufferObject *obj)
 }
 
 bool
-ArrayBufferObject::uninlineData(JSContext *maybecx)
+ArrayBufferObject::uninlineData(JSContext *cx)
 {
    if (hasDynamicElements())
        return true;
@@ -304,8 +304,8 @@ ArrayBufferObject::uninlineData(JSContext *maybecx)
    JSObject *view = *GetViewList(this);
    JSObject *viewListHead = view;
 
-   ObjectElements *header = AllocateArrayBufferContents(maybecx, bytes,
-                                                        reinterpret_cast<uint8_t*>(oldPointer));
+   JSRuntime *rt = cx ? NULL : compartment()->rt;
+   ObjectElements *header = AllocateArrayBufferContents(rt, cx, bytes, reinterpret_cast<uint8_t*>(oldPointer));
    if (!header)
        return false;
    elements = header->elements();
@@ -449,7 +449,7 @@ ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents)
     } else {
         uint32_t length = buffer.byteLength();
         js::ObjectElements *newheader =
-            AllocateArrayBufferContents(cx, length, buffer.dataPointer());
+            AllocateArrayBufferContents(NULL, cx, length, buffer.dataPointer());
         if (!newheader) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -3544,22 +3544,24 @@ JS_IsArrayBufferViewObject(JSObject *objArg, JSContext *cx)
 }
 
 JS_FRIEND_API(uint32_t)
-JS_GetArrayBufferByteLength(JSObject *obj, JSContext *maybecx)
+JS_GetArrayBufferByteLength(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return 0;
     return obj->asArrayBuffer().byteLength();
 }
 
 JS_FRIEND_API(uint8_t *)
-JS_GetArrayBufferData(JSObject *obj, JSContext *maybecx)
+JS_GetArrayBufferData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     ArrayBufferObject &buffer = obj->asArrayBuffer();
-    if (!buffer.uninlineData(maybecx))
+    if (!buffer.uninlineData(cx))
         return NULL;
     return buffer.dataPointer();
 }
@@ -3584,7 +3586,7 @@ JS_NewArrayBufferWithContents(JSContext *cx, void *contents)
 JS_PUBLIC_API(JSBool)
 JS_AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data)
 {
-    js::ObjectElements *header = AllocateArrayBufferContents(cx, nbytes, NULL);
+    js::ObjectElements *header = AllocateArrayBufferContents(NULL, cx, nbytes, NULL);
     if (!header)
         return false;
 
@@ -3613,9 +3615,10 @@ JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents)
 }
 
 JS_FRIEND_API(uint32_t)
-JS_GetTypedArrayLength(JSObject *obj, JSContext *maybecx)
+JS_GetTypedArrayLength(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return 0;
     JS_ASSERT(obj->isTypedArray());
@@ -3623,9 +3626,10 @@ JS_GetTypedArrayLength(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(uint32_t)
-JS_GetTypedArrayByteOffset(JSObject *obj, JSContext *maybecx)
+JS_GetTypedArrayByteOffset(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return 0;
     JS_ASSERT(obj->isTypedArray());
@@ -3633,9 +3637,10 @@ JS_GetTypedArrayByteOffset(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(uint32_t)
-JS_GetTypedArrayByteLength(JSObject *obj, JSContext *maybecx)
+JS_GetTypedArrayByteLength(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return 0;
     JS_ASSERT(obj->isTypedArray());
@@ -3643,9 +3648,10 @@ JS_GetTypedArrayByteLength(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(JSArrayBufferViewType)
-JS_GetTypedArrayType(JSObject *obj, JSContext *maybecx)
+JS_GetTypedArrayType(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return ArrayBufferView::TYPE_MAX;
     JS_ASSERT(obj->isTypedArray());
@@ -3653,9 +3659,10 @@ JS_GetTypedArrayType(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(int8_t *)
-JS_GetInt8ArrayData(JSObject *obj, JSContext *maybecx)
+JS_GetInt8ArrayData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
@@ -3664,9 +3671,10 @@ JS_GetInt8ArrayData(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(uint8_t *)
-JS_GetUint8ArrayData(JSObject *obj, JSContext *maybecx)
+JS_GetUint8ArrayData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
@@ -3675,9 +3683,10 @@ JS_GetUint8ArrayData(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(uint8_t *)
-JS_GetUint8ClampedArrayData(JSObject *obj, JSContext *maybecx)
+JS_GetUint8ClampedArrayData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
@@ -3686,9 +3695,10 @@ JS_GetUint8ClampedArrayData(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(int16_t *)
-JS_GetInt16ArrayData(JSObject *obj, JSContext *maybecx)
+JS_GetInt16ArrayData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
@@ -3697,9 +3707,10 @@ JS_GetInt16ArrayData(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(uint16_t *)
-JS_GetUint16ArrayData(JSObject *obj, JSContext *maybecx)
+JS_GetUint16ArrayData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
@@ -3708,9 +3719,10 @@ JS_GetUint16ArrayData(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(int32_t *)
-JS_GetInt32ArrayData(JSObject *obj, JSContext *maybecx)
+JS_GetInt32ArrayData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
@@ -3719,9 +3731,10 @@ JS_GetInt32ArrayData(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(uint32_t *)
-JS_GetUint32ArrayData(JSObject *obj, JSContext *maybecx)
+JS_GetUint32ArrayData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
@@ -3730,9 +3743,10 @@ JS_GetUint32ArrayData(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(float *)
-JS_GetFloat32ArrayData(JSObject *obj, JSContext *maybecx)
+JS_GetFloat32ArrayData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
@@ -3741,9 +3755,10 @@ JS_GetFloat32ArrayData(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(double *)
-JS_GetFloat64ArrayData(JSObject *obj, JSContext *maybecx)
+JS_GetFloat64ArrayData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
@@ -3763,18 +3778,20 @@ JS_IsDataViewObject(JSContext *cx, JSObject *objArg, JSBool *isDataView)
 }
 
 JS_FRIEND_API(uint32_t)
-JS_GetDataViewByteOffset(JSObject *obj, JSContext *maybecx)
+JS_GetDataViewByteOffset(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return 0;
     return obj->asDataView().byteOffset();
 }
 
 JS_FRIEND_API(void *)
-JS_GetDataViewData(JSObject *obj, JSContext *maybecx)
+JS_GetDataViewData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isDataView());
@@ -3782,9 +3799,10 @@ JS_GetDataViewData(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(uint32_t)
-JS_GetDataViewByteLength(JSObject *obj, JSContext *maybecx)
+JS_GetDataViewByteLength(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return 0;
     JS_ASSERT(obj->isDataView());
@@ -3792,9 +3810,10 @@ JS_GetDataViewByteLength(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(void *)
-JS_GetArrayBufferViewData(JSObject *obj, JSContext *maybecx)
+JS_GetArrayBufferViewData(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray() || obj->isDataView());
@@ -3802,9 +3821,10 @@ JS_GetArrayBufferViewData(JSObject *obj, JSContext *maybecx)
 }
 
 JS_FRIEND_API(uint32_t)
-JS_GetArrayBufferViewByteLength(JSObject *obj, JSContext *maybecx)
+JS_GetArrayBufferViewByteLength(JSObject *objArg, JSContext *cx)
 {
-    obj = CheckedUnwrap(maybecx, obj);
+    RootedObject obj_(cx, objArg);
+    JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return 0;
     JS_ASSERT(obj->isTypedArray() || obj->isDataView());
