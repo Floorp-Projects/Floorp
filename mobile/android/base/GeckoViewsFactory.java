@@ -44,6 +44,8 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new AboutHomeSection(context, attrs);
             else if (TextUtils.equals(viewName, "AwesomeBarTabs"))
                 return new AwesomeBarTabs(context, attrs);
+            else if (TextUtils.equals(viewName, "BrowserToolbarBackground"))
+                return new BrowserToolbarBackground(context, attrs);
             else if (TextUtils.equals(viewName, "FormAssistPopup"))
                 return new FormAssistPopup(context, attrs);
             else if (TextUtils.equals(viewName, "LinkTextView"))

@@ -23,19 +23,12 @@
                       android:layout_height="0dip"
                       android:visibility="gone"/>
 
-        <View android:id="@+id/curve"
-              android:layout_width="72dip"
-              android:layout_height="fill_parent"
-              android:layout_marginRight="48dip"
-              android:layout_alignParentRight="true"
-              android:background="@drawable/address_bar_bg_curve"/>
-
-        <View android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:layout_alignParentLeft="true"
-              android:layout_alignParentBottom="true"
-              android:layout_toLeftOf="@id/curve"
-              android:background="@drawable/address_bar_bg"/>
+        <org.mozilla.gecko.BrowserToolbarBackground android:layout_width="fill_parent"
+                                                    android:layout_height="fill_parent"
+                                                    android:layout_marginRight="64dip"
+                                                    android:layout_alignParentTop="true"
+                                                    android:layout_alignParentRight="true"
+                                                    android:background="@drawable/address_bar_bg"/>
 
         <ImageButton android:id="@+id/menu"
                      style="@style/AddressBar.ImageButton"
@@ -131,12 +124,12 @@
 
         </FrameLayout>
 
-         <ImageView android:id="@+id/shadow"
-                    android:layout_width="fill_parent"
-                    android:layout_height="2dp"
-                    android:layout_alignParentBottom="true"
-                    android:background="@drawable/address_bar_bg_shadow_repeat"
-                    android:visibility="gone"/>
+        <ImageView android:id="@+id/shadow"
+                   android:layout_width="fill_parent"
+                   android:layout_height="2dp"
+                   android:layout_alignParentBottom="true"
+                   android:background="@drawable/address_bar_bg_shadow_repeat"
+                   android:visibility="gone"/>
 
     </RelativeLayout>
 
