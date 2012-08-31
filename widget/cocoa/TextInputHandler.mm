@@ -712,6 +712,12 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
 
   bool isPrintableKey = !TextInputHandler::IsSpecialGeckoKey(nativeKeyCode);
+  if (isPrintableKey &&
+      [aNativeKeyEvent type] != NSKeyDown &&
+      [aNativeKeyEvent type] != NSKeyUp)) {
+    NS_WARNING("Why the printable key doesn't cause NSKeyDown or NSKeyUp?");
+    isPrintableKey = false;
+  }
 
   // Decide what string will be input.
   nsAutoString insertString;
