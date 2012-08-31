@@ -189,7 +189,8 @@ struct ParseContext                 /* tree context for semantic checks */
                                            exclude 'in' */
     bool            parsingWith:1;  /* true while we are within a
                                        with-statement or E4X filter-expression
-                                       in the current ParseContext chain */
+                                       in the current ParseContext chain
+                                       (which stops at the top-level or an eval() */
 
     // Set when parsing a declaration-like destructuring pattern.  This flag
     // causes PrimaryExpr to create PN_NAME parse nodes for variable references

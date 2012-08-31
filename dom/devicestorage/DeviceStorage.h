@@ -28,7 +28,7 @@ public:
 
   nsresult Init(nsPIDOMWindow* aWindow, const nsAString &aType);
 
-  void SetRootFileForType(const nsAString& aType);
+  void SetRootDirectoryForType(const nsAString& aType);
 
   static void CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
                                       const nsAString &aType,
@@ -50,15 +50,15 @@ private:
                              bool aEditable, 
                              nsIDOMDeviceStorageCursor** aRetval);
 
-  int32_t mStorageType;
-  nsCOMPtr<nsIFile> mFile;
+  nsString mStorageType;
+  nsCOMPtr<nsIFile> mRootDirectory;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   bool mIsWatchingFile;
   bool mAllowedToWatchFile;
 
-  nsresult Notify(const char* aReason, nsIFile* aFile);
+  nsresult Notify(const char* aReason, class DeviceStorageFile* aFile);
 
   friend class WatchFileEvent;
   friend class DeviceStorageRequest;
