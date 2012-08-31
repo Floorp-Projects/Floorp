@@ -78,7 +78,6 @@ Readability.prototype = {
     replaceFonts: /<(\/?)font[^>]*>/gi,
     trim: /^\s+|\s+$/g,
     normalize: /\s{2,}/g,
-    killBreaks: /(<br\s*\/?>(\s|&nbsp;?)*){1,}/g,
     videos: /http:\/\/(www\.)?(youtube|vimeo)\.com/i,
     nextLink: /(next|weiter|continue|>([^\|]|$)|»([^\|]|$))/i,
     prevLink: /(prev|earl|old|new|<|«)/i,
@@ -306,7 +305,6 @@ Readability.prototype = {
    **/
   _prepArticle: function(articleContent) {
     this._cleanStyles(articleContent);
-    this._killBreaks(articleContent);
 
     // Clean out junk from the article content
     this._cleanConditionally(articleContent, "form");
@@ -1268,16 +1266,6 @@ Readability.prototype = {
   },
 
   /**
-   * Remove extraneous break tags from a node.
-   *
-   * @param Element
-   * @return void
-   **/
-  _killBreaks: function(e) {
-    e.innerHTML = e.innerHTML.replace(this.REGEXPS.killBreaks,'<br />');
-  },
-
-  /**
    * Clean a node of all elements of type "tag".
    * (Unless it's a youtube/vimeo video. People love movies.)
    *
@@ -1330,9 +1318,9 @@ Readability.prototype = {
     // TODO: Consider taking into account original contentScore here.
     for (let i = curTagsLength-1; i >= 0; i -= 1) {
       let weight = this._getClassWeight(tagsList[i]);
-      let contentScore = (typeof tagsList[i].readability !== 'undefined') ? tagsList[i].this._contentScore : 0;
+      let contentScore = 0;
 
-      this.log("Cleaning Conditionally " + tagsList[i] + " (" + tagsList[i].className + ":" + tagsList[i].id + ")" + ((typeof tagsList[i].readability !== 'undefined') ? (" with score " + tagsList[i].this._contentScore) : ''));
+      this.log("Cleaning Conditionally " + tagsList[i] + " (" + tagsList[i].className + ":" + tagsList[i].id + ")");
 
       if (weight + contentScore < 0) {
         tagsList[i].parentNode.removeChild(tagsList[i]);
