@@ -320,6 +320,11 @@
                     /*nbytes_wr*/Types.DWORD.out_ptr,
                     /*overlapped*/Types.void_t.inout_ptr // FIXME: Implement?
          );
+
+        WinFile.FlushFileBuffers =
+          declareFFI("FlushFileBuffers", ctypes.winapi_abi,
+                     /*return*/ Types.zero_or_nothing,
+                     /*file*/   Types.HANDLE);
      };
      exports.OS.Win.File._init = init;
    })(this);

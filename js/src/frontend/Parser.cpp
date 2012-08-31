@@ -397,18 +397,49 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *
     bufEnd(0),
     ndefaults(0),
     strictModeState(sms),
-    inWith(outerpc->parsingWith),
+    inWith(false),                  // initialized below
     inGenexpLambda(false),
-    cxFlags(outerpc->sc->context)     // the cxFlags are set in LeaveFunction
+    cxFlags(outerpc->sc->context)   // the cxFlags are set in LeaveFunction
 {
     isFunctionBox = true;
-    if (!outerpc->sc->inFunction()) {
+
+    if (outerpc->parsingWith) {
+        // This covers cases that don't involve eval().  For example:
+        //
+        //   with (o) { (function() { g(); })(); }
+        //
+        // In this case, |outerpc| corresponds to global code, and
+        // outerpc->parsingWith is true.
+        inWith = true;
+
+    } else if (!outerpc->sc->inFunction()) {
+        // This covers the case where a function is nested within an eval()
+        // within a |with| statement.
+        //
+        //   with (o) { eval("(function() { g(); })();"); }
+        //
+        // In this case, |outerpc| corresponds to the eval(),
+        // outerpc->parsingWith is false because the eval() breaks the
+        // ParseContext chain, and |parent| is NULL (again because of the
+        // eval(), so we have to look at |outerpc|'s scopeChain.
+        //
         JSObject *scope = outerpc->sc->scopeChain();
         while (scope) {
             if (scope->isWith())
                 inWith = true;
             scope = scope->enclosingScope();
         }
+    } else {
+        // This is like the above case, but for more deeply nested functions.
+        // For example:
+        //
+        //   with (o) { eval("(function() { (function() { g(); })(); })();"); } }
+        //
+        // In this case, the inner anonymous function needs to inherit the
+        // setting of |inWith| from the outer one.
+        FunctionBox *parent = outerpc->sc->funbox();
+        if (parent && parent->inWith)
+            inWith = true;
     }
 }
 

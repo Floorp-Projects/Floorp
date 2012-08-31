@@ -1066,8 +1066,8 @@ nsEventListenerManager::HasUnloadListeners()
 }
 
 nsresult
-nsEventListenerManager::SetEventHandlerToJsval(nsIAtom *aEventName,
-                                               JSContext *cx,
+nsEventListenerManager::SetEventHandlerToJsval(nsIAtom* aEventName,
+                                               JSContext* cx,
                                                JSObject* aScope,
                                                const jsval& v,
                                                bool aExpectScriptContext)

@@ -92,7 +92,7 @@
       * the end of the file has been reached.
       * @throws {OS.File.Error} In case of I/O error.
       */
-     File.prototype.read = function read(buffer, nbytes, options) {
+     File.prototype._read = function _read(buffer, nbytes, options) {
        return throw_on_negative("read",
          UnixFile.read(this.fd, buffer, nbytes)
        );
@@ -111,7 +111,7 @@
       * @return {number} The number of bytes effectively written.
       * @throws {OS.File.Error} In case of I/O error.
       */
-     File.prototype.write = function write(buffer, nbytes, options) {
+     File.prototype._write = function _write(buffer, nbytes, options) {
        return throw_on_negative("write",
          UnixFile.write(this.fd, buffer, nbytes)
        );
@@ -157,6 +157,16 @@
      File.prototype.stat = function stat() {
        throw_on_negative("stat", UnixFile.fstat(this.fd, gStatDataPtr));
          return new File.Info(gStatData);
+     };
+
+     /**
+      * Flushes the file's buffers and causes all buffered data
+      * to be written.
+      *
+      * @throws {OS.File.Error} In case of I/O error.
+      */
+     File.prototype.flush = function flush() {
+       throw_on_negative("flush", UnixFile.fsync(this.fd));
      };
 
 
@@ -401,8 +411,8 @@
          if (!pump_buffer || pump_buffer.length < bufSize) {
            pump_buffer = new (ctypes.ArrayType(ctypes.char))(bufSize);
          }
-         let read = source.read.bind(source);
-         let write = dest.write.bind(dest);
+         let read = source._read.bind(source);
+         let write = dest._write.bind(dest);
          // Perform actual copy
          let total_read = 0;
          while (true) {
