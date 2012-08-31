@@ -8,17 +8,17 @@
     <RelativeLayout android:layout_width="fill_parent"
                     android:layout_height="fill_parent">
 
-        <ImageButton android:id="@+id/menu"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="78dip"
-                     android:layout_alignParentRight="true"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/menu"
-                     android:contentDescription="@string/menu"
-                     android:background="@drawable/menu_normal"
-                     android:paddingLeft="42dip"
-                     android:paddingRight="12dip"
-                     android:enabled="false"/>
+        <org.mozilla.gecko.MenuButton android:id="@+id/menu"
+                                      style="@style/AddressBar.ImageButton"
+                                      android:layout_width="78dip"
+                                      android:layout_alignParentRight="true"
+                                      android:gravity="center_vertical"
+                                      android:src="@drawable/menu"
+                                      android:contentDescription="@string/menu"
+                                      android:background="@android:color/black"
+                                      android:paddingLeft="42dip"
+                                      android:paddingRight="12dip"
+                                      android:enabled="false"/>
 
         <View android:layout_width="fill_parent"
               android:layout_height="fill_parent"
