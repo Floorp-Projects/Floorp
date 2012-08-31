@@ -19,17 +19,17 @@
                                                     android:layout_alignParentRight="true"
                                                     android:background="@drawable/address_bar_bg"/>
 
-        <ImageButton android:id="@+id/menu"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="90dip"
-                     android:layout_alignParentRight="true"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/menu_level"
-                     android:contentDescription="@string/menu"
-                     android:background="@drawable/menu_button"
-                     android:paddingLeft="48dip"
-                     android:paddingRight="14dip"
-                     android:visibility="gone"/>
+        <org.mozilla.gecko.MenuButton android:id="@+id/menu"
+                                      style="@style/AddressBar.ImageButton"
+                                      android:layout_width="90dip"
+                                      android:layout_alignParentRight="true"
+                                      android:gravity="center_vertical"
+                                      android:src="@drawable/menu_level"
+                                      android:contentDescription="@string/menu"
+                                      android:background="@drawable/menu_button"
+                                      android:paddingLeft="48dip"
+                                      android:paddingRight="14dip"
+                                      android:visibility="gone"/>
 
         <org.mozilla.gecko.TabsButton android:id="@+id/tabs"
                                       style="@style/AddressBar.ImageButton"

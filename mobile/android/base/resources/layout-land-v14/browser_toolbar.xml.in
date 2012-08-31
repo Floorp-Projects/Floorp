@@ -32,8 +32,8 @@
                                                     android:layout_alignParentRight="true"
                                                     android:background="@drawable/address_bar_bg"/>
 
-        <ImageButton android:id="@+id/menu"
-                     style="@style/AddressBar.ImageButton.Unused"/>
+        <org.mozilla.gecko.MenuButton android:id="@+id/menu"
+                                      style="@style/AddressBar.ImageButton.Unused"/>
 
         <org.mozilla.gecko.TabsButton android:id="@+id/tabs"
                                       style="@style/AddressBar.ImageButton"

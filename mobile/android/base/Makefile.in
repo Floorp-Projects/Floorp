@@ -89,6 +89,7 @@ FENNEC_JAVA_FILES = \
   InputMethods.java \
   LinkPreference.java \
   LinkTextView.java \
+  MenuButton.java \
   MenuItemActionBar.java \
   MenuItemDefault.java \
   MultiChoicePreference.java \
@@ -641,8 +642,6 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-mdpi-v11/ic_menu_share.png \
   res/drawable-mdpi-v11/menu.png \
-  res/drawable-mdpi-v11/menu_normal.png \
-  res/drawable-mdpi-v11/menu_pressed.png \
   res/drawable-mdpi-v11/menu_panel_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_arrow.png \
@@ -669,8 +668,6 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-hdpi-v11/ic_menu_share.png \
   res/drawable-hdpi-v11/menu.png \
-  res/drawable-hdpi-v11/menu_normal.png \
-  res/drawable-hdpi-v11/menu_pressed.png \
   res/drawable-hdpi-v11/menu_panel_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_arrow.png \
@@ -697,8 +694,6 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-xhdpi-v11/ic_menu_share.png \
   res/drawable-xhdpi-v11/menu.png \
-  res/drawable-xhdpi-v11/menu_normal.png \
-  res/drawable-xhdpi-v11/menu_pressed.png \
   res/drawable-xhdpi-v11/menu_panel_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_bg.9.png \
   res/drawable-xhdpi-v11/menu_popup_arrow.png \
@@ -727,8 +722,6 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/tabs_carat.png \
   res/drawable-land-mdpi-v14/urlbar_stop.png \
   res/drawable-land-mdpi-v14/menu.png \
-  res/drawable-land-mdpi-v14/menu_normal.png \
-  res/drawable-land-mdpi-v14/menu_pressed.png \
   res/drawable-land-mdpi-v14/reader.png \
   res/drawable-land-mdpi-v14/site_security_identified.png \
   res/drawable-land-mdpi-v14/site_security_verified.png \
@@ -748,8 +741,6 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/tabs_carat.png \
   res/drawable-land-hdpi-v14/urlbar_stop.png \
   res/drawable-land-hdpi-v14/menu.png \
-  res/drawable-land-hdpi-v14/menu_normal.png \
-  res/drawable-land-hdpi-v14/menu_pressed.png \
   res/drawable-land-hdpi-v14/reader.png \
   res/drawable-land-hdpi-v14/site_security_identified.png \
   res/drawable-land-hdpi-v14/site_security_verified.png \
@@ -769,8 +760,6 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/tabs_carat.png \
   res/drawable-land-xhdpi-v14/urlbar_stop.png \
   res/drawable-land-xhdpi-v14/menu.png \
-  res/drawable-land-xhdpi-v14/menu_normal.png \
-  res/drawable-land-xhdpi-v14/menu_pressed.png \
   res/drawable-land-xhdpi-v14/reader.png \
   res/drawable-land-xhdpi-v14/site_security_identified.png \
   res/drawable-land-xhdpi-v14/site_security_verified.png \
@@ -799,8 +788,6 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/site_security_identified.png \
   res/drawable-large-mdpi-v11/site_security_verified.png \
   res/drawable-large-mdpi-v11/menu.png \
-  res/drawable-large-mdpi-v11/menu_normal.png \
-  res/drawable-large-mdpi-v11/menu_pressed.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
   $(NULL)
 
@@ -826,8 +813,6 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/site_security_identified.png \
   res/drawable-large-hdpi-v11/site_security_verified.png \
   res/drawable-large-hdpi-v11/menu.png \
-  res/drawable-large-hdpi-v11/menu_normal.png \
-  res/drawable-large-hdpi-v11/menu_pressed.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
   $(NULL)
 
@@ -853,8 +838,6 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/site_security_identified.png \
   res/drawable-large-xhdpi-v11/site_security_verified.png \
   res/drawable-large-xhdpi-v11/menu.png \
-  res/drawable-large-xhdpi-v11/menu_normal.png \
-  res/drawable-large-xhdpi-v11/menu_pressed.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
   $(NULL)
 
