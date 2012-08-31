@@ -177,7 +177,7 @@ function testSteps()
   is(event.target.result, key1, "put gave back the same key");
 
   request = objectStore.add({id:10});
-  request.onerror = new ExpectError("ConstraintError", true);
+  request.addEventListener("error", new ExpectError("ConstraintError", true));
   request.onsuccess = unexpectedSuccessHandler;
   event = yield;
 

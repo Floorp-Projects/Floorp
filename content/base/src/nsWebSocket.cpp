@@ -503,10 +503,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsWebSocket)
   if (isBlack|| tmp->mKeepingAlive) {
     if (tmp->mListenerManager) {
       tmp->mListenerManager->UnmarkGrayJSListeners();
-      NS_UNMARK_LISTENER_WRAPPER(Open)
-      NS_UNMARK_LISTENER_WRAPPER(Error)
-      NS_UNMARK_LISTENER_WRAPPER(Message)
-      NS_UNMARK_LISTENER_WRAPPER(Close)
     }
     if (!isBlack && tmp->PreservingWrapper()) {
       xpc_UnmarkGrayObject(tmp->GetWrapperPreserveColor());
@@ -529,10 +525,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsWebSocket,
                                                   nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnOpenListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnMessageListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnCloseListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mURI)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannel)
@@ -541,10 +533,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsWebSocket,
                                                 nsDOMEventTargetHelper)
   tmp->Disconnect();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnOpenListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnMessageListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnCloseListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mURI)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChannel)
@@ -566,14 +554,15 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsWebSocket, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsWebSocket, nsDOMEventTargetHelper)
 
+NS_IMPL_EVENT_HANDLER(nsWebSocket, open)
+NS_IMPL_EVENT_HANDLER(nsWebSocket, error)
+NS_IMPL_EVENT_HANDLER(nsWebSocket, message)
+NS_IMPL_EVENT_HANDLER(nsWebSocket, close)
+
 void
 nsWebSocket::DisconnectFromOwner()
 {
   nsDOMEventTargetHelper::DisconnectFromOwner();
-  NS_DISCONNECT_EVENT_HANDLER(Open)
-  NS_DISCONNECT_EVENT_HANDLER(Message)
-  NS_DISCONNECT_EVENT_HANDLER(Close)
-  NS_DISCONNECT_EVENT_HANDLER(Error)
   CloseConnection(nsIWebSocketChannel::CLOSE_GOING_AWAY);
   DontKeepAliveAnyMore();
 }
@@ -1223,25 +1212,6 @@ nsWebSocket::SetBinaryType(const nsAString& aBinaryType)
 
   return NS_OK;
 }
-
-#define NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(_eventlistenername, _eventlistener) \
-  NS_IMETHODIMP                                                                \
-  nsWebSocket::GetOn##_eventlistenername(nsIDOMEventListener * *aEventListener)\
-  {                                                                            \
-    return GetInnerEventListener(_eventlistener, aEventListener);              \
-  }                                                                            \
-                                                                               \
-  NS_IMETHODIMP                                                                \
-  nsWebSocket::SetOn##_eventlistenername(nsIDOMEventListener * aEventListener) \
-  {                                                                            \
-    return RemoveAddEventListener(NS_LITERAL_STRING(#_eventlistenername),      \
-                                  _eventlistener, aEventListener);             \
-  }
-
-NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(open, mOnOpenListener)
-NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(error, mOnErrorListener)
-NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(message, mOnMessageListener)
-NS_WEBSOCKET_IMPL_DOMEVENTLISTENER(close, mOnCloseListener)
 
 NS_IMETHODIMP
 nsWebSocket::Send(nsIVariant *aData, JSContext *aCx)

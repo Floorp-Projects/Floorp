@@ -46,12 +46,8 @@ DOMCI_DATA(DesktopNotification, nsDOMDesktopNotification)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMDesktopNotification)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMDesktopNotification, nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnClickCallback)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnCloseCallback)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMDesktopNotification, nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnClickCallback)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnCloseCallback)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDesktopNotification)
@@ -62,6 +58,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMDesktopNotification, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsDOMDesktopNotification, nsDOMEventTargetHelper)
+
+NS_IMPL_EVENT_HANDLER(nsDOMDesktopNotification, click)
+NS_IMPL_EVENT_HANDLER(nsDOMDesktopNotification, close)
 
 nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
                                                    const nsAString & description,
@@ -179,32 +178,6 @@ nsDOMDesktopNotification::Show()
     return NS_OK;
 
   return PostDesktopNotification();
-}
-
-NS_IMETHODIMP
-nsDOMDesktopNotification::GetOnclick(nsIDOMEventListener * *aOnclick)
-{
-  return GetInnerEventListener(mOnClickCallback, aOnclick);
-}
-
-NS_IMETHODIMP nsDOMDesktopNotification::SetOnclick(nsIDOMEventListener * aOnclick)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING("click"),
-                                mOnClickCallback,
-                                aOnclick);
-}
-
-NS_IMETHODIMP
-nsDOMDesktopNotification::GetOnclose(nsIDOMEventListener * *aOnclose)
-{
-  return GetInnerEventListener(mOnCloseCallback, aOnclose);
-}
-
-NS_IMETHODIMP nsDOMDesktopNotification::SetOnclose(nsIDOMEventListener * aOnclose)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING("close"),
-                                mOnCloseCallback,
-                                aOnclose);
 }
 
 /* ------------------------------------------------------------------------ */
