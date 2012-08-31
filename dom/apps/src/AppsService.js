@@ -47,6 +47,11 @@ AppsService.prototype = {
     return DOMApplicationRegistry.getManifestURLByLocalId(aLocalId);
   },
 
+  getAppFromObserverMessage: function getAppFromObserverMessage(aMessage) {
+    debug("getAppFromObserverMessage( " + aMessage + " )");
+    return DOMApplicationRegistry.getAppFromObserverMessage(aMessage);
+  },
+
   classID : APPS_SERVICE_CID,
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIAppsService])
 }

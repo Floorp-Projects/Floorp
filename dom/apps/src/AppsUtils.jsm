@@ -105,5 +105,20 @@ let AppsUtils = {
     }
 
     return "";
+  },
+
+  getAppFromObserverMessage: function(aApps, aMessage) {
+    let data = JSON.parse(aMessage);
+
+    for (let id in aApps) {
+      let app = aApps[id];
+      if (app.origin != data.origin) {
+        continue;
+      }
+
+      return this.cloneAsMozIApplication(app);
+    }
+
+    return null;
   }
 }
