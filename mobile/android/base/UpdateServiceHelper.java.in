@@ -1,0 +1,79 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#filter substitution
+
+package org.mozilla.gecko.updater;
+
+import android.content.Context;
+import android.content.Intent;
+
+import android.os.Build;
+
+import android.util.Log;
+
+import java.net.URL;
+
+import java.util.Locale;
+
+public class UpdateServiceHelper {
+    public static final String ACTION_REGISTER_FOR_UPDATES = "@ANDROID_PACKAGE_NAME@.REGISTER_FOR_UPDATES";
+    public static final String ACTION_UNREGISTER_FOR_UPDATES = "@ANDROID_PACKAGE_NAME@.UNREGISTER_FOR_UPDATES";
+    public static final String ACTION_CHECK_FOR_UPDATE = "@ANDROID_PACKAGE_NAME@.CHECK_FOR_UPDATE";
+    public static final String ACTION_CHECK_UPDATE_RESULT = "@ANDROID_PACKAGE_NAME@.CHECK_UPDATE_RESULT";
+    public static final String ACTION_APPLY_UPDATE = "@ANDROID_PACKAGE_NAME@.APPLY_UPDATE";
+
+    // Flags for ACTION_CHECK_FOR_UPDATE
+    public static final int FLAG_FORCE_DOWNLOAD = 1;
+    public static final int FLAG_OVERWRITE_EXISTING = 1 << 1;
+    public static final int FLAG_REINSTALL = 1 << 2;
+    public static final int FLAG_RETRY = 1 << 3;
+
+    // Name of the Intent extra that holds the flags for ACTION_CHECK_FOR_UPDATE
+    public static final String EXTRA_UPDATE_FLAGS_NAME = "updateFlags";
+
+    // Name of the Intent extra that holds the APK path, used with ACTION_APPLY_UPDATE
+    public static final String EXTRA_PACKAGE_PATH_NAME = "packagePath";
+
+    public static final String UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
+
+    private static final String LOGTAG = "UpdateServiceHelper";
+    private static final String BUILDID = "@MOZ_APP_BUILDID@";
+
+#ifdef MOZ_PKG_SPECIAL
+    private static final String UPDATE_URL = "https://aus2.mozilla.org/update/4/@MOZ_APP_BASENAME@/@MOZ_APP_VERSION@/%BUILDID%/Android_@MOZ_APP_ABI@-@MOZ_PKG_SPECIAL@/%LOCALE%/@MOZ_UPDATE_CHANNEL@/%OS_VERSION%/default/default/@MOZ_APP_VERSION@/update.xml";
+#else
+    private static final String UPDATE_URL = "https://aus2.mozilla.org/update/4/@MOZ_APP_BASENAME@/@MOZ_APP_VERSION@/%BUILDID%/Android_@MOZ_APP_ABI@/%LOCALE%/@MOZ_UPDATE_CHANNEL@/%OS_VERSION%/default/default/@MOZ_APP_VERSION@/update.xml";  
+#endif
+    
+    public static URL getUpdateUrl(boolean force) {
+        Locale locale = Locale.getDefault();
+        String url = UPDATE_URL.replace("%LOCALE%", locale.getLanguage() + "-" + locale.getCountry()).
+            replace("%OS_VERSION%", Build.VERSION.RELEASE).
+            replace("%BUILDID%", force ? "0" : BUILDID);
+
+        try {
+            return new URL(url);
+        } catch (java.net.MalformedURLException e) {
+            Log.e(LOGTAG, "Failed to create update url: ", e);
+            return null;
+        }
+    }
+
+    public static boolean isUpdaterEnabled() {
+#ifdef MOZ_UPDATER
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    public static void registerForUpdates(Context context) {
+        if (!isUpdaterEnabled())
+            return;
+
+        context.startService(new Intent(UpdateServiceHelper.ACTION_REGISTER_FOR_UPDATES, null, context, UpdateService.class));
+    }
+}
