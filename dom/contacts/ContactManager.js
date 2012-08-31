@@ -170,9 +170,9 @@ function Contact() {
 
 Contact.prototype = {
   __exposedProps__: {
-                      id: 'rw',
-                      updated: 'rw',
-                      published:  'rw',
+                      id: 'r',
+                      updated: 'r',
+                      published:  'r',
                       name: 'rw',
                       honorificPrefix: 'rw',
                       givenName: 'rw',

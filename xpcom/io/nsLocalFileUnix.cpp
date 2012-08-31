@@ -963,7 +963,7 @@ nsLocalFile::Remove(bool recursive)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTime(int64_t *aLastModTime)
+nsLocalFile::GetLastModifiedTime(PRTime *aLastModTime)
 {
     CHECK_mPath();
     NS_ENSURE_ARG(aLastModTime);
@@ -971,17 +971,17 @@ nsLocalFile::GetLastModifiedTime(int64_t *aLastModTime)
     PRFileInfo64 info;
     if (PR_GetFileInfo64(mPath.get(), &info) != PR_SUCCESS)
         return NSRESULT_FOR_ERRNO();
-    int64_t modTime = int64_t(info.modifyTime);
+    PRTime modTime = info.modifyTime;
     if (modTime == 0)
         *aLastModTime = 0;
     else
-        *aLastModTime = modTime / int64_t(PR_USEC_PER_MSEC);
+        *aLastModTime = modTime / PR_USEC_PER_MSEC;
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTime(int64_t aLastModTime)
+nsLocalFile::SetLastModifiedTime(PRTime aLastModTime)
 {
     CHECK_mPath();
 
@@ -992,7 +992,7 @@ nsLocalFile::SetLastModifiedTime(int64_t aLastModTime)
         ut.actime = mCachedStat.st_atime;
 
         // convert milliseconds to seconds since the unix epoch
-        ut.modtime = (time_t)(double(aLastModTime) / PR_MSEC_PER_SEC);
+        ut.modtime = (time_t)(aLastModTime / PR_MSEC_PER_SEC);
         result = utime(mPath.get(), &ut);
     } else {
         result = utime(mPath.get(), nullptr);
@@ -1001,7 +1001,7 @@ nsLocalFile::SetLastModifiedTime(int64_t aLastModTime)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTimeOfLink(int64_t *aLastModTimeOfLink)
+nsLocalFile::GetLastModifiedTimeOfLink(PRTime *aLastModTimeOfLink)
 {
     CHECK_mPath();
     NS_ENSURE_ARG(aLastModTimeOfLink);
@@ -1009,7 +1009,7 @@ nsLocalFile::GetLastModifiedTimeOfLink(int64_t *aLastModTimeOfLink)
     struct STAT sbuf;
     if (LSTAT(mPath.get(), &sbuf) == -1)
         return NSRESULT_FOR_ERRNO();
-    *aLastModTimeOfLink = int64_t(sbuf.st_mtime) * int64_t(PR_MSEC_PER_SEC);
+    *aLastModTimeOfLink = PRTime(sbuf.st_mtime) * PR_MSEC_PER_SEC;
 
     return NS_OK;
 }
@@ -1018,7 +1018,7 @@ nsLocalFile::GetLastModifiedTimeOfLink(int64_t *aLastModTimeOfLink)
  * utime(2) may or may not dereference symlinks, joy.
  */
 NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTimeOfLink(int64_t aLastModTimeOfLink)
+nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink)
 {
     return SetLastModifiedTime(aLastModTimeOfLink);
 }

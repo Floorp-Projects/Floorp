@@ -494,7 +494,7 @@ nsDOMFileFile::GetMozFullPathInternal(nsAString &aFilename)
 NS_IMETHODIMP
 nsDOMFileFile::GetLastModifiedDate(JSContext* cx, JS::Value *aLastModifiedDate)
 {
-  int64_t msecs;
+  PRTime msecs;
   mFile->GetLastModifiedTime(&msecs);
   JSObject* date = JS_NewDateObjectMsec(cx, msecs);
   if (date) {

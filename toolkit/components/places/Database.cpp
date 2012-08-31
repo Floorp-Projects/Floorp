@@ -90,7 +90,7 @@ hasRecentCorruptDB()
     if (NS_SUCCEEDED(currFile->GetLeafName(leafName)) &&
         leafName.Length() >= DATABASE_CORRUPT_FILENAME.Length() &&
         leafName.Find(".corrupt", DATABASE_FILENAME.Length()) != -1) {
-      int64_t lastMod = 0;
+      PRTime lastMod = 0;
       currFile->GetLastModifiedTime(&lastMod);
       NS_ENSURE_TRUE(lastMod > 0, false);
       return (PR_Now() - lastMod) > RECENT_BACKUP_TIME_MICROSEC;

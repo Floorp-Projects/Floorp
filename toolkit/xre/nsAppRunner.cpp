@@ -810,7 +810,7 @@ nsXULAppInfo::InvalidateCachesOnRestart()
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetReplacedLockTime(int64_t *aReplacedLockTime)
+nsXULAppInfo::GetReplacedLockTime(PRTime *aReplacedLockTime)
 {
   if (!gProfileLock)
     return NS_ERROR_NOT_AVAILABLE;

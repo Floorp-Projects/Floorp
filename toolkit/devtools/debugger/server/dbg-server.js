@@ -61,6 +61,9 @@ var DebuggerServer = {
   xpcInspector: null,
   _allowConnection: null,
 
+  LONG_STRING_LENGTH: 10000,
+  LONG_STRING_INITIAL_LENGTH: 1000,
+
   /**
    * Initialize the debugger server.
    *

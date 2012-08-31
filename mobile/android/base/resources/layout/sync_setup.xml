@@ -3,39 +3,34 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  style="@style/SyncLayout" >
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncContainer" >
 
   <TextView
       style="@style/SyncTop"
-      android:id="@+id/setup_top"
       android:text="@string/sync_title_connect" />
 
   <ScrollView
-    style="@style/SyncLayout"
-    android:fillViewport="true"
-    android:layout_below="@id/setup_top"
-    android:layout_above="@+id/setup_bottom" >
+    style="@style/SyncMiddle"
+    android:padding="@dimen/SyncSpace" >
 
     <LinearLayout
-        style="@style/SyncLayout.Vertical"
-        android:layout_height="wrap_content"
-        android:padding="15dp" >
+        style="@style/SyncLayout.Vertical" >
 
       <TextView
         android:id="@+id/setup_header"
         style="@style/SyncTextItem"
         android:gravity="left"
-        android:layout_marginTop="15dp"
+        android:paddingBottom="@dimen/SyncSpace"
         android:text="@string/sync_subtitle_header"
         android:textStyle="bold"
         android:focusable="true"
         android:nextFocusDown="@+id/setup_subtitle" />
+
       <TextView
         android:id="@id/setup_subtitle"
         style="@style/SyncTextItem"
         android:gravity="left"
-        android:layout_marginTop="2dp"
         android:text="@string/sync_subtitle_connect"
         android:focusable="true"
         android:nextFocusDown="@+id/setup_showme"
@@ -44,7 +39,7 @@
       <TextView
         android:id="@id/setup_showme"
         style="@style/SyncLinkItem"
-        android:layout_marginTop="2dp"
+        android:paddingBottom="@dimen/SyncSpace"
         android:onClick="showClickHandler"
         android:text="@string/sync_link_show"
         android:focusable="true"
@@ -54,9 +49,7 @@
       <LinearLayout
         style="@style/SyncLayout"
         android:layout_height="wrap_content"
-        android:paddingTop="30dp"
-        android:paddingBottom="30dp"
-        android:paddingLeft="-15dp"
+        android:paddingBottom="@dimen/SyncSpace"
         android:orientation="vertical" >
         <TextView
           android:id="@id/text_pin1"
@@ -81,20 +74,20 @@
         android:id="@id/link_nodevice"
         style="@style/SyncLinkItem"
         android:gravity="center"
-        android:paddingBottom="5dp"
         android:onClick="manualClickHandler"
         android:text="@string/sync_link_advancedsetup"
         android:focusable="true"
         android:nextFocusUp="@id/text_pin3" />
     </LinearLayout>
   </ScrollView>
+
   <LinearLayout
-    android:id="@id/setup_bottom"
     style="@style/SyncBottom"
     android:orientation="horizontal" >
+
     <Button
       style="@style/SyncButton"
       android:onClick="cancelClickHandler"
       android:text="@string/sync_button_cancel" />
   </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

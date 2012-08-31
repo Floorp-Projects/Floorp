@@ -1133,7 +1133,7 @@ FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
     // ensure that we DO NOT resolve aliases
     aFile->SetFollowLinks(false);
 
-    int64_t lastModDate;
+    PRTime lastModDate;
     if (NS_FAILED(rv = aFile->GetLastModifiedTime(&lastModDate)))
         return(rv);
 
