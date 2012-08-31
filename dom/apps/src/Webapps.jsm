@@ -111,15 +111,6 @@ let DOMApplicationRegistry = {
         }).bind(this));
       }
     }).bind(this));
-
-    try {
-      let hosts = Services.prefs.getCharPref("dom.mozApps.whitelist");
-      hosts.split(",").forEach(function(aHost) {
-        Services.perms.add(Services.io.newURI(aHost, null, null),
-                           "webapps-manage",
-                           Ci.nsIPermissionManager.ALLOW_ACTION);
-      });
-    } catch(e) { }
   },
 
 #ifdef MOZ_SYS_MSG
