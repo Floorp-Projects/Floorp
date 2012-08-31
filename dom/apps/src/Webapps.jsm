@@ -780,6 +780,10 @@ let DOMApplicationRegistry = {
     return AppsUtils.getAppLocalIdByManifestURL(this.webapps, aManifestURL);
   },
 
+  getAppFromObserverMessage: function(aMessage) {
+    return AppsUtils.getAppFromObserverMessage(this.webapps, aMessage);
+  },
+
   getAllWithoutManifests: function(aCallback) {
     let result = {};
     for (let id in this.webapps) {

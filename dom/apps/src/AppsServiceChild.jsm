@@ -76,6 +76,11 @@ let DOMApplicationRegistry = {
   getManifestURLByLocalId: function getManifestURLByLocalId(aLocalId) {
     debug("getManifestURLByLocalId " + aLocalId);
     return AppsUtils.getManifestURLByLocalId(this.webapps, aLocalId);
+  },
+
+  getAppFromObserverMessage: function getAppFromObserverMessage(aMessage) {
+    debug("getAppFromObserverMessage " + aMessage);
+    return AppsUtils.getAppFromObserverMessage(this.webapps. aMessage);
   }
 }
 
