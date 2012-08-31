@@ -193,6 +193,7 @@
 
 *|*::-moz-pagecontent {
   display: block !important;
+  margin: auto;
 }
 
 *|*::-moz-pagebreak {

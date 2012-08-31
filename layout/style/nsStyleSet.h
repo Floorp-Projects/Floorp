@@ -29,6 +29,7 @@
 class nsIURI;
 class nsCSSFontFaceRule;
 class nsCSSKeyframesRule;
+class nsCSSPageRule;
 class nsRuleWalker;
 struct ElementDependentRuleProcessorData;
 struct TreeMatchContext;
@@ -151,6 +152,11 @@ class nsStyleSet
   // true for success and false for failure.
   bool AppendKeyframesRules(nsPresContext* aPresContext,
                               nsTArray<nsCSSKeyframesRule*>& aArray);
+
+  // Append all the currently-active page rules to aArray.  Return
+  // true for success and false for failure.
+  bool AppendPageRules(nsPresContext* aPresContext,
+                       nsTArray<nsCSSPageRule*>& aArray);
 
   // Begin ignoring style context destruction, to avoid lots of unnecessary
   // work on document teardown.

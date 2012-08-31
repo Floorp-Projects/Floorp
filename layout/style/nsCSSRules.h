@@ -28,12 +28,8 @@
 #include "nsTArray.h"
 #include "nsDOMCSSDeclaration.h"
 #include "Declaration.h"
-
-namespace mozilla {
-namespace css {
-class StyleRule;
-}
-}
+#include "nsIDOMCSSPageRule.h"
+#include "StyleRule.h"
 
 class nsMediaList;
 
@@ -431,6 +427,79 @@ private:
   uint32_t FindRuleIndexForKey(const nsAString& aKey);
 
   nsString                                   mName;
+};
+
+class nsCSSPageRule;
+
+class nsCSSPageStyleDeclaration MOZ_FINAL : public nsDOMCSSDeclaration
+{
+public:
+  nsCSSPageStyleDeclaration(nsCSSPageRule *aRule);
+  virtual ~nsCSSPageStyleDeclaration();
+
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) MOZ_OVERRIDE;
+  void DropReference() { mRule = nullptr; }
+  virtual mozilla::css::Declaration* GetCSSDeclaration(bool aAllocate) MOZ_OVERRIDE;
+  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl) MOZ_OVERRIDE;
+  virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) MOZ_OVERRIDE;
+  virtual nsIDocument* DocToUpdate() MOZ_OVERRIDE;
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsCSSPageStyleDeclaration,
+                                                         nsICSSDeclaration)
+
+  virtual nsINode *GetParentObject();
+
+protected:
+  // This reference is not reference-counted. The rule object tells us
+  // when it's about to go away.
+  nsCSSPageRule *mRule;
+};
+
+class nsCSSPageRule MOZ_FINAL : public mozilla::css::Rule,
+                                public nsIDOMCSSPageRule
+{
+public:
+  // WARNING: Steals the contents of aDeclaration
+  nsCSSPageRule(nsAutoPtr<mozilla::css::Declaration> aDeclaration)
+    : mDeclaration(aDeclaration),
+      mImportantRule(nullptr)
+  {
+  }
+private:
+  nsCSSPageRule(const nsCSSPageRule& aCopy);
+  ~nsCSSPageRule();
+public:
+  NS_DECL_ISUPPORTS
+
+  // nsIStyleRule methods
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
+#endif
+
+  // Rule methods
+  DECL_STYLE_RULE_INHERIT
+  virtual int32_t GetType() const;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
+  // nsIDOMCSSPageRule interface
+  NS_DECL_NSIDOMCSSPAGERULE
+
+  mozilla::css::Declaration* Declaration()   { return mDeclaration; }
+
+  void ChangeDeclaration(mozilla::css::Declaration* aDeclaration);
+
+  mozilla::css::ImportantRule* GetImportantRule();
+
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+private:
+  nsAutoPtr<mozilla::css::Declaration>    mDeclaration;
+  // lazily created when needed:
+  nsRefPtr<nsCSSPageStyleDeclaration>     mDOMDeclaration;
+  nsRefPtr<mozilla::css::ImportantRule>   mImportantRule;
 };
 
 namespace mozilla {
