@@ -1034,8 +1034,12 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
     JSBool ok;
     {
         AssertCompartmentUnchanged pcc(cx);
+
+#ifdef JS_ION
         ion::IonContext ictx(cx, cx->compartment, NULL);
         ion::IonActivation activation(cx, NULL);
+#endif
+
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
         ok = JaegerTrampoline(cx, fp, code, stackLimit);
