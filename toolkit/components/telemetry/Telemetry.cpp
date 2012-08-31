@@ -1395,8 +1395,7 @@ TelemetryImpl::RecordSlowStatement(const nsACString &sql,
                                    const nsACString &dbName,
                                    uint32_t delay)
 {
-  MOZ_ASSERT(sTelemetry);
-  if (!sTelemetry->mCanRecord)
+  if (!sTelemetry || !sTelemetry->mCanRecord)
     return;
 
   nsCAutoString fullSQL(sql);
@@ -1421,10 +1420,8 @@ void
 TelemetryImpl::RecordChromeHang(uint32_t duration,
                                 Telemetry::ProcessedStack &aStack)
 {
-  MOZ_ASSERT(sTelemetry);
-  if (!sTelemetry->mCanRecord) {
+  if (!sTelemetry || !sTelemetry->mCanRecord)
     return;
-  }
 
   MutexAutoLock hangReportMutex(sTelemetry->mHangReportsMutex);
 
@@ -1432,8 +1429,7 @@ TelemetryImpl::RecordChromeHang(uint32_t duration,
   if (sTelemetry->mHangReports.Length()) {
     Telemetry::ProcessedStack &firstStack =
       sTelemetry->mHangReports[0].mStack;
-    const uint32_t moduleCount = aStack.GetNumModules();
-    for (size_t i = 0; i < moduleCount; ++i) {
+    for (size_t i = 0; i < aStack.GetNumModules(); ++i) {
       const Telemetry::ProcessedStack::Module &module = aStack.GetModule(i);
       if (firstStack.HasModule(module)) {
         aStack.RemoveModule(i);
