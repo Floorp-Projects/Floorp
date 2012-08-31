@@ -160,12 +160,8 @@ CodeGeneratorX64::loadUnboxedValue(Operand source, MIRType type, const LDefiniti
 
       case MIRType_Object:
       case MIRType_String:
-      {
-        Register out = ToRegister(dest);
-        masm.movq(source, out);
-        masm.unboxObject(ValueOperand(out), out);
+        masm.unboxObject(source, ToRegister(dest));
         break;
-      }
 
       case MIRType_Int32:
       case MIRType_Boolean:
@@ -199,8 +195,7 @@ CodeGeneratorX64::storeUnboxedValue(const LAllocation *value, MIRType valueType,
 
     // For known integers and booleans, we can just store the unboxed value if
     // the slot has the same type.
-    if ((valueType == MIRType_Int32 || valueType == MIRType_Boolean) &&
-        slotType == valueType) {
+    if ((valueType == MIRType_Int32 || valueType == MIRType_Boolean) && slotType == valueType) {
         if (value->isConstant()) {
             Value val = *value->toConstant();
             if (valueType == MIRType_Int32)
@@ -217,9 +212,7 @@ CodeGeneratorX64::storeUnboxedValue(const LAllocation *value, MIRType valueType,
         masm.moveValue(*value->toConstant(), ScratchReg);
         masm.movq(ScratchReg, dest);
     } else {
-        JSValueType type = ValueTypeFromMIRType(valueType);
-        masm.boxValue(type, ToRegister(value), ScratchReg);
-        masm.movq(ScratchReg, dest);
+        masm.storeValue(ValueTypeFromMIRType(valueType), ToRegister(value), dest);
     }
 }
 
