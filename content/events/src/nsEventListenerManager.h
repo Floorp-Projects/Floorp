@@ -44,6 +44,7 @@ struct nsListenerStruct
   nsCOMPtr<nsIAtom>             mTypeAtom;
   uint16_t                      mFlags;
   uint8_t                       mListenerType;
+  bool                          mListenerIsHandler;
   bool                          mHandlerIsString;
 
   nsIJSEventListener* GetJSListener() const {
@@ -281,7 +282,8 @@ protected:
   void AddEventListener(nsIDOMEventListener *aListener, 
                         uint32_t aType,
                         nsIAtom* aTypeAtom,
-                        int32_t aFlags);
+                        int32_t aFlags,
+                        bool aHandler = false);
   void RemoveEventListener(nsIDOMEventListener *aListener,
                            uint32_t aType,
                            nsIAtom* aUserType,
