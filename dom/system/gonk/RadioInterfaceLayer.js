@@ -763,6 +763,11 @@ RadioInterfaceLayer.prototype = {
   handleCallStateChange: function handleCallStateChange(call) {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
+
+    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_INCOMING) {
+      gSystemMessenger.broadcastMessage("telephony-incoming", {number: call.number});
+    }
+
     if (call.isActive) {
       this._activeCall = call;
     } else if (this._activeCall &&
