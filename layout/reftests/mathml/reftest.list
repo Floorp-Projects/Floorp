@@ -104,3 +104,8 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # See bug 569125#c29
 == maction-dynamic-2.html maction-dynamic-2-ref.html
 == mo-lspace-rspace.html mo-lspace-rspace-ref.html
 == maction-dynamic-3.html maction-dynamic-3-ref.html
+== whitespace-trim-1.html whitespace-trim-1-ref.html
+== whitespace-trim-2.html whitespace-trim-2-ref.html
+== whitespace-trim-3.html whitespace-trim-3-ref.html
+fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 560100
+== whitespace-trim-5.html whitespace-trim-5-ref.html
