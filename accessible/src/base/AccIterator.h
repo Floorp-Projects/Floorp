@@ -8,7 +8,7 @@
 #define mozilla_a11y_AccIterator_h__
 
 #include "DocAccessible.h"
-#include "AccFilters.h"
+#include "Filters.h"
 #include "nsAccessibilityService.h"
 
 namespace mozilla {
