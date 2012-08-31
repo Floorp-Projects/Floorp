@@ -24,19 +24,6 @@ NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPageContentFrame)
 
-/* virtual */ nsSize
-nsPageContentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
-                                nsSize aCBSize, nscoord aAvailableWidth,
-                                nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                                uint32_t aFlags)
-{
-  NS_ASSERTION(mPD, "Pages are supposed to have page data");
-  nscoord height = (!mPD || mPD->mReflowSize.height == NS_UNCONSTRAINEDSIZE)
-                   ? NS_UNCONSTRAINEDSIZE
-                   : (mPD->mReflowSize.height - mPD->mReflowMargin.TopBottom());
-  return nsSize(aAvailableWidth, height);
-}
-
 NS_IMETHODIMP
 nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
@@ -57,18 +44,19 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   // Set our size up front, since some parts of reflow depend on it
   // being already set.  Note that the computed height may be
   // unconstrained; that's ok.  Consumers should watch out for that.
-  SetSize(nsSize(aReflowState.availableWidth, aReflowState.availableHeight));
+  nsSize  maxSize(aReflowState.ComputedWidth(),
+                  aReflowState.ComputedHeight());
+  SetSize(maxSize);
  
   // A PageContentFrame must always have one child: the canvas frame.
   // Resize our frame allowing it only to be as big as we are
   // XXX Pay attention to the page's border and padding...
   if (mFrames.NotEmpty()) {
     nsIFrame* frame = mFrames.FirstChild();
-    nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
-    kidReflowState.SetComputedHeight(aReflowState.availableHeight);
+    kidReflowState.SetComputedHeight(maxSize.height);
 
-    mPD->mPageContentSize  = aReflowState.availableWidth;
+    mPD->mPageContentSize = maxSize.width;
 
     // Reflow the page content area
     rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
@@ -112,9 +100,9 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(fixedStatus), "fixed frames can be truncated, but not incomplete");
 
   // Return our desired size
-  aDesiredSize.width = aReflowState.availableWidth;
-  if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
-    aDesiredSize.height = aReflowState.availableHeight;
+  aDesiredSize.width = aReflowState.ComputedWidth();
+  if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE) {
+    aDesiredSize.height = aReflowState.ComputedHeight();
   }
 
   FinishAndStoreOverflow(&aDesiredSize);
