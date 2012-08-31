@@ -114,6 +114,7 @@ FENNEC_JAVA_FILES = \
   Tabs.java \
   TabsButton.java \
   TabsPanel.java \
+  TabsPanelButton.java \
   TabsTray.java \
   TabsAccessor.java \
   Telemetry.java \
@@ -648,8 +649,6 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/menu_item_texture.png \
   res/drawable-mdpi-v11/menu_item_pressed_texture.png \
   res/drawable-mdpi-v11/menu_item_check.png \
-  res/drawable-mdpi-v11/tab_new_normal.png \
-  res/drawable-mdpi-v11/tab_new_pressed.png \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V11 = \
@@ -674,8 +673,6 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/menu_item_texture.png \
   res/drawable-hdpi-v11/menu_item_pressed_texture.png \
   res/drawable-hdpi-v11/menu_item_check.png \
-  res/drawable-hdpi-v11/tab_new_normal.png \
-  res/drawable-hdpi-v11/tab_new_pressed.png \
   $(NULL)
 
 RES_DRAWABLE_XHDPI_V11 = \
@@ -700,8 +697,6 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/menu_item_texture.png \
   res/drawable-xhdpi-v11/menu_item_pressed_texture.png \
   res/drawable-xhdpi-v11/menu_item_check.png \
-  res/drawable-xhdpi-v11/tab_new_normal.png \
-  res/drawable-xhdpi-v11/tab_new_pressed.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_V14 = \
@@ -717,8 +712,6 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/remote_tabs_off.png \
   res/drawable-land-mdpi-v14/remote_tabs_on.png \
   res/drawable-land-mdpi-v14/tab_new.png \
-  res/drawable-land-mdpi-v14/tab_new_normal.png \
-  res/drawable-land-mdpi-v14/tab_new_pressed.png \
   res/drawable-land-mdpi-v14/tabs_carat.png \
   res/drawable-land-mdpi-v14/urlbar_stop.png \
   res/drawable-land-mdpi-v14/menu.png \
@@ -736,8 +729,6 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/remote_tabs_off.png \
   res/drawable-land-hdpi-v14/remote_tabs_on.png \
   res/drawable-land-hdpi-v14/tab_new.png \
-  res/drawable-land-hdpi-v14/tab_new_normal.png \
-  res/drawable-land-hdpi-v14/tab_new_pressed.png \
   res/drawable-land-hdpi-v14/tabs_carat.png \
   res/drawable-land-hdpi-v14/urlbar_stop.png \
   res/drawable-land-hdpi-v14/menu.png \
@@ -755,8 +746,6 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/remote_tabs_off.png \
   res/drawable-land-xhdpi-v14/remote_tabs_on.png \
   res/drawable-land-xhdpi-v14/tab_new.png \
-  res/drawable-land-xhdpi-v14/tab_new_normal.png \
-  res/drawable-land-xhdpi-v14/tab_new_pressed.png \
   res/drawable-land-xhdpi-v14/tabs_carat.png \
   res/drawable-land-xhdpi-v14/urlbar_stop.png \
   res/drawable-land-xhdpi-v14/menu.png \
@@ -781,8 +770,6 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/remote_tabs_off.png \
   res/drawable-large-mdpi-v11/remote_tabs_on.png \
   res/drawable-large-mdpi-v11/tab_new.png \
-  res/drawable-large-mdpi-v11/tab_new_normal.png \
-  res/drawable-large-mdpi-v11/tab_new_pressed.png \
   res/drawable-large-mdpi-v11/urlbar_stop.png \
   res/drawable-large-mdpi-v11/reader.png \
   res/drawable-large-mdpi-v11/site_security_identified.png \
@@ -806,8 +793,6 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/remote_tabs_off.png \
   res/drawable-large-hdpi-v11/remote_tabs_on.png \
   res/drawable-large-hdpi-v11/tab_new.png \
-  res/drawable-large-hdpi-v11/tab_new_normal.png \
-  res/drawable-large-hdpi-v11/tab_new_pressed.png \
   res/drawable-large-hdpi-v11/urlbar_stop.png \
   res/drawable-large-hdpi-v11/reader.png \
   res/drawable-large-hdpi-v11/site_security_identified.png \
@@ -831,8 +816,6 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/remote_tabs_on.png \
   res/drawable-large-xhdpi-v11/remote_tabs_off.png \
   res/drawable-large-xhdpi-v11/tab_new.png \
-  res/drawable-large-xhdpi-v11/tab_new_normal.png \
-  res/drawable-large-xhdpi-v11/tab_new_pressed.png \
   res/drawable-large-xhdpi-v11/urlbar_stop.png \
   res/drawable-large-xhdpi-v11/reader.png \
   res/drawable-large-xhdpi-v11/site_security_identified.png \
