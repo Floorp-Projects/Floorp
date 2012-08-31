@@ -56,7 +56,7 @@
 
             <Button android:id="@+id/awesome_bar"
                     style="@style/AddressBar.Button"
-                    android:layout_marginLeft="26dp"
+                    android:layout_marginLeft="20dp"
                     android:layout_marginTop="6dp"
                     android:layout_marginBottom="6dp"
                     android:layout_marginRight="0dp"

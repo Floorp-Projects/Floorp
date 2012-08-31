@@ -13,10 +13,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
-const messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
-                         .getService(Ci.nsIMessageBroadcaster);
-
-
 // -----------------------------------------------------------------------
 // MozKeyboard
 // -----------------------------------------------------------------------
@@ -39,9 +35,6 @@ MozKeyboard.prototype = {
   }),
 
   init: function mozKeyboardInit(win) {
-    messageManager.loadFrameScript(kFormsFrameScript, true);
-    messageManager.addMessageListener("Forms:Input", this);
-
     Services.obs.addObserver(this, "inner-window-destroyed", false);
     Services.obs.addObserver(this, 'in-process-browser-frame-shown', false);
     Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
@@ -56,7 +49,9 @@ MozKeyboard.prototype = {
 
   uninit: function mozKeyboardUninit() {
     Services.obs.removeObserver(this, "inner-window-destroyed");
-    messageManager.removeMessageListener("Forms:Input", this);
+    if (this._messageManager) {
+      this._messageManager.removeMessageListener("Forms:Input", this);
+    }
     this._window = null;
     this._utils = null;
     this._focusHandler = null;
@@ -70,19 +65,19 @@ MozKeyboard.prototype = {
   },
 
   setSelectedOption: function mozKeyboardSetSelectedOption(index) {
-    messageManager.broadcastAsyncMessage("Forms:Select:Choice", {
+    this._messageManager.broadcastAsyncMessage("Forms:Select:Choice", {
       "index": index
     });
   },
 
   setValue: function mozKeyboardSetValue(value) {
-    messageManager.broadcastAsyncMessage("Forms:Input:Value", {
+    this._messageManager.broadcastAsyncMessage("Forms:Input:Value", {
       "value": value
     });
   },
 
   setSelectedOptions: function mozKeyboardSetSelectedOptions(indexes) {
-    messageManager.broadcastAsyncMessage("Forms:Select:Choice", {
+    this._messageManager.broadcastAsyncMessage("Forms:Select:Choice", {
       "indexes": indexes || []
     });
   },
@@ -122,6 +117,7 @@ MozKeyboard.prototype = {
     case 'in-process-browser-frame-shown': {
       let frameLoader = subject.QueryInterface(Ci.nsIFrameLoader);
       let mm = frameLoader.messageManager;
+      this._messageManager = mm;
       mm.addMessageListener("Forms:Input", this);
       try {
         mm.loadFrameScript(kFormsFrameScript, true);

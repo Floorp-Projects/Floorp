@@ -24,9 +24,12 @@ class TestPageSourceChrome(MarionetteTestCase):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
         self.win = self.marionette.current_window_handle
-        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', '_blank', 'chrome,centerscreen');")
+        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
+        self.marionette.switch_to_window('foo')
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
 
     def tearDown(self):
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
         self.marionette.execute_script("window.close();")
         self.marionette.switch_to_window(self.win)
         MarionetteTestCase.tearDown(self)

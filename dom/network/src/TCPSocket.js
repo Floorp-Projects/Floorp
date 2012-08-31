@@ -88,6 +88,15 @@ function TCPSocket() {
   this._host = "";
   this._port = 0;
   this._ssl = false;
+
+  // As a workaround for bug https://bugzilla.mozilla.org/show_bug.cgi?id=786639
+  // we want to create any Uint8Array's off of the owning window so that there
+  // is no need for a wrapper to exist around the typed array from the
+  // perspective of content.  (The wrapper is bad because it only lets content
+  // see length, and forbids access to the array indices unless we excplicitly
+  // list them all.)  We will then access the array through a wrapper, but
+  // since we are chrome-privileged, this does not pose a problem.
+  this.useWin = null;
 }
 
 TCPSocket.prototype = {
@@ -222,11 +231,11 @@ TCPSocket.prototype = {
         self._multiplexStream.removeStream(0);
 
         if (status) {
-          this._readyState = kCLOSED;
+          self._readyState = kCLOSED;
           let err = new Error("Connection closed while writing: " + status);
           err.status = status;
-          this.callListener("onerror", err);
-          this.callListener("onclose");
+          self.callListener("onerror", err);
+          self.callListener("onclose");
           return;
         }
 
@@ -272,6 +281,7 @@ TCPSocket.prototype = {
       Ci.nsIInterfaceRequestor
     ).getInterface(Ci.nsIDOMWindowUtils);
 
+    this.useWin = XPCNativeWrapper.unwrap(aWindow);
     this.innerWindowID = util.currentInnerWindowID;
     LOG("window init: " + this.innerWindowID);
   },
@@ -291,6 +301,8 @@ TCPSocket.prototype = {
         this.onerror = null;
         this.onclose = null;
 
+        this.useWin = null;
+
         // Clean up our socket
         this.close();
       }
@@ -306,6 +318,7 @@ TCPSocket.prototype = {
     }
     let that = new TCPSocket();
 
+    that.useWin = this.useWin;
     that.innerWindowID = this.innerWindowID;
 
     LOG("window init: " + that.innerWindowID);
@@ -476,7 +489,7 @@ TCPSocket.prototype = {
 
     if (buffered_output && !status) {
       // If we have some buffered output still, and status is not an
-      // error, the other side has done a half-close, but we don't 
+      // error, the other side has done a half-close, but we don't
       // want to be in the close state until we are done sending
       // everything that was buffered. We also don't want to call onclose
       // yet.
@@ -497,7 +510,8 @@ TCPSocket.prototype = {
   // nsIStreamListener (Triggered by _inputStreamPump.asyncRead)
   onDataAvailable: function ts_onDataAvailable(request, context, inputStream, offset, count) {
     if (this._binaryType === "arraybuffer") {
-      let ua = new Uint8Array(count);
+      let ua = this.useWin ? new this.useWin.Uint8Array(count)
+                           : new Uint8Array(count);
       ua.set(this._inputStreamBinary.readByteArray(count));
       this.callListener("ondata", ua);
     } else {

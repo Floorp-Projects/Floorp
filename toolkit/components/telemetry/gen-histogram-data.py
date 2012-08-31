@@ -16,22 +16,67 @@ banner = """/* This file is auto-generated, see gen-histogram-data.py.  */
 
 # Write out the gHistograms array.
 
-def print_array_entry(histogram):
+class StringTable:
+    def __init__(self):
+        self.current_index = 0;
+        self.table = {}
+
+    def c_strlen(self, string):
+        return len(string) + 1
+
+    def stringIndex(self, string):
+        if string in self.table:
+            return self.table[string]
+        else:
+            result = self.current_index
+            self.table[string] = result
+            self.current_index += self.c_strlen(string)
+            return result
+
+    def writeDefinition(self, f, name):
+        entries = self.table.items()
+        entries.sort(key=lambda x:x[1])
+        # Avoid null-in-string warnings with GCC and potentially
+        # overlong string constants; write everything out the long way.
+        def explodeToCharArray(string):
+            def toCChar(s):
+                if s == "'":
+                    return "'\\''"
+                else:
+                    return "'%s'" % s
+            return ", ".join(map(toCChar, string))
+        f.write("const char %s[] = {\n" % name)
+        for (string, offset) in entries[:-1]:
+            f.write("  /* %5d */ %s, '\\0',\n"
+                    % (offset, explodeToCharArray(string)))
+        f.write("  /* %5d */ %s, '\\0' };\n\n"
+                % (entries[-1][1], explodeToCharArray(entries[-1][0])))
+
+def print_array_entry(histogram, name_index, desc_index):
     cpp_guard = histogram.cpp_guard()
     if cpp_guard:
         print "#if defined(%s)" % cpp_guard
-    print "  { \"%s\", %s, %s, %s, %s, \"%s\" }," \
-        % (histogram.name(), histogram.low(), histogram.high(),
+    print "  { %s, %s, %s, %s, %d, %d }," \
+        % (histogram.low(), histogram.high(),
            histogram.n_buckets(), histogram.nsITelemetry_kind(),
-           histogram.description())
+           name_index, desc_index)
     if cpp_guard:
         print "#endif"
 
 def write_histogram_table(histograms):
+    table = StringTable()
+
     print "const TelemetryHistogram gHistograms[] = {"
     for histogram in histograms:
-        print_array_entry(histogram)
+        name_index = table.stringIndex(histogram.name())
+        desc_index = table.stringIndex(histogram.description())
+        print_array_entry(histogram, name_index, desc_index)
     print "};"
+
+    strtab_name = "gHistogramStringTable"
+    table.writeDefinition(sys.stdout, strtab_name)
+    static_assert("sizeof(%s) <= UINT16_MAX" % strtab_name,
+                  "index overflow")
 
 # Write out static asserts for histogram data.  We'd prefer to perform
 # these checks in this script itself, but since several histograms
@@ -60,6 +105,8 @@ def shared_static_asserts(histogram):
     static_assert("%s < %s" % (low, high), "low >= high for %s" % name)
     static_assert("%s > 2" % n_buckets, "Not enough values for %s" % name)
     static_assert("%s >= 1" % low, "Incorrect low value for %s" % name)
+    static_assert("%s > %s" % (high, n_buckets),
+                  "high must be > number of buckets for %s; you may want an enumerated histogram" % name)
 
 def static_asserts_for_linear(histogram):
     shared_static_asserts(histogram)

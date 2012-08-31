@@ -3215,7 +3215,8 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64 setbuf isatty)
+AC_CHECK_FUNCS(random strerror lchown fchmod snprintf memmove rint stat64 lstat64 truncate64 setbuf isatty)
+AC_CHECK_FUNCS(statvfs64 statvfs statfs64 statfs)
 AC_CHECK_FUNCS(flockfile getpagesize)
 AC_CHECK_FUNCS(localtime_r strtok_r)
 
@@ -4198,6 +4199,7 @@ MOZ_WEBSMS_BACKEND=
 MOZ_GRAPHITE=1
 ACCESSIBILITY=1
 MOZ_SYS_MSG=
+MOZ_PAY=
 
 case "$target_os" in
     mingw*)
@@ -7312,6 +7314,14 @@ fi
 AC_SUBST(MOZ_B2G_CAMERA)
 
 dnl ========================================================
+dnl = Enable Support for Payment API
+dnl ========================================================
+if test -n "$MOZ_PAY"; then
+    AC_DEFINE(MOZ_PAY)
+fi
+AC_SUBST(MOZ_PAY)
+
+dnl ========================================================
 dnl = Support for demangling undefined symbols
 dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
@@ -8600,17 +8610,21 @@ HAVE_CPP_CHAR16_T
 HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 HAVE_CPP_PARTIAL_SPECIALIZATION
 HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
-HAVE_STATVFS
-HAVE_STATVFS64
 NEED_CPP_UNUSED_IMPLEMENTATIONS
 NEW_H
 HAVE_GETPAGESIZE
 HAVE_ICONV
 HAVE_ICONV_WITH_CONST_INPUT
 HAVE_MBRTOWC
-HAVE_SYS_MOUNT_H
-HAVE_SYS_VFS_H
 HAVE_WCRTOMB
+HAVE_STATVFS64
+HAVE_STATVFS
+HAVE_STATFS64
+HAVE_STATFS
+HAVE_SYS_STATVFS_H
+HAVE_SYS_STATFS_H
+HAVE_SYS_VFS_H
+HAVE_SYS_MOUNT_H
 "
 
 AC_CONFIG_HEADER(

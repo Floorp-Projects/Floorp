@@ -1213,6 +1213,12 @@ if [ "$MOZ_B2G_RIL" ]; then
   "
 fi
 
+if [ "$MOZ_PAY" ]; then
+  add_makefiles "
+    dom/payment/Makefile
+  "
+fi
+
 if [ "$MOZ_CRASHREPORTER" ]; then
   add_makefiles "
     toolkit/crashreporter/Makefile

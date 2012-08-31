@@ -930,6 +930,23 @@ var gSyncSetup = {
           document.getElementById("prefsWipe").hidden = true;
         }
 
+        if (Weave.Engines.get("addons").enabled) {
+          let ids = Weave.Engines.get("addons")._store.getAllIDs();
+          let blessedcount = 0;
+          for each (let i in ids) {
+            if (i) {
+              blessedcount++;
+            }
+          }
+          // bug 600141 does not apply, as this does not have to support existing strings
+          document.getElementById("addonCount").value =
+            PluralForm.get(blessedcount,
+                           this._stringBundle.GetStringFromName("addonsCount.label"))
+                      .replace("#1", blessedcount);
+        } else {
+          document.getElementById("addonCount").hidden = true;
+        }
+
         this._case1Setup = true;
         break;
       case 2:

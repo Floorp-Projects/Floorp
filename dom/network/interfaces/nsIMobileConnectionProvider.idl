@@ -28,6 +28,14 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest getCardLock(in nsIDOMWindow window, in DOMString lockType);
   nsIDOMDOMRequest unlockCardLock(in nsIDOMWindow window, in jsval info);
   nsIDOMDOMRequest setCardLock(in nsIDOMWindow window, in jsval info);
+
   nsIDOMDOMRequest sendUSSD(in nsIDOMWindow window, in DOMString ussd);
   nsIDOMDOMRequest cancelUSSD(in nsIDOMWindow window);
+
+  void sendStkResponse(in nsIDOMWindow window,
+                       in jsval        command,
+                       in jsval        response);
+  void sendStkMenuSelection(in nsIDOMWindow   window,
+                            in unsigned short itemIdentifier,
+                            in boolean        helpRequested);
 };

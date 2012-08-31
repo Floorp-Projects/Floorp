@@ -483,6 +483,8 @@ endif
 
 endif
 
+EXTRA_MDDEPEND_FILES = asm_enc_offsets.s.pp asm_enc_offsets.$(OBJ_SUFFIX).pp asm_com_offsets.s.pp asm_com_offsets.$(OBJ_SUFFIX).pp
+
 include $(topsrcdir)/config/rules.mk
 
 # This must be after rules.mk in order to use $(OBJ_SUFFIX) outside a

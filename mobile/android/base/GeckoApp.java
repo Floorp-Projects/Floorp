@@ -893,13 +893,6 @@ abstract public class GeckoApp
                 handlePageShow(tabId);
             } else if (event.equals("Gecko:Ready")) {
                 sIsGeckoReady = true;
-                final Menu menu = mMenu;
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        if (menu != null)
-                            menu.findItem(R.id.settings).setEnabled(true);
-                    }
-                });
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
                 connectGeckoLayerClient();
@@ -1878,11 +1871,14 @@ abstract public class GeckoApp
      * compatable with our previous implementations
      */
     protected String getURIFromIntent(Intent intent) {
+        final String action = intent.getAction();
+        if (ACTION_ALERT_CALLBACK.equals(action))
+            return null;
+
         String uri = intent.getDataString();
         if (uri != null)
             return uri;
 
-        final String action = intent.getAction();
         if ((action != null && action.startsWith(ACTION_WEBAPP_PREFIX)) || ACTION_BOOKMARK.equals(action)) {
             uri = intent.getStringExtra("args");
             if (uri != null && uri.startsWith("--url=")) {

@@ -1,0 +1,356 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+interface nsIDOMEvent;
+
+dictionary MozStkTextMessage
+{
+  /**
+   * Text String.
+   *
+   * @see TS 11.14, clause 12.15, Text String.
+   */
+  DOMString text;
+
+  /**
+   * Indicate this text message is high priority or normal priority.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, Display Text, bit 1.
+   *
+   * High priority text shall be displayed on the screen immediately, except if
+   * there is a conflict of priority level of alerting such as incoming calls
+   * or a low battery warning. In that situation, the resolution is left to
+   * the terminal. If the command is rejected in spite of the high priority,
+   * the terminal shall inform the ICC with resultCode is
+   * TERMINAL_CRNTLY_UNABLE_TO_PROCESS in MozStkResponse.
+   *
+   * true: high priority
+   * false: normal priority
+   */
+  boolean isHighPriority;
+
+  /**
+   * Need to wait for user to clear message or not.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, Display Text, bit 8.
+   *
+   * If this attribute is true, but user doesn't give any input within a period
+   * of time(said 30 secs), the terminal shall inform the ICC with resultCode
+   * is NO_RESPONSE_FROM_USER in MozStkResponse.
+   *
+   * true: Wait for user to clear message.
+   * false: clear message after a delay.
+   */
+  boolean userClear;
+
+  /**
+   * Need to response immediately or not.
+   *
+   * @see TS 11.14, clause 12.43, Immediate response.
+   *
+   * When this attribute is true, the terminal shall immediately send
+   * MozStkResponse with resultCode is OK.
+   *
+   * true: The terminal shall send response immediately.
+   * false: otherwise.
+   */
+  boolean responseNeeded;
+};
+
+dictionary MozStkItem
+{
+  /**
+   * Identifier of item.
+   *
+   * The identifier is a single byte between '01' and 'FF'. Each item shall
+   * have a unique identifier within an Item list.
+   */
+  unsigned short identifier;
+
+  /**
+   * Text string of item.
+   */
+  DOMString text;
+};
+
+dictionary MozStkMenu
+{
+  /**
+   * Array of MozStkItem.
+   *
+   * @see TS 11.14, clause 12.9
+   */
+  jsval items; // MozStkItem[]
+
+  /**
+   * Presentation type, one of TYPE_*.
+   */
+  unsigned short presentationType;
+
+  /**
+   * Title of the menu.
+   */
+  DOMString title;
+
+  /**
+   * Default item identifier of the menu.
+   */
+  unsigned short defaultItem;
+
+  /**
+   * Help information available or not.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, SET UP MENU, bit 8.
+   *
+   * true: help information available.
+   * false: no help information available.
+   */
+  boolean isHelpAvailable;
+};
+
+dictionary MozStkInput
+{
+  /**
+   * Text for the ME to display in conjunction with asking the user to respond.
+   */
+  DOMString text;
+
+  /**
+   * Minimum length of response.
+   */
+  unsigned short minLength;
+
+  /**
+   * Maximum length of response.
+   */
+  unsigned short maxLength;
+
+  /**
+   * Text for the ME to display, corresponds to a default text string offered
+   * by the ICC.
+   */
+  DOMString defaultText;
+
+  /**
+   * Input format.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT, bit 1.
+   *
+   * true: Alphabet set.
+   * false: Digits only.
+   */
+  boolean isAlphabet;
+
+  /**
+   * Alphabet encoding.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT, bit 2.
+   *
+   * true: UCS2 alphabet.
+   * false: default SMS alphabet.
+   */
+  boolean isUCS2;
+
+  /**
+   * Visibility of input.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT, bit 3.
+   *
+   * true: User input shall not be revealed in any way.
+   * false: ME may echo user input on the display.
+   */
+  boolean hideInput;
+
+  /**
+   * Yes/No response is requested.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INKEY, bit 3.
+   *
+   * true: Yes/No response is requested, and character sets
+   *       (Alphabet set and UCS2) are disabled.
+   * false: Character sets (Alphabet set and UCS2) are enabled.
+   */
+  boolean isYesNoRequested;
+
+  /**
+   * User input in packed or unpacked format.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT, bit 4.
+   *
+   * true: User input to be in SMS packed format.
+   * false: User input to be in unpacked format.
+   */
+  boolean isPacked;
+
+  /**
+   * Help information available or not.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT/GET INKEY, bit 8.
+   *
+   * true: help information available.
+   * false: no help information available.
+   */
+  boolean isHelpAvailable;
+};
+
+dictionary MozStkBrowserSetting
+{
+  /**
+   * Confirm message to launch browser.
+   *
+   * @see MozStkTextMessage for the detail specification of
+   *      confirmMessage.
+   */
+  jsval confirmMessage;
+
+  /**
+   * The URL to be opened by browser.
+   */
+  DOMString url;
+
+  /**
+   * One of STK_BROWSER_MODE_*.
+   *
+   * @see nsIDOMMozIccManager.STK_BROWSER_MODE_*
+   */
+  unsigned short mode;
+};
+
+dictionary MozStkSetUpCall
+{
+  /**
+   * The Dialling number.
+   */
+  DOMString address;
+
+  /**
+   * The text message used in user confirmation phase.
+   *
+   * @see MozStkTextMessage for the detail specification of
+   *      confirmMessage.
+   */
+  jsval confirmMessage;
+
+  /**
+   * The text message used in call set up phase.
+   *
+   * @see MozStkTextMessage for the detail specification of
+   *      callMessage.
+   */
+  jsval callMessage;
+};
+
+dictionary MozStkCommand
+{
+  /**
+   * The number of command issued by ICC. And it is assigned
+   * by ICC may take any hexadecimal value betweean '01' and 'FE'.
+   *
+   * @see TS 11.14, clause 6.5.1
+   */
+  unsigned short commandNumber;
+
+  /**
+   * One of STK_CMD_*
+   */
+  unsigned short typeOfCommand;
+
+  /**
+   * Qualifiers specific to the command.
+   */
+  unsigned short commandQualifier;
+
+  /**
+   * options varies accrording to the typeOfCommand in MozStkCommand.
+   *
+   * When typeOfCommand is
+   * - STK_DISPLAY_TEXT
+   * - STK_SET_UP_IDLE_MODE_TEXT
+   * - STK_REFRESH
+   * - STK_SEND_{SS|USSD|SMS|DTMF},
+   * options is MozStkTextMessage.
+   *
+   * When typeOfCommand is
+   * - STK_SELECT_ITEM
+   * - STK_SET_UP_MENU
+   * options is MozStkMenu.
+   *
+   * When typeOfCommand is
+   * - STK_GET_INKEY
+   * - STK_GET_INPUT,
+   * options is MozStkInput.
+   *
+   * When typeOfCommand is
+   * - STK_LAUNCH_BROWSER
+   * options is MozStkBrowserSetting.
+   *
+   * When typeOfCommand is
+   * - STK_SET_UP_CALL
+   * options is MozStkSetUpCall.
+   */
+  jsval options;
+};
+
+[scriptable, builtinclass, uuid(06bbc6fa-9b59-4db6-b66b-3b26f9c379df)]
+interface nsIDOMMozStkCommandEvent : nsIDOMEvent
+{
+  /**
+   * See nsIDOMMozStkCommand for the detail of command.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval command;
+};
+
+dictionary MozStkResponse
+{
+  /**
+   * One of RESULT_*
+   */
+  unsigned short resultCode;
+
+  /**
+   * The identifier of the item selected by user.
+   *
+   * @see MozStkItem.identifier
+   */
+  unsigned short itemIdentifier;
+
+  /**
+   * User input.
+   */
+  DOMString input;
+
+  /**
+   * Alphabet encoding.
+   *
+   * @see MozStkInput.isUCS2
+   */
+  boolean isUCS2;
+
+  /**
+   * YES/NO response.
+   *
+   * @see MozStkInput.isYesNoRequested
+   */
+  boolean isYesNo;
+
+  /**
+   * Packed or unpacked format.
+   *
+   * @see MozStkInput.isPacked
+   */
+  boolean isPacked;
+
+  /**
+   * User has confirmed or rejected the call during STK_CMD_CALL_SET_UP.
+   *
+   * @see RIL_REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM
+   *
+   * true: Confirmed by User.
+   * false: Rejected by User.
+   */
+  boolean hasConfirmed;
+};

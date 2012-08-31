@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758258
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=758258">Mozilla Bug 758258</a>
 <p id="display"></p>
 <div id="content">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript;version=1.7">
@@ -129,13 +129,13 @@ var gData = [
     app: "http://example.org/manifest.webapp",
     src: "file:///",
     isapp: true,
-    test: [ "eo-unique" ],
+    test: [ "eo-unique", "in-app-not-installed" ],
   },
   {
     app: "http://example.org/manifest.webapp",
     src: "file:///tmp/",
     isapp: true,
-    test: [ "eo-unique" ],
+    test: [ "eo-unique", "in-app-not-installed" ],
   },
   // iframe inside an app is part of the app.
   {
@@ -281,12 +281,11 @@ function checkIFrame(aFrame, data) {
   }
 
   if (data.isapp) {
-    is(principal.appStatus, Ci.nsIPrincipal.APP_STATUS_INSTALLED,
-       'this should be an installed app');
-    isnot(principal.appId, Ci.nsIScriptSecurityManager.NO_APP_ID,
-          "installed app should have a valid appId");
-    isnot(principal.appId, Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID,
-          "installed app should have a valid appId");
+    if (data.test.indexOf("in-app-not-installed") != -1) {
+      is(principal.appStatus, Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED, 'this should not be an installed app');
+    } else {
+      is(principal.appStatus, Ci.nsIPrincipal.APP_STATUS_INSTALLED, 'this should be an installed app');
+    }
   } else {
     is(principal.appStatus, Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED,
        'this should not be an installed app');

@@ -40,6 +40,7 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/Preferences.h"
 #include "nsAlgorithm.h"
 #include "nsPrintfCString.h"
@@ -250,7 +251,7 @@ private:
 
 // sBatteryObserver is owned by the IO thread. Only the IO thread may
 // create or destroy it.
-static BatteryObserver *sBatteryObserver = NULL;
+static StaticRefPtr<BatteryObserver> sBatteryObserver;
 
 static void
 RegisterBatteryObserverIOThread()
@@ -277,7 +278,6 @@ UnregisterBatteryObserverIOThread()
   MOZ_ASSERT(sBatteryObserver);
 
   UnregisterUeventListener(sBatteryObserver);
-  delete sBatteryObserver;
   sBatteryObserver = NULL;
 }
 

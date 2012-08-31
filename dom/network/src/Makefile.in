@@ -30,14 +30,25 @@ EXPORTS_mozilla/dom/network = \
 
 CPPSRCS = \
   Connection.cpp \
-  MobileConnection.cpp \
   Utils.cpp \
   USSDReceivedEvent.cpp \
   $(NULL)
 
+ifdef MOZ_B2G_RIL
+CPPSRCS += \
+  MobileConnection.cpp \
+  $(NULL)
+endif
+
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
+
+ifdef MOZ_B2G_RIL
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/dom/icc/src \
+  $(NULL)
+endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

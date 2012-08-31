@@ -15,9 +15,14 @@ const PREF_OVERRIDES_ENABLED = "general.useragent.site_specific_overrides";
 
 var gPrefBranch;
 var gOverrides;
+var gInitialized = false;
 
 var UserAgentOverrides = {
   init: function uao_init() {
+    if (gInitialized)
+      return;
+    gInitialized = true;
+
     gPrefBranch = Services.prefs.getBranch("general.useragent.override.");
     gPrefBranch.addObserver("", buildOverrides, false);
 
@@ -29,6 +34,10 @@ var UserAgentOverrides = {
   },
 
   uninit: function uao_uninit() {
+    if (!gInitialized)
+      return;
+    gInitialized = false;
+
     gPrefBranch.removeObserver("", buildOverrides);
 
     Services.prefs.removeObserver(PREF_OVERRIDES_ENABLED, buildOverrides);

@@ -2038,6 +2038,8 @@ public:
   intptr_t GetScrollLayerCount();
   intptr_t RemoveScrollLayerCount();
 
+  virtual nsIFrame* GetScrolledFrame() { return mScrolledFrame; }
+
 private:
   nsIFrame* mScrollFrame;
   nsIFrame* mScrolledFrame;
