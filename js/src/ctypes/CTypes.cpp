@@ -2149,7 +2149,7 @@ ImplicitConvert(JSContext* cx,
           return false;
 
         char** charBuffer = static_cast<char**>(buffer);
-        *charBuffer = (char*)cx->malloc_(nbytes + 1);
+        *charBuffer = cx->pod_malloc<char>(nbytes + 1);
         if (!*charBuffer) {
           JS_ReportAllocationOverflow(cx);
           return false;
@@ -2166,7 +2166,7 @@ ImplicitConvert(JSContext* cx,
         // JSString's buffer, but this approach is safer if the caller happens
         // to modify the string.)
         jschar** jscharBuffer = static_cast<jschar**>(buffer);
-        *jscharBuffer = (jschar*)cx->malloc_((sourceLength + 1) * sizeof(jschar));
+        *jscharBuffer = cx->pod_malloc<jschar>(sourceLength + 1);
         if (!*jscharBuffer) {
           JS_ReportAllocationOverflow(cx);
           return false;
@@ -2255,7 +2255,7 @@ ImplicitConvert(JSContext* cx,
       // Convert into an intermediate, in case of failure.
       size_t elementSize = CType::GetSize(baseType);
       size_t arraySize = elementSize * targetLength;
-      AutoPtr<char> intermediate((char*)cx->malloc_(arraySize));
+      AutoPtr<char> intermediate(cx->pod_malloc<char>(arraySize));
       if (!intermediate) {
         JS_ReportAllocationOverflow(cx);
         return false;
@@ -2306,7 +2306,7 @@ ImplicitConvert(JSContext* cx,
 
       // Convert into an intermediate, in case of failure.
       size_t structSize = CType::GetSize(targetType);
-      AutoPtr<char> intermediate((char*)cx->malloc_(structSize));
+      AutoPtr<char> intermediate(cx->pod_malloc<char>(structSize));
       if (!intermediate) {
         JS_ReportAllocationOverflow(cx);
         return false;
@@ -4202,7 +4202,7 @@ ArrayType::BuildFFIType(JSContext* cx, JSObject* obj)
   ffiType->type = FFI_TYPE_STRUCT;
   ffiType->size = CType::GetSize(obj);
   ffiType->alignment = CType::GetAlignment(obj);
-  ffiType->elements = (ffi_type**)cx->malloc_((length + 1) * sizeof(ffi_type*));
+  ffiType->elements = cx->pod_malloc<ffi_type*>(length + 1);
   if (!ffiType->elements) {
     JS_ReportAllocationOverflow(cx);
     return NULL;
@@ -4646,7 +4646,7 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
 
   AutoPtr<ffi_type*> elements;
   if (len != 0) {
-    elements = (ffi_type**)cx->malloc_((len + 1) * sizeof(ffi_type*));
+    elements = cx->pod_malloc<ffi_type*>(len + 1);
     if (!elements) {
       JS_ReportOutOfMemory(cx);
       return NULL;
@@ -4665,7 +4665,7 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
     // Represent an empty struct as having a size of 1 byte, just like C++.
     JS_ASSERT(structSize == 1);
     JS_ASSERT(structAlign == 1);
-    elements = (ffi_type**)cx->malloc_(2 * sizeof(ffi_type*));
+    elements = cx->pod_malloc<ffi_type*>(2);
     if (!elements) {
       JS_ReportOutOfMemory(cx);
       return NULL;

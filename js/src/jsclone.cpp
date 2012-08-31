@@ -612,7 +612,7 @@ class Chars {
     bool allocate(size_t len) {
         JS_ASSERT(!p);
         // We're going to null-terminate!
-        p = (jschar *) cx->malloc_((len + 1) * sizeof(jschar));
+        p = cx->pod_malloc<jschar>(len + 1);
         if (p) {
             p[len] = jschar(0);
             return true;

@@ -301,7 +301,7 @@ HeapReverser::getEdgeDescription()
 {
     if (!debugPrinter && debugPrintIndex == (size_t) -1) {
         const char *arg = static_cast<const char *>(debugPrintArg);
-        char *name = static_cast<char *>(js_malloc(strlen(arg) + 1));
+        char *name = js_pod_malloc<char>(strlen(arg) + 1);
         if (!name)
             return NULL;
         strcpy(name, arg);
@@ -310,7 +310,7 @@ HeapReverser::getEdgeDescription()
 
     /* Lovely; but a fixed size is required by JSTraceNamePrinter. */
     static const int nameSize = 200;
-    char *name = static_cast<char *>(js_malloc(nameSize));
+    char *name = js_pod_malloc<char>(nameSize);
     if (!name)
         return NULL;
     if (debugPrinter)
@@ -455,7 +455,7 @@ ReferenceFinder::Path::computeName(JSContext *cx)
         size += strlen(l->edge.name) + (l->next ? 2 : 0);
     size += 1;
 
-    char *path = static_cast<char *>(cx->malloc_(size));
+    char *path = cx->pod_malloc<char>(size);
     if (!path)
         return NULL;
 

@@ -191,7 +191,7 @@ SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *may
         return NULL;
 
     size_t len = buf.length();
-    char *cstr = (char *)js_malloc((len + 1) * sizeof(char));
+    char *cstr = js_pod_malloc<char>(len + 1);
     if (cstr == NULL)
         return NULL;
 

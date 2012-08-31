@@ -474,7 +474,7 @@ FrameEntry *
 FrameState::snapshotState()
 {
     /* Everything can be recovered from a copy of the frame entries. */
-    FrameEntry *snapshot = (FrameEntry *)js_malloc(nentries * sizeof(FrameEntry));
+    FrameEntry *snapshot = js_pod_malloc<FrameEntry>(nentries);
     if (!snapshot)
         return NULL;
     PodCopy(snapshot, entries, nentries);
