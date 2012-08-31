@@ -51,8 +51,10 @@ FENNEC_JAVA_FILES = \
   awesomebar/HistoryTab.java \
   BrowserApp.java \
   BrowserToolbar.java \
+  BrowserToolbarBackground.java \
   CameraImageResultHandler.java \
   CameraVideoResultHandler.java \
+  CanvasDelegate.java \
   SyncPreference.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
@@ -464,7 +466,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/address_bar_back_button.xml \
   res/drawable/address_bar_back_button_bg.xml \
   res/drawable/address_bar_back_button_pressed_bg.xml \
-  res/drawable/address_bar_bg_curve.png \
   res/drawable/address_bar_forward_button.xml \
   res/drawable/address_bar_texture_port.png \
   res/drawable/address_bar_url.xml \
@@ -545,7 +546,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tabs_crop_pressed.png \
   res/drawable-hdpi/tabs_full_normal.png \
   res/drawable-hdpi/tabs_full_pressed.png \
-  res/drawable-hdpi/address_bar_bg_curve.png \
   res/drawable-hdpi/address_bar_texture_port.png \
   res/drawable-hdpi/address_bar_url_default.9.png \
   res/drawable-hdpi/address_bar_url_pressed.9.png \
@@ -581,7 +581,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/abouthome_promo_logo_apps.png \
   res/drawable-xhdpi/abouthome_promo_logo_sync.png \
   res/drawable-xhdpi/abouthome_thumbnail.png \
-  res/drawable-xhdpi/address_bar_bg_curve.png \
   res/drawable-xhdpi/address_bar_bg_shadow.png \
   res/drawable-xhdpi/address_bar_texture_port.png \
   res/drawable-xhdpi/address_bar_url_default.9.png \
@@ -728,7 +727,6 @@ RES_DRAWABLE_LAND_V14 = \
 RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-mdpi-v14/ic_awesomebar_search.png \
-  res/drawable-land-mdpi-v14/address_bar_bg_curve.png \
   res/drawable-land-mdpi-v14/address_bar_texture_land.png \
   res/drawable-land-mdpi-v14/address_bar_url_default.9.png \
   res/drawable-land-mdpi-v14/address_bar_url_pressed.9.png \
@@ -754,7 +752,6 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
 RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-hdpi-v14/ic_awesomebar_search.png \
-  res/drawable-land-hdpi-v14/address_bar_bg_curve.png \
   res/drawable-land-hdpi-v14/address_bar_texture_land.png \
   res/drawable-land-hdpi-v14/address_bar_url_default.9.png \
   res/drawable-land-hdpi-v14/address_bar_url_pressed.9.png \
@@ -780,7 +777,6 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
 RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/ic_awesomebar_go.png \
   res/drawable-land-xhdpi-v14/ic_awesomebar_search.png \
-  res/drawable-land-xhdpi-v14/address_bar_bg_curve.png \
   res/drawable-land-xhdpi-v14/address_bar_texture_land.png \
   res/drawable-land-xhdpi-v14/address_bar_url_default.9.png \
   res/drawable-land-xhdpi-v14/address_bar_url_pressed.9.png \
@@ -804,7 +800,6 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_MDPI_V11 = \
-  res/drawable-large-mdpi-v11/address_bar_bg_curve.png \
   res/drawable-large-mdpi-v11/address_bar_bg.xml \
   res/drawable-large-mdpi-v11/address_bar_texture_tablet.png \
   res/drawable-large-mdpi-v11/address_bar_back_button_bg.png \
@@ -837,7 +832,6 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
-  res/drawable-large-hdpi-v11/address_bar_bg_curve.png \
   res/drawable-large-hdpi-v11/address_bar_texture_tablet.png \
   res/drawable-large-hdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-hdpi-v11/address_bar_back_button_pressed_bg.png \
@@ -869,7 +863,6 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
-  res/drawable-large-xhdpi-v11/address_bar_bg_curve.png \
   res/drawable-large-xhdpi-v11/address_bar_texture_tablet.png \
   res/drawable-large-xhdpi-v11/address_bar_back_button_bg.png \
   res/drawable-large-xhdpi-v11/address_bar_back_button_pressed_bg.png \
