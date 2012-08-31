@@ -94,15 +94,29 @@ public class TabsButton extends ImageButton
 
         mLeftCurve.reset();
         mLeftCurve.moveTo(left, top);
-        mLeftCurve.cubicTo(left + (curve * 0.75f), top,
-                           left + (curve * 0.25f), bottom,
-                           left + curve, bottom);
+
+        if (mCropped && mSide == CurveTowards.LEFT) {
+            mLeftCurve.cubicTo(left + curve, top,
+                               left, bottom,
+                               left + curve, bottom);
+        } else {
+            mLeftCurve.cubicTo(left + (curve * 0.75f), top,
+                               left + (curve * 0.25f), bottom,
+                               left + curve, bottom);
+        }
 
         mRightCurve.reset();
         mRightCurve.moveTo(right, bottom);
-        mRightCurve.cubicTo(right - (curve * 0.75f), bottom,
-                            right - (curve * 0.25f), top,
-                            right - curve, top);
+
+        if (mCropped && mSide == CurveTowards.RIGHT) {
+            mRightCurve.cubicTo(right - curve, bottom,
+                                right, top,
+                                right - curve, top);
+        } else {
+            mRightCurve.cubicTo(right - (curve * 0.75f), bottom,
+                                right - (curve * 0.25f), top,
+                                right - curve, top);
+        }
 
         mPath.reset();
 
