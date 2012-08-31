@@ -96,14 +96,14 @@ TestSettingsAPI()
   nsCOMPtr<nsISettingsServiceLock> lock1;
   iss->GetLock(getter_AddRefs(lock1));
 
-  lock->Set("asdf", BOOLEAN_TO_JSVAL(true), cb0);
+  lock->Set("asdf", BOOLEAN_TO_JSVAL(true), cb0, nullptr);
   lock1->Get("asdf", cb1);
   lock->Get("asdf", cb2);
-  lock->Set("asdf", BOOLEAN_TO_JSVAL(false), cb3);
+  lock->Set("asdf", BOOLEAN_TO_JSVAL(false), cb3, nullptr);
   lock->Get("asdf", cb4);
-  lock->Set("int", INT_TO_JSVAL(9), cb5);
+  lock->Set("int", INT_TO_JSVAL(9), cb5, nullptr);
   lock->Get("int", cb6);
-  lock->Set("doub", DOUBLE_TO_JSVAL(9.4), cb7);
+  lock->Set("doub", DOUBLE_TO_JSVAL(9.4), cb7, nullptr);
   lock->Get("doub", cb8);
   lock1->Get("asdfxxx", cb9);
 
