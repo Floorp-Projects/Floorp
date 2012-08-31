@@ -312,14 +312,15 @@ DeviceStorageRequestParent::StatFileEvent::CancelableRun()
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   nsCOMPtr<nsIRunnable> r;
-  uint64_t diskUsage = DeviceStorageFile::DirectoryDiskUsage(mFile->mFile);
-  int64_t freeSpace;
+  uint64_t diskUsage = 0;
+  DeviceStorageFile::DirectoryDiskUsage(mFile->mFile, &diskUsage);
+  int64_t freeSpace = 0;
   nsresult rv = mFile->mFile->GetDiskSpaceAvailable(&freeSpace);
   if (NS_FAILED(rv)) {
     freeSpace = 0;
   }
   
-  r = new PostStatResultEvent(mParent, diskUsage, freeSpace);
+  r = new PostStatResultEvent(mParent, freeSpace, diskUsage);
   NS_DispatchToMainThread(r);
   return NS_OK;
 }
