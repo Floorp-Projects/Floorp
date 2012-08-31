@@ -1579,8 +1579,10 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         } else {
             JS_ASSERT(pc->sc->strictModeState != StrictMode::STRICT);
             JS_ASSERT(pn->pn_cookie.isFree());
-            pc->sc->setFunMightAliasLocals();
-            pc->sc->setFunHasExtensibleScope();
+            if (pc->sc->inFunction()) {
+                pc->sc->setFunMightAliasLocals();
+                pc->sc->setFunHasExtensibleScope();
+            }
             pn->setOp(JSOP_DEFFUN);
 
             /*
@@ -1974,7 +1976,7 @@ Parser::statements(bool *hasFunctionStmt)
                  * General deoptimization was done in functionDef, here we just
                  * need to tell TOK_LC in Parser::statement to add braces.
                  */
-                JS_ASSERT(pc->sc->funHasExtensibleScope());
+                JS_ASSERT_IF(pc->sc->inFunction(), pc->sc->funHasExtensibleScope());
                 if (hasFunctionStmt)
                     *hasFunctionStmt = true;
             }
@@ -2174,7 +2176,8 @@ BindVarOrConst(JSContext *cx, BindData *data, HandlePropertyName name, Parser *p
 
     if (stmt && stmt->type == STMT_WITH) {
         pn->pn_dflags |= PND_DEOPTIMIZED;
-        pc->sc->setFunMightAliasLocals();
+        if (pc->sc->inFunction()) 
+            pc->sc->setFunMightAliasLocals();
         return true;
     }
 
@@ -4835,11 +4838,11 @@ GenexpGuard::maybeNoteGenerator(ParseNode *pn)
 {
     ParseContext *pc = parser->pc;
     if (pc->yieldCount > 0) {
-        pc->sc->setFunIsGenerator();
         if (!pc->sc->inFunction()) {
             parser->reportError(NULL, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
             return false;
         }
+        pc->sc->setFunIsGenerator();
         if (pc->funHasReturnExpr) {
             /* At the time we saw the yield, we might not have set funIsGenerator yet. */
             ReportBadReturn(pc->sc->context, parser, pn, &Parser::reportError,
@@ -5683,7 +5686,7 @@ Parser::memberExpr(bool allowCallSyntax)
                      * In non-strict mode code, direct calls to eval can add
                      * variables to the call object.
                      */
-                    if (pc->sc->strictModeState != StrictMode::STRICT)
+                    if (pc->sc->inFunction() && pc->sc->strictModeState != StrictMode::STRICT)
                         pc->sc->setFunHasExtensibleScope();
                 }
             } else if (lhs->isOp(JSOP_GETPROP)) {

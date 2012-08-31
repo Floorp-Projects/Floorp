@@ -163,25 +163,22 @@ struct SharedContext {
     inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox,
                          StrictMode sms);
 
-    // In theory, |fun*| flags are only relevant if |inFunction()| is true.
-    // However, we get and set in some cases where |inFunction()| is false,
-    // which is why |INFUNC| doesn't appear in all of the fun* and setFun*
-    // functions below.
+    // The |fun*| flags are only relevant if |inFunction()| is true.
 #define INFUNC JS_ASSERT(inFunction())
 
     bool hasExplicitUseStrict()        const {         return cxFlags.hasExplicitUseStrict; }
     bool bindingsAccessedDynamically() const {         return cxFlags.bindingsAccessedDynamically; }
     bool funIsGenerator()              const { INFUNC; return cxFlags.funIsGenerator; }
-    bool funMightAliasLocals()         const {         return cxFlags.funMightAliasLocals; }
-    bool funHasExtensibleScope()       const {         return cxFlags.funHasExtensibleScope; }
+    bool funMightAliasLocals()         const { INFUNC; return cxFlags.funMightAliasLocals; }
+    bool funHasExtensibleScope()       const { INFUNC; return cxFlags.funHasExtensibleScope; }
     bool funArgumentsHasLocalBinding() const { INFUNC; return cxFlags.funArgumentsHasLocalBinding; }
     bool funDefinitelyNeedsArgsObj()   const { INFUNC; return cxFlags.funDefinitelyNeedsArgsObj; }
 
     void setExplicitUseStrict()               {         cxFlags.hasExplicitUseStrict        = true; }
     void setBindingsAccessedDynamically()     {         cxFlags.bindingsAccessedDynamically = true; }
     void setFunIsGenerator()                  { INFUNC; cxFlags.funIsGenerator              = true; }
-    void setFunMightAliasLocals()             {         cxFlags.funMightAliasLocals         = true; }
-    void setFunHasExtensibleScope()           {         cxFlags.funHasExtensibleScope       = true; }
+    void setFunMightAliasLocals()             { INFUNC; cxFlags.funMightAliasLocals         = true; }
+    void setFunHasExtensibleScope()           { INFUNC; cxFlags.funHasExtensibleScope       = true; }
     void setFunArgumentsHasLocalBinding()     { INFUNC; cxFlags.funArgumentsHasLocalBinding = true; }
     void setFunDefinitelyNeedsArgsObj()       { JS_ASSERT(cxFlags.funArgumentsHasLocalBinding);
                                                 INFUNC; cxFlags.funDefinitelyNeedsArgsObj   = true; }

@@ -1182,7 +1182,7 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
     }
     if (bce->script->compileAndGo &&
         bce->hasGlobalScope &&
-        !bce->sc->funMightAliasLocals() &&
+        !(bce->sc->inFunction() && bce->sc->funMightAliasLocals()) &&
         !pn->isDeoptimized() &&
         !bce->sc->inStrictMode())
     {
@@ -4849,7 +4849,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         FunctionBox *funbox = pn->pn_funbox;
         SharedContext sc(cx, /* scopeChain = */ NULL, fun, funbox, funbox->strictModeState);
         sc.cxFlags = funbox->cxFlags;
-        if (bce->sc->funMightAliasLocals())
+        if (bce->sc->inFunction() && bce->sc->funMightAliasLocals())
             sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
         JS_ASSERT_IF(bce->sc->inStrictMode(), sc.inStrictMode());
 
