@@ -2009,6 +2009,14 @@ var UserAgent = {
         if (tab == null)
           break;
 
+        if (/\.?youtube\.com$/.test(channel.URI.host)) {
+          let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
+          if (ua.indexOf("Android; Tablet;") !== -1) {
+            ua = ua.replace("Android; Tablet;", "Android; Mobile;");
+            channel.setRequestHeader("User-Agent", ua, false);
+          }
+        }
+
         // Send desktop UA if "Request Desktop Site" is enabled
         if (tab.desktopMode)
           channel.setRequestHeader("User-Agent", this.DESKTOP_UA, false);
