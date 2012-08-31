@@ -75,7 +75,6 @@ Readability.prototype = {
     negative: /hidden|combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|shoutbox|sidebar|sponsor|shopping|tags|tool|widget/i,
     extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single|utility/i,
     byline: /byline|author|dateline|writtenby/i,
-    divToPElements: /<(a|blockquote|dl|div|img|ol|p|pre|table|ul|select)/i,
     replaceFonts: /<(\/?)font[^>]*>/gi,
     trim: /^\s+|\s+$/g,
     normalize: /\s{2,}/g,
@@ -85,6 +84,8 @@ Readability.prototype = {
     prevLink: /(prev|earl|old|new|<|«)/i,
     whitespace: /^\s*$/
   },
+
+  DIV_TO_P_ELEMS: [ "A", "BLOCKQUOTE", "DL", "DIV", "IMG", "OL", "P", "PRE", "TABLE", "UL", "SELECT" ],
 
   /**
    * Run any post-process modifications to article content as necessary.
@@ -477,7 +478,7 @@ Readability.prototype = {
           // algorithm with DIVs with are, in practice, paragraphs.
           let pIndex = this._getSinglePIndexInsideDiv(node);
 
-          if (node.innerHTML.search(this.REGEXPS.divToPElements) === -1 || pIndex >= 0) {
+          if (pIndex >= 0 || !this._hasChildBlockElement(node)) {
             if (pIndex >= 0) {
               let newNode = node.childNodes[pIndex];
               node.parentNode.replaceChild(newNode, node);
@@ -764,6 +765,24 @@ Readability.prototype = {
     }
 
     return pIndex;
+  },
+
+  /**
+   * Determine whether element has any children block level elements.
+   * 
+   * @param Element
+   */
+  _hasChildBlockElement: function (e) {
+    let length = e.childNodes.length;
+    for (let i = 0; i < length; i++) {
+      let child = e.childNodes[i];
+      if (child.nodeType != 1)
+        continue;
+
+      if (this.DIV_TO_P_ELEMS.indexOf(child.tagName) !== -1 || this._hasChildBlockElement(child))
+        return true;
+    }
+    return false;
   },
 
   /**
