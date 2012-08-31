@@ -93,6 +93,11 @@ XPCOMUtils.defineLazyGetter(this, "WAP", function () {
   return WAP;
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger", function() {
+  return Cc["@mozilla.org/system-message-internal;1"]
+           .getService(Ci.nsISystemMessagesInternal);
+});
+
 function convertRILCallState(state) {
   switch (state) {
     case RIL.CALL_STATE_ACTIVE:
@@ -1033,6 +1038,7 @@ RadioInterfaceLayer.prototype = {
 
   handleStkProactiveCommand: function handleStkProactiveCommand(message) {
     debug("handleStkProactiveCommand " + JSON.stringify(message));
+    gSystemMessenger.broadcastMessage("icc-stkcommand", message);
     ppmm.broadcastAsyncMessage("RIL:StkCommand", message);
   },
 
