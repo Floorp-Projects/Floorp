@@ -389,6 +389,9 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
             if (ss.isJSON()) {
                 ss.appendDecimal("Page Faults", "",
                                  double(slices[i].endFaults - slices[i].startFaults));
+
+                ss.appendNumber("Start Timestamp", "%llu", "", (unsigned long long)slices[i].start);
+                ss.appendNumber("End Timestamp", "%llu", "", (unsigned long long)slices[i].end);
             }
             if (slices[i].resetReason)
                 ss.appendString("Reset", slices[i].resetReason);
