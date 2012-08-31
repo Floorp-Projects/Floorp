@@ -2681,10 +2681,12 @@ Tab.prototype = {
         // pages have any privilege themselves.
         if (/^about:/.test(target.documentURI)) {
           this.browser.addEventListener("click", ErrorPageEventHandler, false);
-          this.browser.addEventListener("pagehide", function listener() {
+          let listener = function() {
             this.browser.removeEventListener("click", ErrorPageEventHandler, false);
             this.browser.removeEventListener("pagehide", listener, true);
-          }.bind(this), true);
+          }.bind(this);
+
+          this.browser.addEventListener("pagehide", listener, true);
         }
 
         if (/^about:reader/.test(target.documentURI)) {
