@@ -493,7 +493,7 @@ Readability.prototype = {
 
               if (childNode.nodeType === 3) { // Node.TEXT_NODE
                 let p = doc.createElement('p');
-                p.innerHTML = childNode.textContent;
+                p.textContent = childNode.textContent;
                 p.style.display = 'inline';
                 p.className = 'readability-styled';
                 childNode.parentNode.replaceChild(p, childNode);
