@@ -10,6 +10,7 @@
 
 class nsPresContext;
 class nsIPrintSettings;
+class nsITimerCallback;
 
 /**
  * Interface for accessing special capabilities of the page sequence frame.
@@ -38,7 +39,10 @@ public:
                         nsIPrintSettings* aPrintOptions,
                         PRUnichar* aDocTitle,
                         PRUnichar* aDocURL) = 0;
+
+  NS_IMETHOD PrePrintNextPage(nsITimerCallback* aCallback, bool* aDone) = 0;
   NS_IMETHOD PrintNextPage() = 0;
+  NS_IMETHOD ResetPrintCanvasList() = 0;
   NS_IMETHOD GetCurrentPageNum(int32_t* aPageNum) = 0;
   NS_IMETHOD GetNumPages(int32_t* aNumPages) = 0;
   NS_IMETHOD IsDoingPrintRange(bool* aDoing) = 0;
