@@ -239,7 +239,7 @@ Readability.prototype = {
       let next = node;
       while (next
           && (next.nodeType != Node.ELEMENT_NODE)
-          && !whitespace.test(next.textContent)) {
+          && whitespace.test(next.textContent)) {
         next = next.nextSibling;
       }
       return next;
