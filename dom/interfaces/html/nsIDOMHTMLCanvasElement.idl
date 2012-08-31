@@ -24,7 +24,23 @@ interface nsIDOMFile;
 interface nsIVariant;
 interface nsIInputStreamCallback;
 
-[scriptable, uuid(5929542B-C68E-48AB-84F9-D9642DA39720)]
+[scriptable, builtinclass, uuid(8d5fb8a0-7782-11e1-b0c4-0800200c9a67)]
+interface nsIDOMMozCanvasPrintState : nsISupports
+{
+  // A canvas rendering context.
+  readonly attribute nsISupports context;
+
+  // To be called when rendering to the context is done.
+  void done();
+};
+
+[scriptable, function, uuid(8d5fb8a0-7782-11e1-b0c4-0800200c9a66)]
+interface nsIPrintCallback : nsISupports
+{
+  void render(in nsIDOMMozCanvasPrintState ctx);
+};
+
+[scriptable, uuid(a7062fca-41c6-4520-b777-3bb30fd77273)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute unsigned long width;
@@ -56,5 +72,8 @@ interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
   // stream in the desired image format.
   void mozFetchAsStream(in nsIInputStreamCallback callback,
                                         [optional] in DOMString type);
+
+  // A Mozilla-only callback that is called during the printing process.
+  attribute nsIPrintCallback mozPrintCallback;
 };
 
