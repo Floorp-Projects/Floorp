@@ -938,7 +938,7 @@ private:
     NS_ENSURE_SUCCESS(rv, false);
     rv = stmt->GetInt64(1, &_place.sessionId);
     NS_ENSURE_SUCCESS(rv, false);
-    rv = stmt->GetInt64(2, &_place.visitTime);
+    rv = stmt->GetInt64(2, reinterpret_cast<int64_t*>(&_place.visitTime));
     NS_ENSURE_SUCCESS(rv, false);
 
     // If we have been given a visit threshold start time, go ahead and

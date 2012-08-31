@@ -362,6 +362,14 @@ bool TabParent::SendRealKeyEvent(nsKeyEvent& event)
 bool TabParent::SendRealTouchEvent(nsTouchEvent& event)
 {
   nsTouchEvent e(event);
+  // PresShell::HandleEventInternal adds touches on touch end/cancel.
+  // This hack filters those out. Bug 785554
+  if (event.message == NS_TOUCH_END || event.message == NS_TOUCH_CANCEL) {
+    for (int i = e.touches.Length() - 1; i >= 0; i--) {
+      if (!e.touches[i]->mChanged)
+        e.touches.RemoveElementAt(i);
+    }
+  }
   MaybeForwardEventToRenderFrame(event, &e);
   return (e.message == NS_TOUCH_MOVE) ?
     PBrowserParent::SendRealTouchMoveEvent(e) :

@@ -2518,7 +2518,7 @@ nsGlobalWindow::DialogsAreBlocked(bool *aBeingAbused)
 
   nsGlobalWindow *topWindow = GetScriptableTop();
   if (!topWindow) {
-    NS_ERROR("DialogsAreBlocked() called without a top window?");
+    NS_ASSERTION(!mDocShell, "DialogsAreBlocked() called without a top window?");
     return true;
   }
 
@@ -7652,9 +7652,11 @@ nsGlobalWindow::ActivateOrDeactivate(bool aActivate)
 
     // widgetListener should be a nsXULWindow
     nsIWidgetListener* listener = topLevelWidget->GetWidgetListener();
-    nsCOMPtr<nsIXULWindow> window = listener->GetXULWindow();
-    nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(window));
-    topLevelWindow = do_GetInterface(req);
+    if (listener) {
+      nsCOMPtr<nsIXULWindow> window = listener->GetXULWindow();
+      nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(window));
+      topLevelWindow = do_GetInterface(req);
+    }
   }
   if (topLevelWindow) {
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(topLevelWindow));
@@ -11074,9 +11076,9 @@ nsGlobalWindow::SetHasAudioAvailableEventListeners()
 #define EVENT(name_, id_, type_, struct_)                                    \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
                                              jsval *vp) {                    \
-    nsEventListenerManager *elm = GetListenerManager(false);              \
+    nsEventListenerManager *elm = GetListenerManager(false);                 \
     if (elm) {                                                               \
-      elm->GetJSEventListener(nsGkAtoms::on##name_, vp);                     \
+      elm->GetEventHandler(nsGkAtoms::on##name_, vp);                        \
     } else {                                                                 \
       *vp = JSVAL_NULL;                                                      \
     }                                                                        \
@@ -11084,7 +11086,7 @@ nsGlobalWindow::SetHasAudioAvailableEventListeners()
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
                                              const jsval &v) {               \
-    nsEventListenerManager *elm = GetListenerManager(true);               \
+    nsEventListenerManager *elm = GetListenerManager(true);                  \
     if (!elm) {                                                              \
       return NS_ERROR_OUT_OF_MEMORY;                                         \
     }                                                                        \
@@ -11093,7 +11095,7 @@ nsGlobalWindow::SetHasAudioAvailableEventListeners()
     if (!obj) {                                                              \
       return NS_ERROR_UNEXPECTED;                                            \
     }                                                                        \
-    return elm->SetJSEventListenerToJsval(nsGkAtoms::on##name_, cx, obj, v); \
+    return elm->SetEventHandlerToJsval(nsGkAtoms::on##name_, cx, obj, v);    \
   }
 #define WINDOW_ONLY_EVENT EVENT
 #define TOUCH_EVENT EVENT

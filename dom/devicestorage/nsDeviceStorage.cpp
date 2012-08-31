@@ -264,9 +264,25 @@ DeviceStorageFile::Write(InfallibleTArray<uint8_t>& aBits) {
 nsresult
 DeviceStorageFile::Remove()
 {
-  mFile->Remove(true);
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  bool check;
+  nsresult rv = mFile->Exists(&check);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  if (!check) {
+    return NS_OK;
+  }
+
+  rv = mFile->Remove(true);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   nsCOMPtr<IOEventComplete> iocomplete = new IOEventComplete(mFile, "deleted");
-  NS_DispatchToMainThread(iocomplete);    
+  NS_DispatchToMainThread(iocomplete);
   return NS_OK;
 }
 
@@ -300,7 +316,7 @@ DeviceStorageFile::collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &
 
   while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(f))) && f) {
 
-    int64_t msecs;
+    PRTime msecs;
     f->GetLastModifiedTime(&msecs);
 
     if (msecs < aSince) {
@@ -1096,7 +1112,6 @@ public:
     mFile->Remove();
 
     nsRefPtr<nsRunnable> r;
-
     bool check = false;
     mFile->mFile->Exists(&check);
     if (check) {

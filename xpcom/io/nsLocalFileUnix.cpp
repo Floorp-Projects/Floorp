@@ -36,6 +36,7 @@
 #endif
 #endif
 
+#include "xpcom-private.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -962,7 +963,7 @@ nsLocalFile::Remove(bool recursive)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTime(int64_t *aLastModTime)
+nsLocalFile::GetLastModifiedTime(PRTime *aLastModTime)
 {
     CHECK_mPath();
     NS_ENSURE_ARG(aLastModTime);
@@ -970,17 +971,17 @@ nsLocalFile::GetLastModifiedTime(int64_t *aLastModTime)
     PRFileInfo64 info;
     if (PR_GetFileInfo64(mPath.get(), &info) != PR_SUCCESS)
         return NSRESULT_FOR_ERRNO();
-    int64_t modTime = int64_t(info.modifyTime);
+    PRTime modTime = info.modifyTime;
     if (modTime == 0)
         *aLastModTime = 0;
     else
-        *aLastModTime = modTime / int64_t(PR_USEC_PER_MSEC);
+        *aLastModTime = modTime / PR_USEC_PER_MSEC;
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTime(int64_t aLastModTime)
+nsLocalFile::SetLastModifiedTime(PRTime aLastModTime)
 {
     CHECK_mPath();
 
@@ -991,7 +992,7 @@ nsLocalFile::SetLastModifiedTime(int64_t aLastModTime)
         ut.actime = mCachedStat.st_atime;
 
         // convert milliseconds to seconds since the unix epoch
-        ut.modtime = (time_t)(double(aLastModTime) / PR_MSEC_PER_SEC);
+        ut.modtime = (time_t)(aLastModTime / PR_MSEC_PER_SEC);
         result = utime(mPath.get(), &ut);
     } else {
         result = utime(mPath.get(), nullptr);
@@ -1000,7 +1001,7 @@ nsLocalFile::SetLastModifiedTime(int64_t aLastModTime)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastModifiedTimeOfLink(int64_t *aLastModTimeOfLink)
+nsLocalFile::GetLastModifiedTimeOfLink(PRTime *aLastModTimeOfLink)
 {
     CHECK_mPath();
     NS_ENSURE_ARG(aLastModTimeOfLink);
@@ -1008,7 +1009,7 @@ nsLocalFile::GetLastModifiedTimeOfLink(int64_t *aLastModTimeOfLink)
     struct STAT sbuf;
     if (LSTAT(mPath.get(), &sbuf) == -1)
         return NSRESULT_FOR_ERRNO();
-    *aLastModTimeOfLink = int64_t(sbuf.st_mtime) * int64_t(PR_MSEC_PER_SEC);
+    *aLastModTimeOfLink = PRTime(sbuf.st_mtime) * PR_MSEC_PER_SEC;
 
     return NS_OK;
 }
@@ -1017,7 +1018,7 @@ nsLocalFile::GetLastModifiedTimeOfLink(int64_t *aLastModTimeOfLink)
  * utime(2) may or may not dereference symlinks, joy.
  */
 NS_IMETHODIMP
-nsLocalFile::SetLastModifiedTimeOfLink(int64_t aLastModTimeOfLink)
+nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink)
 {
     return SetLastModifiedTime(aLastModTimeOfLink);
 }
@@ -1214,7 +1215,7 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 
     /* 
      * Members of the STATFS struct that you should know about:
-     * f_bsize = block size on disk.
+     * F_BSIZE = block size on disk.
      * f_bavail = number of free blocks available to a non-superuser.
      * f_bfree = number of total free blocks in file system.
      */
@@ -1226,22 +1227,17 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 #endif
         return NS_ERROR_FAILURE;
     }
-#ifdef DEBUG_DISK_SPACE
-    printf("DiskSpaceAvailable: %d bytes\n",
-         fs_buf.f_bsize * (fs_buf.f_bavail - 1));
-#endif
-
     /* 
      * The number of bytes free == The number of free blocks available to
      * a non-superuser, minus one as a fudge factor, multiplied by the size
      * of the aforementioned blocks.
      */
-#if defined(SOLARIS) || defined(XP_MACOSX)
-    /* On Solaris and Mac, unit is f_frsize. */
-    *aDiskSpaceAvailable = (int64_t)fs_buf.f_frsize * (fs_buf.f_bavail - 1);
-#else
-    *aDiskSpaceAvailable = (int64_t)fs_buf.f_bsize * (fs_buf.f_bavail - 1);
-#endif /* SOLARIS */
+    *aDiskSpaceAvailable = (int64_t)fs_buf.F_BSIZE * (fs_buf.f_bavail - 1);
+
+#ifdef DEBUG_DISK_SPACE
+    printf("DiskSpaceAvailable: %lu bytes\n",
+         *aDiskSpaceAvailable);
+#endif
 
 #if defined(USE_LINUX_QUOTACTL)
 
@@ -1264,7 +1260,7 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
     {
         int64_t QuotaSpaceAvailable = 0;
         if (dq.dqb_bhardlimit > dq.dqb_curspace)
-            QuotaSpaceAvailable = int64_t(fs_buf.f_bsize * (dq.dqb_bhardlimit - dq.dqb_curspace));
+            QuotaSpaceAvailable = int64_t(fs_buf.F_BSIZE * (dq.dqb_bhardlimit - dq.dqb_curspace));
         if(QuotaSpaceAvailable < *aDiskSpaceAvailable) {
             *aDiskSpaceAvailable = QuotaSpaceAvailable;
         }

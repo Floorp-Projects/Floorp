@@ -82,7 +82,7 @@ var colors = {
   "-moz-menuhovertext": ["rgb(255, 255, 255)", "rgb(255, 254, 254)", "rgb(254, 255, 254)"],
   "-moz-menubartext": ["rgb(0, 0, 0)"],
   //"-moz-menubarhovertext": ["rgb(255, 255, 255)"],
-  "-moz-oddtreerow": ["rgb(236, 242, 254)", "rgb(240, 240, 240)", "rgb(243, 245, 250)"],
+  "-moz-oddtreerow": ["rgb(236, 242, 254)", "rgb(240, 240, 240)", "rgb(243, 245, 250)", "rgb(243, 246, 250)"],
   "-moz-visitedhyperlinktext": ["rgb(85, 26, 139)"],
   "currentcolor": ["rgb(0, 0, 0)"],
   //"-moz-win-mediatext": ["rgb(255, 255, 255)"],

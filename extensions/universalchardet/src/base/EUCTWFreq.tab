@@ -24,9 +24,7 @@
 
 #define EUCTW_TYPICAL_DISTRIBUTION_RATIO (float)0.75
 
-//Char to FreqOrder table , 
-#define EUCTW_TABLE_SIZE  8102
-
+// Char to FreqOrder table
 static const int16_t EUCTWCharToFreqOrder[] =
 {
    1,1800,1506, 255,1431, 198,   9,  82,   6,7310, 177, 202,3615,1256,2808, 110, // 2742

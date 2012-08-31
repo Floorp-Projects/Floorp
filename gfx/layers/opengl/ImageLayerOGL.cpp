@@ -953,9 +953,13 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     }
 #ifdef MOZ_WIDGET_GONK
   } else if (mExternalBufferTexture.IsAllocated()) {
+    gl()->MakeCurrent();
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, mExternalBufferTexture.GetTextureID());
+
     ShaderProgramOGL *program = mOGLManager->GetProgram(RGBAExternalLayerProgramType, GetMaskLayer());
 
-    gl()->ApplyFilterToBoundTexture(mFilter);
+    gl()->ApplyFilterToBoundTexture(LOCAL_GL_TEXTURE_EXTERNAL, mFilter);
 
     program->Activate();
     program->SetLayerQuadRect(nsIntRect(0, 0,
@@ -969,6 +973,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     mOGLManager->BindAndDrawQuadWithTextureRect(program,
                                                 GetVisibleRegion().GetBounds(),
                                                 nsIntSize(mSize.width, mSize.height));
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, 0);
 #endif
   } else if (mSharedHandle) {
     GLContext::SharedHandleDetails handleDetails;

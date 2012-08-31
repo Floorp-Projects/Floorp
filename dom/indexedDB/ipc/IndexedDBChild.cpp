@@ -248,7 +248,7 @@ IndexedDBDatabaseChild::SetRequest(IDBOpenDBRequest* aRequest)
 
 bool
 IndexedDBDatabaseChild::EnsureDatabase(
-                           IDBRequest* aRequest,
+                           IDBOpenDBRequest* aRequest,
                            const DatabaseInfoGuts& aDBInfo,
                            const InfallibleTArray<ObjectStoreInfoGuts>& aOSInfo)
 {
@@ -293,8 +293,8 @@ IndexedDBDatabaseChild::EnsureDatabase(
 
   if (!mDatabase) {
     nsRefPtr<IDBDatabase> database =
-      IDBDatabase::Create(aRequest, dbInfo.forget(), aDBInfo.origin, NULL,
-                          NULL);
+      IDBDatabase::Create(aRequest, aRequest->Factory(), dbInfo.forget(),
+                          aDBInfo.origin, NULL, NULL);
     if (!database) {
       NS_WARNING("Failed to create database!");
       return false;

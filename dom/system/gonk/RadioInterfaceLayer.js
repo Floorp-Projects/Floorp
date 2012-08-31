@@ -62,7 +62,9 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:UnlockCardLock",
   "RIL:SetCardLock",
   "RIL:SendUSSD",
-  "RIL:CancelUSSD"
+  "RIL:CancelUSSD",
+  "RIL:SendStkResponse",
+  "RIL:SendStkMenuSelection"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
@@ -303,6 +305,12 @@ RadioInterfaceLayer.prototype = {
         this.saveRequestTarget(msg);
         this.cancelUSSD(msg.json);
         break;
+      case "RIL:SendStkResponse":
+        this.sendStkResponse(msg.json);
+        break;
+      case "RIL:SendStkMenuSelection":
+        this.sendStkMenuSelection(msg.json);
+        break;
     }
   },
 
@@ -440,6 +448,12 @@ RadioInterfaceLayer.prototype = {
       case "cancelussd":
         this.handleCancelUSSD(message);
         break;
+      case "stkcommand":
+        this.handleStkProactiveCommand(message);
+        break;
+      case "stksessionend":
+        ppmm.broadcastAsyncMessage("RIL:StkSessionEnd", null);
+        break;
       default:
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
@@ -575,21 +589,7 @@ RadioInterfaceLayer.prototype = {
     if (!newInfo.batch) {
       ppmm.broadcastAsyncMessage("RIL:DataInfoChanged", dataInfo);
     }
-
-    if (!this.dataCallSettings["enabled"]) {
-      return;
-    }
-
-    let isRegistered =
-      newInfo.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED &&
-      (!newInfo.roaming || this._isDataRoamingEnabled());
-    let haveDataConnection =
-      newInfo.type != RIL.GECKO_MOBILE_CONNECTION_STATE_UNKNOWN;
-
-    if (isRegistered && haveDataConnection) {
-      debug("Radio is ready for data connection.");
-      this.updateRILNetworkInterface();
-    }
+    this.updateRILNetworkInterface();
   },
 
   handleSignalStrengthChange: function handleSignalStrengthChange(message) {
@@ -679,6 +679,7 @@ RadioInterfaceLayer.prototype = {
     // This check avoids data call connection if the radio is not ready 
     // yet after toggling off airplane mode. 
     if (this.rilContext.radioState != RIL.GECKO_RADIOSTATE_READY) {
+      debug("RIL is not ready for data connection: radio's not ready");
       return; 
     }
 
@@ -695,11 +696,29 @@ RadioInterfaceLayer.prototype = {
     if (!this.dataCallSettings["enabled"] && RILNetworkInterface.connected) {
       debug("Data call settings: disconnect data call.");
       RILNetworkInterface.disconnect();
+      return;
     }
-    if (this.dataCallSettings["enabled"] && !RILNetworkInterface.connected) {
-      debug("Data call settings connect data call.");
-      RILNetworkInterface.connect(this.dataCallSettings);
+    if (!this.dataCallSettings["enabled"] || RILNetworkInterface.connected) {
+      debug("Data call settings: nothing to do.");
+      return;
     }
+    let dataInfo = this.rilContext.data;
+    let isRegistered =
+      dataInfo.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED;
+    let haveDataConnection =
+      dataInfo.type != RIL.GECKO_MOBILE_CONNECTION_STATE_UNKNOWN;
+    if (!isRegistered || !haveDataConnection) {
+      debug("RIL is not ready for data connection: Phone's not registered " +
+            "or doesn't have data connection.");
+      return;
+    }
+    if (dataInfo.roaming && !this.dataCallSettings["roaming_enabled"]) {
+      debug("We're roaming, but data roaming is disabled.");
+      return;
+    }
+
+    debug("Data call settings: connect data call.");
+    RILNetworkInterface.connect(this.dataCallSettings);
   },
 
   /**
@@ -1012,6 +1031,11 @@ RadioInterfaceLayer.prototype = {
     this._sendRequestResults(messageType, message);
   },
 
+  handleStkProactiveCommand: function handleStkProactiveCommand(message) {
+    debug("handleStkProactiveCommand " + JSON.stringify(message));
+    ppmm.broadcastAsyncMessage("RIL:StkCommand", message);
+  },
+
   // nsIObserver
 
   observe: function observe(subject, topic, data) {
@@ -1182,6 +1206,15 @@ RadioInterfaceLayer.prototype = {
     this.worker.postMessage(message);
   },
 
+  sendStkResponse: function sendStkResponse(message) {
+    message.rilMessageType = "sendStkTerminalResponse";
+    this.worker.postMessage(message);
+  },
+
+  sendStkMenuSelection: function sendStkMenuSelection(message) {
+    message.rilMessageType = "sendStkMenuSelection";
+    this.worker.postMessage(message);
+  },
 
   get microphoneMuted() {
     return gAudioManager.microphoneMuted;
@@ -1729,9 +1762,10 @@ let RILNetworkInterface = {
 
   state: Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN,
 
-  NETWORK_TYPE_WIFI:       Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
-  NETWORK_TYPE_MOBILE:     Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
-  NETWORK_TYPE_MOBILE_MMS: Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS,
+  NETWORK_TYPE_WIFI:        Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
+  NETWORK_TYPE_MOBILE:      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
+  NETWORK_TYPE_MOBILE_MMS:  Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS,
+  NETWORK_TYPE_MOBILE_SUPL: Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL,
 
   /**
    * Standard values for the APN connection retry process

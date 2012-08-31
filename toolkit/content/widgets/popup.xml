@@ -423,15 +423,20 @@
             hideAnchor = true;
           }
           else {
+            let dir = "";
             arrowbox.pack = popupTop + popupRect.height / 2 < anchorTop ? "end" : "start";
             if (horizPos == 1) {
-              container.dir = "";
               anchorClass = "left";
             }
             else if (horizPos == -1) {
-              container.dir = "reverse";
+              dir = "reverse";
               anchorClass = "right";
             }
+            // In RTL, everything should be inverted.
+            if (window.getComputedStyle(this).direction == "rtl") {
+              dir = (dir == "") ? "reverse" : "";
+            }
+            container.dir = dir;
           }
         }
         else {

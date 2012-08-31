@@ -44,7 +44,7 @@ def InvokeClWithDependencyGeneration(cmdline):
     if ret != 0 or target == "":
         sys.exit(ret)
 
-    depsdir = os.path.normpath(os.path.join(os.path.dirname(target), ".deps"))
+    depsdir = os.path.normpath(os.path.join(os.curdir, ".deps"))
     depstarget = os.path.join(depsdir, depstarget)
     if not os.path.isdir(depsdir):
         try:

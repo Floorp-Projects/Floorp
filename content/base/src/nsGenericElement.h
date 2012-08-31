@@ -210,9 +210,9 @@ public:
    * @param aValue the JS to attach
    * @param aDefer indicates if deferred execution is allowed
    */
-  nsresult AddScriptEventListener(nsIAtom* aEventName,
-                                  const nsAString& aValue,
-                                  bool aDefer = true);
+  nsresult SetEventHandler(nsIAtom* aEventName,
+                           const nsAString& aValue,
+                           bool aDefer = true);
 
   /**
    * Do whatever needs to be done when the mouse leaves a link

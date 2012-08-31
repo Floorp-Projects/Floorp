@@ -3110,7 +3110,7 @@
               tab.style.MozMarginStart = - (width + scrollButtonWidth + paddingStart) + "px";
             }
 
-            this.style.MozMarginStart = width + paddingStart + "px";
+            this.style.MozPaddingStart = width + paddingStart + "px";
 
           } else {
             this.removeAttribute("positionpinnedtabs");
@@ -3120,7 +3120,7 @@
               tab.style.MozMarginStart = "";
             }
 
-            this.style.MozMarginStart = "";
+            this.style.MozPaddingStart = "";
           }
 
           this.mTabstrip.ensureElementIsVisible(this.selectedItem, false);
@@ -3233,12 +3233,14 @@
           if (this.getAttribute("movingtab") != "true")
             return;
 
-          let draggedTab = event.dataTransfer.mozGetDataAt(TAB_DROP_TYPE, 0);
-          if ("animDropIndex" in draggedTab._dragData) {
-            let newIndex = draggedTab._dragData.animDropIndex;
-            if (newIndex > draggedTab._tPos)
-              newIndex--;
-            this.tabbrowser.moveTabTo(draggedTab, newIndex);
+          if (event) {
+            let draggedTab = event.dataTransfer.mozGetDataAt(TAB_DROP_TYPE, 0);
+            if ("animDropIndex" in draggedTab._dragData) {
+              let newIndex = draggedTab._dragData.animDropIndex;
+              if (newIndex > draggedTab._tPos)
+                newIndex--;
+              this.tabbrowser.moveTabTo(draggedTab, newIndex);
+            }
           }
 
           for (let tab of this.tabbrowser.visibleTabs)
@@ -3563,7 +3565,7 @@
         canvas.width = 160;
         canvas.height = 90;
         PageThumbs.captureToCanvas(browser.contentWindow, canvas);
-        dt.setDragImage(canvas, 0, 0);
+        dt.setDragImage(canvas, -16, -16);
 
         // _dragData.offsetX/Y give the coordinates that the mouse should be
         // positioned relative to the corner of the new window created upon
@@ -3716,6 +3718,7 @@
             this.tabbrowser.pinTab(newTab);
           this.tabbrowser.moveTabTo(newTab, newIndex);
 
+          draggedTab.parentNode._finishAnimateTabMove();
           this.tabbrowser.swapBrowsersAndCloseOther(newTab, draggedTab);
 
           // We need to select the tab after we've done

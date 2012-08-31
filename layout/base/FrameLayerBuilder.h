@@ -268,13 +268,21 @@ public:
   /* These are only in the public section because they need
    * to be called by file-scope helper functions in FrameLayerBuilder.cpp.
    */
-  
+
   /**
    * Record aItem as a display item that is rendered by aLayer.
    */
   void AddLayerDisplayItem(Layer* aLayer,
                            nsDisplayItem* aItem,
                            LayerState aLayerState);
+
+  /**
+   * Record aFrame as a frame that is rendered by an item on aLayer.
+   */
+  void AddLayerDisplayItemForFrame(Layer* aLayer,
+                                   nsIFrame* aFrame,
+                                   uint32_t aDisplayItemKey,
+                                   LayerState aLayerState);
 
   /**
    * Record aItem as a display item that is rendered by the ThebesLayer
@@ -296,7 +304,14 @@ public:
    * This could be a dedicated layer for the display item, or a ThebesLayer
    * that renders many display items.
    */
-  Layer* GetOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
+  Layer* GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey);
+
+  /**
+   * Calls GetOldLayerForFrame on the underlying frame of the display item,
+   * and each subsequent merged frame if no layer is found for the underlying
+   * frame.
+   */
+  Layer* GetOldLayerFor(nsDisplayItem* aItem);
 
   static Layer* GetDebugOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
   /**
@@ -584,7 +599,9 @@ public:
   }
 
 protected:
-  void RemoveThebesItemsForLayerSubtree(Layer* aLayer);
+  void RemoveThebesItemsAndOwnerDataForLayerSubtree(Layer* aLayer,
+                                                    bool aRemoveThebesItems,
+                                                    bool aRemoveOwnerData);
 
   static void SetAndClearInvalidRegion(DisplayItemDataEntry* aEntry);
   static PLDHashOperator UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,

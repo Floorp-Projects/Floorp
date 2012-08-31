@@ -847,7 +847,6 @@ JSRuntime::JSRuntime()
     waiveGCQuota(false),
     mathCache_(NULL),
     dtoaState(NULL),
-    pendingProxyOperation(NULL),
     trustedPrincipals_(NULL),
     wrapObjectCallback(TransparentObjectWrapper),
     sameCompartmentWrapObjectCallback(NULL),
