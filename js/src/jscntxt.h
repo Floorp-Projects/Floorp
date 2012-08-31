@@ -441,9 +441,6 @@ struct JSRuntime : js::RuntimeFriendFields
 
     bool initSelfHosting(JSContext *cx);
     void markSelfHostedGlobal(JSTracer *trc);
-    bool isSelfHostedGlobal(js::HandleObject global) {
-        return global == selfHostedGlobal_;
-    }
     JSFunction *getSelfHostedFunction(JSContext *cx, const char *name);
     bool cloneSelfHostedValueById(JSContext *cx, jsid id, js::HandleObject holder, js::Value *vp);
 
