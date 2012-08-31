@@ -259,6 +259,12 @@ JSRuntime::initSelfHosting(JSContext *cx)
         return false;
     JS_SetGlobalObject(cx, selfHostedGlobal_);
 
+    AutoCompartment ac(cx, cx->global());
+    RootedObject shg(cx, selfHostedGlobal_);
+
+    if (!JS_InitStandardClasses(cx, shg))
+        return false;
+
     const char *src = selfhosted::raw_sources;
     uint32_t srcLen = selfhosted::GetRawScriptsSize();
 
@@ -266,7 +272,6 @@ JSRuntime::initSelfHosting(JSContext *cx)
     options.setFileAndLine("self-hosted", 1);
     options.setSelfHostingMode(true);
 
-    RootedObject shg(cx, selfHostedGlobal_);
     Value rv;
     /*
      * Set a temporary error reporter printing to stderr because it is too
