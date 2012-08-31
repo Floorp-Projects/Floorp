@@ -42,24 +42,20 @@ function testSteps()
       ok(true, "createIndex with no keyPath should throw");
     }
 
+    let ex;
     try {
-      request = objectStore.createIndex("Hola", ["foo"], { multiEntry: true });
-      ok(false, "createIndex with array keyPath and multiEntry should throw");
+      objectStore.createIndex("Hola", ["foo"], { multiEntry: true });
     }
     catch(e) {
-      ok(true, "createIndex with array keyPath and multiEntry should throw");
+      ex = e;
     }
+    ok(ex, "createIndex with array keyPath and multiEntry should throw");
+    is(ex.name, "InvalidAccessError", "should throw right exception");
+    ok(ex instanceof DOMException, "should throw right exception");
+    is(ex.code, DOMException.INVALID_ACCESS_ERR, "should throw right exception");
 
     try {
-      request = objectStore.createIndex("Hola", []);
-      ok(false, "createIndex with empty array keyPath should throw");
-    }
-    catch(e) {
-      ok(true, "createIndex with empty array keyPath should throw");
-    }
-
-    try {
-      request = objectStore.createIndex("foo", "bar", 10);
+      objectStore.createIndex("foo", "bar", 10);
       ok(false, "createIndex with bad options should throw");
     }
     catch(e) {

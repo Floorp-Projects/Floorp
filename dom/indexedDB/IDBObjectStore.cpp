@@ -2331,7 +2331,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   }
 
   if (params.multiEntry && keyPath.IsArray()) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
   DatabaseInfo* databaseInfo = mTransaction->DBInfo();
