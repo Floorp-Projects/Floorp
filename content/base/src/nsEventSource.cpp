@@ -82,9 +82,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsEventSource)
   if (isBlack || tmp->mWaitingForOnStopRequest) {
     if (tmp->mListenerManager) {
       tmp->mListenerManager->UnmarkGrayJSListeners();
-      NS_UNMARK_LISTENER_WRAPPER(Open)
-      NS_UNMARK_LISTENER_WRAPPER(Message)
-      NS_UNMARK_LISTENER_WRAPPER(Error)
     }
     if (!isBlack && tmp->PreservingWrapper()) {
       xpc_UnmarkGrayObject(tmp->GetWrapperPreserveColor());
@@ -113,17 +110,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsEventSource,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannelEventSink)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHttpChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTimer)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnOpenListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnMessageListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mUnicodeDecoder)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsEventSource, nsDOMEventTargetHelper)
   tmp->Close();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnOpenListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnMessageListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 DOMCI_DATA(EventSource, nsEventSource)
@@ -143,13 +134,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsEventSource, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsEventSource, nsDOMEventTargetHelper)
 
+NS_IMPL_EVENT_HANDLER(nsEventSource, open)
+NS_IMPL_EVENT_HANDLER(nsEventSource, message)
+NS_IMPL_EVENT_HANDLER(nsEventSource, error)
+
 void
 nsEventSource::DisconnectFromOwner()
 {
   nsDOMEventTargetHelper::DisconnectFromOwner();
-  NS_DISCONNECT_EVENT_HANDLER(Open)
-  NS_DISCONNECT_EVENT_HANDLER(Message)
-  NS_DISCONNECT_EVENT_HANDLER(Error)
   Close();
 }
 
@@ -179,24 +171,6 @@ nsEventSource::GetWithCredentials(bool *aWithCredentials)
   *aWithCredentials = mWithCredentials;
   return NS_OK;
 }
-
-#define NS_EVENTSRC_IMPL_DOMEVENTLISTENER(_eventlistenername, _eventlistener)  \
-  NS_IMETHODIMP                                                                \
-  nsEventSource::GetOn##_eventlistenername(nsIDOMEventListener * *aListener)   \
-  {                                                                            \
-    return GetInnerEventListener(_eventlistener, aListener);                   \
-  }                                                                            \
-                                                                               \
-  NS_IMETHODIMP                                                                \
-  nsEventSource::SetOn##_eventlistenername(nsIDOMEventListener * aListener)    \
-  {                                                                            \
-    return RemoveAddEventListener(NS_LITERAL_STRING(#_eventlistenername),      \
-                                  _eventlistener, aListener);                  \
-  }
-
-NS_EVENTSRC_IMPL_DOMEVENTLISTENER(open, mOnOpenListener)
-NS_EVENTSRC_IMPL_DOMEVENTLISTENER(error, mOnErrorListener)
-NS_EVENTSRC_IMPL_DOMEVENTLISTENER(message, mOnMessageListener)
 
 NS_IMETHODIMP
 nsEventSource::Close()
