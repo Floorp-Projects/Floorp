@@ -30,7 +30,9 @@
 #include "jsscriptinlines.h"
 
 #include "methodjit/StubCalls-inl.h"
-#include "ion/IonMacroAssembler.h"
+#ifdef JS_ION
+# include "ion/IonMacroAssembler.h"
+#endif
 
 using namespace js;
 using namespace js::mjit;
@@ -550,6 +552,7 @@ class CallCompiler : public BaseCompiler
         repatch.relink(oolCall, fptr);
     }
 
+#ifdef JS_ION
     bool generateIonStub()
     {
         RecompilationMonitor monitor(cx);
@@ -826,6 +829,7 @@ class CallCompiler : public BaseCompiler
 
         return true;
     }
+#endif
 
     bool generateFullCallStub(JSScript *script, uint32_t flags)
     {
@@ -1225,6 +1229,7 @@ class CallCompiler : public BaseCompiler
             if (ucr.unjittable)
                 disable();
 
+#ifdef JS_ION
             // If the following conditions pass, try to inline a call into
             // an IonMonkey JIT'd function.
             if (!callingNew &&
@@ -1238,6 +1243,7 @@ class CallCompiler : public BaseCompiler
                 if (!generateIonStub())
                     THROWV(NULL);
             }
+#endif
             return NULL;
         }
 

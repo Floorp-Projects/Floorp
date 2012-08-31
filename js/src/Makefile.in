@@ -300,11 +300,13 @@ CPPSRCS +=	MIR.cpp \
 		$(NULL)
 endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
+ifdef ENABLE_ION
 CPPSRCS +=	CodeGenerator-x86-shared.cpp
 CPPSRCS +=	IonFrames-x86-shared.cpp
 CPPSRCS +=	MoveEmitter-x86-shared.cpp
 CPPSRCS +=	Assembler-x86-shared.cpp
 CPPSRCS +=	Lowering-x86-shared.cpp
+endif #ENABLE_ION
 ifeq (x86_64, $(TARGET_CPU))
 ifdef _MSC_VER
 ASFILES +=	TrampolineMasmX64.asm
@@ -317,7 +319,7 @@ endif
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX64.s
 endif
-#CPPSRCS		+= only_on_x86_64.cpp
+ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/x64
 CPPSRCS += 	Lowering-x64.cpp \
 		CodeGenerator-x64.cpp \
@@ -326,8 +328,9 @@ CPPSRCS += 	Lowering-x64.cpp \
 		Bailouts-x64.cpp \
 		MacroAssembler-x64.cpp \
 		$(NULL)
+endif #ENABLE_ION
 else
-#CPPSRCS		+= only_on_x86.cpp
+ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/x86
 CPPSRCS +=	Lowering-x86.cpp \
 		CodeGenerator-x86.cpp \
@@ -336,6 +339,7 @@ CPPSRCS +=	Lowering-x86.cpp \
 		Bailouts-x86.cpp \
 		MacroAssembler-x86.cpp \
 		$(NULL)
+endif #ENABLE_ION
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX86.s
 endif
@@ -343,7 +347,7 @@ endif
 endif
 ifdef ENABLE_ION
 ifeq (arm, $(findstring arm, $(TARGET_CPU)))
-#CPPSRCS		+= only_on_arm.cpp
+ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/arm
 CPPSRCS +=	Lowering-arm.cpp \
 		CodeGenerator-arm.cpp \
@@ -355,6 +359,7 @@ CPPSRCS +=	Lowering-arm.cpp \
 		Architecture-arm.cpp \
 		MacroAssembler-arm.cpp \
 		$(NULL)
+endif #ENABLE_ION
 endif
 endif #ENABLE_ION
 ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))

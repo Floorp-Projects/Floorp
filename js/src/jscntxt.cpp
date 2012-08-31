@@ -1016,11 +1016,13 @@ js_InvokeOperationCallback(JSContext *cx)
     if (rt->gcIsNeeded)
         GCSlice(rt, GC_NORMAL, rt->gcTriggerReason);
 
+#ifdef JS_ION
     /*
      * A worker thread may have set the callback after finishing an Ion
      * compilation.
      */
     ion::AttachFinishedCompilations(cx);
+#endif
 
     /*
      * Important: Additional callbacks can occur inside the callback handler
