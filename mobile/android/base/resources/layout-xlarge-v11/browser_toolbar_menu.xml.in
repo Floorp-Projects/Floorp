@@ -33,17 +33,18 @@
                      android:layout_alignLeft="@id/tabs"
                      android:gravity="center_horizontal"/>
 
-        <ImageButton android:id="@+id/menu"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="56dip"
-                     android:layout_alignParentRight="true"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/menu"
-                     android:contentDescription="@string/menu"
-                     android:background="@drawable/action_bar_button"
-                     android:paddingLeft="14dip"
-                     android:paddingRight="14dip"
-                     android:visibility="gone"/>
+        <org.mozilla.gecko.MenuButton android:id="@+id/menu"
+                                      style="@style/AddressBar.ImageButton"
+                                      android:layout_width="56dip"
+                                      android:layout_alignParentRight="true"
+                                      gecko:curveTowards="none"
+                                      android:gravity="center_vertical"
+                                      android:src="@drawable/menu"
+                                      android:contentDescription="@string/menu"
+                                      android:background="@drawable/action_bar_button"
+                                      android:paddingLeft="14dip"
+                                      android:paddingRight="14dip"
+                                      android:visibility="gone"/>
 
         <LinearLayout android:id="@+id/menu_items"
                       android:layout_width="wrap_content"
