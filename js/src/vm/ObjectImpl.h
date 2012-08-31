@@ -359,10 +359,6 @@ class ElementsHeader
             friend class SparseElementsHeader;
             Shape * shape;
         } sparse;
-        class {
-            friend class ArrayBufferElementsHeader;
-            JSObject * views;
-        } buffer;
     };
 
     void staticAsserts() {
@@ -754,8 +750,6 @@ class ArrayBufferElementsHeader : public ElementsHeader
 
     bool setElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> receiver,
                     uint32_t index, const Value &v, unsigned resolveFlags, bool *succeeded);
-
-    JSObject **viewList() { return &buffer.views; }
 
   private:
     inline bool isArrayBufferElements() const MOZ_DELETE;

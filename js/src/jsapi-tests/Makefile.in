@@ -17,7 +17,6 @@ CPPSRCS = \
   tests.cpp \
   selfTest.cpp \
   testAddPropertyPropcache.cpp \
-  testArrayBuffer.cpp \
   testArgumentsObject.cpp \
   testBindCallable.cpp \
   testBug604087.cpp \
