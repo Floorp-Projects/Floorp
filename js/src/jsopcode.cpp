@@ -6192,13 +6192,13 @@ DecompileExpressionFromStack(JSContext *cx, int spindex, int skipStackHits, Valu
     if (!valuepc)
         return true;
 
-    ExpressionDecompiler ea(cx, script, fun);
-    if (!ea.init())
+    ExpressionDecompiler ed(cx, script, fun);
+    if (!ed.init())
         return false;
-    if (!ea.decompilePC(valuepc))
+    if (!ed.decompilePC(valuepc))
         return false;
 
-    return ea.getOutput(res);
+    return ed.getOutput(res);
 }
 
 char *
