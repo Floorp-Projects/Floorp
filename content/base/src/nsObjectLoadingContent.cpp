@@ -687,43 +687,37 @@ nsObjectLoadingContent::~nsObjectLoadingContent()
 nsresult
 nsObjectLoadingContent::InstantiatePluginInstance()
 {
-  if (mType != eType_Plugin || mIsLoading) {
-    LOG(("OBJLC [%p]: Not instantiating loading or non-plugin object, type %u",
-         this, mType));
+  if (mInstanceOwner || mType != eType_Plugin || mIsLoading || mInstantiating) {
     return NS_OK;
   }
-
-  // Don't do anything if we already have an active instance.
-  if (mInstanceOwner) {
-    return NS_OK;
-  }
-
-  // Don't allow re-entry into initialization code.
-  if (mInstantiating) {
-    return NS_OK;
-  }
+  
   mInstantiating = true;
   AutoSetInstantiatingToFalse autoInstantiating(this);
+
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent *>(this));
+
+  nsIDocument* doc = thisContent->GetCurrentDoc();
+  if (!doc || !InActiveDocument(thisContent)) {
+    NS_ERROR("Shouldn't be calling "
+             "InstantiatePluginInstance without an active document");
+    return NS_ERROR_FAILURE;
+  }
 
   // Instantiating an instance can result in script execution, which
   // can destroy this DOM object. Don't allow that for the scope
   // of this method.
   nsCOMPtr<nsIObjectLoadingContent> kungFuDeathGrip = this;
 
-  nsCOMPtr<nsIContent> thisContent =
-    do_QueryInterface(static_cast<nsIImageLoadingContent *>(this));
-  // Flush layout so that the plugin is initialized with the latest information.
-  nsIDocument* doc = thisContent->GetCurrentDoc();
-  if (!doc) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!InActiveDocument(thisContent)) {
-    NS_ERROR("Shouldn't be calling "
-             "InstantiatePluginInstance in an inactive document");
-    return NS_ERROR_FAILURE;
-  }
+  // Flush layout so that the frame is created if possible and the plugin is
+  // initialized with the latest information.
   doc->FlushPendingNotifications(Flush_Layout);
-
+  
+  if (!thisContent->GetPrimaryFrame()) {
+    LOG(("OBJLC [%p]: Not instantiating plugin with no frame", this));
+    return NS_OK;
+  }
+  
   nsresult rv = NS_ERROR_FAILURE;
   nsRefPtr<nsPluginHost> pluginHost =
     already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
@@ -1729,6 +1723,14 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         oldType = mType;
         oldState = ObjectState();
 
+        if (!thisContent->GetPrimaryFrame()) {
+          // We're un-rendered, and can't instantiate a plugin. HasNewFrame will
+          // re-start us when we can proceed.
+          LOG(("OBJLC [%p]: Aborting load - plugin-type, but no frame", this));
+          CloseChannel();
+          break;
+        }
+        
         rv = pluginHost->NewEmbeddedPluginStreamListener(mURI, this, nullptr,
                                                          getter_AddRefs(mFinalListener));
         if (NS_SUCCEEDED(rv)) {
