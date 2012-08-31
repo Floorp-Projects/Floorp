@@ -43,26 +43,38 @@ JS_BEGIN_EXTERN_C
 struct DtoaState;
 JS_END_EXTERN_C
 
-struct JSSharpInfo {
-    bool hasGen;
-    bool isSharp;
-
-    JSSharpInfo() : hasGen(false), isSharp(false) {}
-};
-
-typedef js::HashMap<JSObject *, JSSharpInfo> JSSharpTable;
-
-struct JSSharpObjectMap {
-    unsigned     depth;
-    uint32_t     sharpgen;
-    JSSharpTable table;
-
-    JSSharpObjectMap(JSContext *cx) : depth(0), sharpgen(0), table(js::TempAllocPolicy(cx)) {
-        table.init();
-    }
-};
-
 namespace js {
+
+typedef HashSet<JSObject *> ObjectSet;
+
+/* Detects cycles when traversing an object graph. */
+class AutoCycleDetector
+{
+    JSContext *cx;
+    JSObject *obj;
+    bool cyclic;
+    uint32_t hashsetGenerationAtInit;
+    ObjectSet::AddPtr hashsetAddPointer;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+  public:
+    AutoCycleDetector(JSContext *cx, JSObject *obj
+                      JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : cx(cx), obj(obj), cyclic(true)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    ~AutoCycleDetector();
+
+    bool init();
+
+    bool foundCycle() { return cyclic; }
+};
+
+/* Updates references in the cycle detection set if the GC moves them. */
+extern void
+TraceCycleDetectionSet(JSTracer *trc, ObjectSet &set);
 
 namespace mjit {
 class JaegerRuntime;
@@ -362,13 +374,15 @@ struct JSRuntime : js::RuntimeFriendFields
     void *ownerThread() const { return ownerThread_; }
     void clearOwnerThread();
     void setOwnerThread();
-    JS_FRIEND_API(bool) onOwnerThread() const;
+    JS_FRIEND_API(void) abortIfWrongThread() const;
+    JS_FRIEND_API(void) assertValidThread() const;
   private:
     void                *ownerThread_;
   public:
 #else
   public:
-    bool onOwnerThread() const { return true; }
+    void abortIfWrongThread() const {}
+    void assertValidThread() const {}
 #endif
 
     /* Keeper of the contiguous stack used by all contexts in this thread. */
@@ -1100,10 +1114,6 @@ VersionIsKnown(JSVersion version)
     return VersionNumber(version) != JSVERSION_UNKNOWN;
 }
 
-typedef HashSet<JSObject *,
-                DefaultHasher<JSObject *>,
-                SystemAllocPolicy> BusyArraysSet;
-
 inline void
 FreeOp::free_(void* p) {
     if (shouldFreeLater()) {
@@ -1227,8 +1237,7 @@ struct JSContext : js::ContextFriendFields
 
   public:
     /* State for object and array toSource conversion. */
-    JSSharpObjectMap    sharpObjectMap;
-    js::BusyArraysSet   busyArrays;
+    js::ObjectSet       cycleDetectorSet;
 
     /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
     JSArgumentFormatMap *argumentFormatMap;

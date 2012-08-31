@@ -111,7 +111,7 @@
       * the end of the file has been reached.
       * @throws {OS.File.Error} In case of I/O error.
       */
-     File.prototype.read = function read(buffer, nbytes, options) {
+     File.prototype._read = function _read(buffer, nbytes, options) {
        // |gBytesReadPtr| is a pointer to |gBytesRead|.
        throw_on_zero("read",
          WinFile.ReadFile(this.fd, buffer, nbytes, gBytesReadPtr, null)
@@ -132,7 +132,7 @@
       * @return {number} The number of bytes effectively written.
       * @throws {OS.File.Error} In case of I/O error.
       */
-     File.prototype.write = function write(buffer, nbytes, options) {
+     File.prototype._write = function _write(buffer, nbytes, options) {
        // |gBytesWrittenPtr| is a pointer to |gBytesWritten|.
        throw_on_zero("write",
          WinFile.WriteFile(this.fd, buffer, nbytes, gBytesWrittenPtr, null)
@@ -180,6 +180,16 @@
        throw_on_zero("stat",
          WinFile.GetFileInformationByHandle(this.fd, gFileInfoPtr));
        return new File.Info(gFileInfo);
+     };
+
+     /**
+      * Flushes the file's buffers and causes all buffered data
+      * to be written.
+      *
+      * @throws {OS.File.Error} In case of I/O error.
+      */
+     File.prototype.flush = function flush() {
+       throw_on_zero("flush", WinFile.FlushFileBuffers(this.fd));
      };
 
      // Constant used to normalize options.

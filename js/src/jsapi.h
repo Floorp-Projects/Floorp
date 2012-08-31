@@ -14,6 +14,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/StandardInteger.h"
+#ifdef __cplusplus
+# include "mozilla/ThreadLocal.h"
+#endif
 
 #include <stddef.h>
 #include <stdio.h>
@@ -3017,6 +3020,8 @@ JS_IsInSuspendedRequest(JSRuntime *rt);
 JS_END_EXTERN_C
 
 namespace JS {
+
+extern mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
 
 inline bool
 IsPoisonedId(jsid iden)

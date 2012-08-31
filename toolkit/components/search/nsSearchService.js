@@ -9,6 +9,9 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm");
+
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
@@ -278,64 +281,6 @@ function ENSURE_WARN(assertion, message, resultCode) {
   if (!assertion)
     throw Components.Exception(message, resultCode);
 }
-
-/**
- * A delayed treatment that may be delayed even further.
- *
- * Use this for instance if you write data to a file and you expect
- * that you may have to rewrite data very soon afterwards. With
- * |Lazy|, the treatment is delayed by a few milliseconds and,
- * should a new change to the data occur during this period,
- * 1/ only the final version of the data is actually written;
- * 2/ a further grace delay is added to take into account other
- * changes.
- *
- * @constructor
- * @param {Function} code The code to execute after the delay.
- * @param {number=} delay An optional delay, in milliseconds.
- */
-function Lazy(code, delay) {
-  LOG("Lazy: Creating a Lazy");
-  this._callback =
-    (function(){
-       code();
-       this._timer = null;
-     }).bind(this);
-  this._delay = delay || LAZY_SERIALIZE_DELAY;
-  this._timer = null;
-}
-Lazy.prototype = {
-  /**
-   * Start (or postpone) treatment.
-   */
-  go: function Lazy_go() {
-    LOG("Lazy_go: starting");
-    if (this._timer) {
-      LOG("Lazy_go: reusing active timer");
-      this._timer.delay = this._delay;
-    } else {
-      LOG("Lazy_go: creating timer");
-      this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      this._timer.
-        initWithCallback(this._callback,
-                         this._delay,
-                         Ci.nsITimer.TYPE_ONE_SHOT);
-    }
-  },
-  /**
-   * Perform any postponed treatment immediately.
-   */
-  flush: function Lazy_flush() {
-    LOG("Lazy_flush: starting");
-    if (!this._timer) {
-      return;
-    }
-    this._timer.cancel();
-    this._timer = null;
-    this._callback();
-  }
-};
-
 
 function loadListener(aChannel, aEngine, aCallback) {
   this._channel = aChannel;
@@ -3825,10 +3770,10 @@ var engineMetadataService = {
         let istream = converter.convertToInputStream(JSON.stringify(store));
         NetUtil.asyncCopy(istream, ostream, callback);
       }
-      this._lazyWriter = new Lazy(writeCommit);
+      this._lazyWriter = new DeferredTask(writeCommit, LAZY_SERIALIZE_DELAY);
     }
     LOG("epsCommit: (re)setting timer");
-    this._lazyWriter.go();
+    this._lazyWriter.start();
   },
   _lazyWriter: null,
 };

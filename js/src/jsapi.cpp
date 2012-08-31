@@ -10,6 +10,7 @@
  */
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/ThreadLocal.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -719,6 +720,13 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
  */
 static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
+/*
+ * Thread Local Storage slot for storing the runtime for a thread.
+ */
+namespace JS {
+mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
+}
+
 static const JSSecurityCallbacks NullSecurityCallbacks = { };
 
 JSRuntime::JSRuntime()
@@ -877,6 +885,8 @@ JSRuntime::init(uint32_t maxbytes)
     ownerThread_ = PR_GetCurrentThread();
 #endif
 
+    JS::TlsRuntime.set(this);
+
 #ifdef JS_METHODJIT_SPEW
     JMCheckLogging();
 #endif
@@ -938,7 +948,9 @@ JSRuntime::init(uint32_t maxbytes)
 
 JSRuntime::~JSRuntime()
 {
-    JS_ASSERT(onOwnerThread());
+#ifdef JS_THREADSAFE
+    clearOwnerThread();
+#endif
 
     delete_(debugScopes);
 
@@ -994,7 +1006,10 @@ JSRuntime::setOwnerThread()
 {
     JS_ASSERT(ownerThread_ == (void *)0xc1ea12);  /* "clear" */
     JS_ASSERT(requestDepth == 0);
+    JS_ASSERT(js_NewRuntimeWasCalled);
+    JS_ASSERT(JS::TlsRuntime.get() == NULL);
     ownerThread_ = PR_GetCurrentThread();
+    JS::TlsRuntime.set(this);
     nativeStackBase = GetNativeStackBase();
     if (nativeStackQuota)
         JS_SetNativeStackQuota(this, nativeStackQuota);
@@ -1003,9 +1018,11 @@ JSRuntime::setOwnerThread()
 void
 JSRuntime::clearOwnerThread()
 {
-    JS_ASSERT(onOwnerThread());
+    assertValidThread();
     JS_ASSERT(requestDepth == 0);
+    JS_ASSERT(js_NewRuntimeWasCalled);
     ownerThread_ = (void *)0xc1ea12;  /* "clear" */
+    JS::TlsRuntime.set(NULL);
     nativeStackBase = 0;
 #if JS_STACK_GROWTH_DIRECTION > 0
     nativeStackLimit = UINTPTR_MAX;
@@ -1014,10 +1031,20 @@ JSRuntime::clearOwnerThread()
 #endif
 }
 
-JS_FRIEND_API(bool)
-JSRuntime::onOwnerThread() const
+JS_FRIEND_API(void)
+JSRuntime::abortIfWrongThread() const
 {
-    return ownerThread_ == PR_GetCurrentThread();
+    if (ownerThread_ != PR_GetCurrentThread())
+        MOZ_CRASH();
+    if (this != JS::TlsRuntime.get())
+        MOZ_CRASH();
+}
+
+JS_FRIEND_API(void)
+JSRuntime::assertValidThread() const
+{
+    JS_ASSERT(ownerThread_ == PR_GetCurrentThread());
+    JS_ASSERT(this == JS::TlsRuntime.get());
 }
 #endif  /* JS_THREADSAFE */
 
@@ -1053,6 +1080,9 @@ JS_NewRuntime(uint32_t maxbytes)
 #endif /* DEBUG */
 
         InitMemorySubsystem();
+
+        if (!JS::TlsRuntime.init())
+            return false;
 
         js_NewRuntimeWasCalled = JS_TRUE;
     }
@@ -1101,7 +1131,7 @@ static void
 StartRequest(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    JS_ASSERT(rt->onOwnerThread());
+    rt->assertValidThread();
 
     if (rt->requestDepth) {
         rt->requestDepth++;
@@ -1118,7 +1148,7 @@ static void
 StopRequest(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    JS_ASSERT(rt->onOwnerThread());
+    rt->assertValidThread();
     JS_ASSERT(rt->requestDepth != 0);
     if (rt->requestDepth != 1) {
         rt->requestDepth--;
@@ -1166,7 +1196,7 @@ JS_SuspendRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     JSRuntime *rt = cx->runtime;
-    JS_ASSERT(rt->onOwnerThread());
+    rt->assertValidThread();
 
     unsigned saveDepth = rt->requestDepth;
     if (!saveDepth)
@@ -1186,7 +1216,7 @@ JS_ResumeRequest(JSContext *cx, unsigned saveDepth)
 {
 #ifdef JS_THREADSAFE
     JSRuntime *rt = cx->runtime;
-    JS_ASSERT(rt->onOwnerThread());
+    rt->assertValidThread();
     if (saveDepth == 0)
         return;
     JS_ASSERT(saveDepth >= 1);
@@ -1202,7 +1232,7 @@ JS_PUBLIC_API(JSBool)
 JS_IsInRequest(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(rt->onOwnerThread());
+    rt->assertValidThread();
     return rt->requestDepth != 0;
 #else
     return false;
@@ -1213,7 +1243,7 @@ JS_PUBLIC_API(JSBool)
 JS_IsInSuspendedRequest(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(rt->onOwnerThread());
+    rt->assertValidThread();
     return rt->suspendCount != 0;
 #else
     return false;
@@ -7025,10 +7055,7 @@ JS_SetRuntimeThread(JSRuntime *rt)
 extern JS_NEVER_INLINE JS_PUBLIC_API(void)
 JS_AbortIfWrongThread(JSRuntime *rt)
 {
-#ifdef JS_THREADSAFE
-    if (!rt->onOwnerThread())
-        MOZ_CRASH();
-#endif
+    rt->abortIfWrongThread();
 }
 
 #ifdef JS_GC_ZEAL
