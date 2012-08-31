@@ -101,80 +101,29 @@
         isChecking: false,
         update: null,
 
-        get updateEnabled() {
-          try {
-            return Services.prefs.getBoolPref("app.update.enabled");
-          }
-          catch (e) { }
-          return true; // Mobile default is true
+        init: function() {
+          Services.obs.addObserver(this, "Update:CheckResult", false);
         },
 
-        startUpdate: function() {
-          if (!this.update)
-            this.update = this.um.activeUpdate;
-
-          this.aus.pauseDownload();
-
-          let updateTimerCallback = this.aus.QueryInterface(Ci.nsITimerCallback);
-          updateTimerCallback.notify(null);
-        }
+        observe: function(aSubject, aTopic, aData) {
+          if (aTopic == "Update:CheckResult") {
+            showUpdateMessage(aData == "true");
+          }
+        },
       };
 
-      XPCOMUtils.defineLazyServiceGetter(Updater, "aus",
-                                         "@mozilla.org/updates/update-service;1",
-                                         "nsIApplicationUpdateService");
-      XPCOMUtils.defineLazyServiceGetter(Updater, "checker",
-                                         "@mozilla.org/updates/update-checker;1",
-                                         "nsIUpdateChecker");
-      XPCOMUtils.defineLazyServiceGetter(Updater, "um",
-                                         "@mozilla.org/updates/update-manager;1",
-                                         "nsIUpdateManager");
-
-      let UpdateCheckListener = {
-        onProgress: function(aRequest, aPosition, aTotalSize) {
-        },
-
-        onCheckComplete: function(aRequest, aUpdates, aUpdateCount) {
-          Updater.isChecking = false;
-
-          Updater.update = Updater.aus.selectUpdate(aUpdates, aUpdates.length);
-          if (!Updater.update || !Updater.aus.canApplyUpdates) {
-            showUpdateMessage(false);
-            return;
-          }
-
-          if (!Updater.update.appVersion || Services.vc.compare(Updater.update.appVersion, Services.appinfo.version) < 0) {
-            showUpdateMessage(false);
-            return;
-          }
-
-          showUpdateMessage(true);
-          Updater.startUpdate();
-        },
-
-        onError: function(aRequest, aUpdate) {
-          // Errors in the update check are treated as no updates found. If the
-          // update check fails repeatedly without a success the user will be
-          // notified with the normal app update user interface so this is safe.
-          Updater.isChecking = false;
-          showUpdateMessage(false);
-        },
-
-        QueryInterface: function(aIID) {
-          if (!aIID.equals(Ci.nsIUpdateCheckListener) && !aIID.equals(Ci.nsISupports))
-            throw Cr.NS_ERROR_NO_INTERFACE;
-          return this;
-        }
-      };
-
-      if (!Updater.updateEnabled)
-        document.getElementById("updateBox").style.display = "none";
+      Updater.init();
 
       function checkForUpdates() {
         Updater.isChecking = true;
         showCheckingMessage();
 
-        Updater.checker.checkForUpdates(UpdateCheckListener, true);
+        let bridge = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
+        bridge.handleGeckoMessage(JSON.stringify({
+          gecko: {
+            type: "Update:Check",
+          }
+        }));
       }
 
       let updateLink = document.getElementById("updateLink");
