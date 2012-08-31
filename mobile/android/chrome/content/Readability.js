@@ -478,22 +478,14 @@ Readability.prototype = {
           let pIndex = this._getSinglePIndexInsideDiv(node);
 
           if (node.innerHTML.search(this.REGEXPS.divToPElements) === -1 || pIndex >= 0) {
-            let newNode;
             if (pIndex >= 0) {
-              newNode = node.childNodes[pIndex];
+              let newNode = node.childNodes[pIndex];
+              node.parentNode.replaceChild(newNode, node);
+              purgeNode(node);
             } else {
-              newNode = doc.createElement('p');
-              newNode.innerHTML = node.innerHTML;
-
-              // Manually update allElements since it is not a live NodeList
-              newNode._index = nodeIndex;
-              allElements[nodeIndex] = newNode;
-
-              nodesToScore[nodesToScore.length] = newNode;
+              this._setNodeTag(node, "P");
+              nodesToScore[nodesToScore.length] = node;
             }
-
-            node.parentNode.replaceChild(newNode, node);
-            purgeNode(node);
           } else {
             // EXPERIMENTAL
             for (let i = 0, il = node.childNodes.length; i < il; i += 1) {
