@@ -34,11 +34,12 @@ LIRGeneratorX64::lowerConstantDouble(double d, MInstruction *mir)
 bool
 LIRGeneratorX64::visitConstant(MConstant *ins)
 {
-    if (ins->canEmitAtUses())
-        return emitAtUses(ins);
-
     if (ins->type() == MIRType_Double)
         return lowerConstantDouble(ins->value().toDouble(), ins);
+
+    // Emit non-double constants at their uses.
+    if (ins->canEmitAtUses())
+        return emitAtUses(ins);
 
     return LIRGeneratorShared::visitConstant(ins);
 }

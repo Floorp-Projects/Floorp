@@ -40,9 +40,6 @@ LIRGeneratorX86::lowerConstantDouble(double d, MInstruction *mir)
 bool
 LIRGeneratorX86::visitConstant(MConstant *ins)
 {
-    if (ins->canEmitAtUses() && ins->type() != MIRType_Double)
-        return emitAtUses(ins);
-
     if (ins->type() == MIRType_Double) {
         uint32 index;
         if (!lirGraph_.addConstantToPool(ins->value(), &index))
@@ -50,6 +47,10 @@ LIRGeneratorX86::visitConstant(MConstant *ins)
         LDouble *lir = new LDouble(LConstantIndex::FromIndex(index));
         return define(lir, ins);
     }
+
+    // Emit non-double constants at their uses.
+    if (ins->canEmitAtUses())
+        return emitAtUses(ins);
 
     return LIRGeneratorShared::visitConstant(ins);
 }
