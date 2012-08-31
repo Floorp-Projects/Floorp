@@ -202,19 +202,12 @@ ArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-/*
- * Note that some callers are allowed to pass in a NULL cx, so we allocate with
- * the cx if available and fall back to the runtime.
- */
 static ObjectElements *
-AllocateArrayBufferContents(JSRuntime *rt, JSContext *cx, uint32_t nbytes, uint8_t *contents)
+AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, uint8_t *contents)
 {
-    uint32_t size = nbytes + sizeof(ObjectElements);
-    ObjectElements *newheader =
-        static_cast<ObjectElements *>(cx ? cx->calloc_(size) : rt->calloc_(size));
+    ObjectElements *newheader = (ObjectElements *)cx->calloc_(nbytes + sizeof(ObjectElements));
     if (!newheader) {
-        if (cx)
-            js_ReportOutOfMemory(cx);
+        js_ReportOutOfMemory(cx);
         return NULL;
     }
     if (contents)
@@ -235,7 +228,7 @@ ArrayBufferObject::allocateSlots(JSContext *cx, uint32_t bytes, uint8_t *content
     size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
 
     if (bytes > sizeof(Value) * usableSlots) {
-        ObjectElements *header = AllocateArrayBufferContents(NULL, cx, bytes, contents);
+        ObjectElements *header = AllocateArrayBufferContents(cx, bytes, contents);
         if (!header)
             return false;
         elements = header->elements();
@@ -290,39 +283,6 @@ GetViewList(ArrayBufferObject *obj)
     };
     return &reinterpret_cast<OldObjectRepresentationHack*>(obj->getElementsHeader())->views;
 #endif
-}
-
-bool
-ArrayBufferObject::uninlineData(JSContext *cx)
-{
-   if (hasDynamicElements())
-       return true;
-
-   // Grab out data before invalidating it
-   uint32_t bytes = byteLength();
-   uintptr_t oldPointer = uintptr_t(dataPointer());
-   JSObject *view = *GetViewList(this);
-   JSObject *viewListHead = view;
-
-   JSRuntime *rt = cx ? NULL : compartment()->rt;
-   ObjectElements *header = AllocateArrayBufferContents(rt, cx, bytes, reinterpret_cast<uint8_t*>(oldPointer));
-   if (!header)
-       return false;
-   elements = header->elements();
-   setElementsHeader(getElementsHeader(), bytes);
-
-   // Update all views
-   uintptr_t newPointer = uintptr_t(dataPointer());
-   while (view) {
-       uintptr_t newDataPtr = uintptr_t(view->getPrivate()) - oldPointer + newPointer;
-       view->setPrivate(reinterpret_cast<uint8_t*>(newDataPtr));
-       view = NextView(view);
-   }
-
-   // Restore the list of views
-   *GetViewList(this) = viewListHead;
-
-   return true;
 }
 
 void
@@ -449,7 +409,7 @@ ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents)
     } else {
         uint32_t length = buffer.byteLength();
         js::ObjectElements *newheader =
-            AllocateArrayBufferContents(NULL, cx, length, buffer.dataPointer());
+            AllocateArrayBufferContents(cx, length, buffer.dataPointer());
         if (!newheader) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -3560,10 +3520,7 @@ JS_GetArrayBufferData(JSObject *objArg, JSContext *cx)
     JSObject *obj = CheckedUnwrap(cx, obj_);
     if (!obj)
         return NULL;
-    ArrayBufferObject &buffer = obj->asArrayBuffer();
-    if (!buffer.uninlineData(cx))
-        return NULL;
-    return buffer.dataPointer();
+    return obj->asArrayBuffer().dataPointer();
 }
 
 JS_FRIEND_API(JSObject *)
@@ -3586,7 +3543,7 @@ JS_NewArrayBufferWithContents(JSContext *cx, void *contents)
 JS_PUBLIC_API(JSBool)
 JS_AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data)
 {
-    js::ObjectElements *header = AllocateArrayBufferContents(NULL, cx, nbytes, NULL);
+    js::ObjectElements *header = AllocateArrayBufferContents(cx, nbytes, NULL);
     if (!header)
         return false;
 
