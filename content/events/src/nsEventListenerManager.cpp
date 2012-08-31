@@ -185,7 +185,8 @@ void
 nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                          uint32_t aType,
                                          nsIAtom* aTypeAtom,
-                                         int32_t aFlags)
+                                         int32_t aFlags,
+                                         bool aHandler)
 {
   NS_ABORT_IF_FALSE(aType && aTypeAtom, "Missing type");
 
@@ -199,7 +200,9 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; i++) {
     ls = &mListeners.ElementAt(i);
-    if (ls->mListener == aListener && ls->mFlags == aFlags &&
+    if (ls->mListener == aListener &&
+        ls->mListenerIsHandler == aHandler &&
+        ls->mFlags == aFlags &&
         EVENT_TYPE_EQUALS(ls, aType, aTypeAtom)) {
       return;
     }
@@ -213,6 +216,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   ls->mEventType = aType;
   ls->mTypeAtom = aTypeAtom;
   ls->mFlags = aFlags;
+  ls->mListenerIsHandler = aHandler;
   ls->mHandlerIsString = false;
 
   // Detect the type of event listener.
@@ -464,8 +468,7 @@ nsEventListenerManager::FindEventHandler(uint32_t aEventType,
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
-    if (EVENT_TYPE_EQUALS(ls, aEventType, aTypeAtom) &&
-        (ls->mListenerType == eJSEventListener))
+    if (ls->mListenerIsHandler && EVENT_TYPE_EQUALS(ls, aEventType, aTypeAtom))
     {
       return ls;
     }
@@ -493,7 +496,7 @@ nsEventListenerManager::SetEventHandlerInternal(nsIScriptContext *aContext,
                                aHandler, getter_AddRefs(scriptListener));
     if (NS_SUCCEEDED(rv)) {
       AddEventListener(scriptListener, eventType, aName,
-                       NS_EVENT_FLAG_BUBBLE | NS_PRIV_EVENT_FLAG_SCRIPT);
+                       NS_EVENT_FLAG_BUBBLE | NS_PRIV_EVENT_FLAG_SCRIPT, true);
 
       ls = FindEventHandler(eventType, aName);
     }
