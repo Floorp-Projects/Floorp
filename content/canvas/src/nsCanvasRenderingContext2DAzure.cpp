@@ -1124,7 +1124,9 @@ nsCanvasRenderingContext2DAzure::GetSurfaceFormat() const
 NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 {
-  NS_IF_ADDREF(*canvas = GetCanvas());
+  if (mCanvasElement) {
+    NS_IF_ADDREF(*canvas = mCanvasElement->GetOriginalCanvas());
+  }
 
   return NS_OK;
 }
