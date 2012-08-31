@@ -63,6 +63,41 @@
 using namespace js;
 using namespace js::gc;
 
+bool
+js::AutoCycleDetector::init()
+{
+    ObjectSet &set = cx->cycleDetectorSet;
+    hashsetAddPointer = set.lookupForAdd(obj);
+    if (!hashsetAddPointer) {
+        if (!set.add(hashsetAddPointer, obj))
+            return false;
+        cyclic = false;
+        hashsetGenerationAtInit = set.generation();
+    }
+    return true;
+}
+
+js::AutoCycleDetector::~AutoCycleDetector()
+{
+    if (!cyclic) {
+        if (hashsetGenerationAtInit == cx->cycleDetectorSet.generation())
+            cx->cycleDetectorSet.remove(hashsetAddPointer);
+        else
+            cx->cycleDetectorSet.remove(obj);
+    }
+}
+
+void
+js::TraceCycleDetectionSet(JSTracer *trc, js::ObjectSet &set)
+{
+    for (js::ObjectSet::Enum e(set); !e.empty(); e.popFront()) {
+        JSObject *prior = e.front();
+        MarkObjectRoot(trc, const_cast<JSObject **>(&e.front()), "cycle detector table entry");
+        if (prior != e.front())
+            e.rekeyFront(e.front());
+    }
+}
+
 struct CallbackData
 {
     CallbackData(JSMallocSizeOfFun f) : mallocSizeOf(f), n(0) {}
@@ -296,7 +331,7 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
 
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
 
-    if (!cx->busyArrays.init()) {
+    if (!cx->cycleDetectorSet.init()) {
         Foreground::delete_(cx);
         return NULL;
     }
@@ -1069,7 +1104,7 @@ JSContext::JSContext(JSRuntime *rt)
     defaultCompartmentObject_(NULL),
     stack(thisDuringConstruction()),
     parseMapPool_(NULL),
-    sharpObjectMap(thisDuringConstruction()),
+    cycleDetectorSet(thisDuringConstruction()),
     argumentFormatMap(NULL),
     lastMessage(NULL),
     errorReporter(NULL),
@@ -1376,7 +1411,7 @@ JSContext::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const
      * ones have been found by DMD to be worth measuring.  More stuff may be
      * added later.
      */
-    return mallocSizeOf(this) + busyArrays.sizeOfExcludingThis(mallocSizeOf);
+    return mallocSizeOf(this) + cycleDetectorSet.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void
@@ -1390,8 +1425,7 @@ JSContext::mark(JSTracer *trc)
     if (isExceptionPending())
         MarkValueRoot(trc, &exception, "exception");
 
-    if (sharpObjectMap.depth > 0)
-        js_TraceSharpMap(trc, &sharpObjectMap);
+    TraceCycleDetectionSet(trc, cycleDetectorSet);
 
     MarkValueRoot(trc, &iterValue, "iterValue");
 }
@@ -1404,7 +1438,7 @@ AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
     : cx(cx)
 {
     JS_ASSERT(cx->runtime->requestDepth || cx->runtime->isHeapBusy());
-    JS_ASSERT(cx->runtime->onOwnerThread());
+    cx->runtime->assertValidThread();
     cx->runtime->checkRequestDepth++;
 }
 

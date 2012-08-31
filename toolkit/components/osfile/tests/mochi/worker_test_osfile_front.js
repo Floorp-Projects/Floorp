@@ -19,8 +19,8 @@ self.onmessage = function onmessage_start(msg) {
     test_offsetby();
     test_open_existing_file();
     test_open_non_existing_file();
+    test_flush_open_file();
     test_copy_existing_file();
-    test_read_write_file();
     test_readall_writeall_file();
     test_position();
     test_move_file();
@@ -161,6 +161,20 @@ function test_open_non_existing_file()
 }
 
 /**
+ * Test that to ensure that |foo.flush()| does not
+ * cause an error, where |foo| is an open file.
+ */
+function test_flush_open_file()
+{
+  ok(true, "Starting test_flush_open_file");
+  let tmp = "test_flush.tmp";
+  let file = OS.File.open(tmp, {create: true, write: true});
+  file.flush();
+  file.close();
+  OS.File.remove(tmp);
+}
+
+/**
  * Utility function for comparing two files (or a prefix of two files).
  *
  * This function returns nothing but fails of both files (or prefixes)
@@ -178,81 +192,29 @@ function compare_files(test, sourcePath, destPath, prefix)
   let source = OS.File.open(sourcePath);
   let dest = OS.File.open(destPath);
   ok(true, "Files are open");
-  let array1 = new (ctypes.ArrayType(ctypes.char, 4096))();
-  let array2 = new (ctypes.ArrayType(ctypes.char, 4096))();
-  ok(true, "Arrays are created");
-  let pos = 0;
-  while (true) {
-    ok(true, "Position: "+pos);
-    let chunkSize;
+  let sourceResult, destResult;
+  try {
     if (prefix != undefined) {
-      chunkSize = Math.min(4096, prefix - pos);
+      sourceResult = source.read(prefix);
+      destResult = dest.read(prefix);
     } else {
-      chunkSize = 4096;
+      sourceResult = source.read();
+      destResult = dest.read();
     }
-    let bytes_read1 = source.read(array1, chunkSize);
-    let bytes_read2 = dest.read(array2, chunkSize);
-    is (bytes_read1 > 0, bytes_read2 > 0,
-       test + ": Both files contain data or neither does " +
-        bytes_read1 + ", " + bytes_read2);
-    if ((bytes_read1 > 0) != (bytes_read2 > 0)) {
-      break;
-    }
-    if (bytes_read1 == 0) {
-      break;
-    }
-    let bytes;
-    if (bytes_read1 != bytes_read2) {
-      // This would be surprising, but theoretically possible with a
-      // remote file system, I believe.
-      bytes = Math.min(bytes_read1, bytes_read2);
-      pos += bytes;
-      source.setPosition(pos, OS.File.POS_START);
-      dest.setPosition(pos, OS.File.POS_START);
-    } else {
-      bytes = bytes_read1;
-      pos += bytes;
-    }
-    for (let i = 0; i < bytes; ++i) {
-      if (array1[i] != array2[i]) {
-        ok(false, test + ": Files do not match at position " + i
-           + " (" + array1[i] + "/ " + array2[i] + ")");
+    is(sourceResult.bytes, destResult.bytes, test + ": Both files have the same size");
+    let sourceView = new Uint8Array(sourceResult.buffer);
+    let destView = new Uint8Array(destResult.buffer);
+    for (let i = 0; i < sourceResult.bytes; ++i) {
+      if (sourceView[i] != destView[i]) {
+        is(sourceView[i] != destView[i], test + ": Comparing char " + i);
+        break;
       }
     }
+  } finally {
+    source.close();
+    dest.close();
   }
-  source.close();
-  dest.close();
   ok(true, test + ": Comparison complete");
-}
-
-/**
- * Test basic read/write through an ArrayBuffer
- */
-function test_read_write_file()
-{
-  let src_file_name = "chrome/toolkit/components/osfile/tests/mochi/worker_test_osfile_unix.js";
-  let tmp_file_name = "test_osfile_front.tmp";
-  ok(true, "Starting test_read_write_file");
-
-  let source = OS.File.open(src_file_name);
-  let dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
-
-  let buf = new ArrayBuffer(4096);
-  for (let bytesAvailable = source.read(buf, 4096);
-         bytesAvailable != 0;
-         bytesAvailable = source.read(buf, 4096)) {
-    let bytesWritten = dest.write(buf, bytesAvailable);
-    if (bytesWritten != bytesAvailable) {
-      is(bytesWritten, bytesAvailable, "test_read_write_file: writing all bytes");
-    }
-  }
-
-  ok(true, "test_read_write_file: copy complete");
-  source.close();
-  dest.close();
-
-  compare_files("test_read_write_file", src_file_name, tmp_file_name);
-  OS.File.remove(tmp_file_name);
 }
 
 function test_readall_writeall_file()
@@ -261,7 +223,7 @@ function test_readall_writeall_file()
   let tmp_file_name = "test_osfile_front.tmp";
   ok(true, "Starting test_readall_writeall_file");
 
-  // readTo, ArrayBuffer
+  // read, ArrayBuffer
 
   let source = OS.File.open(src_file_name);
   let dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
@@ -271,7 +233,7 @@ function test_readall_writeall_file()
   let readResult = source.readTo(buf, size);
   is(readResult, size, "test_readall_writeall_file: read the right number of bytes");
 
-  dest.writeFrom(buf, size);
+  dest.write(buf, size);
 
   ok(true, "test_readall_writeall_file: copy complete (manual allocation)");
   source.close();
@@ -280,7 +242,7 @@ function test_readall_writeall_file()
   compare_files("test_readall_writeall_file (manual allocation)", src_file_name, tmp_file_name);
   OS.File.remove(tmp_file_name);
 
-  // readTo, C buffer
+  // read, C buffer
 
   source = OS.File.open(src_file_name);
   dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
@@ -289,7 +251,7 @@ function test_readall_writeall_file()
   readResult = source.readTo(ptr, size);
   is(readResult, size, "test_readall_writeall_file: read the right number of bytes (C buffer)");
 
-  dest.writeFrom(ptr, readResult, {bytes: size});
+  dest.write(ptr, readResult, {bytes: size});
 
   ok(true, "test_readall_writeall_file: copy complete (C buffer)");
   source.close();
@@ -308,7 +270,7 @@ function test_readall_writeall_file()
   readResult = source.readTo(buf, LEFT, {offset: OFFSET});
   is(readResult, LEFT, "test_readall_writeall_file: read the right number of bytes (with offset)");
 
-  dest.writeFrom(buf, LEFT, {offset: OFFSET});
+  dest.write(buf, LEFT, {offset: OFFSET});
   is(dest.stat().size, LEFT, "test_readall_writeall_file: wrote the right number of bytes (with offset)");
 
   ok(true, "test_readall_writeall_file: copy complete (with offset)");
@@ -328,7 +290,7 @@ function test_readall_writeall_file()
   readResult = source.readTo(ptr, LEFT, {offset: OFFSET});
   is(readResult, LEFT, "test_readall_writeall_file: read the right number of bytes (with offset)");
 
-  dest.writeFrom(ptr, LEFT, {offset: OFFSET});
+  dest.write(ptr, LEFT, {offset: OFFSET});
   is(dest.stat().size, LEFT, "test_readall_writeall_file: wrote the right number of bytes (with offset)");
 
   ok(true, "test_readall_writeall_file: copy complete (with offset)");
@@ -338,12 +300,12 @@ function test_readall_writeall_file()
   compare_files("test_readall_writeall_file (with offset)", src_file_name, tmp_file_name, LEFT);
   OS.File.remove(tmp_file_name);
 
-  // readAll
+  // read
   buf = new ArrayBuffer(size);
   source = OS.File.open(src_file_name);
   dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
 
-  readResult = source.readAll();
+  readResult = source.read();
   is(readResult.bytes, size, "test_readall_writeall_file: read the right number of bytes (auto allocation)");
 
   dest.write(readResult.buffer, readResult.bytes);
@@ -527,7 +489,7 @@ function test_info() {
 
   let file = OS.File.open(filename, {trunc: true});
   let buf = new ArrayBuffer(size);
-  file.write(buf, size);
+  file._write(buf, size);
   file.close();
 
   // Test OS.File.stat on new file

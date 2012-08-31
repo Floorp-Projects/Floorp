@@ -272,8 +272,8 @@ public:
    * be in the same compartment.  If aExpectScriptContext is false,
    * not finding an nsIScriptContext does not cause failure.
    */
-  nsresult SetEventHandlerToJsval(nsIAtom *aEventName, JSContext *cx,
-                                  JSObject *aScope, const jsval &v,
+  nsresult SetEventHandlerToJsval(nsIAtom* aEventName, JSContext* cx,
+                                  JSObject* aScope, const jsval& v,
                                   bool aExpectScriptContext);
   /**
    * Get the value of the "inline" event listener for aEventName.
