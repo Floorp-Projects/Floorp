@@ -2165,7 +2165,7 @@ bool
 TypeCompartment::growPendingArray(JSContext *cx)
 {
     unsigned newCapacity = js::Max(unsigned(100), pendingCapacity * 2);
-    PendingWork *newArray = (PendingWork *) js_calloc(newCapacity * sizeof(PendingWork));
+    PendingWork *newArray = js_pod_calloc<PendingWork>(newCapacity);
     if (!newArray) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return false;
@@ -2792,13 +2792,13 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj_)
             return;
         }
 
-        jsid *ids = (jsid *) cx->calloc_(obj->slotSpan() * sizeof(jsid));
+        jsid *ids = cx->pod_calloc<jsid>(obj->slotSpan());
         if (!ids) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
         }
 
-        Type *types = (Type *) cx->calloc_(obj->slotSpan() * sizeof(Type));
+        Type *types = cx->pod_calloc<Type>(obj->slotSpan());
         if (!types) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -5245,7 +5245,7 @@ JSScript::makeTypes(JSContext *cx)
     JS_ASSERT(!types);
 
     if (!cx->typeInferenceEnabled()) {
-        types = (TypeScript *) cx->calloc_(sizeof(TypeScript));
+        types = cx->pod_calloc<TypeScript>();
         if (!types) {
             js_ReportOutOfMemory(cx);
             return false;

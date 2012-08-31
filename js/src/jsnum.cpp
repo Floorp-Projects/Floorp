@@ -67,7 +67,7 @@ static bool
 ComputeAccurateDecimalInteger(JSContext *cx, const jschar *start, const jschar *end, double *dp)
 {
     size_t length = end - start;
-    char *cstr = static_cast<char *>(cx->malloc_(length + 1));
+    char *cstr = cx->pod_malloc<char>(length + 1);
     if (!cstr)
         return false;
 
@@ -702,7 +702,7 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
     }
     tmpGroup--;
 
-    char *buf = (char *)cx->malloc_(buflen + 1);
+    char *buf = cx->pod_malloc<char>(buflen + 1);
     if (!buf)
         return false;
 
@@ -1089,9 +1089,9 @@ InitRuntimeNumberState(JSRuntime *rt)
     size_t decimalPointSize = strlen(decimalPoint) + 1;
     size_t groupingSize = strlen(grouping) + 1;
 
-    char *storage = static_cast<char *>(js_malloc(thousandsSeparatorSize +
-                                                  decimalPointSize +
-                                                  groupingSize));
+    char *storage = js_pod_malloc<char>(thousandsSeparatorSize +
+                                        decimalPointSize +
+                                        groupingSize);
     if (!storage)
         return false;
 

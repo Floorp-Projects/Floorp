@@ -372,7 +372,7 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
     if (obj->getClass() == &AttributeNameClass) {
         JS::Anchor<JSString *> anchor(str);
         size_t length = str->length();
-        jschar *chars = (jschar *) cx->malloc_((length + 2) * sizeof(jschar));
+        jschar *chars = cx->pod_malloc<jschar>(length + 2);
         if (!chars)
             return NULL;
         *chars = '@';
@@ -1719,7 +1719,7 @@ ParseXMLSource(JSContext *cx, HandleString src)
     length = constrlen(prefix) + urilen + constrlen(middle) + srclen +
              constrlen(suffix);
 
-    chars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
+    chars = cx->pod_malloc<jschar>(length + 1);
     if (!chars)
         return NULL;
 
@@ -2307,8 +2307,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray<JSObject> *decls)
     newlength = length;
     if (STARTS_WITH_XML(cp, length) || !IsXMLName(cp, length)) {
         newlength = length + 2 + (size_t) log10((double) decls->length);
-        bp = (jschar *)
-             cx->malloc_((newlength + 1) * sizeof(jschar));
+        bp = cx->pod_malloc<jschar>(newlength + 1);
         if (!bp)
             return NULL;
 
@@ -2332,8 +2331,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray<JSObject> *decls)
                         newlength * sizeof(jschar))) {
                 if (bp == cp) {
                     newlength = length + 2 + (size_t) log10((double) n);
-                    bp = (jschar *)
-                         cx->malloc_((newlength + 1) * sizeof(jschar));
+                    bp = cx->pod_malloc<jschar>(newlength + 1);
                     if (!bp)
                         return NULL;
                     js_strncpy(bp, cp, length);
@@ -7601,7 +7599,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
         return NULL;
 
     size_t newlen = (isName) ? len + 1 + len2 : len + 2 + len2 + 1;
-    jschar *newchars = (jschar *) cx->malloc_((newlen+1) * sizeof(jschar));
+    jschar *newchars = cx->pod_malloc<jschar>(newlen+1);
     if (!newchars)
         return NULL;
 

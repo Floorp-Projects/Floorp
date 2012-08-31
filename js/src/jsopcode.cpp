@@ -1076,7 +1076,7 @@ JSPrinter *
 js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
               unsigned indent, JSBool pretty, JSBool grouped, JSBool strict)
 {
-    JSPrinter *jp = (JSPrinter *) cx->malloc_(sizeof(JSPrinter));
+    JSPrinter *jp = cx->pod_malloc<JSPrinter>();
     if (!jp)
         return NULL;
     new (&jp->sprinter) Sprinter(cx);
@@ -4282,12 +4282,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
               case JSOP_FUNAPPLY:
               {
                 argc = GET_ARGC(pc);
-                const char **argv = (const char **)
-                    cx->malloc_((size_t)(argc + 1) * sizeof *argv);
+                const char **argv = cx->pod_malloc<const char*>(argc + 1);
                 if (!argv)
                     return NULL;
-                jsbytecode **argbytecodes = (jsbytecode **)
-                    cx->malloc_((size_t)(argc + 1) * sizeof *argbytecodes);
+                jsbytecode **argbytecodes = cx->pod_malloc<jsbytecode*>(argc + 1);
                 if (!argbytecodes) {
                     js_free(argv);
                     return NULL;
@@ -4903,8 +4901,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     j = 0;
                     ok = true;
                 } else {
-                    table = (TableEntry *)
-                            cx->malloc_((size_t)n * sizeof *table);
+                    table = cx->pod_malloc<TableEntry>(n);
                     if (!table)
                         return NULL;
                     for (i = j = 0; i < n; i++) {
@@ -4923,8 +4920,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                         }
                         pc2 += JUMP_OFFSET_LEN;
                     }
-                    tmp = (TableEntry *)
-                          cx->malloc_((size_t)j * sizeof *table);
+                    tmp = cx->pod_malloc<TableEntry>(j);
                     if (tmp) {
                         MergeSort(table, size_t(j), tmp, CompareTableEntries);
                         js_free(tmp);
@@ -4957,8 +4953,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 npairs = GET_UINT16(pc2);
                 pc2 += UINT16_LEN;
 
-                table = (TableEntry *)
-                    cx->malloc_((size_t)npairs * sizeof *table);
+                table = cx->pod_malloc<TableEntry>(npairs);
                 if (!table)
                     return NULL;
                 for (k = 0; k < npairs; k++) {
@@ -5021,8 +5016,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                  * stashing each case's delta from switch top in table[i].key,
                  * and the distance to its statements in table[i].offset.
                  */
-                table = (TableEntry *)
-                    cx->malloc_((size_t)ncases * sizeof *table);
+                table = cx->pod_malloc<TableEntry>(ncases);
                 if (!table)
                     return NULL;
                 pc2 = pc;
@@ -5802,7 +5796,7 @@ PCStack::~PCStack()
 bool
 PCStack::init(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    stack = static_cast<jsbytecode **>(cx->malloc_(StackDepth(script) * sizeof(*stack)));
+    stack = cx->pod_malloc<jsbytecode*>(StackDepth(script));
     if (!stack)
         return false;
     depth_ = ReconstructPCStack(cx, script, pc, stack);
@@ -6121,7 +6115,7 @@ bool
 ExpressionDecompiler::getOutput(char **res)
 {
     ptrdiff_t len = sprinter.stringEnd() - sprinter.stringAt(0);
-    *res = static_cast<char *>(cx->malloc_(len + 1));
+    *res = cx->pod_malloc<char>(len + 1);
     if (!*res)
         return false;
     js_memcpy(*res, sprinter.stringAt(0), len);
@@ -6308,7 +6302,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
         }
     } g;
 
-    g.pcstack = (jsbytecode **)js_malloc(StackDepth(script) * sizeof *g.pcstack);
+    g.pcstack = js_pod_malloc<jsbytecode*>(StackDepth(script));
     if (!g.pcstack)
         return NULL;
 

@@ -686,8 +686,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
      * Variables which are currently dead. On forward branches to locations
      * where these are live, they need to be marked as live.
      */
-    LifetimeVariable **saved = (LifetimeVariable **)
-        cx->calloc_(numSlots * sizeof(LifetimeVariable*));
+    LifetimeVariable **saved = cx->pod_calloc<LifetimeVariable*>(numSlots);
     if (!saved) {
         setOOM(cx);
         return;
@@ -1197,8 +1196,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
      * Current value of each variable and stack value. Empty for missing or
      * untracked entries, i.e. escaping locals and arguments.
      */
-    SSAValueInfo *values = (SSAValueInfo *)
-        cx->calloc_((numSlots + maxDepth) * sizeof(SSAValueInfo));
+    SSAValueInfo *values = cx->pod_calloc<SSAValueInfo>(numSlots + maxDepth);
     if (!values) {
         setOOM(cx);
         return;
