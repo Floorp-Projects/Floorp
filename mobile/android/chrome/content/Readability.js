@@ -406,14 +406,13 @@ Readability.prototype = {
    * @return Element
   **/
   _grabArticle: function (page) {
+    let doc = this._doc;
+    let isPaging = (page !== null ? true: false);
+    page = page ? page : this._doc.body;
+    let pageCacheHtml = page.innerHTML;
+
     while (true) {
-      let doc = this._doc;
       let stripUnlikelyCandidates = this._flagIsActive(this.FLAG_STRIP_UNLIKELYS);
-      let isPaging = (page !== null ? true: false);
-
-      page = page ? page : this._doc.body;
-
-      let pageCacheHtml = page.innerHTML;
       let allElements = page.getElementsByTagName('*');
 
       // First, node prepping. Trash nodes that look cruddy (like ones with the
