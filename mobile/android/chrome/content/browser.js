@@ -2689,15 +2689,9 @@ Tab.prototype = {
           this.browser.addEventListener("pagehide", listener, true);
         }
 
-        if (/^about:reader/.test(target.documentURI)) {
-          let aboutReader = new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
-          let listener = function() {
-            aboutReader.uninit();
-            this.browser.removeEventListener("pagehide", listener, true);
-          }.bind(this);
+        if (/^about:reader/.test(target.documentURI))
+          new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
 
-          this.browser.addEventListener("pagehide", listener, true);
-        }
         break;
       }
 
