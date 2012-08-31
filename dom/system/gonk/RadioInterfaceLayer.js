@@ -87,15 +87,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
+                                   "@mozilla.org/system-message-internal;1",
+                                   "nsISystemMessagesInternal");
+
 XPCOMUtils.defineLazyGetter(this, "WAP", function () {
   let WAP = {};
   Cu.import("resource://gre/modules/WapPushManager.js", WAP);
   return WAP;
-});
-
-XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger", function() {
-  return Cc["@mozilla.org/system-message-internal;1"]
-           .getService(Ci.nsISystemMessagesInternal);
 });
 
 function convertRILCallState(state) {
