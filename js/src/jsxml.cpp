@@ -378,14 +378,14 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
         *chars = '@';
         const jschar *strChars = str->getChars(cx);
         if (!strChars) {
-            cx->free_(chars);
+            js_free(chars);
             return NULL;
         }
         js_strncpy(chars + 1, strChars, length);
         chars[++length] = 0;
         str = js_NewString(cx, chars, length);
         if (!str) {
-            cx->free_(chars);
+            js_free(chars);
             return NULL;
         }
     }
@@ -862,7 +862,7 @@ ReallocateVector(HeapPtr<T> *vector, size_t count)
 #endif
 
     size_t size = count * sizeof(HeapPtr<T>);
-    return (HeapPtr<T> *) OffTheBooks::realloc_(vector, size);
+    return (HeapPtr<T> *) js_realloc(vector, size);
 }
 
 /* NB: called with null cx from the GC, via xml_trace => JSXMLArray::trim. */
@@ -874,9 +874,9 @@ JSXMLArray<T>::setCapacity(JSContext *cx, uint32_t newCapacity)
         /* We could let realloc(p, 0) free this, but purify gets confused. */
         if (vector) {
             if (cx)
-                cx->free_(vector);
+                js_free(vector);
             else
-                Foreground::free_(vector);
+                js_free(vector);
         }
         vector = NULL;
     } else {
@@ -1062,7 +1062,7 @@ XMLArrayTruncate(JSContext *cx, JSXMLArray<T> *array, uint32_t length)
 
     if (length == 0) {
         if (array->vector)
-            cx->free_(array->vector);
+            js_free(array->vector);
         vector = NULL;
     } else {
         vector = ReallocateVector(array->vector, length);
@@ -1733,7 +1733,7 @@ ParseXMLSource(JSContext *cx, HandleString src)
     offset += dstlen;
     srcp = src->getChars(cx);
     if (!srcp) {
-        cx->free_(chars);
+        js_free(chars);
         return NULL;
     }
     js_strncpy(chars + offset, srcp, srclen);
@@ -1765,7 +1765,7 @@ ParseXMLSource(JSContext *cx, HandleString src)
         if (parser.init()) {
             JSObject *scopeChain = GetCurrentScopeChain(cx);
             if (!scopeChain) {
-                cx->free_(chars);
+                js_free(chars);
                 return NULL;
             }
 
@@ -1779,7 +1779,7 @@ ParseXMLSource(JSContext *cx, HandleString src)
         }
     }
 
-    cx->free_(chars);
+    js_free(chars);
     return xml;
 
 #undef constrlen
@@ -2360,7 +2360,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray<JSObject> *decls)
     } else {
         prefix = js_NewString(cx, bp, newlength);
         if (!prefix)
-            cx->free_(bp);
+            js_free(bp);
     }
     return prefix;
 }
@@ -5102,7 +5102,7 @@ xml_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op, Value *state
         if (!statep->isInt32(0)) {
             cursor = (JSXMLArrayCursor<JSXML> *) statep->toPrivate();
             if (cursor)
-                cx->delete_(cursor);
+                js_delete(cursor);
         }
         statep->setNull();
         break;

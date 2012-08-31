@@ -87,7 +87,6 @@ namespace JSC {
   // These are reference-counted. A new one starts with a count of 1. 
   class ExecutablePool {
 
-    JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR;
     friend class ExecutableAllocator;
 private:
     struct Allocation {
@@ -123,10 +122,16 @@ public:
         JS_ASSERT(m_refCount != 0);
         // XXX: disabled, see bug 654820.
         //JS_ASSERT_IF(willDestroy, m_refCount == 1);
-        if (--m_refCount == 0) {
-            js::UnwantedForeground::delete_(this);
-        }
+        if (--m_refCount == 0)
+            js_delete(this);
     }
+
+    ExecutablePool(ExecutableAllocator* allocator, Allocation a)
+      : m_allocator(allocator), m_freePtr(a.pages), m_end(m_freePtr + a.size), m_allocation(a),
+        m_refCount(1), m_mjitCodeMethod(0), m_mjitCodeRegexp(0), m_destroy(false), m_gcNumber(0)
+    { }
+
+    ~ExecutablePool();
 
 private:
     // It should be impossible for us to roll over, because only small
@@ -137,13 +142,6 @@ private:
         JS_ASSERT(m_refCount);
         ++m_refCount;
     }
-
-    ExecutablePool(ExecutableAllocator* allocator, Allocation a)
-      : m_allocator(allocator), m_freePtr(a.pages), m_end(m_freePtr + a.size), m_allocation(a),
-        m_refCount(1), m_mjitCodeMethod(0), m_mjitCodeRegexp(0), m_destroy(false), m_gcNumber(0)
-    { }
-
-    ~ExecutablePool();
 
     void* alloc(size_t n, CodeKind kind)
     {
@@ -304,7 +302,7 @@ private:
         if (!a.pages)
             return NULL;
 
-        ExecutablePool *pool = js::OffTheBooks::new_<ExecutablePool>(this, a);
+        ExecutablePool *pool = js_new<ExecutablePool>(this, a);
         if (!pool) {
             systemRelease(a);
             return NULL;

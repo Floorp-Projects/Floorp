@@ -192,7 +192,7 @@ str_escape(JSContext *cx, unsigned argc, Value *vp)
 
     JSString *retstr = js_NewString(cx, newchars, newlength);
     if (!retstr) {
-        cx->free_(newchars);
+        js_free(newchars);
         return false;
     }
 
@@ -624,7 +624,7 @@ js_toLowerCase(JSContext *cx, JSString *str)
     news[n] = 0;
     str = js_NewString(cx, news, n);
     if (!str) {
-        cx->free_(news);
+        js_free(news);
         return NULL;
     }
     return str;
@@ -691,7 +691,7 @@ js_toUpperCase(JSContext *cx, JSString *str)
     news[n] = 0;
     str = js_NewString(cx, news, n);
     if (!str) {
-        cx->free_(news);
+        js_free(news);
         return NULL;
     }
     return str;
@@ -3192,7 +3192,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned i = 0; i < args.length(); i++) {
         uint16_t code;
         if (!ToUint16(cx, args[i], &code)) {
-            cx->free_(chars);
+            js_free(chars);
             return JS_FALSE;
         }
         chars[i] = (jschar)code;
@@ -3200,7 +3200,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
     chars[args.length()] = 0;
     JSString *str = js_NewString(cx, chars, args.length());
     if (!str) {
-        cx->free_(chars);
+        js_free(chars);
         return JS_FALSE;
     }
 
@@ -3343,7 +3343,7 @@ js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
     news[n] = 0;
     JSFixedString *str = js_NewString(cx, news, n);
     if (!str)
-        cx->free_(news);
+        js_free(news);
     return str;
 }
 
@@ -3358,7 +3358,7 @@ js_NewStringCopyN(JSContext *cx, const char *s, size_t n)
         return NULL;
     JSFixedString *str = js_NewString(cx, chars, n);
     if (!str)
-        cx->free_(chars);
+        js_free(chars);
     return str;
 }
 
@@ -3376,7 +3376,7 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s)
     js_memcpy(news, s, m);
     JSFixedString *str = js_NewString(cx, news, n);
     if (!str)
-        cx->free_(news);
+        js_free(news);
     return str;
 }
 
@@ -3654,13 +3654,13 @@ DeflateString(JSContext *cx, const jschar *chars, size_t nchars)
         nbytes = GetDeflatedStringLength(cx, chars, nchars);
         if (nbytes == (size_t) -1)
             return NULL;
-        bytes = (char *) (cx ? cx->malloc_(nbytes + 1) : OffTheBooks::malloc_(nbytes + 1));
+        bytes = (char *) (cx ? cx->malloc_(nbytes + 1) : js_malloc(nbytes + 1));
         if (!bytes)
             return NULL;
         JS_ALWAYS_TRUE(DeflateStringToBuffer(cx, chars, nchars, bytes, &nbytes));
     } else {
         nbytes = nchars;
-        bytes = (char *) (cx ? cx->malloc_(nbytes + 1) : OffTheBooks::malloc_(nbytes + 1));
+        bytes = (char *) (cx ? cx->malloc_(nbytes + 1) : js_malloc(nbytes + 1));
         if (!bytes)
             return NULL;
         for (i = 0; i < nbytes; i++)

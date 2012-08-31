@@ -678,7 +678,7 @@ frontend::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGen
             chars[length] = 0;
             JSString *str = js_NewString(cx, chars, length);
             if (!str) {
-                cx->free_(chars);
+                js_free(chars);
                 return false;
             }
 

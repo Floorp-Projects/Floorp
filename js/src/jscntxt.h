@@ -341,7 +341,13 @@ class FreeOp : public JSFreeOp {
 
     inline void free_(void* p);
 
-    JS_DECLARE_DELETE_METHODS(free_, inline)
+    template <class T>
+    inline void delete_(T *p) {
+        if (p) {
+            p->~T();
+            free_(p);
+        }
+    }
 
     static void staticAsserts() {
         /*
@@ -934,13 +940,7 @@ struct JSRuntime : js::RuntimeFriendFields
         return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, bytes, cx);
     }
 
-    inline void free_(void* p) {
-        /* FIXME: Making this free in the background is buggy. Can it work? */
-        js::Foreground::free_(p);
-    }
-
-    JS_DECLARE_NEW_METHODS(malloc_, JS_ALWAYS_INLINE)
-    JS_DECLARE_DELETE_METHODS(free_, JS_ALWAYS_INLINE)
+    JS_DECLARE_NEW_METHODS(new_, malloc_, JS_ALWAYS_INLINE)
 
     void setGCMaxMallocBytes(size_t value);
 
@@ -1120,7 +1120,7 @@ FreeOp::free_(void* p) {
         runtime()->gcHelperThread.freeLater(p);
         return;
     }
-    runtime()->free_(p);
+    js_free(p);
 }
 
 } /* namespace js */
@@ -1416,12 +1416,7 @@ struct JSContext : js::ContextFriendFields
         return runtime->realloc_(p, oldBytes, newBytes, this);
     }
 
-    inline void free_(void* p) {
-        runtime->free_(p);
-    }
-
-    JS_DECLARE_NEW_METHODS(malloc_, inline)
-    JS_DECLARE_DELETE_METHODS(free_, inline)
+    JS_DECLARE_NEW_METHODS(new_, malloc_, JS_ALWAYS_INLINE)
 
     void purge();
 
@@ -1617,7 +1612,6 @@ class AutoKeepAtoms {
 };
 
 class AutoReleasePtr {
-    JSContext   *cx;
     void        *ptr;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
@@ -1625,20 +1619,20 @@ class AutoReleasePtr {
     AutoReleasePtr operator=(const AutoReleasePtr &other) MOZ_DELETE;
 
   public:
-    explicit AutoReleasePtr(JSContext *cx, void *ptr
+    explicit AutoReleasePtr(void *ptr
                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx), ptr(ptr)
+      : ptr(ptr)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
-    ~AutoReleasePtr() { cx->free_(ptr); }
+    void forget() { ptr = NULL; }
+    ~AutoReleasePtr() { js_free(ptr); }
 };
 
 /*
  * FIXME: bug 602774: cleaner API for AutoReleaseNullablePtr
  */
 class AutoReleaseNullablePtr {
-    JSContext   *cx;
     void        *ptr;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
@@ -1646,18 +1640,18 @@ class AutoReleaseNullablePtr {
     AutoReleaseNullablePtr operator=(const AutoReleaseNullablePtr &other) MOZ_DELETE;
 
   public:
-    explicit AutoReleaseNullablePtr(JSContext *cx, void *ptr
+    explicit AutoReleaseNullablePtr(void *ptr
                                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx), ptr(ptr)
+      : ptr(ptr)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
     void reset(void *ptr2) {
         if (ptr)
-            cx->free_(ptr);
+            js_free(ptr);
         ptr = ptr2;
     }
-    ~AutoReleaseNullablePtr() { if (ptr) cx->free_(ptr); }
+    ~AutoReleaseNullablePtr() { if (ptr) js_free(ptr); }
 };
 
 } /* namespace js */
@@ -2013,7 +2007,7 @@ class RuntimeAllocPolicy
     RuntimeAllocPolicy(JSContext *cx) : runtime(cx->runtime) {}
     void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
     void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
-    void free_(void *p) { runtime->free_(p); }
+    void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const {}
 };
 
@@ -2029,7 +2023,7 @@ class ContextAllocPolicy
     JSContext *context() const { return cx; }
     void *malloc_(size_t bytes) { return cx->malloc_(bytes); }
     void *realloc_(void *p, size_t oldBytes, size_t bytes) { return cx->realloc_(p, oldBytes, bytes); }
-    void free_(void *p) { cx->free_(p); }
+    void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const { js_ReportAllocationOverflow(cx); }
 };
 

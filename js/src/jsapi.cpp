@@ -436,7 +436,7 @@ JS_RemoveArgumentFormatter(JSContext *cx, const char *format)
     while ((map = *mpp) != NULL) {
         if (map->length == length && !strcmp(map->format, format)) {
             *mpp = map->next;
-            cx->free_(map);
+            js_free(map);
             return;
         }
         mpp = &map->next;
@@ -905,7 +905,7 @@ JSRuntime::init(uint32_t maxbytes)
         !atomsCompartment->init(NULL) ||
         !compartments.append(atomsCompartment))
     {
-        Foreground::delete_(atomsCompartment);
+        js_delete(atomsCompartment);
         return false;
     }
 
@@ -938,7 +938,7 @@ JSRuntime::init(uint32_t maxbytes)
 
     debugScopes = this->new_<DebugScopes>(this);
     if (!debugScopes || !debugScopes->init()) {
-        Foreground::delete_(debugScopes);
+        js_delete(debugScopes);
         return false;
     }
 
@@ -952,7 +952,7 @@ JSRuntime::~JSRuntime()
     clearOwnerThread();
 #endif
 
-    delete_(debugScopes);
+    js_delete(debugScopes);
 
     /*
      * Even though all objects in the compartment are dead, we may have keep
@@ -992,12 +992,12 @@ JSRuntime::~JSRuntime()
         PR_DestroyLock(gcLock);
 #endif
 
-    delete_(bumpAlloc_);
-    delete_(mathCache_);
+    js_delete(bumpAlloc_);
+    js_delete(mathCache_);
 #ifdef JS_METHODJIT
-    delete_(jaegerRuntime_);
+    js_delete(jaegerRuntime_);
 #endif
-    delete_(execAlloc_);  /* Delete after jaegerRuntime_. */
+    js_delete(execAlloc_);  /* Delete after jaegerRuntime_. */
 }
 
 #ifdef JS_THREADSAFE
@@ -1087,7 +1087,7 @@ JS_NewRuntime(uint32_t maxbytes)
         js_NewRuntimeWasCalled = JS_TRUE;
     }
 
-    JSRuntime *rt = OffTheBooks::new_<JSRuntime>();
+    JSRuntime *rt = js_new<JSRuntime>();
     if (!rt)
         return NULL;
 
@@ -1104,7 +1104,7 @@ JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
     Probes::destroyRuntime(rt);
-    Foreground::delete_(rt);
+    js_delete(rt);
 }
 
 JS_PUBLIC_API(void)
@@ -2310,7 +2310,7 @@ JS_realloc(JSContext *cx, void *p, size_t nbytes)
 JS_PUBLIC_API(void)
 JS_free(JSContext *cx, void *p)
 {
-    return cx->free_(p);
+    return js_free(p);
 }
 
 JS_PUBLIC_API(void)
@@ -2772,7 +2772,7 @@ DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     const char *edgeName = JS_GetTraceEdgeName(&dtrc->base, dtrc->buffer, sizeof(dtrc->buffer));
     size_t edgeNameSize = strlen(edgeName) + 1;
     size_t bytes = offsetof(JSHeapDumpNode, edgeName) + edgeNameSize;
-    JSHeapDumpNode *node = (JSHeapDumpNode *) OffTheBooks::malloc_(bytes);
+    JSHeapDumpNode *node = (JSHeapDumpNode *) js_malloc(bytes);
     if (!node) {
         dtrc->ok = false;
         return;
@@ -2916,7 +2916,7 @@ JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind startKind,
         for (;;) {
             next = node->next;
             parent = node->parent;
-            Foreground::free_(node);
+            js_free(node);
             node = next;
             if (node)
                 break;
@@ -5227,7 +5227,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
         return NULL;
 
     JSScript *script = Compile(cx, obj, options, chars, length);
-    cx->free_(chars);
+    js_free(chars);
     return script;
 }
 
@@ -5395,7 +5395,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *objArg
             JS_SetErrorReporter(cx, older);
         }
     }
-    cx->free_(chars);
+    js_free(chars);
     JS_RestoreExceptionState(cx, exnState);
     return result;
 }
@@ -5519,7 +5519,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
         return NULL;
 
     JSFunction *fun = CompileFunction(cx, obj, options, name, nargs, argnames, chars, length);
-    cx->free_(chars);
+    js_free(chars);
     return fun;
 }
 
@@ -5715,7 +5715,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
         return false;
 
     bool ok = Evaluate(cx, obj, options, chars, length, rval);
-    cx->free_(chars);
+    js_free(chars);
     return ok;
 }
 
@@ -6020,7 +6020,7 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
         return NULL;
     str = js_NewString(cx, js, n);
     if (!str)
-        cx->free_(js);
+        js_free(js);
     return str;
 }
 
@@ -6461,7 +6461,7 @@ void
 JSAutoStructuredCloneBuffer::clear()
 {
     if (data_) {
-        Foreground::free_(data_);
+        js_free(data_);
         data_ = NULL;
         nbytes_ = 0;
         version_ = 0;
@@ -6480,7 +6480,7 @@ JSAutoStructuredCloneBuffer::adopt(uint64_t *data, size_t nbytes, uint32_t versi
 bool
 JSAutoStructuredCloneBuffer::copy(const uint64_t *srcData, size_t nbytes, uint32_t version)
 {
-    uint64_t *newData = static_cast<uint64_t *>(OffTheBooks::malloc_(nbytes));
+    uint64_t *newData = static_cast<uint64_t *>(js_malloc(nbytes));
     if (!newData)
         return false;
 
@@ -6776,7 +6776,7 @@ JS_NewRegExpObject(JSContext *cx, JSObject *objArg, char *bytes, size_t length, 
 
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
     RegExpObject *reobj = RegExpObject::create(cx, res, chars, length, RegExpFlag(flags), NULL);
-    cx->free_(chars);
+    js_free(chars);
     return reobj;
 }
 
@@ -6835,7 +6835,7 @@ JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, unsigned 
     if (!chars)
         return NULL;
     RegExpObject *reobj = RegExpObject::createNoStatics(cx, chars, length, RegExpFlag(flags), NULL);
-    cx->free_(chars);
+    js_free(chars);
     return reobj;
 }
 
@@ -6995,7 +6995,7 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
             assertSameCompartment(cx, state->exception);
             JS_RemoveValueRoot(cx, &state->exception);
         }
-        cx->free_(state);
+        js_free(state);
     }
 }
 
