@@ -216,7 +216,10 @@ Readability.prototype = {
 
     this._replaceBrs(doc.body);
 
-    doc.body.innerHTML = doc.body.innerHTML.replace(this.REGEXPS.replaceFonts, '<$1span>');
+    let fonts = doc.getElementsByTagName("FONT");
+    for (let i = fonts.length; --i >=0;) {
+      this._setNodeTag(fonts[i], "SPAN");
+    }
   },
 
   /**
@@ -288,6 +291,11 @@ Readability.prototype = {
         }
       }
     }
+  },
+
+  _setNodeTag: function (node, tag) {
+    node.localName = tag.toLowerCase();
+    node.tagName = tag.toUpperCase();
   },
 
   /**
