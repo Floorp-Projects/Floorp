@@ -9,6 +9,15 @@ function send(message) {
   self.postMessage(message);
 }
 
+function should_throw(f) {
+  try {
+    f();
+  } catch (x) {
+    return x;
+  }
+  return null;
+}
+
 self.onmessage = function onmessage_start(msg) {
   self.onmessage = function onmessage_ignored(msg) {
     log("ignored message " + JSON.stringify(msg.data));
@@ -230,10 +239,10 @@ function test_readall_writeall_file()
   let size = source.stat().size;
 
   let buf = new ArrayBuffer(size);
-  let readResult = source.readTo(buf, size);
+  let readResult = source.readTo(buf);
   is(readResult, size, "test_readall_writeall_file: read the right number of bytes");
 
-  dest.write(buf, size);
+  dest.write(buf);
 
   ok(true, "test_readall_writeall_file: copy complete (manual allocation)");
   source.close();
@@ -248,10 +257,10 @@ function test_readall_writeall_file()
   dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
   buf = new ArrayBuffer(size);
   let ptr = OS.Shared.Type.voidptr_t.implementation(buf);
-  readResult = source.readTo(ptr, size);
+  readResult = source.readTo(ptr, {bytes: size});
   is(readResult, size, "test_readall_writeall_file: read the right number of bytes (C buffer)");
 
-  dest.write(ptr, readResult, {bytes: size});
+  dest.write(ptr, {bytes: size});
 
   ok(true, "test_readall_writeall_file: copy complete (C buffer)");
   source.close();
@@ -260,6 +269,17 @@ function test_readall_writeall_file()
   compare_files("test_readall_writeall_file (C buffer)", src_file_name, tmp_file_name);
   OS.File.remove(tmp_file_name);
 
+  // read/write, C buffer, missing |bytes| option
+  source = OS.File.open(src_file_name);
+  dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
+  let exn = should_throw(function() { source.readTo(ptr); });
+  ok(exn != null && exn instanceof TypeError, "test_readall_writeall_file: read with C pointer and without bytes fails with the correct error");
+  exn = should_throw(function() { dest.write(ptr); });
+  ok(exn != null && exn instanceof TypeError, "test_readall_writeall_file: write with C pointer and without bytes fails with the correct error");
+
+  source.close();
+  dest.close();
+
   // readTo, ArrayBuffer + offset
   let OFFSET = 12;
   let LEFT = size - OFFSET;
@@ -267,10 +287,10 @@ function test_readall_writeall_file()
   source = OS.File.open(src_file_name);
   dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
 
-  readResult = source.readTo(buf, LEFT, {offset: OFFSET});
+  readResult = source.readTo(buf, {offset: OFFSET});
   is(readResult, LEFT, "test_readall_writeall_file: read the right number of bytes (with offset)");
 
-  dest.write(buf, LEFT, {offset: OFFSET});
+  dest.write(buf, {offset: OFFSET});
   is(dest.stat().size, LEFT, "test_readall_writeall_file: wrote the right number of bytes (with offset)");
 
   ok(true, "test_readall_writeall_file: copy complete (with offset)");
@@ -287,10 +307,10 @@ function test_readall_writeall_file()
   source = OS.File.open(src_file_name);
   dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
 
-  readResult = source.readTo(ptr, LEFT, {offset: OFFSET});
+  readResult = source.readTo(ptr, {bytes: LEFT, offset: OFFSET});
   is(readResult, LEFT, "test_readall_writeall_file: read the right number of bytes (with offset)");
 
-  dest.write(ptr, LEFT, {offset: OFFSET});
+  dest.write(ptr, {bytes: LEFT, offset: OFFSET});
   is(dest.stat().size, LEFT, "test_readall_writeall_file: wrote the right number of bytes (with offset)");
 
   ok(true, "test_readall_writeall_file: copy complete (with offset)");
@@ -308,7 +328,7 @@ function test_readall_writeall_file()
   readResult = source.read();
   is(readResult.bytes, size, "test_readall_writeall_file: read the right number of bytes (auto allocation)");
 
-  dest.write(readResult.buffer, readResult.bytes);
+  dest.write(readResult.buffer, {bytes: readResult.bytes});
 
   ok(true, "test_readall_writeall_file: copy complete (auto allocation)");
   source.close();
@@ -316,8 +336,6 @@ function test_readall_writeall_file()
 
   compare_files("test_readall_writeall_file (auto allocation)", src_file_name, tmp_file_name);
   OS.File.remove(tmp_file_name);
-
-
 }
 
 /**
