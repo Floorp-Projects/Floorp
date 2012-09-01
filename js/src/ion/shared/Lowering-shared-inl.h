@@ -330,6 +330,7 @@ LIRGeneratorShared::tempFloat()
 LDefinition
 LIRGeneratorShared::tempCopy(MDefinition *input, uint32 reusedInput)
 {
+    JS_ASSERT(input->virtualRegister());
     LDefinition t = temp(LDefinition::TypeFrom(input->type()), LDefinition::MUST_REUSE_INPUT);
     t.setReusedInput(reusedInput);
     return t;

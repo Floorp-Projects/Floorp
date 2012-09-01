@@ -1035,6 +1035,8 @@ LinearScanAllocator::reifyAllocations()
                     LAllocation *alloc = reg->ins()->getOperand(def->getReusedInput());
                     LAllocation *origAlloc = LAllocation::New(*alloc);
 
+                    JS_ASSERT(!alloc->isUse());
+
                     *alloc = *interval->getAllocation();
                     if (!moveInputAlloc(inputOf(reg->ins()), origAlloc, alloc))
                         return false;

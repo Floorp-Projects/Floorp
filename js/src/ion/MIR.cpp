@@ -548,9 +548,20 @@ MShiftInstruction::infer(const TypeOracle::Binary &b)
 void
 MUrsh::infer(const TypeOracle::Binary &b)
 {
-    this->MShiftInstruction::infer(b);
-    if (specialization_ != MIRType_Int32)
+    if (b.lhs == MIRType_Object || b.rhs == MIRType_Object) {
+        specialization_ = MIRType_None;
         setResultType(MIRType_Value);
+        return;
+    }
+
+    if (b.rval == MIRType_Double) {
+        specialization_ = MIRType_Double;
+        setResultType(MIRType_Double);
+        return;
+    }
+
+    specialization_ = MIRType_Int32;
+    JS_ASSERT(type() == MIRType_Int32);
 }
 
 static inline bool

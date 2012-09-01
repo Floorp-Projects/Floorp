@@ -69,6 +69,10 @@ class BitwisePolicy : public BoxInputsPolicy
 
   public:
     bool adjustInputs(MInstruction *def);
+
+    MIRType specialization() const {
+        return specialization_;
+    }
 };
 
 class TableSwitchPolicy : public BoxInputsPolicy

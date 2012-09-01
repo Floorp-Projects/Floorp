@@ -806,7 +806,7 @@ CodeGeneratorX86Shared::visitBitOpI(LBitOpI *ins)
 }
 
 bool
-CodeGeneratorX86Shared::visitShiftOp(LShiftOp *ins)
+CodeGeneratorX86Shared::visitShiftI(LShiftI *ins)
 {
     const LAllocation *lhs = ins->getOperand(0);
     const LAllocation *rhs = ins->getOperand(1);
@@ -849,6 +849,26 @@ CodeGeneratorX86Shared::visitShiftOp(LShiftOp *ins)
             JS_NOT_REACHED("unexpected shift opcode");
     }
 
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitUrshD(LUrshD *ins)
+{
+    Register lhs = ToRegister(ins->lhs());
+    JS_ASSERT(ToRegister(ins->temp()) == lhs);
+
+    const LAllocation *rhs = ins->rhs();
+    FloatRegister out = ToFloatRegister(ins->output());
+
+    if (rhs->isConstant()) {
+        masm.shrl(Imm32(ToInt32(rhs) & 0x1F), lhs);
+    } else {
+        JS_ASSERT(ToRegister(rhs) == ecx);
+        masm.shrl_cl(lhs);
+    }
+
+    masm.convertUInt32ToDouble(lhs, out);
     return true;
 }
 
