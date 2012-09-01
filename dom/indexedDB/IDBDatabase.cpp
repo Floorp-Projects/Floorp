@@ -494,7 +494,6 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
 
   mozilla::dom::IDBObjectStoreParameters params;
   KeyPath keyPath(0);
-  nsTArray<nsString> keyPathArray;
 
   nsresult rv;
 

@@ -1082,7 +1082,7 @@ JS_NewRuntime(uint32_t maxbytes)
         InitMemorySubsystem();
 
         if (!JS::TlsRuntime.init())
-            return false;
+            return NULL;
 
         js_NewRuntimeWasCalled = JS_TRUE;
     }

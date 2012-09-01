@@ -3035,7 +3035,7 @@ let SessionStoreInternal = {
   },
 
   /**
-   * Restory history for a window
+   * Restore history for a window
    * @param aWindow
    *        Window reference
    * @param aTabs

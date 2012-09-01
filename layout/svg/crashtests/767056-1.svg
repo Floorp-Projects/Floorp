@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="100%"
+     class="reftest-wait">
+  <script>
+
+function resize() {
+  // Set the viewBox to the same width as the content area, but slightly
+  // higher. This checks that we don't enter an infinite reflow loop. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=767056#c10
+  var viewBox = "0 0 " + window.innerWidth + " " + (window.innerHeight + 1);
+  document.documentElement.setAttribute("viewBox", viewBox);
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", resize, false);
+setTimeout(resize, 3000); // For non-gecko
+
+  </script>
+  <rect width="100%" height="100%"/>
+</svg>

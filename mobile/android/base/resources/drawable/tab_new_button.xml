@@ -5,7 +5,7 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:state_pressed="true" android:drawable="@drawable/tab_new_pressed"/>
-    <item android:drawable="@drawable/tab_new_normal"/>
+    <item android:state_pressed="true" android:drawable="@drawable/highlight"/>
+    <item android:drawable="@drawable/tabs_tray_bg_repeat"/>
 
 </selector>

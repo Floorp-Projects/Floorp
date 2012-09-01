@@ -953,10 +953,11 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate)
   params.channels = aNumChannels;
 #ifdef MOZ_SAMPLE_TYPE_S16LE
   params.format =  CUBEB_SAMPLE_S16NE;
+  mBytesPerFrame = sizeof(int16_t) * aNumChannels;
 #else /* MOZ_SAMPLE_TYPE_FLOAT32 */
   params.format = CUBEB_SAMPLE_FLOAT32NE;
-#endif
   mBytesPerFrame = sizeof(float) * aNumChannels;
+#endif
 
   {
     cubeb_stream* stream;
