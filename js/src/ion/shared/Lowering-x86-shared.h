@@ -27,6 +27,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     bool visitPowHalf(MPowHalf *ins);
     bool lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);
     bool lowerModI(MMod *mod);
+    bool lowerUrshD(MUrsh *mir);
 };
 
 } // namespace ion

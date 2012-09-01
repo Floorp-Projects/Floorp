@@ -42,7 +42,8 @@
     _(BitNotV)                      \
     _(BitOpI)                       \
     _(BitOpV)                       \
-    _(ShiftOp)                      \
+    _(ShiftI)                       \
+    _(UrshD)                        \
     _(Return)                       \
     _(Throw)                        \
     _(Phi)                          \
