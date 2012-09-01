@@ -342,7 +342,7 @@ struct Parser : private AutoGCRooter
     void prepareNodeForMutation(ParseNode *pn) { return allocator.prepareNodeForMutation(pn); }
 
     /* new_ methods for creating parse nodes. These report OOM on context. */
-    JS_DECLARE_NEW_METHODS(allocParseNode, inline)
+    JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
 
     ParseNode *cloneNode(const ParseNode &other) {
         ParseNode *node = allocParseNode(sizeof(ParseNode));

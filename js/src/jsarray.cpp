@@ -1325,7 +1325,7 @@ JSObject::makeDenseArraySlow(JSContext *cx, HandleObject obj)
     if (!AddLengthProperty(cx, obj)) {
         obj->shape_ = oldShape;
         if (obj->elements != emptyObjectElements)
-            cx->free_(obj->getElementsHeader());
+            js_free(obj->getElementsHeader());
         obj->elements = elems;
         return false;
     }
@@ -1345,7 +1345,7 @@ JSObject::makeDenseArraySlow(JSContext *cx, HandleObject obj)
 
         if (!obj->addDataProperty(cx, id, next, JSPROP_ENUMERATE)) {
             obj->shape_ = oldShape;
-            cx->free_(obj->getElementsHeader());
+            js_free(obj->getElementsHeader());
             obj->elements = elems;
             return false;
         }
@@ -1358,7 +1358,7 @@ JSObject::makeDenseArraySlow(JSContext *cx, HandleObject obj)
     ObjectElements *oldheader = ObjectElements::fromElements(elems);
 
     obj->getElementsHeader()->length = oldheader->length;
-    cx->free_(oldheader);
+    js_free(oldheader);
 
     return true;
 }
@@ -3737,7 +3737,7 @@ js_ArrayInfo(JSContext *cx, unsigned argc, Value *vp)
         if (arg.isPrimitive() ||
             !(array = arg.toObjectOrNull())->isArray()) {
             fprintf(stderr, "%s: not array\n", bytes);
-            cx->free_(bytes);
+            js_free(bytes);
             continue;
         }
         fprintf(stderr, "%s: %s (len %u", bytes,
@@ -3748,7 +3748,7 @@ js_ArrayInfo(JSContext *cx, unsigned argc, Value *vp)
                     array->getDenseArrayCapacity());
         }
         fputs(")\n", stderr);
-        cx->free_(bytes);
+        js_free(bytes);
     }
 
     args.rval().setUndefined();

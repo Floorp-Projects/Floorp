@@ -1273,7 +1273,7 @@ js_FinishGC(JSRuntime *rt)
 
     /* Delete all remaining Compartments. */
     for (CompartmentsIter c(rt); !c.done(); c.next())
-        Foreground::delete_(c.get());
+        js_delete(c.get());
     rt->compartments.clear();
     rt->atomsCompartment = NULL;
 
@@ -3083,7 +3083,7 @@ GCHelperThread::replenishAndFreeLater(void *ptr)
     do {
         if (freeCursor && !freeVector.append(freeCursorEnd - FREE_ARRAY_LENGTH))
             break;
-        freeCursor = (void **) OffTheBooks::malloc_(FREE_ARRAY_SIZE);
+        freeCursor = (void **) js_malloc(FREE_ARRAY_SIZE);
         if (!freeCursor) {
             freeCursorEnd = NULL;
             break;
@@ -3092,7 +3092,7 @@ GCHelperThread::replenishAndFreeLater(void *ptr)
         *freeCursor++ = ptr;
         return;
     } while (false);
-    Foreground::free_(ptr);
+    js_free(ptr);
 }
 
 #ifdef JS_THREADSAFE
@@ -4748,7 +4748,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
 
         js_ReportOutOfMemory(cx);
     }
-    Foreground::delete_(compartment);
+    js_delete(compartment);
     return NULL;
 }
 
@@ -4942,7 +4942,7 @@ JS::CheckStackRoots(JSContext *cx)
      * stack was last scanned, and update the last scanned state.
      */
     if (stackEnd != oldStackEnd) {
-        rt->free_(oldStackData);
+        js_free(oldStackData);
         oldStackCapacity = rt->nativeStackQuota / sizeof(uintptr_t);
         oldStackData = (uintptr_t *) rt->malloc_(oldStackCapacity * sizeof(uintptr_t));
         if (!oldStackData) {
@@ -5132,7 +5132,7 @@ StartVerifyPreBarriers(JSRuntime *rt)
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         r.front()->bitmap.clear();
 
-    VerifyPreTracer *trc = new (js_malloc(sizeof(VerifyPreTracer))) VerifyPreTracer;
+    VerifyPreTracer *trc = js_new<VerifyPreTracer>();
 
     rt->gcNumber++;
     trc->number = rt->gcNumber;
@@ -5327,7 +5327,7 @@ StartVerifyPostBarriers(JSRuntime *rt)
     {
         return;
     }
-    VerifyPostTracer *trc = new (js_malloc(sizeof(VerifyPostTracer))) VerifyPostTracer;
+    VerifyPostTracer *trc = js_new<VerifyPostTracer>();
     rt->gcVerifyPostData = trc;
     rt->gcNumber++;
     trc->number = rt->gcNumber;

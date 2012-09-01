@@ -2039,13 +2039,42 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
 
     GLenum format;
     GLenum datatype;
-
     GetOptimalReadFormats(this, format, datatype);
 
+    GLsizei width = dest->Width();
+    GLsizei height = dest->Height();
+
     fReadPixels(0, 0,
-                dest->Width(), dest->Height(),
+                width, height,
                 format, datatype,
                 dest->Data());
+
+    // Check if GL is giving back 1.0 alpha for
+    // RGBA reads to RGBA images from no-alpha buffers.
+#ifdef XP_MACOSX
+    if (WorkAroundDriverBugs() &&
+        mVendor == VendorNVIDIA &&
+        dest->Format() == gfxASurface::ImageFormatARGB32 &&
+        width && height)
+    {
+        GLint alphaBits = 0;
+        fGetIntegerv(LOCAL_GL_ALPHA_BITS, &alphaBits);
+        if (!alphaBits) {
+            const uint32_t alphaMask = GFX_PACKED_PIXEL_NO_PREMULTIPLY(0xff,0,0,0);
+
+            uint32_t* itr = (uint32_t*)dest->Data();
+            uint32_t testPixel = *itr;
+            if ((testPixel & alphaMask) != alphaMask) {
+                // We need to set the alpha channel to 1.0 manually.
+                uint32_t* itrEnd = itr + width*height;  // Stride is guaranteed to be width*4.
+
+                for (; itr != itrEnd; itr++) {
+                    *itr |= alphaMask;
+                }
+            }
+        }
+    }
+#endif
 
     // Output should be in BGRA, so swap if RGBA.
     if (format == LOCAL_GL_RGBA) {
