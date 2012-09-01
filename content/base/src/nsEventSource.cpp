@@ -413,10 +413,10 @@ nsEventSource::Observe(nsISupports* aSubject,
   DebugOnly<nsresult> rv;
   if (strcmp(aTopic, DOM_WINDOW_FROZEN_TOPIC) == 0) {
     rv = Freeze();
-    NS_ASSERTION(rv, "Freeze() failed");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Freeze() failed");
   } else if (strcmp(aTopic, DOM_WINDOW_THAWED_TOPIC) == 0) {
     rv = Thaw();
-    NS_ASSERTION(rv, "Thaw() failed");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Thaw() failed");
   } else if (strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) == 0) {
     Close();
   }
