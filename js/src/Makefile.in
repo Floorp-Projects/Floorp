@@ -512,37 +512,6 @@ ifeq ($(MOZ_DEBUG),1)
 #check:: check-ooms
 endif
 
-## Prevent regressing in our deprecation of non-preferred memory management functions.
-# We use all the files in the distribution so that different configurations
-# don't give different results. We skip the contents of objdirs using |find|
-# (it can't be done with %-expansion, because the files we want to skip aren't
-# in the vpath).
-ALL_FILES=$(shell find $(srcdir) \( -name "*.cpp" -o -name "*.h" \) ! -path "*/dist/*" ! -path "*/config/*")
-check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL_FILES))
-
-	# js_malloc and friends are only used by other memory managers, and should
-	# never be used elsewhere directly.
-	$(srcdir)/config/check_source_count.py "\bjs_malloc\b" 0 \
-		"in Makefile.in" "cx->malloc_ or rt->malloc_" $^
-	$(srcdir)/config/check_source_count.py "\bjs_calloc\b" 0 \
-		"in Makefile.in" "cx->calloc_ or rt->calloc_" $^
-	$(srcdir)/config/check_source_count.py "\bjs_realloc\b" 0 \
-		"in Makefile.in" "cx->realloc_ or rt->realloc_" $^
-	$(srcdir)/config/check_source_count.py "\bjs_free\b" 0 \
-		"in Makefile.in" "cx->free_" $^
-
-	# We desire these numbers to go down, not up. See "User guide to memory
-	# management within SpiderMonkey" in jsutil.h.
-	$(srcdir)/config/check_source_count.py OffTheBooks:: 71 \
-		"in Makefile.in" "{cx,rt}->{new_,array_new,malloc_,calloc_,realloc_}" $^
-	# This should go to zero, if possible.
-	$(srcdir)/config/check_source_count.py UnwantedForeground:: 31 \
-		"in Makefile.in" "{cx,rt}->{free_,delete_,array_delete}" $^
-
-ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
-#check:: check-malloc-function-usage FIXME: disable on JM until closer to merge time.
-endif
-
 ifdef MOZ_VALGRIND
 ifndef MOZ_ASAN
 JITTEST_VALGRIND_FLAG = --valgrind

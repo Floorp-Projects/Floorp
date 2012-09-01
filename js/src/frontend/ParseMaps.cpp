@@ -36,7 +36,7 @@ void
 ParseMapPool::purgeAll()
 {
     for (void **it = all.begin(), **end = all.end(); it != end; ++it)
-        cx->delete_<AtomMapT>(asAtomMap(*it));
+        js_delete<AtomMapT>(asAtomMap(*it));
 
     all.clearAndFree();
     recyclable.clearAndFree();

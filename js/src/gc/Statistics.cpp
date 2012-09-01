@@ -127,7 +127,7 @@ class StatisticsSerializer
             return NULL;
 
         size_t nchars = strlen(buf);
-        jschar *out = (jschar *)js_malloc(sizeof(jschar) * (nchars + 1));
+        jschar *out = js_pod_malloc<jschar>(nchars + 1);
         if (!out) {
             oom_ = true;
             js_free(buf);
