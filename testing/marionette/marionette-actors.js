@@ -509,35 +509,31 @@ MarionetteDriverActor.prototype = {
    */
   executeScriptInSandbox: function MDA_executeScriptInSandbox(sandbox, script,
      directInject, async) {
-    try {
-      if (directInject && async &&
-          (this.scriptTimeout == null || this.scriptTimeout == 0)) {
-        this.sendError("Please set a timeout", 21, null);
-        return;
-      }
 
-      if (this.importedScripts.exists()) {
-        let stream = Cc["@mozilla.org/network/file-input-stream;1"].  
-                      createInstance(Ci.nsIFileInputStream);
-        stream.init(this.importedScripts, -1, 0, 0);
-        let data = NetUtil.readInputStreamToString(stream, stream.available());
-        script = data + script;
-      }
-
-      let res = Cu.evalInSandbox(script, sandbox, "1.8");
-
-      if (directInject && !async &&
-          (res == undefined || res.passed == undefined)) {
-        this.sendError("finish() not called", 500, null);
-        return;
-      }
-
-      if (!async) {
-        this.sendResponse(this.curBrowser.elementManager.wrapValue(res));
-      }
+    if (directInject && async &&
+        (this.scriptTimeout == null || this.scriptTimeout == 0)) {
+      this.sendError("Please set a timeout", 21, null);
+      return;
     }
-    catch (e) {
-      this.sendError(e.name + ': ' + e.message, 17, e.stack);
+
+    if (this.importedScripts.exists()) {
+      let stream = Cc["@mozilla.org/network/file-input-stream;1"].  
+                    createInstance(Ci.nsIFileInputStream);
+      stream.init(this.importedScripts, -1, 0, 0);
+      let data = NetUtil.readInputStreamToString(stream, stream.available());
+      script = data + script;
+    }
+
+    let res = Cu.evalInSandbox(script, sandbox, "1.8");
+
+    if (directInject && !async &&
+        (res == undefined || res.passed == undefined)) {
+      this.sendError("finish() not called", 500, null);
+      return;
+    }
+
+    if (!async) {
+      this.sendResponse(this.curBrowser.elementManager.wrapValue(res));
     }
   },
 
@@ -675,7 +671,8 @@ MarionetteDriverActor.prototype = {
     let curWindow = this.getCurrentWindow();
     let original_onerror = curWindow.onerror;
     let that = this;
-    let marionette = new Marionette(this, curWindow, "chrome", this.marionetteLog, this.marionettePerf);
+    let marionette = new Marionette(this, curWindow, "chrome",
+                                    this.marionetteLog, this.marionettePerf);
     marionette.command_id = this.command_id;
 
     function chromeAsyncReturnFunc(value, status) {
@@ -745,7 +742,7 @@ MarionetteDriverActor.prototype = {
 
       this.executeScriptInSandbox(_chromeSandbox, script, directInject, true);
     } catch (e) {
-      this.sendError(e.name + ": " + e.message, 17, e.stack, marionette.command_id);
+      chromeAsyncReturnFunc(e.name + ": " + e.message, 17);
     }
   },
 
