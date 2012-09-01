@@ -216,27 +216,7 @@ LIRGeneratorARM::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mi
 {
 
     ins->setOperand(0, useRegister(lhs));
-    // this check probably not necessary, it is a carry-over from the x86 code.
-    if (rhs->isConstant()) {
-        ins->setOperand(1, useOrConstant(rhs));
-    } else {
-        // If our operand isn't a constant, then we want to strip off any
-        // unnecessary bits.  We do this by generating an AND LInstruction
-        // and dumping it into the instruction stream right before the shift.
-        LBitOpI *LAnd = new LBitOpI(JSOP_BITAND);
-        LAnd->setOperand(0, useRegister(rhs));
-        LAnd->setOperand(1, LConstantIndex::FromIndex(0x1f));
-        LAnd->setDef(0, LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
-        uint32 vreg = getVirtualRegister();
-        if (vreg >= MAX_VIRTUAL_REGISTERS)
-            return false;
-        LAnd->getDef(0)->setVirtualRegister(vreg);
-        if (!add(LAnd))
-            return false;
-        LUse policy = LUse(LUse::REGISTER);
-        policy.setVirtualRegister(vreg);
-        ins->setOperand(1, policy);
-    }
+    ins->setOperand(1, useRegisterOrConstant(rhs));
     return define(ins, mir,
                   LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
 }
@@ -361,3 +341,15 @@ LIRGeneratorARM::visitInterruptCheck(MInterruptCheck *ins)
     return true;
 }
 
+bool
+LIRGeneratorARM::lowerUrshD(MUrsh *mir)
+{
+    MDefinition *lhs = mir->lhs();
+    MDefinition *rhs = mir->rhs();
+
+    JS_ASSERT(lhs->type() == MIRType_Int32);
+    JS_ASSERT(rhs->type() == MIRType_Int32);
+
+    LUrshD *lir = new LUrshD(useRegister(lhs), useRegisterOrConstant(rhs), temp());
+    return define(lir, mir);
+}

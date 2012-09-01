@@ -15,6 +15,18 @@
 namespace js {
 namespace ion {
 
+template <size_t Temps, size_t ExtraUses = 0>
+class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
+{
+  public:
+    const LAllocation *lhs() {
+        return this->getOperand(0);
+    }
+    const LAllocation *rhs() {
+        return this->getOperand(1);
+    }
+};
+
 // Used for jumps from other blocks. Also simplifies register allocation since
 // the first instruction of a block is guaranteed to have no uses.
 class LLabel : public LInstructionHelper<0, 0, 0>
@@ -1161,14 +1173,14 @@ class LBitOpV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
 
 // Shift operation, taking two 32-bit integers as inputs and returning
 // a 32-bit integer result as an output.
-class LShiftOp : public LInstructionHelper<1, 2, 0>
+class LShiftI : public LInstructionHelper<1, 2, 0>
 {
     JSOp op_;
 
   public:
-    LIR_HEADER(ShiftOp);
+    LIR_HEADER(ShiftI);
 
-    LShiftOp(JSOp op)
+    LShiftI(JSOp op)
       : op_(op)
     { }
 
@@ -1178,6 +1190,21 @@ class LShiftOp : public LInstructionHelper<1, 2, 0>
 
     MInstruction *mir() {
         return mir_->toInstruction();
+    }
+};
+
+class LUrshD : public LBinaryMath<1>
+{
+  public:
+    LIR_HEADER(UrshD);
+
+    LUrshD(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp) {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, temp);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
     }
 };
 
@@ -1195,18 +1222,6 @@ class LThrow : public LCallInstructionHelper<0, BOX_PIECES, 0>
     LIR_HEADER(Throw);
 
     static const size_t Value = 0;
-};
-
-template <size_t Temps, size_t ExtraUses = 0>
-class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
-{
-  public:
-    const LAllocation *lhs() {
-        return this->getOperand(0);
-    }
-    const LAllocation *rhs() {
-        return this->getOperand(1);
-    }
 };
 
 class LMinMaxI : public LInstructionHelper<1, 2, 0>

@@ -102,3 +102,24 @@ LIRGeneratorX86Shared::lowerModI(MMod *mod)
     LModI *lir = new LModI(useFixed(mod->lhs(), eax), useRegister(mod->rhs()));
     return assignSnapshot(lir) && defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
 }
+
+bool
+LIRGeneratorX86Shared::lowerUrshD(MUrsh *mir)
+{
+    MDefinition *lhs = mir->lhs();
+    MDefinition *rhs = mir->rhs();
+
+    JS_ASSERT(lhs->type() == MIRType_Int32);
+    JS_ASSERT(rhs->type() == MIRType_Int32);
+    JS_ASSERT(mir->type() == MIRType_Double);
+
+#ifdef JS_CPU_X64
+    JS_ASSERT(ecx == rcx);
+#endif
+
+    LUse lhsUse = useRegisterAtStart(lhs);
+    LAllocation rhsAlloc = rhs->isConstant() ? useOrConstant(rhs) : useFixed(rhs, ecx);
+
+    LUrshD *lir = new LUrshD(lhsUse, rhsAlloc, tempCopy(lhs, 0));
+    return define(lir, mir);
+}

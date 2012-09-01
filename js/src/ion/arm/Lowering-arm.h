@@ -30,6 +30,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool defineUntypedPhi(MPhi *phi, size_t lirIndex);
     bool lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, 
                        MDefinition *rhs);
+    bool lowerUrshD(MUrsh *mir);
 
     bool lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir,
                      MDefinition *input);

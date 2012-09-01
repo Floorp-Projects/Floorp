@@ -593,20 +593,26 @@ LIRGenerator::visitBitXor(MBitXor *ins)
 }
 
 bool
-LIRGenerator::lowerShiftOp(JSOp op, MInstruction *ins)
+LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction *ins)
 {
     MDefinition *lhs = ins->getOperand(0);
     MDefinition *rhs = ins->getOperand(1);
 
     if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
-        LShiftOp *lir = new LShiftOp(op);
+        if (ins->type() == MIRType_Double) {
+            JS_ASSERT(op == JSOP_URSH);
+            return lowerUrshD(ins->toUrsh());
+        }
+
+        LShiftI *lir = new LShiftI(op);
         if (op == JSOP_URSH) {
-            MUrsh *ursh = ins->toUrsh();
-            if (ursh->fallible() && !assignSnapshot(lir))
+            if (ins->toUrsh()->fallible() && !assignSnapshot(lir))
                 return false;
         }
         return lowerForShift(lir, ins, lhs, rhs);
     }
+
+    JS_ASSERT(ins->specialization() == MIRType_None);
 
     if (op == JSOP_URSH) {
         LBinaryV *lir = new LBinaryV(op);
