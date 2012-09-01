@@ -24,6 +24,8 @@
 #include "nsIPrincipal.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIAppsService.h"
+#include "mozIApplication.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;
 
@@ -120,6 +122,33 @@ GetHostForPrincipal(nsIPrincipal* aPrincipal, nsACString& aHost)
 
   return NS_OK;
 }
+
+class AppUninstallObserver : public nsIObserver {
+public:
+  NS_DECL_ISUPPORTS
+
+  // nsIObserver implementation.
+  NS_IMETHODIMP
+  Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *data)
+  {
+    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "webapps-uninstall"));
+
+    nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
+    nsCOMPtr<mozIApplication> app;
+
+    appsService->GetAppFromObserverMessage(nsAutoString(data), getter_AddRefs(app));
+    NS_ENSURE_TRUE(app, NS_ERROR_UNEXPECTED);
+
+    uint32_t appId;
+    app->GetLocalId(&appId);
+    MOZ_ASSERT(appId != nsIScriptSecurityManager::NO_APP_ID);
+
+    nsCOMPtr<nsIPermissionManager> permManager = do_GetService("@mozilla.org/permissionmanager;1");
+    return permManager->RemovePermissionsForApp(appId);
+  }
+};
+
+NS_IMPL_ISUPPORTS1(AppUninstallObserver, nsIObserver)
 
 } // anonymous namespace
 
@@ -236,6 +265,13 @@ NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(uint16_t aReason)
   }
 
   return NS_OK;
+}
+
+/* static */ void
+nsPermissionManager::AppUninstallObserverInit()
+{
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  observerService->AddObserver(new AppUninstallObserver(), "webapps-uninstall", /* holdsWeak= */ false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1066,6 +1102,85 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
   else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // the profile has already changed; init the db from the new location
     InitDB(false);
+  }
+
+  return NS_OK;
+}
+
+PLDHashOperator
+nsPermissionManager::GetPermissionsForApp(nsPermissionManager::PermissionHashKey* entry, void* arg)
+{
+  GetPermissionsForAppStruct* data = static_cast<GetPermissionsForAppStruct*>(arg);
+
+  for (uint32_t i = 0; i < entry->GetPermissions().Length(); ++i) {
+    nsPermissionManager::PermissionEntry& permEntry = entry->GetPermissions()[i];
+
+    if (entry->GetKey()->mAppId != data->appId) {
+      continue;
+    }
+
+    data->permissions.AppendObject(new nsPermission(entry->GetKey()->mHost,
+                                                    entry->GetKey()->mAppId,
+                                                    entry->GetKey()->mIsInBrowserElement,
+                                                    gPermissionManager->mTypeArray.ElementAt(permEntry.mType),
+                                                    permEntry.mPermission,
+                                                    permEntry.mExpireType,
+                                                    permEntry.mExpireTime));
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId)
+{
+  ENSURE_NOT_CHILD_PROCESS;
+  NS_ENSURE_ARG(aAppId != nsIScriptSecurityManager::NO_APP_ID);
+
+  // We begin by removing all the permissions from the DB.
+  // This is not using a mozIStorageStatement because removing an app should be
+  // rare enough to not have to worry too much about performance.
+  // After clearing the DB, we call AddInternal() to make sure that all
+  // processes are aware of this change and the representation of the DB in
+  // memory is updated.
+  // We have to get all permissions associated with an application and then
+  // remove those because doing so in EnumerateEntries() would fail because
+  // we might happen to actually delete entries from the list.
+
+  nsCAutoString sql;
+  sql.AppendLiteral("DELETE FROM moz_hosts WHERE appId=");
+  sql.AppendInt(aAppId);
+
+  nsresult rv = mDBConn->ExecuteSimpleSQL(sql);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  GetPermissionsForAppStruct data(aAppId);
+  mPermissionTable.EnumerateEntries(GetPermissionsForApp, &data);
+
+  for (int32_t i=0; i<data.permissions.Count(); ++i) {
+    nsCAutoString host;
+    bool isInBrowserElement;
+    nsCAutoString type;
+
+    data.permissions[i]->GetHost(host);
+    data.permissions[i]->GetIsInBrowserElement(&isInBrowserElement);
+    data.permissions[i]->GetType(type);
+
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(GetPrincipal(host, aAppId, isInBrowserElement,
+                               getter_AddRefs(principal)))) {
+      NS_ERROR("GetPrincipal() failed!");
+      continue;
+    }
+
+    AddInternal(principal,
+                type,
+                nsIPermissionManager::UNKNOWN_ACTION,
+                0,
+                nsIPermissionManager::EXPIRE_NEVER,
+                0,
+                nsPermissionManager::eNotify,
+                nsPermissionManager::eNoDBOperation);
   }
 
   return NS_OK;

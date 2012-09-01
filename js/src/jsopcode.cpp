@@ -5968,7 +5968,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
         else
             return write("[") &&
                    quote(prop, '\'') &&
-                   write("]") >= 0;
+                   write("]");
         return true;
       }
       case JSOP_GETELEM:
@@ -6024,7 +6024,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
         return write(js_this_str);
       case JSOP_CALL:
       case JSOP_FUNCALL:
-        return decompilePC(pcstack[-(GET_ARGC(pc) + 2)]) &&
+        return decompilePC(pcstack[-int32_t(GET_ARGC(pc) + 2)]) &&
                write("(...)");
       default:
         break;
@@ -6192,13 +6192,13 @@ DecompileExpressionFromStack(JSContext *cx, int spindex, int skipStackHits, Valu
     if (!valuepc)
         return true;
 
-    ExpressionDecompiler ea(cx, script, fun);
-    if (!ea.init())
+    ExpressionDecompiler ed(cx, script, fun);
+    if (!ed.init())
         return false;
-    if (!ea.decompilePC(valuepc))
+    if (!ed.decompilePC(valuepc))
         return false;
 
-    return ea.getOutput(res);
+    return ed.getOutput(res);
 }
 
 char *

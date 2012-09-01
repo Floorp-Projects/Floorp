@@ -25,20 +25,20 @@ let gStrings = Services.strings.createBundle("chrome://browser/locale/aboutReade
 let AboutReader = function(doc, win) {
   dump("Init()");
 
-  this._doc = doc;
-  this._win = win;
+  this._docRef = Cu.getWeakReference(doc);
+  this._winRef = Cu.getWeakReference(win);
 
   Services.obs.addObserver(this, "Reader:FaviconReturn", false);
 
   this._article = null;
 
   dump("Feching toolbar, header and content notes from about:reader");
-  this._headerElement = doc.getElementById("reader-header");
-  this._domainElement = doc.getElementById("reader-domain");
-  this._titleElement = doc.getElementById("reader-title");
-  this._creditsElement = doc.getElementById("reader-credits");
-  this._contentElement = doc.getElementById("reader-content");
-  this._toolbarElement = doc.getElementById("reader-toolbar");
+  this._headerElementRef = Cu.getWeakReference(doc.getElementById("reader-header"));
+  this._domainElementRef = Cu.getWeakReference(doc.getElementById("reader-domain"));
+  this._titleElementRef = Cu.getWeakReference(doc.getElementById("reader-title"));
+  this._creditsElementRef = Cu.getWeakReference(doc.getElementById("reader-credits"));
+  this._contentElementRef = Cu.getWeakReference(doc.getElementById("reader-content"));
+  this._toolbarElementRef = Cu.getWeakReference(doc.getElementById("reader-toolbar"));
 
   this._toolbarEnabled = false;
 
@@ -104,11 +104,44 @@ AboutReader.prototype = {
                           ".content .wp-caption img, " +
                           ".content figure img",
 
+  get _doc() {
+    return this._docRef.get();
+  },
+
+  get _win() {
+    return this._winRef.get();
+  },
+
+  get _headerElement() {
+    return this._headerElementRef.get();
+  },
+
+  get _domainElement() {
+    return this._domainElementRef.get();
+  },
+
+  get _titleElement() {
+    return this._titleElementRef.get();
+  },
+
+  get _creditsElement() {
+    return this._creditsElementRef.get();
+  },
+
+  get _contentElement() {
+    return this._contentElementRef.get();
+  },
+
+  get _toolbarElement() {
+    return this._toolbarElementRef.get();
+  },
+
   observe: function(aMessage, aTopic, aData) {
     switch(aTopic) {
       case "Reader:FaviconReturn": {
         let info = JSON.parse(aData);
         this._loadFavicon(info.url, info.faviconUrl);
+        Services.obs.removeObserver(this, "Reader:FaviconReturn", false);
         break;
       }
     }
@@ -140,23 +173,6 @@ AboutReader.prototype = {
         this._updateImageMargins();
         break;
     }
-  },
-
-  uninit: function Reader_uninit() {
-    dump("Uninit()");
-
-    Services.obs.removeObserver(this, "Reader:FaviconReturn", false);
-
-    let body = this._doc.body;
-    body.removeEventListener("touchstart", this, false);
-    body.removeEventListener("click", this, false);
-
-    let win = this._win;
-    win.removeEventListener("scroll", this, false);
-    win.removeEventListener("popstate", this, false);
-    win.removeEventListener("resize", this, false);
-
-    this._hideContent();
   },
 
   _updateToggleButton: function Reader_updateToggleButton() {
