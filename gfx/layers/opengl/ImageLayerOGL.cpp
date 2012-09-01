@@ -372,11 +372,7 @@ ImageLayerOGL::RenderLayer(int,
     program->SetTextureUnit(0);
     program->LoadMask(GetMaskLayer());
 
-    mOGLManager->BindAndDrawQuadWithTextureRect(program,
-                                                GetVisibleRegion().GetBounds(),
-                                                nsIntSize(cairoImage->GetSize().width,
-                                                          cairoImage->GetSize().height));
-
+    mOGLManager->BindAndDrawQuad(program);
 
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
     if (cairoImage->mSurface && pixmap) {
