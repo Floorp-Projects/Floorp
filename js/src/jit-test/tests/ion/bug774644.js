@@ -8,4 +8,3 @@ function addTestCase() {
   for (var d = start; d < stop; d >>= 86400000)
     new TestCase();
 }
-dis(addTestCase);
