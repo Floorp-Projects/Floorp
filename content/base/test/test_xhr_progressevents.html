@@ -14,7 +14,11 @@ SimpleTest.waitForExplicitFinish();
 var gen = runTests();
 
 function log(s) {
-  //document.getElementById("l").textContent += s + "\n";
+  // Uncomment these to get debugging information
+  /*
+  document.getElementById("l").textContent += s + "\n";
+  dump(s + "\n");
+  */
 }
 
 function getEvent(e) {
@@ -101,6 +105,7 @@ function closeConn() {
   var xhr = new XMLHttpRequest();
   xhr.open("POST", "progressserver.sjs?close");
   xhr.send();
+  return xhr;
 }
 
 var longString = "long";
@@ -214,8 +219,9 @@ function runTests() {
       }
       if ("close" in test) {
         log("closing");
+        let xhrClose;
         if (!testState.file)
-          closeConn();
+          xhrClose = closeConn();
 
         e = yield;
         is(e.type, "readystatechange", "should readystate to done closing " + testState.name);
@@ -240,6 +246,16 @@ function runTests() {
         is(e.type, "loadend", "should fire loadend closing " + testState.name);
         is(e.lengthComputable, true, "length should be computable during loadend closing " + testState.name);
         log("got loadend");
+
+        // if we closed the connection using an explicit request, make sure that goes through before
+        // running the next test in order to avoid reordered requests from closing the wrong
+        // connection.
+        if (xhrClose && xhrClose.readyState != xhrClose.DONE) {
+          log("wait for closeConn to finish");
+          xhrClose.onloadend = getEvent;
+          yield;
+          is(xhrClose.readyState, xhrClose.DONE, "closeConn finished");
+        }
 
         if (responseType.chunked) {
           is(xhr.response, null, "chunked data has null response for " + testState.name);

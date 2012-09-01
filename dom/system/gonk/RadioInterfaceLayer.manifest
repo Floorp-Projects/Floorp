@@ -13,7 +13,18 @@
 # limitations under the License.
 
 # RadioInterfaceLayer.js
+#
+# IMPORTANT:
+# Users of nsIRadioInterfaceLayer should invoke
+# nsIInterfaceRequestor::GetInterface() as implemented by
+# "@mozilla.org/telephony/system-worker-manager;1" to
+# obtain the instance.
+#
+# DO NOT use do_CreateInstance()/do_GetService() to directly
+# instantiate "@mozilla.org/ril;1".
+#
 component {2d831c8d-6017-435b-a80c-e5d422810cea} RadioInterfaceLayer.js
+contract @mozilla.org/ril;1 {2d831c8d-6017-435b-a80c-e5d422810cea}
 
 # RILContentHelper.js
 component {472816e1-1fd6-4405-996c-806f9ea68174} RILContentHelper.js

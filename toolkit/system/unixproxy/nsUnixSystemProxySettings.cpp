@@ -371,7 +371,7 @@ nsUnixSystemProxySettings::GetProxyFromGConf(const nsACString& aScheme,
 {
   bool masterProxySwitch = false;
   mGConf->GetBool(NS_LITERAL_CSTRING("/system/http_proxy/use_http_proxy"), &masterProxySwitch);
-  if (!IsProxyMode("manual") || !masterProxySwitch) {
+  if (!(IsProxyMode("manual") || masterProxySwitch)) {
     aResult.AppendLiteral("DIRECT");
     return NS_OK;
   }

@@ -14,6 +14,7 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIDOMMimeType.h"
 #include "nsPluginLogging.h"
 #include "nsNPAPIPlugin.h"
 #include "mozilla/TimeStamp.h"
@@ -32,6 +33,8 @@ inline char* new_str(const char* str)
     return strcpy(result, str);
   return result;
 }
+
+NS_IMPL_ISUPPORTS1(DOMMimeTypeImpl, nsIDOMMimeType)
 
 /* nsPluginTag */
 
@@ -341,6 +344,25 @@ nsPluginTag::SetClicktoplay(bool aClicktoplay)
   }
   
   mPluginHost->UpdatePluginInfo(nullptr);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginTag::GetMimeTypes(uint32_t* aCount, nsIDOMMimeType*** aResults)
+{
+  uint32_t count = mMimeTypes.Length();
+  *aResults = static_cast<nsIDOMMimeType**>
+                         (nsMemory::Alloc(count * sizeof(**aResults)));
+  if (!*aResults)
+    return NS_ERROR_OUT_OF_MEMORY;
+  *aCount = count;
+
+  for (uint32_t i = 0; i < count; i++) {
+    nsIDOMMimeType* mimeType = new DOMMimeTypeImpl(this, i);
+    (*aResults)[i] = mimeType;
+    NS_ADDREF((*aResults)[i]);
+  }
+
   return NS_OK;
 }
 

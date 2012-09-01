@@ -582,56 +582,6 @@ let Buf = {
  * and acts upon state changes accordingly.
  */
 let RIL = {
-
-  /**
-   * One of the RADIO_STATE_* constants.
-   */
-  radioState: GECKO_RADIOSTATE_UNAVAILABLE,
-  _isInitialRadioState: true,
-
-  /**
-   * ICC status. Keeps a reference of the data response to the
-   * getICCStatus request.
-   */
-  iccStatus: null,
-
-  /**
-   * Card state
-   */
-  cardState: null,
-
-  /**
-   * Strings
-   */
-  IMEI: null,
-  IMEISV: null,
-  SMSC: null,
-
-  /**
-   * ICC information, such as MSISDN, IMSI, ...etc.
-   */
-  iccInfo: {},
-
-  /**
-   * Application identification for apps in ICC.
-   */
-  aid: null,
-
-  networkSelectionMode: null,
-
-  voiceRegistrationState: {},
-  dataRegistrationState: {},
-
-  /**
-   * List of strings identifying the network operator.
-   */
-  operator: null,
-
-  /**
-   * String containing the baseband version.
-   */
-  basebandVersion: null,
-
   /**
    * Valid calls.
    */
@@ -654,21 +604,92 @@ let RIL = {
    */
   _pendingSentSmsMap: {},
 
-  /**
-   * Whether or not the multiple requests in requestNetworkInfo() are currently
-   * being processed
-   */
-  _processingNetworkInfo: false,
+  initRILState: function initRILState() {
+    /**
+     * One of the RADIO_STATE_* constants.
+     */
+    this.radioState = GECKO_RADIOSTATE_UNAVAILABLE;
+    this._isInitialRadioState = true;
 
-  /**
-   * Pending messages to be send in batch from requestNetworkInfo()
-   */
-  _pendingNetworkInfo: {rilMessageType: "networkinfochanged"},
+    /**
+     * ICC status. Keeps a reference of the data response to the
+     * getICCStatus request.
+     */
+    this.iccStatus = null;
 
-  /**
-   * Mute or unmute the radio.
-   */
-  _muted: true,
+    /**
+     * Card state
+     */
+    this.cardState = null;
+
+    /**
+     * Strings
+     */
+    this.IMEI = null;
+    this.IMEISV = null;
+    this.SMSC = null;
+
+    /**
+     * ICC information, such as MSISDN, IMSI, ...etc.
+     */
+    this.iccInfo = {};
+
+    /**
+     * Application identification for apps in ICC.
+     */
+    this.aid = null;
+  
+    /**
+     * Application type for apps in ICC.
+     */
+    this.appType = null,
+
+    this.networkSelectionMode = null;
+
+    this.voiceRegistrationState = {};
+    this.dataRegistrationState = {};
+
+    /**
+     * List of strings identifying the network operator.
+     */
+    this.operator = null;
+
+    /**
+     * String containing the baseband version.
+     */
+    this.basebandVersion = null;
+
+    // Clean up this.currentCalls: rild might have restarted.
+    for each (let currentCall in this.currentCalls) {
+      delete this.currentCalls[currentCall.callIndex];
+      this._handleDisconnectedCall(currentCall);
+    }
+
+    // Deactivate this.currentDataCalls: rild might have restarted.
+    for each (let datacall in this.currentDataCalls) {
+      this.deactivateDataCall(datacall);
+    }
+
+    // Don't clean up this._receivedSmsSegmentsMap or this._pendingSentSmsMap
+    // because on rild restart: we may continue with the pending segments.
+
+    /**
+     * Whether or not the multiple requests in requestNetworkInfo() are currently
+     * being processed
+     */
+    this._processingNetworkInfo = false;
+
+    /**
+     * Pending messages to be send in batch from requestNetworkInfo()
+     */
+    this._pendingNetworkInfo = {rilMessageType: "networkinfochanged"};
+
+    /**
+     * Mute or unmute the radio.
+     */
+    this._muted = true;
+  },
+  
   get muted() {
     return this._muted;
   },
@@ -1308,6 +1329,7 @@ let RIL = {
       function add(contact) {
         this.iccInfo.adn.push(contact);
       };
+
       function finish() {
         if (DEBUG) {
           for (let i = 0; i < this.iccInfo.adn.length; i++) {
@@ -1315,12 +1337,19 @@ let RIL = {
                                 " number = " + this.iccInfo.adn[i].number);
           }
         }
-        this.sendDOMMessage({rilMessageType: "icccontacts",
-                             contactType: "ADN",
-                             contacts: this.iccInfo.adn,
-                             requestId: options.requestId});
+        options.rilMessageType = "icccontacts";
+        options.contactType = "ADN";
+        options.contacts = this.iccInfo.adn,
+        this.sendDOMMessage(options);
       };
       this.parseDiallingNumber(options, add, finish);
+    }
+
+    function error(options) {
+      options.rilMessageType = "icccontacts";
+      options.contactType = "ADN";
+      options.contacts = [];
+      this.sendDOMMessage(options);
     }
 
     this.iccInfo.adn = [];
@@ -1335,8 +1364,9 @@ let RIL = {
       pin2:      null,
       type:      EF_TYPE_LINEAR_FIXED,
       callback:  callback,
+      onerror:   error
       loadAll:   true,
-      requestId: options.requestId
+      requestId: options.requestId,
     });
   },
 
@@ -1400,7 +1430,33 @@ let RIL = {
   },
 
   /**
-   * Get ICC Phonebook.
+   * Get UICC Phonebook.
+   *
+   * @params type
+   *         "ADN" or "FDN".
+   */
+  getICCContacts: function getICCContacts(options) {
+    let type = options.type;
+    switch (type) {
+      case "ADN":
+        switch (this.appType) {
+          case CARD_APPTYPE_SIM:
+            options.fileId = ICC_EF_ADN;
+            this.getADN(options);
+            break;
+          case CARD_APPTYPE_USIM:
+            this.getPBR(options);
+            break;
+        }
+        break;
+      case "FDN":
+        this.getFDN(options);
+        break;
+    }
+  },
+
+  /**
+   * Get USIM Phonebook.
    *
    * @params requestId
    *         Request id from RadioInterfaceLayer.
@@ -1421,6 +1477,13 @@ let RIL = {
       Buf.readStringDelimiter(bufLen);
     }
 
+    function error(options) {
+      options.rilMessageType = "icccontacts";
+      options.contactType = "ADN";
+      options.contacts = [];
+      this.sendDOMMessage(options);
+    }
+
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_PBR,
@@ -1432,6 +1495,7 @@ let RIL = {
       pin2:      null,
       type:      EF_TYPE_LINEAR_FIXED,
       callback:  callback,
+      onerror:   error,
       requestId: options.requestId,
     });
   },
@@ -2178,6 +2242,7 @@ let RIL = {
     }
     // fetchICCRecords will need to read aid, so read aid here.
     this.aid = app.aid;
+    this.appType = app.app_type;
 
     let newCardState;
     switch (app.app_state) {
@@ -3115,6 +3180,8 @@ let RIL = {
   }
 };
 
+RIL.initRILState();
+
 RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
   if (options.rilRequestError) {
     return;
@@ -3503,6 +3570,13 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
   this[REQUEST_DATA_CALL_LIST](length, options);
 };
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
+  if (!length) {
+    if (options.onerror) {
+      options.onerror.call(this, options);
+    }
+    return;
+  }
+
   // Don't need to read rilRequestError since we can know error status from
   // sw1 and sw2.
   let sw1 = Buf.readUint32();
@@ -3514,6 +3588,9 @@ RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
       debug("ICC I/O Error EF id = " + options.fileId.toString(16) +
             " command = " + options.command.toString(16) +
             "(" + sw1.toString(16) + "/" + sw2.toString(16) + ")");
+    }
+    if (options.onerror) {
+      options.onerror.call(this, options);
     }
     return;
   }
@@ -3992,6 +4069,8 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
     debug("Detected RIL version " + version);
     debug("RILQUIRKS_V5_LEGACY is " + RILQUIRKS_V5_LEGACY);
   }
+
+  this.initRILState();
 };
 
 /**

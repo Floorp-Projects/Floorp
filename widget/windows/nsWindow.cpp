@@ -1369,8 +1369,12 @@ NS_METHOD nsWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
   ConstrainSize(&aWidth, &aHeight);
 
   // Avoid unnecessary resizing calls
-  if (mBounds.width == aWidth && mBounds.height == aHeight && !aRepaint)
+  if (mBounds.width == aWidth && mBounds.height == aHeight) {
+    if (aRepaint) {
+      Invalidate();
+    }
     return NS_OK;
+  }
 
 #ifdef MOZ_XUL
   if (eTransparencyTransparent == mTransparencyMode)
@@ -1409,8 +1413,12 @@ NS_METHOD nsWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeig
 
   // Avoid unnecessary resizing calls
   if (mBounds.x == aX && mBounds.y == aY &&
-      mBounds.width == aWidth && mBounds.height == aHeight && !aRepaint)
+      mBounds.width == aWidth && mBounds.height == aHeight) {
+    if (aRepaint) {
+      Invalidate();
+    }
     return NS_OK;
+  }
 
 #ifdef MOZ_XUL
   if (eTransparencyTransparent == mTransparencyMode)

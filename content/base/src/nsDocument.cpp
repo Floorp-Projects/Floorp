@@ -7681,7 +7681,7 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr)
   // which indicates that the "real" load has already started and
   // that we shouldn't preload it.
   int16_t blockingStatus;
-  if (nsContentUtils::IsImageInCache(uri) ||
+  if (nsContentUtils::IsImageInCache(uri, static_cast<nsIDocument *>(this)) ||
       !nsContentUtils::CanLoadImage(uri, static_cast<nsIDocument *>(this),
                                     this, NodePrincipal(), &blockingStatus)) {
     return;

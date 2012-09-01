@@ -164,7 +164,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearData", false);
-    Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
     Services.obs.addObserver(this, "Viewport:Flush", false);
@@ -2681,11 +2680,17 @@ Tab.prototype = {
         // pages have any privilege themselves.
         if (/^about:/.test(target.documentURI)) {
           this.browser.addEventListener("click", ErrorPageEventHandler, false);
-          this.browser.addEventListener("pagehide", function listener() {
+          let listener = function() {
             this.browser.removeEventListener("click", ErrorPageEventHandler, false);
             this.browser.removeEventListener("pagehide", listener, true);
-          }.bind(this), true);
+          }.bind(this);
+
+          this.browser.addEventListener("pagehide", listener, true);
         }
+
+        if (/^about:reader/.test(target.documentURI))
+          new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
+
         break;
       }
 
@@ -2934,14 +2939,6 @@ Tab.prototype = {
             tabID: this.id
           }
         });
-
-        if (/^about:reader/.test(aEvent.originalTarget.documentURI)) {
-          let aboutReader = new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
-          this.browser.addEventListener("pagehide", function listener() {
-            aboutReader.uninit();
-            this.browser.removeEventListener("pagehide", listener, true);
-          }.bind(this), true);
-        }
 
         // Once document is fully loaded, parse it
         Reader.parseDocumentFromTab(this.id, function (article) {
