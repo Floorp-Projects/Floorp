@@ -175,7 +175,7 @@ TypeInferenceOracle::getOsrTypes(jsbytecode *osrPc, Vector<MIRType> &slotTypes)
 
     // To determine the slot types at the OSR pc, we have to do a forward walk
     // over the bytecode to reconstruct the types.
-    while (pc < osrPc) {
+    for (;;) {
         Bytecode *opinfo = analysis->maybeCode(pc);
         if (opinfo) {
             if (opinfo->jumpTarget) {
@@ -195,6 +195,9 @@ TypeInferenceOracle::getOsrTypes(jsbytecode *osrPc, Vector<MIRType> &slotTypes)
                     slotTypeSets[slot] = analysis->pushedTypes(pc, 0);
             }
         }
+
+        if (pc == osrPc)
+            break;
 
         pc += GetBytecodeLength(pc);
     }
