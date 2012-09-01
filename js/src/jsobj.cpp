@@ -2126,7 +2126,7 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type_, JSObject *paren
 
     JSObject *obj = JSObject::create(cx, kind, shape, type, slots);
     if (!obj) {
-        cx->free_(slots);
+        js_free(slots);
         return NULL;
     }
 
@@ -2650,9 +2650,9 @@ struct JSObject::TradeGutsReserved {
     ~TradeGutsReserved()
     {
         if (newaslots)
-            cx->free_(newaslots);
+            js_free(newaslots);
         if (newbslots)
-            cx->free_(newbslots);
+            js_free(newbslots);
     }
 };
 
@@ -2745,13 +2745,13 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
     unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan());
 
     if (adynamic) {
-        reserved.newaslots = (HeapSlot *) cx->malloc_(sizeof(HeapSlot) * adynamic);
+        reserved.newaslots = cx->pod_malloc<HeapSlot>(adynamic);
         if (!reserved.newaslots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(reserved.newaslots, adynamic);
     }
     if (bdynamic) {
-        reserved.newbslots = (HeapSlot *) cx->malloc_(sizeof(HeapSlot) * bdynamic);
+        reserved.newbslots = cx->pod_malloc<HeapSlot>(bdynamic);
         if (!reserved.newbslots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(reserved.newbslots, bdynamic);
@@ -2840,9 +2840,9 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
 
         /* Done with the dynamic slots. */
         if (a->hasDynamicSlots())
-            cx->free_(a->slots);
+            js_free(a->slots);
         if (b->hasDynamicSlots())
-            cx->free_(b->slots);
+            js_free(b->slots);
 
         void *apriv = a->hasPrivate() ? a->getPrivate() : NULL;
         void *bpriv = b->hasPrivate() ? b->getPrivate() : NULL;
@@ -3327,7 +3327,7 @@ JSObject::growSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
     }
 
     if (!oldCount) {
-        slots = (HeapSlot *) cx->malloc_(newCount * sizeof(HeapSlot));
+        slots = cx->pod_malloc<HeapSlot>(newCount);
         if (!slots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(slots, newCount);
@@ -3375,7 +3375,7 @@ JSObject::shrinkSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
     size_t newSize = oldSize - (oldCount - newCount) * sizeof(Value);
 
     if (newCount == 0) {
-        cx->free_(slots);
+        js_free(slots);
         slots = NULL;
         if (Probes::objectResizeActive())
             Probes::resizeObject(cx, this, oldSize, newSize);

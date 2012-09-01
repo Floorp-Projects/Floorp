@@ -306,7 +306,7 @@ class LifoAlloc
         return static_cast<T *>(alloc(sizeof(T)));
     }
 
-    JS_DECLARE_NEW_METHODS(alloc, JS_ALWAYS_INLINE)
+    JS_DECLARE_NEW_METHODS(new_, alloc, JS_ALWAYS_INLINE)
 };
 
 class LifoAllocScope

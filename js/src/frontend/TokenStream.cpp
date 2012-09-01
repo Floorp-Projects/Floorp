@@ -218,9 +218,9 @@ TokenStream::TokenStream(JSContext *cx, const CompileOptions &options,
 TokenStream::~TokenStream()
 {
     if (flags & TSF_OWNFILENAME)
-        cx->free_((void *) filename);
+        js_free((void *) filename);
     if (sourceMap)
-        cx->free_(sourceMap);
+        js_free(sourceMap);
     if (originPrincipals)
         JS_DropPrincipals(cx->runtime, originPrincipals);
 }
@@ -441,19 +441,19 @@ CompileError::throwError()
 
 CompileError::~CompileError()
 {
-    cx->free_((void*)report.uclinebuf);
-    cx->free_((void*)report.linebuf);
-    cx->free_((void*)report.ucmessage);
-    cx->free_(message);
+    js_free((void*)report.uclinebuf);
+    js_free((void*)report.linebuf);
+    js_free((void*)report.ucmessage);
+    js_free(message);
     message = NULL;
 
     if (report.messageArgs) {
         if (hasCharArgs) {
             unsigned i = 0;
             while (report.messageArgs[i])
-                cx->free_((void*)report.messageArgs[i++]);
+                js_free((void*)report.messageArgs[i++]);
         }
-        cx->free_(report.messageArgs);
+        js_free(report.messageArgs);
     }
 
     PodZero(&report);
@@ -725,7 +725,7 @@ TokenStream::getXMLEntity()
     bytes = DeflateString(cx, bp + 1, (tb.end() - bp) - 1);
     if (bytes) {
         reportError(msg, bytes);
-        cx->free_(bytes);
+        js_free(bytes);
     }
     return false;
 }
@@ -1211,7 +1211,7 @@ TokenStream::getAtLine()
             if (c == EOF || c == '\n') {
                 if (i > 0) {
                     if (flags & TSF_OWNFILENAME)
-                        cx->free_((void *) filename);
+                        js_free((void *) filename);
                     filename = JS_strdup(cx, filenameBuf);
                     if (!filename)
                         return false;
@@ -1250,8 +1250,8 @@ TokenStream::getAtSourceMappingURL()
         size_t sourceMapLength = tokenbuf.length();
 
         if (sourceMap)
-            cx->free_(sourceMap);
-        sourceMap = static_cast<jschar *>(cx->malloc_(sizeof(jschar) * (sourceMapLength + 1)));
+            js_free(sourceMap);
+        sourceMap = cx->pod_malloc<jschar>(sourceMapLength + 1);
         if (!sourceMap)
             return false;
 

@@ -1560,7 +1560,7 @@ inline bool
 PreallocateObjectDynamicSlots(JSContext *cx, Shape *shape, HeapSlot **slots)
 {
     if (size_t count = JSObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan())) {
-        *slots = (HeapSlot *) cx->malloc_(count * sizeof(HeapSlot));
+        *slots = cx->pod_malloc<HeapSlot>(count);
         if (!*slots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(*slots, count);

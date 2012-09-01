@@ -3285,7 +3285,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         return JS_FALSE;
 
     char *filename = NULL;
-    AutoReleaseNullablePtr filenamep(cx, filename);
+    AutoReleaseNullablePtr filenamep(filename);
     uint32_t lineno = 1;
     bool loc = true;
 

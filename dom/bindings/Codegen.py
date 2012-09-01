@@ -3287,13 +3287,17 @@ class CGGetterCall(CGPerSignatureCall):
                                     attr, getter=True)
 
 class FakeArgument():
-    def __init__(self, type):
+    """
+    A class that quacks like an IDLArgument.  This is used to make
+    setters look like method calls or for special operations.
+    """
+    def __init__(self, type, interfaceMember):
         self.type = type
         self.optional = False
         self.variadic = False
         self.defaultValue = None
-        self.treatNullAs = "Default"
-        self.treatUndefinedAs = "Default"
+        self.treatNullAs = interfaceMember.treatNullAs
+        self.treatUndefinedAs = interfaceMember.treatUndefinedAs
 
 class CGSetterCall(CGPerSignatureCall):
     """
@@ -3301,7 +3305,8 @@ class CGSetterCall(CGPerSignatureCall):
     setter.
     """
     def __init__(self, argType, nativeMethodName, descriptor, attr):
-        CGPerSignatureCall.__init__(self, None, [], [FakeArgument(argType)],
+        CGPerSignatureCall.__init__(self, None, [],
+                                    [FakeArgument(argType, attr)],
                                     nativeMethodName, False, descriptor, attr,
                                     setter=True)
     def wrap_return_value(self):
@@ -4407,7 +4412,9 @@ class CGProxySpecialOperation(CGPerSignatureCall):
     def getArguments(self):
         args = [(a, a.identifier.name) for a in self.arguments]
         if self.idlNode.isGetter():
-            args.append((FakeArgument(BuiltinTypes[IDLBuiltinType.Types.boolean]), "found"))
+            args.append((FakeArgument(BuiltinTypes[IDLBuiltinType.Types.boolean],
+                                      self.idlNode),
+                         "found"))
         return args
 
     def wrap_return_value(self):
