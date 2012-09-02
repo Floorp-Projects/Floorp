@@ -900,7 +900,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         ArrayLength(sManagerProperties));
   } else {
 #ifdef DEBUG
-    nsCAutoString signalStr;
+    nsAutoCString signalStr;
     signalStr += dbus_message_get_member(aMsg);
     signalStr += " Signal not handled!";
     NS_WARNING(signalStr.get());

@@ -757,8 +757,8 @@ nsXBLBinding::GenerateAnonymousContent()
   // See if there's an includes attribute.
   if (nsContentUtils::HasNonEmptyAttr(content, kNameSpaceID_None,
                                       nsGkAtoms::includes)) {
-    nsCAutoString message("An XBL Binding with URI ");
-    nsCAutoString uri;
+    nsAutoCString message("An XBL Binding with URI ");
+    nsAutoCString uri;
     mPrototypeBinding->BindingURI()->GetSpec(uri);
     message += uri;
     message += " is still using the deprecated\n<content includes=\"\"> syntax! Use <children> instead!\n"; 
@@ -1338,7 +1338,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                             JSObject** aClassObject)
 {
   // First ensure our JS class is initialized.
-  nsCAutoString className(aClassName);
+  nsAutoCString className(aClassName);
   JSObject* parent_proto = nullptr;  // If we have an "obj" we can set this
   JSAutoRequest ar(cx);
 

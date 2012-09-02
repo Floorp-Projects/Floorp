@@ -329,7 +329,7 @@ CreateIFoo( IFoo** result )
 
 PLDHashOperator
 nsIEnumRead(const uint32_t& aKey, IFoo* aFoo, void* userArg) {
-  nsCAutoString str;
+  nsAutoCString str;
   aFoo->GetString(str);
 
   printf("  enumerated %u = \"%s\"\n", aKey, str.get());
@@ -338,7 +338,7 @@ nsIEnumRead(const uint32_t& aKey, IFoo* aFoo, void* userArg) {
 
 PLDHashOperator
 nsIEnum(const uint32_t& aKey, nsCOMPtr<IFoo>& aData, void* userArg) {
-  nsCAutoString str;
+  nsAutoCString str;
   aData->GetString(str);
 
   printf("  enumerated %u = \"%s\"\n", aKey, str.get());
@@ -347,7 +347,7 @@ nsIEnum(const uint32_t& aKey, nsCOMPtr<IFoo>& aData, void* userArg) {
 
 PLDHashOperator
 nsIEnum2Read(nsISupports* aKey, uint32_t aData, void* userArg) {
-  nsCAutoString str;
+  nsAutoCString str;
   nsCOMPtr<IFoo> foo = do_QueryInterface(aKey);
   foo->GetString(str);
 
@@ -358,7 +358,7 @@ nsIEnum2Read(nsISupports* aKey, uint32_t aData, void* userArg) {
 
 PLDHashOperator
 nsIEnum2(nsISupports* aKey, uint32_t& aData, void* userArg) {
-  nsCAutoString str;
+  nsAutoCString str;
   nsCOMPtr<IFoo> foo = do_QueryInterface(aKey);
   foo->GetString(str);
 
@@ -759,7 +759,7 @@ main(void) {
       exit (30);
     }
     
-    nsCAutoString str;
+    nsAutoCString str;
     myEnt->GetString(str);
     printf("Found %s\n", str.get());
   }
@@ -827,7 +827,7 @@ main(void) {
       exit (30);
     }
     
-    nsCAutoString str;
+    nsAutoCString str;
     myEnt->GetString(str);
     printf("Found %s\n", str.get());
   }

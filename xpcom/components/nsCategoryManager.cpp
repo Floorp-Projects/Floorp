@@ -758,7 +758,7 @@ NS_CreateServicesFromCategory(const char *category,
   bool hasMore;
   while (NS_SUCCEEDED(senumerator->HasMore(&hasMore)) && hasMore) {
     // From here on just skip any error we get.
-    nsCAutoString entryString;
+    nsAutoCString entryString;
     if (NS_FAILED(senumerator->GetNext(entryString)))
       continue;
       

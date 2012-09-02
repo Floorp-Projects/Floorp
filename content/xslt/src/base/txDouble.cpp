@@ -109,7 +109,7 @@ public:
         return mSign*PR_strtod(mBuffer.get(), 0);
     }
 private:
-    nsCAutoString mBuffer;
+    nsAutoCString mBuffer;
     enum {
         eWhitestart,
         eDecimal,

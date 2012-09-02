@@ -732,7 +732,7 @@ NS_IMETHODIMP
 nsJARChannel::SetAppURI(nsIURI *aURI) {
     NS_ENSURE_ARG_POINTER(aURI);
 
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     aURI->GetScheme(scheme);
     if (!scheme.EqualsLiteral("app")) {
         return NS_ERROR_INVALID_ARG;
@@ -791,13 +791,13 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
             // We only want to run scripts if the server really intended to
             // send us a JAR file.  Check the server-supplied content type for
             // a JAR type.
-            nsCAutoString header;
+            nsAutoCString header;
             httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Type"),
                                            header);
-            nsCAutoString contentType;
-            nsCAutoString charset;
+            nsAutoCString contentType;
+            nsAutoCString charset;
             NS_ParseContentType(header, contentType, charset);
-            nsCAutoString channelContentType;
+            nsAutoCString channelContentType;
             channel->GetContentType(channelContentType);
             mIsUnsafe = !(contentType.Equals(channelContentType) &&
                           (contentType.EqualsLiteral("application/java-archive") ||

@@ -80,7 +80,7 @@ static void
 LogDocURI(nsIDocument* aDocumentNode)
 {
   nsIURI* uri = aDocumentNode->GetDocumentURI();
-  nsCAutoString spec;
+  nsAutoCString spec;
   uri->GetSpec(spec);
   printf("uri: %s", spec.get());
 }
@@ -90,7 +90,7 @@ LogDocShellState(nsIDocument* aDocumentNode)
 {
   printf("docshell busy: ");
 
-  nsCAutoString docShellBusy;
+  nsAutoCString docShellBusy;
   nsCOMPtr<nsISupports> container = aDocumentNode->GetContainer();
   if (container) {
     nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
@@ -296,7 +296,7 @@ static void
 LogRequest(nsIRequest* aRequest)
 {
   if (aRequest) {
-    nsCAutoString name;
+    nsAutoCString name;
     aRequest->GetName(name);
     printf("    request spec: %s\n", name.get());
     uint32_t loadFlags = 0;
@@ -407,7 +407,7 @@ logging::DocLoad(const char* aMsg, nsIDocument* aDocumentNode)
 void
 logging::DocLoadEventFired(AccEvent* aEvent)
 {
-  nsCAutoString strEventType;
+  nsAutoCString strEventType;
   GetDocLoadEventType(aEvent, strEventType);
   if (!strEventType.IsEmpty())
     printf("  fire: %s\n", strEventType.get());
@@ -416,7 +416,7 @@ logging::DocLoadEventFired(AccEvent* aEvent)
 void
 logging::DocLoadEventHandled(AccEvent* aEvent)
 {
-  nsCAutoString strEventType;
+  nsAutoCString strEventType;
   GetDocLoadEventType(aEvent, strEventType);
   if (strEventType.IsEmpty())
     return;
@@ -574,11 +574,11 @@ logging::Node(const char* aDescr, nsINode* aNode)
 
   dom::Element* elm = aNode->AsElement();
 
-  nsCAutoString tag;
+  nsAutoCString tag;
   elm->Tag()->ToUTF8String(tag);
 
   nsIAtom* idAtom = elm->GetID();
-  nsCAutoString id;
+  nsAutoCString id;
   if (idAtom)
     idAtom->ToUTF8String(id);
 

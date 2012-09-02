@@ -36,7 +36,7 @@ CreateResetProfile(nsIToolkitProfileService* aProfileSvc, nsIToolkitProfile* *aN
 
   nsCOMPtr<nsIToolkitProfile> newProfile;
   // Make the new profile "default-" + the time in seconds since epoch for uniqueness.
-  nsCAutoString newProfileName("default-");
+  nsAutoCString newProfileName("default-");
   newProfileName.Append(nsPrintfCString("%lld", PR_Now() / 1000));
   nsresult rv = aProfileSvc->CreateProfile(nullptr, // choose a default dir for us
                                            nullptr, // choose a default dir for us

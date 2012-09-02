@@ -309,7 +309,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
     do_QueryInterface(nsContentUtils::GetDocumentFromContext());
 
   nsIURI *baseURI = mDocumentURI;
-  nsCAutoString charset;
+  nsAutoCString charset;
 
   if (callingDoc) {
     baseURI = callingDoc->GetDocBaseURI();
@@ -357,7 +357,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
 
     bool isChrome = false;
     if (NS_FAILED(uri->SchemeIs("chrome", &isChrome)) || !isChrome) {
-      nsCAutoString spec;
+      nsAutoCString spec;
       if (mDocumentURI)
         mDocumentURI->GetSpec(spec);
 
@@ -503,7 +503,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
 
   int32_t charsetSource = kCharsetFromDocTypeDefault;
-  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
+  nsAutoCString charset(NS_LITERAL_CSTRING("UTF-8"));
   TryChannelCharset(aChannel, charsetSource, charset, nullptr);
 
   nsCOMPtr<nsIURI> aUrl;

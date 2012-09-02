@@ -101,7 +101,7 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsCAutoString encodedData;
+  nsAutoCString encodedData;
   nsresult rv =
     Preferences::GetCString(MAC_OS_X_PAGE_SETUP_PREFNAME, &encodedData);
   if (NS_FAILED(rv)) {
@@ -139,7 +139,7 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
   if (err != noErr)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString encodedData;
+  nsAutoCString encodedData;
   encodedData.Adopt(PL_Base64Encode((char*)[data bytes], [data length], nullptr));
   if (!encodedData.get())
     return NS_ERROR_OUT_OF_MEMORY;

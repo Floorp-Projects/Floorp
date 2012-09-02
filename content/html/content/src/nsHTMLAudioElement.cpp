@@ -219,7 +219,7 @@ nsHTMLAudioElement::MozCurrentSampleOffset(uint64_t *aRetVal)
 
 nsresult nsHTMLAudioElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 {
-    nsCAutoString value(
+    nsAutoCString value(
 #ifdef MOZ_WEBM
       "audio/webm,"
 #endif

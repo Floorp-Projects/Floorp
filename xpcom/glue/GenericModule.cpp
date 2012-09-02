@@ -65,7 +65,7 @@ GenericModule::RegisterSelf(nsIComponentManager* aCompMgr,
     if (!catman)
       catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
 
-    nsCAutoString r;
+    nsAutoCString r;
     catman->AddCategoryEntry(e->category, e->entry, e->value, true, true,
                              getter_Copies(r));
   }

@@ -64,8 +64,8 @@ nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval)
     *_retval = false;
     return NS_OK;
   }
-  nsCAutoString service;
-  nsCAutoString method;
+  nsAutoCString service;
+  nsAutoCString method;
   
   nsresult rv = dbusHandlerApp->GetService(service);
   if (NS_FAILED(rv)) {
@@ -86,7 +86,7 @@ NS_IMETHODIMP
 nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
                                 nsIInterfaceRequestor *aWindowContext)
 {
-  nsCAutoString spec;
+  nsAutoCString spec;
   nsresult rv = aURI->GetAsciiSpec(spec);
   NS_ENSURE_SUCCESS(rv,rv);
   const char* uri = spec.get(); 

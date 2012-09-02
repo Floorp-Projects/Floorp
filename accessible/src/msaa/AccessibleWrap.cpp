@@ -1568,7 +1568,7 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
   NS_ENSURE_TRUE(hWnd, NS_ERROR_FAILURE);
 
   nsAutoString tag;
-  nsCAutoString id;
+  nsAutoCString id;
   nsIContent* cnt = accessible->GetContent();
   if (cnt) {
     cnt->Tag()->ToString(tag);
@@ -1678,7 +1678,7 @@ AccessibleWrap::ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
     if (!propElem)
       return E_FAIL;
 
-    nsCAutoString name;
+    nsAutoCString name;
     if (NS_FAILED(propElem->GetKey(name)))
       return E_FAIL;
 

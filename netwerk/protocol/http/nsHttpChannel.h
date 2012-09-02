@@ -121,7 +121,7 @@ public: /* internal necko use only */
       { mUploadStreamHasHeaders = hasHeaders; }
 
     nsresult SetReferrerInternal(nsIURI *referrer) {
-        nsCAutoString spec;
+        nsAutoCString spec;
         nsresult rv = referrer->GetAsciiSpec(spec);
         if (NS_FAILED(rv)) return rv;
         mReferrer = referrer;
@@ -256,7 +256,7 @@ private:
     // Ref RFC2616 13.10: "invalidation... MUST only be performed if
     // the host part is the same as in the Request-URI"
     inline bool HostPartIsTheSame(nsIURI *uri) {
-        nsCAutoString tmpHost1, tmpHost2;
+        nsAutoCString tmpHost1, tmpHost2;
         return (NS_SUCCEEDED(mURI->GetAsciiHost(tmpHost1)) &&
                 NS_SUCCEEDED(uri->GetAsciiHost(tmpHost2)) &&
                 (tmpHost1 == tmpHost2));

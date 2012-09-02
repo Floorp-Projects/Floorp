@@ -339,7 +339,7 @@ protected:
         mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
 
         if (!data) {
-            nsCAutoString failure;
+            nsAutoCString failure;
             failure += "Pixel buffer binding failed: ";
             failure.AppendPrintf("%dx%d\n", size.width, size.height);
             gfx::LogFailure(failure);

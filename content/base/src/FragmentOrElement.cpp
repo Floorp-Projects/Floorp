@@ -1697,7 +1697,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
     char name[512];
     uint32_t nsid = tmp->GetNameSpaceID();
     nsAtomCString localName(tmp->NodeInfo()->NameAtom());
-    nsCAutoString uri;
+    nsAutoCString uri;
     if (tmp->OwnerDoc()->GetDocumentURI()) {
       tmp->OwnerDoc()->GetDocumentURI()->GetSpec(uri);
     }

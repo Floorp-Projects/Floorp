@@ -1083,7 +1083,7 @@ Selection::ToStringWithFormat(const char* aFormatType, uint32_t aFlags,
                               int32_t aWrapCol, nsAString& aReturn)
 {
   nsresult rv = NS_OK;
-  nsCAutoString formatType( NS_DOC_ENCODER_CONTRACTID_BASE );
+  nsAutoCString formatType( NS_DOC_ENCODER_CONTRACTID_BASE );
   formatType.Append(aFormatType);
   nsCOMPtr<nsIDocumentEncoder> encoder =
            do_CreateInstance(formatType.get(), &rv);

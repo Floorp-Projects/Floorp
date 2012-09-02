@@ -136,7 +136,7 @@ ca_context_get_default()
 
     nsCOMPtr<nsIXULAppInfo> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
     if (appInfo) {
-        nsCAutoString version;
+        nsAutoCString version;
         appInfo->GetVersion(version);
 
         ca_context_change_props(ctx, "application.version", version.get(), NULL);
@@ -232,7 +232,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                 if (channel) {
                       channel->GetURI(getter_AddRefs(uri));
                       if (uri) {
-                            nsCAutoString uriSpec;
+                            nsAutoCString uriSpec;
                             uri->GetSpec(uriSpec);
                             printf("Failed to load %s\n", uriSpec.get());
                       }
@@ -288,7 +288,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCAutoString path;
+    nsAutoCString path;
     rv = canberraFile->GetNativePath(path);
     if (NS_FAILED(rv)) {
         return rv;
@@ -326,7 +326,7 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        nsCAutoString spec;
+        nsAutoCString spec;
         rv = aURL->GetSpec(spec);
         if (NS_FAILED(rv)) {
             return rv;

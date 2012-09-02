@@ -201,7 +201,7 @@ void
 TabParent::LoadURL(nsIURI* aURI)
 {
     if (!mShown) {
-      nsCAutoString spec;
+      nsAutoCString spec;
       if (aURI) {
         aURI->GetSpec(spec);
       }
@@ -915,7 +915,7 @@ TabParent::HandleDelayedDialogs()
                                 data->mName, data->mFeatures,
                                 params, mFrameElement);
     } else if (ww) {
-      nsCAutoString url;
+      nsAutoCString url;
       if (data->mType) {
         if (data->mType == nsIDialogCreator::SELECT_DIALOG) {
           url.Assign("chrome://global/content/selectDialog.xul");

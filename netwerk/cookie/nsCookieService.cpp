@@ -105,12 +105,12 @@ bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
 // struct for temporarily storing cookie attributes during header parsing
 struct nsCookieAttributes
 {
-  nsCAutoString name;
-  nsCAutoString value;
-  nsCAutoString host;
-  nsCAutoString path;
-  nsCAutoString expires;
-  nsCAutoString maxage;
+  nsAutoCString name;
+  nsAutoCString value;
+  nsAutoCString host;
+  nsAutoCString path;
+  nsAutoCString expires;
+  nsAutoCString maxage;
   int64_t expiryTime;
   bool isSession;
   bool isSecure;
@@ -191,7 +191,7 @@ LogFailure(bool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const c
   if (!PR_LOG_TEST(sCookieLog, PR_LOG_WARNING))
     return;
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   if (aHostURI)
     aHostURI->GetAsciiSpec(spec);
 
@@ -251,7 +251,7 @@ LogSuccess(bool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCooki
     return;
   }
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   if (aHostURI)
     aHostURI->GetAsciiSpec(spec);
 
@@ -332,7 +332,7 @@ public:
     aError->GetResult(&result);
 
 #ifdef PR_LOGGING
-    nsCAutoString message;
+    nsAutoCString message;
     aError->GetMessage(message);
     COOKIE_LOGSTRING(PR_LOG_WARNING,
       ("DBListenerErrorHandler::HandleError(): Error %d occurred while "
@@ -1420,7 +1420,7 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
   if (RequireThirdPartyCheck())
     mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
-  nsCAutoString result;
+  nsAutoCString result;
   GetCookieStringInternal(aHostURI, isForeign, aHttpBound, result);
   *aCookie = result.IsEmpty() ? nullptr : ToNewCString(result);
   return NS_OK;
@@ -1489,7 +1489,7 @@ nsCookieService::SetCookieStringInternal(nsIURI             *aHostURI,
   // scheme must have a non-empty host. A trailing dot in the host
   // is acceptable.
   bool requireHostMatch;
-  nsCAutoString baseDomain;
+  nsAutoCString baseDomain;
   nsresult rv = GetBaseDomain(aHostURI, baseDomain, requireHostMatch);
   if (NS_FAILED(rv)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, 
@@ -1693,13 +1693,13 @@ nsCookieService::Add(const nsACString &aHost,
   }
 
   // first, normalize the hostname, and fail if it contains illegal characters.
-  nsCAutoString host(aHost);
+  nsAutoCString host(aHost);
   nsresult rv = NormalizeHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get the base domain for the host URI.
   // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
-  nsCAutoString baseDomain;
+  nsAutoCString baseDomain;
   rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1733,11 +1733,11 @@ nsCookieService::Remove(const nsACString &aHost,
   }
 
   // first, normalize the hostname, and fail if it contains illegal characters.
-  nsCAutoString host(aHost);
+  nsAutoCString host(aHost);
   nsresult rv = NormalizeHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString baseDomain;
+  nsAutoCString baseDomain;
   rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2131,7 +2131,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
 
   static const char kTrue[] = "TRUE";
 
-  nsCAutoString buffer, baseDomain;
+  nsAutoCString buffer, baseDomain;
   bool isMore = true;
   int32_t hostIndex, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
   nsASingleFragmentCString::char_iterator iter;
@@ -2325,7 +2325,7 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
   // scheme must have a non-empty host. A trailing dot in the host
   // is acceptable.
   bool requireHostMatch;
-  nsCAutoString baseDomain, hostFromURI, pathFromURI;
+  nsAutoCString baseDomain, hostFromURI, pathFromURI;
   nsresult rv = GetBaseDomain(aHostURI, baseDomain, requireHostMatch);
   if (NS_SUCCEEDED(rv))
     rv = aHostURI->GetAsciiHost(hostFromURI);
@@ -3032,7 +3032,7 @@ nsresult
 nsCookieService::NormalizeHost(nsCString &aHost)
 {
   if (!IsASCII(aHost)) {
-    nsCAutoString host;
+    nsAutoCString host;
     nsresult rv = mIDNService->ConvertUTF8toACE(aHost, host);
     if (NS_FAILED(rv))
       return rv;
@@ -3126,7 +3126,7 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
                              bool                aRequireHostMatch)
 {
   // get host from aHostURI
-  nsCAutoString hostFromURI;
+  nsAutoCString hostFromURI;
   aHostURI->GetAsciiHost(hostFromURI);
 
   // if a domain is given, check the host has permission
@@ -3202,7 +3202,7 @@ nsCookieService::CheckPath(nsCookieAttributes &aCookieAttributes,
      * been disabled, unless we can evangelize these sites.
      */
     // get path from aHostURI
-    nsCAutoString pathFromURI;
+    nsAutoCString pathFromURI;
     if (NS_FAILED(aHostURI->GetPath(pathFromURI)) ||
         !StringBeginsWith(pathFromURI, aCookieAttributes.path)) {
       return false;
@@ -3496,7 +3496,7 @@ nsCookieService::CookieExists(nsICookie2 *aCookie,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCAutoString host, name, path;
+  nsAutoCString host, name, path;
   nsresult rv = aCookie->GetHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aCookie->GetName(name);
@@ -3504,7 +3504,7 @@ nsCookieService::CookieExists(nsICookie2 *aCookie,
   rv = aCookie->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString baseDomain;
+  nsAutoCString baseDomain;
   rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3555,11 +3555,11 @@ nsCookieService::CountCookiesFromHost(const nsACString &aHost,
   }
 
   // first, normalize the hostname, and fail if it contains illegal characters.
-  nsCAutoString host(aHost);
+  nsAutoCString host(aHost);
   nsresult rv = NormalizeHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString baseDomain;
+  nsAutoCString baseDomain;
   rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3583,11 +3583,11 @@ nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
   }
 
   // first, normalize the hostname, and fail if it contains illegal characters.
-  nsCAutoString host(aHost);
+  nsAutoCString host(aHost);
   nsresult rv = NormalizeHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString baseDomain;
+  nsAutoCString baseDomain;
   rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 

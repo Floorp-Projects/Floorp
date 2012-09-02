@@ -124,7 +124,7 @@ nsRDFDataSourceDataSource::Init(const char *uri)
 
   // cut off "rdf:datasource?"
   NS_NAMED_LITERAL_CSTRING(prefix, "rdf:datasource");
-  nsCAutoString mInnerURI;
+  nsAutoCString mInnerURI;
   mInnerURI = Substring(mURI, prefix.Length() + 1);
   // bail if datasorce is empty or we're trying to inspect ourself
   if (mInnerURI.IsEmpty() || mInnerURI == prefix) {

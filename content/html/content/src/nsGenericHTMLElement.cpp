@@ -2221,7 +2221,7 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
 
   nsresult result = NS_OK;
 
-  nsCAutoString key;
+  nsAutoCString key;
   nsCOMPtr<nsILayoutHistoryState> history = GetLayoutHistoryAndKey(aContent, false, key);
 
   if (history) {
@@ -2288,7 +2288,7 @@ bool
 nsGenericHTMLElement::RestoreFormControlState(nsGenericHTMLElement* aContent,
                                               nsIFormControl* aControl)
 {
-  nsCAutoString key;
+  nsAutoCString key;
   nsCOMPtr<nsILayoutHistoryState> history = GetLayoutHistoryAndKey(aContent, true, key);
   if (!history) {
     return false;
@@ -2952,7 +2952,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& 
     return NS_OK;
   }
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   uri->GetSpec(spec);
   CopyUTF8toUTF16(spec, aResult);
   return NS_OK;
@@ -3023,7 +3023,7 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
         nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
                                                   uriPart, doc, baseURI);
         if (attrURI) {
-          nsCAutoString spec;
+          nsAutoCString spec;
           attrURI->GetSpec(spec);
           AppendUTF8toUTF16(spec, aResult);
         } else {

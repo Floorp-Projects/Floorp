@@ -243,7 +243,7 @@ nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, bool* aExists)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsCAutoString key;
+  nsAutoCString key;
   rv = GetCacheKey(aURI, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -327,7 +327,7 @@ nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
   rv = NS_NewURI(getter_AddRefs(requestedURI), aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString scheme;
+  nsAutoCString scheme;
   rv = requestedURI->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -353,7 +353,7 @@ nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
     do_CreateInstance(NS_OFFLINECACHEUPDATE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString clientID;
+  nsAutoCString clientID;
   rv = appCache->GetClientID(clientID);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -387,7 +387,7 @@ nsDOMOfflineResourceList::MozRemove(const nsAString& aURI)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsCAutoString key;
+  nsAutoCString key;
   rv = GetCacheKey(aURI, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -753,7 +753,7 @@ nsDOMOfflineResourceList::GetCacheKey(nsIURI *aURI, nsCString &aKey)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // url fragments aren't used in cache keys
-  nsCAutoString::const_iterator specStart, specEnd;
+  nsAutoCString::const_iterator specStart, specEnd;
   aKey.BeginReading(specStart);
   aKey.EndReading(specEnd);
   if (FindCharInReadable('#', specStart, specEnd)) {

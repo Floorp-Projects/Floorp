@@ -150,7 +150,7 @@ nsHTMLVideoElement::GetAttributeMappingFunction() const
 
 nsresult nsHTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 {
-  nsCAutoString value(
+  nsAutoCString value(
 #ifdef MOZ_WEBM
       "video/webm,"
 #endif

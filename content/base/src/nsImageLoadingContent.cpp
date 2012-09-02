@@ -64,7 +64,7 @@ static void PrintReqURL(imgIRequest* req) {
     return;
   }
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   uri->GetSpec(spec);
   printf("spec='%s'\n", spec.get());
 }

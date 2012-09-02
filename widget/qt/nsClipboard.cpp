@@ -254,7 +254,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
     // Walk through flavors and see which flavor matches the one being pasted
     uint32_t flavorCount;
     flavorList->Count(&flavorCount);
-    nsCAutoString foundFlavor;
+    nsAutoCString foundFlavor;
 
     for (uint32_t i = 0; i < flavorCount; ++i)
     {
@@ -273,7 +273,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
             {
                 // Clipboard has text and flavor accepts text, so lets
                 // handle the data as text
-                foundFlavor = nsCAutoString(flavorStr);
+                foundFlavor = nsAutoCString(flavorStr);
 
                 // Get the text data from clipboard
                 QString text = mimeData->text();
@@ -300,7 +300,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
             {
                 // Clipboard has text/html and flavor accepts text/html, so lets
                 // handle the data as text/html
-                foundFlavor = nsCAutoString(flavorStr);
+                foundFlavor = nsAutoCString(flavorStr);
 
                 // Get the text data from clipboard
                 QString html = mimeData->html();

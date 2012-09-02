@@ -171,7 +171,7 @@ DeviceStorageFile::IsType(nsAString& aType)
   PRIntervalTime iStart = PR_IntervalNow();
 #endif
 
-  nsCAutoString mimeType;
+  nsAutoCString mimeType;
   nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID);
   if (!mimeService) {
     return false;

@@ -456,7 +456,7 @@ nsPrefetchService::ProcessNextURI()
 
 #if defined(PR_LOGGING)
         if (LOG_ENABLED()) {
-            nsCAutoString spec;
+            nsAutoCString spec;
             mCurrentNode->mURI->GetSpec(spec);
             LOG(("ProcessNextURI [%s]\n", spec.get()));
         }
@@ -642,7 +642,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
 
 #if defined(PR_LOGGING)
     if (LOG_ENABLED()) {
-        nsCAutoString spec;
+        nsAutoCString spec;
         aURI->GetSpec(spec);
         LOG(("PrefetchURI [%s]\n", spec.get()));
     }
@@ -691,7 +691,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     if (!aExplicit) {
         nsCOMPtr<nsIURL> url(do_QueryInterface(aURI, &rv));
         if (NS_FAILED(rv)) return rv;
-        nsCAutoString query;
+        nsAutoCString query;
         rv = url->GetQuery(query);
         if (NS_FAILED(rv) || !query.IsEmpty()) {
             LOG(("rejected: URL has a query string\n"));
@@ -787,7 +787,7 @@ nsPrefetchNode::GetSource(nsIDOMNode **aSource)
 NS_IMETHODIMP
 nsPrefetchNode::GetUri(nsAString &aURI)
 {
-    nsCAutoString spec;
+    nsAutoCString spec;
     nsresult rv = mURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -72,7 +72,7 @@ SVGPointList::SetValueFromString(const nsAString& aValue)
   nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
     tokenizer(aValue, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
 
-  nsCAutoString str1, str2;  // outside loop to minimize memory churn
+  nsAutoCString str1, str2;  // outside loop to minimize memory churn
 
   while (tokenizer.hasMoreTokens()) {
     CopyUTF16toUTF8(tokenizer.nextToken(), str1);

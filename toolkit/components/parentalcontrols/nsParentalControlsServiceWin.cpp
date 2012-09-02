@@ -187,7 +187,7 @@ nsParentalControlsServiceWin::RequestURIOverride(nsIURI *aTarget, nsIInterfaceRe
 
   NS_ENSURE_ARG_POINTER(aTarget);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   aTarget->GetSpec(spec);
   if (spec.IsEmpty())
     return NS_ERROR_INVALID_ARG;
@@ -244,7 +244,7 @@ nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfa
     hWnd = GetDesktopWindow();
 
   // The first entry should be the root uri
-  nsCAutoString rootSpec;
+  nsAutoCString rootSpec;
   nsCOMPtr<nsIURI> rootURI = do_QueryElementAt(aTargets, 0);
   if (!rootURI)
     return NS_ERROR_INVALID_ARG;
@@ -266,7 +266,7 @@ nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfa
     if (!uri)
       continue;
 
-    nsCAutoString subURI;
+    nsAutoCString subURI;
     if (NS_FAILED(uri->GetSpec(subURI)))
       continue;
 
@@ -301,7 +301,7 @@ nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfa
 void
 nsParentalControlsServiceWin::LogFileDownload(bool blocked, nsIURI *aSource, nsIFile *aTarget)
 {
-  nsCAutoString curi;
+  nsAutoCString curi;
 
   if (!gEventWrite)
     return;
@@ -313,7 +313,7 @@ nsParentalControlsServiceWin::LogFileDownload(bool blocked, nsIURI *aSource, nsI
 
   // Get the name of the currently running process
   nsCOMPtr<nsIXULAppInfo> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
-  nsCAutoString asciiAppName;
+  nsAutoCString asciiAppName;
   if (appInfo)
     appInfo->GetName(asciiAppName);
   nsAutoString appName = NS_ConvertUTF8toUTF16(asciiAppName);
