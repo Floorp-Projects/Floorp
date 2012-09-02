@@ -1006,7 +1006,7 @@ txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup)
     if (NS_FAILED(rv) && mObserver) {
         // This is most likely a network or security error, just
         // use the uri as context.
-        nsCAutoString spec;
+        nsAutoCString spec;
         aUri->GetSpec(spec);
         CopyUTF8toUTF16(spec, mSourceText);
         nsresult status = NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_XSLT ? rv :

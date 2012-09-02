@@ -607,7 +607,7 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
 
   nsCOMPtr<nsIXULRuntime> runtime = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (runtime) {
-    nsCAutoString os;
+    nsAutoCString os;
     DebugOnly<nsresult> rv = runtime->GetOS(os);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 

@@ -31,7 +31,7 @@ FileLocation::FileLocation(const FileLocation &file, const char *path)
       file.mBaseFile->GetParent(getter_AddRefs(cfile));
 
 #if defined(XP_WIN) || defined(XP_OS2)
-      nsCAutoString pathStr(path);
+      nsAutoCString pathStr(path);
       char *p;
       uint32_t len = pathStr.GetMutableData(&p);
       for (; len; ++p, --len) {

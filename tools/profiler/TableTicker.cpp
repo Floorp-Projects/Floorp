@@ -446,7 +446,7 @@ static JSBool
 WriteCallback(const jschar *buf, uint32_t len, void *data)
 {
   std::ofstream& stream = *static_cast<std::ofstream*>(data);
-  nsCAutoString profile = NS_ConvertUTF16toUTF8(buf, len);
+  nsAutoCString profile = NS_ConvertUTF16toUTF8(buf, len);
   stream << profile.Data();
   return JS_TRUE;
 }
@@ -475,7 +475,7 @@ public:
     tmpPath.AppendPrintf("/sdcard/profile_%i_%i.txt", XRE_GetProcessType(), getpid());
 #else
     nsCOMPtr<nsIFile> tmpFile;
-    nsCAutoString tmpPath;
+    nsAutoCString tmpPath;
     if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile)))) {
       LOG("Failed to find temporary directory.");
       return NS_ERROR_FAILURE;
@@ -569,7 +569,7 @@ JSObject* TableTicker::GetMetaJSObject(JSObjectBuilder& b)
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler> http = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);
   if (!NS_FAILED(res)) {
-    nsCAutoString string;
+    nsAutoCString string;
 
     res = http->GetPlatform(string);
     if (!NS_FAILED(res))
@@ -586,7 +586,7 @@ JSObject* TableTicker::GetMetaJSObject(JSObjectBuilder& b)
 
   nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
   if (runtime) {
-    nsCAutoString string;
+    nsAutoCString string;
 
     res = runtime->GetXPCOMABI(string);
     if (!NS_FAILED(res))
@@ -599,7 +599,7 @@ JSObject* TableTicker::GetMetaJSObject(JSObjectBuilder& b)
 
   nsCOMPtr<nsIXULAppInfo> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
   if (appInfo) {
-    nsCAutoString string;
+    nsAutoCString string;
 
     res = appInfo->GetName(string);
     if (!NS_FAILED(res))

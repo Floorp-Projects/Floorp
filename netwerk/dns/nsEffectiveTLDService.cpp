@@ -47,7 +47,7 @@ nsEffectiveTLDService::Init()
   for (uint32_t i = 0; i < ArrayLength(gEntries) - 1; i++) {
 #ifdef DEBUG
     nsDependentCString name(gEntries[i].domain);
-    nsCAutoString normalizedName(gEntries[i].domain);
+    nsAutoCString normalizedName(gEntries[i].domain);
     NS_ASSERTION(NS_SUCCEEDED(NormalizeHostname(normalizedName)),
                  "normalization failure!");
     NS_ASSERTION(name.Equals(normalizedName), "domain not normalized!");
@@ -71,7 +71,7 @@ nsEffectiveTLDService::GetPublicSuffix(nsIURI     *aURI,
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
   NS_ENSURE_ARG_POINTER(innerURI);
 
-  nsCAutoString host;
+  nsAutoCString host;
   nsresult rv = innerURI->GetAsciiHost(host);
   if (NS_FAILED(rv)) return rv;
 
@@ -91,7 +91,7 @@ nsEffectiveTLDService::GetBaseDomain(nsIURI     *aURI,
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
   NS_ENSURE_ARG_POINTER(innerURI);
 
-  nsCAutoString host;
+  nsAutoCString host;
   nsresult rv = innerURI->GetAsciiHost(host);
   if (NS_FAILED(rv)) return rv;
 
@@ -106,7 +106,7 @@ nsEffectiveTLDService::GetPublicSuffixFromHost(const nsACString &aHostname,
 {
   // Create a mutable copy of the hostname and normalize it to ACE.
   // This will fail if the hostname includes invalid characters.
-  nsCAutoString normHostname(aHostname);
+  nsAutoCString normHostname(aHostname);
   nsresult rv = NormalizeHostname(normHostname);
   if (NS_FAILED(rv)) return rv;
 
@@ -123,7 +123,7 @@ nsEffectiveTLDService::GetBaseDomainFromHost(const nsACString &aHostname,
 {
   // Create a mutable copy of the hostname and normalize it to ACE.
   // This will fail if the hostname includes invalid characters.
-  nsCAutoString normHostname(aHostname);
+  nsAutoCString normHostname(aHostname);
   nsresult rv = NormalizeHostname(normHostname);
   if (NS_FAILED(rv)) return rv;
 

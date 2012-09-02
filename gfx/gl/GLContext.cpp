@@ -2890,7 +2890,7 @@ GLContext::UseBlitProgram()
         NS_ASSERTION(success, "Shader compilation failed!");
 
         if (!success) {
-            nsCAutoString log;
+            nsAutoCString log;
             fGetShaderiv(shaders[i], LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
             log.SetCapacity(len);
             fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
@@ -2914,7 +2914,7 @@ GLContext::UseBlitProgram()
     NS_ASSERTION(success, "Shader linking failed!");
 
     if (!success) {
-        nsCAutoString log;
+        nsAutoCString log;
         fGetProgramiv(mBlitProgram, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
         log.SetCapacity(len);
         fGetProgramInfoLog(mBlitProgram, len, (GLint*) &len, (char*) log.BeginWriting());
@@ -2944,7 +2944,7 @@ GLContext::SetBlitFramebufferForDestTexture(GLuint aTexture)
 
     GLenum result = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (aTexture && (result != LOCAL_GL_FRAMEBUFFER_COMPLETE)) {
-        nsCAutoString msg;
+        nsAutoCString msg;
         msg.Append("Framebuffer not complete -- error 0x");
         msg.AppendInt(result, 16);
         // Note: if you are hitting this, it is likely that

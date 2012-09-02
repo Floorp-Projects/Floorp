@@ -254,7 +254,7 @@ moz_gtk_icon_size(const char *name)
 static int32_t
 GetIconSize(nsIMozIconURI *aIconURI)
 {
-  nsCAutoString iconSizeString;
+  nsAutoCString iconSizeString;
 
   aIconURI->GetIconSize(iconSizeString);
   if (iconSizeString.IsEmpty()) {
@@ -330,13 +330,13 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
   }
 
   uint32_t iconSize = GetIconSize(aIconURI);
-  nsCAutoString type;
+  nsAutoCString type;
   aIconURI->GetContentType(type);
 
   GnomeVFSFileInfo fileInfo = {0};
   fileInfo.refcount = 1; // In case some GnomeVFS function addrefs and releases it
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   nsCOMPtr<nsIURL> url;
   rv = aIconURI->GetIconURL(getter_AddRefs(url));
   if (url) {
@@ -353,7 +353,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
       // "Whenever we can detect the charset used for the URI type we try to
       //  convert it to/from utf8 automatically inside gnome-vfs."
       // I'll interpret that as "otherwise, this field is random junk".
-      nsCAutoString name;
+      nsAutoCString name;
       url->GetFileName(name);
       fileInfo.name = g_strdup(name.get());
 
@@ -367,7 +367,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
   if (type.IsEmpty()) {
     nsCOMPtr<nsIMIMEService> ms(do_GetService("@mozilla.org/mime;1"));
     if (ms) {
-      nsCAutoString fileExt;
+      nsAutoCString fileExt;
       aIconURI->GetFileExtension(fileExt);
       if (!fileExt.IsEmpty()) {
         ms->GetTypeFromExtension(fileExt, type);
@@ -435,7 +435,7 @@ nsIconChannel::InitWithGIO(nsIMozIconURI *aIconURI)
   // Get icon for file specified by URI
   if (fileURI) {
     bool isFile;
-    nsCAutoString spec;
+    nsAutoCString spec;
     fileURI->GetAsciiSpec(spec);
     if (NS_SUCCEEDED(fileURI->SchemeIs("file", &isFile)) && isFile) {
       GFile *file = g_file_new_for_uri(spec.get());
@@ -455,13 +455,13 @@ nsIconChannel::InitWithGIO(nsIMozIconURI *aIconURI)
   
   // Try to get icon by using MIME type
   if (!icon) {
-    nsCAutoString type;
+    nsAutoCString type;
     aIconURI->GetContentType(type);
     // Try to get MIME type from file extension by using nsIMIMEService
     if (type.IsEmpty()) {
       nsCOMPtr<nsIMIMEService> ms(do_GetService("@mozilla.org/mime;1"));
       if (ms) {
-        nsCAutoString fileExt;
+        nsAutoCString fileExt;
         aIconURI->GetFileExtension(fileExt);
         ms->GetTypeFromExtension(fileExt, type);
       }
@@ -525,7 +525,7 @@ nsIconChannel::Init(nsIURI* aURI)
   nsCOMPtr<nsIMozIconURI> iconURI = do_QueryInterface(aURI);
   NS_ASSERTION(iconURI, "URI is not an nsIMozIconURI");
 
-  nsCAutoString stockIcon;
+  nsAutoCString stockIcon;
   iconURI->GetStockIcon(stockIcon);
   if (stockIcon.IsEmpty()) {
 #ifdef MOZ_ENABLE_GNOMEUI
@@ -540,10 +540,10 @@ nsIconChannel::Init(nsIURI* aURI)
   }
 
   // Search for stockIcon
-  nsCAutoString iconSizeString;
+  nsAutoCString iconSizeString;
   iconURI->GetIconSize(iconSizeString);
 
-  nsCAutoString iconStateString;
+  nsAutoCString iconStateString;
   iconURI->GetIconState(iconStateString);
 
   GtkIconSize icon_size = moz_gtk_icon_size(iconSizeString.get());
@@ -559,7 +559,7 @@ nsIconChannel::Init(nsIURI* aURI)
   }
 
   bool forceDirection = direction != GTK_TEXT_DIR_NONE;
-  nsCAutoString stockID;
+  nsAutoCString stockID;
   bool useIconName = false;
   if (!forceDirection) {
     direction = gtk_widget_get_default_direction();

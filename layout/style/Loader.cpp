@@ -271,7 +271,7 @@ static PRLogModuleInfo *gLoaderLog = PR_NewLogModule("nsCSSLoader");
   PR_BEGIN_MACRO                                    \
     NS_ASSERTION(uri, "Logging null uri");          \
     if (LOG_ENABLED()) {                            \
-      nsCAutoString _logURISpec;                    \
+      nsAutoCString _logURISpec;                    \
       uri->GetSpec(_logURISpec);                    \
       LOG((format, _logURISpec.get()));             \
     }                                               \
@@ -670,7 +670,7 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
     pos += step;
   }
 
-  nsCAutoString charset;
+  nsAutoCString charset;
   while (pos < aDataLength) {
     if (aStyleSheetData[pos] == '"') {
       break;
@@ -894,7 +894,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     }
   }
 
-  nsCAutoString contentType;
+  nsAutoCString contentType;
   if (channel) {
     channel->GetContentType(contentType);
   }
@@ -929,7 +929,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
       errorFlag = nsIScriptError::errorFlag;
     }
 
-    nsCAutoString spec;
+    nsAutoCString spec;
     channelURI->GetSpec(spec);
 
     const nsAFlatString& specUTF16 = NS_ConvertUTF8toUTF16(spec);
@@ -1388,7 +1388,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   NS_ASSERTION(mLoadingDatas.IsInitialized(), "mLoadingDatas should be initialized by now.");
 
 #ifdef NS_FUNCTION_TIMER
-  nsCAutoString spec__("N/A");
+  nsAutoCString spec__("N/A");
   if (aLoadData->mURI) aLoadData->mURI->GetSpec(spec__);
   NS_TIME_FUNCTION_FMT("Loading stylesheet (url: %s, %ssync)",
                        spec__.get(), aLoadData->mSyncLoad ? "" : "a");
@@ -1622,7 +1622,7 @@ Loader::ParseSheet(const nsAString& aInput,
   NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
 
 #ifdef NS_FUNCTION_TIMER
-  nsCAutoString spec__("N/A");
+  nsAutoCString spec__("N/A");
   if (aLoadData->mURI) aLoadData->mURI->GetSpec(spec__);
   NS_TIME_FUNCTION_FMT("Parsing stylesheet (url: %s)", spec__.get());
 #endif

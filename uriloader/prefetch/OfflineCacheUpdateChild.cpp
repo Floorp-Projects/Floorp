@@ -158,7 +158,7 @@ OfflineCacheUpdateChild::AssociateDocument(nsIDOMDocument *aDocument,
     if (!existingCache) {
 #if defined(PR_LOGGING)
         if (LOG_ENABLED()) {
-            nsCAutoString clientID;
+            nsAutoCString clientID;
             if (aApplicationCache) {
                 aApplicationCache->GetClientID(clientID);
             }

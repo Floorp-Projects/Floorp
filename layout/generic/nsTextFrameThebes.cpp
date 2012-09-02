@@ -8343,7 +8343,7 @@ nsTextFrame::GetFrameName(nsAString& aResult) const
 {
   MakeFrameName(NS_LITERAL_STRING("Text"), aResult);
   int32_t totalContentLength;
-  nsCAutoString tmp;
+  nsAutoCString tmp;
   ToCString(tmp, &totalContentLength);
   tmp.SetLength(NS_MIN(tmp.Length(), 50u));
   aResult += NS_LITERAL_STRING("\"") + NS_ConvertASCIItoUTF16(tmp) + NS_LITERAL_STRING("\"");

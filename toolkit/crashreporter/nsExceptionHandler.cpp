@@ -1127,9 +1127,9 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory,
   _wputenv(dataDirEnv.get());
 #else
   // Save this path in the environment for the crash reporter application.
-  nsCAutoString dataDirEnv("MOZ_CRASHREPORTER_DATA_DIRECTORY=");
+  nsAutoCString dataDirEnv("MOZ_CRASHREPORTER_DATA_DIRECTORY=");
 
-  nsCAutoString dataDirectoryPath;
+  nsAutoCString dataDirectoryPath;
   rv = dataDirectory->GetNativePath(dataDirectoryPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1141,7 +1141,7 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory,
   PR_SetEnv(env);
 #endif
 
-  nsCAutoString data;
+  nsAutoCString data;
   if(NS_SUCCEEDED(GetOrInit(dataDirectory,
                             NS_LITERAL_CSTRING("InstallTime") + aBuildID,
                             data, InitInstallTime)))
@@ -1174,7 +1174,7 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory,
   if (filename.Length() < XP_PATH_MAX)
     wcsncpy(lastCrashTimeFilename, filename.get(), filename.Length());
 #else
-  nsCAutoString filename;
+  nsAutoCString filename;
   rv = lastCrashFile->GetNativePath(filename);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1200,7 +1200,7 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory,
       wcsncpy(crashMarkerFilename, markerFilename.get(),
               markerFilename.Length());
 #else
-    nsCAutoString markerFilename;
+    nsAutoCString markerFilename;
     rv = markerFile->GetNativePath(markerFilename);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1456,7 +1456,7 @@ bool GetAnnotation(const nsACString& key, nsACString& data)
   if (!gExceptionHandler)
     return false;
 
-  nsCAutoString entry;
+  nsAutoCString entry;
   if (!crashReporterAPIData_Hash->Get(key, &entry))
     return false;
 
@@ -1513,7 +1513,7 @@ SetRestartArgs(int argc, char** argv)
     return NS_OK;
 
   int i;
-  nsCAutoString envVar;
+  nsAutoCString envVar;
   char *env;
   char *argv0 = getenv("MOZ_APP_LAUNCHER");
   for (i = 0; i < argc; i++) {
@@ -1574,7 +1574,7 @@ nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo)
 #ifdef XP_MACOSX
 nsresult AppendObjCExceptionInfoToAppNotes(void *inException)
 {
-  nsCAutoString excString;
+  nsAutoCString excString;
   GetObjCExceptionInfo(inException, excString);
   AppendAppNotesToCrashReport(excString);
   return NS_OK;
@@ -1597,7 +1597,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
     do_GetService("@mozilla.org/xre/app-info;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString appVendor, appName;
+  nsAutoCString appVendor, appName;
   rv = appinfo->GetVendor(appVendor);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = appinfo->GetName(appName);
@@ -1607,7 +1607,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
     (do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString regPath;
+  nsAutoCString regPath;
 
   regPath.AppendLiteral("Software\\");
 
@@ -1753,7 +1753,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
     return rv;
   }
   
-  nsCAutoString submitReportValue;
+  nsAutoCString submitReportValue;
   rv = iniParser->GetString(NS_LITERAL_CSTRING("Crash Reporter"),
                             NS_LITERAL_CSTRING("SubmitReport"),
                             submitReportValue);
@@ -2334,7 +2334,7 @@ CheckForLastRunCrash()
     return false;
   }
 
-  nsCAutoString lastMinidump_contents;
+  nsAutoCString lastMinidump_contents;
   if (NS_FAILED(GetFileContents(lastCrashFile, lastMinidump_contents))) {
     return false;
   }
@@ -2345,7 +2345,7 @@ CheckForLastRunCrash()
   nsDependentString lastMinidump(
       reinterpret_cast<const PRUnichar*>(lastMinidump_contents.get()));
 #else
-  nsCAutoString lastMinidump = lastMinidump_contents;
+  nsAutoCString lastMinidump = lastMinidump_contents;
 #endif
   nsCOMPtr<nsIFile> lastMinidumpFile;
   CreateFileFromPath(lastMinidump.get(),

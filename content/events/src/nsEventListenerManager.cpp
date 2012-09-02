@@ -632,7 +632,7 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
       if ( !inlineOK ) {
         // gather information to log with violation report
         nsIURI* uri = doc->GetDocumentURI();
-        nsCAutoString asciiSpec;
+        nsAutoCString asciiSpec;
         if (uri)
           uri->GetAsciiSpec(asciiSpec);
         nsAutoString scriptSample, attr, tagName(NS_LITERAL_STRING("UNKNOWN"));
@@ -753,7 +753,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     }
 
     uint32_t lineNo = 0;
-    nsCAutoString url (NS_LITERAL_CSTRING("-moz-evil:lying-event-listener"));
+    nsAutoCString url (NS_LITERAL_CSTRING("-moz-evil:lying-event-listener"));
     nsCOMPtr<nsIDocument> doc;
     if (content) {
       doc = content->OwnerDoc();

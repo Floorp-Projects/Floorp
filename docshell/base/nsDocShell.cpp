@@ -401,7 +401,7 @@ OnPingTimeout(nsITimer *timer, void *closure)
 static bool
 IsSameHost(nsIURI *uri1, nsIURI *uri2)
 {
-  nsCAutoString host1, host2;
+  nsAutoCString host1, host2;
   uri1->GetAsciiHost(host1);
   uri2->GetAsciiHost(host2);
   return host1.Equals(host2);
@@ -1280,7 +1280,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
 
 #if defined(PR_LOGGING) && defined(DEBUG)
     if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
-        nsCAutoString uristr;
+        nsAutoCString uristr;
         aURI->GetAsciiSpec(uristr);
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
                ("nsDocShell[%p]: loading %s with flags 0x%08x",
@@ -1842,7 +1842,7 @@ nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
 {
 #ifdef PR_LOGGING
     if (gDocShellLeakLog && PR_LOG_TEST(gDocShellLeakLog, PR_LOG_DEBUG)) {
-        nsCAutoString spec;
+        nsAutoCString spec;
         if (aURI)
             aURI->GetSpec(spec);
         PR_LogPrint("DOCSHELL %p SetCurrentURI %s\n", this, spec.get());
@@ -4025,8 +4025,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     bool addHostPort = false;
     nsresult rv = NS_OK;
     nsAutoString messageStr;
-    nsCAutoString cssClass;
-    nsCAutoString errorPage;
+    nsAutoCString cssClass;
+    nsAutoCString errorPage;
 
     errorPage.AssignLiteral("neterror");
 
@@ -4034,7 +4034,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     if (NS_ERROR_UNKNOWN_PROTOCOL == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
         // extract the scheme
-        nsCAutoString scheme;
+        nsAutoCString scheme;
         aURI->GetScheme(scheme);
         CopyASCIItoUTF16(scheme, formatStrs[0]);
         formatStrCount = 1;
@@ -4047,7 +4047,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     else if (NS_ERROR_UNKNOWN_HOST == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
         // Get the host
-        nsCAutoString host;
+        nsAutoCString host;
         nsCOMPtr<nsIURI> innermostURI = NS_GetInnermostURI(aURI);
         innermostURI->GetHost(host);
         CopyUTF8toUTF16(host, formatStrs[0]);
@@ -4067,7 +4067,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     else if (NS_ERROR_NET_TIMEOUT == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
         // Get the host
-        nsCAutoString host;
+        nsAutoCString host;
         aURI->GetHost(host);
         CopyUTF8toUTF16(host, formatStrs[0]);
         formatStrCount = 1;
@@ -4148,7 +4148,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             }
         }
     } else if (NS_ERROR_PHISHING_URI == aError || NS_ERROR_MALWARE_URI == aError) {
-        nsCAutoString host;
+        nsAutoCString host;
         aURI->GetHost(host);
         CopyUTF8toUTF16(host, formatStrs[0]);
         formatStrCount = 1;
@@ -4255,7 +4255,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     else {
         if (addHostPort) {
             // Build up the host:port string.
-            nsCAutoString hostport;
+            nsAutoCString hostport;
             if (aURI) {
                 aURI->GetHostPort(hostport);
             } else {
@@ -4264,7 +4264,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             CopyUTF8toUTF16(hostport, formatStrs[formatStrCount++]);
         }
 
-        nsCAutoString spec;
+        nsAutoCString spec;
         rv = NS_ERROR_NOT_AVAILABLE;
         if (aURI) {
             // displaying "file://" is aesthetically unpleasing and could even be
@@ -4276,7 +4276,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             else
                 aURI->GetSpec(spec);
 
-            nsCAutoString charset;
+            nsAutoCString charset;
             // unescape and convert from origin charset
             aURI->GetOriginCharset(charset);
             nsCOMPtr<nsITextToSubURI> textToSubURI(
@@ -4340,10 +4340,10 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
 {
 #if defined(PR_LOGGING) && defined(DEBUG)
     if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
-        nsCAutoString spec;
+        nsAutoCString spec;
         aURI->GetSpec(spec);
 
-        nsCAutoString chanName;
+        nsAutoCString chanName;
         if (aFailedChannel)
             aFailedChannel->GetName(chanName);
         else
@@ -4365,8 +4365,8 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
         mLSHE->AbandonBFCacheEntry();
     }
 
-    nsCAutoString url;
-    nsCAutoString charset;
+    nsAutoCString url;
+    nsAutoCString charset;
     if (aURI)
     {
         nsresult rv = aURI->GetSpec(url);
@@ -5694,7 +5694,7 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
     //            uriAttrib is empty or the URI specified
     MOZ_ASSERT(aPrincipal);
 
-    nsCAutoString uriAttrib;
+    nsAutoCString uriAttrib;
     int32_t seconds = 0;
     bool specifiesSeconds = false;
 
@@ -5890,7 +5890,7 @@ NS_IMETHODIMP nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
     nsresult rv;
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel, &rv));
     if (NS_SUCCEEDED(rv)) {
-        nsCAutoString refreshHeader;
+        nsAutoCString refreshHeader;
         rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("refresh"),
                                             refreshHeader);
 
@@ -6141,7 +6141,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
         nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
-        nsCAutoString aURI;
+        nsAutoCString aURI;
         uri->GetAsciiSpec(aURI);
 
         nsCOMPtr<nsIWyciwygChannel>  wcwgChannel(do_QueryInterface(aRequest));
@@ -6487,7 +6487,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
             //
             nsCOMPtr<nsIURI> newURI;
 
-            nsCAutoString oldSpec;
+            nsAutoCString oldSpec;
             url->GetSpec(oldSpec);
       
             //
@@ -6497,10 +6497,10 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                 bool keywordsEnabled =
                     Preferences::GetBool("keyword.enabled", false);
 
-                nsCAutoString host;
+                nsAutoCString host;
                 url->GetHost(host);
 
-                nsCAutoString scheme;
+                nsAutoCString scheme;
                 url->GetScheme(scheme);
 
                 int32_t dotLoc = host.FindChar('.');
@@ -6540,7 +6540,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                         // Since we don't have access to the exact original string
                         // that was entered by the user, this will just have to do.
                         bool isACE;
-                        nsCAutoString utf8Host;
+                        nsAutoCString utf8Host;
                         nsCOMPtr<nsIIDNService> idnSrv =
                             do_GetService(NS_IDNSERVICE_CONTRACTID);
                         if (idnSrv &&
@@ -6597,7 +6597,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                 bool sameURI = false;
                 url->Equals(newURI, &sameURI);
                 if (!sameURI) {
-                    nsCAutoString newSpec;
+                    nsAutoCString newSpec;
                     newURI->GetSpec(newSpec);
                     NS_ConvertUTF8toUTF16 newSpecW(newSpec);
 
@@ -6960,7 +6960,7 @@ nsDocShell::CaptureState()
 #ifdef DEBUG_PAGE_CACHE
     nsCOMPtr<nsIURI> uri;
     mOSHE->GetURI(getter_AddRefs(uri));
-    nsCAutoString spec;
+    nsAutoCString spec;
     if (uri)
         uri->GetSpec(spec);
     printf("Saving presentation into session history\n");
@@ -7120,7 +7120,7 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, bool *aRestoring)
     nsCOMPtr<nsIURI> uri;
     aSHEntry->GetURI(getter_AddRefs(uri));
 
-    nsCAutoString spec;
+    nsAutoCString spec;
     if (uri)
         uri->GetSpec(spec);
 #endif
@@ -7894,11 +7894,11 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                       NS_ERROR_FAILURE);
     nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
 
-    nsCAutoString defaultCharset;
-    nsCAutoString forceCharset;
-    nsCAutoString hintCharset;
+    nsAutoCString defaultCharset;
+    nsAutoCString forceCharset;
+    nsAutoCString hintCharset;
     int32_t hintCharsetSource;
-    nsCAutoString prevDocCharset;
+    nsAutoCString prevDocCharset;
     int32_t minFontSize;
     float textZoom;
     float pageZoom;
@@ -8293,7 +8293,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
 #ifdef PR_LOGGING
     if (gDocShellLeakLog && PR_LOG_TEST(gDocShellLeakLog, PR_LOG_DEBUG)) {
-        nsCAutoString spec;
+        nsAutoCString spec;
         if (aURI)
             aURI->GetSpec(spec);
         PR_LogPrint("DOCSHELL %p InternalLoad %s\n", this, spec.get());
@@ -8478,7 +8478,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
             nsDependentString name(aWindowTarget);
             nsCOMPtr<nsIDOMWindow> newWin;
-            nsCAutoString spec;
+            nsAutoCString spec;
             if (aURI)
                 aURI->GetSpec(spec);
             rv = win->OpenNoNavigate(NS_ConvertUTF8toUTF16(spec),
@@ -8638,7 +8638,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // Split mCurrentURI and aURI on the '#' character.  Make sure we read
         // the return values of SplitURIAtHash; if it fails, we don't want to
         // allow a short-circuited navigation.
-        nsCAutoString curBeforeHash, curHash, newBeforeHash, newHash;
+        nsAutoCString curBeforeHash, curHash, newBeforeHash, newHash;
         nsresult splitRv1, splitRv2;
         splitRv1 = mCurrentURI ?
             nsContentUtils::SplitURIAtHash(mCurrentURI,
@@ -9362,7 +9362,7 @@ AppendSegmentToString(nsIInputStream *in,
 {
     // aFromSegment now contains aCount bytes of data.
 
-    nsCAutoString *buf = static_cast<nsCAutoString *>(closure);
+    nsAutoCString *buf = static_cast<nsAutoCString *>(closure);
     buf->Append(fromRawSegment, count);
 
     // Indicate that we have consumed all of aFromSegment
@@ -9378,7 +9378,7 @@ nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData,
     NS_ENSURE_STATE(httpChannel);
 
     uint32_t numRead;
-    nsCAutoString headersString;
+    nsAutoCString headersString;
     nsresult rv = aHeadersData->ReadSegments(AppendSegmentToString,
                                              &headersString,
                                              PR_UINT32_MAX,
@@ -9386,8 +9386,8 @@ nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // used during the manipulation of the String from the InputStream
-    nsCAutoString headerName;
-    nsCAutoString headerValue;
+    nsAutoCString headerName;
+    nsAutoCString headerValue;
     int32_t crlf;
     int32_t colon;
 
@@ -9644,10 +9644,10 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
 
 #if defined(PR_LOGGING) && defined(DEBUG)
     if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
-        nsCAutoString spec;
+        nsAutoCString spec;
         aURI->GetSpec(spec);
 
-        nsCAutoString chanName;
+        nsAutoCString chanName;
         if (aChannel)
             aChannel->GetName(chanName);
         else
@@ -10023,10 +10023,10 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         if (!docBaseURI)
             return NS_ERROR_FAILURE;
 
-        nsCAutoString spec;
+        nsAutoCString spec;
         docBaseURI->GetSpec(spec);
 
-        nsCAutoString charset;
+        nsAutoCString charset;
         rv = docBaseURI->GetOriginCharset(charset);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
@@ -10056,7 +10056,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
             // It's very important that we check that newURI is of the same
             // origin as mCurrentURI, not docBaseURI, because a page can
             // set docBaseURI arbitrarily to any domain.
-            nsCAutoString currentUserPass, newUserPass;
+            nsAutoCString currentUserPass, newUserPass;
             NS_ENSURE_SUCCESS(mCurrentURI->GetUserPass(currentUserPass),
                               NS_ERROR_FAILURE);
             NS_ENSURE_SUCCESS(newURI->GetUserPass(newUserPass),
@@ -10223,7 +10223,7 @@ nsDocShell::ShouldAddToSessionHistory(nsIURI * aURI)
     // should just do a spec compare, rather than two gets of the scheme and
     // then the path.  -Gagan
     nsresult rv;
-    nsCAutoString buf, pref;
+    nsAutoCString buf, pref;
 
     rv = aURI->GetScheme(buf);
     if (NS_FAILED(rv))
@@ -10258,10 +10258,10 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
 
 #if defined(PR_LOGGING) && defined(DEBUG)
     if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
-        nsCAutoString spec;
+        nsAutoCString spec;
         aURI->GetSpec(spec);
 
-        nsCAutoString chanName;
+        nsAutoCString chanName;
         if (aChannel)
             aChannel->GetName(chanName);
         else
@@ -10443,7 +10443,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, uint32_t aLoadType)
     nsCOMPtr<nsIURI> uri;
     nsCOMPtr<nsIInputStream> postData;
     nsCOMPtr<nsIURI> referrerURI;
-    nsCAutoString contentType;
+    nsAutoCString contentType;
     nsCOMPtr<nsISupports> owner;
 
     NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
@@ -10940,7 +10940,7 @@ nsDocShell::ChannelIsPost(nsIChannel* aChannel)
         return false;
     }
 
-    nsCAutoString method;
+    nsAutoCString method;
     httpChannel->GetRequestMethod(method);
     return method.Equals("POST");
 }
@@ -11880,7 +11880,7 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
     nsCOMPtr<nsIExternalProtocolService> extProtService =
         do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
     if (extProtService) {
-      nsCAutoString scheme;
+      nsAutoCString scheme;
       aURI->GetScheme(scheme);
       if (!scheme.IsEmpty()) {
         // if the URL scheme does not correspond to an exposed protocol, then we
@@ -11926,7 +11926,7 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
   if (anchor) {
     anchor->GetType(typeHint);
     NS_ConvertUTF16toUTF8 utf8Hint(typeHint);
-    nsCAutoString type, dummy;
+    nsAutoCString type, dummy;
     NS_ParseContentType(utf8Hint, type, dummy);
     CopyUTF8toUTF16(type, typeHint);
   }
@@ -11985,11 +11985,11 @@ nsDocShell::OnOverLink(nsIContent* aContent,
     return rv;
 
   // use url origin charset to unescape the URL
-  nsCAutoString charset;
+  nsAutoCString charset;
   rv = aURI->GetOriginCharset(charset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 

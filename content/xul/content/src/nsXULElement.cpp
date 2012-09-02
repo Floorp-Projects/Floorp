@@ -2489,7 +2489,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
             return NS_ERROR_UNEXPECTED;
     }
 
-    nsCAutoString urlspec;
+    nsAutoCString urlspec;
     nsContentUtils::GetWrapperSafeScriptFilename(aDocument, aURI, urlspec);
 
     // Ok, compile it to create a prototype script object!

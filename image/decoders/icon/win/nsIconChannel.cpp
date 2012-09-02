@@ -310,7 +310,7 @@ nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
     nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString defFileExt;
+    nsAutoCString defFileExt;
     mimeService->GetPrimaryExtension(contentType, fileExt, defFileExt);
     // If the mime service does not know about this mime type, we show
     // the generic icon.
@@ -356,7 +356,7 @@ nsresult nsIconChannel::GetStockHIcon(nsIMozIconURI *aIconURI, HICON *hIcon)
   {
     uint32_t desiredImageSize;
     aIconURI->GetImageSize(&desiredImageSize);
-    nsCAutoString stockIcon;
+    nsAutoCString stockIcon;
     aIconURI->GetStockIcon(stockIcon);
 
     SHSTOCKICONID stockIconID = GetStockIconIDForName(stockIcon);
@@ -461,7 +461,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
   nsCOMPtr<nsIMozIconURI> iconURI(do_QueryInterface(mUrl, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString stockIcon;
+  nsAutoCString stockIcon;
   iconURI->GetStockIcon(stockIcon);
   if (!stockIcon.IsEmpty())
     rv = GetStockHIcon(iconURI, &hIcon);

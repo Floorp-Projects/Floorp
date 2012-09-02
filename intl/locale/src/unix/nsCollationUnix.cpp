@@ -88,7 +88,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      nsCAutoString mappedCharset;
+      nsAutoCString mappedCharset;
       res = platformCharset->GetDefaultCharsetForLocale(localeStr, mappedCharset);
       if (NS_SUCCEEDED(res)) {
         mCollation->SetCharset(mappedCharset.get());

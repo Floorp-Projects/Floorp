@@ -77,7 +77,7 @@ public:
     }
 
     PLDHashNumber GetHashCode() const {
-      nsCAutoString str;
+      nsAutoCString str;
       str.Assign(mHost);
       str.AppendInt(mAppId);
       str.AppendInt(static_cast<int32_t>(mIsInBrowserElement));

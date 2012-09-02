@@ -225,7 +225,7 @@ nsCertOverrideService::Read()
     return rv;
   }
 
-  nsCAutoString buffer;
+  nsAutoCString buffer;
   bool isMore = true;
   int32_t hostIndex = 0, algoIndex, fingerprintIndex, overrideBitsIndex, dbKeyIndex;
 
@@ -263,7 +263,7 @@ nsCertOverrideService::Read()
     const nsASingleFragmentCString &bits_string = Substring(buffer, overrideBitsIndex, dbKeyIndex - overrideBitsIndex - 1);
     const nsASingleFragmentCString &db_key = Substring(buffer, dbKeyIndex, buffer.Length() - dbKeyIndex);
 
-    nsCAutoString host(tmp);
+    nsAutoCString host(tmp);
     nsCertOverride::OverrideBits bits;
     nsCertOverride::convertStringToBits(bits_string, bits);
 
@@ -273,7 +273,7 @@ nsCertOverrideService::Read()
       continue; // Ignore broken entries
 
     nsresult portParseError;
-    nsCAutoString portString(Substring(host, portIndex+1));
+    nsAutoCString portString(Substring(host, portIndex+1));
     port = portString.ToInteger(&portParseError);
     if (NS_FAILED(portParseError))
       continue; // Ignore broken entries
@@ -305,7 +305,7 @@ WriteEntryCallback(nsCertOverrideEntry *aEntry,
     if (settings.mIsTemporary)
       return PL_DHASH_NEXT;
 
-    nsCAutoString bits_string;
+    nsAutoCString bits_string;
     nsCertOverride::convertBitsToString(settings.mOverrideBits, 
                                             bits_string);
 
@@ -504,7 +504,7 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, in
   }
   PR_FREEIF(nickname);
 
-  nsCAutoString fpStr;
+  nsAutoCString fpStr;
   nsresult rv = GetCertFingerprintByOidTag(nsscert, 
                   mOidTagForStoringNewHashes, fpStr);
   if (NS_FAILED(rv))
@@ -560,7 +560,7 @@ nsCertOverrideService::HasMatchingOverride(const nsACString & aHostName, int32_t
   *_retval = false;
   *aOverrideBits = nsCertOverride::ob_None;
 
-  nsCAutoString hostPort;
+  nsAutoCString hostPort;
   GetHostWithPort(aHostName, aPort, hostPort);
   nsCertOverride settings;
 
@@ -577,7 +577,7 @@ nsCertOverrideService::HasMatchingOverride(const nsACString & aHostName, int32_t
   *aOverrideBits = settings.mOverrideBits;
   *aIsTemporary = settings.mIsTemporary;
 
-  nsCAutoString fpStr;
+  nsAutoCString fpStr;
   nsresult rv;
 
   if (settings.mFingerprintAlgOID.Equals(mDottedOidForStoringNewHashes)) {
@@ -607,7 +607,7 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, int32_t
   *_found = false;
   *aOverrideBits = nsCertOverride::ob_None;
 
-  nsCAutoString hostPort;
+  nsAutoCString hostPort;
   GetHostWithPort(aHostName, aPort, hostPort);
   nsCertOverride settings;
 
@@ -640,7 +640,7 @@ nsCertOverrideService::AddEntryToList(const nsACString &aHostName, int32_t aPort
                                       nsCertOverride::OverrideBits ob,
                                       const nsACString &dbKey)
 {
-  nsCAutoString hostPort;
+  nsAutoCString hostPort;
   GetHostWithPort(aHostName, aPort, hostPort);
 
   {
@@ -676,7 +676,7 @@ nsCertOverrideService::ClearValidityOverride(const nsACString & aHostName, int32
     RemoveAllTemporaryOverrides();
     return NS_OK;
   }
-  nsCAutoString hostPort;
+  nsAutoCString hostPort;
   GetHostWithPort(aHostName, aPort, hostPort);
   {
     ReentrantMonitorAutoEnter lock(monitor);
@@ -771,7 +771,7 @@ FindMatchingCertCallback(nsCertOverrideEntry *aEntry,
     }
 
     if (still_ok && matchesDBKey(cai->cert, settings.mDBKey.get())) {
-      nsCAutoString cert_fingerprint;
+      nsAutoCString cert_fingerprint;
       nsresult rv;
       if (settings.mFingerprintAlgOID.Equals(cai->mDottedOidForStoringNewHashes)) {
         rv = GetCertFingerprintByOidTag(cai->cert,
@@ -841,7 +841,7 @@ EnumerateCertOverridesCallback(nsCertOverrideEntry *aEntry,
     }
     else {
       if (matchesDBKey(capac->cert, settings.mDBKey.get())) {
-        nsCAutoString cert_fingerprint;
+        nsAutoCString cert_fingerprint;
         nsresult rv;
         if (settings.mFingerprintAlgOID.Equals(capac->mDottedOidForStoringNewHashes)) {
           rv = GetCertFingerprintByOidTag(capac->cert,
@@ -884,7 +884,7 @@ nsCertOverrideService::EnumerateCertOverrides(nsIX509Cert *aCert,
 void
 nsCertOverrideService::GetHostWithPort(const nsACString & aHostName, int32_t aPort, nsACString& _retval)
 {
-  nsCAutoString hostPort(aHostName);
+  nsAutoCString hostPort(aHostName);
   if (aPort == -1) {
     aPort = 443;
   }

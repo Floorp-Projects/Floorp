@@ -48,7 +48,7 @@ ConvertLocaleToCharsetUsingDeprecatedConfig(const nsACString& locale,
                                             nsACString& oResult)
 {
   if (!(locale.IsEmpty())) {
-    nsCAutoString localeKey;
+    nsAutoCString localeKey;
     localeKey.AssignLiteral("locale.all.");
     localeKey.Append(locale);
     if (NS_SUCCEEDED(nsUConvPropertySearch::SearchPropertyValue(kUnixCharsets,
@@ -150,7 +150,7 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
   // try falling back on a deprecated (locale based) name
   //
   char* locale = setlocale(LC_CTYPE, nullptr);
-  nsCAutoString localeStr;
+  nsAutoCString localeStr;
   localeStr.Assign(locale);
   return ConvertLocaleToCharsetUsingDeprecatedConfig(localeStr, oString);
 }
@@ -215,7 +215,7 @@ nsPlatformCharset::VerifyCharset(nsCString &aCharset)
   // check if we recognize the charset string
   //
 
-  nsCAutoString result;
+  nsAutoCString result;
   res = charsetConverterManager->GetCharsetAlias(aCharset.get(), result);
   if (NS_FAILED(res)) {
     return res;

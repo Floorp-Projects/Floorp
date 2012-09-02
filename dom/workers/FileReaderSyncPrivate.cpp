@@ -194,7 +194,7 @@ FileReaderSyncPrivate::GuessCharset(nsIInputStream *aStream,
     const nsACString& detectorName = runtime->GetDetectorName();
 
     if (!detectorName.IsEmpty()) {
-      nsCAutoString detectorContractID;
+      nsAutoCString detectorContractID;
       detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
       detectorContractID += detectorName;
       detector = do_CreateInstance(detectorContractID.get());

@@ -1197,7 +1197,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
 {
   nsresult rv = NS_OK;
 
-  nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
+  nsAutoCString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
   LossyAppendUTF16toASCII(aFormatType, formatType);
   nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType.get(), &rv));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1270,7 +1270,7 @@ nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
     return rv;
   }
 
-  nsCAutoString charsetStr;
+  nsAutoCString charsetStr;
   rv = GetDocumentCharacterSet(charsetStr);
   if(NS_FAILED(rv) || charsetStr.IsEmpty())
     charsetStr.AssignLiteral("ISO-8859-1");

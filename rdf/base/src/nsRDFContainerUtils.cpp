@@ -124,7 +124,7 @@ RDFContainerUtilsImpl::IndexToOrdinalResource(int32_t aIndex, nsIRDFResource **a
     if (aIndex <= 0)
         return NS_ERROR_ILLEGAL_VALUE;
 
-    nsCAutoString uri(kRDFNameSpaceURI);
+    nsAutoCString uri(kRDFNameSpaceURI);
     uri.Append('_');
     uri.AppendInt(aIndex);
     

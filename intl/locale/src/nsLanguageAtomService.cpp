@@ -39,7 +39,7 @@ nsIAtom*
 nsLanguageAtomService::LookupLanguage(const nsACString &aLanguage,
                                       nsresult *aError)
 {
-  nsCAutoString lowered(aLanguage);
+  nsAutoCString lowered(aLanguage);
   ToLowerCase(lowered);
 
   nsCOMPtr<nsIAtom> lang = do_GetAtom(lowered);

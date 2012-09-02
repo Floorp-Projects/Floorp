@@ -1161,7 +1161,7 @@ nsPrintEngine::GetDocumentTitleAndURL(nsIDocument* aDoc,
 
   if (!exposableURI) return;
 
-  nsCAutoString urlCStr;
+  nsAutoCString urlCStr;
   exposableURI->GetSpec(urlCStr);
 
   nsresult rv;
@@ -1507,7 +1507,7 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, bool aIsPrinting)
 
   PR_PL(("nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError=%lx, bool aIsPrinting=%d)\n", (long)aPrintError, (int)aIsPrinting));
 
-  nsCAutoString stringName;
+  nsAutoCString stringName;
 
   switch(aPrintError)
   {

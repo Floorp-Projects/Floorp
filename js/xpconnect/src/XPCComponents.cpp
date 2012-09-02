@@ -77,7 +77,7 @@ char* xpc_CloneAllAccess()
 
 char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
 {
-    nsCAutoString asciiName;
+    nsAutoCString asciiName;
     CopyUTF16toUTF8(nsDependentString(wideName), asciiName);
 
     for (const char** p = list; *p; p++)
@@ -882,7 +882,7 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                 NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup) {
                 nsCOMPtr<nsISupportsCString> holder(do_QueryInterface(isup));
                 if (holder) {
-                    nsCAutoString name;
+                    nsAutoCString name;
                     if (NS_SUCCEEDED(holder->GetData(name))) {
                         JSString* idstr = JS_NewStringCopyN(cx, name.get(), name.Length());
                         if (idstr &&
@@ -3873,7 +3873,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
         return NS_ERROR_FAILURE;
     }
 
-    nsCAutoString filenameBuf;
+    nsAutoCString filenameBuf;
     if (!filename) {
         // Default to the spec of the principal.
         nsJSPrincipals::get(prin)->GetScriptLocation(filenameBuf);

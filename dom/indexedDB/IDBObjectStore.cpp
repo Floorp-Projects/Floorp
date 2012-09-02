@@ -3147,7 +3147,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     mKeyRange->GetBindingClause(keyValue, keyRangeClause);
   }
 
-  nsCAutoString directionClause;
+  nsAutoCString directionClause;
   switch (mDirection) {
     case IDBCursor::NEXT:
     case IDBCursor::NEXT_UNIQUE:
@@ -3202,7 +3202,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   // Now we need to make the query to get the next match.
   keyRangeClause.Truncate();
-  nsCAutoString continueToKeyRangeClause;
+  nsAutoCString continueToKeyRangeClause;
 
   NS_NAMED_LITERAL_CSTRING(currentKey, "current_key");
   NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
@@ -3653,7 +3653,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(lowerKeyName, "lower_key");
   NS_NAMED_LITERAL_CSTRING(upperKeyName, "upper_key");
 
-  nsCAutoString keyRangeClause;
+  nsAutoCString keyRangeClause;
   if (mKeyRange) {
     if (!mKeyRange->Lower().IsUnset()) {
       keyRangeClause = NS_LITERAL_CSTRING(" AND key_value");
@@ -3678,7 +3678,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
   }
 
-  nsCAutoString limitClause;
+  nsAutoCString limitClause;
   if (mLimit != PR_UINT32_MAX) {
     limitClause.AssignLiteral(" LIMIT ");
     limitClause.AppendInt(mLimit);
@@ -3886,7 +3886,7 @@ CountHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(lowerKeyName, "lower_key");
   NS_NAMED_LITERAL_CSTRING(upperKeyName, "upper_key");
 
-  nsCAutoString keyRangeClause;
+  nsAutoCString keyRangeClause;
   if (mKeyRange) {
     if (!mKeyRange->Lower().IsUnset()) {
       keyRangeClause = NS_LITERAL_CSTRING(" AND key_value");

@@ -887,7 +887,7 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t *data, uint32_t length, nsIInt
   
   nsNSSShutDownPreventionLock locker;
   PK11SlotInfo *slot;
-  nsCAutoString nickname;
+  nsAutoCString nickname;
   nsresult rv = NS_ERROR_FAILURE;
   int numCACerts;
   SECItem *CACerts;
@@ -1586,7 +1586,7 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
   if (NS_FAILED(rv))
     return;
 
-  nsCAutoString username;
+  nsAutoCString username;
   char *temp_un = CERT_GetCommonName(&cert->subject);
   if (temp_un) {
     username = temp_un;
@@ -1594,7 +1594,7 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
     temp_un = nullptr;
   }
 
-  nsCAutoString caname;
+  nsAutoCString caname;
   char *temp_ca = CERT_GetOrgName(&cert->issuer);
   if (temp_ca) {
     caname = temp_ca;
@@ -1606,7 +1606,7 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
   nssComponent->GetPIPNSSBundleString("nick_template", tmpNickFmt);
   NS_ConvertUTF16toUTF8 nickFmt(tmpNickFmt);
 
-  nsCAutoString baseName;
+  nsAutoCString baseName;
   char *temp_nn = PR_smprintf(nickFmt.get(), username.get(), caname.get());
   if (!temp_nn) {
     return;

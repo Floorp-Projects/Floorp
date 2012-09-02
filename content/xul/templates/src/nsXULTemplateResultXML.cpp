@@ -29,7 +29,7 @@ nsXULTemplateResultXML::nsXULTemplateResultXML(nsXMLQuery* aQuery,
     nsCOMPtr<nsIAtom> id = content->GetID();
     if (id) {
       nsCOMPtr<nsIURI> uri = content->GetBaseURI();
-      nsCAutoString spec;
+      nsAutoCString spec;
       uri->GetSpec(spec);
 
       mId = NS_ConvertUTF8toUTF16(spec);

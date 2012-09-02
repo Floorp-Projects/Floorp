@@ -665,13 +665,13 @@ nsContentUtils::URIIsChromeOrInPref(nsIURI *aURI, const char *aPref)
     return false;
   }
 
-  nsCAutoString scheme;
+  nsAutoCString scheme;
   aURI->GetScheme(scheme);
   if (scheme.EqualsLiteral("chrome")) {
     return true;
   }
 
-  nsCAutoString prePathUTF8;
+  nsAutoCString prePathUTF8;
   aURI->GetPrePath(prePathUTF8);
   NS_ConvertUTF8toUTF16 prePath(prePathUTF8);
 
@@ -3270,7 +3270,7 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   if (!aLineNumber) {
     JSContext *cx = nullptr;
     sThreadJSContextStack->Peek(&cx);
@@ -3359,7 +3359,7 @@ nsContentUtils::GetWrapperSafeScriptFilename(nsIDocument *aDocument,
       // followed by the string " -> " to the URI of the script we're
       // loading here so that script in that URI gets the same wrapper
       // automation that the chrome document expects.
-      nsCAutoString spec;
+      nsAutoCString spec;
       docURI->GetSpec(spec);
       spec.AppendASCII(" -> ");
       spec.Append(aScriptURI);
@@ -3701,7 +3701,7 @@ nsContentUtils::GuessCharset(const char *aData, uint32_t aDataLen,
     const nsAdoptingCString& detectorName =
       Preferences::GetLocalizedCString("intl.charset.detector");
     if (!detectorName.IsEmpty()) {
-      nsCAutoString detectorContractID;
+      nsAutoCString detectorContractID;
       detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
       detectorContractID += detectorName;
       detector = do_CreateInstance(detectorContractID.get());
@@ -4737,7 +4737,7 @@ nsContentUtils::GetLinkLocation(Element* aElement, nsString& aLocationString)
 {
   nsCOMPtr<nsIURI> hrefURI = aElement->GetHrefURI();
   if (hrefURI) {
-    nsCAutoString specUTF8;
+    nsAutoCString specUTF8;
     nsresult rv = hrefURI->GetSpec(specUTF8);
     if (NS_SUCCEEDED(rv))
       CopyUTF8toUTF16(specUTF8, aLocationString);
@@ -5528,7 +5528,7 @@ nsContentUtils::SplitURIAtHash(nsIURI *aURI,
 
   NS_ENSURE_ARG_POINTER(aURI);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 

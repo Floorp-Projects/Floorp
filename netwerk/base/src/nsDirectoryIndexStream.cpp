@@ -81,7 +81,7 @@ static int compare(nsIFile* aElement1, nsIFile* aElement2, void* aData)
         return Compare(name1, name2);
     }
 
-    nsCAutoString name1, name2;
+    nsAutoCString name1, name2;
     aElement1->GetNativeLeafName(name1);
     aElement2->GetNativeLeafName(name2);
 
@@ -101,7 +101,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-        nsCAutoString path;
+        nsAutoCString path;
         aDir->GetNativePath(path);
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("nsDirectoryIndexStream[%p]: initialized on %s",
@@ -153,7 +153,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 #endif
 
     mBuf.AppendLiteral("300: ");
-    nsCAutoString url;
+    nsAutoCString url;
     rv = net_GetURLSpecFromFile(aDir, url);
     if (NS_FAILED(rv)) return rv;
     mBuf.Append(url);
@@ -253,7 +253,7 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
 
 #ifdef PR_LOGGING
             if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-                nsCAutoString path;
+                nsAutoCString path;
                 current->GetNativePath(path);
                 PR_LOG(gLog, PR_LOG_DEBUG,
                        ("nsDirectoryIndexStream[%p]: iterated %s",
@@ -293,7 +293,7 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
                 if (!leafname.IsEmpty())
                     escaped = nsEscape(NS_ConvertUTF16toUTF8(leafname).get(), url_Path);
             } else {
-                nsCAutoString leafname;
+                nsAutoCString leafname;
                 rv = current->GetNativeLeafName(leafname);
                 if (NS_FAILED(rv)) return rv;
                 if (!leafname.IsEmpty())

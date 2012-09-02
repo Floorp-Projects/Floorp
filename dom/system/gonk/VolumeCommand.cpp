@@ -46,7 +46,7 @@ VolumeActionCommand::VolumeActionCommand(Volume *aVolume,
   : VolumeCommand(aCallback),
     mVolume(aVolume)
 {
-  nsCAutoString cmd;
+  nsAutoCString cmd;
 
   cmd = "volume ";
   cmd += aAction;
