@@ -98,7 +98,7 @@ main(int argc, char* argv[])
       return 1;
 	  }
 
-    nsCAutoString key;
+    nsAutoCString key;
     nsAutoString value;
 
     ret = propElem->GetKey(key);

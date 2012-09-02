@@ -267,7 +267,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     nsACString::const_iterator keyEnd(keyBegin);
     if (!FindCharInReadable(']', keyEnd, strEnd))
       return NS_ERROR_FAILURE;
-    nsCAutoString key(Substring(keyBegin, keyEnd));
+    nsAutoCString key(Substring(keyBegin, keyEnd));
     
     nsCOMPtr<nsIFile> fromFile;
     nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
@@ -323,7 +323,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsIFile> file = do_QueryInterface(aValue);
     if (!file)
       return NS_NOINTERFACE;
-    nsCAutoString descriptorString;
+    nsAutoCString descriptorString;
 
     rv = file->GetPersistentDescriptor(descriptorString);
     if (NS_SUCCEEDED(rv)) {
@@ -341,7 +341,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     relFilePref->GetFile(getter_AddRefs(file));
     if (!file)
       return NS_NOINTERFACE;
-    nsCAutoString relativeToKey;
+    nsAutoCString relativeToKey;
     (void) relFilePref->GetRelativeToKey(relativeToKey);
 
     nsCOMPtr<nsIFile> relativeToFile;
@@ -352,12 +352,12 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     if (NS_FAILED(rv))
       return rv;
 
-    nsCAutoString relDescriptor;
+    nsAutoCString relDescriptor;
     rv = file->GetRelativeDescriptor(relativeToFile, relDescriptor);
     if (NS_FAILED(rv))
       return rv;
     
-    nsCAutoString descriptorString;
+    nsAutoCString descriptorString;
     descriptorString.Append('[');
     descriptorString.Append(relativeToKey);
     descriptorString.Append(']');
@@ -624,7 +624,7 @@ nsresult nsPrefBranch::NotifyObserver(const char *newpref, void *data)
   // remove any root this string may contain so as to not confuse the observer
   // by passing them something other than what they passed us as a topic
   uint32_t len = pCallback->GetPrefBranch()->GetRootLength();
-  nsCAutoString suffix(newpref + len);
+  nsAutoCString suffix(newpref + len);
 
   observer->Observe(static_cast<nsIPrefBranch *>(pCallback->GetPrefBranch()),
                     NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,

@@ -283,7 +283,7 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
   rv = nsContentUtils::GetUTFOrigin(srcURI, origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   rv = srcURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -442,7 +442,7 @@ nsEventSource::OnStartRequest(nsIRequest *aRequest,
   rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString contentType;
+  nsAutoCString contentType;
   rv = httpChannel->GetContentType(contentType);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1111,7 +1111,7 @@ nsEventSource::PrintErrorOnConsole(const char *aBundleURI,
 nsresult
 nsEventSource::ConsoleError()
 {
-  nsCAutoString targetSpec;
+  nsAutoCString targetSpec;
   nsresult rv = mSrc->GetSpec(targetSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1234,7 +1234,7 @@ nsEventSource::CheckCanRequestSrc(nsIURI* aSrc)
                                  nsContentUtils::GetSecurityManager());
   isValidContentLoadPolicy = NS_SUCCEEDED(rv) && NS_CP_ACCEPTED(shouldLoad);
 
-  nsCAutoString targetURIScheme;
+  nsAutoCString targetURIScheme;
   rv = srcToTest->GetScheme(targetURIScheme);
   if (NS_SUCCEEDED(rv)) {
     // We only have the http support for now

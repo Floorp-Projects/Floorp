@@ -601,7 +601,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                  NotifyOperationType   aNotifyOperation,
                                  DBOperationType       aDBOperation)
 {
-  nsCAutoString host;
+  nsAutoCString host;
   nsresult rv = GetHostForPrincipal(aPrincipal, host);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -940,7 +940,7 @@ nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
   nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString host;
+  nsAutoCString host;
   rv = GetHostForPrincipal(aPrincipal, host);
 
   // No host doesn't mean an error. Just return the default. Unless this is
@@ -1147,7 +1147,7 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId)
   // remove those because doing so in EnumerateEntries() would fail because
   // we might happen to actually delete entries from the list.
 
-  nsCAutoString sql;
+  nsAutoCString sql;
   sql.AppendLiteral("DELETE FROM moz_hosts WHERE appId=");
   sql.AppendInt(aAppId);
 
@@ -1158,9 +1158,9 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId)
   mPermissionTable.EnumerateEntries(GetPermissionsForApp, &data);
 
   for (int32_t i=0; i<data.permissions.Count(); ++i) {
-    nsCAutoString host;
+    nsAutoCString host;
     bool isInBrowserElement;
-    nsCAutoString type;
+    nsAutoCString type;
 
     data.permissions[i]->GetHost(host);
     data.permissions[i]->GetIsInBrowserElement(&isInBrowserElement);
@@ -1293,7 +1293,7 @@ nsPermissionManager::Read()
   NS_ENSURE_SUCCESS(rv, rv);
 
   int64_t id;
-  nsCAutoString host, type;
+  nsAutoCString host, type;
   uint32_t permission;
   uint32_t expireType;
   int64_t expireTime;
@@ -1370,7 +1370,7 @@ nsPermissionManager::Import()
    * permission is an integer between 1 and 15
    */
 
-  nsCAutoString buffer;
+  nsAutoCString buffer;
   bool isMore = true;
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
     if (buffer.IsEmpty() || buffer.First() == '#') {

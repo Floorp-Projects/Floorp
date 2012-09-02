@@ -437,7 +437,7 @@ nsDOMFileReader::GetAsText(const nsACString &aCharset,
                            nsAString& aResult)
 {
   nsresult rv;
-  nsCAutoString charsetGuess;
+  nsAutoCString charsetGuess;
   if (!aCharset.IsEmpty()) {
     charsetGuess = aCharset;
   } else {
@@ -445,7 +445,7 @@ nsDOMFileReader::GetAsText(const nsACString &aCharset,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCAutoString charset;
+  nsAutoCString charset;
   rv = nsCharsetAlias::GetPreferred(charsetGuess, charset);
   NS_ENSURE_SUCCESS(rv, rv);
 

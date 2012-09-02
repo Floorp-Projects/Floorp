@@ -39,7 +39,7 @@ MySocketListener::OnSocketAccepted(nsIServerSocket *serv,
 {
     LOG(("MySocketListener::OnSocketAccepted [serv=%p trans=%p]\n", serv, trans));
 
-    nsCAutoString host;
+    nsAutoCString host;
     int32_t port;
 
     trans->GetHost(host);

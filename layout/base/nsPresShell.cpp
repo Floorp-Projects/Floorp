@@ -179,7 +179,7 @@
 
 #ifdef NS_FUNCTION_TIMER
 #define NS_TIME_FUNCTION_DECLARE_DOCURL                \
-  nsCAutoString docURL__("N/A");                       \
+  nsAutoCString docURL__("N/A");                       \
   nsIURI *uri__ = mDocument->GetDocumentURI();         \
   if (uri__) uri__->GetSpec(docURL__);
 #define NS_TIME_FUNCTION_WITH_DOCURL                   \
@@ -1638,7 +1638,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     if (mDocument) {
       nsIURI *uri = mDocument->GetDocumentURI();
       if (uri) {
-        nsCAutoString url;
+        nsAutoCString url;
         uri->GetSpec(url);
         printf("*** PresShell::InitialReflow (this=%p, url='%s')\n", (void*)this, url.get());
       }
@@ -2476,7 +2476,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
 {
 #ifdef NS_FUNCTION_TIMER
   NS_TIME_FUNCTION_DECLARE_DOCURL;
-  nsCAutoString frameType__("N/A");
+  nsAutoCString frameType__("N/A");
   nsIAtom *atomType__ = aFrame ? aFrame->GetType() : nullptr;
   if (atomType__) atomType__->ToUTF8String(frameType__);
   NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (document: %s, frame type: %s)", MOZ_FUNCTION_NAME,
@@ -7356,7 +7356,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 {
   NS_TIME_FUNCTION_WITH_DOCURL;
 
-  nsCAutoString docURL("N/A");
+  nsAutoCString docURL("N/A");
   nsIURI *uri = mDocument->GetDocumentURI();
   if (uri)
     uri->GetSpec(docURL);
@@ -8301,7 +8301,7 @@ void
 PresShell::DumpReflows()
 {
   if (mReflowCountMgr) {
-    nsCAutoString uriStr;
+    nsAutoCString uriStr;
     if (mDocument) {
       nsIURI *uri = mDocument->GetDocumentURI();
       if (uri) {

@@ -29,7 +29,7 @@ bool LoopInDir(nsIFile* file)
         if(!file)
             return false;
     
-        nsCAutoString name;
+        nsAutoCString name;
         if(NS_FAILED(file->GetNativeLeafName(name)))
             return false;
         

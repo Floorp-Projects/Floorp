@@ -1056,7 +1056,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, bool allowHidden,
         if (leafStr.IsEmpty())
             continue;
   
-        nsCAutoString           fullURI;
+        nsAutoCString           fullURI;
         fullURI.Assign(parentURI);
         if (fullURI.Last() != '/')
         {
@@ -1069,7 +1069,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, bool allowHidden,
         if (!escLeafStr)
             continue;
   
-        nsCAutoString           leaf(escLeafStr);
+        nsAutoCString           leaf(escLeafStr);
         NS_Free(escLeafStr);
         escLeafStr = nullptr;
 
@@ -1326,7 +1326,7 @@ FileSystemDataSource::getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL
     nsCOMPtr<nsILineInputStream> linereader = do_QueryInterface(strm, &rv);
 
     nsAutoString    line;
-    nsCAutoString   cLine;
+    nsAutoCString   cLine;
     while(NS_SUCCEEDED(rv))
     {
         bool    isEOF;

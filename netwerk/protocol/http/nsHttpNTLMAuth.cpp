@@ -92,7 +92,7 @@ MatchesBaseURI(const nsCSubstring &matchScheme,
 static bool
 IsNonFqdn(nsIURI *uri)
 {
-    nsCAutoString host;
+    nsAutoCString host;
     PRNetAddr addr;
 
     if (NS_FAILED(uri->GetAsciiHost(host)))
@@ -110,7 +110,7 @@ TestPref(nsIURI *uri, const char *pref)
     if (!prefs)
         return false;
 
-    nsCAutoString scheme, host;
+    nsAutoCString scheme, host;
     int32_t port;
 
     if (NS_FAILED(uri->GetScheme(scheme)))
@@ -351,7 +351,7 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
     // initial challenge
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
         // NTLM service name format is 'HTTP@host' for both http and https
-        nsCAutoString serviceName, host;
+        nsAutoCString serviceName, host;
         rv = authChannel->GetAsciiHostForAuth(host);
         if (NS_FAILED(rv))
             return rv;

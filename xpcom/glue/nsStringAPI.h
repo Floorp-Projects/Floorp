@@ -1429,7 +1429,7 @@ ToNewUnicode(const nsAString& aStr)
 typedef nsString PromiseFlatString;
 typedef nsCString PromiseFlatCString;
 
-typedef nsCString nsCAutoString;
+typedef nsCString nsAutoCString;
 typedef nsString nsAutoString;
 
 NS_HIDDEN_(bool) ParseString(const nsACString& aAstring, char aDelimiter, 

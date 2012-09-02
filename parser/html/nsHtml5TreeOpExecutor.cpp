@@ -1036,7 +1036,7 @@ nsHtml5TreeOpExecutor::ConvertIfNotPreloadedYet(const nsAString& aURL)
     NS_WARNING("Failed to create a URI");
     return nullptr;
   }
-  nsCAutoString spec;
+  nsAutoCString spec;
   uri->GetSpec(spec);
   if (mPreloadedURLs.Contains(spec)) {
     return nullptr;

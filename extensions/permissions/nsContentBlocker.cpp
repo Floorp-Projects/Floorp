@@ -149,7 +149,7 @@ nsContentBlocker::ShouldLoad(uint32_t          aContentType,
   
   // we only want to check http, https, ftp
   // for chrome:// and resources and others, no need to check.
-  nsCAutoString scheme;
+  nsAutoCString scheme;
   aContentLocation->GetScheme(scheme);
   if (!scheme.LowerCaseEqualsLiteral("ftp") &&
       !scheme.LowerCaseEqualsLiteral("http") &&
@@ -287,7 +287,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
     
     // A more generic method somewhere would be nice
 
-    nsCAutoString currentHost;
+    nsAutoCString currentHost;
     rv = aCurrentURI->GetAsciiHost(currentHost);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -303,7 +303,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
     const nsCSubstring &tail =
       Substring(currentHost, dot, currentHost.Length() - dot);
 
-    nsCAutoString firstHost;
+    nsAutoCString firstHost;
     rv = aFirstURI->GetAsciiHost(firstHost);
     NS_ENSURE_SUCCESS(rv, rv);
 

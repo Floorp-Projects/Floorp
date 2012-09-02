@@ -31,7 +31,7 @@ public:
   // is there a PAC url specified in the system configuration
   bool IsAutoconfigEnabled() const;
   // retrieve the pac url
-  nsresult GetAutoconfigURL(nsCAutoString& aResult) const;
+  nsresult GetAutoconfigURL(nsAutoCString& aResult) const;
 
   // Find the SystemConfiguration proxy & port for a given URI
   nsresult FindSCProxyPort(nsIURI* aURI, nsACString& aResultHost, int32_t& aResultPort, bool& aResultSocksProxy);
@@ -209,7 +209,7 @@ nsOSXSystemProxySettings::IsAutoconfigEnabled() const
 }
 
 nsresult
-nsOSXSystemProxySettings::GetAutoconfigURL(nsCAutoString& aResult) const
+nsOSXSystemProxySettings::GetAutoconfigURL(nsAutoCString& aResult) const
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -228,8 +228,8 @@ nsOSXSystemProxySettings::GetAutoconfigURL(nsCAutoString& aResult) const
 static bool
 IsHostProxyEntry(const nsACString& aHost, const nsACString& aOverride)
 {
-  nsCAutoString host(aHost);
-  nsCAutoString override(aOverride);
+  nsAutoCString host(aHost);
+  nsAutoCString override(aOverride);
 
   int32_t overrideLength = override.Length();
   int32_t tokenStart = 0;
@@ -249,7 +249,7 @@ IsHostProxyEntry(const nsACString& aHost, const nsACString& aOverride)
     } else {
       if (tokenEnd == -1)
         tokenEnd = overrideLength; // no '*' char, match rest of string
-      nsCAutoString token(Substring(override, tokenStart, tokenEnd - tokenStart));
+      nsAutoCString token(Substring(override, tokenStart, tokenEnd - tokenStart));
       offset = host.Find(token, offset);
       if (offset == -1 || (!star && offset))
         return false;
@@ -276,7 +276,7 @@ nsOSXSystemProxySettings::IsInExceptionList(const nsACString& aHost) const
   NSString* currentValue = NULL;
   while ((currentValue = [exceptionEnumerator nextObject])) {
     NS_ENSURE_TRUE([currentValue isKindOfClass:[NSString class]], false);
-    nsCAutoString overrideStr([currentValue UTF8String]);
+    nsAutoCString overrideStr([currentValue UTF8String]);
     if (IsHostProxyEntry(aHost, overrideStr))
       return true;
   }
@@ -291,7 +291,7 @@ nsOSXSystemProxySettings::GetPACURI(nsACString& aResult)
 
   NS_ENSURE_TRUE(mProxyDict != NULL, NS_ERROR_FAILURE);
 
-  nsCAutoString pacUrl;
+  nsAutoCString pacUrl;
   if (IsAutoconfigEnabled() && NS_SUCCEEDED(GetAutoconfigURL(pacUrl))) {
     aResult.Assign(pacUrl);
     return NS_OK;
@@ -307,12 +307,12 @@ nsOSXSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsCAutoString host;
+  nsAutoCString host;
   nsresult rv = aURI->GetHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t proxyPort;
-  nsCAutoString proxyHost;
+  nsAutoCString proxyHost;
   bool proxySocks;
   rv = FindSCProxyPort(aURI, proxyHost, proxyPort, proxySocks);
 

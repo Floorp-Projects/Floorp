@@ -94,7 +94,7 @@ imgRequest::imgRequest(imgLoader* aLoader) :
 imgRequest::~imgRequest()
 {
   if (mURI) {
-    nsCAutoString spec;
+    nsAutoCString spec;
     mURI->GetSpec(spec);
     LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::~imgRequest()", "keyuri", spec.get());
   } else
@@ -227,7 +227,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool 
     } 
 #if defined(PR_LOGGING)
     else {
-      nsCAutoString spec;
+      nsAutoCString spec;
       mURI->GetSpec(spec);
       LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy no cache entry", "uri", spec.get());
     }
@@ -392,7 +392,7 @@ void imgRequest::UpdateCacheEntrySize()
     mCacheEntry->SetDataSize(mImage->SizeOfData());
 
 #ifdef DEBUG_joe
-    nsCAutoString url;
+    nsAutoCString url;
     mURI->GetSpec(url);
     printf("CACHEPUT: %d %s %d\n", time(NULL), url.get(), imageSize);
 #endif
@@ -435,7 +435,7 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
       }
 
       if (!bMustRevalidate) {
-        nsCAutoString cacheHeader;
+        nsAutoCString cacheHeader;
 
         httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"),
                                             cacheHeader);
@@ -1013,7 +1013,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     }
 
     /* set our content disposition as a property */
-    nsCAutoString disposition;
+    nsAutoCString disposition;
     if (chan) {
       chan->GetContentDispositionHeader(disposition);
     }
@@ -1064,7 +1064,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       imageFlags |= Image::INIT_FLAG_MULTIPART;
 
     // Get our URI string
-    nsCAutoString uriString;
+    nsAutoCString uriString;
     rv = mURI->GetSpec(uriString);
     if (NS_FAILED(rv))
       uriString.Assign("<unknown image URI>");
@@ -1083,7 +1083,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       /* Use content-length as a size hint for http channels. */
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
       if (httpChannel) {
-        nsCAutoString contentLength;
+        nsAutoCString contentLength;
         rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
                                             contentLength);
         if (NS_SUCCEEDED(rv)) {
@@ -1253,7 +1253,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   mNewRedirectChannel = nullptr;
 
 #if defined(PR_LOGGING)
-  nsCAutoString oldspec;
+  nsAutoCString oldspec;
   if (mCurrentURI)
     mCurrentURI->GetSpec(oldspec);
   LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "old", oldspec.get());

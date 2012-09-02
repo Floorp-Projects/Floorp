@@ -620,7 +620,7 @@ nsJSONListener::ProcessBytes(const char* aBuffer, uint32_t aByteLength)
 {
   nsresult rv;
   // Check for BOM, or sniff charset
-  nsCAutoString charset;
+  nsAutoCString charset;
   if (mNeedsConverter && !mDecoder) {
     if (!nsContentUtils::CheckForBOM((const unsigned char*) mSniffBuffer.get(),
                                       mSniffBuffer.Length(), charset)) {

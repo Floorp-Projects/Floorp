@@ -88,12 +88,12 @@ __try {
   if (!uri)
     return S_FALSE;
 
-  nsCAutoString prePath;
+  nsAutoCString prePath;
   nsresult rv = uri->GetPrePath(prePath);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  nsCAutoString path;
+  nsAutoCString path;
   rv = uri->GetPath(path);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);

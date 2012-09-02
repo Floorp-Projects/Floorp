@@ -44,7 +44,7 @@ nsAlertsImageLoadListener::OnStreamComplete(nsIStreamLoader* aLoader,
       nsCOMPtr<nsIURI> uri;
       channel->GetURI(getter_AddRefs(uri));
       if (uri) {
-        nsCAutoString uriSpec;
+        nsAutoCString uriSpec;
         uri->GetSpec(uriSpec);
         printf("Failed to load %s\n", uriSpec.get());
       }

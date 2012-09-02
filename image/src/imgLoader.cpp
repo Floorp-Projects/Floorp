@@ -575,7 +575,7 @@ void imgCacheEntry::SetHasNoProxies(bool hasNoProxies)
 #if defined(PR_LOGGING)
   nsCOMPtr<nsIURI> uri;
   mRequest->GetURI(getter_AddRefs(uri));
-  nsCAutoString spec;
+  nsAutoCString spec;
   if (uri)
     uri->GetSpec(spec);
   if (hasNoProxies)
@@ -765,7 +765,7 @@ void imgCacheExpirationTracker::NotifyExpired(imgCacheEntry *entry)
   if (req) {
     nsCOMPtr<nsIURI> uri;
     req->GetURI(getter_AddRefs(uri));
-    nsCAutoString spec;
+    nsAutoCString spec;
     uri->GetSpec(spec);
     LOG_FUNC_WITH_PARAM(gImgLog, "imgCacheExpirationTracker::NotifyExpired", "entry", spec.get());
   }
@@ -971,7 +971,7 @@ NS_IMETHODIMP imgLoader::RemoveEntry(nsIURI *uri)
 NS_IMETHODIMP imgLoader::FindEntryProperties(nsIURI *uri, nsIProperties **_retval)
 {
   nsRefPtr<imgCacheEntry> entry;
-  nsCAutoString spec;
+  nsAutoCString spec;
   imgCacheTable &cache = GetCache(uri);
 
   uri->GetSpec(spec);
@@ -1016,7 +1016,7 @@ bool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
 {
   imgCacheTable &cache = GetCache(key);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   key->GetSpec(spec);
 
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::PutIntoCache", "uri", spec.get());
@@ -1070,7 +1070,7 @@ bool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
 bool imgLoader::SetHasNoProxies(nsIURI *key, imgCacheEntry *entry)
 {
 #if defined(PR_LOGGING)
-  nsCAutoString spec;
+  nsAutoCString spec;
   key->GetSpec(spec);
 
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::SetHasNoProxies", "uri", spec.get());
@@ -1103,7 +1103,7 @@ bool imgLoader::SetHasProxies(nsIURI *key)
 
   imgCacheTable &cache = GetCache(key);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   key->GetSpec(spec);
 
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::SetHasProxies", "uri", spec.get());
@@ -1149,7 +1149,7 @@ void imgLoader::CheckCacheLimits(imgCacheTable &cache, imgCacheQueue &queue)
     if (req) {
       nsCOMPtr<nsIURI> uri;
       req->GetURI(getter_AddRefs(uri));
-      nsCAutoString spec;
+      nsAutoCString spec;
       uri->GetSpec(spec);
       LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::CheckCacheLimits", "entry", spec.get());
     }
@@ -1359,7 +1359,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
   }
 #if defined(PR_LOGGING)
   else if (!key) {
-    nsCAutoString spec;
+    nsAutoCString spec;
     aURI->GetSpec(spec);
 
     PR_LOG(gImgLog, PR_LOG_DEBUG,
@@ -1407,7 +1407,7 @@ bool imgLoader::RemoveFromCache(nsIURI *aKey)
   imgCacheTable &cache = GetCache(aKey);
   imgCacheQueue &queue = GetCacheQueue(aKey);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   aKey->GetSpec(spec);
 
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::RemoveFromCache", "uri", spec.get());
@@ -1446,7 +1446,7 @@ bool imgLoader::RemoveFromCache(imgCacheEntry *entry)
     if (NS_SUCCEEDED(request->GetURI(getter_AddRefs(key))) && key) {
       imgCacheTable &cache = GetCache(key);
       imgCacheQueue &queue = GetCacheQueue(key);
-      nsCAutoString spec;
+      nsAutoCString spec;
       key->GetSpec(spec);
 
       LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::RemoveFromCache", "entry's uri", spec.get());
@@ -1545,7 +1545,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   if (!aURI)
     return NS_ERROR_NULL_POINTER;
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   aURI->GetSpec(spec);
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI", spec.get());
 
@@ -1821,7 +1821,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     // for correctly dealing with image load requests that are a result
     // of post data.
     imgCacheTable &cache = GetCache(uri);
-    nsCAutoString spec;
+    nsAutoCString spec;
 
     uri->GetSpec(spec);
 
@@ -1926,7 +1926,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, bool *_retval)
 {
   *_retval = false;
-  nsCAutoString mimeType(aMimeType);
+  nsAutoCString mimeType(aMimeType);
   ToLowerCase(mimeType);
   *_retval = (Image::GetDecoderType(mimeType.get()) == Image::eDecoderType_unknown)
     ? false : true;
@@ -2042,7 +2042,7 @@ NS_IMETHODIMP ProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *c
 
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (channel) {
-    nsCAutoString contentType;
+    nsAutoCString contentType;
     nsresult rv = channel->GetContentType(contentType);
 
     if (!contentType.IsEmpty()) {
@@ -2186,7 +2186,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   mRequest->GetURI(getter_AddRefs(uri));
 
 #if defined(PR_LOGGING)
-  nsCAutoString spec;
+  nsAutoCString spec;
   uri->GetSpec(spec);
   LOG_MSG_WITH_PARAM(gImgLog, "imgCacheValidator::OnStartRequest creating new request", "uri", spec.get());
 #endif

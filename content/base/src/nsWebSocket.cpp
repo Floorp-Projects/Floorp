@@ -189,7 +189,7 @@ nsWebSocket::ConsoleError()
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   nsresult rv;
 
-  nsCAutoString targetSpec;
+  nsAutoCString targetSpec;
   rv = mURI->GetSpec(targetSpec);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to get targetSpec");
@@ -948,17 +948,17 @@ nsWebSocket::ParseURL(const nsString& aURL)
   nsCOMPtr<nsIURL> parsedURL(do_QueryInterface(uri, &rv));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
-  nsCAutoString fragment;
+  nsAutoCString fragment;
   rv = parsedURL->GetRef(fragment);
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && fragment.IsEmpty(),
                  NS_ERROR_DOM_SYNTAX_ERR);
 
-  nsCAutoString scheme;
+  nsAutoCString scheme;
   rv = parsedURL->GetScheme(scheme);
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && !scheme.IsEmpty(),
                  NS_ERROR_DOM_SYNTAX_ERR);
 
-  nsCAutoString host;
+  nsAutoCString host;
   rv = parsedURL->GetAsciiHost(host);
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && !host.IsEmpty(), NS_ERROR_DOM_SYNTAX_ERR);
 
@@ -969,14 +969,14 @@ nsWebSocket::ParseURL(const nsString& aURL)
   rv = NS_CheckPortSafety(port, scheme.get());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
-  nsCAutoString filePath;
+  nsAutoCString filePath;
   rv = parsedURL->GetFilePath(filePath);
   if (filePath.IsEmpty()) {
     filePath.AssignLiteral("/");
   }
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
-  nsCAutoString query;
+  nsAutoCString query;
   rv = parsedURL->GetQuery(query);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
@@ -1093,7 +1093,7 @@ nsWebSocket::UpdateURI()
   nsresult rv = mChannel->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   rv = uri->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
   CopyUTF8toUTF16(spec, mEffectiveURL);
@@ -1342,7 +1342,7 @@ nsWebSocket::Close(uint16_t code, const nsAString & reason, uint8_t argc)
     closeCode = code;
   }
 
-  nsCAutoString closeReason;
+  nsAutoCString closeReason;
   if (argc >= 2) {
     CopyUTF16toUTF8(reason, closeReason);
 

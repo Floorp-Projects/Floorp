@@ -165,7 +165,7 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
     //if we see it, strip if off for this test...
 
     if(';'==aEntity.Last()) {
-      nsCAutoString temp(aEntity);
+      nsAutoCString temp(aEntity);
       temp.Truncate(aEntity.Length()-1);
       return EntityToUnicode(temp);
     }
@@ -183,7 +183,7 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
 
 int32_t 
 nsHTMLEntities::EntityToUnicode(const nsAString& aEntity) {
-  nsCAutoString theEntity; theEntity.AssignWithConversion(aEntity);
+  nsAutoCString theEntity; theEntity.AssignWithConversion(aEntity);
   if(';'==theEntity.Last()) {
     theEntity.Truncate(theEntity.Length()-1);
   }
@@ -228,9 +228,9 @@ public:
      }
 
      // Make sure we don't find things that aren't there
-     value = nsHTMLEntities::EntityToUnicode(nsCAutoString("@"));
+     value = nsHTMLEntities::EntityToUnicode(nsAutoCString("@"));
      NS_ASSERTION(value == -1, "found @");
-     value = nsHTMLEntities::EntityToUnicode(nsCAutoString("zzzzz"));
+     value = nsHTMLEntities::EntityToUnicode(nsAutoCString("zzzzz"));
      NS_ASSERTION(value == -1, "found zzzzz");
      nsHTMLEntities::ReleaseTable();
    }

@@ -72,7 +72,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, int32_t urlFactory = UR
     if (NS_SUCCEEDED(result))
     {
         nsCOMPtr<nsIURL> tURL = do_QueryInterface(pURL);
-        nsCAutoString temp;
+        nsAutoCString temp;
         int32_t port;
         nsresult rv;
 
@@ -223,11 +223,11 @@ nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
 
 
     // get the new spec
-    nsCAutoString newURL;
+    nsAutoCString newURL;
     status = baseURL->Resolve(nsDependentCString(relativePortion), newURL);
     if (NS_FAILED(status)) return status;
 
-    nsCAutoString temp;
+    nsAutoCString temp;
     baseURL->GetSpec(temp);
 
     printf("Analyzing %s\n", temp.get());

@@ -584,7 +584,7 @@ nsINode::GetDOMBaseURI(nsAString &aURI) const
 {
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   if (baseURI) {
     baseURI->GetSpec(spec);
   }

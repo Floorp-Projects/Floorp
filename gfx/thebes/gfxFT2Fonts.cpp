@@ -202,7 +202,7 @@ void gfxFT2FontGroup::GetPrefFonts(nsIAtom *aLangGroup, nsTArray<nsRefPtr<gfxFon
     NS_ASSERTION(aLangGroup, "aLangGroup is null");
     gfxToolkitPlatform *platform = gfxToolkitPlatform::GetPlatform();
     nsAutoTArray<nsRefPtr<gfxFontEntry>, 5> fonts;
-    nsCAutoString key;
+    nsAutoCString key;
     aLangGroup->ToUTF8String(key);
     key.Append("-");
     key.AppendInt(GetStyle()->style);
@@ -234,7 +234,7 @@ static int32_t GetCJKLangGroupIndex(const char *aLangGroup) {
 void gfxFT2FontGroup::GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList) {
     gfxToolkitPlatform *platform = gfxToolkitPlatform::GetPlatform();
 
-    nsCAutoString key("x-internal-cjk-");
+    nsAutoCString key("x-internal-cjk-");
     key.AppendInt(mStyle.style);
     key.Append("-");
     key.AppendInt(mStyle.weight);
@@ -258,7 +258,7 @@ void gfxFT2FontGroup::GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& aFontEn
                 const char *start = p;
                 while (++p != p_end && *p != kComma)
                     /* nothing */ ;
-                nsCAutoString lang(Substring(start, p));
+                nsAutoCString lang(Substring(start, p));
                 lang.CompressWhitespace(false, true);
                 int32_t index = GetCJKLangGroupIndex(lang.get());
                 if (index >= 0) {

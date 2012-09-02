@@ -48,7 +48,7 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *a
         nsCOMPtr<nsISupportsCString> category = do_QueryInterface(entry, &rv);
 
         if (NS_SUCCEEDED(rv)) {
-            nsCAutoString categoryEntry;
+            nsAutoCString categoryEntry;
             rv = category->GetData(categoryEntry);
 
             nsXPIDLCString contractId;
@@ -81,7 +81,7 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *a
                 }
                 else {
                   #ifdef DEBUG
-                    nsCAutoString warnStr("Cannot create startup observer : ");
+                    nsAutoCString warnStr("Cannot create startup observer : ");
                     warnStr += contractId.get();
                     NS_WARNING(warnStr.get());
                   #endif

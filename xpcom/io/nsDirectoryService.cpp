@@ -512,7 +512,7 @@ nsDirectoryService::RegisterCategoryProviders()
 
     bool more;
     while (NS_SUCCEEDED(strings->HasMore(&more)) && more) {
-        nsCAutoString entry;
+        nsAutoCString entry;
         strings->GetNext(entry);
 
         nsXPIDLCString contractID;

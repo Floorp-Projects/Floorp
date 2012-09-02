@@ -2142,7 +2142,7 @@ nsDOMWindowUtils::GoOnline()
   nsCOMPtr<nsIURI> documentURI;
   documentURI = doc->GetDocumentURI();
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   documentURI->GetSpec(spec);
   if (!StringBeginsWith(spec,  NS_LITERAL_CSTRING("about:neterror?")))
     return NS_ERROR_DOM_SECURITY_ERR;
