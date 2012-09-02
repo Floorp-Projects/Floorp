@@ -387,43 +387,33 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
     return;
   }
 
-  WillChange();
-
   Float width = aSurface->GetSize().width;
   Float height = aSurface->GetSize().height;
-  Rect extents(0, 0, width, height);
-
-  AlphaBoxBlur blur(extents, IntSize(0, 0),
-                    AlphaBoxBlur::CalculateBlurRadius(Point(aSigma, aSigma)),
-                    nullptr, nullptr);
-  if (!blur.GetData()) {
-    return;
-  }
-
-  IntSize blursize = blur.GetSize();
-  cairo_surface_t* blursurf = cairo_image_surface_create_for_data(blur.GetData(),
-                                                                  CAIRO_FORMAT_A8,
-                                                                  blursize.width,
-                                                                  blursize.height,
-                                                                  blur.GetStride());
-
-  ClearSurfaceForUnboundedSource(aOperator);
-  
-  // Draw the source surface into the surface we're going to blur.
+ 
   SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
   cairo_surface_t* surf = source->GetSurface();
+ 
+  cairo_surface_t* blursurf = cairo_image_surface_create(CAIRO_FORMAT_A8,
+                                                         width,
+                                                         height);
 
   cairo_t* ctx = cairo_create(blursurf);
   cairo_set_source_surface(ctx, surf, 0, 0);
-  IntRect blurrect = blur.GetRect();
   cairo_new_path(ctx);
-  cairo_rectangle(ctx, blurrect.x, blurrect.y, blurrect.width, blurrect.height);
+  cairo_rectangle(ctx, 0, 0, width, height);
   cairo_fill(ctx);
   cairo_destroy(ctx);
-
-  // Blur the result, then use that blurred result as a mask to draw the shadow
-  // colour to the surface.
+ 
+  Rect extents(0, 0, width, height);
+  AlphaBoxBlur blur(cairo_image_surface_get_data(blursurf),
+                    extents,
+                    cairo_image_surface_get_stride(blursurf),
+                    aSigma);
   blur.Blur();
+
+  WillChange();
+  ClearSurfaceForUnboundedSource(aOperator);
+  
   cairo_save(mContext);
   cairo_set_operator(mContext, GfxOpToCairoOp(aOperator));
   cairo_identity_matrix(mContext);
