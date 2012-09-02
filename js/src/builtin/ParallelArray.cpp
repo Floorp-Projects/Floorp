@@ -914,7 +914,10 @@ ParallelArrayObject::getParallelArrayElement(JSContext *cx, IndexInfo &iv, Mutab
     // copy is not observable by the user.
     uint32_t rowLength = iv.partialProducts[d - 1];
     uint32_t offset = base + iv.toScalar();
-    if (offset + rowLength > end) {
+
+    // Make sure both the start of the extent and the end of the extent are
+    // within bounds, in case one or both are 0.
+    if (offset >= end || offset + rowLength > end) {
         vp.setUndefined();
         return true;
     }
