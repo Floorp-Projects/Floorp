@@ -1206,8 +1206,6 @@ nsWebSocket::SetBinaryType(const nsAString& aBinaryType)
     mBinaryType = WS_BINARY_TYPE_ARRAYBUFFER;
   } else if (aBinaryType.EqualsLiteral("blob")) {
     mBinaryType = WS_BINARY_TYPE_BLOB;
-  } else  {
-    return NS_ERROR_INVALID_ARG;
   }
 
   return NS_OK;
