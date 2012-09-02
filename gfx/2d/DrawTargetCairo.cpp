@@ -11,6 +11,7 @@
 #include "ScaledFontBase.h"
 
 #include "cairo.h"
+#include "cairo-tee.h"
 #include <string.h>
 
 #include "Blur.h"
@@ -391,19 +392,11 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   Float height = aSurface->GetSize().height;
  
   SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
-  cairo_surface_t* surf = source->GetSurface();
+  cairo_surface_t* sourcesurf = source->GetSurface();
+  cairo_surface_t* blursurf = cairo_tee_surface_index(sourcesurf, 0);
+  cairo_surface_t* surf = cairo_tee_surface_index(sourcesurf, 1);
  
-  cairo_surface_t* blursurf = cairo_image_surface_create(CAIRO_FORMAT_A8,
-                                                         width,
-                                                         height);
-
-  cairo_t* ctx = cairo_create(blursurf);
-  cairo_set_source_surface(ctx, surf, 0, 0);
-  cairo_new_path(ctx);
-  cairo_rectangle(ctx, 0, 0, width, height);
-  cairo_fill(ctx);
-  cairo_destroy(ctx);
- 
+  MOZ_ASSERT(cairo_surface_get_type(blursurf) == CAIRO_SURFACE_TYPE_IMAGE);
   Rect extents(0, 0, width, height);
   AlphaBoxBlur blur(cairo_image_surface_get_data(blursurf),
                     extents,
@@ -444,7 +437,6 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   }
 
   cairo_restore(mContext);
-  cairo_surface_destroy(blursurf);
 }
 
 void
@@ -797,6 +789,40 @@ DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize&
   mFormat = CairoContentToGfxFormat(cairo_surface_get_content(aSurface));
 
   return true;
+}
+
+TemporaryRef<DrawTarget>
+DrawTargetCairo::CreateShadowDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
+{
+  cairo_surface_t* similar = cairo_surface_create_similar(cairo_get_target(mContext),
+                                                          GfxFormatToCairoContent(aFormat),
+                                                          aSize.width, aSize.height);
+
+  if (cairo_surface_status(similar)) {
+    return nullptr;
+  }
+
+  cairo_surface_t* blursurf = cairo_image_surface_create(CAIRO_FORMAT_A8,
+                                                         aSize.width,
+                                                         aSize.height);
+
+  if (cairo_surface_status(blursurf)) {
+    return nullptr;
+  }
+
+  cairo_surface_t* tee = cairo_tee_surface_create(blursurf);
+  cairo_surface_destroy(blursurf);
+  if (cairo_surface_status(tee)) {
+    cairo_surface_destroy(similar);
+    return nullptr;
+  }
+
+  cairo_tee_surface_add(tee, similar);
+  cairo_surface_destroy(similar);
+
+  RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
+  target->InitAlreadyReferenced(tee, aSize);
+  return target;
 }
 
 bool
