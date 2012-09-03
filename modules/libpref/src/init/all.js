@@ -24,6 +24,10 @@ pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.compatMode.firefox", false);
 
+// This pref exists only for testing purposes. In order to disable all
+// overrides by default, don't initialize UserAgentOverrides.jsm.
+pref("general.useragent.site_specific_overrides", true);
+
 pref("general.config.obscure_value", 13); // for MCD .cfg files
 
 pref("general.warnOnAboutConfig", true);
@@ -1783,6 +1787,29 @@ pref("font.size.inflation.lineThreshold", 400);
  * large enough. This means that when s=0, i is always equal to m.
  */
 pref("font.size.inflation.mappingIntercept", 1);
+
+/*
+ * When enabled, the touch.radius and mouse.radius prefs allow events to be dispatched
+ * to nearby elements that are sensitive to the event. See PositionedEventTargeting.cpp.
+ * The 'mm' prefs define a rectangle around the nominal event target point within which
+ * we will search for suitable elements. 'visitedWeight' is a percentage weight;
+ * a value > 100 makes a visited link be treated as further away from the event target
+ * than it really is, while a value < 100 makes a visited link be treated as closer
+ * to the event target than it really is.
+ */
+pref("ui.touch.radius.enabled", false);
+pref("ui.touch.radius.leftmm", 8);
+pref("ui.touch.radius.topmm", 12);
+pref("ui.touch.radius.rightmm", 8);
+pref("ui.touch.radius.bottommm", 4);
+pref("ui.touch.radius.visitedWeight", 120);
+
+pref("ui.mouse.radius.enabled", false);
+pref("ui.mouse.radius.leftmm", 8);
+pref("ui.mouse.radius.topmm", 12);
+pref("ui.mouse.radius.rightmm", 8);
+pref("ui.mouse.radius.bottommm", 4);
+pref("ui.mouse.radius.visitedWeight", 120);
 
 #ifdef XP_WIN
 
@@ -3692,6 +3719,8 @@ pref("social.enabled", false);
 // Disable idle observer fuzz, because only privileged content can access idle
 // observers (bug 780507).
 pref("dom.idle-observers-api.fuzz_time.disabled", true);
+
+pref("toolkit.identity.debug", false);
 
 // Setting that to true grant elevated privileges to apps that ask
 // for them in their manifest.

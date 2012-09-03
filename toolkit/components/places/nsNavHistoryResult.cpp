@@ -1094,7 +1094,7 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_KeywordGreater(
 int32_t nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
-  nsCAutoString annoName(static_cast<char*>(closure));
+  nsAutoCString annoName(static_cast<char*>(closure));
   NS_ENSURE_TRUE(!annoName.IsEmpty(), 0);
 
   bool a_itemAnno = false;
@@ -1105,7 +1105,7 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
   if (a->mItemId != -1) {
     a_itemAnno = true;
   } else {
-    nsCAutoString spec;
+    nsAutoCString spec;
     if (NS_SUCCEEDED(a->GetUri(spec)))
       NS_NewURI(getter_AddRefs(a_uri), spec);
     NS_ENSURE_TRUE(a_uri, 0);
@@ -1114,7 +1114,7 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
   if (b->mItemId != -1) {
     b_itemAnno = true;
   } else {
-    nsCAutoString spec;
+    nsAutoCString spec;
     if (NS_SUCCEEDED(b->GetUri(spec)))
       NS_NewURI(getter_AddRefs(b_uri), spec);
     NS_ENSURE_TRUE(b_uri, 0);
@@ -1436,7 +1436,7 @@ nsNavHistoryContainerResultNode::InsertSortedChild(
       container->FillStats();
     }
 
-    nsCAutoString sortingAnnotation;
+    nsAutoCString sortingAnnotation;
     GetSortingAnnotation(sortingAnnotation);
     bool itemExists;
     uint32_t position = FindInsertionPoint(aNode, comparator, 
@@ -1467,7 +1467,7 @@ nsNavHistoryContainerResultNode::EnsureItemPosition(uint32_t aIndex) {
   if (!comparator)
     return false;
 
-  nsCAutoString sortAnno;
+  nsAutoCString sortAnno;
   GetSortingAnnotation(sortAnno);
   if (!DoesChildNeedResorting(aIndex, comparator, sortAnno.get()))
     return false;
@@ -1782,7 +1782,7 @@ nsNavHistoryContainerResultNode::ChangeTitles(nsIURI* aURI,
                                               bool aOnlyOne)
 {
   // uri string
-  nsCAutoString uriString;
+  nsAutoCString uriString;
   nsresult rv = aURI->GetSpec(uriString);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2299,7 +2299,7 @@ nsNavHistoryQueryResultNode::FillChildren()
     // then have proper visit counts and dates.
     SortComparator comparator = GetSortingComparator(GetSortType());
     if (comparator) {
-      nsCAutoString sortingAnnotation;
+      nsAutoCString sortingAnnotation;
       GetSortingAnnotation(sortingAnnotation);
       // Usually containers queries results comes already sorted from the
       // database, but some locales could have special rules to sort by title.
@@ -2561,7 +2561,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
       if (!hasDomain)
         return NS_OK;
 
-      nsCAutoString host;
+      nsAutoCString host;
       if (NS_FAILED(aURI->GetAsciiHost(host)))
         return NS_OK;
 
@@ -2687,7 +2687,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
   if (mHasSearchTerms) {
     // Find all matching URI nodes.
     nsCOMArray<nsNavHistoryResultNode> matches;
-    nsCAutoString spec;
+    nsAutoCString spec;
     nsresult rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
     RecursiveFindURIs(onlyOneEntry, this, spec, &matches);
@@ -2769,7 +2769,7 @@ nsNavHistoryQueryResultNode::OnDeleteURI(nsIURI* aURI,
                          nsINavHistoryQueryOptions::RESULTS_AS_URI ||
                          mOptions->ResultType() ==
                          nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS);
-  nsCAutoString spec;
+  nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2825,7 +2825,7 @@ nsNavHistoryQueryResultNode::OnPageChanged(nsIURI* aURI,
                                            const nsAString& aNewValue,
                                            const nsACString& aGUID)
 {
-  nsCAutoString spec;
+  nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2872,7 +2872,7 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
 {
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
-  nsCAutoString spec;
+  nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
   bool onlyOneEntry = (mOptions->ResultType() ==
@@ -3361,7 +3361,7 @@ nsNavHistoryFolderResultNode::OnChildrenFilled()
     // then have proper visit counts and dates.
     SortComparator comparator = GetSortingComparator(GetSortType());
     if (comparator) {
-      nsCAutoString sortingAnnotation;
+      nsAutoCString sortingAnnotation;
       GetSortingAnnotation(sortingAnnotation);
       RecursiveSort(sortingAnnotation.get(), comparator);
     }
@@ -3691,7 +3691,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
   bool isQuery = false;
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
     NS_ASSERTION(aURI, "Got a null URI when we are a bookmark?!");
-    nsCAutoString itemURISpec;
+    nsAutoCString itemURISpec;
     rv = aURI->GetSpec(itemURISpec);
     NS_ENSURE_SUCCESS(rv, rv);
     isQuery = IsQueryURI(itemURISpec);
@@ -4035,7 +4035,7 @@ nsNavHistoryFolderResultNode::OnItemMoved(int64_t aItemId,
   } else {
     // moving between two different folders, just do a remove and an add
     nsCOMPtr<nsIURI> itemURI;
-    nsCAutoString itemTitle;
+    nsAutoCString itemTitle;
     if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
       nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
       NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
@@ -4746,12 +4746,12 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
       nsCOMPtr<nsINavHistoryResultNode> firstChild;
       rv = mRootNode->GetChild(0, getter_AddRefs(firstChild));
       NS_ENSURE_SUCCESS(rv, rv);
-      nsCAutoString title;
+      nsAutoCString title;
       rv = firstChild->GetTitle(title);
       NS_ENSURE_SUCCESS(rv, rv);
       nsNavHistory* history = nsNavHistory::GetHistoryService();
       NS_ENSURE_TRUE(history, NS_OK);
-      nsCAutoString todayLabel;
+      nsAutoCString todayLabel;
       history->GetStringFromName(
         NS_LITERAL_STRING("finduri-AgeInDays-is-0").get(), todayLabel);
       todayIsMissing = !todayLabel.Equals(title);

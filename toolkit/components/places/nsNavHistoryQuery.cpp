@@ -150,13 +150,13 @@ inline void AppendAmpersandIfNonempty(nsACString& aString)
 }
 inline void AppendInt16(nsACString& str, int16_t i)
 {
-  nsCAutoString tmp;
+  nsAutoCString tmp;
   tmp.AppendInt(i);
   str.Append(tmp);
 }
 inline void AppendInt32(nsACString& str, int32_t i)
 {
-  nsCAutoString tmp;
+  nsAutoCString tmp;
   tmp.AppendInt(i);
   str.Append(tmp);
 }
@@ -339,7 +339,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
   nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions);
   NS_ENSURE_TRUE(options, NS_ERROR_INVALID_ARG);
 
-  nsCAutoString queryString;
+  nsAutoCString queryString;
   for (uint32_t queryIndex = 0; queryIndex < aQueryCount;  queryIndex ++) {
     nsCOMPtr<nsNavHistoryQuery> query = do_QueryInterface(aQueries[queryIndex]);
     if (queryIndex > 0) {
@@ -414,7 +414,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       AppendBoolKeyValueIfTrue(queryString,
                                NS_LITERAL_CSTRING(QUERYKEY_DOMAIN_IS_HOST),
                                query, &nsINavHistoryQuery::GetDomainIsHost);
-      nsCAutoString domain;
+      nsAutoCString domain;
       nsresult rv = query->GetDomain(domain);
       NS_ENSURE_SUCCESS(rv, rv);
       nsCString escapedDomain;
@@ -435,10 +435,10 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       nsCOMPtr<nsIURI> uri;
       query->GetUri(getter_AddRefs(uri));
       NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE); // hasURI should tell is if invalid
-      nsCAutoString uriSpec;
+      nsAutoCString uriSpec;
       nsresult rv = uri->GetSpec(uriSpec);
       NS_ENSURE_SUCCESS(rv, rv);
-      nsCAutoString escaped;
+      nsAutoCString escaped;
       bool success = NS_Escape(uriSpec, escaped, url_XAlphas);
       NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
@@ -457,9 +457,9 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
         queryString.AppendLiteral(QUERYKEY_NOTANNOTATION "=");
       else
         queryString.AppendLiteral(QUERYKEY_ANNOTATION "=");
-      nsCAutoString annot;
+      nsAutoCString annot;
       query->GetAnnotation(annot);
-      nsCAutoString escaped;
+      nsAutoCString escaped;
       bool success = NS_Escape(annot, escaped, url_XAlphas);
       NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
       queryString.Append(escaped);
@@ -479,7 +479,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     // tags
     const nsTArray<nsString> &tags = query->Tags();
     for (uint32_t i = 0; i < tags.Length(); ++i) {
-      nsCAutoString escapedTag;
+      nsAutoCString escapedTag;
       if (!NS_Escape(NS_ConvertUTF16toUTF8(tags[i]), escapedTag, url_XAlphas))
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -509,7 +509,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     if (options->SortingMode() == nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_DESCENDING ||
         options->SortingMode() == nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_ASCENDING) {
       // sortingAnnotation
-      nsCAutoString sortingAnnotation;
+      nsAutoCString sortingAnnotation;
       if (NS_SUCCEEDED(options->GetSortingAnnotation(sortingAnnotation))) {
         nsCString escaped;
         if (!NS_Escape(sortingAnnotation, escaped, url_XAlphas))
@@ -696,7 +696,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // domain string
     } else if (kvp.key.EqualsLiteral(QUERYKEY_DOMAIN)) {
-      nsCAutoString unescapedDomain(kvp.value);
+      nsAutoCString unescapedDomain(kvp.value);
       NS_UnescapeURL(unescapedDomain); // modifies input
       rv = query->SetDomain(unescapedDomain);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -716,7 +716,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // uri
     } else if (kvp.key.EqualsLiteral(QUERYKEY_URI)) {
-      nsCAutoString unescapedUri(kvp.value);
+      nsAutoCString unescapedUri(kvp.value);
       NS_UnescapeURL(unescapedUri); // modifies input
       nsCOMPtr<nsIURI> uri;
       nsresult rv = NS_NewURI(getter_AddRefs(uri), unescapedUri);
@@ -732,21 +732,21 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // not annotation
     } else if (kvp.key.EqualsLiteral(QUERYKEY_NOTANNOTATION)) {
-      nsCAutoString unescaped(kvp.value);
+      nsAutoCString unescaped(kvp.value);
       NS_UnescapeURL(unescaped); // modifies input
       query->SetAnnotationIsNot(true);
       query->SetAnnotation(unescaped);
 
     // annotation
     } else if (kvp.key.EqualsLiteral(QUERYKEY_ANNOTATION)) {
-      nsCAutoString unescaped(kvp.value);
+      nsAutoCString unescaped(kvp.value);
       NS_UnescapeURL(unescaped); // modifies input
       query->SetAnnotationIsNot(false);
       query->SetAnnotation(unescaped);
 
     // tag
     } else if (kvp.key.EqualsLiteral(QUERYKEY_TAG)) {
-      nsCAutoString unescaped(kvp.value);
+      nsAutoCString unescaped(kvp.value);
       NS_UnescapeURL(unescaped); // modifies input
       NS_ConvertUTF8toUTF16 tag(unescaped);
       if (!tags.Contains(tag)) {
@@ -1589,7 +1589,7 @@ AppendUint32KeyValueIfNonzero(nsACString& aString,
     aString += aName;
 
     // AppendInt requires a concrete string
-    nsCAutoString appendMe("=");
+    nsAutoCString appendMe("=");
     appendMe.AppendInt(value);
     aString.Append(appendMe);
   }
@@ -1604,14 +1604,14 @@ AppendInt64KeyValueIfNonzero(nsACString& aString,
                              nsINavHistoryQuery* aQuery,
                              Int64QueryGetter getter)
 {
-  int64_t value;
+  PRTime value;
   DebugOnly<nsresult> rv = (aQuery->*getter)(&value);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failure getting value");
   if (value) {
     AppendAmpersandIfNonempty(aString);
     aString += aName;
-    nsCAutoString appendMe("=");
-    appendMe.AppendInt(value);
+    nsAutoCString appendMe("=");
+    appendMe.AppendInt(static_cast<int64_t>(value));
     aString.Append(appendMe);
   }
 }

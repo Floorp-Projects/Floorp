@@ -153,6 +153,18 @@ let libnetutils = (function () {
                                    ctypes.int,
                                    ctypes.int,
                                    ctypes.int),
+    ifc_add_route: library.declare("ifc_add_route", ctypes.default_abi,
+                                   ctypes.int, // return value
+                                   ctypes.char.ptr, // ifname
+                                   ctypes.char.ptr, // dst
+                                   ctypes.int, // prefix_length
+                                   ctypes.char.ptr), // gw
+    ifc_remove_route: library.declare("ifc_remove_route", ctypes.default_abi,
+                                      ctypes.int, // return value
+                                      ctypes.char.ptr, // ifname
+                                      ctypes.char.ptr, // dst
+                                      ctypes.int, // prefix_length
+                                      ctypes.char.ptr), // gw
     dhcp_stop: library.declare("dhcp_stop", ctypes.default_abi,
                                ctypes.int,
                                ctypes.char.ptr),

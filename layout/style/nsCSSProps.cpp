@@ -131,8 +131,8 @@ nsCSSProps::AddRefTable(void)
     {
       // let's verify the table...
       for (int32_t index = 0; index < eCSSProperty_COUNT; ++index) {
-        nsCAutoString temp1(kCSSRawProperties[index]);
-        nsCAutoString temp2(kCSSRawProperties[index]);
+        nsAutoCString temp1(kCSSRawProperties[index]);
+        nsAutoCString temp2(kCSSRawProperties[index]);
         ToLowerCase(temp1);
         NS_ABORT_IF_FALSE(temp1.Equals(temp2), "upper case char in prop table");
         NS_ABORT_IF_FALSE(-1 == temp1.FindChar('_'),
@@ -149,8 +149,8 @@ nsCSSProps::AddRefTable(void)
     {
       // let's verify the table...
       for (int32_t index = 0; index < eCSSFontDesc_COUNT; ++index) {
-        nsCAutoString temp1(kCSSRawFontDescs[index]);
-        nsCAutoString temp2(kCSSRawFontDescs[index]);
+        nsAutoCString temp1(kCSSRawFontDescs[index]);
+        nsAutoCString temp2(kCSSRawFontDescs[index]);
         ToLowerCase(temp1);
         NS_ABORT_IF_FALSE(temp1.Equals(temp2), "upper case char in desc table");
         NS_ABORT_IF_FALSE(-1 == temp1.FindChar('_'),

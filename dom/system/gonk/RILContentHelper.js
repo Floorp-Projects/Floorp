@@ -381,11 +381,12 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  sendStkResponse: function sendStkResponse(window, response) {
+  sendStkResponse: function sendStkResponse(window, command, response) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
+    response.command = command;
     cpmm.sendAsyncMessage("RIL:SendStkResponse", response);
   },
 

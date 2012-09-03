@@ -7,7 +7,7 @@
 
 interface nsIDOMDOMStringList;
 
-[scriptable, uuid(f394a721-66e9-46fc-bb24-b980bb732dd0)]
+[scriptable, uuid(c105fe6f-5603-40b2-b3d0-84cb51fab9f4)]
 interface nsIDOMOfflineResourceList : nsISupports
 {
   /**
@@ -92,12 +92,12 @@ interface nsIDOMOfflineResourceList : nsISupports
   void swapCache();
 
   /* Events */
-  attribute nsIDOMEventListener onchecking;
-  attribute nsIDOMEventListener onerror;
-  attribute nsIDOMEventListener onnoupdate;
-  attribute nsIDOMEventListener ondownloading;
-  attribute nsIDOMEventListener onprogress;
-  attribute nsIDOMEventListener onupdateready;
-  attribute nsIDOMEventListener oncached;
-  attribute nsIDOMEventListener onobsolete;
+  [implicit_jscontext] attribute jsval onchecking;
+  [implicit_jscontext] attribute jsval onerror;
+  [implicit_jscontext] attribute jsval onnoupdate;
+  [implicit_jscontext] attribute jsval ondownloading;
+  [implicit_jscontext] attribute jsval onprogress;
+  [implicit_jscontext] attribute jsval onupdateready;
+  [implicit_jscontext] attribute jsval oncached;
+  [implicit_jscontext] attribute jsval onobsolete;
 };

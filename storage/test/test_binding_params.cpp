@@ -35,7 +35,7 @@ test_ASCIIString()
   ), getter_AddRefs(select));
 
   // Roundtrip a string through the table, and ensure it comes out as expected.
-  nsCAutoString inserted("I'm an ASCII string");
+  nsAutoCString inserted("I'm an ASCII string");
   {
     mozStorageStatementScoper scoper(insert);
     bool hasResult;
@@ -44,7 +44,7 @@ test_ASCIIString()
     do_check_false(hasResult);
   }
 
-  nsCAutoString result;
+  nsAutoCString result;
   {
     mozStorageStatementScoper scoper(select);
     bool hasResult;
@@ -80,7 +80,7 @@ test_CString()
   // Roundtrip a string through the table, and ensure it comes out as expected.
   static const char sCharArray[] =
     "I'm not a \xff\x00\xac\xde\xbb ASCII string!";
-  nsCAutoString inserted(sCharArray, ArrayLength(sCharArray) - 1);
+  nsAutoCString inserted(sCharArray, ArrayLength(sCharArray) - 1);
   do_check_true(inserted.Length() == ArrayLength(sCharArray) - 1);
   {
     mozStorageStatementScoper scoper(insert);
@@ -91,7 +91,7 @@ test_CString()
   }
 
   {
-    nsCAutoString result;
+    nsAutoCString result;
 
     mozStorageStatementScoper scoper(select);
     bool hasResult;
@@ -127,7 +127,7 @@ test_UTFStrings()
   // Roundtrip a UTF8 string through the table, using UTF8 input and output.
   static const char sCharArray[] =
     "I'm a \xc3\xbb\xc3\xbc\xc3\xa2\xc3\xa4\xc3\xa7 UTF8 string!";
-  nsCAutoString insertedUTF8(sCharArray, ArrayLength(sCharArray) - 1);
+  nsAutoCString insertedUTF8(sCharArray, ArrayLength(sCharArray) - 1);
   do_check_true(insertedUTF8.Length() == ArrayLength(sCharArray) - 1);
   NS_ConvertUTF8toUTF16 insertedUTF16(insertedUTF8);
   do_check_true(insertedUTF8 == NS_ConvertUTF16toUTF8(insertedUTF16));
@@ -140,7 +140,7 @@ test_UTFStrings()
   }
 
   {
-    nsCAutoString result;
+    nsAutoCString result;
 
     mozStorageStatementScoper scoper(select);
     bool hasResult;
@@ -176,7 +176,7 @@ test_UTFStrings()
   }
 
   {
-    nsCAutoString result;
+    nsAutoCString result;
 
     mozStorageStatementScoper scoper(select);
     bool hasResult;

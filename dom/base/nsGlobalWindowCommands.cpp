@@ -577,7 +577,7 @@ nsClipboardGetContentsCommand::DoClipboardCommand(const char *aCommandName, nsIC
 {
   NS_ENSURE_ARG(aParams);
 
-  nsCAutoString mimeType("text/plain");
+  nsAutoCString mimeType("text/plain");
 
   nsXPIDLCString format;    // nsICommandParams needs to use nsACString
   if (NS_SUCCEEDED(aParams->GetCStringValue("format", getter_Copies(format))))

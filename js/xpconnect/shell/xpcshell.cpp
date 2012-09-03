@@ -1632,7 +1632,7 @@ GetCurrentWorkingDirectory(nsAString& workingDirectory)
     workingDirectory.SetLength(requiredLength);
     workingDirectory.Replace(workingDirectory.Length() - 1, 1, L'\\');
 #elif defined(XP_UNIX)
-    nsCAutoString cwd;
+    nsAutoCString cwd;
     // 1024 is just a guess at a sane starting value
     size_t bufsize = 1024;
     char* result = nullptr;

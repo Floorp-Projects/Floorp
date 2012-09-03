@@ -189,7 +189,8 @@ struct ParseContext                 /* tree context for semantic checks */
                                            exclude 'in' */
     bool            parsingWith:1;  /* true while we are within a
                                        with-statement or E4X filter-expression
-                                       in the current ParseContext chain */
+                                       in the current ParseContext chain
+                                       (which stops at the top-level or an eval() */
 
     // Set when parsing a declaration-like destructuring pattern.  This flag
     // causes PrimaryExpr to create PN_NAME parse nodes for variable references
@@ -341,7 +342,7 @@ struct Parser : private AutoGCRooter
     void prepareNodeForMutation(ParseNode *pn) { return allocator.prepareNodeForMutation(pn); }
 
     /* new_ methods for creating parse nodes. These report OOM on context. */
-    JS_DECLARE_NEW_METHODS(allocParseNode, inline)
+    JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
 
     ParseNode *cloneNode(const ParseNode &other) {
         ParseNode *node = allocParseNode(sizeof(ParseNode));

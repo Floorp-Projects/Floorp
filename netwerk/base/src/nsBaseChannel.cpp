@@ -653,7 +653,7 @@ CallTypeSniffers(void *aClosure, const uint8_t *aData, uint32_t aCount)
     gIOService->GetContentSniffers();
   uint32_t length = sniffers.Count();
   for (uint32_t i = 0; i < length; ++i) {
-    nsCAutoString newType;
+    nsAutoCString newType;
     nsresult rv =
       sniffers[i]->GetMIMETypeFromContent(chan, aData, aCount, newType);
     if (NS_SUCCEEDED(rv) && !newType.IsEmpty()) {
@@ -673,7 +673,7 @@ CallUnknownTypeSniffer(void *aClosure, const uint8_t *aData, uint32_t aCount)
   if (!sniffer)
     return;
 
-  nsCAutoString detected;
+  nsAutoCString detected;
   nsresult rv = sniffer->GetMIMETypeFromContent(chan, aData, aCount, detected);
   if (NS_SUCCEEDED(rv))
     chan->SetContentType(detected);

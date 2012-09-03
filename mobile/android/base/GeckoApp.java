@@ -694,17 +694,18 @@ abstract public class GeckoApp
 
             @Override
             public void onPostExecute(String faviconUrl) {
+                JSONObject args = new JSONObject();
+
                 if (faviconUrl != null) {
-                    JSONObject args = new JSONObject();
                     try {
                         args.put("url", url);
                         args.put("faviconUrl", faviconUrl);
                     } catch (JSONException e) {
                         Log.e(LOGTAG, "error building json arguments");
                     }
-
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:FaviconReturn", args.toString()));
                 }
+
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:FaviconReturn", args.toString()));
             }
         }).execute();
     }
@@ -893,13 +894,6 @@ abstract public class GeckoApp
                 handlePageShow(tabId);
             } else if (event.equals("Gecko:Ready")) {
                 sIsGeckoReady = true;
-                final Menu menu = mMenu;
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        if (menu != null)
-                            menu.findItem(R.id.settings).setEnabled(true);
-                    }
-                });
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
                 connectGeckoLayerClient();

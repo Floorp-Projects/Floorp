@@ -7,8 +7,8 @@
 
     <item android:maxLevel="1">
         <selector>
-            <item android:state_pressed="true" android:drawable="@drawable/menu_pressed"/>
-            <item android:drawable="@drawable/menu_normal"/>
+            <item android:state_pressed="true" android:drawable="@drawable/highlight"/>
+            <item android:drawable="@android:color/black"/>
         </selector>
     </item>
 

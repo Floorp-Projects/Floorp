@@ -72,7 +72,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, int32_t urlFactory = UR
     if (NS_SUCCEEDED(result))
     {
         nsCOMPtr<nsIURL> tURL = do_QueryInterface(pURL);
-        nsCAutoString temp;
+        nsAutoCString temp;
         int32_t port;
         nsresult rv;
 
@@ -223,11 +223,11 @@ nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
 
 
     // get the new spec
-    nsCAutoString newURL;
+    nsAutoCString newURL;
     status = baseURL->Resolve(nsDependentCString(relativePortion), newURL);
     if (NS_FAILED(status)) return status;
 
-    nsCAutoString temp;
+    nsAutoCString temp;
     baseURL->GetSpec(temp);
 
     printf("Analyzing %s\n", temp.get());
@@ -380,11 +380,9 @@ int main(int argc, char **argv)
     if (test_common_init(&argc, &argv) != 0)
         return -1;
 
-    int rv = -1;
-
     if (argc < 2) {
         printusage();
-        return NS_OK;
+        return 0;
     }
     {
         nsCOMPtr<nsIServiceManager> servMan;
@@ -404,7 +402,7 @@ int main(int argc, char **argv)
                 if (i+1 >= argc)
                 {
                     printusage();
-                    return NS_OK;
+                    return 0;
                 }
             }
             else if (PL_strcasecmp(argv[i], "-abs") == 0)
@@ -421,7 +419,7 @@ int main(int argc, char **argv)
                 if (i+1 >= argc)
                 {
                     printusage();
-                    return NS_OK;
+                    return 0;
                 }
                 gFileIO = argv[i+1];
                 i++;
@@ -434,13 +432,19 @@ int main(int argc, char **argv)
         PRTime startTime = PR_Now();
         if (bMakeAbs)
         {
-            rv = (url && relativePath)
-               ? doMakeAbsTest(url, relativePath)
-               : doMakeAbsTest();
+            if (url && relativePath) {
+              doMakeAbsTest(url, relativePath);
+            } else {
+              doMakeAbsTest();
+            }
         }
         else
         {
-            rv = gFileIO ? testURL(0, urlFactory) : testURL(url, urlFactory);
+            if (gFileIO) {
+              testURL(0, urlFactory);
+            } else {
+              testURL(url, urlFactory);
+            }
         }
         if (gFileIO)
         {
@@ -450,6 +454,5 @@ int main(int argc, char **argv)
         }
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-    rv = NS_ShutdownXPCOM(nullptr);
-    return rv;
+    return NS_FAILED(NS_ShutdownXPCOM(nullptr)) ? 1 : 0;
 }

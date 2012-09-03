@@ -2149,7 +2149,7 @@ ImplicitConvert(JSContext* cx,
           return false;
 
         char** charBuffer = static_cast<char**>(buffer);
-        *charBuffer = cx->array_new<char>(nbytes + 1);
+        *charBuffer = cx->pod_malloc<char>(nbytes + 1);
         if (!*charBuffer) {
           JS_ReportAllocationOverflow(cx);
           return false;
@@ -2166,7 +2166,7 @@ ImplicitConvert(JSContext* cx,
         // JSString's buffer, but this approach is safer if the caller happens
         // to modify the string.)
         jschar** jscharBuffer = static_cast<jschar**>(buffer);
-        *jscharBuffer = cx->array_new<jschar>(sourceLength + 1);
+        *jscharBuffer = cx->pod_malloc<jschar>(sourceLength + 1);
         if (!*jscharBuffer) {
           JS_ReportAllocationOverflow(cx);
           return false;
@@ -2255,7 +2255,7 @@ ImplicitConvert(JSContext* cx,
       // Convert into an intermediate, in case of failure.
       size_t elementSize = CType::GetSize(baseType);
       size_t arraySize = elementSize * targetLength;
-      AutoPtr<char>::Array intermediate(cx->array_new<char>(arraySize));
+      AutoPtr<char> intermediate(cx->pod_malloc<char>(arraySize));
       if (!intermediate) {
         JS_ReportAllocationOverflow(cx);
         return false;
@@ -2306,7 +2306,7 @@ ImplicitConvert(JSContext* cx,
 
       // Convert into an intermediate, in case of failure.
       size_t structSize = CType::GetSize(targetType);
-      AutoPtr<char>::Array intermediate(cx->array_new<char>(structSize));
+      AutoPtr<char> intermediate(cx->pod_malloc<char>(structSize));
       if (!intermediate) {
         JS_ReportAllocationOverflow(cx);
         return false;
@@ -3067,7 +3067,7 @@ CType::Finalize(JSFreeOp *fop, JSObject* obj)
     slot = JS_GetReservedSlot(obj, SLOT_FFITYPE);
     if (!JSVAL_IS_VOID(slot)) {
       ffi_type* ffiType = static_cast<ffi_type*>(JSVAL_TO_PRIVATE(slot));
-      FreeOp::get(fop)->array_delete(ffiType->elements);
+      FreeOp::get(fop)->free_(ffiType->elements);
       FreeOp::get(fop)->delete_(ffiType);
     }
 
@@ -4202,7 +4202,7 @@ ArrayType::BuildFFIType(JSContext* cx, JSObject* obj)
   ffiType->type = FFI_TYPE_STRUCT;
   ffiType->size = CType::GetSize(obj);
   ffiType->alignment = CType::GetAlignment(obj);
-  ffiType->elements = cx->array_new<ffi_type*>(length + 1);
+  ffiType->elements = cx->pod_malloc<ffi_type*>(length + 1);
   if (!ffiType->elements) {
     JS_ReportAllocationOverflow(cx);
     return NULL;
@@ -4644,9 +4644,9 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
   }
   ffiType->type = FFI_TYPE_STRUCT;
 
-  AutoPtr<ffi_type*>::Array elements;
+  AutoPtr<ffi_type*> elements;
   if (len != 0) {
-    elements = cx->array_new<ffi_type*>(len + 1);
+    elements = cx->pod_malloc<ffi_type*>(len + 1);
     if (!elements) {
       JS_ReportOutOfMemory(cx);
       return NULL;
@@ -4665,7 +4665,7 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
     // Represent an empty struct as having a size of 1 byte, just like C++.
     JS_ASSERT(structSize == 1);
     JS_ASSERT(structAlign == 1);
-    elements = cx->array_new<ffi_type*>(2);
+    elements = cx->pod_malloc<ffi_type*>(2);
     if (!elements) {
       JS_ReportOutOfMemory(cx);
       return NULL;
@@ -5012,14 +5012,14 @@ struct AutoValue
 
   ~AutoValue()
   {
-    UnwantedForeground::array_delete(static_cast<char*>(mData));
+    js_free(mData);
   }
 
   bool SizeToType(JSContext* cx, JSObject* type)
   {
     // Allocate a minimum of sizeof(ffi_arg) to handle small integers.
     size_t size = Align(CType::GetSize(type), sizeof(ffi_arg));
-    mData = cx->array_new<char>(size);
+    mData = js_malloc(size);
     if (mData)
       memset(mData, 0, size);
     return mData != NULL;
@@ -6068,11 +6068,11 @@ CData::Create(JSContext* cx,
   } else {
     // Initialize our own buffer.
     size_t size = CType::GetSize(typeObj);
-    data = cx->array_new<char>(size);
+    data = (char*)cx->malloc_(size);
     if (!data) {
       // Report a catchable allocation error.
       JS_ReportAllocationOverflow(cx);
-      Foreground::delete_(buffer);
+      js_free(buffer);
       return NULL;
     }
 
@@ -6104,7 +6104,7 @@ CData::Finalize(JSFreeOp *fop, JSObject* obj)
   char** buffer = static_cast<char**>(JSVAL_TO_PRIVATE(slot));
 
   if (owns)
-    FreeOp::get(fop)->array_delete(*buffer);
+    FreeOp::get(fop)->free_(*buffer);
   FreeOp::get(fop)->delete_(buffer);
 }
 

@@ -23,7 +23,7 @@ dictionary IDBObjectStoreParameters
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
  * for more information.
  */
-[scriptable, builtinclass, uuid(601a43a0-dce2-402f-8ba5-238fe5d5f8d2)]
+[scriptable, builtinclass, uuid(89299bf8-e078-4ebc-abda-d97fe5618602)]
 interface nsIIDBDatabase : nsISupports
 {
   readonly attribute DOMString name;
@@ -55,9 +55,9 @@ interface nsIIDBDatabase : nsISupports
   void
   close();
 
-  attribute nsIDOMEventListener onabort;
+  [implicit_jscontext] attribute jsval onabort;
 
-  attribute nsIDOMEventListener onerror;
+  [implicit_jscontext] attribute jsval onerror;
 
-  attribute nsIDOMEventListener onversionchange;
+  [implicit_jscontext] attribute jsval onversionchange;
 };

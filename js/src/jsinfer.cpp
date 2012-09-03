@@ -2165,14 +2165,14 @@ bool
 TypeCompartment::growPendingArray(JSContext *cx)
 {
     unsigned newCapacity = js::Max(unsigned(100), pendingCapacity * 2);
-    PendingWork *newArray = (PendingWork *) OffTheBooks::calloc_(newCapacity * sizeof(PendingWork));
+    PendingWork *newArray = js_pod_calloc<PendingWork>(newCapacity);
     if (!newArray) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return false;
     }
 
     PodCopy(newArray, pendingArray, pendingCount);
-    cx->free_(pendingArray);
+    js_free(pendingArray);
 
     pendingArray = newArray;
     pendingCapacity = newCapacity;
@@ -2792,13 +2792,13 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj_)
             return;
         }
 
-        jsid *ids = (jsid *) cx->calloc_(obj->slotSpan() * sizeof(jsid));
+        jsid *ids = cx->pod_calloc<jsid>(obj->slotSpan());
         if (!ids) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
         }
 
-        Type *types = (Type *) cx->calloc_(obj->slotSpan() * sizeof(Type));
+        Type *types = cx->pod_calloc<Type>(obj->slotSpan());
         if (!types) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -3241,7 +3241,7 @@ TypeObject::clearNewScript(JSContext *cx)
     /* We NULL out newScript *before* freeing it so the write barrier works. */
     TypeNewScript *savedNewScript = newScript;
     newScript = NULL;
-    cx->free_(savedNewScript);
+    js_free(savedNewScript);
 
     markStateChange(cx);
 }
@@ -5245,7 +5245,7 @@ JSScript::makeTypes(JSContext *cx)
     JS_ASSERT(!types);
 
     if (!cx->typeInferenceEnabled()) {
-        types = (TypeScript *) cx->calloc_(sizeof(TypeScript));
+        types = cx->pod_calloc<TypeScript>();
         if (!types) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -5930,8 +5930,8 @@ TypeCompartment::sweep(FreeOp *fop)
             }
 
             if (remove) {
-                Foreground::free_(key.ids);
-                Foreground::free_(entry.types);
+                js_free(key.ids);
+                js_free(entry.types);
                 e.removeFront();
             }
         }
@@ -6015,16 +6015,16 @@ JSCompartment::sweepNewTypeObjectTable(TypeObjectSet &table)
 TypeCompartment::~TypeCompartment()
 {
     if (pendingArray)
-        Foreground::free_(pendingArray);
+        js_free(pendingArray);
 
     if (arrayTypeTable)
-        Foreground::delete_(arrayTypeTable);
+        js_delete(arrayTypeTable);
 
     if (objectTypeTable)
-        Foreground::delete_(objectTypeTable);
+        js_delete(objectTypeTable);
 
     if (allocationSiteTable)
-        Foreground::delete_(allocationSiteTable);
+        js_delete(allocationSiteTable);
 }
 
 /* static */ void
@@ -6067,11 +6067,11 @@ TypeScript::destroy()
 {
     while (dynamicList) {
         TypeResult *next = dynamicList->next;
-        Foreground::delete_(dynamicList);
+        js_delete(dynamicList);
         dynamicList = next;
     }
 
-    Foreground::free_(this);
+    js_free(this);
 }
 
 /* static */ void

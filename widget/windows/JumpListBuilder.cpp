@@ -175,7 +175,7 @@ nsresult JumpListBuilder::RemoveIconCacheForItems(nsIMutableArray *items)
           
           // The local file path is stored inside the nsIURI
           // Get the nsIURI spec which stores the local path for the icon to remove
-          nsCAutoString spec;
+          nsAutoCString spec;
           nsresult rv = uri->GetSpec(spec);
           NS_ENSURE_SUCCESS(rv, rv);
 

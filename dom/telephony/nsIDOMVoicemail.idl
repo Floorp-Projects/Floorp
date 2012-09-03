@@ -8,7 +8,7 @@
 
 interface nsIDOMMozVoicemailStatus;
 
-[scriptable, builtinclass, uuid(d9042fb9-a4a6-4133-b2de-8f7aa08595d9)]
+[scriptable, builtinclass, uuid(c343eb25-9dc8-49a8-a70f-58a0337b3f6e)]
 interface nsIDOMMozVoicemail : nsIDOMEventTarget
 {
   /**
@@ -30,5 +30,5 @@ interface nsIDOMMozVoicemail : nsIDOMEventTarget
   /**
    * The current voicemail status has changed
    */
-  attribute nsIDOMEventListener onstatuschanged;
+  [implicit_jscontext] attribute jsval onstatuschanged;
 };

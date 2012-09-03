@@ -212,7 +212,7 @@ LogGssError(OM_uint32 maj_stat, OM_uint32 min_stat, const char *prefix)
     gss_buffer_desc status1_string;
     gss_buffer_desc status2_string;
     OM_uint32 ret;
-    nsCAutoString errorStr;
+    nsAutoCString errorStr;
     errorStr.Assign(prefix);
 
     if (!gssLibrary)
@@ -368,7 +368,7 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
     gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
     gss_buffer_t  in_token_ptr = GSS_C_NO_BUFFER;
     gss_name_t server;
-    nsCAutoString userbuf;
+    nsAutoCString userbuf;
     nsresult rv;
 
     LOG(("entering nsAuthGSSAPI::GetNextToken()\n"));

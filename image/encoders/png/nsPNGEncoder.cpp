@@ -346,7 +346,7 @@ nsPNGEncoder::ParseOptions(const nsAString& aOptions,
 {
 #ifdef PNG_APNG_SUPPORTED
   // Make a copy of aOptions, because strtok() will modify it.
-  nsCAutoString optionsCopy;
+  nsAutoCString optionsCopy;
   optionsCopy.Assign(NS_ConvertUTF16toUTF8(aOptions));
   char* options = optionsCopy.BeginWriting();
 

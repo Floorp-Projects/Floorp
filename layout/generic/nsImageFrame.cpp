@@ -1623,7 +1623,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
           // mouse is over the border.
           if (p.x < 0) p.x = 0;
           if (p.y < 0) p.y = 0;
-          nsCAutoString spec;
+          nsAutoCString spec;
           uri->GetSpec(spec);
           spec += nsPrintfCString("?%d,%d", p.x, p.y);
           uri->SetSpec(spec);                
@@ -1734,7 +1734,7 @@ nsImageFrame::List(FILE* out, int32_t aIndent) const
     if (currentRequest) {
       nsCOMPtr<nsIURI> uri;
       currentRequest->GetURI(getter_AddRefs(uri));
-      nsCAutoString uristr;
+      nsAutoCString uristr;
       uri->GetAsciiSpec(uristr);
       fprintf(out, " [src=%s]", uristr.get());
     }
@@ -1786,8 +1786,8 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
   nsCOMPtr<nsIURI> realURI;
   SpecToURI(aSpec, sIOService, getter_AddRefs(realURI));
  
-  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<imgILoader> il =
+    nsContentUtils::GetImgLoaderForDocument(aPresContext->Document());
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
@@ -1829,7 +1829,7 @@ nsImageFrame::SpecToURI(const nsAString& aSpec, nsIIOService *aIOService,
   if (mContent) {
     baseURI = mContent->GetBaseURI();
   }
-  nsCAutoString charset;
+  nsAutoCString charset;
   GetDocumentCharacterSet(charset);
   NS_NewURI(aURI, aSpec, 
             charset.IsEmpty() ? nullptr : charset.get(), 

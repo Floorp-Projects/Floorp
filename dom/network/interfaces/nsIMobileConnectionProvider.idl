@@ -33,6 +33,7 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest cancelUSSD(in nsIDOMWindow window);
 
   void sendStkResponse(in nsIDOMWindow window,
+                       in jsval        command,
                        in jsval        response);
   void sendStkMenuSelection(in nsIDOMWindow   window,
                             in unsigned short itemIdentifier,

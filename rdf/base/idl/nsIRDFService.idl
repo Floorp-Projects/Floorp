@@ -41,7 +41,7 @@ interface nsIRDFService : nsISupports {
     /**
      * Construct an RDF literal from a PRTime.
      */
-    nsIRDFDate     GetDateLiteral(in long long aValue);
+    nsIRDFDate     GetDateLiteral(in PRTime aValue);
 
     /**
      * Construct an RDF literal from an int.

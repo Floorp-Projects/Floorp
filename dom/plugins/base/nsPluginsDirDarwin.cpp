@@ -299,7 +299,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
 #ifdef __LP64__
   char executablePath[PATH_MAX];
   executablePath[0] = '\0';
-  nsCAutoString bundlePath;
+  nsAutoCString bundlePath;
   mPlugin->GetNativePath(bundlePath);
   CFStringRef pathRef = ::CFStringCreateWithCString(NULL, bundlePath.get(), kCFStringEncodingUTF8);
   if (pathRef) {
@@ -320,7 +320,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
     ::CFRelease(pathRef); 
   }
 #else
-  nsCAutoString bundlePath;
+  nsAutoCString bundlePath;
   mPlugin->GetNativePath(bundlePath);
   const char *executablePath = bundlePath.get();
 #endif
@@ -409,7 +409,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   memset(&info, 0, sizeof(info));
 
   // Try to get a bundle reference.
-  nsCAutoString path;
+  nsAutoCString path;
   if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
     return rv;
   CFBundleRef bundle = getPluginBundle(path.get());
@@ -418,7 +418,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   info.fFullPath = PL_strdup(path.get());
 
   // fill in file name
-  nsCAutoString fileName;
+  nsAutoCString fileName;
   if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
     return rv;
   info.fFileName = PL_strdup(fileName.get());

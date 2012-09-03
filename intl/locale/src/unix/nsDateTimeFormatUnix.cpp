@@ -73,7 +73,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      nsCAutoString mappedCharset;
+      nsAutoCString mappedCharset;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale, mappedCharset);
       if (NS_SUCCEEDED(res)) {
         mCharset = mappedCharset;

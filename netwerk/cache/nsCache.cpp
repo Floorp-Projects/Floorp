@@ -30,7 +30,7 @@ CacheLogInit()
 void
 CacheLogPrintPath(PRLogModuleLevel level, const char * format, nsIFile * item)
 {
-    nsCAutoString path;
+    nsAutoCString path;
     nsresult rv = item->GetNativePath(path);
     if (NS_SUCCEEDED(rv)) {
         PR_LOG(gCacheLog, level, (format, path.get()));

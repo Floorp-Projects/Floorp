@@ -582,56 +582,6 @@ let Buf = {
  * and acts upon state changes accordingly.
  */
 let RIL = {
-
-  /**
-   * One of the RADIO_STATE_* constants.
-   */
-  radioState: GECKO_RADIOSTATE_UNAVAILABLE,
-  _isInitialRadioState: true,
-
-  /**
-   * ICC status. Keeps a reference of the data response to the
-   * getICCStatus request.
-   */
-  iccStatus: null,
-
-  /**
-   * Card state
-   */
-  cardState: null,
-
-  /**
-   * Strings
-   */
-  IMEI: null,
-  IMEISV: null,
-  SMSC: null,
-
-  /**
-   * ICC information, such as MSISDN, IMSI, ...etc.
-   */
-  iccInfo: {},
-
-  /**
-   * Application identification for apps in ICC.
-   */
-  aid: null,
-
-  networkSelectionMode: null,
-
-  voiceRegistrationState: {},
-  dataRegistrationState: {},
-
-  /**
-   * List of strings identifying the network operator.
-   */
-  operator: null,
-
-  /**
-   * String containing the baseband version.
-   */
-  basebandVersion: null,
-
   /**
    * Valid calls.
    */
@@ -654,21 +604,92 @@ let RIL = {
    */
   _pendingSentSmsMap: {},
 
-  /**
-   * Whether or not the multiple requests in requestNetworkInfo() are currently
-   * being processed
-   */
-  _processingNetworkInfo: false,
+  initRILState: function initRILState() {
+    /**
+     * One of the RADIO_STATE_* constants.
+     */
+    this.radioState = GECKO_RADIOSTATE_UNAVAILABLE;
+    this._isInitialRadioState = true;
 
-  /**
-   * Pending messages to be send in batch from requestNetworkInfo()
-   */
-  _pendingNetworkInfo: {rilMessageType: "networkinfochanged"},
+    /**
+     * ICC status. Keeps a reference of the data response to the
+     * getICCStatus request.
+     */
+    this.iccStatus = null;
 
-  /**
-   * Mute or unmute the radio.
-   */
-  _muted: true,
+    /**
+     * Card state
+     */
+    this.cardState = null;
+
+    /**
+     * Strings
+     */
+    this.IMEI = null;
+    this.IMEISV = null;
+    this.SMSC = null;
+
+    /**
+     * ICC information, such as MSISDN, IMSI, ...etc.
+     */
+    this.iccInfo = {};
+
+    /**
+     * Application identification for apps in ICC.
+     */
+    this.aid = null;
+  
+    /**
+     * Application type for apps in ICC.
+     */
+    this.appType = null,
+
+    this.networkSelectionMode = null;
+
+    this.voiceRegistrationState = {};
+    this.dataRegistrationState = {};
+
+    /**
+     * List of strings identifying the network operator.
+     */
+    this.operator = null;
+
+    /**
+     * String containing the baseband version.
+     */
+    this.basebandVersion = null;
+
+    // Clean up this.currentCalls: rild might have restarted.
+    for each (let currentCall in this.currentCalls) {
+      delete this.currentCalls[currentCall.callIndex];
+      this._handleDisconnectedCall(currentCall);
+    }
+
+    // Deactivate this.currentDataCalls: rild might have restarted.
+    for each (let datacall in this.currentDataCalls) {
+      this.deactivateDataCall(datacall);
+    }
+
+    // Don't clean up this._receivedSmsSegmentsMap or this._pendingSentSmsMap
+    // because on rild restart: we may continue with the pending segments.
+
+    /**
+     * Whether or not the multiple requests in requestNetworkInfo() are currently
+     * being processed
+     */
+    this._processingNetworkInfo = false;
+
+    /**
+     * Pending messages to be send in batch from requestNetworkInfo()
+     */
+    this._pendingNetworkInfo = {rilMessageType: "networkinfochanged"};
+
+    /**
+     * Mute or unmute the radio.
+     */
+    this._muted = true;
+  },
+  
   get muted() {
     return this._muted;
   },
@@ -1308,6 +1329,7 @@ let RIL = {
       function add(contact) {
         this.iccInfo.adn.push(contact);
       };
+
       function finish() {
         if (DEBUG) {
           for (let i = 0; i < this.iccInfo.adn.length; i++) {
@@ -1315,12 +1337,19 @@ let RIL = {
                                 " number = " + this.iccInfo.adn[i].number);
           }
         }
-        this.sendDOMMessage({rilMessageType: "icccontacts",
-                             contactType: "ADN",
-                             contacts: this.iccInfo.adn,
-                             requestId: options.requestId});
+        options.rilMessageType = "icccontacts";
+        options.contactType = "ADN";
+        options.contacts = this.iccInfo.adn,
+        this.sendDOMMessage(options);
       };
       this.parseDiallingNumber(options, add, finish);
+    }
+
+    function error(options) {
+      options.rilMessageType = "icccontacts";
+      options.contactType = "ADN";
+      options.contacts = [];
+      this.sendDOMMessage(options);
     }
 
     this.iccInfo.adn = [];
@@ -1335,8 +1364,9 @@ let RIL = {
       pin2:      null,
       type:      EF_TYPE_LINEAR_FIXED,
       callback:  callback,
+      onerror:   error
       loadAll:   true,
-      requestId: options.requestId
+      requestId: options.requestId,
     });
   },
 
@@ -1400,7 +1430,33 @@ let RIL = {
   },
 
   /**
-   * Get ICC Phonebook.
+   * Get UICC Phonebook.
+   *
+   * @params type
+   *         "ADN" or "FDN".
+   */
+  getICCContacts: function getICCContacts(options) {
+    let type = options.type;
+    switch (type) {
+      case "ADN":
+        switch (this.appType) {
+          case CARD_APPTYPE_SIM:
+            options.fileId = ICC_EF_ADN;
+            this.getADN(options);
+            break;
+          case CARD_APPTYPE_USIM:
+            this.getPBR(options);
+            break;
+        }
+        break;
+      case "FDN":
+        this.getFDN(options);
+        break;
+    }
+  },
+
+  /**
+   * Get USIM Phonebook.
    *
    * @params requestId
    *         Request id from RadioInterfaceLayer.
@@ -1421,6 +1477,13 @@ let RIL = {
       Buf.readStringDelimiter(bufLen);
     }
 
+    function error(options) {
+      options.rilMessageType = "icccontacts";
+      options.contactType = "ADN";
+      options.contacts = [];
+      this.sendDOMMessage(options);
+    }
+
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_PBR,
@@ -1432,6 +1495,7 @@ let RIL = {
       pin2:      null,
       type:      EF_TYPE_LINEAR_FIXED,
       callback:  callback,
+      onerror:   error,
       requestId: options.requestId,
     });
   },
@@ -1938,9 +2002,7 @@ let RIL = {
   /**
    * Send STK terminal response.
    *
-   * @param commandNumber
-   * @param typeOfCommand
-   * @param commandQualifier
+   * @param command
    * @param resultCode
    * @param [optional] itemIdentifier
    * @param [optional] input
@@ -1984,9 +2046,15 @@ let RIL = {
     GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
                                COMPREHENSIONTLV_FLAG_CR);
     GsmPDUHelper.writeHexOctet(3);
-    GsmPDUHelper.writeHexOctet(response.commandNumber);
-    GsmPDUHelper.writeHexOctet(response.typeOfCommand);
-    GsmPDUHelper.writeHexOctet(response.commandQualifier);
+    if (response.command) {
+      GsmPDUHelper.writeHexOctet(response.command.commandNumber);
+      GsmPDUHelper.writeHexOctet(response.command.typeOfCommand);
+      GsmPDUHelper.writeHexOctet(response.command.commandQualifier);
+    } else {
+      GsmPDUHelper.writeHexOctet(0x00);
+      GsmPDUHelper.writeHexOctet(0x00);
+      GsmPDUHelper.writeHexOctet(0x00);
+    }
 
     // Device Identifier
     // According to TS102.223/TS31.111 section 6.8 Structure of
@@ -2174,6 +2242,7 @@ let RIL = {
     }
     // fetchICCRecords will need to read aid, so read aid here.
     this.aid = app.aid;
+    this.appType = app.app_type;
 
     let newCardState;
     switch (app.app_state) {
@@ -3070,9 +3139,6 @@ let RIL = {
         COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: 0,
-        typeOfCommand: 0,
-        commandQualifier: 0,
         resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
       throw new Error("Can't find COMMAND_DETAILS ComprehensionTlv");
     }
@@ -3086,11 +3152,9 @@ let RIL = {
 
     let param = StkCommandParamsFactory.createParam(cmdDetails, ctlvs);
     if (param) {
-      RIL.sendDOMMessage({rilMessageType: "stkcommand",
-                          commandNumber: cmdDetails.commandNumber,
-                          typeOfCommand: cmdDetails.typeOfCommand,
-                          commandQualifier: cmdDetails.commandQualifier,
-                          options: param});
+      cmdDetails.rilMessageType = "stkcommand";
+      cmdDetails.options = param;
+      RIL.sendDOMMessage(cmdDetails);
     }
   },
 
@@ -3115,6 +3179,8 @@ let RIL = {
     }
   }
 };
+
+RIL.initRILState();
 
 RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
   if (options.rilRequestError) {
@@ -3504,6 +3570,13 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
   this[REQUEST_DATA_CALL_LIST](length, options);
 };
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
+  if (!length) {
+    if (options.onerror) {
+      options.onerror.call(this, options);
+    }
+    return;
+  }
+
   // Don't need to read rilRequestError since we can know error status from
   // sw1 and sw2.
   let sw1 = Buf.readUint32();
@@ -3515,6 +3588,9 @@ RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
       debug("ICC I/O Error EF id = " + options.fileId.toString(16) +
             " command = " + options.command.toString(16) +
             "(" + sw1.toString(16) + "/" + sw2.toString(16) + ")");
+    }
+    if (options.onerror) {
+      options.onerror.call(this, options);
     }
     return;
   }
@@ -3993,6 +4069,8 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
     debug("Detected RIL version " + version);
     debug("RILQUIRKS_V5_LEGACY is " + RILQUIRKS_V5_LEGACY);
   }
+
+  this.initRILState();
 };
 
 /**
@@ -5426,10 +5504,8 @@ let StkCommandParamsFactory = {
 
     if (menu.items.length == 0) {
       RIL.sendStkTerminalResponse({
-          commandNumber: cmdDetails.commandNumber,
-          typeOfCommand: cmdDetails.typeOfCommand,
-          commandQualifier: cmdDetails.commandQualifier,
-          resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+        command: cmdDetails,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Menu: Required value missing : items");
     }
 
@@ -5455,9 +5531,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Display Text: Required value missing : Text String");
     }
@@ -5487,9 +5561,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Set Up Idle Text: Required value missing : Text String");
     }
@@ -5504,9 +5576,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Get InKey: Required value missing : Text String");
     }
@@ -5545,9 +5615,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Get Input: Required value missing : Text String");
     }
@@ -5598,9 +5666,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Event Notfiy: Required value missing : Alpha ID");
     }
@@ -5627,9 +5693,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ADDRESS, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Set Up Call: Required value missing : Adress");
     }
@@ -5644,9 +5708,7 @@ let StkCommandParamsFactory = {
     let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_URL, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
-        commandNumber: cmdDetails.commandNumber,
-        typeOfCommand: cmdDetails.typeOfCommand,
-        commandQualifier: cmdDetails.commandQualifier,
+        command: cmdDetails,
         resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
       throw new Error("Stk Launch Browser: Required value missing : URL");
     }
@@ -5914,9 +5976,6 @@ let ComprehensionTlvHelper = {
       case 0xff: // Not used.
       case 0x80: // Reserved for future use.
         RIL.sendStkTerminalResponse({
-          commandNumber: 0,
-          typeOfCommand: 0,
-          commandQualifier: 0,
           resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
         throw new Error("Invalid octet when parsing Comprehension TLV :" + temp);
         break;
@@ -5959,9 +6018,6 @@ let ComprehensionTlvHelper = {
       hlen++;
       if (length < 0x80) {
         RIL.sendStkTerminalResponse({
-          commandNumber: 0,
-          typeOfCommand: 0,
-          commandQualifier: 0,
           resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
         throw new Error("Invalid length in Comprehension TLV :" + length);
       }
@@ -5970,9 +6026,6 @@ let ComprehensionTlvHelper = {
       hlen += 2;
       if (lenth < 0x0100) {
          RIL.sendStkTerminalResponse({
-          commandNumber: 0,
-          typeOfCommand: 0,
-          commandQualifier: 0,
           resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
         throw new Error("Invalid length in 3-byte Comprehension TLV :" + length);
       }
@@ -5983,17 +6036,11 @@ let ComprehensionTlvHelper = {
       hlen += 3;
       if (length < 0x010000) {
         RIL.sendStkTerminalResponse({
-          commandNumber: 0,
-          typeOfCommand: 0,
-          commandQualifier: 0,
           resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
         throw new Error("Invalid length in 4-byte Comprehension TLV :" + length);
       }
     } else {
       RIL.sendStkTerminalResponse({
-        commandNumber: 0,
-        typeOfCommand: 0,
-        commandQualifier: 0,
         resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
       throw new Error("Invalid octet in Comprehension TLV :" + length);
     }
@@ -6047,25 +6094,16 @@ let BerTlvHelper = {
         length = GsmPDUHelper.readHexOctet();
         if (length < 0x80) {
           RIL.sendStkTerminalResponse({
-            commandNumber: 0,
-            typeOfCommand: 0,
-            commandQualifier: 0,
             resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
           throw new Error("Invalid length " + length);
         }
       } else {
         RIL.sendStkTerminalResponse({
-          commandNumber: 0,
-          typeOfCommand: 0,
-          commandQualifier: 0,
           resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
         throw new Error("Invalid length octet " + temp);
       }
     } else {
       RIL.sendStkTerminalResponse({
-        commandNumber: 0,
-        typeOfCommand: 0,
-        commandQualifier: 0,
         resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
       throw new Error("Unknown BER tag");
     }
@@ -6073,9 +6111,6 @@ let BerTlvHelper = {
     // If the value length of the BerTlv is larger than remaining value on Parcel.
     if (dataLen - hlen < length) {
       RIL.sendStkTerminalResponse({
-        commandNumber: 0,
-        typeOfCommand: 0,
-        commandQualifier: 0,
         resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
       throw new Error("BerTlvHelper value length too long!!");
       return;

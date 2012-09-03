@@ -95,7 +95,7 @@ public:
 private:
   PRLogModuleInfo *mLog;
   void *mFrom;
-  nsCAutoString mFunc;
+  nsAutoCString mFunc;
 };
 
 

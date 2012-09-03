@@ -55,7 +55,7 @@ nsFeedSniffer::ConvertEncodedData(nsIRequest* request,
   if (!httpChannel)
     return NS_ERROR_NO_INTERFACE;
 
-  nsCAutoString contentEncoding;
+  nsAutoCString contentEncoding;
   httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"), 
                                  contentEncoding);
   if (!contentEncoding.IsEmpty()) {
@@ -205,7 +205,7 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
     return NS_ERROR_NO_INTERFACE;
 
   // Check that this is a GET request, since you can't subscribe to a POST...
-  nsCAutoString method;
+  nsAutoCString method;
   channel->GetRequestMethod(method);
   if (!method.Equals("GET")) {
     sniffedType.Truncate();
@@ -222,7 +222,7 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   nsCOMPtr<nsIURI> originalURI;
   channel->GetOriginalURI(getter_AddRefs(originalURI));
 
-  nsCAutoString scheme;
+  nsAutoCString scheme;
   originalURI->GetScheme(scheme);
   if (scheme.EqualsLiteral("view-source")) {
     sniffedType.Truncate();
@@ -233,7 +233,7 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   // something specific that we think is a reliable indication of a feed, don't
   // bother sniffing since we assume the site maintainer knows what they're 
   // doing. 
-  nsCAutoString contentType;
+  nsAutoCString contentType;
   channel->GetContentType(contentType);
   bool noSniff = contentType.EqualsLiteral(TYPE_RSS) ||
                    contentType.EqualsLiteral(TYPE_ATOM);
@@ -242,7 +242,7 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   // the feed: protocol. This is also a reliable indication.
   // The value of the header doesn't matter.  
   if (!noSniff) {
-    nsCAutoString sniffHeader;
+    nsAutoCString sniffHeader;
     nsresult foundHeader =
       channel->GetRequestHeader(NS_LITERAL_CSTRING("X-Moz-Is-Feed"),
                                 sniffHeader);

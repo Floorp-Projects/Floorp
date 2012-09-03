@@ -2133,7 +2133,7 @@ nsSocketTransport::TraceInBuf(const char *buf, int32_t n)
     if (!val || !*val)
         return;
 
-    nsCAutoString header;
+    nsAutoCString header;
     header.Assign(NS_LITERAL_CSTRING("Reading from: ") + mHost);
     header.Append(':');
     header.AppendInt(mPort);
@@ -2148,7 +2148,7 @@ nsSocketTransport::TraceOutBuf(const char *buf, int32_t n)
     if (!val || !*val)
         return;
 
-    nsCAutoString header;
+    nsAutoCString header;
     header.Assign(NS_LITERAL_CSTRING("Writing to: ") + mHost);
     header.Append(':');
     header.AppendInt(mPort);

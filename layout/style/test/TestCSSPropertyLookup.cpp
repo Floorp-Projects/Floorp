@@ -70,7 +70,7 @@ TestProps()
   // Now make sure we don't find some garbage
   for (int i = 0; i < (int) (sizeof(kJunkNames) / sizeof(const char*)); i++) {
     const char* const tag = kJunkNames[i];
-    id = nsCSSProps::LookupProperty(nsCAutoString(tag), nsCSSProps::eAny);
+    id = nsCSSProps::LookupProperty(nsAutoCString(tag), nsCSSProps::eAny);
     if (id >= 0) {
       printf("bug: found '%s'\n", tag ? tag : "(null)");
       success = false;
@@ -140,7 +140,7 @@ TestKeywords()
   // Now make sure we don't find some garbage
   for (int i = 0; i < (int) (sizeof(kJunkNames) / sizeof(const char*)); i++) {
     const char* const tag = kJunkNames[i];
-    id = nsCSSKeywords::LookupKeyword(nsCAutoString(tag));
+    id = nsCSSKeywords::LookupKeyword(nsAutoCString(tag));
     if (eCSSKeyword_UNKNOWN < id) {
       printf("bug: found '%s'\n", tag ? tag : "(null)");
       success = false;

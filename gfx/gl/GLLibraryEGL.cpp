@@ -44,7 +44,7 @@ static PRLibrary* LoadApitraceLibrary()
 
     // The firefox process can't write to /data/local, but it can write
     // to $GRE_HOME/
-    nsCAutoString logPath;
+    nsAutoCString logPath;
     logPath.AppendPrintf("%s/%s", getenv("GRE_HOME"), logFile.get());
 
     // apitrace uses the TRACE_FILE environment variable to determine where

@@ -94,16 +94,16 @@ nsIconChannel::Init(nsIURI* aURI)
   nsCOMPtr<nsIMozIconURI> iconURI = do_QueryInterface(aURI);
   NS_ASSERTION(iconURI, "URI is not an nsIMozIconURI");
 
-  nsCAutoString stockIcon;
+  nsAutoCString stockIcon;
   iconURI->GetStockIcon(stockIcon);
 
-  nsCAutoString iconSizeString;
+  nsAutoCString iconSizeString;
   iconURI->GetIconSize(iconSizeString);
 
   uint32_t desiredImageSize;
   iconURI->GetImageSize(&desiredImageSize);
 
-  nsCAutoString iconStateString;
+  nsAutoCString iconStateString;
   iconURI->GetIconState(iconStateString);
   bool disabled = iconStateString.EqualsLiteral("disabled");
 
