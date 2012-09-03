@@ -56,13 +56,15 @@ let CustomChromeProtocol = {
     // nsIFactory
     createInstance: function BNPH_createInstance(aOuter, aIID) {
       if (aOuter) {
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw Components.Exception("Class does not allow aggregation",
+                                   Components.results.NS_ERROR_NO_AGGREGATION);
       }
       return CustomChromeProtocol.QueryInterface(aIID);
     },
 
     lockFactory: function BNPH_lockFactory(aLock) {
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+      throw Components.Exception("Function lockFactory is not implemented",
+                                 Components.results.NS_ERROR_NOT_IMPLEMENTED);
     },
 
     QueryInterface: XPCOMUtils.generateQI([
