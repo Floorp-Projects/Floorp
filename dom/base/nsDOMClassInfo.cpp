@@ -1905,14 +1905,14 @@ static const JSClass *sObjectClass = nullptr;
  * Set our JSClass pointer for the Object class
  */
 static void
-FindObjectClass(JSObject* aGlobalObject)
+FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
 {
   NS_ASSERTION(!sObjectClass,
                "Double set of sObjectClass");
   JSObject *obj, *proto = aGlobalObject;
   do {
     obj = proto;
-    proto = js::GetObjectProto(obj);
+    js::GetObjectProto(cx, obj, &proto);
   } while (proto);
 
   sObjectClass = js::GetObjectJSClass(obj);
@@ -5126,7 +5126,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
   // sObjectClass, so compute it here. We assume that nobody has had a
   // chance to monkey around with proto's prototype chain before this.
   if (!sObjectClass) {
-    FindObjectClass(proto);
+    FindObjectClass(cx, proto);
     NS_ASSERTION(sObjectClass && !strcmp(sObjectClass->name, "Object"),
                  "Incorrect object class!");
   }
@@ -7500,7 +7500,11 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     wrapper->GetJSObject(&realObj);
 
     if (obj == realObj) {
-      JSObject *proto = js::GetObjectProto(obj);
+      JSObject *proto;
+      if (!js::GetObjectProto(cx, obj, &proto)) {
+          *_retval = JS_FALSE;
+          return NS_OK;
+      }
       if (proto) {
         JSObject *pobj = NULL;
         jsval val;
@@ -8939,7 +8943,9 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
   }
 
   while (js::GetObjectJSClass(obj) != &sHTMLDocumentAllClass) {
-    obj = js::GetObjectProto(obj);
+    if (!js::GetObjectProto(cx, obj, &obj)) {
+      return JS_FALSE;
+    }
 
     if (!obj) {
       NS_ERROR("The JS engine lies!");

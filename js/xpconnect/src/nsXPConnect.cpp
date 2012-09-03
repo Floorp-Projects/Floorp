@@ -2929,40 +2929,6 @@ JS_EXPORT_API(void) DumpJSEval(uint32_t frameno, const char* text)
         printf("failed to get XPConnect service!\n");
 }
 
-JS_EXPORT_API(void) DumpJSObject(JSObject* obj)
-{
-    xpc_DumpJSObject(obj);
-}
-
-JS_EXPORT_API(void) DumpJSValue(JS::Value val)
-{
-    printf("Dumping 0x%llu.\n", (long long) val.asRawBits());
-    if (val.isNull()) {
-        printf("Value is null\n");
-    } else if (val.isObject()) {
-        printf("Value is an object\n");
-        DumpJSObject(&val.toObject());
-    } else if (val.isNumber()) {
-        printf("Value is a number: ");
-        if (val.isInt32())
-          printf("Integer %i\n", val.toInt32());
-        else if (val.isDouble())
-          printf("Floating-point value %f\n", val.toDouble());
-    } else if (val.isString()) {
-        printf("Value is a string: ");
-        putc('<', stdout);
-        JS_FileEscapedString(stdout, val.toString(), 0);
-        fputs(">\n", stdout);
-    } else if (val.isBoolean()) {
-        printf("Value is boolean: ");
-        printf(val.isTrue() ? "true" : "false");
-    } else if (val.isUndefined()) {
-        printf("Value is undefined\n");
-    } else {
-        printf("No idea what this value is.\n");
-    }
-}
-
 JS_EXPORT_API(void) DumpCompleteHeap()
 {
     nsCOMPtr<nsICycleCollectorListener> listener =

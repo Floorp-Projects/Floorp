@@ -1835,7 +1835,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
     }
 
   restart:
-    for (cur = obj; cur; cur = js::GetObjectProto(cur)) {
+    for (cur = obj; cur; ) {
         // this is on two lines to make the compiler happy given the goto.
         js::Class* clazz;
         clazz = js::GetObjectClass(cur);
@@ -1851,7 +1851,7 @@ return_wrapper:
                 if (proto != wrapper_proto &&
                     (!protoClassInfo || !wrapper_proto ||
                      protoClassInfo != wrapper_proto->GetClassInfo()))
-                    continue;
+                    goto next;
             }
             if (pobj2)
                 *pobj2 = isWN ? nullptr : cur;
@@ -1866,7 +1866,7 @@ return_tearoff:
                 (proto->GetScope() != wrapper->GetScope() ||
                  !protoClassInfo || !wrapper->GetProto() ||
                  protoClassInfo != wrapper->GetProto()->GetClassInfo()))
-                continue;
+                goto next;
             if (pobj2)
                 *pobj2 = nullptr;
             XPCWrappedNativeTearOff* to = (XPCWrappedNativeTearOff*) js::GetObjectPrivate(cur);
@@ -1878,13 +1878,18 @@ return_tearoff:
         }
 
         // Unwrap any wrapper wrappers.
-        JSObject *unsafeObj = cx
-                              ? XPCWrapper::Unwrap(cx, cur, /* stopAtOuter = */ false)
-                              : js::UnwrapObject(cur, /* stopAtOuter = */ false);
+        JSObject *unsafeObj;
+        unsafeObj = cx
+                  ? XPCWrapper::Unwrap(cx, cur, /* stopAtOuter = */ false)
+                  : js::UnwrapObject(cur, /* stopAtOuter = */ false);
         if (unsafeObj) {
             obj = unsafeObj;
             goto restart;
         }
+
+      next:
+        if (!js::GetObjectProto(cx, cur, &cur))
+            return nullptr;
     }
 
     if (pobj2)
