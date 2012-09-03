@@ -44,8 +44,8 @@ struct nsListenerStruct
   nsCOMPtr<nsIAtom>             mTypeAtom;
   uint16_t                      mFlags;
   uint8_t                       mListenerType;
-  bool                          mListenerIsHandler;
-  bool                          mHandlerIsString;
+  bool                          mListenerIsHandler : 1;
+  bool                          mHandlerIsString : 1;
 
   nsIJSEventListener* GetJSListener() const {
     return (mListenerType == eJSEventListener) ?
