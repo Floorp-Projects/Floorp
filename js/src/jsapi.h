@@ -4334,8 +4334,8 @@ extern JS_PUBLIC_API(void *)
 JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
                       jsval *argv);
 
-extern JS_PUBLIC_API(JSObject *)
-JS_GetPrototype(JSRawObject obj);
+extern JS_PUBLIC_API(JSBool)
+JS_GetPrototype(JSContext *cx, JSObject *obj, JSObject **protop);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto);

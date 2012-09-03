@@ -614,6 +614,7 @@ jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 JSDValue*
 jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
 {
+    JSContext* cx = jsdc->dumbContext;
     if(!(CHECK_BIT_FLAG(jsdval->flags, GOT_PROTO)))
     {
         JSObject* obj;
@@ -623,7 +624,8 @@ jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
         if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return NULL;
         obj = JSVAL_TO_OBJECT(jsdval->val);
-        proto = JS_GetPrototype(obj);
+        if(!JS_GetPrototype(cx, obj, &proto))
+            return NULL;
         if(!proto)
             return NULL;
         jsdval->proto = jsd_NewValue(jsdc, OBJECT_TO_JSVAL(proto));
@@ -665,6 +667,7 @@ JSDValue*
 jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
 {
     JSCompartment* oldCompartment = NULL;
+    JSContext* cx = jsdc->dumbContext;
 
     if(!(CHECK_BIT_FLAG(jsdval->flags, GOT_CTOR)))
     {
@@ -676,7 +679,8 @@ jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
         if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return NULL;
         obj = JSVAL_TO_OBJECT(jsdval->val);
-        proto = JS_GetPrototype(obj);
+        if(!JS_GetPrototype(cx, obj, &proto))
+            return NULL;
         if(!proto)
             return NULL;
         JS_BeginRequest(jsdc->dumbContext);

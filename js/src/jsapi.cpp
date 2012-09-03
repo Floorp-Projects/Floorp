@@ -3268,11 +3268,14 @@ JS_GetInstancePrivate(JSContext *cx, JSObject *objArg, JSClass *clasp, jsval *ar
     return obj->getPrivate();
 }
 
-JS_PUBLIC_API(JSObject *)
-JS_GetPrototype(RawObject obj)
+JS_PUBLIC_API(JSBool)
+JS_GetPrototype(JSContext *cx, JSObject *objArg, JSObject **protop)
 {
-    /* FIXME! */
-    return obj->getProto();
+    RootedObject obj(cx, objArg);
+    RootedObject proto(cx);
+    bool rv = JSObject::getProto(cx, obj, &proto);
+    *protop = proto;
+    return rv;
 }
 
 JS_PUBLIC_API(JSBool)
