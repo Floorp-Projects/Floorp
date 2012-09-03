@@ -303,7 +303,7 @@ struct Parser : private AutoGCRooter
      */
     ObjectBox *newObjectBox(JSObject *obj);
 
-    FunctionBox *newFunctionBox(JSObject *obj, ParseContext *pc, StrictMode::StrictModeState sms);
+    FunctionBox *newFunctionBox(JSObject *obj, ParseContext *pc, StrictMode sms);
 
     /*
      * Create a new function object given parse context (pc) and a name (which

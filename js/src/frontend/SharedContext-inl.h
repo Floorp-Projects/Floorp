@@ -16,7 +16,7 @@ namespace frontend {
 
 inline
 SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun,
-                             FunctionBox *funbox, StrictMode::StrictModeState sms)
+                             FunctionBox *funbox, StrictMode sms)
   : context(cx),
     fun_(cx, fun),
     funbox_(funbox),
