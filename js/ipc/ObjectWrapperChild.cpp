@@ -422,14 +422,14 @@ ObjectWrapperChild::AnswerNewEnumerateInit(/* no in-parameters */
         return false;
     AutoObjectRooter tvr(cx, state);
 
-    for (JSObject* proto = mObj;
-         proto;
-         proto = JS_GetPrototype(proto))
-    {
+    for (JSObject* proto = mObj; proto; ) {
         AutoIdArray ids(cx, JS_Enumerate(cx, proto));
         for (size_t i = 0; i < ids.length(); ++i)
             JS_DefinePropertyById(cx, state, ids[i], JSVAL_VOID,
                                   NULL, NULL, JSPROP_ENUMERATE | JSPROP_SHARED);
+
+        if (!JS_GetPrototype(cx, proto, &proto))
+            return false;
     }
 
     InfallibleTArray<nsString>* strIds;

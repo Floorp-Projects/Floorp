@@ -405,11 +405,10 @@ GetObjectProto(JSContext *cx, JSObject *obj, JSObject **proto)
         clasp == &js::OuterWindowProxyClass ||
         clasp == &js::FunctionProxyClass)
     {
-        /* FIXME */
-        *proto = reinterpret_cast<const shadow::Object*>(obj)->type->proto;
-    } else {
-        *proto = reinterpret_cast<const shadow::Object*>(obj)->type->proto;
+        return JS_GetPrototype(cx, obj, proto);
     }
+
+    *proto = reinterpret_cast<const shadow::Object*>(obj)->type->proto;
     return true;
 }
 

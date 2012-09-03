@@ -288,7 +288,11 @@ interface_hasInstance(JSContext *cx, JSHandleObject obj, JSMutableHandleValue vp
             } else {
                 JSObject *protoObj = JSVAL_TO_OBJECT(prototype);
                 JSObject *proto = other;
-                while ((proto = JS_GetPrototype(proto))) {
+                for (;;) {
+                    if (!JS_GetPrototype(cx, proto, &proto))
+                        return false;
+                    if (!proto)
+                        break;
                     if (proto == protoObj) {
                         *bp = true;
                         return true;
@@ -697,8 +701,9 @@ template<class LC>
 bool
 ListBase<LC>::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
-    JSObject *proto = JS_GetPrototype(proxy);
-    return getOwnPropertyNames(cx, proxy, props) &&
+    JSObject *proto;
+    return JS_GetPrototype(cx, proxy, &proto) &&
+           getOwnPropertyNames(cx, proxy, props) &&
            (!proto || js::GetPropertyNames(cx, proto, 0, &props));
 }
 
