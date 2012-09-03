@@ -27,9 +27,9 @@ public:
 #ifdef XP_WIN
                 nsID aPdbSignature,
                 unsigned long aPdbAge,
-                const char *aPdbName,
+                char *aPdbName,
 #endif
-                const char *aName)
+                char *aName)
     : mStart(aStart)
     , mEnd(aEnd)
     , mOffset(aOffset)
