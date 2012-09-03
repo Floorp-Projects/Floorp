@@ -4367,6 +4367,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         options.setPrincipals(parent->principals())
                .setOriginPrincipals(parent->originPrincipals)
                .setCompileAndGo(parent->compileAndGo)
+               .setSelfHostingMode(parent->selfHosted)
                .setNoScriptRval(false)
                .setVersion(parent->getVersion())
                .setUserBit(parent->userBit);

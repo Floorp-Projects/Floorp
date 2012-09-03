@@ -1038,6 +1038,8 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
     Vector<FrameDescription> frames(cx);
 
     for (ScriptFrameIter i(cx); !i.done(); ++i) {
+        if (i.script()->selfHosted)
+            continue;
         FrameDescription desc;
         desc.script = i.script();
         desc.lineno = PCToLineNumber(i.script(), i.pc());
