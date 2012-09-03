@@ -281,6 +281,7 @@ NeedIntermediateSurface(const Pattern& aPattern, const DrawOptions& aOptions)
 
 DrawTargetCairo::DrawTargetCairo()
   : mContext(nullptr)
+  , mPathObserver(nullptr)
 {
 }
 
@@ -687,11 +688,6 @@ DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FILL_WINDING */) cons
                                                           const_cast<DrawTargetCairo*>(this),
                                                           aFillRule);
 
-  // Creating a PathBuilder implicitly resets our mPathObserver, as it calls
-  // SetPathObserver() on us. Since this guarantees our old path is saved off,
-  // it's safe to reset the path here.
-  cairo_new_path(mContext);
-
   return builder;
 }
 
@@ -921,12 +917,6 @@ DrawTargetCairo::SetPathObserver(CairoPathContext* aPathObserver)
 void
 DrawTargetCairo::SetTransform(const Matrix& aTransform)
 {
-  // We're about to logically change our transformation. Our current path will
-  // need to change, because Cairo stores paths in device space.
-  if (mPathObserver) {
-    mPathObserver->MatrixWillChange(aTransform);
-  }
-
   mTransform = aTransform;
 
   cairo_matrix_t mat;
