@@ -404,11 +404,17 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             //
             // COW(obj) => COW(foo) => COW(bar) => contentWin.StandardClass.prototype
             JSProtoKey key = JSProto_Null;
-            JSObject *unwrappedProto = NULL;
-            if (wrappedProto && IsCrossCompartmentWrapper(wrappedProto) &&
-                (unwrappedProto = Wrapper::wrappedObject(wrappedProto))) {
-                JSAutoCompartment ac(cx, unwrappedProto);
-                key = JS_IdentifyClassPrototype(cx, unwrappedProto);
+            {
+                JSAutoCompartment ac(cx, obj);
+                JSObject *unwrappedProto;
+                if (!js::GetObjectProto(cx, obj, &unwrappedProto))
+                    return NULL;
+                if (unwrappedProto && IsCrossCompartmentWrapper(unwrappedProto))
+                    unwrappedProto = Wrapper::wrappedObject(unwrappedProto);
+                if (unwrappedProto) {
+                    JSAutoCompartment ac2(cx, unwrappedProto);
+                    key = JS_IdentifyClassPrototype(cx, unwrappedProto);
+                }
             }
             if (key != JSProto_Null) {
                 JSObject *homeProto;

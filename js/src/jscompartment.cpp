@@ -289,19 +289,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     RootedObject obj(cx, &vp->toObject());
 
-    /*
-     * Recurse to wrap the prototype. Long prototype chains will run out of
-     * stack, causing an error in CHECK_RECURSE.
-     *
-     * Wrapping the proto before creating the new wrapper and adding it to the
-     * cache helps avoid leaving a bad entry in the cache on OOM. But note that
-     * if we wrapped both proto and parent, we would get infinite recursion
-     * here (since Object.prototype->parent->proto leads to Object.prototype
-     * itself).
-     */
-    RootedObject proto(cx, obj->getTaggedProto().raw());
-    if (!wrap(cx, proto.address()))
-        return false;
+    JSObject *proto = Proxy::LazyProto;
 
     /*
      * We hand in the original wrapped object into the wrap hook to allow
