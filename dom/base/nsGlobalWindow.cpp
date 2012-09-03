@@ -2518,7 +2518,7 @@ nsGlobalWindow::DialogsAreBlocked(bool *aBeingAbused)
 
   nsGlobalWindow *topWindow = GetScriptableTop();
   if (!topWindow) {
-    NS_ASSERTION(!mDocShell, "DialogsAreBlocked() called without a top window?");
+    NS_ERROR("DialogsAreBlocked() called without a top window?");
     return true;
   }
 
@@ -7652,11 +7652,9 @@ nsGlobalWindow::ActivateOrDeactivate(bool aActivate)
 
     // widgetListener should be a nsXULWindow
     nsIWidgetListener* listener = topLevelWidget->GetWidgetListener();
-    if (listener) {
-      nsCOMPtr<nsIXULWindow> window = listener->GetXULWindow();
-      nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(window));
-      topLevelWindow = do_GetInterface(req);
-    }
+    nsCOMPtr<nsIXULWindow> window = listener->GetXULWindow();
+    nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(window));
+    topLevelWindow = do_GetInterface(req);
   }
   if (topLevelWindow) {
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(topLevelWindow));
