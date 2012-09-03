@@ -1031,7 +1031,7 @@ private:
 void FileMediaResource::EnsureLengthInitialized()
 {
   mLock.AssertCurrentThreadOwns();
-  if (mSizeInitialized) {
+  if (mSizeInitialized || !mInput) {
     return;
   }
   mSizeInitialized = true;
