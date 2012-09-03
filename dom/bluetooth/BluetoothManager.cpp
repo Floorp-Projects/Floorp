@@ -83,7 +83,7 @@ public:
                                     sc->GetNativeGlobal(),
                                     adapter,
                                     aValue);
-    bool result = NS_SUCCEEDED(rv) ? true : false;
+    bool result = NS_SUCCEEDED(rv);
     if (!result) {
       NS_WARNING("Cannot create native object!");
       SetError(NS_LITERAL_STRING("BluetoothNativeObjectError"));
@@ -247,6 +247,20 @@ BluetoothManager::HandleMozsettingChanged(const PRUnichar* aData)
   }
 
   bool enabled = value.toBoolean();
+  bool isEnabled = (bs->IsEnabledInternal() > 0);
+  if (!isEnabled && enabled) {
+    if (NS_FAILED(bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING("/"), this))) {
+      NS_ERROR("Failed to register object with observer!");
+      return NS_ERROR_FAILURE;
+    }
+  } else if (isEnabled && !enabled){
+    if (NS_FAILED(bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING("/"), this))) {
+      NS_WARNING("Failed to unregister object with observer!");
+    }
+  } else {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIRunnable> resultTask = new ToggleBtResultTask(this, enabled);
 
   if (enabled) {
@@ -330,17 +344,19 @@ BluetoothManager::GetDefaultAdapter(nsIDOMDOMRequest** aAdapter)
 // static
 already_AddRefed<BluetoothManager>
 BluetoothManager::Create(nsPIDOMWindow* aWindow) {
-
   nsRefPtr<BluetoothManager> manager = new BluetoothManager(aWindow);
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
     NS_WARNING("BluetoothService not available!");
     return nullptr;
   }
-  
-  if (NS_FAILED(bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING("/"), manager))) {
-    NS_ERROR("Failed to register object with observer!");
-    return nullptr;
+
+  bool isEnabled = (bs->IsEnabledInternal() > 0);
+  if (isEnabled) {
+    if (NS_FAILED(bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING("/"), manager))) {
+      NS_ERROR("Failed to register object with observer!");
+      return nullptr;
+    }
   }
   
   return manager.forget();
@@ -390,13 +406,28 @@ NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
 void
 BluetoothManager::Notify(const BluetoothSignal& aData)
 {
+  if (aData.name().EqualsLiteral("AdapterAdded")) {
+    nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
+    nsresult rv = event->InitEvent(NS_LITERAL_STRING("adapteradded"), false, false);
+
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to init the adapteradded event!!!");
+      return;
+    }
+
+    event->SetTrusted(true);
+    bool dummy;
+    DispatchEvent(event, &dummy);
+  } else {
 #ifdef DEBUG
-  nsCString warningMsg;
-  warningMsg.AssignLiteral("Not handling manager signal: ");
-  warningMsg.Append(NS_ConvertUTF16toUTF8(aData.name()));
-  NS_WARNING(warningMsg.get());
+    nsCString warningMsg;
+    warningMsg.AssignLiteral("Not handling manager signal: ");
+    warningMsg.Append(NS_ConvertUTF16toUTF8(aData.name()));
+    NS_WARNING(warningMsg.get());
 #endif
+  }
 }
 
 NS_IMPL_EVENT_HANDLER(BluetoothManager, enabled)
 NS_IMPL_EVENT_HANDLER(BluetoothManager, disabled)
+NS_IMPL_EVENT_HANDLER(BluetoothManager, adapteradded)
