@@ -12,13 +12,10 @@ namespace mozilla {
 
 MaskLayerImageCache::MaskLayerImageCache()
 {
-  MOZ_COUNT_CTOR(MaskLayerImageCache);
   mMaskImageContainers.Init();
 }
 MaskLayerImageCache::~MaskLayerImageCache()
-{
-  MOZ_COUNT_DTOR(MaskLayerImageCache);
-}
+{}
 
 
 /* static */ PLDHashOperator
