@@ -186,6 +186,10 @@ CanvasLayerOGL::UpdateSurface()
   }
 #endif
 
+  if (mCanvasGLContext) {
+    mCanvasGLContext->MakeCurrent();
+  }
+
   if (mCanvasGLContext &&
       !mForceReadback &&
       mCanvasGLContext->GetContextType() == gl()->GetContextType())
@@ -193,7 +197,6 @@ CanvasLayerOGL::UpdateSurface()
     DiscardTempSurface();
 
     // Can texture share, just make sure it's resolved first
-    mCanvasGLContext->MakeCurrent();
     mCanvasGLContext->GuaranteeResolve();
 
     if (gl()->BindOffscreenNeedsTexture(mCanvasGLContext) &&
@@ -202,30 +205,33 @@ CanvasLayerOGL::UpdateSurface()
       mOGLManager->MakeCurrent();
       MakeTextureIfNeeded(gl(), mTexture);
     }
-  } else {
-    nsRefPtr<gfxASurface> updatedAreaSurface;
+    return;
+  }
 
-    if (mCanvasSurface) {
-      updatedAreaSurface = mCanvasSurface;
-    } else if (mCanvasGLContext) {
-      gfxIntSize size(mBounds.width, mBounds.height);
-      nsRefPtr<gfxImageSurface> updatedAreaImageSurface =
+  nsRefPtr<gfxASurface> updatedAreaSurface;
+  if (mCanvasGLContext) {
+    gfxIntSize size(mBounds.width, mBounds.height);
+    nsRefPtr<gfxImageSurface> updatedAreaImageSurface =
         GetTempSurface(size, gfxASurface::ImageFormatARGB32);
 
-      updatedAreaImageSurface->Flush();
-      mCanvasGLContext->ReadScreenIntoImageSurface(updatedAreaImageSurface);
-      updatedAreaImageSurface->MarkDirty();
+    updatedAreaImageSurface->Flush();
+    mCanvasGLContext->ReadScreenIntoImageSurface(updatedAreaImageSurface);
+    updatedAreaImageSurface->MarkDirty();
 
-      updatedAreaSurface = updatedAreaImageSurface;
-    }
-
-    mOGLManager->MakeCurrent();
-    mLayerProgram = gl()->UploadSurfaceToTexture(updatedAreaSurface,
-                                                 mBounds,
-                                                 mTexture,
-                                                 false,
-                                                 nsIntPoint(0, 0));
+    updatedAreaSurface = updatedAreaImageSurface;
+  } else if (mCanvasSurface) {
+    updatedAreaSurface = mCanvasSurface;
+  } else {
+    MOZ_NOT_REACHED("Unhandled canvas layer type.");
+    return;
   }
+
+  mOGLManager->MakeCurrent();
+  mLayerProgram = gl()->UploadSurfaceToTexture(updatedAreaSurface,
+                                               mBounds,
+                                               mTexture,
+                                               false,
+                                               nsIntPoint(0, 0));
 }
 
 void

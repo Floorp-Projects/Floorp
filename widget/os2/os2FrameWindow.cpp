@@ -485,7 +485,7 @@ nsresult os2FrameWindow::SetIcon(const nsAString& aIconSpec)
 
   // if the file was found, try to use it
   if (iconFile) {
-    nsCAutoString path;
+    nsAutoCString path;
     iconFile->GetNativePath(path);
 
     if (mFrameIcon) {

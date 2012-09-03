@@ -1058,7 +1058,7 @@ ProcessGeneralName(PRArenaPool *arena,
 	if (SEC_ASN1DecodeItem(arena, &decoded, 
 			       SEC_ASN1_GET(SEC_UTF8StringTemplate), 
 			       &current->name.OthName.name) == SECSuccess) {
-	  AppendUTF8toUTF16(nsCAutoString((char*)decoded.data, decoded.len),
+	  AppendUTF8toUTF16(nsAutoCString((char*)decoded.data, decoded.len),
 			    value);
 	} else {
 	  ProcessRawBytes(nssComponent, &current->name.OthName.name, value);

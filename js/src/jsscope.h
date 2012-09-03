@@ -130,7 +130,7 @@ struct ShapeTable {
     }
 
     ~ShapeTable() {
-        js::UnwantedForeground::free_(entries);
+        js_free(entries);
     }
 
     /* By definition, hashShift = HASH_BITS - log2(capacity). */

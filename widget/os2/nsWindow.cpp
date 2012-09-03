@@ -2081,7 +2081,7 @@ do {
   thebesContext->Clip();
 
 #ifdef DEBUG_PAINT
-  debug_DumpPaintEvent(stdout, this, &event, nsCAutoString("noname"),
+  debug_DumpPaintEvent(stdout, this, &event, nsAutoCString("noname"),
                        (int32_t)mWnd);
 #endif
 

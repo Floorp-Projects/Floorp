@@ -142,7 +142,7 @@ Omnijar::GetURIString(Type aType, nsACString &result)
         return NS_OK;
     }
 
-    nsCAutoString omniJarSpec;
+    nsAutoCString omniJarSpec;
     if (sPath[aType]) {
         nsresult rv = NS_GetURLSpecFromActualFile(sPath[aType], omniJarSpec);
         NS_ENSURE_SUCCESS(rv, rv);

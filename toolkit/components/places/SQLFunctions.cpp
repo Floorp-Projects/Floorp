@@ -333,7 +333,7 @@ namespace places {
     #define HAS_BEHAVIOR(aBitName) \
       (searchBehavior & mozIPlacesAutoComplete::BEHAVIOR_##aBitName)
 
-    nsCAutoString searchString;
+    nsAutoCString searchString;
     (void)aArguments->GetUTF8String(kArgSearchString, searchString);
     nsCString url;
     (void)aArguments->GetUTF8String(kArgIndexURL, url);
@@ -353,7 +353,7 @@ namespace places {
     int32_t visitCount = aArguments->AsInt32(kArgIndexVisitCount);
     bool typed = aArguments->AsInt32(kArgIndexTyped) ? true : false;
     bool bookmark = aArguments->AsInt32(kArgIndexBookmark) ? true : false;
-    nsCAutoString tags;
+    nsAutoCString tags;
     (void)aArguments->GetUTF8String(kArgIndexTags, tags);
     int32_t openPageCount = aArguments->AsInt32(kArgIndexOpenPageCount);
 
@@ -378,7 +378,7 @@ namespace places {
     nsCString fixedURI;
     fixupURISpec(url, matchBehavior, fixedURI);
 
-    nsCAutoString title;
+    nsAutoCString title;
     (void)aArguments->GetUTF8String(kArgIndexTitle, title);
 
     // Determine if every token matches either the bookmark title, tags, page
@@ -645,7 +645,7 @@ namespace places {
   GenerateGUIDFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
                                        nsIVariant **_result)
   {
-    nsCAutoString guid;
+    nsAutoCString guid;
     nsresult rv = GenerateGUID(guid);
     NS_ENSURE_SUCCESS(rv, rv);
 

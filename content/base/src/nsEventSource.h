@@ -192,10 +192,6 @@ protected:
   nsString mLastFieldName;
   nsString mLastFieldValue;
 
-  nsRefPtr<nsDOMEventListenerWrapper> mOnOpenListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnMessageListener;
-
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   /**

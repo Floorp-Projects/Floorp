@@ -266,7 +266,7 @@ MRESULT EXPENTRY nsDragWindowProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2)
           // QI'ing nsIURL will fail for mailto: and the like
         nsCOMPtr<nsIURL> urlObject(do_QueryInterface(dragservice->mSourceData));
         if (urlObject) {
-          nsCAutoString filename;
+          nsAutoCString filename;
           urlObject->GetFileName(filename);
           if (filename.IsEmpty()) {
             urlObject->GetHost(filename);
@@ -517,7 +517,7 @@ nsresult nsDragService::SaveAsContents(PCSZ pszDest, nsIURL* aURL)
 
 nsresult nsDragService::SaveAsURL(PCSZ pszDest, nsIURI* aURI)
 {
-  nsCAutoString strUri;
+  nsAutoCString strUri;
   aURI->GetSpec(strUri);
 
   if (strUri.IsEmpty())
@@ -634,11 +634,11 @@ nsresult  nsDragService::GetUrlAndTitle(nsISupports *aGenericData,
     // the hostname & filename;  if not, use the first MAXTITLELTH
     // characters that appear after the scheme name
 
-  nsCAutoString strTitle;
+  nsAutoCString strTitle;
 
   nsCOMPtr<nsIURL> urlObj( do_QueryInterface(saveURI));
   if (urlObj) {
-    nsCAutoString strFile;
+    nsAutoCString strFile;
 
     urlObj->GetHost(strTitle);
     urlObj->GetFileName(strFile);
@@ -649,7 +649,7 @@ nsresult  nsDragService::GetUrlAndTitle(nsISupports *aGenericData,
     else {
       urlObj->GetDirectory(strFile);
       if (strFile.Length() > 1) {
-        nsCAutoString::const_iterator start, end, curr;
+        nsAutoCString::const_iterator start, end, curr;
         strFile.BeginReading(start);
         strFile.EndReading(end);
         strFile.EndReading(curr);
@@ -880,7 +880,7 @@ NS_IMETHODIMP nsDragService::NativeDragEnter(PDRAGINFO pdinfo)
           nsCOMPtr<nsIFile> file;
           if (NS_SUCCEEDED(NS_NewNativeLocalFile(someText, true,
                                                  getter_AddRefs(file)))) {
-            nsCAutoString textStr;
+            nsAutoCString textStr;
             NS_GetURLSpecFromFile(file, textStr);
             if (!textStr.IsEmpty()) {
               someText.Assign(ToNewCString(textStr));
@@ -1141,7 +1141,7 @@ NS_IMETHODIMP nsDragService::NativeDrop(PDRAGINFO pdinfo, HWND hwnd,
           nsCOMPtr<nsIFile> file;
           if (NS_SUCCEEDED(NS_NewNativeLocalFile(fileName,
                                          true, getter_AddRefs(file)))) {
-            nsCAutoString textStr;
+            nsAutoCString textStr;
             NS_GetURLSpecFromFile(file, textStr);
             if (!textStr.IsEmpty()) {
               dropText.Assign(ToNewCString(textStr));
@@ -1354,7 +1354,7 @@ NS_IMETHODIMP nsDragService::NativeDataToTransferable( PCSZ pszText,
       if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), pszText))) {
         nsCOMPtr<nsIURL> url (do_QueryInterface(uri));
         if (url) {
-          nsCAutoString extension;
+          nsAutoCString extension;
           url->GetFileExtension(extension);
           if (!extension.IsEmpty()) {
             if (extension.LowerCaseEqualsLiteral("gif") ||
@@ -1443,7 +1443,7 @@ nsresult RenderToOS2FileComplete(PDRAGTRANSFER pdxfer, USHORT usResult,
         nsCOMPtr<nsIFile> file;
         if (NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(gTempFile),
                                          true, getter_AddRefs(file)))) {
-          nsCAutoString textStr;
+          nsAutoCString textStr;
           NS_GetURLSpecFromFile(file, textStr);
           if (!textStr.IsEmpty()) {
             *outText = ToNewCString(textStr);
@@ -1721,7 +1721,7 @@ void SaveTypeAndSource(nsIFile *file, nsIDOMDocument *domDoc,
   if (ignore)
     return;
 
-  nsCAutoString url;
+  nsAutoCString url;
   srcUri->GetSpec(url);
   os2file->SetFileSource(url);
 

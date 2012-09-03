@@ -63,7 +63,7 @@ nsHttpDigestAuth::MD5Hash(const char *buf, uint32_t len)
   rv = mVerifier->Update((unsigned char*)buf, len);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString hashString;
+  nsAutoCString hashString;
   rv = mVerifier->Finish(false, hashString);
   if (NS_FAILED(rv)) return rv;
 
@@ -118,7 +118,7 @@ nsHttpDigestAuth::GetMethodAndPath(nsIHttpAuthenticableChannel *authChannel,
           // XXX we should really ask the HTTP channel for this string
           // instead of regenerating it here.
           //
-          nsCAutoString buf;
+          nsAutoCString buf;
           path = NS_EscapeURL(path, esc_OnlyNonASCII, buf);
         }
       }
@@ -139,7 +139,7 @@ nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
                                     nsISupports **continuationState,
                                     bool *result)
 {
-  nsCAutoString realm, domain, nonce, opaque;
+  nsAutoCString realm, domain, nonce, opaque;
   bool stale;
   uint16_t algorithm, qop;
 
@@ -182,7 +182,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
   // IIS implementation requires extra quotes
   bool requireExtraQuotes = false;
   {
-    nsCAutoString serverVal;
+    nsAutoCString serverVal;
     authChannel->GetServerResponseHeader(serverVal);
     if (!serverVal.IsEmpty()) {
       requireExtraQuotes = !PL_strncasecmp(serverVal.get(), "Microsoft-IIS", 13);
@@ -190,12 +190,12 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
   }
 
   nsresult rv;
-  nsCAutoString httpMethod;
-  nsCAutoString path;
+  nsAutoCString httpMethod;
+  nsAutoCString path;
   rv = GetMethodAndPath(authChannel, isProxyAuth, httpMethod, path);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString realm, domain, nonce, opaque;
+  nsAutoCString realm, domain, nonce, opaque;
   bool stale;
   uint16_t algorithm, qop;
 
@@ -280,7 +280,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
   // this lets the client verify the server response (via a server
   // returned Authentication-Info header). also used for session info.
   //
-  nsCAutoString cnonce;
+  nsAutoCString cnonce;
   static const char hexChar[] = "0123456789abcdef"; 
   for (int i=0; i<16; ++i) {
     cnonce.Append(hexChar[(int)(15.0 * rand()/(RAND_MAX + 1.0))]);
@@ -312,7 +312,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
   //    cnonce
   //
 
-  nsCAutoString authString;
+  nsAutoCString authString;
 
   authString.AssignLiteral("Digest username=");
   rv = AppendQuotedString(cUser, authString);
@@ -399,7 +399,7 @@ nsHttpDigestAuth::CalculateResponse(const char * ha1_digest,
       len += 4; // length of "auth"
   }
 
-  nsCAutoString contents;
+  nsAutoCString contents;
   contents.SetCapacity(len);
 
   contents.Assign(ha1_digest, EXPANDED_DIGEST_LENGTH);
@@ -465,7 +465,7 @@ nsHttpDigestAuth::CalculateHA1(const nsAFlatCString & username,
         len = exlen;
   }
 
-  nsCAutoString contents;
+  nsAutoCString contents;
   contents.SetCapacity(len + 1);
 
   contents.Assign(username);
@@ -512,7 +512,7 @@ nsHttpDigestAuth::CalculateHA2(const nsAFlatCString & method,
     len += EXPANDED_DIGEST_LENGTH + 1;
   }
 
-  nsCAutoString contents;
+  nsAutoCString contents;
   contents.SetCapacity(len);
 
   contents.Assign(method);
@@ -658,7 +658,7 @@ nsresult
 nsHttpDigestAuth::AppendQuotedString(const nsACString & value,
                                      nsACString & aHeaderLine)
 {
-  nsCAutoString quoted;
+  nsAutoCString quoted;
   nsACString::const_iterator s, e;
   value.BeginReading(s);
   value.EndReading(e);

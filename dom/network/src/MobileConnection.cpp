@@ -33,18 +33,10 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(MobileConnection)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MobileConnection,
                                                   nsDOMEventTargetHelper)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(cardstatechange)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(voicechange)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(datachange)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(ussdreceived)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
                                                 nsDOMEventTargetHelper)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(cardstatechange)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(voicechange)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(datachange)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(ussdreceived)
   tmp->mProvider = nullptr;
   tmp->mIccManager = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -57,6 +49,11 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(MobileConnection, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MobileConnection, nsDOMEventTargetHelper)
+
+NS_IMPL_EVENT_HANDLER(MobileConnection, cardstatechange)
+NS_IMPL_EVENT_HANDLER(MobileConnection, voicechange)
+NS_IMPL_EVENT_HANDLER(MobileConnection, datachange)
+NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
 
 MobileConnection::MobileConnection()
 {
@@ -306,11 +303,6 @@ MobileConnection::InternalDispatchEvent(const nsAString& aType)
 
   return NS_OK;
 }
-
-NS_IMPL_EVENT_HANDLER(MobileConnection, cardstatechange)
-NS_IMPL_EVENT_HANDLER(MobileConnection, voicechange)
-NS_IMPL_EVENT_HANDLER(MobileConnection, datachange)
-NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
 
 } // namespace network
 } // namespace dom

@@ -26,7 +26,7 @@ class nsString;
  * http://dev.w3.org/html5/websockets/
  *
  */
-[scriptable, uuid(e59c8c65-df29-485c-a00b-8fac3dc1573a)]
+[scriptable, uuid(5224dbe7-58ac-43e6-93ba-f288a1421dff)]
 interface nsIWebSocket : nsISupports
 {
   readonly attribute DOMString url;
@@ -47,10 +47,10 @@ interface nsIWebSocket : nsISupports
   attribute DOMString binaryType;
 
   // event handler attributes
-  attribute nsIDOMEventListener onopen;
-  attribute nsIDOMEventListener onmessage;
-  attribute nsIDOMEventListener onerror;
-  attribute nsIDOMEventListener onclose;
+  [implicit_jscontext] attribute jsval onopen;
+  [implicit_jscontext] attribute jsval onmessage;
+  [implicit_jscontext] attribute jsval onerror;
+  [implicit_jscontext] attribute jsval onclose;
 
   /**
    * Transmits data to other end of the connection.

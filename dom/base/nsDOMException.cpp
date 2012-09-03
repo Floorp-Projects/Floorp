@@ -319,7 +319,7 @@ nsDOMException::ToString(char **aReturn)
   static const char format[] =
     "[Exception... \"%s\"  code: \"%d\" nsresult: \"0x%x (%s)\"  location: \"%s\"]";
 
-  nsCAutoString location;
+  nsAutoCString location;
 
   if (mInner) {
     nsXPIDLCString filename;

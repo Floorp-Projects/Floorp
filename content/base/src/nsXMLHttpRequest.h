@@ -46,16 +46,17 @@ class AsyncVerifyRedirectCallbackForwarder;
 class nsIUnicodeDecoder;
 class nsIDOMFormData;
 
-#define IMPL_EVENT_HANDLER(_lowercase, _capitalized)                    \
-  JSObject* GetOn##_lowercase(JSContext* /* unused */ )                 \
+#define IMPL_EVENT_HANDLER(_lowercase)                                  \
+  inline JSObject* GetOn##_lowercase(JSContext* aCx)                    \
   {                                                                     \
-    return GetListenerAsJSObject(mOn##_capitalized##Listener);          \
+    JS::Value val;                                                      \
+    nsresult rv = GetOn##_lowercase(aCx, &val);                         \
+    return NS_SUCCEEDED(rv) ? JSVAL_TO_OBJECT(val) : nullptr;           \
   }                                                                     \
-  void SetOn##_lowercase(JSContext* aCx, JSObject* aCallback, ErrorResult& aRv) \
+  void SetOn##_lowercase(JSContext* aCx, JSObject* aCallback,           \
+                         ErrorResult& aRv)                              \
   {                                                                     \
-    aRv = SetJSObjectListener(aCx, NS_LITERAL_STRING(#_lowercase),      \
-                              mOn##_capitalized##Listener,              \
-                              aCallback);                               \
+    aRv = SetOn##_lowercase(aCx, OBJECT_TO_JSVAL(aCallback));           \
   }
 
 class nsXHREventTarget : public nsDOMEventTargetHelper,
@@ -72,52 +73,15 @@ public:
   NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
 
-  IMPL_EVENT_HANDLER(loadstart, LoadStart)
-  IMPL_EVENT_HANDLER(progress, Progress)
-  IMPL_EVENT_HANDLER(abort, Abort)
-  IMPL_EVENT_HANDLER(error, Error)
-  IMPL_EVENT_HANDLER(load, Load)
-  IMPL_EVENT_HANDLER(timeout, Timeout)
-  IMPL_EVENT_HANDLER(loadend, Loadend)
+  IMPL_EVENT_HANDLER(loadstart)
+  IMPL_EVENT_HANDLER(progress)
+  IMPL_EVENT_HANDLER(abort)
+  IMPL_EVENT_HANDLER(error)
+  IMPL_EVENT_HANDLER(load)
+  IMPL_EVENT_HANDLER(timeout)
+  IMPL_EVENT_HANDLER(loadend)
   
   virtual void DisconnectFromOwner();
-protected:
-  static inline JSObject* GetListenerAsJSObject(nsDOMEventListenerWrapper* aWrapper)
-  {
-    if (!aWrapper) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder =
-        do_QueryInterface(aWrapper->GetInner());
-    JSObject* obj;
-    return holder && NS_SUCCEEDED(holder->GetJSObject(&obj)) ? obj : nullptr;
-  }
-  inline nsresult SetJSObjectListener(JSContext* aCx,
-                                      const nsAString& aType,
-                                      nsRefPtr<nsDOMEventListenerWrapper>& aWrapper,
-                                      JSObject* aCallback)
-  {
-    nsCOMPtr<nsIDOMEventListener> listener;
-    if (aCallback) {
-      nsresult rv =
-        nsContentUtils::XPConnect()->WrapJS(aCx,
-                                            aCallback,
-                                            NS_GET_IID(nsIDOMEventListener),
-                                            getter_AddRefs(listener));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    return RemoveAddEventListener(aType, aWrapper, listener);
-  }
-
-  nsRefPtr<nsDOMEventListenerWrapper> mOnLoadListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnLoadStartListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnProgressListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnLoadendListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnTimeoutListener;
 };
 
 class nsXMLHttpRequestUpload : public nsXHREventTarget,
@@ -247,7 +211,7 @@ public:
 #endif
 
   // event handler
-  IMPL_EVENT_HANDLER(readystatechange, Readystatechange)
+  IMPL_EVENT_HANDLER(readystatechange)
 
   // states
   uint16_t GetReadyState();
@@ -515,13 +479,6 @@ protected:
   already_AddRefed<nsILoadGroup> GetLoadGroup() const;
   nsIURI *GetBaseURI();
 
-  nsresult RemoveAddEventListener(const nsAString& aType,
-                                  nsRefPtr<nsDOMEventListenerWrapper>& aCurrent,
-                                  nsIDOMEventListener* aNew);
-
-  nsresult GetInnerEventListener(nsRefPtr<nsDOMEventListenerWrapper>& aWrapper,
-                                 nsIDOMEventListener** aListener);
-
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
 
   bool IsSystemXHR();
@@ -553,8 +510,6 @@ protected:
   nsCOMPtr<nsIDocument> mResponseXML;
   nsCOMPtr<nsIChannel> mCORSPreflightChannel;
   nsTArray<nsCString> mCORSUnsafeHeaders;
-
-  nsRefPtr<nsDOMEventListenerWrapper> mOnReadystatechangeListener;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
 

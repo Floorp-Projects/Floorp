@@ -759,87 +759,6 @@ StyleEditor.prototype = {
   },
 
   /**
-   * Decode a CSS source string to unicode according to the character set rules
-   * defined in <http://www.w3.org/TR/CSS2/syndata.html#charset>.
-   *
-   * @param string aString
-   *        Source of a CSS stylesheet, loaded from file or cache.
-   * @param string aChannelCharset
-   *        Charset of the source string if set by the HTTP channel.
-   * @return string
-   *         The CSS string, in unicode.
-   */
-  _decodeCSSCharset: function SE__decodeCSSCharset(aString, aChannelCharset)
-  {
-    // StyleSheet's charset can be specified from multiple sources
-
-    if (aChannelCharset.length > 0) {
-      // step 1 of syndata.html: charset given in HTTP header.
-      return this._convertToUnicode(aString, aChannelCharset);
-    }
-
-    let sheet = this.styleSheet;
-    if (sheet) {
-      // Do we have a @charset rule in the stylesheet?
-      // step 2 of syndata.html (without the BOM check).
-      if (sheet.cssRules) {
-        let rules = sheet.cssRules;
-        if (rules.length
-            && rules.item(0).type == Ci.nsIDOMCSSRule.CHARSET_RULE) {
-          return this._convertToUnicode(aString, rules.item(0).encoding);
-        }
-      }
-
-      if (sheet.ownerNode) {
-        // step 3: see <link charset="…">
-        let linkCharset = sheet.ownerNode.getAttribute("charset");
-        if (linkCharset != null) {
-          return this._convertToUnicode(aString, linkCharset);
-        }
-      }
-
-      // step 4 (1 of 2): charset of referring stylesheet.
-      let parentSheet = sheet.parentStyleSheet;
-      if (parentSheet && parentSheet.cssRules &&
-          parentSheet.cssRules[0].type == Ci.nsIDOMCSSRule.CHARSET_RULE) {
-        return this._convertToUnicode(aString,
-            parentSheet.cssRules[0].encoding);
-      }
-
-      // step 4 (2 of 2): charset of referring document.
-      if (sheet.ownerNode && sheet.ownerNode.ownerDocument.characterSet) {
-        return this._convertToUnicode(aString,
-            sheet.ownerNode.ownerDocument.characterSet);
-      }
-    }
-
-    // step 5: default to utf-8.
-    return this._convertToUnicode(aString, "UTF-8");
-  },
-
-  /**
-   * Convert a given string, encoded in a given character set, to unicode.
-   * @param string aString
-   *        A string.
-   * @param string aCharset
-   *        A character set.
-   * @return string
-   *         A unicode string.
-   */
-  _convertToUnicode: function SE__convertToUnicode(aString, aCharset) {
-    // Decoding primitives.
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-        .createInstance(Ci.nsIScriptableUnicodeConverter);
-
-    try {
-      converter.charset = aCharset;
-      return converter.ConvertToUnicode(aString);
-    } catch(e) {
-      return aString;
-    }
-  },
-
-  /**
    * Load source from a file or file-like resource.
    *
    * @param string aHref
@@ -871,7 +790,6 @@ StyleEditor.prototype = {
   {
     let channel = Services.io.newChannel(aHref, null, null);
     let chunks = [];
-    let channelCharset = "";
     let streamListener = { // nsIStreamListener inherits nsIRequestObserver
       onStartRequest: function (aRequest, aContext, aStatusCode) {
         if (!Components.isSuccessCode(aStatusCode)) {
@@ -879,10 +797,6 @@ StyleEditor.prototype = {
         }
       }.bind(this),
       onDataAvailable: function (aRequest, aContext, aStream, aOffset, aCount) {
-        let channel = aRequest.QueryInterface(Ci.nsIChannel);
-        if (!channelCharset) {
-          channelCharset = channel.contentCharset;
-        }
         chunks.push(NetUtil.readInputStreamToString(aStream, aCount));
       },
       onStopRequest: function (aRequest, aContext, aStatusCode) {
@@ -890,7 +804,7 @@ StyleEditor.prototype = {
           return this._signalError(LOAD_ERROR);
         }
 
-        this._onSourceLoad(chunks.join(""), channelCharset);
+        this._onSourceLoad(chunks.join(""));
       }.bind(this)
     };
 
@@ -902,14 +816,9 @@ StyleEditor.prototype = {
    * Called when source has been loaded.
    *
    * @param string aSourceText
-   * @param string aCharset
-   *        Optional. The character set to use. The default is to detect the
-   *        character set following the standard (see
-   *        <http://www.w3.org/TR/CSS2/syndata.html#charset>).
    */
-  _onSourceLoad: function SE__onSourceLoad(aSourceText, aCharset)
+  _onSourceLoad: function SE__onSourceLoad(aSourceText)
   {
-    aSourceText = this._decodeCSSCharset(aSourceText, aCharset || "");
     this._restoreExpando();
     this._state.text = prettifyCSS(aSourceText);
     this._loaded = true;

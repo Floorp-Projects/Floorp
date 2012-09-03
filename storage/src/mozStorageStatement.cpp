@@ -338,7 +338,7 @@ Statement::Clone(mozIStorageStatement **_statement)
   nsRefPtr<Statement> statement(new Statement());
   NS_ENSURE_TRUE(statement, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCAutoString sql(::sqlite3_sql(mDBStatement));
+  nsAutoCString sql(::sqlite3_sql(mDBStatement));
   nsresult rv = statement->initialize(mDBConnection, sql);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -422,7 +422,7 @@ Statement::GetParameterName(uint32_t aParamIndex,
                                                    aParamIndex + 1);
   if (name == NULL) {
     // this thing had no name, so fake one
-    nsCAutoString name(":");
+    nsAutoCString name(":");
     name.AppendInt(aParamIndex);
     _name.Assign(name);
   }
@@ -442,7 +442,7 @@ Statement::GetParameterIndex(const nsACString &aName,
 
   // We do not accept any forms of names other than ":name", but we need to add
   // the colon for SQLite.
-  nsCAutoString name(":");
+  nsAutoCString name(":");
   name.Append(aName);
   int ind = ::sqlite3_bind_parameter_index(mDBStatement, name.get());
   if (ind  == 0) // Named parameter not found.
@@ -584,7 +584,7 @@ Statement::ExecuteStep(bool *_moreResults)
 
 #ifdef PR_LOGGING
   if (srv != SQLITE_ROW && srv != SQLITE_DONE) {
-      nsCAutoString errStr;
+      nsAutoCString errStr;
       (void)mDBConnection->GetLastErrorString(errStr);
       PR_LOG(gStorageLog, PR_LOG_DEBUG,
              ("Statement::ExecuteStep error: %s", errStr.get()));

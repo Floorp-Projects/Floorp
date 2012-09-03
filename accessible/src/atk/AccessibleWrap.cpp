@@ -724,7 +724,7 @@ ConvertToAtkAttributeSet(nsIPersistentProperties* aAttributes)
         nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(sup));
         NS_ENSURE_TRUE(propElem, objAttributeSet);
 
-        nsCAutoString name;
+        nsAutoCString name;
         rv = propElem->GetKey(name);
         NS_ENSURE_SUCCESS(rv, objAttributeSet);
 

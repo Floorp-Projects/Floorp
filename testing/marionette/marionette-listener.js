@@ -465,8 +465,8 @@ function executeWithCallback(msg, timeout) {
   try {
     asyncTestRunning = true;
     if (importedScripts.exists()) {
-      let stream = Components.classes["@mozilla.org/network/file-input-stream;1"].  
-                      createInstance(Components.interfaces.nsIFileInputStream);
+      let stream = Cc["@mozilla.org/network/file-input-stream;1"].
+                      createInstance(Ci.nsIFileInputStream);
       stream.init(importedScripts, -1, 0, 0);
       let data = NetUtil.readInputStreamToString(stream, stream.available());
       scriptSrc = data + scriptSrc;
@@ -474,7 +474,7 @@ function executeWithCallback(msg, timeout) {
     Cu.evalInSandbox(scriptSrc, sandbox, "1.8");
   } catch (e) {
     // 17 = JavascriptException
-    sendError(e.name + ': ' + e.message, 17, e.stack);
+    sandbox.asyncComplete(e.name + ': ' + e.message, 17);
   }
 }
 

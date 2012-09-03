@@ -1114,7 +1114,7 @@ nsAnnotationService::GetPagesWithAnnotationCOMArray(const nsACString& aName,
   bool hasMore = false;
   while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasMore)) &&
          hasMore) {
-    nsCAutoString uristring;
+    nsAutoCString uristring;
     rv = stmt->GetUTF8String(0, uristring);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1274,7 +1274,7 @@ nsAnnotationService::GetAnnotationNamesTArray(nsIURI* aURI,
   bool hasResult = false;
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasResult)) &&
          hasResult) {
-    nsCAutoString name;
+    nsAutoCString name;
     rv = statement->GetUTF8String(0, name);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!_result->AppendElement(name))
@@ -1539,7 +1539,7 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
   while (NS_SUCCEEDED(sourceStmt->ExecuteStep(&hasResult)) && hasResult) {
     int64_t sourcePlaceId = sourceStmt->AsInt64(0);
     int64_t annoNameID = sourceStmt->AsInt64(1);
-    nsCAutoString annoName;
+    nsAutoCString annoName;
     rv = sourceStmt->GetUTF8String(2, annoName);
     NS_ENSURE_SUCCESS(rv, rv);
     int64_t annoExistsOnDest = sourceStmt->AsInt64(3);
@@ -1618,7 +1618,7 @@ nsAnnotationService::CopyItemAnnotations(int64_t aSourceItemId,
   bool hasResult;
   while (NS_SUCCEEDED(sourceStmt->ExecuteStep(&hasResult)) && hasResult) {
     int64_t annoNameID = sourceStmt->AsInt64(0);
-    nsCAutoString annoName;
+    nsAutoCString annoName;
     rv = sourceStmt->GetUTF8String(1, annoName);
     NS_ENSURE_SUCCESS(rv, rv);
     int64_t annoExistsOnDest = sourceStmt->AsInt64(2);
@@ -1690,11 +1690,11 @@ nsAnnotationService::GetAnnotationURI(nsIURI* aURI,
   if (aName.IsEmpty())
     return NS_ERROR_INVALID_ARG;
 
-  nsCAutoString annoSpec;
+  nsAutoCString annoSpec;
   nsresult rv = aURI->GetSpec(annoSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   spec.AssignLiteral("moz-anno:");
   spec += aName;
   spec += NS_LITERAL_CSTRING(":");

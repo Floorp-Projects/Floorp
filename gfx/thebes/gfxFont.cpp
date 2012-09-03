@@ -3148,7 +3148,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     const PRUnichar kComma        = PRUnichar(',');
 
     nsIAtom *groupAtom = nullptr;
-    nsCAutoString groupString;
+    nsAutoCString groupString;
     if (aLanguage) {
         if (!gLangService) {
             CallGetService(NS_LANGUAGEATOMSERVICE_CONTRACTID, &gLangService);
@@ -3168,7 +3168,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     families.BeginReading(p);
     families.EndReading(p_end);
     nsAutoString family;
-    nsCAutoString lcFamily;
+    nsAutoCString lcFamily;
     nsAutoString genericFamily;
 
     while (p < p_end) {
@@ -3216,7 +3216,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
 
                 ToLowerCase(NS_LossyConvertUTF16toASCII(family), lcFamily);
 
-                nsCAutoString prefName("font.name.");
+                nsAutoCString prefName("font.name.");
                 prefName.Append(lcFamily);
                 prefName.AppendLiteral(".");
                 prefName.Append(groupString);
@@ -3270,7 +3270,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
         }
 
         if (generic && aResolveGeneric) {
-            nsCAutoString prefName("font.name-list.");
+            nsAutoCString prefName("font.name-list.");
             prefName.Append(lcFamily);
             prefName.AppendLiteral(".");
             prefName.Append(groupString);
@@ -3476,7 +3476,7 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
 
 #ifdef PR_LOGGING
             if (NS_UNLIKELY(log)) {
-                nsCAutoString lang;
+                nsAutoCString lang;
                 mStyle.language->ToUTF8String(lang);
                 uint32_t runLen = runLimit - runStart;
                 PR_LOG(log, PR_LOG_WARNING,\
@@ -5634,7 +5634,7 @@ gfxTextRun::Dump(FILE* aOutput) {
         gfxFont* font = mGlyphRuns[i].mFont;
         const gfxFontStyle* style = font->GetStyle();
         NS_ConvertUTF16toUTF8 fontName(font->GetName());
-        nsCAutoString lang;
+        nsAutoCString lang;
         style->language->ToUTF8String(lang);
         fprintf(aOutput, "%d: %s %f/%d/%d/%s", mGlyphRuns[i].mCharacterOffset,
                 fontName.get(), style->size,

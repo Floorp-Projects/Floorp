@@ -491,62 +491,11 @@ nsJARChannel::GetURI(nsIURI **aURI)
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetOwner(nsISupports **result)
+nsJARChannel::GetOwner(nsISupports **aOwner)
 {
-    nsresult rv;
-
-    if (mOwner) {
-        NS_ADDREF(*result = mOwner);
-        return NS_OK;
-    }
-
-    if (!mJarInput) {
-        *result = nullptr;
-        return NS_OK;
-    }
-
-    //-- Verify signature, if one is present, and set owner accordingly
-    nsCOMPtr<nsIZipReader> jarReader;
-    mJarInput->GetJarReader(getter_AddRefs(jarReader));
-    if (!jarReader)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    nsCOMPtr<nsIPrincipal> cert;
-    rv = jarReader->GetCertificatePrincipal(mJarEntry, getter_AddRefs(cert));
-    if (NS_FAILED(rv)) return rv;
-
-    if (cert) {
-        nsCAutoString certFingerprint;
-        rv = cert->GetFingerprint(certFingerprint);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCAutoString subjectName;
-        rv = cert->GetSubjectName(subjectName);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCAutoString prettyName;
-        rv = cert->GetPrettyName(prettyName);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsISupports> certificate;
-        rv = cert->GetCertificate(getter_AddRefs(certificate));
-        if (NS_FAILED(rv)) return rv;
-        
-        nsCOMPtr<nsIScriptSecurityManager> secMan = 
-                 do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = secMan->GetCertificatePrincipal(certFingerprint, subjectName,
-                                             prettyName, certificate,
-                                             mJarBaseURI,
-                                             getter_AddRefs(cert));
-        if (NS_FAILED(rv)) return rv;
-
-        mOwner = do_QueryInterface(cert, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        NS_ADDREF(*result = mOwner);
-    }
+    // JAR signatures are not processed to avoid main-thread network I/O (bug 726125)
+    *aOwner = mOwner;
+    NS_IF_ADDREF(*aOwner);
     return NS_OK;
 }
 
@@ -783,7 +732,7 @@ NS_IMETHODIMP
 nsJARChannel::SetAppURI(nsIURI *aURI) {
     NS_ENSURE_ARG_POINTER(aURI);
 
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     aURI->GetScheme(scheme);
     if (!scheme.EqualsLiteral("app")) {
         return NS_ERROR_INVALID_ARG;
@@ -842,13 +791,13 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
             // We only want to run scripts if the server really intended to
             // send us a JAR file.  Check the server-supplied content type for
             // a JAR type.
-            nsCAutoString header;
+            nsAutoCString header;
             httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Type"),
                                            header);
-            nsCAutoString contentType;
-            nsCAutoString charset;
+            nsAutoCString contentType;
+            nsAutoCString charset;
             NS_ParseContentType(header, contentType, charset);
-            nsCAutoString channelContentType;
+            nsAutoCString channelContentType;
             channel->GetContentType(channelContentType);
             mIsUnsafe = !(contentType.Equals(channelContentType) &&
                           (contentType.EqualsLiteral("application/java-archive") ||

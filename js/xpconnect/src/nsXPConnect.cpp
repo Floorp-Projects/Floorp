@@ -1428,6 +1428,10 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
         return canonical.get();
     }
 
+    nsISupports* supports = nullptr;
+    if (mozilla::dom::UnwrapDOMObjectToISupports(aJSObj, supports))
+        return supports;
+
     return nullptr;
 }
 
@@ -2529,7 +2533,7 @@ Base64Encode(JSContext *cx, JS::Value val, JS::Value *out)
     if (!encodedString.IsValid())
         return false;
 
-    nsCAutoString result;
+    nsAutoCString result;
     if (NS_FAILED(mozilla::Base64Encode(encodedString, result))) {
         JS_ReportError(cx, "Failed to encode base64 data!");
         return false;
@@ -2555,7 +2559,7 @@ Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
     if (!encodedString.IsValid())
         return false;
 
-    nsCAutoString result;
+    nsAutoCString result;
     if (NS_FAILED(mozilla::Base64Decode(encodedString, result))) {
         JS_ReportError(cx, "Failed to decode base64 string!");
         return false;

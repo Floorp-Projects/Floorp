@@ -8,7 +8,7 @@
 interface nsIDOMDOMRequest;
 interface nsIArray;
 
-[scriptable, uuid(9583b825-46b1-4e8f-bb48-9fed660a95e6)]
+[scriptable, uuid(e3649c1d-c950-495e-b0ed-6ce40be9743b)]
 interface mozIDOMApplication  : nsISupports
 {
   readonly attribute jsval manifest;
@@ -17,6 +17,7 @@ interface mozIDOMApplication  : nsISupports
   readonly attribute DOMString origin;
   readonly attribute DOMString installOrigin;
   readonly attribute unsigned long long installTime;
+  readonly attribute boolean removable;
 
   /* 
    * The current progress when downloading an offline cache.

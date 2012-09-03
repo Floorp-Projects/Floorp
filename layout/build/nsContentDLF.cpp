@@ -146,7 +146,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
                              nsIContentViewer** aDocViewer)
 {
 #ifdef NS_FUNCTION_TIMER
-  nsCAutoString channelURL__("N/A");
+  nsAutoCString channelURL__("N/A");
   nsCOMPtr<nsIURI> url__;
   if (aChannel && NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(url__)))) {
     url__->GetSpec(channelURL__);
@@ -158,7 +158,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
   // Declare "type" here.  This is because although the variable itself only
   // needs limited scope, we need to use the raw string memory -- as returned
   // by "type.get()" farther down in the function.
-  nsCAutoString type;
+  nsAutoCString type;
 
   // Are we viewing source?
   nsCOMPtr<nsIViewSourceChannel> viewSourceChannel = do_QueryInterface(aChannel);
@@ -481,7 +481,7 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
 }
 
 bool nsContentDLF::IsImageContentType(const char* aContentType) {
-  nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
+  nsCOMPtr<imgILoader> loader(do_CreateInstance("@mozilla.org/image/loader;1"));
   bool isDecoderAvailable = false;
   loader->SupportImageWithMimeType(aContentType, &isDecoderAvailable);
   return isDecoderAvailable;

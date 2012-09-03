@@ -411,7 +411,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     nsCOMPtr<nsIPrefBranch> prefBranch;
     GetPrefBranch(getter_AddRefs(prefBranch));
     if (prefBranch) {
-        nsCAutoString externalProtocolPref("network.protocol-handler.external.");
+        nsAutoCString externalProtocolPref("network.protocol-handler.external.");
         externalProtocolPref += scheme;
         rv = prefBranch->GetBoolPref(externalProtocolPref.get(), &externalProtocol);
         if (NS_FAILED(rv)) {
@@ -420,7 +420,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     }
 
     if (!externalProtocol) {
-        nsCAutoString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
+        nsAutoCString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
         contractID += scheme;
         ToLowerCase(contractID);
 
@@ -439,7 +439,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
         rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"moz-gio",
                             result);
         if (NS_SUCCEEDED(rv)) {
-            nsCAutoString spec(scheme);
+            nsAutoCString spec(scheme);
             spec.Append(':');
 
             nsIURI *uri;
@@ -463,7 +463,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
         rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"moz-gnomevfs",
                             result);
         if (NS_SUCCEEDED(rv)) {
-            nsCAutoString spec(scheme);
+            nsAutoCString spec(scheme);
             spec.Append(':');
 
             nsIURI *uri;
@@ -533,7 +533,7 @@ nsIOService::NewURI(const nsACString &aSpec, const char *aCharset, nsIURI *aBase
         return NS_ERROR_MALFORMED_URI;
     AutoIncrement inc(&recursionCount);
 
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     nsresult rv = ExtractScheme(aSpec, scheme);
     if (NS_FAILED(rv)) {
         // then aSpec is relative
@@ -610,7 +610,7 @@ nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
     nsresult rv;
     NS_ENSURE_ARG_POINTER(aURI);
 
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     rv = aURI->GetScheme(scheme);
     if (NS_FAILED(rv))
         return rv;
@@ -631,7 +631,7 @@ nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
         nsCOMPtr<nsIProxyInfo> pi;
         LookupProxyInfo(aURI, aProxyURI, aProxyFlags, &scheme, getter_AddRefs(pi));
         if (pi) {
-            nsCAutoString type;
+            nsAutoCString type;
             if (NS_SUCCEEDED(pi->GetType(type)) && type.EqualsLiteral("http")) {
                 // we are going to proxy this channel using an http proxy
                 rv = GetProtocolHandler("http", getter_AddRefs(handler));
@@ -1015,7 +1015,7 @@ nsIOService::ProtocolHasFlags(nsIURI   *uri,
     NS_ENSURE_ARG(uri);
 
     *result = false;
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     nsresult rv = uri->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
   
@@ -1164,7 +1164,7 @@ nsIOService::EscapeString(const nsACString& aString,
 {
   NS_ENSURE_ARG_MAX(aEscapeType, 4);
 
-  nsCAutoString stringCopy(aString);
+  nsAutoCString stringCopy(aString);
   nsCString result;
 
   if (!NS_Escape(stringCopy, result, (nsEscapeMask) aEscapeType))
@@ -1202,7 +1202,7 @@ nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
                                            int32_t *aCharsetEnd,
                                            bool *aHadCharset)
 {
-    nsCAutoString ignored;
+    nsAutoCString ignored;
     net_ParseContentType(aTypeHeader, ignored, aCharset, aHadCharset,
                          aCharsetStart, aCharsetEnd);
     if (*aHadCharset && *aCharsetStart == *aCharsetEnd) {
@@ -1217,7 +1217,7 @@ nsIOService::SpeculativeConnect(nsIURI *aURI,
                                 nsIInterfaceRequestor *aCallbacks,
                                 nsIEventTarget *aTarget)
 {
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     nsresult rv = aURI->GetScheme(scheme);
     if (NS_FAILED(rv))
         return rv;

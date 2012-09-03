@@ -789,7 +789,7 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data)
 
     JSObject *iterobj = NewObjectWithGivenProto(cx, &MapIteratorClass, proto, global);
     if (!iterobj) {
-        cx->delete_(range);
+        js_delete(range);
         return NULL;
     }
     iterobj->setSlot(TargetSlot, ObjectValue(*mapobj));
@@ -817,7 +817,7 @@ MapIteratorObject::next_impl(JSContext *cx, CallArgs args)
     if (!range)
         return js_ThrowStopIteration(cx);
     if (range->empty()) {
-        cx->delete_(range);
+        js_delete(range);
         thisobj.setReservedSlot(RangeSlot, PrivateValue(NULL));
         return js_ThrowStopIteration(cx);
     }
@@ -1236,7 +1236,7 @@ SetIteratorObject::create(JSContext *cx, HandleObject setobj, ValueSet *data)
 
     JSObject *iterobj = NewObjectWithGivenProto(cx, &SetIteratorClass, proto, global);
     if (!iterobj) {
-        cx->delete_(range);
+        js_delete(range);
         return NULL;
     }
     iterobj->setSlot(TargetSlot, ObjectValue(*setobj));
@@ -1264,7 +1264,7 @@ SetIteratorObject::next_impl(JSContext *cx, CallArgs args)
     if (!range)
         return js_ThrowStopIteration(cx);
     if (range->empty()) {
-        cx->delete_(range);
+        js_delete(range);
         thisobj.setReservedSlot(RangeSlot, PrivateValue(NULL));
         return js_ThrowStopIteration(cx);
     }

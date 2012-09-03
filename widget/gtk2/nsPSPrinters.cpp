@@ -63,7 +63,7 @@ nsPSPrinterList::GetPrinterList(nsTArray<nsCString>& aList)
         int num_dests = (gCupsShim.mCupsGetDests)(&dests);
         if (num_dests) {
             for (int i = 0; i < num_dests; i++) {
-                nsCAutoString fullName(NS_CUPS_PRINTER);
+                nsAutoCString fullName(NS_CUPS_PRINTER);
                 fullName.Append(dests[i].name);
                 if (dests[i].instance != NULL) {
                     fullName.Append("/");
@@ -87,7 +87,7 @@ nsPSPrinterList::GetPrinterList(nsTArray<nsCString>& aList)
     aList.AppendElement(
             NS_LITERAL_CSTRING(NS_POSTSCRIPT_DRIVER_NAME "default"));
 
-    nsCAutoString list(PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST"));
+    nsAutoCString list(PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST"));
     if (list.IsEmpty()) {
         list = Preferences::GetCString("print.printer_list");
     }
@@ -101,7 +101,7 @@ nsPSPrinterList::GetPrinterList(nsTArray<nsCString>& aList)
                 name = PL_strtok_r(nullptr, " ", &state)
         ) {
             if (0 != strcmp(name, "default")) {
-                nsCAutoString fullName(NS_POSTSCRIPT_DRIVER_NAME);
+                nsAutoCString fullName(NS_POSTSCRIPT_DRIVER_NAME);
                 fullName.Append(name);
                 aList.AppendElement(fullName);
             }

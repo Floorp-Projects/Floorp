@@ -14,6 +14,7 @@ from threading import Thread
 import StringIO
 from devicemanager import DeviceManager, FileError, NetworkTools, _pop_last_line
 import errno
+from distutils.version import StrictVersion
 
 class AgentError(Exception):
   "SUTAgent-specific exception."
@@ -52,7 +53,12 @@ class DeviceManagerSUT(DeviceManager):
     self._sock = None
     self.deviceRoot = deviceRoot
     if self.getDeviceRoot() == None:
-        raise BaseException("Failed to connect to SUT Agent and retrieve the device root.")
+      raise BaseException("Failed to connect to SUT Agent and retrieve the device root.")
+    try:
+      verstring = self.runCmds([{ 'cmd': 'ver' }])
+      self.agentVersion = re.sub('SUTAgentAndroid Version ', '', verstring)
+    except AgentError, err:
+      raise BaseException("Failed to get SUTAgent version")
 
   def _cmdNeedsResponse(self, cmd):
     """ Not all commands need a response from the agent:
@@ -263,16 +269,38 @@ class DeviceManagerSUT(DeviceManager):
   # returns:
   # success: <return code>
   # failure: None
-  def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None):
+  def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None, root=False):
     cmdline = self._escapedCommandLine(cmd)
     if env:
       cmdline = '%s %s' % (self.formatEnvString(env), cmdline)
 
+    haveExecSu = (StrictVersion(self.agentVersion) >= StrictVersion('1.13'))
+
+    # Depending on agent version we send one of the following commands here:
+    # * exec (run as normal user)
+    # * execsu (run as privileged user)
+    # * execcwd (run as normal user from specified directory)
+    # * execcwdsu (run as privileged user from specified directory)
+
+    cmd = "exec"
+    if cwd:
+      cmd += "cwd"
+    if root and haveExecSu:
+      cmd += "su"
+
     try:
       if cwd:
-        self.sendCmds([{ 'cmd': 'execcwd %s %s' % (cwd, cmdline) }], outputfile, timeout)
+        self.sendCmds([{ 'cmd': '%s %s %s' % (cmd, cwd, cmdline) }], outputfile, timeout)
       else:
-        self.sendCmds([{ 'cmd': 'exec su -c "%s"' % cmdline }], outputfile, timeout)
+        if (not root) or haveExecSu:
+          self.sendCmds([{ 'cmd': '%s %s' % (cmd, cmdline) }], outputfile, timeout)
+        else:
+          # need to manually inject su -c for backwards compatibility (this may
+          # not work on ICS or above!!)
+          # (FIXME: this backwards compatibility code is really ugly and should
+          # be deprecated at some point in the future)
+          self.sendCmds([ { 'cmd': '%s su -c "%s"' % (cmd, cmdline) }], outputfile,
+                          timeout)
     except AgentError:
       return None
 

@@ -389,7 +389,7 @@ nsHttpChannel::Connect()
 
         // Check for a previous SPDY Alternate-Protocol directive
         if (gHttpHandler->IsSpdyEnabled() && mAllowSpdy) {
-            nsCAutoString hostPort;
+            nsAutoCString hostPort;
 
             if (NS_SUCCEEDED(mURI->GetHostPort(hostPort)) &&
                 gHttpHandler->ConnMgr()->GetSpdyAlternateProtocol(hostPort)) {
@@ -724,7 +724,7 @@ nsHttpChannel::SetupTransaction()
 
     // Use the URI path if not proxying (transparent proxying such as proxy
     // CONNECT does not count here). Also figure out what HTTP version to use.
-    nsCAutoString buf, path;
+    nsAutoCString buf, path;
     nsCString* requestURI;
     if (mConnectionInfo->UsingConnect() ||
         !mConnectionInfo->UsingHttpProxy()) {
@@ -804,7 +804,7 @@ nsHttpChannel::SetupTransaction()
             mEntityID.BeginReading(slash);
 
             if (FindCharInReadable('/', slash, end)) {
-                nsCAutoString ifMatch;
+                nsAutoCString ifMatch;
                 mRequestHead.SetHeader(nsHttp::If_Match,
                         NS_UnescapeURL(Substring(start, slash), 0, ifMatch));
 
@@ -878,7 +878,7 @@ CallTypeSniffers(void *aClosure, const uint8_t *aData, uint32_t aCount)
     gIOService->GetContentSniffers();
   uint32_t length = sniffers.Count();
   for (uint32_t i = 0; i < length; ++i) {
-    nsCAutoString newType;
+    nsAutoCString newType;
     nsresult rv =
       sniffers[i]->GetMIMETypeFromContent(chan, aData, aCount, newType);
     if (NS_SUCCEEDED(rv) && !newType.IsEmpty()) {
@@ -1097,7 +1097,7 @@ nsHttpChannel::ProcessSTSHeader()
     if (!isHttps)
         return NS_OK;
 
-    nsCAutoString asciiHost;
+    nsAutoCString asciiHost;
     rv = mURI->GetAsciiHost(asciiHost);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
@@ -1147,7 +1147,7 @@ nsHttpChannel::ProcessSTSHeader()
     // If there's a STS header, process it (STS Spec 7.1).  At this point in
     // processing, the channel is trusted, so the header should not be ignored.
     const nsHttpAtom atom = nsHttp::ResolveAtom("Strict-Transport-Security");
-    nsCAutoString stsHeader;
+    nsAutoCString stsHeader;
     rv = mResponseHead->GetHeader(atom, stsHeader);
     if (rv == NS_ERROR_NOT_AVAILABLE) {
         LOG(("STS: No STS header, continuing load.\n"));
@@ -1436,7 +1436,7 @@ nsHttpChannel::ContinueProcessNormal(nsresult rv)
     // Check that the server sent us what we were asking for
     if (mResuming) {
         // Create an entity id from the response
-        nsCAutoString id;
+        nsAutoCString id;
         rv = GetEntityID(id);
         if (NS_FAILED(rv)) {
             // If creating an entity id is not possible -> error
@@ -1805,7 +1805,7 @@ HttpCacheQuery::ResponseWouldVary() const
     AssertOnCacheThread();
 
     nsresult rv;
-    nsCAutoString buf, metaKey;
+    nsAutoCString buf, metaKey;
     mCachedResponseHead->GetHeader(nsHttp::Vary, buf);
     if (!buf.IsEmpty()) {
         NS_NAMED_LITERAL_CSTRING(prefix, "request-");
@@ -1855,7 +1855,7 @@ HttpCacheQuery::ResponseWouldVary() const
                 // If this is a cookie-header, stored metadata is not
                 // the value itself but the hash. So we also hash the
                 // outgoing value here in order to compare the hashes
-                nsCAutoString hash;
+                nsAutoCString hash;
                 if (atom == nsHttp::Cookie) {
                     rv = Hash(newVal, hash);
                     // If hash failed, be conservative (the cached hash
@@ -2071,7 +2071,7 @@ nsHttpChannel::ProcessPartialContent()
     if (NS_FAILED(rv)) return rv;
 
     // update the cached response head
-    nsCAutoString head;
+    nsAutoCString head;
     mCachedResponseHead->Flatten(head, true);
     rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
     if (NS_FAILED(rv)) return rv;
@@ -2163,8 +2163,8 @@ nsHttpChannel::ProcessNotModified()
     // that cache entry so there is a fighting chance of getting things on the
     // right track as well as disabling pipelining for that host.
 
-    nsCAutoString lastModifiedCached;
-    nsCAutoString lastModified304;
+    nsAutoCString lastModifiedCached;
+    nsAutoCString lastModified304;
 
     rv = mCachedResponseHead->GetHeader(nsHttp::Last_Modified,
                                         lastModifiedCached);
@@ -2192,7 +2192,7 @@ nsHttpChannel::ProcessNotModified()
     if (NS_FAILED(rv)) return rv;
 
     // update the cached response head
-    nsCAutoString head;
+    nsAutoCString head;
     mCachedResponseHead->Flatten(head, true);
     rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
     if (NS_FAILED(rv)) return rv;
@@ -2352,7 +2352,7 @@ IsSubRangeRequest(nsHttpRequestHead &aRequestHead)
 {
     if (!aRequestHead.PeekHeader(nsHttp::Range))
         return false;
-    nsCAutoString byteRange;
+    nsAutoCString byteRange;
     aRequestHead.GetHeader(nsHttp::Range, byteRange);
     return !byteRange.EqualsLiteral("bytes=0-");
 }
@@ -2370,7 +2370,7 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
     // make sure we're not abusing this function
     NS_PRECONDITION(!mCacheEntry, "cache entry already open");
 
-    nsCAutoString cacheKey;
+    nsAutoCString cacheKey;
 
     if (mRequestHead.Method() == nsHttp::Post) {
         // If the post id is already set then this is an attempt to replay
@@ -2432,7 +2432,7 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
 
     // If we have an application cache, we check it first.
     if (mApplicationCache) {
-        nsCAutoString appCacheClientID;
+        nsAutoCString appCacheClientID;
         rv = mApplicationCache->GetClientID(appCacheClientID);
         if (NS_SUCCEEDED(rv)) {
             // We open with ACCESS_READ only, because we don't want to overwrite
@@ -2496,7 +2496,7 @@ nsHttpChannel::OnOfflineCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
         return NS_OK;
 
     if (!mApplicationCacheForWrite && !mFallbackChannel) {
-        nsCAutoString cacheKey;
+        nsAutoCString cacheKey;
         GenerateCacheKey(mPostID, cacheKey);
 
         // Check for namespace match.
@@ -2545,7 +2545,7 @@ nsHttpChannel::OpenNormalCacheEntry(bool usingSSL)
     nsDependentCString clientID(
         GetCacheSessionNameForStoragePolicy(storagePolicy, mPrivateBrowsing));
 
-    nsCAutoString cacheKey;
+    nsAutoCString cacheKey;
     GenerateCacheKey(mPostID, cacheKey);
 
     nsCacheAccessMode accessRequested;
@@ -2627,13 +2627,13 @@ nsHttpChannel::OpenOfflineCacheEntryForWriting()
     if (IsSubRangeRequest(mRequestHead))
         return NS_OK;
 
-    nsCAutoString cacheKey;
+    nsAutoCString cacheKey;
     GenerateCacheKey(mPostID, cacheKey);
 
     NS_ENSURE_TRUE(mApplicationCacheForWrite,
                    NS_ERROR_NOT_AVAILABLE);
 
-    nsCAutoString offlineCacheClientID;
+    nsAutoCString offlineCacheClientID;
     rv = mApplicationCacheForWrite->GetClientID(offlineCacheClientID);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3264,7 +3264,7 @@ HttpCacheQuery::HasQueryString(nsHttpAtom method, nsIURI * uri)
     if (method != nsHttp::Get && method != nsHttp::Head)
         return false;
 
-    nsCAutoString query;
+    nsAutoCString query;
     nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
     nsresult rv = url->GetQuery(query);
     return NS_SUCCEEDED(rv) && !query.IsEmpty();
@@ -3715,7 +3715,7 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
     // header in this case, but it doesn't seem worth the extra code to perform
     // the check.
     {
-        nsCAutoString buf, metaKey;
+        nsAutoCString buf, metaKey;
         mResponseHead->GetHeader(nsHttp::Vary, buf);
         if (!buf.IsEmpty()) {
             NS_NAMED_LITERAL_CSTRING(prefix, "request-");
@@ -3728,7 +3728,7 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
                 if (*token != '*') {
                     nsHttpAtom atom = nsHttp::ResolveAtom(token);
                     const char *val = mRequestHead.PeekHeader(atom);
-                    nsCAutoString hash;
+                    nsAutoCString hash;
                     if (val) {
                         // If cookie-header, store a hash of the value
                         if (atom == nsHttp::Cookie) {
@@ -3763,7 +3763,7 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
 
     // Store the received HTTP head with the cache entry as an element of
     // the meta data.
-    nsCAutoString head;
+    nsAutoCString head;
     mResponseHead->Flatten(head, true);
     rv = entry->SetMetaDataElement("response-head", head.get());
 
@@ -3791,7 +3791,7 @@ nsHttpChannel::StoreAuthorizationMetaData(nsICacheEntryDescriptor *entry)
         return NS_OK;
 
     // eg. [Basic realm="wally world"]
-    nsCAutoString buf;
+    nsAutoCString buf;
     GetAuthType(val, buf);
     return entry->SetMetaDataElement("auth", buf.get());
 }
@@ -3992,7 +3992,7 @@ nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType)
         return NS_ERROR_FAILURE;
 
     // make sure non-ASCII characters in the location header are escaped.
-    nsCAutoString locationBuf;
+    nsAutoCString locationBuf;
     if (NS_EscapeURL(location, -1, esc_OnlyNonASCII, locationBuf))
         location = locationBuf.get();
 
@@ -4039,7 +4039,7 @@ nsHttpChannel::CreateNewURI(const char *loc, nsIURI **newURI)
     if (NS_FAILED(rv)) return rv;
 
     // the new uri should inherit the origin charset of the current uri
-    nsCAutoString originCharset;
+    nsAutoCString originCharset;
     rv = mURI->GetOriginCharset(originCharset);
     if (NS_FAILED(rv))
         originCharset.Truncate();
@@ -4069,7 +4069,7 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
 
     // move the reference of the old location to the new one if the new
     // one has none.
-    nsCAutoString ref;
+    nsAutoCString ref;
     rv = mRedirectURI->GetRef(ref);
     if (NS_SUCCEEDED(rv) && ref.IsEmpty()) {
         mURI->GetRef(ref);
@@ -4773,7 +4773,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
         // For sanity's sake we may want to cancel an alternate protocol
         // redirection involving the original host name
 
-        nsCAutoString hostPort;
+        nsAutoCString hostPort;
         if (NS_SUCCEEDED(mOriginalURI->GetHostPort(hostPort)))
             gHttpHandler->ConnMgr()->RemoveSpdyAlternateProtocol(hostPort);
     }
@@ -5113,7 +5113,7 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
         LOG(("sending status notification [this=%p status=%x progress=%llu/%llu]\n",
             this, status, progress, progressMax));
 
-        nsCAutoString host;
+        nsAutoCString host;
         mURI->GetHost(host);
         mProgressSink->OnStatus(this, nullptr, status,
                                 NS_ConvertUTF8toUTF16(host).get());
@@ -5310,7 +5310,7 @@ nsHttpChannel::GetCacheKey(nsISupports **key)
     if (!container)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCAutoString cacheKey;
+    nsAutoCString cacheKey;
     rv = GenerateCacheKey(mPostID, cacheKey);
     if (NS_FAILED(rv)) return rv;
 
@@ -5645,7 +5645,7 @@ nsHttpChannel::GetOfflineCacheEntryAsForeignMarker()
 
     nsresult rv;
 
-    nsCAutoString cacheKey;
+    nsAutoCString cacheKey;
     rv = GenerateCacheKey(mPostID, cacheKey);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
@@ -5799,7 +5799,7 @@ nsHttpChannel::MaybeInvalidateCacheEntryForSubsequentGet()
 
     // Invalidate the request-uri.
     // Pass 0 in first param to get the cache-key for a GET-request.
-    nsCAutoString tmpCacheKey;
+    nsAutoCString tmpCacheKey;
     GenerateCacheKey(0, tmpCacheKey);
     LOG(("MaybeInvalidateCacheEntryForSubsequentGet [this=%p uri=%s]\n", 
         this, tmpCacheKey.get()));
@@ -5823,7 +5823,7 @@ nsHttpChannel::MaybeInvalidateCacheEntryForSubsequentGet()
 void
 nsHttpChannel::InvalidateCacheEntryForLocation(const char *location)
 {
-    nsCAutoString tmpCacheKey, tmpSpec;
+    nsAutoCString tmpCacheKey, tmpSpec;
     nsCOMPtr<nsIURI> resultingURI;
     nsresult rv = CreateNewURI(location, getter_AddRefs(resultingURI));
     if (NS_SUCCEEDED(rv) && HostPartIsTheSame(resultingURI)) {

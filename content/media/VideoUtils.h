@@ -85,7 +85,20 @@ private:
   nsCOMPtr<nsIThread> mThread;
 };
 
+class MediaResource;
 } // namespace mozilla
+
+class nsTimeRanges;
+
+// Estimates the buffered ranges of a MediaResource using a simple
+// (byteOffset/length)*duration method. Probably inaccurate, but won't
+// do file I/O, and can be used when we don't have detailed knowledge
+// of the byte->time mapping of a resource. aDurationUsecs is the duration
+// of the media in microseconds. Estimated buffered ranges are stored in
+// aOutBuffered. Ranges are 0-normalized, i.e. in the range of (0,duration].
+void GetEstimatedBufferedTimeRanges(mozilla::MediaResource* aStream,
+                                    int64_t aDurationUsecs,
+                                    nsTimeRanges* aOutBuffered);
 
 // Converts from number of audio frames (aFrames) to microseconds, given
 // the specified audio rate (aRate). Stores result in aOutUsecs. Returns true

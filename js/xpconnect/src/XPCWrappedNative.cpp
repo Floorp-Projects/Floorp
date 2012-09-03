@@ -551,8 +551,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             JSObject *cached = cache->GetWrapper();
             if (cached) {
                 if (IS_SLIM_WRAPPER_OBJECT(cached)) {
-                    if (!XPCWrappedNative::Morph(ccx, cached, Interface, cache,
-                                                 getter_AddRefs(wrapper)))
+                    if (NS_FAILED(XPCWrappedNative::Morph(ccx, cached,
+                          Interface, cache, getter_AddRefs(wrapper))))
                         return NS_ERROR_FAILURE;
                 } else {
                     wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cached));
