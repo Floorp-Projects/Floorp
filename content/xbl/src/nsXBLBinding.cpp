@@ -1217,7 +1217,9 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
               JSAutoCompartment ac(cx, scriptObject);
 
               for ( ; true; base = proto) { // Will break out on null proto
-                proto = ::JS_GetPrototype(base);
+                if (!JS_GetPrototype(cx, base, &proto)) {
+                  return;
+                }
                 if (!proto) {
                   break;
                 }
@@ -1249,7 +1251,10 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
 
                 // Alright!  This is the right prototype.  Pull it out of the
                 // proto chain.
-                JSObject* grandProto = ::JS_GetPrototype(proto);
+                JSObject* grandProto;
+                if (!JS_GetPrototype(cx, proto, &grandProto)) {
+                  return;
+                }
                 ::JS_SetPrototype(cx, base, grandProto);
                 break;
               }
@@ -1346,7 +1351,9 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
 
   if (obj) {
     // Retrieve the current prototype of obj.
-    parent_proto = ::JS_GetPrototype(obj);
+    if (!JS_GetPrototype(cx, obj, &parent_proto)) {
+      return NS_ERROR_FAILURE;
+    }
     if (parent_proto) {
       // We need to create a unique classname based on aClassName and
       // parent_proto.  Append a space (an invalid URI character) to ensure that

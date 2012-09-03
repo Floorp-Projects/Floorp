@@ -569,8 +569,11 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
 JSObject *
 WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
 {
+    JSObject *proto;
+    if (!JS_GetPrototype(cx, obj, &proto))
+        return NULL;
     JSObject *wrapperObj =
-        Wrapper::New(cx, obj, JS_GetPrototype(obj), JS_GetGlobalForObject(cx, obj),
+        Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper,
                      OnlyIfSubjectIsSystem>::singleton);
     return wrapperObj;
@@ -586,8 +589,11 @@ WrapperFactory::IsComponentsObject(JSObject *obj)
 JSObject *
 WrapperFactory::WrapComponentsObject(JSContext *cx, JSObject *obj)
 {
+    JSObject *proto;
+    if (!JS_GetPrototype(cx, obj, &proto))
+        return NULL;
     JSObject *wrapperObj =
-        Wrapper::New(cx, obj, JS_GetPrototype(obj), JS_GetGlobalForObject(cx, obj),
+        Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper, ComponentsObjectPolicy>::singleton);
 
     return wrapperObj;

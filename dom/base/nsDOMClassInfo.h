@@ -420,7 +420,7 @@ public:
                                           JSMutableHandleValue vp);
   static JSBool SecurityCheckOnSetProp(JSContext *cx, JSHandleObject obj, JSHandleId id,
                                        JSBool strict, JSMutableHandleValue vp);
-  static void InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj);
+  static JSBool InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
                                              nsIHTMLDocument *doc);
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)

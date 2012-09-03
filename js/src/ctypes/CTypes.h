@@ -428,7 +428,7 @@ namespace CType {
   ffi_type* GetFFIType(JSContext* cx, JSObject* obj);
   JSString* GetName(JSContext* cx, JSHandleObject obj);
   JSObject* GetProtoFromCtor(JSObject* obj, CTypeProtoSlot slot);
-  JSObject* GetProtoFromType(JSObject* obj, CTypeProtoSlot slot);
+  JSObject* GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
   JSCTypesCallbacks* GetCallbacksFromType(JSObject* obj);
 }
 

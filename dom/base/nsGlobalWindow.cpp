@@ -1687,7 +1687,11 @@ nsGlobalWindow::SetOuterObject(JSContext* aCx, JSObject* aOuterObject)
 
   // Set up the prototype for the outer object.
   JSObject* inner = JS_GetParent(aOuterObject);
-  JS_SetPrototype(aCx, aOuterObject, JS_GetPrototype(inner));
+  JSObject* proto;
+  if (!JS_GetPrototype(aCx, inner, &proto)) {
+    return NS_ERROR_FAILURE;
+  }
+  JS_SetPrototype(aCx, aOuterObject, proto);
 
   return NS_OK;
 }
@@ -1856,7 +1860,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     if (aDocument != oldDoc) {
       xpc_UnmarkGrayObject(currentInner->mJSObject);
-      nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
+      if (!nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject)) {
+        return NS_ERROR_FAILURE;
+      }
     }
 
     // We're reusing the inner window, but this still counts as a navigation,
@@ -1992,7 +1998,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
         JS_SetParent(cx, mJSObject, newInnerWindow->mJSObject);
 
-        SetOuterObject(cx, mJSObject);
+        rv = SetOuterObject(cx, mJSObject);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         JSCompartment *compartment = js::GetObjectCompartment(mJSObject);
         xpc::CompartmentPrivate *priv =
@@ -2049,9 +2056,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // the global object's compartment as its default compartment,
     // so update that now since it might have changed.
     JS_SetGlobalObject(cx, mJSObject);
-    NS_ASSERTION(JS_GetPrototype(mJSObject) ==
-                 JS_GetPrototype(newInnerJSObject),
+#ifdef DEBUG
+    JSObject *proto1, *proto2;
+    JS_GetPrototype(cx, mJSObject, &proto1);
+    JS_GetPrototype(cx, newInnerJSObject, &proto2);
+    NS_ASSERTION(proto1 == proto2,
                  "outer and inner globals should have the same prototype");
+#endif
 
     nsCOMPtr<nsIContent> frame = do_QueryInterface(GetFrameElementInternal());
     if (frame) {

@@ -759,13 +759,16 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
   JSObject *objProto = &protov.toObject();
 
   JSObject* instance = &vp.toObject();
-  JSObject* proto = JS_GetPrototype(instance);
+  JSObject* proto;
+  if (!JS_GetPrototype(cx, instance, &proto))
+    return false;
   while (proto) {
     if (proto == objProto) {
       *bp = true;
       return true;
     }
-    proto = JS_GetPrototype(proto);
+    if (!JS_GetPrototype(cx, proto, &proto))
+      return false;
   }
 
   nsISupports* native =
