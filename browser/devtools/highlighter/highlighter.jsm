@@ -150,16 +150,15 @@ Highlighter.prototype = {
 
     stack.appendChild(this.highlighterContainer);
 
-    this.showOutline();
-
     this.buildInfobar(controlsBox);
 
     this.transitionDisabler = null;
     this.pageEventsMuter = null;
 
-    this.computeZoomFactor();
     this.unlock();
-    this.hide();
+
+    this.hidden = true;
+    this.show();
   },
 
   /**
@@ -219,6 +218,10 @@ Highlighter.prototype = {
     }
 
     this.invalidateSize(!!aScroll);
+
+    if (this._highlighting) {
+      this.showOutline();
+    }
 
     if (oldNode !== this.node) {
       this.emitEvent("nodeselected");
