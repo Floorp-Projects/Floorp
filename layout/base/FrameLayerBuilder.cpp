@@ -3296,28 +3296,24 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   gfxMatrix imageTransform = maskTransform;
   imageTransform.Scale(mParameters.mXScale, mParameters.mYScale);
 
+  nsAutoPtr<MaskLayerImageCache::MaskLayerImageKey> newKey(
+    new MaskLayerImageCache::MaskLayerImageKey(aLayer->Manager()->GetBackendType()));
+
   // copy and transform the rounded rects
-  nsTArray<MaskLayerImageCache::PixelRoundedRect> roundedRects;
   for (uint32_t i = 0; i < newData.mRoundedClipRects.Length(); ++i) {
-    roundedRects.AppendElement(
+    newKey->mRoundedClipRects.AppendElement(
       MaskLayerImageCache::PixelRoundedRect(newData.mRoundedClipRects[i],
                                             mContainerFrame->PresContext()));
-    roundedRects[i].ScaleAndTranslate(imageTransform);
+    newKey->mRoundedClipRects[i].ScaleAndTranslate(imageTransform);
   }
  
-  // check to see if we can reuse a mask image
-  const MaskLayerImageCache::MaskLayerImageKey* key =
-    new MaskLayerImageCache::MaskLayerImageKey(roundedRects, aLayer->Manager()->GetBackendType());
-  const MaskLayerImageCache::MaskLayerImageKey* lookupKey = key;
+  const MaskLayerImageCache::MaskLayerImageKey* lookupKey = newKey;
 
+  // check to see if we can reuse a mask image
   nsRefPtr<ImageContainer> container =
     GetMaskLayerImageCache()->FindImageFor(&lookupKey);
 
-  if (container) {
-    // track the returned key for the mask image
-    delete key;
-    key = lookupKey;
-  } else {
+  if (!container) {
     // no existing mask image, so build a new one
     nsRefPtr<gfxASurface> surface =
       aLayer->Manager()->CreateOptimalMaskSurface(surfaceSize);
@@ -3348,7 +3344,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
     static_cast<CairoImage*>(image.get())->SetData(data);
     container->SetCurrentImageInTransaction(image);
 
-    GetMaskLayerImageCache()->PutImage(key, container);
+    GetMaskLayerImageCache()->PutImage(newKey.forget(), container);
   }
 
   maskLayer->SetContainer(container);
@@ -3358,7 +3354,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   userData->mScaleX = newData.mScaleX;
   userData->mScaleY = newData.mScaleY;
   userData->mRoundedClipRects.SwapElements(newData.mRoundedClipRects);
-  userData->mImageKey = key;
+  userData->mImageKey = lookupKey;
 
   aLayer->SetMaskLayer(maskLayer);
   SetClipCount(thebesData, aRoundedRectClipCount);
