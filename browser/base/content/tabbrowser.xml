@@ -3630,7 +3630,7 @@
 
         var newIndex = this._getDropIndex(event);
         var scrollRect = tabStrip.scrollClientRect;
-        var rect = this.getBoundingClientRect();
+        var rect = tabStrip.getBoundingClientRect();
         var minMargin = scrollRect.left - rect.left;
         var maxMargin = Math.min(minMargin + scrollRect.width,
                                  scrollRect.right);
