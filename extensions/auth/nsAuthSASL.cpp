@@ -72,7 +72,7 @@ nsAuthSASL::GetNextToken(const void *inToken,
     void *unwrappedToken;
     char *message;
     uint32_t unwrappedTokenLen, messageLen;
-    nsCAutoString userbuf;
+    nsAutoCString userbuf;
     
     if (!mInnerModule) 
         return NS_ERROR_NOT_INITIALIZED;

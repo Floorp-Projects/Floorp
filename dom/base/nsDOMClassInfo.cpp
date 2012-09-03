@@ -2304,7 +2304,7 @@ nsDOMClassInfo::RegisterExternalClasses()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXPIDLCString contractId;
-  nsCAutoString categoryEntry;
+  nsAutoCString categoryEntry;
   nsCOMPtr<nsISupports> entry;
 
   while (NS_SUCCEEDED(e->GetNext(getter_AddRefs(entry)))) {

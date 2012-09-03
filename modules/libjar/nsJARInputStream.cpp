@@ -92,7 +92,7 @@ nsJARInputStream::InitDirectory(nsJAR* aJar,
     // iterate through dirName and copy it to escDirName, escaping chars
     // which are special at the "top" level of the regexp so FindEntries
     // works correctly
-    nsCAutoString escDirName;
+    nsAutoCString escDirName;
     const char* curr = dirName.BeginReading();
     const char* end  = dirName.EndReading();
     while (curr != end) {
@@ -114,7 +114,7 @@ nsJARInputStream::InitDirectory(nsJAR* aJar,
         }
         ++curr;
     }
-    nsCAutoString pattern = escDirName + NS_LITERAL_CSTRING("?*~") +
+    nsAutoCString pattern = escDirName + NS_LITERAL_CSTRING("?*~") +
                             escDirName + NS_LITERAL_CSTRING("?*/?*");
     rv = mJar->mZip->FindInit(pattern.get(), &find);
     if (NS_FAILED(rv)) return rv;

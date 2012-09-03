@@ -109,7 +109,7 @@ nsWyciwygProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
   {
     // If original channel used https, make sure PSM is initialized
     // (this may be first channel to load during a session restore)
-    nsCAutoString path;
+    nsAutoCString path;
     rv = url->GetPath(path);
     NS_ENSURE_SUCCESS(rv, rv);
     int32_t slashIndex = path.FindChar('/', 2);

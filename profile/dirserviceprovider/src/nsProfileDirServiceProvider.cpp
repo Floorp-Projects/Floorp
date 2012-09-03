@@ -269,7 +269,7 @@ nsProfileDirServiceProvider::InitProfileDir(nsIFile *profileDir)
   if (!exists) {
     nsCOMPtr<nsIFile> profileDefaultsDir;
     nsCOMPtr<nsIFile> profileDirParent;
-    nsCAutoString profileDirName;
+    nsAutoCString profileDirName;
 
     (void)profileDir->GetParent(getter_AddRefs(profileDirParent));
     if (!profileDirParent)
@@ -371,7 +371,7 @@ nsProfileDirServiceProvider::EnsureProfileFileExists(nsIFile *aFile, nsIFile *de
       return rv;
   }
 
-  nsCAutoString leafName;
+  nsAutoCString leafName;
   rv = aFile->GetNativeLeafName(leafName);
   if (NS_FAILED(rv))
     return rv;

@@ -54,7 +54,7 @@ nsContentPolicy::~nsContentPolicy()
 #define WARN_IF_URI_UNINITIALIZED(uri,name)                         \
   PR_BEGIN_MACRO                                                    \
     if ((uri)) {                                                    \
-        nsCAutoString spec;                                         \
+        nsAutoCString spec;                                         \
         (uri)->GetAsciiSpec(spec);                                  \
         if (spec.IsEmpty()) {                                       \
             NS_WARNING(name " is uninitialized, fix caller");       \
@@ -151,11 +151,11 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
       } else {                                                                \
         resultName = "(null ptr)";                                            \
       }                                                                       \
-      nsCAutoString spec("None");                                             \
+      nsAutoCString spec("None");                                             \
       if (contentLocation) {                                                  \
           contentLocation->GetSpec(spec);                                     \
       }                                                                       \
-      nsCAutoString refSpec("None");                                          \
+      nsAutoCString refSpec("None");                                          \
       if (requestingLocation) {                                               \
           requestingLocation->GetSpec(refSpec);                               \
       }                                                                       \

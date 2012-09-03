@@ -51,7 +51,7 @@
 #include "mozilla/FunctionTimer.h"
 #ifdef NS_FUNCTION_TIMER
 #define TIME_URILOADER_FUNCTION(req)                         \
-    nsCAutoString name__("N/A");                             \
+    nsAutoCString name__("N/A");                             \
     (req)->GetName(name__);                                  \
     NS_TIME_FUNCTION_FMT("%s (line %d) (request: %s)",       \
                          MOZ_FUNCTION_NAME,                  \
@@ -431,7 +431,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       //
       // Fourth step: try to find an nsIContentHandler for our type.
       //
-      nsCAutoString handlerContractID (NS_CONTENT_HANDLER_CONTRACTID_PREFIX);
+      nsAutoCString handlerContractID (NS_CONTENT_HANDLER_CONTRACTID_PREFIX);
       handlerContractID += mContentType;
 
       nsCOMPtr<nsIContentHandler> contentHandler =
@@ -761,7 +761,7 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
   if (LOG_ENABLED()) {
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
-    nsCAutoString spec;
+    nsAutoCString spec;
     uri->GetAsciiSpec(spec);
     LOG(("nsURILoader::OpenURI for %s", spec.get()));
   }
@@ -810,7 +810,7 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
   if (LOG_ENABLED()) {
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
-    nsCAutoString spec;
+    nsAutoCString spec;
     uri->GetAsciiSpec(spec);
     LOG(("nsURILoader::OpenChannel for %s", spec.get()));
   }

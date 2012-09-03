@@ -1849,7 +1849,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
 
     virtual void initExtraCompartmentStats(JSCompartment *c,
                                            JS::CompartmentStats *cstats) MOZ_OVERRIDE {
-        nsCAutoString cJSPathPrefix, cDOMPathPrefix;
+        nsAutoCString cJSPathPrefix, cDOMPathPrefix;
         nsCString cName;
         GetCompartmentName(c, cName, true);
 

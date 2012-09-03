@@ -6,11 +6,11 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, uuid(8c6b574d-1135-4387-a6e3-6d8ba38d79a1)]
+[scriptable, uuid(a0eb16f3-5fa2-4cbd-bf7a-4ce7704b13ea)]
 interface nsIDOMMozConnection : nsISupports
 {
   readonly attribute double  bandwidth;
   readonly attribute boolean metered;
 
-           attribute nsIDOMEventListener onchange;
+  [implicit_jscontext] attribute jsval onchange;
 };

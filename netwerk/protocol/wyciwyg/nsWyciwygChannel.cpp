@@ -359,7 +359,7 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_ARG_POINTER(listener);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   mURI->GetSpec(spec);
 
   // open a cache entry for this channel...
@@ -394,7 +394,7 @@ NS_IMETHODIMP
 nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
 {
   // URIs not thread-safe, so get spec now in case we need it
-  nsCAutoString spec;
+  nsAutoCString spec;
   nsresult rv = mURI->GetAsciiSpec(spec);
   if (NS_FAILED(rv)) 
     return rv;
@@ -702,7 +702,7 @@ nsWyciwygChannel::ReadFromCache()
   // Get the stored security info
   mCacheEntry->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
-  nsCAutoString tmpStr;
+  nsAutoCString tmpStr;
   rv = mCacheEntry->GetMetaDataElement("inhibit-persistent-caching",
                                        getter_Copies(tmpStr));
   if (NS_SUCCEEDED(rv) && tmpStr == NS_LITERAL_CSTRING("1"))
@@ -730,7 +730,7 @@ nsWyciwygChannel::WriteCharsetAndSourceToCache(int32_t aSource,
   
   mCacheEntry->SetMetaDataElement("charset", aCharset.get());
 
-  nsCAutoString source;
+  nsAutoCString source;
   source.AppendInt(aSource);
   mCacheEntry->SetMetaDataElement("charset-source", source.get());
 }

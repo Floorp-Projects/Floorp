@@ -91,9 +91,6 @@ protected:
   nsCOMPtr<nsISupports> mSource;
   nsRefPtr<IDBTransaction> mTransaction;
 
-  NS_DECL_EVENT_HANDLER(success)
-  NS_DECL_EVENT_HANDLER(error)
-
   jsval mResultVal;
 
   nsCOMPtr<nsIDOMDOMError> mError;
@@ -138,9 +135,6 @@ protected:
   ~IDBOpenDBRequest();
 
   // Only touched on the main thread.
-  NS_DECL_EVENT_HANDLER(blocked)
-  NS_DECL_EVENT_HANDLER(upgradeneeded)
-
   nsRefPtr<IDBFactory> mFactory;
 };
 

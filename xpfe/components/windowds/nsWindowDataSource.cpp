@@ -170,7 +170,7 @@ nsWindowDataSource::OnWindowTitleChange(nsIXULWindow *window,
 NS_IMETHODIMP
 nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
 {
-    nsCAutoString windowId(NS_LITERAL_CSTRING("window-"));
+    nsAutoCString windowId(NS_LITERAL_CSTRING("window-"));
     windowId.AppendInt(windowCount++, 10);
 
     nsCOMPtr<nsIRDFResource> windowResource;

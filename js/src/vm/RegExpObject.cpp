@@ -546,7 +546,7 @@ RegExpCompartment::sweep(JSRuntime *rt)
         /* See the comment on RegExpShared lifetime in RegExpObject.h. */
         RegExpShared *shared = e.front().value;
         if (shared->activeUseCount == 0 && shared->gcNumberWhenUsed < rt->gcStartNumber) {
-            Foreground::delete_(shared);
+            js_delete(shared);
             e.removeFront();
         }
     }

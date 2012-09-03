@@ -148,7 +148,7 @@
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   nsCOMPtr<nsIFile> resDir;
-  nsCAutoString resPath;
+  nsAutoCString resPath;
   NSString* pathToImage;
   NSImage* cursorImage;
 

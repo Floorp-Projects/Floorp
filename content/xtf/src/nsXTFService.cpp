@@ -77,7 +77,7 @@ nsXTFService::CreateElement(nsIContent** aResult,
   // Check if we have an xtf factory for the given namespaceid in our cache:
   if (!mFactoryHash.Get(aNodeInfo.get()->NamespaceID(), getter_AddRefs(factory))) {
     // No. See if there is one registered with the component manager:
-    nsCAutoString xtf_contract_id(NS_XTF_ELEMENT_FACTORY_CONTRACTID_PREFIX);
+    nsAutoCString xtf_contract_id(NS_XTF_ELEMENT_FACTORY_CONTRACTID_PREFIX);
     nsAutoString uri;
     aNodeInfo.get()->GetNamespaceURI(uri);
     AppendUTF16toUTF8(uri, xtf_contract_id);

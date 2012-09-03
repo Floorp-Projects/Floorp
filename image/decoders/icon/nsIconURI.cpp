@@ -74,7 +74,7 @@ nsMozIconURI::GetSpec(nsACString &aSpec)
 
   if (mIconURL)
   {
-    nsCAutoString fileIconSpec;
+    nsAutoCString fileIconSpec;
     nsresult rv = mIconURL->GetSpec(fileIconSpec);
     NS_ENSURE_SUCCESS(rv, rv);
     aSpec += fileIconSpec;
@@ -172,7 +172,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
   mIconSize = -1;
   mIconState = -1;
 
-  nsCAutoString iconSpec(aSpec);
+  nsAutoCString iconSpec(aSpec);
   if (!Substring(iconSpec, 0, MOZICON_SCHEME_LEN).EqualsLiteral(MOZICON_SCHEME))
     return NS_ERROR_MALFORMED_URI;
 
@@ -181,7 +181,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
   {
     extractAttributeValue(iconSpec.get(), "contentType=", mContentType);
 
-    nsCAutoString sizeString;
+    nsAutoCString sizeString;
     extractAttributeValue(iconSpec.get(), "size=", sizeString);
     if (!sizeString.IsEmpty())
     {      
@@ -200,7 +200,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
         mSize = sizeValue;
     }
 
-    nsCAutoString stateString;
+    nsAutoCString stateString;
     extractAttributeValue(iconSpec.get(), "state=", stateString);
     if (!stateString.IsEmpty())
     {
@@ -222,7 +222,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
   if (pathLength < 3)
     return NS_ERROR_MALFORMED_URI;
 
-  nsCAutoString iconPath(Substring(iconSpec, MOZICON_SCHEME_LEN, pathLength));
+  nsAutoCString iconPath(Substring(iconSpec, MOZICON_SCHEME_LEN, pathLength));
 
   // Icon URI path can have three forms:
   // (1) //stock/<icon-identifier>
@@ -387,8 +387,8 @@ nsMozIconURI::Equals(nsIURI *other, bool *result)
   NS_ENSURE_ARG_POINTER(other);
   NS_PRECONDITION(result, "null pointer");
 
-  nsCAutoString spec1;
-  nsCAutoString spec2;
+  nsAutoCString spec1;
+  nsAutoCString spec2;
 
   other->GetSpec(spec2);
   GetSpec(spec1);
@@ -530,7 +530,7 @@ nsMozIconURI::GetFileExtension(nsACString &aFileExtension)
   // First, try to get the extension from mIconURL if we have one
   if (mIconURL)
   {
-    nsCAutoString fileExt;
+    nsAutoCString fileExt;
     if (NS_SUCCEEDED(mIconURL->GetFileExtension(fileExt)))
     {
       if (!fileExt.IsEmpty())

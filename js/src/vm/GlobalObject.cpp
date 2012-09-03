@@ -227,7 +227,7 @@ intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber,
                          errorArgs[0], errorArgs[1], errorArgs[2]);
     for (unsigned i = 0; i < 3; i++)
-        cx->free_(errorArgs[i]);
+        js_free(errorArgs[i]);
     return false;
 }
 
@@ -305,7 +305,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
             return NULL;
         ScriptSource *ss = cx->new_<ScriptSource>();
         if (!ss) {
-            cx->free_(source);
+            js_free(source);
             return NULL;
         }
         ScriptSourceHolder ssh(cx->runtime, ss);

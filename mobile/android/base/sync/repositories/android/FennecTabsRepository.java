@@ -4,7 +4,11 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
+import java.util.ArrayList;
+
+import org.json.simple.JSONArray;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserContract.Tabs;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NoContentProviderException;
@@ -18,14 +22,23 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSince
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.repositories.domain.TabsRecord;
+import org.mozilla.gecko.sync.repositories.domain.TabsRecord.Tab;
 
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
 
 public class FennecTabsRepository extends Repository {
+  protected final String localClientName;
+  protected final String localClientGuid;
+
+  public FennecTabsRepository(final String localClientName, final String localClientGuid) {
+    this.localClientName = localClientName;
+    this.localClientGuid = localClientGuid;
+  }
 
   /**
    * Note that — unlike most repositories — this will only fetch Fennec's tabs,
@@ -35,15 +48,15 @@ public class FennecTabsRepository extends Repository {
    * unless you use {@link #fetch(String[], RepositorySessionFetchRecordsDelegate)}
    * and specify an explicit GUID.
    */
-  public static class FennecTabsRepositorySession extends RepositorySession {
-
-    private static final String LOG_TAG = "FennecTabsSession";
+  public class FennecTabsRepositorySession extends RepositorySession {
+    protected static final String LOG_TAG = "FennecTabsSession";
 
     private final ContentProviderClient tabsProvider;
     private final ContentProviderClient clientsProvider;
 
-    protected ContentProviderClient getContentProvider(final Context context, final Uri uri) throws NoContentProviderException {
+    protected final RepoUtils.QueryHelper tabsHelper;
 
+    protected ContentProviderClient getContentProvider(final Context context, final Uri uri) throws NoContentProviderException {
       ContentProviderClient client = context.getContentResolver().acquireContentProviderClient(uri);
       if (client == null) {
         throw new NoContentProviderException(uri);
@@ -60,7 +73,6 @@ public class FennecTabsRepository extends Repository {
       } catch (Exception e) {}
     }
 
-
     public FennecTabsRepositorySession(Repository repository, Context context) throws NoContentProviderException {
       super(repository);
       clientsProvider = getContentProvider(context, BrowserContract.Clients.CONTENT_URI);
@@ -74,6 +86,8 @@ public class FennecTabsRepository extends Repository {
         // Oh, Java.
         throw new RuntimeException(e);
       }
+
+      tabsHelper = new RepoUtils.QueryHelper(context, BrowserContract.Tabs.CONTENT_URI, LOG_TAG);
     }
 
     @Override
@@ -88,37 +102,96 @@ public class FennecTabsRepository extends Repository {
       super.finish(delegate);
     }
 
-    @Override
-    public void guidsSince(long timestamp,
-                           RepositorySessionGuidsSinceDelegate delegate) {
-      // Empty until Bug 730039 lands.
-      delegate.onGuidsSinceSucceeded(new String[] {});
+    // Default parameters for local data: local client has null GUID. Override
+    // these to test against non-live data.
+    protected String localClientSelection() {
+      return BrowserContract.Tabs.CLIENT_GUID + " IS NULL";
+    }
+
+    protected String[] localClientSelectionArgs() {
+      return null;
     }
 
     @Override
-    public void fetchSince(long timestamp,
-                           RepositorySessionFetchRecordsDelegate delegate) {
-      // Empty until Bug 730039 lands.
-      delegate.onFetchCompleted(now());
+    public void guidsSince(final long timestamp,
+                           final RepositorySessionGuidsSinceDelegate delegate) {
+      // Bug 783692: Now that Bug 730039 has landed, we could implement this,
+      // but it's not a priority since it's not used (yet).
+      Logger.warn(LOG_TAG, "Not returning anything from guidsSince.");
+      delegateQueue.execute(new Runnable() {
+        @Override
+        public void run() {
+          delegate.onGuidsSinceSucceeded(new String[] {});
+        }
+      });
     }
 
     @Override
-    public void fetch(String[] guids,
-                      RepositorySessionFetchRecordsDelegate delegate) {
-      // Incomplete until Bug 730039 lands.
-      // TODO
-      delegate.onFetchCompleted(now());
+    public void fetchSince(final long timestamp,
+                           final RepositorySessionFetchRecordsDelegate delegate) {
+      if (tabsProvider == null) {
+        throw new IllegalArgumentException("tabsProvider was null.");
+      }
+      if (tabsHelper == null) {
+        throw new IllegalArgumentException("tabsHelper was null.");
+      }
+
+      final String positionAscending = BrowserContract.Tabs.POSITION + " ASC";
+
+      final String localClientSelection = localClientSelection();
+      final String[] localClientSelectionArgs = localClientSelectionArgs();
+
+      final Runnable command = new Runnable() {
+        @Override
+        public void run() {
+          // We fetch all local tabs (since the record must contain them all)
+          // but only process the record if the timestamp is sufficiently
+          // recent.
+          try {
+            final Cursor cursor = tabsHelper.safeQuery(tabsProvider, ".fetchSince()", null,
+                localClientSelection, localClientSelectionArgs, positionAscending);
+            try {
+              final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, localClientGuid, localClientName);
+
+              if (tabsRecord.lastModified >= timestamp) {
+                delegate.onFetchedRecord(tabsRecord);
+              }
+            } finally {
+              cursor.close();
+            }
+          } catch (Exception e) {
+            delegate.onFetchFailed(e, null);
+            return;
+          }
+          delegate.onFetchCompleted(now());
+        }
+      };
+
+      delegateQueue.execute(command);
     }
 
     @Override
-    public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
-      // Incomplete until Bug 730039 lands.
-      // TODO
-      delegate.onFetchCompleted(now());
+    public void fetch(final String[] guids,
+                      final RepositorySessionFetchRecordsDelegate delegate) {
+      // Bug 783692: Now that Bug 730039 has landed, we could implement this,
+      // but it's not a priority since it's not used (yet).
+      Logger.warn(LOG_TAG, "Not returning anything from fetch");
+      delegateQueue.execute(new Runnable() {
+        @Override
+        public void run() {
+          delegate.onFetchCompleted(now());
+        }
+      });
+    }
+
+    @Override
+    public void fetchAll(final RepositorySessionFetchRecordsDelegate delegate) {
+      fetchSince(0, delegate);
     }
 
     private static final String TABS_CLIENT_GUID_IS = BrowserContract.Tabs.CLIENT_GUID + " = ?";
     private static final String CLIENT_GUID_IS = BrowserContract.Clients.GUID + " = ?";
+
     @Override
     public void store(final Record record) throws NoStoreDelegateException {
       if (delegate == null) {
@@ -218,5 +291,70 @@ public class FennecTabsRepository extends Repository {
     } catch (Exception e) {
       delegate.onSessionCreateFailed(e);
     }
+  }
+
+  /**
+   * Extract a <code>Tab</code> from a cursor row.
+   * <p>
+   * Caller is responsible for creating, positioning, and closing the cursor.
+   *
+   * @param cursor
+   *          to inspect.
+   * @return <code>Tab</code> instance.
+   */
+  public static Tab tabFromCursor(final Cursor cursor) {
+    final String title = RepoUtils.getStringFromCursor(cursor, Tabs.TITLE);
+    final String icon = RepoUtils.getStringFromCursor(cursor, Tabs.FAVICON);
+    final JSONArray history = RepoUtils.getJSONArrayFromCursor(cursor, Tabs.HISTORY);
+    final long lastUsed = RepoUtils.getLongFromCursor(cursor, Tabs.LAST_USED);
+
+    return new Tab(title, icon, history, lastUsed);
+  }
+
+  /**
+   * Extract a <code>TabsRecord</code> from a cursor.
+   * <p>
+   * Caller is responsible for creating and closing cursor. Each row of the
+   * cursor should be an individual tab record.
+   * <p>
+   * The extracted tabs record has the given client GUID and client name.
+   *
+   * @param cursor
+   *          to inspect.
+   * @param clientGuid
+   *          returned tabs record will have this client GUID.
+   * @param clientName
+   *          returned tabs record will have this client name.
+   * @return <code>TabsRecord</code> instance.
+   */
+  public static TabsRecord tabsRecordFromCursor(final Cursor cursor, final String clientGuid, final String clientName) {
+    final String collection = "tabs";
+    final TabsRecord record = new TabsRecord(clientGuid, collection, 0, false);
+    record.tabs = new ArrayList<TabsRecord.Tab>();
+    record.clientName = clientName;
+
+    record.androidID = -1;
+    record.deleted = false;
+
+    record.lastModified = 0;
+
+    int position = cursor.getPosition();
+    try {
+      cursor.moveToFirst();
+      while (!cursor.isAfterLast()) {
+        final Tab tab = FennecTabsRepository.tabFromCursor(cursor);
+        record.tabs.add(tab);
+
+        if (tab.lastUsed > record.lastModified) {
+          record.lastModified = tab.lastUsed;
+        }
+
+        cursor.moveToNext();
+      }
+    } finally {
+      cursor.moveToPosition(position);
+    }
+
+    return record;
   }
 }

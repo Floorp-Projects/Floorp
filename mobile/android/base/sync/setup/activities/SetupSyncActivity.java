@@ -70,7 +70,6 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    setTheme(R.style.SyncTheme);
     Logger.info(LOG_TAG, "Called SetupSyncActivity.onCreate.");
     super.onCreate(savedInstanceState);
 
@@ -93,7 +92,12 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     super.onResume();
 
     if (!hasInternet()) {
-      setContentView(R.layout.sync_setup_nointernet);
+      runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          setContentView(R.layout.sync_setup_nointernet);
+        }
+      });
       return;
     }
 

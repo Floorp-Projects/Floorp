@@ -757,8 +757,8 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
               nsresult rv = fixup->CreateExposableURI(uri,getter_AddRefs(tmpuri));
               if (NS_SUCCEEDED(rv) && tmpuri) {
                 // (don't bother if there's no host)
-                nsCAutoString host;
-                nsCAutoString prepath;
+                nsAutoCString host;
+                nsAutoCString prepath;
                 tmpuri->GetHost(host);
                 tmpuri->GetPrePath(prepath);
                 if (!host.IsEmpty()) {

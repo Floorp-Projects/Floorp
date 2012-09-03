@@ -506,7 +506,7 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
     nsReadingIterator<PRUnichar> iter;
 
     const char **entityTable = mInAttribute ? kAttrEntities : kEntities;
-    nsCAutoString entityReplacement;
+    nsAutoCString entityReplacement;
 
     for (aStr.BeginReading(iter);
          iter != done_reading;

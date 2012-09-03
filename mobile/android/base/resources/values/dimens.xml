@@ -32,8 +32,9 @@
     <dimen name="popup_width">400dp</dimen>
     <dimen name="tab_thumbnail_height">78dp</dimen>
     <dimen name="tab_thumbnail_width">136dp</dimen>
-    <dimen name="tabs_list_divider_height">2dp</dimen>
+    <dimen name="tabs_button_full_width">98dp</dimen>
     <dimen name="tabs_counter_size">22sp</dimen>
+    <dimen name="tabs_list_divider_height">2dp</dimen>
     <dimen name="text_selection_handle_width">30dp</dimen>
     <dimen name="text_selection_handle_height">44dp</dimen>
     <dimen name="text_selection_handle_shadow">2dp</dimen>

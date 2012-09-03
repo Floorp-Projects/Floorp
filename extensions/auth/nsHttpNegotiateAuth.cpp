@@ -95,7 +95,7 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
         return rv;
 
     uint32_t req_flags = nsIAuthModule::REQ_DEFAULT;
-    nsCAutoString service;
+    nsAutoCString service;
 
     if (isProxyAuth) {
         if (!TestBoolPref(kNegotiateAuthAllowProxies)) {
@@ -302,7 +302,7 @@ nsHttpNegotiateAuth::TestBoolPref(const char *pref)
 bool
 nsHttpNegotiateAuth::TestNonFqdn(nsIURI *uri)
 {
-    nsCAutoString host;
+    nsAutoCString host;
     PRNetAddr addr;
 
     if (!TestBoolPref(kNegotiateAuthAllowNonFqdn))
@@ -323,7 +323,7 @@ nsHttpNegotiateAuth::TestPref(nsIURI *uri, const char *pref)
     if (!prefs)
         return false;
 
-    nsCAutoString scheme, host;
+    nsAutoCString scheme, host;
     int32_t port;
 
     if (NS_FAILED(uri->GetScheme(scheme)))

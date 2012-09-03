@@ -35,7 +35,7 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
 
     nsTArray<nsString> fontList;
 
-    nsCAutoString generic;
+    nsAutoCString generic;
     if (aGeneric)
         generic.Assign(aGeneric);
     else
@@ -43,7 +43,7 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
 
     nsCOMPtr<nsIAtom> langGroupAtom;
     if (aLangGroup) {
-        nsCAutoString lowered;
+        nsAutoCString lowered;
         lowered.Assign(aLangGroup);
         ToLowerCase(lowered);
         langGroupAtom = do_GetAtom(lowered);

@@ -20,6 +20,12 @@ extern "C" {
 
 using namespace mozilla;
 
+// On B2G estimate the buffered ranges rather than calculating them explicitly.
+// This prevents us doing I/O on the main thread, which is prohibited in B2G.
+#ifdef MOZ_WIDGET_GONK
+#define OGG_ESTIMATE_BUFFERED 1
+#endif
+
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
 
@@ -1620,6 +1626,17 @@ nsresult nsOggReader::SeekBisection(int64_t aTarget,
 
 nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
 {
+#ifdef OGG_ESTIMATE_BUFFERED
+  MediaResource* stream = mDecoder->GetResource();
+  int64_t durationUs = 0;
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    durationUs = mDecoder->GetStateMachine()->GetDuration();
+  }
+  GetEstimatedBufferedTimeRanges(stream, durationUs, aBuffered);
+  
+  return NS_OK;
+#else
   // HasAudio and HasVideo are not used here as they take a lock and cause
   // a deadlock. Accessing mInfo doesn't require a lock - it doesn't change
   // after metadata is read.
@@ -1720,6 +1737,7 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
   }
 
   return NS_OK;
+#endif
 }
 
 bool nsOggReader::IsKnownStream(uint32_t aSerial)

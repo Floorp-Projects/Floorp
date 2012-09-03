@@ -8,7 +8,7 @@ interface nsIDOMEventListener;
 interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 
-[scriptable, builtinclass, uuid(6363c0ff-b58f-4fb3-9707-0ba27f120b2c)]
+[scriptable, builtinclass, uuid(be78baf4-20ba-4ceb-be40-d9774a9388c4)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   unsigned short      getNumberOfMessagesForText(in DOMString text);
@@ -28,7 +28,7 @@ interface nsIDOMMozSmsManager : nsIDOMEventTarget
 
   nsIDOMMozSmsRequest markMessageRead(in long id, in boolean aValue);
 
-  attribute nsIDOMEventListener onreceived;
-  attribute nsIDOMEventListener onsent;
-  attribute nsIDOMEventListener ondelivered;
+  [implicit_jscontext] attribute jsval onreceived;
+  [implicit_jscontext] attribute jsval onsent;
+  [implicit_jscontext] attribute jsval ondelivered;
 };

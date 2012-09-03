@@ -108,7 +108,7 @@ nsFontFace::GetURI(nsAString & aURI)
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
     if (mFontEntry->mUserFontData->mURI) {
-      nsCAutoString spec;
+      nsAutoCString spec;
       mFontEntry->mUserFontData->mURI->GetSpec(spec);
       AppendUTF8toUTF16(spec, aURI);
     }
@@ -177,7 +177,7 @@ nsFontFace::GetMetadata(nsAString & aMetadata)
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
     const gfxUserFontData* userFontData = mFontEntry->mUserFontData;
     if (userFontData->mMetadata.Length() && userFontData->mMetaOrigLen) {
-      nsCAutoString str;
+      nsAutoCString str;
       str.SetLength(userFontData->mMetaOrigLen);
       if (str.Length() == userFontData->mMetaOrigLen) {
         uLongf destLen = userFontData->mMetaOrigLen;

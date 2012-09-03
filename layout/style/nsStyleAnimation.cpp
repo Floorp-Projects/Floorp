@@ -348,7 +348,7 @@ SetCalcValue(const nsStyleCoord::Calc* aCalc, nsCSSValue& aValue)
 static already_AddRefed<nsStringBuffer>
 GetURIAsUtf16StringBuffer(nsIURI* aUri)
 {
-  nsCAutoString utf8String;
+  nsAutoCString utf8String;
   nsresult rv = aUri->GetSpec(utf8String);
   NS_ENSURE_SUCCESS(rv, nullptr);
 

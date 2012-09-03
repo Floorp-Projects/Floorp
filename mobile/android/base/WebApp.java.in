@@ -20,6 +20,7 @@ import java.net.URL;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.WebAppAllocator;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;

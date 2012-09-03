@@ -255,7 +255,7 @@ nsIncrementalDownload::ProcessTimeout()
   // Don't bother making a range request if we are just going to fetch the
   // entire document.
   if (mInterval || mCurrentSize != int64_t(0)) {
-    nsCAutoString range;
+    nsAutoCString range;
     MakeRangeSpec(mCurrentSize, mTotalSize, mChunkSize, mInterval == 0, range);
 
     rv = http->SetRequestHeader(NS_LITERAL_CSTRING("Range"), range, false);
@@ -556,7 +556,7 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
     if (code == 206) {
       // OK, read the Content-Range header to determine the total size of this
       // download file.
-      nsCAutoString buf;
+      nsAutoCString buf;
       rv = http->GetResponseHeader(NS_LITERAL_CSTRING("Content-Range"), buf);
       if (NS_FAILED(rv))
         return rv;
@@ -754,7 +754,7 @@ nsIncrementalDownload::AsyncOnChannelRedirect(nsIChannel *oldChannel,
     return rv;
 
   // If we didn't have a Range header, then we must be doing a full download.
-  nsCAutoString rangeVal;
+  nsAutoCString rangeVal;
   http->GetRequestHeader(rangeHdr, rangeVal);
   if (!rangeVal.IsEmpty()) {
     rv = newHttpChannel->SetRequestHeader(rangeHdr, rangeVal, false);

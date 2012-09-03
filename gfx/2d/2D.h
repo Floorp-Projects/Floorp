@@ -728,6 +728,21 @@ public:
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const = 0;
 
   /*
+   * Create a draw target optimized for drawing a shadow.
+   *
+   * Note that aSigma is the blur radius that must be used when we draw the
+   * shadow. Also note that this doesn't affect the size of the allocated
+   * surface, the caller is still responsible for including the shadow area in
+   * its size.
+   */
+  virtual TemporaryRef<DrawTarget>
+    CreateShadowDrawTarget(const IntSize &aSize, SurfaceFormat aFormat,
+                           float aSigma) const
+  {
+    return CreateSimilarDrawTarget(aSize, aFormat);
+  }
+
+  /*
    * Create a path builder with the specified fillmode.
    *
    * We need the fill mode up front because of Direct2D.

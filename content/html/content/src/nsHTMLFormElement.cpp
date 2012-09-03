@@ -1688,7 +1688,8 @@ nsHTMLFormElement::CheckValidFormSubmission()
   nsCOMPtr<nsISimpleEnumerator> theEnum;
   nsresult rv = service->EnumerateObservers(NS_INVALIDFORMSUBMIT_SUBJECT,
                                             getter_AddRefs(theEnum));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Return true on error here because that's what we always did
+  NS_ENSURE_SUCCESS(rv, true);
 
   bool hasObserver = false;
   rv = theEnum->HasMoreElements(&hasObserver);
@@ -1698,7 +1699,8 @@ nsHTMLFormElement::CheckValidFormSubmission()
   if (NS_SUCCEEDED(rv) && hasObserver) {
     nsCOMPtr<nsIMutableArray> invalidElements =
       do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Return true on error here because that's what we always did
+    NS_ENSURE_SUCCESS(rv, true);
 
     if (!CheckFormValidity(invalidElements.get())) {
       // For the first invalid submission, we should update element states.

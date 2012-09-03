@@ -159,7 +159,7 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
 #ifdef PR_LOGGING
   if (LOG_ENABLED()) {
-    nsCAutoString fontURI;
+    nsAutoCString fontURI;
     mFontURI->GetSpec(fontURI);
     if (NS_SUCCEEDED(aStatus)) {
       LOG(("fontdownloader (%p) download completed - font uri: (%s)\n", 
@@ -349,7 +349,7 @@ nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
 
 #ifdef PR_LOGGING
   if (LOG_ENABLED()) {
-    nsCAutoString fontURI, referrerURI;
+    nsAutoCString fontURI, referrerURI;
     aFontFaceSrc->mURI->GetSpec(fontURI);
     if (aFontFaceSrc->mReferrer)
       aFontFaceSrc->mReferrer->GetSpec(referrerURI);
@@ -700,7 +700,7 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
   }
 
   NS_ConvertUTF16toUTF8 familyName(aProxy->FamilyName());
-  nsCAutoString fontURI;
+  nsAutoCString fontURI;
   if (aProxy->mSrcIndex == aProxy->mSrcList.Length()) {
     fontURI.AppendLiteral("(end of source list)");
   } else {
@@ -734,7 +734,7 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
                                    nsCSSProps::kFontStretchKTable).get(),
         aProxy->mSrcIndex);
 
-  if (aStatus != 0) {
+  if (NS_FAILED(aStatus)) {
     msg.Append(": ");
     switch (aStatus) {
     case NS_ERROR_DOM_BAD_URI:
@@ -904,7 +904,7 @@ nsUserFontSet::SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
 
   // make sure there's a mime type
   if (NS_SUCCEEDED(rv)) {
-    nsCAutoString mimeType;
+    nsAutoCString mimeType;
     rv = channel->GetContentType(mimeType);
     aBufferLength = totalRead;
   }

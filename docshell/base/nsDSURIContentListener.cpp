@@ -390,7 +390,7 @@ bool nsDSURIContentListener::CheckFrameOptions(nsIRequest *request)
         return true;
     }
 
-    nsCAutoString xfoHeaderCValue;
+    nsAutoCString xfoHeaderCValue;
     httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("X-Frame-Options"),
                                    xfoHeaderCValue);
     NS_ConvertUTF8toUTF16 xfoHeaderValue(xfoHeaderCValue);

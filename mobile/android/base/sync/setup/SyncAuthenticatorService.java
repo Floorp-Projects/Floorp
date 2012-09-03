@@ -9,8 +9,11 @@ import java.security.NoSuchAlgorithmException;
 
 import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.sync.SyncConfiguration;
+import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.config.AccountPickler;
+import org.mozilla.gecko.sync.config.ClientRecordTerminator;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
 import android.accounts.AbstractAccountAuthenticator;
@@ -21,6 +24,7 @@ import android.accounts.NetworkErrorException;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 
@@ -217,20 +221,107 @@ public class SyncAuthenticatorService extends Service {
      * Account disappeared.
      */
     @Override
-    public Bundle getAccountRemovalAllowed(AccountAuthenticatorResponse response, Account account) throws NetworkErrorException {
+    public Bundle getAccountRemovalAllowed(final AccountAuthenticatorResponse response, Account account)
+        throws NetworkErrorException {
       Bundle result = super.getAccountRemovalAllowed(response, account);
 
-      if (result != null &&
-          result.containsKey(AccountManager.KEY_BOOLEAN_RESULT) &&
-          !result.containsKey(AccountManager.KEY_INTENT)) {
-        final boolean removalAllowed = result.getBoolean(AccountManager.KEY_BOOLEAN_RESULT);
-
-        if (removalAllowed) {
-          Logger.info(LOG_TAG, "Account named " + account.name + " being removed; " +
-              "deleting saved pickle file '" + Constants.ACCOUNT_PICKLE_FILENAME + "'.");
-          AccountPickler.deletePickle(mContext, Constants.ACCOUNT_PICKLE_FILENAME);
-        }
+      if (result == null ||
+          !result.containsKey(AccountManager.KEY_BOOLEAN_RESULT) ||
+          result.containsKey(AccountManager.KEY_INTENT)) {
+        return result;
       }
+
+      final boolean removalAllowed = result.getBoolean(AccountManager.KEY_BOOLEAN_RESULT);
+      if (!removalAllowed) {
+        return result;
+      }
+
+      final String accountName = account.name;
+
+      // Delete the Account pickle in the background.
+      ThreadPool.run(new Runnable() {
+        @Override
+        public void run() {
+          Logger.info(LOG_TAG, "Account named " + accountName + " being removed; " +
+              "deleting saved pickle file '" + Constants.ACCOUNT_PICKLE_FILENAME + "'.");
+          try {
+            AccountPickler.deletePickle(mContext, Constants.ACCOUNT_PICKLE_FILENAME);
+          } catch (Exception e) {
+            // This should never happen, but we really don't want to die in a background thread.
+            Logger.warn(LOG_TAG, "Got exception deleting saved pickle file; ignoring.", e);
+          }
+        }
+      });
+
+      // Bug 770785: delete the Account's client record in the background. We
+      // want to get the Account's data synchronously, though, since it is
+      // possible the Account object will be invalid by the time the Runnable
+      // executes. We don't need to worry about accessing prefs too early since
+      // deleting the Account doesn't remove them -- at least, not yet. We would
+      // prefer to use SyncAccounts.blockingFromAndroidAccountV0, but that
+      // hangs, possibly because the Account Manager doesn't appreciate giving
+      // out an auth token while deleting the account.
+
+      final AccountManager accountManager = AccountManager.get(mContext);
+      final String password = accountManager.getPassword(account);
+      final String serverURL = accountManager.getUserData(account, Constants.OPTION_SERVER);
+
+      ThreadPool.run(new Runnable() {
+        @Override
+        public void run() {
+          Logger.info(LOG_TAG, "Account named " + accountName + " being removed; " +
+              "deleting client record from server.");
+
+          String encodedUsername;
+          try {
+            encodedUsername = Utils.usernameFromAccount(accountName);
+          } catch (Exception e) {
+            Logger.warn(LOG_TAG, "Got exception deleting client record from server; ignoring.", e);
+            return;
+          }
+
+          if (accountName == null || encodedUsername == null || password == null || serverURL == null) {
+            Logger.warn(LOG_TAG, "Account parameters were null; not deleting client record from server.");
+            return;
+          }
+
+          // This is not exactly modular. We need to get some information about
+          // the account, namely the current clusterURL and client GUID, and we
+          // extract it by hand. We're not worried about the Account being
+          // deleted out from under us since the prefs remain even after Account
+          // deletion.
+          final String product = GlobalConstants.BROWSER_INTENT_PACKAGE;
+          final String profile = Constants.DEFAULT_PROFILE;
+          final long version = SyncConfiguration.CURRENT_PREFS_VERSION;
+
+          SharedPreferences prefs;
+          try {
+            prefs = Utils.getSharedPreferences(mContext, product, encodedUsername, serverURL, profile, version);
+          } catch (Exception e) {
+            Logger.warn(LOG_TAG, "Caught exception fetching preferences; not deleting client record from server.", e);
+            return;
+          }
+
+          final String clientGuid = prefs.getString(SyncConfiguration.PREF_ACCOUNT_GUID, null);
+          final String clusterURL = prefs.getString(SyncConfiguration.PREF_CLUSTER_URL, null);
+
+          if (clientGuid == null) {
+            Logger.warn(LOG_TAG, "Client GUID was null; not deleting client record from server.");
+            return;
+          }
+
+          if (clusterURL == null) {
+            Logger.warn(LOG_TAG, "Cluster URL was null; not deleting client record from server.");
+            return;
+          }
+
+          try {
+            ClientRecordTerminator.deleteClientRecord(encodedUsername, password, clusterURL, clientGuid);
+          } catch (Exception e) {
+            Logger.warn(LOG_TAG, "Got exception deleting client record from server; ignoring.", e);
+          }
+        }
+      });
 
       return result;
     }

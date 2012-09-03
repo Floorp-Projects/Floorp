@@ -3467,7 +3467,7 @@ nsHTMLEditor::StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
     if (NS_SUCCEEDED(rv))
     {
       // Get the URI, then url spec from the sheet
-      nsCAutoString spec;
+      nsAutoCString spec;
       rv = aSheet->GetSheetURI()->GetSpec(spec);
 
       if (NS_SUCCEEDED(rv))

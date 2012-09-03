@@ -35,7 +35,7 @@ interface nsIURI;
 interface nsIObserver;
 interface nsIPrincipal;
 
-[scriptable, uuid(cc423aaf-f088-4ec2-86ef-7733225773f9)]
+[scriptable, uuid(da33450a-f3cb-4fdb-93ee-219644e450c2)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -169,6 +169,11 @@ interface nsIPermissionManager : nsISupports
    *         nsIPermission objects
    */
   readonly attribute nsISimpleEnumerator enumerator;
+
+  /**
+   * Remove all permissions associated with a given app id.
+   */
+  void removePermissionsForApp(in unsigned long appId);
 };
 
 %{ C++

@@ -1030,10 +1030,10 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
 
                         // Use a string buffer for the output data, first
                         // save a quote.
-                        nsCAutoString   outpt( NS_LITERAL_CSTRING("\"") );
+                        nsAutoCString   outpt( NS_LITERAL_CSTRING("\"") );
                         // Now copy the URL converting the Unicode string
                         // to a single-byte ASCII string
-                        nsCAutoString tmpNativeStr;
+                        nsAutoCString tmpNativeStr;
                         NS_CopyUnicodeToNative( url, tmpNativeStr );
                         outpt.Append( tmpNativeStr );
                         // Add the "," used to separate the URL and the page
@@ -1262,7 +1262,7 @@ nsNativeAppSupportWin::HandleCommandLine(const char* aCmdLineString,
     int between, quoted, bSlashCount;
     int argc;
     const char *p;
-    nsCAutoString arg;
+    nsAutoCString arg;
 
     nsCOMPtr<nsICommandLineRunner> cmdLine
         (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));

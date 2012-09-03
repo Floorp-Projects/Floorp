@@ -36,8 +36,8 @@ nsCSSKeywords::AddRefTable(void)
       // let's verify the table...
       int32_t index = 0;
       for (; index < eCSSKeyword_COUNT && kCSSRawKeywords[index]; ++index) {
-        nsCAutoString temp1(kCSSRawKeywords[index]);
-        nsCAutoString temp2(kCSSRawKeywords[index]);
+        nsAutoCString temp1(kCSSRawKeywords[index]);
+        nsAutoCString temp2(kCSSRawKeywords[index]);
         ToLowerCase(temp1);
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
         NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in table");

@@ -587,7 +587,7 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
     }
 
     nsresult rv;
-    nsCAutoString hostACE;
+    nsAutoCString hostACE;
     if (idn && !IsASCII(*hostPtr)) {
         if (NS_SUCCEEDED(idn->ConvertUTF8toACE(*hostPtr, hostACE)))
             hostPtr = &hostACE;
@@ -639,7 +639,7 @@ nsDNSService::CancelAsyncResolve(const nsACString  &aHostname,
 
     nsCString hostname(aHostname);
 
-    nsCAutoString hostACE;
+    nsAutoCString hostACE;
     if (idn && !IsASCII(aHostname)) {
         if (NS_SUCCEEDED(idn->ConvertUTF8toACE(aHostname, hostACE)))
             hostname = hostACE;
@@ -676,7 +676,7 @@ nsDNSService::Resolve(const nsACString &hostname,
     }
 
     nsresult rv;
-    nsCAutoString hostACE;
+    nsAutoCString hostACE;
     if (idn && !IsASCII(*hostPtr)) {
         if (NS_SUCCEEDED(idn->ConvertUTF8toACE(*hostPtr, hostACE)))
             hostPtr = &hostACE;

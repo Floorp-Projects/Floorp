@@ -66,7 +66,7 @@ variantToSQLiteT(T aObj,
     case nsIDataType::VTYPE_UTF8STRING:
     case nsIDataType::VTYPE_CSTRING:
     {
-      nsCAutoString value;
+      nsAutoCString value;
       // GetAsAUTF8String should never perform conversion when coming from
       // 8-bit string types, and thus can accept strings with arbitrary encoding
       // (including UTF8 and ASCII).

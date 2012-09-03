@@ -456,7 +456,7 @@ nsPrefetchService::ProcessNextURI()
 
 #if defined(PR_LOGGING)
         if (LOG_ENABLED()) {
-            nsCAutoString spec;
+            nsAutoCString spec;
             mCurrentNode->mURI->GetSpec(spec);
             LOG(("ProcessNextURI [%s]\n", spec.get()));
         }
@@ -642,7 +642,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
 
 #if defined(PR_LOGGING)
     if (LOG_ENABLED()) {
-        nsCAutoString spec;
+        nsAutoCString spec;
         aURI->GetSpec(spec);
         LOG(("PrefetchURI [%s]\n", spec.get()));
     }
@@ -691,7 +691,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     if (!aExplicit) {
         nsCOMPtr<nsIURL> url(do_QueryInterface(aURI, &rv));
         if (NS_FAILED(rv)) return rv;
-        nsCAutoString query;
+        nsAutoCString query;
         rv = url->GetQuery(query);
         if (NS_FAILED(rv) || !query.IsEmpty()) {
             LOG(("rejected: URL has a query string\n"));
@@ -787,7 +787,7 @@ nsPrefetchNode::GetSource(nsIDOMNode **aSource)
 NS_IMETHODIMP
 nsPrefetchNode::GetUri(nsAString &aURI)
 {
-    nsCAutoString spec;
+    nsAutoCString spec;
     nsresult rv = mURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -835,15 +835,6 @@ nsPrefetchNode::GetStatus(uint16_t *aStatus)
     uint32_t httpStatus;
     rv = httpChannel->GetResponseStatus(&httpStatus);
     if (rv == NS_ERROR_NOT_AVAILABLE) {
-        // Someone's calling this before we got a response... Check our
-        // ReadyState.  If we're at RECEIVING or LOADED, then this means the
-        // connection errored before we got any data; return a somewhat
-        // sensible error code in that case.
-        if (mState >= nsIDOMLoadStatus::RECEIVING) {
-            *aStatus = NS_ERROR_NOT_AVAILABLE;
-            return NS_OK;
-        }
-
         *aStatus = 0;
         return NS_OK;
     }

@@ -32,7 +32,7 @@ nsresult
 nsCharsetAlias::GetPreferredInternal(const nsACString& aAlias,
                                      nsACString& oResult)
 {
-   nsCAutoString key(aAlias);
+   nsAutoCString key(aAlias);
    ToLowerCase(key);
 
    return nsUConvPropertySearch::SearchPropertyValue(kAliases,
@@ -76,12 +76,12 @@ nsCharsetAlias::Equals(const nsACString& aCharset1,
    }
 
    *oResult = false;
-   nsCAutoString name1;
+   nsAutoCString name1;
    res = GetPreferredInternal(aCharset1, name1);
    if (NS_FAILED(res))
      return res;
 
-   nsCAutoString name2;
+   nsAutoCString name2;
    res = GetPreferredInternal(aCharset2, name2);
    if (NS_FAILED(res))
      return res;

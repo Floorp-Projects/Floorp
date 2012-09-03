@@ -65,7 +65,7 @@ CSPService::ShouldLoad(uint32_t aContentType,
 
 #ifdef PR_LOGGING
     {
-        nsCAutoString location;
+        nsAutoCString location;
         aContentLocation->GetSpec(location);
         PR_LOG(gCspPRLog, PR_LOG_DEBUG,
             ("CSPService::ShouldLoad called for %s", location.get()));
@@ -108,7 +108,7 @@ CSPService::ShouldLoad(uint32_t aContentType,
     }
 #ifdef PR_LOGGING
     else {
-        nsCAutoString uriSpec;
+        nsAutoCString uriSpec;
         aContentLocation->GetSpec(uriSpec);
         PR_LOG(gCspPRLog, PR_LOG_DEBUG,
             ("COULD NOT get nsINode for location: %s", uriSpec.get()));
@@ -167,7 +167,7 @@ CSPService::ShouldProcess(uint32_t         aContentType,
     }
 #ifdef PR_LOGGING
     else {
-        nsCAutoString uriSpec;
+        nsAutoCString uriSpec;
         aContentLocation->GetSpec(uriSpec);
         PR_LOG(gCspPRLog, PR_LOG_DEBUG,
             ("COULD NOT get nsINode for location: %s", uriSpec.get()));
@@ -234,7 +234,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
 
 #ifdef PR_LOGGING
   if (newUri) {
-    nsCAutoString newUriSpec("None");
+    nsAutoCString newUriSpec("None");
     newUri->GetSpec(newUriSpec);
     PR_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSPService::AsyncOnChannelRedirect called for %s",
@@ -268,7 +268,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
 
   // The redirecting channel isn't a writable property bag, we won't be able
   // to enforce the load policy if it redirects again, so we stop it now.
-  nsCAutoString newUriSpec;
+  nsAutoCString newUriSpec;
   rv = newUri->GetSpec(newUriSpec);
   const PRUnichar *formatParams[] = { NS_ConvertUTF8toUTF16(newUriSpec).get() };
   if (NS_SUCCEEDED(rv)) {

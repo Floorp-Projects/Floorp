@@ -273,7 +273,7 @@ GfxInfo::AddCrashReportAnnotations()
 
   /* Add an App Note for now so that we get the data immediately. These
    * can go away after we store the above in the socorro db */
-  nsCAutoString note;
+  nsAutoCString note;
   note.AppendPrintf("AdapterDescription: '%s'\n", mAdapterDescription.get());
 
   CrashReporter::AppendAppNotesToCrashReport(note);
