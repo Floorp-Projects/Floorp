@@ -1088,6 +1088,9 @@ AddNewScriptRecipients(GlobalObject::DebuggerVector *src, AutoValueVector *dest)
 void
 Debugger::slowPathOnNewScript(JSContext *cx, HandleScript script, GlobalObject *compileAndGoGlobal_)
 {
+    if (script->selfHosted)
+        return;
+
     Rooted<GlobalObject*> compileAndGoGlobal(cx, compileAndGoGlobal_);
 
     JS_ASSERT(script->compileAndGo == !!compileAndGoGlobal);
@@ -2474,7 +2477,7 @@ class Debugger::ScriptQuery {
      * condition occurred.
      */
     void consider(JSScript *script) {
-        if (oom)
+        if (oom || script->selfHosted)
             return;
         JSCompartment *compartment = script->compartment();
         if (!compartments.has(compartment))
@@ -3289,7 +3292,7 @@ Debugger::observesScript(JSScript *script) const
 {
     if (!enabled)
         return false;
-    return observesGlobal(&script->global());
+    return observesGlobal(&script->global()) && !script->selfHosted;
 }
 
 static JSBool
@@ -4224,7 +4227,7 @@ DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
     }
 
     RootedFunction fun(cx, obj->toFunction());
-    if (!fun->isInterpreted()) {
+    if (fun->isBuiltin()) {
         args.rval().setUndefined();
         return true;
     }
