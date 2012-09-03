@@ -625,7 +625,11 @@ static JSObject*
 NewOuterWindowProxy(JSContext *cx, JSObject *parent)
 {
   JSAutoCompartment ac(cx, parent);
-  JSObject *obj = js::Wrapper::New(cx, parent, js::GetObjectProto(parent), parent,
+  JSObject *proto;
+  if (!js::GetObjectProto(cx, parent, &proto))
+    return nullptr;
+
+  JSObject *obj = js::Wrapper::New(cx, parent, proto, parent,
                                    &nsOuterWindowProxy::singleton);
   NS_ASSERTION(js::GetObjectClass(obj)->ext.innerObject, "bad class");
   return obj;

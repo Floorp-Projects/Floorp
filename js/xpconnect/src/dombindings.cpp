@@ -562,7 +562,9 @@ ListBase<LC>::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, boo
         return true;
     if (xpc::WrapperFactory::IsXrayWrapper(proxy))
         return resolveNativeName(cx, proxy, id, desc);
-    JSObject *proto = js::GetObjectProto(proxy);
+    JSObject *proto;
+    if (!js::GetObjectProto(cx, proxy, &proto))
+        return false;
     if (!proto) {
         desc->obj = NULL;
         return true;
@@ -744,7 +746,9 @@ ListBase<LC>::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
         return true;
 
     // OK, now we have to look at the proto
-    JSObject *proto = js::GetObjectProto(proxy);
+    JSObject *proto;
+    if (!js::GetObjectProto(cx, proxy, &proto))
+        return false;
     if (!proto)
         return true;
 
@@ -797,7 +801,9 @@ bool
 ListBase<LC>::getPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id, bool *found,
                                      JS::Value *vp)
 {
-    JSObject *proto = js::GetObjectProto(proxy);
+    JSObject *proto;
+    if (!js::GetObjectProto(cx, proxy, &proto))
+        return false;
     if (!proto)
         return true;
 
@@ -918,7 +924,9 @@ ListBase<LC>::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *rece
 
     // No need to worry about name getters here, so just check the proto.
 
-    JSObject *proto = js::GetObjectProto(proxy);
+    JSObject *proto;
+    if (!js::GetObjectProto(cx, proxy, &proto))
+        return false;
     if (proto) {
         JSBool isPresent;
         if (!JS_GetElementIfPresent(cx, proto, index, proxy, vp, &isPresent))

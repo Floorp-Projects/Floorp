@@ -5017,7 +5017,10 @@ if (expando) {
 """ + get + """
 // No need to worry about name getters here, so just check the proto.
 
-JSObject *proto = js::GetObjectProto(proxy);
+JSObject *proto;
+if (!js::GetObjectProto(cx, proxy, &proto)) {
+  return false;
+}
 if (proto) {
   JSBool isPresent;
   if (!JS_GetElementIfPresent(cx, proto, index, proxy, vp, &isPresent)) {

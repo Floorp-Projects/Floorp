@@ -397,11 +397,20 @@ GetFunctionNativeReserved(RawObject fun, size_t which);
 JS_FRIEND_API(void)
 SetFunctionNativeReserved(RawObject fun, size_t which, const Value &val);
 
-inline JSObject *
-GetObjectProto(RawObject obj)
+inline bool
+GetObjectProto(JSContext *cx, JSObject *obj, JSObject **proto)
 {
-    /* FIXME */
-    return reinterpret_cast<const shadow::Object*>(obj)->type->proto;
+    js::Class *clasp = GetObjectClass(obj);
+    if (clasp == &js::ObjectProxyClass ||
+        clasp == &js::OuterWindowProxyClass ||
+        clasp == &js::FunctionProxyClass)
+    {
+        /* FIXME */
+        *proto = reinterpret_cast<const shadow::Object*>(obj)->type->proto;
+    } else {
+        *proto = reinterpret_cast<const shadow::Object*>(obj)->type->proto;
+    }
+    return true;
 }
 
 inline void *

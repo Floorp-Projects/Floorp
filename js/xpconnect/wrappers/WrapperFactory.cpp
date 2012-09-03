@@ -77,7 +77,9 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, JSObject *obj)
     CompartmentPrivate *priv = GetCompartmentPrivate(obj);
 
     // Get a waiver for the proto.
-    JSObject *proto = js::GetObjectProto(obj);
+    JSObject *proto;
+    if (!js::GetObjectProto(cx, obj, &proto))
+        return nullptr;
     if (proto && !(proto = WaiveXray(cx, proto)))
         return nullptr;
 
@@ -528,7 +530,10 @@ WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
     JSObject *xrayHolder = XrayUtils::createHolder(cx, obj, js::GetObjectParent(obj));
     if (!xrayHolder)
         return nullptr;
-    JSObject *wrapperObj = Wrapper::New(cx, obj, js::GetObjectProto(obj), js::GetObjectParent(obj),
+    JSObject *proto;
+    if (!js::GetObjectProto(cx, obj, &proto))
+        return nullptr;
+    JSObject *wrapperObj = Wrapper::New(cx, obj, proto, js::GetObjectParent(obj),
                                         &LW::singleton);
     if (!wrapperObj)
         return nullptr;
