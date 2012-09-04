@@ -732,3 +732,12 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
     }
 }, "recording-device-events", false);
 })();
+
+(function volumeStateTracker() {
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    shell.sendChromeEvent({
+      type: 'volume-state-changed',
+      active: (aData == 'Shared')
+    });
+}, 'volume-state-changed', false);
+})();
