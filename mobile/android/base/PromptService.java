@@ -248,12 +248,12 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         length = aButtons == null ? 0 : aButtons.length;
         if (length > 0) {
             builder.setPositiveButton(aButtons[0].label, this);
-        }
-        if (length > 1) {
-            builder.setNeutralButton(aButtons[1].label, this);
-        }
-        if (length > 2) {
-            builder.setNegativeButton(aButtons[2].label, this);
+            if (length > 1) {
+                builder.setNeutralButton(aButtons[1].label, this);
+                if (length > 2) {
+                    builder.setNegativeButton(aButtons[2].label, this);
+                }
+            }
         }
 
         // The AlertDialog must be created on the UI thread, not the GeckoBackgroundThread.
