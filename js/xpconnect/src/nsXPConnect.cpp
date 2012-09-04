@@ -502,7 +502,7 @@ nsXPConnect::NotifyLeaveMainThread()
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
     JSRuntime *rt = mRuntime->GetJSRuntime();
-    if (JS_IsInRequest(rt) || JS_IsInSuspendedRequest(rt))
+    if (JS_IsInRequest(rt))
         return false;
     JS_ClearRuntimeThread(rt);
     return true;
