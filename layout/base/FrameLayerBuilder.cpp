@@ -498,10 +498,18 @@ public:
     mActiveScrolledRootPosition(0, 0) {}
 
   /**
+   * Record the number of clips in the Thebes layer's mask layer.
+   * Should not be reset when the layer is recycled since it is used to track
+   * changes in the use of mask layers.
+   */
+  uint32_t mMaskClipCount;
+
+  /**
    * A color that should be painted over the bounds of the layer's visible
    * region before any other content is painted.
    */
   nscolor mForcedBackgroundColor;
+
   /**
    * The resolution scale used.
    */
@@ -1674,6 +1682,10 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
     thebesLayerData = mThebesLayerDataStack[lowestUsableLayerWithScrolledRoot];
     layer = thebesLayerData->mLayer;
   }
+
+  // check to see if the new item has rounded rect clips in common with
+  // other items in the layer
+  thebesLayerData->UpdateCommonClipCount(aClip);
 
   thebesLayerData->Accumulate(this, aItem, aVisibleRect, aDrawRect, aClip);
 
@@ -3202,7 +3214,7 @@ FrameLayerBuilder::Clip::RemoveRoundedCorners()
 }
 
 gfxRect
-CalculateBounds(nsTArray<FrameLayerBuilder::Clip::RoundedRect> aRects, int32_t A2D)
+CalculateBounds(const nsTArray<FrameLayerBuilder::Clip::RoundedRect>& aRects, int32_t A2D)
 {
   nsRect bounds = aRects[0].mRect;
   for (uint32_t i = 1; i < aRects.Length(); ++i) {
@@ -3211,16 +3223,36 @@ CalculateBounds(nsTArray<FrameLayerBuilder::Clip::RoundedRect> aRects, int32_t A
  
   return nsLayoutUtils::RectToGfxRect(bounds, A2D);
 }
- 
+
+static void
+SetClipCount(ThebesDisplayItemLayerUserData* aThebesData,
+             uint32_t aClipCount)
+{
+  if (aThebesData) {
+    aThebesData->mMaskClipCount = aClipCount;
+  }
+}
+
 void
 ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aClip,
                                uint32_t aRoundedRectClipCount)
 {
+  // if the number of clips we are going to mask has decreased, then aLayer might have
+  // cached graphics which assume the existence of a soon-to-be non-existent mask layer
+  // in that case, invalidate the whole layer.
+  ThebesDisplayItemLayerUserData* thebesData = GetThebesDisplayItemLayerUserData(aLayer);
+  if (thebesData &&
+      aRoundedRectClipCount < thebesData->mMaskClipCount) {
+    ThebesLayer* thebes = aLayer->AsThebesLayer();
+    thebes->InvalidateRegion(thebes->GetValidRegion().GetBounds());
+  }
+
   // don't build an unnecessary mask
   nsIntRect layerBounds = aLayer->GetVisibleRegion().GetBounds();
   if (aClip.mRoundedClipRects.IsEmpty() ||
-      aRoundedRectClipCount <= 0 ||
+      aRoundedRectClipCount == 0 ||
       layerBounds.IsEmpty()) {
+    SetClipCount(thebesData, 0);
     return;
   }
 
@@ -3238,6 +3270,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
 
   if (*userData == newData) {
     aLayer->SetMaskLayer(maskLayer);
+    SetClipCount(thebesData, aRoundedRectClipCount);
     return;
   }
 
@@ -3263,28 +3296,24 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   gfxMatrix imageTransform = maskTransform;
   imageTransform.Scale(mParameters.mXScale, mParameters.mYScale);
 
+  nsAutoPtr<MaskLayerImageCache::MaskLayerImageKey> newKey(
+    new MaskLayerImageCache::MaskLayerImageKey(aLayer->Manager()->GetBackendType()));
+
   // copy and transform the rounded rects
-  nsTArray<MaskLayerImageCache::PixelRoundedRect> roundedRects;
   for (uint32_t i = 0; i < newData.mRoundedClipRects.Length(); ++i) {
-    roundedRects.AppendElement(
+    newKey->mRoundedClipRects.AppendElement(
       MaskLayerImageCache::PixelRoundedRect(newData.mRoundedClipRects[i],
                                             mContainerFrame->PresContext()));
-    roundedRects[i].ScaleAndTranslate(imageTransform);
+    newKey->mRoundedClipRects[i].ScaleAndTranslate(imageTransform);
   }
  
-  // check to see if we can reuse a mask image
-  const MaskLayerImageCache::MaskLayerImageKey* key =
-    new MaskLayerImageCache::MaskLayerImageKey(roundedRects, aLayer->Manager()->GetBackendType());
-  const MaskLayerImageCache::MaskLayerImageKey* lookupKey = key;
+  const MaskLayerImageCache::MaskLayerImageKey* lookupKey = newKey;
 
+  // check to see if we can reuse a mask image
   nsRefPtr<ImageContainer> container =
     GetMaskLayerImageCache()->FindImageFor(&lookupKey);
 
-  if (container) {
-    // track the returned key for the mask image
-    delete key;
-    key = lookupKey;
-  } else {
+  if (!container) {
     // no existing mask image, so build a new one
     nsRefPtr<gfxASurface> surface =
       aLayer->Manager()->CreateOptimalMaskSurface(surfaceSize);
@@ -3292,6 +3321,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
     // fail if we can't get the right surface
     if (!surface || surface->CairoStatus()) {
       NS_WARNING("Could not create surface for mask layer.");
+      SetClipCount(thebesData, 0);
       return;
     }
 
@@ -3314,7 +3344,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
     static_cast<CairoImage*>(image.get())->SetData(data);
     container->SetCurrentImageInTransaction(image);
 
-    GetMaskLayerImageCache()->PutImage(key, container);
+    GetMaskLayerImageCache()->PutImage(newKey.forget(), container);
   }
 
   maskLayer->SetContainer(container);
@@ -3324,9 +3354,10 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   userData->mScaleX = newData.mScaleX;
   userData->mScaleY = newData.mScaleY;
   userData->mRoundedClipRects.SwapElements(newData.mRoundedClipRects);
-  userData->mImageKey = key;
+  userData->mImageKey = lookupKey;
 
   aLayer->SetMaskLayer(maskLayer);
+  SetClipCount(thebesData, aRoundedRectClipCount);
   return;
 }
 

@@ -6,7 +6,7 @@ export WIN32_REDIST_DIR=/c/tools/msvs10/VC/redist/x64/Microsoft.VC100.CRT
 
 # Use 32bit linker for PGO crash bug.
 # https://connect.microsoft.com/VisualStudio/feedback/details/686117/
-export LD=/c/tools/msvs10/VC/BIN/x86_amd64/link.exe
+export LD=c:/tools/msvs10/VC/BIN/x86_amd64/link.exe
 
 . $topsrcdir/build/mozconfig.vs2010-common
 
