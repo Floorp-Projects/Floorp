@@ -1593,9 +1593,7 @@ class MReturnFromCtor
 //
 // Arguments are *not* simply pushed onto a call stack: they are evaluated
 // left-to-right, but stored in the arg vector in C-style, right-to-left.
-class MPassArg
-  : public MUnaryInstruction,
-    public BoxInputsPolicy
+class MPassArg : public MUnaryInstruction
 {
     int32 argnum_;
 
@@ -1603,7 +1601,7 @@ class MPassArg
     MPassArg(MDefinition *def)
       : MUnaryInstruction(def), argnum_(-1)
     {
-        setResultType(MIRType_Value);
+        setResultType(def->type());
     }
 
   public:
@@ -1625,15 +1623,9 @@ class MPassArg
         JS_ASSERT(argnum_ >= 0);
         return (uint32)argnum_;
     }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-
-    // Include argnum_ with instruction output: MPassArg order is arbitrary.
     void printOpcode(FILE *fp);
 };
 
