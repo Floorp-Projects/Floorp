@@ -22,6 +22,8 @@ Tests for document.all
   <a id="id3">E</a>
   <a id="id3">F</a>
 </div>
+<iframe id="subframe" src="data:text/html,<span id='x'></span>"
+        style="display: none"></iframe>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -137,6 +139,14 @@ elementNames.forEach(function (name) {
   }
 });
 is(hasName.length, 0, "found all names");
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var subdoc = $("subframe").contentDocument;
+  is(subdoc.all.x, subdoc.body.firstChild,
+     "document.all should work in a subdocument");
+  SimpleTest.finish();
+});
 
 // Utility functions
 function rC(node) {
