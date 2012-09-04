@@ -61,6 +61,7 @@ CPPSRCS += \
   nsVolume.cpp \
   nsVolumeService.cpp \
   nsVolumeStat.cpp \
+  TimeSetting.cpp \
   Volume.cpp \
   VolumeCommand.cpp \
   VolumeManager.cpp \
