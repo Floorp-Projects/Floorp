@@ -71,11 +71,10 @@ DOMWifiManager.prototype = {
     // Maintain this state for synchronous APIs.
     this._currentNetwork = null;
     this._connectionStatus = "disconnected";
-    this._enabled = true;
+    this._enabled = false;
     this._lastConnectionInfo = null;
 
-    const messages = ["WifiManager:setEnabled:Return:OK", "WifiManager:setEnabled:Return:NO",
-                      "WifiManager:getNetworks:Return:OK", "WifiManager:getNetworks:Return:NO",
+    const messages = ["WifiManager:getNetworks:Return:OK", "WifiManager:getNetworks:Return:NO",
                       "WifiManager:associate:Return:OK", "WifiManager:associate:Return:NO",
                       "WifiManager:forget:Return:OK", "WifiManager:forget:Return:NO",
                       "WifiManager:wps:Return:OK", "WifiManager:wps:Return:NO",
@@ -125,19 +124,6 @@ DOMWifiManager.prototype = {
 
     let request;
     switch (aMessage.name) {
-      case "WifiManager:setEnabled:Return:OK":
-        request = this.takeRequest(msg.rid);
-        this._enabled = msg.data;
-        if (!this._enabled)
-          this._currentNetwork = null;
-        Services.DOMRequest.fireSuccess(request, true);
-        break;
-
-      case "WifiManager:setEnabled:Return:NO":
-        request = this.takeRequest(msg.rid);
-        Services.DOMRequest.fireError(request, "Unable to initialize wifi");
-        break;
-
       case "WifiManager:getNetworks:Return:OK":
         request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
@@ -284,14 +270,6 @@ DOMWifiManager.prototype = {
   },
 
   // nsIDOMWifiManager
-  setEnabled: function nsIDOMWifiManager_setEnabled(enabled) {
-    if (!this._hasPrivileges)
-      throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
-    var request = this.createRequest();
-    this._sendMessageForRequest("WifiManager:setEnabled", enabled, request);
-    return request;
-  },
-
   getNetworks: function nsIDOMWifiManager_getNetworks() {
     if (!this._hasPrivileges)
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);

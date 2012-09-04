@@ -36,18 +36,9 @@ interface nsIWifi : nsISupports
     void setWifiTethering(in boolean enabled, in nsIWifiTetheringCallback callback);
 };
 
-[scriptable, uuid(b1f2e67f-75a8-4781-bf7f-eb21662ae9f3)]
+[scriptable, uuid(540674a6-edbe-11e1-87c9-dbcd31c74284)]
 interface nsIDOMWifiManager : nsISupports
 {
-    /**
-     * TODO Remove in favor of a settings API.
-     * Activates or disactivates wifi.
-     * onsuccess: Wifi has been successfully activated and can start
-     *            attempting to connect to networks. request.value will be true.
-     * onerror: Wifi was not successfully activated. (TODO provide details!)
-     */
-    nsIDOMDOMRequest setEnabled(in boolean enabled);
-
     /**
      * Returns the list of currently available networks as well as the list of
      * currently configured networks.
@@ -97,7 +88,6 @@ interface nsIDOMWifiManager : nsISupports
     nsIDOMDOMRequest wps(in jsval detail);
 
     /**
-     * TODO Remove in favor of a settings API.
      * Returns whether or not wifi is currently enabled.
      */
     readonly attribute boolean enabled;
