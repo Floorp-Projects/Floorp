@@ -18,7 +18,6 @@ XPIDLSRCS       := \
                 nsIEditActionListener.idl \
                 nsIEditor.idl \
                 nsIEditorIMESupport.idl \
-                nsIEditorLogging.idl \
                 nsIEditorMailSupport.idl \
                 nsIEditorObserver.idl \
                 nsIEditorSpellCheck.idl \
