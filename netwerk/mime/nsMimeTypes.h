@@ -75,6 +75,7 @@
 #define AUDIO_OGG                           "audio/ogg"
 #define AUDIO_WAV                           "audio/x-wav"
 #define AUDIO_WEBM                          "audio/webm"
+#define AUDIO_MP3                           "audio/mpeg"
 
 #define BINARY_OCTET_STREAM                 "binary/octet-stream"
 
