@@ -544,8 +544,6 @@ public:
         return mCycleCollectionContext;
     }
 
-    unsigned GetOutstandingRequests(JSContext* cx);
-
     // This returns the singleton nsCycleCollectionParticipant for JSContexts.
     static nsCycleCollectionParticipant *JSContextParticipant();
 

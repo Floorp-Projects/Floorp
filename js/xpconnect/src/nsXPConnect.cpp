@@ -893,20 +893,6 @@ nsXPConnectParticipant::TraverseImpl(nsXPConnectParticipant *that, void *p,
     return NS_OK;
 }
 
-unsigned
-nsXPConnect::GetOutstandingRequests(JSContext* cx)
-{
-    unsigned n = js::GetContextOutstandingRequests(cx);
-    XPCCallContext* context = mCycleCollectionContext;
-    // Ignore the contribution from the XPCCallContext we created for cycle
-    // collection.
-    if (context && cx == context->GetJSContext()) {
-        MOZ_ASSERT(n);
-        --n;
-    }
-    return n;
-}
-
 class JSContextParticipant : public nsCycleCollectionParticipant
 {
 public:
@@ -934,11 +920,13 @@ public:
     {
         JSContext *cx = static_cast<JSContext*>(n);
 
-        // Add outstandingRequests to the count, if there are outstanding
-        // requests the context needs to be kept alive and adding unknown
-        // edges will ensure that any cycles this context is in won't be
-        // collected.
-        unsigned refCount = nsXPConnect::GetXPConnect()->GetOutstandingRequests(cx) + 1;
+        // JSContexts do not have an internal refcount and always have a single
+        // owner (e.g., nsJSContext). Thus, the default refcount is 1. However,
+        // in the (abnormal) case of synchronous cycle-collection, the context
+        // may be actively executing code in which case we want to treat it as
+        // rooted by adding an extra refcount.
+        unsigned refCount = js::ContextHasOutstandingRequests(cx) ? 2 : 1;
+
         cb.DescribeRefCountedNode(refCount, "JSContext");
         if (JSObject *global = JS_GetGlobalObject(cx)) {
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
