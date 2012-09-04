@@ -103,6 +103,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     static inline Operand ToUpper32(const BaseIndex &address) {
         return Operand(address.base, address.index, address.scale, address.offset + 4);
+    }
 
     uint32_t Upper32Of(JSValueShiftedTag tag) {
         union { // Implemented in this way to appease MSVC++.
