@@ -85,15 +85,6 @@ private:
   char **mCachedKeys;
   uint32_t mCachedKeysCount;
 
-  nsRefPtr<nsDOMEventListenerWrapper> mOnCheckingListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnNoUpdateListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnDownloadingListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnProgressListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnCachedListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnUpdateReadyListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnObsoleteListener;
-
   nsCOMArray<nsIDOMEvent> mPendingEvents;
 };
 

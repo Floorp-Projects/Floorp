@@ -296,7 +296,7 @@ GetShutdownTimeFileName()
       return NULL;
 
     mozFile->AppendNative(NS_LITERAL_CSTRING("Telemetry.ShutdownTime.txt"));
-    nsCAutoString nativePath;
+    nsAutoCString nativePath;
     nsresult rv = mozFile->GetNativePath(nativePath);
     if (!NS_SUCCEEDED(rv))
       return NULL;

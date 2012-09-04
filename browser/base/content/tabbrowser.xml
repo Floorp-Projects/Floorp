@@ -3228,25 +3228,16 @@
       </method>
 
       <method name="_finishAnimateTabMove">
-        <parameter name="event"/>
         <body><![CDATA[
           if (this.getAttribute("movingtab") != "true")
             return;
-
-          if (event) {
-            let draggedTab = event.dataTransfer.mozGetDataAt(TAB_DROP_TYPE, 0);
-            if ("animDropIndex" in draggedTab._dragData) {
-              let newIndex = draggedTab._dragData.animDropIndex;
-              if (newIndex > draggedTab._tPos)
-                newIndex--;
-              this.tabbrowser.moveTabTo(draggedTab, newIndex);
-            }
-          }
 
           for (let tab of this.tabbrowser.visibleTabs)
             tab.style.transform = "";
 
           this.removeAttribute("movingtab");
+
+          this._handleTabSelect();
         ]]></body>
       </method>
 
@@ -3623,7 +3614,7 @@
           return;
         }
 
-        this._finishAnimateTabMove(event);
+        this._finishAnimateTabMove();
 
         if (effects == "link") {
           let tab = this._getDragTargetTab(event);
@@ -3639,7 +3630,7 @@
 
         var newIndex = this._getDropIndex(event);
         var scrollRect = tabStrip.scrollClientRect;
-        var rect = this.getBoundingClientRect();
+        var rect = tabStrip.getBoundingClientRect();
         var minMargin = scrollRect.left - rect.left;
         var maxMargin = Math.min(minMargin + scrollRect.width,
                                  scrollRect.right);
@@ -3700,7 +3691,14 @@
           if (draggedTab.parentNode != this || event.shiftKey)
             this.selectedItem = newTab;
         } else if (draggedTab && draggedTab.parentNode == this) {
-          this._finishAnimateTabMove(event);
+          // actually move the dragged tab
+          if ("animDropIndex" in draggedTab._dragData) {
+            let newIndex = draggedTab._dragData.animDropIndex;
+            if (newIndex > draggedTab._tPos)
+              newIndex--;
+            this.tabbrowser.moveTabTo(draggedTab, newIndex);
+          }
+          this._finishAnimateTabMove();
         } else if (draggedTab) {
           // swap the dropped tab with a new one we create and then close
           // it in the other window (making it seem to have moved between
@@ -3769,7 +3767,7 @@
         // isn't dispatched when the tab is moved within the tabstrip,
         // see bug 460801.
 
-        this._finishAnimateTabMove(event);
+        this._finishAnimateTabMove();
 
         var dt = event.dataTransfer;
         var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);

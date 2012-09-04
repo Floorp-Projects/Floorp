@@ -359,6 +359,10 @@ class ElementsHeader
             friend class SparseElementsHeader;
             Shape * shape;
         } sparse;
+        class {
+            friend class ArrayBufferElementsHeader;
+            JSObject * views;
+        } buffer;
     };
 
     void staticAsserts() {
@@ -750,6 +754,8 @@ class ArrayBufferElementsHeader : public ElementsHeader
 
     bool setElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> receiver,
                     uint32_t index, const Value &v, unsigned resolveFlags, bool *succeeded);
+
+    JSObject **viewList() { return &buffer.views; }
 
   private:
     inline bool isArrayBufferElements() const MOZ_DELETE;
@@ -1357,6 +1363,23 @@ GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<SpecialId> sid, un
 extern bool
 GetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> receiver, uint32_t index,
            unsigned resolveFlags, Value *vp);
+extern bool
+GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> receiver,
+            Handle<PropertyId> pid, unsigned resolveFlags, MutableHandle<Value> vp);
+inline bool
+GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> receiver,
+            Handle<PropertyName*> name, unsigned resolveFlags, MutableHandle<Value> vp)
+{
+    Rooted<PropertyId> pid(cx, PropertyId(name));
+    return GetProperty(cx, obj, receiver, pid, resolveFlags, vp);
+}
+inline bool
+GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> receiver,
+            Handle<SpecialId> sid, unsigned resolveFlags, MutableHandle<Value> vp)
+{
+    Rooted<PropertyId> pid(cx, PropertyId(sid));
+    return GetProperty(cx, obj, receiver, pid, resolveFlags, vp);
+}
 
 extern bool
 DefineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, const PropDesc &desc,

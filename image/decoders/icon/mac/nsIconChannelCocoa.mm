@@ -204,7 +204,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsXPIDLCString contentType;
-  nsCAutoString fileExt;
+  nsAutoCString fileExt;
   nsCOMPtr<nsIFile> fileloc; // file we want an icon for
   uint32_t desiredImageSize;
   nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(fileloc), &desiredImageSize, contentType, fileExt);

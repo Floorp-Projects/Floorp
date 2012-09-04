@@ -1054,6 +1054,26 @@ public:
         }
     }
 
+    void fGetIntegerv(GLenum pname, GLint *params) {
+        switch (pname)
+        {
+            // LOCAL_GL_FRAMEBUFFER_BINDING is equal to
+            // LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT, so we don't need two
+            // cases.
+            case LOCAL_GL_FRAMEBUFFER_BINDING:
+                *params = GetUserBoundDrawFBO();
+                break;
+
+            case LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT:
+                *params = GetUserBoundReadFBO();
+                break;
+
+            default:
+                raw_fGetIntegerv(pname, params);
+                break;
+        }
+    }
+
 #ifdef DEBUG
     // See comment near BindInternalDrawFBO()
     bool mInInternalBindingMode_DrawFBO;
@@ -1062,6 +1082,8 @@ public:
 
     GLuint GetUserBoundDrawFBO() {
 #ifdef DEBUG
+        MOZ_ASSERT(IsCurrent());
+
         GLint ret = 0;
         // Don't need a branch here, because:
         // LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT == LOCAL_GL_FRAMEBUFFER_BINDING == 0x8CA6
@@ -1093,6 +1115,8 @@ public:
 
     GLuint GetUserBoundReadFBO() {
 #ifdef DEBUG
+        MOZ_ASSERT(IsCurrent());
+
         GLint ret = 0;
         // We use raw_ here because this is debug code and we need to see what
         // the driver thinks.
@@ -2399,26 +2423,6 @@ private:
     }
 
 public:
-    void fGetIntegerv(GLenum pname, GLint *params) {
-        switch (pname)
-        {
-            // LOCAL_GL_FRAMEBUFFER_BINDING is equal to
-            // LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT, so we don't need two
-            // cases.
-            case LOCAL_GL_FRAMEBUFFER_BINDING:
-                *params = GetUserBoundDrawFBO();
-                break;
-
-            case LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT:
-                *params = GetUserBoundReadFBO();
-                break;
-
-            default:
-                raw_fGetIntegerv(pname, params);
-                break;
-        }
-    }
-
     void GetUIntegerv(GLenum pname, GLuint *params) {
         fGetIntegerv(pname, reinterpret_cast<GLint*>(params));
     }

@@ -169,7 +169,7 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
   uint32_t writeLen = NS_MIN(mAudioStream->Available(), dataLength / mChannels);
 
   float* frames = JS_GetFloat32ArrayData(tsrc, aCx);
-#ifdef MOZ_SAMPLE_TYPE_S16LE
+#ifdef MOZ_SAMPLE_TYPE_S16
   // Convert the samples back to integers as we are using fixed point audio in
   // the nsAudioStream.
   nsAutoArrayPtr<short> shortsArray(new short[writeLen * mChannels]);
@@ -219,7 +219,7 @@ nsHTMLAudioElement::MozCurrentSampleOffset(uint64_t *aRetVal)
 
 nsresult nsHTMLAudioElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 {
-    nsCAutoString value(
+    nsAutoCString value(
 #ifdef MOZ_WEBM
       "audio/webm,"
 #endif

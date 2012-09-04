@@ -138,7 +138,7 @@ static void FreeStringArray(uint32_t variants, char ** array)
 
 bool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
-    nsCAutoString leaf;
+    nsAutoCString leaf;
     if (NS_FAILED(file->GetNativeLeafName(leaf)))
         return false;
 
@@ -172,7 +172,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
     if (!mPlugin)
       return NS_ERROR_NULL_POINTER;
    
-    nsCAutoString temp;
+    nsAutoCString temp;
     mPlugin->GetNativePath(temp);
 
     *outLibrary = PR_LoadLibrary(temp.get());
@@ -189,11 +189,11 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo &info, PRLibrary **outLibrary)
    char       failure[ CCHMAXPATH] = "";
    APIRET     ret;
 
-   nsCAutoString path;
+   nsAutoCString path;
    if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
      return rv;
 
-   nsCAutoString fileName;
+   nsAutoCString fileName;
    if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
      return rv;
 

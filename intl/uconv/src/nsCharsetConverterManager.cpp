@@ -132,7 +132,7 @@ nsCharsetConverterManager::GetUnicodeEncoder(const char * aDest,
                                              nsIUnicodeEncoder ** aResult)
 {
   // resolve the charset first
-  nsCAutoString charset;
+  nsAutoCString charset;
   
   // fully qualify to possibly avoid vtable call
   nsCharsetConverterManager::GetCharsetAlias(aDest, charset);
@@ -151,7 +151,7 @@ nsCharsetConverterManager::GetUnicodeEncoderRaw(const char * aDest,
 
   nsresult rv = NS_OK;
 
-  nsCAutoString
+  nsAutoCString
     contractid(NS_LITERAL_CSTRING(NS_UNICODEENCODER_CONTRACTID_BASE) +
                nsDependentCString(aDest));
 
@@ -173,7 +173,7 @@ nsCharsetConverterManager::GetUnicodeDecoder(const char * aSrc,
                                              nsIUnicodeDecoder ** aResult)
 {
   // resolve the charset first
-  nsCAutoString charset;
+  nsAutoCString charset;
 
   // fully qualify to possibly avoid vtable call
   if (NS_FAILED(nsCharsetConverterManager::GetCharsetAlias(aSrc, charset)))
@@ -188,7 +188,7 @@ nsCharsetConverterManager::GetUnicodeDecoderInternal(const char * aSrc,
                                                      nsIUnicodeDecoder ** aResult)
 {
   // resolve the charset first
-  nsCAutoString charset;
+  nsAutoCString charset;
 
   nsresult rv = nsCharsetAlias::GetPreferredInternal(nsDependentCString(aSrc),
                                                      charset);
@@ -250,11 +250,11 @@ nsresult GetList(const nsACString& aCategory,
     if (!supStr)
       continue;
 
-    nsCAutoString name;
+    nsAutoCString name;
     if (NS_FAILED(supStr->GetData(name)))
       continue;
 
-    nsCAutoString fullName(aPrefix);
+    nsAutoCString fullName(aPrefix);
     fullName.Append(name);
     NS_ENSURE_TRUE(array->AppendElement(fullName), NS_ERROR_OUT_OF_MEMORY);
   }
@@ -332,7 +332,7 @@ nsCharsetConverterManager::GetCharsetLangGroup(const char * aCharset,
                                                nsIAtom** aResult)
 {
   // resolve the charset first
-  nsCAutoString charset;
+  nsAutoCString charset;
 
   nsresult rv = GetCharsetAlias(aCharset, charset);
   NS_ENSURE_SUCCESS(rv, rv);

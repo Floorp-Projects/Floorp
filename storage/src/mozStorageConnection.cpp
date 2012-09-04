@@ -495,7 +495,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
 
   ::sqlite3_trace(mDBConn, tracefunc, this);
 
-  nsCAutoString leafName(":memory");
+  nsAutoCString leafName(":memory");
   if (aDatabaseFile)
     (void)aDatabaseFile->GetNativeLeafName(leafName);
   PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s' (%p)",
@@ -506,7 +506,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
   // the database has just been created, otherwise, if the database does not
   // use WAL journal mode, a VACUUM operation will updated its page_size.
   int64_t pageSize = DEFAULT_PAGE_SIZE;
-  nsCAutoString pageSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+  nsAutoCString pageSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
                               "PRAGMA page_size = ");
   pageSizeQuery.AppendInt(pageSize);
   rv = ExecuteSimpleSQL(pageSizeQuery);
@@ -527,7 +527,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
   // Setting the cache_size forces the database open, verifying if it is valid
   // or corrupt.  So this is executed regardless it being actually needed.
   // The cache_size is calculated from the actual page_size, to save memory.
-  nsCAutoString cacheSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+  nsAutoCString cacheSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
                                "PRAGMA cache_size = ");
   cacheSizeQuery.AppendInt(NS_MIN(DEFAULT_CACHE_SIZE_PAGES,
                                   int32_t(MAX_CACHE_SIZE_BYTES / pageSize)));
@@ -581,7 +581,7 @@ Connection::databaseElementExists(enum DatabaseElementType aElementType,
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCAutoString query("SELECT name FROM sqlite_master WHERE type = '");
+  nsAutoCString query("SELECT name FROM sqlite_master WHERE type = '");
   switch (aElementType) {
     case INDEX:
       query.Append("index");
@@ -696,7 +696,7 @@ Connection::internalClose()
 #endif
 
 #ifdef PR_LOGGING
-  nsCAutoString leafName(":memory");
+  nsAutoCString leafName(":memory");
   if (mDatabaseFile)
       (void)mDatabaseFile->GetNativeLeafName(leafName);
   PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Closing connection to '%s'",
@@ -965,7 +965,7 @@ Connection::Clone(bool aReadOnly,
       continue;
     }
 
-    nsCAutoString pragmaQuery("PRAGMA ");
+    nsAutoCString pragmaQuery("PRAGMA ");
     pragmaQuery.Append(pragmas[i]);
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = CreateStatement(pragmaQuery, getter_AddRefs(stmt));
@@ -1068,7 +1068,7 @@ Connection::SetSchemaVersion(int32_t aVersion)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCAutoString stmt(NS_LITERAL_CSTRING("PRAGMA user_version = "));
+  nsAutoCString stmt(NS_LITERAL_CSTRING("PRAGMA user_version = "));
   stmt.AppendInt(aVersion);
 
   return ExecuteSimpleSQL(stmt);

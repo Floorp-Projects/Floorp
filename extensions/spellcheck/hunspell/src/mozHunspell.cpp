@@ -184,7 +184,7 @@ NS_IMETHODIMP mozHunspell::SetDictionary(const PRUnichar *aDictionary)
   if (!affFile)
     return NS_ERROR_FILE_NOT_FOUND;
 
-  nsCAutoString dictFileName, affFileName;
+  nsAutoCString dictFileName, affFileName;
 
   // XXX This isn't really good. nsIFile->NativePath isn't safe for all
   // character sets on Windows.

@@ -540,7 +540,7 @@ nsDOMFileFile::GetType(nsAString &aType)
       do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString mimeType;
+    nsAutoCString mimeType;
     rv = mimeService->GetTypeFromFile(mFile, mimeType);
     if (NS_FAILED(rv)) {
       mimeType.Truncate();
@@ -713,7 +713,7 @@ nsDOMFileInternalUrlHolder::nsDOMFileInternalUrlHolder(nsIDOMBlob* aFile,
  
 nsDOMFileInternalUrlHolder::~nsDOMFileInternalUrlHolder() {
   if (!mUrl.IsEmpty()) {
-    nsCAutoString narrowUrl;
+    nsAutoCString narrowUrl;
     CopyUTF16toUTF8(mUrl, narrowUrl);
     nsBlobProtocolHandler::RemoveFileDataEntry(narrowUrl);
   }

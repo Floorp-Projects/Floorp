@@ -1095,12 +1095,12 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                     // Open a given URL...
 
                     // Get the URL from the first argument in the command.
-                    nsCAutoString url;
+                    nsAutoCString url;
                     ParseDDEArg(hsz2, 0, url);
 
                     // Read the 3rd argument in the command to determine if a
                     // new window is to be used.
-                    nsCAutoString windowID;
+                    nsAutoCString windowID;
                     ParseDDEArg(hsz2, 2, windowID);
                     // to open the URL in a new window, the old OS/2 code
                     // looks for "0" while the new Win32 code looks for "";
@@ -1182,7 +1182,7 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
 
                         // Use a string buffer for the output data, first
                         // save a quote.
-                        nsCAutoString   outpt( NS_LITERAL_CSTRING("\"") );
+                        nsAutoCString   outpt( NS_LITERAL_CSTRING("\"") );
                         // Now copy the URL converting the Unicode string
                         // to a single-byte ASCII string
                         outpt.Append( NS_LossyConvertUTF16toASCII( url ) );
@@ -1208,7 +1208,7 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                 }
                 case topicActivate: {
                     // Activate a Nav window...
-                    nsCAutoString windowID;
+                    nsAutoCString windowID;
                     ParseDDEArg(hsz2, 0, windowID);
                     // 4294967295 is decimal for 0xFFFFFFFF which is also a
                     //   correct value to do that Activate last window stuff
@@ -1259,12 +1259,12 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
 #if MOZ_DEBUG_DDE
             printf( "Handling dde request: [%s]...\n", (char*)request );
 #endif
-            nsCAutoString url;
+            nsAutoCString url;
             ParseDDEArg((const char*) request, 0, url);
 
             // Read the 3rd argument in the command to determine if a
             // new window is to be used.
-            nsCAutoString windowID;
+            nsAutoCString windowID;
             ParseDDEArg((const char*) request, 2, windowID);
 
             // to open the URL in a new window, the old OS/2 code
@@ -1362,7 +1362,7 @@ void nsNativeAppSupportOS2::ParseDDEArg( HSZ args, int index, nsCString& aString
     DWORD argLen = WinDdeQueryString( args, NULL, NULL, CP_WINANSI );
     // there wasn't any string, so return empty string
     if ( !argLen ) return;
-    nsCAutoString temp;
+    nsAutoCString temp;
     // Ensure result's buffer is sufficiently big.
     temp.SetLength( argLen );
     // Now get the string contents.
@@ -1412,7 +1412,7 @@ nsNativeAppSupportOS2::HandleCommandLine(const char* aCmdLineString,
     int between, quoted, bSlashCount;
     int argc;
     const char *p;
-    nsCAutoString arg;
+    nsAutoCString arg;
 
     nsCOMPtr<nsICommandLineRunner> cmdLine
         (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));

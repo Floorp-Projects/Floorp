@@ -249,7 +249,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
       // default to rejecting, in case the prompting process fails
       *aResult = false;
 
-      nsCAutoString hostPort;
+      nsAutoCString hostPort;
       aURI->GetHostPort(hostPort);
 
       if (!aCookie) {
@@ -292,7 +292,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
       uint32_t countFromHost;
       nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv)) {
-        nsCAutoString rawHost;
+        nsAutoCString rawHost;
         aCookie->GetRawHost(rawHost);
         rv = cookieManager->CountCookiesFromHost(rawHost, &countFromHost);
 

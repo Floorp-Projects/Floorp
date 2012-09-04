@@ -293,7 +293,7 @@ GetLocalDTDURI(const nsCatalogData* aCatalogData, nsIURI* aDTD,
 {
   NS_ASSERTION(aDTD, "Null parameter.");
 
-  nsCAutoString fileName;
+  nsAutoCString fileName;
   if (aCatalogData) {
     // remap the DTD to a known local DTD
     fileName.Assign(aCatalogData->mLocalDTD);
@@ -315,7 +315,7 @@ GetLocalDTDURI(const nsCatalogData* aCatalogData, nsIURI* aDTD,
     }
   }
 
-  nsCAutoString respath("resource://gre/res/dtd/");
+  nsAutoCString respath("resource://gre/res/dtd/");
   respath += fileName;
   NS_NewURI(aResult, respath);
 }
@@ -780,7 +780,7 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
     return NS_ERROR_CONTENT_BLOCKED;
   }
 
-  nsCAutoString absURL;
+  nsAutoCString absURL;
   uri->GetSpec(absURL);
 
   CopyUTF8toUTF16(absURL, aAbsURL);

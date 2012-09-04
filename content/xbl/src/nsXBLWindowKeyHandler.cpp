@@ -124,7 +124,7 @@ nsXBLSpecialDocInfo::GetAllHandlers(const char* aType,
                                     nsXBLPrototypeHandler** aUserHandler)
 {
   if (mUserHTMLBindings) {
-    nsCAutoString type(aType);
+    nsAutoCString type(aType);
     type.Append("User");
     GetHandlers(mUserHTMLBindings, type, aUserHandler);
   }

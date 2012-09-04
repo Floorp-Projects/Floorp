@@ -1422,7 +1422,7 @@ public:
         emitDisjunction(m_pattern.m_body);
         regexEnd();
 
-        return adoptPtr(js::OffTheBooks::new_<BytecodePattern>(m_bodyDisjunction.release(), m_allParenthesesInfo, Ref<YarrPattern>(m_pattern), allocator));
+        return adoptPtr(js_new<BytecodePattern>(m_bodyDisjunction.release(), m_allParenthesesInfo, Ref<YarrPattern>(m_pattern), allocator));
     }
 
     void checkInput(unsigned count)
@@ -1648,7 +1648,7 @@ public:
         unsigned subpatternId = parenthesesBegin.atom.subpatternId;
 
         unsigned numSubpatterns = lastSubpatternId - subpatternId + 1;
-        ByteDisjunction* parenthesesDisjunction = js::OffTheBooks::new_<ByteDisjunction>(numSubpatterns, callFrameSize);
+        ByteDisjunction* parenthesesDisjunction = js_new<ByteDisjunction>(numSubpatterns, callFrameSize);
 
         parenthesesDisjunction->terms.append(ByteTerm::SubpatternBegin());
         for (unsigned termInParentheses = beginTerm + 1; termInParentheses < endTerm; ++termInParentheses)
@@ -1711,7 +1711,7 @@ public:
 
     void regexBegin(unsigned numSubpatterns, unsigned callFrameSize, bool onceThrough)
     {
-        m_bodyDisjunction = adoptPtr(js::OffTheBooks::new_<ByteDisjunction>(numSubpatterns, callFrameSize));
+        m_bodyDisjunction = adoptPtr(js_new<ByteDisjunction>(numSubpatterns, callFrameSize));
         m_bodyDisjunction->terms.append(ByteTerm::BodyAlternativeBegin(onceThrough));
         m_bodyDisjunction->terms[0].frameLocation = 0;
         m_currentAlternativeIndex = 0;

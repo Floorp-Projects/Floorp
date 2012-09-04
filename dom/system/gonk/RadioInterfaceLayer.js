@@ -87,6 +87,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
+                                   "@mozilla.org/system-message-internal;1",
+                                   "nsISystemMessagesInternal");
+
 XPCOMUtils.defineLazyGetter(this, "WAP", function () {
   let WAP = {};
   Cu.import("resource://gre/modules/WapPushManager.js", WAP);
@@ -418,7 +422,7 @@ RadioInterfaceLayer.prototype = {
               " timestamp=" + message.localTimeStampInMS);
         break;
       case "iccinfochange":
-        this.rilContext.icc = message;
+        this.handleICCInfoChange(message);
         break;
       case "iccGetCardLock":
       case "iccSetCardLock":
@@ -758,6 +762,11 @@ RadioInterfaceLayer.prototype = {
   handleCallStateChange: function handleCallStateChange(call) {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
+
+    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_INCOMING) {
+      gSystemMessenger.broadcastMessage("telephony-incoming", {number: call.number});
+    }
+
     if (call.isActive) {
       this._activeCall = call;
     } else if (this._activeCall &&
@@ -1008,6 +1017,17 @@ RadioInterfaceLayer.prototype = {
                                   [message.datacalls, message.datacalls.length]);
   },
 
+  handleICCInfoChange: function handleICCInfoChange(message) {
+    let oldIcc = this.rilContext.icc;
+    this.rilContext.icc = message;
+    if (oldIcc && (oldIcc.mcc == message.mcc || oldIcc.mnc == message.mnc)) {
+      return;
+    }
+    // RIL:IccInfoChanged corresponds to a DOM event that gets fired only
+    // when the MCC or MNC codes have changed.
+    ppmm.broadcastAsyncMessage("RIL:IccInfoChanged", message);
+  },
+
   handleICCCardLockResult: function handleICCCardLockResult(message) {
     this._sendRequestResults("RIL:CardLockResult", message);
   },
@@ -1033,6 +1053,7 @@ RadioInterfaceLayer.prototype = {
 
   handleStkProactiveCommand: function handleStkProactiveCommand(message) {
     debug("handleStkProactiveCommand " + JSON.stringify(message));
+    gSystemMessenger.broadcastMessage("icc-stkcommand", message);
     ppmm.broadcastAsyncMessage("RIL:StkCommand", message);
   },
 
@@ -1730,20 +1751,9 @@ RadioInterfaceLayer.prototype = {
     } 
     let requestId = Math.floor(Math.random() * 1000);
     this._contactsCallbacks[requestId] = callback;
-    
-    let msgType;
-    switch (type) {
-      case "ADN": 
-        msgType = "getPBR";
-        break;
-      case "FDN":
-        msgType = "getFDN";
-        break;
-      default:
-        debug("Unknown contact type. " + type);
-        return;
-    }
-    this.worker.postMessage({rilMessageType: msgType, requestId: requestId});
+    this.worker.postMessage({rilMessageType: "getICCContacts",
+                             type: type,
+                             requestId: requestId});
   }
 };
 

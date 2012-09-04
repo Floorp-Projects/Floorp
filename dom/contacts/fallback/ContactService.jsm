@@ -21,12 +21,18 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
 
+XPCOMUtils.defineLazyGetter(this, "mRIL", function () {
+  return Cc["@mozilla.org/telephony/system-worker-manager;1"].
+           getService(Ci.nsIInterfaceRequestor).
+           getInterface(Ci.nsIRadioInterfaceLayer);
+});
+
 let myGlobal = this;
 
 let DOMContactManager = {
   init: function() {
     if (DEBUG) debug("Init");
-    this._messages = ["Contacts:Find", "Contacts:Clear", "Contact:Save", "Contact:Remove"];
+    this._messages = ["Contacts:Find", "Contacts:Clear", "Contact:Save", "Contact:Remove", "Contacts:GetSimContacts"];
     this._messages.forEach((function(msgName) {
       ppmm.addMessageListener(msgName, this);
     }).bind(this));
@@ -141,6 +147,14 @@ let DOMContactManager = {
           function() { mm.sendAsyncMessage("Contacts:Clear:Return:OK", { requestID: msg.requestID }); }.bind(this),
           function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
         );
+        break;
+      case "Contacts:GetSimContacts":
+        let callback = function(aType, aContacts) {
+          if (DEBUG) debug("got SIM contacts: " + aType + " " + JSON.stringify(aContacts));
+          mm.sendAsyncMessage("Contacts:GetSimContacts:Return:OK", {requestID: msg.requestID, contacts: aContacts});
+        };
+        mRIL.getICCContacts(msg.options.type, callback);
+        break;
       default:
         if (DEBUG) debug("WRONG MESSAGE NAME: " + aMessage.name);
     }

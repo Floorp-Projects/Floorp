@@ -92,7 +92,7 @@ nsMIMEInfoMac::LoadUriInternal(nsIURI *aURI)
 
   nsresult rv = NS_ERROR_FAILURE;
 
-  nsCAutoString uri;
+  nsAutoCString uri;
   aURI->GetSpec(uri);
   if (!uri.IsEmpty()) {
     CFURLRef myURLRef = ::CFURLCreateWithBytes(kCFAllocatorDefault,

@@ -227,7 +227,7 @@ nsHTMLCSSStyleSheet::List(FILE* out, int32_t aIndent) const
   for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("HTML CSS Style Sheet: ", out);
-  nsCAutoString urlSpec;
+  nsAutoCString urlSpec;
   mURL->GetSpec(urlSpec);
   if (!urlSpec.IsEmpty()) {
     fputs(urlSpec.get(), out);

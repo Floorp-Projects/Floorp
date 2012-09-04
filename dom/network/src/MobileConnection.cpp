@@ -16,6 +16,7 @@
 #define VOICECHANGE_EVENTNAME      NS_LITERAL_STRING("voicechange")
 #define DATACHANGE_EVENTNAME       NS_LITERAL_STRING("datachange")
 #define CARDSTATECHANGE_EVENTNAME  NS_LITERAL_STRING("cardstatechange")
+#define ICCINFOCHANGE_EVENTNAME    NS_LITERAL_STRING("iccinfochange")
 #define USSDRECEIVED_EVENTNAME     NS_LITERAL_STRING("ussdreceived")
 
 DOMCI_DATA(MozMobileConnection, mozilla::dom::network::MobileConnection)
@@ -27,24 +28,17 @@ namespace network {
 const char* kVoiceChangedTopic     = "mobile-connection-voice-changed";
 const char* kDataChangedTopic      = "mobile-connection-data-changed";
 const char* kCardStateChangedTopic = "mobile-connection-cardstate-changed";
+const char* kIccInfoChangedTopic   = "mobile-connection-iccinfo-changed";
 const char* kUssdReceivedTopic     = "mobile-connection-ussd-received";
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MobileConnection)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MobileConnection,
                                                   nsDOMEventTargetHelper)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(cardstatechange)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(voicechange)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(datachange)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(ussdreceived)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
                                                 nsDOMEventTargetHelper)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(cardstatechange)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(voicechange)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(datachange)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(ussdreceived)
   tmp->mProvider = nullptr;
   tmp->mIccManager = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -57,6 +51,12 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(MobileConnection, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MobileConnection, nsDOMEventTargetHelper)
+
+NS_IMPL_EVENT_HANDLER(MobileConnection, cardstatechange)
+NS_IMPL_EVENT_HANDLER(MobileConnection, iccinfochange)
+NS_IMPL_EVENT_HANDLER(MobileConnection, voicechange)
+NS_IMPL_EVENT_HANDLER(MobileConnection, datachange)
+NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
 
 MobileConnection::MobileConnection()
 {
@@ -83,6 +83,7 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
   obs->AddObserver(this, kVoiceChangedTopic, false);
   obs->AddObserver(this, kDataChangedTopic, false);
   obs->AddObserver(this, kCardStateChangedTopic, false);
+  obs->AddObserver(this, kIccInfoChangedTopic, false);
   obs->AddObserver(this, kUssdReceivedTopic, false);
 
   mIccManager = new icc::IccManager();
@@ -101,6 +102,7 @@ MobileConnection::Shutdown()
   obs->RemoveObserver(this, kVoiceChangedTopic);
   obs->RemoveObserver(this, kDataChangedTopic);
   obs->RemoveObserver(this, kCardStateChangedTopic);
+  obs->RemoveObserver(this, kIccInfoChangedTopic);
   obs->RemoveObserver(this, kUssdReceivedTopic);
 
   if (mIccManager) {
@@ -131,6 +133,11 @@ MobileConnection::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
+  if (!strcmp(aTopic, kIccInfoChangedTopic)) {
+    InternalDispatchEvent(ICCINFOCHANGE_EVENTNAME);
+    return NS_OK;
+  }
+
   if (!strcmp(aTopic, kUssdReceivedTopic)) {
     nsString ussd;
     ussd.Assign(aData);
@@ -158,6 +165,16 @@ MobileConnection::GetCardState(nsAString& cardState)
     return NS_OK;
   }
   return mProvider->GetCardState(cardState);
+}
+
+NS_IMETHODIMP
+MobileConnection::GetIccInfo(nsIDOMMozMobileICCInfo** aIccInfo)
+{
+  if (!mProvider) {
+    *aIccInfo = nullptr;
+    return NS_OK;
+  }
+  return mProvider->GetIccInfo(aIccInfo);
 }
 
 NS_IMETHODIMP
@@ -306,11 +323,6 @@ MobileConnection::InternalDispatchEvent(const nsAString& aType)
 
   return NS_OK;
 }
-
-NS_IMPL_EVENT_HANDLER(MobileConnection, cardstatechange)
-NS_IMPL_EVENT_HANDLER(MobileConnection, voicechange)
-NS_IMPL_EVENT_HANDLER(MobileConnection, datachange)
-NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
 
 } // namespace network
 } // namespace dom

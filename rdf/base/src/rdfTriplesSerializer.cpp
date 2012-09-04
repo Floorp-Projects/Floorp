@@ -76,7 +76,7 @@ TriplesVisitor::Visit(nsIRDFNode *aSubject, nsIRDFResource *aPredicate,
     } else if ((lit = do_QueryInterface(aObject)) != nullptr) {
         const PRUnichar *value;
         lit->GetValueConst(&value);
-        nsCAutoString object;
+        nsAutoCString object;
         object.AppendLiteral("\"");
         AppendUTF16toUTF8(value, object);
         object.AppendLiteral("\" ");

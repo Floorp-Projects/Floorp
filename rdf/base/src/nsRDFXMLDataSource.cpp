@@ -606,7 +606,7 @@ RDFXMLDataSourceImpl::GetURI(char* *aURI)
         return NS_OK;
     }
     
-    nsCAutoString spec;
+    nsAutoCString spec;
     mURL->GetSpec(spec);
     *aURI = ToNewCString(spec);
     if (!*aURI) {
@@ -826,7 +826,7 @@ RDFXMLDataSourceImpl::Flush(void)
         return NS_ERROR_NOT_INITIALIZED;
 
 #ifdef PR_LOGGING
-    nsCAutoString spec;
+    nsAutoCString spec;
     mURL->GetSpec(spec);
     PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] flush(%s)", this, spec.get()));
@@ -906,7 +906,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Refresh(bool aBlocking)
 {
 #ifdef PR_LOGGING
-    nsCAutoString spec;
+    nsAutoCString spec;
     if (mURL) {
         mURL->GetSpec(spec);
     }
@@ -961,7 +961,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::BeginLoad(void)
 {
 #ifdef PR_LOGGING
-    nsCAutoString spec;
+    nsAutoCString spec;
     if (mURL) {
         mURL->GetSpec(spec);
     }
@@ -987,7 +987,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Interrupt(void)
 {
 #ifdef PR_LOGGING
-    nsCAutoString spec;
+    nsAutoCString spec;
     if (mURL) {
         mURL->GetSpec(spec);
     }
@@ -1012,7 +1012,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Resume(void)
 {
 #ifdef PR_LOGGING
-    nsCAutoString spec;
+    nsAutoCString spec;
     if (mURL) {
         mURL->GetSpec(spec);
     }
@@ -1037,7 +1037,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::EndLoad(void)
 {
 #ifdef PR_LOGGING
-    nsCAutoString spec;
+    nsAutoCString spec;
     if (mURL) {
         mURL->GetSpec(spec);
     }
