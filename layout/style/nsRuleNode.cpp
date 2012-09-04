@@ -6433,11 +6433,7 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
            SETCOORD_LPOH | SETCOORD_INITIAL_NONE | SETCOORD_STORE_CALC,
            aContext, mPresContext, canStoreInRuleTree);
 
-
-  // Handle 'auto' values for min-width / min-height
-  if (pos->mMinWidth.GetUnit() == eStyleUnit_Auto) {
-    pos->mMinWidth.SetCoordValue(0);
-  }
+  // Make 'auto' values for min-height compute to 0
   if (pos->mMinHeight.GetUnit() == eStyleUnit_Auto) {
     pos->mMinHeight.SetCoordValue(0);
   }
