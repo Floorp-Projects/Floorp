@@ -78,28 +78,6 @@ _destroyJSDObject(JSDContext* jsdc, JSDObject* jsdobj)
     free(jsdobj);
 }
 
-static JSDObject*
-_createJSDObject(JSDContext* jsdc, JSContext *cx, JSObject *obj)
-{
-    JSDObject* jsdobj;
-    JSStackFrame* fp;
-    JSStackFrame* iter = NULL;
-    const char* newURL;
-    jsbytecode* pc;
-
-    JS_ASSERT(JSD_OBJECTS_LOCKED(jsdc));
-
-    jsdobj = (JSDObject*) calloc(1, sizeof(JSDObject));
-    if (jsdobj)
-    {
-        JS_INIT_CLIST(&jsdobj->links);
-        JS_APPEND_LINK(&jsdobj->links, &jsdc->objectsList);
-        jsdobj->obj = obj;
-        JS_HashTableAdd(jsdc->objectsTable, obj, jsdobj);
-    }
-    return jsdobj;
-}
-
 void
 jsd_Constructing(JSDContext* jsdc, JSContext *cx, JSObject *obj,
                  JSStackFrame *fp)

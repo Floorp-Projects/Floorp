@@ -36,18 +36,18 @@ ifdef JS_THREADSAFE
 DEFINES         += -DJS_THREADSAFE
 endif
 
-CSRCS		= \
-		  jsdebug.c \
-		  jsd_atom.c \
-		  jsd_high.c \
-		  jsd_hook.c \
-		  jsd_lock.c \
-		  jsd_obj.c \
-		  jsd_scpt.c \
-		  jsd_stak.c \
-		  jsd_step.c \
-		  jsd_text.c \
-		  jsd_val.c \
+CPPSRCS		+= \
+		  jsdebug.cpp \
+		  jsd_atom.cpp \
+		  jsd_high.cpp \
+		  jsd_hook.cpp \
+		  jsd_lock.cpp \
+		  jsd_obj.cpp \
+		  jsd_scpt.cpp \
+		  jsd_stak.cpp \
+		  jsd_step.cpp \
+		  jsd_text.cpp \
+		  jsd_val.cpp \
 		  $(NULL)
 
 ifdef ENABLE_TESTS

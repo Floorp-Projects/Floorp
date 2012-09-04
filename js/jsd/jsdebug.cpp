@@ -110,7 +110,6 @@ JSD_ClearAllProfileData(JSDContext *jsdc)
 JSD_PUBLIC_API(void)
 JSD_SetContextFlags(JSDContext *jsdc, uint32_t flags)
 {
-    uint32_t oldFlags = jsdc->flags;
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     jsdc->flags = flags;
     if (flags & JSD_COLLECT_PROFILE_DATA) {
@@ -891,7 +890,7 @@ JSD_IsLockingAndThreadIdSupported()
 #endif
 }
 
-JSD_PUBLIC_API(void*)
+JSD_PUBLIC_API(JSDStaticLock*)
 JSD_CreateLock()
 {
 #ifdef JSD_THREADSAFE
@@ -902,7 +901,7 @@ JSD_CreateLock()
 }
 
 JSD_PUBLIC_API(void)
-JSD_Lock(void* lock)
+JSD_Lock(JSDStaticLock* lock)
 {
 #ifdef JSD_THREADSAFE
     jsd_Lock(lock);
@@ -910,7 +909,7 @@ JSD_Lock(void* lock)
 }
 
 JSD_PUBLIC_API(void)
-JSD_Unlock(void* lock)
+JSD_Unlock(JSDStaticLock* lock)
 {
 #ifdef JSD_THREADSAFE
     jsd_Unlock(lock);
@@ -918,7 +917,7 @@ JSD_Unlock(void* lock)
 }
 
 JSD_PUBLIC_API(JSBool)
-JSD_IsLocked(void* lock)
+JSD_IsLocked(JSDStaticLock* lock)
 {
 #if defined(JSD_THREADSAFE) && defined(DEBUG)
     return jsd_IsLocked(lock);
@@ -928,7 +927,7 @@ JSD_IsLocked(void* lock)
 }
 
 JSD_PUBLIC_API(JSBool)
-JSD_IsUnlocked(void* lock)
+JSD_IsUnlocked(JSDStaticLock* lock)
 {
 #if defined(JSD_THREADSAFE) && defined(DEBUG)
     return ! jsd_IsLocked(lock);

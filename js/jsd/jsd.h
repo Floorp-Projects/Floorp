@@ -28,20 +28,7 @@
 #define JSD_USE_NSPR_LOCKS 1
 #endif /* MOZILLA_CLIENT */
 
-
-/* Get jstypes.h included first. After that we can use PR macros for doing
-*  this extern "C" stuff!
-*/
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 #include "jstypes.h"
-#ifdef __cplusplus
-}
-#endif
-
-JS_BEGIN_EXTERN_C
 #include "jsprf.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jshash.h" /* Added by JSIFY */
@@ -61,9 +48,6 @@ JS_BEGIN_EXTERN_C
 #include <frame/log.h>
 #include <frame/req.h>
 #endif /* LIVEWIRE */
-JS_END_EXTERN_C
-
-JS_BEGIN_EXTERN_C
 
 #define JSD_MAJOR_VERSION 1
 #define JSD_MINOR_VERSION 1
@@ -138,11 +122,11 @@ struct JSDContext
     JSDProfileData*         callingFunctionPData;
     int64_t                 lastReturnTime;
 #ifdef JSD_THREADSAFE
-    void*                   scriptsLock;
-    void*                   sourceTextLock;
-    void*                   objectsLock;
-    void*                   atomsLock;
-    void*                   threadStatesLock;
+    JSDStaticLock*          scriptsLock;
+    JSDStaticLock*          sourceTextLock;
+    JSDStaticLock*          objectsLock;
+    JSDStaticLock*          atomsLock;
+    JSDStaticLock*          threadStatesLock;
 #endif /* JSD_THREADSAFE */
 #ifdef JSD_HAS_DANGEROUS_THREAD
     void*                   dangerousThread;
@@ -759,7 +743,7 @@ jsd_SetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate,
 #ifdef JSD_THREADSAFE
 
 /* the system-wide lock */
-extern void* _jsd_global_lock;
+extern JSDStaticLock* _jsd_global_lock;
 #define JSD_LOCK()                               \
     JS_BEGIN_MACRO                               \
         if(!_jsd_global_lock)                    \
@@ -1110,7 +1094,5 @@ jsdlw_AppHookProc(LWDBGApp* app,
 
 #endif
 /***************************************************************************/
-
-JS_END_EXTERN_C
 
 #endif /* jsd_h___ */
