@@ -228,6 +228,7 @@ class MutableHandle : public MutableHandleBase<T>
 
 typedef MutableHandle<JSObject*>    MutableHandleObject;
 typedef MutableHandle<Value>        MutableHandleValue;
+typedef MutableHandle<jsid>         MutableHandleId;
 
 /*
  * Raw pointer used as documentation that a parameter does not need to be
@@ -235,6 +236,7 @@ typedef MutableHandle<Value>        MutableHandleValue;
  */
 typedef JSObject *                  RawObject;
 typedef JSString *                  RawString;
+typedef Value                       RawValue;
 
 extern mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
 
