@@ -714,7 +714,7 @@ nsNavHistory::GetNewSessionID()
     "SELECT session FROM moz_historyvisits "
     "ORDER BY visit_date DESC "
   ), getter_AddRefs(selectSession));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, 0);
   bool hasSession;
   if (NS_SUCCEEDED(selectSession->ExecuteStep(&hasSession)) && hasSession) {
     mLastSessionID = selectSession->AsInt64(0) + 1;

@@ -82,6 +82,8 @@ public:
   virtual bool 
   SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow);
 
+  virtual int IsEnabledInternal();
+
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,

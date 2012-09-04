@@ -79,7 +79,7 @@ using namespace js::frontend;
     JS_END_MACRO
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
-StrictMode::StrictModeState
+StrictMode
 StrictModeGetter::get() const
 {
     return parser->pc->sc->strictModeState;
@@ -388,7 +388,7 @@ Parser::newObjectBox(JSObject *obj)
 }
 
 FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *outerpc,
-                         StrictMode::StrictModeState sms)
+                         StrictMode sms)
   : ObjectBox(traceListHead, obj),
     siblings(outerpc->functionList),
     kids(NULL),
@@ -444,7 +444,7 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *
 }
 
 FunctionBox *
-Parser::newFunctionBox(JSObject *obj, ParseContext *outerpc, StrictMode::StrictModeState sms)
+Parser::newFunctionBox(JSObject *obj, ParseContext *outerpc, StrictMode sms)
 {
     JS_ASSERT(obj && !IsPoisonedPtr(obj));
     JS_ASSERT(obj->isFunction());
@@ -1612,7 +1612,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         return NULL;
 
     // Inherit strictness if neeeded.
-    StrictMode::StrictModeState sms = (outerpc->sc->strictModeState == StrictMode::STRICT) ?
+    StrictMode sms = (outerpc->sc->strictModeState == StrictMode::STRICT) ?
         StrictMode::STRICT : StrictMode::UNKNOWN;
 
     // Create box for fun->object early to protect against last-ditch GC.
@@ -1779,7 +1779,7 @@ Parser::functionExpr()
 }
 
 void
-FunctionBox::recursivelySetStrictMode(StrictMode::StrictModeState strictness)
+FunctionBox::recursivelySetStrictMode(StrictMode strictness)
 {
     if (strictModeState == StrictMode::UNKNOWN) {
         strictModeState = strictness;

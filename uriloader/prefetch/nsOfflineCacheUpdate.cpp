@@ -1528,8 +1528,7 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
         return;
     }
 
-    rv = NotifyState(nsIOfflineCacheUpdateObserver::STATE_ITEMCOMPLETED);
-    if (NS_FAILED(rv)) return;
+    NotifyState(nsIOfflineCacheUpdateObserver::STATE_ITEMCOMPLETED);
 
     ProcessNextURI();
 }
@@ -1774,7 +1773,7 @@ nsOfflineCacheUpdate::ProcessNextURI()
     return NS_DispatchToCurrentThread(this);
 }
 
-nsresult
+void
 nsOfflineCacheUpdate::GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers)
 {
     for (int32_t i = 0; i < mWeakObservers.Count(); i++) {
@@ -1789,38 +1788,30 @@ nsOfflineCacheUpdate::GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> 
     for (int32_t i = 0; i < mObservers.Count(); i++) {
         aObservers.AppendObject(mObservers[i]);
     }
-
-    return NS_OK;
 }
 
-nsresult
+void
 nsOfflineCacheUpdate::NotifyState(uint32_t state)
 {
     LOG(("nsOfflineCacheUpdate::NotifyState [%p, %d]", this, state));
 
     nsCOMArray<nsIOfflineCacheUpdateObserver> observers;
-    nsresult rv = GatherObservers(observers);
-    NS_ENSURE_SUCCESS(rv, rv);
+    GatherObservers(observers);
 
     for (int32_t i = 0; i < observers.Count(); i++) {
         observers[i]->UpdateStateChanged(this, state);
     }
-
-    return NS_OK;
 }
 
-nsresult
+void
 nsOfflineCacheUpdate::AssociateDocuments(nsIApplicationCache* cache)
 {
     nsCOMArray<nsIOfflineCacheUpdateObserver> observers;
-    nsresult rv = GatherObservers(observers);
-    NS_ENSURE_SUCCESS(rv, rv);
+    GatherObservers(observers);
 
     for (int32_t i = 0; i < observers.Count(); i++) {
         observers[i]->ApplicationCacheAvailable(cache);
     }
-
-    return NS_OK;
 }
 
 void
@@ -2235,17 +2226,18 @@ nsOfflineCacheUpdate::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate,
         mSucceeded = succeeded;
     }
 
-    nsresult rv = NotifyState(aState);
+    NotifyState(aState);
     if (aState == nsIOfflineCacheUpdateObserver::STATE_FINISHED)
         aUpdate->RemoveObserver(this);
 
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsOfflineCacheUpdate::ApplicationCacheAvailable(nsIApplicationCache *applicationCache)
 {
-    return AssociateDocuments(applicationCache);
+    AssociateDocuments(applicationCache);
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

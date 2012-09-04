@@ -835,15 +835,6 @@ nsPrefetchNode::GetStatus(uint16_t *aStatus)
     uint32_t httpStatus;
     rv = httpChannel->GetResponseStatus(&httpStatus);
     if (rv == NS_ERROR_NOT_AVAILABLE) {
-        // Someone's calling this before we got a response... Check our
-        // ReadyState.  If we're at RECEIVING or LOADED, then this means the
-        // connection errored before we got any data; return a somewhat
-        // sensible error code in that case.
-        if (mState >= nsIDOMLoadStatus::RECEIVING) {
-            *aStatus = NS_ERROR_NOT_AVAILABLE;
-            return NS_OK;
-        }
-
         *aStatus = 0;
         return NS_OK;
     }

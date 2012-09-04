@@ -1891,7 +1891,7 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
             // found "static" XUL element count hint
             nsresult strErr = NS_OK;
             staticCount = staticValue.ToInteger(&strErr);
-            if (strErr)
+            if (NS_FAILED(strErr))
                 staticCount = 0;
         } else {
             // compute the "static" XUL element count
