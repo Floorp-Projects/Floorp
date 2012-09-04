@@ -1259,7 +1259,7 @@ CodeGeneratorX86Shared::visitOutOfLineTruncate(OutOfLineTruncate *ool)
 
     {
         Label positive;
-        masm.j(Assembler::GreaterThan, &positive);
+        masm.j(Assembler::Above, &positive);
 
         static const double shiftNeg = 4294967296.0;
         masm.loadStaticDouble(&shiftNeg, temp);
