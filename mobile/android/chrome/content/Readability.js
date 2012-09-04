@@ -119,9 +119,10 @@ Readability.prototype = {
 
       // Prepath-rooted relative URI.
       if (uri[0] == "/")
-        return prePath + "/" + uri;
+        return prePath + uri;
 
-      // Standard relative URI; add entire path.
+      // Standard relative URI; add entire path. pathBase already includes a
+      // trailing "/".
       return pathBase + uri;
     }
 
