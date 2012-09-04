@@ -3428,44 +3428,26 @@ html|*#gcli-output-frame {
 }
 
 .chat-close-button {
-  list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-.chat-close-button:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+  list-style-image: url('chrome://browser/skin/social/chat-close.png');
+  -moz-image-region: rect(0, 14px, 14px, 0);
 }
 
 .chat-close-button:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
+  -moz-image-region: rect(14px, 14px, 28px, 0);
 }
 
-
-.chat-toggle-button {
-  /* XXX get a real image for this */
-  list-style-image: url("chrome://global/skin/icons/checkbox.png");
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.chat-toggle-button:hover {
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-.chat-toggle-button[minimized="true"] {
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-.chat-toggle-button[minimized="true"]:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+.chat-close-button:hover {
+  -moz-image-region: rect(28px, 14px, 42px, 0);
 }
 
 .chat-title {
   font-weight: bold;
   color: -moz-dialogtext;
+  cursor: inherit;
 }
 
 .chat-titlebar {
-  background-image: linear-gradient(white, #ddd);
+  background-color: #d9d9d9;
   height: 20px;
   min-height: 20px;
   width: 100%;
@@ -3473,10 +3455,15 @@ html|*#gcli-output-frame {
   padding: 2px;
   border: none;
   border-bottom: 1px solid #404040;
+  cursor: pointer;
 }
 
 .chat-titlebar[minimized="true"] {
   border-bottom: none;
+}
+
+.chat-titlebar[selected] {
+  background-color: #f0f0f0;
 }
 
 .chat-frame {
@@ -3486,8 +3473,7 @@ html|*#gcli-output-frame {
 }
 
 .chatbar-button {
-  /* XXX get a real image for this */
-  background-image: linear-gradient(white, #ddd);
+  background-color: #d9d9d9;
   list-style-image: url("chrome://browser/skin/social/social.png");
   border: none;
   margin: 0;
@@ -3500,6 +3486,7 @@ html|*#gcli-output-frame {
 
 .chatbar-button[open="true"],
 .chatbar-button:active:hover {
+  background-color: #f0f0f0;
   box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
 }
 
