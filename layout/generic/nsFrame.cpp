@@ -3890,10 +3890,20 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     result.width = NS_MIN(maxWidth, result.width);
   }
 
-  nscoord minWidth =
-    nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
-      aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
-      stylePos->mMinWidth);
+  nscoord minWidth;
+  if (stylePos->mMinWidth.GetUnit() != eStyleUnit_Auto) {
+    minWidth =
+      nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
+        aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
+        stylePos->mMinWidth);
+  } else {
+    // Treat "min-width: auto" as 0.
+    // NOTE: Technically, "auto" is supposed to behave like "min-content" on
+    // flex items. However, we don't need to worry about that here, because
+    // flex items' min-sizes are intentionally ignored until the flex
+    // container explicitly considers them during space distribution.
+    minWidth = 0;
+  }
   result.width = NS_MAX(minWidth, result.width);
 
   // Compute height
