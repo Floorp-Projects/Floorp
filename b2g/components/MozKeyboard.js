@@ -65,19 +65,19 @@ MozKeyboard.prototype = {
   },
 
   setSelectedOption: function mozKeyboardSetSelectedOption(index) {
-    this._messageManager.broadcastAsyncMessage("Forms:Select:Choice", {
+    this._messageManager.sendAsyncMessage("Forms:Select:Choice", {
       "index": index
     });
   },
 
   setValue: function mozKeyboardSetValue(value) {
-    this._messageManager.broadcastAsyncMessage("Forms:Input:Value", {
+    this._messageManager.sendAsyncMessage("Forms:Input:Value", {
       "value": value
     });
   },
 
   setSelectedOptions: function mozKeyboardSetSelectedOptions(indexes) {
-    this._messageManager.broadcastAsyncMessage("Forms:Select:Choice", {
+    this._messageManager.sendAsyncMessage("Forms:Select:Choice", {
       "indexes": indexes || []
     });
   },

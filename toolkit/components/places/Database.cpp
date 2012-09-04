@@ -560,7 +560,7 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
   // Be sure to set journal mode after page_size.  WAL would prevent the change
   // otherwise.
-  if (NS_SUCCEEDED(SetJournalMode(mMainConn, JOURNAL_WAL))) {
+  if (JOURNAL_WAL == SetJournalMode(mMainConn, JOURNAL_WAL)) {
     // Set the WAL journal size limit.  We want it to be small, since in
     // synchronous = NORMAL mode a crash could cause loss of all the
     // transactions in the journal.  For added safety we will also force

@@ -225,6 +225,7 @@ public:
   virtual bool SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey) = 0;
   virtual bool SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm) = 0;
   virtual bool SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow) = 0;
+  virtual int IsEnabledInternal() = 0;
 
   /**
    * Due to the fact that some operations require multiple calls, a

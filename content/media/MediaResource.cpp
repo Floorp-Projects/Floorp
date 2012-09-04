@@ -917,7 +917,8 @@ class FileMediaResource : public MediaResource
 {
 public:
   FileMediaResource(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
-    MediaResource(aDecoder, aChannel, aURI), mSize(-1),
+    MediaResource(aDecoder, aChannel, aURI),
+    mSize(-1),
     mLock("FileMediaResource.mLock"),
     mSizeInitialized(false)
   {
@@ -958,14 +959,28 @@ public:
   }
   virtual int64_t GetLength() {
     MutexAutoLock lock(mLock);
-    EnsureLengthInitialized();
-    return mSize;
+    if (mInput) {
+      EnsureSizeInitialized();
+    }
+    return mSizeInitialized ? mSize : 0;
   }
   virtual int64_t GetNextCachedData(int64_t aOffset)
   {
+    MutexAutoLock lock(mLock);
+    if (!mInput) {
+      return -1;
+    }
+    EnsureSizeInitialized();
     return (aOffset < mSize) ? aOffset : -1;
   }
-  virtual int64_t GetCachedDataEnd(int64_t aOffset) { return NS_MAX(aOffset, mSize); }
+  virtual int64_t GetCachedDataEnd(int64_t aOffset) {
+    MutexAutoLock lock(mLock);
+    if (!mInput) {
+      return aOffset;
+    }
+    EnsureSizeInitialized();
+    return NS_MAX(aOffset, mSize);
+  }
   virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) { return true; }
   virtual bool    IsSuspendedByCache(MediaResource** aActiveResource)
   {
@@ -980,16 +995,18 @@ public:
 
 private:
   // Ensures mSize is initialized, if it can be.
-  void EnsureLengthInitialized();
+  // mLock must be held when this is called, and mInput must be non-null.
+  void EnsureSizeInitialized();
 
   // The file size, or -1 if not known. Immutable after Open().
+  // Can be used from any thread.
   int64_t mSize;
 
   // This lock handles synchronisation between calls to Close() and
   // the Read, Seek, etc calls. Close must not be called while a
   // Read or Seek is in progress since it resets various internal
   // values to null.
-  // This lock protects mSeekable and mInput.
+  // This lock protects mSeekable, mInput, mSize, and mSizeInitialized.
   Mutex mLock;
 
   // Seekable stream interface to file. This can be used from any
@@ -997,7 +1014,9 @@ private:
   nsCOMPtr<nsISeekableStream> mSeekable;
 
   // Input stream for the media data. This can be used from any
-  // thread.
+  // thread. This is annulled when the decoder is being shutdown.
+  // The decoder can be shut down while we're calculating buffered
+  // ranges or seeking, so this must be null-checked before it's used.
   nsCOMPtr<nsIInputStream>  mInput;
 
   // Whether we've attempted to initialize mSize. Note that mSize can be -1
@@ -1028,9 +1047,10 @@ private:
   nsRefPtr<nsMediaDecoder> mDecoder;
 };
 
-void FileMediaResource::EnsureLengthInitialized()
+void FileMediaResource::EnsureSizeInitialized()
 {
   mLock.AssertCurrentThreadOwns();
+  NS_ASSERTION(mInput, "Must have file input stream");
   if (mSizeInitialized) {
     return;
   }
@@ -1048,7 +1068,10 @@ void FileMediaResource::EnsureLengthInitialized()
 nsresult FileMediaResource::GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
 {
   MutexAutoLock lock(mLock);
-  EnsureLengthInitialized();
+  if (!mInput) {
+    return NS_ERROR_FAILURE;
+  }
+  EnsureSizeInitialized();
   if (mSize == -1) {
     return NS_ERROR_FAILURE;
   }
@@ -1162,9 +1185,9 @@ MediaResource* FileMediaResource::CloneData(nsMediaDecoder* aDecoder)
 nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount)
 {
   MutexAutoLock lock(mLock);
-  EnsureLengthInitialized();
   if (!mInput || !mSeekable)
     return NS_ERROR_FAILURE;
+  EnsureSizeInitialized();
   int64_t offset = 0;
   nsresult res = mSeekable->Tell(&offset);
   NS_ENSURE_SUCCESS(res,res);
@@ -1192,9 +1215,9 @@ nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32
 nsresult FileMediaResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 {
   MutexAutoLock lock(mLock);
-  EnsureLengthInitialized();
   if (!mInput)
     return NS_ERROR_FAILURE;
+  EnsureSizeInitialized();
   return mInput->Read(aBuffer, aCount, aBytes);
 }
 
@@ -1205,7 +1228,7 @@ nsresult FileMediaResource::Seek(int32_t aWhence, int64_t aOffset)
   MutexAutoLock lock(mLock);
   if (!mSeekable)
     return NS_ERROR_FAILURE;
-  EnsureLengthInitialized();
+  EnsureSizeInitialized();
   return mSeekable->Seek(aWhence, aOffset);
 }
 
@@ -1216,7 +1239,7 @@ int64_t FileMediaResource::Tell()
   MutexAutoLock lock(mLock);
   if (!mSeekable)
     return 0;
-  EnsureLengthInitialized();
+  EnsureSizeInitialized();
 
   int64_t offset = 0;
   mSeekable->Tell(&offset);

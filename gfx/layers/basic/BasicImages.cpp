@@ -30,6 +30,7 @@ public:
   BasicPlanarYCbCrImage(const gfxIntSize& aScaleHint, gfxImageFormat aOffscreenFormat, BufferRecycleBin *aRecycleBin)
     : PlanarYCbCrImage(aRecycleBin)
     , mScaleHint(aScaleHint)
+    , mDelayedConversion(false)
   {
     SetOffscreenFormat(aOffscreenFormat);
   }
@@ -44,12 +45,15 @@ public:
   }
 
   virtual void SetData(const Data& aData);
+  virtual void SetDelayedConversion(bool aDelayed) { mDelayedConversion = aDelayed; }
+
   already_AddRefed<gfxASurface> GetAsSurface();
 
 private:
+  nsAutoArrayPtr<uint8_t> mDecodedBuffer;
   gfxIntSize mScaleHint;
   int mStride;
-  nsAutoArrayPtr<uint8_t> mDecodedBuffer;
+  bool mDelayedConversion;
 };
 
 class BasicImageFactory : public ImageFactory
@@ -80,6 +84,10 @@ void
 BasicPlanarYCbCrImage::SetData(const Data& aData)
 {
   PlanarYCbCrImage::SetData(aData);
+
+  if (mDelayedConversion) {
+    return;
+  }
 
   // Do some sanity checks to prevent integer overflow
   if (aData.mYSize.width > PlanarYCbCrImage::MAX_DIMENSION ||

@@ -82,3 +82,6 @@ fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) == 672646-alpha-radial-g
 == transformed-path.html transformed-path.html
 
 == 749467-1.html 749467-1-ref.html
+
+# You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
+fuzzy-if(azureQuartz,2,113) fuzzy-if(d2d,12,17) == 784573-1.html 784573-1-ref.html

@@ -734,7 +734,7 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
                                    nsCSSProps::kFontStretchKTable).get(),
         aProxy->mSrcIndex);
 
-  if (aStatus != 0) {
+  if (NS_FAILED(aStatus)) {
     msg.Append(": ");
     switch (aStatus) {
     case NS_ERROR_DOM_BAD_URI:

@@ -287,7 +287,8 @@ public:
 
     mTempRect = mgfx::Rect(0, 0, ctx->mWidth, ctx->mHeight);
 
-    Float blurRadius = mSigma * 3;
+    static const gfxFloat GAUSSIAN_SCALE_FACTOR = (3 * sqrt(2 * M_PI) / 4) * 1.5;
+    int32_t blurRadius = (int32_t) floor(mSigma * GAUSSIAN_SCALE_FACTOR + 0.5);
 
     // We need to enlarge and possibly offset our temporary surface
     // so that things outside of the canvas may cast shadows.
@@ -311,8 +312,8 @@ public:
     transform._32 -= mTempRect.y;
       
     mTarget =
-      mCtx->mTarget->CreateSimilarDrawTarget(IntSize(int32_t(mTempRect.width), int32_t(mTempRect.height)),
-                                             FORMAT_B8G8R8A8);
+      mCtx->mTarget->CreateShadowDrawTarget(IntSize(int32_t(mTempRect.width), int32_t(mTempRect.height)),
+                                             FORMAT_B8G8R8A8, mSigma);
 
     if (!mTarget) {
       // XXX - Deal with the situation where our temp size is too big to
@@ -3102,8 +3103,9 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
       buffer.mGlyphs = &glyphBuf.front();
       buffer.mNumGlyphs = glyphBuf.size();
 
+      Rect bounds(mBoundingBox.x, mBoundingBox.y, mBoundingBox.width, mBoundingBox.height);
       if (mOp == nsCanvasRenderingContext2DAzure::TEXT_DRAW_OPERATION_FILL) {
-        AdjustedTarget(mCtx)->
+        AdjustedTarget(mCtx, &bounds)->
           FillGlyphs(scaledFont, buffer,
                      CanvasGeneralPattern().
                        ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_FILL, mCtx->mTarget),
@@ -3112,7 +3114,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
         RefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
 
         const ContextState& state = *mState;
-        AdjustedTarget(mCtx)->
+        AdjustedTarget(mCtx, &bounds)->
           Stroke(path, CanvasGeneralPattern().
                    ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_STROKE, mCtx->mTarget),
                  StrokeOptions(state.lineWidth, state.lineJoin,
