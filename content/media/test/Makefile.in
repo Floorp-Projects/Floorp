@@ -214,6 +214,9 @@ MOCHITEST_FILES += \
 		video-overhang.ogg \
 		file_a4_tone.ogg \
 		detodos.opus \
+		short.mp4 \
+		notags.mp3 \
+		id3tags.mp3 \
 		$(NULL)
 
 # Wave sample files
