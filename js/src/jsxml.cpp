@@ -155,12 +155,12 @@ DEFINE_GETTER(NameURI_getter,
               if (obj->getClass() == &NamespaceClass) vp.set(obj->getNameURIVal()))
 
 static JSBool
-namespace_equality(JSContext *cx, HandleObject obj, const Value *v, JSBool *bp)
+namespace_equality(JSContext *cx, HandleObject obj, HandleValue v, JSBool *bp)
 {
     JSObject *obj2;
 
-    JS_ASSERT(v->isObjectOrNull());
-    obj2 = v->toObjectOrNull();
+    JS_ASSERT(v.isObjectOrNull());
+    obj2 = v.toObjectOrNull();
     *bp = (!obj2 || obj2->getClass() != &NamespaceClass)
           ? JS_FALSE
           : EqualStrings(obj->getNameURI(), obj2->getNameURI());
@@ -269,11 +269,11 @@ qname_identity(JSObject *qna, const JSObject *qnb)
 }
 
 static JSBool
-qname_equality(JSContext *cx, HandleObject qn, const Value *v, JSBool *bp)
+qname_equality(JSContext *cx, HandleObject qn, HandleValue v, JSBool *bp)
 {
     JSObject *obj2;
 
-    obj2 = v->toObjectOrNull();
+    obj2 = v.toObjectOrNull();
     *bp = (!obj2 || obj2->getClass() != &QNameClass)
           ? JS_FALSE
           : qname_identity(qn, obj2);
@@ -5059,7 +5059,8 @@ xml_convert(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue rva
 }
 
 static JSBool
-xml_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op, Value *statep, jsid *idp)
+xml_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
+              MutableHandleValue statep, MutableHandleId idp)
 {
     JSXML *xml;
     uint32_t length, index;
@@ -5072,37 +5073,36 @@ xml_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op, Value *state
       case JSENUMERATE_INIT:
       case JSENUMERATE_INIT_ALL:
         if (length == 0) {
-            statep->setInt32(0);
+            statep.setInt32(0);
         } else {
             cursor = cx->new_< JSXMLArrayCursor<JSXML> >(&xml->xml_kids);
             if (!cursor)
                 return JS_FALSE;
-            statep->setPrivate(cursor);
+            statep.address()->setPrivate(cursor);
         }
-        if (idp)
-            *idp = INT_TO_JSID(length);
+        idp.set(INT_TO_JSID(length));
         break;
 
       case JSENUMERATE_NEXT:
-        if (statep->isInt32(0)) {
-            statep->setNull();
+        if (statep.address()->isInt32(0)) {
+            statep.setNull();
             break;
         }
-        cursor = (JSXMLArrayCursor<JSXML> *) statep->toPrivate();
+        cursor = (JSXMLArrayCursor<JSXML> *) statep.address()->toPrivate();
         if (cursor && cursor->array && (index = cursor->index) < length) {
-            *idp = INT_TO_JSID(index);
+            idp.set(INT_TO_JSID(index));
             cursor->index = index + 1;
             break;
         }
         /* FALL THROUGH */
 
       case JSENUMERATE_DESTROY:
-        if (!statep->isInt32(0)) {
-            cursor = (JSXMLArrayCursor<JSXML> *) statep->toPrivate();
+        if (!statep.address()->isInt32(0)) {
+            cursor = (JSXMLArrayCursor<JSXML> *) statep.address()->toPrivate();
             if (cursor)
                 js_delete(cursor);
         }
-        statep->setNull();
+        statep.setNull();
         break;
     }
     return JS_TRUE;
@@ -5115,7 +5115,7 @@ xml_typeOf(JSContext *cx, HandleObject obj)
 }
 
 static JSBool
-xml_hasInstance(JSContext *cx, HandleObject obj, const Value *, JSBool *bp)
+xml_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, JSBool *bp)
 {
     return JS_TRUE;
 }
