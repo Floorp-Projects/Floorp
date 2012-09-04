@@ -1,5 +1,3 @@
-. "$topsrcdir/b2g/config/mozconfigs/common"
-
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-b2g
 
 mk_add_options MOZ_MAKE_FLAGS="-j8"
