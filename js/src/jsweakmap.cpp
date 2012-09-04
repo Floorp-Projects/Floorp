@@ -242,7 +242,7 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
     if (!map) {
         map = cx->new_<ObjectValueMap>(cx, thisObj.get());
         if (!map->init()) {
-            cx->delete_(map);
+            js_delete(map);
             JS_ReportOutOfMemory(cx);
             return false;
         }

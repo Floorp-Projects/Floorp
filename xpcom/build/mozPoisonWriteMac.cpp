@@ -351,7 +351,7 @@ void PoisonWrite() {
     nsCOMPtr<nsIFile> mozFile;
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
     if (mozFile) {
-        nsCAutoString nativePath;
+        nsAutoCString nativePath;
         nsresult rv = mozFile->GetNativePath(nativePath);
         if (NS_SUCCEEDED(rv)) {
             sProfileDirectory = PL_strdup(nativePath.get());

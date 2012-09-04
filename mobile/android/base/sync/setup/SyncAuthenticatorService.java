@@ -14,7 +14,6 @@ import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.config.AccountPickler;
 import org.mozilla.gecko.sync.config.ClientRecordTerminator;
-import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
 import android.accounts.AbstractAccountAuthenticator;
@@ -222,7 +221,7 @@ public class SyncAuthenticatorService extends Service {
      * Account disappeared.
      */
     @Override
-    public Bundle getAccountRemovalAllowed(final AccountAuthenticatorResponse response, final Account account)
+    public Bundle getAccountRemovalAllowed(final AccountAuthenticatorResponse response, Account account)
         throws NetworkErrorException {
       Bundle result = super.getAccountRemovalAllowed(response, account);
 
@@ -237,11 +236,13 @@ public class SyncAuthenticatorService extends Service {
         return result;
       }
 
+      final String accountName = account.name;
+
       // Delete the Account pickle in the background.
       ThreadPool.run(new Runnable() {
         @Override
         public void run() {
-          Logger.info(LOG_TAG, "Account named " + account.name + " being removed; " +
+          Logger.info(LOG_TAG, "Account named " + accountName + " being removed; " +
               "deleting saved pickle file '" + Constants.ACCOUNT_PICKLE_FILENAME + "'.");
           try {
             AccountPickler.deletePickle(mContext, Constants.ACCOUNT_PICKLE_FILENAME);
@@ -252,26 +253,34 @@ public class SyncAuthenticatorService extends Service {
         }
       });
 
-      // Bug 770785: delete the Account's client record in the background. We want
-      // to get the Account's data synchronously, though, since it is possible the
-      // Account object will be invalid by the time the Runnable executes. We
-      // don't need to worry about accessing prefs too early since deleting the
-      // Account doesn't remove them -- at least, not yet.
-      SyncAccountParameters tempParams = null;
-      try {
-        tempParams = SyncAccounts.blockingFromAndroidAccountV0(mContext, AccountManager.get(mContext), account);
-      } catch (Exception e) {
-        // Do nothing.  Null parameters are handled in the Runnable.
-      }
-      final SyncAccountParameters params = tempParams;
+      // Bug 770785: delete the Account's client record in the background. We
+      // want to get the Account's data synchronously, though, since it is
+      // possible the Account object will be invalid by the time the Runnable
+      // executes. We don't need to worry about accessing prefs too early since
+      // deleting the Account doesn't remove them -- at least, not yet. We would
+      // prefer to use SyncAccounts.blockingFromAndroidAccountV0, but that
+      // hangs, possibly because the Account Manager doesn't appreciate giving
+      // out an auth token while deleting the account.
+
+      final AccountManager accountManager = AccountManager.get(mContext);
+      final String password = accountManager.getPassword(account);
+      final String serverURL = accountManager.getUserData(account, Constants.OPTION_SERVER);
 
       ThreadPool.run(new Runnable() {
         @Override
         public void run() {
-          Logger.info(LOG_TAG, "Account named " + account.name + " being removed; " +
+          Logger.info(LOG_TAG, "Account named " + accountName + " being removed; " +
               "deleting client record from server.");
 
-          if (params == null || params.username == null || params.password == null) {
+          String encodedUsername;
+          try {
+            encodedUsername = Utils.usernameFromAccount(accountName);
+          } catch (Exception e) {
+            Logger.warn(LOG_TAG, "Got exception deleting client record from server; ignoring.", e);
+            return;
+          }
+
+          if (accountName == null || encodedUsername == null || password == null || serverURL == null) {
             Logger.warn(LOG_TAG, "Account parameters were null; not deleting client record from server.");
             return;
           }
@@ -287,7 +296,7 @@ public class SyncAuthenticatorService extends Service {
 
           SharedPreferences prefs;
           try {
-            prefs = Utils.getSharedPreferences(mContext, product, params.username, params.serverURL, profile, version);
+            prefs = Utils.getSharedPreferences(mContext, product, encodedUsername, serverURL, profile, version);
           } catch (Exception e) {
             Logger.warn(LOG_TAG, "Caught exception fetching preferences; not deleting client record from server.", e);
             return;
@@ -307,7 +316,7 @@ public class SyncAuthenticatorService extends Service {
           }
 
           try {
-            ClientRecordTerminator.deleteClientRecord(params.username, params.password, clusterURL, clientGuid);
+            ClientRecordTerminator.deleteClientRecord(encodedUsername, password, clusterURL, clientGuid);
           } catch (Exception e) {
             Logger.warn(LOG_TAG, "Got exception deleting client record from server; ignoring.", e);
           }

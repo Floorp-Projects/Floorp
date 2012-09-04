@@ -176,14 +176,14 @@ function testSteps()
     if (keyI === 0) {
       doCompare(-0);
       let req = store.add(i, -0);
-      req.onerror = new ExpectError("ConstraintError", true);
+      req.addEventListener("error", new ExpectError("ConstraintError", true));
       req.onsuccess = unexpectedSuccessHandler;
       yield;
     }
     else if (Array.isArray(keyI) && keyI.length === 1 && keyI[0] === 0) {
       doCompare([-0]);
       let req = store.add(i, [-0]);
-      req.onerror = new ExpectError("ConstraintError", true);
+      req.addEventListener("error", new ExpectError("ConstraintError", true));
       req.onsuccess = unexpectedSuccessHandler;
       yield;
     }

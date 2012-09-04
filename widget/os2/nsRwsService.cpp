@@ -156,7 +156,7 @@ nsRwsService::IconFromExtension(const char *aExt, bool aNeedMini,
   if (NS_SUCCEEDED(rv))
     return rv;
 
-  nsCAutoString path;
+  nsAutoCString path;
   rv = CreateFileForExtension(aExt, path);
   if (NS_SUCCEEDED(rv)) {
     rv = IconFromPath(path.get(), false, aNeedMini, _retval);
@@ -237,7 +237,7 @@ nsRwsService::HandlerFromExtension(const char *aExt, uint32_t *aHandle,
   if (NS_SUCCEEDED(rv))
     return rv;
 
-  nsCAutoString path;
+  nsAutoCString path;
   rv = CreateFileForExtension(aExt, path);
   if (NS_SUCCEEDED(rv)) {
     rv = HandlerFromPath(path.get(), aHandle, _retval);
@@ -687,7 +687,7 @@ static nsresult CreateFileForExtension(const char *aFileExt,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCAutoString pathStr(NS_LITERAL_CSTRING("nsrws."));
+  nsAutoCString pathStr(NS_LITERAL_CSTRING("nsrws."));
   if (*aFileExt == '.')
     aFileExt++;
   pathStr.Append(aFileExt);

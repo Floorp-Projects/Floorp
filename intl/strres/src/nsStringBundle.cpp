@@ -114,7 +114,7 @@ nsresult
 nsStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
 {  
   ReentrantMonitorAutoEnter automon(mReentrantMonitor);
-  nsCAutoString name;
+  nsAutoCString name;
   name.AppendInt(aID, 10);
 
   nsresult rv;
@@ -301,7 +301,7 @@ nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings
         (propElement = do_QueryInterface(supports, &rv))) {
 
       // now check if its in the override bundle
-      nsCAutoString key;
+      nsAutoCString key;
       propElement->GetKey(key);
 
       nsAutoString value;
@@ -411,7 +411,7 @@ nsExtensibleStringBundle::Init(const char * aCategory,
     if (NS_FAILED(rv))
       continue;
 
-    nsCAutoString name;
+    nsAutoCString name;
     rv = supStr->GetData(name);
     if (NS_FAILED(rv))
       continue;

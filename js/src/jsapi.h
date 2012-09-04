@@ -14,6 +14,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/StandardInteger.h"
+#ifdef __cplusplus
+# include "mozilla/ThreadLocal.h"
+#endif
 
 #include <stddef.h>
 #include <stdio.h>
@@ -3018,6 +3021,8 @@ JS_END_EXTERN_C
 
 namespace JS {
 
+extern mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
+
 inline bool
 IsPoisonedId(jsid iden)
 {
@@ -4829,6 +4834,37 @@ JS_ClearNonGlobalObject(JSContext *cx, JSObject *objArg);
 JS_PUBLIC_API(void)
 JS_SetAllNonReservedSlotsToUndefined(JSContext *cx, JSObject *objArg);
 
+/*
+ * Create a new array buffer with the given contents, which must have been
+ * returned by JS_AllocateArrayBufferContents or JS_StealArrayBufferContents.
+ * The new array buffer takes ownership. After calling this function, do not
+ * free |contents| or use |contents| from another thread.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_NewArrayBufferWithContents(JSContext *cx, void *contents);
+
+/*
+ * Steal the contents of the given array buffer. The array buffer has its
+ * length set to 0 and its contents array cleared. The caller takes ownership
+ * of |contents| and must free it or transfer ownership via
+ * JS_NewArrayBufferWithContents when done using it.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents);
+
+/*
+ * Allocate memory that may be eventually passed to
+ * JS_NewArrayBufferWithContents. |nbytes| is the number of payload bytes
+ * required. The pointer to pass to JS_NewArrayBufferWithContents is returned
+ * in |contents|. The pointer to the |nbytes| of usable memory is returned in
+ * |data|. (*|contents| will contain a header before |data|.) The only legal
+ * operations on *|contents| is to free it or pass it to
+ * JS_NewArrayBufferWithContents.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data);
+
+
 extern JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj);
 
@@ -5726,7 +5762,7 @@ class JSAutoByteString {
     }
 
     ~JSAutoByteString() {
-        js::UnwantedForeground::free_(mBytes);
+        js_free(mBytes);
     }
 
     /* Take ownership of the given byte array. */
@@ -5743,7 +5779,7 @@ class JSAutoByteString {
     }
 
     void clear() {
-        js::UnwantedForeground::free_(mBytes);
+        js_free(mBytes);
         mBytes = NULL;
     }
 
@@ -6002,17 +6038,17 @@ JS_ReportAllocationOverflow(JSContext *cx);
 struct JSErrorReport {
     const char      *filename;      /* source file name, URL, etc., or null */
     JSPrincipals    *originPrincipals; /* see 'originPrincipals' comment above */
-    unsigned           lineno;         /* source line number */
+    unsigned        lineno;         /* source line number */
     const char      *linebuf;       /* offending source line without final \n */
     const char      *tokenptr;      /* pointer to error token in linebuf */
     const jschar    *uclinebuf;     /* unicode (original) line buffer */
     const jschar    *uctokenptr;    /* unicode (original) token pointer */
-    unsigned           flags;          /* error/warning, etc. */
-    unsigned           errorNumber;    /* the error number, e.g. see js.msg */
+    unsigned        flags;          /* error/warning, etc. */
+    unsigned        errorNumber;    /* the error number, e.g. see js.msg */
     const jschar    *ucmessage;     /* the (default) error message */
     const jschar    **messageArgs;  /* arguments for the error message */
     int16_t         exnType;        /* One of the JSExnType constants */
-    unsigned           column;         /* zero-based column index in line */
+    unsigned        column;         /* zero-based column index in line */
 };
 
 /*

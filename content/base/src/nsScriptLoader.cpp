@@ -616,7 +616,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("CSP blocked inline scripts (2)"));
       // gather information to log with violation report
       nsIURI* uri = mDocument->GetDocumentURI();
-      nsCAutoString asciiSpec;
+      nsAutoCString asciiSpec;
       uri->GetAsciiSpec(asciiSpec);
       nsAutoString scriptText;
       aElement->GetScriptText(scriptText);
@@ -829,7 +829,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 
   // It's very important to use aRequest->mURI, not the final URI of the channel
   // aRequest ended up getting script data from, as the script filename.
-  nsCAutoString url;
+  nsAutoCString url;
   nsContentUtils::GetWrapperSafeScriptFilename(mDocument, aRequest->mURI, url);
 
   bool isUndefined;
@@ -995,7 +995,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
     return NS_OK;
   }
 
-  nsCAutoString characterSet;
+  nsAutoCString characterSet;
 
   nsresult rv = NS_OK;
   if (aChannel) {

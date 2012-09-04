@@ -127,7 +127,7 @@ class StatisticsSerializer
             return NULL;
 
         size_t nchars = strlen(buf);
-        jschar *out = (jschar *)js_malloc(sizeof(jschar) * (nchars + 1));
+        jschar *out = js_pod_malloc<jschar>(nchars + 1);
         if (!out) {
             oom_ = true;
             js_free(buf);
@@ -389,6 +389,9 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
             if (ss.isJSON()) {
                 ss.appendDecimal("Page Faults", "",
                                  double(slices[i].endFaults - slices[i].startFaults));
+
+                ss.appendNumber("Start Timestamp", "%llu", "", (unsigned long long)slices[i].start);
+                ss.appendNumber("End Timestamp", "%llu", "", (unsigned long long)slices[i].end);
             }
             if (slices[i].resetReason)
                 ss.appendString("Reset", slices[i].resetReason);

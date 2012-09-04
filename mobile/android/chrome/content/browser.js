@@ -60,8 +60,6 @@ const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
-const kTapHighlightDelay = 50; // milliseconds
-
 // The element tag names that are considered to receive input. Mouse-down
 // events directed to one of these are allowed to go through.
 const kElementsReceivingInput = {
@@ -164,7 +162,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearData", false);
-    Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
     Services.obs.addObserver(this, "Viewport:Flush", false);
@@ -2010,6 +2007,14 @@ var UserAgent = {
         if (tab == null)
           break;
 
+        if (/\.?youtube\.com$/.test(channel.URI.host)) {
+          let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
+          if (ua.indexOf("Android; Tablet;") !== -1) {
+            ua = ua.replace("Android; Tablet;", "Android; Mobile;");
+            channel.setRequestHeader("User-Agent", ua, false);
+          }
+        }
+
         // Send desktop UA if "Request Desktop Site" is enabled
         if (tab.desktopMode)
           channel.setRequestHeader("User-Agent", this.DESKTOP_UA, false);
@@ -2681,11 +2686,17 @@ Tab.prototype = {
         // pages have any privilege themselves.
         if (/^about:/.test(target.documentURI)) {
           this.browser.addEventListener("click", ErrorPageEventHandler, false);
-          this.browser.addEventListener("pagehide", function listener() {
+          let listener = function() {
             this.browser.removeEventListener("click", ErrorPageEventHandler, false);
             this.browser.removeEventListener("pagehide", listener, true);
-          }.bind(this), true);
+          }.bind(this);
+
+          this.browser.addEventListener("pagehide", listener, true);
         }
+
+        if (/^about:reader/.test(target.documentURI))
+          new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
+
         break;
       }
 
@@ -2934,14 +2945,6 @@ Tab.prototype = {
             tabID: this.id
           }
         });
-
-        if (/^about:reader/.test(aEvent.originalTarget.documentURI)) {
-          let aboutReader = new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
-          this.browser.addEventListener("pagehide", function listener() {
-            aboutReader.uninit();
-            this.browser.removeEventListener("pagehide", listener, true);
-          }.bind(this), true);
-        }
 
         // Once document is fully loaded, parse it
         Reader.parseDocumentFromTab(this.id, function (article) {
@@ -3629,29 +3632,18 @@ var BrowserEventHandler = {
 
   _highlightElement: null,
 
-  _highlightTimeout: null,
-
   _doTapHighlight: function _doTapHighlight(aElement) {
-    this._cancelTapHighlight();
+    DOMUtils.setContentState(aElement, kStateActive);
     this._highlightElement = aElement;
-    // delay actually highlighting the element in case we are panning
-    this._highlightTimeout = setTimeout(function() {
-      DOMUtils.setContentState(aElement, kStateActive);
-    }, kTapHighlightDelay);
   },
 
   _cancelTapHighlight: function _cancelTapHighlight() {
-    if (this._highlightTimeout) {
-      clearTimeout(this._highlightTimeout);
-      this._highlightTimeout = null;
-    }
-
     if (!this._highlightElement)
       return;
 
     // If the active element is in a sub-frame, we need to make that frame's document
     // active to remove the element's active state.
-    if (this._highlightElement.ownerDocument && this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
+    if (this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
       DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kStateActive);
 
     DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);

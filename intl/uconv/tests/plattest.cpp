@@ -23,7 +23,7 @@ main(int argc, const char** argv)
     if (!locale_service) return -1;
 
     nsCOMPtr<nsILocale>             locale;
-    nsCAutoString                   charset;
+    nsAutoCString                   charset;
     nsAutoString                    category;
 
     nsresult rv = locale_service->GetSystemLocale(getter_AddRefs(locale));

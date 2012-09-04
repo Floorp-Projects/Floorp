@@ -3017,7 +3017,7 @@ void
 WebGLContext::GetProgramInfoLog(WebGLProgram *prog, nsAString& retval,
                                 ErrorResult& rv)
 {
-    nsCAutoString s;
+    nsAutoCString s;
     GetProgramInfoLog(prog, s, rv);
     if (s.IsVoid())
         retval.SetIsVoid(true);
@@ -3769,7 +3769,7 @@ WebGLContext::LinkProgram(WebGLProgram *program, ErrorResult& rv)
             // but it seems saner to keep a single way of obtaining shader infologs.
 
             ErrorResult rv;
-            nsCAutoString log;
+            nsAutoCString log;
 
             bool alreadyReportedShaderInfoLog = false;
 
@@ -5021,7 +5021,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
             ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &len);
 
             if (len) {
-                nsCAutoString info;
+                nsAutoCString info;
                 info.SetLength(len);
                 ShGetInfoLog(compiler, info.BeginWriting());
                 shader->SetTranslationFailure(info);
@@ -5097,7 +5097,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
             int len = 0;
             ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &len);
 
-            nsCAutoString translatedSrc;
+            nsAutoCString translatedSrc;
             translatedSrc.SetLength(len);
             ShGetObjectCode(compiler, translatedSrc.BeginWriting());
 
@@ -5339,7 +5339,7 @@ void
 WebGLContext::GetShaderInfoLog(WebGLShader *shader, nsAString& retval,
                                ErrorResult& rv)
 {
-    nsCAutoString s;
+    nsAutoCString s;
     GetShaderInfoLog(shader, s, rv);
     if (s.IsVoid())
         retval.SetIsVoid(true);

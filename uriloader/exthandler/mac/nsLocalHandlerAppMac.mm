@@ -46,7 +46,7 @@ nsLocalHandlerAppMac::LaunchWithURI(nsIURI *aURI,
   if (NS_FAILED(rv))
     return rv;
   
-  nsCAutoString uriSpec;
+  nsAutoCString uriSpec;
   aURI->GetAsciiSpec(uriSpec);
 
   const UInt8* uriString = reinterpret_cast<const UInt8*>(uriSpec.get());

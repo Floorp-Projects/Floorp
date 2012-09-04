@@ -75,7 +75,7 @@ nsJARURI::FormatSpec(const nsACString &entrySpec, nsACString &result,
     NS_ASSERTION(StringBeginsWith(entrySpec, NS_BOGUS_ENTRY_SCHEME),
                  "bogus entry spec");
 
-    nsCAutoString fileSpec;
+    nsAutoCString fileSpec;
     nsresult rv = mJARFile->GetSpec(fileSpec);
     if (NS_FAILED(rv)) return rv;
 
@@ -102,7 +102,7 @@ nsJARURI::CreateEntryURL(const nsACString& entryFilename,
     }
 
     // Flatten the concatenation, just in case.  See bug 128288
-    nsCAutoString spec(NS_BOGUS_ENTRY_SCHEME + entryFilename);
+    nsAutoCString spec(NS_BOGUS_ENTRY_SCHEME + entryFilename);
     nsresult rv = stdURL->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
                                spec, charset, nullptr);
     if (NS_FAILED(rv)) {
@@ -216,7 +216,7 @@ nsJARURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 NS_IMETHODIMP
 nsJARURI::GetSpec(nsACString &aSpec)
 {
-    nsCAutoString entrySpec;
+    nsAutoCString entrySpec;
     mJAREntry->GetSpec(entrySpec);
     return FormatSpec(entrySpec, aSpec);
 }
@@ -224,7 +224,7 @@ nsJARURI::GetSpec(nsACString &aSpec)
 NS_IMETHODIMP
 nsJARURI::GetSpecIgnoringRef(nsACString &aSpec)
 {
-    nsCAutoString entrySpec;
+    nsAutoCString entrySpec;
     mJAREntry->GetSpecIgnoringRef(entrySpec);
     return FormatSpec(entrySpec, aSpec);
 }
@@ -249,7 +249,7 @@ nsJARURI::SetSpecWithBase(const nsACString &aSpec, nsIURI* aBaseURL)
     nsCOMPtr<nsIIOService> ioServ(do_GetIOService(&rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     rv = ioServ->ExtractScheme(aSpec, scheme);
     if (NS_FAILED(rv)) {
         // not an absolute URI
@@ -412,7 +412,7 @@ nsJARURI::SetPort(int32_t aPort)
 NS_IMETHODIMP
 nsJARURI::GetPath(nsACString &aPath)
 {
-    nsCAutoString entrySpec;
+    nsAutoCString entrySpec;
     mJAREntry->GetSpec(entrySpec);
     return FormatSpec(entrySpec, aPath, false);
 }
@@ -529,7 +529,7 @@ nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
     if (NS_FAILED(rv))
       return rv;
 
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     rv = ioServ->ExtractScheme(relativePath, scheme);
     if (NS_SUCCEEDED(rv)) {
         // then aSpec is absolute
@@ -537,7 +537,7 @@ nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
         return NS_OK;
     }
 
-    nsCAutoString resolvedPath;
+    nsAutoCString resolvedPath;
     mJAREntry->Resolve(relativePath, resolvedPath);
     
     return FormatSpec(resolvedPath, result);
@@ -659,7 +659,7 @@ nsJARURI::GetCommonBaseSpec(nsIURI* uriToCompare, nsACString& commonSpec)
             // Not a URL, so nothing in common
             return NS_OK;
         }
-        nsCAutoString common;
+        nsAutoCString common;
         rv = ourJARFileURL->GetCommonBaseSpec(otherJARFile, common);
         if (NS_FAILED(rv)) return rv;
 
@@ -669,11 +669,11 @@ nsJARURI::GetCommonBaseSpec(nsIURI* uriToCompare, nsACString& commonSpec)
     }
     
     // At this point we have the same JAR file.  Compare the JAREntrys
-    nsCAutoString otherEntry;
+    nsAutoCString otherEntry;
     rv = otherJARURI->GetJAREntry(otherEntry);
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString otherCharset;
+    nsAutoCString otherCharset;
     rv = uriToCompare->GetOriginCharset(otherCharset);
     if (NS_FAILED(rv)) return rv;
 
@@ -681,7 +681,7 @@ nsJARURI::GetCommonBaseSpec(nsIURI* uriToCompare, nsACString& commonSpec)
     rv = CreateEntryURL(otherEntry, otherCharset.get(), getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString common;
+    nsAutoCString common;
     rv = mJAREntry->GetCommonBaseSpec(url, common);
     if (NS_FAILED(rv)) return rv;
 
@@ -716,11 +716,11 @@ nsJARURI::GetRelativeSpec(nsIURI* uriToCompare, nsACString& relativeSpec)
     }
 
     // Same JAR file.  Compare the JAREntrys
-    nsCAutoString otherEntry;
+    nsAutoCString otherEntry;
     rv = otherJARURI->GetJAREntry(otherEntry);
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString otherCharset;
+    nsAutoCString otherCharset;
     rv = uriToCompare->GetOriginCharset(otherCharset);
     if (NS_FAILED(rv)) return rv;
 
@@ -728,7 +728,7 @@ nsJARURI::GetRelativeSpec(nsIURI* uriToCompare, nsACString& relativeSpec)
     rv = CreateEntryURL(otherEntry, otherCharset.get(), getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString relativeEntrySpec;
+    nsAutoCString relativeEntrySpec;
     rv = mJAREntry->GetRelativeSpec(url, relativeEntrySpec);
     if (NS_FAILED(rv)) return rv;
 
@@ -751,7 +751,7 @@ nsJARURI::GetJARFile(nsIURI* *jarFile)
 NS_IMETHODIMP
 nsJARURI::GetJAREntry(nsACString &entryPath)
 {
-    nsCAutoString filePath;
+    nsAutoCString filePath;
     mJAREntry->GetFilePath(filePath);
     NS_ASSERTION(filePath.Length() > 0, "path should never be empty!");
     // Trim off the leading '/'

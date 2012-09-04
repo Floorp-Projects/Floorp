@@ -171,7 +171,7 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
   *aDataToLen = 0;
 
   if ( !nsCRT::strcmp(aFromDataFlavor, kHTMLMime) ) {
-    nsCAutoString toFlavor ( aToDataFlavor );
+    nsAutoCString toFlavor ( aToDataFlavor );
 
     // HTML on clipboard is going to always be double byte so it will be in a primitive
     // class of nsISupportsString. Also, since the data is in two byte chunks the 

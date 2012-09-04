@@ -567,7 +567,7 @@ ConvertAndWrite(const nsAString& aString,
   startCharLength = charLength;
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString charXferString;
+  nsAutoCString charXferString;
   if (!EnsureStringLength(charXferString, charLength))
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -608,7 +608,7 @@ ConvertAndWrite(const nsAString& aString,
       rv = aStream->Write(finish_buf, charLength, &written);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCAutoString entString("&#");
+      nsAutoCString entString("&#");
       if (NS_IS_HIGH_SURROGATE(unicodeBuf[unicodeLength - 1]) && 
           unicodeLength < startLength && NS_IS_LOW_SURROGATE(unicodeBuf[unicodeLength]))  {
         entString.AppendInt(SURROGATE_TO_UCS4(unicodeBuf[unicodeLength - 1],
@@ -619,7 +619,7 @@ ConvertAndWrite(const nsAString& aString,
         entString.AppendInt(unicodeBuf[unicodeLength - 1]);
       entString.Append(';');
 
-      // Since entString is an nsCAutoString we know entString.get()
+      // Since entString is an nsAutoCString we know entString.get()
       // returns a null-terminated string, so no need for extra
       // null-termination before calling Write() here.
 
@@ -1038,7 +1038,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
   
 
   if (!mSerializer) {
-    nsCAutoString progId(NS_CONTENTSERIALIZER_CONTRACTID_PREFIX);
+    nsAutoCString progId(NS_CONTENTSERIALIZER_CONTRACTID_PREFIX);
     AppendUTF16toUTF8(mMimeType, progId);
 
     mSerializer = do_CreateInstance(progId.get());

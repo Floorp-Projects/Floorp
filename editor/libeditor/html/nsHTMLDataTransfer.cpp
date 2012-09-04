@@ -1037,7 +1037,7 @@ FindIntegerAfterString(const char *aLeadingString,
   if (numBack == -1)
     return false;
 
-  nsCAutoString numStr(Substring(aCStr, numFront, numBack-numFront));
+  nsAutoCString numStr(Substring(aCStr, numFront, numBack-numFront));
   nsresult errorCode;
   foundNumber = numStr.ToInteger(&errorCode);
   return true;
@@ -1099,7 +1099,7 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
   }
 
   // create context string
-  nsCAutoString contextUTF8(Substring(aCfhtml, startHTML, startFragment - startHTML) +
+  nsAutoCString contextUTF8(Substring(aCfhtml, startHTML, startFragment - startHTML) +
                             NS_LITERAL_CSTRING("<!--" kInsertCookie "-->") +
                             Substring(aCfhtml, endFragment, endHTML - endFragment));
 
@@ -1134,7 +1134,7 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
   }
 
   // create fragment string
-  nsCAutoString fragmentUTF8(Substring(aCfhtml, startFragment, endFragment-startFragment));
+  nsAutoCString fragmentUTF8(Substring(aCfhtml, startFragment, endFragment-startFragment));
 
   // remove the StartFragment/EndFragment comments from the fragment, if present
   RemoveFragComments(fragmentUTF8);
@@ -1191,7 +1191,7 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
 
       nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1");
       NS_ENSURE_TRUE(mime, NS_ERROR_FAILURE);
-      nsCAutoString contentType;
+      nsAutoCString contentType;
       rv = mime->GetTypeFromFile(fileObj, contentType);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1286,7 +1286,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
       nsCOMPtr<nsISupportsCString> textDataObj = do_QueryInterface(genericDataObj);
       if (textDataObj && len > 0)
       {
-        nsCAutoString cfhtml;
+        nsAutoCString cfhtml;
         textDataObj->GetData(cfhtml);
         NS_ASSERTION(cfhtml.Length() <= (len), "Invalid length!");
         nsXPIDLString cfcontext, cffragment, cfselection; // cfselection left emtpy for now
@@ -1324,7 +1324,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
       } else {
         nsCOMPtr<nsISupportsCString> textDataObj(do_QueryInterface(genericDataObj));
         if (textDataObj && len > 0) {
-          nsCAutoString text;
+          nsAutoCString text;
           textDataObj->GetData(text);
           NS_ASSERTION(text.Length() <= len, "Invalid length!");
           stuffToPaste.Assign(NS_ConvertUTF8toUTF16(Substring(text, 0, len)));

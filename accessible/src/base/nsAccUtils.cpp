@@ -40,7 +40,7 @@ nsAccUtils::SetAccAttr(nsIPersistentProperties *aAttributes,
                        nsIAtom *aAttrName, const nsAString& aAttrValue)
 {
   nsAutoString oldValue;
-  nsCAutoString attrName;
+  nsAutoCString attrName;
 
   aAttributes->SetStringProperty(nsAtomCString(aAttrName), aAttrValue, oldValue);
 }

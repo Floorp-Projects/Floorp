@@ -110,7 +110,7 @@ main(int argc, char* argv[])
 
         nsCOMPtr<nsIFile> file;
         rv = NS_NewNativeLocalFile(nsDependentCString(fileName), false, getter_AddRefs(file));
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) return -1;
 
         rv = RunBlockingTest(nsDependentCString(hostName), port, file);
 #if defined(PR_LOGGING)
@@ -126,5 +126,5 @@ main(int argc, char* argv[])
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM(nullptr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-    return NS_OK;
+    return 0;
 }

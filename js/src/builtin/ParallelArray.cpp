@@ -121,10 +121,11 @@ NewDenseCopiedArrayWithType(JSContext *cx, uint32_t length, HandleObject source)
     uint32_t srclen;
     uint32_t copyUpTo;
 
-    // Optimize for the common case: if we have a dense array source, copy
-    // whatever we can, truncating to length, and filling the rest with
-    // undefineds. Holes are converted to undefineds eagerly.
     if (source->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, source)) {
+        // Optimize for the common case: if we have a dense array source, copy
+        // whatever we can, truncating to length. This path doesn't trigger
+        // GC, so we don't need to initialize all the array's slots before
+        // copying.
         const Value *srcvp = source->getDenseArrayElements();
 
         srclen = source->getDenseArrayInitializedLength();
@@ -136,7 +137,17 @@ NewDenseCopiedArrayWithType(JSContext *cx, uint32_t length, HandleObject source)
             elem = srcvp[i].isMagic(JS_ARRAY_HOLE) ? UndefinedValue() : srcvp[i];
             buffer->initDenseArrayElementWithType(cx, i, elem);
         }
+
+        // Fill the rest with undefineds.
+        for (uint32_t i = copyUpTo; i < length; i++)
+            buffer->initDenseArrayElementWithType(cx, i, UndefinedValue());
     } else {
+        // This path might GC. The GC expects an object's slots to be
+        // initialized, so we have to make sure all the array's slots are
+        // initialized.
+        for (uint32_t i = 0; i < length; i++)
+            buffer->initDenseArrayElementWithType(cx, i, UndefinedValue());
+
         IndexInfo siv(cx);
         RootedParallelArrayObject sourcePA(cx);
 
@@ -149,13 +160,9 @@ NewDenseCopiedArrayWithType(JSContext *cx, uint32_t length, HandleObject source)
         for (uint32_t i = 0; i < copyUpTo; i++) {
             if (!GetElementFromArrayLikeObject(cx, source, sourcePA, siv, i, &elem))
                 return NULL;
-            buffer->initDenseArrayElementWithType(cx, i, elem);
+            buffer->setDenseArrayElementWithType(cx, i, elem);
         }
     }
-
-    // Fill the rest with undefineds.
-    for (uint32_t i = copyUpTo; i < length; i++)
-        buffer->initDenseArrayElementWithType(cx, i, UndefinedValue());
 
     if (!SetArrayNewType(cx, buffer))
         return NULL;
@@ -907,7 +914,10 @@ ParallelArrayObject::getParallelArrayElement(JSContext *cx, IndexInfo &iv, Mutab
     // copy is not observable by the user.
     uint32_t rowLength = iv.partialProducts[d - 1];
     uint32_t offset = base + iv.toScalar();
-    if (offset + rowLength > end) {
+
+    // Make sure both the start of the extent and the end of the extent are
+    // within bounds, in case one or both are 0.
+    if (offset >= end || offset + rowLength > end) {
         vp.setUndefined();
         return true;
     }

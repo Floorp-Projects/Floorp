@@ -582,7 +582,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                     if (loadOK) {
 #ifdef PR_LOGGING
                         if (LOG_ENABLED()) {
-                            nsCAutoString fontURI;
+                            nsAutoCString fontURI;
                             currSrc.mURI->GetSpec(fontURI);
                             LOG(("userfonts (%p) [src %d] loading uri: (%s) for (%s)\n",
                                  this, aProxyEntry->mSrcIndex, fontURI.get(),
@@ -737,7 +737,7 @@ gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
         // must do this before ReplaceFontEntry() because that will
         // clear the proxy's mFamily pointer!
         if (LOG_ENABLED()) {
-            nsCAutoString fontURI;
+            nsAutoCString fontURI;
             aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
             LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) gen: %8.8x\n",
                  this, aProxy->mSrcIndex, fontURI.get(),
@@ -749,7 +749,7 @@ gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
     } else {
 #ifdef PR_LOGGING
         if (LOG_ENABLED()) {
-            nsCAutoString fontURI;
+            nsAutoCString fontURI;
             aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
             LOG(("userfonts (%p) [src %d] failed uri: (%s) for (%s)"
                  " error making platform font\n",

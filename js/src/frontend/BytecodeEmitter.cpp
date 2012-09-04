@@ -139,12 +139,10 @@ BytecodeEmitter::init()
 
 BytecodeEmitter::~BytecodeEmitter()
 {
-    JSContext *cx = sc->context;
-
-    cx->free_(prolog.base);
-    cx->free_(prolog.notes);
-    cx->free_(main.base);
-    cx->free_(main.notes);
+    js_free(prolog.base);
+    js_free(prolog.notes);
+    js_free(main.base);
+    js_free(main.notes);
 }
 
 static ptrdiff_t
@@ -2217,7 +2215,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     ParseNode *pn2, *pn3, *pn4;
     int32_t i, low, high;
     int noteIndex;
-    size_t switchSize, tableSize;
+    size_t switchSize;
     jsbytecode *pc;
     StmtInfoBCE stmtInfo(cx);
 
@@ -2372,9 +2370,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 } else {
                     /* Just grab 8K for the worst-case bitmap. */
                     intmap_bitlen = JS_BIT(16);
-                    intmap = (jsbitmap *)
-                        cx->malloc_((JS_BIT(16) >> JS_BITS_PER_WORD_LOG2)
-                                   * sizeof(jsbitmap));
+                    intmap = cx->pod_malloc<jsbitmap>(JS_BIT(16) >> JS_BITS_PER_WORD_LOG2);
                     if (!intmap) {
                         JS_ReportOutOfMemory(cx);
                         return false;
@@ -2391,7 +2387,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       release:
         if (intmap && intmap != intmap_space)
-            cx->free_(intmap);
+            js_free(intmap);
         if (!ok)
             return false;
 
@@ -2519,11 +2515,9 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * ScopedFreePtr takes care of freeing it on exit.
              */
             if (tableLength != 0) {
-                tableSize = (size_t)tableLength * sizeof *table;
-                table = (ParseNode **) cx->malloc_(tableSize);
+                table = cx->pod_calloc<ParseNode*>(tableLength);
                 if (!table)
                     return false;
-                memset(table, 0, tableSize);
                 for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
                     if (pn3->isKind(PNK_DEFAULT))
                         continue;

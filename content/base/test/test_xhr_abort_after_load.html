@@ -25,6 +25,7 @@ function runTest() {
   function nextTest() {
     if (testFunctions.length == 0) {
       SimpleTest.finish();
+      return;
     }
     (testFunctions.shift())();
   }

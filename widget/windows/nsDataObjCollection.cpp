@@ -302,7 +302,7 @@ HRESULT nsDataObjCollection::GetText(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   hGlobalMemory = GlobalAlloc(GHND, buffersize);
 
   if (pFE->cfFormat == CF_TEXT) {
-    nsCAutoString text;
+    nsAutoCString text;
     for (uint32_t i = 0; i < mDataObjects.Length(); ++i) {
       nsDataObj* dataObj = mDataObjects.ElementAt(i);
       hr = dataObj->GetData(&fe, &workingmedium);

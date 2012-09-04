@@ -1167,7 +1167,7 @@ nsBaseWidget::OverrideSystemMouseScrollSpeed(int32_t aOriginalDelta,
     return NS_OK;
   }
 
-  nsCAutoString factorPrefName(
+  nsAutoCString factorPrefName(
     "mousewheel.system_scroll_override_on_root_content.");
   if (aIsHorizontal) {
     factorPrefName.AppendLiteral("horizontal.");
@@ -1575,7 +1575,7 @@ nsBaseWidget::debug_WantPaintFlashing()
 nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
                               nsIWidget *           aWidget,
                               nsGUIEvent *          aGuiEvent,
-                              const nsCAutoString & aWidgetName,
+                              const nsAutoCString & aWidgetName,
                               int32_t               aWindowID)
 {
   if (aGuiEvent->message == NS_MOUSE_MOVE)
@@ -1611,7 +1611,7 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
 nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
                                    const nsIntRegion &   aRegion,
-                                   const nsCAutoString & aWidgetName,
+                                   const nsAutoCString & aWidgetName,
                                    int32_t               aWindowID)
 {
   NS_ASSERTION(nullptr != aFileOut,"cmon, null output FILE");
@@ -1637,7 +1637,7 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
 nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
                                    const nsIntRect *     aRect,
-                                   const nsCAutoString & aWidgetName,
+                                   const nsAutoCString & aWidgetName,
                                    int32_t               aWindowID)
 {
   if (!debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping"))
