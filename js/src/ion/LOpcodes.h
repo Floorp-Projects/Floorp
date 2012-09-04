@@ -34,7 +34,8 @@
     _(CallNative)                   \
     _(CallConstructor)              \
     _(ApplyArgsGeneric)             \
-    _(StackArg)                     \
+    _(StackArgT)                    \
+    _(StackArgV)                    \
     _(CreateThis)                   \
     _(CreateThisVM)                 \
     _(ReturnFromCtor)               \

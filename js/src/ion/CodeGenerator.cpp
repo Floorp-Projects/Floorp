@@ -376,7 +376,27 @@ CodeGenerator::visitOsrScopeChain(LOsrScopeChain *lir)
 }
 
 bool
-CodeGenerator::visitStackArg(LStackArg *lir)
+CodeGenerator::visitStackArgT(LStackArgT *lir)
+{
+    const LAllocation *arg = lir->getArgument();
+    MIRType argType = lir->mir()->getArgument()->type();
+    uint32 argslot = lir->argslot();
+
+    int32 stack_offset = StackOffsetOfPassedArg(argslot);
+    Address dest(StackPointer, stack_offset);
+
+    if (arg->isFloatReg())
+        masm.storeDouble(ToFloatRegister(arg), dest);
+    else if (arg->isRegister())
+        masm.storeValue(ValueTypeFromMIRType(argType), ToRegister(arg), dest);
+    else
+        masm.storeValue(*(arg->toConstant()), dest);
+
+    return pushedArgumentSlots_.append(StackOffsetToSlot(stack_offset));
+}
+
+bool
+CodeGenerator::visitStackArgV(LStackArgV *lir)
 {
     ValueOperand val = ToValue(lir, 0);
     uint32 argslot = lir->argslot();

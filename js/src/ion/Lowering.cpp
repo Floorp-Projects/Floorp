@@ -159,13 +159,7 @@ bool
 LIRGenerator::visitPassArg(MPassArg *arg)
 {
     MDefinition *opd = arg->getArgument();
-    JS_ASSERT(opd->type() == MIRType_Value);
-
     uint32 argslot = getArgumentSlot(arg->getArgnum());
-
-    LStackArg *stack = new LStackArg(argslot);
-    if (!useBox(stack, 0, opd))
-        return false;
 
     // Pass through the virtual register of the operand.
     // This causes snapshots to correctly copy the operand on the stack.
@@ -174,6 +168,15 @@ LIRGenerator::visitPassArg(MPassArg *arg)
     // We could do better by informing snapshots about the argument vector.
     arg->setVirtualRegister(opd->virtualRegister());
 
+    // Values take a slow path.
+    if (opd->type() == MIRType_Value) {
+        LStackArgV *stack = new LStackArgV(argslot);
+        return useBox(stack, 0, opd) && add(stack);
+    }
+
+    // Known types can move constant types and/or payloads.
+    LStackArgT *stack = new LStackArgT(argslot, useRegisterOrConstant(opd));
+    stack->setMir(arg);
     return add(stack);
 }
 
