@@ -626,7 +626,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     masm.passABIArg(argVp);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->jitInfo()->op));
 
-    if (target->jitinfo()->isInfallible) {
+    if (target->jitInfo()->isInfallible) {
         masm.loadValue(Address(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult()),
                        JSReturnOperand);
     } else {
