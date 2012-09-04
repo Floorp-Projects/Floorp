@@ -1206,7 +1206,6 @@ MarkConservativeStackRoots(JSTracer *trc, bool useSavedRoots)
     ConservativeGCData *cgcd = &rt->conservativeGC;
     if (!cgcd->hasStackToScan()) {
 #ifdef JS_THREADSAFE
-        JS_ASSERT(!rt->suspendCount);
         JS_ASSERT(!rt->requestDepth);
 #endif
         return;
