@@ -482,7 +482,7 @@ with_DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
 
 static JSBool
 with_Enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
-               Value *statep, jsid *idp)
+               MutableHandleValue statep, MutableHandleId idp)
 {
     RootedObject actual(cx, &obj->asWith().object());
     return JSObject::enumerate(cx, actual, enum_op, statep, idp);

@@ -112,7 +112,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
     virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
     virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
-    virtual bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp);
+    virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp);
     virtual JSType typeOf(JSContext *cx, JSObject *proxy);
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx);
     virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
@@ -162,7 +162,7 @@ class JS_PUBLIC_API(IndirectProxyHandler) : public BaseProxyHandler {
                            Value *argv, Value *rval) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
-    virtual bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp,
+    virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
                              bool *bp) MOZ_OVERRIDE;
     virtual JSType typeOf(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue,
@@ -237,7 +237,7 @@ class Proxy {
     static bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
     static bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
     static bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
-    static bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp);
+    static bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp);
     static JSType typeOf(JSContext *cx, JSObject *proxy);
     static bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx);
     static JSString *obj_toString(JSContext *cx, JSObject *proxy);

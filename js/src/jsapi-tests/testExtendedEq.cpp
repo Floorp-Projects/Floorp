@@ -13,7 +13,7 @@
 #include "jsobj.h"
 
 static JSBool
-my_Equality(JSContext *cx, JS::HandleObject obj, const jsval *, JSBool *bp)
+my_Equality(JSContext *cx, JS::HandleObject obj, JS::HandleValue, JSBool *bp)
 {
     *bp = JS_TRUE;
     return JS_TRUE;

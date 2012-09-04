@@ -700,9 +700,8 @@ XPC_GetIdentityObject(JSContext *cx, JSObject *obj)
 }
 
 JSBool
-XPC_WN_Equality(JSContext *cx, JSHandleObject obj, const jsval *valp, JSBool *bp)
+XPC_WN_Equality(JSContext *cx, JSHandleObject obj, JSHandleValue v, JSBool *bp)
 {
-    jsval v = *valp;
     *bp = false;
 
     JSObject *obj2;
@@ -942,10 +941,10 @@ XPC_WN_Helper_Convert(JSContext *cx, JSHandleObject obj, JSType type, JSMutableH
 
 static JSBool
 XPC_WN_Helper_CheckAccess(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                          JSAccessMode mode, jsval *vp)
+                          JSAccessMode mode, JSMutableHandleValue vp)
 {
     PRE_HELPER_STUB
-    CheckAccess(wrapper, cx, obj, id, mode, vp, &retval);
+    CheckAccess(wrapper, cx, obj, id, mode, vp.address(), &retval);
     POST_HELPER_STUB
 }
 
@@ -989,12 +988,12 @@ XPC_WN_Helper_Construct(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-XPC_WN_Helper_HasInstance(JSContext *cx, JSHandleObject obj, const jsval *valp, JSBool *bp)
+XPC_WN_Helper_HasInstance(JSContext *cx, JSHandleObject obj, JSMutableHandleValue valp, JSBool *bp)
 {
     SLIM_LOG_WILL_MORPH(cx, obj);
     bool retval2;
     PRE_HELPER_STUB_NO_SLIM
-    HasInstance(wrapper, cx, obj, *valp, &retval2, &retval);
+    HasInstance(wrapper, cx, obj, valp, &retval2, &retval);
     *bp = retval2;
     POST_HELPER_STUB
 }
@@ -1145,7 +1144,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsig
 
 JSBool
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
-                      jsval *statep, jsid *idp)
+                      JSMutableHandleValue statep, JSMutableHandleId idp)
 {
     js::Class *clazz = js::GetObjectClass(obj);
     if (!IS_WRAPPER_CLASS(clazz) || clazz == &XPC_WN_NoHelper_JSClass.base) {
@@ -1175,7 +1174,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
              enum_op == JSENUMERATE_INIT_ALL) &&
             wrapper->HasMutatedSet() &&
             !XPC_WN_Shared_Enumerate(cx, obj)) {
-            *statep = JSVAL_NULL;
+            statep.set(JSVAL_NULL);
             return false;
         }
 
@@ -1183,11 +1182,11 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
         // js_ObjectOps.enumerate ???
 
         rv = si->GetCallback()->
-            NewEnumerate(wrapper, cx, obj, enum_op, statep, idp, &retval);
+            NewEnumerate(wrapper, cx, obj, enum_op, statep.address(), idp.address(), &retval);
 
         if ((enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL) &&
             (NS_FAILED(rv) || !retval)) {
-            *statep = JSVAL_NULL;
+            statep.set(JSVAL_NULL);
         }
 
         if (NS_FAILED(rv))
@@ -1201,14 +1200,14 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
                  !si->GetFlags().DontEnumStaticProps()) &&
                 wrapper->HasMutatedSet() &&
                 !XPC_WN_Shared_Enumerate(cx, obj)) {
-                *statep = JSVAL_NULL;
+                statep.set(JSVAL_NULL);
                 return false;
             }
             rv = si->GetCallback()->
                 Enumerate(wrapper, cx, obj, &retval);
 
             if (NS_FAILED(rv) || !retval)
-                *statep = JSVAL_NULL;
+                statep.set(JSVAL_NULL);
 
             if (NS_FAILED(rv))
                 return Throw(rv, cx);

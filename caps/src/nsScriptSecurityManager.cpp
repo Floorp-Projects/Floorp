@@ -532,7 +532,7 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
 JSBool
 nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSHandleObject obj,
                                            JSHandleId id, JSAccessMode mode,
-                                           jsval *vp)
+                                           JSMutableHandleValue vp)
 {
     // Get the security manager
     nsScriptSecurityManager *ssm =
@@ -548,9 +548,9 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSHandleObject obj,
     //    a different trust domain.
     // 2. A user-defined getter or setter function accessible on another
     //    trust domain's window or document object.
-    // *vp can be a primitive, in that case, we use obj as the target
+    // vp can be a primitive, in that case, we use obj as the target
     // object.
-    JSObject* target = JSVAL_IS_PRIMITIVE(*vp) ? obj : JSVAL_TO_OBJECT(*vp);
+    JSObject* target = JSVAL_IS_PRIMITIVE(vp) ? obj : JSVAL_TO_OBJECT(vp);
 
     // Do the same-origin check -- this sets a JS exception if the check fails.
     // Pass the parent object's class name, as we have no class-info for it.
