@@ -554,7 +554,6 @@ jsd_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
     unsigned first = jsdscript->lineBase;
     unsigned last = first + jsd_GetScriptLineExtent(jsdc, jsdscript) - 1;
     JSBool ok;
-    unsigned *lines;
     jsbytecode **pcs;
     unsigned i;
 
