@@ -14,9 +14,9 @@
 #include "gfxUtils.h"
 #include "yuv_convert.h"
 #include "GLContextProvider.h"
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
 # include "GLXLibrary.h"
-# include "mozilla/X11Util.h"
+# include "gfxXlibSurface.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -344,18 +344,6 @@ ImageLayerOGL::RenderLayer(int,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, data->mTexture.GetTextureID());
 
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
-    GLXPixmap pixmap;
-
-    if (cairoImage->mSurface) {
-        pixmap = sDefGLXLib.CreatePixmap(cairoImage->mSurface);
-        NS_ASSERTION(pixmap, "Failed to create pixmap!");
-        if (pixmap) {
-            sDefGLXLib.BindTexImage(pixmap);
-        }
-    }
-#endif
-
     ShaderProgramOGL *program = 
       mOGLManager->GetProgram(data->mLayerProgram, GetMaskLayer());
 
@@ -372,13 +360,6 @@ ImageLayerOGL::RenderLayer(int,
     program->LoadMask(GetMaskLayer());
 
     mOGLManager->BindAndDrawQuad(program);
-
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
-    if (cairoImage->mSurface && pixmap) {
-        sDefGLXLib.ReleaseTexImage(pixmap);
-        sDefGLXLib.DestroyPixmap(pixmap);
-    }
-#endif
 #ifdef XP_MACOSX
   } else if (image->GetFormat() == MAC_IO_SURFACE) {
      MacIOSurfaceImage *ioImage =
@@ -580,16 +561,25 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
 
   SetClamping(gl, tex);
 
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
-  if (sDefGLXLib.SupportsTextureFromPixmap(aImage->mSurface)) {
-    if (aImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
-      backendData->mLayerProgram = gl::RGBALayerProgramType;
-    } else {
-      backendData->mLayerProgram = gl::RGBXLayerProgramType;
-    }
+#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+  if (aImage->mSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+    gfxXlibSurface *xsurf =
+      static_cast<gfxXlibSurface*>(aImage->mSurface.get());
+    GLXPixmap pixmap = xsurf->GetGLXPixmap();
+    if (pixmap) {
+      if (aImage->mSurface->GetContentType()
+          == gfxASurface::CONTENT_COLOR_ALPHA) {
+        backendData->mLayerProgram = gl::RGBALayerProgramType;
+      } else {
+        backendData->mLayerProgram = gl::RGBXLayerProgramType;
+      }
 
-    aImage->SetBackendData(LAYERS_OPENGL, backendData.forget());
-    return;
+      aImage->SetBackendData(LAYERS_OPENGL, backendData.forget());
+
+      sDefGLXLib.BindTexImage(pixmap);
+
+      return;
+    }
   }
 #endif
   backendData->mLayerProgram =
