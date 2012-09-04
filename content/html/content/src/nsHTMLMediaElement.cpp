@@ -1034,6 +1034,11 @@ nsresult nsHTMLMediaElement::LoadResource()
   if (other) {
     // Clone it.
     nsresult rv = InitializeDecoderAsClone(other->mDecoder);
+    // Get the mimetype from the element we clone, since we will not get it via
+    // the channel, and we won't be able to sniff for it, because we will not
+    // open a channel to get the beginning of the media (it is likely to already
+    // be in the cache).
+    mMimeType = other->mMimeType;
     if (NS_SUCCEEDED(rv))
       return rv;
   }
