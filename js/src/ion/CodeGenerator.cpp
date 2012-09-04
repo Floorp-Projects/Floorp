@@ -1664,7 +1664,7 @@ CodeGenerator::visitAbsI(LAbsI *ins)
     masm.test32(input, input);
     masm.j(Assembler::GreaterThanOrEqual, &positive);
     masm.neg32(input);
-    if (!ins->snapshot() || !bailoutIf(Assembler::Overflow, ins->snapshot()))
+    if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
         return false;
     masm.bind(&positive);
 
