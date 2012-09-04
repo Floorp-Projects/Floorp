@@ -4184,22 +4184,46 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
         return NULL;
 
     for (uint32 i = 1; i < osrBlock->stackDepth(); i++) {
-        MIRType type = slotTypes[i];
         // Unbox the MOsrValue if it is known to be unboxable.
-        if (type != MIRType_Value &&
-            type != MIRType_Undefined &&
-            type != MIRType_Null &&
-            type != MIRType_Magic)
-        {
+        switch (slotTypes[i]) {
+          case MIRType_Boolean:
+          case MIRType_Int32:
+          case MIRType_Double:
+          case MIRType_String:
+          case MIRType_Object:
+          {
             MDefinition *def = osrBlock->getSlot(i);
             JS_ASSERT(def->type() == MIRType_Value);
 
             MInstruction *actual = MUnbox::New(def, slotTypes[i], MUnbox::Infallible);
             osrBlock->add(actual);
             osrBlock->rewriteSlot(i, actual);
-        } else if (type == MIRType_Magic) {
+            break;
+          }
+
+          case MIRType_Null:
+          {
+            MConstant *c = MConstant::New(NullValue());
+            osrBlock->add(c);
+            osrBlock->rewriteSlot(i, c);
+            break;
+          }
+
+          case MIRType_Undefined:
+          {
+            MConstant *c = MConstant::New(UndefinedValue());
+            osrBlock->add(c);
+            osrBlock->rewriteSlot(i, c);
+            break;
+          }
+
+          case MIRType_Magic:
             JS_ASSERT(lazyArguments_);
             osrBlock->rewriteSlot(i, lazyArguments_);
+            break;
+
+          default:
+            break;
         }
     }
 
