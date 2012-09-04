@@ -626,20 +626,26 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     masm.passABIArg(argVp);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->jitInfo()->op));
 
-    // Test for failure.
-    Label success, exception;
-    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+    if (target->jitinfo()->isInfallible) {
+        masm.loadValue(Address(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult()),
+                       JSReturnOperand);
+    } else {
+        // Test for failure.
+        Label success, exception;
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
 
-    // Load the outparam vp[0] into output register(s).
-    masm.loadValue(Address(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult()), JSReturnOperand);
-    masm.jump(&success);
+        // Load the outparam vp[0] into output register(s).
+        masm.loadValue(Address(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult()),
+                       JSReturnOperand);
+        masm.jump(&success);
 
-    // Handle exception case.
-    {
-        masm.bind(&exception);
-        masm.handleException();
+        // Handle exception case.
+        {
+            masm.bind(&exception);
+            masm.handleException();
+        }
+        masm.bind(&success);
     }
-    masm.bind(&success);
 
     // The next instruction is removing the footer of the exit frame, so there
     // is no need for leaveFakeExitFrame.
@@ -3958,7 +3964,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
 
         masm.loadValue(Address(StackPointer, IonDOMExitFrameLayout::offsetOfResult()),
-                    JSReturnOperand);
+                       JSReturnOperand);
         masm.jump(&success);
 
         {
