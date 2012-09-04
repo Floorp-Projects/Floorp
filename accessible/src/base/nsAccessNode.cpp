@@ -155,12 +155,6 @@ nsAccessNode::GetDocumentNode() const
   return mContent ? mContent->OwnerDoc() : nullptr;
 }
 
-bool
-nsAccessNode::IsPrimaryForNode() const
-{
-  return true;
-}
-
 void
 nsAccessNode::Language(nsAString& aLanguage)
 {

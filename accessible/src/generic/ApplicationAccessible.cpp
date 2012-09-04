@@ -26,7 +26,7 @@ using namespace mozilla::a11y;
 ApplicationAccessible::ApplicationAccessible() :
   AccessibleWrap(nullptr, nullptr)
 {
-  mFlags |= eApplicationAccessible;
+  mFlags |= (eApplicationAccessible | eSharedNode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -280,11 +280,6 @@ ApplicationAccessible::Shutdown()
   mAppInfo = nullptr;
 }
 
-bool
-ApplicationAccessible::IsPrimaryForNode() const
-{
-  return false;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible public methods
