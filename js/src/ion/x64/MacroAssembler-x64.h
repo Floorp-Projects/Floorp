@@ -82,11 +82,42 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         call(rax);
     }
 
+    // Refers to the upper 32 bits of a 64-bit Value operand.
+    // On x86_64, the upper 32 bits do not necessarily only contain the type.
+    Operand ToUpper32(Operand base) {
+        switch (base.kind()) {
+          case Operand::REG_DISP:
+            return Operand(Register::FromCode(base.base()), base.disp() + 4);
+
+          case Operand::SCALE:
+            return Operand(Register::FromCode(base.base()), Register::FromCode(base.index()),
+                           base.scale(), base.disp() + 4);
+
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+            return base; // Silence GCC warning.
+        }
+    }
     static inline Operand ToUpper32(const Address &address) {
         return Operand(address.base, address.offset + 4);
     }
     static inline Operand ToUpper32(const BaseIndex &address) {
         return Operand(address.base, address.index, address.scale, address.offset + 4);
+
+    uint32_t Upper32Of(JSValueShiftedTag tag) {
+        union { // Implemented in this way to appease MSVC++.
+            uint64_t tag;
+            struct {
+                uint32_t lo32;
+                uint32_t hi32;
+            } s;
+        } e;
+        e.tag = tag;
+        return e.s.hi32;
+    }
+
+    JSValueShiftedTag GetShiftedTag(JSValueType type) {
+        return (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
     }
 
     /////////////////////////////////////////////////////////////////
@@ -100,8 +131,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     template <typename T>
     void storeValue(JSValueType type, Register reg, const T &dest) {
-        boxValue(type, reg, ScratchReg);
-        movq(ScratchReg, Operand(dest));
+        // Value types with 32-bit payloads can be emitted as two 32-bit moves.
+        if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+            movl(reg, Operand(dest));
+            movl(Imm32(Upper32Of(GetShiftedTag(type))), ToUpper32(Operand(dest)));
+        } else {
+            boxValue(type, reg, ScratchReg);
+            movq(ScratchReg, Operand(dest));
+        }
     }
     template <typename T>
     void storeValue(const Value &val, const T &dest) {
@@ -518,8 +555,32 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    // Type-testing instructions on x64 will clobber ScratchReg, when used on
-    // ValueOperands.
+    // x64 can test for certain types directly from memory when the payload
+    // of the type is limited to 32 bits. This avoids loading into a register,
+    // accesses half as much memory, and removes a right-shift.
+    void branchTestUndefined(Condition cond, const Operand &operand, Label *label) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_UNDEFINED))));
+        j(cond, label);
+    }
+    void branchTestInt32(Condition cond, const Operand &operand, Label *label) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_INT32))));
+        j(cond, label);
+    }
+    void branchTestBoolean(Condition cond, const Operand &operand, Label *label) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_BOOLEAN))));
+        j(cond, label);
+    }
+    void branchTestNull(Condition cond, const Operand &operand, Label *label) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_NULL))));
+        j(cond, label);
+    }
+
+    // Perform a type-test on a full Value loaded into a register.
+    // Clobbers the ScratchReg.
     void branchTestUndefined(Condition cond, const ValueOperand &src, Label *label) {
         cond = testUndefined(cond, src);
         j(cond, label);
@@ -735,8 +796,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     void loadInt32OrDouble(const Operand &operand, const FloatRegister &dest) {
         Label notInt32, end;
-        movq(operand, ScratchReg);
-        branchTestInt32(Assembler::NotEqual, ValueOperand(ScratchReg), &notInt32);
+        branchTestInt32(Assembler::NotEqual, operand, &notInt32);
         cvtsi2sd(operand, dest);
         jump(&end);
         bind(&notInt32);
