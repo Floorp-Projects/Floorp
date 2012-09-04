@@ -257,9 +257,12 @@ function synthesizeTouchAtCenter(aTarget, aEvent, aWindow)
  * aEvent is an object which may contain the properties:
  *   shiftKey, ctrlKey, altKey, metaKey, accessKey, deltaX, deltaY, deltaZ,
  *   deltaMode, lineOrPageDeltaX, lineOrPageDeltaY, isMomentum, isPixelOnlyDevice,
- *   isCustomizedByPrefs
+ *   isCustomizedByPrefs, expectedOverflowDeltaX, expectedOverflowDeltaY
  *
  * deltaMode must be defined, others are ok even if undefined.
+ *
+ * expectedOverflowDeltaX and expectedOverflowDeltaY take integer value.  The
+ * value is just checked as 0 or positive or negative.
  *
  * aWindow is optional, and defaults to the current window object.
  */
@@ -281,6 +284,24 @@ function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
   }
   if (aEvent.isCustomizedByPrefs) {
     options |= utils.WHEEL_EVENT_CUSTOMIZED_BY_USER_PREFS;
+  }
+  if (typeof aEvent.expectedOverflowDeltaX !== "undefined") {
+    if (aEvent.expectedOverflowDeltaX === 0) {
+      options |= utils.WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_ZERO;
+    } else if (aEvent.expectedOverflowDeltaX > 0) {
+      options |= utils.WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_POSITIVE;
+    } else {
+      options |= utils.WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_NEGATIVE;
+    }
+  }
+  if (typeof aEvent.expectedOverflowDeltaY !== "undefined") {
+    if (aEvent.expectedOverflowDeltaY === 0) {
+      options |= utils.WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_ZERO;
+    } else if (aEvent.expectedOverflowDeltaY > 0) {
+      options |= utils.WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_POSITIVE;
+    } else {
+      options |= utils.WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_NEGATIVE;
+    }
   }
   var isPixelOnlyDevice =
     aEvent.isPixelOnlyDevice && aEvent.deltaMode == WheelEvent.DOM_DELTA_PIXEL;
