@@ -1,5 +1,3 @@
-. "$topsrcdir/mobile/android/config/mozconfigs/common"
-
 # Global options
 mk_add_options MOZ_MAKE_FLAGS="-j4"
 
