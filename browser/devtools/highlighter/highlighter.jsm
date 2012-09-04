@@ -148,7 +148,8 @@ Highlighter.prototype = {
     this.highlighterContainer.appendChild(outlineContainer);
     this.highlighterContainer.appendChild(controlsBox);
 
-    stack.appendChild(this.highlighterContainer);
+    // Insert the highlighter right after the browser
+    stack.insertBefore(this.highlighterContainer, stack.childNodes[1]);
 
     this.buildInfobar(controlsBox);
 
