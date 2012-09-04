@@ -1130,7 +1130,7 @@ nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 
 // Get the file + path
 NS_IMETHODIMP
-nsFilePicker::SetDefaultString(const nsAString& aString)
+nsBaseWinFilePicker::SetDefaultString(const nsAString& aString)
 {
   mDefaultFilePath = aString;
 
@@ -1164,21 +1164,21 @@ nsFilePicker::SetDefaultString(const nsAString& aString)
 }
 
 NS_IMETHODIMP
-nsFilePicker::GetDefaultString(nsAString& aString)
+nsBaseWinFilePicker::GetDefaultString(nsAString& aString)
 {
   return NS_ERROR_FAILURE;
 }
 
 // The default extension to use for files
 NS_IMETHODIMP
-nsFilePicker::GetDefaultExtension(nsAString& aExtension)
+nsBaseWinFilePicker::GetDefaultExtension(nsAString& aExtension)
 {
   aExtension = mDefaultExtension;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
+nsBaseWinFilePicker::SetDefaultExtension(const nsAString& aExtension)
 {
   mDefaultExtension = aExtension;
   return NS_OK;

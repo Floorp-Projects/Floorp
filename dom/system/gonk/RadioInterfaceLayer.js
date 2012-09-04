@@ -422,7 +422,7 @@ RadioInterfaceLayer.prototype = {
               " timestamp=" + message.localTimeStampInMS);
         break;
       case "iccinfochange":
-        this.rilContext.icc = message;
+        this.handleICCInfoChange(message);
         break;
       case "iccGetCardLock":
       case "iccSetCardLock":
@@ -1015,6 +1015,17 @@ RadioInterfaceLayer.prototype = {
   handleDataCallList: function handleDataCallList(message) {
     this._deliverDataCallCallback("receiveDataCallList",
                                   [message.datacalls, message.datacalls.length]);
+  },
+
+  handleICCInfoChange: function handleICCInfoChange(message) {
+    let oldIcc = this.rilContext.icc;
+    this.rilContext.icc = message;
+    if (oldIcc && (oldIcc.mcc == message.mcc || oldIcc.mnc == message.mnc)) {
+      return;
+    }
+    // RIL:IccInfoChanged corresponds to a DOM event that gets fired only
+    // when the MCC or MNC codes have changed.
+    ppmm.broadcastAsyncMessage("RIL:IccInfoChanged", message);
   },
 
   handleICCCardLockResult: function handleICCCardLockResult(message) {

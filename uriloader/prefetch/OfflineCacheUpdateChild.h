@@ -50,7 +50,7 @@ public:
 private:
     nsresult AssociateDocument(nsIDOMDocument *aDocument,
                                nsIApplicationCache *aApplicationCache);
-    nsresult GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
+    void GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
     nsresult Finish();
 
     void RefcountHitZero();

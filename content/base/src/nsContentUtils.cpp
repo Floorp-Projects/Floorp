@@ -5136,7 +5136,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   nsresult errorCode;
   float scaleMinFloat = minScaleStr.ToFloat(&errorCode);
 
-  if (errorCode) {
+  if (NS_FAILED(errorCode)) {
     scaleMinFloat = kViewportMinScale;
   }
 
@@ -5151,7 +5151,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   nsresult scaleMaxErrorCode;
   float scaleMaxFloat = maxScaleStr.ToFloat(&scaleMaxErrorCode);
 
-  if (scaleMaxErrorCode) {
+  if (NS_FAILED(scaleMaxErrorCode)) {
     scaleMaxFloat = kViewportMaxScale;
   }
 
@@ -5210,7 +5210,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   screen->GetRect(&screenLeft, &screenTop, &screenWidth, &screenHeight);
 
   uint32_t width = widthStr.ToInteger(&errorCode);
-  if (errorCode) {
+  if (NS_FAILED(errorCode)) {
     if (autoSize) {
       width = screenWidth;
     } else {
@@ -5229,7 +5229,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
 
   uint32_t height = heightStr.ToInteger(&errorCode);
 
-  if (errorCode) {
+  if (NS_FAILED(errorCode)) {
     height = width * ((float)screenHeight / screenWidth);
   }
 
@@ -5244,10 +5244,10 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
 
   // We need to perform a conversion, but only if the initial or maximum
   // scale were set explicitly by the user.
-  if (!scaleStr.IsEmpty() && !scaleErrorCode) {
+  if (!scaleStr.IsEmpty() && NS_SUCCEEDED(scaleErrorCode)) {
     width = NS_MAX(width, (uint32_t)(screenWidth / scaleFloat));
     height = NS_MAX(height, (uint32_t)(screenHeight / scaleFloat));
-  } else if (!maxScaleStr.IsEmpty() && !scaleMaxErrorCode) {
+  } else if (!maxScaleStr.IsEmpty() && NS_SUCCEEDED(scaleMaxErrorCode)) {
     width = NS_MAX(width, (uint32_t)(screenWidth / scaleMaxFloat));
     height = NS_MAX(height, (uint32_t)(screenHeight / scaleMaxFloat));
   }

@@ -1364,7 +1364,7 @@ let RIL = {
       pin2:      null,
       type:      EF_TYPE_LINEAR_FIXED,
       callback:  callback,
-      onerror:   error
+      onerror:   error,
       loadAll:   true,
       requestId: options.requestId,
     });

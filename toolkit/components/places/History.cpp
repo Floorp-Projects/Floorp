@@ -907,7 +907,7 @@ private:
       mozStorageStatementScoper scoper(stmt);
       nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("visit_date"),
                                           _place.visitTime);
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS(rv, false);
 
       scoper.Abandon();
     }

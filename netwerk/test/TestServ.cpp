@@ -127,7 +127,7 @@ main(int argc, char* argv[])
      */
 
     rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return -1;
 
     {
         rv = MakeServer(atoi(argv[1]));
@@ -141,5 +141,5 @@ main(int argc, char* argv[])
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     NS_ShutdownXPCOM(nullptr);
-    return rv;
+    return 0;
 }

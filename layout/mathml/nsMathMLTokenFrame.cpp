@@ -111,7 +111,6 @@ nsMathMLTokenFrame::SetInitialChildList(ChildListID     aListID,
 
   ForceTrimChildTextFrames();
 
-  SetQuotes(false);
   ProcessTextData();
   return rv;
 }
@@ -248,20 +247,6 @@ nsMathMLTokenFrame::MarkIntrinsicWidthsDirty()
   nsMathMLContainerFrame::MarkIntrinsicWidthsDirty();
 }
 
-NS_IMETHODIMP
-nsMathMLTokenFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
-                                     int32_t         aModType)
-{
-  if (nsGkAtoms::lquote_ == aAttribute ||
-      nsGkAtoms::rquote_ == aAttribute) {
-    SetQuotes(true);
-  }
-
-  return nsMathMLContainerFrame::
-         AttributeChanged(aNameSpaceID, aAttribute, aModType);
-}
-
 void
 nsMathMLTokenFrame::ProcessTextData()
 {
@@ -368,56 +353,4 @@ nsMathMLTokenFrame::SetTextStyle()
   }
 
   return false;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// For <ms>, it is assumed that the mathml.css file contains two rules:
-// ms:before { content: open-quote; }
-// ms:after { content: close-quote; }
-// With these two rules, the frame construction code will
-// create inline frames that contain text frames which themselves
-// contain the text content of the quotes.
-// So the main idea in this code is to see if there are lquote and 
-// rquote attributes. If these are there, we ovewrite the default
-// quotes in the text frames.
-// XXX this is somewhat bogus, we probably should map lquote and rquote
-// to 'content' style rules
-//
-// But what if the mathml.css file wasn't loaded? 
-// We also check that we are not relying on null pointers...
-
-static void
-SetQuote(nsIFrame* aFrame, nsString& aValue, bool aNotify)
-{
-  if (!aFrame)
-    return;
-
-  nsIFrame* textFrame = aFrame->GetFirstPrincipalChild();
-  if (!textFrame)
-    return;
-
-  nsIContent* quoteContent = textFrame->GetContent();
-  if (!quoteContent->IsNodeOfType(nsINode::eTEXT))
-    return;
-
-  quoteContent->SetText(aValue, aNotify);
-}
-
-void
-nsMathMLTokenFrame::SetQuotes(bool aNotify)
-{
-  if (mContent->Tag() != nsGkAtoms::ms_)
-    return;
-
-  nsAutoString value;
-  // lquote
-  if (GetAttribute(mContent, mPresentationData.mstyle,
-                   nsGkAtoms::lquote_, value)) {
-    SetQuote(nsLayoutUtils::GetBeforeFrame(this), value, aNotify);
-  }
-  // rquote
-  if (GetAttribute(mContent, mPresentationData.mstyle,
-                   nsGkAtoms::rquote_, value)) {
-    SetQuote(nsLayoutUtils::GetAfterFrame(this), value, aNotify);
-  }
 }

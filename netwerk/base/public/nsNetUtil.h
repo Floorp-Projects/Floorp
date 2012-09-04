@@ -1678,9 +1678,12 @@ NS_SecurityHashURI(nsIURI* aURI)
         scheme.EqualsLiteral("news"))
     {
         nsAutoCString spec;
-        uint32_t specHash = baseURI->GetSpec(spec);
-        if (NS_SUCCEEDED(specHash))
+        uint32_t specHash;
+        nsresult res = baseURI->GetSpec(spec);
+        if (NS_SUCCEEDED(res))
             specHash = mozilla::HashString(spec);
+        else
+            specHash = static_cast<uint32_t>(res);
         return specHash;
     }
 

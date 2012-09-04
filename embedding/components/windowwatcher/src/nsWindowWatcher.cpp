@@ -1470,12 +1470,14 @@ uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
 
   nsCOMPtr<nsIScriptSecurityManager>
     securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-  NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
 
   bool isChrome = false;
-  nsresult rv = securityManager->SubjectPrincipalIsSystem(&isChrome);
-  if (NS_FAILED(rv)) {
-    isChrome = false;
+  nsresult rv;
+  if (securityManager) {
+    rv = securityManager->SubjectPrincipalIsSystem(&isChrome);
+    if (NS_FAILED(rv)) {
+      isChrome = false;
+    }
   }
 
   nsCOMPtr<nsIPrefBranch> prefBranch;
@@ -1578,11 +1580,13 @@ uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
    */
 
   // Check security state for use in determing window dimensions
-  bool enabled;
-  nsresult res =
-    securityManager->IsCapabilityEnabled("UniversalXPConnect", &enabled);
+  bool enabled = false;
+  if (securityManager) {
+    rv = securityManager->IsCapabilityEnabled("UniversalXPConnect",
+                                              &enabled);
+  }
 
-  if (NS_FAILED(res) || !enabled || (isChrome && !aHasChromeParent)) {
+  if (NS_FAILED(rv) || !enabled || (isChrome && !aHasChromeParent)) {
     // If priv check fails (or if we're called from chrome, but the
     // parent is not a chrome window), set all elements to minimum
     // reqs., else leave them alone.
