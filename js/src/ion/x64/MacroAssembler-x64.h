@@ -82,6 +82,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         call(rax);
     }
 
+    static inline Operand ToUpper32(const Address &address) {
+        return Operand(address.base, address.offset + 4);
+    }
+    static inline Operand ToUpper32(const BaseIndex &address) {
+        return Operand(address.base, address.index, address.scale, address.offset + 4);
+    }
+
     /////////////////////////////////////////////////////////////////
     // X86/X64-common interface.
     /////////////////////////////////////////////////////////////////
@@ -100,7 +107,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void storeValue(const Value &val, const T &dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         movq(ImmWord(jv.asBits), ScratchReg);
-        writeDataRelocation(val);
+        if (val.isMarkable())
+            writeDataRelocation(val);
         movq(ScratchReg, Operand(dest));
     }
     void storeValue(ValueOperand val, BaseIndex dest) {
