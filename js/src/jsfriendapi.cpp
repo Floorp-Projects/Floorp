@@ -704,10 +704,10 @@ GetOwnerThread(const JSContext *cx)
     return cx->runtime->ownerThread();
 }
 
-JS_FRIEND_API(unsigned)
-GetContextOutstandingRequests(const JSContext *cx)
+JS_FRIEND_API(bool)
+ContextHasOutstandingRequests(const JSContext *cx)
 {
-    return cx->outstandingRequests;
+    return cx->outstandingRequests > 0;
 }
 #endif
 
