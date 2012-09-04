@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: mozStopDownload</title>
+  <meta charset='utf-8'>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function finish_test(element) {
+  if (element.parentNode)
+    element.parentNode.removeChild(element);
+  manager.finished(element.token);
+}
+
+function onApplicationOctetStreamLoaded(e) {
+  var t = e.target;
+  t.removeEventListener('loadedmetadata', onApplicationOctetStreamLoaded);
+  ok(true, "The media loads when served with application/octet-stream.");
+  finish_test(t);
+}
+
+function checkApplicationOctetStream(t) {
+  t.src = t.src.replace("&nomime", "&type=application/octet-stream");
+  t.addEventListener("loadedmetadata", onApplicationOctetStreamLoaded);
+}
+
+function onmetadataloaded(e) {
+  var t = e.target;
+  t.removeEventListener('loadedmetadata', onmetadataloaded)
+  ok(true, "The media loads when served without a Content-Type.");
+  checkApplicationOctetStream(t);
+}
+
+function onerror(e) {
+  var t = e.target;
+  t.removeEventListener('error', onerror);
+  ok(false, "The media could not be loaded." + t.src + "\n");
+  finish_test(t);
+}
+
+function startTest(test, token) {
+  var elemType = /^audio/.test(test.type) ? "audio" : "video";
+  var element = document.createElement(elemType);
+  // This .sjs file serve the media file without Content-Type header, or with a
+  // specific Content-Type header.
+  element.src = 'contentType.sjs?file=' + test.name + "&nomime";
+  element.token = token;
+  element.controls = true;
+  element.preload = "metadata";
+  document.body.appendChild(element);
+  manager.started(token);
+  element.addEventListener("loadedmetadata", onmetadataloaded);
+  element.addEventListener("error", onerror);
+}
+
+manager.runTests(gSnifferTests, startTest);
+</script>
+</pre>
+</body>
+</html>
