@@ -58,7 +58,7 @@ SVGNumberList::SetValueFromString(const nsAString& aValue)
   nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
     tokenizer(aValue, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
 
-  nsCAutoString str;  // outside loop to minimize memory churn
+  nsAutoCString str;  // outside loop to minimize memory churn
 
   while (tokenizer.hasMoreTokens()) {
     CopyUTF16toUTF8(tokenizer.nextToken(), str); // NS_ConvertUTF16toUTF8

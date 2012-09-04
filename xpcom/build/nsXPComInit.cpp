@@ -504,9 +504,9 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 
     mozilla::MapsMemoryReporter::Init();
 
-    mozilla::HangMonitor::Startup();
-
     mozilla::Telemetry::Init();
+
+    mozilla::HangMonitor::Startup();
 
     mozilla::eventtracer::Init();
 

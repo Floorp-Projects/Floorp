@@ -71,11 +71,6 @@ private:
    * current battery status (charging or not).
    */
   double mRemainingTime;
-
-  NS_DECL_EVENT_HANDLER(levelchange)
-  NS_DECL_EVENT_HANDLER(chargingchange)
-  NS_DECL_EVENT_HANDLER(chargingtimechange)
-  NS_DECL_EVENT_HANDLER(dischargingtimechange)
 };
 
 } // namespace battery

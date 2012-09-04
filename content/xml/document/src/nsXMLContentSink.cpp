@@ -169,7 +169,7 @@ nsXMLContentSink::WillBuildModel(nsDTDMode aDTDMode)
 
   // Check for correct load-command for maybe prettyprinting
   if (mPrettyPrintXML) {
-    nsCAutoString command;
+    nsAutoCString command;
     GetParser()->GetCommand(command);
     if (!command.EqualsLiteral("view")) {
       mPrettyPrintXML = false;
@@ -697,7 +697,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
   nsresult rv = NS_OK;
   mPrettyPrintXML = false;
 
-  nsCAutoString cmd;
+  nsAutoCString cmd;
   if (mParser)
     GetParser()->GetCommand(cmd);
   if (cmd.EqualsASCII(kLoadAsData))
@@ -1223,7 +1223,7 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
       mCSSLoader->LoadSheetSync(uri, true, true, getter_AddRefs(sheet));
 
 #ifdef DEBUG
-      nsCAutoString uriStr;
+      nsAutoCString uriStr;
       uri->GetSpec(uriStr);
       printf("Loading catalog stylesheet: %s ... %s\n", uriStr.get(), sheet.get() ? "Done" : "Failed");
 #endif

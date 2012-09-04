@@ -112,7 +112,7 @@ CrashReporterParent::GenerateChildData(const AnnotationTable* processNotes)
 {
     MOZ_ASSERT(mInitialized);
 
-    nsCAutoString type;
+    nsAutoCString type;
     switch (mProcessType) {
         case GeckoProcessType_Content:
             type = NS_LITERAL_CSTRING("content");

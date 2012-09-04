@@ -2039,13 +2039,42 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
 
     GLenum format;
     GLenum datatype;
-
     GetOptimalReadFormats(this, format, datatype);
 
+    GLsizei width = dest->Width();
+    GLsizei height = dest->Height();
+
     fReadPixels(0, 0,
-                dest->Width(), dest->Height(),
+                width, height,
                 format, datatype,
                 dest->Data());
+
+    // Check if GL is giving back 1.0 alpha for
+    // RGBA reads to RGBA images from no-alpha buffers.
+#ifdef XP_MACOSX
+    if (WorkAroundDriverBugs() &&
+        mVendor == VendorNVIDIA &&
+        dest->Format() == gfxASurface::ImageFormatARGB32 &&
+        width && height)
+    {
+        GLint alphaBits = 0;
+        fGetIntegerv(LOCAL_GL_ALPHA_BITS, &alphaBits);
+        if (!alphaBits) {
+            const uint32_t alphaMask = GFX_PACKED_PIXEL_NO_PREMULTIPLY(0xff,0,0,0);
+
+            uint32_t* itr = (uint32_t*)dest->Data();
+            uint32_t testPixel = *itr;
+            if ((testPixel & alphaMask) != alphaMask) {
+                // We need to set the alpha channel to 1.0 manually.
+                uint32_t* itrEnd = itr + width*height;  // Stride is guaranteed to be width*4.
+
+                for (; itr != itrEnd; itr++) {
+                    *itr |= alphaMask;
+                }
+            }
+        }
+    }
+#endif
 
     // Output should be in BGRA, so swap if RGBA.
     if (format == LOCAL_GL_RGBA) {
@@ -2861,7 +2890,7 @@ GLContext::UseBlitProgram()
         NS_ASSERTION(success, "Shader compilation failed!");
 
         if (!success) {
-            nsCAutoString log;
+            nsAutoCString log;
             fGetShaderiv(shaders[i], LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
             log.SetCapacity(len);
             fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
@@ -2885,7 +2914,7 @@ GLContext::UseBlitProgram()
     NS_ASSERTION(success, "Shader linking failed!");
 
     if (!success) {
-        nsCAutoString log;
+        nsAutoCString log;
         fGetProgramiv(mBlitProgram, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
         log.SetCapacity(len);
         fGetProgramInfoLog(mBlitProgram, len, (GLint*) &len, (char*) log.BeginWriting());
@@ -2915,7 +2944,7 @@ GLContext::SetBlitFramebufferForDestTexture(GLuint aTexture)
 
     GLenum result = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (aTexture && (result != LOCAL_GL_FRAMEBUFFER_COMPLETE)) {
-        nsCAutoString msg;
+        nsAutoCString msg;
         msg.Append("Framebuffer not complete -- error 0x");
         msg.AppendInt(result, 16);
         // Note: if you are hitting this, it is likely that

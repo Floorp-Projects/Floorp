@@ -6,9 +6,9 @@
 <resources>
 
     <declare-styleable name="AboutHomeSection">
-         <attr name="title" format="string"/>
-         <attr name="subtitle" format="string"/>
-         <attr name="more_text" format="string"/>
+        <attr name="title" format="string"/>
+        <attr name="subtitle" format="string"/>
+        <attr name="more_text" format="string"/>
     </declare-styleable>
 
     <declare-styleable name="MenuItem">
@@ -24,21 +24,33 @@
     </declare-styleable>
 
     <declare-styleable name="FlowLayout">
-         <attr name="spacing" format="dimension"/>
+        <attr name="spacing" format="dimension"/>
     </declare-styleable>
 
     <declare-styleable name="MultiChoicePreference">
-         <attr name="entries" format="string"/>
-         <attr name="entryKeys" format="string"/>
-         <attr name="initialValues" format="string"/>
+        <attr name="entries" format="string"/>
+        <attr name="entryKeys" format="string"/>
+        <attr name="initialValues" format="string"/>
+    </declare-styleable>
+
+    <declare-styleable name="BrowserToolbarCurve">
+        <attr name="curveTowards">
+            <flag name="none" value="0x00" />
+            <flag name="left" value="0x01" />
+            <flag name="right" value ="0x02" />
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="TabsButton">
+        <attr name="cropped" format="boolean"/>
     </declare-styleable>
 
     <declare-styleable name="TabsPanel">
-         <attr name="sidebar" format="boolean"/>
+        <attr name="sidebar" format="boolean"/>
     </declare-styleable>
 
     <declare-styleable name="TextSelectionHandle">
-         <attr name="handleType" format="string"/>
+        <attr name="handleType" format="string"/>
     </declare-styleable>
 
 </resources>

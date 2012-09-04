@@ -154,7 +154,7 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
 {
     // We only support desktop files that end in ".desktop" like the spec says:
     // http://standards.freedesktop.org/desktop-entry-spec/latest/ar01s02.html
-    nsCAutoString leafName;
+    nsAutoCString leafName;
     nsresult rv = aFile->GetNativeLeafName(leafName);
     if (NS_FAILED(rv) ||
 	!StringEndsWith(leafName, NS_LITERAL_CSTRING(".desktop")))
@@ -165,12 +165,12 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
     if (NS_FAILED(rv))
         return rv;
 
-    nsCAutoString type;
+    nsAutoCString type;
     parser.GetString(DESKTOP_ENTRY_SECTION, "Type", type);
     if (!type.EqualsLiteral("Link"))
         return NS_ERROR_NOT_AVAILABLE;
 
-    nsCAutoString url;
+    nsAutoCString url;
     rv = parser.GetString(DESKTOP_ENTRY_SECTION, "URL", url);
     if (NS_FAILED(rv) || url.IsEmpty())
         return NS_ERROR_NOT_AVAILABLE;
@@ -220,7 +220,7 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
     const nsACString *specPtr = &spec;
 
 #if defined(XP_WIN) || defined(XP_OS2)
-    nsCAutoString buf;
+    nsAutoCString buf;
     if (net_NormalizeFileURL(spec, buf))
         specPtr = &buf;
 #endif

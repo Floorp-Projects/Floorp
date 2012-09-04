@@ -138,7 +138,7 @@ nsresult nsExtProtocolChannel::OpenURL()
   if (extProtService)
   {
 #ifdef DEBUG
-    nsCAutoString urlScheme;
+    nsAutoCString urlScheme;
     mUrl->GetScheme(urlScheme);
     bool haveHandler = false;
     extProtService->ExternalProtocolHandlerExists(urlScheme.get(), &haveHandler);
@@ -340,7 +340,7 @@ bool nsExternalProtocolHandler::HaveExternalProtocolHandler(nsIURI * aURI)
   bool haveHandler = false;
   if (aURI)
   {
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     aURI->GetScheme(scheme);
     nsCOMPtr<nsIExternalProtocolService> extProtSvc(do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
     if (extProtSvc)

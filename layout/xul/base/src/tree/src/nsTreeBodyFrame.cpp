@@ -2096,7 +2096,7 @@ nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContex
       return NS_OK;
     nsCOMPtr<nsIURI> uri;
     styleRequest->GetURI(getter_AddRefs(uri));
-    nsCAutoString spec;
+    nsAutoCString spec;
     uri->GetSpec(spec);
     CopyUTF8toUTF16(spec, imageSrc);
   }

@@ -1778,7 +1778,7 @@ public:
         // then we convert the text to an 8-bit version and call the 8-bit
         // Create function instead.
         if (aFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
-            nsCAutoString narrowText;
+            nsAutoCString narrowText;
             LossyAppendUTF16toASCII(nsDependentSubstring(aText, aLength),
                                     narrowText);
             return Create((const uint8_t*)(narrowText.BeginReading()),

@@ -237,7 +237,7 @@ nsChromeRegistryChrome::IsLocaleRTL(const nsACString& package, bool *aResult)
 {
   *aResult = false;
 
-  nsCAutoString locale;
+  nsAutoCString locale;
   GetSelectedLocale(package, locale);
   if (locale.Length() < 2)
     return NS_OK;
@@ -245,7 +245,7 @@ nsChromeRegistryChrome::IsLocaleRTL(const nsACString& package, bool *aResult)
   // first check the intl.uidirection.<locale> preference, and if that is not
   // set, check the same preference but with just the first two characters of
   // the locale. If that isn't set, default to left-to-right.
-  nsCAutoString prefString = NS_LITERAL_CSTRING("intl.uidirection.") + locale;
+  nsAutoCString prefString = NS_LITERAL_CSTRING("intl.uidirection.") + locale;
   nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (!prefBranch)
     return NS_OK;
@@ -255,7 +255,7 @@ nsChromeRegistryChrome::IsLocaleRTL(const nsACString& package, bool *aResult)
   if (dir.IsEmpty()) {
     int32_t hyphen = prefString.FindChar('-');
     if (hyphen >= 1) {
-      nsCAutoString shortPref(Substring(prefString, 0, hyphen));
+      nsAutoCString shortPref(Substring(prefString, 0, hyphen));
       prefBranch->GetCharPref(shortPref.get(), getter_Copies(dir));
     }
   }
@@ -291,7 +291,7 @@ nsChromeRegistryChrome::SelectLocaleFromPref(nsIPrefBranch* prefs)
 
   if (NS_SUCCEEDED(rv) && matchOSLocale) {
     // compute lang and region code only when needed!
-    nsCAutoString uiLocale;
+    nsAutoCString uiLocale;
     rv = getUILangCountry(uiLocale);
     if (NS_SUCCEEDED(rv))
       mSelectedLocale = uiLocale;

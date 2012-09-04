@@ -407,17 +407,11 @@ IDBDatabase::CreateObjectStoreInternal(IDBTransaction* aTransaction,
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(abort)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(error)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(versionchange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFactory)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
   // Don't unlink mFactory!
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(abort)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(error)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(versionchange)
 
   // Do some cleanup.
   tmp->OnUnlink();
@@ -500,7 +494,6 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
 
   mozilla::dom::IDBObjectStoreParameters params;
   KeyPath keyPath(0);
-  nsTArray<nsString> keyPathArray;
 
   nsresult rv;
 

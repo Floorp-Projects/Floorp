@@ -44,7 +44,7 @@ protected:
     PLDHashTable mDates;
     PLDHashTable mBlobs;
 
-    nsCAutoString mLastURIPrefix;
+    nsAutoCString mLastURIPrefix;
     nsCOMPtr<nsIFactory> mLastFactory;
     nsCOMPtr<nsIFactory> mDefaultResourceFactory;
 

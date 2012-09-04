@@ -218,7 +218,7 @@ ApplicationAccessible::GetAppName(nsAString& aName)
   if (!mAppInfo)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString cname;
+  nsAutoCString cname;
   nsresult rv = mAppInfo->GetName(cname);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -234,7 +234,7 @@ ApplicationAccessible::GetAppVersion(nsAString& aVersion)
   if (!mAppInfo)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString cversion;
+  nsAutoCString cversion;
   nsresult rv = mAppInfo->GetVersion(cversion);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -257,7 +257,7 @@ ApplicationAccessible::GetPlatformVersion(nsAString& aVersion)
   if (!mAppInfo)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString cversion;
+  nsAutoCString cversion;
   nsresult rv = mAppInfo->GetPlatformVersion(cversion);
   NS_ENSURE_SUCCESS(rv, rv);
 

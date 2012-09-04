@@ -715,7 +715,7 @@ void imgRequestProxy::OnImageIsAnimated()
 void imgRequestProxy::OnStartRequest()
 {
 #ifdef PR_LOGGING
-  nsCAutoString name;
+  nsAutoCString name;
   GetName(name);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStartRequest", "name", name.get());
 #endif
@@ -732,7 +732,7 @@ void imgRequestProxy::OnStartRequest()
 void imgRequestProxy::OnStopRequest(bool lastPart)
 {
 #ifdef PR_LOGGING
-  nsCAutoString name;
+  nsAutoCString name;
   GetName(name);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStopRequest", "name", name.get());
 #endif
@@ -775,7 +775,7 @@ void imgRequestProxy::OnStopRequest(bool lastPart)
 void imgRequestProxy::BlockOnload()
 {
 #ifdef PR_LOGGING
-  nsCAutoString name;
+  nsAutoCString name;
   GetName(name);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::BlockOnload", "name", name.get());
 #endif
@@ -789,7 +789,7 @@ void imgRequestProxy::BlockOnload()
 void imgRequestProxy::UnblockOnload()
 {
 #ifdef PR_LOGGING
-  nsCAutoString name;
+  nsAutoCString name;
   GetName(name);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::UnblockOnload", "name", name.get());
 #endif

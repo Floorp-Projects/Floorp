@@ -327,7 +327,7 @@ nsHTMLDocument::TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
     nsresult rv = aMarkupDV->GetHintCharacterSetSource(&requestCharsetSource);
 
     if(NS_SUCCEEDED(rv) && kCharsetUninitialized != requestCharsetSource) {
-      nsCAutoString requestCharset;
+      nsAutoCString requestCharset;
       rv = aMarkupDV->GetHintCharacterSet(requestCharset);
       aMarkupDV->SetHintCharacterSetSource((int32_t)(kCharsetUninitialized));
 
@@ -357,7 +357,7 @@ nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
   if(kCharsetFromUserForced <= aCharsetSource)
     return true;
 
-  nsCAutoString forceCharsetFromDocShell;
+  nsAutoCString forceCharsetFromDocShell;
   if (aMarkupDV) {
     rv = aMarkupDV->GetForceCharacterSet(forceCharsetFromDocShell);
   }
@@ -491,7 +491,7 @@ nsHTMLDocument::TryDefaultCharset( nsIMarkupDocumentViewer* aMarkupDV,
   if(kCharsetFromUserDefault <= aCharsetSource)
     return true;
 
-  nsCAutoString defaultCharsetFromDocShell;
+  nsAutoCString defaultCharsetFromDocShell;
   if (aMarkupDV) {
     nsresult rv =
       aMarkupDV->GetDefaultCharacterSet(defaultCharsetFromDocShell);
@@ -540,7 +540,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsCAutoString contentType;
+  nsAutoCString contentType;
   aChannel->GetContentType(contentType);
 
   bool view = !strcmp(aCommand, "view") ||
@@ -586,7 +586,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // GetSpec can be expensive for some URIs, so check the scheme first.
     bool isAbout = false;
     if (uri && NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
-      nsCAutoString str;
+      nsAutoCString str;
       uri->GetSpec(str);
       if (str.EqualsLiteral("about:blank")) {
         loadAsHtml5 = false;    
@@ -680,7 +680,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
-  nsCAutoString urlSpec;
+  nsAutoCString urlSpec;
   uri->GetSpec(urlSpec);
 #ifdef DEBUG_charset
   printf("Determining charset for %s\n", urlSpec.get());
@@ -688,12 +688,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   // These are the charset source and charset for our document
   int32_t charsetSource;
-  nsCAutoString charset;
+  nsAutoCString charset;
 
   // These are the charset source and charset for the parser.  This can differ
   // from that for the document if the channel is a wyciwyg channel.
   int32_t parserCharsetSource;
-  nsCAutoString parserCharset;
+  nsAutoCString parserCharset;
 
   nsCOMPtr<nsIWyciwygChannel> wyciwygChannel;
   
@@ -751,14 +751,14 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // check if current doc is from POST command
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
     if (httpChannel) {
-      nsCAutoString methodStr;
+      nsAutoCString methodStr;
       rv = httpChannel->GetRequestMethod(methodStr);
       isPostPage = (NS_SUCCEEDED(rv) &&
                     methodStr.EqualsLiteral("POST"));
     }
 
     if (isPostPage && muCV && kCharsetFromHintPrevDoc > charsetSource) {
-      nsCAutoString requestCharset;
+      nsAutoCString requestCharset;
       muCV->GetPrevDocCharacterSet(requestCharset);
       if (!requestCharset.IsEmpty()) {
         charsetSource = kCharsetFromHintPrevDoc;
@@ -772,7 +772,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       parserCharsetSource = charsetSource < kCharsetFromChannel ?
         kCharsetFromChannel : charsetSource;
         
-      nsCAutoString cachedCharset;
+      nsAutoCString cachedCharset;
       int32_t cachedSource;
       rv = wyciwygChannel->GetCharsetAndSource(&cachedSource, cachedCharset);
       if (NS_SUCCEEDED(rv)) {
@@ -936,7 +936,7 @@ nsHTMLDocument::GetDomain(nsAString& aDomain)
     return NS_ERROR_FAILURE;
   }
 
-  nsCAutoString hostName;
+  nsAutoCString hostName;
 
   if (NS_SUCCEEDED(uri->GetHost(hostName))) {
     CopyUTF8toUTF16(hostName, aDomain);
@@ -963,10 +963,10 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
     return NS_ERROR_FAILURE;
   }
 
-  nsCAutoString newURIString;
+  nsAutoCString newURIString;
   if (NS_FAILED(uri->GetScheme(newURIString)))
     return NS_ERROR_FAILURE;
-  nsCAutoString path;
+  nsAutoCString path;
   if (NS_FAILED(uri->GetPath(path)))
     return NS_ERROR_FAILURE;
   newURIString.AppendLiteral("://");
@@ -980,7 +980,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   // Check new domain - must be a superdomain of the current host
   // For example, a page from foo.bar.com may set domain to bar.com,
   // but not to ar.com, baz.com, or fi.foo.bar.com.
-  nsCAutoString current, domain;
+  nsAutoCString current, domain;
   if (NS_FAILED(uri->GetAsciiHost(current)))
     current.Truncate();
   if (NS_FAILED(newURI->GetAsciiHost(domain)))
@@ -997,7 +997,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
     if (!tldService)
       return NS_ERROR_NOT_AVAILABLE;
 
-    nsCAutoString currentBaseDomain;
+    nsAutoCString currentBaseDomain;
     ok = NS_SUCCEEDED(tldService->GetBaseDomain(uri, 0, currentBaseDomain));
     NS_ASSERTION(StringEndsWith(domain, currentBaseDomain) ==
                  (domain.Length() >= currentBaseDomain.Length()),
@@ -1015,7 +1015,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
 NS_IMETHODIMP
 nsHTMLDocument::GetURL(nsAString& aURL)
 {
-  nsCAutoString str;
+  nsAutoCString str;
 
   if (mDocumentURI) {
     mDocumentURI->GetSpec(str);
@@ -1321,12 +1321,12 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsCAutoString contentType;
+  nsAutoCString contentType;
   contentType.AssignLiteral("text/html");
   if (aOptionalArgCount > 0) {
     nsAutoString type;
     nsContentUtils::ASCIIToLower(aContentTypeOrUrl, type);
-    nsCAutoString actualType, dummy;
+    nsAutoCString actualType, dummy;
     NS_ParseContentType(NS_ConvertUTF16toUTF8(type), actualType, dummy);
     if (!actualType.EqualsLiteral("text/html") &&
         !type.EqualsLiteral("replace")) {
@@ -1408,8 +1408,8 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
 #ifdef DEBUG
     nsCOMPtr<nsIURI> callerDocURI = callerDoc->GetDocumentURI();
     nsCOMPtr<nsIURI> thisURI = nsIDocument::GetDocumentURI();
-    nsCAutoString callerSpec;
-    nsCAutoString thisSpec;
+    nsAutoCString callerSpec;
+    nsAutoCString thisSpec;
     if (callerDocURI) {
       callerDocURI->GetSpec(callerSpec);
     }
@@ -2220,7 +2220,7 @@ nsresult
 nsHTMLDocument::CreateAndAddWyciwygChannel(void)
 {
   nsresult rv = NS_OK;
-  nsCAutoString url, originalSpec;
+  nsAutoCString url, originalSpec;
 
   mDocumentURI->GetSpec(originalSpec);
 
@@ -3081,7 +3081,7 @@ static bool
 ConvertToMidasInternalCommand(const nsAString & inCommandID,
                               nsACString& outCommandID)
 {
-  nsCAutoString dummyCString;
+  nsAutoCString dummyCString;
   nsAutoString dummyString;
   bool dummyBool;
   return ConvertToMidasInternalCommandInner(inCommandID, dummyString,
@@ -3154,7 +3154,7 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
 
   *_retval = false;
 
-  nsCAutoString cmdToDispatch, paramStr;
+  nsAutoCString cmdToDispatch, paramStr;
   bool isBool, boolVal;
   if (!ConvertToMidasInternalCommand(commandID, value,
                                      cmdToDispatch, paramStr,
@@ -3245,7 +3245,7 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString& commandID,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
 
-  nsCAutoString cmdToDispatch;
+  nsAutoCString cmdToDispatch;
   if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
     // Return false
     return NS_OK;
@@ -3273,7 +3273,7 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
 
-  nsCAutoString cmdToDispatch;
+  nsAutoCString cmdToDispatch;
   if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
     // Return false
     return NS_OK;
@@ -3312,7 +3312,7 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, bool *_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
 
-  nsCAutoString cmdToDispatch, paramToCheck;
+  nsAutoCString cmdToDispatch, paramToCheck;
   bool dummy, dummy2;
   if (!ConvertToMidasInternalCommand(commandID, commandID,
                                      cmdToDispatch, paramToCheck,
@@ -3381,7 +3381,7 @@ nsHTMLDocument::QueryCommandSupported(const nsAString & commandID,
   NS_ENSURE_ARG_POINTER(_retval);
 
   // commandID is supported if it can be converted to a Midas command
-  nsCAutoString cmdToDispatch;
+  nsAutoCString cmdToDispatch;
   *_retval = ConvertToMidasInternalCommand(commandID, cmdToDispatch);
 
   return NS_OK;
@@ -3394,7 +3394,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
 {
   _retval.SetLength(0);
 
-  nsCAutoString cmdToDispatch, paramStr;
+  nsAutoCString cmdToDispatch, paramStr;
   if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
     // Return empty string
     return NS_OK;

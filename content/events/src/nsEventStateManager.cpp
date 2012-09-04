@@ -188,7 +188,7 @@ PrintDocTree(nsIDocShellTreeItem* aParentItem, int aLevel)
     static_cast<void*>(presContext ? presContext->EventStateManager() : nullptr),
     uri ? ' ' : '\n');
   if (uri) {
-    nsCAutoString spec;
+    nsAutoCString spec;
     uri->GetSpec(spec);
     printf("\"%s\"\n", spec.get());
   }
@@ -4874,7 +4874,8 @@ nsEventStateManager::UnregisterAccessKey(nsIContent* aContent, uint32_t aKey)
 uint32_t
 nsEventStateManager::GetRegisteredAccessKey(nsIContent* aContent)
 {
-  NS_ENSURE_ARG(aContent);
+  NS_ASSERTION(aContent, "Null pointer passed to GetRegisteredAccessKey");
+  NS_ENSURE_TRUE(aContent, 0);
 
   if (mAccessKeys.IndexOf(aContent) == -1)
     return 0;
@@ -5358,25 +5359,25 @@ nsEventStateManager::WheelPrefs::Init(
   }
   mInit[aIndex] = true;
 
-  nsCAutoString basePrefName;
+  nsAutoCString basePrefName;
   GetBasePrefName(aIndex, basePrefName);
 
-  nsCAutoString prefNameX(basePrefName);
+  nsAutoCString prefNameX(basePrefName);
   prefNameX.AppendLiteral("delta_multiplier_x");
   mMultiplierX[aIndex] =
     static_cast<double>(Preferences::GetInt(prefNameX.get(), 100)) / 100;
 
-  nsCAutoString prefNameY(basePrefName);
+  nsAutoCString prefNameY(basePrefName);
   prefNameY.AppendLiteral("delta_multiplier_y");
   mMultiplierY[aIndex] =
     static_cast<double>(Preferences::GetInt(prefNameY.get(), 100)) / 100;
 
-  nsCAutoString prefNameZ(basePrefName);
+  nsAutoCString prefNameZ(basePrefName);
   prefNameZ.AppendLiteral("delta_multiplier_z");
   mMultiplierZ[aIndex] =
     static_cast<double>(Preferences::GetInt(prefNameZ.get(), 100)) / 100;
 
-  nsCAutoString prefNameAction(basePrefName);
+  nsAutoCString prefNameAction(basePrefName);
   prefNameAction.AppendLiteral("action");
   mActions[aIndex] =
     static_cast<Action>(Preferences::GetInt(prefNameAction.get(),

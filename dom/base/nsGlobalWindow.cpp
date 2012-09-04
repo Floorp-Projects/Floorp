@@ -823,7 +823,7 @@ nsGlobalWindow::~nsGlobalWindow()
 
 #ifdef DEBUG
   if (!PR_GetEnv("MOZ_QUIET")) {
-    nsCAutoString url;
+    nsAutoCString url;
     if (mLastOpenedURI) {
       mLastOpenedURI->GetSpec(url);
     }
@@ -2190,7 +2190,7 @@ nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 #ifdef PR_LOGGING
   if (gDOMLeakPRLog && PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
     nsIURI *uri = aDocument->GetDocumentURI();
-    nsCAutoString spec;
+    nsAutoCString spec;
     if (uri)
       uri->GetSpec(spec);
     PR_LogPrint("DOMWINDOW %p SetNewDocument %s", this, spec.get());
@@ -2518,7 +2518,7 @@ nsGlobalWindow::DialogsAreBlocked(bool *aBeingAbused)
 
   nsGlobalWindow *topWindow = GetScriptableTop();
   if (!topWindow) {
-    NS_ASSERTION(!mDocShell, "DialogsAreBlocked() called without a top window?");
+    NS_ERROR("DialogsAreBlocked() called without a top window?");
     return true;
   }
 
@@ -4667,7 +4667,7 @@ nsGlobalWindow::MakeScriptDialogTitle(nsAString &aOutTitle)
           nsCOMPtr<nsIURI> fixedURI;
           rv = fixup->CreateExposableURI(uri, getter_AddRefs(fixedURI));
           if (NS_SUCCEEDED(rv) && fixedURI) {
-            nsCAutoString host;
+            nsAutoCString host;
             fixedURI->GetHost(host);
 
             if (!host.IsEmpty()) {
@@ -4675,7 +4675,7 @@ nsGlobalWindow::MakeScriptDialogTitle(nsAString &aOutTitle)
               // schemes (e.g. file:) we fall back to the localized
               // generic string
 
-              nsCAutoString prepath;
+              nsAutoCString prepath;
               fixedURI->GetPrePath(prepath);
 
               NS_ConvertUTF8toUTF16 ucsPrePath(prepath);
@@ -7652,11 +7652,9 @@ nsGlobalWindow::ActivateOrDeactivate(bool aActivate)
 
     // widgetListener should be a nsXULWindow
     nsIWidgetListener* listener = topLevelWidget->GetWidgetListener();
-    if (listener) {
-      nsCOMPtr<nsIXULWindow> window = listener->GetXULWindow();
-      nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(window));
-      topLevelWindow = do_GetInterface(req);
-    }
+    nsCOMPtr<nsIXULWindow> window = listener->GetXULWindow();
+    nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(window));
+    topLevelWindow = do_GetInterface(req);
   }
   if (topLevelWindow) {
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(topLevelWindow));
@@ -7974,14 +7972,14 @@ nsGlobalWindow::DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI)
 
   // Make sure that aOldURI and aNewURI are identical up to the '#', and that
   // their hashes are different.
-  nsCAutoString oldBeforeHash, oldHash, newBeforeHash, newHash;
+  nsAutoCString oldBeforeHash, oldHash, newBeforeHash, newHash;
   nsContentUtils::SplitURIAtHash(aOldURI, oldBeforeHash, oldHash);
   nsContentUtils::SplitURIAtHash(aNewURI, newBeforeHash, newHash);
 
   NS_ENSURE_STATE(oldBeforeHash.Equals(newBeforeHash));
   NS_ENSURE_STATE(!oldHash.Equals(newHash));
 
-  nsCAutoString oldSpec, newSpec;
+  nsAutoCString oldSpec, newSpec;
   aOldURI->GetSpec(oldSpec);
   aNewURI->GetSpec(newSpec);
 
@@ -10234,7 +10232,7 @@ nsGlobalWindow::BuildURIfromBase(const char *aURL, nsIURI **aBuiltURI,
   /* resolve the URI, which could be relative to the calling window
      (note the algorithm to get the base URI should match the one
      used to actually kick off the load in nsWindowWatcher.cpp). */
-  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8")); // default to utf-8
+  nsAutoCString charset(NS_LITERAL_CSTRING("UTF-8")); // default to utf-8
   nsIURI* baseURI = nullptr;
   nsCOMPtr<nsIURI> uriToLoad;
   nsCOMPtr<nsIDOMWindow> sourceWindow;
@@ -11095,7 +11093,8 @@ nsGlobalWindow::SetHasAudioAvailableEventListeners()
     if (!obj) {                                                              \
       return NS_ERROR_UNEXPECTED;                                            \
     }                                                                        \
-    return elm->SetEventHandlerToJsval(nsGkAtoms::on##name_, cx, obj, v);    \
+    return elm->SetEventHandlerToJsval(nsGkAtoms::on##name_, cx, obj, v,     \
+                                       true);                                \
   }
 #define WINDOW_ONLY_EVENT EVENT
 #define TOUCH_EVENT EVENT

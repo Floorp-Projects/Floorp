@@ -686,8 +686,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
      * Variables which are currently dead. On forward branches to locations
      * where these are live, they need to be marked as live.
      */
-    LifetimeVariable **saved = (LifetimeVariable **)
-        cx->calloc_(numSlots * sizeof(LifetimeVariable*));
+    LifetimeVariable **saved = cx->pod_calloc<LifetimeVariable*>(numSlots);
     if (!saved) {
         setOOM(cx);
         return;
@@ -799,7 +798,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                 LifetimeVariable &var = *saved[i];
                 var.lifetime = alloc.new_<Lifetime>(offset, var.savedEnd, var.saved);
                 if (!var.lifetime) {
-                    cx->free_(saved);
+                    js_free(saved);
                     setOOM(cx);
                     return;
                 }
@@ -866,7 +865,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
                 LoopAnalysis *nloop = alloc.new_<LoopAnalysis>();
                 if (!nloop) {
-                    cx->free_(saved);
+                    js_free(saved);
                     setOOM(cx);
                     return;
                 }
@@ -916,7 +915,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                          */
                         var.lifetime = alloc.new_<Lifetime>(offset, var.savedEnd, var.saved);
                         if (!var.lifetime) {
-                            cx->free_(saved);
+                            js_free(saved);
                             setOOM(cx);
                             return;
                         }
@@ -939,7 +938,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
         offset--;
     }
 
-    cx->free_(saved);
+    js_free(saved);
 
     ranLifetimes_ = true;
 }
@@ -1197,8 +1196,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
      * Current value of each variable and stack value. Empty for missing or
      * untracked entries, i.e. escaping locals and arguments.
      */
-    SSAValueInfo *values = (SSAValueInfo *)
-        cx->calloc_((numSlots + maxDepth) * sizeof(SSAValueInfo));
+    SSAValueInfo *values = cx->pod_calloc<SSAValueInfo>(numSlots + maxDepth);
     if (!values) {
         setOOM(cx);
         return;
@@ -1207,7 +1205,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
         JSContext *cx;
         SSAValueInfo *values;
         FreeSSAValues(JSContext *cx, SSAValueInfo *values) : cx(cx), values(values) {}
-        ~FreeSSAValues() { cx->free_(values); }
+        ~FreeSSAValues() { js_free(values); }
     } free(cx, values);
 
     SSAValueInfo *stack = values + numSlots;
@@ -1853,7 +1851,7 @@ ScriptAnalysis::freezeNewValues(JSContext *cx, uint32_t offset)
 
     unsigned count = pending->length();
     if (count == 0) {
-        cx->delete_(pending);
+        js_delete(pending);
         return;
     }
 
@@ -1868,7 +1866,7 @@ ScriptAnalysis::freezeNewValues(JSContext *cx, uint32_t offset)
     code.newValues[count].slot = 0;
     code.newValues[count].value.clear();
 
-    cx->delete_(pending);
+    js_delete(pending);
 }
 
 bool

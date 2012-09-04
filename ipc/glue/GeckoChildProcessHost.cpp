@@ -384,7 +384,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, b
   // different than parent.  So temporarily change NSPR_LOG_FILE so child
   // inherits value we want it to have. (NSPR only looks at NSPR_LOG_FILE at
   // startup, so it's 'safe' to play with the parent's environment this way.)
-  nsCAutoString setChildLogName("NSPR_LOG_FILE=");
+  nsAutoCString setChildLogName("NSPR_LOG_FILE=");
   setChildLogName.Append(origLogName);
 
   // remember original value so we can restore it.
@@ -562,7 +562,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   if (Omnijar::IsInitialized()) {
     // Make sure that child processes can find the omnijar
     // See XRE_InitCommandLine in nsAppRunner.cpp
-    nsCAutoString path;
+    nsAutoCString path;
     nsCOMPtr<nsIFile> file = Omnijar::GetPath(Omnijar::GRE);
     if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
       childArgv.push_back("-greomni");

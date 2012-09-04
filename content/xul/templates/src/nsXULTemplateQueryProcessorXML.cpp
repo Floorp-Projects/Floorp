@@ -149,7 +149,7 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
     if (!uri)
         return NS_ERROR_UNEXPECTED;
 
-    nsCAutoString uriStr;
+    nsAutoCString uriStr;
     rv = uri->GetSpec(uriStr);
     NS_ENSURE_SUCCESS(rv, rv);
 

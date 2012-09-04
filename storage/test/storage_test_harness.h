@@ -147,11 +147,11 @@ AsyncStatementSpinner::HandleError(mozIStorageError *aError)
   int32_t result;
   nsresult rv = aError->GetResult(&result);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString message;
+  nsAutoCString message;
   rv = aError->GetMessage(message);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString warnMsg;
+  nsAutoCString warnMsg;
   warnMsg.Append("An error occurred while executing an async statement: ");
   warnMsg.AppendInt(result);
   warnMsg.Append(" ");

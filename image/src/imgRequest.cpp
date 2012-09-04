@@ -79,8 +79,8 @@ NS_IMPL_ISUPPORTS8(imgRequest,
                    nsIInterfaceRequestor,
                    nsIAsyncVerifyRedirectCallback)
 
-imgRequest::imgRequest() : 
-  mValidator(nullptr), mImageSniffers("image-sniffing-services"),
+imgRequest::imgRequest(imgLoader* aLoader) :
+  mLoader(aLoader), mValidator(nullptr), mImageSniffers("image-sniffing-services"),
   mInnerWindowId(0), mCORSMode(imgIRequest::CORS_NONE),
   mDecodeRequested(false), mIsMultiPartChannel(false), mGotData(false),
   mIsInCache(false), mBlockingOnload(false)
@@ -94,7 +94,7 @@ imgRequest::imgRequest() :
 imgRequest::~imgRequest()
 {
   if (mURI) {
-    nsCAutoString spec;
+    nsAutoCString spec;
     mURI->GetSpec(spec);
     LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::~imgRequest()", "keyuri", spec.get());
   } else
@@ -178,7 +178,7 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
   // proxies.
   if (mObservers.IsEmpty()) {
     NS_ABORT_IF_FALSE(mURI, "Trying to SetHasProxies without key uri.");
-    imgLoader::SetHasProxies(mURI);
+    mLoader->SetHasProxies(mURI);
   }
 
   // If we don't have any current observers, we should restart any animation.
@@ -223,11 +223,11 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool 
     if (mCacheEntry) {
       NS_ABORT_IF_FALSE(mURI, "Removing last observer without key uri.");
 
-      imgLoader::SetHasNoProxies(mURI, mCacheEntry);
+      mLoader->SetHasNoProxies(mURI, mCacheEntry);
     } 
 #if defined(PR_LOGGING)
     else {
-      nsCAutoString spec;
+      nsAutoCString spec;
       mURI->GetSpec(spec);
       LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy no cache entry", "uri", spec.get());
     }
@@ -328,9 +328,9 @@ void imgRequest::RemoveFromCache()
   if (mIsInCache) {
     // mCacheEntry is nulled out when we have no more observers.
     if (mCacheEntry)
-      imgLoader::RemoveFromCache(mCacheEntry);
+      mLoader->RemoveFromCache(mCacheEntry);
     else
-      imgLoader::RemoveFromCache(mURI);
+      mLoader->RemoveFromCache(mURI);
   }
 
   mCacheEntry = nullptr;
@@ -392,7 +392,7 @@ void imgRequest::UpdateCacheEntrySize()
     mCacheEntry->SetDataSize(mImage->SizeOfData());
 
 #ifdef DEBUG_joe
-    nsCAutoString url;
+    nsAutoCString url;
     mURI->GetSpec(url);
     printf("CACHEPUT: %d %s %d\n", time(NULL), url.get(), imageSize);
 #endif
@@ -435,7 +435,7 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
       }
 
       if (!bMustRevalidate) {
-        nsCAutoString cacheHeader;
+        nsAutoCString cacheHeader;
 
         httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"),
                                             cacheHeader);
@@ -1013,7 +1013,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     }
 
     /* set our content disposition as a property */
-    nsCAutoString disposition;
+    nsAutoCString disposition;
     if (chan) {
       chan->GetContentDispositionHeader(disposition);
     }
@@ -1064,7 +1064,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       imageFlags |= Image::INIT_FLAG_MULTIPART;
 
     // Get our URI string
-    nsCAutoString uriString;
+    nsAutoCString uriString;
     rv = mURI->GetSpec(uriString);
     if (NS_FAILED(rv))
       uriString.Assign("<unknown image URI>");
@@ -1083,7 +1083,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       /* Use content-length as a size hint for http channels. */
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
       if (httpChannel) {
-        nsCAutoString contentLength;
+        nsAutoCString contentLength;
         rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
                                             contentLength);
         if (NS_SUCCEEDED(rv)) {
@@ -1253,7 +1253,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   mNewRedirectChannel = nullptr;
 
 #if defined(PR_LOGGING)
-  nsCAutoString oldspec;
+  nsAutoCString oldspec;
   if (mCurrentURI)
     mCurrentURI->GetSpec(oldspec);
   LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "old", oldspec.get());

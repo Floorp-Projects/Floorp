@@ -341,7 +341,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface
                time.tm_hour, time.tm_min, time.tm_sec);
       printName[CCHMAXPATH-1] = '\0';
 
-      nsCAutoString printString(printName);
+      nsAutoCString printString(printName);
       rv = pdfLocation->AppendNative(printString);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = pdfLocation->GetPath(filename);
@@ -639,12 +639,12 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 
     // store printer description in prefs for the print dialog
     if (!prefFailed) {
-       nsCAutoString printerDescription;
-       printerDescription = nsCAutoString(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(i)->szDeviceName);
+       nsAutoCString printerDescription;
+       printerDescription = nsAutoCString(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(i)->szDeviceName);
        printerDescription += " (";
-       printerDescription += nsCAutoString(nsDeviceContextSpecOS2::PrnDlg.GetDriverType(i));
+       printerDescription += nsAutoCString(nsDeviceContextSpecOS2::PrnDlg.GetDriverType(i));
        printerDescription += ")";
-       nsCAutoString prefName("print.printer_");
+       nsAutoCString prefName("print.printer_");
        prefName += printer;
        prefName += ".printer_description";
        Preferences::SetCString(prefName.get(), printerDescription);

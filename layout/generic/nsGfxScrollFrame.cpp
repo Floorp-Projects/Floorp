@@ -1448,14 +1448,14 @@ nsGfxScrollFrameInner::AsyncScroll::InitDuration(nsIAtom *aOrigin) {
     static const int32_t kDefaultMinMS = 150, kDefaultMaxMS = 150;
     static const bool kDefaultIsSmoothEnabled = true;
 
-    nsCAutoString originName;
+    nsAutoCString originName;
     aOrigin->ToUTF8String(originName);
-    nsCAutoString prefBase = NS_LITERAL_CSTRING("general.smoothScroll.") + originName;
+    nsAutoCString prefBase = NS_LITERAL_CSTRING("general.smoothScroll.") + originName;
 
     isOriginSmoothnessEnabled = Preferences::GetBool(prefBase.get(), kDefaultIsSmoothEnabled);
     if (isOriginSmoothnessEnabled) {
-      nsCAutoString prefMin = prefBase + NS_LITERAL_CSTRING(".durationMinMS");
-      nsCAutoString prefMax = prefBase + NS_LITERAL_CSTRING(".durationMaxMS");
+      nsAutoCString prefMin = prefBase + NS_LITERAL_CSTRING(".durationMinMS");
+      nsAutoCString prefMax = prefBase + NS_LITERAL_CSTRING(".durationMaxMS");
       mOriginMinMS = Preferences::GetInt(prefMin.get(), kDefaultMinMS);
       mOriginMaxMS = Preferences::GetInt(prefMax.get(), kDefaultMaxMS);
 

@@ -1,0 +1,177 @@
+<!DOCTYPE HTML>
+<html id="html" style="height:100%">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=780847
+-->
+<head>
+  <title>Test radii for mouse events</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  .target { position:absolute; left:100px; top:100px; width:100px; height:100px; background:blue; }
+  </style>
+</head>
+<body id="body" onload="setTimeout(runTest, 0)" style="margin:0; width:100%; height:100%">
+<p id="display"></p>
+<div id="content">
+  <div id="ruler" style="position:absolute; left:0; top:0; width:1mozmm; height:0;"></div>
+
+  <div class="target" id="t" onmousedown="x=1"></div>
+
+  <div class="target" id="t2" hidden></div>
+
+  <input class="target" id="t3_1" hidden></input>
+  <a href="#" class="target" id="t3_2" hidden></a>
+  <label class="target" id="t3_3" hidden></label>
+  <button class="target" id="t3_4" hidden></button>
+  <select class="target" id="t3_5" hidden></select>
+  <textarea class="target" id="t3_6" hidden></textarea>
+  <div role="button" class="target" id="t3_7" hidden></div>
+  <img class="target" id="t3_8" hidden></img>
+
+  <div class="target" style="transform:translate(-80px,0);" id="t4" onmousedown="x=1" hidden></div>
+
+  <div class="target" style="left:0; z-index:1" id="t5_left" onmousedown="x=1" hidden></div>
+  <div class="target" style="left:106px;" id="t5_right" onmousedown="x=1" hidden></div>
+  <div class="target" style="left:0; top:210px;" id="t5_below" onmousedown="x=1" hidden></div>
+
+  <div class="target" id="t6" onmousedown="x=1" hidden>
+    <div id="t6_inner" style="position:absolute; left:-20px; top:20px; width:60px; height:60px; background:yellow;"></div>
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+var prefBase = "ui.mouse.radius.";
+SpecialPowers.setBoolPref(prefBase + "enabled", true);
+SpecialPowers.setIntPref(prefBase + "leftmm", 12);
+SpecialPowers.setIntPref(prefBase + "topmm", 8);
+SpecialPowers.setIntPref(prefBase + "rightmm", 4);
+SpecialPowers.setIntPref(prefBase + "bottommm", 4);
+SpecialPowers.setIntPref(prefBase + "visitedWeight", 50);
+
+SimpleTest.waitForExplicitFinish();
+
+var mm = document.getElementById("ruler").getBoundingClientRect().width;
+ok(4*mm >= 10, "WARNING: mm " + mm + " too small in this configuration. Test results will be bogus");
+
+function endTest() {
+  SpecialPowers.clearUserPref(prefBase + "enabled");
+  SpecialPowers.clearUserPref(prefBase + "leftmmm");
+  SpecialPowers.clearUserPref(prefBase + "topmm");
+  SpecialPowers.clearUserPref(prefBase + "rightmm");
+  SpecialPowers.clearUserPref(prefBase + "bottommm");
+  SpecialPowers.clearUserPref(prefBase + "visitedWeight");
+  SimpleTest.finish();
+}
+
+var eventTarget;
+window.onmousedown = function(event) { eventTarget = event.target; };
+
+function testMouseClick(idPosition, dx, dy, idTarget, msg) {
+  eventTarget = null;
+  synthesizeMouse(document.getElementById(idPosition), dx, dy, {});
+  try {
+    is(eventTarget.id, idTarget,
+       "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]");
+  } catch (ex) {
+    ok(false, "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]; got " + eventTarget);
+  }
+}
+
+function setShowing(id, show) {
+  var e = document.getElementById(id);
+  e.hidden = !show;
+}
+
+function runTest() {
+  // Test basic functionality: clicks sufficiently close to the element
+  // should be allowed to hit the element. We test points just inside and
+  // just outside the edges we set up in the prefs.
+  testMouseClick("t", 100 + 13*mm, 10, "body", "basic functionality");
+  testMouseClick("t", 100 + 11*mm, 10, "t", "basic functionality");
+  testMouseClick("t", 10, 100 + 9*mm, "body", "basic functionality");
+  testMouseClick("t", 10, 100 + 7*mm, "t", "basic functionality");
+  testMouseClick("t", -5*mm, 10, "body", "basic functionality");
+  testMouseClick("t", -3*mm, 10, "t", "basic functionality");
+  testMouseClick("t", 10, -5*mm, "body", "basic functionality");
+  testMouseClick("t", 10, -3*mm, "t", "basic functionality");
+  setShowing("t", false);
+
+  // Now test the criteria we use to determine which elements are hittable
+  // this way.
+
+  setShowing("t2", true);
+  var t2 = document.getElementById("t2");
+  // Unadorned DIVs are not click radius targets
+  testMouseClick("t2", 100 + 11*mm, 10, "body", "unadorned DIV");
+  // DIVs with the right event handlers are click radius targets
+  t2.onmousedown = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onmousedown");
+  t2.onmousedown = null;
+  testMouseClick("t2", 100 + 11*mm, 10, "body", "DIV with onmousedown removed");
+  t2.onmouseup = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onmouseup");
+  t2.onmouseup = null;
+  t2.onclick = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onclick");
+  t2.onclick = null;
+  // Keypresses don't make click radius targets
+  t2.onkeypress = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "body", "DIV with onkeypress");
+  t2.onkeypress = null;
+  setShowing("t2", false);
+
+  // Now check that certain elements are click radius targets and others are not
+  for (var i = 1; i <= 8; ++i) {
+    var id = "t3_" + i;
+    var shouldHit = i <= 7;
+    setShowing(id, true);
+    testMouseClick(id, 100 + 11*mm, 10, shouldHit ? id : "body",
+                   "<" + document.getElementById(id).tagName + "> element");
+    setShowing(id, false);
+  }
+
+  // Check that our targeting computations take into account the effects of
+  // CSS transforms
+  setShowing("t4", true);
+  testMouseClick("t4", -1, 10, "t4", "translated DIV");
+  setShowing("t4", false);
+
+  // Test the prioritization of multiple targets based on distance to
+  // the target.
+  setShowing("t5_left", true);
+  setShowing("t5_right", true);
+  setShowing("t5_below", true);
+  testMouseClick("t5_left", 102, 10, "t5_left", "closest DIV is left");
+  testMouseClick("t5_left", 102.5, 10, "t5_left",
+    "closest DIV to midpoint is left because of its higher z-index");
+  testMouseClick("t5_left", 104, 10, "t5_right", "closest DIV is right");
+  testMouseClick("t5_left", 10, 104, "t5_left", "closest DIV is left");
+  testMouseClick("t5_left", 10, 105, "t5_left",
+    "closest DIV to midpoint is left because of its higher z-index");
+  testMouseClick("t5_left", 10, 106, "t5_below", "closest DIV is below");
+  setShowing("t5_left", false);
+  setShowing("t5_right", false);
+  setShowing("t5_below", false);
+
+  // Test behavior of nested elements.
+  // The following behaviors are questionable and may need to be changed.
+  setShowing("t6", true);
+  testMouseClick("t6_inner", -1, 10, "t6_inner",
+    "inner element is clickable because its parent is, even when it sticks outside parent");
+  testMouseClick("t6_inner", 19, -1, "t6_inner",
+    "when outside both inner and parent, but in range of both, the inner is selected");
+  testMouseClick("t6_inner", 25, -1, "t6",
+    "clicking in clickable parent close to inner activates parent, not inner");
+  setShowing("t6", false);
+
+  // Not yet tested:
+  // -- visited link weight
+  // -- "Closest" using Euclidean distance
+  endTest();
+}
+</script>
+</pre>
+</body>
+</html>

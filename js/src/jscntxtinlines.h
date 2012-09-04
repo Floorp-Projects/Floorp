@@ -176,7 +176,7 @@ class AutoPtr
   public:
     explicit AutoPtr(JSContext *cx) : cx(cx), value(NULL) {}
     ~AutoPtr() {
-        cx->delete_<T>(value);
+        js_delete<T>(value);
     }
 
     void operator=(T *ptr) { value = ptr; }
@@ -551,7 +551,7 @@ JSContext::ensureParseMapPool()
 {
     if (parseMapPool_)
         return true;
-    parseMapPool_ = js::OffTheBooks::new_<js::frontend::ParseMapPool>(this);
+    parseMapPool_ = js_new<js::frontend::ParseMapPool>(this);
     return parseMapPool_;
 }
 

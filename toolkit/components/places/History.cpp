@@ -907,7 +907,7 @@ private:
       mozStorageStatementScoper scoper(stmt);
       nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("visit_date"),
                                           _place.visitTime);
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS(rv, false);
 
       scoper.Abandon();
     }
@@ -1293,7 +1293,7 @@ public:
     rv = destinationFile->GetLeafName(destinationFileName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString destinationURISpec;
+    nsAutoCString destinationURISpec;
     rv = destinationFileURL->GetSpec(destinationURISpec);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1563,7 +1563,7 @@ History::InsertPlace(const VisitData& aPlace)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aPlace.hidden);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString guid(aPlace.guid);
+  nsAutoCString guid(aPlace.guid);
   if (aPlace.guid.IsVoid()) {
     rv = GenerateGUID(guid);
     NS_ENSURE_SUCCESS(rv, rv);

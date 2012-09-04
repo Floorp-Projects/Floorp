@@ -166,7 +166,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       return NS_OK;
     }
 
-    nsCAutoString ranges;
+    nsAutoCString ranges;
     hc->GetResponseHeader(NS_LITERAL_CSTRING("Accept-Ranges"),
                           ranges);
     bool acceptsRanges = ranges.EqualsLiteral("bytes");
@@ -180,7 +180,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       // 3) X-AMZ-Meta-Content-Duration.
       // 4) X-Content-Duration.
       // 5) Perform a seek in the decoder to find the value.
-      nsCAutoString durationText;
+      nsAutoCString durationText;
       nsresult ec = NS_OK;
       rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("Content-Duration"), durationText);
       if (NS_FAILED(rv)) {
@@ -482,7 +482,7 @@ void ChannelMediaResource::SetupChannelHeaders()
   // requests, and therefore seeking, early.
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
   if (hc) {
-    nsCAutoString rangeString("bytes=");
+    nsAutoCString rangeString("bytes=");
     rangeString.AppendInt(mOffset);
     rangeString.Append("-");
     hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, false);
@@ -1031,7 +1031,7 @@ private:
 void FileMediaResource::EnsureLengthInitialized()
 {
   mLock.AssertCurrentThreadOwns();
-  if (mSizeInitialized) {
+  if (mSizeInitialized || !mInput) {
     return;
   }
   mSizeInitialized = true;

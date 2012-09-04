@@ -272,7 +272,7 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   // of "dom.ipc.plugins.enabled"
   // The "filename.dll" part can contain shell wildcard pattern
 
-  nsCAutoString prefFile(aPluginTag->mFullPath.get());
+  nsAutoCString prefFile(aPluginTag->mFullPath.get());
   int32_t slashPos = prefFile.RFindCharInSet("/\\");
   if (kNotFound == slashPos)
     return false;
@@ -281,14 +281,14 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 
 #ifdef XP_MACOSX
 #if defined(__i386__)
-  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.i386.");
+  nsAutoCString prefGroupKey("dom.ipc.plugins.enabled.i386.");
 #elif defined(__x86_64__)
-  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.x86_64.");
+  nsAutoCString prefGroupKey("dom.ipc.plugins.enabled.x86_64.");
 #elif defined(__ppc__)
-  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.ppc.");
+  nsAutoCString prefGroupKey("dom.ipc.plugins.enabled.ppc.");
 #endif
 #else
-  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.");
+  nsAutoCString prefGroupKey("dom.ipc.plugins.enabled.");
 #endif
 
   // Java plugins include a number of different file names,
@@ -1496,7 +1496,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   nsIPrincipal *principal = doc->NodePrincipal();
 
-  nsCAutoString specStr;
+  nsAutoCString specStr;
   const char *spec;
 
   nsCOMPtr<nsIURI> uri;

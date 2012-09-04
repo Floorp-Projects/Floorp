@@ -591,9 +591,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mDatabase,
                                                        nsIDOMEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mError);
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(error)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(complete)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(abort)
 
   for (uint32_t i = 0; i < tmp->mCreatedObjectStores.Length(); i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedObjectStores[i]");
@@ -610,9 +607,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction, IDBWrapperCache)
   // Don't unlink mDatabase!
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mError);
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(error)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(complete)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(abort)
 
   tmp->mCreatedObjectStores.Clear();
   tmp->mDeletedObjectStores.Clear();
@@ -630,9 +624,9 @@ NS_IMPL_RELEASE_INHERITED(IDBTransaction, IDBWrapperCache)
 
 DOMCI_DATA(IDBTransaction, IDBTransaction)
 
-NS_IMPL_EVENT_HANDLER(IDBTransaction, error);
-NS_IMPL_EVENT_HANDLER(IDBTransaction, complete);
-NS_IMPL_EVENT_HANDLER(IDBTransaction, abort);
+NS_IMPL_EVENT_HANDLER(IDBTransaction, error)
+NS_IMPL_EVENT_HANDLER(IDBTransaction, complete)
+NS_IMPL_EVENT_HANDLER(IDBTransaction, abort)
 
 NS_IMETHODIMP
 IDBTransaction::GetDb(nsIIDBDatabase** aDB)

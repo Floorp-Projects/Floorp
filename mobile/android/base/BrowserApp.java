@@ -659,8 +659,12 @@ abstract public class BrowserApp extends GeckoApp
                         try {
                             URL url = new URL(icon);
                             InputStream is = (InputStream) url.getContent();
-                            Drawable drawable = Drawable.createFromStream(is, "src");
-                            item.setIcon(drawable);
+                            try {
+                                Drawable drawable = Drawable.createFromStream(is, "src");
+                                item.setIcon(drawable);
+                            } finally {
+                                is.close();
+                            }
                         } catch (Exception e) {
                             Log.w(LOGTAG, "Unable to set icon", e);
                         }

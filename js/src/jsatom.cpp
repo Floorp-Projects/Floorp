@@ -384,7 +384,7 @@ js::Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib, 
 
     JSAtom *atom = AtomizeInline(cx, &chars, inflatedLength, ib, ocb);
     if (ocb == TakeCharOwnership && chars)
-        cx->free_((void *)chars);
+        js_free((void *)chars);
     return atom;
 }
 
@@ -498,7 +498,7 @@ js::XDRAtom(XDRState<mode> *xdr, JSAtom **atomp)
          * most allocations here will be bigger than tempLifoAlloc's default
          * chunk size.
          */
-        chars = static_cast<jschar *>(cx->runtime->malloc_(nchars * sizeof(jschar)));
+        chars = cx->runtime->pod_malloc<jschar>(nchars);
         if (!chars)
             return false;
     }
@@ -506,7 +506,7 @@ js::XDRAtom(XDRState<mode> *xdr, JSAtom **atomp)
     JS_ALWAYS_TRUE(xdr->codeChars(chars, nchars));
     atom = AtomizeChars(cx, chars, nchars);
     if (chars != stackChars)
-        Foreground::free_(chars);
+        js_free(chars);
 #endif /* !IS_LITTLE_ENDIAN */
 
     if (!atom)

@@ -661,7 +661,7 @@ GfxInfo::AddCrashReportAnnotations()
   
   /* Add an App Note for now so that we get the data immediately. These
    * can go away after we store the above in the socorro db */
-  nsCAutoString note;
+  nsAutoCString note;
   /* AppendPrintf only supports 32 character strings, mrghh. */
   note.Append("AdapterVendorID: ");
   note.Append(narrowVendorID);
@@ -717,6 +717,8 @@ WindowsVersionToOperatingSystem(int32_t aWindowsVersion)
       return DRIVER_OS_WINDOWS_VISTA;
     case gfxWindowsPlatform::kWindows7:
       return DRIVER_OS_WINDOWS_7;
+    case gfxWindowsPlatform::kWindows8:
+      return DRIVER_OS_WINDOWS_8;
     case gfxWindowsPlatform::kWindowsUnknown:
     default:
       return DRIVER_OS_UNKNOWN;

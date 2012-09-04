@@ -939,7 +939,7 @@ RDFServiceImpl::GetResource(const nsACString& aURI, nsIRDFResource** aResource)
             // Try to find a factory using the component manager.
             nsACString::const_iterator begin;
             aURI.BeginReading(begin);
-            nsCAutoString contractID;
+            nsAutoCString contractID;
             contractID = NS_LITERAL_CSTRING(NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX) +
                          Substring(begin, p);
 
@@ -1017,7 +1017,7 @@ static int32_t kShift = 6;
     }
 
     nsresult rv;
-    nsCAutoString s;
+    nsAutoCString s;
 
     do {
         // Ugh, this is a really sloppy way to do this; I copied the
@@ -1371,7 +1371,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, bool aBlock, nsIRDFDataSource** 
     // Attempt to canonify the URI before we look for it in the
     // cache. We won't bother doing this on `rdf:' URIs to avoid
     // useless (and expensive) protocol handler lookups.
-    nsCAutoString spec(aURI);
+    nsAutoCString spec(aURI);
 
     if (!StringBeginsWith(spec, NS_LITERAL_CSTRING("rdf:"))) {
         nsCOMPtr<nsIURI> uri;
@@ -1397,7 +1397,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, bool aBlock, nsIRDFDataSource** 
     nsCOMPtr<nsIRDFDataSource> ds;
     if (StringBeginsWith(spec, NS_LITERAL_CSTRING("rdf:"))) {
         // It's a built-in data source. Convert it to a contract ID.
-        nsCAutoString contractID(
+        nsAutoCString contractID(
                 NS_LITERAL_CSTRING(NS_RDF_DATASOURCE_CONTRACTID_PREFIX) +
                 Substring(spec, 4, spec.Length() - 4));
 

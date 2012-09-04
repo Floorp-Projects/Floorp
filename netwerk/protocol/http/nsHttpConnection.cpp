@@ -260,7 +260,7 @@ nsHttpConnection::EnsureNPNComplete()
 
     nsCOMPtr<nsISupports> securityInfo;
     nsCOMPtr<nsISSLSocketControl> ssl;
-    nsCAutoString negotiatedNPN;
+    nsAutoCString negotiatedNPN;
     
     rv = mSocketTransport->GetSecurityInfo(getter_AddRefs(securityInfo));
     if (NS_FAILED(rv))
@@ -1420,7 +1420,7 @@ nsHttpConnection::SetupProxyConnect()
     NS_ABORT_IF_FALSE(!mUsingSpdyVersion,
                       "SPDY NPN Complete while using proxy connect stream");
 
-    nsCAutoString buf;
+    nsAutoCString buf;
     nsresult rv = nsHttpHandler::GenerateHostPort(
             nsDependentCString(mConnInfo->Host()), mConnInfo->Port(), buf);
     if (NS_FAILED(rv))

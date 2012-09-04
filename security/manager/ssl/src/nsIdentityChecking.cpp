@@ -673,7 +673,7 @@ loadTestEVInfos()
   if (NS_FAILED(rv))
     return;
 
-  nsCAutoString buffer;
+  nsAutoCString buffer;
   bool isMore = true;
 
   /* file format

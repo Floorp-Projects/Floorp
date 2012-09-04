@@ -1819,7 +1819,7 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
     obj->setPrivate(dbg);
     if (!dbg->init(cx)) {
-        cx->delete_(dbg);
+        js_delete(dbg);
         return false;
     }
 

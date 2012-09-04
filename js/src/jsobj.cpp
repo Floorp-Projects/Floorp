@@ -102,266 +102,24 @@ JS_ObjectToOuterObject(JSContext *cx, JSObject *obj_)
     return GetOuterObject(cx, obj);
 }
 
-static bool
-MarkSharpObjects(JSContext *cx, HandleObject obj, JSIdArray **idap, JSSharpInfo *value)
-{
-    JS_CHECK_RECURSION(cx, return false);
-
-    JSIdArray *ida;
-
-    JSSharpObjectMap *map = &cx->sharpObjectMap;
-    JS_ASSERT(map->depth >= 1);
-    JSSharpInfo sharpid;
-    JSSharpTable::Ptr p = map->table.lookup(obj);
-    if (!p) {
-        if (!map->table.put(obj.get(), sharpid))
-            return false;
-
-        ida = JS_Enumerate(cx, obj);
-        if (!ida)
-            return false;
-
-        bool ok = true;
-        RootedId id(cx);
-        for (int i = 0, length = ida->length; i < length; i++) {
-            id = ida->vector[i];
-            RootedObject obj2(cx);
-            RootedShape prop(cx);
-            ok = JSObject::lookupGeneric(cx, obj, id, &obj2, &prop);
-            if (!ok)
-                break;
-            if (!prop)
-                continue;
-            bool hasGetter, hasSetter;
-            RootedValue value(cx), setter(cx);
-            if (obj2->isNative()) {
-                Shape *shape = (Shape *) prop;
-                hasGetter = shape->hasGetterValue();
-                hasSetter = shape->hasSetterValue();
-                if (hasGetter)
-                    value = shape->getterValue();
-                if (hasSetter)
-                    setter = shape->setterValue();
-            } else {
-                hasGetter = hasSetter = false;
-            }
-            if (hasSetter) {
-                /* Mark the getter, then set val to setter. */
-                if (hasGetter && value.isObject()) {
-                    Rooted<JSObject*> vobj(cx, &value.toObject());
-                    ok = MarkSharpObjects(cx, vobj, NULL, NULL);
-                    if (!ok)
-                        break;
-                }
-                value = setter;
-            } else if (!hasGetter) {
-                ok = JSObject::getGeneric(cx, obj, obj, id, &value);
-                if (!ok)
-                    break;
-            }
-            if (value.isObject()) {
-                Rooted<JSObject*> vobj(cx, &value.toObject());
-                if (!MarkSharpObjects(cx, vobj, NULL, NULL)) {
-                    ok = false;
-                    break;
-                }
-            }
-        }
-        if (!ok || !idap)
-            JS_DestroyIdArray(cx, ida);
-        if (!ok)
-            return false;
-    } else {
-        if (!p->value.hasGen && !p->value.isSharp) {
-            p->value.hasGen = true;
-        }
-        sharpid = p->value;
-        ida = NULL;
-    }
-    if (idap)
-        *idap = ida;
-    if (value)
-        *value = sharpid;
-    return true;
-}
-
-bool
-js_EnterSharpObject(JSContext *cx, HandleObject obj, JSIdArray **idap, bool *alreadySeen, bool *isSharp)
-{
-    if (!JS_CHECK_OPERATION_LIMIT(cx))
-        return false;
-
-    *alreadySeen = false;
-
-    JSSharpObjectMap *map = &cx->sharpObjectMap;
-
-    JS_ASSERT_IF(map->depth == 0, map->table.count() == 0);
-    JS_ASSERT_IF(map->table.count() == 0, map->depth == 0);
-
-    JSSharpTable::Ptr p;
-    JSSharpInfo sharpid;
-    JSIdArray *ida = NULL;
-
-    /* From this point the control must flow either through out: or bad:. */
-    if (map->depth == 0) {
-        JS_KEEP_ATOMS(cx->runtime);
-
-        /*
-         * Although MarkSharpObjects tries to avoid invoking getters,
-         * it ends up doing so anyway under some circumstances; for
-         * example, if a wrapped object has getters, the wrapper will
-         * prevent MarkSharpObjects from recognizing them as such.
-         * This could lead to js_LeaveSharpObject being called while
-         * MarkSharpObjects is still working.
-         *
-         * Increment map->depth while we call MarkSharpObjects, to
-         * ensure that such a call doesn't free the hash table we're
-         * still using.
-         */
-        map->depth = 1;
-        bool success = MarkSharpObjects(cx, obj, &ida, &sharpid);
-        JS_ASSERT(map->depth == 1);
-        map->depth = 0;
-        if (!success)
-            goto bad;
-        JS_ASSERT(!sharpid.isSharp);
-        if (!idap) {
-            JS_DestroyIdArray(cx, ida);
-            ida = NULL;
-        }
-    } else {
-        /*
-         * It's possible that the value of a property has changed from the
-         * first time the object's properties are traversed (when the property
-         * ids are entered into the hash table) to the second (when they are
-         * converted to strings), i.e., the JSObject::getProperty() call is not
-         * idempotent.
-         */
-        p = map->table.lookup(obj);
-        if (!p) {
-            if (!map->table.put(obj.get(), sharpid))
-                goto bad;
-            goto out;
-        }
-        sharpid = p->value;
-    }
-
-    if (sharpid.isSharp || sharpid.hasGen)
-        *alreadySeen = true;
-
-out:
-    if (!sharpid.isSharp) {
-        if (idap && !ida) {
-            ida = JS_Enumerate(cx, obj);
-            if (!ida)
-                goto bad;
-        }
-        map->depth++;
-    }
-
-    if (idap)
-        *idap = ida;
-    *isSharp = sharpid.isSharp;
-    return true;
-
-bad:
-    /* Clean up the sharpObjectMap table on outermost error. */
-    if (map->depth == 0) {
-        JS_UNKEEP_ATOMS(cx->runtime);
-        map->sharpgen = 0;
-        map->table.clear();
-    }
-    return false;
-}
-
-void
-js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
-{
-    JSSharpObjectMap *map = &cx->sharpObjectMap;
-    JS_ASSERT(map->depth > 0);
-    if (--map->depth == 0) {
-        JS_UNKEEP_ATOMS(cx->runtime);
-        map->sharpgen = 0;
-        map->table.clear();
-    }
-    if (idap) {
-        if (JSIdArray *ida = *idap) {
-            JS_DestroyIdArray(cx, ida);
-            *idap = NULL;
-        }
-    }
-}
-
-void
-js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map)
-{
-    JS_ASSERT(map->depth > 0);
-
-    /*
-     * During recursive calls to MarkSharpObjects a non-native object or
-     * object with a custom getProperty method can potentially return an
-     * unrooted value or even cut from the object graph an argument of one of
-     * MarkSharpObjects recursive invocations. So we must protect map->table
-     * entries against GC.
-     *
-     * We can not simply use JSTempValueRooter to mark the obj argument of
-     * MarkSharpObjects during recursion as we have to protect *all* entries
-     * in JSSharpObjectMap including those that contains otherwise unreachable
-     * objects just allocated through custom getProperty. Otherwise newer
-     * allocations can re-use the address of an object stored in the hashtable
-     * confusing js_EnterSharpObject. So to address the problem we simply
-     * mark all objects from map->table.
-     *
-     * An alternative "proper" solution is to use JSTempValueRooter in
-     * MarkSharpObjects with code to remove during finalization entries
-     * with otherwise unreachable objects. But this is way too complex
-     * to justify spending efforts.
-     */
-    for (JSSharpTable::Range r = map->table.all(); !r.empty(); r.popFront()) {
-        JSObject *tmp = r.front().key;
-        MarkObjectRoot(trc, &tmp, "sharp table entry");
-        JS_ASSERT(tmp == r.front().key);
-    }
-}
-
 #if JS_HAS_TOSOURCE
 static JSBool
 obj_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-
-    bool comma = false;
-    const jschar *vchars;
-    size_t vlength;
-    Value *val;
-    JSString *gsop[2];
-    SkipRoot skipGsop(cx, &gsop, 2);
-
     JS_CHECK_RECURSION(cx, return JS_FALSE);
-
-    Value localroot[4];
-    PodArrayZero(localroot);
-    AutoArrayRooter tvr(cx, ArrayLength(localroot), localroot);
-
-    /* If outermost, we need parentheses to be an expression, not a block. */
-    bool outermost = (cx->sharpObjectMap.depth == 0);
 
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
-    JSIdArray *ida;
-    bool alreadySeen = false;
-    bool isSharp = false;
-    if (!js_EnterSharpObject(cx, obj, &ida, &alreadySeen, &isSharp))
-        return false;
+    /* If outermost, we need parentheses to be an expression, not a block. */
+    bool outermost = (cx->cycleDetectorSet.count() == 0);
 
-    if (!ida) {
-        /*
-         * We've already seen obj, so don't serialize it again (particularly as
-         * we might recur in the process): just serialize an empty object.
-         */
-        JS_ASSERT(alreadySeen);
+    AutoCycleDetector detector(cx, obj);
+    if (!detector.init())
+        return false;
+    if (detector.foundCycle()) {
         JSString *str = js_NewStringCopyZ(cx, "{}");
         if (!str)
             return false;
@@ -369,62 +127,36 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    JS_ASSERT(!isSharp);
-    if (alreadySeen) {
-        JSSharpTable::Ptr p = cx->sharpObjectMap.table.lookup(obj);
-        JS_ASSERT(p);
-        JS_ASSERT(!p->value.isSharp);
-        p->value.isSharp = true;
-    }
-
-    /* Automatically call js_LeaveSharpObject when we leave this frame. */
-    class AutoLeaveSharpObject {
-        JSContext *cx;
-        JSIdArray *ida;
-      public:
-        AutoLeaveSharpObject(JSContext *cx, JSIdArray *ida) : cx(cx), ida(ida) {}
-        ~AutoLeaveSharpObject() {
-            js_LeaveSharpObject(cx, &ida);
-        }
-    } autoLeaveSharpObject(cx, ida);
-
     StringBuffer buf(cx);
     if (outermost && !buf.append('('))
         return false;
     if (!buf.append('{'))
         return false;
 
-    /*
-     * We have four local roots for cooked and raw value GC safety.  Hoist the
-     * "localroot + 2" out of the loop using the val local, which refers to
-     * the raw (unconverted, "uncooked") values.
-     */
-    val = localroot + 2;
+    Value val[2];
+    PodArrayZero(val);
+    AutoArrayRooter tvr2(cx, ArrayLength(val), val);
 
-    RootedId id(cx);
-    for (int i = 0; i < ida->length; i++) {
-        /* Get strings for id and value and GC-root them via vp. */
-        id = ida->vector[i];
-        Rooted<JSLinearString*> idstr(cx);
+    JSString *gsop[2];
+    SkipRoot skipGsop(cx, &gsop, 2);
 
+    AutoIdVector idv(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &idv))
+        return false;
+
+    bool comma = false;
+    for (size_t i = 0; i < idv.length(); ++i) {
+        RootedId id(cx, idv[i]);
         RootedObject obj2(cx);
-        RootedShape prop(cx);
-        if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
+        RootedShape shape(cx);
+        if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &shape))
             return false;
 
-        /*
-         * Convert id to a value and then to a string.  Decide early whether we
-         * prefer get/set or old getter/setter syntax.
-         */
-        JSString *s = ToString(cx, IdToValue(id));
-        if (!s || !(idstr = s->ensureLinear(cx)))
-            return false;
-
+        /*  Decide early whether we prefer get/set or old getter/setter syntax. */
         int valcnt = 0;
-        if (prop) {
+        if (shape) {
             bool doGet = true;
             if (obj2->isNative()) {
-                Shape *shape = (Shape *) prop;
                 unsigned attrs = shape->attributes();
                 if (attrs & JSPROP_GETTER) {
                     doGet = false;
@@ -448,13 +180,22 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
             }
         }
 
+        /* Convert id to a linear string. */
+        RawString s = ToString(cx, IdToValue(id));
+        if (!s)
+            return false;
+        Rooted<JSLinearString*> idstr(cx, s->ensureLinear(cx));
+        if (!idstr)
+            return false;
+
         /*
          * If id is a string that's not an identifier, or if it's a negative
          * integer, then it must be quoted.
          */
         if (JSID_IS_ATOM(id)
             ? !IsIdentifier(idstr)
-            : (!JSID_IS_INT(id) || JSID_TO_INT(id) < 0)) {
+            : (!JSID_IS_INT(id) || JSID_TO_INT(id) < 0))
+        {
             s = js_QuoteString(cx, idstr, jschar('\''));
             if (!s || !(idstr = s->ensureLinear(cx)))
                 return false;
@@ -469,14 +210,13 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
                 continue;
 
             /* Convert val[j] to its canonical source form. */
-            JSString *valstr = js_ValueToSource(cx, val[j]);
+            RootedString valstr(cx, js_ValueToSource(cx, val[j]));
             if (!valstr)
                 return false;
-            localroot[j].setString(valstr);             /* local root */
-            vchars = valstr->getChars(cx);
+            const jschar *vchars = valstr->getChars(cx);
             if (!vchars)
                 return false;
-            vlength = valstr->length();
+            size_t vlength = valstr->length();
 
             /*
              * Remove '(function ' from the beginning of valstr and ')' from the
@@ -536,7 +276,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
     if (outermost && !buf.append(')'))
         return false;
 
-    JSString *str = buf.finishString();
+    RawString str = buf.finishString();
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2386,7 +2126,7 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type_, JSObject *paren
 
     JSObject *obj = JSObject::create(cx, kind, shape, type, slots);
     if (!obj) {
-        cx->free_(slots);
+        js_free(slots);
         return NULL;
     }
 
@@ -2910,9 +2650,9 @@ struct JSObject::TradeGutsReserved {
     ~TradeGutsReserved()
     {
         if (newaslots)
-            cx->free_(newaslots);
+            js_free(newaslots);
         if (newbslots)
-            cx->free_(newbslots);
+            js_free(newbslots);
     }
 };
 
@@ -3005,13 +2745,13 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
     unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan());
 
     if (adynamic) {
-        reserved.newaslots = (HeapSlot *) cx->malloc_(sizeof(HeapSlot) * adynamic);
+        reserved.newaslots = cx->pod_malloc<HeapSlot>(adynamic);
         if (!reserved.newaslots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(reserved.newaslots, adynamic);
     }
     if (bdynamic) {
-        reserved.newbslots = (HeapSlot *) cx->malloc_(sizeof(HeapSlot) * bdynamic);
+        reserved.newbslots = cx->pod_malloc<HeapSlot>(bdynamic);
         if (!reserved.newbslots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(reserved.newbslots, bdynamic);
@@ -3100,9 +2840,9 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
 
         /* Done with the dynamic slots. */
         if (a->hasDynamicSlots())
-            cx->free_(a->slots);
+            js_free(a->slots);
         if (b->hasDynamicSlots())
-            cx->free_(b->slots);
+            js_free(b->slots);
 
         void *apriv = a->hasPrivate() ? a->getPrivate() : NULL;
         void *bpriv = b->hasPrivate() ? b->getPrivate() : NULL;
@@ -3587,7 +3327,7 @@ JSObject::growSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
     }
 
     if (!oldCount) {
-        slots = (HeapSlot *) cx->malloc_(newCount * sizeof(HeapSlot));
+        slots = cx->pod_malloc<HeapSlot>(newCount);
         if (!slots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(slots, newCount);
@@ -3635,7 +3375,7 @@ JSObject::shrinkSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
     size_t newSize = oldSize - (oldCount - newCount) * sizeof(Value);
 
     if (newCount == 0) {
-        cx->free_(slots);
+        js_free(slots);
         slots = NULL;
         if (Probes::objectResizeActive())
             Probes::resizeObject(cx, this, oldSize, newSize);
