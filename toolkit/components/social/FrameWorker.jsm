@@ -146,11 +146,6 @@ FrameWorker.prototype = {
       workerWindow.addEventListener(t, l, c)
     };
 
-    // And a very hacky work-around for bug 734215
-    sandbox.bufferToArrayHack = function fw_bufferToArrayHack(a) {
-      return new workerWindow.Uint8Array(a);
-    };
-
     this.sandbox = sandbox;
 
     let worker = this;
