@@ -114,8 +114,8 @@
 #endif
 @BINPATH@/blocklist.xml
 #ifdef XP_UNIX
-@BINPATH@/run-mozilla.sh
 #ifndef XP_MACOSX
+@BINPATH@/run-mozilla.sh
 @BINPATH@/mozilla-xremote-client
 #endif
 #endif
