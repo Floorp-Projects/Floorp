@@ -7,12 +7,10 @@
 
   <binding id="chatbox">
     <content orient="vertical" mousethrough="never">
-      <xul:hbox class="chat-titlebar" xbl:inherits="minimized">
+      <xul:hbox class="chat-titlebar" xbl:inherits="minimized,selected"
+                onclick="document.getBindingParent(this).toggle();">
         <xul:image class="chat-status-icon" xbl:inherits="src=image"/>
         <xul:label class="chat-title" flex="1" xbl:inherits="value=label,crop"/>
-        <xul:toolbarbutton class="chat-toggle-button chat-toolbarbutton"
-                           xbl:inherits="minimized"
-                           oncommand="document.getBindingParent(this).toggle();"/>
         <xul:toolbarbutton class="chat-close-button chat-toolbarbutton"
                            oncommand="document.getBindingParent(this).close();"/>
       </xul:hbox>
@@ -132,7 +130,19 @@
         </getter>
       </property>
 
-      <field name="selectedChat"/>
+      <property name="selectedChat">
+        <getter><![CDATA[
+          return this._selectedChat;
+        ]]></getter>
+        <setter><![CDATA[
+          if (this._selectedChat)
+            this._selectedChat.removeAttribute("selected");
+          this._selectedChat = val;
+          if (val) {
+            this._selectedChat.setAttribute("selected", "true");
+          }
+        ]]></setter>
+      </property>
 
       <field name="menuitemMap">new WeakMap()</field>
       <field name="chatboxForURL">new Map();</field>
