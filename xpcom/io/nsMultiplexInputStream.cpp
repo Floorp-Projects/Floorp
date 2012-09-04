@@ -50,7 +50,7 @@ private:
                                const char* aFromRawSegment, uint32_t aToOffset,
                                uint32_t aCount, uint32_t *aWriteCount);
     
-    nsCOMArray<nsIInputStream> mStreams;
+    nsTArray<nsCOMPtr<nsIInputStream> > mStreams;
     uint32_t mCurrentStream;
     bool mStartedReadingCurrent;
     nsresult mStatus;
@@ -83,7 +83,7 @@ nsMultiplexInputStream::nsMultiplexInputStream()
 NS_IMETHODIMP
 nsMultiplexInputStream::GetCount(uint32_t *aCount)
 {
-    *aCount = mStreams.Count();
+    *aCount = mStreams.Length();
     return NS_OK;
 }
 
@@ -91,14 +91,14 @@ nsMultiplexInputStream::GetCount(uint32_t *aCount)
 NS_IMETHODIMP
 nsMultiplexInputStream::AppendStream(nsIInputStream *aStream)
 {
-    return mStreams.AppendObject(aStream) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return mStreams.AppendElement(aStream) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* void insertStream (in nsIInputStream stream, in unsigned long index); */
 NS_IMETHODIMP
 nsMultiplexInputStream::InsertStream(nsIInputStream *aStream, uint32_t aIndex)
 {
-    bool result = mStreams.InsertObjectAt(aStream, aIndex);
+    bool result = mStreams.InsertElementAt(aIndex, aStream);
     NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
     if (mCurrentStream > aIndex ||
         (mCurrentStream == aIndex && mStartedReadingCurrent))
@@ -110,8 +110,7 @@ nsMultiplexInputStream::InsertStream(nsIInputStream *aStream, uint32_t aIndex)
 NS_IMETHODIMP
 nsMultiplexInputStream::RemoveStream(uint32_t aIndex)
 {
-    bool result = mStreams.RemoveObjectAt(aIndex);
-    NS_ENSURE_TRUE(result, NS_ERROR_NOT_AVAILABLE);
+    mStreams.RemoveElementAt(aIndex);
     if (mCurrentStream > aIndex)
         --mCurrentStream;
     else if (mCurrentStream == aIndex)
@@ -124,7 +123,7 @@ nsMultiplexInputStream::RemoveStream(uint32_t aIndex)
 NS_IMETHODIMP
 nsMultiplexInputStream::GetStream(uint32_t aIndex, nsIInputStream **_retval)
 {
-    *_retval = mStreams.SafeObjectAt(aIndex);
+    *_retval = mStreams.SafeElementAt(aIndex, nullptr);
     NS_ENSURE_TRUE(*_retval, NS_ERROR_NOT_AVAILABLE);
 
     NS_ADDREF(*_retval);
@@ -139,7 +138,7 @@ nsMultiplexInputStream::Close()
 
     nsresult rv = NS_OK;
 
-    uint32_t len = mStreams.Count();
+    uint32_t len = mStreams.Length();
     for (uint32_t i = 0; i < len; ++i) {
         nsresult rv2 = mStreams[i]->Close();
         // We still want to close all streams, but we should return an error
@@ -159,7 +158,7 @@ nsMultiplexInputStream::Available(uint64_t *_retval)
     nsresult rv;
     uint64_t avail = 0;
 
-    uint32_t len = mStreams.Count();
+    uint32_t len = mStreams.Length();
     for (uint32_t i = mCurrentStream; i < len; i++) {
         uint64_t streamAvail;
         rv = mStreams[i]->Available(&streamAvail);
@@ -187,7 +186,7 @@ nsMultiplexInputStream::Read(char * aBuf, uint32_t aCount, uint32_t *_retval)
  
     nsresult rv = NS_OK;
 
-    uint32_t len = mStreams.Count();
+    uint32_t len = mStreams.Length();
     while (mCurrentStream < len && aCount) {
         uint32_t read;
         rv = mStreams[mCurrentStream]->Read(aBuf, aCount, &read);
@@ -241,7 +240,7 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
     state.mClosure = aClosure;
     state.mDone = false;
     
-    uint32_t len = mStreams.Count();
+    uint32_t len = mStreams.Length();
     while (mCurrentStream < len && aCount) {
         uint32_t read;
         rv = mStreams[mCurrentStream]->ReadSegments(ReadSegCb, &state, aCount, &read);
@@ -299,7 +298,7 @@ nsMultiplexInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
 NS_IMETHODIMP
 nsMultiplexInputStream::IsNonBlocking(bool *aNonBlocking)
 {
-    uint32_t len = mStreams.Count();
+    uint32_t len = mStreams.Length();
     if (len == 0) {
         // Claim to be non-blocking, since we won't block the caller.
         // On the other hand we'll never return NS_BASE_STREAM_WOULD_BLOCK,
@@ -329,20 +328,208 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
 
     nsresult rv;
 
-    // rewinding to start is easy, and should be the most common case
-    if (aWhence == NS_SEEK_SET && aOffset == 0)
-    {
-        uint32_t i, last;
-        last = mStartedReadingCurrent ? mCurrentStream+1 : mCurrentStream;
-        for (i = 0; i < last; ++i) {
-            nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(mStreams[i]);
-            NS_ENSURE_TRUE(stream, NS_ERROR_NO_INTERFACE);
+    uint32_t oldCurrentStream = mCurrentStream;
+    bool oldStartedReadingCurrent = mStartedReadingCurrent;
 
-            rv = stream->Seek(NS_SEEK_SET, 0);
-            NS_ENSURE_SUCCESS(rv, rv);
+    if (aWhence == NS_SEEK_SET) {
+        int64_t remaining = aOffset;
+        if (aOffset == 0) {
+            mCurrentStream = 0;
         }
-        mCurrentStream = 0;
-        mStartedReadingCurrent = false;
+        for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+            nsCOMPtr<nsISeekableStream> stream =
+                do_QueryInterface(mStreams[i]);
+            if (!stream) {
+              return NS_ERROR_FAILURE;
+            }
+
+            // See if all remaining streams should be rewound
+            if (remaining == 0) {
+                if (i < oldCurrentStream ||
+                    (i == oldCurrentStream && oldStartedReadingCurrent)) {
+                    rv = stream->Seek(NS_SEEK_SET, 0);
+                    NS_ENSURE_SUCCESS(rv, rv);
+                    continue;
+                }
+                else {
+                    break;
+                }
+            }
+
+            // Get position in current stream
+            int64_t streamPos;
+            if (i > oldCurrentStream ||
+                (i == oldCurrentStream && !oldStartedReadingCurrent)) {
+                streamPos = 0;
+            }
+            else {
+                rv = stream->Tell(&streamPos);
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
+
+            // See if we need to seek current stream forward or backward
+            if (remaining < streamPos) {
+                rv = stream->Seek(NS_SEEK_SET, remaining);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                mCurrentStream = i;
+                mStartedReadingCurrent = remaining != 0;
+
+                remaining = 0;
+            }
+            else if (remaining > streamPos) {
+                if (i < oldCurrentStream) {
+                    // We're already at end so no need to seek this stream
+                    remaining -= streamPos;
+                }
+                else {
+                    uint64_t avail;
+                    rv = mStreams[i]->Available(&avail);
+                    NS_ENSURE_SUCCESS(rv, rv);
+
+                    int64_t newPos = streamPos +
+                                     NS_MIN((int64_t)avail, remaining);
+
+                    rv = stream->Seek(NS_SEEK_SET, newPos);
+                    NS_ENSURE_SUCCESS(rv, rv);
+
+                    mCurrentStream = i;
+                    mStartedReadingCurrent = true;
+
+                    remaining -= newPos;
+                }
+            }
+            else {
+                NS_ASSERTION(remaining == streamPos, "Huh?");
+                remaining = 0;
+            }
+        }
+
+        return NS_OK;
+    }
+
+    if (aWhence == NS_SEEK_CUR && aOffset > 0) {
+        int64_t remaining = aOffset;
+        for (uint32_t i = mCurrentStream; remaining && i < mStreams.Length(); ++i) {
+            nsCOMPtr<nsISeekableStream> stream =
+                do_QueryInterface(mStreams[i]);
+
+            uint64_t avail;
+            rv = mStreams[i]->Available(&avail);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            int64_t seek = NS_MIN((int64_t)avail, remaining);
+
+            rv = stream->Seek(NS_SEEK_CUR, seek);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            mCurrentStream = i;
+            mStartedReadingCurrent = true;
+
+            remaining -= seek;
+        }
+
+        return NS_OK;
+    }
+
+    if (aWhence == NS_SEEK_CUR && aOffset < 0) {
+        int64_t remaining = -aOffset;
+        for (uint32_t i = mCurrentStream; remaining && i != (uint32_t)-1; --i) {
+            nsCOMPtr<nsISeekableStream> stream =
+                do_QueryInterface(mStreams[i]);
+
+            int64_t pos;
+            rv = stream->Tell(&pos);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            int64_t seek = NS_MIN(pos, remaining);
+
+            rv = stream->Seek(NS_SEEK_CUR, -seek);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            mCurrentStream = i;
+            mStartedReadingCurrent = seek != -pos;
+
+            remaining -= seek;
+        }
+
+        return NS_OK;
+    }
+
+    if (aWhence == NS_SEEK_CUR) {
+        NS_ASSERTION(aOffset == 0, "Should have handled all non-zero values");
+
+        return NS_OK;
+    }
+
+    if (aWhence == NS_SEEK_END) {
+        if (aOffset > 0) {
+          return NS_ERROR_INVALID_ARG;
+        }
+        int64_t remaining = aOffset;
+        for (uint32_t i = mStreams.Length() - 1; i != (uint32_t)-1; --i) {
+            nsCOMPtr<nsISeekableStream> stream =
+                do_QueryInterface(mStreams[i]);
+
+            // See if all remaining streams should be seeked to end
+            if (remaining == 0) {
+                if (i >= oldCurrentStream) {
+                    rv = stream->Seek(NS_SEEK_END, 0);
+                    NS_ENSURE_SUCCESS(rv, rv);
+                }
+                else {
+                    break;
+                }
+            }
+
+            // Get position in current stream
+            int64_t streamPos;
+            if (i < oldCurrentStream) {
+                streamPos = 0;
+            } else {
+                uint64_t avail;
+                rv = mStreams[i]->Available(&avail);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                streamPos = avail;
+            }
+
+            // See if we have enough data in the current stream.
+            if (NS_ABS(remaining) < streamPos) {
+                rv = stream->Seek(NS_SEEK_END, remaining);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                mCurrentStream = i;
+                mStartedReadingCurrent = true;
+
+                remaining = 0;
+            } else if (NS_ABS(remaining) > streamPos) {
+                if (i > oldCurrentStream ||
+                    (i == oldCurrentStream && !oldStartedReadingCurrent)) {
+                    // We're already at start so no need to seek this stream
+                    remaining += streamPos;
+                } else {
+                    int64_t avail;
+                    rv = stream->Tell(&avail);
+                    NS_ENSURE_SUCCESS(rv, rv);
+
+                    int64_t newPos = streamPos + NS_MIN(avail, NS_ABS(remaining));
+
+                    rv = stream->Seek(NS_SEEK_END, -newPos);
+                    NS_ENSURE_SUCCESS(rv, rv);
+
+                    mCurrentStream = i;
+                    mStartedReadingCurrent = true;
+
+                    remaining += newPos;
+                }
+            }
+            else {
+                NS_ASSERTION(remaining == streamPos, "Huh?");
+                remaining = 0;
+            }
+        }
+
         return NS_OK;
     }
 
@@ -408,7 +595,7 @@ nsMultiplexInputStream::Serialize(InputStreamParams& aParams)
 {
     MultiplexInputStreamParams params;
 
-    uint32_t streamCount = mStreams.Count();
+    uint32_t streamCount = mStreams.Length();
 
     if (streamCount) {
         InfallibleTArray<InputStreamParams>& streams = params.streams();
@@ -416,7 +603,7 @@ nsMultiplexInputStream::Serialize(InputStreamParams& aParams)
         streams.SetCapacity(streamCount);
         for (uint32_t index = 0; index < streamCount; index++) {
             nsCOMPtr<nsIIPCSerializableInputStream> serializable =
-                do_QueryInterface(mStreams.ObjectAt(index));
+                do_QueryInterface(mStreams[index]);
             NS_ASSERTION(serializable, "Child stream isn't serializable!");
 
             if (serializable) {
