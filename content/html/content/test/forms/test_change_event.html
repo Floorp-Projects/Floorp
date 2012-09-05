@@ -106,6 +106,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     input.blur();
     is(textInputChange[0], 2, "text input element should have dispatched change event (2).");
 
+    // value being set while focused
+    input.focus();
+    input.value = 'foo';
+    input.blur();
+    is(textInputChange[0], 2, "text input element should not have dispatched change event (2).");
+
+    // value being set while focused after being modified manually
+    input.focus();
+    synthesizeKey("f", {});
+    input.value = 'bar';
+    input.blur();
+    is(textInputChange[0], 3, "text input element should not have dispatched change event (3).");
+
     //focus and blur textarea
     var textarea = document.getElementById("textarea");
     textarea.focus();
