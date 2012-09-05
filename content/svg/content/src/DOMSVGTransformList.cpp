@@ -87,7 +87,7 @@ DOMSVGTransformList::GetItemAt(uint32_t aIndex)
   if (IsAnimValList()) {
     Element()->FlushAnimations();
   }
-  if (aIndex < Length()) {
+  if (aIndex < LengthNoFlush()) {
     EnsureItemAt(aIndex);
     return mItems[aIndex];
   }
@@ -151,7 +151,7 @@ DOMSVGTransformList::GetNumberOfItems(uint32_t *aNumberOfItems)
   if (IsAnimValList()) {
     Element()->FlushAnimations();
   }
-  *aNumberOfItems = Length();
+  *aNumberOfItems = LengthNoFlush();
   return NS_OK;
 }
 
@@ -170,7 +170,7 @@ DOMSVGTransformList::Clear()
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  if (Length() > 0) {
+  if (LengthNoFlush() > 0) {
     nsAttrValue emptyOrOldValue = Element()->WillChangeTransformList();
     // Notify any existing DOM items of removal *before* truncating the lists
     // so that they can find their SVGTransform internal counterparts and copy
@@ -241,7 +241,7 @@ DOMSVGTransformList::InsertItemBefore(nsIDOMSVGTransform *newItem,
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  index = NS_MIN(index, Length());
+  index = NS_MIN(index, LengthNoFlush());
   if (index >= DOMSVGTransform::MaxListIndex()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -298,7 +298,7 @@ DOMSVGTransformList::ReplaceItem(nsIDOMSVGTransform *newItem,
   if (!domItem) {
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   }
-  if (index >= Length()) {
+  if (index >= LengthNoFlush()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
   if (domItem->HasOwner()) {
@@ -336,7 +336,7 @@ DOMSVGTransformList::RemoveItem(uint32_t index, nsIDOMSVGTransform **_retval)
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  if (index >= Length()) {
+  if (index >= LengthNoFlush()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -371,7 +371,7 @@ NS_IMETHODIMP
 DOMSVGTransformList::AppendItem(nsIDOMSVGTransform *newItem,
                                 nsIDOMSVGTransform **_retval)
 {
-  return InsertItemBefore(newItem, Length(), _retval);
+  return InsertItemBefore(newItem, LengthNoFlush(), _retval);
 }
 
 /* nsIDOMSVGTransform createSVGTransformFromMatrix (in nsIDOMSVGMatrix matrix);
@@ -398,13 +398,13 @@ DOMSVGTransformList::Consolidate(nsIDOMSVGTransform **_retval)
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  if (Length() == 0)
+  if (LengthNoFlush() == 0)
     return NS_OK;
 
   // Note that SVG 1.1 says, "The consolidation operation creates new
   // SVGTransform object as the first and only item in the list" hence, even if
-  // Length() == 1 we can't return that one item (after making it a matrix
-  // type). We must orphan the existing item and then make a new one.
+  // LengthNoFlush() == 1 we can't return that one item (after making it a
+  // matrix type). We must orphan the existing item and then make a new one.
 
   // First calculate our matrix
   gfxMatrix mx = InternalList().GetConsolidationMatrix();
@@ -414,7 +414,7 @@ DOMSVGTransformList::Consolidate(nsIDOMSVGTransform **_retval)
 
   // And append the new transform
   nsRefPtr<DOMSVGTransform> transform = new DOMSVGTransform(mx);
-  return InsertItemBefore(transform, Length(), _retval);
+  return InsertItemBefore(transform, LengthNoFlush(), _retval);
 }
 
 //----------------------------------------------------------------------

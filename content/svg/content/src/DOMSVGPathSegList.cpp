@@ -93,7 +93,7 @@ DOMSVGPathSegList::GetItemAt(uint32_t aIndex)
   if (IsAnimValList()) {
     Element()->FlushAnimations();
   }
-  if (aIndex < Length()) {
+  if (aIndex < LengthNoFlush()) {
     EnsureItemAt(aIndex);
     return ItemAt(aIndex);
   }
@@ -247,7 +247,7 @@ DOMSVGPathSegList::GetNumberOfItems(uint32_t *aNumberOfItems)
   if (IsAnimValList()) {
     Element()->FlushAnimations();
   }
-  *aNumberOfItems = Length();
+  *aNumberOfItems = LengthNoFlush();
   return NS_OK;
 }
 
@@ -258,7 +258,7 @@ DOMSVGPathSegList::Clear()
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  if (Length() > 0) {
+  if (LengthNoFlush() > 0) {
     nsAttrValue emptyOrOldValue = Element()->WillChangePathSegList();
     // DOM list items that are to be removed must be removed before we change
     // the internal list, otherwise they wouldn't be able to copy their
@@ -336,10 +336,10 @@ DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
   }
 
   uint32_t internalIndex;
-  if (aIndex < Length()) {
+  if (aIndex < LengthNoFlush()) {
     internalIndex = mItems[aIndex].mInternalDataIndex;
   } else {
-    aIndex = Length();
+    aIndex = LengthNoFlush();
     internalIndex = InternalList().mData.Length();
   }
   if (aIndex >= DOMSVGPathSeg::MaxListIndex()) {
@@ -401,7 +401,7 @@ DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
   if (!domItem) {
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   }
-  if (aIndex >= Length()) {
+  if (aIndex >= LengthNoFlush()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
   if (domItem->HasOwner()) {
@@ -439,7 +439,7 @@ DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
 
   uint32_t delta = newArgCount - oldArgCount;
   if (delta != 0) {
-    for (uint32_t i = aIndex + 1; i < Length(); ++i) {
+    for (uint32_t i = aIndex + 1; i < LengthNoFlush(); ++i) {
       mItems[i].mInternalDataIndex += delta;
     }
   }
@@ -461,7 +461,7 @@ DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  if (aIndex >= Length()) {
+  if (aIndex >= LengthNoFlush()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
   // We have to return the removed item, so make sure it exists:
@@ -498,7 +498,7 @@ NS_IMETHODIMP
 DOMSVGPathSegList::AppendItem(nsIDOMSVGPathSeg *aNewItem,
                               nsIDOMSVGPathSeg **_retval)
 {
-  return InsertItemBefore(aNewItem, Length(), _retval);
+  return InsertItemBefore(aNewItem, LengthNoFlush(), _retval);
 }
 
 NS_IMETHODIMP

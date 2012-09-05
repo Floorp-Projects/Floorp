@@ -86,7 +86,7 @@ DOMSVGLengthList::GetItemAt(uint32_t aIndex)
   if (IsAnimValList()) {
     Element()->FlushAnimations();
   }
-  if (aIndex < Length()) {
+  if (aIndex < LengthNoFlush()) {
     EnsureItemAt(aIndex);
     return mItems[aIndex];
   }
@@ -147,7 +147,7 @@ DOMSVGLengthList::GetNumberOfItems(uint32_t *aNumberOfItems)
   if (IsAnimValList()) {
     Element()->FlushAnimations();
   }
-  *aNumberOfItems = Length();
+  *aNumberOfItems = LengthNoFlush();
   return NS_OK;
 }
 
@@ -158,7 +158,7 @@ DOMSVGLengthList::Clear()
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  if (Length() > 0) {
+  if (LengthNoFlush() > 0) {
     nsAttrValue emptyOrOldValue = Element()->WillChangeLengthList(AttrEnum());
     // Notify any existing DOM items of removal *before* truncating the lists
     // so that they can find their SVGLength internal counterparts and copy
@@ -226,7 +226,7 @@ DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  index = NS_MIN(index, Length());
+  index = NS_MIN(index, LengthNoFlush());
   if (index >= DOMSVGLength::MaxListIndex()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -281,7 +281,7 @@ DOMSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
   if (!domItem) {
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   }
-  if (index >= Length()) {
+  if (index >= LengthNoFlush()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
   if (domItem->HasOwner()) {
@@ -319,7 +319,7 @@ DOMSVGLengthList::RemoveItem(uint32_t index,
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  if (index >= Length()) {
+  if (index >= LengthNoFlush()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -353,7 +353,7 @@ NS_IMETHODIMP
 DOMSVGLengthList::AppendItem(nsIDOMSVGLength *newItem,
                              nsIDOMSVGLength **_retval)
 {
-  return InsertItemBefore(newItem, Length(), _retval);
+  return InsertItemBefore(newItem, LengthNoFlush(), _retval);
 }
 
 NS_IMETHODIMP
