@@ -79,7 +79,7 @@ pref("network.http.pipelining.maxrequests" , 6);
 pref("network.http.keep-alive.timeout", 600);
 pref("network.http.max-connections", 20);
 pref("network.http.max-persistent-connections-per-server", 6);
-pref("network.http.max-persistent-connections-per-proxy", 8);
+pref("network.http.max-persistent-connections-per-proxy", 20);
 
 // See bug 545869 for details on why these are set the way they are
 pref("network.buffer.cache.count", 24);
