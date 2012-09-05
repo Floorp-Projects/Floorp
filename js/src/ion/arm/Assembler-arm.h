@@ -995,11 +995,6 @@ class Operand
         return O2Reg(Register::FromCode(reg));
     }
 
-    Register toReg() const {
-        JS_ASSERT(Tag == OP2);
-        return Register::FromCode(reg);
-    }
-
     void toAddr(Register *r, Imm32 *dest) const {
         JS_ASSERT(Tag == MEM);
         *r = Register::FromCode(reg);

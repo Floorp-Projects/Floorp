@@ -981,8 +981,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void cmp32(const Register &lhs, const Imm32 &rhs);
     void cmp32(const Register &lhs, const Register &rhs);
-    void cmp32(const Operand &lhs, const Imm32 &rhs);
-    void cmp32(const Operand &lhs, const Register &rhs);
     void cmpPtr(const Register &lhs, const ImmWord &rhs);
     void cmpPtr(const Register &lhs, const Register &rhs);
     void cmpPtr(const Register &lhs, const ImmGCPtr &rhs);
