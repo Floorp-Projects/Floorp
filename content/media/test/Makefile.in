@@ -127,8 +127,6 @@ MOCHITEST_FILES = \
 		test_media_selection.html \
 		test_playback.html \
 		test_seekLies.html \
-		test_media_sniffer.html \
-		contentType.sjs \
 		$(NULL)
 
 $(warning test_error_in_video_document.html is disabled for intermittent failures. Bug 608634)
@@ -214,9 +212,6 @@ MOCHITEST_FILES += \
 		video-overhang.ogg \
 		file_a4_tone.ogg \
 		detodos.opus \
-		short.mp4 \
-		notags.mp3 \
-		id3tags.mp3 \
 		$(NULL)
 
 # Wave sample files
