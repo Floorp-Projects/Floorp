@@ -11,10 +11,9 @@ interface CSSRule;
 interface CSSValue;
 
 interface CSSStyleDeclaration {
-  [GetterInfallible]
+  [SetterThrows]
   attribute DOMString cssText;
 
-  [Infallible]
   readonly attribute unsigned long length;
   getter DOMString item(unsigned long index);
 
@@ -31,6 +30,5 @@ interface CSSStyleDeclaration {
   [Throws]
   DOMString removeProperty(DOMString property);
 
-  [Infallible]
   readonly attribute CSSRule parentRule;
 };

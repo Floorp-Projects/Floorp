@@ -25,7 +25,6 @@ interface XULElement;
 interface CanvasRenderingContext2D {
 
   // back-reference to the canvas
-  [Infallible]
   readonly attribute HTMLCanvasElement canvas;
 
   // state
@@ -47,14 +46,14 @@ interface CanvasRenderingContext2D {
 // NOT IMPLEMENTED  void resetTransform();
 
   // compositing
-           [Infallible]
            attribute double globalAlpha; // (default 1.0)
+           [Throws]
            attribute DOMString globalCompositeOperation; // (default source-over)
 
   // colors and styles (see also the CanvasDrawingStyles interface)
-           [SetterInfallible]
+           [GetterThrows]
            attribute any strokeStyle; // (default black)
-           [SetterInfallible]
+           [GetterThrows]
            attribute any fillStyle; // (default black)
   [Throws]
   CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
@@ -64,13 +63,9 @@ interface CanvasRenderingContext2D {
   CanvasPattern createPattern((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, [TreatNullAs=EmptyString] DOMString repetition);
 
   // shadows
-           [Infallible]
            attribute double shadowOffsetX; // (default 0)
-           [Infallible]
            attribute double shadowOffsetY; // (default 0)
-           [Infallible]
            attribute double shadowBlur; // (default 0)
-           [Infallible]
            attribute DOMString shadowColor; // (default transparent black)
 
   // rects
@@ -130,23 +125,23 @@ interface CanvasRenderingContext2D {
 
   // Mozilla-specific stuff
   // FIXME Bug 768048 mozCurrentTransform/mozCurrentTransformInverse should return a WebIDL array.
+  [Throws]
   attribute object mozCurrentTransform; // [ m11, m12, m21, m22, dx, dy ], i.e. row major
+  [Throws]
   attribute object mozCurrentTransformInverse;
 
-  [Infallible]
   attribute DOMString mozFillRule; /* "evenodd", "nonzero" (default) */
 
+  [Throws]
   attribute any mozDash; /* default |null| */
 
-  [Infallible]
   attribute double mozDashOffset; /* default 0.0 */
 
-  [GetterInfallible]
+  [SetterThrows]
   attribute DOMString mozTextStyle;
 
   // image smoothing mode -- if disabled, images won't be smoothed
   // if scaled.
-  [Infallible]
   attribute boolean mozImageSmoothingEnabled;
 
   // Show the caret if appropriate when drawing
@@ -215,13 +210,10 @@ CanvasRenderingContext2D implements CanvasPathMethods;
 [NoInterfaceObject]
 interface CanvasDrawingStyles {
   // line caps/joins
-           [Infallible]
            attribute double lineWidth; // (default 1)
-           [Infallible]
            attribute DOMString lineCap; // "butt", "round", "square" (default "butt")
-           [SetterInfallible]
+           [GetterThrows]
            attribute DOMString lineJoin; // "round", "bevel", "miter" (default "miter")
-           [Infallible]
            attribute double miterLimit; // (default 10)
 
   // dashed lines
@@ -230,11 +222,9 @@ interface CanvasDrawingStyles {
 // NOT IMPLEMENTED             attribute double lineDashOffset;
 
   // text
-           [GetterInfallible]
+           [SetterThrows]
            attribute DOMString font; // (default 10px sans-serif)
-           [Infallible]
            attribute DOMString textAlign; // "start", "end", "left", "right", "center" (default: "start")
-           [Infallible]
            attribute DOMString textBaseline; // "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" (default: "alphabetic")
 };
 

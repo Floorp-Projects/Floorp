@@ -472,13 +472,10 @@ interface WebGLRenderingContext {
     const unsigned long UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
     const unsigned long BROWSER_DEFAULT_WEBGL          = 0x9244;
 
-    [Infallible]
     readonly attribute HTMLCanvasElement canvas;
 
-    [Infallible]
     readonly attribute long drawingBufferWidth;
 
-    [Infallible]
     readonly attribute long drawingBufferHeight;
 
     [WebGLHandlesContextLoss, Throws] WebGLContextAttributes getContextAttributes();
