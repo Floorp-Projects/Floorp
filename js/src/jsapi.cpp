@@ -224,23 +224,6 @@ JS_GetEmptyString(JSRuntime *rt)
     return rt->emptyString;
 }
 
-static JSBool
-TryArgumentFormatter(JSContext *cx, const char **formatp, JSBool fromJS, jsval **vpp, va_list *app)
-{
-    const char *format;
-    JSArgumentFormatMap *map;
-
-    format = *formatp;
-    for (map = cx->argumentFormatMap; map; map = map->next) {
-        if (!strncmp(format, map->format, map->length)) {
-            *formatp = format + map->length;
-            return map->formatter(cx, format, fromJS, vpp, app);
-        }
-    }
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CHAR, format);
-    return JS_FALSE;
-}
-
 static void
 AssertHeapIsIdle(JSRuntime *rt)
 {
@@ -389,63 +372,12 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
           case '*':
             break;
           default:
-            format--;
-            if (!TryArgumentFormatter(cx, &format, JS_TRUE, &sp,
-                                      JS_ADDRESSOF_VA_LIST(ap))) {
-                return JS_FALSE;
-            }
-            /* NB: the formatter already updated sp, so we continue here. */
-            continue;
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CHAR, format);
+            return JS_FALSE;
         }
         sp++;
     }
     return JS_TRUE;
-}
-
-JS_PUBLIC_API(JSBool)
-JS_AddArgumentFormatter(JSContext *cx, const char *format, JSArgumentFormatter formatter)
-{
-    size_t length;
-    JSArgumentFormatMap **mpp, *map;
-
-    length = strlen(format);
-    mpp = &cx->argumentFormatMap;
-    while ((map = *mpp) != NULL) {
-        /* Insert before any shorter string to match before prefixes. */
-        if (map->length < length)
-            break;
-        if (map->length == length && !strcmp(map->format, format))
-            goto out;
-        mpp = &map->next;
-    }
-    map = cx->pod_malloc<JSArgumentFormatMap>();
-    if (!map)
-        return JS_FALSE;
-    map->format = format;
-    map->length = length;
-    map->next = *mpp;
-    *mpp = map;
-out:
-    map->formatter = formatter;
-    return JS_TRUE;
-}
-
-JS_PUBLIC_API(void)
-JS_RemoveArgumentFormatter(JSContext *cx, const char *format)
-{
-    size_t length;
-    JSArgumentFormatMap **mpp, *map;
-
-    length = strlen(format);
-    mpp = &cx->argumentFormatMap;
-    while ((map = *mpp) != NULL) {
-        if (map->length == length && !strcmp(map->format, format)) {
-            *mpp = map->next;
-            js_free(map);
-            return;
-        }
-        mpp = &map->next;
-    }
 }
 
 JS_PUBLIC_API(JSBool)
