@@ -164,6 +164,11 @@ private:
     AllocPImageBridge(mozilla::ipc::Transport* aTransport,
                       base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
+    virtual bool RecvGetProcessAttributes(uint64_t* aId,
+                                          bool* aStartBackground,
+                                          bool* aIsForApp,
+                                          bool* aIsForBrowser) MOZ_OVERRIDE;
+
     virtual PBrowserParent* AllocPBrowser(const uint32_t& aChromeFlags,
                                           const bool& aIsBrowserElement,
                                           const AppId& aApp);
@@ -297,11 +302,12 @@ private:
     // the nsIObserverService.
     nsCOMArray<nsIMemoryReporter> mMemoryReporters;
 
-    bool mIsAlive;
-    bool mSendPermissionUpdates;
-
     const nsString mAppManifestURL;
     nsRefPtr<nsFrameMessageManager> mMessageManager;
+
+    bool mIsAlive;
+    bool mSendPermissionUpdates;
+    bool mIsForBrowser;
 
     friend class CrashReporterParent;
 };

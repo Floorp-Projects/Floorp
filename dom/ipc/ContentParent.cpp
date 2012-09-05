@@ -686,9 +686,10 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
     , mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
+    , mAppManifestURL(aAppManifestURL)
     , mIsAlive(true)
     , mSendPermissionUpdates(false)
-    , mAppManifestURL(aAppManifestURL)
+    , mIsForBrowser(aIsForBrowser)
 {
     // From this point on, NS_WARNING, NS_ASSERTION, etc. should print out the
     // PID along with the warning.
@@ -707,8 +708,6 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL,
         mSubprocess->AsyncLaunch();
     }
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
-    unused << SendSetProcessAttributes(gContentChildID++,
-                                       IsForApp(), aIsForBrowser);
 
     // NB: internally, this will send an IPC message to the child
     // process to get it to create the CompositorChild.  This
@@ -1085,6 +1084,18 @@ ContentParent::AllocPImageBridge(mozilla::ipc::Transport* aTransport,
                                  base::ProcessId aOtherProcess)
 {
     return ImageBridgeParent::Create(aTransport, aOtherProcess);
+}
+
+bool
+ContentParent::RecvGetProcessAttributes(uint64_t* aId, bool* aStartBackground,
+                                        bool* aIsForApp, bool* aIsForBrowser)
+{
+    *aId = gContentChildID++;
+    *aStartBackground =
+        (mAppManifestURL == MAGIC_PREALLOCATED_APP_MANIFEST_URL);
+    *aIsForApp = IsForApp();
+    *aIsForBrowser = mIsForBrowser;
+    return true;
 }
 
 PBrowserParent*
