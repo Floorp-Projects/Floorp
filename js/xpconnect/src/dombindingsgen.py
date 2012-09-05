@@ -736,7 +736,7 @@ def writeStubFile(filename, config, interfaces):
                 "Register(nsScriptNameSpaceManager* aNameSpaceManager)\n"
                 "{\n"
                 "#define REGISTER_PROTO(_dom_class) \\\n"
-                "    aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_class), _dom_class##Wrapper::DefineDOMInterface);\n\n"""
+                "    aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_class), _dom_class##Wrapper::DefineDOMInterface, nullptr);\n\n"""
                 "\n")
         for clazz in config.list_classes.itervalues():
             f.write("    REGISTER_PROTO(%s);\n" % clazz.name)
