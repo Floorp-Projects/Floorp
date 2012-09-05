@@ -22,3 +22,5 @@ fi
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
+
+. "$topsrcdir/build/mozconfig.common.override"
