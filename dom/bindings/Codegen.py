@@ -1338,6 +1338,24 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
   *aEnabled = true;
   return !!%s(aCx, global, aReceiver);""" % (getter))
 
+class CGPrefEnabled(CGAbstractMethod):
+    """
+    A method for testing whether the preference controlling this
+    interface is enabled.  When it's not, the interface should not be
+    visible on the global.
+    """
+    def __init__(self, descriptor):
+        CGAbstractMethod.__init__(self, descriptor, 'PrefEnabled', 'bool', [])
+
+    def declare(self):
+        return CGAbstractMethod.declare(self)
+
+    def define(self):
+        return CGAbstractMethod.define(self)
+
+    def definition_body(self):
+        return "  return %s::PrefEnabled();" % self.descriptor.nativeType
+
 class CGIsMethod(CGAbstractMethod):
     def __init__(self, descriptor):
         args = [Argument('JSObject*', 'obj')]
@@ -4999,6 +5017,11 @@ class CGDescriptor(CGThing):
 
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
+            if (not descriptor.interface.isExternal() and
+                # Workers stuff is never pref-controlled
+                not descriptor.workers and
+                descriptor.interface.getExtendedAttribute("PrefControlled") is not None):
+                cgThings.append(CGPrefEnabled(descriptor))
 
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGNativePropertyHooks(descriptor))
@@ -5310,12 +5333,16 @@ class CGRegisterProtos(CGAbstractMethod):
 
     def _defineMacro(self):
        return """
-#define REGISTER_PROTO(_dom_class) \\
-  aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_class), _dom_class##Binding::DefineDOMInterface);\n\n"""
+#define REGISTER_PROTO(_dom_class, _pref_check) \\
+  aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_class), _dom_class##Binding::DefineDOMInterface, _pref_check);\n\n"""
     def _undefineMacro(self):
         return "\n#undef REGISTER_PROTO"
     def _registerProtos(self):
-        lines = ["REGISTER_PROTO(%s);" % desc.name
+        def getPrefCheck(desc):
+            if desc.interface.getExtendedAttribute("PrefControlled") is None:
+                return "nullptr"
+            return "%sBinding::PrefEnabled" % desc.name
+        lines = ["REGISTER_PROTO(%s, %s);" % (desc.name, getPrefCheck(desc))
                  for desc in self.config.getDescriptors(hasInterfaceObject=True,
                                                         isExternal=False,
                                                         workers=False,

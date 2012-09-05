@@ -738,6 +738,9 @@ class IDLInterface(IDLObjectWithScope):
                 return loopPoint
         return None
 
+    def getExtendedAttribute(self, name):
+        return self._extendedAttrDict.get(name, None)
+
 class IDLDictionary(IDLObjectWithScope):
     def __init__(self, location, parentScope, name, parent, members):
         assert isinstance(parentScope, IDLScope)
