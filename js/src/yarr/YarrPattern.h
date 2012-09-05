@@ -66,15 +66,13 @@ struct CharacterRange {
 };
 
 struct CharacterClassTable : RefCounted<CharacterClassTable> {
-    friend class js::OffTheBooks;
     const char* m_table;
     bool m_inverted;
     static PassRefPtr<CharacterClassTable> create(const char* table, bool inverted)
     {
-        return adoptRef(js::OffTheBooks::new_<CharacterClassTable>(table, inverted));
+        return adoptRef(js_new<CharacterClassTable>(table, inverted));
     }
 
-private:
     CharacterClassTable(const char* table, bool inverted)
         : m_table(table)
         , m_inverted(inverted)
@@ -94,7 +92,7 @@ public:
     }
     ~CharacterClass()
     {
-        js::Foreground::delete_(m_table.get());
+        js_delete(m_table.get());
     }
     Vector<UChar> m_matches;
     Vector<CharacterRange> m_ranges;
@@ -299,7 +297,7 @@ public:
 
     PatternAlternative* addNewAlternative()
     {
-        PatternAlternative* alternative = js::OffTheBooks::new_<PatternAlternative>(this);
+        PatternAlternative* alternative = js_new<PatternAlternative>(this);
         m_alternatives.append(alternative);
         return alternative;
     }

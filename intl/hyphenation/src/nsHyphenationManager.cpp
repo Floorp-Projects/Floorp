@@ -302,7 +302,7 @@ nsHyphenationManager::LoadAliases()
     for (uint32_t i = 0; i < prefCount; ++i) {
       nsAdoptingCString value = Preferences::GetCString(prefNames[i]);
       if (value) {
-        nsCAutoString alias(prefNames[i]);
+        nsAutoCString alias(prefNames[i]);
         alias.Cut(0, strlen(INTL_HYPHENATIONALIAS_PREFIX));
         ToLowerCase(alias);
         ToLowerCase(value);

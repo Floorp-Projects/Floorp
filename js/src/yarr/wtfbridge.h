@@ -80,7 +80,7 @@ class OwnPtr {
 
     ~OwnPtr() {
         if (ptr)
-            js::Foreground::delete_(ptr);
+            js_delete(ptr);
     }
 
     OwnPtr<T> &operator=(PassOwnPtr<T> p) {
@@ -192,7 +192,7 @@ class Vector {
 
     void deleteAllValues() {
         for (T *p = impl.begin(); p != impl.end(); ++p)
-            js::Foreground::delete_(*p);
+            js_delete(*p);
     }
 };
 
@@ -218,7 +218,7 @@ class Vector<OwnPtr<T> > {
 
     void clear() {
         for (T **p = impl.begin(); p != impl.end(); ++p)
-            js::Foreground::delete_(*p);
+            delete_(*p);
         return impl.clear();
     }
 };

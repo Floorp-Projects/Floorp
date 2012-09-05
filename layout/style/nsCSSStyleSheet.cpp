@@ -1525,7 +1525,7 @@ nsCSSStyleSheet::List(FILE* out, int32_t aIndent) const
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("CSS Style Sheet: ", out);
-  nsCAutoString urlSpec;
+  nsAutoCString urlSpec;
   nsresult rv = mInner->mSheetURI->GetSpec(urlSpec);
   if (NS_SUCCEEDED(rv) && !urlSpec.IsEmpty()) {
     fputs(urlSpec.get(), out);
@@ -1695,7 +1695,7 @@ NS_IMETHODIMP
 nsCSSStyleSheet::GetHref(nsAString& aHref)
 {
   if (mInner->mOriginalSheetURI) {
-    nsCAutoString str;
+    nsAutoCString str;
     mInner->mOriginalSheetURI->GetSpec(str);
     CopyUTF8toUTF16(str, aHref);
   } else {

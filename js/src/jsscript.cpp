@@ -179,7 +179,7 @@ XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, unsigned numArgs, un
         }
 
         for (BindingIter bi(script->bindings); bi; bi++) {
-            uint8_t u8 = (uint8_t(bi->kind()) << 1) | bi->aliased();
+            uint8_t u8 = (uint8_t(bi->kind()) << 1) | uint8_t(bi->aliased());
             if (!xdr->codeUint8(&u8))
                 return false;
         }
@@ -778,8 +778,8 @@ JSScript::initScriptCounts(JSContext *cx)
     if (!map) {
         map = cx->new_<ScriptCountsMap>();
         if (!map || !map->init()) {
-            cx->free_(cursor);
-            cx->delete_(map);
+            js_free(cursor);
+            js_delete(map);
             return false;
         }
         compartment()->scriptCountsMap = map;
@@ -803,8 +803,8 @@ JSScript::initScriptCounts(JSContext *cx)
     }
 
     if (!map->putNew(this, scriptCounts)) {
-        cx->free_(cursor);
-        cx->delete_(map);
+        js_free(cursor);
+        js_delete(map);
         return false;
     }
     hasScriptCounts = true; // safe to set this;  we can't fail after this point
@@ -1058,7 +1058,7 @@ void
 SourceDataCache::put(ScriptSource *ss, JSFixedString *str)
 {
     if (!map_) {
-        map_ = OffTheBooks::new_<Map>();
+        map_ = js_new<Map>();
         if (!map_)
             return;
         if (!map_->init()) {
@@ -1073,7 +1073,7 @@ SourceDataCache::put(ScriptSource *ss, JSFixedString *str)
 void
 SourceDataCache::purge()
 {
-    Foreground::delete_(map_);
+    js_delete(map_);
     map_ = NULL;
 }
 
@@ -1094,13 +1094,13 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
             if (!DecompressString(data.compressed, compressedLength_,
                                   reinterpret_cast<unsigned char *>(decompressed), nbytes)) {
                 JS_ReportOutOfMemory(cx);
-                cx->free_(decompressed);
+                js_free(decompressed);
                 return NULL;
             }
             decompressed[length_] = 0;
             cached = js_NewString(cx, decompressed, length_);
             if (!cached) {
-                cx->free_(decompressed);
+                js_free(decompressed);
                 return NULL;
             }
             cx->runtime->sourceDataCache.put(this, cached);
@@ -1174,12 +1174,12 @@ void
 ScriptSource::destroy(JSRuntime *rt)
 {
     JS_ASSERT(ready());
-    rt->free_(data.compressed);
-    rt->free_(sourceMap_);
+    js_free(data.compressed);
+    js_free(sourceMap_);
 #ifdef DEBUG
     ready_ = false;
 #endif
-    rt->free_(this);
+    js_free(this);
 }
 
 size_t
@@ -1228,7 +1228,7 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
         }
         if (!xdr->codeBytes(data.compressed, byteLen)) {
             if (mode == XDR_DECODE) {
-                xdr->cx()->free_(data.compressed);
+                js_free(data.compressed);
                 data.compressed = NULL;
             }
             return false;
@@ -1255,7 +1255,7 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
         }
         if (!xdr->codeChars(sourceMap_, sourceMapLen)) {
             if (mode == XDR_DECODE) {
-                xdr->cx()->free_(sourceMap_);
+                js_free(sourceMap_);
                 sourceMap_ = NULL;
             }
             return false;
@@ -1278,7 +1278,7 @@ ScriptSource::setSourceMap(JSContext *cx, jschar *sourceMapURL, const char *file
     if (hasSourceMap()) {
         if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage, NULL,
                                           JSMSG_ALREADY_HAS_SOURCEMAP, filename)) {
-            cx->free_(sourceMapURL);
+            js_free(sourceMapURL);
             return false;
         }
     }
@@ -1315,7 +1315,7 @@ js::SaveScriptFilename(JSContext *cx, const char *filename)
         strcpy(entry->filename, filename);
 
         if (!rt->scriptFilenameTable.add(p, entry)) {
-            Foreground::free_(entry);
+            js_free(entry);
             JS_ReportOutOfMemory(cx);
             return NULL;
         }
@@ -1346,7 +1346,7 @@ js::SweepScriptFilenames(JSRuntime *rt)
         if (entry->marked) {
             entry->marked = false;
         } else if (!rt->gcKeepAtoms) {
-            Foreground::free_(entry);
+            js_free(entry);
             e.removeFront();
         }
     }
@@ -1357,7 +1357,7 @@ js::FreeScriptFilenames(JSRuntime *rt)
 {
     ScriptFilenameTable &table = rt->scriptFilenameTable;
     for (ScriptFilenameTable::Enum e(table); !e.empty(); e.popFront())
-        Foreground::free_(e.front());
+        js_free(e.front());
 
     table.clear();
 }
@@ -2140,7 +2140,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                                      options, src->staticLevel,
                                      src->scriptSource(), src->sourceStart, src->sourceEnd);
     if (!dst) {
-        Foreground::free_(data);
+        js_free(data);
         return NULL;
     }
 
@@ -2270,16 +2270,16 @@ JSScript::ensureHasDebugScript(JSContext *cx)
     if (!map) {
         map = cx->new_<DebugScriptMap>();
         if (!map || !map->init()) {
-            cx->free_(debug);
-            cx->delete_(map);
+            js_free(debug);
+            js_delete(map);
             return false;
         }
         compartment()->debugScriptMap = map;
     }
 
     if (!map->putNew(this, debug)) {
-        cx->free_(debug);
-        cx->delete_(map);
+        js_free(debug);
+        js_delete(map);
         return false;
     }
     hasDebugScript = true; // safe to set this;  we can't fail after this point
@@ -2321,7 +2321,7 @@ JSScript::tryNewStepMode(JSContext *cx, uint32_t newValue)
         recompileForStepMode(cx->runtime->defaultFreeOp());
 
         if (!stepModeEnabled() && !debug->numSites)
-            cx->free_(releaseDebugScript());
+            js_free(releaseDebugScript());
     }
 
     return true;

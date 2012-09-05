@@ -109,7 +109,7 @@ ContactDB.prototype = {
         // Upgrade existing email field in the DB.
         objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
-          if (cursor) {
+          if (cursor && cursor.value.properties.email) {
             if (DEBUG) debug("upgrade email1: " + JSON.stringify(cursor.value));
             cursor.value.properties.email =
               cursor.value.properties.email.map(function(address) { return { address: address }; });
@@ -131,7 +131,7 @@ ContactDB.prototype = {
         // Upgrade existing impp field in the DB.
         objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
-          if (cursor) {
+          if (cursor && cursor.value.properties.impp) {
             if (DEBUG) debug("upgrade impp1: " + JSON.stringify(cursor.value));
             cursor.value.properties.impp =
               cursor.value.properties.impp.map(function(value) { return { value: value }; });
@@ -143,7 +143,7 @@ ContactDB.prototype = {
         // Upgrade existing url field in the DB.
         objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
-          if (cursor) {
+          if (cursor && cursor.value.properties.url) {
             if (DEBUG) debug("upgrade url1: " + JSON.stringify(cursor.value));
             cursor.value.properties.url =
               cursor.value.properties.url.map(function(value) { return { value: value }; });

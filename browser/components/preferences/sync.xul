@@ -135,8 +135,8 @@
               </columns>
               <rows>
                 <row align="center">
-                  <label value="&syncComputerName.label;"
-                         accesskey="&syncComputerName.accesskey;"
+                  <label value="&syncDeviceName.label;"
+                         accesskey="&syncDeviceName.accesskey;"
                          control="syncComputerName"/>
                   <textbox id="syncComputerName"
                            onchange="gSyncUtils.changeName(this)"/>

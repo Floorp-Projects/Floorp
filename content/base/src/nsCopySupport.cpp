@@ -220,7 +220,7 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
         // Try and get source URI of the items that are being dragged
         nsIURI *uri = aDoc->GetDocumentURI();
         if (uri) {
-          nsCAutoString spec;
+          nsAutoCString spec;
           uri->GetSpec(spec);
           if (!spec.IsEmpty()) {
             nsAutoString shortcut;
@@ -428,7 +428,7 @@ nsCopySupport::GetContents(const nsACString& aMimeType, uint32_t aFlags, nsISele
   
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
 
-  nsCAutoString encoderContractID(NS_DOC_ENCODER_CONTRACTID_BASE);
+  nsAutoCString encoderContractID(NS_DOC_ENCODER_CONTRACTID_BASE);
   encoderContractID.Append(aMimeType);
     
   docEncoder = do_CreateInstance(encoderContractID.get());
@@ -477,7 +477,7 @@ nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
-    nsCAutoString location;
+    nsAutoCString location;
     rv = uri->GetSpec(location);
     NS_ENSURE_SUCCESS(rv, rv);
 

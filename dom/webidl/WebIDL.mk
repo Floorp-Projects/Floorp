@@ -9,6 +9,7 @@ generated_webidl_files = \
   $(NULL)
 
 webidl_files = \
+  AudioContext.webidl \
   CanvasRenderingContext2D.webidl \
   CSSStyleDeclaration.webidl \
   Function.webidl \

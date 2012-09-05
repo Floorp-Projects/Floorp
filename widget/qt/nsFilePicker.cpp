@@ -70,7 +70,7 @@ nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
         return NS_OK;
     }
 
-    nsCAutoString filter, name;
+    nsAutoCString filter, name;
     CopyUTF16toUTF8(aFilter, filter);
     CopyUTF16toUTF8(aTitle, name);
 
@@ -181,7 +181,7 @@ nsFilePicker::GetFiles(nsISimpleEnumerator* *aFiles)
 NS_IMETHODIMP
 nsFilePicker::Show(int16_t* aReturn)
 {
-    nsCAutoString directory;
+    nsAutoCString directory;
     if (mDisplayDirectory) {
         mDisplayDirectory->GetNativePath(directory);
     }

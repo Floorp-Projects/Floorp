@@ -288,6 +288,9 @@ public:
     return HasAttr(kNameSpaceID_None, nsGkAtoms::checked);
   }
 
+  bool Indeterminate() const { return mIndeterminate; }
+  bool Checked() const { return mChecked; }
+
   /**
    * Fires change event if mFocusedValue and current value held are unequal.
    */

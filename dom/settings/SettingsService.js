@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 const nsIClassInfo            = Ci.nsIClassInfo;
 
 const SETTINGSSERVICELOCK_CONTRACTID = "@mozilla.org/settingsServiceLock;1";
-const SETTINGSSERVICELOCK_CID        = Components.ID("{3ab3cbc0-8513-11e1-b0c4-0800200c9a66}");
+const SETTINGSSERVICELOCK_CID        = Components.ID("{d7a395a0-e292-11e1-834e-1761d57f5f99}");
 const nsISettingsServiceLock         = Ci.nsISettingsServiceLock;
 
 function SettingsServiceLock(aSettingsService)
@@ -51,9 +51,10 @@ SettingsServiceLock.prototype = {
       switch (info.intent) {
         case "set":
           let value = info.value;
+          let message = info.message;
           if(typeof(value) == 'object')
             debug("object name:" + name + ", val: " + JSON.stringify(value));
-          req = store.put({settingName: name, settingValue: value});
+          req = store.put({ settingName: name, settingValue: value });
 
           req.onsuccess = function() {
             debug("set on success");
@@ -62,7 +63,8 @@ SettingsServiceLock.prototype = {
               callback.handle(name, value);
             Services.obs.notifyObservers(lock, "mozsettings-changed", JSON.stringify({
               key: name,
-              value: value
+              value: value,
+              message: message
             }));
             lock._open = false;
           };
@@ -117,20 +119,26 @@ SettingsServiceLock.prototype = {
     this.createTransactionAndProcess();
   },
 
-  set: function set(aName, aValue, aCallback) {
+  set: function set(aName, aValue, aCallback, aMessage) {
     debug("set: " + aName + ": " + JSON.stringify(aValue));
-    this._requests.enqueue({ callback: aCallback, intent: "set", name: aName, value: aValue});
+    if (aMessage === undefined)
+      aMessage = null;
+    this._requests.enqueue({ callback: aCallback,
+                             intent: "set", 
+                             name: aName, 
+                             value: aValue, 
+                             message: aMessage });
     this.createTransactionAndProcess();
   },
 
   classID : SETTINGSSERVICELOCK_CID,
   QueryInterface : XPCOMUtils.generateQI([nsISettingsServiceLock]),
 
-  classInfo : XPCOMUtils.generateCI({classID: SETTINGSSERVICELOCK_CID,
-                                     contractID: SETTINGSSERVICELOCK_CONTRACTID,
-                                     classDescription: "SettingsServiceLock",
-                                     interfaces: [nsISettingsServiceLock],
-                                     flags: nsIClassInfo.DOM_OBJECT})
+  classInfo : XPCOMUtils.generateCI({ classID: SETTINGSSERVICELOCK_CID,
+                                      contractID: SETTINGSSERVICELOCK_CONTRACTID,
+                                      classDescription: "SettingsServiceLock",
+                                      interfaces: [nsISettingsServiceLock],
+                                      flags: nsIClassInfo.DOM_OBJECT })
 };
 
 const SETTINGSSERVICE_CID        = Components.ID("{3458e760-8513-11e1-b0c4-0800200c9a66}");
@@ -141,8 +149,10 @@ function SettingsService()
 {
   debug("settingsService Constructor");
   this._locks = new Queue();
-  var idbManager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"].getService(Ci.nsIIndexedDatabaseManager);
-  idbManager.initWindowless(myGlobal);
+  if (!("indexedDB" in myGlobal)) {
+    let idbManager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"].getService(Ci.nsIIndexedDatabaseManager);
+    idbManager.initWindowless(myGlobal);
+  }
   this._settingsDB = new SettingsDB();
   this._settingsDB.init(myGlobal);
 }

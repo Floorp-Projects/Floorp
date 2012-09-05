@@ -550,7 +550,7 @@ function test_invalid_sessionId_ignored()
       new VisitInfo(),
     ],
   };
-  place.visits[0].sessionId = -1;
+  place.visits[0].sessionId = 0;
   do_check_false(gGlobalHistory.isVisited(place.uri));
 
   gHistory.updatePlaces(place, expectHandleResult(function(aPlaceInfo) {

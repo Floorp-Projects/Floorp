@@ -27,20 +27,35 @@ var testParts = [
   [1, "red.png"]
 ];
 
+// We'll append the part number to this, and tell the informant
+const BASE_URL = "bug733553-informant.sjs?";
+
 function initializeOnload() {
   var iframeelem = document.getElementById('test-iframe');
   var firstimg = iframeelem.contentDocument.getElementById('image1');
   firstimg.addEventListener("load", imageLoad, false);
 }
 
+function readyForNext() {
+  var loader = document.getElementById("loader");
+  if (loader) {
+    testIndex++;
+    loader.src = BASE_URL + testIndex;
+  }
+}
+
 function imageLoad(aEvent) {
   if (testParts.length > testIndex) {
-    var [width, fileName] = testParts[testIndex++];
-    is(aEvent.target.width, width,
-       "Test " + (testIndex - 1) + " " + fileName + " width not correct");
-  }
-  else {
-    aEvent.target.removeEventListener("load", arguments.callee, false);
+    var [width, fileName] = testParts[testIndex];
+    if (aEvent.target.width == width) {
+      is(aEvent.target.width, width,
+         "Test " + testIndex + " " + fileName + " width correct");
+      readyForNext();
+    }
+  } else {
+    aEvent.target.removeEventListener("load", imageLoad, false);
+    var loader = document.getElementById("loader");
+    readyForNext();
     SimpleTest.finish();
   }
 }
@@ -49,6 +64,7 @@ function imageLoad(aEvent) {
 </pre>
 <div id="content"> <!-- style="display: none" -->
 <iframe id="test-iframe" src="http://mochi.test:8888/tests/image/test/mochitest/bug733553-iframe.html" onload="initializeOnload()"></iframe>
+<iframe id="loader"></iframe>
 </div>
 </body>
 </html>

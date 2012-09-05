@@ -162,7 +162,7 @@ nsAsyncAlert::Run()
   //   - The default value of the "show every time" checkbox is unchecked
   //   - If the user checks the checkbox, we clear the show-once pref.
 
-  nsCAutoString showOncePref(mPrefName);
+  nsAutoCString showOncePref(mPrefName);
   showOncePref += ".show_once";
 
   bool showOnce = false;
@@ -278,7 +278,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   MOZ_ASSERT(NS_IsMainThread());
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::SECURITY_UI, aBucket);
   // See AlertDialog() for a description of how showOnce works.
-  nsCAutoString showOncePref(prefName);
+  nsAutoCString showOncePref(prefName);
   showOncePref += ".show_once";
 
   bool showOnce = false;

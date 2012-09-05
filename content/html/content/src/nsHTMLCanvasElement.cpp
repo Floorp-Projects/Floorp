@@ -28,6 +28,8 @@
 #include "nsDisplayList.h"
 #include "BasicLayers.h"
 #include "imgIEncoder.h"
+#include "nsITimer.h"
+#include "nsAsyncDOMEvent.h"
 
 #include "nsIWritablePropertyBag2.h"
 
@@ -38,6 +40,91 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 
+class nsHTMLCanvasPrintState : public nsIDOMMozCanvasPrintState
+{
+public:
+  nsHTMLCanvasPrintState(nsHTMLCanvasElement* aCanvas,
+                         nsICanvasRenderingContextInternal* aContext,
+                         nsITimerCallback* aCallback)
+    : mIsDone(false), mPendingNotify(false), mCanvas(aCanvas),
+      mContext(aContext), mCallback(aCallback)
+  {
+  }
+
+  NS_IMETHOD GetContext(nsISupports** aContext)
+  {
+    NS_ADDREF(*aContext = mContext);
+    return NS_OK;
+  }
+
+  NS_IMETHOD Done()
+  {
+    if (!mPendingNotify && !mIsDone) {
+      // The canvas needs to be invalidated for printing reftests on linux to
+      // work.
+      if (mCanvas) {
+        mCanvas->InvalidateCanvas();
+      }
+      nsRefPtr<nsRunnableMethod<nsHTMLCanvasPrintState> > doneEvent =
+        NS_NewRunnableMethod(this, &nsHTMLCanvasPrintState::NotifyDone);
+      if (NS_SUCCEEDED(NS_DispatchToCurrentThread(doneEvent))) {
+        mPendingNotify = true;
+      }
+    }
+    return NS_OK;
+  }
+
+  void NotifyDone()
+  {
+    mIsDone = true;
+    mPendingNotify = false;
+    if (mCallback) {
+      mCallback->Notify(nullptr);
+    }
+  }
+
+  bool mIsDone;
+
+  // CC
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsHTMLCanvasPrintState)
+private:
+  virtual ~nsHTMLCanvasPrintState()
+  {
+  }
+  bool mPendingNotify;
+
+protected:
+  nsRefPtr<nsHTMLCanvasElement> mCanvas;
+  nsCOMPtr<nsICanvasRenderingContextInternal> mContext;
+  nsCOMPtr<nsITimerCallback> mCallback;
+};
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsHTMLCanvasPrintState)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHTMLCanvasPrintState)
+
+DOMCI_DATA(MozCanvasPrintState, nsHTMLCanvasPrintState)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHTMLCanvasPrintState)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozCanvasPrintState)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozCanvasPrintState)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLCanvasPrintState)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHTMLCanvasPrintState)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mCanvas, nsIDOMHTMLCanvasElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCallback)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHTMLCanvasPrintState)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCanvas)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCallback)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+// ---------------------------------------------------------------------------
+
 nsGenericHTMLElement*
 NS_NewHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                         FromParser aFromParser)
@@ -46,23 +133,31 @@ NS_NewHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 }
 
 nsHTMLCanvasElement::nsHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo), mWriteOnly(false)
+  : nsGenericHTMLElement(aNodeInfo), 
+    mWriteOnly(false)
 {
 }
 
 nsHTMLCanvasElement::~nsHTMLCanvasElement()
 {
+  ResetPrintCallback();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLCanvasElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLCanvasElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrintCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrintState)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOriginalCanvas)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLCanvasElement,
                                                 nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCurrentContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPrintCallback)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPrintState)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginalCanvas)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLCanvasElement, nsGenericElement)
@@ -122,6 +217,74 @@ nsHTMLCanvasElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
+void
+nsHTMLCanvasElement::HandlePrintCallback(nsPresContext::nsPresContextType aType)
+{
+  // Only call the print callback here if 1) we're in a print testing mode or
+  // print preview mode, 2) the canvas has a print callback and 3) the callback
+  // hasn't already been called. For real printing the callback is handled in
+  // nsSimplePageSequenceFrame::PrePrintNextPage.
+  nsCOMPtr<nsIPrintCallback> printCallback;
+  if ((aType == nsPresContext::eContext_PageLayout ||
+       aType == nsPresContext::eContext_PrintPreview) &&
+      !mPrintState &&
+      NS_SUCCEEDED(GetMozPrintCallback(getter_AddRefs(printCallback))) && printCallback) {
+    DispatchPrintCallback(nullptr);
+  }
+}
+
+nsresult
+nsHTMLCanvasElement::DispatchPrintCallback(nsITimerCallback* aCallback)
+{
+  // For print reftests the context may not be initialized yet, so get a context
+  // so mCurrentContext is set.
+  if (!mCurrentContext) {
+    nsresult rv;
+    nsCOMPtr<nsISupports> context;
+    rv = GetContext(NS_LITERAL_STRING("2d"), JSVAL_VOID,
+                    getter_AddRefs(context));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  mPrintState = new nsHTMLCanvasPrintState(this, mCurrentContext, aCallback);
+
+  nsRefPtr<nsRunnableMethod<nsHTMLCanvasElement> > renderEvent =
+        NS_NewRunnableMethod(this, &nsHTMLCanvasElement::CallPrintCallback);
+  return NS_DispatchToCurrentThread(renderEvent);
+}
+
+void
+nsHTMLCanvasElement::CallPrintCallback()
+{
+  nsCOMPtr<nsIPrintCallback> printCallback;
+  GetMozPrintCallback(getter_AddRefs(printCallback));
+  printCallback->Render(mPrintState);
+}
+
+void
+nsHTMLCanvasElement::ResetPrintCallback()
+{
+  if (mPrintState) {
+    mPrintState = nullptr;
+  }
+}
+
+bool
+nsHTMLCanvasElement::IsPrintCallbackDone()
+{
+  if (mPrintState == nullptr) {
+    return true;
+  }
+
+  return mPrintState->mIsDone;
+}
+
+nsIDOMHTMLCanvasElement*
+nsHTMLCanvasElement::GetOriginalCanvas()
+{
+  return mOriginalCanvas ? mOriginalCanvas.get() : this;
+}
+
+
 nsresult
 nsHTMLCanvasElement::CopyInnerTo(nsGenericElement* aDest)
 {
@@ -129,11 +292,14 @@ nsHTMLCanvasElement::CopyInnerTo(nsGenericElement* aDest)
   NS_ENSURE_SUCCESS(rv, rv);
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     nsHTMLCanvasElement* dest = static_cast<nsHTMLCanvasElement*>(aDest);
+    nsHTMLCanvasElement* self = const_cast<nsHTMLCanvasElement*>(this);
+    dest->mOriginalCanvas = self;
+
     nsCOMPtr<nsISupports> cxt;
     dest->GetContext(NS_LITERAL_STRING("2d"), JSVAL_VOID, getter_AddRefs(cxt));
     nsCOMPtr<nsIDOMCanvasRenderingContext2D> context2d = do_QueryInterface(cxt);
-    if (context2d) {
-      context2d->DrawImage(const_cast<nsHTMLCanvasElement*>(this),
+    if (context2d && !self->mPrintCallback) {
+      context2d->DrawImage(self,
                            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0);
     }
   }
@@ -215,6 +381,24 @@ nsHTMLCanvasElement::MozFetchAsStream(nsIInputStreamCallback *aCallback,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return asyncCallback->OnInputStreamReady(asyncData);
+}
+
+NS_IMETHODIMP
+nsHTMLCanvasElement::SetMozPrintCallback(nsIPrintCallback *aCallback)
+{
+  mPrintCallback = aCallback;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLCanvasElement::GetMozPrintCallback(nsIPrintCallback** aCallback)
+{
+  if (mOriginalCanvas) {
+    mOriginalCanvas->GetMozPrintCallback(aCallback);
+    return NS_OK;
+  }
+  NS_IF_ADDREF(*aCallback = mPrintCallback);
+  return NS_OK;
 }
 
 nsresult

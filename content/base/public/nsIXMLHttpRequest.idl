@@ -42,16 +42,16 @@ dictionary XMLHttpRequestParameters
   boolean mozSystem;
 };
 
-[scriptable, builtinclass, uuid(5e346bf8-7083-4ef8-b9b9-736a1b5aa7ab)]
+[scriptable, builtinclass, uuid(a137d5e6-81e2-4fa3-a791-26459df723ff)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes
-  attribute nsIDOMEventListener onabort;
-  attribute nsIDOMEventListener onerror;
-  attribute nsIDOMEventListener onload;
-  attribute nsIDOMEventListener onloadstart;
-  attribute nsIDOMEventListener onprogress;
-  attribute nsIDOMEventListener ontimeout;
-  attribute nsIDOMEventListener onloadend;
+  [implicit_jscontext] attribute jsval onabort;
+  [implicit_jscontext] attribute jsval onerror;
+  [implicit_jscontext] attribute jsval onload;
+  [implicit_jscontext] attribute jsval onloadstart;
+  [implicit_jscontext] attribute jsval onprogress;
+  [implicit_jscontext] attribute jsval ontimeout;
+  [implicit_jscontext] attribute jsval onloadend;
 };
 
 [scriptable, builtinclass, uuid(8dbd2448-740a-412c-b314-434f24a1c510)]
@@ -100,7 +100,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(2ed23d20-9d6d-47fd-b60f-2416dbd57005)]
+[scriptable, uuid(8e9768b4-339c-413c-a210-0c74934eb9e1)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -371,7 +371,7 @@ interface nsIXMLHttpRequest : nsISupports
    *
    * Call open() before setting an onreadystatechange listener.
    */
-  attribute nsIDOMEventListener onreadystatechange;
+  [implicit_jscontext] attribute jsval onreadystatechange;
 
   /**
    * If true, the request will be sent without cookie and authentication

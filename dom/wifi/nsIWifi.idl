@@ -5,30 +5,40 @@
 #include "nsISupports.idl"
 #include "nsIDOMDOMRequest.idl"
 #include "nsIDOMEvent.idl"
+#include "nsINetworkManager.idl"
 
 interface nsIVariant;
 
-[scriptable, uuid(abb936bc-ba81-4c23-8dfa-3e5d96557044)]
+[scriptable, function, uuid(c675c7c3-5261-480a-98f3-69934c9ab7c6)]
+interface nsIWifiTetheringCallback : nsISupports
+{
+  /**
+   * Callback function used to report status to NetworkManager.
+   * result: 0: success, others: fail.
+   * networkInterface: report wifi network interface's name.
+   */
+  void wifiTetheringEnabledChange(in jsval result,
+                                  in nsINetworkInterface networkInterface);
+};
+
+[scriptable, uuid(65649c30-d312-11e1-9b23-0800200c9a66)]
 interface nsIWifi : nsISupports
 {
     /**
      * Shutdown the wifi system.
      */
     void shutdown();
+    /**
+     * Request to enable/disable Wifi Tethering.
+     * enabled: true or false.
+     * callback: report status to NetworkManager.
+     */
+    void setWifiTethering(in boolean enabled, in nsIWifiTetheringCallback callback);
 };
 
-[scriptable, uuid(b1f2e67f-75a8-4781-bf7f-eb21662ae9f3)]
+[scriptable, uuid(540674a6-edbe-11e1-87c9-dbcd31c74284)]
 interface nsIDOMWifiManager : nsISupports
 {
-    /**
-     * TODO Remove in favor of a settings API.
-     * Activates or disactivates wifi.
-     * onsuccess: Wifi has been successfully activated and can start
-     *            attempting to connect to networks. request.value will be true.
-     * onerror: Wifi was not successfully activated. (TODO provide details!)
-     */
-    nsIDOMDOMRequest setEnabled(in boolean enabled);
-
     /**
      * Returns the list of currently available networks as well as the list of
      * currently configured networks.
@@ -78,7 +88,6 @@ interface nsIDOMWifiManager : nsISupports
     nsIDOMDOMRequest wps(in jsval detail);
 
     /**
-     * TODO Remove in favor of a settings API.
      * Returns whether or not wifi is currently enabled.
      */
     readonly attribute boolean enabled;

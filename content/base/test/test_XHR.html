@@ -235,8 +235,8 @@ checkXHRStatus();
 xhr.open("GET", 'file_XHR_binary1.bin'); 
 checkXHRStatus();
 xhr.responseType = 'arraybuffer';
-xhr.onreadystatechange = continueTest;
 xhr.send(null);
+xhr.onreadystatechange = continueTest;
 while (xhr.readyState != 4) {
   checkXHRStatus();
   yield;
@@ -271,9 +271,9 @@ for (var i = 0; i < responseTypes.length; i++) {
 
   // with a binary file
   xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = continueTest;
   xhr.open("GET", 'file_XHR_binary1.bin', true);
   xhr.send(null);
+  xhr.onreadystatechange = continueTest;
   while(xhr.readyState != 2)
     yield;
 
@@ -300,10 +300,10 @@ for (var i = 0; i < responseTypes.length; i++) {
 
   // with a larger binary file
   xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = continueTest;
   xhr.open("GET", 'file_XHR_binary2.bin', true);
   xhr.responseType = t;
   xhr.send(null);
+  xhr.onreadystatechange = continueTest;
 
   while (xhr.readyState != 4)
     yield;
@@ -332,6 +332,8 @@ for (var i = 0; i < responseTypes.length; i++) {
 }
 
 var client = new XMLHttpRequest();
+client.open("GET", "file_XHR_pass1.xml", true);
+client.send();
 client.onreadystatechange = function() {
   if(client.readyState == 4) {
     try {
@@ -347,8 +349,6 @@ client.onreadystatechange = function() {
     }
   }
 }
-client.open("GET", "file_XHR_pass1.xml", true);
-client.send();
 client.abort();
 
 SimpleTest.finish();

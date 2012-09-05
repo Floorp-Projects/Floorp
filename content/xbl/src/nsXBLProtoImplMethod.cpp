@@ -193,7 +193,7 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
   // Now that we have a body and args, compile the function
   // and then define it.
   NS_ConvertUTF16toUTF8 cname(mName);
-  nsCAutoString functionUri(aClassStr);
+  nsAutoCString functionUri(aClassStr);
   int32_t hash = functionUri.RFindChar('#');
   if (hash != kNotFound) {
     functionUri.Truncate(hash);

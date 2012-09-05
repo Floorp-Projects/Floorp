@@ -222,8 +222,8 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
     nsCOMPtr<nsIURI> uri;
-    nsCAutoString uriStr;
-    nsCAutoString scheme;
+    nsAutoCString uriStr;
+    nsAutoCString scheme;
 
     JSScript* script = nullptr;
 
@@ -269,7 +269,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
 
         // For file URIs prepend the filename with the filename of the
         // calling script, and " -> ". See bug 418356.
-        nsCAutoString tmp(JS_GetScriptFilename(cx, script));
+        nsAutoCString tmp(JS_GetScriptFilename(cx, script));
         tmp.AppendLiteral(" -> ");
         tmp.Append(uriStr);
 
@@ -278,7 +278,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
 
     bool writeScript = false;
     JSVersion version = JS_GetVersion(cx);
-    nsCAutoString cachePath;
+    nsAutoCString cachePath;
     cachePath.AppendPrintf("jssubloader/%d", version);
     PathifyURI(uri, cachePath);
 

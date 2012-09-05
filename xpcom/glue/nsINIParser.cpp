@@ -69,7 +69,7 @@ nsINIParser::Init(nsIFile* aFile)
 
     fd = _wfopen(path.get(), READ_BINARYMODE);
 #else
-    nsCAutoString path;
+    nsAutoCString path;
     aFile->GetNativePath(path);
 
     fd = fopen(path.get(), READ_BINARYMODE);

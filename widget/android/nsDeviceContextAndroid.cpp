@@ -15,12 +15,12 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecAndroid, nsIDeviceContextSpec)
 NS_IMETHODIMP
 nsDeviceContextSpecAndroid::GetSurfaceForPrinter(gfxASurface** aSurface)
 {
-  nsCAutoString tmpDir(getenv("TMPDIR"));
+  nsAutoCString tmpDir(getenv("TMPDIR"));
   nsresult rv = 
     NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCAutoString filename("tmp-printing.pdf");  
+  nsAutoCString filename("tmp-printing.pdf");  
   mTempFile->AppendNative(filename);
   rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0660);
   NS_ENSURE_SUCCESS(rv, rv);  

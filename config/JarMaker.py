@@ -66,7 +66,7 @@ class JarMaker(object):
   jarline = re.compile('(?:(?P<jarfile>[\w\d.\-\_\\\/]+).jar\:)|(?:\s*(\#.*)?)\s*$')
   regline = re.compile('\%\s+(.*)$')
   entryre = '(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+'
-  entryline = re.compile(entryre + '(?P<output>[\w\d.\-\_\\\/\+]+)\s*(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/]+)\))?\s*$')
+  entryline = re.compile(entryre + '(?P<output>[\w\d.\-\_\\\/\+\@]+)\s*(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/\@]+)\))?\s*$')
 
   def __init__(self, outputFormat = 'flat', useJarfileManifest = True,
                useChromeManifest = False):

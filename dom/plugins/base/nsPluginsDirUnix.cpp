@@ -209,7 +209,7 @@ static void LoadExtraSharedLibs()
 
 bool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
-    nsCAutoString filename;
+    nsAutoCString filename;
     if (NS_FAILED(file->GetNativeLeafName(filename)))
         return false;
 
@@ -258,7 +258,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
         return NS_ERROR_FILE_NOT_FOUND;
 
     nsresult rv;
-    nsCAutoString path;
+    nsAutoCString path;
     rv = mPlugin->GetNativePath(path);
     if (NS_FAILED(rv))
         return rv;
@@ -348,12 +348,12 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
         return rv;
     }
 
-    nsCAutoString path;
+    nsAutoCString path;
     if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
         return rv;
     info.fFullPath = PL_strdup(path.get());
 
-    nsCAutoString fileName;
+    nsAutoCString fileName;
     if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
         return rv;
     info.fFileName = PL_strdup(fileName.get());

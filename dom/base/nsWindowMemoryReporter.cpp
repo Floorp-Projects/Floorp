@@ -113,7 +113,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
                      nsIMemoryMultiReporterCallback *aCb,
                      nsISupports *aClosure)
 {
-  nsCAutoString windowPath("explicit/window-objects/");
+  nsAutoCString windowPath("explicit/window-objects/");
 
   // Avoid calling aWindow->GetTop() if there's no outer window.  It will work
   // just fine, but will spew a lot of warnings.
@@ -151,7 +151,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
 #define REPORT(_pathTail, _amount, _desc)                                     \
   do {                                                                        \
     if (_amount > 0) {                                                        \
-        nsCAutoString path(windowPath);                                       \
+        nsAutoCString path(windowPath);                                       \
         path += _pathTail;                                                    \
         nsresult rv;                                                          \
         rv = aCb->Callback(EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,\
@@ -530,7 +530,7 @@ CheckForGhostWindowsEnumerator(nsISupports *aKey, TimeStamp& aTimeStamp,
 
   nsCOMPtr<nsIURI> uri = GetWindowURI(window);
 
-  nsCAutoString domain;
+  nsAutoCString domain;
   if (uri) {
     // GetBaseDomain works fine if |uri| is null, but it outputs a warning
     // which ends up overrunning the mochitest logs.
@@ -584,7 +584,7 @@ GetNonDetachedWindowDomainsEnumerator(const uint64_t& aId, nsGlobalWindow* aWind
 
   nsCOMPtr<nsIURI> uri = GetWindowURI(aWindow);
 
-  nsCAutoString domain;
+  nsAutoCString domain;
   if (uri) {
     data->tldService->GetBaseDomain(uri, 0, domain);
   }
@@ -698,7 +698,7 @@ ReportGhostWindowsEnumerator(nsUint64HashKey* aIDHashKey, void* aClosure)
     return PL_DHASH_NEXT;
   }
 
-  nsCAutoString path;
+  nsAutoCString path;
   path.AppendLiteral("ghost-windows/");
   AppendWindowURI(window, path);
 

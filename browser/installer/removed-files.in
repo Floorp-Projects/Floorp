@@ -289,6 +289,9 @@ res/ua.css
 res/unixcharset.properties
 res/viewsource.css
 res/wincharset.properties
+#ifdef XP_MACOSX
+run-mozilla.sh
+#endif
 searchplugins/DRAE.gif
 searchplugins/DRAE.png
 searchplugins/DRAE.src

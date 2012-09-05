@@ -109,7 +109,7 @@ BlockingResourceBase::CheckAcquire(const CallStack& aCallContext)
         return;
 
     fputs("###!!! ERROR: Potential deadlock detected:\n", stderr);
-    nsCAutoString out("Potential deadlock detected:\n");
+    nsAutoCString out("Potential deadlock detected:\n");
     bool maybeImminent = PrintCycle(cycle, out);
 
     if (maybeImminent) {

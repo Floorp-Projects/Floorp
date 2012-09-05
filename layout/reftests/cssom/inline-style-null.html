@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<style>
+  div { color: green; }
+  div#reverse { color: red; }
+</style>
+<div id="null" style="color: red">This text should be green</div>
+<div id="emptystring"style="color: red">This text should be green</div>
+<div id="reverse" style="color: green">This text should be green</div>
+<script>
+  document.getElementById("null").style.color = null;
+  document.getElementById("emptystring").style.color = "";
+  document.getElementById("reverse").style.color = "some invalid color string";
+</script>

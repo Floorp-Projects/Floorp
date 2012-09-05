@@ -159,7 +159,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
      */
     mallocSize = sizeof(JSErrorReport) + argsArraySize + argsCopySize +
                  ucmessageSize + uclinebufSize + linebufSize + filenameSize;
-    cursor = (uint8_t *)cx->malloc_(mallocSize);
+    cursor = cx->pod_malloc<uint8_t>(mallocSize);
     if (!cursor)
         return NULL;
 
@@ -317,7 +317,7 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
          */
         priv->errorReport = CopyErrorReport(cx, report);
         if (!priv->errorReport) {
-            cx->free_(priv);
+            js_free(priv);
             return false;
         }
     } else {
@@ -1175,19 +1175,8 @@ js_CopyErrorObject(JSContext *cx, HandleObject errobj, HandleObject scope)
     JSExnPrivate *copy = (JSExnPrivate *)cx->malloc_(size);
     if (!copy)
         return NULL;
+    AutoReleasePtr autoFreePrivate(copy);
 
-    struct AutoFree {
-        JSContext *cx;
-        JSExnPrivate *p;
-        ~AutoFree() {
-            if (p) {
-                cx->free_(p->errorReport);
-                cx->free_(p);
-            }
-        }
-    } autoFree = {cx, copy};
-
-    // Copy each field. Don't bother copying the stack elements.
     if (priv->errorReport) {
         copy->errorReport = CopyErrorReport(cx, priv->errorReport);
         if (!copy->errorReport)
@@ -1195,6 +1184,8 @@ js_CopyErrorObject(JSContext *cx, HandleObject errobj, HandleObject scope)
     } else {
         copy->errorReport = NULL;
     }
+    AutoReleasePtr autoFreeErrorReport(copy->errorReport);
+
     copy->message.init(priv->message);
     if (!cx->compartment->wrap(cx, &copy->message))
         return NULL;
@@ -1216,6 +1207,7 @@ js_CopyErrorObject(JSContext *cx, HandleObject errobj, HandleObject scope)
     if (!copyobj)
         return NULL;
     SetExnPrivate(cx, copyobj, copy);
-    autoFree.p = NULL;
+    autoFreePrivate.forget();
+    autoFreeErrorReport.forget();
     return copyobj;
 }

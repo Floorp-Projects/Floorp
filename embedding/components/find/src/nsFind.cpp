@@ -1008,7 +1008,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         t1b = frag->Get1b();
         t2b = nullptr;
 #ifdef DEBUG_FIND
-        nsCAutoString str1(t1b, fragLen);
+        nsAutoCString str1(t1b, fragLen);
         printf("1 byte, '%s'\n", str1.get());
 #endif
       }

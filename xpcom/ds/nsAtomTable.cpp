@@ -251,7 +251,7 @@ DumpAtomLeaks(PLDHashTable *table, PLDHashEntryHdr *he,
   AtomImpl* atom = entry->mAtom;
   if (!atom->IsPermanent()) {
     ++*static_cast<uint32_t*>(arg);
-    nsCAutoString str;
+    nsAutoCString str;
     atom->ToUTF8String(str);
     fputs(str.get(), stdout);
     fputs("\n", stdout);

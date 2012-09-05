@@ -223,7 +223,7 @@ nsMultipartProxyListener::OnStartRequest(nsIRequest *aRequest,
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
 
-  nsCAutoString contentType;
+  nsAutoCString contentType;
   nsresult rv = channel->GetContentType(contentType);
 
   if (!contentType.EqualsLiteral("multipart/x-mixed-replace")) {
@@ -287,24 +287,10 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXHREventTarget)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXHREventTarget,
                                                   nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadStartListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnProgressListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadendListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnTimeoutListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
                                                 nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadStartListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnProgressListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadendListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnTimeoutListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXHREventTarget)
@@ -314,108 +300,18 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
 
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, loadstart)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, progress)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, abort)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, error)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, load)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, timeout)
+NS_IMPL_EVENT_HANDLER(nsXHREventTarget, loadend)
+
 void
 nsXHREventTarget::DisconnectFromOwner()
 {
   nsDOMEventTargetHelper::DisconnectFromOwner();
-  NS_DISCONNECT_EVENT_HANDLER(Load)
-  NS_DISCONNECT_EVENT_HANDLER(Error)
-  NS_DISCONNECT_EVENT_HANDLER(Abort)
-  NS_DISCONNECT_EVENT_HANDLER(Load)
-  NS_DISCONNECT_EVENT_HANDLER(Progress)
-  NS_DISCONNECT_EVENT_HANDLER(Loadend)
-  NS_DISCONNECT_EVENT_HANDLER(Timeout)
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnload(nsIDOMEventListener** aOnLoad)
-{
-  return GetInnerEventListener(mOnLoadListener, aOnLoad);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnload(nsIDOMEventListener* aOnLoad)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(LOAD_STR),
-                                mOnLoadListener, aOnLoad);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnerror(nsIDOMEventListener** aOnerror)
-{
-  return GetInnerEventListener(mOnErrorListener, aOnerror);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnerror(nsIDOMEventListener* aOnerror)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(ERROR_STR),
-                                mOnErrorListener, aOnerror);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnabort(nsIDOMEventListener** aOnabort)
-{
-  return GetInnerEventListener(mOnAbortListener, aOnabort);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnabort(nsIDOMEventListener* aOnabort)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_STR),
-                                mOnAbortListener, aOnabort);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnloadstart(nsIDOMEventListener** aOnloadstart)
-{
-  return GetInnerEventListener(mOnLoadStartListener, aOnloadstart);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnloadstart(nsIDOMEventListener* aOnloadstart)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(LOADSTART_STR),
-                                mOnLoadStartListener, aOnloadstart);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnprogress(nsIDOMEventListener** aOnprogress)
-{
-  return GetInnerEventListener(mOnProgressListener, aOnprogress);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnprogress(nsIDOMEventListener* aOnprogress)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(PROGRESS_STR),
-                                mOnProgressListener, aOnprogress);
-}
-
-/* attribute nsIDOMEventListener ontimeout; */
-NS_IMETHODIMP
-nsXHREventTarget::GetOntimeout(nsIDOMEventListener * *aOntimeout)
-{
-  return GetInnerEventListener(mOnTimeoutListener, aOntimeout);
-}
-NS_IMETHODIMP
-nsXHREventTarget::SetOntimeout(nsIDOMEventListener *aOntimeout)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(TIMEOUT_STR),
-                                mOnTimeoutListener, aOntimeout);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetOnloadend(nsIDOMEventListener** aOnLoadend)
-{
-  return GetInnerEventListener(mOnLoadendListener, aOnLoadend);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetOnloadend(nsIDOMEventListener* aOnLoadend)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(LOADEND_STR),
-                                mOnLoadendListener, aOnLoadend);
 }
 
 /////////////////////////////////////////////
@@ -620,13 +516,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsXMLHttpRequest)
   if (isBlack || tmp->mWaitingForOnStopRequest) {
     if (tmp->mListenerManager) {
       tmp->mListenerManager->UnmarkGrayJSListeners();
-      NS_UNMARK_LISTENER_WRAPPER(Load)
-      NS_UNMARK_LISTENER_WRAPPER(Error)
-      NS_UNMARK_LISTENER_WRAPPER(Abort)
-      NS_UNMARK_LISTENER_WRAPPER(LoadStart)
-      NS_UNMARK_LISTENER_WRAPPER(Progress)
-      NS_UNMARK_LISTENER_WRAPPER(Loadend)
-      NS_UNMARK_LISTENER_WRAPPER(Readystatechange)
     }
     if (!isBlack && tmp->PreservingWrapper()) {
       xpc_UnmarkGrayObject(tmp->GetWrapperPreserveColor());
@@ -651,8 +540,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mResponseXML)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCORSPreflightChannel)
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnReadystatechangeListener)
-
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mXMLParserStreamListener)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannelEventSink)
@@ -671,8 +558,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mReadRequest)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mResponseXML)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCORSPreflightChannel)
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnReadystatechangeListener)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mXMLParserStreamListener)
 
@@ -708,29 +593,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
 NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
 
+NS_IMPL_EVENT_HANDLER(nsXMLHttpRequest, readystatechange)
+
 void
 nsXMLHttpRequest::DisconnectFromOwner()
 {
   nsXHREventTarget::DisconnectFromOwner();
-  NS_DISCONNECT_EVENT_HANDLER(Readystatechange)
   Abort();
-}
-
-NS_IMETHODIMP
-nsXMLHttpRequest::GetOnreadystatechange(nsIDOMEventListener * *aOnreadystatechange)
-{
-  return
-    nsXHREventTarget::GetInnerEventListener(mOnReadystatechangeListener,
-                                            aOnreadystatechange);
-}
-
-NS_IMETHODIMP
-nsXMLHttpRequest::SetOnreadystatechange(nsIDOMEventListener * aOnreadystatechange)
-{
-  return
-    nsXHREventTarget::RemoveAddEventListener(NS_LITERAL_STRING(READYSTATE_STR),
-                                             mOnReadystatechangeListener,
-                                             aOnreadystatechange);
 }
 
 /* readonly attribute nsIChannel channel; */
@@ -814,7 +683,7 @@ nsXMLHttpRequest::DetectCharset()
     channel = mChannel;
   }
 
-  nsCAutoString charsetVal;
+  nsAutoCString charsetVal;
   nsresult rv = channel ? channel->GetContentCharset(charsetVal) :
                 NS_ERROR_FAILURE;
   if (NS_SUCCEEDED(rv)) {
@@ -1015,7 +884,7 @@ nsXMLHttpRequest::CreatePartialBlob()
     return NS_OK;
   }
 
-  nsCAutoString contentType;
+  nsAutoCString contentType;
   if (mLoadTotal == mLoadTransferred) {
     mChannel->GetContentType(contentType);
   }
@@ -1459,7 +1328,7 @@ nsXMLHttpRequest::GetAllResponseHeaders(nsString& aResponseHeaders)
   }
 
   // Even non-http channels supply content type.
-  nsCAutoString value;
+  nsAutoCString value;
   if (NS_SUCCEEDED(mChannel->GetContentType(value))) {
     aResponseHeaders.AppendLiteral("Content-Type: ");
     AppendASCIItoUTF16(value, aResponseHeaders);
@@ -1576,7 +1445,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
     }
 
     if (!safeHeader) {
-      nsCAutoString headerVal;
+      nsAutoCString headerVal;
       // The "Access-Control-Expose-Headers" header contains a comma separated
       // list of method names.
       httpChannel->
@@ -1744,7 +1613,7 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   NS_ENSURE_TRUE(httpChannel, NS_ERROR_DOM_BAD_URI);
 
-  nsCAutoString method;
+  nsAutoCString method;
   httpChannel->GetRequestMethod(method);
   if (!mCORSUnsafeHeaders.IsEmpty() ||
       (mUpload && mUpload->HasListeners()) ||
@@ -1880,7 +1749,7 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
   // XXXbz this is wrong: we should only be looking at whether
   // user/password were passed, not at the values!  See bug 759624.
   if (user.WasPassed() && !user.Value().IsEmpty()) {
-    nsCAutoString userpass;
+    nsAutoCString userpass;
     CopyUTF16toUTF8(user.Value(), userpass);
     if (password.WasPassed() && !password.Value().IsEmpty()) {
       userpass.Append(':');
@@ -2030,7 +1899,7 @@ bool nsXMLHttpRequest::CreateDOMFile(nsIRequest *request)
   }
   bool fromFile = false;
   if (file) {
-    nsCAutoString contentType;
+    nsAutoCString contentType;
     mChannel->GetContentType(contentType);
     nsCOMPtr<nsISupports> cacheToken;
     if (cc) {
@@ -2202,7 +2071,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
                      mResponseType == XML_HTTP_RESPONSE_TYPE_DOCUMENT;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (parseBody && httpChannel) {
-    nsCAutoString method;
+    nsAutoCString method;
     httpChannel->GetRequestMethod(method);
     parseBody = !method.EqualsLiteral("HEAD");
   }
@@ -2215,7 +2084,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     // parse non-XML data. This also protects us from the situation
     // where we have an XML document and sink, but HTML (or other)
     // parser, which can produce unreliable results.
-    nsCAutoString type;
+    nsAutoCString type;
     channel->GetContentType(type);
 
     if ((mResponseType == XML_HTTP_RESPONSE_TYPE_DOCUMENT) &&
@@ -2395,7 +2264,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     } else {
       // Smaller files may be written in cache map instead of separate files.
       // Also, no-store response cannot be written in persistent cache.
-      nsCAutoString contentType;
+      nsAutoCString contentType;
       mChannel->GetContentType(contentType);
       mBuilder->GetBlobInternal(NS_ConvertASCIItoUTF16(contentType),
                                 false, getter_AddRefs(mResponseBlob));
@@ -2828,7 +2697,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
 
   // Ignore argument if method is GET, there is no point in trying to
   // upload anything
-  nsCAutoString method;
+  nsAutoCString method;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
   if (httpChannel) {
@@ -2910,8 +2779,8 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   if ((aVariant || !aBody.IsNull()) && httpChannel &&
       !method.EqualsLiteral("GET")) {
 
-    nsCAutoString charset;
-    nsCAutoString defaultContentType;
+    nsAutoCString charset;
+    nsAutoCString defaultContentType;
     nsCOMPtr<nsIInputStream> postDataStream;
 
     rv = GetRequestBody(aVariant, aBody, getter_AddRefs(postDataStream),
@@ -2921,7 +2790,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     if (postDataStream) {
       // If no content type header was set by the client, we set it to
       // application/xml.
-      nsCAutoString contentType;
+      nsAutoCString contentType;
       if (NS_FAILED(httpChannel->
                       GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
                                        contentType)) ||
@@ -2931,7 +2800,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
 
       // We don't want to set a charset for streams.
       if (!charset.IsEmpty()) {
-        nsCAutoString specifiedCharset;
+        nsAutoCString specifiedCharset;
         bool haveCharset;
         int32_t charsetStart, charsetEnd;
         rv = NS_ExtractCharsetFromContentType(contentType, specifiedCharset,
@@ -2957,7 +2826,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
           // table, hence might be differently cased).
           if (!specifiedCharset.Equals(charset,
                                        nsCaseInsensitiveCStringComparator())) {
-            nsCAutoString newCharset("; charset=");
+            nsAutoCString newCharset("; charset=");
             newCharset.Append(charset);
             contentType.Replace(charsetStart, charsetEnd - charsetStart,
                                 newCharset);
@@ -3007,11 +2876,11 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   }
 
   if (httpChannel) {
-    nsCAutoString contentTypeHeader;
+    nsAutoCString contentTypeHeader;
     rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
                                        contentTypeHeader);
     if (NS_SUCCEEDED(rv)) {
-      nsCAutoString contentType, charset;
+      nsAutoCString contentType, charset;
       rv = NS_ParseContentType(contentTypeHeader, contentType, charset);
       NS_ENSURE_SUCCESS(rv, rv);
   
@@ -3091,7 +2960,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   // if the channel doesn't know any content type.
   // This means that we always try to parse local files as XML
   // ignoring return value, as this is not critical
-  nsCAutoString contentType;
+  nsAutoCString contentType;
   if (NS_FAILED(mChannel->GetContentType(contentType)) ||
       contentType.IsEmpty() ||
       contentType.Equals(UNKNOWN_CONTENT_TYPE)) {

@@ -22,7 +22,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMEventListener;
 interface nsIDOMLockedFile;
 
-[scriptable, builtinclass, uuid(882ad3d0-6fb1-4841-8e17-0ba17b11edc8)]
+[scriptable, builtinclass, uuid(47438729-7f3f-4a66-b6d4-d1297c593d46)]
 interface nsIDOMFileHandle : nsISupports
 {
   readonly attribute DOMString name;
@@ -45,7 +45,7 @@ interface nsIDOMFileHandle : nsISupports
   FileInfo
   getFileInfo();
 
-  attribute nsIDOMEventListener onabort;
+  [implicit_jscontext] attribute jsval onabort;
 
-  attribute nsIDOMEventListener onerror;
+  [implicit_jscontext] attribute jsval onerror;
 };

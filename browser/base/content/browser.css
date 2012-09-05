@@ -605,7 +605,7 @@ html|*#gcli-output-frame,
 
 /* Responsive Mode */
 
-vbox[anonid=browserContainer][responsivemode] {
+.browserContainer[responsivemode] {
   overflow: auto;
 }
 
@@ -613,16 +613,16 @@ vbox[anonid=browserContainer][responsivemode] {
   -moz-box-pack: end;
 }
 
-stack[anonid=browserStack][responsivemode] {
+.browserStack[responsivemode] {
   transition-duration: 200ms;
   transition-timing-function: linear;
 }
 
-stack[anonid=browserStack][responsivemode] {
+.browserStack[responsivemode] {
   transition-property: min-width, max-width, min-height, max-height;
 }
 
-stack[anonid=browserStack][responsivemode][notransition] {
+.browserStack[responsivemode][notransition] {
   transition: none;
 }
 

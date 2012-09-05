@@ -26,6 +26,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_save_resend_postdata.js \
   browser_browserDrop.js \
   browser_Services.js \
+  browser_DeferredTask.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

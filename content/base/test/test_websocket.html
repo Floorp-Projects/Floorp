@@ -1245,9 +1245,9 @@ function test42()
 // test some utf-8 non-characters. They should be allowed in the
 // websockets context. Test via round trip echo.
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-42");
-  var data = ["U+FFFE ￾",
-              "U+FFFF ￿",
-              "U+10FFFF 􏿿"];
+  var data = ["U+FFFE \ufffe",
+		"U+FFFF \uffff",
+		"U+10FFFF \udbff\udfff"];
   var index = 0;
 
   ws.onopen = function()
@@ -1282,30 +1282,14 @@ function test43()
     // Test binaryType setting
     ws.binaryType = "arraybuffer";
     ws.binaryType = "blob";
-    try {
-        ws.binaryType = "";  // illegal
-        ok(false, "allowed ws.binaryType to be set to empty string"); 
-    } catch(e) {
-        ok(true, "prevented ws.binaryType to be set to empty string: " + e); 
-    }
-    try {
-        ws.binaryType = "ArrayBuffer";  // illegal
-        ok(false, "allowed ws.binaryType to be set to 'ArrayBuffer'"); 
-    } catch(e) {
-        ok(true, "prevented ws.binaryType to be set to 'ArrayBuffer' " + e); 
-    }
-    try {
-        ws.binaryType = "Blob";  // illegal
-        ok(false, "allowed ws.binaryType to be set to 'Blob'"); 
-    } catch(e) {
-        ok(true, "prevented ws.binaryType to be set to 'Blob' " + e); 
-    }
-    try {
-        ws.binaryType = "mcfoofluu";  // illegal
-        ok(false, "allowed ws.binaryType to be set to 'mcfoofluu'"); 
-    } catch(e) {
-        ok(true, "prevented ws.binaryType to be set to 'mcfoofluu'"); 
-    }
+    ws.binaryType = "";  // illegal
+    is(ws.binaryType, "blob");
+    ws.binaryType = "ArrayBuffer";  // illegal
+    is(ws.binaryType, "blob");
+    ws.binaryType = "Blob";  // illegal
+    is(ws.binaryType, "blob");
+    ws.binaryType = "mcfoofluu";  // illegal
+    is(ws.binaryType, "blob");
     ws.close();
   };
 

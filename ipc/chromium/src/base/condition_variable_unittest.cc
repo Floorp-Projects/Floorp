@@ -133,7 +133,7 @@ class WorkQueue : public PlatformThread::Delegate {
   bool allow_help_requests_;  // Workers can signal more workers.
   bool shutdown_;  // Set when threads need to terminate.
 
-  DFAKE_MUTEX(locked_methods_);
+  DFAKE_MUTEX(locked_methods_)
 };
 
 //------------------------------------------------------------------------------

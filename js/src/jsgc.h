@@ -639,8 +639,8 @@ class GCHelperThread {
     static void freeElementsAndArray(void **array, void **end) {
         JS_ASSERT(array <= end);
         for (void **p = array; p != end; ++p)
-            js::Foreground::free_(*p);
-        js::Foreground::free_(array);
+            js_free(*p);
+        js_free(array);
     }
 
     static void threadMain(void* arg);
@@ -768,7 +768,7 @@ struct MarkStack {
         if (ballastcap == 0)
             return true;
 
-        ballast = (T *)js_malloc(sizeof(T) * ballastcap);
+        ballast = js_pod_malloc<T>(ballastcap);
         if (!ballast)
             return false;
         ballastLimit = ballast + ballastcap;
@@ -849,7 +849,7 @@ struct MarkStack {
 
         T *newStack;
         if (stack == ballast) {
-            newStack = (T *)js_malloc(sizeof(T) * newcap);
+            newStack = js_pod_malloc<T>(newcap);
             if (!newStack)
                 return false;
             for (T *src = stack, *dst = newStack; src < tos; )

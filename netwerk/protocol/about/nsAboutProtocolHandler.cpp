@@ -94,7 +94,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
         // no one but the security manager will see.  Make sure to preserve our
         // path, in case someone decides to hardcode checks for particular
         // about: URIs somewhere.
-        nsCAutoString spec;
+        nsAutoCString spec;
         rv = url->GetPath(spec);
         NS_ENSURE_SUCCESS(rv, rv);
         

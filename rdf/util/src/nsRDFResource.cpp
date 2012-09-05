@@ -153,7 +153,7 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
     }
 
     // Construct a ContractID of the form "@mozilla.org/rdf/delegate/[key]/[scheme];1
-    nsCAutoString contractID(NS_RDF_DELEGATEFACTORY_CONTRACTID_PREFIX);
+    nsAutoCString contractID(NS_RDF_DELEGATEFACTORY_CONTRACTID_PREFIX);
     contractID.Append(aKey);
     contractID.Append("&scheme=");
 

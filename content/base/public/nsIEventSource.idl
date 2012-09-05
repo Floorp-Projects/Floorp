@@ -17,7 +17,7 @@ interface nsIPrincipal;
 interface nsIScriptContext;
 interface nsPIDOMWindow;
 
-[scriptable, uuid(a3d3181e-47c1-4f2e-b2c7-94775a86f5c5)]
+[scriptable, uuid(778e5ae3-c72c-4d4b-9dc7-4a6477651957)]
 interface nsIEventSource : nsISupports
 {
   readonly attribute DOMString url;
@@ -34,9 +34,9 @@ interface nsIEventSource : nsISupports
   readonly attribute boolean withCredentials;
 
   // event handler attributes
-  attribute nsIDOMEventListener onopen;
-  attribute nsIDOMEventListener onmessage;
-  attribute nsIDOMEventListener onerror;
+  [implicit_jscontext] attribute jsval onopen;
+  [implicit_jscontext] attribute jsval onmessage;
+  [implicit_jscontext] attribute jsval onerror;
 
   /**
    * Close the connection, if any, and set the readyState attribute to CLOSED.

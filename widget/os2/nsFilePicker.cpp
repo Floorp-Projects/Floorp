@@ -89,7 +89,7 @@ NS_IMETHODIMP nsFilePicker::Show(int16_t *retval)
   NS_ENSURE_ARG_POINTER(retval);
 
   bool result = false;
-  nsCAutoString fileBuffer;
+  nsAutoCString fileBuffer;
   char *converted = ConvertToFileSystemCharset(mDefault);
   if (nullptr == converted) {
     LossyCopyUTF16toASCII(mDefault, fileBuffer);
@@ -102,7 +102,7 @@ NS_IMETHODIMP nsFilePicker::Show(int16_t *retval)
   char *title = ConvertToFileSystemCharset(mTitle);
   if (nullptr == title)
     title = ToNewCString(mTitle);
-  nsCAutoString initialDir;
+  nsAutoCString initialDir;
   if (mDisplayDirectory)
     mDisplayDirectory->GetNativePath(initialDir);
   // If no display directory, re-use the last one.
@@ -315,7 +315,7 @@ NS_IMETHODIMP nsFilePicker::Show(int16_t *retval)
     file->InitWithNativePath(mFile);
     nsCOMPtr<nsIFile> dir;
     if (NS_SUCCEEDED(file->GetParent(getter_AddRefs(dir)))) {
-      nsCAutoString newDir;
+      nsAutoCString newDir;
       dir->GetNativePath(newDir);
       if(!newDir.IsEmpty())
         PL_strncpyz(mLastUsedDirectory, newDir.get(), MAX_PATH+1);
@@ -479,7 +479,7 @@ void nsFilePicker::InitNative(nsIWidget *aParent,
 //-------------------------------------------------------------------------
 void nsFilePicker::GetFileSystemCharset(nsCString & fileSystemCharset)
 {
-  static nsCAutoString aCharset;
+  static nsAutoCString aCharset;
   nsresult rv;
 
   if (aCharset.Length() < 1) {
@@ -502,7 +502,7 @@ char * nsFilePicker::ConvertToFileSystemCharset(const nsAString& inString)
 
   // get file system charset and create a unicode encoder
   if (nullptr == mUnicodeEncoder) {
-    nsCAutoString fileSystemCharset;
+    nsAutoCString fileSystemCharset;
     GetFileSystemCharset(fileSystemCharset);
 
     nsCOMPtr<nsICharsetConverterManager> ccm = 
@@ -545,7 +545,7 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 
   // get file system charset and create a unicode encoder
   if (nullptr == mUnicodeDecoder) {
-    nsCAutoString fileSystemCharset;
+    nsAutoCString fileSystemCharset;
     GetFileSystemCharset(fileSystemCharset);
 
     nsCOMPtr<nsICharsetConverterManager> ccm = 

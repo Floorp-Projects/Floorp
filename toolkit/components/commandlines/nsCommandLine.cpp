@@ -263,7 +263,7 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
   rv = lfm->GetCFURL(&baseurl);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString path;
+  nsAutoCString path;
   NS_CopyUnicodeToNative(aArgument, path);
 
   CFURLRef newurl =
@@ -293,10 +293,10 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
     return NS_OK;
   }
 
-  nsCAutoString nativeArg;
+  nsAutoCString nativeArg;
   NS_CopyUnicodeToNative(aArgument, nativeArg);
 
-  nsCAutoString newpath;
+  nsAutoCString newpath;
   mWorkingDir->GetNativePath(newpath);
 
   newpath.Append('/');
@@ -345,10 +345,10 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
   rv = lf->InitWithPath(aArgument);
   if (NS_FAILED(rv)) {
 
-    nsCAutoString fullPath;
+    nsAutoCString fullPath;
     mWorkingDir->GetNativePath(fullPath);
 
-    nsCAutoString carg;
+    nsAutoCString carg;
     NS_CopyUnicodeToNative(aArgument, carg);
 
     fullPath.Append('\\');
@@ -389,7 +389,7 @@ nsCommandLine::ResolveURI(const nsAString& aArgument, nsIURI* *aResult)
   rv = lf->InitWithPath(aArgument);
   if (NS_SUCCEEDED(rv)) {
     lf->Normalize();
-    nsCAutoString url;
+    nsAutoCString url;
     // Try to resolve the url for .url files.
     resolveShortcutURL(lf, url);
     if (!url.IsEmpty()) {
@@ -538,7 +538,7 @@ nsCommandLine::EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClo
   nsCOMPtr<nsIUTF8StringEnumerator> strenum (do_QueryInterface(entenum));
   NS_ENSURE_TRUE(strenum, NS_ERROR_UNEXPECTED);
 
-  nsCAutoString entry;
+  nsAutoCString entry;
   bool hasMore;
   while (NS_SUCCEEDED(strenum->HasMore(&hasMore)) && hasMore) {
     strenum->GetNext(entry);
@@ -584,7 +584,7 @@ nsCommandLine::EnumerateValidators(EnumerateValidatorsCallback aCallback, void *
   nsCOMPtr<nsIUTF8StringEnumerator> strenum (do_QueryInterface(entenum));
   NS_ENSURE_TRUE(strenum, NS_ERROR_UNEXPECTED);
 
-  nsCAutoString entry;
+  nsAutoCString entry;
   bool hasMore;
   while (NS_SUCCEEDED(strenum->HasMore(&hasMore)) && hasMore) {
     strenum->GetNext(entry);

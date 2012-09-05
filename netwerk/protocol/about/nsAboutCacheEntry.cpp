@@ -160,7 +160,7 @@ nsresult
 nsAboutCacheEntry::OpenCacheEntry(nsIURI *uri, nsICacheEntryDescriptor **result)
 {
     nsresult rv;
-    nsCAutoString clientID, key;
+    nsAutoCString clientID, key;
     bool streamBased = true;
 
     rv = ParseURI(uri, clientID, streamBased, key);
@@ -225,7 +225,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     nsCString buffer;
     uint32_t n;
 
-    nsCAutoString str;
+    nsAutoCString str;
 
     rv = descriptor->GetKey(str);
     if (NS_FAILED(rv)) return rv;
@@ -267,7 +267,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     char timeBuf[255];
     uint32_t u = 0;
     int32_t  i = 0;
-    nsCAutoString s;
+    nsAutoCString s;
 
     // Fetch Count
     s.Truncate();
@@ -401,7 +401,7 @@ nsAboutCacheEntry::ParseURI(nsIURI *uri, nsCString &clientID,
     //
     nsresult rv;
 
-    nsCAutoString path;
+    nsAutoCString path;
     rv = uri->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 

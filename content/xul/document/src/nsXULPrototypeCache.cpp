@@ -215,9 +215,9 @@ nsXULPrototypeCache::PutScript(nsIURI* aURI, JSScript* aScriptObject)
     CacheScriptEntry existingEntry;
     if (mScriptTable.Get(aURI, &existingEntry)) {
 #ifdef DEBUG
-        nsCAutoString scriptName;
+        nsAutoCString scriptName;
         aURI->GetSpec(scriptName);
-        nsCAutoString message("Loaded script ");
+        nsAutoCString message("Loaded script ");
         message += scriptName;
         message += " twice (bug 392650)";
         NS_WARNING(message.get());
@@ -266,7 +266,7 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo)
 static PLDHashOperator
 FlushSkinXBL(nsIURI* aKey, nsRefPtr<nsXBLDocumentInfo>& aDocInfo, void* aClosure)
 {
-  nsCAutoString str;
+  nsAutoCString str;
   aKey->GetPath(str);
 
   PLDHashOperator ret = PL_DHASH_NEXT;
@@ -281,7 +281,7 @@ FlushSkinXBL(nsIURI* aKey, nsRefPtr<nsXBLDocumentInfo>& aDocInfo, void* aClosure
 static PLDHashOperator
 FlushSkinSheets(nsIURI* aKey, nsRefPtr<nsCSSStyleSheet>& aSheet, void* aClosure)
 {
-  nsCAutoString str;
+  nsAutoCString str;
   aSheet->GetSheetURI()->GetPath(str);
 
   PLDHashOperator ret = PL_DHASH_NEXT;
@@ -391,7 +391,7 @@ nsXULPrototypeCache::WritePrototype(nsXULPrototypeDocument* aPrototypeDocument)
 nsresult
 nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream) 
 {
-    nsCAutoString spec(kXULCachePrefix);
+    nsAutoCString spec(kXULCachePrefix);
     nsresult rv = PathifyURI(uri, spec);
     if (NS_FAILED(rv)) 
         return NS_ERROR_NOT_AVAILABLE;
@@ -467,7 +467,7 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
                                     &len);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString spec(kXULCachePrefix);
+    nsAutoCString spec(kXULCachePrefix);
     rv = PathifyURI(uri, spec);
     if (NS_FAILED(rv))
         return NS_ERROR_NOT_AVAILABLE;
@@ -487,7 +487,7 @@ nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists)
         *exists = true;
         return NS_OK;
     }
-    nsCAutoString spec(kXULCachePrefix);
+    nsAutoCString spec(kXULCachePrefix);
     nsresult rv = PathifyURI(uri, spec);
     if (NS_FAILED(rv)) {
         *exists = false;
@@ -535,7 +535,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
 {
     nsresult rv, tmp;
 
-    nsCAutoString path;
+    nsAutoCString path;
     aURI->GetPath(path);
     if (!StringEndsWith(path, NS_LITERAL_CSTRING(".xul")))
         return NS_ERROR_NOT_AVAILABLE;
@@ -574,25 +574,25 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(chromeDir));
     if (NS_FAILED(rv))
         return rv;
-    nsCAutoString chromePath;
+    nsAutoCString chromePath;
     rv = chromeDir->GetNativePath(chromePath);
     if (NS_FAILED(rv))
         return rv;
 
     // XXXbe we assume the first package's locale is the same as the locale of
     // all subsequent packages of cached chrome URIs....
-    nsCAutoString package;
+    nsAutoCString package;
     rv = aURI->GetHost(package);
     if (NS_FAILED(rv))
         return rv;
     nsCOMPtr<nsIXULChromeRegistry> chromeReg
         = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
-    nsCAutoString locale;
+    nsAutoCString locale;
     rv = chromeReg->GetSelectedLocale(package, locale);
     if (NS_FAILED(rv))
         return rv;
 
-    nsCAutoString fileChromePath, fileLocale;
+    nsAutoCString fileChromePath, fileLocale;
     
     nsAutoArrayPtr<char> buf;
     uint32_t len, amtRead;

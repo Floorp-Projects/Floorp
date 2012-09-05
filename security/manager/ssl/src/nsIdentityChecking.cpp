@@ -673,7 +673,7 @@ loadTestEVInfos()
   if (NS_FAILED(rv))
     return;
 
-  nsCAutoString buffer;
+  nsAutoCString buffer;
   bool isMore = true;
 
   /* file format
@@ -1146,7 +1146,10 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV)
     CERT_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST
     | CERT_REV_MI_REQUIRE_SOME_FRESH_INFO_AVAILABLE;
 
-  uint64_t methodFlags[2];
+  // We need a PRUint64 here instead of a nice int64_t (until bug 634793 is
+  // fixed) to match the type used in security/nss/lib/certdb/certt.h for
+  // cert_rev_flags_per_method.
+  PRUint64 methodFlags[2];
   methodFlags[cert_revocation_method_crl] = revMethodFlags;
   methodFlags[cert_revocation_method_ocsp] = revMethodFlags;
 

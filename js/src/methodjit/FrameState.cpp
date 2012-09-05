@@ -31,10 +31,10 @@ FrameState::~FrameState()
         ActiveFrame *parent = a->parent;
         if (a->script->hasAnalysis())
             a->script->analysis()->clearAllocations();
-        cx->free_(a);
+        js_free(a);
         a = parent;
     }
-    cx->free_(entries);
+    js_free(entries);
 }
 
 void
@@ -63,7 +63,7 @@ FrameState::pushActiveFrame(JSScript *script, uint32_t argc)
         size_t totalBytes = sizeof(FrameEntry) * nentries +       // entries[]
                             sizeof(FrameEntry *) * nentries +     // tracker.entries
                             sizeof(StackEntryExtra) * nentries;   // extraArray
-        uint8_t *cursor = (uint8_t *)OffTheBooks::calloc_(totalBytes);
+        uint8_t *cursor = (uint8_t *)js_calloc(totalBytes);
         if (!cursor)
             return false;
 
@@ -89,7 +89,7 @@ FrameState::pushActiveFrame(JSScript *script, uint32_t argc)
     /* We should have already checked that argc == nargs */
     JS_ASSERT_IF(a, argc == script->function()->nargs);
 
-    ActiveFrame *newa = OffTheBooks::new_<ActiveFrame>();
+    ActiveFrame *newa = js_new<ActiveFrame>();
     if (!newa)
         return false;
 
@@ -147,7 +147,7 @@ FrameState::popActiveFrame()
     }
 
     ActiveFrame *parent = a->parent;
-    cx->delete_(a);
+    js_delete(a);
     a = parent;
 }
 
@@ -474,7 +474,7 @@ FrameEntry *
 FrameState::snapshotState()
 {
     /* Everything can be recovered from a copy of the frame entries. */
-    FrameEntry *snapshot = cx->array_new<FrameEntry>(nentries);
+    FrameEntry *snapshot = js_pod_malloc<FrameEntry>(nentries);
     if (!snapshot)
         return NULL;
     PodCopy(snapshot, entries, nentries);
@@ -2858,7 +2858,7 @@ FrameState::getTemporaryCopies(Uses uses)
                 FrameEntry *nfe = tracker[i];
                 if (!deadEntry(nfe, uses.nuses) && nfe->isCopy() && nfe->copyOf() == fe) {
                     if (!res)
-                        res = OffTheBooks::new_< Vector<TemporaryCopy> >(cx);
+                        res = js_new< Vector<TemporaryCopy> >(cx);
                     res->append(TemporaryCopy(addressOf(nfe), addressOf(fe)));
                 }
             }

@@ -173,7 +173,7 @@ public:
 
     virtual bool RecvLastPrivateDocShellDestroyed();
 
-    virtual bool RecvFilePathUpdate(const nsString& path, const nsCString& reason);
+    virtual bool RecvFilePathUpdate(const nsString& type, const nsString& path, const nsCString& reason);
     virtual bool RecvFileSystemUpdate(const nsString& aFsName, const nsString& aName, const int32_t& aState);
 
 #ifdef ANDROID

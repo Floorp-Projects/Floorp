@@ -55,7 +55,7 @@ static NS_DEFINE_CID(kMultiplexInputStream, NS_MULTIPLEXINPUTSTREAM_CID);
 static void
 LogHeaders(const char *lines)
 {
-    nsCAutoString buf;
+    nsAutoCString buf;
     char *p;
     while ((p = PL_strstr(lines, "\r\n")) != nullptr) {
         buf.Assign(lines, p - lines);
@@ -1173,7 +1173,7 @@ nsHttpTransaction::HandleContentStart()
 #if defined(PR_LOGGING)
         if (LOG3_ENABLED()) {
             LOG3(("http response [\n"));
-            nsCAutoString headers;
+            nsAutoCString headers;
             mResponseHead->Flatten(headers, false);
             LogHeaders(headers.get());
             LOG3(("]\n"));
@@ -1422,7 +1422,7 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
         if (mActivityDistributor && mResponseHead && mHaveAllHeaders &&
             !mReportedResponseHeader) {
             mReportedResponseHeader = true;
-            nsCAutoString completeResponseHeaders;
+            nsAutoCString completeResponseHeaders;
             mResponseHead->Flatten(completeResponseHeaders, false);
             completeResponseHeaders.AppendLiteral("\r\n");
             mActivityDistributor->ObserveActivity(

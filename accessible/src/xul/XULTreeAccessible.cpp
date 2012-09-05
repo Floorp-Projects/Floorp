@@ -199,7 +199,7 @@ XULTreeAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 
   int32_t row = -1;
   nsCOMPtr<nsITreeColumn> column;
-  nsCAutoString childEltUnused;
+  nsAutoCString childEltUnused;
   mTree->GetCellAt(clientX, clientY, &row, getter_AddRefs(column),
                    childEltUnused);
 
@@ -703,6 +703,7 @@ XULTreeItemAccessibleBase::
   mTree(aTree), mTreeView(aTreeView), mRow(aRow)
 {
   mParent = aParent;
+  mFlags |= eSharedNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -896,12 +897,6 @@ XULTreeItemAccessibleBase::Shutdown()
   AccessibleWrap::Shutdown();
 }
 
-bool
-XULTreeItemAccessibleBase::IsPrimaryForNode() const
-{
-  return false;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeItemAccessibleBase: Accessible public methods
 
@@ -1028,7 +1023,7 @@ XULTreeItemAccessibleBase::DispatchClickEvent(nsIContent* aContent,
 
   // Get column and pseudo element.
   nsCOMPtr<nsITreeColumn> column;
-  nsCAutoString pseudoElm;
+  nsAutoCString pseudoElm;
 
   if (aActionIndex == eAction_Click) {
     // Key column is visible and clickable.

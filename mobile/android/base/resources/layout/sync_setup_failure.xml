@@ -3,32 +3,31 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  style="@style/SyncLayout" >
-  <TextView
-      style="@style/SyncTop"
-      android:id="@+id/failure_top"
-      android:text="@string/sync_title_fail" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncContainer" >
 
   <TextView
-    android:id="@+id/failure_subtitle1"
-    style="@style/SyncTextItem"
-    android:layout_below="@id/failure_top"
-    android:padding="20dp"
-    android:text="@string/sync_subtitle_fail" />
+    style="@style/SyncTop"
+    android:text="@string/sync_title_fail" />
 
-  <TextView
-    android:id="@+id/failure_subtitle2"
-    style="@style/SyncTextItem"
-    android:layout_below="@id/failure_subtitle1"
-    android:paddingLeft="20dp"
-    android:paddingRight="20dp"
-    android:text="@string/sync_subtitle_failmultiple" />
+  <ScrollView
+    style="@style/SyncMiddle" >
+
+      <LinearLayout
+        style="@style/SyncLayout.Vertical" >
+        <TextView android:id="@+id/failure_subtitle1"
+          style="@style/SyncTextItem"
+          android:paddingBottom="@dimen/SyncSpace"
+          android:text="@string/sync_subtitle_fail" />
+
+        <TextView android:id="@+id/failure_subtitle2"
+          style="@style/SyncTextItem"
+          android:text="@string/sync_subtitle_failmultiple" />
+      </LinearLayout>
+    </ScrollView>
 
   <LinearLayout
-    android:id="@+id/failure_bottom"
-    style="@style/SyncBottom"
-    android:orientation="horizontal" >
+    style="@style/SyncBottom" >
 
     <Button
       style="@style/SyncButton"
@@ -45,4 +44,4 @@
       android:onClick="cancelClickHandler"
       android:text="@string/sync_button_cancel" />
   </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-print">
+<head>
+  <script type="text/javascript">
+    window.onload = function() { 
+      var canvas = document.getElementById('canvas');
+      canvas.mozPrintCallback = function(obj) {
+        var ctx = obj.context;
+        ctx.fillStyle = 'rgb(255, 0, 0)';
+        ctx.fillRect(0, 0, 10, 10);
+        obj.done();
+      };
+      setTimeout(function() {
+        document.documentElement.className = "reftest-print" 
+      }, 0);
+    };
+  </script>
+</head>
+<body>
+  <canvas id="canvas" width="10px" height="10px"></canvas>
+</body>
+</html>

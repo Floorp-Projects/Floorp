@@ -94,7 +94,7 @@ nsStructuredCloneContainer::InitFromBase64(const nsAString &aData,
 
   NS_ConvertUTF16toUTF8 data(aData);
 
-  nsCAutoString binaryData;
+  nsAutoCString binaryData;
   nsresult rv = Base64Decode(data, binaryData);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -140,8 +140,8 @@ nsStructuredCloneContainer::GetDataAsBase64(nsAString &aOut)
   NS_ENSURE_STATE(mData);
   aOut.Truncate();
 
-  nsCAutoString binaryData(reinterpret_cast<char*>(mData), mSize);
-  nsCAutoString base64Data;
+  nsAutoCString binaryData(reinterpret_cast<char*>(mData), mSize);
+  nsAutoCString base64Data;
   nsresult rv = Base64Encode(binaryData, base64Data);
   NS_ENSURE_SUCCESS(rv, rv);
 

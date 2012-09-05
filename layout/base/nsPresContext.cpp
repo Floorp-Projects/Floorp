@@ -446,13 +446,13 @@ nsPresContext::GetFontPrefsForLang(nsIAtom *aLanguage) const
   font.minimum-size.[langGroup] = integer - settable by the user
   */
 
-  nsCAutoString langGroup;
+  nsAutoCString langGroup;
   langGroupAtom->ToUTF8String(langGroup);
 
   prefs->mDefaultVariableFont.size = CSSPixelsToAppUnits(16);
   prefs->mDefaultFixedFont.size = CSSPixelsToAppUnits(13);
 
-  nsCAutoString pref;
+  nsAutoCString pref;
 
   // get the current applicable font-size unit
   enum {eUnit_unknown = -1, eUnit_px, eUnit_pt};
@@ -505,7 +505,7 @@ nsPresContext::GetFontPrefsForLang(nsIAtom *aLanguage) const
   // generic name that should be fed into the cascade. It is up to the GFX
   // code to look up the font prefs to convert generic names to specific
   // family names as necessary.
-  nsCAutoString generic_dot_langGroup;
+  nsAutoCString generic_dot_langGroup;
   for (uint32_t eType = 0; eType < ArrayLength(fontTypes); ++eType) {
     generic_dot_langGroup.Assign(kGenericFont[eType]);
     generic_dot_langGroup.Append(langGroup);

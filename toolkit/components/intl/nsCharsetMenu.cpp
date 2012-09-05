@@ -92,7 +92,7 @@ public:
   nsMenuEntry() { MOZ_COUNT_CTOR(nsMenuEntry); }
   ~nsMenuEntry() { MOZ_COUNT_DTOR(nsMenuEntry); }
 
-  nsCAutoString mCharset;
+  nsAutoCString mCharset;
   nsAutoString      mTitle;
 };
 
@@ -330,7 +330,7 @@ nsCharsetMenu::SetArrayFromEnumerator(nsIUTF8StringEnumerator* aEnumerator,
   bool hasMore;
   rv = aEnumerator->HasMore(&hasMore);
   
-  nsCAutoString value;
+  nsAutoCString value;
   while (NS_SUCCEEDED(rv) && hasMore) {
     rv = aEnumerator->GetNext(value);
     if (NS_SUCCEEDED(rv))
@@ -1240,7 +1240,7 @@ nsresult nsCharsetMenu::AddMenuItemToContainer(
   nsresult res = NS_OK;
   nsCOMPtr<nsIRDFResource> node;
 
-  nsCAutoString id;
+  nsAutoCString id;
   if (aIDPrefix != NULL) id.Assign(aIDPrefix);
   id.Append(aItem->mCharset);
 
@@ -1396,7 +1396,7 @@ nsresult nsCharsetMenu::AddFromStringToMenu(
 
     // if this charset is not on the accepted list of charsets, ignore it
     int32_t index;
-    index = aDecs.IndexOf(nsCAutoString(p), 0, nsIgnoreCaseCStringComparator());
+    index = aDecs.IndexOf(nsAutoCString(p), 0, nsIgnoreCaseCStringComparator());
     if (index >= 0) {
 
       // else, add it to the menu
@@ -1418,7 +1418,7 @@ nsresult nsCharsetMenu::AddFromStringToMenu(
 
 nsresult nsCharsetMenu::AddSeparatorToContainer(nsIRDFContainer * aContainer)
 {
-  nsCAutoString str;
+  nsAutoCString str;
   str.AssignLiteral("----");
 
   // hack to generate unique id's for separators
@@ -1471,8 +1471,8 @@ nsresult nsCharsetMenu::WriteCacheToPrefs(nsTArray<nsMenuEntry*> * aArray,
   nsresult res = NS_OK;
 
   // create together the cache string
-  nsCAutoString cache;
-  nsCAutoString sep(NS_LITERAL_CSTRING(", "));
+  nsAutoCString cache;
+  nsAutoCString sep(NS_LITERAL_CSTRING(", "));
   uint32_t count = aArray->Length();
 
   for (uint32_t i = aCacheStart; i < count; i++) {

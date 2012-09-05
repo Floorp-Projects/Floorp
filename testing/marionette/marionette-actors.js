@@ -301,7 +301,19 @@ MarionetteDriverActor.prototype = {
     this.curFrame = null;
     this.addBrowser(win);
     this.curBrowser.newSession = newSession;
-    this.curBrowser.startSession(newSession);
+    this.curBrowser.startSession(newSession, win, this.whenBrowserStarted.bind(this));
+  },
+
+  /**
+   * Callback invoked after a new session has been started in a browser.
+   * Loads the Marionette frame script into the browser if needed.
+   *
+   * @param nsIDOMWindow win
+   *        Window whose browser we need to access
+   * @param boolean newSession
+   *        True if this is the first time we're talking to this browser
+   */
+  whenBrowserStarted: function MDA_whenBrowserStarted(win, newSession) {
     try {
       if (!Services.prefs.getBoolPref("marionette.contentListener") || !newSession) {
         this.curBrowser.loadFrameScript("chrome://marionette/content/marionette-listener.js", win);
@@ -371,7 +383,7 @@ MarionetteDriverActor.prototype = {
     else if ((appName == "B2G") && (this.curBrowser == null)) {
       //if there is a content listener, then we just wake it up
       this.addBrowser(this.getCurrentWindow());
-      this.curBrowser.startSession(false);
+      this.curBrowser.startSession(false, this.getCurrentWindow(), this.whenBrowserStarted);
       this.messageManager.broadcastAsyncMessage("Marionette:restart", {});
     }
     else {
@@ -509,35 +521,31 @@ MarionetteDriverActor.prototype = {
    */
   executeScriptInSandbox: function MDA_executeScriptInSandbox(sandbox, script,
      directInject, async) {
-    try {
-      if (directInject && async &&
-          (this.scriptTimeout == null || this.scriptTimeout == 0)) {
-        this.sendError("Please set a timeout", 21, null);
-        return;
-      }
 
-      if (this.importedScripts.exists()) {
-        let stream = Cc["@mozilla.org/network/file-input-stream;1"].  
-                      createInstance(Ci.nsIFileInputStream);
-        stream.init(this.importedScripts, -1, 0, 0);
-        let data = NetUtil.readInputStreamToString(stream, stream.available());
-        script = data + script;
-      }
-
-      let res = Cu.evalInSandbox(script, sandbox, "1.8");
-
-      if (directInject && !async &&
-          (res == undefined || res.passed == undefined)) {
-        this.sendError("finish() not called", 500, null);
-        return;
-      }
-
-      if (!async) {
-        this.sendResponse(this.curBrowser.elementManager.wrapValue(res));
-      }
+    if (directInject && async &&
+        (this.scriptTimeout == null || this.scriptTimeout == 0)) {
+      this.sendError("Please set a timeout", 21, null);
+      return;
     }
-    catch (e) {
-      this.sendError(e.name + ': ' + e.message, 17, e.stack);
+
+    if (this.importedScripts.exists()) {
+      let stream = Cc["@mozilla.org/network/file-input-stream;1"].  
+                    createInstance(Ci.nsIFileInputStream);
+      stream.init(this.importedScripts, -1, 0, 0);
+      let data = NetUtil.readInputStreamToString(stream, stream.available());
+      script = data + script;
+    }
+
+    let res = Cu.evalInSandbox(script, sandbox, "1.8");
+
+    if (directInject && !async &&
+        (res == undefined || res.passed == undefined)) {
+      this.sendError("finish() not called", 500, null);
+      return;
+    }
+
+    if (!async) {
+      this.sendResponse(this.curBrowser.elementManager.wrapValue(res));
     }
   },
 
@@ -634,7 +642,10 @@ MarionetteDriverActor.prototype = {
       }
     }
     else {
-      this.sendAsync("executeJSScript", {value:aRequest.value, args:aRequest.args, timeout:aRequest.timeout});
+      this.sendAsync("executeJSScript", { value:aRequest.value,
+                                          args:aRequest.args,
+                                          newSandbox:aRequest.newSandbox,
+                                          timeout:aRequest.timeout });
    }
   },
 
@@ -672,7 +683,8 @@ MarionetteDriverActor.prototype = {
     let curWindow = this.getCurrentWindow();
     let original_onerror = curWindow.onerror;
     let that = this;
-    let marionette = new Marionette(this, curWindow, "chrome", this.marionetteLog, this.marionettePerf);
+    let marionette = new Marionette(this, curWindow, "chrome",
+                                    this.marionetteLog, this.marionettePerf);
     marionette.command_id = this.command_id;
 
     function chromeAsyncReturnFunc(value, status) {
@@ -742,7 +754,7 @@ MarionetteDriverActor.prototype = {
 
       this.executeScriptInSandbox(_chromeSandbox, script, directInject, true);
     } catch (e) {
-      this.sendError(e.name + ": " + e.message, 17, e.stack, marionette.command_id);
+      chromeAsyncReturnFunc(e.name + ": " + e.message, 17);
     }
   },
 
@@ -1558,21 +1570,27 @@ BrowserObj.prototype = {
    * @param boolean newTab
    *        If true, create new tab
    */
-  startSession: function BO_startSession(newTab) {
+  startSession: function BO_startSession(newTab, win, callback) {
     if (appName == "B2G") {
-      return;
+      callback(win, newTab);
     }
-    if (newTab) {
+    else if (newTab) {
       this.addTab(this.startPage);
-      //if we have a new tab, make it the selected tab and give it focus
+      //if we have a new tab, make it the selected tab
       this.browser.selectedTab = this.tab;
       let newTabBrowser = this.browser.getBrowserForTab(this.tab);
+      // wait for tab to be loaded
+      newTabBrowser.addEventListener("load", function onLoad() {
+        newTabBrowser.removeEventListener("load", onLoad, true);
+        callback(win, newTab);
+      }, true);
     }
     else {
       //set this.tab to the currently focused tab
       if (this.browser != undefined && this.browser.selectedTab != undefined) {
         this.tab = this.browser.selectedTab;
       }
+      callback(win, newTab);
     }
   },
 

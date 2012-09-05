@@ -55,7 +55,7 @@ nsresult TestGetURL(const nsCString& aURL)
   rv = xhr->GetResponseText(response);
   TEST_ENSURE_SUCCESS(rv, "GetResponse failed!");
 
-  nsCAutoString responseUTF8 = NS_ConvertUTF16toUTF8(response);
+  nsAutoCString responseUTF8 = NS_ConvertUTF16toUTF8(response);
   printf("#BEGIN\n");
   printf("%s", responseUTF8.get());
   printf("\n#EOF\n");
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
   if (xpcom.failed())
     return 1;
 
-  nsCAutoString targetURL(argv[1]);
+  nsAutoCString targetURL(argv[1]);
 
   int retval = 0;
   if (NS_FAILED(TestGetURL(targetURL))) {

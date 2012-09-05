@@ -29,6 +29,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
 struct DatabaseInfo;
+class IDBFactory;
 class IDBIndex;
 class IDBObjectStore;
 class IDBTransaction;
@@ -54,6 +55,7 @@ public:
 
   static already_AddRefed<IDBDatabase>
   Create(IDBWrapperCache* aOwnerCache,
+         IDBFactory* aFactory,
          already_AddRefed<DatabaseInfo> aDatabaseInfo,
          const nsACString& aASCIIOrigin,
          FileManager* aFileManager,
@@ -159,7 +161,13 @@ private:
 
   void OnUnlink();
 
+  // The factory must be kept alive when IndexedDB is used in multiple
+  // processes. If it dies then the entire actor tree will be destroyed with it
+  // and the world will explode.
+  nsRefPtr<IDBFactory> mFactory;
+
   nsRefPtr<DatabaseInfo> mDatabaseInfo;
+
   // Set to a copy of the existing DatabaseInfo when starting a versionchange
   // transaction.
   nsRefPtr<DatabaseInfo> mPreviousDatabaseInfo;
@@ -169,11 +177,6 @@ private:
   nsCString mASCIIOrigin;
 
   nsRefPtr<FileManager> mFileManager;
-
-  // Only touched on the main thread.
-  NS_DECL_EVENT_HANDLER(abort)
-  NS_DECL_EVENT_HANDLER(error)
-  NS_DECL_EVENT_HANDLER(versionchange)
 
   IndexedDBDatabaseChild* mActorChild;
   IndexedDBDatabaseParent* mActorParent;

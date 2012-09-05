@@ -314,7 +314,7 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
     nsCOMPtr<nsIStringBundleService> bundleService = 
       do_GetService(NS_STRINGBUNDLE_CONTRACTID);
 
-    nsCAutoString appShortName;
+    nsAutoCString appShortName;
     if (bundleService) {
       nsCOMPtr<nsIStringBundle> bundle;
       bundleService->CreateBundle("chrome://branding/locale/brand.properties",

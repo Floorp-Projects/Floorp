@@ -66,6 +66,41 @@
 using namespace js;
 using namespace js::gc;
 
+bool
+js::AutoCycleDetector::init()
+{
+    ObjectSet &set = cx->cycleDetectorSet;
+    hashsetAddPointer = set.lookupForAdd(obj);
+    if (!hashsetAddPointer) {
+        if (!set.add(hashsetAddPointer, obj))
+            return false;
+        cyclic = false;
+        hashsetGenerationAtInit = set.generation();
+    }
+    return true;
+}
+
+js::AutoCycleDetector::~AutoCycleDetector()
+{
+    if (!cyclic) {
+        if (hashsetGenerationAtInit == cx->cycleDetectorSet.generation())
+            cx->cycleDetectorSet.remove(hashsetAddPointer);
+        else
+            cx->cycleDetectorSet.remove(obj);
+    }
+}
+
+void
+js::TraceCycleDetectionSet(JSTracer *trc, js::ObjectSet &set)
+{
+    for (js::ObjectSet::Enum e(set); !e.empty(); e.popFront()) {
+        JSObject *prior = e.front();
+        MarkObjectRoot(trc, const_cast<JSObject **>(&e.front()), "cycle detector table entry");
+        if (prior != e.front())
+            e.rekeyFront(e.front());
+    }
+}
+
 struct CallbackData
 {
     CallbackData(JSMallocSizeOfFun f) : mallocSizeOf(f), n(0) {}
@@ -161,7 +196,7 @@ JSRuntime::createExecutableAllocator(JSContext *cx)
 
     JSC::AllocationBehavior randomize =
         jitHardening ? JSC::AllocationCanRandomize : JSC::AllocationDeterministic;
-    execAlloc_ = new_<JSC::ExecutableAllocator>(randomize);
+    execAlloc_ = js_new<JSC::ExecutableAllocator>(randomize);
     if (!execAlloc_)
         js_ReportOutOfMemory(cx);
     return execAlloc_;
@@ -173,7 +208,7 @@ JSRuntime::createBumpPointerAllocator(JSContext *cx)
     JS_ASSERT(!bumpAlloc_);
     JS_ASSERT(cx->runtime == this);
 
-    bumpAlloc_ = new_<WTF::BumpPointerAllocator>();
+    bumpAlloc_ = js_new<WTF::BumpPointerAllocator>();
     if (!bumpAlloc_)
         js_ReportOutOfMemory(cx);
     return bumpAlloc_;
@@ -185,7 +220,7 @@ JSRuntime::createMathCache(JSContext *cx)
     JS_ASSERT(!mathCache_);
     JS_ASSERT(cx->runtime == this);
 
-    MathCache *newMathCache = new_<MathCache>();
+    MathCache *newMathCache = js_new<MathCache>();
     if (!newMathCache) {
         js_ReportOutOfMemory(cx);
         return NULL;
@@ -202,10 +237,10 @@ JSRuntime::createJaegerRuntime(JSContext *cx)
     JS_ASSERT(!jaegerRuntime_);
     JS_ASSERT(cx->runtime == this);
 
-    mjit::JaegerRuntime *jr = new_<mjit::JaegerRuntime>();
+    mjit::JaegerRuntime *jr = js_new<mjit::JaegerRuntime>();
     if (!jr || !jr->init(cx)) {
         js_ReportOutOfMemory(cx);
-        delete_(jr);
+        js_delete(jr);
         return NULL;
     }
 
@@ -214,7 +249,11 @@ JSRuntime::createJaegerRuntime(JSContext *cx)
 }
 #endif
 
-
+static void
+selfHosting_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+{
+    PrintError(cx, stderr, message, report, true);
+}
 static JSClass self_hosting_global_class = {
     "self-hosting-global", JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_PropertyStub,
@@ -240,11 +279,16 @@ JSRuntime::initSelfHosting(JSContext *cx)
 
     RootedObject shg(cx, selfHostedGlobal_);
     Value rv;
-    if (!Evaluate(cx, shg, options, src, srcLen, &rv))
-        return false;
-
+    /*
+     * Set a temporary error reporter printing to stderr because it is too
+     * early in the startup process for any other reporter to be registered
+     * and we don't want errors in self-hosted code to be silently swallowed.
+     */
+    JSErrorReporter oldReporter = JS_SetErrorReporter(cx, selfHosting_ErrorReporter);
+    bool ok = Evaluate(cx, shg, options, src, srcLen, &rv);
+    JS_SetErrorReporter(cx, oldReporter);
     JS_SetGlobalObject(cx, savedGlobal);
-    return true;
+    return ok;
 }
 
 void
@@ -301,14 +345,14 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
     JS_AbortIfWrongThread(rt);
 
-    JSContext *cx = OffTheBooks::new_<JSContext>(rt);
+    JSContext *cx = js_new<JSContext>(rt);
     if (!cx)
         return NULL;
 
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
 
-    if (!cx->busyArrays.init()) {
-        Foreground::delete_(cx);
+    if (!cx->cycleDetectorSet.init()) {
+        js_delete(cx);
         return NULL;
     }
 
@@ -410,7 +454,7 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         PrepareForFullGC(rt);
         GC(rt, GC_NORMAL, gcreason::DESTROY_CONTEXT);
     }
-    Foreground::delete_(cx);
+    js_delete(cx);
 }
 
 namespace js {
@@ -624,8 +668,8 @@ js_ReportErrorVA(JSContext *cx, unsigned flags, const char *format, va_list ap)
     warning = JSREPORT_IS_WARNING(report.flags);
 
     ReportError(cx, message, &report, NULL, NULL);
-    Foreground::free_(message);
-    Foreground::free_(ucmessage);
+    js_free(message);
+    js_free(ucmessage);
     return warning;
 }
 
@@ -656,6 +700,78 @@ ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
             return;
         JS_ReportError(cx, "%s. Usage: %hs", msg, chars);
     }
+}
+
+bool
+PrintError(JSContext *cx, FILE *file, const char *message, JSErrorReport *report,
+           bool reportWarnings)
+{
+    if (!report) {
+        fprintf(file, "%s\n", message);
+        fflush(file);
+        return false;
+    }
+
+    /* Conditionally ignore reported warnings. */
+    if (JSREPORT_IS_WARNING(report->flags) && !reportWarnings)
+        return false;
+
+    char *prefix = NULL;
+    if (report->filename)
+        prefix = JS_smprintf("%s:", report->filename);
+    if (report->lineno) {
+        char *tmp = prefix;
+        prefix = JS_smprintf("%s%u:%u ", tmp ? tmp : "", report->lineno, report->column);
+        JS_free(cx, tmp);
+    }
+    if (JSREPORT_IS_WARNING(report->flags)) {
+        char *tmp = prefix;
+        prefix = JS_smprintf("%s%swarning: ",
+                             tmp ? tmp : "",
+                             JSREPORT_IS_STRICT(report->flags) ? "strict " : "");
+        JS_free(cx, tmp);
+    }
+
+    /* embedded newlines -- argh! */
+    const char *ctmp;
+    while ((ctmp = strchr(message, '\n')) != 0) {
+        ctmp++;
+        if (prefix)
+            fputs(prefix, file);
+        fwrite(message, 1, ctmp - message, file);
+        message = ctmp;
+    }
+
+    /* If there were no filename or lineno, the prefix might be empty */
+    if (prefix)
+        fputs(prefix, file);
+    fputs(message, file);
+
+    if (report->linebuf) {
+        /* report->linebuf usually ends with a newline. */
+        int n = strlen(report->linebuf);
+        fprintf(file, ":\n%s%s%s%s",
+                prefix,
+                report->linebuf,
+                (n > 0 && report->linebuf[n-1] == '\n') ? "" : "\n",
+                prefix);
+        n = report->tokenptr - report->linebuf;
+        for (int i = 0, j = 0; i < n; i++) {
+            if (report->linebuf[i] == '\t') {
+                for (int k = (j + 8) & ~7; j < k; j++) {
+                    fputc('.', file);
+                }
+                continue;
+            }
+            fputc('.', file);
+            j++;
+        }
+        fputc('^', file);
+    }
+    fputc('\n', file);
+    fflush(file);
+    JS_free(cx, prefix);
+    return true;
 }
 
 } /* namespace js */
@@ -702,8 +818,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
              * null it out to act as the caboose when we free the
              * pointers later.
              */
-            reportp->messageArgs = (const jschar **)
-                cx->malloc_(sizeof(jschar *) * (argCount + 1));
+            reportp->messageArgs = cx->pod_malloc<const jschar*>(argCount + 1);
             if (!reportp->messageArgs)
                 return JS_FALSE;
             reportp->messageArgs[argCount] = NULL;
@@ -745,10 +860,9 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 * Note - the above calculation assumes that each argument
                 * is used once and only once in the expansion !!!
                 */
-                reportp->ucmessage = out = (jschar *)
-                    cx->malloc_((expandedLength + 1) * sizeof(jschar));
+                reportp->ucmessage = out = cx->pod_malloc<jschar>(expandedLength + 1);
                 if (!out) {
-                    cx->free_(buffer);
+                    js_free(buffer);
                     goto error;
                 }
                 while (*fmt) {
@@ -768,7 +882,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 }
                 JS_ASSERT(expandedArgs == argCount);
                 *out = 0;
-                cx->free_(buffer);
+                js_free(buffer);
                 *messagep = DeflateString(cx, reportp->ucmessage,
                                           size_t(out - reportp->ucmessage));
                 if (!*messagep)
@@ -796,7 +910,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
         const char *defaultErrorMessage
             = "No error message available for error number %d";
         size_t nbytes = strlen(defaultErrorMessage) + 16;
-        *messagep = (char *)cx->malloc_(nbytes);
+        *messagep = cx->pod_malloc<char>(nbytes);
         if (!*messagep)
             goto error;
         JS_snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
@@ -809,17 +923,17 @@ error:
         if (charArgs) {
             i = 0;
             while (reportp->messageArgs[i])
-                cx->free_((void *)reportp->messageArgs[i++]);
+                js_free((void *)reportp->messageArgs[i++]);
         }
-        cx->free_((void *)reportp->messageArgs);
+        js_free((void *)reportp->messageArgs);
         reportp->messageArgs = NULL;
     }
     if (reportp->ucmessage) {
-        cx->free_((void *)reportp->ucmessage);
+        js_free((void *)reportp->ucmessage);
         reportp->ucmessage = NULL;
     }
     if (*messagep) {
-        cx->free_((void *)*messagep);
+        js_free((void *)*messagep);
         *messagep = NULL;
     }
     return JS_FALSE;
@@ -851,7 +965,7 @@ js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
     ReportError(cx, message, &report, callback, userRef);
 
     if (message)
-        cx->free_(message);
+        js_free(message);
     if (report.messageArgs) {
         /*
          * js_ExpandErrorArguments owns its messageArgs only if it had to
@@ -860,12 +974,12 @@ js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
         if (charArgs) {
             int i = 0;
             while (report.messageArgs[i])
-                cx->free_((void *)report.messageArgs[i++]);
+                js_free((void *)report.messageArgs[i++]);
         }
-        cx->free_((void *)report.messageArgs);
+        js_free((void *)report.messageArgs);
     }
     if (report.ucmessage)
-        cx->free_((void *)report.ucmessage);
+        js_free((void *)report.ucmessage);
 
     return warning;
 }
@@ -879,7 +993,7 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
         return;
 
     if (cx->lastMessage)
-        Foreground::free_(cx->lastMessage);
+        js_free(cx->lastMessage);
     cx->lastMessage = JS_strdup(cx, message);
     if (!cx->lastMessage)
         return;
@@ -934,7 +1048,7 @@ js_ReportIsNullOrUndefined(JSContext *cx, int spindex, HandleValue v,
                                           js_null_str, NULL);
     }
 
-    cx->free_(bytes);
+    js_free(bytes);
     return ok;
 }
 
@@ -957,7 +1071,7 @@ js_ReportMissingArg(JSContext *cx, HandleValue v, unsigned arg)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_MISSING_FUN_ARG, argbuf,
                          bytes ? bytes : "");
-    cx->free_(bytes);
+    js_free(bytes);
 }
 
 JSBool
@@ -976,7 +1090,7 @@ js_ReportValueErrorFlags(JSContext *cx, unsigned flags, const unsigned errorNumb
 
     ok = JS_ReportErrorFlagsAndNumber(cx, flags, js_GetErrorMessage,
                                       NULL, errorNumber, bytes, arg1, arg2);
-    cx->free_(bytes);
+    js_free(bytes);
     return ok;
 }
 
@@ -1095,7 +1209,7 @@ JSContext::JSContext(JSRuntime *rt)
     defaultCompartmentObject_(NULL),
     stack(thisDuringConstruction()),
     parseMapPool_(NULL),
-    sharpObjectMap(thisDuringConstruction()),
+    cycleDetectorSet(thisDuringConstruction()),
     argumentFormatMap(NULL),
     lastMessage(NULL),
     errorReporter(NULL),
@@ -1134,17 +1248,17 @@ JSContext::~JSContext()
 {
     /* Free the stuff hanging off of cx. */
     if (parseMapPool_)
-        Foreground::delete_(parseMapPool_);
+        js_delete(parseMapPool_);
 
     if (lastMessage)
-        Foreground::free_(lastMessage);
+        js_free(lastMessage);
 
     /* Remove any argument formatters. */
     JSArgumentFormatMap *map = argumentFormatMap;
     while (map) {
         JSArgumentFormatMap *temp = map;
         map = map->next;
-        Foreground::free_(temp);
+        js_free(temp);
     }
 
     JS_ASSERT(!resolvingList);
@@ -1223,7 +1337,10 @@ JSContext::saveFrameChain()
         return false;
     }
 
-    compartment = defaultCompartmentObject_->compartment();
+    if (defaultCompartmentObject_)
+        compartment = defaultCompartmentObject_->compartment();
+    else
+        compartment = NULL;
     enterCompartmentDepth_ = 0;
 
     if (isExceptionPending())
@@ -1289,11 +1406,11 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
     ShrinkGCBuffers(this);
     gcHelperThread.waitBackgroundSweepOrAllocEnd();
     if (!p)
-        p = OffTheBooks::malloc_(nbytes);
+        p = js_malloc(nbytes);
     else if (p == reinterpret_cast<void *>(1))
-        p = OffTheBooks::calloc_(nbytes);
+        p = js_calloc(nbytes);
     else
-      p = OffTheBooks::realloc_(p, nbytes);
+      p = js_realloc(p, nbytes);
     if (p)
         return p;
     if (cx)
@@ -1305,7 +1422,7 @@ void
 JSContext::purge()
 {
     if (!activeCompilations) {
-        Foreground::delete_(parseMapPool_);
+        js_delete(parseMapPool_);
         parseMapPool_ = NULL;
     }
 }
@@ -1399,7 +1516,7 @@ JSContext::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const
      * ones have been found by DMD to be worth measuring.  More stuff may be
      * added later.
      */
-    return mallocSizeOf(this) + busyArrays.sizeOfExcludingThis(mallocSizeOf);
+    return mallocSizeOf(this) + cycleDetectorSet.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void
@@ -1413,8 +1530,7 @@ JSContext::mark(JSTracer *trc)
     if (isExceptionPending())
         MarkValueRoot(trc, &exception, "exception");
 
-    if (sharpObjectMap.depth > 0)
-        js_TraceSharpMap(trc, &sharpObjectMap);
+    TraceCycleDetectionSet(trc, cycleDetectorSet);
 
     MarkValueRoot(trc, &iterValue, "iterValue");
 }
@@ -1427,7 +1543,7 @@ AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
     : cx(cx)
 {
     JS_ASSERT(cx->runtime->requestDepth || cx->runtime->isHeapBusy());
-    JS_ASSERT(cx->runtime->onOwnerThread());
+    cx->runtime->assertValidThread();
     cx->runtime->checkRequestDepth++;
 }
 

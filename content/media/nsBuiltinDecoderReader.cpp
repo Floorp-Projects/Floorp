@@ -233,6 +233,7 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
   data.mPicSize = gfxIntSize(aPicture.width, aPicture.height);
   data.mStereoMode = aInfo.mStereoMode;
 
+  videoImage->SetDelayedConversion(true);
   videoImage->SetData(data);
   return v.forget();
 }

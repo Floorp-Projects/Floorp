@@ -18,7 +18,7 @@ interface nsIDOMDOMError;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransaction
  * for more information.
  */
-[scriptable, builtinclass, uuid(79f73099-02ff-416d-9754-5a315e29ee4f)]
+[scriptable, builtinclass, uuid(3197172b-2f56-4837-9427-5e5d4b20a363)]
 interface nsIIDBTransaction : nsISupports
 {
   readonly attribute nsIIDBDatabase db;
@@ -36,13 +36,13 @@ interface nsIIDBTransaction : nsISupports
   // Don't commit the transaction.
   void abort();
 
-  attribute nsIDOMEventListener onerror;
+  [implicit_jscontext] attribute jsval onerror;
 
   // Event listener that fires when the transaction is completed
   // successfully. Receives an Event.
-  attribute nsIDOMEventListener oncomplete;
+  [implicit_jscontext] attribute jsval oncomplete;
 
   // Event listener that fires when the transaction is aborted.
   // Receives an Event.
-  attribute nsIDOMEventListener onabort;
+  [implicit_jscontext] attribute jsval onabort;
 };

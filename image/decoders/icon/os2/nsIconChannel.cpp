@@ -222,7 +222,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream **_retval,
   nsCOMPtr<nsIFile> localFile;
   uint32_t desiredImageSize;
   nsXPIDLCString contentType;
-  nsCAutoString filePath;
+  nsAutoCString filePath;
   nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile),
                                        &desiredImageSize, contentType,
                                        filePath);
@@ -456,7 +456,7 @@ static HPOINTER GetIcon(nsCString& file, bool fExists,
       NS_FAILED(tempPath->AppendNative(file)))
     return 0;
 
-  nsCAutoString pathStr;
+  nsAutoCString pathStr;
   tempPath->GetNativePath(pathStr);
   FILE* fp = fopen(pathStr.get(), "wb+");
   if (fp) {

@@ -26,7 +26,7 @@ using namespace mozilla::a11y;
 ApplicationAccessible::ApplicationAccessible() :
   AccessibleWrap(nullptr, nullptr)
 {
-  mFlags |= eApplicationAccessible;
+  mFlags |= (eApplicationAccessible | eSharedNode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +218,7 @@ ApplicationAccessible::GetAppName(nsAString& aName)
   if (!mAppInfo)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString cname;
+  nsAutoCString cname;
   nsresult rv = mAppInfo->GetName(cname);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -234,7 +234,7 @@ ApplicationAccessible::GetAppVersion(nsAString& aVersion)
   if (!mAppInfo)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString cversion;
+  nsAutoCString cversion;
   nsresult rv = mAppInfo->GetVersion(cversion);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -257,7 +257,7 @@ ApplicationAccessible::GetPlatformVersion(nsAString& aVersion)
   if (!mAppInfo)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString cversion;
+  nsAutoCString cversion;
   nsresult rv = mAppInfo->GetPlatformVersion(cversion);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -280,11 +280,6 @@ ApplicationAccessible::Shutdown()
   mAppInfo = nullptr;
 }
 
-bool
-ApplicationAccessible::IsPrimaryForNode() const
-{
-  return false;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible public methods

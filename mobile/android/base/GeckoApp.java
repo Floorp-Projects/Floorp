@@ -16,6 +16,8 @@ import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoEventResponder;
 import org.mozilla.gecko.GeckoAccessibility;
+import org.mozilla.gecko.updater.UpdateServiceHelper;
+import org.mozilla.gecko.updater.UpdateService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -127,7 +129,6 @@ abstract public class GeckoApp
     public static final String ACTION_DEBUG         = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_BOOKMARK      = "org.mozilla.gecko.BOOKMARK";
     public static final String ACTION_LOAD          = "org.mozilla.gecko.LOAD";
-    public static final String ACTION_UPDATE        = "org.mozilla.gecko.UPDATE";
     public static final String ACTION_INIT_PW       = "org.mozilla.gecko.INIT_PW";
     public static final String SAVED_STATE_TITLE         = "title";
     public static final String SAVED_STATE_IN_BACKGROUND = "inBackground";
@@ -694,17 +695,18 @@ abstract public class GeckoApp
 
             @Override
             public void onPostExecute(String faviconUrl) {
+                JSONObject args = new JSONObject();
+
                 if (faviconUrl != null) {
-                    JSONObject args = new JSONObject();
                     try {
                         args.put("url", url);
                         args.put("faviconUrl", faviconUrl);
                     } catch (JSONException e) {
                         Log.e(LOGTAG, "error building json arguments");
                     }
-
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:FaviconReturn", args.toString()));
                 }
+
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:FaviconReturn", args.toString()));
             }
         }).execute();
     }
@@ -893,13 +895,6 @@ abstract public class GeckoApp
                 handlePageShow(tabId);
             } else if (event.equals("Gecko:Ready")) {
                 sIsGeckoReady = true;
-                final Menu menu = mMenu;
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        if (menu != null)
-                            menu.findItem(R.id.settings).setEnabled(true);
-                    }
-                });
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
                 connectGeckoLayerClient();
@@ -917,8 +912,6 @@ abstract public class GeckoApp
                 String host = message.getString("host");
                 JSONArray permissions = message.getJSONArray("permissions");
                 showSiteSettingsDialog(host, permissions);
-            } else if (event.equals("Update:Restart")) {
-                doRestart("org.mozilla.gecko.restart_update");
             } else if (event.equals("Tab:ViewportMetadata")) {
                 int tabId = message.getInt("tabID");
                 Tab tab = Tabs.getInstance().getTab(tabId);
@@ -1007,6 +1000,8 @@ abstract public class GeckoApp
                 GeckoAppShell.shareImage(src, type);
             } else if (event.equals("Sanitize:ClearHistory")) {
                 handleClearHistory();
+            } else if (event.equals("Update:Check")) {
+                startService(new Intent(UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE, null, this, UpdateService.class));
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1494,11 +1489,6 @@ abstract public class GeckoApp
 
         BrowserDB.initialize(getProfile().getName());
 
-        if (ACTION_UPDATE.equals(action) || args != null && args.contains("-alert update-app")) {
-            Log.i(LOGTAG,"onCreate: Update request");
-            checkAndLaunchUpdate();
-        }
-
         String passedUri = null;
         String uri = getURIFromIntent(intent);
         if (uri != null && uri.length() > 0) {
@@ -1593,7 +1583,6 @@ abstract public class GeckoApp
         registerEventListener("ToggleChrome:Show");
         registerEventListener("ToggleChrome:Focus");
         registerEventListener("Permissions:Data");
-        registerEventListener("Update:Restart");
         registerEventListener("Tab:HasTouchListener");
         registerEventListener("Tab:ViewportMetadata");
         registerEventListener("Session:StatePurged");
@@ -1608,6 +1597,7 @@ abstract public class GeckoApp
         registerEventListener("Share:Text");
         registerEventListener("Share:Image");
         registerEventListener("Sanitize:ClearHistory");
+        registerEventListener("Update:Check");
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -1627,6 +1617,8 @@ abstract public class GeckoApp
 
         GeckoNetworkManager.getInstance().init();
         GeckoNetworkManager.getInstance().start();
+
+        UpdateServiceHelper.registerForUpdates(this);
 
         GeckoScreenOrientationListener.getInstance().start();
 
@@ -2036,7 +2028,6 @@ abstract public class GeckoApp
         unregisterEventListener("ToggleChrome:Show");
         unregisterEventListener("ToggleChrome:Focus");
         unregisterEventListener("Permissions:Data");
-        unregisterEventListener("Update:Restart");
         unregisterEventListener("Tab:HasTouchListener");
         unregisterEventListener("Tab:ViewportMetadata");
         unregisterEventListener("Session:StatePurged");
@@ -2051,6 +2042,7 @@ abstract public class GeckoApp
         unregisterEventListener("Share:Text");
         unregisterEventListener("Share:Image");
         unregisterEventListener("Sanitize:ClearHistory");
+        unregisterEventListener("Update:Check");
 
         deleteTempFiles();
 
@@ -2219,76 +2211,6 @@ abstract public class GeckoApp
 
     public void handleNotification(String action, String alertName, String alertCookie) {
         GeckoAppShell.handleNotification(action, alertName, alertCookie);
-    }
-
-    private void checkAndLaunchUpdate() {
-        Log.i(LOGTAG, "Checking for an update");
-
-        int statusCode = 8; // UNEXPECTED_ERROR
-        File baseUpdateDir = null;
-        if (Build.VERSION.SDK_INT >= 8)
-            baseUpdateDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
-        else
-            baseUpdateDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
-
-        File updateDir = new File(new File(baseUpdateDir, "updates"),"0");
-
-        File updateFile = new File(updateDir, "update.apk");
-        File statusFile = new File(updateDir, "update.status");
-
-        if (!statusFile.exists() || !readUpdateStatus(statusFile).equals("pending"))
-            return;
-
-        if (!updateFile.exists())
-            return;
-
-        Log.i(LOGTAG, "Update is available!");
-
-        // Launch APK
-        File updateFileToRun = new File(updateDir, getPackageName() + "-update.apk");
-        try {
-            if (updateFile.renameTo(updateFileToRun)) {
-                String amCmd = "/system/bin/am start -a android.intent.action.VIEW " +
-                               "-n com.android.packageinstaller/.PackageInstallerActivity -d file://" +
-                               updateFileToRun.getPath();
-                Log.i(LOGTAG, amCmd);
-                Runtime.getRuntime().exec(amCmd);
-                statusCode = 0; // OK
-            } else {
-                Log.i(LOGTAG, "Cannot rename the update file!");
-                statusCode = 7; // WRITE_ERROR
-            }
-        } catch (Exception e) {
-            Log.i(LOGTAG, "error launching installer to update", e);
-        }
-
-        // Update the status file
-        String status = statusCode == 0 ? "succeeded\n" : "failed: "+ statusCode + "\n";
-
-        OutputStream outStream;
-        try {
-            byte[] buf = status.getBytes("UTF-8");
-            outStream = new FileOutputStream(statusFile);
-            outStream.write(buf, 0, buf.length);
-            outStream.close();
-        } catch (Exception e) {
-            Log.i(LOGTAG, "error writing status file", e);
-        }
-
-        if (statusCode == 0)
-            System.exit(0);
-    }
-
-    private String readUpdateStatus(File statusFile) {
-        String status = "";
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(statusFile));
-            status = reader.readLine();
-            reader.close();
-        } catch (Exception e) {
-            Log.i(LOGTAG, "error reading update status", e);
-        }
-        return status;
     }
 
     private void checkMigrateProfile() {
@@ -2571,6 +2493,10 @@ abstract public class GeckoApp
             wl.release();
             mWakeLocks.remove(topic);
         }
+    }
+
+    public void notifyCheckUpdateResult(boolean result) {
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result ? "true" : "false"));
     }
 
     private void connectGeckoLayerClient() {

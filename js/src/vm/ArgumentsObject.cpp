@@ -162,6 +162,12 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHa
     if (!obj->isNormalArguments())
         return true;
 
+    unsigned attrs;
+    if (!baseops::GetAttributes(cx, obj, id, &attrs))
+        return false;
+    JS_ASSERT(!(attrs & JSPROP_READONLY));
+    attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
+
     NormalArgumentsObject &argsobj = obj->asNormalArguments();
     JSScript *script = argsobj.containingScript();
 
@@ -191,7 +197,7 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHa
      */
     RootedValue value(cx);
     return baseops::DeleteGeneric(cx, obj, id, &value, false) &&
-           baseops::DefineGeneric(cx, obj, id, vp, NULL, NULL, JSPROP_ENUMERATE);
+           baseops::DefineGeneric(cx, obj, id, vp, NULL, NULL, attrs);
 }
 
 static JSBool
@@ -284,6 +290,12 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Mut
     if (!obj->isStrictArguments())
         return true;
 
+    unsigned attrs;
+    if (!baseops::GetAttributes(cx, obj, id, &attrs))
+        return false;
+    JS_ASSERT(!(attrs & JSPROP_READONLY));
+    attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
+
     Rooted<StrictArgumentsObject*> argsobj(cx, &obj->asStrictArguments());
 
     if (JSID_IS_INT(id)) {
@@ -297,14 +309,14 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Mut
     }
 
     /*
-     * For simplicity we use delete/set to replace the property with one
+     * For simplicity we use delete/define to replace the property with one
      * backed by the default Object getter and setter. Note that we rely on
      * args_delProperty to clear the corresponding reserved slot so the GC can
      * collect its value.
      */
     RootedValue value(cx);
     return baseops::DeleteGeneric(cx, argsobj, id, &value, strict) &&
-           baseops::SetPropertyHelper(cx, argsobj, argsobj, id, 0, vp, strict);
+           baseops::DefineGeneric(cx, argsobj, id, vp, NULL, NULL, attrs);
 }
 
 static JSBool

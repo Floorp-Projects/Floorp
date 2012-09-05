@@ -372,20 +372,20 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
     if (obj->getClass() == &AttributeNameClass) {
         JS::Anchor<JSString *> anchor(str);
         size_t length = str->length();
-        jschar *chars = (jschar *) cx->malloc_((length + 2) * sizeof(jschar));
+        jschar *chars = cx->pod_malloc<jschar>(length + 2);
         if (!chars)
             return NULL;
         *chars = '@';
         const jschar *strChars = str->getChars(cx);
         if (!strChars) {
-            cx->free_(chars);
+            js_free(chars);
             return NULL;
         }
         js_strncpy(chars + 1, strChars, length);
         chars[++length] = 0;
         str = js_NewString(cx, chars, length);
         if (!str) {
-            cx->free_(chars);
+            js_free(chars);
             return NULL;
         }
     }
@@ -862,7 +862,7 @@ ReallocateVector(HeapPtr<T> *vector, size_t count)
 #endif
 
     size_t size = count * sizeof(HeapPtr<T>);
-    return (HeapPtr<T> *) OffTheBooks::realloc_(vector, size);
+    return (HeapPtr<T> *) js_realloc(vector, size);
 }
 
 /* NB: called with null cx from the GC, via xml_trace => JSXMLArray::trim. */
@@ -874,9 +874,9 @@ JSXMLArray<T>::setCapacity(JSContext *cx, uint32_t newCapacity)
         /* We could let realloc(p, 0) free this, but purify gets confused. */
         if (vector) {
             if (cx)
-                cx->free_(vector);
+                js_free(vector);
             else
-                Foreground::free_(vector);
+                js_free(vector);
         }
         vector = NULL;
     } else {
@@ -1062,7 +1062,7 @@ XMLArrayTruncate(JSContext *cx, JSXMLArray<T> *array, uint32_t length)
 
     if (length == 0) {
         if (array->vector)
-            cx->free_(array->vector);
+            js_free(array->vector);
         vector = NULL;
     } else {
         vector = ReallocateVector(array->vector, length);
@@ -1719,7 +1719,7 @@ ParseXMLSource(JSContext *cx, HandleString src)
     length = constrlen(prefix) + urilen + constrlen(middle) + srclen +
              constrlen(suffix);
 
-    chars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
+    chars = cx->pod_malloc<jschar>(length + 1);
     if (!chars)
         return NULL;
 
@@ -1733,7 +1733,7 @@ ParseXMLSource(JSContext *cx, HandleString src)
     offset += dstlen;
     srcp = src->getChars(cx);
     if (!srcp) {
-        cx->free_(chars);
+        js_free(chars);
         return NULL;
     }
     js_strncpy(chars + offset, srcp, srclen);
@@ -1765,7 +1765,7 @@ ParseXMLSource(JSContext *cx, HandleString src)
         if (parser.init()) {
             JSObject *scopeChain = GetCurrentScopeChain(cx);
             if (!scopeChain) {
-                cx->free_(chars);
+                js_free(chars);
                 return NULL;
             }
 
@@ -1779,7 +1779,7 @@ ParseXMLSource(JSContext *cx, HandleString src)
         }
     }
 
-    cx->free_(chars);
+    js_free(chars);
     return xml;
 
 #undef constrlen
@@ -2307,8 +2307,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray<JSObject> *decls)
     newlength = length;
     if (STARTS_WITH_XML(cp, length) || !IsXMLName(cp, length)) {
         newlength = length + 2 + (size_t) log10((double) decls->length);
-        bp = (jschar *)
-             cx->malloc_((newlength + 1) * sizeof(jschar));
+        bp = cx->pod_malloc<jschar>(newlength + 1);
         if (!bp)
             return NULL;
 
@@ -2332,8 +2331,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray<JSObject> *decls)
                         newlength * sizeof(jschar))) {
                 if (bp == cp) {
                     newlength = length + 2 + (size_t) log10((double) n);
-                    bp = (jschar *)
-                         cx->malloc_((newlength + 1) * sizeof(jschar));
+                    bp = cx->pod_malloc<jschar>(newlength + 1);
                     if (!bp)
                         return NULL;
                     js_strncpy(bp, cp, length);
@@ -2360,7 +2358,7 @@ GeneratePrefix(JSContext *cx, JSLinearString *uri, JSXMLArray<JSObject> *decls)
     } else {
         prefix = js_NewString(cx, bp, newlength);
         if (!prefix)
-            cx->free_(bp);
+            js_free(bp);
     }
     return prefix;
 }
@@ -5102,7 +5100,7 @@ xml_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op, Value *state
         if (!statep->isInt32(0)) {
             cursor = (JSXMLArrayCursor<JSXML> *) statep->toPrivate();
             if (cursor)
-                cx->delete_(cursor);
+                js_delete(cursor);
         }
         statep->setNull();
         break;
@@ -7601,7 +7599,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
         return NULL;
 
     size_t newlen = (isName) ? len + 1 + len2 : len + 2 + len2 + 1;
-    jschar *newchars = (jschar *) cx->malloc_((newlen+1) * sizeof(jschar));
+    jschar *newchars = cx->pod_malloc<jschar>(newlen+1);
     if (!newchars)
         return NULL;
 

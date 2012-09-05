@@ -148,6 +148,12 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name="org.mozilla.gecko.GeckoUpdateReceiver">
+            <intent-filter>
+                <action android:name="@ANDROID_PACKAGE_NAME@.CHECK_UPDATE_RESULT" />
+            </intent-filter>
+        </receiver>
+
         <receiver android:name="org.mozilla.gecko.GeckoMessageReceiver"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER">
             <intent-filter>
@@ -223,6 +229,13 @@
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.TabsProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.tabs"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.updater.UpdateService"
+            android:process="@MANGLED_ANDROID_PACKAGE_NAME@.UpdateService">
+        </service>
+
 
 #include ../sync/manifests/SyncAndroidManifest_services.xml.in
     </application>

@@ -6,8 +6,6 @@
 // Disables security checking our updates which haven't been signed
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-AddonManager.checkCompatibility = false;
-
 var ADDONS = [
   "test_bug470377_1",
   "test_bug470377_2",
@@ -28,6 +26,7 @@ function run_test() {
   server.start(4444);
 
   startupManager();
+  AddonManager.checkCompatibility = false;
 
   installAllFiles([do_get_addon(a) for each (a in ADDONS)], function() {
     restartManager();

@@ -37,7 +37,7 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI *aURI, Link *aContent)
   if (!aContent || !aURI)
     return NS_OK;
 
-  nsCAutoString uri;
+  nsAutoCString uri;
   nsresult rv = aURI->GetSpec(uri);
   if (NS_FAILED(rv)) return rv;
   NS_ConvertUTF8toUTF16 uriString(uri);
@@ -63,7 +63,7 @@ nsAndroidHistory::UnregisterVisitedCallback(nsIURI *aURI, Link *aContent)
   if (!aContent || !aURI)
     return NS_OK;
 
-  nsCAutoString uri;
+  nsAutoCString uri;
   nsresult rv = aURI->GetSpec(uri);
   if (NS_FAILED(rv)) return rv;
   NS_ConvertUTF8toUTF16 uriString(uri);
@@ -91,7 +91,7 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
 
   AndroidBridge *bridge = AndroidBridge::Bridge();
   if (bridge) {
-    nsCAutoString uri;
+    nsAutoCString uri;
     nsresult rv = aURI->GetSpec(uri);
     if (NS_FAILED(rv)) return rv;
     NS_ConvertUTF8toUTF16 uriString(uri);

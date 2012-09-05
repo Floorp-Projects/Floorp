@@ -294,14 +294,14 @@ nsPreflightCache::GetCacheKey(nsIURI* aURI,
   nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, false);
   
-  nsCAutoString scheme, host, port;
+  nsAutoCString scheme, host, port;
   if (uri) {
     uri->GetScheme(scheme);
     uri->GetHost(host);
     port.AppendInt(NS_GetRealPort(uri));
   }
 
-  nsCAutoString cred;
+  nsAutoCString cred;
   if (aWithCredentials) {
     _retval.AssignLiteral("cred");
   }
@@ -309,7 +309,7 @@ nsPreflightCache::GetCacheKey(nsIURI* aURI,
     _retval.AssignLiteral("nocred");
   }
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -512,13 +512,13 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
   NS_ENSURE_TRUE(http, NS_ERROR_DOM_BAD_URI);
 
   // Check the Access-Control-Allow-Origin header
-  nsCAutoString allowedOriginHeader;
+  nsAutoCString allowedOriginHeader;
   rv = http->GetResponseHeader(
     NS_LITERAL_CSTRING("Access-Control-Allow-Origin"), allowedOriginHeader);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mWithCredentials || !allowedOriginHeader.EqualsLiteral("*")) {
-    nsCAutoString origin;
+    nsAutoCString origin;
     rv = nsContentUtils::GetASCIIOrigin(mRequestingPrincipal, origin);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -529,7 +529,7 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
 
   // Check Access-Control-Allow-Credentials header
   if (mWithCredentials) {
-    nsCAutoString allowCredentialsHeader;
+    nsAutoCString allowCredentialsHeader;
     rv = http->GetResponseHeader(
       NS_LITERAL_CSTRING("Access-Control-Allow-Credentials"), allowCredentialsHeader);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -547,7 +547,7 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
       return NS_ERROR_DOM_BAD_URI;
     }
 
-    nsCAutoString headerVal;
+    nsAutoCString headerVal;
     // The "Access-Control-Allow-Methods" header contains a comma separated
     // list of method names.
     http->GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Allow-Methods"),
@@ -758,7 +758,7 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel, bool aAllowDataURI)
   NS_ENSURE_TRUE(userpass.IsEmpty(), NS_ERROR_DOM_BAD_URI);
 
   // Add the Origin header
-  nsCAutoString origin;
+  nsAutoCString origin;
   rv = nsContentUtils::GetASCIIOrigin(mRequestingPrincipal, origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -776,7 +776,7 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel, bool aAllowDataURI)
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mPreflightHeaders.IsEmpty()) {
-      nsCAutoString headers;
+      nsAutoCString headers;
       for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
         if (i != 0) {
           headers += ',';
@@ -853,7 +853,7 @@ nsCORSPreflightListener::AddResultToCache(nsIRequest *aRequest)
   NS_ASSERTION(http, "Request was not http");
 
   // The "Access-Control-Max-Age" header should return an age in seconds.
-  nsCAutoString headerVal;
+  nsAutoCString headerVal;
   http->GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Max-Age"),
                           headerVal);
   if (headerVal.IsEmpty()) {
@@ -1044,7 +1044,7 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
 {
   *aPreflightChannel = nullptr;
 
-  nsCAutoString method;
+  nsAutoCString method;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequestChannel));
   NS_ENSURE_TRUE(httpChannel, NS_ERROR_UNEXPECTED);
   httpChannel->GetRequestMethod(method);

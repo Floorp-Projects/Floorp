@@ -2759,7 +2759,7 @@ def wrapForType(type, descriptorProvider, templateValues):
     defaultValues = {'obj': 'obj'}
     return string.Template(wrap).substitute(defaultValues, **templateValues)
 
-def infallibleForAttr(attr, descriptorProvider):
+def infallibleForMember(member, type, descriptorProvider):
     """
     Determine the fallibility of changing a C++ value of IDL type "type" into
     JS for the given attribute. Apart from isCreator, all the defaults are used,
@@ -2770,8 +2770,8 @@ def infallibleForAttr(attr, descriptorProvider):
         We assume that successCode for wrapping up return values cannot contain
         failure conditions.
     """
-    return getWrapTemplateForType(attr.type, descriptorProvider, 'result', None,\
-                                  memberIsCreator(attr))[1]
+    return getWrapTemplateForType(type, descriptorProvider, 'result', None,\
+                                  memberIsCreator(member))[1]
 
 def typeNeedsCx(type):
     return (type is not None and
@@ -3287,13 +3287,17 @@ class CGGetterCall(CGPerSignatureCall):
                                     attr, getter=True)
 
 class FakeArgument():
-    def __init__(self, type):
+    """
+    A class that quacks like an IDLArgument.  This is used to make
+    setters look like method calls or for special operations.
+    """
+    def __init__(self, type, interfaceMember):
         self.type = type
         self.optional = False
         self.variadic = False
         self.defaultValue = None
-        self.treatNullAs = "Default"
-        self.treatUndefinedAs = "Default"
+        self.treatNullAs = interfaceMember.treatNullAs
+        self.treatUndefinedAs = interfaceMember.treatUndefinedAs
 
 class CGSetterCall(CGPerSignatureCall):
     """
@@ -3301,7 +3305,8 @@ class CGSetterCall(CGPerSignatureCall):
     setter.
     """
     def __init__(self, argType, nativeMethodName, descriptor, attr):
-        CGPerSignatureCall.__init__(self, None, [], [FakeArgument(argType)],
+        CGPerSignatureCall.__init__(self, None, [],
+                                    [FakeArgument(argType, attr)],
                                     nativeMethodName, False, descriptor, attr,
                                     setter=True)
     def wrap_return_value(self):
@@ -3496,7 +3501,7 @@ class CGMemberJITInfo(CGThing):
                 "  %s,\n"
                 "  %s,\n"
                 "  %s,\n"
-                "  %s,  /* isInfallible. Only relevant for getters. */\n"
+                "  %s,  /* isInfallible. False in setters. */\n"
                 "  false  /* isConstant. Only relevant for getters. */\n"
                 "};\n" % (infoName, opName, protoID, depth, failstr))
 
@@ -3505,7 +3510,7 @@ class CGMemberJITInfo(CGThing):
             getterinfo = ("%s_getterinfo" % self.member.identifier.name)
             getter = ("(JSJitPropertyOp)get_%s" % self.member.identifier.name)
             getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.member, getter=True)
-            getterinfal = getterinfal and infallibleForAttr(self.member, self.descriptor)
+            getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
             result = self.defineJitInfo(getterinfo, getter, getterinfal)
             if not self.member.readonly:
                 setterinfo = ("%s_setterinfo" % self.member.identifier.name)
@@ -3517,8 +3522,21 @@ class CGMemberJITInfo(CGThing):
             methodinfo = ("%s_methodinfo" % self.member.identifier.name)
             # Actually a JSJitMethodOp, but JSJitPropertyOp by struct definition.
             method = ("(JSJitPropertyOp)%s" % self.member.identifier.name)
-            # Method, much like setters, are always fallible
-            result = self.defineJitInfo(methodinfo, method, False)
+
+            # Methods are infallible if they are infallible, have no arguments
+            # to unwrap, and have a return type that's infallible to wrap up for
+            # return.
+            methodInfal = False
+            sigs = self.member.signatures()
+            if len(sigs) == 1:
+                # Don't handle overloading. If there's more than one signature,
+                # one of them must take arguments.
+                sig = sigs[0]
+                if len(sig[1]) == 0 and infallibleForMember(self.member, sig[0], self.descriptor):
+                    # No arguments and infallible return boxing
+                    methodInfal = True
+
+            result = self.defineJitInfo(methodinfo, method, methodInfal)
             return result
         raise TypeError("Illegal member type to CGPropertyJITInfo")
 
@@ -4407,7 +4425,9 @@ class CGProxySpecialOperation(CGPerSignatureCall):
     def getArguments(self):
         args = [(a, a.identifier.name) for a in self.arguments]
         if self.idlNode.isGetter():
-            args.append((FakeArgument(BuiltinTypes[IDLBuiltinType.Types.boolean]), "found"))
+            args.append((FakeArgument(BuiltinTypes[IDLBuiltinType.Types.boolean],
+                                      self.idlNode),
+                         "found"))
         return args
 
     def wrap_return_value(self):

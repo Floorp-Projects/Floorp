@@ -249,7 +249,7 @@ static void
 AddLangGroup(FcPattern *aPattern, nsIAtom *aLangGroup)
 {
     // Translate from mozilla's internal mapping into fontconfig's
-    nsCAutoString lang;
+    nsAutoCString lang;
     gfxFontconfigUtils::GetSampleLangForGroup(aLangGroup, &lang);
 
     if (!lang.IsEmpty()) {
@@ -528,7 +528,7 @@ gfxFontconfigUtils::GetFontListInternal(nsTArray<nsCString>& aListOfFonts,
         }
 
         // Remove duplicates...
-        nsCAutoString strFamily(family);
+        nsAutoCString strFamily(family);
         if (aListOfFonts.Contains(strFamily))
             continue;
 
@@ -635,7 +635,7 @@ gfxFontconfigUtils::UpdateFontListInternal(bool aForce)
             const char *start = p;
             while (++p != p_end && *p != kComma)
                 /* nothing */ ;
-            nsCAutoString name(Substring(start, p));
+            nsAutoCString name(Substring(start, p));
             name.CompressWhitespace(false, true);
             mAliasForMultiFonts.AppendElement(name);
             p++;
@@ -835,7 +835,7 @@ gfxFontconfigUtils::FontsByFullnameEntry::KeyEquals(KeyTypePointer aKey) const
 {
     const FcChar8 *key = mKey;
     // If mKey is NULL, key comes from the style and family of the first font.
-    nsCAutoString fullname;
+    nsAutoCString fullname;
     if (!key) {
         NS_ASSERTION(mFonts.Length(), "No font in FontsByFullnameEntry!");
         GetFullnameFromFamilyAndStyle(mFonts[0], &fullname);
@@ -881,7 +881,7 @@ gfxFontconfigUtils::AddFullnameEntries()
 
         // Fontconfig does not provide a fullname property for all fonts.
         if (v == 0) {
-            nsCAutoString name;
+            nsAutoCString name;
             if (!GetFullnameFromFamilyAndStyle(font, &name))
                 continue;
 

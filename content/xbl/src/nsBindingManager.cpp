@@ -1123,7 +1123,7 @@ MarkForDeath(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
   if (aBinding->MarkedForDeath())
     return PL_DHASH_NEXT; // Already marked for death.
 
-  nsCAutoString path;
+  nsAutoCString path;
   aBinding->PrototypeBinding()->DocURI()->GetPath(path);
 
   if (!strncmp(path.get(), "/skin", 5))

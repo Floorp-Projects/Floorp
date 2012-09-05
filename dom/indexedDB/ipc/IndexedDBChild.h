@@ -97,7 +97,8 @@ public:
 
 protected:
   bool
-  EnsureDatabase(IDBRequest* aRequest, const DatabaseInfoGuts& aDBInfo,
+  EnsureDatabase(IDBOpenDBRequest* aRequest,
+                 const DatabaseInfoGuts& aDBInfo,
                  const InfallibleTArray<ObjectStoreInfoGuts>& aOSInfo);
 
   virtual void

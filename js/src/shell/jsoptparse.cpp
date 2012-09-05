@@ -442,9 +442,9 @@ OptionParser::getMultiStringOption(const char *longflag) const
 OptionParser::~OptionParser()
 {
     for (Option **it = options.begin(), **end = options.end(); it != end; ++it)
-        Foreground::delete_<Option>(*it);
+        js_delete<Option>(*it);
     for (Option **it = arguments.begin(), **end = arguments.end(); it != end; ++it)
-        Foreground::delete_<Option>(*it);
+        js_delete<Option>(*it);
 }
 
 Option *
@@ -534,8 +534,7 @@ OptionParser::addIntOption(char shortflag, const char *longflag, const char *met
 {
     if (!options.reserve(options.length() + 1))
         return false;
-    IntOption *io = OffTheBooks::new_<IntOption>(shortflag, longflag, help, metavar,
-                                                 defaultValue);
+    IntOption *io = js_new<IntOption>(shortflag, longflag, help, metavar, defaultValue);
     if (!io)
         return false;
     options.infallibleAppend(io);
@@ -547,7 +546,7 @@ OptionParser::addBoolOption(char shortflag, const char *longflag, const char *he
 {
     if (!options.reserve(options.length() + 1))
         return false;
-    BoolOption *bo = OffTheBooks::new_<BoolOption>(shortflag, longflag, help);
+    BoolOption *bo = js_new<BoolOption>(shortflag, longflag, help);
     if (!bo)
         return false;
     options.infallibleAppend(bo);
@@ -560,7 +559,7 @@ OptionParser::addStringOption(char shortflag, const char *longflag, const char *
 {
     if (!options.reserve(options.length() + 1))
         return false;
-    StringOption *so = OffTheBooks::new_<StringOption>(shortflag, longflag, help, metavar);
+    StringOption *so = js_new<StringOption>(shortflag, longflag, help, metavar);
     if (!so)
         return false;
     options.infallibleAppend(so);
@@ -573,8 +572,7 @@ OptionParser::addMultiStringOption(char shortflag, const char *longflag, const c
 {
     if (!options.reserve(options.length() + 1))
         return false;
-    MultiStringOption *mso = OffTheBooks::new_<MultiStringOption>(shortflag, longflag, help,
-                                                                  metavar);
+    MultiStringOption *mso = js_new<MultiStringOption>(shortflag, longflag, help, metavar);
     if (!mso)
         return false;
     options.infallibleAppend(mso);
@@ -588,7 +586,7 @@ OptionParser::addOptionalStringArg(const char *name, const char *help)
 {
     if (!arguments.reserve(arguments.length() + 1))
         return false;
-    StringOption *so = OffTheBooks::new_<StringOption>(1, name, help, (const char *) NULL);
+    StringOption *so = js_new<StringOption>(1, name, help, (const char *) NULL);
     if (!so)
         return false;
     arguments.infallibleAppend(so);
@@ -601,8 +599,7 @@ OptionParser::addOptionalMultiStringArg(const char *name, const char *help)
     JS_ASSERT_IF(!arguments.empty(), !arguments.back()->isVariadic());
     if (!arguments.reserve(arguments.length() + 1))
         return false;
-    MultiStringOption *mso = OffTheBooks::new_<MultiStringOption>(1, name, help,
-                                                                  (const char *) NULL);
+    MultiStringOption *mso = js_new<MultiStringOption>(1, name, help, (const char *) NULL);
     if (!mso)
         return false;
     arguments.infallibleAppend(mso);

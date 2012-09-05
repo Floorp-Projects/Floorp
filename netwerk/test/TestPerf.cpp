@@ -17,7 +17,7 @@ load_sync_1(nsISupports *element, void *data)
 {
     nsCOMPtr<nsIInputStream> stream;
     nsCOMPtr<nsIURI> uri( do_QueryInterface(element) );
-    nsCAutoString spec;
+    nsAutoCString spec;
     nsresult rv;
 
     rv = NS_OpenURI(getter_AddRefs(stream), uri, gIOService);
@@ -98,7 +98,7 @@ NS_IMETHODIMP
 MyListener::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
 {
     if (NS_FAILED(status)) {
-        nsCAutoString spec;
+        nsAutoCString spec;
         req->GetName(spec);
         fprintf(stderr, "*** failed loading %s [reason=%x]\n", spec.get(), status);
     }

@@ -44,11 +44,11 @@ nsReverseStringSQLFunction::OnFunctionCall(
 {
   nsresult rv;
 
-  nsCAutoString stringToReverse;
+  nsAutoCString stringToReverse;
   rv = aFunctionArguments->GetUTF8String(0, stringToReverse);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString result;
+  nsAutoCString result;
   ReverseString(stringToReverse, result);
 
   nsCOMPtr<nsIWritableVariant> outVar(do_CreateInstance(
@@ -83,11 +83,11 @@ nsIsOfflineSQLFunction::OnFunctionCall(
 {
   nsresult rv;
 
-  nsCAutoString scope;
+  nsAutoCString scope;
   rv = aFunctionArguments->GetUTF8String(0, scope);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString domain;
+  nsAutoCString domain;
   rv = nsDOMStorageDBWrapper::GetDomainFromScopeKey(scope, domain);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -671,7 +671,7 @@ nsDOMStoragePersistentDB::RemoveOwner(const nsACString& aOwner,
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scope(stmt);
 
-  nsCAutoString subdomainsDBKey;
+  nsAutoCString subdomainsDBKey;
   nsDOMStorageDBWrapper::CreateDomainScopeDBKey(aOwner, subdomainsDBKey);
 
   if (DomainMaybeCached(subdomainsDBKey)) {
@@ -744,7 +744,7 @@ nsDOMStoragePersistentDB::RemoveOwners(const nsTArray<nsString> &aOwners,
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (uint32_t i = 0; i < aOwners.Length(); i++) {
-    nsCAutoString quotaKey;
+    nsAutoCString quotaKey;
     rv = nsDOMStorageDBWrapper::CreateDomainScopeDBKey(
       NS_ConvertUTF16toUTF8(aOwners[i]), quotaKey);
 
@@ -757,7 +757,7 @@ nsDOMStoragePersistentDB::RemoveOwners(const nsTArray<nsString> &aOwners,
       quotaKey.AppendLiteral(":");
     quotaKey.AppendLiteral("*");
 
-    nsCAutoString paramName;
+    nsAutoCString paramName;
     paramName.Assign("scope");
     paramName.AppendInt(i);
 
@@ -812,7 +812,7 @@ nsDOMStoragePersistentDB::GetUsage(const nsACString& aDomain,
 {
   nsresult rv;
 
-  nsCAutoString quotadomainDBKey;
+  nsAutoCString quotadomainDBKey;
   rv = nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomain,
                                                      aIncludeSubDomains,
                                                      false,
@@ -878,7 +878,7 @@ nsDOMStoragePersistentDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scope(stmt);
 
-  nsCAutoString scopeValue(aQuotaDomainDBKey);
+  nsAutoCString scopeValue(aQuotaDomainDBKey);
   scopeValue += NS_LITERAL_CSTRING("*");
 
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), scopeValue);

@@ -17,7 +17,8 @@ Components.classes["@mozilla.org/permissionmanager;1"]
                             "webapps-manage",
                              Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
 
-SpecialPowers.setCharPref("dom.mozApps.whitelist", "http://mochi.test:8888");
+SpecialPowers.addPermission("webapps-manage", true, "http://mochi.test:8888");
+
 SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
 SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', true);
 SpecialPowers.setBoolPref("dom.mozBrowserFramesWhitelist", "http://www.example.com");
@@ -62,7 +63,7 @@ function mainCommand() {
 }
 
 function popup_listener() {
-  debug("here in popup listener"); 
+  debug("here in popup listener");
   popupNotifications.panel.addEventListener("popupshown", mainCommand, false);
 }
 

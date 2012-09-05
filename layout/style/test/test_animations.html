@@ -60,6 +60,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
     100% { padding-bottom: 20px; animation-timing-function: ease-out }
   }
 
+  @keyframes always_fifty {
+    from, to { margin-left: 50px }
+  }
+
   #withbefore::before, #withafter::after {
     content: "";
     animation: anim2 1s linear alternate infinite;
@@ -1314,6 +1318,15 @@ is(cs.lineHeight, default_line_height,
    "animations should not override UA !important at 200ms");
 is(cs.marginTop, "40px",
    "rest of animation should still work when UA !important present at 200ms");
+done_div();
+
+// Test that author !important rules override animations, but
+// that animations override regular author rules.
+new_div("animation: always_fifty 1s linear infinite; margin-left: 200px");
+is(cs.marginLeft, "50px", "animations override regular author rules");
+done_div();
+new_div("animation: always_fifty 1s linear infinite; margin-left: 200px ! important;");
+is(cs.marginLeft, "200px", "important author rules override animations");
 done_div();
 
 // Test interaction of animations and restyling (Bug 686656).

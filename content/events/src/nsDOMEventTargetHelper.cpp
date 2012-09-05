@@ -13,28 +13,6 @@
 #include "prprf.h"
 #include "nsGlobalWindow.h"
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventListenerWrapper)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventListenerWrapper)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-NS_INTERFACE_MAP_END_AGGREGATED(mListener)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventListenerWrapper)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMEventListenerWrapper)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEventListenerWrapper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListener)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEventListenerWrapper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListener)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMETHODIMP
-nsDOMEventListenerWrapper::HandleEvent(nsIDOMEvent* aEvent)
-{
-  return mListener->HandleEvent(aEvent);
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMEventTargetHelper)
@@ -210,35 +188,33 @@ nsDOMEventTargetHelper::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 }
 
 nsresult
-nsDOMEventTargetHelper::RemoveAddEventListener(const nsAString& aType,
-                                               nsRefPtr<nsDOMEventListenerWrapper>& aCurrent,
-                                               nsIDOMEventListener* aNew)
+nsDOMEventTargetHelper::SetEventHandler(nsIAtom* aType,
+                                        JSContext* aCx,
+                                        const JS::Value& aValue)
 {
-  if (aCurrent) {
-    RemoveEventListener(aType, aCurrent, false);
-    aCurrent = nullptr;
+  nsEventListenerManager* elm = GetListenerManager(true);
+
+  JSObject* obj = GetWrapper();
+  if (!obj) {
+    return NS_OK;
   }
-  if (aNew) {
-    aCurrent = new nsDOMEventListenerWrapper(aNew);
-    NS_ENSURE_TRUE(aCurrent, NS_ERROR_OUT_OF_MEMORY);
-    nsIDOMEventTarget::AddEventListener(aType, aCurrent, false);
-  }
-  return NS_OK;
+  
+  return elm->SetEventHandlerToJsval(aType, aCx, obj, aValue,
+                                     HasOrHasHadOwner());
 }
 
-nsresult
-nsDOMEventTargetHelper::GetInnerEventListener(nsRefPtr<nsDOMEventListenerWrapper>& aWrapper,
-                                              nsIDOMEventListener** aListener)
+void
+nsDOMEventTargetHelper::GetEventHandler(nsIAtom* aType,
+                                        JSContext* aCx,
+                                        JS::Value* aValue)
 {
-  NS_ENSURE_ARG_POINTER(aListener);
-  if (aWrapper) {
-    NS_IF_ADDREF(*aListener = aWrapper->GetInner());
-  } else {
-    *aListener = nullptr;
-  }
-  return NS_OK;
-}
+  *aValue = JSVAL_NULL;
 
+  nsEventListenerManager* elm = GetListenerManager(false);
+  if (elm) {
+    elm->GetEventHandler(aType, aValue);
+  }
+}
 
 nsresult
 nsDOMEventTargetHelper::PreHandleEvent(nsEventChainPreVisitor& aVisitor)

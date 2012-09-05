@@ -1903,7 +1903,7 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
         aValue) {
       NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
         "Expected string value for script body");
-      nsresult rv = AddScriptEventListener(aName, aValue->GetStringValue());
+      nsresult rv = SetEventHandler(aName, aValue->GetStringValue());
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (aNotify && aName == nsGkAtoms::spellcheck) {
@@ -2043,7 +2043,7 @@ nsGenericHTMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                                                   EventNameType_HTML)) {
       nsEventListenerManager* manager = GetListenerManager(false);
       if (manager) {
-        manager->RemoveScriptEventListener(aAttribute);
+        manager->RemoveEventHandler(aAttribute);
       }
     }
 
@@ -2141,7 +2141,8 @@ nsGenericHTMLElement::ParseBackgroundAttribute(int32_t aNamespaceID,
                                                nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None &&
-      aAttribute == nsGkAtoms::background) {
+      aAttribute == nsGkAtoms::background &&
+      !aValue.IsEmpty()) {
     // Resolve url to an absolute url
     nsIDocument* doc = OwnerDoc();
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
@@ -2221,7 +2222,7 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
 
   nsresult result = NS_OK;
 
-  nsCAutoString key;
+  nsAutoCString key;
   nsCOMPtr<nsILayoutHistoryState> history = GetLayoutHistoryAndKey(aContent, false, key);
 
   if (history) {
@@ -2288,7 +2289,7 @@ bool
 nsGenericHTMLElement::RestoreFormControlState(nsGenericHTMLElement* aContent,
                                               nsIFormControl* aControl)
 {
-  nsCAutoString key;
+  nsAutoCString key;
   nsCOMPtr<nsILayoutHistoryState> history = GetLayoutHistoryAndKey(aContent, true, key);
   if (!history) {
     return false;
@@ -2776,12 +2777,14 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
       const_cast<nsAttrValue*>(aAttributes->GetAttr(nsGkAtoms::background));
     // If the value is an image, or it is a URL and we attempted a load,
     // put it in the style tree.
-    if (value &&
-        (value->Type() == nsAttrValue::eImage ||
-         (value->Type() == nsAttrValue::eURL &&
-          value->LoadImage(presContext->Document())))) {
-      nsCSSValueList* list = backImage->SetListValue();
-      list->mValue.SetImageValue(value->GetImageValue());
+    if (value) {
+      if (value->Type() == nsAttrValue::eURL) {
+        value->LoadImage(presContext->Document());
+      }
+      if (value->Type() == nsAttrValue::eImage) {
+        nsCSSValueList* list = backImage->SetListValue();
+        list->mValue.SetImageValue(value->GetImageValue());
+      }
     }
   }
 }
@@ -2952,7 +2955,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& 
     return NS_OK;
   }
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   uri->GetSpec(spec);
   CopyUTF8toUTF16(spec, aResult);
   return NS_OK;
@@ -3023,7 +3026,7 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
         nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
                                                   uriPart, doc, baseURI);
         if (attrURI) {
-          nsCAutoString spec;
+          nsAutoCString spec;
           attrURI->GetSpec(spec);
           AppendUTF8toUTF16(spec, aResult);
         } else {
@@ -4085,7 +4088,7 @@ nsGenericHTMLElement::RecompileScriptEventListeners()
 
         nsAutoString value;
         GetAttr(kNameSpaceID_None, attr, value);
-        AddScriptEventListener(attr, value, true);
+        SetEventHandler(attr, value, true);
     }
 }
 

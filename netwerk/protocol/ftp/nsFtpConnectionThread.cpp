@@ -150,7 +150,7 @@ nsFtpState::OnControlDataAvailable(const char *aData, uint32_t aDataLen)
         }
 
         // Append the current segment, including the LF
-        nsCAutoString line;
+        nsAutoCString line;
         int32_t crlfLength = 0;
 
         if ((currLineLength > eolLength) &&
@@ -282,7 +282,7 @@ nsFtpState::EstablishControlConnection()
     mState = FTP_READ_BUF;
     mNextState = FTP_S_USER;
     
-    nsCAutoString host;
+    nsAutoCString host;
     rv = mChannel->URI()->GetAsciiHost(host);
     if (NS_FAILED(rv))
         return rv;
@@ -647,7 +647,7 @@ nsFtpState::S_user() {
         return NS_ERROR_FAILURE;
 
     nsresult rv;
-    nsCAutoString usernameStr("USER ");
+    nsAutoCString usernameStr("USER ");
 
     mResponseMsg = "";
 
@@ -716,7 +716,7 @@ nsFtpState::R_user() {
 nsresult
 nsFtpState::S_pass() {
     nsresult rv;
-    nsCAutoString passwordStr("PASS ");
+    nsAutoCString passwordStr("PASS ");
 
     mResponseMsg = "";
 
@@ -825,7 +825,7 @@ nsFtpState::R_pwd() {
     if (mResponseCode/100 != 2)
         return FTP_S_TYPE;
 
-    nsCAutoString respStr(mResponseMsg);
+    nsAutoCString respStr(mResponseMsg);
     int32_t pos = respStr.FindChar('"');
     if (pos > -1) {
         respStr.Cut(0, pos+1);
@@ -949,7 +949,7 @@ nsFtpState::S_cwd() {
     if (mPwd.IsEmpty())
         mCacheConnection = false;
 
-    nsCAutoString cwdStr;
+    nsAutoCString cwdStr;
     if (mAction != PUT)
         cwdStr = mPath;
     if (cwdStr.IsEmpty() || cwdStr.First() != '/')
@@ -976,7 +976,7 @@ nsFtpState::R_cwd() {
 
 nsresult
 nsFtpState::S_size() {
-    nsCAutoString sizeBuf(mPath);
+    nsAutoCString sizeBuf(mPath);
     if (sizeBuf.IsEmpty() || sizeBuf.First() != '/')
         sizeBuf.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
@@ -1000,7 +1000,7 @@ nsFtpState::R_size() {
 
 nsresult
 nsFtpState::S_mdtm() {
-    nsCAutoString mdtmBuf(mPath);
+    nsAutoCString mdtmBuf(mPath);
     if (mdtmBuf.IsEmpty() || mdtmBuf.First() != '/')
         mdtmBuf.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
@@ -1023,7 +1023,7 @@ nsFtpState::R_mdtm() {
             mModTime = mResponseMsg;
 
             // Save lastModified time for downloaded files.
-            nsCAutoString timeString;
+            nsAutoCString timeString;
             nsresult error;
             PRExplodedTime exTime;
 
@@ -1083,7 +1083,7 @@ nsFtpState::SetContentType()
 
     if (!mPath.IsEmpty() && mPath.Last() != '/') {
         nsCOMPtr<nsIURL> url = (do_QueryInterface(mChannel->URI()));
-        nsCAutoString filePath;
+        nsAutoCString filePath;
         if(NS_SUCCEEDED(url->GetFilePath(filePath))) {
             filePath.Append('/');
             url->SetFilePath(filePath);
@@ -1112,7 +1112,7 @@ nsFtpState::S_list() {
     
     if (mCacheEntry) {
         // save off the server type if we are caching.
-        nsCAutoString serverType;
+        nsAutoCString serverType;
         serverType.AppendInt(mServerType);
         mCacheEntry->SetMetaDataElement("servertype", serverType.get());
 
@@ -1158,7 +1158,7 @@ nsFtpState::R_list() {
 
 nsresult
 nsFtpState::S_retr() {
-    nsCAutoString retrStr(mPath);
+    nsAutoCString retrStr(mPath);
     if (retrStr.IsEmpty() || retrStr.First() != '/')
         retrStr.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
@@ -1206,7 +1206,7 @@ nsFtpState::R_retr() {
 nsresult
 nsFtpState::S_rest() {
     
-    nsCAutoString restString("REST ");
+    nsAutoCString restString("REST ");
     // The int64_t cast is needed to avoid ambiguity
     restString.AppendInt(int64_t(mChannel->StartPos()), 10);
     restString.Append(CRLF);
@@ -1238,7 +1238,7 @@ nsFtpState::S_stor() {
     nsCOMPtr<nsIURL> url = do_QueryInterface(mChannel->URI());
     NS_ASSERTION(url, "I thought you were a nsStandardURL");
 
-    nsCAutoString storStr;
+    nsAutoCString storStr;
     url->GetFilePath(storStr);
     NS_ASSERTION(!storStr.IsEmpty(), "What does it mean to store a empty path");
         
@@ -1338,7 +1338,7 @@ nsFtpState::R_pasv() {
     nsresult rv;
     int32_t port;
 
-    nsCAutoString responseCopy(mResponseMsg);
+    nsAutoCString responseCopy(mResponseMsg);
     char *response = responseCopy.BeginWriting();
 
     char *ptr = response;
@@ -1438,7 +1438,7 @@ nsFtpState::R_pasv() {
        
         nsCOMPtr<nsISocketTransport> strans;
 
-        nsCAutoString host;
+        nsAutoCString host;
         if (!PR_IsNetAddrType(&mServerAddress, PR_IpAddrAny)) {
             char buf[64];
             PR_NetAddrToString(&mServerAddress, buf, sizeof(buf));
@@ -1674,7 +1674,7 @@ nsFtpState::Init(nsFtpChannel *channel)
         mAction = PUT;
 
     nsresult rv;
-    nsCAutoString path;
+    nsAutoCString path;
     nsCOMPtr<nsIURL> url = do_QueryInterface(mChannel->URI());
 	
     nsCString host;
@@ -1711,7 +1711,7 @@ nsFtpState::Init(nsFtpChannel *channel)
         int32_t len = NS_UnescapeURL(fwdPtr);
         mPath.Assign(fwdPtr, len);
         if (IsUTF8(mPath)) {
-    	    nsCAutoString originCharset;
+    	    nsAutoCString originCharset;
     	    rv = mChannel->URI()->GetOriginCharset(originCharset);
     	    if (NS_SUCCEEDED(rv) && !originCharset.EqualsLiteral("UTF-8"))
     	        ConvertUTF8PathToCharset(originCharset);
@@ -1724,7 +1724,7 @@ nsFtpState::Init(nsFtpChannel *channel)
     }
 
     // pull any username and/or password out of the uri
-    nsCAutoString uname;
+    nsAutoCString uname;
     rv = mChannel->URI()->GetUsername(uname);
     if (NS_FAILED(rv))
         return rv;
@@ -1738,7 +1738,7 @@ nsFtpState::Init(nsFtpChannel *channel)
             return NS_ERROR_MALFORMED_URI;
     }
 
-    nsCAutoString password;
+    nsAutoCString password;
     rv = mChannel->URI()->GetPassword(password);
     if (NS_FAILED(rv))
         return rv;
@@ -1872,7 +1872,7 @@ nsFtpState::SendFTPCommand(const nsCSubstring& command)
     NS_ASSERTION(mControlConnection, "null control connection");        
     
     // we don't want to log the password:
-    nsCAutoString logcmd(command);
+    nsAutoCString logcmd(command);
     if (StringBeginsWith(command, NS_LITERAL_CSTRING("PASS "))) 
         logcmd = "PASS xxxxx";
     
@@ -1897,7 +1897,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
 {
     int ntok=1;
     char *t, *nextToken;
-    nsCAutoString fileStringCopy;
+    nsAutoCString fileStringCopy;
 
     // Get a writeable copy we can strtok with.
     fileStringCopy = fileString;
@@ -2187,7 +2187,7 @@ nsFtpState::ReadCacheEntry()
 
     nsXPIDLCString serverType;
     mCacheEntry->GetMetaDataElement("servertype", getter_Copies(serverType));
-    nsCAutoString serverNum(serverType.get());
+    nsAutoCString serverNum(serverType.get());
     nsresult err;
     mServerType = serverNum.ToInteger(&err);
     
@@ -2253,7 +2253,7 @@ nsFtpState::CheckCache()
     }
 
     // Generate cache key (remove trailing #ref if any):
-    nsCAutoString key;
+    nsAutoCString key;
     mChannel->URI()->GetAsciiSpec(key);
     int32_t pos = key.RFindChar('#');
     if (pos != kNotFound)
@@ -2284,7 +2284,7 @@ nsFtpState::ConvertUTF8PathToCharset(const nsACString &aCharset)
     nsresult rv;
     NS_ASSERTION(IsUTF8(mPath), "mPath isn't UTF8 string!");
     NS_ConvertUTF8toUTF16 ucsPath(mPath);
-    nsCAutoString result;
+    nsAutoCString result;
 
     nsCOMPtr<nsICharsetConverterManager> charsetMgr(
         do_GetService("@mozilla.org/charset-converter-manager;1", &rv));
