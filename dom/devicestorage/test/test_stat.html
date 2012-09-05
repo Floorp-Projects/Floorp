@@ -35,7 +35,7 @@ function statError(e) {
   devicestorage_cleanup();
 }
 
-var storage = navigator.getDeviceStorage("pictures");
+var storage = navigator.getDeviceStorage("testing");
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
 function addError(e) {
@@ -51,7 +51,7 @@ function addSuccess(e) {
   request.onerror = statError;
 }
 
-request = storage.addNamed(createRandomBlob('image/png'), "a/b.png");
+request = storage.addNamed(createRandomBlob(), "a/b");
 request.onsuccess = addSuccess;
 request.onerror = addError;
 

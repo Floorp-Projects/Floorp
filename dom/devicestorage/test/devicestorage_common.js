@@ -54,8 +54,8 @@ function getRandomBuffer() {
   return buffer;
 }
 
-function createRandomBlob(mime) {
-  return blob = new Blob([getRandomBuffer()], {type: mime});
+function createRandomBlob() {
+  return blob = new Blob([getRandomBuffer()], {type: 'binary/random'});
 }
 
 function randomFilename(l) {
