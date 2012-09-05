@@ -274,11 +274,23 @@ LIRGeneratorShared::useAnyOrConstant(MDefinition *mir)
 {
     return useRegisterOrConstant(mir);
 }
+
+LAllocation
+LIRGeneratorShared::useAny(MDefinition *mir)
+{
+    return useRegister(mir);
+}
 #else
 LAllocation
 LIRGeneratorShared::useAnyOrConstant(MDefinition *mir)
 {
     return useOrConstant(mir);
+}
+
+LAllocation
+LIRGeneratorShared::useAny(MDefinition *mir)
+{
+    return use(mir);
 }
 #endif
 

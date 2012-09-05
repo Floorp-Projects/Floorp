@@ -624,6 +624,9 @@ class AssemblerX86Shared
     }
     void cmpl(const Operand &lhs, const Register &rhs) {
         switch (lhs.kind()) {
+          case Operand::REG:
+            masm.cmpl_rr(rhs.code(), lhs.reg());
+            break;
           case Operand::REG_DISP:
             masm.cmpl_rm(rhs.code(), lhs.disp(), lhs.base());
             break;
