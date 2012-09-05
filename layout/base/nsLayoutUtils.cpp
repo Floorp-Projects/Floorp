@@ -2878,7 +2878,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
               boxSizingToMarginEdgeWidth, *widthStyleCoord);
   }
 
-  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None) {
+  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None &&
+      !(isFlexItem && isHorizontalFlexItem)) {
     maxWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
                  aFrame, aCBSize.width, boxSizingAdjust.width,
                  boxSizingToMarginEdgeWidth, stylePos->mMaxWidth);
@@ -2886,7 +2887,11 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
     maxWidth = nscoord_MAX;
   }
 
-  if (stylePos->mMinWidth.GetUnit() != eStyleUnit_Auto) {
+  // NOTE: Flex items ignore their min & max sizing properties in their
+  // flex container's main-axis.  (Those properties get applied later in
+  // the flexbox algorithm.)
+  if (stylePos->mMinWidth.GetUnit() != eStyleUnit_Auto &&
+      !(isFlexItem && isHorizontalFlexItem)) {
     minWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
                  aFrame, aCBSize.width, boxSizingAdjust.width,
                  boxSizingToMarginEdgeWidth, stylePos->mMinWidth);
@@ -2905,7 +2910,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                 *heightStyleCoord);
   }
 
-  if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
+  if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height) &&
+      !(isFlexItem && !isHorizontalFlexItem)) {
     maxHeight = nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
                   boxSizingAdjust.height, 
                   stylePos->mMaxHeight);
@@ -2913,7 +2919,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
     maxHeight = nscoord_MAX;
   }
 
-  if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
+  if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height) &&
+      !(isFlexItem && !isHorizontalFlexItem)) {
     minHeight = nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
                   boxSizingAdjust.height,
                   stylePos->mMinHeight);
