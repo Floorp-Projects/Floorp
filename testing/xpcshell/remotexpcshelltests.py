@@ -150,13 +150,15 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
     def buildXpcsCmd(self, testdir):
         self.xpcsCmd = [
            self.remoteJoin(self.remoteBinDir, "xpcshell"),
-           '-r', self.remoteJoin(self.remoteComponentsDir, 'httpd.manifest'),
+           '-r', self.remoteJoin(self.remoteComponentsDir, 'httpd.manifest')]
+        # If using an APK, --greomni must be specified before any -e arguments.
+        if self.options.localAPK:
+          self.xpcsCmd.extend(['--greomni', self.remoteAPK])
+        self.xpcsCmd.extend([
            '-s',
            '-e', 'const _HTTPD_JS_PATH = "%s";' % self.remoteJoin(self.remoteComponentsDir, 'httpd.js'),
            '-e', 'const _HEAD_JS_PATH = "%s";' % self.remoteJoin(self.remoteScriptsDir, 'head.js'),
-           '-f', self.remoteScriptsDir+'/head.js']
-        if self.options.localAPK:
-          self.xpcsCmd.extend(['--greomni', self.remoteAPK])
+           '-f', self.remoteScriptsDir+'/head.js'])
 
         if self.remoteDebugger:
           # for example, "/data/local/gdbserver" "localhost:12345"
