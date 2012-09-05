@@ -1266,7 +1266,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInnerWindowHolder)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOuterWindow)
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpenerScriptPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mListenerManager,
                                                   nsEventListenerManager)
 
@@ -1316,7 +1315,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOuterWindow)
   }
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOpenerScriptPrincipal)
   if (tmp->mListenerManager) {
     tmp->mListenerManager->Disconnect();
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListenerManager)
@@ -1517,7 +1515,6 @@ nsGlobalWindow::SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal)
   if (mDoc) {
     if (!mDoc->IsInitialDocument()) {
       // We have a document already, and it's not the original one.  Bail out.
-      // Do NOT set mOpenerScriptPrincipal in this case, just to be safe.
       return;
     }
 
@@ -1571,14 +1568,6 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
 
   // Set the initial about:blank document up with the correct principal.
   SetOpenerScriptPrincipal(newWindowPrincipal);
-}
-
-nsIPrincipal*
-nsGlobalWindow::GetOpenerScriptPrincipal()
-{
-  FORWARD_TO_OUTER(GetOpenerScriptPrincipal, (), nullptr);
-
-  return mOpenerScriptPrincipal;
 }
 
 PopupControlState
