@@ -1797,7 +1797,7 @@ MacroAssemblerARMCompat::storePtr(ImmWord imm, const Address &address)
     movePtr(imm, ScratchRegister);
     storePtr(ScratchRegister, address);
 }
-    
+
 void
 MacroAssemblerARMCompat::storePtr(ImmGCPtr imm, const Address &address)
 {
@@ -1823,6 +1823,19 @@ MacroAssemblerARMCompat::cmp32(const Register &lhs, const Imm32 &rhs)
 {
     JS_ASSERT(lhs != ScratchRegister);
     ma_cmp(lhs, rhs);
+}
+
+void
+MacroAssemblerARMCompat::cmp32(const Operand &lhs, const Register &rhs)
+{
+    ma_cmp(lhs.toReg(), rhs);
+}
+
+void
+MacroAssemblerARMCompat::cmp32(const Operand &lhs, const Imm32 &rhs)
+{
+    JS_ASSERT(lhs.toReg() != ScratchRegister);
+    ma_cmp(lhs.toReg(), rhs);
 }
 
 void

@@ -1313,11 +1313,11 @@ LIRGenerator::visitBoundsCheck(MBoundsCheck *ins)
     LInstruction *check;
     if (ins->minimum() || ins->maximum()) {
         check = new LBoundsCheckRange(useRegisterOrConstant(ins->index()),
-                                      useRegister(ins->length()),
+                                      useAny(ins->length()),
                                       temp());
     } else {
         check = new LBoundsCheck(useRegisterOrConstant(ins->index()),
-                                 useRegisterOrConstant(ins->length()));
+                                 useAnyOrConstant(ins->length()));
     }
     return assignSnapshot(check, Bailout_BoundsCheck) && add(check, ins);
 }
