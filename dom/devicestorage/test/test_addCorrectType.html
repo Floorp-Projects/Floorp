@@ -3,18 +3,19 @@
   http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <!DOCTYPE HTML>
-<html> <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=717103
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=786922
 -->
 <head>
-  <title>Test for the device storage API </title>
+  <title>Test for basic sanity of the device storage API </title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="devicestorage_common.js"></script>
 
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=786922">Mozilla Bug 786922</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   
@@ -22,24 +23,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+
 devicestorage_setup();
 
-function testingStorage() {
-  return navigator.getDeviceStorage("pictures");
+function addNamed(storage, mime, fileExtension) {
+  dump("adding: " + mime + " " + fileExtension + "\n");
+  return navigator.getDeviceStorage(storage).addNamed(createRandomBlob(mime), randomFilename(40) + "." + fileExtension);
 }
 
+// These tests must all fail
 var tests = [
-  function () { return testingStorage().addNamed(createRandomBlob('image/png'), gFileName); },
-  function () { return testingStorage().delete(gFileName); },
-  function () { return testingStorage().get(gFileName); },
-  function () { var r = testingStorage().enumerate("../"); return r; }
+  function () { return addNamed("pictures", "kyle/smash", ".png")},
+  function () { return addNamed("pictures", "image/png",  ".poo")},
+  function () { return addNamed("music",    "kyle/smash", ".mp3")},
+  function () { return addNamed("music",    "music/mp3",  ".poo")},
+  function () { return addNamed("videos",   "kyle/smash", ".ogv")},
+  function () { return addNamed("videos",   "video/ogv",  ".poo")},
 ];
-
-var gFileName = "../owned.png";
 
 function fail(e) {
   ok(false, "addSuccess was called");
-  dump(request);
   devicestorage_cleanup();
 }
 
@@ -61,8 +64,6 @@ function next(e) {
 }
 
 next();
-
-
 
 </script>
 </pre>

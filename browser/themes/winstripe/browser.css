@@ -3167,13 +3167,13 @@ html|*#gcli-output-frame {
 
 /* Responsive Mode */
 
-vbox[anonid=browserContainer][responsivemode] {
+.browserContainer[responsivemode] {
   background: #2a3643 url("chrome://browser/skin/devtools/responsive-background.png");
   box-shadow: 0 0 7px black inset;
   padding: 0 20px 20px 20px;
 }
 
-stack[anonid=browserStack][responsivemode] {
+.browserStack[responsivemode] {
   box-shadow: 0 0 7px black;
 }
 
