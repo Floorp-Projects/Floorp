@@ -446,8 +446,9 @@ RPCChannel::Incall(const Message& call, size_t stackDepth)
         }
 
         if (LoggingEnabled()) {
-            fprintf(stderr, "  (%s: %s won, so we're%sdeferring)\n",
-                    mChild ? "child" : "parent", winner, defer ? " " : " not ");
+            printf_stderr("  (%s: %s won, so we're%sdeferring)\n",
+                          mChild ? "child" : "parent", winner,
+                          defer ? " " : " not ");
         }
 
         if (defer) {
@@ -626,30 +627,29 @@ RPCChannel::DebugAbort(const char* file, int line, const char* cond,
                        const char* why,
                        const char* type, bool reply) const
 {
-    fprintf(stderr,
-            "###!!! [RPCChannel][%s][%s:%d] "
-            "Assertion (%s) failed.  %s (triggered by %s%s)\n",
-            mChild ? "Child" : "Parent",
-            file, line, cond,
-            why,
-            type, reply ? "reply" : "");
+    printf_stderr("###!!! [RPCChannel][%s][%s:%d] "
+                  "Assertion (%s) failed.  %s (triggered by %s%s)\n",
+                  mChild ? "Child" : "Parent",
+                  file, line, cond,
+                  why,
+                  type, reply ? "reply" : "");
     // technically we need the mutex for this, but we're dying anyway
-    DumpRPCStack(stderr, "  ");
-    fprintf(stderr, "  remote RPC stack guess: %lu\n",
-            mRemoteStackDepthGuess);
-    fprintf(stderr, "  deferred stack size: %lu\n",
-            mDeferred.size());
-    fprintf(stderr, "  out-of-turn RPC replies stack size: %lu\n",
-            mOutOfTurnReplies.size());
-    fprintf(stderr, "  Pending queue size: %lu, front to back:\n",
-            mPending.size());
+    DumpRPCStack("  ");
+    printf_stderr("  remote RPC stack guess: %lu\n",
+                  mRemoteStackDepthGuess);
+    printf_stderr("  deferred stack size: %lu\n",
+                  mDeferred.size());
+    printf_stderr("  out-of-turn RPC replies stack size: %lu\n",
+                  mOutOfTurnReplies.size());
+    printf_stderr("  Pending queue size: %lu, front to back:\n",
+                  mPending.size());
 
     MessageQueue pending = mPending;
     while (!pending.empty()) {
-        fprintf(stderr, "    [ %s%s ]\n",
-                pending.front().is_rpc() ? "rpc" :
-                (pending.front().is_sync() ? "sync" : "async"),
-                pending.front().is_reply() ? "reply" : "");
+        printf_stderr("    [ %s%s ]\n",
+                      pending.front().is_rpc() ? "rpc" :
+                      (pending.front().is_sync() ? "sync" : "async"),
+                      pending.front().is_reply() ? "reply" : "");
         pending.pop_front();
     }
 
@@ -657,15 +657,12 @@ RPCChannel::DebugAbort(const char* file, int line, const char* cond,
 }
 
 void
-RPCChannel::DumpRPCStack(FILE* outfile, const char* const pfx) const
+RPCChannel::DumpRPCStack(const char* const pfx) const
 {
     NS_WARN_IF_FALSE(MessageLoop::current() != mWorkerLoop,
                      "The worker thread had better be paused in a debugger!");
 
-    if (!outfile)
-        outfile = stdout;
-
-    fprintf(outfile, "%sRPCChannel 'backtrace':\n", pfx);
+    printf_stderr("%sRPCChannel 'backtrace':\n", pfx);
 
     // print a python-style backtrace, first frame to last
     for (uint32_t i = 0; i < mCxxStackFrames.size(); ++i) {
@@ -673,8 +670,8 @@ RPCChannel::DumpRPCStack(FILE* outfile, const char* const pfx) const
         const char* dir, *sems, *name;
         mCxxStackFrames[i].Describe(&id, &dir, &sems, &name);
 
-        fprintf(outfile, "%s[(%u) %s %s %s(actor=%d) ]\n", pfx,
-                i, dir, sems, name, id);
+        printf_stderr("%s[(%u) %s %s %s(actor=%d) ]\n", pfx,
+                      i, dir, sems, name, id);
     }
 }
 
