@@ -1863,8 +1863,7 @@ main(int argc, char **argv, char **envp)
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
                                                   systemprincipal,
-                                                  nsIXPConnect::
-                                                  FLAG_SYSTEM_GLOBAL_OBJECT,
+                                                  0,
                                                   getter_AddRefs(holder));
         if (NS_FAILED(rv))
             return 1;
