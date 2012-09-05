@@ -360,7 +360,6 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
         name.Equals("accept-encoding") ||
         name.Equals("te") ||
         name.Equals("connection") ||
-        name.Equals("proxy-connection") ||
         name.Equals("url"))
       continue;
     

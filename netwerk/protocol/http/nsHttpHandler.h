@@ -59,8 +59,7 @@ public:
 
     nsresult Init();
     nsresult AddStandardRequestHeaders(nsHttpHeaderArray *,
-                                       uint8_t capabilities,
-                                       bool useProxy);
+                                       uint8_t capabilities);
     bool     IsAcceptableEncoding(const char *encoding);
 
     const nsAFlatCString &UserAgent();

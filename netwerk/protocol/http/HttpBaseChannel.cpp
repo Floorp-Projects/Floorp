@@ -129,9 +129,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
   if (NS_FAILED(rv)) return rv;
 
   rv = gHttpHandler->
-      AddStandardRequestHeaders(&mRequestHead.Headers(), aCaps,
-                                !mConnectionInfo->UsingConnect() &&
-                                mConnectionInfo->UsingHttpProxy());
+    AddStandardRequestHeaders(&mRequestHead.Headers(), aCaps);
 
   return rv;
 }
