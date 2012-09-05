@@ -422,7 +422,7 @@ class nsTFixedString_CharT : public nsTString_CharT
    *
    * NAMES:
    *   nsAutoString for wide characters
-   *   nsCAutoString for narrow characters
+   *   nsAutoCString for narrow characters
    */
 class NS_STACK_CLASS nsTAutoString_CharT : public nsTFixedString_CharT
   {

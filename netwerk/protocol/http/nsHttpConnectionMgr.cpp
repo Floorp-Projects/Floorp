@@ -659,7 +659,7 @@ nsHttpConnectionMgr::GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry)
 
     nsCOMPtr<nsISupports> securityInfo;
     nsCOMPtr<nsISSLSocketControl> sslSocketControl;
-    nsCAutoString negotiatedNPN;
+    nsAutoCString negotiatedNPN;
     
     activeSpdy->GetSecurityInfo(getter_AddRefs(securityInfo));
     if (!securityInfo) {
@@ -1040,7 +1040,7 @@ nsHttpConnectionMgr::ReportFailedToProcess(nsIURI *uri)
 {
     NS_ABORT_IF_FALSE(uri, "precondition");
 
-    nsCAutoString host;
+    nsAutoCString host;
     int32_t port = -1;
     bool usingSSL = false;
     bool isHttp = false;

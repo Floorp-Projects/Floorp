@@ -16,7 +16,7 @@
 static bool
 ServerIsNES3x(nsIHttpChannel *httpChannel)
 {
-    nsCAutoString server;
+    nsAutoCString server;
     httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Server"), server);
     // case sensitive string comparison is OK here.  the server string
     // is a well-known value, so we should not have to worry about it

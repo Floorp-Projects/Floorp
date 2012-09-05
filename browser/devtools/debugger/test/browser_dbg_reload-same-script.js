@@ -95,7 +95,7 @@ function test()
     else if (step === 2) {
       testCurrentScript("-01.js", step);
       expectedScript = "-02.js";
-      gView.Scripts.selectScript(gView.Scripts.scriptLocations[1]);
+      switchScript(1);
     }
     else if (step === 3) {
       testCurrentScript("-02.js", step);
@@ -105,7 +105,7 @@ function test()
     else if (step === 4) {
       testCurrentScript("-02.js", step);
       expectedScript = "-01.js";
-      gView.Scripts.selectScript(gView.Scripts.scriptLocations[0]);
+      switchScript(0);
     }
     else if (step === 5) {
       testCurrentScript("-01.js", step);
@@ -125,7 +125,7 @@ function test()
     else if (step === 8) {
       testCurrentScript("-01.js", step);
       expectedScript = "-02.js";
-      gView.Scripts.selectScript(gView.Scripts.scriptLocations[1]);
+      switchScript(1);
     }
     else if (step === 9) {
       testCurrentScript("-02.js", step);
@@ -145,7 +145,7 @@ function test()
     else if (step === 12) {
       testCurrentScript("-02.js", step);
       expectedScript = "-01.js";
-      gView.Scripts.selectScript(gView.Scripts.scriptLocations[0]);
+      switchScript(0);
     }
     else if (step === 13) {
       testCurrentScript("-01.js", step);
@@ -164,6 +164,24 @@ function test()
       "The selected script isn't the correct one. (" + step + ")");
     is(gView.Scripts.selected, scriptShownUrl,
       "The shown script is not the the correct one. (" + step + ")");
+  }
+
+  function switchScript(index)
+  {
+    let scriptsView = gView.Scripts;
+    let scriptLocations = scriptsView.scriptLocations;
+    info("Available scripts: " + scriptLocations);
+
+    if (scriptLocations.length === 2) {
+      // We got all the scripts, it's safe to switch.
+      scriptsView.selectScript(scriptLocations[index]);
+      return;
+    }
+
+    window.addEventListener("Debugger:AfterNewScript", function _onEvent(aEvent) {
+      window.removeEventListener(aEvent.type, _onEvent);
+      switchScript(index);
+    });
   }
 
   function reloadPage()

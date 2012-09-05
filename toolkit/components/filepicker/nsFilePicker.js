@@ -187,11 +187,13 @@ nsFilePicker.prototype = {
     var tm = Components.classes["@mozilla.org/thread-manager;1"]
                        .getService(Components.interfaces.nsIThreadManager);
     tm.mainThread.dispatch(function() {
+      let result = Components.interfaces.nsIFilePicker.returnCancel;
       try {
-        let result = this.show();
-        aFilePickerShownCallback.done(result);
+        result = this.show();
       } catch(ex) {
-        aFilePickerShownCallback.done(this.returnCancel);
+      }
+      if (aFilePickerShownCallback) {
+        aFilePickerShownCallback.done(result);
       }
     }.bind(this), Components.interfaces.nsIThread.DISPATCH_NORMAL);
   },

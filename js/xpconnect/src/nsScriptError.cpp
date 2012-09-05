@@ -35,7 +35,7 @@ NS_IMETHODIMP
 nsScriptError::GetMessageMoz(PRUnichar **result) {
     nsresult rv;
 
-    nsCAutoString message;
+    nsAutoCString message;
     rv = ToString(message);
     if (NS_FAILED(rv))
         return rv;

@@ -178,15 +178,15 @@ bool nsWaveReader::DecodeAudioData()
     for (unsigned int j = 0; j < mChannels; ++j) {
       if (mSampleFormat == nsAudioStream::FORMAT_U8) {
         uint8_t v =  ReadUint8(&d);
-#if defined(MOZ_SAMPLE_TYPE_S16LE)
+#if defined(MOZ_SAMPLE_TYPE_S16)
         *s++ = (v * (1.F/PR_UINT8_MAX)) * PR_UINT16_MAX + PR_INT16_MIN;
 #elif defined(MOZ_SAMPLE_TYPE_FLOAT32)
         *s++ = (v * (1.F/PR_UINT8_MAX)) * 2.F - 1.F;
 #endif
       }
-      else if (mSampleFormat == nsAudioStream::FORMAT_S16_LE) {
+      else if (mSampleFormat == nsAudioStream::FORMAT_S16) {
         int16_t v =  ReadInt16LE(&d);
-#if defined(MOZ_SAMPLE_TYPE_S16LE)
+#if defined(MOZ_SAMPLE_TYPE_S16)
         *s++ = v;
 #elif defined(MOZ_SAMPLE_TYPE_FLOAT32)
         *s++ = (int32_t(v) - PR_INT16_MIN) / float(PR_UINT16_MAX) * 2.F - 1.F;
@@ -453,7 +453,7 @@ nsWaveReader::LoadFormatChunk()
   if (sampleFormat == 8) {
     mSampleFormat = nsAudioStream::FORMAT_U8;
   } else {
-    mSampleFormat = nsAudioStream::FORMAT_S16_LE;
+    mSampleFormat = nsAudioStream::FORMAT_S16;
   }
   return true;
 }

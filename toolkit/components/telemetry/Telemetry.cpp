@@ -187,16 +187,31 @@ StatisticsRecorder gStatisticsRecorder;
 
 // Hardcoded probes
 struct TelemetryHistogram {
-  const char *id;
   uint32_t min;
   uint32_t max;
   uint32_t bucketCount;
   uint32_t histogramType;
-  const char *comment;
+  uint16_t id_offset;
+  uint16_t comment_offset;
+
+  const char *id() const;
+  const char *comment() const;
 };
 
 #include "TelemetryHistogramData.inc"
 bool gCorruptHistograms[Telemetry::HistogramCount];
+
+const char *
+TelemetryHistogram::id() const
+{
+  return &gHistogramStringTable[this->id_offset];
+}
+
+const char *
+TelemetryHistogram::comment() const
+{
+  return &gHistogramStringTable[this->comment_offset];
+}
 
 bool
 TelemetryHistogramType(Histogram *h, uint32_t *result)
@@ -268,7 +283,7 @@ GetHistogramByEnumId(Telemetry::ID id, Histogram **ret)
   }
 
   const TelemetryHistogram &p = gHistograms[id];
-  nsresult rv = HistogramGet(p.id, p.min, p.max, p.bucketCount, p.histogramType, &h);
+  nsresult rv = HistogramGet(p.id(), p.min, p.max, p.bucketCount, p.histogramType, &h);
   if (NS_FAILED(rv))
     return rv;
 
@@ -585,7 +600,7 @@ TelemetryImpl::GetHistogramEnumId(const char *name, Telemetry::ID *id)
   TelemetryImpl::HistogramMapType *map = &sTelemetry->mHistogramMap;
   if (!map->Count()) {
     for (uint32_t i = 0; i < Telemetry::HistogramCount; i++) {
-      CharPtrEntryType *entry = map->PutEntry(gHistograms[i].id);
+      CharPtrEntryType *entry = map->PutEntry(gHistograms[i].id());
       if (NS_UNLIKELY(!entry)) {
         map->Clear();
         return NS_ERROR_OUT_OF_MEMORY;
@@ -777,7 +792,7 @@ TelemetryImpl::GetAddonHistogram(const nsACString &id, const nsACString &name,
 
   AddonHistogramInfo &info = histogramEntry->mData;
   if (!info.h) {
-    nsCAutoString actualName;
+    nsAutoCString actualName;
     AddonHistogramName(id, name, actualName);
     if (!CreateHistogramForAddon(actualName, info)) {
       return NS_ERROR_FAILURE;
@@ -1044,7 +1059,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
 
     const uint32_t pcCount = stack.GetStackSize();
     for (size_t pcIndex = 0; pcIndex < pcCount; ++pcIndex) {
-      nsCAutoString pcString;
+      nsAutoCString pcString;
       const Telemetry::ProcessedStack::Frame &Frame = stack.GetFrame(pcIndex);
       pcString.AppendPrintf("0x%p", Frame.mOffset);
       JSString *str = JS_NewStringCopyZ(cx, pcString.get());
@@ -1085,7 +1100,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
       }
 
       // Start address
-      nsCAutoString addressString;
+      nsAutoCString addressString;
       addressString.AppendPrintf("0x%p", module.mStart);
       JSString *str = JS_NewStringCopyZ(cx, addressString.get());
       if (!str) {
@@ -1153,10 +1168,10 @@ TelemetryImpl::GetRegisteredHistograms(JSContext *cx, jsval *ret)
   JS::AutoObjectRooter root(cx, info);
 
   for (size_t i = 0; i < count; ++i) {
-    JSString *comment = JS_InternString(cx, gHistograms[i].comment);
+    JSString *comment = JS_InternString(cx, gHistograms[i].comment());
     
     if (!(comment
-          && JS_DefineProperty(cx, info, gHistograms[i].id,
+          && JS_DefineProperty(cx, info, gHistograms[i].id(),
                                STRING_TO_JSVAL(comment), NULL, NULL,
                                JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
@@ -1380,20 +1395,19 @@ TelemetryImpl::RecordSlowStatement(const nsACString &sql,
                                    const nsACString &dbName,
                                    uint32_t delay)
 {
-  MOZ_ASSERT(sTelemetry);
-  if (!sTelemetry->mCanRecord)
+  if (!sTelemetry || !sTelemetry->mCanRecord)
     return;
 
-  nsCAutoString fullSQL(sql);
+  nsAutoCString fullSQL(sql);
   fullSQL.AppendPrintf(" /* %s */", dbName.BeginReading());
 
   bool isFirefoxDB = sTelemetry->mTrackedDBs.Contains(dbName);
   if (isFirefoxDB) {
-    nsCAutoString sanitizedSQL(SanitizeSQL(fullSQL));
+    nsAutoCString sanitizedSQL(SanitizeSQL(fullSQL));
     StoreSlowSQL(sanitizedSQL, delay, Sanitized);
   } else {
     // Report aggregate DB-level statistics for addon DBs
-    nsCAutoString aggregate;
+    nsAutoCString aggregate;
     aggregate.AppendPrintf("Untracked SQL for %s", dbName.BeginReading());
     StoreSlowSQL(aggregate, delay, Sanitized);
   }
@@ -1406,10 +1420,8 @@ void
 TelemetryImpl::RecordChromeHang(uint32_t duration,
                                 Telemetry::ProcessedStack &aStack)
 {
-  MOZ_ASSERT(sTelemetry);
-  if (!sTelemetry->mCanRecord) {
+  if (!sTelemetry || !sTelemetry->mCanRecord)
     return;
-  }
 
   MutexAutoLock hangReportMutex(sTelemetry->mHangReportsMutex);
 
@@ -1417,8 +1429,7 @@ TelemetryImpl::RecordChromeHang(uint32_t duration,
   if (sTelemetry->mHangReports.Length()) {
     Telemetry::ProcessedStack &firstStack =
       sTelemetry->mHangReports[0].mStack;
-    const uint32_t moduleCount = aStack.GetNumModules();
-    for (size_t i = 0; i < moduleCount; ++i) {
+    for (size_t i = 0; i < aStack.GetNumModules(); ++i) {
       const Telemetry::ProcessedStack::Module &module = aStack.GetModule(i);
       if (firstStack.HasModule(module)) {
         aStack.RemoveModule(i);

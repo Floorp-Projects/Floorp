@@ -31,18 +31,10 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(BatteryManager)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BatteryManager,
                                                   nsDOMEventTargetHelper)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(levelchange)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(chargingchange)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(chargingtimechange)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(dischargingtimechange)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BatteryManager,
                                                 nsDOMEventTargetHelper)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(levelchange)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(chargingchange)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(chargingtimechange)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(dischargingtimechange)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BatteryManager)
@@ -52,6 +44,11 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(BatteryManager, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BatteryManager, nsDOMEventTargetHelper)
+
+NS_IMPL_EVENT_HANDLER(BatteryManager, levelchange)
+NS_IMPL_EVENT_HANDLER(BatteryManager, chargingchange)
+NS_IMPL_EVENT_HANDLER(BatteryManager, chargingtimechange)
+NS_IMPL_EVENT_HANDLER(BatteryManager, dischargingtimechange)
 
 BatteryManager::BatteryManager()
   : mLevel(kDefaultLevel)
@@ -120,11 +117,6 @@ BatteryManager::GetChargingTime(double* aChargingTime)
 
   return NS_OK;
 }
-
-NS_IMPL_EVENT_HANDLER(BatteryManager, levelchange)
-NS_IMPL_EVENT_HANDLER(BatteryManager, chargingchange)
-NS_IMPL_EVENT_HANDLER(BatteryManager, chargingtimechange)
-NS_IMPL_EVENT_HANDLER(BatteryManager, dischargingtimechange)
 
 nsresult
 BatteryManager::DispatchTrustedEventToSelf(const nsAString& aEventName)

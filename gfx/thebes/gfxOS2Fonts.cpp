@@ -565,7 +565,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUnichar* aString, uint32_t aLen
 
     mEnableKerning = !(aFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED);
 
-    nsCAutoString utf8;
+    nsAutoCString utf8;
     int32_t headerLen = AppendDirectionalIndicatorUTF8(textRun->IsRightToLeft(), utf8);
     AppendUTF16toUTF8(Substring(aString, aString + aLength), utf8);
 
@@ -610,7 +610,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const uint8_t* aString, uint32_t aLengt
         // bytes of any UCS-2 characters < 256), NS_ConvertASCIItoUTF16 seems
         // to DTRT.
         NS_ConvertASCIItoUTF16 unicodeString(chars, aLength);
-        nsCAutoString utf8;
+        nsAutoCString utf8;
         int32_t headerLen = AppendDirectionalIndicatorUTF8(isRTL, utf8);
         AppendUTF16toUTF8(unicodeString, utf8);
         InitTextRun(textRun, (uint8_t *)utf8.get(), utf8.Length(), headerLen);

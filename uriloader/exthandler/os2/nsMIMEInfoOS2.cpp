@@ -50,7 +50,7 @@ nsMIMEInfoOS2::~nsMIMEInfoOS2()
 // if the helper application is a DOS app, create an 8.3 filename
 static nsresult Make8Dot3Name(nsIFile *aFile, nsACString& aPath)
 {
-  nsCAutoString leafName;
+  nsAutoCString leafName;
   aFile->GetNativeLeafName(leafName);
   const char *lastDot = strrchr(leafName.get(), '.');
 
@@ -115,7 +115,7 @@ NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithFile(nsIFile *aFile)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCAutoString filePath;
+  nsAutoCString filePath;
   aFile->GetNativePath(filePath);
 
   // if there's no program, use the WPS to open the file
@@ -149,7 +149,7 @@ NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithFile(nsIFile *aFile)
   }
 
   // open the data file using the specified program file
-  nsCAutoString appPath;
+  nsAutoCString appPath;
   if (application) {
     application->GetNativePath(appPath);
   }
@@ -269,20 +269,20 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI *aURL)
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
-  nsCAutoString urlSpec;
+  nsAutoCString urlSpec;
   aURL->GetSpec(urlSpec);
   uri->SetSpec(urlSpec);
 
   /* Get the protocol so we can look up the preferences */
-  nsCAutoString uProtocol;
+  nsAutoCString uProtocol;
   uri->GetScheme(uProtocol);
 
-  nsCAutoString branchName = NS_LITERAL_CSTRING("applications.") + uProtocol;
-  nsCAutoString prefName = branchName + branchName;
+  nsAutoCString branchName = NS_LITERAL_CSTRING("applications.") + uProtocol;
+  nsAutoCString prefName = branchName + branchName;
   nsAdoptingCString prefString = Preferences::GetCString(prefName.get());
 
-  nsCAutoString applicationName;
-  nsCAutoString parameters;
+  nsAutoCString applicationName;
+  nsAutoCString parameters;
 
   if (prefString.IsEmpty()) {
     char szAppFromINI[CCHMAXPATH];
@@ -300,8 +300,8 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI *aURL)
   }
 
   // Dissect the URI
-  nsCAutoString uURL, uUsername, uPassword, uHost, uPort, uPath;
-  nsCAutoString uEmail, uGroup;
+  nsAutoCString uURL, uUsername, uPassword, uHost, uPort, uPath;
+  nsAutoCString uEmail, uGroup;
   int32_t iPort;
 
   // when passing to OS/2 apps later, we need ASCII URLs,
@@ -352,7 +352,7 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI *aURL)
 
       int32_t pos = parameters.Find(url.get());
       if (pos != kNotFound) {
-        nsCAutoString uURL;
+        nsAutoCString uURL;
         aURL->GetSpec(uURL);
         NS_UnescapeURL(uURL);
         uURL.Cut(0, uProtocol.Length()+1);
@@ -563,7 +563,7 @@ nsMIMEInfoOS2::GetIconURLVariant(nsIFile *aApplication, nsIVariant **_retval)
   nsresult rv = CallCreateInstance("@mozilla.org/variant;1", _retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString fileURLSpec;
+  nsAutoCString fileURLSpec;
   if (aApplication)
     NS_GetURLSpecFromFile(aApplication, fileURLSpec);
   else {
@@ -571,7 +571,7 @@ nsMIMEInfoOS2::GetIconURLVariant(nsIFile *aApplication, nsIVariant **_retval)
     fileURLSpec.Insert(NS_LITERAL_CSTRING("moztmp."), 0);
   }
 
-  nsCAutoString iconURLSpec(NS_LITERAL_CSTRING("moz-icon://"));
+  nsAutoCString iconURLSpec(NS_LITERAL_CSTRING("moz-icon://"));
   iconURLSpec += fileURLSpec;
   nsCOMPtr<nsIWritableVariant> writable(do_QueryInterface(*_retval));
   writable->SetAsAUTF8String(iconURLSpec);

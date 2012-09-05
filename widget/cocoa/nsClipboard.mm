@@ -499,8 +499,8 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       // The Finder doesn't like getting random binary data aka
       // Unicode, so change it into an escaped URL containing only
       // ASCII.
-      nsCAutoString utf8Data = NS_ConvertUTF16toUTF8(url.get(), url.Length());
-      nsCAutoString escData;
+      nsAutoCString utf8Data = NS_ConvertUTF16toUTF8(url.get(), url.Length());
+      nsAutoCString escData;
       NS_EscapeURL(utf8Data.get(), utf8Data.Length(), esc_OnlyNonASCII|esc_AlwaysCopy, escData);
 
       // printf("Escaped url is %s, length %d\n", escData.get(), escData.Length());

@@ -61,7 +61,7 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
     if (NS_FAILED(rv))
         return rv;
 
-    nsCAutoString asciiSpec;
+    nsAutoCString asciiSpec;
     rv = innerURI->GetAsciiSpec(asciiSpec);
     if (NS_FAILED(rv))
         return rv;

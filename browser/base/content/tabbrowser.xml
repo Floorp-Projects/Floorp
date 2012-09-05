@@ -26,12 +26,14 @@
                   onselect="if (event.target.localName == 'tabpanels') this.parentNode.updateCurrentBrowser();">
         <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer">
           <xul:notificationbox flex="1">
-            <xul:vbox flex="1" anonid="browserContainer">
-              <xul:stack flex="1" anonid="browserStack">
-                <xul:browser type="content-primary" message="true" disablehistory="true"
-                             xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
-              </xul:stack>
-            </xul:vbox>
+            <xul:hbox flex="1" class="browserSidebarContainer">
+              <xul:vbox flex="1" class="browserContainer">
+                <xul:stack flex="1" class="browserStack">
+                  <xul:browser anonid="initialBrowser" type="content-primary" message="true" disablehistory="true"
+                               xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
+                </xul:stack>
+              </xul:vbox>
+            </xul:hbox>
           </xul:notificationbox>
         </xul:tabpanels>
       </xul:tabbox>
@@ -292,6 +294,15 @@
       </method>
 
       <method name="getNotificationBox">
+        <parameter name="aBrowser"/>
+        <body>
+          <![CDATA[
+            return this.getSidebarContainer(aBrowser).parentNode;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getSidebarContainer">
         <parameter name="aBrowser"/>
         <body>
           <![CDATA[
@@ -1292,24 +1303,32 @@
             var stack = document.createElementNS(
                                     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                     "stack");
-            stack.setAttribute("anonid", "browserStack");
+            stack.className = "browserStack";
             stack.appendChild(b);
             stack.setAttribute("flex", "1");
 
             // Create the browserContainer
-            var box = document.createElementNS(
+            var browserContainer = document.createElementNS(
                                     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                     "vbox");
-            box.setAttribute("anonid", "browserContainer");
-            box.appendChild(stack);
-            box.setAttribute("flex", "1");
+            browserContainer.className = "browserContainer";
+            browserContainer.appendChild(stack);
+            browserContainer.setAttribute("flex", "1");
+
+            // Create the sidebar container
+            var browserSidebarContainer = document.createElementNS(
+                                      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                      "hbox");
+            browserSidebarContainer.className = "browserSidebarContainer";
+            browserSidebarContainer.appendChild(browserContainer);
+            browserSidebarContainer.setAttribute("flex", "1");
 
             // Add the Message and the Browser to the box
             var notificationbox = document.createElementNS(
                                     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                     "notificationbox");
             notificationbox.setAttribute("flex", "1");
-            notificationbox.appendChild(box);
+            notificationbox.appendChild(browserSidebarContainer);
 
             var position = this.tabs.length - 1;
             var uniqueId = "panel" + Date.now() + position;
@@ -1754,7 +1773,7 @@
             // This will unload the document. An unload handler could remove
             // dependant tabs, so it's important that the tabbrowser is now in
             // a consistent state (tab removed, tab positions updated, etc.).
-            panel.removeChild(this.getBrowserContainer(browser));
+            browser.parentNode.removeChild(browser);
 
             // Release the browser in case something is erroneously holding a
             // reference to the tab after its removal.
@@ -2559,7 +2578,7 @@
 
       <constructor>
         <![CDATA[
-          this.mCurrentBrowser = this.mPanelContainer.firstChild.firstChild.firstChild.firstChild;
+          this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
           this.mCurrentTab = this.tabContainer.firstChild;
           document.addEventListener("keypress", this, false);
           window.addEventListener("sizemodechange", this, false);
@@ -3110,7 +3129,7 @@
               tab.style.MozMarginStart = - (width + scrollButtonWidth + paddingStart) + "px";
             }
 
-            this.style.MozMarginStart = width + paddingStart + "px";
+            this.style.MozPaddingStart = width + paddingStart + "px";
 
           } else {
             this.removeAttribute("positionpinnedtabs");
@@ -3120,7 +3139,7 @@
               tab.style.MozMarginStart = "";
             }
 
-            this.style.MozMarginStart = "";
+            this.style.MozPaddingStart = "";
           }
 
           this.mTabstrip.ensureElementIsVisible(this.selectedItem, false);
@@ -3228,23 +3247,16 @@
       </method>
 
       <method name="_finishAnimateTabMove">
-        <parameter name="event"/>
         <body><![CDATA[
           if (this.getAttribute("movingtab") != "true")
             return;
-
-          let draggedTab = event.dataTransfer.mozGetDataAt(TAB_DROP_TYPE, 0);
-          if ("animDropIndex" in draggedTab._dragData) {
-            let newIndex = draggedTab._dragData.animDropIndex;
-            if (newIndex > draggedTab._tPos)
-              newIndex--;
-            this.tabbrowser.moveTabTo(draggedTab, newIndex);
-          }
 
           for (let tab of this.tabbrowser.visibleTabs)
             tab.style.transform = "";
 
           this.removeAttribute("movingtab");
+
+          this._handleTabSelect();
         ]]></body>
       </method>
 
@@ -3563,7 +3575,7 @@
         canvas.width = 160;
         canvas.height = 90;
         PageThumbs.captureToCanvas(browser.contentWindow, canvas);
-        dt.setDragImage(canvas, 0, 0);
+        dt.setDragImage(canvas, -16, -16);
 
         // _dragData.offsetX/Y give the coordinates that the mouse should be
         // positioned relative to the corner of the new window created upon
@@ -3621,7 +3633,7 @@
           return;
         }
 
-        this._finishAnimateTabMove(event);
+        this._finishAnimateTabMove();
 
         if (effects == "link") {
           let tab = this._getDragTargetTab(event);
@@ -3637,7 +3649,7 @@
 
         var newIndex = this._getDropIndex(event);
         var scrollRect = tabStrip.scrollClientRect;
-        var rect = this.getBoundingClientRect();
+        var rect = tabStrip.getBoundingClientRect();
         var minMargin = scrollRect.left - rect.left;
         var maxMargin = Math.min(minMargin + scrollRect.width,
                                  scrollRect.right);
@@ -3698,7 +3710,14 @@
           if (draggedTab.parentNode != this || event.shiftKey)
             this.selectedItem = newTab;
         } else if (draggedTab && draggedTab.parentNode == this) {
-          this._finishAnimateTabMove(event);
+          // actually move the dragged tab
+          if ("animDropIndex" in draggedTab._dragData) {
+            let newIndex = draggedTab._dragData.animDropIndex;
+            if (newIndex > draggedTab._tPos)
+              newIndex--;
+            this.tabbrowser.moveTabTo(draggedTab, newIndex);
+          }
+          this._finishAnimateTabMove();
         } else if (draggedTab) {
           // swap the dropped tab with a new one we create and then close
           // it in the other window (making it seem to have moved between
@@ -3716,6 +3735,7 @@
             this.tabbrowser.pinTab(newTab);
           this.tabbrowser.moveTabTo(newTab, newIndex);
 
+          draggedTab.parentNode._finishAnimateTabMove();
           this.tabbrowser.swapBrowsersAndCloseOther(newTab, draggedTab);
 
           // We need to select the tab after we've done
@@ -3766,7 +3786,7 @@
         // isn't dispatched when the tab is moved within the tabstrip,
         // see bug 460801.
 
-        this._finishAnimateTabMove(event);
+        this._finishAnimateTabMove();
 
         var dt = event.dataTransfer;
         var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);

@@ -658,7 +658,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
       mozilla::services::GetXULChromeRegistryService();
 
     if (packageRegistry) {
-      nsCAutoString utf8DictName;
+      nsAutoCString utf8DictName;
       rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"),
                                               utf8DictName);
       AppendUTF8toUTF16(utf8DictName, dictName);

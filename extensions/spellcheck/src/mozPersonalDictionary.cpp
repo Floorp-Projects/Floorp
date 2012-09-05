@@ -166,7 +166,7 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
   mDictionaryTable.EnumerateEntries(AddHostToStringArray, &array);
 
   uint32_t bytesWritten;
-  nsCAutoString utf8Key;
+  nsAutoCString utf8Key;
   for (uint32_t i = 0; i < array.Length(); ++i ) {
     CopyUTF16toUTF8(array[i], utf8Key);
 

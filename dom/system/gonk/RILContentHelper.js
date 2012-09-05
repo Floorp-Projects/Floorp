@@ -29,6 +29,8 @@ const DEBUG = RIL.DEBUG_CONTENT_HELPER;
 
 const RILCONTENTHELPER_CID =
   Components.ID("{472816e1-1fd6-4405-996c-806f9ea68174}");
+const MOBILEICCINFO_CID =
+  Components.ID("{8649c12f-f8f4-4664-bbdd-7d115c23e2a7}");
 const MOBILECONNECTIONINFO_CID =
   Components.ID("{a35cfd39-2d93-4489-ac7d-396475dacb27}");
 const MOBILENETWORKINFO_CID =
@@ -40,6 +42,7 @@ const VOICEMAILSTATUS_CID=
 
 const RIL_IPC_MSG_NAMES = [
   "RIL:CardStateChanged",
+  "RIL:IccInfoChanged",
   "RIL:VoiceInfoChanged",
   "RIL:DataInfoChanged",
   "RIL:EnumerateCalls",
@@ -64,6 +67,7 @@ const RIL_IPC_MSG_NAMES = [
 const kVoiceChangedTopic     = "mobile-connection-voice-changed";
 const kDataChangedTopic      = "mobile-connection-data-changed";
 const kCardStateChangedTopic = "mobile-connection-cardstate-changed";
+const kIccInfoChangedTopic   = "mobile-connection-iccinfo-changed";
 const kUssdReceivedTopic     = "mobile-connection-ussd-received";
 const kStkCommandTopic       = "icc-manager-stk-command";
 const kStkSessionEndTopic    = "icc-manager-stk-session-end";
@@ -75,6 +79,23 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
+
+function MobileICCInfo() {}
+MobileICCInfo.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozMobileICCInfo]),
+  classID:        MOBILEICCINFO_CID,
+  classInfo:      XPCOMUtils.generateCI({
+    classID:          MOBILEICCINFO_CID,
+    classDescription: "MobileICCInfo",
+    flags:            Ci.nsIClassInfo.DOM_OBJECT,
+    interfaces:       [Ci.nsIDOMMozMobileICCInfo]
+  }),
+
+  // nsIDOMMozMobileICCInfo
+
+  mcc: 0,
+  mnc: 0
+};
 
 function MobileConnectionInfo() {}
 MobileConnectionInfo.prototype = {
@@ -157,6 +178,7 @@ VoicemailStatus.prototype = {
 };
 
 function RILContentHelper() {
+  this.iccInfo = new MobileICCInfo();
   this.voiceConnectionInfo = new MobileConnectionInfo();
   this.dataConnectionInfo = new MobileConnectionInfo();
 
@@ -172,6 +194,7 @@ function RILContentHelper() {
     return;
   }
   this.cardState = rilContext.cardState;
+  this.updateICCInfo(rilContext.icc, this.iccInfo);
   this.updateConnectionInfo(rilContext.voice, this.voiceConnectionInfo);
   this.updateConnectionInfo(rilContext.data, this.dataConnectionInfo);
 }
@@ -187,6 +210,11 @@ RILContentHelper.prototype = {
                                     classDescription: "RILContentHelper",
                                     interfaces: [Ci.nsIMobileConnectionProvider,
                                                  Ci.nsIRILContentHelper]}),
+
+  updateICCInfo: function updateICCInfo(srcInfo, destInfo) {
+    destInfo.mcc = srcInfo.mcc;
+    destInfo.mnc = srcInfo.mnc;
+  },
 
   updateConnectionInfo: function updateConnectionInfo(srcInfo, destInfo) {
     for (let key in srcInfo) {
@@ -227,9 +255,10 @@ RILContentHelper.prototype = {
 
   // nsIRILContentHelper
 
-  cardState:           RIL.GECKO_CARDSTATE_UNAVAILABLE,
-  voiceConnectionInfo: null,
-  dataConnectionInfo:  null,
+  cardState:            RIL.GECKO_CARDSTATE_UNAVAILABLE,
+  iccInfo:              null,
+  voiceConnectionInfo:  null,
+  dataConnectionInfo:   null,
   networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
 
   /**
@@ -381,11 +410,12 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  sendStkResponse: function sendStkResponse(window, response) {
+  sendStkResponse: function sendStkResponse(window, command, response) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
+    response.command = command;
     cpmm.sendAsyncMessage("RIL:SendStkResponse", response);
   },
 
@@ -582,6 +612,10 @@ RILContentHelper.prototype = {
           this.cardState = msg.json.cardState;
           Services.obs.notifyObservers(null, kCardStateChangedTopic, null);
         }
+        break;
+      case "RIL:IccInfoChanged":
+        this.updateICCInfo(msg.json, this.iccInfo);
+        Services.obs.notifyObservers(null, kIccInfoChangedTopic, null);
         break;
       case "RIL:VoiceInfoChanged":
         this.updateConnectionInfo(msg.json, this.voiceConnectionInfo);

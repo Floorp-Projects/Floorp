@@ -156,7 +156,7 @@ NS_IMETHODIMP
 nsGnomeVFSService::GetMimeTypeFromExtension(const nsACString &aExtension,
                                             nsACString& aMimeType)
 {
-  nsCAutoString fileExtToUse(".");
+  nsAutoCString fileExtToUse(".");
   fileExtToUse.Append(aExtension);
 
   const char *mimeType = gnome_vfs_mime_type_from_name(fileExtToUse.get());
@@ -201,7 +201,7 @@ nsGnomeVFSService::GetDescriptionForMimeType(const nsACString &aMimeType,
 NS_IMETHODIMP
 nsGnomeVFSService::ShowURI(nsIURI *aURI)
 {
-  nsCAutoString spec;
+  nsAutoCString spec;
   aURI->GetSpec(spec);
 
   if (gnome_vfs_url_show_with_env(spec.get(), NULL) == GNOME_VFS_OK)

@@ -378,7 +378,7 @@ gfxQtPlatform::ResolveFontName(const nsAString& aFontName,
         return NS_OK;
     }
 
-    nsCAutoString utf8Name = NS_ConvertUTF16toUTF8(aFontName);
+    nsAutoCString utf8Name = NS_ConvertUTF16toUTF8(aFontName);
 
     FcPattern *npat = FcPatternCreate();
     FcPatternAddString(npat, FC_FAMILY, (FcChar8*)utf8Name.get());

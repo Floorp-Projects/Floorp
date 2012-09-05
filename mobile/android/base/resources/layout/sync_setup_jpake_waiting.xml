@@ -3,34 +3,40 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  style="@style/SyncLayout" >
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncContainer" >
+
   <TextView
     style="@style/SyncTop"
-    android:id="@+id/waiting_top"
     android:text="@string/sync_title_connect" />
 
-  <ProgressBar
-    android:id="@+id/waiting_content1"
-    style="@android:style/Widget.ProgressBar.Horizontal"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:layout_below="@id/waiting_top"
-    android:indeterminateOnly="true"
-    android:layout_marginTop="40dp"
-    android:layout_marginLeft="15dp"
-    android:layout_marginRight="15dp"
-    android:layout_marginBottom="15dp"/>
-  <TextView
-    style="@style/SyncTextItem"
-    android:gravity="center"
-    android:layout_below="@id/waiting_content1"
-    android:text="@string/sync_jpake_subtitle_waiting" />
+  <ScrollView
+    style="@style/SyncMiddle" >
+
+    <LinearLayout
+      style="@style/SyncLayout.Vertical" >
+
+      <ProgressBar
+        android:id="@+id/waiting_content1"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:indeterminateOnly="true"
+        android:padding="@dimen/SyncSpace" />
+
+      <TextView
+        style="@style/SyncTextItem"
+        android:gravity="center"
+        android:text="@string/sync_jpake_subtitle_waiting" />
+    </LinearLayout>
+  </ScrollView>
+
   <LinearLayout
     style="@style/SyncBottom">
+
     <Button
       style="@style/SyncButton"
       android:onClick="cancelClickHandler"
       android:text="@string/sync_button_cancel" />
   </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

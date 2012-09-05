@@ -141,7 +141,7 @@ nsStringBundleTextOverride::Init()
     // read in the custom bundle. Keys are in the form
     // chrome://package/locale/foo.properties:keyname
 
-    nsCAutoString customStringsURLSpec;
+    nsAutoCString customStringsURLSpec;
     rv = NS_GetURLSpecFromFile(customStringsFile, customStringsURLSpec);
     if (NS_FAILED(rv)) return rv;
     
@@ -175,7 +175,7 @@ nsStringBundleTextOverride::Init()
 
         nsCOMPtr<nsIPropertyElement> prop = do_QueryInterface(sup);
 
-        nsCAutoString key;
+        nsAutoCString key;
         nsAutoString value;
         prop->GetKey(key);
         prop->GetValue(value);
@@ -195,7 +195,7 @@ nsStringBundleTextOverride::GetStringFromName(const nsACString& aURL,
                                               nsAString& aResult)
 {
     // concatenate url#key to get the key to read
-    nsCAutoString combinedURL(aURL + NS_LITERAL_CSTRING("#") + key);
+    nsAutoCString combinedURL(aURL + NS_LITERAL_CSTRING("#") + key);
 
     // persistent properties uses ":" as a delimiter, so escape that character
     combinedURL.ReplaceSubstring(":", "%3A");
@@ -258,7 +258,7 @@ nsPropertyEnumeratorByURL::HasMoreElements(bool * aResult)
         mCurrent = do_QueryInterface(supports);
 
         if (mCurrent) {
-            nsCAutoString curKey;
+            nsAutoCString curKey;
             mCurrent->GetKey(curKey);
         
             if (StringBeginsWith(curKey, mURL))

@@ -135,7 +135,7 @@ nsFtpChannel::OpenContentStream(bool async, nsIInputStream **result,
 bool
 nsFtpChannel::GetStatusArg(nsresult status, nsString &statusArg)
 {
-    nsCAutoString host;
+    nsAutoCString host;
     URI()->GetHost(host);
     CopyUTF8toUTF16(host, statusArg);
     return true;

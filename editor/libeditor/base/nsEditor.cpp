@@ -5260,7 +5260,7 @@ nsEditor::DumpNode(nsIDOMNode *aNode, int32_t indent)
     nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(aNode);
     nsAutoString str;
     textNode->GetData(str);
-    nsCAutoString cstr;
+    nsAutoCString cstr;
     LossyCopyUTF16toASCII(str, cstr);
     cstr.ReplaceChar('\n', ' ');
     printf("<textnode> %s\n", cstr.get());

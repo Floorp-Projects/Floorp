@@ -19,6 +19,7 @@
 #define mozilla_dom_system_b2g_systemworkermanager_h__
 
 #include "nsIInterfaceRequestor.h"
+#include "nsIRadioInterfaceLayer.h"
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -55,9 +56,15 @@ private:
   ~SystemWorkerManager();
 
   nsresult InitRIL(JSContext *cx);
+#ifdef MOZ_WIDGET_GONK
+  nsresult InitNetd(JSContext *cx);
+#endif
   nsresult InitWifi(JSContext *cx);
 
-  nsCOMPtr<nsIWorkerHolder> mRILWorker;
+  nsCOMPtr<nsIRadioInterfaceLayer> mRIL;
+#ifdef MOZ_WIDGET_GONK
+  nsCOMPtr<nsIWorkerHolder> mNetdWorker;
+#endif
   nsCOMPtr<nsIWorkerHolder> mWifiWorker;
 
   bool mShutdown;

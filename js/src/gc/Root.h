@@ -12,8 +12,6 @@
 
 #include "mozilla/TypeTraits.h"
 
-#include "jsapi.h"
-
 #include "js/TemplateLib.h"
 #include "js/Utility.h"
 
@@ -242,6 +240,9 @@ typedef MutableHandle<Value>        MutableHandleValue;
  * rooted.
  */
 typedef JSObject *                  RawObject;
+typedef JSString *                  RawString;
+
+extern mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
 
 /*
  * By default, pointers should use the inheritance hierarchy to find their
@@ -273,10 +274,10 @@ class RootedBase {};
 template <typename T>
 class Rooted : public RootedBase<T>
 {
-    void init(JSContext *cx_)
+    void init(JSContext *cxArg)
     {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-        ContextFriendFields *cx = ContextFriendFields::get(cx_);
+        ContextFriendFields *cx = ContextFriendFields::get(cxArg);
 
         ThingRootKind kind = RootMethods<T>::kind();
         this->stack = reinterpret_cast<Rooted<T>**>(&cx->thingGCRooters[kind]);
@@ -287,7 +288,27 @@ class Rooted : public RootedBase<T>
 #endif
     }
 
+    void init(JSRuntime *rtArg)
+    {
+#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+        RuntimeFriendFields *rt = const_cast<RuntimeFriendFields *>(RuntimeFriendFields::get(rtArg));
+
+        ThingRootKind kind = RootMethods<T>::kind();
+        this->stack = reinterpret_cast<Rooted<T>**>(&rt->thingGCRooters[kind]);
+        this->prev = *stack;
+        *stack = this;
+
+        JS_ASSERT(!RootMethods<T>::poisoned(ptr));
+#endif
+    }
+
   public:
+    Rooted() : ptr(RootMethods<T>::initial()) { init(JS::TlsRuntime); }
+    Rooted(const T &initial) : ptr(initial) { init(JS::TlsRuntime); }
+
+    Rooted(JSRuntime *rt) : ptr(RootMethods<T>::initial()) { init(rt); }
+    Rooted(JSRuntime *rt, T initial) : ptr(initial) { init(rt); }
+
     Rooted(JSContext *cx) : ptr(RootMethods<T>::initial()) { init(cx); }
     Rooted(JSContext *cx, T initial) : ptr(initial) { init(cx); }
 
@@ -324,13 +345,11 @@ class Rooted : public RootedBase<T>
     }
 
   private:
-
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
     Rooted<T> **stack, *prev;
 #endif
     T ptr;
 
-    Rooted() MOZ_DELETE;
     Rooted(const Rooted &) MOZ_DELETE;
 };
 

@@ -54,7 +54,7 @@ static void SetProxyResult(const char* aType, const nsACString& aHostPort,
                            nsACString& aResult)
 {
     nsCOMPtr<nsIURI> uri;
-    nsCAutoString host;
+    nsAutoCString host;
     int32_t port;
 
     // Try parsing it as a URI.
@@ -121,7 +121,7 @@ nsWindowsSystemProxySettings::MatchOverride(const nsACString& aHost)
 
     NS_ConvertUTF16toUTF8 cbuf(buf);
 
-    nsCAutoString host(aHost);
+    nsAutoCString host(aHost);
     int32_t start = 0;
     int32_t end = cbuf.Length();
 
@@ -138,7 +138,7 @@ nsWindowsSystemProxySettings::MatchOverride(const nsACString& aHost)
             delimiter = end;
 
         if (delimiter != start) {
-            const nsCAutoString override(Substring(cbuf, start,
+            const nsAutoCString override(Substring(cbuf, start,
                                                    delimiter - start));
             if (override.EqualsLiteral("<local>")) {
                 // This override matches local addresses.
@@ -162,8 +162,8 @@ bool
 nsWindowsSystemProxySettings::PatternMatch(const nsACString& aHost,
                                            const nsACString& aOverride)
 {
-    nsCAutoString host(aHost);
-    nsCAutoString override(aOverride);
+    nsAutoCString host(aHost);
+    nsAutoCString override(aOverride);
     int32_t overrideLength = override.Length();
     int32_t tokenStart = 0;
     int32_t offset = 0;
@@ -181,7 +181,7 @@ nsWindowsSystemProxySettings::PatternMatch(const nsACString& aHost,
         } else {
             if (tokenEnd == -1)
                 tokenEnd = overrideLength;
-            nsCAutoString token(Substring(override, tokenStart,
+            nsAutoCString token(Substring(override, tokenStart,
                                           tokenEnd - tokenStart));
             offset = host.Find(token, offset);
             if (offset == -1 || (!star && offset))
@@ -226,11 +226,11 @@ nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
         return NS_OK;
     }
 
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     rv = aURI->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString host;
+    nsAutoCString host;
     rv = aURI->GetHost(host);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -241,14 +241,14 @@ nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
 
     NS_ConvertUTF16toUTF8 cbuf(buf);
 
-    nsCAutoString prefix;
+    nsAutoCString prefix;
     ToLowerCase(scheme, prefix);
 
     prefix.Append('=');
 
-    nsCAutoString specificProxy;
-    nsCAutoString defaultProxy;
-    nsCAutoString socksProxy;
+    nsAutoCString specificProxy;
+    nsAutoCString defaultProxy;
+    nsAutoCString socksProxy;
     int32_t start = 0;
     int32_t end = cbuf.Length();
 
@@ -258,7 +258,7 @@ nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
             delimiter = end;
 
         if (delimiter != start) {
-            const nsCAutoString proxy(Substring(cbuf, start,
+            const nsAutoCString proxy(Substring(cbuf, start,
                                                 delimiter - start));
             if (proxy.FindChar('=') == -1) {
                 // If a proxy name is listed by itself, it is used as the

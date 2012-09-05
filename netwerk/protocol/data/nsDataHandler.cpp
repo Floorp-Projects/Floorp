@@ -83,7 +83,7 @@ nsDataHandler::NewURI(const nsACString &aSpec,
         rv = uri->SetRef(spec);
     } else {
         // Otherwise, we'll assume |spec| is a fully-specified data URI
-        nsCAutoString contentType, contentCharset, dataBuffer, hashRef;
+        nsAutoCString contentType, contentCharset, dataBuffer, hashRef;
         bool base64;
         rv = ParseURI(spec, contentType, contentCharset, base64, dataBuffer, hashRef);
         if (NS_FAILED(rv))

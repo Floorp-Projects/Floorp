@@ -501,7 +501,7 @@ class DeviceManager:
 
     # Right now this is just clearing the logcat so we can only see what happens after this call.
     buf = StringIO.StringIO()
-    self.shell(['/system/bin/logcat', '-c'], buf)
+    self.shell(['/system/bin/logcat', '-c'], buf, root=True)
 
   def getLogcat(self):
     """
@@ -511,7 +511,7 @@ class DeviceManager:
     failure: None
     """
     buf = StringIO.StringIO()
-    if self.shell(["/system/bin/logcat", "-d", "dalvikvm:S", "ConnectivityService:S", "WifiMonitor:S", "WifiStateTracker:S", "wpa_supplicant:S", "NetworkStateTracker:S"], buf) != 0:
+    if self.shell(["/system/bin/logcat", "-d", "dalvikvm:S", "ConnectivityService:S", "WifiMonitor:S", "WifiStateTracker:S", "wpa_supplicant:S", "NetworkStateTracker:S"], buf, root=True) != 0:
       return None
 
     return str(buf.getvalue()[0:-1]).rstrip().split('\r')

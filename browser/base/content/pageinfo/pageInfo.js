@@ -730,18 +730,26 @@ function onBeginLinkDrag(event,urlField,descField)
 }
 
 //******** Image Stuff
-function getSelectedImage(tree)
+function getSelectedRows(tree)
 {
-  if (!gImageView.rowCount)
-    return null;
+  var start = { };
+  var end   = { };
+  var numRanges = tree.view.selection.getRangeCount();
 
-  // Only works if only one item is selected
-  var clickedRow = tree.view.selection.currentIndex;
-  if (clickedRow == -1)
-    return null;
+  var rowArray = [ ];
+  for (var t = 0; t < numRanges; t++) {
+    tree.view.selection.getRangeAt(t, start, end);
+    for (var v = start.value; v <= end.value; v++)
+      rowArray.push(v);
+  }
 
-  // image-node
-  return gImageView.data[clickedRow][COL_IMAGE_NODE];
+  return rowArray;
+}
+
+function getSelectedRow(tree)
+{
+  var rows = getSelectedRows(tree);
+  return (rows.length == 1) ? rows[0] : -1;
 }
 
 function selectSaveFolder()
@@ -774,10 +782,11 @@ function selectSaveFolder()
 function saveMedia()
 {
   var tree = document.getElementById("imagetree");
-  var count = tree.view.selection.count;
-  if (count == 1) {
-    var item = getSelectedImage(tree);
-    var url = gImageView.data[tree.currentIndex][COL_IMAGE_ADDRESS];
+  var rowArray = getSelectedRows(tree);
+  if (rowArray.length == 1) {
+    var row = rowArray[0];
+    var item = gImageView.data[row][COL_IMAGE_NODE];
+    var url = gImageView.data[row][COL_IMAGE_ADDRESS];
 
     if (url) {
       var titleKey = "SaveImageTitle";
@@ -792,16 +801,6 @@ function saveMedia()
   }
   else {
     var odir  = selectSaveFolder();
-    var start = { };
-    var end   = { };
-    var numRanges = tree.view.selection.getRangeCount();
-
-    var rowArray = [ ];
-    for (var t = 0; t < numRanges; t++) {
-      tree.view.selection.getRangeAt(t, start, end);
-      for (var v = start.value; v <= end.value; v++)
-        rowArray.push(v);
-    }
 
     var saveAnImage = function(aURIString, aChosenData, aBaseURI) {
       internalSave(aURIString, null, null, null, null, false, "SaveImageTitle",
@@ -870,14 +869,14 @@ function onImageSelect()
     splitter.collapsed     = false;
     previewBox.collapsed   = false;
     tree.flex = 0;
-    makePreview(tree.view.selection.currentIndex);
+    makePreview(getSelectedRows(tree)[0]);
   }
 }
 
 function makePreview(row)
 {
   var imageTree = document.getElementById("imagetree");
-  var item = getSelectedImage(imageTree);
+  var item = gImageView.data[row][COL_IMAGE_NODE];
   var url = gImageView.data[row][COL_IMAGE_ADDRESS];
   var isBG = gImageView.data[row][COL_IMAGE_BG];
   var isAudio = false;
@@ -1104,7 +1103,7 @@ var imagePermissionObserver = {
       var permission = aSubject.QueryInterface(Components.interfaces.nsIPermission);
       if (permission.type == "image") {
         var imageTree = document.getElementById("imagetree");
-        var row = imageTree.currentIndex;
+        var row = getSelectedRow(imageTree);
         var item = gImageView.data[row][COL_IMAGE_NODE];
         var url = gImageView.data[row][COL_IMAGE_ADDRESS];
         if (makeURI(url).host == permission.host)

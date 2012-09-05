@@ -60,7 +60,7 @@ NS_IMETHODIMP
 nsContentHandlerApp::LaunchWithURI(nsIURI *aURI,
                                    nsIInterfaceRequestor *aWindowContext)
 {
-  nsCAutoString spec;
+  nsAutoCString spec;
   nsresult rv = aURI->GetAsciiSpec(spec);
   NS_ENSURE_SUCCESS(rv,rv);
   const char* url = spec.get();

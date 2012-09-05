@@ -20,7 +20,7 @@
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">fill_parent</item>
     <item name="android:layout_gravity">center</item>
-    <item name="android:padding">20dp</item>
+    <item name="android:padding">@dimen/SyncSpace</item>
     <item name="android:orientation">vertical</item>
   </style>
   <style name="SyncTextItem" parent="@android:style/TextAppearance.Medium">
@@ -29,7 +29,6 @@
     <item name="android:textSize">15dp</item>
   </style>
   <style name="SyncTextError" parent="@style/SyncTextItem">
-    <item name="android:layout_margin">10dp</item>
     <item name="android:textSize">15dp</item>
     <item name="android:visibility">gone</item>
   </style>
@@ -48,7 +47,7 @@
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:singleLine">true</item>
-    <item name="android:inputType">textNoSuggestions</item>
+    <item name="android:inputType">text|textNoSuggestions</item>
   </style>
   <style name="SyncEditPin" parent="@style/SyncEditItem">
     <item name="android:layout_width">wrap_content</item>
@@ -59,7 +58,11 @@
   </style>
 
   <!-- Theme Styles -->
-  <style name="SyncTheme" parent="@android:style/Theme.NoTitleBar"/>
+  <style name="SyncTheme" parent="@style/Gecko" />
+
+  <!-- Outer container: a container with top, middle, and bottom
+       content in it. -->
+  <style name="SyncContainer" parent="@style/SyncLayout.Vertical" />
 
   <!-- Top title bar: a text view with the Sync icon to the left. -->
   <style name="SyncTop">
@@ -70,16 +73,25 @@
     <item name="android:drawableLeft">@drawable/icon</item>
     <item name="android:padding">4dp</item>
     <item name="android:drawablePadding">4dp</item>
-    <item name="android:layout_alignParentTop">true</item>
     <item name="android:background">@android:drawable/bottom_bar</item>
   </style>
+
+  <dimen name="SyncSpace">20dp</dimen>
+
+  <!-- Middle scroller: a scroll view with content in it. -->
+  <style name="SyncMiddle">
+    <item name="android:layout_width">fill_parent</item>
+    <item name="android:layout_height">0dp</item>
+    <item name="android:layout_weight">1</item>
+    <item name="android:padding">@dimen/SyncSpace</item>
+  </style>
+
   <!-- Bottom bar: a horizontal linear layout with buttons in it. -->
   <style name="SyncBottom">
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:layout_gravity">center</item>
     <item name="android:gravity">center</item>
-    <item name="android:layout_alignParentBottom">true</item>
     <item name="android:background">@android:drawable/bottom_bar</item>
   </style>
   <style name="SyncButton" parent="@android:style/Widget.Button">

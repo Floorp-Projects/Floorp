@@ -431,7 +431,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
      defined in your desktop file.  If it doesn't, the OSSO
      system will happily kill your process.
   */
-  nsCAutoString applicationName;
+  nsAutoCString applicationName;
   if (gAppData->vendor) {
       applicationName.Append(gAppData->vendor);
       applicationName.Append(".");
@@ -528,7 +528,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
   // Set the correct/requested restart command in any case.
 
   // Is there a request to suppress default binary launcher?
-  nsCAutoString path;
+  nsAutoCString path;
   char* argv1 = getenv("MOZ_APP_LAUNCHER");
 
   if(!argv1) {
@@ -542,7 +542,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
 
     if (NS_SUCCEEDED(rv)) {
       // Strip off the -bin suffix to get the shell script we should run; this is what Breakpad does
-      nsCAutoString leafName;
+      nsAutoCString leafName;
       rv = executablePath->GetNativeLeafName(leafName);
       if (NS_SUCCEEDED(rv) && StringEndsWith(leafName, NS_LITERAL_CSTRING("-bin"))) {
         leafName.SetLength(leafName.Length() - strlen("-bin"));

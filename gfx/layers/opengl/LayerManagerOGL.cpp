@@ -1094,7 +1094,7 @@ LayerManagerOGL::SetupBackBuffer(int aWidth, int aHeight)
 
   GLenum result = mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
   if (result != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-    nsCAutoString msg;
+    nsAutoCString msg;
     msg.Append("Framebuffer not complete -- error 0x");
     msg.AppendInt(result, 16);
     NS_RUNTIMEABORT(msg.get());
@@ -1257,7 +1257,7 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
   // PowerVR. See bug 695246.
   GLenum result = mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
   if (result != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-    nsCAutoString msg;
+    nsAutoCString msg;
     msg.Append("Framebuffer not complete -- error 0x");
     msg.AppendInt(result, 16);
     msg.Append(", mFBOTextureTarget 0x");

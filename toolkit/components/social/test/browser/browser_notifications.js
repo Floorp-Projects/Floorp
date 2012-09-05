@@ -6,6 +6,70 @@ const TEST_PROVIDER_ORIGIN = 'http://example.com';
 
 Cu.import("resource://gre/modules/Services.jsm");
 
+// A mock notifications server.  Based on:
+// dom/tests/mochitest/notification/notification_common.js
+const FAKE_CID = Cc["@mozilla.org/uuid-generator;1"].
+    getService(Ci.nsIUUIDGenerator).generateUUID();
+
+const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
+const ALERTS_SERVICE_CID = Components.ID(Cc[ALERTS_SERVICE_CONTRACT_ID].number);
+
+function MockAlertsService() {}
+
+MockAlertsService.prototype = {
+
+    showAlertNotification: function(imageUrl, title, text, textClickable,
+                                    cookie, alertListener, name) {
+        let obData = JSON.stringify({
+          imageUrl: imageUrl,
+          title: title,
+          text:text,
+          textClickable: textClickable,
+          cookie: cookie,
+          name: name
+        });
+        Services.obs.notifyObservers(null, "social-test:notification-alert", obData);
+
+        if (textClickable) {
+          // probably should do this async....
+          alertListener.observe(null, "alertclickcallback", cookie);
+        }
+
+        alertListener.observe(null, "alertfinished", cookie);
+    },
+
+    QueryInterface: function(aIID) {
+        if (aIID.equals(Ci.nsISupports) ||
+            aIID.equals(Ci.nsIAlertsService))
+            return this;
+        throw Cr.NS_ERROR_NO_INTERFACE;
+    }
+};
+
+var factory = {
+    createInstance: function(aOuter, aIID) {
+        if (aOuter != null)
+            throw Cr.NS_ERROR_NO_AGGREGATION;
+        return new MockAlertsService().QueryInterface(aIID);
+    }
+};
+
+function replacePromptService() {
+  Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
+            .registerFactory(FAKE_CID, "",
+                             ALERTS_SERVICE_CONTRACT_ID,
+                             factory)
+}
+
+function restorePromptService() {
+  Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
+            .registerFactory(ALERTS_SERVICE_CID, "",
+                             ALERTS_SERVICE_CONTRACT_ID,
+                             null);
+}
+// end of alerts service mock.
+
+
 function ensureProvider(workerFunction, cb) {
   let manifest = {
     origin: TEST_PROVIDER_ORIGIN,
@@ -25,6 +89,8 @@ function test() {
   let cbPostTest = function(cb) {
     SocialService.removeProvider(TEST_PROVIDER_ORIGIN, function() {cb()});
   };
+  replacePromptService();
+  registerCleanupFunction(restorePromptService);
   runTests(tests, undefined, cbPostTest);
 }
 
@@ -57,72 +123,26 @@ let tests = {
       }
     }
     ensureProvider(run, function(provider) {
-      if ('@mozilla.org/system-alerts-service;1' in Cc) {
-        // This is a platform that has a system-alerts-service so the "toast"
-        // notifications aren't implemented by XUL making it very tricky to test.
-        // So just punt.
-        info("this platform has a system alerts service - test skipped");
-        cbnext();
-        return;
+      let observer = {
+        observedData: null,
+        observe: function(subject, topic, data) {
+          this.observedData = JSON.parse(data);
+          Services.obs.removeObserver(observer, "social-test:notification-alert");
+        }
       }
-      if (!("@mozilla.org/alerts-service;1" in Cc)) {
-        info("Alerts service does not exist in this application");
-        cbnext();
-        return;
-      }
-      var notifier;
-      try {
-        notifier = Cc["@mozilla.org/alerts-service;1"].
-                   getService(Ci.nsIAlertsService);
-      } catch (ex) {
-        info("Alerts service is not available. (Mac OS X without Growl?)", ex);
-        cbnext();
-        return;
-      }
+      Services.obs.addObserver(observer, "social-test:notification-alert", false);
 
       provider.port.onmessage = function(e) {
         if (e.data.topic == "test.done") {
           ok(e.data.data, "check the test worked");
+          ok(observer.observedData, "test observer fired");
+          is(observer.observedData.text, "test notification", "check the alert text is correct");
+          is(observer.observedData.title, "Example Provider", "check the alert title is correct");
+          is(observer.observedData.textClickable, true, "check the alert is clickable");
           cbnext();
         }
       }
       provider.port.postMessage({topic: "test.initialize"});
-      let count = 0;
-      // this relies on the implementation of the alerts service.
-      const ALERT_CHROME_URL = "chrome://global/content/alerts/alert.xul";
-      const ALERT_TEXT_LABEL_ID = "alertTextLabel";
-      const ALERT_TITLE_LABEL_ID = "alertTitleLabel";
-      let findPopup = function() {
-        let wenum = Services.ww.getWindowEnumerator();
-        while (wenum.hasMoreElements()) {
-          let win = wenum.getNext();
-          if (win.location.href == ALERT_CHROME_URL) {
-            let doc = win.document;
-            // We found the window - wait until the ID we care about also exists.
-            if (doc.getElementById(ALERT_TEXT_LABEL_ID) &&
-                doc.getElementById(ALERT_TEXT_LABEL_ID).getAttribute("value")) {
-              // some sanity checking of the content.
-              is(doc.getElementById(ALERT_TEXT_LABEL_ID).getAttribute("value"),
-                 "test notification",
-                 "check the alert label is correct");
-              is(doc.getElementById(ALERT_TITLE_LABEL_ID).getAttribute("value"),
-                 "Example Provider",
-                 "check the alert title is correct");
-              // now click on the text - this should trigger a "callback" into
-              // our worker which will then send back a "test.done" message.
-              EventUtils.sendMouseEvent({type: "click"}, ALERT_TEXT_LABEL_ID, win);
-              return;
-            }
-          }
-        }
-        if (count++ > 50) {
-          ok(false, "failed to find the notification popup");
-          cbnext();
-          return;
-        }
-        executeSoon(findPopup);
-      }
-      executeSoon(findPopup);
     });
   }
 };

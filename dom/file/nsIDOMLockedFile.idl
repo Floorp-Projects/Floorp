@@ -16,7 +16,7 @@ dictionary DOMFileMetadataParameters
   boolean lastModified;
 };
 
-[scriptable, builtinclass, uuid(696a4cbf-603d-40e1-840a-e468ee363871)]
+[scriptable, builtinclass, uuid(589e0d26-20b5-4355-ac1e-9c6fd0dd83f2)]
 interface nsIDOMLockedFile : nsISupports
 {
   readonly attribute nsIDOMFileHandle fileHandle;
@@ -60,9 +60,9 @@ interface nsIDOMLockedFile : nsISupports
   void
   abort();
 
-  attribute nsIDOMEventListener oncomplete;
+  [implicit_jscontext] attribute jsval oncomplete;
 
-  attribute nsIDOMEventListener onabort;
+  [implicit_jscontext] attribute jsval onabort;
 
-  attribute nsIDOMEventListener onerror;
+  [implicit_jscontext] attribute jsval onerror;
 };

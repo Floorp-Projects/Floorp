@@ -395,7 +395,9 @@ class MarionetteTestRunner(object):
                     issubclass(obj, unittest.TestCase)):
                     testnames = testloader.getTestCaseNames(obj)
                     for testname in testnames:
-                        suite.addTest(obj(weakref.ref(self.marionette), methodName=testname))
+                        suite.addTest(obj(weakref.ref(self.marionette),
+                                      methodName=testname,
+                                      filepath=filepath))
 
         elif file_ext == '.js':
             suite.addTest(MarionetteJSTestCase(weakref.ref(self.marionette), jsFile=filepath))

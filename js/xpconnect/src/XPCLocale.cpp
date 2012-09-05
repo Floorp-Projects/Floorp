@@ -164,7 +164,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
             do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
 
           if (NS_SUCCEEDED(rv)) {
-            nsCAutoString charset;
+            nsAutoCString charset;
             rv = platformCharset->GetDefaultCharsetForLocale(localeStr, charset);
             if (NS_SUCCEEDED(rv)) {
               // get/create unicode decoder for charset

@@ -1098,7 +1098,7 @@ RememberCertErrorsTable::RememberCertErrorsTable()
 }
 
 static nsresult
-GetHostPortKey(TransportSecurityInfo* infoObject, nsCAutoString &result)
+GetHostPortKey(TransportSecurityInfo* infoObject, nsAutoCString &result)
 {
   nsresult rv;
 
@@ -1126,7 +1126,7 @@ RememberCertErrorsTable::RememberCertHasError(TransportSecurityInfo* infoObject,
 {
   nsresult rv;
 
-  nsCAutoString hostPortKey;
+  nsAutoCString hostPortKey;
   rv = GetHostPortKey(infoObject, hostPortKey);
   if (NS_FAILED(rv))
     return;
@@ -1164,7 +1164,7 @@ RememberCertErrorsTable::LookupCertErrorBits(TransportSecurityInfo* infoObject,
 
   nsresult rv;
 
-  nsCAutoString hostPortKey;
+  nsAutoCString hostPortKey;
   rv = GetHostPortKey(infoObject, hostPortKey);
   if (NS_FAILED(rv))
     return;

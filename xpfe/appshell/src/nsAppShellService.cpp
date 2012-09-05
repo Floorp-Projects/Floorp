@@ -338,7 +338,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   nsCOMPtr<nsIXULChromeRegistry> reg =
     mozilla::services::GetXULChromeRegistryService();
   if (reg) {
-    nsCAutoString package;
+    nsAutoCString package;
     package.AssignLiteral("global");
     bool isRTL = false;
     reg->IsLocaleRTL(package, &isRTL);

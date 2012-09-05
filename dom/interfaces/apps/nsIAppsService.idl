@@ -5,6 +5,7 @@
 #include "domstubs.idl"
 
 interface mozIDOMApplication;
+interface mozIApplication;
 
 %{C++
 #define APPS_SERVICE_CID { 0x05072afa, 0x92fe, 0x45bf, { 0xae, 0x22, 0x39, 0xb6, 0x9c, 0x11, 0x70, 0x58 } }
@@ -15,7 +16,7 @@ interface mozIDOMApplication;
  * This service allows accessing some DOMApplicationRegistry methods from
  * non-javascript code.
  */
-[scriptable, uuid(04e4ef3c-1a30-45bc-ab08-291820f13872)]
+[scriptable, uuid(1f0ec00c-57c7-4ad2-a648-1359aa390360)]
 interface nsIAppsService : nsISupports
 {
   mozIDOMApplication getAppByManifestURL(in DOMString manifestURL);
@@ -37,4 +38,11 @@ interface nsIAppsService : nsISupports
    * Returns the manifest URL associated to this localId.
    */
   DOMString getManifestURLByLocalId(in unsigned long localId);
+
+  /**
+   * Returns the app that is related to the message.
+   * This is a helper to not have to worry about what is the actual structure
+   * of the message when listening to one.
+   */
+  mozIApplication getAppFromObserverMessage(in DOMString message);
 };

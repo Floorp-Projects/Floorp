@@ -35,7 +35,7 @@ nsLocalFile::InitWithFile(nsIFile *aFile)
 {
     NS_ENSURE_ARG(aFile);
     
-    nsCAutoString path;
+    nsAutoCString path;
     aFile->GetNativePath(path);
     if (path.IsEmpty())
         return NS_ERROR_INVALID_ARG;
@@ -58,7 +58,7 @@ nsLocalFile::CreateUnique(uint32_t type, uint32_t attributes)
     nsAutoString pathName, leafName, rootName, suffix;
     rv = GetPath(pathName);
 #else
-    nsCAutoString pathName, leafName, rootName, suffix; 
+    nsAutoCString pathName, leafName, rootName, suffix; 
     rv = GetNativePath(pathName);
 #endif
     if (NS_FAILED(rv))

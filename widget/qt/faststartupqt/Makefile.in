@@ -52,6 +52,7 @@ CPPSRCS += \
 	mozqwidgetfast.cpp \
 	nsFastStartupQt.cpp \
 	nsQAppInstance.cpp \
+	mozqglwidgetwrapper.cpp \
 	$(NULL)
 
 DEFINES += -DLIBRARY_FILENAME="$(SHARED_LIBRARY)" -DMOZ_NO_MOZALLOC -DXPCOM_GLUE

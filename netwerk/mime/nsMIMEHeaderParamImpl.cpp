@@ -86,13 +86,13 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
     // convert to UTF-8 after charset conversion and RFC 2047 decoding 
     // if necessary.
     
-    nsCAutoString str1;
+    nsAutoCString str1;
     rv = DecodeParameter(med, charset.get(), nullptr, false, str1);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!aFallbackCharset.IsEmpty())
     {
-        nsCAutoString str2;
+        nsAutoCString str2;
         nsCOMPtr<nsIUTF8ConverterService> 
           cvtUTF8(do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
         if (cvtUTF8 &&
@@ -286,9 +286,9 @@ bool IsValidOctetSequenceForCharset(nsACString& aCharset, const char *aOctets)
     return false;
   }
 
-  nsCAutoString tmpRaw;
+  nsAutoCString tmpRaw;
   tmpRaw.Assign(aOctets);
-  nsCAutoString tmpDecoded;
+  nsAutoCString tmpDecoded;
 
   nsresult rv = cvtUTF8->ConvertStringToUTF8(tmpRaw,
                                              PromiseFlatCString(aCharset).get(),
@@ -340,7 +340,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
   if (aCharset) *aCharset = nullptr;
   if (aLang) *aLang = nullptr;
 
-  nsCAutoString charset;
+  nsAutoCString charset;
 
   bool acceptContinuations = (aDecoding != RFC_5987_DECODING);
 
@@ -456,7 +456,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
       ++str;
       valueStart = str;
       for (valueEnd = str; *valueEnd; ++valueEnd) {
-        if (*valueEnd == '\\')
+        if (*valueEnd == '\\' && *(valueEnd + 1))
           ++valueEnd;
         else if (*valueEnd == '"')
           break;
@@ -480,7 +480,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
 
       // if the parameter spans across multiple lines we have to strip out the
       //     line continuation -- jht 4/29/98 
-      nsCAutoString tempStr(valueStart, valueEnd - valueStart);
+      nsAutoCString tempStr(valueStart, valueEnd - valueStart);
       tempStr.StripChars("\r\n");
       char *res = ToNewCString(tempStr);
       NS_ENSURE_TRUE(res, NS_ERROR_OUT_OF_MEMORY);
@@ -720,7 +720,7 @@ nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal,
   }
 
   if (aEatContinuations) {
-    nsCAutoString temp(aResult);
+    nsAutoCString temp(aResult);
     temp.ReplaceSubstring("\n\t", " ");
     temp.ReplaceSubstring("\r\t", " ");
     temp.StripChars("\r\n");
@@ -779,9 +779,9 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
                                           nsACString& aLang,
                                           nsAString& aResult)
 {
-  nsCAutoString charset;
-  nsCAutoString language;
-  nsCAutoString value;
+  nsAutoCString charset;
+  nsAutoCString language;
+  nsAutoCString value;
 
   uint32_t delimiters = 0;
   const char *encoded = PromiseFlatCString(aParamVal).get();
@@ -851,7 +851,7 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
     do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString utf8;
+  nsAutoCString utf8;
   rv = cvtUTF8->ConvertStringToUTF8(value, charset.get(), true, false, 1, utf8);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -878,7 +878,7 @@ nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
   }
 
   const nsAFlatCString& param = PromiseFlatCString(aParamValue);
-  nsCAutoString unQuoted;
+  nsAutoCString unQuoted;
   nsACString::const_iterator s, e;
   param.BeginReading(s);
   param.EndReading(e);
@@ -899,7 +899,7 @@ nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
 
   aResult = unQuoted;
   
-  nsCAutoString decoded;
+  nsAutoCString decoded;
 
   // Try RFC 2047 encoding, instead.
   nsresult rv = DecodeRFC2047Header(unQuoted.get(), aDefaultCharset, 
@@ -1050,7 +1050,7 @@ void CopyRawHeader(const char *aInput, uint32_t aLen,
   // If not UTF-8, treat as default charset
   nsCOMPtr<nsIUTF8ConverterService> 
     cvtUTF8(do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
-  nsCAutoString utf8Text;
+  nsAutoCString utf8Text;
   if (cvtUTF8 &&
       NS_SUCCEEDED(
       cvtUTF8->ConvertStringToUTF8(Substring(aInput, aInput + aLen), 
@@ -1183,7 +1183,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
     {
       nsCOMPtr<nsIUTF8ConverterService> 
         cvtUTF8(do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
-      nsCAutoString utf8Text;
+      nsAutoCString utf8Text;
       // skip ASCIIness/UTF8ness test if aCharset is 7bit non-ascii charset.
       if (cvtUTF8 &&
           NS_SUCCEEDED(
@@ -1211,7 +1211,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
   // put the tail back
   CopyRawHeader(begin, strlen(begin), aDefaultCharset, aResult);
 
-  nsCAutoString tempStr(aResult);
+  nsAutoCString tempStr(aResult);
   tempStr.ReplaceChar('\t', ' ');
   aResult = tempStr;
 

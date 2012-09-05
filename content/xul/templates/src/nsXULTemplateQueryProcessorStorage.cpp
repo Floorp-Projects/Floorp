@@ -44,7 +44,7 @@ nsXULTemplateResultSetStorage::nsXULTemplateResultSetStorage(mozIStorageStatemen
         return;
     }
     for (uint32_t c = 0; c < count; c++) {
-        nsCAutoString name;
+        nsAutoCString name;
         rv = aStatement->GetColumnName(c, name);
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIAtom> columnName = do_GetAtom(NS_LITERAL_CSTRING("?") + name);
@@ -187,13 +187,13 @@ nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIFile> databaseFile;
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     rv = uri->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (scheme.EqualsLiteral("profile")) {
 
-        nsCAutoString path;
+        nsAutoCString path;
         rv = uri->GetPath(path);
         NS_ENSURE_SUCCESS(rv, rv);
 

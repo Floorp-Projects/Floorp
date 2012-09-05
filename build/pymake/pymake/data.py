@@ -1184,31 +1184,45 @@ class Target(object):
             search += [util.normaljoin(dir, self.target).replace('\\', '/')
                        for dir in makefile.getvpath(self.target)]
 
-        for t in search:
+        targetandtime = self.searchinlocs(makefile, search)
+        if targetandtime is not None:
+            (self.vpathtarget, self.mtime) = targetandtime
+            return
+
+        self.vpathtarget = self.target
+        self.mtime = None
+
+    def searchinlocs(self, makefile, locs):
+        """
+        Look in the given locations relative to the makefile working directory
+        for a file. Return a pair of the target and the mtime if found, None
+        if not.
+        """
+        for t in locs:
             fspath = util.normaljoin(makefile.workdir, t).replace('\\', '/')
             mtime = getmtime(fspath)
 #            _log.info("Searching %s ... checking %s ... mtime %r" % (t, fspath, mtime))
             if mtime is not None:
-                self.vpathtarget = t
-                self.mtime = mtime
-                return
+                return (t, mtime)
 
-        self.vpathtarget = self.target
-        self.mtime = None
+        return None
         
     def beingremade(self):
         """
-        When we remake ourself, we need to reset our mtime and vpathtarget.
-
-        We store our old mtime so that $? can calculate out-of-date prerequisites.
+        When we remake ourself, we have to drop any vpath prefixes.
         """
-        self.realmtime = self.mtime
-        self.mtime = None
         self.vpathtarget = self.target
         self.wasremade = True
 
     def notifydone(self, makefile):
         assert self._state == MAKESTATE_WORKING, "State was %s" % self._state
+        # If we were remade then resolve mtime again
+        if self.wasremade:
+            targetandtime = self.searchinlocs(makefile, [self.target])
+            if targetandtime is not None:
+                (_, self.mtime) = targetandtime
+            else:
+                self.mtime = None
 
         self._state = MAKESTATE_FINISHED
         for cb in self._callbacks:
@@ -1315,7 +1329,7 @@ def setautomaticvariables(v, makefile, target, prerequisites):
     prtargets = [makefile.gettarget(p) for p in prerequisites]
     prall = [pt.vpathtarget for pt in prtargets]
     proutofdate = [pt.vpathtarget for pt in withoutdups(prtargets)
-                   if target.realmtime is None or mtimeislater(pt.mtime, target.realmtime)]
+                   if target.mtime is None or mtimeislater(pt.mtime, target.mtime)]
     
     setautomatic(v, '@', [target.vpathtarget])
     if len(prall):

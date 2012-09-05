@@ -14740,14 +14740,8 @@ isPixel(ctx, 0,25, 0,255,0,255, 0);
 isPixel(ctx, 50,25, 0,255,0,255, 0);
 isPixel(ctx, 99,25, 0,255,0,255, 0);
 isPixel(ctx, 0,49, 0,255,0,255, 0);
-if (IsAzureEnabled() && IsAzureCairo()) {
-  // Bug 764108
-  todo_isPixel(ctx, 50,49, 0,255,0,255, 0);
-  todo_isPixel(ctx, 99,49, 0,255,0,255, 0);
-} else {
-  isPixel(ctx, 50,49, 0,255,0,255, 0);
-  isPixel(ctx, 99,49, 0,255,0,255, 0);
-}
+isPixel(ctx, 50,49, 0,255,0,255, 0);
+isPixel(ctx, 99,49, 0,255,0,255, 0);
 
 }
 </script>

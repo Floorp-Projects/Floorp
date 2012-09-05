@@ -790,7 +790,7 @@ static nsresult ToString(const nsDiscriminatedUnion& data,
 #define CASE__APPENDFLOAT_NUMBER(type_, member_)                        \
     case nsIDataType :: type_ :                                         \
     {                                                                   \
-        nsCAutoString str;                                              \
+        nsAutoCString str;                                              \
         str.AppendFloat(data.u. member_);                               \
         outString.Assign(str);                                          \
         return NS_OK;                                                   \
@@ -868,7 +868,7 @@ nsVariant::ConvertToAString(const nsDiscriminatedUnion& data,
         return NS_OK;
     default:
     {
-        nsCAutoString tempCString;
+        nsAutoCString tempCString;
         nsresult rv = ToString(data, tempCString);
         if(NS_FAILED(rv))
             return rv;
@@ -971,7 +971,7 @@ nsVariant::ConvertToAUTF8String(const nsDiscriminatedUnion& data,
     }
     default:
     {
-        nsCAutoString tempCString;
+        nsAutoCString tempCString;
         nsresult rv = ToString(data, tempCString);
         if(NS_FAILED(rv))
             return rv;
@@ -1002,7 +1002,7 @@ nsVariant::ConvertToStringWithSize(const nsDiscriminatedUnion& data,
                                    uint32_t *size, char **str)
 {
     nsAutoString  tempString;
-    nsCAutoString tempCString;
+    nsAutoCString tempCString;
     nsresult rv;
 
     switch(data.mType)
@@ -1080,7 +1080,7 @@ nsVariant::ConvertToWStringWithSize(const nsDiscriminatedUnion& data,
                                     uint32_t *size, PRUnichar **str)
 {
     nsAutoString  tempString;
-    nsCAutoString tempCString;
+    nsAutoCString tempCString;
     nsresult rv;
 
     switch(data.mType)

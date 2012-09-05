@@ -18,7 +18,7 @@
         onunload="RemoteTabViewer.uninit()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        title="&tabs.otherComputers.label;">
+        title="&tabs.otherDevices.label;">
   <script type="application/javascript;version=1.8" src="chrome://browser/content/sync/aboutSyncTabs.js"/>
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <html:head>
@@ -56,7 +56,7 @@
                oncontextmenu="RemoteTabViewer.adjustContextMenu(event)">
     <hbox id="headers" align="center">
       <label id="tabsListHeading"
-             value="&tabs.otherComputers.label;"/>
+             value="&tabs.otherDevices.label;"/>
       <spacer flex="1"/>
       <textbox type="search"
                emptytext="&tabs.searchText.label;"

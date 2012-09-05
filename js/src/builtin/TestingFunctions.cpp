@@ -542,7 +542,7 @@ CountHeapNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     if (node) {
         countTracer->recycleList = node->next;
     } else {
-        node = (JSCountHeapNode *) js_malloc(sizeof *node);
+        node = js_pod_malloc<JSCountHeapNode>();
         if (!node) {
             countTracer->ok = false;
             return;

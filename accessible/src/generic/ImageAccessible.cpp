@@ -136,7 +136,7 @@ ImageAccessible::DoAction(uint8_t aIndex)
   if (!uri)
     return NS_ERROR_INVALID_ARG;
 
-  nsCAutoString utf8spec;
+  nsAutoCString utf8spec;
   uri->GetSpec(utf8spec);
   NS_ConvertUTF8toUTF16 spec(utf8spec);
 

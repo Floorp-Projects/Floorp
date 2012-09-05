@@ -24,7 +24,7 @@
 
 <script> 
 
-steps = [get_installed_returns_nothing, install_super_crazy, get_self_returns_nothing, 
+steps = [get_installed_returns_nothing, get_self_returns_nothing, 
          install_wild_crazy, uninstall_wild_crazy, tearDown];
 
 runAll(steps);
@@ -36,14 +36,6 @@ function get_installed_returns_nothing(next) {
             "success",
             ok,
             next);
-}
-
-function install_super_crazy(next)  {
-  debug("in " + arguments.callee.name);
-  var appURL = SERVERS['super_crazy'];
-  install(appURL, ok, function() { 
-    getInstalled([appURL], ok, next);
-  });
 }
 
 function get_self_returns_nothing(next) {

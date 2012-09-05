@@ -203,7 +203,7 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
     CreateIframe(openerFrameElement, aName, /* aRemote = */ false);
   NS_ENSURE_TRUE(popupFrameElement, false);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   if (aURI) {
     aURI->GetSpec(spec);
   }

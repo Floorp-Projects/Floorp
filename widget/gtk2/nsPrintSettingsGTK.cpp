@@ -421,7 +421,7 @@ nsPrintSettingsGTK::SetToFileName(const PRUnichar * aToFileName)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Convert the nsIFile to a URL
-  nsCAutoString url;
+  nsAutoCString url;
   rv = NS_GetURLSpecFromFile(file, url);
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -20,8 +20,7 @@ function convertAppsArray(aApps, aWindow) {
   let apps = Cu.createArrayIn(aWindow);
   for (let i = 0; i < aApps.length; i++) {
     let app = aApps[i];
-    apps.push(createApplicationObject(aWindow, app.origin, app.manifest, app.manifestURL, 
-                                      app.receipts, app.installOrigin, app.installTime));
+    apps.push(createApplicationObject(aWindow, app));
   }
 
   return apps;
@@ -55,6 +54,14 @@ WebappsRegistry.prototype = {
     return true;
   },
 
+  // Hosted apps can't be trusted or certified, so just check that the
+  // manifest doesn't ask for those.
+  checkAppStatus: function(aManifest) {
+    let manifestStatus = aManifest.type || "web";
+    return (Services.prefs.getBoolPref("dom.mozApps.dev_mode") ||
+            manifestStatus === "web");
+  },
+
   receiveMessage: function(aMessage) {
     let msg = aMessage.json;
     if (msg.oid != this._id)
@@ -65,8 +72,7 @@ WebappsRegistry.prototype = {
     let app = msg.app;
     switch (aMessage.name) {
       case "Webapps:Install:Return:OK":
-        Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
-                                                                     app.installOrigin, app.installTime));
+        Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app));
         break;
       case "Webapps:Install:Return:KO":
         Services.DOMRequest.fireError(req, msg.error || "DENIED");
@@ -74,8 +80,7 @@ WebappsRegistry.prototype = {
       case "Webapps:GetSelf:Return:OK":
         if (msg.apps.length) {
           app = msg.apps[0];
-          Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
-                                                                       app.installOrigin, app.installTime));
+          Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app));
         } else {
           Services.DOMRequest.fireSuccess(req, null);
         }
@@ -92,11 +97,11 @@ WebappsRegistry.prototype = {
 
   _getOrigin: function(aURL) {
     let uri = Services.io.newURI(aURL, null, null);
-    return uri.prePath; 
+    return uri.prePath;
   },
 
   // mozIDOMApplicationRegistry implementation
-  
+
   install: function(aURL, aParams) {
     let installURL = this._window.location.href;
     let installOrigin = this._getOrigin(installURL);
@@ -113,17 +118,21 @@ WebappsRegistry.prototype = {
           if (!this.checkManifest(manifest, installOrigin)) {
             Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
           } else {
-            let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
-            let categories = (aParams && aParams.categories && Array.isArray(aParams.categories)) ? aParams.categories : [];
-            cpmm.sendAsyncMessage("Webapps:Install", { app: { installOrigin: installOrigin,
-                                                              origin: this._getOrigin(aURL),
-                                                              manifestURL: aURL,
-                                                              manifest: manifest,
-                                                              receipts: receipts,
-                                                              categories: categories },
-                                                              from: installURL,
-                                                              oid: this._id,
-                                                              requestID: requestID });
+            if (!this.checkAppStatus(manifest)) {
+              Services.DOMRequest.fireError(request, "INVALID_SECURITY_LEVEL");
+            } else {
+              let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
+              let categories = (aParams && aParams.categories && Array.isArray(aParams.categories)) ? aParams.categories : [];
+              cpmm.sendAsyncMessage("Webapps:Install", { app: { installOrigin: installOrigin,
+                                                                origin: this._getOrigin(aURL),
+                                                                manifestURL: aURL,
+                                                                manifest: manifest,
+                                                                receipts: receipts,
+                                                                categories: categories },
+                                                                from: installURL,
+                                                                oid: this._id,
+                                                                requestID: requestID });
+            }
           }
         } catch(e) {
           Services.DOMRequest.fireError(request, "MANIFEST_PARSE_ERROR");
@@ -131,7 +140,7 @@ WebappsRegistry.prototype = {
       }
       else {
         Services.DOMRequest.fireError(request, "MANIFEST_URL_ERROR");
-      }      
+      }
     }).bind(this), false);
 
     xhr.addEventListener("error", (function() {
@@ -195,11 +204,11 @@ WebappsRegistry.prototype = {
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     this._id = util.outerWindowID;
   },
-  
+
   classID: Components.ID("{fff440b3-fae2-45c1-bf03-3b5a2e432270}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMApplicationRegistry, Ci.nsIDOMGlobalPropertyInitializer]),
-  
+
   classInfo: XPCOMUtils.generateCI({classID: Components.ID("{fff440b3-fae2-45c1-bf03-3b5a2e432270}"),
                                     contractID: "@mozilla.org/webapps;1",
                                     interfaces: [Ci.mozIDOMApplicationRegistry],
@@ -211,9 +220,9 @@ WebappsRegistry.prototype = {
   * mozIDOMApplication object
   */
 
-function createApplicationObject(aWindow, aOrigin, aManifest, aManifestURL, aReceipts, aInstallOrigin, aInstallTime) {
+function createApplicationObject(aWindow, aApp) {
   let app = Cc["@mozilla.org/webapps/application;1"].createInstance(Ci.mozIDOMApplication);
-  app.wrappedJSObject.init(aWindow, aOrigin, aManifest, aManifestURL, aReceipts, aInstallOrigin, aInstallTime);
+  app.wrappedJSObject.init(aWindow, aApp);
   return app;
 }
 
@@ -234,20 +243,24 @@ WebappsApplication.prototype = {
                       onprogress: 'rw',
                       launch: 'r',
                       receipts: 'r',
+                      removable: 'r',
                       uninstall: 'r'
                      },
 
-  init: function(aWindow, aOrigin, aManifest, aManifestURL, aReceipts, aInstallOrigin, aInstallTime) {
-    this.origin = aOrigin;
-    this.manifest = ObjectWrapper.wrap(aManifest, aWindow);
-    this.manifestURL = aManifestURL;
-    this.receipts = aReceipts;
-    this.installOrigin = aInstallOrigin;
-    this.installTime = aInstallTime;
+  init: function(aWindow, aApp) {
+    this.origin = aApp.origin;
+    this.manifest = ObjectWrapper.wrap(aApp.manifest, aWindow);
+    this.manifestURL = aApp.manifestURL;
+    this.receipts = aApp.receipts;
+    this.installOrigin = aApp.installOrigin;
+    this.installTime = aApp.installTime;
     this.status = "installed";
+    this.removable = aApp.removable;
     this.progress = NaN;
     this._onprogress = null;
-    this.initHelper(aWindow, ["Webapps:Uninstall:Return:OK", "Webapps:Uninstall:Return:KO", "Webapps:OfflineCache"]);
+    this.initHelper(aWindow, ["Webapps:Uninstall:Return:OK",
+                              "Webapps:Uninstall:Return:KO",
+                              "Webapps:OfflineCache"]);
   },
 
   set onprogress(aCallback) {
@@ -294,7 +307,7 @@ WebappsApplication.prototype = {
       case "Webapps:OfflineCache":
         if (msg.manifest != this.manifestURL)
           return;
-        
+
         this.status = msg.status;
         if (this._onprogress) {
           let event = new this._window.MozApplicationEvent("applicationinstall", { application: this });
@@ -393,7 +406,7 @@ WebappsApplicationMgmt.prototype = {
     let req = this.getRequest(msg.requestID);
     // We want Webapps:Install:Return:OK and Webapps:Uninstall:Return:OK to be boradcasted
     // to all instances of mozApps.mgmt
-    if (!((msg.oid == this._id && req) 
+    if (!((msg.oid == this._id && req)
        || aMessage.name == "Webapps:Install:Return:OK" || aMessage.name == "Webapps:Uninstall:Return:OK"))
       return;
     switch (aMessage.name) {
@@ -409,16 +422,15 @@ WebappsApplicationMgmt.prototype = {
       case "Webapps:Install:Return:OK":
         if (this._oninstall) {
           let app = msg.app;
-          let event = new this._window.MozApplicationEvent("applicationinstall", 
-                           { application : createApplicationObject(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
-                                                                  app.installOrigin, app.installTime) });
+          let event = new this._window.MozApplicationEvent("applicationinstall",
+                           { application : createApplicationObject(this._window, app) });
           this._oninstall.handleEvent(event);
         }
         break;
       case "Webapps:Uninstall:Return:OK":
         if (this._onuninstall) {
-          let event = new this._window.MozApplicationEvent("applicationuninstall", 
-                           { application : createApplicationObject(this._window, msg.origin, null, null, null, null, 0) });
+          let event = new this._window.MozApplicationEvent("applicationuninstall",
+                           { application : createApplicationObject(this._window, { origin: msg.origin }) });
           this._onuninstall.handleEvent(event);
         }
         break;

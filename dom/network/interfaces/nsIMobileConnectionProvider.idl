@@ -4,6 +4,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMMozMobileICCInfo;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMDOMRequest;
@@ -13,10 +14,11 @@ interface nsIDOMWindow;
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(fb3fac34-c1c2-45a9-ad18-a7af0f7997c9)]
+[scriptable, uuid(63787ba1-5091-450b-8810-d321a8b4f77a)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   readonly attribute DOMString cardState;
+  readonly attribute nsIDOMMozMobileICCInfo iccInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo voiceConnectionInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo dataConnectionInfo;
   readonly attribute DOMString networkSelectionMode;
@@ -33,6 +35,7 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest cancelUSSD(in nsIDOMWindow window);
 
   void sendStkResponse(in nsIDOMWindow window,
+                       in jsval        command,
                        in jsval        response);
   void sendStkMenuSelection(in nsIDOMWindow   window,
                             in unsigned short itemIdentifier,

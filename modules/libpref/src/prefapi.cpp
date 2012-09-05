@@ -335,8 +335,8 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg)
     if (!pref)
         return PL_DHASH_NEXT;
 
-    nsCAutoString prefValue;
-    nsCAutoString prefPrefix;
+    nsAutoCString prefValue;
+    nsAutoCString prefPrefix;
     prefPrefix.Assign(NS_LITERAL_CSTRING("user_pref(\""));
 
     // where we're getting our pref from
@@ -371,7 +371,7 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg)
     else if (pref->flags & PREF_BOOL)
         prefValue = (sourcePref->boolVal) ? "true" : "false";
 
-    nsCAutoString prefName;
+    nsAutoCString prefName;
     str_escape(pref->key, prefName);
 
     argData->prefArray[i] = ToNewCString(prefPrefix +
@@ -591,7 +591,7 @@ PREF_DeleteBranch(const char *branch_name)
      * does not. When nsIPref goes away this function should be fixed to
      * never add the period at all.
      */
-    nsCAutoString branch_dot(branch_name);
+    nsAutoCString branch_dot(branch_name);
     if ((len > 1) && branch_name[len - 1] != '.')
         branch_dot += '.';
 

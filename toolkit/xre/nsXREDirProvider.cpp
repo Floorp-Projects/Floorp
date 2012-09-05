@@ -467,7 +467,7 @@ LoadDirsIntoArray(nsCOMArray<nsIFile>& aSourceDirs,
     if (!appended)
       continue;
 
-    nsCAutoString leaf;
+    nsAutoCString leaf;
     appended->GetNativeLeafName(leaf);
     if (!Substring(leaf, leaf.Length() - 4).Equals(NS_LITERAL_CSTRING(".xpi"))) {
       LoadDirIntoArray(appended,
@@ -525,10 +525,10 @@ LoadExtensionDirectories(nsINIParser &parser,
   nsresult rv;
   int32_t i = 0;
   do {
-    nsCAutoString buf("Extension");
+    nsAutoCString buf("Extension");
     buf.AppendInt(i++);
 
-    nsCAutoString path;
+    nsAutoCString path;
     rv = parser.GetString(aSection, buf.get(), path);
     if (NS_FAILED(rv))
       return;
@@ -621,7 +621,7 @@ DumpFileArray(const char *key,
 {
   fprintf(stderr, "nsXREDirProvider::GetFilesInternal(%s)\n", key);
 
-  nsCAutoString path;
+  nsAutoCString path;
   for (int32_t i = 0; i < dirs.Count(); ++i) {
     dirs[i]->GetNativePath(path);
     fprintf(stderr, "  %s\n", path.get());
@@ -1232,7 +1232,7 @@ nsXREDirProvider::GetUserDataDirectory(nsIFile** aFile, bool aLocal,
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG_jungshik
-  nsCAutoString cwd;
+  nsAutoCString cwd;
   localDir->GetNativePath(cwd);
   printf("nsXREDirProvider::GetUserDataDirectory: %s\n", cwd.get());
 #endif
@@ -1251,7 +1251,7 @@ nsXREDirProvider::EnsureDirectoryExists(nsIFile* aDirectory)
   NS_ENSURE_SUCCESS(rv, rv);
 #ifdef DEBUG_jungshik
   if (!exists) {
-    nsCAutoString cwd;
+    nsAutoCString cwd;
     aDirectory->GetNativePath(cwd);
     printf("nsXREDirProvider::EnsureDirectoryExists: %s does not\n", cwd.get());
   }
@@ -1275,7 +1275,7 @@ nsXREDirProvider::EnsureProfileFileExists(nsIFile *aFile)
   rv = aFile->Exists(&exists);
   if (NS_FAILED(rv) || exists) return;
 
-  nsCAutoString leafName;
+  nsAutoCString leafName;
   rv = aFile->GetNativeLeafName(leafName);
   if (NS_FAILED(rv)) return;
 
@@ -1357,9 +1357,9 @@ nsXREDirProvider::AppendProfilePath(nsIFile* aFile,
     return NS_ERROR_FAILURE;
   }
 
-  nsCAutoString profile;
-  nsCAutoString appName;
-  nsCAutoString vendor;
+  nsAutoCString profile;
+  nsAutoCString appName;
+  nsAutoCString vendor;
   if (aProfileName && !aProfileName->IsEmpty()) {
     profile = *aProfileName;
   } else if (aAppName) {
@@ -1412,7 +1412,7 @@ nsXREDirProvider::AppendProfilePath(nsIFile* aFile,
   NS_ENSURE_SUCCESS(rv, rv);
 #elif defined(XP_UNIX)
   // Make it hidden (i.e. using the ".")
-  nsCAutoString folder(".");
+  nsAutoCString folder(".");
 
   if (!profile.IsEmpty()) {
     // Skip any leading path characters
@@ -1460,7 +1460,7 @@ nsXREDirProvider::AppendProfileString(nsIFile* aFile, const char* aPath)
   NS_ASSERTION(aFile, "Null file!");
   NS_ASSERTION(aPath, "Null path!");
 
-  nsCAutoString pathDup(aPath);
+  nsAutoCString pathDup(aPath);
 
   char* path = pathDup.BeginWriting();
 

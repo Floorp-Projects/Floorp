@@ -210,4 +210,29 @@
   <string name="bookmarkhistory_import_wait">&bookmarkhistory_import_wait;</string>
 
   <string name="webapp_generic_name">&webapp_generic_name;</string>
+
+  <!-- Updater notifications -->
+  <string name="updater_start_title">&updater_start_title;</string>
+  <string name="updater_start_ticker">&updater_start_ticker;</string>
+  <string name="updater_start_select">&updater_start_select;</string>
+
+  <string name="updater_downloading_title">&updater_downloading_title;</string>
+  <string name="updater_downloading_ticker">&updater_downloading_ticker;</string>
+  <string name="updater_downloading_ticker_failed">&updater_downloading_ticker_failed;</string>
+  <string name="updater_downloading_select">&updater_downloading_select;</string>
+  <string name="updater_downloading_retry">&updater_downloading_retry;</string>
+  <string name="updater_downloading_willapply">&updater_downloading_willapply;</string>
+  
+  <string name="updater_apply_title">&updater_apply_title;</string>
+  <string name="updater_apply_ticker">&updater_apply_ticker;</string>
+  <string name="updater_apply_select">&updater_apply_select;</string>
+
+  <string name="updater_installing_title">&updater_installing_title;</string>
+  <string name="updater_installing_ticker">&updater_installing_ticker;</string>
+  <string name="updater_installing_ticker_success">&updater_installing_ticker_success;</string>
+  <string name="updater_installing_ticker_fail">&updater_installing_ticker_fail;</string>
+  <string name="updater_installing_text">&updater_installing_text;</string>
+  <string name="updater_installing_text_success">&updater_installing_text_success;</string>
+  <string name="updater_installing_text_fail">&updater_installing_text_fail;</string>
+
 </resources>

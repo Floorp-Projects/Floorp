@@ -48,8 +48,8 @@ using namespace js;
  * MALLOC gets declared external, and that doesn't work for class members, so
  * wrap.
  */
-inline void* dtoa_malloc(size_t size) { return OffTheBooks::malloc_(size); }
-inline void dtoa_free(void* p) { return UnwantedForeground::free_(p); }
+inline void* dtoa_malloc(size_t size) { return js_malloc(size); }
+inline void dtoa_free(void* p) { return js_free(p); }
 
 #define NO_GLOBAL_STATE
 #define MALLOC dtoa_malloc
@@ -301,7 +301,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
     JS_ASSERT(base >= 2 && base <= 36);
 
     dval(d) = dinput;
-    buffer = (char*) OffTheBooks::malloc_(DTOBASESTR_BUFFER_SIZE);
+    buffer = (char*) js_malloc(DTOBASESTR_BUFFER_SIZE);
     if (!buffer)
         return NULL;
     p = buffer;
@@ -345,7 +345,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
         if (!b) {
           nomem1:
             Bfree(PASS_STATE b);
-            UnwantedForeground::free_(buffer);
+            js_free(buffer);
             return NULL;
         }
         do {
@@ -381,7 +381,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
             if (mlo != mhi)
                 Bfree(PASS_STATE mlo);
             Bfree(PASS_STATE mhi);
-            UnwantedForeground::free_(buffer);
+            js_free(buffer);
             return NULL;
         }
         JS_ASSERT(e < 0);

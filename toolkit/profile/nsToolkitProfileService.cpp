@@ -352,7 +352,7 @@ nsToolkitProfileLock::Unlock()
 }
 
 NS_IMETHODIMP
-nsToolkitProfileLock::GetReplacedLockTime(int64_t *aResult)
+nsToolkitProfileLock::GetReplacedLockTime(PRTime *aResult)
 {
     mLock.GetReplacedLockTime(aResult);
     return NS_OK;
@@ -408,7 +408,7 @@ nsToolkitProfileService::Init()
     if (NS_FAILED(rv))
         return rv;
 
-    nsCAutoString buffer;
+    nsAutoCString buffer;
     rv = parser.GetString("General", "StartWithLastProfile", buffer);
     if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("0"))
         mStartWithLast = false;
@@ -417,7 +417,7 @@ nsToolkitProfileService::Init()
 
     unsigned int c = 0;
     for (c = 0; true; ++c) {
-        nsCAutoString profileID("Profile");
+        nsAutoCString profileID("Profile");
         profileID.AppendInt(c);
 
         rv = parser.GetString(profileID.get(), "IsRelative", buffer);
@@ -425,7 +425,7 @@ nsToolkitProfileService::Init()
 
         bool isRelative = buffer.EqualsLiteral("1");
 
-        nsCAutoString filePath;
+        nsAutoCString filePath;
 
         rv = parser.GetString(profileID.get(), "Path", filePath);
         if (NS_FAILED(rv)) {
@@ -661,7 +661,7 @@ nsToolkitProfileService::CreateDefaultProfileForApp(const nsACString& aProfileNa
     (*aResult)->GetRootDir(getter_AddRefs(rootDir));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString profileDir;
+    nsAutoCString profileDir;
     rv = rootDir->GetRelativeDescriptor(appData, profileDir);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -722,7 +722,7 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
 
     nsCOMPtr<nsIFile> rootDir (aRootDir);
 
-    nsCAutoString dirName;
+    nsAutoCString dirName;
     if (!rootDir) {
         rv = gDirServiceProvider->GetUserProfilesRootDir(getter_AddRefs(rootDir),
                                                          aProfileName, aAppName,
@@ -867,7 +867,7 @@ nsToolkitProfileService::Flush()
                    "StartWithLastProfile=%s\n\n",
                    mStartWithLast ? "1" : "0");
 
-    nsCAutoString path;
+    nsAutoCString path;
     cur = mFirst;
     pCount = 0;
 

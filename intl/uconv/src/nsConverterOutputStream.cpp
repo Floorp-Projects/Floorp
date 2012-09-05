@@ -67,7 +67,7 @@ nsConverterOutputStream::Write(uint32_t aCount, const PRUnichar* aChars,
     nsresult rv = mConverter->GetMaxLength(aChars, inLen, &maxLen);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString buf;
+    nsAutoCString buf;
     buf.SetLength(maxLen);
     if (buf.Length() != (uint32_t) maxLen)
         return NS_ERROR_OUT_OF_MEMORY;

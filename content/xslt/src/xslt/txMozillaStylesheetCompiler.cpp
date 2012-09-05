@@ -59,7 +59,7 @@ getSpec(nsIChannel* aChannel, nsAString& aSpec)
         return;
     }
 
-    nsCAutoString spec;
+    nsAutoCString spec;
     uri->GetSpec(spec);
     AppendUTF8toUTF16(spec, aSpec);
 }
@@ -255,8 +255,8 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
     // check channel's charset...
-    nsCAutoString charsetVal;
-    nsCAutoString charset;
+    nsAutoCString charsetVal;
+    nsAutoCString charset;
     if (NS_SUCCEEDED(channel->GetContentCharset(charsetVal))) {
         if (NS_SUCCEEDED(nsCharsetAlias::GetPreferred(charsetVal, charset))) {
             charsetSource = kCharsetFromChannel;
@@ -270,7 +270,7 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);
     parser->SetDocumentCharset(charset, charsetSource);
 
-    nsCAutoString contentType;
+    nsAutoCString contentType;
     channel->GetContentType(contentType);
 
     // Time to sniff! Note: this should go away once file channels do
@@ -498,7 +498,7 @@ nsresult
 TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
              nsILoadGroup* aLoadGroup, nsIPrincipal* aCallerPrincipal)
 {
-    nsCAutoString spec;
+    nsAutoCString spec;
     aUri->GetSpec(spec);
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS, ("TX_LoadSheet: %s\n", spec.get()));
 
@@ -668,7 +668,7 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
     rv = handleNode(doc, aCompiler);
     if (NS_FAILED(rv)) {
-        nsCAutoString spec;
+        nsAutoCString spec;
         uri->GetSpec(spec);
         aCompiler->cancel(rv, nullptr, NS_ConvertUTF8toUTF16(spec).get());
         return rv;
@@ -703,7 +703,7 @@ TX_CompileStylesheet(nsINode* aNode, txMozillaXSLTProcessor* aProcessor,
     }
     NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
     
-    nsCAutoString spec;
+    nsAutoCString spec;
     uri->GetSpec(spec);
     NS_ConvertUTF8toUTF16 baseURI(spec);
 

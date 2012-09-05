@@ -48,11 +48,11 @@ AsyncStatementCallback::HandleError(mozIStorageError *aError)
   int32_t result;
   nsresult rv = aError->GetResult(&result);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString message;
+  nsAutoCString message;
   rv = aError->GetMessage(message);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString warnMsg;
+  nsAutoCString warnMsg;
   warnMsg.Append("An error occurred while executing an async statement: ");
   warnMsg.AppendInt(result);
   warnMsg.Append(" ");
@@ -64,7 +64,7 @@ AsyncStatementCallback::HandleError(mozIStorageError *aError)
 }
 
 #define URI_TO_URLCSTRING(uri, spec) \
-  nsCAutoString spec; \
+  nsAutoCString spec; \
   if (NS_FAILED(aURI->GetSpec(spec))) { \
     return NS_ERROR_UNEXPECTED; \
   }
@@ -177,7 +177,7 @@ URIBinder::Bind(mozIStorageBindingParams* aParams,
 nsresult
 GetReversedHostname(nsIURI* aURI, nsString& aRevHost)
 {
-  nsCAutoString forward8;
+  nsAutoCString forward8;
   nsresult rv = aURI->GetHost(forward8);
   // Not all URIs have a host.
   if (NS_FAILED(rv))

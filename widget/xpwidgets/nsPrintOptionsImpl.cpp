@@ -1059,7 +1059,7 @@ nsPrintOptions::ReadPrefDouble(const char * aPrefId, double& aVal)
 {
   NS_ENSURE_ARG_POINTER(aPrefId);
 
-  nsCAutoString str;
+  nsAutoCString str;
   nsresult rv = Preferences::GetCString(aPrefId, &str);
   if (NS_SUCCEEDED(rv) && !str.IsEmpty()) {
     aVal = atof(str.get());
@@ -1102,7 +1102,7 @@ void
 nsPrintOptions::WriteInchesFromTwipsPref(const char * aPrefId, int32_t aTwips)
 {
   double inches = NS_TWIPS_TO_INCHES(aTwips);
-  nsCAutoString inchesStr;
+  nsAutoCString inchesStr;
   inchesStr.AppendFloat(inches);
 
   Preferences::SetCString(aPrefId, inchesStr);

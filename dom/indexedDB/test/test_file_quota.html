@@ -46,7 +46,7 @@
     objectStore = trans.objectStore(objectStoreName);
 
     request = objectStore.add(fileData.file, fileData.key);
-    request.onerror = new ExpectError("UnknownError");
+    request.addEventListener("error", new ExpectError("UnknownError"));
     request.onsuccess = unexpectedSuccessHandler;
     event = yield;
 

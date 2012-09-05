@@ -773,7 +773,8 @@ class ShellFunction(Function):
         log.debug("%s: running shell command '%s'" % (self.loc, cline))
         if msys:
             cline = [shell, "-c", cline]
-        p = subprocess.Popen(cline, shell=not msys, stdout=subprocess.PIPE, cwd=makefile.workdir)
+        p = subprocess.Popen(cline, env=makefile.env, shell=not msys,
+                             stdout=subprocess.PIPE, cwd=makefile.workdir)
         stdout, stderr = p.communicate()
 
         stdout = stdout.replace('\r\n', '\n')

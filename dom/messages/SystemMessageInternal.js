@@ -41,31 +41,14 @@ function SystemMessageInternal() {
 
 SystemMessageInternal.prototype = {
   sendMessage: function sendMessage(aType, aMessage, aPageURI, aManifestURI) {
-    debug("Broadcasting " + aType + " " + JSON.stringify(aMessage));
-    ppmm.broadcastAsyncMessage("SystemMessageManager:Message" , { type: aType,
-                                                                  msg: aMessage,
-                                                                  manifest: aManifestURI.spec });
+    this._sendMessage(aType, aMessage, aPageURI.spec, aManifestURI.spec);
+  },
 
-    // Queue the message for pages that registered an handler for this type.
-    this._pages.forEach(function sendMess_openPage(aPage) {
-      if (aPage.type != aType ||
-          aPage.manifest != aManifestURI.spec ||
-          aPage.uri != aPageURI.spec) {
-        return;
+  broadcastMessage: function broadcastMessage(aType, aMessage) {
+    this._pages.forEach(function(aPage) {
+      if (aPage.type == aType) {
+        this._sendMessage(aType, aMessage, aPage.uri, aPage.manifest);
       }
-
-      aPage.pending.push(aMessage);
-      if (aPage.pending.length > kMaxPendingMessages) {
-        aPage.pending.splice(0, 1);
-      }
-
-      // We don't need to send the full object to observers.
-      let page = { uri: aPage.uri,
-                   manifest: aPage.manifest,
-                   type: aPage.type,
-                   target: aMessage.target };
-      debug("Asking to open  " + JSON.stringify(page));
-      Services.obs.notifyObservers(this, "system-messages-open-app", JSON.stringify(page));
     }.bind(this))
   },
 
@@ -116,6 +99,35 @@ SystemMessageInternal.prototype = {
       ppmm = null;
       this._pages = null;
     }
+  },
+
+  _sendMessage: function _sendMessage(aType, aMessage, aPageURI, aManifestURI) {
+    debug("Broadcasting " + aType + " " + JSON.stringify(aMessage));
+    ppmm.broadcastAsyncMessage("SystemMessageManager:Message" , { type: aType,
+                                                                  msg: aMessage,
+                                                                  manifest: aManifestURI });
+
+    // Queue the message for pages that registered an handler for this type.
+    this._pages.forEach(function sendMess_openPage(aPage) {
+      if (aPage.type != aType ||
+          aPage.manifest != aManifestURI ||
+          aPage.uri != aPageURI) {
+        return;
+      }
+
+      aPage.pending.push(aMessage);
+      if (aPage.pending.length > kMaxPendingMessages) {
+        aPage.pending.splice(0, 1);
+      }
+
+      // We don't need to send the full object to observers.
+      let page = { uri: aPage.uri,
+                   manifest: aPage.manifest,
+                   type: aPage.type,
+                   target: aMessage.target };
+      debug("Asking to open  " + JSON.stringify(page));
+      Services.obs.notifyObservers(this, "system-messages-open-app", JSON.stringify(page));
+    }.bind(this))
   },
 
   classID: Components.ID("{70589ca5-91ac-4b9e-b839-d6a88167d714}"),

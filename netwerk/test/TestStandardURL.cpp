@@ -31,13 +31,13 @@ static void set_spec_test()
 
 static void get_spec_test()
 {
-    nsCAutoString spec;
+    nsAutoCString spec;
     test_url->GetSpec(spec);
 }
 
 static void resolve_test()
 {
-    nsCAutoString spec;
+    nsAutoCString spec;
     test_url->Resolve(NS_LITERAL_CSTRING("foo.html?q=45"), spec);
 }
 
@@ -48,13 +48,13 @@ static void set_scheme_test()
 
 static void get_scheme_test()
 {
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     test_url->GetScheme(scheme);
 }
 
 static void host_test()
 {
-    nsCAutoString host;
+    nsAutoCString host;
     test_url->GetHost(host);
     test_url->SetHost(NS_LITERAL_CSTRING("www.yahoo.com"));
     test_url->SetHost(host);
@@ -67,13 +67,13 @@ static void set_path_test()
 
 static void get_path_test()
 {
-    nsCAutoString path;
+    nsAutoCString path;
     test_url->GetPath(path);
 }
 
 static void query_test()
 {
-    nsCAutoString query;
+    nsAutoCString query;
     test_url->GetQuery(query);
     test_url->SetQuery(NS_LITERAL_CSTRING("a=b&d=c&what-ever-you-want-to-be-called=45"));
     test_url->SetQuery(query);
@@ -81,7 +81,7 @@ static void query_test()
 
 static void ref_test()
 {
-    nsCAutoString ref;
+    nsAutoCString ref;
     test_url->GetRef(ref);
     test_url->SetRef(NS_LITERAL_CSTRING("#some-book-mark"));
     test_url->SetRef(ref);

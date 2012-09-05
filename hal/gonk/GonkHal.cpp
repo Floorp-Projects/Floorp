@@ -612,6 +612,14 @@ SetTimezone(const nsCString& aTimezoneSpec)
   tzset();
 }
 
+nsCString 
+GetTimezone()
+{
+  char timezone[32];
+  property_get("persist.sys.timezone", timezone, "");
+  return nsCString(timezone);
+}
+
 // Nothing to do here.  Gonk widgetry always listens for screen
 // orientation changes.
 void

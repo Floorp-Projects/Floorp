@@ -17,11 +17,11 @@ interface nsIDOMDesktopNotificationCenter : nsISupports
 };
 
 
-[scriptable, uuid(9131FD07-A7DB-4B3A-A98B-6D9F3746682F)]
+[scriptable, uuid(77bc6adc-77d6-4b29-9844-7eaac25e995d)]
 interface nsIDOMDesktopNotification : nsISupports
 {
   void show();
 
-  attribute nsIDOMEventListener onclick;
-  attribute nsIDOMEventListener onclose;
+  [implicit_jscontext] attribute jsval onclick;
+  [implicit_jscontext] attribute jsval onclose;
 };

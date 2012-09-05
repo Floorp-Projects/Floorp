@@ -774,7 +774,7 @@ nsresult FaviconHelper::HashURI(nsCOMPtr<nsICryptoHash> &aCryptoHash,
   if (!aUri)
     return NS_ERROR_INVALID_ARG;
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   nsresult rv = aUri->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -804,7 +804,7 @@ nsresult FaviconHelper::GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
   bool aURLShortcut)
 {
   // Hash the input URI and replace any / with _
-  nsCAutoString inputURIHash;
+  nsAutoCString inputURIHash;
   nsCOMPtr<nsICryptoHash> cryptoHash;
   nsresult rv = HashURI(cryptoHash, aFaviconPageURI,
                         inputURIHash);

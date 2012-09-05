@@ -256,7 +256,7 @@ nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
   // Note that the only header we care about is the "link" header, since we
   // have all the infrastructure for kicking off stylesheet loads.
   
-  nsCAutoString linkHeader;
+  nsAutoCString linkHeader;
   
   nsresult rv = httpchannel->GetResponseHeader(NS_LITERAL_CSTRING("link"),
                                                linkHeader);
@@ -412,7 +412,7 @@ nsContentSink::Decode5987Format(nsAString& aEncoded) {
   if (NS_FAILED(rv))
     return false;
 
-  nsCAutoString asciiValue;
+  nsAutoCString asciiValue;
 
   const PRUnichar* encstart = aEncoded.BeginReading();
   const PRUnichar* encend = aEncoded.EndReading();
@@ -429,7 +429,7 @@ nsContentSink::Decode5987Format(nsAString& aEncoded) {
   }
 
   nsAutoString decoded;
-  nsCAutoString language;
+  nsAutoCString language;
 
   rv = mimehdrpar->DecodeRFC5987Param(asciiValue, language, decoded);
   if (NS_FAILED(rv))
@@ -860,7 +860,7 @@ nsContentSink::PrefetchDNS(const nsAString &aHref)
     if (!uri) {
       return;
     }
-    nsCAutoString host;
+    nsAutoCString host;
     uri->GetHost(host);
     CopyUTF8toUTF16(host, hostname);
   }
@@ -886,7 +886,7 @@ nsContentSink::SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
                "mDocument must implement nsIApplicationCacheContainer.");
 
   if (aLoadApplicationCache) {
-    nsCAutoString groupID;
+    nsAutoCString groupID;
     rv = aLoadApplicationCache->GetGroupID(groupID);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -909,7 +909,7 @@ nsContentSink::SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
       // the cache the document was loaded from - associate the document with
       // that cache and invoke the cache update process.
 #ifdef DEBUG
-      nsCAutoString docURISpec, clientID;
+      nsAutoCString docURISpec, clientID;
       mDocumentURI->GetAsciiSpec(docURISpec);
       aLoadApplicationCache->GetClientID(clientID);
       SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_CALLS,
@@ -963,7 +963,7 @@ nsContentSink::SelectDocAppCacheNoManifest(nsIApplicationCache *aLoadApplication
                  "mDocument must implement nsIApplicationCacheContainer.");
 
 #ifdef DEBUG
-    nsCAutoString docURISpec, clientID;
+    nsAutoCString docURISpec, clientID;
     mDocumentURI->GetAsciiSpec(docURISpec);
     aLoadApplicationCache->GetClientID(clientID);
     SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_CALLS,
@@ -975,7 +975,7 @@ nsContentSink::SelectDocAppCacheNoManifest(nsIApplicationCache *aLoadApplication
 
     // Return the uri and invoke the update process for the selected
     // application cache.
-    nsCAutoString groupID;
+    nsAutoCString groupID;
     rv = aLoadApplicationCache->GetGroupID(groupID);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1082,7 +1082,7 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
       bool fetchedWithHTTPGetOrEquiv = false;
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mDocument->GetChannel()));
       if (httpChannel) {
-        nsCAutoString method;
+        nsAutoCString method;
         rv = httpChannel->GetRequestMethod(method);
         if (NS_SUCCEEDED(rv))
           fetchedWithHTTPGetOrEquiv = method.Equals("GET");

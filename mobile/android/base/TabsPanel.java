@@ -173,8 +173,7 @@ public class TabsPanel extends LinearLayout {
             int listHeight = (int) (0.5 * mContext.getResources().getDisplayMetrics().heightPixels);
 
             int height = actionBarHeight + listHeight; 
-            if (showAnimation)
-                dispatchLayoutChange(getWidth(), height);
+            dispatchLayoutChange(getWidth(), height);
         }
 
         // If Sync is set up, query the database for remote clients.

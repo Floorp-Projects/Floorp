@@ -11,7 +11,7 @@
 #define nsTAString_IncompatibleCharT        nsAString
 #define nsTString_CharT                     nsCString
 #define nsTFixedString_CharT                nsFixedCString
-#define nsTAutoString_CharT                 nsCAutoString
+#define nsTAutoString_CharT                 nsAutoCString
 #define nsTSubstring_CharT                  nsACString
 #define nsTSubstringTuple_CharT             nsCSubstringTuple
 #define nsTStringComparator_CharT           nsCStringComparator

@@ -932,7 +932,7 @@ DocumentRule::List(FILE* out, int32_t aIndent) const
 {
   for (int32_t indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
-  nsCAutoString str;
+  nsAutoCString str;
   str.AssignLiteral("@-moz-document ");
   for (URL *url = mURLs; url; url = url->next) {
     switch (url->func) {
@@ -949,7 +949,7 @@ DocumentRule::List(FILE* out, int32_t aIndent) const
         str.AppendLiteral("regexp(\"");
         break;
     }
-    nsCAutoString escapedURL(url->url);
+    nsAutoCString escapedURL(url->url);
     escapedURL.ReplaceSubstring("\"", "\\\""); // escape quotes
     str.Append(escapedURL);
     str.AppendLiteral("\"), ");
@@ -1054,7 +1054,7 @@ DocumentRule::UseForPresentation(nsPresContext* aPresContext,
 {
   nsIDocument *doc = aPresContext->Document();
   nsIURI *docURI = doc->GetDocumentURI();
-  nsCAutoString docURISpec;
+  nsAutoCString docURISpec;
   if (docURI)
     docURI->GetSpec(docURISpec);
 
@@ -1069,7 +1069,7 @@ DocumentRule::UseForPresentation(nsPresContext* aPresContext,
           return true;
       } break;
       case eDomain: {
-        nsCAutoString host;
+        nsAutoCString host;
         if (docURI)
           docURI->GetHost(host);
         int32_t lenDiff = host.Length() - url->url.Length();
@@ -1334,7 +1334,7 @@ AppendSerializedUnicodeRange(nsCSSValue const & aValue,
     return;
 
   nsCSSValue::Array const & sources = *aValue.GetArrayValue();
-  nsCAutoString buf;
+  nsAutoCString buf;
 
   NS_ABORT_IF_FALSE(sources.Count() % 2 == 0,
                     "odd number of entries in a unicode-range: array");

@@ -93,7 +93,7 @@ NS_IMETHODIMP nsVolumeService::GetVolumeByPath(const nsAString &aPath, nsIVolume
   nsVolume::Array::index_type volIndex;
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
     nsRefPtr<nsVolume> vol = mVolumeArray[volIndex];
-    nsCAutoString volMountPointSlash = NS_ConvertUTF16toUTF8(vol->MountPoint());
+    nsAutoCString volMountPointSlash = NS_ConvertUTF16toUTF8(vol->MountPoint());
     volMountPointSlash.Append(NS_LITERAL_CSTRING("/"));
     nsDependentCSubstring testStr(realPathBuf, volMountPointSlash.Length());
     if (volMountPointSlash.Equals(testStr)) {

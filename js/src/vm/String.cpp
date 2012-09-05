@@ -130,7 +130,7 @@ AllocChars(JSContext *maybecx, size_t length, jschar **chars, size_t *capacity)
 
     JS_STATIC_ASSERT(JSString::MAX_LENGTH * sizeof(jschar) < UINT32_MAX);
     size_t bytes = numChars * sizeof(jschar);
-    *chars = (jschar *)(maybecx ? maybecx->malloc_(bytes) : OffTheBooks::malloc_(bytes));
+    *chars = (jschar *)(maybecx ? maybecx->malloc_(bytes) : js_malloc(bytes));
     return *chars != NULL;
 }
 

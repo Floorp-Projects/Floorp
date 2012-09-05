@@ -1707,7 +1707,7 @@ nsCacheService::CreateCustomOfflineDevice(nsIFile *aProfileDir,
     NS_ENSURE_ARG(aProfileDir);
 
 #if defined(PR_LOGGING)
-    nsCAutoString profilePath;
+    nsAutoCString profilePath;
     aProfileDir->GetNativePath(profilePath);
     CACHE_LOG_ALWAYS(("Creating custom offline device, %s, %d",
                       profilePath.BeginReading(), aQuota));
@@ -1789,7 +1789,7 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
 {
     NS_ASSERTION(request, "CreateRequest: request is null");
      
-    nsCAutoString key(*session->ClientID());
+    nsAutoCString key(*session->ClientID());
     key.Append(':');
     key.Append(clientKey);
 

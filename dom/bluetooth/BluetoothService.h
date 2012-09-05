@@ -10,6 +10,7 @@
 #include "nsThreadUtils.h"
 #include "nsClassHashtable.h"
 #include "nsIObserver.h"
+#include "nsIRunnable.h"
 #include "BluetoothCommon.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -72,7 +73,7 @@ public:
    * @return NS_OK on initialization starting correctly, NS_ERROR_FAILURE
    * otherwise
    */
-  nsresult Start(BluetoothReplyRunnable* aResultRunnable);
+  nsresult Start(nsIRunnable* aResultRunnable);
 
   /** 
    * Stop bluetooth services. Starts up any threads and connections that
@@ -87,7 +88,7 @@ public:
    * @return NS_OK on initialization starting correctly, NS_ERROR_FAILURE
    * otherwise
    */
-  nsresult Stop(BluetoothReplyRunnable* aResultRunnable);
+  nsresult Stop(nsIRunnable* aResultRunnable);
 
   /** 
    * Returns the BluetoothService singleton. Only to be called from main thread.
@@ -224,6 +225,7 @@ public:
   virtual bool SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey) = 0;
   virtual bool SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm) = 0;
   virtual bool SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow) = 0;
+  virtual int IsEnabledInternal() = 0;
 
   /**
    * Due to the fact that some operations require multiple calls, a
@@ -249,8 +251,7 @@ protected:
   {
   }
 
-  nsresult StartStopBluetooth(BluetoothReplyRunnable* aResultRunnable,
-                              bool aStart);
+  nsresult StartStopBluetooth(nsIRunnable* aResultRunnable, bool aStart);
   // This function is implemented in platform-specific BluetoothServiceFactory
   // files
   static BluetoothService* Create();

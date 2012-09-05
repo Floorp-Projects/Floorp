@@ -111,6 +111,9 @@ public class GeckoAccessibility {
             // In Jelly Bean we populate an AccessibilityNodeInfo with the minimal amount of data to have
             // it work with TalkBack.
             final LayerView view = GeckoApp.mAppContext.getLayerView();
+            if (view == null)
+                return;
+
             if (mVirtualCursorNode == null)
                 mVirtualCursorNode = AccessibilityNodeInfo.obtain(view, VIRTUAL_CURSOR_POSITION);
             mVirtualCursorNode.setEnabled(message.optBoolean("enabled", true));

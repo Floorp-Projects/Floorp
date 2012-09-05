@@ -209,7 +209,7 @@ NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject,
 nsresult nsAutoConfig::downloadAutoConfig()
 {
     nsresult rv;
-    nsCAutoString emailAddr;
+    nsAutoCString emailAddr;
     nsXPIDLCString urlName;
     static bool firstTime = true;
     

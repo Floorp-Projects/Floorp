@@ -75,7 +75,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
     case CSS_URI :
       {
         if (mValue.mURI) {
-          nsCAutoString specUTF8;
+          nsAutoCString specUTF8;
           mValue.mURI->GetSpec(specUTF8);
 
           tmpStr.AssignLiteral("url(");
@@ -365,7 +365,7 @@ nsROCSSPrimitiveValue::GetStringValue(nsAString& aReturn)
       aReturn.Assign(mValue.mString);
       break;
     case CSS_URI: {
-      nsCAutoString spec;
+      nsAutoCString spec;
       if (mValue.mURI)
         mValue.mURI->GetSpec(spec);
       CopyUTF8toUTF16(spec, aReturn);

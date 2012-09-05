@@ -72,7 +72,7 @@ convertResultCode(int aSQLiteResultCode)
 
   // generic error
 #ifdef DEBUG
-  nsCAutoString message;
+  nsAutoCString message;
   message.AppendLiteral("SQLite returned error code ");
   message.AppendInt(rc);
   message.AppendLiteral(" , Storage will convert it to NS_ERROR_FAILURE");
@@ -96,7 +96,7 @@ checkAndLogStatementPerformance(sqlite3_stmt *aStatement)
   if (::strstr(sql, "/* do not warn (bug "))
     return;
 
-  nsCAutoString message;
+  nsAutoCString message;
   message.AppendInt(count);
   if (count == 1)
     message.Append(" sort operation has ");

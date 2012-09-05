@@ -156,9 +156,9 @@ private:
   if (aNode) {                                                                 \
     if (aNode->IsElement()) {                                                  \
       dom::Element* targetElm = aNode->AsElement();                            \
-      nsCAutoString tag;                                                       \
+      nsAutoCString tag;                                                       \
       targetElm->Tag()->ToUTF8String(tag);                                     \
-      nsCAutoString id;                                                        \
+      nsAutoCString id;                                                        \
       nsIAtom* atomid = targetElm->GetID();                                    \
       if (atomid)                                                              \
         atomid->ToUTF8String(id);                                              \
@@ -166,7 +166,7 @@ private:
     } else if (aNode->IsNodeOfType(nsINode::eDOCUMENT)) {                      \
       nsCOMPtr<nsIDocument> document = do_QueryInterface(aNode);               \
       nsIURI* uri = document->GetDocumentURI();                                \
-      nsCAutoString spec;                                                      \
+      nsAutoCString spec;                                                      \
       uri->GetSpec(spec);                                                      \
       printf("document: %p; uri: %s", (void*)aNode, spec.get());               \
     }                                                                          \

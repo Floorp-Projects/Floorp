@@ -542,7 +542,7 @@ nsCStringKey::Clone() const
 nsCStringKey::nsCStringKey(nsIObjectInputStream* aStream, nsresult *aResult)
     : mStr(nullptr), mStrLen(0), mOwnership(OWN)
 {
-    nsCAutoString str;
+    nsAutoCString str;
     nsresult rv = aStream->ReadCString(str);
     mStr = ToNewCString(str);
     if (NS_SUCCEEDED(rv))

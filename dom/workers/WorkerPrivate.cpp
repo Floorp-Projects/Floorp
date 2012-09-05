@@ -1552,7 +1552,7 @@ public:
 
     if (!mWorkerPrivate) {
 #ifdef DEBUG
-      nsCAutoString message("Unable to report memory for ");
+      nsAutoCString message("Unable to report memory for ");
       message += NS_LITERAL_CSTRING("Worker (") + mAddressString +
                  NS_LITERAL_CSTRING(")! It is either using ctypes or is in "
                                     "the process of being destroyed");
@@ -1892,8 +1892,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                                      nsCOMPtr<nsPIDOMWindow>& aWindow,
                                      nsCOMPtr<nsIScriptContext>& aScriptContext,
                                      nsCOMPtr<nsIURI>& aBaseURI,
-                                     nsCOMPtr<nsIPrincipal>& aPrincipal,
-                                     nsCOMPtr<nsIDocument>& aDocument)
+                                     nsCOMPtr<nsIPrincipal>& aPrincipal)
 : EventTarget(aParent ? aCx : NULL), mMutex("WorkerPrivateParent Mutex"),
   mCondVar(mMutex, "WorkerPrivateParent CondVar"),
   mJSObject(aObject), mParent(aParent), mParentJSContext(aParentJSContext),
@@ -1914,7 +1913,6 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mScriptNotify = do_QueryInterface(mScriptContext);
   mBaseURI.swap(aBaseURI);
   mPrincipal.swap(aPrincipal);
-  mDocument.swap(aDocument);
 
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
@@ -2221,7 +2219,6 @@ WorkerPrivateParent<Derived>::ForgetMainThreadObjects(
   SwapToISupportsArray(mBaseURI, aDoomed);
   SwapToISupportsArray(mScriptURI, aDoomed);
   SwapToISupportsArray(mPrincipal, aDoomed);
-  SwapToISupportsArray(mDocument, aDoomed);
 
   mMainThreadObjectsForgotten = true;
 }
@@ -2278,7 +2275,8 @@ uint64_t
 WorkerPrivateParent<Derived>::GetInnerWindowId()
 {
   AssertIsOnMainThread();
-  return mDocument ? mDocument->InnerWindowID() : 0;
+  NS_ASSERTION(!mWindow || mWindow->IsInnerWindow(), "Outer window?");
+  return mWindow ? mWindow->WindowID() : 0;
 }
 
 template <class Derived>
@@ -2404,7 +2402,7 @@ WorkerPrivateParent<Derived>::SetBaseURI(nsIURI* aBaseURI)
   if (NS_SUCCEEDED(aBaseURI->GetPort(&port)) && port != -1) {
     mLocationInfo.mPort.AppendInt(port);
 
-    nsCAutoString host(mLocationInfo.mHostname);
+    nsAutoCString host(mLocationInfo.mHostname);
     host.AppendLiteral(":");
     host.Append(mLocationInfo.mPort);
 
@@ -2454,12 +2452,11 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx, JSObject* aObject,
                              nsCOMPtr<nsPIDOMWindow>& aWindow,
                              nsCOMPtr<nsIScriptContext>& aParentScriptContext,
                              nsCOMPtr<nsIURI>& aBaseURI,
-                             nsCOMPtr<nsIPrincipal>& aPrincipal,
-                             nsCOMPtr<nsIDocument>& aDocument)
+                             nsCOMPtr<nsIPrincipal>& aPrincipal)
 : WorkerPrivateParent<WorkerPrivate>(aCx, aObject, aParent, aParentJSContext,
                                      aScriptURL, aIsChromeWorker, aDomain,
                                      aWindow, aParentScriptContext, aBaseURI,
-                                     aPrincipal, aDocument),
+                                     aPrincipal),
   mJSContext(nullptr), mErrorHandlerRecursionCount(0), mNextTimeoutId(1),
   mStatus(Pending), mSuspended(false), mTimerRunning(false),
   mRunningExpiredTimeouts(false), mCloseHandlerStarted(false),
@@ -2648,7 +2645,7 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
   nsRefPtr<WorkerPrivate> worker =
     new WorkerPrivate(aCx, aObj, aParent, parentContext, scriptURL,
                       aIsChromeWorker, domain, window, scriptContext, baseURI,
-                      principal, document);
+                      principal);
 
   worker->SetIsDOMBinding();
   worker->SetWrapper(aObj);

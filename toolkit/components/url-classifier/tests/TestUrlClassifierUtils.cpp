@@ -262,7 +262,7 @@ void TestLongHostname()
   nsUrlClassifierUtils utils;
   utils.Init();
 
-  nsCAutoString out;
+  nsAutoCString out;
   nsDependentCString in(str);
   PRIntervalTime clockStart = PR_IntervalNow();
   utils.CanonicalizeHostname(in, out);

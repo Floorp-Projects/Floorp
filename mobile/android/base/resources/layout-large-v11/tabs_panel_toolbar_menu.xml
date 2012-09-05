@@ -8,17 +8,17 @@
     <RelativeLayout android:layout_width="fill_parent"
                     android:layout_height="fill_parent">
 
-        <ImageButton android:id="@+id/menu"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="90dip"
-                     android:layout_alignParentRight="true"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/menu"
-                     android:contentDescription="@string/menu"
-                     android:background="@drawable/menu_normal"
-                     android:paddingLeft="48dip"
-                     android:paddingRight="14dip"
-                     android:enabled="false"/>
+        <org.mozilla.gecko.MenuButton android:id="@+id/menu"
+                                      style="@style/AddressBar.ImageButton"
+                                      android:layout_width="90dip"
+                                      android:layout_alignParentRight="true"
+                                      android:gravity="center_vertical"
+                                      android:src="@drawable/menu"
+                                      android:contentDescription="@string/menu"
+                                      android:background="@android:color/black"
+                                      android:paddingLeft="48dip"
+                                      android:paddingRight="14dip"
+                                      android:enabled="false"/>
 
         <View android:layout_width="fill_parent"
               android:layout_height="fill_parent"
@@ -27,7 +27,7 @@
 
         <LinearLayout android:layout_width="fill_parent"
                       android:layout_height="fill_parent"
-                      android:layout_marginRight="15dip">
+                      android:layout_marginRight="28dip">
 
             <TextView android:id="@+id/title"
                       android:layout_width="wrap_content"
@@ -48,15 +48,15 @@
                          android:background="@drawable/action_bar_button"
                          android:visibility="gone"/>
 
-            <ImageButton android:id="@+id/add_tab"
-                         android:layout_width="98dip"
-                         android:layout_height="@dimen/browser_toolbar_height"
-                         android:gravity="center_vertical"
-                         android:paddingLeft="14dip"
-                         android:paddingRight="56dip"
-                         android:src="@drawable/tab_new"
-                         android:contentDescription="@string/new_tab"
-                         android:background="@drawable/tab_new_button"/>
+            <org.mozilla.gecko.TabsPanelButton android:id="@+id/add_tab"
+                                               android:layout_width="85dip"
+                                               android:layout_height="@dimen/browser_toolbar_height"
+                                               android:gravity="center_vertical"
+                                               android:paddingLeft="14dip"
+                                               android:paddingRight="43dip"
+                                               android:src="@drawable/tab_new"
+                                               android:contentDescription="@string/new_tab"
+                                               android:background="@drawable/tab_new_button"/>
 
         </LinearLayout>
 

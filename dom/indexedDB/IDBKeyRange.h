@@ -98,7 +98,7 @@ public:
                 spacecolon + lowerKey;
     }
     else {
-      nsCAutoString clause;
+      nsAutoCString clause;
 
       if (!Lower().IsUnset()) {
         // Lower key is set.

@@ -1427,7 +1427,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mContextStack.AppendElement(mCurrentContext);
 
 #ifdef DEBUG
-  nsCAutoString spec;
+  nsAutoCString spec;
   (void)aURI->GetSpec(spec);
   SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_CALLS,
              ("HTMLContentSink::Init: this=%p url='%s'",
@@ -2131,7 +2131,7 @@ HTMLContentSink::DumpContentModel()
       Element* root = mDocument->GetRootElement();
       if (root) {
         if (mDocumentURI) {
-          nsCAutoString buf;
+          nsAutoCString buf;
           mDocumentURI->GetSpec(buf);
           fputs(buf.get(), out);
         }

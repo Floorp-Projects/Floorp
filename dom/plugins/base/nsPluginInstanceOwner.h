@@ -301,9 +301,6 @@ private:
   
 #ifdef XP_MACOSX
   NP_CGContext                              mCGPluginPortCopy;
-#ifndef NP_NO_QUICKDRAW
-  NP_Port                                   mQDPluginPortCopy;
-#endif
   int32_t                                   mInCGPaintLevel;
   mozilla::RefPtr<MacIOSurface>             mIOSurface;
   mozilla::RefPtr<nsCARenderer>             mCARenderer;

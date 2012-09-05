@@ -593,7 +593,7 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
 {
   *aDocInfo = nullptr;
 
-  nsCAutoString spec(kXBLCachePrefix);
+  nsAutoCString spec(kXBLCachePrefix);
   nsresult rv = PathifyURI(aURI, spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -663,7 +663,7 @@ nsXBLDocumentInfo::WritePrototypeBindings()
   if (!nsContentUtils::IsSystemPrincipal(mDocument->NodePrincipal()))
     return NS_OK;
 
-  nsCAutoString spec(kXBLCachePrefix);
+  nsAutoCString spec(kXBLCachePrefix);
   nsresult rv = PathifyURI(DocumentURI(), spec);
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -884,13 +884,13 @@ Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
   }
 
   if (Layer* mask = GetMaskLayer()) {
-    nsCAutoString pfx(aPrefix);
+    nsAutoCString pfx(aPrefix);
     pfx += "  Mask layer: ";
     mask->Dump(aFile, pfx.get());
   }
 
   if (Layer* kid = GetFirstChild()) {
-    nsCAutoString pfx(aPrefix);
+    nsAutoCString pfx(aPrefix);
     pfx += "  ";
     if (aDumpHtml) {
       fprintf(aFile, "<ul>");
@@ -911,7 +911,7 @@ Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
 void
 Layer::DumpSelf(FILE* aFile, const char* aPrefix)
 {
-  nsCAutoString str;
+  nsAutoCString str;
   PrintInfo(str, aPrefix);
   fprintf(FILEOrDefault(aFile), "%s\n", str.get());
 }
@@ -925,7 +925,7 @@ Layer::Log(const char* aPrefix)
   LogSelf(aPrefix);
 
   if (Layer* kid = GetFirstChild()) {
-    nsCAutoString pfx(aPrefix);
+    nsAutoCString pfx(aPrefix);
     pfx += "  ";
     kid->Log(pfx.get());
   }
@@ -940,7 +940,7 @@ Layer::LogSelf(const char* aPrefix)
   if (!IsLogEnabled())
     return;
 
-  nsCAutoString str;
+  nsAutoCString str;
   PrintInfo(str, aPrefix);
   MOZ_LAYERS_LOG(("%s", str.get()));
 }
@@ -1083,7 +1083,7 @@ LayerManager::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
   }
 #endif
 
-  nsCAutoString pfx(aPrefix);
+  nsAutoCString pfx(aPrefix);
   pfx += "  ";
   if (!GetRoot()) {
     fprintf(file, "%s(null)", pfx.get());
@@ -1106,7 +1106,7 @@ LayerManager::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
 void
 LayerManager::DumpSelf(FILE* aFile, const char* aPrefix)
 {
-  nsCAutoString str;
+  nsAutoCString str;
   PrintInfo(str, aPrefix);
   fprintf(FILEOrDefault(aFile), "%s\n", str.get());
 }
@@ -1119,7 +1119,7 @@ LayerManager::Log(const char* aPrefix)
 
   LogSelf(aPrefix);
 
-  nsCAutoString pfx(aPrefix);
+  nsAutoCString pfx(aPrefix);
   pfx += "  ";
   if (!GetRoot()) {
     MOZ_LAYERS_LOG(("%s(null)", pfx.get()));
@@ -1132,7 +1132,7 @@ LayerManager::Log(const char* aPrefix)
 void
 LayerManager::LogSelf(const char* aPrefix)
 {
-  nsCAutoString str;
+  nsAutoCString str;
   PrintInfo(str, aPrefix);
   MOZ_LAYERS_LOG(("%s", str.get()));
 }

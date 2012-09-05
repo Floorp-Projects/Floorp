@@ -551,7 +551,7 @@ nsTransferable::FlavorsTransferableCanImport(nsISupportsArray **_retval)
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
 
         nsCOMPtr<nsISupportsCString> flavorWrapper ( do_QueryInterface (genericFlavor) );
-        nsCAutoString flavorStr;
+        nsAutoCString flavorStr;
         flavorWrapper->GetData( flavorStr );
 
         if (GetDataForFlavor (mDataArray, flavorStr.get())
@@ -597,7 +597,7 @@ nsTransferable::FlavorsTransferableCanExport(nsISupportsArray **_retval)
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
 
         nsCOMPtr<nsISupportsCString> flavorWrapper ( do_QueryInterface (genericFlavor) );
-        nsCAutoString flavorStr;
+        nsAutoCString flavorStr;
         flavorWrapper->GetData( flavorStr );
 
         if (GetDataForFlavor (mDataArray, flavorStr.get())

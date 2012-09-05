@@ -750,7 +750,7 @@ nsFileView::GetCellText(int32_t aRow, nsITreeColumn* aCol,
   if (NS_LITERAL_STRING("FilenameColumn").Equals(colID)) {
     curFile->GetLeafName(aCellText);
   } else if (NS_LITERAL_STRING("LastModifiedColumn").Equals(colID)) {
-    int64_t lastModTime;
+    PRTime lastModTime;
     curFile->GetLastModifiedTime(&lastModTime);
     // XXX FormatPRTime could take an nsAString&
     nsAutoString temp;
@@ -946,7 +946,7 @@ SortDateCallback(const void* aElement1, const void* aElement2, void* aContext)
   nsIFile* file1 = *static_cast<nsIFile* const *>(aElement1);
   nsIFile* file2 = *static_cast<nsIFile* const *>(aElement2);
 
-  int64_t time1, time2;
+  PRTime time1, time2;
   file1->GetLastModifiedTime(&time1);
   file2->GetLastModifiedTime(&time2);
 

@@ -922,7 +922,7 @@ nsHTMLInputElement::SetHeight(uint32_t aHeight)
 NS_IMETHODIMP
 nsHTMLInputElement::GetIndeterminate(bool* aValue)
 {
-  *aValue = mIndeterminate;
+  *aValue = Indeterminate();
   return NS_OK;
 }
 
@@ -1641,7 +1641,7 @@ nsHTMLInputElement::SetValueChanged(bool aValueChanged)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetChecked(bool* aChecked)
 {
-  *aChecked = mChecked;
+  *aChecked = Checked();
   return NS_OK;
 }
 
@@ -4254,7 +4254,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
     case VALIDITY_STATE_VALUE_MISSING:
     {
       nsXPIDLString message;
-      nsCAutoString key;
+      nsAutoCString key;
       switch (mType)
       {
         case NS_FORM_INPUT_FILE:
@@ -4277,7 +4277,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
     case VALIDITY_STATE_TYPE_MISMATCH:
     {
       nsXPIDLString message;
-      nsCAutoString key;
+      nsAutoCString key;
       if (mType == NS_FORM_INPUT_EMAIL) {
         key.AssignLiteral("FormValidationInvalidEmail");
       } else if (mType == NS_FORM_INPUT_URL) {
@@ -4410,7 +4410,7 @@ nsHTMLInputElement::IsValidEmailAddressList(const nsAString& aValue)
 bool
 nsHTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
 {
-  nsCAutoString value = NS_ConvertUTF16toUTF8(aValue);
+  nsAutoCString value = NS_ConvertUTF16toUTF8(aValue);
   uint32_t i = 0;
   uint32_t length = value.Length();
 
@@ -4419,7 +4419,7 @@ nsHTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
   if (idnSrv) {
     bool ace;
     if (NS_SUCCEEDED(idnSrv->IsACE(value, &ace)) && !ace) {
-      nsCAutoString punyCodedValue;
+      nsAutoCString punyCodedValue;
       if (NS_SUCCEEDED(idnSrv->ConvertUTF8toACE(value, punyCodedValue))) {
         value = punyCodedValue;
         length = value.Length();

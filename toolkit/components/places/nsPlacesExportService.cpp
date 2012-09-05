@@ -279,7 +279,7 @@ WriteFaviconAttribute(const nsACString& aURI, nsIOutputStream* aOutput)
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI);
   if (NS_FAILED(rv)) {
-    nsCAutoString warnMsg;
+    nsAutoCString warnMsg;
     warnMsg.Append("Bookmarks Export: Found invalid favicon '");
     warnMsg.Append(aURI);
     warnMsg.Append("'");
@@ -296,8 +296,8 @@ WriteFaviconAttribute(const nsACString& aURI, nsIOutputStream* aOutput)
     return NS_OK; // no favicon
   NS_ENSURE_SUCCESS(rv, rv); // anything else is error
 
-  nsCAutoString faviconScheme;
-  nsCAutoString faviconSpec;
+  nsAutoCString faviconScheme;
+  nsAutoCString faviconSpec;
   rv = faviconURI->GetSpec(faviconSpec);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = faviconURI->GetScheme(faviconScheme);
@@ -493,7 +493,7 @@ nsPlacesExportService::WriteTitle(nsINavHistoryResultNode* aItem,
   if (type == nsINavHistoryResultNode::RESULT_TYPE_SEPARATOR)
     return NS_ERROR_INVALID_ARG;
 
-  nsCAutoString title;
+  nsAutoCString title;
   rv = aItem->GetTitle(title);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -555,13 +555,13 @@ nsPlacesExportService::WriteItem(nsINavHistoryResultNode* aItem,
   // before doing any attempt to write the item check that uri is valid, if the
   // item has a bad uri we skip it silently, otherwise we could stop while
   // exporting, generating a corrupt file.
-  nsCAutoString uri;
+  nsAutoCString uri;
   nsresult rv = aItem->GetUri(uri);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIURI> pageURI;
   rv = NS_NewURI(getter_AddRefs(pageURI), uri, nullptr);
   if (NS_FAILED(rv)) {
-    nsCAutoString warnMsg;
+    nsAutoCString warnMsg;
     warnMsg.Append("Bookmarks Export: Found invalid item uri '");
     warnMsg.Append(uri);
     warnMsg.Append("'");
@@ -681,7 +681,7 @@ nsPlacesExportService::WriteItem(nsINavHistoryResultNode* aItem,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // title
-  nsCAutoString title;
+  nsAutoCString title;
   rv = aItem->GetTitle(title);
   NS_ENSURE_SUCCESS(rv, rv);
   char* escapedTitle = nsEscapeHTML(title.get());
@@ -809,7 +809,7 @@ nsPlacesExportService::WriteSeparator(nsINavHistoryResultNode* aItem,
   // Note: we can't write the separator ID or anything else other than NAME
   // because it makes Firefox 2.x crash/hang - see bug #381129
 
-  nsCAutoString title;
+  nsAutoCString title;
   rv = mBookmarksService->GetItemTitle(itemId, title);
   if (NS_SUCCEEDED(rv) && !title.IsEmpty()) {
     rv = aOutput->Write(kNameAttribute, strlen(kNameAttribute), &dummy);
@@ -848,7 +848,7 @@ nsPlacesExportService::WriteSeparator(nsINavHistoryResultNode* aItem,
 nsresult
 WriteEscapedUrl(const nsCString& aString, nsIOutputStream* aOutput)
 {
-  nsCAutoString escaped(aString);
+  nsAutoCString escaped(aString);
   int32_t offset;
   while ((offset = escaped.FindChar('\"')) >= 0) {
     escaped.Cut(offset, 1);
@@ -868,7 +868,7 @@ nsPlacesExportService::WriteContainerContents(nsINavHistoryResultNode* aFolder,
                                                     const nsACString& aIndent,
                                                     nsIOutputStream* aOutput)
 {
-  nsCAutoString myIndent(aIndent);
+  nsAutoCString myIndent(aIndent);
   myIndent.Append(kIndent);
 
   int64_t folderId;
@@ -998,7 +998,7 @@ nsPlacesExportService::ExportHTMLToFile(nsIFile* aBookmarksFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // indents
-  nsCAutoString indent;
+  nsAutoCString indent;
   indent.Assign(kIndent);
 
   // Bookmarks Menu.

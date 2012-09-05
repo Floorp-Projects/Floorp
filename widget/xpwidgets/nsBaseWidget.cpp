@@ -751,35 +751,9 @@ nsBaseWidget::AutoUseBasicLayerManager::~AutoUseBasicLayerManager()
 bool
 nsBaseWidget::GetShouldAccelerate()
 {
-#if defined(XP_WIN) || defined(ANDROID) || (MOZ_PLATFORM_MAEMO > 5) || defined(MOZ_GL_PROVIDER)
+#if defined(XP_WIN) || defined(ANDROID) || (MOZ_PLATFORM_MAEMO > 5) || \
+    defined(MOZ_GL_PROVIDER) || defined(XP_MACOSX)
   bool accelerateByDefault = true;
-#elif defined(XP_MACOSX)
-/* quickdraw plugins don't work with OpenGL so we need to avoid OpenGL when we want to support
- * them. e.g. 10.5 */
-# if defined(NP_NO_QUICKDRAW)
-  bool accelerateByDefault = true;
-
-  // 10.6.2 and lower have a bug involving textures and pixel buffer objects
-  // that caused bug 629016, so we don't allow OpenGL-accelerated layers on
-  // those versions of the OS.
-  // This will still let full-screen video be accelerated on OpenGL, because
-  // that XUL widget opts in to acceleration, but that's probably OK.
-  SInt32 major, minor, bugfix;
-  OSErr err1 = ::Gestalt(gestaltSystemVersionMajor, &major);
-  OSErr err2 = ::Gestalt(gestaltSystemVersionMinor, &minor);
-  OSErr err3 = ::Gestalt(gestaltSystemVersionBugFix, &bugfix);
-  if (err1 == noErr && err2 == noErr && err3 == noErr) {
-    if (major == 10 && minor == 6) {
-      if (bugfix <= 2) {
-        accelerateByDefault = false;
-      }
-    }
-  }
-
-# else
-  bool accelerateByDefault = false;
-# endif
-
 #else
   bool accelerateByDefault = false;
 #endif
@@ -1193,7 +1167,7 @@ nsBaseWidget::OverrideSystemMouseScrollSpeed(int32_t aOriginalDelta,
     return NS_OK;
   }
 
-  nsCAutoString factorPrefName(
+  nsAutoCString factorPrefName(
     "mousewheel.system_scroll_override_on_root_content.");
   if (aIsHorizontal) {
     factorPrefName.AppendLiteral("horizontal.");
@@ -1601,7 +1575,7 @@ nsBaseWidget::debug_WantPaintFlashing()
 nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
                               nsIWidget *           aWidget,
                               nsGUIEvent *          aGuiEvent,
-                              const nsCAutoString & aWidgetName,
+                              const nsAutoCString & aWidgetName,
                               int32_t               aWindowID)
 {
   if (aGuiEvent->message == NS_MOUSE_MOVE)
@@ -1637,7 +1611,7 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
 nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
                                    const nsIntRegion &   aRegion,
-                                   const nsCAutoString & aWidgetName,
+                                   const nsAutoCString & aWidgetName,
                                    int32_t               aWindowID)
 {
   NS_ASSERTION(nullptr != aFileOut,"cmon, null output FILE");
@@ -1663,7 +1637,7 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
 nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
                                    const nsIntRect *     aRect,
-                                   const nsCAutoString & aWidgetName,
+                                   const nsAutoCString & aWidgetName,
                                    int32_t               aWindowID)
 {
   if (!debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping"))

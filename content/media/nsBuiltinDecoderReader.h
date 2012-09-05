@@ -53,7 +53,7 @@ public:
   bool mHasVideo;
 };
 
-#ifdef MOZ_SAMPLE_TYPE_S16LE
+#ifdef MOZ_SAMPLE_TYPE_S16
 #include <ogg/os_types.h>
 typedef ogg_int32_t VorbisPCMValue;
 typedef short AudioDataValue;

@@ -409,7 +409,7 @@ GetLogTextFor(TF_DA_ATTR_INFO aAttr, nsACString &aText)
 static nsCString
 GetLogTextFor(const TF_DISPLAYATTRIBUTE &aDispAttr)
 {
-  nsCAutoString str, tmp;
+  nsAutoCString str, tmp;
   str = "crText:{ ";
   GetLogTextFor(aDispAttr.crText, tmp);
   str += tmp;

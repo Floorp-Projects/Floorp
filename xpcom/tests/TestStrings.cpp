@@ -135,7 +135,7 @@ bool test_rfind_2()
 bool test_rfind_3()
   {
     const char text[] = "urn:mozilla:locale:en-US:necko";
-    nsCAutoString value(text);
+    nsAutoCString value(text);
     int32_t i = value.RFind(":");
     if (i == 24)
       return true;
@@ -160,7 +160,7 @@ bool test_rfind_4()
 bool test_findinreadable()
   {
     const char text[] = "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/chrome/classic.jar!/";
-    nsCAutoString value(text);
+    nsAutoCString value(text);
 
     nsACString::const_iterator begin, end;
     value.BeginReading(begin);
@@ -248,7 +248,7 @@ bool test_findinreadable()
 bool test_rfindinreadable()
   {
     const char text[] = "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/chrome/classic.jar!/";
-    nsCAutoString value(text);
+    nsAutoCString value(text);
 
     nsACString::const_iterator begin, end;
     value.BeginReading(begin);
@@ -512,7 +512,7 @@ bool test_concat_2()
     nsCString text("text");
     const nsACString& aText = text;
 
-    nsCAutoString result( fieldTextStr + aText );
+    nsAutoCString result( fieldTextStr + aText );
 
     if (strcmp(result.get(), "xyztext") == 0)
       return true;
@@ -891,7 +891,7 @@ bool test_voided_autostr()
   {
     const char kData[] = "hello world";
 
-    nsCAutoString str;
+    nsAutoCString str;
     if (str.IsVoid())
       return false;
     if (!str.IsEmpty())
@@ -953,10 +953,10 @@ bool test_string_tointeger()
   int32_t i;
   nsresult rv;
   for (const ToIntegerTest* t = kToIntegerTests; t->str; ++t) {
-    int32_t result = nsCAutoString(t->str).ToInteger(&rv, t->radix);
+    int32_t result = nsAutoCString(t->str).ToInteger(&rv, t->radix);
     if (rv != t->rv || result != t->result)
       return false;
-    result = nsCAutoString(t->str).ToInteger(&i, t->radix);
+    result = nsAutoCString(t->str).ToInteger(&i, t->radix);
     if ((nsresult)i != t->rv || result != t->result)
       return false;
   }

@@ -652,7 +652,7 @@ main(int32_t argc, char *argv[])
         // keep tabs on the second and third cookies, so we can check them later
         nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
         if (!cookie2) break;
-        nsCAutoString name;
+        nsAutoCString name;
         cookie2->GetName(name);
         if (name == NS_LITERAL_CSTRING("test2"))
           expiredCookie = cookie2;
@@ -709,8 +709,8 @@ main(int32_t argc, char *argv[])
       // test that cookies are
       // a) returned by order of creation time (oldest first, newest last)
       // b) evicted by order of lastAccessed time, if the limit on cookies per host (50) is reached
-      nsCAutoString name;
-      nsCAutoString expected;
+      nsAutoCString name;
+      nsAutoCString expected;
       for (int32_t i = 0; i < 60; ++i) {
         name = NS_LITERAL_CSTRING("test");
         name.AppendInt(i);

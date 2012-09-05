@@ -204,6 +204,8 @@ BlacklistOSToOperatingSystem(const nsAString& os)
     return DRIVER_OS_WINDOWS_VISTA;
   else if (os == NS_LITERAL_STRING("WINNT 6.1"))
     return DRIVER_OS_WINDOWS_7;
+  else if (os == NS_LITERAL_STRING("WINNT 6.2"))
+    return DRIVER_OS_WINDOWS_8;
   else if (os == NS_LITERAL_STRING("Linux"))
     return DRIVER_OS_LINUX;
   else if (os == NS_LITERAL_STRING("Darwin 9"))
@@ -212,6 +214,8 @@ BlacklistOSToOperatingSystem(const nsAString& os)
     return DRIVER_OS_OS_X_10_6;
   else if (os == NS_LITERAL_STRING("Darwin 11"))
     return DRIVER_OS_OS_X_10_7;
+  else if (os == NS_LITERAL_STRING("Darwin 12"))
+    return DRIVER_OS_OS_X_10_8;
   else if (os == NS_LITERAL_STRING("Android"))
     return DRIVER_OS_ANDROID;
   else if (os == NS_LITERAL_STRING("All"))

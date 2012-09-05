@@ -163,8 +163,8 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
 
     if (pobj->lastProperty() == entry->pshape) {
 #ifdef DEBUG
-        PropertyName *name = GetNameFromBytecode(cx, script, pc, op);
-        JS_ASSERT(pobj->nativeContainsNoAllocation(NameToId(name)));
+        Rooted<PropertyName*> name(cx, GetNameFromBytecode(cx, script, pc, op));
+        JS_ASSERT(pobj->nativeContainsNoAllocation(name));
 #endif
         *pobjp = pobj;
         return NULL;

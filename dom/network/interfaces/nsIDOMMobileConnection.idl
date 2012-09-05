@@ -6,12 +6,13 @@
 
 interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
+interface nsIDOMMozMobileICCInfo;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozIccManager;
 
-[scriptable, builtinclass, uuid(46fa4f72-9c81-4b7f-b395-87202966e526)]
+[scriptable, builtinclass, uuid(d9009d90-a4b3-44fd-a592-42b09f330fe5)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   /**
@@ -21,6 +22,11 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * 'networkLocked', 'ready'.
    */
   readonly attribute DOMString cardState;
+
+  /**
+   * Information stored in the device's ICC card.
+   */
+  readonly attribute nsIDOMMozMobileICCInfo iccInfo;
 
   /**
    * Information about the voice connection.
@@ -208,25 +214,31 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * The 'cardstatechange' event is notified when the 'cardState' attribute
    * changes value.
    */
-  attribute nsIDOMEventListener oncardstatechange;
+  [implicit_jscontext] attribute jsval oncardstatechange;
+
+   /**
+   * The 'iccinfochange' event is notified whenever the icc info object
+   * changes.
+   */
+  [implicit_jscontext] attribute jsval oniccinfochange;
 
   /**
    * The 'voicechange' event is notified whenever the voice connection object
    * changes.
    */
-  attribute nsIDOMEventListener onvoicechange;
+  [implicit_jscontext] attribute jsval onvoicechange;
 
   /**
    * The 'datachange' event is notified whenever the data connection object
    * changes values.
    */
-  attribute nsIDOMEventListener ondatachange;
+  [implicit_jscontext] attribute jsval ondatachange;
 
   /**
    * The 'ussdreceived' event is notified whenever a new USSD message is
    * received.
    */
-  attribute nsIDOMEventListener onussdreceived;
+  [implicit_jscontext] attribute jsval onussdreceived;
 };
 
 [scriptable, uuid(5ea0e4a9-4684-40da-9930-8ebb61d187f3)]
@@ -333,4 +345,18 @@ interface nsIDOMMozMobileCellInfo: nsISupports
    * Mobile Cell ID for GSM/WCDMA networks.
    */
   readonly attribute unsigned long gsmCellId;
+};
+
+[scriptable, uuid(109c1117-1199-47aa-aad2-ea9f456220fa)]
+interface nsIDOMMozMobileICCInfo : nsISupports
+{
+  /**
+   * Mobile Country Code (MCC) of the subscriber's home network.
+   */
+  readonly attribute unsigned short mcc;
+
+  /**
+   * Mobile Network Code (MNC) of the subscriber's home network.
+   */
+  readonly attribute unsigned short mnc;
 };

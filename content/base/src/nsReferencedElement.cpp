@@ -25,13 +25,13 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
   if (!aURI)
     return;
 
-  nsCAutoString refPart;
+  nsAutoCString refPart;
   aURI->GetRef(refPart);
   // Unescape %-escapes in the reference. The result will be in the
   // origin charset of the URL, hopefully...
   NS_UnescapeURL(refPart);
 
-  nsCAutoString charset;
+  nsAutoCString charset;
   aURI->GetOriginCharset(charset);
   nsAutoString ref;
   nsresult rv = nsContentUtils::ConvertStringFromCharset(charset, refPart, ref);
