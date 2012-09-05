@@ -5122,9 +5122,10 @@ class CGDictionary(CGThing):
                 "\n".join(memberDecls) + "\n"
                 "private:\n"
                 "  // Disallow copy-construction\n"
-                "  ${selfName}(const ${selfName}&) MOZ_DELETE;\n"
-                "  static bool InitIds(JSContext* cx);\n"
-                "  static bool initedIds;\n" +
+                "  ${selfName}(const ${selfName}&) MOZ_DELETE;\n" +
+                # NOTE: jsids are per-runtime, so don't use them in workers
+                ("  static bool InitIds(JSContext* cx);\n"
+                 "  static bool initedIds;\n" if not self.workers else "") +
                 "\n".join("  static jsid " +
                           self.makeIdName(m.identifier.name) + ";" for
                           m in d.members) + "\n"
@@ -5156,26 +5157,28 @@ class CGDictionary(CGThing):
                            reindent=True)
 
         return string.Template(
-            "bool ${selfName}::initedIds = false;\n" +
-            "\n".join("jsid ${selfName}::%s = JSID_VOID;" %
-                      self.makeIdName(m.identifier.name)
-                      for m in d.members) + "\n"
-            "\n"
-            "bool\n"
-            "${selfName}::InitIds(JSContext* cx)\n"
-            "{\n"
-            "  MOZ_ASSERT(!initedIds);\n"
-            "${idInit}\n"
-            "  initedIds = true;\n"
-            "  return true;\n"
-            "}\n"
-            "\n"
+            # NOTE: jsids are per-runtime, so don't use them in workers
+            ("bool ${selfName}::initedIds = false;\n" +
+             "\n".join("jsid ${selfName}::%s = JSID_VOID;" %
+                       self.makeIdName(m.identifier.name)
+                       for m in d.members) + "\n"
+             "\n"
+             "bool\n"
+             "${selfName}::InitIds(JSContext* cx)\n"
+             "{\n"
+             "  MOZ_ASSERT(!initedIds);\n"
+             "${idInit}\n"
+             "  initedIds = true;\n"
+             "  return true;\n"
+             "}\n"
+             "\n" if not self.workers else "") +
             "bool\n"
             "${selfName}::Init(JSContext* cx, const JS::Value& val)\n"
-            "{\n"
-            "  if (!initedIds && !InitIds(cx)) {\n"
-            "    return false;\n"
-            "  }\n"
+            "{\n" +
+            # NOTE: jsids are per-runtime, so don't use them in workers
+            ("  if (!initedIds && !InitIds(cx)) {\n"
+             "    return false;\n"
+             "  }\n" if not self.workers else "") +
             "${initParent}"
             "  JSBool found;\n"
             "  JS::Value temp;\n"
@@ -5235,20 +5238,35 @@ class CGDictionary(CGThing):
         if member.defaultValue:
             replacements["haveValue"] = "found"
 
+        # NOTE: jsids are per-runtime, so don't use them in workers
+        if self.workers:
+            propName = member.identifier.name
+            propCheck = ('JS_HasProperty(cx, &val.toObject(), "%s", &found)' %
+                         propName)
+            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", &temp)' %
+                       propName)
+        else:
+            propId = self.makeIdName(member.identifier.name);
+            propCheck = ("JS_HasPropertyById(cx, &val.toObject(), %s, &found)" %
+                         propId)
+            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, &temp)" %
+                       propId)
+
         conversionReplacements = {
-            "propId" : self.makeIdName(member.identifier.name),
             "prop": "(this->%s)" % member.identifier.name,
-            "convert": string.Template(templateBody).substitute(replacements)
+            "convert": string.Template(templateBody).substitute(replacements),
+            "propCheck": propCheck,
+            "propGet": propGet
             }
         conversion = ("if (isNull) {\n"
                       "  found = false;\n"
-                      "} else if (!JS_HasPropertyById(cx, &val.toObject(), ${propId}, &found)) {\n"
+                      "} else if (!${propCheck}) {\n"
                       "  return false;\n"
                       "}\n")
         if member.defaultValue:
             conversion += (
                 "if (found) {\n"
-                "  if (!JS_GetPropertyById(cx, &val.toObject(), ${propId}, &temp)) {\n"
+                "  if (!${propGet}) {\n"
                 "    return false;\n"
                 "  }\n"
                 "}\n"
@@ -5257,7 +5275,7 @@ class CGDictionary(CGThing):
             conversion += (
                 "if (found) {\n"
                 "  ${prop}.Construct();\n"
-                "  if (!JS_GetPropertyById(cx, &val.toObject(), ${propId}, &temp)) {\n"
+                "  if (!${propGet}) {\n"
                 "    return false;\n"
                 "  }\n"
                 "${convert}\n"
