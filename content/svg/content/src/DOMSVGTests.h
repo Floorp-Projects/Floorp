@@ -24,6 +24,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMSVGTESTS
 
+  DOMSVGTests();
   virtual ~DOMSVGTests() {}
 
   friend class mozilla::DOMSVGStringList;
@@ -79,14 +80,13 @@ public:
   void UnsetAttr(const nsIAtom* aAttribute);
 
   nsIAtom* GetAttrName(uint8_t aAttrEnum) const;
-  SVGStringList* GetStringListAttribute(uint8_t aAttrEnum) const;
-  SVGStringList* GetOrCreateStringListAttribute(uint8_t aAttrEnum) const;
   void GetAttrValue(uint8_t aAttrEnum, nsAttrValue &aValue) const;
 
   void MaybeInvalidate();
 
 private:
   enum { FEATURES, EXTENSIONS, LANGUAGE };
+  SVGStringList mStringListAttributes[3];
   static nsIAtom** sStringListNames[3];
 };
 

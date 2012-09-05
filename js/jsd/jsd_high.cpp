@@ -24,7 +24,7 @@ static void* _dangerousThread = NULL;
 #endif
 
 #ifdef JSD_THREADSAFE
-void* _jsd_global_lock = NULL;
+JSDStaticLock* _jsd_global_lock = NULL;
 #endif
 
 #ifdef DEBUG
@@ -184,7 +184,6 @@ jsd_DebuggerOnForUser(JSRuntime*         jsrt,
                       JSObject*          scopeobj)
 {
     JSDContext* jsdc;
-    JSContext* iter = NULL;
 
     jsdc = _newJSDContext(jsrt, callbacks, user, scopeobj);
     if( ! jsdc )
@@ -284,7 +283,6 @@ jsd_SetUserCallbacks(JSRuntime* jsrt, JSD_UserCallbacks* callbacks, void* user)
 void*
 jsd_SetContextPrivate(JSDContext* jsdc, void *data)
 {
-    void *rval = jsdc->data;
     jsdc->data = data;
     return data;
 }

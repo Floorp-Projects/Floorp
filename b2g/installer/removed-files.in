@@ -1,3 +1,6 @@
 README.txt
 @DLL_PREFIX@mozutils@DLL_SUFFIX@
 jssubloader/
+#ifdef XP_MACOSX
+run-mozilla.sh
+#endif

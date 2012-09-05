@@ -689,6 +689,15 @@ public:
    */
   bool IsInDocument() const { return !(mFlags & eIsNotInDocument); }
 
+  /**
+  * Return true if the accessible is primary accessible for the given DOM node.
+  *
+  * Accessible hierarchy may be complex for single DOM node, in this case
+  * these accessibles share the same DOM node. The primary accessible "owns"
+  * that DOM node in terms it gets stored in the accessible to node map.
+  */
+  bool IsPrimaryForNode() const { return !(mFlags & eSharedNode); }
+
 protected:
 
   //////////////////////////////////////////////////////////////////////////////
@@ -738,7 +747,8 @@ protected:
    */
   enum StateFlags {
     eIsDefunct = 1 << 2, // accessible is defunct
-    eIsNotInDocument = 1 << 3 // accessible is not in document
+    eIsNotInDocument = 1 << 3, // accessible is not in document
+    eSharedNode = 1 << 4 // accessible shares DOM node from another accessible
   };
 
   /**
@@ -746,23 +756,23 @@ protected:
    * @note keep these flags in sync with ChildrenFlags and StateFlags
    */
   enum AccessibleTypes {
-    eApplicationAccessible = 1 << 4,
-    eAutoCompleteAccessible = 1 << 5,
-    eAutoCompletePopupAccessible = 1 << 6,
-    eComboboxAccessible = 1 << 7,
-    eDocAccessible = 1 << 8,
-    eHyperTextAccessible = 1 << 9,
-    eHTMLFileInputAccessible = 1 << 10,
-    eHTMLListItemAccessible = 1 << 11,
-    eImageAccessible = 1 << 12,
-    eImageMapAccessible = 1 << 13,
-    eListControlAccessible = 1 << 14,
-    eMenuButtonAccessible = 1 << 15,
-    eMenuPopupAccessible = 1 << 16,
-    eRootAccessible = 1 << 17,
-    eTextLeafAccessible = 1 << 18,
-    eXULDeckAccessible = 1 << 19,
-    eXULTreeAccessible = 1 << 20
+    eApplicationAccessible = 1 << 5,
+    eAutoCompleteAccessible = 1 << 6,
+    eAutoCompletePopupAccessible = 1 << 7,
+    eComboboxAccessible = 1 << 8,
+    eDocAccessible = 1 << 9,
+    eHyperTextAccessible = 1 << 10,
+    eHTMLFileInputAccessible = 1 << 11,
+    eHTMLListItemAccessible = 1 << 12,
+    eImageAccessible = 1 << 13,
+    eImageMapAccessible = 1 << 14,
+    eListControlAccessible = 1 << 15,
+    eMenuButtonAccessible = 1 << 16,
+    eMenuPopupAccessible = 1 << 17,
+    eRootAccessible = 1 << 18,
+    eTextLeafAccessible = 1 << 19,
+    eXULDeckAccessible = 1 << 20,
+    eXULTreeAccessible = 1 << 21
   };
 
   //////////////////////////////////////////////////////////////////////////////

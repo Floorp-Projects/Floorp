@@ -17,6 +17,8 @@
 
 #include "jsd.h"
 
+#include "js/Utility.h"
+
 #ifdef JSD_THREADSAFE
 
 #ifdef JSD_USE_NSPR_LOCKS
@@ -77,12 +79,12 @@ void ASSERT_VALID_LOCK(JSDStaticLock* lock)
 #define ASSERT_VALID_LOCK(x) ((void)0)
 #endif
 
-void*
+JSDStaticLock*
 jsd_CreateLock()
 {
     JSDStaticLock* lock;
 
-    if( ! (lock = calloc(1, sizeof(JSDStaticLock))) || 
+    if( ! (lock = js_pod_calloc<JSDStaticLock>(1)) ||
         ! (lock->lock = PR_NewLock()) )
     {
         if(lock)
