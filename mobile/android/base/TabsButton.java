@@ -14,41 +14,23 @@ import android.graphics.Path;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.PorterDuff.Mode;
 import android.util.AttributeSet;
-import android.widget.ImageButton;
 
-public class TabsButton extends ImageButton 
-                        implements CanvasDelegate.DrawManager { 
-    Paint mPaint;
+public class TabsButton extends ShapedButton {
+    private Paint mPaint;
 
-    Path mPath;
-    Path mBackgroundPath;
-    Path mLeftCurve;
-    Path mRightCurve;
+    private Path mBackgroundPath;
+    private Path mLeftCurve;
+    private Path mRightCurve;
 
-    boolean mCropped;
-    int mFullWidth;
-    CurveTowards mSide;
-    CanvasDelegate mCanvasDelegate;
-
-    private enum CurveTowards { NONE, LEFT, RIGHT };
+    private boolean mCropped;
+    private int mFullWidth;
 
     public TabsButton(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.BrowserToolbarCurve);
-        int curveTowards = a.getInt(R.styleable.BrowserToolbarCurve_curveTowards, 0x02);
-        a.recycle();
-
-        a = context.obtainStyledAttributes(attrs, R.styleable.TabsButton);
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabsButton);
         mCropped = a.getBoolean(R.styleable.TabsButton_cropped, false);
         a.recycle();
-
-        if (curveTowards == 0x00)
-            mSide = CurveTowards.NONE;
-        else if (curveTowards == 0x01)
-            mSide = CurveTowards.LEFT;
-        else
-            mSide = CurveTowards.RIGHT;
 
         // Paint to draw the background.
         mPaint = new Paint();
@@ -168,10 +150,5 @@ public class TabsButton extends ImageButton
         // Additionally draw a black curve for cropped button's default level.
         if (mCropped && background.getLevel() != 2)
             canvas.drawPath(mBackgroundPath, mPaint);
-    }
-
-    @Override
-    public void defaultDraw(Canvas canvas) {
-        super.draw(canvas);
     }
 }
