@@ -680,67 +680,66 @@ CodeGeneratorARM::visitBitOpI(LBitOpI *ins)
 bool
 CodeGeneratorARM::visitShiftI(LShiftI *ins)
 {
-    const LAllocation *lhs = ins->getOperand(0);
-    const LAllocation *rhs = ins->getOperand(1);
-    const LDefinition *dest = ins->getDef(0);
+    Register lhs = ToRegister(ins->lhs());
+    const LAllocation *rhs = ins->rhs();
+    Register dest = ToRegister(ins->output());
 
-    // The shift amounts should be AND'ed into the 0-31 range since arm shifts
-    // by the lower byte of the register (it will attempt to shift by 250 if you
-    // ask it to, and the result will probably not be what you want.
-    if (!rhs->isConstant()) {
-        masm.ma_and(Imm32(0x1f), ToRegister(rhs), ToRegister(dest));
-        rhs = dest->output();
-    }
-
-    switch (ins->bitop()) {
-        case JSOP_LSH:
-          if (rhs->isConstant()) {
-                masm.ma_lsl(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs), ToRegister(dest));
-          } else {
-                masm.ma_lsl(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
-          }
+    if (rhs->isConstant()) {
+        int32_t shift = ToInt32(rhs) & 0x1F;
+        switch (ins->bitop()) {
+          case JSOP_LSH:
+            if (shift)
+                masm.ma_lsl(Imm32(shift), lhs, dest);
+            else
+                masm.ma_mov(lhs, dest);
             break;
-        case JSOP_RSH:
-          if (rhs->isConstant()) {
-              if ((ToInt32(rhs) & 0x1f) != 0) {
-                  masm.ma_asr(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs), ToRegister(dest));
-              } else {
-                  masm.ma_mov(ToRegister(lhs), ToRegister(dest));
-              }
-          } else {
-                masm.ma_asr(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
-          }
+          case JSOP_RSH:
+            if (shift)
+                masm.ma_asr(Imm32(shift), lhs, dest);
+            else
+                masm.ma_mov(lhs, dest);
             break;
-        case JSOP_URSH: {
-            MUrsh *ursh = ins->mir()->toUrsh();
-            if (rhs->isConstant()) {
-                if ((ToInt32(rhs) & 0x1f) != 0) {
-                    masm.ma_lsr(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs), ToRegister(dest));
-                } else {
-                    masm.ma_mov(ToRegister(lhs), ToRegister(dest));
-                }
+          case JSOP_URSH:
+            if (shift) {
+                masm.ma_lsr(Imm32(shift), lhs, dest);
             } else {
-                masm.ma_lsr(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
-            }
-
-            // Note: this is an unsigned operation.
-            // We don't have a UINT32 type, so we will emulate this with INT32
-            // The bit representation of an integer from ToInt32 and ToUint32 are the same.
-            // So the inputs are ok.
-            // But we need to bring the output back again from UINT32 to INT32.
-            // Both representation overlap each other in the positive numbers. (in INT32)
-            // So there is only a problem when solution (in INT32) is negative.
-            if (ursh->canOverflow()) {
-                masm.ma_cmp(ToRegister(dest), Imm32(0));
-                if (!bailoutIf(Assembler::LessThan, ins->snapshot())) {
-                    return false;
+                // x >>> 0 can overflow.
+                masm.ma_mov(lhs, dest);
+                if (ins->mir()->toUrsh()->canOverflow()) {
+                    masm.ma_cmp(dest, Imm32(0));
+                    if (!bailoutIf(Assembler::LessThan, ins->snapshot()))
+                        return false;
                 }
             }
             break;
+          default:
+            JS_NOT_REACHED("Unexpected shift op");
         }
-        default:
-            JS_NOT_REACHED("unexpected shift opcode");
-            return false;
+    } else {
+        // The shift amounts should be AND'ed into the 0-31 range since arm
+        // shifts by the lower byte of the register (it will attempt to shift
+        // by 250 if you ask it to).
+        masm.ma_and(Imm32(0x1F), ToRegister(rhs), dest);
+
+        switch (ins->bitop()) {
+          case JSOP_LSH:
+            masm.ma_lsl(dest, lhs, dest);
+            break;
+          case JSOP_RSH:
+            masm.ma_asr(dest, lhs, dest);
+            break;
+          case JSOP_URSH:
+            masm.ma_lsr(dest, lhs, dest);
+            if (ins->mir()->toUrsh()->canOverflow()) {
+                // x >>> 0 can overflow.
+                masm.ma_cmp(dest, Imm32(0));
+                if (!bailoutIf(Assembler::LessThan, ins->snapshot()))
+                    return false;
+            }
+            break;
+          default:
+            JS_NOT_REACHED("Unexpected shift op");
+        }
     }
 
     return true;
@@ -756,12 +755,13 @@ CodeGeneratorARM::visitUrshD(LUrshD *ins)
     FloatRegister out = ToFloatRegister(ins->output());
 
     if (rhs->isConstant()) {
-        if ((ToInt32(rhs) & 0x1f) != 0)
-            masm.ma_lsr(Imm32(ToInt32(rhs) & 0x1F), lhs, temp);
+        int32_t shift = ToInt32(rhs) & 0x1F;
+        if (shift)
+            masm.ma_lsr(Imm32(shift), lhs, temp);
         else
             masm.ma_mov(lhs, temp);
     } else {
-        masm.ma_and(Imm32(0x1f), ToRegister(rhs), temp);
+        masm.ma_and(Imm32(0x1F), ToRegister(rhs), temp);
         masm.ma_lsr(temp, lhs, temp);
     }
 

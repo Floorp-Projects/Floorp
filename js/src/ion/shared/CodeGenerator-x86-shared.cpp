@@ -808,45 +808,54 @@ CodeGeneratorX86Shared::visitBitOpI(LBitOpI *ins)
 bool
 CodeGeneratorX86Shared::visitShiftI(LShiftI *ins)
 {
-    const LAllocation *lhs = ins->getOperand(0);
-    const LAllocation *rhs = ins->getOperand(1);
+    Register lhs = ToRegister(ins->lhs());
+    const LAllocation *rhs = ins->rhs();
 
-    switch (ins->bitop()) {
-        case JSOP_LSH:
-            if (rhs->isConstant())
-                masm.shll(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs));
-            else
-                masm.shll_cl(ToRegister(lhs));
+    if (rhs->isConstant()) {
+        int32_t shift = ToInt32(rhs) & 0x1F;
+        switch (ins->bitop()) {
+          case JSOP_LSH:
+            if (shift)
+                masm.shll(Imm32(shift), lhs);
             break;
-        case JSOP_RSH:
-            if (rhs->isConstant())
-                masm.sarl(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs));
-            else
-                masm.sarl_cl(ToRegister(lhs));
+          case JSOP_RSH:
+            if (shift)
+                masm.sarl(Imm32(shift), lhs);
             break;
-        case JSOP_URSH: {
-            MUrsh *ursh = ins->mir()->toUrsh(); 
-            if (rhs->isConstant())
-                masm.shrl(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs));
-            else
-                masm.shrl_cl(ToRegister(lhs));
- 
-            // Note: this is an unsigned operation.
-            // We don't have a UINT32 type, so we will emulate this with INT32
-            // The bit representation of an integer from ToInt32 and ToUint32 are the same.
-            // So the inputs are ok.
-            // But we need to bring the output back again from UINT32 to INT32.
-            // Both representation overlap each other in the positive numbers. (in INT32)
-            // So there is only a problem when solution (in INT32) is negative.
-            if (ursh->canOverflow()) {
-                masm.cmpl(ToOperand(lhs), Imm32(0));
-                if (!bailoutIf(Assembler::LessThan, ins->snapshot()))
+          case JSOP_URSH:
+            if (shift) {
+                masm.shrl(Imm32(shift), lhs);
+            } else if (ins->mir()->toUrsh()->canOverflow()) {
+                // x >>> 0 can overflow.
+                masm.testl(lhs, lhs);
+                if (!bailoutIf(Assembler::Signed, ins->snapshot()))
                     return false;
             }
             break;
+          default:
+            JS_NOT_REACHED("Unexpected shift op");
         }
-        default:
-            JS_NOT_REACHED("unexpected shift opcode");
+    } else {
+        JS_ASSERT(ToRegister(rhs) == ecx);
+        switch (ins->bitop()) {
+          case JSOP_LSH:
+            masm.shll_cl(lhs);
+            break;
+          case JSOP_RSH:
+            masm.sarl_cl(lhs);
+            break;
+          case JSOP_URSH:
+            masm.shrl_cl(lhs);
+            if (ins->mir()->toUrsh()->canOverflow()) {
+                // x >>> 0 can overflow.
+                masm.testl(lhs, lhs);
+                if (!bailoutIf(Assembler::Signed, ins->snapshot()))
+                    return false;
+            }
+            break;
+          default:
+            JS_NOT_REACHED("Unexpected shift op");
+        }
     }
 
     return true;
@@ -862,7 +871,9 @@ CodeGeneratorX86Shared::visitUrshD(LUrshD *ins)
     FloatRegister out = ToFloatRegister(ins->output());
 
     if (rhs->isConstant()) {
-        masm.shrl(Imm32(ToInt32(rhs) & 0x1F), lhs);
+        int32_t shift = ToInt32(rhs) & 0x1F;
+        if (shift)
+            masm.shrl(Imm32(shift), lhs);
     } else {
         JS_ASSERT(ToRegister(rhs) == ecx);
         masm.shrl_cl(lhs);

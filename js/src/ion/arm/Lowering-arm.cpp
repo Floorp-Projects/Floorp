@@ -217,8 +217,7 @@ LIRGeneratorARM::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mi
 
     ins->setOperand(0, useRegister(lhs));
     ins->setOperand(1, useRegisterOrConstant(rhs));
-    return define(ins, mir,
-                  LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
+    return define(ins, mir);
 }
 
 bool
