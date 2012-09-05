@@ -126,13 +126,11 @@ struct SharedContext {
     JSContext       *const context;
 
   private:
-    const RootedFunction fun_;      /* function to store argument and variable
-                                       names when it's a function's context */
     FunctionBox *const funbox_;     /* null or box for function we're compiling
-                                       if inFunction() is true and not in
-                                       js::frontend::CompileFunctionBody */
+                                       (if inFunction() is true) */
 
-    const RootedObject scopeChain_; /* scope chain object for the script */
+    const RootedObject scopeChain_; /* scope chain object for the script
+                                       (if inFunction() is false) */
 
   public:
     ContextFlags    cxFlags;
@@ -158,9 +156,9 @@ struct SharedContext {
     // When parsing is done, no context may be in the UNKNOWN strictness state.
     StrictMode strictModeState;
 
-    // If it's function code, fun must be non-NULL and scopeChain must be NULL.
-    // If it's global code, fun and funbox must be NULL.
-    inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox,
+    // If it's function code, funbox must be non-NULL and scopeChain must be NULL.
+    // If it's global code, funbox must be NULL.
+    inline SharedContext(JSContext *cx, JSObject *scopeChain, FunctionBox *funbox,
                          StrictMode sms);
 
     // The |fun*| flags are only relevant if |inFunction()| is true.
@@ -185,9 +183,8 @@ struct SharedContext {
 
 #undef INFUNC
 
-    bool inFunction() const { return !!fun_; }
+    bool inFunction() const { return !!funbox_; }
 
-    JSFunction *fun()      const { JS_ASSERT(inFunction());  return fun_; }
     FunctionBox *funbox()  const { JS_ASSERT(inFunction());  return funbox_; }
     JSObject *scopeChain() const { JS_ASSERT(!inFunction()); return scopeChain_; }
 
@@ -304,9 +301,9 @@ struct FunctionBox : public ObjectBox
     FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *pc,
                 StrictMode sms);
 
-    bool funIsGenerator()        const { return cxFlags.funIsGenerator; }
+    bool funIsGenerator() const { return cxFlags.funIsGenerator; }
 
-    JSFunction *function() const { return (JSFunction *) object; }
+    JSFunction *fun() const { return (JSFunction *) object; }
 
     void recursivelySetStrictMode(StrictMode strictness);
 };

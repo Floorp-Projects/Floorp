@@ -314,7 +314,7 @@ ParseContext::generateFunctionBindings(JSContext *cx, Bindings *bindings) const
         return false;
 
     if (bindings->hasAnyAliasedBindings() || sc->funHasExtensibleScope())
-        sc->fun()->flags |= JSFUN_HEAVYWEIGHT;
+        sc->funbox()->fun()->flags |= JSFUN_HEAVYWEIGHT;
 
     return true;
 }
@@ -390,7 +390,7 @@ Parser::newObjectBox(JSObject *obj)
 FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *outerpc,
                          StrictMode sms)
   : ObjectBox(traceListHead, obj),
-    siblings(outerpc->functionList),
+    siblings(outerpc ? outerpc->functionList : NULL),
     kids(NULL),
     bindings(),
     bufStart(0),
@@ -403,7 +403,10 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *
 {
     isFunctionBox = true;
 
-    if (outerpc->parsingWith) {
+    if (!outerpc) {
+        inWith = false;
+
+    } else if (outerpc->parsingWith) {
         // This covers cases that don't involve eval().  For example:
         //
         //   with (o) { (function() { g(); })(); }
@@ -463,7 +466,9 @@ Parser::newFunctionBox(JSObject *obj, ParseContext *outerpc, StrictMode sms)
         return NULL;
     }
 
-    traceListHead = outerpc->functionList = funbox;
+    if (outerpc)
+        outerpc->functionList = funbox;
+    traceListHead = funbox;
 
     return funbox;
 }
@@ -506,8 +511,7 @@ Parser::parse(JSObject *chain)
      *   an object lock before it finishes generating bytecode into a script
      *   protected from the GC by a root or a stack frame reference.
      */
-    SharedContext globalsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL,
-                           StrictModeFromContext(context));
+    SharedContext globalsc(context, chain, /* funbox = */ NULL, StrictModeFromContext(context));
     ParseContext globalpc(this, &globalsc, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!globalpc.init())
         return NULL;
@@ -655,8 +659,9 @@ ReportBadReturn(JSContext *cx, Parser *parser, ParseNode *pn, Parser::Reporter r
                 unsigned errnum, unsigned anonerrnum)
 {
     JSAutoByteString name;
-    if (parser->pc->sc->fun()->atom()) {
-        if (!js_AtomToPrintableString(cx, parser->pc->sc->fun()->atom(), &name))
+    JSAtom *atom = parser->pc->sc->funbox()->fun()->atom();
+    if (atom) {
+        if (!js_AtomToPrintableString(cx, atom, &name))
             return false;
     } else {
         errnum = anonerrnum;
@@ -819,7 +824,7 @@ Parser::functionBody(FunctionBodyType type)
     Definition *maybeArgDef = pc->decls().lookupFirst(arguments);
     bool argumentsHasBinding = !!maybeArgDef;
     bool argumentsHasLocalBinding = maybeArgDef && maybeArgDef->kind() != Definition::ARG;
-    bool hasRest = pc->sc->fun()->hasRest();
+    bool hasRest = pc->sc->funbox()->fun()->hasRest();
     if (hasRest && argumentsHasLocalBinding) {
         reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
         return NULL;
@@ -1170,7 +1175,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
                  * produce an error (in strict mode).
                  */
                 if (dn->isClosed() || dn->isAssigned())
-                    funpc->sc->fun()->flags |= JSFUN_HEAVYWEIGHT;
+                    funpc->sc->funbox()->fun()->flags |= JSFUN_HEAVYWEIGHT;
                 continue;
             }
 
@@ -1623,7 +1628,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         return NULL;
 
     /* Initialize early for possible flags mutation via destructuringExpr. */
-    SharedContext funsc(context, /* scopeChain = */ NULL, fun, funbox, sms);
+    SharedContext funsc(context, /* scopeChain = */ NULL, funbox, sms);
     ParseContext funpc(this, &funsc, outerpc->staticLevel + 1, outerpc->blockidGen);
     if (!funpc.init())
         return NULL;
@@ -1800,7 +1805,7 @@ Parser::setStrictMode(bool strictMode)
     if (pc->sc->strictModeState != StrictMode::UNKNOWN) {
         // Strict mode was inherited.
         JS_ASSERT(pc->sc->strictModeState == StrictMode::STRICT);
-        if (pc->sc->inFunction() && pc->sc->funbox()) {
+        if (pc->sc->inFunction()) {
             JS_ASSERT(pc->sc->funbox()->strictModeState == pc->sc->strictModeState);
             JS_ASSERT(pc->parent->sc->strictModeState == StrictMode::STRICT);
         } else {
@@ -1832,8 +1837,7 @@ Parser::setStrictMode(bool strictMode)
         // We changed the strict mode state. Retroactively recursively set
         // strict mode status on all the function children we've seen so far
         // children (That is, functions in default expressions).
-        if (pc->sc->funbox())
-            pc->sc->funbox()->strictModeState = pc->sc->strictModeState;
+        pc->sc->funbox()->strictModeState = pc->sc->strictModeState;
         for (FunctionBox *kid = pc->functionList; kid; kid = kid->siblings)
             kid->recursivelySetStrictMode(pc->sc->strictModeState);
     }
@@ -5350,7 +5354,7 @@ Parser::generatorExpr(ParseNode *kid)
         if (!funbox)
             return NULL;
 
-        SharedContext gensc(context, /* scopeChain = */ NULL, fun, funbox, outerpc->sc->strictModeState);
+        SharedContext gensc(context, /* scopeChain = */ NULL, funbox, outerpc->sc->strictModeState);
         ParseContext genpc(this, &gensc, outerpc->staticLevel + 1, outerpc->blockidGen);
         if (!genpc.init())
             return NULL;
@@ -6328,7 +6332,7 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
      * lightweight function activation, or if its scope chain doesn't match
      * the one passed to us.
      */
-    SharedContext xmlsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL, StrictMode::NOTSTRICT);
+    SharedContext xmlsc(context, chain, /* funbox = */ NULL, StrictMode::NOTSTRICT);
     ParseContext xmlpc(this, &xmlsc, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!xmlpc.init())
         return NULL;
