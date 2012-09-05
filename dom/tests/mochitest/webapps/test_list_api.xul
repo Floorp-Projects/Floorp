@@ -1,46 +1,54 @@
 <?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
 <?xml-stylesheet type="text/css" href="chrome://global/skin"?>
 <?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
 
-<!-- Any copyright is dedicated to the Public Domain.
-   - http://creativecommons.org/publicdomain/zero/1.0/
-   - https://bugzilla.mozilla.org/show_bug.cgi?id=741549
--->
-
-<window title="Mozilla Bug 741549"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 741549">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
-  <script type="application/javascript" src="apphelper.js"/>
-  <script type="application/javascript" src="jshelper.js"/>
+  <script type="application/javascript" src="head.js"/>
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
      target="_blank">Mozilla Bug 741549</a>
   </body>
 
-<script type="text/javascript">
-<![CDATA[
+<script>
 
-var expectedMethods = ['navigator.mozApps.QueryInterface',
-                       'navigator.mozApps.getInstalled',
-                       'navigator.mozApps.getSelf',
-                       'navigator.mozApps.install',
-                       'navigator.mozApps.installPackage',
-                       'navigator.mozApps.mgmt.QueryInterface',
-                       'navigator.mozApps.mgmt.getAll',
-                       'navigator.mozApps.mgmt.getNotInstalled'];
-var actualMethods = [];
+var props = {
+  QueryInterface: "function",
+  getInstalled: "function",
+  getSelf: "function",
+  install: "function",
+  installPackage: "function",
+  mgmt: "object",
+};
 
-actualMethods = actualMethods.concat(iterateMethods("navigator.mozApps.", navigator.mozApps, ['setApplicationChooser', 'setRepoOrigin', 'setMockResponse']));
-actualMethods = actualMethods.concat(iterateMethods("navigator.mozApps.mgmt.", navigator.mozApps.mgmt));
-actualMethods = actualMethods.sort();
-ok(JSON.stringify(actualMethods) == JSON.stringify(expectedMethods), actualMethods);
-tearDown();
-]]>
+isDeeply([p for (p in navigator.mozApps)].sort(), Object.keys(props).sort(),
+         "navigator.mozApps has only the expected properties");
 
-</script> 
+for (var p in props) {
+  is(typeof navigator.mozApps[p], props[p], "typeof " + p);
+}
 
+var mgmtProps = {
+  QueryInterface: "function",
+  getAll: "function",
+  getNotInstalled: "function",
+  oninstall: "object",
+  onuninstall: "object",
+};
+
+isDeeply([p for (p in navigator.mozApps.mgmt)].sort(),
+         Object.keys(mgmtProps).sort(),
+         "navigator.mozApps.mgmt has only the expected properties");
+
+for (var p in mgmtProps) {
+  is(typeof navigator.mozApps.mgmt[p], mgmtProps[p], "typeof mgmt." + p);
+}
+
+</script>
 </window>
-
