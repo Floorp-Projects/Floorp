@@ -265,7 +265,7 @@ class Descriptor(DescriptorProvider):
                 else:
                     add('all', [config], attribute)
 
-        for attribute in ['infallible', 'implicitJSContext', 'resultNotAddRefed']:
+        for attribute in ['implicitJSContext', 'resultNotAddRefed']:
             addExtendedAttribute(attribute, desc.get(attribute, {}))
 
         self.binaryNames = desc.get('binaryNames', {})
