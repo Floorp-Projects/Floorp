@@ -25,17 +25,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 devicestorage_setup();
 
 function testingStorage() {
-  return navigator.getDeviceStorage("pictures");
+  return navigator.getDeviceStorage("testing");
 }
 
 var tests = [
-  function () { return testingStorage().addNamed(createRandomBlob('image/png'), gFileName); },
+  function () { return testingStorage().addNamed(createRandomBlob(), gFileName); },
   function () { return testingStorage().delete(gFileName); },
   function () { return testingStorage().get(gFileName); },
   function () { var r = testingStorage().enumerate("../"); return r; }
 ];
 
-var gFileName = "../owned.png";
+var gFileName = "../owned";
 
 function fail(e) {
   ok(false, "addSuccess was called");

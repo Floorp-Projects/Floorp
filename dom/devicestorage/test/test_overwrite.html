@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var filename = "devicestorage/aaaa.png"
+var filename = "devicestorage/aaaa"
 
 devicestorage_setup();
 
@@ -45,7 +45,7 @@ function addOverwritingSuccess(e) {
 function addOverwritingError(e) {
   ok(true, "Adding to the same location should fail");
 
-  var storage = navigator.getDeviceStorage("pictures");
+  var storage = navigator.getDeviceStorage("testing");
   request = storage.delete(filename)
   request.onsuccess = deleteSuccess;
   request.onerror = deleteError;
@@ -54,10 +54,10 @@ function addOverwritingError(e) {
 function addSuccess(e) {
   ok(true, "addSuccess was called");
 
-  var storage = navigator.getDeviceStorage("pictures");
+  var storage = navigator.getDeviceStorage("testing");
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
-  request = storage.addNamed(createRandomBlob('image/png'), filename);
+  request = storage.addNamed(createRandomBlob(), filename);
   ok(request, "Should have a non-null request");
 
   request.onsuccess = addOverwritingSuccess;
@@ -66,16 +66,16 @@ function addSuccess(e) {
 
 function addError(e) {
   // test file is already exists.  clean it up and try again..
-  var storage = navigator.getDeviceStorage("pictures");
+  var storage = navigator.getDeviceStorage("testing");
   request = storage.delete(filename)
   request.onsuccess = runtest;
 }
 
 function runtest() {
-  var storage = navigator.getDeviceStorage("pictures");
+  var storage = navigator.getDeviceStorage("testing");
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
-  request = storage.addNamed(createRandomBlob('image/png'), filename);
+  request = storage.addNamed(createRandomBlob(), filename);
   ok(request, "Should have a non-null request");
 
   request.onsuccess = addSuccess;
