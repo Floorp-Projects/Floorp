@@ -112,6 +112,13 @@ public:
 
     BlobParent* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
 
+    /**
+     * Kill our subprocess and make sure it dies.  Should only be used
+     * in emergency situations since it bypasses the normal shutdown
+     * process.
+     */
+    void KillHard();
+
 protected:
     void OnChannelConnected(int32 pid);
     virtual void ActorDestroy(ActorDestroyReason why);

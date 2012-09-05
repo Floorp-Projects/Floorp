@@ -523,17 +523,8 @@ ContentParent::ProcessingError(Result what)
         // Messages sent after crashes etc. are not a big deal.
         return;
     }
-    // Other errors are big deals.  This ensures the process is
-    // eventually killed, but doesn't immediately KILLITWITHFIRE
-    // because we want to get a minidump if possible.  After a timeout
-    // though, the process is forceably killed.
-    if (!KillProcess(OtherProcess(), 1, false)) {
-        NS_WARNING("failed to kill subprocess!");
-    }
-    XRE_GetIOMessageLoop()->PostTask(
-        FROM_HERE,
-        NewRunnableFunction(&ProcessWatcher::EnsureProcessTerminated,
-                            OtherProcess(), /*force=*/true));
+    // Other errors are big deals.
+    KillHard();
 }
 
 namespace {
@@ -1229,6 +1220,22 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
   }
 
   return actor;
+}
+
+void
+ContentParent::KillHard()
+{
+    // This ensures the process is eventually killed, but doesn't
+    // immediately KILLITWITHFIRE because we want to get a minidump if
+    // possible.  After a timeout though, the process is forceably
+    // killed.
+    if (!KillProcess(OtherProcess(), 1, false)) {
+        NS_WARNING("failed to kill subprocess!");
+    }
+    XRE_GetIOMessageLoop()->PostTask(
+        FROM_HERE,
+        NewRunnableFunction(&ProcessWatcher::EnsureProcessTerminated,
+                            OtherProcess(), /*force=*/true));
 }
 
 PCrashReporterParent*
