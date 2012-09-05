@@ -2978,8 +2978,11 @@ class CGPerSignatureCall(CGThing):
         isCreator = memberIsCreator(self.idlNode)
         if isCreator:
             # We better be returning addrefed things!
-            assert isResultAlreadyAddRefed(self.descriptor,
-                                           self.extendedAttributes)
+            assert(isResultAlreadyAddRefed(self.descriptor,
+                                           self.extendedAttributes) or
+                   # Workers use raw pointers for new-object return
+                   # values or something
+                   self.descriptor.workers)
 
         resultTemplateValues = { 'jsvalRef': '*vp', 'jsvalPtr': 'vp',
                                  'isCreator': isCreator}

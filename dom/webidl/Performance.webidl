@@ -14,7 +14,6 @@
 
 interface Performance {
   // DOMHighResTimeStamp now();
-  [Infallible]
   double now();
 
   [Infallible]

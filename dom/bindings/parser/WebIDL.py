@@ -676,9 +676,11 @@ class IDLInterface(IDLObjectWithScope):
                                                      allowForbidden=True)
 
                 method = IDLMethod(self.location, identifier, retType, args)
-                # Constructors are always Creators and never have any
-                # other extended attributes.
-                method.addExtendedAttributes(["Creator"])
+                # Constructors are always Creators and are always
+                # assumed to be able to throw (since there's no way to
+                # indicate otherwise) and never have any other
+                # extended attributes.
+                method.addExtendedAttributes([("Creator",), ("Throws",)])
                 method.resolve(self)
 
             self._extendedAttrDict[identifier] = attrlist if len(attrlist) else True

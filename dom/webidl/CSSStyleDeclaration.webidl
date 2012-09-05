@@ -16,17 +16,19 @@ interface CSSStyleDeclaration {
 
   [Infallible]
   readonly attribute unsigned long length;
-  [Infallible]
   getter DOMString item(unsigned long index);
 
+  [Throws]
   DOMString getPropertyValue(DOMString property);
   // Mozilla extension, sort of
+  [Throws]
   CSSValue getPropertyCSSValue(DOMString property);
-  [Infallible]
   DOMString getPropertyPriority(DOMString property);
   // This would be nicer if it used a string default value of "".
   // See bug 759622.
+  [Throws]
   void setProperty(DOMString property, DOMString value, [TreatNullAs=EmptyString] optional DOMString priority);
+  [Throws]
   DOMString removeProperty(DOMString property);
 
   [Infallible]

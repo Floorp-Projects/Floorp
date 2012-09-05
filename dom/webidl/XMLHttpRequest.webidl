@@ -68,8 +68,10 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   readonly attribute unsigned short readyState;
 
   // request
+  [Throws]
   void open(DOMString method, DOMString url, optional boolean async = true,
             optional DOMString? user, optional DOMString? password);
+  [Throws]
   void setRequestHeader(DOMString header, DOMString value);
 
   [GetterInfallible]
@@ -81,15 +83,22 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Infallible=MainThread]
   readonly attribute XMLHttpRequestUpload upload;
 
+  [Throws]
   void send();
+  [Throws]
   void send(ArrayBuffer data);
+  [Throws]
   void send(Blob data);
+  [Throws]
   void send(Document data);
+  [Throws]
   void send(DOMString? data);
+  [Throws]
   void send(FormData data);
+  [Throws]
   void send(InputStream data);
 
-  [Infallible=MainThread]
+  [Throws=Workers]
   void abort();
 
   // response
@@ -98,12 +107,13 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
   [Infallible]
   readonly attribute DOMString statusText;
+  [Throws]
   DOMString? getResponseHeader(DOMString header);
 
-  [Infallible=MainThread]
+  [Throws=Workers]
   DOMString getAllResponseHeaders();
 
-  [Infallible=MainThread]
+  [Throws=Workers]
   void overrideMimeType(DOMString mime);
 
   [GetterInfallible]
@@ -124,7 +134,9 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [ChromeOnly, GetterInfallible]
   readonly attribute MozChannel channel;
 
+  [Throws]
   void sendAsBinary(DOMString body);
+  [Throws]
   any getInterface(IID iid);
 
   [Infallible]
