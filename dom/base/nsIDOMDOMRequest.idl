@@ -21,11 +21,13 @@ interface nsIDOMDOMRequest : nsIDOMEventTarget
   [implicit_jscontext] attribute jsval onerror;
 };
 
-[scriptable, builtinclass, uuid(eebcdf29-f8fa-4c36-bbc7-2146b1cbaf7b)]
+[scriptable, builtinclass, uuid(10996de9-e6f6-4058-97bd-45f1fe065eb5)]
 interface nsIDOMRequestService : nsISupports
 {
   nsIDOMDOMRequest createRequest(in nsIDOMWindow window);
 
   void fireSuccess(in nsIDOMDOMRequest request, in jsval result);
   void fireError(in nsIDOMDOMRequest request, in DOMString error);
+  void fireSuccessAsync(in nsIDOMDOMRequest request, in jsval result);
+  void fireErrorAsync(in nsIDOMDOMRequest request, in DOMString error);
 };

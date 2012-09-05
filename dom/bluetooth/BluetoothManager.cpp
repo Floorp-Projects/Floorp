@@ -164,7 +164,9 @@ BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow) :
   mPath.AssignLiteral("/");
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  obs->AddObserver(this, "mozsettings-changed", false);
+  if (obs) {
+    obs->AddObserver(this, "mozsettings-changed", false);
+  }
 }
 
 BluetoothManager::~BluetoothManager()
@@ -178,7 +180,9 @@ BluetoothManager::~BluetoothManager()
   }
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  obs->RemoveObserver(this, "mozsettings-changed");
+  if (obs) {
+    obs->RemoveObserver(this, "mozsettings-changed");
+  }
 }
 
 nsresult

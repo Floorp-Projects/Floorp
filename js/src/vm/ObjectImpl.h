@@ -1162,6 +1162,14 @@ class ObjectImpl : public gc::Cell
     inline Shape * nativeLookupNoAllocation(PropertyId pid);
     inline Shape * nativeLookupNoAllocation(PropertyName *name);
 
+    inline bool nativeContains(JSContext *cx, Handle<jsid> id);
+    inline bool nativeContains(JSContext *cx, Handle<PropertyName*> name);
+    inline bool nativeContains(JSContext *cx, Handle<Shape*> shape);
+
+    inline bool nativeContainsNoAllocation(jsid id);
+    inline bool nativeContainsNoAllocation(PropertyName *name);
+    inline bool nativeContainsNoAllocation(Shape &shape);
+
     inline Class *getClass() const;
     inline JSClass *getJSClass() const;
     inline bool hasClass(const Class *c) const;

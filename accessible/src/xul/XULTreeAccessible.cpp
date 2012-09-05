@@ -703,6 +703,7 @@ XULTreeItemAccessibleBase::
   mTree(aTree), mTreeView(aTreeView), mRow(aRow)
 {
   mParent = aParent;
+  mFlags |= eSharedNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -894,12 +895,6 @@ XULTreeItemAccessibleBase::Shutdown()
   mRow = -1;
 
   AccessibleWrap::Shutdown();
-}
-
-bool
-XULTreeItemAccessibleBase::IsPrimaryForNode() const
-{
-  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
