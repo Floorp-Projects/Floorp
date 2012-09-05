@@ -1198,7 +1198,7 @@ class LBitOpV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
 
 // Shift operation, taking two 32-bit integers as inputs and returning
 // a 32-bit integer result as an output.
-class LShiftI : public LInstructionHelper<1, 2, 0>
+class LShiftI : public LBinaryMath<0>
 {
     JSOp op_;
 

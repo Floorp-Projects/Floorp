@@ -973,6 +973,8 @@ public:
     
     void shrl_i8r(int imm, RegisterID dst)
     {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "shrl       $%d, %s\n", MAYBE_PAD, imm, nameIReg(4, dst));
         if (imm == 1)
             m_formatter.oneByteOp(OP_GROUP2_Ev1, GROUP2_OP_SHR, dst);
         else {
@@ -983,6 +985,8 @@ public:
     
     void shrl_CLr(RegisterID dst)
     {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "shrl       %%cl, %s\n", MAYBE_PAD, nameIReg(4, dst));
         m_formatter.oneByteOp(OP_GROUP2_EvCL, GROUP2_OP_SHR, dst);
     }
 
