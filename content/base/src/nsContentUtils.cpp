@@ -3598,21 +3598,39 @@ nsContentUtils::ConvertStringFromCharset(const nsACString& aCharset,
     return rv;
 
   nsPromiseFlatCString flatInput(aInput);
-  int32_t srcLen = flatInput.Length();
-  int32_t dstLen;
-  rv = decoder->GetMaxLength(flatInput.get(), srcLen, &dstLen);
+  int32_t length = flatInput.Length();
+  int32_t outLen;
+  rv = decoder->GetMaxLength(flatInput.get(), length, &outLen);
   if (NS_FAILED(rv))
     return rv;
 
-  PRUnichar *ustr = (PRUnichar *)nsMemory::Alloc((dstLen + 1) *
+  PRUnichar *ustr = (PRUnichar *)nsMemory::Alloc((outLen + 1) *
                                                  sizeof(PRUnichar));
   if (!ustr)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = decoder->Convert(flatInput.get(), &srcLen, ustr, &dstLen);
-  if (NS_SUCCEEDED(rv)) {
+  const char* data = flatInput.get();
+  aOutput.Truncate();
+  for (;;) {
+    int32_t srcLen = length;
+    int32_t dstLen = outLen;
+    rv = decoder->Convert(data, &srcLen, ustr, &dstLen);
+    // Convert will convert the input partially even if the status
+    // indicates a failure.
     ustr[dstLen] = 0;
-    aOutput.Assign(ustr, dstLen);
+    aOutput.Append(ustr, dstLen);
+    if (rv != NS_ERROR_ILLEGAL_INPUT) {
+      break;
+    }
+    // Emit a decode error manually because some decoders
+    // do not support kOnError_Recover (bug 638379)
+    if (srcLen == -1) {
+      decoder->Reset();
+    } else {
+      data += srcLen + 1;
+      length -= srcLen + 1;
+      aOutput.Append(static_cast<PRUnichar>(0xFFFD));
+    }
   }
 
   nsMemory::Free(ustr);
