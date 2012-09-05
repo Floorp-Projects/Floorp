@@ -1514,6 +1514,20 @@ let RIL = {
   },
 
   /**
+   * Set call waiting status.
+   *
+   * @param on
+   *        Boolean indicating the desired waiting status.
+   */
+  setCallWaiting: function setCallWaiting(options) {
+    Buf.newParcel(REQUEST_SET_CALL_WAITING, options);
+    Buf.writeUint32(2);
+    Buf.writeUint32(options.enabled ? 1 : 0);
+    Buf.writeUint32(ICC_SERVICE_CLASS_VOICE);
+    Buf.sendParcel();
+  },
+
+  /**
    * Set screen state.
    *
    * @param on
@@ -3619,7 +3633,10 @@ RIL[REQUEST_SET_CLIR] = null;
 RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] = null;
 RIL[REQUEST_SET_CALL_FORWARD] = null;
 RIL[REQUEST_QUERY_CALL_WAITING] = null;
-RIL[REQUEST_SET_CALL_WAITING] = null;
+RIL[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, options) {
+  options.success = options.rilRequestError == 0 ? true : false;
+  this.sendDOMMessage(options);
+};
 RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
 RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, options) {
   if (options.rilRequestError) {
