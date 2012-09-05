@@ -1933,7 +1933,7 @@ void nsGfxScrollFrameInner::ScrollVisual(nsPoint aOldScrolledFramePos)
     return;
   }
 
-  rootPresContext->RequestUpdatePluginGeometry(mOuter);
+  rootPresContext->RequestUpdatePluginGeometry();
 
   AdjustViews(mScrolledFrame);
   // We need to call this after fixing up the view positions
