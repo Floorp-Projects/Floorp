@@ -5,13 +5,14 @@
  
 #include "nsISupports.idl"
 
-[scriptable, uuid(e388fded-1321-41af-a988-861a2bc5cfc3)]
+[scriptable, uuid(c94651cf-082f-45e2-9481-33a1a700b46a)]
 interface nsIProfiler : nsISupports
 {
   void StartProfiler(in uint32_t aEntries, in uint32_t aInterval,
                       [array, size_is(aFeatureCount)] in string aFeatures,
                       in uint32_t aFeatureCount);
   void StopProfiler();
+  void AddMarker(in string aMarker);
   string GetProfile();
   [implicit_jscontext]
   jsval getProfileData();
