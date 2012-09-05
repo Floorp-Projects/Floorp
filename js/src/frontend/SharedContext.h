@@ -105,7 +105,7 @@ class ContextFlags {
     bool            funDefinitelyNeedsArgsObj:1;
 
   public:
-    ContextFlags(JSContext *cx)
+    ContextFlags()
      :  hasExplicitUseStrict(false),
         bindingsAccessedDynamically(false),
         funIsGenerator(false),

@@ -21,7 +21,7 @@ SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fu
     fun_(cx, fun),
     funbox_(funbox),
     scopeChain_(cx, scopeChain),
-    cxFlags(cx),
+    cxFlags(),
     strictModeState(sms)
 {
     JS_ASSERT((fun && !scopeChain_) || (!fun && !funbox));
