@@ -13,6 +13,7 @@
 #include "nsPrintData.h"
 #include "nsFrameList.h"
 #include "mozilla/Attributes.h"
+#include "nsHTMLCanvasElement.h"
 
 // Interfaces
 #include "nsIDocument.h"
@@ -103,6 +104,8 @@ public:
   void InstallPrintPreviewListener();
 
   // nsIDocumentViewerPrint Printing Methods
+  bool     HasPrintCallbackCanvas();
+  bool     PrePrintPage();
   bool     PrintPage(nsPrintObject* aPOect, bool& aInRange);
   bool     DonePrintingPages(nsPrintObject* aPO, nsresult aResult);
 

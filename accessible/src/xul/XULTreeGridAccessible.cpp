@@ -469,6 +469,7 @@ XULTreeGridCellAccessible::
   mTreeView(aTreeView), mRow(aRow), mColumn(aColumn)
 {
   mParent = aRowAcc;
+  mFlags |= eSharedNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -792,12 +793,6 @@ XULTreeGridCellAccessible::Init()
     mTreeView->GetCellValue(mRow, mColumn, mCachedTextEquiv);
   else
     mTreeView->GetCellText(mRow, mColumn, mCachedTextEquiv);
-}
-
-bool
-XULTreeGridCellAccessible::IsPrimaryForNode() const
-{
-  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

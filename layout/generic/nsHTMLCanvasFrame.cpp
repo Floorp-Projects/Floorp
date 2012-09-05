@@ -260,6 +260,9 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsHTMLCanvasElement* element = static_cast<nsHTMLCanvasElement*>(GetContent());
   nsIntSize canvasSize = GetCanvasSize();
 
+  nsPresContext* presContext = PresContext();
+  element->HandlePrintCallback(presContext->Type());
+
   if (canvasSize.width <= 0 || canvasSize.height <= 0 || area.IsEmpty())
     return nullptr;
 
@@ -269,7 +272,6 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (!layer)
     return nullptr;
 
-  nsPresContext* presContext = PresContext();
   gfxRect r = gfxRect(presContext->AppUnitsToGfxUnits(area.x),
                       presContext->AppUnitsToGfxUnits(area.y),
                       presContext->AppUnitsToGfxUnits(area.width),

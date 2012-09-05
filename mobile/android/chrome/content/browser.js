@@ -6564,6 +6564,10 @@ let Reader = {
 
   DEBUG: 1,
 
+  // Don't try to parse the page if it has too many elements (for memory and
+  // performance reasons)
+  MAX_ELEMS_TO_PARSE: 3000,
+
   init: function Reader_init() {
     this.log("Init()");
     this._requests = {};
@@ -6801,6 +6805,13 @@ let Reader = {
   },
 
   _readerParse: function Reader_readerParse(uri, doc, callback) {
+    let numTags = doc.getElementsByTagName("*").length;
+    if (numTags > this.MAX_ELEMS_TO_PARSE) {
+      this.log("Aborting parse for " + uri.spec + "; " + numTags + " elements found");
+      callback(null);
+      return;
+    }
+
     let worker = new ChromeWorker("readerWorker.js");
     worker.onmessage = function (evt) {
       let article = evt.data;
