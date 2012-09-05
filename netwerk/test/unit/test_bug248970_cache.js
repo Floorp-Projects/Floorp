@@ -52,28 +52,6 @@ function check_devices_available(devices) {
   }
 }
 
-function get_device_entry_count(device) {
-  var cs = get_cache_service();
-  var entry_count = -1;
-
-  var visitor = {
-    visitDevice: function (deviceID, deviceInfo) {
-      if (device == deviceID)
-        entry_count = deviceInfo.entryCount;
-      return false;
-    },
-    visitEntry: function (deviceID, entryInfo) {
-      do_throw("nsICacheVisitor.visitEntry should not be called " +
-        "when checking the availability of devices");
-    }
-  };
-
-  // get the device entry count
-  cs.visitEntries(visitor);
-
-  return entry_count;
-}
-
 function make_input_stream_scriptable(input) {
   var wrapper = Cc["@mozilla.org/scriptableinputstream;1"].
                 createInstance(Ci.nsIScriptableInputStream);

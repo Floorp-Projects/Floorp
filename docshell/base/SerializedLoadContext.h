@@ -36,13 +36,21 @@ public:
 
   void Init(nsILoadContext* aLoadContext);
 
-  bool IsNotNull() const 
+  bool IsNotNull() const
   {
     return mIsNotNull;
   }
 
+  bool IsPrivateBitValid() const
+  {
+    return mIsPrivateBitValid;
+  }
+
   // used to indicate if child-side LoadContext * was null.
   bool          mIsNotNull;
+  // used to indicate if child-side mUsePrivateBrowsing flag is valid, even if
+  // mIsNotNull is false, i.e., child LoadContext was null.
+  bool          mIsPrivateBitValid;
   bool          mIsContent;
   bool          mUsePrivateBrowsing;
   bool          mIsInBrowserElement;

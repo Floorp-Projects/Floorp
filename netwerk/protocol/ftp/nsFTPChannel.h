@@ -29,19 +29,21 @@
 #include "nsHashPropertyBag.h"
 #include "nsFtpProtocolHandler.h"
 #include "nsNetUtil.h"
+#include "PrivateBrowsingChannel.h"
 
 class nsFtpChannel : public nsBaseChannel,
                      public nsIFTPChannel,
                      public nsIUploadChannel,
                      public nsIResumableChannel,
-                     public nsIProxiedChannel
+                     public nsIProxiedChannel,
+                     public mozilla::net::PrivateBrowsingChannel<nsFtpChannel>
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIUPLOADCHANNEL
     NS_DECL_NSIRESUMABLECHANNEL
     NS_DECL_NSIPROXIEDCHANNEL
-    
+
     nsFtpChannel(nsIURI *uri, nsIProxyInfo *pi)
         : mProxyInfo(pi)
         , mStartPos(0)
@@ -93,6 +95,11 @@ protected:
                                        nsIChannel** channel);
     virtual bool GetStatusArg(nsresult status, nsString &statusArg);
     virtual void OnCallbacksChanged();
+
+    NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks);
+    NS_IMETHOD SetLoadGroup(nsILoadGroup* aLoadGroup);
+
+    friend class mozilla::net::PrivateBrowsingChannel<nsFtpChannel>;
 
 private:
     nsCOMPtr<nsIProxyInfo>    mProxyInfo; 
