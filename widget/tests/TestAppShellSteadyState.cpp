@@ -399,7 +399,7 @@ Test4Internal(nsIAppShell* aAppShell)
   }
 
   nsCOMPtr<nsIURI> uri;
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), "about:blank", NULL))) {
+  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), "about:", NULL))) {
     fail("Failed to create new uri");
     return false;
   }
