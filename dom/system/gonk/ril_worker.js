@@ -1291,14 +1291,15 @@ let RIL = {
                                 " number = " + this.iccInfo.fdn[i].number);
           }
         }
-        this.sendDOMMessage({rilMessageType: "icccontacts",
-                             contactType: "FDN",
-                             contacts: this.iccInfo.fdn,
-                             requestId: options.requestId});
+        delete options.callback;
+        delete options.onerror;
+        options.rilMessageType = "icccontacts";
+        options.contacts = this.iccInfo.fdn;
+        this.sendDOMMessage(options);
       };
       this.parseDiallingNumber(options, add, finish);
     }
-    
+
     this.iccInfo.fdn = [];
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
@@ -1334,20 +1335,27 @@ let RIL = {
         if (DEBUG) {
           for (let i = 0; i < this.iccInfo.adn.length; i++) {
             debug("ADN[" + i + "] alphaId = " + this.iccInfo.adn[i].alphaId +
-                                " number = " + this.iccInfo.adn[i].number);
+                                " number  = " + this.iccInfo.adn[i].number);
           }
         }
+        // To prevent DataCloneError when sending parcels,
+        // We need to delete those properties which are not
+        // 'Structured Clone Data',
+        // in this case, those callback functions.
+        delete options.callback;
+        delete options.onerror;
         options.rilMessageType = "icccontacts";
-        options.contactType = "ADN";
-        options.contacts = this.iccInfo.adn,
+        options.contacts = this.iccInfo.adn;
         this.sendDOMMessage(options);
       };
       this.parseDiallingNumber(options, add, finish);
     }
 
     function error(options) {
+      // TODO: Error handling should be addressed in Bug 787477
+      delete options.callback;
+      delete options.onerror;
       options.rilMessageType = "icccontacts";
-      options.contactType = "ADN";
       options.contacts = [];
       this.sendDOMMessage(options);
     }
@@ -1436,6 +1444,13 @@ let RIL = {
    *         "ADN" or "FDN".
    */
   getICCContacts: function getICCContacts(options) {
+    if (!this.appType) {
+      // TODO: Error handling should be addressed in Bug 787477
+      options.rilMessageType = "icccontacts";
+      options.contacts = [];
+      this.sendDOMMessage(options);
+    }
+
     let type = options.contactType;
     switch (type) {
       case "ADN":
@@ -1478,8 +1493,10 @@ let RIL = {
     }
 
     function error(options) {
+      // TODO: Error handling should be addressed in Bug 787477
+      delete options.callback;
+      delete options.onerror;
       options.rilMessageType = "icccontacts";
-      options.contactType = "ADN";
       options.contacts = [];
       this.sendDOMMessage(options);
     }
