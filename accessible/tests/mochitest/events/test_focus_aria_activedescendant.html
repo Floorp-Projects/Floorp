@@ -70,6 +70,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
 
       gQueue.push(new synthFocus("container", new focusChecker("item1")));
       gQueue.push(new changeARIAActiveDescendant("container", "item2"));
+
+      gQueue.push(new synthFocus("combobox_entry", new focusChecker("combobox_entry")));
+      gQueue.push(new changeARIAActiveDescendant("combobox", "combobox_option2"));
+
       todo(false, "No focus for inserted element, bug 687011");
       //gQueue.push(new insertItemNFocus("container", "item3"));
 
@@ -87,6 +91,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
      title="Support aria-activedescendant usage in nsIAccesible::TakeFocus()">
     Mozilla Bug 429547
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=761102"
+     title="Focus may be missed when ARIA active-descendant is changed on active composite widget">
+    Mozilla Bug 761102
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -95,6 +104,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
   <div role="listbox" aria-activedescendant="item1" id="container" tabindex="1">
     <div role="listitem" id="item1">item1</div>
     <div role="listitem" id="item2">item2</div>
+  </div>
+
+  <div role="combobox" id="combobox">
+    <input id="combobox_entry">
+    <ul>
+      <li role="option" id="combobox_option1">option1</li>
+      <li role="option" id="combobox_option2">option2</li>
+    </ul>
   </div>
 </body>
 </html>
