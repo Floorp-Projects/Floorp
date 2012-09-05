@@ -873,32 +873,13 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     // the JS stack, just use the principal of our parent window.  In those
     // cases we do _not_ set the parent window principal as the owner of the
     // load--since we really don't know who the owner is, just leave it null.
-    nsIPrincipal* newWindowPrincipal = subjectPrincipal;
-    if (!newWindowPrincipal && aParent) {
-      nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(aParent));
-      if (sop) {
-        newWindowPrincipal = sop->GetPrincipal();
-      }
-    }
-
-    bool isSystem;
-    rv = sm->IsSystemPrincipal(newWindowPrincipal, &isSystem);
-    if (NS_FAILED(rv) || isSystem) {
-      // Don't pass this principal along to content windows
-      int32_t itemType;
-      rv = newDocShellItem->GetItemType(&itemType);
-      if (NS_FAILED(rv) || itemType != nsIDocShellTreeItem::typeChrome) {
-        newWindowPrincipal = nullptr;        
-      }
-    }
-
     nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(*_retval);
 #ifdef DEBUG
     nsCOMPtr<nsPIDOMWindow> newDebugWindow = do_GetInterface(newDocShell);
     NS_ASSERTION(newWindow == newDebugWindow, "Different windows??");
 #endif
     if (newWindow) {
-      newWindow->SetOpenerScriptPrincipal(newWindowPrincipal);
+      newWindow->SetInitialPrincipalToSubject(newDocShellItem, aParent);
     }
   }
 
