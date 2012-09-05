@@ -57,6 +57,8 @@ GonkNativeWindow::~GonkNativeWindow()
 void GonkNativeWindow::abandon()
 {
     Mutex::Autolock lock(mMutex);
+    ++mGeneration;
+    CNW_LOGD("abandon: new generation %d", mGeneration);
     freeAllBuffersLocked();
     mDequeueCondition.signal();
 }
@@ -79,6 +81,7 @@ void GonkNativeWindow::init()
     mTimestamp = NATIVE_WINDOW_TIMESTAMP_AUTO;
     mBufferCount = MIN_BUFFER_SLOTS;
     mFrameCounter = 0;
+    mGeneration = 0;
 }
 
 
@@ -346,7 +349,7 @@ int GonkNativeWindow::queueBuffer(ANativeWindowBuffer* buffer)
 already_AddRefed<GraphicBufferLocked>
 GonkNativeWindow::getCurrentBuffer()
 {
-  CNW_LOGD("GonkNativeWindow::lockCurrentBuffer");
+  CNW_LOGD("GonkNativeWindow::getCurrentBuffer");
   Mutex::Autolock lock(mMutex);
 
   int found = -1;
@@ -368,30 +371,36 @@ GonkNativeWindow::getCurrentBuffer()
   mSlots[found].mBufferState = BufferSlot::RENDERING;
 
   nsRefPtr<GraphicBufferLocked> ret =
-    new CameraGraphicBuffer(this, found, mSlots[found].mSurfaceDescriptor);
+    new CameraGraphicBuffer(this, found, mGeneration, mSlots[found].mSurfaceDescriptor);
   mDequeueCondition.signal();
   return ret.forget();
 }
 
-void
-GonkNativeWindow::returnBuffer(uint32_t aIndex)
+bool
+GonkNativeWindow::returnBuffer(uint32_t aIndex, uint32_t aGeneration)
 {
-  CNW_LOGD("GonkNativeWindow::freeBuffer");
+  CNW_LOGD("GonkNativeWindow::returnBuffer: slot=%d (generation=%d)", aIndex, aGeneration);
   Mutex::Autolock lock(mMutex);
 
+  if (aGeneration != mGeneration) {
+    CNW_LOGD("returnBuffer: buffer is from generation %d (current is %d)",
+      aGeneration, mGeneration);
+    return false;
+  }
   if (aIndex < 0 || aIndex >= mBufferCount) {
-    CNW_LOGE("cancelBuffer: slot index out of range [0, %d]: %d",
+    CNW_LOGE("returnBuffer: slot index out of range [0, %d]: %d",
              mBufferCount, aIndex);
-    return;
-  } else if (mSlots[aIndex].mBufferState != BufferSlot::RENDERING) {
-    printf_stderr("cancelBuffer: slot %d is not owned by the compositor (state=%d)",
+    return false;
+  }
+  if (mSlots[aIndex].mBufferState != BufferSlot::RENDERING) {
+    CNW_LOGE("returnBuffer: slot %d is not owned by the compositor (state=%d)",
                   aIndex, mSlots[aIndex].mBufferState);
-    return;
+    return false;
   }
 
   mSlots[aIndex].mBufferState = BufferSlot::FREE;
   mDequeueCondition.signal();
-  return;
+  return true;
 }
 
 int GonkNativeWindow::lockBuffer(ANativeWindowBuffer* buffer)
