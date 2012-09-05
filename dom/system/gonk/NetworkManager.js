@@ -161,6 +161,9 @@ NetworkManager.prototype = {
                 network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
               this.addHostRoute(network);
             }
+            // Remove pre-created default route and let setAndConfigureActive()
+            // to set default route only on preferred network
+            this.removeDefaultRoute(network.name);
             this.setAndConfigureActive();
             break;
           case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
@@ -202,6 +205,9 @@ NetworkManager.prototype = {
         network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
       this.addHostRoute(network);
     }
+    // Remove pre-created default route and let setAndConfigureActive()
+    // to set default route only on preferred network
+    this.removeDefaultRoute(network.name);
     this.setAndConfigureActive();
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_REGISTERED, null);
     debug("Network '" + network.name + "' registered.");
@@ -336,6 +342,15 @@ NetworkManager.prototype = {
     };
     this.worker.postMessage(options);
     this.setNetworkProxy();
+  },
+
+  removeDefaultRoute: function removeDefaultRoute(ifname) {
+    debug("Remove default route for " + ifname);
+    let options = {
+      cmd: "removeDefaultRoute",
+      ifname: ifname
+    }
+    this.worker.postMessage(options);
   },
 
   addHostRoute: function addHostRoute(network) {
