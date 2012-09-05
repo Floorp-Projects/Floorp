@@ -1685,8 +1685,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
         script->isGenerator = bce->sc->funIsGenerator();
-        script->isGeneratorExp = bce->sc->funbox() && bce->sc->funbox()->inGenexpLambda;
-        script->setFunction(bce->sc->fun());
+        script->isGeneratorExp = bce->sc->funbox()->inGenexpLambda;
+        script->setFunction(bce->sc->funbox()->fun());
     }
 
     /*

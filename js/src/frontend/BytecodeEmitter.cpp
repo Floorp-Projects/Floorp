@@ -706,7 +706,7 @@ EnclosingStaticScope(BytecodeEmitter *bce)
         return NULL;
     }
 
-    return bce->sc->fun();
+    return bce->sc->funbox()->fun();
 }
 
 // Push a block scope statement and link blockObj into bce->blockChain.
@@ -922,9 +922,9 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
          */
         for (unsigned i = pn->pn_cookie.level(); i; i--) {
             skippedScopes += ClonedBlockDepth(bceOfDef);
-            if (bceOfDef->sc->fun()->isHeavyweight()) {
+            if (bceOfDef->sc->funbox()->fun()->isHeavyweight()) {
                 skippedScopes++;
-                if (bceOfDef->sc->fun()->isNamedLambda())
+                if (bceOfDef->sc->funbox()->fun()->isNamedLambda())
                     skippedScopes++;
             }
             bceOfDef = bceOfDef->parent;
@@ -1382,8 +1382,8 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (dn->pn_cookie.level() != bce->script->staticLevel)
             return true;
 
-        JS_ASSERT(bce->sc->fun()->flags & JSFUN_LAMBDA);
-        JS_ASSERT(pn->pn_atom == bce->sc->fun()->atom());
+        JS_ASSERT(bce->sc->funbox()->fun()->flags & JSFUN_LAMBDA);
+        JS_ASSERT(pn->pn_atom == bce->sc->funbox()->fun()->atom());
 
         /*
          * Leave pn->isOp(JSOP_NAME) if bce->fun is heavyweight to
@@ -1409,7 +1409,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * heavyweight, ensuring that the function name is represented in
          * the scope chain so that assignment will throw a TypeError.
          */
-        if (!bce->sc->fun()->isHeavyweight()) {
+        if (!bce->sc->funbox()->fun()->isHeavyweight()) {
             op = JSOP_CALLEE;
             pn->pn_dflags |= PND_CONST;
         }
@@ -2685,7 +2685,7 @@ MaybeEmitVarDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *
     }
 
     if (JOF_OPTYPE(pn->getOp()) == JOF_ATOM &&
-        (!bce->sc->inFunction() || bce->sc->fun()->isHeavyweight()))
+        (!bce->sc->inFunction() || bce->sc->funbox()->fun()->isHeavyweight()))
     {
         bce->switchToProlog();
         if (!UpdateSourceCoordNotes(cx, bce, pn->pn_pos.begin))
@@ -4832,7 +4832,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return Emit1(cx, bce, JSOP_GETFUNNS) >= 0;
 #endif
 
-    RootedFunction fun(cx, pn->pn_funbox->function());
+    RootedFunction fun(cx, pn->pn_funbox->fun());
     JS_ASSERT(fun->isInterpreted());
     if (fun->script()) {
         /*
@@ -4847,7 +4847,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     {
         FunctionBox *funbox = pn->pn_funbox;
-        SharedContext sc(cx, /* scopeChain = */ NULL, fun, funbox, funbox->strictModeState);
+        SharedContext sc(cx, /* scopeChain = */ NULL, funbox, funbox->strictModeState);
         sc.cxFlags = funbox->cxFlags;
         if (bce->sc->inFunction() && bce->sc->funMightAliasLocals())
             sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
@@ -5956,7 +5956,7 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_ARGSBODY));
     uint16_t ndefaults = bce->sc->funbox()->ndefaults;
-    JSFunction *fun = bce->sc->fun();
+    JSFunction *fun = bce->sc->funbox()->fun();
     unsigned nformal = fun->nargs - fun->hasRest();
     EMIT_UINT16_IMM_OP(JSOP_ACTUALSFILLED, nformal - ndefaults);
     ptrdiff_t top = bce->offset();
@@ -6045,7 +6045,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_ARGSBODY:
       {
-        RootedFunction fun(cx, bce->sc->fun());
+        RootedFunction fun(cx, bce->sc->funbox()->fun());
         ParseNode *pnlast = pn->last();
 
         // Carefully emit everything in the right order:
