@@ -40,9 +40,9 @@ function run_test() {
 }
 
 function run_test_1() {
-  AddonManager.checkCompatibility = false;
-
   startupManager();
+  AddonManager.checkCompatibility = false;
+  restartManager();
 
   AddonManager.getAddonsByIDs(["bug470377_1@tests.mozilla.org",
                                "bug470377_2@tests.mozilla.org",
