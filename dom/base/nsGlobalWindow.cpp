@@ -1546,6 +1546,39 @@ nsGlobalWindow::SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal)
   }
 }
 
+void
+nsGlobalWindow::SetInitialPrincipalToSubject(nsIDocShellTreeItem* aItem,
+                                             nsIDOMWindow* aParent)
+{
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  MOZ_ASSERT(ssm);
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> newWindowPrincipal;
+  rv = ssm->GetSubjectPrincipal(getter_AddRefs(newWindowPrincipal));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  if (!newWindowPrincipal && aParent) {
+    nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(aParent));
+    if (sop) {
+      newWindowPrincipal = sop->GetPrincipal();
+    }
+  }
+
+  bool isSystem;
+  rv = ssm->IsSystemPrincipal(newWindowPrincipal, &isSystem);
+  if (NS_FAILED(rv) || isSystem) {
+    // Don't pass this principal along to content windows
+    int32_t itemType;
+    rv = aItem->GetItemType(&itemType);
+    if (NS_FAILED(rv) || itemType != nsIDocShellTreeItem::typeChrome) {
+      newWindowPrincipal = nullptr;
+    }
+  }
+
+  SetOpenerScriptPrincipal(newWindowPrincipal);
+}
+
 nsIPrincipal*
 nsGlobalWindow::GetOpenerScriptPrincipal()
 {
