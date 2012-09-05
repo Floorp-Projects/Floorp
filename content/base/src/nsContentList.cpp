@@ -619,10 +619,16 @@ nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
+nsGenericElement*
+nsContentList::GetElementAt(uint32_t aIndex)
+{
+  return static_cast<nsGenericElement*>(Item(aIndex, true));
+}
+
 nsIContent*
 nsContentList::GetNodeAt(uint32_t aIndex)
 {
-  return Item(aIndex, true);
+  return GetElementAt(aIndex);
 }
 
 nsISupports*

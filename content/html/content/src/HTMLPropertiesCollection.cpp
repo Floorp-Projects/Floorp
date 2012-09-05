@@ -157,8 +157,8 @@ HTMLPropertiesCollection::GetNamedItem(const nsAString& aName,
   return static_cast<nsIDOMPropertyNodeList*>(propertyList);
 }
 
-nsIContent*
-HTMLPropertiesCollection::GetNodeAt(uint32_t aIndex)
+nsGenericElement*
+HTMLPropertiesCollection::GetElementAt(uint32_t aIndex)
 {
   EnsureFresh();
   return mProperties.SafeElementAt(aIndex);
