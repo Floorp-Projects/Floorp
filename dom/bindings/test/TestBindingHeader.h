@@ -50,8 +50,8 @@ public:
   // We need a GetParentObject to make binding codegen happy
   virtual nsISupports* GetParentObject();
 
-  bool GetIndirectlyImplementedProperty(ErrorResult&);
-  void SetIndirectlyImplementedProperty(bool, ErrorResult&);
+  bool GetIndirectlyImplementedProperty();
+  void SetIndirectlyImplementedProperty(bool);
   void IndirectlyImplementedMethod();
 };
 
@@ -128,9 +128,9 @@ public:
   */
   
   // Integer types
-  int8_t GetReadonlyByte(ErrorResult&);
-  int8_t GetWritableByte(ErrorResult&);
-  void SetWritableByte(int8_t, ErrorResult&);
+  int8_t GetReadonlyByte();
+  int8_t GetWritableByte();
+  void SetWritableByte(int8_t);
   void PassByte(int8_t);
   int8_t ReceiveByte();
   void PassOptionalByte(const Optional<int8_t>&);
@@ -138,57 +138,57 @@ public:
   void PassNullableByte(Nullable<int8_t>&);
   void PassOptionalNullableByte(const Optional< Nullable<int8_t> >&);
 
-  int16_t GetReadonlyShort(ErrorResult&);
-  int16_t GetWritableShort(ErrorResult&);
-  void SetWritableShort(int16_t, ErrorResult&);
+  int16_t GetReadonlyShort();
+  int16_t GetWritableShort();
+  void SetWritableShort(int16_t);
   void PassShort(int16_t);
   int16_t ReceiveShort();
   void PassOptionalShort(const Optional<int16_t>&);
   void PassOptionalShortWithDefault(int16_t);
 
-  int32_t GetReadonlyLong(ErrorResult&);
-  int32_t GetWritableLong(ErrorResult&);
-  void SetWritableLong(int32_t, ErrorResult&);
+  int32_t GetReadonlyLong();
+  int32_t GetWritableLong();
+  void SetWritableLong(int32_t);
   void PassLong(int32_t);
   int16_t ReceiveLong();
   void PassOptionalLong(const Optional<int32_t>&);
   void PassOptionalLongWithDefault(int32_t);
 
-  int64_t GetReadonlyLongLong(ErrorResult&);
-  int64_t GetWritableLongLong(ErrorResult&);
-  void SetWritableLongLong(int64_t, ErrorResult&);
+  int64_t GetReadonlyLongLong();
+  int64_t GetWritableLongLong();
+  void SetWritableLongLong(int64_t);
   void PassLongLong(int64_t);
   int64_t ReceiveLongLong();
   void PassOptionalLongLong(const Optional<int64_t>&);
   void PassOptionalLongLongWithDefault(int64_t);
 
-  uint8_t GetReadonlyOctet(ErrorResult&);
-  uint8_t GetWritableOctet(ErrorResult&);
-  void SetWritableOctet(uint8_t, ErrorResult&);
+  uint8_t GetReadonlyOctet();
+  uint8_t GetWritableOctet();
+  void SetWritableOctet(uint8_t);
   void PassOctet(uint8_t);
   uint8_t ReceiveOctet();
   void PassOptionalOctet(const Optional<uint8_t>&);
   void PassOptionalOctetWithDefault(uint8_t);
 
-  uint16_t GetReadonlyUnsignedShort(ErrorResult&);
-  uint16_t GetWritableUnsignedShort(ErrorResult&);
-  void SetWritableUnsignedShort(uint16_t, ErrorResult&);
+  uint16_t GetReadonlyUnsignedShort();
+  uint16_t GetWritableUnsignedShort();
+  void SetWritableUnsignedShort(uint16_t);
   void PassUnsignedShort(uint16_t);
   uint16_t ReceiveUnsignedShort();
   void PassOptionalUnsignedShort(const Optional<uint16_t>&);
   void PassOptionalUnsignedShortWithDefault(uint16_t);
 
-  uint32_t GetReadonlyUnsignedLong(ErrorResult&);
-  uint32_t GetWritableUnsignedLong(ErrorResult&);
-  void SetWritableUnsignedLong(uint32_t, ErrorResult&);
+  uint32_t GetReadonlyUnsignedLong();
+  uint32_t GetWritableUnsignedLong();
+  void SetWritableUnsignedLong(uint32_t);
   void PassUnsignedLong(uint32_t);
   uint32_t ReceiveUnsignedLong();
   void PassOptionalUnsignedLong(const Optional<uint32_t>&);
   void PassOptionalUnsignedLongWithDefault(uint32_t);
 
-  uint64_t GetReadonlyUnsignedLongLong(ErrorResult&);
-  uint64_t GetWritableUnsignedLongLong(ErrorResult&);
-  void SetWritableUnsignedLongLong(uint64_t, ErrorResult&);
+  uint64_t GetReadonlyUnsignedLongLong();
+  uint64_t GetWritableUnsignedLongLong();
+  void SetWritableUnsignedLongLong(uint64_t);
   void PassUnsignedLongLong(uint64_t);
   uint64_t ReceiveUnsignedLongLong();
   void PassOptionalUnsignedLongLong(const Optional<uint64_t>&);
@@ -202,10 +202,10 @@ public:
   void PassSelf(TestInterface&);
   void PassSelf2(NonNull<TestInterface>&);
   void PassNullableSelf(TestInterface*);
-  already_AddRefed<TestInterface> GetNonNullSelf(ErrorResult&);
-  void SetNonNullSelf(TestInterface&, ErrorResult&);
-  already_AddRefed<TestInterface> GetNullableSelf(ErrorResult&);
-  void SetNullableSelf(TestInterface*, ErrorResult&);
+  already_AddRefed<TestInterface> GetNonNullSelf();
+  void SetNonNullSelf(TestInterface&);
+  already_AddRefed<TestInterface> GetNullableSelf();
+  void SetNullableSelf(TestInterface*);
   void PassOptionalSelf(const Optional<TestInterface*> &);
   void PassOptionalNonNullSelf(const Optional<NonNull<TestInterface> >&);
   void PassOptionalSelfWithDefault(TestInterface*);
@@ -224,10 +224,10 @@ public:
   void PassOther(TestNonCastableInterface&);
   void PassOther2(NonNull<TestNonCastableInterface>&);
   void PassNullableOther(TestNonCastableInterface*);
-  already_AddRefed<TestNonCastableInterface> GetNonNullOther(ErrorResult&);
-  void SetNonNullOther(TestNonCastableInterface&, ErrorResult&);
-  already_AddRefed<TestNonCastableInterface> GetNullableOther(ErrorResult&);
-  void SetNullableOther(TestNonCastableInterface*, ErrorResult&);
+  already_AddRefed<TestNonCastableInterface> GetNonNullOther();
+  void SetNonNullOther(TestNonCastableInterface&);
+  already_AddRefed<TestNonCastableInterface> GetNullableOther();
+  void SetNullableOther(TestNonCastableInterface*);
   void PassOptionalOther(const Optional<TestNonCastableInterface*>&);
   void PassOptionalNonNullOther(const Optional<NonNull<TestNonCastableInterface> >&);
   void PassOptionalOtherWithDefault(TestNonCastableInterface*);
@@ -239,10 +239,10 @@ public:
   void PassExternal(TestExternalInterface*);
   void PassExternal2(TestExternalInterface*);
   void PassNullableExternal(TestExternalInterface*);
-  already_AddRefed<TestExternalInterface> GetNonNullExternal(ErrorResult&);
-  void SetNonNullExternal(TestExternalInterface*, ErrorResult&);
-  already_AddRefed<TestExternalInterface> GetNullableExternal(ErrorResult&);
-  void SetNullableExternal(TestExternalInterface*, ErrorResult&);
+  already_AddRefed<TestExternalInterface> GetNonNullExternal();
+  void SetNonNullExternal(TestExternalInterface*);
+  already_AddRefed<TestExternalInterface> GetNullableExternal();
+  void SetNullableExternal(TestExternalInterface*);
   void PassOptionalExternal(const Optional<TestExternalInterface*>&);
   void PassOptionalNonNullExternal(const Optional<TestExternalInterface*>&);
   void PassOptionalExternalWithDefault(TestExternalInterface*);
@@ -254,10 +254,10 @@ public:
   void PassCallbackInterface(TestCallbackInterface&);
   void PassCallbackInterface2(OwningNonNull<TestCallbackInterface>);
   void PassNullableCallbackInterface(TestCallbackInterface*);
-  already_AddRefed<TestCallbackInterface> GetNonNullCallbackInterface(ErrorResult&);
-  void SetNonNullCallbackInterface(TestCallbackInterface&, ErrorResult&);
-  already_AddRefed<TestCallbackInterface> GetNullableCallbackInterface(ErrorResult&);
-  void SetNullableCallbackInterface(TestCallbackInterface*, ErrorResult&);
+  already_AddRefed<TestCallbackInterface> GetNonNullCallbackInterface();
+  void SetNonNullCallbackInterface(TestCallbackInterface&);
+  already_AddRefed<TestCallbackInterface> GetNullableCallbackInterface();
+  void SetNullableCallbackInterface(TestCallbackInterface*);
   void PassOptionalCallbackInterface(const Optional<nsRefPtr<TestCallbackInterface> >&);
   void PassOptionalNonNullCallbackInterface(const Optional<OwningNonNull<TestCallbackInterface> >&);
   void PassOptionalCallbackInterfaceWithDefault(TestCallbackInterface*);
@@ -326,9 +326,9 @@ public:
   void PassOptionalEnum(const Optional<TestEnum>&);
   void PassEnumWithDefault(TestEnum);
   TestEnum ReceiveEnum();
-  TestEnum GetEnumAttribute(ErrorResult&);
-  TestEnum GetReadonlyEnumAttribute(ErrorResult&);
-  void SetEnumAttribute(TestEnum, ErrorResult&);
+  TestEnum GetEnumAttribute();
+  TestEnum GetReadonlyEnumAttribute();
+  void SetEnumAttribute(TestEnum);
 
   // Callback types
   void PassCallback(JSContext*, JSObject*);
@@ -384,9 +384,9 @@ public:
   // binaryNames tests
   void MethodRenamedTo();
   void MethodRenamedTo(int8_t);
-  int8_t GetAttributeGetterRenamedTo(ErrorResult&);
-  int8_t GetAttributeRenamedTo(ErrorResult&);
-  void SetAttributeRenamedTo(int8_t, ErrorResult&);
+  int8_t GetAttributeGetterRenamedTo();
+  int8_t GetAttributeRenamedTo();
+  void SetAttributeRenamedTo(int8_t);
 
   // Dictionary tests
   void PassDictionary(const Dict&);
@@ -397,24 +397,24 @@ public:
   void PassDictContainingDict(const DictContainingDict&);
 
   // Methods and properties imported via "implements"
-  bool GetImplementedProperty(ErrorResult&);
-  void SetImplementedProperty(bool, ErrorResult&);
+  bool GetImplementedProperty();
+  void SetImplementedProperty(bool);
   void ImplementedMethod();
-  bool GetImplementedParentProperty(ErrorResult&);
-  void SetImplementedParentProperty(bool, ErrorResult&);
+  bool GetImplementedParentProperty();
+  void SetImplementedParentProperty(bool);
   void ImplementedParentMethod();
-  bool GetIndirectlyImplementedProperty(ErrorResult&);
-  void SetIndirectlyImplementedProperty(bool, ErrorResult&);
+  bool GetIndirectlyImplementedProperty();
+  void SetIndirectlyImplementedProperty(bool);
   void IndirectlyImplementedMethod();
-  uint32_t GetDiamondImplementedProperty(ErrorResult&);
+  uint32_t GetDiamondImplementedProperty();
 
 private:
   // We add signatures here that _could_ start matching if the codegen
   // got data types wrong.  That way if it ever does we'll have a call
   // to these private deleted methods and compilation will fail.
-  void SetReadonlyByte(int8_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyByte(int8_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableByte(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableByte(T) MOZ_DELETE;
   template<typename T>
   void PassByte(T) MOZ_DELETE;
   template<typename T>
@@ -422,9 +422,9 @@ private:
   template<typename T>
   void PassOptionalByteWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyShort(int16_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyShort(int16_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableShort(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableShort(T) MOZ_DELETE;
   template<typename T>
   void PassShort(T) MOZ_DELETE;
   template<typename T>
@@ -432,9 +432,9 @@ private:
   template<typename T>
   void PassOptionalShortWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyLong(int32_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyLong(int32_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableLong(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableLong(T) MOZ_DELETE;
   template<typename T>
   void PassLong(T) MOZ_DELETE;
   template<typename T>
@@ -442,9 +442,9 @@ private:
   template<typename T>
   void PassOptionalLongWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyLongLong(int64_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyLongLong(int64_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableLongLong(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableLongLong(T) MOZ_DELETE;
   template<typename T>
   void PassLongLong(T) MOZ_DELETE;
   template<typename T>
@@ -452,9 +452,9 @@ private:
   template<typename T>
   void PassOptionalLongLongWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyOctet(uint8_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyOctet(uint8_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableOctet(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableOctet(T) MOZ_DELETE;
   template<typename T>
   void PassOctet(T) MOZ_DELETE;
   template<typename T>
@@ -462,9 +462,9 @@ private:
   template<typename T>
   void PassOptionalOctetWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyUnsignedShort(uint16_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyUnsignedShort(uint16_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableUnsignedShort(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableUnsignedShort(T) MOZ_DELETE;
   template<typename T>
   void PassUnsignedShort(T) MOZ_DELETE;
   template<typename T>
@@ -472,9 +472,9 @@ private:
   template<typename T>
   void PassOptionalUnsignedShortWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyUnsignedLong(uint32_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyUnsignedLong(uint32_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableUnsignedLong(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableUnsignedLong(T) MOZ_DELETE;
   template<typename T>
   void PassUnsignedLong(T) MOZ_DELETE;
   template<typename T>
@@ -482,9 +482,9 @@ private:
   template<typename T>
   void PassOptionalUnsignedLongWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyUnsignedLongLong(uint64_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyUnsignedLongLong(uint64_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableUnsignedLongLong(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableUnsignedLongLong(T) MOZ_DELETE;
   template<typename T>
   void PassUnsignedLongLong(T) MOZ_DELETE;
   template<typename T>
