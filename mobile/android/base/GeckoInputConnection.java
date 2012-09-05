@@ -989,89 +989,77 @@ class GeckoInputConnection
         return mIMEState != IME_STATE_DISABLED;
     }
 
-    public void notifyIME(final int type, final int state) {
-        postToUiThread(new Runnable() {
-            public void run() {
-                View v = getView();
-                if (v == null)
-                    return;
+    public void notifyIME(int type, int state) {
+        View v = getView();
+        if (v == null)
+            return;
 
-                switch (type) {
-                    case NOTIFY_IME_RESETINPUTSTATE:
-                        if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: reset");
+        switch (type) {
+        case NOTIFY_IME_RESETINPUTSTATE:
+            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: reset");
 
-                        // Gecko just cancelled the current composition from underneath us,
-                        // so abandon our active composition string WITHOUT committing it!
-                        resetCompositionState();
+            // Gecko just cancelled the current composition from underneath us,
+            // so abandon our active composition string WITHOUT committing it!
+            resetCompositionState();
 
-                        // Don't use IMEStateUpdater for reset.
-                        // Because IME may not work showSoftInput()
-                        // after calling restartInput() immediately.
-                        // So we have to call showSoftInput() delay.
-                        InputMethodManager imm = getInputMethodManager();
-                        if (imm == null) {
-                            // no way to reset IME status directly
-                            IMEStateUpdater.resetIME();
-                        } else {
-                            imm.restartInput(v);
-                        }
-
-                        // keep current enabled state
-                        IMEStateUpdater.enableIME();
-                        break;
-
-                    case NOTIFY_IME_CANCELCOMPOSITION:
-                        if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: cancel");
-                        IMEStateUpdater.resetIME();
-                        break;
-
-                    case NOTIFY_IME_FOCUSCHANGE:
-                        if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: focus");
-                        IMEStateUpdater.resetIME();
-                        break;
-
-                    case NOTIFY_IME_SETOPENSTATE:
-                    default:
-                        if (DEBUG)
-                            throw new IllegalArgumentException("Unexpected NOTIFY_IME=" + type);
-                        break;
-                }
+            // Don't use IMEStateUpdater for reset.
+            // Because IME may not work showSoftInput()
+            // after calling restartInput() immediately.
+            // So we have to call showSoftInput() delay.
+            InputMethodManager imm = getInputMethodManager();
+            if (imm == null) {
+                // no way to reset IME status directly
+                IMEStateUpdater.resetIME();
+            } else {
+                imm.restartInput(v);
             }
-        });
+
+            // keep current enabled state
+            IMEStateUpdater.enableIME();
+            break;
+
+        case NOTIFY_IME_CANCELCOMPOSITION:
+            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: cancel");
+            IMEStateUpdater.resetIME();
+            break;
+
+        case NOTIFY_IME_FOCUSCHANGE:
+            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: focus");
+            IMEStateUpdater.resetIME();
+            break;
+
+        case NOTIFY_IME_SETOPENSTATE:
+        default:
+            if (DEBUG)
+                throw new IllegalArgumentException("Unexpected NOTIFY_IME=" + type);
+            break;
+        }
     }
 
-    public void notifyIMEEnabled(final int state, final String typeHint, final String modeHint, final String actionHint) {
-        postToUiThread(new Runnable() {
-            public void run() {
-                View v = getView();
-                if (v == null)
-                    return;
+    public void notifyIMEEnabled(int state, String typeHint, final String modeHint, String actionHint) {
+        View v = getView();
 
-                /* When IME is 'disabled', IME processing is disabled.
-                   In addition, the IME UI is hidden */
-                mIMEState = state;
-                mIMETypeHint = (typeHint == null) ? "" : typeHint;
-                mIMEModeHint = (modeHint == null) ? "" : modeHint;
-                mIMEActionHint = (actionHint == null) ? "" : actionHint;
-                IMEStateUpdater.enableIME();
-            }
-        });
+        if (v == null)
+            return;
+
+        /* When IME is 'disabled', IME processing is disabled.
+           In addition, the IME UI is hidden */
+        mIMEState = state;
+        mIMETypeHint = (typeHint == null) ? "" : typeHint;
+        mIMEModeHint = (modeHint == null) ? "" : modeHint;
+        mIMEActionHint = (actionHint == null) ? "" : actionHint;
+        IMEStateUpdater.enableIME();
     }
 
-    public final void notifyIMEChange(final String text, final int start, final int end,
-                                      final int newEnd) {
-        postToUiThread(new Runnable() {
-            public void run() {
-                InputMethodManager imm = getInputMethodManager();
-                if (imm == null)
-                    return;
+    public void notifyIMEChange(String text, int start, int end, int newEnd) {
+        InputMethodManager imm = getInputMethodManager();
+        if (imm == null)
+            return;
 
-                if (newEnd < 0)
-                    notifySelectionChange(imm, start, end);
-                else
-                    notifyTextChange(imm, text, start, end, newEnd);
-            }
-        });
+        if (newEnd < 0)
+            notifySelectionChange(imm, start, end);
+        else
+            notifyTextChange(imm, text, start, end, newEnd);
     }
 
     /* Delay updating IME states (see bug 573800) */
@@ -1102,30 +1090,25 @@ class GeckoInputConnection
                 instance = null;
             }
 
-            // TimerTask.run() is running on a random background thread, so post to UI thread.
-            postToUiThread(new Runnable() {
-                public void run() {
-                    final View v = getView();
-                    if (v == null)
+            final View v = getView();
+            if (v == null)
                         return;
 
-                    final InputMethodManager imm = getInputMethodManager();
-                    if (imm == null)
-                        return;
+            final InputMethodManager imm = getInputMethodManager();
+            if (imm == null)
+                return;
 
-                    if (mReset)
-                        imm.restartInput(v);
+            if (mReset)
+                imm.restartInput(v);
 
-                    if (!mEnable)
-                        return;
+            if (!mEnable)
+                return;
 
-                    if (mIMEState != IME_STATE_DISABLED) {
-                        imm.showSoftInput(v, 0);
-                    } else if (imm.isActive(v)) {
-                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    }
-                }
-            });
+            if (mIMEState != IME_STATE_DISABLED) {
+                imm.showSoftInput(v, 0);
+            } else if (imm.isActive(v)) {
+                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+            }
         }
     }
 
@@ -1165,12 +1148,6 @@ class GeckoInputConnection
     private static String prettyPrintString(CharSequence s) {
         // Quote string and replace newlines with CR arrows.
         return "\"" + s.toString().replace('\n', UNICODE_CRARR) + "\"";
-    }
-
-    private static void postToUiThread(Runnable runnable) {
-        // postToUiThread() is called by the Gecko and TimerTask threads.
-        // The UI thread does not need to post Runnables to itself.
-        GeckoApp.mAppContext.mMainHandler.post(runnable);
     }
 
     private static final class Span {
