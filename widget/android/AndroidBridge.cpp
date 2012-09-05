@@ -255,7 +255,14 @@ AndroidBridge::NotifyIME(int aType, int aState)
 }
 
 jstring NewJavaString(AutoLocalJNIFrame* frame, const PRUnichar* string, uint32_t len) {
-    jstring ret = frame->GetEnv()->NewString( string, len);
+    jstring ret = frame->GetEnv()->NewString(string, len);
+    if (frame->CheckForException())
+        return NULL;
+    return ret;
+}
+
+jstring NewJavaStringUTF(AutoLocalJNIFrame* frame, const char* string) {
+    jstring ret = frame->GetEnv()->NewStringUTF(string);
     if (frame->CheckForException())
         return NULL;
     return ret;
@@ -1809,11 +1816,11 @@ AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aR
     jobjectArray numbers =
         (jobjectArray)env->NewObjectArray(aFilter.numbers().Length(),
                                           jStringClass,
-                                          env->NewStringUTF(""));
+                                          NewJavaStringUTF(&jniFrame, ""));
 
     for (uint32_t i = 0; i < aFilter.numbers().Length(); ++i) {
         env->SetObjectArrayElement(numbers, i,
-                                   env->NewStringUTF(NS_ConvertUTF16toUTF8(aFilter.numbers()[i]).get()));
+                                   NewJavaStringUTF(&jniFrame, NS_ConvertUTF16toUTF8(aFilter.numbers()[i]).get()));
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jCreateMessageList,
