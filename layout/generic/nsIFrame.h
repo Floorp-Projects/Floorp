@@ -2093,6 +2093,12 @@ public:
   virtual bool IsLeaf() const;
 
   /**
+   * Is this a flex item? (Is the parent a flex container frame?)
+   */
+  bool IsFlexItem() const
+  { return mParent && mParent->GetType() == nsGkAtoms::flexContainerFrame; }
+
+  /**
    * This must only be called on frames that are display roots (see
    * nsLayoutUtils::GetDisplayRootFrame). This causes all invalidates
    * reaching this frame to be performed asynchronously off an event,

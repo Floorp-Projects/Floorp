@@ -2816,7 +2816,38 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                    nsSize aIntrinsicRatio, nsSize aCBSize,
                    nsSize aMargin, nsSize aBorder, nsSize aPadding)
 {
-  const nsStylePosition *stylePos = aFrame->GetStylePosition();
+  const nsStylePosition* stylePos = aFrame->GetStylePosition();
+
+  // If we're a flex item, we'll compute our size a bit differently.
+  const nsStyleCoord* widthStyleCoord = &(stylePos->mWidth);
+  const nsStyleCoord* heightStyleCoord = &(stylePos->mHeight);
+
+  bool isFlexItem = aFrame->IsFlexItem();
+  bool isHorizontalFlexItem = false;
+
+#ifdef MOZ_FLEXBOX
+  if (isFlexItem) {
+    // Flex items use their "flex-basis" property in place of their main-size
+    // property (e.g. "width") for sizing purposes, *unless* they have
+    // "flex-basis:auto", in which case they use their main-size property after
+    // all.
+    uint32_t flexDirection =
+      aFrame->GetParent()->GetStylePosition()->mFlexDirection;
+    isHorizontalFlexItem =
+      flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
+      flexDirection == NS_STYLE_FLEX_DIRECTION_ROW_REVERSE;
+
+    if (stylePos->mFlexBasis.GetUnit() != eStyleUnit_Auto) {
+      if (isHorizontalFlexItem) {
+        widthStyleCoord = &(stylePos->mFlexBasis);
+      } else {
+        heightStyleCoord = &(stylePos->mFlexBasis);
+      }
+    }
+  }
+#endif // MOZ_FLEXBOX
+
+
   // Handle intrinsic sizes and their interaction with
   // {min-,max-,}{width,height} according to the rules in
   // http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
@@ -2825,8 +2856,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   // a * (b / c) because of its reduced accuracy relative to a * b / c
   // or (a * b) / c (which are equivalent).
 
-  const bool isAutoWidth = stylePos->mWidth.GetUnit() == eStyleUnit_Auto;
-  const bool isAutoHeight = IsAutoHeight(stylePos->mHeight, aCBSize.height);
+  const bool isAutoWidth = widthStyleCoord->GetUnit() == eStyleUnit_Auto;
+  const bool isAutoHeight = IsAutoHeight(*heightStyleCoord, aCBSize.height);
 
   nsSize boxSizingAdjust(0,0);
   switch (stylePos->mBoxSizing) {
@@ -2844,7 +2875,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   if (!isAutoWidth) {
     width = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
               aFrame, aCBSize.width, boxSizingAdjust.width,
-              boxSizingToMarginEdgeWidth, stylePos->mWidth);
+              boxSizingToMarginEdgeWidth, *widthStyleCoord);
   }
 
   if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None) {
@@ -2871,7 +2902,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   if (!isAutoHeight) {
     height = nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
                 boxSizingAdjust.height, 
-                stylePos->mHeight);
+                *heightStyleCoord);
   }
 
   if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
