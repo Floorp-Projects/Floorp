@@ -5,3 +5,5 @@ ac_add_options --enable-update-packaging
 
 . $topsrcdir/build/unix/mozconfig.linux
 
+
+. "$topsrcdir/build/mozconfig.common.override"

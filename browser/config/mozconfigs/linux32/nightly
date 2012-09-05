@@ -36,3 +36,5 @@ ac_add_options --with-ccache=/usr/bin/ccache
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
+
+. "$topsrcdir/build/mozconfig.common.override"
