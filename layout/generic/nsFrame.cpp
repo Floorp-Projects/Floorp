@@ -3873,13 +3873,40 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   }
   nscoord boxSizingToMarginEdgeWidth =
     aMargin.width + aBorder.width + aPadding.width - boxSizingAdjust.width;
+  const nsStyleCoord* widthStyleCoord = &(stylePos->mWidth);
+  const nsStyleCoord* heightStyleCoord = &(stylePos->mHeight);
+
+  bool isFlexItem = IsFlexItem();
+  bool isHorizontalFlexItem = false;
+ 
+#ifdef MOZ_FLEXBOX
+  if (isFlexItem) {
+    // Flex items use their "flex-basis" property in place of their main-size
+    // property (e.g. "width") for sizing purposes, *unless* they have
+    // "flex-basis:auto", in which case they use their main-size property after
+    // all.
+    uint32_t flexDirection = mParent->GetStylePosition()->mFlexDirection;
+    isHorizontalFlexItem =
+      flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
+      flexDirection == NS_STYLE_FLEX_DIRECTION_ROW_REVERSE;
+
+    if (stylePos->mFlexBasis.GetUnit() != eStyleUnit_Auto) {
+      if (isHorizontalFlexItem) {
+        widthStyleCoord = &(stylePos->mFlexBasis);
+      } else {
+        heightStyleCoord = &(stylePos->mFlexBasis);
+      }
+    }
+  }
+#endif // MOZ_FLEXBOX
+
   // Compute width
 
-  if (stylePos->mWidth.GetUnit() != eStyleUnit_Auto) {
+  if (widthStyleCoord->GetUnit() != eStyleUnit_Auto) {
     result.width =
       nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
         aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
-        stylePos->mWidth);
+        *widthStyleCoord);
   }
 
   if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None) {
@@ -3907,11 +3934,11 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   result.width = NS_MAX(minWidth, result.width);
 
   // Compute height
-  if (!nsLayoutUtils::IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
+  if (!nsLayoutUtils::IsAutoHeight(*heightStyleCoord, aCBSize.height)) {
     result.height =
       nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
                                         boxSizingAdjust.height,
-                                        stylePos->mHeight);
+                                        *heightStyleCoord);
   }
 
   if (result.height != NS_UNCONSTRAINEDSIZE) {
