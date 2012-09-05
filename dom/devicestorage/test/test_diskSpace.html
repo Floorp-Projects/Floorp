@@ -1,0 +1,101 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717103
+-->
+<head>
+  <title>Test for the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup();
+
+
+var freeBytes = -1;
+var stats = 0;
+
+function stat(s, file_list_length) {
+  if (freeBytes == -1) {
+    freeBytes = s.target.result.freeBytes;
+  }
+
+  ok(freeBytes == s.target.result.freeBytes, "Free bytes should be the same");
+  ok(file_list_length * 1024 == s.target.result.totalBytes, "space taken up by files should match")
+
+  stats = stats + 1;
+
+  if (stats == 2) {
+    devicestorage_cleanup();
+  }
+}
+
+function addSuccess(e) {
+  added = added - 1;
+
+  if (added == 0) {
+    request = pictures.stat();
+    request.onsuccess = function(s) {stat(s, picture_files.length)};
+
+    request = videos.stat();
+    request.onsuccess = function(s) {stat(s, video_files.length)};
+
+    request = music.stat();
+    request.onsuccess = function(s) {stat(s, music_files.length)};
+  }
+}
+
+function addError(e) {
+  ok(false, "addError was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+ok(true, "hi");
+
+var pictures = navigator.getDeviceStorage("pictures");
+var picture_files = [ "a.png", "b.png", "c.png", "d.png", "e.png" ];
+
+var videos = navigator.getDeviceStorage("videos");
+var video_files = [ "a.ogv", "b.ogv" ];
+
+var music = navigator.getDeviceStorage("music");
+var music_files = [ "a.mp3", "b.mp3", "c.mp3" ];
+
+var added = picture_files.length + video_files.length + music_files.length;
+
+for (var i=0; i < picture_files.length; i++) {
+ request = pictures.addNamed(createRandomBlob('image/png'), picture_files[i]);
+ request.onsuccess = addSuccess;
+ request.onerror = addError;
+}
+
+for (var i=0; i < video_files.length; i++) {
+ request = videos.addNamed(createRandomBlob('video/ogv'), video_files[i]);
+ request.onsuccess = addSuccess;
+ request.onerror = addError;
+}
+
+for (var i=0; i < music_files.length; i++) {
+ request = music.addNamed(createRandomBlob('audio/mp3'), music_files[i]);
+ request.onsuccess = addSuccess;
+ request.onerror = addError;
+}
+
+</script>
+</pre>
+</body>
+</html>
+

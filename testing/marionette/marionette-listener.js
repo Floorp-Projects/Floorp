@@ -497,17 +497,24 @@ function setSearchTimeout(msg) {
  * All other navigation is handled by the server (in chrome space).
  */
 function goUrl(msg) {
-  curWindow.location = msg.json.value;
-  //TODO: replace this with DOMContentLoaded event listening when Bug 720714 is resolved
-  let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  function checkLoad() { 
-    if (curWindow.document.readyState == "complete") { 
+  addEventListener("DOMContentLoaded", function onDOMContentLoaded(event) {
+    // Prevent DOMContentLoaded events from frames from invoking this code,
+    // unless the event is coming from the frame associated with the current
+    // window (i.e., someone has used switch_to_frame).
+    if (!event.originalTarget.defaultView.frameElement || 
+        event.originalTarget.defaultView.frameElement == curWindow.frameElement) {
+      removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
+
+      let errorRegex = /about:.+(error)|(blocked)\?/;
+      if (curWindow.document.readyState == "interactive" && errorRegex.exec(curWindow.document.baseURI)) {
+        sendError("Error loading page", 13, null);
+        return;
+      }
+
       sendOk();
-      return;
-    } 
-    checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-  }
-  checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+  }, false);
+  curWindow.location = msg.json.value;
 }
 
 /**

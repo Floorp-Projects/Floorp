@@ -93,7 +93,7 @@ function ResponsiveUI(aWindow, aTab)
   this.browser = aTab.linkedBrowser;
   this.chromeDoc = aWindow.document;
   this.container = aWindow.gBrowser.getBrowserContainer(this.browser);
-  this.stack = this.container.querySelector("[anonid=browserStack]");
+  this.stack = this.container.querySelector(".browserStack");
 
   // Try to load presets from prefs
   if (Services.prefs.prefHasUserValue("devtools.responsiveUI.presets")) {
@@ -282,12 +282,12 @@ ResponsiveUI.prototype = {
   /**
    * Build the toolbar and the resizers.
    *
-   * <vbox anonid="browserContainer"> From tabbrowser.xml
+   * <vbox class="browserContainer"> From tabbrowser.xml
    *  <toolbar class="devtools-toolbar devtools-responsiveui-toolbar">
    *    <menulist class="devtools-menulist"/> // presets
    *    <toolbarbutton tabindex="0" class="devtools-toolbarbutton" label="rotate"/> // rotate
    *  </toolbar>
-   *  <stack anonid="browserStack"> From tabbrowser.xml
+   *  <stack class="browserStack"> From tabbrowser.xml
    *    <browser/>
    *    <box class="devtools-responsiveui-resizehandle" bottom="0" right="0"/>
    *    <box class="devtools-responsiveui-resizebar" top="0" right="0"/>
