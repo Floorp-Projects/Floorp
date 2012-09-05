@@ -897,6 +897,7 @@ public:
   }
 
   bool IsRootContentDocument();
+  bool IsCrossProcessRootContentDocument();
 
 protected:
   friend class nsRunnableMethod<nsPresContext>;

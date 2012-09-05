@@ -5,6 +5,8 @@
 
 /* a presentation of a document, part 1 */
 
+#include "base/basictypes.h"
+
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -63,6 +65,8 @@
 #include "nsDOMMediaQueryList.h"
 #include "nsSMILAnimationController.h"
 #include "mozilla/css/ImageLoader.h"
+#include "mozilla/dom/PBrowserChild.h"
+#include "mozilla/dom/TabChild.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -2338,6 +2342,21 @@ nsPresContext::IsRootContentDocument()
 
   nsIFrame* f = view->GetFrame();
   return (f && f->PresContext()->IsChrome());
+}
+
+bool
+nsPresContext::IsCrossProcessRootContentDocument()
+{
+  if (!IsRootContentDocument()) {
+    return false;
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    return true;
+  }
+
+  TabChild* tabChild = GetTabChildFrom(mShell);
+  return (tabChild && tabChild->IsRootContentDocument());
 }
 
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
