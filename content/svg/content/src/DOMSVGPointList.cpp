@@ -112,7 +112,7 @@ DOMSVGPointList::GetItemAt(uint32_t aIndex)
   if (IsAnimValList()) {
     Element()->FlushAnimations();
   }
-  if (aIndex < Length()) {
+  if (aIndex < LengthNoFlush()) {
     EnsureItemAt(aIndex);
     return mItems[aIndex];
   }
@@ -191,7 +191,7 @@ DOMSVGPointList::GetNumberOfItems(uint32_t *aNumberOfItems)
   if (IsAnimValList()) {
     Element()->FlushAnimations();
   }
-  *aNumberOfItems = Length();
+  *aNumberOfItems = LengthNoFlush();
   return NS_OK;
 }
 
@@ -202,7 +202,7 @@ DOMSVGPointList::Clear()
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  if (Length() > 0) {
+  if (LengthNoFlush() > 0) {
     nsAttrValue emptyOrOldValue = Element()->WillChangePointList();
     // DOM list items that are to be removed must be removed before we change
     // the internal list, otherwise they wouldn't be able to copy their
@@ -279,7 +279,7 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  aIndex = NS_MIN(aIndex, Length());
+  aIndex = NS_MIN(aIndex, LengthNoFlush());
   if (aIndex >= DOMSVGPoint::MaxListIndex()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -334,7 +334,7 @@ DOMSVGPointList::ReplaceItem(nsIDOMSVGPoint *aNewItem,
   if (!domItem) {
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   }
-  if (aIndex >= Length()) {
+  if (aIndex >= LengthNoFlush()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
   if (domItem->HasOwner() || domItem->IsReadonly()) {
@@ -372,7 +372,7 @@ DOMSVGPointList::RemoveItem(uint32_t aIndex,
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
-  if (aIndex >= Length()) {
+  if (aIndex >= LengthNoFlush()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -406,7 +406,7 @@ NS_IMETHODIMP
 DOMSVGPointList::AppendItem(nsIDOMSVGPoint *aNewItem,
                             nsIDOMSVGPoint **_retval)
 {
-  return InsertItemBefore(aNewItem, Length(), _retval);
+  return InsertItemBefore(aNewItem, LengthNoFlush(), _retval);
 }
 
 NS_IMETHODIMP
