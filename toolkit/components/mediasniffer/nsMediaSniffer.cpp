@@ -18,7 +18,6 @@ static const unsigned MP4_MIN_BYTES_COUNT = 12;
 // The maximum number of bytes to consider when attempting to sniff a file.
 static const PRUint32 MAX_BYTES_SNIFFED = 512;
 
-NS_IMPL_CLASSINFO(nsMediaSniffer, NULL, 0, NS_MEDIA_SNIFFER_CID)
 NS_IMPL_ISUPPORTS1(nsMediaSniffer, nsIContentSniffer)
 
 nsMediaSniffer::nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
