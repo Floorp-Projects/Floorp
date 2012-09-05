@@ -2343,7 +2343,6 @@ nsPresContext::IsRootContentDocument()
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
                                      nsPresContextType aType)
   : nsPresContext(aDocument, aType),
-    mUpdatePluginGeometryForFrame(nullptr),
     mDOMGeneration(0),
     mNeedsToUpdatePluginGeometry(false)
 {
@@ -2604,21 +2603,13 @@ nsRootPresContext::UpdatePluginGeometry()
   // update when we don't actually want one.
   CancelUpdatePluginGeometryTimer();
 
-  nsIFrame* f = mUpdatePluginGeometryForFrame;
-  if (f) {
-    mUpdatePluginGeometryForFrame->PresContext()->
-      SetContainsUpdatePluginGeometryFrame(false);
-    mUpdatePluginGeometryForFrame = nullptr;
-  } else {
-    f = FrameManager()->GetRootFrame();
-  }
-
+  nsIFrame* f = FrameManager()->GetRootFrame();
   nsTArray<nsIWidget::Configuration> configurations;
   GetPluginGeometryUpdates(f, &configurations);
   if (configurations.IsEmpty())
     return;
   SortConfigurations(&configurations);
-  nsIWidget* widget = FrameManager()->GetRootFrame()->GetNearestWidget();
+  nsIWidget* widget = f->GetNearestWidget();
   NS_ASSERTION(widget, "Plugins must have a parent window");
   widget->ConfigureChildren(configurations);
   DidApplyPluginGeometryUpdates();
@@ -2631,7 +2622,7 @@ UpdatePluginGeometryCallback(nsITimer *aTimer, void *aClosure)
 }
 
 void
-nsRootPresContext::RequestUpdatePluginGeometry(nsIFrame* aFrame)
+nsRootPresContext::RequestUpdatePluginGeometry()
 {
   if (mRegisteredPlugins.Count() == 0)
     return;
@@ -2654,16 +2645,6 @@ nsRootPresContext::RequestUpdatePluginGeometry(nsIFrame* aFrame)
                              nsITimer::TYPE_ONE_SHOT);
     }
     mNeedsToUpdatePluginGeometry = true;
-    mUpdatePluginGeometryForFrame = aFrame;
-    mUpdatePluginGeometryForFrame->PresContext()->
-      SetContainsUpdatePluginGeometryFrame(true);
-  } else {
-    if (!mUpdatePluginGeometryForFrame ||
-        aFrame == mUpdatePluginGeometryForFrame)
-      return;
-    mUpdatePluginGeometryForFrame->PresContext()->
-      SetContainsUpdatePluginGeometryFrame(false);
-    mUpdatePluginGeometryForFrame = nullptr;
   }
 }
 
@@ -2683,26 +2664,6 @@ void
 nsRootPresContext::DidApplyPluginGeometryUpdates()
 {
   mRegisteredPlugins.EnumerateEntries(PluginDidSetGeometryEnumerator, nullptr);
-}
-
-void
-nsRootPresContext::RootForgetUpdatePluginGeometryFrame(nsIFrame* aFrame)
-{
-  if (aFrame == mUpdatePluginGeometryForFrame) {
-    mUpdatePluginGeometryForFrame->PresContext()->
-      SetContainsUpdatePluginGeometryFrame(false);
-    mUpdatePluginGeometryForFrame = nullptr;
-  }
-}
-
-void
-nsRootPresContext::RootForgetUpdatePluginGeometryFrameForPresContext(
-  nsPresContext* aPresContext)
-{
-  if (aPresContext->GetContainsUpdatePluginGeometryFrame()) {
-    aPresContext->SetContainsUpdatePluginGeometryFrame(false);
-    mUpdatePluginGeometryForFrame = nullptr;
-  }
 }
 
 static void
@@ -2760,8 +2721,4 @@ nsRootPresContext::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   // - mRegisteredPlugins
   // - mWillPaintObservers
   // - mWillPaintFallbackEvent
-  //
-  // The following member are not measured:
-  // - mUpdatePluginGeometryForFrame, because it is non-owning
 }
-
