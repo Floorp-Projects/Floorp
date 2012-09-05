@@ -10,8 +10,12 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+#  man, our mime database sucks hard.  followup bug # 788273
+#		test_add.html \
+
 MOCHITEST_FILES	= \
 		test_sanity.html \
+		test_addCorrectType.html \
 		test_basic.html \
 		test_enumerate.html \
 		test_enumerateMultipleContinue.html \
