@@ -1710,7 +1710,6 @@ CreateNativeGlobalForInner(JSContext* aCx,
   MOZ_ASSERT(aHolder);
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  uint32_t flags = aIsChrome ? nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT : 0;
 
   nsCOMPtr<nsIPrincipal> systemPrincipal;
   if (aIsChrome) {
@@ -1722,7 +1721,7 @@ CreateNativeGlobalForInner(JSContext* aCx,
   nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
   nsresult rv = xpc->InitClassesWithNewWrappedGlobal(
     aCx, static_cast<nsIScriptGlobalObject*>(aNewInner),
-    aIsChrome ? systemPrincipal.get() : aPrincipal, flags,
+    aIsChrome ? systemPrincipal.get() : aPrincipal, 0,
     getter_AddRefs(jsholder));
   NS_ENSURE_SUCCESS(rv, rv);
 

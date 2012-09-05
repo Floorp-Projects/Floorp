@@ -303,7 +303,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(26efd266-3e33-4dc9-8233-e13bb8d9c452)]
+[uuid(bd300b18-1c34-4589-8285-23a12cc580ea)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -339,7 +339,7 @@ interface nsIXPConnect : nsISupports
                   in uint32_t     aFlags);
 
     const uint32_t INIT_JS_STANDARD_CLASSES  = 1 << 0;
-    const uint32_t FLAG_SYSTEM_GLOBAL_OBJECT = 1 << 1;
+    // Free bit here!
     const uint32_t OMIT_COMPONENTS_OBJECT    = 1 << 2;
 
     /**
