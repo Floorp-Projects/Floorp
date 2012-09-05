@@ -819,6 +819,8 @@ NS_IMETHODIMP
 nsProtocolProxyService::Resolve(nsIURI *uri, uint32_t flags,
                                 nsIProxyInfo **result)
 {
+    NS_ENSURE_ARG_POINTER(uri);
+
     nsProtocolInfo info;
     nsresult rv = GetProtocolInfo(uri, &info);
     if (NS_FAILED(rv))
@@ -864,6 +866,9 @@ nsProtocolProxyService::AsyncResolve(nsIURI *uri, uint32_t flags,
                                      nsIProtocolProxyCallback *callback,
                                      nsICancelable **result)
 {
+    NS_ENSURE_ARG_POINTER(uri);
+    NS_ENSURE_ARG_POINTER(callback);
+
     nsRefPtr<nsAsyncResolveRequest> ctx =
         new nsAsyncResolveRequest(this, uri, flags, callback);
     if (!ctx)
@@ -1173,6 +1178,9 @@ loser:
 nsresult
 nsProtocolProxyService::GetProtocolInfo(nsIURI *uri, nsProtocolInfo *info)
 {
+    NS_PRECONDITION(uri, "URI is null");
+    NS_PRECONDITION(info, "info is null");
+
     nsresult rv;
 
     rv = uri->GetScheme(info->scheme);
