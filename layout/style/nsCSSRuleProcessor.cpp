@@ -1909,6 +1909,27 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
+      case nsCSSPseudoClasses::ePseudoClass_mozHasHandlerRef:
+        {
+          nsIContent *child = nullptr;
+          int32_t index = -1;
+
+          do {
+            child = aElement->GetChildAt(++index);
+            if (child && child->IsHTML() &&
+                child->Tag() == nsGkAtoms::param &&
+                child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                                   NS_LITERAL_STRING("pluginurl"),
+                                   eIgnoreCase)) {
+              break;
+            }
+          } while (child);
+          if (!child) {
+            return false;
+          }
+        }
+        break;
+
       case nsCSSPseudoClasses::ePseudoClass_mozIsHTML:
         if (!aTreeMatchContext.mIsHTMLDocument || !aElement->IsHTML()) {
           return false;

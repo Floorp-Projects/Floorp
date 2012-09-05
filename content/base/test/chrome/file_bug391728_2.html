@@ -43,7 +43,7 @@ document.addEventListener("PluginBlocklisted", blocked_plugin_detected, true);
 <div><embed id="plugin1" style="width: 100px; height: 100px" type="application/x-unknown"></div>
 <div><embed id="plugin2" style="width: 100px; height: 100px" src="data:application/x-unknown,test"></div>
 
-<!-- So do objects with a type/uri and no content -->
+<!-- So do objects with no content and no pluginurl -->
 <div><object id="plugin3" style="width: 100px; height: 100px" type="application/x-unknown"></object></div>
 <div><object id="plugin4" style="width: 100px; height: 100px" data="data:application/x-unknown,test"></object></div>
 
@@ -69,6 +69,16 @@ document.addEventListener("PluginBlocklisted", blocked_plugin_detected, true);
   
 </object></div>
 
+<!-- Pluginurl forces the psuedo class and error event regardless of content -->
+<div><object id="plugin11" style="width: 100px; height: 100px" type="application/x-unknown">
+  <param name="pluginurl" value="http://foo">
+  <p>Fallback content</p>
+</object></div>
+<div><object id="plugin12" style="width: 100px; height: 100px" data="data:application/x-unknown,test">
+  <param name="pluginurl" value="http://foo">
+  <p>Fallback content</p>
+</object></div>
+
 <!-- No errors or psuedo classes for objects with fallback content -->
 <div><object id="fallback1" style="width: 100px; height: 100px" type="application/x-unknown">
   <p>Fallback content</p>
@@ -80,10 +90,10 @@ document.addEventListener("PluginBlocklisted", blocked_plugin_detected, true);
 <!-- Even other plugins are considered content so no errors dispatched from these
      objects, but the inner embeds do get processed -->
 <div><object id="fallback3" style="width: 100px; height: 100px" type="application/x-unknown">
-  <embed id="plugin11" style="width: 100px; height: 100px" type="application/x-unknown">
+  <embed id="plugin13" style="width: 100px; height: 100px" type="application/x-unknown">
 </object></div>
 <div><object id="fallback4" style="width: 100px; height: 100px" data="data:application/x-unknown,test">
-  <embed id="plugin12" style="width: 100px; height: 100px" type="application/x-unknown">
+  <embed id="plugin14" style="width: 100px; height: 100px" type="application/x-unknown">
 </object></div>
 </body>
 </html>
