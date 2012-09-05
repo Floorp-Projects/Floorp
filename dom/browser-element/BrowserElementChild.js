@@ -107,6 +107,12 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
+    this._afterPaintHandlerClosure = this._afterPaintHandler.bind(this);
+    addEventListener('MozAfterPaint',
+                     this._afterPaintHandlerClosure,
+                     /* useCapture = */ true,
+                     /* wantsUntrusted = */ false);
+
     var self = this;
     function addMsgListener(msg, handler) {
       addMessageListener('browser-element-api:' + msg, handler.bind(self));
@@ -348,6 +354,19 @@ BrowserElementChild.prototype = {
       else {
         debug("Not top level!");
       }
+    }
+  },
+
+  _afterPaintHandler: function(e) {
+    let uri = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
+    debug("Got afterpaint event: " + uri.spec);
+    if (uri.spec != "about:blank") {
+      /* this._afterPaintHandlerClosure == arguments.callee, except we're in
+       * strict mode so we don't have arguments.callee. */
+      removeEventListener('MozAfterPaint', this._afterPaintHandlerClosure,
+                          /* useCapture */ true);
+
+      sendAsyncMsg('firstpaint');
     }
   },
 
