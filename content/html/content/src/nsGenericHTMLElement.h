@@ -35,6 +35,9 @@ class nsIDOMHTMLMenuElement;
 class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
 class nsIDOMHTMLPropertiesCollection;
+namespace mozilla {
+class ErrorResult;
+}
 
 typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 
@@ -121,6 +124,8 @@ public:
   NS_IMETHOD GetItemScope(bool* aItemScope);
   NS_IMETHOD SetItemScope(bool aItemScope);
   NS_IMETHOD GetItemValue(nsIVariant** aValue);
+  JS::Value GetItemValue(JSContext* aCx, JSObject* aScope,
+                         mozilla::ErrorResult& error);
   NS_IMETHOD SetItemValue(nsIVariant* aValue);
 protected:
   // These methods are used to implement element-specific behavior of Get/SetItemValue

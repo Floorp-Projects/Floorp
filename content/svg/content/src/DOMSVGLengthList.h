@@ -14,6 +14,7 @@
 #include "nsTArray.h"
 #include "SVGLengthList.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
 
 class nsIDOMSVGLength;
 class nsSVGElement;
@@ -93,6 +94,45 @@ public:
 
   /// Called to notify us to syncronize our length and detach excess items.
   void InternalListLengthWillChange(uint32_t aNewLength);
+
+  uint32_t NumberOfItems() const
+  {
+    if (IsAnimValList()) {
+      Element()->FlushAnimations();
+    }
+    return LengthNoFlush();
+  }
+  void Clear(ErrorResult& aError);
+  already_AddRefed<nsIDOMSVGLength> Initialize(nsIDOMSVGLength *newItem,
+                                               ErrorResult& error);
+  nsIDOMSVGLength* GetItem(uint32_t index, ErrorResult& error)
+  {
+    bool found;
+    nsIDOMSVGLength* item = IndexedGetter(index, found, error);
+    if (!found) {
+      error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    }
+    return item;
+  }
+  nsIDOMSVGLength* IndexedGetter(uint32_t index, bool& found,
+                                 ErrorResult& error);
+  already_AddRefed<nsIDOMSVGLength> InsertItemBefore(nsIDOMSVGLength *newItem,
+                                                     uint32_t index,
+                                                     ErrorResult& error);
+  already_AddRefed<nsIDOMSVGLength> ReplaceItem(nsIDOMSVGLength *newItem,
+                                                uint32_t index,
+                                                ErrorResult& error);
+  already_AddRefed<nsIDOMSVGLength> RemoveItem(uint32_t index,
+                                               ErrorResult& error);
+  already_AddRefed<nsIDOMSVGLength> AppendItem(nsIDOMSVGLength *newItem,
+                                               ErrorResult& error)
+  {
+    return InsertItemBefore(newItem, LengthNoFlush(), error);
+  }
+  uint32_t Length() const
+  {
+    return NumberOfItems();
+  }
 
 private:
 

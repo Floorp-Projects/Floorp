@@ -4,17 +4,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.w3.org/TR/2012/WD-dom-20120105/
+ * http://dvcs.w3.org/hg/webevents/raw-file/default/touchevents.html
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
-interface Element;
+interface Touch;
 
-interface HTMLCollection {
+interface TouchList {
   readonly attribute unsigned long length;
-  getter Element? item(unsigned long index);
-  [Throws]
-  getter object? namedItem(DOMString name); // only returns Element
+  getter Touch? item(unsigned long index);
+  Touch identifiedTouch(long identifier);
 };

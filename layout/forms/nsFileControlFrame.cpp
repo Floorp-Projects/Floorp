@@ -53,6 +53,7 @@
 
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDragEvent.h"
+#include "nsContentList.h"
 
 namespace dom = mozilla::dom;
 

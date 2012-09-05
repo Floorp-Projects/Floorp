@@ -45,10 +45,10 @@ protected:
   nsRefPtr<HTMLPropertiesCollection> mCollection;
 };
 
-class HTMLPropertiesCollection : public nsIDOMHTMLPropertiesCollection,
+class HTMLPropertiesCollection : public nsIHTMLCollection,
+                                 public nsIDOMHTMLPropertiesCollection,
                                  public nsStubMutationObserver,
-                                 public nsWrapperCache,
-                                 public nsIHTMLCollection
+                                 public nsWrapperCache
 {
   friend class PropertyNodeList;
   friend class PropertyStringList;
@@ -62,6 +62,19 @@ public:
   NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aResult);
   void SetDocument(nsIDocument* aDocument);
   nsINode* GetParentObject();
+  virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
+                              mozilla::ErrorResult& error);
+  PropertyNodeList* NamedItem(const nsAString& aName);
+  PropertyNodeList* NamedGetter(const nsAString& aName, bool& aFound)
+  {
+    aFound = IsSupportedNamedProperty(aName);
+    return aFound ? NamedItem(aName) : nullptr;
+  }
+  nsDOMStringList* Names()
+  {
+    EnsureFresh();
+    return mNames;
+  }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMHTMLPROPERTIESCOLLECTION
@@ -85,6 +98,12 @@ protected:
 
   // Crawl startNode and its descendants, looking for items
   void CrawlSubtree(Element* startNode);
+
+  bool IsSupportedNamedProperty(const nsAString& aName)
+  {
+    EnsureFresh();
+    return mNames->ContainsInternal(aName);
+  }
 
   // the items that make up this collection
   nsTArray<nsRefPtr<nsGenericHTMLElement> > mProperties; 
@@ -118,6 +137,9 @@ public:
                                bool *triedToWrap);
 
   void SetDocument(nsIDocument* aDocument);
+
+  void GetValues(JSContext* aCx, nsTArray<JS::Value >& aResult,
+                 ErrorResult& aError);
 
   NS_DECL_NSIDOMPROPERTYNODELIST
 
