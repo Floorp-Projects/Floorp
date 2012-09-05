@@ -33,7 +33,6 @@ class nsPIDOMWindow;
 #define POST_ERROR_EVENT_FILE_NOT_ENUMERABLE         "File location is not enumerable"
 #define POST_ERROR_EVENT_PERMISSION_DENIED           "Permission Denied"
 #define POST_ERROR_EVENT_ILLEGAL_FILE_NAME           "Illegal file name"
-#define POST_ERROR_EVENT_ILLEGAL_TYPE                "Illegal content type"
 #define POST_ERROR_EVENT_UNKNOWN                     "Unknown"
 #define POST_ERROR_EVENT_NON_STRING_TYPE_UNSUPPORTED "Non-string type unsupported"
 #define POST_ERROR_EVENT_NOT_IMPLEMENTED             "Not implemented"
@@ -58,6 +57,7 @@ public:
   // we want to make sure that the names of file can't reach
   // outside of the type of storage the user asked for.
   bool IsSafePath();
+  bool IsType(nsAString& aType);
 
   nsresult Remove();
   nsresult Write(nsIInputStream* aInputStream);
@@ -65,8 +65,7 @@ public:
   void CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, uint64_t aSince = 0);
   void collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, uint64_t aSince, nsAString& aRootPath);
 
-  static bool IsType(nsIFile* aFile, const nsAString& aStorageType);
-  static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const nsAString& aStorageType);
+  static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar);
 
 private:
   void NormalizeFilePath();
