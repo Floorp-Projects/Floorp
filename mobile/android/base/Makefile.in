@@ -107,6 +107,7 @@ FENNEC_JAVA_FILES = \
   RemoteTabs.java \
   RobocopAPI.java \
   SetupScreen.java \
+  ShapedButton.java \
   SiteIdentityPopup.java \
   SuggestClient.java \
   SurfaceBits.java \
