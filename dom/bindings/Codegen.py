@@ -2838,11 +2838,16 @@ class CGCallGenerator(CGThing):
     """
     A class to generate an actual call to a C++ object.  Assumes that the C++
     object is stored in a variable whose name is given by the |object| argument.
+
+    errorReport should be a CGThing for an error report or None if no
+    error reporting is needed.
     """
     def __init__(self, errorReport, arguments, argsPre, returnType,
                  extendedAttributes, descriptorProvider, nativeMethodName,
                  static, object="self", declareResult=True):
         CGThing.__init__(self)
+
+        assert errorReport is None or isinstance(errorReport, CGThing)
 
         isFallible = errorReport is not None
 
@@ -4825,8 +4830,9 @@ class CGDOMJSProxyHandler_obj_toString(ClassMethod):
             extendedAttributes = self.descriptor.getExtendedAttributes(stringifier)
             infallible = 'infallible' in extendedAttributes
             if not infallible:
-                error = ('ThrowMethodFailedWithDetails(cx, rv, "%s", "toString")\n' +
-                         "return NULL;") % self.descriptor.interface.identifier.name
+                error = CGGeneric(
+                    ('ThrowMethodFailedWithDetails(cx, rv, "%s", "toString");\n' +
+                     "return NULL;") % self.descriptor.interface.identifier.name)
             else:
                 error = None
             call = CGCallGenerator(error, [], "", returnType, extendedAttributes, self.descriptor, nativeName, False, object="UnwrapProxy(proxy)")
