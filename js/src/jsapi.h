@@ -1944,14 +1944,6 @@ typedef const JSErrorFormatString *
 (* JSErrorCallback)(void *userRef, const char *locale,
                     const unsigned errorNumber);
 
-#ifdef va_start
-#define JS_ARGUMENT_FORMATTER_DEFINED 1
-
-typedef JSBool
-(* JSArgumentFormatter)(JSContext *cx, const char *format, JSBool fromJS,
-                        jsval **vpp, va_list *app);
-#endif
-
 typedef JSBool
 (* JSLocaleToUpperCase)(JSContext *cx, JSString *src, jsval *rval);
 
@@ -2605,56 +2597,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv,
                       const char *format, va_list ap);
 #endif
-
-#ifdef JS_ARGUMENT_FORMATTER_DEFINED
-
-/*
- * Add and remove a format string handler for JS_{Convert,Push}Arguments{,VA}.
- * The handler function has this signature:
- *
- *   JSBool MyArgumentFormatter(JSContext *cx, const char *format,
- *                              JSBool fromJS, jsval **vpp, va_list *app);
- *
- * It should return true on success, and return false after reporting an error
- * or detecting an already-reported error.
- *
- * For a given format string, for example "AA", the formatter is called from
- * JS_ConvertArgumentsVA like so:
- *
- *   formatter(cx, "AA...", JS_TRUE, &sp, &ap);
- *
- * sp points into the arguments array on the JS stack, while ap points into
- * the stdarg.h va_list on the C stack.  The JS_TRUE passed for fromJS tells
- * the formatter to convert zero or more jsvals at sp to zero or more C values
- * accessed via pointers-to-values at ap, updating both sp (via *vpp) and ap
- * (via *app) to point past the converted arguments and their result pointers
- * on the C stack.
- *
- * When called from JS_PushArgumentsVA, the formatter is invoked thus:
- *
- *   formatter(cx, "AA...", JS_FALSE, &sp, &ap);
- *
- * where JS_FALSE for fromJS means to wrap the C values at ap according to the
- * format specifier and store them at sp, updating ap and sp appropriately.
- *
- * The "..." after "AA" is the rest of the format string that was passed into
- * JS_{Convert,Push}Arguments{,VA}.  The actual format trailing substring used
- * in each Convert or PushArguments call is passed to the formatter, so that
- * one such function may implement several formats, in order to share code.
- *
- * Remove just forgets about any handler associated with format.  Add does not
- * copy format, it points at the string storage allocated by the caller, which
- * is typically a string constant.  If format is in dynamic storage, it is up
- * to the caller to keep the string alive until Remove is called.
- */
-extern JS_PUBLIC_API(JSBool)
-JS_AddArgumentFormatter(JSContext *cx, const char *format,
-                        JSArgumentFormatter formatter);
-
-extern JS_PUBLIC_API(void)
-JS_RemoveArgumentFormatter(JSContext *cx, const char *format);
-
-#endif /* JS_ARGUMENT_FORMATTER_DEFINED */
 
 extern JS_PUBLIC_API(JSBool)
 JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp);
