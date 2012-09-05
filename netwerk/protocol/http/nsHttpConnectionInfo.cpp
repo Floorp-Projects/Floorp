@@ -44,11 +44,15 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, int32_t port)
         mHashKey.SetCharAt('S', 1);
 
     // NOTE: for transparent proxies (e.g., SOCKS) we need to encode the proxy
-    // type in the hash key (this ensures that we will continue to speak the
+    // info in the hash key (this ensures that we will continue to speak the
     // right protocol even if our proxy preferences change).
     if (!mUsingHttpProxy && ProxyHost()) {
         mHashKey.AppendLiteral(" (");
         mHashKey.Append(ProxyType());
+        mHashKey.Append(':');
+        mHashKey.Append(ProxyHost());
+        mHashKey.Append(':');
+        mHashKey.AppendInt(ProxyPort());
         mHashKey.Append(')');
     }
 }
