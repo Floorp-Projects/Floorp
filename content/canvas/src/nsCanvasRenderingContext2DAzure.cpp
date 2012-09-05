@@ -3216,6 +3216,16 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
     isRTL = GET_BIDI_OPTION_DIRECTION(document->GetBidiOptions()) == IBMBIDI_TEXTDIRECTION_RTL;
   }
 
+  gfxFontGroup* currentFontStyle = GetCurrentFontStyle();
+  NS_ASSERTION(currentFontStyle, "font group is null");
+
+  if (currentFontStyle->GetStyle()->size == 0.0F) {
+    if (aWidth) {
+      *aWidth = 0;
+    }
+    return NS_OK;
+  }
+
   const ContextState &state = CurrentState();
 
   // This is only needed to know if we can know the drawing bounding box easily.
@@ -3234,11 +3244,8 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
   processor.mBoundingBox = gfxRect(0, 0, 0, 0);
   processor.mDoMeasureBoundingBox = doDrawShadow || !mIsEntireFrameInvalid;
   processor.mState = &CurrentState();
+  processor.mFontgrp = currentFontStyle;
     
-
-  processor.mFontgrp = GetCurrentFontStyle();
-  NS_ASSERTION(processor.mFontgrp, "font group is null");
-
   nscoord totalWidthCoord;
 
   // calls bidi algo twice since it needs the full text width and the
