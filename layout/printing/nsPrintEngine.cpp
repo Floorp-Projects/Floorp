@@ -2393,7 +2393,93 @@ nsPrintEngine::ElipseLongString(PRUnichar *& aStr, const uint32_t aLen, bool aDo
   }
 }
 
+static bool
+DocHasPrintCallbackCanvas(nsIDocument* aDoc, void* aData)
+{
+  if (!aDoc) {
+    return true;
+  }
+  Element* root = aDoc->GetRootElement();
+  nsRefPtr<nsContentList> canvases = NS_GetContentList(root,
+                                                       kNameSpaceID_XHTML,
+                                                       NS_LITERAL_STRING("canvas"));
+  PRUint32 canvasCount = canvases->Length(true);
+  for (PRUint32 i = 0; i < canvasCount; ++i) {
+    nsCOMPtr<nsIDOMHTMLCanvasElement> canvas = do_QueryInterface(canvases->Item(i, false));
+    nsCOMPtr<nsIPrintCallback> printCallback;
+    if (canvas && NS_SUCCEEDED(canvas->GetMozPrintCallback(getter_AddRefs(printCallback))) &&
+        printCallback) {
+      // This subdocument has a print callback. Set result and return false to
+      // stop iteration.
+      *static_cast<bool*>(aData) = true;
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool
+DocHasPrintCallbackCanvas(nsIDocument* aDoc)
+{
+  bool result = false;
+  aDoc->EnumerateSubDocuments(&DocHasPrintCallbackCanvas, static_cast<void*>(&result));
+  return result;
+}
+
+/**
+ * Checks to see if the document this print engine is associated with has any
+ * canvases that have a mozPrintCallback.
+ */
+bool
+nsPrintEngine::HasPrintCallbackCanvas()
+{
+  if (!mDocument) {
+    return false;
+  }
+  // First check this mDocument.
+  bool result = false;
+  DocHasPrintCallbackCanvas(mDocument, static_cast<void*>(&result));
+  // Also check the sub documents.
+  return result || DocHasPrintCallbackCanvas(mDocument);
+}
+
 //-------------------------------------------------------
+bool
+nsPrintEngine::PrePrintPage()
+{
+  NS_ASSERTION(mPageSeqFrame,  "mPageSeqFrame is null!");
+  NS_ASSERTION(mPrt,           "mPrt is null!");
+
+  // Although these should NEVER be NULL
+  // This is added insurance, to make sure we don't crash in optimized builds
+  if (!mPrt || !mPageSeqFrame) {
+    return true; // means we are done preparing the page.
+  }
+
+  // Check setting to see if someone request it be cancelled
+  bool isCancelled = false;
+  mPrt->mPrintSettings->GetIsCancelled(&isCancelled);
+  if (isCancelled)
+    return true;
+
+  // Ask mPageSeqFrame if the page is ready to be printed.
+  // If the page doesn't get printed at all, the |done| will be |true|.
+  bool done = false;
+  nsresult rv = mPageSeqFrame->PrePrintNextPage(mPagePrintTimer, &done);
+  if (NS_FAILED(rv)) {
+    // ??? ::PrintPage doesn't set |mPrt->mIsAborted = true| if rv != NS_ERROR_ABORT,
+    // but I don't really understand why this should be the right thing to do?
+    // Shouldn't |mPrt->mIsAborted| set to true all the time if something
+    // wents wrong?
+    if (rv != NS_ERROR_ABORT) {
+      ShowPrintErrorDialog(rv);
+      mPrt->mIsAborted = true;
+    }
+    done = true;
+  }
+  return done;
+}
+
 bool
 nsPrintEngine::PrintPage(nsPrintObject*    aPO,
                          bool&           aInRange)
@@ -2415,7 +2501,7 @@ nsPrintEngine::PrintPage(nsPrintObject*    aPO,
   // Check setting to see if someone request it be cancelled
   bool isCancelled = false;
   mPrt->mPrintSettings->GetIsCancelled(&isCancelled);
-  if (isCancelled)
+  if (isCancelled || mPrt->mIsAborted)
     return true;
 
   int32_t pageNum, numPages, endPage;
@@ -2674,14 +2760,8 @@ void nsPrintEngine::SetIsPrinting(bool aIsPrinting)
   mIsDoingPrinting = aIsPrinting;
   // Calling SetIsPrinting while in print preview confuses the document viewer
   // This is safe because we prevent exiting print preview while printing
-  if (!mIsDoingPrintPreview &&
-      mPrt && mPrt->mPrintObject && mPrt->mPrintObject->mDocShell) {
-    nsCOMPtr<nsIContentViewer> viewer;
-    mPrt->mPrintObject->mDocShell->GetContentViewer(getter_AddRefs(viewer));
-    nsCOMPtr<nsIDocumentViewerPrint> docViewerPrint = do_QueryInterface(viewer);
-    if (docViewerPrint) {
-      docViewerPrint->SetIsPrinting(aIsPrinting);
-    }
+  if (!mIsDoingPrintPreview && mDocViewerPrint) {
+    mDocViewerPrint->SetIsPrinting(aIsPrinting);
   }
   if (mPrt && aIsPrinting) {
     mPrt->mPreparingForPrint = true;
@@ -2800,7 +2880,14 @@ nsPrintEngine::DonePrintingPages(nsPrintObject* aPO, nsresult aResult)
   //NS_ASSERTION(aPO, "Pointer is null!");
   PR_PL(("****** In DV::DonePrintingPages PO: %p (%s)\n", aPO, aPO?gFrameTypesStr[aPO->mFrameType]:""));
 
-  if (aPO != nullptr) {
+  // If there is a pageSeqFrame, make sure there are no more printCanvas active
+  // that might call |Notify| on the pagePrintTimer after things are cleaned up
+  // and printing was marked as being done.
+  if (mPageSeqFrame) {
+    mPageSeqFrame->ResetPrintCanvasList();
+  }
+
+  if (aPO && !mPrt->mIsAborted) {
     aPO->mHasBeenPrinted = true;
     nsresult rv;
     bool didPrint = PrintDocContent(mPrt->mPrintObject, rv);

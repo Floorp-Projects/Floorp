@@ -1413,7 +1413,9 @@ nsCanvasRenderingContext2D::GetImageFormat() const
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 {
-    NS_IF_ADDREF(*canvas = mCanvasElement);
+    if (mCanvasElement) {
+      NS_IF_ADDREF(*canvas = mCanvasElement->GetOriginalCanvas());
+    }
 
     return NS_OK;
 }
