@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=785588
+-->
+<head>
+  <title>Test for Bug 785588 --- ordering of scroll-related events</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=785588">Mozilla Bug 785588</a>
+<div id="content">
+  <div id="d" style="border:2px solid black; width:100px; height:100px; overflow:auto">
+    <div id="inner" style="height:200px;">Hello</div>
+  </div>
+</div>
+<pre id="test">
+<script>
+SimpleTest.waitForExplicitFinish();
+
+var smoothScrollPref = "general.smoothScroll";
+SpecialPowers.setBoolPref(smoothScrollPref, false);
+
+var d = document.getElementById("d");
+d.scrollTop = 0;
+var inner = document.getElementById("inner");
+
+var state = "initial";
+
+function onFrame() {
+  is(state, "initial", "Must be in initial state");
+  ok(d.scrollTop > 0, "Must have scrolled by some amount (got " + d.scrollTop + ")");
+  state = "didOnFrame";
+}
+
+function onScroll() {
+  is(state, "didOnFrame", "Must have got requestAnimationFrame callback already");
+  ok(d.scrollTop > 0, "Must have scrolled by some amount (got " + d.scrollTop + ")");
+  SpecialPowers.clearUserPref(smoothScrollPref);
+  SimpleTest.finish();
+}
+
+function doTest() {
+  window.getSelection().collapse(inner.firstChild, 0);
+  window.mozRequestAnimationFrame(onFrame);
+  d.onscroll = onScroll;
+  sendKey("DOWN");
+}
+
+SimpleTest.waitForFocus(doTest);
+</script>
+</pre>
+</body>
+</html>

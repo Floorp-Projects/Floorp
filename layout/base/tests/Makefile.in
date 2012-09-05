@@ -133,6 +133,7 @@ MOCHITEST_FILES =	\
 		test_bug696020.html \
  		test_event_target_radius.html \
 		test_mozPaintCount.html \
+		test_scroll_event_ordering.html \
 		test_scroll_selection_into_view.html \
 		test_bug583889.html \
 		bug583889_inner1.html \
