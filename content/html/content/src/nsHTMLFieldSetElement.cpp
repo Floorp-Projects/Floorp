@@ -11,6 +11,7 @@
 #include "nsIFormControl.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
+#include "nsContentList.h"
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FieldSet)

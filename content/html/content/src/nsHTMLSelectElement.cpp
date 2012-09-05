@@ -36,6 +36,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozAutoDocUpdate.h"
 #include "dombindings.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -662,14 +663,7 @@ nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
   int32_t index;
   NS_ENSURE_SUCCESS(aBefore->GetAsInt32(&index), NS_ERROR_DOM_SYNTAX_ERR);
 
-  // If item index is out of range, insert to last.
-  // (since beforeElement becomes null, it is inserted to last)
-  nsCOMPtr<nsIDOMNode> beforeNode;
-  if (NS_SUCCEEDED(Item(index, getter_AddRefs(beforeNode)))) {
-    beforeElement = do_QueryInterface(beforeNode);
-  }
-
-  return Add(aElement, beforeElement);
+  return Add(aElement, index);
 }
 
 NS_IMETHODIMP
@@ -2087,20 +2081,45 @@ nsHTMLOptionCollection::SetOption(uint32_t aIndex,
   return rv;
 }
 
+int32_t
+nsHTMLOptionCollection::GetSelectedIndex(ErrorResult& aError)
+{
+  if (!mSelect) {
+    aError.Throw(NS_ERROR_UNEXPECTED);
+    return 0;
+  }
+
+  int32_t selectedIndex;
+  aError = mSelect->GetSelectedIndex(&selectedIndex);
+  return selectedIndex;
+}
+
 NS_IMETHODIMP
 nsHTMLOptionCollection::GetSelectedIndex(int32_t *aSelectedIndex)
 {
-  NS_ENSURE_TRUE(mSelect, NS_ERROR_UNEXPECTED);
+  ErrorResult rv;
+  *aSelectedIndex = GetSelectedIndex(rv);
+  return rv.ErrorCode();
+}
 
-  return mSelect->GetSelectedIndex(aSelectedIndex);
+void
+nsHTMLOptionCollection::SetSelectedIndex(int32_t aSelectedIndex,
+                                         ErrorResult& aError)
+{
+  if (!mSelect) {
+    aError.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  aError = mSelect->SetSelectedIndex(aSelectedIndex);
 }
 
 NS_IMETHODIMP
 nsHTMLOptionCollection::SetSelectedIndex(int32_t aSelectedIndex)
 {
-  NS_ENSURE_TRUE(mSelect, NS_ERROR_UNEXPECTED);
-
-  return mSelect->SetSelectedIndex(aSelectedIndex);
+  ErrorResult rv;
+  SetSelectedIndex(aSelectedIndex, rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
@@ -2153,7 +2172,7 @@ nsHTMLOptionCollection::GetNamedItem(const nsAString& aName,
 nsINode*
 nsHTMLOptionCollection::GetParentObject()
 {
-    return mSelect;
+  return mSelect;
 }
 
 NS_IMETHODIMP
@@ -2163,6 +2182,24 @@ nsHTMLOptionCollection::NamedItem(const nsAString& aName,
   NS_IF_ADDREF(*aReturn = GetNamedItemHelper(mElements, aName));
 
   return NS_OK;
+}
+
+JSObject*
+nsHTMLOptionCollection::NamedItem(JSContext* cx, const nsAString& name,
+                                  ErrorResult& error)
+{
+  nsINode *item = GetNamedItemHelper(mElements, name);
+  if (!item) {
+    return nullptr;
+  }
+  JSObject* wrapper = GetWrapper();
+  JSAutoCompartment ac(cx, wrapper);
+  JS::Value v;
+  if (!mozilla::dom::WrapObject(cx, wrapper, item, item, nullptr, &v)) {
+    error.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  return &v.toObject();
 }
 
 NS_IMETHODIMP
@@ -2187,17 +2224,28 @@ nsHTMLOptionCollection::Add(nsIDOMHTMLOptionElement *aOption,
   return mSelect->Add(aOption, aBefore);
 }
 
-NS_IMETHODIMP
-nsHTMLOptionCollection::Remove(int32_t aIndex)
+void
+nsHTMLOptionCollection::Remove(int32_t aIndex, ErrorResult& aError)
 {
-  NS_ENSURE_TRUE(mSelect, NS_ERROR_UNEXPECTED);
+  if (!mSelect) {
+    aError.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
 
   uint32_t len = 0;
   mSelect->GetLength(&len);
   if (aIndex < 0 || (uint32_t)aIndex >= len)
     aIndex = 0;
 
-  return mSelect->Remove(aIndex);
+  aError = mSelect->Remove(aIndex);
+}
+
+NS_IMETHODIMP
+nsHTMLOptionCollection::Remove(int32_t aIndex)
+{
+  ErrorResult rv;
+  Remove(aIndex, rv);
+  return rv.ErrorCode();
 }
 
 void

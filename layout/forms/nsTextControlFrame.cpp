@@ -70,6 +70,7 @@
 #include "nsFocusManager.h"
 #include "nsTextEditRules.h"
 #include "nsPresState.h"
+#include "nsContentList.h"
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Selection.h"

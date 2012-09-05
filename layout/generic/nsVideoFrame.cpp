@@ -30,6 +30,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "ImageContainer.h"
 #include "ImageLayers.h"
+#include "nsContentList.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"

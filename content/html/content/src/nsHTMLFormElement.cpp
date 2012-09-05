@@ -53,6 +53,7 @@
 #include "nsIDOMHTMLButtonElement.h"
 #include "dombindings.h"
 #include "nsSandboxFlags.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla::dom;
 
@@ -96,6 +97,9 @@ public:
   {
     return mForm;
   }
+
+  virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
+                              mozilla::ErrorResult& error);
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);
@@ -2526,4 +2530,22 @@ nsFormControlList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache)
   nsISupports *item = NamedItemInternal(aName, true);
   *aCache = nullptr;
   return item;
+}
+
+JSObject*
+nsFormControlList::NamedItem(JSContext* cx, const nsAString& name,
+                             mozilla::ErrorResult& error)
+{
+  nsISupports *item = NamedItemInternal(name, true);
+  if (!item) {
+    return nullptr;
+  }
+  JSObject* wrapper = GetWrapper();
+  JSAutoCompartment ac(cx, wrapper);
+  JS::Value v;
+  if (!mozilla::dom::WrapObject(cx, wrapper, item, &v)) {
+    error.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  return &v.toObject();
 }

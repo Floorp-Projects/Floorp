@@ -188,18 +188,16 @@ DOMSVGPointList::InternalAList() const
 NS_IMETHODIMP
 DOMSVGPointList::GetNumberOfItems(uint32_t *aNumberOfItems)
 {
-  if (IsAnimValList()) {
-    Element()->FlushAnimations();
-  }
-  *aNumberOfItems = LengthNoFlush();
+  *aNumberOfItems = NumberOfItems();
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DOMSVGPointList::Clear()
+void
+DOMSVGPointList::Clear(ErrorResult& aError)
 {
   if (IsAnimValList()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
   }
 
   if (LengthNoFlush() > 0) {
@@ -225,16 +223,22 @@ DOMSVGPointList::Clear()
       Element()->AnimationNeedsResample();
     }
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMSVGPointList::Initialize(nsIDOMSVGPoint *aNewItem,
-                            nsIDOMSVGPoint **_retval)
+DOMSVGPointList::Clear()
 {
-  *_retval = nullptr;
+  ErrorResult rv;
+  Clear(rv);
+  return rv.ErrorCode();
+}
+
+already_AddRefed<nsIDOMSVGPoint>
+DOMSVGPointList::Initialize(nsIDOMSVGPoint *aNewItem, ErrorResult& aError)
+{
   if (IsAnimValList()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return nullptr;
   }
 
   // If aNewItem is already in a list we should insert a clone of aNewItem,
@@ -247,46 +251,69 @@ DOMSVGPointList::Initialize(nsIDOMSVGPoint *aNewItem,
 
   nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(aNewItem);
   if (!domItem) {
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+    aError.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
+    return nullptr;
   }
   if (domItem->HasOwner() || domItem->IsReadonly()) {
     aNewItem = domItem->Clone();
   }
 
   Clear();
-  return InsertItemBefore(aNewItem, 0, _retval);
+  return InsertItemBefore(aNewItem, 0, aError);
+}
+
+NS_IMETHODIMP
+DOMSVGPointList::Initialize(nsIDOMSVGPoint *aNewItem,
+                            nsIDOMSVGPoint **_retval)
+{
+  ErrorResult rv;
+  *_retval = Initialize(aNewItem, rv).get();
+  return rv.ErrorCode();
+}
+
+nsIDOMSVGPoint*
+DOMSVGPointList::IndexedGetter(uint32_t aIndex, bool& aFound,
+                               ErrorResult& aError)
+{
+  if (IsAnimValList()) {
+    Element()->FlushAnimations();
+  }
+  aFound = aIndex < LengthNoFlush();
+  if (aFound) {
+    EnsureItemAt(aIndex);
+    return mItems[aIndex];
+  }
+  return nullptr;
 }
 
 NS_IMETHODIMP
 DOMSVGPointList::GetItem(uint32_t aIndex,
                          nsIDOMSVGPoint **_retval)
 {
-  *_retval = GetItemAt(aIndex);
-  if (!*_retval) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-  NS_ADDREF(*_retval);
-  return NS_OK;
+  ErrorResult rv;
+  NS_IF_ADDREF(*_retval = GetItem(aIndex, rv));
+  return rv.ErrorCode();
 }
 
-NS_IMETHODIMP
-DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
-                                  uint32_t aIndex,
-                                  nsIDOMSVGPoint **_retval)
+already_AddRefed<nsIDOMSVGPoint>
+DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem, uint32_t aIndex,
+                                  ErrorResult& aError)
 {
-  *_retval = nullptr;
   if (IsAnimValList()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return nullptr;
   }
 
   aIndex = NS_MIN(aIndex, LengthNoFlush());
   if (aIndex >= DOMSVGPoint::MaxListIndex()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
   }
 
   nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(aNewItem);
   if (!domItem) {
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+    aError.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
+    return nullptr;
   }
   if (domItem->HasOwner() || domItem->IsReadonly()) {
     domItem = domItem->Clone(); // must do this before changing anything!
@@ -295,7 +322,8 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
   // Ensure we have enough memory so we can avoid complex error handling below:
   if (!mItems.SetCapacity(mItems.Length() + 1) ||
       !InternalList().SetCapacity(InternalList().Length() + 1)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
   }
 
   nsAttrValue emptyOrOldValue = Element()->WillChangePointList();
@@ -316,26 +344,36 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
-  domItem.forget(_retval);
-  return NS_OK;
+  return domItem.forget();
 }
 
 NS_IMETHODIMP
-DOMSVGPointList::ReplaceItem(nsIDOMSVGPoint *aNewItem,
-                             uint32_t aIndex,
-                             nsIDOMSVGPoint **_retval)
+DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
+                                  uint32_t aIndex,
+                                  nsIDOMSVGPoint **_retval)
 {
-  *_retval = nullptr;
+  ErrorResult rv;
+  *_retval = InsertItemBefore(aNewItem, aIndex, rv).get();
+  return rv.ErrorCode();
+}
+
+already_AddRefed<nsIDOMSVGPoint>
+DOMSVGPointList::ReplaceItem(nsIDOMSVGPoint *aNewItem, uint32_t aIndex,
+                             ErrorResult& aError)
+{
   if (IsAnimValList()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return nullptr;
   }
 
   nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(aNewItem);
   if (!domItem) {
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+    aError.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
+    return nullptr;
   }
   if (aIndex >= LengthNoFlush()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
   }
   if (domItem->HasOwner() || domItem->IsReadonly()) {
     domItem = domItem->Clone(); // must do this before changing anything!
@@ -359,21 +397,30 @@ DOMSVGPointList::ReplaceItem(nsIDOMSVGPoint *aNewItem,
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
-  NS_ADDREF(*_retval = domItem.get());
-  return NS_OK;
+  return domItem.forget();
 }
 
 NS_IMETHODIMP
-DOMSVGPointList::RemoveItem(uint32_t aIndex,
-                            nsIDOMSVGPoint **_retval)
+DOMSVGPointList::ReplaceItem(nsIDOMSVGPoint *aNewItem,
+                             uint32_t aIndex,
+                             nsIDOMSVGPoint **_retval)
 {
-  *_retval = nullptr;
+  ErrorResult rv;
+  *_retval = ReplaceItem(aNewItem, aIndex, rv).get();
+  return rv.ErrorCode();
+}
+
+already_AddRefed<nsIDOMSVGPoint>
+DOMSVGPointList::RemoveItem(uint32_t aIndex, ErrorResult& aError)
+{
   if (IsAnimValList()) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return nullptr;
   }
 
   if (aIndex >= LengthNoFlush()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
   }
 
   nsAttrValue emptyOrOldValue = Element()->WillChangePointList();
@@ -388,7 +435,7 @@ DOMSVGPointList::RemoveItem(uint32_t aIndex,
   // Notify the DOM item of removal *before* modifying the lists so that the
   // DOM item can copy its *old* value:
   mItems[aIndex]->RemovingFromList();
-  NS_ADDREF(*_retval = mItems[aIndex]);
+  nsCOMPtr<nsIDOMSVGPoint> result = mItems[aIndex];
 
   InternalList().RemoveItem(aIndex);
   mItems.RemoveElementAt(aIndex);
@@ -399,20 +446,32 @@ DOMSVGPointList::RemoveItem(uint32_t aIndex,
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
-  return NS_OK;
+  return result.forget();
+}
+
+NS_IMETHODIMP
+DOMSVGPointList::RemoveItem(uint32_t aIndex,
+                            nsIDOMSVGPoint **_retval)
+{
+  ErrorResult rv;
+  *_retval = RemoveItem(aIndex, rv).get();
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
 DOMSVGPointList::AppendItem(nsIDOMSVGPoint *aNewItem,
                             nsIDOMSVGPoint **_retval)
 {
-  return InsertItemBefore(aNewItem, LengthNoFlush(), _retval);
+  ErrorResult rv;
+  *_retval = AppendItem(aNewItem, rv).get();
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
-DOMSVGPointList::GetLength(uint32_t *aNumberOfItems)
+DOMSVGPointList::GetLength(uint32_t *aLength)
 {
-  return GetNumberOfItems(aNumberOfItems);
+  *aLength = LengthNoFlush();
+  return NS_OK;
 }
 
 void

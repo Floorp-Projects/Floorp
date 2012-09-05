@@ -488,6 +488,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #include "nsWrapperCacheInlines.h"
 #include "dombindings.h"
+#include "mozilla/dom/HTMLCollectionBinding.h"
 
 #include "nsIDOMBatteryManager.h"
 #include "BatteryManager.h"
@@ -8859,15 +8860,16 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
   if (!JSVAL_IS_PRIMITIVE(collection)) {
     // We already have a node list in our reserved slot, use it.
     JSObject *obj = JSVAL_TO_OBJECT(collection);
-    if (mozilla::dom::oldproxybindings::HTMLCollection::objIsWrapper(obj)) {
-      nsIHTMLCollection *native =
-        mozilla::dom::oldproxybindings::HTMLCollection::getNative(obj);
-      NS_ADDREF(*nodeList = static_cast<nsContentList*>(native));
+    nsIHTMLCollection* htmlCollection;
+    rv = mozilla::dom::UnwrapObject<nsIHTMLCollection>(cx, obj, htmlCollection);
+    if (NS_SUCCEEDED(rv)) {
+      NS_ADDREF(*nodeList = static_cast<nsContentList*>(htmlCollection));
     }
     else {
       nsISupports *native = sXPConnect->GetNativeOfWrapper(cx, obj);
       if (native) {
         NS_ADDREF(*nodeList = nsContentList::FromSupports(native));
+        rv = NS_OK;
       }
       else {
         rv = NS_ERROR_FAILURE;
