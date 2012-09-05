@@ -127,4 +127,12 @@ interface nsIMarkupDocumentViewer : nsISupports
    */
   [noscript] void appendSubtree(in nsIMarkupDocumentViewerTArray array);
 
+  /**
+   * Set the maximum line width for the document.
+   * NOTE: This will generate a reflow!
+   *
+   * @param maxLineWidth The maximum width of any line boxes on the page,
+   *        in CSS pixels.
+   */
+  void changeMaxLineBoxWidth(in int32_t maxLineBoxWidth);
 };
