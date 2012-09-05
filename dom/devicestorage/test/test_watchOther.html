@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 
 devicestorage_setup();
 
-var gFileName = randomFilename(20) + ".png"
+var gFileName = randomFilename(20);
 
 function addSuccess(e) {
 }
@@ -54,15 +54,15 @@ function onChangeFail(e) {
   ok(false, "We should never see any changes");
 }
 
-var storage = navigator.getDeviceStorage("pictures");
+var storage = navigator.getDeviceStorage("testing");
 ok(storage, "Should have storage");
 storage.addEventListener("change", onChange);
 
-var storageOther = navigator.getDeviceStorage("music");
+var storageOther = navigator.getDeviceStorage("testing-other");
 ok(storageOther, "Should have storage");
 storageOther.addEventListener("change", onChangeFail);
 
-request = storage.addNamed(createRandomBlob('image/png'), gFileName);
+request = storage.addNamed(createRandomBlob(), gFileName);
 ok(request, "Should have a non-null request");
 
 request.onsuccess = addSuccess;
