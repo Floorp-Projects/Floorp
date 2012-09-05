@@ -235,6 +235,7 @@
   max-width: none !important;
   min-height: 0 !important;
   max-height: none !important;
+  -moz-box-sizing: border-box !important; 
 }
 
 /* If there is a full-screen element that is not the root then
