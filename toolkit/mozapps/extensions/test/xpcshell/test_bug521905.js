@@ -8,7 +8,6 @@ const ID = "bug521905@tests.mozilla.org";
 
 // Disables security checking our updates which haven't been signed
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
-AddonManager.checkCompatibility = false;
 
 function run_test() {
   // This test is only relevant on builds where the version is included in the
@@ -21,6 +20,8 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2.0pre", "2");
 
   startupManager();
+  AddonManager.checkCompatibility = false;
+
   installAllFiles([do_get_addon(ADDON)], function() {
     restartManager();
 
