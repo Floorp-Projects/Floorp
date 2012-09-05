@@ -10,7 +10,7 @@ Cu.import("resource:///modules/devtools/gcli.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource:///modules/devtools/Console.jsm");
+                                  "resource://gre/modules/devtools/Console.jsm");
 
 // We should really be using nsICookieManager so we can read more than just the
 // key/value of cookies. The difficulty is filtering the cookies that are
