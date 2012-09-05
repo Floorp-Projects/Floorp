@@ -12,3 +12,5 @@ mk_add_options MOZ_MAKE_FLAGS="-j12"
 export MOZ_PACKAGE_JSSHELL=1
 
 ac_add_options --with-macbundlename-prefix=Firefox
+
+. "$topsrcdir/build/mozconfig.common.override"
