@@ -148,18 +148,18 @@ Highlighter.prototype = {
     this.highlighterContainer.appendChild(outlineContainer);
     this.highlighterContainer.appendChild(controlsBox);
 
-    stack.appendChild(this.highlighterContainer);
-
-    this.showOutline();
+    // Insert the highlighter right after the browser
+    stack.insertBefore(this.highlighterContainer, stack.childNodes[1]);
 
     this.buildInfobar(controlsBox);
 
     this.transitionDisabler = null;
     this.pageEventsMuter = null;
 
-    this.computeZoomFactor();
     this.unlock();
-    this.hide();
+
+    this.hidden = true;
+    this.show();
   },
 
   /**
@@ -219,6 +219,10 @@ Highlighter.prototype = {
     }
 
     this.invalidateSize(!!aScroll);
+
+    if (this._highlighting) {
+      this.showOutline();
+    }
 
     if (oldNode !== this.node) {
       this.emitEvent("nodeselected");
