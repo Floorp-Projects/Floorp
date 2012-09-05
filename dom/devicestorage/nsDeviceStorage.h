@@ -58,7 +58,6 @@ public:
   // we want to make sure that the names of file can't reach
   // outside of the type of storage the user asked for.
   bool IsSafePath();
-  bool IsType(nsAString& aType);
 
   nsresult Remove();
   nsresult Write(nsIInputStream* aInputStream);
@@ -66,7 +65,8 @@ public:
   void CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, uint64_t aSince = 0);
   void collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, uint64_t aSince, nsAString& aRootPath);
 
-  static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar);
+  static bool IsType(nsIFile* aFile, const nsAString& aStorageType);
+  static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const nsAString& aStorageType);
 
 private:
   void NormalizeFilePath();
