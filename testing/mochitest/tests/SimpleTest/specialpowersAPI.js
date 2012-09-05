@@ -796,6 +796,14 @@ SpecialPowersAPI.prototype = {
     }
   },
 
+  getMaxLineBoxWidth: function(window) {
+    return this._getMUDV(window).maxLineBoxWidth;
+  },
+
+  setMaxLineBoxWidth: function(window, width) {
+    this._getMUDV(window).changeMaxLineBoxWidth(width);
+  },
+
   getFullZoom: function(window) {
     return this._getMUDV(window).fullZoom;
   },
