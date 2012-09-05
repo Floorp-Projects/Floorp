@@ -1508,44 +1508,10 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
 }
 
 void
-nsGlobalWindow::SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal)
-{
-  FORWARD_TO_OUTER_VOID(SetOpenerScriptPrincipal, (aPrincipal));
-
-  if (mDoc) {
-    if (!mDoc->IsInitialDocument()) {
-      // We have a document already, and it's not the original one.  Bail out.
-      return;
-    }
-
-#ifdef DEBUG
-    // We better have an about:blank document loaded at this point.  Otherwise,
-    // something is really weird.
-    nsCOMPtr<nsIURI> uri;
-    mDoc->NodePrincipal()->GetURI(getter_AddRefs(uri));
-    NS_ASSERTION(uri && NS_IsAboutBlank(uri) &&
-                 NS_IsAboutBlank(mDoc->GetDocumentURI()),
-                 "Unexpected original document");
-#endif
-
-    GetDocShell()->CreateAboutBlankContentViewer(aPrincipal);
-    mDoc->SetIsInitialDocument(true);
-
-    nsCOMPtr<nsIPresShell> shell;
-    GetDocShell()->GetPresShell(getter_AddRefs(shell));
-
-    if (shell && !shell->DidInitialReflow()) {
-      // Ensure that if someone plays with this document they will get
-      // layout happening.
-      nsRect r = shell->GetPresContext()->GetVisibleArea();
-      shell->InitialReflow(r.width, r.height);
-    }
-  }
-}
-
-void
 nsGlobalWindow::SetInitialPrincipalToSubject()
 {
+  FORWARD_TO_OUTER_VOID(SetInitialPrincipalToSubject, ());
+
   // First, grab the subject principal. These methods never fail.
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   nsCOMPtr<nsIPrincipal> newWindowPrincipal, systemPrincipal;
@@ -1566,8 +1532,38 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
     }
   }
 
-  // Set the initial about:blank document up with the correct principal.
-  SetOpenerScriptPrincipal(newWindowPrincipal);
+  // If there's an existing document, bail if it either:
+  if (mDoc) {
+    // (a) is not an initial about:blank document, or
+    if (!mDoc->IsInitialDocument())
+      return;
+    // (b) already has the correct principal.
+    if (mDoc->NodePrincipal() == newWindowPrincipal)
+      return;
+
+#ifdef DEBUG
+    // If we have a document loaded at this point, it had better be about:blank.
+    // Otherwise, something is really weird.
+    nsCOMPtr<nsIURI> uri;
+    mDoc->NodePrincipal()->GetURI(getter_AddRefs(uri));
+    NS_ASSERTION(uri && NS_IsAboutBlank(uri) &&
+                 NS_IsAboutBlank(mDoc->GetDocumentURI()),
+                 "Unexpected original document");
+#endif
+  }
+
+  GetDocShell()->CreateAboutBlankContentViewer(newWindowPrincipal);
+  mDoc->SetIsInitialDocument(true);
+
+  nsCOMPtr<nsIPresShell> shell;
+  GetDocShell()->GetPresShell(getter_AddRefs(shell));
+
+  if (shell && !shell->DidInitialReflow()) {
+    // Ensure that if someone plays with this document they will get
+    // layout happening.
+    nsRect r = shell->GetPresContext()->GetVisibleArea();
+    shell->InitialReflow(r.width, r.height);
+  }
 }
 
 PopupControlState
