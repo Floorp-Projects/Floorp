@@ -195,6 +195,14 @@ SetTimezone(const nsCString& aTimezoneSpec)
   Hal()->SendSetTimezone(nsCString(aTimezoneSpec));
 } 
 
+nsCString
+GetTimezone()
+{
+  nsCString timezone;
+  Hal()->SendGetTimezone(&timezone);
+  return timezone;
+}
+
 void
 Reboot()
 {
@@ -529,6 +537,16 @@ public:
     }
     hal::SetTimezone(aTimezoneSpec);
     return true;  
+  }
+
+  virtual bool
+  RecvGetTimezone(nsCString *aTimezoneSpec) MOZ_OVERRIDE
+  {
+    if (!AppProcessHasPermission(this, "systemclock-read")) {
+      return false;
+    }
+    *aTimezoneSpec = hal::GetTimezone();
+    return true;
   }
 
   virtual bool

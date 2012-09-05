@@ -2037,9 +2037,8 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *objArg)
      * Since ES5 15.1.1.3 undefined can't be deleted.
      */
     RootedPropertyName undefinedName(cx, cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
-    RootedId undefinedId(cx, NameToId(undefinedName));
     RootedValue undefinedValue(cx, UndefinedValue());
-    if (!obj->nativeContains(cx, undefinedId) &&
+    if (!obj->nativeContains(cx, undefinedName) &&
         !JSObject::defineProperty(cx, obj, undefinedName, undefinedValue,
                                   JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_PERMANENT | JSPROP_READONLY)) {
@@ -2114,11 +2113,10 @@ AddNameToArray(JSContext *cx, PropertyName *name, JSIdArray *ida, int *ip)
 }
 
 static JSIdArray *
-EnumerateIfResolved(JSContext *cx, JSHandleObject obj, PropertyName *name, JSIdArray *ida,
-                    int *ip, JSBool *foundp)
+EnumerateIfResolved(JSContext *cx, Handle<JSObject*> obj, Handle<PropertyName*> name,
+                    JSIdArray *ida, int *ip, JSBool *foundp)
 {
-    RootedId id(cx, NameToId(name));
-    *foundp = obj->nativeContains(cx, id);
+    *foundp = obj->nativeContains(cx, name);
     if (*foundp)
         ida = AddNameToArray(cx, name, ida, ip);
     return ida;
@@ -2130,7 +2128,6 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *objArg, JSIdArray *
     RootedObject obj(cx, objArg);
     JSRuntime *rt;
     int i, j, k;
-    PropertyName *name;
     JSBool found;
     JSClassInitializerOp init;
 
@@ -2148,7 +2145,7 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *objArg, JSIdArray *
     }
 
     /* Check whether 'undefined' has been resolved and enumerate it if so. */
-    name = rt->atomState.typeAtoms[JSTYPE_VOID];
+    Rooted<PropertyName*> name(cx, rt->atomState.typeAtoms[JSTYPE_VOID]);
     ida = EnumerateIfResolved(cx, obj, name, ida, &i, &found);
     if (!ida)
         return NULL;

@@ -222,7 +222,6 @@ public:
 
   // nsAccessNode
   virtual nsIFrame* GetFrame() const;
-  virtual bool IsPrimaryForNode() const;
 
   // Accessible
   virtual a11y::role NativeRole();

@@ -2297,6 +2297,11 @@ public class GeckoAppShell
     public static void unregisterSurfaceTextureFrameListener(Object surfaceTexture) {
         ((SurfaceTexture)surfaceTexture).setOnFrameAvailableListener(null);
     }
+
+    public static void notifyCheckUpdateResult(boolean result) {
+        if (GeckoApp.mAppContext != null)
+            GeckoApp.mAppContext.notifyCheckUpdateResult(result);
+    }
 }
 
 class ScreenshotHandler implements Runnable {

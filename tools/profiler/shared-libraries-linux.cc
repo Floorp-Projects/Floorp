@@ -29,7 +29,7 @@ static ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 }
 #endif
 
-#ifndef MOZ_OLD_LINKER
+#if !defined(MOZ_OLD_LINKER) && !defined(MOZ_WIDGET_GONK)
 // TODO fix me with proper include
 #include "nsDebug.h"
 #ifdef ANDROID
@@ -42,7 +42,7 @@ static ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 #include <sys/types.h>
 
 #ifdef ANDROID
-__attribute__((weak))
+extern "C" __attribute__((weak))
 int dl_iterate_phdr(
           int (*callback) (struct dl_phdr_info *info,
                            size_t size, void *data),
@@ -81,7 +81,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 {
   SharedLibraryInfo info;
 
-#ifndef MOZ_OLD_LINKER
+#if !defined(MOZ_OLD_LINKER) && !defined(MOZ_WIDGET_GONK)
   dl_iterate_phdr(dl_iterate_callback, &info);
 #ifndef ANDROID
   return info;
@@ -114,7 +114,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       LOG("Get maps line failed");
       continue;
     }
-#if defined(ANDROID) && !defined(MOZ_OLD_LINKER)
+#if defined(ANDROID) && !defined(MOZ_OLD_LINKER) && !defined(MOZ_WIDGET_GONK)
     // Use proc/pid/maps to get the dalvik-jit section since it has
     // no associated phdrs
     if (strcmp(name, "/dev/ashmem/dalvik-jit-code-cache") != 0)

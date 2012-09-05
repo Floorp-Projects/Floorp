@@ -120,13 +120,6 @@ _addSource(JSDContext* jsdc, char* url)
 }
 
 static void
-_moveSourceToFront(JSDContext* jsdc, JSDSourceText* jsdsrc)
-{
-    JS_REMOVE_LINK(&jsdsrc->links);
-    JS_INSERT_LINK(&jsdsrc->links, &jsdc->sources);
-}
-
-static void
 _moveSourceToRemovedList(JSDContext* jsdc, JSDSourceText* jsdsrc)
 {
     _clearText(jsdc, jsdsrc);
@@ -436,7 +429,7 @@ jsd_AppendUCSourceText(JSDContext* jsdc,
     JSD_LOCK_SOURCE_TEXT(jsdc);
     if(!buf)
     {
-        buf = malloc(UNICODE_TRUNCATE_BUF_SIZE);
+        buf = js_pod_malloc<char>(UNICODE_TRUNCATE_BUF_SIZE);
         if(!buf)
         {
             JSD_UNLOCK_SOURCE_TEXT(jsdc);

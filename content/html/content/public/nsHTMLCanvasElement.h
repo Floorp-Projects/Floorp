@@ -18,6 +18,8 @@
 
 class nsICanvasRenderingContextInternal;
 class nsIDOMFile;
+class nsHTMLCanvasPrintState;
+class nsITimerCallback;
 class nsIPropertyBag;
 
 namespace mozilla {
@@ -168,9 +170,13 @@ protected:
   nsresult GetContextHelper(const nsAString& aContextId,
                             bool aForceThebes,
                             nsICanvasRenderingContextInternal **aContext);
+  void CallPrintCallback();
 
   nsString mCurrentContextId;
+  nsCOMPtr<nsIDOMHTMLCanvasElement> mOriginalCanvas;
+  nsCOMPtr<nsIPrintCallback> mPrintCallback;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
+  nsCOMPtr<nsHTMLCanvasPrintState> mPrintState;
   
 public:
   // Record whether this canvas should be write-only or not.
@@ -178,6 +184,16 @@ public:
   // We also transitively set it when script paints a canvas which
   // is itself write-only.
   bool                     mWriteOnly;
+
+  bool IsPrintCallbackDone();
+
+  void HandlePrintCallback(nsPresContext::nsPresContextType aType);
+
+  nsresult DispatchPrintCallback(nsITimerCallback* aCallback);
+
+  void ResetPrintCallback();
+
+  nsIDOMHTMLCanvasElement* GetOriginalCanvas();
 };
 
 inline nsISupports*

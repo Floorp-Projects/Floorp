@@ -635,6 +635,7 @@ HTMLComboboxListAccessible::
                              DocAccessible* aDoc) :
   HTMLSelectListAccessible(aContent, aDoc)
 {
+  mFlags |= eSharedNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -653,12 +654,6 @@ HTMLComboboxListAccessible::GetFrame() const
   }
 
   return nullptr;
-}
-
-bool
-HTMLComboboxListAccessible::IsPrimaryForNode() const
-{
-  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

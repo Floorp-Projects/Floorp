@@ -164,6 +164,8 @@ FENNEC_JAVA_FILES = \
   ui/SubdocumentScrollHelper.java \
   GeckoNetworkManager.java \
   GeckoScreenOrientationListener.java \
+  UpdateService.java \
+  GeckoUpdateReceiver.java \
   $(MOZGLUE_JAVA_FILES) \
   $(UTIL_JAVA_FILES) \
   $(NULL)
@@ -188,6 +190,7 @@ FENNEC_PP_JAVA_FILES = \
   db/TabsProvider.java \
   db/GeckoProvider.java \
   SmsManager.java \
+  UpdateServiceHelper.java \
   $(NULL)
 
 FENNEC_PP_XML_FILES = \
@@ -219,6 +222,8 @@ else
 MIN_CPU_VERSION=5
 endif
 
+MOZ_APP_BUILDID=$(shell cat $(DEPTH)/config/buildid)
+
 ifeq (,$(ANDROID_VERSION_CODE))
 ifeq ($(MIN_CPU_VERSION),7)
 ANDROID_VERSION_CODE=$(shell cat $(DEPTH)/config/buildid | cut -c1-10)
@@ -243,6 +248,10 @@ DEFINES += \
   -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
   -DMOZILLA_OFFICIAL=$(MOZILLA_OFFICIAL) \
   -DUA_BUILDID=$(UA_BUILDID) \
+  -DMOZ_APP_BASENAME=$(MOZ_APP_BASENAME) \
+  -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID) \
+  -DMOZ_APP_ABI=$(TARGET_XPCOM_ABI) \
+  -DMOZ_UPDATER=$(MOZ_UPDATER) \
   $(NULL)
 
 ifdef MOZ_LINKER_EXTRACT
