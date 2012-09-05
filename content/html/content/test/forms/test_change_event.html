@@ -117,7 +117,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     synthesizeKey("f", {});
     input.value = 'bar';
     input.blur();
-    is(textInputChange[0], 3, "text input element should not have dispatched change event (3).");
+    is(textInputChange[0], 3, "text input element should have dispatched change event (3).");
 
     //focus and blur textarea
     var textarea = document.getElementById("textarea");
@@ -125,6 +125,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     synthesizeKey("f", {});
     textarea.blur();
     is(textareaChange, 1, "Textarea element should have dispatched change event.");
+
+    // value being set while focused
+    textarea.focus();
+    textarea.value = 'foo';
+    textarea.blur();
+    is(textareaChange, 1, "textarea should not have dispatched change event (1).");
+
+    // value being set while focused after being modified manually
+    textarea.focus();
+    synthesizeKey("f", {});
+    textarea.value = 'bar';
+    textarea.blur();
+    is(textareaChange, 2, "textearea should have dispatched change event (2).");
 
     //Non-text input tests:
     for (var i = 0; i < NonTextInputTypes.length; ++i) {
