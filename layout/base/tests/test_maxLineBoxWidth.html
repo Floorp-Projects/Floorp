@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=780258
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 780258</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+  p {
+    margin-bottom: 30px;
+  }
+
+  #container {
+    width: 200px;
+  }
+
+  .box {
+    position: absolute;
+    height: 600px;
+    width: 200px;
+    border: 1px solid blue;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=780258">Mozilla Bug 780258</a>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <div class="box">&nbsp;</div>
+  <div id="container">
+    <p>All of this text should be completely contained
+       within the blue box.
+    <p>I once knew a man, showed me the sleight of hand.
+       In the blink of an eye he danced across the strings.
+       He played a song I've never heard; poignant and absurd;
+       To this day, it leaves me wondering.
+    <p>Don't let tomorrow find you wishin'.
+       Boy, you've got a mission.
+       Shake it, rattle, and roll.
+       Now, just use your intuition.
+       You'll get less competition
+       from the clock up on the wall.
+    <p>You are what you are.
+       You dream what you dream.
+       Play on your blue guitar for me.
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+function doChange() {
+  SpecialPowers.setMaxLineBoxWidth(window, 200);
+}
+
+var gFirstBlankSnap;
+var gUnchangedContentSnap;
+var gIncorrectContentSnap;
+var gCorrectContentSnap;
+
+/** Test for Bug 780258 **/
+SimpleTest.waitForExplicitFinish();
+gFirstBlankSnap = snapshotWindow(window);
+
+// Display our content.
+document.getElementById('content').style.display = 'block';
+
+// Take a snapshot.
+gUnchangedContentSnap = snapshotWindow(window);
+
+// Verify this isn't the same as the blank snapshot.
+var result = compareSnapshots(gFirstBlankSnap, gUnchangedContentSnap, false);
+ok(result[0], "content should appear different than blank page");
+
+// Set container width to 350px.
+document.getElementById('container').style.width = '350px';
+
+// Take a snapshot.
+gIncorrectContentSnap = snapshotWindow(window);
+
+// Verify this is NOT the same as the first content snapshot.
+result = compareSnapshots(gUnchangedContentSnap, gIncorrectContentSnap, false);
+ok(result[0], "unchanged content should be different than changed content");
+
+// Run the max line box width change.
+doChange();
+
+// Take snapshot.
+gCorrectContentSnap = snapshotWindow(window);
+
+// Compare snapshots.
+result = compareSnapshots(gUnchangedContentSnap, gCorrectContentSnap, true);
+ok(result[0], "unchanged content should be the same as corrected content");
+
+// Finish the test.
+SimpleTest.finish();
+
+</script>
+</pre>
+</body>
+</html>

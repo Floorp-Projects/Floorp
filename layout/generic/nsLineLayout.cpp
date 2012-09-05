@@ -748,6 +748,15 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // For now, set the available height to unconstrained always.
   nsSize availSize(mBlockReflowState->ComputedWidth(), NS_UNCONSTRAINEDSIZE);
 
+  // If the available size is greater than the maximum line box width (if
+  // specified), then we need to adjust the line box width to be at the max
+  // possible width.
+  nscoord maxLineBoxWidth = aFrame->PresContext()->PresShell()->MaxLineBoxWidth();
+
+  if (maxLineBoxWidth > 0 && psd->mRightEdge > maxLineBoxWidth) {
+    psd->mRightEdge = maxLineBoxWidth;
+  }
+
   // Inline-ish and text-ish things don't compute their width;
   // everything else does.  We need to give them an available width that
   // reflects the space left on the line.
