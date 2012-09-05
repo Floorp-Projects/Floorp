@@ -36,7 +36,7 @@ interface OnlyForUseInConstructor {
  ]
 interface TestInterface {
   // Integer types
-  // XXXbz add tests for infallible versions of all the integer stuff
+  // XXXbz add tests for throwing versions of all the integer stuff
   readonly attribute byte readonlyByte;
   attribute byte writableByte;
   void passByte(byte arg);
@@ -96,7 +96,7 @@ interface TestInterface {
   void passOptionalUnsignedLongLongWithDefault(optional unsigned long long arg = 17);
 
   // Castable interface types
-  // XXXbz add tests for infallible versions of all the castable interface stuff
+  // XXXbz add tests for throwing versions of all the castable interface stuff
   TestInterface receiveSelf();
   TestInterface? receiveNullableSelf();
   TestInterface receiveWeakSelf();

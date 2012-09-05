@@ -290,21 +290,21 @@ class Descriptor(DescriptorProvider):
         return self.interface.hasInterfaceObject() or self.interface.hasInterfacePrototypeObject()
 
     def getExtendedAttributes(self, member, getter=False, setter=False):
-        def ensureValidInfallibleExtendedAttribute(attr):
+        def ensureValidInfallibilityExtendedAttribute(name, attr):
             assert(attr is None or attr is True or len(attr) == 1)
             if (attr is not None and attr is not True and
                 'Workers' not in attr and 'MainThread' not in attr):
-                raise TypeError("Unknown value for 'infallible': " + attr[0])
+                raise TypeError(("Unknown value for '%s': " % name) + attr[0])
 
         name = member.identifier.name
         if member.isMethod():
             attrs = self.extendedAttributes['all'].get(name, [])
-            infallible = member.getExtendedAttribute("Infallible")
-            ensureValidInfallibleExtendedAttribute(infallible)
-            if (infallible is not None and
-                (infallible is True or
-                 ('Workers' in infallible and self.workers) or
-                 ('MainThread' in infallible and not self.workers))):
+            throws = member.getExtendedAttribute("Throws")
+            ensureValidInfallibilityExtendedAttribute("Throws", throws)
+            if (throws is None or
+                (throws is not True and
+                 ('Workers' not in throws or not self.workers) and
+                 ('MainThread' not in throws or self.workers))):
                 attrs.append("infallible")
             return attrs
 
@@ -317,7 +317,7 @@ class Descriptor(DescriptorProvider):
             infallibleAttr = "GetterInfallible" if getter else "SetterInfallible"
             infallible = member.getExtendedAttribute(infallibleAttr)
 
-        ensureValidInfallibleExtendedAttribute(infallible)
+        ensureValidInfallibilityExtendedAttribute("Infallible", infallible)
         if (infallible is not None and
             (infallible is True or
              ('Workers' in infallible and self.workers) or
