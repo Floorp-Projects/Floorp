@@ -167,9 +167,6 @@ public:
     virtual bool RecvCycleCollect();
 
     virtual bool RecvAppInfo(const nsCString& version, const nsCString& buildID);
-    virtual bool RecvSetProcessAttributes(const uint64_t& id,
-                                          const bool& aIsForApp,
-                                          const bool& aIsForBrowser);
 
     virtual bool RecvLastPrivateDocShellDestroyed();
 
