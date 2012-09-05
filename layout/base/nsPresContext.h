@@ -887,17 +887,6 @@ public:
   {
     PropertyTable()->DeleteAllFor(aFrame);
   }
-  inline void ForgetUpdatePluginGeometryFrame(nsIFrame* aFrame);
-
-  bool GetContainsUpdatePluginGeometryFrame()
-  {
-    return mContainsUpdatePluginGeometryFrame;
-  }
-
-  void SetContainsUpdatePluginGeometryFrame(bool aValue)
-  {
-    mContainsUpdatePluginGeometryFrame = aValue;
-  }
 
   bool MayHaveFixedBackgroundFrames() { return mMayHaveFixedBackgroundFrames; }
   void SetHasFixedBackgroundFrame() { mMayHaveFixedBackgroundFrames = true; }
@@ -1158,7 +1147,6 @@ protected:
   unsigned              mProcessingRestyles : 1;
   unsigned              mProcessingAnimationStyleChange : 1;
 
-  unsigned              mContainsUpdatePluginGeometryFrame : 1;
   unsigned              mFireAfterPaintEvents : 1;
 
   // Cache whether we are chrome or not because it is expensive.  
@@ -1266,21 +1254,7 @@ public:
    * of any windowed plugins is updated. aFrame is the root of the
    * frame subtree whose geometry has changed.
    */
-  void RequestUpdatePluginGeometry(nsIFrame* aFrame);
-
-  /**
-   * Call this when a frame is being destroyed and
-   * mContainsUpdatePluginGeometryFrame is set in the frame's prescontext.
-   */
-  void RootForgetUpdatePluginGeometryFrame(nsIFrame* aFrame);
-
-  /**
-   * Call this when a document is going to no longer be valid for plugin updates
-   * (say by going into the bfcache). If mContainsUpdatePluginGeometryFrame is
-   * set in the prescontext then it will be cleared along with
-   * mUpdatePluginGeometryForFrame.
-   */
-  void RootForgetUpdatePluginGeometryFrameForPresContext(nsPresContext* aPresContext);
+  void RequestUpdatePluginGeometry();
 
   /**
    * Increment DOM-modification generation counter to indicate that
@@ -1343,21 +1317,9 @@ protected:
   // null to use the root frame of this prescontext
   nsTArray<nsCOMPtr<nsIRunnable> > mWillPaintObservers;
   nsRevocableEventPtr<RunWillPaintObservers> mWillPaintFallbackEvent;
-  nsIFrame* mUpdatePluginGeometryForFrame;
   uint32_t mDOMGeneration;
   bool mNeedsToUpdatePluginGeometry;
 };
-
-inline void
-nsPresContext::ForgetUpdatePluginGeometryFrame(nsIFrame* aFrame)
-{
-  if (mContainsUpdatePluginGeometryFrame) {
-    nsRootPresContext* rootPC = GetRootPresContext();
-    if (rootPC) {
-      rootPC->RootForgetUpdatePluginGeometryFrame(aFrame);
-    }
-  }
-}
 
 #ifdef MOZ_REFLOW_PERF
 

@@ -750,7 +750,7 @@ nsObjectFrame::RegisterPluginForGeometryUpdates()
   }
   mRootPresContextRegisteredWith = rpc;
   mRootPresContextRegisteredWith->RegisterPluginForGeometryUpdates(mContent);
-  mRootPresContextRegisteredWith->RequestUpdatePluginGeometry(this);
+  mRootPresContextRegisteredWith->RequestUpdatePluginGeometry();
 }
 
 void
