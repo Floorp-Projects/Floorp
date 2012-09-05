@@ -23,7 +23,7 @@ X11Error(Display *display, XErrorEvent *event) {
   unsigned long age = NextRequest(display) - event->serial;
 
   // Get a string to represent the request that caused the error.
-  nsCAutoString message;
+  nsAutoCString message;
   if (event->request_code < 128) {
     // Core protocol request
     message.AppendInt(event->request_code);
@@ -79,7 +79,7 @@ X11Error(Display *display, XErrorEvent *event) {
                           buffer, sizeof(buffer));
   }
 
-  nsCAutoString notes;
+  nsAutoCString notes;
   if (buffer[0]) {
     notes.Append(buffer);
   } else {

@@ -90,7 +90,7 @@ hasRecentCorruptDB()
     if (NS_SUCCEEDED(currFile->GetLeafName(leafName)) &&
         leafName.Length() >= DATABASE_CORRUPT_FILENAME.Length() &&
         leafName.Find(".corrupt", DATABASE_FILENAME.Length()) != -1) {
-      int64_t lastMod = 0;
+      PRTime lastMod = 0;
       currFile->GetLastModifiedTime(&lastMod);
       NS_ENSURE_TRUE(lastMod > 0, false);
       return (PR_Now() - lastMod) > RECENT_BACKUP_TIME_MICROSEC;
@@ -161,7 +161,7 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
                              enum JournalMode aJournalMode)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCAutoString journalMode;
+  nsAutoCString journalMode;
   switch (aJournalMode) {
     default:
       MOZ_ASSERT("Trying to set an unknown journal mode.");
@@ -181,7 +181,7 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
   }
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsCAutoString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+  nsAutoCString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR
 		      "PRAGMA journal_mode = ");
   query.Append(journalMode);
   aDBConn->CreateStatement(query, getter_AddRefs(statement));
@@ -560,14 +560,14 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
   // Be sure to set journal mode after page_size.  WAL would prevent the change
   // otherwise.
-  if (NS_SUCCEEDED(SetJournalMode(mMainConn, JOURNAL_WAL))) {
+  if (JOURNAL_WAL == SetJournalMode(mMainConn, JOURNAL_WAL)) {
     // Set the WAL journal size limit.  We want it to be small, since in
     // synchronous = NORMAL mode a crash could cause loss of all the
     // transactions in the journal.  For added safety we will also force
     // checkpointing at strategic moments.
     int32_t checkpointPages =
       static_cast<int32_t>(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 1024 / mDBPageSize);
-    nsCAutoString checkpointPragma("PRAGMA wal_autocheckpoint = ");
+    nsAutoCString checkpointPragma("PRAGMA wal_autocheckpoint = ");
     checkpointPragma.AppendInt(checkpointPages);
     rv = mMainConn->ExecuteSimpleSQL(checkpointPragma);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -591,7 +591,7 @@ Database::InitSchema(bool* aDatabaseMigrated)
   // Since exceeding the limit will cause a truncate, allow a slightly
   // larger limit than DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES to reduce the number
   // of times it is needed.
-  nsCAutoString journalSizePragma("PRAGMA journal_size_limit = ");
+  nsAutoCString journalSizePragma("PRAGMA journal_size_limit = ");
   journalSizePragma.AppendInt(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 3);
   (void)mMainConn->ExecuteSimpleSQL(journalSizePragma);
 
@@ -1038,7 +1038,7 @@ Database::CheckAndUpdateGUIDs()
     int64_t itemId;
     rv = stmt->GetInt64(0, &itemId);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCAutoString guid;
+    nsAutoCString guid;
     rv = stmt->GetUTF8String(1, guid);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1112,7 +1112,7 @@ Database::CheckAndUpdateGUIDs()
     int64_t placeId;
     rv = stmt->GetInt64(0, &placeId);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCAutoString guid;
+    nsAutoCString guid;
     rv = stmt->GetUTF8String(1, guid);
     NS_ENSURE_SUCCESS(rv, rv);
 

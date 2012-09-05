@@ -597,7 +597,7 @@ nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver, nsIChannel *aChannel)
   parser->SetContentSink(this);
 
   int32_t charsetSource = kCharsetFromDocTypeDefault;
-  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
+  nsAutoCString charset(NS_LITERAL_CSTRING("UTF-8"));
   TryChannelCharset(aChannel, charsetSource, charset);
   parser->SetDocumentCharset(charset, charsetSource);
 
@@ -619,10 +619,10 @@ nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
     return true;
   
   if (aChannel) {
-    nsCAutoString charsetVal;
+    nsAutoCString charsetVal;
     nsresult rv = aChannel->GetContentCharset(charsetVal);
     if (NS_SUCCEEDED(rv)) {
-      nsCAutoString preferred;
+      nsAutoCString preferred;
       if (NS_FAILED(nsCharsetAlias::GetPreferred(charsetVal, preferred)))
         return false;
 

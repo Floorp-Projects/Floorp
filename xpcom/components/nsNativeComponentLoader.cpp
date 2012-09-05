@@ -122,7 +122,7 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
         return NULL;
     }
 
-    nsCAutoString filePath;
+    nsAutoCString filePath;
     file->GetNativePath(filePath);
 
     NativeLoadData data;
@@ -154,7 +154,7 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
     }
 
 #ifdef IMPLEMENT_BREAK_AFTER_LOAD
-    nsCAutoString leafName;
+    nsAutoCString leafName;
     file->GetNativeLeafName(leafName);
 
     char *env = getenv("XPCOM_BREAK_ON_LOAD");
@@ -207,7 +207,7 @@ nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
     if (PR_LOG_TEST(nsNativeModuleLoaderLog, PR_LOG_DEBUG)) {
         nsCOMPtr<nsIFile> file(do_QueryInterface(aHashedFile));
 
-        nsCAutoString filePath;
+        nsAutoCString filePath;
         file->GetNativePath(filePath);
 
         LOG(PR_LOG_DEBUG,

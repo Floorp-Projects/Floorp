@@ -489,7 +489,7 @@ nsDocLoader::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 
 #ifdef PR_LOGGING
   if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
-    nsCAutoString name;
+    nsAutoCString name;
     request->GetName(name);
 
     uint32_t count = 0;
@@ -570,7 +570,7 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
 
 #ifdef PR_LOGGING
   if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
-    nsCAutoString name;
+    nsAutoCString name;
     aRequest->GetName(name);
 
     uint32_t count = 0;
@@ -831,7 +831,7 @@ void nsDocLoader::doStartDocumentLoad(void)
 {
 
 #if defined(DEBUG)
-  nsCAutoString buffer;
+  nsAutoCString buffer;
 
   GetURIStringFromRequest(mDocumentRequest, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -856,7 +856,7 @@ void nsDocLoader::doStartDocumentLoad(void)
 void nsDocLoader::doStartURLLoad(nsIRequest *request)
 {
 #if defined(DEBUG)
-  nsCAutoString buffer;
+  nsAutoCString buffer;
 
   GetURIStringFromRequest(request, buffer);
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -875,7 +875,7 @@ void nsDocLoader::doStartURLLoad(nsIRequest *request)
 void nsDocLoader::doStopURLLoad(nsIRequest *request, nsresult aStatus)
 {
 #if defined(DEBUG)
-  nsCAutoString buffer;
+  nsAutoCString buffer;
 
   GetURIStringFromRequest(request, buffer);
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -905,7 +905,7 @@ void nsDocLoader::doStopDocumentLoad(nsIRequest *request,
                                          nsresult aStatus)
 {
 #if defined(DEBUG)
-  nsCAutoString buffer;
+  nsAutoCString buffer;
 
   GetURIStringFromRequest(request, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -1112,7 +1112,7 @@ NS_IMETHODIMP nsDocLoader::OnProgress(nsIRequest *aRequest, nsISupports* ctxt,
   //
   else {
 #if defined(DEBUG)
-    nsCAutoString buffer;
+    nsAutoCString buffer;
 
     GetURIStringFromRequest(aRequest, buffer);
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -1138,7 +1138,7 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
   //
   // Fire progress notifications out to any registered nsIWebProgressListeners
   //
-  if (aStatus) {
+  if (aStatus != NS_OK) {
     // Remember the current status for this request
     nsRequestInfo *info;
     info = GetRequestInfo(aRequest);
@@ -1220,7 +1220,7 @@ void nsDocLoader::FireOnProgressChange(nsDocLoader *aLoadInitiator,
   }
 
 #if defined(DEBUG)
-  nsCAutoString buffer;
+  nsAutoCString buffer;
 
   GetURIStringFromRequest(request, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -1312,7 +1312,7 @@ void nsDocLoader::DoFireOnStateChange(nsIWebProgress * const aProgress,
     aStateFlags |= nsIWebProgressListener::STATE_RESTORING;
 
 #if defined(DEBUG)
-  nsCAutoString buffer;
+  nsAutoCString buffer;
 
   GetURIStringFromRequest(aRequest, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -1763,7 +1763,7 @@ void nsDocLoader::DumpChannelInfo()
     info = (nsChannelInfo *)mChannelInfoList.ElementAt(i);
 
 #if defined(DEBUG)
-    nsCAutoString buffer;
+    nsAutoCString buffer;
     nsresult rv = NS_OK;
     if (info->mURI) {
       rv = info->mURI->GetSpec(buffer);

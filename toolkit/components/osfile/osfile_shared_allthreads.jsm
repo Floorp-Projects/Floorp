@@ -46,6 +46,10 @@
        });
      };
 
+     /**
+      * A variable controlling whether we should printout logs.
+      */
+     exports.OS.Shared.DEBUG = false;
      let LOG;
      if (typeof console != "undefined" && console.log) {
        LOG = console.log.bind(console, "OS");
@@ -329,8 +333,10 @@
      };
 
      function projector(type, signed) {
-       LOG("Determining best projection for", type,
+       if (exports.OS.Shared.DEBUG) {
+         LOG("Determining best projection for", type,
              "(size: ", type.size, ")", signed?"signed":"unsigned");
+       }
        if (type instanceof Type) {
          type = type.implementation;
        }
@@ -348,14 +354,20 @@
            || type == ctypes.uintptr_t
            || type == ctypes.off_t){
           if (signed) {
-            LOG("Projected as a large signed integer");
+	    if (exports.OS.Shared.DEBUG) {
+             LOG("Projected as a large signed integer");
+	    }
             return projectLargeInt;
           } else {
-            LOG("Projected as a large unsigned integer");
+	    if (exports.OS.Shared.DEBUG) {
+             LOG("Projected as a large unsigned integer");
+	    }
             return projectLargeUInt;
           }
        }
-       LOG("Projected as a regular number");
+       if (exports.OS.Shared.DEBUG) {
+         LOG("Projected as a regular number");
+       }
        return projectValue;
      };
      exports.OS.Shared.projectValue = projectValue;
@@ -758,7 +770,9 @@
         // thread
      let declareFFI = function declareFFI(lib, symbol, abi,
                                           returnType /*, argTypes ...*/) {
-       LOG("Attempting to declare FFI ", symbol);
+       if (exports.OS.Shared.DEBUG) {
+         LOG("Attempting to declare FFI ", symbol);
+       }
        // We guard agressively, to avoid any late surprise
        if (typeof symbol != "string") {
          throw new TypeError("declareFFI expects as first argument a string");
@@ -796,12 +810,16 @@
          if (exports.OS.Shared.DEBUG) {
            result.fun = fun; // Also return the raw FFI function.
          }
-         LOG("Function", symbol, "declared");
+	 if (exports.OS.Shared.DEBUG) {
+          LOG("Function", symbol, "declared");
+	 }
          return result;
        } catch (x) {
          // Note: Not being able to declare a function is normal.
          // Some functions are OS (or OS version)-specific.
-         LOG("Could not declare function " + symbol, x);
+	 if (exports.OS.Shared.DEBUG) {
+          LOG("Could not declare function " + symbol, x);
+	 }
          return null;
        }
      };

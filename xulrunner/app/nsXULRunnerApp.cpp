@@ -124,7 +124,7 @@ GetGREVersion(const char *argv0,
 
 static void Usage(const char *argv0)
 {
-    nsCAutoString milestone;
+    nsAutoCString milestone;
     GetGREVersion(argv0, &milestone, nullptr);
 
     // display additional information (XXX make localizable?)
@@ -280,8 +280,8 @@ int main(int argc, char* argv[])
 
   if (argc == 2 && (IsArg(argv[1], "v") || IsArg(argv[1], "version")))
   {
-    nsCAutoString milestone;
-    nsCAutoString version;
+    nsAutoCString milestone;
+    nsAutoCString version;
     GetGREVersion(argv[0], &milestone, &version);
     Output(false, "Mozilla XULRunner %s - %s\n",
            milestone.get(), version.get());
@@ -295,7 +295,7 @@ int main(int argc, char* argv[])
   }
 
   if (argc > 1) {
-    nsCAutoString milestone;
+    nsAutoCString milestone;
     rv = GetGREVersion(argv[0], &milestone, nullptr);
     if (NS_FAILED(rv))
       return 2;

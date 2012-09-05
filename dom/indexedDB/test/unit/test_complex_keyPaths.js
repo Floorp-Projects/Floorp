@@ -44,6 +44,7 @@ function testSteps()
     { keyPath: "foo.2.bar", exception: true },
     { keyPath: "foo. .bar", exception: true },
     { keyPath: ".bar",    exception: true },
+    { keyPath: [],        exception: true },
 
     { keyPath: ["foo", "bar"],        value: { foo: 1, bar: 2 },              key: [1, 2] },
     { keyPath: ["foo"],               value: { foo: 1, bar: 2 },              key: [1] },
@@ -258,18 +259,6 @@ function testSteps()
     e = yield;
     is(JSON.stringify(e.target.result), JSON.stringify(info.res || info.v),
        "expected value stored" + test);
-  }
-
-  // Can't handle autoincrement and empty keypath
-  try {
-    store = db.createObjectStore("storefail", { keyPath: "", autoIncrement: true });
-    ok(false, "Should have thrown when creating empty-keypath autoincrement store");
-  }
-  catch(e) {
-    ok(true, "Did throw when creating empty-keypath autoincrement store");
-    is(e.name, "InvalidAccessError", "expect an InvalidAccessError when creating empty-keypath autoincrement store");
-    ok(e instanceof DOMException, "Got a DOMException when creating empty-keypath autoincrement store");
-    is(e.code, DOMException.INVALID_ACCESS_ERR, "expect an INVALID_ACCESS_ERR when creating empty-keypath autoincrement store");
   }
 
   openRequest.onsuccess = grabEventAndContinueHandler;

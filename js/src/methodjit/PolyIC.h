@@ -133,11 +133,11 @@ class BasePolyIC : public BaseIC {
         if (isOnePool()) {
             JSC::ExecutablePool *oldPool = u.execPool;
             JS_ASSERT(!isTagged(oldPool));
-            ExecPoolVector *execPools = OffTheBooks::new_<ExecPoolVector>(SystemAllocPolicy());
+            ExecPoolVector *execPools = js_new<ExecPoolVector>(SystemAllocPolicy());
             if (!execPools)
                 return false;
             if (!execPools->append(oldPool) || !execPools->append(pool)) {
-                Foreground::delete_(execPools);
+                js_delete(execPools);
                 return false;
             }
             u.taggedExecPools = tag(execPools);
@@ -158,7 +158,7 @@ class BasePolyIC : public BaseIC {
             ExecPoolVector *execPools = multiplePools();
             for (size_t i = 0; i < execPools->length(); i++)
                 (*execPools)[i]->release();
-            Foreground::delete_(execPools);
+            js_delete(execPools);
             u.execPool = NULL;
         }
         JS_ASSERT(areZeroPools());

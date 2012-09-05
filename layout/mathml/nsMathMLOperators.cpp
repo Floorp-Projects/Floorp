@@ -247,7 +247,7 @@ InitOperators(void)
 
   // Get the list of invariant chars
   for (int32_t i = 0; i < eMATHVARIANT_COUNT; ++i) {
-    nsCAutoString key(NS_LITERAL_CSTRING("mathvariant."));
+    nsAutoCString key(NS_LITERAL_CSTRING("mathvariant."));
     key.Append(kMathVariant_name[i]);
     nsAutoString value;
     mathfontProp->GetStringProperty(key, value);
@@ -264,7 +264,7 @@ InitOperators(void)
     if (NS_SUCCEEDED(mathfontProp->Enumerate(getter_AddRefs(iterator)))) {
       bool more;
       uint32_t index = 0;
-      nsCAutoString name;
+      nsAutoCString name;
       nsAutoString attributes;
       while ((NS_SUCCEEDED(iterator->HasMoreElements(&more))) && more) {
         nsCOMPtr<nsIPropertyElement> element;

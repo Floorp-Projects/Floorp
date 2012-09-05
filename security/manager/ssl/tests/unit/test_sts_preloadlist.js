@@ -142,9 +142,15 @@ function test_part1() {
   do_check_true(gSTSService.isStsHost("sibling.cert.se"));
   do_check_false(gSTSService.isStsHost("another.subdomain.cert.se"));
 
-  // test private browsing correctly interacts with removing preloaded sites
-  if (getPBSvc())
+  // Test private browsing correctly interacts with removing preloaded sites.
+  // If we don't have the private browsing service, don't run those tests
+  // (which means we have to manually call run_next_test() instead of relying
+  // on our observer to call it).
+  if (getPBSvc()) {
     getPBSvc().privateBrowsingEnabled = true;
+  } else {
+    run_next_test();
+  }
 }
 
 function test_private_browsing1() {

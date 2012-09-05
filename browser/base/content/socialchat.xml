@@ -176,7 +176,7 @@
       <method name="resize">
         <body><![CDATA[
           let child = this.firstCollapsedChild;
-          if (child && this.emptyWidth > 200) {
+          if (child && this.emptyWidth > child.viewWidth) {
             this.showChat(child);
           }
           if (!this.firstCollapsedChild) {
@@ -211,6 +211,7 @@
       <method name="collapseChat">
         <parameter name="aChatbox"/>
         <body><![CDATA[
+          aChatbox.viewWidth = aChatbox.getBoundingClientRect().width;
           aChatbox.collapsed = true;
           aChatbox.isActive = false;
           let menu = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");

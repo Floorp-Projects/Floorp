@@ -748,7 +748,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 
   
   /* Set filename */
-  nsCAutoString filename;
+  nsAutoCString filename;
   if (NS_FAILED(CopyPrinterCharPref(nullptr, printerName, "filename", filename))) {
     const char *path;
   
@@ -782,7 +782,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
     printerFeatures.SetCanChangeOrientation(true);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
 
-    nsCAutoString orientation;
+    nsAutoCString orientation;
     if (NS_SUCCEEDED(CopyPrinterCharPref("postscript", printerName,
                                          "orientation", orientation))) {
       if (orientation.LowerCaseEqualsLiteral("portrait")) {
@@ -840,7 +840,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
     printerFeatures.SetCanChangePaperSize(true);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
-    nsCAutoString papername;
+    nsAutoCString papername;
     if (NS_SUCCEEDED(CopyPrinterCharPref("postscript", printerName,
                                          "paper_size", papername))) {
       nsPaperSizePS paper;
@@ -888,7 +888,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
 
     if (hasSpoolerCmd) {
-      nsCAutoString command;
+      nsAutoCString command;
       if (NS_SUCCEEDED(CopyPrinterCharPref("postscript",
             printerName, "print_command", command))) {
         DO_PR_DEBUG_LOG(("setting default print command to '%s'\n",

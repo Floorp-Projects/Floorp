@@ -42,7 +42,7 @@
     let blob = getNullBlob((50 + 1) * 1024 * 1024 - getUsageSync());
 
     request = lockedFile.write(blob);
-    request.onerror = new ExpectError("UnknownError");
+    request.addEventListener("error", new ExpectError("UnknownError"));
     request.onsuccess = unexpectedSuccessHandler;
     event = yield;
 

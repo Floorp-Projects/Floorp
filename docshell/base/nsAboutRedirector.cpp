@@ -76,7 +76,7 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
 
     nsresult rv;
 
-    nsCAutoString path;
+    nsAutoCString path;
     rv = NS_GetAboutModuleName(aURI, path);
     if (NS_FAILED(rv))
         return rv;
@@ -123,7 +123,7 @@ nsAboutRedirector::GetURIFlags(nsIURI *aURI, uint32_t *result)
 {
     NS_ENSURE_ARG_POINTER(aURI);
 
-    nsCAutoString name;
+    nsAutoCString name;
     nsresult rv = NS_GetAboutModuleName(aURI, name);
     NS_ENSURE_SUCCESS(rv, rv);
 

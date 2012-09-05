@@ -180,6 +180,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rel, rel)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
+NS_IMPL_STRING_ATTR(nsHTMLLinkElement, CrossOrigin, crossorigin)
 
 void
 nsHTMLLinkElement::GetItemValueText(nsAString& aValue)

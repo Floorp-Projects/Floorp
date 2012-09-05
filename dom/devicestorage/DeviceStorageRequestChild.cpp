@@ -83,7 +83,7 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
           continue;
         }
 
-        nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(f);
+        nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(r.paths()[i].type(), f);
         dsf->SetPath(r.paths()[i].name());
         cursor->mFiles.AppendElement(dsf);
       }

@@ -50,7 +50,9 @@ if (typeof Components != "undefined") {
       libc = ctypes.open(libc_candidates[i]);
       break;
     } catch (x) {
-      LOG("Could not open libc "+libc_candidates[i]);
+      if (exports.OS.Shared.DEBUG) {
+        LOG("Could not open libc "+libc_candidates[i]);
+      }
     }
   }
   if (!libc) {

@@ -35,13 +35,17 @@ public:
   virtual eMathMLFrameType GetMathMLFrameType();
 
   NS_IMETHOD
-  Init(nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIFrame*        aPrevInFlow);
-
-  NS_IMETHOD
   SetInitialChildList(ChildListID     aListID,
                       nsFrameList&    aChildList);
+
+  NS_IMETHOD
+  AppendFrames(ChildListID            aListID,
+               nsFrameList&           aChildList);
+
+  NS_IMETHOD
+  InsertFrames(ChildListID            aListID,
+               nsIFrame*              aPrevFrame,
+               nsFrameList&           aChildList);
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
@@ -55,11 +59,6 @@ public:
         nsHTMLReflowMetrics& aDesiredSize);
 
   virtual void MarkIntrinsicWidthsDirty();
-
-  NS_IMETHOD
-  AttributeChanged(int32_t         aNameSpaceID,
-                   nsIAtom*        aAttribute,
-                   int32_t         aModType);
 
   virtual nsresult
   ChildListChanged(int32_t aModType)
@@ -81,8 +80,7 @@ protected:
   // depending on its textual content
   bool SetTextStyle();
 
-  // helper to set the quotes of <ms>
-  void SetQuotes(bool aNotify);
+  void ForceTrimChildTextFrames();
 };
 
 #endif /* nsMathMLTokentFrame_h___ */

@@ -219,7 +219,7 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
   if (mState == NS_TABLE_STATE_EMPTY) {
     nsresult rv = LoadProperties(mFontName[0], mGlyphProperties);
 #ifdef DEBUG
-    nsCAutoString uriStr;
+    nsAutoCString uriStr;
     uriStr.AssignLiteral("resource://gre/res/fonts/mathfont");
     LossyAppendUTF16toASCII(mFontName[0], uriStr);
     uriStr.StripWhitespace(); // that may come from mFontName
@@ -235,7 +235,7 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
     mState = NS_TABLE_STATE_READY;
 
     // see if there are external fonts needed for certain chars in this table
-    nsCAutoString key;
+    nsAutoCString key;
     nsAutoString value;
     for (int32_t i = 1; ; i++) {
       key.AssignLiteral("external.");
@@ -514,7 +514,7 @@ GetFontExtensionPref(PRUnichar aChar,
 
   static const char* kMathFontPrefix = "font.mathfont-family.";
 
-  nsCAutoString extension;
+  nsAutoCString extension;
   switch (aExtension)
   {
     case eExtension_base:
@@ -531,14 +531,14 @@ GetFontExtensionPref(PRUnichar aChar,
   }
 
   // .\\uNNNN key
-  nsCAutoString key;
+  nsAutoCString key;
   key.AssignASCII(kMathFontPrefix);
   char ustr[10];
   PR_snprintf(ustr, sizeof(ustr), "\\u%04X", aChar);
   key.Append(ustr);
   key.Append(extension);
   // .\uNNNN key
-  nsCAutoString alternateKey;
+  nsAutoCString alternateKey;
   alternateKey.AssignASCII(kMathFontPrefix);
   NS_ConvertUTF16toUTF8 tmp(&aChar, 1);
   alternateKey.Append(tmp);
@@ -583,7 +583,7 @@ InitGlobals(nsPresContext* aPresContext)
     It will be deleted at shutdown, even if a failure happens below.
   */
 
-  nsCAutoString key;
+  nsAutoCString key;
   nsAutoString value;
   nsCOMPtr<nsIPersistentProperties> mathfontProp;
 

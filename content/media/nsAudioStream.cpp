@@ -298,7 +298,11 @@ static int PrefChanged(const char* aPref, void* aClosure)
       gVolumeScale = NS_MAX<double>(0, PR_strtod(utf8.get(), nullptr));
     }
   } else if (strcmp(aPref, PREF_USE_CUBEB) == 0) {
+#ifdef MOZ_WIDGET_GONK
+    bool value = Preferences::GetBool(aPref, false);
+#else
     bool value = Preferences::GetBool(aPref, true);
+#endif
     mozilla::MutexAutoLock lock(*gAudioPrefsLock);
     gUseCubeb = value;
   } else if (strcmp(aPref, PREF_CUBEB_LATENCY) == 0) {
@@ -474,15 +478,11 @@ nsresult nsNativeAudioStream::Write(const void* aBuf, uint32_t aFrames)
 
   if (s_data) {
     double scaled_volume = GetVolumeScale() * mVolume;
-#ifdef MOZ_SAMPLE_TYPE_S16LE
+#ifdef MOZ_SAMPLE_TYPE_S16
     const short* buf = static_cast<const short*>(aBuf);
     int32_t volume = int32_t((1 << 16) * scaled_volume);
     for (uint32_t i = 0; i < samples; ++i) {
-      short s = buf[i];
-#if defined(IS_BIG_ENDIAN)
-      s = ((s & 0x00ff) << 8) | ((s & 0xff00) >> 8);
-#endif
-      s_data[i] = short((int32_t(s) * volume) >> 16);
+      s_data[i] = short((int32_t(buf[i]) * volume) >> 16);
     }
 #else /* MOZ_SAMPLE_TYPE_FLOAT32 */
     const SampleType* buf = static_cast<const SampleType*>(aBuf);
@@ -951,12 +951,13 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate)
   cubeb_stream_params params;
   params.rate = aRate;
   params.channels = aNumChannels;
-#ifdef MOZ_SAMPLE_TYPE_S16LE
+#ifdef MOZ_SAMPLE_TYPE_S16
   params.format =  CUBEB_SAMPLE_S16NE;
+  mBytesPerFrame = sizeof(int16_t) * aNumChannels;
 #else /* MOZ_SAMPLE_TYPE_FLOAT32 */
   params.format = CUBEB_SAMPLE_FLOAT32NE;
-#endif
   mBytesPerFrame = sizeof(float) * aNumChannels;
+#endif
 
   {
     cubeb_stream* stream;
@@ -1188,7 +1189,7 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
         output += input_size[i];
       } else {
         // Adjust volume as each sample is copied out.
-#ifdef MOZ_SAMPLE_TYPE_S16LE
+#ifdef MOZ_SAMPLE_TYPE_S16
         int32_t volume = int32_t(1 << 16) * scaled_volume;
 
         const short* src = static_cast<const short*>(input[i]);

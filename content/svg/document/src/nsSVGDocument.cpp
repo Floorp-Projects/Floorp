@@ -48,7 +48,7 @@ nsSVGDocument::GetDomain(nsAString& aDomain)
   SetDOMStringToNull(aDomain);
 
   if (mDocumentURI) {
-    nsCAutoString domain;
+    nsAutoCString domain;
     nsresult rv = mDocumentURI->GetHost(domain);
     if (domain.IsEmpty() || NS_FAILED(rv))
       return rv;
@@ -65,7 +65,7 @@ nsSVGDocument::GetURL(nsAString& aURL)
   SetDOMStringToNull(aURL);
 
   if (mDocumentURI) {
-    nsCAutoString url;
+    nsAutoCString url;
     nsresult rv = mDocumentURI->GetSpec(url);
     if (url.IsEmpty() || NS_FAILED(rv))
       return rv;

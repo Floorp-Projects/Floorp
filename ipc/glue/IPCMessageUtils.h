@@ -323,9 +323,9 @@ struct ParamTraits<nsCString> : ParamTraits<nsACString>
 #ifdef MOZILLA_INTERNAL_API
 
 template<>
-struct ParamTraits<nsCAutoString> : ParamTraits<nsCString>
+struct ParamTraits<nsAutoCString> : ParamTraits<nsCString>
 {
-  typedef nsCAutoString paramType;
+  typedef nsAutoCString paramType;
 };
 
 #endif  // MOZILLA_INTERNAL_API

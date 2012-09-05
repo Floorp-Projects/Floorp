@@ -15,10 +15,10 @@ dictionary DeviceStorageEnumerationParameters
   jsval since;
 };
 
-[scriptable, uuid(36f3b16b-a398-4b19-944e-ce299b714725), builtinclass]
+[scriptable, uuid(7efbe025-3a8a-4151-9257-3e8c941dc099), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
-    attribute nsIDOMEventListener onchange;
+    [implicit_jscontext] attribute jsval onchange;
     nsIDOMDOMRequest add(in nsIDOMBlob aBlob);
     nsIDOMDOMRequest addNamed(in nsIDOMBlob aBlob, in DOMString aName);
 

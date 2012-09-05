@@ -215,7 +215,7 @@ nsDownloadManager::RemoveDownloadsForURI(nsIURI *aURI)
 {
   mozStorageStatementScoper scope(mGetIdsForURIStatement);
 
-  nsCAutoString source;
+  nsAutoCString source;
   nsresult rv = aURI->GetSpec(source);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1014,7 +1014,7 @@ nsDownloadManager::GetDownloadFromDB(uint32_t aID, nsDownload **retVal)
   dl->SetProgressBytes(currBytes, maxBytes);
 
   // Build mMIMEInfo only if the mimeType in DB is not empty
-  nsCAutoString mimeType;
+  nsAutoCString mimeType;
   rv = stmt->GetUTF8String(i++, mimeType);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1031,7 +1031,7 @@ nsDownloadManager::GetDownloadFromDB(uint32_t aID, nsDownload **retVal)
     rv = dl->mMIMEInfo->SetPreferredAction(action);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString persistentDescriptor;
+    nsAutoCString persistentDescriptor;
     rv = stmt->GetUTF8String(i++, persistentDescriptor);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1351,7 +1351,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   dl->mCancelable = aCancelable;
 
   // Adding to the DB
-  nsCAutoString source, target;
+  nsAutoCString source, target;
   aSource->GetSpec(source);
   aTarget->GetSpec(target);
 
@@ -1362,7 +1362,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
 
   // Break down MIMEInfo but don't panic if we can't get all the pieces - we
   // can still download the file
-  nsCAutoString persistentDescriptor, mimeType;
+  nsAutoCString persistentDescriptor, mimeType;
   nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
   if (aMIMEInfo) {
     (void)aMIMEInfo->GetType(mimeType);
@@ -2320,7 +2320,7 @@ nsDownload::SetState(DownloadState aState)
 #endif
 #ifdef MOZ_WIDGET_ANDROID
         nsCOMPtr<nsIMIMEInfo> mimeInfo;
-        nsCAutoString contentType;
+        nsAutoCString contentType;
         GetMIMEInfo(getter_AddRefs(mimeInfo));
 
         if (mimeInfo)
@@ -3079,7 +3079,7 @@ nsDownload::UpdateDB()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mReferrer) {
-    nsCAutoString referrer;
+    nsAutoCString referrer;
     rv = mReferrer->GetSpec(referrer);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("referrer"), referrer);

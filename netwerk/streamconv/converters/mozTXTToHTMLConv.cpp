@@ -395,7 +395,7 @@ bool mozTXTToHTMLConv::ShouldLinkify(const nsCString& aURL)
   if (!mIOService)
     return false;
 
-  nsCAutoString scheme;
+  nsAutoCString scheme;
   nsresult rv = mIOService->ExtractScheme(aURL, scheme);
   if(NS_FAILED(rv))
     return false;

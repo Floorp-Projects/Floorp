@@ -106,7 +106,7 @@ imgStatusTracker::Notify(imgRequest* request, imgRequestProxy* proxy)
 #ifdef PR_LOGGING
   nsCOMPtr<nsIURI> uri;
   request->GetURI(getter_AddRefs(uri));
-  nsCAutoString spec;
+  nsAutoCString spec;
   uri->GetSpec(spec);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgStatusTracker::Notify async", "uri", spec.get());
 #endif
@@ -160,7 +160,7 @@ imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
 #ifdef PR_LOGGING
   nsCOMPtr<nsIURI> uri;
   proxy->GetURI(getter_AddRefs(uri));
-  nsCAutoString spec;
+  nsAutoCString spec;
   uri->GetSpec(spec);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgStatusTracker::NotifyCurrentState", "uri", spec.get());
 #endif
@@ -181,7 +181,7 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
 #ifdef PR_LOGGING
   nsCOMPtr<nsIURI> uri;
   proxy->GetURI(getter_AddRefs(uri));
-  nsCAutoString spec;
+  nsAutoCString spec;
   uri->GetSpec(spec);
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgStatusTracker::SyncNotify", "uri", spec.get());
 #endif

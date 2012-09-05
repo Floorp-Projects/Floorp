@@ -134,7 +134,7 @@ nsBasePrincipal::CertificateEquals(nsIPrincipal *aOther)
   if (!mCert)
     return true;
 
-  nsCAutoString str;
+  nsAutoCString str;
   aOther->GetFingerprint(str);
   if (!str.Equals(mCert->fingerprint))
     return false;
@@ -190,7 +190,7 @@ nsBasePrincipal::CanEnableCapability(const char *capability, int16_t *result)
   for(;;) {
     const char *space = PL_strchr(start, ' ');
     int32_t len = space ? space - start : strlen(start);
-    nsCAutoString capString(start, len);
+    nsAutoCString capString(start, len);
     nsCStringKey key(capString);
     int16_t value =
       mCapabilities ? (int16_t)NS_PTR_TO_INT32(mCapabilities->Get(&key)) : 0;
@@ -237,7 +237,7 @@ nsBasePrincipal::SetCanEnableCapability(const char *capability,
   for(;;) {
     const char *space = PL_strchr(start, ' ');
     int len = space ? space - start : strlen(start);
-    nsCAutoString capString(start, len);
+    nsAutoCString capString(start, len);
     nsCStringKey key(capString);
     mCapabilities->Put(&key, NS_INT32_TO_PTR(canEnable));
     if (!space) {
@@ -263,7 +263,7 @@ nsBasePrincipal::IsCapabilityEnabled(const char *capability, void *annotation,
   for(;;) {
     const char *space = PL_strchr(start, ' ');
     int len = space ? space - start : strlen(start);
-    nsCAutoString capString(start, len);
+    nsAutoCString capString(start, len);
     nsCStringKey key(capString);
     *result = (ht->Get(&key) == (void *) AnnotationEnabled);
     if (!*result) {
@@ -312,7 +312,7 @@ nsBasePrincipal::SetCapability(const char *capability, void **annotation,
   for(;;) {
     const char *space = PL_strchr(start, ' ');
     int len = space ? space - start : strlen(start);
-    nsCAutoString capString(start, len);
+    nsAutoCString capString(start, len);
     nsCStringKey key(capString);
     nsHashtable *ht = static_cast<nsHashtable *>(*annotation);
     ht->Put(&key, (void *) value);
@@ -524,7 +524,7 @@ nsBasePrincipal::GetPreferences(char** aPrefName, char** aID,
   }
 
   //-- Capabilities
-  nsCAutoString grantedListStr, deniedListStr;
+  nsAutoCString grantedListStr, deniedListStr;
   if (mCapabilities) {
     CapabilityList capList = CapabilityList();
     capList.granted = &grantedListStr;
@@ -602,7 +602,7 @@ FreeAnnotationEntry(nsIObjectInputStream* aStream, nsHashKey* aKey,
 #ifdef DEBUG
 void nsPrincipal::dumpImpl()
 {
-  nsCAutoString str;
+  nsAutoCString str;
   GetScriptLocation(str);
   fprintf(stderr, "nsPrincipal (%p) = %s\n", static_cast<void*>(this), str.get());
 }
@@ -680,7 +680,7 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, char **aOrigin)
     return NS_ERROR_FAILURE;
   }
 
-  nsCAutoString hostPort;
+  nsAutoCString hostPort;
 
   // chrome: URLs don't have a meaningful origin, so make
   // sure we just get the full spec for them.
@@ -708,7 +708,7 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, char **aOrigin)
       hostPort.AppendInt(port, 10);
     }
 
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     rv = origin->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -717,7 +717,7 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, char **aOrigin)
   else {
     // Some URIs (e.g., nsSimpleURI) don't support asciiHost. Just
     // get the full spec.
-    nsCAutoString spec;
+    nsAutoCString spec;
     // XXX nsMozIconURI and nsJARURI don't implement this correctly, they
     // both fall back to GetSpec.  That needs to be fixed.
     rv = origin->GetAsciiSpec(spec);
@@ -1319,7 +1319,7 @@ nsPrincipal::GetAppStatus()
   NS_ENSURE_SUCCESS(app->GetAppStatus(&status),
                     nsIPrincipal::APP_STATUS_NOT_INSTALLED);
 
-  nsCAutoString origin;
+  nsAutoCString origin;
   NS_ENSURE_SUCCESS(GetOrigin(getter_Copies(origin)),
                     nsIPrincipal::APP_STATUS_NOT_INSTALLED);
   nsString appOrigin;
@@ -1332,7 +1332,7 @@ nsPrincipal::GetAppStatus()
   NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(appURI), appOrigin),
                     nsIPrincipal::APP_STATUS_NOT_INSTALLED);
 
-  nsCAutoString appOriginPunned;
+  nsAutoCString appOriginPunned;
   NS_ENSURE_SUCCESS(GetOriginForURI(appURI, getter_Copies(appOriginPunned)),
                     nsIPrincipal::APP_STATUS_NOT_INSTALLED);
 

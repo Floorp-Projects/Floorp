@@ -468,15 +468,41 @@ protected:
    *
    * @param aTargetFrame        The event target of the wheel event.
    * @param aEvent              The handling mouse wheel event.
-   * @param aForDefaultAction   Whether this uses wheel transaction or not.
-   *                            If true, returns the latest scrolled frame if
-   *                            there is it.  Otherwise, the nearest ancestor
-   *                            scrollable frame from aTargetFrame.
+   * @param aOptions            The options for finding the scroll target.
+   *                            Callers should use COMPUTE_*.
    * @return                    The scrollable frame which should be scrolled.
    */
+  // These flags are used in ComputeScrollTarget(). Callers should use
+  // COMPUTE_*.
+  enum
+  {
+    PREFER_MOUSE_WHEEL_TRANSACTION               = 1,
+    PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS = 2,
+    PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS = 4,
+    START_FROM_PARENT                            = 8
+  };
+  enum ComputeScrollTargetOptions
+  {
+    // At computing scroll target for legacy mouse events, we should return
+    // first scrollable element even when it's not scrollable to the direction.
+    COMPUTE_LEGACY_MOUSE_SCROLL_EVENT_TARGET     = 0,
+    // Default action prefers the scrolled element immediately before if it's
+    // still under the mouse cursor.  Otherwise, it prefers the nearest
+    // scrollable ancestor which will be scrolled actually.
+    COMPUTE_DEFAULT_ACTION_TARGET                =
+      (PREFER_MOUSE_WHEEL_TRANSACTION |
+       PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS |
+       PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS),
+    // Look for the nearest scrollable ancestor which can be scrollable with
+    // aEvent.
+    COMPUTE_SCROLLABLE_ANCESTOR_ALONG_X_AXIS     =
+      (PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS | START_FROM_PARENT),
+    COMPUTE_SCROLLABLE_ANCESTOR_ALONG_Y_AXIS     =
+      (PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS | START_FROM_PARENT)
+  };
   nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
                                           mozilla::widget::WheelEvent* aEvent,
-                                          bool aForDefaultAction);
+                                          ComputeScrollTargetOptions aOptions);
 
   /**
    * GetScrollAmount() returns the scroll amount in app uints of one line or

@@ -13,7 +13,6 @@ public class RedirectToSetupActivity extends Activity {
   public static final String LOG_TAG = "RedirectToSetupActivity";
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    setTheme(R.style.SyncTheme);
     super.onCreate(savedInstanceState);
     setContentView(R.layout.sync_redirect_to_setup);
   }

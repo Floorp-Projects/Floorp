@@ -132,9 +132,9 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
 
   for (uint32_t i = 0; i < searchCount; ++i) {
     // Use the search name to create the contract id string for the search service
-    nsCAutoString searchName;
+    nsAutoCString searchName;
     aInput->GetSearchAt(i, searchName);
-    nsCAutoString cid(searchCID);
+    nsAutoCString cid(searchCID);
     cid.Append(searchName);
 
     // Use the created cid to get a pointer to the search service and store it for later
@@ -1578,7 +1578,7 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
     nsresult rv;
     nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     if (NS_SUCCEEDED(ios->ExtractScheme(NS_ConvertUTF16toUTF8(aValue), scheme))) {
       // Trying to autocomplete a URI from somewhere other than the beginning.
       // Only succeed if the missing portion is "http://"; otherwise do not

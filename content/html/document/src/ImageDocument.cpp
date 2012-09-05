@@ -174,7 +174,7 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   nsCOMPtr<nsIURI> channelURI;
   channel->GetURI(getter_AddRefs(channelURI));
 
-  nsCAutoString mimeType;
+  nsAutoCString mimeType;
   channel->GetContentType(mimeType);
 
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
@@ -544,7 +544,7 @@ ImageDocument::OnStopDecode(imgIRequest *aRequest,
 
   // mImageContent can be null if the document is already destroyed
   if (NS_FAILED(aStatus) && mStringBundle && mImageContent) {
-    nsCAutoString src;
+    nsAutoCString src;
     mDocumentURI->GetSpec(src);
     NS_ConvertUTF8toUTF16 srcString(src);
     const PRUnichar* formatString[] = { srcString.get() };
@@ -655,7 +655,7 @@ ImageDocument::CreateSyntheticDocument()
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
 
-  nsCAutoString src;
+  nsAutoCString src;
   mDocumentURI->GetSpec(src);
 
   // Push a null JSContext on the stack so that code that runs within
@@ -718,7 +718,7 @@ ImageDocument::CheckOverflowing(bool changeState)
 void 
 ImageDocument::UpdateTitleAndCharset()
 {
-  nsCAutoString typeStr;
+  nsAutoCString typeStr;
   nsCOMPtr<imgIRequest> imageRequest;
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
   if (imageLoader) {

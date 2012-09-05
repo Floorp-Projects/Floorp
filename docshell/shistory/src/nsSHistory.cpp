@@ -72,7 +72,7 @@ static PRLogModuleInfo* gLogModule = PR_LOG_DEFINE("nsSHistory");
 #define LOG_SPEC(format, uri)                              \
   PR_BEGIN_MACRO                                           \
     if (PR_LOG_TEST(gLogModule, PR_LOG_DEBUG)) {           \
-      nsCAutoString _specStr(NS_LITERAL_CSTRING("(null)"));\
+      nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));\
       if (uri) {                                           \
         uri->GetSpec(_specStr);                            \
       }                                                    \
@@ -555,7 +555,7 @@ nsSHistory::PrintHistory()
     }
 
 #if 0
-    nsCAutoString url;
+    nsAutoCString url;
     if (uri)
      uri->GetSpec(url);
 

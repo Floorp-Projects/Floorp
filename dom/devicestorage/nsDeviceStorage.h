@@ -33,6 +33,7 @@ class nsPIDOMWindow;
 #define POST_ERROR_EVENT_FILE_NOT_ENUMERABLE         "File location is not enumerable"
 #define POST_ERROR_EVENT_PERMISSION_DENIED           "Permission Denied"
 #define POST_ERROR_EVENT_ILLEGAL_FILE_NAME           "Illegal file name"
+#define POST_ERROR_EVENT_ILLEGAL_TYPE                "Illegal content type"
 #define POST_ERROR_EVENT_UNKNOWN                     "Unknown"
 #define POST_ERROR_EVENT_NON_STRING_TYPE_UNSUPPORTED "Non-string type unsupported"
 #define POST_ERROR_EVENT_NOT_IMPLEMENTED             "Not implemented"
@@ -44,10 +45,11 @@ class DeviceStorageFile MOZ_FINAL
 public:
   nsCOMPtr<nsIFile> mFile;
   nsString mPath;
+  nsString mStorageType;
   bool mEditable;
 
-  DeviceStorageFile(nsIFile* aFile, const nsAString& aPath);
-  DeviceStorageFile(nsIFile* aFile);
+  DeviceStorageFile(const nsAString& aStorageType, nsIFile* aFile, const nsAString& aPath);
+  DeviceStorageFile(const nsAString& aStorageType, nsIFile* aFile);
   void SetPath(const nsAString& aPath);
   void SetEditable(bool aEditable);
 
@@ -63,7 +65,8 @@ public:
   void CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, uint64_t aSince = 0);
   void collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, uint64_t aSince, nsAString& aRootPath);
 
-  static uint64_t DirectoryDiskUsage(nsIFile* aFile, uint64_t aSoFar = 0);
+  static bool IsType(nsIFile* aFile, const nsAString& aStorageType);
+  static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const nsAString& aStorageType);
 
 private:
   void NormalizeFilePath();
@@ -104,6 +107,8 @@ public:
 
   virtual bool Recv__delete__(const bool& allow);
   virtual void IPDLRelease();
+
+  void GetStorageType(nsAString & aType);
 
 private:
   ~nsDOMDeviceStorageCursor();

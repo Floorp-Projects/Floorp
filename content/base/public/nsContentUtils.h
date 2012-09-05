@@ -482,13 +482,6 @@ public:
     return sIOService;
   }
 
-  static imgILoader* GetImgLoader()
-  {
-    if (!sImgLoaderInitialized)
-      InitImgLoader();
-    return sImgLoader;
-  }
-
 #ifdef MOZ_XTF
   static nsIXTFService* GetXTFService();
 #endif
@@ -664,9 +657,16 @@ public:
                             imgIRequest** aRequest);
 
   /**
+   * Obtain an image loader that respects the given document/channel's privacy status.
+   * Null document/channel arguments return the public image loader.
+   */
+  static imgILoader* GetImgLoaderForDocument(nsIDocument* aDoc);
+  static imgILoader* GetImgLoaderForChannel(nsIChannel* aChannel);
+
+  /**
    * Returns whether the given URI is in the image cache.
    */
-  static bool IsImageInCache(nsIURI* aURI);
+  static bool IsImageInCache(nsIURI* aURI, nsIDocument* aDocument);
 
   /**
    * Method to get an imgIContainer from an image loading content
@@ -1989,18 +1989,6 @@ public:
   static bool IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput);
 
   /**
-   * If the URI is chrome, return true unconditionarlly.
-   *
-   * Otherwise, get the contents of the given pref, and treat it as a
-   * comma-separated list of URIs.  Return true if the given URI's prepath is
-   * in the list, and false otherwise.
-   *
-   * Comparisons are case-insensitive, and whitespace between elements of the
-   * comma-separated list is ignored.
-   */
-  static bool URIIsChromeOrInPref(nsIURI *aURI, const char *aPref);
-
-  /**
    * This will parse aSource, to extract the value of the pseudo attribute
    * with the name specified in aName. See
    * http://www.w3.org/TR/xml-stylesheet/#NT-StyleSheetPI for the specification
@@ -2077,24 +2065,6 @@ public:
    */
   static nsresult IsUserIdle(uint32_t aRequestedIdleTimeInMS, bool* aUserIsIdle);
 
-  /** 
-   * Takes a window and a string to check prefs against. Assumes that
-   * the window is an app window, and that the pref is a comma
-   * seperated list of app urls that have permission to use whatever
-   * the preference refers to (for example, does the current window
-   * have access to mozTelephony). Chrome is always given permissions
-   * for the requested preference. Sets aAllowed based on preference.
-   *
-   * @param aWindow Current window asking for preference permission
-   * @param aPrefURL Preference name
-   * @param aAllowed [out] outparam on whether or not window is allowed
-   *                       to access pref
-   *
-   * @return NS_OK on successful preference lookup, error code otherwise
-   */
-  static nsresult IsOnPrefWhitelist(nsPIDOMWindow* aWindow,
-                                    const char* aPrefURL, bool *aAllowed);
-
   /**
    * Takes a selection, and a text control element (<input> or <textarea>), and
    * returns the offsets in the text content corresponding to the selection.
@@ -2160,9 +2130,11 @@ private:
   static bool sImgLoaderInitialized;
   static void InitImgLoader();
 
-  // The following two members are initialized lazily
+  // The following four members are initialized lazily
   static imgILoader* sImgLoader;
+  static imgILoader* sPrivateImgLoader;
   static imgICache* sImgCache;
+  static imgICache* sPrivateImgCache;
 
   static nsIConsoleService* sConsoleService;
 

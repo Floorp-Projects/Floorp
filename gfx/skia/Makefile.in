@@ -370,7 +370,7 @@ CPPSRCS += \
 	SkUtils_opts_SSE2.cpp \
 	opts_check_SSE2.cpp \
 	$(NULL)
-ifdef HAVE_COMPILER_FLAG_MSSSE3
+ifdef HAVE_TOOLCHAIN_SUPPORT_MSSSE3
 DEFINES += -DSK_BUILD_SSSE3
 CPPSRCS += SkBitmapProcState_opts_SSSE3.cpp
 endif

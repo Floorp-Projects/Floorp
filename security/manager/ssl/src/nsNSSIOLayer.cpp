@@ -631,7 +631,7 @@ nsSSLIOLayerHelpers::getSiteKey(nsNSSSocketInfo *socketInfo, nsCSubstring &key)
 bool
 nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(nsNSSSocketInfo *socketInfo)
 {
-  nsCAutoString key;
+  nsAutoCString key;
   getSiteKey(socketInfo, key);
 
   if (!socketInfo->IsTLSEnabled()) {
@@ -660,7 +660,7 @@ nsSSLIOLayerHelpers::rememberTolerantSite(nsNSSSocketInfo *socketInfo)
   if (!socketInfo->IsTLSEnabled())
     return;
 
-  nsCAutoString key;
+  nsAutoCString key;
   getSiteKey(socketInfo, key);
 
   MutexAutoLock lock(*mutex);
@@ -2372,7 +2372,7 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, bool forSTARTTLS,
 
   // Let's see if we're trying to connect to a site we know is
   // TLS intolerant.
-  nsCAutoString key;
+  nsAutoCString key;
   key = nsDependentCString(host) + NS_LITERAL_CSTRING(":") + nsPrintfCString("%d", port);
 
   if (nsSSLIOLayerHelpers::isKnownAsIntolerantSite(key)) {

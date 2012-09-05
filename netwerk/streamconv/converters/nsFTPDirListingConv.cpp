@@ -121,7 +121,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     printf("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer);
 #endif // DEBUG_dougt
 
-    nsCAutoString indexFormat;
+    nsAutoCString indexFormat;
     if (!mSentHeading) {
         // build up the 300: line
         nsCOMPtr<nsIURI> uri;
@@ -219,8 +219,8 @@ nsFTPDirListingConv::GetHeaders(nsACString& headers,
     headers.AppendLiteral("300: ");
 
     // Bug 111117 - don't print the password
-    nsCAutoString pw;
-    nsCAutoString spec;
+    nsAutoCString pw;
+    nsAutoCString spec;
     uri->GetPassword(pw);
     if (!pw.IsEmpty()) {
          rv = uri->SetPassword(EmptyCString());
@@ -295,7 +295,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
             }
         }
 
-        nsCAutoString buf;
+        nsAutoCString buf;
         aString.Append('\"');
         aString.Append(NS_EscapeURL(Substring(result.fe_fname, 
                                               result.fe_fname+result.fe_fnlen),

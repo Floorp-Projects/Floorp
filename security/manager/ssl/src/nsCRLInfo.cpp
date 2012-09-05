@@ -41,7 +41,7 @@ nsCRLInfo::nsCRLInfo(CERTSignedCrl *signedCrl)
   nsAutoString nameInDb;
   nsAutoString nextUpdateLocale;
   nsAutoString lastUpdateLocale;
-  nsCAutoString lastFetchURL;
+  nsAutoCString lastFetchURL;
   PRTime lastUpdate = 0;
   PRTime nextUpdate = 0;
   SECStatus sec_rv;

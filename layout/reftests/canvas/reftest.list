@@ -52,8 +52,8 @@ fails-if(Android) != text-font-lang.html text-font-lang-notref.html
 # test
 fails-if(azureQuartz) == linear-gradient-1a.html linear-gradient-1-ref.html
 
-# this passes with cairo on 10.7 but not with azure for reasons unknown
-fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)||(azureQuartz&&/Mac\x20OS\x20X\x2010\.7/.test(http.oscpu))) == linear-gradient-1b.html linear-gradient-1-ref.html
+# this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
+fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)||(azureQuartz&&/Mac\x20OS\x20X\x2010\.[78]/.test(http.oscpu))) == linear-gradient-1b.html linear-gradient-1-ref.html
 
 == zero-dimensions.html zero-dimensions-ref.html
 
@@ -82,3 +82,6 @@ fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) == 672646-alpha-radial-g
 == transformed-path.html transformed-path.html
 
 == 749467-1.html 749467-1-ref.html
+
+# You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
+fuzzy-if(azureQuartz,2,113) fuzzy-if(d2d,12,17) == 784573-1.html 784573-1-ref.html

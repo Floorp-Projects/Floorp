@@ -475,7 +475,7 @@ nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
   if (!isAboutScheme)
     return false;
 
-  nsCAutoString path;
+  nsAutoCString path;
   uri->GetPath(path);
 
   NS_NAMED_LITERAL_CSTRING(neterror, "neterror");

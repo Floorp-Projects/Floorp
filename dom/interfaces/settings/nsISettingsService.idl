@@ -13,10 +13,14 @@ interface nsISettingsServiceCallback : nsISupports
   void handleError(in DOMString aErrorMessage);
 };
 
-[scriptable, uuid(3ab3cbc0-8513-11e1-b0c4-0800200c9a66)]
+[scriptable, uuid(d7a395a0-e292-11e1-834e-1761d57f5f99)]
 interface nsISettingsServiceLock : nsISupports
 {
-  void set(in string aName, in jsval aValue, in nsISettingsServiceCallback aCallback);
+  void set(in string aName,
+           in jsval aValue,
+           in nsISettingsServiceCallback aCallback,
+           [optional] in string aMessage);
+
   void get(in string aName, in nsISettingsServiceCallback aCallback);
 };
 

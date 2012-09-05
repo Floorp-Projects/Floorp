@@ -23,5 +23,5 @@ protected:
     nsXPIDLCString mLocation;
     nsString mDescription;
     int64_t mSize;
-    int64_t mLastModified;
+    PRTime mLastModified;
 };

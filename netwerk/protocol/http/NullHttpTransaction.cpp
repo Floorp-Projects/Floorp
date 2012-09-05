@@ -127,7 +127,7 @@ NullHttpTransaction::RequestHead()
   if (!mRequestHead) {
     mRequestHead = new nsHttpRequestHead();
 
-    nsCAutoString hostHeader;
+    nsAutoCString hostHeader;
     nsCString host(mConnectionInfo->GetHost());
     nsresult rv = nsHttpHandler::GenerateHostPort(host,
                                                   mConnectionInfo->Port(),

@@ -372,7 +372,7 @@ HttpChannelChild::OnTransportAndData(const nsresult& status,
                  status == NS_NET_STATUS_READING,
                  "unexpected status code");
 
-    nsCAutoString host;
+    nsAutoCString host;
     mURI->GetHost(host);
     mProgressSink->OnStatus(this, nullptr, status,
                             NS_ConvertUTF8toUTF16(host).get());
@@ -568,7 +568,7 @@ HttpChannelChild::OnStatus(const nsresult& status)
   if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending && 
       !(mLoadFlags & LOAD_BACKGROUND)) 
   {
-    nsCAutoString host;
+    nsAutoCString host;
     mURI->GetHost(host);
     mProgressSink->OnStatus(this, nullptr, status,
                             NS_ConvertUTF8toUTF16(host).get());

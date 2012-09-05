@@ -417,7 +417,7 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
 
   nsCOMPtr<nsIXULAppInfo> xapp (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
   if (xapp) {
-    nsCAutoString s;
+    nsAutoCString s;
     rv = xapp->GetID(s);
     if (NS_SUCCEEDED(rv))
       CopyUTF8toUTF16(s, appID);

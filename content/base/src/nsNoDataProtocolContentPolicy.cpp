@@ -42,7 +42,7 @@ nsNoDataProtocolContentPolicy::ShouldLoad(uint32_t aContentType,
 
     // The following are just quick-escapes for the most common cases
     // where we would allow the content to be loaded anyway.
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     aContentLocation->GetScheme(scheme);
     if (scheme.EqualsLiteral("http") ||
         scheme.EqualsLiteral("https") ||

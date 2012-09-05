@@ -166,7 +166,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
         if (uri) {
-          nsCAutoString uriSpec;
+          nsAutoCString uriSpec;
           uri->GetSpec(uriSpec);
           PR_LOG(gWin32SoundLog, PR_LOG_ALWAYS,
                  ("Failed to load %s\n", uriSpec.get()));

@@ -1205,7 +1205,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
     if (useA_API) {
       // Convert each values of sIMECompClauseArray. The values mean offset of
       // the clauses in ANSI string. But we need the values in Unicode string.
-      nsCAutoString compANSIStr;
+      nsAutoCString compANSIStr;
       if (ConvertToANSIString(mCompositionString, GetKeyboardCodePage(),
                               compANSIStr)) {
         uint32_t maxlen = compANSIStr.Length();

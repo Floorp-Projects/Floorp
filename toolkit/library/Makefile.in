@@ -114,6 +114,10 @@ ifdef MOZ_B2G_BT #{
 STATIC_LIBS += mozdbus_s
 endif #}
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+STATIC_LIBS += moznetd_s
+endif
+
 ifdef MOZ_IPDL_TESTS
 STATIC_LIBS += ipdlunittest_s
 endif
@@ -369,7 +373,7 @@ ifndef MOZ_TREE_PIXMAN
 EXTRA_DSO_LDOPTS += $(MOZ_PIXMAN_LIBS)
 endif
 
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib) 
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib)
 
 ifdef MOZ_SYDNEYAUDIO
 ifeq ($(OS_ARCH),Linux)
@@ -405,6 +409,12 @@ OS_LIBS += \
   -lsensorservice \
   -ldbus \
   $(NULL)
+
+ifdef MOZ_CUBEB
+OS_LIBS += \
+  -lOpenSLES \
+  $(NULL)
+endif
 endif
 
 EXTRA_DEPS += \

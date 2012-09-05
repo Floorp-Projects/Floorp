@@ -85,10 +85,10 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
   NS_NAMED_LITERAL_CSTRING(width, "width=");
   NS_NAMED_LITERAL_CSTRING(height, "height=");
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   uri->GetSpec(spec);
 
-  nsCAutoString type;
+  nsAutoCString type;
 
   nsRefPtr<nsDeviceCaptureProvider> capture;
   nsCaptureParams captureParams;
@@ -103,7 +103,7 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
     captureParams.captureVideo = true;
     captureParams.timeLimit = 0;
     captureParams.frameLimit = 1;
-    nsCAutoString buffer;
+    nsAutoCString buffer;
     extractAttributeValue(spec.get(), "width=", buffer);
     nsresult err;
     captureParams.width = buffer.ToInteger(&err);
@@ -130,7 +130,7 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
     SetContentType(type);
     captureParams.captureAudio = false;
     captureParams.captureVideo = true;
-    nsCAutoString buffer;
+    nsAutoCString buffer;
     extractAttributeValue(spec.get(), "width=", buffer);
     nsresult err;
     captureParams.width = buffer.ToInteger(&err);

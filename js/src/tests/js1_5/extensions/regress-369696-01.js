@@ -23,15 +23,7 @@ function test()
   q = [];
   q.__defineGetter__("0", q.toString);
   q[2] = q;
-  try
-  {
-    q.toSource();
-    throw new Error("didn't throw");
-  }
-  catch (e)
-  {
-    assertEq(e instanceof InternalError, true, "bad error: " + e);
-  }
+  assertEq(q.toSource(), "[\"\", , []]", "wrong string");
 
   reportCompare(expect, actual, summary);
 

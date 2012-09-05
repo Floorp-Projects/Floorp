@@ -2282,7 +2282,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
   CMMFPKIStatus reqStatus;
   CERTCertificate *currCert;
   PK11SlotInfo *slot;
-  nsCAutoString localNick;
+  nsAutoCString localNick;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsresult rv = NS_OK;
   CERTCertList *caPubs = nullptr;
@@ -2771,7 +2771,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
     return NS_OK;
   }
 
-  nsCAutoString charset(document->GetDocumentCharacterSet());
+  nsAutoCString charset(document->GetDocumentCharacterSet());
 
   // XXX Doing what nsFormSubmission::GetEncoder does (see
   //     http://bugzilla.mozilla.org/show_bug.cgi?id=81203).

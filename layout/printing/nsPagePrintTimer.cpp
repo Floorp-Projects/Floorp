@@ -52,39 +52,52 @@ nsPagePrintTimer::StartTimer(bool aUseDelay)
   return result;
 }
 
+//nsRunnable
+NS_IMETHODIMP
+nsPagePrintTimer::Run() 
+{
+  bool initNewTimer = true;
+  // Check to see if we are done
+  // inRange will be true if a page is actually printed
+  bool inRange;
+  bool donePrinting;
 
+  // donePrinting will be true if it completed successfully or
+  // if the printing was cancelled
+  donePrinting = mPrintEngine->PrintPage(mPrintObj, inRange);
+  if (donePrinting) {
+    // now clean up print or print the next webshell
+    if (mPrintEngine->DonePrintingPages(mPrintObj, NS_OK)) {
+      initNewTimer = false;
+    }
+  }
+
+  // Note that the Stop() destroys this after the print job finishes
+  // (The PrintEngine stops holding a reference when DonePrintingPages
+  // returns true.)
+  Stop(); 
+  if (initNewTimer) {
+    ++mFiringCount;
+    nsresult result = StartTimer(inRange);
+    if (NS_FAILED(result)) {
+      donePrinting = true;     // had a failure.. we are finished..
+      mPrintEngine->SetIsPrinting(false);
+    }
+  }
+  return NS_OK;
+};
 
 // nsITimerCallback
 NS_IMETHODIMP
 nsPagePrintTimer::Notify(nsITimer *timer)
 {
   if (mDocViewerPrint) {
-    bool initNewTimer = true;
-    // Check to see if we are done
-    // inRange will be true if a page is actually printed
-    bool inRange;
-    // donePrinting will be true if it completed successfully or
-    // if the printing was cancelled
-    bool donePrinting = mPrintEngine->PrintPage(mPrintObj, inRange);
-    if (donePrinting) {
-      // now clean up print or print the next webshell
-      if (mPrintEngine->DonePrintingPages(mPrintObj, NS_OK)) {
-        initNewTimer = false;
-      }
+    bool donePrePrint = mPrintEngine->PrePrintPage();
+
+    if (donePrePrint) {
+      NS_DispatchToMainThread(this);
     }
 
-    // Note that the Stop() destroys this after the print job finishes
-    // (The PrintEngine stops holding a reference when DonePrintingPages
-    // returns true.)
-    Stop(); 
-    if (initNewTimer) {
-      ++mFiringCount;
-      nsresult result = StartTimer(inRange);
-      if (NS_FAILED(result)) {
-        donePrinting = true;     // had a failure.. we are finished..
-        mPrintEngine->SetIsPrinting(false);
-      }
-    }
   }
   return NS_OK;
 }

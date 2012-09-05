@@ -190,7 +190,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   const nsAdoptingCString& detectorName =
     Preferences::GetLocalizedCString("intl.charset.detector");
   if (!detectorName.IsEmpty()) {
-    nsCAutoString detectorContractID;
+    nsAutoCString detectorContractID;
     detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
     detectorContractID += detectorName;
     if ((mChardet = do_CreateInstance(detectorContractID.get()))) {
@@ -244,7 +244,7 @@ nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf)
       } else {
         // We've already committed to a decoder. Request a reload from the
         // docshell.
-        nsCAutoString charset(aCharset);
+        nsAutoCString charset(aCharset);
         mTreeBuilder->NeedsCharsetSwitchTo(charset,
                                            kCharsetFromAutoDetection,
                                            0);
@@ -414,7 +414,7 @@ nsHtml5StreamParser::SetEncodingFromExpat(const PRUnichar* aEncoding)
 {
   if (aEncoding) {
     nsDependentString utf16(aEncoding);
-    nsCAutoString utf8;
+    nsAutoCString utf8;
     CopyUTF16toUTF8(utf16, utf8);
     if (PreferredForInternalEncodingDecl(utf8)) {
       mCharset.Assign(utf8);
@@ -942,7 +942,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mRequest, &rv));
   if (NS_SUCCEEDED(rv)) {
-    nsCAutoString method;
+    nsAutoCString method;
     httpChannel->GetRequestMethod(method);
     // XXX does Necko have a way to renavigate POST, etc. without hitting
     // the network?
@@ -1153,7 +1153,7 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
 bool
 nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
 {
-  nsCAutoString newEncoding(aEncoding);
+  nsAutoCString newEncoding(aEncoding);
   newEncoding.Trim(" \t\r\n\f");
   if (newEncoding.LowerCaseEqualsLiteral("utf-16") ||
       newEncoding.LowerCaseEqualsLiteral("utf-16be") ||
@@ -1193,7 +1193,7 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
   
   // XXX check HTML5 non-IANA aliases here
   
-  nsCAutoString preferred;
+  nsAutoCString preferred;
   
   rv = nsCharsetAlias::GetPreferred(newEncoding, preferred);
   if (NS_FAILED(rv)) {
@@ -1230,7 +1230,7 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
     return false;
   }
 
-  nsCAutoString newEncoding;
+  nsAutoCString newEncoding;
   CopyUTF16toUTF8(*aEncoding, newEncoding);
 
   if (!PreferredForInternalEncodingDecl(newEncoding)) {

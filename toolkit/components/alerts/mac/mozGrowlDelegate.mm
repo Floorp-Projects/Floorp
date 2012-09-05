@@ -169,7 +169,7 @@
     do_GetService("@mozilla.org/xre/app-info;1", &rv);
   NS_ENSURE_SUCCESS(rv, nil);
 
-  nsCAutoString appName;
+  nsAutoCString appName;
   rv = appInfo->GetName(appName);
   NS_ENSURE_SUCCESS(rv, nil);
 

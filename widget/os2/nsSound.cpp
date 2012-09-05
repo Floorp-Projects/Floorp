@@ -130,7 +130,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         if (channel) {
           channel->GetURI(getter_AddRefs(uri));
           if (uri) {
-            nsCAutoString uriSpec;
+            nsAutoCString uriSpec;
             uri->GetSpec(uriSpec);
             fprintf(stderr, "nsSound::OnStreamComplete:  failed to load %s\n",
                     uriSpec.get());
@@ -246,7 +246,7 @@ NS_IMETHODIMP nsSound::PlayEventSound(uint32_t aEventId)
 
 nsresult nsSound::PlaySoundFile(const nsAString &aSoundFile)
 {
-  nsCAutoString buf;
+  nsAutoCString buf;
   nsresult rv = NS_CopyUnicodeToNative(aSoundFile, buf);
   NS_ENSURE_SUCCESS(rv,rv);
 

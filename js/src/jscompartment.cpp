@@ -82,12 +82,12 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 JSCompartment::~JSCompartment()
 {
 #ifdef JS_ION
-    Foreground::delete_(ionCompartment_);
+    js_delete(ionCompartment_);
 #endif
 
-    Foreground::delete_(watchpointMap);
-    Foreground::delete_(scriptCountsMap);
-    Foreground::delete_(debugScriptMap);
+    js_delete(watchpointMap);
+    js_delete(scriptCountsMap);
+    js_delete(debugScriptMap);
 }
 
 bool

@@ -18,7 +18,8 @@ Cu.import('resource://gre/modules/AlarmService.jsm');
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import('resource://gre/modules/PermissionPromptHelper.jsm');
 Cu.import('resource://gre/modules/ObjectWrapper.jsm');
-Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
+Cu.import('resource://gre/modules/accessibility/AccessFu.jsm');
+Cu.import('resource://gre/modules/Payment.jsm');
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
@@ -72,7 +73,21 @@ var shell = {
     } catch(e) { }
     if (Services.prefs.getBoolPref('app.reportCrashes') &&
         crashID) {
-      this.CrashSubmit().submit(crashID)
+
+      if (!Services.io.offline) {
+        this.CrashSubmit.submit(crashID);
+        return;
+      }
+
+      Services.obs.addObserver(function observer(subject, topic, state) {
+          if (topic != "network:offline-status-changed")
+            return;
+          if (state == 'online') {
+            shell.CrashSubmit.submit(crashID);
+            Services.obs.removeObserver(observer, topic);
+          }
+        }
+        , "network:offline-status-changed", false);
     }
   },
 
@@ -174,6 +189,10 @@ var shell = {
     window.removeEventListener('sizemodechange', this);
     this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
     ppmm.removeMessageListener("content-handler", this);
+    if (this.timer) {
+      this.timer.cancel();
+      this.timer = null;
+    }
 
 #ifndef MOZ_WIDGET_GONK
     delete Services.audioManager;
@@ -239,8 +258,11 @@ var shell = {
       this.sendChromeEvent({type: type});
     }
   },
-  
+
   lastHardwareButtonEventType: null, // property for the hack above
+  needBufferSysMsgs: true,
+  bufferedSysMsgs: [],
+  timer: null,
 
   handleEvent: function shell_handleEvent(evt) {
     let content = this.contentBrowser.contentWindow;
@@ -325,6 +347,18 @@ var shell = {
                    ObjectWrapper.wrap(details, getContentWindow()));
   },
 
+  sendSystemMessage: function shell_sendSystemMessage(msg) {
+    let origin = Services.io.newURI(msg.manifest, null, null).prePath;
+    this.sendChromeEvent({
+      type: 'open-app',
+      url: msg.uri,
+      origin: origin,
+      manifest: msg.manifest,
+      isActivity: (msg.type == 'activity'),
+      target: msg.target
+    });
+  },
+
   receiveMessage: function shell_receiveMessage(message) {
     if (message.name != 'content-handler') {
       return;
@@ -374,15 +408,13 @@ nsBrowserAccess.prototype = {
 // Listen for system messages and relay them to Gaia.
 Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
   let msg = JSON.parse(data);
-  let origin = Services.io.newURI(msg.manifest, null, null).prePath;
-  shell.sendChromeEvent({
-    type: 'open-app',
-    url: msg.uri,
-    origin: origin,
-    manifest: msg.manifest,
-    isActivity: (msg.type == 'activity'),
-    target: msg.target
-  });
+  // Buffer non-activity messages until content starts to load for 10 seconds.
+  // We'll revisit this later if new kind of messages don't need to be cached.
+  if (shell.needBufferSysMsgs && msg.type !== 'activity') {
+    shell.bufferedSysMsgs.push(msg);
+    return;
+  }
+  shell.sendSystemMessage(msg);
 }, 'system-messages-open-app', false);
 
 Services.obs.addObserver(function(aSubject, aTopic, aData) {
@@ -446,6 +478,18 @@ var CustomEventManager = {
     window.addEventListener("ContentStart", (function(evt) {
       let content = shell.contentBrowser.contentWindow;
       content.addEventListener("mozContentEvent", this, false, true);
+
+      // After content starts to load for 10 seconds, send and
+      // clean up the buffered system messages if there is any.
+      shell.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      shell.timer.initWithCallback(function timerCallback() {
+        shell.bufferedSysMsgs.forEach(function sendSysMsg(msg) {
+          shell.sendSystemMessage(msg);
+        });
+        shell.bufferedSysMsgs.length = 0;
+        shell.needBufferSysMsgs = false;
+        shell.timer = null;
+      }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
     }).bind(this), false);
   },
 
@@ -659,6 +703,15 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
 }, "geolocation-device-events", false);
 })();
 
+(function headphonesStatusTracker() {
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    shell.sendChromeEvent({
+      type: 'headphones-status',
+      state: aData
+    });
+}, "headphones-status", false);
+})();
+
 (function recordingStatusTracker() {
   let gRecordingActiveCount = 0;
 
@@ -678,4 +731,13 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
       });
     }
 }, "recording-device-events", false);
+})();
+
+(function volumeStateTracker() {
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    shell.sendChromeEvent({
+      type: 'volume-state-changed',
+      active: (aData == 'Shared')
+    });
+}, 'volume-state-changed', false);
 })();

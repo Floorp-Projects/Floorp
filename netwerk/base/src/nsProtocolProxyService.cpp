@@ -51,7 +51,7 @@ static PRLogModuleInfo *sLog = PR_NewLogModule("proxy");
 
 // This structure is intended to be allocated on the stack
 struct nsProtocolInfo {
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     uint32_t flags;
     int32_t defaultPort;
 };
@@ -482,7 +482,7 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort)
         return true;
 
     int32_t port;
-    nsCAutoString host;
+    nsAutoCString host;
  
     nsresult rv = aURI->GetAsciiHost(host);
     if (NS_FAILED(rv) || host.IsEmpty())
@@ -686,7 +686,7 @@ nsProtocolProxyService::SecondsSinceSessionStart()
 void
 nsProtocolProxyService::EnableProxy(nsProxyInfo *pi)
 {
-    nsCAutoString key;
+    nsAutoCString key;
     GetProxyKey(pi, key);
     mFailedProxies.Remove(key);
 }
@@ -694,7 +694,7 @@ nsProtocolProxyService::EnableProxy(nsProxyInfo *pi)
 void
 nsProtocolProxyService::DisableProxy(nsProxyInfo *pi)
 {
-    nsCAutoString key;
+    nsAutoCString key;
     GetProxyKey(pi, key);
 
     uint32_t dsec = SecondsSinceSessionStart();
@@ -721,7 +721,7 @@ nsProtocolProxyService::DisableProxy(nsProxyInfo *pi)
 bool
 nsProtocolProxyService::IsProxyDisabled(nsProxyInfo *pi)
 {
-    nsCAutoString key;
+    nsAutoCString key;
     GetProxyKey(pi, key);
 
     uint32_t val;
@@ -1077,7 +1077,7 @@ nsProtocolProxyService::LoadHostFilters(const char *filters)
                           portLocation ? portLocation :
                           endhost;
 
-        nsCAutoString str(starthost, end - starthost);
+        nsAutoCString str(starthost, end - starthost);
 
         // If the current host filter is "<local>", then all local (i.e.
         // no dots in the hostname) hosts should bypass the proxy
@@ -1245,10 +1245,10 @@ nsProtocolProxyService::Resolve_Internal(nsIURI *uri,
         return NS_OK;  // Can't proxy this (filters may not override)
 
     if (mSystemProxySettings) {
-        nsCAutoString PACURI;
+        nsAutoCString PACURI;
         if (NS_FAILED(mSystemProxySettings->GetPACURI(PACURI)) ||
             PACURI.IsEmpty()) {
-            nsCAutoString proxy;
+            nsAutoCString proxy;
             nsresult rv = mSystemProxySettings->GetProxyForURI(uri, proxy);
             if (NS_SUCCEEDED(rv)) {
                 ProcessPACString(proxy, flags, result);

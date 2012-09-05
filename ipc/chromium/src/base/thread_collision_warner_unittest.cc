@@ -17,7 +17,7 @@ MSVC_PUSH_DISABLE_WARNING(4822)
 
 // Would cause a memory leak otherwise.
 #undef DFAKE_MUTEX
-#define DFAKE_MUTEX(obj) scoped_ptr<base::AsserterBase> obj
+#define DFAKE_MUTEX(obj) scoped_ptr<base::AsserterBase> obj;
 
 // In Release, we expect the AsserterBase::warn() to not happen.
 #define EXPECT_NDEBUG_FALSE_DEBUG_TRUE EXPECT_FALSE
@@ -140,7 +140,7 @@ TEST(ThreadCollisionTest, MTBookCriticalSectionTest) {
     }
 
    private:
-    DFAKE_MUTEX(push_pop_);
+    DFAKE_MUTEX(push_pop_)
 
     DISALLOW_COPY_AND_ASSIGN(NonThreadSafeQueue);
   };
@@ -198,7 +198,7 @@ TEST(ThreadCollisionTest, MTScopedBookCriticalSectionTest) {
     }
 
    private:
-    DFAKE_MUTEX(push_pop_);
+    DFAKE_MUTEX(push_pop_)
 
     DISALLOW_COPY_AND_ASSIGN(NonThreadSafeQueue);
   };
@@ -256,7 +256,7 @@ TEST(ThreadCollisionTest, MTSynchedScopedBookCriticalSectionTest) {
     }
 
    private:
-    DFAKE_MUTEX(push_pop_);
+    DFAKE_MUTEX(push_pop_)
 
     DISALLOW_COPY_AND_ASSIGN(NonThreadSafeQueue);
   };
@@ -330,7 +330,7 @@ TEST(ThreadCollisionTest, MTSynchedScopedRecursiveBookCriticalSectionTest) {
     }
 
    private:
-    DFAKE_MUTEX(push_pop_);
+    DFAKE_MUTEX(push_pop_)
 
     DISALLOW_COPY_AND_ASSIGN(NonThreadSafeQueue);
   };

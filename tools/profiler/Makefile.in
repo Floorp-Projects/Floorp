@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DEPTH       = @DEPTH@
-topsrcdir	  = @top_srcdir@
+topsrcdir   = @top_srcdir@
 srcdir      = @srcdir@
 VPATH       = $(srcdir)
 relativesrcdir = @relativesrcdir@
@@ -23,6 +23,7 @@ EXPORTS += \
   $(NULL)
 
 LOCAL_INCLUDES += \
+  -I$(topsrcdir)/mozglue/linker \
   -I$(topsrcdir)/ipc/chromium/src \
   $(NULL)
 
@@ -67,6 +68,10 @@ XPIDLSRCS = \
 EXTRA_JS_MODULES = \
   Profiler.jsm \
   $(NULL)
+
+ifdef MOZ_OLD_LINKER
+DEFINES += -DMOZ_OLD_LINKER
+endif
 
 ifneq (,$(filter Android Linux,$(OS_TARGET)))
 CPPSRCS += \

@@ -33,7 +33,7 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
     NS_ERROR("Could not get CharsetConverterManager service.");
     return false;
   }
-  nsCAutoString encoding;
+  nsAutoCString encoding;
   CopyUTF16toUTF8(*charset, encoding);
   encoding.Trim(" \t\r\n\f");
   if (encoding.LowerCaseEqualsLiteral("utf-16") ||
@@ -47,7 +47,7 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
     }
     return true;
   }
-  nsCAutoString preferred;
+  nsAutoCString preferred;
   res = nsCharsetAlias::GetPreferred(encoding, preferred);
   if (NS_FAILED(res)) {
     return false;

@@ -107,7 +107,7 @@ net_GetStdURLParser()
 nsresult
 net_GetURLSpecFromDir(nsIFile *aFile, nsACString &result)
 {
-    nsCAutoString escPath;
+    nsAutoCString escPath;
     nsresult rv = net_GetURLSpecFromActualFile(aFile, escPath);
     if (NS_FAILED(rv))
         return rv;
@@ -123,7 +123,7 @@ net_GetURLSpecFromDir(nsIFile *aFile, nsACString &result)
 nsresult
 net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 {
-    nsCAutoString escPath;
+    nsAutoCString escPath;
     nsresult rv = net_GetURLSpecFromActualFile(aFile, escPath);
     if (NS_FAILED(rv))
         return rv;
@@ -396,8 +396,8 @@ net_ResolveRelativePath(const nsACString &relativePath,
                         const nsACString &basePath,
                         nsACString &result)
 {
-    nsCAutoString name;
-    nsCAutoString path(basePath);
+    nsAutoCString name;
+    nsAutoCString path(basePath);
     bool needsDelim = false;
 
     if ( !path.IsEmpty() ) {
@@ -1016,7 +1016,7 @@ net_IsValidHostName(const nsCSubstring &host)
         return true;
 
     // Might be a valid IPv6 link-local address containing a percent sign
-    nsCAutoString strhost(host);
+    nsAutoCString strhost(host);
     PRNetAddr addr;
     return PR_StringToNetAddr(strhost.get(), &addr) == PR_SUCCESS;
 }

@@ -81,6 +81,14 @@ android::FramebufferNativeWindow*
 NativeWindow()
 {
     if (!gNativeWindow) {
+        // Some gralloc HALs need this in order to open the
+        // framebuffer device after we restart with the screen off.
+        //
+        // NB: this *must* run BEFORE allocating the
+        // FramebufferNativeWindow.  Do not separate these two C++
+        // statements.
+        hal::SetScreenEnabled(true);
+
         // We (apparently) don't have a way to tell if allocating the
         // fbs succeeded or failed.
         gNativeWindow = new android::FramebufferNativeWindow();
@@ -163,9 +171,6 @@ static void *frameBufferWatcher(void *) {
 nsWindow::nsWindow()
 {
     if (!sScreenInitialized) {
-        // workaround Bug 725143
-        hal::SetScreenEnabled(true);
-
         // Watching screen on/off state by using a pthread
         // which implicitly calls exit() when the main thread ends
         if (pthread_create(&sFramebufferWatchThread, NULL, frameBufferWatcher, NULL)) {

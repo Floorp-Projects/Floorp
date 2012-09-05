@@ -56,7 +56,7 @@ OS2Uni::GetUconvObject(int aCodePage, ConverterRequest aReq)
     if (aCodePage == gConverterInfo[i].mCodePage) {
       if (gConverterInfo[i].mEncoder == nullptr) {
         const char* convname;
-        nsCAutoString charset;
+        nsAutoCString charset;
         if (aCodePage == 0) {
           nsCOMPtr<nsIPlatformCharset>
                       plat(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));

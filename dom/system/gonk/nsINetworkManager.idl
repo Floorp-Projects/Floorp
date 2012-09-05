@@ -7,7 +7,7 @@
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
-[scriptable, uuid(463ed2f3-1739-41bc-a967-1e816764f915)]
+[scriptable, uuid(d70b9d95-87d5-4ce9-aff7-4323dac79b07)]
 interface nsINetworkInterface : nsISupports
 {
   const long NETWORK_STATE_UNKNOWN = -1;
@@ -27,6 +27,7 @@ interface nsINetworkInterface : nsISupports
   const long NETWORK_TYPE_WIFI        = 0;
   const long NETWORK_TYPE_MOBILE      = 1;
   const long NETWORK_TYPE_MOBILE_MMS  = 2;
+  const long NETWORK_TYPE_MOBILE_SUPL = 3;
 
   /**
    * Network type. One of the NETWORK_TYPE_* constants.

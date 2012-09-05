@@ -214,7 +214,7 @@ MediaEngineWebRTCAudioSource::Process(const int channel,
   AudioSegment segment;
   segment.Init(CHANNELS);
   segment.AppendFrames(
-    buffer.forget(), length, 0, length, nsAudioStream::FORMAT_S16_LE
+    buffer.forget(), length, 0, length, nsAudioStream::FORMAT_S16
   );
   mSource->AppendToTrack(mTrackID, &segment);
 

@@ -128,7 +128,7 @@ nsStrictTransportSecurityService::GetPrincipalForURI(nsIURI* aURI,
 
   // We have to normalize the scheme of the URIs we're using, so just use https.
   // HSTS information is shared across all ports for a given host.
-  nsCAutoString host;
+  nsAutoCString host;
   rv = GetHost(aURI, host);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIURI> uri;
@@ -174,7 +174,7 @@ nsStrictTransportSecurityService::SetStsState(nsIURI* aSourceURI,
                        expiretime);
     NS_ENSURE_SUCCESS(rv, rv);
   } else { // !includeSubdomains
-    nsCAutoString hostname;
+    nsAutoCString hostname;
     rv = GetHost(aSourceURI, hostname);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -192,7 +192,7 @@ nsStrictTransportSecurityService::RemoveStsState(nsIURI* aURI)
   // manager is used and it's not threadsafe.
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
 
-  nsCAutoString hostname;
+  nsAutoCString hostname;
   nsresult rv = GetHost(aURI, hostname);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -367,7 +367,7 @@ nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, bool* aResult)
   // set default in case if we can't find any STS information
   *aResult = false;
 
-  nsCAutoString host;
+  nsAutoCString host;
   nsresult rv = GetHost(aURI, host);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -579,7 +579,7 @@ nsStrictTransportSecurityService::AddPermission(nsIURI     *aURI,
                                         aExpireType, aExpireTime);
     }
 
-    nsCAutoString host;
+    nsAutoCString host;
     nsresult rv = GetHost(aURI, host);
     NS_ENSURE_SUCCESS(rv, rv);
     STSLOG(("AddPermission for entry for %s", host.get()));

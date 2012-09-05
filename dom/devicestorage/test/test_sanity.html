@@ -38,8 +38,14 @@ ok(throws, "getDeviceStorage takes one arg");
 storage = navigator.getDeviceStorage("kilimanjaro");
 ok(!storage, "kilimanjaro - Should not have this type of storage");
 
-storage = navigator.getDeviceStorage("testing");
-ok(storage, "testing - Should have getDeviceStorage");
+storage = navigator.getDeviceStorage("pictures");
+ok(storage, "pictures - Should have getDeviceStorage");
+
+storage = navigator.getDeviceStorage("music");
+ok(storage, "music - Should have getDeviceStorage");
+
+storage = navigator.getDeviceStorage("videos");
+ok(storage, "videos - Should have getDeviceStorage");
 
 var cursor = storage.enumerate();
 ok(cursor, "Should have a non-null cursor");

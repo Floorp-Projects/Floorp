@@ -1,0 +1,54 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(393f54dc-13c1-44e5-ad36-ab410dc3334b)]
+interface nsIDOMPaymentProductPrice : nsISupports
+{
+  // A product might have a different price depending on the country. Even if
+  // the currency is the same.
+  readonly attribute DOMString country;
+
+  // Each price has a currency associated.
+  readonly attribute DOMString currency;
+
+  // Total amount of the product being sold.
+  readonly attribute double amount;
+};
+
+[scriptable, uuid(95b89ed3-074d-4c31-a26d-5f0abed420a2)]
+interface nsIDOMPaymentRequestInfo : nsISupports
+{
+  // Base64 encoded and digitally signed payment request.
+  readonly attribute DOMString jwt;
+
+  // JWT type that identifies the payment provider owner of the payment request
+  // format.
+  readonly attribute DOMString type;
+
+  // Payment provider name.
+  readonly attribute DOMString providerName;
+};
+
+[scriptable, uuid(7a9f78a6-84c6-4f8a-bb3e-3d9ae34727db)]
+interface nsIDOMPaymentRequestPaymentInfo : nsIDOMPaymentRequestInfo
+{
+  // Name of the product being sold.
+  readonly attribute DOMString productName;
+
+  // Human readable description about the product being sold.
+  readonly attribute DOMString productDescription;
+
+  // Could be a single nsIDOMPaymentProductPrice or an array of them.
+  readonly attribute jsval productPrice;
+};
+
+[scriptable, uuid(9759800a-7766-48c3-a6a6-efbe6ab54054)]
+interface nsIDOMPaymentRequestRefundInfo : nsIDOMPaymentRequestInfo
+{
+  // If the requests is a refund request, it must contain a refund reason.
+  readonly attribute DOMString reason;
+};
+

@@ -123,7 +123,7 @@ private:
 
   nsresult ReadHeader();
   nsresult SanityCheck(nsIFile* aStoreFile);
-  nsresult CalculateChecksum(nsCAutoString& aChecksum, bool aChecksumPresent);
+  nsresult CalculateChecksum(nsAutoCString& aChecksum, bool aChecksumPresent);
   nsresult CheckChecksum(nsIFile* aStoreFile);
   void UpdateHeader();
 

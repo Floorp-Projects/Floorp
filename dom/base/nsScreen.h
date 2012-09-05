@@ -58,8 +58,6 @@ private:
   virtual ~nsScreen();
 
   nsRefPtr<FullScreenEventListener> mEventListener;
-
-  NS_DECL_EVENT_HANDLER(mozorientationchange)
 };
 
 #endif /* nsScreen_h___ */

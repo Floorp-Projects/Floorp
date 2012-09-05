@@ -10,6 +10,7 @@
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h"
 #include "nsIDateTimeFormat.h"
+#include "nsHTMLCanvasElement.h"
 
 //-----------------------------------------------
 // This class maintains all the data that 
@@ -76,7 +77,9 @@ public:
                         nsIPrintSettings* aPrintSettings,
                         PRUnichar*        aDocTitle,
                         PRUnichar*        aDocURL);
+  NS_IMETHOD PrePrintNextPage(nsITimerCallback* aCallback, bool* aDone);
   NS_IMETHOD PrintNextPage();
+  NS_IMETHOD ResetPrintCanvasList();
   NS_IMETHOD GetCurrentPageNum(int32_t* aPageNum);
   NS_IMETHOD GetNumPages(int32_t* aNumPages);
   NS_IMETHOD IsDoingPrintRange(bool* aDoing);
@@ -93,7 +96,11 @@ public:
    * @see nsGkAtoms::sequenceFrame
    */
   virtual nsIAtom* GetType() const;
-  
+
+  virtual void InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aX, nscoord aY,
+                                  nsIFrame* aForChild,
+                                  PRUint32 aFlags);
 #ifdef DEBUG
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
 #endif
@@ -118,6 +125,8 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nscoord aWidth, nscoord aHeight);
 
+  void         DetermineWhetherToPrintPage();
+
   nsMargin mMargin;
 
   // I18N date formatter service which we'll want to cache locally.
@@ -134,6 +143,7 @@ protected:
   int32_t      mFromPageNum;
   int32_t      mToPageNum;
   nsTArray<int32_t> mPageRanges;
+  nsTArray<nsRefPtr<nsHTMLCanvasElement> > mCurrentCanvasList;
 
   // Selection Printing Info
   nscoord      mSelectionHeight;
@@ -144,6 +154,10 @@ protected:
   bool mDoingPageRange;
 
   bool mIsPrintingSelection;
+
+  bool mCalledBeginPage;
+
+  bool mCurrentCanvasListSetup;
 };
 
 #endif /* nsSimplePageSequence_h___ */

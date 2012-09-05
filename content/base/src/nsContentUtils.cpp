@@ -119,6 +119,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMHTMLInputElement.h"
 #include "nsParserConstants.h"
 #include "nsIWebNavigation.h"
+#include "nsILoadContext.h"
 #include "nsTextFragment.h"
 #include "mozilla/Selection.h"
 
@@ -134,6 +135,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 
 #include "mozAutoDocUpdate.h"
 #include "imgICache.h"
+#include "imgLoader.h"
 #include "xpcprivate.h" // nsXPConnect
 #include "nsScriptSecurityManager.h"
 #include "nsIChannelPolicy.h"
@@ -187,7 +189,9 @@ nsIIOService *nsContentUtils::sIOService;
 nsIXTFService *nsContentUtils::sXTFService = nullptr;
 #endif
 imgILoader *nsContentUtils::sImgLoader;
+imgILoader *nsContentUtils::sPrivateImgLoader;
 imgICache *nsContentUtils::sImgCache;
+imgICache *nsContentUtils::sPrivateImgCache;
 nsIConsoleService *nsContentUtils::sConsoleService;
 nsDataHashtable<nsISupportsHashKey, EventNameMapping>* nsContentUtils::sAtomEventTable = nullptr;
 nsDataHashtable<nsStringHashKey, EventNameMapping>* nsContentUtils::sStringEventTable = nullptr;
@@ -508,15 +512,17 @@ nsContentUtils::InitImgLoader()
   sImgLoaderInitialized = true;
 
   // Ignore failure and just don't load images
-  nsresult rv = CallGetService("@mozilla.org/image/loader;1", &sImgLoader);
-  if (NS_FAILED(rv)) {
-    // no image loading for us.  Oh, well.
-    sImgLoader = nullptr;
-    sImgCache = nullptr;
-  } else {
-    if (NS_FAILED(CallGetService("@mozilla.org/image/cache;1", &sImgCache )))
-      sImgCache = nullptr;
-  }
+  nsresult rv = CallCreateInstance("@mozilla.org/image/loader;1", &sImgLoader);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Creation should have succeeded");
+  rv = CallCreateInstance("@mozilla.org/image/loader;1", &sPrivateImgLoader);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Creation should have succeeded");
+
+  rv = CallQueryInterface(sImgLoader, &sImgCache);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "imgICache and imgILoader should be paired");
+  rv = CallQueryInterface(sPrivateImgLoader, &sPrivateImgCache);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "imgICache and imgILoader should be paired");
+
+  sPrivateImgCache->RespectPrivacyNotifications();
 }
 
 bool
@@ -650,40 +656,6 @@ nsContentUtils::IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput)
   }
 
   return autocomplete.EqualsLiteral("on");
-}
-
-bool
-nsContentUtils::URIIsChromeOrInPref(nsIURI *aURI, const char *aPref)
-{
-  if (!aURI) {
-    return false;
-  }
-
-  nsCAutoString scheme;
-  aURI->GetScheme(scheme);
-  if (scheme.EqualsLiteral("chrome")) {
-    return true;
-  }
-
-  nsCAutoString prePathUTF8;
-  aURI->GetPrePath(prePathUTF8);
-  NS_ConvertUTF8toUTF16 prePath(prePathUTF8);
-
-  const nsAdoptingString& whitelist = Preferences::GetString(aPref);
-
-  // This tokenizer also strips off whitespace around tokens, as desired.
-  nsCharSeparatedTokenizer tokenizer(whitelist, ',',
-    nsCharSeparatedTokenizerTemplate<>::SEPARATOR_OPTIONAL);
-
-  while (tokenizer.hasMoreTokens()) {
-    const nsSubstring& whitelistItem = tokenizer.nextToken();
-
-    if (whitelistItem.Equals(prePath, nsCaseInsensitiveStringComparator())) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 #define SKIP_WHITESPACE(iter, end_iter, end_res)                 \
@@ -1493,7 +1465,9 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sXTFService);
 #endif
   NS_IF_RELEASE(sImgLoader);
+  NS_IF_RELEASE(sPrivateImgLoader);
   NS_IF_RELEASE(sImgCache);
+  NS_IF_RELEASE(sPrivateImgCache);
 #ifdef IBMBIDI
   NS_IF_RELEASE(sBidiKeyboard);
 #endif
@@ -2692,19 +2666,60 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
   return NS_FAILED(rv) ? false : NS_CP_ACCEPTED(decision);
 }
 
+imgILoader*
+nsContentUtils::GetImgLoaderForDocument(nsIDocument* aDoc)
+{
+  if (!sImgLoaderInitialized)
+    InitImgLoader();
+  if (!aDoc)
+    return sImgLoader;
+  bool isPrivate = false;
+  nsCOMPtr<nsILoadGroup> loadGroup = aDoc->GetDocumentLoadGroup();
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  if (loadGroup) {
+    loadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    if (callbacks) {
+      nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
+      isPrivate = loadContext && loadContext->UsePrivateBrowsing();
+    }
+  } else {
+    nsCOMPtr<nsIChannel> channel = aDoc->GetChannel();
+    if (channel) {
+      nsCOMPtr<nsILoadContext> context;
+      NS_QueryNotificationCallbacks(channel, context);
+      isPrivate = context && context->UsePrivateBrowsing();
+    }
+  }
+  return isPrivate ? sPrivateImgLoader : sImgLoader;
+}
+
+// static
+imgILoader*
+nsContentUtils::GetImgLoaderForChannel(nsIChannel* aChannel)
+{
+  if (!sImgLoaderInitialized)
+    InitImgLoader();
+  if (!aChannel)
+    return sImgLoader;
+  nsCOMPtr<nsILoadContext> context;
+  NS_QueryNotificationCallbacks(aChannel, context);
+  return context && context->UsePrivateBrowsing() ? sPrivateImgLoader : sImgLoader;
+}
+
 // static
 bool
-nsContentUtils::IsImageInCache(nsIURI* aURI)
+nsContentUtils::IsImageInCache(nsIURI* aURI, nsIDocument* aDocument)
 {
     if (!sImgLoaderInitialized)
         InitImgLoader();
 
-    if (!sImgCache) return false;
+    imgILoader* loader = GetImgLoaderForDocument(aDocument);
+    nsCOMPtr<imgICache> cache = do_QueryInterface(loader);
 
     // If something unexpected happened we return false, otherwise if props
     // is set, the image is cached and we return true
     nsCOMPtr<nsIProperties> props;
-    nsresult rv = sImgCache->FindEntryProperties(aURI, getter_AddRefs(props));
+    nsresult rv = cache->FindEntryProperties(aURI, getter_AddRefs(props));
     return (NS_SUCCEEDED(rv) && props);
 }
 
@@ -2720,7 +2735,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
   NS_PRECONDITION(aLoadingPrincipal, "Must have a principal");
   NS_PRECONDITION(aRequest, "Null out param");
 
-  imgILoader* imgLoader = GetImgLoader();
+  imgILoader* imgLoader = GetImgLoaderForDocument(aLoadingDocument);
   if (!imgLoader) {
     // nothing we can do here
     return NS_OK;
@@ -3221,7 +3236,7 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   if (!aLineNumber) {
     JSContext *cx = nullptr;
     sThreadJSContextStack->Peek(&cx);
@@ -3310,7 +3325,7 @@ nsContentUtils::GetWrapperSafeScriptFilename(nsIDocument *aDocument,
       // followed by the string " -> " to the URI of the script we're
       // loading here so that script in that URI gets the same wrapper
       // automation that the chrome document expects.
-      nsCAutoString spec;
+      nsAutoCString spec;
       docURI->GetSpec(spec);
       spec.AppendASCII(" -> ");
       spec.Append(aScriptURI);
@@ -3652,7 +3667,7 @@ nsContentUtils::GuessCharset(const char *aData, uint32_t aDataLen,
     const nsAdoptingCString& detectorName =
       Preferences::GetLocalizedCString("intl.charset.detector");
     if (!detectorName.IsEmpty()) {
-      nsCAutoString detectorContractID;
+      nsAutoCString detectorContractID;
       detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
       detectorContractID += detectorName;
       detector = do_CreateInstance(detectorContractID.get());
@@ -4688,7 +4703,7 @@ nsContentUtils::GetLinkLocation(Element* aElement, nsString& aLocationString)
 {
   nsCOMPtr<nsIURI> hrefURI = aElement->GetHrefURI();
   if (hrefURI) {
-    nsCAutoString specUTF8;
+    nsAutoCString specUTF8;
     nsresult rv = hrefURI->GetSpec(specUTF8);
     if (NS_SUCCEEDED(rv))
       CopyUTF8toUTF16(specUTF8, aLocationString);
@@ -5087,7 +5102,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   nsresult errorCode;
   float scaleMinFloat = minScaleStr.ToFloat(&errorCode);
 
-  if (errorCode) {
+  if (NS_FAILED(errorCode)) {
     scaleMinFloat = kViewportMinScale;
   }
 
@@ -5102,7 +5117,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   nsresult scaleMaxErrorCode;
   float scaleMaxFloat = maxScaleStr.ToFloat(&scaleMaxErrorCode);
 
-  if (scaleMaxErrorCode) {
+  if (NS_FAILED(scaleMaxErrorCode)) {
     scaleMaxFloat = kViewportMaxScale;
   }
 
@@ -5161,7 +5176,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
   screen->GetRect(&screenLeft, &screenTop, &screenWidth, &screenHeight);
 
   uint32_t width = widthStr.ToInteger(&errorCode);
-  if (errorCode) {
+  if (NS_FAILED(errorCode)) {
     if (autoSize) {
       width = screenWidth;
     } else {
@@ -5180,7 +5195,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
 
   uint32_t height = heightStr.ToInteger(&errorCode);
 
-  if (errorCode) {
+  if (NS_FAILED(errorCode)) {
     height = width * ((float)screenHeight / screenWidth);
   }
 
@@ -5195,10 +5210,10 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
 
   // We need to perform a conversion, but only if the initial or maximum
   // scale were set explicitly by the user.
-  if (!scaleStr.IsEmpty() && !scaleErrorCode) {
+  if (!scaleStr.IsEmpty() && NS_SUCCEEDED(scaleErrorCode)) {
     width = NS_MAX(width, (uint32_t)(screenWidth / scaleFloat));
     height = NS_MAX(height, (uint32_t)(screenHeight / scaleFloat));
-  } else if (!maxScaleStr.IsEmpty() && !scaleMaxErrorCode) {
+  } else if (!maxScaleStr.IsEmpty() && NS_SUCCEEDED(scaleMaxErrorCode)) {
     width = NS_MAX(width, (uint32_t)(screenWidth / scaleMaxFloat));
     height = NS_MAX(height, (uint32_t)(screenHeight / scaleMaxFloat));
   }
@@ -5479,7 +5494,7 @@ nsContentUtils::SplitURIAtHash(nsIURI *aURI,
 
   NS_ENSURE_ARG_POINTER(aURI);
 
-  nsCAutoString spec;
+  nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -6909,80 +6924,6 @@ nsContentUtils::JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
     }
     aRetVal.AppendObject(a);
   }
-  return NS_OK;
-}
-
-// static
-nsresult
-nsContentUtils::IsOnPrefWhitelist(nsPIDOMWindow* aWindow,
-                                  const char* aPrefURL, bool* aAllowed)
-{
-  // Make sure we're dealing with an inner window.
-  nsPIDOMWindow* innerWindow = aWindow->IsInnerWindow() ?
-    aWindow :
-    aWindow->GetCurrentInnerWindow();
-  NS_ENSURE_TRUE(innerWindow, NS_ERROR_FAILURE);
-
-  // Make sure we're being called from a window that we have permission to
-  // access.
-  if (!nsContentUtils::CanCallerAccess(innerWindow)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  // Need the document in order to make security decisions.
-  nsCOMPtr<nsIDocument> document =
-    do_QueryInterface(innerWindow->GetExtantDocument());
-  NS_ENSURE_TRUE(document, NS_NOINTERFACE);
-
-  // Do security checks. We assume that chrome is always allowed.
-  if (nsContentUtils::IsSystemPrincipal(document->NodePrincipal())) {
-    *aAllowed = true;
-    return NS_OK;    
-  }
-
-  // We also allow a comma seperated list of pages specified by
-  // preferences.  
-  nsCOMPtr<nsIURI> originalURI;
-  nsresult rv =
-    document->NodePrincipal()->GetURI(getter_AddRefs(originalURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> documentURI;
-  rv = originalURI->Clone(getter_AddRefs(documentURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Strip the query string (if there is one) before comparing.
-  nsCOMPtr<nsIURL> documentURL = do_QueryInterface(documentURI);
-  if (documentURL) {
-    rv = documentURL->SetQuery(EmptyCString());
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  bool allowed = false;
-
-  // The pref may not exist but in that case we deny access just as we do if
-  // the url doesn't match.
-  nsCString whitelist;
-  if (NS_SUCCEEDED(Preferences::GetCString(aPrefURL,
-                                           &whitelist))) {
-    nsCOMPtr<nsIIOService> ios = do_GetIOService();
-    NS_ENSURE_TRUE(ios, NS_ERROR_FAILURE);
-
-    nsCCharSeparatedTokenizer tokenizer(whitelist, ',');
-    while (tokenizer.hasMoreTokens()) {
-      nsCOMPtr<nsIURI> uri;
-      if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), tokenizer.nextToken(),
-                                 nullptr, nullptr, ios))) {
-        rv = documentURI->EqualsExceptRef(uri, &allowed);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (allowed) {
-          break;
-        }
-      }
-    }
-  }
-  *aAllowed = allowed;
   return NS_OK;
 }
 

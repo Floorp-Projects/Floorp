@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPaymentFlowInfo;
+
+[scriptable, function, uuid(ca475754-6852-49a2-97e8-8a94cc7a453f)]
+interface nsIPaymentUIGlueCallback : nsISupports
+{
+    void onresult(in DOMString result);
+};
+
+[scriptable, uuid(c3ff92b3-f24f-4f93-afda-e92a112a80f8)]
+interface nsIPaymentUIGlue : nsISupports
+{
+    // The 'paymentRequestsInfo' contains the payment request information
+    // for each JWT provided via navigator.mozPay call.    
+    void confirmPaymentRequest(in jsval paymentRequestsInfo,
+                               in nsIPaymentUIGlueCallback successCb,
+                               in nsIPaymentUIGlueCallback errorCb);
+
+    void showPaymentFlow(in nsIPaymentFlowInfo paymentFlowInfo,
+                         in nsIPaymentUIGlueCallback errorCb);
+};

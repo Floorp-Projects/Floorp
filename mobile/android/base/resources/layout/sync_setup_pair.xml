@@ -3,39 +3,34 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  style="@style/SyncLayout" >
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncContainer" >
+
   <TextView
     style="@style/SyncTop"
-    android:id="@+id/pair_top"
     android:text="@string/sync_title_pair" />
 
   <ScrollView
-    style="@style/SyncLayout"
-    android:layout_below="@id/pair_top"
-    android:layout_above="@+id/pair_bottom" >
+    style="@style/SyncMiddle" >
 
     <LinearLayout
       style="@style/SyncLayout.Vertical"
-      android:gravity="center"
-      android:padding="10dp" >
-
+      android:gravity="center" >
       <TextView
         android:id="@+id/setup_subtitle"
         style="@style/SyncTextItem"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="10dp"
         android:text="@string/sync_subtitle_pair" />
 
       <TextView
         style="@style/SyncLinkItem"
-        android:layout_marginBottom="10dp"
+        android:paddingBottom="@dimen/SyncSpace"
         android:onClick="showClickHandler"
         android:text="@string/sync_link_show" />
 
       <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/SyncSpace"
         android:gravity="center"
         android:orientation="vertical" >
 
@@ -56,20 +51,20 @@
         android:id="@+id/pair_error"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/SyncSpace"
         android:gravity="center"
         android:orientation="horizontal"
         android:visibility="invisible" >
 
         <TextView
           style="@style/SyncTextError"
-          android:layout_margin="10dp"
           android:text="@string/sync_pair_tryagain"
           android:textSize="10dp" />
       </LinearLayout>
     </LinearLayout>
   </ScrollView>
+
   <LinearLayout
-    android:id="@id/pair_bottom"
     style="@style/SyncBottom"
     android:orientation="horizontal" >
 
@@ -86,4 +81,4 @@
       android:enabled="false"
       android:text="@string/sync_button_connect" />
   </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

@@ -493,7 +493,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
                                   windowIsModalContentDialog = false;
   uint32_t                        chromeFlags;
   nsAutoString                    name;             // string version of aName
-  nsCAutoString                   features;         // string version of aFeatures
+  nsAutoCString                   features;         // string version of aFeatures
   nsCOMPtr<nsIURI>                uriToLoad;        // from aUrl, if any
   nsCOMPtr<nsIDocShellTreeOwner>  parentTreeOwner;  // from the parent window, if any
   nsCOMPtr<nsIDocShellTreeItem>   newDocShellItem;  // from the new window
@@ -832,7 +832,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
         nsCOMPtr<nsIMarkupDocumentViewer> parentMuCV =
           do_QueryInterface(parentCV);
         if (parentMuCV) {
-          nsCAutoString charset;
+          nsAutoCString charset;
           nsresult res = parentMuCV->GetDefaultCharacterSet(charset);
           if (NS_SUCCEEDED(res)) {
             newMuCV->SetDefaultCharacterSet(charset);
@@ -1470,12 +1470,14 @@ uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
 
   nsCOMPtr<nsIScriptSecurityManager>
     securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-  NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
 
   bool isChrome = false;
-  nsresult rv = securityManager->SubjectPrincipalIsSystem(&isChrome);
-  if (NS_FAILED(rv)) {
-    isChrome = false;
+  nsresult rv;
+  if (securityManager) {
+    rv = securityManager->SubjectPrincipalIsSystem(&isChrome);
+    if (NS_FAILED(rv)) {
+      isChrome = false;
+    }
   }
 
   nsCOMPtr<nsIPrefBranch> prefBranch;
@@ -1578,11 +1580,13 @@ uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
    */
 
   // Check security state for use in determing window dimensions
-  bool enabled;
-  nsresult res =
-    securityManager->IsCapabilityEnabled("UniversalXPConnect", &enabled);
+  bool enabled = false;
+  if (securityManager) {
+    rv = securityManager->IsCapabilityEnabled("UniversalXPConnect",
+                                              &enabled);
+  }
 
-  if (NS_FAILED(res) || !enabled || (isChrome && !aHasChromeParent)) {
+  if (NS_FAILED(rv) || !enabled || (isChrome && !aHasChromeParent)) {
     // If priv check fails (or if we're called from chrome, but the
     // parent is not a chrome window), set all elements to minimum
     // reqs., else leave them alone.
@@ -1631,7 +1635,7 @@ nsWindowWatcher::WinHasOption(const char *aOptions, const char *aName,
   int32_t found = 0;
 
 #ifdef DEBUG
-    nsCAutoString options(aOptions);
+    nsAutoCString options(aOptions);
     NS_ASSERTION(options.FindCharInSet(" \n\r\t") == kNotFound, 
                   "There should be no whitespace in this string!");
 #endif

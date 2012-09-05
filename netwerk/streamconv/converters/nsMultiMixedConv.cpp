@@ -647,7 +647,7 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     // we're assuming the content-type is available at this stage
     NS_ASSERTION(mToken.IsEmpty(), "a second on start???");
     const char *bndry = nullptr;
-    nsCAutoString delimiter;
+    nsAutoCString delimiter;
     nsresult rv = NS_OK;
     mContext = ctxt;
 
@@ -679,7 +679,7 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     char *attrib = (char *) strchr(bndry, ';');
     if (attrib) *attrib = '\0';
 
-    nsCAutoString boundaryString(bndry);
+    nsAutoCString boundaryString(bndry);
     if (attrib) *attrib = ';';
 
     boundaryString.Trim(" \"");
@@ -942,11 +942,11 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
         char *colon = (char *) strchr(cursor, ':');
         if (colon) {
             *colon = '\0';
-            nsCAutoString headerStr(cursor);
+            nsAutoCString headerStr(cursor);
             headerStr.CompressWhitespace();
             *colon = ':';
 
-            nsCAutoString headerVal(colon + 1);
+            nsAutoCString headerVal(colon + 1);
             headerVal.CompressWhitespace();
 
             // examine header

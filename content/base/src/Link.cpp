@@ -286,7 +286,7 @@ Link::GetProtocol(nsAString &_protocol)
     _protocol.AssignLiteral("http");
   }
   else {
-    nsCAutoString scheme;
+    nsAutoCString scheme;
     (void)uri->GetScheme(scheme);
     CopyASCIItoUTF16(scheme, _protocol);
   }
@@ -305,7 +305,7 @@ Link::GetHost(nsAString &_host)
     return NS_OK;
   }
 
-  nsCAutoString hostport;
+  nsAutoCString hostport;
   nsresult rv = uri->GetHostPort(hostport);
   if (NS_SUCCEEDED(rv)) {
     CopyUTF8toUTF16(hostport, _host);
@@ -324,7 +324,7 @@ Link::GetHostname(nsAString &_hostname)
     return NS_OK;
   }
 
-  nsCAutoString host;
+  nsAutoCString host;
   nsresult rv = uri->GetHost(host);
   // Note that failure to get the host from the URI is not necessarily a bad
   // thing.  Some URIs do not have a host.
@@ -347,7 +347,7 @@ Link::GetPathname(nsAString &_pathname)
     return NS_OK;
   }
 
-  nsCAutoString file;
+  nsAutoCString file;
   nsresult rv = url->GetFilePath(file);
   NS_ENSURE_SUCCESS(rv, rv);
   CopyUTF8toUTF16(file, _pathname);
@@ -367,7 +367,7 @@ Link::GetSearch(nsAString &_search)
     return NS_OK;
   }
 
-  nsCAutoString search;
+  nsAutoCString search;
   nsresult rv = url->GetQuery(search);
   if (NS_SUCCEEDED(rv) && !search.IsEmpty()) {
     CopyUTF8toUTF16(NS_LITERAL_CSTRING("?") + search, _search);
@@ -410,7 +410,7 @@ Link::GetHash(nsAString &_hash)
     return NS_OK;
   }
 
-  nsCAutoString ref;
+  nsAutoCString ref;
   nsresult rv = uri->GetRef(ref);
   if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
     NS_UnescapeURL(ref); // XXX may result in random non-ASCII bytes!
@@ -492,7 +492,7 @@ Link::SetHrefAttribute(nsIURI *aURI)
 {
   NS_ASSERTION(aURI, "Null URI is illegal!");
 
-  nsCAutoString href;
+  nsAutoCString href;
   (void)aURI->GetSpec(href);
   (void)mElement->SetAttr(kNameSpaceID_None, nsGkAtoms::href,
                           NS_ConvertUTF8toUTF16(href), true);

@@ -53,9 +53,6 @@ public:
 
   HTMLAreaAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessNode
-  virtual bool IsPrimaryForNode() const;
-
   // Accessible
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);

@@ -70,7 +70,7 @@ function testSteps()
   is(event.target.result, "foopy", "Got correct result");
 
   let request = objectStore.add("foopy", 5);
-  request.onerror = new ExpectError("ConstraintError", true);
+  request.addEventListener("error", new ExpectError("ConstraintError", true));
   request.onsuccess = unexpectedSuccessHandler;
 
   trans.oncomplete = grabEventAndContinueHandler;

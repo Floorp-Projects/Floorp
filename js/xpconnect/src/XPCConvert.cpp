@@ -1110,7 +1110,7 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
     const char * msg = message;
     char* sz = nullptr;
     nsXPIDLString xmsg;
-    nsCAutoString sxmsg;
+    nsAutoCString sxmsg;
 
     nsCOMPtr<nsIScriptError> errorObject = do_QueryInterface(data);
     if (errorObject) {
@@ -1362,7 +1362,7 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
     }
 
     if (data) {
-        nsCAutoString formattedMsg;
+        nsAutoCString formattedMsg;
         data->ToString(formattedMsg);
 
         rv = ConstructException(NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS,

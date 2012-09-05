@@ -23,6 +23,11 @@ CSRCS           = \
 endif
 
 ifeq ($(OS_TARGET),Android)
+ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
+CSRCS         = \
+              cubeb_opensl.c \
+              $(NULL)
+endif
 # No Android implementation of libcubeb yet.
 else ifeq ($(OS_TARGET),Linux)
 CSRCS         = \

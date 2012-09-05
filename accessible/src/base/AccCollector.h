@@ -5,7 +5,7 @@
 #ifndef mozilla_a11y_AccCollector_h__
 #define mozilla_a11y_AccCollector_h__
 
-#include "AccFilters.h"
+#include "Filters.h"
 
 #include "nsTArray.h"
 

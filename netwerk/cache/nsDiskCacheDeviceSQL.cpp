@@ -191,7 +191,7 @@ nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, ns
   uint32_t valueLen;
   const char *clientID = values->AsSharedUTF8String(0, &valueLen);
   const char *key = values->AsSharedUTF8String(1, &valueLen);
-  nsCAutoString fullKey(clientID);
+  nsAutoCString fullKey(clientID);
   fullKey.AppendLiteral(":");
   fullKey.Append(key);
   int generation  = values->AsInt32(2);
@@ -224,7 +224,7 @@ nsOfflineCacheEvictionFunction::Apply()
 
   for (int32_t i = 0; i < mItems.Count(); i++) {
 #if defined(PR_LOGGING)
-    nsCAutoString path;
+    nsAutoCString path;
     mItems[i]->GetNativePath(path);
     LOG(("  removing %s\n", path.get()));
 #endif
@@ -293,7 +293,7 @@ nsOfflineCacheDeviceInfo::GetDescription(char **aDescription)
 NS_IMETHODIMP
 nsOfflineCacheDeviceInfo::GetUsageReport(char ** usageReport)
 {
-  nsCAutoString buffer;
+  nsAutoCString buffer;
   buffer.AssignLiteral("  <tr>\n"
                        "    <th>Cache Directory:</th>\n"
                        "    <td>");
@@ -374,7 +374,7 @@ nsOfflineCacheBinding::Create(nsIFile *cacheDir,
   if (!file)
     return nullptr;
 
-  nsCAutoString keyBuf;
+  nsAutoCString keyBuf;
   const char *cid, *key;
   if (!DecomposeCacheEntryKey(fullKey, &cid, &key, keyBuf))
     return nullptr;
@@ -900,7 +900,7 @@ nsresult
 nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
 {
   // Decompose the key into "ClientID" and "Key"
-  nsCAutoString keyBuf;
+  nsAutoCString keyBuf;
   const char *cid, *key;
 
   if (!DecomposeCacheEntryKey(entry->Key(), &cid, &key, keyBuf))
@@ -968,7 +968,7 @@ nsresult
 nsOfflineCacheDevice::UpdateEntrySize(nsCacheEntry *entry, uint32_t newSize)
 {
   // Decompose the key into "ClientID" and "Key"
-  nsCAutoString keyBuf;
+  nsAutoCString keyBuf;
   const char *cid, *key;
   if (!DecomposeCacheEntryKey(entry->Key(), &cid, &key, keyBuf))
     return NS_ERROR_UNEXPECTED;
@@ -1005,7 +1005,7 @@ nsOfflineCacheDevice::DeleteEntry(nsCacheEntry *entry, bool deleteData)
   }
 
   // Decompose the key into "ClientID" and "Key"
-  nsCAutoString keyBuf;
+  nsAutoCString keyBuf;
   const char *cid, *key;
   if (!DecomposeCacheEntryKey(entry->Key(), &cid, &key, keyBuf))
     return NS_ERROR_UNEXPECTED;
@@ -1241,7 +1241,7 @@ nsOfflineCacheDevice::InitActiveCaches()
 
   while (hasRows)
   {
-    nsCAutoString group;
+    nsAutoCString group;
     statement->GetUTF8String(0, group);
     nsCString clientID;
     statement->GetUTF8String(1, clientID);
@@ -1370,7 +1370,7 @@ nsOfflineCacheDevice::FindEntry(nsCString *fullKey, bool *collision)
   // SELECT * FROM moz_cache WHERE key = ?
 
   // Decompose the key into "ClientID" and "Key"
-  nsCAutoString keyBuf;
+  nsAutoCString keyBuf;
   const char *cid, *key;
   if (!DecomposeCacheEntryKey(fullKey, &cid, &key, keyBuf))
     return nullptr;
@@ -1488,7 +1488,7 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
   // it from the table.  so, we should always have to insert at this point.
 
   // Decompose the key into "ClientID" and "Key"
-  nsCAutoString keyBuf;
+  nsAutoCString keyBuf;
   const char *cid, *key;
   if (!DecomposeCacheEntryKey(entry->Key(), &cid, &key, keyBuf))
     return NS_ERROR_UNEXPECTED;
@@ -2280,7 +2280,7 @@ bool
 nsOfflineCacheDevice::CanUseCache(nsIURI *keyURI, const nsCString &clientID)
 {
   if (mActiveCaches.Contains(clientID)) {
-    nsCAutoString groupID;
+    nsAutoCString groupID;
     nsresult rv = GetGroupForCache(clientID, groupID);
     NS_ENSURE_SUCCESS(rv, false);
 
@@ -2328,7 +2328,7 @@ nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!(itemType & nsIApplicationCache::ITEM_FOREIGN)) {
-      nsCAutoString clientID;
+      nsAutoCString clientID;
       rv = statement->GetUTF8String(0, clientID);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2360,7 +2360,7 @@ nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
 
     // Don't associate with a cache based solely on a whitelist entry
     if (!(itemType & nsIApplicationCacheNamespace::NAMESPACE_BYPASS)) {
-      nsCAutoString clientID;
+      nsAutoCString clientID;
       rv = nsstatement->GetUTF8String(0, clientID);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2384,7 +2384,7 @@ nsOfflineCacheDevice::CacheOpportunistically(nsIApplicationCache* cache,
 
   nsresult rv;
 
-  nsCAutoString clientID;
+  nsAutoCString clientID;
   rv = cache->GetClientID(clientID);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2502,7 +2502,7 @@ nsOfflineCacheDevice::AutoShutdown(nsIApplicationCache * aAppCache)
   nsRefPtr<nsCacheService> cacheService = nsCacheService::GlobalInstance();
   cacheService->RemoveCustomOfflineDevice(this);
 
-  nsCAutoString clientID;
+  nsAutoCString clientID;
   aAppCache->GetClientID(clientID);
   mCaches.Remove(clientID);
 

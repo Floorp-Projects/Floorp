@@ -528,7 +528,8 @@ CalibratedPerformanceCounter()
 double
 TimeDuration::ToSeconds() const
 {
-  return double(mValue) / (sFrequencyPerSec * 1000ULL);
+  // Converting before arithmetic avoids blocked store forward
+  return double(mValue) / (double(sFrequencyPerSec) * 1000.0);
 }
 
 double

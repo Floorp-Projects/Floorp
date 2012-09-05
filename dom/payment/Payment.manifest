@@ -1,0 +1,18 @@
+component {a920adc0-c36e-4fd0-8de0-aac1ac6ebbd0} Payment.js
+contract @mozilla.org/payment/content-helper;1 {a920adc0-c36e-4fd0-8de0-aac1ac6ebbd0}
+category JavaScript-navigator-property mozPay @mozilla.org/payment/content-helper;1
+
+component {b8bce4e7-fbf0-4719-a634-b1bf9018657c} PaymentFlowInfo.js
+contract @mozilla.org/payment/flow-info;1 {b8bce4e7-fbf0-4719-a634-b1bf9018657c}
+
+component {3d7dcabf-b77c-4bb3-b225-46011898ec32} PaymentRequestInfo.js
+contract @mozilla.org/payment/product-price;1 {3d7dcabf-b77c-4bb3-b225-46011898ec32}
+
+component {0a58c67d-f003-48da-81d1-bd8f605f4b1c} PaymentRequestInfo.js
+contract @mozilla.org/payment/request-info;1 {0a58c67d-f003-48da-81d1-bd8f605f4b1c}
+
+component {7f2e3274-3956-42e1-b7ce-59b8cd23d177} PaymentRequestInfo.js
+contract @mozilla.org/payment/request-payment-info;1 {7f2e3274-3956-42e1-b7ce-59b8cd23d177}
+
+component {e75566c6-dfb1-4f6b-b21d-078536c883b0} PaymentRequestInfo.js
+contract @mozilla.org/payment/request-refund-info;1 {e75566c6-dfb1-4f6b-b21d-078536c883b0}

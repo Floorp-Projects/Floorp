@@ -173,7 +173,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
           // gather information to log with violation report
           nsCOMPtr<nsIURI> uri;
           principal->GetURI(getter_AddRefs(uri));
-          nsCAutoString asciiSpec;
+          nsAutoCString asciiSpec;
           uri->GetAsciiSpec(asciiSpec);
 		  csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT,
 								   NS_ConvertUTF8toUTF16(asciiSpec),
@@ -222,7 +222,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     if (!scriptContext)
         return NS_ERROR_FAILURE;
 
-    nsCAutoString script(mScript);
+    nsAutoCString script(mScript);
     // Unescape the script
     NS_UnescapeURL(script);
 
@@ -1217,7 +1217,7 @@ nsJSProtocolHandler::NewURI(const nsACString &aSpec,
     if (!aCharset || !nsCRT::strcasecmp("UTF-8", aCharset))
       rv = url->SetSpec(aSpec);
     else {
-      nsCAutoString utf8Spec;
+      nsAutoCString utf8Spec;
       rv = EnsureUTF8Spec(PromiseFlatCString(aSpec), aCharset, utf8Spec);
       if (NS_SUCCEEDED(rv)) {
         if (utf8Spec.IsEmpty())

@@ -77,7 +77,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSScriptTimeoutHandler)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
   if (NS_UNLIKELY(cb.WantDebugInfo())) {
-    nsCAutoString name("nsJSScriptTimeoutHandler");
+    nsAutoCString name("nsJSScriptTimeoutHandler");
     if (tmp->mExpr) {
       name.AppendLiteral(" [");
       name.Append(tmp->mFileName);

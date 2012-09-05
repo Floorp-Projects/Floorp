@@ -7,12 +7,18 @@ from marionette_test import MarionetteTestCase
 
 class TestLog(MarionetteTestCase):
     def test_log_basic(self):
+        # clear any previous data
+        self.marionette.get_logs()
+
         self.marionette.log("I am info")
         self.assertTrue("I am info" in self.marionette.get_logs()[0])
         self.marionette.log("I AM ERROR", "ERROR")
         self.assertTrue("I AM ERROR" in self.marionette.get_logs()[0])
-    
+
     def test_that_we_can_clear_the_logs(self):
+        # clear any previous data
+        self.marionette.get_logs()
+
         self.marionette.log("I am info")
         self.assertTrue("I am info" in self.marionette.get_logs()[0])
         self.marionette.log("I AM ERROR", "ERROR")
@@ -22,6 +28,9 @@ class TestLog(MarionetteTestCase):
         self.assertEqual(0, len(self.marionette.get_logs()))
 
     def test_log_script(self):
+        # clear any previous data
+        self.marionette.get_logs()
+
         self.marionette.execute_script("log('some log');")
         self.assertTrue("some log" in self.marionette.get_logs()[0])
         self.marionette.execute_script("log('some error', 'ERROR');")

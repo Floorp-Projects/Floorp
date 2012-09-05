@@ -13,9 +13,9 @@ interface nsIDOMEventListener;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBOpenDBRequest
  * for more information.
  */
-[scriptable, builtinclass, uuid(91010fbe-1dfb-435d-852e-288d2804c0a7)]
+[scriptable, builtinclass, uuid(2d6c5ef4-b84a-45ae-9030-eb6cfc65bb26)]
 interface nsIIDBOpenDBRequest : nsISupports
 {
-  attribute nsIDOMEventListener onblocked;
-  attribute nsIDOMEventListener onupgradeneeded;
+  [implicit_jscontext] attribute jsval onblocked;
+  [implicit_jscontext] attribute jsval onupgradeneeded;
 };

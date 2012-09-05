@@ -48,8 +48,8 @@ void nsColorNames::AddRefTable(void)
     {
       // let's verify the table...
       for (uint32_t index = 0; index < eColorName_COUNT; ++index) {
-        nsCAutoString temp1(kColorNames[index]);
-        nsCAutoString temp2(kColorNames[index]);
+        nsAutoCString temp1(kColorNames[index]);
+        nsAutoCString temp2(kColorNames[index]);
         ToLowerCase(temp1);
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
       }
