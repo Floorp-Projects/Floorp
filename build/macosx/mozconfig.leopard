@@ -1,6 +1,6 @@
-. $topsrcdir/build/macosx/common
+. $topsrcdir/build/macosx/mozconfig.common
 
-# Mac builds don't nomally have to be handled as cross
+# Mac builds don't normally have to be handled as cross
 # compilation, but some of the libraries on the bots
 # (IDL for example) are built only for one arch.
 
