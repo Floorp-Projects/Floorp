@@ -1,4 +1,4 @@
-. $topsrcdir/build/macosx/common
+. $topsrcdir/build/macosx/mozconfig.common
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
