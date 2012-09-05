@@ -84,7 +84,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
   } else if (aData.mSurface) {
     mCanvasSurface = aData.mSurface;
     mNeedsYFlip = false;
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
     if (aData.mSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
         gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(aData.mSurface);
         mPixmap = xsurf->GetGLXPixmap();
@@ -180,7 +180,7 @@ CanvasLayerOGL::UpdateSurface()
     return;
   }
 
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
   if (mPixmap) {
     return;
   }
@@ -286,7 +286,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     program = mOGLManager->GetProgram(mLayerProgram, GetMaskLayer());
   }
 
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
   if (mPixmap && !mDelayedUpdates) {
     sGLXLibrary.BindTexImage(mPixmap);
   }
@@ -312,7 +312,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     mOGLManager->BindAndDrawQuadWithTextureRect(program, drawRect, drawRect.Size());
   }
 
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
   if (mPixmap && !mDelayedUpdates) {
     sGLXLibrary.ReleaseTexImage(mPixmap);
   }
