@@ -757,9 +757,8 @@ static uint16_t sFrameCount = 0;
 void
 FPSState::DrawFrameCounter(GLContext* context)
 {
-
-  // We intentionally overflow at 2^16.
-  uint16_t frameNumber = sFrameCount++;
+  SAMPLER_FRAME_NUMBER(sFrameCount);
+  uint16_t frameNumber = sFrameCount;
   for (size_t i = 0; i < 16; i++) {
     context->fScissor(3*i, 0, 3, 3);
 
@@ -772,6 +771,8 @@ FPSState::DrawFrameCounter(GLContext* context)
     }
     context->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
   }
+  // We intentionally overflow at 2^16.
+  sFrameCount++;
 }
 
 // |aTexCoordRect| is the rectangle from the texture that we want to
@@ -975,7 +976,7 @@ LayerManagerOGL::Render()
   if (mFPS) {
     mFPS->DrawFPS(TimeStamp::Now(), mGLContext, GetProgram(Copy2DProgramType));
   } else if (sFrameCounter) {
-    DrawFrameCounter(mGLContext);
+    FPSState::DrawFrameCounter(mGLContext);
   }
 
   if (mGLContext->IsDoubleBuffered()) {
