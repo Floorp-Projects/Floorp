@@ -109,13 +109,9 @@ interface nsIDOMTCPSocket : nsISupports
 
   /**
    * The readyState attribute indicates which state the socket is currently
-   * in. The state will be either CONNECTING, OPEN, CLOSING, or CLOSED.
+   * in. The state will be either "connecting", "open", "closing", or "closed".
    */
   readonly attribute DOMString readyState;
-  readonly attribute DOMString CONNECTING;
-  readonly attribute DOMString OPEN;
-  readonly attribute DOMString CLOSING;
-  readonly attribute DOMString CLOSED;
 
   /**
    * The binaryType attribute indicates which mode this socket uses for
