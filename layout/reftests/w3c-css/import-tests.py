@@ -8,6 +8,7 @@ from subprocess import Popen, PIPE
 import xml.dom.minidom
 import html5lib
 import shutil
+import sys
 
 # FIXME:
 #   * Import more tests rather than just the very limited set currently
@@ -33,7 +34,6 @@ gSubtrees = [
     #os.path.join("contributors", "opera", "submitted", "multicol")
 ]
 
-gLog = None
 gPrefixedProperties = [
     "column-count",
     "column-fill",
@@ -47,6 +47,8 @@ gPrefixedProperties = [
     "column-width"
 ]
 
+gLog = None
+gFailList = {}
 gDestPath = None
 gSrcPath = None
 support_dirs_mapped = set()
@@ -228,10 +230,20 @@ def setup_log():
     # information about where they came from.
     gLog = open(os.path.join(gDestPath, "import.log"), "w")
 
+def read_fail_list():
+    global gFailList
+    dirname = os.path.realpath(__file__).split(os.path.sep)
+    dirname = os.path.sep.join(dirname[:len(dirname)-1])
+    failListFile = open(os.path.join(dirname, "failures.list"), "r")
+    gFailList = [x for x in [x.lstrip().rstrip() for x in failListFile] if bool(x)
+                 and not x.startswith("#")]
+    failListFile.close()
+
 def main():
     global gDestPath, gLog, gTestfiles
     read_options()
     setup_paths()
+    read_fail_list()
     setup_log()
     write_log_header()
     remove_existing_dirs()
@@ -242,6 +254,8 @@ def main():
 
     listfile = open(os.path.join(gDestPath, "reftest.list"), "w")
     for test in tests:
+        if test[1] in gFailList:
+            test[0:] = ["fails"] + test
         listfile.write(" ".join(test) + "\n")
     listfile.close()
 
