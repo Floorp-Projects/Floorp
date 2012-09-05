@@ -1697,7 +1697,6 @@ static nsresult
 CreateNativeGlobalForInner(JSContext* aCx,
                            nsGlobalWindow* aNewInner,
                            nsIURI* aURI,
-                           bool aIsChrome,
                            nsIPrincipal* aPrincipal,
                            JSObject** aNativeGlobal,
                            nsIXPConnectJSObjectHolder** aHolder)
@@ -1711,18 +1710,10 @@ CreateNativeGlobalForInner(JSContext* aCx,
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
 
-  nsCOMPtr<nsIPrincipal> systemPrincipal;
-  if (aIsChrome) {
-    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-    ssm->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-    MOZ_ASSERT(systemPrincipal);
-  }
-
   nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
   nsresult rv = xpc->InitClassesWithNewWrappedGlobal(
     aCx, static_cast<nsIScriptGlobalObject*>(aNewInner),
-    aIsChrome ? systemPrincipal.get() : aPrincipal, 0,
-    getter_AddRefs(jsholder));
+    aPrincipal, 0, getter_AddRefs(jsholder));
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(jsholder);
@@ -1845,8 +1836,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   bool thisChrome = IsChromeWindow();
 
-  bool isChrome = false;
-
   nsCxPusher cxPusher;
   if (!cxPusher.Push(cx)) {
     return NS_ERROR_FAILURE;
@@ -1899,7 +1888,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       NS_ASSERTION(newInnerWindow, "Got a state without inner window");
     } else if (thisChrome) {
       newInnerWindow = new nsGlobalChromeWindow(this);
-      isChrome = true;
     } else if (mIsModalContentWindow) {
       newInnerWindow = new nsGlobalModalWindow(this);
     } else {
@@ -1924,7 +1912,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       // Every script context we are initialized with must create a
       // new global.
       rv = CreateNativeGlobalForInner(cx, newInnerWindow,
-                                      aDocument->GetDocumentURI(), isChrome,
+                                      aDocument->GetDocumentURI(),
                                       aDocument->NodePrincipal(),
                                       &newInnerWindow->mJSObject,
                                       getter_AddRefs(mInnerWindowHolder));
