@@ -90,20 +90,14 @@ class MacroAssemblerX86Shared : public Assembler
     void neg32(const Register &reg) {
         negl(reg);
     }
-    void cmp32(const Register &lhs, const Imm32 &rhs) {
-        cmpl(lhs, rhs);
+    void cmp32(const Register &src, const Imm32 &imm) {
+        cmpl(src, imm);
     }
     void test32(const Register &lhs, const Register &rhs) {
         testl(lhs, rhs);
     }
     void cmp32(Register a, Register b) {
         cmpl(a, b);
-    }
-    void cmp32(const Operand &lhs, const Imm32 &rhs) {
-        cmpl(lhs, rhs);
-    }
-    void cmp32(const Operand &lhs, const Register &rhs) {
-        cmpl(lhs, rhs);
     }
     void add32(Imm32 imm, Register dest) {
         addl(imm, dest);
