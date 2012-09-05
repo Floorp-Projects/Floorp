@@ -975,7 +975,7 @@ JSRuntime::~JSRuntime()
     FreeScriptFilenames(this);
 
 #ifdef JS_THREADSAFE
-    delete_(workerThreadState);
+    js_delete(workerThreadState);
     sourceCompressorThread.finish();
 #endif
 

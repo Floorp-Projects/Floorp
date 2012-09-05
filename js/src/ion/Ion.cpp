@@ -155,7 +155,7 @@ ion::FinishOffThreadBuilder(IonBuilder *builder)
         builder->recompileInfo.compilerOutput(types)->invalidate();
         builder->script->ion = NULL;
     }
-    Foreground::delete_(builder->temp().lifoAlloc());
+    js_delete(builder->temp().lifoAlloc());
 }
 
 static inline void
@@ -260,7 +260,7 @@ IonCompartment::getBailoutTable(JSContext *cx, const FrameSizeClass &frameClass)
 
 IonCompartment::~IonCompartment()
 {
-    Foreground::delete_(functionWrappers_);
+    js_delete(functionWrappers_);
 }
 
 IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
@@ -881,7 +881,7 @@ class AutoDestroyAllocator
     ~AutoDestroyAllocator()
     {
         if (alloc)
-            Foreground::delete_(alloc);
+            js_delete(alloc);
     }
 };
 
