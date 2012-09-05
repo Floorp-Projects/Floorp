@@ -507,7 +507,7 @@ pref("dom.ipc.processPriorityManager.enabled", true);
 pref("dom.ipc.processPriorityManager.gracePeriodMS", 1000);
 pref("hal.processPriorityManager.gonk.masterOomAdjust", 0);
 pref("hal.processPriorityManager.gonk.foregroundOomAdjust", 1);
-pref("hal.processPriorityManager.gonk.backgroundOomAdjust", 2);
+pref("hal.processPriorityManager.gonk.backgroundOomAdjust", 6);
 pref("hal.processPriorityManager.gonk.masterNice", -1);
 pref("hal.processPriorityManager.gonk.foregroundNice", 0);
 pref("hal.processPriorityManager.gonk.backgroundNice", 10);
