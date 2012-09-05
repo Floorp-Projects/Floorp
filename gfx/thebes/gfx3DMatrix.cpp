@@ -812,8 +812,8 @@ bool gfx3DMatrix::IsBackfaceVisible() const
 
 static void NudgeToInteger(float *aVal)
 {
-  float r = NS_roundf(*aVal);
-  if (fabsf(*aVal - r) < 1e-4) {
+  float r = floorf(*aVal + 0.5f);
+  if (fabsf(*aVal - r) < 1e-4f) {
     *aVal = r;
   }
 }

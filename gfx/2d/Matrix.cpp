@@ -56,5 +56,24 @@ Matrix::TransformBounds(const Rect &aRect) const
   return Rect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
+static void NudgeToInteger(float *aVal)
+{
+  float r = floorf(*aVal + 0.5f);
+  if (fabsf(*aVal - r) < 1e-4f) {
+    *aVal = r;
+  }
+}
+
+void
+Matrix::NudgeToIntegers()
+{
+  NudgeToInteger(&_11);
+  NudgeToInteger(&_12);
+  NudgeToInteger(&_21);
+  NudgeToInteger(&_22);
+  NudgeToInteger(&_31);
+  NudgeToInteger(&_32);
+}
+
 }
 }
