@@ -155,13 +155,6 @@ DeviceStorageFile::IsType(nsAString& aType)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  // in testing, we ignore filtering for the testing types
-  if (mozilla::Preferences::GetBool("device.storage.testing", false) &&
-      (aType.Equals(NS_LITERAL_STRING("testing")) ||
-       aType.Equals(NS_LITERAL_STRING("testing-other")))) {
-    return true;
-  }
-
 #ifdef DEBUG_ISTYPE
   nsCOMPtr<nsIConsoleService> svc = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   char buffer[1024];
@@ -572,18 +565,13 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
 #endif
   }
 
-  // in testing, we have access to a few more directory locations
-  if (mozilla::Preferences::GetBool("device.storage.testing", false)) {
-
-    // testing directory
-    if (aType.Equals(NS_LITERAL_STRING("testing")) ||
-	aType.Equals(NS_LITERAL_STRING("testing-other"))) {
-      dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
-      if (f) {
-        f->AppendRelativeNativePath(NS_LITERAL_CSTRING("device-storage-testing"));
-        f->Create(nsIFile::DIRECTORY_TYPE, 0777);
-        f->Normalize();
-      }
+  // in testing, we default all device storage types to a temp directory
+  if (f && mozilla::Preferences::GetBool("device.storage.testing", false)) {
+    dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
+    if (f) {
+      f->AppendRelativeNativePath(NS_LITERAL_CSTRING("device-storage-testing"));
+      f->Create(nsIFile::DIRECTORY_TYPE, 0777);
+      f->Normalize();
     }
   }
 
