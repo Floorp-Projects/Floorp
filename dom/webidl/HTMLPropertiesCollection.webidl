@@ -4,17 +4,23 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.w3.org/TR/2012/WD-dom-20120105/
+ * http://www.whatwg.org/specs/web-apps/current-work/
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
-interface Element;
+interface DOMStringList;
 
-interface HTMLCollection {
-  readonly attribute unsigned long length;
-  getter Element? item(unsigned long index);
+interface HTMLPropertiesCollection : HTMLCollection {
+  // inherits length and item()
+  getter PropertyNodeList? namedItem(DOMString name); // overrides inherited namedItem()
+  readonly attribute DOMStringList names;
+};
+
+typedef sequence<any> PropertyValueArray;
+
+interface PropertyNodeList : NodeList {
   [Throws]
-  getter object? namedItem(DOMString name); // only returns Element
+  PropertyValueArray getValues();
 };

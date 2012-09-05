@@ -12,6 +12,9 @@
 #include "nsGenericElement.h"
 #include "nsIDOMDOMTokenList.h"
 
+namespace mozilla {
+class ErrorResult;
+}
 class nsAttrValue;
 
 // nsISupports must be on the primary inheritance chain 
@@ -42,6 +45,22 @@ public:
     }
     return mElement->GetAttrInfo(kNameSpaceID_None, mAttrAtom).mValue;
   }
+
+  uint32_t Length();
+  void Item(uint32_t aIndex, nsAString& aResult)
+  {
+    bool found;
+    IndexedGetter(aIndex, found, aResult);
+    if (!found) {
+      SetDOMStringToNull(aResult);
+    }
+  }
+  void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aResult);
+  bool Contains(const nsAString& aToken, mozilla::ErrorResult& aError);
+  void Add(const nsAString& aToken, mozilla::ErrorResult& aError);
+  void Remove(const nsAString& aToken, mozilla::ErrorResult& aError);
+  bool Toggle(const nsAString& aToken, mozilla::ErrorResult& aError);
+  void Stringify(nsAString& aResult);
 
 protected:
   virtual ~nsDOMTokenList();

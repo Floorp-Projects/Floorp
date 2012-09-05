@@ -15,6 +15,7 @@
 #include "nsTArray.h"
 #include "SVGPathData.h" // IWYU pragma: keep
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
 
 class nsIDOMSVGPathSeg;
 
@@ -131,6 +132,45 @@ public:
    */
   bool AttrIsAnimating() const;
 
+  uint32_t NumberOfItems() const
+  {
+    if (IsAnimValList()) {
+      Element()->FlushAnimations();
+    }
+    return LengthNoFlush();
+  }
+  void Clear(ErrorResult& aError);
+  already_AddRefed<nsIDOMSVGPathSeg> Initialize(nsIDOMSVGPathSeg *aNewItem,
+                                                ErrorResult& aError);
+  nsIDOMSVGPathSeg* GetItem(uint32_t aIndex, ErrorResult& aError)
+  {
+    bool found;
+    nsIDOMSVGPathSeg* item = IndexedGetter(aIndex, found, aError);
+    if (!found) {
+      aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    }
+    return item;
+  }
+  nsIDOMSVGPathSeg* IndexedGetter(uint32_t aIndex, bool& found,
+                                  ErrorResult& aError);
+  already_AddRefed<nsIDOMSVGPathSeg> InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
+                                                      uint32_t aIndex,
+                                                      ErrorResult& aError);
+  already_AddRefed<nsIDOMSVGPathSeg> ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
+                                                 uint32_t aIndex,
+                                                 ErrorResult& aError);
+  already_AddRefed<nsIDOMSVGPathSeg> RemoveItem(uint32_t aIndex,
+                                                ErrorResult& aError);
+  already_AddRefed<nsIDOMSVGPathSeg> AppendItem(nsIDOMSVGPathSeg *aNewItem,
+                                                ErrorResult& aError)
+  {
+    return InsertItemBefore(aNewItem, LengthNoFlush(), aError);
+  }
+  uint32_t Length() const
+  {
+    return NumberOfItems();
+  }
+
 private:
 
   /**
@@ -148,7 +188,7 @@ private:
 
   ~DOMSVGPathSegList();
 
-  nsSVGElement* Element() {
+  nsSVGElement* Element() const {
     return mElement.get();
   }
 

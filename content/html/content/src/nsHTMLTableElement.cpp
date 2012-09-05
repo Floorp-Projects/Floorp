@@ -25,6 +25,8 @@
 #include "nsIHTMLCollection.h"
 #include "nsHTMLStyleSheet.h"
 #include "dombindings.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 
@@ -47,6 +49,9 @@ public:
   {
     return mParent;
   }
+
+  virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
+                              ErrorResult& error);
 
   NS_IMETHOD    ParentDestroyed();
 
@@ -261,6 +266,27 @@ TableRowsCollection::GetNamedItem(const nsAString& aName,
     }
   );
   *aCache = nullptr;
+  return nullptr;
+}
+
+JSObject*
+TableRowsCollection::NamedItem(JSContext* cx, const nsAString& name,
+                               ErrorResult& error)
+{
+  nsWrapperCache* cache;
+  DO_FOR_EACH_ROWGROUP(
+    nsISupports* item = GetNamedItemInRowGroup(rows, name, &cache);
+    if (item) {
+      JSObject* wrapper = GetWrapper();
+      JSAutoCompartment ac(cx, wrapper);
+      JS::Value v;
+      if (!mozilla::dom::WrapObject(cx, wrapper, item, cache, nullptr, &v)) {
+        error.Throw(NS_ERROR_FAILURE);
+        return nullptr;
+      }
+      return &v.toObject();
+    }
+  );
   return nullptr;
 }
 

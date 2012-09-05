@@ -12,13 +12,27 @@ webidl_files = \
   AudioContext.webidl \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
+  ClientRectList.webidl \
   CSSStyleDeclaration.webidl \
+  DOMTokenList.webidl \
+  DOMSettableTokenList.webidl \
   Function.webidl \
   EventListener.webidl \
   EventTarget.webidl \
+  FileList.webidl \
+  HTMLCollection.webidl \
+  HTMLOptionsCollection.webidl \
+  HTMLPropertiesCollection.webidl \
+  NodeList.webidl \
+  PaintRequestList.webidl \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
+  SVGLengthList.webidl \
+  SVGNumberList.webidl \
+  SVGPathSegList.webidl \
+  SVGPointList.webidl \
+  SVGTransformList.webidl \
   WebSocket.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \

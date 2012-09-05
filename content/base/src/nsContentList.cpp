@@ -21,6 +21,7 @@
 #include "nsGkAtoms.h"
 
 #include "dombindings.h"
+#include "mozilla/dom/BindingUtils.h"
 
 // Form related includes
 #include "nsIDOMHTMLFormElement.h"
@@ -285,6 +286,28 @@ NS_GetContentList(nsINode* aRootNode,
   return list;
 }
 
+#ifdef DEBUG
+const nsCacheableFuncStringContentList::ContentListType
+  nsCacheableFuncStringNodeList::sType = nsCacheableFuncStringContentList::eNodeList;
+const nsCacheableFuncStringContentList::ContentListType
+  nsCacheableFuncStringHTMLCollection::sType = nsCacheableFuncStringContentList::eHTMLCollection;
+#endif
+
+JSObject*
+nsCacheableFuncStringNodeList::WrapObject(JSContext *cx, JSObject *scope,
+                                          bool *triedToWrap)
+{
+  return oldproxybindings::NodeList::create(cx, scope, this, triedToWrap);
+}
+
+
+JSObject*
+nsCacheableFuncStringHTMLCollection::WrapObject(JSContext *cx, JSObject *scope,
+                                                bool *triedToWrap)
+{
+  return oldproxybindings::HTMLCollection::create(cx, scope, this, triedToWrap);
+}
+
 // Hashtable for storing nsCacheableFuncStringContentList
 static PLDHashTable gFuncStringContentListHashTable;
 
@@ -314,12 +337,13 @@ FuncStringContentListHashtableMatchEntry(PLDHashTable *table,
   return e->mContentList->Equals(ourKey);
 }
 
+template<class ListType>
 already_AddRefed<nsContentList>
-NS_GetFuncStringContentList(nsINode* aRootNode,
-                            nsContentListMatchFunc aFunc,
-                            nsContentListDestroyFunc aDestroyFunc,
-                            nsFuncStringContentListDataAllocator aDataAllocator,
-                            const nsAString& aString)
+GetFuncStringContentList(nsINode* aRootNode,
+                         nsContentListMatchFunc aFunc,
+                         nsContentListDestroyFunc aDestroyFunc,
+                         nsFuncStringContentListDataAllocator aDataAllocator,
+                         const nsAString& aString)
 {
   NS_ASSERTION(aRootNode, "content list has to have a root");
 
@@ -359,15 +383,19 @@ NS_GetFuncStringContentList(nsINode* aRootNode,
                        (PL_DHashTableOperate(&gFuncStringContentListHashTable,
                                              &hashKey,
                                              PL_DHASH_ADD));
-    if (entry)
+    if (entry) {
       list = entry->mContentList;
+#ifdef DEBUG
+      MOZ_ASSERT_IF(list, list->mType == ListType::sType);
+#endif
+    }
   }
 
   if (!list) {
     // We need to create a ContentList and add it to our new entry, if
     // we have an entry
-    list = new nsCacheableFuncStringContentList(aRootNode, aFunc, aDestroyFunc,
-                                                aDataAllocator, aString);
+    list = new ListType(aRootNode, aFunc, aDestroyFunc, aDataAllocator,
+                        aString);
     if (list && !list->AllocatedData()) {
       // Failed to allocate the data
       delete list;
@@ -389,6 +417,34 @@ NS_GetFuncStringContentList(nsINode* aRootNode,
   // Don't cache these lists globally
 
   return list;
+}
+
+already_AddRefed<nsContentList>
+NS_GetFuncStringNodeList(nsINode* aRootNode,
+                         nsContentListMatchFunc aFunc,
+                         nsContentListDestroyFunc aDestroyFunc,
+                         nsFuncStringContentListDataAllocator aDataAllocator,
+                         const nsAString& aString)
+{
+  return GetFuncStringContentList<nsCacheableFuncStringNodeList>(aRootNode,
+                                                                 aFunc,
+                                                                 aDestroyFunc,
+                                                                 aDataAllocator,
+                                                                 aString);
+}
+
+already_AddRefed<nsContentList>
+NS_GetFuncStringHTMLCollection(nsINode* aRootNode,
+                               nsContentListMatchFunc aFunc,
+                               nsContentListDestroyFunc aDestroyFunc,
+                               nsFuncStringContentListDataAllocator aDataAllocator,
+                               const nsAString& aString)
+{
+  return GetFuncStringContentList<nsCacheableFuncStringHTMLCollection>(aRootNode,
+                                                                       aFunc,
+                                                                       aDestroyFunc,
+                                                                       aDataAllocator,
+                                                                       aString);
 }
 
 // nsContentList implementation
@@ -637,6 +693,24 @@ nsContentList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache)
   nsIContent *item;
   *aCache = item = NamedItem(aName, true);
   return item;
+}
+
+JSObject*
+nsContentList::NamedItem(JSContext* cx, const nsAString& name,
+                         mozilla::ErrorResult& error)
+{
+  nsIContent *item = NamedItem(name, true);
+  if (!item) {
+    return nullptr;
+  }
+  JSObject* wrapper = GetWrapper();
+  JSAutoCompartment ac(cx, wrapper);
+  JS::Value v;
+  if (!mozilla::dom::WrapObject(cx, wrapper, item, item, nullptr, &v)) {
+    error.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  return &v.toObject();
 }
 
 void
