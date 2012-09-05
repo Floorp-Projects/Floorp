@@ -2132,14 +2132,14 @@ CodeGenerator::visitBoundsCheck(LBoundsCheck *lir)
                 return true;
             return bailout(lir->snapshot());
         }
-        masm.cmp32(ToRegister(lir->length()), Imm32(index));
+        masm.cmp32(ToOperand(lir->length()), Imm32(index));
         return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());
     }
     if (lir->length()->isConstant()) {
         masm.cmp32(ToRegister(lir->index()), Imm32(ToInt32(lir->length())));
         return bailoutIf(Assembler::AboveOrEqual, lir->snapshot());
     }
-    masm.cmp32(ToRegister(lir->length()), ToRegister(lir->index()));
+    masm.cmp32(ToOperand(lir->length()), ToRegister(lir->index()));
     return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());
 }
 
@@ -2155,7 +2155,7 @@ CodeGenerator::visitBoundsCheckRange(LBoundsCheckRange *lir)
         int32 nmin, nmax;
         int32 index = ToInt32(lir->index());
         if (SafeAdd(index, min, &nmin) && SafeAdd(index, max, &nmax) && nmin >= 0) {
-            masm.cmp32(ToRegister(lir->length()), Imm32(nmax));
+            masm.cmp32(ToOperand(lir->length()), Imm32(nmax));
             return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());
         }
         masm.mov(Imm32(index), temp);
@@ -2194,7 +2194,7 @@ CodeGenerator::visitBoundsCheckRange(LBoundsCheckRange *lir)
             return false;
     }
 
-    masm.cmp32(ToRegister(lir->length()), temp);
+    masm.cmp32(ToOperand(lir->length()), temp);
     return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());
 }
 
