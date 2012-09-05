@@ -45,6 +45,3 @@ _OPT\.OBJ/
 \.project$
 \.cproject$
 \.settings/
-
-# Python stuff installed at build-time
-\.egg-info/

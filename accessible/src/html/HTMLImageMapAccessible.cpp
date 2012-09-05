@@ -152,6 +152,9 @@ HTMLAreaAccessible::
   HTMLAreaAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HTMLLinkAccessible(aContent, aDoc)
 {
+  // Make HTML area DOM element not accessible. HTML image map accessible			
+  // manages its tree itself.
+  mFlags |= eSharedNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,17 +184,6 @@ HTMLAreaAccessible::Description(nsString& aDescription)
   nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(mContent));
   if (area)
     area->GetShape(aDescription);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// HTMLAreaAccessible: nsAccessNode public
-
-bool
-HTMLAreaAccessible::IsPrimaryForNode() const
-{
-  // Make HTML area DOM element not accessible. HTML image map accessible
-  // manages its tree itself.
-  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
