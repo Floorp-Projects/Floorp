@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 765063 Helper">
+  <script>
+    var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+    navigator.mozApps.install(url, null);
+    document.location = "about:blank";
+  </script>
+</window>

@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cross Origin Helper</title>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<script type="application/javascript">
+
+/**
+ * Install an app, check that getSelf() works, and then tell the test page
+ * to continue the tests.
+ *
+ * This page loads on a different origin than the one for the test page,
+ * which enables that page to check the behavior of various API calls when apps
+ * have been installed from multiple origins.
+ */
+
+var parent = SpecialPowers.wrap(window).parent;
+
+confirmNextInstall();
+navigator.mozApps.install(parent.url2, null).onsuccess = function onInstall() {
+  // Give the test page a reference to the installed app, so it can uninstall it
+  // after it finishes the tests.
+  parent.app2 = this.result;
+
+  navigator.mozApps.getSelf().onsuccess = function onGetSelf() {
+    parent.ok(this.result instanceof Components.interfaces.mozIDOMApplication,
+              "getSelf() from app's origin returns mozIDOMApplication");
+    parent.is(this.result.manifestURL, parent.url2,
+              "getSelf() from app's origin returns origin's app");
+
+    // Tell the test page to continue the tests.
+    parent.postMessage("next", "*");
+  }
+}
+
+</script>
+</body>
+</html>
