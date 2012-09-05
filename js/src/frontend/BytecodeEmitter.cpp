@@ -117,7 +117,6 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, Shared
     ntrynotes(0), lastTryNode(NULL),
     arrayCompDepth(0),
     emitLevel(0),
-    constMap(sc->context),
     constList(sc->context),
     typesetCount(0),
     hasSingletons(false),
@@ -134,7 +133,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, Shared
 bool
 BytecodeEmitter::init()
 {
-    return constMap.init() && atomIndices.ensureMap(sc->context);
+    return atomIndices.ensureMap(sc->context);
 }
 
 BytecodeEmitter::~BytecodeEmitter()
@@ -733,17 +732,6 @@ PopStatementBCE(JSContext *cx, BytecodeEmitter *bce)
         return false;
     }
     FinishPopStatement(bce);
-    return true;
-}
-
-bool
-frontend::DefineCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, ParseNode *pn)
-{
-    /* XXX just do numbers for now */
-    if (pn->isKind(PNK_NUMBER)) {
-        if (!bce->constMap.put(atom, NumberValue(pn->pn_dval)))
-            return false;
-    }
     return true;
 }
 
@@ -3394,11 +3382,6 @@ EmitVariables(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmitOption 
                 JSOp bindOp = (op == JSOP_SETNAME) ? JSOP_BINDNAME : JSOP_BINDGNAME;
                 if (!EmitIndex32(cx, bindOp, atomIndex, bce))
                     return false;
-            }
-            if (pn->isOp(JSOP_DEFCONST) &&
-                !DefineCompileTimeConstant(cx, bce, pn2->pn_atom, pn3))
-            {
-                return false;
             }
 
             bool oldEmittingForInit = bce->emittingForInit;
