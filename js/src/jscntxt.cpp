@@ -1207,7 +1207,6 @@ JSContext::JSContext(JSRuntime *rt)
     stack(thisDuringConstruction()),
     parseMapPool_(NULL),
     cycleDetectorSet(thisDuringConstruction()),
-    argumentFormatMap(NULL),
     lastMessage(NULL),
     errorReporter(NULL),
     operationCallback(NULL),
@@ -1249,14 +1248,6 @@ JSContext::~JSContext()
 
     if (lastMessage)
         js_free(lastMessage);
-
-    /* Remove any argument formatters. */
-    JSArgumentFormatMap *map = argumentFormatMap;
-    while (map) {
-        JSArgumentFormatMap *temp = map;
-        map = map->next;
-        js_free(temp);
-    }
 
     JS_ASSERT(!resolvingList);
 }

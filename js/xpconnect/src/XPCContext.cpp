@@ -47,9 +47,6 @@ XPCContext::~XPCContext()
             static_cast<XPCWrappedNativeScope*>(scopeptr);
         scope->ClearContext();
     }
-
-    // we do not call JS_RemoveArgumentFormatter because we now only
-    // delete XPCContext *after* the underlying JSContext is dead
 }
 
 void
