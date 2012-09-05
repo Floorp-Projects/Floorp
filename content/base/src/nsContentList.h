@@ -273,6 +273,8 @@ public:
     return mRootNode;
   }
 
+  virtual nsIContent* GetNodeAt(uint32_t aIndex);
+
   // nsContentList public methods
   NS_HIDDEN_(uint32_t) Length(bool aDoFlush);
   NS_HIDDEN_(nsIContent*) Item(uint32_t aIndex, bool aDoFlush);

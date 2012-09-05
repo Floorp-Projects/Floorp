@@ -2106,7 +2106,7 @@ nsHTMLOptionCollection::SetSelectedIndex(int32_t aSelectedIndex)
 NS_IMETHODIMP
 nsHTMLOptionCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
 {
-  nsISupports* item = GetNodeAt(aIndex);
+  nsISupports* item = GetElementAt(aIndex);
   if (!item) {
     *aReturn = nullptr;
 
@@ -2116,10 +2116,10 @@ nsHTMLOptionCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(item, aReturn);
 }
 
-nsIContent*
-nsHTMLOptionCollection::GetNodeAt(uint32_t aIndex)
+nsGenericElement*
+nsHTMLOptionCollection::GetElementAt(uint32_t aIndex)
 {
-  return static_cast<nsIContent*>(ItemAsOption(aIndex));
+  return ItemAsOption(aIndex);
 }
 
 static nsHTMLOptionElement*

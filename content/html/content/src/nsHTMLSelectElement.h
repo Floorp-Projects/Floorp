@@ -50,7 +50,7 @@ public:
   // nsIDOMHTMLCollection interface, all its methods are defined in
   // nsIDOMHTMLOptionsCollection
 
-  virtual nsIContent* GetNodeAt(uint32_t aIndex);
+  virtual nsGenericElement* GetElementAt(uint32_t aIndex);
   virtual nsINode* GetParentObject();
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsHTMLOptionCollection,

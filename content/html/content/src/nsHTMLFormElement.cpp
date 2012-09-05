@@ -2215,7 +2215,7 @@ nsFormControlList::GetLength(uint32_t* aLength)
 NS_IMETHODIMP
 nsFormControlList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
 {
-  nsISupports* item = GetNodeAt(aIndex);
+  nsISupports* item = GetElementAt(aIndex);
   if (!item) {
     *aReturn = nullptr;
 
@@ -2512,8 +2512,8 @@ nsFormControlList::GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aContr
   return NS_OK;
 }
 
-nsIContent*
-nsFormControlList::GetNodeAt(uint32_t aIndex)
+nsGenericElement*
+nsFormControlList::GetElementAt(uint32_t aIndex)
 {
   FlushPendingNotifications();
 
