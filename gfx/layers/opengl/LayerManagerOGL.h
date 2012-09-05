@@ -442,6 +442,7 @@ private:
   nsAutoPtr<FPSState> mFPS;
 
   static bool sDrawFPS;
+  static bool sFrameCounter;
 };
 
 /**
