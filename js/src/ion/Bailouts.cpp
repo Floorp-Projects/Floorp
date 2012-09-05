@@ -241,7 +241,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     // on the stack safely and the reported error attempts to walk the IonMonkey
     // frames. We cannot iterate on the stack because we have no exit frame to
     // start Ion frames iteratons.
-    BailoutClosure *br = OffTheBooks::new_<BailoutClosure>();
+    BailoutClosure *br = js_new<BailoutClosure>();
     if (!br)
         return BAILOUT_RETURN_FATAL_ERROR;
     activation->setBailout(br);
@@ -580,7 +580,7 @@ ion::ThunkToInterpreter(Value *vp)
         // out with a special return code, and resume interpreting in the
         // original Interpret activation.
         vp->setMagic(JS_ION_BAILOUT);
-        cx->delete_(br);
+        js_delete(br);
         return Interpret_Ok;
     }
 
@@ -606,7 +606,7 @@ ion::ThunkToInterpreter(Value *vp)
 
         fp->setRunningInIon();
         vp->setPrivate(fp);
-        cx->delete_(br);
+        js_delete(br);
         return Interpret_OSR;
     }
 
@@ -615,7 +615,7 @@ ion::ThunkToInterpreter(Value *vp)
 
     // The BailoutFrameGuard's destructor will ensure that the frame is
     // removed.
-    cx->delete_(br);
+    js_delete(br);
 
     return status;
 }

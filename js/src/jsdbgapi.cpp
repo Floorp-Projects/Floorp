@@ -1843,7 +1843,7 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
             break;
     }
 
-    StackDescription *desc = cx->new_<StackDescription>();
+    StackDescription *desc = js_new<StackDescription>();
     if (!desc)
         return NULL;
 
@@ -1855,8 +1855,8 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
 JS_PUBLIC_API(void)
 JS::FreeStackDescription(JSContext *cx, StackDescription *desc)
 {
-    cx->free_(desc->frames);
-    cx->free_(desc);
+    js_delete(desc->frames);
+    js_delete(desc);
 }
 
 class AutoPropertyDescArray
