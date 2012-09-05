@@ -191,7 +191,7 @@ TableRowsCollection::GetLength(uint32_t* aLength)
 // Returns the item at index aIndex if available. If null is returned,
 // then aCount will be set to the number of rows in this row collection.
 // Otherwise, the value of aCount is undefined.
-static nsIContent*
+static nsGenericElement*
 GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
                          uint32_t aIndex, uint32_t* aCount)
 {
@@ -200,20 +200,20 @@ GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
   if (rows) {
     rows->GetLength(aCount);
     if (aIndex < *aCount) {
-      nsCOMPtr<nsINodeList> list = do_QueryInterface(rows);
-      return list->GetNodeAt(aIndex);
+      nsIHTMLCollection* list = static_cast<nsIHTMLCollection*>(rows);
+      return list->GetElementAt(aIndex);
     }
   }
   
   return nullptr;
 }
 
-nsIContent*
-TableRowsCollection::GetNodeAt(uint32_t aIndex)
+nsGenericElement*
+TableRowsCollection::GetElementAt(uint32_t aIndex)
 {
   DO_FOR_EACH_ROWGROUP(
     uint32_t count;
-    nsIContent* node = GetItemOrCountInRowGroup(rows, aIndex, &count);
+    nsGenericElement* node = GetItemOrCountInRowGroup(rows, aIndex, &count);
     if (node) {
       return node; 
     }
@@ -228,7 +228,7 @@ TableRowsCollection::GetNodeAt(uint32_t aIndex)
 NS_IMETHODIMP 
 TableRowsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
 {
-  nsISupports* node = GetNodeAt(aIndex);
+  nsISupports* node = GetElementAt(aIndex);
   if (!node) {
     *aReturn = nullptr;
 
