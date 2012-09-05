@@ -2987,6 +2987,7 @@ let SessionStoreInternal = {
       // a tab gets closed before it's been properly restored
       browser.__SS_data = tabData;
       browser.__SS_restoreState = TAB_STATE_NEEDS_RESTORE;
+      browser.setAttribute("pending", "true");
       tab.setAttribute("pending", "true");
 
       // Make sure that set/getTabValue will set/read the correct data by
@@ -3171,6 +3172,7 @@ let SessionStoreInternal = {
 
     // Set this tab's state to restoring
     browser.__SS_restoreState = TAB_STATE_RESTORING;
+    browser.removeAttribute("pending");
     aTab.removeAttribute("pending");
 
     // Remove the history listener, since we no longer need it once we start restoring
@@ -4334,6 +4336,9 @@ let SessionStoreInternal = {
 
     // The browser is no longer in any sort of restoring state.
     delete browser.__SS_restoreState;
+
+    aTab.removeAttribute("pending");
+    browser.removeAttribute("pending");
 
     // We want to decrement window.__SS_tabsToRestore here so that we always
     // decrement it AFTER a tab is done restoring or when a tab gets "reset".
