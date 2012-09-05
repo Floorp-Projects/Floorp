@@ -4710,7 +4710,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 
                     inner = fun->script();
                     if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner))) {
-                        Foreground::delete_(jp->localNames);
+                        js_delete(jp->localNames);
                         jp->localNames = outerLocalNames;
                         return NULL;
                     }
@@ -4739,7 +4739,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                          != NULL;
                     jp->script = outer;
                     jp->fun = outerfun;
-                    Foreground::delete_(jp->localNames);
+                    js_delete(jp->localNames);
                     jp->localNames = outerLocalNames;
                     jp->decompiledOpcodes = decompiledOpcodes;
                     if (!ok)
@@ -5505,7 +5505,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, unsigned len,
     bool ok = Decompile(&ss, pc, len) != NULL;
 
     jp->script = oldscript;
-    Foreground::delete_(jp->localNames);
+    js_delete(jp->localNames);
     jp->localNames = oldLocalNames;
 
     /* If the given code didn't empty the stack, do it now. */
