@@ -678,6 +678,23 @@ TabChild::~TabChild()
 }
 
 bool
+TabChild::IsRootContentDocument()
+{
+    if (!mIsBrowserElement && mAppId == nsIScriptSecurityManager::NO_APP_ID) {
+        // We're the child side of a <xul:browser remote=true>.  This
+        // is always a root content document.
+        return true;
+    }
+
+    // Otherwise, we're the child side of an <html:browser
+    // remote=true> or <html:app remote=true>.  Because of bug 761935,
+    // these can't be nested within another <html:app remote=true>, so
+    // we assume that we can't be a root content document.  When that
+    // bug is fixed, we need to revisit that assumption.
+    return false;
+}
+
+bool
 TabChild::RecvLoadURL(const nsCString& uri)
 {
     printf("loading %s, %d\n", uri.get(), NS_IsMainThread());
