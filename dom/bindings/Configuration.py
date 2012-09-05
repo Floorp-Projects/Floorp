@@ -290,38 +290,34 @@ class Descriptor(DescriptorProvider):
         return self.interface.hasInterfaceObject() or self.interface.hasInterfacePrototypeObject()
 
     def getExtendedAttributes(self, member, getter=False, setter=False):
-        def ensureValidInfallibilityExtendedAttribute(name, attr):
+        def ensureValidThrowsExtendedAttribute(attr):
             assert(attr is None or attr is True or len(attr) == 1)
             if (attr is not None and attr is not True and
                 'Workers' not in attr and 'MainThread' not in attr):
-                raise TypeError(("Unknown value for '%s': " % name) + attr[0])
+                raise TypeError("Unknown value for 'Throws': " + attr[0])
 
-        name = member.identifier.name
-        if member.isMethod():
-            attrs = self.extendedAttributes['all'].get(name, [])
-            throws = member.getExtendedAttribute("Throws")
-            ensureValidInfallibilityExtendedAttribute("Throws", throws)
+        def maybeAppendInfallibleToAttrs(attrs, throws):
+            ensureValidThrowsExtendedAttribute(throws)
             if (throws is None or
                 (throws is not True and
                  ('Workers' not in throws or not self.workers) and
                  ('MainThread' not in throws or self.workers))):
                 attrs.append("infallible")
+
+        name = member.identifier.name
+        if member.isMethod():
+            attrs = self.extendedAttributes['all'].get(name, [])
+            throws = member.getExtendedAttribute("Throws")
+            maybeAppendInfallibleToAttrs(attrs, throws)
             return attrs
 
         assert member.isAttr()
         assert bool(getter) != bool(setter)
         key = 'getterOnly' if getter else 'setterOnly'
         attrs = self.extendedAttributes['all'].get(name, []) + self.extendedAttributes[key].get(name, [])
-        infallible = member.getExtendedAttribute("Infallible")
-        if infallible is None:
-            infallibleAttr = "GetterInfallible" if getter else "SetterInfallible"
-            infallible = member.getExtendedAttribute(infallibleAttr)
-
-        ensureValidInfallibilityExtendedAttribute("Infallible", infallible)
-        if (infallible is not None and
-            (infallible is True or
-             ('Workers' in infallible and self.workers) or
-             ('MainThread' in infallible and not self.workers))):
-            attrs.append("infallible")
-
+        throws = member.getExtendedAttribute("Throws")
+        if throws is None:
+            throwsAttr = "GetterThrows" if getter else "SetterThrows"
+            throws = member.getExtendedAttribute(throwsAttr)
+        maybeAppendInfallibleToAttrs(attrs, throws)
         return attrs

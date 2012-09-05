@@ -15,8 +15,7 @@ interface PerformanceNavigation {
   const unsigned short TYPE_RELOAD = 1;
   const unsigned short TYPE_BACK_FORWARD = 2;
   const unsigned short TYPE_RESERVED = 255;
-  [Infallible]
+
   readonly attribute unsigned short type;
-  [Infallible]
   readonly attribute unsigned short redirectCount;
 };

@@ -54,7 +54,7 @@ dictionary MozXMLHttpRequestParameters
 [Constructor(optional MozXMLHttpRequestParameters params)]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // event handler
-  [TreatNonCallableAsNull, GetterInfallible=MainThread]
+  [TreatNonCallableAsNull, SetterThrows, GetterThrows=Workers]
   attribute Function? onreadystatechange;
 
   // states
@@ -64,7 +64,6 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   const unsigned short LOADING = 3;
   const unsigned short DONE = 4;
 
-  [Infallible]
   readonly attribute unsigned short readyState;
 
   // request
@@ -74,13 +73,13 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws]
   void setRequestHeader(DOMString header, DOMString value);
 
-  [GetterInfallible]
+  [SetterThrows]
   attribute unsigned long timeout;
 
-  [GetterInfallible, SetterInfallible=MainThread]
+  [SetterThrows=Workers]
   attribute boolean withCredentials;
 
-  [Infallible=MainThread]
+  [Throws=Workers]
   readonly attribute XMLHttpRequestUpload upload;
 
   [Throws]
@@ -102,10 +101,9 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   void abort();
 
   // response
-  [Infallible=MainThread]
+  [Throws=Workers]
   readonly attribute unsigned short status;
 
-  [Infallible]
   readonly attribute DOMString statusText;
   [Throws]
   DOMString? getResponseHeader(DOMString header);
@@ -116,22 +114,24 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws=Workers]
   void overrideMimeType(DOMString mime);
 
-  [GetterInfallible]
+  [SetterThrows]
   attribute XMLHttpRequestResponseType responseType;
+  [Throws]
   readonly attribute any response;
+  [Throws]
   readonly attribute DOMString? responseText;
 
-  [GetterInfallible=Workers]
+  [Throws=MainThread]
   readonly attribute Document? responseXML;
 
   // Mozilla-specific stuff
-  [GetterInfallible, SetterInfallible=MainThread]
+  [SetterThrows=Workers]
   attribute boolean multipart;
 
-  [GetterInfallible, SetterInfallible=MainThread]
+  [SetterThrows=Workers]
   attribute boolean mozBackgroundRequest;
 
-  [ChromeOnly, GetterInfallible]
+  [ChromeOnly]
   readonly attribute MozChannel channel;
 
   [Throws]
@@ -139,9 +139,6 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws]
   any getInterface(IID iid);
 
-  [Infallible]
   readonly attribute boolean mozAnon;
-
-  [Infallible]
   readonly attribute boolean mozSystem;
 };
