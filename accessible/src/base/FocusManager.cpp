@@ -60,7 +60,7 @@ FocusManager::IsFocused(const Accessible* aAccessible) const
       DocAccessible* doc = 
         GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
       return aAccessible ==
-	(doc ? doc->GetAccessibleOrContainer(focusedNode) : nullptr);
+        (doc ? doc->GetAccessibleOrContainer(focusedNode) : nullptr);
     }
   }
   return false;
