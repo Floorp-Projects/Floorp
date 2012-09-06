@@ -33,13 +33,12 @@ struct TryNode {
 };
 
 struct CGObjectList {
-    uint32_t            length;     /* number of emitted so far objects */
-    ObjectBox           *lastbox;   /* last emitted object */
+    Vector<ObjectBox*> list;
+    CGObjectList(JSContext *cx) : list(cx) {}
 
-    CGObjectList() : length(0), lastbox(NULL) {}
-
-    unsigned add(ObjectBox *objbox);
+    bool append(ObjectBox *objbox) { return list.append(objbox); }
     unsigned indexOf(JSObject *obj);
+    size_t length() const { return list.length(); }
     void finish(ObjectArray *array);
 };
 
