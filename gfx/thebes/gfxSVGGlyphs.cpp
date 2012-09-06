@@ -370,3 +370,14 @@ gfxSVGGlyphs::InsertGlyphChar(Element *aGlyphElement,
     }
 }
 
+void
+gfxTextObjectPaint::InitStrokeGeometry(gfxContext *aContext,
+                                       float devUnitsPerSVGUnit)
+{
+    mStrokeWidth = aContext->CurrentLineWidth() / devUnitsPerSVGUnit;
+    aContext->CurrentDash(mDashes, &mDashOffset);
+    for (uint32_t i = 0; i < mDashes.Length(); i++) {
+        mDashes[i] /= devUnitsPerSVGUnit;
+    }
+    mDashOffset /= devUnitsPerSVGUnit;
+}

@@ -709,19 +709,23 @@ public:
   /*
    * @return false if there is no stroke
    */
-  static bool HasStroke(nsIFrame* aFrame);
+  static bool HasStroke(nsIFrame* aFrame,
+                        gfxTextObjectPaint *aObjectPaint = nullptr);
 
-  static float GetStrokeWidth(nsIFrame* aFrame);
+  static float GetStrokeWidth(nsIFrame* aFrame,
+                              gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /*
    * Set up a cairo context for measuring a stroked path
    */
-  static void SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext);
+  static void SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext,
+                                       gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /*
    * Set up a cairo context for hit testing a stroked path
    */
-  static void SetupCairoStrokeHitGeometry(nsIFrame* aFrame, gfxContext *aContext);
+  static void SetupCairoStrokeHitGeometry(nsIFrame* aFrame, gfxContext *aContext,
+                                          gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /*
    * Set up a cairo context for stroking, including setting up any stroke-related

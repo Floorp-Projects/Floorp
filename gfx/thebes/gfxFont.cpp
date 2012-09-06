@@ -2090,6 +2090,8 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMod
     aContext->Translate(gfxPoint(aPoint.x, aPoint.y));
     aContext->Scale(devUnitsPerSVGUnit, devUnitsPerSVGUnit);
 
+    aObjectPaint->InitStrokeGeometry(aContext, devUnitsPerSVGUnit);
+
     return GetFontEntry()->RenderSVGGlyph(aContext, aGlyphId, aDrawMode,
                                           aObjectPaint);
 }

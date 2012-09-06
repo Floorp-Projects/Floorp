@@ -185,11 +185,14 @@ nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
   /* render */
   Render(aContext);
 
+  gfxTextObjectPaint *objectPaint =
+    (gfxTextObjectPaint*)aContext->GetUserData(&gfxTextObjectPaint::sUserDataKey);
+
   if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
     MarkerProperties properties = GetMarkerProperties(this);
       
     if (properties.MarkersExist()) {
-      float strokeWidth = nsSVGUtils::GetStrokeWidth(this);
+      float strokeWidth = nsSVGUtils::GetStrokeWidth(this, objectPaint);
         
       nsTArray<nsSVGMark> marks;
       static_cast<nsSVGPathGeometryElement*>
