@@ -44,6 +44,7 @@ class gfxUserFontSet;
 class gfxUserFontData;
 class gfxShapedWord;
 class gfxSVGGlyphs;
+class gfxTextObjectPaint;
 
 class nsILanguageAtomService;
 
@@ -280,7 +281,8 @@ public:
 
     bool TryGetSVGData();
     bool HasSVGGlyph(uint32_t aGlyphId);
-    bool RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId, int aDrawMode);
+    bool RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId, int aDrawMode,
+                        gfxTextObjectPaint *aObjectPaint);
 
     virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
         return true;
@@ -1418,6 +1420,9 @@ public:
      * that there is no spacing.
      * @param aDrawMode specifies whether the fill or stroke of the glyph should be
      * drawn, or if it should be drawn into the current path
+     * @param aObjectPaint information about how to construct the fill and
+     * stroke pattern. Can be NULL if we are not stroking the text, which
+     * indicates that the current source from aContext should be used for filling
      * 
      * Callers guarantee:
      * -- aStart and aEnd are aligned to cluster and ligature boundaries
@@ -1428,7 +1433,7 @@ public:
      */
     virtual void Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                       gfxContext *aContext, DrawMode aDrawMode, gfxPoint *aBaselineOrigin,
-                      Spacing *aSpacing, gfxPattern *aStrokePattern);
+                      Spacing *aSpacing, gfxTextObjectPaint *aObjectPaint);
 
     /**
      * Measure a run of characters. See gfxTextRun::Metrics.
@@ -1711,7 +1716,7 @@ protected:
     void SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont);
 
     bool RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
-                        uint32_t aGlyphId);
+                        uint32_t aGlyphId, gfxTextObjectPaint *aObjectPaint);
 
     // Bug 674909. When synthetic bolding text by drawing twice, need to
     // render using a pixel offset in device pixels, otherwise text
@@ -2526,7 +2531,7 @@ public:
               gfxFont::DrawMode aDrawMode,
               uint32_t aStart, uint32_t aLength,
               PropertyProvider *aProvider,
-              gfxFloat *aAdvanceWidth, gfxPattern *aStrokePattern,
+              gfxFloat *aAdvanceWidth, gfxTextObjectPaint *aObjectPaint,
               DrawCallbacks *aCallbacks = nullptr);
 
     /**
@@ -2974,8 +2979,8 @@ private:
     // **** drawing helper ****
     void DrawGlyphs(gfxFont *aFont, gfxContext *aContext,
                     gfxFont::DrawMode aDrawMode, gfxPoint *aPt,
-                    gfxPattern *aStrokePattern, uint32_t aStart, uint32_t aEnd,
-                    PropertyProvider *aProvider,
+                    gfxTextObjectPaint *aObjectPaint, uint32_t aStart,
+                    uint32_t aEnd, PropertyProvider *aProvider,
                     uint32_t aSpacingStart, uint32_t aSpacingEnd);
 
     nsAutoPtr<DetailedGlyphStore>   mDetailedGlyphs;

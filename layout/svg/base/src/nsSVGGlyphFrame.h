@@ -21,6 +21,7 @@ class nsRenderingContext;
 class nsSVGGlyphFrame;
 class nsSVGTextFrame;
 class nsSVGTextPathFrame;
+class gfxTextObjectPaint;
 
 struct CharacterPosition;
 
@@ -236,7 +237,7 @@ private:
   void DrawCharacters(CharacterIterator *aIter,
                       gfxContext *aContext,
                       DrawMode aDrawMode,
-                      gfxPattern *aStrokePattern = nullptr);
+                      gfxTextObjectPaint *aObjectPaint = nullptr);
 
   void NotifyGlyphMetricsChange();
   void SetupGlobalTransform(gfxContext *aContext, uint32_t aFor);
