@@ -3,8 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsVersionComparator.h"
-#include <algorithm>
 
+#include <stdlib.h>
+#include <string.h>
+#if defined(XP_WIN) && !defined(UPDATER_NO_STRING_GLUE_STL)
+#include <wchar.h>
+#include "nsStringGlue.h"
+#endif
 
 struct VersionPart {
   int32_t     numA;
@@ -252,7 +257,7 @@ CompareVP(VersionPartW &v1, VersionPartW &v2)
   if (r)
     return r;
 
-  r = wcsncmp(v1.strB, v2.strB, std::min(v1.strBlen,v2.strBlen));
+  r = wcsncmp(v1.strB, v2.strB, NS_MIN(v1.strBlen,v2.strBlen));
   if (r)
     return r;
 
