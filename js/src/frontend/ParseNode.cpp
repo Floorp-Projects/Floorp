@@ -544,11 +544,11 @@ frontend::CloneLeftHandSide(ParseNode *opn, Parser *parser)
 
 #if JS_HAS_DESTRUCTURING
     if (opn->isArity(PN_LIST)) {
-        JS_ASSERT(opn->isKind(PNK_RB) || opn->isKind(PNK_RC));
+        JS_ASSERT(opn->isKind(PNK_ARRAY) || opn->isKind(PNK_OBJECT));
         pn->makeEmpty();
         for (ParseNode *opn2 = opn->pn_head; opn2; opn2 = opn2->pn_next) {
             ParseNode *pn2;
-            if (opn->isKind(PNK_RC)) {
+            if (opn->isKind(PNK_OBJECT)) {
                 JS_ASSERT(opn2->isArity(PN_BINARY));
                 JS_ASSERT(opn2->isKind(PNK_COLON));
 

@@ -46,8 +46,8 @@ ParseNode::isConstant()
       case PNK_FALSE:
       case PNK_TRUE:
         return true;
-      case PNK_RB:
-      case PNK_RC:
+      case PNK_ARRAY:
+      case PNK_OBJECT:
         return isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST);
       default:
         return false;
