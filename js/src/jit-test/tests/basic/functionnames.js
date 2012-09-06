@@ -131,3 +131,19 @@ odeURIL:(function(){})
 
 a = { 1: function () {} };
 assertName(a[1], 'a[1]');
+
+a = {
+  "embedded spaces": function(){},
+  "dots.look.like.property.references": function(){},
+  "\"\'quotes\'\"": function(){},
+  "!@#$%": function(){}
+};
+assertName(a["embedded spaces"], 'a["embedded spaces"]');
+assertName(a["dots.look.like.property.references"], 'a["dots.look.like.property.references"]');
+assertName(a["\"\'quotes\'\""], 'a["\\\"\'quotes\'\\\""]');
+assertName(a["!@#$%"], 'a["!@#$%"]');
+
+a.b = {};
+a.b.c = {};
+a.b["c"]["d e"] = { f: { 1: { "g": { "h i": function() {} } } } };
+assertName(a.b.c["d e"].f[1].g["h i"], 'a.b.c["d e"].f[1].g["h i"]');
