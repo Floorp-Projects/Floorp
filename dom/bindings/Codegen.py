@@ -4651,9 +4651,10 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     "  return true;\n" +
                     "}\n") % (self.descriptor.nativeType)
         elif self.descriptor.operations['IndexedGetter']:
-            set += ("if (GetArrayIndexFromId(cx, id)) {\n" +
+            set += ("if (GetArrayIndexFromId(cx, id) >= 0) {\n" +
                     "  return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n" +
                     "}\n") % self.descriptor.name
+
         namedSetter = self.descriptor.operations['NamedSetter']
         if namedSetter:
             if not self.descriptor.operations['NamedCreator'] is namedSetter:
@@ -4682,6 +4683,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     "  if (found) {\n"
                     "    return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n" +
                     "  }\n" +
+                    "  return true;\n"
                     "}\n") % (self.descriptor.nativeType, self.descriptor.name)
         return set + """return mozilla::dom::DOMProxyHandler::defineProperty(%s);""" % ", ".join(a.name for a in self.args)
 
