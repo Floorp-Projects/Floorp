@@ -6371,7 +6371,7 @@ Parser::checkForFunctionNode(PropertyName *name, ParseNode *node)
         }
 
         node->setArity(PN_NULLARY);
-        node->setKind(PNK_FUNCTION);
+        node->setKind(PNK_FUNCTIONNS);
     }
 
     return true;
@@ -6511,7 +6511,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
       case TOK_FUNCTION:
 #if JS_HAS_XML_SUPPORT
         if (allowsXML() && tokenStream.matchToken(TOK_DBLCOLON, TSF_KEYWORD_IS_NAME)) {
-            pn2 = NullaryNode::create(PNK_FUNCTION, this);
+            pn2 = NullaryNode::create(PNK_FUNCTIONNS, this);
             if (!pn2)
                 return NULL;
             pn = qualifiedSuffix(pn2);
