@@ -56,12 +56,11 @@ DeferredTask.prototype = {
    */
   start: function DeferredTask_start() {
     if (this._timer) {
-      this._timer.delay = this._delay;
-    } else {
-      this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      this._timer.initWithCallback(
-        this._callback, this._delay, Ci.nsITimer.TYPE_ONE_SHOT);
+      this._timer.cancel();
     }
+    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._timer.initWithCallback(
+      this._callback, this._delay, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   /**
