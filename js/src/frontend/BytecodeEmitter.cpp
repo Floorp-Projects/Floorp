@@ -7044,7 +7044,7 @@ CGObjectList::finish(ObjectArray *array)
 }
 
 void
-GCConstList::finish(ConstArray *array)
+CGConstList::finish(ConstArray *array)
 {
     JS_ASSERT(length() == array->length);
 

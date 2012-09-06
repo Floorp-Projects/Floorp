@@ -46,10 +46,10 @@ struct CGObjectList {
     void finish(ObjectArray *array);
 };
 
-class GCConstList {
+class CGConstList {
     Vector<Value> list;
   public:
-    GCConstList(JSContext *cx) : list(cx) {}
+    CGConstList(JSContext *cx) : list(cx) {}
     bool append(Value v) { JS_ASSERT_IF(v.isString(), v.toString()->isAtom()); return list.append(v); }
     size_t length() const { return list.length(); }
     void finish(ConstArray *array);
@@ -101,7 +101,7 @@ struct BytecodeEmitter
 
     unsigned        emitLevel;      /* js::frontend::EmitTree recursion level */
 
-    GCConstList     constList;      /* constants to be included with the script */
+    CGConstList     constList;      /* constants to be included with the script */
 
     CGObjectList    objectList;     /* list of emitted objects */
     CGObjectList    regexpList;     /* list of emitted regexp that will be
