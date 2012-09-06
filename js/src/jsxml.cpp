@@ -1578,7 +1578,7 @@ ParseNodeToXML(Parser *parser, ParseNode *pn,
                 goto skip_child;
             xml_class = JSXML_CLASS_COMMENT;
         } else if (pn->isKind(PNK_XMLPI)) {
-            XMLProcessingInstruction &pi = pn->asXMLProcessingInstruction();
+            XMLProcessingInstruction &pi = pn->as<XMLProcessingInstruction>();
             if (IS_XML(str)) {
                 Value v = StringValue(str);
                 JSAutoByteString bytes;
