@@ -33,24 +33,15 @@ class NameResolver
     }
 
     /*
-     * Some special atoms like 'prototype' and '__proto__' aren't useful to show
-     * up in function names.
-     */
-    bool special(JSAtom *atom) {
-        return cx->runtime->atomState.protoAtom == atom ||
-               cx->runtime->atomState.classPrototypeAtom == atom;
-    }
-
-    /*
      * Walk over the given ParseNode, converting it to a stringified name that
      * respresents where the function is being assigned to.
      */
     bool nameExpression(ParseNode *n) {
         switch (n->getKind()) {
             case PNK_DOT:
-                return nameExpression(n->expr()) &&
-                       (special(n->pn_atom) ||
-                        (buf->append(".") && buf->append(n->pn_atom)));
+                return (nameExpression(n->expr()) &&
+                        buf->append(".") &&
+                        buf->append(n->pn_atom));
 
             case PNK_NAME:
                 return buf->append(n->pn_atom);
@@ -202,14 +193,8 @@ class NameResolver
             ParseNode *node = toName[pos];
 
             if (node->isKind(PNK_COLON)) {
-                if (node->pn_left->isKind(PNK_NAME)) {
-                    /* special atoms are skipped, but others are dot-appended */
-                    if (!special(node->pn_left->pn_atom)) {
-                        if (!buf.append(".") || !buf.append(node->pn_left->pn_atom))
-                            return NULL;
-                    }
-                } else if (node->pn_left->isKind(PNK_STRING)) {
-                    /* If a string is explicitly specified, don't see if its special */
+                if (node->pn_left->isKind(PNK_NAME) || node->pn_left->isKind(PNK_STRING)) {
+                    /* Atoms are dot-appended. */
                     if (!buf.append(".") || !buf.append(node->pn_left->pn_atom))
                         return NULL;
                 }
