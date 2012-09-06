@@ -28,12 +28,12 @@ class nsMediaSniffer : public nsIContentSniffer
     ~nsMediaSniffer() {};
 
 #define PATTERN_ENTRY(mask, pattern, contentType) \
-    {(const PRUint8*)mask, (const PRUint8*)pattern, sizeof(mask) - 1, contentType}
+    {(const uint8_t*)mask, (const uint8_t*)pattern, sizeof(mask) - 1, contentType}
 
   struct nsMediaSnifferEntry {
-    const PRUint8* mMask;
-    const PRUint8* mPattern;
-    const PRUint32 mLength;
+    const uint8_t* mMask;
+    const uint8_t* mPattern;
+    const uint32_t mLength;
     const char* mContentType;
   };
 
