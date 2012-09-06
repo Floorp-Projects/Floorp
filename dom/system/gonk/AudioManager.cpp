@@ -18,6 +18,8 @@
 #include "mozilla/Hal.h"
 #include "AudioManager.h"
 #include "gonk/AudioSystem.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
 
 using namespace mozilla::dom::gonk;
 using namespace android;
@@ -25,6 +27,11 @@ using namespace mozilla::hal;
 using namespace mozilla;
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AudioManager" , ## args) 
+
+#define HEADPHONES_STATUS_CHANGED "headphones-status-changed"
+#define HEADPHONES_STATUS_ON      NS_LITERAL_STRING("on").get()
+#define HEADPHONES_STATUS_OFF     NS_LITERAL_STRING("off").get()
+#define HEADPHONES_STATUS_UNKNOWN NS_LITERAL_STRING("unknown").get()
 
 NS_IMPL_ISUPPORTS1(AudioManager, nsIAudioManager)
 
@@ -53,11 +60,27 @@ InternalSetAudioRoutes(SwitchState aState)
   }
 }
 
+static void
+NotifyHeadphonesStatus(SwitchState aState)
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    if (aState == SWITCH_STATE_ON) {
+      obs->NotifyObservers(nullptr, HEADPHONES_STATUS_CHANGED, HEADPHONES_STATUS_ON);
+    } else if (aState == SWITCH_STATE_OFF) {
+      obs->NotifyObservers(nullptr, HEADPHONES_STATUS_CHANGED, HEADPHONES_STATUS_OFF);
+    } else {
+      obs->NotifyObservers(nullptr, HEADPHONES_STATUS_CHANGED, HEADPHONES_STATUS_UNKNOWN);
+    }
+  }
+}
+
 class HeadphoneSwitchObserver : public SwitchObserver
 {
 public:
   void Notify(const SwitchEvent& aEvent) {
     InternalSetAudioRoutes(aEvent.status());
+    NotifyHeadphonesStatus(aEvent.status());
   }
 };
 
