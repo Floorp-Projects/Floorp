@@ -125,6 +125,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsSVGUtils.h"
 #include "nsISVGChildFrame.h"
 #include "nsRenderingContext.h"
+#include "gfxSVGGlyphs.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -6950,7 +6951,10 @@ nsContentUtils::JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
 
 /* static */
 bool
-nsContentUtils::PaintSVGGlyph(Element *aElement, gfxContext *aContext) {
+nsContentUtils::PaintSVGGlyph(Element *aElement, gfxContext *aContext,
+                              gfxFont::DrawMode aDrawMode,
+                              gfxTextObjectPaint *aObjectPaint)
+{
   nsIFrame *frame = aElement->GetPrimaryFrame();
   if (!frame) {
     NS_WARNING("No frame for SVG glyph");
@@ -6966,6 +6970,7 @@ nsContentUtils::PaintSVGGlyph(Element *aElement, gfxContext *aContext) {
   nsRenderingContext context;
 
   context.Init(frame->PresContext()->DeviceContext(), aContext);
+  context.AddUserData(&gfxTextObjectPaint::sUserDataKey, aObjectPaint, nullptr);
 
   nsresult rv = displayFrame->PaintSVG(&context, nullptr);
   NS_ENSURE_SUCCESS(rv, false);

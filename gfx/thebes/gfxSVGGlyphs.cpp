@@ -66,7 +66,7 @@
 #define UTF8_CHARSET NS_LITERAL_CSTRING("utf-8")
 
 
-typedef mozilla::dom::Element Element;
+mozilla::gfx::UserDataKey gfxTextObjectPaint::sUserDataKey;
 
 /* static */ gfxSVGGlyphs*
 gfxSVGGlyphs::ParseFromBuffer(uint8_t *aBuffer, uint32_t aBufLen)
@@ -174,7 +174,7 @@ gfxSVGGlyphs::FindGlyphElements(Element *aElem,
  */
 bool
 gfxSVGGlyphs::RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
-                          DrawMode aDrawMode)
+                          DrawMode aDrawMode, gfxTextObjectPaint *aObjectPaint)
 {
     if (aDrawMode == gfxFont::GLYPH_PATH) {
         return false;
@@ -185,7 +185,7 @@ gfxSVGGlyphs::RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
     Element *glyph = mGlyphIdMap.Get(aGlyphId);
     NS_ASSERTION(glyph, "No glyph element. Should check with HasSVGGlyph() first!");
 
-    return nsContentUtils::PaintSVGGlyph(glyph, aContext);
+    return nsContentUtils::PaintSVGGlyph(glyph, aContext, aDrawMode, aObjectPaint);
 }
 
 bool

@@ -47,6 +47,7 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsIContent.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "gfxContext.h"
+#include "gfxFont.h"
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/GuardObjects.h"
@@ -114,6 +115,7 @@ struct nsIntMargin;
 class nsPIDOMWindow;
 class nsIDocumentLoaderFactory;
 class nsIDOMHTMLInputElement;
+class gfxTextObjectPaint;
 
 namespace mozilla {
 
@@ -2084,7 +2086,9 @@ public:
 
   static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext);
 
-  static bool PaintSVGGlyph(Element *aElement, gfxContext *aContext);
+  static bool PaintSVGGlyph(Element *aElement, gfxContext *aContext,
+                            gfxFont::DrawMode aDrawMode,
+                            gfxTextObjectPaint *aObjectPaint);
 
 private:
   static bool InitializeEventTable();

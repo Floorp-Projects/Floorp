@@ -433,7 +433,7 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
   DrawMode drawMode = SetupCairoState(gfx, getter_AddRefs(strokePattern));
 
   if (drawMode) {
-    DrawCharacters(&iter, gfx, drawMode, strokePattern);
+    DrawCharacters(&iter, gfx, drawMode, nullptr);
   }
   
   gfx->Restore();
@@ -605,7 +605,7 @@ void
 nsSVGGlyphFrame::DrawCharacters(CharacterIterator *aIter,
                                 gfxContext *aContext,
                                 DrawMode aDrawMode,
-                                gfxPattern *aStrokePattern)
+                                gfxTextObjectPaint *aObjectPaint)
 {
   if (aDrawMode & gfxFont::GLYPH_STROKE) {
     aIter->SetLineWidthAndDashesForDrawing(aContext);
@@ -613,7 +613,7 @@ nsSVGGlyphFrame::DrawCharacters(CharacterIterator *aIter,
 
   if (aIter->SetupForDirectTextRunDrawing(aContext)) {
     mTextRun->Draw(aContext, gfxPoint(0, 0), aDrawMode, 0,
-                   mTextRun->GetLength(), nullptr, nullptr, aStrokePattern);
+                   mTextRun->GetLength(), nullptr, nullptr, aObjectPaint);
     return;
   }
 
@@ -621,7 +621,7 @@ nsSVGGlyphFrame::DrawCharacters(CharacterIterator *aIter,
   while ((i = aIter->NextCluster()) != aIter->InvalidCluster()) {
     aIter->SetupForDrawing(aContext);
     mTextRun->Draw(aContext, gfxPoint(0, 0), aDrawMode, i,
-                   aIter->ClusterLength(), nullptr, nullptr, aStrokePattern);
+                   aIter->ClusterLength(), nullptr, nullptr, aObjectPaint);
   }
 }
 
