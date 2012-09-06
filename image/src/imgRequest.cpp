@@ -79,11 +79,18 @@ NS_IMPL_ISUPPORTS8(imgRequest,
                    nsIInterfaceRequestor,
                    nsIAsyncVerifyRedirectCallback)
 
-imgRequest::imgRequest(imgLoader* aLoader) :
-  mLoader(aLoader), mValidator(nullptr), mImageSniffers("image-sniffing-services"),
-  mInnerWindowId(0), mCORSMode(imgIRequest::CORS_NONE),
-  mDecodeRequested(false), mIsMultiPartChannel(false), mGotData(false),
-  mIsInCache(false), mBlockingOnload(false)
+imgRequest::imgRequest(imgLoader* aLoader)
+ : mLoader(aLoader)
+ , mValidator(nullptr)
+ , mImageSniffers("image-sniffing-services")
+ , mInnerWindowId(0)
+ , mCORSMode(imgIRequest::CORS_NONE)
+ , mDecodeRequested(false)
+ , mIsMultiPartChannel(false)
+ , mGotData(false)
+ , mIsInCache(false)
+ , mBlockingOnload(false)
+ , mResniffMimeType(false)
 {
   // Register our pref observers if we haven't yet.
   if (NS_UNLIKELY(!gInitializedPrefCaches)) {
@@ -787,22 +794,18 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   NS_ABORT_IF_FALSE(mIsMultiPartChannel || !mImage,
                     "Already have an image for non-multipart request");
 
-  // If we're multipart, and our image is initialized, fix things up for another round
+  // If we're multipart and about to load another image, signal so we can
+  // detect the mime type in OnDataAvailable.
   if (mIsMultiPartChannel && mImage) {
-    // Update the content type for this new part
-    nsCOMPtr<nsIChannel> partChan(do_QueryInterface(aRequest));
-    partChan->GetContentType(mContentType);
-    if (mContentType.EqualsLiteral(SVG_MIMETYPE) ||
-        mImage->GetType() == imgIContainer::TYPE_VECTOR) {
-      // mImage won't be reusable due to format change or a new SVG part
-      // Reset the tracker and forget that we have data for OnDataAvailable to
-      // treat its next call as a fresh image.
-      mStatusTracker = new imgStatusTracker(nullptr);
-      mGotData = false;
-    } else if (mImage->GetType() == imgIContainer::TYPE_RASTER) {
-      // Inform the RasterImage that we have new source data
-      static_cast<RasterImage*>(mImage.get())->NewSourceData(mContentType.get());
-    }
+    mResniffMimeType = true;
+    if (mImage->GetType() == imgIContainer::TYPE_RASTER) {
+        // Tell the RasterImage to reinitialize itself. We have to do this in
+        // OnStartRequest so that its state machine is always in a consistent
+        // state.
+        // Note that if our MIME type changes, mImage will be replaced with a
+        // new object.
+        static_cast<RasterImage*>(mImage.get())->NewSourceData();
+      }
   }
 
   /*
@@ -935,6 +938,12 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   return NS_OK;
 }
 
+struct mimetype_closure
+{
+  imgRequest* request;
+  nsACString* newType;
+};
+
 /* prototype for these defined below */
 static NS_METHOD sniff_mimetype_callback(nsIInputStream* in, void* closure, const char* fromRawSegment,
                                          uint32_t toOffset, uint32_t count, uint32_t *writeCount);
@@ -953,31 +962,33 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
 
   nsresult rv;
 
-  uint16_t imageType;
-  if (mGotData) {
-    imageType = mImage->GetType();
-  } else {
+  if (!mGotData || mResniffMimeType) {
     LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |First time through... finding mimetype|");
 
     mGotData = true;
+
+    mimetype_closure closure;
+    nsAutoCString newType;
+    closure.request = this;
+    closure.newType = &newType;
 
     /* look at the first few bytes and see if we can tell what the data is from that
      * since servers tend to lie. :(
      */
     uint32_t out;
-    inStr->ReadSegments(sniff_mimetype_callback, this, count, &out);
+    inStr->ReadSegments(sniff_mimetype_callback, &closure, count, &out);
 
 #ifdef DEBUG
     /* NS_WARNING if the content type from the channel isn't the same if the sniffing */
 #endif
 
     nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
-    if (mContentType.IsEmpty()) {
+    if (newType.IsEmpty()) {
       LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |sniffing of mimetype failed|");
 
       rv = NS_ERROR_FAILURE;
       if (chan) {
-        rv = chan->GetContentType(mContentType);
+        rv = chan->GetContentType(newType);
       }
 
       if (NS_FAILED(rv)) {
@@ -993,140 +1004,159 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
       LOG_MSG(gImgLog, "imgRequest::OnDataAvailable", "Got content type from the channel");
     }
 
-    /* now we have mimetype, so we can infer the image type that we want */
-    if (mContentType.EqualsLiteral(SVG_MIMETYPE)) {
-      mImage = new VectorImage(mStatusTracker.forget());
-    } else {
-      mImage = new RasterImage(mStatusTracker.forget());
-    }
-    mImage->SetInnerWindowID(mInnerWindowId);
-    imageType = mImage->GetType();
+    // If we're a regular image and this is the first call to OnDataAvailable,
+    // this will always be true. If we've resniffed our MIME type (i.e. we're a
+    // multipart/x-mixed-replace image), we have to be able to switch our image
+    // type and decoder.
+    // We always reinitialize for SVGs, because they have no way of
+    // reinitializing themselves.
+    if (mContentType != newType || newType.EqualsLiteral(SVG_MIMETYPE)) {
+      mContentType = newType;
 
-    // Notify any imgRequestProxys that are observing us that we have an Image.
-    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
-    while (iter.HasMore()) {
-      iter.GetNext()->SetImage(mImage);
-    }
-
-    /* set our mimetype as a property */
-    nsCOMPtr<nsISupportsCString> contentType(do_CreateInstance("@mozilla.org/supports-cstring;1"));
-    if (contentType) {
-      contentType->SetData(mContentType);
-      mProperties->Set("type", contentType);
-    }
-
-    /* set our content disposition as a property */
-    nsAutoCString disposition;
-    if (chan) {
-      chan->GetContentDispositionHeader(disposition);
-    }
-    if (!disposition.IsEmpty()) {
-      nsCOMPtr<nsISupportsCString> contentDisposition(do_CreateInstance("@mozilla.org/supports-cstring;1"));
-      if (contentDisposition) {
-        contentDisposition->SetData(disposition);
-        mProperties->Set("content-disposition", contentDisposition);
+      // If we've resniffed our MIME type and it changed, we need to create a
+      // new status tracker to give to the image, because we don't have one of
+      // our own any more.
+      if (mResniffMimeType) {
+        NS_ABORT_IF_FALSE(mIsMultiPartChannel, "Resniffing a non-multipart image");
+        mStatusTracker = new imgStatusTracker(nullptr);
       }
-    }
 
-    LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType.get());
+      mResniffMimeType = false;
 
-    //
-    // Figure out our Image initialization flags
-    //
+      /* now we have mimetype, so we can infer the image type that we want */
+      if (mContentType.EqualsLiteral(SVG_MIMETYPE)) {
+        mImage = new VectorImage(mStatusTracker.forget());
+      } else {
+        mImage = new RasterImage(mStatusTracker.forget());
+      }
+      mImage->SetInnerWindowID(mInnerWindowId);
 
-    // We default to the static globals
-    bool isDiscardable = gDiscardable;
-    bool doDecodeOnDraw = gDecodeOnDraw;
+      // Notify any imgRequestProxys that are observing us that we have an Image.
+      nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+      while (iter.HasMore()) {
+        iter.GetNext()->SetImage(mImage);
+      }
 
-    // We want UI to be as snappy as possible and not to flicker. Disable discarding
-    // and decode-on-draw for chrome URLS
-    bool isChrome = false;
-    rv = mURI->SchemeIs("chrome", &isChrome);
-    if (NS_SUCCEEDED(rv) && isChrome)
-      isDiscardable = doDecodeOnDraw = false;
+      /* set our mimetype as a property */
+      nsCOMPtr<nsISupportsCString> contentType(do_CreateInstance("@mozilla.org/supports-cstring;1"));
+      if (contentType) {
+        contentType->SetData(mContentType);
+        mProperties->Set("type", contentType);
+      }
 
-    // We don't want resources like the "loading" icon to be discardable or
-    // decode-on-draw either.
-    bool isResource = false;
-    rv = mURI->SchemeIs("resource", &isResource);
-    if (NS_SUCCEEDED(rv) && isResource)
-      isDiscardable = doDecodeOnDraw = false;
+      /* set our content disposition as a property */
+      nsAutoCString disposition;
+      if (chan) {
+        chan->GetContentDispositionHeader(disposition);
+      }
+      if (!disposition.IsEmpty()) {
+        nsCOMPtr<nsISupportsCString> contentDisposition(do_CreateInstance("@mozilla.org/supports-cstring;1"));
+        if (contentDisposition) {
+          contentDisposition->SetData(disposition);
+          mProperties->Set("content-disposition", contentDisposition);
+        }
+      }
 
-    // For multipart/x-mixed-replace, we basically want a direct channel to the
-    // decoder. Disable both for this case as well.
-    if (mIsMultiPartChannel)
-      isDiscardable = doDecodeOnDraw = false;
+      LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType.get());
 
-    // We have all the information we need
-    uint32_t imageFlags = Image::INIT_FLAG_NONE;
-    if (isDiscardable)
-      imageFlags |= Image::INIT_FLAG_DISCARDABLE;
-    if (doDecodeOnDraw)
-      imageFlags |= Image::INIT_FLAG_DECODE_ON_DRAW;
-    if (mIsMultiPartChannel)
-      imageFlags |= Image::INIT_FLAG_MULTIPART;
+      //
+      // Figure out our Image initialization flags
+      //
 
-    // Get our URI string
-    nsAutoCString uriString;
-    rv = mURI->GetSpec(uriString);
-    if (NS_FAILED(rv))
-      uriString.Assign("<unknown image URI>");
+      // We default to the static globals
+      bool isDiscardable = gDiscardable;
+      bool doDecodeOnDraw = gDecodeOnDraw;
 
-    // Initialize the image that we created above. For RasterImages, this
-    // instantiates a decoder behind the scenes, so if we don't have a decoder
-    // for this mimetype we'll find out about it here.
-    rv = mImage->Init(this, mContentType.get(), uriString.get(), imageFlags);
-    if (NS_FAILED(rv)) { // Probably bad mimetype
+      // We want UI to be as snappy as possible and not to flicker. Disable discarding
+      // and decode-on-draw for chrome URLS
+      bool isChrome = false;
+      rv = mURI->SchemeIs("chrome", &isChrome);
+      if (NS_SUCCEEDED(rv) && isChrome)
+        isDiscardable = doDecodeOnDraw = false;
 
-      this->Cancel(rv);
-      return NS_BINDING_ABORTED;
-    }
+      // We don't want resources like the "loading" icon to be discardable or
+      // decode-on-draw either.
+      bool isResource = false;
+      rv = mURI->SchemeIs("resource", &isResource);
+      if (NS_SUCCEEDED(rv) && isResource)
+        isDiscardable = doDecodeOnDraw = false;
 
-    if (imageType == imgIContainer::TYPE_RASTER) {
-      /* Use content-length as a size hint for http channels. */
-      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
-      if (httpChannel) {
-        nsAutoCString contentLength;
-        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
-                                            contentLength);
-        if (NS_SUCCEEDED(rv)) {
-          int32_t len = contentLength.ToInteger(&rv);
+      // For multipart/x-mixed-replace, we basically want a direct channel to the
+      // decoder. Disable both for this case as well.
+      if (mIsMultiPartChannel)
+        isDiscardable = doDecodeOnDraw = false;
 
-          // Pass anything usable on so that the RasterImage can preallocate
-          // its source buffer
-          if (len > 0) {
-            uint32_t sizeHint = (uint32_t) len;
-            sizeHint = NS_MIN<uint32_t>(sizeHint, 20000000); /* Bound by something reasonable */
-            RasterImage* rasterImage = static_cast<RasterImage*>(mImage.get());
-            rv = rasterImage->SetSourceSizeHint(sizeHint);
-            if (NS_FAILED(rv)) {
-              // Flush memory, try to get some back, and try again
-              rv = nsMemory::HeapMinimize(true);
-              nsresult rv2 = rasterImage->SetSourceSizeHint(sizeHint);
-              // If we've still failed at this point, things are going downhill
-              if (NS_FAILED(rv) || NS_FAILED(rv2)) {
-                NS_WARNING("About to hit OOM in imagelib!");
+      // We have all the information we need
+      uint32_t imageFlags = Image::INIT_FLAG_NONE;
+      if (isDiscardable)
+        imageFlags |= Image::INIT_FLAG_DISCARDABLE;
+      if (doDecodeOnDraw)
+        imageFlags |= Image::INIT_FLAG_DECODE_ON_DRAW;
+      if (mIsMultiPartChannel)
+        imageFlags |= Image::INIT_FLAG_MULTIPART;
+
+      // Get our URI string
+      nsAutoCString uriString;
+      rv = mURI->GetSpec(uriString);
+      if (NS_FAILED(rv))
+        uriString.Assign("<unknown image URI>");
+
+      // Initialize the image that we created above. For RasterImages, this
+      // instantiates a decoder behind the scenes, so if we don't have a decoder
+      // for this mimetype we'll find out about it here.
+      rv = mImage->Init(this, mContentType.get(), uriString.get(), imageFlags);
+      if (NS_FAILED(rv)) { // Probably bad mimetype
+
+        this->Cancel(rv);
+        return NS_BINDING_ABORTED;
+      }
+
+      if (mImage->GetType() == imgIContainer::TYPE_RASTER) {
+        /* Use content-length as a size hint for http channels. */
+        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
+        if (httpChannel) {
+          nsAutoCString contentLength;
+          rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
+                                              contentLength);
+          if (NS_SUCCEEDED(rv)) {
+            int32_t len = contentLength.ToInteger(&rv);
+
+            // Pass anything usable on so that the RasterImage can preallocate
+            // its source buffer
+            if (len > 0) {
+              uint32_t sizeHint = (uint32_t) len;
+              sizeHint = NS_MIN<uint32_t>(sizeHint, 20000000); /* Bound by something reasonable */
+              RasterImage* rasterImage = static_cast<RasterImage*>(mImage.get());
+              rv = rasterImage->SetSourceSizeHint(sizeHint);
+              if (NS_FAILED(rv)) {
+                // Flush memory, try to get some back, and try again
+                rv = nsMemory::HeapMinimize(true);
+                nsresult rv2 = rasterImage->SetSourceSizeHint(sizeHint);
+                // If we've still failed at this point, things are going downhill
+                if (NS_FAILED(rv) || NS_FAILED(rv2)) {
+                  NS_WARNING("About to hit OOM in imagelib!");
+                }
               }
             }
           }
         }
       }
-    }
 
-    if (imageType == imgIContainer::TYPE_RASTER) {
-      // If we were waiting on the image to do something, now's our chance.
-      if (mDecodeRequested) {
-        mImage->RequestDecode();
+      if (mImage->GetType() == imgIContainer::TYPE_RASTER) {
+        // If we were waiting on the image to do something, now's our chance.
+        if (mDecodeRequested) {
+          mImage->RequestDecode();
+        }
+      } else { // mImage->GetType() == imgIContainer::TYPE_VECTOR
+        nsCOMPtr<nsIStreamListener> imageAsStream = do_QueryInterface(mImage);
+        NS_ABORT_IF_FALSE(imageAsStream,
+                          "SVG-typed Image failed QI to nsIStreamListener");
+        imageAsStream->OnStartRequest(aRequest, nullptr);
       }
-    } else { // imageType == imgIContainer::TYPE_VECTOR
-      nsCOMPtr<nsIStreamListener> imageAsStream = do_QueryInterface(mImage);
-      NS_ABORT_IF_FALSE(imageAsStream,
-                        "SVG-typed Image failed QI to nsIStreamListener");
-      imageAsStream->OnStartRequest(aRequest, nullptr);
     }
   }
 
-  if (imageType == imgIContainer::TYPE_RASTER) {
+  if (mImage->GetType() == imgIContainer::TYPE_RASTER) {
     // WriteToRasterImage always consumes everything it gets
     // if it doesn't run out of memory
     uint32_t bytesRead;
@@ -1135,7 +1165,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
                              count, &bytesRead);
     NS_ABORT_IF_FALSE(bytesRead == count || mImage->HasError(),
   "WriteToRasterImage should consume everything or the image must be in error!");
-  } else { // imageType == imgIContainer::TYPE_VECTOR
+  } else { // mImage->GetType() == imgIContainer::TYPE_VECTOR
     nsCOMPtr<nsIStreamListener> imageAsStream = do_QueryInterface(mImage);
     rv = imageAsStream->OnDataAvailable(aRequest, ctxt, inStr,
                                         sourceOffset, count);
@@ -1152,31 +1182,31 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
 }
 
 static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,
-                                         void* closure,
+                                         void* data,
                                          const char* fromRawSegment,
                                          uint32_t toOffset,
                                          uint32_t count,
                                          uint32_t *writeCount)
 {
-  imgRequest *request = static_cast<imgRequest*>(closure);
+  mimetype_closure* closure = static_cast<mimetype_closure*>(data);
 
-  NS_ASSERTION(request, "request is null!");
+  NS_ASSERTION(closure, "closure is null!");
 
   if (count > 0)
-    request->SniffMimeType(fromRawSegment, count);
+    closure->request->SniffMimeType(fromRawSegment, count, *closure->newType);
 
   *writeCount = 0;
   return NS_ERROR_FAILURE;
 }
 
 void
-imgRequest::SniffMimeType(const char *buf, uint32_t len)
+imgRequest::SniffMimeType(const char *buf, uint32_t len, nsACString& newType)
 {
-  imgLoader::GetMimeTypeFromContent(buf, len, mContentType);
+  imgLoader::GetMimeTypeFromContent(buf, len, newType);
 
   // The vast majority of the time, imgLoader will find a gif/jpeg/png image
-  // and fill mContentType with the sniffed MIME type.
-  if (!mContentType.IsEmpty())
+  // and fill newType with the sniffed MIME type.
+  if (!newType.IsEmpty())
     return;
 
   // When our sniffing fails, we want to query registered image decoders
@@ -1186,8 +1216,8 @@ imgRequest::SniffMimeType(const char *buf, uint32_t len)
   uint32_t length = sniffers.Count();
   for (uint32_t i = 0; i < length; ++i) {
     nsresult rv =
-      sniffers[i]->GetMIMETypeFromContent(nullptr, (const uint8_t *) buf, len, mContentType);
-    if (NS_SUCCEEDED(rv) && !mContentType.IsEmpty()) {
+      sniffers[i]->GetMIMETypeFromContent(nullptr, (const uint8_t *) buf, len, newType);
+    if (NS_SUCCEEDED(rv) && !newType.IsEmpty()) {
       return;
     }
   }
