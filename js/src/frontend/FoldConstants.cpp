@@ -245,7 +245,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
             break;
 
           case PNK_XMLPI: {
-            XMLProcessingInstruction &pi = pn2->asXMLProcessingInstruction();
+            XMLProcessingInstruction &pi = pn2->as<XMLProcessingInstruction>();
             str = js_MakeXMLPIString(cx, pi.target(), pi.data());
             if (!str)
                 return false;

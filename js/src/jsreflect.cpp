@@ -2910,7 +2910,7 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
         return builder.xmlComment(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
       case PNK_XMLPI: {
-        XMLProcessingInstruction &pi = pn->asXMLProcessingInstruction();
+        XMLProcessingInstruction &pi = pn->as<XMLProcessingInstruction>();
         return builder.xmlPI(atomContents(pi.target()),
                              atomContents(pi.data()),
                              &pi.pn_pos,
