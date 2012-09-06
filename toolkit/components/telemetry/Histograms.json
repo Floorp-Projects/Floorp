@@ -1602,18 +1602,6 @@
     "n_buckets": 10,
     "description": "Total Time spent (ms) during disk cache revalidation"
   },
-  "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 10,
-    "description": "Time spent in nsDiskCacheOutputStream::Close() on non-main thread (ms)"
-  },
-  "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_MAIN_THREAD": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 10,
-    "description": "Time spent in nsDiskCacheOutputStream::Close() on the main thread (ms)"
-  },
   "NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL": {
     "kind": "exponential",
     "high": "10000",
