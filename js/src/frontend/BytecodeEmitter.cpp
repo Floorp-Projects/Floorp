@@ -6161,11 +6161,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_BREAK:
-        ok = EmitBreak(cx, bce, pn->asBreakStatement().label());
+        ok = EmitBreak(cx, bce, pn->as<BreakStatement>().label());
         break;
 
       case PNK_CONTINUE:
-        ok = EmitContinue(cx, bce, pn->asContinueStatement().label());
+        ok = EmitContinue(cx, bce, pn->as<ContinueStatement>().label());
         break;
 
       case PNK_WITH:
@@ -6280,7 +6280,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_CONDITIONAL:
-        ok = EmitConditionalExpression(cx, bce, pn->asConditionalExpression());
+        ok = EmitConditionalExpression(cx, bce, pn->as<ConditionalExpression>());
         break;
 
       case PNK_OR:
@@ -6616,7 +6616,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_XMLPI:
-        if (!EmitXMLProcessingInstruction(cx, bce, pn->asXMLProcessingInstruction()))
+        if (!EmitXMLProcessingInstruction(cx, bce, pn->as<XMLProcessingInstruction>()))
             return false;
         break;
 #endif /* JS_HAS_XML_SUPPORT */
