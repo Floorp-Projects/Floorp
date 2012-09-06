@@ -23,14 +23,38 @@ public class SingleTileLayer extends TileLayer {
 
     private Rect mMask;
 
-    public SingleTileLayer(CairoImage image) { this(false, image); }
+    // To avoid excessive GC, declare some objects here that would otherwise
+    // be created and destroyed frequently during draw().
+    private final RectF mBounds;
+    private final RectF mTextureBounds;
+    private final RectF mViewport;
+    private final Rect mIntBounds;
+    private final Rect mSubRect;
+    private final RectF mSubRectF;
+    private final Region mMaskedBounds;
+    private final Rect mCropRect;
+    private final float[] mCoords;
+
+    public SingleTileLayer(CairoImage image) {
+        this(false, image);
+    }
 
     public SingleTileLayer(boolean repeat, CairoImage image) {
-        super(image, repeat ? TileLayer.PaintMode.REPEAT : TileLayer.PaintMode.NORMAL);
+        this(image, repeat ? TileLayer.PaintMode.REPEAT : TileLayer.PaintMode.NORMAL);
     }
 
     public SingleTileLayer(CairoImage image, TileLayer.PaintMode paintMode) {
         super(image, paintMode);
+
+        mBounds = new RectF();
+        mTextureBounds = new RectF();
+        mViewport = new RectF();
+        mIntBounds = new Rect();
+        mSubRect = new Rect();
+        mSubRectF = new RectF();
+        mMaskedBounds = new Region();
+        mCropRect = new Rect();
+        mCoords = new float[20];
     }
 
     /**
@@ -47,73 +71,80 @@ public class SingleTileLayer extends TileLayer {
         if (!initialized())
             return;
 
-        RectF bounds;
-        RectF textureBounds;
-        RectF viewport = context.viewport;
+        mViewport.set(context.viewport);
 
         if (repeats()) {
             // If we're repeating, we want to adjust the texture bounds so that
             // the texture repeats the correct number of times when drawn at
             // the size of the viewport.
-            bounds = getBounds(context);
-            textureBounds = new RectF(0.0f, 0.0f, bounds.width(), bounds.height());
-            bounds = new RectF(0.0f, 0.0f, viewport.width(), viewport.height());
+            mBounds.set(getBounds(context));
+            mTextureBounds.set(0.0f, 0.0f, mBounds.width(), mBounds.height());
+            mBounds.set(0.0f, 0.0f, mViewport.width(), mViewport.height());
         } else if (stretches()) {
             // If we're stretching, we just want the bounds and texture bounds
             // to fit to the page.
-            bounds = new RectF(context.pageRect);
-            textureBounds = bounds;
+            mBounds.set(context.pageRect);
+            mTextureBounds.set(mBounds);
         } else {
-            bounds = getBounds(context);
-            textureBounds = bounds;
+            mBounds.set(getBounds(context));
+            mTextureBounds.set(mBounds);
         }
 
-        Rect intBounds = new Rect();
-        bounds.roundOut(intBounds);
-        Region maskedBounds = new Region(intBounds);
+        mBounds.roundOut(mIntBounds);
+        mMaskedBounds.set(mIntBounds);
         if (mMask != null) {
-            maskedBounds.op(mMask, Region.Op.DIFFERENCE);
-            if (maskedBounds.isEmpty())
+            mMaskedBounds.op(mMask, Region.Op.DIFFERENCE);
+            if (mMaskedBounds.isEmpty())
                 return;
         }
 
         // XXX Possible optimisation here, form this array so we can draw it in
         //     a single call.
-        RegionIterator i = new RegionIterator(maskedBounds);
-        for (Rect subRect = new Rect(); i.next(subRect);) {
+        RegionIterator i = new RegionIterator(mMaskedBounds);
+        while (i.next(mSubRect)) {
             // Compensate for rounding errors at the edge of the tile caused by
             // the roundOut above
-            RectF subRectF = new RectF(Math.max(bounds.left, (float)subRect.left),
-                                       Math.max(bounds.top, (float)subRect.top),
-                                       Math.min(bounds.right, (float)subRect.right),
-                                       Math.min(bounds.bottom, (float)subRect.bottom));
+            mSubRectF.set(Math.max(mBounds.left, (float)mSubRect.left),
+                          Math.max(mBounds.top, (float)mSubRect.top),
+                          Math.min(mBounds.right, (float)mSubRect.right),
+                          Math.min(mBounds.bottom, (float)mSubRect.bottom));
 
             // This is the left/top/right/bottom of the rect, relative to the
             // bottom-left of the layer, to use for texture coordinates.
-            int[] cropRect = new int[] { Math.round(subRectF.left - bounds.left),
-                                         Math.round(bounds.bottom - subRectF.top),
-                                         Math.round(subRectF.right - bounds.left),
-                                         Math.round(bounds.bottom - subRectF.bottom) };
+            mCropRect.set(Math.round(mSubRectF.left - mBounds.left),
+                          Math.round(mBounds.bottom - mSubRectF.top),
+                          Math.round(mSubRectF.right - mBounds.left),
+                          Math.round(mBounds.bottom - mSubRectF.bottom));
 
-            float left = subRectF.left - viewport.left;
-            float top = viewport.bottom - subRectF.bottom;
-            float right = left + subRectF.width();
-            float bottom = top + subRectF.height();
+            float left = mSubRectF.left - mViewport.left;
+            float top = mViewport.bottom - mSubRectF.bottom;
+            float right = left + mSubRectF.width();
+            float bottom = top + mSubRectF.height();
 
-            float[] coords = {
-                //x, y, z, texture_x, texture_y
-                left/viewport.width(), bottom/viewport.height(), 0,
-                cropRect[0]/textureBounds.width(), cropRect[1]/textureBounds.height(),
+            //x, y, z, texture_x, texture_y
+            mCoords[0] = left/mViewport.width();
+            mCoords[1] = bottom/mViewport.height();
+            mCoords[2] = 0;
+            mCoords[3] = mCropRect.left/mTextureBounds.width();
+            mCoords[4] = mCropRect.top/mTextureBounds.height();
 
-                left/viewport.width(), top/viewport.height(), 0,
-                cropRect[0]/textureBounds.width(), cropRect[3]/textureBounds.height(),
+            mCoords[5] = left/mViewport.width();
+            mCoords[6] = top/mViewport.height();
+            mCoords[7] = 0;
+            mCoords[8] = mCropRect.left/mTextureBounds.width();
+            mCoords[9] = mCropRect.bottom/mTextureBounds.height();
 
-                right/viewport.width(), bottom/viewport.height(), 0,
-                cropRect[2]/textureBounds.width(), cropRect[1]/textureBounds.height(),
+            mCoords[10] = right/mViewport.width();
+            mCoords[11] = bottom/mViewport.height();
+            mCoords[12] = 0;
+            mCoords[13] = mCropRect.right/mTextureBounds.width();
+            mCoords[14] = mCropRect.top/mTextureBounds.height();
 
-                right/viewport.width(), top/viewport.height(), 0,
-                cropRect[2]/textureBounds.width(), cropRect[3]/textureBounds.height()
-            };
+            mCoords[15] = right/mViewport.width();
+            mCoords[16] = top/mViewport.height();
+            mCoords[17] = 0;
+            mCoords[18] = mCropRect.right/mTextureBounds.width();
+            mCoords[19] = mCropRect.bottom/mTextureBounds.height();
 
             FloatBuffer coordBuffer = context.coordBuffer;
             int positionHandle = context.positionHandle;
@@ -124,7 +155,7 @@ public class SingleTileLayer extends TileLayer {
 
             // Make sure we are at position zero in the buffer
             coordBuffer.position(0);
-            coordBuffer.put(coords);
+            coordBuffer.put(mCoords);
 
             // Unbind any the current array buffer so we can use client side buffers
             GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
