@@ -294,8 +294,8 @@ private:
                     const char* type="rpc", bool reply=false) const;
 
     // This method is only safe to call on the worker thread, or in a
-    // debugger with all threads paused.  |outfile| defaults to stdout.
-    void DumpRPCStack(FILE* outfile=NULL, const char* const pfx="") const;
+    // debugger with all threads paused.
+    void DumpRPCStack(const char* const pfx="") const;
 
     // 
     // Queue of all incoming messages, except for replies to sync

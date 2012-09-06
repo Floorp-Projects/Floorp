@@ -144,7 +144,7 @@ nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
 NS_IMETHODIMP 
 nsStreamLoader::OnDataAvailable(nsIRequest* request, nsISupports *ctxt, 
                                 nsIInputStream *inStr, 
-                                uint32_t sourceOffset, uint32_t count)
+                                uint64_t sourceOffset, uint32_t count)
 {
   uint32_t countRead;
   return inStr->ReadSegments(WriteSegmentFun, this, count, &countRead);

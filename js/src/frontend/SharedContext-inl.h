@@ -15,23 +15,22 @@ namespace js {
 namespace frontend {
 
 inline
-SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun,
-                             FunctionBox *funbox, StrictMode sms)
+SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, FunctionBox *funbox,
+                             StrictMode sms)
   : context(cx),
-    fun_(cx, fun),
     funbox_(funbox),
     scopeChain_(cx, scopeChain),
-    cxFlags(cx),
+    cxFlags(),
     strictModeState(sms)
 {
-    JS_ASSERT((fun && !scopeChain_) || (!fun && !funbox));
+    JS_ASSERT((funbox && !scopeChain_) || !funbox);
 }
 
 inline bool
 SharedContext::inStrictMode()
 {
     JS_ASSERT(strictModeState != StrictMode::UNKNOWN);
-    JS_ASSERT_IF(inFunction() && funbox(), funbox()->strictModeState == strictModeState);
+    JS_ASSERT_IF(inFunction(), funbox()->strictModeState == strictModeState);
     return strictModeState == StrictMode::STRICT;
 }
 

@@ -529,8 +529,8 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "mozilla/dom/Activity.h"
 
 #include "DOMCameraManager.h"
-#include "CameraControl.h"
-#include "CameraCapabilities.h"
+#include "DOMCameraControl.h"
+#include "DOMCameraCapabilities.h"
 
 #include "DOMError.h"
 #include "DOMRequest.h"
@@ -1523,9 +1523,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MediaStream, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
-
-  NS_DEFINE_CLASSINFO_DATA(ProgressEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(XMLHttpRequestUpload, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
@@ -4197,11 +4194,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 #endif
 
-  DOM_CLASSINFO_MAP_BEGIN(ProgressEvent, nsIDOMProgressEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMProgressEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(XMLHttpRequestUpload, nsIXMLHttpRequestUpload)
     DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestUpload)
@@ -4639,7 +4631,8 @@ nsDOMClassInfo::Init()
   mozilla::dom::oldproxybindings::Register(nameSpaceManager);
 
   if (!AzureCanvasEnabled()) {
-    nameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING("CanvasRenderingContext2D"), NULL);
+    nameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING("CanvasRenderingContext2D"),
+                                                 nullptr, nullptr);
   }
 
   sIsInitialized = true;
@@ -6787,6 +6780,10 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     if (define) {
       if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
           !ConstructorEnabled(name_struct, aWin)) {
+        return NS_OK;
+      }
+
+      if (name_struct->mPrefEnabled && !(*name_struct->mPrefEnabled)()) {
         return NS_OK;
       }
 

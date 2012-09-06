@@ -54,7 +54,7 @@ dictionary MozXMLHttpRequestParameters
 [Constructor(optional MozXMLHttpRequestParameters params)]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // event handler
-  [TreatNonCallableAsNull, GetterInfallible=MainThread]
+  [TreatNonCallableAsNull, SetterThrows, GetterThrows=Workers]
   attribute Function? onreadystatechange;
 
   // states
@@ -64,72 +64,81 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   const unsigned short LOADING = 3;
   const unsigned short DONE = 4;
 
-  [Infallible]
   readonly attribute unsigned short readyState;
 
   // request
+  [Throws]
   void open(DOMString method, DOMString url, optional boolean async = true,
             optional DOMString? user, optional DOMString? password);
+  [Throws]
   void setRequestHeader(DOMString header, DOMString value);
 
-  [GetterInfallible]
+  [SetterThrows]
   attribute unsigned long timeout;
 
-  [GetterInfallible, SetterInfallible=MainThread]
+  [SetterThrows=Workers]
   attribute boolean withCredentials;
 
-  [Infallible=MainThread]
+  [Throws=Workers]
   readonly attribute XMLHttpRequestUpload upload;
 
+  [Throws]
   void send();
+  [Throws]
   void send(ArrayBuffer data);
+  [Throws]
   void send(Blob data);
+  [Throws]
   void send(Document data);
+  [Throws]
   void send(DOMString? data);
+  [Throws]
   void send(FormData data);
+  [Throws]
   void send(InputStream data);
 
-  [Infallible=MainThread]
+  [Throws=Workers]
   void abort();
 
   // response
-  [Infallible=MainThread]
+  [Throws=Workers]
   readonly attribute unsigned short status;
 
-  [Infallible]
   readonly attribute DOMString statusText;
+  [Throws]
   DOMString? getResponseHeader(DOMString header);
 
-  [Infallible=MainThread]
+  [Throws=Workers]
   DOMString getAllResponseHeaders();
 
-  [Infallible=MainThread]
+  [Throws=Workers]
   void overrideMimeType(DOMString mime);
 
-  [GetterInfallible]
+  [SetterThrows]
   attribute XMLHttpRequestResponseType responseType;
+  [Throws]
   readonly attribute any response;
+  [Throws]
   readonly attribute DOMString? responseText;
 
-  [GetterInfallible=Workers]
+  [Throws=MainThread]
   readonly attribute Document? responseXML;
 
   // Mozilla-specific stuff
-  [GetterInfallible, SetterInfallible=MainThread]
+  [SetterThrows=Workers]
   attribute boolean multipart;
 
-  [GetterInfallible, SetterInfallible=MainThread]
+  [SetterThrows=Workers]
   attribute boolean mozBackgroundRequest;
 
-  [ChromeOnly, GetterInfallible]
+  [ChromeOnly]
   readonly attribute MozChannel channel;
 
+  [Throws]
   void sendAsBinary(DOMString body);
+  [Throws]
   any getInterface(IID iid);
 
-  [Infallible]
   readonly attribute boolean mozAnon;
-
-  [Infallible]
   readonly attribute boolean mozSystem;
 };

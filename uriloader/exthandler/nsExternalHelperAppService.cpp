@@ -1743,8 +1743,10 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
     }
 }
 
-NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
-                                                  nsIInputStream * inStr, uint32_t sourceOffset, uint32_t count)
+NS_IMETHODIMP
+nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
+                                      nsIInputStream * inStr,
+                                      uint64_t sourceOffset, uint32_t count)
 {
   nsresult rv = NS_OK;
   // first, check to see if we've been canceled....

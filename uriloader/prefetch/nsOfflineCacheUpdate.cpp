@@ -212,7 +212,7 @@ NS_IMETHODIMP
 nsManifestCheck::OnDataAvailable(nsIRequest *aRequest,
                                  nsISupports *aContext,
                                  nsIInputStream *aStream,
-                                 uint32_t aOffset,
+                                 uint64_t aOffset,
                                  uint32_t aCount)
 {
     uint32_t bytesRead;
@@ -392,13 +392,13 @@ NS_IMETHODIMP
 nsOfflineCacheUpdateItem::OnDataAvailable(nsIRequest *aRequest,
                                           nsISupports *aContext,
                                           nsIInputStream *aStream,
-                                          uint32_t aOffset,
+                                          uint64_t aOffset,
                                           uint32_t aCount)
 {
     uint32_t bytesRead = 0;
     aStream->ReadSegments(NS_DiscardSegment, nullptr, aCount, &bytesRead);
     mBytesRead += bytesRead;
-    LOG(("loaded %u bytes into offline cache [offset=%u]\n",
+    LOG(("loaded %u bytes into offline cache [offset=%llu]\n",
          bytesRead, aOffset));
 
     mUpdate->OnByteProgress(bytesRead);
@@ -1080,7 +1080,7 @@ NS_IMETHODIMP
 nsOfflineManifestItem::OnDataAvailable(nsIRequest *aRequest,
                                        nsISupports *aContext,
                                        nsIInputStream *aStream,
-                                       uint32_t aOffset,
+                                       uint64_t aOffset,
                                        uint32_t aCount)
 {
     uint32_t bytesRead = 0;

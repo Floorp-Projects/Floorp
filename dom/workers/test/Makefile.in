@@ -39,6 +39,8 @@ MOCHITEST_FILES = \
   importScripts_worker_imported2.js \
   importScripts_worker_imported3.js \
   importScripts_worker_imported4.js \
+  test_instanceof.html \
+  instanceof_worker.js \
   test_json.html \
   json_worker.js \
   test_location.html \

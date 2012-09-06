@@ -145,8 +145,19 @@ BluetoothService::DistributeSignal(const BluetoothSignal& signal)
   // Notify observers that a message has been sent
   BluetoothSignalObserverList* ol;
   if (!mBluetoothSignalObserverTable.Get(signal.path(), &ol)) {
+#if DEBUG
+    nsString msg;
+    msg.AssignLiteral("No observer registered for path");
+    msg.Append(signal.path());
+    NS_WARNING(NS_ConvertUTF16toUTF8(msg).get());
+#endif
     return NS_OK;
   }
+#if DEBUG
+  if (ol->Length() == 0) {
+    NS_WARNING("Distributing to observer list of 0");
+  }
+#endif
   ol->Broadcast(signal);
   return NS_OK;
 }

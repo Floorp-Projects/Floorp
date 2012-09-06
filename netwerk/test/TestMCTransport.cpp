@@ -93,9 +93,9 @@ TestListener::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
 NS_IMETHODIMP
 TestListener::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
                               nsIInputStream *is,
-                              uint32_t offset, uint32_t count)
+                              uint64_t offset, uint32_t count)
 {
-    printf("OnDataAvailable: offset=%u count=%u\n", offset, count);
+    printf("OnDataAvailable: offset=%llu count=%u\n", offset, count);
 
     if (!mFile) return NS_ERROR_FAILURE;
 

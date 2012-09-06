@@ -48,7 +48,7 @@ def writeMakefiles(files):
         pathmap.setdefault(dirp, []).append(leaf)
 
     for k, v in pathmap.iteritems():
-        result = writeMakefile.substMakefile('parseFailures.py', 'dom/imptests/' + k, [], v)
+        result = writeMakefile.substMakefile('parseFailures.py', [], v)
 
         fp = open(k + '/Makefile.in', 'wb')
         fp.write(result)
