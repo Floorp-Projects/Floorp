@@ -126,7 +126,7 @@ ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 libs:: 
 	cp -p $(MOZ_APP_NAME)$(BIN_SUFFIX) $(DIST)/bin/$(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
 
-GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, firefox.js)
+GARBAGE += $(addprefix $(FINAL_TARGET)/defaults/pref/, firefox.js)
 
 endif
 
@@ -134,24 +134,24 @@ endif #} LIBXUL_SDK
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/mozicon128.png $(DIST)/bin/icons
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png  $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png  $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png  $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/mozicon128.png $(FINAL_TARGET)/icons
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png  $(FINAL_TARGET)/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png  $(FINAL_TARGET)/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png  $(FINAL_TARGET)/chrome/icons/default
 endif
 
 libs:: $(srcdir)/profile/prefs.js
-	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/defaults/profile
+	$(INSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile
 
 ifndef LIBXUL_SDK
 # channel-prefs.js is handled separate from other prefs due to bug 756325
 libs:: $(srcdir)/profile/channel-prefs.js
-	$(NSINSTALL) -D $(DIST)/bin/defaults/pref
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(PREF_PPFLAGS) $(ACDEFINES) $^ > $(DIST)/bin/defaults/pref/channel-prefs.js
+	$(NSINSTALL) -D $(FINAL_TARGET)/defaults/pref
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(PREF_PPFLAGS) $(ACDEFINES) $^ > $(FINAL_TARGET)/defaults/pref/channel-prefs.js
 endif
 
 libs:: $(srcdir)/blocklist.xml
-	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
+	$(INSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 

@@ -147,6 +147,7 @@ COMPONENT_LIBS += \
   htmlpars \
   identity \
   imglib2 \
+  mediasniffer \
   gkgfx \
   gklayout \
   docshell \

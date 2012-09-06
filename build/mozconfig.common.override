@@ -1,0 +1,11 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Common mozconfig for all users
+#
+# Add options to this file that will be inherited by all in-tree mozconfigs.
+# This file is included at the *end* of the mozconfigs, and so may be used
+# to override anything done previously.
+#
+# The common expected usage is for try builds with nondefault options.

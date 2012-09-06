@@ -509,6 +509,9 @@ var CustomEventManager = {
       case 'select-choicechange':
         FormsHelper.handleEvent(detail);
         break;
+      case 'system-message-listener-ready':
+        Services.obs.notifyObservers(null, 'system-message-listener-ready', null);
+        break;
     }
   }
 }

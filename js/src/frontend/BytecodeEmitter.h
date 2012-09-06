@@ -99,9 +99,6 @@ struct BytecodeEmitter
 
     unsigned        emitLevel;      /* js::frontend::EmitTree recursion level */
 
-    typedef HashMap<JSAtom *, Value> ConstMap;
-    ConstMap        constMap;       /* compile time constants */
-
     GCConstList     constList;      /* constants to be included with the script */
 
     CGObjectList    objectList;     /* list of emitted objects */
@@ -208,21 +205,6 @@ Emit3(JSContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1, jsbytecode o
  */
 ptrdiff_t
 EmitN(JSContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra);
-
-/*
- * Define and lookup a primitive jsval associated with the const named by atom.
- * DefineCompileTimeConstant analyzes the constant-folded initializer at pn
- * and saves the const's value in bce->constList, if it can be used at compile
- * time. It returns true unless an error occurred.
- *
- * If the initializer's value could not be saved, DefineCompileTimeConstant
- * calls will return the undefined value. DefineCompileTimeConstant tries
- * to find a const value memorized for atom, returning true with *vp set to a
- * value other than undefined if the constant was found, true with *vp set to
- * JSVAL_VOID if not found, and false on error.
- */
-bool
-DefineCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, ParseNode *pn);
 
 /*
  * Emit code into bce for the tree rooted at pn.

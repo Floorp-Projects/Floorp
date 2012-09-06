@@ -529,8 +529,8 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "mozilla/dom/Activity.h"
 
 #include "DOMCameraManager.h"
-#include "CameraControl.h"
-#include "CameraCapabilities.h"
+#include "DOMCameraControl.h"
+#include "DOMCameraCapabilities.h"
 
 #include "DOMError.h"
 #include "DOMRequest.h"
@@ -4639,7 +4639,8 @@ nsDOMClassInfo::Init()
   mozilla::dom::oldproxybindings::Register(nameSpaceManager);
 
   if (!AzureCanvasEnabled()) {
-    nameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING("CanvasRenderingContext2D"), NULL);
+    nameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING("CanvasRenderingContext2D"),
+                                                 nullptr, nullptr);
   }
 
   sIsInitialized = true;
@@ -6787,6 +6788,10 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     if (define) {
       if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
           !ConstructorEnabled(name_struct, aWin)) {
+        return NS_OK;
+      }
+
+      if (name_struct->mPrefEnabled && !(*name_struct->mPrefEnabled)()) {
         return NS_OK;
       }
 

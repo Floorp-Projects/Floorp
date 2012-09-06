@@ -1,0 +1,8 @@
+# LIST OF REFTEST FAILURES FROM IMPORTS
+#
+# The syntax of this file is as follows:
+#    1) All lines marked with a '#' are comments.
+#    2) A failure is denoted by a path, starting
+#       with module. E.g.:
+#         css3-multicol/block-clip-001.xht
+

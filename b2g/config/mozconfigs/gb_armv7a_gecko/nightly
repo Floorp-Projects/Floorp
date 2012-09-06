@@ -1,3 +1,5 @@
+. "$topsrcdir/b2g/config/mozconfigs/common"
+
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-b2g
 
 mk_add_options MOZ_MAKE_FLAGS="-j8"
@@ -15,3 +17,5 @@ ENABLE_MARIONETTE=1
 
 # Enable dump() from JS.
 export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
+
+. "$topsrcdir/b2g/config/mozconfigs/common.override"

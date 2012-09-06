@@ -6664,26 +6664,17 @@ nsDocShell::EnsureContentViewer()
 
     NS_TIME_FUNCTION;
 
-    nsIPrincipal* principal = nullptr;
     nsCOMPtr<nsIURI> baseURI;
-
-    nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(mScriptGlobal));
-    if (piDOMWindow) {
-        principal = piDOMWindow->GetOpenerScriptPrincipal();
-    }
-
-    if (!principal) {
-        principal = GetInheritedPrincipal(false);
-        nsCOMPtr<nsIDocShellTreeItem> parentItem;
-        GetSameTypeParent(getter_AddRefs(parentItem));
-        if (parentItem) {
-            nsCOMPtr<nsPIDOMWindow> domWin = do_GetInterface(GetAsSupports(this));
-            if (domWin) {
-                nsCOMPtr<nsIContent> parentContent =
-                    do_QueryInterface(domWin->GetFrameElementInternal());
-                if (parentContent) {
-                    baseURI = parentContent->GetBaseURI();
-                }
+    nsIPrincipal* principal = GetInheritedPrincipal(false);
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    GetSameTypeParent(getter_AddRefs(parentItem));
+    if (parentItem) {
+        nsCOMPtr<nsPIDOMWindow> domWin = do_GetInterface(GetAsSupports(this));
+        if (domWin) {
+            nsCOMPtr<nsIContent> parentContent =
+                do_QueryInterface(domWin->GetFrameElementInternal());
+            if (parentContent) {
+                baseURI = parentContent->GetBaseURI();
             }
         }
     }
