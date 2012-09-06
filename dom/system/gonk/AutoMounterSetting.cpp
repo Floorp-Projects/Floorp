@@ -78,7 +78,7 @@ AutoMounterSetting::AutoMounterSetting()
     return;
   }
   nsCOMPtr<nsISettingsServiceLock> lock;
-  settingsService->GetLock(getter_AddRefs(lock));
+  settingsService->CreateLock(getter_AddRefs(lock));
   nsCOMPtr<nsISettingsServiceCallback> callback = new SettingsServiceCallback();
   lock->Set(UMS_MODE, INT_TO_JSVAL(AUTOMOUNTER_DISABLE), callback, nullptr);
 }

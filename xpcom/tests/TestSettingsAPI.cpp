@@ -236,10 +236,10 @@ TestSettingsAPI()
 
   nsCOMPtr<nsISettingsService> iss = do_GetService("@mozilla.org/settingsService;1");
   nsCOMPtr<nsISettingsServiceLock> lock;
-  iss->GetLock(getter_AddRefs(lock));
+  iss->CreateLock(getter_AddRefs(lock));
 
   nsCOMPtr<nsISettingsServiceLock> lock1;
-  iss->GetLock(getter_AddRefs(lock1));
+  iss->CreateLock(getter_AddRefs(lock1));
 
   lock->Set("asdf", BOOLEAN_TO_JSVAL(true), cb0, nullptr);
   lock1->Get("asdf", cb1);
@@ -255,7 +255,7 @@ TestSettingsAPI()
   // The followings test if the observer can receive correct settings.
   // Case #1 won't carry any message; case #2 will carry TEST_OBSERVER_MESSAGE.
   nsCOMPtr<nsISettingsServiceLock> lock2;
-    iss->GetLock(getter_AddRefs(lock2));
+    iss->CreateLock(getter_AddRefs(lock2));
   lock2->Set(TEST_OBSERVER_KEY,
              BOOLEAN_TO_JSVAL(TEST_OBSERVER_VALUE),
              nullptr, nullptr);

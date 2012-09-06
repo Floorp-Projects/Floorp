@@ -1,5 +1,5 @@
-component {dd9f5380-a454-11e1-b3dd-0800200c9a66} SettingsManager.js
-contract @mozilla.org/settingsManager;1 {dd9f5380-a454-11e1-b3dd-0800200c9a66}
+component {0694f5e0-f777-11e1-a21f-0800200c9a66} SettingsManager.js
+contract @mozilla.org/settingsManager;1 {0694f5e0-f777-11e1-a21f-0800200c9a66}
 category JavaScript-navigator-property mozSettings @mozilla.org/settingsManager;1
 
 component {ef95ddd0-6308-11e1-b86c-0800200c9a66} SettingsManager.js
