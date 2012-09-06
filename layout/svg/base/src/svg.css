@@ -18,6 +18,13 @@ svg:not(:root), symbol, image, marker, pattern, foreignObject {
  overflow: hidden;
 }
 
+@media all and (-moz-is-glyph) {
+ :root {
+   fill: -moz-objectfill;
+   stroke: -moz-objectstroke;
+ }
+}
+
 foreignObject {
   margin: 0 ! important;
   padding: 0 ! important;
