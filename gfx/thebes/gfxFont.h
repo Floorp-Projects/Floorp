@@ -281,6 +281,8 @@ public:
 
     bool TryGetSVGData();
     bool HasSVGGlyph(uint32_t aGlyphId);
+    bool GetSVGGlyphExtents(gfxContext *aContext, uint32_t aGlyphId,
+                            gfxRect *aResult);
     bool RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId, int aDrawMode,
                         gfxTextObjectPaint *aObjectPaint);
 

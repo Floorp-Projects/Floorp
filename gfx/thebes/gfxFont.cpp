@@ -211,6 +211,23 @@ gfxFontEntry::HasSVGGlyph(uint32_t aGlyphId)
 }
 
 bool
+gfxFontEntry::GetSVGGlyphExtents(gfxContext *aContext, uint32_t aGlyphId,
+                                 gfxRect *aResult)
+{
+    NS_ABORT_IF_FALSE(mSVGInitialized, "SVG data has not yet been loaded. TryGetSVGData() first.");
+
+    gfxContextAutoSaveRestore matrixRestore(aContext);
+    cairo_matrix_t fontMatrix;
+    cairo_get_font_matrix(aContext->GetCairo(), &fontMatrix);
+
+    gfxMatrix svgToAppSpace = *reinterpret_cast<gfxMatrix*>(&fontMatrix);
+    svgToAppSpace.Scale(1.0f / gfxSVGGlyphs::SVG_UNITS_PER_EM,
+                        1.0f / gfxSVGGlyphs::SVG_UNITS_PER_EM);
+
+    return mSVGGlyphs->GetGlyphExtents(aGlyphId, svgToAppSpace, aResult);
+}
+
+bool
 gfxFontEntry::RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId,
                              int aDrawMode, gfxTextObjectPaint *aObjectPaint)
 {
@@ -2063,13 +2080,11 @@ bool
 gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
                         uint32_t aGlyphId, gfxTextObjectPaint *aObjectPaint)
 {
-    static const float SVG_UNITS_PER_EM = 1000.0;
-
     if (!GetFontEntry()->HasSVGGlyph(aGlyphId)) {
         return false;
     }
 
-    const float devUnitsPerSVGUnit = GetStyle()->size / SVG_UNITS_PER_EM;
+    const gfxFloat devUnitsPerSVGUnit = GetStyle()->size / gfxSVGGlyphs::SVG_UNITS_PER_EM;
     gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
 
     aContext->Translate(gfxPoint(aPoint.x, aPoint.y));
@@ -2591,7 +2606,7 @@ void
 gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTight,
                            gfxGlyphExtents *aExtents)
 {
-    gfxMatrix matrix = aContext->CurrentMatrix();
+    gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
     aContext->IdentityMatrix();
     cairo_glyph_t glyph;
     glyph.index = aGlyphID;
@@ -2599,7 +2614,6 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTi
     glyph.y = 0;
     cairo_text_extents_t extents;
     cairo_glyph_extents(aContext->GetCairo(), &glyph, 1, &extents);
-    aContext->SetMatrix(matrix);
 
     const Metrics& fontMetrics = GetMetrics();
     uint32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
@@ -2619,9 +2633,19 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTi
     }
 #endif
 
-    double d2a = appUnitsPerDevUnit;
+    gfxFloat d2a = appUnitsPerDevUnit;
     gfxRect bounds(extents.x_bearing*d2a, extents.y_bearing*d2a,
                    extents.width*d2a, extents.height*d2a);
+
+    gfxRect svgBounds;
+    if (mFontEntry->TryGetSVGData() &&
+        mFontEntry->HasSVGGlyph(aGlyphID) &&
+        mFontEntry->GetSVGGlyphExtents(aContext, aGlyphID, &svgBounds)) {
+
+        bounds = bounds.Union(gfxRect(svgBounds.x * d2a, svgBounds.y * d2a,
+                                      svgBounds.width * d2a, svgBounds.height * d2a));
+    }
+
     aExtents->SetTightGlyphExtents(aGlyphID, bounds);
 }
 
