@@ -2060,7 +2060,7 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
         GLint alphaBits = 0;
         fGetIntegerv(LOCAL_GL_ALPHA_BITS, &alphaBits);
         if (!alphaBits) {
-            const uint32_t alphaMask = GFX_PACKED_PIXEL_NO_PREMULTIPLY(0xff,0,0,0);
+            const uint32_t alphaMask = gfxPackedPixelNoPreMultiply(0xff,0,0,0);
 
             uint32_t* itr = (uint32_t*)dest->Data();
             uint32_t testPixel = *itr;
