@@ -12,6 +12,7 @@ chrome.jar:
   skin/aboutApps.css                        (aboutApps.css)
 * skin/aboutDownloads.css                   (aboutDownloads.css)
   skin/aboutFeedback.css                    (aboutFeedback.css)
+  skin/aboutMemory.css                      (aboutMemory.css)
   skin/aboutReader.css                      (aboutReader.css)
 * skin/browser.css                          (browser.css)
 * skin/content.css                          (content.css)
@@ -19,6 +20,7 @@ chrome.jar:
   skin/touchcontrols.css                    (touchcontrols.css)
   skin/netError.css                         (netError.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
+% override chrome://global/skin/aboutMemory.css chrome://browser/skin/aboutMemory.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
