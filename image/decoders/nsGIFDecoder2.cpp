@@ -558,7 +558,7 @@ static void ConvertColormap(uint32_t *aColormap, uint32_t aColors)
   // NB: can't use 32-bit reads, they might read off the end of the buffer
   for (; (NS_PTR_TO_UINT32(from) & 0x3) && c; --c) {
     from -= 3;
-    *--to = gfxPackedPixel(0xFF, from[0], from[1], from[2]);
+    *--to = GFX_PACKED_PIXEL(0xFF, from[0], from[1], from[2]);
   }
 
   // bulk copy of pixels.
@@ -573,7 +573,7 @@ static void ConvertColormap(uint32_t *aColormap, uint32_t aColors)
   // NB: can't use 32-bit reads, they might read off the end of the buffer
   while (c--) {
     from -= 3;
-    *--to = gfxPackedPixel(0xFF, from[0], from[1], from[2]);
+    *--to = GFX_PACKED_PIXEL(0xFF, from[0], from[1], from[2]);
   }
 }
 

@@ -609,7 +609,7 @@ nsJPEGDecoder::OutputScanlines(bool* suspend)
 
       // copy as bytes until source pointer is 32-bit-aligned
       for (; (NS_PTR_TO_UINT32(sampleRow) & 0x3) && idx; --idx) {
-        *imageRow++ = gfxPackedPixel(0xFF, sampleRow[0], sampleRow[1], sampleRow[2]);
+        *imageRow++ = GFX_PACKED_PIXEL(0xFF, sampleRow[0], sampleRow[1], sampleRow[2]);
         sampleRow += 3;
       }
 
@@ -624,7 +624,7 @@ nsJPEGDecoder::OutputScanlines(bool* suspend)
       // copy remaining pixel(s)
       while (idx--) {
         // 32-bit read of final pixel will exceed buffer, so read bytes
-        *imageRow++ = gfxPackedPixel(0xFF, sampleRow[0], sampleRow[1], sampleRow[2]);
+        *imageRow++ = GFX_PACKED_PIXEL(0xFF, sampleRow[0], sampleRow[1], sampleRow[2]);
         sampleRow += 3;
       }
   }
