@@ -1,0 +1,39 @@
+<html class="reftest-wait">
+  <!--
+        This test makes sure that the glyph extents are being extended to
+      the bounds of the SVG glyph by placing an SVG glyph in a div outside
+      the truetype extents but inside the SVG extents
+  -->
+  <head>
+    <style type="text/css">
+      @font-face {
+        font-family : svgttf;
+        src : url(resources/svg.woff);
+      }
+
+      body {
+        font-family : svgttf;
+        font-size : 200px;
+        color : palevioletred;
+      }
+
+      div {
+        width : 160px;
+        overflow : hidden;
+      }
+    </style>
+    <script type="text/javascript">
+      function expand() {
+        var div = document.getElementById("thediv");
+        div.style.width = "200px";
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate", expand, false);
+    </script>
+  </head>
+  <body>
+    <div id="thediv">
+O<br>
+    </div>
+  </body>
+</html>
