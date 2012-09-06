@@ -634,7 +634,7 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
           renderingContext->ThebesContext()->CurrentSurface();
       NS_ENSURE_TRUE(renderingSurface, NS_ERROR_OUT_OF_MEMORY);
 
-      for (PRInt32 i = mCurrentCanvasList.Length() - 1; i >= 0 ; i--) {
+      for (int32_t i = mCurrentCanvasList.Length() - 1; i >= 0 ; i--) {
         nsHTMLCanvasElement* canvas = mCurrentCanvasList[i];
         nsIntSize size = canvas->GetSize();
 
@@ -660,8 +660,8 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
       }
     }
   }
-  PRInt32 doneCounter = 0;
-  for (PRInt32 i = mCurrentCanvasList.Length() - 1; i >= 0 ; i--) {
+  int32_t doneCounter = 0;
+  for (int32_t i = mCurrentCanvasList.Length() - 1; i >= 0 ; i--) {
     nsHTMLCanvasElement* canvas = mCurrentCanvasList[i];
 
     if (canvas->IsPrintCallbackDone()) {
@@ -678,7 +678,7 @@ void
 nsSimplePageSequenceFrame::InvalidateInternal(const nsRect& aDamageRect,
                                               nscoord aX, nscoord aY,
                                               nsIFrame* aForChild,
-                                              PRUint32 aFlags)
+                                              uint32_t aFlags)
 {
   // xxx Invalidate the entire frame as otherwise invalidate of printCanvas
   // don't work properly. This is hopefully no longer necessary once 539356
@@ -690,7 +690,7 @@ nsSimplePageSequenceFrame::InvalidateInternal(const nsRect& aDamageRect,
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::ResetPrintCanvasList()
 {
-  for (PRInt32 i = mCurrentCanvasList.Length() - 1; i >= 0 ; i--) {
+  for (int32_t i = mCurrentCanvasList.Length() - 1; i >= 0 ; i--) {
     nsHTMLCanvasElement* canvas = mCurrentCanvasList[i];
     canvas->ResetPrintCallback();
   }
