@@ -2243,6 +2243,11 @@ struct nsStyleSVG {
   // text object
   nsStyleSVGOpacitySource mFillOpacitySource    : 2;
   nsStyleSVGOpacitySource mStrokeOpacitySource  : 2;
+
+  // SVG glyph outer object inheritance for other properties
+  bool mStrokeDasharrayFromObject   : 1;
+  bool mStrokeDashoffsetFromObject  : 1;
+  bool mStrokeWidthFromObject       : 1;
 };
 
 struct nsStyleSVGReset {
