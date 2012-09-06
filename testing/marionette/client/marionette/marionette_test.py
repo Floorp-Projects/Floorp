@@ -102,12 +102,12 @@ class MarionetteTestCase(CommonTestCase):
     def setUp(self):
         CommonTestCase.setUp(self)
         self.marionette.execute_script("log('TEST-START: %s:%s')" % 
-                                       (self.filepath, self.methodName))
+                                       (self.filepath.replace('\\', '\\\\'), self.methodName))
 
     def tearDown(self):
         self.marionette.set_context("content")
         self.marionette.execute_script("log('TEST-END: %s:%s')" % 
-                                       (self.filepath, self.methodName))
+                                       (self.filepath.replace('\\', '\\\\'), self.methodName))
         CommonTestCase.tearDown(self)
 
     def get_new_emulator(self):
@@ -141,7 +141,7 @@ class MarionetteJSTestCase(CommonTestCase):
     def runTest(self):
         if self.marionette.session is None:
             self.marionette.start_session()
-        self.marionette.execute_script("log('TEST-START: %s');" % self.jsFile)
+        self.marionette.execute_script("log('TEST-START: %s');" % self.jsFile.replace('\\', '\\\\'))
         f = open(self.jsFile, 'r')
         js = f.read()
         args = []
