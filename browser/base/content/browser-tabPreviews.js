@@ -11,37 +11,56 @@
  */
 var tabPreviews = {
   aspectRatio: 0.5625, // 16:9
+
+  get width() {
+    delete this.width;
+    return this.width = Math.ceil(screen.availWidth / 5.75);
+  },
+
+  get height() {
+    delete this.height;
+    return this.height = Math.round(this.width * this.aspectRatio);
+  },
+
   init: function tabPreviews_init() {
     if (this._selectedTab)
       return;
     this._selectedTab = gBrowser.selectedTab;
 
-    this.width = Math.ceil(screen.availWidth / 5.75);
-    this.height = Math.round(this.width * this.aspectRatio);
-
     window.addEventListener("unload", this, false);
     gBrowser.tabContainer.addEventListener("TabSelect", this, false);
     gBrowser.tabContainer.addEventListener("SSTabRestored", this, false);
   },
+
   uninit: function tabPreviews_uninit() {
     window.removeEventListener("unload", this, false);
     gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
     gBrowser.tabContainer.removeEventListener("SSTabRestored", this, false);
     this._selectedTab = null;
   },
+
   get: function tabPreviews_get(aTab) {
-    this.init();
+    let uri = aTab.linkedBrowser.currentURI.spec;
 
     if (aTab.__thumbnail_lastURI &&
-        aTab.__thumbnail_lastURI != aTab.linkedBrowser.currentURI.spec) {
+        aTab.__thumbnail_lastURI != uri) {
       aTab.__thumbnail = null;
       aTab.__thumbnail_lastURI = null;
     }
-    return aTab.__thumbnail || this.capture(aTab, !aTab.hasAttribute("busy"));
-  },
-  capture: function tabPreviews_capture(aTab, aStore) {
-    this.init();
 
+    if (aTab.__thumbnail)
+      return aTab.__thumbnail;
+
+    if (aTab.getAttribute("pending") == "true") {
+      let img = new Image;
+      img.src = PageThumbs.getThumbnailURL(uri);
+      return img;
+    }
+
+    return this.capture(aTab, !aTab.hasAttribute("busy"));
+  },
+
+  capture: function tabPreviews_capture(aTab, aStore) {
     var thumbnail = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     thumbnail.mozOpaque = true;
     thumbnail.height = this.height;
@@ -61,6 +80,7 @@ var tabPreviews = {
     }
     return thumbnail;
   },
+
   handleEvent: function tabPreviews_handleEvent(event) {
     switch (event.type) {
       case "TabSelect":

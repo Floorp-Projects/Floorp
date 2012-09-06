@@ -419,8 +419,8 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image");
 }
 
-.ctrlTab-preview > html|canvas,
-.allTabs-preview > html|canvas {
+:-moz-any(.ctrlTab-preview, .allTabs-preview) > html|img,
+:-moz-any(.ctrlTab-preview, .allTabs-preview) > html|canvas {
   min-width: inherit;
   max-width: inherit;
   min-height: inherit;
