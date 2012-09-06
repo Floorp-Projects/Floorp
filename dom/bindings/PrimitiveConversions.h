@@ -77,16 +77,6 @@ struct PrimitiveConversionTraits<uint32_t> : PrimitiveConversionTraits_smallInt 
 };
 
 template<>
-struct PrimitiveConversionTraits<bool> {
-  typedef JSBool jstype;
-  typedef bool intermediateType;
-  static inline bool converter(JSContext* /* unused */, JS::Value v, jstype* retval) {
-    *retval = JS::ToBoolean(v);
-    return true;
-  }
-};
-
-template<>
 struct PrimitiveConversionTraits<int64_t> {
   typedef int64_t jstype;
   typedef int64_t intermediateType;
@@ -101,6 +91,16 @@ struct PrimitiveConversionTraits<uint64_t> {
   typedef uint64_t intermediateType;
   static inline bool converter(JSContext* cx, JS::Value v, jstype* retval) {
     return JS::ToUint64(cx, v, retval);
+  }
+};
+
+template<>
+struct PrimitiveConversionTraits<bool> {
+  typedef JSBool jstype;
+  typedef bool intermediateType;
+  static inline bool converter(JSContext* /* unused */, JS::Value v, jstype* retval) {
+    *retval = JS::ToBoolean(v);
+    return true;
   }
 };
 
