@@ -725,7 +725,8 @@ public:
     MapUVSToGlyphFormat14(const uint8_t *aBuf, uint32_t aCh, uint32_t aVS);
 
     static uint32_t
-    MapCharToGlyph(const uint8_t *aBuf, uint32_t aBufLength, uint32_t aCh);
+    MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
+                   uint32_t aUnicode, uint32_t aVarSelector = 0);
 
 #ifdef XP_WIN
 

@@ -838,23 +838,40 @@ gfxFontUtils::MapUVSToGlyphFormat14(const uint8_t *aBuf, uint32_t aCh, uint32_t 
 }
 
 uint32_t
-gfxFontUtils::MapCharToGlyph(const uint8_t *aBuf, uint32_t aBufLength,
-                             uint32_t aCh)
+gfxFontUtils::MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
+                             uint32_t aUnicode, uint32_t aVarSelector)
 {
-    uint32_t offset;
+    uint32_t offset, uvsOffset;
     bool     symbol;
-    uint32_t format = FindPreferredSubtable(aBuf, aBufLength, &offset,
-                                            nullptr, &symbol);
+    uint32_t format = FindPreferredSubtable(aCmapBuf, aBufLength, &offset,
+                                            &uvsOffset, &symbol);
 
+    uint32_t gid;
     switch (format) {
     case 4:
-        return aCh < UNICODE_BMP_LIMIT ?
-            MapCharToGlyphFormat4(aBuf + offset, PRUnichar(aCh)) : 0;
+        gid = aUnicode < UNICODE_BMP_LIMIT ?
+            MapCharToGlyphFormat4(aCmapBuf + offset, PRUnichar(aUnicode)) : 0;
+        break;
     case 12:
-        return MapCharToGlyphFormat12(aBuf + offset, aCh);
+        gid = MapCharToGlyphFormat12(aCmapBuf + offset, aUnicode);
+        break;
     default:
-        return 0;
+        NS_WARNING("unsupported cmap format, glyphs will be missing");
+        gid = 0;
     }
+
+    if (aVarSelector && uvsOffset && gid) {
+        uint32_t varGID =
+            gfxFontUtils::MapUVSToGlyphFormat14(aCmapBuf + uvsOffset,
+                                                aUnicode, aVarSelector);
+        if (varGID) {
+            gid = varGID;
+        }
+        // else the variation sequence was not supported, use default mapping
+        // of the character code alone
+    }
+
+    return gid;
 }
 
 uint8_t gfxFontUtils::CharRangeBit(uint32_t ch) {
