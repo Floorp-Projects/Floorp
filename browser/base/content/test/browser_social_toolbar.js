@@ -7,8 +7,8 @@ function test() {
 
   let manifest = { // normal provider
     name: "provider 1",
-    origin: "https://example1.com",
-    workerURL: "https://example1.com/worker.js",
+    origin: "https://example.com",
+    workerURL: "https://example.com/browser/browser/base/content/test/social_worker.js",
     iconURL: "chrome://branding/content/icon48.png"
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
