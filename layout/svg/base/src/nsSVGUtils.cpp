@@ -1842,7 +1842,9 @@ nsSVGUtils::GetFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyle
 {
   const nsStyleSVGPaint &paint = aStyleContext->GetStyleSVG()->*aFillOrStroke;
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
-  bool isServer = paint.mType == eStyleSVGPaintType_Server;
+  bool isServer = paint.mType == eStyleSVGPaintType_Server ||
+                  paint.mType == eStyleSVGPaintType_ObjectFill ||
+                  paint.mType == eStyleSVGPaintType_ObjectStroke;
   nscolor color = isServer ? paint.mFallbackColor : paint.mPaint.mColor;
   if (styleIfVisited) {
     const nsStyleSVGPaint &paintIfVisited =

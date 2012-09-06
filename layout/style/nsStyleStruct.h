@@ -2163,7 +2163,9 @@ protected:
 enum nsStyleSVGPaintType {
   eStyleSVGPaintType_None = 1,
   eStyleSVGPaintType_Color,
-  eStyleSVGPaintType_Server
+  eStyleSVGPaintType_Server,
+  eStyleSVGPaintType_ObjectFill,
+  eStyleSVGPaintType_ObjectStroke
 };
 
 struct nsStyleSVGPaint

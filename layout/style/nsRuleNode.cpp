@@ -7132,12 +7132,27 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
     aResult.mPaint.mColor = color;
   } else if (aValue.GetUnit() == eCSSUnit_Pair) {
     const nsCSSValuePair& pair = aValue.GetPairValue();
-    NS_ABORT_IF_FALSE(pair.mXValue.GetUnit() == eCSSUnit_URL,
-                      "malformed paint server value");
 
-    aResult.SetType(eStyleSVGPaintType_Server);
-    aResult.mPaint.mPaintServer = pair.mXValue.GetURLValue();
-    NS_IF_ADDREF(aResult.mPaint.mPaintServer);
+    if (pair.mXValue.GetUnit() == eCSSUnit_URL) {
+      aResult.SetType(eStyleSVGPaintType_Server);
+      aResult.mPaint.mPaintServer = pair.mXValue.GetURLValue();
+      NS_IF_ADDREF(aResult.mPaint.mPaintServer);
+    } else if (pair.mXValue.GetUnit() == eCSSUnit_Enumerated) {
+
+      switch (pair.mXValue.GetIntValue()) {
+      case NS_COLOR_OBJECTFILL:
+        aResult.SetType(eStyleSVGPaintType_ObjectFill);
+        break;
+      case NS_COLOR_OBJECTSTROKE:
+        aResult.SetType(eStyleSVGPaintType_ObjectStroke);
+        break;
+      default:
+        NS_NOTREACHED("unknown keyword as paint server value");
+      }
+
+    } else {
+      NS_NOTREACHED("malformed paint server value");
+    }
 
     if (pair.mYValue.GetUnit() == eCSSUnit_None) {
       aResult.mFallbackColor = NS_RGBA(0, 0, 0, 0);
