@@ -287,6 +287,8 @@ nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
   , mDisplayWidth(0)
   , mRecentSelectedIndex(NS_SKIP_NOTIFY_INDEX)
   , mDisplayedIndex(-1)
+  , mLastDropDownAboveScreenY(nscoord_MIN)
+  , mLastDropDownBelowScreenY(nscoord_MIN)
   , mDroppedDown(false)
   , mInRedisplayText(false)
   , mDelayedShowDropDown(false)
@@ -645,15 +647,18 @@ nsComboboxControlFrame::GetAvailableDropdownSpace(nscoord* aAbove,
   *aAbove = 0;
   *aBelow = 0;
   
-  nsRect thisScreenRect = GetScreenRectInAppUnits();
   nsRect screen = nsFormControlFrame::GetUsableScreenRect(PresContext());
-  nscoord dropdownY = thisScreenRect.YMost() + aTranslation->y;
+  if (mLastDropDownBelowScreenY == nscoord_MIN) {
+    nsRect thisScreenRect = GetScreenRectInAppUnits();
+    mLastDropDownBelowScreenY = thisScreenRect.YMost() + aTranslation->y;
+    mLastDropDownAboveScreenY = thisScreenRect.y + aTranslation->y;
+  }
 
   nscoord minY;
   if (!PresContext()->IsChrome()) {
     nsIFrame* root = PresContext()->PresShell()->GetRootFrame();
     minY = root->GetScreenRectInAppUnits().y;
-    if (dropdownY < root->GetScreenRectInAppUnits().y) {
+    if (mLastDropDownBelowScreenY < root->GetScreenRectInAppUnits().y) {
       // Don't allow the drop-down to be placed above the top of the root frame.
       return;
     }
@@ -661,8 +666,8 @@ nsComboboxControlFrame::GetAvailableDropdownSpace(nscoord* aAbove,
     minY = screen.y;
   }
   
-  nscoord below = screen.YMost() - dropdownY;
-  nscoord above = thisScreenRect.y + aTranslation->y - minY;
+  nscoord below = screen.YMost() - mLastDropDownBelowScreenY;
+  nscoord above = mLastDropDownAboveScreenY - minY;
 
   // If the difference between the space above and below is less
   // than a row-height, then we favor the space below.
@@ -683,6 +688,7 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
 {
   nsPoint translation;
   nscoord above, below;
+  mLastDropDownBelowScreenY = nscoord_MIN;
   GetAvailableDropdownSpace(&above, &below, &translation);
   if (above <= 0 && below <= 0) {
     // Hide the view immediately to minimize flicker.

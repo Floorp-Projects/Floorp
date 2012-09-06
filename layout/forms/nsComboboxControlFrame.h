@@ -272,6 +272,13 @@ protected:
   // then open or close the combo box.
   nsCOMPtr<nsIDOMEventListener> mButtonListener;
 
+  // The last y-positions used for estimating available space above and
+  // below for the dropdown list in GetAvailableDropdownSpace.  These are
+  // reset to nscoord_MIN in AbsolutelyPositionDropDown when placing the
+  // dropdown at its actual position.  The GetAvailableDropdownSpace call
+  // from nsListControlFrame::ReflowAsDropdown use the last position.
+  nscoord               mLastDropDownAboveScreenY;
+  nscoord               mLastDropDownBelowScreenY;
   // Current state of the dropdown list, true is dropped down.
   bool                  mDroppedDown;
   // See comment in HandleRedisplayTextEvent().
