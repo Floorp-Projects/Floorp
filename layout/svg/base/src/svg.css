@@ -21,7 +21,9 @@ svg:not(:root), symbol, image, marker, pattern, foreignObject {
 @media all and (-moz-is-glyph) {
  :root {
    fill: -moz-objectfill;
+   fill-opacity: -moz-objectfillopacity;
    stroke: -moz-objectstroke;
+   stroke-opacity: -moz-objectstrokeopacity;
  }
 }
 
