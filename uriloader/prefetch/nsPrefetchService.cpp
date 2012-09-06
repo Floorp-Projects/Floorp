@@ -281,13 +281,13 @@ NS_IMETHODIMP
 nsPrefetchNode::OnDataAvailable(nsIRequest *aRequest,
                                 nsISupports *aContext,
                                 nsIInputStream *aStream,
-                                uint32_t aOffset,
+                                uint64_t aOffset,
                                 uint32_t aCount)
 {
     uint32_t bytesRead = 0;
     aStream->ReadSegments(NS_DiscardSegment, nullptr, aCount, &bytesRead);
     mBytesRead += bytesRead;
-    LOG(("prefetched %u bytes [offset=%u]\n", bytesRead, aOffset));
+    LOG(("prefetched %u bytes [offset=%llu]\n", bytesRead, aOffset));
     return NS_OK;
 }
 

@@ -98,7 +98,7 @@ NS_IMETHODIMP
 nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, 
                                     nsISupports *aContext, 
                                     nsIInputStream *iStr, 
-                                    uint32_t aSourceOffset, 
+                                    uint64_t aSourceOffset, 
                                     uint32_t aCount)
 {
     nsresult rv = NS_ERROR_INVALID_CONTENT_ENCODING;
@@ -329,7 +329,7 @@ nsHTTPCompressConv::Convert(nsIInputStream *aFromStream,
 
 nsresult
 nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
-                                       nsISupports *context, uint32_t offset,
+                                       nsISupports *context, uint64_t offset,
                                        const char *buffer, uint32_t count)
 {
     if (!mStream) {

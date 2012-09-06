@@ -439,7 +439,7 @@ nsPingListener::OnStartRequest(nsIRequest *request, nsISupports *context)
 
 NS_IMETHODIMP
 nsPingListener::OnDataAvailable(nsIRequest *request, nsISupports *context,
-                                nsIInputStream *stream, uint32_t offset,
+                                nsIInputStream *stream, uint64_t offset,
                                 uint32_t count)
 {
   uint32_t result;

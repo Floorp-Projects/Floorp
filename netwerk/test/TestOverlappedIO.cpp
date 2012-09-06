@@ -74,10 +74,10 @@ NS_IMETHODIMP
 TestListener::OnDataAvailable(nsIRequest* request,
                               nsISupports* context,
                               nsIInputStream *aIStream, 
-                              uint32_t aSourceOffset,
+                              uint64_t aSourceOffset,
                               uint32_t aLength)
 {
-    LOG(("TestListener::OnDataAvailable [offset=%u length=%u]\n",
+    LOG(("TestListener::OnDataAvailable [offset=%llu length=%u]\n",
         aSourceOffset, aLength));
     char buf[1025];
     uint32_t amt;

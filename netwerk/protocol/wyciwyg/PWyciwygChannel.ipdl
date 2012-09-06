@@ -40,7 +40,7 @@ child:
                  nsCString securityInfo);
 
   OnDataAvailable(nsCString data,
-                  uint32_t  offset);
+                  uint64_t  offset);
 
   OnStopRequest(nsresult statusCode);
 

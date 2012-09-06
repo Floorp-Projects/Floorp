@@ -4500,7 +4500,7 @@ NS_IMETHODIMP
 nsXULDocument::CachedChromeStreamListener::OnDataAvailable(nsIRequest *request,
                                                            nsISupports* aContext,
                                                            nsIInputStream* aInStr,
-                                                           uint32_t aSourceOffset,
+                                                           uint64_t aSourceOffset,
                                                            uint32_t aCount)
 {
     NS_NOTREACHED("CachedChromeStream doesn't receive data");
