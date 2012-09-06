@@ -709,10 +709,10 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
 (function headphonesStatusTracker() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     shell.sendChromeEvent({
-      type: 'headphones-status',
+      type: 'headphones-status-changed',
       state: aData
     });
-}, "headphones-status", false);
+}, "headphones-status-changed", false);
 })();
 
 (function recordingStatusTracker() {
