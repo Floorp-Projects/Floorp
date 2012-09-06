@@ -69,7 +69,7 @@ function Fuz(){};
 Fuz.prototype = {
   add: function() {}
 }
-assertName(Fuz.prototype.add, 'Fuz.add');
+assertName(Fuz.prototype.add, 'Fuz.prototype.add');
 
 var x = 1;
 x = function(){};
