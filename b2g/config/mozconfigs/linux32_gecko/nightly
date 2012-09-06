@@ -1,3 +1,5 @@
+. "$topsrcdir/b2g/config/mozconfigs/common"
+
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
 ac_add_options --enable-codesighs
@@ -36,3 +38,5 @@ ac_add_options --enable-application=b2g
 ENABLE_MARIONETTE=1
 ac_add_options --disable-elf-hack
 export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
+
+. "$topsrcdir/b2g/config/mozconfigs/common.override"

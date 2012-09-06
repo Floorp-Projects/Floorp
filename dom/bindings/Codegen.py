@@ -1338,6 +1338,24 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
   *aEnabled = true;
   return !!%s(aCx, global, aReceiver);""" % (getter))
 
+class CGPrefEnabled(CGAbstractMethod):
+    """
+    A method for testing whether the preference controlling this
+    interface is enabled.  When it's not, the interface should not be
+    visible on the global.
+    """
+    def __init__(self, descriptor):
+        CGAbstractMethod.__init__(self, descriptor, 'PrefEnabled', 'bool', [])
+
+    def declare(self):
+        return CGAbstractMethod.declare(self)
+
+    def define(self):
+        return CGAbstractMethod.define(self)
+
+    def definition_body(self):
+        return "  return %s::PrefEnabled();" % self.descriptor.nativeType
+
 class CGIsMethod(CGAbstractMethod):
     def __init__(self, descriptor):
         args = [Argument('JSObject*', 'obj')]
@@ -2838,11 +2856,16 @@ class CGCallGenerator(CGThing):
     """
     A class to generate an actual call to a C++ object.  Assumes that the C++
     object is stored in a variable whose name is given by the |object| argument.
+
+    errorReport should be a CGThing for an error report or None if no
+    error reporting is needed.
     """
     def __init__(self, errorReport, arguments, argsPre, returnType,
                  extendedAttributes, descriptorProvider, nativeMethodName,
                  static, object="self", declareResult=True):
         CGThing.__init__(self)
+
+        assert errorReport is None or isinstance(errorReport, CGThing)
 
         isFallible = errorReport is not None
 
@@ -2973,8 +2996,11 @@ class CGPerSignatureCall(CGThing):
         isCreator = memberIsCreator(self.idlNode)
         if isCreator:
             # We better be returning addrefed things!
-            assert isResultAlreadyAddRefed(self.descriptor,
-                                           self.extendedAttributes)
+            assert(isResultAlreadyAddRefed(self.descriptor,
+                                           self.extendedAttributes) or
+                   # Workers use raw pointers for new-object return
+                   # values or something
+                   self.descriptor.workers)
 
         resultTemplateValues = { 'jsvalRef': '*vp', 'jsvalPtr': 'vp',
                                  'isCreator': isCreator}
@@ -4825,8 +4851,9 @@ class CGDOMJSProxyHandler_obj_toString(ClassMethod):
             extendedAttributes = self.descriptor.getExtendedAttributes(stringifier)
             infallible = 'infallible' in extendedAttributes
             if not infallible:
-                error = ('ThrowMethodFailedWithDetails(cx, rv, "%s", "toString")\n' +
-                         "return NULL;") % self.descriptor.interface.identifier.name
+                error = CGGeneric(
+                    ('ThrowMethodFailedWithDetails(cx, rv, "%s", "toString");\n' +
+                     "return NULL;") % self.descriptor.interface.identifier.name)
             else:
                 error = None
             call = CGCallGenerator(error, [], "", returnType, extendedAttributes, self.descriptor, nativeName, False, object="UnwrapProxy(proxy)")
@@ -4990,6 +5017,11 @@ class CGDescriptor(CGThing):
 
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
+            if (not descriptor.interface.isExternal() and
+                # Workers stuff is never pref-controlled
+                not descriptor.workers and
+                descriptor.interface.getExtendedAttribute("PrefControlled") is not None):
+                cgThings.append(CGPrefEnabled(descriptor))
 
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGNativePropertyHooks(descriptor))
@@ -5113,9 +5145,10 @@ class CGDictionary(CGThing):
                 "\n".join(memberDecls) + "\n"
                 "private:\n"
                 "  // Disallow copy-construction\n"
-                "  ${selfName}(const ${selfName}&) MOZ_DELETE;\n"
-                "  static bool InitIds(JSContext* cx);\n"
-                "  static bool initedIds;\n" +
+                "  ${selfName}(const ${selfName}&) MOZ_DELETE;\n" +
+                # NOTE: jsids are per-runtime, so don't use them in workers
+                ("  static bool InitIds(JSContext* cx);\n"
+                 "  static bool initedIds;\n" if not self.workers else "") +
                 "\n".join("  static jsid " +
                           self.makeIdName(m.identifier.name) + ";" for
                           m in d.members) + "\n"
@@ -5147,26 +5180,28 @@ class CGDictionary(CGThing):
                            reindent=True)
 
         return string.Template(
-            "bool ${selfName}::initedIds = false;\n" +
-            "\n".join("jsid ${selfName}::%s = JSID_VOID;" %
-                      self.makeIdName(m.identifier.name)
-                      for m in d.members) + "\n"
-            "\n"
-            "bool\n"
-            "${selfName}::InitIds(JSContext* cx)\n"
-            "{\n"
-            "  MOZ_ASSERT(!initedIds);\n"
-            "${idInit}\n"
-            "  initedIds = true;\n"
-            "  return true;\n"
-            "}\n"
-            "\n"
+            # NOTE: jsids are per-runtime, so don't use them in workers
+            ("bool ${selfName}::initedIds = false;\n" +
+             "\n".join("jsid ${selfName}::%s = JSID_VOID;" %
+                       self.makeIdName(m.identifier.name)
+                       for m in d.members) + "\n"
+             "\n"
+             "bool\n"
+             "${selfName}::InitIds(JSContext* cx)\n"
+             "{\n"
+             "  MOZ_ASSERT(!initedIds);\n"
+             "${idInit}\n"
+             "  initedIds = true;\n"
+             "  return true;\n"
+             "}\n"
+             "\n" if not self.workers else "") +
             "bool\n"
             "${selfName}::Init(JSContext* cx, const JS::Value& val)\n"
-            "{\n"
-            "  if (!initedIds && !InitIds(cx)) {\n"
-            "    return false;\n"
-            "  }\n"
+            "{\n" +
+            # NOTE: jsids are per-runtime, so don't use them in workers
+            ("  if (!initedIds && !InitIds(cx)) {\n"
+             "    return false;\n"
+             "  }\n" if not self.workers else "") +
             "${initParent}"
             "  JSBool found;\n"
             "  JS::Value temp;\n"
@@ -5226,20 +5261,35 @@ class CGDictionary(CGThing):
         if member.defaultValue:
             replacements["haveValue"] = "found"
 
+        # NOTE: jsids are per-runtime, so don't use them in workers
+        if self.workers:
+            propName = member.identifier.name
+            propCheck = ('JS_HasProperty(cx, &val.toObject(), "%s", &found)' %
+                         propName)
+            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", &temp)' %
+                       propName)
+        else:
+            propId = self.makeIdName(member.identifier.name);
+            propCheck = ("JS_HasPropertyById(cx, &val.toObject(), %s, &found)" %
+                         propId)
+            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, &temp)" %
+                       propId)
+
         conversionReplacements = {
-            "propId" : self.makeIdName(member.identifier.name),
             "prop": "(this->%s)" % member.identifier.name,
-            "convert": string.Template(templateBody).substitute(replacements)
+            "convert": string.Template(templateBody).substitute(replacements),
+            "propCheck": propCheck,
+            "propGet": propGet
             }
         conversion = ("if (isNull) {\n"
                       "  found = false;\n"
-                      "} else if (!JS_HasPropertyById(cx, &val.toObject(), ${propId}, &found)) {\n"
+                      "} else if (!${propCheck}) {\n"
                       "  return false;\n"
                       "}\n")
         if member.defaultValue:
             conversion += (
                 "if (found) {\n"
-                "  if (!JS_GetPropertyById(cx, &val.toObject(), ${propId}, &temp)) {\n"
+                "  if (!${propGet}) {\n"
                 "    return false;\n"
                 "  }\n"
                 "}\n"
@@ -5248,7 +5298,7 @@ class CGDictionary(CGThing):
             conversion += (
                 "if (found) {\n"
                 "  ${prop}.Construct();\n"
-                "  if (!JS_GetPropertyById(cx, &val.toObject(), ${propId}, &temp)) {\n"
+                "  if (!${propGet}) {\n"
                 "    return false;\n"
                 "  }\n"
                 "${convert}\n"
@@ -5283,12 +5333,16 @@ class CGRegisterProtos(CGAbstractMethod):
 
     def _defineMacro(self):
        return """
-#define REGISTER_PROTO(_dom_class) \\
-  aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_class), _dom_class##Binding::DefineDOMInterface);\n\n"""
+#define REGISTER_PROTO(_dom_class, _pref_check) \\
+  aNameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING(#_dom_class), _dom_class##Binding::DefineDOMInterface, _pref_check);\n\n"""
     def _undefineMacro(self):
         return "\n#undef REGISTER_PROTO"
     def _registerProtos(self):
-        lines = ["REGISTER_PROTO(%s);" % desc.name
+        def getPrefCheck(desc):
+            if desc.interface.getExtendedAttribute("PrefControlled") is None:
+                return "nullptr"
+            return "%sBinding::PrefEnabled" % desc.name
+        lines = ["REGISTER_PROTO(%s, %s);" % (desc.name, getPrefCheck(desc))
                  for desc in self.config.getDescriptors(hasInterfaceObject=True,
                                                         isExternal=False,
                                                         workers=False,

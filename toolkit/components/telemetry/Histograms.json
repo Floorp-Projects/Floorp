@@ -828,6 +828,18 @@
     "kind": "boolean",
     "description": "Stores 1 if the cache would be clean with the disk cache corruption plan of Bug 105843"
   },
+  "DISK_CACHE_REVALIDATION_SAFE": {
+    "kind": "boolean",
+    "description": "Stores 1 if the cache clean file was revalidated, or 0 if a non empty doom list prevented revalidation"
+  },
+  "DISK_CACHE_INVALIDATION_SUCCESS": {
+    "kind": "boolean",
+    "description": "Stores 1 if writing '0' to the cache clean file succeeded, and 0 if it failed."
+  },
+  "DISK_CACHE_REVALIDATION_SUCCESS": {
+    "kind": "boolean",
+    "description": "Stores 1 if writing '1' to the cache clean file succeeded, and 0 if it failed."
+  },
   "HTTP_CACHE_DISPOSITION_2": {
     "kind": "enumerated",
     "n_values": 5,

@@ -14,11 +14,8 @@
 
 interface Performance {
   // DOMHighResTimeStamp now();
-  [Infallible]
   double now();
 
-  [Infallible]
   readonly attribute PerformanceTiming timing;
-  [Infallible]
   readonly attribute PerformanceNavigation navigation;
 };

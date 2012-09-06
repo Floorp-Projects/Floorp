@@ -74,7 +74,7 @@ protected:
                           const nsCString& aEntityID,
                           const URIParams& aURI) MOZ_OVERRIDE;
   bool RecvOnDataAvailable(const nsCString& data,
-                           const uint32_t& offset,
+                           const uint64_t& offset,
                            const uint32_t& count) MOZ_OVERRIDE;
   bool RecvOnStopRequest(const nsresult& statusCode) MOZ_OVERRIDE;
   bool RecvFailedAsyncOpen(const nsresult& statusCode) MOZ_OVERRIDE;
@@ -86,7 +86,7 @@ protected:
                         const nsCString& aEntityID,
                         const URIParams& aURI);
   void DoOnDataAvailable(const nsCString& data,
-                         const uint32_t& offset,
+                         const uint64_t& offset,
                          const uint32_t& count);
   void DoOnStopRequest(const nsresult& statusCode);
   void DoFailedAsyncOpen(const nsresult& statusCode);

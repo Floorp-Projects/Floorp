@@ -39,7 +39,7 @@
               aIID.equals(Ci.nsISupports))
             return this;
 
-          throw Components.results.NS_ERROR_NO_INTERFACE;
+          throw Components.Exception("No interface", Components.results.NS_ERROR_NO_INTERFACE);
         },
 
         observe: function(aSubject, aTopic, aPrefName) {
@@ -78,7 +78,8 @@
         <body>
         <![CDATA[
           // Should be code to set the from the preference input.value
-          throw "No valueFromPreference implementation";
+          throw Components.Exception("No valueFromPreference implementation",
+                                     Components.results.NS_ERROR_NOT_IMPLEMENTED);
         ]]>
         </body>
       </method>
@@ -87,7 +88,8 @@
         <body>
         <![CDATA[
           // Should be code to set the input.value from the preference
-          throw "No valueToPreference implementation";
+          throw Components.Exception("No valueToPreference implementation",
+                                     Components.results.NS_ERROR_NOT_IMPLEMENTED);
         ]]>
         </body>
       </method>

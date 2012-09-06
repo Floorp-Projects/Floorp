@@ -536,7 +536,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
         if (avail > PR_UINT32_MAX)
             avail = PR_UINT32_MAX;
 
-        rv = aConsumer->OnDataAvailable(channel, nullptr, bufStream, (uint32_t)NS_MIN(offset, (uint64_t)PR_UINT32_MAX), (uint32_t)avail);
+        rv = aConsumer->OnDataAvailable(channel, nullptr, bufStream, offset, (uint32_t)avail);
         if (NS_SUCCEEDED(rv))
             offset += avail;
     }
@@ -1143,7 +1143,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::OnDataAvailable(nsIRequest *request,
                                       nsISupports *ctxt,
                                       nsIInputStream *inStr,
-                                      uint32_t sourceOffset,
+                                      uint64_t sourceOffset,
                                       uint32_t count)
 {
     return mListener->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);

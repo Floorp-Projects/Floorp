@@ -14,3 +14,5 @@ mk_add_options MOZ_MAKE_FLAGS="-j4"
 
 #Use ccache
 ac_add_options --with-ccache=/usr/bin/ccache
+
+. "$topsrcdir/xulrunner/config/mozconfigs/common.override"

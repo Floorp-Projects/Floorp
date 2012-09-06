@@ -274,7 +274,7 @@ NS_IMETHODIMP
 nsMultipartProxyListener::OnDataAvailable(nsIRequest *aRequest,
                                           nsISupports *ctxt,
                                           nsIInputStream *inStr,
-                                          uint32_t sourceOffset,
+                                          uint64_t sourceOffset,
                                           uint32_t count)
 {
   return mDestListener->OnDataAvailable(aRequest, ctxt, inStr, sourceOffset,
@@ -1925,7 +1925,7 @@ NS_IMETHODIMP
 nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
                                   nsISupports *ctxt,
                                   nsIInputStream *inStr,
-                                  uint32_t sourceOffset,
+                                  uint64_t sourceOffset,
                                   uint32_t count)
 {
   NS_ENSURE_ARG_POINTER(inStr);

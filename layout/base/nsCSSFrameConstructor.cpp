@@ -8178,10 +8178,9 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     // RepaintFrame changes can indicate changes in opacity etc which
     // can require plugin clipping to change. If we requested a reflow,
     // we don't need to do this since the reflow will do it for us.
-    nsIFrame* rootFrame = GetRootFrame();
     nsRootPresContext* rootPC = presContext->GetRootPresContext();
     if (rootPC) {
-      rootPC->RequestUpdatePluginGeometry(rootFrame);
+      rootPC->RequestUpdatePluginGeometry();
     }
   }
 

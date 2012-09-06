@@ -76,7 +76,7 @@ ExternalHelperAppParent::RecvOnStartRequest(const nsCString& entityID)
 
 bool
 ExternalHelperAppParent::RecvOnDataAvailable(const nsCString& data,
-                                             const uint32_t& offset,
+                                             const uint64_t& offset,
                                              const uint32_t& count)
 {
   if (NS_FAILED(mStatus))

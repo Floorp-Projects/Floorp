@@ -1,0 +1,4 @@
+{
+  "name": "Basic App",
+  "installs_allowed_from": ["*"]
+}

@@ -3854,7 +3854,7 @@ fi
 dnl system libevent Support
 dnl ========================================================
 MOZ_ARG_WITH_STRING(system-libevent,
-[  --with-system-libevent=[PFX]
+[  --with-system-libevent[=PFX]
                           Use system libevent [installed at prefix PFX]],
     LIBEVENT_DIR=$withval)
 
@@ -3863,10 +3863,11 @@ _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
 if test -z "$LIBEVENT_DIR" -o "$LIBEVENT_DIR" = no; then
     MOZ_NATIVE_LIBEVENT=
+elif test "$LIBEVENT_DIR" = yes; then
+    PKG_CHECK_MODULES(MOZ_LIBEVENT, libevent,
+        MOZ_NATIVE_LIBEVENT=1,
+        AC_MSG_ERROR([--with-system-libevent requested but libevent package not found]))
 else
-    if test "${LIBEVENT_DIR}" = "yes"; then
-        LIBEVENT_DIR=/usr
-    fi
     CFLAGS="-I${LIBEVENT_DIR}/include $CFLAGS"
     LDFLAGS="-L${LIBEVENT_DIR}/lib $LDFLAGS"
     MOZ_CHECK_HEADER(event.h,
@@ -3876,16 +3877,16 @@ else
         AC_MSG_ERROR([--with-system-libevent requested but event.h not found]))
     AC_CHECK_LIB(event, event_init,
                  [MOZ_NATIVE_LIBEVENT=1
-                  MOZ_LIBEVENT_INCLUDES="${LIBEVENT_DIR}/include"
+                  MOZ_LIBEVENT_CFLAGS="-I${LIBEVENT_DIR}/include"
                   MOZ_LIBEVENT_LIBS="-L${LIBEVENT_DIR}/lib -levent"],
-                 [MOZ_NATIVE_LIBEVENT= MOZ_LIBEVENT_INCLUDES= MOZ_LIBEVENT_LIBS=])
+                 [MOZ_NATIVE_LIBEVENT= MOZ_LIBEVENT_CFLAGS= MOZ_LIBEVENT_LIBS=])
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
 AC_SUBST(MOZ_NATIVE_LIBEVENT)
-AC_SUBST(MOZ_LIBEVENT_INCLUDES)
+AC_SUBST(MOZ_LIBEVENT_CFLAGS)
 AC_SUBST(MOZ_LIBEVENT_LIBS)
 
 dnl ========================================================

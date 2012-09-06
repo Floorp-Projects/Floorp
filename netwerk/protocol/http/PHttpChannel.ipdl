@@ -114,7 +114,7 @@ child:
                      uint64_t  progress,
                      uint64_t  progressMax,
                      nsCString data,
-                     uint32_t  offset,
+                     uint64_t  offset,
                      uint32_t  count);
 
   OnStopRequest(nsresult statusCode);

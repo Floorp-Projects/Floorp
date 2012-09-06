@@ -1628,9 +1628,9 @@ const GECKO_RADIOSTATE_READY         = "ready";
 
 const GECKO_CARDSTATE_UNAVAILABLE    = null;
 const GECKO_CARDSTATE_ABSENT         = "absent";
-const GECKO_CARDSTATE_PIN_REQUIRED   = "pin_required";
-const GECKO_CARDSTATE_PUK_REQUIRED   = "puk_required";
-const GECKO_CARDSTATE_NETWORK_LOCKED = "network_locked";
+const GECKO_CARDSTATE_PIN_REQUIRED   = "pinRequired";
+const GECKO_CARDSTATE_PUK_REQUIRED   = "pukRequired";
+const GECKO_CARDSTATE_NETWORK_LOCKED = "networkLocked";
 const GECKO_CARDSTATE_NOT_READY      = null;
 const GECKO_CARDSTATE_READY          = "ready";
 

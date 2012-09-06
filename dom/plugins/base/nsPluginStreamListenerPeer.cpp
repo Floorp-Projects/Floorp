@@ -218,7 +218,9 @@ CachedFileHolder::Release()
 
 NS_IMETHODIMP
 nsPluginByteRangeStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
-                                                 nsIInputStream *inStr, uint32_t sourceOffset, uint32_t count)
+                                                 nsIInputStream *inStr,
+                                                 uint64_t sourceOffset,
+                                                 uint32_t count)
 {
   if (!mStreamConverter)
     return NS_ERROR_FAILURE;
@@ -849,7 +851,7 @@ nsPluginStreamListenerPeer::UseExistingPluginCacheFile(nsPluginStreamListenerPee
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
                                                           nsISupports* aContext,
                                                           nsIInputStream *aIStream,
-                                                          uint32_t sourceOffset,
+                                                          uint64_t sourceOffset,
                                                           uint32_t aLength)
 {
   NS_ASSERTION(mRequests.IndexOfObject(GetBaseRequest(request)) != -1,
@@ -880,7 +882,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   GetURL(&url);
   
   PLUGIN_LOG(PLUGIN_LOG_NOISY,
-             ("nsPluginStreamListenerPeer::OnDataAvailable this=%p request=%p, offset=%d, length=%d, url=%s\n",
+             ("nsPluginStreamListenerPeer::OnDataAvailable this=%p request=%p, offset=%llu, length=%u, url=%s\n",
               this, request, sourceOffset, aLength, url ? url : "no url set"));
   
   // if the plugin has requested an AsFileOnly stream, then don't
