@@ -27,16 +27,8 @@ var tabPreviews = {
       return;
     this._selectedTab = gBrowser.selectedTab;
 
-    window.addEventListener("unload", this, false);
     gBrowser.tabContainer.addEventListener("TabSelect", this, false);
     gBrowser.tabContainer.addEventListener("SSTabRestored", this, false);
-  },
-
-  uninit: function tabPreviews_uninit() {
-    window.removeEventListener("unload", this, false);
-    gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
-    gBrowser.tabContainer.removeEventListener("SSTabRestored", this, false);
-    this._selectedTab = null;
   },
 
   get: function tabPreviews_get(aTab) {
@@ -102,9 +94,6 @@ var tabPreviews = {
         break;
       case "SSTabRestored":
         this.capture(event.target, true);
-        break;
-      case "unload":
-        this.uninit();
         break;
     }
   }
