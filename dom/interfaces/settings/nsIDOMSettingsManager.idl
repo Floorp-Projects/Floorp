@@ -20,9 +20,10 @@ interface nsIDOMSettingsLock : nsISupports
   nsIDOMDOMRequest clear();
 };
 
-[scriptable, uuid(dd9f5380-a454-11e1-b3dd-0800200c9a66)]
+[scriptable, uuid(0694f5e0-f777-11e1-a21f-0800200c9a66)]
 interface nsIDOMSettingsManager : nsISupports
 {
+  nsIDOMSettingsLock createLock();
   nsIDOMSettingsLock getLock();
 
   void addObserver(in DOMString name, in jsval callback);
