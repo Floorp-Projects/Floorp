@@ -1,0 +1,5 @@
+pref(gfx.font_rendering.opentype_svg.enabled,false)   != svg-glyph-basic.svg svg-glyph-basic-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-basic.svg svg-glyph-basic-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,false)   != svg-glyph-positioning.svg svg-glyph-positioning-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-positioning.svg svg-glyph-positioning-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-invalid.html svg-glyph-invalid-ref.html
