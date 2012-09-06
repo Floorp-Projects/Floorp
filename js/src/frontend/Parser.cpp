@@ -357,7 +357,6 @@ Parser::~Parser()
 
 ObjectBox::ObjectBox(ObjectBox* traceLink, JSObject *obj)
   : traceLink(traceLink),
-    emitLink(NULL),
     object(obj),
     isFunctionBox(false)
 {
