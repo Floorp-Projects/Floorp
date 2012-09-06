@@ -29,12 +29,27 @@
 static bool
 HasStableTSC()
 {
+  union {
+    int regs[4];
+    struct {
+      int nIds;
+      char cpuString[12];
+    };
+  } cpuInfo;
+
+  __cpuid(cpuInfo.regs, 0);
+  // Only allow Intel CPUs for now
+  // The order of the registers is reg[1], reg[3], reg[2].  We just adjust the
+  // string so that we can compare in one go.
+  if (_strnicmp(cpuInfo.cpuString, "GenuntelineI", sizeof(cpuInfo.cpuString)))
+    return false;
+
   int regs[4];
 
   // detect if the Advanced Power Management feature is supported
   __cpuid(regs, 0x80000000);
   if (regs[0] < 0x80000007)
-          return false;
+    return false;
 
   __cpuid(regs, 0x80000007);
   // if bit 8 is set than TSC will run at a constant rate
@@ -200,6 +215,18 @@ namespace mozilla {
 static ULONGLONG
 CalibratedPerformanceCounter();
 
+
+static inline ULONGLONG
+InterlockedRead64(volatile ULONGLONG* destination)
+{
+#ifdef _WIN64
+  // Aligned 64-bit reads on x86-64 are atomic
+  return *destination;
+#else
+  // Dirty hack since Windows doesn't provide an atomic 64-bit read function
+  return _InterlockedCompareExchange64(reinterpret_cast<volatile __int64*> (destination), 0, 0);
+#endif
+}
 
 // ----------------------------------------------------------------------------
 // Critical Section helper class
@@ -494,6 +521,36 @@ CheckCalibration(LONGLONG overflow, ULONGLONG qpc, ULONGLONG gtc)
   return true;
 }
 
+// AtomicStoreIfGreaterThan tries to store the maximum of two values in one of them
+// without locking.  The only scenario in which two racing threads may corrupt the
+// maximum value is when they both try to increase the value without knowing about
+// each other, like below:
+//
+// Thread 1 reads 1000.  newValue in thread 1 is 1005.
+// Thread 2 reads 1000.  newValue in thread 2 is 1001.
+// Thread 1 tries to store.  Its value is less than newValue, so the store happens.
+//                           *destination is now 1005.
+// Thread 2 tries to store.  Its value is less than newValue, so the store happens.
+//                           *destination is now 1001.
+//
+// The correct value to be stored if this was happening serially is 1005.  The
+// following algorithm achieves that.
+//
+// The return value is the maximum value.
+ULONGLONG
+AtomicStoreIfGreaterThan(ULONGLONG* destination, ULONGLONG newValue)
+{
+  ULONGLONG readValue;
+  do {
+    readValue = InterlockedRead64(destination);
+    if (readValue > newValue)
+      return readValue;
+  } while (readValue != _InterlockedCompareExchange64(reinterpret_cast<volatile __int64*> (destination),
+                                                      newValue, readValue));
+
+  return newValue;
+}
+
 // The main function.  Result is in [mt] ensuring to not go back and be mostly
 // reliable with highest possible resolution.
 static ULONGLONG
@@ -510,6 +567,8 @@ CalibratedPerformanceCounter()
   ULONGLONG qpc = PerformanceCounter();
   DWORD gtcw = GetTickCount();
 
+  ULONGLONG result;
+  {
   AutoCriticalSection lock(&sTimeStampLock);
 
   // Rollover protection
@@ -525,7 +584,7 @@ CalibratedPerformanceCounter()
     overflow = diff - sOverrunThreshold;
   }
 
-  ULONGLONG result = qpc;
+  result = qpc;
   if (!CheckCalibration(overflow, qpc, gtc)) {
     // We are back on GTC, QPC has been observed unreliable
     result = ms2mt(gtc) + sSkew;
@@ -535,11 +594,9 @@ CalibratedPerformanceCounter()
   LOG(("TimeStamp: result = %1.2fms, diff = %1.4fms",
       mt2ms_d(result), mt2ms_d(diff)));
 #endif
+  }
 
-  if (result > sLastResult)
-    sLastResult = result;
-
-  return sLastResult;
+  return AtomicStoreIfGreaterThan(&sLastResult, result);
 }
 
 // ----------------------------------------------------------------------------
