@@ -1581,6 +1581,13 @@ const int32_t nsCSSProps::kStrokeLinejoinKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
+// Lookup table to store the sole objectValue keyword to let SVG glyphs inherit
+// certain stroke-* properties from the outer text object
+const int32_t nsCSSProps::kStrokeObjectValueKTable[] = {
+  eCSSKeyword__moz_objectvalue, NS_STYLE_STROKE_PROP_OBJECTVALUE,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 const int32_t nsCSSProps::kTextAnchorKTable[] = {
   eCSSKeyword_start, NS_STYLE_TEXT_ANCHOR_START,
   eCSSKeyword_middle, NS_STYLE_TEXT_ANCHOR_MIDDLE,

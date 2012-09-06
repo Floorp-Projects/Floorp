@@ -7198,6 +7198,18 @@ SetSVGOpacity(const nsCSSValue& aValue,
   }
 }
 
+template <typename FieldT, typename T>
+static bool
+SetTextObjectValue(const nsCSSValue& aValue, FieldT& aField, T aFallbackValue)
+{
+  if (aValue.GetUnit() != eCSSUnit_Enumerated ||
+      aValue.GetIntValue() != NS_STYLE_STROKE_PROP_OBJECTVALUE) {
+    return false;
+  }
+  aField = aFallbackValue;
+  return true;
+}
+
 const void*
 nsRuleNode::ComputeSVGData(void* aStartStruct,
                            const nsRuleData* aRuleData,
@@ -7297,7 +7309,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
               parentSVG->mStroke, mPresContext, aContext,
               svg->mStroke, eStyleSVGPaintType_None, canStoreInRuleTree);
 
-  // stroke-dasharray: <dasharray>, none, inherit
+  // stroke-dasharray: <dasharray>, none, inherit, -moz-objectValue
   const nsCSSValue* strokeDasharrayValue = aRuleData->ValueForStrokeDasharray();
   switch (strokeDasharrayValue->GetUnit()) {
   case eCSSUnit_Null:
@@ -7305,6 +7317,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
 
   case eCSSUnit_Inherit:
     canStoreInRuleTree = false;
+    svg->mStrokeDasharrayFromObject = parentSVG->mStrokeDasharrayFromObject;
     // only do the copy if weren't already set up by the copy constructor
     // FIXME Bug 389408: This is broken when aStartStruct is non-null!
     if (!svg->mStrokeDasharray) {
@@ -7321,8 +7334,19 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
     }
     break;
 
+  case eCSSUnit_Enumerated:
+    NS_ABORT_IF_FALSE(strokeDasharrayValue->GetIntValue() ==
+                            NS_STYLE_STROKE_PROP_OBJECTVALUE,
+                      "Unknown keyword for stroke-dasharray");
+    svg->mStrokeDasharrayFromObject = true;
+    delete [] svg->mStrokeDasharray;
+    svg->mStrokeDasharray = nullptr;
+    svg->mStrokeDasharrayLength = 0;
+    break;
+
   case eCSSUnit_Initial:
   case eCSSUnit_None:
+    svg->mStrokeDasharrayFromObject = false;
     delete [] svg->mStrokeDasharray;
     svg->mStrokeDasharray = nullptr;
     svg->mStrokeDasharrayLength = 0;
@@ -7330,6 +7354,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
 
   case eCSSUnit_List:
   case eCSSUnit_ListDep: {
+    svg->mStrokeDasharrayFromObject = false;
     delete [] svg->mStrokeDasharray;
     svg->mStrokeDasharray = nullptr;
     svg->mStrokeDasharrayLength = 0;
@@ -7362,10 +7387,19 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   }
 
   // stroke-dashoffset: <dashoffset>, inherit
-  SetCoord(*aRuleData->ValueForStrokeDashoffset(),
-           svg->mStrokeDashoffset, parentSVG->mStrokeDashoffset,
-           SETCOORD_LPH | SETCOORD_FACTOR | SETCOORD_INITIAL_ZERO,
-           aContext, mPresContext, canStoreInRuleTree);
+  const nsCSSValue *strokeDashoffsetValue =
+    aRuleData->ValueForStrokeDashoffset();
+  svg->mStrokeDashoffsetFromObject =
+    strokeDashoffsetValue->GetUnit() == eCSSUnit_Enumerated &&
+    strokeDashoffsetValue->GetIntValue() == NS_STYLE_STROKE_PROP_OBJECTVALUE;
+  if (svg->mStrokeDashoffsetFromObject) {
+    svg->mStrokeDashoffset.SetIntValue(0, eStyleUnit_Integer);
+  } else {
+    SetCoord(*aRuleData->ValueForStrokeDashoffset(),
+             svg->mStrokeDashoffset, parentSVG->mStrokeDashoffset,
+             SETCOORD_LPH | SETCOORD_FACTOR | SETCOORD_INITIAL_ZERO,
+             aContext, mPresContext, canStoreInRuleTree);
+  }
 
   // stroke-linecap: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForStrokeLinecap(),
@@ -7394,9 +7428,22 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
 
   // stroke-width:
   const nsCSSValue* strokeWidthValue = aRuleData->ValueForStrokeWidth();
-  if (eCSSUnit_Initial == strokeWidthValue->GetUnit()) {
+  switch (strokeWidthValue->GetUnit()) {
+  case eCSSUnit_Enumerated:
+    NS_ABORT_IF_FALSE(strokeWidthValue->GetIntValue() ==
+                        NS_STYLE_STROKE_PROP_OBJECTVALUE,
+                      "Unrecognized keyword for stroke-width");
+    svg->mStrokeWidthFromObject = true;
     svg->mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
-  } else {
+    break;
+
+  case eCSSUnit_Initial:
+    svg->mStrokeWidthFromObject = false;
+    svg->mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
+    break;
+
+  default:
+    svg->mStrokeWidthFromObject = false;
     SetCoord(*strokeWidthValue,
              svg->mStrokeWidth, parentSVG->mStrokeWidth,
              SETCOORD_LPH | SETCOORD_FACTOR,

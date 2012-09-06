@@ -868,6 +868,9 @@ nsStyleSVG::nsStyleSVG()
     mTextRendering           = NS_STYLE_TEXT_RENDERING_AUTO;
     mFillOpacitySource       = eStyleSVGOpacitySource_Normal;
     mStrokeOpacitySource     = eStyleSVGOpacitySource_Normal;
+    mStrokeDasharrayFromObject = false;
+    mStrokeDashoffsetFromObject = false;
+    mStrokeWidthFromObject   = false;
 }
 
 nsStyleSVG::~nsStyleSVG() 
@@ -918,6 +921,9 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mTextRendering = aSource.mTextRendering;
   mFillOpacitySource = aSource.mFillOpacitySource;
   mStrokeOpacitySource = aSource.mStrokeOpacitySource;
+  mStrokeDasharrayFromObject = aSource.mStrokeDasharrayFromObject;
+  mStrokeDashoffsetFromObject = aSource.mStrokeDashoffsetFromObject;
+  mStrokeWidthFromObject = aSource.mStrokeWidthFromObject;
 }
 
 static bool PaintURIChanged(const nsStyleSVGPaint& aPaint1,
@@ -978,7 +984,10 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mStrokeLinejoin        != aOther.mStrokeLinejoin        ||
        mTextAnchor            != aOther.mTextAnchor            ||
        mFillOpacitySource     != aOther.mFillOpacitySource     ||
-       mStrokeOpacitySource   != aOther.mStrokeOpacitySource) {
+       mStrokeOpacitySource   != aOther.mStrokeOpacitySource   ||
+       mStrokeDasharrayFromObject != aOther.mStrokeDasharrayFromObject ||
+       mStrokeDashoffsetFromObject != aOther.mStrokeDashoffsetFromObject ||
+       mStrokeWidthFromObject != aOther.mStrokeWidthFromObject) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
     return hint;
   }
