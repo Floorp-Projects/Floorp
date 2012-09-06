@@ -103,7 +103,7 @@ private:
  */
 static inline void SetPixel(uint32_t*& aDecoded, uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint8_t aAlpha = 0xFF)
 {
-    *aDecoded++ = gfxPackedPixel(aAlpha, aRed, aGreen, aBlue);
+    *aDecoded++ = GFX_PACKED_PIXEL(aAlpha, aRed, aGreen, aBlue);
 }
 
 static inline void SetPixel(uint32_t*& aDecoded, uint8_t idx, colorTable* aColors)
