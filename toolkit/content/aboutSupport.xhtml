@@ -44,7 +44,7 @@
     </div>
 
     <div>
-      <button onclick="copyContentsToClipboard()">
+      <button id="copy-to-clipboard" onclick="copyContentsToClipboard()">
         &aboutSupport.copyToClipboard.label;
       </button>
     </div>
@@ -86,7 +86,7 @@
             </td>
           </tr>
 
-          <tr>
+          <tr id="profile-row">
             <th class="column">
 #ifdef XP_WIN
               &aboutSupport.appBasicsProfileDirWinMac;
@@ -236,7 +236,7 @@
             <td id="javascript-incremental-gc">
             </td>
           </tr>
-	</tbody>
+        </tbody>
       </table>
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
@@ -262,7 +262,7 @@
             <td id="a11y-force-disabled">
             </td>
           </tr>
-	</tbody>
+        </tbody>
       </table>
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->
