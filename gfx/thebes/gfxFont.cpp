@@ -253,7 +253,9 @@ gfxFontEntry::TryGetSVGData()
 
         FallibleTArray<uint8_t> svgTable;
         rv = GetFontTable(TRUETYPE_TAG('S', 'V', 'G', ' '), svgTable);
-        NS_ENSURE_SUCCESS(rv, false);
+        if (NS_FAILED(rv)) {
+            return false;
+        }
 
         FallibleTArray<uint8_t> cmapTable;
         rv = GetFontTable(TRUETYPE_TAG('c', 'm', 'a', 'p'), cmapTable);
@@ -1586,7 +1588,7 @@ struct GlyphBufferAzure {
         return &mGlyphBuffer[mNumGlyphs++];
     }
 
-    void Flush(DrawTarget *aDT, gfxPattern *aStrokePattern, ScaledFont *aFont,
+    void Flush(DrawTarget *aDT, gfxTextObjectPaint *aObjectPaint, ScaledFont *aFont,
                gfxFont::DrawMode aDrawMode, bool aReverse, const GlyphRenderingOptions *aOptions,
                gfxContext *aThebesContext, const Matrix *invFontMatrix, bool aFinish = false)
     {
@@ -1607,8 +1609,15 @@ struct GlyphBufferAzure {
 
         gfxContext::AzureState state = aThebesContext->CurrentState();
         if (aDrawMode & gfxFont::GLYPH_FILL) {
-            if (state.pattern) {
-                Pattern *pat = state.pattern->GetPattern(aDT, state.patternTransformChanged ? &state.patternTransform : nullptr);
+            if (state.pattern || aObjectPaint) {
+                Pattern *pat;
+
+                nsRefPtr<gfxPattern> fillPattern;
+                if (!aObjectPaint || !(fillPattern = aObjectPaint->GetFillPattern())) {
+                    pat = state.pattern->GetPattern(aDT, state.patternTransformChanged ? &state.patternTransform : nullptr);
+                } else {
+                    pat = fillPattern->GetPattern(aDT, state.patternTransformChanged ? &state.patternTransform : nullptr);
+                }
 
                 if (invFontMatrix) {
                     // The brush matrix needs to be multiplied with the inverted matrix
@@ -1649,8 +1658,11 @@ struct GlyphBufferAzure {
         }
         if (aDrawMode & gfxFont::GLYPH_STROKE) {
             RefPtr<Path> path = aFont->GetPathForGlyphs(buf, aDT);
-            if (aStrokePattern) {
-                aDT->Stroke(path, *aStrokePattern->GetPattern(aDT), state.strokeOptions);
+            if (aObjectPaint) {
+                nsRefPtr<gfxPattern> strokePattern = aObjectPaint->GetStrokePattern();
+                if (strokePattern) {
+                    aDT->Stroke(path, *strokePattern->GetPattern(aDT), state.strokeOptions);
+                }
             }
         }
 
@@ -1827,7 +1839,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 
                           gfxPoint point(ToDeviceUnits(glyphX, devUnitsPerAppUnit),
                                          ToDeviceUnits(y, devUnitsPerAppUnit));
-                                            
+
                           if (!haveSVGGlyphs ||
                               !RenderSVGGlyph(aContext, point, aDrawMode,
                                               details->mGlyphID, aObjectPaint)) {
@@ -1885,7 +1897,6 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     } else {
       RefPtr<ScaledFont> scaledFont =
         gfxPlatform::GetPlatform()->GetScaledFontForFont(dt, this);
-      nsRefPtr<gfxPattern> strokePattern = aObjectPaint->GetStrokePattern();
 
       if (!scaledFont) {
         return;
@@ -1940,14 +1951,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
       for (i = aStart; i < aEnd; ++i) {
           const gfxTextRun::CompressedGlyph *glyphData = &charGlyphs[i];
           if (glyphData->IsSimpleGlyph()) {
-              glyph = glyphs.AppendGlyph();
-              glyph->mIndex = glyphData->GetSimpleGlyph();
               double advance = glyphData->GetSimpleAdvance();
-              // Perhaps we should put a scale in the cairo context instead of
-              // doing this scaling here...
-              // Multiplying by the reciprocal may introduce tiny error here,
-              // but we assume cairo is going to round coordinates at some stage
-              // and this is faster
               double glyphX;
               if (isRTL) {
                   x -= advance;
@@ -1956,13 +1960,31 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                   glyphX = x;
                   x += advance;
               }
+
+              if (haveSVGGlyphs) {
+                  gfxPoint point(ToDeviceUnits(glyphX, devUnitsPerAppUnit),
+                                 ToDeviceUnits(y, devUnitsPerAppUnit));
+                  if (RenderSVGGlyph(aContext, point, aDrawMode,
+                                     glyphData->GetSimpleGlyph(),
+                                     aObjectPaint)) {
+                      continue;
+                  }
+              }
+
+              // Perhaps we should put a scale in the cairo context instead of
+              // doing this scaling here...
+              // Multiplying by the reciprocal may introduce tiny error here,
+              // but we assume cairo is going to round coordinates at some stage
+              // and this is faster
+              glyph = glyphs.AppendGlyph();
+              glyph->mIndex = glyphData->GetSimpleGlyph();
               glyph->mPosition.x = ToDeviceUnits(glyphX, devUnitsPerAppUnit);
               glyph->mPosition.y = ToDeviceUnits(y, devUnitsPerAppUnit);
               glyph->mPosition = matInv * glyph->mPosition;
-              glyphs.Flush(dt, strokePattern, scaledFont,
+              glyphs.Flush(dt, aObjectPaint, scaledFont,
                            aDrawMode, isRTL, renderingOptions,
                            aContext, passedInvMatrix);
-            
+
               // synthetic bolding by multi-striking with 1-pixel offsets
               // at least once, more if there's room (large font sizes)
               if (IsSyntheticBold()) {
@@ -1978,7 +2000,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                       doubleglyph->mPosition.y = glyph->mPosition.y;
                       doubleglyph->mPosition = matInv * doubleglyph->mPosition;
                       strikeOffset += synBoldOnePixelOffset;
-                      glyphs.Flush(dt, strokePattern, scaledFont,
+                      glyphs.Flush(dt, aObjectPaint, scaledFont,
                                    aDrawMode, isRTL, renderingOptions,
                                    aContext, passedInvMatrix);
                   } while (--strikeCount > 0);
@@ -2009,36 +2031,44 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                                                                      details->mGlyphID);
                           }
                       } else {
-                          glyph = glyphs.AppendGlyph();
-                          glyph->mIndex = details->mGlyphID;
                           double glyphX = x + details->mXOffset;
                           if (isRTL) {
                               glyphX -= advance;
                           }
-                          glyph->mPosition.x = ToDeviceUnits(glyphX, devUnitsPerAppUnit);
-                          glyph->mPosition.y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
-                          glyph->mPosition = matInv * glyph->mPosition;
-                          glyphs.Flush(dt, strokePattern, scaledFont, aDrawMode,
-                                       isRTL, renderingOptions, aContext, passedInvMatrix);
 
-                          if (IsSyntheticBold()) {
-                              double strikeOffset = synBoldOnePixelOffset;
-                              int32_t strikeCount = strikes;
-                              do {
-                                  Glyph *doubleglyph;
-                                  doubleglyph = glyphs.AppendGlyph();
-                                  doubleglyph->mIndex = glyph->mIndex;
-                                  doubleglyph->mPosition.x =
-                                      ToDeviceUnits(glyphX + strikeOffset *
+                          gfxPoint point(ToDeviceUnits(glyphX, devUnitsPerAppUnit),
+                                         ToDeviceUnits(y, devUnitsPerAppUnit));
+
+                          if (!haveSVGGlyphs ||
+                              !RenderSVGGlyph(aContext, point, aDrawMode,
+                                              details->mGlyphID, aObjectPaint)) {
+                              glyph = glyphs.AppendGlyph();
+                              glyph->mIndex = details->mGlyphID;
+                              glyph->mPosition.x = ToDeviceUnits(glyphX, devUnitsPerAppUnit);
+                              glyph->mPosition.y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
+                              glyph->mPosition = matInv * glyph->mPosition;
+                              glyphs.Flush(dt, aObjectPaint, scaledFont, aDrawMode,
+                                           isRTL, renderingOptions, aContext, passedInvMatrix);
+
+                              if (IsSyntheticBold()) {
+                                  double strikeOffset = synBoldOnePixelOffset;
+                                  int32_t strikeCount = strikes;
+                                  do {
+                                      Glyph *doubleglyph;
+                                      doubleglyph = glyphs.AppendGlyph();
+                                      doubleglyph->mIndex = glyph->mIndex;
+                                      doubleglyph->mPosition.x =
+                                          ToDeviceUnits(glyphX + strikeOffset *
                                                         appUnitsPerDevUnit,
-                                                    devUnitsPerAppUnit);
-                                  doubleglyph->mPosition.y = glyph->mPosition.y;
-                                  strikeOffset += synBoldOnePixelOffset;
-                                  doubleglyph->mPosition = matInv * doubleglyph->mPosition;
-                                  glyphs.Flush(dt, strokePattern, scaledFont,
-                                               aDrawMode, isRTL, renderingOptions,
-                                               aContext, passedInvMatrix);
-                              } while (--strikeCount > 0);
+                                                        devUnitsPerAppUnit);
+                                      doubleglyph->mPosition.y = glyph->mPosition.y;
+                                      strikeOffset += synBoldOnePixelOffset;
+                                      doubleglyph->mPosition = matInv * doubleglyph->mPosition;
+                                      glyphs.Flush(dt, aObjectPaint, scaledFont,
+                                                   aDrawMode, isRTL, renderingOptions,
+                                                   aContext, passedInvMatrix);
+                                  } while (--strikeCount > 0);
+                              }
                           }
                       }
                       x += direction*advance;
@@ -2055,7 +2085,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
           }
       }
 
-      glyphs.Flush(dt, strokePattern, scaledFont, aDrawMode, isRTL,
+      glyphs.Flush(dt, aObjectPaint, scaledFont, aDrawMode, isRTL,
                    renderingOptions, aContext, passedInvMatrix, true);
 
       dt->SetTransform(oldMat);
