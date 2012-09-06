@@ -169,9 +169,9 @@ JSRuntime::triggerOperationCallback()
      * Invalidate ionTop to trigger its over-recursion check. Note this must be
      * set before interrupt, to avoid racing with js_InvokeOperationCallback,
      * into a weird state where interrupt is stuck at 0 but ionStackLimit is
-     * NULL.
+     * MAXADDR.
      */
-    ionStackLimit = 0;
+    ionStackLimit = -1;
 
     /*
      * Use JS_ATOMIC_SET in the hope that it ensures the write will become
