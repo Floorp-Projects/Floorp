@@ -130,7 +130,7 @@ WorkerThreadState::init(JSRuntime *rt)
         if (!helper.thread) {
             for (size_t j = 0; j < numThreads; j++)
                 threads[j].destroy();
-            Foreground::free_(threads);
+            js_delete(threads);
             threads = NULL;
             numThreads = 0;
             return false;
@@ -149,7 +149,7 @@ WorkerThreadState::~WorkerThreadState()
     if (threads) {
         for (size_t i = 0; i < numThreads; i++)
             threads[i].destroy();
-        Foreground::free_(threads);
+        js_delete(threads);
     }
 
     if (workerLock)
