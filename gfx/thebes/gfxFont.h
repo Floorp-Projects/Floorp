@@ -43,6 +43,7 @@ class gfxFontGroup;
 class gfxUserFontSet;
 class gfxUserFontData;
 class gfxShapedWord;
+class gfxSVGGlyphs;
 
 class nsILanguageAtomService;
 
@@ -208,6 +209,7 @@ public:
         mSymbolFont(false),
         mIgnoreGDEF(false),
         mIgnoreGSUB(false),
+        mSVGInitialized(false),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
 #ifdef MOZ_GRAPHITE
         mCheckedForGraphiteTables(false),
@@ -215,6 +217,7 @@ public:
         mHasCmapTable(false),
         mUVSOffset(0), mUVSData(nullptr),
         mUserFontData(nullptr),
+        mSVGGlyphs(nullptr),
         mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
         mFamily(aFamily)
     { }
@@ -275,6 +278,10 @@ public:
     uint16_t GetUVSGlyph(uint32_t aCh, uint32_t aVS);
     virtual nsresult ReadCMAP();
 
+    bool TryGetSVGData();
+    bool HasSVGGlyph(uint32_t aGlyphId);
+    bool RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId, int aDrawMode);
+
     virtual bool MatchesGenericFamily(const nsACString& aGeneric) const {
         return true;
     }
@@ -332,6 +339,7 @@ public:
     bool             mSymbolFont  : 1;
     bool             mIgnoreGDEF  : 1;
     bool             mIgnoreGSUB  : 1;
+    bool             mSVGInitialized : 1;
 
     uint16_t         mWeight;
     int16_t          mStretch;
@@ -345,6 +353,7 @@ public:
     uint32_t         mUVSOffset;
     nsAutoArrayPtr<uint8_t> mUVSData;
     gfxUserFontData* mUserFontData;
+    gfxSVGGlyphs    *mSVGGlyphs;
 
     nsTArray<gfxFontFeature> mFeatureSettings;
     uint32_t         mLanguageOverride;
@@ -366,6 +375,7 @@ protected:
         mSymbolFont(false),
         mIgnoreGDEF(false),
         mIgnoreGSUB(false),
+        mSVGInitialized(false),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
 #ifdef MOZ_GRAPHITE
         mCheckedForGraphiteTables(false),
@@ -373,6 +383,7 @@ protected:
         mHasCmapTable(false),
         mUVSOffset(0), mUVSData(nullptr),
         mUserFontData(nullptr),
+        mSVGGlyphs(nullptr),
         mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
         mFamily(nullptr)
     { }
@@ -1698,6 +1709,9 @@ protected:
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
     void SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont);
+
+    bool RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
+                        uint32_t aGlyphId);
 
     // Bug 674909. When synthetic bolding text by drawing twice, need to
     // render using a pixel offset in device pixels, otherwise text
