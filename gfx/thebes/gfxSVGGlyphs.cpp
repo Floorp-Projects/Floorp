@@ -100,6 +100,7 @@ gfxSVGGlyphs::ParseFromBuffer(uint8_t *aBuffer, uint32_t aBufLen)
     nsCOMPtr<nsIPresShell> presShell;
     rv = viewer->GetPresShell(getter_AddRefs(presShell));
     NS_ENSURE_SUCCESS(rv, nullptr);
+    presShell->GetPresContext()->SetIsGlyph(true);
 
     if (!presShell->DidInitialReflow()) {
         nsRect rect = presShell->GetPresContext()->GetVisibleArea();

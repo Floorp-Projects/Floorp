@@ -12,6 +12,7 @@
 #include "nsSVGGeometryFrame.h"
 #include "nsSVGUtils.h"
 #include "nsTextFragment.h"
+#include "gfxSVGGlyphs.h"
 
 class CharacterIterator;
 class gfxContext;
@@ -266,7 +267,103 @@ private:
 
 private:
   DrawMode SetupCairoState(gfxContext *aContext,
-                           gfxPattern **aStrokePattern);
+                           gfxTextObjectPaint *aOuterObjectPaint,
+                           gfxTextObjectPaint **aThisObjectPaint);
+
+  // Slightly horrible callback for deferring application of opacity
+  struct SVGTextObjectPaint : public gfxTextObjectPaint {
+    already_AddRefed<gfxPattern> GetFillPattern(float opacity);
+    already_AddRefed<gfxPattern> GetStrokePattern(float opacity);
+
+    struct Paint {
+      Paint() {
+        mPatternCache.Init();
+      }
+
+      void SetPaintServer(nsIFrame *aFrame, const gfxMatrix& aContextMatrix,
+                          nsSVGPaintServerFrame *aPaintServerFrame) {
+        mPaintType = eStyleSVGPaintType_Server;
+        mPaintDefinition.mPaintServerFrame = aPaintServerFrame;
+        mFrame = aFrame;
+        mContextMatrix = aContextMatrix;
+      }
+
+      void SetColor(const nscolor &aColor) {
+        mPaintType = eStyleSVGPaintType_Color;
+        mPaintDefinition.mColor = aColor;
+      }
+
+      void SetObjectPaint(gfxTextObjectPaint *aObjectPaint,
+                          nsStyleSVGPaintType aPaintType) {
+        NS_ASSERTION(aPaintType == eStyleSVGPaintType_ObjectFill ||
+                     aPaintType == eStyleSVGPaintType_ObjectStroke,
+                     "Invalid object paint type");
+        mPaintType = aPaintType;
+        mPaintDefinition.mObjectPaint = aObjectPaint;
+      }
+
+      union {
+        nsSVGPaintServerFrame *mPaintServerFrame;
+        gfxTextObjectPaint *mObjectPaint;
+        nscolor mColor;
+      } mPaintDefinition;
+
+      nsIFrame *mFrame;
+      gfxMatrix mContextMatrix;
+      nsStyleSVGPaintType mPaintType;
+
+      gfxMatrix mPatternMatrix;
+      nsRefPtrHashtable<nsFloatHashKey, gfxPattern> mPatternCache;
+
+      already_AddRefed<gfxPattern> GetPattern(float aOpacity,
+                                              nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
+    };
+
+    Paint mFillPaint;
+    Paint mStrokePaint;
+  };
+
+  /**
+   * Sets up the stroke style in |aContext| and stores stroke pattern
+   * information in |aThisObjectPaint|.
+   */
+  void SetupCairoStroke(gfxContext *aContext,
+                        gfxTextObjectPaint *aOuterObjectPaint,
+                        SVGTextObjectPaint *aThisObjectPaint);
+
+  /**
+   * Sets up the fill style in |aContext| and stores fill pattern information
+   * in |aThisObjectPaint|.
+   */
+  bool SetupCairoFill(gfxContext *aContext,
+                      gfxTextObjectPaint *aOuterObjectPaint,
+                      SVGTextObjectPaint *aThisObjectPaint);
+
+  /**
+   * Sets the current pattern to the fill or stroke style of the outer text
+   * object.
+   */
+  bool SetupObjectPaint(gfxContext *aContext,
+                        nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                        float& aOpacity,
+                        gfxTextObjectPaint *aObjectPaint);
+
+  /**
+   * Stores in |aTargetPaint| information on how to reconstruct the current
+   * fill or stroke pattern.
+   * @param aOuterObjectPaint pattern information from the outer text object
+   * @param aTargetPaint where to store the current pattern information
+   * @param aFillOrStroke member pointer to the paint we are setting up
+   * @param aProperty the frame property descriptor of the fill or stroke paint
+   *   server frame
+   */
+  void SetupInheritablePaint(gfxContext *aContext,
+                             float aOpacity,
+                             gfxTextObjectPaint *aOuterObjectPaint,
+                             SVGTextObjectPaint::Paint& aTargetPaint,
+                             nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                             const FramePropertyDescriptor *aProperty);
+
 };
 
 #endif
