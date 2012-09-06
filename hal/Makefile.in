@@ -92,7 +92,7 @@ CMMSRCS += \
   CocoaSensor.mm \
   smslib.mm \
   $(NULL)
-else ifneq (,$(filter OpenBSD NetBSD FreeBSD DragonFlyBSD,$(OS_TARGET)))
+else ifneq (,$(filter OpenBSD NetBSD FreeBSD DragonFly,$(OS_TARGET)))
 CPPSRCS += \
   FallbackSensor.cpp \
   FallbackVibration.cpp \
