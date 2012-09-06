@@ -400,16 +400,9 @@ let DOMApplicationRegistry = {
   },
 
   _nextLocalId: function() {
-    // All installed apps have a localId > 1000.
-    let maxLocalId = 1000;
-
-    for (let id in this.webapps) {
-      if (this.webapps[id].localId > maxLocalId) {
-        maxLocalId = this.webapps[id].localId;
-      }
-    }
-
-    return maxLocalId + 1;
+    let id = Services.prefs.getIntPref("dom.mozApps.maxLocalId") + 1;
+    Services.prefs.setIntPref("dom.mozApps.maxLocalId", id);
+    return id;
   },
 
   _appId: function(aURI) {
