@@ -323,6 +323,7 @@ _moz_cairo_get_current_point
 _moz_cairo_get_dash
 _moz_cairo_get_dash_count
 _moz_cairo_get_fill_rule
+_moz_cairo_get_font_matrix
 _moz_cairo_get_group_target
 _moz_cairo_get_line_cap
 _moz_cairo_get_line_join
