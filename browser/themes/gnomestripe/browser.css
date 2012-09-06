@@ -2714,6 +2714,10 @@ html|*#gcli-output-frame {
   text-decoration: underline;
 }
 
+.social-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
 .chat-status-icon {
   max-height: 16px;
   max-width: 16px;
