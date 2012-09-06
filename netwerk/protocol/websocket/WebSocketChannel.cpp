@@ -3050,10 +3050,10 @@ NS_IMETHODIMP
 WebSocketChannel::OnDataAvailable(nsIRequest *aRequest,
                                     nsISupports *aContext,
                                     nsIInputStream *aInputStream,
-                                    uint32_t aOffset,
+                                    uint64_t aOffset,
                                     uint32_t aCount)
 {
-  LOG(("WebSocketChannel::OnDataAvailable() %p [%p %p %p %u %u]\n",
+  LOG(("WebSocketChannel::OnDataAvailable() %p [%p %p %p %llu %u]\n",
          this, aRequest, aContext, aInputStream, aOffset, aCount));
 
   if (aContext == mSocketIn) {

@@ -167,6 +167,13 @@ function runDHCPAndSetDefaultRouteAndDNS(options) {
 }
 
 /**
+ * Remove default route for given network interface.
+ */
+function removeDefaultRoute(options) {
+  libnetutils.ifc_remove_default_route(options.ifname);
+}
+
+/**
  * Add host route for given network interface.
  */
 function addHostRoute(options) {

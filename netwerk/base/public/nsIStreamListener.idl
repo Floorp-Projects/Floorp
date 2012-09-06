@@ -10,7 +10,7 @@ interface nsIInputStream;
 /**
  * nsIStreamListener
  */
-[scriptable, uuid(1a637020-1482-11d3-9333-00104ba0fd40)]
+[scriptable, uuid(3b4c8a77-76ba-4610-b316-678c73a3b88c)]
 interface nsIStreamListener : nsIRequestObserver
 {
     /**
@@ -25,8 +25,6 @@ interface nsIStreamListener : nsIRequestObserver
      *        Number of bytes that were sent in previous onDataAvailable calls
      *        for this request. In other words, the sum of all previous count
      *        parameters.
-     *        If that number is greater than or equal to 2^32, this parameter
-     *        will be PR_UINT32_MAX (2^32 - 1).
      * @param aCount number of bytes available in the stream
      *
      * NOTE: The aInputStream parameter must implement readSegments.
@@ -37,6 +35,6 @@ interface nsIStreamListener : nsIRequestObserver
     void onDataAvailable(in nsIRequest aRequest,
                          in nsISupports aContext, 
                          in nsIInputStream aInputStream,
-                         in unsigned long aOffset,
+                         in unsigned long long aOffset,
                          in unsigned long aCount);
 };

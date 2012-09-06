@@ -33,7 +33,7 @@ NS_IMETHODIMP
 ExternalHelperAppChild::OnDataAvailable(nsIRequest *request,
                                         nsISupports *ctx,
                                         nsIInputStream *input,
-                                        uint32_t offset,
+                                        uint64_t offset,
                                         uint32_t count)
 {
   if (NS_FAILED(mStatus))

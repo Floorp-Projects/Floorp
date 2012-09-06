@@ -157,7 +157,7 @@ RDFSerializer.prototype = {
                      target.Value + "</em:" + prop + ">\n");
         }
         else {
-          throw new Error("Cannot serialize unknown literal type");
+          throw Components.Exception("Cannot serialize unknown literal type");
         }
       }
     }
@@ -184,7 +184,7 @@ RDFSerializer.prototype = {
   serializeResource: function RDFS_serializeResource(aDs, aResource, aIndent) {
     if (this.resources.indexOf(aResource) != -1 ) {
       // We cannot output multiple references to the same resource.
-      throw new Error("Cannot serialize multiple references to " + aResource.Value);
+      throw Components.Exception("Cannot serialize multiple references to " + aResource.Value);
     }
     if (aIndent === undefined)
       aIndent = "";
@@ -256,7 +256,7 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
   function getRequiredProperty(aDs, aSource, aProperty) {
     let value = getProperty(aDs, aSource, aProperty);
     if (!value)
-      throw new Error("Update manifest is missing a required " + aProperty + " property.");
+      throw Components.Exception("Update manifest is missing a required " + aProperty + " property.");
     return value;
   }
 
@@ -284,7 +284,7 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
   if (aUpdateKey) {
     let signature = getProperty(ds, extensionRes, "signature");
     if (!signature)
-      throw new Error("Update manifest for " + aId + " does not contain a required signature");
+      throw Components.Exception("Update manifest for " + aId + " does not contain a required signature");
     let serializer = new RDFSerializer();
     let updateString = null;
 
@@ -292,7 +292,8 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
       updateString = serializer.serializeResource(ds, extensionRes);
     }
     catch (e) {
-      throw new Error("Failed to generate signed string for " + aId + ". Serializer threw " + e);
+      throw Components.Exception("Failed to generate signed string for " + aId + ". Serializer threw " + e,
+                                 e.result);
     }
 
     let result = false;
@@ -303,11 +304,12 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
       result = verifier.verifyData(updateString, signature, aUpdateKey);
     }
     catch (e) {
-      throw new Error("The signature or updateKey for " + aId + " is malformed");
+      throw Components.Exception("The signature or updateKey for " + aId + " is malformed." +
+                                 "Verifier threw " + e, e.result);
     }
 
     if (!result)
-      throw new Error("The signature for " + aId + " was not created by the add-on's updateKey");
+      throw Components.Exception("The signature for " + aId + " was not created by the add-on's updateKey");
   }
 
   let updates = ds.GetTarget(extensionRes, EM_R("updates"), true);
@@ -320,12 +322,12 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
   }
 
   if (!(updates instanceof Ci.nsIRDFResource))
-    throw new Error("Missing updates property for " + extensionRes.Value);
+    throw Components.Exception("Missing updates property for " + extensionRes.Value);
 
   let cu = Cc["@mozilla.org/rdf/container-utils;1"].
            getService(Ci.nsIRDFContainerUtils);
   if (!cu.IsContainer(ds, updates))
-    throw new Error("Updates property was not an RDF container");
+    throw Components.Exception("Updates property was not an RDF container");
 
   let results = [];
   let ctr = Cc["@mozilla.org/rdf/container;1"].

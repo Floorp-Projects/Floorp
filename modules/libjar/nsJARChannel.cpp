@@ -895,7 +895,7 @@ nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
 NS_IMETHODIMP
 nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
                                nsIInputStream *stream,
-                               uint32_t offset, uint32_t count)
+                               uint64_t offset, uint32_t count)
 {
 #if defined(PR_LOGGING)
     LOG(("nsJARChannel::OnDataAvailable [this=%x %s]\n", this, mSpec.get()));
@@ -909,7 +909,7 @@ nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
     // nsITransportEventSink implementation.
     // XXX do the 64-bit stuff for real
     if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
-        mProgressSink->OnProgress(this, nullptr, uint64_t(offset + count),
+        mProgressSink->OnProgress(this, nullptr, offset + count,
                                   uint64_t(mContentLength));
 
     return rv; // let the pump cancel on failure

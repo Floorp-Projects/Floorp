@@ -896,6 +896,10 @@ InspectorUI.prototype = {
     this.inspectCommand.setAttribute("checked", "false");
 
     this.inspecting = false;
+
+    if (this.closing)
+      return;
+
     if (this.highlighter.getNode()) {
       this.select(this.highlighter.getNode(), true, !aPreventScroll);
     } else {

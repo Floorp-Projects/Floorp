@@ -187,7 +187,7 @@ interface nsICameraErrorCallback : nsISupports
     attributes here affect the preview, any pictures taken, and/or
     any video recorded by the camera.
 */
-[scriptable, uuid(3066c884-d2c3-4477-847d-08ea1c2d188a)]
+[scriptable, uuid(b8949e5c-55b0-49dd-99a9-68d11342915a)]
 interface nsICameraControl : nsISupports
 {
     readonly attribute nsICameraCapabilities capabilities;
@@ -313,6 +313,10 @@ interface nsICameraControl : nsISupports
     */
     [implicit_jscontext]
     void getPreviewStream(in jsval aOptions, in nsICameraPreviewStreamCallback onSuccess, [optional] in nsICameraErrorCallback onError);
+
+    /* call in or after the takePicture() onSuccess callback to
+       resume the camera preview stream. */
+    void resumePreview();
 };
 
 [scriptable, function, uuid(a267afbc-d91c-413a-8de5-0b94aecffa3e)]
