@@ -2172,7 +2172,8 @@ nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
 }
 
 bool
-nsSVGUtils::SetupCairoStroke(nsIFrame* aFrame, gfxContext* aContext)
+nsSVGUtils::SetupCairoStroke(nsIFrame* aFrame, gfxContext* aContext,
+                             gfxTextObjectPaint *aObjectPaint)
 {
   if (!HasStroke(aFrame)) {
     return false;

@@ -22,6 +22,7 @@
 #include "nsMathUtils.h"
 #include "nsPoint.h"
 #include "nsRect.h"
+#include "nsStyleStruct.h"
 #include "mozilla/Constants.h"
 
 class gfxASurface;
@@ -722,7 +723,8 @@ public:
    * Set up a cairo context for stroking, including setting up any stroke-related
    * properties such as dashing and setting the current paint on the gfxContext.
    */
-  static bool SetupCairoStroke(nsIFrame* aFrame, gfxContext *aContext);
+  static bool SetupCairoStroke(nsIFrame* aFrame, gfxContext *aContext,
+                               gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /**
    * This function returns a set of bit flags indicating which parts of the
