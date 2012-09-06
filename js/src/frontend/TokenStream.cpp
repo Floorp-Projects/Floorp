@@ -45,11 +45,6 @@ using namespace js;
 using namespace js::frontend;
 using namespace js::unicode;
 
-#define JS_KEYWORD(keyword, type, op, version) \
-    const char js_##keyword##_str[] = #keyword;
-#include "jskeyword.tbl"
-#undef JS_KEYWORD
-
 static const KeywordInfo keywords[] = {
 #define JS_KEYWORD(keyword, type, op, version) \
     {js_##keyword##_str, type, op, version},
