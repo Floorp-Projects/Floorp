@@ -1616,15 +1616,15 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
 {
     /* The counts of indexed things must be checked during code generation. */
     JS_ASSERT(bce->atomIndices->count() <= INDEX_LIMIT);
-    JS_ASSERT(bce->objectList.length <= INDEX_LIMIT);
-    JS_ASSERT(bce->regexpList.length <= INDEX_LIMIT);
+    JS_ASSERT(bce->objectList.length() <= INDEX_LIMIT);
+    JS_ASSERT(bce->regexpList.length() <= INDEX_LIMIT);
 
     uint32_t mainLength = bce->offset();
     uint32_t prologLength = bce->prologOffset();
     uint32_t nsrcnotes = uint32_t(bce->countFinalSourceNotes());
     if (!partiallyInit(cx, script, prologLength + mainLength, nsrcnotes, bce->atomIndices->count(),
-                       bce->objectList.length, bce->regexpList.length, bce->ntrynotes,
-                       bce->constList.length(), bce->typesetCount))
+                       bce->objectList.length(), bce->regexpList.length(),
+                       bce->tryNoteList.length(), bce->constList.length(), bce->typesetCount))
         return false;
 
     JS_ASSERT(script->mainOffset == 0);
@@ -1651,18 +1651,19 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
 
     if (!FinishTakingSrcNotes(cx, bce, script->notes()))
         return false;
-    if (bce->ntrynotes != 0)
-        FinishTakingTryNotes(bce, script->trynotes());
-    if (bce->objectList.length != 0)
+    if (bce->tryNoteList.length() != 0)
+        bce->tryNoteList.finish(script->trynotes());
+    if (bce->objectList.length() != 0)
         bce->objectList.finish(script->objects());
-    if (bce->regexpList.length != 0)
+    if (bce->regexpList.length() != 0)
         bce->regexpList.finish(script->regexps());
     if (bce->constList.length() != 0)
         bce->constList.finish(script->consts());
     script->strictModeCode = bce->sc->inStrictMode();
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
-    script->funHasExtensibleScope = bce->sc->funHasExtensibleScope();
+    script->funHasExtensibleScope =
+        bce->sc->inFunction() ? bce->sc->funHasExtensibleScope() : false;
     script->hasSingletons = bce->hasSingletons;
 #ifdef JS_METHODJIT
     if (cx->compartment->debugMode())
@@ -1684,8 +1685,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
         script->isGenerator = bce->sc->funIsGenerator();
-        script->isGeneratorExp = bce->sc->funbox() && bce->sc->funbox()->inGenexpLambda;
-        script->setFunction(bce->sc->fun());
+        script->isGeneratorExp = bce->sc->funbox()->inGenexpLambda;
+        script->setFunction(bce->sc->funbox()->fun());
     }
 
     /*

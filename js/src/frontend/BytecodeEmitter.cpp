@@ -59,10 +59,6 @@ using namespace js::gc;
 using namespace js::frontend;
 
 static bool
-NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned stackDepth,
-           size_t start, size_t end);
-
-static bool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
 struct frontend::StmtInfoBCE : public StmtInfoBase
@@ -114,10 +110,12 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, Shared
     blockChain(sc->context),
     atomIndices(sc->context),
     stackDepth(0), maxStackDepth(0),
-    ntrynotes(0), lastTryNode(NULL),
+    tryNoteList(sc->context),
     arrayCompDepth(0),
     emitLevel(0),
     constList(sc->context),
+    objectList(sc->context),
+    regexpList(sc->context),
     typesetCount(0),
     hasSingletons(false),
     emittingForInit(false),
@@ -706,7 +704,7 @@ EnclosingStaticScope(BytecodeEmitter *bce)
         return NULL;
     }
 
-    return bce->sc->fun();
+    return bce->sc->funbox()->fun();
 }
 
 // Push a block scope statement and link blockObj into bce->blockChain.
@@ -824,7 +822,11 @@ static bool
 EmitObjectOp(JSContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
-    return EmitIndex32(cx, op, bce->objectList.add(objbox), bce);
+
+    if (!bce->objectList.append(objbox))
+        return false;
+
+    return EmitIndex32(cx, op, bce->objectList.length() - 1, bce);
 }
 
 static bool
@@ -922,9 +924,9 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
          */
         for (unsigned i = pn->pn_cookie.level(); i; i--) {
             skippedScopes += ClonedBlockDepth(bceOfDef);
-            if (bceOfDef->sc->fun()->isHeavyweight()) {
+            if (bceOfDef->sc->funbox()->fun()->isHeavyweight()) {
                 skippedScopes++;
-                if (bceOfDef->sc->fun()->isNamedLambda())
+                if (bceOfDef->sc->funbox()->fun()->isNamedLambda())
                     skippedScopes++;
             }
             bceOfDef = bceOfDef->parent;
@@ -1182,7 +1184,7 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
     }
     if (bce->script->compileAndGo &&
         bce->hasGlobalScope &&
-        !bce->sc->funMightAliasLocals() &&
+        !(bce->sc->inFunction() && bce->sc->funMightAliasLocals()) &&
         !pn->isDeoptimized() &&
         !bce->sc->inStrictMode())
     {
@@ -1382,8 +1384,8 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (dn->pn_cookie.level() != bce->script->staticLevel)
             return true;
 
-        JS_ASSERT(bce->sc->fun()->flags & JSFUN_LAMBDA);
-        JS_ASSERT(pn->pn_atom == bce->sc->fun()->atom());
+        JS_ASSERT(bce->sc->funbox()->fun()->flags & JSFUN_LAMBDA);
+        JS_ASSERT(pn->pn_atom == bce->sc->funbox()->fun()->atom());
 
         /*
          * Leave pn->isOp(JSOP_NAME) if bce->fun is heavyweight to
@@ -1409,7 +1411,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * heavyweight, ensuring that the function name is represented in
          * the scope chain so that assignment will throw a TypeError.
          */
-        if (!bce->sc->fun()->isHeavyweight()) {
+        if (!bce->sc->funbox()->fun()->isHeavyweight()) {
             op = JSOP_CALLEE;
             pn->pn_dflags |= PND_CONST;
         }
@@ -2685,7 +2687,7 @@ MaybeEmitVarDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *
     }
 
     if (JOF_OPTYPE(pn->getOp()) == JOF_ATOM &&
-        (!bce->sc->inFunction() || bce->sc->fun()->isHeavyweight()))
+        (!bce->sc->inFunction() || bce->sc->funbox()->fun()->isHeavyweight()))
     {
         bce->switchToProlog();
         if (!UpdateSourceCoordNotes(cx, bce, pn->pn_pos.begin))
@@ -4122,7 +4124,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * Add the try note last, to let post-order give us the right ordering
      * (first to last for a given nesting level, inner to outer by level).
      */
-    if (pn->pn_kid2 && !NewTryNote(cx, bce, JSTRY_CATCH, depth, tryStart, tryEnd))
+    if (pn->pn_kid2 && !bce->tryNoteList.append(JSTRY_CATCH, depth, tryStart, tryEnd))
         return false;
 
     /*
@@ -4130,7 +4132,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * trynote to catch exceptions (re)thrown from a catch block or
      * for the try{}finally{} case.
      */
-    if (pn->pn_kid3 && !NewTryNote(cx, bce, JSTRY_FINALLY, depth, tryStart, finallyStart))
+    if (pn->pn_kid3 && !bce->tryNoteList.append(JSTRY_FINALLY, depth, tryStart, finallyStart))
         return false;
 
     return true;
@@ -4652,7 +4654,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
             return false;
     }
 
-    if (!NewTryNote(cx, bce, JSTRY_ITER, bce->stackDepth, top, bce->offset()))
+    if (!bce->tryNoteList.append(JSTRY_ITER, bce->stackDepth, top, bce->offset()))
         return false;
     if (Emit1(cx, bce, JSOP_ENDITER) < 0)
         return false;
@@ -4832,7 +4834,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return Emit1(cx, bce, JSOP_GETFUNNS) >= 0;
 #endif
 
-    RootedFunction fun(cx, pn->pn_funbox->function());
+    RootedFunction fun(cx, pn->pn_funbox->fun());
     JS_ASSERT(fun->isInterpreted());
     if (fun->script()) {
         /*
@@ -4847,9 +4849,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     {
         FunctionBox *funbox = pn->pn_funbox;
-        SharedContext sc(cx, /* scopeChain = */ NULL, fun, funbox, funbox->strictModeState);
+        SharedContext sc(cx, /* scopeChain = */ NULL, funbox, funbox->strictModeState);
         sc.cxFlags = funbox->cxFlags;
-        if (bce->sc->funMightAliasLocals())
+        if (bce->sc->inFunction() && bce->sc->funMightAliasLocals())
             sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
         JS_ASSERT_IF(bce->sc->inStrictMode(), sc.inStrictMode());
 
@@ -4882,7 +4884,10 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     /* Make the function object a literal in the outer script's pool. */
-    unsigned index = bce->objectList.add(pn->pn_funbox);
+    if (!bce->objectList.append(pn->pn_funbox))
+        return false;
+
+    unsigned index = bce->objectList.length() - 1;
 
     /* Non-hoisted functions simply emit their respective op. */
     if (!pn->functionIsHoisted()) {
@@ -5827,10 +5832,11 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ObjectBox *objbox = bce->parser->newObjectBox(obj);
         if (!objbox)
             return false;
-        unsigned index = bce->objectList.add(objbox);
+        if (!bce->objectList.append(objbox))
+            return false;
         MOZ_STATIC_ASSERT(JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
                           "newinit and newobject must have equal length to edit in-place");
-        EMIT_UINT32_IN_PLACE(offset, JSOP_NEWOBJECT, uint32_t(index));
+        EMIT_UINT32_IN_PLACE(offset, JSOP_NEWOBJECT, uint32_t(bce->objectList.length() - 1));
     }
 
     return true;
@@ -5956,7 +5962,7 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_ARGSBODY));
     uint16_t ndefaults = bce->sc->funbox()->ndefaults;
-    JSFunction *fun = bce->sc->fun();
+    JSFunction *fun = bce->sc->funbox()->fun();
     unsigned nformal = fun->nargs - fun->hasRest();
     EMIT_UINT16_IMM_OP(JSOP_ACTUALSFILLED, nformal - ndefaults);
     ptrdiff_t top = bce->offset();
@@ -6045,7 +6051,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_ARGSBODY:
       {
-        RootedFunction fun(cx, bce->sc->fun());
+        RootedFunction fun(cx, bce->sc->funbox()->fun());
         ParseNode *pnlast = pn->last();
 
         // Carefully emit everything in the right order:
@@ -6526,7 +6532,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_REGEXP:
         JS_ASSERT(pn->isOp(JSOP_REGEXP));
-        ok = EmitRegExp(cx, bce->regexpList.add(pn->pn_objbox), bce);
+        if (!bce->regexpList.append(pn->pn_objbox))
+            return false;
+        ok = EmitRegExp(cx, bce->regexpList.length() - 1, bce);
         break;
 
 #if JS_HAS_XML_SUPPORT
@@ -6947,44 +6955,30 @@ frontend::FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *n
     return true;
 }
 
-static bool
-NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned stackDepth,
-           size_t start, size_t end)
+bool
+CGTryNoteList::append(JSTryNoteKind kind, unsigned stackDepth, size_t start, size_t end)
 {
-    JS_ASSERT((unsigned)(uint16_t)stackDepth == stackDepth);
+    JS_ASSERT(unsigned(uint16_t(stackDepth)) == stackDepth);
     JS_ASSERT(start <= end);
-    JS_ASSERT((size_t)(uint32_t)start == start);
-    JS_ASSERT((size_t)(uint32_t)end == end);
+    JS_ASSERT(size_t(uint32_t(start)) == start);
+    JS_ASSERT(size_t(uint32_t(end)) == end);
 
-    TryNode *tryNode = cx->tempLifoAlloc().new_<TryNode>();
-    if (!tryNode) {
-        js_ReportOutOfMemory(cx);
-        return false;
-    }
+    JSTryNote note;
+    note.kind = kind;
+    note.stackDepth = uint16_t(stackDepth);
+    note.start = uint32_t(start);
+    note.length = uint32_t(end - start);
 
-    tryNode->note.kind = kind;
-    tryNode->note.stackDepth = (uint16_t)stackDepth;
-    tryNode->note.start = (uint32_t)start;
-    tryNode->note.length = (uint32_t)(end - start);
-    tryNode->prev = bce->lastTryNode;
-    bce->lastTryNode = tryNode;
-    bce->ntrynotes++;
-    return true;
+    return list.append(note);
 }
 
 void
-frontend::FinishTakingTryNotes(BytecodeEmitter *bce, TryNoteArray *array)
+CGTryNoteList::finish(TryNoteArray *array)
 {
-    TryNode *tryNode;
-    JSTryNote *tn;
+    JS_ASSERT(length() == array->length);
 
-    JS_ASSERT(array->length > 0 && array->length == bce->ntrynotes);
-    tn = array->vector + array->length;
-    tryNode = bce->lastTryNode;
-    do {
-        *--tn = tryNode->note;
-    } while ((tryNode = tryNode->prev) != NULL);
-    JS_ASSERT(tn == array->vector);
+    for (unsigned i = 0; i < length(); i++)
+        array->vector[i] = list[i];
 }
 
 /*
@@ -7029,49 +7023,33 @@ frontend::FinishTakingTryNotes(BytecodeEmitter *bce, TryNoteArray *array)
  * for global regexps) and on any ad-hoc properties.  Also, __proto__ refers to
  * the pre-compilation prototype, a pigeon-hole problem for instanceof tests.
  */
-unsigned
-CGObjectList::add(ObjectBox *objbox)
-{
-    JS_ASSERT(!objbox->emitLink);
-    objbox->emitLink = lastbox;
-    lastbox = objbox;
-    return length++;
-}
 
 unsigned
 CGObjectList::indexOf(JSObject *obj)
 {
-    JS_ASSERT(length > 0);
-    unsigned index = length - 1;
-    for (ObjectBox *box = lastbox; box->object != obj; box = box->emitLink)
-        index--;
-    return index;
+    for (unsigned i = 0; i < length(); i++)
+        if (list[i]->object == obj)
+            return i;
+    JS_NOT_REACHED("couldn't find index for object");
 }
 
 void
 CGObjectList::finish(ObjectArray *array)
 {
-    JS_ASSERT(length <= INDEX_LIMIT);
-    JS_ASSERT(length == array->length);
+    JS_ASSERT(length() <= INDEX_LIMIT);
+    JS_ASSERT(length() == array->length);
 
-    js::HeapPtrObject *cursor = array->vector + array->length;
-    ObjectBox *objbox = lastbox;
-    do {
-        --cursor;
-        JS_ASSERT(!*cursor);
-        *cursor = objbox->object;
-    } while ((objbox = objbox->emitLink) != NULL);
-    JS_ASSERT(cursor == array->vector);
+    for (unsigned i = 0; i < length(); i++)
+        array->vector[i] = list[i]->object;
 }
 
 void
-GCConstList::finish(ConstArray *array)
+CGConstList::finish(ConstArray *array)
 {
-    JS_ASSERT(array->length == list.length());
-    Value *src = list.begin(), *srcend = list.end();
-    HeapValue *dst = array->vector;
-    for (; src != srcend; ++src, ++dst)
-        *dst = *src;
+    JS_ASSERT(length() == array->length);
+
+    for (unsigned i = 0; i < length(); i++)
+        array->vector[i] = list[i];
 }
 
 /*

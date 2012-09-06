@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478911
 
 function toggleGeolocationSetting(value, callback) {
   var mozSettings = window.navigator.mozSettings;
-  var lock = mozSettings.getLock();
+  var lock = mozSettings.createLock();
 
   var geoenabled = {"geolocation.enabled": value};
 
