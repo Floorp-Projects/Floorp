@@ -1623,8 +1623,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     uint32_t prologLength = bce->prologOffset();
     uint32_t nsrcnotes = uint32_t(bce->countFinalSourceNotes());
     if (!partiallyInit(cx, script, prologLength + mainLength, nsrcnotes, bce->atomIndices->count(),
-                       bce->objectList.length(), bce->regexpList.length(), bce->ntrynotes,
-                       bce->constList.length(), bce->typesetCount))
+                       bce->objectList.length(), bce->regexpList.length(),
+                       bce->tryNoteList.length(), bce->constList.length(), bce->typesetCount))
         return false;
 
     JS_ASSERT(script->mainOffset == 0);
@@ -1651,8 +1651,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
 
     if (!FinishTakingSrcNotes(cx, bce, script->notes()))
         return false;
-    if (bce->ntrynotes != 0)
-        FinishTakingTryNotes(bce, script->trynotes());
+    if (bce->tryNoteList.length() != 0)
+        bce->tryNoteList.finish(script->trynotes());
     if (bce->objectList.length() != 0)
         bce->objectList.finish(script->objects());
     if (bce->regexpList.length() != 0)
