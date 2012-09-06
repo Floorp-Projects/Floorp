@@ -472,22 +472,15 @@ nsInputStreamPump::OnStateTransfer()
                 offsetBefore = 0;
             }
 
-            // report the current stream offset to our listener... if we've
-            // streamed more than PR_UINT32_MAX, then avoid overflowing the
-            // stream offset.  it's the best we can do without a 64-bit stream
-            // listener API.
-            uint32_t odaOffset =
-                mStreamOffset > PR_UINT32_MAX ?
-                PR_UINT32_MAX : uint32_t(mStreamOffset);
             uint32_t odaAvail =
                 avail > PR_UINT32_MAX ?
                 PR_UINT32_MAX : uint32_t(avail);
 
-            LOG(("  calling OnDataAvailable [offset=%lld(%u) count=%llu(%u)]\n",
-                mStreamOffset, odaOffset, avail, odaAvail));
+            LOG(("  calling OnDataAvailable [offset=%llu count=%llu(%u)]\n",
+                mStreamOffset, avail, odaAvail));
 
             rv = mListener->OnDataAvailable(this, mListenerContext, mAsyncStream,
-                                            odaOffset, odaAvail);
+                                            mStreamOffset, odaAvail);
 
             // don't enter this code if ODA failed or called Cancel
             if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(mStatus)) {

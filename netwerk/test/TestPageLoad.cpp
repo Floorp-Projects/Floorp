@@ -161,7 +161,7 @@ MyListener::OnStopRequest(nsIRequest *req, nsISupports *ctxt, nsresult status)
 NS_IMETHODIMP
 MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctxt,
                             nsIInputStream *stream,
-                            uint32_t offset, uint32_t count)
+                            uint64_t offset, uint32_t count)
 {
     //printf(">>> OnDataAvailable [count=%u]\n", count);
     nsresult rv = NS_ERROR_FAILURE;
@@ -170,7 +170,7 @@ MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctxt,
 
     if(ctxt == nullptr) {
       bytesRead=0;
-      rv = stream->ReadSegments(streamParse, &offset, count, &bytesRead);
+      rv = stream->ReadSegments(streamParse, nullptr, count, &bytesRead);
     } else {
       while (count) {
         uint32_t amount = NS_MIN<uint32_t>(count, sizeof(buf));

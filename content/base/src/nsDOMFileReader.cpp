@@ -286,7 +286,7 @@ nsresult
 nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
                                    nsISupports *aContext,
                                    nsIInputStream *aInputStream,
-                                   uint32_t aOffset,
+                                   uint64_t aOffset,
                                    uint32_t aCount)
 {
   if (mDataFormat == FILE_AS_BINARY) {
@@ -294,6 +294,9 @@ nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
     NS_ASSERTION(mResult.Length() == aOffset,
                  "unexpected mResult length");
     uint32_t oldLen = mResult.Length();
+    if (uint64_t(oldLen) + aCount > PR_UINT32_MAX)
+      return NS_ERROR_OUT_OF_MEMORY;
+
     PRUnichar *buf = nullptr;
     mResult.GetMutableData(&buf, oldLen + aCount, fallible_t());
     NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
@@ -311,6 +314,10 @@ nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
   }
   else {
     //Update memory buffer to reflect the contents of the file
+    if (aOffset + aCount > PR_UINT32_MAX) {
+      // PR_Realloc doesn't support over 4GB memory size even if 64-bit OS
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     mFileData = (char *)PR_Realloc(mFileData, aOffset + aCount);
     NS_ENSURE_TRUE(mFileData, NS_ERROR_OUT_OF_MEMORY);
 

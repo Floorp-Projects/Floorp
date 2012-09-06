@@ -55,7 +55,7 @@ MyListener::OnStopRequest(nsIRequest *req, nsISupports *ctxt, nsresult status)
 NS_IMETHODIMP
 MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctxt,
                             nsIInputStream *stream,
-                            uint32_t offset, uint32_t count)
+                            uint64_t offset, uint32_t count)
 {
     printf(">>> OnDataAvailable [count=%u]\n", count);
 

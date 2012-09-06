@@ -875,7 +875,7 @@ NS_IMETHODIMP
 nsObjectLoadingContent::OnDataAvailable(nsIRequest *aRequest,
                                         nsISupports *aContext,
                                         nsIInputStream *aInputStream,
-                                        uint32_t aOffset, uint32_t aCount)
+                                        uint64_t aOffset, uint32_t aCount)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
