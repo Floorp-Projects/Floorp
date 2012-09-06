@@ -49,6 +49,7 @@ HashString(const nsACString& aStr)
  * nsCStringHashKey
  * nsUint32HashKey
  * nsUint64HashKey
+ * nsFloatHashKey
  * nsPtrHashkey
  * nsClearingPtrHashKey
  * nsVoidPtrHashKey
@@ -214,6 +215,32 @@ public:
 
 private:
   const uint64_t mValue;
+};
+
+/**
+ * hashkey wrapper using float KeyType
+ *
+ * @see nsTHashtable::EntryType for specification
+ */
+class nsFloatHashKey : public PLDHashEntryHdr
+{
+public:
+  typedef const float& KeyType;
+  typedef const float* KeyTypePointer;
+
+  nsFloatHashKey(KeyTypePointer aKey) : mValue(*aKey) { }
+  nsFloatHashKey(const nsFloatHashKey& toCopy) : mValue(toCopy.mValue) { }
+  ~nsFloatHashKey() { }
+
+  KeyType GetKey() const { return mValue; }
+  bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return *reinterpret_cast<const uint32_t*>(aKey); }
+  enum { ALLOW_MEMMOVE = true };
+
+private:
+  const float mValue;
 };
 
 /**
