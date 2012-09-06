@@ -43,6 +43,7 @@
 #include "nsAutoPtr.h"
 #include "nsIContentViewer.h"
 #include "nsIPresShell.h"
+#include "nsClassHashtable.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIDocument.h"
@@ -52,10 +53,57 @@
 
 
 /**
- * Used by gfxFontEntry for OpenType fonts which contains SVG tables to parse
- * the SVG document and store and render SVG glyphs
+ * Wraps an SVG document contained in the SVG table of an OpenType font.
+ * There may be multiple SVG documents in an SVG table which we lazily parse
+ *   so we have an instance of this class for every document in the SVG table
+ *   which contains a glyph ID which has been used
+ * Finds and looks up elements contained in the SVG document which have glyph
+ *   mappings to be drawn by gfxSVGGlyphs
  */
-class gfxSVGGlyphs {
+class gfxSVGGlyphsDocument
+{
+    typedef mozilla::dom::Element Element;
+    typedef gfxFont::DrawMode DrawMode;
+
+public:
+    gfxSVGGlyphsDocument(uint8_t *aBuffer, uint32_t aBufLen,
+                         const FallibleTArray<uint8_t>& aCmapTable);
+
+    Element *GetGlyphElement(uint32_t aGlyphId);
+
+    ~gfxSVGGlyphsDocument() {
+        if (mViewer) {
+            mViewer->Destroy();
+        }
+    }
+
+private:
+    nsresult ParseDocument(uint8_t *aBuffer, uint32_t aBufLen);
+
+    nsresult SetupPresentation();
+
+    void FindGlyphElements(Element *aElement,
+                           const FallibleTArray<uint8_t> &aCmapTable);
+
+    void InsertGlyphId(Element *aGlyphElement);
+    void InsertGlyphChar(Element *aGlyphElement,
+                         const FallibleTArray<uint8_t> &aCmapTable);
+
+    nsCOMPtr<nsIDocument> mDocument;
+    nsCOMPtr<nsIContentViewer> mViewer;
+    nsCOMPtr<nsIPresShell> mPresShell;
+
+    nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
+};
+
+/**
+ * Used by |gfxFontEntry| to represent the SVG table of an OpenType font.
+ * Handles lazy parsing of the SVG documents in the table, looking up SVG glyphs
+ *   and rendering SVG glyphs.
+ * Each |gfxFontEntry| owns at most one |gfxSVGGlyphs| instance.
+ */
+class gfxSVGGlyphs
+{
 private:
     typedef mozilla::dom::Element Element;
     typedef gfxFont::DrawMode DrawMode;
@@ -63,42 +111,69 @@ private:
 public:
     static const float SVG_UNITS_PER_EM;
 
-    static gfxSVGGlyphs* ParseFromBuffer(uint8_t *aBuffer, uint32_t aBufLen);
+    /**
+     * @param aSVGTable The SVG table from the OpenType font
+     * @param aCmapTable The CMAP table from the OpenType font
+     */
+    gfxSVGGlyphs(FallibleTArray<uint8_t>& aSVGTable,
+                 const FallibleTArray<uint8_t>& aCmapTable);
 
+    /**
+     * Big- to little-endian conversion for headers
+     */
+    void UnmangleHeaders();
+
+    /**
+     * Find the |gfxSVGGlyphsDocument| containing an SVG glyph for |aGlyphId|.
+     * If |aGlyphId| does not map to an SVG document, return null.
+     * If a |gfxSVGGlyphsDocument| has not been created for the document, create one.
+     */
+    gfxSVGGlyphsDocument *FindOrCreateGlyphsDocument(uint32_t aGlyphId);
+
+    /**
+     * Return true iff there is an SVG glyph for |aGlyphId|
+     */
     bool HasSVGGlyph(uint32_t aGlyphId);
 
+    /**
+     * Render the SVG glyph for |aGlyphId|
+     * @param aDrawMode Whether to fill or stroke or both; see gfxFont::DrawMode
+     * @param aObjectPaint Information on outer text object paints.
+     *   See |gfxTextObjectPaint|.
+     */
     bool RenderGlyph(gfxContext *aContext, uint32_t aGlyphId, DrawMode aDrawMode,
                      gfxTextObjectPaint *aObjectPaint);
 
+    /**
+     * Get the extents for the SVG glyph associated with |aGlyphId|
+     * @param aSVGToAppSpace The matrix mapping the SVG glyph space to the
+     *   target context space
+     */
     bool GetGlyphExtents(uint32_t aGlyphId, const gfxMatrix& aSVGToAppSpace,
                          gfxRect *aResult);
 
-    bool Init(const gfxFontEntry *aFont,
-              const FallibleTArray<uint8_t> &aCmapTable);
-
-    ~gfxSVGGlyphs() {
-        mViewer->Destroy();
-    }
-
 private:
-    gfxSVGGlyphs() {
-    }
+    Element *GetGlyphElement(uint32_t aGlyphId);
 
-    static nsresult ParseDocument(uint8_t *aBuffer, uint32_t aBufLen,
-                                  nsIDocument **aResult);
-
-    void FindGlyphElements(Element *aElement, const gfxFontEntry *aFontEntry,
-                           const FallibleTArray<uint8_t> &aCmapTable);
-
-    void InsertGlyphId(Element *aGlyphElement);
-    void InsertGlyphChar(Element *aGlyphElement, const gfxFontEntry *aFontEntry,
-                         const FallibleTArray<uint8_t> &aCmapTable);
-    
-    nsCOMPtr<nsIDocument> mDocument;
-    nsCOMPtr<nsIContentViewer> mViewer;
-    nsCOMPtr<nsIPresShell> mPresShell;
-
+    nsClassHashtable<nsUint32HashKey, gfxSVGGlyphsDocument> mGlyphDocs;
     nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
+
+    FallibleTArray<uint8_t> mSVGData;
+    FallibleTArray<uint8_t> mCmapData;
+
+    struct Header {
+        uint16_t mVersion;
+        uint16_t mIndexLength;
+    } *mHeader;
+
+    struct IndexEntry {
+        uint16_t mStartGlyph;
+        uint16_t mEndGlyph;
+        uint32_t mDocOffset;
+        uint32_t mDocLength;
+    } *mIndex;
+
+    static int CompareIndexEntries(const void *_a, const void *_b);
 };
 
 /**

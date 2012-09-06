@@ -253,23 +253,13 @@ gfxFontEntry::TryGetSVGData()
 
         FallibleTArray<uint8_t> svgTable;
         rv = GetFontTable(TRUETYPE_TAG('S', 'V', 'G', ' '), svgTable);
-        if (NS_FAILED(rv)) {
-            return false;
-        }
+        NS_ENSURE_SUCCESS(rv, false);
 
-        nsAutoPtr<gfxSVGGlyphs>
-            svgGlyphs(gfxSVGGlyphs::ParseFromBuffer(svgTable.Elements(),
-                                                    svgTable.Length()));
+        FallibleTArray<uint8_t> cmapTable;
+        rv = GetFontTable(TRUETYPE_TAG('c', 'm', 'a', 'p'), cmapTable);
+        NS_ENSURE_SUCCESS(rv, false);
 
-        if (svgGlyphs) {
-            FallibleTArray<uint8_t> cmapTable;
-            nsresult rv = GetFontTable(TRUETYPE_TAG('c', 'm', 'a', 'p'), cmapTable);
-            NS_ENSURE_SUCCESS(rv, false);
-
-            if (svgGlyphs->Init(this, cmapTable)) {
-                mSVGGlyphs = svgGlyphs.forget();
-            }
-        }
+        mSVGGlyphs = new gfxSVGGlyphs(svgTable, cmapTable);
     }
 
     return !!mSVGGlyphs;
