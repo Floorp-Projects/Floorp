@@ -29,7 +29,7 @@ class NameResolver
 
     /* Test whether a ParseNode represents a function invocation */
     bool call(ParseNode *pn) {
-        return pn && pn->isKind(PNK_LP);
+        return pn && pn->isKind(PNK_CALL);
     }
 
     /*
@@ -75,7 +75,7 @@ class NameResolver
             case PNK_NAME:
                 return buf->append(n->pn_atom);
 
-            case PNK_LB:
+            case PNK_ELEM:
                 return nameExpression(n->pn_left) &&
                        buf->append("[") &&
                        nameExpression(n->pn_right) &&
@@ -146,12 +146,12 @@ class NameResolver
 
                 case PNK_COLON:
                     /*
-                     * If this is a PNK_COLON, but our parent is not a PNK_RC,
+                     * If this is a PNK_COLON, but our parent is not a PNK_OBJECT,
                      * then this is a label and we're done naming. Otherwise we
-                     * record the PNK_COLON but skip the PNK_RC so we're not
+                     * record the PNK_COLON but skip the PNK_OBJECT so we're not
                      * flagged as a contributor.
                      */
-                    if (pos == 0 || !parents[pos - 1]->isKind(PNK_RC))
+                    if (pos == 0 || !parents[pos - 1]->isKind(PNK_OBJECT))
                         return NULL;
                     pos--;
                     /* fallthrough */
