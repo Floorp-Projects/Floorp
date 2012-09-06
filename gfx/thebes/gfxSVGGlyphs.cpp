@@ -70,6 +70,8 @@ mozilla::gfx::UserDataKey gfxTextObjectPaint::sUserDataKey;
 
 const float gfxSVGGlyphs::SVG_UNITS_PER_EM = 1000.0f;
 
+const gfxRGBA SimpleTextObjectPaint::sZero = gfxRGBA(0.0f, 0.0f, 0.0f, 0.0f);
+
 /* static */ gfxSVGGlyphs*
 gfxSVGGlyphs::ParseFromBuffer(uint8_t *aBuffer, uint32_t aBufLen)
 {

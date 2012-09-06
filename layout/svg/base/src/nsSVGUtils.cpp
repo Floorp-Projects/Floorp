@@ -1905,10 +1905,10 @@ nsSVGUtils::SetupObjectPaint(gfxContext *aContext,
 
   switch (aPaint.mType) {
     case eStyleSVGPaintType_ObjectFill:
-      pattern = aObjectPaint->GetFillPattern();
+      pattern = aObjectPaint->GetFillPattern(aOpacity);
       break;
     case eStyleSVGPaintType_ObjectStroke:
-      pattern = aObjectPaint->GetStrokePattern();
+      pattern = aObjectPaint->GetStrokePattern(aOpacity);
       break;
     default:
       return false;
@@ -1939,7 +1939,10 @@ nsSVGUtils::SetupCairoFillPaint(nsIFrame *aFrame, gfxContext* aContext,
   else
     aContext->SetFillRule(gfxContext::FILL_RULE_WINDING);
 
-  float opacity = MaybeOptimizeOpacity(aFrame, style->mFillOpacity);
+  float opacity = MaybeOptimizeOpacity(aFrame,
+                                       GetOpacity(style->mFillOpacitySource,
+                                                  style->mFillOpacity,
+                                                  aObjectPaint));
   nsSVGPaintServerFrame *ps =
     nsSVGEffects::GetPaintServer(aFrame, &style->mFill, nsSVGEffects::FillProperty());
   if (ps && ps->SetupPaintServer(aContext, aFrame, &nsStyleSVG::mFill, opacity))
@@ -1966,7 +1969,10 @@ nsSVGUtils::SetupCairoStrokePaint(nsIFrame *aFrame, gfxContext* aContext,
   if (style->mStroke.mType == eStyleSVGPaintType_None)
     return false;
 
-  float opacity = MaybeOptimizeOpacity(aFrame, style->mStrokeOpacity);
+  float opacity = MaybeOptimizeOpacity(aFrame,
+                                       GetOpacity(style->mStrokeOpacitySource,
+                                                  style->mStrokeOpacity,
+                                                  aObjectPaint));
 
   nsSVGPaintServerFrame *ps =
     nsSVGEffects::GetPaintServer(aFrame, &style->mStroke, nsSVGEffects::StrokeProperty());
@@ -1984,6 +1990,36 @@ nsSVGUtils::SetupCairoStrokePaint(nsIFrame *aFrame, gfxContext* aContext,
                             &nsStyleSVG::mStroke, opacity);
 
   return true;
+}
+
+/* static */ float
+nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
+                       const float& aOpacity,
+                       gfxTextObjectPaint *aOuterObjectPaint)
+{
+  float opacity = 1.0f;
+  switch (aOpacityType) {
+  case eStyleSVGOpacitySource_Normal:
+    opacity = aOpacity;
+    break;
+  case eStyleSVGOpacitySource_ObjectFillOpacity:
+    if (aOuterObjectPaint) {
+      opacity = aOuterObjectPaint->GetFillOpacity();
+    } else {
+      NS_WARNING("objectFillOpacity used outside of an SVG glyph");
+    }
+    break;
+  case eStyleSVGOpacitySource_ObjectStrokeOpacity:
+    if (aOuterObjectPaint) {
+      opacity = aOuterObjectPaint->GetStrokeOpacity();
+    } else {
+      NS_WARNING("objectStrokeOpacity used outside of an SVG glyph");
+    }
+    break;
+  default:
+    NS_NOTREACHED("Unknown object opacity inheritance type for SVG glyph");
+  }
+  return opacity;
 }
 
 bool
