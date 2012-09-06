@@ -36,6 +36,13 @@ public class ScrollbarLayer extends TileLayer {
     private final Canvas mCanvas;
     private float mOpacity;
 
+    // To avoid excessive GC, declare some objects here that would otherwise
+    // be created and destroyed frequently during draw().
+    private final RectF mBarRectF;
+    private final Rect mBarRect;
+    private final float[] mBodyCoords;
+    private final float[] mCap;
+
     private LayerRenderer mRenderer;
     private int mProgram;
     private int mPositionHandle;
@@ -124,6 +131,11 @@ public class ScrollbarLayer extends TileLayer {
         mCanvas.drawCircle(CAP_RADIUS, CAP_RADIUS, CAP_RADIUS, foregroundPaint);
 
         mBitmap.copyPixelsToBuffer(buffer.asIntBuffer());
+
+        mBarRectF = new RectF();
+        mBarRect = new Rect();
+        mBodyCoords = new float[20];
+        mCap = new float[20];
     }
 
     public static ScrollbarLayer create(LayerRenderer renderer, boolean vertical) {
@@ -224,33 +236,47 @@ public class ScrollbarLayer extends TileLayer {
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
-        Rect rect = RectUtils.round(mVertical
-                ? getVerticalRect(context)
-                : getHorizontalRect(context));
+        if (mVertical) {
+            getVerticalRect(context, mBarRectF);
+        } else {
+            getHorizontalRect(context, mBarRectF);
+        }
+        RectUtils.round(mBarRectF, mBarRect);
+
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, getTextureID());
 
         float viewWidth = context.viewport.width();
         float viewHeight = context.viewport.height();
 
-        float top = viewHeight - rect.top;
-        float bot = viewHeight - rect.bottom;
+        float top = viewHeight - mBarRect.top;
+        float bot = viewHeight - mBarRect.bottom;
 
         // Coordinates for the scrollbar's body combined with the texture coordinates
-        float[] bodyCoords = {
-            // x, y, z, texture_x, texture_y
-            rect.left/viewWidth, bot/viewHeight, 0,
-            BODY_TEX_COORDS[0], BODY_TEX_COORDS[1],
+        // x, y, z, texture_x, texture_y
+        mBodyCoords[0] = mBarRect.left/viewWidth;
+        mBodyCoords[1] = bot/viewHeight;
+        mBodyCoords[2] = 0;
+        mBodyCoords[3] = BODY_TEX_COORDS[0];
+        mBodyCoords[4] = BODY_TEX_COORDS[1];
 
-            rect.left/viewWidth, (bot+rect.height())/viewHeight, 0,
-            BODY_TEX_COORDS[2], BODY_TEX_COORDS[3],
+        mBodyCoords[5] = mBarRect.left/viewWidth;
+        mBodyCoords[6] = (bot+mBarRect.height())/viewHeight;
+        mBodyCoords[7] = 0;
+        mBodyCoords[8] = BODY_TEX_COORDS[2];
+        mBodyCoords[9] = BODY_TEX_COORDS[3];
 
-            (rect.left+rect.width())/viewWidth, bot/viewHeight, 0,
-            BODY_TEX_COORDS[4], BODY_TEX_COORDS[5],
+        mBodyCoords[10] = (mBarRect.left+mBarRect.width())/viewWidth;
+        mBodyCoords[11] = bot/viewHeight;
+        mBodyCoords[12] = 0;
+        mBodyCoords[13] = BODY_TEX_COORDS[4];
+        mBodyCoords[14] = BODY_TEX_COORDS[5];
 
-            (rect.left+rect.width())/viewWidth, (bot+rect.height())/viewHeight, 0,
-            BODY_TEX_COORDS[6], BODY_TEX_COORDS[7]
-        };
+        mBodyCoords[15] = (mBarRect.left+mBarRect.width())/viewWidth;
+        mBodyCoords[16] = (bot+mBarRect.height())/viewHeight;
+        mBodyCoords[17] = 0;
+        mBodyCoords[18] = BODY_TEX_COORDS[6];
+        mBodyCoords[19] = BODY_TEX_COORDS[7];
 
         // Get the buffer and handles from the context
         FloatBuffer coordBuffer = context.coordBuffer;
@@ -260,7 +286,7 @@ public class ScrollbarLayer extends TileLayer {
         // Make sure we are at position zero in the buffer in case other draw methods did not
         // clean up after themselves
         coordBuffer.position(0);
-        coordBuffer.put(bodyCoords);
+        coordBuffer.put(mBodyCoords);
 
         // Unbind any the current array buffer so we can use client side buffers
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
@@ -282,22 +308,32 @@ public class ScrollbarLayer extends TileLayer {
 
         if (mVertical) {
             // top endcap
-            float[] topCap = {
-                // x, y, z, texture_x, texture_y
-                rect.left/viewWidth, top/viewHeight, 0,
-                TOP_CAP_TEX_COORDS[0], TOP_CAP_TEX_COORDS[1],
+            // x, y, z, texture_x, texture_y
+            mCap[0] = mBarRect.left/viewWidth;
+            mCap[1] = top/viewHeight;
+            mCap[2] = 0;
+            mCap[3] = TOP_CAP_TEX_COORDS[0];
+            mCap[4] = TOP_CAP_TEX_COORDS[1];
 
-                rect.left/viewWidth, (top+CAP_RADIUS)/viewHeight, 0,
-                TOP_CAP_TEX_COORDS[2], TOP_CAP_TEX_COORDS[3],
+            mCap[5] = mBarRect.left/viewWidth;
+            mCap[6] = (top+CAP_RADIUS)/viewHeight;
+            mCap[7] = 0;
+            mCap[8] = TOP_CAP_TEX_COORDS[2];
+            mCap[9] = TOP_CAP_TEX_COORDS[3];
 
-                (rect.left+BAR_SIZE)/viewWidth, top/viewHeight, 0,
-                TOP_CAP_TEX_COORDS[4], TOP_CAP_TEX_COORDS[5],
+            mCap[10] = (mBarRect.left+BAR_SIZE)/viewWidth;
+            mCap[11] = top/viewHeight;
+            mCap[12] = 0;
+            mCap[13] = TOP_CAP_TEX_COORDS[4];
+            mCap[14] = TOP_CAP_TEX_COORDS[5];
 
-                (rect.left+BAR_SIZE)/viewWidth, (top+CAP_RADIUS)/viewHeight, 0,
-                TOP_CAP_TEX_COORDS[6], TOP_CAP_TEX_COORDS[7]
-            };
+            mCap[15] = (mBarRect.left+BAR_SIZE)/viewWidth;
+            mCap[16] = (top+CAP_RADIUS)/viewHeight;
+            mCap[17] = 0;
+            mCap[18] = TOP_CAP_TEX_COORDS[6];
+            mCap[19] = TOP_CAP_TEX_COORDS[7];
 
-            coordBuffer.put(topCap);
+            coordBuffer.put(mCap);
 
             // Vertex coordinates are x,y,z starting at position 0 into the buffer.
             coordBuffer.position(0);
@@ -317,22 +353,32 @@ public class ScrollbarLayer extends TileLayer {
             coordBuffer.position(0);
 
             // bottom endcap
-            float[] botCap = {
-                // x, y, z, texture_x, texture_y
-                rect.left/viewWidth, (bot-CAP_RADIUS)/viewHeight, 0,
-                BOT_CAP_TEX_COORDS[0], BOT_CAP_TEX_COORDS[1],
+            // x, y, z, texture_x, texture_y
+            mCap[0] = mBarRect.left/viewWidth;
+            mCap[1] = (bot-CAP_RADIUS)/viewHeight;
+            mCap[2] = 0;
+            mCap[3] = BOT_CAP_TEX_COORDS[0];
+            mCap[4] = BOT_CAP_TEX_COORDS[1];
 
-                rect.left/viewWidth, (bot)/viewHeight, 0,
-                BOT_CAP_TEX_COORDS[2], BOT_CAP_TEX_COORDS[3],
+            mCap[5] = mBarRect.left/viewWidth;
+            mCap[6] = (bot)/viewHeight;
+            mCap[7] = 0;
+            mCap[8] = BOT_CAP_TEX_COORDS[2];
+            mCap[9] = BOT_CAP_TEX_COORDS[3];
 
-                (rect.left+BAR_SIZE)/viewWidth, (bot-CAP_RADIUS)/viewHeight, 0,
-                BOT_CAP_TEX_COORDS[4], BOT_CAP_TEX_COORDS[5],
+            mCap[10] = (mBarRect.left+BAR_SIZE)/viewWidth;
+            mCap[11] = (bot-CAP_RADIUS)/viewHeight;
+            mCap[12] = 0;
+            mCap[13] = BOT_CAP_TEX_COORDS[4];
+            mCap[14] = BOT_CAP_TEX_COORDS[5];
 
-                (rect.left+BAR_SIZE)/viewWidth, (bot)/viewHeight, 0,
-                BOT_CAP_TEX_COORDS[6], BOT_CAP_TEX_COORDS[7]
-            };
+            mCap[15] = (mBarRect.left+BAR_SIZE)/viewWidth;
+            mCap[16] = (bot)/viewHeight;
+            mCap[17] = 0;
+            mCap[18] = BOT_CAP_TEX_COORDS[6];
+            mCap[19] = BOT_CAP_TEX_COORDS[7];
 
-            coordBuffer.put(botCap);
+            coordBuffer.put(mCap);
 
             // Vertex coordinates are x,y,z starting at position 0 into the buffer.
             coordBuffer.position(0);
@@ -352,19 +398,32 @@ public class ScrollbarLayer extends TileLayer {
             coordBuffer.position(0);
         } else {
             // left endcap
-            float[] leftCap = {
-                // x, y, z, texture_x, texture_y
-                (rect.left-CAP_RADIUS)/viewWidth, bot/viewHeight, 0,
-                LEFT_CAP_TEX_COORDS[0], LEFT_CAP_TEX_COORDS[1],
-                (rect.left-CAP_RADIUS)/viewWidth, (bot+BAR_SIZE)/viewHeight, 0,
-                LEFT_CAP_TEX_COORDS[2], LEFT_CAP_TEX_COORDS[3],
-                (rect.left)/viewWidth, bot/viewHeight, 0, LEFT_CAP_TEX_COORDS[4],
-                LEFT_CAP_TEX_COORDS[5],
-                (rect.left)/viewWidth, (bot+BAR_SIZE)/viewHeight, 0,
-                LEFT_CAP_TEX_COORDS[6], LEFT_CAP_TEX_COORDS[7]
-            };
+            // x, y, z, texture_x, texture_y
+            mCap[0] = (mBarRect.left-CAP_RADIUS)/viewWidth;
+            mCap[1] = bot/viewHeight;
+            mCap[2] = 0;
+            mCap[3] = LEFT_CAP_TEX_COORDS[0];
+            mCap[4] = LEFT_CAP_TEX_COORDS[1];
 
-            coordBuffer.put(leftCap);
+            mCap[5] = (mBarRect.left-CAP_RADIUS)/viewWidth;
+            mCap[6] = (bot+BAR_SIZE)/viewHeight;
+            mCap[7] = 0;
+            mCap[8] = LEFT_CAP_TEX_COORDS[2];
+            mCap[9] = LEFT_CAP_TEX_COORDS[3];
+
+            mCap[10] = (mBarRect.left)/viewWidth;
+            mCap[11] = bot/viewHeight;
+            mCap[12] = 0;
+            mCap[13] = LEFT_CAP_TEX_COORDS[4];
+            mCap[14] = LEFT_CAP_TEX_COORDS[5];
+
+            mCap[15] = (mBarRect.left)/viewWidth;
+            mCap[16] = (bot+BAR_SIZE)/viewHeight;
+            mCap[17] = 0;
+            mCap[18] = LEFT_CAP_TEX_COORDS[6];
+            mCap[19] = LEFT_CAP_TEX_COORDS[7];
+
+            coordBuffer.put(mCap);
 
             // Vertex coordinates are x,y,z starting at position 0 into the buffer.
             coordBuffer.position(0);
@@ -384,22 +443,32 @@ public class ScrollbarLayer extends TileLayer {
             coordBuffer.position(0);
 
             // right endcap
-            float[] rightCap = {
-                // x, y, z, texture_x, texture_y
-                rect.right/viewWidth, (bot)/viewHeight, 0,
-                RIGHT_CAP_TEX_COORDS[0], RIGHT_CAP_TEX_COORDS[1],
+            // x, y, z, texture_x, texture_y
+            mCap[0] = mBarRect.right/viewWidth;
+            mCap[1] = (bot)/viewHeight;
+            mCap[2] = 0;
+            mCap[3] = RIGHT_CAP_TEX_COORDS[0];
+            mCap[4] = RIGHT_CAP_TEX_COORDS[1];
 
-                rect.right/viewWidth, (bot+BAR_SIZE)/viewHeight, 0,
-                RIGHT_CAP_TEX_COORDS[2], RIGHT_CAP_TEX_COORDS[3],
+            mCap[5] = mBarRect.right/viewWidth;
+            mCap[6] = (bot+BAR_SIZE)/viewHeight;
+            mCap[7] = 0;
+            mCap[8] = RIGHT_CAP_TEX_COORDS[2];
+            mCap[9] = RIGHT_CAP_TEX_COORDS[3];
 
-                (rect.right+CAP_RADIUS)/viewWidth, (bot)/viewHeight, 0,
-                RIGHT_CAP_TEX_COORDS[4], RIGHT_CAP_TEX_COORDS[5],
+            mCap[10] = (mBarRect.right+CAP_RADIUS)/viewWidth;
+            mCap[11] = (bot)/viewHeight;
+            mCap[12] = 0;
+            mCap[13] = RIGHT_CAP_TEX_COORDS[4];
+            mCap[14] = RIGHT_CAP_TEX_COORDS[5];
 
-                (rect.right+CAP_RADIUS)/viewWidth, (bot+BAR_SIZE)/viewHeight, 0,
-                RIGHT_CAP_TEX_COORDS[6], RIGHT_CAP_TEX_COORDS[7]
-            };
+            mCap[15] = (mBarRect.right+CAP_RADIUS)/viewWidth;
+            mCap[16] = (bot+BAR_SIZE)/viewHeight;
+            mCap[17] = 0;
+            mCap[18] = RIGHT_CAP_TEX_COORDS[6];
+            mCap[19] = RIGHT_CAP_TEX_COORDS[7];
 
-            coordBuffer.put(rightCap);
+            coordBuffer.put(mCap);
 
             // Vertex coordinates are x,y,z starting at position 0 into the buffer.
             coordBuffer.position(0);
@@ -420,7 +489,7 @@ public class ScrollbarLayer extends TileLayer {
         mRenderer.activateDefaultProgram();
     }
 
-    private RectF getVerticalRect(RenderContext context) {
+    private void getVerticalRect(RenderContext context, RectF dest) {
         RectF viewport = context.viewport;
         RectF pageRect = context.pageRect;
         float barStart = ((viewport.top - pageRect.top) * (viewport.height() / pageRect.height())) + CAP_RADIUS;
@@ -430,10 +499,10 @@ public class ScrollbarLayer extends TileLayer {
             barStart = barEnd = middle;
         }
         float right = viewport.width() - PADDING;
-        return new RectF(right - BAR_SIZE, barStart, right, barEnd);
+        dest.set(right - BAR_SIZE, barStart, right, barEnd);
     }
 
-    private RectF getHorizontalRect(RenderContext context) {
+    private void getHorizontalRect(RenderContext context, RectF dest) {
         RectF viewport = context.viewport;
         RectF pageRect = context.pageRect;
         float barStart = ((viewport.left - pageRect.left) * (viewport.width() / pageRect.width())) + CAP_RADIUS;
@@ -443,6 +512,6 @@ public class ScrollbarLayer extends TileLayer {
             barStart = barEnd = middle;
         }
         float bottom = viewport.height() - PADDING;
-        return new RectF(barStart, bottom - BAR_SIZE, barEnd, bottom);
+        dest.set(barStart, bottom - BAR_SIZE, barEnd, bottom);
     }
 }
