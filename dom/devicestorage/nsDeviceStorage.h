@@ -33,7 +33,6 @@ class nsPIDOMWindow;
 #define POST_ERROR_EVENT_FILE_NOT_ENUMERABLE         "File location is not enumerable"
 #define POST_ERROR_EVENT_PERMISSION_DENIED           "Permission Denied"
 #define POST_ERROR_EVENT_ILLEGAL_FILE_NAME           "Illegal file name"
-#define POST_ERROR_EVENT_ILLEGAL_TYPE                "Illegal content type"
 #define POST_ERROR_EVENT_UNKNOWN                     "Unknown"
 #define POST_ERROR_EVENT_NON_STRING_TYPE_UNSUPPORTED "Non-string type unsupported"
 #define POST_ERROR_EVENT_NOT_IMPLEMENTED             "Not implemented"
