@@ -101,8 +101,8 @@ CheckOverRecursed(JSContext *cx)
     //   (1) The interrupt bit is set, and we need to fire the interrupt callback.
     //   (2) The stack limit has been exceeded, and we need to throw an error.
     //
-    // Note that we can reach here if ionStackLimit is NULL, but interrupt has
-    // not yet been set to 1. That's okay; it will be set to 1 very shortly,
+    // Note that we can reach here if ionStackLimit is MAXADDR, but interrupt
+    // has not yet been set to 1. That's okay; it will be set to 1 very shortly,
     // and in the interim we might just fire a few useless calls to
     // CheckOverRecursed.
     JS_CHECK_RECURSION(cx, return false);
