@@ -136,6 +136,7 @@ class UpvarCookie
     F(XMLPI) \
     F(XMLUNARY) \
     F(AT) \
+    F(FUNCTIONNS) \
     F(DBLCOLON) \
     F(ANYNAME) \
     F(DBLDOT) \
@@ -406,6 +407,7 @@ enum ParseNodeKind {
  * PNK_ANYNAME  nullary     pn_op: JSOP_ANYNAME
  *                          pn_atom: cx->runtime->atomState.starAtom
  * PNK_AT       unary       pn_op: JSOP_TOATTRNAME; pn_kid attribute id/expr
+ * PNK_FUNCTIONNS nullary   special E4X "function::" namespace
  * PNK_DBLCOLON binary      pn_op: JSOP_QNAME
  *                          pn_left: PNK_ANYNAME or PNK_NAME node
  *                          pn_right: PNK_STRING "*" node, or expr within []
