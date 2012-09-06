@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<!--
+    Test SVG glyphs for text object pattern inheritance
+    Covers glyph ID range 48 (N) to 51 (Q)
+-->
+<!-- -moz-objectfill, no stroke -->
+  <!-- N -->
+  <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+    stroke="none" fill="-moz-objectFill" glyphchar="N"/>
+
+  <!-- O -->
+  <rect x="50" y="-950" width="900" height="900" stroke-width="100"
+    fill="-moz-objectFill" stroke="none" glyphchar="O"/>
+
+<!-- -moz-objectstroke -->
+  <!-- P -->
+  <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+    stroke="-moz-objectStroke" fill="burlywood" glyphchar="P"/>
+
+<!-- both -moz-objectstroke and -moz-objectfill -->
+  <!-- Q -->
+  <rect x="50" y="-950" width="900" height="900" stroke-width="100"
+    fill="-moz-objectStroke" stroke="-moz-objectFill" glyphchar="Q"/>
+</svg>
