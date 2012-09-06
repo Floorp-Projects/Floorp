@@ -1978,6 +1978,8 @@ class IDLArgument(IDLObjectWithIdentifier):
         self.variadic = variadic
         self.dictionaryMember = dictionaryMember
         self._isComplete = False
+        self.enforceRange = False
+        self.clamp = False
 
         assert not variadic or optional
 
@@ -1986,9 +1988,21 @@ class IDLArgument(IDLObjectWithIdentifier):
             attrs,
             isDictionaryMember=self.dictionaryMember,
             isOptional=self.optional)
-        if len(attrs) != 0:
-            raise WebIDLError("Unhandled extended attribute on an argument",
-                              [self.location])
+        for attribute in attrs:
+            attr = attribute[0]
+            if attr == "Clamp":
+                if self.enforceRange:
+                    raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
+                                      [self.location]);
+                self.clamp = True
+            elif attr == "EnforceRange":
+                if self.clamp:
+                    raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
+                                      [self.location]);
+                self.enforceRange = True
+            else:
+                raise WebIDLError("Unhandled extended attribute on an argument",
+                                  [self.location])
 
     def isComplete(self):
         return self._isComplete
