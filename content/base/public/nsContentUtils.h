@@ -2090,6 +2090,9 @@ public:
                             gfxFont::DrawMode aDrawMode,
                             gfxTextObjectPaint *aObjectPaint);
 
+  static bool GetSVGGlyphExtents(Element *aElement, const gfxMatrix& aSVGToAppSpace,
+                                 gfxRect *aResult);
+
 private:
   static bool InitializeEventTable();
 

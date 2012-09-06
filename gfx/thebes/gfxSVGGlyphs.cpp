@@ -68,6 +68,8 @@
 
 mozilla::gfx::UserDataKey gfxTextObjectPaint::sUserDataKey;
 
+const float gfxSVGGlyphs::SVG_UNITS_PER_EM = 1000.0f;
+
 /* static */ gfxSVGGlyphs*
 gfxSVGGlyphs::ParseFromBuffer(uint8_t *aBuffer, uint32_t aBufLen)
 {
@@ -189,6 +191,16 @@ gfxSVGGlyphs::RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
     NS_ASSERTION(glyph, "No glyph element. Should check with HasSVGGlyph() first!");
 
     return nsContentUtils::PaintSVGGlyph(glyph, aContext, aDrawMode, aObjectPaint);
+}
+
+bool
+gfxSVGGlyphs::GetGlyphExtents(uint32_t aGlyphId, const gfxMatrix& aSVGToAppSpace,
+                              gfxRect *aResult)
+{
+    Element *glyph = mGlyphIdMap.Get(aGlyphId);
+    NS_ASSERTION(glyph, "No glyph element. Should check with HasSVGGlyph() first!");
+
+    return nsContentUtils::GetSVGGlyphExtents(glyph, aSVGToAppSpace, aResult);
 }
 
 bool

@@ -6978,6 +6978,31 @@ nsContentUtils::PaintSVGGlyph(Element *aElement, gfxContext *aContext,
   return true;
 }
 
+/* static */
+bool
+nsContentUtils::GetSVGGlyphExtents(Element *aElement, const gfxMatrix& aSVGToAppSpace,
+                                   gfxRect *aResult)
+{
+  nsIFrame *frame = aElement->GetPrimaryFrame();
+  if (!frame) {
+    NS_WARNING("No frame for SVG glyph");
+    return false;
+  }
+
+  nsISVGChildFrame *displayFrame = do_QueryFrame(frame);
+  if (!displayFrame) {
+    NS_WARNING("Non SVG frame for SVG glyph");
+    return false;
+  }
+
+  *aResult = displayFrame->GetBBoxContribution(aSVGToAppSpace,
+      nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIncludeFillGeometry |
+      nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIncludeStrokeGeometry |
+      nsSVGUtils::eBBoxIncludeMarkers);
+
+  return true;
+}
+
 // static
 void
 nsContentUtils::GetSelectionInTextControl(Selection* aSelection,

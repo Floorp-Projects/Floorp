@@ -61,12 +61,17 @@ private:
     typedef gfxFont::DrawMode DrawMode;
 
 public:
+    static const float SVG_UNITS_PER_EM;
+
     static gfxSVGGlyphs* ParseFromBuffer(uint8_t *aBuffer, uint32_t aBufLen);
 
     bool HasSVGGlyph(uint32_t aGlyphId);
 
     bool RenderGlyph(gfxContext *aContext, uint32_t aGlyphId, DrawMode aDrawMode,
                      gfxTextObjectPaint *aObjectPaint);
+
+    bool GetGlyphExtents(uint32_t aGlyphId, const gfxMatrix& aSVGToAppSpace,
+                         gfxRect *aResult);
 
     bool Init(const gfxFontEntry *aFont,
               const FallibleTArray<uint8_t> &aCmapTable);
