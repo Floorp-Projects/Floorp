@@ -30,34 +30,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=603550
 SimpleTest.waitForExplicitFinish();
 
 function sendMouseMoveFaraway(el) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var rect = el.getBoundingClientRect();
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.sendMouseEvent('mousemove', rect.left + 5000, rect.top + 5000, 0, 0, 0);
 }
 
 function sendMouseDown(el) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var rect = el.getBoundingClientRect();
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.sendMouseEvent('mousedown', rect.left + 5, rect.top + 5, 0, 1, 0);
 }
 
 function sendMouseUp(el) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var rect = el.getBoundingClientRect();
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.sendMouseEvent('mouseup', rect.left + 5, rect.top + 5, 0, 1, 0);
 }
 
 function fireEvent(target, event) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var utils =
-    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-           getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.dispatchDOMEventViaPresShell(target, event, true);
 }
 

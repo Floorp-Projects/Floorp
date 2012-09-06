@@ -56,16 +56,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=423523
   }
   
   function sendMouseClick() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var rect=document.getElementById('div1').getBoundingClientRect();
-    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                   getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var utils = SpecialPowers.getDOMWindowUtils(window);
     utils.sendMouseEvent('mousedown', rect.left+1, rect.top+1, 0, 1, 0);
     utils.sendMouseEvent('mouseup', rect.left+1, rect.top+1, 0, 1, 0);
   }
  
   function runtests() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     sendMouseClick();
     window.getSelection().collapse(document.getElementById("div1").firstChild, 0);
     ok(divIsFocused(), "Div should be focused [0].");
