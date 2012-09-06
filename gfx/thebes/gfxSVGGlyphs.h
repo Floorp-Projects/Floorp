@@ -124,6 +124,21 @@ public:
     virtual float GetFillOpacity() { return 1.0f; }
     virtual float GetStrokeOpacity() { return 1.0f; }
 
+    void InitStrokeGeometry(gfxContext *aContext,
+                            float devUnitsPerSVGUnit);
+
+    FallibleTArray<gfxFloat>& GetStrokeDashArray() {
+        return mDashes;
+    }
+
+    gfxFloat GetStrokeDashOffset() {
+        return mDashOffset;
+    }
+
+    gfxFloat GetStrokeWidth() {
+        return mStrokeWidth;
+    }
+
     already_AddRefed<gfxPattern> GetFillPattern() {
         return GetFillPattern(GetFillOpacity());
     }
@@ -133,6 +148,11 @@ public:
     }
 
     virtual ~gfxTextObjectPaint() { }
+
+private:
+    FallibleTArray<gfxFloat> mDashes;
+    gfxFloat mDashOffset;
+    gfxFloat mStrokeWidth;
 };
 
 /**
