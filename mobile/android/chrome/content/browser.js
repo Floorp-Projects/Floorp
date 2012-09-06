@@ -6191,9 +6191,8 @@ var WebappsUI = {
 
   isMarketplace: function isMarketplace(aUri) {
     try {
-      return aUri.host == this.MARKETPLACE.URI.host;
+      return !aUri.schemeIs("about") && aUri.host == this.MARKETPLACE.URI.host;
     } catch(ex) {
-      // this can fail for uri's that don't have a host (i.e. about urls)
       console.log("could not find host for " + aUri.spec + ", " + ex);
     }
     return false;
