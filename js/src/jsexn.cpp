@@ -635,7 +635,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
     /* Step 4. */
     RootedString name(cx);
     if (nameVal.isUndefined()) {
-        name = CLASS_NAME(cx, Error);
+        name = cx->runtime->atomState.ErrorAtom;
     } else {
         name = ToString(cx, nameVal);
         if (!name)
@@ -659,7 +659,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 7. */
     if (name->empty() && message->empty()) {
-        args.rval().setString(CLASS_NAME(cx, Error));
+        args.rval().setString(cx->runtime->atomState.ErrorAtom);
         return true;
     }
 
@@ -789,7 +789,7 @@ static JSObject *
 InitErrorClass(JSContext *cx, Handle<GlobalObject*> global, int type, HandleObject proto)
 {
     JSProtoKey key = GetExceptionProtoKey(type);
-    RootedAtom name(cx, cx->runtime->atomState.classAtoms[key]);
+    RootedAtom name(cx, ClassName(key, cx));
     RootedObject errorProto(cx, global->createBlankPrototypeInheriting(cx, &ErrorClass, *proto));
     if (!errorProto)
         return NULL;
@@ -894,7 +894,7 @@ GetErrorTypeName(JSContext* cx, int16_t exnType)
         return NULL;
     }
     JSProtoKey key = GetExceptionProtoKey(exnType);
-    return cx->runtime->atomState.classAtoms[key]->chars();
+    return ClassName(key, cx)->chars();
 }
 
 } /* namespace js */

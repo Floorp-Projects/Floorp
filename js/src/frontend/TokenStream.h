@@ -21,11 +21,6 @@
 
 #include "js/Vector.h"
 
-#define JS_KEYWORD(keyword, type, op, version) \
-    extern const char js_##keyword##_str[];
-#include "jskeyword.tbl"
-#undef JS_KEYWORD
-
 namespace js {
 namespace frontend {
 

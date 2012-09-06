@@ -2566,7 +2566,7 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
     }
 
     if (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment->isCollecting())
-        MarkAtomState(trc);
+        MarkAtoms(trc);
     rt->staticStrings.trace(trc);
 
     for (ContextIter acx(rt); !acx.done(); acx.next())
@@ -3959,7 +3959,7 @@ SweepAtomsCompartment(JSRuntime *rt)
 
     {
         gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_ATOMS);
-        SweepAtomState(rt);
+        SweepAtoms(rt);
     }
 
     FreeOp fop(rt, rt->gcSweepOnBackgroundThread);
