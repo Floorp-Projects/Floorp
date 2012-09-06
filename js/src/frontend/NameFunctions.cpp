@@ -32,6 +32,25 @@ class NameResolver
         return pn && pn->isKind(PNK_LP);
     }
 
+    /*
+     * Append a reference to a property named |name| to |buf|. If |name| is
+     * a proper identifier name, then we append '.name'; otherwise, we
+     * append '["name"]'.
+     *
+     * Note that we need the IsIdentifier check for atoms from both
+     * PNK_NAME nodes and PNK_STRING nodes: given code like a["b c"], the
+     * front end will produce a PNK_DOT with a PNK_NAME child whose name
+     * contains spaces.
+     */
+    bool appendPropertyReference(JSAtom *name) {
+        if (IsIdentifier(name))
+            return buf->append(".") && buf->append(name);
+
+        /* Quote the string as needed. */
+        JSString *source = js_QuoteString(cx, name, '"');
+        return source && buf->append("[") && buf->append(source) && buf->append("]");
+    }
+
     /* Append a number to buf. */
     bool appendNumber(double n) {
         char number[30];
@@ -51,9 +70,7 @@ class NameResolver
     bool nameExpression(ParseNode *n) {
         switch (n->getKind()) {
             case PNK_DOT:
-                return (nameExpression(n->expr()) &&
-                        buf->append(".") &&
-                        buf->append(n->pn_atom));
+                return nameExpression(n->expr()) && appendPropertyReference(n->pn_atom);
 
             case PNK_NAME:
                 return buf->append(n->pn_atom);
@@ -204,8 +221,7 @@ class NameResolver
             if (node->isKind(PNK_COLON)) {
                 ParseNode *left = node->pn_left;
                 if (left->isKind(PNK_NAME) || left->isKind(PNK_STRING)) {
-                    /* Atoms are dot-appended. */
-                    if (!buf.append(".") || !buf.append(left->pn_atom))
+                    if (!appendPropertyReference(left->pn_atom))
                         return NULL;
                 } else if (left->isKind(PNK_NUMBER)) {
                     if (!appendNumericPropertyReference(left->pn_dval))
