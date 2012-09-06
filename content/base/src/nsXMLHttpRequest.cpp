@@ -3153,7 +3153,9 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     }
 
     if (!safeHeader) {
-      mCORSUnsafeHeaders.AppendElement(header);
+      if (!mCORSUnsafeHeaders.Contains(header)) {
+        mCORSUnsafeHeaders.AppendElement(header);
+      }
     }
   }
 
