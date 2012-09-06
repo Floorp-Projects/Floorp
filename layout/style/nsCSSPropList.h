@@ -3103,8 +3103,8 @@ CSS_PROP_SVG(
     FillOpacity,
     CSS_PROPERTY_PARSE_VALUE,
     "",
-    VARIANT_HN,
-    nullptr,
+    VARIANT_HN | VARIANT_KEYWORD,
+    kObjectOpacityKTable,
     offsetof(nsStyleSVG, mFillOpacity),
     eStyleAnimType_float)
 CSS_PROP_SVG(
@@ -3312,8 +3312,8 @@ CSS_PROP_SVG(
     StrokeOpacity,
     CSS_PROPERTY_PARSE_VALUE,
     "",
-    VARIANT_HN,
-    nullptr,
+    VARIANT_HN | VARIANT_KEYWORD,
+    kObjectOpacityKTable,
     offsetof(nsStyleSVG, mStrokeOpacity),
     eStyleAnimType_float)
 CSS_PROP_SVG(

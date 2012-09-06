@@ -900,6 +900,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_TRANSFORM_STYLE_FLAT               0
 #define NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D        1
 
+// object {fill,stroke}-opacity for SVG glyphs
+#define NS_STYLE_OBJECT_FILL_OPACITY                0
+#define NS_STYLE_OBJECT_STROKE_OPACITY              1
+
 /*****************************************************************************
  * Constants for media features.                                             *
  *****************************************************************************/

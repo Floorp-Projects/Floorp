@@ -866,6 +866,8 @@ nsStyleSVG::nsStyleSVG()
     mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
     mTextAnchor              = NS_STYLE_TEXT_ANCHOR_START;
     mTextRendering           = NS_STYLE_TEXT_RENDERING_AUTO;
+    mFillOpacitySource       = eStyleSVGOpacitySource_Normal;
+    mStrokeOpacitySource     = eStyleSVGOpacitySource_Normal;
 }
 
 nsStyleSVG::~nsStyleSVG() 
@@ -914,6 +916,8 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mStrokeLinejoin = aSource.mStrokeLinejoin;
   mTextAnchor = aSource.mTextAnchor;
   mTextRendering = aSource.mTextRendering;
+  mFillOpacitySource = aSource.mFillOpacitySource;
+  mStrokeOpacitySource = aSource.mStrokeOpacitySource;
 }
 
 static bool PaintURIChanged(const nsStyleSVGPaint& aPaint1,
@@ -972,7 +976,9 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mStrokeDasharrayLength != aOther.mStrokeDasharrayLength ||
        mStrokeLinecap         != aOther.mStrokeLinecap         ||
        mStrokeLinejoin        != aOther.mStrokeLinejoin        ||
-       mTextAnchor            != aOther.mTextAnchor) {
+       mTextAnchor            != aOther.mTextAnchor            ||
+       mFillOpacitySource     != aOther.mFillOpacitySource     ||
+       mStrokeOpacitySource   != aOther.mStrokeOpacitySource) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
     return hint;
   }

@@ -1148,6 +1148,12 @@ const int32_t nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kObjectOpacityKTable[] = {
+  eCSSKeyword__moz_objectfillopacity, NS_STYLE_OBJECT_FILL_OPACITY,
+  eCSSKeyword__moz_objectstrokeopacity, NS_STYLE_OBJECT_STROKE_OPACITY,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const int32_t nsCSSProps::kObjectPatternKTable[] = {
   eCSSKeyword__moz_objectfill, NS_COLOR_OBJECTFILL,
   eCSSKeyword__moz_objectstroke, NS_COLOR_OBJECTSTROKE,
