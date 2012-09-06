@@ -990,13 +990,7 @@ $(CCOBJS): %.$(OBJ_SUFFIX): %.cc
 $(CPPOBJS): %.$(OBJ_SUFFIX): %.cpp
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
-ifdef STRICT_CPLUSPLUS_SUFFIX
-	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
-	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
-	$(RM) t_$*.cc
-else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
-endif #STRICT_CPLUSPLUS_SUFFIX
 
 $(CMMOBJS): $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm
 	$(REPORT_BUILD)
