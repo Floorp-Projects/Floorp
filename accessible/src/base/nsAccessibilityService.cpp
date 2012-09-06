@@ -1610,12 +1610,9 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
     return accessible;
   }
 
-  if (tag == nsGkAtoms::dt ||
-      (tag == nsGkAtoms::li &&
-       aFrame->GetType() != nsGkAtoms::blockFrame)) {
-    // Normally for li, it is created by the list item frame (in nsBlockFrame)
-    // which knows about the bullet frame; however, in this case the list item
-    // must have been styled using display: foo
+  if (tag == nsGkAtoms::dt || tag == nsGkAtoms::li) {
+    // Create list item accessible unconditionally by tag name. nsBlockFrame
+    // creates the list item accessible for other elements styled as list items.
     Accessible* accessible = new HTMLLIAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
