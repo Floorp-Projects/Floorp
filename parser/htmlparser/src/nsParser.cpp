@@ -2061,7 +2061,7 @@ ParserWriteFunc(nsIInputStream* in,
 
 nsresult
 nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
-                          nsIInputStream *pIStream, uint32_t sourceOffset,
+                          nsIInputStream *pIStream, uint64_t sourceOffset,
                           uint32_t aLength)
 {
   NS_PRECONDITION((eOnStart == mParserContext->mStreamListenerState ||

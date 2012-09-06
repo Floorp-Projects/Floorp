@@ -74,7 +74,7 @@ nsresult nsPartChannel::SendOnStartRequest(nsISupports* aContext)
 
 nsresult nsPartChannel::SendOnDataAvailable(nsISupports* aContext,
                                             nsIInputStream* aStream,
-                                            uint32_t aOffset, uint32_t aLen)
+                                            uint64_t aOffset, uint32_t aLen)
 {
     return mListener->OnDataAvailable(this, aContext, aStream, aOffset, aLen);
 }
@@ -458,7 +458,8 @@ private:
 // nsIStreamListener implementation
 NS_IMETHODIMP
 nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
-                                  nsIInputStream *inStr, uint32_t sourceOffset, uint32_t count) {
+                                  nsIInputStream *inStr, uint64_t sourceOffset,
+                                  uint32_t count) {
 
     if (mToken.IsEmpty()) // no token, no love.
         return NS_ERROR_FAILURE;
@@ -874,7 +875,7 @@ nsMultiMixedConv::SendData(char *aBuffer, uint32_t aLen) {
             return NS_OK;
     }
 
-    uint32_t offset = mTotalSent;
+    uint64_t offset = mTotalSent;
     mTotalSent += aLen;
 
     nsCOMPtr<nsIStringInputStream> ss(
