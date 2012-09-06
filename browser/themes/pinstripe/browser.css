@@ -3398,6 +3398,15 @@ html|*#gcli-output-frame {
   text-decoration: underline;
 }
 
+.social-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+#social-notification-box,
+.social-panel-frame {
+  border-radius: inherit;
+}
+
 /* === end of social toolbar provider menu === */
 
 .chat-status-icon {
