@@ -275,6 +275,12 @@ private:
     already_AddRefed<gfxPattern> GetFillPattern(float opacity);
     already_AddRefed<gfxPattern> GetStrokePattern(float opacity);
 
+    void SetFillOpacity(float aOpacity) { mFillOpacity = aOpacity; }
+    float GetFillOpacity() { return mFillOpacity; }
+
+    void SetStrokeOpacity(float aOpacity) { mStrokeOpacity = aOpacity; }
+    float GetStrokeOpacity() { return mStrokeOpacity; }
+
     struct Paint {
       Paint() {
         mPatternCache.Init();
@@ -321,13 +327,16 @@ private:
 
     Paint mFillPaint;
     Paint mStrokePaint;
+
+    float mFillOpacity;
+    float mStrokeOpacity;
   };
 
   /**
    * Sets up the stroke style in |aContext| and stores stroke pattern
    * information in |aThisObjectPaint|.
    */
-  void SetupCairoStroke(gfxContext *aContext,
+  bool SetupCairoStroke(gfxContext *aContext,
                         gfxTextObjectPaint *aOuterObjectPaint,
                         SVGTextObjectPaint *aThisObjectPaint);
 
@@ -341,7 +350,8 @@ private:
 
   /**
    * Sets the current pattern to the fill or stroke style of the outer text
-   * object.
+   * object. Will also set the paint opacity to transparent if the paint is set
+   * to "none".
    */
   bool SetupObjectPaint(gfxContext *aContext,
                         nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
@@ -350,7 +360,8 @@ private:
 
   /**
    * Stores in |aTargetPaint| information on how to reconstruct the current
-   * fill or stroke pattern.
+   * fill or stroke pattern. Will also set the paint opacity to transparent if
+   * the paint is set to "none".
    * @param aOuterObjectPaint pattern information from the outer text object
    * @param aTargetPaint where to store the current pattern information
    * @param aFillOrStroke member pointer to the paint we are setting up
@@ -358,7 +369,7 @@ private:
    *   server frame
    */
   void SetupInheritablePaint(gfxContext *aContext,
-                             float aOpacity,
+                             float& aOpacity,
                              gfxTextObjectPaint *aOuterObjectPaint,
                              SVGTextObjectPaint::Paint& aTargetPaint,
                              nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,

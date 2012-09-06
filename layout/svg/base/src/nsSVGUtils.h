@@ -702,6 +702,10 @@ public:
   static bool SetupCairoStrokePaint(nsIFrame* aFrame, gfxContext* aContext,
                                     gfxTextObjectPaint *aObjectPaint = nullptr);
 
+  static float GetOpacity(nsStyleSVGOpacitySource aOpacityType,
+                          const float& aOpacity,
+                          gfxTextObjectPaint *aOuterObjectPaint);
+
   /*
    * @return false if there is no stroke
    */
