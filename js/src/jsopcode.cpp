@@ -5772,16 +5772,11 @@ GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
 
 class PCStack
 {
-    JSContext *cx;
     jsbytecode **stack;
     int depth_;
 
   public:
-    explicit PCStack(JSContext *cx)
-        : cx(cx),
-          stack(NULL),
-          depth_(0)
-    {}
+    PCStack() : stack(NULL), depth_(0) {}
     ~PCStack();
     bool init(JSContext *cx, JSScript *script, jsbytecode *pc);
     int depth() const { return depth_; }
@@ -5881,7 +5876,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
 {
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
-    PCStack pcstack(cx);
+    PCStack pcstack;
     if (!pcstack.init(cx, script, pc))
         return false;
 
@@ -6134,7 +6129,7 @@ FindStartPC(JSContext *cx, JSScript *script, int spindex, int skipStackHits,
 
     *valuepc = NULL;
 
-    PCStack pcstack(cx);
+    PCStack pcstack;
     if (!pcstack.init(cx, script, current))
         return false;
 
@@ -6294,7 +6289,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     struct Guard {
         jsbytecode **pcstack;
         JSPrinter *printer;
-        Guard() : pcstack(NULL), printer(NULL) {}
+        Guard() : pcstack(), printer(NULL) {}
         ~Guard() {
             if (printer)
                 js_DestroyPrinter(printer);
