@@ -100,7 +100,7 @@ public:
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY,
                                   nsIFrame* aForChild,
-                                  PRUint32 aFlags);
+                                  uint32_t aFlags);
 #ifdef DEBUG
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
 #endif

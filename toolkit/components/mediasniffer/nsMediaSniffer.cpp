@@ -16,7 +16,7 @@
 // The minimum number of bytes that are needed to attempt to sniff an mp4 file.
 static const unsigned MP4_MIN_BYTES_COUNT = 12;
 // The maximum number of bytes to consider when attempting to sniff a file.
-static const PRUint32 MAX_BYTES_SNIFFED = 512;
+static const uint32_t MAX_BYTES_SNIFFED = 512;
 
 NS_IMPL_ISUPPORTS1(nsMediaSniffer, nsIContentSniffer)
 
@@ -35,13 +35,13 @@ nsMediaSniffer::nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
 
 // This function implements mp4 sniffing algorithm, described at
 // http://mimesniff.spec.whatwg.org/#signature-for-mp4
-static bool MatchesMP4(const PRUint8* aData, const PRUint32 aLength)
+static bool MatchesMP4(const uint8_t* aData, const uint32_t aLength)
 {
   if (aLength <= MP4_MIN_BYTES_COUNT) {
     return false;
   }
   // Conversion from big endian to host byte order.
-  PRUint32 boxSize = (PRUint32)(aData[3] | aData[2] << 8 | aData[1] << 16 | aData[0] << 24);
+  uint32_t boxSize = (uint32_t)(aData[3] | aData[2] << 8 | aData[1] << 16 | aData[0] << 24);
 
   // Boxsize should be evenly divisible by 4.
   if (boxSize % 4 || aLength < boxSize) {
@@ -54,7 +54,7 @@ static bool MatchesMP4(const PRUint8* aData, const PRUint32 aLength)
       aData[7] != 0x70) {
     return false;
   }
-  for (PRUint32 i = 2; i <= boxSize / 4 - 1 ; i++) {
+  for (uint32_t i = 2; i <= boxSize / 4 - 1 ; i++) {
     if (i == 3) {
       continue;
     }
@@ -70,19 +70,19 @@ static bool MatchesMP4(const PRUint8* aData, const PRUint32 aLength)
 
 NS_IMETHODIMP
 nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
-                                       const PRUint8* aData,
-                                       const PRUint32 aLength,
+                                       const uint8_t* aData,
+                                       const uint32_t aLength,
                                        nsACString& aSniffedType)
 {
-  const PRUint32 clampedLength = NS_MIN(aLength, MAX_BYTES_SNIFFED);
+  const uint32_t clampedLength = NS_MIN(aLength, MAX_BYTES_SNIFFED);
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sSnifferEntries); ++i) {
+  for (uint32_t i = 0; i < NS_ARRAY_LENGTH(sSnifferEntries); ++i) {
     const nsMediaSnifferEntry& currentEntry = sSnifferEntries[i];
     if (clampedLength < currentEntry.mLength || currentEntry.mLength == 0) {
       continue;
     }
     bool matched = true;
-    for (PRUint32 j = 0; j < currentEntry.mLength; ++j) {
+    for (uint32_t j = 0; j < currentEntry.mLength; ++j) {
       if ((currentEntry.mMask[j] & aData[j]) != currentEntry.mPattern[j]) {
         matched = false;
         break;
