@@ -3205,7 +3205,7 @@ InitTypedArrayClass(JSContext *cx)
 
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, ArrayType::class_constructor,
-                                     cx->runtime->atomState.classAtoms[ArrayType::key], 3);
+                                     ClassName(ArrayType::key, cx), 3);
     if (!ctor)
         return NULL;
 
@@ -3291,7 +3291,7 @@ InitArrayBufferClass(JSContext *cx)
         return NULL;
 
     RootedFunction ctor(cx, global->createConstructor(cx, ArrayBufferObject::class_constructor,
-                                                      CLASS_NAME(cx, ArrayBuffer), 1));
+                                                      cx->runtime->atomState.ArrayBufferAtom, 1));
     if (!ctor)
         return NULL;
 
@@ -3420,7 +3420,7 @@ DataViewObject::initClass(JSContext *cx)
         return NULL;
 
     RootedFunction ctor(cx, global->createConstructor(cx, DataViewObject::class_constructor,
-                                                      CLASS_NAME(cx, DataView), 3));
+                                                      cx->runtime->atomState.DataViewAtom, 3));
     if (!ctor)
         return NULL;
 

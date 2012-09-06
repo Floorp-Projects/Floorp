@@ -3551,7 +3551,8 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
         return NULL;
     arrayProto->setArrayLength(cx, 0);
 
-    RootedFunction ctor(cx, global->createConstructor(cx, js_Array, CLASS_NAME(cx, Array), 1));
+    RootedFunction ctor(cx);
+    ctor = global->createConstructor(cx, js_Array, cx->runtime->atomState.ArrayAtom, 1);
     if (!ctor)
         return NULL;
 

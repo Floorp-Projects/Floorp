@@ -1777,8 +1777,8 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
 
         iteratorProto->asPropertyIterator().setNativeIterator(ni);
 
-        Rooted<JSFunction*> ctor(cx, global->createConstructor(cx, IteratorConstructor,
-                                                               CLASS_NAME(cx, Iterator), 2));
+        Rooted<JSFunction*> ctor(cx);
+        ctor = global->createConstructor(cx, IteratorConstructor, cx->runtime->atomState.IteratorAtom, 2);
         if (!ctor)
             return false;
         if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))

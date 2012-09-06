@@ -847,8 +847,8 @@ ParallelArrayObject::initClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     JSProtoKey key = JSProto_ParallelArray;
-    JSAtom *atom = CLASS_NAME(cx, ParallelArray);
-    RootedFunction ctor(cx, global->createConstructor(cx, construct, atom, 0));
+    Rooted<PropertyName*> name(cx, cx->runtime->atomState.ParallelArrayAtom);
+    RootedFunction ctor(cx, global->createConstructor(cx, construct, name, 0));
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndBrand(cx, proto, NULL, methods) ||
