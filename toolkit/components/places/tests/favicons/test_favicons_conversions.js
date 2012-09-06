@@ -41,6 +41,7 @@ function checkFaviconDataConversion(aFileName, aFileMimeType, aFileLength,
     PlacesUtils.favicons.replaceFaviconData(faviconURI, fileData, fileData.length,
                                             aFileMimeType);
     PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, faviconURI, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
       function CFDC_verify(aURI, aDataLen, aData, aMimeType) {
         if (!aExpectConversion) {
           do_check_true(compareArrays(aData, fileData));

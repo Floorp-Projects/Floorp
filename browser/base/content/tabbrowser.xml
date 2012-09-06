@@ -685,7 +685,10 @@
               if (!(aURI instanceof Ci.nsIURI))
                 aURI = makeURI(aURI);
               this.mFaviconService.setAndFetchFaviconForPage(browser.currentURI,
-                                                             aURI, false);
+                                                             aURI, false,
+                                                             gPrivateBrowsingUI.privateWindow ?
+                                                               this.mFaviconService.FAVICON_LOAD_PRIVATE :
+                                                               this.mFaviconService.FAVICON_LOAD_NON_PRIVATE);
             }
 
             if ((browser.mIconURL || "") != aTab.getAttribute("image")) {

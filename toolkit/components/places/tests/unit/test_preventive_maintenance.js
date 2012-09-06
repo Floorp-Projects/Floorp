@@ -1281,7 +1281,8 @@ tests.push({
                                            bs.DEFAULT_INDEX);
     do_check_true(this._separatorId > 0);
     ts.tagURI(this._uri1, ["testtag"]);
-    fs.setAndFetchFaviconForPage(this._uri2, SMALLPNG_DATA_URI, false);
+    fs.setAndFetchFaviconForPage(this._uri2, SMALLPNG_DATA_URI, false,
+                                 PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
     bs.setKeywordForBookmark(this._bookmarkId, "testkeyword");
     as.setPageAnnotation(this._uri2, "anno", "anno", 0, as.EXPIRE_NEVER);
     as.setItemAnnotation(this._bookmarkId, "anno", "anno", 0, as.EXPIRE_NEVER);
