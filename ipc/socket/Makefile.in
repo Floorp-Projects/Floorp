@@ -2,27 +2,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH = @DEPTH@
+DEPTH = ../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += chromium glue ipdl testshell
+MODULE = ipc
+LIBRARY_NAME = mozipcsocket_s
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
+EXPORT_LIBRARY = 1
 
-ifdef MOZ_B2G_RIL #{
-DIRS += ril
-endif #}
+EXPORTS_NAMESPACES = mozilla/ipc
 
-ifdef MOZ_B2G_BT #{
-DIRS += dbus socket
-endif #}
+EXPORTS_mozilla/ipc = \
+  Socket.h \
+  $(NULL)
 
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-DIRS += netd
-endif
+CPPSRCS += \
+  Socket.cpp \
+  $(NULL)
 
-TOOL_DIRS = app
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 include $(topsrcdir)/config/rules.mk
