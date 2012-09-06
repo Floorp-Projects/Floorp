@@ -268,10 +268,12 @@
       </hbox>
     </panel>
 
-    <panel id="social-notification-panel" type="arrow" hidden="true" noautofocus="true">
+    <panel id="social-notification-panel" class="social-panel"
+           type="arrow" hidden="true" noautofocus="true">
       <box id="social-notification-box" flex="1"></box>
     </panel>
     <panel id="social-flyout-panel"
+           class="social-panel"
            onpopupshown="SocialFlyout.onShown()"
            onpopuphidden="SocialFlyout.onHidden()"
            side="right"
