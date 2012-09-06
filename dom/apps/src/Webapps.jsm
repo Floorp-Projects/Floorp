@@ -345,6 +345,7 @@ let DOMApplicationRegistry = {
     appNote.id = id;
 
     appObject.localId = localId;
+    appObject.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true).path;
 
     let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
     let manFile = dir.clone();
@@ -375,7 +376,7 @@ let DOMApplicationRegistry = {
         ppmm.broadcastAsyncMessage("Webapps:Install:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
         this.children.forEach(function(aMsgMgr) {
-          aMsgMgr.broadcastAsyncMessage("Webapps:AddApp", { id: id, app: appObject });
+          aMsgMgr.sendAsyncMessage("Webapps:AddApp", { id: id, app: appObject });
         });
       }).bind(this));
 
