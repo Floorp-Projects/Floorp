@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!--
+        Test that gradients are inherited from the outer object when using
+      the objectFill and objectStroke paint server values in SVG glyphs
+  -->
+
+  <style type="text/css"><![CDATA[
+    @font-face {
+      font-family: "Liberation";
+      src:url("resources/svg.woff") format("woff");
+    }
+
+    text {
+      font-family: "Liberation";
+      font-size: 200px;
+      stroke-width: 5;
+    }
+  ]]></style>
+
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="800" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="purple" offset="0%" />
+      <stop stop-color="lime" offset="100%" />
+    </linearGradient>
+    <radialGradient id="grad2" cx="250" cy="400" r="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="red" offset="0%" />
+      <stop stop-color="blue" offset="100%" />
+    </radialGradient>
+    
+  </defs>
+
+  <text x="0" y="200" fill="url(#grad)" stroke="url(#grad2)">N</text>
+  <text x="300" y="200" fill="url(#grad)" stroke="url(#grad2)">O</text>
+  <text x="0" y="500" fill="url(#grad)" stroke="url(#grad2)">P</text>
+  <text x="300" y="500" fill="url(#grad)" stroke="url(#grad2)">Q</text>
+</svg>
