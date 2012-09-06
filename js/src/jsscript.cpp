@@ -1488,7 +1488,6 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
     }
 
     script->compileAndGo = options.compileAndGo;
-    script->selfHosted = options.selfHostingMode;
     script->noScriptRval = options.noScriptRval;
  
     script->version = options.version;
@@ -1763,8 +1762,6 @@ JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 {
     JS_ASSERT(!script->isActiveEval);
-    if (script->selfHosted)
-        return;
     if (JSNewScriptHook hook = cx->runtime->debugHooks.newScriptHook) {
         AutoKeepAtoms keep(cx->runtime);
         hook(cx, script->filename, script->lineno, script, fun,
@@ -1775,8 +1772,6 @@ js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 void
 js::CallDestroyScriptHook(FreeOp *fop, JSScript *script)
 {
-    if (script->selfHosted)
-        return;
     if (JSDestroyScriptHook hook = fop->runtime()->debugHooks.destroyScriptHook)
         hook(fop, script, fop->runtime()->debugHooks.destroyScriptHookData);
     script->clearTraps(fop);
