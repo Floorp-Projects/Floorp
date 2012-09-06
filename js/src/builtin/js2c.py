@@ -278,7 +278,8 @@ def JS2C(source, target, env):
     lines = ExpandConstants(lines, consts)
     lines = ExpandMacros(lines, macros)
     Validate(lines, filename)
-    lines = minifier.JSMinify(lines)
+    if not env['DEBUG']:
+      lines = minifier.JSMinify(lines)
     id = (os.path.split(filename)[1])[:-3]
     if debugger: id = id[:-9]
     raw_length = len(lines)
