@@ -68,7 +68,7 @@ js_json_parse(JSContext *cx, unsigned argc, Value *vp)
         if (!linear)
             return false;
     } else {
-        linear = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
+        linear = cx->runtime->atomState.undefinedAtom;
     }
     JS::Anchor<JSString *> anchor(linear);
 
@@ -887,7 +887,7 @@ ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, HandleVa
 static JSBool
 json_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
-    vp->setString(CLASS_NAME(cx, JSON));
+    vp->setString(cx->runtime->atomState.JSONAtom);
     return JS_TRUE;
 }
 #endif
