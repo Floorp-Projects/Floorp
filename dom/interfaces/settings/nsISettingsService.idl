@@ -24,8 +24,8 @@ interface nsISettingsServiceLock : nsISupports
   void get(in string aName, in nsISettingsServiceCallback aCallback);
 };
 
-[scriptable, uuid(3458e760-8513-11e1-b0c4-0800200c9a66)]
+[scriptable, uuid(f656f0c0-f776-11e1-a21f-0800200c9a66)]
 interface nsISettingsService : nsISupports
 {
-  nsISettingsServiceLock getLock();
+  nsISettingsServiceLock createLock();
 };
