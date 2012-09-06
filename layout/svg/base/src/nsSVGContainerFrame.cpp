@@ -197,7 +197,8 @@ nsSVGDisplayContainerFrame::PaintSVG(nsRenderingContext* aContext,
                                      const nsIntRect *aDirtyRect)
 {
   NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
-               (mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+               (mState & NS_STATE_SVG_NONDISPLAY_CHILD) ||
+               PresContext()->IsGlyph(),
                "If display lists are enabled, only painting of non-display "
                "SVG should take this code path");
 

@@ -1136,7 +1136,8 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
                                   nsIFrame *aFrame)
 {
   NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
-               (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+               (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) ||
+               aFrame->PresContext()->IsGlyph(),
                "If display lists are enabled, only painting of non-display "
                "SVG should take this code path");
 
