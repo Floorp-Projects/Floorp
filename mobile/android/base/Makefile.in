@@ -107,6 +107,7 @@ FENNEC_JAVA_FILES = \
   RemoteTabs.java \
   RobocopAPI.java \
   SetupScreen.java \
+  ShapedButton.java \
   SiteIdentityPopup.java \
   SuggestClient.java \
   SurfaceBits.java \
@@ -166,8 +167,6 @@ FENNEC_JAVA_FILES = \
   GeckoScreenOrientationListener.java \
   UpdateService.java \
   GeckoUpdateReceiver.java \
-  $(MOZGLUE_JAVA_FILES) \
-  $(UTIL_JAVA_FILES) \
   $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
@@ -272,7 +271,7 @@ GARBAGE += \
   Manifest.java \
   $(NULL)
 
-GARBAGE_DIRS += classes res sync db
+GARBAGE_DIRS += classes db jars res sync
 
 MOZ_ANDROID_SHARED_ID = "$(ANDROID_PACKAGE_NAME).sharedID"
 MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "$(ANDROID_PACKAGE_NAME)_sync"
@@ -980,11 +979,37 @@ include $(topsrcdir)/config/android-common.mk
 # Sync dependencies are provided in a single jar. Sync classes themselves are delivered as source,
 # because Android resource classes must be compiled together in order to avoid overlapping resource
 # indices.
-classes.dex: $(FENNEC_JAVA_FILES) $(FENNEC_PP_JAVA_FILES) $(SYNC_JAVA_FILES) $(SYNC_PP_JAVA_FILES) $(SYNC_THIRDPARTY_JAVA_FILES) R.java
-	$(NSINSTALL) -D classes
-	$(JAVAC) $(JAVAC_FLAGS) -d classes $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes -classpath classes $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
-	$(DX) --dex --output=$@ classes
+classes.dex: jars/gecko-browser.jar
+	@echo "DX classes.dex"
+	$(DX) --dex --output=classes.dex jars
+
+jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+	@echo "JAR gecko-browser.jar"
+	$(NSINSTALL) -D classes/gecko-browser
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+	jar cMf jars/gecko-browser.jar -C classes/gecko-browser .
+
+jars/gecko-mozglue.jar: $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES)) jars
+	@echo "JAR gecko-mozglue.jar"
+	$(NSINSTALL) -D classes/gecko-mozglue
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all -d classes/gecko-mozglue $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES))
+	jar cMf jars/gecko-mozglue.jar -C classes/gecko-mozglue .
+
+jars/gecko-util.jar: $(addprefix $(srcdir)/,$(UTIL_JAVA_FILES)) jars
+	@echo "JAR gecko-util.jar"
+	$(NSINSTALL) -D classes/gecko-util
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation -d classes/gecko-util $(addprefix $(srcdir)/,$(UTIL_JAVA_FILES))
+	jar cMf jars/gecko-util.jar -C classes/gecko-util .
+
+jars/sync-thirdparty.jar: $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES)) jars
+	@echo "JAR sync-thirdparty.jar"
+	$(NSINSTALL) -D classes/sync-thirdparty
+	$(JAVAC) $(JAVAC_FLAGS) -d classes/sync-thirdparty $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
+	jar cMf jars/sync-thirdparty.jar -C classes/sync-thirdparty .
+
+jars:
+	@echo "MKDIR jars"
+	$(NSINSTALL) -D jars
 
 PP_RES_XML= \
   $(SYNC_PP_RES_XML) \

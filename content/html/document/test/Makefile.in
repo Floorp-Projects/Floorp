@@ -72,6 +72,8 @@ MOCHITEST_FILES = 	test_bug1682.html \
 		test_bug677495.html \
 		test_bug677495-1.html \
 		test_bug741266.html \
+		test_non-ascii-cookie.html \
+		test_non-ascii-cookie.html^headers^ \
 		$(NULL)
 
 ifneq (mobile,$(MOZ_BUILD_APP))

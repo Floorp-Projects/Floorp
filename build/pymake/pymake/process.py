@@ -88,8 +88,8 @@ def call(cline, env, cwd, loc, cb, context, echo, justprint=False):
         if msys:
             if len(cline) > 3 and cline[1] == ':' and cline[2] == '/':
                 cline = '/' + cline[0] + cline[2:]
-            cline = [shell, "-c", cline]
-        context.call(cline, shell=not msys, env=env, cwd=cwd, cb=cb, echo=echo,
+        cline = [shell, "-c", cline]
+        context.call(cline, shell=False, env=env, cwd=cwd, cb=cb, echo=echo,
                      justprint=justprint)
         return
 

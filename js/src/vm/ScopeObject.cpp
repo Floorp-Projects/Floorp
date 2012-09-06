@@ -1098,10 +1098,10 @@ class DebugScopeProxy : public BaseProxyHandler
 
             Bindings &bindings = script->bindings;
             BindingIter bi(script->bindings);
-            while (NameToId(bi->name()) != id) {
-                if (!++bi)
-                    return false;
-            }
+            while (bi && NameToId(bi->name()) != id)
+                bi++;
+            if (!bi)
+                return false;
 
             if (bi->kind() == VARIABLE || bi->kind() == CONSTANT) {
                 unsigned i = bi.frameIndex();

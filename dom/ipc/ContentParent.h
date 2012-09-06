@@ -112,6 +112,13 @@ public:
 
     BlobParent* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
 
+    /**
+     * Kill our subprocess and make sure it dies.  Should only be used
+     * in emergency situations since it bypasses the normal shutdown
+     * process.
+     */
+    void KillHard();
+
 protected:
     void OnChannelConnected(int32 pid);
     virtual void ActorDestroy(ActorDestroyReason why);
@@ -163,6 +170,11 @@ private:
     PImageBridgeParent*
     AllocPImageBridge(mozilla::ipc::Transport* aTransport,
                       base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+
+    virtual bool RecvGetProcessAttributes(uint64_t* aId,
+                                          bool* aStartBackground,
+                                          bool* aIsForApp,
+                                          bool* aIsForBrowser) MOZ_OVERRIDE;
 
     virtual PBrowserParent* AllocPBrowser(const uint32_t& aChromeFlags,
                                           const bool& aIsBrowserElement,
@@ -297,11 +309,12 @@ private:
     // the nsIObserverService.
     nsCOMArray<nsIMemoryReporter> mMemoryReporters;
 
-    bool mIsAlive;
-    bool mSendPermissionUpdates;
-
     const nsString mAppManifestURL;
     nsRefPtr<nsFrameMessageManager> mMessageManager;
+
+    bool mIsAlive;
+    bool mSendPermissionUpdates;
+    bool mIsForBrowser;
 
     friend class CrashReporterParent;
 };

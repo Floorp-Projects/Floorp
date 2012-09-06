@@ -345,6 +345,9 @@ inline bool IsDOMProxy(JSObject *obj)
 typedef bool
 (*DefineInterface)(JSContext *cx, JSObject *global, bool *enabled);
 
+typedef bool
+(*PrefEnabled)();
+
 extern bool
 DefineStaticJSVals(JSContext *cx);
 void
