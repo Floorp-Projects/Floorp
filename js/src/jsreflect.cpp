@@ -2787,7 +2787,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                 return false;
         }
 
-        if (pnleft->isKind(PNK_FUNCTION))
+        if (pnleft->isKind(PNK_FUNCTIONNS))
             return builder.xmlFunctionQualifiedIdentifier(right, computed, &pn->pn_pos, dst);
 
         Value left;

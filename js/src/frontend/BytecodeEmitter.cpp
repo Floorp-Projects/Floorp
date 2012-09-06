@@ -4820,11 +4820,6 @@ EmitFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 static JS_NEVER_INLINE bool
 EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-#if JS_HAS_XML_SUPPORT
-    if (pn->isArity(PN_NULLARY))
-        return Emit1(cx, bce, JSOP_GETFUNNS) >= 0;
-#endif
-
     RootedFunction fun(cx, pn->pn_funbox->fun());
     JS_ASSERT(fun->isInterpreted());
     if (fun->script()) {
@@ -6319,7 +6314,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             }
         } else {
 #if JS_HAS_XML_SUPPORT
-
       case PNK_DBLCOLON:
             JS_ASSERT(pn->getOp() != JSOP_XMLNAME);
             if (pn->isArity(PN_NAME)) {
@@ -6353,6 +6347,10 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
 #if JS_HAS_XML_SUPPORT
+      case PNK_FUNCTIONNS:
+        ok = (Emit1(cx, bce, JSOP_GETFUNNS) >= 0);
+        break;
+
       case PNK_XMLUNARY:
         if (pn->getOp() == JSOP_XMLNAME) {
             if (!EmitXMLName(cx, pn, JSOP_XMLNAME, bce))
