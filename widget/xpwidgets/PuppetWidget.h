@@ -133,13 +133,20 @@ public:
   // nsBaseWidget methods we override
   //
 
-//NS_IMETHOD              CaptureMouse(bool aCapture);
+  // Documents loaded in child processes are always subdocuments of
+  // other docs in an ancestor process.  To ensure that the
+  // backgrounds of those documents are painted like those of
+  // same-process subdocuments, we force the widget here to be
+  // transparent, which in turn will cause layout to use a transparent
+  // backstop background color.
+  virtual nsTransparencyMode GetTransparencyMode() MOZ_OVERRIDE
+  { return eTransparencyTransparent; }
+
   virtual LayerManager*
   GetLayerManager(PLayersChild* aShadowManager = nullptr,
                   LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                   bool* aAllowRetaining = nullptr);
-//  virtual nsDeviceContext* GetDeviceContext();
   virtual gfxASurface*      GetThebesSurface();
 
   NS_IMETHOD ResetInputState();

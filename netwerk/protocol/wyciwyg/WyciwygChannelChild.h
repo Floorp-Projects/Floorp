@@ -58,7 +58,7 @@ protected:
                           const nsCString& charset,
                           const nsCString& securityInfo);
   bool RecvOnDataAvailable(const nsCString& data,
-                           const uint32_t& offset);
+                           const uint64_t& offset);
   bool RecvOnStopRequest(const nsresult& statusCode);
   bool RecvCancelEarly(const nsresult& statusCode);
 
@@ -68,7 +68,7 @@ protected:
                       const nsCString& charset,
                       const nsCString& securityInfo);
   void OnDataAvailable(const nsCString& data,
-                       const uint32_t& offset);
+                       const uint64_t& offset);
   void OnStopRequest(const nsresult& statusCode);
   void CancelEarly(const nsresult& statusCode);
 

@@ -791,6 +791,8 @@ CSSParserImpl::SetStyleSheet(nsCSSStyleSheet* aSheet)
     } else {
       mNameSpaceMap = nullptr;
     }
+  } else if (mSheet) {
+    mNameSpaceMap = mSheet->GetNameSpaceMap();
   }
 
   return NS_OK;

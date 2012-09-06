@@ -58,8 +58,6 @@
         this._formattingEnabled = this._prefs.getBoolPref("formatting.enabled");
         this._mayTrimURLs = this._prefs.getBoolPref("trimURLs");
 
-        this._urlTooltip = document.getElementById("urlTooltip");
-
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
         this.inputField.addEventListener("mousedown", this, false);
         this.inputField.addEventListener("mousemove", this, false);
@@ -410,26 +408,13 @@
         <body><![CDATA[
           if (this.focused || !this._contentIsCropped)
             return;
-          if (this._tooltipTimer)
-            clearTimeout(this._tooltipTimer);
-          this._tooltipTimer = setTimeout(function (self) {
-            self._tooltipTimer = 0;
-            var label = self._urlTooltip.firstChild;
-            label.value = self.value;
-            var bO = self.boxObject;
-            self._urlTooltip.maxWidth = bO.width;
-            self._urlTooltip.showPopup(self, bO.screenX, bO.screenY + bO.height, "tooltip");
-          }, 700, this);
+          this.inputField.setAttribute("tooltiptext", this.value);
         ]]></body>
       </method>
 
       <method name="_hideURLTooltip">
         <body><![CDATA[
-          if (this._tooltipTimer) {
-            clearTimeout(this._tooltipTimer);
-            this._tooltipTimer = 0;
-          }
-          this._urlTooltip.hidePopup();
+          this.inputField.removeAttribute("tooltiptext");
         ]]></body>
       </method>
 

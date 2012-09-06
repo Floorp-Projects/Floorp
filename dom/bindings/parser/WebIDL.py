@@ -676,9 +676,11 @@ class IDLInterface(IDLObjectWithScope):
                                                      allowForbidden=True)
 
                 method = IDLMethod(self.location, identifier, retType, args)
-                # Constructors are always Creators and never have any
-                # other extended attributes.
-                method.addExtendedAttributes(["Creator"])
+                # Constructors are always Creators and are always
+                # assumed to be able to throw (since there's no way to
+                # indicate otherwise) and never have any other
+                # extended attributes.
+                method.addExtendedAttributes([("Creator",), ("Throws",)])
                 method.resolve(self)
 
             self._extendedAttrDict[identifier] = attrlist if len(attrlist) else True
@@ -735,6 +737,9 @@ class IDLInterface(IDLObjectWithScope):
             if loopPoint:
                 return loopPoint
         return None
+
+    def getExtendedAttribute(self, name):
+        return self._extendedAttrDict.get(name, None)
 
 class IDLDictionary(IDLObjectWithScope):
     def __init__(self, location, parentScope, name, parent, members):
@@ -1973,6 +1978,8 @@ class IDLArgument(IDLObjectWithIdentifier):
         self.variadic = variadic
         self.dictionaryMember = dictionaryMember
         self._isComplete = False
+        self.enforceRange = False
+        self.clamp = False
 
         assert not variadic or optional
 
@@ -1981,9 +1988,21 @@ class IDLArgument(IDLObjectWithIdentifier):
             attrs,
             isDictionaryMember=self.dictionaryMember,
             isOptional=self.optional)
-        if len(attrs) != 0:
-            raise WebIDLError("Unhandled extended attribute on an argument",
-                              [self.location])
+        for attribute in attrs:
+            attr = attribute[0]
+            if attr == "Clamp":
+                if self.enforceRange:
+                    raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
+                                      [self.location]);
+                self.clamp = True
+            elif attr == "EnforceRange":
+                if self.clamp:
+                    raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
+                                      [self.location]);
+                self.enforceRange = True
+            else:
+                raise WebIDLError("Unhandled extended attribute on an argument",
+                                  [self.location])
 
     def isComplete(self):
         return self._isComplete

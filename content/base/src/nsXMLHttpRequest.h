@@ -27,7 +27,7 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsIDOMLSProgressEvent.h"
 #include "nsITimer.h"
-#include "nsDOMProgressEvent.h"
+#include "nsIDOMProgressEvent.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsContentUtils.h"
 #include "nsDOMFile.h"
@@ -682,9 +682,7 @@ public:
 protected:
   void WarnAboutLSProgressEvent(nsIDocument::DeprecatedOperations);
 
-  // Use nsDOMProgressEvent so that we can forward
-  // most of the method calls easily.
-  nsRefPtr<nsDOMProgressEvent> mInner;
+  nsCOMPtr<nsIDOMProgressEvent> mInner;
   nsCOMPtr<nsPIDOMWindow> mWindow;
   uint64_t mCurProgress;
   uint64_t mMaxProgress;

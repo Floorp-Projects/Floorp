@@ -1,0 +1,40 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker JSON messages
+-->
+<head>
+  <title>Test for DOM Worker Navigator</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script src="json_worker.js" language="javascript"></script>
+<script class="testbody" language="javascript">
+
+  var worker = new Worker("instanceof_worker.js");
+
+  worker.onmessage = function(event) {
+    ok(event.data.status, event.data.event);
+
+    if (event.data.last)
+      SimpleTest.finish();
+  };
+
+  worker.postMessage(42);
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

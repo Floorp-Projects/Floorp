@@ -15,3 +15,5 @@ mk_add_options MOZ_MAKE_FLAGS=-j1
 export MOZ_PACKAGE_JSSHELL=1
 
 . $topsrcdir/build/win64/mozconfig.vs2010
+
+. "$topsrcdir/build/mozconfig.common.override"

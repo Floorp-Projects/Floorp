@@ -748,7 +748,7 @@ NS_IMETHODIMP
 nsIndexedToHTML::OnDataAvailable(nsIRequest *aRequest,
                                  nsISupports *aCtxt,
                                  nsIInputStream* aInput,
-                                 uint32_t aOffset,
+                                 uint64_t aOffset,
                                  uint32_t aCount) {
     return mParser->OnDataAvailable(aRequest, aCtxt, aInput, aOffset, aCount);
 }

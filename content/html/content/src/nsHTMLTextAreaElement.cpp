@@ -545,8 +545,22 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::SetValue(const nsAString& aValue)
 {
+  // If the value has been set by a script, we basically want to keep the
+  // current change event state. If the element is ready to fire a change
+  // event, we should keep it that way. Otherwise, we should make sure the
+  // element will not fire any event because of the script interaction.
+  //
+  // NOTE: this is currently quite expensive work (too much string
+  // manipulation). We should probably optimize that.
+  nsAutoString currentValue;
+  GetValueInternal(currentValue, true);
+
   SetValueInternal(aValue, false);
-  GetValueInternal(mFocusedValue, true);
+
+  if (mFocusedValue.Equals(currentValue)) {
+    GetValueInternal(mFocusedValue, true);
+  }
+
   return NS_OK;
 }
 

@@ -332,8 +332,7 @@ nsHttpHandler::InitConnectionMgr()
 
 nsresult
 nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
-                                         uint8_t caps,
-                                         bool useProxy)
+                                         uint8_t caps)
 {
     nsresult rv;
 
@@ -359,13 +358,8 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
 
     // RFC2616 section 19.6.2 states that the "Connection: keep-alive"
     // and "Keep-alive" request headers should not be sent by HTTP/1.1
-    // user-agents.  Otherwise, problems with proxy servers (especially
-    // transparent proxies) can result.
-    //
-    // However, we need to send something so that we can use keepalive
-    // with HTTP/1.0 servers/proxies. We use "Proxy-Connection:" when
-    // we're talking to an http proxy, and "Connection:" otherwise.
-    // We no longer send the Keep-Alive request header.
+    // user-agents.  But this is not a problem in practice, and the
+    // alternative proxy-connection is worse. see 570283
 
     NS_NAMED_LITERAL_CSTRING(close, "close");
     NS_NAMED_LITERAL_CSTRING(keepAlive, "keep-alive");
@@ -373,9 +367,6 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     const nsACString *connectionType = &close;
     if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
         connectionType = &keepAlive;
-    } else if (useProxy) {
-        // Bug 92006
-        request->SetHeader(nsHttp::Connection, close);
     }
 
     // Add the "Do-Not-Track" header
@@ -385,9 +376,7 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
       if (NS_FAILED(rv)) return rv;
     }
 
-    const nsHttpAtom &header = useProxy ? nsHttp::Proxy_Connection
-                                        : nsHttp::Connection;
-    return request->SetHeader(header, *connectionType);
+    return request->SetHeader(nsHttp::Connection, *connectionType);
 }
 
 bool
