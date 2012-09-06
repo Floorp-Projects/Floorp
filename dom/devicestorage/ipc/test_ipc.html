@@ -71,6 +71,19 @@
 
     function onTestComplete() {
       let comp = SpecialPowers.wrap(Components);
+      let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+      let spObserver = comp.classes["@mozilla.org/special-powers-observer;1"]
+                            .getService(comp.interfaces.nsIMessageListener);
+
+      mm.removeMessageListener("SPPrefService", spObserver);
+      mm.removeMessageListener("SPProcessCrashService", spObserver);
+      mm.removeMessageListener("SPPingService", spObserver);
+      mm.removeMessageListener("SpecialPowers.Quit", spObserver);
+      mm.removeMessageListener("SPPermissionManager", spObserver);
+
+      mm.removeMessageListener("test:DeviceStorage:ipcTestMessage", onTestMessage);
+      mm.removeMessageListener("test:DeviceStorage:ipcTestComplete", onTestComplete);
+
       SimpleTest.executeSoon(function () { SimpleTest.finish(); });
     }
 
