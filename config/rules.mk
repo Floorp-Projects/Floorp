@@ -1291,17 +1291,10 @@ INSTALL_TARGETS += XPIDL_HEADERS
 
 XPIDLSRCS_FILES := $(XPIDLSRCS)
 XPIDLSRCS_DEST := $(IDL_DIR)
-XPIDLSRCS_TARGET := export-idl
+XPIDLSRCS_TARGET := export
 INSTALL_TARGETS += XPIDLSRCS
-
-export:: export-idl
 endif
 endif #} XPIDLSRCS
-
-export-idl:: $(SUBMAKEFILES) $(MAKE_DIRS)
-	$(LOOP_OVER_PARALLEL_DIRS)
-	$(LOOP_OVER_DIRS)
-	$(LOOP_OVER_TOOL_DIRS)
 
 ################################################################################
 # Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components
