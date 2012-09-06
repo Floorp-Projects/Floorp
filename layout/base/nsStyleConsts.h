@@ -206,6 +206,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_COLOR_MOZ_HYPERLINKTEXT              -4
 #define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -5
 #define NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT        -6
+// Only valid as paints in SVG glyphs
+#define NS_COLOR_OBJECTFILL                     -7
+#define NS_COLOR_OBJECTSTROKE                   -8
 
 // See nsStyleDisplay
 #define NS_STYLE_ANIMATION_DIRECTION_NORMAL       0
