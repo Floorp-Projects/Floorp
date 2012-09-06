@@ -68,6 +68,7 @@ struct nsGlobalNameStruct
 
   // For new style DOM bindings.
   mozilla::dom::DefineInterface mDefineDOMInterface;
+  mozilla::dom::PrefEnabled mPrefEnabled; // May be null if not pref controlled
 
 private:
 
@@ -139,7 +140,8 @@ public:
   nsGlobalNameStruct* GetConstructorProto(const nsGlobalNameStruct* aStruct);
 
   void RegisterDefineDOMInterface(const nsAFlatString& aName,
-    mozilla::dom::DefineInterface aDefineDOMInterface);
+    mozilla::dom::DefineInterface aDefineDOMInterface,
+    mozilla::dom::PrefEnabled aPrefEnabled);
 
 private:
   // Adds a new entry to the hash and returns the nsGlobalNameStruct

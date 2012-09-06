@@ -12,7 +12,7 @@ ac_add_app_options x86_64 --target=x86_64-apple-darwin10
 
 ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.6.sdk
 
-. $topsrcdir/build/macosx/common
+. $topsrcdir/build/macosx/mozconfig.common
 
 # $MOZ_BUILD_APP is only defined when sourced by configure.  That's not a
 # problem, because the variables it affects only need to be set for

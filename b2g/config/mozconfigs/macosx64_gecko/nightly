@@ -1,4 +1,4 @@
-. $topsrcdir/build/macosx/common
+. $topsrcdir/build/macosx/mozconfig.common
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
@@ -26,3 +26,5 @@ ac_add_options --with-ccache
 ENABLE_MARIONETTE=1
 
 export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
+
+. "$topsrcdir/b2g/config/mozconfigs/common.override"

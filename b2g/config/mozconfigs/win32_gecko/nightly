@@ -1,3 +1,5 @@
+. "$topsrcdir/b2g/config/mozconfigs/common"
+
 # for pgo
 mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) $(MOZ_OBJDIR)/_profile/pgo/profileserver.py'
 
@@ -27,3 +29,5 @@ ac_add_options --enable-application=b2g
 ENABLE_MARIONETTE=1
 
 export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
+
+. "$topsrcdir/b2g/config/mozconfigs/common.override"
