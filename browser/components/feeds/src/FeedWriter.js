@@ -1328,7 +1328,14 @@ FeedWriter.prototype = {
     }
     var faviconURI = makeURI(readerURI.prePath + "/favicon.ico");
     var self = this;
+    var usePrivateBrowsing = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                         .getInterface(Ci.nsIWebNavigation)
+                                         .QueryInterface(Ci.nsIDocShell)
+                                         .QueryInterface(Ci.nsILoadContext)
+                                         .usePrivateBrowsing;
     this._faviconService.setAndFetchFaviconForPage(readerURI, faviconURI, false,
+      usePrivateBrowsing ? this._faviconService.FAVICON_LOAD_PRIVATE
+                         : this._faviconService.FAVICON_LOAD_NON_PRIVATE,
       function (aURI, aDataLen, aData, aMimeType) {
         if (aDataLen > 0) {
           var dataURL = "data:" + aMimeType + ";base64," +
