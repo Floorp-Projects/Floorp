@@ -1639,6 +1639,12 @@ function test() {
     var foreign_exchange_student_1 = alien_constructor(local_buffer);
     var foreign_exchange_student_2 = new alien_constructor(local_buffer);
 
+    // gc bug 787775
+    var ab = new ArrayBuffer(4);
+    var dv = new DataView(ab);
+    dv = 1;
+    gc();
+
     reportCompare(0, 0, 'done.');
     exitFunc ('test');
 }
