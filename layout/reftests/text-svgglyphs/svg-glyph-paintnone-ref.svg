@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <rect x="30" y="30" width="160" height="160" stroke-width="10"
+        fill="darkorchid" stroke="none"
+        fill-opacity="0.5" />
+
+  <rect x="30" y="230" width="160" height="160" stroke-width="10"
+        stroke="goldenrod" fill="none"
+        stroke-opacity="0.5" />
+
+  <rect x="230" y="30" width="160" height="160" stroke-width="10"
+        stroke="goldenrod" fill="none"
+        stroke-opacity="0.5" />
+
+  <rect x="230" y="230" width="160" height="160" stroke-width="10"
+        fill="darkorchid" stroke="none"
+        fill-opacity="0.5" />
+</svg>
