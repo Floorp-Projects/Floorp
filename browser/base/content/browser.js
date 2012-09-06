@@ -146,14 +146,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
 #ifdef MOZ_SAFE_BROWSING
 XPCOMUtils.defineLazyGetter(this, "SafeBrowsing", function() {
   let tmp = {};
-  Cu.import("resource://gre/modules/SafeBrowsing.jsm", tmp);
+  Cu.import("resource:///modules/SafeBrowsing.jsm", tmp);
   return tmp.SafeBrowsing;
 });
 #endif
 
 XPCOMUtils.defineLazyGetter(this, "gBrowserNewTabPreloader", function () {
   let tmp = {};
-  Cu.import("resource://gre/modules/BrowserNewTabPreloader.jsm", tmp);
+  Cu.import("resource:///modules/BrowserNewTabPreloader.jsm", tmp);
   return new tmp.BrowserNewTabPreloader();
 });
 
@@ -1432,14 +1432,6 @@ var gBrowserInit = {
       if (gPrefService.getBoolPref("devtools.toolbar.visible")) {
         DeveloperToolbar.show(false);
       }
-    }
-
-    // Enable Inspector?
-    let enabled = gPrefService.getBoolPref("devtools.inspector.enabled");
-    if (enabled) {
-      let cmd = document.getElementById("Tools:Inspect");
-      cmd.removeAttribute("disabled");
-      cmd.removeAttribute("hidden");
     }
 
     // Enable Debugger?

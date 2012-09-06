@@ -129,7 +129,7 @@ Consumer::OnStopRequest(nsIRequest *request, nsISupports *aContext,
 NS_IMETHODIMP
 Consumer::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
                           nsIInputStream *aIStream,
-                          uint32_t aOffset, uint32_t aLength) {
+                          uint64_t aOffset, uint32_t aLength) {
     fprintf(stderr, "Consumer::OnData() -> in\n\n");
 
     if (!mOnStart) {

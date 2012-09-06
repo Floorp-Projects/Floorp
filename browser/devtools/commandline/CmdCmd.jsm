@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource:///modules/devtools/Console.jsm");
+                                  "resource://gre/modules/devtools/Console.jsm");
 
 const PREF_DIR = "devtools.commands.dir";
 

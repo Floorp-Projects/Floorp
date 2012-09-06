@@ -38,3 +38,5 @@ ac_add_options --enable-application=b2g
 ENABLE_MARIONETTE=1
 ac_add_options --disable-elf-hack
 export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
+
+. "$topsrcdir/b2g/config/mozconfigs/common.override"

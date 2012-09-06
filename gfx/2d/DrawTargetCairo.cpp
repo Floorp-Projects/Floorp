@@ -196,6 +196,16 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
       cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(pattern.mSurface);
 
       pat = cairo_pattern_create_for_surface(surf);
+
+      // The pattern matrix is a matrix that transforms the pattern into user
+      // space. Cairo takes a matrix that converts from user space to pattern
+      // space. Cairo therefore needs the inverse.
+
+      cairo_matrix_t mat;
+      GfxMatrixToCairoMatrix(pattern.mMatrix, mat);
+      cairo_matrix_invert(&mat);
+      cairo_pattern_set_matrix(pat, &mat);
+
       cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(pattern.mFilter));
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(pattern.mExtendMode));
 

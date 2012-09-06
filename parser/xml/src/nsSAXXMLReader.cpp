@@ -521,7 +521,7 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
 
     rv = mListener->OnDataAvailable(parserChannel, nullptr,
                                     aStream,
-                                    (uint32_t)NS_MIN(offset, (uint64_t)PR_UINT32_MAX),
+                                    offset,
                                     (uint32_t)available);
     if (NS_SUCCEEDED(rv))
       offset += available;
@@ -576,7 +576,7 @@ nsSAXXMLReader::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 
 NS_IMETHODIMP
 nsSAXXMLReader::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
-                                nsIInputStream *aInputStream, uint32_t offset,
+                                nsIInputStream *aInputStream, uint64_t offset,
                                 uint32_t count)
 {
   NS_ENSURE_TRUE(mIsAsyncParse, NS_ERROR_FAILURE);

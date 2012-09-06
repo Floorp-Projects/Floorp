@@ -455,7 +455,7 @@ nsJSON::DecodeInternal(JSContext* cx,
 
     rv = jsonListener->OnDataAvailable(jsonChannel, nullptr,
                                        aStream,
-                                       (uint32_t)NS_MIN(offset, (uint64_t)PR_UINT32_MAX),
+                                       offset,
                                        (uint32_t)available);
     if (NS_FAILED(rv)) {
       jsonChannel->Cancel(rv);
@@ -586,7 +586,7 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 NS_IMETHODIMP
 nsJSONListener::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
                                 nsIInputStream *aStream,
-                                uint32_t aOffset, uint32_t aLength)
+                                uint64_t aOffset, uint32_t aLength)
 {
   nsresult rv = NS_OK;
 

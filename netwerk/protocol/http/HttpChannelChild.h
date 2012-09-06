@@ -103,7 +103,7 @@ protected:
                               const uint64_t& progress,
                               const uint64_t& progressMax,
                               const nsCString& data,
-                              const uint32_t& offset,
+                              const uint64_t& offset,
                               const uint32_t& count);
   bool RecvOnStopRequest(const nsresult& statusCode);
   bool RecvOnProgress(const uint64_t& progress, const uint64_t& progressMax);
@@ -157,7 +157,7 @@ private:
                           const uint64_t progress,
                           const uint64_t& progressMax,
                           const nsCString& data,
-                          const uint32_t& offset,
+                          const uint64_t& offset,
                           const uint32_t& count);
   void OnStopRequest(const nsresult& statusCode);
   void OnProgress(const uint64_t& progress, const uint64_t& progressMax);

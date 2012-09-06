@@ -87,7 +87,7 @@ nsresult
 ChannelMediaResource::Listener::OnDataAvailable(nsIRequest* aRequest,
                                                 nsISupports* aContext,
                                                 nsIInputStream* aStream,
-                                                uint32_t aOffset,
+                                                uint64_t aOffset,
                                                 uint32_t aCount)
 {
   if (!mResource)
@@ -704,12 +704,24 @@ ChannelMediaResource::RecreateChannel()
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
 
-  return NS_NewChannel(getter_AddRefs(mChannel),
-                       mURI,
-                       nullptr,
-                       loadGroup,
-                       nullptr,
-                       loadFlags);
+  nsresult rv = NS_NewChannel(getter_AddRefs(mChannel),
+                              mURI,
+                              nullptr,
+                              loadGroup,
+                              nullptr,
+                              loadFlags);
+
+  // We have cached the Content-Type, which should not change. Give a hint to
+  // the channel to avoid a sniffing failure, which would be expected because we
+  // are probably seeking in the middle of the bitstream, and sniffing relies
+  // on the presence of a magic number at the beginning of the stream.
+  nsAutoCString contentType;
+  element->GetMimeType(contentType);
+  NS_ASSERTION(!contentType.IsEmpty(),
+      "When recreating a channel, we should know the Content-Type.");
+  mChannel->SetContentType(contentType);
+
+  return rv;
 }
 
 void

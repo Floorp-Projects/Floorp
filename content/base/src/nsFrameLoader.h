@@ -22,6 +22,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
 #include "FrameMetrics.h"
+#include "nsStubMutationObserver.h"
 
 class nsIURI;
 class nsSubDocumentFrame;
@@ -29,6 +30,9 @@ class nsIView;
 class nsIInProcessContentFrameMessageManager;
 class AutoResetInShow;
 class nsITabParent;
+class nsIDocShellTreeItem;
+class nsIDocShellTreeOwner;
+class nsIDocShellTreeNode;
 
 namespace mozilla {
 namespace dom {
@@ -135,7 +139,8 @@ private:
 
 
 class nsFrameLoader MOZ_FINAL : public nsIFrameLoader,
-                                public nsIContentViewManager
+                                public nsIContentViewManager,
+                                public nsStubMutationObserver
 {
   friend class AutoResetInShow;
   typedef mozilla::dom::PBrowserParent PBrowserParent;
@@ -166,6 +171,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
   NS_DECL_NSIFRAMELOADER
   NS_DECL_NSICONTENTVIEWMANAGER
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   NS_HIDDEN_(nsresult) CheckForRecursiveLoad(nsIURI* aURI);
   nsresult ReallyStartLoading();
   void Finalize();
@@ -337,9 +343,19 @@ private:
   // Tell the remote browser that it's now "virtually visible"
   bool ShowRemoteFrame(const nsIntSize& size);
 
+  bool AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
+                              nsIDocShellTreeOwner* aOwner,
+                              int32_t aParentType,
+                              nsIDocShellTreeNode* aParentNode);
+
+  nsIAtom* TypeAttrName() const {
+    return mOwnerContent->IsXUL() ? nsGkAtoms::type : nsGkAtoms::mozframetype;
+  }
+
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   mozilla::dom::Element* mOwnerContent; // WEAK
+
 public:
   // public because a callback needs these.
   nsRefPtr<nsFrameMessageManager> mMessageManager;
@@ -373,6 +389,7 @@ private:
   bool mClipSubdocument : 1;
   bool mClampScrollPosition : 1;
   bool mRemoteBrowserInitialized : 1;
+  bool mObservingOwnerContent : 1;
 
   // XXX leaking
   nsCOMPtr<nsIObserver> mChildHost;

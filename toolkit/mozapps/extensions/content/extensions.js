@@ -7,6 +7,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -221,7 +222,7 @@ var FakeHistory = {
 
   back: function FakeHistory_back() {
     if (this.pos == 0)
-      throw new Error("Cannot go back from this point");
+      throw Components.Exception("Cannot go back from this point");
 
     this.pos--;
     gViewController.updateState(this.states[this.pos]);
@@ -231,7 +232,7 @@ var FakeHistory = {
 
   forward: function FakeHistory_forward() {
     if ((this.pos + 1) >= this.states.length)
-      throw new Error("Cannot go forward from this point");
+      throw Components.Exception("Cannot go forward from this point");
 
     this.pos++;
     gViewController.updateState(this.states[this.pos]);
@@ -251,7 +252,7 @@ var FakeHistory = {
 
   popState: function FakeHistory_popState() {
     if (this.pos == 0)
-      throw new Error("Cannot popState from this view");
+      throw Components.Exception("Cannot popState from this view");
 
     this.states.splice(this.pos, this.states.length);
     this.pos--;
@@ -580,11 +581,11 @@ var gViewController = {
     var view = this.parseViewId(aViewId);
 
     if (!view.type || !(view.type in this.viewObjects))
-      throw new Error("Invalid view: " + view.type);
+      throw Components.Exception("Invalid view: " + view.type);
 
     var viewObj = this.viewObjects[view.type];
     if (!viewObj.node)
-      throw new Error("Root node doesn't exist for '" + view.type + "' view");
+      throw Components.Exception("Root node doesn't exist for '" + view.type + "' view");
 
     if (this.currentViewObj && aViewId != aPreviousView) {
       try {
@@ -2335,7 +2336,7 @@ var gListView = {
 
   show: function gListView_show(aType, aRequest) {
     if (!(aType in AddonManager.addonTypes))
-      throw new Error("Attempting to show unknown type " + aType);
+      throw Components.Exception("Attempting to show unknown type " + aType, Cr.NS_ERROR_INVALID_ARG);
 
     this._type = aType;
     this.node.setAttribute("type", aType);

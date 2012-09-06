@@ -11,47 +11,26 @@
  */
 
 interface PerformanceTiming {
-  [Infallible]
   readonly attribute unsigned long long navigationStart;
-  [Infallible]
   readonly attribute unsigned long long unloadEventStart;
-  [Infallible]
   readonly attribute unsigned long long unloadEventEnd;
-  [Infallible]
   readonly attribute unsigned long long redirectStart;
-  [Infallible]
   readonly attribute unsigned long long redirectEnd;
-  [Infallible]
   readonly attribute unsigned long long fetchStart;
-  [Infallible]
   readonly attribute unsigned long long domainLookupStart;
-  [Infallible]
   readonly attribute unsigned long long domainLookupEnd;
-  [Infallible]
   readonly attribute unsigned long long connectStart;
-  [Infallible]
   readonly attribute unsigned long long connectEnd;
   // secureConnectionStart will be implemneted in bug 772589
-  // [Infallible]
   // readonly attribute unsigned long long secureConnectionStart;
-  [Infallible]
   readonly attribute unsigned long long requestStart;
-  [Infallible]
   readonly attribute unsigned long long responseStart;
-  [Infallible]
   readonly attribute unsigned long long responseEnd;
-  [Infallible]
   readonly attribute unsigned long long domLoading;
-  [Infallible]
   readonly attribute unsigned long long domInteractive;
-  [Infallible]
   readonly attribute unsigned long long domContentLoadedEventStart;
-  [Infallible]
   readonly attribute unsigned long long domContentLoadedEventEnd;
-  [Infallible]
   readonly attribute unsigned long long domComplete;
-  [Infallible]
   readonly attribute unsigned long long loadEventStart;
-  [Infallible]
   readonly attribute unsigned long long loadEventEnd;
 };

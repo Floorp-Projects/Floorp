@@ -1,90 +1,100 @@
 <?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
 <?xml-stylesheet type="text/css" href="chrome://global/skin"?>
 <?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
 
-<!-- Any copyright is dedicated to the Public Domain.
-   - http://creativecommons.org/publicdomain/zero/1.0/
-   - https://bugzilla.mozilla.org/show_bug.cgi?id=741549
--->
-
-<window title="Mozilla Bug 741549"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 741549">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
-  <script type="application/javascript" src="apphelper.js"/>
-  <script type="application/javascript" src="jshelper.js"/>
+  <script type="application/javascript" src="head.js"/>
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
      target="_blank">Mozilla Bug 741549</a>
-  <iframe id="no_delegated_install" onload="go();" src="http://sub2.test2.example.org:80/chrome/dom/tests/mochitest/webapps/apps/include.html"/>
   </body>
 
 <script> 
 
-function go() {
-  runAll(steps);
-}
+var steps = [
+  noArgs,
+  parseError,
+  invalidManifest,
+  permissionDenied,
+  invalidContent,
+];
 
-steps = [no_args, parse_error, invalid_manifest, permission_denied, invalid_content,
-         mgmt_api_errors, mgmt_api_add_listener, uninstall_apps, tearDown];
+runAll(steps);
 
-function no_args(next)  {
-  debug("in " + arguments.callee.name);
+function noArgs(next) {
   try { 
     navigator.mozApps.install();
   } catch (e) {
-    ok(e.message == "Not enough arguments \[mozIDOMApplicationRegistry.install\]", "install returned " + e.message);
+    is(e.message, "Not enough arguments \[mozIDOMApplicationRegistry.install\]",
+       "install without arguments throws exception");
     next();
   }
 }
 
-function parse_error(next)  {
-  debug("in " + arguments.callee.name);  
-  mozAppscb(navigator.mozApps.install(SERVERS['json_syntax_error'], null), 
-          [{ name: "== \"MANIFEST_PARSE_ERROR\"" }], "error", ok, next);
+function parseError(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/json_syntax_error.webapp";
+
+  confirmNextInstall();
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "MANIFEST_PARSE_ERROR", "manifest with syntax error");
+    next();
+  };
 }
 
-function invalid_manifest(next) {
-  debug("in " + arguments.callee.name);
-  mozAppscb(navigator.mozApps.install(SERVERS['missing_required_field'], null),
-          [{ name: "== \"INVALID_MANIFEST\"" }], "error", ok, next);
+function invalidManifest(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/missing_required_field.webapp";
+
+  confirmNextInstall();
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
+    next();
+  };
 }
 
-function permission_denied(next) {
-  debug("in " + arguments.callee.name);
-  mozAppscb(navigator.mozApps.install(SERVERS['no_delegated_install'], null),
-          [{ name: "== \"DENIED\"" }], "error", todo, next);
+function permissionDenied(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/no_delegated_install.webapp";
+
+  confirmNextInstall();
+  var request = navigator.mozApps.install(url, null);
+
+  request.onerror = function onInstallError() {
+    is(this.error.name, "DENIED", "manifest without installs_allowed_from");
+    next();
+  };
+
+  request.onsuccess = function onInstall() {
+    todo(false, "manifest without installs_allowed_from fails");
+    this.result.uninstall().onsuccess = function onUninstall() {
+      next();
+    };
+  };
 }
 
-function invalid_content(next) {
-  debug("in " + arguments.callee.name);
-  mozAppscb(navigator.mozApps.install(SERVERS['bad_content_type'], null),
-          [{ name: "== \"INVALID_MANIFEST\"" }], "error", todo, next);
+function invalidContent(next) {
+  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/bad_content_type.webapp";
+
+  confirmNextInstall();
+  var request = navigator.mozApps.install(url, null);
+
+  request.onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "manifest with bad content type");
+    next();
+  };
+
+  request.onsuccess = function onInstall() {
+    todo(false, "manifest with bad content type fails");
+    this.result.uninstall().onsuccess = function onUninstall() {
+      next();
+    };
+  };
 }
 
-function mgmt_api_errors(next) {
-  debug("in " + arguments.callee.name);
-  onIframeLoad("no_delegated_install", ok, next);
-  document.getElementById("no_delegated_install").contentWindow.postMessage("mgmt.getAll", '*');
-}
-
-function mgmt_api_add_listener(next) {
-  debug("in " + arguments.callee.name);
-  onIframeLoad("no_delegated_install", todo, next);
-  document.getElementById("no_delegated_install").contentWindow.postMessage("mgmt.event_error", '*');
-}
-
-function uninstall_apps(next) {
-  debug("in " + arguments.callee.name);
-  var appURL = SERVERS['bad_content_type'];
-  uninstall(appURL, ok, function() {
-    appURL = SERVERS['no_delegated_install'];
-    uninstall(appURL, ok, function() { next(); });
-  });
-}
-
-</script> 
-
+</script>
 </window>
-
