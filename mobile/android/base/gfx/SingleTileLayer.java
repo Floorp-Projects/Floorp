@@ -33,6 +33,7 @@ public class SingleTileLayer extends TileLayer {
     private final RectF mSubRectF;
     private final Region mMaskedBounds;
     private final Rect mCropRect;
+    private final RectF mObjRectF;
     private final float[] mCoords;
 
     public SingleTileLayer(CairoImage image) {
@@ -54,6 +55,7 @@ public class SingleTileLayer extends TileLayer {
         mSubRectF = new RectF();
         mMaskedBounds = new Region();
         mCropRect = new Rect();
+        mObjRectF = new RectF();
         mCoords = new float[20];
     }
 
@@ -116,35 +118,13 @@ public class SingleTileLayer extends TileLayer {
                           Math.round(mSubRectF.right - mBounds.left),
                           Math.round(mBounds.bottom - mSubRectF.bottom));
 
-            float left = mSubRectF.left - mViewport.left;
-            float top = mViewport.bottom - mSubRectF.bottom;
-            float right = left + mSubRectF.width();
-            float bottom = top + mSubRectF.height();
+            mObjRectF.set(mSubRectF.left - mViewport.left,
+                          mViewport.bottom - mSubRectF.bottom,
+                          mSubRectF.right - mViewport.left,
+                          mViewport.bottom - mSubRectF.top);
 
-            //x, y, z, texture_x, texture_y
-            mCoords[0] = left/mViewport.width();
-            mCoords[1] = bottom/mViewport.height();
-            mCoords[2] = 0;
-            mCoords[3] = mCropRect.left/mTextureBounds.width();
-            mCoords[4] = mCropRect.top/mTextureBounds.height();
-
-            mCoords[5] = left/mViewport.width();
-            mCoords[6] = top/mViewport.height();
-            mCoords[7] = 0;
-            mCoords[8] = mCropRect.left/mTextureBounds.width();
-            mCoords[9] = mCropRect.bottom/mTextureBounds.height();
-
-            mCoords[10] = right/mViewport.width();
-            mCoords[11] = bottom/mViewport.height();
-            mCoords[12] = 0;
-            mCoords[13] = mCropRect.right/mTextureBounds.width();
-            mCoords[14] = mCropRect.top/mTextureBounds.height();
-
-            mCoords[15] = right/mViewport.width();
-            mCoords[16] = top/mViewport.height();
-            mCoords[17] = 0;
-            mCoords[18] = mCropRect.right/mTextureBounds.width();
-            mCoords[19] = mCropRect.bottom/mTextureBounds.height();
+            fillRectCoordBuffer(mCoords, mObjRectF, mViewport.width(), mViewport.height(),
+                                mCropRect, mTextureBounds.width(), mTextureBounds.height());
 
             FloatBuffer coordBuffer = context.coordBuffer;
             int positionHandle = context.positionHandle;
