@@ -1432,11 +1432,11 @@ let RIL = {
   /**
    * Get UICC Phonebook.
    *
-   * @params type
+   * @params contactType
    *         "ADN" or "FDN".
    */
   getICCContacts: function getICCContacts(options) {
-    let type = options.type;
+    let type = options.contactType;
     switch (type) {
       case "ADN":
         switch (this.appType) {
