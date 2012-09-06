@@ -15,7 +15,9 @@
 #include "updatehelper.h"
 #endif
 
+#define UPDATER_NO_STRING_GLUE_STL
 #include "../../../../xpcom/build/nsVersionComparator.cpp"
+#undef UPDATER_NO_STRING_GLUE_STL
 
 #if defined(XP_UNIX)
 # include <sys/types.h>
