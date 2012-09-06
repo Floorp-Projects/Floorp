@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<!--
+    Basic test SVG glyphs
+    Covers glyph ID range 1 (L\xfe01) to 47 (M)
+-->
+  <!-- char = L -->
+  <g glyphid="46">
+    <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+      stroke="black" fill="red"/>
+    <rect x="100" y="-1000" width="100" height="100" stroke="none"
+      fill="turquoise" />
+  </g>
+
+  <!-- L with a UVS selector -->
+  <rect x="100" y="-900" width="800" height="800" stroke-width="50"
+    stroke="black" fill="green" glyphchar="L&#xfe01;"/>
+
+  <!-- M -->
+  <rect x="50" y="-950" width="900" height="900" stroke-width="100"
+    fill="pink" stroke="hotpink" glyphchar="M"/>
+
+</svg>
