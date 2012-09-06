@@ -129,8 +129,7 @@ DOMJSClass Class = {
     %s, /* trace */
     JSCLASS_NO_INTERNAL_MEMBERS
   },
-  %s,
-  -1
+  %s
 };
 """ % (self.descriptor.interface.identifier.name,
        ADDPROPERTY_HOOK_NAME if self.descriptor.concrete and not self.descriptor.workers and self.descriptor.wrapperCache else 'JS_PropertyStub',
@@ -1584,7 +1583,9 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     invalidEnumValueFatal=True,
                                     defaultValue=None,
                                     treatNullAs="Default",
-                                    treatUndefinedAs="Default"):
+                                    treatUndefinedAs="Default",
+                                    isEnforceRange=False,
+                                    isClamp=False):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -1610,6 +1611,12 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
     false).
 
     If defaultValue is not None, it's the IDL default value for this conversion
+
+    If isEnforceRange is true, we're converting an integer and throwing if the
+    value is out of range.
+
+    If isClamp is true, we're converting an integer and clamping if the
+    value is out of range.
 
     The return value from this function is a tuple consisting of four things:
 
@@ -1707,10 +1714,14 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
         return templateBody
 
+    assert not (isEnforceRange and isClamp) # These are mutually exclusive
+
     if type.isArray():
         raise TypeError("Can't handle array arguments yet")
 
     if type.isSequence():
+        assert not isEnforceRange and not isClamp
+
         if isMember:
             # XXXbz we probably _could_ handle this; we just have to be careful
             # with reallocation behavior for arrays.  In particular, if we have
@@ -2001,6 +2012,8 @@ for (uint32_t i = 0; i < length; ++i) {
         return templateBody.define(), declType, holderType, False
 
     if type.isGeckoInterface():
+        assert not isEnforceRange and not isClamp
+
         descriptor = descriptorProvider.getDescriptor(
             type.unroll().inner.identifier.name)
         # This is an interface that we implement as a concrete class
@@ -2110,6 +2123,7 @@ for (uint32_t i = 0; i < length; ++i) {
         return (templateBody, declType, holderType, isOptional)
 
     if type.isSpiderMonkeyInterface():
+        assert not isEnforceRange and not isClamp
         if isMember:
             raise TypeError("Can't handle member arraybuffers or "
                             "arraybuffer views because making sure all the "
@@ -2165,8 +2179,7 @@ for (uint32_t i = 0; i < length; ++i) {
         return (template, CGGeneric(declType), holderType, False)
 
     if type.isString():
-        # XXXbz Need to figure out string behavior based on extended args?  Also, how to
-        # detect them?
+        assert not isEnforceRange and not isClamp
 
         treatAs = {
             "Default": "eStringify",
@@ -2230,6 +2243,8 @@ for (uint32_t i = 0; i < length; ++i) {
             False)
 
     if type.isEnum():
+        assert not isEnforceRange and not isClamp
+
         if type.nullable():
             raise TypeError("We don't support nullable enumerated arguments "
                             "yet")
@@ -2265,6 +2280,8 @@ for (uint32_t i = 0; i < length; ++i) {
         return (template, CGGeneric(enum), None, isOptional)
 
     if type.isCallback():
+        assert not isEnforceRange and not isClamp
+
         if isMember:
             raise TypeError("Can't handle member callbacks; need to sort out "
                             "rooting issues")
@@ -2283,6 +2300,8 @@ for (uint32_t i = 0; i < length; ++i) {
             CGGeneric("JSObject*"), None, isOptional)
 
     if type.isAny():
+        assert not isEnforceRange and not isClamp
+
         if isMember:
             raise TypeError("Can't handle member 'any'; need to sort out "
                             "rooting issues")
@@ -2292,6 +2311,8 @@ for (uint32_t i = 0; i < length; ++i) {
         return (templateBody, CGGeneric("JS::Value"), None, isOptional)
 
     if type.isObject():
+        assert not isEnforceRange and not isClamp
+
         if isMember:
             raise TypeError("Can't handle member 'object'; need to sort out "
                             "rooting issues")
@@ -2344,8 +2365,14 @@ for (uint32_t i = 0; i < length; ++i) {
     if not type.isPrimitive():
         raise TypeError("Need conversion for argument type '%s'" % str(type))
 
-    # XXXbz need to add support for [EnforceRange] and [Clamp]
     typeName = builtinNames[type.tag()]
+
+    conversionBehavior = "eDefault"
+    if isEnforceRange:
+        conversionBehavior = "eEnforceRange"
+    elif isClamp:
+        conversionBehavior = "eClamp"
+
     if type.nullable():
         dataLoc = "${declName}.SetValue()"
         nullCondition = "${val}.isNullOrUndefined()"
@@ -2354,18 +2381,18 @@ for (uint32_t i = 0; i < length; ++i) {
         template = (
             "if (%s) {\n"
             "  ${declName}.SetNull();\n"
-            "} else if (!ValueToPrimitive<%s>(cx, ${val}, &%s)) {\n"
+            "} else if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
             "  return false;\n"
-            "}" % (nullCondition, typeName, dataLoc))
+            "}" % (nullCondition, typeName, conversionBehavior, dataLoc))
         declType = CGGeneric("Nullable<" + typeName + ">")
     else:
         assert(defaultValue is None or
                not isinstance(defaultValue, IDLNullValue))
         dataLoc = "${declName}"
         template = (
-            "if (!ValueToPrimitive<%s>(cx, ${val}, &%s)) {\n"
+            "if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
             "  return false;\n"
-            "}" % (typeName, dataLoc))
+            "}" % (typeName, conversionBehavior, dataLoc))
         declType = CGGeneric(typeName)
     if (defaultValue is not None and
         # We already handled IDLNullValue, so just deal with the other ones
@@ -2533,7 +2560,9 @@ class CGArgumentConverter(CGThing):
                                             invalidEnumValueFatal=self.invalidEnumValueFatal,
                                             defaultValue=self.argument.defaultValue,
                                             treatNullAs=self.argument.treatNullAs,
-                                            treatUndefinedAs=self.argument.treatUndefinedAs),
+                                            treatUndefinedAs=self.argument.treatUndefinedAs,
+                                            isEnforceRange=self.argument.enforceRange,
+                                            isClamp=self.argument.clamp),
             self.replacementVariables,
             self.argcAndIndex).define()
 
@@ -3324,6 +3353,8 @@ class FakeArgument():
         self.defaultValue = None
         self.treatNullAs = interfaceMember.treatNullAs
         self.treatUndefinedAs = interfaceMember.treatUndefinedAs
+        self.enforceRange = False
+        self.clamp = False
 
 class CGSetterCall(CGPerSignatureCall):
     """
@@ -4651,9 +4682,10 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     "  return true;\n" +
                     "}\n") % (self.descriptor.nativeType)
         elif self.descriptor.operations['IndexedGetter']:
-            set += ("if (GetArrayIndexFromId(cx, id)) {\n" +
+            set += ("if (GetArrayIndexFromId(cx, id) >= 0) {\n" +
                     "  return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n" +
                     "}\n") % self.descriptor.name
+
         namedSetter = self.descriptor.operations['NamedSetter']
         if namedSetter:
             if not self.descriptor.operations['NamedCreator'] is namedSetter:
@@ -4682,6 +4714,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     "  if (found) {\n"
                     "    return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n" +
                     "  }\n" +
+                    "  return true;\n"
                     "}\n") % (self.descriptor.nativeType, self.descriptor.name)
         return set + """return mozilla::dom::DOMProxyHandler::defineProperty(%s);""" % ", ".join(a.name for a in self.args)
 

@@ -6,10 +6,10 @@
 <div id="log"></div>
 <script>
 var objects = [
-  Event,
-  Event.prototype,
-  document.createEvent("Event"),
-  document.createEvent("CustomEvent")
+  [Event, "Event interface object"],
+  [Event.prototype, "Event prototype object"],
+  [document.createEvent("Event"), "Event object"],
+  [document.createEvent("CustomEvent"), "CustomEvent object"]
 ]
 testConstants(objects, [
   ["NONE", 0],
