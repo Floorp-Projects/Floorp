@@ -24,6 +24,7 @@
 #define nsPropertyTable_h_
 
 #include "nscore.h"
+#include "prtypes.h"
 
 class nsIAtom;
 typedef PRUptrdiff PtrBits;

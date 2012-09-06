@@ -21,6 +21,7 @@
 #ifndef nsHashtable_h__
 #define nsHashtable_h__
 
+#include "prtypes.h"
 #include "pldhash.h"
 #include "prlock.h"
 #include "nscore.h"
