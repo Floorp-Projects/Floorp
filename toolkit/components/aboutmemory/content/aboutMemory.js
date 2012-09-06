@@ -422,11 +422,13 @@ function updateAboutMemory()
   }
 
   // The "Update" button has an id so it can be clicked in a test.
+  // (Also for mobile styling of it and the other buttons.)
   appendButton(UpDesc, updateAboutMemory, "Update", "updateButton");
-  appendButton(GCDesc, doGlobalGC,        "GC");
-  appendButton(CCDesc, doCC,              "CC");
+  appendButton(GCDesc, doGlobalGC,        "GC",     "doGCButton");
+  appendButton(CCDesc, doCC,              "CC",     "doCCButton");
   appendButton(MPDesc, function() { minimizeMemoryUsage3x(updateAboutMemory); },
-                                          "Minimize memory usage");
+                                          "Minimize memory usage",
+                                                    "minMemUseButton");
 
   let div1 = appendElement(body, "div");
   if (gVerbose) {
