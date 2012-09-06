@@ -293,7 +293,7 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
 
     // We can only update update.status if argv[1] exists.  argv[1] is
     // the directory where the update.status file exists.
-    if (argc > 1 || 
+    if (argc < 2 || 
         !WriteStatusFailure(argv[1], 
                             SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS)) {
       LOG(("Could not write update.status service update failure."
