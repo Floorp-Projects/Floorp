@@ -272,9 +272,9 @@ void RemoveApplication(nsINIParser& parser, const char* curExeDir, const char* p
      * four in libnotify.so.1.
      * Passing the fourth argument as NULL is binary compatible.
      */
-    typedef void  (*notify_init_t)(char*);
-    typedef void* (*notify_notification_new_t)(char*, char*, char*, char*);
-    typedef void  (*notify_notification_show_t)(void*, char*);
+    typedef void  (*notify_init_t)(const char*);
+    typedef void* (*notify_notification_new_t)(const char*, const char*, const char*, const char*);
+    typedef void  (*notify_notification_show_t)(void*, void**);
 
     void *handle = dlopen("libnotify.so.4", RTLD_LAZY);
     if (!handle) {
@@ -283,9 +283,9 @@ void RemoveApplication(nsINIParser& parser, const char* curExeDir, const char* p
         return;
     }
 
-    notify_init_t nn_init = (notify_init_t)dlsym(handle, "notify_init");
-    notify_notification_new_t nn_new = (notify_notification_new_t)dlsym(handle, "notify_notification_new");
-    notify_notification_show_t nn_show = (notify_notification_show_t)dlsym(handle, "notify_notification_show");
+    notify_init_t nn_init = (notify_init_t)(uintptr_t)dlsym(handle, "notify_init");
+    notify_notification_new_t nn_new = (notify_notification_new_t)(uintptr_t)dlsym(handle, "notify_notification_new");
+    notify_notification_show_t nn_show = (notify_notification_show_t)(uintptr_t)dlsym(handle, "notify_notification_show");
     if (!nn_init || !nn_new || !nn_show) {
       dlclose(handle);
       return;

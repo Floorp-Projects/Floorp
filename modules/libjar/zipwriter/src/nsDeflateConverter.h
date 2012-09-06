@@ -50,7 +50,7 @@ private:
     };
 
     WrapMode mWrapMode;
-    uint32_t mOffset;
+    uint64_t mOffset;
     int32_t mLevel;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCOMPtr<nsISupports> mContext;

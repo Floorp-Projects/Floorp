@@ -158,7 +158,7 @@ class NameResolver
      */
     JSAtom *resolveFun(ParseNode *pn, JSAtom *prefix) {
         JS_ASSERT(pn != NULL && pn->isKind(PNK_FUNCTION));
-        JSFunction *fun = pn->pn_funbox->function();
+        JSFunction *fun = pn->pn_funbox->fun();
         if (nparents == 0)
             return NULL;
 

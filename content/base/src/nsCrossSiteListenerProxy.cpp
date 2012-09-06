@@ -614,7 +614,7 @@ NS_IMETHODIMP
 nsCORSListenerProxy::OnDataAvailable(nsIRequest* aRequest,
                                      nsISupports* aContext, 
                                      nsIInputStream* aInputStream,
-                                     uint32_t aOffset,
+                                     uint64_t aOffset,
                                      uint32_t aCount)
 {
   if (!mRequestApproved) {
@@ -1006,7 +1006,7 @@ NS_IMETHODIMP
 nsCORSPreflightListener::OnDataAvailable(nsIRequest *aRequest,
                                          nsISupports *ctxt,
                                          nsIInputStream *inStr,
-                                         uint32_t sourceOffset,
+                                         uint64_t sourceOffset,
                                          uint32_t count)
 {
   uint32_t totalRead;

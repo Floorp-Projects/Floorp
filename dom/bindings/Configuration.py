@@ -265,7 +265,7 @@ class Descriptor(DescriptorProvider):
                 else:
                     add('all', [config], attribute)
 
-        for attribute in ['infallible', 'implicitJSContext', 'resultNotAddRefed']:
+        for attribute in ['implicitJSContext', 'resultNotAddRefed']:
             addExtendedAttribute(attribute, desc.get(attribute, {}))
 
         self.binaryNames = desc.get('binaryNames', {})
@@ -290,38 +290,34 @@ class Descriptor(DescriptorProvider):
         return self.interface.hasInterfaceObject() or self.interface.hasInterfacePrototypeObject()
 
     def getExtendedAttributes(self, member, getter=False, setter=False):
-        def ensureValidInfallibleExtendedAttribute(attr):
+        def ensureValidThrowsExtendedAttribute(attr):
             assert(attr is None or attr is True or len(attr) == 1)
             if (attr is not None and attr is not True and
                 'Workers' not in attr and 'MainThread' not in attr):
-                raise TypeError("Unknown value for 'infallible': " + attr[0])
+                raise TypeError("Unknown value for 'Throws': " + attr[0])
+
+        def maybeAppendInfallibleToAttrs(attrs, throws):
+            ensureValidThrowsExtendedAttribute(throws)
+            if (throws is None or
+                (throws is not True and
+                 ('Workers' not in throws or not self.workers) and
+                 ('MainThread' not in throws or self.workers))):
+                attrs.append("infallible")
 
         name = member.identifier.name
         if member.isMethod():
             attrs = self.extendedAttributes['all'].get(name, [])
-            infallible = member.getExtendedAttribute("Infallible")
-            ensureValidInfallibleExtendedAttribute(infallible)
-            if (infallible is not None and
-                (infallible is True or
-                 ('Workers' in infallible and self.workers) or
-                 ('MainThread' in infallible and not self.workers))):
-                attrs.append("infallible")
+            throws = member.getExtendedAttribute("Throws")
+            maybeAppendInfallibleToAttrs(attrs, throws)
             return attrs
 
         assert member.isAttr()
         assert bool(getter) != bool(setter)
         key = 'getterOnly' if getter else 'setterOnly'
         attrs = self.extendedAttributes['all'].get(name, []) + self.extendedAttributes[key].get(name, [])
-        infallible = member.getExtendedAttribute("Infallible")
-        if infallible is None:
-            infallibleAttr = "GetterInfallible" if getter else "SetterInfallible"
-            infallible = member.getExtendedAttribute(infallibleAttr)
-
-        ensureValidInfallibleExtendedAttribute(infallible)
-        if (infallible is not None and
-            (infallible is True or
-             ('Workers' in infallible and self.workers) or
-             ('MainThread' in infallible and not self.workers))):
-            attrs.append("infallible")
-
+        throws = member.getExtendedAttribute("Throws")
+        if throws is None:
+            throwsAttr = "GetterThrows" if getter else "SetterThrows"
+            throws = member.getExtendedAttribute(throwsAttr)
+        maybeAppendInfallibleToAttrs(attrs, throws)
         return attrs

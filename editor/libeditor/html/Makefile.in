@@ -41,8 +41,7 @@ CPPSRCS  = \
            $(NULL)
 
 ifdef ENABLE_EDITOR_API_LOG
-CPPSRCS += nsHTMLEditorLog.cpp             \
-           nsEditorTxnLog.cpp              \
+CPPSRCS += nsEditorTxnLog.cpp              \
            $(NULL)
 
 DEFINES += -DENABLE_EDITOR_API_LOG

@@ -1130,10 +1130,10 @@ nsStylePosition::nsStylePosition(void)
   mOffset.SetRight(autoCoord);
   mOffset.SetBottom(autoCoord);
   mWidth.SetAutoValue();
-  mMinWidth.SetCoordValue(0);
+  mMinWidth.SetAutoValue();
   mMaxWidth.SetNoneValue();
   mHeight.SetAutoValue();
-  mMinHeight.SetCoordValue(0);
+  mMinHeight.SetAutoValue();
   mMaxHeight.SetNoneValue();
 #ifdef MOZ_FLEXBOX
   mFlexBasis.SetAutoValue();
@@ -1252,8 +1252,7 @@ nsChangeHint nsStylePosition::MaxDifference()
 /* static */ bool
 nsStylePosition::WidthCoordDependsOnContainer(const nsStyleCoord &aCoord)
 {
-  return aCoord.GetUnit() == eStyleUnit_Auto ||
-         aCoord.HasPercent() ||
+  return aCoord.HasPercent() ||
          (aCoord.GetUnit() == eStyleUnit_Enumerated &&
           (aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT ||
            aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE));

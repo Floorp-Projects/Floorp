@@ -15,11 +15,9 @@ include $(DEPTH)/config/autoconf.mk
 VISIBILITY_FLAGS =
 
 ifneq (WINNT,$(HOST_OS_ARCH))
-HOST_PROGRAM	= nsinstall$(HOST_BIN_SUFFIX)
+HOST_PROGRAM	= nsinstall_real$(HOST_BIN_SUFFIX)
 HOST_CSRCS	= nsinstall.c pathsub.c
 endif
-
-TARGETS		= $(HOST_PROGRAM) $(SIMPLE_PROGRAMS)
 
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
 # a recursive rule for finding nsinstall and the Perl scripts.
@@ -41,14 +39,21 @@ ifneq (,$(JS_SHARED_LIBRARY)$(MOZ_NATIVE_ZLIB))
 DEFINES += -DMOZ_NATIVE_ZLIB=1
 endif
 
+ifneq (WINNT,$(HOST_OS_ARCH))
+# Ensure nsinstall is atomically created
+nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)
+	cp $^ $@.tmp
+	mv $@.tmp $@
+
+NSINSTALL_FILES := nsinstall$(HOST_BIN_SUFFIX)
+NSINSTALL_DEST := $(DIST)/bin
+NSINSTALL_TARGET := export
+INSTALL_TARGETS += NSINSTALL
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 HOST_CFLAGS += -DUNICODE -D_UNICODE
-
-export:: $(TARGETS)
-ifdef HOST_PROGRAM
-	$(INSTALL) $(HOST_PROGRAM) $(DIST)/bin
-endif
 
 ifdef WRAP_SYSTEM_INCLUDES
 export:: \

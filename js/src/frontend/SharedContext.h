@@ -105,7 +105,7 @@ class ContextFlags {
     bool            funDefinitelyNeedsArgsObj:1;
 
   public:
-    ContextFlags(JSContext *cx)
+    ContextFlags()
      :  hasExplicitUseStrict(false),
         bindingsAccessedDynamically(false),
         funIsGenerator(false),
@@ -126,13 +126,11 @@ struct SharedContext {
     JSContext       *const context;
 
   private:
-    const RootedFunction fun_;      /* function to store argument and variable
-                                       names when it's a function's context */
     FunctionBox *const funbox_;     /* null or box for function we're compiling
-                                       if inFunction() is true and not in
-                                       js::frontend::CompileFunctionBody */
+                                       (if inFunction() is true) */
 
-    const RootedObject scopeChain_; /* scope chain object for the script */
+    const RootedObject scopeChain_; /* scope chain object for the script
+                                       (if inFunction() is false) */
 
   public:
     ContextFlags    cxFlags;
@@ -158,39 +156,35 @@ struct SharedContext {
     // When parsing is done, no context may be in the UNKNOWN strictness state.
     StrictMode strictModeState;
 
-    // If it's function code, fun must be non-NULL and scopeChain must be NULL.
-    // If it's global code, fun and funbox must be NULL.
-    inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox,
+    // If it's function code, funbox must be non-NULL and scopeChain must be NULL.
+    // If it's global code, funbox must be NULL.
+    inline SharedContext(JSContext *cx, JSObject *scopeChain, FunctionBox *funbox,
                          StrictMode sms);
 
-    // In theory, |fun*| flags are only relevant if |inFunction()| is true.
-    // However, we get and set in some cases where |inFunction()| is false,
-    // which is why |INFUNC| doesn't appear in all of the fun* and setFun*
-    // functions below.
+    // The |fun*| flags are only relevant if |inFunction()| is true.
 #define INFUNC JS_ASSERT(inFunction())
 
     bool hasExplicitUseStrict()        const {         return cxFlags.hasExplicitUseStrict; }
     bool bindingsAccessedDynamically() const {         return cxFlags.bindingsAccessedDynamically; }
     bool funIsGenerator()              const { INFUNC; return cxFlags.funIsGenerator; }
-    bool funMightAliasLocals()         const {         return cxFlags.funMightAliasLocals; }
-    bool funHasExtensibleScope()       const {         return cxFlags.funHasExtensibleScope; }
+    bool funMightAliasLocals()         const { INFUNC; return cxFlags.funMightAliasLocals; }
+    bool funHasExtensibleScope()       const { INFUNC; return cxFlags.funHasExtensibleScope; }
     bool funArgumentsHasLocalBinding() const { INFUNC; return cxFlags.funArgumentsHasLocalBinding; }
     bool funDefinitelyNeedsArgsObj()   const { INFUNC; return cxFlags.funDefinitelyNeedsArgsObj; }
 
     void setExplicitUseStrict()               {         cxFlags.hasExplicitUseStrict        = true; }
     void setBindingsAccessedDynamically()     {         cxFlags.bindingsAccessedDynamically = true; }
     void setFunIsGenerator()                  { INFUNC; cxFlags.funIsGenerator              = true; }
-    void setFunMightAliasLocals()             {         cxFlags.funMightAliasLocals         = true; }
-    void setFunHasExtensibleScope()           {         cxFlags.funHasExtensibleScope       = true; }
+    void setFunMightAliasLocals()             { INFUNC; cxFlags.funMightAliasLocals         = true; }
+    void setFunHasExtensibleScope()           { INFUNC; cxFlags.funHasExtensibleScope       = true; }
     void setFunArgumentsHasLocalBinding()     { INFUNC; cxFlags.funArgumentsHasLocalBinding = true; }
     void setFunDefinitelyNeedsArgsObj()       { JS_ASSERT(cxFlags.funArgumentsHasLocalBinding);
                                                 INFUNC; cxFlags.funDefinitelyNeedsArgsObj   = true; }
 
 #undef INFUNC
 
-    bool inFunction() const { return !!fun_; }
+    bool inFunction() const { return !!funbox_; }
 
-    JSFunction *fun()      const { JS_ASSERT(inFunction());  return fun_; }
     FunctionBox *funbox()  const { JS_ASSERT(inFunction());  return funbox_; }
     JSObject *scopeChain() const { JS_ASSERT(!inFunction()); return scopeChain_; }
 
@@ -307,9 +301,9 @@ struct FunctionBox : public ObjectBox
     FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *pc,
                 StrictMode sms);
 
-    bool funIsGenerator()        const { return cxFlags.funIsGenerator; }
+    bool funIsGenerator() const { return cxFlags.funIsGenerator; }
 
-    JSFunction *function() const { return (JSFunction *) object; }
+    JSFunction *fun() const { return (JSFunction *) object; }
 
     void recursivelySetStrictMode(StrictMode strictness);
 };

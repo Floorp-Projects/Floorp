@@ -100,7 +100,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         return NULL;
     parser.sct = &sct;
 
-    SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL, StrictModeFromContext(cx));
+    SharedContext sc(cx, scopeChain, /* funbox = */ NULL, StrictModeFromContext(cx));
 
     ParseContext pc(&parser, &sc, staticLevel, /* bodyid = */ 0);
     if (!pc.init())
@@ -152,9 +152,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
             ObjectBox *funbox = parser.newObjectBox(callerFrame->fun());
             if (!funbox)
                 return NULL;
-            funbox->emitLink = bce.objectList.lastbox;
-            bce.objectList.lastbox = funbox;
-            bce.objectList.length++;
+            if (!bce.objectList.append(funbox))
+                return NULL;
         }
     }
 
@@ -275,8 +274,11 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
     parser.sct = &sct;
 
     JS_ASSERT(fun);
-    SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL,
-                        StrictModeFromContext(cx));
+
+    StrictMode sms = StrictModeFromContext(cx);
+    FunctionBox *funbox = parser.newFunctionBox(fun, /* outerpc = */ NULL, sms);
+
+    SharedContext funsc(cx, /* scopeChain = */ NULL, funbox, sms);
     fun->setArgCount(formals.length());
 
     unsigned staticLevel = 0;

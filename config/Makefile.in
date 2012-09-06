@@ -20,15 +20,13 @@ VISIBILITY_FLAGS =
 STDCXX_COMPAT =
 
 ifneq (WINNT,$(HOST_OS_ARCH))
-HOST_PROGRAM	= nsinstall$(HOST_BIN_SUFFIX)
+HOST_PROGRAM	= nsinstall_real$(HOST_BIN_SUFFIX)
 HOST_CSRCS	= nsinstall.c pathsub.c
 endif
 
-TARGETS		= $(HOST_PROGRAM) $(SIMPLE_PROGRAMS)
-
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
-TARGETS		+= elf-dynstr-gc
+export:: elf-dynstr-gc
 # Compiling the above will create dependency files.
 NEED_MDDEPDIR	= 1
 endif
@@ -49,6 +47,26 @@ include $(topsrcdir)/config/config.mk
 # Do not install util programs
 NO_INSTALL=1
 
+ifneq (WINNT,$(HOST_OS_ARCH))
+# Ensure nsinstall is atomically created
+nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)
+	cp $^ $@.tmp
+	mv $@.tmp $@
+
+NSINSTALL_FILES := nsinstall$(HOST_BIN_SUFFIX)
+NSINSTALL_DEST := $(DIST)/bin
+NSINSTALL_TARGET := export
+INSTALL_TARGETS += NSINSTALL
+endif
+
+HEADERS_FILES = \
+	$(DEPTH)/mozilla-config.h \
+	$(srcdir)/nsStaticComponents.h \
+	$(NULL)
+HEADERS_DEST := $(DIST)/include
+HEADERS_TARGET := export
+INSTALL_TARGETS += HEADERS
+
 include $(topsrcdir)/config/rules.mk
 
 HOST_CFLAGS += -DUNICODE -D_UNICODE
@@ -57,17 +75,8 @@ ifeq ($(OS_CONFIG),SunOS4.1)
 NSPR_CFLAGS	+= -I$(srcdir)/../nsprpub/pr/include/md
 endif
 
-HEADERS = \
-	$(DEPTH)/mozilla-config.h \
-	$(srcdir)/nsStaticComponents.h \
-	$(NULL)
-
-export:: $(TARGETS) $(HEADERS)
-	$(INSTALL) $(IFLAGS1) $(HEADERS) $(DIST)/include
+export::
 	-$(RM) $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
-ifdef HOST_PROGRAM
-	$(INSTALL) $(HOST_PROGRAM) $(DIST)/bin
-endif
 
 # Generate a new buildid every time we "export" in config... that's only
 # supposed to be once per-build!

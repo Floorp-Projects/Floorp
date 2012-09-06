@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMClassInfoID.h"
-#include "DOMCameraManager.h"
-#include "CameraControl.h"
+#include "DOMCameraControl.h"
+#include "CameraControlImpl.h"
 
 using namespace mozilla;
 
@@ -12,10 +11,10 @@ using namespace mozilla;
  * Fallback camera control subclass.  Can be used as a template for the
  * definition of new camera support classes.
  */
-class nsFallbackCameraControl : public nsCameraControl
+class nsFallbackCameraControl : public CameraControlImpl
 {
 public:
-  nsFallbackCameraControl(uint32_t aCameraId, nsIThread* aCameraThread);
+  nsFallbackCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError);
 
   const char* GetParameter(const char* aKey);
   const char* GetParameterConstChar(uint32_t aKey);
@@ -25,18 +24,20 @@ public:
   void SetParameter(uint32_t aKey, const char* aValue);
   void SetParameter(uint32_t aKey, double aValue);
   void SetParameter(uint32_t aKey, const nsTArray<dom::CameraRegion>& aRegions);
-  void PushParameters();
+  nsresult PushParameters();
 
 protected:
   ~nsFallbackCameraControl();
 
   nsresult GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStream);
+  nsresult StartPreviewImpl(StartPreviewTask* aStartPreview);
+  nsresult StopPreviewImpl(StopPreviewTask* aStopPreview);
   nsresult AutoFocusImpl(AutoFocusTask* aAutoFocus);
   nsresult TakePictureImpl(TakePictureTask* aTakePicture);
   nsresult StartRecordingImpl(StartRecordingTask* aStartRecording);
   nsresult StopRecordingImpl(StopRecordingTask* aStopRecording);
-  nsresult PushParametersImpl(PushParametersTask* aPushParameters);
-  nsresult PullParametersImpl(PullParametersTask* aPullParameters);
+  nsresult PushParametersImpl();
+  nsresult PullParametersImpl();
 
 private:
   nsFallbackCameraControl(const nsFallbackCameraControl&) MOZ_DELETE;
@@ -44,17 +45,31 @@ private:
 };
 
 /**
+ * Stub implementation of the DOM-facing camera control constructor.
+ *
+ * This should never get called--it exists to keep the linker happy; if
+ * implemented, it should construct (e.g.) nsFallbackCameraControl and
+ * store a reference in the 'mCameraControl' member (which is why it is
+ * defined here).
+ */
+nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError)
+{
+}
+
+/**
  * Stub implemetations of the fallback camera control.
  *
  * None of these should ever get called--they exist to keep the linker happy,
  * and may be used as templates for new camera support classes.
  */
-nsFallbackCameraControl::nsFallbackCameraControl(uint32_t aCameraId, nsIThread* aCameraThread)
-  : nsCameraControl(aCameraId, aCameraThread)
-{ }
+nsFallbackCameraControl::nsFallbackCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError)
+  : CameraControlImpl(aCameraId, aCameraThread)
+{
+}
 
 nsFallbackCameraControl::~nsFallbackCameraControl()
-{ }
+{
+}
 
 const char*
 nsFallbackCameraControl::GetParameter(const char* aKey)
@@ -99,13 +114,26 @@ nsFallbackCameraControl::SetParameter(uint32_t aKey, const nsTArray<dom::CameraR
 {
 }
 
-void
+nsresult
 nsFallbackCameraControl::PushParameters()
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
 nsFallbackCameraControl::GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStream)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsFallbackCameraControl::StartPreviewImpl(StartPreviewTask* aGetPreviewStream)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsFallbackCameraControl::StopPreviewImpl(StopPreviewTask* aGetPreviewStream)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -135,13 +163,13 @@ nsFallbackCameraControl::StopRecordingImpl(StopRecordingTask* aStopRecording)
 }
 
 nsresult
-nsFallbackCameraControl::PushParametersImpl(PushParametersTask* aPushParameters)
+nsFallbackCameraControl::PushParametersImpl()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-nsFallbackCameraControl::PullParametersImpl(PullParametersTask* aPullParameters)
+nsFallbackCameraControl::PullParametersImpl()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

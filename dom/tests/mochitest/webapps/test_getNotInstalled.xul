@@ -8,61 +8,97 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Mozilla Bug 781379">
-<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-<script type="application/javascript" src="apphelper.js"/>
-<script type="application/javascript" src="jshelper.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="head.js"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
+     target="_blank">Mozilla Bug 781379</a>
+  </body>
+
 <script type="application/javascript;version=1.8">
+
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Webapps.jsm");
 
-let notInstalled = 0;
+// We use a different origin than other webapps test files because we compare
+// the number of apps before and after installing this one; and if a test file
+// installs our app and then doesn't uninstall it (f.e. because it isn't written
+// to clean up after itself, or because it throws an exception or times out),
+// then this test will *reinstall* the app, and the number of apps won't change,
+// which will look like a failure in this test although it's actually a failure
+// in the other one.
+//
+// Using a different origin here isn't a foolproof solution, as another test
+// could start using it.  Reviewer vigilance is required!  And to anyone reading
+// this: don't use this origin without good reason and due consideration for
+// the potential consequences!
+//
+// Alternately, we could define a test-specific domain, getNotInstalled.com,
+// in source/build/pgo/server-locations.txt.  But that seems like overkill,
+// and this problem will go away once we support multiple apps per origin,
+// since then we can make this test install its own personal webapp from any
+// origin.
+//
+let url = "http://example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
 
-let _isLaunchable;
+let app, notInstalled, _isLaunchable;
+
 let steps = [
-  monkeyPatchDOMApplicationRegistry, getNotInstalled, installApp,
-  compareNotInstalled, unmonkeyPatchDOMApplicationRegistry, cleanUp, tearDown
+  monkeyPatchDOMApplicationRegistry,
+  getNotInstalled,
+  installApp,
+  compareNotInstalled,
+  unmonkeyPatchDOMApplicationRegistry,
+  uninstallApp,
 ];
+
 runAll(steps);
 
 // Monkey patch DOMApplicationRegistry._isLaunchable for testing.
 // This way, we don't have to create a platform specific application with a
 // status other than "installed".
-function monkeyPatchDOMApplicationRegistry (next) {
+function monkeyPatchDOMApplicationRegistry(next) {
   _isLaunchable = DOMApplicationRegistry._isLaunchable;
-  DOMApplicationRegistry._isLaunchable = function mockIsLaunchable (aOrigin) {
+  DOMApplicationRegistry._isLaunchable = function mockIsLaunchable(aOrigin) {
     return false;
   }
   next();
 }
 
 // Call navigator.mozApps.mgmt.getNotInstalled and save the result.
-function getNotInstalled (next) {
-  window.navigator.mozApps.mgmt.getNotInstalled().onsuccess = function() {
+function getNotInstalled(next) {
+  window.navigator.mozApps.mgmt.getNotInstalled().onsuccess =
+  function onGetNotInstalled() {
     notInstalled = this.result.length;
     next();
   };
 }
 
 // Add an app to the appregistry
-function installApp (next) {
-  let appURL = SERVERS["super_crazy"];
-  install(appURL, ok, next);
+function installApp(next) {
+  confirmNextInstall();
+  navigator.mozApps.install(url, null).onsuccess = function onInstall() {
+    app = this.result;
+    next();
+  }
 }
 
 // Call navigator.mozApps.mgmt.getNotInstalled and make sure there is one more.
-function compareNotInstalled (next) {
+function compareNotInstalled(next) {
   let results;
-  function getNotInstalledError () {
+  function getNotInstalledError() {
     ok(false, "window.mozApps.mgmt.getNotInstalled onerror called");
     next();
   }
-  function getNotInstalledSuccess () {
+  function getNotInstalledSuccess() {
     ok(true, "window.mozApps.mgmt.getNotInstalled onsuccess called");
-    is(this.result.length, notInstalled + 1, "should get one more notInstalled app");
+    is(this.result.length, notInstalled + 1,
+       "should get one more notInstalled app");
 
     if (this.result.length > 0) {
-      is(this.result[this.result.length-1].origin, "http://www.example.com",
-        "getNotInstalled returned the expected app");
+      is(this.result[this.result.length-1].origin, "http://example.com",
+         "getNotInstalled returned the expected app");
     }
     next();
   }
@@ -81,20 +117,22 @@ function compareNotInstalled (next) {
   }
 }
 
-function unmonkeyPatchDOMApplicationRegistry (next) {
+function unmonkeyPatchDOMApplicationRegistry(next) {
   if (typeof _isLaunchable === "function") {
     DOMApplicationRegistry._isLaunchable = _isLaunchable;
-    ok(true, "restored DOMApplicationRegistry._isLaunchable")
+    ok(true, "restored DOMApplicationRegistry._isLaunchable");
   } else {
-    ok(false, "can't restore DOMApplicationRegistry._isLaunchable")
+    ok(false, "can't restore DOMApplicationRegistry._isLaunchable");
   }
   next();
 }
 
-// Remove installed app.
-function cleanUp (next) {
-  let appURL = SERVERS["super_crazy"];
-  uninstall(appURL, ok, next);
+// Remove the app from the appregistry
+function uninstallApp(next) {
+  app.uninstall().onsuccess = function onUninstall() {
+    app = null;
+    next();
+  }
 }
 
 </script>

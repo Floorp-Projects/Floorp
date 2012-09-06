@@ -28,6 +28,7 @@ PARALLEL_DIRS += \
   filepicker \
   find \
   intl \
+  mediasniffer \
   microformats \
   osfile \
   parentalcontrols \

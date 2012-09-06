@@ -35,7 +35,7 @@ var SettingsListener = {
       throw new Error('Callback is not a function');
     }
 
-    var req = settings.getLock().get(name);
+    var req = settings.createLock().get(name);
     req.addEventListener('success', (function onsuccess() {
       callback(typeof(req.result[name]) != 'undefined' ?
         req.result[name] : defaultValue);

@@ -128,7 +128,7 @@ NS_IMETHODIMP
 TestListener::OnDataAvailable( nsIChannel *aChannel,
                                nsISupports *aContext,
                                nsIInputStream *aStream,
-                               uint32_t offset,
+                               uint64_t offset,
                                uint32_t aLength ) {
     nsresult rv = NS_OK;
 

@@ -110,7 +110,7 @@ NS_IMETHODIMP
 nsUnknownDecoder::OnDataAvailable(nsIRequest* request, 
                                   nsISupports *aCtxt,
                                   nsIInputStream *aStream, 
-                                  uint32_t aSourceOffset, 
+                                  uint64_t aSourceOffset, 
                                   uint32_t aCount)
 {
   nsresult rv = NS_OK;

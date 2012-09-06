@@ -26,3 +26,5 @@ ac_add_options --disable-crashreporter
 
 # Treat warnings as errors in directories with FAIL_ON_WARNINGS.
 ac_add_options --enable-warnings-as-errors
+
+. "$topsrcdir/build/mozconfig.common.override"

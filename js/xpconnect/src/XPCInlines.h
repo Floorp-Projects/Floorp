@@ -611,8 +611,6 @@ xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     } else {
         obj = JS_NewObject(cx, clasp, proto, parent);
     }
-    if (obj && JS_IsSystemObject(cx, parent) && !JS_MakeSystemObject(cx, obj))
-        obj = NULL;
     return obj;
 }
 

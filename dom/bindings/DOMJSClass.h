@@ -73,12 +73,6 @@ struct DOMJSClass
 
   DOMClass mClass;
 
-  // We cache the VTable index of GetWrapperCache for objects that support it.
-  //
-  // -1 indicates that GetWrapperCache is not implemented on the underlying object.
-  // XXXkhuey this is unused and needs to die.
-  const int16_t mGetWrapperCacheVTableOffset;
-
   static DOMJSClass* FromJSClass(JSClass* base) {
     MOZ_ASSERT(base->flags & JSCLASS_IS_DOMJSCLASS);
     return reinterpret_cast<DOMJSClass*>(base);

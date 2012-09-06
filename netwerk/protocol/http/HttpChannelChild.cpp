@@ -297,7 +297,7 @@ class TransportAndDataEvent : public ChannelEvent
                         const uint64_t& progress,
                         const uint64_t& progressMax,
                         const nsCString& data,
-                        const uint32_t& offset,
+                        const uint64_t& offset,
                         const uint32_t& count)
   : mChild(child)
   , mStatus(status)
@@ -315,7 +315,7 @@ class TransportAndDataEvent : public ChannelEvent
   uint64_t mProgress;
   uint64_t mProgressMax;
   nsCString mData;
-  uint32_t mOffset;
+  uint64_t mOffset;
   uint32_t mCount;
 };
 
@@ -324,7 +324,7 @@ HttpChannelChild::RecvOnTransportAndData(const nsresult& status,
                                          const uint64_t& progress,
                                          const uint64_t& progressMax,
                                          const nsCString& data,
-                                         const uint32_t& offset,
+                                         const uint64_t& offset,
                                          const uint32_t& count)
 {
   if (mEventQ.ShouldEnqueue()) {
@@ -342,7 +342,7 @@ HttpChannelChild::OnTransportAndData(const nsresult& status,
                                      const uint64_t progress,
                                      const uint64_t& progressMax,
                                      const nsCString& data,
-                                     const uint32_t& offset,
+                                     const uint64_t& offset,
                                      const uint32_t& count)
 {
   LOG(("HttpChannelChild::OnTransportAndData [this=%x]\n", this));

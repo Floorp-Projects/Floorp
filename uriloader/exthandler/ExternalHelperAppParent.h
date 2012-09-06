@@ -40,7 +40,7 @@ public:
     NS_DECL_NSIRESUMABLECHANNEL
 
     bool RecvOnStartRequest(const nsCString& entityID);
-    bool RecvOnDataAvailable(const nsCString& data, const uint32_t& offset, const uint32_t& count);
+    bool RecvOnDataAvailable(const nsCString& data, const uint64_t& offset, const uint32_t& count);
     bool RecvOnStopRequest(const nsresult& code);
 
     ExternalHelperAppParent(const OptionalURIParams& uri, const int64_t& contentLength);
