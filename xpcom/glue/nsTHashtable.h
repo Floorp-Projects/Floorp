@@ -7,6 +7,7 @@
 #define nsTHashtable_h__
 
 #include "nscore.h"
+#include "prtypes.h"
 #include "pldhash.h"
 #include "nsDebug.h"
 #include NEW_H
