@@ -330,6 +330,14 @@ GetWindowsTheme(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
     return NS_OK;
 }
 
+static nsresult
+GetIsGlyph(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
+          nsCSSValue& aResult)
+{
+    aResult.SetIntValue(aPresContext->IsGlyph() ? 1 : 0, eCSSUnit_Integer);
+    return NS_OK;
+}
+
 /*
  * Adding new media features requires (1) adding the new feature to this
  * array, with appropriate entries (and potentially any new code needed
@@ -566,6 +574,17 @@ nsMediaFeatures::features[] = {
         nsMediaFeature::eIdent,
         { nullptr },
         GetWindowsTheme
+    },
+
+    // Internal -moz-is-glyph media feature: applies only inside SVG glyphs.
+    // Internal because it is really only useful in the user agent anyway
+    //  and therefore not worth standardizing.
+    {
+        &nsGkAtoms::_moz_is_glyph,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { nullptr },
+        GetIsGlyph
     },
     // Null-mName terminator:
     {
