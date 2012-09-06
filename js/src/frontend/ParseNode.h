@@ -59,6 +59,138 @@ class UpvarCookie
     }
 };
 
+#define FOR_EACH_PARSE_NODE_KIND(F) \
+    F(NOP) \
+    F(SEMI) \
+    F(COMMA) \
+    F(CONDITIONAL) \
+    F(COLON) \
+    F(OR) \
+    F(AND) \
+    F(BITOR) \
+    F(BITXOR) \
+    F(BITAND) \
+    F(POS) \
+    F(NEG) \
+    F(ADD) \
+    F(SUB) \
+    F(STAR) \
+    F(DIV) \
+    F(MOD) \
+    F(PREINCREMENT) \
+    F(POSTINCREMENT) \
+    F(PREDECREMENT) \
+    F(POSTDECREMENT) \
+    F(DOT) \
+    F(ELEM) \
+    F(ARRAY) \
+    F(STATEMENTLIST) \
+    F(XMLCURLYEXPR) \
+    F(OBJECT) \
+    F(CALL) \
+    F(NAME) \
+    F(INTRINSICNAME) \
+    F(NUMBER) \
+    F(STRING) \
+    F(REGEXP) \
+    F(TRUE) \
+    F(FALSE) \
+    F(NULL) \
+    F(THIS) \
+    F(FUNCTION) \
+    F(IF) \
+    F(ELSE) \
+    F(SWITCH) \
+    F(CASE) \
+    F(DEFAULT) \
+    F(WHILE) \
+    F(DOWHILE) \
+    F(FOR) \
+    F(BREAK) \
+    F(CONTINUE) \
+    F(IN) \
+    F(VAR) \
+    F(CONST) \
+    F(WITH) \
+    F(RETURN) \
+    F(NEW) \
+    F(DELETE) \
+    F(TRY) \
+    F(CATCH) \
+    F(CATCHLIST) \
+    F(FINALLY) \
+    F(THROW) \
+    F(INSTANCEOF) \
+    F(DEBUGGER) \
+    F(DEFXMLNS) \
+    F(XMLSTAGO) \
+    F(XMLETAGO) \
+    F(XMLPTAGC) \
+    F(XMLTAGC) \
+    F(XMLNAME) \
+    F(XMLATTR) \
+    F(XMLSPACE) \
+    F(XMLTEXT) \
+    F(XMLCOMMENT) \
+    F(XMLCDATA) \
+    F(XMLPI) \
+    F(XMLUNARY) \
+    F(AT) \
+    F(DBLCOLON) \
+    F(ANYNAME) \
+    F(DBLDOT) \
+    F(FILTER) \
+    F(XMLELEM) \
+    F(XMLLIST) \
+    F(YIELD) \
+    F(ARRAYCOMP) \
+    F(ARRAYPUSH) \
+    F(LEXICALSCOPE) \
+    F(LET) \
+    F(SEQ) \
+    F(FORIN) \
+    F(FORHEAD) \
+    F(ARGSBODY) \
+    F(SPREAD) \
+    \
+    /* Equality operators. */ \
+    F(STRICTEQ) \
+    F(EQ) \
+    F(STRICTNE) \
+    F(NE) \
+    \
+    /* Unary operators. */ \
+    F(TYPEOF) \
+    F(VOID) \
+    F(NOT) \
+    F(BITNOT) \
+    \
+    /* Relational operators (< <= > >=). */ \
+    F(LT) \
+    F(LE) \
+    F(GT) \
+    F(GE) \
+    \
+    /* Shift operators (<< >> >>>). */ \
+    F(LSH) \
+    F(RSH) \
+    F(URSH) \
+    \
+    /* Assignment operators (= += -= etc.). */ \
+    /* ParseNode::isAssignment assumes all these are consecutive. */ \
+    F(ASSIGN) \
+    F(ADDASSIGN) \
+    F(SUBASSIGN) \
+    F(BITORASSIGN) \
+    F(BITXORASSIGN) \
+    F(BITANDASSIGN) \
+    F(LSHASSIGN) \
+    F(RSHASSIGN) \
+    F(URSHASSIGN) \
+    F(MULASSIGN) \
+    F(DIVASSIGN) \
+    F(MODASSIGN)
+
 /*
  * Parsing builds a tree of nodes that directs code generation.  This tree is
  * not a concrete syntax tree in all respects (for example, || and && are left
@@ -70,144 +202,12 @@ class UpvarCookie
  * The long comment after this enum block describes the kinds in detail.
  */
 enum ParseNodeKind {
-    PNK_NOP,
-    PNK_SEMI,
-    PNK_COMMA,
-    PNK_CONDITIONAL,
-    PNK_COLON,
-    PNK_OR,
-    PNK_AND,
-    PNK_BITOR,
-    PNK_BITXOR,
-    PNK_BITAND,
-    PNK_POS,
-    PNK_NEG,
-    PNK_ADD,
-    PNK_SUB,
-    PNK_STAR,
-    PNK_DIV,
-    PNK_MOD,
-    PNK_PREINCREMENT,
-    PNK_POSTINCREMENT,
-    PNK_PREDECREMENT,
-    PNK_POSTDECREMENT,
-    PNK_DOT,
-    PNK_ELEM,
-    PNK_ARRAY,
-    PNK_STATEMENTLIST,
-    PNK_XMLCURLYEXPR,
-    PNK_OBJECT,
-    PNK_CALL,
-    PNK_NAME,
-    PNK_INTRINSICNAME,
-    PNK_NUMBER,
-    PNK_STRING,
-    PNK_REGEXP,
-    PNK_TRUE,
-    PNK_FALSE,
-    PNK_NULL,
-    PNK_THIS,
-    PNK_FUNCTION,
-    PNK_IF,
-    PNK_ELSE,
-    PNK_SWITCH,
-    PNK_CASE,
-    PNK_DEFAULT,
-    PNK_WHILE,
-    PNK_DOWHILE,
-    PNK_FOR,
-    PNK_BREAK,
-    PNK_CONTINUE,
-    PNK_IN,
-    PNK_VAR,
-    PNK_CONST,
-    PNK_WITH,
-    PNK_RETURN,
-    PNK_NEW,
-    PNK_DELETE,
-    PNK_TRY,
-    PNK_CATCH,
-    PNK_CATCHLIST,
-    PNK_FINALLY,
-    PNK_THROW,
-    PNK_INSTANCEOF,
-    PNK_DEBUGGER,
-    PNK_DEFXMLNS,
-    PNK_XMLSTAGO,
-    PNK_XMLETAGO,
-    PNK_XMLPTAGC,
-    PNK_XMLTAGC,
-    PNK_XMLNAME,
-    PNK_XMLATTR,
-    PNK_XMLSPACE,
-    PNK_XMLTEXT,
-    PNK_XMLCOMMENT,
-    PNK_XMLCDATA,
-    PNK_XMLPI,
-    PNK_XMLUNARY,
-    PNK_AT,
-    PNK_DBLCOLON,
-    PNK_ANYNAME,
-    PNK_DBLDOT,
-    PNK_FILTER,
-    PNK_XMLELEM,
-    PNK_XMLLIST,
-    PNK_YIELD,
-    PNK_ARRAYCOMP,
-    PNK_ARRAYPUSH,
-    PNK_LEXICALSCOPE,
-    PNK_LET,
-    PNK_SEQ,
-    PNK_FORIN,
-    PNK_FORHEAD,
-    PNK_ARGSBODY,
-    PNK_SPREAD,
-
-    /*
-     * The following parse node kinds occupy contiguous ranges to enable easy
-     * range-testing.
-     */
-
-    /* Equality operators. */
-    PNK_STRICTEQ,
-    PNK_EQ,
-    PNK_STRICTNE,
-    PNK_NE,
-
-    /* Unary operators. */
-    PNK_TYPEOF,
-    PNK_VOID,
-    PNK_NOT,
-    PNK_BITNOT,
-
-    /* Relational operators (< <= > >=). */
-    PNK_LT,
-    PNK_LE,
-    PNK_GT,
-    PNK_GE,
-
-    /* Shift operators (<< >> >>>). */
-    PNK_LSH,
-    PNK_RSH,
-    PNK_URSH,
-
-    /* Assignment operators (= += -= etc.). */
-    PNK_ASSIGN,
+#define EMIT_ENUM(name) PNK_##name,
+    FOR_EACH_PARSE_NODE_KIND(EMIT_ENUM)
+#undef EMIT_ENUM
+    PNK_LIMIT, /* domain size */
     PNK_ASSIGNMENT_START = PNK_ASSIGN,
-    PNK_ADDASSIGN,
-    PNK_SUBASSIGN,
-    PNK_BITORASSIGN,
-    PNK_BITXORASSIGN,
-    PNK_BITANDASSIGN,
-    PNK_LSHASSIGN,
-    PNK_RSHASSIGN,
-    PNK_URSHASSIGN,
-    PNK_MULASSIGN,
-    PNK_DIVASSIGN,
-    PNK_MODASSIGN,
-    PNK_ASSIGNMENT_LAST = PNK_MODASSIGN,
-
-    PNK_LIMIT /* domain size */
+    PNK_ASSIGNMENT_LAST = PNK_MODASSIGN
 };
 
 /*
@@ -891,7 +891,8 @@ struct ParseNode {
     }
 
 #ifdef DEBUG
-    inline void dump(int indent);
+    void dump();
+    void dump(int indent);
 #endif
 };
 
@@ -905,7 +906,7 @@ struct NullaryNode : public ParseNode {
     }
 
 #ifdef DEBUG
-    inline void dump();
+    void dump();
 #endif
 };
 
@@ -925,7 +926,7 @@ struct UnaryNode : public ParseNode {
     }
 
 #ifdef DEBUG
-    inline void dump(int indent);
+    void dump(int indent);
 #endif
 };
 
@@ -953,7 +954,7 @@ struct BinaryNode : public ParseNode {
     }
 
 #ifdef DEBUG
-    inline void dump(int indent);
+    void dump(int indent);
 #endif
 };
 
@@ -977,7 +978,7 @@ struct TernaryNode : public ParseNode {
     }
 
 #ifdef DEBUG
-    inline void dump(int indent);
+    void dump(int indent);
 #endif
 };
 
@@ -991,7 +992,7 @@ struct ListNode : public ParseNode {
     }
 
 #ifdef DEBUG
-    inline void dump(int indent);
+    void dump(int indent);
 #endif
 };
 
@@ -1005,7 +1006,7 @@ struct FunctionNode : public ParseNode {
     }
 
 #ifdef DEBUG
-    inline void dump(int indent);
+    void dump(int indent);
 #endif
 };
 
@@ -1019,7 +1020,7 @@ struct NameNode : public ParseNode {
     }
 
 #ifdef DEBUG
-    inline void dump(int indent);
+    void dump(int indent);
 #endif
 };
 
