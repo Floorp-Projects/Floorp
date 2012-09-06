@@ -32,7 +32,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  nsresult SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue);
+  void SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue);
   const nsAttrValue* GetAttr(nsIAtom* aAttrName) const;
   const nsAttrValue* GetAttr(const nsAString& aAttrName) const;
 

@@ -564,8 +564,7 @@ nsAttrAndChildArray::SetAndTakeMappedAttr(nsIAtom* aLocalName,
   nsRefPtr<nsMappedAttributes> mapped =
     GetModifiableMapped(aContent, aSheet, willAdd);
 
-  nsresult rv = mapped->SetAndTakeAttr(aLocalName, aValue);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mapped->SetAndTakeAttr(aLocalName, aValue);
 
   return MakeMappedUnique(mapped);
 }
