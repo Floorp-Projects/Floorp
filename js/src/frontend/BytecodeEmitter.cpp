@@ -114,8 +114,6 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, Shared
     arrayCompDepth(0),
     emitLevel(0),
     constList(sc->context),
-    objectList(sc->context),
-    regexpList(sc->context),
     typesetCount(0),
     hasSingletons(false),
     emittingForInit(false),
@@ -822,11 +820,7 @@ static bool
 EmitObjectOp(JSContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
-
-    if (!bce->objectList.append(objbox))
-        return false;
-
-    return EmitIndex32(cx, op, bce->objectList.length() - 1, bce);
+    return EmitIndex32(cx, op, bce->objectList.add(objbox), bce);
 }
 
 static bool
@@ -4884,10 +4878,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     /* Make the function object a literal in the outer script's pool. */
-    if (!bce->objectList.append(pn->pn_funbox))
-        return false;
-
-    unsigned index = bce->objectList.length() - 1;
+    unsigned index = bce->objectList.add(pn->pn_funbox);
 
     /* Non-hoisted functions simply emit their respective op. */
     if (!pn->functionIsHoisted()) {
@@ -5832,11 +5823,10 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ObjectBox *objbox = bce->parser->newObjectBox(obj);
         if (!objbox)
             return false;
-        if (!bce->objectList.append(objbox))
-            return false;
+        unsigned index = bce->objectList.add(objbox);
         MOZ_STATIC_ASSERT(JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
                           "newinit and newobject must have equal length to edit in-place");
-        EMIT_UINT32_IN_PLACE(offset, JSOP_NEWOBJECT, uint32_t(bce->objectList.length() - 1));
+        EMIT_UINT32_IN_PLACE(offset, JSOP_NEWOBJECT, uint32_t(index));
     }
 
     return true;
@@ -6532,9 +6522,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_REGEXP:
         JS_ASSERT(pn->isOp(JSOP_REGEXP));
-        if (!bce->regexpList.append(pn->pn_objbox))
-            return false;
-        ok = EmitRegExp(cx, bce->regexpList.length() - 1, bce);
+        ok = EmitRegExp(cx, bce->regexpList.add(pn->pn_objbox), bce);
         break;
 
 #if JS_HAS_XML_SUPPORT
@@ -7023,24 +7011,39 @@ CGTryNoteList::finish(TryNoteArray *array)
  * for global regexps) and on any ad-hoc properties.  Also, __proto__ refers to
  * the pre-compilation prototype, a pigeon-hole problem for instanceof tests.
  */
+unsigned
+CGObjectList::add(ObjectBox *objbox)
+{
+    JS_ASSERT(!objbox->emitLink);
+    objbox->emitLink = lastbox;
+    lastbox = objbox;
+    return length++;
+}
 
 unsigned
 CGObjectList::indexOf(JSObject *obj)
 {
-    for (unsigned i = 0; i < length(); i++)
-        if (list[i]->object == obj)
-            return i;
-    JS_NOT_REACHED("couldn't find index for object");
+    JS_ASSERT(length > 0);
+    unsigned index = length - 1;
+    for (ObjectBox *box = lastbox; box->object != obj; box = box->emitLink)
+        index--;
+    return index;
 }
 
 void
 CGObjectList::finish(ObjectArray *array)
 {
-    JS_ASSERT(length() <= INDEX_LIMIT);
-    JS_ASSERT(length() == array->length);
+    JS_ASSERT(length <= INDEX_LIMIT);
+    JS_ASSERT(length == array->length);
 
-    for (unsigned i = 0; i < length(); i++)
-        array->vector[i] = list[i]->object;
+    js::HeapPtrObject *cursor = array->vector + array->length;
+    ObjectBox *objbox = lastbox;
+    do {
+        --cursor;
+        JS_ASSERT(!*cursor);
+        *cursor = objbox->object;
+    } while ((objbox = objbox->emitLink) != NULL);
+    JS_ASSERT(cursor == array->vector);
 }
 
 void
