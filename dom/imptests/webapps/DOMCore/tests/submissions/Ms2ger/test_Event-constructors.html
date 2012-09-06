@@ -5,11 +5,48 @@
 <div id=log></div>
 <script>
 test(function() {
+  assert_throws(new TypeError(), function() {
+    new Event()
+  })
+})
+test(function() {
+  var test_error = { name: "test" }
+  assert_throws(test_error, function() {
+    new Event({ toString: function() { throw test_error; } })
+  })
+})
+test(function() {
+  var ev = new Event("")
+  assert_equals(ev.type, "")
+  assert_equals(ev.target, null)
+  assert_equals(ev.currentTarget, null)
+  assert_equals(ev.eventPhase, Event.NONE)
+  assert_equals(ev.bubbles, false)
+  assert_equals(ev.cancelable, false)
+  assert_equals(ev.defaultPrevented, false)
+  assert_equals(ev.isTrusted, false)
+  assert_true(ev.timeStamp > 0)
+  assert_true("initEvent" in ev)
+})
+test(function() {
   var ev = new Event("test")
   assert_equals(ev.type, "test")
   assert_equals(ev.target, null)
   assert_equals(ev.currentTarget, null)
-  assert_equals(ev.eventPhase, Event.AT_TARGET)
+  assert_equals(ev.eventPhase, Event.NONE)
+  assert_equals(ev.bubbles, false)
+  assert_equals(ev.cancelable, false)
+  assert_equals(ev.defaultPrevented, false)
+  assert_equals(ev.isTrusted, false)
+  assert_true(ev.timeStamp > 0)
+  assert_true("initEvent" in ev)
+})
+test(function() {
+  var ev = Event("test")
+  assert_equals(ev.type, "test")
+  assert_equals(ev.target, null)
+  assert_equals(ev.currentTarget, null)
+  assert_equals(ev.eventPhase, Event.NONE)
   assert_equals(ev.bubbles, false)
   assert_equals(ev.cancelable, false)
   assert_equals(ev.defaultPrevented, false)
@@ -30,6 +67,12 @@ test(function() {
   assert_equals(ev.cancelable, true)
 })
 test(function() {
+  var ev = new Event("@", { "bubbles\0IGNORED": true, cancelable: true})
+  assert_equals(ev.type, "@")
+  assert_equals(ev.bubbles, false)
+  assert_equals(ev.cancelable, true)
+})
+test(function() {
   var ev = new Event("Xx", { cancelable: true})
   assert_equals(ev.type, "Xx")
   assert_equals(ev.bubbles, false)
@@ -43,6 +86,28 @@ test(function() {
 })
 test(function() {
   var ev = new Event("Xx", {bubbles: true, cancelable: false, sweet: "x"})
+  assert_equals(ev.type, "Xx")
+  assert_equals(ev.bubbles, true)
+  assert_equals(ev.cancelable, false)
+  assert_equals(ev.sweet, undefined)
+})
+test(function() {
+  var called = []
+  var ev = new Event("Xx", {
+    get cancelable() {
+      called.push("cancelable")
+      return false
+    },
+    get bubbles() {
+      called.push("bubbles")
+      return true;
+    },
+    get sweet() {
+      called.push("sweet")
+      return "x"
+    }
+  })
+  assert_array_equals(called, ["bubbles", "cancelable"])
   assert_equals(ev.type, "Xx")
   assert_equals(ev.bubbles, true)
   assert_equals(ev.cancelable, false)

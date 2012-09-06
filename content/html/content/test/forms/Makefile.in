@@ -32,13 +32,14 @@ MOCHITEST_FILES = \
 		test_maxlength_attribute.html \
 		test_datalist_element.html \
 		test_form_attributes_reflection.html \
+		test_option_disabled.html \
 		test_option_index_attribute.html \
+		test_option_text.html \
 		test_progress_element.html \
 		test_form_attribute-1.html \
 		test_form_attribute-2.html \
 		test_form_attribute-3.html \
 		test_form_attribute-4.html \
-		test_option_disabled.html \
 		test_meter_element.html \
 		test_meter_pseudo-classes.html \
 		test_max_attribute.html \

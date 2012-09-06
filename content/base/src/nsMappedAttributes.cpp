@@ -77,7 +77,7 @@ void* nsMappedAttributes::operator new(size_t aSize, uint32_t aAttrCount) CPP_TH
 NS_IMPL_ISUPPORTS1(nsMappedAttributes,
                    nsIStyleRule)
 
-nsresult
+void
 nsMappedAttributes::SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue)
 {
   NS_PRECONDITION(aAttrName, "null name");
@@ -87,8 +87,7 @@ nsMappedAttributes::SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue)
     if (Attrs()[i].mName.Equals(aAttrName)) {
       Attrs()[i].mValue.Reset();
       Attrs()[i].mValue.SwapValueWith(aValue);
-
-      return NS_OK;
+      return;
     }
   }
 
@@ -102,8 +101,6 @@ nsMappedAttributes::SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue)
   new (&Attrs()[i].mValue) nsAttrValue();
   Attrs()[i].mValue.SwapValueWith(aValue);
   ++mAttrCount;
-
-  return NS_OK;
 }
 
 const nsAttrValue*

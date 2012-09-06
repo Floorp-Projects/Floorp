@@ -47,6 +47,23 @@ nsDOMWindowList::SetDocShell(nsIDocShell* aDocShell)
   return NS_OK;
 }
 
+void
+nsDOMWindowList::EnsureFresh()
+{
+  nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShellNode);
+
+  if (shellAsNav) {
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    shellAsNav->GetDocument(getter_AddRefs(domdoc));
+
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+
+    if (doc) {
+      doc->FlushPendingNotifications(Flush_ContentAndNotify);
+    }
+  }
+}
+
 NS_IMETHODIMP 
 nsDOMWindowList::GetLength(uint32_t* aLength)
 {
@@ -54,21 +71,7 @@ nsDOMWindowList::GetLength(uint32_t* aLength)
 
   *aLength = 0;
 
-  nsCOMPtr<nsIWebNavigation> shellAsNav(do_QueryInterface(mDocShellNode));
-
-  if (shellAsNav) {
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    shellAsNav->GetDocument(getter_AddRefs(domdoc));
-
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
-
-    if (doc) {
-      doc->FlushPendingNotifications(Flush_ContentAndNotify);
-    }
-  }
-
-  // The above flush might cause mDocShellNode to be cleared, so we
-  // need to check that it's still non-null here.
+  EnsureFresh();
 
   if (mDocShellNode) {
     int32_t length;
@@ -87,21 +90,7 @@ nsDOMWindowList::Item(uint32_t aIndex, nsIDOMWindow** aReturn)
 
   *aReturn = nullptr;
 
-  nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShellNode);
-
-  if (shellAsNav) {
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    shellAsNav->GetDocument(getter_AddRefs(domdoc));
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-
-    if (doc) {
-      doc->FlushPendingNotifications(Flush_ContentAndNotify);
-    }
-  }
-
-  // The above flush might cause mDocShellNode to be cleared, so we
-  // need to check that it's still non-null here.
+  EnsureFresh();
 
   if (mDocShellNode) {
     mDocShellNode->GetChildAt(aIndex, getter_AddRefs(item));
@@ -124,21 +113,7 @@ nsDOMWindowList::NamedItem(const nsAString& aName, nsIDOMWindow** aReturn)
 
   *aReturn = nullptr;
 
-  nsCOMPtr<nsIWebNavigation> shellAsNav(do_QueryInterface(mDocShellNode));
-
-  if (shellAsNav) {
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    shellAsNav->GetDocument(getter_AddRefs(domdoc));
-
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
-
-    if (doc) {
-      doc->FlushPendingNotifications(Flush_ContentAndNotify);
-    }
-  }
-
-  // The above flush might cause mDocShellNode to be cleared, so we
-  // need to check that it's still non-null here.
+  EnsureFresh();
 
   if (mDocShellNode) {
     mDocShellNode->FindChildWithName(PromiseFlatString(aName).get(),

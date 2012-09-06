@@ -304,6 +304,11 @@ interface TestInterface {
   void passDictionaryOrLong(long x);
 
   void passDictContainingDict(optional DictContainingDict arg);
+
+  // EnforceRange/Clamp tests
+  void dontEnforceRangeOrClamp(byte arg);
+  void doEnforceRange([EnforceRange] byte arg);
+  void doClamp([Clamp] byte arg);
 };
 
 interface TestNonWrapperCacheInterface {
