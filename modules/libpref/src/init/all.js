@@ -235,6 +235,8 @@ pref("gfx.font_rendering.directwrite.enabled", false);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 
+pref("gfx.font_rendering.opentype_svg.enabled", false);
+
 pref("gfx.canvas.azure.enabled", true);
 #ifdef XP_WIN
 // comma separated list of backends to use in order of preference
