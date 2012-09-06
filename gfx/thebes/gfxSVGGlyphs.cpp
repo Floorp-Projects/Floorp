@@ -108,6 +108,8 @@ gfxSVGGlyphs::ParseFromBuffer(uint8_t *aBuffer, uint32_t aBufLen)
         NS_ENSURE_SUCCESS(rv, nullptr);
     }
 
+    doc->FlushPendingNotifications(Flush_Layout);
+
     result->mViewer = viewer;
     result->mPresShell = presShell;
     result->mDocument = doc;
