@@ -185,22 +185,11 @@ public:
   }
 
   void RemoveObserver(Observer<InfoType>* aObserver) {
-    // If mObservers is null, that means there are no observers.
-    // In addition, if RemoveObserver() returns false, that means we didn't
-    // find the observer.
-    // In both cases, that is a logical error we want to make sure the developer
-    // notices.
-
-    MOZ_ASSERT(mObservers);
-
-#ifndef DEBUG
-    if (!mObservers) {
+    bool removed = mObservers && mObservers->RemoveObserver(aObserver);
+    if (!removed) {
+      NS_WARNING("RemoveObserver() called for unregistered observer");
       return;
     }
-#endif
-
-    DebugOnly<bool> removed = mObservers->RemoveObserver(aObserver);
-    MOZ_ASSERT(removed);
 
     if (mObservers->Length() == 0) {
       DisableNotifications();
@@ -208,7 +197,7 @@ public:
       OnNotificationsDisabled();
 
       delete mObservers;
-      mObservers = 0;
+      mObservers = nullptr;
     }
   }
 
@@ -452,14 +441,15 @@ DisableSensorNotifications(SensorType aSensor) {
 }
 
 typedef mozilla::ObserverList<SensorData> SensorObserverList;
-static SensorObserverList* gSensorObservers = NULL;
+static SensorObserverList* gSensorObservers = nullptr;
 
 static SensorObserverList &
 GetSensorObservers(SensorType sensor_type) {
   MOZ_ASSERT(sensor_type < NUM_SENSOR_TYPE);
   
-  if(gSensorObservers == NULL)
+  if(!gSensorObservers) {
     gSensorObservers = new SensorObserverList[NUM_SENSOR_TYPE];
+  }
   return gSensorObservers[sensor_type];
 }
 
@@ -477,12 +467,14 @@ RegisterSensorObserver(SensorType aSensor, ISensorObserver *aObserver) {
 
 void
 UnregisterSensorObserver(SensorType aSensor, ISensorObserver *aObserver) {
-  SensorObserverList &observers = GetSensorObservers(aSensor);
-
   AssertMainThread();
-  
-  observers.RemoveObserver(aObserver);
-  if (observers.Length() > 0) {
+
+  if (!gSensorObservers) {
+    return;
+  }
+
+  SensorObserverList &observers = GetSensorObservers(aSensor);
+  if (!observers.RemoveObserver(aObserver) || observers.Length() > 0) {
     return;
   }
   DisableSensorNotifications(aSensor);
@@ -683,12 +675,18 @@ void
 UnregisterSwitchObserver(hal::SwitchDevice aDevice, hal::SwitchObserver *aObserver)
 {
   AssertMainThread();
-  SwitchObserverList& observer = GetSwitchObserverList(aDevice);
-  observer.RemoveObserver(aObserver);
-  if (observer.Length() == 0) {
-    DisableSwitchNotifications(aDevice);
-    ReleaseObserversIfNeeded();
+
+  if (!sSwitchObserverLists) {
+    return;
   }
+
+  SwitchObserverList& observer = GetSwitchObserverList(aDevice);
+  if (!observer.RemoveObserver(aObserver) || observer.Length() > 0) {
+    return;
+  }
+
+  DisableSwitchNotifications(aDevice);
+  ReleaseObserversIfNeeded();
 }
 
 void
@@ -719,7 +717,7 @@ void
 UnregisterTheOneAlarmObserver()
 {
   if (sAlarmObserver) {
-    sAlarmObserver = NULL;
+    sAlarmObserver = nullptr;
     PROXY_IF_SANDBOXED(DisableAlarm());
   }
 }
