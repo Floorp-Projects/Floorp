@@ -6944,9 +6944,7 @@ nsDocShell::CaptureState()
     if (!privWin)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsISupports> windowState;
-    nsresult rv = privWin->SaveWindowState(getter_AddRefs(windowState));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsISupports> windowState = privWin->SaveWindowState();
 
 #ifdef DEBUG_PAGE_CACHE
     nsCOMPtr<nsIURI> uri;
@@ -6958,7 +6956,7 @@ nsDocShell::CaptureState()
     printf("  SH URI: %s\n", spec.get());
 #endif
 
-    rv = mOSHE->SetWindowState(windowState);
+    nsresult rv = mOSHE->SetWindowState(windowState);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Suspend refresh URIs and save off the timer queue
