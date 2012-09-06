@@ -129,7 +129,8 @@
               if (gFaviconService.isFailedFavicon(iconURI))
                 return;
 
-              gFaviconService.setAndLoadFaviconForPage(this.currentURI, iconURI, true);
+              gFaviconService.setAndLoadFaviconForPage(this.currentURI, iconURI, true,
+                                                       gFaviconService.FAVICON_LOAD_NON_PRIVATE);
               this.mIconURL = iconURI.spec;
             } catch (e) {
               this.mIconURL = null;
