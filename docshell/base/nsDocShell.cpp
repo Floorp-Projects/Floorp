@@ -6945,6 +6945,7 @@ nsDocShell::CaptureState()
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsISupports> windowState = privWin->SaveWindowState();
+    NS_ENSURE_TRUE(windowState, NS_ERROR_FAILURE);
 
 #ifdef DEBUG_PAGE_CACHE
     nsCOMPtr<nsIURI> uri;
