@@ -15,6 +15,7 @@ browser.jar:
         skin/classic/browser/aboutCertError_sectionCollapsed.png
         skin/classic/browser/aboutCertError_sectionCollapsed-rtl.png
         skin/classic/browser/aboutCertError_sectionExpanded.png
+        skin/classic/browser/aboutSocialError.css
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/aboutSyncTabs.css
 #endif
@@ -216,6 +217,7 @@ browser.jar:
         skin/classic/aero/browser/aboutCertError_sectionCollapsed.png
         skin/classic/aero/browser/aboutCertError_sectionCollapsed-rtl.png
         skin/classic/aero/browser/aboutCertError_sectionExpanded.png
+        skin/classic/aero/browser/aboutSocialError.css
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/aboutSyncTabs.css
 #endif
