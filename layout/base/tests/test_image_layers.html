@@ -19,9 +19,7 @@ var lastPaintCount;
 function changeImage() {
   lastPaintCount = window.mozPaintCount;
   
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                 getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.checkAndClearPaintedState(image);
 
   image.src = "./image_rrgg-256x256.png";
@@ -34,9 +32,7 @@ function checkDone() {
     return;
   }
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                 getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   ok(!utils.checkAndClearPaintedState(image), "Should not paint any thebes layers for our image!");
   SimpleTest.finish();
 }

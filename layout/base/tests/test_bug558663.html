@@ -22,7 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558663
 /** Test for Bug 558663 **/
 
 SimpleTest.waitForExplicitFinish();
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 window.addEventListener("load", runTest, false);
 
 function checkSnapshots(s1, s2, shouldBeEqual, testName) {

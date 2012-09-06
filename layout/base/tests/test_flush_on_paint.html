@@ -44,9 +44,7 @@ function checkDone() {
     return;
   }
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                 getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   is(plugin.getWidthAtLastPaint(), utils.screenPixelsPerCSSPixel*expectedWidth,
      "Check that we set width before painting");
 

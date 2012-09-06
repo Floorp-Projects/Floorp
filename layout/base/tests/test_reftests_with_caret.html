@@ -84,13 +84,10 @@ function refTest(test,ref) {
 
 var caretBlinkTime = null;
 function endTest() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
   if (caretBlinkTime !== null) {
-    prefs.setIntPref("ui.caretBlinkTime", caretBlinkTime);
+    SpecialPowers.setIntPref("ui.caretBlinkTime", caretBlinkTime);
   } else {
-    prefs.clearUserPref("ui.caretBlinkTime");
+    SpecialPowers.clearUserPref("ui.caretBlinkTime");
   }
 
   // finish(), yet let the test actually end first, to be safe.
@@ -163,13 +160,10 @@ function nextTest() {
 }
 function runTests() {
   try {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
     try {
-      caretBlinkTime = prefs.getIntPref("ui.caretBlinkTime");
+      caretBlinkTime = SpecialPowers.getIntPref("ui.caretBlinkTime");
     } catch (e) {}
-    prefs.setIntPref("ui.caretBlinkTime", -1);
+    SpecialPowers.setIntPref("ui.caretBlinkTime", -1);
 
     nextTest();
   } catch(e) {
