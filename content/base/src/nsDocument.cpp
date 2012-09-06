@@ -1023,7 +1023,7 @@ NS_IMETHODIMP
 nsExternalResourceMap::PendingLoad::OnDataAvailable(nsIRequest* aRequest,
                                                     nsISupports* aContext,
                                                     nsIInputStream* aStream,
-                                                    uint32_t aOffset,
+                                                    uint64_t aOffset,
                                                     uint32_t aCount)
 {
   NS_PRECONDITION(mTargetListener, "Shouldn't be getting called!");

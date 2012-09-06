@@ -691,7 +691,7 @@ NS_IMETHODIMP nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aC
 NS_IMETHODIMP nsIconChannel::OnDataAvailable(nsIRequest* aRequest,
                                              nsISupports* aContext,
                                              nsIInputStream* aStream,
-                                             uint32_t aOffset,
+                                             uint64_t aOffset,
                                              uint32_t aCount)
 {
   if (mListener)

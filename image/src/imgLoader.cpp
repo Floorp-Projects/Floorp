@@ -2083,8 +2083,11 @@ NS_IMETHODIMP ProxyListener::OnStopRequest(nsIRequest *aRequest, nsISupports *ct
 
 /** nsIStreamListener methods **/
 
-/* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
-NS_IMETHODIMP ProxyListener::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt, nsIInputStream *inStr, uint32_t sourceOffset, uint32_t count)
+/* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long long sourceOffset, in unsigned long count); */
+NS_IMETHODIMP
+ProxyListener::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
+                               nsIInputStream *inStr, uint64_t sourceOffset,
+                               uint32_t count)
 {
   if (!mDestListener)
     return NS_ERROR_FAILURE;
@@ -2249,8 +2252,11 @@ NS_IMETHODIMP imgCacheValidator::OnStopRequest(nsIRequest *aRequest, nsISupports
 /** nsIStreamListener methods **/
 
 
-/* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
-NS_IMETHODIMP imgCacheValidator::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt, nsIInputStream *inStr, uint32_t sourceOffset, uint32_t count)
+/* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long long sourceOffset, in unsigned long count); */
+NS_IMETHODIMP
+imgCacheValidator::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
+                                   nsIInputStream *inStr,
+                                   uint64_t sourceOffset, uint32_t count)
 {
   if (!mDestListener) {
     // XXX see bug 113959

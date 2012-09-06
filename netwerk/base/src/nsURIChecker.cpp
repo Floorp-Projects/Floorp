@@ -310,7 +310,7 @@ nsURIChecker::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 
 NS_IMETHODIMP
 nsURIChecker::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
-                               nsIInputStream *aInput, uint32_t aOffset,
+                               nsIInputStream *aInput, uint64_t aOffset,
                                uint32_t aCount)
 {
     NS_NOTREACHED("nsURIChecker::OnDataAvailable");
