@@ -68,7 +68,7 @@ protected:
                              nsAString& aTerminationEvent) = 0;
   // and for onDataAvailable
   NS_IMETHOD DoOnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
-                               nsIInputStream *aInputStream, uint32_t aOffset,
+                               nsIInputStream *aInputStream, uint64_t aOffset,
                                uint32_t aCount) = 0;
 
   void StartProgressEventTimer();

@@ -1122,7 +1122,7 @@ nsresult
 nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
                                nsISupports* aContext,
                                nsIInputStream* aInStream,
-                               uint32_t aSourceOffset,
+                               uint64_t aSourceOffset,
                                uint32_t aLength)
 {
   nsresult rv;

@@ -126,7 +126,7 @@ nsDownloader::ConsumeData(nsIInputStream* in,
 NS_IMETHODIMP 
 nsDownloader::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, 
                               nsIInputStream *inStr, 
-                              uint32_t sourceOffset, uint32_t count)
+                              uint64_t sourceOffset, uint32_t count)
 {
     uint32_t n;  
     return inStr->ReadSegments(ConsumeData, this, count, &n);

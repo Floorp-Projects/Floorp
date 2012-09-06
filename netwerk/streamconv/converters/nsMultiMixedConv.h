@@ -43,7 +43,7 @@ public:
   void SetIsLastPart() { mIsLastPart = true; }
   nsresult SendOnStartRequest(nsISupports* aContext);
   nsresult SendOnDataAvailable(nsISupports* aContext, nsIInputStream* aStream,
-                               uint32_t aOffset, uint32_t aLen);
+                               uint64_t aOffset, uint32_t aLen);
   nsresult SendOnStopRequest(nsISupports* aContext, nsresult aStatus);
   /* SetContentDisposition expects the full value of the Content-Disposition
    * header */

@@ -345,7 +345,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
 NS_IMETHODIMP
 nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
                                   nsIInputStream *aStream,
-                                  uint32_t aSourceOffset,
+                                  uint64_t aSourceOffset,
                                   uint32_t aCount) {
   if (aCount < 1)
     return NS_OK;
