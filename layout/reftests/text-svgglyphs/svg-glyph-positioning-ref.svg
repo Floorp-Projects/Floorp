@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- M -->
+  <rect x="10" y="10" width="180" height="180" stroke-width="20"
+    fill="pink" stroke="hotpink" />
+
+  <!-- L -->
+  <rect x="220" y="20" width="160" height="160" stroke-width="10"
+    stroke="black" fill="red" />
+  <rect x="220" y="0" width="20" height="20" stroke="none"
+    fill="turquoise" />
+
+  <!-- L with UVS -->
+  <rect x="370" y="20" width="160" height="160" stroke-width="10"
+    stroke="black" fill="green" />
+</svg>
