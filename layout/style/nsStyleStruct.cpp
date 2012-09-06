@@ -1111,9 +1111,9 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
   if (mType == eStyleSVGPaintType_Server)
     return EqualURIs(mPaint.mPaintServer, aOther.mPaint.mPaintServer) &&
            mFallbackColor == aOther.mFallbackColor;
-  if (mType == eStyleSVGPaintType_None)
-    return true;
-  return mPaint.mColor == aOther.mPaint.mColor;
+  if (mType == eStyleSVGPaintType_Color)
+    return mPaint.mColor == aOther.mPaint.mColor;
+  return true;
 }
 
 

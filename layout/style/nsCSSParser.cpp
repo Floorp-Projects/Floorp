@@ -9821,16 +9821,21 @@ bool
 CSSParserImpl::ParsePaint(nsCSSProperty aPropID)
 {
   nsCSSValue x, y;
-  if (!ParseVariant(x, VARIANT_HC | VARIANT_NONE | VARIANT_URL, nullptr))
+  if (!ParseVariant(x, VARIANT_HCK | VARIANT_NONE | VARIANT_URL,
+                    nsCSSProps::kObjectPatternKTable)) {
     return false;
-  if (x.GetUnit() == eCSSUnit_URL) {
+  }
+
+  bool canHaveFallback = x.GetUnit() == eCSSUnit_URL ||
+                         x.GetUnit() == eCSSUnit_Enumerated;
+  if (canHaveFallback) {
     if (!ParseVariant(y, VARIANT_COLOR | VARIANT_NONE, nullptr))
       y.SetNoneValue();
   }
   if (!ExpectEndProperty())
     return false;
 
-  if (x.GetUnit() != eCSSUnit_URL) {
+  if (!canHaveFallback) {
     AppendValue(aPropID, x);
   } else {
     nsCSSValue val;
