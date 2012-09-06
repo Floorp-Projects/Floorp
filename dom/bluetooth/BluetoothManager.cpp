@@ -15,11 +15,17 @@
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
+#include "nsDOMEventTargetHelper.h"
 #include "nsIDOMDOMRequest.h"
+#include "nsIJSContextStack.h"
+#include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
+#include "mozilla/LazyIdleThread.h"
+#include "mozilla/Services.h"
 #include "mozilla/Util.h"
+#include "nsIDOMDOMRequest.h"
 
 using namespace mozilla;
 
@@ -110,7 +116,8 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    mManagerPtr->FireEnabledDisabledEvent(mEnabled);
+    mManagerPtr->SetEnabledInternal(mEnabled);
+    mManagerPtr->FireEnabledDisabledEvent();
 
     // mManagerPtr must be null before returning to prevent the background
     // thread from racing to release it during the destruction of this runnable.
@@ -125,11 +132,11 @@ private:
 };
 
 nsresult
-BluetoothManager::FireEnabledDisabledEvent(bool aEnabled)
+BluetoothManager::FireEnabledDisabledEvent()
 {
   nsString eventName;
 
-  if (aEnabled) {
+  if (mEnabled) {
     eventName.AssignLiteral("enabled");
   } else {
     eventName.AssignLiteral("disabled");
@@ -149,21 +156,142 @@ BluetoothManager::FireEnabledDisabledEvent(bool aEnabled)
   return NS_OK;
 }
 
-BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
-: BluetoothPropertyContainer(BluetoothObjectType::TYPE_MANAGER)
+BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow) :
+  BluetoothPropertyContainer(BluetoothObjectType::TYPE_MANAGER),
+  mEnabled(false)
 {
-  MOZ_ASSERT(aWindow);
-
   BindToOwner(aWindow);
   mPath.AssignLiteral("/");
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, "mozsettings-changed", false);
+  }
 }
 
 BluetoothManager::~BluetoothManager()
 {
   BluetoothService* bs = BluetoothService::Get();
+  // We can be null on shutdown, where this might happen
   if (bs) {
-    bs->UnregisterManager(this);
+    if (NS_FAILED(bs->UnregisterBluetoothSignalHandler(mPath, this))) {
+      NS_WARNING("Failed to unregister object with observer!");
+    }
   }
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, "mozsettings-changed");
+  }
+}
+
+nsresult
+BluetoothManager::HandleMozsettingChanged(const PRUnichar* aData)
+{
+  // The string that we're interested in will be a JSON string that looks like:
+  //  {"key":"bluetooth.enabled","value":true}
+  nsresult rv;
+
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  JSContext *cx = sc->GetNativeContext();
+  if (!cx) {
+    return NS_OK;
+  }
+
+  // In the following [if] blocks, NS_OK will be returned even if JS_* functions
+  // return false. That's because this function gets called whenever mozSettings
+  // changes, so that we'll receive signals we're not interested in and it would
+  // be one of the reasons for making JS_* functions return false.
+  nsDependentString dataStr(aData);
+  JS::Value val;
+  if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val)) {
+    return NS_OK;
+  }
+
+  if (!val.isObject()) {
+    return NS_OK;
+  }
+
+  JSObject &obj(val.toObject());
+  JS::Value key;
+  if (!JS_GetProperty(cx, &obj, "key", &key)) {
+    return NS_OK;
+  }
+
+  if (!key.isString()) {
+    return NS_OK;
+  }
+
+  JSBool match;
+  if (!JS_StringEqualsAscii(cx, key.toString(), "bluetooth.enabled", &match)) {
+    return NS_OK;
+  }
+
+  if (!match) {
+    return NS_OK;
+  }
+
+  JS::Value value;
+  if (!JS_GetProperty(cx, &obj, "value", &value)) {
+    return NS_OK;
+  }
+
+  if (!value.isBoolean()) {
+    return NS_OK;
+  }
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return NS_ERROR_FAILURE;
+  }
+
+  bool enabled = value.toBoolean();
+  bool isEnabled = (bs->IsEnabledInternal() > 0);
+  if (!isEnabled && enabled) {
+    if (NS_FAILED(bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING("/"), this))) {
+      NS_ERROR("Failed to register object with observer!");
+      return NS_ERROR_FAILURE;
+    }
+  } else if (isEnabled && !enabled){
+    if (NS_FAILED(bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING("/"), this))) {
+      NS_WARNING("Failed to unregister object with observer!");
+    }
+  } else {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIRunnable> resultTask = new ToggleBtResultTask(this, enabled);
+
+  if (enabled) {
+    if (NS_FAILED(bs->Start(resultTask))) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    if (NS_FAILED(bs->Stop(resultTask))) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothManager::Observe(nsISupports* aSubject,
+                          const char* aTopic,
+                          const PRUnichar* aData)
+{
+  nsresult rv = NS_OK;
+
+  if (!strcmp("mozsettings-changed", aTopic)) {
+    rv = HandleMozsettingChanged(aData);
+  }
+
+  return rv;
 }
 
 void
@@ -181,13 +309,7 @@ BluetoothManager::SetPropertyByValue(const BluetoothNamedValue& aValue)
 NS_IMETHODIMP
 BluetoothManager::GetEnabled(bool* aEnabled)
 {
-  BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    NS_WARNING("BluetoothService not available!");
-    return NS_ERROR_FAILURE;
-  }
-
-  *aEnabled = bs->IsEnabled();
+  *aEnabled = mEnabled;
   return NS_OK;
 }
 
@@ -199,7 +321,7 @@ BluetoothManager::GetDefaultAdapter(nsIDOMDOMRequest** aAdapter)
     NS_WARNING("BluetoothService not available!");
     return NS_ERROR_FAILURE;
   }
-
+  
   nsCOMPtr<nsIDOMRequestService> rs = do_GetService("@mozilla.org/dom/dom-request-service;1");
 
   if (!rs) {
@@ -225,21 +347,22 @@ BluetoothManager::GetDefaultAdapter(nsIDOMDOMRequest** aAdapter)
 
 // static
 already_AddRefed<BluetoothManager>
-BluetoothManager::Create(nsPIDOMWindow* aWindow)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
-
+BluetoothManager::Create(nsPIDOMWindow* aWindow) {
+  nsRefPtr<BluetoothManager> manager = new BluetoothManager(aWindow);
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
     NS_WARNING("BluetoothService not available!");
     return nullptr;
   }
 
-  nsRefPtr<BluetoothManager> manager = new BluetoothManager(aWindow);
-
-  bs->RegisterManager(manager);
-
+  bool isEnabled = (bs->IsEnabledInternal() > 0);
+  if (isEnabled) {
+    if (NS_FAILED(bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING("/"), manager))) {
+      NS_ERROR("Failed to register object with observer!");
+      return nullptr;
+    }
+  }
+  
   return manager.forget();
 }
 
@@ -266,14 +389,18 @@ NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
 
   uint32_t permission;
   nsresult rv =
-    permMgr->TestPermissionFromPrincipal(principal, "mozBluetooth",
-                                         &permission);
+    permMgr->TestPermissionFromPrincipal(principal, "mozBluetooth", &permission);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<BluetoothManager> bluetoothManager;
+  if (permission != nsIPermissionManager::ALLOW_ACTION) {
+    *aBluetoothManager = nullptr;
+    return NS_OK;
+  }
 
-  if (permission == nsIPermissionManager::ALLOW_ACTION) {
-    bluetoothManager = BluetoothManager::Create(aWindow);
+  nsRefPtr<BluetoothManager> bluetoothManager = BluetoothManager::Create(aWindow);
+  if (!bluetoothManager) {
+    NS_ERROR("Cannot create bluetooth manager!");
+    return NS_ERROR_FAILURE;
   }
 
   bluetoothManager.forget(aBluetoothManager);

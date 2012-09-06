@@ -7,31 +7,20 @@
 #ifndef mozilla_dom_bluetooth_bluetootheventservice_h__
 #define mozilla_dom_bluetooth_bluetootheventservice_h__
 
-#include "BluetoothCommon.h"
-#include "nsAutoPtr.h"
+#include "nsThreadUtils.h"
 #include "nsClassHashtable.h"
 #include "nsIObserver.h"
-#include "nsIThread.h"
-#include "nsTObserverArray.h"
+#include "nsIRunnable.h"
+#include "BluetoothCommon.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothManager;
-class BluetoothNamedValue;
-class BluetoothReplyRunnable;
 class BluetoothSignal;
+class BluetoothReplyRunnable;
+class BluetoothNamedValue;
 
 class BluetoothService : public nsIObserver
 {
-  class ToggleBtAck;
-  friend class ToggleBtAck;
-
-  class ToggleBtTask;
-  friend class ToggleBtTask;
-
-  class StartupTask;
-  friend class StartupTask;
-
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -76,10 +65,15 @@ public:
    * bluetooth needs to operate on the current platform. Assumed to be run on
    * the main thread with delayed return for blocking startup functions via
    * runnable.
+   *
+   * @param aResultRunnable Runnable object to execute after bluetooth has
+   * either come up or failed. Runnable should check existence of
+   * BluetoothService via Get() function to see if service started correctly.
+   *
    * @return NS_OK on initialization starting correctly, NS_ERROR_FAILURE
    * otherwise
    */
-  nsresult Start();
+  nsresult Start(nsIRunnable* aResultRunnable);
 
   /** 
    * Stop bluetooth services. Starts up any threads and connections that
@@ -87,35 +81,14 @@ public:
    * the main thread with delayed return for blocking startup functions via
    * runnable.
    *
+   * @param aResultRunnable Runnable object to execute after bluetooth has
+   * either shut down or failed. Runnable should check lack of existence of
+   * BluetoothService via Get() function to see if service stopped correctly.
+   *
    * @return NS_OK on initialization starting correctly, NS_ERROR_FAILURE
    * otherwise
    */
-  nsresult Stop();
-
-  /**
-   * Called when XPCOM first creates this service.
-   */
-  nsresult HandleStartup();
-
-  /**
-   * Called when "mozsettings-changed" observer topic fires.
-   */
-  nsresult HandleSettingsChanged(const nsAString& aData);
-
-  /**
-   * Called when XPCOM is shutting down.
-   */
-  nsresult HandleShutdown();
-
-  /**
-   * Called when a BluetoothManager is created.
-   */
-  void RegisterManager(BluetoothManager* aManager);
-
-  /**
-   * Called when a BluetoothManager is destroyed.
-   */
-  void UnregisterManager(BluetoothManager* aManager);
+  nsresult Stop(nsIRunnable* aResultRunnable);
 
   /** 
    * Returns the BluetoothService singleton. Only to be called from main thread.
@@ -126,13 +99,7 @@ public:
    * has not yet been started, for instance)
    */
   static BluetoothService* Get();
-
-  static already_AddRefed<BluetoothService> FactoryCreate()
-  {
-    nsRefPtr<BluetoothService> service = Get();
-    return service.forget();
-  }
-
+  
   /**
    * Returns the path of the default adapter, implemented via a platform
    * specific method.
@@ -264,33 +231,7 @@ public:
   virtual bool SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey) = 0;
   virtual bool SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm) = 0;
   virtual bool SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow) = 0;
-
-  virtual bool IsEnabled()
-  {
-    return mEnabled;
-  }
-
-protected:
-  BluetoothService()
-  : mEnabled(false)
-#ifdef DEBUG
-    , mLastRequestedEnable(false)
-#endif
-  {
-    mBluetoothSignalObserverTable.Init();
-  }
-
-  virtual ~BluetoothService()
-  { }
-
-  nsresult StartStopBluetooth(bool aStart);
-
-  // Called by ToggleBtAck.
-  void SetEnabled(bool aEnabled);
-
-  // This function is implemented in platform-specific BluetoothServiceFactory
-  // files
-  static BluetoothService* Create();
+  virtual int IsEnabledInternal() = 0;
 
   /**
    * Due to the fact that some operations require multiple calls, a
@@ -306,19 +247,26 @@ protected:
    */
   nsCOMPtr<nsIThread> mBluetoothCommandThread;
 
+protected:
+  BluetoothService()
+  {
+    mBluetoothSignalObserverTable.Init();
+  }
+
+  virtual ~BluetoothService()
+  {
+  }
+
+  nsresult StartStopBluetooth(nsIRunnable* aResultRunnable, bool aStart);
+  // This function is implemented in platform-specific BluetoothServiceFactory
+  // files
+  static BluetoothService* Create();
+
   typedef mozilla::ObserverList<BluetoothSignal> BluetoothSignalObserverList;
   typedef nsClassHashtable<nsStringHashKey, BluetoothSignalObserverList >
   BluetoothSignalObserverTable;
 
   BluetoothSignalObserverTable mBluetoothSignalObserverTable;
-
-  typedef nsTObserverArray<BluetoothManager*> BluetoothManagerList;
-  BluetoothManagerList mLiveManagers;
-
-  bool mEnabled;
-#ifdef DEBUG
-  bool mLastRequestedEnable;
-#endif
 };
 
 END_BLUETOOTH_NAMESPACE

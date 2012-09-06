@@ -11,6 +11,8 @@
 #include "BluetoothPropertyContainer.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDOMBluetoothManager.h"
+#include "nsIEventTarget.h"
+#include "nsIObserver.h"
 #include "mozilla/Observer.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -21,24 +23,33 @@ class BluetoothManager : public nsDOMEventTargetHelper
                        , public nsIDOMBluetoothManager
                        , public BluetoothSignalObserver
                        , public BluetoothPropertyContainer
+                       , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMBLUETOOTHMANAGER
+  NS_DECL_NSIOBSERVER
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BluetoothManager,
                                            nsDOMEventTargetHelper)
 
+
+  inline void SetEnabledInternal(bool aEnabled) {mEnabled = aEnabled;}
+
   static already_AddRefed<BluetoothManager>
   Create(nsPIDOMWindow* aWindow);
   void Notify(const BluetoothSignal& aData);
   virtual void SetPropertyByValue(const BluetoothNamedValue& aValue);
-  nsresult FireEnabledDisabledEvent(bool aEnabled);
+  nsresult FireEnabledDisabledEvent();
 private:
   BluetoothManager(nsPIDOMWindow* aWindow);
   ~BluetoothManager();
+
+  nsresult HandleMozsettingChanged(const PRUnichar* aData);
+
+  bool mEnabled;
 };
 
 END_BLUETOOTH_NAMESPACE
