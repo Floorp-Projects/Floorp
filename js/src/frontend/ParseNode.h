@@ -92,13 +92,12 @@ enum ParseNodeKind {
     PNK_PREDECREMENT,
     PNK_POSTDECREMENT,
     PNK_DOT,
-    PNK_LB,
-    PNK_RB,
+    PNK_ELEM,
+    PNK_ARRAY,
     PNK_STATEMENTLIST,
     PNK_XMLCURLYEXPR,
-    PNK_RC,
-    PNK_LP,
-    PNK_RP,
+    PNK_OBJECT,
+    PNK_CALL,
     PNK_NAME,
     PNK_INTRINSICNAME,
     PNK_NUMBER,
@@ -225,7 +224,7 @@ enum ParseNodeKind {
  *                                   PNK_RETURN for expression closure, or
  *                                   PNK_SEQ for expression closure with
  *                                     destructured formal parameters
- *                                   PNK_LP see isGeneratorExpr def below
+ *                                   PNK_CALL see isGeneratorExpr def below
  *                          pn_cookie: static level and var index for function
  *                          pn_dflags: PND_* definition/use flags (see below)
  *                          pn_blockid: block id number
@@ -277,8 +276,8 @@ enum ParseNodeKind {
  *                          PNK_LEXICALSCOPE nodes, each with pn_expr pointing
  *                          to a PNK_CATCH node
  *                          pn_kid3: null or finally block
- * PNK_CATCH    ternary     pn_kid1: PNK_NAME, PNK_RB, or PNK_RC catch var node
- *                                   (PNK_RB or PNK_RC if destructuring)
+ * PNK_CATCH    ternary     pn_kid1: PNK_NAME, PNK_ARRAY, or PNK_OBJECT catch var node
+ *                                   (PNK_ARRAY or PNK_OBJECT if destructuring)
  *                          pn_kid2: null or the catch guard expression
  *                          pn_kid3: catch block statements
  * PNK_BREAK    name        pn_atom: label or null
@@ -367,21 +366,21 @@ enum ParseNodeKind {
  * PNK_DELETE   unary       pn_kid: MEMBER expr
  * PNK_DOT,     name        pn_expr: MEMBER expr to left of .
  * PNK_DBLDOT               pn_atom: name to right of .
- * PNK_LB       binary      pn_left: MEMBER expr to left of [
+ * PNK_ELEM     binary      pn_left: MEMBER expr to left of [
  *                          pn_right: expr between [ and ]
- * PNK_LP       list        pn_head: list of call, arg1, arg2, ... argN
+ * PNK_CALL     list        pn_head: list of call, arg1, arg2, ... argN
  *                          pn_count: 1 + N (where N is number of args)
  *                          call is a MEMBER expr naming a callable object
- * PNK_RB       list        pn_head: list of pn_count array element exprs
+ * PNK_ARRAY    list        pn_head: list of pn_count array element exprs
  *                          [,,] holes are represented by PNK_COMMA nodes
  *                          pn_xflags: PN_ENDCOMMA if extra comma at end
- * PNK_RC       list        pn_head: list of pn_count binary PNK_COLON nodes
+ * PNK_OBJECT   list        pn_head: list of pn_count binary PNK_COLON nodes
  * PNK_COLON    binary      key-value pair in object initializer or
  *                          destructuring lhs
  *                          pn_left: property id, pn_right: value
  *                          var {x} = object destructuring shorthand shares
  *                          PN_NAME node for x on left and right of PNK_COLON
- *                          node in PNK_RC's list, has PNX_DESTRUCT flag
+ *                          node in PNK_OBJECT's list, has PNX_DESTRUCT flag
  * PNK_NAME,    name        pn_atom: name, string, or object atom
  * PNK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT, or
  *                                 JSOP_REGEXP
@@ -812,7 +811,7 @@ struct ParseNode {
      * True if this node is a desugared generator expression.
      */
     bool isGeneratorExpr() const {
-        if (getKind() == PNK_LP) {
+        if (isKind(PNK_CALL)) {
             ParseNode *callee = this->pn_head;
             if (callee->getKind() == PNK_FUNCTION && callee->pn_body->getKind() == PNK_LEXICALSCOPE)
                 return true;
@@ -824,7 +823,7 @@ struct ParseNode {
         JS_ASSERT(isGeneratorExpr());
         ParseNode *callee = this->pn_head;
         ParseNode *body = callee->pn_body;
-        JS_ASSERT(body->getKind() == PNK_LEXICALSCOPE);
+        JS_ASSERT(body->isKind(PNK_LEXICALSCOPE));
         return body->pn_expr;
     }
 #endif
@@ -1171,7 +1170,7 @@ class XMLDoubleColonProperty : public ParseNode {
   public:
     XMLDoubleColonProperty(ParseNode *lhs, ParseNode *rhs,
                            const TokenPtr &begin, const TokenPtr &end)
-      : ParseNode(PNK_LB, JSOP_GETELEM, PN_BINARY, TokenPos::make(begin, end))
+      : ParseNode(PNK_ELEM, JSOP_GETELEM, PN_BINARY, TokenPos::make(begin, end))
     {
         JS_ASSERT(rhs->isKind(PNK_DBLCOLON));
         pn_u.binary.left = lhs;
@@ -1210,7 +1209,7 @@ class XMLProperty : public ParseNode {
   public:
     XMLProperty(ParseNode *lhs, ParseNode *propertyId,
                 const TokenPtr &begin, const TokenPtr &end)
-      : ParseNode(PNK_LB, JSOP_GETELEM, PN_BINARY, TokenPos::make(begin, end))
+      : ParseNode(PNK_ELEM, JSOP_GETELEM, PN_BINARY, TokenPos::make(begin, end))
     {
         pn_u.binary.left = lhs;
         pn_u.binary.right = propertyId;
@@ -1256,7 +1255,7 @@ class PropertyByValue : public ParseNode {
   public:
     PropertyByValue(ParseNode *lhs, ParseNode *propExpr,
                     const TokenPtr &begin, const TokenPtr &end)
-      : ParseNode(PNK_LB, JSOP_GETELEM, PN_BINARY, TokenPos::make(begin, end))
+      : ParseNode(PNK_ELEM, JSOP_GETELEM, PN_BINARY, TokenPos::make(begin, end))
     {
         pn_u.binary.left = lhs;
         pn_u.binary.right = propExpr;
