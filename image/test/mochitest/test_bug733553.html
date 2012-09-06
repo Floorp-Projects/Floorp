@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=733553
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body>
+<body onload="initializeOnload()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=733553">Mozilla Bug 733553</a>
 <p id="display"></p>
 <pre id="test">
@@ -17,43 +17,48 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=733553
 
 SimpleTest.waitForExplicitFinish();
 
-var testIndex = 0;
+var testIndex = -1;
 var testParts = [
   [1, "red.png"],
   [40, "animated-gif2.gif"],
   [1, "red.png"],
   [100, "lime100x100.svg"],
+  [100, "lime100x100.svg"],
   [40, "animated-gif2.gif"],
-  [1, "red.png"]
+  [1, "red.png"],
+  [80, "damon.jpg"],
+  [80, "damon.jpg"],
+  [80, "damon.jpg"]
 ];
 
 // We'll append the part number to this, and tell the informant
 const BASE_URL = "bug733553-informant.sjs?";
 
 function initializeOnload() {
-  var iframeelem = document.getElementById('test-iframe');
-  var firstimg = iframeelem.contentDocument.getElementById('image1');
+  var firstimg = document.createElement('img');
   firstimg.addEventListener("load", imageLoad, false);
+  firstimg.addEventListener("error", imageLoad, false);
+  firstimg.src = "bug733553.sjs";
+  document.getElementById('content').appendChild(firstimg);
+
+  // Really ready for first, but who's counting
+  readyForNext();
 }
 
 function readyForNext() {
   var loader = document.getElementById("loader");
-  if (loader) {
-    testIndex++;
-    loader.src = BASE_URL + testIndex;
-  }
+  loader.src = BASE_URL + ++testIndex;
 }
 
 function imageLoad(aEvent) {
   if (testParts.length > testIndex) {
     var [width, fileName] = testParts[testIndex];
-    if (aEvent.target.width == width) {
-      is(aEvent.target.width, width,
-         "Test " + testIndex + " " + fileName + " width correct");
-      readyForNext();
-    }
+    is(aEvent.target.width, width,
+       "Test " + testIndex + " " + fileName + " width correct");
+    readyForNext();
   } else {
     aEvent.target.removeEventListener("load", imageLoad, false);
+    aEvent.target.removeEventListener("error", imageLoad, false);
     var loader = document.getElementById("loader");
     readyForNext();
     SimpleTest.finish();
@@ -63,7 +68,6 @@ function imageLoad(aEvent) {
 </script>
 </pre>
 <div id="content"> <!-- style="display: none" -->
-<iframe id="test-iframe" src="http://mochi.test:8888/tests/image/test/mochitest/bug733553-iframe.html" onload="initializeOnload()"></iframe>
 <iframe id="loader"></iframe>
 </div>
 </body>
