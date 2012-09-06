@@ -55,7 +55,6 @@ MOCHITEST_FILES =   imgutils.js \
                 bug671906.sjs \
                 test_bug671906.html \
                 test_bug733553.html \
-                bug733553-iframe.html \
                 bug733553.sjs \
                 bug733553-informant.sjs \
                 animated-gif2.gif \
