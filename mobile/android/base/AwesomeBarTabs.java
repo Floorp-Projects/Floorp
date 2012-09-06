@@ -5,6 +5,11 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.awesomebar.AllPagesTab;
+import org.mozilla.gecko.awesomebar.AwesomeBarTab;
+import org.mozilla.gecko.awesomebar.BookmarksTab;
+import org.mozilla.gecko.awesomebar.HistoryTab;
+
 import android.content.Context;
 import android.net.Uri;
 import android.util.AttributeSet;
