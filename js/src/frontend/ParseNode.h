@@ -97,7 +97,8 @@ class UpvarCookie
     F(FALSE) \
     F(NULL) \
     F(THIS) \
-    F(FUNCTION) \
+    F(FUNCTIONDECL) \
+    F(FUNCTIONEXPR) \
     F(IF) \
     F(ELSE) \
     F(SWITCH) \
@@ -215,7 +216,8 @@ enum ParseNodeKind {
  * Label        Variant     Members
  * -----        -------     -------
  * <Definitions>
- * PNK_FUNCTION name        pn_funbox: ptr to js::FunctionBox holding function
+ * PNK_FUNCTIONDECL
+ *              function    pn_funbox: ptr to js::FunctionBox holding function
  *                            object containing arg and var properties.  We
  *                            create the function object at parse (not emit)
  *                            time to specialize arg and var bytecodes early.
@@ -382,10 +384,11 @@ enum ParseNodeKind {
  *                          var {x} = object destructuring shorthand shares
  *                          PN_NAME node for x on left and right of PNK_COLON
  *                          node in PNK_OBJECT's list, has PNX_DESTRUCT flag
+ * PNK_FUNCTIONEXPR function  The same fields as PNK_FUNCTIONDECL above.
  * PNK_NAME,    name        pn_atom: name, string, or object atom
  * PNK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT, or
- *                                 JSOP_REGEXP
- * PNK_REGEXP               If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
+ * PNK_REGEXP                      JSOP_REGEXP
+ *                          If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
  *                          with pn_cookie telling (staticLevel, slot) (see
  *                          jsscript.h's UPVAR macros) and pn_dflags telling
  *                          const-ness and static analysis results
@@ -815,7 +818,8 @@ struct ParseNode {
     bool isGeneratorExpr() const {
         if (isKind(PNK_CALL)) {
             ParseNode *callee = this->pn_head;
-            if (callee->getKind() == PNK_FUNCTION && callee->pn_body->getKind() == PNK_LEXICALSCOPE)
+            JS_ASSERT(!callee->isKind(PNK_FUNCTIONDECL));
+            if (callee->getKind() == PNK_FUNCTIONEXPR && callee->pn_body->getKind() == PNK_LEXICALSCOPE)
                 return true;
         }
         return false;
@@ -1386,7 +1390,7 @@ struct Definition : public ParseNode
     static const char *kindString(Kind kind);
 
     Kind kind() {
-        if (getKind() == PNK_FUNCTION) {
+        if (getKind() == PNK_FUNCTIONDECL) {
             if (isOp(JSOP_GETARG))
                 return ARG;
             return VAR;
