@@ -32,6 +32,18 @@ class NameResolver
         return pn && pn->isKind(PNK_LP);
     }
 
+    /* Append a number to buf. */
+    bool appendNumber(double n) {
+        char number[30];
+        int digits = JS_snprintf(number, sizeof(number), "%g", n);
+        return buf->appendInflated(number, digits);
+    }
+
+    /* Append "[<n>]" to buf, referencing a property named by a numeric literal. */
+    bool appendNumericPropertyReference(double n) {
+        return buf->append("[") && appendNumber(n) && buf->append("]");
+    }
+
     /*
      * Walk over the given ParseNode, converting it to a stringified name that
      * respresents where the function is being assigned to.
@@ -52,11 +64,8 @@ class NameResolver
                        nameExpression(n->pn_right) &&
                        buf->append("]");
 
-            case PNK_NUMBER: {
-                char number[30];
-                int digits = JS_snprintf(number, sizeof(number), "%g", n->pn_dval);
-                return buf->appendInflated(number, digits);
-            }
+            case PNK_NUMBER:
+                return appendNumber(n->pn_dval);
 
             /*
              * Technically this isn't an "abort" situation, we're just confused
@@ -193,9 +202,13 @@ class NameResolver
             ParseNode *node = toName[pos];
 
             if (node->isKind(PNK_COLON)) {
-                if (node->pn_left->isKind(PNK_NAME) || node->pn_left->isKind(PNK_STRING)) {
+                ParseNode *left = node->pn_left;
+                if (left->isKind(PNK_NAME) || left->isKind(PNK_STRING)) {
                     /* Atoms are dot-appended. */
-                    if (!buf.append(".") || !buf.append(node->pn_left->pn_atom))
+                    if (!buf.append(".") || !buf.append(left->pn_atom))
+                        return NULL;
+                } else if (left->isKind(PNK_NUMBER)) {
+                    if (!appendNumericPropertyReference(left->pn_dval))
                         return NULL;
                 }
             } else {

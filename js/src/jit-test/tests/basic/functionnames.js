@@ -128,3 +128,6 @@ assertName(z[0], 'z<');
 
 /* fuzz bug from 785089 */
 odeURIL:(function(){})
+
+a = { 1: function () {} };
+assertName(a[1], 'a[1]');
