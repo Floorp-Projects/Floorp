@@ -53,18 +53,20 @@ static NS_DEFINE_CID(kMultiplexInputStream, NS_MULTIPLEXINPUTSTREAM_CID);
 
 #if defined(PR_LOGGING)
 static void
-LogHeaders(const char *lines)
+LogHeaders(const char *lineStart)
 {
     nsAutoCString buf;
-    char *p;
-    while ((p = PL_strstr(lines, "\r\n")) != nullptr) {
-        buf.Assign(lines, p - lines);
-        if (PL_strcasestr(buf.get(), "authorization: ") != nullptr) {
-            char *p = PL_strchr(PL_strchr(buf.get(), ' ')+1, ' ');
-            while (*++p) *p = '*';
+    char *endOfLine;
+    while ((endOfLine = PL_strstr(lineStart, "\r\n"))) {
+        buf.Assign(lineStart, endOfLine - lineStart);
+        if (PL_strcasestr(buf.get(), "authorization: ") ||
+            PL_strcasestr(buf.get(), "proxy-authorization: ")) {
+            char *p = PL_strchr(PL_strchr(buf.get(), ' ') + 1, ' ');
+            while (p && *++p)
+                *p = '*';
         }
         LOG3(("  %s\n", buf.get()));
-        lines = p + 2;
+        lineStart = endOfLine + 2;
     }
 }
 #endif
