@@ -1823,14 +1823,14 @@ RadioInterfaceLayer.prototype = {
   },
 
   _contactsCallbacks: null,
-  getICCContacts: function getICCContacts(type, callback) {
+  getICCContacts: function getICCContacts(contactType, callback) {
     if (!this._contactsCallbacks) {
       this._contactsCallbacks = {};
     } 
     let requestId = Math.floor(Math.random() * 1000);
     this._contactsCallbacks[requestId] = callback;
     this.worker.postMessage({rilMessageType: "getICCContacts",
-                             type: type,
+                             contactType: contactType,
                              requestId: requestId});
   }
 };

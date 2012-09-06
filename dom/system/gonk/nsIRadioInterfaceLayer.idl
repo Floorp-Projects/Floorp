@@ -117,18 +117,18 @@ interface nsIRILDataCallback : nsISupports
                            in unsigned long length);
 };
 
-[scriptable, function, uuid(2bc2f51a-78be-4c0e-95dd-55a3ce2ded40)]
+[scriptable, function, uuid(cfff68a2-7799-4c37-acca-bf58c19b2236)]
 interface nsIRILContactCallback : nsISupports
 {
   /**
    * Called when nsIRadioInterfaceLayer is asked to provide ICC contacts.
    *
-   * @param type
+   * @param contactType
    *        Type of the dialling number, i.e. ADN, FDN.
    * @param contacts
    *        Array of the ICC contacts of the specified type.
    */
-  void receiveContactsList(in DOMString type, in jsval contacts);
+  void receiveContactsList(in DOMString contactType, in jsval contacts);
 };
 
 /**
@@ -231,7 +231,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(8b649965-6687-46a8-88fa-a5495ce90735)]
+[scriptable, uuid(0a05f286-608d-4d2e-ab72-16bd36e93c15)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -282,5 +282,15 @@ interface nsIRadioInterfaceLayer : nsISupports
   /**
    * ICC-related functionality.
    */
-  void getICCContacts(in DOMString type, in nsIRILContactCallback callback);
+
+  /**
+   * Get ICC Contact List.
+   *
+   * @param contactType One of the values below.
+   *                    "ADN" (Abbreviated Dialling Numbers)
+   *                    "FDN" (Fixed Dialling Numbers)
+   * @param callback  A nsIRILContactCallback object.
+   */
+  void getICCContacts(in DOMString contactType,
+                      in nsIRILContactCallback callback);
 };
