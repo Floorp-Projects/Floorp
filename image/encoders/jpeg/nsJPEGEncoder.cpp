@@ -354,9 +354,9 @@ nsJPEGEncoder::ConvertRGBARow(const uint8_t* aSrc, uint8_t* aDest,
     uint8_t* pixelOut = &aDest[x * 3];
 
     uint8_t alpha = pixelIn[3];
-    pixelOut[0] = GFX_PREMULTIPLY(pixelIn[0], alpha);
-    pixelOut[1] = GFX_PREMULTIPLY(pixelIn[1], alpha);
-    pixelOut[2] = GFX_PREMULTIPLY(pixelIn[2], alpha);
+    pixelOut[0] = gfxPreMultiply(pixelIn[0], alpha);
+    pixelOut[1] = gfxPreMultiply(pixelIn[1], alpha);
+    pixelOut[2] = gfxPreMultiply(pixelIn[2], alpha);
   }
 }
 
