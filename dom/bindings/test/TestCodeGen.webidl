@@ -4,6 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+typedef long myLong;
+typedef TestInterface AnotherNameForTestInterface;
+typedef TestInterface? NullableTestInterface;
+
 interface TestExternalInterface;
 
 interface TestNonCastableInterface {
@@ -309,6 +313,12 @@ interface TestInterface {
   void dontEnforceRangeOrClamp(byte arg);
   void doEnforceRange([EnforceRange] byte arg);
   void doClamp([Clamp] byte arg);
+
+  // Typedefs
+  const myLong myLongConstant = 5;
+  void exerciseTypedefInterfaces1(AnotherNameForTestInterface arg);
+  AnotherNameForTestInterface exerciseTypedefInterfaces2(NullableTestInterface arg);
+  void exerciseTypedefInterfaces3(YetAnotherNameForTestInterface arg);
 };
 
 interface TestNonWrapperCacheInterface {
