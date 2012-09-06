@@ -14,6 +14,7 @@ interface nsIDOMBluetoothDevice : nsIDOMEventTarget
   readonly attribute DOMString icon;
   [binaryname(DeviceClass)] readonly attribute unsigned long class;
   [implicit_jscontext] readonly attribute jsval uuids;
+  [implicit_jscontext] readonly attribute jsval services;
   readonly attribute bool connected;
   readonly attribute bool paired;
   [implicit_jscontext] attribute jsval onpropertychanged;
