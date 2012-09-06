@@ -105,11 +105,10 @@ def printMakefiles(thissrcdir, dest, directories):
 
     subdirs, mochitests, supportfiles = parseManifestFile(dest, d)
 
-    abspath = "%s/%s" % (thissrcdir, path)
     files = ["test_%s" % (mochitest, ) for mochitest in mochitests]
     files.extend(supportfiles)
 
-    result = writeMakefile.substMakefile("importTestsuite.py", abspath, subdirs, files)
+    result = writeMakefile.substMakefile("importTestsuite.py", subdirs, files)
 
     fp = open(path + "/Makefile.in", "wb")
     fp.write(result)
