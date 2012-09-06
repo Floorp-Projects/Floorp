@@ -11,6 +11,7 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
+#include "BluetoothServiceUuid.h"
 
 #include "nsIDOMDOMRequest.h"
 #include "nsDOMClassInfo.h"
@@ -25,6 +26,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothDevice)
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(BluetoothDevice,
                                                nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJsUuids)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJsServices)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothDevice, 
@@ -50,6 +52,7 @@ BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aOwner,
                                  const BluetoothValue& aValue) :
   BluetoothPropertyContainer(BluetoothObjectType::TYPE_DEVICE),
   mJsUuids(nullptr),
+  mJsServices(nullptr),
   mAdapterPath(aAdapterPath),
   mIsRooted(false)
 {
@@ -90,7 +93,7 @@ BluetoothDevice::Unroot()
     mIsRooted = false;
   }
 }
-  
+
 void
 BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
 {
@@ -98,15 +101,17 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
   const BluetoothValue& value = aValue.value();
   if (name.EqualsLiteral("Name")) {
     mName = value.get_nsString();
-  } else if (name.EqualsLiteral("Address")) {
-    mAddress = value.get_nsString();
+  } else if (name.EqualsLiteral("Path")) {
+    mPath = value.get_nsString();
+    NS_WARNING(NS_ConvertUTF16toUTF8(mPath).get());
     BluetoothService* bs = BluetoothService::Get();
     if (!bs) {
       NS_WARNING("BluetoothService not available!");
-      return;
+    } else if (NS_FAILED(bs->RegisterBluetoothSignalHandler(mPath, this))) {
+      NS_WARNING("Failed to register object with observer!");
     }
-    // We can't actually set up our path until we know our address
-    bs->GetDevicePath(mAdapterPath, mAddress, mPath);
+  } else if (name.EqualsLiteral("Address")) {
+    mAddress = value.get_nsString();
   } else if (name.EqualsLiteral("Class")) {
     mClass = value.get_uint32_t();
   } else if (name.EqualsLiteral("Icon")) {
@@ -125,6 +130,22 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
                              sc->GetNativeGlobal(), mUuids, &mJsUuids);
       if (NS_FAILED(rv)) {
         NS_WARNING("Cannot set JS UUIDs object!");
+        return;
+      }
+      Root();
+    } else {
+      NS_WARNING("Could not get context!");
+    }
+  } else if (name.EqualsLiteral("Services")) {
+    mServices = value.get_ArrayOfnsString();
+    nsresult rv;
+    nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+    if (sc) {
+      rv =
+        StringArrayToJSArray(sc->GetNativeContext(),
+                             sc->GetNativeGlobal(), mServices, &mJsServices);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Cannot set JS Services object!");
         return;
       }
       Root();
@@ -253,7 +274,18 @@ BluetoothDevice::GetUuids(JSContext* aCx, jsval* aUuids)
   } else {
     NS_WARNING("UUIDs not yet set!\n");
     return NS_ERROR_FAILURE;
-  }    
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothDevice::GetServices(JSContext* aCx, jsval* aServices)
+{
+  if (mJsServices) {
+    aServices->setObject(*mJsServices);
+  } else {
+    NS_WARNING("Services not yet set!\n");
+  }
   return NS_OK;
 }
 
