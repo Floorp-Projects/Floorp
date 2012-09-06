@@ -44,6 +44,8 @@
 #include <pango/pango-modules.h>
 #include <pango/pangofc-fontmap.h>
 
+#include FT_TRUETYPE_TABLES_H
+
 #ifdef MOZ_WIDGET_GTK
 #include <gdk/gdk.h>
 #endif
@@ -533,6 +535,9 @@ public:
     // lifetime of the FontEntry.
     PangoCoverage *GetPangoCoverage();
 
+    virtual nsresult
+    GetFontTable(uint32_t aTableTag, FallibleTArray<uint8_t>& aBuffer) MOZ_OVERRIDE;
+
 protected:
     void InitPattern();
 
@@ -746,6 +751,29 @@ gfxDownloadedFcFontEntry::GetPangoCoverage()
         mPangoCoverage.own(NewPangoCoverage(mPatterns[0]));
     }
     return mPangoCoverage;
+}
+
+nsresult
+gfxDownloadedFcFontEntry::GetFontTable(uint32_t aTableTag,
+                                       FallibleTArray<uint8_t>& aBuffer)
+{
+    FT_ULong length = 0;
+    FT_Error error = FT_Load_Sfnt_Table(mFace, aTableTag, 0, nullptr, &length);
+    if (error) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    if (!aBuffer.SetLength(length)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    error = FT_Load_Sfnt_Table(mFace, aTableTag, 0, aBuffer.Elements(), &length);
+    if (error) {
+        aBuffer.Clear();
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
 }
 
 /*
