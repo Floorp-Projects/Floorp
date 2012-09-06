@@ -3592,10 +3592,10 @@ bool setSitesWithData(NPObject* npobj, const NPVariant* args, uint32_t argCount,
 
     // Parse out the three tokens into a siteData struct.
     const char* siteEnd = strchr(iterator, ':');
-    *((char*) siteEnd) = NULL;
+    *((char*) siteEnd) = '\0';
     const char* flagsEnd = strchr(siteEnd + 1, ':');
-    *((char*) flagsEnd) = NULL;
-    *((char*) next) = NULL;
+    *((char*) flagsEnd) = '\0';
+    *((char*) next) = '\0';
     
     siteData data;
     data.site = string(iterator);
