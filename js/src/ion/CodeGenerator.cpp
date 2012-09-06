@@ -3465,7 +3465,7 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    PropertyName **typeAtoms = gen->compartment->rt->atomState.typeAtoms;
+    JSRuntime *rt = gen->compartment->rt;
 
     // Jump to the OOL path if the value is an object. Objects are complicated
     // since they may have a typeof hook.
@@ -3475,29 +3475,29 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
 
     Label notNumber;
     masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
-    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_NUMBER]), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.numberAtom), output);
     masm.jump(&done);
     masm.bind(&notNumber);
 
     Label notUndefined;
     masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
-    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_VOID]), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.undefinedAtom), output);
     masm.jump(&done);
     masm.bind(&notUndefined);
 
     Label notNull;
     masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
-    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_OBJECT]), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.objectAtom), output);
     masm.jump(&done);
     masm.bind(&notNull);
 
     Label notBoolean;
     masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_BOOLEAN]), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.booleanAtom), output);
     masm.jump(&done);
     masm.bind(&notBoolean);
 
-    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_STRING]), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.stringAtom), output);
 
     masm.bind(&done);
     masm.bind(ool->rejoin());

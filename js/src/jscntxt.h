@@ -22,6 +22,7 @@
 #include "jsgc.h"
 #include "jspropertycache.h"
 #include "jspropertytree.h"
+#include "jsprototypes.h"
 #include "jsutil.h"
 #include "prmjtime.h"
 
@@ -377,6 +378,22 @@ class FreeOp : public JSFreeOp {
 namespace JS {
 struct RuntimeSizes;
 }
+
+/* Various built-in or commonly-used names pinned on first context. */
+struct JSAtomState
+{
+#define PROPERTYNAME_FIELD(id, text)          js::PropertyName *id##Atom;
+    FOR_EACH_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD)
+#undef PROPERTYNAME_FIELD
+#define PROPERTYNAME_FIELD(name, code, init)  js::PropertyName *name##Atom;
+    JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD)
+#undef PROPERTYNAME_FIELD
+};
+
+#define ATOM(name) js::HandlePropertyName::fromMarkedLocation(&cx->runtime->atomState.name##Atom)
+
+#define NAME_OFFSET(name)       offsetof(JSAtomState, name##Atom)
+#define OFFSET_TO_NAME(rt,off)  (*(js::PropertyName **)((char*)&(rt)->atomState + (off)))
 
 struct JSRuntime : js::RuntimeFriendFields
 {
@@ -884,8 +901,18 @@ struct JSRuntime : js::RuntimeFriendFields
     void setTrustedPrincipals(JSPrincipals *p) { trustedPrincipals_ = p; }
     JSPrincipals *trustedPrincipals() const { return trustedPrincipals_; }
 
-    /* Literal table maintained by jsatom.c functions. */
-    JSAtomState         atomState;
+    /* Set of all currently-living atoms. */
+    js::AtomSet         atoms;
+
+    union {
+        /*
+         * Cached pointers to various interned property names, initialized in
+         * order from first to last via the other union arm.
+         */
+        JSAtomState atomState;
+
+        js::PropertyName *firstCachedName;
+    };
 
     /* Tables of strings that are pre-allocated in the atomsCompartment. */
     js::StaticStrings   staticStrings;

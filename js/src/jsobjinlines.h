@@ -1549,7 +1549,7 @@ DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
     JS_ASSERT(ctor);
     JS_ASSERT(proto);
 
-    jsid id = NameToId(cx->runtime->atomState.classAtoms[key]);
+    jsid id = NameToId(ClassName(key, cx));
     JS_ASSERT(!global->nativeLookupNoAllocation(id));
 
     /* Set these first in case AddTypePropertyId looks for this class. */
