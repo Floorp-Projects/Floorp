@@ -67,7 +67,7 @@ private:
     nsCOMPtr<nsIStringInputStream>  mStream;
 
     nsresult do_OnDataAvailable (nsIRequest *request, nsISupports *aContext,
-                                 uint32_t aSourceOffset, const char *buffer,
+                                 uint64_t aSourceOffset, const char *buffer,
                                  uint32_t aCount);
 
     bool        mCheckHeaderDone;

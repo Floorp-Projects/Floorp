@@ -277,8 +277,10 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
   return rv;
 }
 
-NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
-                                                  nsIInputStream * inStr, uint32_t sourceOffset, uint32_t count)
+NS_IMETHODIMP
+nsDocumentOpenInfo::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
+                                    nsIInputStream * inStr,
+                                    uint64_t sourceOffset, uint32_t count)
 {
   TIME_URILOADER_FUNCTION(request);
 

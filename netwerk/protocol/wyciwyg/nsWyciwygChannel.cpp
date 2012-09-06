@@ -593,9 +593,9 @@ nsWyciwygChannel::OnCacheEntryDoomed(nsresult status)
 NS_IMETHODIMP
 nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
                                   nsIInputStream *input,
-                                  uint32_t offset, uint32_t count)
+                                  uint64_t offset, uint32_t count)
 {
-  LOG(("nsWyciwygChannel::OnDataAvailable [this=%x request=%x offset=%u count=%u]\n",
+  LOG(("nsWyciwygChannel::OnDataAvailable [this=%x request=%x offset=%llu count=%u]\n",
       this, request, offset, count));
 
   nsresult rv;
@@ -604,7 +604,7 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
 
   // XXX handle 64-bit stuff for real
   if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
-    mProgressSink->OnProgress(this, nullptr, uint64_t(offset + count),
+    mProgressSink->OnProgress(this, nullptr, offset + count,
                               uint64_t(mContentLength));
 
   return rv; // let the pump cancel on failure

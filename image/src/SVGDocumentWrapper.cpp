@@ -209,7 +209,7 @@ SVGDocumentWrapper::ResetAnimation()
 NS_IMETHODIMP
 SVGDocumentWrapper::OnDataAvailable(nsIRequest* aRequest, nsISupports* ctxt,
                                     nsIInputStream* inStr,
-                                    uint32_t sourceOffset,
+                                    uint64_t sourceOffset,
                                     uint32_t count)
 {
   return mListener->OnDataAvailable(aRequest, ctxt, inStr,

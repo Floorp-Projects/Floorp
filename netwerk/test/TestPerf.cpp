@@ -77,7 +77,7 @@ MyListener::OnStartRequest(nsIRequest *req, nsISupports *ctx)
 NS_IMETHODIMP
 MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
                             nsIInputStream *stream,
-                            uint32_t offset, uint32_t count)
+                            uint64_t offset, uint32_t count)
 {
     nsresult rv;
     char buf[4096];

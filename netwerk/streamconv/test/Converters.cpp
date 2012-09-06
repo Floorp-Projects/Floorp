@@ -90,7 +90,7 @@ NS_IMETHODIMP
 TestConverter::OnDataAvailable(nsIRequest* request,
                                nsISupports *ctxt, 
                                nsIInputStream *inStr, 
-                               uint32_t sourceOffset, 
+                               uint64_t sourceOffset, 
                                uint32_t count) {
     nsresult rv;
     nsCOMPtr<nsIInputStream> convertedStream;
@@ -106,7 +106,7 @@ TestConverter::OnDataAvailable(nsIRequest* request,
     uint64_t offset = sourceOffset;
     while (len > 0) {
         uint32_t count = saturated(len);
-        rv = mListener->OnDataAvailable(request, ctxt, convertedStream, saturated(offset), count);
+        rv = mListener->OnDataAvailable(request, ctxt, convertedStream, offset, count);
         if (NS_FAILED(rv)) return rv;
 
         offset += count;

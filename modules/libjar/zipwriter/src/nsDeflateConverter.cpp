@@ -102,11 +102,12 @@ NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char *aFromType,
 
 /* void onDataAvailable (in nsIRequest aRequest, in nsISupports aContext,
  *                       in nsIInputStream aInputStream,
- *                       in unsigned long aOffset, in unsigned long aCount); */
+ *                       in unsigned long long aOffset,
+ *                       in unsigned long aCount); */
 NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest *aRequest,
                                                   nsISupports *aContext,
                                                   nsIInputStream *aInputStream,
-                                                  uint32_t aOffset,
+                                                  uint64_t aOffset,
                                                   uint32_t aCount)
 {
     if (!mListener)
