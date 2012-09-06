@@ -48,6 +48,7 @@
 #include "nsIDocument.h"
 #include "gfxPattern.h"
 #include "gfxFont.h"
+#include "mozilla/gfx/UserData.h"
 
 
 /**
@@ -64,7 +65,8 @@ public:
 
     bool HasSVGGlyph(uint32_t aGlyphId);
 
-    bool RenderGlyph(gfxContext *aContext, uint32_t aGlyphId, DrawMode aDrawMode);
+    bool RenderGlyph(gfxContext *aContext, uint32_t aGlyphId, DrawMode aDrawMode,
+                     gfxTextObjectPaint *aObjectPaint);
 
     bool Init(const gfxFontEntry *aFont,
               const FallibleTArray<uint8_t> &aCmapTable);
@@ -92,6 +94,69 @@ private:
     nsCOMPtr<nsIPresShell> mPresShell;
 
     nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
+};
+
+/**
+ * Used for trickling down paint information through to SVG glyphs.
+ * Will be extended in later patch.
+ */
+class gfxTextObjectPaint
+{
+protected:
+    gfxTextObjectPaint() { }
+
+public:
+    static mozilla::gfx::UserDataKey sUserDataKey;
+
+    /*
+     * Get outer text object pattern with the specified opacity value.
+     * This lets us inherit paints and paint opacities (i.e. fill/stroke and
+     * fill-opacity/stroke-opacity) separately.
+     *
+     * Deferred opacity to be actually implemented in a later patch
+     */
+    virtual already_AddRefed<gfxPattern> GetFillPattern(float aOpacity = 1.0f) = 0;
+    virtual already_AddRefed<gfxPattern> GetStrokePattern(float aOpacity = 1.0f) = 0;
+
+    virtual ~gfxTextObjectPaint() { }
+};
+
+/**
+ * For passing in patterns where the outer text object has no separate pattern
+ * opacity value.
+ */
+class SimpleTextObjectPaint : public gfxTextObjectPaint
+{
+public:
+    SimpleTextObjectPaint(gfxPattern *aFillPattern, gfxPattern *aStrokePattern) :
+        mFillPattern(aFillPattern), mStrokePattern(aStrokePattern),
+        mFillMatrix(aFillPattern ? aFillPattern->GetMatrix() : gfxMatrix()),
+        mStrokeMatrix(aStrokePattern ? aStrokePattern->GetMatrix() : gfxMatrix())
+    {
+    }
+
+    already_AddRefed<gfxPattern> GetFillPattern(float aOpacity) {
+        if (mFillPattern) {
+            mFillPattern->SetMatrix(mFillMatrix);
+        }
+        nsRefPtr<gfxPattern> fillPattern = mFillPattern;
+        return fillPattern.forget();
+    }
+
+    already_AddRefed<gfxPattern> GetStrokePattern(float aOpacity) {
+        if (mStrokePattern) {
+            mStrokePattern->SetMatrix(mStrokeMatrix);
+        }
+        nsRefPtr<gfxPattern> strokePattern = mStrokePattern;
+        return strokePattern.forget();
+    }
+
+private:
+    nsRefPtr<gfxPattern> mFillPattern;
+    nsRefPtr<gfxPattern> mStrokePattern;
+
+    gfxMatrix mFillMatrix;
+    gfxMatrix mStrokeMatrix;
 };
 
 #endif

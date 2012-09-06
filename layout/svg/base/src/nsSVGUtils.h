@@ -46,6 +46,7 @@ class nsSVGOuterSVGFrame;
 class nsSVGPathGeometryFrame;
 class nsSVGSVGElement;
 class nsTextFrame;
+class gfxTextObjectPaint;
 
 struct nsStyleSVG;
 struct nsStyleSVGPaint;
@@ -679,16 +680,26 @@ public:
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
   /**
+   * Set up cairo context with an object pattern
+   */
+  static bool SetupObjectPaint(gfxContext *aContext,
+                               gfxTextObjectPaint *aObjectPaint,
+                               const nsStyleSVGPaint& aPaint,
+                               float aOpacity);
+
+  /**
    * Sets the current paint on the specified gfxContent to be the SVG 'fill'
    * for the given frame.
    */
-  static bool SetupCairoFillPaint(nsIFrame* aFrame, gfxContext* aContext);
+  static bool SetupCairoFillPaint(nsIFrame* aFrame, gfxContext* aContext,
+                                  gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /**
    * Sets the current paint on the specified gfxContent to be the SVG 'stroke'
    * for the given frame.
    */
-  static bool SetupCairoStrokePaint(nsIFrame* aFrame, gfxContext* aContext);
+  static bool SetupCairoStrokePaint(nsIFrame* aFrame, gfxContext* aContext,
+                                    gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /*
    * @return false if there is no stroke
