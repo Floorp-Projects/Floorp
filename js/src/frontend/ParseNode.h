@@ -1428,7 +1428,6 @@ LinkUseToDef(ParseNode *pn, Definition *dn)
 
 struct ObjectBox {
     ObjectBox           *traceLink;
-    ObjectBox           *emitLink;
     JSObject            *object;
     bool                isFunctionBox;
 

@@ -152,9 +152,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
             ObjectBox *funbox = parser.newObjectBox(callerFrame->fun());
             if (!funbox)
                 return NULL;
-            funbox->emitLink = bce.objectList.lastbox;
-            bce.objectList.lastbox = funbox;
-            bce.objectList.length++;
+            if (!bce.objectList.append(funbox))
+                return NULL;
         }
     }
 
