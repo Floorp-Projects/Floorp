@@ -11,7 +11,7 @@
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsError.h"
-#include "nsDOMProgressEvent.h"
+#include "nsIDOMProgressEvent.h"
 #include "nsDOMClassInfoID.h"
 #include "FileHelper.h"
 #include "LockedFile.h"
@@ -138,9 +138,16 @@ FileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal)
     return;
   }
 
-  nsRefPtr<nsDOMProgressEvent> event = new nsDOMProgressEvent(nullptr, nullptr);
-  nsresult rv = event->InitProgressEvent(NS_LITERAL_STRING("progress"),
-                                         false, false, false, aLoaded, aTotal);
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event), nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
+  MOZ_ASSERT(progress);
+  rv = progress->InitProgressEvent(NS_LITERAL_STRING("progress"), false, false,
+                                   false, aLoaded, aTotal);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -151,7 +158,7 @@ FileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal)
   }
 
   bool dummy;
-  rv = DispatchEvent(static_cast<nsIDOMProgressEvent*>(event), &dummy);
+  rv = DispatchEvent(event, &dummy);
   if (NS_FAILED(rv)) {
     return;
   }
