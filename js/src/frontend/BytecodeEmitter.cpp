@@ -59,10 +59,6 @@ using namespace js::gc;
 using namespace js::frontend;
 
 static bool
-NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned stackDepth,
-           size_t start, size_t end);
-
-static bool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
 struct frontend::StmtInfoBCE : public StmtInfoBase
@@ -114,7 +110,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, Shared
     blockChain(sc->context),
     atomIndices(sc->context),
     stackDepth(0), maxStackDepth(0),
-    ntrynotes(0), lastTryNode(NULL),
+    tryNoteList(sc->context),
     arrayCompDepth(0),
     emitLevel(0),
     constList(sc->context),
@@ -4128,7 +4124,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * Add the try note last, to let post-order give us the right ordering
      * (first to last for a given nesting level, inner to outer by level).
      */
-    if (pn->pn_kid2 && !NewTryNote(cx, bce, JSTRY_CATCH, depth, tryStart, tryEnd))
+    if (pn->pn_kid2 && !bce->tryNoteList.append(JSTRY_CATCH, depth, tryStart, tryEnd))
         return false;
 
     /*
@@ -4136,7 +4132,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * trynote to catch exceptions (re)thrown from a catch block or
      * for the try{}finally{} case.
      */
-    if (pn->pn_kid3 && !NewTryNote(cx, bce, JSTRY_FINALLY, depth, tryStart, finallyStart))
+    if (pn->pn_kid3 && !bce->tryNoteList.append(JSTRY_FINALLY, depth, tryStart, finallyStart))
         return false;
 
     return true;
@@ -4658,7 +4654,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
             return false;
     }
 
-    if (!NewTryNote(cx, bce, JSTRY_ITER, bce->stackDepth, top, bce->offset()))
+    if (!bce->tryNoteList.append(JSTRY_ITER, bce->stackDepth, top, bce->offset()))
         return false;
     if (Emit1(cx, bce, JSOP_ENDITER) < 0)
         return false;
@@ -6959,44 +6955,30 @@ frontend::FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *n
     return true;
 }
 
-static bool
-NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned stackDepth,
-           size_t start, size_t end)
+bool
+CGTryNoteList::append(JSTryNoteKind kind, unsigned stackDepth, size_t start, size_t end)
 {
-    JS_ASSERT((unsigned)(uint16_t)stackDepth == stackDepth);
+    JS_ASSERT(unsigned(uint16_t(stackDepth)) == stackDepth);
     JS_ASSERT(start <= end);
-    JS_ASSERT((size_t)(uint32_t)start == start);
-    JS_ASSERT((size_t)(uint32_t)end == end);
+    JS_ASSERT(size_t(uint32_t(start)) == start);
+    JS_ASSERT(size_t(uint32_t(end)) == end);
 
-    TryNode *tryNode = cx->tempLifoAlloc().new_<TryNode>();
-    if (!tryNode) {
-        js_ReportOutOfMemory(cx);
-        return false;
-    }
+    JSTryNote note;
+    note.kind = kind;
+    note.stackDepth = uint16_t(stackDepth);
+    note.start = uint32_t(start);
+    note.length = uint32_t(end - start);
 
-    tryNode->note.kind = kind;
-    tryNode->note.stackDepth = (uint16_t)stackDepth;
-    tryNode->note.start = (uint32_t)start;
-    tryNode->note.length = (uint32_t)(end - start);
-    tryNode->prev = bce->lastTryNode;
-    bce->lastTryNode = tryNode;
-    bce->ntrynotes++;
-    return true;
+    return list.append(note);
 }
 
 void
-frontend::FinishTakingTryNotes(BytecodeEmitter *bce, TryNoteArray *array)
+CGTryNoteList::finish(TryNoteArray *array)
 {
-    TryNode *tryNode;
-    JSTryNote *tn;
+    JS_ASSERT(length() == array->length);
 
-    JS_ASSERT(array->length > 0 && array->length == bce->ntrynotes);
-    tn = array->vector + array->length;
-    tryNode = bce->lastTryNode;
-    do {
-        *--tn = tryNode->note;
-    } while ((tryNode = tryNode->prev) != NULL);
-    JS_ASSERT(tn == array->vector);
+    for (unsigned i = 0; i < length(); i++)
+        array->vector[i] = list[i];
 }
 
 /*
