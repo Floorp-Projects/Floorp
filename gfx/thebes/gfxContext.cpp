@@ -2093,6 +2093,7 @@ gfxContext::ChangeTransform(const Matrix &aNewMatrix)
 
     if (toNewUS.IsRectilinear() && mPathIsRect) {
       mRect = toNewUS.TransformBounds(mRect);
+      mRect.NudgeToIntegers();
     } else if (mPathIsRect) {
       mPathBuilder = mDT->CreatePathBuilder(CurrentState().fillRule);
       
