@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript">
+/* Orientation Test
+ *
+ * Clear the canvas to black, and clear the upper-left quadrant
+ * to white. If this doesn't pass, but the Clear test does, then
+ * likely y-flip is wrong.
+ */
+
+"use strict";
+
+function renderGL(gl) {
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.enable(gl.SCISSOR_TEST);
+  gl.scissor(0, 128, 128, 128);
+  gl.clearColor(1.0, 1.0, 1.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.finish();
+}
+
+function renderBackup(canvas) {
+  var context = canvas.getContext("2d");
+  context.fillStyle = "rgba(0, 0, 0, 1.0)";
+  context.fillRect(0, 0, 256, 256);
+
+  context.fillStyle = "rgba(255, 255, 255, 1.0)";
+  context.fillRect(0, 0, 128, 128);
+}
+
+function onLoad() {
+  var canvas = document.getElementById("canvas");
+  var gl = initGL(canvas);
+
+  if (gl)
+    renderGL(gl);
+  else
+    renderBackup(canvas);
+}
+
+</script>
+</head>
+
+<body onload="onLoad();">
+  <canvas id="canvas" width="256" height="256"></canvas>
+</body>
+
+</html>

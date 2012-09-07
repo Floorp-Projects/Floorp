@@ -18,11 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=496292
 <pre id="test">
 <script type="application/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-
 SimpleTest.waitForExplicitFinish();
 
 var canvas = document.getElementById('canvas');
@@ -59,12 +54,10 @@ RemoteCanvas.prototype.reload = function(cb, force) {
 }
 
 RemoteCanvas.prototype.handleEvent = function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     // Look back up the iframe by id
     var ldrFrame = document.getElementById("test-iframe-" + this.url);
     // Get a reference to the window object you need for the canvas
-    // drawWindow method
+    // SpecialPowers.snapshotRect method
     var remoteWindow = ldrFrame.contentWindow;
 
     //Draw canvas
@@ -75,6 +68,9 @@ RemoteCanvas.prototype.handleEvent = function() {
     var windowWidth = window.innerWidth - 25;
     var windowHeight = window.innerHeight;
 
+    var rect = { left: 0, top: 0, width: windowWidth, height: windowHeight };
+    var snapshot = SpecialPowers.snapshotRect(remoteWindow, rect, "rgb(0,0,0)");
+
     var ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0,
                   RemoteCanvas.CANVAS_WIDTH,
@@ -82,10 +78,7 @@ RemoteCanvas.prototype.handleEvent = function() {
     ctx.save();
     ctx.scale(RemoteCanvas.CANVAS_WIDTH / windowWidth,
               RemoteCanvas.CANVAS_HEIGHT / windowHeight);
-    ctx.drawWindow(remoteWindow,
-                   0, 0,
-                   windowWidth, windowHeight,
-                   "rgb(0,0,0)");
+    ctx.drawImage(snapshot, 0, 0);
     ctx.restore();
     this.cb();
 };
@@ -103,10 +96,7 @@ function checkFirst()
   first = canvas.toDataURL();
   is(first, ref, "The default Accept header used by image loader is correct");
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  Cc["@mozilla.org/preferences-service;1"].
-  getService(Ci.nsIPrefBranch).
-  setCharPref("image.http.accept", "image/png");
+  SpecialPowers.setCharPref("image.http.accept", "image/png");
 
   var remoteCanvas = new RemoteCanvas("bug496292-iframe-2.html");
   remoteCanvas.load(checkSecond);
@@ -117,11 +107,8 @@ function checkSecond()
   second = canvas.toDataURL();
   is(second, ref, "The modified Accept header used by image loader is correct");
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   try {
-    Cc["@mozilla.org/preferences-service;1"].
-    getService(Ci.nsIPrefBranch).
-    clearUserPref("image.http.accept");
+    SpecialPowers.clearUserPref("image.http.accept");
   } catch (ex) { }
 
   var remoteCanvas = new RemoteCanvas("bug496292-iframe-1.html");

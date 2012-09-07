@@ -1,4 +1,4 @@
-// |jit-test| error: SyntaxError
+// |jit-test| error: SyntaxError;
 (function() {
   function a() {}
   function a() {}

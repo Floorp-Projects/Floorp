@@ -47,9 +47,10 @@ public:
                 const nsAString& aDeviceAddress,
                 nsAString& aDevicePath);
 
-  virtual nsTArray<uint32_t>
+  virtual bool
   AddReservedServicesInternal(const nsAString& aAdapterPath,
-                              const nsTArray<uint32_t>& aServices);
+                              const nsTArray<uint32_t>& aServices,
+                              nsTArray<uint32_t>& aServiceHandlesContainer);
 
   virtual bool
   RemoveReservedServicesInternal(const nsAString& aAdapterPath,

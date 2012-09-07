@@ -77,13 +77,15 @@ onconnect = function(e) {
           profileURL: "http://en.wikipedia.org/wiki/Kuma_Lisa"
         };
         port.postMessage({topic: "social.user-profile", data: profile});
+        break;
+      case "test-ambient-notification":
         let icon = {
           name: "testIcon",
           iconURL: "chrome://branding/content/icon48.png",
           contentPanel: "https://example.com/browser/browser/base/content/test/social_panel.html",
           counter: 1
         };
-        port.postMessage({topic: "social.ambient-notification", data: icon});
+        apiPort.postMessage({topic: "social.ambient-notification", data: icon});
         break;
       case "test-isVisible":
         sidebarPort.postMessage({topic: "test-isVisible"});

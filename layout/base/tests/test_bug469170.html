@@ -13,7 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469170
 
 <iframe id="source" width="50" height="50"
        src="data:text/html,%3Chtml%3E%3C%2Fhtml%3E"></iframe>
-<canvas id="scratch" width="50" height="50"></canvas>
 
 <pre id="test">
 <script type="application/javascript">
@@ -23,15 +22,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469170
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var canvas = document.getElementById('scratch');
   var source = document.getElementById('source').contentWindow;
+  rect = { left: 0, top: 0,
+           width: source.innerWidth, height: source.innerHeight };
+  var canvas = SpecialPowers.snapshotRect(source, rect, "transparent");
   var context = canvas.getContext("2d");
-
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.drawWindow(source, 0, 0, source.innerWidth, source.innerHeight,
-                     "transparent");
 
   var components = [ "red", "green", "blue", "alpha" ];
 
