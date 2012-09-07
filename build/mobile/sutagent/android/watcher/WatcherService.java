@@ -191,9 +191,15 @@ public class WatcherService extends Service
 
     private void handleCommand(Intent intent)
         {
-        String sCmd = intent.getStringExtra("command");
+        // Note: intent can be null "if the service is being restarted after its process
+        // has gone away". In this case, we will consider that to be equivalent to a start
+        // http://developer.android.com/reference/android/app/Service.html#onStartCommand%28android.content.Intent,%20int,%20int%29
 
-//        Debug.waitForDebugger();
+        String sCmd = "start";
+        if (intent != null)
+            {
+            sCmd = intent.getStringExtra("command");
+            }
 
         if (sCmd != null)
             {
