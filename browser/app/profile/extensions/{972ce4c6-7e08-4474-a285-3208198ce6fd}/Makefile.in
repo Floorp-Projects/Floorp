@@ -17,9 +17,6 @@ FILES := \
 
 libs::
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(srcdir)/install.rdf.in > install.rdf
-	$(INSTALL) $(FILES) $(DIST)/bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}
+	$(INSTALL) $(FILES) $(FINAL_TARGET)/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}
  
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(FILES) $(DESTDIR)$(mozappdir)/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}
-
 GARBAGE += $(FILES)

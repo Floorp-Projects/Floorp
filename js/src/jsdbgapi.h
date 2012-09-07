@@ -386,23 +386,6 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun);
 extern JS_PUBLIC_API(size_t)
 JS_GetScriptTotalSize(JSContext *cx, JSScript *script);
 
-/*
- * Return true if obj is a "system" object, that is, one created by
- * JS_NewSystemObject with the system flag set and not JS_NewObject.
- *
- * What "system" means is up to the API client.
- */
-extern JS_PUBLIC_API(JSBool)
-JS_IsSystemObject(JSContext *cx, JSObject *obj);
-
-/*
- * Mark an object as being a system object. This should be called immediately
- * after allocating the object. A system object is an object for which
- * JS_IsSystemObject returns true.
- */
-extern JS_PUBLIC_API(JSBool)
-JS_MakeSystemObject(JSContext *cx, JSObject *obj);
-
 /************************************************************************/
 
 extern JS_FRIEND_API(void)

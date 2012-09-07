@@ -50,9 +50,9 @@ public:
   // We need a GetParentObject to make binding codegen happy
   virtual nsISupports* GetParentObject();
 
-  bool GetIndirectlyImplementedProperty(ErrorResult&);
-  void SetIndirectlyImplementedProperty(bool, ErrorResult&);
-  void IndirectlyImplementedMethod(ErrorResult&);
+  bool GetIndirectlyImplementedProperty();
+  void SetIndirectlyImplementedProperty(bool);
+  void IndirectlyImplementedMethod();
 };
 
 // IID for the TestExternalInterface
@@ -128,257 +128,235 @@ public:
   */
   
   // Integer types
-  int8_t GetReadonlyByte(ErrorResult&);
-  int8_t GetWritableByte(ErrorResult&);
-  void SetWritableByte(int8_t, ErrorResult&);
-  void PassByte(int8_t, ErrorResult&);
-  int8_t ReceiveByte(ErrorResult&);
-  void PassOptionalByte(const Optional<int8_t>&, ErrorResult&);
-  void PassOptionalByteWithDefault(int8_t, ErrorResult&);
-  void PassNullableByte(Nullable<int8_t>&, ErrorResult&);
-  void PassOptionalNullableByte(const Optional< Nullable<int8_t> >&,
-                                ErrorResult&);
+  int8_t GetReadonlyByte();
+  int8_t GetWritableByte();
+  void SetWritableByte(int8_t);
+  void PassByte(int8_t);
+  int8_t ReceiveByte();
+  void PassOptionalByte(const Optional<int8_t>&);
+  void PassOptionalByteWithDefault(int8_t);
+  void PassNullableByte(Nullable<int8_t>&);
+  void PassOptionalNullableByte(const Optional< Nullable<int8_t> >&);
 
-  int16_t GetReadonlyShort(ErrorResult&);
-  int16_t GetWritableShort(ErrorResult&);
-  void SetWritableShort(int16_t, ErrorResult&);
-  void PassShort(int16_t, ErrorResult&);
-  int16_t ReceiveShort(ErrorResult&);
-  void PassOptionalShort(const Optional<int16_t>&, ErrorResult&);
-  void PassOptionalShortWithDefault(int16_t, ErrorResult&);
+  int16_t GetReadonlyShort();
+  int16_t GetWritableShort();
+  void SetWritableShort(int16_t);
+  void PassShort(int16_t);
+  int16_t ReceiveShort();
+  void PassOptionalShort(const Optional<int16_t>&);
+  void PassOptionalShortWithDefault(int16_t);
 
-  int32_t GetReadonlyLong(ErrorResult&);
-  int32_t GetWritableLong(ErrorResult&);
-  void SetWritableLong(int32_t, ErrorResult&);
-  void PassLong(int32_t, ErrorResult&);
-  int16_t ReceiveLong(ErrorResult&);
-  void PassOptionalLong(const Optional<int32_t>&, ErrorResult&);
-  void PassOptionalLongWithDefault(int32_t, ErrorResult&);
+  int32_t GetReadonlyLong();
+  int32_t GetWritableLong();
+  void SetWritableLong(int32_t);
+  void PassLong(int32_t);
+  int16_t ReceiveLong();
+  void PassOptionalLong(const Optional<int32_t>&);
+  void PassOptionalLongWithDefault(int32_t);
 
-  int64_t GetReadonlyLongLong(ErrorResult&);
-  int64_t GetWritableLongLong(ErrorResult&);
-  void SetWritableLongLong(int64_t, ErrorResult&);
-  void PassLongLong(int64_t, ErrorResult&);
-  int64_t ReceiveLongLong(ErrorResult&);
-  void PassOptionalLongLong(const Optional<int64_t>&, ErrorResult&);
-  void PassOptionalLongLongWithDefault(int64_t, ErrorResult&);
+  int64_t GetReadonlyLongLong();
+  int64_t GetWritableLongLong();
+  void SetWritableLongLong(int64_t);
+  void PassLongLong(int64_t);
+  int64_t ReceiveLongLong();
+  void PassOptionalLongLong(const Optional<int64_t>&);
+  void PassOptionalLongLongWithDefault(int64_t);
 
-  uint8_t GetReadonlyOctet(ErrorResult&);
-  uint8_t GetWritableOctet(ErrorResult&);
-  void SetWritableOctet(uint8_t, ErrorResult&);
-  void PassOctet(uint8_t, ErrorResult&);
-  uint8_t ReceiveOctet(ErrorResult&);
-  void PassOptionalOctet(const Optional<uint8_t>&, ErrorResult&);
-  void PassOptionalOctetWithDefault(uint8_t, ErrorResult&);
+  uint8_t GetReadonlyOctet();
+  uint8_t GetWritableOctet();
+  void SetWritableOctet(uint8_t);
+  void PassOctet(uint8_t);
+  uint8_t ReceiveOctet();
+  void PassOptionalOctet(const Optional<uint8_t>&);
+  void PassOptionalOctetWithDefault(uint8_t);
 
-  uint16_t GetReadonlyUnsignedShort(ErrorResult&);
-  uint16_t GetWritableUnsignedShort(ErrorResult&);
-  void SetWritableUnsignedShort(uint16_t, ErrorResult&);
-  void PassUnsignedShort(uint16_t, ErrorResult&);
-  uint16_t ReceiveUnsignedShort(ErrorResult&);
-  void PassOptionalUnsignedShort(const Optional<uint16_t>&, ErrorResult&);
-  void PassOptionalUnsignedShortWithDefault(uint16_t, ErrorResult&);
+  uint16_t GetReadonlyUnsignedShort();
+  uint16_t GetWritableUnsignedShort();
+  void SetWritableUnsignedShort(uint16_t);
+  void PassUnsignedShort(uint16_t);
+  uint16_t ReceiveUnsignedShort();
+  void PassOptionalUnsignedShort(const Optional<uint16_t>&);
+  void PassOptionalUnsignedShortWithDefault(uint16_t);
 
-  uint32_t GetReadonlyUnsignedLong(ErrorResult&);
-  uint32_t GetWritableUnsignedLong(ErrorResult&);
-  void SetWritableUnsignedLong(uint32_t, ErrorResult&);
-  void PassUnsignedLong(uint32_t, ErrorResult&);
-  uint32_t ReceiveUnsignedLong(ErrorResult&);
-  void PassOptionalUnsignedLong(const Optional<uint32_t>&, ErrorResult&);
-  void PassOptionalUnsignedLongWithDefault(uint32_t, ErrorResult&);
+  uint32_t GetReadonlyUnsignedLong();
+  uint32_t GetWritableUnsignedLong();
+  void SetWritableUnsignedLong(uint32_t);
+  void PassUnsignedLong(uint32_t);
+  uint32_t ReceiveUnsignedLong();
+  void PassOptionalUnsignedLong(const Optional<uint32_t>&);
+  void PassOptionalUnsignedLongWithDefault(uint32_t);
 
-  uint64_t GetReadonlyUnsignedLongLong(ErrorResult&);
-  uint64_t GetWritableUnsignedLongLong(ErrorResult&);
-  void SetWritableUnsignedLongLong(uint64_t, ErrorResult&);
-  void PassUnsignedLongLong(uint64_t, ErrorResult&);
-  uint64_t ReceiveUnsignedLongLong(ErrorResult&);
-  void PassOptionalUnsignedLongLong(const Optional<uint64_t>&, ErrorResult&);
-  void PassOptionalUnsignedLongLongWithDefault(uint64_t, ErrorResult&);
+  uint64_t GetReadonlyUnsignedLongLong();
+  uint64_t GetWritableUnsignedLongLong();
+  void SetWritableUnsignedLongLong(uint64_t);
+  void PassUnsignedLongLong(uint64_t);
+  uint64_t ReceiveUnsignedLongLong();
+  void PassOptionalUnsignedLongLong(const Optional<uint64_t>&);
+  void PassOptionalUnsignedLongLongWithDefault(uint64_t);
 
   // Interface types
-  already_AddRefed<TestInterface> ReceiveSelf(ErrorResult&);
-  already_AddRefed<TestInterface> ReceiveNullableSelf(ErrorResult&);
-  TestInterface* ReceiveWeakSelf(ErrorResult&);
-  TestInterface* ReceiveWeakNullableSelf(ErrorResult&);
-  void PassSelf(TestInterface&, ErrorResult&);
-  void PassSelf2(NonNull<TestInterface>&, ErrorResult&);
-  void PassNullableSelf(TestInterface*, ErrorResult&);
-  already_AddRefed<TestInterface> GetNonNullSelf(ErrorResult&);
-  void SetNonNullSelf(TestInterface&, ErrorResult&);
-  already_AddRefed<TestInterface> GetNullableSelf(ErrorResult&);
-  void SetNullableSelf(TestInterface*, ErrorResult&);
-  void PassOptionalSelf(const Optional<TestInterface*> &, ErrorResult&);
-  void PassOptionalNonNullSelf(const Optional<NonNull<TestInterface> >&, ErrorResult&);
-  void PassOptionalSelfWithDefault(TestInterface*, ErrorResult&);
+  already_AddRefed<TestInterface> ReceiveSelf();
+  already_AddRefed<TestInterface> ReceiveNullableSelf();
+  TestInterface* ReceiveWeakSelf();
+  TestInterface* ReceiveWeakNullableSelf();
+  void PassSelf(TestInterface&);
+  void PassSelf2(NonNull<TestInterface>&);
+  void PassNullableSelf(TestInterface*);
+  already_AddRefed<TestInterface> GetNonNullSelf();
+  void SetNonNullSelf(TestInterface&);
+  already_AddRefed<TestInterface> GetNullableSelf();
+  void SetNullableSelf(TestInterface*);
+  void PassOptionalSelf(const Optional<TestInterface*> &);
+  void PassOptionalNonNullSelf(const Optional<NonNull<TestInterface> >&);
+  void PassOptionalSelfWithDefault(TestInterface*);
 
-  already_AddRefed<TestNonWrapperCacheInterface> ReceiveNonWrapperCacheInterface(ErrorResult&);
-  already_AddRefed<TestNonWrapperCacheInterface> ReceiveNullableNonWrapperCacheInterface(ErrorResult&);
-  void ReceiveNonWrapperCacheInterfaceSequence(nsTArray<nsRefPtr<TestNonWrapperCacheInterface> >&, ErrorResult&);
-  void ReceiveNullableNonWrapperCacheInterfaceSequence(nsTArray<nsRefPtr<TestNonWrapperCacheInterface> >&, ErrorResult&);
-  void ReceiveNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<nsRefPtr<TestNonWrapperCacheInterface> > >&, ErrorResult&);
-  void ReceiveNullableNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<nsRefPtr<TestNonWrapperCacheInterface> > >&, ErrorResult&);
+  already_AddRefed<TestNonWrapperCacheInterface> ReceiveNonWrapperCacheInterface();
+  already_AddRefed<TestNonWrapperCacheInterface> ReceiveNullableNonWrapperCacheInterface();
+  void ReceiveNonWrapperCacheInterfaceSequence(nsTArray<nsRefPtr<TestNonWrapperCacheInterface> >&);
+  void ReceiveNullableNonWrapperCacheInterfaceSequence(nsTArray<nsRefPtr<TestNonWrapperCacheInterface> >&);
+  void ReceiveNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<nsRefPtr<TestNonWrapperCacheInterface> > >&);
+  void ReceiveNullableNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<nsRefPtr<TestNonWrapperCacheInterface> > >&);
 
-  already_AddRefed<TestNonCastableInterface> ReceiveOther(ErrorResult&);
-  already_AddRefed<TestNonCastableInterface> ReceiveNullableOther(ErrorResult&);
-  TestNonCastableInterface* ReceiveWeakOther(ErrorResult&);
-  TestNonCastableInterface* ReceiveWeakNullableOther(ErrorResult&);
-  void PassOther(TestNonCastableInterface&, ErrorResult&);
-  void PassOther2(NonNull<TestNonCastableInterface>&, ErrorResult&);
-  void PassNullableOther(TestNonCastableInterface*, ErrorResult&);
-  already_AddRefed<TestNonCastableInterface> GetNonNullOther(ErrorResult&);
-  void SetNonNullOther(TestNonCastableInterface&, ErrorResult&);
-  already_AddRefed<TestNonCastableInterface> GetNullableOther(ErrorResult&);
-  void SetNullableOther(TestNonCastableInterface*, ErrorResult&);
-  void PassOptionalOther(const Optional<TestNonCastableInterface*>&, ErrorResult&);
-  void PassOptionalNonNullOther(const Optional<NonNull<TestNonCastableInterface> >&, ErrorResult&);
-  void PassOptionalOtherWithDefault(TestNonCastableInterface*, ErrorResult&);
+  already_AddRefed<TestNonCastableInterface> ReceiveOther();
+  already_AddRefed<TestNonCastableInterface> ReceiveNullableOther();
+  TestNonCastableInterface* ReceiveWeakOther();
+  TestNonCastableInterface* ReceiveWeakNullableOther();
+  void PassOther(TestNonCastableInterface&);
+  void PassOther2(NonNull<TestNonCastableInterface>&);
+  void PassNullableOther(TestNonCastableInterface*);
+  already_AddRefed<TestNonCastableInterface> GetNonNullOther();
+  void SetNonNullOther(TestNonCastableInterface&);
+  already_AddRefed<TestNonCastableInterface> GetNullableOther();
+  void SetNullableOther(TestNonCastableInterface*);
+  void PassOptionalOther(const Optional<TestNonCastableInterface*>&);
+  void PassOptionalNonNullOther(const Optional<NonNull<TestNonCastableInterface> >&);
+  void PassOptionalOtherWithDefault(TestNonCastableInterface*);
 
-  already_AddRefed<TestExternalInterface> ReceiveExternal(ErrorResult&);
-  already_AddRefed<TestExternalInterface> ReceiveNullableExternal(ErrorResult&);
-  TestExternalInterface* ReceiveWeakExternal(ErrorResult&);
-  TestExternalInterface* ReceiveWeakNullableExternal(ErrorResult&);
-  void PassExternal(TestExternalInterface*, ErrorResult&);
-  void PassExternal2(TestExternalInterface*, ErrorResult&);
-  void PassNullableExternal(TestExternalInterface*, ErrorResult&);
-  already_AddRefed<TestExternalInterface> GetNonNullExternal(ErrorResult&);
-  void SetNonNullExternal(TestExternalInterface*, ErrorResult&);
-  already_AddRefed<TestExternalInterface> GetNullableExternal(ErrorResult&);
-  void SetNullableExternal(TestExternalInterface*, ErrorResult&);
-  void PassOptionalExternal(const Optional<TestExternalInterface*>&, ErrorResult&);
-  void PassOptionalNonNullExternal(const Optional<TestExternalInterface*>&, ErrorResult&);
-  void PassOptionalExternalWithDefault(TestExternalInterface*, ErrorResult&);
+  already_AddRefed<TestExternalInterface> ReceiveExternal();
+  already_AddRefed<TestExternalInterface> ReceiveNullableExternal();
+  TestExternalInterface* ReceiveWeakExternal();
+  TestExternalInterface* ReceiveWeakNullableExternal();
+  void PassExternal(TestExternalInterface*);
+  void PassExternal2(TestExternalInterface*);
+  void PassNullableExternal(TestExternalInterface*);
+  already_AddRefed<TestExternalInterface> GetNonNullExternal();
+  void SetNonNullExternal(TestExternalInterface*);
+  already_AddRefed<TestExternalInterface> GetNullableExternal();
+  void SetNullableExternal(TestExternalInterface*);
+  void PassOptionalExternal(const Optional<TestExternalInterface*>&);
+  void PassOptionalNonNullExternal(const Optional<TestExternalInterface*>&);
+  void PassOptionalExternalWithDefault(TestExternalInterface*);
 
-  already_AddRefed<TestCallbackInterface> ReceiveCallbackInterface(ErrorResult&);
-  already_AddRefed<TestCallbackInterface> ReceiveNullableCallbackInterface(ErrorResult&);
-  TestCallbackInterface* ReceiveWeakCallbackInterface(ErrorResult&);
-  TestCallbackInterface* ReceiveWeakNullableCallbackInterface(ErrorResult&);
-  void PassCallbackInterface(TestCallbackInterface&, ErrorResult&);
-  void PassCallbackInterface2(OwningNonNull<TestCallbackInterface>, ErrorResult&);
-  void PassNullableCallbackInterface(TestCallbackInterface*, ErrorResult&);
-  already_AddRefed<TestCallbackInterface> GetNonNullCallbackInterface(ErrorResult&);
-  void SetNonNullCallbackInterface(TestCallbackInterface&, ErrorResult&);
-  already_AddRefed<TestCallbackInterface> GetNullableCallbackInterface(ErrorResult&);
-  void SetNullableCallbackInterface(TestCallbackInterface*, ErrorResult&);
-  void PassOptionalCallbackInterface(const Optional<nsRefPtr<TestCallbackInterface> >&, ErrorResult&);
-  void PassOptionalNonNullCallbackInterface(const Optional<OwningNonNull<TestCallbackInterface> >&, ErrorResult&);
-  void PassOptionalCallbackInterfaceWithDefault(TestCallbackInterface*, ErrorResult&);
+  already_AddRefed<TestCallbackInterface> ReceiveCallbackInterface();
+  already_AddRefed<TestCallbackInterface> ReceiveNullableCallbackInterface();
+  TestCallbackInterface* ReceiveWeakCallbackInterface();
+  TestCallbackInterface* ReceiveWeakNullableCallbackInterface();
+  void PassCallbackInterface(TestCallbackInterface&);
+  void PassCallbackInterface2(OwningNonNull<TestCallbackInterface>);
+  void PassNullableCallbackInterface(TestCallbackInterface*);
+  already_AddRefed<TestCallbackInterface> GetNonNullCallbackInterface();
+  void SetNonNullCallbackInterface(TestCallbackInterface&);
+  already_AddRefed<TestCallbackInterface> GetNullableCallbackInterface();
+  void SetNullableCallbackInterface(TestCallbackInterface*);
+  void PassOptionalCallbackInterface(const Optional<nsRefPtr<TestCallbackInterface> >&);
+  void PassOptionalNonNullCallbackInterface(const Optional<OwningNonNull<TestCallbackInterface> >&);
+  void PassOptionalCallbackInterfaceWithDefault(TestCallbackInterface*);
 
-  already_AddRefed<IndirectlyImplementedInterface> ReceiveConsequentialInterface(ErrorResult&);
-  void PassConsequentialInterface(IndirectlyImplementedInterface&, ErrorResult&);
+  already_AddRefed<IndirectlyImplementedInterface> ReceiveConsequentialInterface();
+  void PassConsequentialInterface(IndirectlyImplementedInterface&);
 
   // Sequence types
-  void ReceiveSequence(nsTArray<int32_t>&, ErrorResult&);
-  void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&, ErrorResult&);
-  void ReceiveSequenceOfNullableInts(nsTArray< Nullable<int32_t> >&, ErrorResult&);
-  void ReceiveNullableSequenceOfNullableInts(Nullable< nsTArray< Nullable<int32_t> > >&, ErrorResult&);
-  void PassSequence(const Sequence<int32_t> &, ErrorResult&);
-  void PassNullableSequence(const Nullable< Sequence<int32_t> >&, ErrorResult&);
-  void PassSequenceOfNullableInts(const Sequence<Nullable<int32_t> >&, ErrorResult&);
-  void PassOptionalSequenceOfNullableInts(const Optional<Sequence<Nullable<int32_t> > > &,
-                                          ErrorResult&);
-  void PassOptionalNullableSequenceOfNullableInts(const Optional<Nullable<Sequence<Nullable<int32_t> > > > &,
-                                                  ErrorResult&);
-  void ReceiveCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &,
-                                     ErrorResult&);
-  void ReceiveNullableCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &,
-                                             ErrorResult&);
-  void ReceiveCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
-                                             ErrorResult&);
-  void ReceiveNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
-                                             ErrorResult&);
-  void ReceiveWeakCastableObjectSequence(nsTArray<TestInterface*> &,
-                                         ErrorResult&);
-  void ReceiveWeakNullableCastableObjectSequence(nsTArray<TestInterface*> &,
-                                                 ErrorResult&);
-  void ReceiveWeakCastableObjectNullableSequence(Nullable< nsTArray<TestInterface*> >&,
-                                                 ErrorResult&);
-  void ReceiveWeakNullableCastableObjectNullableSequence(Nullable< nsTArray<TestInterface*> >&,
-                                                         ErrorResult&);
-  void PassCastableObjectSequence(const Sequence< OwningNonNull<TestInterface> >&,
-                                  ErrorResult&);
-  void PassNullableCastableObjectSequence(const Sequence< nsRefPtr<TestInterface> > &,
-                                          ErrorResult&);
-  void PassCastableObjectNullableSequence(const Nullable< Sequence< OwningNonNull<TestInterface> > >&,
-                                          ErrorResult&);
-  void PassNullableCastableObjectNullableSequence(const Nullable< Sequence< nsRefPtr<TestInterface> > >&,
-                                                  ErrorResult&);
-  void PassOptionalSequence(const Optional<Sequence<int32_t> >&,
-                            ErrorResult&);
-  void PassOptionalNullableSequence(const Optional<Nullable<Sequence<int32_t> > >&,
-                                    ErrorResult&);
-  void PassOptionalNullableSequenceWithDefaultValue(const Nullable< Sequence<int32_t> >&,
-                                                    ErrorResult&);
-  void PassOptionalObjectSequence(const Optional<Sequence<OwningNonNull<TestInterface> > >&,
-                                  ErrorResult&);
+  void ReceiveSequence(nsTArray<int32_t>&);
+  void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&);
+  void ReceiveSequenceOfNullableInts(nsTArray< Nullable<int32_t> >&);
+  void ReceiveNullableSequenceOfNullableInts(Nullable< nsTArray< Nullable<int32_t> > >&);
+  void PassSequence(const Sequence<int32_t> &);
+  void PassNullableSequence(const Nullable< Sequence<int32_t> >&);
+  void PassSequenceOfNullableInts(const Sequence<Nullable<int32_t> >&);
+  void PassOptionalSequenceOfNullableInts(const Optional<Sequence<Nullable<int32_t> > > &);
+  void PassOptionalNullableSequenceOfNullableInts(const Optional<Nullable<Sequence<Nullable<int32_t> > > > &);
+  void ReceiveCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &);
+  void ReceiveNullableCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &);
+  void ReceiveCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&);
+  void ReceiveNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&);
+  void ReceiveWeakCastableObjectSequence(nsTArray<TestInterface*> &);
+  void ReceiveWeakNullableCastableObjectSequence(nsTArray<TestInterface*> &);
+  void ReceiveWeakCastableObjectNullableSequence(Nullable< nsTArray<TestInterface*> >&);
+  void ReceiveWeakNullableCastableObjectNullableSequence(Nullable< nsTArray<TestInterface*> >&);
+  void PassCastableObjectSequence(const Sequence< OwningNonNull<TestInterface> >&);
+  void PassNullableCastableObjectSequence(const Sequence< nsRefPtr<TestInterface> > &);
+  void PassCastableObjectNullableSequence(const Nullable< Sequence< OwningNonNull<TestInterface> > >&);
+  void PassNullableCastableObjectNullableSequence(const Nullable< Sequence< nsRefPtr<TestInterface> > >&);
+  void PassOptionalSequence(const Optional<Sequence<int32_t> >&);
+  void PassOptionalNullableSequence(const Optional<Nullable<Sequence<int32_t> > >&);
+  void PassOptionalNullableSequenceWithDefaultValue(const Nullable< Sequence<int32_t> >&);
+  void PassOptionalObjectSequence(const Optional<Sequence<OwningNonNull<TestInterface> > >&);
 
-  void ReceiveStringSequence(nsTArray<nsString>&, ErrorResult&);
-  void PassStringSequence(const Sequence<nsString>&, ErrorResult&);
+  void ReceiveStringSequence(nsTArray<nsString>&);
+  void PassStringSequence(const Sequence<nsString>&);
 
   // Typed array types
-  void PassArrayBuffer(ArrayBuffer&, ErrorResult&);
-  void PassNullableArrayBuffer(ArrayBuffer*, ErrorResult&);
-  void PassOptionalArrayBuffer(const Optional<ArrayBuffer>&, ErrorResult&);
-  void PassOptionalNullableArrayBuffer(const Optional<ArrayBuffer*>&, ErrorResult&);
-  void PassOptionalNullableArrayBufferWithDefaultValue(ArrayBuffer*, ErrorResult&);
-  void PassArrayBufferView(ArrayBufferView&, ErrorResult&);
-  void PassInt8Array(Int8Array&, ErrorResult&);
-  void PassInt16Array(Int16Array&, ErrorResult&);
-  void PassInt32Array(Int32Array&, ErrorResult&);
-  void PassUint8Array(Uint8Array&, ErrorResult&);
-  void PassUint16Array(Uint16Array&, ErrorResult&);
-  void PassUint32Array(Uint32Array&, ErrorResult&);
-  void PassUint8ClampedArray(Uint8ClampedArray&, ErrorResult&);
-  void PassFloat32Array(Float32Array&, ErrorResult&);
-  void PassFloat64Array(Float64Array&, ErrorResult&);
-  JSObject* ReceiveUint8Array(ErrorResult&);
+  void PassArrayBuffer(ArrayBuffer&);
+  void PassNullableArrayBuffer(ArrayBuffer*);
+  void PassOptionalArrayBuffer(const Optional<ArrayBuffer>&);
+  void PassOptionalNullableArrayBuffer(const Optional<ArrayBuffer*>&);
+  void PassOptionalNullableArrayBufferWithDefaultValue(ArrayBuffer*);
+  void PassArrayBufferView(ArrayBufferView&);
+  void PassInt8Array(Int8Array&);
+  void PassInt16Array(Int16Array&);
+  void PassInt32Array(Int32Array&);
+  void PassUint8Array(Uint8Array&);
+  void PassUint16Array(Uint16Array&);
+  void PassUint32Array(Uint32Array&);
+  void PassUint8ClampedArray(Uint8ClampedArray&);
+  void PassFloat32Array(Float32Array&);
+  void PassFloat64Array(Float64Array&);
+  JSObject* ReceiveUint8Array();
 
   // String types
-  void PassString(const nsAString&, ErrorResult&);
-  void PassNullableString(const nsAString&, ErrorResult&);
-  void PassOptionalString(const Optional<nsAString>&, ErrorResult&);
-  void PassOptionalStringWithDefaultValue(const nsAString&, ErrorResult&);
-  void PassOptionalNullableString(const Optional<nsAString>&, ErrorResult&);
-  void PassOptionalNullableStringWithDefaultValue(const nsAString&, ErrorResult&);
+  void PassString(const nsAString&);
+  void PassNullableString(const nsAString&);
+  void PassOptionalString(const Optional<nsAString>&);
+  void PassOptionalStringWithDefaultValue(const nsAString&);
+  void PassOptionalNullableString(const Optional<nsAString>&);
+  void PassOptionalNullableStringWithDefaultValue(const nsAString&);
 
   // Enumarated types
-  void PassEnum(TestEnum, ErrorResult&);
-  void PassOptionalEnum(const Optional<TestEnum>&, ErrorResult&);
-  void PassEnumWithDefault(TestEnum, ErrorResult&);
-  TestEnum ReceiveEnum(ErrorResult&);
-  TestEnum GetEnumAttribute(ErrorResult&);
-  TestEnum GetReadonlyEnumAttribute(ErrorResult&);
-  void SetEnumAttribute(TestEnum, ErrorResult&);
+  void PassEnum(TestEnum);
+  void PassOptionalEnum(const Optional<TestEnum>&);
+  void PassEnumWithDefault(TestEnum);
+  TestEnum ReceiveEnum();
+  TestEnum GetEnumAttribute();
+  TestEnum GetReadonlyEnumAttribute();
+  void SetEnumAttribute(TestEnum);
 
   // Callback types
-  void PassCallback(JSContext*, JSObject*, ErrorResult&);
-  void PassNullableCallback(JSContext*, JSObject*, ErrorResult&);
-  void PassOptionalCallback(JSContext*, const Optional<JSObject*>&,
-                            ErrorResult&);
-  void PassOptionalNullableCallback(JSContext*, const Optional<JSObject*>&,
-                                    ErrorResult&);
-  void PassOptionalNullableCallbackWithDefaultValue(JSContext*, JSObject*,
-                                                    ErrorResult&);
-  JSObject* ReceiveCallback(JSContext*, ErrorResult&);
-  JSObject* ReceiveNullableCallback(JSContext*, ErrorResult&);
+  void PassCallback(JSContext*, JSObject*);
+  void PassNullableCallback(JSContext*, JSObject*);
+  void PassOptionalCallback(JSContext*, const Optional<JSObject*>&);
+  void PassOptionalNullableCallback(JSContext*, const Optional<JSObject*>&);
+  void PassOptionalNullableCallbackWithDefaultValue(JSContext*, JSObject*);
+  JSObject* ReceiveCallback(JSContext*);
+  JSObject* ReceiveNullableCallback(JSContext*);
 
   // Any types
-  void PassAny(JSContext*, JS::Value, ErrorResult&);
-  void PassOptionalAny(JSContext*, const Optional<JS::Value>&, ErrorResult&);
-  void PassAnyDefaultNull(JSContext*, JS::Value, ErrorResult&);
-  JS::Value ReceiveAny(JSContext*, ErrorResult&);
+  void PassAny(JSContext*, JS::Value);
+  void PassOptionalAny(JSContext*, const Optional<JS::Value>&);
+  void PassAnyDefaultNull(JSContext*, JS::Value);
+  JS::Value ReceiveAny(JSContext*);
 
   // object types
-  void PassObject(JSContext*, JSObject&, ErrorResult&);
-  void PassNullableObject(JSContext*, JSObject*, ErrorResult&);
-  void PassOptionalObject(JSContext*, const Optional<NonNull<JSObject> >&, ErrorResult&);
-  void PassOptionalNullableObject(JSContext*, const Optional<JSObject*>&, ErrorResult&);
-  void PassOptionalNullableObjectWithDefaultValue(JSContext*, JSObject*, ErrorResult&);
-  JSObject* ReceiveObject(JSContext*, ErrorResult&);
-  JSObject* ReceiveNullableObject(JSContext*, ErrorResult&);
+  void PassObject(JSContext*, JSObject&);
+  void PassNullableObject(JSContext*, JSObject*);
+  void PassOptionalObject(JSContext*, const Optional<NonNull<JSObject> >&);
+  void PassOptionalNullableObject(JSContext*, const Optional<JSObject*>&);
+  void PassOptionalNullableObjectWithDefaultValue(JSContext*, JSObject*);
+  JSObject* ReceiveObject(JSContext*);
+  JSObject* ReceiveNullableObject(JSContext*);
 
   // Union types
-  void PassUnion(JSContext*, const ObjectOrLong& arg, ErrorResult&);
-  void PassUnionWithNullable(JSContext*, const ObjectOrNullOrLong& arg, ErrorResult&)
+  void PassUnion(JSContext*, const ObjectOrLong& arg);
+  void PassUnionWithNullable(JSContext*, const ObjectOrNullOrLong& arg)
   {
     ObjectOrLong returnValue;
     if (arg.IsNull()) {
@@ -391,171 +369,177 @@ public:
       i += 1;
     }
   }
-  void PassNullableUnion(JSContext*, const Nullable<ObjectOrLong>&, ErrorResult&);
-  void PassOptionalUnion(JSContext*, const Optional<ObjectOrLong>&, ErrorResult&);
-  void PassOptionalNullableUnion(JSContext*, const Optional<Nullable<ObjectOrLong> >&, ErrorResult&);
-  void PassOptionalNullableUnionWithDefaultValue(JSContext*, const Nullable<ObjectOrLong>&, ErrorResult&);
-  //void PassUnionWithInterfaces(const TestInterfaceOrTestExternalInterface& arg, ErrorResult&);
-  //void PassUnionWithInterfacesAndNullable(const TestInterfaceOrNullOrTestExternalInterface& arg, ErrorResult&);
-  void PassUnionWithArrayBuffer(const ArrayBufferOrLong&, ErrorResult&);
-  void PassUnionWithString(JSContext*, const StringOrObject&, ErrorResult&);
-  //void PassUnionWithEnum(JSContext*, const TestEnumOrObject&, ErrorResult&);
-  void PassUnionWithCallback(JSContext*, const TestCallbackOrLong&, ErrorResult&);
-  void PassUnionWithObject(JSContext*, const ObjectOrLong&, ErrorResult&);
+  void PassNullableUnion(JSContext*, const Nullable<ObjectOrLong>&);
+  void PassOptionalUnion(JSContext*, const Optional<ObjectOrLong>&);
+  void PassOptionalNullableUnion(JSContext*, const Optional<Nullable<ObjectOrLong> >&);
+  void PassOptionalNullableUnionWithDefaultValue(JSContext*, const Nullable<ObjectOrLong>&);
+  //void PassUnionWithInterfaces(const TestInterfaceOrTestExternalInterface& arg);
+  //void PassUnionWithInterfacesAndNullable(const TestInterfaceOrNullOrTestExternalInterface& arg);
+  void PassUnionWithArrayBuffer(const ArrayBufferOrLong&);
+  void PassUnionWithString(JSContext*, const StringOrObject&);
+  //void PassUnionWithEnum(JSContext*, const TestEnumOrObject&);
+  void PassUnionWithCallback(JSContext*, const TestCallbackOrLong&);
+  void PassUnionWithObject(JSContext*, const ObjectOrLong&);
 
   // binaryNames tests
-  void MethodRenamedTo(ErrorResult&);
-  void MethodRenamedTo(int8_t, ErrorResult&);
-  int8_t GetAttributeGetterRenamedTo(ErrorResult&);
-  int8_t GetAttributeRenamedTo(ErrorResult&);
-  void SetAttributeRenamedTo(int8_t, ErrorResult&);
+  void MethodRenamedTo();
+  void MethodRenamedTo(int8_t);
+  int8_t GetAttributeGetterRenamedTo();
+  int8_t GetAttributeRenamedTo();
+  void SetAttributeRenamedTo(int8_t);
 
   // Dictionary tests
-  void PassDictionary(const Dict&, ErrorResult&);
-  void PassOtherDictionary(const GrandparentDict&, ErrorResult&);
-  void PassSequenceOfDictionaries(const Sequence<Dict>&, ErrorResult&);
-  void PassDictionaryOrLong(const Dict&, ErrorResult&);
-  void PassDictionaryOrLong(int32_t, ErrorResult&);
-  void PassDictContainingDict(const DictContainingDict&, ErrorResult&);
+  void PassDictionary(const Dict&);
+  void PassOtherDictionary(const GrandparentDict&);
+  void PassSequenceOfDictionaries(const Sequence<Dict>&);
+  void PassDictionaryOrLong(const Dict&);
+  void PassDictionaryOrLong(int32_t);
+  void PassDictContainingDict(const DictContainingDict&);
+
+  // Typedefs
+  void ExerciseTypedefInterfaces1(TestInterface&);
+  already_AddRefed<TestInterface> ExerciseTypedefInterfaces2(TestInterface*);
+  void ExerciseTypedefInterfaces3(TestInterface&);
 
   // Methods and properties imported via "implements"
-  bool GetImplementedProperty(ErrorResult&);
-  void SetImplementedProperty(bool, ErrorResult&);
-  void ImplementedMethod(ErrorResult&);
-  bool GetImplementedParentProperty(ErrorResult&);
-  void SetImplementedParentProperty(bool, ErrorResult&);
-  void ImplementedParentMethod(ErrorResult&);
-  bool GetIndirectlyImplementedProperty(ErrorResult&);
-  void SetIndirectlyImplementedProperty(bool, ErrorResult&);
-  void IndirectlyImplementedMethod(ErrorResult&);
-  uint32_t GetDiamondImplementedProperty(ErrorResult&);
+  bool GetImplementedProperty();
+  void SetImplementedProperty(bool);
+  void ImplementedMethod();
+  bool GetImplementedParentProperty();
+  void SetImplementedParentProperty(bool);
+  void ImplementedParentMethod();
+  bool GetIndirectlyImplementedProperty();
+  void SetIndirectlyImplementedProperty(bool);
+  void IndirectlyImplementedMethod();
+  uint32_t GetDiamondImplementedProperty();
+
+  // Test EnforceRange/Clamp
+  void DontEnforceRangeOrClamp(int8_t);
+  void DoEnforceRange(int8_t);
+  void DoClamp(int8_t);
 
 private:
   // We add signatures here that _could_ start matching if the codegen
   // got data types wrong.  That way if it ever does we'll have a call
   // to these private deleted methods and compilation will fail.
-  void SetReadonlyByte(int8_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyByte(int8_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableByte(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableByte(T) MOZ_DELETE;
   template<typename T>
-  void PassByte(T, ErrorResult&) MOZ_DELETE;
+  void PassByte(T) MOZ_DELETE;
   template<typename T>
-  void PassOptionalByte(const Optional<T>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalByte(const Optional<T>&) MOZ_DELETE;
   template<typename T>
-  void PassOptionalByteWithDefault(T, ErrorResult&) MOZ_DELETE;
+  void PassOptionalByteWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyShort(int16_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyShort(int16_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableShort(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableShort(T) MOZ_DELETE;
   template<typename T>
-  void PassShort(T, ErrorResult&) MOZ_DELETE;
+  void PassShort(T) MOZ_DELETE;
   template<typename T>
-  void PassOptionalShort(const Optional<T>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalShort(const Optional<T>&) MOZ_DELETE;
   template<typename T>
-  void PassOptionalShortWithDefault(T, ErrorResult&) MOZ_DELETE;
+  void PassOptionalShortWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyLong(int32_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyLong(int32_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableLong(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableLong(T) MOZ_DELETE;
   template<typename T>
-  void PassLong(T, ErrorResult&) MOZ_DELETE;
+  void PassLong(T) MOZ_DELETE;
   template<typename T>
-  void PassOptionalLong(const Optional<T>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalLong(const Optional<T>&) MOZ_DELETE;
   template<typename T>
-  void PassOptionalLongWithDefault(T, ErrorResult&) MOZ_DELETE;
+  void PassOptionalLongWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyLongLong(int64_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyLongLong(int64_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableLongLong(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableLongLong(T) MOZ_DELETE;
   template<typename T>
-  void PassLongLong(T, ErrorResult&) MOZ_DELETE;
+  void PassLongLong(T) MOZ_DELETE;
   template<typename T>
-  void PassOptionalLongLong(const Optional<T>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalLongLong(const Optional<T>&) MOZ_DELETE;
   template<typename T>
-  void PassOptionalLongLongWithDefault(T, ErrorResult&) MOZ_DELETE;
+  void PassOptionalLongLongWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyOctet(uint8_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyOctet(uint8_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableOctet(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableOctet(T) MOZ_DELETE;
   template<typename T>
-  void PassOctet(T, ErrorResult&) MOZ_DELETE;
+  void PassOctet(T) MOZ_DELETE;
   template<typename T>
-  void PassOptionalOctet(const Optional<T>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalOctet(const Optional<T>&) MOZ_DELETE;
   template<typename T>
-  void PassOptionalOctetWithDefault(T, ErrorResult&) MOZ_DELETE;
+  void PassOptionalOctetWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyUnsignedShort(uint16_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyUnsignedShort(uint16_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableUnsignedShort(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableUnsignedShort(T) MOZ_DELETE;
   template<typename T>
-  void PassUnsignedShort(T, ErrorResult&) MOZ_DELETE;
+  void PassUnsignedShort(T) MOZ_DELETE;
   template<typename T>
-  void PassOptionalUnsignedShort(const Optional<T>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalUnsignedShort(const Optional<T>&) MOZ_DELETE;
   template<typename T>
-  void PassOptionalUnsignedShortWithDefault(T, ErrorResult&) MOZ_DELETE;
+  void PassOptionalUnsignedShortWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyUnsignedLong(uint32_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyUnsignedLong(uint32_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableUnsignedLong(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableUnsignedLong(T) MOZ_DELETE;
   template<typename T>
-  void PassUnsignedLong(T, ErrorResult&) MOZ_DELETE;
+  void PassUnsignedLong(T) MOZ_DELETE;
   template<typename T>
-  void PassOptionalUnsignedLong(const Optional<T>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalUnsignedLong(const Optional<T>&) MOZ_DELETE;
   template<typename T>
-  void PassOptionalUnsignedLongWithDefault(T, ErrorResult&) MOZ_DELETE;
+  void PassOptionalUnsignedLongWithDefault(T) MOZ_DELETE;
 
-  void SetReadonlyUnsignedLongLong(uint64_t, ErrorResult&) MOZ_DELETE;
+  void SetReadonlyUnsignedLongLong(uint64_t) MOZ_DELETE;
   template<typename T>
-  void SetWritableUnsignedLongLong(T, ErrorResult&) MOZ_DELETE;
+  void SetWritableUnsignedLongLong(T) MOZ_DELETE;
   template<typename T>
-  void PassUnsignedLongLong(T, ErrorResult&) MOZ_DELETE;
+  void PassUnsignedLongLong(T) MOZ_DELETE;
   template<typename T>
-  void PassOptionalUnsignedLongLong(const Optional<T>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalUnsignedLongLong(const Optional<T>&) MOZ_DELETE;
   template<typename T>
-  void PassOptionalUnsignedLongLongWithDefault(T, ErrorResult&) MOZ_DELETE;
+  void PassOptionalUnsignedLongLongWithDefault(T) MOZ_DELETE;
 
   // Enforce that only const things are passed for sequences
-  void PassSequence(Sequence<int32_t> &, ErrorResult&) MOZ_DELETE;
-  void PassNullableSequence(Nullable< Sequence<int32_t> >&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalNullableSequenceWithDefaultValue(Nullable< Sequence<int32_t> >&,
-                                                    ErrorResult&) MOZ_DELETE;
+  void PassSequence(Sequence<int32_t> &) MOZ_DELETE;
+  void PassNullableSequence(Nullable< Sequence<int32_t> >&) MOZ_DELETE;
+  void PassOptionalNullableSequenceWithDefaultValue(Nullable< Sequence<int32_t> >&) MOZ_DELETE;
 
   // Enforce that only const things are passed for optional
-  void PassOptionalByte(Optional<int8_t>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalNullableByte(Optional<Nullable<int8_t> >&,
-                                ErrorResult&) MOZ_DELETE;
-  void PassOptionalShort(Optional<int16_t>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalLong(Optional<int32_t>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalLongLong(Optional<int64_t>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalOctet(Optional<uint8_t>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalUnsignedShort(Optional<uint16_t>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalUnsignedLong(Optional<uint32_t>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalUnsignedLongLong(Optional<uint64_t>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalSelf(Optional<TestInterface*> &, ErrorResult&) MOZ_DELETE;
-  void PassOptionalNonNullSelf(Optional<NonNull<TestInterface> >&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalOther(Optional<TestNonCastableInterface*>&, ErrorResult&);
-  void PassOptionalNonNullOther(Optional<NonNull<TestNonCastableInterface> >&, ErrorResult&);
-  void PassOptionalExternal(Optional<TestExternalInterface*>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalNonNullExternal(Optional<TestExternalInterface*>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalSequence(Optional<Sequence<int32_t> >&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalNullableSequence(Optional<Nullable<Sequence<int32_t> > >&,
-                                    ErrorResult&) MOZ_DELETE;
-  void PassOptionalObjectSequence(Optional<Sequence<OwningNonNull<TestInterface> > >&,
-                                  ErrorResult&) MOZ_DELETE;
-  void PassOptionalArrayBuffer(Optional<ArrayBuffer>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalNullableArrayBuffer(Optional<ArrayBuffer*>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalEnum(Optional<TestEnum>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalCallback(JSContext*, Optional<JSObject*>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalNullableCallback(JSContext*, Optional<JSObject*>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalAny(Optional<JS::Value>&, ErrorResult) MOZ_DELETE;
+  void PassOptionalByte(Optional<int8_t>&) MOZ_DELETE;
+  void PassOptionalNullableByte(Optional<Nullable<int8_t> >&) MOZ_DELETE;
+  void PassOptionalShort(Optional<int16_t>&) MOZ_DELETE;
+  void PassOptionalLong(Optional<int32_t>&) MOZ_DELETE;
+  void PassOptionalLongLong(Optional<int64_t>&) MOZ_DELETE;
+  void PassOptionalOctet(Optional<uint8_t>&) MOZ_DELETE;
+  void PassOptionalUnsignedShort(Optional<uint16_t>&) MOZ_DELETE;
+  void PassOptionalUnsignedLong(Optional<uint32_t>&) MOZ_DELETE;
+  void PassOptionalUnsignedLongLong(Optional<uint64_t>&) MOZ_DELETE;
+  void PassOptionalSelf(Optional<TestInterface*> &) MOZ_DELETE;
+  void PassOptionalNonNullSelf(Optional<NonNull<TestInterface> >&) MOZ_DELETE;
+  void PassOptionalOther(Optional<TestNonCastableInterface*>&);
+  void PassOptionalNonNullOther(Optional<NonNull<TestNonCastableInterface> >&);
+  void PassOptionalExternal(Optional<TestExternalInterface*>&) MOZ_DELETE;
+  void PassOptionalNonNullExternal(Optional<TestExternalInterface*>&) MOZ_DELETE;
+  void PassOptionalSequence(Optional<Sequence<int32_t> >&) MOZ_DELETE;
+  void PassOptionalNullableSequence(Optional<Nullable<Sequence<int32_t> > >&) MOZ_DELETE;
+  void PassOptionalObjectSequence(Optional<Sequence<OwningNonNull<TestInterface> > >&) MOZ_DELETE;
+  void PassOptionalArrayBuffer(Optional<ArrayBuffer>&) MOZ_DELETE;
+  void PassOptionalNullableArrayBuffer(Optional<ArrayBuffer*>&) MOZ_DELETE;
+  void PassOptionalEnum(Optional<TestEnum>&) MOZ_DELETE;
+  void PassOptionalCallback(JSContext*, Optional<JSObject*>&) MOZ_DELETE;
+  void PassOptionalNullableCallback(JSContext*, Optional<JSObject*>&) MOZ_DELETE;
+  void PassOptionalAny(Optional<JS::Value>&) MOZ_DELETE;
 
   // And test that string stuff is always const
-  void PassString(nsAString&, ErrorResult&) MOZ_DELETE;
-  void PassNullableString(nsAString&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalString(Optional<nsAString>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalStringWithDefaultValue(nsAString&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalNullableString(Optional<nsAString>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalNullableStringWithDefaultValue(nsAString&, ErrorResult&) MOZ_DELETE;
+  void PassString(nsAString&) MOZ_DELETE;
+  void PassNullableString(nsAString&) MOZ_DELETE;
+  void PassOptionalString(Optional<nsAString>&) MOZ_DELETE;
+  void PassOptionalStringWithDefaultValue(nsAString&) MOZ_DELETE;
+  void PassOptionalNullableString(Optional<nsAString>&) MOZ_DELETE;
+  void PassOptionalNullableStringWithDefaultValue(nsAString&) MOZ_DELETE;
 
 };
 
@@ -568,10 +552,10 @@ public:
   // We need a GetParentObject to make binding codegen happy
   virtual nsISupports* GetParentObject();
 
-  uint32_t IndexedGetter(uint32_t, bool&, ErrorResult&);
-  uint32_t IndexedGetter(uint32_t, ErrorResult&) MOZ_DELETE;
-  uint32_t Item(uint32_t, ErrorResult&);
-  uint32_t Item(uint32_t, bool&, ErrorResult&) MOZ_DELETE;
+  uint32_t IndexedGetter(uint32_t, bool&);
+  uint32_t IndexedGetter(uint32_t&) MOZ_DELETE;
+  uint32_t Item(uint32_t&);
+  uint32_t Item(uint32_t, bool&) MOZ_DELETE;
   uint32_t GetLength();
 };
 
@@ -584,7 +568,7 @@ public:
   // We need a GetParentObject to make binding codegen happy
   virtual nsISupports* GetParentObject();
 
-  void NamedGetter(const nsAString&, bool&, nsAString&, ErrorResult&);
+  void NamedGetter(const nsAString&, bool&, nsAString&);
 };
 
 class TestIndexedAndNamedGetterInterface : public nsISupports,
@@ -596,9 +580,9 @@ public:
   // We need a GetParentObject to make binding codegen happy
   virtual nsISupports* GetParentObject();
 
-  uint32_t IndexedGetter(uint32_t, bool&, ErrorResult&);
-  void NamedGetter(const nsAString&, bool&, nsAString&, ErrorResult&);
-  void NamedItem(const nsAString&, nsAString&, ErrorResult&);
+  uint32_t IndexedGetter(uint32_t, bool&);
+  void NamedGetter(const nsAString&, bool&, nsAString&);
+  void NamedItem(const nsAString&, nsAString&);
   uint32_t GetLength();
 };
 
@@ -611,8 +595,8 @@ public:
   // We need a GetParentObject to make binding codegen happy
   virtual nsISupports* GetParentObject();
 
-  void IndexedSetter(uint32_t, const nsAString&, ErrorResult&);
-  void SetItem(uint32_t, const nsAString&, ErrorResult&);
+  void IndexedSetter(uint32_t, const nsAString&);
+  void SetItem(uint32_t, const nsAString&);
 };
 
 class TestNamedSetterInterface : public nsISupports,
@@ -624,7 +608,7 @@ public:
   // We need a GetParentObject to make binding codegen happy
   virtual nsISupports* GetParentObject();
 
-  void NamedSetter(const nsAString&, TestIndexedSetterInterface&, ErrorResult&);
+  void NamedSetter(const nsAString&, TestIndexedSetterInterface&);
 };
 
 class TestIndexedAndNamedSetterInterface : public nsISupports,
@@ -636,21 +620,21 @@ public:
   // We need a GetParentObject to make binding codegen happy
   virtual nsISupports* GetParentObject();
 
-  void IndexedSetter(uint32_t, TestIndexedSetterInterface&, ErrorResult&);
-  void NamedSetter(const nsAString&, TestIndexedSetterInterface&, ErrorResult&);
-  void SetNamedItem(const nsAString&, TestIndexedSetterInterface&, ErrorResult&);
+  void IndexedSetter(uint32_t, TestIndexedSetterInterface&);
+  void NamedSetter(const nsAString&, TestIndexedSetterInterface&);
+  void SetNamedItem(const nsAString&, TestIndexedSetterInterface&);
 };
 
 class TestIndexedAndNamedGetterAndSetterInterface : public TestIndexedSetterInterface
 {
 public:
-  uint32_t IndexedGetter(uint32_t, bool&, ErrorResult&);
-  uint32_t Item(uint32_t, ErrorResult&);
-  void NamedGetter(const nsAString&, bool&, nsAString&, ErrorResult&);
-  void NamedItem(const nsAString&, nsAString&, ErrorResult&);
-  void IndexedSetter(uint32_t, int32_t&, ErrorResult&);
-  void IndexedSetter(uint32_t, const nsAString&, ErrorResult&) MOZ_DELETE;
-  void NamedSetter(const nsAString&, const nsAString&, ErrorResult&);
+  uint32_t IndexedGetter(uint32_t, bool&);
+  uint32_t Item(uint32_t);
+  void NamedGetter(const nsAString&, bool&, nsAString&);
+  void NamedItem(const nsAString&, nsAString&);
+  void IndexedSetter(uint32_t, int32_t&);
+  void IndexedSetter(uint32_t, const nsAString&) MOZ_DELETE;
+  void NamedSetter(const nsAString&, const nsAString&);
   void Stringify(nsAString&);
   uint32_t GetLength();
 };

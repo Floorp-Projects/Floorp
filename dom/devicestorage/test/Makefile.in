@@ -6,7 +6,7 @@ DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir	= dom/devicestorage/test/
+relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -20,7 +20,6 @@ MOCHITEST_FILES	= \
 		test_enumerate.html \
 		test_enumerateMultipleContinue.html \
 		test_overwrite.html \
-		test_diskSpace.html \
 		test_dotdot.html \
 		test_enumerateOptions.html \
 		test_lastModificationFilter.html \

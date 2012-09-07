@@ -25,6 +25,7 @@ CPPSRCS = \
   ImageAccessible.cpp \
   OuterDocAccessible.cpp \
   RootAccessible.cpp \
+  TableCellAccessible.cpp \
   TextLeafAccessible.cpp \
   $(NULL)
 

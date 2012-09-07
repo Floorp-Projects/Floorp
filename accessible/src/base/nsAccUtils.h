@@ -9,7 +9,6 @@
 #include "nsIAccessible.h"
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleText.h"
-#include "nsIAccessibleTable.h"
 
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
@@ -293,32 +292,6 @@ public:
    * to platform accessibility APIs, should the children be pruned off?
    */
   static bool MustPrune(Accessible* aAccessible);
-
-  /**
-   * Search hint enum constants. Used by GetHeaderCellsFor() method.
-   */
-  enum {
-    // search for row header cells, left direction
-    eRowHeaderCells,
-    // search for column header cells, top direction
-    eColumnHeaderCells
-  };
-
-  /**
-   * Return an array of row or column header cells for the given cell.
-   *
-   * @param aTable                [in] table accessible
-   * @param aCell                 [in] cell accessible within the given table to
-   *                               get header cells
-   * @param aRowOrColHeaderCells  [in] specifies whether column or row header
-   *                               cells are returned (see enum constants
-   *                               above)
-   * @param aCells                [out] array of header cell accessibles
-   */
-  static nsresult GetHeaderCellsFor(nsIAccessibleTable *aTable,
-                                    nsIAccessibleTableCell *aCell,
-                                    int32_t aRowOrColHeaderCells,
-                                    nsIArray **aCells);
 };
 
 #endif

@@ -346,7 +346,7 @@ nsFeedSniffer::AppendSegmentToString(nsIInputStream* inputStream,
 
 NS_IMETHODIMP
 nsFeedSniffer::OnDataAvailable(nsIRequest* request, nsISupports* context,
-                               nsIInputStream* stream, uint32_t offset, 
+                               nsIInputStream* stream, uint64_t offset, 
                                uint32_t count)
 {
   uint32_t read;

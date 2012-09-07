@@ -974,7 +974,7 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
     JS_ASSERT(ok);
 
     if (cx->runtime->gcNumber != sample)
-        JS_PROPERTY_CACHE(cx).restore(&savedEntry);
+        cx->propertyCache().restore(&savedEntry);
     JS_ASSERT(prop);
     JS_ASSERT(pobj == found);
     JS_ASSERT(entry->prop == prop);

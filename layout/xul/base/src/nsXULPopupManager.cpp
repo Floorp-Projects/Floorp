@@ -604,7 +604,8 @@ nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
     nsCOMPtr<nsIWidget> widget;
     rootPresContext->PresShell()->GetViewManager()->
       GetRootWidget(getter_AddRefs(widget));
-    mCachedMousePoint -= widget->WidgetToScreenOffset();
+    if (widget)
+      mCachedMousePoint -= widget->WidgetToScreenOffset();
   }
 
   popupFrame->InitializePopupAtScreen(aTriggerContent, aXPos, aYPos, false);

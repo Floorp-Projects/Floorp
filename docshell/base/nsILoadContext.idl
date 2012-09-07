@@ -7,13 +7,14 @@
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;
+interface nsIDOMElement;
 
 /**
  * An nsILoadContext represents the context of a load.  This interface
  * can be queried for various information about where the load is
  * happening.
  */
-[scriptable, uuid(48b5bf16-e0c7-11e1-b28e-91726188709b)]
+[scriptable, uuid(17f6a38a-3f4b-4c94-8252-9d9f7dbf4960)]
 interface nsILoadContext : nsISupports
 {
   /**
@@ -32,6 +33,15 @@ interface nsILoadContext : nsISupports
    * course.  This attribute may be null if there is no associated window.
    */
   readonly attribute nsIDOMWindow topWindow;
+
+  /**
+   * topFrameElement is the <iframe> or <frame> element which contains the
+   * topWindow with which the load is associated.
+   *
+   * Note that we may have a topFrameElement even when we don't have an
+   * associatedWindow, if the topFrameElement's content lives out of process.
+   */
+  readonly attribute nsIDOMElement topFrameElement;
 
   /**
    * Check whether the load is happening in a particular type of application.

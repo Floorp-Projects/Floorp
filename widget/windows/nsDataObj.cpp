@@ -90,11 +90,12 @@ STDMETHODIMP nsDataObj::CStream::QueryInterface(REFIID refiid, void** ppvResult)
 }
 
 // nsIStreamListener implementation
-NS_IMETHODIMP nsDataObj::CStream::OnDataAvailable(nsIRequest *aRequest,
-                                                  nsISupports *aContext,
-                                                  nsIInputStream *aInputStream,
-                                                  uint32_t aOffset, // offset within the stream
-                                                  uint32_t aCount) // bytes available on this call
+NS_IMETHODIMP
+nsDataObj::CStream::OnDataAvailable(nsIRequest *aRequest,
+                                    nsISupports *aContext,
+                                    nsIInputStream *aInputStream,
+                                    uint64_t aOffset, // offset within the stream
+                                    uint32_t aCount) // bytes available on this call
 {
     // Extend the write buffer for the incoming data.
     uint8_t* buffer = mChannelData.AppendElements(aCount);
@@ -1564,8 +1565,8 @@ HRESULT nsDataObj::DropTempFile(FORMATETC& aFE, STGMEDIUM& aSTG)
     ULONG readCount = 0;
     uint32_t writeCount = 0;
     while (1) {
-      rv = pStream->Read(buffer, sizeof(buffer), &readCount);
-      if (NS_FAILED(rv))
+      HRESULT hres = pStream->Read(buffer, sizeof(buffer), &readCount);
+      if (FAILED(hres))
         return E_FAIL;
       if (readCount == 0)
         break;

@@ -7,8 +7,8 @@
   <title>Testcase for fallback colours</title>
 
   <defs>
-    <filter id="erode">
-      <feMorphology operator="dilate" radius="3"/>
+    <filter id="dilate">
+      <feMorphology operator="dilate" radius="6"/>
     </filter>
   </defs>
 
@@ -18,13 +18,13 @@
     A B
   </text>
   <text x="10" y="50" font-size="50"
-        stroke-width="8" stroke="url(#null) lime" fill="none" filter="url(#erode)">
+        stroke-width="8" stroke="url(#null) lime" fill="none" filter="url(#dilate)">
     A B
   </text>
   <text x="200" y="50" font-size="50" fill="red">
     A B
   </text>
-  <text x="200" y="50" font-size="50" fill="url(#null) lime" filter="url(#erode)">
+  <text x="200" y="50" font-size="50" fill="url(#null) lime" filter="url(#dilate)">
     A B
   </text>
   <text x="10" y="200" font-size="50" fill="red"
@@ -32,7 +32,7 @@
     A B
   </text>
   <text x="10" y="200" font-size="50" fill="url(#null) lime"
-        stroke-width="1" stroke="url(#null) lime" filter="url(#erode)">
+        stroke-width="1" stroke="url(#null) lime" filter="url(#dilate)">
     A B
   </text>
 </svg>

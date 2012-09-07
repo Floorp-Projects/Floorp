@@ -2846,7 +2846,21 @@ Accessible::IsWidget() const
 bool
 Accessible::IsActiveWidget() const
 {
-  return FocusMgr()->IsFocused(this);
+  if (FocusMgr()->HasDOMFocus(mContent))
+    return true;
+
+  // If text entry of combobox widget has a focus then the combobox widget is
+  // active.
+  if (mRoleMapEntry && mRoleMapEntry->Is(nsGkAtoms::combobox)) {
+    uint32_t childCount = ChildCount();
+    for (uint32_t idx = 0; idx < childCount; idx++) {
+      Accessible* child = mChildren.ElementAt(idx);
+      if (child->Role() == roles::ENTRY)
+        return FocusMgr()->HasDOMFocus(child->GetContent());
+    }
+  }
+
+  return false;
 }
 
 bool

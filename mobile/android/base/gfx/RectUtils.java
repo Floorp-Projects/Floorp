@@ -76,8 +76,14 @@ public final class RectUtils {
 
     /** Returns the nearest integer rect of the given rect. */
     public static Rect round(RectF rect) {
-        return new Rect(Math.round(rect.left), Math.round(rect.top),
-                        Math.round(rect.right), Math.round(rect.bottom));
+        Rect r = new Rect();
+        round(rect, r);
+        return r;
+    }
+
+    public static void round(RectF rect, Rect dest) {
+        dest.set(Math.round(rect.left), Math.round(rect.top),
+                 Math.round(rect.right), Math.round(rect.bottom));
     }
 
     public static Rect roundIn(RectF rect) {

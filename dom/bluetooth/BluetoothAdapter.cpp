@@ -293,7 +293,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     bool dummy;
     DispatchEvent(event, &dummy);
   } else if (aData.name().EqualsLiteral("DeviceDisappeared")) {
-		const nsAString& deviceAddress = aData.value().get_nsString();
+    const nsAString& deviceAddress = aData.value().get_nsString();
 
     nsCOMPtr<nsIDOMEvent> event;
     NS_NewDOMBluetoothDeviceAddressEvent(getter_AddRefs(event), nullptr, nullptr);
@@ -404,7 +404,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
-    warningMsg.AssignLiteral("Not handling manager signal: ");
+    warningMsg.AssignLiteral("Not handling adapter signal: ");
     warningMsg.Append(NS_ConvertUTF16toUTF8(aData.name()));
     NS_WARNING(warningMsg.get());
 #endif

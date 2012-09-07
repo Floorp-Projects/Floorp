@@ -31,7 +31,7 @@ def WebIDLTest(parser, harness):
     harness.check(len(members), 10, "Should be one production")
 
     names = ["b", "s8", "u8", "s16", "u16", "s32", "u32", "s64", "u64", "ts"]
-    types = ["Boolean", "Byte", "Octet", "Short", "UnsignedShort", "Long", "UnsignedLong", "LongLong", "UnsignedLongLong", "DOMTimeStamp"]
+    types = ["Boolean", "Byte", "Octet", "Short", "UnsignedShort", "Long", "UnsignedLong", "LongLong", "UnsignedLongLong", "UnsignedLongLong"]
     for i in range(10):
         attr = members[i]
         harness.ok(isinstance(attr, WebIDL.IDLAttribute), "Should be an IDLAttribute")

@@ -80,7 +80,7 @@ class BasicTiledLayerBuffer : public TiledLayerBuffer<BasicTiledLayerBuffer, Bas
 
 public:
   BasicTiledLayerBuffer()
-    {}
+  {}
 
   void PaintThebes(BasicTiledThebesLayer* aLayer,
                    const nsIntRegion& aNewValidRegion,
@@ -109,6 +109,7 @@ public:
   const gfxSize& GetResolution() { return mResolution; }
   void SetResolution(const gfxSize& aResolution) { mResolution = aResolution; }
 
+  bool HasFormatChanged(BasicTiledThebesLayer* aThebesLayer) const;
 protected:
   BasicTiledLayerTile ValidateTile(BasicTiledLayerTile aTile,
                                    const nsIntPoint& aTileRect,
@@ -132,6 +133,7 @@ private:
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;
   gfxSize mResolution;
+  bool mLastPaintOpaque;
 
   // The buffer we use when UseSinglePaintBuffer() above is true.
   nsRefPtr<gfxImageSurface>     mSinglePaintBuffer;

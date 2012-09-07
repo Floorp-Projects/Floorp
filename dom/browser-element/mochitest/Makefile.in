@@ -67,6 +67,8 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_XFrameOptionsAllowFrom.html \
 		file_browserElement_XFrameOptionsAllowFrom.html \
 		file_browserElement_XFrameOptionsAllowFrom.sjs \
+		browserElement_FirstPaint.js \
+		test_browserElement_inproc_FirstPaint.html \
 		browserElement_Alert.js \
 		test_browserElement_inproc_Alert.html \
 		browserElement_AlertInFrame.js \
@@ -124,6 +126,9 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_SendEvent.html \
 		browserElement_ScrollEvent.js \
 		test_browserElement_inproc_ScrollEvent.html \
+		browserElement_Auth.js \
+		test_browserElement_inproc_Auth.html \
+		file_http_401_response.sjs \
 		$(NULL)
 
 # Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=774100
@@ -159,6 +164,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_XFrameOptionsDeny.html \
 		test_browserElement_oop_XFrameOptionsSameOrigin.html \
 		test_browserElement_oop_XFrameOptionsAllowFrom.html \
+		test_browserElement_oop_FirstPaint.html \
 		test_browserElement_oop_Alert.html \
 		test_browserElement_oop_AlertInFrame.html \
 		test_browserElement_oop_TargetTop.html \
@@ -180,6 +186,7 @@ MOCHITEST_FILES += \
                 test_browserElement_oop_ContextmenuEvents.html \
 		test_browserElement_oop_SendEvent.html \
 		test_browserElement_oop_ScrollEvent.html \
+		test_browserElement_oop_Auth.html \
 		$(NULL)
 endif #}
 endif #}
