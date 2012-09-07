@@ -416,6 +416,7 @@ gfxPattern::AdjustTransformForPattern(Matrix &aPatternTransform,
   if (!aOriginalTransform) {
     // User space is unchanged, so to get from pattern space to user space,
     // just invert the cairo matrix.
+    aPatternTransform.NudgeToIntegers();
     return;
   }
   // aPatternTransform now maps from pattern space to the user space defined
@@ -429,4 +430,5 @@ gfxPattern::AdjustTransformForPattern(Matrix &aPatternTransform,
   // from original user space to device space. Then transform from
   // device space to current user space.
   aPatternTransform = aPatternTransform * *aOriginalTransform * mat;
+  aPatternTransform.NudgeToIntegers();
 }
