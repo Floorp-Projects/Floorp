@@ -851,6 +851,18 @@ nsDirectoryService::GetFile(const char *prop, bool *persistent, nsIFile **_retva
     {
         rv = GetSpecialSystemDirectory(Win_Downloads, getter_AddRefs(localFile));
     }
+    else if (inAtom == nsDirectoryService::sPictures)
+    {
+        rv = GetSpecialSystemDirectory(Win_Pictures, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sMusic)
+    {
+        rv = GetSpecialSystemDirectory(Win_Music, getter_AddRefs(localFile));
+    }
+    else if (inAtom == nsDirectoryService::sVideos)
+    {
+        rv = GetSpecialSystemDirectory(Win_Videos, getter_AddRefs(localFile));
+    }
 #elif defined (XP_UNIX)
 
     else if (inAtom == nsDirectoryService::sLocalDirectory)
