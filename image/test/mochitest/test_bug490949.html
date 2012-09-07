@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=490949
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body onload="checkFirst()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=490949">Mozilla Bug 490949</a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -54,12 +54,10 @@ RemoteCanvas.prototype.reload = function(cb, force) {
 }
 
 RemoteCanvas.prototype.handleEvent = function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     // Look back up the iframe by id
     var ldrFrame = document.getElementById("test-iframe");
-    // Get a reference to the window object you need for the canvas
-    // drawWindow method
+    // Get a reference to the window object you need for the
+    // SpecialPowers.snapshotRect method
     var remoteWindow = ldrFrame.contentWindow;
 
     //Draw canvas
@@ -70,6 +68,9 @@ RemoteCanvas.prototype.handleEvent = function() {
     var windowWidth = window.innerWidth - 25;
     var windowHeight = window.innerHeight;
 
+    var rect = { left: 0, top: 0, width: windowWidth, height: windowHeight };
+    var snapshot = SpecialPowers.snapshotRect(remoteWindow, rect, "rgb(0,0,0)");
+
     var ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0,
                   RemoteCanvas.CANVAS_WIDTH,
@@ -77,10 +78,7 @@ RemoteCanvas.prototype.handleEvent = function() {
     ctx.save();
     ctx.scale(RemoteCanvas.CANVAS_WIDTH / windowWidth,
               RemoteCanvas.CANVAS_HEIGHT / windowHeight);
-    ctx.drawWindow(remoteWindow,
-                   0, 0,
-                   windowWidth, windowHeight,
-                   "rgb(0,0,0)");
+    ctx.drawImage(snapshot, 0, 0);
     ctx.restore();
     this.cb();
 };
