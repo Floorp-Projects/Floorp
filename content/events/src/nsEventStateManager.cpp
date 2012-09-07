@@ -4892,8 +4892,7 @@ nsEventStateManager::UnregisterAccessKey(nsIContent* aContent, uint32_t aKey)
 uint32_t
 nsEventStateManager::GetRegisteredAccessKey(nsIContent* aContent)
 {
-  NS_ASSERTION(aContent, "Null pointer passed to GetRegisteredAccessKey");
-  NS_ENSURE_TRUE(aContent, 0);
+  MOZ_ASSERT(aContent);
 
   if (mAccessKeys.IndexOf(aContent) == -1)
     return 0;

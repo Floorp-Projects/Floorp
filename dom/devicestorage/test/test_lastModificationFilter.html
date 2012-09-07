@@ -44,7 +44,7 @@ function verifyAndDelete(prefix, files, e) {
   files.remove(index);
 
   // clean up
-  var storage = navigator.getDeviceStorage("testing");
+  var storage = navigator.getDeviceStorage("pictures");
   var cleanup = storage.delete(prefix + "/" + filename);
   cleanup.onsuccess = function(e) {}
 }
@@ -76,15 +76,15 @@ devicestorage_setup();
 
 var prefix = "devicestorage/" + randomFilename(12)
 
-var oldFiles = ["a", "b", "c"];
-var newFiles = ["d", "e", "f"];
+var oldFiles = ["a.png", "b.png", "c.png"];
+var newFiles = ["d.png", "e.png", "f.png"];
 
 // 157795200 is a long long time ago.
 addFiles(prefix, oldFiles, 157795200, addNewFiles);
 
 function enumerateNew() {
 
-  var storage = navigator.getDeviceStorage("testing");
+  var storage = navigator.getDeviceStorage("pictures");
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
 // 836031600 is a long time ago

@@ -141,7 +141,7 @@ SettingsServiceLock.prototype = {
                                       flags: nsIClassInfo.DOM_OBJECT })
 };
 
-const SETTINGSSERVICE_CID        = Components.ID("{3458e760-8513-11e1-b0c4-0800200c9a66}");
+const SETTINGSSERVICE_CID        = Components.ID("{f656f0c0-f776-11e1-a21f-0800200c9a66}");
 
 let myGlobal = this;
 
@@ -166,7 +166,7 @@ SettingsService.prototype = {
     Services.tm.currentThread.dispatch(aCallback, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
-  getLock: function getLock() {
+  createLock: function createLock() {
     debug("get lock!");
     var lock = new SettingsServiceLock(this);
     this._locks.enqueue(lock);

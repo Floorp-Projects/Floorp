@@ -513,12 +513,14 @@ nsHttpServer.prototype =
     this._host = host;
 
     // The listen queue needs to be long enough to handle
-    // network.http.max-persistent-connections-per-server concurrent connections,
-    // plus a safety margin in case some other process is talking to
-    // the server as well.
+    // network.http.max-persistent-connections-per-server or
+    // network.http.max-persistent-connections-per-proxy concurrent
+    // connections, plus a safety margin in case some other process is
+    // talking to the server as well.
     var prefs = getRootPrefBranch();
-    var maxConnections =
-      prefs.getIntPref("network.http.max-persistent-connections-per-server") + 5;
+    var maxConnections = 5 + Math.max(
+      prefs.getIntPref("network.http.max-persistent-connections-per-server"),
+      prefs.getIntPref("network.http.max-persistent-connections-per-proxy"));
 
     try
     {

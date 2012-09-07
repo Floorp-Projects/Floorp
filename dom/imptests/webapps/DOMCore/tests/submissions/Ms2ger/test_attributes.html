@@ -31,7 +31,7 @@ test(function() {
     assert_throws("INVALID_CHARACTER_ERR", function() { el.setAttribute(invalid_names[i], "test") })
   }
 }, "When qualifiedName does not match the Name production, an " +
-   "INVALID_CHARACTER_ERR exception is to be thrown.")
+   "INVALID_CHARACTER_ERR exception is to be thrown. (setAttribute)")
 
 // Step 2
 test(function() {
@@ -40,14 +40,14 @@ test(function() {
   assert_equals(el.getAttributeNS("", "ALIGN"), null)
   assert_equals(el.getAttributeNS("", "align"), "left")
   assert_equals(el.getAttribute("align"), "left")
-}, "setAttribute should lowercase its name argument")
+}, "setAttribute should lowercase its name argument (upper case attribute)")
 test(function() {
   var el = document.createElement("div")
   el.setAttribute("CHEEseCaKe", "tasty")
   assert_equals(el.getAttributeNS("", "CHEEseCaKe"), null)
   assert_equals(el.getAttributeNS("", "cheesecake"), "tasty")
   assert_equals(el.getAttribute("cheesecake"), "tasty")
-}, "setAttribute should lowercase its name argument")
+}, "setAttribute should lowercase its name argument (mixed case attribute)")
 
 // Step 3
 test(function() {
@@ -108,7 +108,7 @@ test(function() {
                   function() { el.setAttributeNS("a", invalid_names[i], "fail") })
   }
 }, "When qualifiedName does not match the Name production, an " +
-   "INVALID_CHARACTER_ERR exception is to be thrown.")
+   "INVALID_CHARACTER_ERR exception is to be thrown. (setAttributeNS)")
 
 // Step 2
 test(function() {
@@ -284,7 +284,7 @@ test(function() {
   assert_equals(el.getAttributeNS(null, "align"), null)
   assert_equals(el.getAttributeNS("", "align"), null)
   el.removeAttributeNS("", "ALIGN")
-}, "Only lowercase attributes are returned on HTML elements")
+}, "Only lowercase attributes are returned on HTML elements (upper case attribute)")
 test(function() {
   var el = document.createElement("div")
   el.setAttributeNS("", "CHEEseCaKe", "tasty")
@@ -307,7 +307,7 @@ test(function() {
   assert_equals(el.getAttributeNS(null, "cheesecake"), null)
   assert_equals(el.getAttributeNS("", "cheesecake"), null)
   el.removeAttributeNS("", "CHEEseCaKe")
-}, "Only lowercase attributes are returned on HTML elements")
+}, "Only lowercase attributes are returned on HTML elements (mixed case attribute)")
 test(function() {
   var el = document.createElement("div")
   document.body.appendChild(el)

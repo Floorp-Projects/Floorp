@@ -396,6 +396,11 @@ public:
   void PassDictionaryOrLong(int32_t);
   void PassDictContainingDict(const DictContainingDict&);
 
+  // Typedefs
+  void ExerciseTypedefInterfaces1(TestInterface&);
+  already_AddRefed<TestInterface> ExerciseTypedefInterfaces2(TestInterface*);
+  void ExerciseTypedefInterfaces3(TestInterface&);
+
   // Methods and properties imported via "implements"
   bool GetImplementedProperty();
   void SetImplementedProperty(bool);
@@ -407,6 +412,11 @@ public:
   void SetIndirectlyImplementedProperty(bool);
   void IndirectlyImplementedMethod();
   uint32_t GetDiamondImplementedProperty();
+
+  // Test EnforceRange/Clamp
+  void DontEnforceRangeOrClamp(int8_t);
+  void DoEnforceRange(int8_t);
+  void DoClamp(int8_t);
 
 private:
   // We add signatures here that _could_ start matching if the codegen

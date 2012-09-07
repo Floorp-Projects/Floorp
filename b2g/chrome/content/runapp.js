@@ -72,7 +72,7 @@ window.addEventListener('load', function() {
     }
 
     let setReq =
-      navigator.mozSettings.getLock().set({'lockscreen.enabled': false});
+      navigator.mozSettings.createLock().set({'lockscreen.enabled': false});
     setReq.onsuccess = function() {
       // give the event loop another turn to disable the lock screen
       window.setTimeout(function() {

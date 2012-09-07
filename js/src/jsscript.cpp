@@ -1623,7 +1623,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     uint32_t prologLength = bce->prologOffset();
     uint32_t nsrcnotes = uint32_t(bce->countFinalSourceNotes());
     if (!partiallyInit(cx, script, prologLength + mainLength, nsrcnotes, bce->atomIndices->count(),
-                       bce->objectList.length, bce->regexpList.length, bce->ntrynotes,
+                       bce->objectList.length, bce->regexpList.length, bce->tryNoteList.length(),
                        bce->constList.length(), bce->typesetCount))
         return false;
 
@@ -1651,8 +1651,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
 
     if (!FinishTakingSrcNotes(cx, bce, script->notes()))
         return false;
-    if (bce->ntrynotes != 0)
-        FinishTakingTryNotes(bce, script->trynotes());
+    if (bce->tryNoteList.length() != 0)
+        bce->tryNoteList.finish(script->trynotes());
     if (bce->objectList.length != 0)
         bce->objectList.finish(script->objects());
     if (bce->regexpList.length != 0)
@@ -1662,7 +1662,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->strictModeCode = bce->sc->inStrictMode();
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
-    script->funHasExtensibleScope = bce->sc->funHasExtensibleScope();
+    script->funHasExtensibleScope =
+        bce->sc->inFunction() ? bce->sc->funHasExtensibleScope() : false;
     script->hasSingletons = bce->hasSingletons;
 #ifdef JS_METHODJIT
     if (cx->compartment->debugMode())
@@ -1684,8 +1685,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
         script->isGenerator = bce->sc->funIsGenerator();
-        script->isGeneratorExp = bce->sc->funbox() && bce->sc->funbox()->inGenexpLambda;
-        script->setFunction(bce->sc->fun());
+        script->isGeneratorExp = bce->sc->funbox()->inGenexpLambda;
+        script->setFunction(bce->sc->funbox()->fun());
     }
 
     /*

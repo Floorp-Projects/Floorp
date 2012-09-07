@@ -990,13 +990,7 @@ $(CCOBJS): %.$(OBJ_SUFFIX): %.cc
 $(CPPOBJS): %.$(OBJ_SUFFIX): %.cpp
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
-ifdef STRICT_CPLUSPLUS_SUFFIX
-	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
-	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
-	$(RM) t_$*.cc
-else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
-endif #STRICT_CPLUSPLUS_SUFFIX
 
 $(CMMOBJS): $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm
 	$(REPORT_BUILD)
@@ -1297,17 +1291,10 @@ INSTALL_TARGETS += XPIDL_HEADERS
 
 XPIDLSRCS_FILES := $(XPIDLSRCS)
 XPIDLSRCS_DEST := $(IDL_DIR)
-XPIDLSRCS_TARGET := export-idl
+XPIDLSRCS_TARGET := export
 INSTALL_TARGETS += XPIDLSRCS
-
-export:: export-idl
 endif
 endif #} XPIDLSRCS
-
-export-idl:: $(SUBMAKEFILES) $(MAKE_DIRS)
-	$(LOOP_OVER_PARALLEL_DIRS)
-	$(LOOP_OVER_DIRS)
-	$(LOOP_OVER_TOOL_DIRS)
 
 ################################################################################
 # Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components

@@ -329,9 +329,12 @@ CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
     return false;
 #if defined(XP_MACOSX)
   rv  = updater->AppendNative(NS_LITERAL_CSTRING(kUpdaterApp));
-  rv |= updater->AppendNative(NS_LITERAL_CSTRING("Contents"));
-  rv |= updater->AppendNative(NS_LITERAL_CSTRING("MacOS"));
-  if (NS_FAILED(rv))
+  nsresult tmp = updater->AppendNative(NS_LITERAL_CSTRING("Contents"));
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+  tmp = updater->AppendNative(NS_LITERAL_CSTRING("MacOS"));
+  if (NS_FAILED(tmp) || NS_FAILED(rv))
     return false;
 #endif
   rv = updater->AppendNative(NS_LITERAL_CSTRING(kUpdaterBin));
