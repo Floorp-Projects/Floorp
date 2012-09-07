@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=780529
+-->
+<window title="Mozilla Bug 780529"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=780529"
+     target="_blank">Mozilla Bug 780529</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 780529 **/
+var req = new XMLHttpRequest();
+req.open("GET", "", true);
+// Have to call send() to get the XHR hooked up as the notification callbacks
+req.send();
+var callbacks = req.channel.notificationCallbacks;
+var sink = callbacks.getInterface(Components.interfaces.nsIChannelEventSink);
+ok(sink instanceof Components.interfaces.nsIChannelEventSink,
+   "Should be a channel event sink")
+ok("asyncOnChannelRedirect" in sink,
+   "Should have the right methods for an event sink");
+
+is(callbacks.getInterface(Components.interfaces.nsIXMLHttpRequest), req,
+   "Should have the right object");
+sinkReq = sink.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+isnot(sinkReq, callbacks, "Sink should not be the XHR object");
+is(sinkReq.getInterface(Components.interfaces.nsIXMLHttpRequest), req,
+   "Should have the XHR object now");
+  ]]>
+  </script>
+</window>

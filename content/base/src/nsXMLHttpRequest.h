@@ -114,6 +114,10 @@ public:
   }
 };
 
+class nsXMLHttpRequestXPCOMifier;
+
+// Make sure that any non-DOM interfaces added here are also added to
+// nsXMLHttpRequestXPCOMifier.
 class nsXMLHttpRequest : public nsXHREventTarget,
                          public nsIXMLHttpRequest,
                          public nsIJSXMLHttpRequest,
@@ -126,6 +130,8 @@ class nsXMLHttpRequest : public nsXHREventTarget,
                          public nsITimerCallback
 {
   friend class nsXHRParseEndListener;
+  friend class nsXMLHttpRequestXPCOMifier;
+
 public:
   nsXMLHttpRequest();
   virtual ~nsXMLHttpRequest();
@@ -502,6 +508,8 @@ protected:
                 const mozilla::dom::Optional<nsAString>& user,
                 const mozilla::dom::Optional<nsAString>& password);
 
+  already_AddRefed<nsXMLHttpRequestXPCOMifier> EnsureXPCOMifier();
+
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
@@ -657,9 +665,48 @@ protected:
     nsCString value;
   };
   nsTArray<RequestHeader> mModifiedRequestHeaders;
+
+  // Helper object to manage our XPCOM scriptability bits
+  nsXMLHttpRequestXPCOMifier* mXPCOMifier;
 };
 
 #undef IMPL_EVENT_HANDLER
+
+// A shim class designed to expose the non-DOM interfaces of
+// XMLHttpRequest via XPCOM stuff.
+class nsXMLHttpRequestXPCOMifier MOZ_FINAL : public nsIStreamListener,
+                                             public nsIChannelEventSink,
+                                             public nsIProgressEventSink,
+                                             public nsIInterfaceRequestor,
+                                             public nsITimerCallback,
+                                             public nsCycleCollectionParticipant
+{
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXMLHttpRequestXPCOMifier,
+                                           nsIStreamListener)
+
+  nsXMLHttpRequestXPCOMifier(nsXMLHttpRequest* aXHR) :
+    mXHR(aXHR)
+  {
+  }
+
+  ~nsXMLHttpRequestXPCOMifier() {
+    if (mXHR) {
+      mXHR->mXPCOMifier = nullptr;
+    }
+  }
+
+  NS_FORWARD_NSISTREAMLISTENER(mXHR->)
+  NS_FORWARD_NSIREQUESTOBSERVER(mXHR->)
+  NS_FORWARD_NSICHANNELEVENTSINK(mXHR->)
+  NS_FORWARD_NSIPROGRESSEVENTSINK(mXHR->)
+  NS_FORWARD_NSITIMERCALLBACK(mXHR->)
+
+  NS_DECL_NSIINTERFACEREQUESTOR
+
+private:
+  nsRefPtr<nsXMLHttpRequest> mXHR;
+};
 
 // helper class to expose a progress DOM Event
 
