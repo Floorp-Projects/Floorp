@@ -305,6 +305,18 @@ function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
   }
   var isPixelOnlyDevice =
     aEvent.isPixelOnlyDevice && aEvent.deltaMode == WheelEvent.DOM_DELTA_PIXEL;
+
+  // Avoid the JS warnings "reference to undefined property"
+  if (!aEvent.deltaX) {
+    aEvent.deltaX = 0;
+  }
+  if (!aEvent.deltaY) {
+    aEvent.deltaY = 0;
+  }
+  if (!aEvent.deltaZ) {
+    aEvent.deltaZ = 0;
+  }
+
   var lineOrPageDeltaX =
     aEvent.lineOrPageDeltaX != null ? aEvent.lineOrPageDeltaX :
                   aEvent.deltaX > 0 ? Math.floor(aEvent.deltaX) :
@@ -313,11 +325,10 @@ function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
     aEvent.lineOrPageDeltaY != null ? aEvent.lineOrPageDeltaY :
                   aEvent.deltaY > 0 ? Math.floor(aEvent.deltaY) :
                                       Math.ceil(aEvent.deltaY);
+
   var rect = aTarget.getBoundingClientRect();
   utils.sendWheelEvent(rect.left + aOffsetX, rect.top + aOffsetY,
-                       aEvent.deltaX ? aEvent.deltaX : 0.0,
-                       aEvent.deltaY ? aEvent.deltaY : 0.0,
-                       aEvent.deltaZ ? aEvent.deltaZ : 0.0,
+                       aEvent.deltaX, aEvent.deltaY, aEvent.deltaZ,
                        aEvent.deltaMode, modifiers,
                        lineOrPageDeltaX, lineOrPageDeltaY, options);
 }
