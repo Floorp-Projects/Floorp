@@ -256,7 +256,7 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
   // decoding, so we can't wait for them to finish. See bug 512435.
   //
   // (*) IsPaintingSuppressed returns false if we haven't gotten the initial
-  // reflow yet, so we have to test !DidInitialReflow || IsPaintingSuppressed.
+  // reflow yet, so we have to test !DidInitialize || IsPaintingSuppressed.
   // It's possible for painting to be suppressed for reasons other than the
   // initial paint delay (for example, being in the bfcache), but we probably
   // aren't loading images in those situations.
@@ -266,7 +266,7 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
   nsIDocument* doc = GetOurOwnerDoc();
   nsIPresShell* shell = doc ? doc->GetShell() : nullptr;
   if (shell && shell->IsVisible() &&
-      (!shell->DidInitialReflow() || shell->IsPaintingSuppressed())) {
+      (!shell->DidInitialize() || shell->IsPaintingSuppressed())) {
 
     mCurrentRequest->RequestDecode();
   }

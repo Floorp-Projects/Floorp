@@ -173,9 +173,9 @@ gfxSVGGlyphsDocument::SetupPresentation()
     NS_ENSURE_SUCCESS(rv, rv);
     presShell->GetPresContext()->SetIsGlyph(true);
 
-    if (!presShell->DidInitialReflow()) {
+    if (!presShell->DidInitialize()) {
         nsRect rect = presShell->GetPresContext()->GetVisibleArea();
-        rv = presShell->InitialReflow(rect.width, rect.height);
+        rv = presShell->Initialize(rect.width, rect.height);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
