@@ -26,12 +26,25 @@ DEFINES += \
 WRAP_LDFLAGS :=
 endif
 
+ZIP_URL := http://people.mozilla.org/~jford/master.zip
+
 GENERATED_DIRS += $(DIST)/bin/$(GAIA_PATH)
 
 include $(topsrcdir)/config/rules.mk
 
 
 libs::
+	# For now, let's fetch a copy of Gaia over http
+	rm -rf master.zip mozilla-b2g-gaia-*
+ifeq ($(OS_ARCH),Darwin)
+	curl -L -o master.zip $(ZIP_URL)
+else
+	wget -O master.zip $(ZIP_URL) || \
+	wget -O master.zip --no-check-certificate $(ZIP_URL)
+endif
+	unzip master.zip
+	mv mozilla-b2g-* $(topsrcdir)/gaia
+	
 	# Below here is how Gaia gets built
 	# The Gaia build system freaks out when N > 1 for -jN
 	$(MAKE) -j1 -C $(GAIADIR) clean
