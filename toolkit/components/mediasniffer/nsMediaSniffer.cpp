@@ -27,8 +27,6 @@ nsMediaSniffer::nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
   PATTERN_ENTRY("\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF", "RIFF\x00\x00\x00\x00WAVE", AUDIO_WAV),
   // WebM
   PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "\x1A\x45\xDF\xA3", VIDEO_WEBM),
-  // mp3 without ID3 tags.
-  PATTERN_ENTRY("\xFF\xFB", "\xFF\xFA", AUDIO_MP3),
   // mp3 with ID3 tags, the string "ID3".
   PATTERN_ENTRY("\xFF\xFF\xFF", "ID3", AUDIO_MP3)
 };
