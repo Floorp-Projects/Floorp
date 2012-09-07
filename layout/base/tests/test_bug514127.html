@@ -17,7 +17,6 @@ iframe source is
 -->
 <iframe id="source" width="50" height="50"
        src="data:text/html,%3Chtml%3E%3Cbody%20style%3D%27background%3A%20rgb%280%2C0%2C255%29%3B%20width%3A%20100px%3B%20height%3A%2050100px%3B%27%3E%3C%2Fbody%3E%3C%2Fhtml%3E"></iframe>
-<canvas id="scratch" width="50" height="50"></canvas>
 
 <pre id="test">
 <script type="application/javascript">
@@ -28,17 +27,16 @@ SimpleTest.waitForExplicitFinish();
 
 function runTest() {
   
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  
-  var canvas = document.getElementById('scratch');
   var source = document.getElementById('source').contentWindow;
+  var canvasWidth = 50;
+  var canvasHeight = 50;
+
+  rect = { left: 25, top: 50000,
+           width: canvasWidth, height: canvasHeight };
+  var canvas = SpecialPowers.snapshotRect(source, rect, "transparent");
   var context = canvas.getContext("2d");
   
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.drawWindow(source, 25, 50000, canvas.width, canvas.height,
-                     "transparent");
-  
-  var data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  var data = context.getImageData(0, 0, canvasWidth, canvasHeight).data;
   var failed = false;
   for (var i = 0; i < data.length; i+=4) {
     if (data[i] != 0 || data[i+1] != 0 || data[i+2] != 255 || data[i+3] != 255) {
