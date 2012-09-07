@@ -1707,7 +1707,7 @@ var types = require('gcli/types');
 var Type = require('gcli/types').Type;
 var Status = require('gcli/types').Status;
 var Conversion = require('gcli/types').Conversion;
-var Speller = require('gcli/types/spell').Speller;
+var spell = require('gcli/types/spell');
 
 
 /**
@@ -1888,13 +1888,14 @@ SelectionType.prototype._findPredictions = function(arg) {
   }
 
   // Try fuzzy matching if we don't get a prefix match
-  if (false && predictions.length === 0) {
-    var speller = new Speller();
-    var names = lookup.map(function(opt) {
-      return opt.name;
+  if (predictions.length === 0) {
+    var names = [];
+    lookup.forEach(function(opt) {
+      if (!opt.value.hidden) {
+        names.push(opt.name);
+      }
     });
-    speller.train(names);
-    var corrected = speller.correct(match);
+    var corrected = spell.correct(match, names);
     if (corrected) {
       lookup.forEach(function(opt) {
         if (opt.name === corrected) {
@@ -2005,153 +2006,116 @@ exports.SelectionType = SelectionType;
 
 });
 /*
- * Copyright (c) 2009 Panagiotis Astithas
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
+ * Copyright 2012, Mozilla Foundation and contributors
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 define('gcli/types/spell', ['require', 'exports', 'module' ], function(require, exports, module) {
 
+/*
+ * A spell-checker based on Damerau-Levenshtein distance.
+ */
+
+var INSERTION_COST = 1;
+var DELETION_COST = 1;
+var SWAP_COST = 1;
+var SUBSTITUTION_COST = 2;
+var MAX_EDIT_DISTANCE = 4;
 
 /**
- * A spell-checker based on the statistical algorithm described by Peter Norvig
- * in http://norvig.com/spell-correct.html, and converted to JavaScript by Past
- * http://past.github.com/speller/
- *
- * Usage requires a two-step process:
- * 1) call speller.train() one or more times with a large text to train the
- *    language model
- * 2) call speller.correct(word) to retrieve the correction for the specified
- *    word
+ * Compute Damerau-Levenshtein Distance
+ * @see http://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance
  */
-function Speller() {
-  // A map of words to the count of times they were encountered during training.
-  this._nWords = {};
-}
+function damerauLevenshteinDistance(wordi, wordj) {
+  var N = wordi.length;
+  var M = wordj.length;
 
-Speller.letters = "abcdefghijklmnopqrstuvwxyz".split("");
+  // We only need to store three rows of our dynamic programming matrix.
+  // (Without swap, it would have been two.)
+  var row0 = new Array(N+1);
+  var row1 = new Array(N+1);
+  var row2 = new Array(N+1);
+  var tmp;
 
-/**
- * A function that trains the language model with the words in the supplied
- * text. Multiple invocation of this function can extend the training of the
- * model.
- */
-Speller.prototype.train = function(words) {
-  words.forEach(function(word) {
-    word = word.toLowerCase();
-    this._nWords[word] = this._nWords.hasOwnProperty(word) ?
-            this._nWords[word] + 1 :
-            1;
-  }, this);
+  var i, j;
+
+  // The distance between the empty string and a string of size i is the cost
+  // of i insertions.
+  for (i = 0; i <= N; i++) {
+    row1[i] = i * INSERTION_COST;
+  }
+
+  // Row-by-row, we're computing the edit distance between substrings wordi[0..i]
+  // and wordj[0..j].
+  for (j = 1; j <= M; j++)
+  {
+    // Edit distance between wordi[0..0] and wordj[0..j] is the cost of j
+    // insertions.
+    row0[0] = j * INSERTION_COST;
+
+    for (i = 1; i <= N; i++)
+    {
+      // Handle deletion, insertion and substitution: we can reach each cell
+      // from three other cells corresponding to those three operations. We
+      // want the minimum cost.
+      row0[i] = Math.min(
+          row0[i-1] + DELETION_COST,
+          row1[i] + INSERTION_COST,
+          row1[i-1] + (wordi[i-1] === wordj[j-1] ? 0 : SUBSTITUTION_COST));
+      // We handle swap too, eg. distance between help and hlep should be 1. If
+      // we find such a swap, there's a chance to update row0[1] to be lower.
+      if (i > 1 && j > 1 && wordi[i-1] === wordj[j-2] && wordj[j-1] === wordi[i-2]) {
+        row0[i] = Math.min(row0[i], row2[i-2] + SWAP_COST);
+      }
+    }
+
+    tmp = row2;
+    row2 = row1;
+    row1 = row0;
+    row0 = tmp;
+  }
+
+  return row1[N];
 };
 
 /**
  * A function that returns the correction for the specified word.
  */
-Speller.prototype.correct = function(word) {
-  if (this._nWords.hasOwnProperty(word)) {
-    return word;
-  }
+exports.correct = function(word, names) {
+  var distance = {};
+  var sorted_candidates;
 
-  var candidates = {};
-  var list = this._edits(word);
-  list.forEach(function(edit) {
-    if (this._nWords.hasOwnProperty(edit)) {
-      candidates[this._nWords[edit]] = edit;
+  names.forEach(function(candidate) {
+    distance[candidate] = damerauLevenshteinDistance(word, candidate);
+  });
+
+  sorted_candidates = names.sort(function(worda, wordb) {
+    if (distance[worda] !== distance[wordb]) {
+      return distance[worda] - distance[wordb];
+    } else {
+      // if the score is the same, always return the first string
+      // in the lexicographical order
+      return worda < wordb;
     }
-  }, this);
+  });
 
-  if (this._countKeys(candidates) > 0) {
-    return candidates[this._max(candidates)];
+  if (distance[sorted_candidates[0]] <= MAX_EDIT_DISTANCE) {
+    return sorted_candidates[0];
+  } else {
+    return undefined;
   }
-
-  list.forEach(function(edit) {
-    this._edits(edit).forEach(function(w) {
-      if (this._nWords.hasOwnProperty(w)) {
-        candidates[this._nWords[w]] = w;
-      }
-    }, this);
-  }, this);
-
-  return this._countKeys(candidates) > 0 ?
-      candidates[this._max(candidates)] :
-      null;
 };
-
-/**
- * A helper function that counts the keys in the supplied object.
- */
-Speller.prototype._countKeys = function(object) {
-  // return Object.keys(object).length; ?
-  var count = 0;
-  for (var attr in object) {
-    if (object.hasOwnProperty(attr)) {
-      count++;
-    }
-  }
-  return count;
-};
-
-/**
- * A helper function that returns the word with the most occurrences in the
- * language model, among the supplied candidates.
- * @param candidates
- */
-Speller.prototype._max = function(candidates) {
-  var arr = [];
-  for (var candidate in candidates) {
-    if (candidates.hasOwnProperty(candidate)) {
-      arr.push(candidate);
-    }
-  }
-  return Math.max.apply(null, arr);
-};
-
-/**
- * A function that returns the set of possible corrections of the specified
- * word. The edits can be deletions, insertions, alterations or transpositions.
- */
-Speller.prototype._edits = function(word) {
-  var results = [];
-
-  // Deletion
-  for (var i = 0; i < word.length; i++) {
-    results.push(word.slice(0, i) + word.slice(i + 1));
-  }
-
-  // Transposition
-  for (i = 0; i < word.length - 1; i++) {
-    results.push(word.slice(0, i) + word.slice(i + 1, i + 2)
-            + word.slice(i, i + 1) + word.slice(i + 2));
-  }
-
-  // Alteration
-  for (i = 0; i < word.length; i++) {
-    Speller.letters.forEach(function(l) {
-      results.push(word.slice(0, i) + l + word.slice(i + 1));
-    }, this);
-  }
-
-  // Insertion
-  for (i = 0; i <= word.length; i++) {
-    Speller.letters.forEach(function(l) {
-      results.push(word.slice(0, i) + l + word.slice(i));
-    }, this);
-  }
-
-  return results;
-};
-
-exports.Speller = Speller;
 
 
 });
