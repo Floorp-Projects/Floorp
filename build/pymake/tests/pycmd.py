@@ -30,3 +30,6 @@ def asplode(args):
 def asplode_return(args):
   arg0 = convertasplode(args[0])
   return arg0
+
+def asplode_raise(args):
+  raise Exception(args[0])
