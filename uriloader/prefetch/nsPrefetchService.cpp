@@ -28,6 +28,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
 #include "nsIDOMNode.h"
+#include "nsINode.h"
+#include "nsIDocument.h"
 
 using namespace mozilla;
 
@@ -179,9 +181,16 @@ nsPrefetchNode::nsPrefetchNode(nsPrefetchService *aService,
 nsresult
 nsPrefetchNode::OpenChannel()
 {
+    nsCOMPtr<nsINode> source = do_QueryReferent(mSource);
+    if (!source) {
+        // Don't attempt to prefetch if we don't have a source node
+        // (which should never happen).
+        return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsILoadGroup> loadGroup = source->OwnerDoc()->GetDocumentLoadGroup();
     nsresult rv = NS_NewChannel(getter_AddRefs(mChannel),
                                 mURI,
-                                nullptr, nullptr, this,
+                                nullptr, loadGroup, this,
                                 nsIRequest::LOAD_BACKGROUND |
                                 nsICachingChannel::LOAD_ONLY_IF_MODIFIED);
     NS_ENSURE_SUCCESS(rv, rv);
