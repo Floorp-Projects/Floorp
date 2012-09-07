@@ -4380,21 +4380,16 @@ GetCompartmentPrivate(JSObject *object)
     return GetCompartmentPrivate(compartment);
 }
 
-inline bool IsUniversalXPConnectEnabled(JSCompartment *compartment)
-{
-    CompartmentPrivate *priv =
-      static_cast<CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment));
-    if (!priv)
-        return false;
-    return priv->universalXPConnectEnabled;
-}
-
 inline bool IsUniversalXPConnectEnabled(JSContext *cx)
 {
     JSCompartment *compartment = js::GetContextCompartment(cx);
     if (!compartment)
         return false;
-    return IsUniversalXPConnectEnabled(compartment);
+    CompartmentPrivate *priv =
+      static_cast<CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment));
+    if (!priv)
+        return false;
+    return priv->universalXPConnectEnabled;
 }
 
 inline void EnableUniversalXPConnect(JSContext *cx)
@@ -4407,13 +4402,6 @@ inline void EnableUniversalXPConnect(JSContext *cx)
     if (!priv)
         return;
     priv->universalXPConnectEnabled = true;
-
-    // Recompute all the cross-compartment wrappers leaving the newly-privileged
-    // compartment.
-    mozilla::DebugOnly<bool> rv;
-    rv = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
-                               js::AllCompartments());
-    MOZ_ASSERT(rv);
 }
 
 }

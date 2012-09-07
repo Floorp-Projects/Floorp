@@ -2176,7 +2176,7 @@ bool
 nsDOMClassInfo::ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
 {
   return xpc::WrapperFactory::IsXrayWrapper(obj) &&
-         xpc::AccessCheck::isChrome(obj);
+         !xpc::WrapperFactory::IsPartiallyTransparent(obj);
 }
 
 nsDOMClassInfo::nsDOMClassInfo(nsDOMClassInfoData* aData) : mData(aData)
