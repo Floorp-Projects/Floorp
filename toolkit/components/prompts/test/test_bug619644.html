@@ -16,8 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=619644
 <script class="testbody" type="text/javascript">
 function hasTabModalPrompts() {
   var prefName = "prompts.tab_modal.enabled";
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  Components.utils.import("resource://gre/modules/Services.jsm");
+  Services = SpecialPowers.Services;
   return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
          Services.prefs.getBoolPref(prefName);
 }
