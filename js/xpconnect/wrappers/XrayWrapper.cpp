@@ -942,7 +942,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
           Is<nsINode>(wrapper)) ||
           (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT) &&
           Is<nsIDocument>(wrapper))) &&
-        (AccessCheck::callerIsChrome() || ContentScriptHasUniversalXPConnect())) {
+        (AccessCheck::callerIsChrome())) {
         bool status;
         Wrapper::Action action = set ? Wrapper::SET : Wrapper::GET;
         desc->obj = NULL; // default value
