@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <title>Test that invalid XML in the 'SVG ' table is rejected</title>
+    <style>
+      @font-face {
+        font-family : 'Liberation';
+        src : url(resources/rubbish.woff);
+      }
+      body {
+        font-family : 'Liberation';
+        font-size : 200px;
+      }
+    </style>
+  </head>
+  <!--
+        The font file resources/rubbish.woff contains an SVG table which
+      does not contain valid XML. This test makes sure it falls back
+      on rendering the text using the truetype outlines.
+  -->
+  <body>
+    LML&#xfe01;
+  </body>
+</html>

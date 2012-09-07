@@ -10,6 +10,7 @@ let Cc = Components.classes;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 const BROWSER_FRAMES_ENABLED_PREF = "dom.mozBrowserFramesEnabled";
@@ -245,6 +246,9 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
                                 this._ownerVisibilityChange.bind(this),
                                 /* useCapture = */ false,
                                 /* wantsUntrusted = */ false);
+
+  // Insert ourself into the prompt service.
+  BrowserElementPromptService.mapFrameToBrowserElementParent(this._frameElement, this);
 }
 
 BrowserElementParent.prototype = {
@@ -269,6 +273,48 @@ BrowserElementParent.prototype = {
   get _windowUtils() {
     return this._window.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils);
+  },
+
+  promptAuth: function(authDetail, callback) {
+    let evt;
+    let self = this;
+    let callbackCalled = false;
+    let cancelCallback = function() {
+      if (!callbackCalled) {
+        callbackCalled = true;
+        callback(false, null, null);
+      }
+    };
+
+    if (authDetail.isOnlyPassword) {
+      // We don't handle password-only prompts, so just cancel it.
+      cancelCallback();
+      return;
+    } else { /* username and password */
+      let detail = {
+        host:     authDetail.host,
+        realm:    authDetail.realm
+      };
+
+      evt = this._createEvent('usernameandpasswordrequired', detail,
+                              /* cancelable */ true);
+      defineAndExpose(evt.detail, 'authenticate', function(username, password) {
+        if (callbackCalled)
+          return;
+        callbackCalled = true;
+        callback(true, username, password);
+      });
+    }
+
+    defineAndExpose(evt.detail, 'cancel', function() {
+      cancelCallback();
+    });
+
+    this._frameElement.dispatchEvent(evt);
+
+    if (!evt.defaultPrevented) {
+      cancelCallback();
+    }
   },
 
   _sendAsyncMsg: function(msg, data) {

@@ -27,9 +27,13 @@
 namespace js {
 namespace frontend {
 
-struct TryNode {
-    JSTryNote       note;
-    TryNode       *prev;
+struct CGTryNoteList {
+    Vector<JSTryNote> list;
+    CGTryNoteList(JSContext *cx) : list(cx) {}
+
+    bool append(JSTryNoteKind kind, unsigned stackDepth, size_t start, size_t end);
+    size_t length() const { return list.length(); }
+    void finish(TryNoteArray *array);
 };
 
 struct CGObjectList {
@@ -43,10 +47,10 @@ struct CGObjectList {
     void finish(ObjectArray *array);
 };
 
-class GCConstList {
+class CGConstList {
     Vector<Value> list;
   public:
-    GCConstList(JSContext *cx) : list(cx) {}
+    CGConstList(JSContext *cx) : list(cx) {}
     bool append(Value v) { JS_ASSERT_IF(v.isString(), v.toString()->isAtom()); return list.append(v); }
     size_t length() const { return list.length(); }
     void finish(ConstArray *array);
@@ -92,14 +96,13 @@ struct BytecodeEmitter
     int             stackDepth;     /* current stack depth in script frame */
     unsigned        maxStackDepth;  /* maximum stack depth so far */
 
-    unsigned        ntrynotes;      /* number of allocated so far try notes */
-    TryNode         *lastTryNode;   /* the last allocated try node */
+    CGTryNoteList   tryNoteList;    /* list of emitted try notes */
 
     unsigned        arrayCompDepth; /* stack depth of array in comprehension */
 
     unsigned        emitLevel;      /* js::frontend::EmitTree recursion level */
 
-    GCConstList     constList;      /* constants to be included with the script */
+    CGConstList     constList;      /* constants to be included with the script */
 
     CGObjectList    objectList;     /* list of emitted objects */
     CGObjectList    regexpList;     /* list of emitted regexp that will be
@@ -400,9 +403,6 @@ AddToSrcNoteDelta(JSContext *cx, BytecodeEmitter *bce, jssrcnote *sn, ptrdiff_t 
 
 bool
 FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *notes);
-
-void
-FinishTakingTryNotes(BytecodeEmitter *bce, TryNoteArray *array);
 
 /*
  * Finish taking source notes in cx's notePool, copying final notes to the new

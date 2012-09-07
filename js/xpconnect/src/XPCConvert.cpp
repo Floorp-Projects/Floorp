@@ -357,6 +357,12 @@ CheckJSCharInCharRange(jschar c)
 }
 #endif
 
+template<typename T>
+bool ConvertToPrimitive(JSContext *cx, const JS::Value& v, T *retval)
+{
+    return ValueToPrimitive<T, eDefault>(cx, v, retval);
+}
+
 // static
 JSBool
 XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
@@ -375,27 +381,27 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
     switch (type.TagPart()) {
     case nsXPTType::T_I8     :
-        return ValueToPrimitive(cx, s, static_cast<int8_t*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<int8_t*>(d));
     case nsXPTType::T_I16    :
-        return ValueToPrimitive(cx, s, static_cast<int16_t*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<int16_t*>(d));
     case nsXPTType::T_I32    :
-        return ValueToPrimitive(cx, s, static_cast<int32_t*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<int32_t*>(d));
     case nsXPTType::T_I64    :
-        return ValueToPrimitive(cx, s, static_cast<int64_t*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<int64_t*>(d));
     case nsXPTType::T_U8     :
-        return ValueToPrimitive(cx, s, static_cast<uint8_t*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<uint8_t*>(d));
     case nsXPTType::T_U16    :
-        return ValueToPrimitive(cx, s, static_cast<uint16_t*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<uint16_t*>(d));
     case nsXPTType::T_U32    :
-        return ValueToPrimitive(cx, s, static_cast<uint32_t*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<uint32_t*>(d));
     case nsXPTType::T_U64    :
-        return ValueToPrimitive(cx, s, static_cast<uint64_t*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<uint64_t*>(d));
     case nsXPTType::T_FLOAT  :
-        return ValueToPrimitive(cx, s, static_cast<float*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<float*>(d));
     case nsXPTType::T_DOUBLE :
-        return ValueToPrimitive(cx, s, static_cast<double*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<double*>(d));
     case nsXPTType::T_BOOL   :
-        return ValueToPrimitive(cx, s, static_cast<bool*>(d));
+        return ConvertToPrimitive(cx, s, static_cast<bool*>(d));
     case nsXPTType::T_CHAR   :
     {
         JSString* str = JS_ValueToString(cx, s);
@@ -1282,7 +1288,10 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
             if (number > 0.0 &&
                 number < (double)0xffffffff &&
                 0.0 == fmod(number,1)) {
-                rv = (nsresult) number;
+                // Visual Studio 9 doesn't allow casting directly from a
+                // double to an enumeration type, contrary to 5.2.9(10) of
+                // C++11, so add an intermediate cast.
+                rv = (nsresult)(uint32_t) number;
                 if (NS_FAILED(rv))
                     isResult = true;
             }

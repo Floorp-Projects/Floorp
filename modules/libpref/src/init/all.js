@@ -235,6 +235,8 @@ pref("gfx.font_rendering.directwrite.enabled", false);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 
+pref("gfx.font_rendering.opentype_svg.enabled", false);
+
 pref("gfx.canvas.azure.enabled", true);
 #ifdef XP_WIN
 // comma separated list of backends to use in order of preference
@@ -3722,3 +3724,6 @@ pref("toolkit.identity.debug", false);
 // Setting that to true grant elevated privileges to apps that ask
 // for them in their manifest.
 pref("dom.mozApps.dev_mode", false);
+
+// Lowest localId for installed apps.
+pref("dom.mozApps.maxLocalId", 10000);

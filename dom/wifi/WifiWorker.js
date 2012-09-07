@@ -1735,7 +1735,7 @@ function WifiWorker() {
       self.setWifiEnabled({enabled: true});
     },
   };
-  gSettingsService.getLock().get("wifi.enabled", initWifiEnabledCb);
+  gSettingsService.createLock().get("wifi.enabled", initWifiEnabledCb);
 }
 
 function translateState(state) {
@@ -2318,7 +2318,7 @@ WifiWorker.prototype = {
     // To avoid WifiWorker setting the wifi again, we mark the
     // "fromInternalSetting" so WifiWorker won't deal with such
     // an internal "mozsettings-changed" event when receiving it.
-    gSettingsService.getLock().set(
+    gSettingsService.createLock().set(
       "wifi.enabled", enabled, null, "fromInternalSetting");
   },
 

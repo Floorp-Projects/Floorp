@@ -3647,7 +3647,6 @@
           }
         }
 
-        var newIndex = this._getDropIndex(event);
         var scrollRect = tabStrip.scrollClientRect;
         var rect = tabStrip.getBoundingClientRect();
         var minMargin = scrollRect.left - rect.left;
@@ -3663,6 +3662,7 @@
           newMargin = (pixelsToScroll > 0) ? maxMargin : minMargin;
         }
         else {
+          let newIndex = this._getDropIndex(event);
           if (newIndex == this.childNodes.length) {
             let tabRect = this.childNodes[newIndex-1].getBoundingClientRect();
             if (ltr)

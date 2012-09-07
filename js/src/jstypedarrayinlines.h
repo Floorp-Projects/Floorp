@@ -251,6 +251,8 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
 
     JS_ASSERT(dvobj.numFixedSlots() == RESERVED_SLOTS);
 
+    arrayBuffer->asArrayBuffer().addView(cx, &dvobj);
+
     return &dvobj;
 }
 

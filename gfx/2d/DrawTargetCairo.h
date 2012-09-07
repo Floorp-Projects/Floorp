@@ -147,19 +147,14 @@ private: // methods
                    const DrawOptions& aOptions,
                    DrawPatternType aDrawType);
 
-  // Copy-on-write support for snapshot surfaces.
-  friend class SourceSurfaceCairo;
-  void AppendSnapshot(SourceSurfaceCairo* aSnapshot);
-  void RemoveSnapshot(SourceSurfaceCairo* aSnapshot);
-
   // Call before you make any changes to the backing surface with which this
   // context is associated. Pass the path you're going to be using if you have
   // one.
   void WillChange(const Path* aPath = nullptr);
 
-  // Call if there is any reason to disassociate all snapshots from this draw
+  // Call if there is any reason to disassociate the snapshot from this draw
   // target; for example, because we're going to be destroyed.
-  void MarkSnapshotsIndependent();
+  void MarkSnapshotIndependent();
 
   // If the current operator is "source" then clear the destination before we
   // draw into it, to simulate the effect of an unbounded source operator.
@@ -168,7 +163,10 @@ private: // data
   cairo_t* mContext;
   cairo_surface_t* mSurface;
   IntSize mSize;
-  std::vector<SourceSurfaceCairo*> mSnapshots;
+
+  // The latest snapshot of this surface. This needs to be told when this
+  // target is modified. We keep it alive as a cache.
+  RefPtr<SourceSurfaceCairo> mSnapshot;
 
   // It is safe to use a regular pointer here because the CairoPathContext will
   // deregister itself on destruction. Using a RefPtr would extend the life-

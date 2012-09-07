@@ -4,34 +4,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_A11Y_XPCOM_XPACESSIBLETABLECELL_H_
-#define MOZILLA_A11Y_XPCOM_XPACESSIBLETABLECELL_H_
+#ifndef mozilla_a11y_xpcom_xpcAccessibletableCell_h_
+#define mozilla_a11y_xpcom_xpcAccessibletableCell_h_
+
+#include "nscore.h"
+
+class nsIAccessibleTable;
+class nsIArray;
 
 namespace mozilla {
 namespace a11y {
+
 class TableAccessible;
 class TableCellAccessible;
-}
-}
 
+/**
+ * This class provides an implementation of the nsIAccessibleTableCell
+ * interface's methods.
+ */
 class xpcAccessibleTableCell
 {
 public:
   xpcAccessibleTableCell(mozilla::a11y::TableCellAccessible* aTableCell) :
     mTableCell(aTableCell) { }
 
+  nsresult GetTable(nsIAccessibleTable** aTable);
+  nsresult GetColumnIndex(int32_t* aColIdx);
+  nsresult GetRowIndex(int32_t* aRowIdx);
+  nsresult GetColumnExtent(int32_t* aExtent);
+  nsresult GetRowExtent(int32_t* aExtent);
+  nsresult GetColumnHeaderCells(nsIArray** aHeaderCells);
+  nsresult GetRowHeaderCells(nsIArray** aHeaderCells);
+  nsresult IsSelected(bool* aSelected);
+
 protected:
   mozilla::a11y::TableCellAccessible* mTableCell;
 };
+} // namespace a11y
+} // namespace mozilla
 
-#define NS_DECL_OR_FORWARD_NSIACCESSIBLETABLECELL_WITH_XPCACCESSIBLETABLECELL \
-  NS_IMETHOD GetTable(nsIAccessibleTable * *aTable); \
-  NS_IMETHOD GetColumnIndex(int32_t *aColumnIndex); \
-  NS_IMETHOD GetRowIndex(int32_t *aRowIndex); \
-  NS_IMETHOD GetColumnExtent(int32_t *aColumnExtent); \
-  NS_IMETHOD GetRowExtent(int32_t *aRowExtent); \
-  NS_IMETHOD GetColumnHeaderCells(nsIArray * *aColumnHeaderCells); \
-  NS_IMETHOD GetRowHeaderCells(nsIArray * *aRowHeaderCells); \
-  NS_IMETHOD IsSelected(bool *_retval ); 
-
-#endif // MOZILLA_A11Y_XPCOM_XPACESSIBLETABLECELL_H_
+#endif // mozilla_a11y_xpcom_xpcAccessibletableCell_h_
