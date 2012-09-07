@@ -48,9 +48,9 @@ js_AtomToPrintableString(JSContext *cx, JSAtom *atom, JSAutoByteString *bytes)
     return js_ValueToPrintable(cx, StringValue(atom), bytes);
 }
 
-#define JS_PROTO(name,code,init) const char js_##name##_str[] = #name;
-#include "jsproto.tbl"
-#undef JS_PROTO
+#define DEFINE_PROTO_STRING(name,code,init) const char js_##name##_str[] = #name;
+JS_FOR_EACH_PROTOTYPE(DEFINE_PROTO_STRING)
+#undef DEFINE_PROTO_STRING
 
 /*
  * String constants for common atoms defined in JSAtomState starting from
@@ -79,9 +79,9 @@ const char *const js_common_atom_names[] = {
     "xml",                      /* typeAtoms[JSTYPE_XML]        */
     js_null_str                 /* nullAtom                     */
 
-#define JS_PROTO(name,code,init) ,js_##name##_str
-#include "jsproto.tbl"
-#undef JS_PROTO
+#define PROTOTYPE_COMMON_ATOM(name,code,init) ,js_##name##_str
+JS_FOR_EACH_PROTOTYPE(PROTOTYPE_COMMON_ATOM)
+#undef PROTOTYPE_COMMON_ATOM
 
 #define DEFINE_ATOM(id, text)          ,js_##id##_str
 #define DEFINE_PROTOTYPE_ATOM(id)      ,js_##id##_str

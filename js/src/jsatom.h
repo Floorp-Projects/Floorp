@@ -11,6 +11,7 @@
 #include "jsalloc.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "jsprototypes.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jslock.h"
@@ -226,9 +227,9 @@ extern const char   js_object_str[];
 extern const char   js_undefined_str[];
 
 /* Well-known predefined C strings. */
-#define JS_PROTO(name,code,init) extern const char js_##name##_str[];
-#include "jsproto.tbl"
-#undef JS_PROTO
+#define DECLARE_PROTO_STR(name,code,init) extern const char js_##name##_str[];
+JS_FOR_EACH_PROTOTYPE(DECLARE_PROTO_STR)
+#undef DECLARE_PROTO_STR
 
 #define DEFINE_ATOM(id, text)  extern const char js_##id##_str[];
 #define DEFINE_PROTOTYPE_ATOM(id)
