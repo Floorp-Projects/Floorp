@@ -744,7 +744,8 @@ struct nsStyleBorder {
 
   nsChangeHint CalcDifference(const nsStyleBorder& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_STYLE_HINT_REFLOW;
+    return NS_CombineHint(NS_STYLE_HINT_REFLOW,
+                          nsChangeHint_BorderStyleNoneChange);
   }
   // ForceCompare is true, because a change to our border-style might
   // change border-width on descendants (requiring reflow of those)
@@ -772,7 +773,7 @@ struct nsStyleBorder {
   // Note that this does *not* consider the effects of 'border-image':
   // if border-style is none, but there is a loaded border image,
   // HasVisibleStyle will be false even though there *is* a border.
-  bool HasVisibleStyle(mozilla::css::Side aSide)
+  bool HasVisibleStyle(mozilla::css::Side aSide) const
   {
     return IsVisibleBorderStyle(GetBorderStyle(aSide));
   }
