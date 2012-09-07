@@ -6191,9 +6191,8 @@ var WebappsUI = {
 
   isMarketplace: function isMarketplace(aUri) {
     try {
-      return aUri.host == this.MARKETPLACE.URI.host;
+      return !aUri.schemeIs("about") && aUri.host == this.MARKETPLACE.URI.host;
     } catch(ex) {
-      // this can fail for uri's that don't have a host (i.e. about urls)
       console.log("could not find host for " + aUri.spec + ", " + ex);
     }
     return false;
@@ -6676,8 +6675,7 @@ let Reader = {
       let url = tab.browser.contentWindow.location.href;
       let uri = Services.io.newURI(url, null, null);
 
-      if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file"))) {
-        this.log("Not parsing URI scheme: " + uri.scheme);
+      if (!this._shouldCheckUri(uri)) {
         callback(null);
         return;
       }
@@ -6802,6 +6800,20 @@ let Reader = {
   log: function(msg) {
     if (this.DEBUG)
       dump("Reader: " + msg);
+  },
+
+  _shouldCheckUri: function Reader_shouldCheckUri(uri) {
+    if ((uri.prePath + "/") === uri.spec) {
+      this.log("Not parsing home page: " + uri.spec);
+      return false;
+    }
+
+    if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file"))) {
+      this.log("Not parsing URI scheme: " + uri.scheme);
+      return false;
+    }
+
+    return true;
   },
 
   _readerParse: function Reader_readerParse(uri, doc, callback) {

@@ -297,7 +297,7 @@ DrawTargetCairo::DrawTargetCairo()
 
 DrawTargetCairo::~DrawTargetCairo()
 {
-  MarkSnapshotsIndependent();
+  MarkSnapshotIndependent();
   if (mPathObserver) {
     mPathObserver->ForgetDrawTarget();
   }
@@ -316,14 +316,18 @@ DrawTargetCairo::GetSize()
 TemporaryRef<SourceSurface>
 DrawTargetCairo::Snapshot()
 {
+  if (mSnapshot) {
+    return mSnapshot;
+  }
+
   IntSize size = GetSize();
 
   cairo_content_t content = cairo_surface_get_content(mSurface);
-  RefPtr<SourceSurfaceCairo> surf = new SourceSurfaceCairo(mSurface, size,
-                                                           CairoContentToGfxFormat(content),
-                                                           this);
-  AppendSnapshot(surf);
-  return surf;
+  mSnapshot = new SourceSurfaceCairo(mSurface,
+                                     size,
+                                     CairoContentToGfxFormat(content),
+                                     this);
+  return mSnapshot;
 }
 
 void
@@ -868,45 +872,21 @@ DrawTargetCairo::GetNativeSurface(NativeSurfaceType aType)
 }
 
 void
-DrawTargetCairo::MarkSnapshotsIndependent()
+DrawTargetCairo::MarkSnapshotIndependent()
 {
-  // Make a copy of the vector, since MarkIndependent implicitly modifies mSnapshots.
-  std::vector<SourceSurfaceCairo*> snapshots = mSnapshots;
-  for (std::vector<SourceSurfaceCairo*>::iterator iter = snapshots.begin();
-       iter != snapshots.end();
-       ++iter) {
-    (*iter)->MarkIndependent();
-  }
-}
-
-void
-DrawTargetCairo::AppendSnapshot(SourceSurfaceCairo* aSnapshot)
-{
-  mSnapshots.push_back(aSnapshot);
-}
-
-void
-DrawTargetCairo::RemoveSnapshot(SourceSurfaceCairo* aSnapshot)
-{
-  std::vector<SourceSurfaceCairo*>::iterator iter = std::find(mSnapshots.begin(),
-                                                              mSnapshots.end(),
-                                                              aSnapshot);
-  if (iter != mSnapshots.end()) {
-    mSnapshots.erase(iter);
+  if (mSnapshot) {
+    if (mSnapshot->refCount() > 1) {
+      // We only need to worry about snapshots that someone else knows about
+      mSnapshot->DrawTargetWillChange();
+    }
+    mSnapshot = nullptr;
   }
 }
 
 void
 DrawTargetCairo::WillChange(const Path* aPath /* = nullptr */)
 {
-  if (!mSnapshots.empty()) {
-    for (std::vector<SourceSurfaceCairo*>::iterator iter = mSnapshots.begin();
-         iter != mSnapshots.end(); ++iter) {
-      (*iter)->DrawTargetWillChange();
-    }
-    // All snapshots will now have copied data.
-    mSnapshots.clear();
-  }
+  MarkSnapshotIndependent();
 
   if (mPathObserver &&
       (!aPath || !mPathObserver->ContainsPath(aPath))) {

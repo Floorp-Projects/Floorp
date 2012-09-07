@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!--
+        Test that patterns are inherited from the outer object when using
+      the objectFill and objectStroke paint server values in SVG glyphs
+  -->
+
+  <style type="text/css"><![CDATA[
+    @font-face {
+      font-family: "Liberation";
+      src:url("resources/svg.woff") format("woff");
+    }
+
+    text {
+      font-family: "Liberation";
+      font-size: 200px;
+      stroke-width: 5;
+    }
+  ]]></style>
+
+  <defs>
+    <pattern id="pat" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
+      <rect x="5" y="5" width="30" height="30" stroke="salmon" stroke-width="5"
+        fill="mistyrose" />
+    </pattern>
+    <pattern id="pat2" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect x="5" y="5" width="10" height="10" stroke="lavenderblush" stroke-width="2"
+        fill="lemonchiffon" />
+    </pattern>
+  </defs>
+
+  <text x="0" y="200" fill="url(#pat)" stroke="url(#pat2)">N</text>
+  <text x="300" y="200" fill="url(#pat)" stroke="url(#pat2)">O</text>
+  <text x="0" y="500" fill="url(#pat)" stroke="url(#pat2)">P</text>
+  <text x="300" y="500" fill="url(#pat)" stroke="url(#pat2)">Q</text>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style type="text/css"><![CDATA[
+    @font-face {
+      font-family: svgwoff;
+      src: url(resources/svg.woff);
+    }
+
+    text {
+      font-family: svgwoff;
+      font-size: 200px;
+      stroke-width: 10;
+      stroke-dasharray: 10 10;
+      stroke-dashoffset: 7;
+      stroke: black;
+    }
+  ]]></style>
+  <text x="0" y="200">a</text>
+  <text x="200" y="200">b</text>
+  <text x="0" y="400">c</text>
+  <text x="200" y="400">d</text>
+</svg>

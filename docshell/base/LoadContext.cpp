@@ -13,6 +13,17 @@ namespace mozilla {
 
 NS_IMPL_ISUPPORTS1(LoadContext, nsILoadContext);
 
+LoadContext::LoadContext(const IPC::SerializedLoadContext& aToCopy,
+                         nsIDOMElement* aTopFrameElemenet)
+  : mIsNotNull(aToCopy.mIsNotNull)
+  , mIsContent(aToCopy.mIsContent)
+  , mUsePrivateBrowsing(aToCopy.mUsePrivateBrowsing)
+  , mIsInBrowserElement(aToCopy.mIsInBrowserElement)
+  , mAppId(aToCopy.mAppId)
+  , mTopFrameElement(do_GetWeakReference(aTopFrameElemenet))
+{}
+
+
 //-----------------------------------------------------------------------------
 // LoadContext::nsILoadContext
 //-----------------------------------------------------------------------------
@@ -33,6 +44,14 @@ LoadContext::GetTopWindow(nsIDOMWindow**)
 
   // can't support this in the parent process
   return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+LoadContext::GetTopFrameElement(nsIDOMElement** aElement)
+{
+  nsCOMPtr<nsIDOMElement> element = do_QueryReferent(mTopFrameElement);
+  element.forget(aElement);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

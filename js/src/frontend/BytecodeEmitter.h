@@ -37,12 +37,13 @@ struct CGTryNoteList {
 };
 
 struct CGObjectList {
-    Vector<ObjectBox*> list;
-    CGObjectList(JSContext *cx) : list(cx) {}
+    uint32_t            length;     /* number of emitted so far objects */
+    ObjectBox           *lastbox;   /* last emitted object */
 
-    bool append(ObjectBox *objbox) { return list.append(objbox); }
+    CGObjectList() : length(0), lastbox(NULL) {}
+
+    unsigned add(ObjectBox *objbox);
     unsigned indexOf(JSObject *obj);
-    size_t length() const { return list.length(); }
     void finish(ObjectArray *array);
 };
 
