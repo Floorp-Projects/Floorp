@@ -255,7 +255,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id,
     if (!obj)
         return false;
 
-    Value v;
+    RootedValue v(cx);
     unsigned attrs;
 
     RootedId propid(cx);

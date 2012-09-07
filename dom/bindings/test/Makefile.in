@@ -61,6 +61,7 @@ MOCHITEST_FILES := \
   forOf_iframe.html \
   test_sequence_wrapping.html \
   file_bug775543.html \
+  test_bug788369.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
