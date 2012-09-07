@@ -280,13 +280,17 @@ struct GradientCacheKey : public PLDHashEntryHdr {
   enum { ALLOW_MEMMOVE = true };
   const nsRefPtr<nsStyleGradient> mGradient;
   const gfxSize mGradientSize;
+  enum { SINGLE_CELL = 0x01 };
+  const uint32_t mFlags;
 
-  GradientCacheKey(nsStyleGradient* aGradient, const gfxSize& aGradientSize)
-    : mGradient(aGradient), mGradientSize(aGradientSize)
+  GradientCacheKey(nsStyleGradient* aGradient, const gfxSize& aGradientSize,
+                   uint32_t aFlags)
+    : mGradient(aGradient), mGradientSize(aGradientSize), mFlags(aFlags)
   { }
 
   GradientCacheKey(const GradientCacheKey* aOther)
-    : mGradient(aOther->mGradient), mGradientSize(aOther->mGradientSize)
+    : mGradient(aOther->mGradient), mGradientSize(aOther->mGradientSize),
+      mFlags(aOther->mFlags)
   { }
 
   static PLDHashNumber
@@ -295,6 +299,7 @@ struct GradientCacheKey : public PLDHashEntryHdr {
     PLDHashNumber hash = 0;
     hash = AddToHash(hash, aKey->mGradientSize.width);
     hash = AddToHash(hash, aKey->mGradientSize.height);
+    hash = AddToHash(hash, aKey->mFlags);
     hash = aKey->mGradient->Hash(hash);
     return hash;
   }
@@ -302,7 +307,8 @@ struct GradientCacheKey : public PLDHashEntryHdr {
   bool KeyEquals(KeyTypePointer aKey) const
   {
     return (*aKey->mGradient == *mGradient) &&
-           (aKey->mGradientSize == mGradientSize);
+           (aKey->mGradientSize == mGradientSize) &&
+           (aKey->mFlags == mFlags);
   }
   static KeyTypePointer KeyToPointer(KeyType aKey)
   {
@@ -315,7 +321,8 @@ struct GradientCacheKey : public PLDHashEntryHdr {
  * to the cache entry to be able to be tracked by the nsExpirationTracker.
  * */
 struct GradientCacheData {
-  GradientCacheData(gfxPattern* aPattern, bool aCoversTile, GradientCacheKey aKey)
+  GradientCacheData(gfxPattern* aPattern, bool aCoversTile,
+                    const GradientCacheKey& aKey)
     : mPattern(aPattern), mCoversTile(aCoversTile), mKey(aKey)
   {}
 
@@ -368,7 +375,8 @@ class GradientCache MOZ_FINAL : public nsExpirationTracker<GradientCacheData,4>
       mHashEntries.Remove(aObject->mKey);
     }
 
-    GradientCacheData* Lookup(nsStyleGradient* aKey, const gfxSize& aGradientSize)
+    GradientCacheData* Lookup(nsStyleGradient* aKey, const gfxSize& aGradientSize,
+                              uint32_t aFlags)
     {
       // We don't cache gradient that have Calc value, because the Calc object
       // can be deallocated by the time we want to compute the hash, and thus we
@@ -378,7 +386,8 @@ class GradientCache MOZ_FINAL : public nsExpirationTracker<GradientCacheData,4>
         return nullptr;
       }
 
-      GradientCacheData* gradient = mHashEntries.Get(GradientCacheKey(aKey, aGradientSize));
+      GradientCacheData* gradient =
+        mHashEntries.Get(GradientCacheKey(aKey, aGradientSize, aFlags));
 
       if (gradient) {
         MarkUsed(gradient);
@@ -389,11 +398,11 @@ class GradientCache MOZ_FINAL : public nsExpirationTracker<GradientCacheData,4>
 
     // Returns true if we successfully register the gradient in the cache, false
     // otherwise.
-    bool RegisterEntry(nsStyleGradient* aKey, const gfxSize& aGradientSize, GradientCacheData* aValue)
+    bool RegisterEntry(GradientCacheData* aValue)
     {
       // We don't cache gradient that have Calc values (see
       // GradientCache::Lookup).
-      if (aKey->HasCalc()) {
+      if (aValue->mKey.mGradient->HasCalc()) {
         return false;
       }
       nsresult rv = AddObject(aValue);
@@ -405,7 +414,7 @@ class GradientCache MOZ_FINAL : public nsExpirationTracker<GradientCacheData,4>
         // anyway, we probably don't want to retain things.
         return false;
       }
-      mHashEntries.Put(GradientCacheKey(aKey, aGradientSize), aValue);
+      mHashEntries.Put(aValue->mKey, aValue);
       return true;
     }
 
@@ -2011,9 +2020,13 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
   gfxRect oneCellArea =
     nsLayoutUtils::RectToGfxRect(aOneCellArea, appUnitsPerPixel);
-
   bool gradientRegistered = true;
-  GradientCacheData* pattern = gGradientCache->Lookup(aGradient, oneCellArea.Size());
+  uint32_t flags = 0;
+  if (aOneCellArea.Contains(aFillArea)) {
+    flags |= GradientCacheKey::SINGLE_CELL;
+  }
+  GradientCacheData* pattern =
+    gGradientCache->Lookup(aGradient, oneCellArea.Size(), flags);
 
   if (pattern == nullptr) {
     // Compute "gradient line" start and end relative to oneCellArea
@@ -2193,10 +2206,11 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       // When the gradient line is parallel to the x axis from the left edge
       // to the right edge of a tile, then we can repeat by just repeating the
       // gradient.
-      if ((gradientStart.y == gradientEnd.y && gradientStart.x == 0 &&
-           gradientEnd.x == oneCellArea.width) ||
-          (gradientStart.x == gradientEnd.x && gradientStart.y == 0 &&
-           gradientEnd.y == oneCellArea.height)) {
+      if (!(flags & GradientCacheKey::SINGLE_CELL) &&
+          ((gradientStart.y == gradientEnd.y && gradientStart.x == 0 &&
+            gradientEnd.x == oneCellArea.width) ||
+           (gradientStart.x == gradientEnd.x && gradientStart.y == 0 &&
+            gradientEnd.y == oneCellArea.height))) {
         forceRepeatToCoverTiles = true;
       }
     } else {
@@ -2253,8 +2267,9 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       gradientPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
     }
     // Register the gradient newly computed in the cache.
-    pattern = new GradientCacheData(gradientPattern, forceRepeatToCoverTiles, GradientCacheKey(aGradient, oneCellArea.Size()));
-    gradientRegistered = gGradientCache->RegisterEntry(aGradient, oneCellArea.Size(), pattern);
+    pattern = new GradientCacheData(gradientPattern, forceRepeatToCoverTiles,
+      GradientCacheKey(aGradient, oneCellArea.Size(), flags));
+    gradientRegistered = gGradientCache->RegisterEntry(pattern);
   }
 
   // Paint gradient tiles. This isn't terribly efficient, but doing it this
