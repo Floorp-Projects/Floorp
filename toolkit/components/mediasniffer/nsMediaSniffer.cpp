@@ -7,7 +7,7 @@
 #include "nsMediaSniffer.h"
 #include "nsMemory.h"
 #include "nsIHttpChannel.h"
-#include "nsAString.h"
+#include "nsString.h"
 #include "nsMimeTypes.h"
 #include "mozilla/ModuleUtils.h"
 
@@ -72,6 +72,18 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
                                        const uint32_t aLength,
                                        nsACString& aSniffedType)
 {
+  // For media, we want to sniff only if the Content-Type is unknown, or if it
+  // is application/octet-stream.
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  nsAutoCString contentType;
+  nsresult rv = channel->GetContentType(contentType);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!contentType.IsEmpty() &&
+      !contentType.EqualsLiteral(APPLICATION_OCTET_STREAM) &&
+      !contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   const uint32_t clampedLength = NS_MIN(aLength, MAX_BYTES_SNIFFED);
 
   for (uint32_t i = 0; i < NS_ARRAY_LENGTH(sSnifferEntries); ++i) {
