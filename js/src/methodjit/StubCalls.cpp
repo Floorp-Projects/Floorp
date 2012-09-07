@@ -493,8 +493,9 @@ StubEqualityOp(VMFrame &f)
             JSObject *l = &lval.toObject(), *r = &rval.toObject();
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
                 JSBool equal;
-                Rooted<JSObject*> lobj(cx, l);
-                if (!eq(cx, lobj, &rval, &equal))
+                RootedObject lobj(cx, l);
+                RootedValue r(cx, rval);
+                if (!eq(cx, lobj, r, &equal))
                     return false;
                 cond = !!equal == EQ;
             } else {
@@ -1149,9 +1150,9 @@ stubs::InstanceOf(VMFrame &f)
         THROWV(JS_FALSE);
     }
     RootedObject obj(cx, &rref.toObject());
-    const Value &lref = regs.sp[-2];
+    MutableHandleValue lref = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
     JSBool cond = JS_FALSE;
-    if (!HasInstance(cx, obj, &lref, &cond))
+    if (!HasInstance(cx, obj, lref, &cond))
         THROWV(JS_FALSE);
     f.regs.sp[-2].setBoolean(cond);
     return cond;

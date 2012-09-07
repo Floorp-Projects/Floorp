@@ -220,6 +220,7 @@ let SocialFlyout = {
     // create and initialize the panel for this window
     let iframe = document.createElement("iframe");
     iframe.setAttribute("type", "content");
+    iframe.setAttribute("class", "social-panel-frame");
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("origin", Social.provider.origin);
     panel.appendChild(iframe);
@@ -536,6 +537,7 @@ var SocialToolbar = {
       if (!notificationFrame) {
         notificationFrame = document.createElement("iframe");
         notificationFrame.setAttribute("type", "content");
+        notificationFrame.setAttribute("class", "social-panel-frame");
         notificationFrame.setAttribute("id", notificationFrameId);
         notificationFrame.setAttribute("mozbrowser", "true");
         notificationFrames.appendChild(notificationFrame);

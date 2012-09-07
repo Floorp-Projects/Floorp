@@ -365,8 +365,13 @@ nsStyleContext::ApplyStyleFixups(nsPresContext* aPresContext)
 }
 
 nsChangeHint
-nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
+nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
+                                    nsChangeHint aParentHintsNotHandledForDescendants)
 {
+  NS_ABORT_IF_FALSE(NS_IsHintSubset(aParentHintsNotHandledForDescendants,
+                                    nsChangeHint_Hints_NotHandledForDescendants),
+                    "caller is passing inherited hints, but shouldn't be");
+
   nsChangeHint hint = NS_STYLE_HINT_NONE;
   NS_ENSURE_TRUE(aOther, hint);
   // We must always ensure that we populate the structs on the new style
@@ -378,48 +383,46 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // we could later get a small change in one of those structs that we
   // don't want to miss.
 
-  // If our rule nodes are the same, then we are looking at the same
-  // style data.  We know this because CalcStyleDifference is always
-  // called on two style contexts that point to the same element, so we
-  // know that our position in the style context tree is the same and
-  // our position in the rule node tree is also the same.
+  // If our rule nodes are the same, then any differences in style data
+  // are already accounted for by differences on ancestors.  We know
+  // this because CalcStyleDifference is always called on two style
+  // contexts that point to the same element, so we know that our
+  // position in the style context tree is the same and our position in
+  // the rule node tree is also the same.
+  // However, if there were noninherited style change hints on the
+  // parent, we might produce these same noninherited hints on this
+  // style context's frame due to 'inherit' values, so we do need to
+  // compare.
+  // (Things like 'em' units are handled by the change hint produced
+  // by font-size changing, so we don't need to worry about them like
+  // we worry about 'inherit' values.)
   bool compare = mRuleNode != aOther->mRuleNode;
 
 #define DO_STRUCT_DIFFERENCE(struct_)                                         \
   PR_BEGIN_MACRO                                                              \
-    NS_ASSERTION(NS_IsHintSubset(nsStyle##struct_::MaxDifference(), maxHint), \
-                 "Struct placed in the wrong maxHint section");               \
     const nsStyle##struct_* this##struct_ = PeekStyle##struct_();             \
     if (this##struct_) {                                                      \
       const nsStyle##struct_* other##struct_ = aOther->GetStyle##struct_();   \
-      if ((compare || nsStyle##struct_::ForceCompare()) &&                    \
-          !NS_IsHintSubset(maxHint, hint) &&                                  \
+      nsChangeHint maxDifference = nsStyle##struct_::MaxDifference();         \
+      if ((compare ||                                                         \
+           (maxDifference & aParentHintsNotHandledForDescendants)) &&         \
+          !NS_IsHintSubset(maxDifference, hint) &&                            \
           this##struct_ != other##struct_) {                                  \
         NS_ASSERTION(NS_IsHintSubset(                                         \
              this##struct_->CalcDifference(*other##struct_),                  \
              nsStyle##struct_::MaxDifference()),                              \
              "CalcDifference() returned bigger hint than MaxDifference()");   \
-        NS_ASSERTION(nsStyle##struct_::ForceCompare() ||                      \
-             NS_IsHintSubset(nsStyle##struct_::MaxDifference(),               \
-                             nsChangeHint(~nsChangeHint_NonInherited_Hints)), \
-             "Structs that can return non-inherited hints must return true "  \
-             "from ForceCompare");                                            \
         NS_UpdateHint(hint, this##struct_->CalcDifference(*other##struct_));  \
       }                                                                       \
     }                                                                         \
   PR_END_MACRO
 
-  // We begin by examining those style structs that are capable of
-  // causing the maximal difference, a FRAMECHANGE.
-  // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
-  // Visibility, Outline, TableBorder, Table, Text, UIReset, Quotes
-  nsChangeHint maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
-      nsChangeHint_UpdateTransformLayer | nsChangeHint_UpdateOpacityLayer |
-      nsChangeHint_UpdateOverflow | nsChangeHint_AddOrRemoveTransform);
+  // In general, we want to examine structs starting with those that can
+  // cause the largest style change, down to those that can cause the
+  // smallest.  This lets us skip later ones if we already have a hint
+  // that subsumes their MaxDifference.  (As the hints get
+  // finer-grained, this optimization is becoming less useful, though.)
   DO_STRUCT_DIFFERENCE(Display);
-
-  maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
-      nsChangeHint_UpdateCursor);
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
   DO_STRUCT_DIFFERENCE(Content);
@@ -431,38 +434,16 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(UIReset);
   DO_STRUCT_DIFFERENCE(Text);
   DO_STRUCT_DIFFERENCE(List);
-  // If the quotes implementation is ever going to change we might not need
-  // a framechange here and a reflow should be sufficient.  See bug 35768.
   DO_STRUCT_DIFFERENCE(Quotes);
-
-  maxHint = nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_UpdateEffects);
   DO_STRUCT_DIFFERENCE(SVGReset);
   DO_STRUCT_DIFFERENCE(SVG);
-
-  maxHint = nsChangeHint(NS_STYLE_HINT_REFLOW |
-      nsChangeHint_UpdateOverflow | nsChangeHint_RecomputePosition);
   DO_STRUCT_DIFFERENCE(Position);
-
-  // At this point, we know that the worst kind of damage we could do is
-  // a reflow.
-  maxHint = NS_STYLE_HINT_REFLOW;
-      
-  // The following structs cause (as their maximal difference) a reflow
-  // to occur.  REFLOW Structs: Font, Margin, Padding, Border, List,
-  // Position, Text, TextReset
   DO_STRUCT_DIFFERENCE(Font);
   DO_STRUCT_DIFFERENCE(Margin);
   DO_STRUCT_DIFFERENCE(Padding);
   DO_STRUCT_DIFFERENCE(Border);
   DO_STRUCT_DIFFERENCE(TextReset);
-
-  // Most backgrounds only require a re-render (i.e., a VISUAL change), but
-  // backgrounds using -moz-element need to reset SVG effects, too.
-  maxHint = nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_UpdateEffects);
   DO_STRUCT_DIFFERENCE(Background);
-
-  // Color only needs a repaint.
-  maxHint = NS_STYLE_HINT_VISUAL;
   DO_STRUCT_DIFFERENCE(Color);
 
 #undef DO_STRUCT_DIFFERENCE
