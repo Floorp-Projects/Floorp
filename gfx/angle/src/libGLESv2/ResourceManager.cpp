@@ -11,7 +11,7 @@
 
 #include "libGLESv2/Buffer.h"
 #include "libGLESv2/Program.h"
-#include "libGLESv2/RenderBuffer.h"
+#include "libGLESv2/Renderbuffer.h"
 #include "libGLESv2/Shader.h"
 #include "libGLESv2/Texture.h"
 
