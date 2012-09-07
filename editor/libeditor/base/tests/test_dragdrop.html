@@ -17,6 +17,7 @@
   <input id="input" value="Drag Me">
   <textarea id="textarea">Some Text To Drag</textarea>
   <p id="contenteditable" contenteditable="true">This is some <b id="bold">editable</b> text.</p>
+  <p id="nestedce" contenteditable="true"><span id="first"> </span>First letter <span id="noneditable" contenteditable="false">Middle</span> Last part</p>
 
 <script type="application/javascript">
 
@@ -158,6 +159,17 @@ function doTest()
 
   // We'd test 'move' here as well as 'copy', but that requires knowledge of
   // the source of the drag which drag simulation doesn't provide.
+
+  // -------- Test dragging non-editable nested inside contenteditable to contenteditable
+
+  input.focus(); // this resets some state in the selection otherwise an inexplicable error occurs calling selectAllChildren.
+  input.blur();
+
+  var nonEditable = document.getElementById("noneditable");
+  selection.selectAllChildren(nonEditable);
+  synthesizeDrop(nonEditable, document.getElementById("first"), [], "copy");
+  is(document.getElementById("nestedce").textContent, " MiddleFirst letter Middle Last part",
+     "Drag non-editable text/html onto contenteditable text");
 
   SimpleTest.finish();
 }
