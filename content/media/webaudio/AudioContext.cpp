@@ -11,6 +11,7 @@
 #include "mozilla/dom/AudioContextBinding.h"
 
 namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(AudioContext, mWindow)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AudioContext)
@@ -34,8 +35,7 @@ JSObject*
 AudioContext::WrapObject(JSContext* aCx, JSObject* aScope,
                          bool* aTriedToWrap)
 {
-  return dom::mozAudioContextBinding::Wrap(aCx, aScope, this,
-                                           aTriedToWrap);
+  return mozAudioContextBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 /* static */ already_AddRefed<AudioContext>
@@ -52,5 +52,6 @@ AudioContext::Constructor(nsISupports* aGlobal, ErrorResult& aRv)
   return object;
 }
 
+}
 }
 

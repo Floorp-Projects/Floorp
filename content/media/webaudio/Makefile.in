@@ -15,7 +15,8 @@ LIBRARY_NAME   := gkconwebaudio_s
 LIBXUL_LIBRARY := 1
 
 CPPSRCS := \
-  AudioContext.cpp
+  AudioContext.cpp \
+  EnableWebAudioCheck.cpp \
   $(NULL)
 
 PARALLEL_DIRS := test
