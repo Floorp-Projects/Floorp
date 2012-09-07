@@ -182,7 +182,7 @@ const char *__stdcall eglQueryString(EGLDisplay dpy, EGLint name)
           case EGL_VENDOR:
             return success("Google Inc.");
           case EGL_VERSION:
-            return success("1.4 (ANGLE "VERSION_STRING")");
+            return success("1.4 (ANGLE " VERSION_STRING ")");
         }
 
         return error(EGL_BAD_PARAMETER, (const char*)NULL);

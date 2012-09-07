@@ -244,7 +244,7 @@ extern mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
  * Rooted<T> may be used without the class definition being available.
  */
 template <typename T>
-struct RootKind<T *> { static ThingRootKind rootKind() { return T::rootKind(); }; };
+struct RootKind<T *> { static ThingRootKind rootKind() { return T::rootKind(); } };
 
 template <typename T>
 struct RootMethods<T *>

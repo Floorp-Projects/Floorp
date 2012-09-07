@@ -23,22 +23,6 @@
 namespace egl
 {
 
-namespace
-{
-const int versionWindowsVista = MAKEWORD(0x00, 0x06);
-const int versionWindows7 = MAKEWORD(0x01, 0x06);
-
-// Return the version of the operating system in a format suitable for ordering
-// comparison.
-int getComparableOSVersion()
-{
-    DWORD version = GetVersion();
-    int majorVersion = LOBYTE(LOWORD(version));
-    int minorVersion = HIBYTE(LOWORD(version));
-    return MAKEWORD(minorVersion, majorVersion);
-}
-}
-
 Surface::Surface(Display *display, const Config *config, HWND window, EGLint postSubBufferSupported) 
     : mDisplay(display), mConfig(config), mWindow(window), mPostSubBufferSupported(postSubBufferSupported)
 {
@@ -188,27 +172,7 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
     // before reallocating them to free up as much video memory as possible.
     device->EvictManagedResources();
 
-    D3DPRESENT_PARAMETERS presentParameters = {0};
     HRESULT result;
-
-    presentParameters.AutoDepthStencilFormat = mConfig->mDepthStencilFormat;
-    // We set BackBufferCount = 1 even when we use D3DSWAPEFFECT_FLIPEX.
-    // We do this because DirectX docs are a bit vague whether to set this to 1
-    // or 2. The runtime seems to accept 1, so we speculate that either it is
-    // forcing it to 2 without telling us, or better, doing something smart
-    // behind the scenes knowing that we don't need more.
-    presentParameters.BackBufferCount = 1;
-    presentParameters.BackBufferFormat = mConfig->mRenderTargetFormat;
-    presentParameters.EnableAutoDepthStencil = FALSE;
-    presentParameters.Flags = 0;
-    presentParameters.hDeviceWindow = getWindowHandle();
-    presentParameters.MultiSampleQuality = 0;                  // FIXME: Unimplemented
-    presentParameters.MultiSampleType = D3DMULTISAMPLE_NONE;   // FIXME: Unimplemented
-    presentParameters.PresentationInterval = mPresentInterval;
-    presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
-    presentParameters.Windowed = TRUE;
-    presentParameters.BackBufferWidth = backbufferWidth;
-    presentParameters.BackBufferHeight = backbufferHeight;
 
     // Release specific resources to free up memory for the new render target, while the
     // old render target still exists for the purpose of preserving its contents.
@@ -243,8 +207,8 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
         pShareHandle = &mShareHandle;
     }
 
-    result = device->CreateTexture(presentParameters.BackBufferWidth, presentParameters.BackBufferHeight, 1, D3DUSAGE_RENDERTARGET,
-                                   presentParameters.BackBufferFormat, D3DPOOL_DEFAULT, &mOffscreenTexture, pShareHandle);
+    result = device->CreateTexture(backbufferWidth, backbufferHeight, 1, D3DUSAGE_RENDERTARGET,
+                                   mConfig->mRenderTargetFormat, D3DPOOL_DEFAULT, &mOffscreenTexture, pShareHandle);
     if (FAILED(result))
     {
         ERR("Could not create offscreen texture: %08lX", result);
@@ -274,14 +238,14 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
             mWidth, mHeight
         };
 
-        if (rect.right > static_cast<LONG>(presentParameters.BackBufferWidth))
+        if (rect.right > static_cast<LONG>(backbufferWidth))
         {
-            rect.right = presentParameters.BackBufferWidth;
+            rect.right = backbufferWidth;
         }
 
-        if (rect.bottom > static_cast<LONG>(presentParameters.BackBufferHeight))
+        if (rect.bottom > static_cast<LONG>(backbufferHeight))
         {
-            rect.bottom = presentParameters.BackBufferHeight;
+            rect.bottom = backbufferHeight;
         }
 
         mDisplay->endScene();
@@ -294,6 +258,35 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
     if (mWindow)
     {
+        D3DPRESENT_PARAMETERS presentParameters = {0};
+        presentParameters.AutoDepthStencilFormat = mConfig->mDepthStencilFormat;
+        presentParameters.BackBufferCount = 1;
+        presentParameters.BackBufferFormat = mConfig->mRenderTargetFormat;
+        presentParameters.EnableAutoDepthStencil = FALSE;
+        presentParameters.Flags = 0;
+        presentParameters.hDeviceWindow = getWindowHandle();
+        presentParameters.MultiSampleQuality = 0;                  // FIXME: Unimplemented
+        presentParameters.MultiSampleType = D3DMULTISAMPLE_NONE;   // FIXME: Unimplemented
+        presentParameters.PresentationInterval = mPresentInterval;
+        presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
+        presentParameters.Windowed = TRUE;
+        presentParameters.BackBufferWidth = backbufferWidth;
+        presentParameters.BackBufferHeight = backbufferHeight;
+
+        // http://crbug.com/140239
+        // http://crbug.com/143434
+        //
+        // Some AMD/Intel switchable systems / drivers appear to round swap chain surfaces to a multiple of 64 pixels in width
+        // when using the integrated Intel. This rounds the width up rather than down.
+        //
+        // Some non-switchable AMD GPUs / drivers do not respect the source rectangle to Present. Therefore, when the vendor ID
+        // is not Intel, the back buffer width must be exactly the same width as the window or horizontal scaling will occur.
+        D3DADAPTER_IDENTIFIER9* adapterIdentifier = mDisplay->getAdapterIdentifier();
+        if (adapterIdentifier->VendorId == VENDOR_ID_INTEL)
+        {
+            presentParameters.BackBufferWidth = (presentParameters.BackBufferWidth + 63) / 64 * 64;
+        }
+
         result = device->CreateAdditionalSwapChain(&presentParameters, &mSwapChain);
 
         if (FAILED(result))
@@ -320,9 +313,8 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
     if (mConfig->mDepthStencilFormat != D3DFMT_UNKNOWN)
     {
-        result = device->CreateDepthStencilSurface(presentParameters.BackBufferWidth, presentParameters.BackBufferHeight,
-                                                   presentParameters.AutoDepthStencilFormat, presentParameters.MultiSampleType,
-                                                   presentParameters.MultiSampleQuality, FALSE, &mDepthStencil, NULL);
+        result = device->CreateDepthStencilSurface(backbufferWidth, backbufferHeight, mConfig->mDepthStencilFormat, D3DMULTISAMPLE_NONE,
+                                                   0, FALSE, &mDepthStencil, NULL);
 
         if (FAILED(result))
         {
@@ -343,8 +335,8 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
         }
     }
 
-    mWidth = presentParameters.BackBufferWidth;
-    mHeight = presentParameters.BackBufferHeight;
+    mWidth = backbufferWidth;
+    mHeight = backbufferHeight;
 
     mPresentIntervalDirty = false;
     return true;

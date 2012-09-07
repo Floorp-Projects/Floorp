@@ -6,9 +6,20 @@
 
 #include <string.h>
 #include "mozilla/Telemetry.h"
+#include "mozilla/Preferences.h"
 #include "sqlite3.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Util.h"
+
+/**
+ * This preference is a workaround to allow users/sysadmins to identify
+ * that the profile exists on an NFS share whose implementation
+ * is incompatible with SQLite's default locking implementation.
+ * Bug 433129 attempted to automatically identify such file-systems, 
+ * but a reliable way was not found and it was determined that the fallback 
+ * locking is slower than POSIX locking, so we do not want to do it by default.
+*/
+#define PREF_NFS_FILESYSTEM   "storage.nfs_filesystem"
 
 namespace {
 
@@ -435,13 +446,23 @@ namespace storage {
 sqlite3_vfs* ConstructTelemetryVFS()
 {
 #if defined(XP_WIN)
-#define EXPECTED_VFS "win32"
+#define EXPECTED_VFS     "win32"
+#define EXPECTED_VFS_NFS "win32"
 #else
-#define EXPECTED_VFS "unix"
+#define EXPECTED_VFS     "unix"
+#define EXPECTED_VFS_NFS "unix-excl"
 #endif
-
-  sqlite3_vfs *vfs = sqlite3_vfs_find(NULL);
-  const bool expected_vfs = vfs->zName && !strcmp(vfs->zName, EXPECTED_VFS);
+  
+  bool expected_vfs;
+  sqlite3_vfs *vfs;
+  if (Preferences::GetBool(PREF_NFS_FILESYSTEM)) {
+    vfs = sqlite3_vfs_find(EXPECTED_VFS_NFS);
+    expected_vfs = (vfs != nullptr);
+  }
+  else {
+    vfs = sqlite3_vfs_find(NULL);
+    expected_vfs = vfs->zName && !strcmp(vfs->zName, EXPECTED_VFS);
+  }
   if (!expected_vfs) {
     return NULL;
   }

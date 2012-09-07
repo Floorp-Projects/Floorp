@@ -1474,16 +1474,15 @@ ExtractHandles(DBusMessage *aReply, nsTArray<uint32_t>& aOutHandles)
   }
 }
 
-nsTArray<uint32_t>
+bool
 BluetoothDBusService::AddReservedServicesInternal(const nsAString& aAdapterPath,
-                                                  const nsTArray<uint32_t>& aServices)
+                                                  const nsTArray<uint32_t>& aServices, 
+                                                  nsTArray<uint32_t>& aServiceHandlesContainer)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  nsTArray<uint32_t> ret;
-
   int length = aServices.Length();
-  if (length == 0) return ret;
+  if (length == 0) return false;
 
   const uint32_t* services = aServices.Elements();
   DBusMessage* reply =
@@ -1495,11 +1494,11 @@ BluetoothDBusService::AddReservedServicesInternal(const nsAString& aAdapterPath,
 
   if (!reply) {
     LOG("Null DBus message. Couldn't extract handles.");
-    return ret;
+    return false;
   }
 
-  ExtractHandles(reply, ret);
-  return ret;
+  ExtractHandles(reply, aServiceHandlesContainer);
+  return true;
 }
 
 bool

@@ -429,6 +429,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TextureSSE2.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\utilities.cpp"
 				>
 			</File>

@@ -230,7 +230,7 @@
                  aria-label="&social.sharePopup.portrait.arialabel;"/>
         </vbox>
         <vbox id="editSharePopupText">
-          <button id="socialUserDisplayName"
+          <button id="socialUserDisplayName" pack="start"
                   oncommand="SocialUI.showProfile();"/>
           <spacer flex="1"/>
           <label id="socialUserRecommendedText"
