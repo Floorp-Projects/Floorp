@@ -1011,28 +1011,10 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                       nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
                                       TreeMatchContext &aTreeMatchContext)
 {
-  if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aMinChange)) {
-    // If aMinChange doesn't include nsChangeHint_NeedDirtyReflow, clear out
-    // all the reflow change bits from it, so that we'll make sure to append a
-    // change to the list for ourselves if we need a reflow.  We need this
-    // because the parent may or may not actually end up reflowing us
-    // otherwise.
-    aMinChange = NS_SubtractHint(aMinChange, nsChangeHint_ReflowFrame);
-  } else if (!NS_IsHintSubset(nsChangeHint_ClearDescendantIntrinsics,
-                              aMinChange)) {
-    // If aMinChange doesn't include nsChangeHint_ClearDescendantIntrinsics,
-    // clear out the nsChangeHint_ClearAncestorIntrinsics flag, since it's
-    // possible that we had some random ancestor that cleared ancestor
-    // intrinsic widths, but we still need to clear intrinsic widths on frames
-    // that are our ancestors but its descendants.
-    aMinChange =
-      NS_SubtractHint(aMinChange, nsChangeHint_ClearAncestorIntrinsics);
-  }
-
   // We need to generate a new change list entry for every frame whose style
   // comparision returns one of these hints. These hints don't automatically
   // update all their descendant frames.
-  aMinChange = NS_SubtractHint(aMinChange, nsChangeHint_NonInherited_Hints);
+  aMinChange = NS_SubtractHint(aMinChange, NS_HintsNotHandledForDescendantsIn(aMinChange));
 
   // It would be nice if we could make stronger assertions here; they
   // would let us simplify the ?: expressions below setting |content|
