@@ -550,13 +550,13 @@ ContactManager.prototype = {
     return request;
   },
 
-  getSimContacts: function(aType) {
+  getSimContacts: function(aContactType) {
     let request;
     request = this.createRequest();
-    let options = {type: aType};
+    let options = {contactType: aContactType};
 
     let allowCallback = function() {
-      if (DEBUG) debug("getSimContacts " + aType);
+      if (DEBUG) debug("getSimContacts " + aContactType);
       cpmm.sendAsyncMessage("Contacts:GetSimContacts",
         {requestID: this.getRequestId({request: request, reason: "getSimContacts"}),
          options: options});
