@@ -519,6 +519,12 @@ MBinaryBitwiseInstruction::foldsTo(bool useValueNumbers)
     if (IsConstant(rhs, 0))
         return foldIfZero(1);
 
+    if (IsConstant(lhs, -1))
+        return foldIfNegOne(0);
+
+    if (IsConstant(rhs, -1))
+        return foldIfNegOne(1);
+
     if (EqualValues(useValueNumbers, lhs, rhs))
         return foldIfEqual();
 
