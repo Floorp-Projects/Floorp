@@ -18,12 +18,23 @@ class GLXLibrary
 public:
     GLXLibrary() : mInitialized(false), mTriedInitializing(false),
                    mUseTextureFromPixmap(false), mDebug(false),
-                   mHasRobustness(false), mOGLLibrary(nullptr) {}
+                   mHasRobustness(false), mIsATI(false),
+                   mClientIsMesa(false), mGLXMajorVersion(0),
+                   mGLXMinorVersion(0), mLibType(OPENGL_LIB),
+                   mOGLLibrary(nullptr) {}
 
     void xDestroyContext(Display* display, GLXContext context);
     Bool xMakeCurrent(Display* display, 
                       GLXDrawable drawable, 
                       GLXContext context);
+
+    enum LibraryType
+    {
+      OPENGL_LIB = 0,
+      MESA_LLVMPIPE_LIB = 1,
+      LIBS_MAX
+    };
+
     GLXContext xGetCurrentContext();
     static void* xGetProcAddress(const char *procName);
     GLXFBConfig* xChooseFBConfig(Display* display, 
@@ -76,7 +87,7 @@ public:
                                      Bool direct,
                                      const int* attrib_list);
 
-    bool EnsureInitialized();
+    bool EnsureInitialized(bool aUseMesaLLVMPipe);
 
     GLXPixmap CreatePixmap(gfxASurface* aSurface);
     void DestroyPixmap(GLXPixmap aPixmap);
@@ -86,6 +97,9 @@ public:
     bool UseTextureFromPixmap() { return mUseTextureFromPixmap; }
     bool HasRobustness() { return mHasRobustness; }
     bool SupportsTextureFromPixmap(gfxASurface* aSurface);
+    bool IsATI() { return mIsATI; }
+    bool GLXVersionCheck(int aMajor, int aMinor);
+    static LibraryType SelectLibrary(const GLContext::ContextFlags& aFlags);
 
 private:
     
@@ -187,11 +201,17 @@ private:
     bool mUseTextureFromPixmap;
     bool mDebug;
     bool mHasRobustness;
+    bool mIsATI;
+    bool mClientIsMesa;
+    int mGLXMajorVersion;
+    int mGLXMinorVersion;
+    LibraryType mLibType;
     PRLibrary *mOGLLibrary;
 };
 
 // a global GLXLibrary instance
-extern GLXLibrary sGLXLibrary;
+extern GLXLibrary sGLXLibrary[GLXLibrary::LIBS_MAX];
+extern GLXLibrary& sDefGLXLib;
 
 } /* namespace gl */
 } /* namespace mozilla */
