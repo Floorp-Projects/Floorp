@@ -18,8 +18,8 @@ class WrapperFactory {
     enum { WAIVE_XRAY_WRAPPER_FLAG = js::Wrapper::LAST_USED_FLAG << 1,
            IS_XRAY_WRAPPER_FLAG    = WAIVE_XRAY_WRAPPER_FLAG << 1,
            SCRIPT_ACCESS_ONLY_FLAG = IS_XRAY_WRAPPER_FLAG << 1,
-           PARTIALLY_TRANSPARENT   = SCRIPT_ACCESS_ONLY_FLAG << 1,
-           SOW_FLAG                = PARTIALLY_TRANSPARENT << 1,
+           XOW_FLAG                = SCRIPT_ACCESS_ONLY_FLAG << 1,
+           SOW_FLAG                = XOW_FLAG << 1,
 
            // Prevent scripts from shadowing native properties.
            // NB: Applies only to Xray wrappers.
@@ -38,8 +38,8 @@ class WrapperFactory {
         return HasWrapperFlag(wrapper, IS_XRAY_WRAPPER_FLAG);
     }
 
-    static bool IsPartiallyTransparent(JSObject *wrapper) {
-        return HasWrapperFlag(wrapper, PARTIALLY_TRANSPARENT);
+    static bool IsXOW(JSObject *wrapper) {
+        return HasWrapperFlag(wrapper, XOW_FLAG);
     }
 
     static bool HasWaiveXrayFlag(JSObject *wrapper) {
