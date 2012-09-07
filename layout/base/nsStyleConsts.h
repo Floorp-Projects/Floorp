@@ -713,11 +713,12 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_TABSIZE_INITIAL                8
 
 // See nsStyleText
-#define NS_STYLE_WHITESPACE_NORMAL              0
-#define NS_STYLE_WHITESPACE_PRE                 1
-#define NS_STYLE_WHITESPACE_NOWRAP              2
-#define NS_STYLE_WHITESPACE_PRE_WRAP            3
-#define NS_STYLE_WHITESPACE_PRE_LINE            4
+#define NS_STYLE_WHITESPACE_NORMAL               0
+#define NS_STYLE_WHITESPACE_PRE                  1
+#define NS_STYLE_WHITESPACE_NOWRAP               2
+#define NS_STYLE_WHITESPACE_PRE_WRAP             3
+#define NS_STYLE_WHITESPACE_PRE_LINE             4
+#define NS_STYLE_WHITESPACE_PRE_DISCARD_NEWLINES 5
 
 // See nsStyleText
 #define NS_STYLE_WORDBREAK_NORMAL               0

@@ -354,22 +354,22 @@ public:
   virtual NS_HIDDEN_(void) EndObservingDocument() = 0;
 
   /**
-   * Return whether InitialReflow() was previously called.
+   * Return whether Initialize() was previously called.
    */
-  bool DidInitialReflow() const { return mDidInitialReflow; }
+  bool DidInitialize() const { return mDidInitialize; }
 
   /**
-   * Perform the initial reflow. Constructs the frame for the root content
-   * object and then reflows the frame model into the specified width and
-   * height.
+   * Perform initialization. Constructs the frame for the root content
+   * object and then enqueues a reflow of the frame model into the
+   * specified width and height.
    *
    * The coordinates for aWidth and aHeight must be in standard nscoords.
    *
    * Callers of this method must hold a reference to this shell that
    * is guaranteed to survive through arbitrary script execution.
-   * Calling InitialReflow can execute arbitrary script.
+   * Calling Initialize can execute arbitrary script.
    */
-  virtual NS_HIDDEN_(nsresult) InitialReflow(nscoord aWidth, nscoord aHeight) = 0;
+  virtual NS_HIDDEN_(nsresult) Initialize(nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Reflow the frame model into a new width and height.  The
@@ -1374,7 +1374,7 @@ protected:
   RenderFlags               mRenderFlags;
 
   bool                      mStylesHaveChanged : 1;
-  bool                      mDidInitialReflow : 1;
+  bool                      mDidInitialize : 1;
   bool                      mIsDestroying : 1;
   bool                      mIsReflowing : 1;
 

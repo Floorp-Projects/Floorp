@@ -11,8 +11,8 @@
 #define LIBGLESV2_PROGRAM_BINARY_H_
 
 #define GL_APICALL
-#include <gles2/gl2.h>
-#include <gles2/gl2ext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 #include <d3dx9.h>
 #include <d3dcompiler.h>

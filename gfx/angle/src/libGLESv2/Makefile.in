@@ -153,6 +153,7 @@ CPPSRCS += \
         ResourceManager.cpp \
         Shader.cpp \
         Texture.cpp \
+        TextureSSE2.cpp \
         utilities.cpp \
         HandleAllocator.cpp \
         IndexDataManager.cpp \
