@@ -388,8 +388,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
 
 #define DO_STRUCT_DIFFERENCE(struct_)                                         \
   PR_BEGIN_MACRO                                                              \
-    NS_ASSERTION(NS_IsHintSubset(nsStyle##struct_::MaxDifference(), maxHint), \
-                 "Struct placed in the wrong maxHint section");               \
     const nsStyle##struct_* this##struct_ = PeekStyle##struct_();             \
     if (this##struct_) {                                                      \
       const nsStyle##struct_* other##struct_ = aOther->GetStyle##struct_();   \
@@ -410,17 +408,12 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
     }                                                                         \
   PR_END_MACRO
 
-  // We begin by examining those style structs that are capable of
-  // causing the maximal difference, a FRAMECHANGE.
-  // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
-  // Visibility, Outline, TableBorder, Table, Text, UIReset, Quotes
-  nsChangeHint maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
-      nsChangeHint_UpdateTransformLayer | nsChangeHint_UpdateOpacityLayer |
-      nsChangeHint_UpdateOverflow | nsChangeHint_AddOrRemoveTransform);
+  // In general, we want to examine structs starting with those that can
+  // cause the largest style change, down to those that can cause the
+  // smallest.  This lets us skip later ones if we already have a hint
+  // that subsumes their MaxDifference.  (As the hints get
+  // finer-grained, this optimization is becoming less useful, though.)
   DO_STRUCT_DIFFERENCE(Display);
-
-  maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
-      nsChangeHint_UpdateCursor);
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
   DO_STRUCT_DIFFERENCE(Content);
@@ -432,38 +425,16 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(UIReset);
   DO_STRUCT_DIFFERENCE(Text);
   DO_STRUCT_DIFFERENCE(List);
-  // If the quotes implementation is ever going to change we might not need
-  // a framechange here and a reflow should be sufficient.  See bug 35768.
   DO_STRUCT_DIFFERENCE(Quotes);
-
-  maxHint = nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_UpdateEffects);
   DO_STRUCT_DIFFERENCE(SVGReset);
   DO_STRUCT_DIFFERENCE(SVG);
-
-  maxHint = nsChangeHint(NS_STYLE_HINT_REFLOW |
-      nsChangeHint_UpdateOverflow | nsChangeHint_RecomputePosition);
   DO_STRUCT_DIFFERENCE(Position);
-
-  // At this point, we know that the worst kind of damage we could do is
-  // a reflow.
-  maxHint = NS_STYLE_HINT_REFLOW;
-      
-  // The following structs cause (as their maximal difference) a reflow
-  // to occur.  REFLOW Structs: Font, Margin, Padding, Border, List,
-  // Position, Text, TextReset
   DO_STRUCT_DIFFERENCE(Font);
   DO_STRUCT_DIFFERENCE(Margin);
   DO_STRUCT_DIFFERENCE(Padding);
   DO_STRUCT_DIFFERENCE(Border);
   DO_STRUCT_DIFFERENCE(TextReset);
-
-  // Most backgrounds only require a re-render (i.e., a VISUAL change), but
-  // backgrounds using -moz-element need to reset SVG effects, too.
-  maxHint = nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_UpdateEffects);
   DO_STRUCT_DIFFERENCE(Background);
-
-  // Color only needs a repaint.
-  maxHint = NS_STYLE_HINT_VISUAL;
   DO_STRUCT_DIFFERENCE(Color);
 
 #undef DO_STRUCT_DIFFERENCE
