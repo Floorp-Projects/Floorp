@@ -1,3 +1,8 @@
+# Canvas reftests
+# From: /content/test/reftest
+# To:   /content/canvas/test/reftest
+include ../../canvas/test/reftest/reftest.list
+
 == bug453105.html bug453105-ref.html
 == optiontext.html optiontext-ref.html
 == bug456008.xhtml bug456008-ref.html

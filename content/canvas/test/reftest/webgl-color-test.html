@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript">
+/* Color Test
+ *
+ * Clear the four quadrants of the canvas as follows:
+ * +------+------+
+ * | red  |green |
+ * |      |      |
+ * +------+------+
+ * | blue |white |
+ * |      |      |
+ * +------+------+
+ *
+ * This is for checking that we're getting the right colors when
+ * we ask for them. This combined with the Orientation test assure
+ * that we are getting the correct colors in the correct places.
+ */
+
+"use strict";
+
+function renderGL(gl) {
+  gl.enable(gl.SCISSOR_TEST);
+
+  gl.scissor(0, 128, 128, 128);
+  gl.clearColor(1.0, 0.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.scissor(128, 128, 128, 128);
+  gl.clearColor(0.0, 1.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.scissor(0, 0, 128, 128);
+  gl.clearColor(0.0, 0.0, 1.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.scissor(128, 0, 128, 128);
+  gl.clearColor(1.0, 1.0, 1.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.finish();
+}
+
+function renderBackup(canvas) {
+  var context = canvas.getContext("2d");
+  context.fillStyle = "rgba(255, 0, 0, 1.0)";
+  context.fillRect(0, 0, 128, 128);
+
+  context.fillStyle = "rgba(0, 255, 0, 1.0)";
+  context.fillRect(128, 0, 128, 128);
+
+  context.fillStyle = "rgba(0, 0, 255, 1.0)";
+  context.fillRect(0, 128, 128, 128);
+
+  context.fillStyle = "rgba(255, 255, 255, 1.0)";
+  context.fillRect(128, 128, 128, 128);
+}
+
+function onLoad() {
+  var canvas = document.getElementById("canvas");
+  var gl = initGL(canvas);
+
+  if (gl)
+    renderGL(gl);
+  else
+    renderBackup(canvas);
+}
+
+</script>
+</head>
+
+<body onload="onLoad();">
+  <canvas id="canvas" width="256" height="256"></canvas>
+</body>
+
+</html>
