@@ -4410,10 +4410,10 @@ inline void EnableUniversalXPConnect(JSContext *cx)
 
     // Recompute all the cross-compartment wrappers leaving the newly-privileged
     // compartment.
-    mozilla::DebugOnly<bool> rv;
-    rv = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
-                               js::AllCompartments());
-    MOZ_ASSERT(rv);
+    bool rv = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
+                                    js::AllCompartments());
+    if (!rv)
+        NS_WARNING("Failed to recompute wrappers in EnableUniversalXPConnect");
 }
 
 }
