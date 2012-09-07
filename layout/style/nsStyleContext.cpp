@@ -399,8 +399,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
              nsStyle##struct_::MaxDifference()),                              \
              "CalcDifference() returned bigger hint than MaxDifference()");   \
         NS_ASSERTION(nsStyle##struct_::ForceCompare() ||                      \
-             NS_IsHintSubset(nsStyle##struct_::MaxDifference(),               \
-                             nsChangeHint(~nsChangeHint_NonInherited_Hints)), \
+             NS_HintsNotHandledForDescendantsIn(nsStyle##struct_::MaxDifference()) == 0,  \
              "Structs that can return non-inherited hints must return true "  \
              "from ForceCompare");                                            \
         NS_UpdateHint(hint, this##struct_->CalcDifference(*other##struct_));  \

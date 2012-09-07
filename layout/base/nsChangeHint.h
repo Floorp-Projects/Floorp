@@ -107,25 +107,10 @@ enum nsChangeHint {
    * has changed whether the frame is a container for fixed-pos or abs-pos
    * elements, but reframing is otherwise not needed.
    */
-  nsChangeHint_AddOrRemoveTransform = 0x4000,
+  nsChangeHint_AddOrRemoveTransform = 0x4000
 
-  /**
-   * We have an optimization when processing change hints which prevents
-   * us from visiting the descendants of a node when a hint on that node
-   * is being processed.  This optimization does not apply in some of the
-   * cases where applying a hint to an element does not necessarily result
-   * in the same hint being handled on the descendants.
-   *
-   * If you're adding such a hint, you should add your hint to this list.
-   */
-  nsChangeHint_NonInherited_Hints =
-    nsChangeHint_UpdateTransformLayer |
-    nsChangeHint_UpdateEffects |
-    nsChangeHint_UpdateOpacityLayer |
-    nsChangeHint_UpdateOverflow |
-    nsChangeHint_ChildrenOnlyTransform |
-    nsChangeHint_RecomputePosition |
-    nsChangeHint_AddOrRemoveTransform
+  // IMPORTANT NOTE: When adding new hints, consider whether you need to
+  // add them to NS_HintsNotHandledForDescendantsIn() below.
 };
 
 // Redefine these operators to return nothing. This will catch any use
@@ -162,6 +147,40 @@ inline bool NS_UpdateHint(nsChangeHint& aDest, nsChangeHint aSrc) {
 // Returns true iff the second hint contains all the hints of the first hint
 inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
   return (aSubset & aSuperSet) == aSubset;
+}
+
+/**
+ * We have an optimization when processing change hints which prevents
+ * us from visiting the descendants of a node when a hint on that node
+ * is being processed.  This optimization does not apply in some of the
+ * cases where applying a hint to an element does not necessarily result
+ * in the same hint being handled on the descendants.
+ */
+inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint) {
+  nsChangeHint result = nsChangeHint(aChangeHint & (
+    nsChangeHint_UpdateTransformLayer |
+    nsChangeHint_UpdateEffects |
+    nsChangeHint_UpdateOpacityLayer |
+    nsChangeHint_UpdateOverflow |
+    nsChangeHint_ChildrenOnlyTransform |
+    nsChangeHint_RecomputePosition |
+    nsChangeHint_AddOrRemoveTransform));
+
+  if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aChangeHint) &&
+      NS_IsHintSubset(nsChangeHint_NeedReflow, aChangeHint)) {
+    // If NeedDirtyReflow is *not* set, then NeedReflow is a
+    // non-inherited hint.
+    NS_UpdateHint(result, nsChangeHint_NeedReflow);
+  }
+
+  if (!NS_IsHintSubset(nsChangeHint_ClearDescendantIntrinsics, aChangeHint) &&
+      NS_IsHintSubset(nsChangeHint_ClearAncestorIntrinsics, aChangeHint)) {
+    // If ClearDescendantIntrinsics is *not* set, then
+    // ClearAncestorIntrinsics is a non-inherited hint.
+    NS_UpdateHint(result, nsChangeHint_ClearAncestorIntrinsics);
+  }
+
+  return result;
 }
 
 // Redefine the old NS_STYLE_HINT constants in terms of the new hint structure
