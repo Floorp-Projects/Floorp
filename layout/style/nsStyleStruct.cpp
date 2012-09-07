@@ -498,7 +498,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
       GetComputedBorder() != aOther.GetComputedBorder() ||
       mFloatEdge != aOther.mFloatEdge ||
       mBorderImageOutset != aOther.mBorderImageOutset ||
-      (shadowDifference & nsChangeHint_ReflowFrame))
+      (shadowDifference & nsChangeHint_NeedReflow))
     return NS_STYLE_HINT_REFLOW;
 
   NS_FOR_CSS_SIDES(ix) {
