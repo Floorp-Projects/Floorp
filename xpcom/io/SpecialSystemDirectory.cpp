@@ -747,6 +747,18 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                 rv = GetRegWindowsAppDataFolder(true, aFile);
             return rv;
         }
+        case Win_Pictures:
+        {
+            return GetWindowsFolder(CSIDL_MYPICTURES, aFile);
+        }
+        case Win_Music:
+        {
+            return GetWindowsFolder(CSIDL_MYMUSIC, aFile);
+        }
+        case Win_Videos:
+        {
+            return GetWindowsFolder(CSIDL_MYVIDEO, aFile);
+        }
 #endif  // XP_WIN
 
 #if defined(XP_UNIX)
