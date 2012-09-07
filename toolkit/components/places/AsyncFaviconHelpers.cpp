@@ -613,7 +613,7 @@ NS_IMETHODIMP
 AsyncFetchAndSetIconFromNetwork::OnDataAvailable(nsIRequest* aRequest,
                                                  nsISupports* aContext,
                                                  nsIInputStream* aInputStream,
-                                                 uint32_t aOffset,
+                                                 uint64_t aOffset,
                                                  uint32_t aCount)
 {
   nsAutoCString buffer;

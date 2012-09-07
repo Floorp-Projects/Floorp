@@ -151,8 +151,10 @@ DeviceStorageFile::IsSafePath()
 }
 
 bool
-DeviceStorageFile::IsType(nsIFile* aFile, const nsAString& aStorageType)
+DeviceStorageFile::IsType(nsAString& aType)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   // String bundles are cached by the bundle service.
   nsCOMPtr<nsIStringBundleService> stringService = mozilla::services::GetStringBundleService();
   if (!stringService) {
@@ -166,7 +168,7 @@ DeviceStorageFile::IsType(nsIFile* aFile, const nsAString& aStorageType)
   }
 
   nsString path;
-  aFile->GetPath(path);
+  mFile->GetPath(path);
 
   int32_t dotIdx = path.RFindChar(PRUnichar('.'));
   if (dotIdx == kNotFound) {
@@ -179,7 +181,7 @@ DeviceStorageFile::IsType(nsIFile* aFile, const nsAString& aStorageType)
   extensionMatch.AppendASCII(";");
 
   nsString extensionListStr;
-  if (NS_FAILED(filterBundle->GetStringFromName(aStorageType.BeginReading(),
+  if (NS_FAILED(filterBundle->GetStringFromName(aType.BeginReading(),
 						getter_Copies(extensionListStr)))) {
     return false;
   }
@@ -403,7 +405,7 @@ DeviceStorageFile::collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &
 }
 
 void
-DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const nsAString& aStorageType)
+DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar)
 {
   if (!aFile) {
     return;
@@ -439,18 +441,12 @@ DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const ns
     if (NS_FAILED(rv)) {
       continue;
     }
-
     if (isLink) {
       // for now, lets just totally ignore symlinks.
       NS_WARNING("DirectoryDiskUsage ignores symlinks");
     } else if (isDir) {
-      DirectoryDiskUsage(f, aSoFar, aStorageType);
+      DirectoryDiskUsage(f, aSoFar);
     } else if (isFile) {
-
-      if (!DeviceStorageFile::IsType(f, aStorageType)) {
-	continue;
-      }
-
       int64_t size;
       rv = f->GetFileSize(&size);
       if (NS_SUCCEEDED(rv)) {
@@ -783,7 +779,7 @@ ContinueCursorEvent::Run() {
   while (cursor->mFiles.Length() > 0) {
     nsRefPtr<DeviceStorageFile> file = cursor->mFiles[0];
     cursor->mFiles.RemoveElementAt(0);
-    if (!DeviceStorageFile::IsType(file->mFile, cursorStorageType)) {
+    if (!file->IsType(cursorStorageType)) {
       continue;
     }
     val = nsIFileToJsval(cursor->GetOwner(), file);
@@ -1197,7 +1193,7 @@ public:
     NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
     nsCOMPtr<nsIRunnable> r;
     uint64_t diskUsage = 0;
-    DeviceStorageFile::DirectoryDiskUsage(mFile->mFile, &diskUsage, mFile->mStorageType);
+    DeviceStorageFile::DirectoryDiskUsage(mFile->mFile, &diskUsage);
     int64_t freeSpace = 0;
     nsresult rv = mFile->mFile->GetDiskSpaceAvailable(&freeSpace);
     if (NS_FAILED(rv)) {
@@ -1633,7 +1629,7 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob *aBlob,
   nsCOMPtr<nsIRunnable> r;
 
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType, mRootDirectory, aPath);
-  if (!DeviceStorageFile::IsType(dsf->mFile, mStorageType) || !IsMimeTypeCorrectForStorageType(mStorageType, aBlob)) {
+  if (!dsf->IsType(mStorageType) || !IsMimeTypeCorrectForStorageType(mStorageType, aBlob)) {
     r = new PostErrorEvent(request, POST_ERROR_EVENT_ILLEGAL_TYPE, dsf);
   }
   else if (!dsf->IsSafePath()) {

@@ -15,10 +15,10 @@ class Accessible;
 namespace mozilla {
 namespace a11y {
 
-  class TableAccessible;
+class TableAccessible;
 
 /**
- * abstract interface implemented by table cell accessibles.
+ * Abstract interface implemented by table cell accessibles.
  */
 class TableCellAccessible
 {
@@ -27,45 +27,45 @@ public:
   /**
    * Return the table this cell is in.
    */
-  virtual TableAccessible* Table() { return nullptr; }
+  virtual TableAccessible* Table() const = 0;
 
   /**
-   * Return the Column of the table this cell is in.
+   * Return the column of the table this cell is in.
    */
-  virtual uint32_t ColIdx() { return 0; }
+  virtual uint32_t ColIdx() const = 0;
 
   /**
-   * Return the the row of the table this cell is in.
+   * Return the row of the table this cell is in.
    */
-  virtual uint32_t RowIdx() { return 0; }
+  virtual uint32_t RowIdx() const = 0;
 
   /**
    * Return the column extent of this cell.
    */
-  virtual uint32_t ColExtent() { return 0; }
+  virtual uint32_t ColExtent() const { return 1; }
 
   /**
    * Return the row extent of this cell.
    */
-  virtual uint32_t RowExtent() { return 0; }
+  virtual uint32_t RowExtent() const { return 1; }
 
   /**
    * Return the column header cells for this cell.
    */
-  virtual void ColHeaderCells(nsTArray<Accessible*>* aCells) { }
+  virtual void ColHeaderCells(nsTArray<Accessible*>* aCells);
 
   /**
    * Return the row header cells for this cell.
    */
-  virtual void RowHeaderCells(nsTArray<Accessible*>* aCells) { }
+  virtual void RowHeaderCells(nsTArray<Accessible*>* aCells);
 
   /**
    * Returns true if this cell is selected.
    */
-  virtual bool Selected() { return false; }
+  virtual bool Selected() = 0;
 };
 
-}
-}
+} // namespace a11y
+} // namespace mozilla
 
 #endif // mozilla_a11y_TableCellAccessible_h__

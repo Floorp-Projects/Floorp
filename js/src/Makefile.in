@@ -896,9 +896,13 @@ selfhosted_out_h_deps := \
   $(srcdir)/builtin/js2c.py \
   $(srcdir)/builtin/embedjs.py
 
+ifeq ($(MOZ_DEBUG),1)
+selfhosting_embed_flags += -d
+endif
+
 selfhosted.out.h: $(selfhosted_out_h_deps)
-	$(PYTHON) $(srcdir)/builtin/embedjs.py $@ $(srcdir)/js.msg \
-	  $(srcdir)/builtin/macros.py $(selfhosting_srcs)
+	$(PYTHON) $(srcdir)/builtin/embedjs.py $(selfhosting_embed_flags) $@ \
+	  $(srcdir)/js.msg $(srcdir)/builtin/macros.py $(selfhosting_srcs)
 
 ###############################################
 # BEGIN kludges for the Nitro assembler

@@ -4386,7 +4386,7 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
     }
 
     if (getHow & JSGET_CACHE_RESULT)
-        JS_PROPERTY_CACHE(cx).fill(cx, obj, obj2, shape);
+        cx->propertyCache().fill(cx, obj, obj2, shape);
 
     /* This call site is hot -- use the always-inlined variant of js_NativeGet(). */
     if (!js_NativeGetInline(cx, receiver, obj, obj2, shape, getHow, vp.address()))
@@ -4607,7 +4607,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
              */
             if (!shape->shadowable()) {
                 if (defineHow & DNP_CACHE_RESULT)
-                    JS_PROPERTY_CACHE(cx).fill(cx, obj, pobj, shape);
+                    cx->propertyCache().fill(cx, obj, pobj, shape);
 
                 if (shape->hasDefaultSetter() && !shape->hasGetterValue())
                     return JS_TRUE;
@@ -4691,7 +4691,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
     }
 
     if ((defineHow & DNP_CACHE_RESULT) && !added)
-        JS_PROPERTY_CACHE(cx).fill(cx, obj, obj, shape);
+        cx->propertyCache().fill(cx, obj, obj, shape);
 
     return js_NativeSet(cx, obj, receiver, shape, added, strict, vp.address());
 }
@@ -5367,7 +5367,6 @@ JSObject::dump()
 
     fprintf(stderr, "flags:");
     if (obj->isDelegate()) fprintf(stderr, " delegate");
-    if (obj->isSystem()) fprintf(stderr, " system");
     if (!obj->isExtensible()) fprintf(stderr, " not_extensible");
     if (obj->isIndexed()) fprintf(stderr, " indexed");
 

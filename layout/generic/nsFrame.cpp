@@ -3873,16 +3873,47 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   }
   nscoord boxSizingToMarginEdgeWidth =
     aMargin.width + aBorder.width + aPadding.width - boxSizingAdjust.width;
+  const nsStyleCoord* widthStyleCoord = &(stylePos->mWidth);
+  const nsStyleCoord* heightStyleCoord = &(stylePos->mHeight);
+
+  bool isFlexItem = IsFlexItem();
+  bool isHorizontalFlexItem = false;
+ 
+#ifdef MOZ_FLEXBOX
+  if (isFlexItem) {
+    // Flex items use their "flex-basis" property in place of their main-size
+    // property (e.g. "width") for sizing purposes, *unless* they have
+    // "flex-basis:auto", in which case they use their main-size property after
+    // all.
+    uint32_t flexDirection = mParent->GetStylePosition()->mFlexDirection;
+    isHorizontalFlexItem =
+      flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
+      flexDirection == NS_STYLE_FLEX_DIRECTION_ROW_REVERSE;
+
+    if (stylePos->mFlexBasis.GetUnit() != eStyleUnit_Auto) {
+      if (isHorizontalFlexItem) {
+        widthStyleCoord = &(stylePos->mFlexBasis);
+      } else {
+        heightStyleCoord = &(stylePos->mFlexBasis);
+      }
+    }
+  }
+#endif // MOZ_FLEXBOX
+
   // Compute width
 
-  if (stylePos->mWidth.GetUnit() != eStyleUnit_Auto) {
+  if (widthStyleCoord->GetUnit() != eStyleUnit_Auto) {
     result.width =
       nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
         aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
-        stylePos->mWidth);
+        *widthStyleCoord);
   }
 
-  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None) {
+  // Flex items ignore their min & max sizing properties in their
+  // flex container's main-axis.  (Those properties get applied later in
+  // the flexbox algorithm.)
+  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None &&
+      !(isFlexItem && isHorizontalFlexItem)) {
     nscoord maxWidth =
       nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
         aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
@@ -3890,22 +3921,34 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     result.width = NS_MIN(maxWidth, result.width);
   }
 
-  nscoord minWidth =
-    nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
-      aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
-      stylePos->mMinWidth);
+  nscoord minWidth;
+  if (stylePos->mMinWidth.GetUnit() != eStyleUnit_Auto &&
+      !(isFlexItem && isHorizontalFlexItem)) {
+    minWidth =
+      nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
+        aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
+        stylePos->mMinWidth);
+  } else {
+    // Treat "min-width: auto" as 0.
+    // NOTE: Technically, "auto" is supposed to behave like "min-content" on
+    // flex items. However, we don't need to worry about that here, because
+    // flex items' min-sizes are intentionally ignored until the flex
+    // container explicitly considers them during space distribution.
+    minWidth = 0;
+  }
   result.width = NS_MAX(minWidth, result.width);
 
   // Compute height
-  if (!nsLayoutUtils::IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
+  if (!nsLayoutUtils::IsAutoHeight(*heightStyleCoord, aCBSize.height)) {
     result.height =
       nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
                                         boxSizingAdjust.height,
-                                        stylePos->mHeight);
+                                        *heightStyleCoord);
   }
 
   if (result.height != NS_UNCONSTRAINEDSIZE) {
-    if (!nsLayoutUtils::IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
+    if (!nsLayoutUtils::IsAutoHeight(stylePos->mMaxHeight, aCBSize.height) &&
+        !(isFlexItem && !isHorizontalFlexItem)) {
       nscoord maxHeight =
         nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
                                           boxSizingAdjust.height,
@@ -3913,7 +3956,8 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
       result.height = NS_MIN(maxHeight, result.height);
     }
 
-    if (!nsLayoutUtils::IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
+    if (!nsLayoutUtils::IsAutoHeight(stylePos->mMinHeight, aCBSize.height) &&
+        !(isFlexItem && !isHorizontalFlexItem)) {
       nscoord minHeight =
         nsLayoutUtils::ComputeHeightValue(aCBSize.height, 
                                           boxSizingAdjust.height, 

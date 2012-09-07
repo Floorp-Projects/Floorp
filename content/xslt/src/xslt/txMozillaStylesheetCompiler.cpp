@@ -223,7 +223,7 @@ txStylesheetSink::DidBuildModel(bool aTerminated)
 NS_IMETHODIMP
 txStylesheetSink::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
                                   nsIInputStream *aInputStream,
-                                  uint32_t aOffset, uint32_t aCount)
+                                  uint64_t aOffset, uint32_t aCount)
 {
     if (!mCheckedForXML) {
         nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);

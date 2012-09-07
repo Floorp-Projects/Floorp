@@ -198,17 +198,6 @@ child:
 
     PTestShell();
 
-    /**
-     * Tell the content process some attributes of itself.  This is
-     * the first message received by content processes after startup.
-     *
-     * |id| is a unique ID among all subprocesses.  When |isForApp &&
-     * isForBrowser|, we're loading <browser> for an app.  When
-     * |isForBrowser|, we're loading <browser>.  When |!isForApp &&
-     * !isForBrowser|, we're probably loading <xul:browser remote>.
-     */
-    SetProcessAttributes(uint64_t id, bool isForApp, bool isForBrowser);
-
     RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
                    OverrideMapping[] overrides, nsCString locale);
 
@@ -247,6 +236,21 @@ child:
     FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState);
 
 parent:
+    /**
+     * Tell the content process some attributes of itself.  This is
+     * among the first information queried by content processes after
+     * startup.  (The message is sync to allow the content process to
+     * control when it receives the information.)
+     *
+     * |id| is a unique ID among all subprocesses.  When |isForApp &&
+     * isForBrowser|, we're loading <browser> for an app.  When
+     * |isForBrowser|, we're loading <browser>.  When |!isForApp &&
+     * !isForBrowser|, we're probably loading <xul:browser remote>.
+     */
+    sync GetProcessAttributes()
+        returns (uint64_t id, bool startBackground,
+                 bool isForApp, bool isForBrowser);
+
     PAudio(int32_t aNumChannels, int32_t aRate, int32_t aFormat);
 
     PDeviceStorageRequest(DeviceStorageParams params);

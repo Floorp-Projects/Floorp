@@ -37,7 +37,7 @@ private:
 
     nsresult CompleteEntry();
     nsresult ProcessData(nsIRequest *aRequest, nsISupports *aContext,
-                         char *aBuffer, uint32_t aOffset, uint32_t aCount);
+                         char *aBuffer, uint64_t aOffset, uint32_t aCount);
 };
 
 #endif

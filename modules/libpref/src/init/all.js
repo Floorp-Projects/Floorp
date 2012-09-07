@@ -235,22 +235,21 @@ pref("gfx.font_rendering.directwrite.enabled", false);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 
-#ifdef XP_WIN
+pref("gfx.font_rendering.opentype_svg.enabled", false);
+
 pref("gfx.canvas.azure.enabled", true);
+#ifdef XP_WIN
 // comma separated list of backends to use in order of preference
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
 pref("gfx.canvas.azure.backends", "direct2d,cairo");
 pref("gfx.content.azure.enabled", true);
 #else
 #ifdef XP_MACOSX
-pref("gfx.canvas.azure.enabled", true);
 pref("gfx.canvas.azure.backends", "cg");
 #else
 #ifdef ANDROID
-pref("gfx.canvas.azure.enabled", true);
 pref("gfx.canvas.azure.backends", "cairo");
 #else
-pref("gfx.canvas.azure.enabled", false);
 pref("gfx.canvas.azure.backends", "cairo");
 #endif
 #endif
@@ -829,7 +828,7 @@ pref("network.http.max-persistent-connections-per-server", 6);
 // If connecting via a proxy, then a
 // new connection will only be attempted if the number of active persistent
 // connections to the proxy is less then max-persistent-connections-per-proxy.
-pref("network.http.max-persistent-connections-per-proxy", 8);
+pref("network.http.max-persistent-connections-per-proxy", 32);
 
 // amount of time (in seconds) to suspend pending requests, before spawning a
 // new connection, once the limit on the number of persistent connections per
@@ -3726,3 +3725,6 @@ pref("toolkit.identity.debug", false);
 // Setting that to true grant elevated privileges to apps that ask
 // for them in their manifest.
 pref("dom.mozApps.dev_mode", false);
+
+// Lowest localId for installed apps.
+pref("dom.mozApps.maxLocalId", 10000);

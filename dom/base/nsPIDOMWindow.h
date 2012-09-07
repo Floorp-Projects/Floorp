@@ -48,8 +48,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{0x66660102, 0xd875, 0x47e2, \
-  {0xa1, 0xf7, 0x12, 0xbc, 0x83, 0xc9, 0x93, 0xa9}}
+{ 0x0c5763c6, 0x5e87, 0x4f6f, \
+  { 0xa2, 0xef, 0xcf, 0x4d, 0xeb, 0xd1, 0xbc, 0xc3 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -280,14 +280,9 @@ public:
     return win->mIsHandlingResizeEvent;
   }
 
-  // Tell this window who opened it.  This only has an effect if there is
-  // either no document currently in the window or if the document is the
-  // original document this window came with (an about:blank document either
-  // preloaded into it when it was created, or created by
-  // CreateAboutBlankContentViewer()).
-  virtual void SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal) = 0;
-  // Ask this window who opened it.
-  virtual nsIPrincipal* GetOpenerScriptPrincipal() = 0;
+  // Set the window up with an about:blank document with the current subject
+  // principal.
+  virtual void SetInitialPrincipalToSubject() = 0;
 
   virtual PopupControlState PushPopupControlState(PopupControlState aState,
                                                   bool aForce) const = 0;
@@ -296,7 +291,7 @@ public:
 
   // Returns an object containing the window's state.  This also suspends
   // all running timeouts in the window.
-  virtual nsresult SaveWindowState(nsISupports **aState) = 0;
+  virtual already_AddRefed<nsISupports> SaveWindowState() = 0;
 
   // Restore the window state from aState.
   virtual nsresult RestoreWindowState(nsISupports *aState) = 0;

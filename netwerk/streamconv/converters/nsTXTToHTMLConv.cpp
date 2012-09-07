@@ -127,7 +127,7 @@ nsTXTToHTMLConv::PreFormatHTML(bool value)
 NS_IMETHODIMP
 nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
                                  nsIInputStream *aInStream,
-                                 uint32_t aOffset, uint32_t aCount)
+                                 uint64_t aOffset, uint32_t aCount)
 {
     nsresult rv = NS_OK;
     nsString pushBuffer;

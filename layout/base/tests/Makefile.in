@@ -133,6 +133,7 @@ MOCHITEST_FILES =	\
 		test_bug696020.html \
  		test_event_target_radius.html \
 		test_mozPaintCount.html \
+		test_scroll_event_ordering.html \
 		test_scroll_selection_into_view.html \
 		test_bug583889.html \
 		bug583889_inner1.html \
@@ -145,6 +146,7 @@ MOCHITEST_FILES =	\
 		test_bug725426.html \
 		test_bug731777.html \
 		test_bug761572.html \
+		test_maxLineBoxWidth.html \
 		$(NULL)
 
 # Tests for bugs 441782, 467672 and 570378 don't pass reliably on Windows, because of bug 469208

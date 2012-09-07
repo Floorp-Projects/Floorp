@@ -586,11 +586,21 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
 
   JSContext *cx = GetJSContextFromWindow(aParent);
 
-  if (isCallerChrome && !hasChromeParent && cx) {
-    // open() is called from chrome on a non-chrome window, push
-    // the context of the callee onto the context stack to
-    // prevent the caller's priveleges from leaking into code
-    // that runs while opening the new window.
+  bool windowTypeIsChrome = chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
+  if (isCallerChrome && !hasChromeParent && !windowTypeIsChrome && cx) {
+    // open() is called from chrome on a non-chrome window, push the context of the
+    // callee onto the context stack to prevent the caller's priveleges from leaking
+    // into code that runs while opening the new window.
+    //
+    // The reasoning for this is in bug 289204. Basically, chrome sometimes does
+    // someContentWindow.open(untrustedURL), and wants to be insulated from nasty
+    // javascript: URLs and such. But there are also cases where we create a
+    // window parented to a content window (such as a download dialog), usually
+    // directly with nsIWindowWatcher. In those cases, we want the principal of
+    // the initial about:blank document to be system, so that the subsequent XUL
+    // load can reuse the inner window and avoid blowing away expandos. As such,
+    // we decide whether to load with the principal of the caller or of the parent
+    // based on whether the docshell type is chrome or content.
 
     callerContextGuard.Push(cx);
   }
@@ -873,32 +883,17 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     // the JS stack, just use the principal of our parent window.  In those
     // cases we do _not_ set the parent window principal as the owner of the
     // load--since we really don't know who the owner is, just leave it null.
-    nsIPrincipal* newWindowPrincipal = subjectPrincipal;
-    if (!newWindowPrincipal && aParent) {
-      nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(aParent));
-      if (sop) {
-        newWindowPrincipal = sop->GetPrincipal();
-      }
-    }
-
-    bool isSystem;
-    rv = sm->IsSystemPrincipal(newWindowPrincipal, &isSystem);
-    if (NS_FAILED(rv) || isSystem) {
-      // Don't pass this principal along to content windows
-      int32_t itemType;
-      rv = newDocShellItem->GetItemType(&itemType);
-      if (NS_FAILED(rv) || itemType != nsIDocShellTreeItem::typeChrome) {
-        newWindowPrincipal = nullptr;        
-      }
-    }
-
     nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(*_retval);
 #ifdef DEBUG
     nsCOMPtr<nsPIDOMWindow> newDebugWindow = do_GetInterface(newDocShell);
     NS_ASSERTION(newWindow == newDebugWindow, "Different windows??");
 #endif
+    // The principal of the initial about:blank document gets set up in
+    // nsWindowWatcher::AddWindow. Make sure to call it. In the common case
+    // this call already happened when the window was created, but
+    // SetInitialPrincipalToSubject is safe to call multiple times.
     if (newWindow) {
-      newWindow->SetOpenerScriptPrincipal(newWindowPrincipal);
+      newWindow->SetInitialPrincipalToSubject();
     }
   }
 

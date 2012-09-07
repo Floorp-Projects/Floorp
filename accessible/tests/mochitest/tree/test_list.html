@@ -123,6 +123,33 @@
 
       testAccessibleTree("list6", tree);
 
+      // li having no display:list-item style
+      var tree =
+        { LIST: [ // ul
+          { LISTITEM: [ // li
+            { TEXT_LEAF: [] },
+          ] },
+          { TEXT_LEAF: [] },
+          { LISTITEM: [ // li
+            { TEXT_LEAF: [] }
+          ] }
+        ] };
+      testAccessibleTree("list7", tree);
+
+      var tree =
+        { LIST: [ // ul
+          { LISTITEM: [ // li
+            { TEXT_LEAF: [] },
+          ] },
+          { LISTITEM: [ // li
+            { TEXT_LEAF: [] }
+          ] }
+        ] };
+      testAccessibleTree("list8", tree);
+
+      // span having display:list-item style
+      testAccessibleTree("list9", discAccTree);
+
       SimpleTest.finish();
     }
 
@@ -136,6 +163,11 @@
      title="Fix O(n^2) access to all the children of a container"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=342045">
     Mozilla Bug 342045
+  </a>
+  <a target="_blank"
+     title="Wrong accessible is created for HTML:li having block display style"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=507555">
+    Mozilla Bug 507555
   </a>
   <a target="_blank"
      title="Bullets of nested not ordered lists have one and the same character."
@@ -193,5 +225,23 @@
       </dl>
     </li>
   </ol>
+
+  <!-- display style different than list-item -->
+  <ul id="list7">
+    <li id="l7_li1" style="display:inline-block;">Oranges</li>
+    <li id="l7_li2" style="display:inline-block;">Apples</li>
+  </ul>
+
+  <ul id="list8">
+    <li id="l8_li1" style="display:inline; float:right;">Oranges</li>
+    <li id="l8_li2" style="display:inline; float:right;">Apples</li>
+  </ul>
+
+  <!-- list-item display style -->
+  <ul id="list9">
+    <span id="l9_li1" style="display:list-item">Oranges</span>
+    <span id="l9_li2" style="display:list-item">Apples</span>
+    <span id="l9_li3" style="display:list-item">Bananas</span>
+  </ul>
 </body>
 </html>

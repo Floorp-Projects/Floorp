@@ -222,7 +222,8 @@ class Buffer {
   F(sill, SILL) \
   F(glat, GLAT) \
   F(gloc, GLOC) \
-  F(feat, FEAT)
+  F(feat, FEAT) \
+  F(svg, SVG)
 
 #define F(name, capname) struct OpenType##capname;
 FOR_EACH_TABLE_TYPE

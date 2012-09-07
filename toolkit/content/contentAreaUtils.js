@@ -846,10 +846,27 @@ function getDefaultFileName(aDefaultFileName, aURI, aDocument,
       return fileName;
   }
 
+  let docTitle;
+  if (aDocument) {
+    // If the document looks like HTML or XML, try to use its original title.
+    docTitle = validateFileName(aDocument.title).trim();
+    if (docTitle) {
+      let contentType = aDocument.contentType;
+      if (contentType == "application/xhtml+xml" ||
+          contentType == "application/xml" ||
+          contentType == "image/svg+xml" ||
+          contentType == "text/html" ||
+          contentType == "text/xml") {
+        // 2) Use the document title
+        return docTitle;
+      }
+    }
+  }
+
   try {
     var url = aURI.QueryInterface(Components.interfaces.nsIURL);
     if (url.fileName != "") {
-      // 2) Use the actual file name, if present
+      // 3) Use the actual file name, if present
       var textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                    .getService(Components.interfaces.nsITextToSubURI);
       return validateFileName(textToSubURI.unEscapeURIForUI(url.originCharset || "UTF-8", url.fileName));
@@ -858,37 +875,33 @@ function getDefaultFileName(aDefaultFileName, aURI, aDocument,
     // This is something like a data: and so forth URI... no filename here.
   }
 
-  if (aDocument) {
-    var docTitle = validateFileName(aDocument.title).replace(/^\s+|\s+$/g, "");
-    if (docTitle) {
-      // 3) Use the document title
-      return docTitle;
-    }
-  }
+  if (docTitle)
+    // 4) Use the document title
+    return docTitle;
 
   if (aDefaultFileName)
-    // 4) Use the caller-provided name, if any
+    // 5) Use the caller-provided name, if any
     return validateFileName(aDefaultFileName);
 
-  // 5) If this is a directory, use the last directory name
+  // 6) If this is a directory, use the last directory name
   var path = aURI.path.match(/\/([^\/]+)\/$/);
   if (path && path.length > 1)
     return validateFileName(path[1]);
 
   try {
     if (aURI.host)
-      // 6) Use the host.
+      // 7) Use the host.
       return aURI.host;
   } catch (e) {
     // Some files have no information at all, like Javascript generated pages
   }
   try {
-    // 7) Use the default file name
+    // 8) Use the default file name
     return ContentAreaUtils.stringBundle.GetStringFromName("DefaultSaveFileName");
   } catch (e) {
     //in case localized string cannot be found
   }
-  // 8) If all else fails, use "index"
+  // 9) If all else fails, use "index"
   return "index";
 }
 
