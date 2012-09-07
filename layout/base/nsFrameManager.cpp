@@ -984,7 +984,7 @@ CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
 {
   nsChangeHint ourChange = aOldContext->CalcStyleDifference(aNewContext,
                              aParentHintsNotHandledForDescendants);
-  NS_ASSERTION(!(ourChange & nsChangeHint_ReflowFrame) ||
+  NS_ASSERTION(!(ourChange & nsChangeHint_AllReflowHints) ||
                (ourChange & nsChangeHint_NeedReflow),
                "Reflow hint bits set without actually asking for a reflow");
 
@@ -1549,7 +1549,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
 
               // Note that the out-of-flow may not be a geometric descendant of
               // the frame where we started the reresolve.  Therefore, even if
-              // aMinChange already includes nsChangeHint_ReflowFrame we don't
+              // aMinChange already includes nsChangeHint_AllReflowHints we don't
               // want to pass that on to the out-of-flow reresolve, since that
               // can lead to the out-of-flow not getting reflowed when it should
               // be (eg a reresolve starting at <body> that involves reflowing
@@ -1564,7 +1564,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                 ReResolveStyleContext(aPresContext, outOfFlowFrame,
                                       content, aChangeList,
                                       NS_SubtractHint(aMinChange,
-                                                      nsChangeHint_ReflowFrame),
+                                                      nsChangeHint_AllReflowHints),
                                       nonInheritedHints,
                                       childRestyleHint,
                                       aRestyleTracker,
