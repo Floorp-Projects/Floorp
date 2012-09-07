@@ -2762,7 +2762,26 @@ let RIL = {
     }
   },
 
+  _sendDataCallError: function _sendDataCallError(message, errorCode) {
+    message.rilMessageType = "datacallerror";
+    if (errorCode == ERROR_GENERIC_FAILURE) {
+      message.error = RIL_ERROR_TO_GECKO_ERROR[errorCode];
+    } else {
+      message.error = RIL_DATACALL_FAILCAUSE_TO_GECKO_DATACALL_ERROR[errorCode];
+    }
+    this.sendDOMMessage(message);
+  },
+
   _processDataCallList: function _processDataCallList(datacalls, newDataCallOptions) {
+    // Check for possible PDP errors: We check earlier because the datacall
+    // can be removed if is the same as the current one.
+    for each (let newDataCall in datacalls) {
+      if (newDataCall.status != DATACALL_FAIL_NONE) {
+        newDataCall.apn = newDataCallOptions.apn;
+        this._sendDataCallError(newDataCall, newDataCall.status);
+      }
+    }
+
     for each (let currentDataCall in this.currentDataCalls) {
       let updatedDataCall;
       if (datacalls) {
@@ -3562,8 +3581,8 @@ RIL.readSetupDataCall_v5 = function readSetupDataCall_v5(options) {
 
 RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options) {
   if (options.rilRequestError) {
-    options.rilMessageType = "datacallerror";
-    this.sendDOMMessage(options);
+    // On Data Call generic errors, we shall notify caller
+    this._sendDataCallError(options, options.rilRequestError);
     return;
   }
 
