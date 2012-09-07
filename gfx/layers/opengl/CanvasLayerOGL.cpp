@@ -288,7 +288,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
 #if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
   if (mPixmap && !mDelayedUpdates) {
-    sGLXLibrary.BindTexImage(mPixmap);
+    sDefGLXLib.BindTexImage(mPixmap);
   }
 #endif
 
@@ -314,7 +314,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
 #if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
   if (mPixmap && !mDelayedUpdates) {
-    sGLXLibrary.ReleaseTexImage(mPixmap);
+    sDefGLXLib.ReleaseTexImage(mPixmap);
   }
 #endif
 
