@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-from setuptools import setup, find_packages
+from setuptools import setup
 
 try:
     here = os.path.dirname(os.path.abspath(__file__))
@@ -32,9 +32,9 @@ setup(name='mozInstall',
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
       author_email='tools@lists.mozilla.org',
-      url='https://github.com/mozilla/mozbase',
+      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
       license='MPL 2.0',
-      packages=find_packages(exclude=['legacy']),
+      packages=['mozinstall'],
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,
