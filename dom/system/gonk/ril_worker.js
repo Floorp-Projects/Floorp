@@ -1461,11 +1461,10 @@ let RIL = {
     }
 
     function error(options) {
-      // TODO: Error handling should be addressed in Bug 787477
       delete options.callback;
       delete options.onerror;
       options.rilMessageType = "icccontacts";
-      options.contacts = [];
+      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
       this.sendDOMMessage(options);
     }
 
@@ -1554,9 +1553,8 @@ let RIL = {
    */
   getICCContacts: function getICCContacts(options) {
     if (!this.appType) {
-      // TODO: Error handling should be addressed in Bug 787477
       options.rilMessageType = "icccontacts";
-      options.contacts = [];
+      options.errorMsg = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
       this.sendDOMMessage(options);
     }
 
@@ -1602,11 +1600,10 @@ let RIL = {
     }
 
     function error(options) {
-      // TODO: Error handling should be addressed in Bug 787477
       delete options.callback;
       delete options.onerror;
       options.rilMessageType = "icccontacts";
-      options.contacts = [];
+      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
       this.sendDOMMessage(options);
     }
 
