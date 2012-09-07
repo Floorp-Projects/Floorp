@@ -1,0 +1,95 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  font: message-box;
+}
+
+body {
+  width: 90%;
+  margin-left: 5%;
+  margin-right: 5%;
+}
+
+.page-subtitle {
+  margin-bottom: 3em;
+}
+
+.major-section {
+  margin-top: 2em;
+  margin-bottom: 1em;
+  font-size: large;
+  text-align: start;
+  font-weight: bold;
+}
+
+#copy-to-clipboard {
+  padding-top: 2%;
+  width: 100%;
+  padding-bottom: 2%;
+}
+
+table {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  font: message-box;
+  font-size: xx-large;
+  text-align: start;
+  width: 100%;
+  border: 1px solid ThreeDShadow;
+  border-spacing: 0px;
+}
+
+th, td {
+  border: 1px dotted ThreeDShadow;
+  padding: 3px;
+}
+
+thead th {
+  text-align: center;
+}
+
+th {
+  text-align: start;
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+th.column {
+  white-space: nowrap;
+  width: 0px;
+}
+
+td {
+  text-align: start;
+  border-top: 1px dotted ThreeDShadow;
+}
+
+.prefs-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.pref-name {
+  width: 70%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.pref-value {
+  width: 30%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#profile-row {
+  display: none;
+}
+
+#reset-box {
+  display: none;
+}
+

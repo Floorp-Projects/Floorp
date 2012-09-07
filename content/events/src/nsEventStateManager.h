@@ -136,7 +136,7 @@ public:
   /**
    * Get accesskey registered on the given element or 0 if there is none.
    *
-   * @param  aContent  the given element
+   * @param  aContent  the given element (must not be null)
    * @return           registered accesskey
    */
   uint32_t GetRegisteredAccessKey(nsIContent* aContent);

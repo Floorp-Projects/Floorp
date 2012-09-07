@@ -206,6 +206,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_COLOR_MOZ_HYPERLINKTEXT              -4
 #define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -5
 #define NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT        -6
+// Only valid as paints in SVG glyphs
+#define NS_COLOR_OBJECTFILL                     -7
+#define NS_COLOR_OBJECTSTROKE                   -8
 
 // See nsStyleDisplay
 #define NS_STYLE_ANIMATION_DIRECTION_NORMAL       0
@@ -870,6 +873,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_STROKE_LINEJOIN_ROUND          1
 #define NS_STYLE_STROKE_LINEJOIN_BEVEL          2
 
+// stroke-dasharray, stroke-dashoffset, stroke-width
+#define NS_STYLE_STROKE_PROP_OBJECTVALUE        0
+
 // text-anchor
 #define NS_STYLE_TEXT_ANCHOR_START              0
 #define NS_STYLE_TEXT_ANCHOR_MIDDLE             1
@@ -896,6 +902,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 
 #define NS_STYLE_TRANSFORM_STYLE_FLAT               0
 #define NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D        1
+
+// object {fill,stroke}-opacity for SVG glyphs
+#define NS_STYLE_OBJECT_FILL_OPACITY                0
+#define NS_STYLE_OBJECT_STROKE_OPACITY              1
 
 /*****************************************************************************
  * Constants for media features.                                             *

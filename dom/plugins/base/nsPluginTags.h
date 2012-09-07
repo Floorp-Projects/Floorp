@@ -92,7 +92,7 @@ class DOMMimeTypeImpl : public nsIDOMMimeType {
 public:
   NS_DECL_ISUPPORTS
 
-  DOMMimeTypeImpl(nsPluginTag* aTag, PRUint32 aMimeTypeIndex)
+  DOMMimeTypeImpl(nsPluginTag* aTag, uint32_t aMimeTypeIndex)
   {
     if (!aTag)
       return;
