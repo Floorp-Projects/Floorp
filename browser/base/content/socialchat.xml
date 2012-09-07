@@ -47,7 +47,7 @@
 
           // let the chat frame know if it is being shown or hidden
           let evt = this.iframe.contentDocument.createEvent("CustomEvent");
-          evt.initCustomEvent(val ? "socialFrameHide" : "socialFrameShow", true, true, {});
+          evt.initCustomEvent(val ? "socialFrameShow" : "socialFrameHide", true, true, {});
           this.iframe.contentDocument.documentElement.dispatchEvent(evt);
         </setter>
       </property>

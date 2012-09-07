@@ -821,18 +821,33 @@ SpecialPowersAPI.prototype = {
     return this.wrap(Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest));
   },
 
-  snapshotWindow: function (win, withCaret) {
+  snapshotWindow: function (win, withCaret, rect, bgcolor) {
     var el = this.window.get().document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    el.width = win.innerWidth;
-    el.height = win.innerHeight;
+    if (arguments.length < 3) {
+      rect = { top: win.scrollY, left: win.scrollX,
+               width: win.innerWidth, height: win.innerHeight };
+    }
+    if (arguments.length < 4) {
+      bgcolor = "rgb(255,255,255)";
+    }
+
+    el.width = rect.width;
+    el.height = rect.height;
     var ctx = el.getContext("2d");
     var flags = 0;
 
-    ctx.drawWindow(win, win.scrollX, win.scrollY,
-                   win.innerWidth, win.innerHeight,
-                   "rgb(255,255,255)",
+    ctx.drawWindow(win,
+                   rect.left, rect.top, rect.width, rect.height,
+                   bgcolor,
                    withCaret ? ctx.DRAWWINDOW_DRAW_CARET : 0);
     return el;
+  },
+
+  snapshotRect: function (win, rect, bgcolor) {
+    // Splice in our "do not want caret" bit
+    args = Array.slice(arguments);
+    args.splice(1, 0, false);
+    return this.snapshotWindow.apply(this, args);
   },
 
   gc: function() {
@@ -1058,20 +1073,6 @@ SpecialPowersAPI.prototype = {
     return this._cb.supportsSelectionClipboard();
   },
 
-  snapshotWindow: function (win, withCaret) {
-    var el = this.window.get().document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    el.width = win.innerWidth;
-    el.height = win.innerHeight;
-    var ctx = el.getContext("2d");
-    var flags = 0;
-
-    ctx.drawWindow(win, win.scrollX, win.scrollY,
-                   win.innerWidth, win.innerHeight,
-                   "rgb(255,255,255)",
-                   withCaret ? ctx.DRAWWINDOW_DRAW_CARET : 0);
-    return el;
-  },
-  
   swapFactoryRegistration: function(cid, contractID, newFactory, oldFactory) {  
     var componentRegistrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 

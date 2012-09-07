@@ -3224,7 +3224,6 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent)
     // document is destroyed before we try to create the new one.
     objFrame->PresContext()->EnsureVisible();
   } else {
-    NS_NOTREACHED("Should not be initializing plugin without a frame");
     return NS_ERROR_FAILURE;
   }
 

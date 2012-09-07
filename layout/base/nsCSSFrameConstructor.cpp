@@ -5511,7 +5511,7 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     // We don't do it for SVG text, since we might need to position and
     // measure the white space glyphs due to x/y/dx/dy attributes.
     if (AtLineBoundary(aIter) &&
-        !styleContext->GetStyleText()->NewlineIsSignificant() &&
+        !styleContext->GetStyleText()->WhiteSpaceOrNewlineIsSignificant() &&
         aIter.List()->ParentHasNoXBLChildren() &&
         !(aState.mAdditionalStateBits & NS_FRAME_GENERATED_CONTENT) &&
         (item.mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) &&

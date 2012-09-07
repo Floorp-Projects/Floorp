@@ -29,7 +29,7 @@ class NameResolver
 
     /* Test whether a ParseNode represents a function invocation */
     bool call(ParseNode *pn) {
-        return pn && pn->isKind(PNK_LP);
+        return pn && pn->isKind(PNK_CALL);
     }
 
     /*
@@ -75,7 +75,7 @@ class NameResolver
             case PNK_NAME:
                 return buf->append(n->pn_atom);
 
-            case PNK_LB:
+            case PNK_ELEM:
                 return nameExpression(n->pn_left) &&
                        buf->append("[") &&
                        nameExpression(n->pn_right) &&
@@ -117,7 +117,10 @@ class NameResolver
 
             switch (cur->getKind()) {
                 case PNK_NAME:     return cur;  /* found the initialized declaration */
-                case PNK_FUNCTION: return NULL; /* won't find an assignment or declaration */
+
+                case PNK_FUNCTIONDECL:
+                case PNK_FUNCTIONEXPR:
+                    return NULL; /* won't find an assignment or declaration */
 
                 case PNK_RETURN:
                     /*
@@ -146,12 +149,12 @@ class NameResolver
 
                 case PNK_COLON:
                     /*
-                     * If this is a PNK_COLON, but our parent is not a PNK_RC,
+                     * If this is a PNK_COLON, but our parent is not a PNK_OBJECT,
                      * then this is a label and we're done naming. Otherwise we
-                     * record the PNK_COLON but skip the PNK_RC so we're not
+                     * record the PNK_COLON but skip the PNK_OBJECT so we're not
                      * flagged as a contributor.
                      */
-                    if (pos == 0 || !parents[pos - 1]->isKind(PNK_RC))
+                    if (pos == 0 || !parents[pos - 1]->isKind(PNK_OBJECT))
                         return NULL;
                     pos--;
                     /* fallthrough */
@@ -174,7 +177,7 @@ class NameResolver
      * assign to the function's displayAtom field
      */
     JSAtom *resolveFun(ParseNode *pn, JSAtom *prefix) {
-        JS_ASSERT(pn != NULL && pn->isKind(PNK_FUNCTION));
+        JS_ASSERT(pn->isKind(PNK_FUNCTIONDECL) || pn->isKind(PNK_FUNCTIONEXPR));
         JSFunction *fun = pn->pn_funbox->fun();
         if (nparents == 0)
             return NULL;
@@ -272,7 +275,9 @@ class NameResolver
         if (cur == NULL)
             return;
 
-        if (cur->isKind(PNK_FUNCTION) && cur->isArity(PN_FUNC)) {
+        if ((cur->isKind(PNK_FUNCTIONEXPR) || cur->isKind(PNK_FUNCTIONDECL)) &&
+            cur->isArity(PN_FUNC))
+        {
             JSAtom *prefix2 = resolveFun(cur, prefix);
             /*
              * If a function looks like (function(){})() where the parent node
@@ -313,7 +318,7 @@ class NameResolver
                 resolve(cur->pn_kid3, prefix);
                 break;
             case PN_FUNC:
-                JS_ASSERT(cur->isKind(PNK_FUNCTION));
+                JS_ASSERT(cur->isKind(PNK_FUNCTIONDECL) || cur->isKind(PNK_FUNCTIONEXPR));
                 resolve(cur->pn_body, prefix);
                 break;
             case PN_LIST:

@@ -59,12 +59,14 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, uint32_t aLength,
 
   bool lastCharArabic = false;
 
-  if (aCompression == COMPRESS_NONE) {
+  if (aCompression == COMPRESS_NONE ||
+      aCompression == DISCARD_NEWLINE) {
     // Skip discardables.
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
       PRUnichar ch = *aText++;
-      if (IsDiscardable(ch, &flags)) {
+      if (IsDiscardable(ch, &flags) ||
+          (ch == '\n' && aCompression == DISCARD_NEWLINE)) {
         aSkipChars->SkipChar();
       } else {
         aSkipChars->KeepChar();
@@ -157,12 +159,14 @@ nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
   uint32_t flags = 0;
   uint8_t* outputStart = aOutput;
 
-  if (aCompression == COMPRESS_NONE) {
+  if (aCompression == COMPRESS_NONE ||
+      aCompression == DISCARD_NEWLINE) {
     // Skip discardables.
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
       uint8_t ch = *aText++;
-      if (IsDiscardable(ch, &flags)) {
+      if (IsDiscardable(ch, &flags) || 
+          ch == '\n' && aCompression == DISCARD_NEWLINE) {
         aSkipChars->SkipChar();
       } else {
         aSkipChars->KeepChar();

@@ -280,9 +280,9 @@ MediaDocument::StartLayout()
   nsCOMPtr<nsIPresShell> shell = GetShell();
   // Don't mess with the presshell if someone has already handled
   // its initial reflow.
-  if (shell && !shell->DidInitialReflow()) {
+  if (shell && !shell->DidInitialize()) {
     nsRect visibleArea = shell->GetPresContext()->GetVisibleArea();
-    nsresult rv = shell->InitialReflow(visibleArea.width, visibleArea.height);
+    nsresult rv = shell->Initialize(visibleArea.width, visibleArea.height);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

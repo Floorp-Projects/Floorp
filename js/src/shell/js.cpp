@@ -3251,6 +3251,7 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 #ifdef DEBUG
     DumpParseTree(pn);
+    fputc('\n', stderr);
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
