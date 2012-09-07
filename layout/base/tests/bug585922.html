@@ -7,6 +7,8 @@
     <input type=text>
     <script>
       function doTest() {
+        netscape.security.PrivilegeManager.enablePrivilege(
+          "UniversalXPConnect");
         function enableCaret(aEnable) {
           var selCon = editor.selectionController;
           selCon.setCaretEnabled(aEnable);
@@ -15,11 +17,13 @@
         var d = document.querySelector("input");
         d.value = "a";
         d.focus();
-        var editor = SpecialPowers.wrap(d).QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+        var editor = d.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
         var sel = editor.selection;
         var t = editor.rootElement.firstChild;
         sel.collapse(t, 1); // put the caret at the end of the div
         setTimeout(function() {
+          netscape.security.PrivilegeManager.enablePrivilege(
+            "UniversalXPConnect");
           enableCaret(false);enableCaret(true);// force a caret display
           enableCaret(false); // hide the caret
           t.replaceData(0, 1, "b"); // replace the text node data
