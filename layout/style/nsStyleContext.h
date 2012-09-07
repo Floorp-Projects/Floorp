@@ -244,7 +244,24 @@ public:
 
   void* GetUniqueStyleData(const nsStyleStructID& aSID);
 
-  nsChangeHint CalcStyleDifference(nsStyleContext* aOther);
+  /**
+   * Compute the style changes needed during restyling when this style
+   * context is being replaced by aOther.  (This is nonsymmetric since
+   * we optimize by skipping comparison for styles that have never been
+   * requested.)
+   *
+   * This method returns a change hint (see nsChangeHint.h).  All change
+   * hints apply to the frame and its later continuations or special
+   * siblings.  Most (all of those except the "NotHandledForDescendants"
+   * hints) also apply to all descendants.  The caller must pass in any
+   * non-inherited hints that resulted from the parent style context's
+   * style change.  The caller *may* pass more hints than needed, but
+   * must not pass less than needed; therefore if the caller doesn't
+   * know, the caller should pass
+   * nsChangeHint_Hints_NotHandledForDescendants.
+   */
+  nsChangeHint CalcStyleDifference(nsStyleContext* aOther,
+                                   nsChangeHint aParentHintsNotHandledForDescendants);
 
   /**
    * Get a color that depends on link-visitedness using this and
