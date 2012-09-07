@@ -1656,6 +1656,15 @@ ion::ForbidCompilation(JSScript *script)
 {
     IonSpew(IonSpew_Abort, "Disabling Ion compilation of script %s:%d",
             script->filename, script->lineno);
+
+    if (script->hasIonScript() && script->compartment()->needsBarrier()) {
+        // We're about to remove edges from the JSScript to gcthings
+        // embedded in the IonScript. Perform one final trace of the
+        // IonScript for the incremental GC, as it must know about
+        // those edges.
+        IonScript::Trace(script->compartment()->barrierTracer(), script->ion);
+    }
+
     script->ion = ION_DISABLED_SCRIPT;
 }
 
