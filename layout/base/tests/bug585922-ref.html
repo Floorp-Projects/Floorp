@@ -7,10 +7,13 @@
     <input type=text>
     <script>
       function doTest() {
+        netscape.security.PrivilegeManager.enablePrivilege(
+          "UniversalXPConnect");
+
         var d = document.querySelector("input");
         d.value = "b";
         d.focus();
-        var editor = SpecialPowers.wrap(d).QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+        var editor = d.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
         var sel = editor.selection;
         var t = editor.rootElement.firstChild;
         sel.collapse(t, 1); // put the caret at the end of the textbox

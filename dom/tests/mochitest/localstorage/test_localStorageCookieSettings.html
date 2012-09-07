@@ -7,7 +7,9 @@
 
 <script type="text/javascript">
 
-window.Services = SpecialPowers.Services;
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 
 // Set cookies behavior to "always reject".
 Services.prefs.setIntPref("network.cookie.cookieBehavior", 2);
