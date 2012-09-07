@@ -29,15 +29,15 @@ function runTests() {
     {mozAnon: 1},
     {mozAnon: []},
     {get mozAnon() { return true; }},
-  ];
-
-  let invalidParameters = [
     0,
     7,
     Math.PI,
     "string",
     true,
     false,
+  ];
+
+  let invalidParameters = [
     {get mozSystem() { throw "Bla"; } },
   ];
 
