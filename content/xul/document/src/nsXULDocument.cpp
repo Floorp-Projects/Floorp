@@ -1993,7 +1993,7 @@ nsXULDocument::StartLayout(void)
 
         nsresult rv = NS_OK;
         nsRect r = cx->GetVisibleArea();
-        rv = shell->InitialReflow(r.width, r.height);
+        rv = shell->Initialize(r.width, r.height);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -3865,7 +3865,7 @@ nsXULDocument::OverlayForwardReference::Resolve()
     nsCOMPtr<nsIContent> target;
 
     nsIPresShell *shell = mDocument->GetShell();
-    bool notify = shell && shell->DidInitialReflow();
+    bool notify = shell && shell->DidInitialize();
 
     nsAutoString id;
     mOverlay->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);

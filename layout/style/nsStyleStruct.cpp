@@ -2934,7 +2934,8 @@ nsStyleText::~nsStyleText(void)
 
 nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
 {
-  if (NewlineIsSignificant() != aOther.NewlineIsSignificant()) {
+  if (WhiteSpaceOrNewlineIsSignificant() !=
+      aOther.WhiteSpaceOrNewlineIsSignificant()) {
     // This may require construction of suppressed text frames
     return NS_STYLE_HINT_FRAMECHANGE;
   }

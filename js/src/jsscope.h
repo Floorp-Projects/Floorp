@@ -1135,8 +1135,10 @@ namespace JS {
     template<> class AnchorPermitted<js::Shape *> { };
     template<> class AnchorPermitted<const js::Shape *> { };
 
-    template<> struct RootKind<js::Shape *> { static ThingRootKind rootKind() { return THING_ROOT_SHAPE; }; };
-    template<> struct RootKind<js::BaseShape *> { static ThingRootKind rootKind() { return THING_ROOT_BASE_SHAPE; }; };
+    template<>
+    struct RootKind<js::Shape *> : SpecificRootKind<js::Shape *, THING_ROOT_SHAPE> {};
+    template<>
+    struct RootKind<js::BaseShape *> : SpecificRootKind<js::BaseShape *, THING_ROOT_BASE_SHAPE> {};
 }
 
 #endif /* jsscope_h___ */

@@ -337,18 +337,10 @@ postfix_expression
                 else
                     $$->setType(TType($1->getBasicType(), $1->getPrecision(), EvqConst, (int) (*$3.string).size()));
             } else {
-                if (fields.num == 1) {
-                    ConstantUnion *unionArray = new ConstantUnion[1];
-                    unionArray->setIConst(fields.offsets[0]);
-                    TIntermTyped* index = context->intermediate.addConstantUnion(unionArray, TType(EbtInt, EbpUndefined, EvqConst), $3.line);
-                    $$ = context->intermediate.addIndex(EOpIndexDirect, $1, index, $2.line);
-                    $$->setType(TType($1->getBasicType(), $1->getPrecision()));
-                } else {
-                    TString vectorString = *$3.string;
-                    TIntermTyped* index = context->intermediate.addSwizzle(fields, $3.line);
-                    $$ = context->intermediate.addIndex(EOpVectorSwizzle, $1, index, $2.line);
-                    $$->setType(TType($1->getBasicType(), $1->getPrecision(), EvqTemporary, (int) vectorString.size()));
-                }
+                TString vectorString = *$3.string;
+                TIntermTyped* index = context->intermediate.addSwizzle(fields, $3.line);
+                $$ = context->intermediate.addIndex(EOpVectorSwizzle, $1, index, $2.line);
+                $$->setType(TType($1->getBasicType(), $1->getPrecision(), EvqTemporary, (int) vectorString.size()));
             }
         } else if ($1->isMatrix()) {
             TMatrixFields fields;

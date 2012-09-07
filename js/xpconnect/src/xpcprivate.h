@@ -3856,7 +3856,7 @@ public:
      */
     AutoScriptEvaluate(JSContext * cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
          : mJSContext(cx), mState(0), mErrorReporterSet(false),
-           mEvaluated(false), mContextHasThread(0) {
+           mEvaluated(false) {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
@@ -3878,7 +3878,6 @@ private:
     JSExceptionState* mState;
     bool mErrorReporterSet;
     bool mEvaluated;
-    intptr_t mContextHasThread;
     mozilla::Maybe<JSAutoCompartment> mAutoCompartment;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 

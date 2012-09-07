@@ -5,14 +5,13 @@
  * These tests make sure that focusing the 'New Tage Page' works as expected.
  */
 function runTests() {
+  // Handle the OSX full keyboard access setting
+  Services.prefs.setIntPref("accessibility.tabfocus", 7);
+
   // Focus count in new tab page.
   // 28 = 9 * 3 + 1 = 9 sites and 1 toggle button, each site has a link, a pin
   // and a remove button.
-  let FOCUS_COUNT = 28; 
-  if ("nsILocalFileMac" in Ci) {
-    // 19 = Mac doesn't focus links, so 9 focus targets less than Windows/Linux.
-    FOCUS_COUNT = 19;
-  }
+  let FOCUS_COUNT = 28;
 
   // Create a new tab page.
   yield setLinks("0,1,2,3,4,5,6,7,8");
@@ -27,6 +26,8 @@ function runTests() {
   // Disable page and count the focus with the disabled page.
   NewTabUtils.allPages.enabled = false;
   yield countFocus(1);
+
+  Services.prefs.clearUserPref("accessibility.tabfocus");
 }
 
 /**
