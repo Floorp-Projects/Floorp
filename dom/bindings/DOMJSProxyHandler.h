@@ -7,7 +7,7 @@
 #define mozilla_dom_DOMJSProxyHandler_h
 
 #include "jsapi.h"
-#include "jsatom.h"
+#include "jsfriendapi.h"
 #include "jsproxy.h"
 #include "xpcpublic.h"
 #include "nsString.h"
