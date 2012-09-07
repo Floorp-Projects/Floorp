@@ -5,6 +5,10 @@
 {
   'variables': {
     'component%': 'static_library',
+    # angle_code is set to 1 for the core ANGLE targets defined in src/build_angle.gyp.
+    # angle_code is set to 0 for test code, sample code, and third party code.
+    # When angle_code is 1, we build with additional warning flags on Mac and Linux.
+    'angle_code%': 0,
     'gcc_or_clang_warnings': [
       '-Wall',
       '-Wchar-subscripts',
@@ -145,6 +149,20 @@
           }
         },
       },
+    }],
+    ['angle_code==1', {
+      'target_defaults': {
+        'conditions': [
+          ['OS=="mac"', {
+            'xcode_settings': {
+              'WARNING_CFLAGS': ['<@(gcc_or_clang_warnings)']
+            },
+          }],
+          ['OS!="win" and OS!="mac"', {
+            'cflags': ['<@(gcc_or_clang_warnings)']
+          }],
+        ]
+      }
     }],
   ],
 }

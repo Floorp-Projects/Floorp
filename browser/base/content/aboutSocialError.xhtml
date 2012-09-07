@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % netErrorDTD SYSTEM "chrome://global/locale/netError.dtd">
+  %netErrorDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&loadError.label;</title>
+    <link rel="stylesheet" type="text/css" media="all"
+          href="chrome://browser/skin/aboutSocialError.css"/>
+  </head>
+
+  <body>
+    <div id="error-box">
+      <p id="main-error-msg"></p>
+      <p id="helper-error-msg"></p>
+    </div>
+    <div id="button-box">
+      <button id="btnTryAgain" onclick="tryAgainButton()"/>
+      <button id="btnCloseSidebar" onclick="closeSidebar()"/>
+    </div>
+  </body>
+
+  <script type="text/javascript;version=1.8"><![CDATA[
+    const Cu = Components.utils;
+
+    Cu.import("resource://gre/modules/Services.jsm");
+    Cu.import("resource://gre/modules/Social.jsm");
+
+    let config = {
+      tryAgainCallback: reloadProvider
+    }
+
+    function parseQueryString() {
+      let url = document.documentURI;
+      let queryString = url.replace(/^about:socialerror\??/, "");
+
+      let modeMatch = queryString.match(/mode=([^&]+)/);
+      let mode = modeMatch && modeMatch[1] ? modeMatch[1] : "";
+
+      switch (mode) {
+        case "onlyRefreshSidebar":
+          config.tryAgainCallback = refreshSidebar;
+          break;
+        default:
+          break;
+      }
+    }
+
+    function setUpStrings() {
+      let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+      let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+
+      let productName = brandBundle.GetStringFromName("brandShortName");
+      let providerName = Social && Social.provider && Social.provider.name;
+
+      // Sets up the error message
+      let msg = browserBundle.formatStringFromName("social.error.message", [productName, providerName], 2);
+      document.getElementById("main-error-msg").textContent = msg;
+
+      // Sets up the buttons' labels and accesskeys
+      let btnTryAgain = document.getElementById("btnTryAgain");
+      btnTryAgain.textContent = browserBundle.GetStringFromName("social.error.tryAgain.label");
+      btnTryAgain.accessKey = browserBundle.GetStringFromName("social.error.tryAgain.accesskey");
+
+      let btnCloseSidebar = document.getElementById("btnCloseSidebar");
+      btnCloseSidebar.textContent = browserBundle.GetStringFromName("social.error.closeSidebar.label");
+      btnCloseSidebar.accessKey = browserBundle.GetStringFromName("social.error.closeSidebar.accesskey");
+    }
+
+    function closeSidebar() {
+      Social.toggleSidebar();
+    }
+
+    function refreshSidebar() {
+      window.location.href = Social.provider.sidebarURL;
+    }
+
+    function reloadProvider() {
+      Social.provider.reload();
+    }
+
+    function tryAgainButton() {
+      config.tryAgainCallback();
+    }
+
+    parseQueryString();
+    setUpStrings();
+  ]]></script>
+</html>

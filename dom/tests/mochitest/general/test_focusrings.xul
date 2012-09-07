@@ -38,14 +38,9 @@ function setOrRestoreTabFocus(newValue) {
 
 function snapShot(element) {
   var rect = element.getBoundingClientRect();
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-  canvas.setAttribute("width", rect.width + 12);
-  canvas.setAttribute("height", rect.height + 12);
-  var ctx = canvas.getContext("2d");
-  ctx.drawWindow(window, rect.left - 6, rect.top - 6, rect.width + 6, rect.height + 6,
-                 "transparent");
-  return canvas;
+  adjustedRect = { left: rect.left - 6, top: rect.top - 6,
+                   width: rect.width + 12, height: rect.height + 12 }
+  return SpecialPowers.snapshotRect(window, adjustedRect, "transparent");
 }
 
 function runTest()

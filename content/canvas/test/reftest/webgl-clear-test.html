@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript">
+/* Clear Test
+ *
+ * Clear the canvas to green to test that we get pixels to the screen.
+ */
+
+"use strict";
+
+function renderGL(gl) {
+  gl.clearColor(0.0, 1.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.finish();
+}
+
+function renderBackup(canvas) {
+  var context = canvas.getContext("2d");
+  context.fillStyle = "rgba(0, 255, 0, 1.0)";
+  context.fillRect(0, 0, 256, 256);
+}
+
+function onLoad() {
+  var canvas = document.getElementById("canvas");
+  var gl = initGL(canvas);
+
+  if (gl)
+    renderGL(gl);
+  else
+    renderBackup(canvas);
+}
+</script>
+</head>
+
+<body onload="onLoad();">
+  <canvas id="canvas" width="256" height="256"></canvas>
+</body>
+
+</html>

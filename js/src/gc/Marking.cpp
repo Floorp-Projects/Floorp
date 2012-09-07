@@ -118,7 +118,7 @@ MarkInternal(JSTracer *trc, T **thingp)
             PushMarkStack(static_cast<GCMarker *>(trc), thing);
     } else {
         trc->callback(trc, (void **)thingp, GetGCThingTraceKind(thing));
-        JS_SET_TRACING_LOCATION(trc, NULL);
+        JS_UNSET_TRACING_LOCATION(trc);
     }
 
     trc->debugPrinter = NULL;
@@ -330,7 +330,7 @@ MarkIdInternal(JSTracer *trc, jsid *id)
         *id = OBJECT_TO_JSID(obj);
     } else {
         /* Unset realLocation manually if we do not call MarkInternal. */
-        JS_SET_TRACING_LOCATION(trc, NULL);
+        JS_UNSET_TRACING_LOCATION(trc);
     }
 }
 
@@ -391,7 +391,7 @@ MarkValueInternal(JSTracer *trc, Value *v)
             v->setObjectOrNull((JSObject *)thing);
     } else {
         /* Unset realLocation manually if we do not call MarkInternal. */
-        JS_SET_TRACING_LOCATION(trc, NULL);
+        JS_UNSET_TRACING_LOCATION(trc);
     }
 }
 
