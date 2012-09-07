@@ -414,8 +414,6 @@ DOMCI_CLASS(MozMobileConnection)
 
 DOMCI_CLASS(USSDReceivedEvent)
 
-DOMCI_CLASS(DataErrorEvent)
-
 // @font-face in CSS
 DOMCI_CLASS(CSSFontFaceRule)
 DOMCI_CLASS(CSSFontFaceStyleDecl)
