@@ -32,6 +32,7 @@ CPPSRCS = \
   Connection.cpp \
   Utils.cpp \
   USSDReceivedEvent.cpp \
+  DataErrorEvent.cpp \
   $(NULL)
 
 ifdef MOZ_B2G_RIL
