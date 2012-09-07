@@ -673,7 +673,7 @@ ObjectWrapperParent::CPOW_Construct(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSHandleObject obj, const jsval *v,
+ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSHandleObject obj, JSMutableHandleValue v,
                                       JSBool *bp)
 {
     CPOW_LOG(("Calling CPOW_HasInstance..."));
@@ -688,7 +688,7 @@ ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSHandleObject obj, const j
 
     JSVariant in_v;
 
-    if (!jsval_to_JSVariant(cx, *v, &in_v))
+    if (!jsval_to_JSVariant(cx, v, &in_v))
         return JS_FALSE;
 
     return (self->Manager()->RequestRunToCompletion() &&
@@ -698,7 +698,7 @@ ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSHandleObject obj, const j
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_Equality(JSContext *cx, JSHandleObject obj, const jsval *v,
+ObjectWrapperParent::CPOW_Equality(JSContext *cx, JSHandleObject obj, JSHandleValue v,
                                    JSBool *bp)
 {
     CPOW_LOG(("Calling CPOW_Equality..."));
@@ -709,10 +709,10 @@ ObjectWrapperParent::CPOW_Equality(JSContext *cx, JSHandleObject obj, const jsva
     if (!self)
         return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_Equality");
 
-    if (JSVAL_IS_PRIMITIVE(*v))
+    if (JSVAL_IS_PRIMITIVE(v))
         return JS_TRUE;
 
-    ObjectWrapperParent* other = Unwrap(JSVAL_TO_OBJECT(*v));
+    ObjectWrapperParent* other = Unwrap(JSVAL_TO_OBJECT(v));
     if (!other)
         return JS_TRUE;
 

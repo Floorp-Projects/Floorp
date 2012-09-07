@@ -1451,7 +1451,7 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp);
 
 extern JSBool
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
-                      jsval *statep, jsid *idp);
+                      JSMutableHandleValue statep, JSMutableHandleId idp);
 
 extern JSType
 XPC_WN_JSOp_TypeOf_Object(JSContext *cx, JSHandleObject obj);
@@ -4380,16 +4380,21 @@ GetCompartmentPrivate(JSObject *object)
     return GetCompartmentPrivate(compartment);
 }
 
-inline bool IsUniversalXPConnectEnabled(JSContext *cx)
+inline bool IsUniversalXPConnectEnabled(JSCompartment *compartment)
 {
-    JSCompartment *compartment = js::GetContextCompartment(cx);
-    if (!compartment)
-        return false;
     CompartmentPrivate *priv =
       static_cast<CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment));
     if (!priv)
         return false;
     return priv->universalXPConnectEnabled;
+}
+
+inline bool IsUniversalXPConnectEnabled(JSContext *cx)
+{
+    JSCompartment *compartment = js::GetContextCompartment(cx);
+    if (!compartment)
+        return false;
+    return IsUniversalXPConnectEnabled(compartment);
 }
 
 inline void EnableUniversalXPConnect(JSContext *cx)
@@ -4402,6 +4407,13 @@ inline void EnableUniversalXPConnect(JSContext *cx)
     if (!priv)
         return;
     priv->universalXPConnectEnabled = true;
+
+    // Recompute all the cross-compartment wrappers leaving the newly-privileged
+    // compartment.
+    mozilla::DebugOnly<bool> rv;
+    rv = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
+                               js::AllCompartments());
+    MOZ_ASSERT(rv);
 }
 
 }
