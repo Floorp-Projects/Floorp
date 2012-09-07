@@ -7,7 +7,9 @@
 #include "XPCWrapper.h"
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
+#include "AccessCheck.h"
 
+using namespace xpc;
 namespace XPCNativeWrapper {
 
 static inline
@@ -37,8 +39,7 @@ UnwrapNW(JSContext *cx, unsigned argc, jsval *vp)
     return true;
   }
 
-  if (xpc::WrapperFactory::IsXrayWrapper(obj) &&
-      !xpc::WrapperFactory::IsXOW(obj)) {
+  if (WrapperFactory::IsXrayWrapper(obj) && AccessCheck::isChrome(obj)) {
     return JS_GetProperty(cx, obj, "wrappedJSObject", vp);
   }
 
