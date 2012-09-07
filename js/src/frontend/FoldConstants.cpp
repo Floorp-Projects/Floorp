@@ -245,7 +245,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
             break;
 
           case PNK_XMLPI: {
-            XMLProcessingInstruction &pi = pn2->asXMLProcessingInstruction();
+            XMLProcessingInstruction &pi = pn2->as<XMLProcessingInstruction>();
             str = js_MakeXMLPIString(cx, pi.target(), pi.data());
             if (!str)
                 return false;
@@ -364,25 +364,6 @@ Boolish(ParseNode *pn)
       case JSOP_STRING:
         return (pn->pn_atom->length() > 0) ? Truthy : Falsy;
 
-#if JS_HAS_GENERATOR_EXPRS
-      case JSOP_CALL:
-      {
-        /*
-         * A generator expression as an if or loop condition has no effects, it
-         * simply results in a truthy object reference. This condition folding
-         * is needed for the decompiler. See bug 442342 and bug 443074.
-         */
-        if (pn->pn_count != 1)
-            return Unknown;
-        ParseNode *pn2 = pn->pn_head;
-        if (!pn2->isKind(PNK_FUNCTION))
-            return Unknown;
-        if (!(pn2->pn_funbox->inGenexpLambda))
-            return Unknown;
-        return Truthy;
-      }
-#endif
-
       case JSOP_DEFFUN:
       case JSOP_LAMBDA:
       case JSOP_TRUE:
@@ -418,7 +399,7 @@ frontend::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGen
 
         /* Don't fold a parenthesized call expression. See bug 537673. */
         pn1 = pn2 = pn->pn_head;
-        if ((pn->isKind(PNK_LP) || pn->isKind(PNK_NEW)) && pn2->isInParens())
+        if ((pn->isKind(PNK_CALL) || pn->isKind(PNK_NEW)) && pn2->isInParens())
             pn2 = pn2->pn_next;
 
         /* Save the list head in pn1 for later use. */

@@ -3,6 +3,9 @@
 # found in the LICENSE file.
 
 {
+  'variables': {
+    'angle_code': 1,
+  },
   'target_defaults': {
     'defines': [
       'ANGLE_DISABLE_TRACE',
@@ -42,16 +45,6 @@
         'compiler/preprocessor/new/Token.h',
         'compiler/preprocessor/new/Tokenizer.cpp',
         'compiler/preprocessor/new/Tokenizer.h',
-      ],
-      'conditions': [
-        ['OS=="mac"', {
-          'xcode_settings': {
-            'WARNING_CFLAGS': ['<@(gcc_or_clang_warnings)']
-          },
-        }],
-        ['OS=="linux"', {
-          'cflags': ['<@(gcc_or_clang_warnings)']
-        }],
       ],
     },
     {
@@ -164,14 +157,6 @@
         }, { # else: posix
           'sources': ['compiler/ossource_posix.cpp'],
         }],
-        ['OS=="mac"', {
-          'xcode_settings': {
-            'WARNING_CFLAGS': ['<@(gcc_or_clang_warnings)']
-          },
-        }],
-        ['OS=="linux"', {
-          'cflags': ['<@(gcc_or_clang_warnings)']
-        }],
       ],
     },
     {
@@ -200,16 +185,6 @@
         'compiler/TranslatorGLSL.h',
         'compiler/VersionGLSL.cpp',
         'compiler/VersionGLSL.h',
-      ],
-      'conditions': [
-        ['OS=="mac"', {
-          'xcode_settings': {
-            'WARNING_CFLAGS': ['<@(gcc_or_clang_warnings)']
-          },
-        }],
-        ['OS=="linux"', {
-          'cflags': ['<@(gcc_or_clang_warnings)']
-        }],
       ],
     },
   ],
@@ -295,6 +270,7 @@
             'libGLESv2/Shader.cpp',
             'libGLESv2/Shader.h',
             'libGLESv2/Texture.cpp',
+            'libGLESv2/TextureSSE2.cpp',
             'libGLESv2/Texture.h',
             'libGLESv2/utilities.cpp',
             'libGLESv2/utilities.h',

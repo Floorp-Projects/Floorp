@@ -575,7 +575,7 @@ GonkGPSGeolocationProvider::DataCallStateChanged(nsIRILDataCallInfo* aDataCall)
     switch (callState) {
       case nsINetworkInterface::NETWORK_STATE_CONNECTED:
 #ifdef AGPS_HAVE_DUAL_APN
-        mAGpsInterface->data_conn_open(AGPS_TYPE_ANY,
+        mAGpsInterface->data_conn_open(AGPS_TYPE_SUPL,
                                        agpsApn.get(),
                                        AGPS_APN_BEARER_IPV4);
 #else
@@ -584,7 +584,7 @@ GonkGPSGeolocationProvider::DataCallStateChanged(nsIRILDataCallInfo* aDataCall)
         break;
       case nsINetworkInterface::NETWORK_STATE_DISCONNECTED:
 #ifdef AGPS_HAVE_DUAL_APN
-        mAGpsInterface->data_conn_closed(AGPS_TYPE_ANY);
+        mAGpsInterface->data_conn_closed(AGPS_TYPE_SUPL);
 #else
         mAGpsInterface->data_conn_closed();
 #endif

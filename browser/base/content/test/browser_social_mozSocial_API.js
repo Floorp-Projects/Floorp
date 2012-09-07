@@ -59,6 +59,8 @@ var tests = {
           // The sidebar message will always come first, since it loads by default
           ok(true, "got sidebar message");
           gotSidebarMessage = true;
+          // load a status panel
+          port.postMessage({topic: "test-ambient-notification"});
           checkNext();
           break;
       }

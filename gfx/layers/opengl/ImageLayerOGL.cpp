@@ -349,10 +349,10 @@ ImageLayerOGL::RenderLayer(int,
     GLXPixmap pixmap;
 
     if (cairoImage->mSurface) {
-        pixmap = sGLXLibrary.CreatePixmap(cairoImage->mSurface);
+        pixmap = sDefGLXLib.CreatePixmap(cairoImage->mSurface);
         NS_ASSERTION(pixmap, "Failed to create pixmap!");
         if (pixmap) {
-            sGLXLibrary.BindTexImage(pixmap);
+            sDefGLXLib.BindTexImage(pixmap);
         }
     }
 #endif
@@ -376,8 +376,8 @@ ImageLayerOGL::RenderLayer(int,
 
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
     if (cairoImage->mSurface && pixmap) {
-        sGLXLibrary.ReleaseTexImage(pixmap);
-        sGLXLibrary.DestroyPixmap(pixmap);
+        sDefGLXLib.ReleaseTexImage(pixmap);
+        sDefGLXLib.DestroyPixmap(pixmap);
     }
 #endif
 #ifdef XP_MACOSX
@@ -582,7 +582,7 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
   SetClamping(gl, tex);
 
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
-  if (sGLXLibrary.SupportsTextureFromPixmap(aImage->mSurface)) {
+  if (sDefGLXLib.SupportsTextureFromPixmap(aImage->mSurface)) {
     if (aImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
       backendData->mLayerProgram = gl::RGBALayerProgramType;
     } else {
