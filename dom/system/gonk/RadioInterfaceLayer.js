@@ -185,16 +185,17 @@ function RadioInterfaceLayer() {
 
   // Read the 'ril.radio.disabled' setting in order to start with a known
   // value at boot time.
-  gSettingsService.createLock().get("ril.radio.disabled", this);
+  let lock = gSettingsService.createLock();
+  lock.get("ril.radio.disabled", this);
 
   // Read the APN data form the setting DB.
-  gSettingsService.createLock().get("ril.data.apn", this);
-  gSettingsService.createLock().get("ril.data.user", this);
-  gSettingsService.createLock().get("ril.data.passwd", this);
-  gSettingsService.createLock().get("ril.data.httpProxyHost", this);
-  gSettingsService.createLock().get("ril.data.httpProxyPort", this);
-  gSettingsService.createLock().get("ril.data.roaming_enabled", this);
-  gSettingsService.createLock().get("ril.data.enabled", this);
+  lock.get("ril.data.apn", this);
+  lock.get("ril.data.user", this);
+  lock.get("ril.data.passwd", this);
+  lock.get("ril.data.httpProxyHost", this);
+  lock.get("ril.data.httpProxyPort", this);
+  lock.get("ril.data.roaming_enabled", this);
+  lock.get("ril.data.enabled", this);
   this._dataCallSettingsToRead = ["ril.data.enabled",
                                   "ril.data.roaming_enabled",
                                   "ril.data.apn",
@@ -204,7 +205,7 @@ function RadioInterfaceLayer() {
                                   "ril.data.httpProxyPort"];
 
   // Read the desired setting of call waiting from the settings DB.
-  gSettingsService.getLock().get("ril.callwaiting.enabled", this);
+  lock.get("ril.callwaiting.enabled", this);
 
   this._messageManagerByRequest = {};
 
@@ -701,9 +702,8 @@ RadioInterfaceLayer.prototype = {
     // in the settings DB.
     if (!message.success) {
       newStatus = !newStatus;
-      gSettingsService.getLock().set("ril.callwaiting.enabled",
-                                     newStatus,
-                                     null);
+      let lock = gSettingsService.createLock();
+      lock.set("ril.callwaiting.enabled", newStatus, null);
       return;
     }
 
