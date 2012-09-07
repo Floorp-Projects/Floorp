@@ -26,10 +26,12 @@ USE_AUTOTARGETS_MK = 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 
 ifdef SDK_XPIDLSRCS
-XPIDLSRCS += $(SDK_XPIDLSRCS)
+_EXTRA_XPIDLSRCS := $(filter-out $(XPIDLSRCS),$(SDK_XPIDLSRCS))
+XPIDLSRCS += $(_EXTRA_XPIDLSRCS)
 endif
 ifdef SDK_HEADERS
-EXPORTS += $(SDK_HEADERS)
+_EXTRA_EXPORTS := $(filter-out $(EXPORTS),$(SDK_HEADERS))
+EXPORTS += $(_EXTRA_EXPORTS)
 endif
 
 REPORT_BUILD = $(info $(notdir $<))
@@ -988,13 +990,7 @@ $(CCOBJS): %.$(OBJ_SUFFIX): %.cc
 $(CPPOBJS): %.$(OBJ_SUFFIX): %.cpp
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
-ifdef STRICT_CPLUSPLUS_SUFFIX
-	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
-	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
-	$(RM) t_$*.cc
-else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
-endif #STRICT_CPLUSPLUS_SUFFIX
 
 $(CMMOBJS): $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm
 	$(REPORT_BUILD)
@@ -1159,15 +1155,19 @@ endif
 
 ifndef NO_DIST_INSTALL
 ifneq (,$(EXPORTS))
-export:: $(EXPORTS)
-	$(call install_cmd,$(IFLAGS1) $^ $(DIST)/include)
+EXPORTS_FILES := $(EXPORTS)
+EXPORTS_DEST := $(DIST)/include
+EXPORTS_TARGET := export
+INSTALL_TARGETS += EXPORTS
 endif
 endif # NO_DIST_INSTALL
 
 define EXPORT_NAMESPACE_RULE
 ifndef NO_DIST_INSTALL
-export:: $(EXPORTS_$(namespace))
-	$(call install_cmd,$(IFLAGS1) $$^ $(DIST)/include/$(namespace))
+EXPORTS_$(namespace)_FILES := $$(EXPORTS_$(namespace))
+EXPORTS_$(namespace)_DEST := $$(DIST)/include/$(namespace)
+EXPORTS_$(namespace)_TARGET := export
+INSTALL_TARGETS += EXPORTS_$(namespace)
 endif # NO_DIST_INSTALL
 endef
 
@@ -1203,14 +1203,12 @@ endif
 # Copy each element of AUTOCFG_JS_EXPORTS to $(FINAL_TARGET)/defaults/autoconfig
 
 ifneq ($(AUTOCFG_JS_EXPORTS),)
-$(FINAL_TARGET)/defaults/autoconfig::
-	$(NSINSTALL) -D $@
-
 ifndef NO_DIST_INSTALL
-export:: $(AUTOCFG_JS_EXPORTS) $(FINAL_TARGET)/defaults/autoconfig
-	$(call install_cmd,$(IFLAGS1) $^)
+AUTOCFG_JS_EXPORTS_FILES := $(AUTOCFG_JS_EXPORTS)
+AUTOCFG_JS_EXPORTS_DEST := $(FINAL_TARGET)/defaults/autoconfig
+AUTOCFG_JS_EXPORTS_TARGET := export
+INSTALL_TARGETS += AUTOCFG_JS_EXPORTS
 endif
-
 endif
 
 ################################################################################
@@ -1271,9 +1269,11 @@ $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
 endif # XPIDL_MODULE.xpt != XPIDLSRCS
 
-libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
-	$(call install_cmd,$(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(FINAL_TARGET)/components)
+XPIDL_MODULE_FILES := $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
+XPIDL_MODULE_DEST := $(FINAL_TARGET)/components
+INSTALL_TARGETS += XPIDL_MODULE
+
 ifndef NO_INTERFACES_MANIFEST
 libs:: $(call mkdir_deps,$(FINAL_TARGET)/components)
 	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/interfaces.manifest "interfaces $(XPIDL_MODULE).xpt"
@@ -1283,29 +1283,18 @@ endif
 
 GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
 
-endif #} XPIDLSRCS
-
-
-ifndef INCLUDED_XPIDL_MK
-  include $(topsrcdir)/config/makefiles/xpidl.mk
-endif
-
-
-# General rules for exporting idl files.
-$(IDL_DIR):
-	$(NSINSTALL) -D $@
-
-export-idl:: $(SUBMAKEFILES) $(MAKE_DIRS)
-
-ifneq ($(XPIDLSRCS),)
 ifndef NO_DIST_INSTALL
-export-idl:: $(XPIDLSRCS) $(IDL_DIR)
-	$(call install_cmd,$(IFLAGS1) $^)
+XPIDL_HEADERS_FILES := $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS))
+XPIDL_HEADERS_DEST := $(DIST)/include
+XPIDL_HEADERS_TARGET := export
+INSTALL_TARGETS += XPIDL_HEADERS
+
+XPIDLSRCS_FILES := $(XPIDLSRCS)
+XPIDLSRCS_DEST := $(IDL_DIR)
+XPIDLSRCS_TARGET := export
+INSTALL_TARGETS += XPIDLSRCS
 endif
-endif
-	$(LOOP_OVER_PARALLEL_DIRS)
-	$(LOOP_OVER_DIRS)
-	$(LOOP_OVER_TOOL_DIRS)
+endif #} XPIDLSRCS
 
 ################################################################################
 # Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components
@@ -1320,7 +1309,9 @@ endif
 ifdef EXTRA_COMPONENTS
 libs:: $(EXTRA_COMPONENTS)
 ifndef NO_DIST_INSTALL
-	$(call install_cmd,$(IFLAGS1) $^ $(FINAL_TARGET)/components)
+EXTRA_COMPONENTS_FILES := $(EXTRA_COMPONENTS)
+EXTRA_COMPONENTS_DEST := $(FINAL_TARGET)/components
+INSTALL_TARGETS += EXTRA_COMPONENTS
 endif
 
 endif
@@ -1344,11 +1335,11 @@ endif
 JS_MODULES_PATH ?= $(FINAL_TARGET)/modules
 
 ifdef EXTRA_JS_MODULES
-libs:: $(EXTRA_JS_MODULES)
 ifndef NO_DIST_INSTALL
-	$(call install_cmd,$(IFLAGS1) $^ $(JS_MODULES_PATH))
+EXTRA_JS_MODULES_FILES := $(EXTRA_JS_MODULES)
+EXTRA_JS_MODULES_DEST := $(JS_MODULES_PATH)
+INSTALL_TARGETS += EXTRA_JS_MODULES
 endif
-
 endif
 
 ifdef EXTRA_PP_JS_MODULES
@@ -1370,9 +1361,10 @@ testmodulesdir = $(DEPTH)/_tests/modules/$(TESTING_JS_MODULE_DIR)
 
 GENERATED_DIRS += $(testmodulesdir)
 
-libs:: $(TESTING_JS_MODULES)
 ifndef NO_DIST_INSTALL
-	$(call install_cmd,$(IFLAGS) $^ $(testmodulesdir))
+TESTING_JS_MODULES_FILES := $(TESTING_JS_MODULES)
+TESTING_JS_MODULES_DEST := $(testmodulesdir)
+INSTALL_TARGETS += TESTING_JS_MODULES
 endif
 
 endif
@@ -1381,25 +1373,19 @@ endif
 # SDK
 
 ifneq (,$(SDK_LIBRARY))
-$(SDK_LIB_DIR)::
-	$(NSINSTALL) -D $@
-
 ifndef NO_DIST_INSTALL
-libs:: $(SDK_LIBRARY) $(SDK_LIB_DIR)
-	$(call install_cmd,$(IFLAGS2) $^)
+SDK_LIBRARY_FILES := $(SDK_LIBRARY)
+SDK_LIBRARY_DEST := $(SDK_LIB_DIR)
+INSTALL_TARGETS += SDK_LIBRARY
 endif
-
 endif # SDK_LIBRARY
 
 ifneq (,$(strip $(SDK_BINARY)))
-$(SDK_BIN_DIR)::
-	$(NSINSTALL) -D $@
-
 ifndef NO_DIST_INSTALL
-libs:: $(SDK_BINARY) $(SDK_BIN_DIR)
-	$(call install_cmd,$(IFLAGS2) $^)
+SDK_BINARY_FILES := $(SDK_BINARY)
+SDK_BINARY_DEST := $(SDK_BIN_DIR)
+INSTALL_TARGETS += SDK_BINARY
 endif
-
 endif # SDK_BINARY
 
 ################################################################################
@@ -1535,25 +1521,39 @@ endif
 # Install/copy rules
 #
 # The INSTALL_TARGETS variable contains a list of all install target
-# categories. Each category defines a list of files, an install destination,
-# and whether the files are executables or not.
+# categories. Each category defines a list of files and executables, and an
+# install destination,
 #
 # FOO_FILES := foo bar
 # FOO_EXECUTABLES := baz
 # FOO_DEST := target_path
 # INSTALL_TARGETS += FOO
+#
+# Additionally, a FOO_TARGET variable may be added to indicate the target for
+# which the files and executables are installed. Default is "libs".
+
+# If we're using binary nsinstall and it's not built yet, fallback to python nsinstall.
+ifneq (,$(filter $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX),$(install_cmd)))
+nsinstall_is_usable = $(if $(wildcard $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)),$(eval nsinstall_is_usable := yes)yes)
+
+define install_cmd_override
+$(1): install_cmd = $$(if $$(nsinstall_is_usable),$$(INSTALL),$$(NSINSTALL_PY)) $$(1)
+endef
+endif
+
 define install_file_template
-libs:: $(2)/$(notdir $(1))
+$(or $(3),libs):: $(2)/$(notdir $(1))
+$(call install_cmd_override,$(2)/$(notdir $(1)))
 $(2)/$(notdir $(1)): $(1) $$(call mkdir_deps,$(2))
-	$(INSTALL) $(3) $$< $${@D}
+	$$(call install_cmd,$(4) $$< $${@D})
 endef
 $(foreach category,$(INSTALL_TARGETS),\
   $(if $($(category)_DEST),,$(error Missing $(category)_DEST))\
   $(foreach file,$($(category)_FILES),\
-    $(eval $(call install_file_template,$(file),$($(category)_DEST),$(IFLAGS1)))\
+    $(eval $(call install_file_template,$(file),$($(category)_DEST),$($(category)_TARGET),$(IFLAGS1)))\
   )\
   $(foreach file,$($(category)_EXECUTABLES),\
-    $(eval $(call install_file_template,$(file),$($(category)_DEST),$(IFLAGS2)))\
+    $(eval $(call install_file_template,$(file),$($(category)_DEST),$($(category)_TARGET),$(IFLAGS2)))\
   )\
 )
 
@@ -1567,19 +1567,22 @@ $(foreach category,$(INSTALL_TARGETS),\
 # FOO_PATH := target_path
 # FOO_FLAGS := -Dsome_flag
 # PP_TARGETS += FOO
+#
+# Additionally, a FOO_TARGET variable may be added to indicate the target for
+# which the files and executables are installed. Default is "libs".
 
 # preprocess_file_template defines preprocessing rules.
 # $(call preprocess_file_template, source_file, target_path, extra_flags)
 define preprocess_file_template
 $(2)/$(notdir $(1)): $(1) $$(call mkdir_deps,$(2)) $$(GLOBAL_DEPS)
 	$$(RM) $$@
-	$$(PYTHON) $$(topsrcdir)/config/Preprocessor.py $(3) $$(DEFINES) $$(ACDEFINES) $$(XULPPFLAGS) $$< > $$@
-libs:: $(2)/$(notdir $(1))
+	$$(PYTHON) $$(topsrcdir)/config/Preprocessor.py $(4) $$(DEFINES) $$(ACDEFINES) $$(XULPPFLAGS) $$< > $$@
+$(or $(3),libs):: $(2)/$(notdir $(1))
 endef
 
 $(foreach category,$(PP_TARGETS),\
   $(foreach file,$($(category)),\
-    $(eval $(call preprocess_file_template,$(file),$($(category)_PATH),$($(category)_FLAGS)))\
+    $(eval $(call preprocess_file_template,$(file),$($(category)_PATH),$($(category)_TARGET),$($(category)_FLAGS)))\
    )\
  )
 

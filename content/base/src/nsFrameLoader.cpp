@@ -91,6 +91,10 @@
 
 #include "mozilla/dom/StructuredCloneUtils.h"
 
+#ifdef MOZ_XUL
+#include "nsXULPopupManager.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -306,6 +310,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mClipSubdocument(true)
   , mClampScrollPosition(true)
   , mRemoteBrowserInitialized(false)
+  , mObservingOwnerContent(false)
   , mCurrentRemoteFrame(nullptr)
   , mRemoteBrowser(nullptr)
   , mRenderMode(RENDER_MODE_DEFAULT)
@@ -657,29 +662,24 @@ SetTreeOwnerAndChromeEventHandlerOnDocshellTree(nsIDocShellTreeItem* aItem,
 /**
  * Set the type of the treeitem and hook it up to the treeowner.
  * @param aItem the treeitem we're working with
- * @param aOwningContent the content node that owns aItem
  * @param aTreeOwner the relevant treeowner; might be null
  * @param aParentType the nsIDocShellTreeItem::GetType of our parent docshell
  * @param aParentNode if non-null, the docshell we should be added as a child to
  *
  * @return whether aItem is top-level content
  */
-static bool
-AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
-                       nsIDocShellTreeOwner* aOwner, int32_t aParentType,
-                       nsIDocShellTreeNode* aParentNode)
+bool
+nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
+                                      nsIDocShellTreeOwner* aOwner,
+                                      int32_t aParentType,
+                                      nsIDocShellTreeNode* aParentNode)
 {
   NS_PRECONDITION(aItem, "Must have docshell treeitem");
-  NS_PRECONDITION(aOwningContent, "Must have owning content");
+  NS_PRECONDITION(mOwnerContent, "Must have owning content");
   
   nsAutoString value;
   bool isContent = false;
-
-  if (aOwningContent->IsXUL()) {
-      aOwningContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
-  } else {
-      aOwningContent->GetAttr(kNameSpaceID_None, nsGkAtoms::mozframetype, value);
-  }
+  mOwnerContent->GetAttr(kNameSpaceID_None, TypeAttrName(), value);
 
   // we accept "content" and "content-xxx" values.
   // at time of writing, we expect "xxx" to be "primary" or "targetable", but
@@ -692,7 +692,7 @@ AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
   // Force mozbrowser frames to always be typeContent, even if the
   // mozbrowser interfaces are disabled.
   nsCOMPtr<nsIDOMMozBrowserFrame> mozbrowser =
-    do_QueryInterface(aOwningContent);
+    do_QueryInterface(mOwnerContent);
   if (mozbrowser) {
     bool isMozbrowser = false;
     mozbrowser->GetMozbrowser(&isMozbrowser);
@@ -725,6 +725,8 @@ AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
     if (aOwner) {
       bool is_targetable = is_primary ||
         value.LowerCaseEqualsLiteral("content-targetable");
+      mOwnerContent->AddMutationObserver(this);
+      mObservingOwnerContent = true;
       aOwner->ContentShellAdded(aItem, is_primary, is_targetable, value);
     }
   }
@@ -1205,10 +1207,15 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   SetTreeOwnerAndChromeEventHandlerOnDocshellTree(otherTreeItem, ourOwner,
                                                   ourChromeEventHandler);
 
-  AddTreeItemToTreeOwner(ourTreeItem, otherContent, otherOwner,
-                         otherParentType, nullptr);
-  AddTreeItemToTreeOwner(otherTreeItem, ourContent, ourOwner, ourParentType,
-                         nullptr);
+  // Switch the owner content before we start calling AddTreeItemToTreeOwner.
+  // Note that we rely on this to deal with setting mObservingOwnerContent to
+  // false and calling RemoveMutationObserver as needed.
+  SetOwnerContent(otherContent);
+  aOther->SetOwnerContent(ourContent);
+
+  AddTreeItemToTreeOwner(ourTreeItem, otherOwner, otherParentType, nullptr);
+  aOther->AddTreeItemToTreeOwner(otherTreeItem, ourOwner, ourParentType,
+                                 nullptr);
 
   // SetSubDocumentFor nulls out parent documents on the old child doc if a
   // new non-null document is passed in, so just go ahead and remove both
@@ -1221,9 +1228,6 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
 
   ourWindow->SetFrameElementInternal(otherFrameElement);
   otherWindow->SetFrameElementInternal(ourFrameElement);
-
-  SetOwnerContent(otherContent);
-  aOther->SetOwnerContent(ourContent);
 
   nsRefPtr<nsFrameMessageManager> ourMessageManager = mMessageManager;
   nsRefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
@@ -1383,6 +1387,10 @@ nsFrameLoader::GetDepthTooGreat(bool* aDepthTooGreat)
 void
 nsFrameLoader::SetOwnerContent(Element* aContent)
 {
+  if (mObservingOwnerContent) {
+    mObservingOwnerContent = false;
+    mOwnerContent->RemoveMutationObserver(this);
+  }
   mOwnerContent = aContent;
   if (RenderFrameParent* rfp = GetCurrentRemoteFrame()) {
     rfp->OwnerContentChanged(aContent);
@@ -1559,8 +1567,8 @@ nsFrameLoader::MaybeCreateDocShell()
     parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
     NS_ENSURE_STATE(parentTreeOwner);
     mIsTopLevelContent =
-      AddTreeItemToTreeOwner(docShellAsItem, mOwnerContent, parentTreeOwner,
-                             parentType, parentAsNode);
+      AddTreeItemToTreeOwner(docShellAsItem, parentTreeOwner, parentType,
+                             parentAsNode);
 
     // Make sure all shells have links back to the content element
     // in the nearest enclosing chrome shell.
@@ -2404,3 +2412,78 @@ nsFrameLoader::GetDetachedSubdocView(nsIDocument** aContainerDoc) const
   return mDetachedSubdocViews;
 }
 
+/* virtual */ void
+nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
+                                mozilla::dom::Element* aElement,
+                                int32_t      aNameSpaceID,
+                                nsIAtom*     aAttribute,
+                                int32_t      aModType)
+{
+  MOZ_ASSERT(mObservingOwnerContent);
+  // TODO: Implement ContentShellAdded for remote browsers (bug 658304)
+  MOZ_ASSERT(!mRemoteBrowser);
+
+  if (aNameSpaceID != kNameSpaceID_None || aAttribute != TypeAttrName()) {
+    return;
+  }
+
+  if (aElement != mOwnerContent) {
+    return;
+  }
+
+  // Note: This logic duplicates a lot of logic in
+  // MaybeCreateDocshell.  We should fix that.
+
+  // Notify our enclosing chrome that our type has changed.  We only do this
+  // if our parent is chrome, since in all other cases we're random content
+  // subframes and the treeowner shouldn't worry about us.
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+  if (!docShellAsItem) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> parentItem;
+  docShellAsItem->GetParent(getter_AddRefs(parentItem));
+  if (!parentItem) {
+    return;
+  }
+
+  int32_t parentType;
+  parentItem->GetItemType(&parentType);
+
+  if (parentType != nsIDocShellTreeItem::typeChrome) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+  parentItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+  if (!parentTreeOwner) {
+    return;
+  }
+
+  nsAutoString value;
+  aElement->GetAttr(kNameSpaceID_None, TypeAttrName(), value);
+
+  bool is_primary = value.LowerCaseEqualsLiteral("content-primary");
+
+#ifdef MOZ_XUL
+  // when a content panel is no longer primary, hide any open popups it may have
+  if (!is_primary) {
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm)
+      pm->HidePopupsInDocShell(docShellAsItem);
+  }
+#endif
+
+  parentTreeOwner->ContentShellRemoved(docShellAsItem);
+  if (value.LowerCaseEqualsLiteral("content") ||
+      StringBeginsWith(value, NS_LITERAL_STRING("content-"),
+                       nsCaseInsensitiveStringComparator())) {
+    bool is_targetable = is_primary ||
+      value.LowerCaseEqualsLiteral("content-targetable");
+
+    parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
+                                       is_targetable, value);
+  }
+}

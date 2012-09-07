@@ -865,8 +865,7 @@ DOMJSClass DedicatedWorkerGlobalScope::sClass = {
       prototypes::id::_ID_Count },
     false,
     &sNativePropertyHooks
-  },
-  -1
+  }
 };
 
 JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
@@ -984,11 +983,13 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
     return NULL;
   }
 
-  // Init other paris-bindings.
-  if (!XMLHttpRequestBinding_workers::CreateInterfaceObjects(aCx, global,
-                                                             global) ||
-      !XMLHttpRequestUploadBinding_workers::CreateInterfaceObjects(aCx, global,
-                                                                   global)) {
+  // Init other paris-bindings.  Use GetProtoObject so the proto will
+  // be correctly cached in the proto cache.  Otherwise we'll end up
+  // double-calling CreateInterfaceObjects when we actually create an
+  // object which has these protos, which breaks things like
+  // instanceof.
+  if (!XMLHttpRequestBinding_workers::GetProtoObject(aCx, global, global) ||
+      !XMLHttpRequestUploadBinding_workers::GetProtoObject(aCx, global, global)) {
     return NULL;
   }
 

@@ -348,7 +348,7 @@ NS_IMETHODIMP
 nsHTTPIndex::OnDataAvailable(nsIRequest *request,
                              nsISupports* aContext,
                              nsIInputStream* aStream,
-                             uint32_t aSourceOffset,
+                             uint64_t aSourceOffset,
                              uint32_t aCount)
 {
   // If mDirectory isn't set, then we should just bail. Either an

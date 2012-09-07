@@ -439,7 +439,7 @@ nsPingListener::OnStartRequest(nsIRequest *request, nsISupports *context)
 
 NS_IMETHODIMP
 nsPingListener::OnDataAvailable(nsIRequest *request, nsISupports *context,
-                                nsIInputStream *stream, uint32_t offset,
+                                nsIInputStream *stream, uint64_t offset,
                                 uint32_t count)
 {
   uint32_t result;
@@ -6664,26 +6664,17 @@ nsDocShell::EnsureContentViewer()
 
     NS_TIME_FUNCTION;
 
-    nsIPrincipal* principal = nullptr;
     nsCOMPtr<nsIURI> baseURI;
-
-    nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(mScriptGlobal));
-    if (piDOMWindow) {
-        principal = piDOMWindow->GetOpenerScriptPrincipal();
-    }
-
-    if (!principal) {
-        principal = GetInheritedPrincipal(false);
-        nsCOMPtr<nsIDocShellTreeItem> parentItem;
-        GetSameTypeParent(getter_AddRefs(parentItem));
-        if (parentItem) {
-            nsCOMPtr<nsPIDOMWindow> domWin = do_GetInterface(GetAsSupports(this));
-            if (domWin) {
-                nsCOMPtr<nsIContent> parentContent =
-                    do_QueryInterface(domWin->GetFrameElementInternal());
-                if (parentContent) {
-                    baseURI = parentContent->GetBaseURI();
-                }
+    nsIPrincipal* principal = GetInheritedPrincipal(false);
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    GetSameTypeParent(getter_AddRefs(parentItem));
+    if (parentItem) {
+        nsCOMPtr<nsPIDOMWindow> domWin = do_GetInterface(GetAsSupports(this));
+        if (domWin) {
+            nsCOMPtr<nsIContent> parentContent =
+                do_QueryInterface(domWin->GetFrameElementInternal());
+            if (parentContent) {
+                baseURI = parentContent->GetBaseURI();
             }
         }
     }
@@ -6953,9 +6944,8 @@ nsDocShell::CaptureState()
     if (!privWin)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsISupports> windowState;
-    nsresult rv = privWin->SaveWindowState(getter_AddRefs(windowState));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsISupports> windowState = privWin->SaveWindowState();
+    NS_ENSURE_TRUE(windowState, NS_ERROR_FAILURE);
 
 #ifdef DEBUG_PAGE_CACHE
     nsCOMPtr<nsIURI> uri;
@@ -6967,7 +6957,7 @@ nsDocShell::CaptureState()
     printf("  SH URI: %s\n", spec.get());
 #endif
 
-    rv = mOSHE->SetWindowState(windowState);
+    nsresult rv = mOSHE->SetWindowState(windowState);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Suspend refresh URIs and save off the timer queue
@@ -11523,6 +11513,24 @@ nsDocShell::GetTopWindow(nsIDOMWindow** aWindow)
         win->GetTop(aWindow);
     }
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetTopFrameElement(nsIDOMElement** aElement)
+{
+    *aElement = nullptr;
+    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(GetAsSupports(this));
+    if (!win) {
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMWindow> top;
+    win->GetScriptableTop(getter_AddRefs(top));
+    NS_ENSURE_TRUE(top, NS_ERROR_FAILURE);
+
+    // GetFrameElement, /not/ GetScriptableFrameElement -- if |top| is inside
+    // <iframe mozbrowser>, we want to return the iframe, not null.
+    return top->GetFrameElement(aElement);
 }
 
 NS_IMETHODIMP

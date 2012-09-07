@@ -59,7 +59,7 @@ public:
 
     // nsIStreamListener method
     NS_IMETHOD OnDataAvailable(nsIRequest* request, nsISupports *ctxt, nsIInputStream *inStr, 
-                               uint32_t sourceOffset, uint32_t count)
+                               uint64_t sourceOffset, uint32_t count)
     {
         nsresult rv;
         uint32_t read;
@@ -120,7 +120,7 @@ nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* 
     while (avail > 0) {
         uint32_t count = saturated(avail);
         rv = aListener->OnDataAvailable(request, nullptr, dataStream,
-                                        saturated(offset), count);
+                                        offset, count);
         if (NS_FAILED(rv)) return rv;
 
         offset += count;

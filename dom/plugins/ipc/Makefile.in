@@ -41,16 +41,10 @@ EXPORTS_mozilla/plugins = \
   PluginScriptableObjectParent.h \
   PluginScriptableObjectUtils.h \
   PluginScriptableObjectUtils-inl.h \
-  PluginInstanceChild.h \
-  PluginInstanceParent.h \
   PluginUtilsOSX.h \
   AStream.h \
-  BrowserStreamChild.h \
-  BrowserStreamParent.h \
   PluginStreamChild.h \
   PluginStreamParent.h \
-  PluginMessageUtils.h \
-  PluginProcessParent.h \
   PluginProcessChild.h \
   StreamNotifyChild.h \
   StreamNotifyParent.h \

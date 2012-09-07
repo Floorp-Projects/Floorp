@@ -294,7 +294,10 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
                 } else if (JSVAL_IS_NUMBER(jsexception)) {
                     // JS often throws an nsresult.
                     if (JSVAL_IS_DOUBLE(jsexception))
-                        rv = (nsresult)(JSVAL_TO_DOUBLE(jsexception));
+                        // Visual Studio 9 doesn't allow casting directly from
+                        // a double to an enumeration type, contrary to
+                        // 5.2.9(10) of C++11, so add an intermediate cast.
+                        rv = (nsresult)(uint32_t)(JSVAL_TO_DOUBLE(jsexception));
                     else
                         rv = (nsresult)(JSVAL_TO_INT(jsexception));
 

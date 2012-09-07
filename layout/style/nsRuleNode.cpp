@@ -6433,15 +6433,6 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
            SETCOORD_LPOH | SETCOORD_INITIAL_NONE | SETCOORD_STORE_CALC,
            aContext, mPresContext, canStoreInRuleTree);
 
-
-  // Handle 'auto' values for min-width / min-height
-  if (pos->mMinWidth.GetUnit() == eStyleUnit_Auto) {
-    pos->mMinWidth.SetCoordValue(0);
-  }
-  if (pos->mMinHeight.GetUnit() == eStyleUnit_Auto) {
-    pos->mMinHeight.SetCoordValue(0);
-  }
-
   // box-sizing: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForBoxSizing(),
               pos->mBoxSizing, canStoreInRuleTree,
@@ -7141,12 +7132,27 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
     aResult.mPaint.mColor = color;
   } else if (aValue.GetUnit() == eCSSUnit_Pair) {
     const nsCSSValuePair& pair = aValue.GetPairValue();
-    NS_ABORT_IF_FALSE(pair.mXValue.GetUnit() == eCSSUnit_URL,
-                      "malformed paint server value");
 
-    aResult.SetType(eStyleSVGPaintType_Server);
-    aResult.mPaint.mPaintServer = pair.mXValue.GetURLValue();
-    NS_IF_ADDREF(aResult.mPaint.mPaintServer);
+    if (pair.mXValue.GetUnit() == eCSSUnit_URL) {
+      aResult.SetType(eStyleSVGPaintType_Server);
+      aResult.mPaint.mPaintServer = pair.mXValue.GetURLValue();
+      NS_IF_ADDREF(aResult.mPaint.mPaintServer);
+    } else if (pair.mXValue.GetUnit() == eCSSUnit_Enumerated) {
+
+      switch (pair.mXValue.GetIntValue()) {
+      case NS_COLOR_OBJECTFILL:
+        aResult.SetType(eStyleSVGPaintType_ObjectFill);
+        break;
+      case NS_COLOR_OBJECTSTROKE:
+        aResult.SetType(eStyleSVGPaintType_ObjectStroke);
+        break;
+      default:
+        NS_NOTREACHED("unknown keyword as paint server value");
+      }
+
+    } else {
+      NS_NOTREACHED("malformed paint server value");
+    }
 
     if (pair.mYValue.GetUnit() == eCSSUnit_None) {
       aResult.mFallbackColor = NS_RGBA(0, 0, 0, 0);
@@ -7160,6 +7166,48 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
     NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Null,
                       "malformed paint server value");
   }
+}
+
+static void
+SetSVGOpacity(const nsCSSValue& aValue,
+              float& aOpacityField, nsStyleSVGOpacitySource& aOpacityTypeField,
+              bool& aCanStoreInRuleTree,
+              float aParentOpacity, nsStyleSVGOpacitySource aParentOpacityType)
+{
+  if (eCSSUnit_Enumerated == aValue.GetUnit()) {
+    switch (aValue.GetIntValue()) {
+    case NS_STYLE_OBJECT_FILL_OPACITY:
+      aOpacityTypeField = eStyleSVGOpacitySource_ObjectFillOpacity;
+      break;
+    case NS_STYLE_OBJECT_STROKE_OPACITY:
+      aOpacityTypeField = eStyleSVGOpacitySource_ObjectStrokeOpacity;
+      break;
+    default:
+      NS_NOTREACHED("SetSVGOpacity: Unknown keyword");
+    }
+    // Fall back on fully opaque
+    aOpacityField = 1.0f;
+  } else if (eCSSUnit_Inherit == aValue.GetUnit()) {
+    aCanStoreInRuleTree = false;
+    aOpacityField = aParentOpacity;
+    aOpacityTypeField = aParentOpacityType;
+  } else if (eCSSUnit_Null != aValue.GetUnit()) {
+    SetFactor(aValue, aOpacityField, aCanStoreInRuleTree,
+              aParentOpacity, 1.0f, SETFCT_OPACITY);
+    aOpacityTypeField = eStyleSVGOpacitySource_Normal;
+  }
+}
+
+template <typename FieldT, typename T>
+static bool
+SetTextObjectValue(const nsCSSValue& aValue, FieldT& aField, T aFallbackValue)
+{
+  if (aValue.GetUnit() != eCSSUnit_Enumerated ||
+      aValue.GetIntValue() != NS_STYLE_STROKE_PROP_OBJECTVALUE) {
+    return false;
+  }
+  aField = aFallbackValue;
+  return true;
 }
 
 const void*
@@ -7195,10 +7243,12 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
               parentSVG->mFill, mPresContext, aContext,
               svg->mFill, eStyleSVGPaintType_Color, canStoreInRuleTree);
 
-  // fill-opacity: factor, inherit, initial
-  SetFactor(*aRuleData->ValueForFillOpacity(),
-            svg->mFillOpacity, canStoreInRuleTree,
-            parentSVG->mFillOpacity, 1.0f, SETFCT_OPACITY);
+  // fill-opacity: factor, inherit, initial, objectFillOpacity, objectStrokeOpacity
+  nsStyleSVGOpacitySource objectFillOpacity = svg->mFillOpacitySource;
+  SetSVGOpacity(*aRuleData->ValueForFillOpacity(),
+                svg->mFillOpacity, objectFillOpacity, canStoreInRuleTree,
+                parentSVG->mFillOpacity, parentSVG->mFillOpacitySource);
+  svg->mFillOpacitySource = objectFillOpacity;
 
   // fill-rule: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForFillRule(),
@@ -7259,7 +7309,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
               parentSVG->mStroke, mPresContext, aContext,
               svg->mStroke, eStyleSVGPaintType_None, canStoreInRuleTree);
 
-  // stroke-dasharray: <dasharray>, none, inherit
+  // stroke-dasharray: <dasharray>, none, inherit, -moz-objectValue
   const nsCSSValue* strokeDasharrayValue = aRuleData->ValueForStrokeDasharray();
   switch (strokeDasharrayValue->GetUnit()) {
   case eCSSUnit_Null:
@@ -7267,6 +7317,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
 
   case eCSSUnit_Inherit:
     canStoreInRuleTree = false;
+    svg->mStrokeDasharrayFromObject = parentSVG->mStrokeDasharrayFromObject;
     // only do the copy if weren't already set up by the copy constructor
     // FIXME Bug 389408: This is broken when aStartStruct is non-null!
     if (!svg->mStrokeDasharray) {
@@ -7283,8 +7334,19 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
     }
     break;
 
+  case eCSSUnit_Enumerated:
+    NS_ABORT_IF_FALSE(strokeDasharrayValue->GetIntValue() ==
+                            NS_STYLE_STROKE_PROP_OBJECTVALUE,
+                      "Unknown keyword for stroke-dasharray");
+    svg->mStrokeDasharrayFromObject = true;
+    delete [] svg->mStrokeDasharray;
+    svg->mStrokeDasharray = nullptr;
+    svg->mStrokeDasharrayLength = 0;
+    break;
+
   case eCSSUnit_Initial:
   case eCSSUnit_None:
+    svg->mStrokeDasharrayFromObject = false;
     delete [] svg->mStrokeDasharray;
     svg->mStrokeDasharray = nullptr;
     svg->mStrokeDasharrayLength = 0;
@@ -7292,6 +7354,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
 
   case eCSSUnit_List:
   case eCSSUnit_ListDep: {
+    svg->mStrokeDasharrayFromObject = false;
     delete [] svg->mStrokeDasharray;
     svg->mStrokeDasharray = nullptr;
     svg->mStrokeDasharrayLength = 0;
@@ -7324,10 +7387,19 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   }
 
   // stroke-dashoffset: <dashoffset>, inherit
-  SetCoord(*aRuleData->ValueForStrokeDashoffset(),
-           svg->mStrokeDashoffset, parentSVG->mStrokeDashoffset,
-           SETCOORD_LPH | SETCOORD_FACTOR | SETCOORD_INITIAL_ZERO,
-           aContext, mPresContext, canStoreInRuleTree);
+  const nsCSSValue *strokeDashoffsetValue =
+    aRuleData->ValueForStrokeDashoffset();
+  svg->mStrokeDashoffsetFromObject =
+    strokeDashoffsetValue->GetUnit() == eCSSUnit_Enumerated &&
+    strokeDashoffsetValue->GetIntValue() == NS_STYLE_STROKE_PROP_OBJECTVALUE;
+  if (svg->mStrokeDashoffsetFromObject) {
+    svg->mStrokeDashoffset.SetIntValue(0, eStyleUnit_Integer);
+  } else {
+    SetCoord(*aRuleData->ValueForStrokeDashoffset(),
+             svg->mStrokeDashoffset, parentSVG->mStrokeDashoffset,
+             SETCOORD_LPH | SETCOORD_FACTOR | SETCOORD_INITIAL_ZERO,
+             aContext, mPresContext, canStoreInRuleTree);
+  }
 
   // stroke-linecap: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForStrokeLinecap(),
@@ -7348,15 +7420,30 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
             parentSVG->mStrokeMiterlimit, 4.0f);
 
   // stroke-opacity:
-  SetFactor(*aRuleData->ValueForStrokeOpacity(),
-            svg->mStrokeOpacity, canStoreInRuleTree,
-            parentSVG->mStrokeOpacity, 1.0f, SETFCT_OPACITY);
+  nsStyleSVGOpacitySource objectStrokeOpacity = svg->mStrokeOpacitySource;
+  SetSVGOpacity(*aRuleData->ValueForStrokeOpacity(),
+                svg->mStrokeOpacity, objectStrokeOpacity, canStoreInRuleTree,
+                parentSVG->mStrokeOpacity, parentSVG->mStrokeOpacitySource);
+  svg->mStrokeOpacitySource = objectStrokeOpacity;
 
   // stroke-width:
   const nsCSSValue* strokeWidthValue = aRuleData->ValueForStrokeWidth();
-  if (eCSSUnit_Initial == strokeWidthValue->GetUnit()) {
+  switch (strokeWidthValue->GetUnit()) {
+  case eCSSUnit_Enumerated:
+    NS_ABORT_IF_FALSE(strokeWidthValue->GetIntValue() ==
+                        NS_STYLE_STROKE_PROP_OBJECTVALUE,
+                      "Unrecognized keyword for stroke-width");
+    svg->mStrokeWidthFromObject = true;
     svg->mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
-  } else {
+    break;
+
+  case eCSSUnit_Initial:
+    svg->mStrokeWidthFromObject = false;
+    svg->mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
+    break;
+
+  default:
+    svg->mStrokeWidthFromObject = false;
     SetCoord(*strokeWidthValue,
              svg->mStrokeWidth, parentSVG->mStrokeWidth,
              SETCOORD_LPH | SETCOORD_FACTOR,

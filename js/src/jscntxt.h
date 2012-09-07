@@ -1071,8 +1071,6 @@ struct JSRuntime : js::RuntimeFriendFields
 };
 
 /* Common macros to access thread-local caches in JSRuntime. */
-#define JS_PROPERTY_CACHE(cx)   (cx->runtime->propertyCache)
-
 #define JS_KEEP_ATOMS(rt)   (rt)->gcKeepAtoms++;
 #define JS_UNKEEP_ATOMS(rt) (rt)->gcKeepAtoms--;
 
@@ -1426,6 +1424,8 @@ struct JSContext : js::ContextFriendFields
     inline js::LifoAlloc &typeLifoAlloc();
 
     inline js::PropertyTree &propertyTree();
+
+    js::PropertyCache &propertyCache() { return runtime->propertyCache; }
 
 #ifdef JS_THREADSAFE
     unsigned            outstandingRequests;/* number of JS_BeginRequest calls

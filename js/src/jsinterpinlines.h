@@ -262,7 +262,7 @@ GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHan
     PropertyCacheEntry *entry;
     Rooted<JSObject*> obj2(cx);
     PropertyName *name;
-    JS_PROPERTY_CACHE(cx).test(cx, pc, obj.get(), obj2.get(), entry, name);
+    cx->propertyCache().test(cx, pc, obj.get(), obj2.get(), entry, name);
     if (!name) {
         AssertValidPropertyCacheHit(cx, obj, obj2, entry);
         if (!NativeGet(cx, obj, obj2, entry->prop, JSGET_CACHE_RESULT, vp))
@@ -305,7 +305,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
     PropertyCacheEntry *entry;
     JSObject *obj2;
     PropertyName *name;
-    if (JS_PROPERTY_CACHE(cx).testForSet(cx, pc, obj, &entry, &obj2, &name)) {
+    if (cx->propertyCache().testForSet(cx, pc, obj, &entry, &obj2, &name)) {
         /*
          * Property cache hit, only partially confirmed by testForSet. We
          * know that the entry applies to regs.pc and that obj's shape

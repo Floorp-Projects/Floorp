@@ -4,6 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+typedef long myLong;
+typedef TestInterface AnotherNameForTestInterface;
+typedef TestInterface? NullableTestInterface;
+
 interface TestExternalInterface;
 
 interface TestNonCastableInterface {
@@ -36,7 +40,7 @@ interface OnlyForUseInConstructor {
  ]
 interface TestInterface {
   // Integer types
-  // XXXbz add tests for infallible versions of all the integer stuff
+  // XXXbz add tests for throwing versions of all the integer stuff
   readonly attribute byte readonlyByte;
   attribute byte writableByte;
   void passByte(byte arg);
@@ -96,7 +100,7 @@ interface TestInterface {
   void passOptionalUnsignedLongLongWithDefault(optional unsigned long long arg = 17);
 
   // Castable interface types
-  // XXXbz add tests for infallible versions of all the castable interface stuff
+  // XXXbz add tests for throwing versions of all the castable interface stuff
   TestInterface receiveSelf();
   TestInterface? receiveNullableSelf();
   TestInterface receiveWeakSelf();
@@ -304,6 +308,17 @@ interface TestInterface {
   void passDictionaryOrLong(long x);
 
   void passDictContainingDict(optional DictContainingDict arg);
+
+  // EnforceRange/Clamp tests
+  void dontEnforceRangeOrClamp(byte arg);
+  void doEnforceRange([EnforceRange] byte arg);
+  void doClamp([Clamp] byte arg);
+
+  // Typedefs
+  const myLong myLongConstant = 5;
+  void exerciseTypedefInterfaces1(AnotherNameForTestInterface arg);
+  AnotherNameForTestInterface exerciseTypedefInterfaces2(NullableTestInterface arg);
+  void exerciseTypedefInterfaces3(YetAnotherNameForTestInterface arg);
 };
 
 interface TestNonWrapperCacheInterface {
@@ -376,6 +391,7 @@ dictionary DictContainingDict {
 
 interface TestIndexedGetterInterface {
   getter long item(unsigned long index);
+  [Infallible]
   readonly attribute unsigned long length;
 };
 
@@ -386,6 +402,7 @@ interface TestNamedGetterInterface {
 interface TestIndexedAndNamedGetterInterface {
   getter long (unsigned long index);
   getter DOMString namedItem(DOMString name);
+  [Infallible]
   readonly attribute unsigned long length;
 };
 
@@ -407,6 +424,8 @@ interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterfa
   getter DOMString namedItem(DOMString name);
   setter creator void (unsigned long index, long item);
   setter creator void (DOMString name, DOMString item);
+  [Infallible]
   stringifier DOMString ();
+  [Infallible]
   readonly attribute unsigned long length;
 };

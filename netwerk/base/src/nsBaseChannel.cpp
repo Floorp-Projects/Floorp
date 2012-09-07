@@ -738,7 +738,7 @@ nsBaseChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 
 NS_IMETHODIMP
 nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
-                               nsIInputStream *stream, uint32_t offset,
+                               nsIInputStream *stream, uint64_t offset,
                                uint32_t count)
 {
   SUSPEND_PUMP_FOR_SCOPE();
@@ -746,7 +746,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
   nsresult rv = mListener->OnDataAvailable(this, mListenerContext, stream,
                                            offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
-    uint64_t prog = uint64_t(offset) + count;
+    uint64_t prog = offset + count;
     uint64_t progMax = ContentLength64();
     OnTransportStatus(nullptr, NS_NET_STATUS_READING, prog, progMax);
   }

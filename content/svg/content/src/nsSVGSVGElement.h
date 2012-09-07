@@ -224,7 +224,7 @@ public:
    * GetAttributeChangeHint is because we need to act on non-attribute (e.g.
    * currentScale) changes in addition to attribute (e.g. viewBox) changes.
    */
-  void ChildrenOnlyTransformChanged(PRUint32 aFlags = 0);
+  void ChildrenOnlyTransformChanged(uint32_t aFlags = 0);
 
   // This services any pending notifications for the transform on on this root
   // <svg> node needing to be recalculated.  (Only applicable in

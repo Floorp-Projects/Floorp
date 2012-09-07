@@ -497,8 +497,9 @@ nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
 // nsIStreamListener methods
 NS_IMETHODIMP
 nsViewSourceChannel::OnDataAvailable(nsIRequest *aRequest, nsISupports* aContext,
-                               nsIInputStream *aInputStream, uint32_t aSourceOffset,
-                               uint32_t aLength) 
+                                     nsIInputStream *aInputStream,
+                                     uint64_t aSourceOffset,
+                                     uint32_t aLength) 
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
     return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel*>

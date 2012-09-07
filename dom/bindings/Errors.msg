@@ -26,3 +26,5 @@ MSG_DEF(MSG_DOES_NOT_IMPLEMENT_INTERFACE, 1, "Value does not implement interface
 MSG_DEF(MSG_NOT_IN_UNION, 1, "Value could not be converted to any of: {0}.")
 MSG_DEF(MSG_ILLEGAL_CONSTRUCTOR, 0, "Illegal constructor.")
 MSG_DEF(MSG_NO_PROPERTY_SETTER, 1, "{0} doesn't have an indexed property setter.")
+MSG_DEF(MSG_ENFORCE_RANGE_NON_FINITE, 1, "Non-finite value is out of range for {0}.")
+MSG_DEF(MSG_ENFORCE_RANGE_OUT_OF_RANGE, 1, "Value is out of range for {0}.")

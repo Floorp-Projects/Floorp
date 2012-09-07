@@ -429,11 +429,14 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
     return NS_OK;
   }
 
-  nsRefPtr<gfxPattern> strokePattern;
-  DrawMode drawMode = SetupCairoState(gfx, getter_AddRefs(strokePattern));
+  gfxTextObjectPaint *outerObjectPaint =
+    (gfxTextObjectPaint*)aContext->GetUserData(&gfxTextObjectPaint::sUserDataKey);
+
+  nsAutoPtr<gfxTextObjectPaint> objectPaint;
+  DrawMode drawMode = SetupCairoState(gfx, outerObjectPaint, getter_Transfers(objectPaint));
 
   if (drawMode) {
-    DrawCharacters(&iter, gfx, drawMode, strokePattern);
+    DrawCharacters(&iter, gfx, drawMode, objectPaint);
   }
   
   gfx->Restore();
@@ -605,7 +608,7 @@ void
 nsSVGGlyphFrame::DrawCharacters(CharacterIterator *aIter,
                                 gfxContext *aContext,
                                 DrawMode aDrawMode,
-                                gfxPattern *aStrokePattern)
+                                gfxTextObjectPaint *aObjectPaint)
 {
   if (aDrawMode & gfxFont::GLYPH_STROKE) {
     aIter->SetLineWidthAndDashesForDrawing(aContext);
@@ -613,7 +616,7 @@ nsSVGGlyphFrame::DrawCharacters(CharacterIterator *aIter,
 
   if (aIter->SetupForDirectTextRunDrawing(aContext)) {
     mTextRun->Draw(aContext, gfxPoint(0, 0), aDrawMode, 0,
-                   mTextRun->GetLength(), nullptr, nullptr, aStrokePattern);
+                   mTextRun->GetLength(), nullptr, nullptr, aObjectPaint);
     return;
   }
 
@@ -621,7 +624,7 @@ nsSVGGlyphFrame::DrawCharacters(CharacterIterator *aIter,
   while ((i = aIter->NextCluster()) != aIter->InvalidCluster()) {
     aIter->SetupForDrawing(aContext);
     mTextRun->Draw(aContext, gfxPoint(0, 0), aDrawMode, i,
-                   aIter->ClusterLength(), nullptr, nullptr, aStrokePattern);
+                   aIter->ClusterLength(), nullptr, nullptr, aObjectPaint);
   }
 }
 
@@ -945,49 +948,197 @@ nsSVGGlyphFrame::GetBaselineOffset(float aMetricsScale)
 }
 
 DrawMode
-nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext, gfxPattern **aStrokePattern)
+nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext,
+                                 gfxTextObjectPaint *aOuterObjectPaint,
+                                 gfxTextObjectPaint **aThisObjectPaint)
 {
   DrawMode toDraw = DrawMode(0);
-  const nsStyleSVG* style = GetStyleSVG();
+  SVGTextObjectPaint *thisObjectPaint = new SVGTextObjectPaint();
 
-  if (nsSVGUtils::HasStroke(this)) {
-    gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
-    aContext->IdentityMatrix();
-
+  if (SetupCairoStroke(aContext, aOuterObjectPaint, thisObjectPaint)) {
     toDraw = DrawMode(toDraw | gfxFont::GLYPH_STROKE);
-
-    nsSVGUtils::SetupCairoStrokeHitGeometry(this, aContext);
-    float opacity = style->mStrokeOpacity;
-    nsSVGPaintServerFrame *ps =
-      nsSVGEffects::GetPaintServer(this, &style->mStroke,
-                                   nsSVGEffects::StrokeProperty());
-
-    nsRefPtr<gfxPattern> strokePattern;
-
-    if (ps) {
-      // Gradient or Pattern: can get pattern directly from frame
-      strokePattern =
-        ps->GetPaintServerPattern(this, aContext->CurrentMatrix(),
-                                  &nsStyleSVG::mStroke, opacity);
-    }
-
-    if (!strokePattern) {
-      nscolor color = nsSVGUtils::GetFallbackOrPaintColor(
-                        aContext, GetStyleContext(), &nsStyleSVG::mStroke);
-      strokePattern = new gfxPattern(gfxRGBA(NS_GET_R(color) / 255.0,
-                                             NS_GET_G(color) / 255.0,
-                                             NS_GET_B(color) / 255.0,
-                                             NS_GET_A(color) / 255.0 * opacity));
-    }
-
-    strokePattern.forget(aStrokePattern);
   }
 
-  if (nsSVGUtils::SetupCairoFillPaint(this, aContext)) {
+  if (SetupCairoFill(aContext, aOuterObjectPaint, thisObjectPaint)) {
     toDraw = DrawMode(toDraw | gfxFont::GLYPH_FILL);
   }
 
+  *aThisObjectPaint = thisObjectPaint;
+
   return toDraw;
+}
+
+bool
+nsSVGGlyphFrame::SetupCairoStroke(gfxContext *aContext,
+                                  gfxTextObjectPaint *aOuterObjectPaint,
+                                  SVGTextObjectPaint *aThisObjectPaint)
+{
+  const nsStyleSVG *style = GetStyleSVG();
+  if (style->mStroke.mType == eStyleSVGPaintType_None) {
+    aThisObjectPaint->SetStrokeOpacity(0.0f);
+    return false;
+  }
+
+  gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
+  aContext->IdentityMatrix();
+
+  nsSVGUtils::SetupCairoStrokeHitGeometry(this, aContext, aOuterObjectPaint);
+  float opacity = nsSVGUtils::GetOpacity(style->mStrokeOpacitySource,
+                                         style->mStrokeOpacity,
+                                         aOuterObjectPaint);
+
+  SetupInheritablePaint(aContext, opacity, aOuterObjectPaint,
+                        aThisObjectPaint->mStrokePaint, &nsStyleSVG::mStroke,
+                        nsSVGEffects::StrokeProperty());
+
+  aThisObjectPaint->SetStrokeOpacity(opacity);
+
+  return opacity != 0.0f;
+}
+
+bool
+nsSVGGlyphFrame::SetupCairoFill(gfxContext *aContext,
+                                gfxTextObjectPaint *aOuterObjectPaint,
+                                SVGTextObjectPaint *aThisObjectPaint)
+{
+  const nsStyleSVG *style = GetStyleSVG();
+  if (style->mFill.mType == eStyleSVGPaintType_None) {
+    aThisObjectPaint->SetFillOpacity(0.0f);
+    return false;
+  }
+
+  float opacity = nsSVGUtils::GetOpacity(style->mFillOpacitySource,
+                                         style->mFillOpacity,
+                                         aOuterObjectPaint);
+
+  SetupInheritablePaint(aContext, opacity, aOuterObjectPaint,
+                        aThisObjectPaint->mFillPaint, &nsStyleSVG::mFill,
+                        nsSVGEffects::FillProperty());
+
+  aThisObjectPaint->SetFillOpacity(opacity);
+
+  return true;
+}
+
+void
+nsSVGGlyphFrame::SetupInheritablePaint(gfxContext *aContext,
+                                       float& aOpacity,
+                                       gfxTextObjectPaint *aOuterObjectPaint,
+                                       SVGTextObjectPaint::Paint& aTargetPaint,
+                                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                       const FramePropertyDescriptor *aProperty)
+{
+  const nsStyleSVG *style = GetStyleSVG();
+  nsSVGPaintServerFrame *ps =
+    nsSVGEffects::GetPaintServer(this, &(style->*aFillOrStroke), aProperty);
+
+  if (ps && ps->SetupPaintServer(aContext, this, aFillOrStroke, aOpacity)) {
+    aTargetPaint.SetPaintServer(this, aContext->CurrentMatrix(), ps);
+  } else if (SetupObjectPaint(aContext, aFillOrStroke, aOpacity, aOuterObjectPaint)) {
+    aTargetPaint.SetObjectPaint(aOuterObjectPaint, (style->*aFillOrStroke).mType);
+  } else {
+    nscolor color = nsSVGUtils::GetFallbackOrPaintColor(aContext,
+                                                        GetStyleContext(),
+                                                        aFillOrStroke);
+    aTargetPaint.SetColor(color);
+
+    aContext->SetPattern(new gfxPattern(gfxRGBA(NS_GET_R(color) / 255.0,
+                                                NS_GET_G(color) / 255.0,
+                                                NS_GET_B(color) / 255.0,
+                                                NS_GET_A(color) / 255.0 * aOpacity)));
+  }
+}
+
+bool
+nsSVGGlyphFrame::SetupObjectPaint(gfxContext *aContext,
+                                  nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                  float& aOpacity,
+                                  gfxTextObjectPaint *aOuterObjectPaint)
+{
+  const nsStyleSVG *style = GetStyleSVG();
+  const nsStyleSVGPaint &paint = style->*aFillOrStroke;
+
+  if (paint.mType != eStyleSVGPaintType_ObjectFill &&
+      paint.mType != eStyleSVGPaintType_ObjectStroke) {
+    return false;
+  }
+
+  nsRefPtr<gfxPattern> pattern = paint.mType == eStyleSVGPaintType_ObjectFill ?
+                                 aOuterObjectPaint->GetFillPattern(aOpacity) :
+                                 aOuterObjectPaint->GetStrokePattern(aOpacity);
+
+  if (!pattern) {
+    return false;
+  }
+
+  pattern->SetMatrix(aContext->CurrentMatrix().Multiply(pattern->GetMatrix()));
+  aContext->SetPattern(pattern);
+
+  return true;
+}
+
+//----------------------------------------------------------------------
+// SVGTextObjectPaint methods:
+
+already_AddRefed<gfxPattern>
+nsSVGGlyphFrame::SVGTextObjectPaint::GetFillPattern(float aOpacity)
+{
+  return mFillPaint.GetPattern(aOpacity, &nsStyleSVG::mFill);
+}
+
+already_AddRefed<gfxPattern>
+nsSVGGlyphFrame::SVGTextObjectPaint::GetStrokePattern(float aOpacity)
+{
+  return mStrokePaint.GetPattern(aOpacity, &nsStyleSVG::mStroke);
+}
+
+already_AddRefed<gfxPattern>
+nsSVGGlyphFrame::SVGTextObjectPaint::Paint::GetPattern(float aOpacity,
+                                                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke)
+{
+  nsRefPtr<gfxPattern> pattern;
+  if (mPatternCache.Get(aOpacity, getter_AddRefs(pattern))) {
+    // Set the pattern matrix just in case it was messed with by a previous
+    // caller. We should get the same matrix each time a pattern is constructed
+    // so this should be fine.
+    pattern->SetMatrix(mPatternMatrix);
+    return pattern.forget();
+  }
+
+  switch (mPaintType) {
+  case eStyleSVGPaintType_None:
+    pattern = new gfxPattern(gfxRGBA(0.0f, 0.0f, 0.0f, 0.0f));
+    break;
+  case eStyleSVGPaintType_Color:
+    pattern = new gfxPattern(gfxRGBA(NS_GET_R(mPaintDefinition.mColor) / 255.0,
+                                     NS_GET_G(mPaintDefinition.mColor) / 255.0,
+                                     NS_GET_B(mPaintDefinition.mColor) / 255.0,
+                                     NS_GET_A(mPaintDefinition.mColor) / 255.0 * aOpacity));
+    break;
+  case eStyleSVGPaintType_Server:
+    pattern = mPaintDefinition.mPaintServerFrame->GetPaintServerPattern(mFrame,
+                                                                        mContextMatrix,
+                                                                        aFillOrStroke,
+                                                                        aOpacity);
+    break;
+  case eStyleSVGPaintType_ObjectFill:
+    pattern = mPaintDefinition.mObjectPaint->GetFillPattern(aOpacity);
+    break;
+  case eStyleSVGPaintType_ObjectStroke:
+    pattern = mPaintDefinition.mObjectPaint->GetStrokePattern(aOpacity);
+    break;
+  default:
+    return nullptr;
+  }
+
+  gfxMatrix contextInverse = mContextMatrix;
+  contextInverse.Invert();
+
+  mPatternMatrix = pattern->GetMatrix().PreMultiply(contextInverse);
+  pattern->SetMatrix(mPatternMatrix);
+  mPatternCache.Put(aOpacity, pattern);
+
+  return pattern.forget();
 }
 
 //----------------------------------------------------------------------

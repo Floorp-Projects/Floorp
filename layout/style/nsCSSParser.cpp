@@ -791,6 +791,8 @@ CSSParserImpl::SetStyleSheet(nsCSSStyleSheet* aSheet)
     } else {
       mNameSpaceMap = nullptr;
     }
+  } else if (mSheet) {
+    mNameSpaceMap = mSheet->GetNameSpaceMap();
   }
 
   return NS_OK;
@@ -9819,16 +9821,21 @@ bool
 CSSParserImpl::ParsePaint(nsCSSProperty aPropID)
 {
   nsCSSValue x, y;
-  if (!ParseVariant(x, VARIANT_HC | VARIANT_NONE | VARIANT_URL, nullptr))
+  if (!ParseVariant(x, VARIANT_HCK | VARIANT_NONE | VARIANT_URL,
+                    nsCSSProps::kObjectPatternKTable)) {
     return false;
-  if (x.GetUnit() == eCSSUnit_URL) {
+  }
+
+  bool canHaveFallback = x.GetUnit() == eCSSUnit_URL ||
+                         x.GetUnit() == eCSSUnit_Enumerated;
+  if (canHaveFallback) {
     if (!ParseVariant(y, VARIANT_COLOR | VARIANT_NONE, nullptr))
       y.SetNoneValue();
   }
   if (!ExpectEndProperty())
     return false;
 
-  if (x.GetUnit() != eCSSUnit_URL) {
+  if (!canHaveFallback) {
     AppendValue(aPropID, x);
   } else {
     nsCSSValue val;
@@ -9842,7 +9849,8 @@ bool
 CSSParserImpl::ParseDasharray()
 {
   nsCSSValue value;
-  if (ParseVariant(value, VARIANT_INHERIT | VARIANT_NONE, nullptr)) {
+  if (ParseVariant(value, VARIANT_HK | VARIANT_NONE,
+                   nsCSSProps::kStrokeObjectValueKTable)) {
     // 'inherit', 'initial', and 'none' are only allowed on their own
     if (!ExpectEndProperty()) {
       return false;

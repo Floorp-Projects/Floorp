@@ -172,6 +172,9 @@ const struct {
     ots::ots_glat_should_serialise, ots::ots_glat_free, false },
   { "Feat", ots::ots_feat_parse, ots::ots_feat_serialise,
     ots::ots_feat_should_serialise, ots::ots_feat_free, false },
+  // SVG glyph table
+  { "SVG ", ots::ots_svg_parse, ots::ots_svg_serialise,
+    ots::ots_svg_should_serialise, ots::ots_svg_free, false},
   // TODO(bashi): Support mort, base, and jstf tables.
   { 0, NULL, NULL, NULL, NULL, false },
 };

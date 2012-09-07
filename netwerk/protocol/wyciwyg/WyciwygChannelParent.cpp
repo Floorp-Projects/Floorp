@@ -233,7 +233,7 @@ NS_IMETHODIMP
 WyciwygChannelParent::OnDataAvailable(nsIRequest *aRequest,
                                       nsISupports *aContext,
                                       nsIInputStream *aInputStream,
-                                      uint32_t aOffset,
+                                      uint64_t aOffset,
                                       uint32_t aCount)
 {
   LOG(("WyciwygChannelParent::OnDataAvailable [this=%x]\n", this));

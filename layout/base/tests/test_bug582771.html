@@ -34,26 +34,20 @@ var d1mousemovecount = 0;
 var d2mousemovecount = 0;
 
 function sendMouseMove(el) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var rect = el.getBoundingClientRect();
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.sendMouseEvent('mousemove', rect.left + 5, rect.top + 5, 0, 0, 0);
 }
 
 function sendMouseDown(el) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var rect = el.getBoundingClientRect();
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.sendMouseEvent('mousedown', rect.left + 5, rect.top + 5, 0, 1, 0);
 }
 
 function sendMouseUp(el) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var rect = el.getBoundingClientRect();
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.sendMouseEvent('mouseup', rect.left + 5, rect.top + 5, 0, 1, 0);
 }
 
