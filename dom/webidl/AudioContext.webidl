@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor]
+[Constructor, PrefControlled]
 interface mozAudioContext {
 };
 
