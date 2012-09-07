@@ -27,9 +27,10 @@ window.fileInputGotClick = false;
 // accessibility.tabfocus must be set to value 7 before running test also
 // on a mac.
 function setOrRestoreTabFocus(newValue) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
   const prefSvcIID = Components.interfaces.nsIPrefService;
-  var prefs = SpecialPowers.wrap(Components).classes[prefSvcContractID].getService(prefSvcIID)
+  var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
                                                    .getBranch("accessibility.");
   if (!newValue) {
     prefs.clearUserPref("tabfocus");
@@ -39,7 +40,9 @@ function setOrRestoreTabFocus(newValue) {
 }
 
 function tab() {
-  var utils = SpecialPowers.DOMWindowUtils;
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                     getInterface(Components.interfaces.nsIDOMWindowUtils);
   // Send tab key events.
   var key = Components.interfaces.nsIDOMKeyEvent.DOM_VK_TAB;
   utils.sendKeyEvent("keydown", key, 0, 0);
@@ -48,6 +51,7 @@ function tab() {
 }
 
 function test() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   // Try to find the 'Browse...' using tabbing.
   var i = 0;
   while (!window.oTarget && i < 100) {
@@ -63,11 +67,11 @@ function test() {
   }
 
   ok(window.oTarget instanceof HTMLInputElement, "Should have focused an input element!")
-  ok(SpecialPowers.wrap(window.oTarget).type == "button", "Should have focused 'Browse...' button!");
+  ok(window.oTarget.type == "button", "Should have focused 'Browse...' button!");
   var e = document.createEvent("mouseevents");
   e.initMouseEvent("click", true, true, window, 0, 1, 1, 1, 1,
                     false, false, false, false, 0, null);
-  SpecialPowers.wrap(window.oTarget).dispatchEvent(e);
+  window.oTarget.dispatchEvent(e);
   ok(window.fileInputGotClick,
      "File input should have got a click event, but not open the file dialog.");
   setOrRestoreTabFocus(0);
