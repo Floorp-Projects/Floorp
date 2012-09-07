@@ -1886,6 +1886,7 @@ class MBinaryBitwiseInstruction
 
     MDefinition *foldsTo(bool useValueNumbers);
     virtual MDefinition *foldIfZero(size_t operand) = 0;
+    virtual MDefinition *foldIfNegOne(size_t operand) = 0;
     virtual MDefinition *foldIfEqual()  = 0;
     virtual void infer(const TypeOracle::Binary &b);
 
@@ -1912,7 +1913,9 @@ class MBitAnd : public MBinaryBitwiseInstruction
     MDefinition *foldIfZero(size_t operand) {
         return getOperand(operand); // 0 & x => 0;
     }
-
+    MDefinition *foldIfNegOne(size_t operand) {
+        return getOperand(1 - operand); // x & -1 => x
+    }
     MDefinition *foldIfEqual() {
         return getOperand(0); // x & x => x;
     }
@@ -1931,13 +1934,11 @@ class MBitOr : public MBinaryBitwiseInstruction
     MDefinition *foldIfZero(size_t operand) {
         return getOperand(1 - operand); // 0 | x => x, so if ith is 0, return (1-i)th
     }
-
+    MDefinition *foldIfNegOne(size_t operand) {
+        return getOperand(operand); // x | -1 => -1
+    }
     MDefinition *foldIfEqual() {
         return getOperand(0); // x | x => x
-    }
-
-    MDefinition *foldIfNegOne(size_t operand) {
-        return getOperand(operand);
     }
 };
 
@@ -1954,7 +1955,9 @@ class MBitXor : public MBinaryBitwiseInstruction
     MDefinition *foldIfZero(size_t operand) {
         return getOperand(1 - operand); // 0 ^ x => x
     }
-
+    MDefinition *foldIfNegOne(size_t operand) {
+        return this;
+    }
     MDefinition *foldIfEqual() {
         return MConstant::New(Int32Value(0));
     }
@@ -1969,6 +1972,9 @@ class MShiftInstruction
     { }
 
   public:
+    MDefinition *foldIfNegOne(size_t operand) {
+        return this;
+    }
     MDefinition *foldIfEqual() {
         return this;
     }
