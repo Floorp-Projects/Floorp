@@ -13,10 +13,6 @@
 
 // Defines for various style related constants
 
-// For hints that don't guarantee that the change will be applied to all descendant
-// frames, style structs returning those hints from CalcDifference must have
-// their ForceCompare() return true.
-
 enum nsChangeHint {
   // change was visual only (e.g., COLOR=)
   // Invalidates all descendant frames (including following
