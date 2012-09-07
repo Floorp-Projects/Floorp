@@ -51,7 +51,12 @@ dictionary MozXMLHttpRequestParameters
   boolean mozSystem = false;
 };
 
-[Constructor(optional MozXMLHttpRequestParameters params)]
+[Constructor(optional MozXMLHttpRequestParameters params),
+ // There are apparently callers, specifically CoffeeScript, who do
+ // things like this:
+ //   c = new(window.ActiveXObject || XMLHttpRequest)("Microsoft.XMLHTTP")
+ // To handle that, we need a constructor that takes a string.
+ Constructor(DOMString ignored)]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // event handler
   [TreatNonCallableAsNull, SetterThrows, GetterThrows=Workers]

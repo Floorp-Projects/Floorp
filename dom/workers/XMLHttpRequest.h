@@ -74,6 +74,21 @@ public:
   Constructor(JSContext* aCx, JSObject* aGlobal,
               const MozXMLHttpRequestParametersWorkers& aParams,
               ErrorResult& aRv);
+
+  static XMLHttpRequest*
+  Constructor(JSContext* aCx, JSObject* aGlobal,
+              const nsAString& ignored, ErrorResult& aRv)
+  {
+    // Pretend like someone passed null, so we can pick up the default values
+    MozXMLHttpRequestParametersWorkers params;
+    if (!params.Init(aCx, JS::NullValue())) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    return Constructor(aCx, aGlobal, params, aRv);
+  }
+
   void
   Unpin();
 
