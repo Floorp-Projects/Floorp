@@ -66,12 +66,6 @@ struct nsCSSValueList;
 
 // The lifetime of these objects is managed by the presshell's arena.
 
-// Each struct must implement a static ForceCompare() function returning a
-// boolean.  Structs that can return a hint that doesn't guarantee that the
-// change will be applied to all descendants must return true from
-// ForceCompare(), so that we will make sure to compare those structs in
-// nsStyleContext::CalcStyleDifference.
-
 struct nsStyleFont {
   nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext);
   nsStyleFont(const nsStyleFont& aStyleFont);
@@ -87,7 +81,6 @@ public:
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_REFLOW;
   }
-  static bool ForceCompare() { return false; }
   static nsChangeHint CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
 
   static nscoord ZoomText(nsPresContext* aPresContext, nscoord aSize);
@@ -293,7 +286,6 @@ struct nsStyleColor {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_VISUAL;
   }
-  static bool ForceCompare() { return false; }
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
@@ -322,7 +314,6 @@ struct nsStyleBackground {
   static nsChangeHint MaxDifference() {
     return NS_CombineHint(nsChangeHint_UpdateEffects, NS_STYLE_HINT_VISUAL);
   }
-  static bool ForceCompare() { return true; }
 
   struct Position;
   friend struct Position;
@@ -545,7 +536,6 @@ struct nsStyleMargin {
                            NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
                                           nsChangeHint_NeedDirtyReflow));
   }
-  static bool ForceCompare() { return true; }
 
   nsStyleSides  mMargin;          // [reset] coord, percent, calc, auto
 
@@ -581,7 +571,6 @@ struct nsStylePadding {
     return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
                            nsChangeHint_ClearDescendantIntrinsics);
   }
-  static bool ForceCompare() { return true; }
 
   nsStyleSides  mPadding;         // [reset] coord, percent, calc
 
@@ -747,10 +736,6 @@ struct nsStyleBorder {
     return NS_CombineHint(NS_STYLE_HINT_REFLOW,
                           nsChangeHint_BorderStyleNoneChange);
   }
-  // ForceCompare is true, because a change to our border-style might
-  // change border-width on descendants (requiring reflow of those)
-  // but not our own border-width (thus not requiring us to reflow).
-  static bool ForceCompare() { return true; }
 
   void EnsureBorderColors() {
     if (!mBorderColors) {
@@ -972,7 +957,6 @@ struct nsStyleOutline {
   static nsChangeHint MaxDifference() {
     return NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame);
   }
-  static bool ForceCompare() { return false; }
 
   nsStyleCorners  mOutlineRadius; // [reset] coord, percent, calc
 
@@ -1058,7 +1042,6 @@ struct nsStyleList {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  static bool ForceCompare() { return false; }
 
   imgIRequest* GetListStyleImage() const { return mListStyleImage; }
   void SetListStyleImage(imgIRequest* aReq)
@@ -1098,7 +1081,6 @@ struct nsStylePosition {
                           nsChangeHint(nsChangeHint_RecomputePosition |
                                        nsChangeHint_UpdateOverflow));
   }
-  static bool ForceCompare() { return true; }
 
   nsStyleSides  mOffset;                // [reset] coord, percent, calc, auto
   nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, calc, auto
@@ -1281,7 +1263,6 @@ struct nsStyleTextReset {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_REFLOW;
   }
-  static bool ForceCompare() { return false; }
 
   nsStyleCoord  mVerticalAlign;         // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
   nsStyleTextOverflow mTextOverflow;    // [reset] enum, string
@@ -1312,7 +1293,6 @@ struct nsStyleText {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  static bool ForceCompare() { return false; }
 
   uint8_t mTextAlign;                   // [inherited] see nsStyleConsts.h
   uint8_t mTextAlignLast;               // [inherited] see nsStyleConsts.h
@@ -1388,7 +1368,6 @@ struct nsStyleVisibility {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  static bool ForceCompare() { return false; }
 
   uint8_t mDirection;                  // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
   uint8_t   mVisible;                  // [inherited]
@@ -1592,7 +1571,6 @@ struct nsStyleDisplay {
                         nsChangeHint_UpdateOverflow |
                         nsChangeHint_AddOrRemoveTransform);
   }
-  static bool ForceCompare() { return true; }
 
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
@@ -1749,7 +1727,6 @@ struct nsStyleTable {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  static bool ForceCompare() { return false; }
 
   uint8_t       mLayoutStrategy;// [reset] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
   uint8_t       mFrame;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
@@ -1775,7 +1752,6 @@ struct nsStyleTableBorder {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  static bool ForceCompare() { return false; }
 
   nscoord       mBorderSpacingX;// [inherited]
   nscoord       mBorderSpacingY;// [inherited]
@@ -1865,7 +1841,6 @@ struct nsStyleQuotes {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  static bool ForceCompare() { return false; }
 
   uint32_t  QuotesCount(void) const { return mQuotesCount; } // [inherited]
 
@@ -1933,7 +1908,6 @@ struct nsStyleContent {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  static bool ForceCompare() { return false; }
 
   uint32_t  ContentCount(void) const  { return mContentCount; } // [reset]
 
@@ -2038,7 +2012,6 @@ struct nsStyleUIReset {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  static bool ForceCompare() { return false; }
 
   uint8_t   mUserSelect;      // [reset] (selection-style)
   uint8_t   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)
@@ -2092,7 +2065,6 @@ struct nsStyleUserInterface {
   static nsChangeHint MaxDifference() {
     return nsChangeHint(nsChangeHint_UpdateCursor | NS_STYLE_HINT_FRAMECHANGE);
   }
-  static bool ForceCompare() { return false; }
 
   uint8_t   mUserInput;       // [inherited]
   uint8_t   mUserModify;      // [inherited] (modify-content)
@@ -2128,7 +2100,6 @@ struct nsStyleXUL {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  static bool ForceCompare() { return false; }
 
   float         mBoxFlex;               // [reset] see nsStyleConsts.h
   uint32_t      mBoxOrdinal;            // [reset] see nsStyleConsts.h
@@ -2156,7 +2127,6 @@ struct nsStyleColumn {
   static nsChangeHint MaxDifference() {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  static bool ForceCompare() { return false; }
 
   uint32_t     mColumnCount; // [reset] see nsStyleConsts.h
   nsStyleCoord mColumnWidth; // [reset] coord, auto
@@ -2236,7 +2206,6 @@ struct nsStyleSVG {
                                          nsChangeHint_ReflowFrame),
                                          nsChangeHint_RepaintFrame);
   }
-  static bool ForceCompare() { return true; }
 
   nsStyleSVGPaint  mFill;             // [inherited]
   nsStyleSVGPaint  mStroke;           // [inherited]
@@ -2294,7 +2263,6 @@ struct nsStyleSVGReset {
                                          nsChangeHint_ReflowFrame),
                                          nsChangeHint_RepaintFrame);
   }
-  static bool ForceCompare() { return true; }
 
   nsCOMPtr<nsIURI> mClipPath;         // [reset]
   nsCOMPtr<nsIURI> mFilter;           // [reset]
