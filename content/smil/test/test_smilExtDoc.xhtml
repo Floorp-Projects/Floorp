@@ -50,12 +50,8 @@ function checkResult()
   var content = document.getElementById("content");
   var bbox = content.getBoundingClientRect();
 
-  var canvas = document.createElement("canvas");
+  var canvas = SpecialPowers.snapshotRect(window, bbox);
   var ctx = canvas.getContext("2d");
-
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  ctx.drawWindow(window, bbox.left, bbox.top, bbox.width, bbox.height,
-                 "rgb(255,255,255)");
 
   var imgd = ctx.getImageData(bbox.width/2, bbox.height/2, 1, 1);
   var isGreen = (imgd.data[0] == 0) &&

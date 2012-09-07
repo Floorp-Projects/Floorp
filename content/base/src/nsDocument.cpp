@@ -6289,7 +6289,7 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
   // reflow.
   if ((!IsHTML() ||
        (aType > Flush_ContentAndNotify && mPresShell &&
-        !mPresShell->DidInitialReflow())) &&
+        !mPresShell->DidInitialize())) &&
       (mParser || mWeakSink)) {
     nsCOMPtr<nsIContentSink> sink;
     if (mParser) {

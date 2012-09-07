@@ -658,26 +658,26 @@ static const yytype_int16 yyrhs[] =
 static const yytype_uint16 yyrline[] =
 {
        0,   165,   165,   200,   203,   216,   221,   226,   232,   235,
-     314,   317,   426,   436,   449,   457,   557,   560,   568,   572,
-     579,   583,   590,   596,   605,   613,   668,   675,   685,   688,
-     698,   708,   729,   730,   731,   736,   737,   746,   758,   759,
-     767,   778,   782,   783,   793,   803,   813,   826,   827,   837,
-     850,   854,   858,   862,   863,   876,   877,   890,   891,   904,
-     905,   922,   923,   936,   937,   938,   939,   940,   944,   947,
-     958,   966,   993,   998,  1005,  1043,  1046,  1053,  1061,  1082,
-    1103,  1114,  1143,  1148,  1158,  1163,  1173,  1176,  1179,  1182,
-    1188,  1195,  1198,  1220,  1238,  1262,  1285,  1289,  1307,  1315,
-    1347,  1367,  1456,  1465,  1488,  1491,  1497,  1505,  1513,  1521,
-    1531,  1538,  1541,  1544,  1550,  1553,  1568,  1572,  1576,  1580,
-    1589,  1594,  1599,  1604,  1609,  1614,  1619,  1624,  1629,  1634,
-    1640,  1646,  1652,  1657,  1662,  1671,  1680,  1685,  1698,  1698,
-    1712,  1712,  1721,  1724,  1739,  1775,  1779,  1785,  1793,  1809,
-    1813,  1817,  1818,  1824,  1825,  1826,  1827,  1828,  1832,  1833,
-    1833,  1833,  1843,  1844,  1848,  1848,  1849,  1849,  1854,  1857,
-    1867,  1870,  1876,  1877,  1881,  1889,  1893,  1903,  1908,  1925,
-    1925,  1930,  1930,  1937,  1937,  1945,  1948,  1954,  1957,  1963,
-    1967,  1974,  1981,  1988,  1995,  2006,  2015,  2019,  2026,  2029,
-    2035,  2035
+     314,   317,   418,   428,   441,   449,   549,   552,   560,   564,
+     571,   575,   582,   588,   597,   605,   660,   667,   677,   680,
+     690,   700,   721,   722,   723,   728,   729,   738,   750,   751,
+     759,   770,   774,   775,   785,   795,   805,   818,   819,   829,
+     842,   846,   850,   854,   855,   868,   869,   882,   883,   896,
+     897,   914,   915,   928,   929,   930,   931,   932,   936,   939,
+     950,   958,   985,   990,   997,  1035,  1038,  1045,  1053,  1074,
+    1095,  1106,  1135,  1140,  1150,  1155,  1165,  1168,  1171,  1174,
+    1180,  1187,  1190,  1212,  1230,  1254,  1277,  1281,  1299,  1307,
+    1339,  1359,  1448,  1457,  1480,  1483,  1489,  1497,  1505,  1513,
+    1523,  1530,  1533,  1536,  1542,  1545,  1560,  1564,  1568,  1572,
+    1581,  1586,  1591,  1596,  1601,  1606,  1611,  1616,  1621,  1626,
+    1632,  1638,  1644,  1649,  1654,  1663,  1672,  1677,  1690,  1690,
+    1704,  1704,  1713,  1716,  1731,  1767,  1771,  1777,  1785,  1801,
+    1805,  1809,  1810,  1816,  1817,  1818,  1819,  1820,  1824,  1825,
+    1825,  1825,  1835,  1836,  1840,  1840,  1841,  1841,  1846,  1849,
+    1859,  1862,  1868,  1869,  1873,  1881,  1885,  1895,  1900,  1917,
+    1917,  1922,  1922,  1929,  1929,  1937,  1940,  1946,  1949,  1955,
+    1959,  1966,  1973,  1980,  1987,  1998,  2007,  2011,  2018,  2021,
+    2027,  2027
 };
 #endif
 
@@ -2271,18 +2271,10 @@ yyreduce:
                 else
                     (yyval.interm.intermTypedNode)->setType(TType((yyvsp[(1) - (3)].interm.intermTypedNode)->getBasicType(), (yyvsp[(1) - (3)].interm.intermTypedNode)->getPrecision(), EvqConst, (int) (*(yyvsp[(3) - (3)].lex).string).size()));
             } else {
-                if (fields.num == 1) {
-                    ConstantUnion *unionArray = new ConstantUnion[1];
-                    unionArray->setIConst(fields.offsets[0]);
-                    TIntermTyped* index = context->intermediate.addConstantUnion(unionArray, TType(EbtInt, EbpUndefined, EvqConst), (yyvsp[(3) - (3)].lex).line);
-                    (yyval.interm.intermTypedNode) = context->intermediate.addIndex(EOpIndexDirect, (yyvsp[(1) - (3)].interm.intermTypedNode), index, (yyvsp[(2) - (3)].lex).line);
-                    (yyval.interm.intermTypedNode)->setType(TType((yyvsp[(1) - (3)].interm.intermTypedNode)->getBasicType(), (yyvsp[(1) - (3)].interm.intermTypedNode)->getPrecision()));
-                } else {
-                    TString vectorString = *(yyvsp[(3) - (3)].lex).string;
-                    TIntermTyped* index = context->intermediate.addSwizzle(fields, (yyvsp[(3) - (3)].lex).line);
-                    (yyval.interm.intermTypedNode) = context->intermediate.addIndex(EOpVectorSwizzle, (yyvsp[(1) - (3)].interm.intermTypedNode), index, (yyvsp[(2) - (3)].lex).line);
-                    (yyval.interm.intermTypedNode)->setType(TType((yyvsp[(1) - (3)].interm.intermTypedNode)->getBasicType(), (yyvsp[(1) - (3)].interm.intermTypedNode)->getPrecision(), EvqTemporary, (int) vectorString.size()));
-                }
+                TString vectorString = *(yyvsp[(3) - (3)].lex).string;
+                TIntermTyped* index = context->intermediate.addSwizzle(fields, (yyvsp[(3) - (3)].lex).line);
+                (yyval.interm.intermTypedNode) = context->intermediate.addIndex(EOpVectorSwizzle, (yyvsp[(1) - (3)].interm.intermTypedNode), index, (yyvsp[(2) - (3)].lex).line);
+                (yyval.interm.intermTypedNode)->setType(TType((yyvsp[(1) - (3)].interm.intermTypedNode)->getBasicType(), (yyvsp[(1) - (3)].interm.intermTypedNode)->getPrecision(), EvqTemporary, (int) vectorString.size()));
             }
         } else if ((yyvsp[(1) - (3)].interm.intermTypedNode)->isMatrix()) {
             TMatrixFields fields;
