@@ -3909,8 +3909,15 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
         if (!(trc)->realLocation || !(location))                              \
             (trc)->realLocation = (location);                                 \
     JS_END_MACRO
+# define JS_UNSET_TRACING_LOCATION(trc)                                       \
+    JS_BEGIN_MACRO                                                            \
+        (trc)->realLocation = NULL;                                           \
+    JS_END_MACRO
 #else
 # define JS_SET_TRACING_LOCATION(trc, location)                               \
+    JS_BEGIN_MACRO                                                            \
+    JS_END_MACRO
+# define JS_UNSET_TRACING_LOCATION(trc)                                       \
     JS_BEGIN_MACRO                                                            \
     JS_END_MACRO
 #endif

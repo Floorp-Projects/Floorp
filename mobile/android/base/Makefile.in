@@ -217,6 +217,7 @@ FENNEC_PP_XML_FILES = \
 
 ifneq (,$(findstring -march=armv7,$(OS_CFLAGS)))
 MIN_CPU_VERSION=7
+DEFINES += -DARMV7_ONLY=1
 else
 MIN_CPU_VERSION=5
 endif

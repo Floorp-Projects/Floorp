@@ -544,11 +544,11 @@ frontend::CloneLeftHandSide(ParseNode *opn, Parser *parser)
 
 #if JS_HAS_DESTRUCTURING
     if (opn->isArity(PN_LIST)) {
-        JS_ASSERT(opn->isKind(PNK_RB) || opn->isKind(PNK_RC));
+        JS_ASSERT(opn->isKind(PNK_ARRAY) || opn->isKind(PNK_OBJECT));
         pn->makeEmpty();
         for (ParseNode *opn2 = opn->pn_head; opn2; opn2 = opn2->pn_next) {
             ParseNode *pn2;
-            if (opn->isKind(PNK_RC)) {
+            if (opn->isKind(PNK_OBJECT)) {
                 JS_ASSERT(opn2->isArity(PN_BINARY));
                 JS_ASSERT(opn2->isKind(PNK_COLON));
 
@@ -602,12 +602,203 @@ frontend::CloneLeftHandSide(ParseNode *opn, Parser *parser)
 }
 
 #ifdef DEBUG
+
+static const char *parseNodeNames[] = {
+#define STRINGIFY(name) #name,
+    FOR_EACH_PARSE_NODE_KIND(STRINGIFY)
+#undef STRINGIFY
+};
+
 void
 frontend::DumpParseTree(ParseNode *pn, int indent)
 {
     if (pn == NULL)
-        fprintf(stderr, "()");
+        fprintf(stderr, "#NULL");
     else
         pn->dump(indent);
+}
+
+static void
+IndentNewLine(int indent)
+{
+    fputc('\n', stderr);
+    for (int i = 0; i < indent; ++i)
+        fputc(' ', stderr);
+}
+
+void
+ParseNode::dump()
+{
+    dump(0);
+    fputc('\n', stderr);
+}
+
+void
+ParseNode::dump(int indent)
+{
+    switch (pn_arity) {
+      case PN_NULLARY:
+        ((NullaryNode *) this)->dump();
+        break;
+      case PN_UNARY:
+        ((UnaryNode *) this)->dump(indent);
+        break;
+      case PN_BINARY:
+        ((BinaryNode *) this)->dump(indent);
+        break;
+      case PN_TERNARY:
+        ((TernaryNode *) this)->dump(indent);
+        break;
+      case PN_FUNC:
+        ((FunctionNode *) this)->dump(indent);
+        break;
+      case PN_LIST:
+        ((ListNode *) this)->dump(indent);
+        break;
+      case PN_NAME:
+        ((NameNode *) this)->dump(indent);
+        break;
+      default:
+        fprintf(stderr, "#<BAD NODE %p, kind=%u, arity=%u>",
+                (void *) this, unsigned(getKind()), unsigned(pn_arity));
+        break;
+    }
+}
+
+void
+NullaryNode::dump()
+{
+    switch (getKind()) {
+      case PNK_TRUE:  fprintf(stderr, "#true");  break;
+      case PNK_FALSE: fprintf(stderr, "#false"); break;
+      case PNK_NULL:  fprintf(stderr, "#null");  break;
+
+      case PNK_NUMBER: {
+        ToCStringBuf cbuf;
+        const char *cstr = NumberToCString(NULL, &cbuf, pn_dval);
+        if (!MOZ_DOUBLE_IS_FINITE(pn_dval))
+            fputc('#', stderr);
+        if (cstr)
+            fprintf(stderr, "%s", cstr);
+        else
+            fprintf(stderr, "%g", pn_dval);
+        break;
+      }
+
+      case PNK_STRING:
+        JSString::dumpChars(pn_atom->chars(), pn_atom->length());
+        break;
+
+      default:
+        fprintf(stderr, "(%s)", parseNodeNames[getKind()]);
+    }
+}
+
+void
+UnaryNode::dump(int indent)
+{
+    const char *name = parseNodeNames[getKind()];
+    fprintf(stderr, "(%s ", name);
+    indent += strlen(name) + 2;
+    DumpParseTree(pn_kid, indent);
+    fprintf(stderr, ")");
+}
+
+void
+BinaryNode::dump(int indent)
+{
+    const char *name = parseNodeNames[getKind()];
+    fprintf(stderr, "(%s ", name);
+    indent += strlen(name) + 2;
+    DumpParseTree(pn_left, indent);
+    IndentNewLine(indent);
+    DumpParseTree(pn_right, indent);
+    fprintf(stderr, ")");
+}
+
+void
+TernaryNode::dump(int indent)
+{
+    const char *name = parseNodeNames[getKind()];
+    fprintf(stderr, "(%s ", name);
+    indent += strlen(name) + 2;
+    DumpParseTree(pn_kid1, indent);
+    IndentNewLine(indent);
+    DumpParseTree(pn_kid2, indent);
+    IndentNewLine(indent);
+    DumpParseTree(pn_kid3, indent);
+    fprintf(stderr, ")");
+}
+
+void
+FunctionNode::dump(int indent)
+{
+    const char *name = parseNodeNames[getKind()];
+    fprintf(stderr, "(%s ", name);
+    indent += strlen(name) + 2;
+    DumpParseTree(pn_body, indent);
+    fprintf(stderr, ")");
+}
+
+void
+ListNode::dump(int indent)
+{
+    const char *name = parseNodeNames[getKind()];
+    fprintf(stderr, "(%s [", name);
+    if (pn_head != NULL) {
+        indent += strlen(name) + 3;
+        DumpParseTree(pn_head, indent);
+        ParseNode *pn = pn_head->pn_next;
+        while (pn != NULL) {
+            IndentNewLine(indent);
+            DumpParseTree(pn, indent);
+            pn = pn->pn_next;
+        }
+    }
+    fprintf(stderr, "])");
+}
+
+void
+NameNode::dump(int indent)
+{
+    if (isKind(PNK_NAME) || isKind(PNK_DOT)) {
+        if (isKind(PNK_DOT))
+            fprintf(stderr, "(.");
+
+        if (!pn_atom) {
+            fprintf(stderr, "#<null name>");
+        } else {
+            const jschar *s = pn_atom->chars();
+            size_t len = pn_atom->length();
+            if (len == 0)
+                fprintf(stderr, "#<zero-length name>");
+            for (size_t i = 0; i < len; i++) {
+                if (s[i] > 32 && s[i] < 127)
+                    fputc(s[i], stderr);
+                else if (s[i] <= 255)
+                    fprintf(stderr, "\\x%02x", (unsigned int) s[i]);
+                else
+                    fprintf(stderr, "\\u%04x", (unsigned int) s[i]);
+            }
+        }
+
+        if (isKind(PNK_DOT)) {
+            fputc(' ', stderr);
+            DumpParseTree(expr(), indent + 2);
+            fputc(')', stderr);
+        }
+        return;
+    }
+
+    JS_ASSERT(!isUsed());
+    const char *name = parseNodeNames[getKind()];
+    if (isUsed())
+        fprintf(stderr, "(%s)", name);
+    else {
+        fprintf(stderr, "(%s ", name);
+        indent += strlen(name) + 2;
+        DumpParseTree(expr(), indent);
+        fprintf(stderr, ")");
+    }
 }
 #endif
