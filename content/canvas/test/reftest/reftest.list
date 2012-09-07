@@ -20,14 +20,14 @@ pref(webgl.disabled,true)  == webgl-disable-test.html       wrapper.html?green.p
 == webgl-clear-test.html?__&alpha&preserve  wrapper.html?green.png
 == webgl-clear-test.html?aa&alpha&preserve  wrapper.html?green.png
 
-pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback&__&_____&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback&aa&_____&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback&__&alpha&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback&aa&alpha&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback&__&_____&preserve  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback&aa&_____&preserve  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback&__&alpha&preserve  wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback&aa&alpha&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-clear-test.html?readback&__&_____&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-clear-test.html?readback&aa&_____&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)                         == webgl-clear-test.html?readback&__&alpha&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)                         == webgl-clear-test.html?readback&aa&alpha&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-clear-test.html?readback&__&_____&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-clear-test.html?readback&aa&_____&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)                         == webgl-clear-test.html?readback&__&alpha&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true)                         == webgl-clear-test.html?readback&aa&alpha&preserve  wrapper.html?green.png
 
 # Check orientation:
 == webgl-orientation-test.html?nogl  wrapper.html?white-top-left.png
@@ -41,14 +41,14 @@ pref(webgl.force-layers-readback,true)  == webgl-clear-test.html?readback&aa&alp
 == webgl-orientation-test.html?__&alpha&preserve  wrapper.html?white-top-left.png
 == webgl-orientation-test.html?aa&alpha&preserve  wrapper.html?white-top-left.png
 
-pref(webgl.force-layers-readback,true)  == webgl-orientation-test.html?readback&__&_____&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true)  == webgl-orientation-test.html?readback&aa&_____&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true)  == webgl-orientation-test.html?readback&__&alpha&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true)  == webgl-orientation-test.html?readback&aa&alpha&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true)  == webgl-orientation-test.html?readback&__&_____&preserve  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true)  == webgl-orientation-test.html?readback&aa&_____&preserve  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true)  == webgl-orientation-test.html?readback&__&alpha&preserve  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true)  == webgl-orientation-test.html?readback&aa&alpha&preserve  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-orientation-test.html?readback&__&_____&________  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-orientation-test.html?readback&aa&_____&________  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true)                         == webgl-orientation-test.html?readback&__&alpha&________  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true)                         == webgl-orientation-test.html?readback&aa&alpha&________  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-orientation-test.html?readback&__&_____&preserve  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-orientation-test.html?readback&aa&_____&preserve  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true)                         == webgl-orientation-test.html?readback&__&alpha&preserve  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true)                         == webgl-orientation-test.html?readback&aa&alpha&preserve  wrapper.html?white-top-left.png
 
 # Does we draw the correct color in the correct places with all context creation options?
 # (Note that our context creation option matrix is 2^6 = 64)
@@ -124,21 +124,19 @@ pref(webgl.force-layers-readback,true)  == webgl-orientation-test.html?readback&
 
 
 # Check a smaller selection for readback:
-pref(webgl.force-layers-readback,true)  == webgl-color-test.html?readback&__&_____&________  wrapper.html?colors.png
-pref(webgl.force-layers-readback,true)  == webgl-color-test.html?readback&aa&_____&________  wrapper.html?colors.png
-pref(webgl.force-layers-readback,true)  == webgl-color-test.html?readback&__&alpha&________  wrapper.html?colors.png
-pref(webgl.force-layers-readback,true)  == webgl-color-test.html?readback&aa&alpha&________  wrapper.html?colors.png
-pref(webgl.force-layers-readback,true)  == webgl-color-test.html?readback&__&_____&preserve  wrapper.html?colors.png
-pref(webgl.force-layers-readback,true)  == webgl-color-test.html?readback&aa&_____&preserve  wrapper.html?colors.png
-pref(webgl.force-layers-readback,true)  == webgl-color-test.html?readback&__&alpha&preserve  wrapper.html?colors.png
-pref(webgl.force-layers-readback,true)  == webgl-color-test.html?readback&aa&alpha&preserve  wrapper.html?colors.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-color-test.html?readback&__&_____&________  wrapper.html?colors.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-color-test.html?readback&aa&_____&________  wrapper.html?colors.png
+pref(webgl.force-layers-readback,true)                         == webgl-color-test.html?readback&__&alpha&________  wrapper.html?colors.png
+pref(webgl.force-layers-readback,true)                         == webgl-color-test.html?readback&aa&alpha&________  wrapper.html?colors.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-color-test.html?readback&__&_____&preserve  wrapper.html?colors.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-color-test.html?readback&aa&_____&preserve  wrapper.html?colors.png
+pref(webgl.force-layers-readback,true)                         == webgl-color-test.html?readback&__&alpha&preserve  wrapper.html?colors.png
+pref(webgl.force-layers-readback,true)                         == webgl-color-test.html?readback&aa&alpha&preserve  wrapper.html?colors.png
 
 
 # Check alpha behavior:
 == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=1.0&nogl        wrapper.html?colors.png
 == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=1.0             wrapper.html?colors.png
-fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=1.0&nogl        wrapper.html?half-colors.png
-fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=1.0             wrapper.html?half-colors.png
 == webgl-color-alpha-test.html?colorVal=0.0&alphaVal=1.0&nogl        wrapper.html?black.png
 == webgl-color-alpha-test.html?colorVal=0.0&alphaVal=1.0             wrapper.html?black.png
 
@@ -147,17 +145,20 @@ fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=1.0         
 == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.0&alpha&nogl  wrapper.html?white.png
 == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.0&alpha       wrapper.html?white.png
 
+fuzzy(1,65536) fuzzy-if(Android,9,65536) == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=1.0&nogl  wrapper.html?half-colors.png
+fuzzy(1,65536) fuzzy-if(Android,9,65536) == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=1.0       wrapper.html?half-colors.png
+
 # Test premult:
-fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&nogl          wrapper.html?colors-half-alpha.png
-fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha               wrapper.html?colors-half-alpha.png
-fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&nogl          wrapper.html?half-colors-half-alpha.png
-fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha               wrapper.html?half-colors-half-alpha.png
-fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult&nogl  wrapper.html?colors-half-alpha.png
-fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult       wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) fuzzy-if(Android,9,65536)                                == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&nogl          wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) fuzzy-if(Android,9,65536)                                == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha               wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) fuzzy-if(Android,9,65536)                                == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&nogl          wrapper.html?half-colors-half-alpha.png
+fuzzy(1,65536) fuzzy-if(Android,9,65536) fails-if(cocoaWidget||Android) == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha               wrapper.html?half-colors-half-alpha.png
+fuzzy(1,65536) fuzzy-if(Android,9,65536)                                == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult&nogl  wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) fuzzy-if(Android,9,65536)                                == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult       wrapper.html?colors-half-alpha.png
 
 # Test over-bright premult:
-fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&premult&nogl  wrapper.html?colors-half-alpha.png
-fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&premult       wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) fuzzy-if(Android,9,65536) == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&premult&nogl  wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) fuzzy-if(Android,9,65536) == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&premult       wrapper.html?colors-half-alpha.png
 
 
 # Check for hanging framebuffer bindings:
@@ -165,20 +166,20 @@ fuzzy(1,65536) == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&pr
 
 == webgl-hanging-fb-test.html       wrapper.html?green.png
 == webgl-hanging-fb-test.html?aa    wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?readback     wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-hanging-fb-test.html?readback&aa  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-hanging-fb-test.html?readback     wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-hanging-fb-test.html?readback&aa  wrapper.html?green.png
 
 == webgl-hanging-scissor-test.html       wrapper.html?green.png
 == webgl-hanging-scissor-test.html?aa    wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-hanging-scissor-test.html?readback     wrapper.html?green.png
-pref(webgl.force-layers-readback,true)  == webgl-hanging-scissor-test.html?readback&aa  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-hanging-scissor-test.html?readback     wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fails-if(nativeFennec)  == webgl-hanging-scissor-test.html?readback&aa  wrapper.html?green.png
 
 
 # Check that our experimental prefs still work:
 
 # 16bpp:
-pref(webgl.prefer-16bpp,true)                                        == webgl-color-test.html?16bpp           wrapper.html?colors.png
-pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true) == webgl-color-test.html?16bpp&readback  wrapper.html?colors.png
+pref(webgl.prefer-16bpp,true)                                                               == webgl-color-test.html?16bpp           wrapper.html?colors.png
+pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true) fails-if(nativeFennec) == webgl-color-test.html?16bpp&readback  wrapper.html?colors.png
 
 # Force native GL (Windows):
 skip-if(!winWidget) pref(webgl.prefer-native-gl,true)                                == webgl-clear-test.html?native-gl        wrapper.html?green.png
