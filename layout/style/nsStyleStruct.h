@@ -2163,7 +2163,15 @@ protected:
 enum nsStyleSVGPaintType {
   eStyleSVGPaintType_None = 1,
   eStyleSVGPaintType_Color,
-  eStyleSVGPaintType_Server
+  eStyleSVGPaintType_Server,
+  eStyleSVGPaintType_ObjectFill,
+  eStyleSVGPaintType_ObjectStroke
+};
+
+enum nsStyleSVGOpacitySource {
+  eStyleSVGOpacitySource_Normal,
+  eStyleSVGOpacitySource_ObjectFillOpacity,
+  eStyleSVGOpacitySource_ObjectStrokeOpacity
 };
 
 struct nsStyleSVGPaint
@@ -2230,6 +2238,16 @@ struct nsStyleSVG {
   uint8_t          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h
   uint8_t          mTextAnchor;       // [inherited] see nsStyleConsts.h
   uint8_t          mTextRendering;    // [inherited] see nsStyleConsts.h
+
+  //  In SVG glyphs, whether we inherit fill or stroke opacity from the outer
+  // text object
+  nsStyleSVGOpacitySource mFillOpacitySource    : 2;
+  nsStyleSVGOpacitySource mStrokeOpacitySource  : 2;
+
+  // SVG glyph outer object inheritance for other properties
+  bool mStrokeDasharrayFromObject   : 1;
+  bool mStrokeDashoffsetFromObject  : 1;
+  bool mStrokeWidthFromObject       : 1;
 };
 
 struct nsStyleSVGReset {

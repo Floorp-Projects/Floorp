@@ -32,14 +32,10 @@ RemoteCanvas.prototype.remotePageLoaded = function(callback) {
 };
 
 function bidiNumeral(val) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-
   if (typeof val == "undefined")
-    return prefs.getIntPref("bidi.numeral");
+    return SpecialPowers.getIntPref("bidi.numeral");
   else
-    prefs.setIntPref("bidi.numeral", val);
+    SpecialPowers.setIntPref("bidi.numeral", val);
 }
 
 var bidiNumeralDefault = bidiNumeral();

@@ -2403,8 +2403,8 @@ DocHasPrintCallbackCanvas(nsIDocument* aDoc, void* aData)
   nsRefPtr<nsContentList> canvases = NS_GetContentList(root,
                                                        kNameSpaceID_XHTML,
                                                        NS_LITERAL_STRING("canvas"));
-  PRUint32 canvasCount = canvases->Length(true);
-  for (PRUint32 i = 0; i < canvasCount; ++i) {
+  uint32_t canvasCount = canvases->Length(true);
+  for (uint32_t i = 0; i < canvasCount; ++i) {
     nsCOMPtr<nsIDOMHTMLCanvasElement> canvas = do_QueryInterface(canvases->Item(i, false));
     nsCOMPtr<nsIPrintCallback> printCallback;
     if (canvas && NS_SUCCEEDED(canvas->GetMozPrintCallback(getter_AddRefs(printCallback))) &&

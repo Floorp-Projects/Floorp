@@ -545,141 +545,47 @@ NS_IMPL_ISUPPORTS_INHERITED1(ARIAGridCellAccessible,
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleTableCell
 
-NS_IMETHODIMP
-ARIAGridCellAccessible::GetTable(nsIAccessibleTable** aTable)
+TableAccessible*
+ARIAGridCellAccessible::Table() const
 {
-  NS_ENSURE_ARG_POINTER(aTable);
-  *aTable = nullptr;
-
   Accessible* table = TableFor(Row());
-  if (table)
-    CallQueryInterface(table, aTable);
-
-  return NS_OK;
+  return table ? table->AsTable() : nullptr;
 }
 
-NS_IMETHODIMP
-ARIAGridCellAccessible::GetColumnIndex(int32_t* aColumnIndex)
+uint32_t
+ARIAGridCellAccessible::ColIdx() const
 {
-  NS_ENSURE_ARG_POINTER(aColumnIndex);
-  *aColumnIndex = -1;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  Accessible* row = Parent();
+  Accessible* row = Row();
   if (!row)
-    return NS_OK;
-
-  *aColumnIndex = 0;
+    return 0;
 
   int32_t indexInRow = IndexInParent();
+  uint32_t colIdx = 0;
   for (int32_t idx = 0; idx < indexInRow; idx++) {
     Accessible* cell = row->GetChildAt(idx);
     roles::Role role = cell->Role();
     if (role == roles::GRID_CELL || role == roles::ROWHEADER ||
         role == roles::COLUMNHEADER)
-      (*aColumnIndex)++;
+      colIdx++;
   }
 
-  return NS_OK;
+  return colIdx;
 }
 
-NS_IMETHODIMP
-ARIAGridCellAccessible::GetRowIndex(int32_t* aRowIndex)
+uint32_t
+ARIAGridCellAccessible::RowIdx() const
 {
-  NS_ENSURE_ARG_POINTER(aRowIndex);
-  *aRowIndex = -1;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  *aRowIndex = RowIndexFor(Row());
-  return NS_OK;
+  return RowIndexFor(Row());
 }
 
-NS_IMETHODIMP
-ARIAGridCellAccessible::GetColumnExtent(int32_t* aExtentCount)
+bool
+ARIAGridCellAccessible::Selected()
 {
-  NS_ENSURE_ARG_POINTER(aExtentCount);
-  *aExtentCount = 0;
+  Accessible* row = Row();
+  if (!row)
+    return false;
 
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  *aExtentCount = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ARIAGridCellAccessible::GetRowExtent(int32_t* aExtentCount)
-{
-  NS_ENSURE_ARG_POINTER(aExtentCount);
-  *aExtentCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  *aExtentCount = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ARIAGridCellAccessible::GetColumnHeaderCells(nsIArray** aHeaderCells)
-{
-  NS_ENSURE_ARG_POINTER(aHeaderCells);
-  *aHeaderCells = nullptr;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAccessibleTable> table;
-  GetTable(getter_AddRefs(table));
-  if (!table)
-    return NS_OK;
-
-  return nsAccUtils::GetHeaderCellsFor(table, this,
-                                       nsAccUtils::eColumnHeaderCells,
-                                       aHeaderCells);
-}
-
-NS_IMETHODIMP
-ARIAGridCellAccessible::GetRowHeaderCells(nsIArray** aHeaderCells)
-{
-  NS_ENSURE_ARG_POINTER(aHeaderCells);
-  *aHeaderCells = nullptr;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAccessibleTable> table;
-  GetTable(getter_AddRefs(table));
-  if (!table)
-    return NS_OK;
-
-  return nsAccUtils::GetHeaderCellsFor(table, this,
-                                       nsAccUtils::eRowHeaderCells,
-                                       aHeaderCells);
-}
-
-NS_IMETHODIMP
-ARIAGridCellAccessible::IsSelected(bool* aIsSelected)
-{
-  NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = false;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  Accessible* row = Parent();
-  if (!row || row->Role() != roles::ROW)
-    return NS_OK;
-
-  if (!nsAccUtils::IsARIASelected(row) && !nsAccUtils::IsARIASelected(this))
-    return NS_OK;
-
-  *aIsSelected = true;
-  return NS_OK;
+  return nsAccUtils::IsARIASelected(row) || nsAccUtils::IsARIASelected(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

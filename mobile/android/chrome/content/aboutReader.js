@@ -433,7 +433,9 @@ AboutReader.prototype = {
   _showContent: function Reader_showContent(article) {
     this._article = article;
 
-    let domain = Services.io.newURI(article.url, null, null).host;
+    let articleUri = Services.io.newURI(article.url, null, null);
+    let domain = articleUri.host;
+
     this._domainElement.innerHTML = domain;
 
     this._creditsElement.innerHTML = article.byline;
@@ -443,11 +445,14 @@ AboutReader.prototype = {
 
     this._headerElement.style.display = "block";
 
-    this._contentElement.innerHTML = article.content;
+    let parserUtils = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils);
+    let contentFragment = parserUtils.parseFragment(article.content, Ci.nsIParserUtils.SanitizerDropForms,
+                                                    false, articleUri, this._contentElement);
+    this._contentElement.innerHTML = "";
+    this._contentElement.appendChild(contentFragment);
     this._updateImageMargins();
 
     this._contentElement.style.display = "block";
-
 
     this._toolbarEnabled = true;
     this._setToolbarVisibility(true);

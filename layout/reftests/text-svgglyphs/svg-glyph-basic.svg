@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style type="text/css">
+    <![CDATA[
+      @font-face {
+        font-family: "Liberation";
+        src:url(resources/svg.woff);
+      }
+      text
+      {
+        font-family: Liberation;
+        font-size: 200px;
+        stroke: black;
+      }
+    ]]>
+  </style>
+  <!--
+        Test that SVG glyphs are being drawn instead of TrueType glyphs
+      Also testing that this does not happen if the
+      gfx.font_rendering.opentype_svg.enabled preference is set to true.
+  -->
+  <!-- glyphid -->
+  <text x="0" y="200">
+  L
+  </text>
+  <!-- glyphchar -->
+  <text x="0" y="400">
+  M
+  </text>
+  <!-- glyphchar with UVS selector -->
+  <text x="0" y="600">
+  L&#xfe01;
+  </text>
+</svg>

@@ -1616,15 +1616,15 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
 {
     /* The counts of indexed things must be checked during code generation. */
     JS_ASSERT(bce->atomIndices->count() <= INDEX_LIMIT);
-    JS_ASSERT(bce->objectList.length() <= INDEX_LIMIT);
-    JS_ASSERT(bce->regexpList.length() <= INDEX_LIMIT);
+    JS_ASSERT(bce->objectList.length <= INDEX_LIMIT);
+    JS_ASSERT(bce->regexpList.length <= INDEX_LIMIT);
 
     uint32_t mainLength = bce->offset();
     uint32_t prologLength = bce->prologOffset();
     uint32_t nsrcnotes = uint32_t(bce->countFinalSourceNotes());
     if (!partiallyInit(cx, script, prologLength + mainLength, nsrcnotes, bce->atomIndices->count(),
-                       bce->objectList.length(), bce->regexpList.length(),
-                       bce->tryNoteList.length(), bce->constList.length(), bce->typesetCount))
+                       bce->objectList.length, bce->regexpList.length, bce->tryNoteList.length(),
+                       bce->constList.length(), bce->typesetCount))
         return false;
 
     JS_ASSERT(script->mainOffset == 0);
@@ -1653,9 +1653,9 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
         return false;
     if (bce->tryNoteList.length() != 0)
         bce->tryNoteList.finish(script->trynotes());
-    if (bce->objectList.length() != 0)
+    if (bce->objectList.length != 0)
         bce->objectList.finish(script->objects());
-    if (bce->regexpList.length() != 0)
+    if (bce->regexpList.length != 0)
         bce->regexpList.finish(script->regexps());
     if (bce->constList.length() != 0)
         bce->constList.finish(script->consts());

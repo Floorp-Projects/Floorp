@@ -396,6 +396,11 @@ public:
   void PassDictionaryOrLong(int32_t);
   void PassDictContainingDict(const DictContainingDict&);
 
+  // Typedefs
+  void ExerciseTypedefInterfaces1(TestInterface&);
+  already_AddRefed<TestInterface> ExerciseTypedefInterfaces2(TestInterface*);
+  void ExerciseTypedefInterfaces3(TestInterface&);
+
   // Methods and properties imported via "implements"
   bool GetImplementedProperty();
   void SetImplementedProperty(bool);
