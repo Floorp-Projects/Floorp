@@ -2350,7 +2350,7 @@ exports.testActivate = function(options) {
 
   helpers.setInput('tsg d');
   helpers.check({
-    hints: ' [options]'
+    hints: ' [options] -> ccc'
   });
 
   helpers.setInput('tsg aa');
@@ -3339,9 +3339,8 @@ exports.testHidden = function(options) {
   helpers.setInput('tshidde');
   helpers.check({
     input:  'tshidde',
-    markup: 'EEEEEEE',
-    status: 'ERROR',
-    hints:  '',
+    hints:         ' -> tse',
+    status: 'ERROR'
   });
 
   helpers.setInput('tshidden');
@@ -4373,7 +4372,7 @@ exports.testPrefSetStatus = function(options) {
   helpers.setInput('pref xxx');
   helpers.check({
     typed:  'pref xxx',
-    markup: 'EEEEVEEE',
+    markup: 'IIIIVIII',
     status: 'ERROR'
   });
 
@@ -5043,7 +5042,7 @@ exports.testChange = function(options) {
 define('gclitest/testSpell', ['require', 'exports', 'module' , 'test/assert', 'gcli/types/spell'], function(require, exports, module) {
 
 var test = require('test/assert');
-var Speller = require('gcli/types/spell').Speller;
+var spell = require('gcli/types/spell');
 
 exports.setup = function() {
 };
@@ -5057,15 +5056,14 @@ exports.testSpellerSimple = function(options) {
     return;
   }
 
-  var speller = new Speller();
-  speller.train(Object.keys(options.window));
+  var alternatives = Object.keys(options.window);
 
-  test.is(speller.correct('document'), 'document');
-  test.is(speller.correct('documen'), 'document');
-  test.is(speller.correct('ocument'), 'document');
-  test.is(speller.correct('odcument'), 'document');
+  test.is(spell.correct('document', alternatives), 'document');
+  test.is(spell.correct('documen', alternatives), 'document');
+  test.is(spell.correct('ocument', alternatives), 'document');
+  test.is(spell.correct('odcument', alternatives), 'document');
 
-  test.is(speller.correct('========='), null);
+  test.is(spell.correct('=========', alternatives), undefined);
 };
 
 
@@ -5531,10 +5529,8 @@ exports.testActivate = function(options) {
 
   type('tsb tt', {
     important: true,
-    options: [ ],
-    error: 'Can\'t use \'tt\'.'
+    options: [ 'true' ]
   }, options);
-
 
   type('asdf', {
     important: false,
