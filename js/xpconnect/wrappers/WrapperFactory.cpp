@@ -349,6 +349,8 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                 }
             }
         }
+    } else if (xpc::IsUniversalXPConnectEnabled(target)) {
+        wrapper = &CrossCompartmentWrapper::singleton;
     } else if (AccessCheck::isChrome(origin)) {
         JSFunction *fun = JS_GetObjectFunction(obj);
         if (fun) {
