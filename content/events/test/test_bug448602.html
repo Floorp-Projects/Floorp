@@ -21,14 +21,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448602
 
 
 function runTests() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 /*
   Disabled due to lack of present support for JSD in JM
   var jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
   var jsd = Components.classes['@mozilla.org/js/jsd/debugger-service;1']
                       .getService(jsdIDebuggerService);
 */
-  var els = Components.classes["@mozilla.org/eventlistenerservice;1"]
+  var els = SpecialPowers.wrap(Components).classes["@mozilla.org/eventlistenerservice;1"]
                       .getService(Components.interfaces.nsIEventListenerService);
 
   // Event listener info tests
@@ -107,7 +106,7 @@ function runTests() {
   var l2 = document.getElementById("testlevel2");
   var l3 = document.getElementById("testlevel3");
   var textnode = l3.firstChild;
-  var chain = els.getEventTargetChainFor(textnode, {});
+  var chain = SpecialPowers.unwrap(els.getEventTargetChainFor(textnode, {}));
   ok(chain.length > 3, "Too short event target chain.");
   is(chain[0], textnode, "Wrong chain item (1)");
   is(chain[1], l3, "Wrong chain item (2)");
