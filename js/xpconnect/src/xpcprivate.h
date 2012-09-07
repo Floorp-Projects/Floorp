@@ -4407,6 +4407,13 @@ inline void EnableUniversalXPConnect(JSContext *cx)
     if (!priv)
         return;
     priv->universalXPConnectEnabled = true;
+
+    // Recompute all the cross-compartment wrappers leaving the newly-privileged
+    // compartment.
+    mozilla::DebugOnly<bool> rv;
+    rv = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
+                               js::AllCompartments());
+    MOZ_ASSERT(rv);
 }
 
 }
