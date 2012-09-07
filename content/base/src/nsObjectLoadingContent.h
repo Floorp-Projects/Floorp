@@ -40,7 +40,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 {
   friend class AutoSetInstantiatingToFalse;
   friend class AutoSetLoadingToFalse;
-  friend class InDocCheckEvent;
+  friend class CheckPluginStopEvent;
   friend class nsStopPluginRunnable;
   friend class nsAsyncInstantiateEvent;
 
@@ -451,6 +451,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     // Track if we have a pending AsyncInstantiateEvent
     nsCOMPtr<nsIRunnable>       mPendingInstantiateEvent;
+
+    // Tracks if we have a pending CheckPluginStopEvent
+    nsCOMPtr<nsIRunnable>       mPendingCheckPluginStopEvent;
 
     // The content type of our current load target, updated by
     // UpdateObjectParameters(). Takes the channel's type into account once
