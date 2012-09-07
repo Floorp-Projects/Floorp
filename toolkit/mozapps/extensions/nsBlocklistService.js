@@ -971,6 +971,10 @@ Blocklist.prototype = {
         if (state == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE ||
             state == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE)
           plugin.clicktoplay = true;
+        // turn off clicktoplay if it was previously set by the blocklist
+        else if (oldState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE ||
+                 oldState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE)
+          plugin.clicktoplay = false;
       }
 
       if (addonList.length == 0) {
