@@ -6,6 +6,7 @@
 <script type="text/javascript">
 
 const DOM_QUOTA_REACHED = 2152924150;
+const Cc = SpecialPowers.wrap(Components).classes;
 
 function checkException(func, exc)
 {
@@ -22,12 +23,10 @@ function checkException(func, exc)
 
 function doStep()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var io = Components.classes["@mozilla.org/network/io-service;1"]
+  var io = Cc["@mozilla.org/network/io-service;1"]
     .getService(Components.interfaces.nsIIOService);
   var uri = io.newURI(window.location, "", null);
-  var cp = Components.classes["@mozilla.org/cookie/permission;1"]
+  var cp = Cc["@mozilla.org/cookie/permission;1"]
     .getService(Components.interfaces.nsICookiePermission);
 
   cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);

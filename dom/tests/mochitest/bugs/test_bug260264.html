@@ -33,7 +33,6 @@ SimpleTest.waitForExplicitFinish();
  * In other words, they obey the interface that |hold| expects its |accessor|
  * parameter to obey.
  */
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var popupMax = makePrefAccessor("dom.popup_maximum"),
     popupEvents = makePrefAccessor("dom.popup_allowed_events"),
     blockPopups = makePrefAccessor("dom.disable_open_during_load"),
@@ -134,7 +133,6 @@ function check_sanity() {
 }
 
 setTimeout(function() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   check_sanity();
   hold(blockPopups, true, run_tests);
   SimpleTest.finish();
