@@ -318,7 +318,7 @@ typedef uint32_t nsresult;
  * The following ifdef exists to maintain binary compatibility with
  * IUnknown.
  */
-#if defined(XP_WIN) && PR_BYTES_PER_LONG == 4
+#ifdef XP_WIN
 typedef unsigned long nsrefcnt;
 #else
 typedef uint32_t nsrefcnt;
