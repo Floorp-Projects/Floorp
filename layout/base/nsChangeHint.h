@@ -212,13 +212,13 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
   nsChangeHint(0)
 #define NS_STYLE_HINT_VISUAL \
   nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView)
-#define nsChangeHint_ReflowFrame                        \
+#define nsChangeHint_AllReflowHints                     \
   nsChangeHint(nsChangeHint_NeedReflow |                \
                nsChangeHint_ClearAncestorIntrinsics |   \
                nsChangeHint_ClearDescendantIntrinsics | \
                nsChangeHint_NeedDirtyReflow)
 #define NS_STYLE_HINT_REFLOW \
-  nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_ReflowFrame)
+  nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_AllReflowHints)
 #define NS_STYLE_HINT_FRAMECHANGE \
   nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_ReconstructFrame)
 
