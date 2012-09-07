@@ -3,11 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.awesomebar;
+package org.mozilla.gecko;
 
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
-import org.mozilla.gecko.AwesomeBarTabs;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 
 import android.content.ContentResolver;
@@ -73,7 +71,7 @@ abstract public class AwesomeBarTab {
         return mListener;
     }
 
-    public void setUrlListener(AwesomeBarTabs.OnUrlOpenListener listener) {
+    protected void setUrlListener(AwesomeBarTabs.OnUrlOpenListener listener) {
         mListener = listener;
     }
 

@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.awesomebar.AwesomeBarTab;
-import org.mozilla.gecko.awesomebar.BookmarksTab;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.util.GeckoAsyncTask;
 
