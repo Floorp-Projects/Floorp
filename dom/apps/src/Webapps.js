@@ -274,6 +274,7 @@ WebappsApplication.prototype = {
   launch: function(aStartPoint) {
     let request = this.createRequest();
     cpmm.sendAsyncMessage("Webapps:Launch", { origin: this.origin,
+                                              manifestURL: this.manifestURL,
                                               startPoint: aStartPoint || "",
                                               oid: this._id,
                                               requestID: this.getRequestId(request) });
