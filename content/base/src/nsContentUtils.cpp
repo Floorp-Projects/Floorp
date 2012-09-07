@@ -122,6 +122,10 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsILoadContext.h"
 #include "nsTextFragment.h"
 #include "mozilla/Selection.h"
+#include "nsSVGUtils.h"
+#include "nsISVGChildFrame.h"
+#include "nsRenderingContext.h"
+#include "gfxSVGGlyphs.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -6943,6 +6947,60 @@ nsContentUtils::JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
     aRetVal.AppendObject(a);
   }
   return NS_OK;
+}
+
+/* static */
+bool
+nsContentUtils::PaintSVGGlyph(Element *aElement, gfxContext *aContext,
+                              gfxFont::DrawMode aDrawMode,
+                              gfxTextObjectPaint *aObjectPaint)
+{
+  nsIFrame *frame = aElement->GetPrimaryFrame();
+  if (!frame) {
+    NS_WARNING("No frame for SVG glyph");
+    return false;
+  }
+
+  nsISVGChildFrame *displayFrame = do_QueryFrame(frame);
+  if (!displayFrame) {
+    NS_WARNING("Non SVG frame for SVG glyph");
+    return false;
+  }
+
+  nsRenderingContext context;
+
+  context.Init(frame->PresContext()->DeviceContext(), aContext);
+  context.AddUserData(&gfxTextObjectPaint::sUserDataKey, aObjectPaint, nullptr);
+
+  nsresult rv = displayFrame->PaintSVG(&context, nullptr);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return true;
+}
+
+/* static */
+bool
+nsContentUtils::GetSVGGlyphExtents(Element *aElement, const gfxMatrix& aSVGToAppSpace,
+                                   gfxRect *aResult)
+{
+  nsIFrame *frame = aElement->GetPrimaryFrame();
+  if (!frame) {
+    NS_WARNING("No frame for SVG glyph");
+    return false;
+  }
+
+  nsISVGChildFrame *displayFrame = do_QueryFrame(frame);
+  if (!displayFrame) {
+    NS_WARNING("Non SVG frame for SVG glyph");
+    return false;
+  }
+
+  *aResult = displayFrame->GetBBoxContribution(aSVGToAppSpace,
+      nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIncludeFillGeometry |
+      nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIncludeStrokeGeometry |
+      nsSVGUtils::eBBoxIncludeMarkers);
+
+  return true;
 }
 
 // static

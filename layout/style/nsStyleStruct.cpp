@@ -866,6 +866,11 @@ nsStyleSVG::nsStyleSVG()
     mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
     mTextAnchor              = NS_STYLE_TEXT_ANCHOR_START;
     mTextRendering           = NS_STYLE_TEXT_RENDERING_AUTO;
+    mFillOpacitySource       = eStyleSVGOpacitySource_Normal;
+    mStrokeOpacitySource     = eStyleSVGOpacitySource_Normal;
+    mStrokeDasharrayFromObject = false;
+    mStrokeDashoffsetFromObject = false;
+    mStrokeWidthFromObject   = false;
 }
 
 nsStyleSVG::~nsStyleSVG() 
@@ -914,6 +919,11 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mStrokeLinejoin = aSource.mStrokeLinejoin;
   mTextAnchor = aSource.mTextAnchor;
   mTextRendering = aSource.mTextRendering;
+  mFillOpacitySource = aSource.mFillOpacitySource;
+  mStrokeOpacitySource = aSource.mStrokeOpacitySource;
+  mStrokeDasharrayFromObject = aSource.mStrokeDasharrayFromObject;
+  mStrokeDashoffsetFromObject = aSource.mStrokeDashoffsetFromObject;
+  mStrokeWidthFromObject = aSource.mStrokeWidthFromObject;
 }
 
 static bool PaintURIChanged(const nsStyleSVGPaint& aPaint1,
@@ -972,7 +982,12 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mStrokeDasharrayLength != aOther.mStrokeDasharrayLength ||
        mStrokeLinecap         != aOther.mStrokeLinecap         ||
        mStrokeLinejoin        != aOther.mStrokeLinejoin        ||
-       mTextAnchor            != aOther.mTextAnchor) {
+       mTextAnchor            != aOther.mTextAnchor            ||
+       mFillOpacitySource     != aOther.mFillOpacitySource     ||
+       mStrokeOpacitySource   != aOther.mStrokeOpacitySource   ||
+       mStrokeDasharrayFromObject != aOther.mStrokeDasharrayFromObject ||
+       mStrokeDashoffsetFromObject != aOther.mStrokeDashoffsetFromObject ||
+       mStrokeWidthFromObject != aOther.mStrokeWidthFromObject) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
     return hint;
   }
@@ -1111,9 +1126,9 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
   if (mType == eStyleSVGPaintType_Server)
     return EqualURIs(mPaint.mPaintServer, aOther.mPaint.mPaintServer) &&
            mFallbackColor == aOther.mFallbackColor;
-  if (mType == eStyleSVGPaintType_None)
-    return true;
-  return mPaint.mColor == aOther.mPaint.mColor;
+  if (mType == eStyleSVGPaintType_Color)
+    return mPaint.mColor == aOther.mPaint.mColor;
+  return true;
 }
 
 

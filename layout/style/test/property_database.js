@@ -3627,14 +3627,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "color": "blue" },
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
-		other_values: [ "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "none", "currentColor" ],
+		other_values: [ "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "none", "currentColor", "-moz-objectFill", "-moz-objectStroke" ],
 		invalid_values: [ "000000", "ff00ff" ]
 	},
 	"fill-opacity": {
 		domProp: "fillOpacity",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "1", "2.8", "1.000" ],
+		initial_values: [ "1", "2.8", "1.000", "-moz-objectFillOpacity", "-moz-objectStrokeOpacity" ],
 		other_values: [ "0", "0.3", "-7.3" ],
 		invalid_values: []
 	},
@@ -3759,14 +3759,14 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)", "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "currentColor" ],
+		other_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)", "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "currentColor", "-moz-objectFill", "-moz-objectStroke" ],
 		invalid_values: [ "000000", "ff00ff" ]
 	},
 	"stroke-dasharray": {
 		domProp: "strokeDasharray",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "none" ],
+		initial_values: [ "none", "-moz-objectValue" ],
 		other_values: [ "5px,3px,2px", "5px 3px 2px", "  5px ,3px	, 2px ", "1px", "5%", "3em" ],
 		invalid_values: [ "-5px,3px,2px", "5px,3px,-2px" ]
 	},
@@ -3774,7 +3774,7 @@ var gCSSProperties = {
 		domProp: "strokeDashoffset",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "0", "-0px", "0em" ],
+		initial_values: [ "0", "-0px", "0em", "-moz-objectValue" ],
 		other_values: [ "3px", "3%", "1em" ],
 		invalid_values: []
 	},
@@ -3806,7 +3806,7 @@ var gCSSProperties = {
 		domProp: "strokeOpacity",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "1", "2.8", "1.000" ],
+		initial_values: [ "1", "2.8", "1.000", "-moz-objectFillOpacity", "-moz-objectStrokeOpacity" ],
 		other_values: [ "0", "0.3", "-7.3" ],
 		invalid_values: []
 	},
@@ -3814,7 +3814,7 @@ var gCSSProperties = {
 		domProp: "strokeWidth",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "1px" ],
+		initial_values: [ "1px", "-moz-objectValue" ],
 		other_values: [ "0", "0px", "-0em", "17px", "0.2em" ],
 		invalid_values: [ "-0.1px", "-3px" ]
 	},

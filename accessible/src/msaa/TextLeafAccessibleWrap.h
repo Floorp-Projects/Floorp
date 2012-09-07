@@ -55,9 +55,9 @@ public:
         /* [retval][out] */ BSTR __RPC_FAR *fontFamily);
     
   protected:
-    nsresult GetCharacterExtents(int32_t aStartOffset, int32_t aEndOffset,
-                                 int32_t* aX, int32_t* aY, 
-                                 int32_t* aWidth, int32_t* aHeight);
+    HRESULT GetCharacterExtents(int32_t aStartOffset, int32_t aEndOffset,
+                                int32_t* aX, int32_t* aY,
+                                int32_t* aWidth, int32_t* aHeight);
 
     // Return child frame containing offset on success
     nsIFrame* GetPointFromOffset(nsIFrame *aContainingFrame,

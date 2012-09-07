@@ -250,7 +250,7 @@ ApproximateZeroLengthSubpathSquareCaps(const gfxPoint &aPoint, gfxContext *aCtx)
 void
 SVGPathData::ConstructPath(gfxContext *aCtx) const
 {
-  if (!mData.Length() || !IsMoveto(SVGPathSegUtils::DecodeType(mData[0]))) {
+  if (mData.IsEmpty() || !IsMoveto(SVGPathSegUtils::DecodeType(mData[0]))) {
     return; // paths without an initial moveto are invalid
   }
 
@@ -258,7 +258,8 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
   bool subpathHasLength = false;  // visual length
   bool subpathContainsNonArc = false;
 
-  uint32_t segType, prevSegType = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
+  uint32_t segType     = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
+  uint32_t prevSegType = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
   gfxPoint pathStart(0.0, 0.0); // start point of [sub]path
   gfxPoint segStart(0.0, 0.0);
   gfxPoint segEnd;
@@ -485,6 +486,8 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
   }
 
   NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt");
+  NS_ABORT_IF_FALSE(prevSegType == segType,
+                    "prevSegType should be left at the final segType");
 
   MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS;
 }
