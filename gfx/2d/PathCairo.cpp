@@ -50,7 +50,6 @@ CairoPathContext::DuplicateContextAndPath()
 {
   // Duplicate the path.
   cairo_path_t* path = cairo_copy_path(mContext);
-  cairo_fill_rule_t rule = cairo_get_fill_rule(mContext);
 
   // Duplicate the context.
   cairo_surface_t* surf = cairo_get_target(mContext);
