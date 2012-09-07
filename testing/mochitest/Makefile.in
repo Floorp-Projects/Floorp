@@ -50,9 +50,9 @@ _SERV_FILES = 	\
 		runtestsb2g.py \
 		runtestsremote.py \
 		runtestsvmware.py \
-		$(topsrcdir)/build/mobile/devicemanager.py \
-		$(topsrcdir)/build/mobile/devicemanagerADB.py \
-		$(topsrcdir)/build/mobile/devicemanagerSUT.py \
+		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanager.py \
+		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerADB.py \
+		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerSUT.py \
 		$(topsrcdir)/build/automationutils.py \
 		$(topsrcdir)/build/manifestparser.py \
 		$(topsrcdir)/build/mobile/remoteautomation.py \
