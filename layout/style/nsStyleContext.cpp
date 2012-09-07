@@ -378,11 +378,12 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // we could later get a small change in one of those structs that we
   // don't want to miss.
 
-  // If our rule nodes are the same, then we are looking at the same
-  // style data.  We know this because CalcStyleDifference is always
-  // called on two style contexts that point to the same element, so we
-  // know that our position in the style context tree is the same and
-  // our position in the rule node tree is also the same.
+  // If our rule nodes are the same, then any differences in style data
+  // are already accounted for by differences on ancestors.  We know
+  // this because CalcStyleDifference is always called on two style
+  // contexts that point to the same element, so we know that our
+  // position in the style context tree is the same and our position in
+  // the rule node tree is also the same.
   bool compare = mRuleNode != aOther->mRuleNode;
 
 #define DO_STRUCT_DIFFERENCE(struct_)                                         \
@@ -393,7 +394,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
     if (this##struct_) {                                                      \
       const nsStyle##struct_* other##struct_ = aOther->GetStyle##struct_();   \
       if ((compare || nsStyle##struct_::ForceCompare()) &&                    \
-          !NS_IsHintSubset(maxHint, hint) &&                                  \
+          !NS_IsHintSubset(nsStyle##struct_::MaxDifference(), hint) &&        \
           this##struct_ != other##struct_) {                                  \
         NS_ASSERTION(NS_IsHintSubset(                                         \
              this##struct_->CalcDifference(*other##struct_),                  \
