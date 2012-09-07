@@ -688,7 +688,7 @@ nsContentSink::ProcessLink(const nsSubstring& aAnchor, const nsSubstring& aHref,
   bool hasPrefetch = linkTypes & PREFETCH;
   // prefetch href if relation is "next" or "prefetch"
   if (hasPrefetch || (linkTypes & NEXT)) {
-    PrefetchHref(aHref, nullptr, hasPrefetch);
+    PrefetchHref(aHref, mDocument, hasPrefetch);
   }
 
   if (!aHref.IsEmpty() && (linkTypes & DNS_PREFETCH)) {
@@ -795,7 +795,7 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
 
 void
 nsContentSink::PrefetchHref(const nsAString &aHref,
-                            nsIContent *aSource,
+                            nsINode *aSource,
                             bool aExplicit)
 {
   //
