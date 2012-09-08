@@ -2197,6 +2197,10 @@ mips*-*)
     ;;
 esac
 
+MOZ_ARG_DISABLE_BOOL(ion,
+[  --disable-ion      Disable use of the IonMonkey JIT],
+  ENABLE_ION= )
+
 MOZ_ARG_DISABLE_BOOL(methodjit,
 [  --disable-methodjit           Disable method JIT support],
   ENABLE_METHODJIT= )

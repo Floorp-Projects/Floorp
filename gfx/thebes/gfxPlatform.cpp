@@ -137,6 +137,8 @@ SRGBOverrideObserver::Observe(nsISupports *aSubject,
 #define HARFBUZZ_SCRIPTS_DEFAULT  mozilla::unicode::SHAPING_DEFAULT
 #define GFX_PREF_FALLBACK_USE_CMAPS  "gfx.font_rendering.fallback.always_use_cmaps"
 
+#define GFX_PREF_OPENTYPE_SVG "gfx.font_rendering.opentype_svg.enabled"
+
 #ifdef MOZ_GRAPHITE
 #define GFX_PREF_GRAPHITE_SHAPING "gfx.font_rendering.graphite.enabled"
 #endif
@@ -1566,6 +1568,8 @@ gfxPlatform::FontsPrefsChanged(const char *aPref)
         }
     } else if (!strcmp(BIDI_NUMERAL_PREF, aPref)) {
         mBidiNumeralOption = UNINITIALIZED_VALUE;
+    } else if (!strcmp(GFX_PREF_OPENTYPE_SVG, aPref)) {
+        gfxFontCache::GetCache()->AgeAllGenerations();
     }
 }
 

@@ -352,8 +352,7 @@ var shell = {
     this.sendChromeEvent({
       type: 'open-app',
       url: msg.uri,
-      origin: origin,
-      manifest: msg.manifest,
+      manifestURL: msg.manifest,
       isActivity: (msg.type == 'activity'),
       target: msg.target
     });
@@ -601,7 +600,7 @@ var WebappsHelper = {
           shell.sendChromeEvent({
             "type": "webapps-launch",
             "url": manifest.fullLaunchPath(json.startPoint),
-            "origin": json.origin
+            "manifestURL": json.manifestURL
           });
         });
         break;
@@ -709,10 +708,10 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
 (function headphonesStatusTracker() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     shell.sendChromeEvent({
-      type: 'headphones-status',
+      type: 'headphones-status-changed',
       state: aData
     });
-}, "headphones-status", false);
+}, "headphones-status-changed", false);
 })();
 
 (function recordingStatusTracker() {

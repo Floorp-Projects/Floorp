@@ -1214,7 +1214,7 @@ gfxDWriteFontList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
     SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
-static nsresult GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
+static HRESULT GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
 {
     HRESULT hr;
     nsRefPtr<IDWriteFontFamily> family;
@@ -1256,7 +1256,7 @@ static nsresult GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
     }
 
     if (!name.SetLength(length + 1)) {
-        return NS_ERROR_FAILURE;
+        return E_FAIL;
     }
     hr = familyNames->GetString(index, name.Elements(), length + 1);
     if (FAILED(hr)) {
@@ -1264,7 +1264,7 @@ static nsresult GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
     }
 
     aFamilyName.Assign(name.Elements());
-    return NS_OK;
+    return S_OK;
 }
 
 // bug 705594 - the method below doesn't actually do any "drawing", it's only

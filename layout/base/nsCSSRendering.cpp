@@ -1025,7 +1025,7 @@ nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame)
   // SCRIPT that does "document.location.href = 'foo'", then
   // nsParser::Terminate will call |DidBuildModel| methods
   // through to the content sink, which will call |StartLayout|
-  // and thus |InitialReflow| on the pres shell.  See bug 119351
+  // and thus |Initialize| on the pres shell.  See bug 119351
   // for the ugly details.
   if (!bodyContent) {
     return aForFrame;

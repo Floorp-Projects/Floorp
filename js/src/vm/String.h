@@ -410,6 +410,7 @@ class JSString : public js::gc::Cell
 #ifdef DEBUG
     bool isShort() const;
     void dump();
+    static void dumpChars(const jschar *s, size_t len);
     bool equals(const char *s);
 #endif
 

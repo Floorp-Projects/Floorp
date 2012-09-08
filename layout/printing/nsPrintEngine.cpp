@@ -1952,12 +1952,12 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
                                                  aPO->mPresShell);
   }
 
-  rv = aPO->mPresShell->InitialReflow(adjSize.width, adjSize.height);
+  rv = aPO->mPresShell->Initialize(adjSize.width, adjSize.height);
 
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(aPO->mPresShell, "Presshell should still be here");
 
-  // Process the reflow event InitialReflow posted
+  // Process the reflow event Initialize posted
   aPO->mPresShell->FlushPendingNotifications(Flush_Layout);
 
   nsCOMPtr<nsIPresShell> displayShell;
@@ -2403,8 +2403,8 @@ DocHasPrintCallbackCanvas(nsIDocument* aDoc, void* aData)
   nsRefPtr<nsContentList> canvases = NS_GetContentList(root,
                                                        kNameSpaceID_XHTML,
                                                        NS_LITERAL_STRING("canvas"));
-  PRUint32 canvasCount = canvases->Length(true);
-  for (PRUint32 i = 0; i < canvasCount; ++i) {
+  uint32_t canvasCount = canvases->Length(true);
+  for (uint32_t i = 0; i < canvasCount; ++i) {
     nsCOMPtr<nsIDOMHTMLCanvasElement> canvas = do_QueryInterface(canvases->Item(i, false));
     nsCOMPtr<nsIPrintCallback> printCallback;
     if (canvas && NS_SUCCEEDED(canvas->GetMozPrintCallback(getter_AddRefs(printCallback))) &&

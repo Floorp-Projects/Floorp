@@ -525,3 +525,6 @@ pref("dom.disable_window_open_dialog_feature", true);
 
 // Screen reader support
 pref("accessibility.accessfu.activate", 2);
+
+// Disable native prompt
+pref("browser.prompt.allowNative", false);

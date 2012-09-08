@@ -1288,7 +1288,10 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
             if (number > 0.0 &&
                 number < (double)0xffffffff &&
                 0.0 == fmod(number,1)) {
-                rv = (nsresult) number;
+                // Visual Studio 9 doesn't allow casting directly from a
+                // double to an enumeration type, contrary to 5.2.9(10) of
+                // C++11, so add an intermediate cast.
+                rv = (nsresult)(uint32_t) number;
                 if (NS_FAILED(rv))
                     isResult = true;
             }

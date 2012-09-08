@@ -43,11 +43,8 @@ addLoadEvent(function() {
 
   // Force cloning of inners
   document.styleSheets[1].cssRules[0];
-  (function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    document.styleSheets[2].cssRules[0];
-  })();
-  
+  SpecialPowers.wrap(document.styleSheets[2]).cssRules[0];
+
   is(document.styleSheets[1].href,
      "data:text/css,%23myDiv{color:green;}",
      "Unexpected href for linked sheet after cloning");

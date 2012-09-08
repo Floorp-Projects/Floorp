@@ -7,7 +7,7 @@
 #include "nsMediaSniffer.h"
 #include "nsMemory.h"
 #include "nsIHttpChannel.h"
-#include "nsAString.h"
+#include "nsString.h"
 #include "nsMimeTypes.h"
 #include "mozilla/ModuleUtils.h"
 
@@ -16,7 +16,7 @@
 // The minimum number of bytes that are needed to attempt to sniff an mp4 file.
 static const unsigned MP4_MIN_BYTES_COUNT = 12;
 // The maximum number of bytes to consider when attempting to sniff a file.
-static const PRUint32 MAX_BYTES_SNIFFED = 512;
+static const uint32_t MAX_BYTES_SNIFFED = 512;
 
 NS_IMPL_ISUPPORTS1(nsMediaSniffer, nsIContentSniffer)
 
@@ -27,21 +27,19 @@ nsMediaSniffer::nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
   PATTERN_ENTRY("\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF", "RIFF\x00\x00\x00\x00WAVE", AUDIO_WAV),
   // WebM
   PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "\x1A\x45\xDF\xA3", VIDEO_WEBM),
-  // mp3 without ID3 tags.
-  PATTERN_ENTRY("\xFF\xFB", "\xFF\xFA", AUDIO_MP3),
   // mp3 with ID3 tags, the string "ID3".
   PATTERN_ENTRY("\xFF\xFF\xFF", "ID3", AUDIO_MP3)
 };
 
 // This function implements mp4 sniffing algorithm, described at
 // http://mimesniff.spec.whatwg.org/#signature-for-mp4
-static bool MatchesMP4(const PRUint8* aData, const PRUint32 aLength)
+static bool MatchesMP4(const uint8_t* aData, const uint32_t aLength)
 {
   if (aLength <= MP4_MIN_BYTES_COUNT) {
     return false;
   }
   // Conversion from big endian to host byte order.
-  PRUint32 boxSize = (PRUint32)(aData[3] | aData[2] << 8 | aData[1] << 16 | aData[0] << 24);
+  uint32_t boxSize = (uint32_t)(aData[3] | aData[2] << 8 | aData[1] << 16 | aData[0] << 24);
 
   // Boxsize should be evenly divisible by 4.
   if (boxSize % 4 || aLength < boxSize) {
@@ -54,7 +52,7 @@ static bool MatchesMP4(const PRUint8* aData, const PRUint32 aLength)
       aData[7] != 0x70) {
     return false;
   }
-  for (PRUint32 i = 2; i <= boxSize / 4 - 1 ; i++) {
+  for (uint32_t i = 2; i <= boxSize / 4 - 1 ; i++) {
     if (i == 3) {
       continue;
     }
@@ -70,19 +68,31 @@ static bool MatchesMP4(const PRUint8* aData, const PRUint32 aLength)
 
 NS_IMETHODIMP
 nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
-                                       const PRUint8* aData,
-                                       const PRUint32 aLength,
+                                       const uint8_t* aData,
+                                       const uint32_t aLength,
                                        nsACString& aSniffedType)
 {
-  const PRUint32 clampedLength = NS_MIN(aLength, MAX_BYTES_SNIFFED);
+  // For media, we want to sniff only if the Content-Type is unknown, or if it
+  // is application/octet-stream.
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  nsAutoCString contentType;
+  nsresult rv = channel->GetContentType(contentType);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!contentType.IsEmpty() &&
+      !contentType.EqualsLiteral(APPLICATION_OCTET_STREAM) &&
+      !contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sSnifferEntries); ++i) {
+  const uint32_t clampedLength = NS_MIN(aLength, MAX_BYTES_SNIFFED);
+
+  for (uint32_t i = 0; i < NS_ARRAY_LENGTH(sSnifferEntries); ++i) {
     const nsMediaSnifferEntry& currentEntry = sSnifferEntries[i];
     if (clampedLength < currentEntry.mLength || currentEntry.mLength == 0) {
       continue;
     }
     bool matched = true;
-    for (PRUint32 j = 0; j < currentEntry.mLength; ++j) {
+    for (uint32_t j = 0; j < currentEntry.mLength; ++j) {
       if ((currentEntry.mMask[j] & aData[j]) != currentEntry.mPattern[j]) {
         matched = false;
         break;

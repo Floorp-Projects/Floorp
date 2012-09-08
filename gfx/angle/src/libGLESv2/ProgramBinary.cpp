@@ -2109,9 +2109,11 @@ bool ProgramBinary::defineUniform(InfoLog &infoLog, GLenum shader, const D3DXHAN
         {
             for (unsigned int arrayIndex = 0; arrayIndex < constantDescription.Elements; arrayIndex++)
             {
+                D3DXHANDLE elementHandle = mConstantTablePS->GetConstantElement(constantHandle, arrayIndex);
+
                 for (unsigned int field = 0; field < constantDescription.StructMembers; field++)
                 {
-                    D3DXHANDLE fieldHandle = mConstantTablePS->GetConstant(constantHandle, field);
+                    D3DXHANDLE fieldHandle = mConstantTablePS->GetConstant(elementHandle, field);
 
                     D3DXCONSTANT_DESC fieldDescription;
                     UINT descriptionCount = 1;

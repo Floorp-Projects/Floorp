@@ -20,11 +20,11 @@
 #include "libGLESv2/ResourceManager.h"
 #include "libGLESv2/Buffer.h"
 #include "libGLESv2/Fence.h"
-#include "libGLESv2/FrameBuffer.h"
+#include "libGLESv2/Framebuffer.h"
 #include "libGLESv2/Program.h"
 #include "libGLESv2/ProgramBinary.h"
 #include "libGLESv2/Query.h"
-#include "libGLESv2/RenderBuffer.h"
+#include "libGLESv2/Renderbuffer.h"
 #include "libGLESv2/Shader.h"
 #include "libGLESv2/Texture.h"
 #include "libGLESv2/VertexDataManager.h"
@@ -369,6 +369,10 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
     {
         depthStencil->Release();
     }
+
+    // Reset pixel shader to null to work around a bug that only happens with Intel GPUs.
+    // http://crbug.com/110343
+    mDevice->SetPixelShader(NULL);
     
     markAllStateDirty();
 }

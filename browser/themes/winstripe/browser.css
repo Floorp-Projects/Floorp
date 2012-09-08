@@ -3421,6 +3421,15 @@ html|*#gcli-output-frame {
   text-decoration: underline;
 }
 
+.social-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+#social-notification-box,
+.social-panel-frame {
+  border-radius: inherit;
+}
+
 .chat-status-icon {
   max-height: 16px;
   max-width: 16px;
@@ -3440,43 +3449,26 @@ html|*#gcli-output-frame {
 }
 
 .chat-close-button {
-  list-style-image: url("chrome://global/skin/icons/Close.gif");
-  padding: 2px 4px;
-}
-
-.chat-close-button:hover {
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
+  list-style-image: url('chrome://browser/skin/social/chat-close.png');
+  -moz-image-region: rect(0, 14px, 14px, 0);
 }
 
 .chat-close-button:hover:active {
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
+  -moz-image-region: rect(14px, 14px, 28px, 0);
 }
 
-
-.chat-toggle-button {
-  /* XXX get a real image for this */
-  list-style-image: url("chrome://global/skin/icons/expand.png");
-}
-
-.chat-toggle-button:hover {
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
-}
-
-.chat-toggle-button[minimized="true"] {
-  list-style-image: url("chrome://global/skin/icons/collapse.png");
-}
-
-.chat-toggle-button[minimized="true"]:hover {
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
+.chat-close-button:hover {
+  -moz-image-region: rect(28px, 14px, 42px, 0);
 }
 
 .chat-title {
   font-weight: bold;
   color: -moz-dialogtext;
+  cursor: inherit;
 }
 
 .chat-titlebar {
-  background-image: linear-gradient(white, #ddd);
+  background-color: #c4cfde;
   height: 20px;
   min-height: 20px;
   width: 100%;
@@ -3484,10 +3476,15 @@ html|*#gcli-output-frame {
   padding: 2px;
   border: none;
   border-bottom: 1px solid gray;
+  cursor: pointer;
 }
 
 .chat-titlebar[minimized="true"] {
   border-bottom: none;
+}
+
+.chat-titlebar[selected] {
+  background-color: #dae3f0;
 }
 
 .chat-frame {
@@ -3500,7 +3497,7 @@ html|*#gcli-output-frame {
   /* XXX get a real image for this */
   -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/social/social.png");
-  background-image: linear-gradient(white, #ddd);
+  background-color: #c4cfde;
   border: none;
   margin: 0;
   padding: 2px;
@@ -3519,6 +3516,7 @@ html|*#gcli-output-frame {
 .chatbar-button[open="true"],
 .chatbar-button:hover,
 .chatbar-button:active:hover {
+  background-color: #dae3f0;
   box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
 }
 
