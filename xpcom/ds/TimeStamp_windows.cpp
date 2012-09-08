@@ -183,7 +183,7 @@ CRITICAL_SECTION sTimeStampLock;
 // Kept in [mt]
 static LONGLONG sSkew = 0;
 
-// Keeps the last result we have returned from TickCount64 (bellow).  Protects
+// Keeps the last result we have returned from sGetTickCount64 (bellow).  Protects
 // from roll over and going backward.
 //
 // Kept in [ms]
@@ -215,6 +215,8 @@ namespace mozilla {
 static ULONGLONG
 CalibratedPerformanceCounter();
 
+typedef ULONGLONG (WINAPI* GetTickCount64_t)();
+static GetTickCount64_t sGetTickCount64 = nullptr;
 
 static inline ULONGLONG
 InterlockedRead64(volatile ULONGLONG* destination)
@@ -412,8 +414,8 @@ InitResolution()
 // @param gtc
 // Result of GetTickCount().  Passing it as an arg lets us call it out
 // of the common mutex.
-static inline ULONGLONG
-TickCount64()
+static ULONGLONG WINAPI
+GetTickCount64Fallback()
 {
   DWORD now = GetTickCount();
   ULONGLONG lastResultHiPart = sLastGTCResult & (~0ULL << 32);
@@ -460,7 +462,7 @@ RecordFlaw()
   // 2. InitResolution for GTC will probably return 0 anyway (increments
   //    only every 15 or 16 ms.)
   //
-  // There is no need to drop sFrequencyPerSec to 1, result of TickCount64
+  // There is no need to drop sFrequencyPerSec to 1, result of sGetTickCount64
   // is multiplied and later divided with sFrequencyPerSec.  Changing it
   // here may introduce sync problems.  Syncing access to sFrequencyPerSec
   // is overkill.  Drawback is we loose some bits from the upper bound of
@@ -572,7 +574,7 @@ CalibratedPerformanceCounter()
   AutoCriticalSection lock(&sTimeStampLock);
 
   // Rollover protection
-  ULONGLONG gtc = TickCount64();
+  ULONGLONG gtc = sGetTickCount64();
 
   LONGLONG diff = qpc - ms2mt(gtc) - sSkew;
   LONGLONG overflow = 0;
@@ -655,6 +657,15 @@ TimeStamp::Startup()
 {
   // Decide which implementation to use for the high-performance timer.
 
+  HMODULE kernelDLL = GetModuleHandleW(L"kernel32.dll");
+  sGetTickCount64 = reinterpret_cast<GetTickCount64_t>
+    (GetProcAddress(kernelDLL, "GetTickCount64"));
+  if (!sGetTickCount64) {
+    // If the platform does not support the GetTickCount64 (Windows XP doesn't),
+    // then use our fallback implementation based on GetTickCount.
+    sGetTickCount64 = GetTickCount64Fallback;
+  }
+
   InitializeCriticalSectionAndSpinCount(&sTimeStampLock, kLockSpinCount);
 
   LARGE_INTEGER freq;
@@ -672,7 +683,7 @@ TimeStamp::Startup()
   sFrequencyPerSec = freq.QuadPart;
 
   ULONGLONG qpc = PerformanceCounter();
-  sLastCalibrated = TickCount64();
+  sLastCalibrated = sGetTickCount64();
   sSkew = qpc - ms2mt(sLastCalibrated);
 
   InitThresholds();
