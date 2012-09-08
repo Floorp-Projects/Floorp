@@ -466,7 +466,7 @@
             return selectedVal;
           // The selection doesn't span the full domain if it doesn't contain a slash and is
           // followed by some character other than a slash.
-          if (selectedVal.indexOf("/") == -1) {
+          if (!selectedVal.contains("/")) {
             let remainder = inputVal.replace(selectedVal, "");
             if (remainder != "" && remainder[0] != "/")
               return selectedVal;
