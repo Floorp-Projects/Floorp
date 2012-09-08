@@ -16,10 +16,11 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(64155DCA-83CA-4FFE-8B64-A7F82F29586F)]
+[scriptable, uuid(8A2BA7C5-B3F2-4A57-86F9-0E87C291A591)]
 interface nsIDOMHTMLOListElement : nsIDOMHTMLElement
 {
            attribute boolean          compact;
+           attribute boolean          reversed;
            attribute long             start;
            attribute DOMString        type;
 };
