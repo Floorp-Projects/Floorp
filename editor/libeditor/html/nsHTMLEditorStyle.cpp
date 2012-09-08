@@ -875,9 +875,13 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
     }
   }
 
-  if (aProperty == nsEditProperty::font &&    // or node is big or small and we are setting font size
+  if (!aChildrenOnly &&
+    (
+      (aProperty == nsEditProperty::font) &&    // or node is big or small and we are setting font size
       (nsHTMLEditUtils::IsBig(aNode) || nsHTMLEditUtils::IsSmall(aNode)) &&
-      aAttribute && aAttribute->LowerCaseEqualsLiteral("size")) {
+      (aAttribute && aAttribute->LowerCaseEqualsLiteral("size"))
+    )
+  ) {
     return RemoveContainer(aNode);  // if we are setting font size, remove any nested bigs and smalls
   }
   return NS_OK;

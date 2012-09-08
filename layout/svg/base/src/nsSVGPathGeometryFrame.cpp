@@ -9,6 +9,7 @@
 // Keep others in (case-insensitive) order:
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "gfxSVGGlyphs.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsRenderingContext.h"
@@ -184,11 +185,14 @@ nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
   /* render */
   Render(aContext);
 
+  gfxTextObjectPaint *objectPaint =
+    (gfxTextObjectPaint*)aContext->GetUserData(&gfxTextObjectPaint::sUserDataKey);
+
   if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
     MarkerProperties properties = GetMarkerProperties(this);
       
     if (properties.MarkersExist()) {
-      float strokeWidth = nsSVGUtils::GetStrokeWidth(this);
+      float strokeWidth = nsSVGUtils::GetStrokeWidth(this, objectPaint);
         
       nsTArray<nsSVGMark> marks;
       static_cast<nsSVGPathGeometryElement*>
@@ -568,12 +572,18 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext)
     return;
   }
 
-  if (nsSVGUtils::SetupCairoFillPaint(this, gfx)) {
+  gfxTextObjectPaint *objectPaint =
+    (gfxTextObjectPaint*)aContext->GetUserData(&gfxTextObjectPaint::sUserDataKey);
+
+  if (nsSVGUtils::SetupCairoFillPaint(this, gfx, objectPaint)) {
     gfx->Fill();
   }
 
-  if (nsSVGUtils::SetupCairoStroke(this, gfx)) {
-    gfx->Stroke();
+  if (nsSVGUtils::HasStroke(this, objectPaint)) {
+    nsSVGUtils::SetupCairoStrokeHitGeometry(this, gfx, objectPaint);
+    if (nsSVGUtils::SetupCairoStrokePaint(this, gfx, objectPaint)) {
+      gfx->Stroke();
+    }
   }
 
   gfx->NewPath();

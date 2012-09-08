@@ -79,7 +79,8 @@ public:
   enum CompressionMode {
     COMPRESS_NONE,
     COMPRESS_WHITESPACE,
-    COMPRESS_WHITESPACE_NEWLINE
+    COMPRESS_WHITESPACE_NEWLINE,
+    DISCARD_NEWLINE
   };
 
   /**
@@ -90,7 +91,8 @@ public:
    * 
    * @param aCompressWhitespace control what is compressed to a
    * single space character: no compression, compress spaces (not followed
-   * by combining mark) and tabs, and compress those plus newlines.
+   * by combining mark) and tabs, compress those plus newlines, or
+   * no compression except newlines are discarded.
    * @param aIncomingFlags a flag indicating whether there was whitespace
    * or an Arabic character preceding this text. We set it to indicate if
    * there's an Arabic character or whitespace preceding the end of this text.

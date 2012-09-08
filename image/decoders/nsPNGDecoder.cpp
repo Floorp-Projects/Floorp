@@ -727,7 +727,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
 
         // copy as bytes until source pointer is 32-bit-aligned
         for (; (NS_PTR_TO_UINT32(line) & 0x3) && idx; --idx) {
-          *cptr32++ = GFX_PACKED_PIXEL(0xFF, line[0], line[1], line[2]);
+          *cptr32++ = gfxPackedPixel(0xFF, line[0], line[1], line[2]);
           line += 3;
         }
 
@@ -742,7 +742,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         // copy remaining pixel(s)
         while (idx--) {
           // 32-bit read of final pixel will exceed buffer, so read bytes
-          *cptr32++ = GFX_PACKED_PIXEL(0xFF, line[0], line[1], line[2]);
+          *cptr32++ = gfxPackedPixel(0xFF, line[0], line[1], line[2]);
           line += 3;
         }
       }
@@ -751,14 +751,14 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
       {
         if (!decoder->mDisablePremultipliedAlpha) {
           for (uint32_t x=width; x>0; --x) {
-            *cptr32++ = GFX_PACKED_PIXEL(line[3], line[0], line[1], line[2]);
+            *cptr32++ = gfxPackedPixel(line[3], line[0], line[1], line[2]);
             if (line[3] != 0xff)
               rowHasNoAlpha = false;
             line += 4;
           }
         } else {
           for (uint32_t x=width; x>0; --x) {
-            *cptr32++ = GFX_PACKED_PIXEL_NO_PREMULTIPLY(line[3], line[0], line[1], line[2]);
+            *cptr32++ = gfxPackedPixelNoPreMultiply(line[3], line[0], line[1], line[2]);
             if (line[3] != 0xff)
               rowHasNoAlpha = false;
             line += 4;

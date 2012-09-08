@@ -154,6 +154,39 @@ public abstract class Layer {
         }
     }
 
+    /**
+     * This function fills in the provided <tt>dest</tt> array with values to render a texture.
+     * The array is filled with 4 sets of {x, y, z, texture_x, texture_y} values (so 20 values
+     * in total) corresponding to the corners of the rect.
+     */
+    protected final void fillRectCoordBuffer(float[] dest, RectF rect, float viewWidth, float viewHeight,
+                                             Rect cropRect, float texWidth, float texHeight) {
+        //x, y, z, texture_x, texture_y
+        dest[0] = rect.left / viewWidth;
+        dest[1] = rect.bottom / viewHeight;
+        dest[2] = 0;
+        dest[3] = cropRect.left / texWidth;
+        dest[4] = cropRect.top / texHeight;
+
+        dest[5] = rect.left / viewWidth;
+        dest[6] = rect.top / viewHeight;
+        dest[7] = 0;
+        dest[8] = cropRect.left / texWidth;
+        dest[9] = cropRect.bottom / texHeight;
+
+        dest[10] = rect.right / viewWidth;
+        dest[11] = rect.bottom / viewHeight;
+        dest[12] = 0;
+        dest[13] = cropRect.right / texWidth;
+        dest[14] = cropRect.top / texHeight;
+
+        dest[15] = rect.right / viewWidth;
+        dest[16] = rect.top / viewHeight;
+        dest[17] = 0;
+        dest[18] = cropRect.right / texWidth;
+        dest[19] = cropRect.bottom / texHeight;
+    }
+
     public static class RenderContext {
         public final RectF viewport;
         public final RectF pageRect;

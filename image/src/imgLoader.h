@@ -322,7 +322,7 @@ private: // methods
 
   imgCacheTable &GetCache(nsIURI *aURI);
   imgCacheQueue &GetCacheQueue(nsIURI *aURI);
-  void CacheEntriesChanged(nsIURI *aURI, PRInt32 sizediff = 0);
+  void CacheEntriesChanged(nsIURI *aURI, int32_t sizediff = 0);
   void CheckCacheLimits(imgCacheTable &cache, imgCacheQueue &queue);
 
 private: // data

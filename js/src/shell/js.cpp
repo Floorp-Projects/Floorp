@@ -3242,6 +3242,7 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 #ifdef DEBUG
     DumpParseTree(pn);
+    fputc('\n', stderr);
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
@@ -4795,7 +4796,8 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
 JSPrincipals shellTrustedPrincipals = { 1 };
 
 JSBool
-CheckObjectAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mode, jsval *vp)
+CheckObjectAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mode,
+                  MutableHandleValue vp)
 {
     return true;
 }

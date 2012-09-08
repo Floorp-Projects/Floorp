@@ -145,18 +145,23 @@ interface CanvasRenderingContext2D {
   attribute boolean mozImageSmoothingEnabled;
 
   // Show the caret if appropriate when drawing
+  [ChromeOnly]
   const unsigned long DRAWWINDOW_DRAW_CARET   = 0x01;
   // Don't flush pending layout notifications that could otherwise
   // be batched up
+  [ChromeOnly]
   const unsigned long DRAWWINDOW_DO_NOT_FLUSH = 0x02;
   // Draw scrollbars and scroll the viewport if they are present
+  [ChromeOnly]
   const unsigned long DRAWWINDOW_DRAW_VIEW    = 0x04;
   // Use the widget layer manager if available. This means hardware
   // acceleration may be used, but it might actually be slower or
   // lower quality than normal. It will however more accurately reflect
   // the pixels rendered to the screen.
+  [ChromeOnly]
   const unsigned long DRAWWINDOW_USE_WIDGET_LAYERS = 0x08;
   // Don't synchronously decode images - draw what we have
+  [ChromeOnly]
   const unsigned long DRAWWINDOW_ASYNC_DECODE_IMAGES = 0x10;
 
   /**
@@ -193,13 +198,11 @@ interface CanvasRenderingContext2D {
    *
    * This API cannot currently be used by Web content. It is chrome
    * only.
-   * FIXME Bug 767931 - Mark drawWindow and asyncDrawXULElement as ChromeOnly
-   *                    in WebIDL
    */
-  [Throws]
+  [Throws, ChromeOnly]
   void drawWindow(Window window, double x, double y, double w, double h,
                   DOMString bgColor, optional unsigned long flags = 0);
-  [Throws]
+  [Throws, ChromeOnly]
   void asyncDrawXULElement(XULElement elem, double x, double y, double w,
                            double h, DOMString bgColor,
                            optional unsigned long flags = 0);

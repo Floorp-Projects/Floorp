@@ -9,12 +9,9 @@
 #define nsChangeHint_h___
 
 #include "prtypes.h"
+#include "nsDebug.h"
 
 // Defines for various style related constants
-
-// For hints that don't guarantee that the change will be applied to all descendant
-// frames, style structs returning those hints from CalcDifference must have
-// their ForceCompare() return true.
 
 enum nsChangeHint {
   // change was visual only (e.g., COLOR=)
@@ -110,22 +107,15 @@ enum nsChangeHint {
   nsChangeHint_AddOrRemoveTransform = 0x4000,
 
   /**
-   * We have an optimization when processing change hints which prevents
-   * us from visiting the descendants of a node when a hint on that node
-   * is being processed.  This optimization does not apply in some of the
-   * cases where applying a hint to an element does not necessarily result
-   * in the same hint being handled on the descendants.
-   *
-   * If you're adding such a hint, you should add your hint to this list.
+   * This change hint has *no* change handling behavior.  However, it
+   * exists to be a non-inherited hint, because when the border-style
+   * changes, and it's inherited by a child, that might require a reflow
+   * due to the border-width change on the child.
    */
-  nsChangeHint_NonInherited_Hints =
-    nsChangeHint_UpdateTransformLayer |
-    nsChangeHint_UpdateEffects |
-    nsChangeHint_UpdateOpacityLayer |
-    nsChangeHint_UpdateOverflow |
-    nsChangeHint_ChildrenOnlyTransform |
-    nsChangeHint_RecomputePosition |
-    nsChangeHint_AddOrRemoveTransform
+  nsChangeHint_BorderStyleNoneChange = 0x8000
+
+  // IMPORTANT NOTE: When adding new hints, consider whether you need to
+  // add them to NS_HintsNotHandledForDescendantsIn() below.
 };
 
 // Redefine these operators to return nothing. This will catch any use
@@ -162,6 +152,59 @@ inline bool NS_UpdateHint(nsChangeHint& aDest, nsChangeHint aSrc) {
 // Returns true iff the second hint contains all the hints of the first hint
 inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
   return (aSubset & aSuperSet) == aSubset;
+}
+
+/**
+ * We have an optimization when processing change hints which prevents
+ * us from visiting the descendants of a node when a hint on that node
+ * is being processed.  This optimization does not apply in some of the
+ * cases where applying a hint to an element does not necessarily result
+ * in the same hint being handled on the descendants.
+ */
+
+// The most hints that NS_HintsNotHandledForDescendantsIn could possibly return:
+#define nsChangeHint_Hints_NotHandledForDescendants nsChangeHint( \
+          nsChangeHint_UpdateTransformLayer | \
+          nsChangeHint_UpdateEffects | \
+          nsChangeHint_UpdateOpacityLayer | \
+          nsChangeHint_UpdateOverflow | \
+          nsChangeHint_ChildrenOnlyTransform | \
+          nsChangeHint_RecomputePosition | \
+          nsChangeHint_AddOrRemoveTransform | \
+          nsChangeHint_BorderStyleNoneChange | \
+          nsChangeHint_NeedReflow | \
+          nsChangeHint_ClearAncestorIntrinsics)
+
+inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint) {
+  nsChangeHint result = nsChangeHint(aChangeHint & (
+    nsChangeHint_UpdateTransformLayer |
+    nsChangeHint_UpdateEffects |
+    nsChangeHint_UpdateOpacityLayer |
+    nsChangeHint_UpdateOverflow |
+    nsChangeHint_ChildrenOnlyTransform |
+    nsChangeHint_RecomputePosition |
+    nsChangeHint_AddOrRemoveTransform |
+    nsChangeHint_BorderStyleNoneChange));
+
+  if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aChangeHint) &&
+      NS_IsHintSubset(nsChangeHint_NeedReflow, aChangeHint)) {
+    // If NeedDirtyReflow is *not* set, then NeedReflow is a
+    // non-inherited hint.
+    NS_UpdateHint(result, nsChangeHint_NeedReflow);
+  }
+
+  if (!NS_IsHintSubset(nsChangeHint_ClearDescendantIntrinsics, aChangeHint) &&
+      NS_IsHintSubset(nsChangeHint_ClearAncestorIntrinsics, aChangeHint)) {
+    // If ClearDescendantIntrinsics is *not* set, then
+    // ClearAncestorIntrinsics is a non-inherited hint.
+    NS_UpdateHint(result, nsChangeHint_ClearAncestorIntrinsics);
+  }
+
+  NS_ABORT_IF_FALSE(NS_IsHintSubset(result,
+                                    nsChangeHint_Hints_NotHandledForDescendants),
+                    "something is inconsistent");
+
+  return result;
 }
 
 // Redefine the old NS_STYLE_HINT constants in terms of the new hint structure
