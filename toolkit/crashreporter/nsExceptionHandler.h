@@ -60,6 +60,8 @@ bool GetExtraFileForID(const nsAString& id, nsIFile** extraFile);
 bool GetExtraFileForMinidump(nsIFile* minidump, nsIFile** extraFile);
 bool AppendExtraData(const nsAString& id, const AnnotationTable& data);
 bool AppendExtraData(nsIFile* extraFile, const AnnotationTable& data);
+void RenameAdditionalHangMinidump(nsIFile* minidump, nsIFile* childMinidump,
+                                  const nsACString& name);
 
 #ifdef XP_WIN32
   nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo);
@@ -103,18 +105,19 @@ typedef int ThreadId;
 // hoops for us.
 ThreadId CurrentThreadId();
 
-// Create new minidumps that are snapshots of the state of this parent
-// process and |childPid|.  Return true on success along with the
-// minidumps and a new UUID that can be used to correlate the dumps.
+// Create a hang report with two minidumps that are snapshots of the state
+// of this parent process and |childPid|. The "main" minidump will be the
+// child process, and this parent process will have the _browser extension.
 //
-// If this function fails, it's the caller's responsibility to clean
-// up |childDump| and |parentDump|.  Either or both can be created and
-// returned non-null on failure.
+// Returns true on success. If this function fails, it will attempt to delete
+// any files that were created.
+//
+// The .extra information created will not include an additional_minidumps
+// annotation: the caller should annotate additional_minidumps with
+// at least "browser" and perhaps other minidumps attached to this report.
 bool CreatePairedMinidumps(ProcessHandle childPid,
                            ThreadId childBlamedThread,
-                           nsAString* pairGUID,
-                           nsIFile** childDump,
-                           nsIFile** parentDump);
+                           nsIFile** childDump);
 
 #  if defined(XP_WIN32) || defined(XP_MACOSX)
 // Parent-side API for children
