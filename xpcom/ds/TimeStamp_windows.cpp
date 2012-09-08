@@ -413,8 +413,9 @@ InitResolution()
 // Result of GetTickCount().  Passing it as an arg lets us call it out
 // of the common mutex.
 static inline ULONGLONG
-TickCount64(DWORD now)
+TickCount64()
 {
+  DWORD now = GetTickCount();
   ULONGLONG lastResultHiPart = sLastGTCResult & (~0ULL << 32);
   ULONGLONG result = lastResultHiPart | ULONGLONG(now);
 
@@ -565,14 +566,13 @@ CalibratedPerformanceCounter()
   // possibly a better performance.
 
   ULONGLONG qpc = PerformanceCounter();
-  DWORD gtcw = GetTickCount();
 
   ULONGLONG result;
   {
   AutoCriticalSection lock(&sTimeStampLock);
 
   // Rollover protection
-  ULONGLONG gtc = TickCount64(gtcw);
+  ULONGLONG gtc = TickCount64();
 
   LONGLONG diff = qpc - ms2mt(gtc) - sSkew;
   LONGLONG overflow = 0;
@@ -672,7 +672,7 @@ TimeStamp::Startup()
   sFrequencyPerSec = freq.QuadPart;
 
   ULONGLONG qpc = PerformanceCounter();
-  sLastCalibrated = TickCount64(::GetTickCount());
+  sLastCalibrated = TickCount64();
   sSkew = qpc - ms2mt(sLastCalibrated);
 
   InitThresholds();
