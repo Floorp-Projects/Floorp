@@ -175,7 +175,7 @@ static const DWORD kLockSpinCount = 4096;
 CRITICAL_SECTION sTimeStampLock;
 
 // ----------------------------------------------------------------------------
-// Globals heavily chaning at runtime, protected with sTimeStampLock mutex
+// Globals heavily changing at runtime, protected with sTimeStampLock mutex
 // ----------------------------------------------------------------------------
 
 // The calibrated difference between QPC and GTC.
@@ -200,13 +200,22 @@ static ULONGLONG sLastResult = 0;
 // Kept in [ms]
 static ULONGLONG sLastCalibrated;
 
+// The following variable stores two booleans, both initialized to false.
+//
+// The lower word is fallbackToGTC:
 // After we have detected a run out of bounderies set this to true.  This
 // then disallows use of QPC result for the hi-res timer.
-static bool sFallBackToGTC = false;
-
+//
+// The higher word is forceRecalibrate:
 // Set to true to force recalibration on QPC read.  This is generally set after
 // system wake up, during which skew can change a lot.
-static bool sForceRecalibrate = false;
+static union CalibrationFlags {
+  struct {
+    bool fallBackToGTC;
+    bool forceRecalibrate;
+  } flags;
+  uint32_t dwordValue;
+} sCalibrationFlags;
 
 
 namespace mozilla {
@@ -313,8 +322,11 @@ StandbyObserver::Observe(nsISupports *subject,
 
   // Clear the potentiall fallback flag now and try using
   // QPC again after wake up.
-  sFallBackToGTC = false;
-  sForceRecalibrate = true;
+  CalibrationFlags value;
+  value.flags.fallBackToGTC = false;
+  value.flags.forceRecalibrate = true;
+  sCalibrationFlags.dwordValue = value.dwordValue; // aligned 32-bit writes are atomic
+
   LOG(("TimeStamp: system has woken up, reset GTC fallback"));
 
   return NS_OK;
@@ -448,7 +460,7 @@ PerformanceCounter()
 static inline void
 RecordFlaw()
 {
-  sFallBackToGTC = true;
+  sCalibrationFlags.flags.fallBackToGTC = true;
 
   LOG(("TimeStamp: falling back to GTC :("));
 
@@ -481,14 +493,16 @@ RecordFlaw()
 static inline bool
 CheckCalibration(LONGLONG overflow, ULONGLONG qpc, ULONGLONG gtc)
 {
-  if (sFallBackToGTC) {
+  CalibrationFlags value;
+  value.dwordValue = sCalibrationFlags.dwordValue; // aligned 32-bit reads are atomic
+  if (value.flags.fallBackToGTC) {
     // We are forbidden to use QPC
     return false;
   }
 
   ULONGLONG sinceLastCalibration = gtc - sLastCalibrated;
 
-  if (overflow && !sForceRecalibrate) {
+  if (overflow && !value.flags.forceRecalibrate) {
     // Calculate trend of the overflow to correspond to the calibration
     // interval, we may get here long after the last calibration because we
     // either didn't read the hi-res function or the system was suspended.
@@ -502,21 +516,23 @@ CheckCalibration(LONGLONG overflow, ULONGLONG qpc, ULONGLONG gtc)
          mt2ms_d(trend)));
 
     if (trend > ms2mt(kOverflowLimit)) {
-      // This sets sFallBackToGTC, we have detected
+      // This sets fallBackToGTC, we have detected
       // an unreliability of QPC, stop using it.
+      AutoCriticalSection lock(&sTimeStampLock);
       RecordFlaw();
       return false;
     }
   }
 
-  if (sinceLastCalibration > kCalibrationInterval || sForceRecalibrate) {
+  if (sinceLastCalibration > kCalibrationInterval || value.flags.forceRecalibrate) {
     // Recalculate the skew now
+    AutoCriticalSection lock(&sTimeStampLock);
     sSkew = qpc - ms2mt(gtc);
     sLastCalibrated = gtc;
     LOG(("TimeStamp: new skew is %1.2fms (force:%d)",
-      mt2ms_d(sSkew), sForceRecalibrate));
+      mt2ms_d(sSkew), value.flags.forceRecalibrate));
 
-    sForceRecalibrate = false;
+    sCalibrationFlags.flags.forceRecalibrate = false;
   }
 
   return true;
@@ -570,10 +586,6 @@ CalibratedPerformanceCounter()
   // Rollover protection
   ULONGLONG gtc = sGetTickCount64();
 
-  ULONGLONG result;
-  {
-  AutoCriticalSection lock(&sTimeStampLock);
-
   LONGLONG diff = qpc - ms2mt(gtc) - sSkew;
   LONGLONG overflow = 0;
 
@@ -584,7 +596,7 @@ CalibratedPerformanceCounter()
     overflow = diff - sOverrunThreshold;
   }
 
-  result = qpc;
+  ULONGLONG result = qpc;
   if (!CheckCalibration(overflow, qpc, gtc)) {
     // We are back on GTC, QPC has been observed unreliable
     result = ms2mt(gtc) + sSkew;
@@ -594,7 +606,6 @@ CalibratedPerformanceCounter()
   LOG(("TimeStamp: result = %1.2fms, diff = %1.4fms",
       mt2ms_d(result), mt2ms_d(diff)));
 #endif
-  }
 
   return AtomicStoreIfGreaterThan(&sLastResult, result);
 }
@@ -671,7 +682,7 @@ TimeStamp::Startup()
   if (!QPCAvailable) {
     // No Performance Counter.  Fall back to use GetTickCount.
     sFrequencyPerSec = 1;
-    sFallBackToGTC = true;
+    sCalibrationFlags.flags.fallBackToGTC = true;
     InitResolution();
 
     LOG(("TimeStamp: using GetTickCount"));
