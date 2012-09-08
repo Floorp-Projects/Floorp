@@ -97,7 +97,7 @@
  *
  * equivalent to (((c)*(a))/255)
  */
-PRUint8 MOZ_ALWAYS_INLINE gfxPreMultiply(PRUint8 c, PRUint8 a) {
+uint8_t MOZ_ALWAYS_INLINE gfxPreMultiply(uint8_t c, uint8_t a) {
     return GFX_DIVIDE_BY_255((c)*(a));
 }
 
@@ -105,8 +105,8 @@ PRUint8 MOZ_ALWAYS_INLINE gfxPreMultiply(PRUint8 c, PRUint8 a) {
  * Pack the 4 8-bit channels (A,R,G,B)
  * into a 32-bit packed NON-premultiplied pixel.
  */
-PRUint32 MOZ_ALWAYS_INLINE
-gfxPackedPixelNoPreMultiply(PRUint8 a, PRUint8 r, PRUint8 g, PRUint8 b) {
+uint32_t MOZ_ALWAYS_INLINE
+gfxPackedPixelNoPreMultiply(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
     return (((a) << 24) | ((r) << 16) | ((g) << 8) | (b));
 }
 
@@ -114,8 +114,8 @@ gfxPackedPixelNoPreMultiply(PRUint8 a, PRUint8 r, PRUint8 g, PRUint8 b) {
  * Pack the 4 8-bit channels (A,R,G,B)
  * into a 32-bit packed premultiplied pixel.
  */
-PRUint32 MOZ_ALWAYS_INLINE
-gfxPackedPixel(PRUint8 a, PRUint8 r, PRUint8 g, PRUint8 b) {
+uint32_t MOZ_ALWAYS_INLINE
+gfxPackedPixel(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
     if (a == 0x00)
         return 0x00000000;
     else if (a == 0xFF) {

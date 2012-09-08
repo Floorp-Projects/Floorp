@@ -122,6 +122,9 @@
     #define NS_WIN_PRINTHOOD                    "PrntHd"
     #define NS_WIN_COOKIES_DIR                  "CookD"
     #define NS_WIN_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
+    #define NS_WIN_PICTURES_DIR                 "Pict"
+    #define NS_WIN_MUSIC_DIR                    "Music"
+    #define NS_WIN_VIDEOS_DIR                   "Vids"
 #elif defined (XP_UNIX)
     #define NS_UNIX_LOCAL_DIR                   "Locl"
     #define NS_UNIX_LIB_DIR                     "LibD"

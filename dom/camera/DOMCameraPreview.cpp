@@ -170,15 +170,15 @@ DOMCameraPreview::HaveEnoughBuffered()
   return mInput->HaveEnoughBuffered(TRACK_VIDEO);
 }
 
-void
+bool
 DOMCameraPreview::ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder aBuilder)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   if (!aBuffer || !aBuilder) {
-    return;
+    return false;
   }
   if (mState != STARTED) {
-    return;
+    return false;
   }
 
   ImageFormat format = aFormat;
@@ -188,6 +188,7 @@ DOMCameraPreview::ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder 
   // AppendFrame() takes over image's reference
   mVideoSegment.AppendFrame(image.forget(), 1, gfxIntSize(mWidth, mHeight));
   mInput->AppendToTrack(TRACK_VIDEO, &mVideoSegment);
+  return true;
 }
 
 void
