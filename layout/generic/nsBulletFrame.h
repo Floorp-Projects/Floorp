@@ -80,7 +80,8 @@ public:
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
 
   // nsBulletFrame
-  int32_t SetListItemOrdinal(int32_t aNextOrdinal, bool* aChanged);
+  int32_t SetListItemOrdinal(int32_t aNextOrdinal, bool* aChanged,
+                             int32_t aIncrement);
 
 
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
