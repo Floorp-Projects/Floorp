@@ -174,28 +174,24 @@ PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
 
     CrashReporterParent* crashReporter = CrashReporter();
     if (crashReporter) {
-        const nsString& hangID = crashReporter->HangID();
-        if (!hangID.IsEmpty()) {
-            notes.Put(CS("HangID"), NS_ConvertUTF16toUTF8(hangID));
 #ifdef XP_WIN
-            if (mPluginCpuUsageOnHang.Length() > 0) {
-              notes.Put(CS("NumberOfProcessors"),
-                        nsPrintfCString("%d", PR_GetNumberOfProcessors()));
+        if (mPluginCpuUsageOnHang.Length() > 0) {
+            notes.Put(CS("NumberOfProcessors"),
+                      nsPrintfCString("%d", PR_GetNumberOfProcessors()));
 
-              nsCString cpuUsageStr;
-              cpuUsageStr.AppendFloat(std::ceil(mPluginCpuUsageOnHang[0] * 100) / 100);
-              notes.Put(CS("PluginCpuUsage"), cpuUsageStr);
+            nsCString cpuUsageStr;
+            cpuUsageStr.AppendFloat(std::ceil(mPluginCpuUsageOnHang[0] * 100) / 100);
+            notes.Put(CS("PluginCpuUsage"), cpuUsageStr);
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
-              for (uint32_t i=1; i<mPluginCpuUsageOnHang.Length(); ++i) {
+            for (uint32_t i=1; i<mPluginCpuUsageOnHang.Length(); ++i) {
                 nsCString tempStr;
                 tempStr.AppendFloat(std::ceil(mPluginCpuUsageOnHang[i] * 100) / 100);
                 notes.Put(nsPrintfCString("CpuUsageFlashProcess%d", i), tempStr);
-              }
-#endif
             }
 #endif
         }
+#endif
     }
 }
 #endif  // MOZ_CRASHREPORTER
@@ -297,14 +293,19 @@ PluginModuleParent::ShouldContinueFromReplyTimeout()
 {
 #ifdef MOZ_CRASHREPORTER
     CrashReporterParent* crashReporter = CrashReporter();
+    crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("PluginHang"),
+                                       NS_LITERAL_CSTRING("1"));
     if (crashReporter->GeneratePairedMinidump(this)) {
-        mBrowserDumpID = crashReporter->ParentDumpID();
         mPluginDumpID = crashReporter->ChildDumpID();
         PLUGIN_LOG_DEBUG(
-                ("generated paired browser/plugin minidumps: %s/%s (ID=%s)",
-                 NS_ConvertUTF16toUTF8(mBrowserDumpID).get(),
-                 NS_ConvertUTF16toUTF8(mPluginDumpID).get(),
-                 NS_ConvertUTF16toUTF8(crashReporter->HangID()).get()));
+                ("generated paired browser/plugin minidumps: %s)",
+                 NS_ConvertUTF16toUTF8(mPluginDumpID).get()));
+
+        crashReporter->AnnotateCrashReport(
+            NS_LITERAL_CSTRING("additional_minidumps"),
+            NS_LITERAL_CSTRING("browser"));
+
+        // TODO: collect Flash minidumps here
     } else {
         NS_WARNING("failed to capture paired minidumps from hang");
     }
@@ -377,9 +378,9 @@ PluginModuleParent::ProcessFirstMinidump()
     AnnotationTable notes;
     notes.Init(4);
     WriteExtraDataForMinidump(notes);
-        
-    if (!mPluginDumpID.IsEmpty() && !mBrowserDumpID.IsEmpty()) {
-        crashReporter->GenerateHangCrashReport(&notes);
+
+    if (!mPluginDumpID.IsEmpty()) {
+        crashReporter->GenerateChildData(&notes);
         return;
     }
 

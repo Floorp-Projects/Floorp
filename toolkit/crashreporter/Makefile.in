@@ -98,6 +98,7 @@ FORCE_STATIC_LIB = 1
 
 EXTRA_JS_MODULES = \
   CrashSubmit.jsm \
+  KeyValueParser.jsm \
   $(NULL)
 
 ifdef ENABLE_TESTS
