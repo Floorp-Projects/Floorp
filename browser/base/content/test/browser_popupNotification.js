@@ -756,7 +756,7 @@ function triggerSecondaryCommand(popup, index) {
   }, false);
 
   // One down event to open the popup
-  EventUtils.synthesizeKey("VK_DOWN", { altKey: (navigator.platform.indexOf("Mac") == -1) });
+  EventUtils.synthesizeKey("VK_DOWN", { altKey: !navigator.platform.contains("Mac") });
 }
 
 function loadURI(uri, callback) {
