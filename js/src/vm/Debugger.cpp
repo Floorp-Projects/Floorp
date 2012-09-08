@@ -81,7 +81,7 @@ ReportMoreArgsNeeded(JSContext *cx, const char *name, unsigned required)
     s[0] = '0' + (required - 1);
     s[1] = '\0';
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                         name, s, required == 1 ? "" : "s");
+                         name, s, required == 2 ? "" : "s");
     return false;
 }
 
@@ -3399,10 +3399,14 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar 
     JS_ASSERT(!IsPoisonedPtr(chars));
     SkipRoot skip(cx, &chars);
 
+    RootedValue thisv(cx);
     if (fp) {
         /* Execute assumes an already-computed 'this" value. */
         if (!ComputeThis(cx, fp))
             return false;
+        thisv = fp->thisValue();
+    } else {
+        thisv = ObjectValue(*env);
     }
 
     /*
@@ -3411,17 +3415,18 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar 
      * static level will suffice.
      */
     CompileOptions options(cx);
-    options.setPrincipals(fp->scopeChain()->compartment()->principals)
+    options.setPrincipals(env->compartment()->principals)
            .setCompileAndGo(true)
            .setNoScriptRval(false)
            .setFileAndLine(filename, lineno);
     RootedScript script(cx, frontend::CompileScript(cx, env, fp, options, chars, length,
-                                                    /* source = */ NULL, /* staticLimit = */ 1));
+                                                    /* source = */ NULL,
+                                                    /* staticLevel = */ fp ? 1 : 0));
     if (!script)
         return false;
 
     script->isActiveEval = true;
-    return ExecuteKernel(cx, script, *env, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
+    return ExecuteKernel(cx, script, *env, thisv, EXECUTE_DEBUG, fp, rval);
 }
 
 static JSBool
@@ -3469,10 +3474,14 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
         }
     }
 
-    Maybe<AutoCompartment> ac;
-    ac.construct(cx, fp->scopeChain());
 
-    Rooted<Env *> env(cx, GetDebugScopeForFrame(cx, fp));
+    Maybe<AutoCompartment> ac;
+    if (fp)
+        ac.construct(cx, fp->scopeChain());
+    else
+        ac.construct(cx, scope);
+
+    Rooted<Env *> env(cx, fp ? GetDebugScopeForFrame(cx, fp) : scope);
     if (!env)
         return false;
 
@@ -4196,6 +4205,43 @@ DebuggerObject_makeDebuggeeValue(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+RequireGlobalObject(JSContext *cx, HandleValue dbgobj, HandleObject obj)
+{
+    if (!obj->isGlobal()) {
+        js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
+                                 JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
+                                 "a global object", NULL);
+        return false;
+    }
+
+    return true;
+}
+
+static JSBool
+DebuggerObject_evalInGlobal(JSContext *cx, unsigned argc, Value *vp)
+{
+    REQUIRE_ARGC("Debugger.Object.prototype.evalInGlobal", 1);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "evalInGlobal", args, dbg, referent);
+    if (!RequireGlobalObject(cx, args.thisv(), referent))
+        return false;
+
+    return DebuggerGenericEval(cx, "Debugger.Object.prototype.evalInGlobal",
+                               args[0], NULL, vp, dbg, referent, NULL);
+}
+
+static JSBool
+DebuggerObject_evalInGlobalWithBindings(JSContext *cx, unsigned argc, Value *vp)
+{
+    REQUIRE_ARGC("Debugger.Object.prototype.evalInGlobalWithBindings", 2);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "evalInGlobalWithBindings", args, dbg, referent);
+    if (!RequireGlobalObject(cx, args.thisv(), referent))
+        return false;
+
+    return DebuggerGenericEval(cx, "Debugger.Object.prototype.evalInGlobalWithBindings",
+                               args[0], &args[1], vp, dbg, referent, NULL);
+}
+
 static JSPropertySpec DebuggerObject_properties[] = {
     JS_PSG("proto", DebuggerObject_getProto, 0),
     JS_PSG("class", DebuggerObject_getClass, 0),
@@ -4223,6 +4269,8 @@ static JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
+    JS_FN("evalInGlobal", DebuggerObject_evalInGlobal, 1, 0),
+    JS_FN("evalInGlobalWithBindings", DebuggerObject_evalInGlobalWithBindings, 2, 0),
     JS_FS_END
 };
 
