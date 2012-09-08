@@ -29,8 +29,8 @@ def make_proclaunch(aDir):
     """
     # Ideally make should take care of this, but since it doesn't - on windows,
     # anyway, let's just call out both targets explicitly.
-    p = subprocess.call(["make", "-C", "iniparser"],stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=aDir)
-    p = subprocess.call(["make"],stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=aDir)
+    p = subprocess.call(["make", "-C", "iniparser"], cwd=aDir)
+    p = subprocess.call(["make"], cwd=aDir)
     if sys.platform == "win32":
         exepath = os.path.join(aDir, "proclaunch.exe")
     else:
@@ -85,8 +85,9 @@ class ProcTest2(unittest.TestCase):
         p = processhandler.ProcessHandler([self.proclaunch,
                                           "process_waittimeout_10s.ini"],
                                           cwd=here)
-        p.run(timeout=30)
-        p.wait()
+        p.run()
+        p.processOutput(timeout=30)
+        p.waitForFinish()
 
         detected, output = check_for_process(self.proclaunch)
         self.determine_status(detected,
@@ -102,7 +103,7 @@ class ProcTest2(unittest.TestCase):
                                           "process_waittimeout_10s.ini"],
                                           cwd=here)
         p.run()
-        p.wait()
+        p.waitForFinish()
 
         detected, output = check_for_process(self.proclaunch)
         self.determine_status(detected,
@@ -112,7 +113,7 @@ class ProcTest2(unittest.TestCase):
 
     def test_process_waittimeout(self):
         """
-        Process is started, then wait is called and times out.
+        Process is started, then waitForFinish is called and times out.
         Process is still running and didn't timeout
         """
         p = processhandler.ProcessHandler([self.proclaunch,
@@ -120,7 +121,8 @@ class ProcTest2(unittest.TestCase):
                                           cwd=here)
 
         p.run()
-        p.wait(timeout=5)
+        p.processOutput()
+        p.waitForFinish(timeout=5)
 
         detected, output = check_for_process(self.proclaunch)
         self.determine_status(detected,
@@ -129,27 +131,6 @@ class ProcTest2(unittest.TestCase):
                               p.didTimeout,
                               True,
                               [])
-
-    def test_process_output_twice(self):
-        """
-        Process is started, then processOutput is called a second time explicitly
-        """
-        p = processhandler.ProcessHandler([self.proclaunch,
-                                          "process_waittimeout_10s.ini"],
-                                          cwd=here)
-
-        p.run()
-        p.processOutput(timeout=5)
-        p.wait()
-
-        detected, output = check_for_process(self.proclaunch)
-        self.determine_status(detected,
-                              output,
-                              p.proc.returncode,
-                              p.didTimeout,
-                              False,
-                              [])
-
 
     def determine_status(self,
                          detected=False,
