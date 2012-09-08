@@ -143,7 +143,7 @@ function checkOKButton() {
 
   // This rest of particular test doesn't really apply on Mac, since buttons
   // aren't focusable by default.
-  if (navigator.platform.contains("Mac")) {
+  if (navigator.platform.indexOf("Mac") != -1) {
     executeSoon(testCloseBySpace);
     return;
   }
@@ -151,7 +151,7 @@ function checkOKButton() {
   let displayName = document.getElementById("socialUserDisplayName");
 
   // Linux has the buttons in the [unshare] [ok] order, so displayName will come first.
-  if (navigator.platform.contains("Linux")) {
+  if (navigator.platform.indexOf("Linux") != -1) {
     checkNextInTabOrder(displayName, function () {
       checkNextInTabOrder(undoButton, function () {
         checkNextInTabOrder(okButton, testCloseBySpace);

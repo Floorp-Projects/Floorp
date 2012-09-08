@@ -28,7 +28,7 @@ function test() {
     executeSoon(function () {
       let consoleListener = {
         observe: function (m) {
-          if (m.message.contains("NS_ERROR_DOM_BAD_URI")) {
+          if (m.message.indexOf("NS_ERROR_DOM_BAD_URI") > -1) {
             ok(true, "drop was blocked");
             executeSoon(finish);
           }
