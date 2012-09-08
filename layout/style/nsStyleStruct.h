@@ -955,7 +955,8 @@ struct nsStyleOutline {
   void RecalcData(nsPresContext* aContext);
   nsChangeHint CalcDifference(const nsStyleOutline& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame);
+    return NS_CombineHint(nsChangeHint_AllReflowHints,
+                          nsChangeHint_RepaintFrame);
   }
 
   nsStyleCorners  mOutlineRadius; // [reset] coord, percent, calc
@@ -2203,7 +2204,7 @@ struct nsStyleSVG {
   nsChangeHint CalcDifference(const nsStyleSVG& aOther) const;
   static nsChangeHint MaxDifference() {
     return NS_CombineHint(NS_CombineHint(nsChangeHint_UpdateEffects,
-                                         nsChangeHint_ReflowFrame),
+                                         nsChangeHint_AllReflowHints),
                                          nsChangeHint_RepaintFrame);
   }
 
@@ -2260,7 +2261,7 @@ struct nsStyleSVGReset {
   nsChangeHint CalcDifference(const nsStyleSVGReset& aOther) const;
   static nsChangeHint MaxDifference() {
     return NS_CombineHint(NS_CombineHint(nsChangeHint_UpdateEffects,
-                                         nsChangeHint_ReflowFrame),
+                                         nsChangeHint_AllReflowHints),
                                          nsChangeHint_RepaintFrame);
   }
 

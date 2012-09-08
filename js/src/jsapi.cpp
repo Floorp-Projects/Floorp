@@ -906,6 +906,10 @@ JSRuntime::init(uint32_t maxbytes)
     JMCheckLogging();
 #endif
 
+#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+    PodArrayZero(thingGCRooters);
+#endif
+
     if (!js_InitGC(this, maxbytes))
         return false;
 

@@ -47,7 +47,6 @@ CPPSRCS	= \
 	GLContext.cpp \
 	GLContextUtils.cpp \
 	GLLibraryLoader.cpp \
-	GLContextProviderOSMesa.cpp \
 	$(NULL)
 
 GL_PROVIDER = Null
