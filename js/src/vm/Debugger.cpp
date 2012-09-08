@@ -3424,26 +3424,22 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar 
     return ExecuteKernel(cx, script, *env, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
 }
 
-enum EvalBindingsMode { WithoutBindings, WithBindings };
-
 static JSBool
-DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode)
+DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
+                    const Value &code, Value *bindings, Value *vp,
+                    Debugger *dbg, HandleObject scope, StackFrame *fp)
 {
-    if (mode == WithBindings)
-        REQUIRE_ARGC("Debugger.Frame.evalWithBindings", 2);
-    else
-        REQUIRE_ARGC("Debugger.Frame.eval", 1);
-    THIS_FRAME(cx, argc, vp, mode == WithBindings ? "evalWithBindings" : "eval",
-               args, thisobj, fp);
-    Debugger *dbg = Debugger::fromChildJSObject(thisobj);
+    /* Either we're specifying the frame, or a global. */
+    JS_ASSERT_IF(fp, !scope);
+    JS_ASSERT_IF(!fp, scope && scope->isGlobal());
 
     /* Check the first argument, the eval code string. */
-    if (!args[0].isString()) {
+    if (!code.isString()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
-                             "Debugger.Frame.eval", "string", InformalValueTypeName(args[0]));
+                             fullMethodName, "string", InformalValueTypeName(code));
         return false;
     }
-    Rooted<JSLinearString*> linearStr(cx, args[0].toString()->ensureLinear(cx));
+    Rooted<JSLinearString*> linearStr(cx, code.toString()->ensureLinear(cx));
     if (!linearStr)
         return false;
 
@@ -3454,8 +3450,8 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
      */
     AutoIdVector keys(cx);
     AutoValueVector values(cx);
-    if (mode == WithBindings) {
-        RootedObject bindingsobj(cx, NonNullObject(cx, args[1]));
+    if (bindings) {
+        RootedObject bindingsobj(cx, NonNullObject(cx, *bindings));
         if (!bindingsobj ||
             !GetPropertyNames(cx, bindingsobj, JSITER_OWNONLY, &keys) ||
             !values.growBy(keys.length()))
@@ -3481,7 +3477,7 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
         return false;
 
     /* If evalWithBindings, create the inner environment. */
-    if (mode == WithBindings) {
+    if (bindings) {
         /* TODO - This should probably be a Call object, like ES5 strict eval. */
         env = NewObjectWithGivenProto(cx, &ObjectClass, NULL, env);
         if (!env)
@@ -3509,13 +3505,21 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
 static JSBool
 DebuggerFrame_eval(JSContext *cx, unsigned argc, Value *vp)
 {
-    return DebuggerFrameEval(cx, argc, vp, WithoutBindings);
+    THIS_FRAME(cx, argc, vp, "eval", args, thisobj, fp);
+    REQUIRE_ARGC("Debugger.Frame.prototype.eval", 1);
+    Debugger *dbg = Debugger::fromChildJSObject(thisobj);
+    return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
+                               args[0], NULL, vp, dbg, NullPtr(), fp);
 }
 
 static JSBool
 DebuggerFrame_evalWithBindings(JSContext *cx, unsigned argc, Value *vp)
 {
-    return DebuggerFrameEval(cx, argc, vp, WithBindings);
+    THIS_FRAME(cx, argc, vp, "evalWithBindings", args, thisobj, fp);
+    REQUIRE_ARGC("Debugger.Frame.prototype.evalWithBindings", 2);
+    Debugger *dbg = Debugger::fromChildJSObject(thisobj);
+    return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
+                               args[0], &args[1], vp, dbg, NullPtr(), fp);
 }
 
 static JSBool
