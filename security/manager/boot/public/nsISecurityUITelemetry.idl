@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(f277021f-8508-456e-b2b2-784c6faa0011)]
+[scriptable, uuid(39823a45-dd9e-4f8b-9b0a-0ad144eb0db6)]
 
 interface nsISecurityUITelemetry : nsISupports {
 
@@ -93,5 +93,13 @@ const uint32_t WARNING_GEOLOCATION_REQUEST_ALWAYS_SHARE = 48;
 const uint32_t WARNING_GEOLOCATION_REQUEST_NEVER_SHARE = 49;
 // It would be nice to measure the two cases of user clicking
 // "not now", and user closing the popup. This is currently not implemented.
+
+/*
+ * Firefox Update Errors: UI is only thrown after 
+ * repeated errors. We only measure when the UI is shown.
+ */
+const uint32_t WARNING_INSECURE_UPDATE = 50;
+const uint32_t WARNING_NO_SECURE_UPDATE = 51;
+
 
 };
