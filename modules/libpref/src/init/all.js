@@ -3542,8 +3542,6 @@ pref("image.mem.max_decoded_image_kb", 51200);
 pref("webgl.force-enabled", false);
 pref("webgl.disabled", false);
 pref("webgl.shader_validator", true);
-pref("webgl.force_osmesa", false);
-pref("webgl.osmesalib", "");
 pref("webgl.prefer-native-gl", false);
 pref("webgl.min_capability_mode", false);
 pref("webgl.disable-extensions", false);

@@ -19,7 +19,6 @@
 #include "mozilla/dom/BindingUtils.h"
 
 #include "jsapi.h"
-#include "jsatom.h"
 
 using namespace JS;
 using namespace mozilla::dom;

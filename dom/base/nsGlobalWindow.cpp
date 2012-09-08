@@ -3867,6 +3867,26 @@ nsGlobalWindow::GetMozInnerScreenY(float* aScreenY)
 }
 
 NS_IMETHODIMP
+nsGlobalWindow::GetDevicePixelRatio(float* aRatio)
+{
+  FORWARD_TO_OUTER(GetDevicePixelRatio, (aRatio), NS_ERROR_NOT_INITIALIZED);
+
+  *aRatio = 1.0;
+
+  if (!mDocShell)
+    return NS_OK;
+
+  nsCOMPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+  if (!presContext)
+    return NS_OK;
+
+  *aRatio = float(nsPresContext::AppUnitsPerCSSPixel())/
+      presContext->AppUnitsPerDevPixel();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsGlobalWindow::GetMozPaintCount(uint64_t* aResult)
 {
   FORWARD_TO_OUTER(GetMozPaintCount, (aResult), NS_ERROR_NOT_INITIALIZED);

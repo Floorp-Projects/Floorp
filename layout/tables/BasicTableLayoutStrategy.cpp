@@ -700,10 +700,10 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
      *   percent width have nonzero pref width, in proportion to pref
      *   width [total_flex_pref]
      *
-     *   b. (NOTE: this case is for BTLS_FINAL_WIDTH only) otherwise, if
-     *   any columns without a specified coordinate width or percent
-     *   width, but with cells originating in them have zero pref width,
-     *   equally between these [numNonSpecZeroWidthCols]
+     *   b. otherwise, if any columns without a specified coordinate
+     *   width or percent width, but with cells originating in them,
+     *   have zero pref width, equally between these
+     *   [numNonSpecZeroWidthCols]
      *
      *   c. otherwise, if any columns without percent width have nonzero
      *   pref width, in proportion to pref width [total_fixed_pref]
@@ -761,8 +761,7 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                 total_fixed_pref = NSCoordSaturatingAdd(total_fixed_pref, 
                                                         pref_width);
             } else if (pref_width == 0) {
-                if (aWidthType == BTLS_FINAL_WIDTH &&
-                    cellMap->GetNumCellsOriginatingInCol(col) > 0) {
+                if (cellMap->GetNumCellsOriginatingInCol(col) > 0) {
                     ++numNonSpecZeroWidthCols;
                 }
             } else {
@@ -823,9 +822,6 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
             l2t = FLEX_FLEX_LARGE;
             basis.c = total_flex_pref;
         } else if (numNonSpecZeroWidthCols > 0) {
-            NS_ASSERTION(aWidthType == BTLS_FINAL_WIDTH,
-                         "numNonSpecZeroWidthCols should only "
-                         "be set when we're setting final width.");
             l2t = FLEX_FLEX_LARGE_ZERO;
             basis.c = numNonSpecZeroWidthCols;
         } else if (total_fixed_pref > 0) {
@@ -955,9 +951,6 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                 }
                 break;
             case FLEX_FLEX_LARGE_ZERO:
-                NS_ASSERTION(aWidthType == BTLS_FINAL_WIDTH,
-                             "FLEX_FLEX_LARGE_ZERO only should be hit "
-                             "when we're setting final width.");
                 if (pct == 0.0f &&
                     !colFrame->GetHasSpecifiedCoord() &&
                     cellMap->GetNumCellsOriginatingInCol(col) > 0) {
