@@ -658,7 +658,7 @@ var allTabs = {
         } catch (e) {}
         tabstring = tab.label + " " + tab.label.toLocaleLowerCase() + " " + tabstring;
         for (let i = 0; i < filter.length; i++)
-          matches += tabstring.contains(filter[i]);
+          matches += tabstring.indexOf(filter[i]) > -1;
       }
       if (matches < filter.length || tab.hidden) {
         preview.hidden = true;
