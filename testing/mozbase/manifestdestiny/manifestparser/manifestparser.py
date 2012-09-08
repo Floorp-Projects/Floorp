@@ -400,55 +400,6 @@ class ManifestParser(object):
     def getRelativeRoot(self, root):
         return root
 
-    def _read(self, root, filename, defaults):
-
-        # get directory of this file
-        here = os.path.dirname(os.path.abspath(filename))
-        defaults['here'] = here
-
-        # read the configuration
-        sections = read_ini(fp=filename, variables=defaults, strict=self.strict)
-
-        # get the tests
-        for section, data in sections:
-
-            # a file to include
-            # TODO: keep track of included file structure:
-            # self.manifests = {'manifest.ini': 'relative/path.ini'}
-            if section.startswith('include:'):
-                include_file = section.split('include:', 1)[-1]
-                include_file = normalize_path(include_file)
-                if not os.path.isabs(include_file):
-                    include_file = os.path.join(self.getRelativeRoot(here), include_file)
-                if not os.path.exists(include_file):
-                    if self.strict:
-                        raise IOError("File '%s' does not exist" % include_file)
-                    else:
-                        continue
-                include_defaults = data.copy()
-                self._read(root, include_file, include_defaults)
-                continue
-
-            # otherwise an item
-            test = data
-            test['name'] = section
-            test['manifest'] = os.path.abspath(filename)
-
-            # determine the path
-            path = test.get('path', section)
-            relpath = path
-            if '://' not in path: # don't futz with URLs
-                path = normalize_path(path)
-                if not os.path.isabs(path):
-                    path = os.path.join(here, path)
-                relpath = os.path.relpath(path, self.rootdir)
-
-            test['path'] = path
-            test['relpath'] = relpath
-
-            # append the item
-            self.tests.append(test)
-
     def read(self, *filenames, **defaults):
 
         # ensure all files exist
@@ -470,7 +421,44 @@ class ManifestParser(object):
                 # == the directory of the first manifest given
                 self.rootdir = here
 
-            self._read(here, filename, defaults)
+            # read the configuration
+            sections = read_ini(fp=filename, variables=defaults, strict=self.strict)
+
+            # get the tests
+            for section, data in sections:
+
+                # a file to include
+                # TODO: keep track of included file structure:
+                # self.manifests = {'manifest.ini': 'relative/path.ini'}
+                if section.startswith('include:'):
+                    include_file = section.split('include:', 1)[-1]
+                    include_file = normalize_path(include_file)
+                    if not os.path.isabs(include_file):
+                        include_file = os.path.join(self.getRelativeRoot(here), include_file)
+                    if not os.path.exists(include_file):
+                        if self.strict:
+                            raise IOError("File '%s' does not exist" % include_file)
+                        else:
+                            continue
+                    include_defaults = data.copy()
+                    self.read(include_file, **include_defaults)
+                    continue
+
+                # otherwise an item
+                test = data
+                test['name'] = section
+                test['manifest'] = os.path.abspath(filename)
+
+                # determine the path
+                path = test.get('path', section)
+                if '://' not in path: # don't futz with URLs
+                    path = normalize_path(path)
+                    if not os.path.isabs(path):
+                        path = os.path.join(here, path)
+                test['path'] = path
+
+                # append the item
+                self.tests.append(test)
 
     ### methods for querying manifests
 
@@ -607,7 +595,7 @@ class ManifestParser(object):
             print >> fp, '[%s]' % path
 
             # reserved keywords:
-            reserved = ['path', 'name', 'here', 'manifest', 'relpath']
+            reserved = ['path', 'name', 'here', 'manifest']
             for key in sorted(test.keys()):
                 if key in reserved:
                     continue
@@ -1024,7 +1012,7 @@ def main(args=sys.argv[1:]):
 
     # set up an option parser
     usage = '%prog [options] [command] ...'
-    description = "%s. Use `help` to display commands" % __doc__.strip()
+    description = __doc__
     parser = OptionParser(usage=usage, description=description)
     parser.add_option('-s', '--strict', dest='strict',
                       action='store_true', default=False,

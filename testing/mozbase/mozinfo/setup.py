@@ -4,7 +4,7 @@
 
 
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 PACKAGE_VERSION = '0.3.3'
 
@@ -28,11 +28,11 @@ setup(name='mozinfo',
       long_description=description,
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='mozilla',
-      author='Mozilla Automation and Testing Team',
-      author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
+      author='Jeff Hammel',
+      author_email='jhammel@mozilla.com',
+      url='https://wiki.mozilla.org/Auto-tools',
       license='MPL',
-      packages=['mozinfo'],
+      packages=find_packages(exclude=['legacy']),
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,

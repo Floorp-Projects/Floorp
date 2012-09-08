@@ -4,7 +4,7 @@
 
 import os
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 
 PACKAGE_VERSION = '0.4'
 
@@ -44,10 +44,10 @@ setup(name='mozprofile',
                    ],
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
-      author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
+      author_email='tools@lists.mozilla.com',
+      url='https://github.com/mozilla/mozbase/tree/master/mozprofile',
       license='MPL 2.0',
-      packages=['mozprofile'],
+      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,

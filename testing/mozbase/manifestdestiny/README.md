@@ -10,14 +10,15 @@ What ManifestDestiny gives you:
   are just dicts with some keys.  For example, a test with no
   user-specified metadata looks like this:
 
-    [{'expected': 'pass',
-      'path': '/home/mozilla/mozmill/src/ManifestDestiny/manifestdestiny/tests/testToolbar/testBackForwardButtons.js',
-      'relpath': 'testToolbar/testBackForwardButtons.js',
-      'name': 'testBackForwardButtons.js',
-      'here': '/home/mozilla/mozmill/src/ManifestDestiny/manifestdestiny/tests',
-      'manifest': '/home/mozilla/mozmill/src/ManifestDestiny/manifestdestiny/tests/manifest.ini',}]
+    [{'path':
+      '/home/jhammel/mozmill/src/ManifestDestiny/manifestdestiny/tests/testToolbar/testBackForwardButtons.js',
+      'name': 'testToolbar/testBackForwardButtons.js', 'here':
+      '/home/jhammel/mozmill/src/ManifestDestiny/manifestdestiny/tests',
+      'manifest': '/home/jhammel/mozmill/src/ManifestDestiny/manifestdestiny/tests',}]
 
-The keys displayed here (path, relpath, name, here, and manifest) are reserved keys for ManifestDestiny and any consuming APIs.  You can add additional key, value metadata to each test.
+The keys displayed here (path, name, here, and manifest) are reserved
+keys for ManifestDestiny and any consuming APIs.  You can add
+additional key, value metadata to each test.
 
 
 # Why have test manifests?
@@ -109,8 +110,8 @@ Manifest Destiny gives tests as a list of dictionaries (in python
 terms).
 
 * path: full path to the test
-* relpath: relative path starting from the root manifest location
-* name: file name of the test
+* name: short name of the test; this is the (usually) relative path
+  specified in the section name
 * here: the parent directory of the manifest
 * manifest: the path to the manifest containing the test
 

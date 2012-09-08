@@ -4,7 +4,7 @@
 
 import os
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 
 PACKAGE_NAME = "mozlog"
 PACKAGE_VERSION = "1.1"
@@ -21,11 +21,11 @@ setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
       description=desc,
       long_description=description,
-      author='Mozilla Automation and Testing Team',
-      author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
+      author='Andrew Halberstadt, Mozilla',
+      author_email='halbersa@gmail.com',
+      url='http://github.com/ahal/mozbase',
       license='MPL 1.1/GPL 2.0/LGPL 2.1',
-      packages=['mozlog'],
+      packages=find_packages(exclude=['legacy']),
       zip_safe=False,
       platforms =['Any'],
       classifiers=['Development Status :: 4 - Beta',

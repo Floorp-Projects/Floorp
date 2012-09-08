@@ -3,9 +3,9 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
-PACKAGE_VERSION = '0.7'
+PACKAGE_VERSION = '0.4'
 
 # take description from README
 here = os.path.dirname(os.path.abspath(__file__))
@@ -28,10 +28,10 @@ setup(name='mozprocess',
                    ],
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
-      author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
+      author_email='tools@lists.mozilla.com',
+      url='https://github.com/mozilla/mozbase/tree/master/mozprocess',
       license='MPL 2.0',
-      packages=['mozprocess'],
+      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
       install_requires=['mozinfo'],
