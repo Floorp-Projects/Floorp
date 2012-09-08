@@ -13,7 +13,7 @@ function test() {
 
 function record(aName) {
   info("got " + aName);
-  if (actual.indexOf(aName) == -1)
+  if (!actual.contains(aName))
     actual.push(aName);
   if (actual.length == expected.length) {
     is(actual.toString(), expected.toString(),
