@@ -88,10 +88,10 @@ private:
       }
     }
     double realWindowSecs = (aNow - earliestFrameInWindow).ToSeconds();
-    if (realWindowSecs == 0.0) {
+    if (realWindowSecs == 0.0 || numFramesDrawnInWindow == 1) {
       return 0.0;
     }
-    return double(numFramesDrawnInWindow) / realWindowSecs;
+    return double(numFramesDrawnInWindow - 1) / realWindowSecs;
   }
 };
 

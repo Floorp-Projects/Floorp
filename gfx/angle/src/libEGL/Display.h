@@ -26,6 +26,19 @@
 #include "libEGL/ShaderCache.h"
 #include "libEGL/Surface.h"
 
+const int versionWindowsVista = MAKEWORD(0x00, 0x06);
+const int versionWindows7 = MAKEWORD(0x01, 0x06);
+
+// Return the version of the operating system in a format suitable for ordering
+// comparison.
+inline int getComparableOSVersion()
+{
+    DWORD version = GetVersion();
+    int majorVersion = LOBYTE(LOWORD(version));
+    int minorVersion = HIBYTE(LOWORD(version));
+    return MAKEWORD(minorVersion, majorVersion);
+}
+
 namespace egl
 {
 class Display
@@ -131,6 +144,7 @@ class Display
     EGLint mMaxSwapInterval;
     EGLint mMinSwapInterval;
     bool mSoftwareDevice;
+    bool mSupportsNonPower2Textures;
     
     typedef std::set<Surface*> SurfaceSet;
     SurfaceSet mSurfaceSet;

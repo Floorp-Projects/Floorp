@@ -62,6 +62,7 @@
 #include "gfxBlur.h"
 #include "gfxUtils.h"
 #include "nsRenderingContext.h"
+#include "gfxSVGGlyphs.h"
 
 #include "nsFrameManager.h"
 #include "nsFrameLoader.h"
@@ -2824,15 +2825,20 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
             // throughout the text layout process
         }
 
+        nsRefPtr<gfxPattern> pattern = mThebes->GetPattern();
+
+        bool isFill = mOp == nsCanvasRenderingContext2D::TEXT_DRAW_OPERATION_FILL;
+        SimpleTextObjectPaint objectPaint(isFill ? pattern.get() : nullptr,
+                                          isFill ? nullptr : pattern.get());
+
         mTextRun->Draw(mThebes,
                        point,
-                       mOp == nsCanvasRenderingContext2D::TEXT_DRAW_OPERATION_STROKE ?
-                                    gfxFont::GLYPH_STROKE : gfxFont::GLYPH_FILL,
+                       isFill ? gfxFont::GLYPH_FILL : gfxFont::GLYPH_STROKE,
                        0,
                        mTextRun->GetLength(),
                        nullptr,
                        nullptr,
-                       nullptr);
+                       &objectPaint);
     }
 
     // current text run

@@ -44,7 +44,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     private static final String LOGTAG = "GeckoPromptService";
 
     private PromptInput[] mInputs;
-    private AlertDialog mDialog = null;
+    private AlertDialog mDialog;
     private static LayoutInflater mInflater;
 
     private int mGroupPaddingSize;
@@ -248,12 +248,12 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         length = aButtons == null ? 0 : aButtons.length;
         if (length > 0) {
             builder.setPositiveButton(aButtons[0].label, this);
-        }
-        if (length > 1) {
-            builder.setNeutralButton(aButtons[1].label, this);
-        }
-        if (length > 2) {
-            builder.setNegativeButton(aButtons[2].label, this);
+            if (length > 1) {
+                builder.setNeutralButton(aButtons[1].label, this);
+                if (length > 2) {
+                    builder.setNegativeButton(aButtons[2].label, this);
+                }
+            }
         }
 
         // The AlertDialog must be created on the UI thread, not the GeckoBackgroundThread.
@@ -267,6 +267,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     public void onClick(DialogInterface aDialog, int aWhich) {
+        GeckoApp.assertOnUiThread();
         JSONObject ret = new JSONObject();
         try {
             int button = -1;
@@ -307,11 +308,14 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     private boolean[] mSelected = null;
+
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        GeckoApp.assertOnUiThread();
         mSelected[position] = !mSelected[position];
     }
 
     public void onCancel(DialogInterface aDialog) {
+        GeckoApp.assertOnUiThread();
         JSONObject ret = new JSONObject();
         try {
             ret.put("button", -1);

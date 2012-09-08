@@ -31,11 +31,6 @@ var normalButtonCanvas, pressedButtonCanvas, normalFocusedButtonCanvas,
     pressedFocusedButtonCanvas, currentSnapshot, button, label, outside;
 
 function runTests() {
-  normalButtonCanvas = $("normalButtonCanvas");
-  pressedButtonCanvas = $("pressedButtonCanvas");
-  normalFocusedButtonCanvas = $("normalFocusedButtonCanvas");
-  pressedFocusedButtonCanvas = $("pressedFocusedButtonCanvas");
-  currentSnapshot = $("currentSnapshot");
   button = $("button");
   label = $("label");
   outside = $("outside");
@@ -54,7 +49,7 @@ function isRectContainedInRectFromRegion(rect, region) {
 function paintListener(e) {
   if (isRectContainedInRectFromRegion(buttonRect(), e.clientRects)) {
     gNeedsPaint = false;
-    takeSnapshot(currentSnapshot);
+    currentSnapshot = takeSnapshot();
   }
 }
 
@@ -76,19 +71,19 @@ function executeTests() {
 
 function tests() {
   window.addEventListener("MozAfterPaint", paintListener, false);
-  takeSnapshot(normalButtonCanvas);
+  normalButtonCanvas = takeSnapshot();
   // Press the button.
   sendMouseEvent("mousemove", button);
   sendMouseEvent("mousedown", button);
   yield;
-  takeSnapshot(pressedFocusedButtonCanvas);
+  pressedFocusedButtonCanvas = takeSnapshot();
   compareSnapshots_(normalButtonCanvas, pressedFocusedButtonCanvas, false, "Pressed focused buttons should look different from normal buttons.");
   // Release.
   sendMouseEvent("mouseup", button);
   yield;
   // make sure the button is focused as this doesn't happen on click on Mac
   button.focus();
-  takeSnapshot(normalFocusedButtonCanvas);
+  normalFocusedButtonCanvas = takeSnapshot();
   compareSnapshots_(normalFocusedButtonCanvas, pressedFocusedButtonCanvas, false, "Pressed focused buttons should look different from normal focused buttons.");
   // Unfocus the button.
   sendMouseEvent("mousedown", outside);
@@ -100,7 +95,7 @@ function tests() {
   sendMouseEvent("mousedown", label);
   yield;
   compareSnapshots_(normalButtonCanvas, currentSnapshot, false, "Pressing the label should have pressed the button.");
-  takeSnapshot(pressedButtonCanvas);
+  pressedButtonCanvas = takeSnapshot();
   // Move the mouse down from the label.
   sendMouseEvent("mousemove", outside);
   yield;
@@ -147,14 +142,11 @@ function compareSnapshots_(c1, c2, shouldBeIdentical, msg) {
   }
 }
 
-function takeSnapshot(canvas) {
+function takeSnapshot() {
   var r = buttonRect();
-  var ctx = canvas.getContext("2d");
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  canvas.width = r.width + 4;
-  canvas.height = r.height + 4;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawWindow(window, r.left - 2, r.top - 2, r.width + 4, r.height + 4, "#FFF");
+  adjustedRect = { left: r.left - 2, top: r.top - 2,
+                   width: r.width + 4, height: r.height + 4 };
+  return SpecialPowers.snapshotRect(window, adjustedRect);
 }
 
 function buttonRect() {
@@ -167,12 +159,6 @@ function buttonRect() {
 <p><input type="button" value="Button" id="button"></p>
 <p><label for="button" id="label">Label</label></p>
 <p id="outside">Something under the label</p>
-
-<canvas id="normalButtonCanvas"></canvas>
-<canvas id="pressedButtonCanvas"></canvas>
-<canvas id="normalFocusedButtonCanvas"></canvas>
-<canvas id="pressedFocusedButtonCanvas"></canvas>
-<canvas id="currentSnapshot"></canvas>
 
 </body>
 </html>

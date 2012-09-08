@@ -633,6 +633,42 @@ function run() {
   expression_should_not_be_parseable("-moz-windows-theme: ''");
   expression_should_not_be_parseable("-moz-windows-theme: ");
 
+  // OpenType SVG media features
+  query_should_be_parseable("(-moz-is-glyph)");
+  query_should_not_be_parseable("not (-moz-is-glyph)");
+  query_should_not_be_parseable("only (-moz-is-glyph)");
+  query_should_be_parseable("all and (-moz-is-glyph)");
+  query_should_be_parseable("not all and (-moz-is-glyph)");
+  query_should_be_parseable("only all and (-moz-is-glyph)");
+
+  query_should_be_parseable("(-moz-is-glyph:0)");
+  query_should_not_be_parseable("not (-moz-is-glyph:0)");
+  query_should_not_be_parseable("only (-moz-is-glyph:0)");
+  query_should_be_parseable("all and (-moz-is-glyph:0)");
+  query_should_be_parseable("not all and (-moz-is-glyph:0)");
+  query_should_be_parseable("only all and (-moz-is-glyph:0)");
+
+  query_should_be_parseable("(-moz-is-glyph:1)");
+  query_should_not_be_parseable("not (-moz-is-glyph:1)");
+  query_should_not_be_parseable("only (-moz-is-glyph:1)");
+  query_should_be_parseable("all and (-moz-is-glyph:1)");
+  query_should_be_parseable("not all and (-moz-is-glyph:1)");
+  query_should_be_parseable("only all and (-moz-is-glyph:1)");
+
+  query_should_not_be_parseable("(min--moz-is-glyph:0)");
+  query_should_not_be_parseable("(max--moz-is-glyph:0)");
+  query_should_not_be_parseable("(min--moz-is-glyph:1)");
+  query_should_not_be_parseable("(max--moz-is-glyph:1)");
+
+  should_apply("not all and (-moz-is-glyph)");
+  should_apply("(-moz-is-glyph:0)");
+  should_apply("not all and (-moz-is-glyph:1)");
+  should_apply("only all and (-moz-is-glyph:0)");
+  should_not_apply("(-moz-is-glyph)");
+  should_not_apply("(-moz-is-glyph:1)");
+  should_not_apply("not all and (-moz-is-glyph:0)");
+  should_not_apply("only all and (-moz-is-glyph:1)");
+
   // Parsing tests
   // bug 454227
   should_apply_unbalanced("(orientation");

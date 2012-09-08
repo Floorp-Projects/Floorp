@@ -29,8 +29,8 @@ public:
     }
 
 private:
-    const TString& mOldFunctionName;
-    const TString& mNewFunctionName;
+    const TString mOldFunctionName;
+    const TString mNewFunctionName;
 };
 
 #endif  // COMPILER_RENAME_FUNCTION

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style type="text/css"><![CDATA[
+    rect {
+      stroke-width: 10;
+      stroke-dasharray: 10 10;
+      stroke-dashoffset: 7;
+    }
+  ]]></style>
+  <rect x="20" y="20" width="160" height="160" stroke="powderblue" />
+  <rect x="220" y="20" width="160" height="160" stroke="chartreuse" />
+  <rect x="20" y="220" width="160" height="160" stroke="sienna" />
+  <rect x="220" y="220" width="160" height="160" stroke="olivedrab" />
+</svg>

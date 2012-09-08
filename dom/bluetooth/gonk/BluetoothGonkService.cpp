@@ -20,6 +20,7 @@
 
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsThreadUtils.h"
 #include <dlfcn.h>
 
 USING_BLUETOOTH_NAMESPACE

@@ -704,7 +704,7 @@ DocumentViewerImpl::InitPresentationStuff(bool aDoInitialReflow)
   styleSet->EndUpdate();
 
   if (aDoInitialReflow) {
-    // Since InitialReflow() will create frames for *all* items
+    // Since Initialize() will create frames for *all* items
     // that are currently in the document tree, we need to flush
     // any pending notifications to prevent the content sink from
     // duplicating layout frames for content it has added to the tree
@@ -730,10 +730,10 @@ DocumentViewerImpl::InitPresentationStuff(bool aDoInitialReflow)
   if (aDoInitialReflow) {
     nsCOMPtr<nsIPresShell> shellGrip = mPresShell;
     // Initial reflow
-    mPresShell->InitialReflow(width, height);
+    mPresShell->Initialize(width, height);
   } else {
     // Store the visible area so it's available for other callers of
-    // InitialReflow, like nsContentSink::StartLayout.
+    // Initialize, like nsContentSink::StartLayout.
     mPresContext->SetVisibleArea(nsRect(0, 0, width, height));
   }
 

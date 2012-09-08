@@ -245,7 +245,7 @@ NS_IMETHODIMP AndroidCameraInputStream::AsyncWait(nsIInputStreamCallback *aCallb
 }
 
 
-NS_IMETHODIMP AndroidCameraInputStream::CloseWithStatus(uint32_t status)
+NS_IMETHODIMP AndroidCameraInputStream::CloseWithStatus(nsresult status)
 {
   AndroidCameraInputStream::doClose();
   return NS_OK;

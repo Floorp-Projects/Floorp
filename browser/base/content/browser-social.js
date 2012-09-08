@@ -220,6 +220,7 @@ let SocialFlyout = {
     // create and initialize the panel for this window
     let iframe = document.createElement("iframe");
     iframe.setAttribute("type", "content");
+    iframe.setAttribute("class", "social-panel-frame");
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("origin", Social.provider.origin);
     panel.appendChild(iframe);
@@ -308,6 +309,8 @@ let SocialShareButton = {
   updateProfileInfo: function SSB_updateProfileInfo() {
     let profileRow = document.getElementById("editSharePopupHeader");
     let profile = Social.provider.profile;
+    this.promptImages = null;
+    this.promptMessages = null;
     if (profile && profile.displayName) {
       profileRow.hidden = false;
       let portrait = document.getElementById("socialUserPortrait");
@@ -316,12 +319,12 @@ let SocialShareButton = {
       displayName.setAttribute("label", profile.displayName);
     } else {
       profileRow.hidden = true;
+      this.updateButtonHiddenState();
+      return;
     }
     // XXX - this shouldn't be done as part of updateProfileInfo, but instead
     // whenever we notice the provider has changed - but the concept of
     // "provider changed" will only exist once bug 774520 lands. 
-    this.promptImages = null;
-    this.promptMessages = null;
     // get the recommend-prompt info.
     let port = Social.provider._getWorkerPort();
     if (port) {
@@ -388,7 +391,8 @@ let SocialShareButton = {
   updateButtonHiddenState: function SSB_updateButtonHiddenState() {
     let shareButton = this.shareButton;
     if (shareButton)
-      shareButton.hidden = !Social.uiVisible || this.promptImages == null;
+      shareButton.hidden = !Social.uiVisible || this.promptImages == null ||
+                           !Social.provider.profile || !Social.provider.profile.userName;
   },
 
   onClick: function SSB_onClick(aEvent) {
@@ -533,6 +537,7 @@ var SocialToolbar = {
       if (!notificationFrame) {
         notificationFrame = document.createElement("iframe");
         notificationFrame.setAttribute("type", "content");
+        notificationFrame.setAttribute("class", "social-panel-frame");
         notificationFrame.setAttribute("id", notificationFrameId);
         notificationFrame.setAttribute("mozbrowser", "true");
         notificationFrames.appendChild(notificationFrame);

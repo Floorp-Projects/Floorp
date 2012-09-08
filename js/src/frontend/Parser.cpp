@@ -357,6 +357,7 @@ Parser::~Parser()
 
 ObjectBox::ObjectBox(ObjectBox* traceLink, JSObject *obj)
   : traceLink(traceLink),
+    emitLink(NULL),
     object(obj),
     isFunctionBox(false)
 {
@@ -962,10 +963,11 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, Parser *parser)
     pn->dn_uses = dn;
 
     /*
-     * A PNK_FUNCTION node must be a definition, so convert shadowed function
-     * statements into nops. This is valid since all body-level function
-     * statement initialization happens at the beginning of the function
-     * (thus, only the last statement's effect is visible). E.g., in
+     * A PNK_FUNCTIONDECL node is always a definition, and two definition nodes
+     * in the same scope can't define the same name, so convert shadowed
+     * function declarations into nops. This is valid since all body-level
+     * function declaration initialization happens at the beginning of the
+     * function (thus, only the last declaration's effect is visible). E.g., in
      *
      *   function outer() {
      *     function g() { return 1 }
@@ -976,7 +978,8 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, Parser *parser)
      *
      * both asserts are valid.
      */
-    if (dn->getKind() == PNK_FUNCTION) {
+    JS_ASSERT(!dn->isKind(PNK_FUNCTIONEXPR));
+    if (dn->getKind() == PNK_FUNCTIONDECL) {
         JS_ASSERT(dn->functionIsHoisted());
         pn->dn_uses = dn->pn_link;
         parser->prepareNodeForMutation(dn);
@@ -1503,7 +1506,8 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     JS_ASSERT_IF(kind == Statement, funName);
 
     /* Make a TOK_FUNCTION node. */
-    ParseNode *pn = FunctionNode::create(PNK_FUNCTION, this);
+    ParseNode *pn =
+        FunctionNode::create(kind == Statement ? PNK_FUNCTIONDECL : PNK_FUNCTIONEXPR, this);
     if (!pn)
         return NULL;
     pn->pn_body = NULL;
@@ -1552,7 +1556,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
              */
             if (Definition *fn = pc->lexdeps.lookupDefn(funName)) {
                 JS_ASSERT(fn->isDefn());
-                fn->setKind(PNK_FUNCTION);
+                fn->setKind(PNK_FUNCTIONDECL);
                 fn->setArity(PN_FUNC);
                 fn->pn_pos.begin = pn->pn_pos.begin;
                 fn->pn_pos.end = pn->pn_pos.end;
@@ -1962,7 +1966,8 @@ Parser::statements(bool *hasFunctionStmt)
             return NULL;
         }
 
-        if (next->isKind(PNK_FUNCTION)) {
+        JS_ASSERT(!next->isKind(PNK_FUNCTIONEXPR));
+        if (next->isKind(PNK_FUNCTIONDECL)) {
             /*
              * PNX_FUNCDEFS notifies the emitter that the block contains body-
              * level function definitions that should be processed before the
@@ -2245,8 +2250,7 @@ MakeSetCall(JSContext *cx, ParseNode *pn, Parser *parser, unsigned msg)
     if (!parser->reportStrictModeError(pn, msg))
         return false;
 
-    ParseNode *pn2 = pn->pn_head;
-    if (pn2->isKind(PNK_FUNCTION) && (pn2->pn_funbox->inGenexpLambda)) {
+    if (pn->isGeneratorExpr()) {
         parser->reportError(pn, msg);
         return false;
     }
@@ -2359,7 +2363,7 @@ BindDestructuringLHS(JSContext *cx, ParseNode *pn, Parser *parser)
         /* FALL THROUGH */
 
       case PNK_DOT:
-      case PNK_LB:
+      case PNK_ELEM:
         /*
          * We may be called on a name node that has already been specialized,
          * in the very weird and ECMA-262-required "for (var [x] = i in o) ..."
@@ -2369,7 +2373,7 @@ BindDestructuringLHS(JSContext *cx, ParseNode *pn, Parser *parser)
             pn->setOp(JSOP_SETNAME);
         break;
 
-      case PNK_LP:
+      case PNK_CALL:
         if (!MakeSetCall(cx, pn, parser, JSMSG_BAD_LEFTSIDE_OF_ASS))
             return false;
         break;
@@ -2443,11 +2447,11 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, Parser *parse
     blockObj = data && data->binder == BindLet ? data->let.blockObj.get() : NULL;
     uint32_t blockCountBefore = blockObj ? blockObj->slotCount() : 0;
 
-    if (left->isKind(PNK_RB)) {
+    if (left->isKind(PNK_ARRAY)) {
         for (ParseNode *pn = left->pn_head; pn; pn = pn->pn_next) {
             /* Nullary comma is an elision; binary comma is an expression.*/
             if (!pn->isArrayHole()) {
-                if (pn->isKind(PNK_RB) || pn->isKind(PNK_RC)) {
+                if (pn->isKind(PNK_ARRAY) || pn->isKind(PNK_OBJECT)) {
                     ok = CheckDestructuring(cx, data, pn, parser, false);
                 } else {
                     if (data) {
@@ -2465,12 +2469,12 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, Parser *parse
             }
         }
     } else {
-        JS_ASSERT(left->isKind(PNK_RC));
+        JS_ASSERT(left->isKind(PNK_OBJECT));
         for (ParseNode *pair = left->pn_head; pair; pair = pair->pn_next) {
             JS_ASSERT(pair->isKind(PNK_COLON));
             ParseNode *pn = pair->pn_right;
 
-            if (pn->isKind(PNK_RB) || pn->isKind(PNK_RC)) {
+            if (pn->isKind(PNK_ARRAY) || pn->isKind(PNK_OBJECT)) {
                 ok = CheckDestructuring(cx, data, pn, parser, false);
             } else if (data) {
                 if (!pn->isKind(PNK_NAME)) {
@@ -3083,11 +3087,11 @@ Parser::forStatement()
                || (versionNumber() == JSVERSION_1_7 &&
                    pn->isOp(JSOP_ITER) &&
                    !(pn->pn_iflags & JSITER_FOREACH) &&
-                   (pn1->pn_head->isKind(PNK_RC) ||
-                    (pn1->pn_head->isKind(PNK_RB) &&
+                   (pn1->pn_head->isKind(PNK_OBJECT) ||
+                    (pn1->pn_head->isKind(PNK_ARRAY) &&
                      pn1->pn_head->pn_count != 2) ||
                     (pn1->pn_head->isKind(PNK_ASSIGN) &&
-                     (!pn1->pn_head->pn_left->isKind(PNK_RB) ||
+                     (!pn1->pn_head->pn_left->isKind(PNK_ARRAY) ||
                       pn1->pn_head->pn_left->pn_count != 2))))
 #endif
               )
@@ -3097,14 +3101,14 @@ Parser::forStatement()
                ((versionNumber() == JSVERSION_1_7 &&
                  pn->isOp(JSOP_ITER) &&
                  !(pn->pn_iflags & JSITER_FOREACH))
-                ? (!pn1->isKind(PNK_RB) || pn1->pn_count != 2)
-                : (!pn1->isKind(PNK_RB) && !pn1->isKind(PNK_RC))) &&
+                ? (!pn1->isKind(PNK_ARRAY) || pn1->pn_count != 2)
+                : (!pn1->isKind(PNK_ARRAY) && !pn1->isKind(PNK_OBJECT))) &&
 #endif
-               !pn1->isKind(PNK_LP) &&
+               !pn1->isKind(PNK_CALL) &&
 #if JS_HAS_XML_SUPPORT
                !pn1->isKind(PNK_XMLUNARY) &&
 #endif
-               !pn1->isKind(PNK_LB)))
+               !pn1->isKind(PNK_ELEM)))
         {
             reportError(pn1, JSMSG_BAD_FOR_LEFTSIDE);
             return NULL;
@@ -3162,7 +3166,7 @@ Parser::forStatement()
 #if JS_HAS_DESTRUCTURING
                 if (pn2->isKind(PNK_ASSIGN)) {
                     pn2 = pn2->pn_left;
-                    JS_ASSERT(pn2->isKind(PNK_RB) || pn2->isKind(PNK_RC) ||
+                    JS_ASSERT(pn2->isKind(PNK_ARRAY) || pn2->isKind(PNK_OBJECT) ||
                               pn2->isKind(PNK_NAME));
                 }
 #endif
@@ -3221,8 +3225,8 @@ Parser::forStatement()
             JS_NOT_REACHED("forStatement TOK_ASSIGN");
             break;
 
-          case PNK_RB:
-          case PNK_RC:
+          case PNK_ARRAY:
+          case PNK_OBJECT:
             if (versionNumber() == JSVERSION_1_7) {
                 /*
                  * Destructuring for-in requires [key, value] enumeration
@@ -4075,9 +4079,9 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
      * - PNK_VAR:   We're parsing var declarations.
      * - PNK_CONST: We're parsing const declarations.
      * - PNK_LET:   We are parsing a let declaration.
-     * - PNK_LP:    We are parsing the head of a let block.
+     * - PNK_CALL:  We are parsing the head of a let block.
      */
-    JS_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET || kind == PNK_LP);
+    JS_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET || kind == PNK_CALL);
 
     ParseNode *pn = ListNode::create(kind, this);
     if (!pn)
@@ -4458,12 +4462,12 @@ Parser::setAssignmentLhsOps(ParseNode *pn, JSOp op)
       case PNK_DOT:
         pn->setOp(JSOP_SETPROP);
         break;
-      case PNK_LB:
+      case PNK_ELEM:
         pn->setOp(JSOP_SETELEM);
         break;
 #if JS_HAS_DESTRUCTURING
-      case PNK_RB:
-      case PNK_RC:
+      case PNK_ARRAY:
+      case PNK_OBJECT:
         if (op != JSOP_NOP) {
             reportError(NULL, JSMSG_BAD_DESTRUCT_ASS);
             return false;
@@ -4472,7 +4476,7 @@ Parser::setAssignmentLhsOps(ParseNode *pn, JSOp op)
             return false;
         break;
 #endif
-      case PNK_LP:
+      case PNK_CALL:
         if (!MakeSetCall(context, pn, this, JSMSG_BAD_LEFTSIDE_OF_ASS))
             return false;
         break;
@@ -4540,13 +4544,13 @@ SetLvalKid(JSContext *cx, Parser *parser, ParseNode *pn, ParseNode *kid,
 {
     if (!kid->isKind(PNK_NAME) &&
         !kid->isKind(PNK_DOT) &&
-        (!kid->isKind(PNK_LP) ||
+        (!kid->isKind(PNK_CALL) ||
          (!kid->isOp(JSOP_CALL) && !kid->isOp(JSOP_EVAL) &&
           !kid->isOp(JSOP_FUNCALL) && !kid->isOp(JSOP_FUNAPPLY))) &&
 #if JS_HAS_XML_SUPPORT
         !kid->isKind(PNK_XMLUNARY) &&
 #endif
-        !kid->isKind(PNK_LB))
+        !kid->isKind(PNK_ELEM))
     {
         parser->reportError(NULL, JSMSG_BAD_OPERAND, name);
         return false;
@@ -4581,7 +4585,7 @@ SetIncOpKid(JSContext *cx, Parser *parser, ParseNode *pn, ParseNode *kid,
              : (preorder ? JSOP_DECPROP : JSOP_PROPDEC);
         break;
 
-      case PNK_LP:
+      case PNK_CALL:
         if (!MakeSetCall(cx, kid, parser, JSMSG_BAD_INCOP_OPERAND))
             return false;
         /* FALL THROUGH */
@@ -4591,7 +4595,7 @@ SetIncOpKid(JSContext *cx, Parser *parser, ParseNode *pn, ParseNode *kid,
             kid->setOp(JSOP_SETXMLNAME);
         /* FALL THROUGH */
 #endif
-      case PNK_LB:
+      case PNK_ELEM:
         op = (tt == TOK_INC)
              ? (preorder ? JSOP_INCELEM : JSOP_ELEMINC)
              : (preorder ? JSOP_DECELEM : JSOP_ELEMDEC);
@@ -4667,7 +4671,7 @@ Parser::unaryExpr()
         if (foldConstants && !FoldConstants(context, pn2, this))
             return NULL;
         switch (pn2->getKind()) {
-          case PNK_LP:
+          case PNK_CALL:
             if (!(pn2->pn_xflags & PNX_SETCALL)) {
                 /*
                  * Call MakeSetCall to check for errors, but clear PNX_SETCALL
@@ -5232,7 +5236,7 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
 
             if (versionNumber() == JSVERSION_1_7) {
                 /* Destructuring requires [key, value] enumeration in JS1.7. */
-                if (!pn3->isKind(PNK_RB) || pn3->pn_count != 2) {
+                if (!pn3->isKind(PNK_ARRAY) || pn3->pn_count != 2) {
                     reportError(NULL, JSMSG_BAD_FOR_LEFTSIDE);
                     return NULL;
                 }
@@ -5334,7 +5338,7 @@ Parser::generatorExpr(ParseNode *kid)
     pn->pn_hidden = true;
 
     /* Make a new node for the desugared generator function. */
-    ParseNode *genfn = FunctionNode::create(PNK_FUNCTION, this);
+    ParseNode *genfn = FunctionNode::create(PNK_FUNCTIONEXPR, this);
     if (!genfn)
         return NULL;
     genfn->setOp(JSOP_LAMBDA);
@@ -5395,7 +5399,7 @@ Parser::generatorExpr(ParseNode *kid)
      * Our result is a call expression that invokes the anonymous generator
      * function object.
      */
-    ParseNode *result = ListNode::create(PNK_LP, this);
+    ParseNode *result = ListNode::create(PNK_CALL, this);
     if (!result)
         return NULL;
     result->setOp(JSOP_CALL);
@@ -5674,7 +5678,7 @@ Parser::memberExpr(bool allowCallSyntax)
             if (!nextMember)
                 return NULL;
         } else if (allowCallSyntax && tt == TOK_LP) {
-            nextMember = ListNode::create(PNK_LP, this);
+            nextMember = ListNode::create(PNK_CALL, this);
             if (!nextMember)
                 return NULL;
             nextMember->setOp(JSOP_CALL);
@@ -6370,7 +6374,7 @@ Parser::checkForFunctionNode(PropertyName *name, ParseNode *node)
         }
 
         node->setArity(PN_NULLARY);
-        node->setKind(PNK_FUNCTION);
+        node->setKind(PNK_FUNCTIONNS);
     }
 
     return true;
@@ -6510,7 +6514,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
       case TOK_FUNCTION:
 #if JS_HAS_XML_SUPPORT
         if (allowsXML() && tokenStream.matchToken(TOK_DBLCOLON, TSF_KEYWORD_IS_NAME)) {
-            pn2 = NullaryNode::create(PNK_FUNCTION, this);
+            pn2 = NullaryNode::create(PNK_FUNCTIONNS, this);
             if (!pn2)
                 return NULL;
             pn = qualifiedSuffix(pn2);
@@ -6526,7 +6530,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
 
       case TOK_LB:
       {
-        pn = ListNode::create(PNK_RB, this);
+        pn = ListNode::create(PNK_ARRAY, this);
         if (!pn)
             return NULL;
         pn->setOp(JSOP_NEWINIT);
@@ -6682,7 +6686,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
             VALUE   = 0x4 | GET | SET
         };
 
-        pn = ListNode::create(PNK_RC, this);
+        pn = ListNode::create(PNK_OBJECT, this);
         if (!pn)
             return NULL;
         pn->setOp(JSOP_NEWINIT);

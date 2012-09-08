@@ -1895,13 +1895,13 @@ ASTSerializer::sourceElement(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::declaration(ParseNode *pn, Value *dst)
 {
-    JS_ASSERT(pn->isKind(PNK_FUNCTION) ||
+    JS_ASSERT(pn->isKind(PNK_FUNCTIONDECL) ||
               pn->isKind(PNK_VAR) ||
               pn->isKind(PNK_LET) ||
               pn->isKind(PNK_CONST));
 
     switch (pn->getKind()) {
-      case PNK_FUNCTION:
+      case PNK_FUNCTIONDECL:
         return function(pn, AST_FUNC_DECL, dst);
 
       case PNK_VAR:
@@ -2149,7 +2149,7 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 {
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
-      case PNK_FUNCTION:
+      case PNK_FUNCTIONDECL:
       case PNK_VAR:
       case PNK_CONST:
         return declaration(pn, dst);
@@ -2469,7 +2469,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 {
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
-      case PNK_FUNCTION:
+      case PNK_FUNCTIONEXPR:
         return function(pn, AST_FUNC_EXPR, dst);
 
       case PNK_COMMA:
@@ -2609,7 +2609,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       }
 
       case PNK_NEW:
-      case PNK_LP:
+      case PNK_CALL:
       {
 #if JS_HAS_GENERATOR_EXPRS
         if (pn->isGeneratorExpr())
@@ -2652,7 +2652,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.memberExpression(false, expr, id, &pn->pn_pos, dst);
       }
 
-      case PNK_LB:
+      case PNK_ELEM:
       {
         JS_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
         JS_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
@@ -2663,7 +2663,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.memberExpression(true, left, right, &pn->pn_pos, dst);
       }
 
-      case PNK_RB:
+      case PNK_ARRAY:
       {
         NodeVector elts(cx);
         if (!elts.reserve(pn->pn_count))
@@ -2692,7 +2692,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                  builder.spreadExpression(expr, &pn->pn_pos, dst);
       }
 
-      case PNK_RC:
+      case PNK_OBJECT:
       {
         /* The parser notes any uninitialized properties by setting the PNX_DESTRUCT flag. */
         if (pn->pn_xflags & PNX_DESTRUCT) {
@@ -2787,7 +2787,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                 return false;
         }
 
-        if (pnleft->isKind(PNK_FUNCTION))
+        if (pnleft->isKind(PNK_FUNCTIONNS))
             return builder.xmlFunctionQualifiedIdentifier(right, computed, &pn->pn_pos, dst);
 
         Value left;
@@ -2910,7 +2910,7 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
         return builder.xmlComment(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
       case PNK_XMLPI: {
-        XMLProcessingInstruction &pi = pn->asXMLProcessingInstruction();
+        XMLProcessingInstruction &pi = pn->as<XMLProcessingInstruction>();
         return builder.xmlPI(atomContents(pi.target()),
                              atomContents(pi.data()),
                              &pi.pn_pos,
@@ -3013,7 +3013,7 @@ ASTSerializer::literal(ParseNode *pn, Value *dst)
 bool
 ASTSerializer::arrayPattern(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 {
-    JS_ASSERT(pn->isKind(PNK_RB));
+    JS_ASSERT(pn->isKind(PNK_ARRAY));
 
     NodeVector elts(cx);
     if (!elts.reserve(pn->pn_count))
@@ -3039,7 +3039,7 @@ ASTSerializer::arrayPattern(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 bool
 ASTSerializer::objectPattern(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 {
-    JS_ASSERT(pn->isKind(PNK_RC));
+    JS_ASSERT(pn->isKind(PNK_OBJECT));
 
     NodeVector elts(cx);
     if (!elts.reserve(pn->pn_count))
@@ -3066,10 +3066,10 @@ ASTSerializer::pattern(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 {
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
-      case PNK_RC:
+      case PNK_OBJECT:
         return objectPattern(pn, pkind, dst);
 
-      case PNK_RB:
+      case PNK_ARRAY:
         return arrayPattern(pn, pkind, dst);
 
       case PNK_NAME:

@@ -613,7 +613,7 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
     NS_ENSURE_SUCCESS(rv, rv);
     bool isDefaultBrowser = false;
     rv = NS_SUCCEEDED(IsDefaultBrowser(&isDefaultBrowser)) &&
-         isDefaultBrowser ? S_OK : NS_ERROR_FAILURE;
+         isDefaultBrowser ? NS_OK : NS_ERROR_FAILURE;
   }
   return rv;
 }

@@ -88,7 +88,7 @@ public:
     AllSizes chrome;
     AllSizes content;
 
-    for (PRUint32 i = 0; i < mKnownLoaders.Length(); i++) {
+    for (uint32_t i = 0; i < mKnownLoaders.Length(); i++) {
       mKnownLoaders[i]->mChromeCache.EnumerateRead(EntryAllSizes, &chrome);
       mKnownLoaders[i]->mCache.EnumerateRead(EntryAllSizes, &content);
     }
@@ -158,7 +158,7 @@ public:
   NS_IMETHOD GetExplicitNonHeap(int64_t *n)
   {
     size_t n2 = 0;
-    for (PRUint32 i = 0; i < mKnownLoaders.Length(); i++) {
+    for (uint32_t i = 0; i < mKnownLoaders.Length(); i++) {
       mKnownLoaders[i]->mChromeCache.EnumerateRead(EntryExplicitNonHeapSize, &n2);
       mKnownLoaders[i]->mCache.EnumerateRead(EntryExplicitNonHeapSize, &n2);
     }
@@ -169,7 +169,7 @@ public:
   static int64_t GetImagesContentUsedUncompressed()
   {
     size_t n = 0;
-    for (PRUint32 i = 0; i < imgLoader::sMemReporter->mKnownLoaders.Length(); i++) {
+    for (uint32_t i = 0; i < imgLoader::sMemReporter->mKnownLoaders.Length(); i++) {
       imgLoader::sMemReporter->mKnownLoaders[i]->mCache.EnumerateRead(EntryUsedUncompressedSize, &n);
     }
     return n;

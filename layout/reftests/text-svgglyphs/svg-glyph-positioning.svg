@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style type="text/css">
+    <![CDATA[
+      @font-face {
+        font-family: "Liberation";
+        src:url(resources/svg.woff);
+      }
+      text
+      {
+        font-family: Liberation;
+        font-size: 200px;
+        stroke: black;
+      }
+    ]]>
+  </style>
+  <!--
+        Test that we're rendering in the right place in the middle of a
+      text run
+  -->
+  <text x="0" y="200">
+  MLL&#xfe01;
+  </text>
+</svg>
