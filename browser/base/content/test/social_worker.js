@@ -64,7 +64,7 @@ onconnect = function(e) {
         testPort.postMessage({topic:"got-flyout-visibility", result: event.data.result});
         break;
       case "test-worker-chat":
-        apiPort.postMessage({topic: "social.request-chat", data: "https://example.com/browser/browser/base/content/test/social_chat.html" });
+        apiPort.postMessage({topic: "social.request-chat", data: event.data.data });
         break;
       case "social.initialize":
         // This is the workerAPI port, respond and set up a notification icon.
