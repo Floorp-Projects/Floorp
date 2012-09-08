@@ -591,16 +591,9 @@ falling back to not using job objects for managing child processes"""
         """the string value of the command line"""
         return subprocess.list2cmdline([self.cmd] + self.args)
 
-    def run(self, timeout=None, outputTimeout=None):
-        """
-        Starts the process.
-
-        If timeout is not None, the process will be allowed to continue for
-        that number of seconds before being killed.
-
-        If outputTimeout is not None, the process will be allowed to continue
-        for that number of seconds without producing any output before
-        being killed.
+    def run(self):
+        """Starts the process.  waitForFinish must be called to allow the
+           process to complete.
         """
         self.didTimeout = False
         self.startTime = datetime.now()
@@ -611,8 +604,6 @@ falling back to not using job objects for managing child processes"""
                                  env=self.env,
                                  ignore_children = self._ignore_children,
                                  **self.keywordargs)
-
-        self.processOutput(timeout=timeout, outputTimeout=outputTimeout)
 
     def kill(self):
         """
@@ -669,6 +660,9 @@ falling back to not using job objects for managing child processes"""
         being killed.
         """
         def _processOutput():
+            if not hasattr(self, 'proc'):
+                self.run()
+
             self.didTimeout = False
             logsource = self.proc.stdout
 
@@ -690,24 +684,21 @@ falling back to not using job objects for managing child processes"""
                 self.onTimeout()
             else:
                 self.onFinish()
-
-        if not hasattr(self, 'proc'):
-            self.run()
-
+        
         if not self.outThread:
             self.outThread = threading.Thread(target=_processOutput)
             self.outThread.daemon = True
             self.outThread.start()
 
 
-    def wait(self, timeout=None):
+    def waitForFinish(self, timeout=None):
         """
         Waits until all output has been read and the process is 
         terminated.
 
         If timeout is not None, will return after timeout seconds.
-        This timeout only causes the wait function to return and
-        does not kill the process.
+        This timeout is only for waitForFinish and doesn't affect
+        the didTimeout or onTimeout properties.
         """
         if self.outThread:
             # Thread.join() blocks the main thread until outThread is finished
@@ -720,12 +711,6 @@ falling back to not using job objects for managing child processes"""
                     return
 
         return self.proc.wait()
-
-    # TODO Remove this method when consumers have been fixed
-    def waitForFinish(self, timeout=None):
-        print >> sys.stderr, "MOZPROCESS WARNING: ProcessHandler.waitForFinish() is deprecated, " \
-                             "use ProcessHandler.wait() instead"
-        return self.wait(timeout=timeout)
 
 
     ### Private methods from here on down. Thar be dragons.
@@ -768,10 +753,6 @@ falling back to not using job objects for managing child processes"""
             if len(r) == 0:
                 return ('', True)
             return (f.readline(), False)
-
-    @property
-    def pid(self):
-        return self.proc.pid
 
 
 ### default output handlers

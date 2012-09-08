@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 try:
     here = os.path.dirname(os.path.abspath(__file__))
@@ -21,11 +21,11 @@ setup(name='mozhttpd',
       long_description=description,
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='mozilla',
-      author='Mozilla Automation and Testing Team',
+      author='Joel Maher',
       author_email='tools@lists.mozilla.org',
-      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
+      url='https://github.com/mozilla/mozbase/tree/master/mozhttpd',
       license='MPL',
-      packages=['mozhttpd'],
+      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,

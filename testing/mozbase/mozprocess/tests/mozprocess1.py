@@ -24,8 +24,8 @@ def make_proclaunch(aDir):
     """
     # Ideally make should take care of this, but since it doesn't - on windows,
     # anyway, let's just call out both targets explicitly.
-    p = subprocess.call(["make", "-C", "iniparser"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=aDir)
-    p = subprocess.call(["make"],stdout=subprocess.PIPE, stderr=subprocess.PIPE ,cwd=aDir)
+    p = subprocess.call(["make", "-C", "iniparser"], cwd=aDir)
+    p = subprocess.call(["make"], cwd=aDir)
     if sys.platform == "win32":
         exepath = os.path.join(aDir, "proclaunch.exe")
     else:
@@ -81,7 +81,8 @@ class ProcTest1(unittest.TestCase):
         p = processhandler.ProcessHandler([self.proclaunch, "process_normal_finish.ini"],
                                           cwd=here)
         p.run()
-        p.wait()
+        p.processOutput()
+        p.waitForFinish()
 
         detected, output = check_for_process(self.proclaunch)
         self.determine_status(detected,
@@ -95,8 +96,9 @@ class ProcTest1(unittest.TestCase):
         """
         p = processhandler.ProcessHandler([self.proclaunch, "process_waittimeout.ini"],
                                           cwd=here)
-        p.run(timeout=10)
-        p.wait()
+        p.run()
+        p.processOutput(timeout=10) 
+        p.waitForFinish()
 
         detected, output = check_for_process(self.proclaunch)
         self.determine_status(detected,
@@ -112,6 +114,7 @@ class ProcTest1(unittest.TestCase):
         p = processhandler.ProcessHandler([self.proclaunch, "process_normal_finish.ini"],
                                           cwd=here)
         p.run()
+        p.processOutput()
         p.kill()
 
         detected, output = check_for_process(self.proclaunch)
