@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 /**
  * Special Powers Exception - used to throw exceptions nicely
  **/
@@ -19,6 +21,42 @@ function SpecialPowersObserverAPI() {
   this._processCrashObserversRegistered = false;
 }
 
+function parseKeyValuePairs(text) {
+  var lines = text.split('\n');
+  var data = {};
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i] == '')
+      continue;
+
+    // can't just .split() because the value might contain = characters
+    let eq = lines[i].indexOf('=');
+    if (eq != -1) {
+      let [key, value] = [lines[i].substring(0, eq),
+                          lines[i].substring(eq + 1)];
+      if (key && value)
+        data[key] = value.replace(/\\n/g, "\n").replace(/\\\\/g, "\\");
+    }
+  }
+  return data;
+}
+
+function parseKeyValuePairsFromFile(file) {
+  var fstream = Cc["@mozilla.org/network/file-input-stream;1"].
+                createInstance(Ci.nsIFileInputStream);
+  fstream.init(file, -1, 0, 0);
+  var is = Cc["@mozilla.org/intl/converter-input-stream;1"].
+           createInstance(Ci.nsIConverterInputStream);
+  is.init(fstream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+  var str = {};
+  var contents = '';
+  while (is.readString(4096, str) != 0) {
+    contents += str.value;
+  }
+  is.close();
+  fstream.close();
+  return parseKeyValuePairs(contents);
+}
+
 SpecialPowersObserverAPI.prototype = {
 
   _observe: function(aSubject, aTopic, aData) {
@@ -28,15 +66,25 @@ SpecialPowersObserverAPI.prototype = {
         function addDumpIDToMessage(propertyName) {
           var id = aSubject.getPropertyAsAString(propertyName);
           if (id) {
-            message.dumpIDs.push(id);
+            message.dumpIDs.push({id: id, extension: "dmp"});
+            message.dumpIDs.push({id: id, extension: "extra"});
           }
         }
 
         var message = { type: "crash-observed", dumpIDs: [] };
-        aSubject = aSubject.QueryInterface(Components.interfaces.nsIPropertyBag2);
+        aSubject = aSubject.QueryInterface(Ci.nsIPropertyBag2);
         if (aTopic == "plugin-crashed") {
           addDumpIDToMessage("pluginDumpID");
           addDumpIDToMessage("browserDumpID");
+
+          let pluginID = aSubject.getPropertyAsAString("pluginDumpID");
+          let extra = this._getExtraData(pluginID);
+          if (extra && ("additional_minidumps" in extra)) {
+            let dumpNames = extra.additional_minidumps.split(',');
+            for (let name of dumpNames) {
+              message.dumpIDs.push({id: pluginID + "-" + name, extension: "dmp"});
+            }
+          }
         } else { // ipc:content-shutdown
           addDumpIDToMessage("dumpID");
         }
@@ -47,12 +95,19 @@ SpecialPowersObserverAPI.prototype = {
 
   _getCrashDumpDir: function() {
     if (!this._crashDumpDir) {
-      var directoryService = Components.classes["@mozilla.org/file/directory_service;1"]
-                             .getService(Components.interfaces.nsIProperties);
-      this._crashDumpDir = directoryService.get("ProfD", Components.interfaces.nsIFile);
+      this._crashDumpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
       this._crashDumpDir.append("minidumps");
     }
     return this._crashDumpDir;
+  },
+
+  _getExtraData: function(dumpId) {
+    let extraFile = this._getCrashDumpDir().clone();
+    extraFile.append(dumpId + ".extra");
+    if (!extraFile.exists()) {
+      return null;
+    }
+    return parseKeyValuePairsFromFile(extraFile);
   },
 
   _deleteCrashDumpFiles: function(aFilenames) {
@@ -83,7 +138,7 @@ SpecialPowersObserverAPI.prototype = {
 
     var crashDumpFiles = [];
     while (entries.hasMoreElements()) {
-      var file = entries.getNext().QueryInterface(Components.interfaces.nsIFile);
+      var file = entries.getNext().QueryInterface(Ci.nsIFile);
       var path = String(file.path);
       if (path.match(/\.(dmp|extra)$/) && !aToIgnore[path]) {
         crashDumpFiles.push(path);
@@ -93,9 +148,7 @@ SpecialPowersObserverAPI.prototype = {
   },
 
   _getURI: function (url) {
-    return Components.classes["@mozilla.org/network/io-service;1"]
-                     .getService(Components.interfaces.nsIIOService)
-                     .newURI(url, null, null);
+    return Services.io.newURI(url, null, null);
   },
 
   /**
@@ -105,8 +158,7 @@ SpecialPowersObserverAPI.prototype = {
   _receiveMessageAPI: function(aMessage) {
     switch(aMessage.name) {
       case "SPPrefService":
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch);
+        var prefs = Services.prefs;
         var prefType = aMessage.json.prefType.toUpperCase();
         var prefName = aMessage.json.prefName;
         var prefValue = "prefValue" in aMessage.json ? aMessage.json.prefValue : null;
@@ -172,20 +224,17 @@ SpecialPowersObserverAPI.prototype = {
         break;
 
       case "SPPermissionManager":
-        let perms =
-          Components.classes["@mozilla.org/permissionmanager;1"]
-                    .getService(Components.interfaces.nsIPermissionManager);
         let msg = aMessage.json;
 
-        let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
+        let secMan = Services.scriptSecurityManager;
         let principal = secMan.getAppCodebasePrincipal(this._getURI(msg.url), msg.appId, msg.isInBrowserElement);
 
         switch (msg.op) {
           case "add":
-            perms.addFromPrincipal(principal, msg.type, msg.permission);
+            Services.perms.addFromPrincipal(principal, msg.type, msg.permission);
             break;
           case "remove":
-            perms.removeFromPrincipal(principal, msg.type);
+            Services.perms.removeFromPrincipal(principal, msg.type);
             break;
           default:
             throw new SpecialPowersException("Invalid operation for " +
