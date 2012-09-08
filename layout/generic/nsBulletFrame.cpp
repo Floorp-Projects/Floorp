@@ -352,8 +352,12 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
 
 int32_t
 nsBulletFrame::SetListItemOrdinal(int32_t aNextOrdinal,
-                                  bool* aChanged)
+                                  bool* aChanged,
+                                  int32_t aIncrement)
 {
+  MOZ_ASSERT(aIncrement == 1 || aIncrement == -1,
+             "We shouldn't have weird increments here");
+
   // Assume that the ordinal comes from the caller
   int32_t oldOrdinal = mOrdinal;
   mOrdinal = aNextOrdinal;
@@ -376,7 +380,7 @@ nsBulletFrame::SetListItemOrdinal(int32_t aNextOrdinal,
 
   *aChanged = oldOrdinal != mOrdinal;
 
-  return mOrdinal + 1;
+  return mOrdinal + aIncrement;
 }
 
 
