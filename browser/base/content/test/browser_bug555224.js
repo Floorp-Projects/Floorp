@@ -19,7 +19,7 @@ function afterZoomAndLoad(aCallback, aTab) {
       value = undefined;
     oldAPTS.call(FullZoom, value, browser);
     // Don't reset _applyPrefToSetting until we've seen the about:blank load(s)
-    if (browser && browser.currentURI.spec.startsWith("http:")) {
+    if (browser && (browser.currentURI.spec.indexOf("http:") != -1)) {
       FullZoom._applyPrefToSetting = oldAPTS;
       didZoom = true;
     }
