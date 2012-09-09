@@ -841,13 +841,11 @@ abstract public class GeckoApp
                 final int tabId = message.getInt("tabID");
                 final String title = message.getString("title");
                 handleTitleChanged(tabId, title);
-                Log.i(LOGTAG, "title - " + title);
             } else if (event.equals("DOMLinkAdded")) {
                 final int tabId = message.getInt("tabID");
                 final String rel = message.getString("rel");
                 final String href = message.getString("href");
                 final int size = message.getInt("size");
-                Log.i(LOGTAG, "link rel - " + rel + ", href - " + href + ", size - " + size);
                 handleLinkAdded(tabId, rel, href, size);
             } else if (event.equals("DOMWindowClose")) {
                 final int tabId = message.getInt("tabID");
@@ -964,7 +962,6 @@ abstract public class GeckoApp
                 Intent intent = GeckoAppShell.getWebAppIntent(url, origin, false);
                 if (intent == null)
                     return;
-                Log.i(LOGTAG, "Open " + url + " (" + origin + ")");
                 startActivity(intent);
             } else if (event.equals("WebApps:Install")) {
                 String name = message.getString("name");
@@ -1711,7 +1708,6 @@ abstract public class GeckoApp
             try {
                 // this class should only be initialized with an intent with non-null data
                 URL url = new URL(mIntent.getData().toString());
-                Log.i(LOGTAG, "xxx - Loading: " + url);
                 // data url should have an http scheme
                 mConnection = (HttpURLConnection) url.openConnection();
                 mConnection.setRequestProperty("User-Agent", getUAStringForHost(url.getHost()));
@@ -1832,22 +1828,18 @@ abstract public class GeckoApp
         else if (ACTION_LOAD.equals(action)) {
             String uri = intent.getDataString();
             loadUrl(uri, AwesomeBar.Target.CURRENT_TAB);
-            Log.i(LOGTAG,"onNewIntent: " + uri);
         }
         else if (Intent.ACTION_VIEW.equals(action)) {
             String uri = intent.getDataString();
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
-            Log.i(LOGTAG,"onNewIntent: " + uri);
         }
         else if (action != null && action.startsWith(ACTION_WEBAPP_PREFIX)) {
             String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createWebappLoadEvent(uri));
-            Log.i(LOGTAG,"Intent : WEBAPP (" + action + ") - " + uri);
         }
         else if (ACTION_BOOKMARK.equals(action)) {
             String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
-            Log.i(LOGTAG,"Intent : BOOKMARK - " + uri);
         }
         else if (ACTION_ALERT_CALLBACK.equals(action)) {
             String alertName = "";
