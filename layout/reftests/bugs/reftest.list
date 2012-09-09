@@ -552,9 +552,9 @@ fails-if(cocoaWidget) == 356774-1.html 356774-1-ref.html # probably bug 379317
 == 363858-2.html 363858-2-ref.html
 == 363858-3.html 363858-3-ref.html
 == 363858-4.html 363858-4-ref.html
-== 363858-5a.html 363858-5-ref.html
+fuzzy-if(OSX==10.8,45,2) == 363858-5a.html 363858-5-ref.html
 == 363858-5b.html 363858-5-ref.html
-== 363858-6a.html 363858-6-ref.html
+fuzzy-if(OSX==10.8,45,2) == 363858-6a.html 363858-6-ref.html
 == 363858-6b.html 363858-6-ref.html
 == 363874.html 363874-ref.html
 == 363874-max-width.html 363874-max-width-ref.html
