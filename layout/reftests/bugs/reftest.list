@@ -1453,7 +1453,7 @@ random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 534804-1.html 534804-1-ref.html
 == 534808-1.html 534808-1-ref.html
 == 534808-2.html 534808-2-ref.html
-fails-if(/Mac\x20OS\x20X\x2010\.7/.test(http.oscpu)) == 534919-1.html 534919-1-ref.html # Bug 705044
+fails-if(OSX==10.7) == 534919-1.html 534919-1-ref.html # Bug 705044
 random == 536061.html 536061-ref.html # fixedpoint division in blur code makes this fail
 == 537507-1.xul 537507-1-ref.xul
 == 537507-2.html 537507-2-ref.html
