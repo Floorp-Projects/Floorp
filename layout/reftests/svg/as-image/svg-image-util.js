@@ -20,30 +20,49 @@ const MEETORSLICE_VALS = [ "meet", "slice" ];
  * Generates full data URI for an SVG document, with the given parameters
  * on the SVG element.
  *
- * @param aViewboxArr   An array of four numbers, representing the viewBox
- *                      attribute, or null for no viewBox.
- * @param aWidth        The width attribute, or null for no width.
- * @param aHeight       The height attribute, or null for no height.
- * @param aAlign        The 'align' component of the preserveAspectRatio
- *                      attribute, or null for none.
- * @param aMeetOrSlice  The 'meetOrSlice' component of the
- *                      preserveAspectRatio attribute, or null for
- *                      none. (If non-null, implies non-null value for
- *                      aAlign.)
+ * @param aViewboxArr         An array of four numbers, representing the
+ *                            viewBox attribute, or null for no viewBox.
+ * @param aWidth              The width attribute, or null for no width.
+ * @param aHeight             The height attribute, or null for no height.
+ * @param aAlign              The 'align' component of the
+ *                            preserveAspectRatio attribute, or null for none.
+ * @param aMeetOrSlice        The 'meetOrSlice' component of the
+ *                            preserveAspectRatio attribute, or null for
+ *                            none. (If non-null, implies non-null value for
+ *                            aAlign.)
+ * @param aViewParams         Parameters to use for the view element.
+ * @param aFragmentIdentifier The SVG fragment identifier.
  */
 function generateSVGDataURI(aViewboxArr, aWidth, aHeight,
-                            aAlign, aMeetOrSlice) {
+                            aAlign, aMeetOrSlice,
+                            aViewParams, aFragmentIdentifier) {
   // prefix
   var datauri = "data:image/svg+xml,"
   // Begin the SVG tag
   datauri += "%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20shape-rendering%3D%22crispEdges%22";
 
   // Append the custom chunk from our params
+  // If we're working with views, the align customisation is applied there instead
   datauri += generateSVGAttrsForParams(aViewboxArr, aWidth, aHeight,
-                                       aAlign, aMeetOrSlice);
+                                       aViewParams ? null : aAlign,
+                                       aMeetOrSlice);
 
-  // Put closing leftbracket on SVG tag
+  // Add 'font-size' just in case the client wants to use ems
+  datauri += "%20font-size%3D%22" + "10px" + "%22";
+
+  // Put closing right bracket on SVG tag
   datauri += "%3E";
+
+  if (aViewParams) {
+    // Give the view the id of the fragment identifier
+    datauri += "%3Cview%20id%3D%22" + aFragmentIdentifier + "%22";
+
+    // Append the custom chunk from our view params
+    datauri += generateSVGAttrsForParams(aViewParams.viewBox, null, null,
+                                         aAlign, aViewParams.meetOrSlice);
+
+    datauri += "%2F%3E";
+  }
 
   // Add the rest of the SVG document
   datauri += "%3Crect%20x%3D%221%22%20y%3D%221%22%20height%3D%2218%22%20width%3D%2218%22%20stroke-width%3D%222%22%20stroke%3D%22black%22%20fill%3D%22yellow%22%2F%3E%3Ccircle%20cx%3D%2210%22%20cy%3D%2210%22%20r%3D%228%22%20style%3D%22fill%3A%20blue%22%2F%3E%3C%2Fsvg%3E";
@@ -59,8 +78,10 @@ function generateSVGAttrsForParams(aViewboxArr, aWidth, aHeight,
   if (aViewboxArr) {
     str += "%20viewBox%3D%22";
     for (var i in aViewboxArr) {
-        var curVal = aViewboxArr[i];
-        str += curVal + "%20";
+        str += aViewboxArr[i];
+        if (i != aViewboxArr.length - 1) {
+          str += "%20";
+        }
     }
     str += "%22";
   }
@@ -77,9 +98,6 @@ function generateSVGAttrsForParams(aViewboxArr, aWidth, aHeight,
     }
     str += "%22";
   }
-
-  // Add 'font-size' just in case the client wants to use ems
-  str += "%20font-size%3D%22" + "10px" + "%22";
 
   return str;
 }
@@ -132,7 +150,13 @@ function appendSVGSubArrayWithParams(aSVGParams, aHostNodeTagName,
     var uri = generateSVGDataURI(aSVGParams.viewBox,
                                  aSVGParams.width, aSVGParams.height,
                                  alignVal,
-                                 aSVGParams.meetOrSlice);
+                                 aSVGParams.meetOrSlice,
+                                 aSVGParams.view,
+                                 aSVGParams.fragmentIdentifier);
+
+    if (aSVGParams.fragmentIdentifier) {
+      uri += "#" + aSVGParams.fragmentIdentifier;
+    }
 
     // Generate & append the host node element
     var hostNode = generateHostNode(aHostNodeTagName, uri,

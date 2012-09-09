@@ -21,6 +21,7 @@
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextFrame.h"
+#include "nsSVGViewElement.h"
 
 namespace dom = mozilla::dom;
 
@@ -284,10 +285,19 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
     return ratio;
   }
 
-  if (content->HasViewBox()) {
-    const nsSVGViewBoxRect viewbox = content->mViewBox.GetAnimValue();
-    float viewBoxWidth = viewbox.width;
-    float viewBoxHeight = viewbox.height;
+  nsSVGViewElement* viewElement = content->GetCurrentViewElement();
+  const nsSVGViewBoxRect* viewbox = nullptr;
+
+  // The logic here should match HasViewBox().
+  if (viewElement && viewElement->mViewBox.IsExplicitlySet()) {
+    viewbox = &viewElement->mViewBox.GetAnimValue();
+  } else if (content->mViewBox.IsExplicitlySet()) {
+    viewbox = &content->mViewBox.GetAnimValue();
+  }
+
+  if (viewbox) {
+    float viewBoxWidth = viewbox->width;
+    float viewBoxHeight = viewbox->height;
 
     if (viewBoxWidth < 0.0f) {
       viewBoxWidth = 0.0f;
