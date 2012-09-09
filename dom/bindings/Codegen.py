@@ -730,7 +730,7 @@ class CGClassConstructHook(CGAbstractStaticMethod):
 class CGClassHasInstanceHook(CGAbstractStaticMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
-                Argument('const jsval*', 'v'), Argument('JSBool*', 'bp')]
+                Argument('JSMutableHandleValue', 'vp'), Argument('JSBool*', 'bp')]
         CGAbstractStaticMethod.__init__(self, descriptor, HASINSTANCE_HOOK_NAME,
                                         'JSBool', args)
 
@@ -743,7 +743,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
         return self.generate_code()
 
     def generate_code(self):
-        return """  if (!v->isObject()) {
+        return """  if (!vp.isObject()) {
     *bp = false;
     return true;
   }
@@ -758,7 +758,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
   }
   JSObject *objProto = &protov.toObject();
 
-  JSObject* instance = &v->toObject();
+  JSObject* instance = &vp.toObject();
   JSObject* proto = JS_GetPrototype(instance);
   while (proto) {
     if (proto == objProto) {

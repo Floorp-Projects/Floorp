@@ -53,8 +53,8 @@
 #include "vm/String-inl.h"
 
 /* static */ inline bool
-JSObject::enumerate(JSContext *cx, js::HandleObject obj,
-                    JSIterateOp iterop, js::Value *statep, jsid *idp)
+JSObject::enumerate(JSContext *cx, JS::HandleObject obj, JSIterateOp iterop,
+                    JS::MutableHandleValue statep, JS::MutableHandleId idp)
 {
     JSNewEnumerateOp op = obj->getOps()->enumerate;
     return (op ? op : JS_EnumerateState)(cx, obj, iterop, statep, idp);

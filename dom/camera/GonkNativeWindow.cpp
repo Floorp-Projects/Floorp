@@ -24,15 +24,14 @@
 #include "GonkNativeWindow.h"
 #include "nsDebug.h"
 
-// enable debug logging by setting to 1
-#define CNW_DEBUG 0
-#if CNW_DEBUG
-#define CNW_LOGD(...) {(void)printf_stderr(__VA_ARGS__);}
-#else
-#define CNW_LOGD(...) ((void)0)
-#endif
-
-#define CNW_LOGE(...) {(void)printf_stderr(__VA_ARGS__);}
+/**
+ * DOM_CAMERA_LOGI() is enabled in debug builds, and turned on by setting
+ * NSPR_LOG_MODULES=Camera:N environment variable, where N >= 3.
+ *
+ * CNW_LOGE() is always enabled.
+ */
+#define CNW_LOGD(...)   DOM_CAMERA_LOGI(__VA_ARGS__)
+#define CNW_LOGE(...)   {(void)printf_stderr(__VA_ARGS__);}
 
 using namespace android;
 using namespace mozilla::layers;

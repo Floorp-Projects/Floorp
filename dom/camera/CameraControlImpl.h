@@ -94,7 +94,7 @@ public:
   virtual void SetParameter(uint32_t aKey, const nsTArray<CameraRegion>& aRegions) = 0;
   virtual nsresult PushParameters() = 0;
 
-  void ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder aBuilder);
+  bool ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder aBuilder);
 
 protected:
   virtual ~CameraControlImpl()

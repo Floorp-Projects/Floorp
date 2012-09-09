@@ -38,6 +38,8 @@ void nsCycleCollector_setForgetSkippableCallback(CC_ForgetSkippableCallback aCB)
 void nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes = false);
 
 #ifdef DEBUG_CC
+void nsCycleCollector_logPurpleAddition(void* aObject,
+                                        nsCycleCollectionParticipant* cp);
 void nsCycleCollector_logPurpleRemoval(void* aObject);
 #endif
 

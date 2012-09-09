@@ -352,8 +352,7 @@ var shell = {
     this.sendChromeEvent({
       type: 'open-app',
       url: msg.uri,
-      origin: origin,
-      manifest: msg.manifest,
+      manifestURL: msg.manifest,
       isActivity: (msg.type == 'activity'),
       target: msg.target
     });
@@ -601,7 +600,7 @@ var WebappsHelper = {
           shell.sendChromeEvent({
             "type": "webapps-launch",
             "url": manifest.fullLaunchPath(json.startPoint),
-            "origin": json.origin
+            "manifestURL": json.manifestURL
           });
         });
         break;

@@ -259,16 +259,17 @@ Snapshot(JSContext *cx, RawObject obj_, unsigned flags, AutoIdVector *props)
                 /* Proxy objects enumerate the prototype on their own, so we are done here. */
                 break;
             }
-            Value state;
+            RootedValue state(cx);
+            RootedId id(cx);
             JSIterateOp op = (flags & JSITER_HIDDEN) ? JSENUMERATE_INIT_ALL : JSENUMERATE_INIT;
-            if (!JSObject::enumerate(cx, pobj, op, &state, NULL))
+            if (!JSObject::enumerate(cx, pobj, op, &state, &id))
                 return false;
             if (state.isMagic(JS_NATIVE_ENUMERATE)) {
                 if (!EnumerateNativeProperties(cx, obj, pobj, flags, ht, props))
                     return false;
             } else {
                 while (true) {
-                    jsid id;
+                    RootedId id(cx);
                     if (!JSObject::enumerate(cx, pobj, JSENUMERATE_NEXT, &state, &id))
                         return false;
                     if (state.isNull())
@@ -1280,9 +1281,9 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, MutableHandleValue rval)
 }
 
 static JSBool
-stopiter_hasInstance(JSContext *cx, HandleObject obj, const Value *v, JSBool *bp)
+stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, JSBool *bp)
 {
-    *bp = IsStopIteration(*v);
+    *bp = IsStopIteration(v);
     return JS_TRUE;
 }
 

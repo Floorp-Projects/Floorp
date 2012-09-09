@@ -30,7 +30,7 @@ protected:
 
 public:
   DOMCameraPreview(ICameraControl* aCameraControl, uint32_t aWidth, uint32_t aHeight, uint32_t aFramesPerSecond = 30);
-  void ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder aBuilder);
+  bool ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder aBuilder);
   bool HaveEnoughBuffered();
 
   NS_IMETHODIMP
