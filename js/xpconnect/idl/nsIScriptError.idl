@@ -11,7 +11,7 @@
 #include "nsISupports.idl"
 #include "nsIConsoleMessage.idl"
 
-[scriptable, uuid(c6dd877a-87b6-47cc-968d-90f4514ec65f)]
+[scriptable, uuid(ddc19b34-e22e-46d5-9f7f-c7768a7dc50a)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
@@ -66,9 +66,9 @@ interface nsIScriptError : nsIConsoleMessage
        returned if init() was used instead of initWithWindowID(). */
     readonly attribute unsigned long long innerWindowID;
 
-    void init(in wstring message,
-              in wstring sourceName,
-              in wstring sourceLine,
+    void init(in AString message,
+              in AString sourceName,
+              in AString sourceLine,
               in uint32_t lineNumber,
               in uint32_t columnNumber,
               in uint32_t flags,
@@ -77,9 +77,9 @@ interface nsIScriptError : nsIConsoleMessage
     /* This should be called instead of nsIScriptError.init to
        initialize with a window id.  The window id should be for the
        inner window associated with this error. */
-    void initWithWindowID(in wstring message,
-                          in wstring sourceName,
-                          in wstring sourceLine,
+    void initWithWindowID(in AString message,
+                          in AString sourceName,
+                          in AString sourceLine,
                           in uint32_t lineNumber,
                           in uint32_t columnNumber,
                           in uint32_t flags,

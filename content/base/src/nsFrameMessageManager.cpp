@@ -683,10 +683,10 @@ ContentScriptErrorReporter(JSContext* aCx,
 
   if (aReport) {
     if (aReport->ucmessage) {
-      message.Assign(reinterpret_cast<const PRUnichar*>(aReport->ucmessage));
+      message.Assign(static_cast<const PRUnichar*>(aReport->ucmessage));
     }
     filename.AssignWithConversion(aReport->filename);
-    line.Assign(reinterpret_cast<const PRUnichar*>(aReport->uclinebuf));
+    line.Assign(static_cast<const PRUnichar*>(aReport->uclinebuf));
     lineNumber = aReport->lineno;
     columnNumber = aReport->uctokenptr - aReport->uclinebuf;
     flags = aReport->flags;
@@ -700,7 +700,7 @@ ContentScriptErrorReporter(JSContext* aCx,
     message.AssignWithConversion(aMessage);
   }
 
-  rv = scriptError->Init(message.get(), filename.get(), line.get(),
+  rv = scriptError->Init(message, filename, line,
                          lineNumber, columnNumber, flags,
                          "Message manager content script");
   if (NS_FAILED(rv)) {
@@ -731,7 +731,7 @@ ContentScriptErrorReporter(JSContext* aCx,
   error.AppendInt(lineNumber, 10);
   error.Append(": ");
   if (aReport->ucmessage) {
-    AppendUTF16toUTF8(reinterpret_cast<const PRUnichar*>(aReport->ucmessage),
+    AppendUTF16toUTF8(static_cast<const PRUnichar*>(aReport->ucmessage),
                       error);
   } else {
     error.Append(aMessage);

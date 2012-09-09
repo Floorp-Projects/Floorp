@@ -106,9 +106,9 @@ Decoder::Finish()
                        NS_ConvertASCIItoUTF16(mImage.GetURIString()));
 
       if (NS_SUCCEEDED(errorObject->InitWithWindowID(
-                         msg.get(),
-                         NS_ConvertUTF8toUTF16(mImage.GetURIString()).get(),
-                         nullptr, 0, 0, nsIScriptError::errorFlag,
+                         msg,
+                         NS_ConvertUTF8toUTF16(mImage.GetURIString()),
+                         EmptyString(), 0, 0, nsIScriptError::errorFlag,
                          "Image", mImage.InnerWindowID()
                        ))) {
         consoleService->LogMessage(errorObject);

@@ -1350,24 +1350,25 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
     if (report) {
         nsAutoString bestMessage;
         if (report && report->ucmessage) {
-            bestMessage = (const PRUnichar *)report->ucmessage;
+            bestMessage = static_cast<const PRUnichar*>(report->ucmessage);
         } else if (message) {
             CopyASCIItoUTF16(message, bestMessage);
         } else {
             bestMessage.AssignLiteral("JavaScript Error");
         }
 
+        const PRUnichar* uclinebuf =
+            static_cast<const PRUnichar*>(report->uclinebuf);
+
         data = new nsScriptError();
-        if (!data)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-
-        data->InitWithWindowID(bestMessage.get(),
-                               NS_ConvertASCIItoUTF16(report->filename).get(),
-                               (const PRUnichar *)report->uclinebuf, report->lineno,
-                               report->uctokenptr - report->uclinebuf, report->flags,
-                               "XPConnect JavaScript",
-                               nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(ccx.GetJSContext()));
+        data->InitWithWindowID(
+            bestMessage,
+            NS_ConvertASCIItoUTF16(report->filename),
+            uclinebuf ? nsDependentString(uclinebuf) : EmptyString(),
+            report->lineno,
+            report->uctokenptr - report->uclinebuf, report->flags,
+            "XPConnect JavaScript",
+            nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(ccx.GetJSContext()));
     }
 
     if (data) {
