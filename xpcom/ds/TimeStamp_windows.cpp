@@ -24,6 +24,40 @@
 #include "prlog.h"
 #include <stdio.h>
 
+#include <intrin.h>
+
+static bool
+HasStableTSC()
+{
+  union {
+    int regs[4];
+    struct {
+      int nIds;
+      char cpuString[12];
+    };
+  } cpuInfo;
+
+  __cpuid(cpuInfo.regs, 0);
+  // Only allow Intel CPUs for now
+  // The order of the registers is reg[1], reg[3], reg[2].  We just adjust the
+  // string so that we can compare in one go.
+  if (_strnicmp(cpuInfo.cpuString, "GenuntelineI", sizeof(cpuInfo.cpuString)))
+    return false;
+
+  int regs[4];
+
+  // detect if the Advanced Power Management feature is supported
+  __cpuid(regs, 0x80000000);
+  if (regs[0] < 0x80000007)
+    return false;
+
+  __cpuid(regs, 0x80000007);
+  // if bit 8 is set than TSC will run at a constant rate
+  // in all ACPI P-state, C-states and T-states
+  return regs[3] & (1 << 8);
+}
+
+
 #if defined(PR_LOGGING)
 // Log module for mozilla::TimeStamp for Windows logging...
 //
@@ -46,6 +80,8 @@ static volatile ULONGLONG sResolutionSigDigs;
 static const double   kNsPerSecd  = 1000000000.0;
 static const LONGLONG kNsPerSec   = 1000000000;
 static const LONGLONG kNsPerMillisec = 1000000;
+
+static bool sHasStableTSC = false;
 
 
 // ----------------------------------------------------------------------------
@@ -139,7 +175,7 @@ static const DWORD kLockSpinCount = 4096;
 CRITICAL_SECTION sTimeStampLock;
 
 // ----------------------------------------------------------------------------
-// Globals heavily chaning at runtime, protected with sTimeStampLock mutex
+// Globals heavily changing at runtime, protected with sTimeStampLock mutex
 // ----------------------------------------------------------------------------
 
 // The calibrated difference between QPC and GTC.
@@ -147,7 +183,7 @@ CRITICAL_SECTION sTimeStampLock;
 // Kept in [mt]
 static LONGLONG sSkew = 0;
 
-// Keeps the last result we have returned from TickCount64 (bellow).  Protects
+// Keeps the last result we have returned from sGetTickCount64 (bellow).  Protects
 // from roll over and going backward.
 //
 // Kept in [ms]
@@ -164,13 +200,22 @@ static ULONGLONG sLastResult = 0;
 // Kept in [ms]
 static ULONGLONG sLastCalibrated;
 
+// The following variable stores two booleans, both initialized to false.
+//
+// The lower word is fallbackToGTC:
 // After we have detected a run out of bounderies set this to true.  This
 // then disallows use of QPC result for the hi-res timer.
-static bool sFallBackToGTC = false;
-
+//
+// The higher word is forceRecalibrate:
 // Set to true to force recalibration on QPC read.  This is generally set after
 // system wake up, during which skew can change a lot.
-static bool sForceRecalibrate = false;
+static union CalibrationFlags {
+  struct {
+    bool fallBackToGTC;
+    bool forceRecalibrate;
+  } flags;
+  uint32_t dwordValue;
+} sCalibrationFlags;
 
 
 namespace mozilla {
@@ -179,6 +224,20 @@ namespace mozilla {
 static ULONGLONG
 CalibratedPerformanceCounter();
 
+typedef ULONGLONG (WINAPI* GetTickCount64_t)();
+static GetTickCount64_t sGetTickCount64 = nullptr;
+
+static inline ULONGLONG
+InterlockedRead64(volatile ULONGLONG* destination)
+{
+#ifdef _WIN64
+  // Aligned 64-bit reads on x86-64 are atomic
+  return *destination;
+#else
+  // Dirty hack since Windows doesn't provide an atomic 64-bit read function
+  return _InterlockedCompareExchange64(reinterpret_cast<volatile __int64*> (destination), 0, 0);
+#endif
+}
 
 // ----------------------------------------------------------------------------
 // Critical Section helper class
@@ -263,8 +322,11 @@ StandbyObserver::Observe(nsISupports *subject,
 
   // Clear the potentiall fallback flag now and try using
   // QPC again after wake up.
-  sFallBackToGTC = false;
-  sForceRecalibrate = true;
+  CalibrationFlags value;
+  value.flags.fallBackToGTC = false;
+  value.flags.forceRecalibrate = true;
+  sCalibrationFlags.dwordValue = value.dwordValue; // aligned 32-bit writes are atomic
+
   LOG(("TimeStamp: system has woken up, reset GTC fallback"));
 
   return NS_OK;
@@ -364,26 +426,25 @@ InitResolution()
 // @param gtc
 // Result of GetTickCount().  Passing it as an arg lets us call it out
 // of the common mutex.
-static inline ULONGLONG
-TickCount64(DWORD now)
+static ULONGLONG WINAPI
+GetTickCount64Fallback()
 {
-  ULONGLONG lastResultHiPart = sLastGTCResult & (~0ULL << 32);
-  ULONGLONG result = lastResultHiPart | ULONGLONG(now);
+  ULONGLONG old, newValue;
+  do {
+    old = InterlockedRead64(&sLastGTCResult);
+    ULONGLONG oldTop = old & 0xffffffff00000000;
+    ULONG oldBottom = old & 0xffffffff;
+    ULONG newBottom = GetTickCount();
+    if (newBottom < oldBottom) {
+        // handle overflow
+        newValue = (oldTop + (1ULL<<32)) | newBottom;
+    } else {
+        newValue = oldTop | newBottom;
+    }
+  } while (old != _InterlockedCompareExchange64(reinterpret_cast<volatile __int64*> (&sLastGTCResult),
+                                                newValue, old));
 
-  // It may happen that when accessing GTC on multiple threads the results
-  // may differ (GTC value may be lower due to running before the others
-  // right around the overflow moment).  That falsely shifts the high part.
-  // Easiest solution is to check for a significant difference.
-
-  if (sLastGTCResult > result) {
-    if ((sLastGTCResult - result) > (1ULL << 31))
-      result += 1ULL << 32;
-    else
-      result = sLastGTCResult;
-  }
-
-  sLastGTCResult = result;
-  return result;
+  return newValue;
 }
 
 // Result is in [mt]
@@ -399,7 +460,7 @@ PerformanceCounter()
 static inline void
 RecordFlaw()
 {
-  sFallBackToGTC = true;
+  sCalibrationFlags.flags.fallBackToGTC = true;
 
   LOG(("TimeStamp: falling back to GTC :("));
 
@@ -411,7 +472,7 @@ RecordFlaw()
   // 2. InitResolution for GTC will probably return 0 anyway (increments
   //    only every 15 or 16 ms.)
   //
-  // There is no need to drop sFrequencyPerSec to 1, result of TickCount64
+  // There is no need to drop sFrequencyPerSec to 1, result of sGetTickCount64
   // is multiplied and later divided with sFrequencyPerSec.  Changing it
   // here may introduce sync problems.  Syncing access to sFrequencyPerSec
   // is overkill.  Drawback is we loose some bits from the upper bound of
@@ -432,14 +493,16 @@ RecordFlaw()
 static inline bool
 CheckCalibration(LONGLONG overflow, ULONGLONG qpc, ULONGLONG gtc)
 {
-  if (sFallBackToGTC) {
+  CalibrationFlags value;
+  value.dwordValue = sCalibrationFlags.dwordValue; // aligned 32-bit reads are atomic
+  if (value.flags.fallBackToGTC) {
     // We are forbidden to use QPC
     return false;
   }
 
   ULONGLONG sinceLastCalibration = gtc - sLastCalibrated;
 
-  if (overflow && !sForceRecalibrate) {
+  if (overflow && !value.flags.forceRecalibrate) {
     // Calculate trend of the overflow to correspond to the calibration
     // interval, we may get here long after the last calibration because we
     // either didn't read the hi-res function or the system was suspended.
@@ -453,24 +516,56 @@ CheckCalibration(LONGLONG overflow, ULONGLONG qpc, ULONGLONG gtc)
          mt2ms_d(trend)));
 
     if (trend > ms2mt(kOverflowLimit)) {
-      // This sets sFallBackToGTC, we have detected
+      // This sets fallBackToGTC, we have detected
       // an unreliability of QPC, stop using it.
+      AutoCriticalSection lock(&sTimeStampLock);
       RecordFlaw();
       return false;
     }
   }
 
-  if (sinceLastCalibration > kCalibrationInterval || sForceRecalibrate) {
+  if (sinceLastCalibration > kCalibrationInterval || value.flags.forceRecalibrate) {
     // Recalculate the skew now
+    AutoCriticalSection lock(&sTimeStampLock);
     sSkew = qpc - ms2mt(gtc);
     sLastCalibrated = gtc;
     LOG(("TimeStamp: new skew is %1.2fms (force:%d)",
-      mt2ms_d(sSkew), sForceRecalibrate));
+      mt2ms_d(sSkew), value.flags.forceRecalibrate));
 
-    sForceRecalibrate = false;
+    sCalibrationFlags.flags.forceRecalibrate = false;
   }
 
   return true;
+}
+
+// AtomicStoreIfGreaterThan tries to store the maximum of two values in one of them
+// without locking.  The only scenario in which two racing threads may corrupt the
+// maximum value is when they both try to increase the value without knowing about
+// each other, like below:
+//
+// Thread 1 reads 1000.  newValue in thread 1 is 1005.
+// Thread 2 reads 1000.  newValue in thread 2 is 1001.
+// Thread 1 tries to store.  Its value is less than newValue, so the store happens.
+//                           *destination is now 1005.
+// Thread 2 tries to store.  Its value is less than newValue, so the store happens.
+//                           *destination is now 1001.
+//
+// The correct value to be stored if this was happening serially is 1005.  The
+// following algorithm achieves that.
+//
+// The return value is the maximum value.
+ULONGLONG
+AtomicStoreIfGreaterThan(ULONGLONG* destination, ULONGLONG newValue)
+{
+  ULONGLONG readValue;
+  do {
+    readValue = InterlockedRead64(destination);
+    if (readValue > newValue)
+      return readValue;
+  } while (readValue != _InterlockedCompareExchange64(reinterpret_cast<volatile __int64*> (destination),
+                                                      newValue, readValue));
+
+  return newValue;
 }
 
 // The main function.  Result is in [mt] ensuring to not go back and be mostly
@@ -487,12 +582,9 @@ CalibratedPerformanceCounter()
   // possibly a better performance.
 
   ULONGLONG qpc = PerformanceCounter();
-  DWORD gtcw = GetTickCount();
-
-  AutoCriticalSection lock(&sTimeStampLock);
 
   // Rollover protection
-  ULONGLONG gtc = TickCount64(gtcw);
+  ULONGLONG gtc = sGetTickCount64();
 
   LONGLONG diff = qpc - ms2mt(gtc) - sSkew;
   LONGLONG overflow = 0;
@@ -515,10 +607,7 @@ CalibratedPerformanceCounter()
       mt2ms_d(result), mt2ms_d(diff)));
 #endif
 
-  if (result > sLastResult)
-    sLastResult = result;
-
-  return sLastResult;
+  return AtomicStoreIfGreaterThan(&sLastResult, result);
 }
 
 // ----------------------------------------------------------------------------
@@ -577,6 +666,15 @@ TimeStamp::Startup()
 {
   // Decide which implementation to use for the high-performance timer.
 
+  HMODULE kernelDLL = GetModuleHandleW(L"kernel32.dll");
+  sGetTickCount64 = reinterpret_cast<GetTickCount64_t>
+    (GetProcAddress(kernelDLL, "GetTickCount64"));
+  if (!sGetTickCount64) {
+    // If the platform does not support the GetTickCount64 (Windows XP doesn't),
+    // then use our fallback implementation based on GetTickCount.
+    sGetTickCount64 = GetTickCount64Fallback;
+  }
+
   InitializeCriticalSectionAndSpinCount(&sTimeStampLock, kLockSpinCount);
 
   LARGE_INTEGER freq;
@@ -584,7 +682,7 @@ TimeStamp::Startup()
   if (!QPCAvailable) {
     // No Performance Counter.  Fall back to use GetTickCount.
     sFrequencyPerSec = 1;
-    sFallBackToGTC = true;
+    sCalibrationFlags.flags.fallBackToGTC = true;
     InitResolution();
 
     LOG(("TimeStamp: using GetTickCount"));
@@ -594,11 +692,13 @@ TimeStamp::Startup()
   sFrequencyPerSec = freq.QuadPart;
 
   ULONGLONG qpc = PerformanceCounter();
-  sLastCalibrated = TickCount64(::GetTickCount());
+  sLastCalibrated = sGetTickCount64();
   sSkew = qpc - ms2mt(sLastCalibrated);
 
   InitThresholds();
   InitResolution();
+
+  sHasStableTSC = HasStableTSC();
 
   LOG(("TimeStamp: initial skew is %1.2fms", mt2ms_d(sSkew)));
 
@@ -614,6 +714,9 @@ TimeStamp::Shutdown()
 TimeStamp
 TimeStamp::Now()
 {
+  if (sHasStableTSC) {
+    return TimeStamp(uint64_t(PerformanceCounter()));
+  }
   return TimeStamp(uint64_t(CalibratedPerformanceCounter()));
 }
 

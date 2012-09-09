@@ -15,8 +15,11 @@
 
 /** Test for HTMLOLElement attributes reflection **/
 
-// TODO: .reversed (boolean), bug 601912
-todo("reversed" in document.createElement("ol"), "reversed is not yet implemented");
+// .reversed (boolean)
+reflectBoolean({
+  element: document.createElement("ol"),
+  attribute: "reversed",
+})
 
 // .start
 reflectInt({

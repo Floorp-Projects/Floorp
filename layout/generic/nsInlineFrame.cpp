@@ -297,6 +297,9 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   if (nullptr == aReflowState.mLineLayout) {
     return NS_ERROR_INVALID_ARG;
   }
+  if (IsFrameTreeTooDeep(aReflowState, aMetrics, aStatus)) {
+    return NS_OK;
+  }
 
   bool    lazilySetParentPointer = false;
 
@@ -365,16 +368,26 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
     nsAutoPtr<nsFrameList> overflowFrames(StealOverflowFrames());
     if (overflowFrames) {
       NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-
-      // Because we lazily set the parent pointer of child frames we get from
-      // our prev-in-flow's overflow list, it's possible that we have not set
-      // the parent pointer for these frames.
-      mFrames.AppendFrames(this, *overflowFrames);
+      if (!lazilySetParentPointer) {
+        // The frames on our own overflowlist may have been pushed by a
+        // previous lazilySetParentPointer Reflow so we need to ensure
+        // the correct parent pointer now since we're not setting it
+        // lazily in this Reflow.
+        nsIFrame* firstChild = overflowFrames->FirstChild();
+        if (lineContainer && lineContainer->GetPrevContinuation()) {
+          ReparentFloatsForInlineChild(lineContainer, firstChild, true);
+        }
+        const bool inFirstLine = aReflowState.mLineLayout->GetInFirstLine();
+        nsFrameManager* fm = PresContext()->FrameManager();
+        for (nsIFrame* f = firstChild; f; f = f->GetNextSibling()) {
+          f->SetParent(this);
+          if (inFirstLine) {
+            fm->ReparentStyleContext(f);
+          }
+        }
+      }
+      mFrames.AppendFrames(nullptr, *overflowFrames);
     }
-  }
-
-  if (IsFrameTreeTooDeep(aReflowState, aMetrics, aStatus)) {
-    return NS_OK;
   }
 
   // Set our own reflow state (additional state above and beyond
@@ -470,42 +483,41 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     if (irs.mSetParentPointer) {
       bool havePrevBlock =
         irs.mLineContainer && irs.mLineContainer->GetPrevContinuation();
-      // If our block is the first in flow, then any floats under the pulled
-      // frame must already belong to our block.
-      if (havePrevBlock) {
-        // This has to happen before we update frame's parent; we need to
-        // know frame's ancestry under its old block.
-        // The blockChildren.ContainsFrame check performed by
-        // ReparentFloatsForInlineChild here may be slow, but we can't
-        // easily avoid it because we don't know where 'frame' originally
-        // came from. If we really really have to optimize this we could
-        // cache whether frame->GetParent() is under its containing blocks
-        // overflowList or not.
-        ReparentFloatsForInlineChild(irs.mLineContainer, frame, false);
-      }
-      frame->SetParent(this);
-      if (inFirstLine) {
-        frameManager->ReparentStyleContext(frame);
-      }
-      // We also need to check if frame has a next-in-flow. If it does, then set
-      // its parent frame pointer, too. Otherwise, if we reflow frame and it's
-      // complete we'll fail when deleting its next-in-flow which is no longer
-      // needed. This scenario doesn't happen often, but it can happen
-      nsIFrame* nextInFlow = frame->GetNextInFlow();
-      for ( ; nextInFlow; nextInFlow = nextInFlow->GetNextInFlow()) {
-        // Since we only do lazy setting of parent pointers for the frame's
-        // initial reflow, this frame can't have a next-in-flow. That means
-        // the continuing child frame must be in our child list as well. If
-        // not, then something is wrong
-        NS_ASSERTION(mFrames.ContainsFrame(nextInFlow), "unexpected flow");
+      nsIFrame* child = frame;
+      do {
+        // If our block is the first in flow, then any floats under the pulled
+        // frame must already belong to our block.
         if (havePrevBlock) {
-          ReparentFloatsForInlineChild(irs.mLineContainer, nextInFlow, false);
+          // This has to happen before we update frame's parent; we need to
+          // know frame's ancestry under its old block.
+          // The blockChildren.ContainsFrame check performed by
+          // ReparentFloatsForInlineChild here may be slow, but we can't
+          // easily avoid it because we don't know where 'frame' originally
+          // came from. If we really really have to optimize this we could
+          // cache whether frame->GetParent() is under its containing blocks
+          // overflowList or not.
+          ReparentFloatsForInlineChild(irs.mLineContainer, child, false);
         }
-        nextInFlow->SetParent(this);
+        child->SetParent(this);
         if (inFirstLine) {
-          frameManager->ReparentStyleContext(nextInFlow);
+          frameManager->ReparentStyleContext(child);
         }
-      }
+        // We also need to do the same for |frame|'s next-in-flows that are in
+        // the sibling list. Otherwise, if we reflow |frame| and it's complete
+        // we'll crash when trying to delete its next-in-flow.
+        // This scenario doesn't happen often, but it can happen.
+        nsIFrame* nextSibling = child->GetNextSibling();
+        child = child->GetNextInFlow();
+        if (NS_UNLIKELY(child)) {
+          while (child != nextSibling && nextSibling) {
+            nextSibling = nextSibling->GetNextSibling();
+          }
+          if (!nextSibling) {
+            child = nullptr;
+          }
+        }
+        MOZ_ASSERT(!child || mFrames.ContainsFrame(child));
+      } while (child);
 
       // Fix the parent pointer for ::first-letter child frame next-in-flows,
       // so nsFirstLetterFrame::Reflow can destroy them safely (bug 401042).
@@ -540,23 +552,33 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
         }
       }
     }
-    rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
-    if (NS_FAILED(rv)) {
-      done = true;
-      break;
+    MOZ_ASSERT(frame->GetParent() == this);
+
+    if (!done) {
+      rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
+      done = NS_FAILED(rv) ||
+             NS_INLINE_IS_BREAK(aStatus) || 
+             (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus));
+      if (done) {
+        if (!irs.mSetParentPointer) {
+          break;
+        }
+        // Keep reparenting the remaining siblings, but don't reflow them.
+        nsFrameList* pushedFrames = GetOverflowFrames();
+        if (pushedFrames && pushedFrames->FirstChild() == frame) {
+          // Don't bother if |frame| was pushed to our overflow list.
+          break;
+        }
+      } else {
+        irs.mPrevFrame = frame;
+      }
     }
-    if (NS_INLINE_IS_BREAK(aStatus) || 
-        (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus))) {
-      done = true;
-      break;
-    }
-    irs.mPrevFrame = frame;
     frame = frame->GetNextSibling();
   }
 
   // Attempt to pull frames from our next-in-flow until we can't
-  if (!done && (nullptr != GetNextInFlow())) {
-    while (!done) {
+  if (!done && GetNextInFlow()) {
+    while (true) {
       bool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
       bool isComplete;
       if (!frame) { // Could be non-null if we pulled a first-letter frame and
@@ -573,25 +595,18 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
         break;
       }
       rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
-      if (NS_FAILED(rv)) {
-        done = true;
-        break;
-      }
-      if (NS_INLINE_IS_BREAK(aStatus) || 
+      if (NS_FAILED(rv) ||
+          NS_INLINE_IS_BREAK(aStatus) || 
           (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus))) {
-        done = true;
         break;
       }
       irs.mPrevFrame = frame;
       frame = frame->GetNextSibling();
     }
   }
-#ifdef DEBUG
-  if (NS_FRAME_IS_COMPLETE(aStatus)) {
-    // We can't be complete AND have overflow frames!
-    NS_ASSERTION(!GetOverflowFrames(), "whoops");
-  }
-#endif
+
+  NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) || !GetOverflowFrames(),
+               "We can't be complete AND have overflow frames!");
 
   // If after reflowing our children they take up no area then make
   // sure that we don't either.
@@ -696,22 +711,6 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
     else {
       // Preserve reflow status when breaking-before our first child
       // and propagate it upward without modification.
-      // Note: if we're lazily setting the frame pointer for our child 
-      // frames, then we need to set it now. Don't return and leave the
-      // remaining child frames in our child list with the wrong parent
-      // frame pointer...
-      if (irs.mSetParentPointer) {
-        if (irs.mLineContainer && irs.mLineContainer->GetPrevContinuation()) {
-          ReparentFloatsForInlineChild(irs.mLineContainer, aFrame->GetNextSibling(),
-                                       true);
-        }
-        for (nsIFrame* f = aFrame->GetNextSibling(); f; f = f->GetNextSibling()) {
-          f->SetParent(this);
-          if (lineLayout->GetInFirstLine()) {
-            aPresContext->FrameManager()->ReparentStyleContext(f);
-          }
-        }
-      }
     }
     return NS_OK;
   }
@@ -766,14 +765,23 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
   nsInlineFrame* nextInFlow = irs.mNextInFlow;
   while (nullptr != nextInFlow) {
     frame = nextInFlow->mFrames.FirstChild();
-
     if (!frame) {
-      // If the principal childlist has no frames, then try moving the overflow
-      // frames to it.
-      nsAutoPtr<nsFrameList> overflowFrames(nextInFlow->StealOverflowFrames());
+      // The nextInFlow's principal list has no frames, try its overflow list.
+      nsFrameList* overflowFrames = nextInFlow->GetOverflowFrames();
       if (overflowFrames) {
-        nextInFlow->mFrames.SetFrames(*overflowFrames);
-        frame = nextInFlow->mFrames.FirstChild();
+        frame = overflowFrames->FirstChild();
+        if (!frame->GetNextSibling()) {
+          // We're stealing the only frame - delete the overflow list.
+          delete nextInFlow->StealOverflowFrames();
+        } else {
+          // We leave the remaining frames on the overflow list (rather than
+          // putting them on nextInFlow's principal list) so we don't have to
+          // set up the parent for them.
+          overflowFrames->RemoveFirstChild();
+        }
+        // ReparentFloatsForInlineChild needs it to be on a child list -
+        // we remove it again below.
+        nextInFlow->mFrames.SetFrames(frame);
       }
     }
 
@@ -788,15 +796,7 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
         ReparentFloatsForInlineChild(irs.mLineContainer, frame, false);
       }
       nextInFlow->mFrames.RemoveFirstChild();
-
-      // If we removed the last frame from the principal child list then move
-      // any overflow frames to it.
-      if (!nextInFlow->mFrames.FirstChild()) {
-        nsAutoPtr<nsFrameList> overflowFrames(nextInFlow->StealOverflowFrames());
-        if (overflowFrames) {
-          nextInFlow->mFrames.SetFrames(*overflowFrames);
-        }
-      }
+      // nsFirstLineFrame::PullOneFrame calls ReparentStyleContext.
 
       mFrames.InsertFrame(this, irs.mPrevFrame, frame);
       isComplete = false;

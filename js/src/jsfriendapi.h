@@ -151,7 +151,8 @@ extern JS_FRIEND_API(JSBool)
 JS_WrapAutoIdVector(JSContext *cx, JS::AutoIdVector &props);
 
 extern JS_FRIEND_API(JSBool)
-JS_EnumerateState(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op, js::Value *statep, jsid *idp);
+JS_EnumerateState(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
+                  js::MutableHandleValue statep, js::MutableHandleId idp);
 
 struct JSFunctionSpecWithHelp {
     const char      *name;
@@ -1391,6 +1392,97 @@ SET_JITINFO(JSFunction * func, const JSJitInfo *info)
     JS_ASSERT(!(fun->flags & 0x4000));
     fun->jitinfo = info;
 }
+#endif /* __cplusplus */
+
+/*
+ * Engine-internal extensions of jsid.  This code is here only until we
+ * eliminate Gecko's dependencies on it!
+ */
+
+static JS_ALWAYS_INLINE jsid
+JSID_FROM_BITS(size_t bits)
+{
+    jsid id;
+    JSID_BITS(id) = bits;
+    return id;
+}
+
+/*
+ * Must not be used on atoms that are representable as integer jsids.
+ * Prefer NameToId or AtomToId over this function:
+ *
+ * A PropertyName is an atom that does not contain an integer in the range
+ * [0, UINT32_MAX]. However, jsid can only hold an integer in the range
+ * [0, JSID_INT_MAX] (where JSID_INT_MAX == 2^31-1).  Thus, for the range of
+ * integers (JSID_INT_MAX, UINT32_MAX], to represent as a jsid 'id', it must be
+ * the case JSID_IS_ATOM(id) and !JSID_TO_ATOM(id)->isPropertyName().  In most
+ * cases when creating a jsid, code does not have to care about this corner
+ * case because:
+ *
+ * - When given an arbitrary JSAtom*, AtomToId must be used, which checks for
+ *   integer atoms representable as integer jsids, and does this conversion.
+ *
+ * - When given a PropertyName*, NameToId can be used which which does not need
+ *   to do any dynamic checks.
+ *
+ * Thus, it is only the rare third case which needs this function, which
+ * handles any JSAtom* that is known not to be representable with an int jsid.
+ */
+static JS_ALWAYS_INLINE jsid
+NON_INTEGER_ATOM_TO_JSID(JSAtom *atom)
+{
+    JS_ASSERT(((size_t)atom & 0x7) == 0);
+    jsid id = JSID_FROM_BITS((size_t)atom);
+    JS_ASSERT(id == INTERNED_STRING_TO_JSID(NULL, (JSString*)atom));
+    return id;
+}
+
+/* All strings stored in jsids are atomized, but are not necessarily property names. */
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_ATOM(jsid id)
+{
+    return JSID_IS_STRING(id);
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_ATOM(jsid id, JSAtom *atom)
+{
+    return id == JSID_FROM_BITS((size_t)atom);
+}
+
+static JS_ALWAYS_INLINE JSAtom *
+JSID_TO_ATOM(jsid id)
+{
+    return (JSAtom *)JSID_TO_STRING(id);
+}
+
+JS_STATIC_ASSERT(sizeof(jsid) == JS_BYTES_PER_WORD);
+
+#ifdef __cplusplus
+
+namespace js {
+
+static JS_ALWAYS_INLINE Value
+IdToValue(jsid id)
+{
+    if (JSID_IS_STRING(id))
+        return StringValue(JSID_TO_STRING(id));
+    if (JS_LIKELY(JSID_IS_INT(id)))
+        return Int32Value(JSID_TO_INT(id));
+    if (JS_LIKELY(JSID_IS_OBJECT(id)))
+        return ObjectValue(*JSID_TO_OBJECT(id));
+    JS_ASSERT(JSID_IS_DEFAULT_XML_NAMESPACE(id) || JSID_IS_VOID(id));
+    return UndefinedValue();
+}
+
+static JS_ALWAYS_INLINE jsval
+IdToJsval(jsid id)
+{
+    return IdToValue(id);
+}
+
+} /* namespace js */
+
 #endif /* __cplusplus */
 
 #endif /* jsfriendapi_h___ */

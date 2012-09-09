@@ -152,6 +152,11 @@ if test -z "$PERL" -o "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
 
+AC_SUBST(GAIADIR)
+if test -n "$GAIADIR" ; then
+    AC_DEFINE(PACKAGE_GAIA)
+fi
+
 MOZ_ARG_WITH_STRING(gonk,
 [  --with-gonk=DIR
                location of gonk dir],

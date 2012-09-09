@@ -505,6 +505,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC aFormat, LPSTGMEDIUM pSTM)
 
       // Someone is asking for an image
       case CF_DIBV5:
+      case CF_DIB:
         return GetDib(df, *aFormat, *pSTM);
 
       default:
@@ -792,7 +793,9 @@ HRESULT nsDataObj::AddGetFormat(FORMATETC& aFE)
 // imgIContainer, so just QI it.
 //
 HRESULT 
-nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG )
+nsDataObj::GetDib(const nsACString& inFlavor,
+                  FORMATETC &aFormat,
+                  STGMEDIUM & aSTG)
 {
   ULONG result = E_FAIL;
   uint32_t len = 0;
@@ -811,7 +814,7 @@ nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG 
   if ( image ) {
     // use the |nsImageToClipboard| helper class to build up a bitmap. We now own
     // the bits, and pass them back to the OS in |aSTG|.
-    nsImageToClipboard converter ( image );
+    nsImageToClipboard converter(image, aFormat.cfFormat == CF_DIBV5);
     HANDLE bits = nullptr;
     nsresult rv = converter.GetPicture ( &bits );
     if ( NS_SUCCEEDED(rv) && bits ) {

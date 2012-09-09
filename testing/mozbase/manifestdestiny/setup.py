@@ -2,12 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# The real details are in manifestparser.py; this is just a front-end
-# BUT use this file when you want to distribute to python!
-# otherwise setuptools will complain that it can't find setup.py
-# and result in a useless package
-
-from setuptools import setup, find_packages
+from setuptools import setup
 import sys
 import os
 
@@ -19,7 +14,7 @@ except:
     description = ''
 
 PACKAGE_NAME = "ManifestDestiny"
-PACKAGE_VERSION = "0.5.4"
+PACKAGE_VERSION = '0.5.5'
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
@@ -27,17 +22,15 @@ setup(name=PACKAGE_NAME,
       long_description=description,
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='mozilla manifests',
-      author='Jeff Hammel',
-      author_email='jhammel@mozilla.com',
-      url='https://github.com/mozilla/mozbase/tree/master/manifestdestiny',
+      author='Mozilla Automation and Testing Team',
+      author_email='tools@lists.mozilla.org',
+      url='https://wiki.mozilla.org/Auto-tools/Projects/MozBase',
       license='MPL',
       zip_safe=False,
-      packages=find_packages(exclude=['legacy']),
-      install_requires=[
-      # -*- Extra requirements: -*-
-      ],
+      packages=['manifestparser'],
+      install_requires=[],
       entry_points="""
       [console_scripts]
-      manifestparser = manifestparser:main
+      manifestparser = manifestparser.manifestparser:main
       """,
      )

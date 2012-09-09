@@ -74,10 +74,10 @@ ProtoGetterImpl(JSContext *cx, CallArgs args)
         return false;
 
     unsigned dummy;
-    Rooted<JSObject*> obj(cx, &args.thisv().toObject());
-    Rooted<jsid> nid(cx, NameToId(cx->runtime->atomState.protoAtom));
-    Rooted<Value> v(cx);
-    if (!CheckAccess(cx, obj, nid, JSACC_PROTO, v.address(), &dummy))
+    RootedObject obj(cx, &args.thisv().toObject());
+    RootedId nid(cx, NameToId(cx->runtime->atomState.protoAtom));
+    RootedValue v(cx);
+    if (!CheckAccess(cx, obj, nid, JSACC_PROTO, &v, &dummy))
         return false;
 
     args.rval().set(v);
@@ -154,9 +154,9 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
     Rooted<JSObject*> newProto(cx, args[0].toObjectOrNull());
 
     unsigned dummy;
-    Rooted<jsid> nid(cx, NameToId(cx->runtime->atomState.protoAtom));
-    Rooted<Value> v(cx);
-    if (!CheckAccess(cx, obj, nid, JSAccessMode(JSACC_PROTO | JSACC_WRITE), v.address(), &dummy))
+    RootedId nid(cx, NameToId(cx->runtime->atomState.protoAtom));
+    RootedValue v(cx);
+    if (!CheckAccess(cx, obj, nid, JSAccessMode(JSACC_PROTO | JSACC_WRITE), &v, &dummy))
         return false;
 
     if (!SetProto(cx, obj, newProto, true))

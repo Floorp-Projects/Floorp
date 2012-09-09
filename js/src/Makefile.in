@@ -154,8 +154,6 @@ INSTALLED_HEADERS = \
 		js.msg \
 		jsalloc.h \
 		jsapi.h \
-		jsatom.h \
-		jsatom.tbl \
 		jsclass.h \
 		jsclist.h \
 		jsdbgapi.h \

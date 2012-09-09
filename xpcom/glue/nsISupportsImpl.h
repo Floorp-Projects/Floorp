@@ -29,7 +29,7 @@
 #include "nsTraceRefcnt.h"
 #include "nsCycleCollector.h"
 #include "nsCycleCollectorUtils.h"
-
+#include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +82,9 @@ private:
 // Support for ISupports classes which interact with cycle collector.
 
 struct nsPurpleBufferEntry {
+  // mObject is set to null when nsCycleCollectingAutoRefCnt loses its
+  // reference to the PurpleBufferEntry so that the entry can be added to the
+  // free list. When mObject is null, mNotPurple has no meaning.
   union {
     void *mObject;                        // when low bit unset
     nsPurpleBufferEntry *mNextInFreeList; // when low bit set
@@ -89,7 +92,13 @@ struct nsPurpleBufferEntry {
   // When an object is in the purple buffer, it replaces its reference
   // count with a (tagged) pointer to this entry, so we store the
   // reference count for it.
-  nsrefcnt mRefCnt;
+  nsrefcnt mRefCnt : 31;
+  // When this flag is true, the purple buffer entry is in
+  // a state where there's an object out there that holds onto it, but we aren't
+  // counting that object as purple. This is done to reduce the cost of removing
+  // objects from the purple buffer.
+  nsrefcnt mNotPurple : 1; // nsrefcnt to ensure right packing.
+
   nsCycleCollectionParticipant *mParticipant; // NULL for nsISupports
 };
 
@@ -105,7 +114,7 @@ public:
   {
   }
 
-  nsrefcnt incr(void *owner)
+  MOZ_ALWAYS_INLINE nsrefcnt incr(void *owner)
   {
     if (NS_UNLIKELY(mTagged == NS_CCAR_TAGGED_STABILIZED_REFCNT)) {
       // The sentinel value "purple bit alone, refcount 0" means
@@ -118,20 +127,18 @@ public:
     }
 
     nsrefcnt refcount;
-    if (IsPurple()) {
+    if (HasPurpleBufferEntry()) {
       nsPurpleBufferEntry *e = NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged);
       NS_ASSERTION(e->mObject == owner, "wrong entry");
-      refcount = e->mRefCnt;
-      NS_ASSERTION(refcount != 0, "purple ISupports pointer with zero refcnt");
-
-      if (NS_LIKELY(NS_CycleCollectorForget2(e))) {
-        // |e| is now invalid
-        ++refcount;
-        mTagged = NS_CCAR_REFCNT_TO_TAGGED(refcount);
-      } else {
-        ++refcount;
-        e->mRefCnt = refcount;
+      NS_ASSERTION(e->mRefCnt, "purple ISupports pointer with zero refcnt");
+      refcount = ++(e->mRefCnt);
+#ifdef DEBUG_CC
+      if (!e->mNotPurple) {
+        nsCycleCollector_logPurpleRemoval(
+          NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject);
       }
+#endif
+      e->mNotPurple = true;
     } else {
       refcount = NS_CCAR_TAGGED_TO_REFCNT(mTagged);
       ++refcount;
@@ -141,37 +148,41 @@ public:
     return refcount;
   }
 
-  void stabilizeForDeletion()
+  MOZ_ALWAYS_INLINE void stabilizeForDeletion()
   {
     mTagged = NS_CCAR_TAGGED_STABILIZED_REFCNT;
   }
 
-  nsrefcnt decr(nsISupports *owner)
+  MOZ_ALWAYS_INLINE nsrefcnt decr(nsISupports *owner)
   {
     return decr(owner, nullptr);
   }
 
-  nsrefcnt decr(void *owner, nsCycleCollectionParticipant *p)
+  MOZ_ALWAYS_INLINE nsrefcnt decr(void *owner, nsCycleCollectionParticipant *p)
   {
     if (NS_UNLIKELY(mTagged == NS_CCAR_TAGGED_STABILIZED_REFCNT))
       return 1;
 
     nsrefcnt refcount;
-    if (IsPurple()) {
+    if (HasPurpleBufferEntry()) {
       nsPurpleBufferEntry *e = NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged);
       NS_ASSERTION(e->mObject == owner, "wrong entry");
-      refcount = e->mRefCnt;
-      --refcount;
-      
+      refcount = --(e->mRefCnt);
       if (NS_UNLIKELY(refcount == 0)) {
-        if (NS_UNLIKELY(!NS_CycleCollectorForget2(e))) {
-          NS_NOTREACHED("forget should not fail when reference count hits 0");
-          // Clear the entry's pointer to us.
-          e->mObject = nullptr;
-        }
-        mTagged = NS_CCAR_REFCNT_TO_TAGGED(refcount);
+#ifdef DEBUG_CC
+        nsCycleCollector_logPurpleRemoval(
+          NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject);
+#endif
+        e->mObject = nullptr;
+        mTagged = NS_CCAR_REFCNT_TO_TAGGED(0);
       } else {
-        e->mRefCnt = refcount;
+#ifdef DEBUG_CC
+        if (e->mNotPurple) {
+          nsCycleCollector_logPurpleAddition(
+            NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject, p);
+        }
+#endif
+        e->mNotPurple = false;
       }
     } else {
       refcount = NS_CCAR_TAGGED_TO_REFCNT(mTagged);
@@ -190,14 +201,14 @@ public:
     return refcount;
   }
 
-  void unmarkPurple()
+  MOZ_ALWAYS_INLINE void ReleasePurpleBufferEntry()
   {
-    NS_ASSERTION(IsPurple(), "must be purple");
+    NS_ASSERTION(HasPurpleBufferEntry(), "must have purple buffer entry");
     nsrefcnt refcount = NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mRefCnt;
     mTagged = NS_CCAR_REFCNT_TO_TAGGED(refcount);
   }
 
-  void RemovePurple()
+  MOZ_ALWAYS_INLINE void RemovePurple()
   {
     NS_ASSERTION(IsPurple(), "must be purple");
 #ifdef DEBUG_CC
@@ -206,27 +217,33 @@ public:
 #endif
     // The entry will be added to the free list later. 
     NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject = nullptr;
-    unmarkPurple();
+    ReleasePurpleBufferEntry();
   }
 
-  bool IsPurple() const
+  MOZ_ALWAYS_INLINE bool HasPurpleBufferEntry() const
   {
     NS_ASSERTION(mTagged != NS_CCAR_TAGGED_STABILIZED_REFCNT,
                  "should have checked for stabilization first");
     return !(NS_PTR_TO_INT32(mTagged) & NS_CCAR_REFCNT_BIT);
   }
 
-  nsrefcnt get() const
+  MOZ_ALWAYS_INLINE bool IsPurple() const
+  {
+    return HasPurpleBufferEntry() &&
+      !(NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mNotPurple);
+  }
+
+  MOZ_ALWAYS_INLINE nsrefcnt get() const
   {
     if (NS_UNLIKELY(mTagged == NS_CCAR_TAGGED_STABILIZED_REFCNT))
       return 1;
 
-    return NS_UNLIKELY(IsPurple())
+    return NS_UNLIKELY(HasPurpleBufferEntry())
              ? NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mRefCnt
              : NS_CCAR_TAGGED_TO_REFCNT(mTagged);
   }
 
-  operator nsrefcnt() const
+  MOZ_ALWAYS_INLINE operator nsrefcnt() const
   {
     return get();
   }
@@ -281,8 +298,8 @@ public:                                                                       \
   NS_IMETHOD_(nsrefcnt) Release(void);                                        \
   void UnmarkIfPurple()                                                       \
   {                                                                           \
-    if (NS_LIKELY(mRefCnt.IsPurple()))                                        \
-      mRefCnt.unmarkPurple();                                                 \
+    if (NS_LIKELY(mRefCnt.HasPurpleBufferEntry()))                            \
+      mRefCnt.ReleasePurpleBufferEntry();                                     \
   }                                                                           \
 protected:                                                                    \
   nsCycleCollectingAutoRefCnt mRefCnt;                                        \
