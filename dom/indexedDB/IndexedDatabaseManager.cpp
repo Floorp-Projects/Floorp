@@ -364,6 +364,10 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
 
   nsScriptErrorEvent event(true, NS_LOAD_ERROR);
   request->FillScriptErrorEvent(&event);
+  NS_ABORT_IF_FALSE(event.fileName,
+                    "FillScriptErrorEvent should give us a non-null string "
+                    "for our error's fileName");
+
   event.errorMsg = errorName.get();
 
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aOwner));
@@ -385,9 +389,9 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_FAILED(scriptError->InitWithWindowID(event.errorMsg,
-                                              event.fileName,
-                                              nullptr, event.lineNr,
+  if (NS_FAILED(scriptError->InitWithWindowID(errorName,
+                                              nsDependentString(event.fileName),
+                                              EmptyString(), event.lineNr,
                                               0, 0,
                                               "IndexedDB",
                                               aOwner->WindowID()))) {

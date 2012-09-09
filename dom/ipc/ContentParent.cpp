@@ -1797,7 +1797,7 @@ ContentParent::RecvScriptError(const nsString& aMessage,
       return true;
 
   nsCOMPtr<nsIScriptError> msg(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-  nsresult rv = msg->Init(aMessage.get(), aSourceName.get(), aSourceLine.get(),
+  nsresult rv = msg->Init(aMessage, aSourceName, aSourceLine,
                           aLineNumber, aColNumber, aFlags, aCategory.get());
   if (NS_FAILED(rv))
     return true;
