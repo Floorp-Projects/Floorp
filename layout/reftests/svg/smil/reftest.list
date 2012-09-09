@@ -139,6 +139,7 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),2,1) fuzzy-if(cocoaWidget&&la
 # animate some viewBox attributes
 == anim-svg-viewBox-01.svg lime.svg
 == anim-svg-viewBox-02.svg lime.svg
+== anim-view-01.svg#view lime.svg
 
 # animate some preserveAspectRatio attributes
 == anim-feImage-preserveAspectRatio-01.svg lime.svg
