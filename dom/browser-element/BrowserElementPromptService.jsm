@@ -16,6 +16,9 @@ let EXPORTED_SYMBOLS = ["BrowserElementPromptService"];
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
+const BROWSER_FRAMES_ENABLED_PREF = "dom.mozBrowserFramesEnabled";
+
 function debug(msg) {
   //dump("BrowserElementPromptService - " + msg + "\n");
 }
@@ -418,7 +421,21 @@ let BrowserElementPromptService = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 
+  _initialized: false,
+
   _init: function() {
+    if (this._initialized) {
+      return;
+    }
+
+    // If the pref is disabled, do nothing except wait for the pref to change.
+    if (!this._browserFramesPrefEnabled()) {
+      var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+      prefs.addObserver(BROWSER_FRAMES_ENABLED_PREF, this, /* ownsWeak = */ true);
+      return;
+    }
+
+    this._initialized = true;
     this._browserElementParentMap = new WeakMap();
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
@@ -487,8 +504,23 @@ let BrowserElementPromptService = {
     delete this._browserElementChildMap[outerWindowID.data];
   },
 
+  _browserFramesPrefEnabled: function() {
+    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    try {
+      return prefs.getBoolPref(BROWSER_FRAMES_ENABLED_PREF);
+    }
+    catch(e) {
+      return false;
+    }
+  },
+
   observe: function(subject, topic, data) {
     switch(topic) {
+    case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
+      if (data == BROWSER_FRAMES_ENABLED_PREF) {
+        this._init();
+      }
+      break;
     case "outer-window-destroyed":
       this._observeOuterWindowDestroyed(subject);
       break;
