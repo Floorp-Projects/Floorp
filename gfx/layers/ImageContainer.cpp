@@ -412,7 +412,7 @@ PlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 }
 
 static void
-CopyPlane(uint8_t *aDst, uint8_t *aSrc,
+CopyPlane(uint8_t *aDst, const uint8_t *aSrc,
           const gfxIntSize &aSize, int32_t aStride, int32_t aSkip)
 {
   if (!aSkip) {
@@ -422,16 +422,16 @@ CopyPlane(uint8_t *aDst, uint8_t *aSrc,
     int32_t height = aSize.height;
     int32_t width = aSize.width;
     for (int y = 0; y < height; ++y) {
-      uint8_t *src = aSrc;
+      const uint8_t *src = aSrc;
       uint8_t *dst = aDst;
       // Slow path
       for (int x = 0; x < width; ++x) {
         *dst++ = *src++;
         src += aSkip;
       }
+      aSrc += aStride;
+      aDst += aStride;
     }
-    aSrc += aStride;
-    aDst += aStride;
   }
 }
 

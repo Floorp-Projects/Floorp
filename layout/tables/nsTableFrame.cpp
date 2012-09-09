@@ -4615,7 +4615,7 @@ nsTableFrame::BCRecalcNeeded(nsStyleContext* aOldStyleContext,
   nsChangeHint change = newStyleData->CalcDifference(*oldStyleData);
   if (!change)
     return false;
-  if (change & nsChangeHint_ReflowFrame)
+  if (change & nsChangeHint_NeedReflow)
     return true; // the caller only needs to mark the bc damage area
   if (change & nsChangeHint_RepaintFrame) {
     // we need to recompute the borders and the caller needs to mark

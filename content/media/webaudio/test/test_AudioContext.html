@@ -11,8 +11,18 @@
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
+  ok(!window.mozAudioContext, "mozAudioContext should be hidden behind a pref");
+  var accessThrows = false;
+  try {
+    new mozAudioContext();
+  } catch (e) {
+    accessThrows = true;
+  }
+  ok(accessThrows, "mozAudioContext should be hidden behind a pref");
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
   var ac = new mozAudioContext();
   ok(ac, "Create a mozAudioContext object");
+  SpecialPowers.clearUserPref("media.webaudio.enabled");
   SimpleTest.finish();
 });
 

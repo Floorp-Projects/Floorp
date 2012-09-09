@@ -36,7 +36,7 @@ self.onmessage = function(msg) {
   self.onmessage = function on_unexpected_message(msg) {
     throw new Error("Unexpected message " + JSON.stringify(msg.data));
   };
-  importScripts("resource:///modules/osfile.jsm");
+  importScripts("resource://gre/modules/osfile.jsm");
   ok(true, "Initialization complete");
 
   samples = [

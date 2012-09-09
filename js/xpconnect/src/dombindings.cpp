@@ -19,7 +19,6 @@
 #include "mozilla/dom/BindingUtils.h"
 
 #include "jsapi.h"
-#include "jsatom.h"
 
 using namespace JS;
 using namespace mozilla::dom;
@@ -270,9 +269,9 @@ ListBase<LC>::namedItem(JSContext *cx, JSObject *obj, jsval *name, NameGetterTyp
 }
 
 JSBool
-interface_hasInstance(JSContext *cx, JSHandleObject obj, const JS::Value *vp, JSBool *bp)
+interface_hasInstance(JSContext *cx, JSHandleObject obj, JSMutableHandleValue vp, JSBool *bp)
 {
-    if (vp->isObject()) {
+    if (vp.isObject()) {
         jsval prototype;
         if (!JS_GetPropertyById(cx, obj, s_prototype_id, &prototype) ||
             JSVAL_IS_PRIMITIVE(prototype)) {
@@ -281,7 +280,7 @@ interface_hasInstance(JSContext *cx, JSHandleObject obj, const JS::Value *vp, JS
             return false;
         }
 
-        JSObject *other = &vp->toObject();
+        JSObject *other = &vp.toObject();
         if (instanceIsProxy(other)) {
             ProxyHandler *handler = static_cast<ProxyHandler*>(js::GetProxyHandler(other));
             if (handler->isInstanceOf(JSVAL_TO_OBJECT(prototype))) {

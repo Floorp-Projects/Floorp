@@ -223,12 +223,14 @@ CameraControlImpl::StopPreview()
   mCameraThread->Dispatch(stopPreviewTask, NS_DISPATCH_NORMAL);
 }
 
-void
+bool
 CameraControlImpl::ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder aBuilder)
 {
-  if (mDOMPreview) {
-    mDOMPreview->ReceiveFrame(aBuffer, aFormat, aBuilder);
+  if (!mDOMPreview) {
+    return false;
   }
+
+  return mDOMPreview->ReceiveFrame(aBuffer, aFormat, aBuilder);
 }
 
 NS_IMETHODIMP
