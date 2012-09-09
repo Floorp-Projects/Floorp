@@ -91,8 +91,6 @@ public class Favicons {
         }
 
         public String getFaviconUrlForPageUrl(String pageUrl) {
-            Log.d(LOGTAG, "Calling getFaviconUrlForPageUrl() for " + pageUrl);
-
             SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
             SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
@@ -117,8 +115,6 @@ public class Favicons {
         }
 
         public void setFaviconUrlForPageUrl(String pageUrl, String faviconUrl) {
-            Log.d(LOGTAG, "Calling setFaviconUrlForPageUrl() for " + pageUrl);
-
             SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
             ContentValues values = new ContentValues();
@@ -172,10 +168,6 @@ public class Favicons {
         mLoadTasks.put(taskId, task);
 
         task.execute();
-
-        Log.d(LOGTAG, "Calling loadFavicon() with URL = " + pageUrl +
-                        " and favicon URL = " + faviconUrl +
-                        " (" + taskId + ")");
 
         return taskId;
     }
@@ -231,20 +223,12 @@ public class Favicons {
             mPageUrl = pageUrl;
             mFaviconUrl = faviconUrl;
             mListener = listener;
-
-            Log.d(LOGTAG, "Creating LoadFaviconTask with URL = " + pageUrl +
-                          " and favicon URL = " + faviconUrl);
         }
 
         // Runs in background thread
         private BitmapDrawable loadFaviconFromDb() {
-            Log.d(LOGTAG, "Loading favicon from DB for URL = " + mPageUrl);
-
             ContentResolver resolver = mContext.getContentResolver();
             BitmapDrawable favicon = BrowserDB.getFaviconForUrl(resolver, mPageUrl);
-
-            if (favicon != null)
-                Log.d(LOGTAG, "Loaded favicon from DB successfully for URL = " + mPageUrl);
 
             return favicon;
         }
@@ -254,20 +238,15 @@ public class Favicons {
             // since the Async task can run this on any number of threads in the
             // pool, we need to protect against inserting the same url twice
             synchronized(mDbHelper) {
-                Log.d(LOGTAG, "Saving favicon on browser database for URL = " + mPageUrl);
                 ContentResolver resolver = mContext.getContentResolver();
                 BrowserDB.updateFaviconForUrl(resolver, mPageUrl, favicon);
 
-                Log.d(LOGTAG, "Saving favicon URL for URL = " + mPageUrl);
                 mDbHelper.setFaviconUrlForPageUrl(mPageUrl, mFaviconUrl);
             }
         }
 
         // Runs in background thread
         private BitmapDrawable downloadFavicon(URL faviconUrl) {
-            Log.d(LOGTAG, "Downloading favicon for URL = " + mPageUrl +
-                          " with favicon URL = " + mFaviconUrl);
-
             if (mFaviconUrl.startsWith("jar:jar:")) {
                 return GeckoJarReader.getBitmapDrawable(GeckoApp.mAppContext.getResources(), mFaviconUrl);
             }
@@ -276,7 +255,7 @@ public class Favicons {
             try {
                 uri = faviconUrl.toURI();
             } catch (URISyntaxException e) {
-                Log.d(LOGTAG, "Could not get URI for favicon URL: " + mFaviconUrl);
+                Log.d(LOGTAG, "Could not get URI for favicon");
                 return null;
             }
 
@@ -324,11 +303,9 @@ public class Favicons {
                     faviconUrl = new URL(mFaviconUrl);
                 }
             } catch (MalformedURLException e) {
-                Log.d(LOGTAG, "The provided favicon URL is not valid", e);
+                Log.d(LOGTAG, "The provided favicon URL is not valid");
                 return null;
             }
-
-            Log.d(LOGTAG, "Favicon URL is now: " + mFaviconUrl);
 
             if (isCancelled())
                 return null;
@@ -346,7 +323,6 @@ public class Favicons {
             image = downloadFavicon(faviconUrl);
 
             if (image != null) {
-                Log.d(LOGTAG, "Downloaded favicon successfully for URL = " + mPageUrl);
                 saveFaviconToDb(image);
             }
 
@@ -355,9 +331,6 @@ public class Favicons {
 
         @Override
         protected void onPostExecute(final BitmapDrawable image) {
-            Log.d(LOGTAG, "LoadFaviconTask finished for URL = " + mPageUrl +
-                          " (" + mId + ")");
-
             mLoadTasks.remove(mId);
 
             if (mListener != null) {
@@ -372,9 +345,6 @@ public class Favicons {
 
         @Override
         protected void onCancelled() {
-            Log.d(LOGTAG, "LoadFaviconTask cancelled for URL = " + mPageUrl +
-                          " (" + mId + ")");
-
             mLoadTasks.remove(mId);
 
             // Note that we don't call the listener callback if the
