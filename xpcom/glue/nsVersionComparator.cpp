@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
+#include <mozilla/StandardInteger.h>
 #if defined(XP_WIN) && !defined(UPDATER_NO_STRING_GLUE_STL)
 #include <wchar.h>
 #include "nsStringGlue.h"
