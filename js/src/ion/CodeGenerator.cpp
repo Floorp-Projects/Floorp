@@ -3527,11 +3527,14 @@ CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool)
 bool
 CodeGenerator::visitToIdV(LToIdV *lir)
 {
-    typedef bool (*pf)(JSContext *, HandleValue, HandleValue, MutableHandleValue);
+    typedef bool (*pf)(JSContext *, HandleScript, jsbytecode *, HandleValue, HandleValue,
+                       MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(ToIdOperation);
 
     pushArg(ToValue(lir, LToIdV::Index));
     pushArg(ToValue(lir, LToIdV::Object));
+    pushArg(ImmWord(lir->mir()->resumePoint()->pc()));
+    pushArg(ImmGCPtr(current->mir()->info().script()));
     return callVM(Info, lir);
 }
 
