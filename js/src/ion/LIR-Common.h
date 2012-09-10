@@ -372,6 +372,10 @@ class LToIdV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 
     static const size_t Object = 0;
     static const size_t Index = BOX_PIECES;
+
+    MToId *mir() const {
+        return mir_->toToId();
+    }
 };
 
 // Allocate an object for |new| on the caller-side.

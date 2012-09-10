@@ -652,7 +652,8 @@ FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid *idp, Muta
 }
 
 static JS_ALWAYS_INLINE bool
-ToIdOperation(JSContext *cx, HandleValue objval, HandleValue idval, MutableHandleValue res)
+ToIdOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue objval,
+              HandleValue idval, MutableHandleValue res)
 {
     if (idval.isInt32()) {
         res.set(idval);
@@ -668,7 +669,7 @@ ToIdOperation(JSContext *cx, HandleValue objval, HandleValue idval, MutableHandl
         return false;
 
     if (!res.isInt32())
-        types::TypeScript::MonitorUnknown(cx);
+        types::TypeScript::MonitorUnknown(cx, script, pc);
     return true;
 }
 

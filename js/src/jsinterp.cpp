@@ -2231,7 +2231,7 @@ BEGIN_CASE(JSOP_TOID)
     idval = regs.sp[-1];
 
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
-    if (!ToIdOperation(cx, objval, idval, res))
+    if (!ToIdOperation(cx, script, regs.pc, objval, idval, res))
         goto error;
 }
 END_CASE(JSOP_TOID)
