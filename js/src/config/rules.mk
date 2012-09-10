@@ -1356,6 +1356,7 @@ endif
 # objdir/_tests/modules/. If TESTING_JS_MODULE_DIR is defined, that path
 # wlll be appended to the output directory.
 
+ifdef ENABLE_TESTS
 ifdef TESTING_JS_MODULES
 testmodulesdir = $(DEPTH)/_tests/modules/$(TESTING_JS_MODULE_DIR)
 
@@ -1367,6 +1368,7 @@ TESTING_JS_MODULES_DEST := $(testmodulesdir)
 INSTALL_TARGETS += TESTING_JS_MODULES
 endif
 
+endif
 endif
 
 ################################################################################
