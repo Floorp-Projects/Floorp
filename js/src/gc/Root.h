@@ -240,6 +240,73 @@ typedef JSObject *                  RawObject;
 typedef JSString *                  RawString;
 typedef Value                       RawValue;
 
+/*
+ * InternalHandle is a handle to an internal pointer into a gcthing. Use
+ * InternalHandle when you have a pointer to a direct field of a gcthing, or
+ * when you need a parameter type for something that *may* be a pointer to a
+ * direct field of a gcthing.
+ */
+class InternalHandleBase
+{
+  protected:
+    static void * const zeroPointer;
+};
+
+template <typename T>
+class InternalHandle { };
+
+template <typename T>
+class InternalHandle<T*> : public InternalHandleBase
+{
+    void * const *holder;
+    size_t offset;
+
+  public:
+    /*
+     * Create an InternalHandle using a Handle to the gcthing containing the
+     * field in question, and a pointer to the field.
+     */
+    template<typename H>
+    InternalHandle(const Handle<H> &handle, T *field)
+      : holder((void**)handle.address()), offset(uintptr_t(field) - uintptr_t(handle.get()))
+    {
+    }
+
+    /*
+     * Create an InternalHandle to a field within a Rooted<>.
+     */
+    template<typename R>
+    InternalHandle(const Rooted<R> &root, T *field)
+      : holder((void**)root.address()), offset(uintptr_t(field) - uintptr_t(root.get()))
+    {
+    }
+
+    T *get() const { return reinterpret_cast<T*>(uintptr_t(*holder) + offset); }
+
+    const T& operator *() const { return *get(); }
+    T* operator ->() const { return get(); }
+
+    static InternalHandle<T*> fromMarkedLocation(T *fieldPtr) {
+        return InternalHandle(fieldPtr);
+    }
+
+  private:
+    /*
+     * Create an InternalHandle to something that is not a pointer to a
+     * gcthing, and so does not need to be rooted in the first place. Use these
+     * InternalHandles to pass pointers into functions that also need to accept
+     * regular InternalHandles to gcthing fields.
+     *
+     * Make this private to prevent accidental misuse; this is only for
+     * fromMarkedLocation().
+     */
+    InternalHandle(T *field)
+      : holder(reinterpret_cast<void * const *>(&zeroPointer)),
+        offset(uintptr_t(field))
+    {
+    }
+};
+
 extern mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
 
 /*
