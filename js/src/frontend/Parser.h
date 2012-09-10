@@ -151,7 +151,7 @@ struct ParseContext                 /* tree context for semantic checks */
      *  - Sometimes a script's bindings are accessed at runtime to retrieve the
      *    contents of the lexical scope (e.g., from the debugger).
      */
-    bool generateFunctionBindings(JSContext *cx, Bindings *bindings) const;
+    bool generateFunctionBindings(JSContext *cx, InternalHandle<Bindings*> bindings) const;
 
   public:
     ParseNode       *yieldNode;     /* parse node for a yield expression that might

@@ -296,7 +296,7 @@ AppendPackedBindings(const ParseContext *pc, const DeclVector &vec, Binding *dst
 }
 
 bool
-ParseContext::generateFunctionBindings(JSContext *cx, Bindings *bindings) const
+ParseContext::generateFunctionBindings(JSContext *cx, InternalHandle<Bindings*> bindings) const
 {
     JS_ASSERT(sc->inFunction());
 
@@ -310,8 +310,11 @@ ParseContext::generateFunctionBindings(JSContext *cx, Bindings *bindings) const
     AppendPackedBindings(this, args_, packedBindings);
     AppendPackedBindings(this, vars_, packedBindings + args_.length());
 
-    if (!bindings->initWithTemporaryStorage(cx, args_.length(), vars_.length(), packedBindings))
+    if (!Bindings::initWithTemporaryStorage(cx, bindings, args_.length(), vars_.length(),
+                                            packedBindings))
+    {
         return false;
+    }
 
     if (bindings->hasAnyAliasedBindings() || sc->funHasExtensibleScope())
         sc->funbox()->fun()->flags |= JSFUN_HEAVYWEIGHT;
@@ -1257,7 +1260,9 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
         }
     }
 
-    if (!funpc->generateFunctionBindings(cx, &funbox->bindings))
+    InternalHandle<Bindings*> bindings =
+        InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
+    if (!funpc->generateFunctionBindings(cx, bindings))
         return false;
 
     funpc->lexdeps.releaseMap(cx);
