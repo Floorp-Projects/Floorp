@@ -200,7 +200,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                                           mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL)),
                                           mCursor.getBlob(mCursor.getColumnIndexOrThrow(URLColumns.FAVICON)),
                                           mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.TITLE)),
-                                          keyword);
+                                          keyword,
+                                          mCursor.getInt(mCursor.getColumnIndexOrThrow(Combined.DISPLAY)));
         }
     }
 
@@ -550,6 +551,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         inflater.inflate(R.menu.awesomebar_contextmenu, menu);
         menu.findItem(R.id.remove_bookmark).setVisible(false);
         menu.findItem(R.id.edit_bookmark).setVisible(false);
+        menu.findItem(R.id.open_in_reader).setVisible(subject.display == Combined.DISPLAY_READER);
 
         // Hide "Remove" item if there isn't a valid history ID
         if (subject.id < 0)
