@@ -2521,14 +2521,9 @@ Tab.prototype = {
     return aDisplayPort;
   },
 
-  setViewport: function(aViewport) {
-    // Transform coordinates based on zoom
-    let x = aViewport.x / aViewport.zoom;
-    let y = aViewport.y / aViewport.zoom;
-
-    // Set scroll position and scroll-port clamping size
-    let viewportWidth = gScreenWidth / aViewport.zoom;
-    let viewportHeight = gScreenHeight / aViewport.zoom;
+  setScrollClampingSize: function(zoom) {
+    let viewportWidth = gScreenWidth / zoom;
+    let viewportHeight = gScreenHeight / zoom;
     let [pageWidth, pageHeight] = this.getPageSize(this.browser.contentDocument,
                                                    viewportWidth, viewportHeight);
     let scrollPortWidth = Math.min(viewportWidth, pageWidth);
@@ -2537,6 +2532,16 @@ Tab.prototype = {
     let win = this.browser.contentWindow;
     win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).
         setScrollPositionClampingScrollPortSize(scrollPortWidth, scrollPortHeight);
+  },
+
+  setViewport: function(aViewport) {
+    // Transform coordinates based on zoom
+    let x = aViewport.x / aViewport.zoom;
+    let y = aViewport.y / aViewport.zoom;
+
+    this.setScrollClampingSize(aViewport.zoom);
+
+    let win = this.browser.contentWindow;
     win.scrollTo(x, y);
 
     this.userScrollPos.x = win.scrollX;
@@ -3286,6 +3291,7 @@ Tab.prototype = {
     let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
     let zoom = this.clampZoom(this._zoom * zoomScale);
     this.setResolution(zoom, false);
+    this.setScrollClampingSize(zoom);
     this.sendViewportUpdate();
   },
 
