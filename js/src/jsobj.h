@@ -885,8 +885,8 @@ struct JSObject : public js::ObjectImpl
     static bool deleteByValue(JSContext *cx, js::HandleObject obj,
                               const js::Value &property, js::MutableHandleValue rval, bool strict);
 
-    static inline bool enumerate(JSContext *cx, js::HandleObject obj,
-                                 JSIterateOp iterop, js::Value *statep, jsid *idp);
+    static inline bool enumerate(JSContext *cx, JS::HandleObject obj, JSIterateOp iterop,
+                                 JS::MutableHandleValue statep, JS::MutableHandleId idp);
     static inline bool defaultValue(JSContext *cx, js::HandleObject obj,
                                     JSType hint, js::MutableHandleValue vp);
     static inline JSType typeOf(JSContext *cx, js::HandleObject obj);
@@ -1316,7 +1316,7 @@ HasDataProperty(JSContext *cx, HandleObject obj, PropertyName *name, Value *vp)
 
 extern JSBool
 CheckAccess(JSContext *cx, JSObject *obj, HandleId id, JSAccessMode mode,
-            js::Value *vp, unsigned *attrsp);
+            MutableHandleValue v, unsigned *attrsp);
 
 } /* namespace js */
 

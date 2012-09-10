@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="svg-image-util.css" />
+  <script src="svg-image-util.js"></script>
+</head>
+<body>
+  <script>
+      var svgParams = {
+        view: {
+          viewBox: [0, 0, 20, 20],
+          meetOrSlice: "meet"
+        },
+        fragmentIdentifier: "view"
+      };
+
+      appendSVGArrayWithParams(svgParams, "img");
+  </script>
+  <!-- Body gets populated by script -->
+</body>
+</html>

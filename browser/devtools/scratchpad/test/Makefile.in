@@ -33,6 +33,7 @@ MOCHITEST_BROWSER_FILES = \
 		browser_scratchpad_bug_650760_help_key.js \
 		browser_scratchpad_bug_651942_recent_files.js \
 		browser_scratchpad_bug756681_display_non_error_exceptions.js \
+		browser_scratchpad_bug_751744_revert_to_saved.js \
 		head.js \
 
 include $(topsrcdir)/config/rules.mk

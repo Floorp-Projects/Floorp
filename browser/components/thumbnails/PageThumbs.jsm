@@ -4,7 +4,7 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["PageThumbs", "PageThumbsStorage", "PageThumbsCache"];
+let EXPORTED_SYMBOLS = ["PageThumbs", "PageThumbsStorage"];
 
 const Cu = Components.utils;
 const Cc = Components.classes;
@@ -533,63 +533,3 @@ let PageThumbsHistoryObserver = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
 };
-
-/**
- * A singleton handling the storage of page thumbnails.
- */
-let PageThumbsCache = {
-  /**
-   * Calls the given callback with a cache entry opened for reading.
-   * @param aKey The key identifying the desired cache entry.
-   * @param aCallback The callback that is called when the cache entry is ready.
-   */
-  getReadEntry: function Cache_getReadEntry(aKey, aCallback) {
-    // Try to open the desired cache entry.
-    this._openCacheEntry(aKey, Ci.nsICache.ACCESS_READ, aCallback);
-  },
-
-  /**
-   * Opens the cache entry identified by the given key.
-   * @param aKey The key identifying the desired cache entry.
-   * @param aAccess The desired access mode (see nsICache.ACCESS_* constants).
-   * @param aCallback The function to be called when the cache entry was opened.
-   */
-  _openCacheEntry: function Cache_openCacheEntry(aKey, aAccess, aCallback) {
-    function onCacheEntryAvailable(aEntry, aAccessGranted, aStatus) {
-      let validAccess = aAccess == aAccessGranted;
-      let validStatus = Components.isSuccessCode(aStatus);
-
-      // Check if a valid entry was passed and if the
-      // access we requested was actually granted.
-      if (aEntry && !(validAccess && validStatus)) {
-        aEntry.close();
-        aEntry = null;
-      }
-
-      aCallback(aEntry);
-    }
-
-    let listener = this._createCacheListener(onCacheEntryAvailable);
-    this._cacheSession.asyncOpenCacheEntry(aKey, aAccess, listener);
-  },
-
-  /**
-   * Returns a cache listener implementing the nsICacheListener interface.
-   * @param aCallback The callback to be called when the cache entry is available.
-   * @return The new cache listener.
-   */
-  _createCacheListener: function Cache_createCacheListener(aCallback) {
-    return {
-      onCacheEntryAvailable: aCallback,
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsICacheListener])
-    };
-  }
-};
-
-/**
- * Define a lazy getter for the cache session.
- */
-XPCOMUtils.defineLazyGetter(PageThumbsCache, "_cacheSession", function () {
-  return Services.cache.createSession(PageThumbs.scheme,
-                                     Ci.nsICache.STORE_ON_DISK, true);
-});

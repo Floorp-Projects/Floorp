@@ -85,6 +85,7 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_THREAD_MGR       100
 #define NS_NATIVE_TSF_CATEGORY_MGR     101
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
+#define NS_NATIVE_ICOREWINDOW          103 // winrt specific
 #endif
 
 #define NS_IWIDGET_IID \

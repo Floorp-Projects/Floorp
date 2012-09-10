@@ -27,6 +27,7 @@
 #include "nsGUIEvent.h"
 #include "nsSVGUtils.h"
 #include "nsSVGSVGElement.h"
+#include "nsSVGViewElement.h"
 #include "nsStyleUtil.h"
 
 #include "nsEventDispatcher.h"
@@ -159,7 +160,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                  FromParser aFromParser)
   : nsSVGSVGElementBase(aNodeInfo),
-    mCoordCtx(nullptr),
     mViewportWidth(0),
     mViewportHeight(0),
     mCurrentTranslate(0.0f, 0.0f),
@@ -719,7 +719,14 @@ nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element,
 NS_IMETHODIMP
 nsSVGSVGElement::GetZoomAndPan(uint16_t *aZoomAndPan)
 {
-  *aZoomAndPan = mEnumAttributes[ZOOMANDPAN].GetAnimValue();
+  nsSVGViewElement* viewElement = GetCurrentViewElement();
+  if (viewElement && viewElement->mEnumAttributes[
+                       nsSVGViewElement::ZOOMANDPAN].IsExplicitlySet()) {
+    *aZoomAndPan = viewElement->mEnumAttributes[
+                     nsSVGViewElement::ZOOMANDPAN].GetAnimValue();
+  } else {
+    *aZoomAndPan = mEnumAttributes[ZOOMANDPAN].GetAnimValue();
+  }
   return NS_OK;
 }
 
@@ -1069,11 +1076,31 @@ nsSVGSVGElement::HasPreserveAspectRatio()
     mPreserveAspectRatio.IsAnimated();
 }
 
+nsSVGViewElement*
+nsSVGSVGElement::GetCurrentViewElement() const
+{
+  if (mCurrentViewID) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      Element *element = doc->GetElementById(*mCurrentViewID);
+      if (element && element->Tag() == nsGkAtoms::view) {
+        return static_cast<nsSVGViewElement*>(element);
+      }
+    }
+  }
+  return nullptr;
+}
+
 nsSVGViewBoxRect
 nsSVGSVGElement::GetViewBoxWithSynthesis(
   float aViewportWidth, float aViewportHeight) const
 {
-  if (HasViewBox()) {
+  // The logic here should match HasViewBox().
+  nsSVGViewElement* viewElement = GetCurrentViewElement();
+  if (viewElement && viewElement->mViewBox.IsExplicitlySet()) {
+    return viewElement->mViewBox.GetAnimValue();
+  }
+  if (mViewBox.IsExplicitlySet()) {
     return mViewBox.GetAnimValue();
   }
 
@@ -1104,13 +1131,23 @@ nsSVGSVGElement::GetPreserveAspectRatioWithOverride() const
     }
   }
 
-  if (!HasViewBox() && ShouldSynthesizeViewBox()) {
+  nsSVGViewElement* viewElement = GetCurrentViewElement();
+
+  // This check is equivalent to "!HasViewBox() && ShouldSynthesizeViewBox()".
+  // We're just holding onto the viewElement that HasViewBox() would look up,
+  // so that we don't have to look it up again later.
+  if (!((viewElement && viewElement->mViewBox.IsExplicitlySet()) ||
+        mViewBox.IsExplicitlySet()) &&
+      ShouldSynthesizeViewBox()) {
     // If we're synthesizing a viewBox, use preserveAspectRatio="none";
     return SVGPreserveAspectRatio(
          nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE,
          nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE);
   }
 
+  if (viewElement && viewElement->mPreserveAspectRatio.IsExplicitlySet()) {
+    return viewElement->mPreserveAspectRatio.GetAnimValue();
+  }
   return mPreserveAspectRatio.GetAnimValue();
 }
 
@@ -1122,10 +1159,19 @@ nsSVGSVGElement::GetLength(uint8_t aCtxType)
 {
   float h, w;
 
-  if (HasViewBox()) {
-    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue();
-    w = viewbox.width;
-    h = viewbox.height;
+  nsSVGViewElement* viewElement = GetCurrentViewElement();
+  const nsSVGViewBoxRect* viewbox = nullptr;
+
+  // The logic here should match HasViewBox().
+  if (viewElement && viewElement->mViewBox.IsExplicitlySet()) {
+    viewbox = &viewElement->mViewBox.GetAnimValue();
+  } else if (mViewBox.IsExplicitlySet()) {
+    viewbox = &mViewBox.GetAnimValue();
+  }
+
+  if (viewbox) {
+    w = viewbox->width;
+    h = viewbox->height;
   } else if (IsInner()) {
     nsSVGSVGElement *ctx = GetCtx();
     w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
@@ -1231,6 +1277,16 @@ nsSVGSVGElement::GetPreserveAspectRatio()
 }
 
 bool
+nsSVGSVGElement::HasViewBox() const
+{
+  nsSVGViewElement* viewElement = GetCurrentViewElement();
+  if (viewElement && viewElement->mViewBox.IsExplicitlySet()) {
+    return true;
+  }
+  return mViewBox.IsExplicitlySet();
+}
+
+bool
 nsSVGSVGElement::ShouldSynthesizeViewBox() const
 {
   NS_ABORT_IF_FALSE(!HasViewBox(),
@@ -1303,7 +1359,8 @@ nsSVGSVGElement::
                     "should only override preserveAspectRatio in images");
 #endif
 
-  if (!HasViewBox() && ShouldSynthesizeViewBox()) {
+  bool hasViewBox = HasViewBox();
+  if (!hasViewBox && ShouldSynthesizeViewBox()) {
     // My non-<svg:image> clients will have been painting me with a synthesized
     // viewBox, but my <svg:image> client that's about to paint me now does NOT
     // want that.  Need to tell ourselves to flush our transform.
@@ -1311,7 +1368,7 @@ nsSVGSVGElement::
   }
   mIsPaintingSVGImageElement = true;
 
-  if (!HasViewBox()) {
+  if (!hasViewBox) {
     return; // preserveAspectRatio irrelevant (only matters if we have viewBox)
   }
 

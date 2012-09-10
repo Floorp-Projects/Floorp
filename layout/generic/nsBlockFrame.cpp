@@ -2787,7 +2787,8 @@ nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (nsGkAtoms::start == aAttribute) {
+  if (nsGkAtoms::start == aAttribute ||
+      (nsGkAtoms::reversed == aAttribute && mContent->IsHTML(nsGkAtoms::ol))) {
     nsPresContext* presContext = PresContext();
 
     // XXX Not sure if this is necessary anymore
@@ -6716,29 +6717,50 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
     return false;
   }
 
+  MOZ_ASSERT(mContent->IsHTML(),
+             "FrameStartsCounterScope should only return true for HTML elements");
+
   // Setup initial list ordinal value
   // XXX Map html's start property to counter-reset style
   int32_t ordinal = 1;
+  int32_t increment;
+  if (mContent->Tag() == nsGkAtoms::ol &&
+      mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::reversed)) {
+    increment = -1;
+  } else {
+    increment = 1;
+  }
 
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
-
-  if (hc) {
-    const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::start);
-    if (attr && attr->Type() == nsAttrValue::eInteger) {
-      ordinal = attr->GetIntegerValue();
+  // Must be non-null, since FrameStartsCounterScope only returns true
+  // for HTML elements.
+  MOZ_ASSERT(hc, "How is mContent not HTML?");
+  const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::start);
+  if (attr && attr->Type() == nsAttrValue::eInteger) {
+    ordinal = attr->GetIntegerValue();
+  } else if (increment < 0) {
+    // <ol reversed> case, or some other case with a negative increment: count
+    // up the child list
+    ordinal = 0;
+    for (nsIContent* kid = mContent->GetFirstChild(); kid;
+         kid = kid->GetNextSibling()) {
+      if (kid->IsHTML(nsGkAtoms::li)) {
+        ordinal -= increment;
+      }
     }
   }
 
   // Get to first-in-flow
   nsBlockFrame* block = (nsBlockFrame*) GetFirstInFlow();
-  return RenumberListsInBlock(aPresContext, block, &ordinal, 0);
+  return RenumberListsInBlock(aPresContext, block, &ordinal, 0, increment);
 }
 
 bool
 nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
                                    nsBlockFrame* aBlockFrame,
                                    int32_t* aOrdinal,
-                                   int32_t aDepth)
+                                   int32_t aDepth,
+                                   int32_t aIncrement)
 {
   // Examine each line in the block
   bool foundValidLine;
@@ -6754,7 +6776,8 @@ nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
     nsIFrame* kid = line->mFirstChild;
     int32_t n = line->GetChildCount();
     while (--n >= 0) {
-      bool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal, aDepth);
+      bool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal,
+                                                   aDepth, aIncrement);
       if (kidRenumberedABullet) {
         line->MarkDirty();
         renumberedABullet = true;
@@ -6770,7 +6793,8 @@ bool
 nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
                                nsIFrame* aKid,
                                int32_t* aOrdinal,
-                               int32_t aDepth)
+                               int32_t aDepth,
+                               int32_t aIncrement)
 {
   NS_PRECONDITION(aPresContext && aKid && aOrdinal, "null params are immoral!");
 
@@ -6802,7 +6826,7 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
       nsBulletFrame* bullet = listItem->GetBullet();
       if (bullet) {
         bool changed;
-        *aOrdinal = bullet->SetListItemOrdinal(*aOrdinal, &changed);
+        *aOrdinal = bullet->SetListItemOrdinal(*aOrdinal, &changed, aIncrement);
         if (changed) {
           kidRenumberedABullet = true;
 
@@ -6814,7 +6838,8 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
       // XXX temporary? if the list-item has child list-items they
       // should be numbered too; especially since the list-item is
       // itself (ASSUMED!) not to be a counter-resetter.
-      bool meToo = RenumberListsInBlock(aPresContext, listItem, aOrdinal, aDepth + 1);
+      bool meToo = RenumberListsInBlock(aPresContext, listItem, aOrdinal,
+                                        aDepth + 1, aIncrement);
       if (meToo) {
         kidRenumberedABullet = true;
       }
@@ -6831,7 +6856,9 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
       // and recurse into it, as it might have child list-items.
       nsBlockFrame* kidBlock = nsLayoutUtils::GetAsBlock(kid);
       if (kidBlock) {
-        kidRenumberedABullet = RenumberListsInBlock(aPresContext, kidBlock, aOrdinal, aDepth + 1);
+        kidRenumberedABullet = RenumberListsInBlock(aPresContext, kidBlock,
+                                                    aOrdinal, aDepth + 1,
+                                                    aIncrement);
       }
     }
   }

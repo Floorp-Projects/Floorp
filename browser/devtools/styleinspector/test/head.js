@@ -6,7 +6,7 @@
 let tempScope = {};
 Cu.import("resource:///modules/devtools/CssLogic.jsm", tempScope);
 Cu.import("resource:///modules/devtools/CssHtmlTree.jsm", tempScope);
-Cu.import("resource://gre/modules/HUDService.jsm", tempScope);
+Cu.import("resource:///modules/HUDService.jsm", tempScope);
 let HUDService = tempScope.HUDService;
 let ConsoleUtils = tempScope.ConsoleUtils;
 let CssLogic = tempScope.CssLogic;

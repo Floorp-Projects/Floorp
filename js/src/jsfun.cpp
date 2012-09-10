@@ -469,9 +469,9 @@ js::CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleF
  * if v is an object) returning true if .prototype is found.
  */
 static JSBool
-fun_hasInstance(JSContext *cx, HandleObject obj_, const Value *v, JSBool *bp)
+fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, JSBool *bp)
 {
-    RootedObject obj(cx, obj_);
+    RootedObject obj(cx, objArg);
 
     while (obj->isFunction()) {
         if (!obj->isBoundFunction())
@@ -493,7 +493,7 @@ fun_hasInstance(JSContext *cx, HandleObject obj_, const Value *v, JSBool *bp)
         return JS_FALSE;
     }
 
-    *bp = js_IsDelegate(cx, &pval.toObject(), *v);
+    *bp = js_IsDelegate(cx, &pval.toObject(), v);
     return JS_TRUE;
 }
 
