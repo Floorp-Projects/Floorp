@@ -5611,10 +5611,10 @@ IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetProper
         if (!TestSingletonProperty(cx, proto, id, &knownConstant))
             return false;
 
-        if (!knownConstant || proto->type()->unknownProperties())
+        if (!knownConstant || proto->getType(cx)->unknownProperties())
             continue;
 
-        types::HeapTypeSet *protoTypes = proto->type()->getProperty(cx, id, false);
+        types::HeapTypeSet *protoTypes = proto->getType(cx)->getProperty(cx, id, false);
         if (!protoTypes)
             continue;
 
