@@ -1,0 +1,40 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const EXPORTED_SYMBOLS = ["UpdateChannel"];
+
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
+
+let UpdateChannel = {
+  /**
+   * Read the update channel from defaults only.  We do this to ensure that
+   * the channel is tightly coupled with the application and does not apply
+   * to other instances of the application that may use the same profile.
+   */
+  get: function UpdateChannel_get() {
+    let channel = "default";
+    let defaults = Services.prefs.getDefaultBranch(null);
+    try {
+      channel = defaults.getCharPref("app.update.channel");
+    } catch (e) {
+      // use default when pref not found
+    }
+
+    try {
+      let partners = Services.prefs.getChildList("app.partner.").sort();
+      if (partners.length) {
+        channel += "-cck";
+        partners.forEach(function (prefName) {
+          channel += "-" + Services.prefs.getCharPref(prefName);
+        });
+      }
+    } catch (e) {
+      Cu.reportError(e);
+    }
+
+    return channel;
+  }
+};
