@@ -22,7 +22,8 @@ namespace ion {
   class IonBuilder;
 }
 
-#ifdef JS_THREADSAFE
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+# define JS_PARALLEL_COMPILATION
 
 struct WorkerThread;
 
@@ -49,9 +50,9 @@ struct WorkerThreadState
     void lock();
     void unlock();
 
-#ifdef DEBUG
+# ifdef DEBUG
     bool isLocked();
-#endif
+# endif
 
     void wait(CondVar which, uint32_t timeoutMillis = 0);
     void notify(CondVar which);
@@ -65,9 +66,9 @@ struct WorkerThreadState
      */
     PRLock *workerLock;
 
-#ifdef DEBUG
+# ifdef DEBUG
     PRThread *lockOwner;
-#endif
+# endif
 
     /* Condvar to notify the main thread that work has been completed. */
     PRCondVar *mainWakeup;
@@ -94,7 +95,7 @@ struct WorkerThread
     void threadLoop();
 };
 
-#endif /* JS_THREADSAFE */
+#endif /* JS_THREADSAFE && JS_ION */
 
 /* Methods for interacting with worker threads. */
 
@@ -120,7 +121,7 @@ class AutoLockWorkerThreadState
     AutoLockWorkerThreadState(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : rt(rt)
     {
-#ifdef JS_THREADSAFE
+#ifdef JS_PARALLEL_COMPILATION
         rt->workerThreadState->lock();
 #endif
         JS_GUARD_OBJECT_NOTIFIER_INIT;
@@ -128,7 +129,7 @@ class AutoLockWorkerThreadState
 
     ~AutoLockWorkerThreadState()
     {
-#ifdef JS_THREADSAFE
+#ifdef JS_PARALLEL_COMPILATION
         rt->workerThreadState->unlock();
 #endif
     }
@@ -144,7 +145,7 @@ class AutoUnlockWorkerThreadState
     AutoUnlockWorkerThreadState(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : rt(rt)
     {
-#ifdef JS_THREADSAFE
+#ifdef JS_PARALLEL_COMPILATION
         rt->workerThreadState->unlock();
 #endif
         JS_GUARD_OBJECT_NOTIFIER_INIT;
@@ -152,7 +153,7 @@ class AutoUnlockWorkerThreadState
 
     ~AutoUnlockWorkerThreadState()
     {
-#ifdef JS_THREADSAFE
+#ifdef JS_PARALLEL_COMPILATION
         rt->workerThreadState->lock();
 #endif
     }

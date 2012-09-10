@@ -4006,7 +4006,7 @@ mjit::Compiler::interruptCheckHelper()
     stubcc.rejoin(Changes(0));
 }
 
-static bool
+static inline bool
 MaybeIonCompileable(JSContext *cx, JSScript *script, bool *recompileCheckForIon)
 {
 #ifdef JS_ION
