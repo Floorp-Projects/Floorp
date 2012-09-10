@@ -127,10 +127,8 @@ AccEvent::CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput)
     // XXX: remove this hack during reorganization of 506907. Meanwhile we
     // want to get rid an assertion for application accessible events which
     // don't have DOM node (see bug 506206).
-    ApplicationAccessible* applicationAcc =
-      nsAccessNode::GetApplicationAccessible();
 
-    if (mAccessible != static_cast<nsIAccessible*>(applicationAcc))
+    if (mAccessible != static_cast<nsIAccessible*>(ApplicationAcc()))
       NS_ASSERTION(targetNode, "There should always be a DOM node for an event");
   }
 #endif
