@@ -213,7 +213,7 @@ extern JSType
 TypeOfValue(JSContext *cx, const Value &v);
 
 extern bool
-HasInstance(JSContext *cx, HandleObject obj, const js::Value &v, JSBool *bp);
+HasInstance(JSContext *cx, HandleObject obj, HandleValue v, JSBool *bp);
 
 /*
  * A linked list of the |FrameRegs regs;| variables belonging to all

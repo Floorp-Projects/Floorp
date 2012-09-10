@@ -63,7 +63,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
   // XXXbz we should make this take Element instead of nsIContent
   NS_ASSERTION(!aContent || aContent->IsElement(),
                "Shouldn't be trying to restyle non-elements directly");
-  NS_ASSERTION(!(aHint & nsChangeHint_ReflowFrame) ||
+  NS_ASSERTION(!(aHint & nsChangeHint_AllReflowHints) ||
                (aHint & nsChangeHint_NeedReflow),
                "Reflow hint bits set without actually asking for a reflow");
 

@@ -34,17 +34,13 @@ case "$target" in
     fi
     ;;
 *-darwin*)
-    # we prefer gcc-4.2 over gcc on older darwin, so
-    # use that specific version if it's available.
-    # On newer versions of darwin, gcc is llvm-gcc while gcc-4.2 is the plain
-    # one, so we also try that first. If that fails, we fall back to clang
-    # as llvm-gcc is an unsupported dead end.
-    MOZ_PATH_PROGS(CC, $CC gcc-4.2 clang gcc)
-    MOZ_PATH_PROGS(CXX, $CXX g++-4.2 clang++ g++)
-    IS_LLVM_GCC=$($CC -v 2>&1 | grep llvm-gcc)
-    if test -n "$IS_LLVM_GCC"
+    # GCC on darwin is based on gcc 4.2 and we don't support it anymore.
+    MOZ_PATH_PROGS(CC, $CC clang)
+    MOZ_PATH_PROGS(CXX, $CXX clang++)
+    IS_GCC=$($CC -v 2>&1 | grep gcc)
+    if test -n "$IS_GCC"
     then
-      echo llvm-gcc is known to be broken, please use gcc-4.2 or clang.
+      echo gcc is known to be broken on OS X, please use clang.
       exit 1
     fi
     ;;

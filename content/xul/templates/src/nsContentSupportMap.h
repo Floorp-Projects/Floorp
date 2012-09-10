@@ -6,6 +6,7 @@
 #ifndef nsContentSupportMap_h__
 #define nsContentSupportMap_h__
 
+#include "prtypes.h"
 #include "pldhash.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsTemplateMatch.h"

@@ -368,8 +368,10 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
           do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = errorObject->InitWithWindowID(error.get(), NS_ConvertUTF8toUTF16(spec).get(),
-                                         nullptr, 0, 0, nsIScriptError::warningFlag,
+      rv = errorObject->InitWithWindowID(error,
+                                         NS_ConvertUTF8toUTF16(spec),
+                                         EmptyString(),
+                                         0, 0, nsIScriptError::warningFlag,
                                          "DOM",
                                          callingDoc ?
                                            callingDoc->InnerWindowID() :

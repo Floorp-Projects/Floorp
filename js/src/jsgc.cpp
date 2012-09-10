@@ -2282,11 +2282,6 @@ AutoIdArray::trace(JSTracer *trc)
     gc::MarkIdRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
 }
 
-void
-AutoEnumStateRooter::trace(JSTracer *trc)
-{
-}
-
 inline void
 AutoGCRooter::trace(JSTracer *trc)
 {
@@ -2297,10 +2292,6 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case PARSER:
         static_cast<frontend::Parser *>(this)->trace(trc);
-        return;
-
-      case ENUMERATOR:
-        static_cast<AutoEnumStateRooter *>(this)->trace(trc);
         return;
 
       case IDARRAY: {

@@ -813,10 +813,10 @@ ArrayBufferObject::obj_deleteSpecial(JSContext *cx, HandleObject obj,
 }
 
 JSBool
-ArrayBufferObject::obj_enumerate(JSContext *cx, HandleObject obj,
-                                 JSIterateOp enum_op, Value *statep, jsid *idp)
+ArrayBufferObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
+                                 MutableHandleValue statep, MutableHandleId idp)
 {
-    statep->setNull();
+    statep.setNull();
     return true;
 }
 
@@ -1365,7 +1365,7 @@ class TypedArrayTemplate
 
     static JSBool
     obj_enumerate(JSContext *cx, HandleObject tarray, JSIterateOp enum_op,
-                  Value *statep, jsid *idp)
+                  MutableHandleValue statep, MutableHandleId idp)
     {
         JS_ASSERT(tarray->isTypedArray());
 
@@ -1373,24 +1373,23 @@ class TypedArrayTemplate
         switch (enum_op) {
           case JSENUMERATE_INIT_ALL:
           case JSENUMERATE_INIT:
-            statep->setInt32(0);
-            if (idp)
-                *idp = ::INT_TO_JSID(length(tarray));
+            statep.setInt32(0);
+            idp.set(::INT_TO_JSID(length(tarray)));
             break;
 
           case JSENUMERATE_NEXT:
-            index = static_cast<uint32_t>(statep->toInt32());
+            index = static_cast<uint32_t>(statep.toInt32());
             if (index < length(tarray)) {
-                *idp = ::INT_TO_JSID(index);
-                statep->setInt32(index + 1);
+                idp.set(::INT_TO_JSID(index));
+                statep.setInt32(index + 1);
             } else {
                 JS_ASSERT(index == length(tarray));
-                statep->setNull();
+                statep.setNull();
             }
             break;
 
           case JSENUMERATE_DESTROY:
-            statep->setNull();
+            statep.setNull();
             break;
         }
 

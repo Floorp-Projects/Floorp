@@ -433,7 +433,7 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
     if (!obj)
         return false;
 
-    Value tmp;
+    RootedValue tmp(cx);
     unsigned attrs;
     if (!CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs))
         return false;
@@ -1289,7 +1289,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
          * Getters and setters are just like watchpoints from an access
          * control point of view.
          */
-        Value dummy;
+        RootedValue dummy(cx);
         unsigned dummyAttrs;
         if (!CheckAccess(cx, obj, id, JSACC_WATCH, &dummy, &dummyAttrs))
             return JS_FALSE;
@@ -1496,7 +1496,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
          * Getters and setters are just like watchpoints from an access
          * control point of view.
          */
-        Value dummy;
+        RootedValue dummy(cx);
         if (!CheckAccess(cx, obj2, id, JSACC_WATCH, &dummy, &attrs))
              return JS_FALSE;
 
@@ -4956,7 +4956,8 @@ DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
 } /* namespace js */
 
 JS_FRIEND_API(JSBool)
-JS_EnumerateState(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op, Value *statep, jsid *idp)
+JS_EnumerateState(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
+                  JSMutableHandleValue statep, JSMutableHandleId idp)
 {
     /* If the class has a custom JSCLASS_NEW_ENUMERATE hook, call it. */
     Class *clasp = obj->getClass();
@@ -4971,7 +4972,7 @@ JS_EnumerateState(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op, Value 
 
     /* Tell InitNativeIterator to treat us like a native object. */
     JS_ASSERT(enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL);
-    statep->setMagic(JS_NATIVE_ENUMERATE);
+    statep.setMagic(JS_NATIVE_ENUMERATE);
     return true;
 }
 
@@ -4979,7 +4980,7 @@ namespace js {
 
 JSBool
 CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
-            Value *vp, unsigned *attrsp)
+            MutableHandleValue vp, unsigned *attrsp)
 {
     JSBool writing;
     RootedObject obj(cx, obj_), pobj(cx);
@@ -4992,7 +4993,7 @@ CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
       case JSACC_PROTO:
         pobj = obj;
         if (!writing)
-            vp->setObjectOrNull(obj->getProto());
+            vp.setObjectOrNull(obj->getProto());
         *attrsp = JSPROP_PERMANENT;
         break;
 
@@ -5002,7 +5003,7 @@ CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
             return JS_FALSE;
         if (!shape) {
             if (!writing)
-                vp->setUndefined();
+                vp.setUndefined();
             *attrsp = 0;
             pobj = obj;
             break;
@@ -5010,7 +5011,7 @@ CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
 
         if (!pobj->isNative()) {
             if (!writing) {
-                    vp->setUndefined();
+                    vp.setUndefined();
                 *attrsp = 0;
             }
             break;
@@ -5019,9 +5020,9 @@ CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
         *attrsp = shape->attributes();
         if (!writing) {
             if (shape->hasSlot())
-                *vp = pobj->nativeGetSlot(shape->slot());
+                vp.set(pobj->nativeGetSlot(shape->slot()));
             else
-                vp->setUndefined();
+                vp.setUndefined();
         }
     }
 

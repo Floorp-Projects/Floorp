@@ -42,7 +42,7 @@ function isnot(a, b, description) {
 
 function test_init() {
   ok(true, "Starting test_init");
-  importScripts("resource:///modules/osfile.jsm");
+  importScripts("resource://gre/modules/osfile.jsm");
 }
 
 function test_open_close() {

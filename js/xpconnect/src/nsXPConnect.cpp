@@ -14,7 +14,6 @@
 #include "XPCWrapper.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
-#include "jsatom.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "dom_quickstubs.h"

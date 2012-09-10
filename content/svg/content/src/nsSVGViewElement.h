@@ -27,6 +27,8 @@ class nsSVGViewElement : public nsSVGViewElementBase,
                          public nsIDOMSVGZoomAndPan
 {
   friend class mozilla::SVGFragmentIdentifier;
+  friend class nsSVGSVGElement;
+  friend class nsSVGOuterSVGFrame;
   friend nsresult NS_NewSVGViewElement(nsIContent **aResult,
                                        already_AddRefed<nsINodeInfo> aNodeInfo);
   nsSVGViewElement(already_AddRefed<nsINodeInfo> aNodeInfo);
