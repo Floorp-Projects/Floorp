@@ -24,12 +24,9 @@
     }
 
     function testScrollXY() {
-      // Enable privileges so we can use nsIDOMWindowUtils interface
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       let iframe = document.getElementById("iframe");
       let cwindow = iframe.contentWindow;
-      let domWindowUtils = cwindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+      let domWindowUtils = SpecialPowers.getDOMWindowUtils(cwindow);
 
       function checkGetScrollXYState(flush, vals, testName) {
         let scrollX = {}, scrollY = {};
@@ -64,8 +61,7 @@
     function testHiddenIframe() {
       let iframe = document.getElementById("hidden-iframe");
       let cwindow = iframe.contentWindow;
-      let domWindowUtils = cwindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+      let domWindowUtils = SpecialPowers.getDOMWindowUtils(cwindow);
 
       // make sure getScrollXY doesn't throw
       let scrollX = {}, scrollY = {};

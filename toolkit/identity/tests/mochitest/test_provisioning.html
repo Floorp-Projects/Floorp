@@ -28,8 +28,7 @@ SimpleTest.waitForExplicitFinish();
 
 const DOMIdentity = Cu.import("resource://gre/modules/DOMIdentity.jsm")
                       .DOMIdentity;
-let outerWinId = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+let outerWinId = SpecialPowers.getDOMWindowUtils(window).outerWindowID;
 
 function check_provision_flow_done(provId) {
   do_check_null(IdentityProvider._provisionFlows[provId]);
