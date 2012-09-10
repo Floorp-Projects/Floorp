@@ -258,7 +258,7 @@ public class UpdateService extends IntentService {
 
     private UpdateInfo findUpdate(boolean force) {
         try {
-            URL url = UpdateServiceHelper.getUpdateUrl(force);
+            URL url = UpdateServiceHelper.getUpdateUrl(this, force);
 
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document dom = builder.parse(url.openConnection().getInputStream());
