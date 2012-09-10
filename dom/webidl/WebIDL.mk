@@ -10,6 +10,7 @@ generated_webidl_files = \
 
 webidl_files = \
   AudioContext.webidl \
+  Blob.webidl \
   CanvasRenderingContext2D.webidl \
   CSSStyleDeclaration.webidl \
   Function.webidl \
