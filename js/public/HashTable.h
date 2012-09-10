@@ -340,8 +340,7 @@ class HashTable : private AllocPolicy
 
     MOZ_WARN_UNUSED_RESULT bool init(uint32_t length)
     {
-        /* Make sure that init isn't called twice. */
-        JS_ASSERT(table == NULL);
+        JS_ASSERT(!initialized());
 
         /*
          * Correct for sMaxAlphaFrac such that the table will not resize
