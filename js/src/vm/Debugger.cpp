@@ -778,11 +778,11 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_, V
 
     switch (status) {
       case JSTRAP_RETURN:
-        key = NameToId(cx->runtime->atomState.returnAtom);
+        key = NameToId(cx->names().return_);
         break;
 
       case JSTRAP_THROW:
-        key = NameToId(cx->runtime->atomState.throwAtom);
+        key = NameToId(cx->names().throw_);
         break;
 
       case JSTRAP_ERROR:
@@ -839,8 +839,8 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     JSContext *cx = ac.ref().context();
     Rooted<JSObject*> obj(cx);
     Shape *shape;
-    jsid returnId = NameToId(cx->runtime->atomState.returnAtom);
-    jsid throwId = NameToId(cx->runtime->atomState.throwAtom);
+    jsid returnId = NameToId(cx->names().return_);
+    jsid throwId = NameToId(cx->names().throw_);
     bool okResumption = rv.isObject();
     if (okResumption) {
         obj = &rv.toObject();

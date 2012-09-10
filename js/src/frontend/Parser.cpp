@@ -4040,9 +4040,9 @@ Parser::statement()
         if (!pn)
             return NULL;
         if (!tokenStream.matchToken(TOK_NAME) ||
-            tokenStream.currentToken().name() != context->runtime->atomState.xmlAtom ||
+            tokenStream.currentToken().name() != context->names().xml ||
             !tokenStream.matchToken(TOK_NAME) ||
-            tokenStream.currentToken().name() != context->runtime->atomState.namespaceAtom ||
+            tokenStream.currentToken().name() != context->names().namespace_ ||
             !tokenStream.matchToken(TOK_ASSIGN))
         {
             reportError(NULL, JSMSG_BAD_DEFAULT_XML_NAMESPACE);
