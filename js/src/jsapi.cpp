@@ -958,9 +958,11 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
 
 #ifdef JS_THREADSAFE
+# ifdef JS_ION
     workerThreadState = this->new_<WorkerThreadState>();
     if (!workerThreadState || !workerThreadState->init(this))
         return false;
+# endif
 
     if (!sourceCompressorThread.init())
         return false;
@@ -994,7 +996,9 @@ JSRuntime::~JSRuntime()
     FreeScriptFilenames(this);
 
 #ifdef JS_THREADSAFE
+# ifdef JS_ION
     js_delete(workerThreadState);
+# endif
     sourceCompressorThread.finish();
 #endif
 
