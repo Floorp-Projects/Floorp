@@ -26,9 +26,9 @@ Tests of DOM Worker Blob constructor
   };
   function f() {
     onmessage = function(e) {
-      var b = new Blob([e.data, "World"],{});
+      var b = new Blob([e.data, "World"],{type: "text/plain"});
       var fr = new FileReaderSync();
-      postMessage(fr.readAsText(b));
+      postMessage({text: fr.readAsText(b), type: b.type});
     };
   }
   var b = new Blob([f,"f();"]);
@@ -36,7 +36,8 @@ Tests of DOM Worker Blob constructor
   var w = new Worker(u);
   w.onmessage = function(e) {
     URL.revokeObjectURL(u);
-    is(e.data, fr.result);
+    is(e.data.text, fr.result);
+    is(e.data.type, "text/plain");
     SimpleTest.finish();
   };
   w.onerror = function(e) {
