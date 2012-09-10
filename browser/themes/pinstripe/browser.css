@@ -3156,14 +3156,6 @@ html|*#gcli-output-frame {
               0 1px 0 hsla(210,16%,76%,.15);
 }
 
-.gclitoolbar-input-node::-moz-selection {
-  background-color: green !important;
-}
-
-.gclitoolbar-input-node {
-  background-color: red;
-}
-
 .gclitoolbar-complete-node {
   padding-left: 21px;
   background-color: transparent;
@@ -3214,8 +3206,7 @@ html|*#gcli-output-frame {
 /* Responsive Mode */
 
 .browserContainer[responsivemode] {
-  background: #2a3643 url("chrome://browser/skin/devtools/responsive-background.png");
-  box-shadow: 0 0 7px black inset;
+  background: #222 url("chrome://browser/skin/devtools/responsive-background.png");
   padding: 0 20px 20px 20px;
 }
 

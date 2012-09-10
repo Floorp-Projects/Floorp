@@ -48,12 +48,14 @@ function testMenuFilterButton(aCategory) {
   menuItem = firstMenuItem;
   let prefKey;
   while (menuItem) {
-    prefKey = menuItem.getAttribute("prefKey");
-    chooseMenuItem(menuItem);
-    ok(isChecked(menuItem), "menu item " + prefKey + " for category " +
-       aCategory + " is checked after clicking it");
-    ok(hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
-       "on after clicking the appropriate menu item");
+    if (menuItem.hasAttribute("prefKey")) {
+      prefKey = menuItem.getAttribute("prefKey");
+      chooseMenuItem(menuItem);
+      ok(isChecked(menuItem), "menu item " + prefKey + " for category " +
+         aCategory + " is checked after clicking it");
+      ok(hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
+         "on after clicking the appropriate menu item");
+    }
     menuItem = menuItem.nextSibling;
   }
   ok(isChecked(button), "the button for category " + aCategory + " is " +
@@ -103,11 +105,13 @@ function testMenuFilterButton(aCategory) {
 
   menuItem = firstMenuItem;
   while (menuItem) {
-    let prefKey = menuItem.getAttribute("prefKey");
-    ok(isChecked(menuItem), "menu item " + prefKey + " for category " +
-       aCategory + " is checked after clicking the button");
-    ok(hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
-       "on after clicking the button");
+    if (menuItem.hasAttribute("prefKey")) {
+      let prefKey = menuItem.getAttribute("prefKey");
+      ok(isChecked(menuItem), "menu item " + prefKey + " for category " +
+         aCategory + " is checked after clicking the button");
+      ok(hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
+         "on after clicking the button");
+    }
     menuItem = menuItem.nextSibling;
   }
 
