@@ -1821,9 +1821,14 @@ function getFunctionName(aFunction) {
   if (aFunction.name) {
     name = aFunction.name;
   } else {
+    // Check if the developer has added a de-facto standard displayName
+    // property for us to use.
     let desc = aFunction.getOwnPropertyDescriptor("displayName");
     if (desc && desc.value && typeof desc.value == "string") {
       name = desc.value;
+    } else if ("displayName" in aFunction) {
+      // Otherwise use SpiderMonkey's inferred name.
+      name = aFunction.displayName;
     }
   }
   return name;

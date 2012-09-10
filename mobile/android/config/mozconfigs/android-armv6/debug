@@ -15,6 +15,9 @@ ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"
 ac_add_options --with-android-version=5
 ac_add_options --with-system-zlib
 
+# IonMonkey disabled in bug 789373
+ac_add_options --disable-ion
+
 export JAVA_HOME=/tools/jdk6
 export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1

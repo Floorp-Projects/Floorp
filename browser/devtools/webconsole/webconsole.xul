@@ -39,7 +39,7 @@
 
   <popupset id="mainPopupSet">
     <menupopup id="output-contextmenu">
-      <menuitem id="saveBodies" type="checkbox" label="&saveBodies.label;"
+      <menuitem id="saveBodiesContextMenu" type="checkbox" label="&saveBodies.label;"
                 accesskey="&saveBodies.accesskey;"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_selectAll"/>
@@ -63,6 +63,9 @@
                       prefKey="network"/>
             <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
                       prefKey="networkinfo"/>
+            <menuseparator id="saveBodiesSeparator" />
+            <menuitem id="saveBodies" type="checkbox" label="&saveBodies.label;"
+                      accesskey="&saveBodies.accesskey;"/>
           </menupopup>
         </toolbarbutton>
         <toolbarbutton label="&btnPageCSS.label;" type="menu-button"
