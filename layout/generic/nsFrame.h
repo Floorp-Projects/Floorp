@@ -339,9 +339,7 @@ public:
   virtual bool UpdateOverflow();
 
   // Selection Methods
-  // XXX Doc me... (in nsIFrame.h puhleeze)
-  // XXX If these are selection specific, then the name should imply selection
-  // rather than generic event processing, e.g., SelectionHandlePress...
+
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
@@ -359,13 +357,20 @@ public:
                            nsGUIEvent *    aEvent,
                            nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD PeekBackwardAndForward(nsSelectionAmount aAmountBack,
-                                    nsSelectionAmount aAmountForward,
-                                    int32_t aStartPos,
-                                    nsPresContext* aPresContext,
-                                    bool aJumpLines,
-                                    bool aMultipleSelection);
+  enum { SELECT_ACCUMULATE = 0x01 };
 
+  nsresult PeekBackwardAndForward(nsSelectionAmount aAmountBack,
+                                  nsSelectionAmount aAmountForward,
+                                  int32_t aStartPos,
+                                  nsPresContext* aPresContext,
+                                  bool aJumpLines,
+                                  uint32_t aSelectFlags);
+
+  nsresult SelectByTypeAtPoint(nsPresContext* aPresContext,
+                               const nsPoint& aPoint,
+                               nsSelectionAmount aBeginAmountType,
+                               nsSelectionAmount aEndAmountType,
+                               uint32_t aSelectFlags);
 
   // Helper for GetContentAndOffsetsFromPoint; calculation of content offsets
   // in this function assumes there is no child frame that can be targeted.
