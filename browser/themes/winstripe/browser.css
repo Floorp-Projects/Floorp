@@ -3118,6 +3118,10 @@ html|*#gcli-output-frame {
               0 0 0 1px hsla(210,40%,83%,.1);
 }
 
+.gclitoolbar-input-node {
+  background-color: green !important;
+}
+
 .gclitoolbar-complete-node {
   padding-left: 21px;
   background-color: transparent;
