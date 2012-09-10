@@ -2898,7 +2898,7 @@ let RIL = {
     let messageStringLength = Buf.readUint32();
     if (DEBUG) debug("Got new SMS, length " + messageStringLength);
     let message = GsmPDUHelper.readMessage();
-    if (DEBUG) debug(message);
+    if (DEBUG) debug("Got new SMS: " + JSON.stringify(message));
 
     // Read string delimiters. See Buf.readString().
     Buf.readStringDelimiter(length);
@@ -2958,11 +2958,13 @@ let RIL = {
   _processSmsStatusReport: function _processSmsStatusReport(length) {
     let message = this._processReceivedSms(length);
     if (!message) {
+      if (DEBUG) debug("invalid SMS-STATUS-REPORT");
       return PDU_FCS_UNSPECIFIED;
     }
 
     let options = this._pendingSentSmsMap[message.messageRef];
     if (!options) {
+      if (DEBUG) debug("no pending SMS-SUBMIT message");
       return PDU_FCS_OK;
     }
 
@@ -2985,12 +2987,14 @@ let RIL = {
 
     // Pending. Waiting for next status report.
     if ((status >>> 5) == 0x01) {
+      if (DEBUG) debug("SMS-STATUS-REPORT: delivery still pending");
       return PDU_FCS_OK;
     }
 
     delete this._pendingSentSmsMap[message.messageRef];
 
     if ((status >>> 5) != 0x00) {
+      if (DEBUG) debug("SMS-STATUS-REPORT: delivery failed");
       // It seems unlikely to get a result code for a failure to deliver.
       // Even if, we don't want to do anything with this.
       return PDU_FCS_OK;
@@ -3525,6 +3529,7 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   options.errorCode = Buf.readUint32();
 
   if (options.requestStatusReport) {
+    if (DEBUG) debug("waiting SMS-STATUS-REPORT for messageRef " + options.messageRef);
     this._pendingSentSmsMap[options.messageRef] = options;
   }
 
