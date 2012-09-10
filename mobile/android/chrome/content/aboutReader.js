@@ -136,7 +136,7 @@ AboutReader.prototype = {
     return this._toolbarElementRef.get();
   },
 
-  observe: function(aMessage, aTopic, aData) {
+  observe: function Reader_observe(aMessage, aTopic, aData) {
     switch(aTopic) {
       case "Reader:FaviconReturn": {
         let info = JSON.parse(aData);
