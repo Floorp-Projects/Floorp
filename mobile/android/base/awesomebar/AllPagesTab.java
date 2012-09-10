@@ -184,11 +184,6 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 return;
 
             String url = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL));
-
-            int display = mCursor.getInt(mCursor.getColumnIndexOrThrow(Combined.DISPLAY));
-            if (display == Combined.DISPLAY_READER) {
-                url = getReaderForUrl(url);
-            }
             listener.onUrlOpen(url);
         }
 
