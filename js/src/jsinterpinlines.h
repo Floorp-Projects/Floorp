@@ -824,7 +824,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
 }
 
 static JS_ALWAYS_INLINE JSString *
-TypeOfOperation(JSContext *cx, const Value &v)
+TypeOfOperation(JSContext *cx, HandleValue v)
 {
     JSType type = JS_TypeOfValue(cx, v);
     return cx->runtime->atomState.typeAtoms[type];
@@ -880,7 +880,7 @@ GreaterThanOrEqualOperation(JSContext *cx, const Value &lhs, const Value &rhs, b
 }
 
 static JS_ALWAYS_INLINE bool
-BitNot(JSContext *cx, const Value &in, int *out)
+BitNot(JSContext *cx, HandleValue in, int *out)
 {
     int i;
     if (!ToInt32(cx, in, &i))
@@ -890,7 +890,7 @@ BitNot(JSContext *cx, const Value &in, int *out)
 }
 
 static JS_ALWAYS_INLINE bool
-BitXor(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
+BitXor(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 {
     int left, right;
     if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
@@ -900,7 +900,7 @@ BitXor(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
 }
 
 static JS_ALWAYS_INLINE bool
-BitOr(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
+BitOr(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 {
     int left, right;
     if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
@@ -910,7 +910,7 @@ BitOr(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
 }
 
 static JS_ALWAYS_INLINE bool
-BitAnd(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
+BitAnd(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 {
     int left, right;
     if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
@@ -920,7 +920,7 @@ BitAnd(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
 }
 
 static JS_ALWAYS_INLINE bool
-BitLsh(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
+BitLsh(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 {
     int32_t left, right;
     if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
@@ -930,7 +930,7 @@ BitLsh(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
 }
 
 static JS_ALWAYS_INLINE bool
-BitRsh(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
+BitRsh(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 {
     int32_t left, right;
     if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
@@ -940,8 +940,8 @@ BitRsh(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
 }
 
 static JS_ALWAYS_INLINE bool
-UrshOperation(JSContext *cx, HandleScript script, jsbytecode *pc, const Value &lhs, const Value &rhs,
-              Value *out)
+UrshOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
+              HandleValue lhs, HandleValue rhs, Value *out)
 {
     uint32_t left;
     int32_t  right;

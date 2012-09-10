@@ -2053,8 +2053,8 @@ END_CASE(JSOP_RSH)
 
 BEGIN_CASE(JSOP_URSH)
 {
-    Value lval = regs.sp[-2];
-    Value rval = regs.sp[-1];
+    HandleValue lval = HandleValue::fromMarkedLocation(&regs.sp[-2]);
+    HandleValue rval = HandleValue::fromMarkedLocation(&regs.sp[-1]);
     if (!UrshOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
@@ -2126,7 +2126,8 @@ END_CASE(JSOP_NOT)
 BEGIN_CASE(JSOP_BITNOT)
 {
     int32_t i;
-    if (!BitNot(cx, regs.sp[-1], &i))
+    HandleValue value = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+    if (!BitNot(cx, value, &i))
         goto error;
     regs.sp[-1].setInt32(i);
 }
@@ -2241,7 +2242,7 @@ END_CASE(JSOP_TOID)
 BEGIN_CASE(JSOP_TYPEOFEXPR)
 BEGIN_CASE(JSOP_TYPEOF)
 {
-    const Value &ref = regs.sp[-1];
+    HandleValue ref = HandleValue::fromMarkedLocation(&regs.sp[-1]);
     regs.sp[-1].setString(TypeOfOperation(cx, ref));
 }
 END_CASE(JSOP_TYPEOF)
@@ -3308,7 +3309,7 @@ END_CASE(JSOP_THROWING)
 BEGIN_CASE(JSOP_THROW)
 {
     CHECK_BRANCH();
-    Value v;
+    RootedValue &v = rootValue0;
     POP_COPY_TO(v);
     JS_ALWAYS_FALSE(Throw(cx, v));
     /* let the code at error try to catch the exception. */
@@ -3975,7 +3976,7 @@ END_CASE(JSOP_ARRAYPUSH)
 }
 
 bool
-js::Throw(JSContext *cx, const Value &v)
+js::Throw(JSContext *cx, HandleValue v)
 {
     JS_ASSERT(!cx->isExceptionPending());
     cx->setPendingException(v);
