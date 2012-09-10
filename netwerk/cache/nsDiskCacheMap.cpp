@@ -1396,12 +1396,16 @@ nsDiskCacheMap::RevalidateCache()
 
     if (!IsCacheInSafeState()) {
         Telemetry::Accumulate(Telemetry::DISK_CACHE_REVALIDATION_SAFE, 0);
-        CACHE_LOG_DEBUG(("CACHE: Revalidation not performed because "
+        CACHE_LOG_DEBUG(("CACHE: Revalidation should not performed because "
                          "cache not in a safe state\n"));
-        return NS_ERROR_FAILURE;
+        // Normally we would return an error here, but there is a bug where
+        // the doom list sometimes gets an entry 'stuck' and doens't clear it
+        // until browser shutdown.  So we allow revalidation for the time being
+        // to get proper telemetry data of how much the cache corruption plan
+        // would help.
+    } else {
+        Telemetry::Accumulate(Telemetry::DISK_CACHE_REVALIDATION_SAFE, 1);
     }
-
-    Telemetry::Accumulate(Telemetry::DISK_CACHE_REVALIDATION_SAFE, 1);
 
     // We want this after the lock to prove that flushing a file isn't that expensive
     Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_REVALIDATION> totalTimer;
