@@ -14,8 +14,11 @@ var a = function() {
 var anon = a();
 anon.displayName = "anonFunc";
 
+var inferred = a();
+
 function evalCall() {
   eval("anon();");
+  eval("inferred();");
 }
 
 </script>

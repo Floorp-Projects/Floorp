@@ -3,6 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// Tests that anonymous functions appear in the stack frame list with either
+// their displayName property or a SpiderMonkey-inferred name.
+
 var gPane = null;
 var gTab = null;
 var gDebuggee = null;
@@ -36,11 +39,33 @@ function testAnonCall() {
       is(frames.querySelector("#stackframe-0 .dbg-stackframe-name").getAttribute("value"),
         "anonFunc", "Frame name should be anonFunc");
 
-      resumeAndFinish();
+      testInferredName();
     }}, 0);
   });
 
   gDebuggee.evalCall();
+}
+
+function testInferredName() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
+    Services.tm.currentThread.dispatch({ run: function() {
+
+      let frames = gDebugger.DebuggerView.StackFrames._frames;
+
+      is(gDebugger.DebuggerController.activeThread.state, "paused",
+        "Should only be getting stack frames while paused.");
+
+      is(frames.querySelectorAll(".dbg-stackframe").length, 3,
+        "Should have three frames.");
+
+      is(frames.querySelector("#stackframe-0 .dbg-stackframe-name").getAttribute("value"),
+        "a/<", "Frame name should be a/<");
+
+      resumeAndFinish();
+    }}, 0);
+  });
+
+  gDebugger.DebuggerController.activeThread.resume();
 }
 
 function resumeAndFinish() {
