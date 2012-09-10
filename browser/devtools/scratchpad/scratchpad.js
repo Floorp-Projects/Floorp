@@ -35,6 +35,7 @@ const PREF_RECENT_FILES_MAX = "devtools.scratchpad.recentFilesMax";
 const BUTTON_POSITION_SAVE = 0;
 const BUTTON_POSITION_CANCEL = 1;
 const BUTTON_POSITION_DONT_SAVE = 2;
+const BUTTON_POSITION_REVERT=0;
 
 let keysbundle = Services.strings.createBundle("chrome://global-platform/locale/platformKeys.properties");
 
@@ -923,6 +924,72 @@ var Scratchpad = {
   },
 
   /**
+   * Restore content from saved version of current file.
+   *
+   * @param function aCallback
+   *        Optional function you want to call when file is saved
+   */
+  revertFile: function SP_revertFile(aCallback)
+  {
+    
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(this.filename);
+
+    if (!file.exists()) {
+      return;
+    }
+
+    this.importFromFile(file, false, function(aStatus, aContent) {
+      if (aCallback) {
+        aCallback(aStatus);
+      }
+    });
+  },
+
+  /**
+   * Prompt to revert scratchpad if it has unsaved changes.
+   *
+   * @param function aCallback
+   *        Optional function you want to call when file is saved. The callback
+   *        receives three arguments:
+   *          - aRevert (boolean) - tells if the file has been reverted.
+   *          - status (number) - the file revert status result (if the file was
+   *          saved).
+   */
+  promptRevert: function SP_promptRervert(aCallback)
+  {
+    if (this.filename) {
+      let ps = Services.prompt;
+      let flags = ps.BUTTON_POS_0 * ps.BUTTON_TITLE_REVERT +
+                  ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL;
+
+      let button = ps.confirmEx(window,
+                          this.strings.GetStringFromName("confirmRevert.title"),
+                          this.strings.GetStringFromName("confirmRevert"),
+                          flags, null, null, null, null, {});
+      if (button == BUTTON_POSITION_CANCEL) {
+        if (aCallback) {
+          aCallback(false);
+        }
+
+        return;
+      }
+      if (button == BUTTON_POSITION_REVERT) {
+        this.revertFile(function(aStatus) {
+          if(aCallback){
+            aCallback(true, aStatus);
+          }
+        });
+
+        return;
+      }
+    }
+    if (aCallback) {
+      aCallback(false);
+    }
+  },
+
+  /**
    * Open the Error Console.
    */
   openErrorConsole: function SP_openErrorConsole()
@@ -1107,6 +1174,14 @@ var Scratchpad = {
   _onDirtyChanged: function SP__onDirtyChanged(aEvent)
   {
     Scratchpad._updateTitle();
+    if (Scratchpad.filename) {
+      if (Scratchpad.editor.dirty) {
+        document.getElementById("sp-cmd-revert").removeAttribute("disabled");
+      }
+      else {
+        document.getElementById("sp-cmd-revert").setAttribute("disabled", true);
+      }
+    }
   },
 
   /**

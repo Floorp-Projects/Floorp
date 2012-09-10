@@ -15,6 +15,8 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource:///modules/devtools/Commands.jsm");
 
+const Node = Components.interfaces.nsIDOMNode;
+
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 
@@ -132,6 +134,28 @@ DeveloperToolbar.prototype.focus = function DT_focus()
 {
   if (this.visible) {
     this._input.focus();
+  } else {
+    this.show(true);
+  }
+};
+
+/**
+ * Called from browser.xul in response to menu-click or keyboard shortcut to
+ * toggle the toolbar
+ */
+DeveloperToolbar.prototype.focusToggle = function DT_focusToggle()
+{
+  if (this.visible) {
+    // If we have focus then the active element is the HTML input contained
+    // inside the xul input element
+    var active = this._chromeWindow.document.activeElement;
+    var position = this._input.compareDocumentPosition(active);
+    if (position & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+      this.hide();
+    }
+    else {
+      this._input.focus();
+    }
   } else {
     this.show(true);
   }
