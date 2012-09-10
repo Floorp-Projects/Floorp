@@ -105,6 +105,13 @@ my_malloc_logger(uint32_t type, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
   NS_StackWalk(stack_callback, 0, const_cast<char*>(name), 0);
 }
 
+// This is called from NS_LogInit() and from the stack walking functions, but
+// only the first call has any effect.  We need to call this function from both
+// places because it must run before any mutexes are created, and also before
+// any objects whose refcounts we're logging are created.  Running this
+// function during NS_LogInit() ensures that we meet the first criterion, and
+// running this function during the stack walking functions ensures we meet the
+// second criterion.
 void
 StackWalkInitCriticalAddress()
 {
@@ -449,7 +456,7 @@ EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
-    MOZ_ASSERT(gCriticalAddress.mInit);
+    StackWalkInitCriticalAddress();
     static HANDLE myProcess = NULL;
     HANDLE myThread;
     DWORD walkerReturn;
@@ -1002,9 +1009,10 @@ EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
-    MOZ_ASSERT(gCriticalAddress.mInit);
     MOZ_ASSERT(!aThread);
     struct my_user_args args;
+
+    StackWalkInitCriticalAddress();
 
     if (!initialized)
         myinit();
@@ -1129,8 +1137,8 @@ EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
-  MOZ_ASSERT(gCriticalAddress.mInit);
   MOZ_ASSERT(!aThread);
+  StackWalkInitCriticalAddress();
 
   // Get the frame pointer
   void **bp;
@@ -1188,8 +1196,8 @@ EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
-    MOZ_ASSERT(gCriticalAddress.mInit);
     MOZ_ASSERT(!aThread);
+    StackWalkInitCriticalAddress();
     unwind_info info;
     info.callback = aCallback;
     info.skip = aSkipFrames + 1;
@@ -1267,7 +1275,6 @@ EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
-    MOZ_ASSERT(gCriticalAddress.mInit);
     MOZ_ASSERT(!aThread);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
