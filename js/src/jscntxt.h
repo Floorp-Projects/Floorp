@@ -814,7 +814,9 @@ struct JSRuntime : js::RuntimeFriendFields
     js::GCHelperThread  gcHelperThread;
 
 #ifdef JS_THREADSAFE
+# ifdef JS_ION
     js::WorkerThreadState *workerThreadState;
+# endif
 
     js::SourceCompressorThread sourceCompressorThread;
 #endif
