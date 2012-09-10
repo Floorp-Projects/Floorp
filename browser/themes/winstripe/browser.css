@@ -3118,10 +3118,6 @@ html|*#gcli-output-frame {
               0 0 0 1px hsla(210,40%,83%,.1);
 }
 
-.gclitoolbar-input-node {
-  background-color: green !important;
-}
-
 .gclitoolbar-complete-node {
   padding-left: 21px;
   background-color: transparent;
@@ -3172,8 +3168,7 @@ html|*#gcli-output-frame {
 /* Responsive Mode */
 
 .browserContainer[responsivemode] {
-  background: #2a3643 url("chrome://browser/skin/devtools/responsive-background.png");
-  box-shadow: 0 0 7px black inset;
+  background: #222 url("chrome://browser/skin/devtools/responsive-background.png");
   padding: 0 20px 20px 20px;
 }
 
