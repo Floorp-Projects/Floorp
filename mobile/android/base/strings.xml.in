@@ -228,12 +228,4 @@
   <string name="updater_apply_ticker">&updater_apply_ticker;</string>
   <string name="updater_apply_select">&updater_apply_select;</string>
 
-  <string name="updater_installing_title">&updater_installing_title;</string>
-  <string name="updater_installing_ticker">&updater_installing_ticker;</string>
-  <string name="updater_installing_ticker_success">&updater_installing_ticker_success;</string>
-  <string name="updater_installing_ticker_fail">&updater_installing_ticker_fail;</string>
-  <string name="updater_installing_text">&updater_installing_text;</string>
-  <string name="updater_installing_text_success">&updater_installing_text_success;</string>
-  <string name="updater_installing_text_fail">&updater_installing_text_fail;</string>
-
 </resources>
