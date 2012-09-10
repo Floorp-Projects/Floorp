@@ -39,7 +39,7 @@ interface nsIFile;
 interface nsIDOMTouch;
 interface nsIDOMClientRect;
 
-[scriptable, uuid(f7222baa-7c4b-4079-a9e0-db13cf797f58)]
+[scriptable, uuid(8A7DA5AF-26FD-4449-8887-9BEADC938B0A)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -920,6 +920,33 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean sendSelectionSetEvent(in unsigned long aOffset,
                                 in unsigned long aLength,
                                 in boolean aReverse);
+
+  /* Selection behaviors - mirror nsIFrame's nsSelectionAmount constants */
+  const unsigned long SELECT_CHARACTER   = 0;
+  const unsigned long SELECT_CLUSTER     = 1;
+  const unsigned long SELECT_WORD        = 2;
+  const unsigned long SELECT_LINE        = 3;
+  const unsigned long SELECT_BEGINLINE   = 4;
+  const unsigned long SELECT_ENDLINE     = 5;
+  const unsigned long SELECT_PARAGRAPH   = 6;
+  const unsigned long SELECT_WORDNOSPACE = 7;
+
+  /**
+   * Select content at a client point based on a selection behavior if the
+   * underlying content is selectable. Selection will accumulate with any
+   * existing selection, callers should clear selection prior if needed.
+   * May fire selection changed events. Calls nsFrame's SelectByTypeAtPoint.
+   *
+   * @param aX, aY The selection point in client coordinates.
+   * @param aSelectType The selection behavior requested.
+   * @return True if a selection occured, false otherwise.
+   * @throw NS_ERROR_DOM_SECURITY_ERR, NS_ERROR_UNEXPECTED for utils
+   * issues, and NS_ERROR_INVALID_ARG for coordinates that are outside
+   * this window.
+   */
+  boolean selectAtPoint(in float aX,
+                        in float aY,
+                        in unsigned long aSelectBehavior);
 
   /**
    * Perform the equivalent of:
