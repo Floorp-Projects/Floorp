@@ -928,9 +928,9 @@ nsExpatDriver::HandleError()
   nsCOMPtr<nsIScriptError> serr(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
   nsresult rv = NS_ERROR_FAILURE;
   if (serr) {
-    rv = serr->InitWithWindowID(description.get(),
-                                mURISpec.get(),
-                                mLastLine.get(),
+    rv = serr->InitWithWindowID(description,
+                                mURISpec,
+                                mLastLine,
                                 lineNumber, colNumber,
                                 nsIScriptError::errorFlag, "malformed-xml",
                                 mInnerWindowID);
