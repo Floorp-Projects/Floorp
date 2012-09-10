@@ -234,8 +234,7 @@ public class UpdateService extends IntentService {
 
         saveUpdateInfo(info);
 
-        // If we have root, we always apply the update immediately because it happens in the background
-        if (mApplyImmediately || checkRoot()) {
+        if (mApplyImmediately) {
             applyUpdate(pkg);
         } else {
             // Prompt to apply the update
@@ -490,65 +489,6 @@ public class UpdateService extends IntentService {
             return;
         }
 
-        if (checkRoot())
-            applyUpdateWithRoot(updateFile);
-        else
-            applyUpdateWithActivity(updateFile);
-    }
-
-    private void applyUpdateWithRoot(File updateFile) {
-        mNotificationManager.cancel(NOTIFICATION_ID);
-
-        Notification notification = new Notification(R.drawable.icon, getResources().getString(R.string.updater_installing_ticker), System.currentTimeMillis());
-        notification.flags = Notification.FLAG_NO_CLEAR;
-
-        Intent notificationIntent = new Intent("org.mozilla.gecko.ACTION_NOOP");
-        notificationIntent.setClass(this, UpdateService.class);
-
-        PendingIntent contentIntent = PendingIntent.getService(this, 0, notificationIntent, 0);
-        notification.flags = Notification.FLAG_NO_CLEAR;
-
-        notification.setLatestEventInfo(this, getResources().getString(R.string.updater_installing_title),
-                                        getResources().getString(R.string.updater_installing_text),
-                                        contentIntent);
-
-        mNotificationManager.notify(NOTIFICATION_ID, notification);
-
-        int result = runAsRoot("pm install " + updateFile.getAbsolutePath());
-        Log.i(LOGTAG, "install result = " + result);
-
-        updateFile.delete();
-
-        int tickerText = result == 0 ? R.string.updater_installing_ticker_success : R.string.updater_installing_ticker_fail;
-        int contentText = result == 0 ? R.string.updater_installing_text_success : R.string.updater_installing_text_fail;
-
-        mNotificationManager.cancel(NOTIFICATION_ID);
-
-        notification = new Notification(R.drawable.icon, getResources().getString(tickerText), System.currentTimeMillis());
-        notification.flags = Notification.FLAG_NO_CLEAR;
-
-        notificationIntent = new Intent(Intent.ACTION_MAIN);
-        notificationIntent.setClassName(getPackageName(), getPackageName() + ".App");
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        notification.flags = Notification.FLAG_NO_CLEAR;
-
-        notification.setLatestEventInfo(this, getResources().getString(R.string.updater_installing_title),
-                                        getResources().getString(result == 0 ? R.string.updater_installing_text_success : R.string.updater_installing_text_fail),
-                                        contentIntent);
-
-        mNotificationManager.notify(NOTIFICATION_ID, notification);
-
-
-        notification.setLatestEventInfo(this, getResources().getString(R.string.updater_installing_title),
-                                        getResources().getString(result == 0 ? R.string.updater_installing_text_success : R.string.updater_installing_text_fail),
-                                        contentIntent);
-        notification.flags = Notification.FLAG_AUTO_CANCEL;
-        mNotificationManager.notify(NOTIFICATION_ID, notification);
-    }
-
-    private void applyUpdateWithActivity(File updateFile) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(Uri.fromFile(updateFile), "application/vnd.android.package-archive");
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -589,29 +529,6 @@ public class UpdateService extends IntentService {
         editor.putString(KEY_LAST_HASH_FUNCTION, info.hashFunction);
         editor.putString(KEY_LAST_HASH_VALUE, info.hashValue);
         editor.commit();
-    }
-
-    private int runAsRoot(String command) {
-        Process p = null;
-        try {
-            p = Runtime.getRuntime().exec("su");
-            OutputStream output = p.getOutputStream();
-            output.write(command.getBytes());
-            output.write(new String("; exit\n").getBytes());
-            output.flush();
-            p.waitFor();
-
-            return p.exitValue();
-        } catch (Exception e) {
-            return -1;
-        } finally {
-            if (p != null)
-                p.destroy();
-        }
-    }
-
-    private boolean checkRoot() {
-        return runAsRoot("echo woooooo") == 0;
     }
 
     private class UpdateInfo {
