@@ -174,12 +174,6 @@ public class AwesomeBarTabs extends TabHost {
         return imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
-    private String getReaderForUrl(String url) {
-        // FIXME: still need to define the final way to open items from
-        // reading list. For now, we're using an about:reader page.
-        return "about:reader?url=" + Uri.encode(url);
-    }
-
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
         mUrlOpenListener = listener;
         for (AwesomeBarTab tab : mTabs) {
