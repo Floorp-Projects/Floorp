@@ -402,18 +402,18 @@ JSObject *NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
 bool CheckOverRecursed(JSContext *cx);
 
 bool DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
-bool InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &value);
+bool InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value);
 
 template<bool Equal>
-bool LooselyEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+bool LooselyEqual(JSContext *cx, HandleValue lhs, HandleValue rhs, JSBool *res);
 
 template<bool Equal>
-bool StrictlyEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+bool StrictlyEqual(JSContext *cx, HandleValue lhs, HandleValue rhs, JSBool *res);
 
-bool LessThan(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
-bool LessThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
-bool GreaterThan(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
-bool GreaterThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+bool LessThan(JSContext *cx, HandleValue lhs, HandleValue rhs, JSBool *res);
+bool LessThanOrEqual(JSContext *cx, HandleValue lhs, HandleValue rhs, JSBool *res);
+bool GreaterThan(JSContext *cx, HandleValue lhs, HandleValue rhs, JSBool *res);
+bool GreaterThanOrEqual(JSContext *cx, HandleValue lhs, HandleValue rhs, JSBool *res);
 
 template<bool Equal>
 bool StringsEqual(JSContext *cx, HandleString left, HandleString right, JSBool *res);
@@ -427,7 +427,7 @@ JSObject *NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type);
 JSObject *NewInitObject(JSContext *cx, HandleObject templateObject);
 
 bool ArrayPopDense(JSContext *cx, JSObject *obj, Value *rval);
-bool ArrayPushDense(JSContext *cx, JSObject *obj, const Value &v, uint32_t *length);
+bool ArrayPushDense(JSContext *cx, JSObject *obj, HandleValue v, uint32_t *length);
 bool ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval);
 
 bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
