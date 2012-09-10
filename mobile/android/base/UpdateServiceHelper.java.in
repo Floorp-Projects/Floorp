@@ -7,16 +7,19 @@
 
 package org.mozilla.gecko.updater;
 
+import org.mozilla.gecko.util.GeckoJarReader;
+
 import android.content.Context;
 import android.content.Intent;
+
+import android.content.pm.PackageManager;
+import android.content.pm.ApplicationInfo;
 
 import android.os.Build;
 
 import android.util.Log;
 
 import java.net.URL;
-
-import java.util.Locale;
 
 public class UpdateServiceHelper {
     public static final String ACTION_REGISTER_FOR_UPDATES = "@ANDROID_PACKAGE_NAME@.REGISTER_FOR_UPDATES";
@@ -41,6 +44,7 @@ public class UpdateServiceHelper {
 
     private static final String LOGTAG = "UpdateServiceHelper";
     private static final String BUILDID = "@MOZ_APP_BUILDID@";
+    private static final String DEFAULT_UPDATE_LOCALE = "en-US";
 
 #ifdef MOZ_PKG_SPECIAL
     private static final String UPDATE_URL = "https://aus2.mozilla.org/update/4/@MOZ_APP_BASENAME@/@MOZ_APP_VERSION@/%BUILDID%/Android_@MOZ_APP_ABI@-@MOZ_PKG_SPECIAL@/%LOCALE%/@MOZ_UPDATE_CHANNEL@/%OS_VERSION%/default/default/@MOZ_APP_VERSION@/update.xml";
@@ -48,9 +52,27 @@ public class UpdateServiceHelper {
     private static final String UPDATE_URL = "https://aus2.mozilla.org/update/4/@MOZ_APP_BASENAME@/@MOZ_APP_VERSION@/%BUILDID%/Android_@MOZ_APP_ABI@/%LOCALE%/@MOZ_UPDATE_CHANNEL@/%OS_VERSION%/default/default/@MOZ_APP_VERSION@/update.xml";  
 #endif
     
-    public static URL getUpdateUrl(boolean force) {
-        Locale locale = Locale.getDefault();
-        String url = UPDATE_URL.replace("%LOCALE%", locale.getLanguage() + "-" + locale.getCountry()).
+    public static URL getUpdateUrl(Context context, boolean force) {
+        PackageManager pm = context.getPackageManager();
+
+        String locale = null;
+        try {
+            ApplicationInfo info = pm.getApplicationInfo("@ANDROID_PACKAGE_NAME@", 0);
+            String updateLocaleUrl = "jar:jar:file://" + info.sourceDir + "!/omni.ja!/update.locale";
+
+            locale = GeckoJarReader.getText(updateLocaleUrl);
+
+            if (locale != null)
+                locale = locale.trim();
+            else
+                locale = DEFAULT_UPDATE_LOCALE;
+        } catch (android.content.pm.PackageManager.NameNotFoundException e) {
+            // Shouldn't really be possible, but fallback to default locale
+            Log.i(LOGTAG, "Failed to read update locale file, falling back to " + DEFAULT_UPDATE_LOCALE);
+            locale = DEFAULT_UPDATE_LOCALE;
+        }
+
+        String url = UPDATE_URL.replace("%LOCALE%", locale).
             replace("%OS_VERSION%", Build.VERSION.RELEASE).
             replace("%BUILDID%", force ? "0" : BUILDID);
 
