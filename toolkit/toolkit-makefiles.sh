@@ -82,6 +82,7 @@ MAKEFILES_dom="
   dom/src/storage/Makefile
   dom/system/Makefile
   dom/workers/Makefile
+  dom/time/Makefile
 "
 
 MAKEFILES_editor="
