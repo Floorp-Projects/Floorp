@@ -1627,25 +1627,20 @@ LaunchCallbackApp(const NS_tchar *workingDir,
 #endif
 }
 
-static bool
-WriteStatusFile(const char* aStatus)
+static void
+WriteStatusText(const char* text)
 {
+  // This is how we communicate our completion status to the main application.
+
   NS_tchar filename[MAXPATHLEN];
   NS_tsnprintf(filename, sizeof(filename)/sizeof(filename[0]),
                NS_T("%s/update.status"), gSourcePath);
 
-  // Make sure that the directory for the update status file exists
-  if (ensure_parent_dir(filename))
-    return false;
-
   AutoFile file = NS_tfopen(filename, NS_T("wb+"));
   if (file == NULL)
-    return false;
+    return;
 
-  if (fwrite(aStatus, strlen(aStatus), 1, file) != 1)
-    return false;
-
-  return true;
+  fwrite(text, strlen(text), 1, file);
 }
 
 static void
@@ -1665,7 +1660,24 @@ WriteStatusFile(int status)
     text = buf;
   }
 
-  WriteStatusFile(text);
+  WriteStatusText(text);
+}
+
+static bool
+WriteStatusFile(const char* aStatus)
+{
+  NS_tchar filename[MAXPATHLEN];
+  NS_tsnprintf(filename, sizeof(filename)/sizeof(filename[0]),
+               NS_T("%s/update.status"), gSourcePath);
+
+  AutoFile file = NS_tfopen(filename, NS_T("wb+"));
+  if (file == NULL)
+    return false;
+
+  if (fwrite(aStatus, strlen(aStatus), 1, file) != 1)
+    return false;
+
+  return true;
 }
 
 #ifdef MOZ_MAINTENANCE_SERVICE
@@ -2101,7 +2113,7 @@ UpdateThreadFunc(void *param)
                    installDir);
 
       ensure_remove_recursive(stageDir);
-      WriteStatusFile(sUsingService ? "pending-service" : "pending");
+      WriteStatusText(sUsingService ? "pending-service" : "pending");
       putenv("MOZ_PROCESS_UPDATES="); // We need to use -process-updates again in the tests
       reportRealResults = false; // pretend success
     }
