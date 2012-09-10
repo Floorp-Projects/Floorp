@@ -203,13 +203,13 @@ TabChild::Init()
   nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
   if (!baseWindow) {
     NS_ERROR("mWebNav doesn't QI to nsIBaseWindow");
-    return false;
+    return NS_ERROR_FAILURE;
   }
 
   mWidget = nsIWidget::CreatePuppetWidget(this);
   if (!mWidget) {
     NS_ERROR("couldn't create fake widget");
-    return false;
+    return NS_ERROR_FAILURE;
   }
   mWidget->Create(
     nullptr, 0,              // no parents

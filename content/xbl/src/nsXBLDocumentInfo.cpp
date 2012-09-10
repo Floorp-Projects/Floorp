@@ -218,10 +218,15 @@ XBL_ProtoErrorReporter(JSContext *cx,
   if (errorObject && consoleService) {
     uint32_t column = report->uctokenptr - report->uclinebuf;
 
+    const PRUnichar* ucmessage =
+      static_cast<const PRUnichar*>(report->ucmessage);
+    const PRUnichar* uclinebuf =
+      static_cast<const PRUnichar*>(report->uclinebuf);
+
     errorObject->Init
-         (reinterpret_cast<const PRUnichar*>(report->ucmessage),
-          NS_ConvertUTF8toUTF16(report->filename).get(),
-          reinterpret_cast<const PRUnichar*>(report->uclinebuf),
+         (ucmessage ? nsDependentString(ucmessage) : EmptyString(),
+          NS_ConvertUTF8toUTF16(report->filename),
+          uclinebuf ? nsDependentString(uclinebuf) : EmptyString(),
           report->lineno, column, report->flags,
           "xbl javascript"
           );

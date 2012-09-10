@@ -1073,9 +1073,9 @@ public:
     NS_WARN_IF_FALSE(scriptError, "Failed to create script error!");
 
     if (scriptError) {
-      if (NS_FAILED(scriptError->InitWithWindowID(aMessage.get(),
-                                                  aFilename.get(),
-                                                  aLine.get(), aLineNumber,
+      if (NS_FAILED(scriptError->InitWithWindowID(aMessage,
+                                                  aFilename,
+                                                  aLine, aLineNumber,
                                                   aColumnNumber, aFlags,
                                                   "Web Worker",
                                                   aInnerWindowId))) {

@@ -21,6 +21,10 @@ CPPSRCS		= \
 		nsSVGClipPathFrame.cpp \
 		nsSVGContainerFrame.cpp \
 		nsSVGEffects.cpp \
+		SVGFEContainerFrame.cpp \
+		SVGFEImageFrame.cpp \
+		SVGFELeafFrame.cpp \
+		SVGFEUnstyledLeafFrame.cpp \
 		nsSVGFilterFrame.cpp \
 		nsSVGFilterInstance.cpp \
 		nsSVGForeignObjectFrame.cpp \
@@ -32,10 +36,6 @@ CPPSRCS		= \
 		nsSVGImageFrame.cpp \
 		nsSVGInnerSVGFrame.cpp \
 		nsSVGIntegrationUtils.cpp \
-		SVGFEContainerFrame.cpp \
-		SVGFEImageFrame.cpp \
-		SVGFELeafFrame.cpp \
-		SVGFEUnstyledLeafFrame.cpp \
 		nsSVGMarkerFrame.cpp \
 		nsSVGMaskFrame.cpp \
 		nsSVGOuterSVGFrame.cpp \
@@ -49,6 +49,7 @@ CPPSRCS		= \
 		nsSVGTextPathFrame.cpp \
 		nsSVGTSpanFrame.cpp \
 		nsSVGUseFrame.cpp \
+		SVGViewFrame.cpp \
 		nsSVGUtils.cpp \
 		$(NULL)
 
