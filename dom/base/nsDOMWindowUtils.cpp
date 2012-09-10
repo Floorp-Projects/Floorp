@@ -2768,6 +2768,10 @@ nsresult
 nsDOMWindowUtils::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
                                             const nsAString& aNewOrigin)
 {
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
@@ -2781,6 +2785,10 @@ nsDOMWindowUtils::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
 nsresult
 nsDOMWindowUtils::RemoteFrameFullscreenReverted()
 {
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
@@ -2794,6 +2802,10 @@ nsDOMWindowUtils::RemoteFrameFullscreenReverted()
 nsresult
 nsDOMWindowUtils::ExitFullscreen()
 {
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   nsIDocument::ExitFullScreen(/* async = */ false);
   return NS_OK;
 }
