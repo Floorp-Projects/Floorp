@@ -1953,9 +1953,9 @@ PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
     }
   }
 
-  nsresult rv = scriptError->InitWithWindowID(msg.get(),
-                                              sourcefile.get(),
-                                              EmptyString().get(),
+  nsresult rv = scriptError->InitWithWindowID(msg,
+                                              sourcefile,
+                                              EmptyString(),
                                               lineno,
                                               0, // column for error is not available
                                               nsIScriptError::warningFlag,
@@ -5986,9 +5986,9 @@ IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHan
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
   NS_WARN_IF_FALSE(errorObject, "Failed to create error object");
   if (errorObject) {
-    nsresult rv = errorObject->InitWithWindowID(warnText.get(),
-                                                nullptr, // file name
-                                                nullptr, // source line
+    nsresult rv = errorObject->InitWithWindowID(warnText,
+                                                EmptyString(), // file name
+                                                EmptyString(), // source line
                                                 0, 0, // Line/col number
                                                 nsIScriptError::warningFlag,
                                                 "DOM Core", windowID);

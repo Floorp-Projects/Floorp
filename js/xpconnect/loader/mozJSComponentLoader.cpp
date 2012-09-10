@@ -125,21 +125,19 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
         do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
 
     if (consoleService && errorObject) {
-        /*
-         * Got an error object; prepare appropriate-width versions of
-         * various arguments to it.
-         */
-        NS_ConvertASCIItoUTF16 fileUni(rep->filename);
-
         uint32_t column = rep->uctokenptr - rep->uclinebuf;
 
-        rv = errorObject->Init(reinterpret_cast<const PRUnichar*>
-                                               (rep->ucmessage),
-                               fileUni.get(),
-                               reinterpret_cast<const PRUnichar*>
-                                               (rep->uclinebuf),
-                               rep->lineno, column, rep->flags,
-                               "component javascript");
+        const PRUnichar* ucmessage =
+            static_cast<const PRUnichar*>(rep->ucmessage);
+        const PRUnichar* uclinebuf =
+            static_cast<const PRUnichar*>(rep->uclinebuf);
+
+        rv = errorObject->Init(
+              ucmessage ? nsDependentString(ucmessage) : EmptyString(),
+              NS_ConvertASCIItoUTF16(rep->filename),
+              uclinebuf ? nsDependentString(uclinebuf) : EmptyString(),
+              rep->lineno, column, rep->flags,
+              "component javascript");
         if (NS_SUCCEEDED(rv)) {
             rv = consoleService->LogMessage(errorObject);
             if (NS_SUCCEEDED(rv)) {
