@@ -325,7 +325,7 @@ Debug_SetValueRangeToCrashOnTouch(HeapValue *vec, size_t len)
 }
 
 bool
-Throw(JSContext *cx, const Value &v);
+Throw(JSContext *cx, HandleValue v);
 
 bool
 GetProperty(JSContext *cx, HandleValue value, PropertyName *name, MutableHandleValue vp);

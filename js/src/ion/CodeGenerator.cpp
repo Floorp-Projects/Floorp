@@ -1518,7 +1518,7 @@ CodeGenerator::visitInitProp(LInitProp *lir)
 {
     Register objReg = ToRegister(lir->getObject());
 
-    typedef bool(*pf)(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &value);
+    typedef bool(*pf)(JSContext *, HandleObject, HandlePropertyName, HandleValue);
     static const VMFunction InitPropInfo = FunctionInfo<pf>(InitProp);
 
     pushArg(ToValue(lir, LInitProp::ValueIndex));
@@ -1880,7 +1880,7 @@ CodeGenerator::visitCompareS(LCompareS *lir)
 bool
 CodeGenerator::visitCompareV(LCompareV *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, const Value &, JSBool *);
+    typedef bool (*pf)(JSContext *, HandleValue, HandleValue, JSBool *);
     static const VMFunction EqInfo = FunctionInfo<pf>(ion::LooselyEqual<true>);
     static const VMFunction NeInfo = FunctionInfo<pf>(ion::LooselyEqual<false>);
     static const VMFunction StrictEqInfo = FunctionInfo<pf>(ion::StrictlyEqual<true>);
@@ -2498,7 +2498,7 @@ bool
 CodeGenerator::emitArrayPush(LInstruction *lir, const MArrayPush *mir, Register obj,
                              ConstantOrRegister value, Register elementsTemp, Register length)
 {
-    typedef bool (*pf)(JSContext *, JSObject *, const Value &, uint32_t *);
+    typedef bool (*pf)(JSContext *, JSObject *, HandleValue, uint32_t *);
     static const VMFunction Info = FunctionInfo<pf>(ion::ArrayPushDense);
     OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), obj, value), StoreRegisterTo(length));
     if (!ool)
@@ -3389,7 +3389,7 @@ CodeGenerator::visitOutOfLineSetPropertyCache(OutOfLineCache *ool)
 bool
 CodeGenerator::visitThrow(LThrow *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &);
+    typedef bool (*pf)(JSContext *, HandleValue);
     static const VMFunction ThrowInfo = FunctionInfo<pf>(js::Throw);
 
     pushArg(ToValue(lir, LThrow::Value));
@@ -3399,7 +3399,7 @@ CodeGenerator::visitThrow(LThrow *lir)
 bool
 CodeGenerator::visitBitNotV(LBitNotV *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, int *p);
+    typedef bool (*pf)(JSContext *, HandleValue, int *p);
     static const VMFunction info = FunctionInfo<pf>(BitNot);
 
     pushArg(ToValue(lir, LBitNotV::Input));
@@ -3409,7 +3409,7 @@ CodeGenerator::visitBitNotV(LBitNotV *lir)
 bool
 CodeGenerator::visitBitOpV(LBitOpV *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, const Value &, int *p);
+    typedef bool (*pf)(JSContext *, HandleValue, HandleValue, int *p);
     static const VMFunction BitAndInfo = FunctionInfo<pf>(BitAnd);
     static const VMFunction BitOrInfo = FunctionInfo<pf>(BitOr);
     static const VMFunction BitXorInfo = FunctionInfo<pf>(BitXor);
@@ -3507,7 +3507,7 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
 bool
 CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool)
 {
-    typedef JSString *(*pf)(JSContext *, const Value &);
+    typedef JSString *(*pf)(JSContext *, HandleValue);
     static const VMFunction Info = FunctionInfo<pf>(TypeOfOperation);
 
     LTypeOfV *ins = ool->ins();
