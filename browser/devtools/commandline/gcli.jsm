@@ -1707,7 +1707,7 @@ var types = require('gcli/types');
 var Type = require('gcli/types').Type;
 var Status = require('gcli/types').Status;
 var Conversion = require('gcli/types').Conversion;
-var Speller = require('gcli/types/spell').Speller;
+var spell = require('gcli/types/spell');
 
 
 /**
@@ -1888,13 +1888,14 @@ SelectionType.prototype._findPredictions = function(arg) {
   }
 
   // Try fuzzy matching if we don't get a prefix match
-  if (false && predictions.length === 0) {
-    var speller = new Speller();
-    var names = lookup.map(function(opt) {
-      return opt.name;
+  if (predictions.length === 0) {
+    var names = [];
+    lookup.forEach(function(opt) {
+      if (!opt.value.hidden) {
+        names.push(opt.name);
+      }
     });
-    speller.train(names);
-    var corrected = speller.correct(match);
+    var corrected = spell.correct(match, names);
     if (corrected) {
       lookup.forEach(function(opt) {
         if (opt.name === corrected) {
@@ -2005,153 +2006,116 @@ exports.SelectionType = SelectionType;
 
 });
 /*
- * Copyright (c) 2009 Panagiotis Astithas
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
+ * Copyright 2012, Mozilla Foundation and contributors
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 define('gcli/types/spell', ['require', 'exports', 'module' ], function(require, exports, module) {
 
+/*
+ * A spell-checker based on Damerau-Levenshtein distance.
+ */
+
+var INSERTION_COST = 1;
+var DELETION_COST = 1;
+var SWAP_COST = 1;
+var SUBSTITUTION_COST = 2;
+var MAX_EDIT_DISTANCE = 4;
 
 /**
- * A spell-checker based on the statistical algorithm described by Peter Norvig
- * in http://norvig.com/spell-correct.html, and converted to JavaScript by Past
- * http://past.github.com/speller/
- *
- * Usage requires a two-step process:
- * 1) call speller.train() one or more times with a large text to train the
- *    language model
- * 2) call speller.correct(word) to retrieve the correction for the specified
- *    word
+ * Compute Damerau-Levenshtein Distance
+ * @see http://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance
  */
-function Speller() {
-  // A map of words to the count of times they were encountered during training.
-  this._nWords = {};
-}
+function damerauLevenshteinDistance(wordi, wordj) {
+  var N = wordi.length;
+  var M = wordj.length;
 
-Speller.letters = "abcdefghijklmnopqrstuvwxyz".split("");
+  // We only need to store three rows of our dynamic programming matrix.
+  // (Without swap, it would have been two.)
+  var row0 = new Array(N+1);
+  var row1 = new Array(N+1);
+  var row2 = new Array(N+1);
+  var tmp;
 
-/**
- * A function that trains the language model with the words in the supplied
- * text. Multiple invocation of this function can extend the training of the
- * model.
- */
-Speller.prototype.train = function(words) {
-  words.forEach(function(word) {
-    word = word.toLowerCase();
-    this._nWords[word] = this._nWords.hasOwnProperty(word) ?
-            this._nWords[word] + 1 :
-            1;
-  }, this);
+  var i, j;
+
+  // The distance between the empty string and a string of size i is the cost
+  // of i insertions.
+  for (i = 0; i <= N; i++) {
+    row1[i] = i * INSERTION_COST;
+  }
+
+  // Row-by-row, we're computing the edit distance between substrings wordi[0..i]
+  // and wordj[0..j].
+  for (j = 1; j <= M; j++)
+  {
+    // Edit distance between wordi[0..0] and wordj[0..j] is the cost of j
+    // insertions.
+    row0[0] = j * INSERTION_COST;
+
+    for (i = 1; i <= N; i++)
+    {
+      // Handle deletion, insertion and substitution: we can reach each cell
+      // from three other cells corresponding to those three operations. We
+      // want the minimum cost.
+      row0[i] = Math.min(
+          row0[i-1] + DELETION_COST,
+          row1[i] + INSERTION_COST,
+          row1[i-1] + (wordi[i-1] === wordj[j-1] ? 0 : SUBSTITUTION_COST));
+      // We handle swap too, eg. distance between help and hlep should be 1. If
+      // we find such a swap, there's a chance to update row0[1] to be lower.
+      if (i > 1 && j > 1 && wordi[i-1] === wordj[j-2] && wordj[j-1] === wordi[i-2]) {
+        row0[i] = Math.min(row0[i], row2[i-2] + SWAP_COST);
+      }
+    }
+
+    tmp = row2;
+    row2 = row1;
+    row1 = row0;
+    row0 = tmp;
+  }
+
+  return row1[N];
 };
 
 /**
  * A function that returns the correction for the specified word.
  */
-Speller.prototype.correct = function(word) {
-  if (this._nWords.hasOwnProperty(word)) {
-    return word;
-  }
+exports.correct = function(word, names) {
+  var distance = {};
+  var sorted_candidates;
 
-  var candidates = {};
-  var list = this._edits(word);
-  list.forEach(function(edit) {
-    if (this._nWords.hasOwnProperty(edit)) {
-      candidates[this._nWords[edit]] = edit;
+  names.forEach(function(candidate) {
+    distance[candidate] = damerauLevenshteinDistance(word, candidate);
+  });
+
+  sorted_candidates = names.sort(function(worda, wordb) {
+    if (distance[worda] !== distance[wordb]) {
+      return distance[worda] - distance[wordb];
+    } else {
+      // if the score is the same, always return the first string
+      // in the lexicographical order
+      return worda < wordb;
     }
-  }, this);
+  });
 
-  if (this._countKeys(candidates) > 0) {
-    return candidates[this._max(candidates)];
+  if (distance[sorted_candidates[0]] <= MAX_EDIT_DISTANCE) {
+    return sorted_candidates[0];
+  } else {
+    return undefined;
   }
-
-  list.forEach(function(edit) {
-    this._edits(edit).forEach(function(w) {
-      if (this._nWords.hasOwnProperty(w)) {
-        candidates[this._nWords[w]] = w;
-      }
-    }, this);
-  }, this);
-
-  return this._countKeys(candidates) > 0 ?
-      candidates[this._max(candidates)] :
-      null;
 };
-
-/**
- * A helper function that counts the keys in the supplied object.
- */
-Speller.prototype._countKeys = function(object) {
-  // return Object.keys(object).length; ?
-  var count = 0;
-  for (var attr in object) {
-    if (object.hasOwnProperty(attr)) {
-      count++;
-    }
-  }
-  return count;
-};
-
-/**
- * A helper function that returns the word with the most occurrences in the
- * language model, among the supplied candidates.
- * @param candidates
- */
-Speller.prototype._max = function(candidates) {
-  var arr = [];
-  for (var candidate in candidates) {
-    if (candidates.hasOwnProperty(candidate)) {
-      arr.push(candidate);
-    }
-  }
-  return Math.max.apply(null, arr);
-};
-
-/**
- * A function that returns the set of possible corrections of the specified
- * word. The edits can be deletions, insertions, alterations or transpositions.
- */
-Speller.prototype._edits = function(word) {
-  var results = [];
-
-  // Deletion
-  for (var i = 0; i < word.length; i++) {
-    results.push(word.slice(0, i) + word.slice(i + 1));
-  }
-
-  // Transposition
-  for (i = 0; i < word.length - 1; i++) {
-    results.push(word.slice(0, i) + word.slice(i + 1, i + 2)
-            + word.slice(i, i + 1) + word.slice(i + 2));
-  }
-
-  // Alteration
-  for (i = 0; i < word.length; i++) {
-    Speller.letters.forEach(function(l) {
-      results.push(word.slice(0, i) + l + word.slice(i + 1));
-    }, this);
-  }
-
-  // Insertion
-  for (i = 0; i <= word.length; i++) {
-    Speller.letters.forEach(function(l) {
-      results.push(word.slice(0, i) + l + word.slice(i));
-    }, this);
-  }
-
-  return results;
-};
-
-exports.Speller = Speller;
 
 
 });
@@ -4068,7 +4032,9 @@ exports._empty = [];
  */
 exports.setDocument = function(document) {
   doc = document;
-  exports._empty = doc.querySelectorAll('x>:root');
+  if (doc != null) {
+    exports._empty = doc.querySelectorAll('x>:root');
+  }
 };
 
 /**
@@ -5127,7 +5093,7 @@ var view = require('gcli/ui/view');
 var l10n = require('gcli/l10n');
 
 var canon = require('gcli/canon');
-var Promise = require('gcli/promise').Promise;
+var Q = require('gcli/promise');
 
 var Status = require('gcli/types').Status;
 var Conversion = require('gcli/types').Conversion;
@@ -5190,8 +5156,6 @@ function Assignment(param, paramIndex) {
   this.paramIndex = paramIndex;
 
   this.onAssignmentChange = util.createEvent('Assignment.onAssignmentChange');
-
-  this.setBlank();
 }
 
 /**
@@ -5273,39 +5237,6 @@ Assignment.prototype.getPredictionAt = function(index) {
 Assignment.prototype.isInName = function() {
   return this.conversion.arg.type === 'NamedArgument' &&
          this.conversion.arg.prefix.slice(-1) !== ' ';
-};
-
-/**
- * Report on the status of the last parse() conversion.
- * We force mutations to happen through this method rather than have
- * setValue and setArgument functions to help maintain integrity when we
- * have ArrayArguments and don't want to get confused. This way assignments
- * are just containers for a conversion rather than things that store
- * a connection between an arg/value.
- * @see types.Conversion
- */
-Assignment.prototype.setConversion = function(conversion) {
-  var oldConversion = this.conversion;
-
-  this.conversion = conversion;
-  this.conversion.assign(this);
-
-  if (this.conversion.equals(oldConversion)) {
-    return;
-  }
-
-  this.onAssignmentChange({
-    assignment: this,
-    conversion: this.conversion,
-    oldConversion: oldConversion
-  });
-};
-
-/**
- * Setup an empty value for the conversion by parsing an empty argument.
- */
-Assignment.prototype.setBlank = function() {
-  this.setConversion(this.param.type.getBlank());
 };
 
 /**
@@ -5454,8 +5385,6 @@ function CommandAssignment() {
   this.param = new canon.Parameter(commandParamMetadata);
   this.paramIndex = -1;
   this.onAssignmentChange = util.createEvent('CommandAssignment.onAssignmentChange');
-
-  this.setBlank();
 }
 
 CommandAssignment.prototype = Object.create(Assignment.prototype);
@@ -5540,6 +5469,7 @@ function Requisition(environment, doc) {
   // The command that we are about to execute.
   // @see setCommandConversion()
   this.commandAssignment = new CommandAssignment();
+  this._setAssignment(this.commandAssignment, null, true);
 
   // The object that stores of Assignment objects that we are filling out.
   // The Assignment objects are stored under their param.name for named
@@ -5626,6 +5556,7 @@ Requisition.prototype._commandAssignmentChanged = function(ev) {
     for (var i = 0; i < command.params.length; i++) {
       var param = command.params[i];
       var assignment = new Assignment(param, i);
+      this._setAssignment(assignment, null, true);
       assignment.onAssignmentChange.add(this._assignmentChanged, this);
       this._assignments[param.name] = assignment;
     }
@@ -5748,40 +5679,81 @@ Requisition.prototype.getAssignments = function(includeCommand) {
 };
 
 /**
- * Alter the given assignment using the given arg. This function is better than
- * calling assignment.setConversion(assignment.param.type.parse(arg)) because
- * it adjusts the args in this requisition to keep things up to date
+ * Alter the given assignment using the given arg.
+ * @param assignment The assignment to alter
+ * @param arg The new value for the assignment. An instance of Argument, or an
+ * instance of Conversion, or null to set the blank value.
  */
 Requisition.prototype.setAssignment = function(assignment, arg) {
-  var originalArgs = assignment.arg.getArgs();
-  var conversion = assignment.param.type.parse(arg);
-  assignment.setConversion(conversion);
+  this._setAssignment(assignment, arg, false);
+};
 
-  var replacementArgs = arg.getArgs();
-  var maxLen = Math.max(originalArgs.length, replacementArgs.length);
-  for (var i = 0; i < maxLen; i++) {
-    // If there are no more original args, or if the original arg was blank
-    // (i.e. not typed by the user), we'll just need to add at the end
-    if (i >= originalArgs.length || originalArgs[i].type === 'BlankArgument') {
-      this._args.push(replacementArgs[i]);
-      continue;
-    }
+/**
+ * Internal function to alter the given assignment using the given arg.
+ * @param assignment The assignment to alter
+ * @param arg The new value for the assignment. An instance of Argument, or an
+ * instance of Conversion, or null to set the blank value.
+ * @param skipArgUpdate (default=false) Adjusts the args in this requisition to
+ * keep things up to date. Args should only be skipped when setAssignment is
+ * being called as part of the update process.
+ */
+Requisition.prototype._setAssignment = function(assignment, arg, skipArgUpdate) {
+  if (!skipArgUpdate) {
+    var originalArgs = assignment.arg.getArgs();
 
-    var index = this._args.indexOf(originalArgs[i]);
-    if (index === -1) {
-      console.error('Couldn\'t find ', originalArgs[i], ' in ', this._args);
-      throw new Error('Couldn\'t find ' + originalArgs[i]);
-    }
+    // Update the args array
+    var replacementArgs = arg.getArgs();
+    var maxLen = Math.max(originalArgs.length, replacementArgs.length);
+    for (var i = 0; i < maxLen; i++) {
+      // If there are no more original args, or if the original arg was blank
+      // (i.e. not typed by the user), we'll just need to add at the end
+      if (i >= originalArgs.length || originalArgs[i].type === 'BlankArgument') {
+        this._args.push(replacementArgs[i]);
+        continue;
+      }
 
-    // If there are no more replacement args, we just remove the original args
-    // Otherwise swap original args and replacements
-    if (i >= replacementArgs.length) {
-      this._args.splice(index, 1);
-    }
-    else {
-      this._args[index] = replacementArgs[i];
+      var index = this._args.indexOf(originalArgs[i]);
+      if (index === -1) {
+        console.error('Couldn\'t find ', originalArgs[i], ' in ', this._args);
+        throw new Error('Couldn\'t find ' + originalArgs[i]);
+      }
+
+      // If there are no more replacement args, we just remove the original args
+      // Otherwise swap original args and replacements
+      if (i >= replacementArgs.length) {
+        this._args.splice(index, 1);
+      }
+      else {
+        this._args[index] = replacementArgs[i];
+      }
     }
   }
+
+  var conversion;
+  if (arg == null) {
+    conversion = assignment.param.type.getBlank();
+  }
+  else if (typeof arg.getStatus === 'function') {
+    conversion = arg;
+  }
+  else {
+    conversion = assignment.param.type.parse(arg);
+  }
+
+  var oldConversion = assignment.conversion;
+
+  assignment.conversion = conversion;
+  assignment.conversion.assign(assignment);
+
+  if (assignment.conversion.equals(oldConversion)) {
+    return;
+  }
+
+  assignment.onAssignmentChange({
+    assignment: assignment,
+    conversion: assignment.conversion,
+    oldConversion: oldConversion
+  });
 };
 
 /**
@@ -5789,7 +5761,7 @@ Requisition.prototype.setAssignment = function(assignment, arg) {
  */
 Requisition.prototype.setBlankArguments = function() {
   this.getAssignments().forEach(function(assignment) {
-    assignment.setBlank();
+    this._setAssignment(assignment, null, true);
   }, this);
 };
 
@@ -6148,8 +6120,8 @@ Requisition.prototype.getAssignmentAt = function(cursor) {
  * @param input (optional) The command to execute. See above.
  */
 Requisition.prototype.exec = function(input) {
-  var command;
-  var args;
+  var command = null;
+  var args = null;
   var hidden = false;
   if (input && input.hidden) {
     hidden = true;
@@ -6200,31 +6172,56 @@ Requisition.prototype.exec = function(input) {
 
   this.commandOutputManager.onOutput({ output: output });
 
+  var onDone = function(data) {
+    output.complete(data);
+  };
+
+  var onError = function(error) {
+    console.error(error);
+    output.error = true;
+    output.complete(error);
+  };
+
   try {
     var context = exports.createExecutionContext(this);
     var reply = command.exec(args, context);
 
-    if (reply != null && typeof reply.then === 'function') {
-      reply.then(
-          function(data) { output.complete(data); },
-          function(error) { output.error = true; output.complete(error); });
-
-      output.promise = reply;
-      // Add progress to our promise and add a handler for it here
-      // See bug 659300
-    }
-    else {
-      output.complete(reply);
-    }
+    this._then(reply, onDone, onError);
   }
   catch (ex) {
-    console.error(ex);
-    output.error = true;
-    output.complete(ex);
+    onError(ex);
   }
 
   this.update('');
   return output;
+};
+
+/**
+ * Different types of promise have different ways of doing 'then'. This is a
+ * catch-all so we can ignore the differences. It also handles concrete values
+ * and calls onDone directly if thing is not a promise.
+ * @param thing The value to test for 'promiseness'
+ * @param onDone The action to take if thing is resolved
+ * @param onError The action to take if thing is rejected
+ */
+Requisition.prototype._then = function(thing, onDone, onError) {
+  var then = null;
+  if (thing != null && typeof thing.then === 'function') {
+    // Old GCLI style / simple promises with a then function
+    then = thing.then;
+  }
+  else if (thing != null && thing.promise != null &&
+                typeof thing.promise.then === 'function') {
+    // Q / Mozilla add-ons style
+    then = thing.promise.then;
+  }
+
+  if (then != null) {
+    then(onDone, onError);
+  }
+  else {
+    onDone(thing);
+  }
 };
 
 /**
@@ -6517,7 +6514,7 @@ Requisition.prototype._split = function(args) {
     // Special case: if the user enters { console.log('foo'); } then we need to
     // use the hidden 'eval' command
     conversion = new Conversion(evalCommand, new ScriptArgument());
-    this.commandAssignment.setConversion(conversion);
+    this._setAssignment(this.commandAssignment, conversion, true);
     return;
   }
 
@@ -6525,8 +6522,8 @@ Requisition.prototype._split = function(args) {
 
   while (argsUsed <= args.length) {
     var arg = (argsUsed === 1) ?
-      args[0] :
-      new MergedArgument(args, 0, argsUsed);
+              args[0] :
+              new MergedArgument(args, 0, argsUsed);
     conversion = this.commandAssignment.param.type.parse(arg);
 
     // We only want to carry on if this command is a parent command,
@@ -6544,7 +6541,7 @@ Requisition.prototype._split = function(args) {
     argsUsed++;
   }
 
-  this.commandAssignment.setConversion(conversion);
+  this._setAssignment(this.commandAssignment, conversion, true);
 
   for (var i = 0; i < argsUsed; i++) {
     args.shift();
@@ -6590,11 +6587,8 @@ Requisition.prototype._assign = function(args) {
   if (this.assignmentCount === 1) {
     var assignment = this.getAssignment(0);
     if (assignment.param.type instanceof StringType) {
-      var arg = (args.length === 1) ?
-        args[0] :
-        new MergedArgument(args);
-      var conversion = assignment.param.type.parse(arg);
-      assignment.setConversion(conversion);
+      var arg = (args.length === 1) ? args[0] : new MergedArgument(args);
+      this._setAssignment(assignment, arg, true);
       return;
     }
   }
@@ -6639,8 +6633,7 @@ Requisition.prototype._assign = function(args) {
           arrayArg.addArgument(arg);
         }
         else {
-          var conversion = assignment.param.type.parse(arg);
-          assignment.setConversion(conversion);
+          this._setAssignment(assignment, arg, true);
         }
       }
       else {
@@ -6657,7 +6650,7 @@ Requisition.prototype._assign = function(args) {
     // If not set positionally, and we can't set it non-positionally,
     // we have to default it to prevent previous values surviving
     if (!assignment.param.isPositionalAllowed) {
-      assignment.setBlank();
+      this._setAssignment(assignment, null, true);
       return;
     }
 
@@ -6674,7 +6667,7 @@ Requisition.prototype._assign = function(args) {
     }
     else {
       if (args.length === 0) {
-        assignment.setBlank();
+        this._setAssignment(assignment, null, true);
       }
       else {
         var arg = args.splice(0, 1)[0];
@@ -6688,8 +6681,7 @@ Requisition.prototype._assign = function(args) {
           this._unassigned.push(new UnassignedAssignment(this, arg));
         }
         else {
-          var conversion = assignment.param.type.parse(arg);
-          assignment.setConversion(conversion);
+          this._setAssignment(assignment, arg, true);
         }
       }
     }
@@ -6698,8 +6690,7 @@ Requisition.prototype._assign = function(args) {
   // Now we need to assign the array argument (if any)
   Object.keys(arrayArgs).forEach(function(name) {
     var assignment = this.getAssignment(name);
-    var conversion = assignment.param.type.parse(arrayArgs[name]);
-    assignment.setConversion(conversion);
+    this._setAssignment(assignment, arrayArgs[name], true);
   }, this);
 
   // What's left is can't be assigned, but we need to extract
@@ -6729,17 +6720,31 @@ function Output(options) {
 }
 
 /**
- * Called when there is data to display
- * @param data
+ * Called when there is data to display, but the command is still executing
+ * @param data The new data. If the data structure has been altered but the
+ * root object is still the same, The same root object should be passed in the
+ * data parameter.
+ * @param ev Optional additional event data, for example to explain how the
+ * data structure has changed
  */
-Output.prototype.complete = function(data) {
+Output.prototype.changed = function(data, ev) {
   this.data = data;
 
+  ev = ev || {};
+  ev.output = this;
+  this.onChange(ev);
+};
+
+/**
+ * Called when there is data to display, and the command has finished executing
+ * See changed() for details on parameters.
+ */
+Output.prototype.complete = function(data, ev) {
   this.end = new Date();
   this.duration = this.end.getTime() - this.start.getTime();
   this.completed = true;
 
-  this.onChange({ output: this });
+  this.changed(data, ev);
 };
 
 /**
@@ -6830,8 +6835,15 @@ exports.createExecutionContext = function(requisition) {
     document: requisition.document,
     environment: requisition.environment,
     createView: view.createView,
+    defer: function() {
+      return Q.defer();
+    },
+    /**
+     * @deprecated Use defer() instead, which does the same thing, but is not
+     * confusingly named
+     */
     createPromise: function() {
-      return new Promise();
+      return Q.defer();
     }
   };
 };
@@ -6856,8 +6868,13 @@ exports.createExecutionContext = function(requisition) {
 
 define('gcli/promise', ['require', 'exports', 'module' ], function(require, exports, module) {
 
-  Components.utils.import("resource:///modules/devtools/Promise.jsm");
-  exports.Promise = Promise;
+  var imported = {};
+  Components.utils.import("resource://gre/modules/commonjs/promise/core.js",
+                          imported);
+
+  exports.defer = imported.Promise.defer;
+  exports.resolve = imported.Promise.resolve;
+  exports.reject = imported.Promise.reject;
 
 });
 define("text!gcli/ui/intro.html", [], "\n" +
@@ -7237,7 +7254,7 @@ FocusManager.prototype._checkShow = function() {
 
   if (fire) {
     if (this._debug) {
-      console.debug('FocusManager.onVisibilityChange', ev);
+      console.log('FocusManager.onVisibilityChange', ev);
     }
     this.onVisibilityChange(ev);
   }
@@ -7734,6 +7751,9 @@ Field.prototype.element = undefined;
 Field.prototype.destroy = function() {
   delete this.messageElement;
 };
+
+// Note: We could/should probably change Fields from working with Conversions
+// to working with Arguments (Tokens), which makes for less calls to parse()
 
 /**
  * Update this field display with the value from this conversion.
@@ -9393,7 +9413,9 @@ Inputter.prototype.textChanged = function() {
   input.typed = newStr;
   this._processCaretChange(input);
 
-  this.element.value = newStr;
+  if (this.element.value !== newStr) {
+    this.element.value = newStr;
+  }
   this.onInputChange({ inputState: input });
 };
 
@@ -9469,8 +9491,12 @@ Inputter.prototype._processCaretChange = function(input) {
     cursor: { start: start, end: end }
   };
 
-  this.element.selectionStart = start;
-  this.element.selectionEnd = end;
+  if (this.element.selectionStart !== start) {
+    this.element.selectionStart = start;
+  }
+  if (this.element.selectionEnd !== end) {
+    this.element.selectionEnd = end;
+  }
 
   this._checkAssignment(start);
 
@@ -9605,7 +9631,7 @@ Inputter.prototype.onKeyUp = function(ev) {
       // If the user is on a valid value, then we increment the value, but if
       // they've typed something that's not right we page through predictions
       if (this.assignment.getStatus() === Status.VALID) {
-        this.requisition.increment(assignment);
+        this.requisition.increment(this.assignment);
         // See notes on focusManager.onInputChange in onKeyDown
         if (this.focusManager) {
           this.focusManager.onInputChange();
@@ -9629,7 +9655,7 @@ Inputter.prototype.onKeyUp = function(ev) {
     else {
       // See notes above for the UP key
       if (this.assignment.getStatus() === Status.VALID) {
-        this.requisition.decrement(assignment);
+        this.requisition.decrement(this.assignment);
         // See notes on focusManager.onInputChange in onKeyDown
         if (this.focusManager) {
           this.focusManager.onInputChange();
@@ -10314,7 +10340,7 @@ Tooltip.prototype.selectChoice = function(ev) {
  * Called by the onFieldChange event on the current Field
  */
 Tooltip.prototype.fieldChanged = function(ev) {
-  this.assignment.setConversion(ev.conversion);
+  this.requisition.setAssignment(this.assignment, ev.conversion.arg);
 
   var isError = ev.conversion.message != null && ev.conversion.message !== '';
   this.focusManager.setError(isError);

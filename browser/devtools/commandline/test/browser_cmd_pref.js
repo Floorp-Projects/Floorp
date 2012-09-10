@@ -163,8 +163,8 @@ function testPrefStatus() {
   helpers.setInput('pref list');
   helpers.check({
     input:  'pref list',
-    hints:           '',
-    markup: 'EEEEVEEEE',
+    hints:           ' -> pref set',
+    markup: 'IIIIVIIII',
     status: 'ERROR'
   });
 }

@@ -3156,6 +3156,14 @@ html|*#gcli-output-frame {
               0 1px 0 hsla(210,16%,76%,.15);
 }
 
+.gclitoolbar-input-node::-moz-selection {
+  background-color: green !important;
+}
+
+.gclitoolbar-input-node {
+  background-color: red;
+}
+
 .gclitoolbar-complete-node {
   padding-left: 21px;
   background-color: transparent;
