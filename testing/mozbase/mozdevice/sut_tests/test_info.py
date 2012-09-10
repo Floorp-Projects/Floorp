@@ -13,13 +13,13 @@ class InfoTestCase(DeviceManagerTestCase):
         """ This tests the "info" command
         """
         cmds = ('os', 'id', 'systime', 'uptime', 'screen',
-                'memory', 'power', 'process')
+                'memory', 'power')
         for c in cmds:
             data = self.dm.getInfo(c)
             print c + str(data)
 
         print " ==== Now we call them all ===="
-        data = self.dm.getInfo('all')
-        print str(data)
+        #data = self.dm.getInfo('all')
+        #print str(data)
 
         # No real good way to verify this.  If it doesn't throw, we're ok.
