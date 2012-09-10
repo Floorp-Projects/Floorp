@@ -322,6 +322,7 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestCombinedView());
         mTests.add(new TestCombinedViewDisplay());
         mTests.add(new TestCombinedViewWithDeletedBookmark());
+        mTests.add(new TestCombinedViewWithDeletedReadingListItem());
     }
 
     public void testBrowserProvider() throws Exception {
@@ -1319,10 +1320,11 @@ public class testBrowserProvider extends ContentProviderTest {
             final String TITLE_2 = "Test Page 2";
             final String TITLE_3_HISTORY = "Test Page 3 (History Entry)";
             final String TITLE_3_BOOKMARK = "Test Page 3 (Bookmark Entry)";
+            final String TITLE_3_BOOKMARK2 = "Test Page 3 (Bookmark Entry 2)";
 
-            final String URL_1 = "http://example.com";
-            final String URL_2 = "http://example.org";
-            final String URL_3 = "http://examples2.com";
+            final String URL_1 = "http://example1.com";
+            final String URL_2 = "http://example2.com";
+            final String URL_3 = "http://example3.com";
 
             final String HISTORY_FAVICON = "HISTORY_FAVICON";
             final String HISTORY_THUMBNAIL = "HISTORY_THUMBNAIL";
@@ -1352,11 +1354,18 @@ public class testBrowserProvider extends ContentProviderTest {
             combinedHistory.put(mHistoryThumbnailCol, HISTORY_THUMBNAIL.getBytes("UTF8"));
             long combinedHistoryId = ContentUris.parseId(mProvider.insert(mHistoryUri, combinedHistory));
 
+
             ContentValues combinedBookmark = createBookmark(TITLE_3_BOOKMARK, URL_3, mMobileFolderId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
             combinedBookmark.put(mBookmarksFaviconCol, BOOKMARK_FAVICON.getBytes("UTF8"));
             combinedBookmark.put(mBookmarksThumbnailCol, BOOKMARK_THUMBNAIL.getBytes("UTF8"));
             long combinedBookmarkId = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedBookmark));
+
+            ContentValues combinedBookmark2 = createBookmark(TITLE_3_BOOKMARK2, URL_3, mMobileFolderId,
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+            combinedBookmark2.put(mBookmarksFaviconCol, BOOKMARK_FAVICON.getBytes("UTF8"));
+            combinedBookmark2.put(mBookmarksThumbnailCol, BOOKMARK_THUMBNAIL.getBytes("UTF8"));
+            long combinedBookmarkId2 = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedBookmark2));
 
             // Create a bookmark folder to make sure it _doesn't_ show up in the results
             ContentValues folderBookmark = createBookmark("", "", mMobileFolderId,
@@ -1415,12 +1424,16 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.moveToNext(), true, "Found third combined entry");
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedIdCol))), new Long(0),
                          "Combined _id column should always be 0");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol))), new Long(combinedBookmarkId),
+            // The bookmark data (bookmark_id and title) associated with the combined entry is non-deterministic,
+            // it might end up with data coming from any of the matching bookmark entries.
+            mAsserter.is(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol)) == combinedBookmarkId ||
+                         c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol)) == combinedBookmarkId2, true,
                          "Combined entry has correct bookmark id");
+            mAsserter.is(c.getString(c.getColumnIndex(mCombinedTitleCol)).equals(TITLE_3_BOOKMARK) ||
+                         c.getString(c.getColumnIndex(mCombinedTitleCol)).equals(TITLE_3_BOOKMARK2), true,
+                         "Combined entry has title corresponding to bookmark entry");
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedHistoryIdCol))), new Long(combinedHistoryId),
                          "Combined entry has correct history id");
-            mAsserter.is(c.getString(c.getColumnIndex(mCombinedTitleCol)), TITLE_3_BOOKMARK,
-                         "Combined entry has title corresponding to bookmark entry");
             mAsserter.is(c.getString(c.getColumnIndex(mCombinedUrlCol)), URL_3,
                          "Combined entry has correct url");
             mAsserter.is(c.getInt(c.getColumnIndex(mCombinedVisitsCol)), VISITS,
@@ -1468,11 +1481,15 @@ public class testBrowserProvider extends ContentProviderTest {
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
             mProvider.insert(mBookmarksUri, combinedBookmark);
 
-            // Create a reading list entry
+            // Create a reading list entries
             int readingListId = getIntColumn("Bookmarks", "FIXED_READING_LIST_ID");
-            ContentValues readingListItem = createBookmark(TITLE_4, URL_4, readingListId,
+            ContentValues readingListItem = createBookmark(TITLE_3_BOOKMARK, URL_3, readingListId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
             long readingListItemId = ContentUris.parseId(mProvider.insert(mBookmarksUri, readingListItem));
+
+            ContentValues readingListItem2 = createBookmark(TITLE_4, URL_4, readingListId,
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+            long readingListItemId2 = ContentUris.parseId(mProvider.insert(mBookmarksUri, readingListItem2));
 
             Cursor c = mProvider.query(mCombinedUri, null, "", null, null);
             mAsserter.is(c.getCount(), 4, "4 combined entries found");
@@ -1481,7 +1498,7 @@ public class testBrowserProvider extends ContentProviderTest {
                 long id = c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol));
 
                 int display = c.getInt(c.getColumnIndex(mCombinedDisplayCol));
-                int expectedDisplay = (id == readingListItemId ? mCombinedDisplayReader : mCombinedDisplayNormal);
+                int expectedDisplay = (id == readingListItemId || id == readingListItemId2 ? mCombinedDisplayReader : mCombinedDisplayNormal);
 
                 mAsserter.is(new Integer(display), new Integer(expectedDisplay),
                                  "Combined display column should always be DISPLAY_READER for the reading list item");
@@ -1524,6 +1541,49 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.moveToFirst(), true, "Found combined entry without bookmark id");
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol))), new Long(0),
                          "Bookmark id should not be set to removed bookmark id");
+        }
+    }
+
+    class TestCombinedViewWithDeletedReadingListItem extends Test {
+        public void test() throws Exception {
+            final String TITLE = "Test Page 1";
+            final String URL = "http://example.com";
+            final int VISITS = 10;
+            final long LAST_VISITED = System.currentTimeMillis();
+
+            // Create a combined history entry
+            ContentValues combinedHistory = createHistoryEntry(TITLE, URL, VISITS, LAST_VISITED);
+            mProvider.insert(mHistoryUri, combinedHistory);
+
+            // Create a combined bookmark entry
+            int readingListId = getIntColumn("Bookmarks", "FIXED_READING_LIST_ID");
+            ContentValues combinedReadingListItem = createBookmark(TITLE, URL, readingListId,
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+            long combinedReadingListItemId = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedReadingListItem));
+
+            Cursor c = mProvider.query(mCombinedUri, null, "", null, null);
+            mAsserter.is(c.getCount(), 1, "1 combined entry found");
+
+            mAsserter.is(c.moveToFirst(), true, "Found combined entry with bookmark id");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol))), new Long(combinedReadingListItemId),
+                         "Bookmark id should be set correctly on combined entry");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedDisplayCol))), new Long(mCombinedDisplayReader),
+                         "Combined entry should have reader display type");
+
+            int deleted = mProvider.delete(mBookmarksUri,
+                                           mBookmarksIdCol + " = ?",
+                                           new String[] { String.valueOf(combinedReadingListItemId) });
+
+            mAsserter.is((deleted == 1), true, "Inserted combined reading list item was deleted");
+
+            c = mProvider.query(mCombinedUri, null, "", null, null);
+            mAsserter.is(c.getCount(), 1, "1 combined entry found");
+
+            mAsserter.is(c.moveToFirst(), true, "Found combined entry without bookmark id");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol))), new Long(0),
+                         "Bookmark id should not be set to removed bookmark id");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedDisplayCol))), new Long(mCombinedDisplayNormal),
+                         "Combined entry should have reader display type");
         }
     }
 }
