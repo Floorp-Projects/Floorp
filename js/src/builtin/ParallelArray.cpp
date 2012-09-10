@@ -860,7 +860,7 @@ ParallelArrayObject::initClass(JSContext *cx, JSObject *obj)
     // Define the length and shape properties.
     RootedId lengthId(cx, AtomToId(cx->runtime->atomState.lengthAtom));
     RootedId shapeId(cx, AtomToId(cx->runtime->atomState.shapeAtom));
-    unsigned flags = JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED | JSPROP_GETTER;
+    unsigned flags = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_GETTER;
 
     JSObject *scriptedLength = js_NewFunction(cx, NULL, NonGenericMethod<lengthGetter>,
                                               0, 0, global, NULL);

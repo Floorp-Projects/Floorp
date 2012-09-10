@@ -7,7 +7,7 @@ let doc;
 let contentWindow;
 
 let tempScope = {};
-Cu.import("resource:///modules/Services.jsm", tempScope);
+Cu.import("resource://gre/modules/Services.jsm", tempScope);
 let Services = tempScope.Services;
 
 function createDocument()

@@ -55,7 +55,7 @@ fails-if(Android) != text-font-lang.html text-font-lang-notref.html
 fails-if(azureQuartz) == linear-gradient-1a.html linear-gradient-1-ref.html
 
 # this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
-fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)||(azureQuartz&&/Mac\x20OS\x20X\x2010\.[78]/.test(http.oscpu))) == linear-gradient-1b.html linear-gradient-1-ref.html
+fails-if(OSX==10.6||(azureQuartz&&(OSX==10.7||OSX==10.8))) == linear-gradient-1b.html linear-gradient-1-ref.html
 
 == zero-dimensions.html zero-dimensions-ref.html
 
@@ -72,7 +72,7 @@ fuzzy-if(azureSkia,9,470) random-if(Android) == dash-1.html dash-1-ref.svg  # Bu
 fails == ctm-singular-sanity.html data:text/html,<body>Pass  # Bug 612033
 == ctm-1.html ctm-1-ref.html
 
-fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html # Bug 673333
+fails-if(OSX==10.6) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html # Bug 673333
 == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum-ref.html
 
 != 693610-1.html 693610-1-notref.html # bug 693610: multiple glyph runs should not be overprinted

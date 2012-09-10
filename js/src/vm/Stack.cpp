@@ -332,7 +332,17 @@ StackFrame::epilogue(JSContext *cx)
             else
                 JS_ASSERT(scopeChain() == prev()->scopeChain());
         } else {
-            JS_ASSERT(scopeChain()->isGlobal());
+            /*
+             * Debugger.Object.prototype.evalInGlobal creates indirect eval
+             * frames scoped to the given global;
+             * Debugger.Object.prototype.evalInGlobalWithBindings creates
+             * indirect eval frames scoped to an object carrying the introduced
+             * bindings.
+             */
+            if (isDebuggerFrame())
+                JS_ASSERT(scopeChain()->isGlobal() || scopeChain()->enclosingScope()->isGlobal());
+            else
+                JS_ASSERT(scopeChain()->isGlobal());
         }
         return;
     }

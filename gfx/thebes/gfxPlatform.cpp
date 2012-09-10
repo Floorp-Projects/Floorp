@@ -390,9 +390,6 @@ gfxPlatform::Shutdown()
     // Shut down the default GL context provider.
     mozilla::gl::GLContextProvider::Shutdown();
 
-    // We always have OSMesa at least potentially available; shut it down too.
-    mozilla::gl::GLContextProviderOSMesa::Shutdown();
-
 #if defined(XP_WIN)
     // The above shutdown calls operate on the available context providers on
     // most platforms.  Windows is a "special snowflake", though, and has three

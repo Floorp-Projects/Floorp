@@ -257,7 +257,7 @@ random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
 fails-if(Android) != text-language-00.xhtml text-language-00-ref.xhtml
 fails-if(Android) random-if(gtk2Widget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts.
-== text-layout-01.svg text-layout-01-ref.svg
+fuzzy-if(OSX==10.8,14,11) == text-layout-01.svg text-layout-01-ref.svg
 == text-layout-02.svg text-layout-02-ref.svg
 == text-layout-03.svg text-layout-03-ref.svg
 == text-layout-04.svg text-layout-04-ref.svg

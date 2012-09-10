@@ -277,7 +277,7 @@ nsSVGMarkerProperty::DoUpdate()
   // Don't need to request ReflowFrame if we're being reflowed.
   if (!(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
     // XXXjwatt: We need to unify SVG into standard reflow so we can just use
-    // nsChangeHint_ReflowFrame here.
+    // nsChangeHint_NeedReflow | nsChangeHint_NeedDirtyReflow here.
     nsSVGUtils::InvalidateAndScheduleReflowSVG(mFrame);
   }
   mFramePresShell->FrameConstructor()->PostRestyleEvent(

@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <mozilla/StandardInteger.h>
 #if defined(XP_WIN) && !defined(UPDATER_NO_STRING_GLUE_STL)
 #include <wchar.h>
 #include "nsStringGlue.h"
@@ -60,7 +61,7 @@ ParseVP(char *part, VersionPart &result)
     *dot = '\0';
 
   if (part[0] == '*' && part[1] == '\0') {
-    result.numA = PR_INT32_MAX;
+    result.numA = INT32_MAX;
     result.strB = "";
   }
   else {

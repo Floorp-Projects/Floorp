@@ -552,9 +552,9 @@ fails-if(cocoaWidget) == 356774-1.html 356774-1-ref.html # probably bug 379317
 == 363858-2.html 363858-2-ref.html
 == 363858-3.html 363858-3-ref.html
 == 363858-4.html 363858-4-ref.html
-== 363858-5a.html 363858-5-ref.html
+fuzzy-if(OSX==10.8,45,2) == 363858-5a.html 363858-5-ref.html
 == 363858-5b.html 363858-5-ref.html
-== 363858-6a.html 363858-6-ref.html
+fuzzy-if(OSX==10.8,45,2) == 363858-6a.html 363858-6-ref.html
 == 363858-6b.html 363858-6-ref.html
 == 363874.html 363874-ref.html
 == 363874-max-width.html 363874-max-width-ref.html
@@ -851,7 +851,7 @@ fails-if(winWidget) fails-if(cocoaWidget) random-if(!cocoaWidget&&!winWidget) !=
 == 402629-1.html 402629-1-ref.html
 == 402629-2.html 402629-2-ref.html
 == 402629-3.html 402629-3-ref.html
-#== 402807-1.html 402807-1-ref.html # Fails on Mac (qm-xserve01)
+== 402807-1.html 402807-1-ref.html
 == 402940-1.html 402940-1-ref.html
 == 402940-1b.html 402940-1-ref.html
 != 402940-2.html 402940-2-notref.html
@@ -1167,7 +1167,7 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 == 446100-1f.html about:blank
 == 446100-1g.html about:blank
 == 446100-1h.html about:blank
-# == 448193.html 448193-ref.html  # Fails due to 2 small single-pixel differences
+fuzzy(127,2) == 448193.html 448193-ref.html
 # == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
 != 449149-1a.html about:blank
 != 449149-1b.html about:blank
@@ -1453,7 +1453,7 @@ random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 534804-1.html 534804-1-ref.html
 == 534808-1.html 534808-1-ref.html
 == 534808-2.html 534808-2-ref.html
-fails-if(/Mac\x20OS\x20X\x2010\.7/.test(http.oscpu)) == 534919-1.html 534919-1-ref.html # Bug 705044
+fails-if(OSX==10.7) == 534919-1.html 534919-1-ref.html # Bug 705044
 random == 536061.html 536061-ref.html # fixedpoint division in blur code makes this fail
 == 537507-1.xul 537507-1-ref.xul
 == 537507-2.html 537507-2-ref.html
@@ -1628,7 +1628,7 @@ skip-if(Android) == 621253-1-internalFilter.html 621253-1-ref.html
 HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
 == 621253-2-internalFilter.html 621253-2-ref.html
 fails-if(Android) HTTP(..) == 619511-1.html 619511-1-ref.html
-random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
+random-if(winWidget) fuzzy-if(OSX==10.8,19,17) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
 == 622585-1.html 622585-1-ref.html
 fails-if(Android) == 625409-1.html 625409-1-ref.html

@@ -1081,9 +1081,9 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                     rv = location->GetFilename(getter_Copies(sourceName));
                                 }
 
-                                rv = scriptError->InitWithWindowID(newMessage.get(),
-                                                                   NS_ConvertASCIItoUTF16(sourceName).get(),
-                                                                   nullptr,
+                                rv = scriptError->InitWithWindowID(newMessage,
+                                                                   NS_ConvertASCIItoUTF16(sourceName),
+                                                                   EmptyString(),
                                                                    lineNumber, 0, 0,
                                                                    "XPConnect JavaScript",
                                                                    nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));

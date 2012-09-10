@@ -8,7 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let menuitems = [], menupopups = [], huds = [], tabs = [];
+let menuitems = [], menupopups = [], huds = [], tabs = [], runCount = 0;
 
 function test()
 {
@@ -43,13 +43,18 @@ function test()
 function startTest()
 {
   // Find the relevant elements in the Web Console of tab 2.
-  let win2 = tabs[1].linkedBrowser.contentWindow;
+  let win2 = tabs[runCount*2 + 1].linkedBrowser.contentWindow;
   let hudId2 = HUDService.getHudIdByWindow(win2);
   huds[1] = HUDService.hudReferences[hudId2];
   HUDService.disableAnimation(hudId2);
 
-  menuitems[1] = huds[1].ui.rootElement.querySelector("#saveBodies");
-  menupopups[1] = huds[1].ui.rootElement.querySelector("menupopup");
+  if (runCount == 0) {
+    menuitems[1] = huds[1].ui.rootElement.querySelector("#saveBodies");
+  }
+  else {
+    menuitems[1] = huds[1].ui.rootElement.querySelector("#saveBodiesContextMenu");
+  }
+  menupopups[1] = menuitems[1].parentNode;
 
   // Open the context menu from tab 2.
   menupopups[1].addEventListener("popupshown", onpopupshown2, false);
@@ -95,10 +100,10 @@ function onpopupshown2b(aEvent)
     menupopups[1].removeEventListener(aEvent.type, _onhidden, false);
 
     // Switch to tab 1 and open the Web Console context menu from there.
-    gBrowser.selectedTab = tabs[0];
+    gBrowser.selectedTab = tabs[runCount*2];
     waitForFocus(function() {
       // Find the relevant elements in the Web Console of tab 1.
-      let win1 = tabs[0].linkedBrowser.contentWindow;
+      let win1 = tabs[runCount*2].linkedBrowser.contentWindow;
       let hudId1 = HUDService.getHudIdByWindow(win1);
       huds[0] = HUDService.hudReferences[hudId1];
       HUDService.disableAnimation(hudId1);
@@ -111,7 +116,7 @@ function onpopupshown2b(aEvent)
 
       menupopups[0].addEventListener("popupshown", onpopupshown1, false);
       menupopups[0].openPopup();
-    }, tabs[0].linkedBrowser.contentWindow);
+    }, tabs[runCount*2].linkedBrowser.contentWindow);
   }, false);
 
   executeSoon(function() {
@@ -134,12 +139,12 @@ function onpopupshown1(aEvent)
   menupopups[0].addEventListener("popuphidden", function _onhidden(aEvent) {
     menupopups[0].removeEventListener(aEvent.type, _onhidden, false);
 
-    gBrowser.selectedTab = tabs[1];
+    gBrowser.selectedTab = tabs[runCount*2 + 1];
     waitForFocus(function() {
       // Reopen the context menu from tab 2.
       menupopups[1].addEventListener("popupshown", onpopupshown2c, false);
       menupopups[1].openPopup();
-    }, tabs[1].linkedBrowser.contentWindow);
+    }, tabs[runCount*2 + 1].linkedBrowser.contentWindow);
   }, false);
 
   executeSoon(function() {
@@ -156,12 +161,25 @@ function onpopupshown2c(aEvent)
   menupopups[1].addEventListener("popuphidden", function _onhidden(aEvent) {
     menupopups[1].removeEventListener(aEvent.type, _onhidden, false);
 
-    // Done!
-    huds = menuitems = menupopups = tabs = null;
+    // Done if on second run
     closeConsole(gBrowser.selectedTab, function() {
-      gBrowser.removeCurrentTab();
-      executeSoon(finishTest);
+      if (runCount == 0) {
+        runCount++;
+        executeSoon(test);
+      }
+      else {
+        gBrowser.removeCurrentTab();
+        gBrowser.selectedTab = tabs[2];
+        gBrowser.removeCurrentTab();
+        gBrowser.selectedTab = tabs[1];
+        gBrowser.removeCurrentTab();
+        gBrowser.selectedTab = tabs[0];
+        gBrowser.removeCurrentTab();
+        huds = menuitems = menupopups = tabs = null;
+        executeSoon(finishTest);
+      }
     });
+
   }, false);
 
   executeSoon(function() {

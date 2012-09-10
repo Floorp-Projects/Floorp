@@ -264,8 +264,8 @@ class PythonJob(Job):
                 pass # sys.exit(0) is not a failure
             else:
                 print >>sys.stderr, e
-                print >>sys.stderr, traceback.print_exc()
-                return (e.code if isinstance(e.code, int) else 1)
+                traceback.print_exc()
+                return -127
         finally:
             os.environ.clear()
             os.environ.update(oldenv)

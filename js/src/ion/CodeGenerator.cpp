@@ -3828,7 +3828,7 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     Label done;
     Label loopPrototypeChain;
 
-    typedef bool (*pf)(JSContext *, HandleObject, const Value &, JSBool *);
+    typedef bool (*pf)(JSContext *, HandleObject, HandleValue, JSBool *);
     static const VMFunction HasInstanceInfo = FunctionInfo<pf>(js::HasInstance);
 
     OutOfLineCode *call = oolCallVM(HasInstanceInfo, ins, (ArgList(), rhs, ToValue(ins, 0)),

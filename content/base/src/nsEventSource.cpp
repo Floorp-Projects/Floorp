@@ -1093,9 +1093,9 @@ nsEventSource::PrintErrorOnConsole(const char *aBundleURI,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = errObj->InitWithWindowID(message.get(),
-                                mScriptFile.get(),
-                                nullptr,
+  rv = errObj->InitWithWindowID(message,
+                                mScriptFile,
+                                EmptyString(),
                                 mScriptLine, 0,
                                 nsIScriptError::errorFlag,
                                 "Event Source", mInnerWindowID);

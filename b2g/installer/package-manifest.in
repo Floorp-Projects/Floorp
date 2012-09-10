@@ -701,3 +701,9 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #ifdef XP_MACOSX
 @BINPATH@/@DLL_PREFIX@plugin_child_interpose@DLL_SUFFIX@
 #endif
+
+#ifdef PACKAGE_GAIA
+[gaia]
+@BINPATH@/gaia/*
+@BINPATH@/b2g-bin@BIN_SUFFIX@
+#endif

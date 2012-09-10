@@ -34,6 +34,7 @@ const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
 
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
+const kSmsSentObserverTopic              = "sms-sent";
 const kSmsDeliveredObserverTopic         = "sms-delivered";
 const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
@@ -181,18 +182,21 @@ function RadioInterfaceLayer() {
                      relSignalStrength: null},
   };
 
+  this.callWaitingStatus = null;
+
   // Read the 'ril.radio.disabled' setting in order to start with a known
   // value at boot time.
-  gSettingsService.createLock().get("ril.radio.disabled", this);
+  let lock = gSettingsService.createLock();
+  lock.get("ril.radio.disabled", this);
 
   // Read the APN data form the setting DB.
-  gSettingsService.createLock().get("ril.data.apn", this);
-  gSettingsService.createLock().get("ril.data.user", this);
-  gSettingsService.createLock().get("ril.data.passwd", this);
-  gSettingsService.createLock().get("ril.data.httpProxyHost", this);
-  gSettingsService.createLock().get("ril.data.httpProxyPort", this);
-  gSettingsService.createLock().get("ril.data.roaming_enabled", this);
-  gSettingsService.createLock().get("ril.data.enabled", this);
+  lock.get("ril.data.apn", this);
+  lock.get("ril.data.user", this);
+  lock.get("ril.data.passwd", this);
+  lock.get("ril.data.httpProxyHost", this);
+  lock.get("ril.data.httpProxyPort", this);
+  lock.get("ril.data.roaming_enabled", this);
+  lock.get("ril.data.enabled", this);
   this._dataCallSettingsToRead = ["ril.data.enabled",
                                   "ril.data.roaming_enabled",
                                   "ril.data.apn",
@@ -200,6 +204,9 @@ function RadioInterfaceLayer() {
                                   "ril.data.passwd",
                                   "ril.data.httpProxyHost",
                                   "ril.data.httpProxyPort"];
+
+  // Read the desired setting of call waiting from the settings DB.
+  lock.get("ril.callwaiting.enabled", this);
 
   this._messageManagerByRequest = {};
 
@@ -392,6 +399,9 @@ RadioInterfaceLayer.prototype = {
         this.rilContext.cardState = message.cardState;
         ppmm.broadcastAsyncMessage("RIL:CardStateChanged", message);
         break;
+      case "setCallWaiting":
+        this.handleCallWaitingStatusChange(message);
+        break;
       case "sms-received":
         this.handleSmsReceived(message);
         return;
@@ -547,6 +557,12 @@ RadioInterfaceLayer.prototype = {
     // this here. (TODO GSM only for now, see bug 726098.)
     voiceInfo.type = "gsm";
 
+    // Ensure the call waiting status once the voice network connects.
+    if (voiceInfo.connected && this.callWaitingStatus == null) {
+      // The call waiting status has not been updated yet. Update that.
+      this.setCallWaitingEnabled(this._callWaitingEnabled);
+    }
+
     // Make sure we also reset the operator and signal strength information
     // if we drop off the network.
     if (newInfo.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
@@ -677,6 +693,41 @@ RadioInterfaceLayer.prototype = {
     if (this.rilContext.radioState == RIL.GECKO_RADIOSTATE_READY &&
         !this._radioEnabled) {
       this.setRadioEnabled(false);
+    }
+  },
+
+  handleCallWaitingStatusChange: function handleCallWaitingStatusChange(message) {
+    let newStatus = message.enabled;
+
+    // RIL fails in setting call waiting status. Reset "ril.callwaiting.enabled"
+    // in the settings DB.
+    if (!message.success) {
+      newStatus = !newStatus;
+      let lock = gSettingsService.createLock();
+      lock.set("ril.callwaiting.enabled", newStatus, null);
+      return;
+    }
+
+    this.callWaitingStatus = newStatus;
+  },
+
+  setCallWaitingEnabled: function setCallWaitingEnabled(value) {
+    debug("Current call waiting status is " + this.callWaitingStatus +
+          ", desired call waiting status is " + value);
+    if (!this.rilContext.voice.connected) {
+      // The voice network is not connected. Wait for that.
+      return;
+    }
+
+    if (value == null) {
+      // We haven't read the initial value from the settings DB yet.
+      // Wait for that.
+      return;
+    }
+
+    if (this.callWaitingStatus != value) {
+      debug("Setting call waiting status to " + value);
+      this.worker.postMessage({rilMessageType: "setCallWaiting", enabled: value});
     }
   },
 
@@ -968,6 +1019,8 @@ RadioInterfaceLayer.prototype = {
     }
 
     gSmsRequestManager.notifySmsSent(options.requestId, sms);
+
+    Services.obs.notifyObservers(options.sms, kSmsSentObserverTopic, null);
   },
 
   handleSmsDelivered: function handleSmsDelivered(message) {
@@ -1097,6 +1150,11 @@ RadioInterfaceLayer.prototype = {
   // corresponds to the 'ril.radio.disabled' setting from the UI.
   _radioEnabled: null,
 
+  // Flag to determine whether we reject a waiting call directly or we
+  // notify the UI of a waiting call. It corresponds to the
+  // 'ril.callwaiting.enbled' setting from the UI.
+  _callWaitingEnabled: null,
+
   // APN data for making data calls.
   dataCallSettings: {},
   _dataCallSettingsToRead: [],
@@ -1129,9 +1187,13 @@ RadioInterfaceLayer.prototype = {
         }
         this.updateRILNetworkInterface();
         break;
+      case "ril.callwaiting.enabled":
+        this._callWaitingEnabled = aResult;
+        this.setCallWaitingEnabled(this._callWaitingEnabled);
+        break;
     };
   },
-    
+
   handleError: function handleError(aErrorMessage) {
     debug("There was an error while reading RIL settings.");
 

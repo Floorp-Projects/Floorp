@@ -1514,6 +1514,20 @@ let RIL = {
   },
 
   /**
+   * Set call waiting status.
+   *
+   * @param on
+   *        Boolean indicating the desired waiting status.
+   */
+  setCallWaiting: function setCallWaiting(options) {
+    Buf.newParcel(REQUEST_SET_CALL_WAITING, options);
+    Buf.writeUint32(2);
+    Buf.writeUint32(options.enabled ? 1 : 0);
+    Buf.writeUint32(ICC_SERVICE_CLASS_VOICE);
+    Buf.sendParcel();
+  },
+
+  /**
    * Set screen state.
    *
    * @param on
@@ -2884,7 +2898,7 @@ let RIL = {
     let messageStringLength = Buf.readUint32();
     if (DEBUG) debug("Got new SMS, length " + messageStringLength);
     let message = GsmPDUHelper.readMessage();
-    if (DEBUG) debug(message);
+    if (DEBUG) debug("Got new SMS: " + JSON.stringify(message));
 
     // Read string delimiters. See Buf.readString().
     Buf.readStringDelimiter(length);
@@ -2944,11 +2958,13 @@ let RIL = {
   _processSmsStatusReport: function _processSmsStatusReport(length) {
     let message = this._processReceivedSms(length);
     if (!message) {
+      if (DEBUG) debug("invalid SMS-STATUS-REPORT");
       return PDU_FCS_UNSPECIFIED;
     }
 
     let options = this._pendingSentSmsMap[message.messageRef];
     if (!options) {
+      if (DEBUG) debug("no pending SMS-SUBMIT message");
       return PDU_FCS_OK;
     }
 
@@ -2971,12 +2987,14 @@ let RIL = {
 
     // Pending. Waiting for next status report.
     if ((status >>> 5) == 0x01) {
+      if (DEBUG) debug("SMS-STATUS-REPORT: delivery still pending");
       return PDU_FCS_OK;
     }
 
     delete this._pendingSentSmsMap[message.messageRef];
 
     if ((status >>> 5) != 0x00) {
+      if (DEBUG) debug("SMS-STATUS-REPORT: delivery failed");
       // It seems unlikely to get a result code for a failure to deliver.
       // Even if, we don't want to do anything with this.
       return PDU_FCS_OK;
@@ -3511,6 +3529,7 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   options.errorCode = Buf.readUint32();
 
   if (options.requestStatusReport) {
+    if (DEBUG) debug("waiting SMS-STATUS-REPORT for messageRef " + options.messageRef);
     this._pendingSentSmsMap[options.messageRef] = options;
   }
 
@@ -3619,7 +3638,10 @@ RIL[REQUEST_SET_CLIR] = null;
 RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] = null;
 RIL[REQUEST_SET_CALL_FORWARD] = null;
 RIL[REQUEST_QUERY_CALL_WAITING] = null;
-RIL[REQUEST_SET_CALL_WAITING] = null;
+RIL[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, options) {
+  options.success = options.rilRequestError == 0 ? true : false;
+  this.sendDOMMessage(options);
+};
 RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
 RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, options) {
   if (options.rilRequestError) {

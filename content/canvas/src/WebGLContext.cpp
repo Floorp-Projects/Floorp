@@ -385,8 +385,6 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     // Get some prefs for some preferred/overriden things
     NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
 
-    bool forceOSMesa =
-        Preferences::GetBool("webgl.force_osmesa", false);
 #ifdef XP_WIN
     bool preferEGL =
         Preferences::GetBool("webgl.prefer-egl", false);
@@ -507,16 +505,6 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     }
 #endif
 
-    // if we're forcing osmesa, do it first
-    if (forceOSMesa) {
-        gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
-        if (!gl || !InitAndValidateGL()) {
-            GenerateWarning("OSMesa forced, but creating context failed -- aborting!");
-            return NS_ERROR_FAILURE;
-        }
-        GenerateWarning("Using software rendering via OSMesa (THIS WILL BE SLOW)");
-    }
-
 #ifdef XP_WIN
     // if we want EGL, try it now
     if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
@@ -539,19 +527,6 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
             GenerateWarning("Error during %s initialization", 
                             useMesaLlvmPipe ? "Mesa LLVMpipe" : "OpenGL");
             return NS_ERROR_FAILURE;
-        }
-    }
-
-    // finally, try OSMesa
-    if (!gl) {
-        gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl) {
-            if (!InitAndValidateGL()) {
-                GenerateWarning("Error during OSMesa initialization");
-                return NS_ERROR_FAILURE;
-            } else {
-                GenerateWarning("Using software rendering via OSMesa (THIS WILL BE SLOW)");
-            }
         }
     }
 
