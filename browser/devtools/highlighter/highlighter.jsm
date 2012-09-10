@@ -220,10 +220,6 @@ Highlighter.prototype = {
 
     this.invalidateSize(!!aScroll);
 
-    if (this._highlighting) {
-      this.showOutline();
-    }
-
     if (oldNode !== this.node) {
       this.emitEvent("nodeselected");
     }
@@ -263,6 +259,7 @@ Highlighter.prototype = {
     this.moveInfobar();
 
     if (this._highlighting) {
+      this.showOutline();
       this.emitEvent("highlighting");
     }
   },
