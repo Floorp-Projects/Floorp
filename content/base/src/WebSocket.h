@@ -188,7 +188,7 @@ protected:
 
   void Send(nsIInputStream* aMsgStream,
             const nsACString& aMsgString,
-            PRUint32 aMsgLength,
+            uint32_t aMsgLength,
             bool aIsBinary,
             ErrorResult& aRv);
 
@@ -206,7 +206,7 @@ protected:
   nsresult PrintErrorOnConsole(const char* aBundleURI,
                                const PRUnichar* aError,
                                const PRUnichar** aFormatStrings,
-                               PRUint32 aFormatStringsLen);
+                               uint32_t aFormatStringsLen);
 
   nsresult DoOnMessageAvailable(const nsACString& aMsg,
                                 bool isBinary);
@@ -226,7 +226,7 @@ protected:
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData,
                                          bool isBinary);
   nsresult CreateAndDispatchCloseEvent(bool aWasClean,
-                                       PRUint16 aCode,
+                                       uint16_t aCode,
                                        const nsString& aReason);
   nsresult CreateResponseBlob(const nsACString& aData,
                               JSContext* aCx,
