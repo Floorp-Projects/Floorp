@@ -544,6 +544,11 @@ function BuildConditionSandbox(aURL) {
         sandbox.http[prop] = hh[prop];
         sandbox.http.__exposedProps__[prop] = "r";
     }
+
+    // Set OSX to the Mac OS X version for Mac, and 0 otherwise.
+    var osxmatch = /Mac OS X (\d+.\d+)$/.exec(hh.oscpu);
+    sandbox.OSX = osxmatch ? parseFloat(osxmatch[1]) : 0;
+
     // see if we have the test plugin available,
     // and set a sandox prop accordingly
     sandbox.haveTestPlugin = false;

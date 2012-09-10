@@ -37,7 +37,7 @@ class nsDirectoryService MOZ_FINAL : public nsIDirectoryService,
   nsDirectoryService();
    ~nsDirectoryService();
 
-  static nsresult RealInit();
+  static void RealInit();
   void RegisterCategoryProviders();
 
   static nsresult
@@ -50,7 +50,7 @@ private:
     
     static bool ReleaseValues(nsHashKey* key, void* data, void* closure);
     nsSupportsHashtable mHashtable;
-    nsCOMPtr<nsISupportsArray> mProviders;
+    nsTArray<nsCOMPtr<nsIDirectoryServiceProvider> > mProviders;
 
 public:
 

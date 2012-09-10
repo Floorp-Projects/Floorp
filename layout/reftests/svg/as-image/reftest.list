@@ -105,6 +105,14 @@ random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
 == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
 
+# with with a fragmentIdentifier viewBox
+== img-fragment-1a.html  img-fragment-1-ref.html
+== img-fragment-1b.html  img-fragment-1-ref.html
+== img-fragment-1c.html  img-fragment-1-ref.html
+== img-fragment-2a.html  img-fragment-2-ref.html
+== img-fragment-2b.html  img-fragment-2-ref.html
+== img-fragment-2c.html  img-fragment-2-ref.html
+
 == list-simple-1.html list-simple-1-ref.html
 
 == svg-image-simple-1.svg lime100x100.svg

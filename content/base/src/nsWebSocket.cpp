@@ -130,9 +130,9 @@ nsWebSocket::PrintErrorOnConsole(const char *aBundleURI,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = errorObject->InitWithWindowID(message.get(),
-                                     NS_ConvertUTF8toUTF16(mScriptFile).get(),
-                                     nullptr, mScriptLine, 0,
+  rv = errorObject->InitWithWindowID(message,
+                                     NS_ConvertUTF8toUTF16(mScriptFile),
+                                     EmptyString(), mScriptLine, 0,
                                      nsIScriptError::errorFlag, "Web Socket",
                                      mInnerWindowID);
   NS_ENSURE_SUCCESS(rv, rv);

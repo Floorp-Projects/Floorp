@@ -3260,9 +3260,9 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = errorObject->InitWithWindowID(errorText.get(),
-                                     NS_ConvertUTF8toUTF16(spec).get(), // file name
-                                     aSourceLine.get(),
+  rv = errorObject->InitWithWindowID(errorText,
+                                     NS_ConvertUTF8toUTF16(spec), // file name
+                                     aSourceLine,
                                      aLineNumber, aColumnNumber,
                                      aErrorFlags, aCategory,
                                      innerWindowID);

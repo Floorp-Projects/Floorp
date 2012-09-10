@@ -406,9 +406,9 @@ nsCSSScanner::OutputError()
       do_CreateInstance(gScriptErrorFactory, &rv);
 
     if (NS_SUCCEEDED(rv)) {
-      rv = errorObject->InitWithWindowID(mError.get(),
-                                         NS_ConvertUTF8toUTF16(mFileName).get(),
-                                         EmptyString().get(),
+      rv = errorObject->InitWithWindowID(mError,
+                                         NS_ConvertUTF8toUTF16(mFileName),
+                                         EmptyString(),
                                          mErrorLineNumber,
                                          mErrorColNumber,
                                          nsIScriptError::warningFlag,
