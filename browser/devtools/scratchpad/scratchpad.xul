@@ -33,6 +33,7 @@
   <command id="sp-cmd-clearRecentFiles" oncommand="Scratchpad.clearRecentFiles();"/>
   <command id="sp-cmd-save" oncommand="Scratchpad.saveFile();"/>
   <command id="sp-cmd-saveas" oncommand="Scratchpad.saveFileAs();"/>
+  <command id="sp-cmd-revert" oncommand="Scratchpad.promptRevert();" disabled="true"/>
 
   <!-- TODO: bug 650340 - implement printFile()
   <command id="sp-cmd-printFile" oncommand="Scratchpad.printFile();" disabled="true"/>
@@ -132,6 +133,10 @@
                 label="&saveFileAsCmd.label;"
                 accesskey="&saveFileAsCmd.accesskey;"
                 command="sp-cmd-saveas"/>
+      <menuitem id="sp-menu-revert"
+                label="&revertCmd.label;"
+                accesskey="&revertCmd.accesskey;"
+                command="sp-cmd-revert"/>
       <menuseparator/>
 
       <!-- TODO: bug 650340 - implement printFile
