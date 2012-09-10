@@ -401,8 +401,8 @@ public:
           ? "chrome javascript"
           : "content javascript";
 
-        rv = errorObject->InitWithWindowID(mErrorMsg.get(), mFileName.get(),
-                                           mSourceLine.get(),
+        rv = errorObject->InitWithWindowID(mErrorMsg, mFileName,
+                                           mSourceLine,
                                            mLineNr, mColumn, mFlags,
                                            category, mInnerWindowID);
 

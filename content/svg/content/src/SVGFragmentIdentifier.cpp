@@ -211,27 +211,17 @@ SVGFragmentIdentifier::ProcessFragmentIdentifier(nsIDocument *aDocument,
   const nsSVGViewElement *viewElement = GetViewElement(aDocument, aAnchorName);
 
   if (viewElement) {
-    if (viewElement->mViewBox.IsExplicitlySet()) {
-      rootElement->mViewBox.SetBaseValue(
-        viewElement->mViewBox.GetBaseValue(), rootElement);
-    } else {
-      RestoreOldViewBox(rootElement);
+    if (!rootElement->mCurrentViewID) {
+      rootElement->mCurrentViewID = new nsString();
     }
-    if (viewElement->mPreserveAspectRatio.IsExplicitlySet()) {
-      rootElement->mPreserveAspectRatio.SetBaseValue(
-        viewElement->mPreserveAspectRatio.GetBaseValue(), rootElement);
-    } else {
-      RestoreOldPreserveAspectRatio(rootElement);
-    }
-    if (viewElement->mEnumAttributes[nsSVGViewElement::ZOOMANDPAN].IsExplicitlySet()) {
-      rootElement->mEnumAttributes[nsSVGSVGElement::ZOOMANDPAN].SetBaseValue(
-        viewElement->mEnumAttributes[nsSVGViewElement::ZOOMANDPAN].GetBaseValue(), rootElement);
-    } else {
-      RestoreOldZoomAndPan(rootElement);
-    }
+    *rootElement->mCurrentViewID = aAnchorName;
     rootElement->mUseCurrentView = true;
+    rootElement->InvalidateTransformNotifyFrame();
     return true;
   }
+
+  bool wasOverridden = !!rootElement->mCurrentViewID;
+  rootElement->mCurrentViewID = nullptr;
 
   rootElement->mUseCurrentView = ProcessSVGViewSpec(aAnchorName, rootElement);
   if (rootElement->mUseCurrentView) {
@@ -243,5 +233,8 @@ SVGFragmentIdentifier::ProcessFragmentIdentifier(nsIDocument *aDocument,
   rootElement->ClearPreserveAspectRatioProperty();
   RestoreOldZoomAndPan(rootElement);
   rootElement->ClearZoomAndPanProperty();
+  if (wasOverridden) {
+    rootElement->InvalidateTransformNotifyFrame();
+  }
   return false;
 }
