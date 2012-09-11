@@ -46,7 +46,8 @@ public:
     virtual ~nsWindow();
 
     static void DoDraw(void);
-    static nsEventStatus DispatchInputEvent(nsGUIEvent &aEvent);
+    static nsEventStatus DispatchInputEvent(nsGUIEvent &aEvent,
+                                            bool* aWasCaptured = nullptr);
 
     NS_IMETHOD Create(nsIWidget *aParent,
                       void *aNativeParent,
