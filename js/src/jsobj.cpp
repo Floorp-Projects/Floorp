@@ -162,13 +162,13 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
                 if (attrs & JSPROP_GETTER) {
                     doGet = false;
                     val[valcnt] = shape->getterValue();
-                    gsop[valcnt] = cx->runtime->atomState.getAtom;
+                    gsop[valcnt] = cx->names().get;
                     valcnt++;
                 }
                 if (attrs & JSPROP_SETTER) {
                     doGet = false;
                     val[valcnt] = shape->setterValue();
-                    gsop[valcnt] = cx->runtime->atomState.setAtom;
+                    gsop[valcnt] = cx->names().set;
                     valcnt++;
                 }
             }
@@ -341,13 +341,13 @@ obj_toString(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 1. */
     if (args.thisv().isUndefined()) {
-        args.rval().setString(cx->runtime->atomState.objectUndefinedAtom);
+        args.rval().setString(cx->names().objectUndefined);
         return true;
     }
 
     /* Step 2. */
     if (args.thisv().isNull()) {
-        args.rval().setString(cx->runtime->atomState.objectNullAtom);
+        args.rval().setString(cx->names().objectNull);
         return true;
     }
 
@@ -378,7 +378,7 @@ obj_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Steps 2-4. */
-    RootedId id(cx, NameToId(cx->runtime->atomState.toStringAtom));
+    RootedId id(cx, NameToId(cx->names().toString));
     return obj->callMethod(cx, id, 0, NULL, args.rval());
 }
 
@@ -643,19 +643,19 @@ DefineAccessor(JSContext *cx, unsigned argc, Value *vp)
     if (!descObj)
         return false;
 
-    JSAtomState &state = cx->runtime->atomState;
+    JSAtomState &names = cx->names();
     RootedValue trueVal(cx, BooleanValue(true));
 
     /* enumerable: true */
-    if (!JSObject::defineProperty(cx, descObj, state.enumerableAtom, trueVal))
+    if (!JSObject::defineProperty(cx, descObj, names.enumerable, trueVal))
         return false;
 
     /* configurable: true */
-    if (!JSObject::defineProperty(cx, descObj, state.configurableAtom, trueVal))
+    if (!JSObject::defineProperty(cx, descObj, names.configurable, trueVal))
         return false;
 
     /* enumerable: true */
-    PropertyName *acc = (Type == Getter) ? state.getAtom : state.setAtom;
+    PropertyName *acc = (Type == Getter) ? names.get : names.set;
     RootedValue accessorVal(cx, args[1]);
     if (!JSObject::defineProperty(cx, descObj, acc, accessorVal))
         return false;
@@ -857,22 +857,22 @@ PropDesc::makeObject(JSContext *cx)
     if (!obj)
         return false;
 
-    const JSAtomState &atomState = cx->runtime->atomState;
+    const JSAtomState &names = cx->names();
     RootedValue configurableVal(cx, BooleanValue((attrs & JSPROP_PERMANENT) == 0));
     RootedValue enumerableVal(cx, BooleanValue((attrs & JSPROP_ENUMERATE) != 0));
     RootedValue writableVal(cx, BooleanValue((attrs & JSPROP_READONLY) == 0));
     if ((hasConfigurable() &&
-         !JSObject::defineProperty(cx, obj, atomState.configurableAtom, configurableVal)) ||
+         !JSObject::defineProperty(cx, obj, names.configurable, configurableVal)) ||
         (hasEnumerable() &&
-         !JSObject::defineProperty(cx, obj, atomState.enumerableAtom, enumerableVal)) ||
+         !JSObject::defineProperty(cx, obj, names.enumerable, enumerableVal)) ||
         (hasGet() &&
-         !JSObject::defineProperty(cx, obj, atomState.getAtom, getterValue())) ||
+         !JSObject::defineProperty(cx, obj, names.get, getterValue())) ||
         (hasSet() &&
-         !JSObject::defineProperty(cx, obj, atomState.setAtom, setterValue())) ||
+         !JSObject::defineProperty(cx, obj, names.set, setterValue())) ||
         (hasValue() &&
-         !JSObject::defineProperty(cx, obj, atomState.valueAtom, value())) ||
+         !JSObject::defineProperty(cx, obj, names.value, value())) ||
         (hasWritable() &&
-         !JSObject::defineProperty(cx, obj, atomState.writableAtom, writableVal)))
+         !JSObject::defineProperty(cx, obj, names.writable, writableVal)))
     {
         return false;
     }
@@ -1051,7 +1051,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     RootedId id(cx);
 
     /* 8.10.5 step 3 */
-    id = NameToId(cx->runtime->atomState.enumerableAtom);
+    id = NameToId(cx->names().enumerable);
     if (!HasProperty(cx, desc, id, &v, &found))
         return false;
     if (found) {
@@ -1061,7 +1061,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     }
 
     /* 8.10.5 step 4 */
-    id = NameToId(cx->runtime->atomState.configurableAtom);
+    id = NameToId(cx->names().configurable);
     if (!HasProperty(cx, desc, id, &v, &found))
         return false;
     if (found) {
@@ -1071,7 +1071,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     }
 
     /* 8.10.5 step 5 */
-    id = NameToId(cx->runtime->atomState.valueAtom);
+    id = NameToId(cx->names().value);
     if (!HasProperty(cx, desc, id, &v, &found))
         return false;
     if (found) {
@@ -1080,7 +1080,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     }
 
     /* 8.10.6 step 6 */
-    id = NameToId(cx->runtime->atomState.writableAtom);
+    id = NameToId(cx->names().writable);
     if (!HasProperty(cx, desc, id, &v, &found))
         return false;
     if (found) {
@@ -1090,7 +1090,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     }
 
     /* 8.10.7 step 7 */
-    id = NameToId(cx->runtime->atomState.getAtom);
+    id = NameToId(cx->names().get);
     if (!HasProperty(cx, desc, id, &v, &found))
         return false;
     if (found) {
@@ -1103,7 +1103,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     }
 
     /* 8.10.7 step 8 */
-    id = NameToId(cx->runtime->atomState.setAtom);
+    id = NameToId(cx->names().set);
     if (!HasProperty(cx, desc, id, &v, &found))
         return false;
     if (found) {
@@ -1565,7 +1565,7 @@ DefinePropertyOnArray(JSContext *cx, HandleObject obj, HandleId id, const PropDe
 
     uint32_t oldLen = obj->getArrayLength();
 
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
+    if (JSID_IS_ATOM(id, cx->names().length)) {
         /*
          * Our optimization of storage of the length property of arrays makes
          * it very difficult to properly implement defining the property.  For
@@ -2313,7 +2313,7 @@ JSObject*
 js_CreateThis(JSContext *cx, Class *newclasp, HandleObject callee)
 {
     RootedValue protov(cx);
-    if (!JSObject::getProperty(cx, callee, callee, cx->runtime->atomState.classPrototypeAtom, &protov))
+    if (!JSObject::getProperty(cx, callee, callee, cx->names().classPrototype, &protov))
         return NULL;
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
@@ -2367,7 +2367,7 @@ JSObject *
 js_CreateThisForFunction(JSContext *cx, HandleObject callee, bool newType)
 {
     RootedValue protov(cx);
-    if (!JSObject::getProperty(cx, callee, callee, cx->runtime->atomState.classPrototypeAtom, &protov))
+    if (!JSObject::getProperty(cx, callee, callee, cx->names().classPrototype, &protov))
         return NULL;
     JSObject *proto;
     if (protov.isObject())
@@ -2434,7 +2434,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
          * global binding...because, really?
          */
         atom = script->getAtom(GET_UINT32_INDEX(pc));
-        if (atom == cx->runtime->atomState.undefinedAtom &&
+        if (atom == cx->names().undefined &&
             (pc += js_CodeSpec[op].length) < endpc) {
             op = JSOp(*pc);
             return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
@@ -4323,7 +4323,7 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
              * XXX do not warn about missing __iterator__ as the function
              * may be called from JS_GetMethodById. See bug 355145.
              */
-            if (JSID_IS_ATOM(id, cx->runtime->atomState.iteratorIntrinsicAtom))
+            if (JSID_IS_ATOM(id, cx->names().iteratorIntrinsic))
                 return JS_TRUE;
 
             /* Do not warn about tests like (obj[prop] == undefined). */
@@ -4855,7 +4855,7 @@ DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
 
     Class *clasp = obj->getClass();
     if (hint == JSTYPE_STRING) {
-        id = NameToId(cx->runtime->atomState.toStringAtom);
+        id = NameToId(cx->names().toString);
 
         /* Optimize (new String(...)).toString(). */
         if (clasp == &StringClass) {
@@ -4870,7 +4870,7 @@ DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
         if (vp.isPrimitive())
             return true;
 
-        id = NameToId(cx->runtime->atomState.valueOfAtom);
+        id = NameToId(cx->names().valueOf);
         if (!MaybeCallMethod(cx, obj, id, vp))
             return false;
         if (vp.isPrimitive())
@@ -4879,7 +4879,7 @@ DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
 
         /* Optimize new String(...).valueOf(). */
         if (clasp == &StringClass) {
-            id = NameToId(cx->runtime->atomState.valueOfAtom);
+            id = NameToId(cx->names().valueOf);
             if (ClassMethodIsNative(cx, obj, &StringClass, id, js_str_toString)) {
                 vp.setString(obj->asString().unbox());
                 return true;
@@ -4888,20 +4888,20 @@ DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
 
         /* Optimize new Number(...).valueOf(). */
         if (clasp == &NumberClass) {
-            id = NameToId(cx->runtime->atomState.valueOfAtom);
+            id = NameToId(cx->names().valueOf);
             if (ClassMethodIsNative(cx, obj, &NumberClass, id, js_num_valueOf)) {
                 vp.setNumber(obj->asNumber().unbox());
                 return true;
             }
         }
 
-        id = NameToId(cx->runtime->atomState.valueOfAtom);
+        id = NameToId(cx->names().valueOf);
         if (!MaybeCallMethod(cx, obj, id, vp))
             return false;
         if (vp.isPrimitive())
             return true;
 
-        id = NameToId(cx->runtime->atomState.toStringAtom);
+        id = NameToId(cx->names().toString);
         if (!MaybeCallMethod(cx, obj, id, vp))
             return false;
         if (vp.isPrimitive())
@@ -5062,7 +5062,7 @@ js_GetClassPrototype(JSContext *cx, JSProtoKey protoKey, MutableHandleObject pro
 
     if (IsFunctionObject(v)) {
         RootedObject ctor(cx, &v.get().toObject());
-        if (!JSObject::getProperty(cx, ctor, ctor, cx->runtime->atomState.classPrototypeAtom, &v))
+        if (!JSObject::getProperty(cx, ctor, ctor, cx->names().classPrototype, &v))
             return false;
     }
 

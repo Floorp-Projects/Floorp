@@ -3163,7 +3163,7 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
     switch (ins->op()) {
       case LInstruction::LOp_InstanceOfO:
       case LInstruction::LOp_InstanceOfV:
-        name = gen->compartment->rt->atomState.classPrototypeAtom;
+        name = gen->compartment->rt->atomState.classPrototype;
         objReg = ToRegister(ins->getTemp(1));
         output = TypedOrValueRegister(MIRType_Object, ToAnyRegister(ins->getDef(0)));
         break;
@@ -3470,29 +3470,29 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
 
     Label notNumber;
     masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
-    masm.movePtr(ImmGCPtr(rt->atomState.numberAtom), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.number), output);
     masm.jump(&done);
     masm.bind(&notNumber);
 
     Label notUndefined;
     masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
-    masm.movePtr(ImmGCPtr(rt->atomState.undefinedAtom), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.undefined), output);
     masm.jump(&done);
     masm.bind(&notUndefined);
 
     Label notNull;
     masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
-    masm.movePtr(ImmGCPtr(rt->atomState.objectAtom), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.object), output);
     masm.jump(&done);
     masm.bind(&notNull);
 
     Label notBoolean;
     masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-    masm.movePtr(ImmGCPtr(rt->atomState.booleanAtom), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.boolean), output);
     masm.jump(&done);
     masm.bind(&notBoolean);
 
-    masm.movePtr(ImmGCPtr(rt->atomState.stringAtom), output);
+    masm.movePtr(ImmGCPtr(rt->atomState.string), output);
 
     masm.bind(&done);
     masm.bind(ool->rejoin());

@@ -333,26 +333,26 @@ RegExpObject::assignInitialShape(JSContext *cx)
     RootedObject self(cx, this);
 
     /* The lastIndex property alone is writable but non-configurable. */
-    if (!addDataProperty(cx, NameToId(cx->runtime->atomState.lastIndexAtom),
+    if (!addDataProperty(cx, NameToId(cx->names().lastIndex),
                          LAST_INDEX_SLOT, JSPROP_PERMANENT))
     {
         return NULL;
     }
 
     /* Remaining instance properties are non-writable and non-configurable. */
-    if (!self->addDataProperty(cx, NameToId(cx->runtime->atomState.sourceAtom),
+    if (!self->addDataProperty(cx, NameToId(cx->names().source),
                                SOURCE_SLOT, JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !self->addDataProperty(cx, NameToId(cx->runtime->atomState.globalAtom),
+        !self->addDataProperty(cx, NameToId(cx->names().global),
                                GLOBAL_FLAG_SLOT, JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !self->addDataProperty(cx, NameToId(cx->runtime->atomState.ignoreCaseAtom),
+        !self->addDataProperty(cx, NameToId(cx->names().ignoreCase),
                                IGNORE_CASE_FLAG_SLOT, JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !self->addDataProperty(cx, NameToId(cx->runtime->atomState.multilineAtom),
+        !self->addDataProperty(cx, NameToId(cx->names().multiline),
                                MULTILINE_FLAG_SLOT, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return NULL;
     }
 
-    return self->addDataProperty(cx, NameToId(cx->runtime->atomState.stickyAtom),
+    return self->addDataProperty(cx, NameToId(cx->names().sticky),
                                  STICKY_FLAG_SLOT, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
@@ -374,18 +374,17 @@ RegExpObject::init(JSContext *cx, HandleAtom source, RegExpFlag flags)
         JS_ASSERT(!self->nativeEmpty());
     }
 
-    DebugOnly<JSAtomState *> atomState = &cx->runtime->atomState;
-    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->lastIndexAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(cx->names().lastIndex))->slot() ==
               LAST_INDEX_SLOT);
-    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->sourceAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(cx->names().source))->slot() ==
               SOURCE_SLOT);
-    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->globalAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(cx->names().global))->slot() ==
               GLOBAL_FLAG_SLOT);
-    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->ignoreCaseAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(cx->names().ignoreCase))->slot() ==
               IGNORE_CASE_FLAG_SLOT);
-    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->multilineAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(cx->names().multiline))->slot() ==
               MULTILINE_FLAG_SLOT);
-    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->stickyAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(cx->names().sticky))->slot() ==
               STICKY_FLAG_SLOT);
 
     /*
