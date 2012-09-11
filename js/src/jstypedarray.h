@@ -159,6 +159,21 @@ class ArrayBufferObject : public JSObject
 };
 
 /*
+ * BufferView
+ *
+ * Common definitions shared by all ArrayBufferViews. (The name ArrayBufferView
+ * is currently being used for a namespace in jsfriendapi.h.)
+ */
+
+struct BufferView {
+    static const size_t BYTEOFFSET_SLOT  = 0;
+    static const size_t BYTELENGTH_SLOT  = 1;
+    static const size_t BUFFER_SLOT      = 2;
+    static const size_t NEXT_VIEW_SLOT   = 3;
+    static const size_t NUM_SLOTS        = 4;
+};
+
+/*
  * TypedArray
  *
  * The non-templated base class for the specific typed implementations.
@@ -166,7 +181,7 @@ class ArrayBufferObject : public JSObject
  * the subclasses.
  */
 
-struct TypedArray {
+struct TypedArray : public BufferView {
     enum {
         TYPE_INT8 = 0,
         TYPE_UINT8,
@@ -186,23 +201,16 @@ struct TypedArray {
         TYPE_MAX
     };
 
-    enum {
-        /* Properties of the typed array stored in reserved slots. */
-        FIELD_LENGTH = 0,
-        FIELD_BYTEOFFSET,
-        FIELD_BYTELENGTH,
-        FIELD_TYPE,
-        FIELD_BUFFER,
-        FIELD_NEXT_VIEW,
-        FIELD_MAX,
-        NUM_FIXED_SLOTS = 7
-    };
+    /*
+     * Typed array properties stored in slots, beyond those shared by all
+     * ArrayBufferViews.
+     */
+    static const size_t LENGTH_SLOT     = BufferView::NUM_SLOTS;
+    static const size_t TYPE_SLOT       = BufferView::NUM_SLOTS + 1;
+    static const size_t RESERVED_SLOTS  = BufferView::NUM_SLOTS + 2;
+    static const size_t DATA_SLOT       = 7; // private slot, based on alloc kind
 
-    // and MUST NOT be used to construct new objects.
     static Class classes[TYPE_MAX];
-
-    // These are the proto/original classes, used
-    // fo constructing new objects
     static Class protoClasses[TYPE_MAX];
 
     static JSBool obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
@@ -277,13 +285,9 @@ IsTypedArrayProtoClass(const Class *clasp)
            clasp < &TypedArray::protoClasses[TypedArray::TYPE_MAX];
 }
 
-class DataViewObject : public JSObject
+class DataViewObject : public JSObject, public BufferView
 {
 public:
-    static const size_t BYTEOFFSET_SLOT = 0;
-    static const size_t BYTELENGTH_SLOT = 1;
-    static const size_t BUFFER_SLOT     = 2;
-    static const size_t NEXT_VIEW_SLOT  = 3;
 
 private:
     static Class protoClass;
@@ -303,9 +307,8 @@ private:
     defineGetter(JSContext *cx, PropertyName *name, HandleObject proto);
 
   public:
-    // 4 slots + 1 private = 5, which gets rounded up to FINALIZE_OBJECT8,
-    // which is 7 non-private
-    static const size_t RESERVED_SLOTS  = 7;
+    static const size_t RESERVED_SLOTS = BufferView::NUM_SLOTS;
+    static const size_t DATA_SLOT       = 7; // private slot, based on alloc kind
 
     static inline Value bufferValue(DataViewObject &view);
     static inline Value byteOffsetValue(DataViewObject &view);
