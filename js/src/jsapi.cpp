@@ -988,7 +988,7 @@ JSRuntime::~JSRuntime()
 #endif
 
     FinishRuntimeNumberState(this);
-    FinishAtoms(this);
+    FinishCommonNames(this);
 
     if (dtoaState)
         js_DestroyDtoaState(dtoaState);
