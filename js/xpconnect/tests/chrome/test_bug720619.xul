@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=720619
+-->
+<window title="Mozilla Bug 720619"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=720619"
+     target="_blank">Mozilla Bug 720619</a>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+  /** Test for Bug 720619 **/
+  const Cu = Components.utils;
+
+  var obj = {
+    valueOf: function () {
+      return 42;
+    },
+    toString: function () {
+      return 'str';
+    }
+  };
+
+  var content = new Cu.Sandbox("about:blank");
+  content.obj = obj;
+
+  ok(Cu.evalInSandbox("obj + ''", content) == "[object Object]");
+  ok(Cu.evalInSandbox("'' + obj", content) == "[object Object]");
+  ok(isNaN(Cu.evalInSandbox("obj - 0", content)));
+  ok(Cu.evalInSandbox("String(obj)", content) == "[object Object]");
+
+  var chrome = new Cu.Sandbox(window);
+  chrome.obj = obj;
+
+  ok(Cu.evalInSandbox("obj + ''", chrome) == "42");
+  ok(Cu.evalInSandbox("'' + obj", chrome) == "42");
+  ok(Cu.evalInSandbox("obj - 0", chrome) == 42);
+  ok(Cu.evalInSandbox("String(obj)", chrome) == "str");
+  ]]></script>
+  </body>
+</window>
