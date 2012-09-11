@@ -2239,12 +2239,19 @@ let RIL = {
    * @param helpRequested
    */
   sendStkMenuSelection: function sendStkMenuSelection(command) {
+    command.tag = BER_MENU_SELECTION_TAG;
+    command.deviceId = {
+      sourceId :STK_DEVICE_ID_KEYPAD,
+      destinationId: STK_DEVICE_ID_SIM
+    };
     this.sendICCEnvelopeCommand(command);
   },
 
   /**
    * Send REQUEST_STK_SEND_ENVELOPE_COMMAND to ICC.
    *
+   * @param tag
+   * @patam deviceId
    * @param [optioanl] itemIdentifier
    * @param [optional] helpRequested
    */
@@ -2258,15 +2265,15 @@ let RIL = {
     Buf.writeUint32(size);
 
     // Write a BER-TLV
-    GsmPDUHelper.writeHexOctet(BER_MENU_SELECTION_TAG);
+    GsmPDUHelper.writeHexOctet(options.tag);
     GsmPDUHelper.writeHexOctet(berLen);
 
     // Device Identifies
     GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_DEVICE_ID |
                                COMPREHENSIONTLV_FLAG_CR);
     GsmPDUHelper.writeHexOctet(2);
-    GsmPDUHelper.writeHexOctet(STK_DEVICE_ID_KEYPAD);
-    GsmPDUHelper.writeHexOctet(STK_DEVICE_ID_SIM);
+    GsmPDUHelper.writeHexOctet(options.deviceId.sourceId);
+    GsmPDUHelper.writeHexOctet(options.deviceId.destinationId);
 
     // Item Identifier
     if (options.itemIdentifier) {
