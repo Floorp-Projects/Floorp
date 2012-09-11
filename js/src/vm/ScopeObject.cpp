@@ -134,19 +134,31 @@ js::ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc)
 /*****************************************************************************/
 
 /*
- * Construct a call object for the given bindings.  If this is a call object
- * for a function invocation, callee should be the function being called.
- * Otherwise it must be a call object for eval of strict mode code, and callee
- * must be null.
+ * Construct a bare-bones call object given a shape, type, and slots pointer.
+ * The call object must be further initialized to be usable.
  */
 CallObject *
-CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee)
+CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots)
 {
-    RootedShape shape(cx, script->bindings.callObjShape());
-
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
     kind = gc::GetBackgroundAllocKind(kind);
+
+    JSObject *obj = JSObject::create(cx, kind, shape, type, slots);
+    if (!obj)
+        return NULL;
+    return &obj->asCall();
+}
+
+/*
+ * Create a CallObject for a JSScript that is not initialized to any particular
+ * callsite. This object can either be initialized (with an enclosing scope and
+ * callee) or used as a template for jit compilation.
+ */
+CallObject *
+CallObject::createTemplateObject(JSContext *cx, JSScript *script)
+{
+    RootedShape shape(cx, script->bindings.callObjShape());
 
     RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
     if (!type)
@@ -156,17 +168,31 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
     if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
-    RootedObject obj(cx, JSObject::create(cx, kind, shape, type, slots));
-    if (!obj)
+    CallObject *callobj = CallObject::create(cx, shape, type, slots);
+    if (!callobj) {
+        js_delete(slots);
+        return NULL;
+    }
+
+    return callobj;
+}
+
+/*
+ * Construct a call object for the given bindings.  If this is a call object
+ * for a function invocation, callee should be the function being called.
+ * Otherwise it must be a call object for eval of strict mode code, and callee
+ * must be null.
+ */
+CallObject *
+CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee)
+{
+    CallObject *callobj = CallObject::createTemplateObject(cx, script);
+    if (!callobj)
         return NULL;
 
-    JS_ASSERT(enclosing->global() == obj->global());
-    if (!obj->asScope().setEnclosingScope(cx, enclosing))
-        return NULL;
-
-    obj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
-
-    return &obj->asCall();
+    callobj->asScope().setEnclosingScope(enclosing);
+    callobj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
+    return callobj;
 }
 
 CallObject *
@@ -248,7 +274,8 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
 
     RootedShape emptyDeclEnvShape(cx);
     emptyDeclEnvShape = EmptyShape::getInitialShape(cx, &DeclEnvClass, NULL,
-                                                    &fp->global(), FINALIZE_KIND);
+                                                    &fp->global(), FINALIZE_KIND,
+                                                    BaseShape::DELEGATE);
     if (!emptyDeclEnvShape)
         return NULL;
 
@@ -256,9 +283,7 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
     if (!obj)
         return NULL;
 
-    if (!obj->asScope().setEnclosingScope(cx, fp->scopeChain()))
-        return NULL;
-
+    obj->asScope().setEnclosingScope(fp->scopeChain());
     Rooted<jsid> id(cx, AtomToId(fp->fun()->atom()));
     RootedValue value(cx, ObjectValue(fp->callee()));
     if (!DefineNativeProperty(cx, obj, id, value, NULL, NULL,
@@ -286,9 +311,7 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
     if (!obj)
         return NULL;
 
-    if (!obj->asScope().setEnclosingScope(cx, enclosing))
-        return NULL;
-
+    obj->asScope().setEnclosingScope(enclosing);
     obj->setReservedSlot(DEPTH_SLOT, PrivateUint32Value(depth));
 
     JSObject *thisp = JSObject::thisObject(cx, proto);
@@ -599,6 +622,8 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Stac
             obj->asClonedBlock().setVar(i, *src);
     }
 
+    JS_ASSERT(obj->isDelegate());
+
     return &obj->asClonedBlock();
 }
 
@@ -620,11 +645,13 @@ StaticBlockObject::create(JSContext *cx)
     if (!type)
         return NULL;
 
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL, FINALIZE_KIND));
-    if (!shape)
+    RootedShape emptyBlockShape(cx);
+    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL, FINALIZE_KIND,
+                                                  BaseShape::DELEGATE);
+    if (!emptyBlockShape)
         return NULL;
 
-    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, shape, type, NULL);
+    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, emptyBlockShape, type, NULL);
     if (!obj)
         return NULL;
 

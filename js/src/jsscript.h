@@ -21,16 +21,24 @@
 
 namespace js {
 
+namespace ion {
+    struct IonScript;
+}
+
+# define ION_DISABLED_SCRIPT ((js::ion::IonScript *)0x1)
+# define ION_COMPILING_SCRIPT ((js::ion::IonScript *)0x2)
+
 struct Shape;
+
 class BindingIter;
 
 namespace mjit {
-struct JITScript;
-class CallCompiler;
+    struct JITScript;
+    class CallCompiler;
 }
 
 namespace analyze {
-class ScriptAnalysis;
+    class ScriptAnalysis;
 }
 
 }
@@ -376,9 +384,9 @@ struct JSScript : public js::gc::Cell
                                  * or has had backedges taken. Reset if the
                                  * script's JIT code is forcibly discarded. */
 
-#if !defined(JS_METHODJIT) && JS_BITS_PER_WORD == 32
-    uint32_t        pad32;
-#endif
+    uint32_t        maxLoopCount; /* Maximum loop count that has been encountered. */
+    uint32_t        loopCount;    /* Number of times a LOOPHEAD has been encountered.
+                                     after a LOOPENTRY. Modified only by interpreter. */
 
 #ifdef DEBUG
     // Unique identifier within the compartment for this script, used for
@@ -450,6 +458,7 @@ struct JSScript : public js::gc::Cell
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
 #endif
+    bool            invalidatedIdempotentCache:1; /* idempotent cache has triggered invalidation */
     bool            isGenerator:1;    /* is a generator */
     bool            isGeneratorExp:1; /* is a generator expression */
     bool            hasScriptCounts:1;/* script has an entry in
@@ -521,6 +530,26 @@ struct JSScript : public js::gc::Cell
         return needsArgsObj() && !strictModeCode;
     }
 
+    js::ion::IonScript *ion;          /* Information attached by Ion */
+
+#if defined(JS_METHODJIT) && JS_BITS_PER_WORD == 32
+    void *padding_;
+#endif
+
+    bool hasIonScript() const {
+        return ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
+    }
+    bool canIonCompile() const {
+        return ion != ION_DISABLED_SCRIPT;
+    }
+    bool isIonCompilingOffThread() const {
+        return ion == ION_COMPILING_SCRIPT;
+    }
+    js::ion::IonScript *ionScript() const {
+        JS_ASSERT(hasIonScript());
+        return ion;
+    }
+
     /*
      * Original compiled function for the script, if it has a function.
      * NULL for global and eval scripts.
@@ -564,6 +593,9 @@ struct JSScript : public js::gc::Cell
     inline bool hasAnalysis();
     inline void clearAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
+
+    /* Heuristic to check if the function is expected to be "short running". */
+    bool isShortRunning();
 
     inline void clearPropertyReadTypes();
 
@@ -631,6 +663,22 @@ struct JSScript : public js::gc::Cell
     uint32_t incUseCount() { return ++useCount; }
     uint32_t *addressOfUseCount() { return &useCount; }
     void resetUseCount() { useCount = 0; }
+
+    void resetLoopCount() {
+        if (loopCount > maxLoopCount)
+            maxLoopCount = loopCount;
+        loopCount = 0;
+    }
+
+    void incrLoopCount() {
+        ++loopCount;
+    }
+
+    uint32_t getMaxLoopCount() {
+        if (loopCount > maxLoopCount)
+            maxLoopCount = loopCount;
+        return maxLoopCount;
+    }
 
     /*
      * Size of the JITScript and all sections.  If |mallocSizeOf| is NULL, the
@@ -736,7 +784,7 @@ struct JSScript : public js::gc::Cell
     inline JSFunction *getFunction(size_t index);
     inline JSFunction *getCallerFunction();
 
-    inline JSObject *getRegExp(size_t index);
+    inline js::RegExpObject *getRegExp(size_t index);
 
     const js::Value &getConst(size_t index) {
         js::ConstArray *arr = consts();

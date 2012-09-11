@@ -25,7 +25,7 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #include "assembler/wtf/Platform.h"
@@ -104,7 +104,7 @@ ARMWord ARMAssembler::getOp2RegScale(RegisterID reg, ARMWord scale)
     ARMWord lz;     // Leading zeroes.
 
     // Calculate shift=log2(scale).
-#if WTF_ARM_ARCH_AT_LEAST(5)
+#if WTF_ARM_ARCH_AT_LEAST_5
     asm (
     "   clz     %[lz], %[scale]\n"
     : [lz]      "=r"  (lz)
@@ -125,7 +125,7 @@ ARMWord ARMAssembler::getOp2RegScale(RegisterID reg, ARMWord scale)
     }
     shift = 31-lz;
     // Check that scale was a power of 2.
-    if ((1<<shift) != scale) {
+    if ((1u<<shift) != scale) {
         return INVALID_IMM;
     }
 
@@ -316,7 +316,7 @@ void ARMAssembler::dataTransferN(bool isLoad, bool isSigned, int size, RegisterI
     bool posOffset = true;
 
     // There may be more elegant ways of handling this, but this one works.
-    if (offset == 0x80000000) {
+    if (offset == int32_t(0x80000000)) {
         // For even bigger offsets, load the entire offset into a register, then do an
         // indexed load using the base register and the index register.
         moveImm(offset, ARMRegisters::S0);

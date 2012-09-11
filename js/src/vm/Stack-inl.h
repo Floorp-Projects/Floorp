@@ -13,6 +13,7 @@
 
 #include "methodjit/MethodJIT.h"
 #include "vm/Stack.h"
+#include "ion/IonFrameIterator-inl.h"
 
 #include "jsscriptinlines.h"
 
@@ -436,7 +437,7 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
 JS_ALWAYS_INLINE bool
 ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                               JSFunction &callee, JSScript *script,
-                              InitialFrameFlags initial)
+                              InitialFrameFlags initial, MaybeReportError report)
 {
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
@@ -444,7 +445,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     JS_ASSERT(script == callee.script());
 
     StackFrame::Flags flags = ToFrameFlags(initial);
-    StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, &callee, script, &flags);
+    StackFrame *fp = getCallFrame(cx, report, args, &callee, script, &flags);
     if (!fp)
         return false;
 
@@ -522,9 +523,17 @@ ContextStack::currentScript(jsbytecode **ppc) const
 
     if (!hasfp())
         return NULL;
-
+		
     FrameRegs &regs = this->regs();
     StackFrame *fp = regs.fp();
+
+#ifdef JS_ION
+    if (fp->beginsIonActivation()) {
+        JSScript *script = NULL;
+        ion::GetPcScript(cx_, &script, ppc);
+        return script;
+    }
+#endif
 
 #ifdef JS_METHODJIT
     mjit::CallSite *inlined = regs.inlined();
@@ -554,6 +563,28 @@ inline HandleObject
 ContextStack::currentScriptedScopeChain() const
 {
     return fp()->scopeChain();
+}
+
+template <class Op>
+inline bool
+StackIter::forEachCanonicalActualArg(Op op, unsigned start /* = 0 */, unsigned count /* = unsigned(-1) */)
+{
+    switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        JS_ASSERT(isFunctionFrame());
+        return fp()->forEachCanonicalActualArg(op, start, count);
+      case ION:
+#ifdef JS_ION
+        return ionInlineFrames_.forEachCanonicalActualArg(op, start, count);
+#endif
+      case NATIVE:
+        JS_NOT_REACHED("Unused ?");
+        return false;
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return false;
 }
 
 } /* namespace js */

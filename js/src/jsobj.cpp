@@ -5528,7 +5528,7 @@ js_DumpBacktrace(JSContext *cx)
             const char *filename = JS_GetScriptFilename(cx, i.script());
             unsigned line = JS_PCToLineNumber(cx, i.script(), i.pc());
             sprinter.printf("#%d %14p   %s:%d (%p @ %d)\n",
-                            depth, i.fp(), filename, line,
+                            depth, (i.isIon() ? 0 : i.fp()), filename, line,
                             i.script(), i.pc() - i.script()->code);
         } else {
             sprinter.printf("#%d ???\n", depth);
@@ -5536,3 +5536,4 @@ js_DumpBacktrace(JSContext *cx)
     }
     fprintf(stdout, "%s", sprinter.string());
 }
+

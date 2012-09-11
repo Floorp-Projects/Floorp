@@ -49,7 +49,7 @@ class JSFixedString;
  * ECMA-262-5 section 9.8.1; but note that it handles integers specially for
  * performance.  See also js::NumberToCString().
  */
-extern JSString * JS_FASTCALL
+extern JSString *
 js_NumberToString(JSContext *cx, double d);
 
 namespace js {
@@ -228,6 +228,30 @@ ToInteger(JSContext *cx, const js::Value &v, double *dp)
     }
     *dp = ToInteger(*dp);
     return true;
+}
+
+inline bool
+SafeAdd(int32_t one, int32_t two, int32_t *res)
+{
+    *res = one + two;
+    int64_t ores = (int64_t)one + (int64_t)two;
+    return ores == (int64_t)*res;
+}
+
+inline bool
+SafeSub(int32_t one, int32_t two, int32_t *res)
+{
+    *res = one - two;
+    int64_t ores = (int64_t)one - (int64_t)two;
+    return ores == (int64_t)*res;
+}
+
+inline bool
+SafeMul(int32_t one, int32_t two, int32_t *res)
+{
+    *res = one * two;
+    int64_t ores = (int64_t)one * (int64_t)two;
+    return ores == (int64_t)*res;
 }
 
 } /* namespace js */

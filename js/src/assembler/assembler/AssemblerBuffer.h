@@ -35,6 +35,7 @@
 #if ENABLE_ASSEMBLER
 
 #include <string.h>
+#include <limits.h>
 #include "assembler/jit/ExecutableAllocator.h"
 #include "assembler/wtf/Assertions.h"
 
@@ -196,6 +197,14 @@ namespace JSC {
              */
             int newCapacity = m_capacity + m_capacity + extraCapacity;
             char* newBuffer;
+
+            // Do not allow offsets to grow beyond INT_MAX / 2. This mirrors
+            // Assembler-shared.h.
+            if (newCapacity >= INT_MAX / 2) {
+                m_size = 0;
+                m_oom = true;
+                return;
+            }
 
             if (m_buffer == m_inlineBuffer) {
                 newBuffer = static_cast<char*>(malloc(newCapacity));

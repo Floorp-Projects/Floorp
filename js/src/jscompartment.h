@@ -1,5 +1,7 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=79:
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -19,6 +21,10 @@
 #include "vm/RegExpObject.h"
 
 namespace js {
+
+namespace ion {
+    class IonCompartment;
+}
 
 /*
  * A single-entry cache for some base-10 double-to-string conversions. This
@@ -164,6 +170,10 @@ struct JSCompartment
     }
 
     void setNeedsBarrier(bool needs);
+
+    static size_t OffsetOfNeedsBarrier() {
+        return offsetof(JSCompartment, needsBarrier_);
+    }
 
     js::GCMarker *barrierTracer() {
         JS_ASSERT(needsBarrier_);
@@ -339,6 +349,7 @@ struct JSCompartment
     bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
+    void mark(JSTracer *trc);
     void markTypes(JSTracer *trc);
     void discardJitCode(js::FreeOp *fop, bool discardConstraints);
     bool isDiscardingJitCode(JSTracer *trc);
@@ -422,6 +433,17 @@ struct JSCompartment
     js::ScriptCountsMap *scriptCountsMap;
 
     js::DebugScriptMap *debugScriptMap;
+	
+#ifdef JS_ION
+  private:
+    js::ion::IonCompartment *ionCompartment_;
+
+  public:
+    bool ensureIonCompartmentExists(JSContext *cx);
+    js::ion::IonCompartment *ionCompartment() {
+        return ionCompartment_;
+    }
+#endif
 };
 
 // For use when changing the debug mode flag on one or more compartments.

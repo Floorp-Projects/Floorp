@@ -108,6 +108,9 @@ array_pop(JSContext *cx, unsigned argc, js::Value *vp);
 extern JSBool
 array_concat(JSContext *cx, unsigned argc, js::Value *vp);
 
+extern void
+ArrayShiftMoveElements(JSObject *obj);
+
 extern JSBool
 array_shift(JSContext *cx, unsigned argc, js::Value *vp);
 

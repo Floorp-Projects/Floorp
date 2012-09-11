@@ -1,5 +1,5 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 40; indent-tabs-mode: nil -*- */
-/* vim: set ts=40 sw=4 et tw=99: */
+/* -*- Mode: C++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil -*- */
+/* vim: set ts=4 sw=4 et tw=99: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -114,6 +114,7 @@ class Bytecode
     bool arrayWriteHole: 1;  /* SETELEM which has written to an array hole. */
     bool getStringElement:1; /* GETELEM which has accessed string properties. */
     bool accessGetter: 1;    /* Property read on a shape with a getter hook. */
+    bool notIdempotent: 1;   /* Don't use an idempotent cache for this property read. */
 
     /* Stack depth before this opcode. */
     uint32_t stackDepth;
@@ -124,7 +125,7 @@ class Bytecode
         /* If this is a JOF_TYPESET opcode, index into the observed types for the op. */
         types::StackTypeSet *observedTypes;
 
-        /* If this is a loop head (TRACE or NOTRACE), information about the loop. */
+        /* If this is a JSOP_LOOPHEAD or JSOP_LOOPENTRY, information about the loop. */
         LoopAnalysis *loop;
     };
 
@@ -291,6 +292,37 @@ ReverseCompareOp(JSOp op)
         return JSOP_GT;
       case JSOP_LE:
         return JSOP_GE;
+      case JSOP_EQ:
+      case JSOP_NE:
+      case JSOP_STRICTEQ:
+      case JSOP_STRICTNE:
+        return op;
+      default:
+        JS_NOT_REACHED("unrecognized op");
+        return op;
+    }
+}
+
+static inline JSOp
+NegateCompareOp(JSOp op)
+{
+    switch (op) {
+      case JSOP_GT:
+        return JSOP_LE;
+      case JSOP_GE:
+        return JSOP_LT;
+      case JSOP_LT:
+        return JSOP_GE;
+      case JSOP_LE:
+        return JSOP_GT;
+      case JSOP_EQ:
+        return JSOP_NE;
+      case JSOP_NE:
+        return JSOP_EQ;
+      case JSOP_STRICTNE:
+        return JSOP_STRICTEQ;
+      case JSOP_STRICTEQ:
+        return JSOP_STRICTNE;
       default:
         JS_NOT_REACHED("unrecognized op");
         return op;
@@ -475,6 +507,9 @@ class LoopAnalysis
      * backedge runs when the loop is initially entered.
      */
     uint32_t lastBlock;
+
+    /* Loop nesting depth, 0 for the outermost loop. */
+    uint16_t depth;
 
     /*
      * This loop contains safe points in its body which the interpreter might
@@ -838,6 +873,7 @@ class ScriptAnalysis
     bool isInlineable:1;
     bool isJaegerCompileable:1;
     bool canTrackVars:1;
+    bool hasLoops_:1;
 
     uint32_t numReturnSites_;
 
@@ -868,9 +904,10 @@ class ScriptAnalysis
     /* Analyze the effect of invoking 'new' on script. */
     void analyzeTypesNew(JSContext *cx);
 
-    bool OOM() { return outOfMemory; }
-    bool failed() { return hadFailure; }
-    bool inlineable(uint32_t argc) { return isInlineable && argc == script->function()->nargs; }
+    bool OOM() const { return outOfMemory; }
+    bool failed() const { return hadFailure; }
+    bool inlineable() const { return isInlineable; }
+    bool inlineable(uint32_t argc) const { return isInlineable && argc == script->function()->nargs; }
     bool jaegerCompileable() { return isJaegerCompileable; }
 
     /* Number of property read opcodes in the script. */
@@ -885,6 +922,8 @@ class ScriptAnalysis
     bool usesThisValue() const { return usesThisValue_; }
     bool hasFunctionCalls() const { return hasFunctionCalls_; }
     uint32_t numReturnSites() const { return numReturnSites_; }
+
+    bool hasLoops() const { return hasLoops_; }
 
     /*
      * True if all named formal arguments are not modified. If the arguments
