@@ -6528,7 +6528,7 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
       if (!content) {
         content = do_QueryInterface(targetPtr);
       }
-      PresShell* contentPresShell = nullptr;
+      nsRefPtr<PresShell> contentPresShell;
       if (content && content->OwnerDoc() == mDocument) {
         contentPresShell = static_cast<PresShell*>
             (content->OwnerDoc()->GetShell());
