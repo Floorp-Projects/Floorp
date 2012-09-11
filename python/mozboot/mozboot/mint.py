@@ -6,7 +6,7 @@ import os
 
 from mozboot.base import BaseBootstrapper
 
-class UbuntuBootstrapper(BaseBootstrapper):
+class MintBootstrapper(BaseBootstrapper):
     def __init__(self, version, dist_id):
         BaseBootstrapper.__init__(self)
 
