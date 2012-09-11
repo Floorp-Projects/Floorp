@@ -728,13 +728,7 @@ nsCSSScanner::Next(nsCSSToken& aToken)
 
     // AT_KEYWORD
     if (ch == '@') {
-      int32_t nextChar = Read();
-      if (nextChar >= 0) {
-        int32_t followingChar = Peek();
-        Pushback(nextChar);
-        if (StartsIdent(nextChar, followingChar))
-          return ParseAtKeyword(ch, aToken);
-      }
+      return ParseAtKeyword(aToken);
     }
 
     // NUMBER or DIM
@@ -1028,8 +1022,8 @@ nsCSSScanner::GatherIdent(int32_t aChar, nsString& aIdent)
     if (!ParseAndAppendEscape(aIdent, false)) {
       return false;
     }
-  }
-  else if (0 < aChar) {
+  } else {
+    MOZ_ASSERT(aChar > 0);
     aIdent.Append(aChar);
   }
   for (;;) {
@@ -1065,6 +1059,7 @@ nsCSSScanner::GatherIdent(int32_t aChar, nsString& aIdent)
       break;
     }
   }
+  MOZ_ASSERT(aIdent.Length() > 0);
   return true;
 }
 
@@ -1124,14 +1119,21 @@ nsCSSScanner::ParseIdent(int32_t aChar, nsCSSToken& aToken)
 }
 
 bool
-nsCSSScanner::ParseAtKeyword(int32_t aChar, nsCSSToken& aToken)
+nsCSSScanner::ParseAtKeyword(nsCSSToken& aToken)
 {
-  aToken.mIdent.SetLength(0);
-  aToken.mType = eCSSToken_AtKeyword;
-  if (!GatherIdent(0, aToken.mIdent)) {
-    aToken.mType = eCSSToken_Symbol;
-    aToken.mSymbol = PRUnichar('@');
+  int32_t ch = Read();
+  if (StartsIdent(ch, Peek())) {
+    aToken.mIdent.SetLength(0);
+    aToken.mType = eCSSToken_AtKeyword;
+    if (GatherIdent(ch, aToken.mIdent)) {
+      return true;
+    }
   }
+  if (ch >= 0) {
+    Pushback(ch);
+  }
+  aToken.mType = eCSSToken_Symbol;
+  aToken.mSymbol = PRUnichar('@');
   return true;
 }
 
