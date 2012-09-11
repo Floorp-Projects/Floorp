@@ -17,6 +17,7 @@ GRE_MODULE     = 1
 XPIDLSRCS =                               \
             mozIApplication.idl \
             nsIDOMApplicationRegistry.idl \
+            nsIDOMApplicationRegistry2.idl \
             nsIAppsService.idl \
             nsIDOMMozApplicationEvent.idl \
             $(NULL)
