@@ -1125,6 +1125,15 @@ protected:
     int32_t mGLMaxFragmentUniformVectors;
     int32_t mGLMaxVertexUniformVectors;
 
+    // Cache the max number of elements that can be read from bound VBOs
+    // (result of ValidateBuffers).
+    int32_t mMinInUseAttribArrayLength;
+
+    inline void InvalidateCachedMinInUseAttribArrayLength()
+    {
+        mMinInUseAttribArrayLength = -1;
+    }
+
     // Represents current status, or state, of the context. That is, is it lost
     // or stable and what part of the context lost process are we currently at.
     // This is used to support the WebGL spec's asyncronous nature in handling
