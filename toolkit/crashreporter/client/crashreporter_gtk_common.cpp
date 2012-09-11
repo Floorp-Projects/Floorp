@@ -5,6 +5,7 @@
 
 #include "crashreporter.h"
 
+#include <unistd.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <glib.h>
