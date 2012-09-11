@@ -1638,7 +1638,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->mainOffset = prologLength;
     PodCopy<jsbytecode>(script->code, bce->prologBase(), prologLength);
     PodCopy<jsbytecode>(script->main(), bce->base(), mainLength);
-    uint32_t nfixed = bce->sc->inFunction() ? script->bindings.numVars() : 0;
+    uint32_t nfixed = bce->sc->isFunction ? script->bindings.numVars() : 0;
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = uint16_t(nfixed);
     InitAtomMap(cx, bce->atomIndices.getMap(), script->atoms);
@@ -1670,14 +1670,14 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
     script->funHasExtensibleScope =
-        bce->sc->inFunction() ? bce->sc->funbox()->hasExtensibleScope() : false;
+        bce->sc->isFunction ? bce->sc->funbox()->hasExtensibleScope() : false;
     script->hasSingletons = bce->hasSingletons;
 #ifdef JS_METHODJIT
     if (cx->compartment->debugMode())
         script->debugMode = true;
 #endif
 
-    if (bce->sc->inFunction()) {
+    if (bce->sc->isFunction) {
         FunctionBox *funbox = bce->sc->funbox();
         if (funbox->argumentsHasLocalBinding()) {
             // This must precede the script->bindings.transfer() call below
@@ -1690,7 +1690,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     }
 
     RootedFunction fun(cx, NULL);
-    if (bce->sc->inFunction()) {
+    if (bce->sc->isFunction) {
         JS_ASSERT(!bce->script->noScriptRval);
         FunctionBox *funbox = bce->sc->funbox();
         script->isGenerator = funbox->isGenerator();
