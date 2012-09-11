@@ -605,12 +605,12 @@ public:
     nsHTMLCanvasElement* GetCanvas() const {
         return mCanvasElement;
     }
-    WebGLsizei GetDrawingBufferWidth() const {
+    WebGLsizei DrawingBufferWidth() const {
         if (!IsContextStable())
             return 0;
         return mWidth;
     }
-    WebGLsizei GetDrawingBufferHeight() const {
+    WebGLsizei DrawingBufferHeight() const {
         if (!IsContextStable())
             return 0;
         return mHeight;

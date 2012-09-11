@@ -137,7 +137,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   attribute boolean mozBackgroundRequest;
 
   [ChromeOnly]
-  readonly attribute MozChannel channel;
+  readonly attribute MozChannel? channel;
 
   [Throws]
   void sendAsBinary(DOMString body);
