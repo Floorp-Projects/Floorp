@@ -4397,16 +4397,21 @@ inline bool IsUniversalXPConnectEnabled(JSContext *cx)
     return IsUniversalXPConnectEnabled(compartment);
 }
 
-inline void EnableUniversalXPConnect(JSContext *cx)
+inline bool EnableUniversalXPConnect(JSContext *cx)
 {
     JSCompartment *compartment = js::GetContextCompartment(cx);
     if (!compartment)
-        return;
+        return true;
     CompartmentPrivate *priv =
       static_cast<CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment));
     if (!priv)
-        return;
+        return true;
     priv->universalXPConnectEnabled = true;
+
+    // Recompute all the cross-compartment wrappers leaving the newly-privileged
+    // compartment.
+    return js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
+                                 js::AllCompartments());
 }
 
 }
