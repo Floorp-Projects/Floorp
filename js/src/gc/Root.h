@@ -374,14 +374,52 @@ class Rooted : public RootedBase<T>
     }
 
   public:
-    Rooted() : ptr(RootMethods<T>::initial()) { init(JS::TlsRuntime); }
-    Rooted(const T &initial) : ptr(initial) { init(JS::TlsRuntime); }
+    Rooted(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+      : ptr(RootMethods<T>::initial())
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(JS::TlsRuntime);
+    }
 
-    Rooted(JSRuntime *rt) : ptr(RootMethods<T>::initial()) { init(rt); }
-    Rooted(JSRuntime *rt, T initial) : ptr(initial) { init(rt); }
+    Rooted(const T &initial
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(initial)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(JS::TlsRuntime);
+    }
 
-    Rooted(JSContext *cx) : ptr(RootMethods<T>::initial()) { init(cx); }
-    Rooted(JSContext *cx, T initial) : ptr(initial) { init(cx); }
+    Rooted(JSRuntime *rt
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(RootMethods<T>::initial())
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(rt);
+    }
+
+    Rooted(JSRuntime *rt, T initial
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(initial)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(rt);
+    }
+
+    Rooted(JSContext *cx
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(RootMethods<T>::initial())
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(cx);
+    }
+
+    Rooted(JSContext *cx, T initial
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(initial)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(cx);
+    }
 
     ~Rooted()
     {
@@ -420,6 +458,7 @@ class Rooted : public RootedBase<T>
     Rooted<T> **stack, *prev;
 #endif
     T ptr;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     Rooted(const Rooted &) MOZ_DELETE;
 };
