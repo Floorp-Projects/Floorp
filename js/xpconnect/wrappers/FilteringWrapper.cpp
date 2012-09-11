@@ -126,13 +126,13 @@ template<> SOW SOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
 template<> SCSOW SCSOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
                                   WrapperFactory::SOW_FLAG);
 template<> XOW XOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
-                              WrapperFactory::PARTIALLY_TRANSPARENT);
+                              WrapperFactory::XOW_FLAG);
 template<> PXOW PXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
-                                WrapperFactory::PARTIALLY_TRANSPARENT);
+                                WrapperFactory::XOW_FLAG);
 template<> DXOW DXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
-                                WrapperFactory::PARTIALLY_TRANSPARENT);
+                                WrapperFactory::XOW_FLAG);
 template<> NNXOW NNXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
-                                  WrapperFactory::PARTIALLY_TRANSPARENT);
+                                  WrapperFactory::XOW_FLAG);
 template<> LW  LW::singleton(WrapperFactory::SHADOWING_FORBIDDEN);
 template<> XLW XLW::singleton(WrapperFactory::SHADOWING_FORBIDDEN);
 
