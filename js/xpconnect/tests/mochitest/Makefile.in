@@ -75,6 +75,8 @@ MOCHITEST_FILES =	bug500931_helper.html \
 		test_lookupMethod.html \
 		file_bug738244.html \
 		file_mozMatchesSelector.html \
+		file_bug720619.html \
+		test_bug720619.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES	= \

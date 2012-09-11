@@ -152,6 +152,10 @@ class JS_FRIEND_API(IndirectWrapper) : public Wrapper,
                          bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *wrapper,
                            AutoIdVector &props) MOZ_OVERRIDE;
+
+    /* Spidermonkey extensions. */
+    virtual bool defaultValue(JSContext *cx, JSObject *wrapper_, JSType hint,
+                              Value *vp) MOZ_OVERRIDE;
 };
 
 /*
@@ -207,6 +211,8 @@ class JS_FRIEND_API(DirectWrapper) : public Wrapper, public DirectProxyHandler
     virtual bool hasInstance(JSContext *cx, HandleObject wrapper, MutableHandleValue v, bool *bp) MOZ_OVERRIDE;
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent) MOZ_OVERRIDE;
+    virtual bool defaultValue(JSContext *cx, JSObject *wrapper_, JSType hint,
+                              Value *vp) MOZ_OVERRIDE;
 
     static DirectWrapper singleton;
     static DirectWrapper singletonWithPrototype;

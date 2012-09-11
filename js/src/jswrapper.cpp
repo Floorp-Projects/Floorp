@@ -200,6 +200,43 @@ IndirectWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props
     GET(IndirectProxyHandler::enumerate(cx, wrapper, props));
 }
 
+/*
+ * Ordinarily, the convert trap would require a PUNCTURE. However, the default
+ * implementation of convert, JS_ConvertStub, obtains a default value by calling
+ * the toString/valueOf method on the wrapper, if any. Doing a PUNCTURE in this
+ * case would be overly conservative. To make matters worse, XPConnect sometimes
+ * installs a custom convert trap that obtains a default value by calling the
+ * toString method on the wrapper. Doing a puncture in this case would be overly
+ * conservative as well. We deal with these anomalies by clearing the pending
+ * exception and falling back to the DefaultValue algorithm whenever the
+ * PUNCTURE fails.
+ */
+bool
+IndirectWrapper::defaultValue(JSContext *cx, JSObject *wrapper_, JSType hint, Value *vp)
+{
+    RootedObject wrapper(cx, wrapper_);
+
+    bool status;
+    if (!enter(cx, wrapper_, JSID_VOID, PUNCTURE, &status)) {
+        RootedValue v(cx);
+        JS_ClearPendingException(cx);
+        if (!DefaultValue(cx, wrapper, hint, &v))
+            return false;
+        *vp = v;
+        return true;
+    }
+    /*
+     * We enter the compartment of the wrappee here, even if we're not a cross
+     * compartment wrapper. Moreover, cross compartment wrappers do not enter
+     * the compartment of the wrappee before calling this function. This is
+     * necessary because the DefaultValue algorithm above operates on the
+     * wrapper, not the wrappee, so we want to delay the decision to switch
+     * compartments until this point.
+     */
+    AutoCompartment call(cx, wrappedObject(wrapper));
+    return IndirectProxyHandler::defaultValue(cx, wrapper_, hint, vp);
+}
+
 DirectWrapper::DirectWrapper(unsigned flags, bool hasPrototype) : Wrapper(flags),
         DirectProxyHandler(&sWrapperFamily)
 {
@@ -260,6 +297,43 @@ DirectWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
     // if we refuse to perform this action, props remains empty
     static jsid id = JSID_VOID;
     GET(DirectProxyHandler::enumerate(cx, wrapper, props));
+}
+
+/*
+ * Ordinarily, the convert trap would require a PUNCTURE. However, the default
+ * implementation of convert, JS_ConvertStub, obtains a default value by calling
+ * the toString/valueOf method on the wrapper, if any. Doing a PUNCTURE in this
+ * case would be overly conservative. To make matters worse, XPConnect sometimes
+ * installs a custom convert trap that obtains a default value by calling the
+ * toString method on the wrapper. Doing a puncture in this case would be overly
+ * conservative as well. We deal with these anomalies by clearing the pending
+ * exception and falling back to the DefaultValue algorithm whenever the
+ * PUNCTURE fails.
+ */
+bool
+DirectWrapper::defaultValue(JSContext *cx, JSObject *wrapper_, JSType hint, Value *vp)
+{
+    RootedObject wrapper(cx, wrapper_);
+
+    bool status;
+    if (!enter(cx, wrapper_, JSID_VOID, PUNCTURE, &status)) {
+        RootedValue v(cx);
+        JS_ClearPendingException(cx);
+        if (!DefaultValue(cx, wrapper, hint, &v))
+            return false;
+        *vp = v;
+        return true;
+    }
+    /*
+     * We enter the compartment of the wrappee here, even if we're not a cross
+     * compartment wrapper. Moreover, cross compartment wrappers do not enter
+     * the compartment of the wrappee before calling this function. This is
+     * necessary because the DefaultValue algorithm above operates on the
+     * wrapper, not the wrappee, so we want to delay the decision to switch
+     * compartments until this point.
+     */
+    AutoCompartment call(cx, wrappedObject(wrapper));
+    return DirectProxyHandler::defaultValue(cx, wrapper_, hint, vp);
 }
 
 bool
@@ -752,11 +826,8 @@ CrossCompartmentWrapper::regexp_toShared(JSContext *cx, JSObject *wrapper, RegEx
 bool
 CrossCompartmentWrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp)
 {
-    {
-        AutoCompartment call(cx, wrappedObject(wrapper));
-        if (!IndirectProxyHandler::defaultValue(cx, wrapper, hint, vp))
-            return false;
-    }
+    if (!DirectWrapper::defaultValue(cx, wrapper, hint, vp))
+        return false;
     return cx->compartment->wrap(cx, vp);
 }
 

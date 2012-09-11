@@ -59,6 +59,7 @@ MOCHITEST_CHROME_FILES = \
 		test_weakmaps.xul \
 		test_weakref.xul \
 		test_wrappers.xul \
+		test_bug720619.xul \
 		$(NULL)
 
 # Disabled until this test gets updated to test the new proxy based
