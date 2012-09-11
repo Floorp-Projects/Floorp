@@ -6,7 +6,7 @@ import os
 
 from mozboot.base import BaseBootstrapper
 
-class UbuntuBootstrapper(BaseBootstrapper):
+class FedoraBootstrapper(BaseBootstrapper):
     def __init__(self, version, dist_id):
         BaseBootstrapper.__init__(self)
 
@@ -14,5 +14,5 @@ class UbuntuBootstrapper(BaseBootstrapper):
         self.dist_id = dist_id
 
     def install_system_packages(self):
-        os.system("sudo apt-get build-dep firefox")
-        os.system("sudo apt-get install mercurial libasound2-dev libcurl4-openssl-dev libnotify-dev libxt-dev libiw-dev mesa-common-dev autoconf2.13 yasm uuid")
+        os.system("sudo yum groupinstall 'Development Tools' 'Development Libraries' 'GNOME Software Development'")
+        os.system("sudo yum install mercurial autoconf213 glibc-static libstdc++-static yasm wireless-tools-devel mesa-libGL-devel alsa-lib-devel libXt-devel")
