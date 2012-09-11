@@ -676,6 +676,11 @@ public:
     hal::SetProcessPriority(aPid, aPriority);
     return true;
   }
+
+  void Notify(const SystemTimeChange& aReason)
+  {
+    unused << SendNotifySystemTimeChange(aReason);
+  }
 };
 
 class HalChild : public PHalChild {
@@ -710,6 +715,12 @@ public:
   virtual bool
   RecvNotifySwitchChange(const mozilla::hal::SwitchEvent& aEvent) MOZ_OVERRIDE {
     hal::NotifySwitchChange(aEvent);
+    return true;
+  }
+
+  virtual bool
+  RecvNotifySystemTimeChange(const SystemTimeChange& aReason) {
+    hal::NotifySystemTimeChange(aReason);
     return true;
   }
 };
