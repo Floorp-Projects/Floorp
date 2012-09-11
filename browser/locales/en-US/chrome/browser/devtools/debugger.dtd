@@ -65,6 +65,22 @@
   -  appears in the filter text box when it is empty. -->
 <!ENTITY debuggerUI.emptyFilterText  "Filter scripts">
 
+<!-- LOCALIZATION NOTE (debuggerUI.searchPanelTitle): This is the text that
+  -  appears in the filter panel popup as a description. -->
+<!ENTITY debuggerUI.searchPanelTitle  "Operators">
+
+<!-- LOCALIZATION NOTE (debuggerUI.searchPanelGlobal): This is the text that
+  -  appears in the filter panel popup for the global search operation. -->
+<!ENTITY debuggerUI.searchPanelGlobal  "Search in all files">
+
+<!-- LOCALIZATION NOTE (debuggerUI.searchPanelToken): This is the text that
+  -  appears in the filter panel popup for the token search operation. -->
+<!ENTITY debuggerUI.searchPanelToken  "Find in this file">
+
+<!-- LOCALIZATION NOTE (debuggerUI.searchPanelLine): This is the text that
+  -  appears in the filter panel popup for the line search operation. -->
+<!ENTITY debuggerUI.searchPanelLine  "Jump to line">
+
 <!-- LOCALIZATION NOTE (emptyScriptText): The text to display in the menulist when
   - there are no scripts. -->
 <!ENTITY debuggerUI.emptyScriptText  "No scripts">
