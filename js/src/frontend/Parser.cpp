@@ -2270,7 +2270,7 @@ MakeSetCall(JSContext *cx, ParseNode *pn, Parser *parser, unsigned msg)
 }
 
 static void
-NoteLValue(JSContext *cx, ParseNode *pn, SharedContext *sc)
+NoteLValue(ParseNode *pn)
 {
     if (pn->isUsed())
         pn->pn_lexdef->pn_dflags |= PND_ASSIGNED;
@@ -2343,7 +2343,7 @@ BindDestructuringVar(JSContext *cx, BindData *data, ParseNode *pn, Parser *parse
     if (data->op == JSOP_DEFCONST)
         pn->pn_dflags |= PND_CONST;
 
-    NoteLValue(cx, pn, parser->pc->sc);
+    NoteLValue(pn);
     return true;
 }
 
@@ -2370,7 +2370,7 @@ BindDestructuringLHS(JSContext *cx, ParseNode *pn, Parser *parser)
 {
     switch (pn->getKind()) {
       case PNK_NAME:
-        NoteLValue(cx, pn, parser->pc->sc);
+        NoteLValue(pn);
         /* FALL THROUGH */
 
       case PNK_DOT:
@@ -3228,7 +3228,7 @@ Parser::forStatement()
         switch (pn2->getKind()) {
           case PNK_NAME:
             /* Beware 'for (arguments in ...)' with or without a 'var'. */
-            NoteLValue(context, pn2, pc->sc);
+            NoteLValue(pn2);
             break;
 
 #if JS_HAS_DESTRUCTURING
@@ -4185,7 +4185,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
                        ? JSOP_SETCONST
                        : JSOP_SETNAME);
 
-            NoteLValue(context, pn2, pc->sc);
+            NoteLValue(pn2);
 
             /* The declarator's position must include the initializer. */
             pn2->pn_pos.end = init->pn_pos.end;
@@ -4468,7 +4468,7 @@ Parser::setAssignmentLhsOps(ParseNode *pn, JSOp op)
         if (!CheckStrictAssignment(context, this, pn))
             return false;
         pn->setOp(pn->isOp(JSOP_GETLOCAL) ? JSOP_SETLOCAL : JSOP_SETNAME);
-        NoteLValue(context, pn, pc->sc);
+        NoteLValue(pn);
         break;
       case PNK_DOT:
         pn->setOp(JSOP_SETPROP);
@@ -4587,7 +4587,7 @@ SetIncOpKid(JSContext *cx, Parser *parser, ParseNode *pn, ParseNode *kid,
         op = (tt == TOK_INC)
              ? (preorder ? JSOP_INCNAME : JSOP_NAMEINC)
              : (preorder ? JSOP_DECNAME : JSOP_NAMEDEC);
-        NoteLValue(cx, kid, parser->pc->sc);
+        NoteLValue(kid);
         break;
 
       case PNK_DOT:
