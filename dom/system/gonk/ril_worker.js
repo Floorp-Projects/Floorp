@@ -2674,7 +2674,7 @@ let RIL = {
         debug("Operator is currently unregistered");
       }
 
-      if (longName && shortName && networkTuple) {
+      if (networkTuple) {
         try {
           this._processNetworkTuple(networkTuple, this.operator);
         } catch (e) {
