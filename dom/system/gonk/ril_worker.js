@@ -5617,6 +5617,9 @@ let StkCommandParamsFactory = {
   createParam: function createParam(cmdDetails, ctlvs) {
     let param;
     switch (cmdDetails.typeOfCommand) {
+      case STK_CMD_SET_UP_EVENT_LIST:
+        param = this.processSetUpEventList(cmdDetails, ctlvs);
+        break;
       case STK_CMD_SET_UP_MENU:
       case STK_CMD_SELECT_ITEM:
         param = this.processSelectItem(cmdDetails, ctlvs);
@@ -5650,6 +5653,27 @@ let StkCommandParamsFactory = {
         break;
     }
     return param;
+  },
+
+  /**
+   * Construct a param for Set Up Event list.
+   *
+   * @param cmdDetails
+   *        The value object of CommandDetails TLV.
+   * @param ctlvs
+   *        The all TLVs in this proactive command.
+   */
+  processSetUpEventList: function processSetUpEventList(cmdDetails, ctlvs) {
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+        COMPREHENSIONTLV_TAG_EVENT_LIST, ctlvs);
+    if (!ctlv) {
+      RIL.sendStkTerminalResponse({
+        command: cmdDetails,
+        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
+      throw new Error("Stk Event List: Required value missing : Event List");
+    }
+
+    return ctlv.value || {eventList: null};
   },
 
   /**
@@ -5920,6 +5944,8 @@ let StkProactiveCmdHelper = {
         return this.retrieveResponseLength(length);
       case COMPREHENSIONTLV_TAG_DEFAULT_TEXT:
         return this.retrieveDefaultText(length);
+      case COMPREHENSIONTLV_TAG_EVENT_LIST:
+        return this.retrieveEventList(length);
       case COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE:
         return this.retrieveImmediaResponse(length);
       case COMPREHENSIONTLV_TAG_URL:
@@ -6092,6 +6118,21 @@ let StkProactiveCmdHelper = {
    */
   retrieveDefaultText: function retrieveDefaultText(length) {
     return this.retrieveTextString(length);
+  },
+
+  /**
+   * Event List.
+   */
+  retrieveEventList: function retrieveEventList(length) {
+    if (!length) {
+      // null means an indication to ME to remove the existing list of events
+      // in ME.
+      return null;
+    }
+
+    return {
+      eventList: GsmPDUHelper.readHexOctetArray(length)
+    };
   },
 
   /**
