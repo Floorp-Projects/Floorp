@@ -41,6 +41,8 @@ case "$target" in
     if test -n "$IS_GCC"
     then
       echo gcc is known to be broken on OS X, please use clang.
+      echo see http://developer.mozilla.org/en-US/docs/Developer_Guide/Build_Instructions/Mac_OS_X_Prerequisites
+      echo for more information.
       exit 1
     fi
     ;;
