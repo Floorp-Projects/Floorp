@@ -964,11 +964,6 @@ class MethodDefiner(PropertyDefiner):
                                 "length": 1,
                                 "flags": "0",
                                 "pref": None })
-            self.regular.append({"name": 'QueryInterface',
-                                 "methodInfo": False,
-                                 "length": 1,
-                                 "flags": "0",
-                                 "pref": None })
 
         if static:
             if not descriptor.interface.hasInterfaceObject():
