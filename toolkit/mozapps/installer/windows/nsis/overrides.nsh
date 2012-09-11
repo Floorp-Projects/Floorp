@@ -18,6 +18,27 @@
 !include FileFunc.nsh
 !endif
 
+!macro __MOZ__WinVer_DefineOSTests WinVer
+  !insertmacro __WinVer_DefineOSTest AtLeast ${WinVer} ""
+  !insertmacro __WinVer_DefineOSTest AtMost ${WinVer} ""
+  !insertmacro __WinVer_DefineOSTest Is ${WinVer} ""
+!macroend
+
+!ifndef WINVER_7
+  !define WINVER_7    0x06010000 ;6.01.????
+  !insertmacro __MOZ__WinVer_DefineOSTests 7
+!endif
+ 
+!ifndef WINVER_2008R2
+  !define WINVER_2008R2    0x06010001 ;6.01.????
+  !insertmacro __MOZ__WinVer_DefineOSTests 2008R2
+!endif
+
+!ifndef WINVER_8
+  !define WINVER_8    0x06020000 ;6.02.????
+  !insertmacro __MOZ__WinVer_DefineOSTests 8
+!endif
+
 !verbose push
 !verbose 3
 !ifndef _OVERRIDE_VERBOSE
