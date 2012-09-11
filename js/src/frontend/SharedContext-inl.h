@@ -20,7 +20,7 @@ SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, FunctionBox *f
   : context(cx),
     funbox_(funbox),
     scopeChain_(cx, scopeChain),
-    cxFlags(),
+    anyCxFlags(),
     strictModeState(sms)
 {
     JS_ASSERT((funbox && !scopeChain_) || !funbox);

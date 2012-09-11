@@ -1178,7 +1178,7 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
     }
     if (bce->script->compileAndGo &&
         bce->hasGlobalScope &&
-        !(bce->sc->inFunction() && bce->sc->funMightAliasLocals()) &&
+        !(bce->sc->inFunction() && bce->sc->funbox()->mightAliasLocals()) &&
         !pn->isDeoptimized() &&
         !bce->sc->inStrictMode())
     {
@@ -2613,7 +2613,8 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
      * execution starts from script->code, so this has no semantic effect.
      */
 
-    if (bce->sc->funArgumentsHasLocalBinding()) {
+    FunctionBox *funbox = bce->sc->funbox();
+    if (funbox->argumentsHasLocalBinding()) {
         JS_ASSERT(bce->next() == bce->base());  /* See JSScript::argumentsBytecode. */
         bce->switchToProlog();
         if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0)
@@ -2634,7 +2635,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToMain();
     }
 
-    if (bce->sc->funIsGenerator()) {
+    if (funbox->isGenerator()) {
         bce->switchToProlog();
         if (Emit1(cx, bce, JSOP_GENERATOR) < 0)
             return false;
@@ -4846,9 +4847,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     {
         FunctionBox *funbox = pn->pn_funbox;
         SharedContext sc(cx, /* scopeChain = */ NULL, funbox, funbox->strictModeState);
-        sc.cxFlags = funbox->cxFlags;
-        if (bce->sc->inFunction() && bce->sc->funMightAliasLocals())
-            sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
+        sc.anyCxFlags = funbox->anyCxFlags;     // copy the non-func-specific flags
+        if (bce->sc->inFunction() && bce->sc->funbox()->mightAliasLocals())
+            funbox->setMightAliasLocals();      // inherit mightAliasLocals from parent
         JS_ASSERT_IF(bce->sc->inStrictMode(), sc.inStrictMode());
 
         // Inherit most things (principals, version, etc) from the parent.
@@ -6087,7 +6088,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             ParseNode *rest = NULL;
             bool restIsDefn = false;
             if (fun->hasRest()) {
-                JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
+                JS_ASSERT(!bce->sc->funbox()->argumentsHasLocalBinding());
                 // Defaults with a rest parameter need special handling. The
                 // rest parameter needs to be undefined while defaults are being
                 // processed. To do this, we create the rest argument and let it
@@ -6132,7 +6133,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return false;
             if (pn2->pn_next == pnlast && fun->hasRest() && !fun->hasDefaults()) {
                 // Fill rest parameter. We handled the case with defaults above.
-                JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
+                JS_ASSERT(!bce->sc->funbox()->argumentsHasLocalBinding());
                 bce->switchToProlog();
                 if (Emit1(cx, bce, JSOP_REST) < 0)
                     return false;

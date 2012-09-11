@@ -3104,7 +3104,7 @@ ASTSerializer::function(ParseNode *pn, ASTType type, Value *dst)
 
     bool isGenerator =
 #if JS_HAS_GENERATORS
-        pn->pn_funbox->funIsGenerator();
+        pn->pn_funbox->isGenerator();
 #else
         false;
 #endif

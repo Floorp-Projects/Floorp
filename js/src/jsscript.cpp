@@ -1670,7 +1670,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
     script->funHasExtensibleScope =
-        bce->sc->inFunction() ? bce->sc->funHasExtensibleScope() : false;
+        bce->sc->inFunction() ? bce->sc->funbox()->hasExtensibleScope() : false;
     script->hasSingletons = bce->hasSingletons;
 #ifdef JS_METHODJIT
     if (cx->compartment->debugMode())
@@ -1678,21 +1678,23 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
 #endif
 
     if (bce->sc->inFunction()) {
-        if (bce->sc->funArgumentsHasLocalBinding()) {
+        FunctionBox *funbox = bce->sc->funbox();
+        if (funbox->argumentsHasLocalBinding()) {
             // This must precede the script->bindings.transfer() call below
             script->setArgumentsHasVarBinding();
-            if (bce->sc->funDefinitelyNeedsArgsObj())
+            if (funbox->definitelyNeedsArgsObj())
                 script->setNeedsArgsObj(true);
         } else {
-            JS_ASSERT(!bce->sc->funDefinitelyNeedsArgsObj());
+            JS_ASSERT(!funbox->definitelyNeedsArgsObj());
         }
     }
 
     RootedFunction fun(cx, NULL);
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
-        script->isGenerator = bce->sc->funIsGenerator();
-        script->isGeneratorExp = bce->sc->funbox()->inGenexpLambda;
+        FunctionBox *funbox = bce->sc->funbox();
+        script->isGenerator = funbox->isGenerator();
+        script->isGeneratorExp = funbox->inGenexpLambda;
         script->setFunction(bce->sc->funbox()->fun());
     }
 
