@@ -5,6 +5,9 @@
 import platform
 import sys
 
+from mozboot.centos import CentOSBootstrapper
+from mozboot.fedora import FedoraBootstrapper
+from mozboot.mint import MintBootstrapper
 from mozboot.osx import OSXBootstrapper
 from mozboot.ubuntu import UbuntuBootstrapper
 
@@ -19,7 +22,13 @@ class Bootstrapper(object):
         if sys.platform.startswith('linux'):
             distro, version, dist_id = platform.linux_distribution()
 
-            if distro == 'Ubuntu':
+            if distro == 'CentOS':
+                cls = CentOSBootstrapper
+            elif distro == 'Fedora':
+                cls = FedoraBootstrapper
+            elif distro == 'Mint':
+                cls = MintBootstrapper
+            elif distro == 'Ubuntu':
                 cls = UbuntuBootstrapper
             else:
                 raise NotImplementedError('Bootstrap support for this Linux '
