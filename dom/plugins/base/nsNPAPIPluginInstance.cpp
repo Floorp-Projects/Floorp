@@ -1444,6 +1444,9 @@ nsNPAPIPluginInstance::TimerWithID(uint32_t id, uint32_t* index)
 uint32_t
 nsNPAPIPluginInstance::ScheduleTimer(uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID))
 {
+  if (RUNNING != mRunning)
+    return 0;
+
   nsNPAPITimer *newTimer = new nsNPAPITimer();
 
   newTimer->inCallback = false;
