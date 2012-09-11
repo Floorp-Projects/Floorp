@@ -340,25 +340,11 @@ dictionary MozStkResponse
   DOMString input;
 
   /**
-   * Alphabet encoding.
-   *
-   * @see MozStkInput.isUCS2
-   */
-  boolean isUCS2;
-
-  /**
    * YES/NO response.
    *
    * @see MozStkInput.isYesNoRequested
    */
   boolean isYesNo;
-
-  /**
-   * Packed or unpacked format.
-   *
-   * @see MozStkInput.isPacked
-   */
-  boolean isPacked;
 
   /**
    * User has confirmed or rejected the call during STK_CMD_CALL_SET_UP.
