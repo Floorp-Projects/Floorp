@@ -76,7 +76,7 @@ inline Value
 TypedArray::lengthValue(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
-    return obj->getFixedSlot(FIELD_LENGTH);
+    return obj->getFixedSlot(LENGTH_SLOT);
 }
 
 inline uint32_t
@@ -89,7 +89,7 @@ inline Value
 TypedArray::byteOffsetValue(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
-    return obj->getFixedSlot(FIELD_BYTEOFFSET);
+    return obj->getFixedSlot(BYTEOFFSET_SLOT);
 }
 
 inline uint32_t
@@ -102,7 +102,7 @@ inline Value
 TypedArray::byteLengthValue(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
-    return obj->getFixedSlot(FIELD_BYTELENGTH);
+    return obj->getFixedSlot(BYTELENGTH_SLOT);
 }
 
 inline uint32_t
@@ -115,14 +115,14 @@ inline uint32_t
 TypedArray::type(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
-    return obj->getFixedSlot(FIELD_TYPE).toInt32();
+    return obj->getFixedSlot(TYPE_SLOT).toInt32();
 }
 
 inline Value
 TypedArray::bufferValue(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
-    return obj->getFixedSlot(FIELD_BUFFER);
+    return obj->getFixedSlot(BUFFER_SLOT);
 }
 
 inline ArrayBufferObject *
@@ -135,7 +135,7 @@ inline void *
 TypedArray::viewData(JSObject *obj)
 {
     JS_ASSERT(obj->isTypedArray());
-    return (void *)obj->getPrivate(NUM_FIXED_SLOTS);
+    return (void *)obj->getPrivate(DATA_SLOT);
 }
 
 inline uint32_t
@@ -249,7 +249,8 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     InitTypedArrayDataPointer(obj, arrayBuffer, byteOffset);
     JS_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
 
-    JS_ASSERT(dvobj.numFixedSlots() == RESERVED_SLOTS);
+    // Verify that the private slot is at the expected place
+    JS_ASSERT(dvobj.numFixedSlots() == DATA_SLOT);
 
     arrayBuffer->asArrayBuffer().addView(cx, &dvobj);
 
