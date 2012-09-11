@@ -4987,10 +4987,11 @@ class CGDOMJSProxyHandler(CGClass):
                          methods=methods)
 
 def stripTrailingWhitespace(text):
+    tail = '\n' if text.endswith('\n') else ''
     lines = text.splitlines()
     for i in range(len(lines)):
         lines[i] = lines[i].rstrip()
-    return '\n'.join(lines)
+    return '\n'.join(lines) + tail
 
 class CGDescriptor(CGThing):
     def __init__(self, descriptor):
