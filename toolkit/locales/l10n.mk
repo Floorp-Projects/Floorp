@@ -130,7 +130,7 @@ endif
 endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
 	cd $(DIST)/l10n-stage; \
-	  $(MAKE_PACKAGE)
+	  $(PREPARE_PACKAGE) && $(MAKE_PACKAGE)
 ifdef MAKE_COMPLETE_MAR
 	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
 	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
@@ -141,12 +141,6 @@ endif
 ifneq (en,$(AB))
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/$(AB).lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/en.lproj
-endif
-endif
-ifdef MOZ_OMNIJAR
-	@(cd $(STAGEDIST) && $(UNPACK_OMNIJAR))
-ifdef MOZ_WEBAPP_RUNTIME
-	@(cd $(STAGEDIST)/webapprt && $(UNPACK_OMNIJAR_WEBAPP_RUNTIME))
 endif
 endif
 	$(MAKE) clobber-zip AB_CD=$(AB_CD)
