@@ -5301,7 +5301,7 @@ PresShell::Paint(nsIView*           aViewToPaint,
       NS_WARNING("Must complete empty transaction when compositing!");
     } else  if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE)) {
       layerManager->BeginTransaction();
-      if (layerManager->EndEmptyTransaction(LayerManager::END_NO_COMPOSITE)) {
+      if (layerManager->EndEmptyTransaction((aType == PaintType_NoComposite) ? LayerManager::END_NO_COMPOSITE : LayerManager::END_DEFAULT)) {
         frame->UpdatePaintCountForPaintedPresShells();
         presContext->NotifyDidPaintForSubtree();
         return;
