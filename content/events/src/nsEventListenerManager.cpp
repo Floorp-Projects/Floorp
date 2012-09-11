@@ -54,6 +54,7 @@
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
 #include "nsSandboxFlags.h"
+#include "TimeChangeObserver.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::hal;
@@ -276,6 +277,8 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     EnableDevice(NS_DEVICE_LIGHT);
   } else if (aTypeAtom == nsGkAtoms::ondevicemotion) {
     EnableDevice(NS_DEVICE_MOTION);
+  } else if (aTypeAtom == nsGkAtoms::onmoztimechange) {
+    EnableTimeChangeNotifications();
   } else if ((aType >= NS_MOZTOUCH_DOWN && aType <= NS_MOZTOUCH_UP) ||
              (aTypeAtom == nsGkAtoms::ontouchstart ||
               aTypeAtom == nsGkAtoms::ontouchend ||
@@ -401,6 +404,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   uint32_t count = mListeners.Length();
   uint32_t typeCount = 0;
   bool deviceType = IsDeviceType(aType);
+  bool timeChangeEvent = (aType == NS_MOZ_TIME_CHANGE_EVENT);
 
   for (uint32_t i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
@@ -414,7 +418,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
         mNoListenerForEvent = NS_EVENT_TYPE_NULL;
         mNoListenerForEventAtom = nullptr;
 
-        if (!deviceType) {
+        if (!deviceType && !timeChangeEvent) {
           return;
         }
         --typeCount;
@@ -424,6 +428,8 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
 
   if (deviceType && typeCount == 0) {
     DisableDevice(aType);
+  } else if (timeChangeEvent && typeCount == 0) {
+    DisableTimeChangeNotifications();
   }
 }
 
@@ -1164,4 +1170,28 @@ nsEventListenerManager::UnmarkGrayJSListeners()
       xpc_TryUnmarkWrappedGrayObject(ls.mListener);
     }
   }
+}
+
+void
+nsEventListenerManager::EnableTimeChangeNotifications()
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
+  if (!window) {
+    return;
+  }
+
+  NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
+  window->EnableTimeChangeNotifications();
+}
+
+void
+nsEventListenerManager::DisableTimeChangeNotifications()
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
+  if (!window) {
+    return;
+  }
+
+  NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
+  window->DisableTimeChangeNotifications();
 }

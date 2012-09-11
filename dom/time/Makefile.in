@@ -16,7 +16,14 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-CPPSRCS = $(NULL)
+CPPSRCS = \
+  TimeManager.cpp \
+  TimeChangeObserver.cpp \
+  $(NULL)
+
+EXPORTS = \
+  TimeChangeObserver.h \
+  $(NULL)
 
 XPIDLSRCS = \
   nsIDOMNavigatorTime.idl \
@@ -24,4 +31,5 @@ XPIDLSRCS = \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
