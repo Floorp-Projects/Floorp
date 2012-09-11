@@ -254,22 +254,10 @@ ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, uint8_t *co
     return true;
 }
 
-static uint32_t
-NextViewSlot(JSObject *obj)
-{
-    return obj->isTypedArray() ? TypedArray::FIELD_NEXT_VIEW : DataViewObject::NEXT_VIEW_SLOT;
-}
-
 static JSObject *
 NextView(JSObject *obj)
 {
-    return obj->getFixedSlot(NextViewSlot(obj)).toObjectOrNull();
-}
-
-static void
-SetNextView(JSObject *obj, JSObject *view)
-{
-    return obj->setFixedSlot(NextViewSlot(obj), ObjectOrNullValue(view));
+    return obj->getFixedSlot(BufferView::NEXT_VIEW_SLOT).toObjectOrNull();
 }
 
 static JSObject **
@@ -327,6 +315,12 @@ ArrayBufferObject::uninlineData(JSContext *maybecx)
    return true;
 }
 
+static void
+SetNextView(JSObject *obj, JSObject *view)
+{
+    return obj->setFixedSlot(BufferView::NEXT_VIEW_SLOT, ObjectOrNullValue(view));
+}
+
 void
 ArrayBufferObject::addView(JSContext *cx, RawObject view)
 {
@@ -354,10 +348,9 @@ ArrayBufferObject::removeFinalizedView(FreeOp *fop, RawObject view)
     JSObject *next;
     for (JSObject *linkObj = *views; true; linkObj = next) {
         JS_ASSERT(linkObj); // Should always find view in the list
-        uint32_t linkObjSlot = NextViewSlot(linkObj);
-        next = linkObj->getFixedSlot(linkObjSlot).toObjectOrNull();
+        next = linkObj->getFixedSlot(BufferView::NEXT_VIEW_SLOT).toObjectOrNull();
         if (next == view) {
-            linkObj->setFixedSlot(linkObjSlot, ObjectOrNullValue(NextView(next)));
+            linkObj->setFixedSlot(BufferView::NEXT_VIEW_SLOT, ObjectOrNullValue(NextView(next)));
             return;
         }
     }
@@ -854,9 +847,9 @@ void
 TypedArray::neuter(JSContext *cx, RawObject tarray)
 {
     JS_ASSERT(tarray->isTypedArray());
-    tarray->setSlot(FIELD_LENGTH, Int32Value(0));
-    tarray->setSlot(FIELD_BYTELENGTH, Int32Value(0));
-    tarray->setSlot(FIELD_BYTEOFFSET, Int32Value(0));
+    tarray->setSlot(LENGTH_SLOT, Int32Value(0));
+    tarray->setSlot(BYTELENGTH_SLOT, Int32Value(0));
+    tarray->setSlot(BYTEOFFSET_SLOT, Int32Value(0));
     tarray->setPrivate(NULL);
 }
 
@@ -978,13 +971,13 @@ TypedArray::obj_setSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpec
 /* static */ int
 TypedArray::lengthOffset()
 {
-    return JSObject::getFixedSlotOffset(FIELD_LENGTH);
+    return JSObject::getFixedSlotOffset(LENGTH_SLOT);
 }
 
 /* static */ int
 TypedArray::dataOffset()
 {
-    return JSObject::getPrivateDataOffset(NUM_FIXED_SLOTS);
+    return JSObject::getPrivateDataOffset(DATA_SLOT);
 }
 
 /* Helper clamped uint8_t type */
@@ -1084,7 +1077,7 @@ class TypedArrayTemplate
     static void
     obj_trace(JSTracer *trc, JSObject *obj)
     {
-        MarkSlot(trc, &obj->getFixedSlotRef(FIELD_BUFFER), "typedarray.buffer");
+        MarkSlot(trc, &obj->getFixedSlotRef(BUFFER_SLOT), "typedarray.buffer");
     }
 
     static JSBool
@@ -1426,17 +1419,17 @@ class TypedArrayTemplate
             }
         }
 
-        obj->setSlot(FIELD_TYPE, Int32Value(ArrayTypeID()));
-        obj->setSlot(FIELD_BUFFER, ObjectValue(*bufobj));
+        obj->setSlot(TYPE_SLOT, Int32Value(ArrayTypeID()));
+        obj->setSlot(BUFFER_SLOT, ObjectValue(*bufobj));
 
         JS_ASSERT(bufobj->isArrayBuffer());
         Rooted<ArrayBufferObject *> buffer(cx, &bufobj->asArrayBuffer());
 
         InitTypedArrayDataPointer(obj, buffer, byteOffset);
-        obj->setSlot(FIELD_LENGTH, Int32Value(len));
-        obj->setSlot(FIELD_BYTEOFFSET, Int32Value(byteOffset));
-        obj->setSlot(FIELD_BYTELENGTH, Int32Value(len * sizeof(NativeType)));
-        obj->setSlot(FIELD_NEXT_VIEW, NullValue());
+        obj->setSlot(LENGTH_SLOT, Int32Value(len));
+        obj->setSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
+        obj->setSlot(BYTELENGTH_SLOT, Int32Value(len * sizeof(NativeType)));
+        obj->setSlot(NEXT_VIEW_SLOT, NullValue());
 
         // Mark the object as non-extensible. We cannot simply call
         // obj->preventExtensions() because that has to iterate through all
@@ -1460,7 +1453,8 @@ class TypedArrayTemplate
         JS_ASSERT(bufferByteLength - byteOffsetValue(obj).toInt32() >= arrayByteLength);
         JS_ASSERT(arrayByteOffset <= bufferByteLength);
 
-        JS_ASSERT(obj->numFixedSlots() == NUM_FIXED_SLOTS);
+        // Verify that the private slot is at the expected place
+        JS_ASSERT(obj->numFixedSlots() == DATA_SLOT);
 #endif
 
         buffer->addView(cx, obj);
@@ -3100,7 +3094,7 @@ IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
       if (clasp != &TypedArray::classes[TypedArrayTemplate<InternalType>::ArrayTypeID()])   \
           return NULL;                                                                      \
                                                                                             \
-      *length = obj->getSlot(TypedArray::FIELD_LENGTH).toInt32();                           \
+      *length = obj->getSlot(TypedArray::LENGTH_SLOT).toInt32();                            \
       *data = static_cast<ExternalType *>(TypedArray::viewData(obj));                       \
                                                                                             \
       return obj;                                                                           \
@@ -3116,10 +3110,10 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Uint32, uint32_t, uint32_t)
 IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float32, float, float)
 IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
 
-#define IMPL_TYPED_ARRAY_PROTO_CLASS(_typedArray)                               \
+#define IMPL_TYPED_ARRAY_PROTO_CLASS(_typedArray)                              \
 {                                                                              \
     #_typedArray "Prototype",                                                  \
-    JSCLASS_HAS_RESERVED_SLOTS(TypedArray::FIELD_MAX) |                        \
+    JSCLASS_HAS_RESERVED_SLOTS(TypedArray::RESERVED_SLOTS) |                   \
     JSCLASS_HAS_PRIVATE |                                                      \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),                           \
     JS_PropertyStub,         /* addProperty */                                 \
@@ -3134,7 +3128,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
 #define IMPL_TYPED_ARRAY_FAST_CLASS(_typedArray)                               \
 {                                                                              \
     #_typedArray,                                                              \
-    JSCLASS_HAS_RESERVED_SLOTS(TypedArray::FIELD_MAX) |                        \
+    JSCLASS_HAS_RESERVED_SLOTS(TypedArray::RESERVED_SLOTS) |                   \
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |                        \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray) |                          \
     Class::NON_NATIVE,                                                         \
@@ -3618,7 +3612,7 @@ JS_GetTypedArrayLength(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return 0;
     JS_ASSERT(obj->isTypedArray());
-    return obj->getSlot(TypedArray::FIELD_LENGTH).toInt32();
+    return obj->getSlot(TypedArray::LENGTH_SLOT).toInt32();
 }
 
 JS_FRIEND_API(uint32_t)
@@ -3628,7 +3622,7 @@ JS_GetTypedArrayByteOffset(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return 0;
     JS_ASSERT(obj->isTypedArray());
-    return obj->getSlot(TypedArray::FIELD_BYTEOFFSET).toInt32();
+    return obj->getSlot(TypedArray::BYTEOFFSET_SLOT).toInt32();
 }
 
 JS_FRIEND_API(uint32_t)
@@ -3638,7 +3632,7 @@ JS_GetTypedArrayByteLength(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return 0;
     JS_ASSERT(obj->isTypedArray());
-    return obj->getSlot(TypedArray::FIELD_BYTELENGTH).toInt32();
+    return obj->getSlot(TypedArray::BYTELENGTH_SLOT).toInt32();
 }
 
 JS_FRIEND_API(JSArrayBufferViewType)
@@ -3648,7 +3642,7 @@ JS_GetTypedArrayType(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return ArrayBufferView::TYPE_MAX;
     JS_ASSERT(obj->isTypedArray());
-    return static_cast<JSArrayBufferViewType>(obj->getSlot(TypedArray::FIELD_TYPE).toInt32());
+    return static_cast<JSArrayBufferViewType>(obj->getSlot(TypedArray::TYPE_SLOT).toInt32());
 }
 
 JS_FRIEND_API(int8_t *)
@@ -3658,7 +3652,7 @@ JS_GetInt8ArrayData(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
-    JS_ASSERT(obj->getSlot(TypedArray::FIELD_TYPE).toInt32() == ArrayBufferView::TYPE_INT8);
+    JS_ASSERT(obj->getSlot(TypedArray::TYPE_SLOT).toInt32() == ArrayBufferView::TYPE_INT8);
     return static_cast<int8_t *>(TypedArray::viewData(obj));
 }
 
@@ -3669,7 +3663,7 @@ JS_GetUint8ArrayData(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
-    JS_ASSERT(obj->getSlot(TypedArray::FIELD_TYPE).toInt32() == ArrayBufferView::TYPE_UINT8);
+    JS_ASSERT(obj->getSlot(TypedArray::TYPE_SLOT).toInt32() == ArrayBufferView::TYPE_UINT8);
     return static_cast<uint8_t *>(TypedArray::viewData(obj));
 }
 
@@ -3680,7 +3674,7 @@ JS_GetUint8ClampedArrayData(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
-    JS_ASSERT(obj->getSlot(TypedArray::FIELD_TYPE).toInt32() == ArrayBufferView::TYPE_UINT8_CLAMPED);
+    JS_ASSERT(obj->getSlot(TypedArray::TYPE_SLOT).toInt32() == ArrayBufferView::TYPE_UINT8_CLAMPED);
     return static_cast<uint8_t *>(TypedArray::viewData(obj));
 }
 
@@ -3691,7 +3685,7 @@ JS_GetInt16ArrayData(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
-    JS_ASSERT(obj->getSlot(TypedArray::FIELD_TYPE).toInt32() == ArrayBufferView::TYPE_INT16);
+    JS_ASSERT(obj->getSlot(TypedArray::TYPE_SLOT).toInt32() == ArrayBufferView::TYPE_INT16);
     return static_cast<int16_t *>(TypedArray::viewData(obj));
 }
 
@@ -3702,7 +3696,7 @@ JS_GetUint16ArrayData(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
-    JS_ASSERT(obj->getSlot(TypedArray::FIELD_TYPE).toInt32() == ArrayBufferView::TYPE_UINT16);
+    JS_ASSERT(obj->getSlot(TypedArray::TYPE_SLOT).toInt32() == ArrayBufferView::TYPE_UINT16);
     return static_cast<uint16_t *>(TypedArray::viewData(obj));
 }
 
@@ -3713,7 +3707,7 @@ JS_GetInt32ArrayData(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
-    JS_ASSERT(obj->getSlot(TypedArray::FIELD_TYPE).toInt32() == ArrayBufferView::TYPE_INT32);
+    JS_ASSERT(obj->getSlot(TypedArray::TYPE_SLOT).toInt32() == ArrayBufferView::TYPE_INT32);
     return static_cast<int32_t *>(TypedArray::viewData(obj));
 }
 
@@ -3724,7 +3718,7 @@ JS_GetUint32ArrayData(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
-    JS_ASSERT(obj->getSlot(TypedArray::FIELD_TYPE).toInt32() == ArrayBufferView::TYPE_UINT32);
+    JS_ASSERT(obj->getSlot(TypedArray::TYPE_SLOT).toInt32() == ArrayBufferView::TYPE_UINT32);
     return static_cast<uint32_t *>(TypedArray::viewData(obj));
 }
 
@@ -3735,7 +3729,7 @@ JS_GetFloat32ArrayData(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
-    JS_ASSERT(obj->getSlot(TypedArray::FIELD_TYPE).toInt32() == ArrayBufferView::TYPE_FLOAT32);
+    JS_ASSERT(obj->getSlot(TypedArray::TYPE_SLOT).toInt32() == ArrayBufferView::TYPE_FLOAT32);
     return static_cast<float *>(TypedArray::viewData(obj));
 }
 
@@ -3746,7 +3740,7 @@ JS_GetFloat64ArrayData(JSObject *obj, JSContext *maybecx)
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isTypedArray());
-    JS_ASSERT(obj->getSlot(TypedArray::FIELD_TYPE).toInt32() == ArrayBufferView::TYPE_FLOAT64);
+    JS_ASSERT(obj->getSlot(TypedArray::TYPE_SLOT).toInt32() == ArrayBufferView::TYPE_FLOAT64);
     return static_cast<double *>(TypedArray::viewData(obj));
 }
 
