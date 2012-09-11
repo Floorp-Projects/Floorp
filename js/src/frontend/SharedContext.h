@@ -135,12 +135,14 @@ class FunctionContextFlags {
 struct SharedContext {
     JSContext       *const context;
 
+    const bool isFunction;          /* true for function code, false for
+                                       global code */
   private:
     FunctionBox *const funbox_;     /* null or box for function we're compiling
-                                       (if inFunction() is true) */
+                                       (if isFunction is true) */
 
     const RootedObject scopeChain_; /* scope chain object for the script
-                                       (if inFunction() is false) */
+                                       (if isFunction is false) */
 
   public:
     AnyContextFlags anyCxFlags;
@@ -176,10 +178,8 @@ struct SharedContext {
     void setExplicitUseStrict()           { anyCxFlags.hasExplicitUseStrict        = true; }
     void setBindingsAccessedDynamically() { anyCxFlags.bindingsAccessedDynamically = true; }
 
-    bool inFunction() const { return !!funbox_; }
-
-    FunctionBox *funbox()  const { JS_ASSERT(inFunction());  return funbox_; }
-    JSObject *scopeChain() const { JS_ASSERT(!inFunction()); return scopeChain_; }
+    FunctionBox *funbox()  const { JS_ASSERT(isFunction);  return funbox_; }
+    JSObject *scopeChain() const { JS_ASSERT(!isFunction); return scopeChain_; }
 
     // JSOPTION_STRICT warnings or strict mode errors.
     inline bool needStrictChecks();

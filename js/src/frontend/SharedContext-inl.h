@@ -18,6 +18,7 @@ inline
 SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, FunctionBox *funbox,
                              StrictMode sms)
   : context(cx),
+    isFunction(!!funbox),
     funbox_(funbox),
     scopeChain_(cx, scopeChain),
     anyCxFlags(),
@@ -30,7 +31,7 @@ inline bool
 SharedContext::inStrictMode()
 {
     JS_ASSERT(strictModeState != StrictMode::UNKNOWN);
-    JS_ASSERT_IF(inFunction(), funbox()->strictModeState == strictModeState);
+    JS_ASSERT_IF(isFunction, funbox()->strictModeState == strictModeState);
     return strictModeState == StrictMode::STRICT;
 }
 
