@@ -250,13 +250,6 @@ MOCHITEST_FILES_A = \
 		file_XHRDocURI.text \
 		file_XHRDocURI.text^headers^ \
 		test_DOMException.html \
-		test_meta_viewport0.html \
-		test_meta_viewport1.html \
-		test_meta_viewport2.html \
-		test_meta_viewport3.html \
-		test_meta_viewport4.html \
-		test_meta_viewport5.html \
-		test_meta_viewport6.html \
 		test_mutationobservers.html \
 		mutationobserver_dialog.html \
 		test_bug744830.html \

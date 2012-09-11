@@ -1537,22 +1537,10 @@ public:
    * which places the viewport information in the document header instead
    * of returning it directly.
    *
-   * @param aDisplayWidth width of the on-screen display area for this
-   * document, in device pixels.
-   * @param aDisplayHeight height of the on-screen display area for this
-   * document, in device pixels.
-   *
    * NOTE: If the site is optimized for mobile (via the doctype), this
    * will return viewport information that specifies default information.
    */
-  static ViewportInfo GetViewportInfo(nsIDocument* aDocument,
-                                      uint32_t aDisplayWidth,
-                                      uint32_t aDisplayHeight);
-
-  /**
-   * The device-pixel-to-CSS-px ratio used to adjust meta viewport values.
-   */
-  static double GetDevicePixelsPerMetaViewportPixel(nsIWidget* aWidget);
+  static ViewportInfo GetViewportInfo(nsIDocument* aDocument);
 
   // Call EnterMicroTask when you're entering JS execution.
   // Usually the best way to do this is to use nsAutoMicroTask.
