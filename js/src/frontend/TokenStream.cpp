@@ -1041,7 +1041,7 @@ TokenStream::getXMLMarkup(TokenKind *ttp, Token **tpp)
 
         JSAtom *data;
         if (contentIndex < 0) {
-            data = cx->runtime->atomState.emptyAtom;
+            data = cx->names().empty;
         } else {
             data = AtomizeChars(cx, tokenbuf.begin() + contentIndex,
                                 tokenbuf.length() - contentIndex);

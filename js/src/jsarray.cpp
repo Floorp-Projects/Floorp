@@ -135,7 +135,7 @@ GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp)
     }
 
     RootedValue value(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.lengthAtom, &value))
+    if (!JSObject::getProperty(cx, obj, obj, cx->names().length, &value))
         return false;
 
     if (value.isInt32()) {
@@ -491,7 +491,7 @@ js::SetLengthProperty(JSContext *cx, HandleObject obj, double length)
     RootedValue v(cx, NumberValue(length));
 
     /* We don't support read-only array length yet. */
-    return JSObject::setProperty(cx, obj, obj, cx->runtime->atomState.lengthAtom, &v, false);
+    return JSObject::setProperty(cx, obj, obj, cx->names().length, &v, false);
 }
 
 /*
@@ -518,7 +518,7 @@ static JSBool
 array_length_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
 {
     if (!obj->isArray()) {
-        return JSObject::defineProperty(cx, obj, cx->runtime->atomState.lengthAtom, vp,
+        return JSObject::defineProperty(cx, obj, cx->names().length, vp,
                                         NULL, NULL, JSPROP_ENUMERATE);
     }
 
@@ -623,7 +623,7 @@ IsDenseArrayId(JSContext *cx, JSObject *obj, jsid id)
     JS_ASSERT(obj->isDenseArray());
 
     uint32_t i;
-    return JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
+    return JSID_IS_ATOM(id, cx->names().length) ||
            (js_IdIsIndex(id, &i) && IsDenseArrayIndex(obj, i));
 }
 
@@ -694,7 +694,7 @@ js_GetDenseArrayElementValue(JSContext *cx, HandleObject obj, jsid id, Value *vp
 
     uint32_t i;
     if (!js_IdIsIndex(id, &i)) {
-        JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom));
+        JS_ASSERT(JSID_IS_ATOM(id, cx->names().length));
         vp->setNumber(obj->getArrayLength());
         return JS_TRUE;
     }
@@ -706,7 +706,7 @@ static JSBool
 array_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name,
                   MutableHandleValue vp)
 {
-    if (name == cx->runtime->atomState.lengthAtom) {
+    if (name == cx->names().length) {
         vp.setNumber(obj->getArrayLength());
         return true;
     }
@@ -808,7 +808,7 @@ static JSBool
 array_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
                  MutableHandleValue vp, JSBool strict)
 {
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
+    if (JSID_IS_ATOM(id, cx->names().length))
         return array_length_setter(cx, obj, id, strict, vp);
 
     if (!obj->isDenseArray())
@@ -922,7 +922,7 @@ static JSBool
 array_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
                     JSPropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
+    if (JSID_IS_ATOM(id, cx->names().length))
         return JS_TRUE;
 
     if (!obj->isDenseArray())
@@ -1015,7 +1015,7 @@ array_defineSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Handle
 static JSBool
 array_getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
-    *attrsp = JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)
+    *attrsp = JSID_IS_ATOM(id, cx->names().length)
         ? JSPROP_PERMANENT : JSPROP_ENUMERATE;
     return true;
 }
@@ -1023,7 +1023,7 @@ array_getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigne
 static JSBool
 array_getPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
 {
-    *attrsp = (name == cx->runtime->atomState.lengthAtom)
+    *attrsp = (name == cx->names().length)
               ? JSPROP_PERMANENT
               : JSPROP_ENUMERATE;
     return true;
@@ -1078,7 +1078,7 @@ array_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
     if (!obj->isDenseArray())
         return baseops::DeleteProperty(cx, obj, name, rval, strict);
 
-    if (name == cx->runtime->atomState.lengthAtom) {
+    if (name == cx->names().length) {
         rval.setBoolean(false);
         return true;
     }
@@ -1241,7 +1241,7 @@ AddLengthProperty(JSContext *cx, HandleObject obj)
      * as accesses to 'length' will use the elements header.
      */
 
-    RootedId lengthId(cx, NameToId(cx->runtime->atomState.lengthAtom));
+    RootedId lengthId(cx, NameToId(cx->names().length));
     JS_ASSERT(!obj->nativeLookup(cx, lengthId));
 
     if (!obj->allocateSlowArrayElements(cx))
@@ -1459,7 +1459,7 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
         return false;
 
     if (detector.foundCycle()) {
-        args.rval().setString(cx->runtime->atomState.emptyAtom);
+        args.rval().setString(cx->names().empty);
         return true;
     }
 
@@ -1540,7 +1540,7 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
                     JSObject *robj = ToObject(cx, elt);
                     if (!robj)
                         return false;
-                    RootedId id(cx, NameToId(cx->runtime->atomState.toLocaleStringAtom));
+                    RootedId id(cx, NameToId(cx->names().toLocaleString));
                     if (!robj->callMethod(cx, id, 0, NULL, &elt))
                         return false;
                 }
@@ -1576,7 +1576,7 @@ array_toString(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     RootedValue join(cx, args.calleev());
-    if (!JSObject::getProperty(cx, obj, obj, cx->runtime->atomState.joinAtom, &join))
+    if (!JSObject::getProperty(cx, obj, obj, cx->names().join, &join))
         return false;
 
     if (!js_IsCallable(join)) {
@@ -3552,7 +3552,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     arrayProto->setArrayLength(cx, 0);
 
     RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, js_Array, cx->runtime->atomState.ArrayAtom, 1);
+    ctor = global->createConstructor(cx, js_Array, cx->names().Array, 1);
     if (!ctor)
         return NULL;
 
