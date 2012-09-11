@@ -472,6 +472,9 @@ class nsHashKey;
 #define NS_WHEEL_EVENT_START         5400
 #define NS_WHEEL_WHEEL               (NS_WHEEL_EVENT_START)
 
+//System time is changed
+#define NS_MOZ_TIME_CHANGE_EVENT     5500
+
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.
