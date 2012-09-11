@@ -54,5 +54,6 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 XPIDL_FLAGS += \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/dom/interfaces/base \
+  -I$(topsrcdir)/dom/interfaces/events \
   -I$(topsrcdir)/dom/media \
   $(NULL)
