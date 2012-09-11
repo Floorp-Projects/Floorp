@@ -25,6 +25,7 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsEventDispatcher.h"
+#include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsIContent.h"
@@ -66,6 +67,8 @@ using namespace mozilla::dom::indexedDB;
 namespace mozilla {
 namespace dom {
 
+TabParent* sEventCapturer;
+
 TabParent *TabParent::mIMETabParent = nullptr;
 
 NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
@@ -79,6 +82,7 @@ TabParent::TabParent(mozIApplication* aApp, bool aIsBrowserElement)
   , mIMECompositionEnding(false)
   , mIMECompositionStart(0)
   , mIMESeqno(0)
+  , mEventCaptureDepth(0)
   , mDPI(0)
   , mActive(false)
   , mIsBrowserElement(aIsBrowserElement)
@@ -121,8 +125,12 @@ TabParent::Recv__delete__()
 void
 TabParent::ActorDestroy(ActorDestroyReason why)
 {
-  if (mIMETabParent == this)
+  if (sEventCapturer == this) {
+    sEventCapturer = nullptr;
+  }
+  if (mIMETabParent == this) {
     mIMETabParent = nullptr;
+  }
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (frameLoader) {
     frameLoader->DestroyChild();
@@ -361,19 +369,70 @@ bool TabParent::SendRealKeyEvent(nsKeyEvent& event)
 
 bool TabParent::SendRealTouchEvent(nsTouchEvent& event)
 {
+  if (event.message == NS_TOUCH_START) {
+    MOZ_ASSERT((!sEventCapturer && mEventCaptureDepth == 0) ||
+               (sEventCapturer == this && mEventCaptureDepth > 0));
+    // We want to capture all remaining touch events in this series
+    // for fast-path dispatch.
+    sEventCapturer = this;
+    ++mEventCaptureDepth;
+  }
+
   nsTouchEvent e(event);
-  // PresShell::HandleEventInternal adds touches on touch end/cancel.
+  // PresShell::HandleEventInternal adds touches on touch end/cancel,
+  // when we're not capturing raw events from the widget backend.
   // This hack filters those out. Bug 785554
-  if (event.message == NS_TOUCH_END || event.message == NS_TOUCH_CANCEL) {
+  if (sEventCapturer != this &&
+      (event.message == NS_TOUCH_END || event.message == NS_TOUCH_CANCEL)) {
     for (int i = e.touches.Length() - 1; i >= 0; i--) {
       if (!e.touches[i]->mChanged)
         e.touches.RemoveElementAt(i);
     }
   }
+
   MaybeForwardEventToRenderFrame(event, &e);
   return (e.message == NS_TOUCH_MOVE) ?
     PBrowserParent::SendRealTouchMoveEvent(e) :
     PBrowserParent::SendRealTouchEvent(e);
+}
+
+/*static*/ TabParent*
+TabParent::GetEventCapturer()
+{
+  return sEventCapturer;
+}
+
+bool
+TabParent::TryCapture(const nsGUIEvent& aEvent)
+{
+  MOZ_ASSERT(sEventCapturer == this && mEventCaptureDepth > 0);
+
+  if (aEvent.eventStructType != NS_TOUCH_EVENT) {
+    // Only capture of touch events is implemented, for now.
+    return false;
+  }
+
+  nsTouchEvent event(static_cast<const nsTouchEvent&>(aEvent));
+
+  bool isTouchPointUp = (event.message == NS_TOUCH_END ||
+                         event.message == NS_TOUCH_CANCEL);
+  if (event.message == NS_TOUCH_START || isTouchPointUp) {
+    // Let the DOM see touch start/end events so that its touch-point
+    // state stays consistent.
+    if (isTouchPointUp && 0 == --mEventCaptureDepth) {
+      // All event series are un-captured, don't try to catch any
+      // more.
+      sEventCapturer = nullptr;
+    }
+    return false;
+  }
+
+  // Adjust the widget coordinates to be relative to our frame.
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  nsEventStateManager::MapEventCoordinatesForChildProcess(frameLoader, &event);
+
+  SendRealTouchEvent(event);
+  return true;
 }
 
 bool
