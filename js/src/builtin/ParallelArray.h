@@ -129,7 +129,8 @@ class ParallelArrayObject : public JSObject {
         // Set the index vector according to a scalar index.
         inline bool fromScalar(uint32_t index);
 
-        bool isInitialized();
+        inline bool inBounds() const;
+        bool isInitialized() const;
     };
 
     static JSObject *initClass(JSContext *cx, JSObject *obj);
