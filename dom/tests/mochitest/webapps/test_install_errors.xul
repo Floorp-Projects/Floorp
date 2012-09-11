@@ -24,6 +24,7 @@ var steps = [
   invalidManifest,
   permissionDenied,
   invalidContent,
+  installPackageNotImplemented,
 ];
 
 runAll(steps);
@@ -94,6 +95,12 @@ function invalidContent(next) {
       next();
     };
   };
+}
+
+function installPackageNotImplemented(next) {
+  ok(!("installPackage" in navigator.mozApps),
+     "installPackage not in navigator.mozApps");
+  next();
 }
 
 </script>

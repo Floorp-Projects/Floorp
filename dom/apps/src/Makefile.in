@@ -12,8 +12,11 @@ include $(DEPTH)/config/autoconf.mk
 EXTRA_COMPONENTS = \
   AppsService.js \
   AppsService.manifest \
-  Webapps.js \
   Webapps.manifest \
+  $(NULL)
+
+EXTRA_PP_COMPONENTS = \
+  Webapps.js \
   $(NULL)
 
 EXTRA_PP_JS_MODULES += \
