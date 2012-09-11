@@ -4880,7 +4880,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     /* Make the function object a literal in the outer script's pool. */
-    unsigned index = bce->objectList.add(pn->pn_funbox);
+    unsigned index = bce->objectList.add(&pn->pn_funbox->objbox);
 
     /* Non-hoisted functions simply emit their respective op. */
     if (!pn->functionIsHoisted()) {

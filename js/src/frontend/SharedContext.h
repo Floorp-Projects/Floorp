@@ -283,8 +283,9 @@ struct StmtInfoBase {
     }
 };
 
-struct FunctionBox : public ObjectBox
+struct FunctionBox
 {
+    ObjectBox       objbox;
     FunctionBox     *siblings;
     FunctionBox     *kids;
     Bindings        bindings;               /* bindings for this function */
@@ -298,12 +299,11 @@ struct FunctionBox : public ObjectBox
 
     ContextFlags    cxFlags;
 
-    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *pc,
-                StrictMode sms);
+    FunctionBox(ObjectBox *traceListHead, JSFunction *fun, ParseContext *pc, StrictMode sms);
 
     bool funIsGenerator() const { return cxFlags.funIsGenerator; }
 
-    JSFunction *fun() const { return (JSFunction *) object; }
+    JSFunction *fun() const { return objbox.object->toFunction(); }
 
     void recursivelySetStrictMode(StrictMode strictness);
 };
