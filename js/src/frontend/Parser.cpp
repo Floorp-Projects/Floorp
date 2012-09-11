@@ -167,7 +167,7 @@ ParseContext::define(JSContext *cx, PropertyName *name, ParseNode *pn, Definitio
     Definition *dn = (Definition *)pn;
     switch (kind) {
       case Definition::ARG:
-        JS_ASSERT(sc->inFunction());
+        JS_ASSERT(sc->isFunction);
         dn->setOp(JSOP_GETARG);
         dn->pn_dflags |= PND_BOUND;
         if (!dn->pn_cookie.set(cx, staticLevel, args_.length()))
@@ -182,7 +182,7 @@ ParseContext::define(JSContext *cx, PropertyName *name, ParseNode *pn, Definitio
 
       case Definition::CONST:
       case Definition::VAR:
-        if (sc->inFunction()) {
+        if (sc->isFunction) {
             dn->setOp(JSOP_GETLOCAL);
             dn->pn_dflags |= PND_BOUND;
             if (!dn->pn_cookie.set(cx, staticLevel, vars_.length()))
@@ -229,7 +229,7 @@ ParseContext::updateDecl(JSAtom *atom, ParseNode *pn)
     Definition *newDecl = (Definition *)pn;
     decls_.updateFirst(atom, newDecl);
 
-    if (!sc->inFunction()) {
+    if (!sc->isFunction) {
         JS_ASSERT(newDecl->isFreeVar());
         return;
     }
@@ -298,7 +298,7 @@ AppendPackedBindings(const ParseContext *pc, const DeclVector &vec, Binding *dst
 bool
 ParseContext::generateFunctionBindings(JSContext *cx, InternalHandle<Bindings*> bindings) const
 {
-    JS_ASSERT(sc->inFunction());
+    JS_ASSERT(sc->isFunction);
 
     unsigned count = args_.length() + vars_.length();
     Binding *packedBindings = cx->tempLifoAlloc().newArrayUninitialized<Binding>(count);
@@ -425,7 +425,7 @@ FunctionBox::FunctionBox(ObjectBox *traceListHead, JSFunction *fun, ParseContext
         // outerpc->parsingWith is true.
         inWith = true;
 
-    } else if (!outerpc->sc->inFunction()) {
+    } else if (!outerpc->sc->isFunction) {
         // This covers the case where a function is nested within an eval()
         // within a |with| statement.
         //
@@ -681,7 +681,7 @@ ReportBadReturn(JSContext *cx, Parser *parser, ParseNode *pn, Parser::Reporter r
 static bool
 CheckFinalReturn(JSContext *cx, Parser *parser, ParseNode *pn)
 {
-    JS_ASSERT(parser->pc->sc->inFunction());
+    JS_ASSERT(parser->pc->sc->isFunction);
     return HasFinalReturn(pn) == ENDS_IN_RETURN ||
            ReportBadReturn(cx, parser, pn, &Parser::reportStrictWarning,
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
@@ -738,7 +738,7 @@ CheckStrictBinding(JSContext *cx, Parser *parser, HandlePropertyName name, Parse
 ParseNode *
 Parser::functionBody(FunctionBodyType type)
 {
-    JS_ASSERT(pc->sc->inFunction());
+    JS_ASSERT(pc->sc->isFunction);
 
     StmtInfoPC stmtInfo(context);
     PushStatementPC(pc, &stmtInfo, STMT_BLOCK);
@@ -1088,7 +1088,7 @@ Parser::newFunction(ParseContext *pc, JSAtom *atom, FunctionSyntaxKind kind)
         pc = pc->parent;
 
     RootedObject parent(context);
-    parent = pc->sc->inFunction() ? NULL : pc->sc->scopeChain();
+    parent = pc->sc->isFunction ? NULL : pc->sc->scopeChain();
 
     RootedFunction fun(context);
     uint32_t flags = JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0);
@@ -1342,7 +1342,7 @@ static bool
 BindDestructuringArg(JSContext *cx, BindData *data, HandlePropertyName name, Parser *parser)
 {
     ParseContext *pc = parser->pc;
-    JS_ASSERT(pc->sc->inFunction());
+    JS_ASSERT(pc->sc->isFunction);
 
     if (pc->decls().lookupFirst(name)) {
         parser->reportError(NULL, JSMSG_BAD_DUP_ARGS);
@@ -1594,12 +1594,12 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
          */
         if (bodyLevel) {
             JS_ASSERT(pn->functionIsHoisted());
-            JS_ASSERT_IF(pc->sc->inFunction(), !pn->pn_cookie.isFree());
-            JS_ASSERT_IF(!pc->sc->inFunction(), pn->pn_cookie.isFree());
+            JS_ASSERT_IF(pc->sc->isFunction, !pn->pn_cookie.isFree());
+            JS_ASSERT_IF(!pc->sc->isFunction, pn->pn_cookie.isFree());
         } else {
             JS_ASSERT(pc->sc->strictModeState != StrictMode::STRICT);
             JS_ASSERT(pn->pn_cookie.isFree());
-            if (pc->sc->inFunction()) {
+            if (pc->sc->isFunction) {
                 FunctionBox *funbox = pc->sc->funbox();
                 funbox->setMightAliasLocals();
                 funbox->setHasExtensibleScope();
@@ -1821,7 +1821,7 @@ Parser::setStrictMode(bool strictMode)
     if (pc->sc->strictModeState != StrictMode::UNKNOWN) {
         // Strict mode was inherited.
         JS_ASSERT(pc->sc->strictModeState == StrictMode::STRICT);
-        if (pc->sc->inFunction()) {
+        if (pc->sc->isFunction) {
             JS_ASSERT(pc->sc->funbox()->strictModeState == pc->sc->strictModeState);
             JS_ASSERT(pc->parent->sc->strictModeState == StrictMode::STRICT);
         } else {
@@ -1848,8 +1848,8 @@ Parser::setStrictMode(bool strictMode)
             pc->queuedStrictModeError->throwError();
         }
     }
-    JS_ASSERT_IF(!pc->sc->inFunction(), !pc->functionList);
-    if (pc->sc->strictModeState != StrictMode::UNKNOWN && pc->sc->inFunction()) {
+    JS_ASSERT_IF(!pc->sc->isFunction, !pc->functionList);
+    if (pc->sc->strictModeState != StrictMode::UNKNOWN && pc->sc->isFunction) {
         // We changed the strict mode state. Retroactively recursively set
         // strict mode status on all the function children we've seen so far
         // children (That is, functions in default expressions).
@@ -1997,7 +1997,7 @@ Parser::statements(bool *hasFunctionStmt)
                  * General deoptimization was done in functionDef, here we just
                  * need to tell TOK_LC in Parser::statement to add braces.
                  */
-                JS_ASSERT_IF(pc->sc->inFunction(), pc->sc->funbox()->hasExtensibleScope());
+                JS_ASSERT_IF(pc->sc->isFunction, pc->sc->funbox()->hasExtensibleScope());
                 if (hasFunctionStmt)
                     *hasFunctionStmt = true;
             }
@@ -2197,7 +2197,7 @@ BindVarOrConst(JSContext *cx, BindData *data, HandlePropertyName name, Parser *p
 
     if (stmt && stmt->type == STMT_WITH) {
         pn->pn_dflags |= PND_DEOPTIMIZED;
-        if (pc->sc->inFunction())
+        if (pc->sc->isFunction)
             pc->sc->funbox()->setMightAliasLocals();
         return true;
     }
@@ -2568,7 +2568,7 @@ ParseNode *
 Parser::returnOrYield(bool useAssignExpr)
 {
     TokenKind tt = tokenStream.currentToken().type;
-    if (!pc->sc->inFunction()) {
+    if (!pc->sc->isFunction) {
         reportError(NULL, JSMSG_BAD_RETURN_OR_YIELD,
                     (tt == TOK_RETURN) ? js_return_str : js_yield_str);
         return NULL;
@@ -4858,7 +4858,7 @@ GenexpGuard::maybeNoteGenerator(ParseNode *pn)
 {
     ParseContext *pc = parser->pc;
     if (pc->yieldCount > 0) {
-        if (!pc->sc->inFunction()) {
+        if (!pc->sc->isFunction) {
             parser->reportError(NULL, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
             return false;
         }
@@ -5382,7 +5382,7 @@ Parser::generatorExpr(ParseNode *kid)
          * kid and could be removed from pc->sc.
          */
         gensc.anyCxFlags = outerpc->sc->anyCxFlags;
-        if (outerpc->sc->inFunction())
+        if (outerpc->sc->isFunction)
             funbox->funCxFlags = outerpc->sc->funbox()->funCxFlags;
 
         funbox->setIsGenerator();
@@ -5708,7 +5708,7 @@ Parser::memberExpr(bool allowCallSyntax)
                      * In non-strict mode code, direct calls to eval can add
                      * variables to the call object.
                      */
-                    if (pc->sc->inFunction() && pc->sc->strictModeState != StrictMode::STRICT)
+                    if (pc->sc->isFunction && pc->sc->strictModeState != StrictMode::STRICT)
                         pc->sc->funbox()->setHasExtensibleScope();
                 }
             } else if (lhs->isOp(JSOP_GETPROP)) {
