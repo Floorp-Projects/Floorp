@@ -838,6 +838,7 @@ GlobalSearchView.prototype = {
  */
 function ScriptsView() {
   this._onScriptsChange = this._onScriptsChange.bind(this);
+  this._onScriptsSearchClick = this._onScriptsSearchClick.bind(this);
   this._onScriptsSearch = this._onScriptsSearch.bind(this);
   this._onScriptsKeyUp = this._onScriptsKeyUp.bind(this);
 }
@@ -1274,6 +1275,13 @@ ScriptsView.prototype = {
   },
 
   /**
+   * The focus listener for the scripts search box.
+   */
+  _onScriptsSearchClick: function DVS__onScriptsSearchClick() {
+    this._searchboxPanel.openPopup(this._searchbox);
+  },
+
+  /**
    * The search listener for the scripts search box.
    */
   _onScriptsSearch: function DVS__onScriptsSearch() {
@@ -1281,6 +1289,8 @@ ScriptsView.prototype = {
     if (!this._scripts.itemCount) {
       return;
     }
+    this._searchboxPanel.hidePopup();
+
     let [file, line, token, isGlobal] = this.searchboxInfo;
 
     // If this is a global script search, schedule a search in all the sources,
@@ -1338,10 +1348,19 @@ ScriptsView.prototype = {
   },
 
   /**
+   * Called when the scripts path filter key sequence was pressed.
+   */
+  _onFileSearch: function DVS__onFileSearch() {
+    this._onSearch();
+    this._searchboxPanel.openPopup(this._searchbox);
+  },
+
+  /**
    * Called when the scripts token filter key sequence was pressed.
    */
   _onLineSearch: function DVS__onLineSearch() {
     this._onSearch(SEARCH_LINE_FLAG);
+    this._searchboxPanel.hidePopup();
   },
 
   /**
@@ -1349,6 +1368,7 @@ ScriptsView.prototype = {
    */
   _onTokenSearch: function DVS__onTokenSearch() {
     this._onSearch(SEARCH_TOKEN_FLAG);
+    this._searchboxPanel.hidePopup();
   },
 
   /**
@@ -1356,6 +1376,7 @@ ScriptsView.prototype = {
    */
   _onGlobalSearch: function DVS__onGlobalSearch() {
     this._onSearch(SEARCH_GLOBAL_FLAG);
+    this._searchboxPanel.hidePopup();
   },
 
   /**
@@ -1363,6 +1384,7 @@ ScriptsView.prototype = {
    */
   _scripts: null,
   _searchbox: null,
+  _searchboxPanel: null,
 
   /**
    * Initialization function, called when the debugger is initialized.
@@ -1370,7 +1392,10 @@ ScriptsView.prototype = {
   initialize: function DVS_initialize() {
     this._scripts = document.getElementById("scripts");
     this._searchbox = document.getElementById("scripts-search");
+    this._searchboxPanel = document.getElementById("scripts-search-panel");
+
     this._scripts.addEventListener("select", this._onScriptsChange, false);
+    this._searchbox.addEventListener("click", this._onScriptsSearchClick, false);
     this._searchbox.addEventListener("select", this._onScriptsSearch, false);
     this._searchbox.addEventListener("input", this._onScriptsSearch, false);
     this._searchbox.addEventListener("keyup", this._onScriptsKeyUp, false);
@@ -1382,6 +1407,7 @@ ScriptsView.prototype = {
    */
   destroy: function DVS_destroy() {
     this._scripts.removeEventListener("select", this._onScriptsChange, false);
+    this._searchbox.removeEventListener("click", this._onScriptsSearchClick, false);
     this._searchbox.removeEventListener("select", this._onScriptsSearch, false);
     this._searchbox.removeEventListener("input", this._onScriptsSearch, false);
     this._searchbox.removeEventListener("keyup", this._onScriptsKeyUp, false);
@@ -1389,6 +1415,7 @@ ScriptsView.prototype = {
     this.empty();
     this._scripts = null;
     this._searchbox = null;
+    this._searchboxPanel = null;
   }
 };
 
