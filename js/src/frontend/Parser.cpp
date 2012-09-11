@@ -362,7 +362,15 @@ ObjectBox::ObjectBox(ObjectBox* traceLink, JSObject *obj)
   : traceLink(traceLink),
     emitLink(NULL),
     object(obj),
-    isFunctionBox(false)
+    funbox(NULL)
+{
+}
+
+ObjectBox::ObjectBox(ObjectBox* traceLink, JSFunction *fun, FunctionBox *funbox)
+  : traceLink(traceLink),
+    emitLink(NULL),
+    object(fun),
+    funbox(funbox)
 {
 }
 
@@ -390,9 +398,9 @@ Parser::newObjectBox(JSObject *obj)
     return objbox;
 }
 
-FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *outerpc,
+FunctionBox::FunctionBox(ObjectBox *traceListHead, JSFunction *fun, ParseContext *outerpc,
                          StrictMode sms)
-  : ObjectBox(traceListHead, obj),
+  : objbox(traceListHead, fun, this),
     siblings(outerpc ? outerpc->functionList : NULL),
     kids(NULL),
     bindings(),
@@ -404,8 +412,6 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *
     inGenexpLambda(false),
     cxFlags()                       // the cxFlags are set in LeaveFunction
 {
-    isFunctionBox = true;
-
     if (!outerpc) {
         inWith = false;
 
@@ -450,10 +456,9 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseContext *
 }
 
 FunctionBox *
-Parser::newFunctionBox(JSObject *obj, ParseContext *outerpc, StrictMode sms)
+Parser::newFunctionBox(JSFunction *fun, ParseContext *outerpc, StrictMode sms)
 {
-    JS_ASSERT(obj && !IsPoisonedPtr(obj));
-    JS_ASSERT(obj->isFunction());
+    JS_ASSERT(fun && !IsPoisonedPtr(fun));
 
     /*
      * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
@@ -463,7 +468,7 @@ Parser::newFunctionBox(JSObject *obj, ParseContext *outerpc, StrictMode sms)
      * function.
      */
     FunctionBox *funbox =
-        context->tempLifoAlloc().new_<FunctionBox>(traceListHead, obj, outerpc, sms);
+        context->tempLifoAlloc().new_<FunctionBox>(traceListHead, fun, outerpc, sms);
     if (!funbox) {
         js_ReportOutOfMemory(context);
         return NULL;
@@ -471,7 +476,7 @@ Parser::newFunctionBox(JSObject *obj, ParseContext *outerpc, StrictMode sms)
 
     if (outerpc)
         outerpc->functionList = funbox;
-    traceListHead = funbox;
+    traceListHead = &funbox->objbox;
 
     return funbox;
 }
@@ -482,8 +487,8 @@ Parser::trace(JSTracer *trc)
     ObjectBox *objbox = traceListHead;
     while (objbox) {
         MarkObjectRoot(trc, &objbox->object, "parser.object");
-        if (objbox->isFunctionBox)
-            static_cast<FunctionBox *>(objbox)->bindings.trace(trc);
+        if (objbox->funbox)
+            objbox->funbox->bindings.trace(trc);
         objbox = objbox->traceLink;
     }
 }
